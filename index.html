@@ -1,1913 +1,445 @@
-"use client";
-import { useState, useEffect, useRef } from "react";
-
-// ─── CSS ──────────────────────────────────────────────────────────────────────
-const CSS = `
-@import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,800;1,700&display=swap');
-
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Ogapay — Earn. Engage. Get Paid.</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Fraunces:ital,wght@0,700;0,800;1,700&display=swap" rel="stylesheet"/>
+<style>
 :root {
-  --gold: #F5A623;
-  --gold-dark: #D4891A;
-  --gold-dim: rgba(245,166,35,0.12);
-  --gold-border: rgba(245,166,35,0.28);
-  --green: #22C55E;
-  --green-dim: rgba(34,197,94,0.12);
-  --green-border: rgba(34,197,94,0.28);
-  --black: #0A0A0A;
-  --card: #111111;
-  --white: #ffffff;
-  --dim: rgba(255,255,255,0.5);
-  --dimmer: rgba(255,255,255,0.2);
-  --line: rgba(255,255,255,0.08);
-  --bar-track: rgba(255,255,255,0.07);
-  --copy-btn-bg: rgba(255,255,255,0.05);
-}
-
-:root.light {
-  --black: #f5f4f0;
-  --card: #ffffff;
-  --white: #0f0f0f;
-  --dim: rgba(0,0,0,0.5);
-  --dimmer: rgba(0,0,0,0.35);
-  --line: rgba(0,0,0,0.08);
-  --bar-track: rgba(0,0,0,0.07);
-  --copy-btn-bg: rgba(0,0,0,0.04);
-}
-
-body {
-  background: var(--black);
-  color: var(--white);
-  font-family: 'Inter', sans-serif;
-  min-height: 100dvh;
-  -webkit-font-smoothing: antialiased;
-}
-
-/* ── NAV ── */
-.t-nav {
-  position: sticky; top: 0;
-  display: flex; align-items: center;
-  padding: 14px 20px; z-index: 50;
-  border-bottom: 1px solid var(--line);
-  background: rgba(10,10,10,0.92);
-  backdrop-filter: blur(14px);
-  gap: 10px;
-}
-.t-nav-back {
-  display: flex; align-items: center; justify-content: center;
-  width: 34px; height: 34px; border-radius: 8px;
-  background: rgba(255,255,255,0.04); border: 1px solid var(--line);
-  color: var(--dimmer); cursor: pointer;
-  transition: background 0.2s, color 0.2s, border-color 0.2s; flex-shrink: 0;
-}
-.t-nav-back:hover { background: var(--gold-dim); border-color: var(--gold-border); color: var(--gold); }
-.t-nav-brand { display: flex; align-items: center; gap: 9px; }
-.t-nav-mona { font-size: 13px; font-weight: 800; letter-spacing: 0.14em; color: var(--gold); text-transform: uppercase; }
-.t-nav-genesis { font-size: 9px; font-weight: 500; letter-spacing: 0.22em; color: var(--dimmer); text-transform: uppercase; margin-top: 2px; }
-.t-nav-socials { margin-left: auto; display: flex; gap: 8px; }
-.t-nav-social {
-  display: flex; align-items: center; justify-content: center;
-  width: 34px; height: 34px; border-radius: 8px;
-  background: rgba(255,255,255,0.04); border: 1px solid var(--line);
-  color: var(--dimmer); text-decoration: none;
-  transition: background 0.2s, color 0.2s, border-color 0.2s;
-}
-.t-nav-social:hover { background: var(--gold-dim); border-color: var(--gold-border); color: var(--gold); }
-
-/* ── SHELL ── */
-.t-shell {
-  min-height: calc(100dvh - 63px);
-  padding: 28px 20px 80px;
-  max-width: 480px; margin: 0 auto;
-  display: flex; flex-direction: column; gap: 20px; position: relative;
-}
-.t-shell::before {
-  content: '';
-  position: fixed; top: -80px; left: 50%; transform: translateX(-50%);
-  width: 600px; height: 400px;
-  background: radial-gradient(ellipse, rgba(245,166,35,0.055) 0%, transparent 65%);
-  pointer-events: none; z-index: 0;
-}
-
-/* ── HEADING ── */
-.t-heading { animation: tRise 0.6s cubic-bezier(0.16,1,0.3,1) both; }
-.t-heading h1 { font-size: 28px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.1; }
-.t-heading h1 em { font-style: italic; color: var(--gold); }
-.t-heading p { font-size: 13px; color: var(--dim); margin-top: 7px; line-height: 1.55; }
-
-/* ── CARDS ── */
-.t-card {
-  background: var(--card); border: 1px solid var(--line);
-  border-radius: 16px; overflow: hidden;
-  animation: tRise 0.6s cubic-bezier(0.16,1,0.3,1) both;
-  animation-delay: var(--delay, 0ms);
-}
-
-/* ── WALLET CARD ── */
-.t-wallet-card { padding: 20px; display: flex; flex-direction: column; gap: 14px; }
-.t-wallet-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
-.t-wallet-label { font-size: 9px; font-weight: 600; letter-spacing: 0.18em; color: var(--dimmer); text-transform: uppercase; margin-bottom: 4px; }
-.t-wallet-addr { display: flex; align-items: center; gap: 7px; font-size: 14px; font-weight: 600; color: var(--white); }
-.t-copy-btn {
-  display: flex; align-items: center; justify-content: center;
-  width: 24px; height: 24px;
-  background: var(--copy-btn-bg); border: 1px solid var(--line);
-  border-radius: 6px; color: var(--dimmer); cursor: pointer; transition: all 0.2s; flex-shrink: 0;
-}
-.t-copy-btn:hover { background: var(--gold-dim); border-color: var(--gold-border); color: var(--gold); }
-.t-disconnect-btn {
-  display: inline-flex; align-items: center; gap: 5px;
-  font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 600;
-  padding: 5px 11px; border-radius: 7px; cursor: pointer;
-  border: 1px solid rgba(255,255,255,0.1); color: var(--dimmer);
-  background: transparent; letter-spacing: 0.03em;
-  transition: border-color 0.2s, color 0.2s, background 0.2s;
-  white-space: nowrap;
-}
-.t-disconnect-btn:hover {
-  border-color: rgba(255,100,100,0.35);
-  color: rgba(255,100,100,0.85);
-  background: rgba(255,100,100,0.06);
-}
-.t-verified {
-  display: inline-flex; align-items: center; gap: 5px;
-  background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.25);
-  border-radius: 100px; padding: 4px 10px;
-  font-size: 11px; font-weight: 600; color: var(--green); letter-spacing: 0.04em;
-  white-space: nowrap;
-}
-.t-wallet-stats { display: flex; gap: 0; border-top: 1px solid var(--line); margin: 0 -20px; padding: 0 20px; }
-.t-wstat { flex: 1; padding: 14px 0; }
-.t-wstat + .t-wstat { border-left: 1px solid var(--line); padding-left: 16px; }
-.t-wstat-label { font-size: 9px; letter-spacing: 0.16em; color: var(--dimmer); text-transform: uppercase; margin-bottom: 5px; font-weight: 500; }
-.t-wstat-val { font-size: 18px; font-weight: 800; letter-spacing: -0.02em; color: var(--white); }
-.t-wstat-val small { font-size: 11px; font-weight: 600; color: var(--dimmer); margin-left: 3px; letter-spacing: 0; }
-.t-wstat-tier { display: inline-block; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; background: var(--gold-dim); border: 1px solid var(--gold-border); color: var(--gold); }
-
-/* ── BOOST CARD ── */
-.t-boost-card { padding: 20px; }
-.t-boost-row { display: flex; gap: 0; }
-.t-boost-col { flex: 1; }
-.t-boost-col + .t-boost-col { border-left: 1px solid var(--line); padding-left: 16px; }
-.t-boost-label { font-size: 9px; letter-spacing: 0.16em; color: var(--dimmer); text-transform: uppercase; font-weight: 500; margin-bottom: 6px; }
-.t-boost-val { font-size: 22px; font-weight: 800; letter-spacing: -0.03em; color: var(--white); }
-.t-boost-val small { font-size: 11px; font-weight: 600; color: var(--dimmer); margin-left: 3px; letter-spacing: 0; }
-.t-boost-val.gold { color: var(--gold); }
-.t-boost-progress { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--line); }
-.t-boost-bar-label { display: flex; justify-content: space-between; font-size: 11px; color: var(--dimmer); margin-bottom: 8px; }
-.t-boost-bar-track { height: 4px; background: var(--bar-track); border-radius: 100px; overflow: hidden; }
-.t-boost-bar-fill {
-  height: 100%; border-radius: 100px;
-  background: linear-gradient(90deg, var(--gold-dark), var(--gold));
-  transition: width 1s cubic-bezier(0.16,1,0.3,1);
-  box-shadow: 0 0 8px rgba(245,166,35,0.4);
-}
-
-/* ── SECTION LABEL ── */
-.t-section-label { font-size: 10px; font-weight: 700; letter-spacing: 0.18em; color: var(--dimmer); text-transform: uppercase; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
-.t-section-label span { color: var(--gold); border-bottom: 1px solid var(--gold); padding-bottom: 12px; margin-bottom: -13px; display: inline-block; }
-.t-tasks { display: flex; flex-direction: column; gap: 10px; }
-
-/* ── TASK CARD ── */
-.t-task {
-  background: var(--card); border: 1px solid var(--line);
-  border-radius: 14px; padding: 16px;
-  display: flex; align-items: center; gap: 14px;
-  transition: border-color 0.25s, background 0.25s;
-  animation: tRise 0.6s cubic-bezier(0.16,1,0.3,1) both;
-  animation-delay: var(--delay, 0ms);
-}
-.t-task:hover:not(.t-task--done) { border-color: rgba(245,166,35,0.2); background: rgba(245,166,35,0.025); }
-.t-task--done { border-color: var(--green-border); background: rgba(34,197,94,0.04); }
-.t-task--doing { border-color: var(--gold-border); }
-
-.t-task-icon {
-  width: 42px; height: 42px; border-radius: 12px; flex-shrink: 0;
-  display: flex; align-items: center; justify-content: center;
-  background: rgba(255,255,255,0.06); border: 1px solid var(--line);
-  color: var(--dimmer); transition: background 0.25s, border-color 0.25s, color 0.25s;
-}
-.t-task--done .t-task-icon { background: var(--green-dim); border-color: var(--green-border); color: var(--green); }
-.t-task-info { flex: 1; min-width: 0; }
-.t-task-title { font-size: 14px; font-weight: 700; color: var(--white); letter-spacing: -0.01em; margin-bottom: 2px; }
-.t-task--done .t-task-title { color: rgba(255,255,255,0.7); }
-.t-task-sub { font-size: 12px; color: var(--dimmer); }
-.t-task-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; flex-shrink: 0; }
-.t-task-reward { font-size: 12px; font-weight: 700; color: var(--gold); letter-spacing: 0.01em; }
-.t-task-reward small { font-size: 9px; color: rgba(245,166,35,0.7); margin-left: 2px; font-weight: 600; }
-.t-task--done .t-task-reward { color: var(--green); }
-.t-task--done .t-task-reward small { color: rgba(34,197,94,0.7); }
-
-.t-task-btn {
-  font-family: 'Inter', sans-serif;
-  font-size: 12px; font-weight: 700; letter-spacing: 0.05em;
-  padding: 7px 16px; border-radius: 8px; cursor: pointer;
-  border: 1px solid var(--gold-border); color: var(--gold); background: var(--gold-dim);
-  text-transform: uppercase; transition: all 0.2s; white-space: nowrap;
-}
-.t-task-btn:hover:not(:disabled) { background: rgba(245,166,35,0.2); border-color: rgba(245,166,35,0.5); }
-.t-task-btn--done {
-  border-color: var(--green-border); color: var(--green); background: var(--green-dim);
-  cursor: default; display: flex; align-items: center; gap: 5px;
-}
-.t-task-btn--doing { border-color: rgba(245,166,35,0.6); background: rgba(245,166,35,0.15); animation: tPulse 1.5s infinite; }
-
-/* ── REFERRAL TASK EXPANSION ── */
-.t-referral-box {
-  width: 100%;
-  background: rgba(255,255,255,0.03);
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  padding: 12px 14px;
-  display: flex; flex-direction: column; gap: 10px;
-  margin-top: 6px;
-}
-.t-referral-label { font-size: 10px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: var(--dimmer); }
-.t-referral-link-row {
-  display: flex; align-items: center; gap: 8px;
-}
-.t-referral-link {
-  flex: 1; font-size: 12px; font-weight: 600; color: var(--white);
-  background: rgba(255,255,255,0.05); border: 1px solid var(--line);
-  border-radius: 7px; padding: 8px 10px;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  font-family: 'Inter', monospace;
-}
-.t-copy-link-btn {
-  display: flex; align-items: center; gap: 5px;
-  font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 700;
-  padding: 8px 12px; border-radius: 7px; cursor: pointer; letter-spacing: 0.04em;
-  border: 1px solid var(--gold-border); color: var(--gold); background: var(--gold-dim);
-  transition: all 0.2s; white-space: nowrap; flex-shrink: 0;
-}
-.t-copy-link-btn:hover { background: rgba(245,166,35,0.2); }
-.t-referral-count {
-  display: flex; align-items: center; justify-content: space-between;
-  font-size: 12px; color: var(--dimmer);
-}
-.t-referral-count strong { color: var(--gold); font-size: 14px; font-weight: 800; }
-.t-referral-progress { display: flex; flex-direction: column; gap: 5px; }
-.t-ref-bar-track { height: 3px; background: var(--bar-track); border-radius: 100px; overflow: hidden; }
-.t-ref-bar-fill { height: 100%; background: var(--gold); border-radius: 100px; transition: width 0.6s cubic-bezier(0.16,1,0.3,1); }
-
-/* ── INFO BANNER ── */
-.t-info-banner {
-  background: var(--card); border: 1px solid var(--line);
-  border-radius: 14px; padding: 16px 18px;
-  display: flex; gap: 13px; align-items: flex-start;
-  animation: tRise 0.6s cubic-bezier(0.16,1,0.3,1) both;
-  animation-delay: var(--delay, 0ms);
-}
-.t-info-icon {
-  width: 36px; height: 36px; flex-shrink: 0;
-  display: flex; align-items: center; justify-content: center;
-  background: var(--gold-dim); border: 1px solid var(--gold-border);
-  border-radius: 10px; color: var(--gold);
-}
-.t-info-text { font-size: 12px; color: var(--dim); line-height: 1.6; }
-.t-info-text strong { color: var(--white); font-weight: 600; }
-
-/* ── FOOTER ── */
-.t-footer {
-  text-align: center; font-size: 11px; color: var(--dimmer);
-  padding-top: 4px; display: flex; flex-direction: column; gap: 4px;
-  animation: tRise 0.6s cubic-bezier(0.16,1,0.3,1) both;
-  animation-delay: var(--delay, 0ms);
-}
-.t-footer-icon { display: flex; align-items: center; justify-content: center; gap: 6px; }
-
-/* ── TOAST ── */
-.t-toast {
-  position: fixed; bottom: 28px; left: 50%;
-  transform: translateX(-50%) translateY(80px);
-  background: #1a1a1a; border: 1px solid var(--gold-border);
-  color: var(--gold); font-size: 12px; font-weight: 600; letter-spacing: 0.04em;
-  padding: 10px 20px; border-radius: 100px;
-  transition: transform 0.4s cubic-bezier(0.16,1,0.3,1), opacity 0.4s;
-  opacity: 0; pointer-events: none; z-index: 200; white-space: nowrap;
-  box-shadow: 0 4px 24px rgba(245,166,35,0.15);
-}
-.t-toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
-
-/* ── SESSION LOCK BANNER ── */
-.t-session-banner {
-  display: flex; align-items: flex-start; gap: 12px;
-  background: rgba(255,107,107,0.06);
-  border: 1px solid rgba(255,107,107,0.2);
-  border-radius: 12px; padding: 14px 16px;
-  animation: tRise 0.4s cubic-bezier(0.16,1,0.3,1) both;
-}
-.t-session-banner.warning {
-  background: rgba(245,166,35,0.06);
-  border-color: rgba(245,166,35,0.2);
-}
-.t-session-banner-icon {
-  font-size: 16px; flex-shrink: 0; margin-top: 1px;
-}
-.t-session-banner-text {
-  font-size: 12px; color: rgba(255,107,107,0.9); line-height: 1.55;
-}
-.t-session-banner.warning .t-session-banner-text { color: rgba(245,166,35,0.9); }
-.t-session-banner-text strong { font-weight: 700; }
-
-/* ── LOADING SKELETON ── */
-.t-skeleton {
-  height: 16px; border-radius: 6px;
-  background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 75%);
-  background-size: 200% 100%;
-  animation: tShimmer 1.5s infinite;
-}
-
-@keyframes tRise {
-  from { opacity: 0; transform: translateY(18px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-@keyframes tPulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.6; }
-}
-@keyframes tShimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
-}
-
-
-/* ── STREAK CARD ── */
-.t-streak-card { padding: 20px; display: flex; flex-direction: column; gap: 16px; }
-.t-streak-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.t-streak-left { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0; }
-.t-streak-badge { display: inline-flex; align-items: center; gap: 5px; font-size: 9px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold); margin-bottom: 2px; }
-.t-streak-count { font-size: 30px; font-weight: 800; letter-spacing: -0.03em; color: var(--white); line-height: 1; }
-.t-streak-count span { font-size: 13px; font-weight: 600; color: var(--dimmer); margin-left: 4px; letter-spacing: 0; }
-.t-streak-sub { font-size: 12px; color: var(--dimmer); margin-top: 2px; }
-.t-streak-btn {
-  font-family: 'Inter', sans-serif;
-  font-size: 12px; font-weight: 700; letter-spacing: 0.05em;
-  padding: 10px 18px; border-radius: 9px; cursor: pointer; flex-shrink: 0;
-  border: 1px solid var(--gold); color: var(--black); background: var(--gold);
-  text-transform: uppercase; transition: all 0.2s; white-space: nowrap;
-}
-.t-streak-btn:hover:not(:disabled) { background: var(--gold-dark); border-color: var(--gold-dark); }
-.t-streak-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-.t-streak-btn--done { background: var(--green-dim); border-color: var(--green-border); color: var(--green); }
-.t-streak-btn--doing { animation: tPulse 1.2s infinite; }
-.t-streak-tiers { display: flex; gap: 5px; border-top: 1px solid var(--line); padding-top: 14px; }
-.t-streak-tier { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; background: rgba(255,255,255,0.03); border: 1px solid var(--line); border-radius: 8px; padding: 8px 4px; transition: border-color 0.2s, background 0.2s; }
-.t-streak-tier--active { border-color: var(--gold-border); background: var(--gold-dim); }
-.t-streak-tier--done { border-color: var(--green-border); background: var(--green-dim); }
-.t-streak-tier-day { font-size: 9px; font-weight: 700; letter-spacing: 0.1em; color: var(--dimmer); text-transform: uppercase; }
-.t-streak-tier--active .t-streak-tier-day { color: var(--gold); }
-.t-streak-tier--done .t-streak-tier-day { color: var(--green); }
-.t-streak-tier-val { font-size: 11px; font-weight: 800; color: var(--white); }
-.t-streak-tier--active .t-streak-tier-val { color: var(--gold); }
-.t-streak-tier--done .t-streak-tier-val { color: var(--green); }
-.t-streak-stats { display: flex; gap: 0; border-top: 1px solid var(--line); margin: 0 -20px; padding: 0 20px; }
-.t-streak-stat { flex: 1; padding: 12px 0; }
-.t-streak-stat + .t-streak-stat { border-left: 1px solid var(--line); padding-left: 16px; }
-.t-streak-stat-label { font-size: 9px; letter-spacing: 0.16em; color: var(--dimmer); text-transform: uppercase; margin-bottom: 4px; font-weight: 500; }
-.t-streak-stat-val { font-size: 15px; font-weight: 800; letter-spacing: -0.02em; color: var(--white); }
-.t-streak-stat-val small { font-size: 10px; font-weight: 600; color: var(--dimmer); margin-left: 2px; }
-
-/* ── COMPLETION SCREEN ── */
-.t-complete {
-  position: fixed; inset: 0;
-  background: var(--black);
-  display: flex; flex-direction: column;
-  overflow-y: auto;
-  animation: tRise 0.7s cubic-bezier(0.16,1,0.3,1) both;
-}
-
-.t-complete-body {
-  flex: 1;
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  padding: 40px 24px 80px;
-  gap: 20px; max-width: 480px; margin: 0 auto; width: 100%;
-}
-
-.t-complete-badge {
-  display: flex; flex-direction: column; align-items: center; gap: 12px;
-  animation: tRise 0.6s cubic-bezier(0.16,1,0.3,1) 0.1s both;
-}
-
-.t-complete-icon {
-  width: 72px; height: 72px; border-radius: 50%;
-  background: var(--green-dim); border: 2px solid var(--green-border);
-  display: flex; align-items: center; justify-content: center;
-  color: var(--green); font-size: 32px;
-  box-shadow: 0 0 40px rgba(34,197,94,0.15);
-}
-
-.t-complete-title {
-  font-size: 30px; font-weight: 800; letter-spacing: -0.02em;
-  color: var(--white); text-align: center; line-height: 1.1;
-}
-
-.t-complete-title em { font-style: italic; color: var(--green); }
-
-.t-complete-sub {
-  font-size: 14px; color: var(--dim); text-align: center; line-height: 1.6;
-  max-width: 340px;
-}
-
-.t-complete-alloc {
-  display: flex; flex-direction: column; align-items: center; gap: 6px;
-  background: var(--card); border: 1px solid var(--line);
-  border-radius: 16px; padding: 24px 32px; width: 100%;
-  animation: tRise 0.6s cubic-bezier(0.16,1,0.3,1) 0.15s both;
-}
-
-.t-complete-alloc-label {
-  font-size: 10px; font-weight: 600; letter-spacing: 0.2em;
-  text-transform: uppercase; color: var(--dimmer);
-}
-
-.t-complete-alloc-row {
-  display: flex; align-items: center; gap: 14px;
-}
-
-.t-complete-alloc-amount {
-  font-size: clamp(40px, 10vw, 60px); font-weight: 800;
-  letter-spacing: -0.03em; color: var(--white); line-height: 1;
-}
-
-.t-complete-alloc-currency {
-  font-size: 24px; font-weight: 700; color: var(--gold);
-}
-
-.t-complete-alloc-breakdown {
-  display: flex; align-items: center; gap: 8px; margin-top: 4px;
-  flex-wrap: wrap; justify-content: center;
-}
-
-.t-complete-alloc-pill {
-  font-size: 11px; font-weight: 600; color: var(--dimmer);
-  background: rgba(255,255,255,0.05); border: 1px solid var(--line);
-  border-radius: 100px; padding: 3px 10px;
-}
-
-.t-complete-alloc-pill.gold { color: var(--gold); background: var(--gold-dim); border-color: var(--gold-border); }
-
-.t-complete-claim {
-  display: flex; flex-direction: column; align-items: center; gap: 8px;
-  background: rgba(34,197,94,0.06); border: 1px solid var(--green-border);
-  border-radius: 16px; padding: 20px 28px; width: 100%;
-  animation: tRise 0.6s cubic-bezier(0.16,1,0.3,1) 0.2s both;
-}
-
-.t-complete-claim-label {
-  font-size: 10px; font-weight: 600; letter-spacing: 0.2em;
-  text-transform: uppercase; color: rgba(34,197,94,0.6);
-}
-
-.t-complete-claim-code {
-  font-size: clamp(16px, 5vw, 22px); font-weight: 800;
-  letter-spacing: 0.1em; color: var(--green);
-  font-variant-numeric: tabular-nums; text-align: center;
-}
-
-.t-complete-claim-sub {
-  font-size: 11px; color: rgba(34,197,94,0.5); text-align: center;
-}
-
-.t-complete-referral {
-  display: flex; flex-direction: column; gap: 10px; width: 100%;
-  background: var(--card); border: 1px solid var(--line);
-  border-radius: 16px; padding: 18px 20px;
-  animation: tRise 0.6s cubic-bezier(0.16,1,0.3,1) 0.25s both;
-}
-
-.t-complete-referral-label {
-  font-size: 10px; font-weight: 600; letter-spacing: 0.16em;
-  text-transform: uppercase; color: var(--dimmer);
-}
-
-.t-complete-referral-row {
-  display: flex; gap: 8px; align-items: center;
-}
-
-.t-complete-referral-link {
-  flex: 1; font-size: 12px; font-weight: 600; color: var(--white);
-  background: rgba(255,255,255,0.05); border: 1px solid var(--line);
-  border-radius: 8px; padding: 9px 12px;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-
-.t-complete-share-btn {
-  display: flex; align-items: center; gap: 6px;
-  font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 700;
-  padding: 9px 16px; border-radius: 8px; cursor: pointer;
-  border: none; background: #000; color: var(--white);
-  letter-spacing: 0.04em; transition: opacity 0.2s; white-space: nowrap;
-}
-.t-complete-share-btn:hover { opacity: 0.8; }
-
-.t-complete-snapshot {
-  display: flex; flex-direction: column; align-items: center; gap: 10px;
-  background: var(--gold-dim); border: 1px solid var(--gold-border);
-  border-radius: 14px; padding: 16px 24px; width: 100%;
-  animation: tRise 0.6s cubic-bezier(0.16,1,0.3,1) 0.3s both;
-}
-
-.t-complete-snapshot-label {
-  font-size: 10px; font-weight: 600; letter-spacing: 0.2em;
-  text-transform: uppercase; color: rgba(245,166,35,0.7);
-}
-
-.t-complete-snapshot-units {
-  display: flex; align-items: center; gap: 8px;
-}
-
-.t-complete-snapshot-unit {
-  display: flex; flex-direction: column; align-items: center; gap: 2px;
-}
-
-.t-complete-snapshot-num {
-  font-size: 24px; font-weight: 800; color: var(--gold);
-  font-variant-numeric: tabular-nums; line-height: 1;
-}
-
-.t-complete-snapshot-sub {
-  font-size: 9px; font-weight: 600; letter-spacing: 0.1em;
-  text-transform: uppercase; color: rgba(245,166,35,0.5);
-}
-
-.t-complete-snapshot-colon {
-  font-size: 20px; font-weight: 800; color: rgba(245,166,35,0.4);
-  margin-bottom: 10px;
-}
-
-.t-complete-footer {
-  font-size: 11px; color: var(--dimmer); text-align: center; padding: 0 0 8px;
-  animation: tRise 0.6s cubic-bezier(0.16,1,0.3,1) 0.35s both;
-}
-`;
-
-// ─── Task definitions ─────────────────────────────────────────────────────────
-// Rewards match the spec: verify=50k, follow=25k, telegram=25k, retweet=15k, invite=50k
-const TASKS = [
-  {
-    id: "verify_wallet",
-    icon: <IconShield />,
-    title: "Verify Wallet",
-    sub: "Prove ownership via Phantom signature",
-    reward: 40000,
-    href: null,
-    auto: true,
-  },
-  {
-    id: "follow_x",
-    icon: <IconX size={18} />,
-    title: "Follow MONA on X",
-    sub: "Follow @Monasolanatoken for updates",
-    reward: 10000,
-    href: "https://x.com/Monasolanatoken",
-  },
-  {
-    id: "join_tg",
-    icon: <IconTg size={18} />,
-    title: "Join MONA Telegram",
-    sub: "Join @Monasolanatokeen community",
-    reward: 10000,
-    href: "https://t.me/monasolanatoken",
-  },
-  {
-    id: "retweet",
-    icon: <IconRetweet />,
-    title: "Retweet Launch Post",
-    sub: "Amplify the Mona Genesis launch",
-    reward: 5000,
-    href: "https://x.com/i/status/2058156156095242647",
-  },
-  {
-    id: "invite",
-    icon: <IconUsers />,
-    title: "Invite Friends",
-    sub: "Earn more per referral as you invite more — unlock bonuses at 5, 10 & 20",
-    reward: 5000, // base per referral — shown in task card
-    href: null,
-    isReferral: true,
-  },
-];
-
-const TASK_BASE_TOTAL = 65000; // 40k + 10k + 10k + 5k
-
-// ── Referral tier rewards ─────────────────────────────────────────────────────
-function calcReferralEarned(count) {
-  if (count === 0) return 0;
-  let total = 0;
-  // Tier 1: referrals 1–4 → 5,000 each
-  const t1 = Math.min(count, 4);
-  total += t1 * 5000;
-  if (count < 5) return total;
-  // Unlock bonus at 5
-  total += 25000;
-  // Tier 2: referrals 5–9 → 8,000 each
-  const t2 = Math.min(count - 4, 5);
-  total += t2 * 8000;
-  if (count < 10) return total;
-  // Unlock bonus at 10
-  total += 50000;
-  // Tier 3: referrals 10–19 → 12,000 each
-  const t3 = Math.min(count - 9, 10);
-  total += t3 * 12000;
-  if (count < 20) return total;
-  // Unlock bonus at 20
-  total += 100000;
-  // Tier 4: referrals 20+ → 20,000 each
-  const t4 = count - 19;
-  total += t4 * 20000;
-  return total;
-}
-
-function getReferralTierLabel(count) {
-  if (count >= 20) return "Platinum Referrer";
-  if (count >= 10) return "Gold Referrer";
-  if (count >= 5)  return "Silver Referrer";
-  if (count >= 1)  return "Bronze Referrer";
-  return "";
-}
-
-function getNextReferralUnlock(count) {
-  if (count < 5)  return { target: 5,  bonus: 25000 };
-  if (count < 10) return { target: 10, bonus: 50000 };
-  if (count < 20) return { target: 20, bonus: 100000 };
-  return null;
-}
-
-const TOTAL_POTENTIAL_BOOST = TASK_BASE_TOTAL; // base tasks only — referrals are uncapped
-
-// ─── Main component ───────────────────────────────────────────────────────────
-// Props:
-//   walletData  — object from /api/analyze-wallet: { wallet, allocation, score, tier, status }
-//   onBack      — function to navigate back to results screen
-export default function TasksPage({ walletData, onBack, onDisconnect }) {
-  const wallet      = walletData?.wallet      ?? "";
-  const allocation  = walletData?.allocation  ?? 0;
-  const score       = walletData?.score       ?? 0;
-
-  // Tier recalculated dynamically as boost is earned
-  function calcTier(total) {
-    if (total >= 1000000) return "Platinum";
-    if (total >= 500000)  return "Gold";
-    if (total >= 100000)  return "Silver";
-    if (total >= 10000)   return "Bronze";
-    return "Seed";
-  }
-
-  // Task state: "idle" | "doing" | "done" | "error"
-  const [taskState, setTaskState] = useState({
-    verify_wallet: "idle",
-    follow_x:      "idle",
-    join_tg:       "idle",
-    retweet:       "idle",
-    invite:        "idle",
-  });
-
-  // liveAllocation — the real allocation from the DB, updated after each task
-  const [liveAllocation, setLiveAllocation] = useState(allocation);
-
-  const [referralCode,  setReferralCode]  = useState("");
-  const [referralCount, setReferralCount] = useState(0);
-  const [referralLink,  setReferralLink]  = useState("");
-  const [linkCopied,    setLinkCopied]    = useState(false);
-  const [walletCopied,  setWalletCopied]  = useState(false);
-  const [toast,         setToast]         = useState({ show: false, text: "" });
-  const [barWidth,      setBarWidth]      = useState(0);
-  const [loading,       setLoading]       = useState(true);
-  const [verifyPhase,   setVerifyPhase]   = useState("idle");
-  const [verifyMsg,     setVerifyMsg]     = useState("");
-  const [claimCode,      setClaimCode]      = useState("");
-  const [showComplete,   setShowComplete]   = useState(false);
-  const [completeCopied, setCompleteCopied] = useState(false);
-
-
-  // ── Daily check-in streak ──────────────────────────────────────────────────
-  const [streakDay,      setStreakDay]      = useState(0);
-  const [longestStreak,  setLongestStreak]  = useState(0);
-  const [streakMona,     setStreakMona]     = useState(0);
-  const [checkedInToday, setCheckedInToday] = useState(false);
-  const [checkInDoing,   setCheckInDoing]   = useState(false);
-  // ── Session token — stored in memory only, never persisted ─────────────────
-  // Issued by server after Phantom signature verification.
-  // Required as X-Session-Token header on all task API calls.
-  const sessionTokenRef  = useRef("");       // the JWT/token string
-  const taskStartTimes   = useRef({});       // taskId → Date.now() when START clicked
-  const [sessionReady,   setSessionReady]   = useState(false); // true once token obtained
-  const [sessionError,   setSessionError]   = useState("");    // shown if token rejected
-
-  // ── On mount: silently restore session if already verified, then load tasks ─
-  useEffect(() => {
-    if (!wallet) return;
-    restoreSessionIfVerified().then(() => fetchTaskStatus());
-
-    // ── Poll referral count every 45s + on tab focus ────────────────────────
-    async function pollReferralCount() {
-      try {
-        const headers = { "Content-Type": "application/json" };
-        if (sessionTokenRef.current) headers["X-Session-Token"] = sessionTokenRef.current;
-        const res = await fetch("/api/tasks/status", {
-          method: "POST",
-          headers,
-          body: JSON.stringify({ wallet }),
-        });
-        if (!res.ok) return;
-        const data = await res.json();
-        if (typeof data.referralCount === "number") setReferralCount(data.referralCount);
-        if (typeof data.allocation === "number") setLiveAllocation(data.allocation);
-      } catch (_) {}
-    }
-
-    const pollId = setInterval(pollReferralCount, 45000);
-    function onVisibility() { if (document.visibilityState === "visible") pollReferralCount(); }
-    document.addEventListener("visibilitychange", onVisibility);
-
-    return () => {
-      clearInterval(pollId);
-      document.removeEventListener("visibilitychange", onVisibility);
-    };
-  }, [wallet]);
-
-  async function restoreSessionIfVerified() {
-    try {
-      const res = await fetch("/api/verify-wallet/status", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ wallet }),
-      });
-      if (!res.ok) return;
-      const data = await res.json();
-      if (!data?.verified) return;
-
-      // Restore session token so tasks are unlocked immediately
-      if (data.sessionToken) {
-        sessionTokenRef.current = data.sessionToken;
-        setSessionReady(true);
-        setSessionError("");
-      }
-
-      // Mark verify_wallet done in local state
-      setTaskState((s) => ({ ...s, verify_wallet: "done" }));
-
-      // Sync allocation (may already include the 40k)
-      if (typeof data.allocation === "number") setLiveAllocation(data.allocation);
-
-      // Restore claim code
-      if (data.claimCode) setClaimCode(data.claimCode);
-
-      // Award the 40k if not yet credited (server sets verifyBoostPending: true)
-      if (data.verifyBoostPending && data.sessionToken) {
-        try {
-          const boostRes = await fetch("/api/tasks/complete", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "X-Session-Token": data.sessionToken,
-            },
-            body: JSON.stringify({ wallet, taskId: "verify_wallet", startedAt: Date.now() }),
-          });
-          if (boostRes.ok) {
-            const boostData = await boostRes.json();
-            if (typeof boostData.allocation === "number") setLiveAllocation(boostData.allocation);
-            showToast("+40,000 MONA earned!");
-          }
-        } catch (_) { /* non-fatal */ }
-      }
-    } catch (_) { /* non-fatal */ }
-  }
-
-  async function fetchTaskStatus() {
-    setLoading(true);
-    try {
-      // If no session token yet, load a read-only status (no mutations possible)
-      const headers = { "Content-Type": "application/json" };
-      if (sessionTokenRef.current) headers["X-Session-Token"] = sessionTokenRef.current;
-
-      const res = await fetch("/api/tasks/status", {
-        method: "POST",
-        headers,
-        body: JSON.stringify({ wallet }),
-      });
-      if (!res.ok) throw new Error("Failed to load tasks");
-      const data = await res.json();
-
-      // data.tasks: { verify_wallet: bool, follow_x: bool, ... }
-      // data.referralCode: "ABC123"
-      // data.referralCount: number
-      const newState = { ...taskState };
-      if (data.tasks) {
-        Object.keys(data.tasks).forEach((id) => {
-          if (data.tasks[id]) newState[id] = "done";
-        });
-      }
-      setTaskState(newState);
-
-      if (data.referralCode) {
-        setReferralCode(data.referralCode);
-        setReferralLink(`https://monacoin.xyz?ref=${data.referralCode}`);
-      }
-      if (typeof data.referralCount === "number") {
-        setReferralCount(data.referralCount);
-      }
-      if (data.claimCode) setClaimCode(data.claimCode);
-      if (data.streak) {
-        setStreakDay(data.streak.currentStreak ?? 0);
-        setLongestStreak(data.streak.longestStreak ?? 0);
-        setStreakMona(data.streak.totalMona ?? 0);
-        setCheckedInToday(data.streak.checkedInToday ?? false);
-      }
-      // Sync real allocation from DB — reflects all previously applied boosts
-      if (typeof data.allocation === "number") setLiveAllocation(data.allocation);
-    } catch (_) {
-      // Non-fatal — tasks default to idle, user can still interact
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  // ── Computed boost values ──────────────────────────────────────────────────
-  const earnedBoost = TASKS
-    .filter((t) => taskState[t.id] === "done")
-    .reduce((s, t) => s + t.reward, 0);
-  // Referral reward is per-referral, shown separately — exclude from bar calc
-  const nonReferralTotal = TASKS
-    .filter((t) => !t.isReferral)
-    .reduce((s, t) => s + t.reward, 0);
-  const nonReferralEarned = TASKS
-    .filter((t) => !t.isReferral && taskState[t.id] === "done")
-    .reduce((s, t) => s + t.reward, 0);
-  const referralEarned  = calcReferralEarned(referralCount);
-  const totalEarned     = nonReferralEarned + referralEarned;
-  const remainingBoost  = TOTAL_POTENTIAL_BOOST - nonReferralEarned;
-  const progress        = Math.round((nonReferralEarned / nonReferralTotal) * 100);
-  // liveAllocation from DB already includes task boosts AND referral MONA
-  // (referral/record now increments walletResult.allocation directly)
-  // referralEarned is kept for display breakdown only — not added again here
-  const finalAllocation = liveAllocation;
-  const tier            = calcTier(finalAllocation);
-  const referralTierLabel = getReferralTierLabel(referralCount);
-  const nextUnlock        = getNextReferralUnlock(referralCount);
-
-  // Animate bar on progress change
-  useEffect(() => {
-    const t = setTimeout(() => setBarWidth(progress), 400);
-    return () => clearTimeout(t);
-  }, [progress]);
-
-  // ── Auto-transition to completion screen when all tasks done ───────────────
-  // Invite is excluded — it's passive (tracked via referral uses), not a button task
-  const COMPLETABLE_TASKS = TASKS.filter((t) => !t.isReferral);
-  const allComplete = !loading && COMPLETABLE_TASKS.every((t) => taskState[t.id] === "done");
-  useEffect(() => {
-    if (allComplete && !showComplete) {
-      const t = setTimeout(() => setShowComplete(true), 1200);
-      return () => clearTimeout(t);
-    }
-  }, [allComplete]);
-
-  // ── Helpers ────────────────────────────────────────────────────────────────
-  function getStreakReward(day) {
-    if (day >= 30) return 3000;
-    if (day >= 14) return 2000;
-    if (day >= 7)  return 1500;
-    if (day >= 3)  return 1000;
-    return 500;
-  }
-
-  async function handleCheckIn() {
-    if (checkedInToday || checkInDoing) return;
-    if (!sessionTokenRef.current && taskState.verify_wallet !== "done") {
-      showToast("Verify your wallet first ↑");
-      return;
-    }
-    setCheckInDoing(true);
-
-    let sessionToken = sessionTokenRef.current;
-    if (!sessionToken && taskState.verify_wallet === "done") {
-      try {
-        const s = await fetch("/api/verify-wallet/status", {
-          method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ wallet }),
-        });
-        if (s.ok) {
-          const sd = await s.json();
-          if (sd?.sessionToken) { sessionToken = sd.sessionToken; sessionTokenRef.current = sessionToken; setSessionReady(true); }
-        }
-      } catch (_) {}
-    }
-
-    if (!sessionToken) {
-      setCheckInDoing(false);
-      showToast("Session expired — please re-verify your wallet.");
-      return;
-    }
-
-    try {
-      const res = await fetch("/api/tasks/checkin", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "X-Session-Token": sessionToken },
-        body: JSON.stringify({ wallet }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) { showToast(data?.error ?? "Check-in failed. Try again."); return; }
-
-      if (data.alreadyCheckedIn) { setCheckedInToday(true); showToast("Already checked in today"); return; }
-
-      setStreakDay(data.streakDay);
-      setLongestStreak(data.longestStreak);
-      setStreakMona(data.totalMona);
-      setCheckedInToday(true);
-      if (typeof data.allocation === "number") setLiveAllocation(data.allocation);
-
-      if (data.capReached || data.monaAwarded === 0) {
-        showToast(`Day ${data.streakDay} streak! Max MONA reached.`);
-      } else {
-        showToast(`Day ${data.streakDay} streak! +${data.monaAwarded.toLocaleString()} MONA`);
-      }
-    } catch (_) {
-      showToast("Network error — please try again.");
-    } finally {
-      setCheckInDoing(false);
-    }
-  }
-
-  function showToast(text) {
-    setToast({ show: true, text });
-    setTimeout(() => setToast({ show: false, text: "" }), 2400);
-  }
-
-  function truncateWallet(w) {
-    if (!w || w.length < 12) return w;
-    return `${w.slice(0, 6)}...${w.slice(-4)}`;
-  }
-
-  // ── Phantom wallet verification ───────────────────────────────────────────
-  async function handlePhantomVerify() {
-    if (verifyPhase === "working") return;
-    setVerifyPhase("working");
-    setVerifyMsg("Connecting to Phantom…");
-    try {
-      const phantom = window?.solana;
-      if (!phantom?.isPhantom) throw new Error("Phantom wallet not found. Please install it first.");
-
-      const resp = await phantom.connect();
-      const connectedPubkey = resp.publicKey.toString();
-      if (connectedPubkey !== wallet) {
-        throw new Error(`Connected wallet (${connectedPubkey.slice(0,6)}…${connectedPubkey.slice(-4)}) doesn't match.`);
-      }
-
-      setVerifyMsg("Fetching nonce…");
-      const nonceRes = await fetch("/api/verify-wallet/nonce", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ wallet }),
-      });
-      if (!nonceRes.ok) throw new Error("Failed to fetch nonce.");
-      const { nonce } = await nonceRes.json();
-      if (!nonce) throw new Error("Invalid nonce from server.");
-
-      setVerifyMsg("Waiting for signature…");
-      const message = `Mona Genesis – verify wallet ownership\nWallet: ${wallet}\nNonce: ${nonce}`;
-      const encodedMessage = new TextEncoder().encode(message);
-      let signatureBytes;
-      try {
-        const { signature } = await phantom.signMessage(encodedMessage, "utf8");
-        signatureBytes = signature;
-      } catch {
-        throw new Error("Signing was cancelled.");
-      }
-
-      setVerifyMsg("Verifying on server…");
-      const bs58 = await import("bs58");
-      const encode = bs58.default?.encode ?? bs58.encode;
-      const signatureB58 = encode(signatureBytes);
-
-      const verifyRes = await fetch("/api/verify-wallet", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ wallet, nonce, signature: signatureB58 }),
-      });
-      const resData = await verifyRes.json();
-      if (!verifyRes.ok) {
-        throw new Error(resData?.error ?? "Signature verification failed.");
-      }
-
-      // Store session token — issued by server after successful sig verification
-      if (resData?.sessionToken) {
-        sessionTokenRef.current = resData.sessionToken;
-        setSessionReady(true);
-        setSessionError("");
-      } else {
-        // Server didn't return a token — treat as auth failure
-        throw new Error("Server did not issue a session token. Please try again.");
-      }
-
-      // Mark task as done
-      setTaskState((s) => ({ ...s, verify_wallet: "done" }));
-      setVerifyPhase("idle");
-      setVerifyMsg("");
-      if (resData?.claimCode) setClaimCode(resData.claimCode);
-
-      // Sync the real allocation from server (now includes the +40k boost)
-      if (typeof resData?.allocation === "number") setLiveAllocation(resData.allocation);
-
-      // Only toast if server confirms the boost was newly awarded
-      if (resData?.verifyBoostAwarded) {
-        showToast("+40,000 MONA earned!");
-      } else {
-        showToast("Wallet verified!");
-      }
-    } catch (err) {
-      setVerifyPhase("error");
-      setVerifyMsg(err.message ?? "Verification failed.");
-      setTimeout(() => { setVerifyPhase("idle"); setVerifyMsg(""); }, 3000);
-    }
-  }
-
-  const [taskCountdown, setTaskCountdown] = useState({}); // taskId → seconds remaining
-
-  // ── Start a task ───────────────────────────────────────────────────────────
-  async function handleStart(task) {
-    if (taskState[task.id] === "done" || taskState[task.id] === "doing") return;
-
-    // Block all tasks until wallet is verified and session token is issued.
-    // Allow through if verify_wallet is already "done" — session token is either
-    // already in sessionTokenRef (restored on mount) or the task state is
-    // authoritative enough to proceed (server will validate the token anyway).
-    if (!sessionTokenRef.current && taskState.verify_wallet !== "done") {
-      setSessionError("You must verify your wallet first before completing tasks.");
-      showToast("Verify your wallet first ↑");
-      return;
-    }
-
-    if (task.href) {
-      // Save state so we can restore on return (handles Phantom in-app browser)
-      try {
-        sessionStorage.setItem("mona_return_screen", "tasks");
-        sessionStorage.setItem("mona_return_wallet", wallet);
-        sessionStorage.setItem("mona_return_task", task.id);
-        sessionStorage.setItem("mona_return_started", String(Date.now()));
-        localStorage.setItem("mona_return_screen", "tasks");
-        localStorage.setItem("mona_return_wallet", wallet);
-        localStorage.setItem("mona_return_task", task.id);
-        localStorage.setItem("mona_return_started", String(Date.now()));
-      } catch (_) {}
-      // Open in new tab — keeps countdown running in this tab
-      window.open(task.href, "_blank", "noopener,noreferrer");
-      // Don't return — let countdown and completion run normally
-    }
-
-    setTaskState((s) => ({ ...s, [task.id]: "doing" }));
-
-    // Record start time client-side (also sent to server for timing validation)
-    const startedAt = Date.now();
-    taskStartTimes.current[task.id] = startedAt;
-
-    // Countdown from 15 → 0
-    let secs = 15;
-    setTaskCountdown((c) => ({ ...c, [task.id]: secs }));
-    const countInterval = setInterval(() => {
-      secs--;
-      setTaskCountdown((c) => ({ ...c, [task.id]: secs }));
-      if (secs <= 0) clearInterval(countInterval);
-    }, 1000);
-
-    // Wait 15 s minimum so user has time to actually complete the action
-    await new Promise((r) => setTimeout(r, 15000));
-    clearInterval(countInterval);
-
-    // Resolve the session token — always read fresh from ref, or re-fetch if missing.
-    // Capture into a local variable so the same token is used in the request header
-    // regardless of any async state updates that happen during the 15s countdown.
-    let sessionToken = sessionTokenRef.current;
-
-    if (!sessionToken && taskState.verify_wallet === "done") {
-      try {
-        const statusRes = await fetch("/api/verify-wallet/status", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ wallet }),
-        });
-        if (statusRes.ok) {
-          const statusData = await statusRes.json();
-          if (statusData?.sessionToken) {
-            sessionToken = statusData.sessionToken;
-            sessionTokenRef.current = sessionToken;
-            setSessionReady(true);
-          }
-        }
-      } catch (_) { /* non-fatal */ }
-    }
-
-    // If still no token after re-fetch attempt, bail gracefully
-    if (!sessionToken) {
-      setSessionError("Session expired. Please re-verify your wallet to continue.");
-      setTaskState((s) => ({ ...s, [task.id]: "idle" }));
-      setTaskCountdown((c) => ({ ...c, [task.id]: 0 }));
-      return;
-    }
-
-    try {
-      const res = await fetch("/api/tasks/complete", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Session-Token": sessionToken,
-        },
-        body: JSON.stringify({
-          wallet,
-          taskId: task.id,
-          startedAt,
-        }),
-      });
-
-      const data = await res.json().catch(() => ({}));
-
-      if (res.status === 401) {
-        // Token was rejected by server — clear it and try one silent re-fetch
-        sessionTokenRef.current = "";
-        try {
-          const retryRes = await fetch("/api/verify-wallet/status", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ wallet }),
-          });
-          if (retryRes.ok) {
-            const retryData = await retryRes.json();
-            if (retryData?.sessionToken) {
-              sessionTokenRef.current = retryData.sessionToken;
-              setSessionReady(true);
-              // Retry the task completion with the fresh token
-              const retryComplete = await fetch("/api/tasks/complete", {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  "X-Session-Token": retryData.sessionToken,
-                },
-                body: JSON.stringify({ wallet, taskId: task.id, startedAt }),
-              });
-              if (retryComplete.ok) {
-                const retryCompleteData = await retryComplete.json().catch(() => ({}));
-                setTaskState((s) => ({ ...s, [task.id]: "done" }));
-                setTaskCountdown((c) => ({ ...c, [task.id]: 0 }));
-                if (typeof retryCompleteData.allocation === "number") setLiveAllocation(retryCompleteData.allocation);
-                showToast(`+${task.reward.toLocaleString()} MONA earned!`);
-                return;
-              }
-            }
-          }
-        } catch (_) { /* retry failed */ }
-
-        // Retry also failed — ask user to re-verify
-        setSessionReady(false);
-        setSessionError("Session expired. Please re-verify your wallet to continue.");
-        setTaskState((s) => ({ ...s, [task.id]: "idle" }));
-        setTaskCountdown((c) => ({ ...c, [task.id]: 0 }));
-        return;
-      }
-
-      if (!res.ok) throw new Error(data?.error ?? "Failed to save task");
-
-      setTaskState((s) => ({ ...s, [task.id]: "done" }));
-      setTaskCountdown((c) => ({ ...c, [task.id]: 0 }));
-      if (typeof data.allocation === "number") setLiveAllocation(data.allocation);
-      showToast(`+${task.reward.toLocaleString()} MONA earned!`);
-    } catch (err) {
-      setTaskState((s) => ({ ...s, [task.id]: "idle" }));
-      setTaskCountdown((c) => ({ ...c, [task.id]: 0 }));
-      showToast("Network error — please try again.");
-    }
-  }
-
-  // ── Copy referral link ─────────────────────────────────────────────────────
-  function handleCopyLink() {
-    if (!referralLink) return;
-    navigator.clipboard.writeText(referralLink).catch(() => {});
-    setLinkCopied(true);
-    setTimeout(() => setLinkCopied(false), 1800);
-  }
-
-  // ── Copy wallet address ────────────────────────────────────────────────────
-  function handleCopyWallet() {
-    if (!wallet) return;
-    navigator.clipboard.writeText(wallet).catch(() => {});
-    setWalletCopied(true);
-    setTimeout(() => setWalletCopied(false), 1600);
-  }
-
-  // ── Disconnect — clears session and returns to home ───────────────────────
-  function handleDisconnect() {
-    // Clear in-memory session token so it can't be reused
-    sessionTokenRef.current = "";
-    // Attempt to disconnect Phantom if it's connected
-    try { window?.solana?.disconnect?.(); } catch (_) {}
-    // Use onDisconnect (→ hero screen) not onBack (→ result screen)
-    if (onDisconnect) onDisconnect();
-    else if (onBack) onBack();
-    else window.history.back();
-  }
-
-  // ─────────────────────────────────────────────────────────────────────────
-  // ── Snapshot countdown ────────────────────────────────────────────────────
-  const SNAPSHOT_DATE = new Date("2026-05-28T00:00:00Z");
-  const [snapTime, setSnapTime] = useState(() => Math.max(0, SNAPSHOT_DATE - Date.now()));
-  useEffect(() => {
-    const id = setInterval(() => setSnapTime(Math.max(0, SNAPSHOT_DATE - Date.now())), 1000);
-    return () => clearInterval(id);
-  }, []);
-  const snapDays  = Math.floor(snapTime / (1000*60*60*24));
-  const snapHours = Math.floor((snapTime % (1000*60*60*24)) / (1000*60*60));
-  const snapMins  = Math.floor((snapTime % (1000*60*60)) / (1000*60));
-  const snapSecs  = Math.floor((snapTime % (1000*60)) / 1000);
-
-  if (showComplete) return (
-    <>
-      <style>{CSS}</style>
-      <div className="t-complete">
-        {/* Nav */}
-        <nav className="t-nav">
-          <div className="t-nav-brand">
-            <MonaLogo size={32} />
-            <div style={{ display:"flex", flexDirection:"column", lineHeight:1 }}>
-              <span className="t-nav-mona">Mona</span>
-              <span className="t-nav-genesis">Genesis</span>
-            </div>
+  --navy:#04063a;--navy2:#080c52;--blue:#1a2480;--blue2:#2535c8;
+  --periwinkle:#8a9ef5;--light-blue:#b8c4ff;--white:#ffffff;
+  --offwhite:#e8ecff;--muted:#6b7ab8;--border:rgba(138,158,245,0.15);
+  --border2:rgba(138,158,245,0.28);--gold:#f5c542;--green:#00d68f;
+  --surface:rgba(26,36,128,0.35);--surface2:rgba(26,36,128,0.6);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--navy);color:var(--white);font-family:'Plus Jakarta Sans',sans-serif;font-size:15px;line-height:1.6;overflow-x:hidden;}
+body::after{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");pointer-events:none;z-index:9999;opacity:0.5;}
+h1,h2,h3,h4{font-family:'Fraunces',serif;}
+a{color:inherit;text-decoration:none;}
+
+/* LOGO */
+.logo-svg{display:flex;align-items:center;gap:10px;}
+.logo-wordmark{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:20px;letter-spacing:-0.5px;}
+.logo-wordmark span{color:var(--periwinkle);}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:center;justify-content:space-between;padding:16px 52px;background:rgba(4,6,58,0.8);backdrop-filter:blur(24px);border-bottom:1px solid var(--border);}
+nav ul{display:flex;gap:28px;list-style:none;font-size:13.5px;color:var(--muted);font-weight:500;}
+nav ul a:hover{color:var(--white);}
+.nav-actions{display:flex;gap:10px;align-items:center;}
+.btn{padding:10px 22px;border-radius:10px;font-family:'Plus Jakarta Sans',sans-serif;font-size:13.5px;font-weight:600;cursor:pointer;border:none;transition:all 0.2s;}
+.btn-ghost{background:transparent;color:var(--light-blue);border:1px solid var(--border2);}
+.btn-ghost:hover{background:var(--surface);color:var(--white);}
+.btn-primary{background:var(--blue2);color:var(--white);box-shadow:0 4px 20px rgba(37,53,200,0.4);}
+.btn-primary:hover{background:#3146e8;transform:translateY(-1px);box-shadow:0 8px 28px rgba(37,53,200,0.55);}
+.btn-lg{padding:14px 32px;font-size:15px;border-radius:12px;}
+
+/* HERO */
+.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:130px 24px 80px;position:relative;overflow:hidden;}
+.hero-bg{position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% -10%,rgba(37,53,200,0.55) 0%,transparent 65%),radial-gradient(ellipse 50% 50% at 80% 80%,rgba(8,12,82,0.8) 0%,transparent 60%),linear-gradient(180deg,var(--navy2) 0%,var(--navy) 100%);}
+.hero-tiles{position:absolute;inset:0;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:48px 48px;mask-image:radial-gradient(ellipse 70% 80% at 50% 40%,black 20%,transparent 80%);opacity:0.6;}
+.hero-content{position:relative;z-index:2;}
+.badge{display:inline-flex;align-items:center;gap:8px;padding:6px 16px;border-radius:100px;background:rgba(138,158,245,0.12);border:1px solid rgba(138,158,245,0.3);font-size:12px;color:var(--periwinkle);font-weight:600;margin-bottom:32px;animation:fadeUp 0.5s ease both;}
+.badge-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.4;transform:scale(1.5);}}
+.hero h1{font-size:clamp(44px,7.5vw,90px);font-weight:800;line-height:1.02;letter-spacing:-2.5px;margin-bottom:24px;animation:fadeUp 0.5s 0.1s ease both;}
+.hero h1 em{font-style:italic;color:var(--periwinkle);}
+.hero p{font-size:clamp(15px,1.8vw,19px);color:var(--muted);max-width:500px;margin:0 auto 44px;font-weight:400;animation:fadeUp 0.5s 0.2s ease both;}
+.hero-cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;animation:fadeUp 0.5s 0.3s ease both;}
+.hero-stats{display:flex;margin-top:80px;border:1px solid var(--border);border-radius:18px;background:var(--surface);backdrop-filter:blur(12px);overflow:hidden;animation:fadeUp 0.5s 0.4s ease both;}
+.stat{padding:22px 40px;text-align:center;border-right:1px solid var(--border);}
+.stat:last-child{border-right:none;}
+.stat-num{font-family:'Fraunces',serif;font-size:26px;font-weight:800;color:var(--white);}
+.stat-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-top:2px;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(22px);}to{opacity:1;transform:translateY(0);}}
+
+/* FLOATING CARDS */
+.float-card{position:absolute;background:var(--surface2);border:1px solid var(--border2);border-radius:14px;padding:14px 18px;backdrop-filter:blur(16px);z-index:3;}
+.float-card-1{left:4%;top:35%;animation:floatY 7s ease-in-out infinite;}
+.float-card-2{right:4%;top:42%;animation:floatY 7s 3s ease-in-out infinite;}
+@keyframes floatY{0%,100%{transform:translateY(0);}50%{transform:translateY(-14px);}}
+.fc-label{font-size:11px;color:var(--muted);margin-bottom:5px;}
+.fc-val{font-family:'Fraunces',serif;font-size:18px;font-weight:800;}
+.fc-val.ngn{color:var(--gold);}.fc-val.usdc{color:var(--green);}
+.fc-sub{font-size:10.5px;color:var(--green);margin-top:3px;}
+
+/* TICKER */
+.ticker-wrap{overflow:hidden;border-top:1px solid var(--border);border-bottom:1px solid var(--border);background:rgba(8,12,82,0.6);padding:11px 0;}
+.ticker{display:flex;gap:60px;animation:tickerAnim 28s linear infinite;white-space:nowrap;}
+.ticker-item{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted);flex-shrink:0;}
+.ticker-item .dot{color:var(--periwinkle);}
+@keyframes tickerAnim{from{transform:translateX(0);}to{transform:translateX(-50%);}}
+
+/* SECTIONS */
+section{padding:100px 52px;}
+.section-inner{max-width:1200px;margin:0 auto;}
+.section-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2.5px;color:var(--periwinkle);margin-bottom:14px;}
+.section-title{font-size:clamp(28px,4vw,46px);font-weight:800;letter-spacing:-1.5px;line-height:1.08;margin-bottom:14px;}
+.section-title em{font-style:italic;color:var(--periwinkle);}
+.section-sub{color:var(--muted);max-width:460px;font-weight:400;line-height:1.7;}
+
+/* HOW IT WORKS */
+.how-grid{display:grid;grid-template-columns:repeat(4,1fr);margin-top:56px;border:1px solid var(--border);border-radius:20px;overflow:hidden;}
+.step-card{background:var(--surface);padding:40px 30px;border-right:1px solid var(--border);transition:background 0.3s;position:relative;overflow:hidden;}
+.step-card:last-child{border-right:none;}
+.step-card::before{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--blue2),var(--periwinkle));transform:scaleX(0);transform-origin:left;transition:transform 0.4s;}
+.step-card:hover{background:var(--surface2);}
+.step-card:hover::before{transform:scaleX(1);}
+.step-num{font-family:'Fraunces',serif;font-size:52px;font-weight:800;color:rgba(138,158,245,0.1);line-height:1;margin-bottom:20px;transition:color 0.3s;}
+.step-card:hover .step-num{color:rgba(138,158,245,0.25);}
+.step-icon{width:42px;height:42px;border-radius:11px;background:rgba(138,158,245,0.12);display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:14px;}
+.step-card h3{font-family:'Plus Jakarta Sans',sans-serif;font-size:16px;font-weight:700;margin-bottom:8px;}
+.step-card p{color:var(--muted);font-size:13.5px;line-height:1.65;}
+
+/* CATEGORIES */
+.cats-section{background:rgba(8,12,82,0.4);}
+.cats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:48px;}
+.cat-card{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:32px 28px;cursor:pointer;transition:all 0.25s;position:relative;overflow:hidden;}
+.cat-card::after{content:'';position:absolute;inset:0;opacity:0;transition:opacity 0.3s;border-radius:18px;}
+.cat-card.social::after{background:radial-gradient(circle at 0 100%,rgba(0,214,143,0.08),transparent 65%);}
+.cat-card.survey::after{background:radial-gradient(circle at 0 100%,rgba(245,197,66,0.08),transparent 65%);}
+.cat-card.freelance::after{background:radial-gradient(circle at 0 100%,rgba(138,158,245,0.1),transparent 65%);}
+.cat-card:hover{border-color:var(--border2);transform:translateY(-4px);box-shadow:0 20px 60px rgba(4,6,58,0.5);}
+.cat-card:hover::after{opacity:1;}
+.cat-count{position:absolute;top:20px;right:20px;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;}
+.social .cat-count{background:rgba(0,214,143,0.12);color:var(--green);}
+.survey .cat-count{background:rgba(245,197,66,0.12);color:var(--gold);}
+.freelance .cat-count{background:rgba(138,158,245,0.12);color:var(--periwinkle);}
+.cat-icon{font-size:30px;margin-bottom:18px;}
+.cat-card h4{font-family:'Plus Jakarta Sans',sans-serif;font-size:17px;font-weight:700;margin-bottom:8px;}
+.cat-card p{color:var(--muted);font-size:13.5px;line-height:1.65;}
+
+/* TASKS */
+.tasks-header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:32px;flex-wrap:wrap;gap:16px;}
+.tasks-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+.task-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px;cursor:pointer;transition:all 0.25s;}
+.task-card:hover{border-color:rgba(138,158,245,0.4);box-shadow:0 8px 40px rgba(4,6,58,0.6);transform:translateY(-3px);}
+.task-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.task-type{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:1px;padding:4px 10px;border-radius:20px;}
+.type-social{background:rgba(0,214,143,0.12);color:var(--green);}
+.type-survey{background:rgba(245,197,66,0.12);color:var(--gold);}
+.type-freelance{background:rgba(138,158,245,0.14);color:var(--periwinkle);}
+.task-payout{font-family:'Fraunces',serif;font-weight:800;font-size:17px;}
+.task-payout.ngn{color:var(--gold);}.task-payout.crypto{color:var(--green);}
+.task-card h4{font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:600;margin-bottom:8px;line-height:1.45;}
+.task-card p{color:var(--muted);font-size:12.5px;margin-bottom:20px;line-height:1.6;}
+.task-footer{display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--muted);}
+.task-slots{display:flex;align-items:center;gap:6px;}
+.slots-bar{width:72px;height:3px;background:var(--border);border-radius:2px;overflow:hidden;}
+.slots-fill{height:100%;background:var(--periwinkle);border-radius:2px;}
+
+/* TABS */
+.tabs{display:flex;gap:3px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:4px;}
+.tab{padding:8px 18px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;color:var(--muted);transition:all 0.2s;border:none;background:transparent;font-family:'Plus Jakarta Sans',sans-serif;}
+.tab.active{background:var(--blue2);color:var(--white);box-shadow:0 2px 12px rgba(37,53,200,0.4);}
+
+/* PAYMENTS */
+.payments-section{background:rgba(8,12,82,0.4);}
+.payment-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:56px;}
+.payment-card{border-radius:22px;padding:44px 40px;border:1px solid var(--border);position:relative;overflow:hidden;}
+.payment-card.ngn-card{background:linear-gradient(135deg,rgba(245,197,66,0.07) 0%,var(--surface) 60%);border-color:rgba(245,197,66,0.2);}
+.payment-card.usdc-card{background:linear-gradient(135deg,rgba(0,214,143,0.07) 0%,var(--surface) 60%);border-color:rgba(0,214,143,0.2);}
+.payment-icon{font-size:42px;margin-bottom:20px;}
+.payment-card h3{font-family:'Plus Jakarta Sans',sans-serif;font-size:22px;font-weight:800;margin-bottom:10px;}
+.payment-card>p{color:var(--muted);font-size:14px;margin-bottom:28px;line-height:1.7;}
+.payment-features{list-style:none;display:flex;flex-direction:column;gap:10px;}
+.payment-features li{display:flex;align-items:center;gap:10px;font-size:13.5px;color:var(--muted);}
+.payment-features li::before{content:'v';width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;font-weight:900;font-style:normal;}
+.ngn-card .payment-features li::before{background:rgba(245,197,66,0.15);color:var(--gold);content:'✓';}
+.usdc-card .payment-features li::before{background:rgba(0,214,143,0.15);color:var(--green);content:'✓';}
+
+/* DASHBOARD */
+.dash-preview{background:var(--surface);border:1px solid var(--border);border-radius:24px;overflow:hidden;margin-top:56px;box-shadow:0 60px 120px rgba(4,6,58,0.7);}
+.dash-bar{background:var(--navy2);border-bottom:1px solid var(--border);padding:14px 22px;display:flex;align-items:center;gap:8px;}
+.dot-r{width:11px;height:11px;border-radius:50%;background:#ff5f57;}
+.dot-y{width:11px;height:11px;border-radius:50%;background:#febc2e;}
+.dot-g{width:11px;height:11px;border-radius:50%;background:#28c840;}
+.dash-url-bar{margin-left:14px;flex:1;max-width:280px;background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:5px 12px;font-size:11.5px;color:var(--muted);}
+.dash-body{display:grid;grid-template-columns:210px 1fr;min-height:480px;}
+.dash-sidebar{background:var(--navy2);border-right:1px solid var(--border);padding:22px 14px;display:flex;flex-direction:column;gap:3px;}
+.dash-user{display:flex;align-items:center;gap:10px;padding:12px;background:var(--surface);border-radius:12px;margin-bottom:18px;}
+.dash-avatar{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--blue2),var(--periwinkle));display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:var(--white);}
+.dash-uname{font-size:12.5px;font-weight:700;}
+.dash-level{font-size:10.5px;color:var(--periwinkle);}
+.nav-sec{font-size:9.5px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);padding:8px 10px 3px;margin-top:6px;}
+.nav-item{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:9px;font-size:12.5px;color:var(--muted);cursor:pointer;transition:all 0.2s;}
+.nav-item:hover{background:var(--surface);color:var(--white);}
+.nav-item.active{background:rgba(37,53,200,0.3);color:var(--periwinkle);}
+.nav-item .ni{font-size:14px;width:18px;text-align:center;}
+.dash-main{padding:26px;}
+.dash-greet{font-family:'Fraunces',serif;font-size:20px;font-weight:800;margin-bottom:22px;}
+.dash-greet span{color:var(--periwinkle);}
+.bal-cards{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:22px;}
+.bal-card{border-radius:14px;padding:20px;border:1px solid var(--border);}
+.bal-card.ngn{background:linear-gradient(135deg,rgba(245,197,66,0.1),var(--surface));border-color:rgba(245,197,66,0.2);}
+.bal-card.usdc{background:linear-gradient(135deg,rgba(0,214,143,0.1),var(--surface));border-color:rgba(0,214,143,0.2);}
+.bal-lbl{font-size:10.5px;color:var(--muted);margin-bottom:5px;}
+.bal-amt{font-family:'Fraunces',serif;font-size:21px;font-weight:800;}
+.bal-card.ngn .bal-amt{color:var(--gold);}.bal-card.usdc .bal-amt{color:var(--green);}
+.bal-chg{font-size:10.5px;color:var(--green);margin-top:3px;}
+.dsec{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;}
+.mini-task{background:var(--navy2);border:1px solid var(--border);border-radius:11px;padding:12px 14px;display:flex;align-items:center;gap:11px;margin-bottom:7px;cursor:pointer;transition:border-color 0.2s;}
+.mini-task:hover{border-color:var(--border2);}
+.mt-icon{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
+.mt-social{background:rgba(0,214,143,0.12);}.mt-survey{background:rgba(245,197,66,0.12);}.mt-freelance{background:rgba(138,158,245,0.12);}
+.mt-info{flex:1;}.mt-title{font-size:12.5px;font-weight:600;}.mt-meta{font-size:10.5px;color:var(--muted);}
+.mt-pay{font-family:'Fraunces',serif;font-size:13px;font-weight:800;color:var(--green);}
+
+/* TESTIMONIALS */
+.testi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:48px;}
+.testi-card{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:28px;}
+.testi-stars{color:var(--gold);font-size:13px;margin-bottom:14px;letter-spacing:2px;}
+.testi-card p{font-size:13.5px;color:var(--muted);margin-bottom:20px;font-style:italic;line-height:1.75;}
+.testi-author{display:flex;align-items:center;gap:10px;}
+.testi-avatar{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:var(--white);}
+.testi-name{font-size:13px;font-weight:700;}.testi-loc{font-size:11px;color:var(--muted);}
+
+/* CTA */
+.cta-section{text-align:center;padding:130px 52px;position:relative;overflow:hidden;}
+.cta-bg{position:absolute;inset:0;background:radial-gradient(ellipse 70% 70% at 50% 50%,rgba(37,53,200,0.3) 0%,transparent 70%),linear-gradient(180deg,var(--navy) 0%,var(--navy2) 50%,var(--navy) 100%);}
+.cta-section h2{font-size:clamp(32px,5vw,62px);font-weight:800;letter-spacing:-2px;margin-bottom:18px;position:relative;z-index:1;}
+.cta-section h2 em{font-style:italic;color:var(--periwinkle);}
+.cta-section>p{color:var(--muted);font-size:17px;margin-bottom:40px;position:relative;z-index:1;}
+.cta-buttons{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;position:relative;z-index:1;}
+
+/* FOOTER */
+footer{border-top:1px solid var(--border);padding:52px;display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:52px;background:var(--navy2);}
+.footer-brand p{color:var(--muted);font-size:13px;margin-top:14px;max-width:250px;line-height:1.75;}
+.footer-col h5{font-family:'Plus Jakarta Sans',sans-serif;font-size:12.5px;font-weight:700;margin-bottom:16px;color:var(--offwhite);}
+.footer-col ul{list-style:none;display:flex;flex-direction:column;gap:10px;}
+.footer-col ul li a{font-size:13px;color:var(--muted);transition:color 0.2s;}
+.footer-col ul li a:hover{color:var(--white);}
+.footer-bottom{border-top:1px solid var(--border);padding:20px 52px;display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--muted);background:var(--navy2);}
+
+/* REVEAL */
+.reveal{opacity:0;transform:translateY(28px);transition:opacity 0.65s ease,transform 0.65s ease;}
+.reveal.visible{opacity:1;transform:translateY(0);}
+
+@media(max-width:1024px){.how-grid{grid-template-columns:1fr 1fr;}.tasks-grid{grid-template-columns:1fr 1fr;}}
+@media(max-width:768px){nav{padding:14px 20px;}nav ul{display:none;}section{padding:60px 20px;}.how-grid,.cats-grid,.tasks-grid,.payment-grid,.testi-grid{grid-template-columns:1fr;}footer{grid-template-columns:1fr 1fr;padding:40px 20px;}.footer-bottom{padding:20px;flex-direction:column;gap:8px;}.hero-stats{flex-direction:column;}.stat{border-right:none;border-bottom:1px solid var(--border);}.stat:last-child{border-bottom:none;}.float-card{display:none;}.dash-sidebar{display:none;}.dash-body{grid-template-columns:1fr;}.bal-cards{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo-svg">
+    <svg width="32" height="32" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="100" height="100" rx="20" fill="#1a2480"/>
+      <rect x="10" y="10" width="35" height="35" rx="7" fill="#8a9ef5" opacity="0.55"/>
+      <polygon points="10,10 45,10 10,45" fill="#1a2480" opacity="0.5"/>
+      <rect x="52" y="10" width="35" height="35" rx="7" fill="white"/>
+      <path d="M52 10 H68 Q87 10 87 27.5 Q87 45 68 45 H52 Z" fill="white"/>
+      <rect x="10" y="52" width="35" height="35" rx="7" fill="#8a9ef5" opacity="0.45"/>
+      <rect x="52" y="52" width="35" height="35" rx="7" fill="#8a9ef5" opacity="0.55"/>
+      <polygon points="52,52 87,52 87,87" fill="#1a2480" opacity="0.5"/>
+      <path d="M52 52 H68 Q87 52 87 69.5 Q87 87 68 87 H52 Z" fill="white"/>
+    </svg>
+    <div class="logo-wordmark">Oga<span>pay</span></div>
+  </div>
+  <ul>
+    <li><a href="#how">How it works</a></li>
+    <li><a href="#tasks">Browse Tasks</a></li>
+    <li><a href="#payments">Payments</a></li>
+    <li><a href="#earn">Dashboard</a></li>
+  </ul>
+  <div class="nav-actions">
+    <button class="btn btn-ghost">Log in</button>
+    <button class="btn btn-primary">Get Started</button>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-tiles"></div>
+  <div class="float-card float-card-1">
+    <div class="fc-label">💸 Just earned</div>
+    <div class="fc-val ngn">₦4,500</div>
+    <div class="fc-sub">▲ 3 tasks today</div>
+  </div>
+  <div class="float-card float-card-2">
+    <div class="fc-label">🌍 Withdrawn</div>
+    <div class="fc-val usdc">$12.50 USDC</div>
+    <div class="fc-sub">⚡ Instant · Solana</div>
+  </div>
+  <div class="hero-content">
+    <div class="badge"><div class="badge-dot"></div>Live — Tasks paying in Naira &amp; Crypto</div>
+    <h1>Do Tasks.<br><em>Get Paid.</em></h1>
+    <p>Ogapay is the global microtask marketplace. Post tasks, complete jobs, earn in Naira or crypto — no barriers.</p>
+    <div class="hero-cta">
+      <button class="btn btn-primary btn-lg">Start Earning Free</button>
+      <button class="btn btn-ghost btn-lg">Post a Task →</button>
+    </div>
+    <div class="hero-stats">
+      <div class="stat"><div class="stat-num">24K+</div><div class="stat-label">Active Earners</div></div>
+      <div class="stat"><div class="stat-num">₦180M+</div><div class="stat-label">Paid Out</div></div>
+      <div class="stat"><div class="stat-num">190+</div><div class="stat-label">Countries</div></div>
+      <div class="stat"><div class="stat-num">3 min</div><div class="stat-label">Avg. Task</div></div>
+    </div>
+  </div>
+</section>
+
+<div class="ticker-wrap">
+  <div class="ticker">
+    <div class="ticker-item"><span class="dot">●</span>Follow on X — ₦250</div>
+    <div class="ticker-item"><span class="dot">●</span>Product survey — $0.75 USDC</div>
+    <div class="ticker-item"><span class="dot">●</span>Logo design — ₦15,000</div>
+    <div class="ticker-item"><span class="dot">●</span>Repost thread — ₦120</div>
+    <div class="ticker-item"><span class="dot">●</span>App feedback — $1.50 USDC</div>
+    <div class="ticker-item"><span class="dot">●</span>Instagram like — ₦80</div>
+    <div class="ticker-item"><span class="dot">●</span>Write review — ₦2,000</div>
+    <div class="ticker-item"><span class="dot">●</span>Telegram join — $0.25 USDC</div>
+    <div class="ticker-item"><span class="dot">●</span>Follow on X — ₦250</div>
+    <div class="ticker-item"><span class="dot">●</span>Product survey — $0.75 USDC</div>
+    <div class="ticker-item"><span class="dot">●</span>Logo design — ₦15,000</div>
+    <div class="ticker-item"><span class="dot">●</span>Repost thread — ₦120</div>
+    <div class="ticker-item"><span class="dot">●</span>App feedback — $1.50 USDC</div>
+    <div class="ticker-item"><span class="dot">●</span>Instagram like — ₦80</div>
+    <div class="ticker-item"><span class="dot">●</span>Write review — ₦2,000</div>
+    <div class="ticker-item"><span class="dot">●</span>Telegram join — $0.25 USDC</div>
+  </div>
+</div>
+
+<section id="how">
+  <div class="section-inner">
+    <div class="reveal"><div class="section-label">Simple Process</div><h2 class="section-title">Up and earning<br><em>in minutes</em></h2><p class="section-sub">No résumé. No interviews. Just sign up, pick a task, and get paid.</p></div>
+    <div class="how-grid reveal">
+      <div class="step-card"><div class="step-num">01</div><div class="step-icon">👤</div><h3>Create account</h3><p>Sign up free in 60 seconds. Connect your bank or crypto wallet to receive payments.</p></div>
+      <div class="step-card"><div class="step-num">02</div><div class="step-icon">🔍</div><h3>Browse live tasks</h3><p>Pick from hundreds of tasks: social engagement, surveys, freelance gigs and more.</p></div>
+      <div class="step-card"><div class="step-num">03</div><div class="step-icon">⚡</div><h3>Complete &amp; submit</h3><p>Do the task, submit proof. Most tasks take 1–5 minutes. No experience needed.</p></div>
+      <div class="step-card"><div class="step-num">04</div><div class="step-icon">💰</div><h3>Get paid</h3><p>Receive Naira to your bank or USDC/SOL to your crypto wallet. Instantly.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="cats-section" id="categories">
+  <div class="section-inner">
+    <div class="reveal"><div class="section-label">Task Types</div><h2 class="section-title">Something for<br><em>everyone</em></h2><p class="section-sub">Three core categories, hundreds of live tasks at any moment.</p></div>
+    <div class="cats-grid reveal">
+      <div class="cat-card social"><div class="cat-count">312 live</div><div class="cat-icon">📱</div><h4>Social Engagement</h4><p>Likes, follows, reposts, comments across X, Instagram, TikTok, YouTube, Telegram, Discord and more.</p></div>
+      <div class="cat-card survey"><div class="cat-count">87 live</div><div class="cat-icon">📋</div><h4>Surveys &amp; Feedback</h4><p>Share your opinion. Test products, fill polls, review apps, and give feedback companies pay for.</p></div>
+      <div class="cat-card freelance"><div class="cat-count">54 live</div><div class="cat-icon">🎨</div><h4>Freelance Gigs</h4><p>Design, writing, translation, video editing, and creative work posted by real clients worldwide.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="tasks">
+  <div class="section-inner">
+    <div class="tasks-header reveal">
+      <div><div class="section-label">Browse Now</div><h2 class="section-title">Live Tasks</h2></div>
+      <div class="tabs">
+        <button class="tab active">All</button>
+        <button class="tab">Social</button>
+        <button class="tab">Surveys</button>
+        <button class="tab">Freelance</button>
+      </div>
+    </div>
+    <div class="tasks-grid reveal">
+      <div class="task-card"><div class="task-top"><span class="task-type type-social">Social</span><span class="task-payout ngn">₦250</span></div><h4>Follow our X account and repost our pinned tweet</h4><p>2 simple actions. Must have 50+ followers. Takes less than 2 minutes.</p><div class="task-footer"><div class="task-slots"><span>Slots:</span><div class="slots-bar"><div class="slots-fill" style="width:65%"></div></div><span>35 left</span></div><span>⏱ ~2 min</span></div></div>
+      <div class="task-card"><div class="task-top"><span class="task-type type-survey">Survey</span><span class="task-payout crypto">$1.50 USDC</span></div><h4>Rate our mobile banking app UX — 8 quick questions</h4><p>Must have used a banking app in the last 30 days. Honest feedback only.</p><div class="task-footer"><div class="task-slots"><span>Slots:</span><div class="slots-bar"><div class="slots-fill" style="width:40%"></div></div><span>60 left</span></div><span>⏱ ~5 min</span></div></div>
+      <div class="task-card"><div class="task-top"><span class="task-type type-freelance">Freelance</span><span class="task-payout ngn">₦15,000</span></div><h4>Design a modern logo for a fintech startup</h4><p>Deliver 3 concepts in PNG &amp; SVG. Open to all designers.</p><div class="task-footer"><div class="task-slots"><span>Slots:</span><div class="slots-bar"><div class="slots-fill" style="width:20%"></div></div><span>4 left</span></div><span>⏱ 1–2 days</span></div></div>
+      <div class="task-card"><div class="task-top"><span class="task-type type-social">Social</span><span class="task-payout crypto">$0.40 USDC</span></div><h4>Join our Telegram channel and stay for 48 hours</h4><p>Must not leave within 48 hours. Verified automatically.</p><div class="task-footer"><div class="task-slots"><span>Slots:</span><div class="slots-bar"><div class="slots-fill" style="width:80%"></div></div><span>20 left</span></div><span>⏱ ~1 min</span></div></div>
+      <div class="task-card"><div class="task-top"><span class="task-type type-survey">Survey</span><span class="task-payout ngn">₦800</span></div><h4>Share your opinion on Nigerian food delivery apps</h4><p>Nigerians only. 5-minute survey about food delivery habits.</p><div class="task-footer"><div class="task-slots"><span>Slots:</span><div class="slots-bar"><div class="slots-fill" style="width:55%"></div></div><span>45 left</span></div><span>⏱ ~5 min</span></div></div>
+      <div class="task-card"><div class="task-top"><span class="task-type type-freelance">Freelance</span><span class="task-payout crypto">$8.00 USDC</span></div><h4>Translate 500 words from English to Yoruba</h4><p>Native Yoruba speakers only. Accuracy verified before payment.</p><div class="task-footer"><div class="task-slots"><span>Slots:</span><div class="slots-bar"><div class="slots-fill" style="width:10%"></div></div><span>9 left</span></div><span>⏱ ~1 hour</span></div></div>
+    </div>
+  </div>
+</section>
+
+<section class="payments-section" id="payments">
+  <div class="section-inner">
+    <div class="reveal"><div class="section-label">Dual Payments</div><h2 class="section-title">Your money,<br><em>your way</em></h2><p class="section-sub">Naira to your bank or crypto to your wallet — Ogapay supports both.</p></div>
+    <div class="payment-grid reveal">
+      <div class="payment-card ngn-card"><div class="payment-icon">🇳🇬</div><h3>Naira Payouts</h3><p>Get paid directly to your Nigerian bank account or mobile money. Instant settlements, no waiting.</p><ul class="payment-features"><li>All Nigerian banks supported</li><li>Instant transfers via Paystack</li><li>Minimum withdrawal: ₦500</li><li>Zero fees under ₦10,000</li><li>OPay, PalmPay &amp; mobile wallets</li></ul></div>
+      <div class="payment-card usdc-card"><div class="payment-icon">🌍</div><h3>Crypto Payouts</h3><p>Earn USDC on Solana or Base. Send globally in seconds. No banks, no borders.</p><ul class="payment-features"><li>USDC on Solana &amp; Base</li><li>Connect any Solana or EVM wallet</li><li>Minimum withdrawal: $1.00</li><li>Near-zero gas fees on Solana</li><li>Works globally — 190+ countries</li></ul></div>
+    </div>
+  </div>
+</section>
+
+<section id="earn">
+  <div class="section-inner">
+    <div class="reveal"><div class="section-label">Dashboard Preview</div><h2 class="section-title">Your command<br><em>center</em></h2><p class="section-sub">Track earnings, manage tasks, and withdraw funds all in one place.</p></div>
+    <div class="dash-preview reveal">
+      <div class="dash-bar"><div class="dot-r"></div><div class="dot-y"></div><div class="dot-g"></div><div class="dash-url-bar">app.ogapay.io/dashboard</div></div>
+      <div class="dash-body">
+        <div class="dash-sidebar">
+          <div class="dash-user"><div class="dash-avatar">AO</div><div><div class="dash-uname">Adaeze Obi</div><div class="dash-level">⭐ Pro Earner</div></div></div>
+          <div class="nav-sec">Main</div>
+          <div class="nav-item active"><span class="ni">🏠</span> Dashboard</div>
+          <div class="nav-item"><span class="ni">🔍</span> Browse Tasks</div>
+          <div class="nav-item"><span class="ni">✅</span> My Tasks</div>
+          <div class="nav-item"><span class="ni">💰</span> Earnings</div>
+          <div class="nav-sec">Account</div>
+          <div class="nav-item"><span class="ni">👛</span> Wallet</div>
+          <div class="nav-item"><span class="ni">📊</span> Analytics</div>
+          <div class="nav-item"><span class="ni">⚙️</span> Settings</div>
+        </div>
+        <div class="dash-main">
+          <div class="dash-greet">Good morning, <span>Adaeze</span> 👋</div>
+          <div class="bal-cards">
+            <div class="bal-card ngn"><div class="bal-lbl">🇳🇬 Naira Balance</div><div class="bal-amt">₦42,850</div><div class="bal-chg">▲ +₦4,200 this week</div></div>
+            <div class="bal-card usdc"><div class="bal-lbl">🔵 USDC Balance</div><div class="bal-amt">$18.40</div><div class="bal-chg">▲ +$3.25 this week</div></div>
           </div>
-          <div className="t-nav-socials">
-            <a href="https://x.com/Monasolanatoken" target="_blank" rel="noopener noreferrer" className="t-nav-social"><IconX size={14} /></a>
-            <a href="https://t.me/monasolanatoken" target="_blank" rel="noopener noreferrer" className="t-nav-social"><IconTg size={14} /></a>
-          </div>
-        </nav>
-
-        <div className="t-complete-body">
-
-          {/* ── Hero badge ── */}
-          <div className="t-complete-badge">
-            <div className="t-complete-icon"><IconCheckLg /></div>
-            <div className="t-complete-title">You're <em>Registered</em></div>
-            <p className="t-complete-sub">
-              All tasks completed and wallet verified. Your allocation is secured for the final snapshot.
-            </p>
-          </div>
-
-          {/* ── Final allocation ── */}
-          <div className="t-complete-alloc">
-            <div className="t-complete-alloc-label">Final Projected Allocation</div>
-            <div className="t-complete-alloc-row">
-              <MonaLogo size={48} />
-              <span className="t-complete-alloc-amount">{finalAllocation.toLocaleString()}</span>
-              <span className="t-complete-alloc-currency">MONA</span>
-            </div>
-            <div className="t-complete-alloc-breakdown">
-              <span className="t-complete-alloc-pill">Base: {allocation.toLocaleString()}</span>
-              <span className="t-complete-alloc-pill gold">+{totalEarned.toLocaleString()} boost</span>
-              <span className="t-complete-alloc-pill gold">{tier} Tier</span>
-              {referralCount > 0 && (
-                <span className="t-complete-alloc-pill gold">{referralCount} referral{referralCount > 1 ? "s" : ""} · {referralTierLabel}</span>
-              )}
-              {nextUnlock && (
-                <span className="t-complete-alloc-pill" style={{ color: "var(--dimmer)" }}>
-                  {nextUnlock.target - referralCount} more refs → +{nextUnlock.bonus.toLocaleString()} unlock
-                </span>
-              )}
-            </div>
-          </div>
-
-          {/* ── Claim code ── */}
-          {claimCode && (
-            <div className="t-complete-claim">
-              <div className="t-complete-claim-label">Your Claim Code</div>
-              <div className="t-complete-claim-code">{claimCode}</div>
-              <div className="t-complete-claim-sub">Save this — it confirms your registration for the airdrop.</div>
-            </div>
-          )}
-
-          {/* ── Referral share ── */}
-          {referralLink && (
-            <div className="t-complete-referral">
-              <div className="t-complete-referral-label">Invite friends · +50,000 MONA each</div>
-              <div className="t-complete-referral-row">
-                <div className="t-complete-referral-link">{referralLink}</div>
-                <button
-                  className="t-copy-link-btn"
-                  onClick={() => {
-                    navigator.clipboard.writeText(referralLink).catch(() => {});
-                    setCompleteCopied(true);
-                    setTimeout(() => setCompleteCopied(false), 1800);
-                  }}
-                >
-                  {completeCopied ? <><IconCheck /> Copied</> : <><IconCopy /> Copy</>}
-                </button>
-              </div>
-              <a
-                href={`https://x.com/intent/tweet?text=${encodeURIComponent(`I just secured my $MONA Genesis airdrop allocation!\n\nCheck yours → ${referralLink}`)}`}
-                target="_blank" rel="noopener noreferrer"
-                className="t-complete-share-btn"
-                style={{ alignSelf: "flex-start" }}
-              >
-                <IconX size={13} /> Share on X
-              </a>
-            </div>
-          )}
-
-          {/* ── Daily check-in streak on completion screen ── */}
-          <div style={{
-            width: "100%",
-            background: "var(--card)", border: "1px solid var(--line)",
-            borderRadius: 16, padding: 20,
-            display: "flex", flexDirection: "column", gap: 16,
-            animation: "tRise 0.6s cubic-bezier(0.16,1,0.3,1) 0.28s both",
-          }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
-              <div style={{ display: "flex", flexDirection: "column", gap: 4, flex: 1 }}>
-                <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--gold)" }}>
-                  <IconFlame /> Daily Streak
-                </div>
-                <div style={{ fontSize: 28, fontWeight: 800, letterSpacing: "-0.03em", color: "var(--white)", lineHeight: 1 }}>
-                  {streakDay}<span style={{ fontSize: 13, fontWeight: 600, color: "var(--dimmer)", marginLeft: 4 }}>day{streakDay !== 1 ? "s" : ""}</span>
-                </div>
-                <div style={{ fontSize: 12, color: "var(--dimmer)" }}>
-                  {checkedInToday
-                    ? `Come back tomorrow · next +${getStreakReward(streakDay + 1).toLocaleString()} MONA`
-                    : `Check in to earn +${getStreakReward(streakDay + 1).toLocaleString()} MONA`}
-                </div>
-              </div>
-              <button
-                className={`t-streak-btn${checkedInToday ? " t-streak-btn--done" : ""}${checkInDoing ? " t-streak-btn--doing" : ""}`}
-                onClick={handleCheckIn}
-                disabled={checkedInToday || checkInDoing}
-              >
-                {checkInDoing ? "…" : checkedInToday ? <><IconCheck /> Done</> : "Check In"}
-              </button>
-            </div>
-
-            {/* Tier pills */}
-            <div className="t-streak-tiers">
-              {[{day:1,label:"Day 1",val:"500"},{day:3,label:"Day 3",val:"1K"},{day:7,label:"Day 7",val:"1.5K"},{day:14,label:"Day 14",val:"2K"},{day:30,label:"Day 30",val:"3K"}].map((tier) => {
-                const done   = streakDay > tier.day || (streakDay === tier.day && checkedInToday);
-                const active = streakDay === tier.day && !checkedInToday;
-                return (
-                  <div key={tier.day} className={`t-streak-tier${done?" t-streak-tier--done":""}${active?" t-streak-tier--active":""}`}>
-                    <span className="t-streak-tier-day">{tier.label}</span>
-                    <span className="t-streak-tier-val">+{tier.val}</span>
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Stats */}
-            <div className="t-streak-stats">
-              <div className="t-streak-stat">
-                <div className="t-streak-stat-label">Best Streak</div>
-                <div className="t-streak-stat-val">{longestStreak}<small>days</small></div>
-              </div>
-              <div className="t-streak-stat">
-                <div className="t-streak-stat-label">Total Earned</div>
-                <div className="t-streak-stat-val">{streakMona.toLocaleString()}<small>MONA</small></div>
-              </div>
-              <div className="t-streak-stat">
-                <div className="t-streak-stat-label">Next Reward</div>
-                <div className="t-streak-stat-val">+{getStreakReward(streakDay + 1).toLocaleString()}<small>MONA</small></div>
-              </div>
-            </div>
-          </div>
-
-          {/* ── Snapshot countdown ── */}
-          <div className="t-complete-snapshot">
-            <div className="t-complete-snapshot-label">Snapshot closes in</div>
-            <div className="t-complete-snapshot-units">
-              <div className="t-complete-snapshot-unit">
-                <span className="t-complete-snapshot-num">{String(snapDays).padStart(2,"0")}</span>
-                <span className="t-complete-snapshot-sub">Days</span>
-              </div>
-              <span className="t-complete-snapshot-colon">:</span>
-              <div className="t-complete-snapshot-unit">
-                <span className="t-complete-snapshot-num">{String(snapHours).padStart(2,"0")}</span>
-                <span className="t-complete-snapshot-sub">Hours</span>
-              </div>
-              <span className="t-complete-snapshot-colon">:</span>
-              <div className="t-complete-snapshot-unit">
-                <span className="t-complete-snapshot-num">{String(snapMins).padStart(2,"0")}</span>
-                <span className="t-complete-snapshot-sub">Mins</span>
-              </div>
-              <span className="t-complete-snapshot-colon">:</span>
-              <div className="t-complete-snapshot-unit">
-                <span className="t-complete-snapshot-num">{String(snapSecs).padStart(2,"0")}</span>
-                <span className="t-complete-snapshot-sub">Secs</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="t-complete-footer">
-            Estimated · Final allocations are confirmed after snapshot filtering.
-          </div>
-
+          <div class="dsec">Recommended for you</div>
+          <div class="mini-task"><div class="mt-icon mt-social">📱</div><div class="mt-info"><div class="mt-title">Follow &amp; repost on X</div><div class="mt-meta">Social · ~2 min · 35 slots left</div></div><div class="mt-pay">₦250</div></div>
+          <div class="mini-task"><div class="mt-icon mt-survey">📋</div><div class="mt-info"><div class="mt-title">Banking app UX survey</div><div class="mt-meta">Survey · ~5 min · 60 slots left</div></div><div class="mt-pay">$1.50</div></div>
+          <div class="mini-task"><div class="mt-icon mt-freelance">🎨</div><div class="mt-info"><div class="mt-title">Translate English → Yoruba</div><div class="mt-meta">Freelance · ~1 hr · 9 slots left</div></div><div class="mt-pay">$8.00</div></div>
         </div>
       </div>
-      <div className={`t-toast${toast.show ? " show" : ""}`}><IconSparkle /> {toast.text}</div>
-    </>
-  );
+    </div>
+  </div>
+</section>
 
-  // ─────────────────────────────────────────────────────────────────────────
-  return (
-    <>
-      <style>{CSS}</style>
+<section style="background:rgba(8,12,82,0.4);">
+  <div class="section-inner">
+    <div class="reveal"><div class="section-label">Community</div><h2 class="section-title">Real people,<br><em>real income</em></h2></div>
+    <div class="testi-grid reveal">
+      <div class="testi-card"><div class="testi-stars">★★★★★</div><p>"I made ₦18,000 in my first week just doing social tasks between lectures. Ogapay is a legit side hustle."</p><div class="testi-author"><div class="testi-avatar" style="background:linear-gradient(135deg,#2535c8,#8a9ef5);">CK</div><div><div class="testi-name">Chukwuemeka K.</div><div class="testi-loc">Lagos, Nigeria</div></div></div></div>
+      <div class="testi-card"><div class="testi-stars">★★★★★</div><p>"Being paid in USDC means I avoid terrible exchange rates. I withdrew $50 straight to my wallet in seconds."</p><div class="testi-author"><div class="testi-avatar" style="background:linear-gradient(135deg,#f5c542,#ff8c42);">AN</div><div><div class="testi-name">Amara N.</div><div class="testi-loc">Accra, Ghana</div></div></div></div>
+      <div class="testi-card"><div class="testi-stars">★★★★★</div><p>"I posted a logo task and got 5 solid submissions within 24 hours. Way cheaper and faster than any agency."</p><div class="testi-author"><div class="testi-avatar" style="background:linear-gradient(135deg,#00d68f,#2535c8);">TO</div><div><div class="testi-name">Tunde O.</div><div class="testi-loc">Abuja, Nigeria</div></div></div></div>
+    </div>
+  </div>
+</section>
 
-      {/* ── NAV ── */}
-      <nav className="t-nav">
-        <button className="t-nav-back" onClick={onBack ?? (() => window.history.back())} title="Back">
-          <IconBack />
-        </button>
-        <div className="t-nav-brand">
-          <MonaLogo size={32} />
-          <div style={{ display: "flex", flexDirection: "column", lineHeight: 1 }}>
-            <span className="t-nav-mona">Mona</span>
-            <span className="t-nav-genesis">Genesis</span>
-          </div>
-        </div>
-        <div className="t-nav-socials">
-          <a href="https://x.com/Monasolanatoken" target="_blank" rel="noopener noreferrer" className="t-nav-social" title="Follow on X">
-            <IconX size={14} />
-          </a>
-          <a href="https://t.me/monasolanatoken" target="_blank" rel="noopener noreferrer" className="t-nav-social" title="Join Telegram">
-            <IconTg size={14} />
-          </a>
-        </div>
-      </nav>
+<section class="cta-section">
+  <div class="cta-bg"></div>
+  <div class="badge" style="margin:0 auto 28px;position:relative;z-index:1;"><div class="badge-dot"></div>Join 24,000+ earners today</div>
+  <h2>Ready to earn<br>with <em>Ogapay?</em></h2>
+  <p>Sign up free. No subscriptions. Get paid in Naira or crypto.</p>
+  <div class="cta-buttons">
+    <button class="btn btn-primary btn-lg">Create Free Account</button>
+    <button class="btn btn-ghost btn-lg">Post Your First Task →</button>
+  </div>
+</section>
 
-      {/* ── SHELL ── */}
-      <div className="t-shell">
+<footer>
+  <div class="footer-brand">
+    <div class="logo-svg">
+      <svg width="28" height="28" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="100" height="100" rx="20" fill="#1a2480"/>
+        <rect x="10" y="10" width="35" height="35" rx="7" fill="#8a9ef5" opacity="0.55"/>
+        <polygon points="10,10 45,10 10,45" fill="#1a2480" opacity="0.5"/>
+        <path d="M52 10 H68 Q87 10 87 27.5 Q87 45 68 45 H52 Z" fill="white"/>
+        <rect x="10" y="52" width="35" height="35" rx="7" fill="#8a9ef5" opacity="0.45"/>
+        <rect x="52" y="52" width="35" height="35" rx="7" fill="#8a9ef5" opacity="0.55"/>
+        <polygon points="52,52 87,52 87,87" fill="#1a2480" opacity="0.5"/>
+        <path d="M52 52 H68 Q87 52 87 69.5 Q87 87 68 87 H52 Z" fill="white"/>
+      </svg>
+      <div class="logo-wordmark">Oga<span>pay</span></div>
+    </div>
+    <p>The global microtask marketplace built for Africans and the world. Earn in Naira or crypto. No barriers.</p>
+  </div>
+  <div class="footer-col"><h5>Platform</h5><ul><li><a href="#">Browse Tasks</a></li><li><a href="#">Post a Task</a></li><li><a href="#">Leaderboard</a></li><li><a href="#">Pricing</a></li></ul></div>
+  <div class="footer-col"><h5>Earn</h5><ul><li><a href="#">Social Tasks</a></li><li><a href="#">Surveys</a></li><li><a href="#">Freelance</a></li><li><a href="#">Referrals</a></li></ul></div>
+  <div class="footer-col"><h5>Company</h5><ul><li><a href="#">About</a></li><li><a href="#">Blog</a></li><li><a href="#">Privacy</a></li><li><a href="#">Terms</a></li></ul></div>
+</footer>
+<div class="footer-bottom"><span>© 2025 Ogapay. All rights reserved.</span><span>Made with ❤️ for Africa &amp; the World</span></div>
 
-        {/* ── HEADING ── */}
-        <div className="t-heading">
-          <h1>Qualification <em>Tasks</em></h1>
-          <p>Complete tasks to boost your allocation before the snapshot closes.</p>
-        </div>
-
-        {/* ── WALLET CARD ── */}
-        <div className="t-card" style={{ "--delay": "60ms" }}>
-          <div className="t-wallet-card">
-            <div className="t-wallet-top">
-              <div>
-                <div className="t-wallet-label">Your Wallet</div>
-                <div className="t-wallet-addr">
-                  {truncateWallet(wallet)}
-                  <button className="t-copy-btn" onClick={handleCopyWallet} title="Copy address">
-                    {walletCopied ? <IconCheck /> : <IconCopy />}
-                  </button>
-                </div>
-              </div>
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6 }}>
-                {taskState.verify_wallet === "done" && (
-                  <div className="t-verified">
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="20 6 9 17 4 12"/>
-                    </svg>
-                    Verified
-                  </div>
-                )}
-                <button className="t-disconnect-btn" onClick={handleDisconnect} title="Check a different wallet">
-                  <IconDisconnect /> Switch wallet
-                </button>
-              </div>
-            </div>
-            <div className="t-wallet-stats">
-              <div className="t-wstat">
-                <div className="t-wstat-label">Base Alloc</div>
-                <div className="t-wstat-val">
-                  {loading ? <span className="t-skeleton" style={{ width: 70, display: "inline-block" }} /> : allocation.toLocaleString()}
-                  {!loading && <small>MONA</small>}
-                </div>
-              </div>
-              <div className="t-wstat">
-                <div className="t-wstat-label">Score</div>
-                <div className="t-wstat-val">{loading ? <span className="t-skeleton" style={{ width: 40, display: "inline-block" }} /> : score}</div>
-              </div>
-              <div className="t-wstat">
-                <div className="t-wstat-label">Tier</div>
-                <div className="t-wstat-val">
-                  {loading
-                    ? <span className="t-skeleton" style={{ width: 50, display: "inline-block" }} />
-                    : <span className="t-wstat-tier">{tier}</span>
-                  }
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* ── BOOST CARD ── */}
-        <div className="t-card" style={{ "--delay": "100ms" }}>
-          <div className="t-boost-card">
-            <div className="t-boost-row">
-              <div className="t-boost-col">
-                <div className="t-boost-label">Base Allocation</div>
-                <div className="t-boost-val">{allocation.toLocaleString()}<small>MONA</small></div>
-              </div>
-              <div className="t-boost-col">
-                <div className="t-boost-label">Boost Earned</div>
-                <div className="t-boost-val gold">+{totalEarned.toLocaleString()}<small>MONA</small></div>
-              </div>
-              <div className="t-boost-col">
-                <div className="t-boost-label">Projected</div>
-                <div className="t-boost-val">{(allocation + totalEarned).toLocaleString()}<small>MONA</small></div>
-              </div>
-            </div>
-            <div className="t-boost-progress">
-              <div className="t-boost-bar-label">
-                <span>Tasks completed</span>
-                <span style={{ color: "var(--gold)", fontWeight: 700 }}>
-                  {TASKS.filter((t) => taskState[t.id] === "done").length} / {TASKS.length}
-                </span>
-              </div>
-              <div className="t-boost-bar-track">
-                <div className="t-boost-bar-fill" style={{ width: `${barWidth}%` }} />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* ── SESSION LOCK BANNER ── */}
-        {!sessionReady && taskState.verify_wallet !== "done" && !loading && (
-          <div className="t-session-banner">
-            <div className="t-session-banner-icon"><IconLockSm /></div>
-            <div className="t-session-banner-text">
-              <strong>Verify your wallet first</strong> — complete the Verify Wallet task below
-              to unlock all other tasks. This confirms you own this wallet before we award points.
-            </div>
-          </div>
-        )}
-        {sessionError && (
-          <div className="t-session-banner warning">
-            <div className="t-session-banner-icon"><IconWarning /></div>
-            <div className="t-session-banner-text">{sessionError}</div>
-          </div>
-        )}
-
-        {/* ── DAILY CHECK-IN STREAK CARD ── */}
-        {taskState.verify_wallet === "done" && (
-          <div className="t-card" style={{ "--delay": "120ms" }}>
-            <div className="t-streak-card">
-              <div className="t-streak-top">
-                <div className="t-streak-left">
-                  <div className="t-streak-badge"><IconFlame /> Daily Streak</div>
-                  <div className="t-streak-count">
-                    {streakDay}<span>day{streakDay !== 1 ? "s" : ""}</span>
-                  </div>
-                  <div className="t-streak-sub">
-                    {checkedInToday
-                      ? `Come back tomorrow · next reward +${getStreakReward(streakDay + 1).toLocaleString()} MONA`
-                      : `Check in now · earn +${getStreakReward(streakDay + 1).toLocaleString()} MONA`}
-                  </div>
-                </div>
-                <button
-                  className={`t-streak-btn${checkedInToday ? " t-streak-btn--done" : ""}${checkInDoing ? " t-streak-btn--doing" : ""}`}
-                  onClick={handleCheckIn}
-                  disabled={checkedInToday || checkInDoing}
-                >
-                  {checkInDoing ? "…" : checkedInToday ? <><IconCheck /> Done</> : "Check In"}
-                </button>
-              </div>
-
-              <div className="t-streak-tiers">
-                {[{day:1,label:"Day 1",val:"500"},{day:3,label:"Day 3",val:"1K"},{day:7,label:"Day 7",val:"1.5K"},{day:14,label:"Day 14",val:"2K"},{day:30,label:"Day 30",val:"3K"}].map((tier) => {
-                  const done   = streakDay > tier.day || (streakDay === tier.day && checkedInToday);
-                  const active = streakDay === tier.day && !checkedInToday;
-                  return (
-                    <div key={tier.day} className={`t-streak-tier${done?" t-streak-tier--done":""}${active?" t-streak-tier--active":""}`}>
-                      <span className="t-streak-tier-day">{tier.label}</span>
-                      <span className="t-streak-tier-val">+{tier.val}</span>
-                    </div>
-                  );
-                })}
-              </div>
-
-              <div className="t-streak-stats">
-                <div className="t-streak-stat">
-                  <div className="t-streak-stat-label">Best Streak</div>
-                  <div className="t-streak-stat-val">{longestStreak}<small>days</small></div>
-                </div>
-                <div className="t-streak-stat">
-                  <div className="t-streak-stat-label">Total Earned</div>
-                  <div className="t-streak-stat-val">{streakMona.toLocaleString()}<small>MONA</small></div>
-                </div>
-                <div className="t-streak-stat">
-                  <div className="t-streak-stat-label">Next Reward</div>
-                  <div className="t-streak-stat-val">+{getStreakReward(streakDay + 1).toLocaleString()}<small>MONA</small></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ── TASK LIST ── */}
-        <div>
-          <div className="t-section-label"><span>Tasks</span></div>
-        </div>
-
-        <div className="t-tasks">
-          {TASKS.map((task, i) => {
-            const state   = taskState[task.id];
-            const isDone  = state === "done";
-            const isDoing = state === "doing";
-
-            // Non-verify tasks are locked until session token is obtained.
-            // If verify_wallet is already "done" (restored from DB) treat as unlocked
-            // even if sessionReady hasn't flipped yet.
-            const isLocked = !task.auto && !sessionReady && taskState.verify_wallet !== "done" && !isDone;
-
-            return (
-              <div key={task.id}>
-                <div
-                  className={`t-task${isDone ? " t-task--done" : ""}${isDoing ? " t-task--doing" : ""}`}
-                  style={{ "--delay": `${140 + i * 50}ms`, opacity: isLocked ? 0.45 : 1, transition: "opacity 0.3s" }}
-                >
-                  <div className="t-task-icon">
-                    {isDone ? <IconCheck /> : task.icon}
-                  </div>
-                  <div className="t-task-info">
-                    <div className="t-task-title">{task.title}</div>
-                    <div className="t-task-sub">{task.sub}</div>
-                  </div>
-                  <div className="t-task-right">
-                    <div className="t-task-reward">
-                      +{task.reward.toLocaleString()}<small>MONA</small>
-                    </div>
-
-                    {/* Verify wallet — Phantom signature flow */}
-                    {task.auto && (
-                      isDone ? (
-                        <button className="t-task-btn t-task-btn--done" disabled>
-                          <IconCheck /> Verified
-                        </button>
-                      ) : (
-                        <button
-                          className={`t-task-btn${verifyPhase === "working" ? " t-task-btn--doing" : ""}`}
-                          onClick={handlePhantomVerify}
-                          disabled={verifyPhase === "working"}
-                        >
-                          <PhantomIcon />
-                          {verifyPhase === "working" ? "Verifying…" : "Verify"}
-                        </button>
-                      )
-                    )}
-
-                    {/* Referral task — no Start button, expand below */}
-                    {task.isReferral && (
-                      <button className="t-task-btn" style={{ opacity: 0.6, cursor: "default" }} disabled>
-                        Invite
-                      </button>
-                    )}
-
-                    {/* Honour tasks */}
-                    {!task.auto && !task.isReferral && (
-                      isDone ? (
-                        <button className="t-task-btn t-task-btn--done" disabled>
-                          <IconCheck /> Done
-                        </button>
-                      ) : (
-                        <button
-                          className={`t-task-btn${isDoing ? " t-task-btn--doing" : ""}`}
-                          onClick={() => handleStart(task)}
-                          disabled={isDoing || isLocked}
-                          title={isLocked ? "Verify your wallet first" : undefined}
-                        >
-                          {isLocked
-                            ? <IconLockSm />
-                            : isDoing
-                              ? taskCountdown[task.id] > 0
-                                ? `${taskCountdown[task.id]}s…`
-                                : "Saving…"
-                              : "Start"}
-                        </button>
-                      )
-                    )}
-                  </div>
-                </div>
-
-                {/* Verify status message */}
-                {task.auto && verifyMsg && (
-                  <div style={{
-                    fontSize: 12, color: verifyPhase === "error" ? "#ff6b6b" : "rgba(245,166,35,0.8)",
-                    textAlign: "center", padding: "6px 0", animation: "tRise 0.3s ease both"
-                  }}>
-                    {verifyMsg}
-                  </div>
-                )}
-
-                {/* ── Referral expansion panel ── */}
-                {task.isReferral && (
-                  <div className="t-referral-box" style={{ marginTop: 8 }}>
-                    <div className="t-referral-label">Your Referral Link</div>
-                    <div className="t-referral-link-row">
-                      <div className="t-referral-link">
-                        {referralLink || "Loading…"}
-                      </div>
-                      <button className="t-copy-link-btn" onClick={handleCopyLink} disabled={!referralLink}>
-                        {linkCopied ? <><IconCheck /> Copied</> : <><IconCopy /> Copy</>}
-                      </button>
-                    </div>
-                    <div className="t-referral-count">
-                      <span>Referrals used your link</span>
-                      <strong>{referralCount}</strong>
-                    </div>
-                    {referralTierLabel && (
-                      <div style={{ fontSize: 11, color: "var(--gold)", fontWeight: 700, letterSpacing: "0.08em" }}>
-                        <IconSparkle /> {referralTierLabel}
-                      </div>
-                    )}
-                    {referralCount > 0 && (
-                      <div className="t-referral-progress">
-                        <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "var(--dimmer)", marginBottom: 4 }}>
-                          <span>Referral boost earned</span>
-                          <span style={{ color: "var(--gold)", fontWeight: 700 }}>+{referralEarned.toLocaleString()} MONA</span>
-                        </div>
-                        <div className="t-ref-bar-track">
-                          <div className="t-ref-bar-fill" style={{ width: `${Math.min((referralCount / 20) * 100, 100)}%` }} />
-                        </div>
-                      </div>
-                    )}
-                    {nextUnlock && (
-                      <div style={{ fontSize: 11, color: "var(--dimmer)", textAlign: "center" }}>
-                        Refer <strong style={{ color: "var(--white)" }}>{nextUnlock.target - referralCount} more</strong> to unlock{" "}
-                        <strong style={{ color: "var(--gold)" }}>+{nextUnlock.bonus.toLocaleString()} MONA</strong> bonus
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-
-        {/* ── INFO BANNER ── */}
-        <div className="t-info-banner" style={{ "--delay": "420ms" }}>
-          <div className="t-info-icon"><IconStar /></div>
-          <div className="t-info-text">
-            <strong>Complete all tasks</strong> to maximize your allocation before the snapshot.
-            Wallet verification is checked automatically from our verified wallets database.
-          </div>
-        </div>
-
-        {/* ── FOOTER ── */}
-        <div className="t-footer" style={{ "--delay": "460ms" }}>
-          <div className="t-footer-icon">
-            <IconLock />
-            All tasks are verified before snapshot.
-          </div>
-          <div>No bots. No shortcuts.</div>
-        </div>
-
-      </div>
-
-      {/* ── TOAST ── */}
-      <div className={`t-toast${toast.show ? " show" : ""}`}><IconSparkle /> {toast.text}</div>
-    </>
-  );
-}
-
-// ─── Icons ────────────────────────────────────────────────────────────────────
-function IconFlame() {
-  return (
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" style={{ display:"inline",verticalAlign:"middle",marginRight:3 }}>
-      <path d="M13.5 0.67s.74 2.65.74 4.8c0 2.06-1.35 3.73-3.41 3.73-2.07 0-3.63-1.67-3.63-3.73l.03-.36C5.21 7.51 4 10.62 4 14c0 4.42 3.58 8 8 8s8-3.58 8-8C20 8.61 17.41 3.8 13.5.67zM11.71 19c-1.78 0-3.22-1.4-3.22-3.14 0-1.62 1.05-2.76 2.81-3.12 1.77-.36 3.6-1.21 4.62-2.58.39 1.29.59 2.65.59 4.04 0 2.65-2.15 4.8-4.8 4.8z"/>
-    </svg>
-  );
-}
-function IconSparkle() {
-  return (
-    <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" style={{ display:"inline",verticalAlign:"middle",marginRight:3 }}>
-      <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/>
-    </svg>
-  );
-}
-function IconLockSm() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-      <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-    </svg>
-  );
-}
-function IconWarning() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-      <line x1="12" y1="9" x2="12" y2="13"/>
-      <line x1="12" y1="17" x2="12.01" y2="17"/>
-    </svg>
-  );
-}
-function IconCheckLg() {
-  return (
-    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-      <polyline points="20 6 9 17 4 12"/>
-    </svg>
-  );
-}
-function MonaLogo({ size = 34 }) {
-  return (
-    <img
-      src="https://i.postimg.cc/PqcnWfqJ/1000457223-removebg-preview.png"
-      width={size} height={size}
-      style={{ objectFit: "contain", display: "block", flexShrink: 0 }}
-      alt="Mona"
-    />
-  );
-}
-function PhantomIcon() {
-  return (
-    <svg width="15" height="15" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M110.584 64.284C110.584 89.739 90.039 110.284 64.584 110.284C39.129 110.284 18.584 89.739 18.584 64.284C18.584 38.829 39.129 18.284 64.584 18.284C90.039 18.284 110.584 38.829 110.584 64.284Z" fill="#AB9FF2"/>
-      <path d="M87.307 55.412H80.545C79.974 43.677 70.336 34.28 58.473 34.28C46.354 34.28 36.562 44.072 36.562 56.191V57.982C36.562 68.543 44.125 77.307 54.175 79.059C54.838 79.175 55.512 79.234 56.189 79.234H60.338C62.115 79.234 63.559 77.79 63.559 76.013C63.559 74.236 62.115 72.792 60.338 72.792H56.189C55.714 72.792 55.243 72.752 54.782 72.674C48.264 71.553 43.338 65.857 43.338 59.01V57.219C43.338 49.108 49.937 42.509 58.047 42.509H58.473C66.477 42.509 72.99 49.054 73.1 57.038L73.107 57.348V61.412C73.107 65.278 76.241 68.412 80.107 68.412H87.307C91.173 68.412 94.307 65.278 94.307 61.412V62.412C94.307 58.546 91.173 55.412 87.307 55.412Z" fill="white"/>
-      <circle cx="56" cy="90" r="5" fill="white"/>
-      <circle cx="72" cy="90" r="5" fill="white"/>
-    </svg>
-  );
-}
-function IconX({ size = 15 }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
-      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-    </svg>
-  );
-}
-function IconTg({ size = 15 }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
-      <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
-    </svg>
-  );
-}
-function IconCheck() {
-  return (
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-      <polyline points="20 6 9 17 4 12"/>
-    </svg>
-  );
-}
-function IconShield() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-    </svg>
-  );
-}
-function IconRetweet() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/>
-      <polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>
-    </svg>
-  );
-}
-function IconUsers() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-      <circle cx="9" cy="7" r="4"/>
-      <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-      <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-    </svg>
-  );
-}
-function IconStar() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-    </svg>
-  );
-}
-function IconLock() {
-  return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-      <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-    </svg>
-  );
-}
-function IconCopy() {
-  return (
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-    </svg>
-  );
-}
-function IconDisconnect() {
-  return (
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-      <polyline points="16 17 21 12 16 7"/>
-      <line x1="21" y1="12" x2="9" y2="12"/>
-    </svg>
-  );
-}
-function IconBack() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-      <polyline points="15 18 9 12 15 6"/>
-    </svg>
-  );
-}
+<script>
+const obs=new IntersectionObserver(e=>{e.forEach(x=>{if(x.isIntersecting)x.target.classList.add('visible');});},{threshold:0.08});
+document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
+document.querySelectorAll('.tab').forEach(tab=>{tab.addEventListener('click',function(){this.closest('.tabs').querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));this.classList.add('active');});});
+</script>
+</body>
+</html>
