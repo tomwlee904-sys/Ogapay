@@ -1582,6 +1582,22 @@ if(scroll&&dots.length){
     dots.forEach((d,i)=>d.classList.toggle('active',i===idx));
   });
 }
+
+// THEME TOGGLE
+function toggleTheme(){
+  const isLight = document.body.classList.toggle('light');
+  localStorage.setItem('ogapay_theme', isLight ? 'light' : 'dark');
+  const btn = document.getElementById('themeToggle');
+  if(btn) btn.textContent = isLight ? '🌙' : '☀️';
+}
+(function(){
+  const saved = localStorage.getItem('ogapay_theme');
+  if(saved === 'light'){
+    document.body.classList.add('light');
+    const btn = document.getElementById('themeToggle');
+    if(btn) btn.textContent = '🌙';
+  }
+})();
 </script>
 </body>
 </html>
