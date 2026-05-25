@@ -7,66 +7,31 @@
 <link rel="icon" type="image/png" href="https://i.postimg.cc/cLH64k0w/1000459401-removebg-preview.png"/>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet"/>
 <style>
-/* ═══════════════════════════════════════════
-   OGAPAY — DESIGN SYSTEM
-   Light: clean white fintech
-   Dark:  Linear / Vercel / Coinbase depth
-═══════════════════════════════════════════ */
 :root{
-  --bg:#FFFFFF;
-  --bg2:#FAFAFB;
-  --card:#FFFFFF;
-  --card-soft:#F5F6FA;
-  --border:#E5E7EB;
-  --border2:#D1D5DB;
-  --text:#0A0A0A;
-  --text2:#6B7280;
-  --text3:#9CA3AF;
-  --blue:#033CE3;
-  --blue2:#1244E8;
-  --blue-bright:#315EFB;
-  --blue-hover:#011F9A;
-  --blue-light:#EEF2FF;
-  --blue-lighter:#F5F7FF;
-  --blue-soft:#A5B4FC;
-  --blue-deep:#011F9A;
+  --bg:#FFFFFF;--bg2:#FAFAFB;--card:#FFFFFF;--card-soft:#F5F6FA;
+  --border:#E5E7EB;--border2:#D1D5DB;--text:#0A0A0A;--text2:#6B7280;--text3:#9CA3AF;
+  --blue:#033CE3;--blue2:#1244E8;--blue-bright:#315EFB;--blue-hover:#011F9A;
+  --blue-light:#EEF2FF;--blue-lighter:#F5F7FF;--blue-soft:#A5B4FC;--blue-deep:#011F9A;
   --blue-grad:linear-gradient(135deg,#315EFB 0%,#033CE3 100%);
-  --gold:#F5B301;
-  --gold-light:#FFFBEB;
+  --gold:#F5B301;--gold-light:#FFFBEB;
   --shadow:0 1px 3px rgba(0,0,0,0.06),0 1px 2px rgba(0,0,0,0.04);
   --shadow-md:0 4px 12px rgba(0,0,0,0.07),0 2px 4px rgba(0,0,0,0.04);
   --shadow-lg:0 12px 32px rgba(0,0,0,0.09),0 4px 8px rgba(0,0,0,0.04);
   --shadow-blue:0 4px 20px rgba(49,94,251,0.28);
   --radius:16px;--radius-sm:10px;--radius-pill:100px;
 }
-
 [data-theme="dark"]{
-  --bg:#050816;
-  --bg2:#0B1023;
-  --card:#10172B;
-  --card-soft:#121A31;
-  --border:rgba(255,255,255,0.08);
-  --border2:rgba(255,255,255,0.14);
-  --text:#FFFFFF;
-  --text2:#A1A8C3;
-  --text3:#6E7590;
-  --blue:#315EFB;
-  --blue2:#4B74FF;
-  --blue-bright:#315EFB;
-  --blue-hover:#5577FF;
-  --blue-light:rgba(49,94,251,0.13);
-  --blue-lighter:rgba(49,94,251,0.07);
-  --blue-soft:rgba(49,94,251,0.28);
-  --blue-deep:#0627B8;
+  --bg:#050816;--bg2:#0B1023;--card:#10172B;--card-soft:#121A31;
+  --border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.14);
+  --text:#FFFFFF;--text2:#A1A8C3;--text3:#6E7590;
+  --blue:#315EFB;--blue2:#4B74FF;--blue-bright:#315EFB;--blue-hover:#5577FF;
+  --blue-light:rgba(49,94,251,0.13);--blue-lighter:rgba(49,94,251,0.07);
+  --blue-soft:rgba(49,94,251,0.28);--blue-deep:#0627B8;
   --blue-grad:linear-gradient(135deg,#315EFB 0%,#0627B8 100%);
-  --gold:#F5B301;
-  --gold-light:rgba(245,179,1,0.1);
-  --shadow:0 1px 4px rgba(0,0,0,0.5);
-  --shadow-md:0 4px 16px rgba(0,0,0,0.55);
-  --shadow-lg:0 12px 40px rgba(0,0,0,0.65);
-  --shadow-blue:0 4px 24px rgba(49,94,251,0.38);
+  --gold:#F5B301;--gold-light:rgba(245,179,1,0.1);
+  --shadow:0 1px 4px rgba(0,0,0,0.5);--shadow-md:0 4px 16px rgba(0,0,0,0.55);
+  --shadow-lg:0 12px 40px rgba(0,0,0,0.65);--shadow-blue:0 4px 24px rgba(49,94,251,0.38);
 }
-
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 *:not(img){transition:background-color 0.25s ease,border-color 0.25s ease,color 0.2s ease,box-shadow 0.25s ease;}
 html{scroll-behavior:smooth;}
@@ -75,14 +40,10 @@ h1,h2,h3,h4,h5{font-family:'Outfit',sans-serif;line-height:1.15;}
 a{color:inherit;text-decoration:none;}
 button{font-family:'DM Sans',sans-serif;cursor:pointer;border:none;background:none;}
 img{max-width:100%;display:block;}
-
-/* ── UTILS ── */
 .container{max-width:1160px;margin:0 auto;padding:0 24px;}
 .section{padding:88px 0;}
 .section-sm{padding:64px 0;}
 .section-alt{background:var(--bg2);}
-
-/* ── BUTTONS ── */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 24px;border-radius:var(--radius-pill);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;transition:all 0.18s;cursor:pointer;white-space:nowrap;border:none;}
 .btn-primary{background:var(--blue-grad);color:#fff;box-shadow:var(--shadow-blue);}
 .btn-primary:hover{filter:brightness(1.12);transform:translateY(-1px);box-shadow:0 6px 28px rgba(49,94,251,0.45);}
@@ -90,19 +51,14 @@ img{max-width:100%;display:block;}
 .btn-secondary:hover{border-color:var(--blue);color:var(--blue);}
 [data-theme="dark"] .btn-secondary{background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.18);}
 [data-theme="dark"] .btn-secondary:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-light);}
-.btn-outline-blue{background:transparent;color:var(--blue);border:1.5px solid var(--blue);}
-.btn-outline-blue:hover{background:var(--blue-light);transform:translateY(-1px);}
 .btn-lg{padding:14px 32px;font-size:15px;}
 .btn-sm{padding:8px 16px;font-size:13px;}
 .btn-white{background:#fff;color:#033CE3;font-weight:700;}
 .btn-white:hover{background:#EEF2FF;transform:translateY(-1px);box-shadow:0 6px 20px rgba(255,255,255,0.2);}
 .btn-outline-white{background:transparent;color:#fff;border:1.5px solid rgba(255,255,255,0.45);}
 .btn-outline-white:hover{background:rgba(255,255,255,0.1);}
-
-/* ── BADGES ── */
 .badge{display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:var(--radius-pill);font-size:12px;font-weight:600;}
 .badge-blue{background:var(--blue-light);color:var(--blue);}
-.badge-blue-active{background:var(--blue-light);color:var(--blue);}
 .badge-gold{background:var(--gold-light);color:var(--gold);}
 [data-theme="dark"] .badge-gold{color:#F5B301;}
 .badge-green{background:var(--blue-light);color:var(--blue);}
@@ -114,13 +70,9 @@ img{max-width:100%;display:block;}
 .dot-gold{background:var(--gold);}
 .dot-live{background:#22C55E;animation:livePulse 2s infinite;}
 @keyframes livePulse{0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,0.5);}50%{box-shadow:0 0 0 5px rgba(34,197,94,0);}}
-
-/* ── SECTION LABELS ── */
 .section-label{font-family:'DM Sans',sans-serif;font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--blue);margin-bottom:12px;display:block;}
 .section-title{font-family:'Outfit',sans-serif;font-size:clamp(26px,3.2vw,38px);font-weight:700;color:var(--text);letter-spacing:-0.5px;line-height:1.15;margin-bottom:10px;}
 .section-sub{color:var(--text2);font-size:15px;line-height:1.7;max-width:460px;}
-
-/* ── REVEAL ── */
 .reveal{opacity:0;transform:translateY(20px);transition:opacity 0.55s ease,transform 0.55s ease;}
 .reveal.visible{opacity:1;transform:none;}
 .reveal-delay-1{transition-delay:0.08s;}
@@ -128,17 +80,9 @@ img{max-width:100%;display:block;}
 .reveal-delay-3{transition-delay:0.24s;}
 .reveal-delay-4{transition-delay:0.32s;}
 
-/* ════════════════════ NAVBAR ════════════════════ */
-.nav{
-  position:sticky;top:0;z-index:500;
-  background:rgba(255,255,255,0.92);
-  border-bottom:1px solid var(--border);
-  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
-}
-[data-theme="dark"] .nav{
-  background:rgba(5,8,22,0.96);
-  border-bottom:1px solid rgba(255,255,255,0.07);
-}
+/* NAVBAR */
+.nav{position:sticky;top:0;z-index:500;background:rgba(255,255,255,0.92);border-bottom:1px solid var(--border);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);}
+[data-theme="dark"] .nav{background:rgba(5,8,22,0.96);border-bottom:1px solid rgba(255,255,255,0.07);}
 @media(max-width:768px){[data-theme="dark"] .nav{background:#050816;}}
 .nav-inner{display:flex;align-items:center;gap:6px;padding:0 24px;height:60px;max-width:1160px;margin:0 auto;}
 .nav-logo{display:flex;align-items:center;flex-shrink:0;margin-right:8px;}
@@ -160,11 +104,9 @@ img{max-width:100%;display:block;}
 .dark-toggle:hover{border-color:var(--border2);color:var(--text);}
 .hamburger{display:none;width:34px;height:34px;border-radius:8px;border:1.5px solid var(--border);align-items:center;justify-content:center;color:var(--text2);background:var(--card);flex-shrink:0;cursor:pointer;}
 
-/* ════════════════════ HERO ════════════════════ */
+/* HERO */
 .hero{padding:72px 0 80px;background:var(--bg);border-bottom:1px solid var(--border);}
-[data-theme="dark"] .hero{
-  background:radial-gradient(ellipse 70% 50% at 50% -10%,rgba(49,94,251,0.13) 0%,transparent 70%),var(--bg);
-}
+[data-theme="dark"] .hero{background:radial-gradient(ellipse 70% 50% at 50% -10%,rgba(49,94,251,0.13) 0%,transparent 70%),var(--bg);}
 .hero-inner{display:grid;grid-template-columns:1fr 420px;gap:64px;align-items:center;}
 .hero-eyebrow{display:inline-flex;align-items:center;gap:8px;padding:5px 14px;border-radius:var(--radius-pill);background:var(--blue-light);border:1px solid var(--blue-soft);font-size:12.5px;font-weight:600;color:var(--blue);margin-bottom:22px;}
 .hero-h1{font-family:'Outfit',sans-serif;font-size:clamp(36px,4.5vw,58px);font-weight:800;letter-spacing:-1.5px;line-height:1.04;color:var(--text);margin-bottom:18px;}
@@ -174,7 +116,6 @@ img{max-width:100%;display:block;}
 .hero-cta{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:36px;}
 .hero-trust{display:flex;align-items:center;gap:20px;flex-wrap:wrap;}
 .trust-item{display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:500;color:var(--text2);}
-.trust-item svg{flex-shrink:0;}
 
 /* ANALYTICS CARD */
 .analytics-card{background:var(--card);border:1.5px solid var(--border);border-radius:20px;padding:24px;box-shadow:var(--shadow-lg);}
@@ -191,7 +132,7 @@ img{max-width:100%;display:block;}
 .ac-stat-label{font-size:11.5px;color:var(--text3);}
 .ac-footer{padding-top:14px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:center;gap:8px;font-size:12px;color:var(--text3);font-weight:500;}
 
-/* ════════════════════ QUICK TASKS BAR ════════════════════ */
+/* QUICK TASKS BAR */
 .quick-bar{padding:28px 0;border-bottom:1px solid var(--border);background:var(--bg);}
 .quick-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--text3);margin-bottom:12px;display:flex;align-items:center;gap:6px;}
 .quick-scroll{display:flex;gap:10px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none;}
@@ -199,15 +140,10 @@ img{max-width:100%;display:block;}
 .qcard{flex-shrink:0;display:flex;align-items:center;gap:10px;background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:10px 16px;cursor:pointer;transition:all 0.18s;}
 .qcard:hover{border-color:var(--blue);box-shadow:var(--shadow-blue);transform:translateY(-1px);}
 .qcard-icon{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:15px;}
-[data-theme="dark"] .qcard .qcard-icon[style*="#FEF3C7"]{background:rgba(245,179,1,0.15)!important;}
-[data-theme="dark"] .qcard .qcard-icon[style*="#EEF2FF"]{background:rgba(49,94,251,0.15)!important;}
-[data-theme="dark"] .qcard .qcard-icon[style*="#FCE7F3"]{background:rgba(236,72,153,0.12)!important;}
-[data-theme="dark"] .qcard .qcard-icon[style*="#D1FAE5"]{background:rgba(34,197,94,0.12)!important;}
-[data-theme="dark"] .qcard .qcard-icon[style*="#FEE2E2"]{background:rgba(239,68,68,0.12)!important;}
 .qcard-name{font-size:13px;font-weight:600;color:var(--text);}
 .qcard-reward{font-size:11.5px;color:var(--text2);margin-top:1px;}
 
-/* ════════════════════ GET STARTED ════════════════════ */
+/* GET STARTED */
 .gs-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:36px;}
 .gs-card{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);padding:28px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;transition:all 0.2s;gap:16px;}
 .gs-card:hover{border-color:var(--blue);box-shadow:var(--shadow-blue);transform:translateY(-2px);}
@@ -219,7 +155,7 @@ img{max-width:100%;display:block;}
 .gs-arrow{width:36px;height:36px;border-radius:50%;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--text3);transition:all 0.2s;flex-shrink:0;}
 .gs-card:hover .gs-arrow{border-color:var(--blue);color:var(--blue);background:var(--blue-light);}
 
-/* ════════════════════ TASK CARDS ════════════════════ */
+/* TASK CARDS */
 .tasks-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px;}
 .tabs{display:flex;gap:3px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:3px;}
 .tab{padding:7px 15px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;color:var(--text2);transition:all 0.18s;border:none;background:transparent;font-family:'DM Sans',sans-serif;}
@@ -237,7 +173,6 @@ img{max-width:100%;display:block;}
 .tc-by{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--text3);}
 .tc-name{font-size:13px;font-weight:600;color:var(--text);}
 .tc-title{font-size:14px;font-weight:600;color:var(--text);line-height:1.45;}
-.tc-desc{font-size:12.5px;color:var(--text2);line-height:1.6;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
 .progress-row{display:flex;justify-content:space-between;font-size:11.5px;color:var(--text3);margin-bottom:5px;}
 .progress-bar{height:4px;background:var(--border);border-radius:var(--radius-pill);overflow:hidden;}
 .progress-fill{height:100%;background:var(--blue);border-radius:var(--radius-pill);transition:width 0.6s ease;}
@@ -249,12 +184,12 @@ img{max-width:100%;display:block;}
 .tc-tags{display:flex;gap:5px;flex-wrap:wrap;}
 .tc-footer{display:flex;align-items:center;justify-content:space-between;font-size:11.5px;color:var(--text3);padding-top:10px;border-top:1px solid var(--border);}
 
-/* ════════════════════ STORE ════════════════════ */
+/* STORE */
 .store-scroll{display:flex;gap:14px;overflow-x:auto;padding-bottom:8px;scrollbar-width:none;}
 .store-scroll::-webkit-scrollbar{display:none;}
 .store-card{flex-shrink:0;width:230px;background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);overflow:hidden;cursor:pointer;transition:all 0.2s;}
 .store-card:hover{border-color:var(--blue);box-shadow:var(--shadow-blue);transform:translateY(-2px);}
-.store-thumb{width:100%;height:130px;display:flex;align-items:center;justify-content:center;font-size:36px;position:relative;}
+.store-thumb{width:100%;height:130px;display:flex;align-items:center;justify-content:center;font-size:36px;}
 .store-body{padding:14px;}
 .store-title{font-family:'Outfit',sans-serif;font-size:13.5px;font-weight:700;color:var(--text);margin-bottom:4px;line-height:1.3;}
 .store-desc{font-size:12px;color:var(--text2);line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:10px;}
@@ -262,21 +197,18 @@ img{max-width:100%;display:block;}
 .store-price{font-family:'Outfit',sans-serif;font-size:15px;font-weight:700;color:var(--blue);}
 .store-rating{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--text2);}
 
-/* ════════════════════ COMMUNITIES ════════════════════ */
+/* COMMUNITIES */
 .communities-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin-top:36px;}
 .community-card{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);overflow:hidden;cursor:pointer;transition:all 0.2s;}
 .community-card:hover{border-color:var(--blue);box-shadow:var(--shadow-blue);transform:translateY(-2px);}
-.community-banner{height:72px;display:flex;align-items:center;justify-content:center;font-size:26px;position:relative;}
-[data-theme="dark"] .community-banner[style*="#EEF2FF"]{background:rgba(49,94,251,0.15)!important;}
-[data-theme="dark"] .community-banner[style*="#FEF3C7"]{background:rgba(245,179,1,0.13)!important;}
-[data-theme="dark"] .community-banner[style*="#FDF2F8"]{background:rgba(236,72,153,0.11)!important;}
+.community-banner{height:72px;display:flex;align-items:center;justify-content:center;font-size:26px;}
 .community-body{padding:14px;}
 .community-title{font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;color:var(--text);margin-bottom:3px;}
 .community-desc{font-size:12px;color:var(--text2);line-height:1.5;margin-bottom:10px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
 .community-meta{display:flex;gap:12px;}
 .community-meta-item{display:flex;align-items:center;gap:4px;font-size:11.5px;color:var(--text3);}
 
-/* ════════════════════ PAYMENTS ════════════════════ */
+/* PAYMENTS */
 .payment-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:36px;}
 .payment-card{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);padding:32px 28px;}
 .payment-card.ngn-card{border-color:#FDE68A;background:linear-gradient(160deg,#FFFBEB 0%,#fff 60%);}
@@ -294,7 +226,7 @@ img{max-width:100%;display:block;}
 [data-theme="dark"] .ngn-card .pf-check{background:rgba(245,179,1,0.2);color:#F5B301;}
 [data-theme="dark"] .usdc-card .pf-check{background:rgba(49,94,251,0.2);color:#315EFB;}
 
-/* ════════════════════ HOW IT WORKS ════════════════════ */
+/* HOW IT WORKS */
 .how-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin-top:44px;border:1.5px solid var(--border);border-radius:var(--radius);overflow:hidden;}
 .step-card{padding:32px 24px;border-right:1px solid var(--border);transition:background 0.2s;position:relative;background:var(--card);}
 .step-card:last-child{border-right:none;}
@@ -304,17 +236,12 @@ img{max-width:100%;display:block;}
 .step-card:hover::after{transform:scaleX(1);}
 .step-num{font-family:'Outfit',sans-serif;font-size:42px;font-weight:800;color:var(--border);line-height:1;margin-bottom:16px;}
 [data-theme="dark"] .step-num{color:rgba(255,255,255,0.06);}
-.step-card:hover .step-num{color:var(--blue-light);}
-[data-theme="dark"] .step-card:hover .step-num{color:rgba(49,94,251,0.3);}
 .step-icon{width:40px;height:40px;border-radius:10px;background:var(--blue-light);display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:12px;}
 .step-card h3{font-family:'Outfit',sans-serif;font-size:15px;font-weight:700;color:var(--text);margin-bottom:6px;}
 .step-card p{font-size:13px;color:var(--text2);line-height:1.6;}
 
-/* ════════════════════ MOBILE NAV ════════════════════ */
-.mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:500;
-  background:var(--bg);border-top:1px solid var(--border);
-  padding:8px 0 max(8px,env(safe-area-inset-bottom));
-  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);}
+/* MOBILE NAV */
+.mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:500;background:var(--bg);border-top:1px solid var(--border);padding:8px 0 max(8px,env(safe-area-inset-bottom));backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);}
 [data-theme="dark"] .mobile-nav{background:rgba(5,8,22,0.96);border-top:1px solid rgba(255,255,255,0.07);}
 .mobile-nav-inner{display:flex;align-items:center;justify-content:space-around;max-width:480px;margin:0 auto;padding:0 16px;}
 .mobile-nav-item{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 12px;border-radius:10px;cursor:pointer;transition:all 0.15s;flex:1;}
@@ -326,7 +253,7 @@ img{max-width:100%;display:block;}
 .mobile-nav-item.active .mobile-nav-label{color:var(--blue);}
 .mobile-nav-create{background:var(--blue-grad);border-radius:50%;width:42px;height:42px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 18px rgba(49,94,251,0.45);margin-top:-8px;}
 
-/* ════════════════════ TESTIMONIALS ════════════════════ */
+/* TESTIMONIALS */
 .testi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:36px;}
 .testi-card{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);padding:24px;}
 .testi-stars{color:var(--gold);font-size:13px;margin-bottom:12px;letter-spacing:1px;}
@@ -336,7 +263,7 @@ img{max-width:100%;display:block;}
 .testi-name{font-size:13px;font-weight:600;color:var(--text);}
 .testi-loc{font-size:11.5px;color:var(--text3);}
 
-/* ════════════════════ TICKER ════════════════════ */
+/* TICKER */
 .ticker-wrap{overflow:hidden;border-top:1px solid var(--border);border-bottom:1px solid var(--border);background:var(--bg2);padding:10px 0;}
 .ticker{display:flex;gap:52px;animation:tickerMove 32s linear infinite;white-space:nowrap;}
 .ticker-item{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--text2);flex-shrink:0;}
@@ -345,14 +272,14 @@ img{max-width:100%;display:block;}
 .ticker-item .usd{color:var(--blue);font-weight:600;}
 @keyframes tickerMove{from{transform:translateX(0);}to{transform:translateX(-50%);}}
 
-/* ════════════════════ CTA SECTION ════════════════════ */
+/* CTA */
 .cta-section{background:var(--blue-grad);padding:80px 0;text-align:center;position:relative;overflow:hidden;}
 [data-theme="dark"] .cta-section::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 80% at 50% 50%,rgba(49,94,251,0.3) 0%,transparent 70%);pointer-events:none;}
 .cta-section h2{font-family:'Outfit',sans-serif;font-size:clamp(28px,4vw,44px);font-weight:800;color:#fff;letter-spacing:-1px;margin-bottom:14px;}
 .cta-section p{color:rgba(255,255,255,0.75);font-size:16px;margin-bottom:32px;}
 .cta-buttons{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;}
 
-/* ════════════════════ FOOTER ════════════════════ */
+/* FOOTER */
 footer{background:var(--bg2);border-top:1px solid var(--border);padding:52px 0 32px;}
 .footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:48px;margin-bottom:48px;}
 .footer-brand p{color:var(--text2);font-size:13px;margin-top:12px;max-width:240px;line-height:1.75;}
@@ -366,7 +293,7 @@ footer{background:var(--bg2);border-top:1px solid var(--border);padding:52px 0 3
 .footer-col ul li a:hover{color:var(--blue);}
 .footer-bottom{display:flex;align-items:center;justify-content:space-between;padding-top:24px;border-top:1px solid var(--border);font-size:12.5px;color:var(--text3);}
 
-/* ════════════════════ FAQ ════════════════════ */
+/* FAQ */
 .faq-item{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);padding:18px 20px;cursor:pointer;transition:border-color 0.2s;}
 .faq-item:hover{border-color:var(--border2);}
 .faq-summary{font-family:'Outfit',sans-serif;font-size:15px;font-weight:600;color:var(--text);list-style:none;display:flex;justify-content:space-between;align-items:center;}
@@ -374,7 +301,7 @@ footer{background:var(--bg2);border-top:1px solid var(--border);padding:52px 0 3
 .faq-icon{color:var(--blue);font-size:18px;flex-shrink:0;margin-left:12px;}
 .faq-body{margin-top:12px;font-size:13.5px;color:var(--text2);line-height:1.7;}
 
-/* ════════════════════ MOBILE MENU ════════════════════ */
+/* MOBILE MENU */
 .mobile-menu{display:none;position:fixed;inset:0;z-index:600;background:var(--bg);padding:24px;flex-direction:column;gap:8px;overflow-y:auto;}
 .mobile-menu.open{display:flex;}
 .mobile-menu-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
@@ -384,7 +311,7 @@ footer{background:var(--bg2);border-top:1px solid var(--border);padding:52px 0 3
 .mobile-menu-link.active{background:var(--blue-light);color:var(--blue);border-color:transparent;}
 .mobile-menu-divider{margin-top:12px;padding-top:16px;border-top:1px solid var(--border);}
 
-/* ════════════════════ RESPONSIVE ════════════════════ */
+/* RESPONSIVE */
 @media(max-width:1024px){
   .hero-inner{grid-template-columns:1fr;gap:40px;}
   .analytics-card{max-width:500px;}
@@ -417,13 +344,12 @@ footer{background:var(--bg2);border-top:1px solid var(--border);padding:52px 0 3
   .footer-grid{grid-template-columns:1fr;}
   .communities-grid{grid-template-columns:1fr;}
   .hero-h1{font-size:34px;letter-spacing:-1px;}
-  .ac-stats{grid-template-columns:1fr 1fr;}
 }
 </style>
 </head>
 <body>
 
-<!-- ════ NAVBAR ════ -->
+<!-- NAVBAR -->
 <header class="nav">
   <div class="nav-inner">
     <a href="#" class="nav-logo">
@@ -431,7 +357,7 @@ footer{background:var(--bg2);border-top:1px solid var(--border);padding:52px 0 3
       <img src="https://i.postimg.cc/3RgxbPCf/1000459444-removebg-preview.png" alt="OgaPay" class="nav-logo-img-dark"/>
     </a>
     <nav class="nav-links">
-      <a href="#tasks" class="nav-link active">Tasks</a>
+      <a href="tasks.html" class="nav-link">Tasks</a>
       <a href="store.html" class="nav-link">Store</a>
       <a href="#communities" class="nav-link">Communities</a>
       <a href="#payments" class="nav-link">Payments</a>
@@ -454,7 +380,7 @@ footer{background:var(--bg2);border-top:1px solid var(--border);padding:52px 0 3
   </div>
 </header>
 
-<!-- ════ MOBILE MENU ════ -->
+<!-- MOBILE MENU -->
 <div class="mobile-menu" id="mobileMenu">
   <div class="mobile-menu-header">
     <div class="nav-logo">
@@ -465,18 +391,18 @@ footer{background:var(--bg2);border-top:1px solid var(--border);padding:52px 0 3
       <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
     </button>
   </div>
-  <a href="#tasks" class="mobile-menu-link active" onclick="document.getElementById('mobileMenu').classList.remove('open')">Tasks</a>
+  <a href="tasks.html" class="mobile-menu-link" onclick="document.getElementById('mobileMenu').classList.remove('open')">Tasks</a>
   <a href="store.html" class="mobile-menu-link" onclick="document.getElementById('mobileMenu').classList.remove('open')">Store</a>
   <a href="#communities" class="mobile-menu-link" onclick="document.getElementById('mobileMenu').classList.remove('open')">Communities</a>
   <a href="#payments" class="mobile-menu-link" onclick="document.getElementById('mobileMenu').classList.remove('open')">Payments</a>
   <a href="#faq" class="mobile-menu-link" onclick="document.getElementById('mobileMenu').classList.remove('open')">FAQ</a>
   <div class="mobile-menu-divider">
-    <button class="btn btn-primary" style="width:100%;justify-content:center;margin-bottom:10px;">Connect Wallet</button>
-    <button class="btn btn-secondary" style="width:100%;justify-content:center;">Start Earning</button>
+    <button class="btn btn-primary" style="width:100%;justify-content:center;margin-bottom:10px;" onclick="window.location.href='tasks.html'">Connect Wallet</button>
+    <button class="btn btn-secondary" style="width:100%;justify-content:center;" onclick="window.location.href='tasks.html'">Start Earning</button>
   </div>
 </div>
 
-<!-- ════ HERO ════ -->
+<!-- HERO -->
 <section class="hero">
   <div class="container">
     <div class="hero-inner">
@@ -491,8 +417,8 @@ footer{background:var(--bg2);border-top:1px solid var(--border);padding:52px 0 3
         </h1>
         <p class="hero-sub">OgaPay helps users complete simple online tasks and get rewarded instantly through Naira payouts and crypto rewards.</p>
         <div class="hero-cta">
-          <button class="btn btn-primary btn-lg">Start Earning</button>
-          <button class="btn btn-secondary btn-lg">Post a Task</button>
+          <button class="btn btn-primary btn-lg" onclick="window.location.href='tasks.html'">Start Earning</button>
+          <button class="btn btn-secondary btn-lg" onclick="window.location.href='tasks.html'">Post a Task</button>
         </div>
         <div class="hero-trust">
           <div class="trust-item">
@@ -531,24 +457,48 @@ footer{background:var(--bg2);border-top:1px solid var(--border);padding:52px 0 3
   </div>
 </section>
 
-<!-- ════ QUICK TASKS BAR ════ -->
+<!-- QUICK TASKS BAR -->
 <div class="quick-bar">
   <div class="container">
     <div class="quick-label"><span class="dot dot-blue"></span> Quick Tasks</div>
     <div class="quick-scroll">
-      <div class="qcard"><div class="qcard-icon" style="background:#FEF3C7;"></div><div><div class="qcard-name">X Raid</div><div class="qcard-reward">₦500</div></div></div>
-      <div class="qcard"><div class="qcard-icon" style="background:#EEF2FF;"></div><div><div class="qcard-name">Telegram Join</div><div class="qcard-reward">₦250</div></div></div>
-      <div class="qcard"><div class="qcard-icon" style="background:#FCE7F3;"></div><div><div class="qcard-name">TikTok Follow</div><div class="qcard-reward">$0.40</div></div></div>
-      <div class="qcard"><div class="qcard-icon" style="background:#D1FAE5;"></div><div><div class="qcard-name">App Download</div><div class="qcard-reward">₦750</div></div></div>
-      <div class="qcard"><div class="qcard-icon" style="background:#EEF2FF;"></div><div><div class="qcard-name">WhatsApp Share</div><div class="qcard-reward">₦150</div></div></div>
-      <div class="qcard"><div class="qcard-icon" style="background:#FEE2E2;"></div><div><div class="qcard-name">Meme Contest</div><div class="qcard-reward">₦2,000</div></div></div>
-      <div class="qcard"><div class="qcard-icon" style="background:#FEF3C7;"></div><div><div class="qcard-name">YouTube Like</div><div class="qcard-reward">₦80</div></div></div>
-      <div class="qcard"><div class="qcard-icon" style="background:#EEF2FF;"></div><div><div class="qcard-name">X Repost</div><div class="qcard-reward">$0.25</div></div></div>
+      <div class="qcard" onclick="window.location.href='tasks.html?cat=social'">
+        <div class="qcard-icon" style="background:#FEF3C7;"></div>
+        <div><div class="qcard-name">X Raid</div><div class="qcard-reward">₦500</div></div>
+      </div>
+      <div class="qcard" onclick="window.location.href='tasks.html?cat=social'">
+        <div class="qcard-icon" style="background:#EEF2FF;"></div>
+        <div><div class="qcard-name">Telegram Join</div><div class="qcard-reward">₦250</div></div>
+      </div>
+      <div class="qcard" onclick="window.location.href='tasks.html?cat=social'">
+        <div class="qcard-icon" style="background:#FCE7F3;"></div>
+        <div><div class="qcard-name">TikTok Follow</div><div class="qcard-reward">$0.40</div></div>
+      </div>
+      <div class="qcard" onclick="window.location.href='tasks.html?cat=testing'">
+        <div class="qcard-icon" style="background:#D1FAE5;"></div>
+        <div><div class="qcard-name">App Download</div><div class="qcard-reward">₦750</div></div>
+      </div>
+      <div class="qcard" onclick="window.location.href='tasks.html?cat=social'">
+        <div class="qcard-icon" style="background:#EEF2FF;"></div>
+        <div><div class="qcard-name">WhatsApp Share</div><div class="qcard-reward">₦150</div></div>
+      </div>
+      <div class="qcard" onclick="window.location.href='tasks.html?cat=content'">
+        <div class="qcard-icon" style="background:#FEE2E2;"></div>
+        <div><div class="qcard-name">Meme Contest</div><div class="qcard-reward">₦2,000</div></div>
+      </div>
+      <div class="qcard" onclick="window.location.href='tasks.html?cat=social'">
+        <div class="qcard-icon" style="background:#FEF3C7;"></div>
+        <div><div class="qcard-name">YouTube Like</div><div class="qcard-reward">₦80</div></div>
+      </div>
+      <div class="qcard" onclick="window.location.href='tasks.html?cat=social'">
+        <div class="qcard-icon" style="background:#EEF2FF;"></div>
+        <div><div class="qcard-name">X Repost</div><div class="qcard-reward">$0.25</div></div>
+      </div>
     </div>
   </div>
 </div>
 
-<!-- ════ TICKER ════ -->
+<!-- TICKER -->
 <div class="ticker-wrap">
   <div class="ticker">
     <div class="ticker-item"><span class="ti-dot">●</span> Follow on X — <span class="ngn">₦250</span></div>
@@ -570,7 +520,7 @@ footer{background:var(--bg2);border-top:1px solid var(--border);padding:52px 0 3
   </div>
 </div>
 
-<!-- ════ GET STARTED ════ -->
+<!-- GET STARTED -->
 <section class="section-sm section-alt" id="getstarted">
   <div class="container">
     <div class="reveal" style="text-align:center;max-width:480px;margin:0 auto;">
@@ -578,14 +528,14 @@ footer{background:var(--bg2);border-top:1px solid var(--border);padding:52px 0 3
       <p class="section-sub" style="margin:0 auto;">Whether you're here to earn or promote, choose your path below.</p>
     </div>
     <div class="gs-grid reveal">
-      <div class="gs-card earn">
+      <div class="gs-card earn" onclick="window.location.href='tasks.html'">
         <div class="gs-left">
           <div class="gs-icon"></div>
           <div><div class="gs-title">I'm a Worker</div><div class="gs-sub">Complete tasks and earn Naira or crypto rewards instantly.</div></div>
         </div>
         <div class="gs-arrow"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
       </div>
-      <div class="gs-card advertiser">
+      <div class="gs-card advertiser" onclick="window.location.href='tasks.html'">
         <div class="gs-left">
           <div class="gs-icon"></div>
           <div><div class="gs-title">I'm an Advertiser</div><div class="gs-sub">Post tasks and reach thousands of active earners fast.</div></div>
@@ -596,7 +546,7 @@ footer{background:var(--bg2);border-top:1px solid var(--border);padding:52px 0 3
   </div>
 </section>
 
-<!-- ════ HIGHLIGHTED TASKS ════ -->
+<!-- HIGHLIGHTED TASKS -->
 <section class="section" id="tasks">
   <div class="container">
     <div class="reveal tasks-header">
@@ -606,65 +556,70 @@ footer{background:var(--bg2);border-top:1px solid var(--border);padding:52px 0 3
       </div>
       <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
         <div class="tabs">
-          <button class="tab active">All</button>
-          <button class="tab">Social</button>
-          <button class="tab">Surveys</button>
-          <button class="tab">Freelance</button>
+          <button class="tab active" onclick="window.location.href='tasks.html'">All</button>
+          <button class="tab" onclick="window.location.href='tasks.html?cat=social'">Social</button>
+          <button class="tab" onclick="window.location.href='tasks.html?cat=survey'">Surveys</button>
+          <button class="tab" onclick="window.location.href='tasks.html?cat=freelance'">Freelance</button>
         </div>
-        <a href="#" class="view-all-btn">View all <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></a>
+        <a href="tasks.html" class="view-all-btn">View all <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></a>
       </div>
     </div>
     <div class="tasks-scroll reveal">
-      <div class="task-card">
+      <!-- Card 1: BrandOga — Social -->
+      <div class="task-card" onclick="window.location.href='tasks.html?cat=social'">
         <div class="tc-top"><div class="tc-lister"><div class="tc-avatar" style="background:linear-gradient(180deg,#033CE3 0%,#011F9A 100%);font-size:12px;">BO</div><div><div class="tc-by">Listed by</div><div class="tc-name">BrandOga</div></div></div><span class="badge badge-green"><span class="dot dot-green"></span>Active</span></div>
         <div><div class="tc-title">Follow our X account &amp; repost pinned tweet</div></div>
         <div><div class="progress-row"><span>65 of 100 slots filled</span><span>65%</span></div><div class="progress-bar"><div class="progress-fill" style="width:65%"></div></div></div>
         <div class="tc-meta-row"><div class="tc-meta-item"><span>35 left</span></div><div class="tc-meta-item"><span>~2 min</span></div></div>
         <div><div class="tc-reward-ngn">₦250</div><div class="tc-reward-sub">per completion</div></div>
         <div class="tc-tags"><span class="badge badge-blue">Social</span><span class="badge badge-gray">X/Twitter</span></div>
-        <div class="tc-footer"><span>50+ followers required</span><button class="btn btn-primary btn-sm">Start →</button></div>
+        <div class="tc-footer"><span>50+ followers required</span><button class="btn btn-primary btn-sm" onclick="event.stopPropagation();window.location.href='tasks.html?cat=social'">Start →</button></div>
       </div>
-      <div class="task-card">
+      <!-- Card 2: TechKing — Survey -->
+      <div class="task-card" onclick="window.location.href='tasks.html?cat=survey'">
         <div class="tc-top"><div class="tc-lister"><div class="tc-avatar" style="background:#F5B301;color:#fff;font-size:12px;">TK</div><div><div class="tc-by">Listed by</div><div class="tc-name">TechKing</div></div></div><span class="badge badge-blue">Survey</span></div>
         <div><div class="tc-title">Rate our mobile banking app — 8 questions</div></div>
         <div><div class="progress-row"><span>40 of 100 slots filled</span><span>40%</span></div><div class="progress-bar"><div class="progress-fill" style="width:40%"></div></div></div>
         <div class="tc-meta-row"><div class="tc-meta-item"><span>60 left</span></div><div class="tc-meta-item"><span>~5 min</span></div></div>
         <div><div class="tc-reward-usd">$1.50</div><div class="tc-reward-sub">USDC per completion</div></div>
         <div class="tc-tags"><span class="badge badge-gray">Survey</span><span class="badge badge-gray">Fintech</span></div>
-        <div class="tc-footer"><span>Must use banking apps</span><button class="btn btn-primary btn-sm">Start →</button></div>
+        <div class="tc-footer"><span>Must use banking apps</span><button class="btn btn-primary btn-sm" onclick="event.stopPropagation();window.location.href='tasks.html?cat=survey'">Start →</button></div>
       </div>
-      <div class="task-card">
+      <!-- Card 3: DesignStudio — Freelance -->
+      <div class="task-card" onclick="window.location.href='tasks.html?cat=freelance'">
         <div class="tc-top"><div class="tc-lister"><div class="tc-avatar" style="background:linear-gradient(180deg,#033CE3 0%,#011F9A 100%);font-size:12px;">DS</div><div><div class="tc-by">Listed by</div><div class="tc-name">DesignStudio</div></div></div><span class="badge badge-gold">Freelance</span></div>
         <div><div class="tc-title">Design a modern logo for a fintech startup</div></div>
         <div><div class="progress-row"><span>1 of 5 slots filled</span><span>20%</span></div><div class="progress-bar"><div class="progress-fill" style="width:20%"></div></div></div>
         <div class="tc-meta-row"><div class="tc-meta-item"><span>4 left</span></div><div class="tc-meta-item"><span>1–2 days</span></div></div>
         <div><div class="tc-reward-ngn">₦15,000</div><div class="tc-reward-sub">per accepted design</div></div>
         <div class="tc-tags"><span class="badge badge-gray">Design</span><span class="badge badge-gray">PNG + SVG</span></div>
-        <div class="tc-footer"><span>Portfolio required</span><button class="btn btn-primary btn-sm">Apply →</button></div>
+        <div class="tc-footer"><span>Portfolio required</span><button class="btn btn-primary btn-sm" onclick="event.stopPropagation();window.location.href='tasks.html?cat=freelance'">Apply →</button></div>
       </div>
-      <div class="task-card">
+      <!-- Card 4: FoodieNG — Survey -->
+      <div class="task-card" onclick="window.location.href='tasks.html?cat=survey'">
         <div class="tc-top"><div class="tc-lister"><div class="tc-avatar" style="background:#EF4444;font-size:12px;">FO</div><div><div class="tc-by">Listed by</div><div class="tc-name">FoodieNG</div></div></div><span class="badge badge-green"><span class="dot dot-green"></span>Active</span></div>
         <div><div class="tc-title">Share opinion on Nigerian food delivery apps</div></div>
         <div><div class="progress-row"><span>55 of 100 slots filled</span><span>55%</span></div><div class="progress-bar"><div class="progress-fill" style="width:55%"></div></div></div>
         <div class="tc-meta-row"><div class="tc-meta-item"><span>45 left</span></div><div class="tc-meta-item"><span>~5 min</span></div></div>
         <div><div class="tc-reward-ngn">₦800</div><div class="tc-reward-sub">per completion</div></div>
         <div class="tc-tags"><span class="badge badge-blue">Survey</span><span class="badge badge-gray">Nigeria only</span></div>
-        <div class="tc-footer"><span>Nigerians only</span><button class="btn btn-primary btn-sm">Start →</button></div>
+        <div class="tc-footer"><span>Nigerians only</span><button class="btn btn-primary btn-sm" onclick="event.stopPropagation();window.location.href='tasks.html?cat=survey'">Start →</button></div>
       </div>
-      <div class="task-card">
+      <!-- Card 5: AppLaunch — Testing -->
+      <div class="task-card" onclick="window.location.href='tasks.html?cat=testing'">
         <div class="tc-top"><div class="tc-lister"><div class="tc-avatar" style="background:linear-gradient(180deg,#033CE3 0%,#011F9A 100%);font-size:12px;">AL</div><div><div class="tc-by">Listed by</div><div class="tc-name">AppLaunch</div></div></div><span class="badge badge-green"><span class="dot dot-green"></span>Active</span></div>
         <div><div class="tc-title">Test our Android app and report bugs found</div></div>
         <div><div class="progress-row"><span>8 of 50 slots filled</span><span>16%</span></div><div class="progress-bar"><div class="progress-fill" style="width:16%"></div></div></div>
         <div class="tc-meta-row"><div class="tc-meta-item"><span>42 left</span></div><div class="tc-meta-item"><span>~15 min</span></div></div>
         <div><div class="tc-reward-usd">$2.00</div><div class="tc-reward-sub">USDC per tester</div></div>
         <div class="tc-tags"><span class="badge badge-gray">App Testing</span><span class="badge badge-gray">Android</span></div>
-        <div class="tc-footer"><span>Android device required</span><button class="btn btn-primary btn-sm">Start →</button></div>
+        <div class="tc-footer"><span>Android device required</span><button class="btn btn-primary btn-sm" onclick="event.stopPropagation();window.location.href='tasks.html?cat=testing'">Start →</button></div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ════ HOW IT WORKS ════ -->
+<!-- HOW IT WORKS -->
 <section class="section section-alt">
   <div class="container">
     <div class="reveal" style="text-align:center;max-width:500px;margin:0 auto;">
@@ -681,7 +636,7 @@ footer{background:var(--bg2);border-top:1px solid var(--border);padding:52px 0 3
   </div>
 </section>
 
-<!-- ════ WORKER STORE ════ -->
+<!-- WORKER STORE -->
 <section class="section" id="store">
   <div class="container">
     <div class="reveal tasks-header">
@@ -689,31 +644,16 @@ footer{background:var(--bg2);border-top:1px solid var(--border);padding:52px 0 3
       <a href="store.html" class="view-all-btn">Browse full store <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></a>
     </div>
     <div class="store-scroll reveal">
-      <div class="store-card" onclick="window.location.href='store.html'">
-        <div class="store-thumb" style="background:linear-gradient(135deg,#1a2878,#033CE3);">🎨</div>
-        <div class="store-body"><div class="store-title">Premium Logo Design Pack</div><div class="store-desc">5 unique logo concepts in PNG, SVG and AI formats. Fast delivery.</div><div class="store-footer"><span class="store-price">₦8,000</span><div class="store-rating">⭐ 4.9 <span style="color:var(--text3);">(42)</span></div></div></div>
-      </div>
-      <div class="store-card" onclick="window.location.href='store.html'">
-        <div class="store-thumb" style="background:linear-gradient(135deg,#7c2d12,#ea580c);">🚀</div>
-        <div class="store-body"><div class="store-title">X Growth Bundle — 500 Followers</div><div class="store-desc">Real Nigerian + diaspora accounts. Gradual drip delivery over 7 days.</div><div class="store-footer"><span class="store-price">$12.00</span><div class="store-rating">⭐ 4.7 <span style="color:var(--text3);">(88)</span></div></div></div>
-      </div>
-      <div class="store-card" onclick="window.location.href='store.html'">
-        <div class="store-thumb" style="background:linear-gradient(135deg,#3b0764,#7c3aed);">😂</div>
-        <div class="store-body"><div class="store-title">Viral Meme Design (x5)</div><div class="store-desc">Custom Nigerian-themed memes for social media marketing.</div><div class="store-footer"><span class="store-price">₦3,500</span><div class="store-rating">⭐ 5.0 <span style="color:var(--text3);">(17)</span></div></div></div>
-      </div>
-      <div class="store-card" onclick="window.location.href='store.html'">
-        <div class="store-thumb" style="background:linear-gradient(135deg,#134e4a,#0d9488);">📢</div>
-        <div class="store-body"><div class="store-title">Telegram Community Raid</div><div class="store-desc">100 real members in 24 hours. Verified, active accounts only.</div><div class="store-footer"><span class="store-price">$8.00</span><div class="store-rating">⭐ 4.8 <span style="color:var(--text3);">(31)</span></div></div></div>
-      </div>
-      <div class="store-card" onclick="window.location.href='store.html'">
-        <div class="store-thumb" style="background:linear-gradient(135deg,#1e3a5f,#2563eb);">✍️</div>
-        <div class="store-body"><div class="store-title">SEO Article Writing (1000 words)</div><div class="store-desc">Keyword-optimized content by Nigerian writers. 48hr delivery.</div><div class="store-footer"><span class="store-price">₦5,000</span><div class="store-rating">⭐ 4.6 <span style="color:var(--text3);">(53)</span></div></div></div>
-      </div>
+      <div class="store-card" onclick="window.location.href='store.html'"><div class="store-thumb" style="background:linear-gradient(135deg,#1a2878,#033CE3);">🎨</div><div class="store-body"><div class="store-title">Premium Logo Design Pack</div><div class="store-desc">5 unique logo concepts in PNG, SVG and AI formats. Fast delivery.</div><div class="store-footer"><span class="store-price">₦8,000</span><div class="store-rating">⭐ 4.9 <span style="color:var(--text3);">(42)</span></div></div></div></div>
+      <div class="store-card" onclick="window.location.href='store.html'"><div class="store-thumb" style="background:linear-gradient(135deg,#7c2d12,#ea580c);">🚀</div><div class="store-body"><div class="store-title">X Growth Bundle — 500 Followers</div><div class="store-desc">Real Nigerian + diaspora accounts. Gradual drip delivery over 7 days.</div><div class="store-footer"><span class="store-price">$12.00</span><div class="store-rating">⭐ 4.7 <span style="color:var(--text3);">(88)</span></div></div></div></div>
+      <div class="store-card" onclick="window.location.href='store.html'"><div class="store-thumb" style="background:linear-gradient(135deg,#3b0764,#7c3aed);">😂</div><div class="store-body"><div class="store-title">Viral Meme Design (x5)</div><div class="store-desc">Custom Nigerian-themed memes for social media marketing.</div><div class="store-footer"><span class="store-price">₦3,500</span><div class="store-rating">⭐ 5.0 <span style="color:var(--text3);">(17)</span></div></div></div></div>
+      <div class="store-card" onclick="window.location.href='store.html'"><div class="store-thumb" style="background:linear-gradient(135deg,#134e4a,#0d9488);">📢</div><div class="store-body"><div class="store-title">Telegram Community Raid</div><div class="store-desc">100 real members in 24 hours. Verified, active accounts only.</div><div class="store-footer"><span class="store-price">$8.00</span><div class="store-rating">⭐ 4.8 <span style="color:var(--text3);">(31)</span></div></div></div></div>
+      <div class="store-card" onclick="window.location.href='store.html'"><div class="store-thumb" style="background:linear-gradient(135deg,#1e3a5f,#2563eb);">✍️</div><div class="store-body"><div class="store-title">SEO Article Writing (1000 words)</div><div class="store-desc">Keyword-optimized content by Nigerian writers. 48hr delivery.</div><div class="store-footer"><span class="store-price">₦5,000</span><div class="store-rating">⭐ 4.6 <span style="color:var(--text3);">(53)</span></div></div></div></div>
     </div>
   </div>
 </section>
 
-<!-- ════ COMMUNITIES ════ -->
+<!-- COMMUNITIES -->
 <section class="section section-alt" id="communities">
   <div class="container">
     <div class="reveal tasks-header">
@@ -730,7 +670,7 @@ footer{background:var(--bg2);border-top:1px solid var(--border);padding:52px 0 3
   </div>
 </section>
 
-<!-- ════ PAYMENTS ════ -->
+<!-- PAYMENTS -->
 <section class="section" id="payments">
   <div class="container">
     <div class="reveal">
@@ -767,7 +707,7 @@ footer{background:var(--bg2);border-top:1px solid var(--border);padding:52px 0 3
   </div>
 </section>
 
-<!-- ════ TESTIMONIALS ════ -->
+<!-- TESTIMONIALS -->
 <section class="section section-alt">
   <div class="container">
     <div class="reveal" style="text-align:center;max-width:480px;margin:0 auto;">
@@ -782,7 +722,7 @@ footer{background:var(--bg2);border-top:1px solid var(--border);padding:52px 0 3
   </div>
 </section>
 
-<!-- ════ FAQ ════ -->
+<!-- FAQ -->
 <section class="section" id="faq">
   <div class="container">
     <div class="reveal" style="text-align:center;max-width:480px;margin:0 auto;">
@@ -798,21 +738,21 @@ footer{background:var(--bg2);border-top:1px solid var(--border);padding:52px 0 3
   </div>
 </section>
 
-<!-- ════ CTA ════ -->
+<!-- CTA -->
 <section class="cta-section">
   <div class="container">
     <div class="reveal">
       <h2>Ready to earn with OgaPay?</h2>
       <p>Sign up free. No subscriptions. Get paid in Naira or crypto.</p>
       <div class="cta-buttons">
-        <button class="btn btn-white btn-lg">Start Earning Free</button>
-        <button class="btn btn-outline-white btn-lg">Post Your First Task</button>
+        <button class="btn btn-white btn-lg" onclick="window.location.href='tasks.html'">Start Earning Free</button>
+        <button class="btn btn-outline-white btn-lg" onclick="window.location.href='tasks.html'">Post Your First Task</button>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ════ FOOTER ════ -->
+<!-- FOOTER -->
 <footer>
   <div class="container">
     <div class="footer-grid">
@@ -821,9 +761,24 @@ footer{background:var(--bg2);border-top:1px solid var(--border);padding:52px 0 3
         <img src="https://i.postimg.cc/3RgxbPCf/1000459444-removebg-preview.png" alt="OgaPay" class="footer-logo-img-dark"/>
         <p>The Nigerian-first microtask marketplace. Earn in Naira or crypto. No barriers, equal opportunities.</p>
       </div>
-      <div class="footer-col"><h5>Platform</h5><ul><li><a href="#">Browse Tasks</a></li><li><a href="#">Post a Task</a></li><li><a href="#">Worker Store</a></li><li><a href="#">Leaderboard</a></li></ul></div>
-      <div class="footer-col"><h5>Earn</h5><ul><li><a href="#">Social Tasks</a></li><li><a href="#">Surveys</a></li><li><a href="#">Freelance</a></li><li><a href="#">Referrals</a></li></ul></div>
-      <div class="footer-col"><h5>Company</h5><ul><li><a href="#">About</a></li><li><a href="#">Blog</a></li><li><a href="#">Privacy</a></li><li><a href="#">Terms</a></li></ul></div>
+      <div class="footer-col"><h5>Platform</h5><ul>
+        <li><a href="tasks.html">Browse Tasks</a></li>
+        <li><a href="tasks.html">Post a Task</a></li>
+        <li><a href="store.html">Worker Store</a></li>
+        <li><a href="tasks.html">Leaderboard</a></li>
+      </ul></div>
+      <div class="footer-col"><h5>Earn</h5><ul>
+        <li><a href="tasks.html?cat=social">Social Tasks</a></li>
+        <li><a href="tasks.html?cat=survey">Surveys</a></li>
+        <li><a href="tasks.html?cat=freelance">Freelance</a></li>
+        <li><a href="tasks.html">Referrals</a></li>
+      </ul></div>
+      <div class="footer-col"><h5>Company</h5><ul>
+        <li><a href="#">About</a></li>
+        <li><a href="#">Blog</a></li>
+        <li><a href="#">Privacy</a></li>
+        <li><a href="#">Terms</a></li>
+      </ul></div>
     </div>
     <div class="footer-bottom">
       <span>© 2025 OgaPay. All rights reserved.</span>
@@ -832,18 +787,18 @@ footer{background:var(--bg2);border-top:1px solid var(--border);padding:52px 0 3
   </div>
 </footer>
 
-<!-- ════ MOBILE BOTTOM NAV ════ -->
+<!-- MOBILE BOTTOM NAV -->
 <div class="mobile-nav">
   <div class="mobile-nav-inner">
-    <div class="mobile-nav-item active">
+    <div class="mobile-nav-item active" onclick="window.location.href='index.html'">
       <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
       <span class="mobile-nav-label">Home</span>
     </div>
-    <div class="mobile-nav-item">
+    <div class="mobile-nav-item" onclick="window.location.href='tasks.html'">
       <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
       <span class="mobile-nav-label">Tasks</span>
     </div>
-    <div class="mobile-nav-item">
+    <div class="mobile-nav-item" onclick="window.location.href='tasks.html'">
       <div class="mobile-nav-create">
         <svg width="18" height="18" fill="none" stroke="white" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       </div>
@@ -861,74 +816,51 @@ footer{background:var(--bg2);border-top:1px solid var(--border);padding:52px 0 3
 </div>
 
 <script>
-// ── THEME SYSTEM ──
 const root = document.documentElement;
 const STORAGE_KEY = 'ogapay-theme';
-
-function getSystemTheme(){
-  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-}
+function getSystemTheme(){ return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'; }
 function applyTheme(theme){
-  if(theme === 'dark') root.setAttribute('data-theme','dark');
+  if(theme==='dark') root.setAttribute('data-theme','dark');
   else root.removeAttribute('data-theme');
-  const moon = document.getElementById('icon-moon');
-  const sun  = document.getElementById('icon-sun');
-  if(moon && sun){ moon.style.display = theme==='dark'?'none':''; sun.style.display = theme==='dark'?'':'none'; }
+  const moon=document.getElementById('icon-moon');
+  const sun=document.getElementById('icon-sun');
+  if(moon&&sun){ moon.style.display=theme==='dark'?'none':''; sun.style.display=theme==='dark'?'':'none'; }
 }
-
-// Init — saved pref → system pref
-const saved = localStorage.getItem(STORAGE_KEY);
-applyTheme(saved || getSystemTheme());
-
-// Live system pref listener (when no manual override)
-window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
-  if(!localStorage.getItem(STORAGE_KEY)) applyTheme(e.matches ? 'dark' : 'light');
+const saved=localStorage.getItem(STORAGE_KEY);
+applyTheme(saved||getSystemTheme());
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',e=>{
+  if(!localStorage.getItem(STORAGE_KEY)) applyTheme(e.matches?'dark':'light');
 });
-
-// Toggle
-document.getElementById('darkToggleBtn').addEventListener('click', () => {
-  const isDark = root.getAttribute('data-theme') === 'dark';
-  const next = isDark ? 'light' : 'dark';
+document.getElementById('darkToggleBtn').addEventListener('click',()=>{
+  const isDark=root.getAttribute('data-theme')==='dark';
+  const next=isDark?'light':'dark';
   applyTheme(next);
-  localStorage.setItem(STORAGE_KEY, next);
+  localStorage.setItem(STORAGE_KEY,next);
 });
 
-// ── SCROLL REVEAL ──
-const obs = new IntersectionObserver(entries => {
-  entries.forEach(e => { if(e.isIntersecting) e.target.classList.add('visible'); });
-}, {threshold: 0.07});
-document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+const obs=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{ if(e.isIntersecting) e.target.classList.add('visible'); });
+},{threshold:0.07});
+document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
 
-// ── TABS ──
-document.querySelectorAll('.tab').forEach(tab => {
-  tab.addEventListener('click', function() {
-    this.closest('.tabs').querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    this.classList.add('active');
-  });
-});
-
-// ── HAMBURGER ──
-document.getElementById('hamburgerBtn').addEventListener('click', () => {
+document.getElementById('hamburgerBtn').addEventListener('click',()=>{
   document.getElementById('mobileMenu').classList.add('open');
 });
 
-// ── MOBILE NAV ──
-document.querySelectorAll('.mobile-nav-item').forEach(item => {
-  item.addEventListener('click', function() {
-    document.querySelectorAll('.mobile-nav-item').forEach(i => i.classList.remove('active'));
+document.querySelectorAll('.mobile-nav-item').forEach(item=>{
+  item.addEventListener('click',function(){
+    document.querySelectorAll('.mobile-nav-item').forEach(i=>i.classList.remove('active'));
     this.classList.add('active');
   });
 });
 
-// ── NAV HIGHLIGHT ON SCROLL ──
-const sections = document.querySelectorAll('section[id], div[id]');
-const navLinks = document.querySelectorAll('.nav-link');
-window.addEventListener('scroll', () => {
-  let current = '';
-  sections.forEach(s => { if(window.scrollY >= s.offsetTop - 100) current = s.id; });
-  navLinks.forEach(l => { l.classList.toggle('active', l.getAttribute('href') === '#' + current); });
-}, {passive: true});
+const sections=document.querySelectorAll('section[id],div[id]');
+const navLinks=document.querySelectorAll('.nav-link');
+window.addEventListener('scroll',()=>{
+  let current='';
+  sections.forEach(s=>{ if(window.scrollY>=s.offsetTop-100) current=s.id; });
+  navLinks.forEach(l=>{ l.classList.toggle('active',l.getAttribute('href')==='#'+current); });
+},{passive:true});
 </script>
 </body>
 </html>
-
