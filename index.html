@@ -107,6 +107,8 @@ img{max-width:100%;display:block;}
 .btn-primary:hover{background:linear-gradient(135deg,#4B74FF 0%,#1E3ED4 100%);transform:translateY(-1px);box-shadow:0 6px 28px rgba(49,94,251,0.45);}
 .btn-secondary{background:var(--card);color:var(--text);border:1.5px solid var(--border2);}
 .btn-secondary:hover{border-color:var(--blue);color:var(--blue);}
+[data-theme="dark"] .btn-secondary{background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.16);color:var(--text);}
+[data-theme="dark"] .btn-secondary:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-light);}
 .btn-outline-blue{background:transparent;color:var(--blue);border:1.5px solid var(--blue);}
 .btn-outline-blue:hover{background:var(--blue-light);transform:translateY(-1px);}
 .btn-lg{padding:14px 32px;font-size:15px;}
@@ -149,13 +151,17 @@ img{max-width:100%;display:block;}
  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
 }
 [data-theme="dark"] .nav{
-  background:rgba(5,8,22,0.88);
+  background:rgba(5,8,22,0.96);
   border-bottom:1px solid rgba(255,255,255,0.07);
+}
+@media(max-width:768px){
+  [data-theme="dark"] .nav{ background:#050816; }
 }
 .nav-inner{display:flex;align-items:center;gap:6px;padding:0 24px;height:60px;max-width:1160px;margin:0 auto;}
 .nav-logo{display:flex;align-items:center;gap:10px;flex-shrink:0;margin-right:8px;}
-.nav-logo-img-light{display:block;height:30px;width:auto;}
-.nav-logo-img-dark{display:none;height:30px;width:auto;}
+.nav-logo-img-light{display:flex;align-items:center;gap:8px;font-family:'Outfit',sans-serif;font-weight:800;font-size:19px;color:var(--text);}
+.nav-logo-img-light span{color:#0627B8;}
+.nav-logo-img-dark{display:none;height:32px;width:auto;}
 [data-theme="dark"] .nav-logo-img-light{display:none;}
 [data-theme="dark"] .nav-logo-img-dark{display:block;}
 .nav-logo-wordmark{font-family:'Outfit',sans-serif;font-weight:800;font-size:20px;color:var(--text);}
@@ -201,7 +207,8 @@ img{max-width:100%;display:block;}
 .ac-title{font-family:'Outfit',sans-serif;font-size:13.5px;font-weight:600;color:var(--text);}
 .ac-live{display:flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:var(--blue);}
 .ac-stats{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
-.ac-stat{background:var(--bg2);border-radius:var(--radius-sm);padding:14px 16px;}
+.ac-stat{background:var(--card-soft);border-radius:var(--radius-sm);padding:14px 16px;}
+[data-theme="dark"] .ac-stat{background:rgba(255,255,255,0.04) !important;}
 .ac-stat-num{font-family:'Outfit',sans-serif;font-size:22px;font-weight:700;color:var(--text);line-height:1.1;margin-bottom:2px;}
 .ac-stat-num.blue{color:var(--blue);}
 .ac-stat-num.gold{color:var(--gold);}
@@ -395,11 +402,12 @@ footer{background:var(--bg2);border-top:1px solid var(--border);padding:52px 0 3
 .footer-col ul li a:hover{color:var(--blue);}
 .footer-bottom{display:flex;align-items:center;justify-content:space-between;padding-top:24px;border-top:1px solid var(--border);font-size:12.5px;color:var(--text3);}
 /* Footer logo */
-.footer-logo-light{display:flex;align-items:center;gap:9px;font-family:'Outfit',sans-serif;font-weight:800;font-size:18px;color:var(--text);}
-.footer-logo-light span{color:#0627B8;}
-[data-theme="dark"] .footer-logo-light span{color:var(--blue);}
-.footer-logo-img-light{height:26px;width:auto;display:block;}
-.footer-logo-img-dark{height:26px;width:auto;display:none;}
+.footer-logo-light{display:flex;align-items:center;gap:9px;}
+.footer-logo-wordmark{display:flex;align-items:center;gap:8px;font-family:'Outfit',sans-serif;font-weight:800;font-size:18px;color:var(--text);}
+.footer-logo-wordmark span{color:#0627B8;}
+[data-theme="dark"] .footer-logo-wordmark span{color:var(--blue);}
+.footer-logo-img-light{display:flex;}
+.footer-logo-img-dark{height:32px;width:auto;display:none;}
 [data-theme="dark"] .footer-logo-img-light{display:none;}
 [data-theme="dark"] .footer-logo-img-dark{display:block;}
 
@@ -465,8 +473,8 @@ footer{background:var(--bg2);border-top:1px solid var(--border);padding:52px 0 3
 [data-theme="dark"] details summary[style*="color:var(--text)"] span{
   color:var(--blue) !important;
 }
-/* ac-stat dark surface */
-[data-theme="dark"] .ac-stat{background:var(--card-soft) !important;}
+/* ac-stat dark surface — already set inline in .ac-stat rule, this reinforces */
+[data-theme="dark"] .ac-stat{background:rgba(255,255,255,0.04) !important;}
 /* Section-alt in dark */
 [data-theme="dark"] .section-alt{background:var(--bg2);}
 /* Step cards in how-it-works dark */
@@ -481,7 +489,12 @@ footer{background:var(--bg2);border-top:1px solid var(--border);padding:52px 0 3
 <header class="nav">
  <div class="nav-inner">
  <a href="#" class="nav-logo">
- <img src="https://i.postimg.cc/BQYwG6qz/Screenshot-20260525-141844.png" alt="OgaPay" class="nav-logo-img-light"/>
+ <!-- Light mode: crisp SVG wordmark -->
+ <div class="nav-logo-img-light">
+ <svg width="28" height="28" viewBox="0 0 100 100" fill="none"><defs><linearGradient id="ng1" x1="50" y1="0" x2="50" y2="100" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#0627B8"/><stop offset="100%" stop-color="#03045E"/></linearGradient></defs><rect width="100" height="100" rx="20" fill="url(#ng1)"/><rect x="10" y="10" width="35" height="35" rx="7" fill="#8a9ef5" opacity="0.7"/><polygon points="10,10 45,10 10,45" fill="#03045E" opacity="0.45"/><path d="M52 10 H68 Q87 10 87 27.5 Q87 45 68 45 H52 Z" fill="white"/><rect x="10" y="52" width="35" height="35" rx="7" fill="#8a9ef5" opacity="0.55"/><rect x="52" y="52" width="35" height="35" rx="7" fill="#8a9ef5" opacity="0.7"/><polygon points="52,52 87,52 87,87" fill="#03045E" opacity="0.45"/><path d="M52 52 H68 Q87 52 87 69.5 Q87 87 68 87 H52 Z" fill="white"/></svg>
+ Oga<span>Pay</span>
+ </div>
+ <!-- Dark mode: glowing PNG logo -->
  <img src="https://i.postimg.cc/QCT8pPxQ/73d1abcc-c59a-453a-93d5-ad59fe1718b5.png" alt="OgaPay" class="nav-logo-img-dark"/>
  </a>
  <nav class="nav-links">
@@ -512,7 +525,10 @@ footer{background:var(--bg2);border-top:1px solid var(--border);padding:52px 0 3
 <div class="mobile-menu" id="mobileMenu">
  <div class="mobile-menu-header">
  <div class="nav-logo">
- <img src="https://i.postimg.cc/BQYwG6qz/Screenshot-20260525-141844.png" alt="OgaPay" class="nav-logo-img-light"/>
+ <div class="nav-logo-img-light">
+ <svg width="26" height="26" viewBox="0 0 100 100" fill="none"><defs><linearGradient id="mg2" x1="50" y1="0" x2="50" y2="100" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#0627B8"/><stop offset="100%" stop-color="#03045E"/></linearGradient></defs><rect width="100" height="100" rx="20" fill="url(#mg2)"/><rect x="10" y="10" width="35" height="35" rx="7" fill="#8a9ef5" opacity="0.7"/><polygon points="10,10 45,10 10,45" fill="#03045E" opacity="0.45"/><path d="M52 10 H68 Q87 10 87 27.5 Q87 45 68 45 H52 Z" fill="white"/><rect x="10" y="52" width="35" height="35" rx="7" fill="#8a9ef5" opacity="0.55"/><rect x="52" y="52" width="35" height="35" rx="7" fill="#8a9ef5" opacity="0.7"/><polygon points="52,52 87,52 87,87" fill="#03045E" opacity="0.45"/><path d="M52 52 H68 Q87 52 87 69.5 Q87 87 68 87 H52 Z" fill="white"/></svg>
+ Oga<span>Pay</span>
+ </div>
  <img src="https://i.postimg.cc/QCT8pPxQ/73d1abcc-c59a-453a-93d5-ad59fe1718b5.png" alt="OgaPay" class="nav-logo-img-dark"/>
  </div>
  <button class="mobile-menu-close" onclick="document.getElementById('mobileMenu').classList.remove('open')">
@@ -1141,7 +1157,10 @@ footer{background:var(--bg2);border-top:1px solid var(--border);padding:52px 0 3
  <div class="footer-grid">
  <div class="footer-brand">
  <div class="footer-logo-light">
- <img src="https://i.postimg.cc/BQYwG6qz/Screenshot-20260525-141844.png" alt="OgaPay" class="footer-logo-img-light"/>
+ <div class="footer-logo-wordmark footer-logo-img-light">
+ <svg width="24" height="24" viewBox="0 0 100 100" fill="none"><defs><linearGradient id="fg2" x1="50" y1="0" x2="50" y2="100" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#0627B8"/><stop offset="100%" stop-color="#03045E"/></linearGradient></defs><rect width="100" height="100" rx="20" fill="url(#fg2)"/><rect x="10" y="10" width="35" height="35" rx="7" fill="#8a9ef5" opacity="0.7"/><polygon points="10,10 45,10 10,45" fill="#03045E" opacity="0.45"/><path d="M52 10 H68 Q87 10 87 27.5 Q87 45 68 45 H52 Z" fill="white"/><rect x="10" y="52" width="35" height="35" rx="7" fill="#8a9ef5" opacity="0.55"/><rect x="52" y="52" width="35" height="35" rx="7" fill="#8a9ef5" opacity="0.7"/><polygon points="52,52 87,52 87,87" fill="#03045E" opacity="0.45"/><path d="M52 52 H68 Q87 52 87 69.5 Q87 87 68 87 H52 Z" fill="white"/></svg>
+ Oga<span>Pay</span>
+ </div>
  <img src="https://i.postimg.cc/QCT8pPxQ/73d1abcc-c59a-453a-93d5-ad59fe1718b5.png" alt="OgaPay" class="footer-logo-img-dark"/>
  </div>
  <p>The Nigerian-first microtask marketplace. Earn in Naira or crypto. No barriers, equal opportunities.</p>
