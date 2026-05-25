@@ -4,91 +4,42 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>OgaPay — One Platform, Equal Opportunities</title>
-<link rel="icon" type="image/png" href="https://i.postimg.cc/QCT8pPxQ/73d1abcc-c59a-453a-93d5-ad59fe1718b5.png"/>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet"/>
 <style>
-/* ═══════════════════════════════════════════
-   OGAPAY — DESIGN SYSTEM TOKENS
-   Light = clean white fintech
-   Dark  = Linear/Vercel-grade depth
-═══════════════════════════════════════════ */
 :root{
-  /* Surfaces */
-  --bg:#FFFFFF;
-  --bg2:#FAFAFB;
-  --card:#FFFFFF;
-  --card-soft:#F5F6FA;
-  /* Borders */
-  --border:#E5E7EB;
-  --border2:#D1D5DB;
-  /* Text */
-  --text:#0A0A0A;
-  --text2:#6B7280;
-  --text3:#9CA3AF;
-  /* Brand blues */
-  --blue:#0627B8;
-  --blue2:#1E3ED4;
-  --blue-bright:#315EFB;
-  --blue-hover:#03045E;
-  --blue-light:#EEF2FF;
-  --blue-lighter:#F5F7FF;
-  --blue-soft:#A5B4FC;
-  --blue-deep:#03045E;
-  --blue-grad:linear-gradient(135deg,#315EFB 0%,#0627B8 100%);
-  /* Gold */
-  --gold:#F5B301;
-  --gold-light:#FFFBEB;
-  /* Shadows */
-  --shadow:0 1px 3px rgba(0,0,0,0.06),0 1px 2px rgba(0,0,0,0.04);
-  --shadow-md:0 4px 12px rgba(0,0,0,0.07),0 2px 4px rgba(0,0,0,0.04);
-  --shadow-lg:0 12px 32px rgba(0,0,0,0.09),0 4px 8px rgba(0,0,0,0.04);
-  --shadow-blue:0 4px 20px rgba(49,94,251,0.25);
-  /* Shape */
-  --radius:16px;--radius-sm:10px;--radius-pill:100px;
-  /* Logo */
-  --logo-light:block;
-  --logo-dark:none;
+ --bg:#FFFFFF;--bg2:#FAFAFB;--card:#FFFFFF;
+ --border:#E5E7EB;--border2:#D1D5DB;
+ --text:#0A0A0A;--text2:#6B7280;--text3:#9CA3AF;
+ --blue:#033CE3;--blue2:#1244E8;--blue-hover:#011F9A;
+ --blue-light:#EEF2FF;--blue-lighter:#F5F7FF;
+ --blue-soft:#A5B4FC;
+ --blue-deep:#011F9A;
+ --blue-grad:linear-gradient(180deg,#033CE3 0%,#011F9A 100%);
+ --gold:#F5B301;--gold-light:#FFFBEB;
+ --shadow:0 1px 3px rgba(0,0,0,0.06),0 1px 2px rgba(0,0,0,0.04);
+ --shadow-md:0 4px 12px rgba(0,0,0,0.07),0 2px 4px rgba(0,0,0,0.04);
+ --shadow-lg:0 12px 32px rgba(0,0,0,0.09),0 4px 8px rgba(0,0,0,0.04);
+ --shadow-blue:0 6px 24px rgba(6,39,184,0.22);
+ --radius:16px;--radius-sm:10px;--radius-pill:100px;
 }
-
 [data-theme="dark"]{
-  /* ── SURFACES — exact spec ── */
-  --bg:#050816;
-  --bg2:#0B1023;
-  --card:#10172B;
-  --card-soft:#121A31;
-  /* ── BORDERS ── */
-  --border:rgba(255,255,255,0.08);
-  --border2:rgba(255,255,255,0.13);
-  /* ── TEXT ── */
-  --text:#FFFFFF;
-  --text2:#A1A8C3;
-  --text3:#6E7590;
-  /* ── BRAND BLUES (dark variant) ── */
-  --blue:#315EFB;
-  --blue2:#4B74FF;
-  --blue-bright:#315EFB;
-  --blue-hover:#5577FF;
-  --blue-light:rgba(49,94,251,0.12);
-  --blue-lighter:rgba(49,94,251,0.07);
-  --blue-soft:rgba(49,94,251,0.25);
-  --blue-deep:#0627B8;
-  --blue-grad:linear-gradient(135deg,#315EFB 0%,#0627B8 100%);
-  /* ── GOLD ── */
-  --gold:#F5B301;
-  --gold-light:rgba(245,179,1,0.1);
-  /* ── SHADOWS ── */
-  --shadow:0 1px 4px rgba(0,0,0,0.5);
-  --shadow-md:0 4px 16px rgba(0,0,0,0.55);
-  --shadow-lg:0 12px 40px rgba(0,0,0,0.65);
-  --shadow-blue:0 4px 24px rgba(49,94,251,0.35);
-  /* ── LOGO ── */
-  --logo-light:none;
-  --logo-dark:block;
+  --bg:#0F1117;--bg2:#161B27;--card:#1A1F2E;
+  --border:#2A3045;--border2:#3A4460;
+  --text:#F0F2F8;--text2:#8B92A8;--text3:#5A6280;
+  --blue:#4A6EF5;--blue2:#5F81FF;--blue-hover:#7A99FF;
+  --blue-light:#1A2240;--blue-lighter:#141930;
+  --blue-soft:#2A3F8F;
+  --blue-deep:#3A5AE0;
+  --blue-grad:linear-gradient(180deg,#3A5AE0 0%,#1A2E8F 100%);
+  --gold:#F5B301;--gold-light:#2A2010;
+  --shadow:0 1px 3px rgba(0,0,0,0.3),0 1px 2px rgba(0,0,0,0.2);
+  --shadow-md:0 4px 12px rgba(0,0,0,0.35),0 2px 4px rgba(0,0,0,0.2);
+  --shadow-lg:0 12px 32px rgba(0,0,0,0.4),0 4px 8px rgba(0,0,0,0.2);
+  --shadow-blue:0 6px 24px rgba(74,110,245,0.3);
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+*{transition:background-color 0.2s ease,border-color 0.2s ease,color 0.15s ease;}
 html{scroll-behavior:smooth;}
-/* Smooth theme transitions on everything except images */
-*:not(img){transition:background-color 0.25s ease,border-color 0.25s ease,color 0.2s ease,box-shadow 0.25s ease;}
 body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:15px;line-height:1.6;overflow-x:hidden;}
 h1,h2,h3,h4,h5{font-family:'Outfit',sans-serif;line-height:1.15;}
 a{color:inherit;text-decoration:none;}
@@ -103,13 +54,11 @@ img{max-width:100%;display:block;}
 
 /* ── BUTTONS ── */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 24px;border-radius:var(--radius-pill);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;transition:all 0.18s;cursor:pointer;white-space:nowrap;border:none;}
-.btn-primary{background:var(--blue-grad);color:#fff;box-shadow:var(--shadow-blue);}
-.btn-primary:hover{background:linear-gradient(135deg,#4B74FF 0%,#1E3ED4 100%);transform:translateY(-1px);box-shadow:0 6px 28px rgba(49,94,251,0.45);}
+.btn-primary{background:var(--blue-grad);color:#fff;}
+.btn-primary:hover{background:linear-gradient(180deg,#1438D4 0%,#011F9A 100%);transform:translateY(-1px);box-shadow:var(--shadow-blue);}
 .btn-secondary{background:var(--card);color:var(--text);border:1.5px solid var(--border2);}
-.btn-secondary:hover{border-color:var(--blue);color:var(--blue);}
-[data-theme="dark"] .btn-secondary{background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.16);color:var(--text);}
-[data-theme="dark"] .btn-secondary:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-light);}
-.btn-outline-blue{background:transparent;color:var(--blue);border:1.5px solid var(--blue);}
+.btn-secondary:hover{border-color:var(--blue);color:var(--blue);background:var(--card);}
+.btn-outline-blue{background:var(--card);color:var(--blue);border:1.5px solid var(--blue);}
 .btn-outline-blue:hover{background:var(--blue-light);transform:translateY(-1px);}
 .btn-lg{padding:14px 32px;font-size:15px;}
 .btn-sm{padding:8px 16px;font-size:13px;}
@@ -118,17 +67,15 @@ img{max-width:100%;display:block;}
 .badge{display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:var(--radius-pill);font-size:12px;font-weight:600;}
 .badge-blue{background:var(--blue-light);color:var(--blue);}
 .badge-blue-active{background:var(--blue-light);color:var(--blue);}
-.badge-gold{background:var(--gold-light);color:var(--gold);}
-[data-theme="dark"] .badge-gold{color:#F5B301;}
+.badge-gold{background:var(--gold-light);color:#92600A;}
 .badge-green{background:var(--blue-light);color:var(--blue);}
-.badge-gray{background:var(--card-soft);color:var(--text2);border:1px solid var(--border);}
-[data-theme="dark"] .badge-gray{background:rgba(255,255,255,0.06);color:var(--text2);}
+.badge-gray{background:var(--bg2);color:var(--text2);}
 .dot{width:6px;height:6px;border-radius:50%;display:inline-block;}
-.dot-green{background:#22C55E;}
+.dot-green{background:var(--blue);}
 .dot-blue{background:var(--blue);}
 .dot-gold{background:var(--gold);}
-.dot-live{background:#22C55E;animation:livePulse 2s infinite;}
-@keyframes livePulse{0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,0.5);}50%{box-shadow:0 0 0 5px rgba(34,197,94,0);}}
+.dot-live{background:var(--blue);animation:livePulse 2s infinite;}
+@keyframes livePulse{0%,100%{box-shadow:0 0 0 0 rgba(6,39,184,0.4);}50%{box-shadow:0 0 0 5px rgba(6,39,184,0);}}
 
 /* ── SECTION LABELS ── */
 .section-label{font-family:'DM Sans',sans-serif;font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--blue);margin-bottom:12px;display:block;}
@@ -146,42 +93,35 @@ img{max-width:100%;display:block;}
 /* ════════════════════ NAVBAR ════════════════════ */
 .nav{
  position:sticky;top:0;z-index:500;
- background:rgba(255,255,255,0.92);
+ background:var(--bg);
  border-bottom:1px solid var(--border);
- backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
-}
-[data-theme="dark"] .nav{
-  background:rgba(5,8,22,0.96);
-  border-bottom:1px solid rgba(255,255,255,0.07);
-}
-@media(max-width:768px){
-  [data-theme="dark"] .nav{ background:#050816; }
+ backdrop-filter:blur(12px);
 }
 .nav-inner{display:flex;align-items:center;gap:6px;padding:0 24px;height:60px;max-width:1160px;margin:0 auto;}
-.nav-logo{display:flex;align-items:center;gap:10px;flex-shrink:0;margin-right:8px;}
-.nav-logo-img-light{display:block;height:32px;width:auto;}
-.nav-logo-img-dark{display:none;height:32px;width:auto;}
-[data-theme="dark"] .nav-logo-img-light{display:none;}
-[data-theme="dark"] .nav-logo-img-dark{display:block;}
+.nav-logo{display:flex;align-items:center;gap:9px;font-family:'Outfit',sans-serif;font-weight:800;font-size:20px;color:var(--text);flex-shrink:0;margin-right:8px;}
+.nav-logo-icon{width:30px;height:30px;flex-shrink:0;}
+.nav-logo span{color:var(--blue);}
 .nav-links{display:flex;gap:0;margin-left:4px;}
 .nav-link{padding:6px 13px;border-radius:8px;font-size:13.5px;font-weight:500;color:var(--text2);transition:all 0.15s;white-space:nowrap;}
 .nav-link:hover{color:var(--text);background:var(--bg2);}
 .nav-link.active{color:var(--blue);background:var(--blue-light);}
 .nav-right{margin-left:auto;display:flex;align-items:center;gap:8px;}
-.nav-icon-btn{width:34px;height:34px;border-radius:8px;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--text2);transition:all 0.15s;cursor:pointer;background:var(--card);position:relative;}
+.nav-icon-btn{width:34px;height:34px;border-radius:8px;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--text2);transition:all 0.15s;cursor:pointer;background:var(--bg);position:relative;}
 .nav-icon-btn:hover{border-color:var(--border2);color:var(--text);}
 .notif-dot{position:absolute;top:-3px;right:-3px;width:14px;height:14px;border-radius:50%;background:#EF4444;font-size:8px;font-weight:700;color:#fff;display:flex;align-items:center;justify-content:center;border:2px solid var(--bg);}
-.connect-btn{background:transparent;color:var(--blue);border:1.5px solid var(--blue);border-radius:var(--radius-pill);padding:7px 18px;font-size:13.5px;font-weight:600;font-family:'DM Sans',sans-serif;transition:all 0.15s;cursor:pointer;}
-.connect-btn:hover{background:var(--blue-light);}
-.dark-toggle{width:34px;height:34px;border-radius:8px;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--text2);background:var(--card);transition:all 0.15s;cursor:pointer;flex-shrink:0;}
-.dark-toggle:hover{border-color:var(--border2);color:var(--text);}
-.hamburger{display:none;width:34px;height:34px;border-radius:8px;border:1.5px solid var(--border);align-items:center;justify-content:center;color:var(--text2);background:var(--card);flex-shrink:0;cursor:pointer;}
+
+/* ── DARK MODE EXTRA OVERRIDES ── */
+[data-theme="dark"] .payment-card.ngn-card{border-color:var(--gold);}
+[data-theme="dark"] .ticker-item .ngn{color:var(--gold);}
+[data-theme="dark"] .btn-primary:hover{background:linear-gradient(180deg,#5070F5 0%,#2A3E9A 100%);}
+.connect-btn{background:var(--bg);color:var(--blue);border:1.5px solid var(--blue);border-radius:var(--radius-pill);padding:7px 18px;font-size:13.5px;font-weight:600;font-family:'DM Sans',sans-serif;transition:all 0.15s;cursor:pointer;}
+.connect-btn:hover{background:var(--blue-light);box-shadow:0 2px 12px rgba(6,39,184,0.14);}
+.dark-toggle{width:34px;height:34px;border-radius:8px;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--text2);background:var(--bg);transition:all 0.15s;cursor:pointer;flex-shrink:0;}
+.dark-toggle:hover{border-color:var(--border2);color:var(--text);background:var(--bg2);}
+.hamburger{display:none;width:34px;height:34px;border-radius:8px;border:1.5px solid var(--border);align-items:center;justify-content:center;color:var(--text2);background:var(--bg);flex-shrink:0;}
 
 /* ════════════════════ HERO ════════════════════ */
 .hero{padding:72px 0 80px;background:var(--bg);border-bottom:1px solid var(--border);}
-[data-theme="dark"] .hero{
-  background:radial-gradient(ellipse 70% 50% at 50% -10%, rgba(49,94,251,0.12) 0%, transparent 70%), var(--bg);
-}
 .hero-inner{display:grid;grid-template-columns:1fr 420px;gap:64px;align-items:center;}
 .hero-eyebrow{display:inline-flex;align-items:center;gap:8px;padding:5px 14px;border-radius:var(--radius-pill);background:var(--blue-light);border:1px solid var(--blue-soft);font-size:12.5px;font-weight:600;color:var(--blue);margin-bottom:22px;}
 .hero-h1{font-family:'Outfit',sans-serif;font-size:clamp(36px,4.5vw,58px);font-weight:800;letter-spacing:-1.5px;line-height:1.04;color:var(--text);margin-bottom:18px;}
@@ -195,17 +135,11 @@ img{max-width:100%;display:block;}
 
 /* ANALYTICS CARD */
 .analytics-card{background:var(--card);border:1.5px solid var(--border);border-radius:20px;padding:24px;box-shadow:var(--shadow-lg);}
-[data-theme="dark"] .analytics-card{
-  background:var(--card);
-  border-color:rgba(255,255,255,0.09);
-  box-shadow:0 0 0 1px rgba(49,94,251,0.08), var(--shadow-lg);
-}
 .ac-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
 .ac-title{font-family:'Outfit',sans-serif;font-size:13.5px;font-weight:600;color:var(--text);}
 .ac-live{display:flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:var(--blue);}
 .ac-stats{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
-.ac-stat{background:var(--card-soft);border-radius:var(--radius-sm);padding:14px 16px;}
-[data-theme="dark"] .ac-stat{background:rgba(255,255,255,0.04) !important;}
+.ac-stat{background:var(--bg2);border-radius:var(--radius-sm);padding:14px 16px;}
 .ac-stat-num{font-family:'Outfit',sans-serif;font-size:22px;font-weight:700;color:var(--text);line-height:1.1;margin-bottom:2px;}
 .ac-stat-num.blue{color:var(--blue);}
 .ac-stat-num.gold{color:var(--gold);}
@@ -218,21 +152,15 @@ img{max-width:100%;display:block;}
 .quick-scroll{display:flex;gap:10px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none;}
 .quick-scroll::-webkit-scrollbar{display:none;}
 .qcard{flex-shrink:0;display:flex;align-items:center;gap:10px;background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:10px 16px;cursor:pointer;transition:all 0.18s;}
-.qcard:hover{border-color:var(--blue);box-shadow:var(--shadow-blue);transform:translateY(-1px);}
+.qcard:hover{border-color:var(--blue);box-shadow:var(--shadow-md);transform:translateY(-1px);}
 .qcard-icon{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:15px;}
 .qcard-name{font-size:13px;font-weight:600;color:var(--text);}
 .qcard-reward{font-size:11.5px;color:var(--text2);margin-top:1px;}
-/* qcard icon backgrounds — auto-adapt */
-[data-theme="dark"] .qcard .qcard-icon[style*="#FEF3C7"]{background:rgba(245,179,1,0.15) !important;}
-[data-theme="dark"] .qcard .qcard-icon[style*="#EEF2FF"]{background:rgba(49,94,251,0.15) !important;}
-[data-theme="dark"] .qcard .qcard-icon[style*="#FCE7F3"]{background:rgba(236,72,153,0.12) !important;}
-[data-theme="dark"] .qcard .qcard-icon[style*="#D1FAE5"]{background:rgba(34,197,94,0.12) !important;}
-[data-theme="dark"] .qcard .qcard-icon[style*="#FEE2E2"]{background:rgba(239,68,68,0.12) !important;}
 
 /* ════════════════════ GET STARTED ════════════════════ */
 .gs-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:36px;}
 .gs-card{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);padding:28px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;transition:all 0.2s;gap:16px;}
-.gs-card:hover{border-color:var(--blue);box-shadow:var(--shadow-blue);transform:translateY(-2px);}
+.gs-card:hover{border-color:var(--blue);box-shadow:var(--shadow-md);transform:translateY(-2px);}
 .gs-left{display:flex;align-items:center;gap:16px;}
 .gs-icon{width:46px;height:46px;border-radius:12px;background:var(--blue-light);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
 .gs-card.advertiser .gs-icon{background:var(--gold-light);}
@@ -246,13 +174,12 @@ img{max-width:100%;display:block;}
 .tabs{display:flex;gap:3px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:3px;}
 .tab{padding:7px 15px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;color:var(--text2);transition:all 0.18s;border:none;background:transparent;font-family:'DM Sans',sans-serif;}
 .tab.active{background:var(--card);color:var(--blue);box-shadow:var(--shadow);}
-[data-theme="dark"] .tab.active{background:var(--card-soft);border:1px solid rgba(255,255,255,0.08);}
 .view-all-btn{font-size:13.5px;font-weight:600;color:var(--blue);display:flex;align-items:center;gap:4px;transition:color 0.15s;}
 .view-all-btn:hover{color:var(--blue-hover);}
 .tasks-scroll{display:flex;gap:14px;overflow-x:auto;padding-bottom:8px;scrollbar-width:none;}
 .tasks-scroll::-webkit-scrollbar{display:none;}
 .task-card{flex-shrink:0;width:280px;background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);padding:20px;cursor:pointer;transition:all 0.2s;display:flex;flex-direction:column;gap:12px;}
-.task-card:hover{border-color:var(--blue);box-shadow:var(--shadow-blue);transform:translateY(-2px);}
+.task-card:hover{border-color:var(--blue);box-shadow:var(--shadow-md);transform:translateY(-2px);}
 .tc-top{display:flex;align-items:center;justify-content:space-between;}
 .tc-lister{display:flex;align-items:center;gap:8px;}
 .tc-avatar{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0;}
@@ -275,11 +202,8 @@ img{max-width:100%;display:block;}
 .store-scroll{display:flex;gap:14px;overflow-x:auto;padding-bottom:8px;scrollbar-width:none;}
 .store-scroll::-webkit-scrollbar{display:none;}
 .store-card{flex-shrink:0;width:230px;background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);overflow:hidden;cursor:pointer;transition:all 0.2s;}
-.store-card:hover{border-color:var(--blue);box-shadow:var(--shadow-blue);transform:translateY(-2px);}
+.store-card:hover{border-color:var(--blue);box-shadow:var(--shadow-md);transform:translateY(-2px);}
 .store-thumb{width:100%;height:130px;display:flex;align-items:center;justify-content:center;font-size:36px;position:relative;}
-[data-theme="dark"] .store-thumb[style*="#EEF2FF"]{background:rgba(49,94,251,0.14) !important;}
-[data-theme="dark"] .store-thumb[style*="#FEF3C7"]{background:rgba(245,179,1,0.12) !important;}
-[data-theme="dark"] .store-thumb[style*="#FDF2F8"]{background:rgba(236,72,153,0.10) !important;}
 .store-body{padding:14px;}
 .store-title{font-family:'Outfit',sans-serif;font-size:13.5px;font-weight:700;color:var(--text);margin-bottom:4px;line-height:1.3;}
 .store-desc{font-size:12px;color:var(--text2);line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:10px;}
@@ -290,11 +214,8 @@ img{max-width:100%;display:block;}
 /* ════════════════════ COMMUNITIES ════════════════════ */
 .communities-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin-top:36px;}
 .community-card{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);overflow:hidden;cursor:pointer;transition:all 0.2s;}
-.community-card:hover{border-color:var(--blue);box-shadow:var(--shadow-blue);transform:translateY(-2px);}
+.community-card:hover{border-color:var(--blue);box-shadow:var(--shadow-md);transform:translateY(-2px);}
 .community-banner{height:72px;display:flex;align-items:center;justify-content:center;font-size:26px;position:relative;}
-[data-theme="dark"] .community-banner[style*="#EEF2FF"]{background:rgba(49,94,251,0.15) !important;}
-[data-theme="dark"] .community-banner[style*="#FEF3C7"]{background:rgba(245,179,1,0.13) !important;}
-[data-theme="dark"] .community-banner[style*="#FDF2F8"]{background:rgba(236,72,153,0.11) !important;}
 .community-body{padding:14px;}
 .community-title{font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;color:var(--text);margin-bottom:3px;}
 .community-desc{font-size:12px;color:var(--text2);line-height:1.5;margin-bottom:10px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
@@ -304,10 +225,8 @@ img{max-width:100%;display:block;}
 /* ════════════════════ PAYMENTS ════════════════════ */
 .payment-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:36px;}
 .payment-card{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);padding:32px 28px;}
-.payment-card.ngn-card{border-color:#FDE68A;background:linear-gradient(160deg,#FFFBEB 0%,#fff 60%);}
-.payment-card.usdc-card{border-color:var(--blue-soft);background:linear-gradient(160deg,var(--blue-light) 0%,#fff 60%);}
-[data-theme="dark"] .payment-card.ngn-card{border-color:rgba(245,179,1,0.25);background:linear-gradient(160deg,rgba(245,179,1,0.08) 0%,var(--card) 60%);}
-[data-theme="dark"] .payment-card.usdc-card{border-color:rgba(49,94,251,0.3);background:linear-gradient(160deg,rgba(49,94,251,0.1) 0%,var(--card) 60%);}
+.payment-card.ngn-card{border-color:#FDE68A;background:linear-gradient(160deg,var(--gold-light) 0%,var(--card) 60%);}
+.payment-card.usdc-card{border-color:var(--blue-soft);background:linear-gradient(160deg,var(--blue-light) 0%,var(--card) 60%);}
 .payment-icon{font-size:36px;margin-bottom:14px;}
 .payment-card h3{font-family:'Outfit',sans-serif;font-size:18px;font-weight:700;color:var(--text);margin-bottom:8px;}
 .payment-card>p{color:var(--text2);font-size:13.5px;margin-bottom:20px;line-height:1.7;}
@@ -315,48 +234,32 @@ img{max-width:100%;display:block;}
 .payment-features li{display:flex;align-items:center;gap:9px;font-size:13.5px;color:var(--text2);}
 .pf-check{width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;font-weight:700;}
 .ngn-card .pf-check{background:#FDE68A;color:#92600A;}
-.usdc-card .pf-check{background:var(--blue-soft);color:var(--blue);}
-[data-theme="dark"] .ngn-card .pf-check{background:rgba(245,179,1,0.2);color:#F5B301;}
-[data-theme="dark"] .usdc-card .pf-check{background:rgba(49,94,251,0.2);color:#315EFB;}
+.usdc-card .pf-check{background:var(--blue-soft);color:var(--blue-deep);}
 
 /* ════════════════════ HOW IT WORKS ════════════════════ */
 .how-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin-top:44px;border:1.5px solid var(--border);border-radius:var(--radius);overflow:hidden;}
-.step-card{padding:32px 24px;border-right:1px solid var(--border);transition:background 0.2s;position:relative;background:var(--card);}
-[data-theme="dark"] .step-card{background:var(--card);}
+.step-card{padding:32px 24px;border-right:1px solid var(--border);transition:background 0.2s;position:relative;}
 .step-card:last-child{border-right:none;}
 .step-card:hover{background:var(--blue-lighter);}
-[data-theme="dark"] .step-card:hover{background:rgba(49,94,251,0.07);}
 .step-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--blue);transform:scaleX(0);transform-origin:left;transition:transform 0.3s;}
 .step-card:hover::after{transform:scaleX(1);}
 .step-num{font-family:'Outfit',sans-serif;font-size:42px;font-weight:800;color:var(--border);line-height:1;margin-bottom:16px;}
-[data-theme="dark"] .step-num{color:rgba(255,255,255,0.06);}
 .step-card:hover .step-num{color:var(--blue-light);}
-[data-theme="dark"] .step-card:hover .step-num{color:rgba(49,94,251,0.3);}
 .step-icon{width:40px;height:40px;border-radius:10px;background:var(--blue-light);display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:12px;}
 .step-card h3{font-family:'Outfit',sans-serif;font-size:15px;font-weight:700;color:var(--text);margin-bottom:6px;}
 .step-card p{font-size:13px;color:var(--text2);line-height:1.6;}
 
 /* ════════════════════ MOBILE NAV ════════════════════ */
-.mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:500;
-  background:var(--bg);
-  border-top:1px solid var(--border);
-  padding:8px 0 max(8px,env(safe-area-inset-bottom));
-  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
-}
-[data-theme="dark"] .mobile-nav{
-  background:rgba(5,8,22,0.95);
-  border-top:1px solid rgba(255,255,255,0.07);
-}
+.mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:500;background:var(--bg);border-top:1px solid var(--border);padding:8px 0 max(8px,env(safe-area-inset-bottom));}
 .mobile-nav-inner{display:flex;align-items:center;justify-content:space-around;max-width:480px;margin:0 auto;padding:0 16px;}
 .mobile-nav-item{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 12px;border-radius:10px;cursor:pointer;transition:all 0.15s;flex:1;}
-.mobile-nav-item:hover{background:var(--blue-light);}
-.mobile-nav-item.active{background:transparent;}
+.mobile-nav-item:hover,.mobile-nav-item.active{background:var(--blue-light);}
 .mobile-nav-item svg{transition:color 0.15s;}
 .mobile-nav-item.active svg{color:var(--blue);}
 .mobile-nav-item:not(.active) svg{color:var(--text3);}
 .mobile-nav-label{font-size:10.5px;font-weight:600;color:var(--text3);transition:color 0.15s;}
 .mobile-nav-item.active .mobile-nav-label{color:var(--blue);}
-.mobile-nav-create{background:var(--blue-grad);border-radius:50%;width:42px;height:42px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 18px rgba(49,94,251,0.45);margin-top:-8px;}
+.mobile-nav-create{background:var(--blue-grad);border-radius:50%;width:42px;height:42px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(6,39,184,0.35);margin-top:-8px;}
 
 /* ════════════════════ TESTIMONIALS ════════════════════ */
 .testi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:36px;}
@@ -373,24 +276,22 @@ img{max-width:100%;display:block;}
 .ticker{display:flex;gap:52px;animation:tickerMove 32s linear infinite;white-space:nowrap;}
 .ticker-item{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--text2);flex-shrink:0;}
 .ticker-item .ti-dot{color:var(--blue);}
-.ticker-item .ngn{color:var(--gold);font-weight:600;}
+.ticker-item .ngn{color:#92600A;font-weight:600;}
 .ticker-item .usd{color:var(--blue);font-weight:600;}
 @keyframes tickerMove{from{transform:translateX(0);}to{transform:translateX(-50%);}}
 
 /* ════════════════════ CTA SECTION ════════════════════ */
-.cta-section{background:var(--blue-grad);padding:80px 0;text-align:center;position:relative;overflow:hidden;}
-[data-theme="dark"] .cta-section{background:linear-gradient(135deg,#0627B8 0%,#050816 100%);}
-[data-theme="dark"] .cta-section::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 80% at 50% 50%,rgba(49,94,251,0.3) 0%,transparent 70%);pointer-events:none;}
+.cta-section{background:var(--blue-grad);padding:80px 0;text-align:center;}
 .cta-section h2{font-family:'Outfit',sans-serif;font-size:clamp(28px,4vw,44px);font-weight:800;color:#fff;letter-spacing:-1px;margin-bottom:14px;}
 .cta-section p{color:rgba(255,255,255,0.75);font-size:16px;margin-bottom:32px;}
 .cta-buttons{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;}
-.btn-white{background:#fff;color:#0627B8;font-weight:700;}
-.btn-white:hover{background:#EEF2FF;transform:translateY(-1px);box-shadow:0 6px 20px rgba(255,255,255,0.2);}
+.btn-white{background:#fff;color:var(--blue);font-weight:700;}
+.btn-white:hover{background:#EEF2FF;transform:translateY(-1px);box-shadow:0 6px 20px rgba(255,255,255,0.15);}
 .btn-outline-white{background:transparent;color:#fff;border:1.5px solid rgba(255,255,255,0.45);}
 .btn-outline-white:hover{background:rgba(255,255,255,0.1);}
 
 /* ════════════════════ FOOTER ════════════════════ */
-footer{background:var(--bg2);border-top:1px solid var(--border);padding:52px 0 32px;}
+footer{background:var(--bg);border-top:1px solid var(--border);padding:52px 0 32px;}
 .footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:48px;margin-bottom:48px;}
 .footer-brand p{color:var(--text2);font-size:13px;margin-top:12px;max-width:240px;line-height:1.75;}
 .footer-col h5{font-family:'Outfit',sans-serif;font-size:13px;font-weight:700;color:var(--text);margin-bottom:14px;}
@@ -398,22 +299,14 @@ footer{background:var(--bg2);border-top:1px solid var(--border);padding:52px 0 3
 .footer-col ul li a{font-size:13px;color:var(--text2);transition:color 0.15s;}
 .footer-col ul li a:hover{color:var(--blue);}
 .footer-bottom{display:flex;align-items:center;justify-content:space-between;padding-top:24px;border-top:1px solid var(--border);font-size:12.5px;color:var(--text3);}
-/* Footer logo */
-.footer-logo-light{display:flex;align-items:center;gap:9px;}
-.footer-logo-img-light{display:block;height:32px;width:auto;}
-.footer-logo-img-dark{height:32px;width:auto;display:none;}
-[data-theme="dark"] .footer-logo-img-light{display:none;}
-[data-theme="dark"] .footer-logo-img-dark{display:block;}
 
 /* ════════════════════ MOBILE MENU ════════════════════ */
 .mobile-menu{display:none;position:fixed;inset:0;z-index:600;background:var(--bg);padding:24px;flex-direction:column;gap:8px;overflow-y:auto;}
 .mobile-menu.open{display:flex;}
 .mobile-menu-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
-.mobile-menu-close{width:34px;height:34px;border-radius:8px;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--text2);background:var(--card);cursor:pointer;}
 .mobile-menu-link{display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:12px;font-size:15px;font-weight:500;color:var(--text);transition:all 0.15s;border:1px solid transparent;}
 .mobile-menu-link:hover{background:var(--bg2);border-color:var(--border);}
 .mobile-menu-link.active{background:var(--blue-light);color:var(--blue);border-color:transparent;}
-.mobile-menu-divider{margin-top:12px;padding-top:16px;border-top:1px solid var(--border);}
 
 /* ════════════════════ RESPONSIVE ════════════════════ */
 @media(max-width:1024px){
@@ -450,31 +343,6 @@ footer{background:var(--bg2);border-top:1px solid var(--border);padding:52px 0 3
  .hero-h1{font-size:34px;letter-spacing:-1px;}
  .ac-stats{grid-template-columns:1fr 1fr;}
 }
-
-/* ════════════════════ FAQ ════════════════════ */
-.faq-item{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);padding:18px 20px;cursor:pointer;transition:border-color 0.2s;}
-.faq-item:hover{border-color:var(--border2);}
-.faq-summary{font-family:'Outfit',sans-serif;font-size:15px;font-weight:600;color:var(--text);list-style:none;display:flex;justify-content:space-between;align-items:center;}
-.faq-summary::-webkit-details-marker{display:none;}
-.faq-icon{color:var(--blue);font-size:18px;flex-shrink:0;margin-left:12px;}
-.faq-body{margin-top:12px;font-size:13.5px;color:var(--text2);line-height:1.7;}
-
-[data-theme="dark"] details[style*="background:#fff"],
-[data-theme="dark"] details[style*='background:#fff']{
-  background:var(--card) !important;
-  border-color:var(--border) !important;
-}
-[data-theme="dark"] details summary[style*="color:var(--text)"] span{
-  color:var(--blue) !important;
-}
-/* ac-stat dark surface — already set inline in .ac-stat rule, this reinforces */
-[data-theme="dark"] .ac-stat{background:rgba(255,255,255,0.04) !important;}
-/* Section-alt in dark */
-[data-theme="dark"] .section-alt{background:var(--bg2);}
-/* Step cards in how-it-works dark */
-[data-theme="dark"] .step-card h3{color:var(--text);}
-[data-theme="dark"] .step-card p{color:var(--text2);}
-
 </style>
 </head>
 <body>
@@ -483,12 +351,27 @@ footer{background:var(--bg2);border-top:1px solid var(--border);padding:52px 0 3
 <header class="nav">
  <div class="nav-inner">
  <a href="#" class="nav-logo">
- <img src="https://i.postimg.cc/cLH64k0w/1000459401-removebg-preview.png" alt="OgaPay" class="nav-logo-img-light"/>
- <img src="https://i.postimg.cc/3RgxbPCf/1000459444-removebg-preview.png" alt="OgaPay" class="nav-logo-img-dark"/>
+ <svg class="nav-logo-icon" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+ <defs>
+ <linearGradient id="logoGrad" x1="50" y1="0" x2="50" y2="100" gradientUnits="userSpaceOnUse">
+ <stop offset="0%" stop-color="#033CE3"/>
+ <stop offset="100%" stop-color="#011F9A"/>
+ </linearGradient>
+ </defs>
+ <rect width="100" height="100" rx="20" fill="url(#logoGrad)"/>
+ <rect x="10" y="10" width="35" height="35" rx="7" fill="#8a9ef5" opacity="0.7"/>
+ <polygon points="10,10 45,10 10,45" fill="#011F9A" opacity="0.45"/>
+ <path d="M52 10 H68 Q87 10 87 27.5 Q87 45 68 45 H52 Z" fill="white"/>
+ <rect x="10" y="52" width="35" height="35" rx="7" fill="#8a9ef5" opacity="0.55"/>
+ <rect x="52" y="52" width="35" height="35" rx="7" fill="#8a9ef5" opacity="0.7"/>
+ <polygon points="52,52 87,52 87,87" fill="#011F9A" opacity="0.45"/>
+ <path d="M52 52 H68 Q87 52 87 69.5 Q87 87 68 87 H52 Z" fill="white"/>
+ </svg>
+ Oga<span>Pay</span>
  </a>
  <nav class="nav-links">
  <a href="#tasks" class="nav-link active">Tasks</a>
- <a href="#store" class="nav-link">Store</a>
+ <a href="store.html" class="nav-link">Store</a>
  <a href="#communities" class="nav-link">Communities</a>
  <a href="#payments" class="nav-link">Payments</a>
  <a href="#faq" class="nav-link">FAQ</a>
@@ -513,20 +396,20 @@ footer{background:var(--bg2);border-top:1px solid var(--border);padding:52px 0 3
 <!-- ════ MOBILE MENU ════ -->
 <div class="mobile-menu" id="mobileMenu">
  <div class="mobile-menu-header">
- <div class="nav-logo">
- <img src="https://i.postimg.cc/cLH64k0w/1000459401-removebg-preview.png" alt="OgaPay" class="nav-logo-img-light"/>
- <img src="https://i.postimg.cc/3RgxbPCf/1000459444-removebg-preview.png" alt="OgaPay" class="nav-logo-img-dark"/>
+ <div class="nav-logo" style="font-family:'Outfit',sans-serif;font-weight:800;font-size:19px;display:flex;align-items:center;gap:8px;">
+ <svg width="28" height="28" viewBox="0 0 100 100" fill="none"><defs><linearGradient id="mg" x1="50" y1="0" x2="50" y2="100" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#033CE3"/><stop offset="100%" stop-color="#011F9A"/></linearGradient></defs><rect width="100" height="100" rx="20" fill="url(#mg)"/><rect x="10" y="10" width="35" height="35" rx="7" fill="#8a9ef5" opacity="0.7"/><polygon points="10,10 45,10 10,45" fill="#011F9A" opacity="0.45"/><path d="M52 10 H68 Q87 10 87 27.5 Q87 45 68 45 H52 Z" fill="white"/><rect x="10" y="52" width="35" height="35" rx="7" fill="#8a9ef5" opacity="0.55"/><rect x="52" y="52" width="35" height="35" rx="7" fill="#8a9ef5" opacity="0.7"/><polygon points="52,52 87,52 87,87" fill="#011F9A" opacity="0.45"/><path d="M52 52 H68 Q87 52 87 69.5 Q87 87 68 87 H52 Z" fill="white"/></svg>
+ Oga<span style="color:#033CE3;">Pay</span>
  </div>
- <button class="mobile-menu-close" onclick="document.getElementById('mobileMenu').classList.remove('open')">
+ <button onclick="document.getElementById('mobileMenu').classList.remove('open')" style="width:34px;height:34px;border-radius:8px;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--text2);background:var(--bg);">
  <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
  </button>
  </div>
  <a href="#tasks" class="mobile-menu-link active" onclick="document.getElementById('mobileMenu').classList.remove('open')"> Tasks</a>
- <a href="#store" class="mobile-menu-link" onclick="document.getElementById('mobileMenu').classList.remove('open')"> Store</a>
+ <a href="store.html" class="mobile-menu-link" onclick="document.getElementById('mobileMenu').classList.remove('open')"> Store</a>
  <a href="#communities" class="mobile-menu-link" onclick="document.getElementById('mobileMenu').classList.remove('open')"> Communities</a>
  <a href="#payments" class="mobile-menu-link" onclick="document.getElementById('mobileMenu').classList.remove('open')"> Payments</a>
  <a href="#faq" class="mobile-menu-link" onclick="document.getElementById('mobileMenu').classList.remove('open')"> FAQ</a>
- <div class="mobile-menu-divider">
+ <div style="margin-top:12px;padding-top:16px;border-top:1px solid var(--border);">
  <button class="btn btn-primary" style="width:100%;justify-content:center;margin-bottom:10px;">Connect Wallet</button>
  <button class="btn btn-secondary" style="width:100%;justify-content:center;">Start Earning</button>
  </div>
@@ -552,15 +435,15 @@ footer{background:var(--bg2);border-top:1px solid var(--border);padding:52px 0 3
  </div>
  <div class="hero-trust">
  <div class="trust-item">
- <svg width="14" height="14" fill="none" stroke="#0627B8" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+ <svg width="14" height="14" fill="none" stroke="#033CE3" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
  Instant payouts
  </div>
  <div class="trust-item">
- <svg width="14" height="14" fill="none" stroke="#0627B8" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+ <svg width="14" height="14" fill="none" stroke="#033CE3" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
  Solana powered
  </div>
  <div class="trust-item">
- <svg width="14" height="14" fill="none" stroke="#0627B8" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+ <svg width="14" height="14" fill="none" stroke="#033CE3" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
  Paystack enabled
  </div>
  </div>
@@ -700,7 +583,7 @@ footer{background:var(--bg2);border-top:1px solid var(--border);padding:52px 0 3
  <div class="task-card">
  <div class="tc-top">
  <div class="tc-lister">
- <div class="tc-avatar" style="background:linear-gradient(180deg,#0627B8 0%,#03045E 100%);font-size:12px;">BO</div>
+ <div class="tc-avatar" style="background:linear-gradient(180deg,#033CE3 0%,#011F9A 100%);font-size:12px;">BO</div>
  <div><div class="tc-by">Listed by</div><div class="tc-name">BrandOga</div></div>
  </div>
  <span class="badge badge-green"><span class="dot dot-green"></span>Active</span>
@@ -766,7 +649,7 @@ footer{background:var(--bg2);border-top:1px solid var(--border);padding:52px 0 3
  <div class="task-card">
  <div class="tc-top">
  <div class="tc-lister">
- <div class="tc-avatar" style="background:linear-gradient(180deg,#0627B8 0%,#03045E 100%);font-size:12px;">DS</div>
+ <div class="tc-avatar" style="background:linear-gradient(180deg,#033CE3 0%,#011F9A 100%);font-size:12px;">DS</div>
  <div><div class="tc-by">Listed by</div><div class="tc-name">DesignStudio</div></div>
  </div>
  <span class="badge badge-gold">Freelance</span>
@@ -832,7 +715,7 @@ footer{background:var(--bg2);border-top:1px solid var(--border);padding:52px 0 3
  <div class="task-card">
  <div class="tc-top">
  <div class="tc-lister">
- <div class="tc-avatar" style="background:linear-gradient(180deg,#0627B8 0%,#03045E 100%);font-size:12px;">AL</div>
+ <div class="tc-avatar" style="background:linear-gradient(180deg,#033CE3 0%,#011F9A 100%);font-size:12px;">AL</div>
  <div><div class="tc-by">Listed by</div><div class="tc-name">AppLaunch</div></div>
  </div>
  <span class="badge badge-green"><span class="dot dot-green"></span>Active</span>
@@ -890,11 +773,11 @@ footer{background:var(--bg2);border-top:1px solid var(--border);padding:52px 0 3
  <span class="section-label">Marketplace</span>
  <h2 class="section-title">Worker Store</h2>
  </div>
- <a href="#" class="view-all-btn">View all <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></a>
+ <a href="store.html" class="view-all-btn">Browse full store <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></a>
  </div>
  <div class="store-scroll reveal">
- <div class="store-card">
- <div class="store-thumb" style="background:#EEF2FF;"></div>
+ <div class="store-card" onclick="window.location.href='store.html'">
+ <div class="store-thumb" style="background:linear-gradient(135deg,#1a2878,#033CE3);font-size:36px;display:flex;align-items:center;justify-content:center;">🎨</div>
  <div class="store-body">
  <div class="store-title">Premium Logo Design Pack</div>
  <div class="store-desc">5 unique logo concepts in PNG, SVG and AI formats. Fast delivery.</div>
@@ -904,8 +787,8 @@ footer{background:var(--bg2);border-top:1px solid var(--border);padding:52px 0 3
  </div>
  </div>
  </div>
- <div class="store-card">
- <div class="store-thumb" style="background:#FEF3C7;"></div>
+ <div class="store-card" onclick="window.location.href='store.html'">
+ <div class="store-thumb" style="background:linear-gradient(135deg,#7c2d12,#ea580c);font-size:36px;display:flex;align-items:center;justify-content:center;">🚀</div>
  <div class="store-body">
  <div class="store-title">X Growth Bundle — 500 Followers</div>
  <div class="store-desc">Real Nigerian + diaspora accounts. Gradual drip delivery over 7 days.</div>
@@ -915,8 +798,8 @@ footer{background:var(--bg2);border-top:1px solid var(--border);padding:52px 0 3
  </div>
  </div>
  </div>
- <div class="store-card">
- <div class="store-thumb" style="background:#EEF2FF;"></div>
+ <div class="store-card" onclick="window.location.href='store.html'">
+ <div class="store-thumb" style="background:linear-gradient(135deg,#3b0764,#7c3aed);font-size:36px;display:flex;align-items:center;justify-content:center;">😂</div>
  <div class="store-body">
  <div class="store-title">Viral Meme Design (x5)</div>
  <div class="store-desc">Custom Nigerian-themed memes for social media marketing.</div>
@@ -926,8 +809,8 @@ footer{background:var(--bg2);border-top:1px solid var(--border);padding:52px 0 3
  </div>
  </div>
  </div>
- <div class="store-card">
- <div class="store-thumb" style="background:#FDF2F8;"></div>
+ <div class="store-card" onclick="window.location.href='store.html'">
+ <div class="store-thumb" style="background:linear-gradient(135deg,#134e4a,#0d9488);font-size:36px;display:flex;align-items:center;justify-content:center;">📢</div>
  <div class="store-body">
  <div class="store-title">Telegram Community Raid</div>
  <div class="store-desc">100 real members in 24 hours. Verified, active accounts only.</div>
@@ -937,8 +820,8 @@ footer{background:var(--bg2);border-top:1px solid var(--border);padding:52px 0 3
  </div>
  </div>
  </div>
- <div class="store-card">
- <div class="store-thumb" style="background:#EEF2FF;"></div>
+ <div class="store-card" onclick="window.location.href='store.html'">
+ <div class="store-thumb" style="background:linear-gradient(135deg,#1e3a5f,#2563eb);font-size:36px;display:flex;align-items:center;justify-content:center;">✍️</div>
  <div class="store-body">
  <div class="store-title">SEO Article Writing (1000 words)</div>
  <div class="store-desc">Keyword-optimized content by Nigerian writers. 48hr delivery.</div>
@@ -1071,7 +954,7 @@ footer{background:var(--bg2);border-top:1px solid var(--border);padding:52px 0 3
  <div class="testi-stars"></div>
  <p>"I made ₦18,000 in my first week just doing social tasks between lectures. OgaPay is a legit side hustle."</p>
  <div class="testi-author">
- <div class="testi-avatar" style="background:linear-gradient(180deg,#0627B8 0%,#03045E 100%);">CK</div>
+ <div class="testi-avatar" style="background:linear-gradient(180deg,#033CE3 0%,#011F9A 100%);">CK</div>
  <div><div class="testi-name">Chukwuemeka K.</div><div class="testi-loc">Lagos, Nigeria</div></div>
  </div>
  </div>
@@ -1087,7 +970,7 @@ footer{background:var(--bg2);border-top:1px solid var(--border);padding:52px 0 3
  <div class="testi-stars"></div>
  <p>"Posted a logo task and got 5 solid designs within 24 hours. Way cheaper and faster than any agency."</p>
  <div class="testi-author">
- <div class="testi-avatar" style="background:linear-gradient(180deg,#0627B8 0%,#03045E 100%);">TO</div>
+ <div class="testi-avatar" style="background:linear-gradient(180deg,#033CE3 0%,#011F9A 100%);">TO</div>
  <div><div class="testi-name">Tunde O.</div><div class="testi-loc">Abuja, Nigeria</div></div>
  </div>
  </div>
@@ -1103,21 +986,21 @@ footer{background:var(--bg2);border-top:1px solid var(--border);padding:52px 0 3
  <h2 class="section-title">Common questions</h2>
  </div>
  <div class="reveal" style="max-width:640px;margin:36px auto 0;display:flex;flex-direction:column;gap:10px;">
- <details class="faq-item">
- <summary class="faq-summary">How do I get paid? <span class="faq-icon">+</span></summary>
- <p class="faq-body">Once a task poster approves your submission, funds are released instantly. You can withdraw to your Nigerian bank account via Paystack or to your Solana wallet as USDC.</p>
+ <details style="background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);padding:18px 20px;cursor:pointer;">
+ <summary style="font-family:'Outfit',sans-serif;font-size:15px;font-weight:600;color:var(--text);list-style:none;display:flex;justify-content:space-between;align-items:center;">How do I get paid? <span style="color:var(--blue);font-size:18px;">+</span></summary>
+ <p style="margin-top:12px;font-size:13.5px;color:var(--text2);line-height:1.7;">Once a task poster approves your submission, funds are released instantly. You can withdraw to your Nigerian bank account via Paystack or to your Solana wallet as USDC.</p>
  </details>
- <details class="faq-item">
- <summary class="faq-summary">Do I need crypto experience to earn? <span class="faq-icon">+</span></summary>
- <p class="faq-body">Not at all. You can earn and withdraw entirely in Naira. Crypto is optional — but easy to set up with a free Phantom wallet if you want USDC payouts.</p>
+ <details style="background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);padding:18px 20px;cursor:pointer;">
+ <summary style="font-family:'Outfit',sans-serif;font-size:15px;font-weight:600;color:var(--text);list-style:none;display:flex;justify-content:space-between;align-items:center;">Do I need crypto experience to earn? <span style="color:var(--blue);font-size:18px;">+</span></summary>
+ <p style="margin-top:12px;font-size:13.5px;color:var(--text2);line-height:1.7;">Not at all. You can earn and withdraw entirely in Naira. Crypto is optional — but easy to set up with a free Phantom wallet if you want USDC payouts.</p>
  </details>
- <details class="faq-item">
- <summary class="faq-summary">What is the minimum withdrawal? <span class="faq-icon">+</span></summary>
- <p class="faq-body">₦500 for Naira withdrawals and $1.00 USDC for crypto withdrawals. There are no fees for Naira withdrawals under ₦10,000.</p>
+ <details style="background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);padding:18px 20px;cursor:pointer;">
+ <summary style="font-family:'Outfit',sans-serif;font-size:15px;font-weight:600;color:var(--text);list-style:none;display:flex;justify-content:space-between;align-items:center;">What is the minimum withdrawal? <span style="color:var(--blue);font-size:18px;">+</span></summary>
+ <p style="margin-top:12px;font-size:13.5px;color:var(--text2);line-height:1.7;">₦500 for Naira withdrawals and $1.00 USDC for crypto withdrawals. There are no fees for Naira withdrawals under ₦10,000.</p>
  </details>
- <details class="faq-item">
- <summary class="faq-summary">How do I post a task as an advertiser? <span class="faq-icon">+</span></summary>
- <p class="faq-body">Create an account, fund your wallet (NGN or USDC), then click "Post a Task". Set your reward, number of slots, proof requirements, and go live in minutes.</p>
+ <details style="background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);padding:18px 20px;cursor:pointer;">
+ <summary style="font-family:'Outfit',sans-serif;font-size:15px;font-weight:600;color:var(--text);list-style:none;display:flex;justify-content:space-between;align-items:center;">How do I post a task as an advertiser? <span style="color:var(--blue);font-size:18px;">+</span></summary>
+ <p style="margin-top:12px;font-size:13.5px;color:var(--text2);line-height:1.7;">Create an account, fund your wallet (NGN or USDC), then click "Post a Task". Set your reward, number of slots, proof requirements, and go live in minutes.</p>
  </details>
  </div>
  </div>
@@ -1142,9 +1025,9 @@ footer{background:var(--bg2);border-top:1px solid var(--border);padding:52px 0 3
  <div class="container">
  <div class="footer-grid">
  <div class="footer-brand">
- <div class="footer-logo-light">
- <img src="https://i.postimg.cc/cLH64k0w/1000459401-removebg-preview.png" alt="OgaPay" class="footer-logo-img-light"/>
- <img src="https://i.postimg.cc/3RgxbPCf/1000459444-removebg-preview.png" alt="OgaPay" class="footer-logo-img-dark"/>
+ <div style="display:flex;align-items:center;gap:9px;font-family:'Outfit',sans-serif;font-weight:800;font-size:18px;">
+ <svg width="26" height="26" viewBox="0 0 100 100" fill="none"><defs><linearGradient id="fg" x1="50" y1="0" x2="50" y2="100" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#033CE3"/><stop offset="100%" stop-color="#011F9A"/></linearGradient></defs><rect width="100" height="100" rx="20" fill="url(#fg)"/><rect x="10" y="10" width="35" height="35" rx="7" fill="#8a9ef5" opacity="0.7"/><polygon points="10,10 45,10 10,45" fill="#011F9A" opacity="0.45"/><path d="M52 10 H68 Q87 10 87 27.5 Q87 45 68 45 H52 Z" fill="white"/><rect x="10" y="52" width="35" height="35" rx="7" fill="#8a9ef5" opacity="0.55"/><rect x="52" y="52" width="35" height="35" rx="7" fill="#8a9ef5" opacity="0.7"/><polygon points="52,52 87,52 87,87" fill="#011F9A" opacity="0.45"/><path d="M52 52 H68 Q87 52 87 69.5 Q87 87 68 87 H52 Z" fill="white"/></svg>
+ Oga<span style="color:#033CE3;">Pay</span>
  </div>
  <p>The Nigerian-first microtask marketplace. Earn in Naira or crypto. No barriers, equal opportunities.</p>
  </div>
@@ -1188,88 +1071,62 @@ footer{background:var(--bg2);border-top:1px solid var(--border);padding:52px 0 3
 </div>
 
 <script>
-// ── THEME SYSTEM ──
-const root = document.documentElement;
-const STORAGE_KEY = 'ogapay-theme';
-const FAVICON_DARK = 'https://i.postimg.cc/BQYwG6qz/Screenshot-20260525-141844.png';
-const FAVICON_LIGHT = 'https://i.postimg.cc/BQYwG6qz/Screenshot-20260525-141844.png';
-
-function getSystemTheme(){
-  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-}
-
-function applyTheme(theme){
-  if(theme === 'dark'){
-    root.setAttribute('data-theme','dark');
-  } else {
-    root.removeAttribute('data-theme');
-  }
-  // Toggle moon/sun icons
-  const iconMoon = document.getElementById('icon-moon');
-  const iconSun  = document.getElementById('icon-sun');
-  if(iconMoon && iconSun){
-    iconMoon.style.display = theme === 'dark' ? 'none' : '';
-    iconSun.style.display  = theme === 'dark' ? ''     : 'none';
-  }
-}
-
-// Init — respect saved preference, fallback to system
-const saved = localStorage.getItem(STORAGE_KEY);
-const initTheme = saved || getSystemTheme();
-applyTheme(initTheme);
-
-// Listen for system changes when no saved pref
-window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
-  if(!localStorage.getItem(STORAGE_KEY)){
-    applyTheme(e.matches ? 'dark' : 'light');
-  }
-});
-
-// Toggle button
-document.getElementById('darkToggleBtn').addEventListener('click', () => {
-  const isDark = root.getAttribute('data-theme') === 'dark';
-  const next = isDark ? 'light' : 'dark';
-  applyTheme(next);
-  localStorage.setItem(STORAGE_KEY, next);
-});
-
-// ── SCROLL REVEAL ──
+// Scroll reveal
 const obs = new IntersectionObserver(entries => {
-  entries.forEach(e => { if(e.isIntersecting) e.target.classList.add('visible'); });
+ entries.forEach(e => { if(e.isIntersecting) e.target.classList.add('visible'); });
 }, {threshold: 0.07});
 document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
 
-// ── TABS ──
+// Tabs
 document.querySelectorAll('.tab').forEach(tab => {
-  tab.addEventListener('click', function() {
-    this.closest('.tabs').querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    this.classList.add('active');
-  });
+ tab.addEventListener('click', function() {
+ this.closest('.tabs').querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+ this.classList.add('active');
+ });
 });
 
-// ── HAMBURGER ──
+// Hamburger
 document.getElementById('hamburgerBtn').addEventListener('click', () => {
-  document.getElementById('mobileMenu').classList.add('open');
+ document.getElementById('mobileMenu').classList.add('open');
 });
 
-// ── MOBILE NAV ACTIVE ──
+// Mobile nav active
 document.querySelectorAll('.mobile-nav-item').forEach(item => {
-  item.addEventListener('click', function() {
-    document.querySelectorAll('.mobile-nav-item').forEach(i => i.classList.remove('active'));
-    this.classList.add('active');
-  });
+ item.addEventListener('click', function() {
+ document.querySelectorAll('.mobile-nav-item').forEach(i => i.classList.remove('active'));
+ this.classList.add('active');
+ });
 });
 
-// ── NAV ACTIVE ON SCROLL ──
+// Nav active on scroll
 const sections = document.querySelectorAll('section[id], div[id]');
 const navLinks = document.querySelectorAll('.nav-link');
 window.addEventListener('scroll', () => {
-  let current = '';
-  sections.forEach(s => { if(window.scrollY >= s.offsetTop - 100) current = s.id; });
-  navLinks.forEach(l => {
-    l.classList.toggle('active', l.getAttribute('href') === '#' + current);
-  });
+ let current = '';
+ sections.forEach(s => { if(window.scrollY >= s.offsetTop - 100) current = s.id; });
+ navLinks.forEach(l => {
+ l.classList.toggle('active', l.getAttribute('href') === '#' + current);
+ });
 }, {passive: true});
+
+// Dark mode toggle
+const darkToggleBtn = document.getElementById('darkToggleBtn');
+const iconMoon = document.getElementById('icon-moon');
+const iconSun = document.getElementById('icon-sun');
+const savedTheme = localStorage.getItem('ogapay-theme');
+if(savedTheme === 'dark'){ document.documentElement.setAttribute('data-theme','dark'); iconMoon.style.display='none'; iconSun.style.display=''; }
+darkToggleBtn.addEventListener('click', () => {
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  if(isDark){
+    document.documentElement.removeAttribute('data-theme');
+    localStorage.setItem('ogapay-theme','light');
+    iconMoon.style.display=''; iconSun.style.display='none';
+  } else {
+    document.documentElement.setAttribute('data-theme','dark');
+    localStorage.setItem('ogapay-theme','dark');
+    iconMoon.style.display='none'; iconSun.style.display='';
+  }
+});
 </script>
 </body>
 </html>
