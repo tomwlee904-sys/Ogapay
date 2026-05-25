@@ -1,0 +1,1014 @@
+
+
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Post a Task — OgaPay</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#FFFFFF;--bg2:#FAFAFB;--card:#FFFFFF;
+  --border:#E5E7EB;--border2:#D1D5DB;
+  --text:#0A0A0A;--text2:#6B7280;--text3:#9CA3AF;
+  --blue:#0627B8;--blue2:#1E3ED4;--blue-hover:#03045E;
+  --blue-light:#EEF2FF;--blue-lighter:#F5F7FF;
+  --blue-soft:#A5B4FC;--blue-deep:#03045E;
+  --blue-grad:linear-gradient(180deg,#0627B8 0%,#03045E 100%);
+  --gold:#F5B301;--gold-light:#FFFBEB;
+  --green:#10B981;--green-light:#ECFDF5;
+  --red:#EF4444;
+  --shadow-sm:0 1px 3px rgba(0,0,0,0.05);
+  --shadow-md:0 4px 12px rgba(0,0,0,0.08);
+  --shadow-lg:0 8px 24px rgba(0,0,0,0.12);
+  --shadow-xl:0 12px 36px rgba(0,0,0,0.15);
+  --radius-sm:6px;--radius-md:8px;--radius-lg:12px;
+  --radius-xl:16px;--radius-2xl:20px;--radius-full:999px;
+  --transition:all 0.2s cubic-bezier(0.4,0,0.2,1);
+}
+[data-theme="dark"]{
+  --bg:#050816;--bg2:#080d1e;--card:#0c1229;
+  --border:#1e2a4a;--border2:#2a3a6a;
+  --text:#F0F2F8;--text2:#8B92A8;--text3:#5A6280;
+  --blue:#4A6EF5;--blue2:#5F81FF;--blue-hover:#7A99FF;
+  --blue-light:#1A2240;--blue-lighter:#141930;
+  --blue-soft:#2A3F8F;--blue-deep:#3A5AE0;
+  --blue-grad:linear-gradient(180deg,#3A5AE0 0%,#1A2E8F 100%);
+  --gold:#F5B301;--gold-light:#2A2010;
+  --green:#34D399;--green-light:#064E3B;
+  --shadow-sm:0 1px 3px rgba(0,0,0,0.35);
+  --shadow-md:0 4px 12px rgba(0,0,0,0.42);
+  --shadow-lg:0 8px 24px rgba(0,0,0,0.5);
+  --shadow-xl:0 12px 36px rgba(0,0,0,0.58);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+*{transition:background-color 0.2s ease,border-color 0.2s ease,color 0.15s ease;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:15px;line-height:1.6;min-height:100vh;}
+h1,h2,h3,h4,h5{font-family:'Outfit',sans-serif;line-height:1.15;}
+a{color:inherit;text-decoration:none;}
+button{font-family:'DM Sans',sans-serif;cursor:pointer;border:none;background:none;}
+input,textarea,select{font-family:'DM Sans',sans-serif;}
+
+/* NAV */
+.nav{position:sticky;top:0;z-index:500;background:rgba(255,255,255,0.97);border-bottom:1px solid var(--border);backdrop-filter:blur(12px);}
+[data-theme="dark"] .nav{background:rgba(5,8,22,0.97);}
+.nav-inner{display:flex;align-items:center;gap:6px;padding:0 24px;height:60px;max-width:1160px;margin:0 auto;}
+.nav-logo{display:flex;align-items:center;flex-shrink:0;margin-right:8px;}
+.nav-logo img{height:30px;width:auto;object-fit:contain;}
+.nav-logo-img-light{display:block;}
+.nav-logo-img-dark{display:none;}
+[data-theme="dark"] .nav-logo-img-light{display:none;}
+[data-theme="dark"] .nav-logo-img-dark{display:block;}
+.nav-links{display:flex;gap:0;margin-left:4px;}
+.nav-link{padding:6px 13px;border-radius:8px;font-size:13.5px;font-weight:500;color:var(--text2);transition:var(--transition);white-space:nowrap;}
+.nav-link:hover{color:var(--text);background:var(--bg2);}
+.nav-link.active{color:var(--blue);background:var(--blue-light);}
+.nav-back{display:flex;align-items:center;gap:6px;font-size:13.5px;font-weight:600;color:var(--text2);padding:7px 14px;border-radius:var(--radius-full);border:1.5px solid var(--border);background:var(--bg);transition:var(--transition);cursor:pointer;text-decoration:none;}
+.nav-back:hover{color:var(--text);border-color:var(--border2);}
+.nav-right{margin-left:auto;display:flex;align-items:center;gap:8px;}
+.dark-toggle{width:34px;height:34px;border-radius:var(--radius-md);border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--text2);background:var(--bg);transition:var(--transition);cursor:pointer;}
+.dark-toggle:hover{border-color:var(--border2);color:var(--text);background:var(--bg2);}
+.connect-btn{background:var(--bg);color:var(--blue);border:1.5px solid var(--blue);border-radius:var(--radius-full);padding:7px 18px;font-size:13.5px;font-weight:600;transition:var(--transition);cursor:pointer;}
+.connect-btn:hover{background:var(--blue-light);}
+.hamburger{display:none;width:34px;height:34px;border-radius:8px;border:1.5px solid var(--border);align-items:center;justify-content:center;color:var(--text2);background:var(--bg);flex-shrink:0;cursor:pointer;}
+
+/* PAGE */
+.page{max-width:920px;margin:0 auto;padding:40px 24px 80px;animation:fadeInUp 0.4s ease;}
+@keyframes fadeInUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+
+/* HEADER */
+.create-header{text-align:center;margin-bottom:32px;padding:24px 16px;}
+.create-eyebrow{display:inline-flex;align-items:center;gap:6px;padding:4px 14px;border-radius:var(--radius-full);background:var(--blue-light);border:1px solid var(--blue-soft);font-size:12px;font-weight:700;color:var(--blue);margin-bottom:14px;text-transform:uppercase;letter-spacing:0.06em;}
+.create-title{font-family:'Outfit',sans-serif;font-size:clamp(28px,4vw,38px);font-weight:800;color:var(--text);margin:0 0 8px;letter-spacing:-0.5px;line-height:1.15;}
+[data-theme="dark"] .create-title{background:linear-gradient(135deg,#ffffff,#c7d2fe);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.create-subtitle{font-size:15px;color:var(--text2);max-width:520px;margin:0 auto;line-height:1.65;}
+
+/* STEP BAR */
+.step-bar{display:flex;align-items:center;gap:0;max-width:640px;margin:0 auto 32px;}
+.step{display:flex;align-items:center;flex:1;}
+.step-circle{width:30px;height:30px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-family:'Outfit',sans-serif;font-size:12px;font-weight:700;color:var(--text3);background:var(--bg);flex-shrink:0;transition:var(--transition);}
+.step.active .step-circle{border-color:var(--blue);color:var(--blue);background:var(--blue-light);}
+.step.done .step-circle{border-color:var(--blue);background:var(--blue);color:#fff;}
+.step-label{font-size:12px;font-weight:600;color:var(--text3);margin-left:8px;white-space:nowrap;}
+.step.active .step-label,.step.done .step-label{color:var(--blue);}
+.step-line{flex:1;height:2px;background:var(--border);margin:0 8px;border-radius:1px;transition:background 0.3s;}
+.step.done ~ .step .step-line{background:var(--border);}
+
+/* MODE SELECTION */
+.mode-selection-wrap{max-width:680px;margin:0 auto 28px;padding:24px;background:var(--card);border-radius:var(--radius-xl);border:1.5px solid var(--border);box-shadow:var(--shadow-md);}
+.mode-selection-header{text-align:center;margin-bottom:20px;}
+.mode-selection-title{font-family:'Outfit',sans-serif;font-size:18px;font-weight:700;color:var(--text);margin:0 0 4px;}
+.mode-selection-sub{font-size:13.5px;color:var(--text2);}
+.mode-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.mode-card{padding:16px;border-radius:var(--radius-lg);border:2px solid var(--border);background:var(--card);cursor:pointer;transition:var(--transition);position:relative;display:flex;flex-direction:column;gap:8px;box-shadow:var(--shadow-sm);}
+.mode-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg);border-color:var(--border2);}
+.mode-card.active{border-color:var(--blue);background:var(--blue-lighter);box-shadow:0 0 0 3px rgba(6,39,184,0.1),var(--shadow-md);}
+[data-theme="dark"] .mode-card.active{background:var(--blue-light);}
+.mode-card-head{display:flex;align-items:center;gap:10px;}
+.mode-icon{width:34px;height:34px;min-width:34px;border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;}
+.mode-icon.social{background:linear-gradient(135deg,#0627B8,#03045E);}
+.mode-icon.survey{background:linear-gradient(135deg,#059669,#047857);}
+.mode-icon.freelance{background:linear-gradient(135deg,#7C3AED,#5B21B6);}
+.mode-card-title{font-family:'Outfit',sans-serif;font-weight:700;font-size:14px;color:var(--text);}
+.mode-card-desc{font-size:12px;color:var(--text2);line-height:1.5;}
+.mode-card-check{position:absolute;top:10px;right:10px;width:18px;height:18px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;transition:var(--transition);}
+.mode-card.active .mode-card-check{background:var(--blue);border-color:var(--blue);}
+
+/* FORM */
+.create-form{display:flex;flex-direction:column;gap:20px;}
+.form-section{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius-xl);padding:28px;box-shadow:var(--shadow-sm);transition:var(--transition);}
+.form-section:hover{box-shadow:var(--shadow-md);}
+.section-header{display:flex;align-items:center;gap:10px;margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid var(--border);}
+.section-icon{width:32px;height:32px;border-radius:var(--radius-md);background:var(--blue-light);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.section-title{font-family:'Outfit',sans-serif;font-size:16px;font-weight:700;color:var(--text);}
+.section-badge{margin-left:auto;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;padding:3px 10px;border-radius:var(--radius-full);background:var(--blue-light);color:var(--blue);}
+
+/* FORM ELEMENTS */
+.form-group{margin-bottom:20px;}
+.form-group:last-child{margin-bottom:0;}
+.form-label{display:flex;align-items:center;gap:6px;font-size:13.5px;font-weight:600;color:var(--text);margin-bottom:8px;}
+.form-required{color:var(--red);}
+.form-hint{font-size:12px;color:var(--text3);margin-top:5px;line-height:1.5;}
+.form-input,.form-select,.form-textarea{width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:var(--radius-lg);background:var(--bg);color:var(--text);font-size:14px;transition:var(--transition);font-family:'DM Sans',sans-serif;}
+.form-input:hover,.form-select:hover,.form-textarea:hover{border-color:var(--border2);}
+.form-input:focus,.form-select:focus,.form-textarea:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(6,39,184,0.08);}
+[data-theme="dark"] .form-input,[data-theme="dark"] .form-select,[data-theme="dark"] .form-textarea{background:var(--bg2);color:var(--text);}
+.form-textarea{resize:vertical;min-height:110px;line-height:1.6;}
+.form-select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236B7280' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;background-size:16px;padding-right:40px;cursor:pointer;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.input-footer{display:flex;justify-content:space-between;align-items:center;margin-top:5px;}
+.char-count{font-size:11.5px;color:var(--text3);}
+
+/* QUICK SELECT */
+.quick-select{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
+.qs-btn{padding:6px 14px;border:1.5px solid var(--border);border-radius:var(--radius-md);background:var(--bg);color:var(--text2);font-size:12.5px;font-weight:500;cursor:pointer;transition:var(--transition);font-family:'DM Sans',sans-serif;}
+.qs-btn:hover{border-color:rgba(6,39,184,0.4);color:var(--text);background:var(--bg2);}
+.qs-btn.active{background:var(--blue-lighter);border-color:var(--blue);color:var(--blue);}
+[data-theme="dark"] .qs-btn.active{background:var(--blue-light);}
+
+/* PLATFORM SELECTOR */
+.platform-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+.platform-btn{padding:10px 8px;border:1.5px solid var(--border);border-radius:var(--radius-md);background:var(--bg);cursor:pointer;transition:var(--transition);display:flex;flex-direction:column;align-items:center;gap:5px;font-size:11.5px;font-weight:600;color:var(--text2);}
+.platform-btn:hover{border-color:var(--border2);color:var(--text);}
+.platform-btn.active{border-color:var(--blue);background:var(--blue-lighter);color:var(--blue);}
+[data-theme="dark"] .platform-btn.active{background:var(--blue-light);}
+.platform-btn .pi{font-size:20px;line-height:1;}
+
+/* PROOF TYPE */
+.proof-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+.proof-btn{padding:14px 8px;border:1.5px solid var(--border);border-radius:var(--radius-lg);background:var(--bg);cursor:pointer;transition:var(--transition);display:flex;flex-direction:column;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--text2);}
+.proof-btn:hover{border-color:var(--border2);color:var(--text);}
+.proof-btn.active{border-color:var(--blue);background:var(--blue-lighter);color:var(--blue);}
+[data-theme="dark"] .proof-btn.active{background:var(--blue-light);}
+.proof-btn .picon{font-size:22px;}
+
+/* REWARD INPUT */
+.reward-input-wrap{position:relative;}
+.reward-currency{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:15px;font-weight:700;color:var(--text2);pointer-events:none;}
+.reward-input{padding-left:44px !important;}
+.reward-usd-equiv{position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:12px;font-weight:600;background:var(--bg2);border:1px solid var(--border);padding:3px 8px;border-radius:var(--radius-md);color:var(--green);pointer-events:none;}
+
+/* REWARD CARDS */
+.reward-cards{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
+.reward-card{padding:16px;border:2px solid var(--border);border-radius:var(--radius-lg);cursor:pointer;transition:var(--transition);position:relative;}
+.reward-card:hover{border-color:var(--border2);transform:translateY(-1px);}
+.reward-card.active-ngn{border-color:var(--gold);background:var(--gold-light);}
+.reward-card.active-usdc{border-color:var(--blue);background:var(--blue-lighter);}
+[data-theme="dark"] .reward-card.active-usdc{background:var(--blue-light);}
+[data-theme="dark"] .reward-card.active-ngn{background:var(--gold-light);}
+.reward-card-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:4px;}
+.reward-card-amount{font-family:'Outfit',sans-serif;font-size:22px;font-weight:800;}
+.reward-card.active-ngn .reward-card-amount{color:var(--gold);}
+.reward-card.active-usdc .reward-card-amount{color:var(--blue);}
+.reward-card-sub{font-size:11.5px;color:var(--text3);margin-top:2px;}
+.reward-card-tick{position:absolute;top:10px;right:10px;width:18px;height:18px;border-radius:50%;background:var(--blue);display:none;align-items:center;justify-content:center;}
+.reward-card.active-ngn .reward-card-tick.ngn-tick,
+.reward-card.active-usdc .reward-card-tick.usdc-tick{display:flex;}
+
+/* PAYOUT OVERVIEW */
+.payout-overview{background:var(--card);border:1.5px solid rgba(6,39,184,0.2);border-radius:var(--radius-xl);overflow:hidden;box-shadow:var(--shadow-sm);position:relative;margin-top:16px;}
+.payout-overview::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#0627B8,#4A6EF5,#A5B4FC);z-index:2;}
+.payout-header{padding:12px 20px;background:linear-gradient(135deg,rgba(238,242,255,0.8),rgba(219,234,254,0.5));border-bottom:1px solid rgba(6,39,184,0.1);}
+[data-theme="dark"] .payout-header{background:linear-gradient(135deg,rgba(26,34,64,0.8),rgba(30,50,143,0.4));}
+.payout-header-title{font-family:'Outfit',sans-serif;font-size:12px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:0.08em;display:flex;align-items:center;gap:6px;}
+.payout-body{padding:0 20px;}
+.payout-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(6,39,184,0.06);}
+.payout-row:last-child{border-bottom:none;}
+.payout-row.highlight{background:linear-gradient(135deg,rgba(238,242,255,0.6),rgba(219,234,254,0.4));padding:14px 20px;margin:0 -20px;border-top:1px solid rgba(6,39,184,0.1);border-bottom:none;}
+.payout-label{font-size:13px;color:var(--text2);font-weight:500;}
+.payout-row.highlight .payout-label{font-weight:700;color:var(--blue);font-size:13.5px;}
+.payout-val{font-family:'Outfit',sans-serif;font-size:15px;font-weight:700;color:var(--text);}
+.payout-val.total{font-size:18px;color:var(--blue);}
+.payout-val.fee{color:var(--text2);font-size:13px;}
+.payout-usd{font-size:11.5px;color:var(--text3);margin-left:5px;}
+
+/* AUDIENCE */
+.audience-selector{display:flex;gap:4px;padding:4px;background:var(--bg2);border:1.5px solid var(--border);border-radius:var(--radius-lg);}
+.aud-btn{flex:1;padding:9px 10px;border:2px solid transparent;border-radius:var(--radius-md);background:transparent;color:var(--text2);font-size:12.5px;font-weight:600;cursor:pointer;transition:var(--transition);font-family:'DM Sans',sans-serif;display:flex;align-items:center;justify-content:center;gap:5px;white-space:nowrap;}
+.aud-btn:hover{background:var(--bg);color:var(--text);}
+.aud-btn.active{background:var(--blue-lighter);color:var(--blue);border-color:var(--blue);box-shadow:0 0 0 2px rgba(6,39,184,0.08);}
+[data-theme="dark"] .aud-btn.active{background:var(--blue-light);}
+
+/* ALERTS */
+.alert{display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border-radius:var(--radius-lg);margin-top:14px;border:1.5px solid;font-size:13.5px;line-height:1.6;}
+.alert-info{background:rgba(238,242,255,0.7);border-color:rgba(6,39,184,0.15);color:#1e3a8a;}
+[data-theme="dark"] .alert-info{background:rgba(26,34,64,0.6);border-color:rgba(74,110,245,0.2);color:#93c5fd;}
+.alert-warning{background:rgba(245,179,1,0.07);border-color:rgba(245,179,1,0.3);color:#92600A;}
+[data-theme="dark"] .alert-warning{background:rgba(42,32,16,0.6);border-color:rgba(245,179,1,0.3);color:#fcd34d;}
+.alert-success{background:rgba(16,185,129,0.07);border-color:rgba(16,185,129,0.3);color:#065f46;}
+[data-theme="dark"] .alert-success{background:rgba(6,78,59,0.4);border-color:rgba(52,211,153,0.3);color:#6ee7b7;}
+.alert svg{flex-shrink:0;margin-top:1px;}
+.info-box{display:flex;gap:10px;padding:12px 14px;background:var(--bg2);border:1.5px solid var(--border);border-radius:var(--radius-lg);margin-bottom:16px;font-size:13px;line-height:1.6;color:var(--text2);}
+
+/* SUBMIT */
+.form-actions{margin-top:20px;display:flex;flex-direction:column;gap:10px;}
+.btn-submit{width:100%;padding:15px 24px;border-radius:var(--radius-lg);font-family:'Outfit',sans-serif;font-size:16px;font-weight:700;cursor:pointer;border:none;background:var(--blue-grad);color:#fff;box-shadow:0 4px 16px rgba(6,39,184,0.3);transition:var(--transition);position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;gap:8px;}
+.btn-submit:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 8px 28px rgba(6,39,184,0.45);}
+.btn-submit:disabled{opacity:0.7;cursor:not-allowed;}
+.btn-draft{width:100%;padding:12px;border-radius:var(--radius-lg);font-size:14px;font-weight:600;cursor:pointer;border:1.5px solid var(--border);background:var(--bg);color:var(--text2);transition:var(--transition);font-family:'DM Sans',sans-serif;}
+.btn-draft:hover{border-color:var(--border2);color:var(--text);}
+
+/* SUCCESS STATE */
+.success-screen{display:none;text-align:center;padding:48px 24px;}
+.success-icon{width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,#059669,#047857);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;box-shadow:0 8px 24px rgba(5,150,105,0.35);}
+.success-title{font-family:'Outfit',sans-serif;font-size:28px;font-weight:800;color:var(--text);margin-bottom:8px;}
+.success-sub{font-size:15px;color:var(--text2);margin-bottom:28px;line-height:1.6;}
+.success-actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;}
+.btn-view-tasks{padding:12px 24px;border-radius:var(--radius-full);background:var(--blue-grad);color:#fff;font-size:14px;font-weight:600;cursor:pointer;border:none;font-family:'DM Sans',sans-serif;transition:var(--transition);}
+.btn-view-tasks:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(6,39,184,0.35);}
+.btn-post-another{padding:12px 24px;border-radius:var(--radius-full);border:1.5px solid var(--border);background:var(--bg);color:var(--text);font-size:14px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:var(--transition);}
+.btn-post-another:hover{border-color:var(--blue);color:var(--blue);}
+
+/* SUMMARY CARD (pre-submit) */
+.task-summary{background:var(--bg2);border:1.5px solid var(--border);border-radius:var(--radius-lg);padding:16px;margin-bottom:16px;}
+.summary-title{font-family:'Outfit',sans-serif;font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.05em;}
+.summary-row{display:flex;justify-content:space-between;align-items:flex-start;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px;}
+.summary-row:last-child{border-bottom:none;}
+.summary-key{color:var(--text2);font-weight:500;flex-shrink:0;margin-right:12px;}
+.summary-val{color:var(--text);font-weight:600;text-align:right;}
+
+/* FEATURED TOGGLE */
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;}
+.toggle-label{font-size:13.5px;color:var(--text);font-weight:600;}
+.toggle-sub{font-size:12px;color:var(--text3);margin-top:2px;}
+.toggle-switch{position:relative;width:42px;height:24px;flex-shrink:0;}
+.toggle-switch input{opacity:0;width:0;height:0;}
+.toggle-slider{position:absolute;cursor:pointer;inset:0;background:var(--border2);border-radius:12px;transition:0.3s;}
+.toggle-slider::before{content:"";position:absolute;height:18px;width:18px;left:3px;bottom:3px;background:white;border-radius:50%;transition:0.3s;}
+.toggle-switch input:checked + .toggle-slider{background:var(--blue);}
+.toggle-switch input:checked + .toggle-slider::before{transform:translateX(18px);}
+
+/* MOBILE */
+@media(max-width:768px){
+  .nav-links{display:none;}
+  .connect-btn{display:none;}
+  .hamburger{display:flex;}
+  .page{padding:24px 16px 80px;}
+  .form-row{grid-template-columns:1fr;}
+  .mode-grid{grid-template-columns:1fr;}
+  .platform-grid{grid-template-columns:repeat(4,1fr);}
+  .proof-grid{grid-template-columns:repeat(2,1fr);}
+  .reward-cards{grid-template-columns:1fr 1fr;}
+  .step-label{display:none;}
+  .create-title{font-size:26px;}
+  .audience-selector{flex-wrap:wrap;}
+}
+@media(max-width:480px){
+  .platform-grid{grid-template-columns:repeat(3,1fr);}
+  .mode-grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<header class="nav">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">
+      <img src="https://i.postimg.cc/cLH64k0w/1000459401-removebg-preview.png" alt="OgaPay" class="nav-logo-img-light"/>
+      <img src="https://i.postimg.cc/3RgxbPCf/1000459444-removebg-preview.png" alt="OgaPay" class="nav-logo-img-dark"/>
+    </a>
+    <nav class="nav-links">
+      <a href="tasks.html" class="nav-link">Tasks</a>
+      <a href="store.html" class="nav-link">Store</a>
+      <a href="index.html#communities" class="nav-link">Communities</a>
+      <a href="index.html#payments" class="nav-link">Payments</a>
+    </nav>
+    <a href="index.html" class="nav-back">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+      Back to Home
+    </a>
+    <div class="nav-right">
+      <button class="dark-toggle" id="themeToggle" title="Toggle theme">
+        <svg id="icon-sun" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+        <svg id="icon-moon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+      <button class="connect-btn">Connect Wallet</button>
+      <button class="hamburger" id="hamburgerBtn">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- PAGE -->
+<div class="page">
+
+  <!-- HEADER -->
+  <div class="create-header">
+    <div class="create-eyebrow">📢 Post a Task</div>
+    <h1 class="create-title">Reach Thousands of Earners</h1>
+    <p class="create-subtitle">Set your reward, define your requirements, and go live in minutes. Only pay for approved completions.</p>
+  </div>
+
+  <!-- STEP BAR -->
+  <div class="step-bar">
+    <div class="step active" id="step1">
+      <div class="step-circle">1</div>
+      <span class="step-label">Task Type</span>
+    </div>
+    <div class="step-line" id="line1"></div>
+    <div class="step" id="step2">
+      <div class="step-circle">2</div>
+      <span class="step-label">Details</span>
+    </div>
+    <div class="step-line" id="line2"></div>
+    <div class="step" id="step3">
+      <div class="step-circle">3</div>
+      <span class="step-label">Reward</span>
+    </div>
+    <div class="step-line" id="line3"></div>
+    <div class="step" id="step4">
+      <div class="step-circle">4</div>
+      <span class="step-label">Review</span>
+    </div>
+  </div>
+
+  <!-- MODE SELECTION -->
+  <div class="mode-selection-wrap">
+    <div class="mode-selection-header">
+      <div class="mode-selection-title">What type of task is this?</div>
+      <div class="mode-selection-sub">Choose the category that best describes what you need done</div>
+    </div>
+    <div class="mode-grid">
+      <div class="mode-card active" onclick="selectMode(this,'social')">
+        <div class="mode-card-head">
+          <div class="mode-icon social">
+            <svg width="17" height="17" fill="none" stroke="white" stroke-width="2.5" viewBox="0 0 24 24"><path d="M17 2H7a5 5 0 0 0-5 5v10a5 5 0 0 0 5 5h10a5 5 0 0 0 5-5V7a5 5 0 0 0-5-5z"/><circle cx="12" cy="12" r="3"/></svg>
+          </div>
+          <div class="mode-card-title">Social Task</div>
+        </div>
+        <div class="mode-card-desc">Follows, reposts, likes, joins — verified actions across all major platforms.</div>
+        <div class="mode-card-check">
+          <svg width="10" height="10" fill="none" stroke="white" stroke-width="3" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+      </div>
+      <div class="mode-card" onclick="selectMode(this,'survey')">
+        <div class="mode-card-head">
+          <div class="mode-icon survey">
+            <svg width="17" height="17" fill="none" stroke="white" stroke-width="2.5" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          </div>
+          <div class="mode-card-title">Survey / Review</div>
+        </div>
+        <div class="mode-card-desc">Feedback, app testing, product reviews — custom questions and criteria.</div>
+        <div class="mode-card-check">
+          <svg width="10" height="10" fill="none" stroke="white" stroke-width="3" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+      </div>
+      <div class="mode-card" onclick="selectMode(this,'freelance')">
+        <div class="mode-card-head">
+          <div class="mode-icon freelance">
+            <svg width="17" height="17" fill="none" stroke="white" stroke-width="2.5" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 9h6M9 12h6M9 15h4"/></svg>
+          </div>
+          <div class="mode-card-title">Freelance / Creative</div>
+        </div>
+        <div class="mode-card-desc">Design, writing, voice recording, data labelling — skilled deliverables.</div>
+        <div class="mode-card-check">
+          <svg width="10" height="10" fill="none" stroke="white" stroke-width="3" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FORM -->
+  <div class="create-form">
+
+    <!-- SECTION 1: DETAILS -->
+    <div class="form-section">
+      <div class="section-header">
+        <div class="section-icon">
+          <svg width="16" height="16" fill="none" stroke="var(--blue)" stroke-width="2.5" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        </div>
+        <span class="section-title">Task Details</span>
+        <span class="section-badge">Step 2</span>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Task Title <span class="form-required">*</span></label>
+        <input type="text" class="form-input" id="taskTitle" placeholder="e.g. Follow our X account and repost our pinned tweet" maxlength="120" oninput="updateChar('taskTitle','titleCount',120);updateStep()"/>
+        <div class="input-footer">
+          <span class="form-hint">Be specific — this is the first thing workers see.</span>
+          <span class="char-count" id="titleCount">0/120</span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Full Instructions <span class="form-required">*</span></label>
+        <textarea class="form-textarea" id="taskDesc" placeholder="Describe step by step what workers must do. Include links, handles, account names, or any specific requirements." maxlength="1000" oninput="updateChar('taskDesc','descCount',1000);updateStep()"></textarea>
+        <div class="input-footer">
+          <span class="form-hint">Clearer instructions = better submissions = faster approval.</span>
+          <span class="char-count" id="descCount">0/1000</span>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Category <span class="form-required">*</span></label>
+          <select class="form-select" id="category" onchange="updateStep()">
+            <option value="">Select category...</option>
+            <option value="social">Social Media</option>
+            <option value="survey">Survey / Feedback</option>
+            <option value="freelance">Freelance / Creative</option>
+            <option value="testing">App Testing</option>
+            <option value="content">Content Creation</option>
+            <option value="crypto">Crypto / Web3</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Estimated Time</label>
+          <select class="form-select" id="estTime">
+            <option value="1">~1 minute</option>
+            <option value="2" selected>~2 minutes</option>
+            <option value="5">~5 minutes</option>
+            <option value="10">~10 minutes</option>
+            <option value="15">~15 minutes</option>
+            <option value="30">~30 minutes</option>
+            <option value="60">~1 hour</option>
+            <option value="120">~2 hours</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group" id="platformGroup">
+        <label class="form-label">Platform</label>
+        <div class="platform-grid">
+          <button class="platform-btn active" onclick="selectPlatform(this)"><span class="pi">🐦</span>X/Twitter</button>
+          <button class="platform-btn" onclick="selectPlatform(this)"><span class="pi">📸</span>Instagram</button>
+          <button class="platform-btn" onclick="selectPlatform(this)"><span class="pi">📢</span>Telegram</button>
+          <button class="platform-btn" onclick="selectPlatform(this)"><span class="pi">🎵</span>TikTok</button>
+          <button class="platform-btn" onclick="selectPlatform(this)"><span class="pi">▶️</span>YouTube</button>
+          <button class="platform-btn" onclick="selectPlatform(this)"><span class="pi">💬</span>WhatsApp</button>
+          <button class="platform-btn" onclick="selectPlatform(this)"><span class="pi">🎮</span>Discord</button>
+          <button class="platform-btn" onclick="selectPlatform(this)"><span class="pi">🔗</span>Other</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 2: PROOF -->
+    <div class="form-section">
+      <div class="section-header">
+        <div class="section-icon">
+          <svg width="16" height="16" fill="none" stroke="var(--blue)" stroke-width="2.5" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        </div>
+        <span class="section-title">Proof of Completion</span>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">How should workers prove completion? <span class="form-required">*</span></label>
+        <div class="proof-grid">
+          <button class="proof-btn active" onclick="selectProof(this)"><span class="picon">📸</span>Screenshot</button>
+          <button class="proof-btn" onclick="selectProof(this)"><span class="picon">🔗</span>URL / Link</button>
+          <button class="proof-btn" onclick="selectProof(this)"><span class="picon">✍️</span>Written text</button>
+          <button class="proof-btn" onclick="selectProof(this)"><span class="picon">📎</span>File upload</button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Proof Instructions</label>
+        <input type="text" class="form-input" id="proofInstructions" placeholder="e.g. Screenshot must show your username visible and the follow button changed to Following"/>
+        <span class="form-hint">Optional — helps workers submit valid proof first time.</span>
+      </div>
+    </div>
+
+    <!-- SECTION 3: SLOTS & TIMING -->
+    <div class="form-section">
+      <div class="section-header">
+        <div class="section-icon">
+          <svg width="16" height="16" fill="none" stroke="var(--blue)" stroke-width="2.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
+        <span class="section-title">Slots & Timeline</span>
+        <span class="section-badge">Step 3</span>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Number of Workers <span class="form-required">*</span></label>
+          <div class="quick-select">
+            <button class="qs-btn" onclick="setSlots(this,10)">10</button>
+            <button class="qs-btn" onclick="setSlots(this,25)">25</button>
+            <button class="qs-btn active" onclick="setSlots(this,50)">50</button>
+            <button class="qs-btn" onclick="setSlots(this,100)">100</button>
+            <button class="qs-btn" onclick="setSlots(this,250)">250</button>
+          </div>
+          <input type="number" class="form-input" id="slotsInput" value="50" min="1" max="10000" oninput="recalcPayout()"/>
+          <span class="form-hint">Max completions before task closes.</span>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Task Deadline</label>
+          <input type="datetime-local" class="form-input" id="deadline"/>
+          <span class="form-hint">Leave blank for no expiry.</span>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Review Window</label>
+          <select class="form-select">
+            <option value="24">24 hours</option>
+            <option value="48" selected>48 hours</option>
+            <option value="72">72 hours</option>
+            <option value="168">7 days</option>
+          </select>
+          <span class="form-hint">Time you have to approve each submission.</span>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Task Visibility</label>
+          <select class="form-select">
+            <option value="public" selected>Public — open to all</option>
+            <option value="invite">Invite only</option>
+            <option value="community">Community members</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 4: AUDIENCE -->
+    <div class="form-section">
+      <div class="section-header">
+        <div class="section-icon">
+          <svg width="16" height="16" fill="none" stroke="var(--blue)" stroke-width="2.5" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <span class="section-title">Audience & Requirements</span>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Who can complete this task?</label>
+        <div class="audience-selector">
+          <button class="aud-btn active" onclick="selectAud(this)">🌍 Everyone</button>
+          <button class="aud-btn" onclick="selectAud(this)">🇳🇬 Nigeria only</button>
+          <button class="aud-btn" onclick="selectAud(this)">🌍 Pan-Africa</button>
+          <button class="aud-btn" onclick="selectAud(this)">🎯 Custom</button>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Min. Followers Required</label>
+          <input type="number" class="form-input" placeholder="0 = no minimum" min="0"/>
+          <span class="form-hint">Useful for social tasks that need real accounts.</span>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Min. Reputation Score</label>
+          <select class="form-select">
+            <option value="0">Any level</option>
+            <option value="20">Starter (20+)</option>
+            <option value="50">Pro (50+)</option>
+            <option value="75">Expert (75+)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="toggle-row">
+        <div>
+          <div class="toggle-label">⭐ Feature this task</div>
+          <div class="toggle-sub">Featured tasks appear at the top and earn 2× more completions. Adds 20% to total cost.</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="featuredToggle" onchange="recalcPayout()">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <!-- SECTION 5: REWARD -->
+    <div class="form-section">
+      <div class="section-header">
+        <div class="section-icon">
+          <svg width="16" height="16" fill="none" stroke="var(--blue)" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        </div>
+        <span class="section-title">Reward per Worker</span>
+        <span class="section-badge">Step 3</span>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Payout Currency <span class="form-required">*</span></label>
+        <div class="reward-cards">
+          <div class="reward-card active-ngn" id="cardNGN" onclick="selectCurrency('NGN')">
+            <div class="reward-card-label">🇳🇬 Naira (NGN)</div>
+            <div class="reward-card-amount" id="ngnPreview">₦500</div>
+            <div class="reward-card-sub">Bank transfer via Paystack</div>
+            <div class="reward-card-tick ngn-tick" style="display:flex;">
+              <svg width="10" height="10" fill="none" stroke="white" stroke-width="3" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+          </div>
+          <div class="reward-card" id="cardUSDC" onclick="selectCurrency('USDC')">
+            <div class="reward-card-label">🔵 USDC (Crypto)</div>
+            <div class="reward-card-amount" id="usdcPreview">$0.31</div>
+            <div class="reward-card-sub">Solana · instant settlement</div>
+            <div class="reward-card-tick usdc-tick">
+              <svg width="10" height="10" fill="none" stroke="white" stroke-width="3" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Reward Amount <span class="form-required">*</span></label>
+        <div class="quick-select" id="rewardQuick">
+          <button class="qs-btn" onclick="setReward(this,250)">₦250</button>
+          <button class="qs-btn active" onclick="setReward(this,500)">₦500</button>
+          <button class="qs-btn" onclick="setReward(this,1000)">₦1,000</button>
+          <button class="qs-btn" onclick="setReward(this,2000)">₦2,000</button>
+          <button class="qs-btn" onclick="setReward(this,5000)">₦5,000</button>
+        </div>
+        <div class="reward-input-wrap">
+          <span class="reward-currency" id="currencySymbol">₦</span>
+          <input type="number" class="form-input reward-input" id="rewardAmount" value="500" min="0" oninput="recalcPayout()"/>
+          <span class="reward-usd-equiv" id="usdEquiv">≈ $0.31</span>
+        </div>
+        <span class="form-hint">Minimum ₦80 per worker for Naira · $0.10 for USDC tasks.</span>
+      </div>
+
+      <!-- PAYOUT OVERVIEW -->
+      <div class="payout-overview">
+        <div class="payout-header">
+          <div class="payout-header-title">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            Cost Breakdown
+          </div>
+        </div>
+        <div class="payout-body">
+          <div class="payout-row">
+            <span class="payout-label">Reward per worker</span>
+            <span class="payout-val" id="po-perWorker">₦500</span>
+          </div>
+          <div class="payout-row">
+            <span class="payout-label">Number of workers</span>
+            <span class="payout-val" id="po-slots">× 50</span>
+          </div>
+          <div class="payout-row">
+            <span class="payout-label">Subtotal</span>
+            <span class="payout-val" id="po-subtotal">₦25,000</span>
+          </div>
+          <div class="payout-row">
+            <span class="payout-label">Platform fee (10%)</span>
+            <span class="payout-val fee" id="po-fee">+ ₦2,500</span>
+          </div>
+          <div class="payout-row" id="po-featured-row" style="display:none;">
+            <span class="payout-label">⭐ Featured boost (20%)</span>
+            <span class="payout-val fee" id="po-featured">+ ₦0</span>
+          </div>
+          <div class="payout-row highlight">
+            <span class="payout-label">Total you pay</span>
+            <div>
+              <span class="payout-val total" id="po-total">₦27,500</span>
+              <span class="payout-usd" id="po-totalusd">≈ $16.97</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="alert alert-info" style="margin-top:16px;">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <div>Funds are locked in escrow when your task goes live. You're only charged for approved submissions. Unused funds are fully refunded if the task expires or is cancelled.</div>
+      </div>
+    </div>
+
+    <!-- SECTION 6: REVIEW & LAUNCH -->
+    <div class="form-section">
+      <div class="section-header">
+        <div class="section-icon">
+          <svg width="16" height="16" fill="none" stroke="var(--blue)" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <span class="section-title">Review & Launch</span>
+        <span class="section-badge">Step 4</span>
+      </div>
+
+      <!-- LIVE SUMMARY -->
+      <div class="task-summary" id="taskSummary">
+        <div class="summary-title">Task Summary</div>
+        <div class="summary-row"><span class="summary-key">Title</span><span class="summary-val" id="s-title">—</span></div>
+        <div class="summary-row"><span class="summary-key">Type</span><span class="summary-val" id="s-type">Social Task</span></div>
+        <div class="summary-row"><span class="summary-key">Workers</span><span class="summary-val" id="s-slots">50 slots</span></div>
+        <div class="summary-row"><span class="summary-key">Reward</span><span class="summary-val" id="s-reward">₦500 per worker</span></div>
+        <div class="summary-row"><span class="summary-key">Total cost</span><span class="summary-val" id="s-total">₦27,500</span></div>
+      </div>
+
+      <div class="info-box">
+        <svg width="15" height="15" fill="none" stroke="var(--text2)" stroke-width="2" viewBox="0 0 24 24" style="flex-shrink:0;margin-top:1px;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        <div>Your task will be reviewed by our moderation team within 5 minutes. Once approved, it goes live immediately and earners start completing it.</div>
+      </div>
+
+      <div class="alert alert-warning">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <div>Make sure your wallet has sufficient balance before posting. Insufficient funds will prevent your task from going live.</div>
+      </div>
+
+      <div class="form-actions">
+        <button class="btn-submit" id="submitBtn" onclick="submitTask()">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M22 2L11 13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          Post Task & Lock Funds
+        </button>
+        <button class="btn-draft" onclick="saveDraft()">Save as Draft</button>
+      </div>
+    </div>
+
+  </div><!-- /create-form -->
+
+  <!-- SUCCESS SCREEN -->
+  <div class="success-screen" id="successScreen">
+    <div class="success-icon">
+      <svg width="34" height="34" fill="none" stroke="white" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+    </div>
+    <h2 class="success-title">Task Posted! 🎉</h2>
+    <p class="success-sub">Your task is now live and visible to thousands of earners on OgaPay. You'll start receiving submissions within minutes.</p>
+    <div class="alert alert-success" style="max-width:480px;margin:0 auto 24px;text-align:left;">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      <div>Funds locked in escrow. You'll be notified when submissions arrive for review.</div>
+    </div>
+    <div class="success-actions">
+      <button class="btn-view-tasks" onclick="window.location.href='tasks.html'">Browse All Tasks</button>
+      <button class="btn-post-another" onclick="resetForm()">Post Another Task</button>
+    </div>
+  </div>
+
+</div><!-- /page -->
+
+<script>
+// ── THEME ──
+const root = document.documentElement;
+const STORAGE_KEY = 'ogapay-theme';
+function applyTheme(t) {
+  root.setAttribute('data-theme', t);
+  document.getElementById('icon-sun').style.display = t === 'dark' ? 'none' : '';
+  document.getElementById('icon-moon').style.display = t === 'dark' ? '' : 'none';
+}
+const saved = localStorage.getItem(STORAGE_KEY) || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+applyTheme(saved);
+document.getElementById('themeToggle').addEventListener('click', () => {
+  const next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  applyTheme(next);
+  localStorage.setItem(STORAGE_KEY, next);
+});
+
+// ── MODE ──
+let currentMode = 'social';
+function selectMode(el, type) {
+  document.querySelectorAll('.mode-card').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  currentMode = type;
+  document.getElementById('platformGroup').style.display = type === 'social' ? 'block' : 'none';
+  document.getElementById('s-type').textContent = { social:'Social Task', survey:'Survey / Review', freelance:'Freelance / Creative' }[type] || type;
+}
+
+// ── PLATFORM ──
+function selectPlatform(el) {
+  document.querySelectorAll('.platform-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// ── PROOF ──
+function selectProof(el) {
+  document.querySelectorAll('.proof-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// ── AUDIENCE ──
+function selectAud(el) {
+  document.querySelectorAll('.aud-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// ── SLOTS ──
+function setSlots(el, val) {
+  document.getElementById('slotsInput').value = val;
+  el.closest('.quick-select').querySelectorAll('.qs-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  recalcPayout();
+}
+
+// ── CURRENCY ──
+let currency = 'NGN';
+function selectCurrency(c) {
+  currency = c;
+  document.getElementById('cardNGN').className = 'reward-card' + (c === 'NGN' ? ' active-ngn' : '');
+  document.getElementById('cardUSDC').className = 'reward-card' + (c === 'USDC' ? ' active-usdc' : '');
+  document.getElementById('currencySymbol').textContent = c === 'NGN' ? '₦' : '$';
+  const qs = document.getElementById('rewardQuick');
+  if (c === 'NGN') {
+    qs.innerHTML = `
+      <button class="qs-btn" onclick="setReward(this,250)">₦250</button>
+      <button class="qs-btn active" onclick="setReward(this,500)">₦500</button>
+      <button class="qs-btn" onclick="setReward(this,1000)">₦1,000</button>
+      <button class="qs-btn" onclick="setReward(this,2000)">₦2,000</button>
+      <button class="qs-btn" onclick="setReward(this,5000)">₦5,000</button>`;
+    document.getElementById('rewardAmount').value = 500;
+  } else {
+    qs.innerHTML = `
+      <button class="qs-btn" onclick="setReward(this,0.25)">$0.25</button>
+      <button class="qs-btn active" onclick="setReward(this,0.5)">$0.50</button>
+      <button class="qs-btn" onclick="setReward(this,1)">$1.00</button>
+      <button class="qs-btn" onclick="setReward(this,2)">$2.00</button>
+      <button class="qs-btn" onclick="setReward(this,5)">$5.00</button>`;
+    document.getElementById('rewardAmount').value = 0.5;
+  }
+  recalcPayout();
+}
+
+function setReward(el, val) {
+  el.closest('.quick-select').querySelectorAll('.qs-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('rewardAmount').value = val;
+  recalcPayout();
+}
+
+// ── PAYOUT CALC ──
+const NGN_RATE = 1620;
+function recalcPayout() {
+  const amount = parseFloat(document.getElementById('rewardAmount').value) || 0;
+  const slots = parseInt(document.getElementById('slotsInput').value) || 0;
+  const featured = document.getElementById('featuredToggle').checked;
+  const subtotal = amount * slots;
+  const fee = subtotal * 0.1;
+  const featuredBoost = featured ? subtotal * 0.2 : 0;
+  const total = subtotal + fee + featuredBoost;
+
+  // Toggle featured row
+  document.getElementById('po-featured-row').style.display = featured ? 'flex' : 'none';
+
+  if (currency === 'NGN') {
+    const usdAmt = amount / NGN_RATE;
+    document.getElementById('usdEquiv').textContent = '≈ $' + usdAmt.toFixed(2);
+    document.getElementById('po-perWorker').textContent = '₦' + fmt(amount);
+    document.getElementById('po-slots').textContent = '× ' + slots;
+    document.getElementById('po-subtotal').textContent = '₦' + fmt(subtotal);
+    document.getElementById('po-fee').textContent = '+ ₦' + fmt(fee);
+    document.getElementById('po-featured').textContent = '+ ₦' + fmt(featuredBoost);
+    document.getElementById('po-total').textContent = '₦' + fmt(total);
+    document.getElementById('po-totalusd').textContent = '≈ $' + (total / NGN_RATE).toFixed(2);
+    document.getElementById('ngnPreview').textContent = '₦' + fmt(amount);
+    document.getElementById('usdcPreview').textContent = '$' + (amount / NGN_RATE).toFixed(2);
+    document.getElementById('s-reward').textContent = '₦' + fmt(amount) + ' per worker';
+    document.getElementById('s-total').textContent = '₦' + fmt(total);
+  } else {
+    document.getElementById('usdEquiv').textContent = '≈ ₦' + fmt(Math.round(amount * NGN_RATE));
+    document.getElementById('po-perWorker').textContent = '$' + amount.toFixed(2);
+    document.getElementById('po-slots').textContent = '× ' + slots;
+    document.getElementById('po-subtotal').textContent = '$' + subtotal.toFixed(2);
+    document.getElementById('po-fee').textContent = '+ $' + fee.toFixed(2);
+    document.getElementById('po-featured').textContent = '+ $' + featuredBoost.toFixed(2);
+    document.getElementById('po-total').textContent = '$' + total.toFixed(2);
+    document.getElementById('po-totalusd').textContent = '≈ ₦' + fmt(Math.round(total * NGN_RATE));
+    document.getElementById('ngnPreview').textContent = '₦' + fmt(Math.round(amount * NGN_RATE));
+    document.getElementById('usdcPreview').textContent = '$' + amount.toFixed(2);
+    document.getElementById('s-reward').textContent = '$' + amount.toFixed(2) + ' USDC per worker';
+    document.getElementById('s-total').textContent = '$' + total.toFixed(2);
+  }
+
+  document.getElementById('s-slots').textContent = slots + ' slots';
+
+  // Update steps
+  updateStep();
+}
+
+function fmt(n) { return Number(n).toLocaleString('en-NG'); }
+
+// ── CHAR COUNTER ──
+function updateChar(inputId, countId, max) {
+  const val = document.getElementById(inputId).value.length;
+  document.getElementById(countId).textContent = val + '/' + max;
+}
+
+// ── STEP TRACKER ──
+function updateStep() {
+  const title = document.getElementById('taskTitle').value.trim();
+  const desc = document.getElementById('taskDesc').value.trim();
+  const cat = document.getElementById('category').value;
+
+  // Step 1 always active to start
+  const s1 = document.getElementById('step1');
+  const s2 = document.getElementById('step2');
+  const s3 = document.getElementById('step3');
+  const s4 = document.getElementById('step4');
+
+  if (title) {
+    s1.className = 'step done'; s1.querySelector('.step-circle').textContent = '✓';
+    document.getElementById('line1').style.background = 'var(--blue)';
+  } else {
+    s1.className = 'step active'; s1.querySelector('.step-circle').textContent = '1';
+    document.getElementById('line1').style.background = '';
+  }
+
+  if (title && desc && cat) {
+    s2.className = 'step done'; s2.querySelector('.step-circle').textContent = '✓';
+    document.getElementById('line2').style.background = 'var(--blue)';
+  } else {
+    s2.className = title ? 'step active' : 'step';
+    s2.querySelector('.step-circle').textContent = '2';
+    document.getElementById('line2').style.background = '';
+  }
+
+  const amount = parseFloat(document.getElementById('rewardAmount').value) || 0;
+  if (title && desc && cat && amount > 0) {
+    s3.className = 'step done'; s3.querySelector('.step-circle').textContent = '✓';
+    document.getElementById('line3').style.background = 'var(--blue)';
+    s4.className = 'step active';
+  } else {
+    s3.className = (title && desc && cat) ? 'step active' : 'step';
+    s3.querySelector('.step-circle').textContent = '3';
+    document.getElementById('line3').style.background = '';
+    s4.className = 'step';
+  }
+
+  // Update summary
+  const titleEl = document.getElementById('taskTitle');
+  document.getElementById('s-title').textContent = titleEl.value.trim() || '—';
+}
+
+// ── SUBMIT ──
+function submitTask() {
+  const title = document.getElementById('taskTitle').value.trim();
+  const desc = document.getElementById('taskDesc').value.trim();
+  const cat = document.getElementById('category').value;
+  const reward = parseFloat(document.getElementById('rewardAmount').value) || 0;
+  const slots = parseInt(document.getElementById('slotsInput').value) || 0;
+
+  if (!title) { shake('taskTitle'); return; }
+  if (!desc) { shake('taskDesc'); return; }
+  if (!cat) { shake('category'); return; }
+  if (reward <= 0) { shake('rewardAmount'); return; }
+  if (slots <= 0) { shake('slotsInput'); return; }
+
+  const btn = document.getElementById('submitBtn');
+  btn.innerHTML = `<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" style="animation:spin 1s linear infinite"><circle cx="12" cy="12" r="10" stroke-dasharray="30 60"/></svg> Submitting task...`;
+  btn.disabled = true;
+
+  setTimeout(() => {
+    // Mark all steps done
+    ['step1','step2','step3','step4'].forEach(id => {
+      const s = document.getElementById(id);
+      s.className = 'step done';
+      s.querySelector('.step-circle').textContent = '✓';
+    });
+    ['line1','line2','line3'].forEach(id => document.getElementById(id).style.background = 'var(--blue)');
+
+    // Show success
+    document.querySelector('.create-header').style.display = 'none';
+    document.querySelector('.mode-selection-wrap').style.display = 'none';
+    document.querySelector('.create-form').style.display = 'none';
+    document.getElementById('successScreen').style.display = 'block';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, 1800);
+}
+
+function saveDraft() {
+  const btn = event.target;
+  btn.textContent = '✓ Draft saved';
+  btn.style.color = 'var(--green)';
+  btn.style.borderColor = 'var(--green)';
+  setTimeout(() => {
+    btn.textContent = 'Save as Draft';
+    btn.style.color = '';
+    btn.style.borderColor = '';
+  }, 2000);
+}
+
+function resetForm() {
+  location.reload();
+}
+
+function shake(id) {
+  const el = document.getElementById(id);
+  el.style.borderColor = 'var(--red)';
+  el.style.animation = 'shake 0.35s ease';
+  el.focus();
+  setTimeout(() => { el.style.animation = ''; el.style.borderColor = ''; }, 700);
+}
+
+// CSS for shake + spin
+const style = document.createElement('style');
+style.textContent = `
+@keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+`;
+document.head.appendChild(style);
+
+// ── INIT ──
+recalcPayout();
+</script>
+</body>
+</html>
+
