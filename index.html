@@ -45,6 +45,16 @@ body.light .btn-ghost{color:var(--blue2);border-color:var(--border2);}
 body.light #authModal>div{background:#e4e8ff;}
 body.light .mobile-nav{background:rgba(240,242,255,0.97);}
 body.light .step-card{background:rgba(255,255,255,0.6);}
+body.light .section-alt{background:rgba(37,53,200,0.06);}
+body.light .gs-card{background:rgba(255,255,255,0.7);border-color:rgba(37,53,200,0.2);}
+body.light .cat-card{background:rgba(255,255,255,0.7);}
+body.light .qcard{background:rgba(255,255,255,0.7);}
+body.light .task-card{background:rgba(255,255,255,0.8);}
+body.light .store-card{background:rgba(255,255,255,0.8);}
+body.light .community-card{background:rgba(255,255,255,0.7);}
+body.light .hero-stats-bar{background:rgba(255,255,255,0.7);}
+body.light .payment-card{background:rgba(255,255,255,0.7);}
+body.light .ticker-item{color:var(--muted);}
 body.light .testi-card{background:rgba(255,255,255,0.7);}
 body.light .lb-table{background:rgba(255,255,255,0.7);}
 .theme-toggle{width:36px;height:36px;border-radius:9px;border:1.5px solid var(--border);background:transparent;display:flex;align-items:center;justify-content:center;color:var(--muted);cursor:pointer;transition:all 0.15s;flex-shrink:0;}
@@ -130,7 +140,7 @@ button{font-family:'DM Sans',sans-serif;cursor:pointer;}
 /* FLOATING CARDS */
 .float-card{position:absolute;background:var(--surface2);border:1px solid var(--border2);border-radius:14px;padding:14px 18px;backdrop-filter:blur(16px);z-index:3;}
 .float-card-1{left:-4%;top:28%;animation:floatY 7s ease-in-out infinite;}
-.float-card-2{right:-2%;top:38%;animation:floatY 7s 3.5s ease-in-out infinite;}
+.float-card-2{right:1%;top:42%;animation:floatY 7s 3.5s ease-in-out infinite;max-width:160px;}
 @keyframes floatY{0%,100%{transform:translateY(0);}50%{transform:translateY(-14px);}}
 .fc-label{font-size:10.5px;color:var(--muted);margin-bottom:5px;}
 .fc-val{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;}
@@ -432,6 +442,10 @@ footer{background:var(--navy2);border-top:1px solid var(--border);padding:56px 0
   .hamburger{display:flex;}
 }
 @media(max-width:768px){
+  .section-alt{padding:48px 0;}
+  .gs-grid{gap:12px;padding:0 4px;}
+  .gs-card{padding:24px 20px;}
+  .float-card{display:none;}
   .mobile-nav{display:block;}
   .mnav-fab{display:flex;}
   body{padding-bottom:68px;}
@@ -565,7 +579,7 @@ footer{background:var(--navy2);border-top:1px solid var(--border);padding:56px 0
         <h1 class="hero-h1">Do Tasks.<br><em>Get Paid.</em></h1>
         <p class="hero-sub">OgaPay is the global microtask marketplace. Post tasks, complete jobs, earn in Naira or crypto — no barriers.</p>
         <div class="hero-cta">
-          <button class="btn btn-primary btn-lg" onclick="showToast('Welcome! Connect wallet to start <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 00-2.91-.09z"/><path d="M12 15l-3-3a22 22 0 012-3.95A12.88 12.88 0 0122 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 01-4 2z"/></svg>')">Start Earning Free</button>
+          <button class="btn btn-primary btn-lg" onclick="showToast('Welcome! Sign up to start earning')">Start Earning Free</button>
           <button class="btn btn-ghost btn-lg" onclick="showToast('Campaign creator launching soon!')">Post a Task →</button>
         </div>
         <div class="hero-stats-bar">
