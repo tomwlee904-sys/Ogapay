@@ -496,8 +496,8 @@ footer{background:var(--navy2);border-top:1px solid var(--border);padding:56px 0
         <span class="notif-dot">3</span>
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg>
       </button>
-      <button class="btn btn-ghost btn-sm" onclick="showToast('Log in coming soon!')">Log in</button>
-      <button class="btn btn-primary btn-sm" onclick="openModal()">
+      <button class="btn btn-ghost btn-sm" id="navLoginBtn" onclick="openAuthModal('login')">Log in</button>
+      <button class="btn btn-primary btn-sm" id="navRegisterBtn" onclick="openAuthModal('register')">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
         Connect Wallet
       </button>
@@ -1489,8 +1489,193 @@ footer{background:var(--navy2);border-top:1px solid var(--border);padding:56px 0
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
 </button>
 
+<!-- AUTH MODAL -->
+<div id="authModal" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(4,6,58,0.85);backdrop-filter:blur(8px);align-items:center;justify-content:center;">
+  <div style="background:var(--navy2);border:1px solid var(--border2);border-radius:22px;padding:36px;width:100%;max-width:420px;margin:16px;position:relative;">
+    <button onclick="closeAuthModal()" style="position:absolute;top:14px;right:14px;background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;">✕</button>
+    <div id="authTabs" style="display:flex;gap:4px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:4px;margin-bottom:24px;">
+      <button id="tabLogin" class="tab active" onclick="switchTab('login')" style="flex:1">Log In</button>
+      <button id="tabRegister" class="tab" onclick="switchTab('register')" style="flex:1">Register</button>
+    </div>
+    <div id="authError" style="display:none;background:rgba(255,77,109,0.1);border:1px solid rgba(255,77,109,0.3);color:var(--red);padding:10px 14px;border-radius:10px;font-size:13px;margin-bottom:16px;"></div>
+    <form id="authForm" onsubmit="handleAuth(event)">
+      <div id="registerFields" style="display:none;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+          <input id="firstName" placeholder="First name" style="background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:11px 14px;color:#fff;font-size:14px;font-family:'DM Sans',sans-serif;outline:none;width:100%;">
+          <input id="lastName" placeholder="Last name" style="background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:11px 14px;color:#fff;font-size:14px;font-family:'DM Sans',sans-serif;outline:none;width:100%;">
+        </div>
+        <input id="username" placeholder="Username" style="background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:11px 14px;color:#fff;font-size:14px;font-family:'DM Sans',sans-serif;outline:none;width:100%;margin-bottom:12px;">
+        <select id="role" style="background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:11px 14px;color:#fff;font-size:14px;font-family:'DM Sans',sans-serif;outline:none;width:100%;margin-bottom:12px;">
+          <option value="WORKER">Worker — I want to earn</option>
+          <option value="POSTER">Poster — I want to post tasks</option>
+        </select>
+      </div>
+      <input id="authEmail" type="email" placeholder="Email address" required style="background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:11px 14px;color:#fff;font-size:14px;font-family:'DM Sans',sans-serif;outline:none;width:100%;margin-bottom:12px;">
+      <input id="authPassword" type="password" placeholder="Password" required style="background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:11px 14px;color:#fff;font-size:14px;font-family:'DM Sans',sans-serif;outline:none;width:100%;margin-bottom:18px;">
+      <button type="submit" id="authSubmitBtn" class="btn btn-primary" style="width:100%;justify-content:center;padding:13px;">Log In</button>
+    </form>
+  </div>
+</div>
+
 <script>
-// MODAL
+const API = 'http://localhost:5000/api/v1';
+let authToken = localStorage.getItem('ogapay_token');
+let currentUser = JSON.parse(localStorage.getItem('ogapay_user')||'null');
+
+// ── AUTH STATE ──
+function updateNavAuth(){
+  const loginBtn = document.getElementById('navLoginBtn');
+  const registerBtn = document.getElementById('navRegisterBtn');
+  if(currentUser){
+    loginBtn.textContent = currentUser.username || currentUser.firstName;
+    loginBtn.onclick = logout;
+    registerBtn.innerHTML = '💼 Dashboard';
+    registerBtn.onclick = () => showToast('Dashboard coming soon!');
+  } else {
+    loginBtn.textContent = 'Log in';
+    loginBtn.onclick = () => openAuthModal('login');
+    registerBtn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg> Get Started`;
+    registerBtn.onclick = () => openAuthModal('register');
+  }
+}
+
+function logout(){
+  localStorage.removeItem('ogapay_token');
+  localStorage.removeItem('ogapay_user');
+  authToken = null; currentUser = null;
+  updateNavAuth();
+  showToast('Logged out successfully');
+}
+
+// ── AUTH MODAL ──
+function openAuthModal(tab='login'){
+  document.getElementById('authModal').style.display='flex';
+  switchTab(tab);
+}
+function closeAuthModal(){
+  document.getElementById('authModal').style.display='none';
+  document.getElementById('authError').style.display='none';
+}
+document.getElementById('authModal').addEventListener('click',function(e){if(e.target===this)closeAuthModal();});
+
+function switchTab(tab){
+  const isLogin = tab==='login';
+  document.getElementById('tabLogin').classList.toggle('active',isLogin);
+  document.getElementById('tabRegister').classList.toggle('active',!isLogin);
+  document.getElementById('registerFields').style.display = isLogin?'none':'block';
+  document.getElementById('authSubmitBtn').textContent = isLogin?'Log In':'Create Account';
+  document.getElementById('authError').style.display='none';
+  document.getElementById('authModal').dataset.tab = tab;
+}
+
+async function handleAuth(e){
+  e.preventDefault();
+  const tab = document.getElementById('authModal').dataset.tab||'login';
+  const email = document.getElementById('authEmail').value;
+  const password = document.getElementById('authPassword').value;
+  const btn = document.getElementById('authSubmitBtn');
+  const errEl = document.getElementById('authError');
+  btn.textContent = 'Please wait...'; btn.disabled = true;
+  errEl.style.display='none';
+
+  try {
+    let body, endpoint;
+    if(tab==='login'){
+      endpoint = '/auth/login';
+      body = {email, password};
+    } else {
+      endpoint = '/auth/register';
+      body = {
+        email, password,
+        firstName: document.getElementById('firstName').value,
+        lastName: document.getElementById('lastName').value,
+        username: document.getElementById('username').value,
+        role: document.getElementById('role').value,
+      };
+    }
+    const res = await fetch(API+endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    const data = await res.json();
+    if(!res.ok) throw new Error(data.message||'Something went wrong');
+    authToken = data.data.tokens.accessToken;
+    currentUser = data.data.user;
+    localStorage.setItem('ogapay_token', authToken);
+    localStorage.setItem('ogapay_user', JSON.stringify(currentUser));
+    updateNavAuth();
+    closeAuthModal();
+    showToast('Welcome, '+currentUser.firstName+'! 🎉');
+  } catch(err){
+    errEl.textContent = err.message;
+    errEl.style.display='block';
+  } finally {
+    btn.textContent = tab==='login'?'Log In':'Create Account';
+    btn.disabled=false;
+  }
+}
+
+// ── LOAD TASKS FROM API ──
+const CATEGORY_ICONS = {
+  SOCIAL_MEDIA:'📱', DATA_ENTRY:'📋', CONTENT_WRITING:'✍️',
+  APP_TESTING:'📲', SURVEY:'📊', DESIGN:'🎨',
+  TRANSLATION:'🌍', WEB_RESEARCH:'🔍', VIDEO_REVIEW:'🎬', OTHER:'💼'
+};
+
+function taskCard(task){
+  const pct = task.maxWorkers > 0 ? Math.min((task.currentWorkers/task.maxWorkers)*100,100) : 0;
+  const icon = CATEGORY_ICONS[task.category]||'💼';
+  const initials = (task.poster.username||'??').substring(0,2).toUpperCase();
+  const reward = task.currency==='NGN'
+    ? `<div class="tc-reward-ngn">₦${Number(task.reward).toLocaleString()}</div>`
+    : `<div class="tc-reward-usd">$${Number(task.reward).toFixed(2)} ${task.currency}</div>`;
+  const tags = (task.tags||[]).map(t=>`<span class="badge badge-blue" style="font-size:10px">${t}</span>`).join('');
+  const timeLeft = task.deadline ? `🕐 ${Math.max(0,Math.ceil((new Date(task.deadline)-Date.now())/86400000))}d left` : '⏱ No deadline';
+  return `
+  <div class="task-card" onclick="showToast('${task.title.replace(/'/g,"\\'")} — ₦${Number(task.reward).toLocaleString()}')">
+    <div class="tc-top">
+      <div class="tc-lister">
+        <div class="avatar" style="width:34px;height:34px;font-size:12px;background:linear-gradient(135deg,#2535c8,#8a9ef5);color:#fff">${initials}</div>
+        <div class="tc-lister-meta">
+          <span class="tc-by">Listed by</span>
+          <span class="tc-name">${task.poster.username}</span>
+        </div>
+      </div>
+      <span class="badge badge-green">Open</span>
+    </div>
+    <div>
+      <div class="progress-row"><span>PROGRESS</span><span>${task.currentWorkers}/${task.maxWorkers}</span></div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+    </div>
+    <div class="tc-meta-row">
+      <span class="tc-meta-item"><span class="dot dot-green"></span>Submissions ${task._count.submissions}</span>
+      <span class="tc-meta-item"><span class="dot dot-blue"></span>${task.maxWorkers} slots</span>
+      <span class="tc-meta-item">${icon} ${task.category.replace(/_/g,' ')}</span>
+    </div>
+    ${reward}
+    <div class="tc-tags">${tags}</div>
+    <p class="tc-desc">${task.description}</p>
+    <div class="tc-footer">
+      <span>${timeLeft}</span>
+      <span>👥 ${task.maxWorkers} workers</span>
+    </div>
+  </div>`;
+}
+
+async function loadTasks(){
+  const container = document.getElementById('tasksScroll');
+  try {
+    const res = await fetch(API+'/tasks?limit=10');
+    const data = await res.json();
+    if(data.success && data.data.length){
+      container.innerHTML = data.data.map(taskCard).join('');
+      // update carousel dots
+      const dotsEl = document.getElementById('taskDots');
+      if(dotsEl) dotsEl.innerHTML = data.data.map((_,i)=>`<div class="cdot${i===0?' active':''}"></div>`).join('');
+    }
+  } catch(err){
+    console.warn('Could not load tasks from API:', err);
+  }
+}
+
+// MODAL (wallet)
 function openModal(){document.getElementById('walletModal').classList.add('active');}
 function closeModal(){document.getElementById('walletModal').classList.remove('active');}
 document.getElementById('walletModal').addEventListener('click',function(e){if(e.target===this)closeModal();});
@@ -1549,6 +1734,10 @@ if(scroll&&dots.length){
     dots.forEach((d,i)=>d.classList.toggle('active',i===idx));
   });
 }
+
+// ── INIT ──
+updateNavAuth();
+loadTasks();
 </script>
 </body>
 </html>
