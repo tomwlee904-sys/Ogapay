@@ -17,6 +17,38 @@
   --shadow:0 4px 24px rgba(4,6,58,0.5);
   --shadow-lg:0 12px 60px rgba(4,6,58,0.7);
 }
+/* ── LIGHT MODE ── */
+body.light{
+  --navy:#f0f2ff;--navy2:#e4e8ff;--blue:#1a2480;--blue2:#2535c8;
+  --periwinkle:#3146e8;--light-blue:#2535c8;--white:#0d1040;
+  --offwhite:#1a2480;--muted:#4a5580;
+  --border:rgba(37,53,200,0.15);--border2:rgba(37,53,200,0.3);
+  --gold:#c49a00;--green:#00a86b;--red:#d63050;
+  --surface:rgba(37,53,200,0.07);--surface2:rgba(37,53,200,0.12);
+  --card:rgba(37,53,200,0.06);
+  --shadow:0 4px 24px rgba(37,53,200,0.15);
+  --shadow-lg:0 12px 60px rgba(37,53,200,0.2);
+}
+body.light{background:#f0f2ff;color:#0d1040;}
+body.light .nav{background:rgba(240,242,255,0.92);}
+body.light .hero-bg{background:radial-gradient(ellipse 70% 55% at 50% -5%,rgba(37,53,200,0.15) 0%,transparent 65%),linear-gradient(180deg,#e4e8ff 0%,#f0f2ff 100%);}
+body.light .ticker-wrap{background:rgba(228,232,255,0.8);}
+body.light .platform-card{background:rgba(255,255,255,0.85);}
+body.light .dash-preview{background:#fff;}
+body.light .dash-sidebar{background:#e4e8ff;}
+body.light .dash-bar{background:#e4e8ff;}
+body.light .mini-task{background:#e4e8ff;}
+body.light footer{background:#e4e8ff;}
+body.light .modal{background:#e4e8ff;}
+body.light .view-all-btn{background:var(--blue2);color:#fff;}
+body.light .btn-ghost{color:var(--blue2);border-color:var(--border2);}
+body.light #authModal>div{background:#e4e8ff;}
+body.light .mobile-nav{background:rgba(240,242,255,0.97);}
+body.light .step-card{background:rgba(255,255,255,0.6);}
+body.light .testi-card{background:rgba(255,255,255,0.7);}
+body.light .lb-table{background:rgba(255,255,255,0.7);}
+.theme-toggle{width:36px;height:36px;border-radius:9px;border:1.5px solid var(--border);background:transparent;display:flex;align-items:center;justify-content:center;color:var(--muted);cursor:pointer;transition:all 0.15s;flex-shrink:0;}
+.theme-toggle:hover{border-color:var(--border2);color:var(--periwinkle);}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
 body{background:var(--navy);color:var(--white);font-family:'DM Sans',sans-serif;font-size:15px;line-height:1.6;overflow-x:hidden;}
@@ -50,7 +82,7 @@ button{font-family:'DM Sans',sans-serif;cursor:pointer;}
 .avatar{border-radius:50%;object-fit:cover;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:700;}
 .section-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2.5px;color:var(--periwinkle);margin-bottom:12px;display:block;}
 .section-title{font-family:'Syne',sans-serif;font-size:clamp(26px,3.5vw,40px);font-weight:800;letter-spacing:-0.5px;line-height:1.12;margin-bottom:12px;}
-.section-title em{font-style:italic;color:var(--periwinkle);}
+.section-title em{font-style:normal;color:var(--periwinkle);}
 .section-sub{color:var(--muted);font-size:15px;line-height:1.7;max-width:480px;}
 .reveal{opacity:0;transform:translateY(24px);transition:opacity 0.6s ease,transform 0.6s ease;}
 .reveal.visible{opacity:1;transform:translateY(0);}
@@ -86,7 +118,7 @@ button{font-family:'DM Sans',sans-serif;cursor:pointer;}
 .hero-inner{position:relative;z-index:2;display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center;}
 .hero-pill{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:100px;background:rgba(138,158,245,0.1);border:1px solid var(--border2);font-size:12.5px;font-weight:600;color:var(--periwinkle);margin-bottom:22px;}
 .hero-h1{font-family:'Syne',sans-serif;font-size:clamp(38px,5vw,64px);font-weight:800;letter-spacing:-2px;line-height:1.05;margin-bottom:20px;}
-.hero-h1 em{font-style:italic;color:var(--periwinkle);}
+.hero-h1 em{font-style:normal;color:var(--periwinkle);}
 .hero-sub{font-size:16px;color:var(--muted);line-height:1.75;max-width:400px;margin-bottom:32px;}
 .hero-cta{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:40px;}
 .hero-stats-bar{display:flex;gap:0;border:1px solid var(--border);border-radius:16px;background:var(--surface);backdrop-filter:blur(12px);overflow:hidden;}
@@ -324,7 +356,7 @@ button{font-family:'DM Sans',sans-serif;cursor:pointer;}
 .testi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:44px;}
 .testi-card{background:var(--surface);border:1.5px solid var(--border);border-radius:18px;padding:26px;}
 .testi-stars{color:var(--gold);font-size:13px;margin-bottom:14px;letter-spacing:2px;}
-.testi-card p{font-size:13.5px;color:var(--muted);margin-bottom:18px;font-style:italic;line-height:1.75;}
+.testi-card p{font-size:13.5px;color:var(--muted);margin-bottom:18px;line-height:1.75;}
 .testi-author{display:flex;align-items:center;gap:10px;}
 .testi-name{font-size:13px;font-weight:700;color:var(--white);}
 .testi-loc{font-size:11px;color:var(--muted);}
@@ -333,7 +365,7 @@ button{font-family:'DM Sans',sans-serif;cursor:pointer;}
 .cta-section{text-align:center;padding:120px 28px;position:relative;overflow:hidden;}
 .cta-bg{position:absolute;inset:0;background:radial-gradient(ellipse 65% 65% at 50% 50%,rgba(37,53,200,0.32) 0%,transparent 70%),linear-gradient(180deg,var(--navy) 0%,var(--navy2) 50%,var(--navy) 100%);}
 .cta-section h2{font-family:'Syne',sans-serif;font-size:clamp(30px,5vw,60px);font-weight:800;letter-spacing:-1.5px;margin-bottom:16px;position:relative;z-index:1;}
-.cta-section h2 em{font-style:italic;color:var(--periwinkle);}
+.cta-section h2 em{font-style:normal;color:var(--periwinkle);}
 .cta-section>p{color:var(--muted);font-size:17px;margin-bottom:36px;position:relative;z-index:1;}
 .cta-buttons{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;position:relative;z-index:1;}
 .cta-pill{display:inline-flex;align-items:center;gap:8px;padding:6px 16px;border-radius:100px;background:rgba(138,158,245,0.1);border:1px solid var(--border2);font-size:12.5px;font-weight:600;color:var(--periwinkle);margin-bottom:28px;position:relative;z-index:1;}
@@ -492,12 +524,13 @@ footer{background:var(--navy2);border-top:1px solid var(--border);padding:56px 0
       <a class="nav-link" href="#">FAQ</a>
     </div>
     <div class="nav-right">
+      <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle light/dark mode">☀️</button>
       <button class="nav-icon-btn" style="position:relative">
         <span class="notif-dot">3</span>
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg>
       </button>
-      <button class="btn btn-ghost btn-sm" id="navLoginBtn" onclick="openAuthModal('login')">Log in</button>
-      <button class="btn btn-primary btn-sm" id="navRegisterBtn" onclick="openAuthModal('register')">
+      <button class="btn btn-ghost btn-sm" onclick="showToast('Log in coming soon!')">Log in</button>
+      <button class="btn btn-primary btn-sm" onclick="openModal()">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
         Connect Wallet
       </button>
@@ -1489,193 +1522,8 @@ footer{background:var(--navy2);border-top:1px solid var(--border);padding:56px 0
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
 </button>
 
-<!-- AUTH MODAL -->
-<div id="authModal" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(4,6,58,0.85);backdrop-filter:blur(8px);align-items:center;justify-content:center;">
-  <div style="background:var(--navy2);border:1px solid var(--border2);border-radius:22px;padding:36px;width:100%;max-width:420px;margin:16px;position:relative;">
-    <button onclick="closeAuthModal()" style="position:absolute;top:14px;right:14px;background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;">✕</button>
-    <div id="authTabs" style="display:flex;gap:4px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:4px;margin-bottom:24px;">
-      <button id="tabLogin" class="tab active" onclick="switchTab('login')" style="flex:1">Log In</button>
-      <button id="tabRegister" class="tab" onclick="switchTab('register')" style="flex:1">Register</button>
-    </div>
-    <div id="authError" style="display:none;background:rgba(255,77,109,0.1);border:1px solid rgba(255,77,109,0.3);color:var(--red);padding:10px 14px;border-radius:10px;font-size:13px;margin-bottom:16px;"></div>
-    <form id="authForm" onsubmit="handleAuth(event)">
-      <div id="registerFields" style="display:none;">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
-          <input id="firstName" placeholder="First name" style="background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:11px 14px;color:#fff;font-size:14px;font-family:'DM Sans',sans-serif;outline:none;width:100%;">
-          <input id="lastName" placeholder="Last name" style="background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:11px 14px;color:#fff;font-size:14px;font-family:'DM Sans',sans-serif;outline:none;width:100%;">
-        </div>
-        <input id="username" placeholder="Username" style="background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:11px 14px;color:#fff;font-size:14px;font-family:'DM Sans',sans-serif;outline:none;width:100%;margin-bottom:12px;">
-        <select id="role" style="background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:11px 14px;color:#fff;font-size:14px;font-family:'DM Sans',sans-serif;outline:none;width:100%;margin-bottom:12px;">
-          <option value="WORKER">Worker — I want to earn</option>
-          <option value="POSTER">Poster — I want to post tasks</option>
-        </select>
-      </div>
-      <input id="authEmail" type="email" placeholder="Email address" required style="background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:11px 14px;color:#fff;font-size:14px;font-family:'DM Sans',sans-serif;outline:none;width:100%;margin-bottom:12px;">
-      <input id="authPassword" type="password" placeholder="Password" required style="background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:11px 14px;color:#fff;font-size:14px;font-family:'DM Sans',sans-serif;outline:none;width:100%;margin-bottom:18px;">
-      <button type="submit" id="authSubmitBtn" class="btn btn-primary" style="width:100%;justify-content:center;padding:13px;">Log In</button>
-    </form>
-  </div>
-</div>
-
 <script>
-const API = 'https://ogapay-production.up.railway.app/api/v1';
-let authToken = localStorage.getItem('ogapay_token');
-let currentUser = JSON.parse(localStorage.getItem('ogapay_user')||'null');
-
-// ── AUTH STATE ──
-function updateNavAuth(){
-  const loginBtn = document.getElementById('navLoginBtn');
-  const registerBtn = document.getElementById('navRegisterBtn');
-  if(currentUser){
-    loginBtn.textContent = currentUser.username || currentUser.firstName;
-    loginBtn.onclick = logout;
-    registerBtn.innerHTML = '💼 Dashboard';
-    registerBtn.onclick = () => showToast('Dashboard coming soon!');
-  } else {
-    loginBtn.textContent = 'Log in';
-    loginBtn.onclick = () => openAuthModal('login');
-    registerBtn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg> Get Started`;
-    registerBtn.onclick = () => openAuthModal('register');
-  }
-}
-
-function logout(){
-  localStorage.removeItem('ogapay_token');
-  localStorage.removeItem('ogapay_user');
-  authToken = null; currentUser = null;
-  updateNavAuth();
-  showToast('Logged out successfully');
-}
-
-// ── AUTH MODAL ──
-function openAuthModal(tab='login'){
-  document.getElementById('authModal').style.display='flex';
-  switchTab(tab);
-}
-function closeAuthModal(){
-  document.getElementById('authModal').style.display='none';
-  document.getElementById('authError').style.display='none';
-}
-document.getElementById('authModal').addEventListener('click',function(e){if(e.target===this)closeAuthModal();});
-
-function switchTab(tab){
-  const isLogin = tab==='login';
-  document.getElementById('tabLogin').classList.toggle('active',isLogin);
-  document.getElementById('tabRegister').classList.toggle('active',!isLogin);
-  document.getElementById('registerFields').style.display = isLogin?'none':'block';
-  document.getElementById('authSubmitBtn').textContent = isLogin?'Log In':'Create Account';
-  document.getElementById('authError').style.display='none';
-  document.getElementById('authModal').dataset.tab = tab;
-}
-
-async function handleAuth(e){
-  e.preventDefault();
-  const tab = document.getElementById('authModal').dataset.tab||'login';
-  const email = document.getElementById('authEmail').value;
-  const password = document.getElementById('authPassword').value;
-  const btn = document.getElementById('authSubmitBtn');
-  const errEl = document.getElementById('authError');
-  btn.textContent = 'Please wait...'; btn.disabled = true;
-  errEl.style.display='none';
-
-  try {
-    let body, endpoint;
-    if(tab==='login'){
-      endpoint = '/auth/login';
-      body = {email, password};
-    } else {
-      endpoint = '/auth/register';
-      body = {
-        email, password,
-        firstName: document.getElementById('firstName').value,
-        lastName: document.getElementById('lastName').value,
-        username: document.getElementById('username').value,
-        role: document.getElementById('role').value,
-      };
-    }
-    const res = await fetch(API+endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
-    const data = await res.json();
-    if(!res.ok) throw new Error(data.message||'Something went wrong');
-    authToken = data.data.tokens.accessToken;
-    currentUser = data.data.user;
-    localStorage.setItem('ogapay_token', authToken);
-    localStorage.setItem('ogapay_user', JSON.stringify(currentUser));
-    updateNavAuth();
-    closeAuthModal();
-    showToast('Welcome, '+currentUser.firstName+'! 🎉');
-  } catch(err){
-    errEl.textContent = err.message;
-    errEl.style.display='block';
-  } finally {
-    btn.textContent = tab==='login'?'Log In':'Create Account';
-    btn.disabled=false;
-  }
-}
-
-// ── LOAD TASKS FROM API ──
-const CATEGORY_ICONS = {
-  SOCIAL_MEDIA:'📱', DATA_ENTRY:'📋', CONTENT_WRITING:'✍️',
-  APP_TESTING:'📲', SURVEY:'📊', DESIGN:'🎨',
-  TRANSLATION:'🌍', WEB_RESEARCH:'🔍', VIDEO_REVIEW:'🎬', OTHER:'💼'
-};
-
-function taskCard(task){
-  const pct = task.maxWorkers > 0 ? Math.min((task.currentWorkers/task.maxWorkers)*100,100) : 0;
-  const icon = CATEGORY_ICONS[task.category]||'💼';
-  const initials = (task.poster.username||'??').substring(0,2).toUpperCase();
-  const reward = task.currency==='NGN'
-    ? `<div class="tc-reward-ngn">₦${Number(task.reward).toLocaleString()}</div>`
-    : `<div class="tc-reward-usd">$${Number(task.reward).toFixed(2)} ${task.currency}</div>`;
-  const tags = (task.tags||[]).map(t=>`<span class="badge badge-blue" style="font-size:10px">${t}</span>`).join('');
-  const timeLeft = task.deadline ? `🕐 ${Math.max(0,Math.ceil((new Date(task.deadline)-Date.now())/86400000))}d left` : '⏱ No deadline';
-  return `
-  <div class="task-card" onclick="showToast('${task.title.replace(/'/g,"\\'")} — ₦${Number(task.reward).toLocaleString()}')">
-    <div class="tc-top">
-      <div class="tc-lister">
-        <div class="avatar" style="width:34px;height:34px;font-size:12px;background:linear-gradient(135deg,#2535c8,#8a9ef5);color:#fff">${initials}</div>
-        <div class="tc-lister-meta">
-          <span class="tc-by">Listed by</span>
-          <span class="tc-name">${task.poster.username}</span>
-        </div>
-      </div>
-      <span class="badge badge-green">Open</span>
-    </div>
-    <div>
-      <div class="progress-row"><span>PROGRESS</span><span>${task.currentWorkers}/${task.maxWorkers}</span></div>
-      <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
-    </div>
-    <div class="tc-meta-row">
-      <span class="tc-meta-item"><span class="dot dot-green"></span>Submissions ${task._count.submissions}</span>
-      <span class="tc-meta-item"><span class="dot dot-blue"></span>${task.maxWorkers} slots</span>
-      <span class="tc-meta-item">${icon} ${task.category.replace(/_/g,' ')}</span>
-    </div>
-    ${reward}
-    <div class="tc-tags">${tags}</div>
-    <p class="tc-desc">${task.description}</p>
-    <div class="tc-footer">
-      <span>${timeLeft}</span>
-      <span>👥 ${task.maxWorkers} workers</span>
-    </div>
-  </div>`;
-}
-
-async function loadTasks(){
-  const container = document.getElementById('tasksScroll');
-  try {
-    const res = await fetch(API+'/tasks?limit=10');
-    const data = await res.json();
-    if(data.success && data.data.length){
-      container.innerHTML = data.data.map(taskCard).join('');
-      // update carousel dots
-      const dotsEl = document.getElementById('taskDots');
-      if(dotsEl) dotsEl.innerHTML = data.data.map((_,i)=>`<div class="cdot${i===0?' active':''}"></div>`).join('');
-    }
-  } catch(err){
-    console.warn('Could not load tasks from API:', err);
-  }
-}
-
-// MODAL (wallet)
+// MODAL
 function openModal(){document.getElementById('walletModal').classList.add('active');}
 function closeModal(){document.getElementById('walletModal').classList.remove('active');}
 document.getElementById('walletModal').addEventListener('click',function(e){if(e.target===this)closeModal();});
@@ -1734,10 +1582,6 @@ if(scroll&&dots.length){
     dots.forEach((d,i)=>d.classList.toggle('active',i===idx));
   });
 }
-
-// ── INIT ──
-updateNavAuth();
-loadTasks();
 </script>
 </body>
 </html>
