@@ -56,9 +56,9 @@ img{max-width:100%;display:block;}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 24px;border-radius:var(--radius-pill);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;transition:all 0.18s;cursor:pointer;white-space:nowrap;border:none;}
 .btn-primary{background:var(--blue-grad);color:#fff;}
 .btn-primary:hover{background:linear-gradient(180deg,#1438D4 0%,#03045E 100%);transform:translateY(-1px);box-shadow:var(--shadow-blue);}
-.btn-secondary{background:var(--card);color:var(--text);border:1.5px solid var(--border2);}
-.btn-secondary:hover{border-color:var(--blue);color:var(--blue);background:var(--card);}
-.btn-outline-blue{background:var(--card);color:var(--blue);border:1.5px solid var(--blue);}
+.btn-secondary{background:#fff;color:var(--text);border:1.5px solid var(--border2);}
+.btn-secondary:hover{border-color:var(--blue);color:var(--blue);background:#fff;}
+.btn-outline-blue{background:#fff;color:var(--blue);border:1.5px solid var(--blue);}
 .btn-outline-blue:hover{background:var(--blue-light);transform:translateY(-1px);}
 .btn-lg{padding:14px 32px;font-size:15px;}
 .btn-sm{padding:8px 16px;font-size:13px;}
@@ -69,7 +69,7 @@ img{max-width:100%;display:block;}
 .badge-blue-active{background:var(--blue-light);color:var(--blue);}
 .badge-gold{background:var(--gold-light);color:#92600A;}
 .badge-green{background:var(--blue-light);color:var(--blue);}
-.badge-gray{background:var(--bg2);color:var(--text2);}
+.badge-gray{background:#F3F4F6;color:var(--text2);}
 .dot{width:6px;height:6px;border-radius:50%;display:inline-block;}
 .dot-green{background:var(--blue);}
 .dot-blue{background:var(--blue);}
@@ -99,21 +99,16 @@ img{max-width:100%;display:block;}
 }
 .nav-inner{display:flex;align-items:center;gap:6px;padding:0 24px;height:60px;max-width:1160px;margin:0 auto;}
 .nav-logo{display:flex;align-items:center;gap:9px;font-family:'Outfit',sans-serif;font-weight:800;font-size:20px;color:var(--text);flex-shrink:0;margin-right:8px;}
-.nav-logo-icon{width:30px;height:30px;flex-shrink:0;}.dark-logo{display:none;}[data-theme="dark"] .dark-logo{display:block;}[data-theme="dark"] .light-logo{display:none;}
+.nav-logo-icon{width:30px;height:30px;flex-shrink:0;}
 .nav-logo span{color:var(--blue);}
 .nav-links{display:flex;gap:0;margin-left:4px;}
 .nav-link{padding:6px 13px;border-radius:8px;font-size:13.5px;font-weight:500;color:var(--text2);transition:all 0.15s;white-space:nowrap;}
-.nav-link:hover{color:var(--text);background:var(--bg2);}
+.nav-link:hover{color:var(--text);background:#F9FAFB;}
 .nav-link.active{color:var(--blue);background:var(--blue-light);}
 .nav-right{margin-left:auto;display:flex;align-items:center;gap:8px;}
-.nav-icon-btn{width:34px;height:34px;border-radius:8px;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--text2);transition:all 0.15s;cursor:pointer;background:var(--bg);position:relative;}
+.nav-icon-btn{width:34px;height:34px;border-radius:8px;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--text2);transition:all 0.15s;cursor:pointer;background:#fff;position:relative;}
 .nav-icon-btn:hover{border-color:var(--border2);color:var(--text);}
-.notif-dot{position:absolute;top:-3px;right:-3px;width:14px;height:14px;border-radius:50%;background:#EF4444;font-size:8px;font-weight:700;color:#fff;display:flex;align-items:center;justify-content:center;border:2px solid var(--bg);}
-
-/* ── DARK MODE EXTRA OVERRIDES ── */
-[data-theme="dark"] .payment-card.ngn-card{border-color:var(--gold);}
-[data-theme="dark"] .ticker-item .ngn{color:var(--gold);}
-[data-theme="dark"] .btn-primary:hover{background:linear-gradient(180deg,#5070F5 0%,#2A3E9A 100%);}
+.notif-dot{position:absolute;top:-3px;right:-3px;width:14px;height:14px;border-radius:50%;background:#EF4444;font-size:8px;font-weight:700;color:#fff;display:flex;align-items:center;justify-content:center;border:2px solid #fff;}
 .connect-btn{background:var(--bg);color:var(--blue);border:1.5px solid var(--blue);border-radius:var(--radius-pill);padding:7px 18px;font-size:13.5px;font-weight:600;font-family:'DM Sans',sans-serif;transition:all 0.15s;cursor:pointer;}
 .connect-btn:hover{background:var(--blue-light);box-shadow:0 2px 12px rgba(6,39,184,0.14);}
 .dark-toggle{width:34px;height:34px;border-radius:8px;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--text2);background:var(--bg);transition:all 0.15s;cursor:pointer;flex-shrink:0;}
@@ -121,7 +116,7 @@ img{max-width:100%;display:block;}
 .hamburger{display:none;width:34px;height:34px;border-radius:8px;border:1.5px solid var(--border);align-items:center;justify-content:center;color:var(--text2);background:var(--bg);flex-shrink:0;}
 
 /* ════════════════════ HERO ════════════════════ */
-.hero{padding:72px 0 80px;background:var(--bg);border-bottom:1px solid var(--border);}
+.hero{padding:72px 0 80px;background:#fff;border-bottom:1px solid var(--border);}
 .hero-inner{display:grid;grid-template-columns:1fr 420px;gap:64px;align-items:center;}
 .hero-eyebrow{display:inline-flex;align-items:center;gap:8px;padding:5px 14px;border-radius:var(--radius-pill);background:var(--blue-light);border:1px solid var(--blue-soft);font-size:12.5px;font-weight:600;color:var(--blue);margin-bottom:22px;}
 .hero-h1{font-family:'Outfit',sans-serif;font-size:clamp(36px,4.5vw,58px);font-weight:800;letter-spacing:-1.5px;line-height:1.04;color:var(--text);margin-bottom:18px;}
@@ -134,7 +129,7 @@ img{max-width:100%;display:block;}
 .trust-item svg{flex-shrink:0;}
 
 /* ANALYTICS CARD */
-.analytics-card{background:var(--card);border:1.5px solid var(--border);border-radius:20px;padding:24px;box-shadow:var(--shadow-lg);}
+.analytics-card{background:#fff;border:1.5px solid var(--border);border-radius:20px;padding:24px;box-shadow:var(--shadow-lg);}
 .ac-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
 .ac-title{font-family:'Outfit',sans-serif;font-size:13.5px;font-weight:600;color:var(--text);}
 .ac-live{display:flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:var(--blue);}
@@ -147,11 +142,11 @@ img{max-width:100%;display:block;}
 .ac-footer{padding-top:14px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:center;gap:8px;font-size:12px;color:var(--text3);font-weight:500;}
 
 /* ════════════════════ QUICK TASKS BAR ════════════════════ */
-.quick-bar{padding:28px 0;border-bottom:1px solid var(--border);background:var(--bg);}
+.quick-bar{padding:28px 0;border-bottom:1px solid var(--border);background:#fff;}
 .quick-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--text3);margin-bottom:12px;display:flex;align-items:center;gap:6px;}
 .quick-scroll{display:flex;gap:10px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none;}
 .quick-scroll::-webkit-scrollbar{display:none;}
-.qcard{flex-shrink:0;display:flex;align-items:center;gap:10px;background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:10px 16px;cursor:pointer;transition:all 0.18s;}
+.qcard{flex-shrink:0;display:flex;align-items:center;gap:10px;background:#fff;border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:10px 16px;cursor:pointer;transition:all 0.18s;}
 .qcard:hover{border-color:var(--blue);box-shadow:var(--shadow-md);transform:translateY(-1px);}
 .qcard-icon{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:15px;}
 .qcard-name{font-size:13px;font-weight:600;color:var(--text);}
@@ -159,7 +154,7 @@ img{max-width:100%;display:block;}
 
 /* ════════════════════ GET STARTED ════════════════════ */
 .gs-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:36px;}
-.gs-card{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);padding:28px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;transition:all 0.2s;gap:16px;}
+.gs-card{background:#fff;border:1.5px solid var(--border);border-radius:var(--radius);padding:28px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;transition:all 0.2s;gap:16px;}
 .gs-card:hover{border-color:var(--blue);box-shadow:var(--shadow-md);transform:translateY(-2px);}
 .gs-left{display:flex;align-items:center;gap:16px;}
 .gs-icon{width:46px;height:46px;border-radius:12px;background:var(--blue-light);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
@@ -173,12 +168,12 @@ img{max-width:100%;display:block;}
 .tasks-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px;}
 .tabs{display:flex;gap:3px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:3px;}
 .tab{padding:7px 15px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;color:var(--text2);transition:all 0.18s;border:none;background:transparent;font-family:'DM Sans',sans-serif;}
-.tab.active{background:var(--card);color:var(--blue);box-shadow:var(--shadow);}
+.tab.active{background:#fff;color:var(--blue);box-shadow:var(--shadow);}
 .view-all-btn{font-size:13.5px;font-weight:600;color:var(--blue);display:flex;align-items:center;gap:4px;transition:color 0.15s;}
 .view-all-btn:hover{color:var(--blue-hover);}
 .tasks-scroll{display:flex;gap:14px;overflow-x:auto;padding-bottom:8px;scrollbar-width:none;}
 .tasks-scroll::-webkit-scrollbar{display:none;}
-.task-card{flex-shrink:0;width:280px;background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);padding:20px;cursor:pointer;transition:all 0.2s;display:flex;flex-direction:column;gap:12px;}
+.task-card{flex-shrink:0;width:280px;background:#fff;border:1.5px solid var(--border);border-radius:var(--radius);padding:20px;cursor:pointer;transition:all 0.2s;display:flex;flex-direction:column;gap:12px;}
 .task-card:hover{border-color:var(--blue);box-shadow:var(--shadow-md);transform:translateY(-2px);}
 .tc-top{display:flex;align-items:center;justify-content:space-between;}
 .tc-lister{display:flex;align-items:center;gap:8px;}
@@ -201,7 +196,7 @@ img{max-width:100%;display:block;}
 /* ════════════════════ STORE ════════════════════ */
 .store-scroll{display:flex;gap:14px;overflow-x:auto;padding-bottom:8px;scrollbar-width:none;}
 .store-scroll::-webkit-scrollbar{display:none;}
-.store-card{flex-shrink:0;width:230px;background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);overflow:hidden;cursor:pointer;transition:all 0.2s;}
+.store-card{flex-shrink:0;width:230px;background:#fff;border:1.5px solid var(--border);border-radius:var(--radius);overflow:hidden;cursor:pointer;transition:all 0.2s;}
 .store-card:hover{border-color:var(--blue);box-shadow:var(--shadow-md);transform:translateY(-2px);}
 .store-thumb{width:100%;height:130px;display:flex;align-items:center;justify-content:center;font-size:36px;position:relative;}
 .store-body{padding:14px;}
@@ -213,7 +208,7 @@ img{max-width:100%;display:block;}
 
 /* ════════════════════ COMMUNITIES ════════════════════ */
 .communities-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin-top:36px;}
-.community-card{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);overflow:hidden;cursor:pointer;transition:all 0.2s;}
+.community-card{background:#fff;border:1.5px solid var(--border);border-radius:var(--radius);overflow:hidden;cursor:pointer;transition:all 0.2s;}
 .community-card:hover{border-color:var(--blue);box-shadow:var(--shadow-md);transform:translateY(-2px);}
 .community-banner{height:72px;display:flex;align-items:center;justify-content:center;font-size:26px;position:relative;}
 .community-body{padding:14px;}
@@ -224,9 +219,9 @@ img{max-width:100%;display:block;}
 
 /* ════════════════════ PAYMENTS ════════════════════ */
 .payment-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:36px;}
-.payment-card{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);padding:32px 28px;}
-.payment-card.ngn-card{border-color:#FDE68A;background:linear-gradient(160deg,var(--gold-light) 0%,var(--card) 60%);}
-.payment-card.usdc-card{border-color:var(--blue-soft);background:linear-gradient(160deg,var(--blue-light) 0%,var(--card) 60%);}
+.payment-card{background:#fff;border:1.5px solid var(--border);border-radius:var(--radius);padding:32px 28px;}
+.payment-card.ngn-card{border-color:#FDE68A;background:linear-gradient(160deg,#FFFBEB 0%,#fff 60%);}
+.payment-card.usdc-card{border-color:var(--blue-soft);background:linear-gradient(160deg,var(--blue-light) 0%,#fff 60%);}
 .payment-icon{font-size:36px;margin-bottom:14px;}
 .payment-card h3{font-family:'Outfit',sans-serif;font-size:18px;font-weight:700;color:var(--text);margin-bottom:8px;}
 .payment-card>p{color:var(--text2);font-size:13.5px;margin-bottom:20px;line-height:1.7;}
@@ -263,7 +258,7 @@ img{max-width:100%;display:block;}
 
 /* ════════════════════ TESTIMONIALS ════════════════════ */
 .testi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:36px;}
-.testi-card{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);padding:24px;}
+.testi-card{background:#fff;border:1.5px solid var(--border);border-radius:var(--radius);padding:24px;}
 .testi-stars{color:var(--gold);font-size:13px;margin-bottom:12px;letter-spacing:1px;}
 .testi-card p{font-size:13.5px;color:var(--text2);line-height:1.75;margin-bottom:18px;font-style:italic;}
 .testi-author{display:flex;align-items:center;gap:10px;}
@@ -291,7 +286,7 @@ img{max-width:100%;display:block;}
 .btn-outline-white:hover{background:rgba(255,255,255,0.1);}
 
 /* ════════════════════ FOOTER ════════════════════ */
-footer{background:var(--bg);border-top:1px solid var(--border);padding:52px 0 32px;}
+footer{background:#fff;border-top:1px solid var(--border);padding:52px 0 32px;}
 .footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:48px;margin-bottom:48px;}
 .footer-brand p{color:var(--text2);font-size:13px;margin-top:12px;max-width:240px;line-height:1.75;}
 .footer-col h5{font-family:'Outfit',sans-serif;font-size:13px;font-weight:700;color:var(--text);margin-bottom:14px;}
@@ -351,9 +346,14 @@ footer{background:var(--bg);border-top:1px solid var(--border);padding:52px 0 32
 <header class="nav">
  <div class="nav-inner">
  <a href="#" class="nav-logo">
- <img src="https://i.postimg.cc/yNY5XJyz/file-0000000014487243ad5dc85e0237682c.png" alt="OgaPay Logo" class="nav-logo-icon light-logo"><img src="https://i.postimg.cc/15FZfNvS/Screenshot-20260525-161909.png" alt="OgaPay Logo Dark" class="nav-logo-icon dark-logo">
- Oga<span>Pay</span>
- </a>
+ <svg class="nav-logo-icon" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+ <defs>
+ <linearGradient id="logoGrad" x1="50" y1="0" x2="50" y2="100" gradientUnits="userSpaceOnUse">
+ <stop offset="0%" stop-color="#0627B8"/>
+ <stop offset="100%" stop-color="#03045E"/>
+ </linearGradient>
+ </defs>
+ <rect width="100" height="100" rx="20" fill="url(#logoGrad)"/>
  <rect x="10" y="10" width="35" height="35" rx="7" fill="#8a9ef5" opacity="0.7"/>
  <polygon points="10,10 45,10 10,45" fill="#03045E" opacity="0.45"/>
  <path d="M52 10 H68 Q87 10 87 27.5 Q87 45 68 45 H52 Z" fill="white"/>
@@ -392,8 +392,10 @@ footer{background:var(--bg);border-top:1px solid var(--border);padding:52px 0 32
 <div class="mobile-menu" id="mobileMenu">
  <div class="mobile-menu-header">
  <div class="nav-logo" style="font-family:'Outfit',sans-serif;font-weight:800;font-size:19px;display:flex;align-items:center;gap:8px;">
- <img src="https://i.postimg.cc/yNY5XJyz/file-0000000014487243ad5dc85e0237682c.png" class="nav-logo-icon light-logo" alt="OgaPay Logo"><img src="https://i.postimg.cc/15FZfNvS/Screenshot-20260525-161909.png" class="nav-logo-icon dark-logo" alt="OgaPay Logo">
- <button onclick="document.getElementById('mobileMenu').classList.remove('open')" style="width:34px;height:34px;border-radius:8px;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--text2);background:var(--bg);">
+ <svg width="28" height="28" viewBox="0 0 100 100" fill="none"><defs><linearGradient id="mg" x1="50" y1="0" x2="50" y2="100" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#0627B8"/><stop offset="100%" stop-color="#03045E"/></linearGradient></defs><rect width="100" height="100" rx="20" fill="url(#mg)"/><rect x="10" y="10" width="35" height="35" rx="7" fill="#8a9ef5" opacity="0.7"/><polygon points="10,10 45,10 10,45" fill="#03045E" opacity="0.45"/><path d="M52 10 H68 Q87 10 87 27.5 Q87 45 68 45 H52 Z" fill="white"/><rect x="10" y="52" width="35" height="35" rx="7" fill="#8a9ef5" opacity="0.55"/><rect x="52" y="52" width="35" height="35" rx="7" fill="#8a9ef5" opacity="0.7"/><polygon points="52,52 87,52 87,87" fill="#03045E" opacity="0.45"/><path d="M52 52 H68 Q87 52 87 69.5 Q87 87 68 87 H52 Z" fill="white"/></svg>
+ Oga<span style="color:#0627B8;">Pay</span>
+ </div>
+ <button onclick="document.getElementById('mobileMenu').classList.remove('open')" style="width:34px;height:34px;border-radius:8px;border:1.5px solid #E5E7EB;display:flex;align-items:center;justify-content:center;color:#6B7280;">
  <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
  </button>
  </div>
@@ -402,7 +404,7 @@ footer{background:var(--bg);border-top:1px solid var(--border);padding:52px 0 32
  <a href="#communities" class="mobile-menu-link" onclick="document.getElementById('mobileMenu').classList.remove('open')"> Communities</a>
  <a href="#payments" class="mobile-menu-link" onclick="document.getElementById('mobileMenu').classList.remove('open')"> Payments</a>
  <a href="#faq" class="mobile-menu-link" onclick="document.getElementById('mobileMenu').classList.remove('open')"> FAQ</a>
- <div style="margin-top:12px;padding-top:16px;border-top:1px solid var(--border);">
+ <div style="margin-top:12px;padding-top:16px;border-top:1px solid #E5E7EB;">
  <button class="btn btn-primary" style="width:100%;justify-content:center;margin-bottom:10px;">Connect Wallet</button>
  <button class="btn btn-secondary" style="width:100%;justify-content:center;">Start Earning</button>
  </div>
@@ -979,19 +981,19 @@ footer{background:var(--bg);border-top:1px solid var(--border);padding:52px 0 32
  <h2 class="section-title">Common questions</h2>
  </div>
  <div class="reveal" style="max-width:640px;margin:36px auto 0;display:flex;flex-direction:column;gap:10px;">
- <details style="background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);padding:18px 20px;cursor:pointer;">
+ <details style="background:#fff;border:1.5px solid var(--border);border-radius:var(--radius);padding:18px 20px;cursor:pointer;">
  <summary style="font-family:'Outfit',sans-serif;font-size:15px;font-weight:600;color:var(--text);list-style:none;display:flex;justify-content:space-between;align-items:center;">How do I get paid? <span style="color:var(--blue);font-size:18px;">+</span></summary>
  <p style="margin-top:12px;font-size:13.5px;color:var(--text2);line-height:1.7;">Once a task poster approves your submission, funds are released instantly. You can withdraw to your Nigerian bank account via Paystack or to your Solana wallet as USDC.</p>
  </details>
- <details style="background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);padding:18px 20px;cursor:pointer;">
+ <details style="background:#fff;border:1.5px solid var(--border);border-radius:var(--radius);padding:18px 20px;cursor:pointer;">
  <summary style="font-family:'Outfit',sans-serif;font-size:15px;font-weight:600;color:var(--text);list-style:none;display:flex;justify-content:space-between;align-items:center;">Do I need crypto experience to earn? <span style="color:var(--blue);font-size:18px;">+</span></summary>
  <p style="margin-top:12px;font-size:13.5px;color:var(--text2);line-height:1.7;">Not at all. You can earn and withdraw entirely in Naira. Crypto is optional — but easy to set up with a free Phantom wallet if you want USDC payouts.</p>
  </details>
- <details style="background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);padding:18px 20px;cursor:pointer;">
+ <details style="background:#fff;border:1.5px solid var(--border);border-radius:var(--radius);padding:18px 20px;cursor:pointer;">
  <summary style="font-family:'Outfit',sans-serif;font-size:15px;font-weight:600;color:var(--text);list-style:none;display:flex;justify-content:space-between;align-items:center;">What is the minimum withdrawal? <span style="color:var(--blue);font-size:18px;">+</span></summary>
  <p style="margin-top:12px;font-size:13.5px;color:var(--text2);line-height:1.7;">₦500 for Naira withdrawals and $1.00 USDC for crypto withdrawals. There are no fees for Naira withdrawals under ₦10,000.</p>
  </details>
- <details style="background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);padding:18px 20px;cursor:pointer;">
+ <details style="background:#fff;border:1.5px solid var(--border);border-radius:var(--radius);padding:18px 20px;cursor:pointer;">
  <summary style="font-family:'Outfit',sans-serif;font-size:15px;font-weight:600;color:var(--text);list-style:none;display:flex;justify-content:space-between;align-items:center;">How do I post a task as an advertiser? <span style="color:var(--blue);font-size:18px;">+</span></summary>
  <p style="margin-top:12px;font-size:13.5px;color:var(--text2);line-height:1.7;">Create an account, fund your wallet (NGN or USDC), then click "Post a Task". Set your reward, number of slots, proof requirements, and go live in minutes.</p>
  </details>
