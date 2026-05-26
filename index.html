@@ -45,14 +45,10 @@ h1,h2,h3,h4,h5{font-family:'Outfit',sans-serif;line-height:1.15;}
 a{color:inherit;text-decoration:none;}
 button{font-family:'DM Sans',sans-serif;cursor:pointer;border:none;background:none;}
 img{max-width:100%;display:block;}
-
-/* ── UTILS ── */
 .container{max-width:1160px;margin:0 auto;padding:0 24px;}
 .section{padding:88px 0;}
 .section-sm{padding:64px 0;}
 .section-alt{background:var(--bg2);}
-
-/* ── BUTTONS ── */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 24px;border-radius:var(--radius-pill);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;transition:all 0.18s;cursor:pointer;white-space:nowrap;border:none;}
 .btn-primary{background:var(--blue-grad);color:#fff;}
 .btn-primary:hover{background:linear-gradient(180deg,#1438D4 0%,#03045E 100%);transform:translateY(-1px);box-shadow:var(--shadow-blue);}
@@ -62,8 +58,6 @@ img{max-width:100%;display:block;}
 .btn-outline-blue:hover{background:var(--blue-light);transform:translateY(-1px);}
 .btn-lg{padding:14px 32px;font-size:15px;}
 .btn-sm{padding:8px 16px;font-size:13px;}
-
-/* ── BADGES ── */
 .badge{display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:var(--radius-pill);font-size:12px;font-weight:600;}
 .badge-blue{background:var(--blue-light);color:var(--blue);}
 .badge-blue-active{background:var(--blue-light);color:var(--blue);}
@@ -76,13 +70,9 @@ img{max-width:100%;display:block;}
 .dot-gold{background:var(--gold);}
 .dot-live{background:var(--blue);animation:livePulse 2s infinite;}
 @keyframes livePulse{0%,100%{box-shadow:0 0 0 0 rgba(6,39,184,0.4);}50%{box-shadow:0 0 0 5px rgba(6,39,184,0);}}
-
-/* ── SECTION LABELS ── */
 .section-label{font-family:'DM Sans',sans-serif;font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--blue);margin-bottom:12px;display:block;}
 .section-title{font-family:'Outfit',sans-serif;font-size:clamp(26px,3.2vw,38px);font-weight:700;color:var(--text);letter-spacing:-0.5px;line-height:1.15;margin-bottom:10px;}
 .section-sub{color:var(--text2);font-size:15px;line-height:1.7;max-width:460px;}
-
-/* ── REVEAL ── */
 .reveal{opacity:0;transform:translateY(20px);transition:opacity 0.55s ease,transform 0.55s ease;}
 .reveal.visible{opacity:1;transform:none;}
 .reveal-delay-1{transition-delay:0.08s;}
@@ -90,13 +80,8 @@ img{max-width:100%;display:block;}
 .reveal-delay-3{transition-delay:0.24s;}
 .reveal-delay-4{transition-delay:0.32s;}
 
-/* ════════════════════ NAVBAR ════════════════════ */
-.nav{
- position:sticky;top:0;z-index:500;
- background:var(--bg);
- border-bottom:1px solid var(--border);
- backdrop-filter:blur(12px);
-}
+/* ════ NAVBAR ════ */
+.nav{position:sticky;top:0;z-index:500;background:var(--bg);border-bottom:1px solid var(--border);backdrop-filter:blur(12px);}
 .nav-inner{display:flex;align-items:center;gap:6px;padding:0 24px;height:60px;max-width:1160px;margin:0 auto;}
 .nav-logo{display:flex;align-items:center;gap:9px;font-family:'Outfit',sans-serif;font-weight:800;font-size:20px;color:var(--text);flex-shrink:0;margin-right:8px;}
 .nav-logo-icon{width:30px;height:30px;flex-shrink:0;}
@@ -109,8 +94,6 @@ img{max-width:100%;display:block;}
 .nav-icon-btn{width:34px;height:34px;border-radius:8px;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--text2);transition:all 0.15s;cursor:pointer;background:var(--bg);position:relative;}
 .nav-icon-btn:hover{border-color:var(--border2);color:var(--text);}
 .notif-dot{position:absolute;top:-3px;right:-3px;width:14px;height:14px;border-radius:50%;background:#EF4444;font-size:8px;font-weight:700;color:#fff;display:flex;align-items:center;justify-content:center;border:2px solid var(--bg);}
-
-/* ── DARK MODE EXTRA OVERRIDES ── */
 [data-theme="dark"] .payment-card.ngn-card{border-color:var(--gold);}
 [data-theme="dark"] .ticker-item .ngn{color:var(--gold);}
 [data-theme="dark"] .btn-primary:hover{background:linear-gradient(180deg,#5070F5 0%,#2A3E9A 100%);}
@@ -120,7 +103,7 @@ img{max-width:100%;display:block;}
 .dark-toggle:hover{border-color:var(--border2);color:var(--text);background:var(--bg2);}
 .hamburger{display:none;width:34px;height:34px;border-radius:8px;border:1.5px solid var(--border);align-items:center;justify-content:center;color:var(--text2);background:var(--bg);flex-shrink:0;}
 
-/* ════════════════════ HERO ════════════════════ */
+/* ════ HERO ════ */
 .hero{padding:72px 0 80px;background:var(--bg);border-bottom:1px solid var(--border);}
 .hero-inner{display:grid;grid-template-columns:1fr 420px;gap:64px;align-items:center;}
 .hero-eyebrow{display:inline-flex;align-items:center;gap:8px;padding:5px 14px;border-radius:var(--radius-pill);background:var(--blue-light);border:1px solid var(--blue-soft);font-size:12.5px;font-weight:600;color:var(--blue);margin-bottom:22px;}
@@ -132,8 +115,6 @@ img{max-width:100%;display:block;}
 .hero-trust{display:flex;align-items:center;gap:20px;flex-wrap:wrap;}
 .trust-item{display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:500;color:var(--text2);}
 .trust-item svg{flex-shrink:0;}
-
-/* ANALYTICS CARD */
 .analytics-card{background:var(--card);border:1.5px solid var(--border);border-radius:20px;padding:24px;box-shadow:var(--shadow-lg);}
 .ac-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
 .ac-title{font-family:'Outfit',sans-serif;font-size:13.5px;font-weight:600;color:var(--text);}
@@ -145,8 +126,6 @@ img{max-width:100%;display:block;}
 .ac-stat-num.gold{color:var(--gold);}
 .ac-stat-label{font-size:11.5px;color:var(--text3);}
 .ac-footer{padding-top:14px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:center;gap:8px;font-size:12px;color:var(--text3);font-weight:500;}
-
-/* ════════════════════ QUICK TASKS BAR ════════════════════ */
 .quick-bar{padding:28px 0;border-bottom:1px solid var(--border);background:var(--bg);}
 .quick-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--text3);margin-bottom:12px;display:flex;align-items:center;gap:6px;}
 .quick-scroll{display:flex;gap:10px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none;}
@@ -156,8 +135,6 @@ img{max-width:100%;display:block;}
 .qcard-icon{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:15px;}
 .qcard-name{font-size:13px;font-weight:600;color:var(--text);}
 .qcard-reward{font-size:11.5px;color:var(--text2);margin-top:1px;}
-
-/* ════════════════════ GET STARTED ════════════════════ */
 .gs-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:36px;}
 .gs-card{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);padding:28px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;transition:all 0.2s;gap:16px;}
 .gs-card:hover{border-color:var(--blue);box-shadow:var(--shadow-md);transform:translateY(-2px);}
@@ -168,8 +145,6 @@ img{max-width:100%;display:block;}
 .gs-sub{font-size:13px;color:var(--text2);line-height:1.5;}
 .gs-arrow{width:36px;height:36px;border-radius:50%;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--text3);transition:all 0.2s;flex-shrink:0;}
 .gs-card:hover .gs-arrow{border-color:var(--blue);color:var(--blue);background:var(--blue-light);}
-
-/* ════════════════════ TASK CARDS ════════════════════ */
 .tasks-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px;}
 .tabs{display:flex;gap:3px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:3px;}
 .tab{padding:7px 15px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;color:var(--text2);transition:all 0.18s;border:none;background:transparent;font-family:'DM Sans',sans-serif;}
@@ -197,8 +172,6 @@ img{max-width:100%;display:block;}
 .tc-reward-sub{font-size:11.5px;color:var(--text3);}
 .tc-tags{display:flex;gap:5px;flex-wrap:wrap;}
 .tc-footer{display:flex;align-items:center;justify-content:space-between;font-size:11.5px;color:var(--text3);padding-top:10px;border-top:1px solid var(--border);}
-
-/* ════════════════════ STORE ════════════════════ */
 .store-scroll{display:flex;gap:14px;overflow-x:auto;padding-bottom:8px;scrollbar-width:none;}
 .store-scroll::-webkit-scrollbar{display:none;}
 .store-card{flex-shrink:0;width:230px;background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);overflow:hidden;cursor:pointer;transition:all 0.2s;}
@@ -210,8 +183,6 @@ img{max-width:100%;display:block;}
 .store-footer{display:flex;align-items:center;justify-content:space-between;}
 .store-price{font-family:'Outfit',sans-serif;font-size:15px;font-weight:700;color:var(--blue);}
 .store-rating{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--text2);}
-
-/* ════════════════════ COMMUNITIES ════════════════════ */
 .communities-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin-top:36px;}
 .community-card{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);overflow:hidden;cursor:pointer;transition:all 0.2s;}
 .community-card:hover{border-color:var(--blue);box-shadow:var(--shadow-md);transform:translateY(-2px);}
@@ -221,8 +192,6 @@ img{max-width:100%;display:block;}
 .community-desc{font-size:12px;color:var(--text2);line-height:1.5;margin-bottom:10px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
 .community-meta{display:flex;gap:12px;}
 .community-meta-item{display:flex;align-items:center;gap:4px;font-size:11.5px;color:var(--text3);}
-
-/* ════════════════════ PAYMENTS ════════════════════ */
 .payment-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:36px;}
 .payment-card{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);padding:32px 28px;}
 .payment-card.ngn-card{border-color:#FDE68A;background:linear-gradient(160deg,var(--gold-light) 0%,var(--card) 60%);}
@@ -235,8 +204,6 @@ img{max-width:100%;display:block;}
 .pf-check{width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;font-weight:700;}
 .ngn-card .pf-check{background:#FDE68A;color:#92600A;}
 .usdc-card .pf-check{background:var(--blue-soft);color:var(--blue-deep);}
-
-/* ════════════════════ HOW IT WORKS ════════════════════ */
 .how-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin-top:44px;border:1.5px solid var(--border);border-radius:var(--radius);overflow:hidden;}
 .step-card{padding:32px 24px;border-right:1px solid var(--border);transition:background 0.2s;position:relative;}
 .step-card:last-child{border-right:none;}
@@ -248,11 +215,9 @@ img{max-width:100%;display:block;}
 .step-icon{width:40px;height:40px;border-radius:10px;background:var(--blue-light);display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:12px;}
 .step-card h3{font-family:'Outfit',sans-serif;font-size:15px;font-weight:700;color:var(--text);margin-bottom:6px;}
 .step-card p{font-size:13px;color:var(--text2);line-height:1.6;}
-
-/* ════════════════════ MOBILE NAV ════════════════════ */
 .mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:500;background:var(--bg);border-top:1px solid var(--border);padding:8px 0 max(8px,env(safe-area-inset-bottom));}
 .mobile-nav-inner{display:flex;align-items:center;justify-content:space-around;max-width:480px;margin:0 auto;padding:0 16px;}
-.mobile-nav-item{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 12px;border-radius:10px;cursor:pointer;transition:all 0.15s;flex:1;}
+.mobile-nav-item{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 12px;border-radius:10px;cursor:pointer;transition:all 0.15s;flex:1;text-decoration:none;}
 .mobile-nav-item:hover,.mobile-nav-item.active{background:var(--blue-light);}
 .mobile-nav-item svg{transition:color 0.15s;}
 .mobile-nav-item.active svg{color:var(--blue);}
@@ -260,8 +225,6 @@ img{max-width:100%;display:block;}
 .mobile-nav-label{font-size:10.5px;font-weight:600;color:var(--text3);transition:color 0.15s;}
 .mobile-nav-item.active .mobile-nav-label{color:var(--blue);}
 .mobile-nav-create{background:var(--blue-grad);border-radius:50%;width:42px;height:42px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(6,39,184,0.35);margin-top:-8px;}
-
-/* ════════════════════ TESTIMONIALS ════════════════════ */
 .testi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:36px;}
 .testi-card{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);padding:24px;}
 .testi-stars{color:var(--gold);font-size:13px;margin-bottom:12px;letter-spacing:1px;}
@@ -270,8 +233,6 @@ img{max-width:100%;display:block;}
 .testi-avatar{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0;}
 .testi-name{font-size:13px;font-weight:600;color:var(--text);}
 .testi-loc{font-size:11.5px;color:var(--text3);}
-
-/* ════════════════════ TICKER ════════════════════ */
 .ticker-wrap{overflow:hidden;border-top:1px solid var(--border);border-bottom:1px solid var(--border);background:var(--bg2);padding:10px 0;}
 .ticker{display:flex;gap:52px;animation:tickerMove 32s linear infinite;white-space:nowrap;}
 .ticker-item{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--text2);flex-shrink:0;}
@@ -279,8 +240,6 @@ img{max-width:100%;display:block;}
 .ticker-item .ngn{color:#92600A;font-weight:600;}
 .ticker-item .usd{color:var(--blue);font-weight:600;}
 @keyframes tickerMove{from{transform:translateX(0);}to{transform:translateX(-50%);}}
-
-/* ════════════════════ CTA SECTION ════════════════════ */
 .cta-section{background:var(--blue-grad);padding:80px 0;text-align:center;}
 .cta-section h2{font-family:'Outfit',sans-serif;font-size:clamp(28px,4vw,44px);font-weight:800;color:#fff;letter-spacing:-1px;margin-bottom:14px;}
 .cta-section p{color:rgba(255,255,255,0.75);font-size:16px;margin-bottom:32px;}
@@ -289,8 +248,6 @@ img{max-width:100%;display:block;}
 .btn-white:hover{background:#EEF2FF;transform:translateY(-1px);box-shadow:0 6px 20px rgba(255,255,255,0.15);}
 .btn-outline-white{background:transparent;color:#fff;border:1.5px solid rgba(255,255,255,0.45);}
 .btn-outline-white:hover{background:rgba(255,255,255,0.1);}
-
-/* ════════════════════ FOOTER ════════════════════ */
 footer{background:var(--bg);border-top:1px solid var(--border);padding:52px 0 32px;}
 .footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:48px;margin-bottom:48px;}
 .footer-brand p{color:var(--text2);font-size:13px;margin-top:12px;max-width:240px;line-height:1.75;}
@@ -299,16 +256,12 @@ footer{background:var(--bg);border-top:1px solid var(--border);padding:52px 0 32
 .footer-col ul li a{font-size:13px;color:var(--text2);transition:color 0.15s;}
 .footer-col ul li a:hover{color:var(--blue);}
 .footer-bottom{display:flex;align-items:center;justify-content:space-between;padding-top:24px;border-top:1px solid var(--border);font-size:12.5px;color:var(--text3);}
-
-/* ════════════════════ MOBILE MENU ════════════════════ */
 .mobile-menu{display:none;position:fixed;inset:0;z-index:600;background:var(--bg);padding:24px;flex-direction:column;gap:8px;overflow-y:auto;}
 .mobile-menu.open{display:flex;}
 .mobile-menu-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
 .mobile-menu-link{display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:12px;font-size:15px;font-weight:500;color:var(--text);transition:all 0.15s;border:1px solid transparent;}
 .mobile-menu-link:hover{background:var(--bg2);border-color:var(--border);}
 .mobile-menu-link.active{background:var(--blue-light);color:var(--blue);border-color:transparent;}
-
-/* ════════════════════ RESPONSIVE ════════════════════ */
 @media(max-width:1024px){
  .hero-inner{grid-template-columns:1fr;gap:40px;}
  .analytics-card{max-width:500px;}
@@ -350,782 +303,479 @@ footer{background:var(--bg);border-top:1px solid var(--border);padding:52px 0 32
 <!-- ════ NAVBAR ════ -->
 <header class="nav">
  <div class="nav-inner">
- <a href="#" class="nav-logo">
- <svg class="nav-logo-icon" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
- <defs>
- <linearGradient id="logoGrad" x1="50" y1="0" x2="50" y2="100" gradientUnits="userSpaceOnUse">
- <stop offset="0%" stop-color="#0627B8"/>
- <stop offset="100%" stop-color="#03045E"/>
- </linearGradient>
- </defs>
- <rect width="100" height="100" rx="20" fill="url(#logoGrad)"/>
- <rect x="10" y="10" width="35" height="35" rx="7" fill="#8a9ef5" opacity="0.7"/>
- <polygon points="10,10 45,10 10,45" fill="#03045E" opacity="0.45"/>
- <path d="M52 10 H68 Q87 10 87 27.5 Q87 45 68 45 H52 Z" fill="white"/>
- <rect x="10" y="52" width="35" height="35" rx="7" fill="#8a9ef5" opacity="0.55"/>
- <rect x="52" y="52" width="35" height="35" rx="7" fill="#8a9ef5" opacity="0.7"/>
- <polygon points="52,52 87,52 87,87" fill="#03045E" opacity="0.45"/>
- <path d="M52 52 H68 Q87 52 87 69.5 Q87 87 68 87 H52 Z" fill="white"/>
- </svg>
- Oga<span>Pay</span>
- </a>
- <nav class="nav-links">
- <a href="#tasks" class="nav-link active">Tasks</a>
- <a href="#store" class="nav-link">Store</a>
- <a href="#communities" class="nav-link">Communities</a>
- <a href="#payments" class="nav-link">Payments</a>
- <a href="#faq" class="nav-link">FAQ</a>
- </nav>
- <div class="nav-right">
- <button class="nav-icon-btn" aria-label="Notifications">
- <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
- <div class="notif-dot">3</div>
- </button>
- <button class="connect-btn">Connect Wallet</button>
- <button class="dark-toggle" id="darkToggleBtn" aria-label="Toggle dark mode">
- <svg id="icon-moon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
- <svg id="icon-sun" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:none"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
- </button>
- <button class="hamburger" id="hamburgerBtn" aria-label="Menu">
- <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
- </button>
- </div>
+  <a href="index.html" class="nav-logo">
+   <svg class="nav-logo-icon" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="logoGrad" x1="50" y1="0" x2="50" y2="100" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#0627B8"/><stop offset="100%" stop-color="#03045E"/></linearGradient></defs><rect width="100" height="100" rx="20" fill="url(#logoGrad)"/><rect x="10" y="10" width="35" height="35" rx="7" fill="#8a9ef5" opacity="0.7"/><polygon points="10,10 45,10 10,45" fill="#03045E" opacity="0.45"/><path d="M52 10 H68 Q87 10 87 27.5 Q87 45 68 45 H52 Z" fill="white"/><rect x="10" y="52" width="35" height="35" rx="7" fill="#8a9ef5" opacity="0.55"/><rect x="52" y="52" width="35" height="35" rx="7" fill="#8a9ef5" opacity="0.7"/><polygon points="52,52 87,52 87,87" fill="#03045E" opacity="0.45"/><path d="M52 52 H68 Q87 52 87 69.5 Q87 87 68 87 H52 Z" fill="white"/></svg>
+   Oga<span>Pay</span>
+  </a>
+  <nav class="nav-links">
+   <a href="index.html" class="nav-link active">Home</a>
+   <a href="tasks.html" class="nav-link">Tasks</a>
+   <a href="store.html" class="nav-link">Store</a>
+   <a href="community.html" class="nav-link">Communities</a>
+   <a href="workers.html" class="nav-link">Workers</a>
+   <a href="post-task.html" class="nav-link">Post a Task</a>
+   <a href="dashboard.html" class="nav-link">Dashboard</a>
+  </nav>
+  <div class="nav-right">
+   <button class="nav-icon-btn" aria-label="Notifications" onclick="window.location.href='dashboard.html'">
+    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+    <div class="notif-dot">3</div>
+   </button>
+   <button class="connect-btn" onclick="window.location.href='dashboard.html'">Connect Wallet</button>
+   <button class="dark-toggle" id="darkToggleBtn" aria-label="Toggle dark mode">
+    <svg id="icon-moon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    <svg id="icon-sun" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:none"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+   </button>
+   <button class="hamburger" id="hamburgerBtn" aria-label="Menu">
+    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+   </button>
+  </div>
  </div>
 </header>
 
 <!-- ════ MOBILE MENU ════ -->
 <div class="mobile-menu" id="mobileMenu">
  <div class="mobile-menu-header">
- <div class="nav-logo" style="font-family:'Outfit',sans-serif;font-weight:800;font-size:19px;display:flex;align-items:center;gap:8px;">
- <svg width="28" height="28" viewBox="0 0 100 100" fill="none"><defs><linearGradient id="mg" x1="50" y1="0" x2="50" y2="100" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#0627B8"/><stop offset="100%" stop-color="#03045E"/></linearGradient></defs><rect width="100" height="100" rx="20" fill="url(#mg)"/><rect x="10" y="10" width="35" height="35" rx="7" fill="#8a9ef5" opacity="0.7"/><polygon points="10,10 45,10 10,45" fill="#03045E" opacity="0.45"/><path d="M52 10 H68 Q87 10 87 27.5 Q87 45 68 45 H52 Z" fill="white"/><rect x="10" y="52" width="35" height="35" rx="7" fill="#8a9ef5" opacity="0.55"/><rect x="52" y="52" width="35" height="35" rx="7" fill="#8a9ef5" opacity="0.7"/><polygon points="52,52 87,52 87,87" fill="#03045E" opacity="0.45"/><path d="M52 52 H68 Q87 52 87 69.5 Q87 87 68 87 H52 Z" fill="white"/></svg>
- Oga<span style="color:#0627B8;">Pay</span>
+  <div class="nav-logo" style="font-family:'Outfit',sans-serif;font-weight:800;font-size:19px;display:flex;align-items:center;gap:8px;">
+   <svg width="28" height="28" viewBox="0 0 100 100" fill="none"><defs><linearGradient id="mg" x1="50" y1="0" x2="50" y2="100" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#0627B8"/><stop offset="100%" stop-color="#03045E"/></linearGradient></defs><rect width="100" height="100" rx="20" fill="url(#mg)"/><rect x="10" y="10" width="35" height="35" rx="7" fill="#8a9ef5" opacity="0.7"/><polygon points="10,10 45,10 10,45" fill="#03045E" opacity="0.45"/><path d="M52 10 H68 Q87 10 87 27.5 Q87 45 68 45 H52 Z" fill="white"/><rect x="10" y="52" width="35" height="35" rx="7" fill="#8a9ef5" opacity="0.55"/><rect x="52" y="52" width="35" height="35" rx="7" fill="#8a9ef5" opacity="0.7"/><polygon points="52,52 87,52 87,87" fill="#03045E" opacity="0.45"/><path d="M52 52 H68 Q87 52 87 69.5 Q87 87 68 87 H52 Z" fill="white"/></svg>
+   Oga<span style="color:#0627B8;">Pay</span>
+  </div>
+  <button onclick="document.getElementById('mobileMenu').classList.remove('open')" style="width:34px;height:34px;border-radius:8px;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--text2);background:var(--bg);">
+   <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+  </button>
  </div>
- <button onclick="document.getElementById('mobileMenu').classList.remove('open')" style="width:34px;height:34px;border-radius:8px;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--text2);background:var(--bg);">
- <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
- </button>
- </div>
- <a href="#tasks" class="mobile-menu-link active" onclick="document.getElementById('mobileMenu').classList.remove('open')"> Tasks</a>
- <a href="#store" class="mobile-menu-link" onclick="document.getElementById('mobileMenu').classList.remove('open')"> Store</a>
- <a href="#communities" class="mobile-menu-link" onclick="document.getElementById('mobileMenu').classList.remove('open')"> Communities</a>
- <a href="#payments" class="mobile-menu-link" onclick="document.getElementById('mobileMenu').classList.remove('open')"> Payments</a>
- <a href="#faq" class="mobile-menu-link" onclick="document.getElementById('mobileMenu').classList.remove('open')"> FAQ</a>
+ <a href="index.html" class="mobile-menu-link active" onclick="document.getElementById('mobileMenu').classList.remove('open')">🏠 Home</a>
+ <a href="tasks.html" class="mobile-menu-link" onclick="document.getElementById('mobileMenu').classList.remove('open')">📋 Tasks</a>
+ <a href="store.html" class="mobile-menu-link" onclick="document.getElementById('mobileMenu').classList.remove('open')">🛒 Store</a>
+ <a href="community.html" class="mobile-menu-link" onclick="document.getElementById('mobileMenu').classList.remove('open')">👥 Communities</a>
+ <a href="workers.html" class="mobile-menu-link" onclick="document.getElementById('mobileMenu').classList.remove('open')">👷 Workers</a>
+ <a href="post-task.html" class="mobile-menu-link" onclick="document.getElementById('mobileMenu').classList.remove('open')">➕ Post a Task</a>
+ <a href="dashboard.html" class="mobile-menu-link" onclick="document.getElementById('mobileMenu').classList.remove('open')">📊 Dashboard</a>
  <div style="margin-top:12px;padding-top:16px;border-top:1px solid var(--border);">
- <button class="btn btn-primary" style="width:100%;justify-content:center;margin-bottom:10px;">Connect Wallet</button>
- <button class="btn btn-secondary" style="width:100%;justify-content:center;">Start Earning</button>
+  <a href="dashboard.html" class="btn btn-primary" style="width:100%;justify-content:center;margin-bottom:10px;display:flex;">Connect Wallet</a>
+  <a href="tasks.html" class="btn btn-secondary" style="width:100%;justify-content:center;display:flex;">Start Earning</a>
  </div>
 </div>
 
 <!-- ════ HERO ════ -->
 <section class="hero">
  <div class="container">
- <div class="hero-inner">
- <div class="reveal">
- <div class="hero-eyebrow">
- <span class="dot dot-live"></span>
- Nigerian-first · Naira + Crypto
- </div>
- <h1 class="hero-h1">
- Earn in <span class="accent-gold">Naira</span><br>
- &amp; <span class="accent">Crypto</span>
- </h1>
- <p class="hero-sub">OgaPay helps users complete simple online tasks and get rewarded instantly through Naira payouts and crypto rewards.</p>
- <div class="hero-cta">
- <button class="btn btn-primary btn-lg">Start Earning</button>
- <a href="post-task.html" class="btn btn-secondary btn-lg">Post a Task</a>
- </div>
- <div class="hero-trust">
- <div class="trust-item">
- <svg width="14" height="14" fill="none" stroke="#0627B8" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
- Instant payouts
- </div>
- <div class="trust-item">
- <svg width="14" height="14" fill="none" stroke="#0627B8" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
- Solana powered
- </div>
- <div class="trust-item">
- <svg width="14" height="14" fill="none" stroke="#0627B8" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
- Paystack enabled
- </div>
- </div>
- </div>
- <div class="reveal reveal-delay-2">
- <div class="analytics-card">
- <div class="ac-header">
- <span class="ac-title">Platform Stats</span>
- <span class="ac-live"><span class="dot dot-live"></span> Live</span>
- </div>
- <div class="ac-stats">
- <div class="ac-stat">
- <div class="ac-stat-num blue">4,821</div>
- <div class="ac-stat-label">Active Tasks</div>
- </div>
- <div class="ac-stat">
- <div class="ac-stat-num gold">₦182M+</div>
- <div class="ac-stat-label">Rewards Paid</div>
- </div>
- <div class="ac-stat">
- <div class="ac-stat-num">24,390</div>
- <div class="ac-stat-label">Online Earners</div>
- </div>
- <div class="ac-stat">
- <div class="ac-stat-num blue">~3 min</div>
- <div class="ac-stat-label">Avg. Payout Time</div>
- </div>
- </div>
- <div class="ac-footer">
- <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
- Powered by Solana + Paystack
- </div>
- </div>
- </div>
- </div>
+  <div class="hero-inner">
+   <div class="reveal">
+    <div class="hero-eyebrow">
+     <span class="dot dot-live"></span>
+     Nigerian-first · Naira + Crypto
+    </div>
+    <h1 class="hero-h1">
+     Earn in <span class="accent-gold">Naira</span><br>
+     &amp; <span class="accent">Crypto</span>
+    </h1>
+    <p class="hero-sub">OgaPay helps users complete simple online tasks and get rewarded instantly through Naira payouts and crypto rewards.</p>
+    <div class="hero-cta">
+     <a href="tasks.html" class="btn btn-primary btn-lg">Start Earning</a>
+     <a href="post-task.html" class="btn btn-secondary btn-lg">Post a Task</a>
+    </div>
+    <div class="hero-trust">
+     <div class="trust-item">
+      <svg width="14" height="14" fill="none" stroke="#0627B8" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+      Instant payouts
+     </div>
+     <div class="trust-item">
+      <svg width="14" height="14" fill="none" stroke="#0627B8" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+      Solana powered
+     </div>
+     <div class="trust-item">
+      <svg width="14" height="14" fill="none" stroke="#0627B8" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+      Paystack enabled
+     </div>
+    </div>
+   </div>
+   <div class="reveal reveal-delay-2">
+    <div class="analytics-card">
+     <div class="ac-header">
+      <span class="ac-title">Platform Stats</span>
+      <span class="ac-live"><span class="dot dot-live"></span> Live</span>
+     </div>
+     <div class="ac-stats">
+      <div class="ac-stat"><div class="ac-stat-num blue">4,821</div><div class="ac-stat-label">Active Tasks</div></div>
+      <div class="ac-stat"><div class="ac-stat-num gold">₦182M+</div><div class="ac-stat-label">Rewards Paid</div></div>
+      <div class="ac-stat"><div class="ac-stat-num">24,390</div><div class="ac-stat-label">Online Earners</div></div>
+      <div class="ac-stat"><div class="ac-stat-num blue">~3 min</div><div class="ac-stat-label">Avg. Payout Time</div></div>
+     </div>
+     <div class="ac-footer">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      Powered by Solana + Paystack
+     </div>
+    </div>
+   </div>
+  </div>
  </div>
 </section>
 
 <!-- ════ QUICK TASKS BAR ════ -->
 <div class="quick-bar">
  <div class="container">
- <div class="quick-label">
- <span class="dot dot-blue"></span>
- Quick Tasks
- </div>
- <div class="quick-scroll">
- <div class="qcard"><div class="qcard-icon" style="background:#FEF3C7;"></div><div><div class="qcard-name">X Raid</div><div class="qcard-reward">₦500</div></div></div>
- <div class="qcard"><div class="qcard-icon" style="background:#EEF2FF;"></div><div><div class="qcard-name">Telegram Join</div><div class="qcard-reward">₦250</div></div></div>
- <div class="qcard"><div class="qcard-icon" style="background:#FCE7F3;"></div><div><div class="qcard-name">TikTok Follow</div><div class="qcard-reward">$0.40</div></div></div>
- <div class="qcard"><div class="qcard-icon" style="background:#D1FAE5;"></div><div><div class="qcard-name">App Download</div><div class="qcard-reward">₦750</div></div></div>
- <div class="qcard"><div class="qcard-icon" style="background:#EEF2FF;"></div><div><div class="qcard-name">WhatsApp Share</div><div class="qcard-reward">₦150</div></div></div>
- <div class="qcard"><div class="qcard-icon" style="background:#FEE2E2;"></div><div><div class="qcard-name">Meme Contest</div><div class="qcard-reward">₦2,000</div></div></div>
- <div class="qcard"><div class="qcard-icon" style="background:#FEF3C7;"></div><div><div class="qcard-name">YouTube Like</div><div class="qcard-reward">₦80</div></div></div>
- <div class="qcard"><div class="qcard-icon" style="background:#EEF2FF;"></div><div><div class="qcard-name">X Repost</div><div class="qcard-reward">$0.25</div></div></div>
- </div>
+  <div class="quick-label"><span class="dot dot-blue"></span> Quick Tasks</div>
+  <div class="quick-scroll">
+   <a href="tasks.html" class="qcard"><div class="qcard-icon" style="background:#FEF3C7;">⚡</div><div><div class="qcard-name">X Raid</div><div class="qcard-reward">₦500</div></div></a>
+   <a href="tasks.html" class="qcard"><div class="qcard-icon" style="background:#EEF2FF;">✈️</div><div><div class="qcard-name">Telegram Join</div><div class="qcard-reward">₦250</div></div></a>
+   <a href="tasks.html" class="qcard"><div class="qcard-icon" style="background:#FCE7F3;">🎵</div><div><div class="qcard-name">TikTok Follow</div><div class="qcard-reward">$0.40</div></div></a>
+   <a href="tasks.html" class="qcard"><div class="qcard-icon" style="background:#D1FAE5;">📱</div><div><div class="qcard-name">App Download</div><div class="qcard-reward">₦750</div></div></a>
+   <a href="tasks.html" class="qcard"><div class="qcard-icon" style="background:#EEF2FF;">💬</div><div><div class="qcard-name">WhatsApp Share</div><div class="qcard-reward">₦150</div></div></a>
+   <a href="tasks.html" class="qcard"><div class="qcard-icon" style="background:#FEE2E2;">😂</div><div><div class="qcard-name">Meme Contest</div><div class="qcard-reward">₦2,000</div></div></a>
+   <a href="tasks.html" class="qcard"><div class="qcard-icon" style="background:#FEF3C7;">▶️</div><div><div class="qcard-name">YouTube Like</div><div class="qcard-reward">₦80</div></div></a>
+   <a href="tasks.html" class="qcard"><div class="qcard-icon" style="background:#EEF2FF;">🔁</div><div><div class="qcard-name">X Repost</div><div class="qcard-reward">$0.25</div></div></a>
+  </div>
  </div>
 </div>
 
 <!-- ════ TICKER ════ -->
 <div class="ticker-wrap">
  <div class="ticker">
- <div class="ticker-item"><span class="ti-dot">●</span> Follow on X — <span class="ngn">₦250</span></div>
- <div class="ticker-item"><span class="ti-dot">●</span> App Download — <span class="ngn">₦750</span></div>
- <div class="ticker-item"><span class="ti-dot">●</span> Survey — <span class="usd">$1.50 USDC</span></div>
- <div class="ticker-item"><span class="ti-dot">●</span> Telegram Join — <span class="ngn">₦250</span></div>
- <div class="ticker-item"><span class="ti-dot">●</span> Logo Design — <span class="ngn">₦15,000</span></div>
- <div class="ticker-item"><span class="ti-dot">●</span> Product Review — <span class="ngn">₦2,000</span></div>
- <div class="ticker-item"><span class="ti-dot">●</span> X Raid — <span class="usd">$0.40 USDC</span></div>
- <div class="ticker-item"><span class="ti-dot">●</span> Instagram Like — <span class="ngn">₦80</span></div>
- <div class="ticker-item"><span class="ti-dot">●</span> Follow on X — <span class="ngn">₦250</span></div>
- <div class="ticker-item"><span class="ti-dot">●</span> App Download — <span class="ngn">₦750</span></div>
- <div class="ticker-item"><span class="ti-dot">●</span> Survey — <span class="usd">$1.50 USDC</span></div>
- <div class="ticker-item"><span class="ti-dot">●</span> Telegram Join — <span class="ngn">₦250</span></div>
- <div class="ticker-item"><span class="ti-dot">●</span> Logo Design — <span class="ngn">₦15,000</span></div>
- <div class="ticker-item"><span class="ti-dot">●</span> Product Review — <span class="ngn">₦2,000</span></div>
- <div class="ticker-item"><span class="ti-dot">●</span> X Raid — <span class="usd">$0.40 USDC</span></div>
- <div class="ticker-item"><span class="ti-dot">●</span> Instagram Like — <span class="ngn">₦80</span></div>
+  <div class="ticker-item"><span class="ti-dot">●</span> Follow on X — <span class="ngn">₦250</span></div>
+  <div class="ticker-item"><span class="ti-dot">●</span> App Download — <span class="ngn">₦750</span></div>
+  <div class="ticker-item"><span class="ti-dot">●</span> Survey — <span class="usd">$1.50 USDC</span></div>
+  <div class="ticker-item"><span class="ti-dot">●</span> Telegram Join — <span class="ngn">₦250</span></div>
+  <div class="ticker-item"><span class="ti-dot">●</span> Logo Design — <span class="ngn">₦15,000</span></div>
+  <div class="ticker-item"><span class="ti-dot">●</span> Product Review — <span class="ngn">₦2,000</span></div>
+  <div class="ticker-item"><span class="ti-dot">●</span> X Raid — <span class="usd">$0.40 USDC</span></div>
+  <div class="ticker-item"><span class="ti-dot">●</span> Instagram Like — <span class="ngn">₦80</span></div>
+  <div class="ticker-item"><span class="ti-dot">●</span> Follow on X — <span class="ngn">₦250</span></div>
+  <div class="ticker-item"><span class="ti-dot">●</span> App Download — <span class="ngn">₦750</span></div>
+  <div class="ticker-item"><span class="ti-dot">●</span> Survey — <span class="usd">$1.50 USDC</span></div>
+  <div class="ticker-item"><span class="ti-dot">●</span> Telegram Join — <span class="ngn">₦250</span></div>
+  <div class="ticker-item"><span class="ti-dot">●</span> Logo Design — <span class="ngn">₦15,000</span></div>
+  <div class="ticker-item"><span class="ti-dot">●</span> Product Review — <span class="ngn">₦2,000</span></div>
+  <div class="ticker-item"><span class="ti-dot">●</span> X Raid — <span class="usd">$0.40 USDC</span></div>
+  <div class="ticker-item"><span class="ti-dot">●</span> Instagram Like — <span class="ngn">₦80</span></div>
  </div>
 </div>
 
 <!-- ════ GET STARTED ════ -->
 <section class="section-sm section-alt" id="getstarted">
  <div class="container">
- <div class="reveal" style="text-align:center;max-width:480px;margin:0 auto 0;">
- <h2 class="section-title">Get started with OgaPay</h2>
- <p class="section-sub" style="margin:0 auto;">Whether you're here to earn or promote, choose your path below.</p>
- </div>
- <div class="gs-grid reveal">
- <div class="gs-card earn">
- <div class="gs-left">
- <div class="gs-icon"></div>
- <div>
- <div class="gs-title">I'm a Worker</div>
- <div class="gs-sub">Complete tasks and earn Naira or crypto rewards instantly.</div>
- </div>
- </div>
- <div class="gs-arrow">
- <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
- </div>
- </div>
- <div class="gs-card advertiser">
- <div class="gs-left">
- <div class="gs-icon"></div>
- <div>
- <div class="gs-title">I'm an Advertiser</div>
- <div class="gs-sub">Post tasks and reach thousands of active earners fast.</div>
- </div>
- </div>
- <div class="gs-arrow">
- <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
- </div>
- </div>
- </div>
+  <div class="reveal" style="text-align:center;max-width:480px;margin:0 auto 0;">
+   <h2 class="section-title">Get started with OgaPay</h2>
+   <p class="section-sub" style="margin:0 auto;">Whether you're here to earn or promote, choose your path below.</p>
+  </div>
+  <div class="gs-grid reveal">
+   <a href="workers.html" class="gs-card earn" style="text-decoration:none;">
+    <div class="gs-left">
+     <div class="gs-icon">👷</div>
+     <div><div class="gs-title">I'm a Worker</div><div class="gs-sub">Complete tasks and earn Naira or crypto rewards instantly.</div></div>
+    </div>
+    <div class="gs-arrow"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
+   </a>
+   <a href="post-task.html" class="gs-card advertiser" style="text-decoration:none;">
+    <div class="gs-left">
+     <div class="gs-icon">📢</div>
+     <div><div class="gs-title">I'm an Advertiser</div><div class="gs-sub">Post tasks and reach thousands of active earners fast.</div></div>
+    </div>
+    <div class="gs-arrow"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
+   </a>
+  </div>
  </div>
 </section>
 
 <!-- ════ HIGHLIGHTED TASKS ════ -->
 <section class="section" id="tasks">
  <div class="container">
- <div class="reveal tasks-header">
- <div>
- <span class="section-label">Live Now</span>
- <h2 class="section-title">Highlighted Tasks</h2>
- </div>
- <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
- <div class="tabs">
- <button class="tab active">All</button>
- <button class="tab">Social</button>
- <button class="tab">Surveys</button>
- <button class="tab">Freelance</button>
- </div>
- <a href="tasks.html" class="view-all-btn">View all <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></a>
- </div>
- </div>
- <div class="tasks-scroll reveal">
- <!-- Task 1 -->
- <div class="task-card">
- <div class="tc-top">
- <div class="tc-lister">
- <div class="tc-avatar" style="background:linear-gradient(180deg,#0627B8 0%,#03045E 100%);font-size:12px;">BO</div>
- <div><div class="tc-by">Listed by</div><div class="tc-name">BrandOga</div></div>
- </div>
- <span class="badge badge-green"><span class="dot dot-green"></span>Active</span>
- </div>
- <div>
- <div class="tc-title">Follow our X account &amp; repost pinned tweet</div>
- </div>
- <div>
- <div class="progress-row"><span>65 of 100 slots filled</span><span>65%</span></div>
- <div class="progress-bar"><div class="progress-fill" style="width:65%"></div></div>
- </div>
- <div class="tc-meta-row">
- <div class="tc-meta-item"> <span>35 left</span></div>
- <div class="tc-meta-item"> <span>~2 min</span></div>
- </div>
- <div>
- <div class="tc-reward-ngn">₦250</div>
- <div class="tc-reward-sub">per completion</div>
- </div>
- <div class="tc-tags">
- <span class="badge badge-blue">Social</span>
- <span class="badge badge-gray">X/Twitter</span>
- </div>
- <div class="tc-footer">
- <span>50+ followers required</span>
- <button class="btn btn-primary btn-sm">Start →</button>
- </div>
- </div>
- <!-- Task 2 -->
- <div class="task-card">
- <div class="tc-top">
- <div class="tc-lister">
- <div class="tc-avatar" style="background:#F5B301;color:#fff;font-size:12px;">TK</div>
- <div><div class="tc-by">Listed by</div><div class="tc-name">TechKing</div></div>
- </div>
- <span class="badge badge-blue">Survey</span>
- </div>
- <div>
- <div class="tc-title">Rate our mobile banking app — 8 questions</div>
- </div>
- <div>
- <div class="progress-row"><span>40 of 100 slots filled</span><span>40%</span></div>
- <div class="progress-bar"><div class="progress-fill" style="width:40%"></div></div>
- </div>
- <div class="tc-meta-row">
- <div class="tc-meta-item"> <span>60 left</span></div>
- <div class="tc-meta-item"> <span>~5 min</span></div>
- </div>
- <div>
- <div class="tc-reward-usd">$1.50</div>
- <div class="tc-reward-sub">USDC per completion</div>
- </div>
- <div class="tc-tags">
- <span class="badge badge-gray">Survey</span>
- <span class="badge badge-gray">Fintech</span>
- </div>
- <div class="tc-footer">
- <span>Must use banking apps</span>
- <button class="btn btn-primary btn-sm">Start →</button>
- </div>
- </div>
- <!-- Task 3 -->
- <div class="task-card">
- <div class="tc-top">
- <div class="tc-lister">
- <div class="tc-avatar" style="background:linear-gradient(180deg,#0627B8 0%,#03045E 100%);font-size:12px;">DS</div>
- <div><div class="tc-by">Listed by</div><div class="tc-name">DesignStudio</div></div>
- </div>
- <span class="badge badge-gold">Freelance</span>
- </div>
- <div>
- <div class="tc-title">Design a modern logo for a fintech startup</div>
- </div>
- <div>
- <div class="progress-row"><span>1 of 5 slots filled</span><span>20%</span></div>
- <div class="progress-bar"><div class="progress-fill" style="width:20%"></div></div>
- </div>
- <div class="tc-meta-row">
- <div class="tc-meta-item"> <span>4 left</span></div>
- <div class="tc-meta-item"> <span>1–2 days</span></div>
- </div>
- <div>
- <div class="tc-reward-ngn">₦15,000</div>
- <div class="tc-reward-sub">per accepted design</div>
- </div>
- <div class="tc-tags">
- <span class="badge badge-gray">Design</span>
- <span class="badge badge-gray">PNG + SVG</span>
- </div>
- <div class="tc-footer">
- <span>Portfolio required</span>
- <button class="btn btn-primary btn-sm">Apply →</button>
- </div>
- </div>
- <!-- Task 4 -->
- <div class="task-card">
- <div class="tc-top">
- <div class="tc-lister">
- <div class="tc-avatar" style="background:#EF4444;font-size:12px;">FO</div>
- <div><div class="tc-by">Listed by</div><div class="tc-name">FoodieNG</div></div>
- </div>
- <span class="badge badge-green"><span class="dot dot-green"></span>Active</span>
- </div>
- <div>
- <div class="tc-title">Share opinion on Nigerian food delivery apps</div>
- </div>
- <div>
- <div class="progress-row"><span>55 of 100 slots filled</span><span>55%</span></div>
- <div class="progress-bar"><div class="progress-fill" style="width:55%"></div></div>
- </div>
- <div class="tc-meta-row">
- <div class="tc-meta-item"> <span>45 left</span></div>
- <div class="tc-meta-item"> <span>~5 min</span></div>
- </div>
- <div>
- <div class="tc-reward-ngn">₦800</div>
- <div class="tc-reward-sub">per completion</div>
- </div>
- <div class="tc-tags">
- <span class="badge badge-blue">Survey</span>
- <span class="badge badge-gray">Nigeria only</span>
- </div>
- <div class="tc-footer">
- <span>Nigerians only</span>
- <button class="btn btn-primary btn-sm">Start →</button>
- </div>
- </div>
- <!-- Task 5 -->
- <div class="task-card">
- <div class="tc-top">
- <div class="tc-lister">
- <div class="tc-avatar" style="background:linear-gradient(180deg,#0627B8 0%,#03045E 100%);font-size:12px;">AL</div>
- <div><div class="tc-by">Listed by</div><div class="tc-name">AppLaunch</div></div>
- </div>
- <span class="badge badge-green"><span class="dot dot-green"></span>Active</span>
- </div>
- <div>
- <div class="tc-title">Test our Android app and report bugs found</div>
- </div>
- <div>
- <div class="progress-row"><span>8 of 50 slots filled</span><span>16%</span></div>
- <div class="progress-bar"><div class="progress-fill" style="width:16%"></div></div>
- </div>
- <div class="tc-meta-row">
- <div class="tc-meta-item"> <span>42 left</span></div>
- <div class="tc-meta-item"> <span>~15 min</span></div>
- </div>
- <div>
- <div class="tc-reward-usd">$2.00</div>
- <div class="tc-reward-sub">USDC per tester</div>
- </div>
- <div class="tc-tags">
- <span class="badge badge-gray">App Testing</span>
- <span class="badge badge-gray">Android</span>
- </div>
- <div class="tc-footer">
- <span>Android device required</span>
- <button class="btn btn-primary btn-sm">Start →</button>
- </div>
- </div>
- </div>
+  <div class="reveal tasks-header">
+   <div>
+    <span class="section-label">Live Now</span>
+    <h2 class="section-title">Highlighted Tasks</h2>
+   </div>
+   <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+    <div class="tabs">
+     <button class="tab active">All</button>
+     <button class="tab">Social</button>
+     <button class="tab">Surveys</button>
+     <button class="tab">Freelance</button>
+    </div>
+    <a href="tasks.html" class="view-all-btn">View all <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></a>
+   </div>
+  </div>
+  <div class="tasks-scroll reveal">
+   <a href="tasks.html" class="task-card" style="text-decoration:none;">
+    <div class="tc-top"><div class="tc-lister"><div class="tc-avatar" style="background:linear-gradient(180deg,#0627B8 0%,#03045E 100%);font-size:12px;">BO</div><div><div class="tc-by">Listed by</div><div class="tc-name">BrandOga</div></div></div><span class="badge badge-green"><span class="dot dot-green"></span>Active</span></div>
+    <div><div class="tc-title">Follow our X account &amp; repost pinned tweet</div></div>
+    <div><div class="progress-row"><span>65 of 100 slots filled</span><span>65%</span></div><div class="progress-bar"><div class="progress-fill" style="width:65%"></div></div></div>
+    <div class="tc-meta-row"><div class="tc-meta-item"><span>35 left</span></div><div class="tc-meta-item"><span>~2 min</span></div></div>
+    <div><div class="tc-reward-ngn">₦250</div><div class="tc-reward-sub">per completion</div></div>
+    <div class="tc-tags"><span class="badge badge-blue">Social</span><span class="badge badge-gray">X/Twitter</span></div>
+    <div class="tc-footer"><span>50+ followers required</span><span class="btn btn-primary btn-sm">Start →</span></div>
+   </a>
+   <a href="tasks.html" class="task-card" style="text-decoration:none;">
+    <div class="tc-top"><div class="tc-lister"><div class="tc-avatar" style="background:#F5B301;color:#fff;font-size:12px;">TK</div><div><div class="tc-by">Listed by</div><div class="tc-name">TechKing</div></div></div><span class="badge badge-blue">Survey</span></div>
+    <div><div class="tc-title">Rate our mobile banking app — 8 questions</div></div>
+    <div><div class="progress-row"><span>40 of 100 slots filled</span><span>40%</span></div><div class="progress-bar"><div class="progress-fill" style="width:40%"></div></div></div>
+    <div class="tc-meta-row"><div class="tc-meta-item"><span>60 left</span></div><div class="tc-meta-item"><span>~5 min</span></div></div>
+    <div><div class="tc-reward-usd">$1.50</div><div class="tc-reward-sub">USDC per completion</div></div>
+    <div class="tc-tags"><span class="badge badge-gray">Survey</span><span class="badge badge-gray">Fintech</span></div>
+    <div class="tc-footer"><span>Must use banking apps</span><span class="btn btn-primary btn-sm">Start →</span></div>
+   </a>
+   <a href="tasks.html" class="task-card" style="text-decoration:none;">
+    <div class="tc-top"><div class="tc-lister"><div class="tc-avatar" style="background:linear-gradient(180deg,#0627B8 0%,#03045E 100%);font-size:12px;">DS</div><div><div class="tc-by">Listed by</div><div class="tc-name">DesignStudio</div></div></div><span class="badge badge-gold">Freelance</span></div>
+    <div><div class="tc-title">Design a modern logo for a fintech startup</div></div>
+    <div><div class="progress-row"><span>1 of 5 slots filled</span><span>20%</span></div><div class="progress-bar"><div class="progress-fill" style="width:20%"></div></div></div>
+    <div class="tc-meta-row"><div class="tc-meta-item"><span>4 left</span></div><div class="tc-meta-item"><span>1–2 days</span></div></div>
+    <div><div class="tc-reward-ngn">₦15,000</div><div class="tc-reward-sub">per accepted design</div></div>
+    <div class="tc-tags"><span class="badge badge-gray">Design</span><span class="badge badge-gray">PNG + SVG</span></div>
+    <div class="tc-footer"><span>Portfolio required</span><span class="btn btn-primary btn-sm">Apply →</span></div>
+   </a>
+   <a href="tasks.html" class="task-card" style="text-decoration:none;">
+    <div class="tc-top"><div class="tc-lister"><div class="tc-avatar" style="background:#EF4444;font-size:12px;">FO</div><div><div class="tc-by">Listed by</div><div class="tc-name">FoodieNG</div></div></div><span class="badge badge-green"><span class="dot dot-green"></span>Active</span></div>
+    <div><div class="tc-title">Share opinion on Nigerian food delivery apps</div></div>
+    <div><div class="progress-row"><span>55 of 100 slots filled</span><span>55%</span></div><div class="progress-bar"><div class="progress-fill" style="width:55%"></div></div></div>
+    <div class="tc-meta-row"><div class="tc-meta-item"><span>45 left</span></div><div class="tc-meta-item"><span>~5 min</span></div></div>
+    <div><div class="tc-reward-ngn">₦800</div><div class="tc-reward-sub">per completion</div></div>
+    <div class="tc-tags"><span class="badge badge-blue">Survey</span><span class="badge badge-gray">Nigeria only</span></div>
+    <div class="tc-footer"><span>Nigerians only</span><span class="btn btn-primary btn-sm">Start →</span></div>
+   </a>
+   <a href="tasks.html" class="task-card" style="text-decoration:none;">
+    <div class="tc-top"><div class="tc-lister"><div class="tc-avatar" style="background:linear-gradient(180deg,#0627B8 0%,#03045E 100%);font-size:12px;">AL</div><div><div class="tc-by">Listed by</div><div class="tc-name">AppLaunch</div></div></div><span class="badge badge-green"><span class="dot dot-green"></span>Active</span></div>
+    <div><div class="tc-title">Test our Android app and report bugs found</div></div>
+    <div><div class="progress-row"><span>8 of 50 slots filled</span><span>16%</span></div><div class="progress-bar"><div class="progress-fill" style="width:16%"></div></div></div>
+    <div class="tc-meta-row"><div class="tc-meta-item"><span>42 left</span></div><div class="tc-meta-item"><span>~15 min</span></div></div>
+    <div><div class="tc-reward-usd">$2.00</div><div class="tc-reward-sub">USDC per tester</div></div>
+    <div class="tc-tags"><span class="badge badge-gray">App Testing</span><span class="badge badge-gray">Android</span></div>
+    <div class="tc-footer"><span>Android device required</span><span class="btn btn-primary btn-sm">Start →</span></div>
+   </a>
+  </div>
  </div>
 </section>
 
 <!-- ════ HOW IT WORKS ════ -->
 <section class="section section-alt">
  <div class="container">
- <div class="reveal" style="text-align:center;max-width:500px;margin:0 auto;">
- <span class="section-label">Simple Process</span>
- <h2 class="section-title">Up and earning in minutes</h2>
- <p class="section-sub" style="margin:0 auto;">No résumé. No interviews. Just sign up, pick a task, and get paid.</p>
- </div>
- <div class="how-grid reveal">
- <div class="step-card"><div class="step-num">01</div><div class="step-icon"></div><h3>Create account</h3><p>Sign up free in 60 seconds. Connect your bank or Solana wallet.</p></div>
- <div class="step-card"><div class="step-num">02</div><div class="step-icon"></div><h3>Browse tasks</h3><p>Pick from hundreds of tasks: social, surveys, freelance gigs and more.</p></div>
- <div class="step-card"><div class="step-num">03</div><div class="step-icon"></div><h3>Complete &amp; submit</h3><p>Do the task, submit proof. Most tasks take 1–5 minutes.</p></div>
- <div class="step-card"><div class="step-num">04</div><div class="step-icon"></div><h3>Get paid</h3><p>Receive Naira to your bank or USDC to your crypto wallet instantly.</p></div>
- </div>
+  <div class="reveal" style="text-align:center;max-width:500px;margin:0 auto;">
+   <span class="section-label">Simple Process</span>
+   <h2 class="section-title">Up and earning in minutes</h2>
+   <p class="section-sub" style="margin:0 auto;">No résumé. No interviews. Just sign up, pick a task, and get paid.</p>
+  </div>
+  <div class="how-grid reveal">
+   <a href="dashboard.html" class="step-card" style="text-decoration:none;"><div class="step-num">01</div><div class="step-icon">👤</div><h3>Create account</h3><p>Sign up free in 60 seconds. Connect your bank or Solana wallet.</p></a>
+   <a href="tasks.html" class="step-card" style="text-decoration:none;"><div class="step-num">02</div><div class="step-icon">🔍</div><h3>Browse tasks</h3><p>Pick from hundreds of tasks: social, surveys, freelance gigs and more.</p></a>
+   <a href="tasks.html" class="step-card" style="text-decoration:none;"><div class="step-num">03</div><div class="step-icon">✅</div><h3>Complete &amp; submit</h3><p>Do the task, submit proof. Most tasks take 1–5 minutes.</p></a>
+   <a href="dashboard.html" class="step-card" style="text-decoration:none;"><div class="step-num">04</div><div class="step-icon">💰</div><h3>Get paid</h3><p>Receive Naira to your bank or USDC to your crypto wallet instantly.</p></a>
+  </div>
  </div>
 </section>
 
 <!-- ════ WORKER STORE ════ -->
 <section class="section" id="store">
  <div class="container">
- <div class="reveal tasks-header">
- <div>
- <span class="section-label">Marketplace</span>
- <h2 class="section-title">Worker Store</h2>
- </div>
- <a href="store.html" class="view-all-btn">View all <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></a>
- </div>
- <div class="store-scroll reveal">
- <div class="store-card">
- <div class="store-thumb" style="background:#EEF2FF;"></div>
- <div class="store-body">
- <div class="store-title">Premium Logo Design Pack</div>
- <div class="store-desc">5 unique logo concepts in PNG, SVG and AI formats. Fast delivery.</div>
- <div class="store-footer">
- <span class="store-price">₦8,000</span>
- <div class="store-rating">⭐ 4.9 <span style="color:var(--text3);">(42)</span></div>
- </div>
- </div>
- </div>
- <div class="store-card">
- <div class="store-thumb" style="background:#FEF3C7;"></div>
- <div class="store-body">
- <div class="store-title">X Growth Bundle — 500 Followers</div>
- <div class="store-desc">Real Nigerian + diaspora accounts. Gradual drip delivery over 7 days.</div>
- <div class="store-footer">
- <span class="store-price">$12.00</span>
- <div class="store-rating">⭐ 4.7 <span style="color:var(--text3);">(88)</span></div>
- </div>
- </div>
- </div>
- <div class="store-card">
- <div class="store-thumb" style="background:#EEF2FF;"></div>
- <div class="store-body">
- <div class="store-title">Viral Meme Design (x5)</div>
- <div class="store-desc">Custom Nigerian-themed memes for social media marketing.</div>
- <div class="store-footer">
- <span class="store-price">₦3,500</span>
- <div class="store-rating">⭐ 5.0 <span style="color:var(--text3);">(17)</span></div>
- </div>
- </div>
- </div>
- <div class="store-card">
- <div class="store-thumb" style="background:#FDF2F8;"></div>
- <div class="store-body">
- <div class="store-title">Telegram Community Raid</div>
- <div class="store-desc">100 real members in 24 hours. Verified, active accounts only.</div>
- <div class="store-footer">
- <span class="store-price">$8.00</span>
- <div class="store-rating">⭐ 4.8 <span style="color:var(--text3);">(31)</span></div>
- </div>
- </div>
- </div>
- <div class="store-card">
- <div class="store-thumb" style="background:#EEF2FF;"></div>
- <div class="store-body">
- <div class="store-title">SEO Article Writing (1000 words)</div>
- <div class="store-desc">Keyword-optimized content by Nigerian writers. 48hr delivery.</div>
- <div class="store-footer">
- <span class="store-price">₦5,000</span>
- <div class="store-rating">⭐ 4.6 <span style="color:var(--text3);">(53)</span></div>
- </div>
- </div>
- </div>
- </div>
+  <div class="reveal tasks-header">
+   <div><span class="section-label">Marketplace</span><h2 class="section-title">Worker Store</h2></div>
+   <a href="store.html" class="view-all-btn">Browse full store <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></a>
+  </div>
+  <div class="store-scroll reveal">
+   <a href="store.html" class="store-card"><div class="store-thumb" style="background:#EEF2FF;font-size:36px;display:flex;align-items:center;justify-content:center;">🎨</div><div class="store-body"><div class="store-title">Premium Logo Design Pack</div><div class="store-desc">5 unique logo concepts in PNG, SVG and AI formats. Fast delivery.</div><div class="store-footer"><span class="store-price">₦8,000</span><div class="store-rating">⭐ 4.9 <span style="color:var(--text3);">(42)</span></div></div></div></a>
+   <a href="store.html" class="store-card"><div class="store-thumb" style="background:#FEF3C7;font-size:36px;display:flex;align-items:center;justify-content:center;">🚀</div><div class="store-body"><div class="store-title">X Growth Bundle — 500 Followers</div><div class="store-desc">Real Nigerian + diaspora accounts. Gradual drip delivery over 7 days.</div><div class="store-footer"><span class="store-price">$12.00</span><div class="store-rating">⭐ 4.7 <span style="color:var(--text3);">(88)</span></div></div></div></a>
+   <a href="store.html" class="store-card"><div class="store-thumb" style="background:#EEF2FF;font-size:36px;display:flex;align-items:center;justify-content:center;">😂</div><div class="store-body"><div class="store-title">Viral Meme Design (x5)</div><div class="store-desc">Custom Nigerian-themed memes for social media marketing.</div><div class="store-footer"><span class="store-price">₦3,500</span><div class="store-rating">⭐ 5.0 <span style="color:var(--text3);">(17)</span></div></div></div></a>
+   <a href="store.html" class="store-card"><div class="store-thumb" style="background:#FDF2F8;font-size:36px;display:flex;align-items:center;justify-content:center;">📢</div><div class="store-body"><div class="store-title">Telegram Community Raid</div><div class="store-desc">100 real members in 24 hours. Verified, active accounts only.</div><div class="store-footer"><span class="store-price">$8.00</span><div class="store-rating">⭐ 4.8 <span style="color:var(--text3);">(31)</span></div></div></div></a>
+   <a href="store.html" class="store-card"><div class="store-thumb" style="background:#EEF2FF;font-size:36px;display:flex;align-items:center;justify-content:center;">✍️</div><div class="store-body"><div class="store-title">SEO Article Writing (1000 words)</div><div class="store-desc">Keyword-optimized content by Nigerian writers. 48hr delivery.</div><div class="store-footer"><span class="store-price">₦5,000</span><div class="store-rating">⭐ 4.6 <span style="color:var(--text3);">(53)</span></div></div></div></a>
+  </div>
  </div>
 </section>
 
 <!-- ════ COMMUNITIES ════ -->
 <section class="section section-alt" id="communities">
  <div class="container">
- <div class="reveal tasks-header">
- <div>
- <span class="section-label">Connect</span>
- <h2 class="section-title">Communities</h2>
- </div>
- <a href="#" class="view-all-btn">View all <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></a>
- </div>
- <div class="communities-grid reveal">
- <div class="community-card">
- <div class="community-banner" style="background:#EEF2FF;"></div>
- <div class="community-body">
- <div class="community-title">Oga Raiders</div>
- <div class="community-desc">Nigeria's most active raid community. Daily tasks, leaderboards, and cash prizes.</div>
- <div class="community-meta">
- <div class="community-meta-item"> <span>8,204 members</span></div>
- <div class="community-meta-item"> <span>42 active tasks</span></div>
- </div>
- </div>
- </div>
- <div class="community-card">
- <div class="community-banner" style="background:#EEF2FF;">🟢</div>
- <div class="community-body">
- <div class="community-title">Solana NG</div>
- <div class="community-desc">Nigerian Solana ecosystem — airdrops, tasks, and crypto alpha.</div>
- <div class="community-meta">
- <div class="community-meta-item"> <span>5,112 members</span></div>
- <div class="community-meta-item"> <span>28 active tasks</span></div>
- </div>
- </div>
- </div>
- <div class="community-card">
- <div class="community-banner" style="background:#FEF3C7;"></div>
- <div class="community-body">
- <div class="community-title">Meme Hub</div>
- <div class="community-desc">Create, share, and earn from viral memes. Competitions every week.</div>
- <div class="community-meta">
- <div class="community-meta-item"> <span>12,490 members</span></div>
- <div class="community-meta-item"> <span>15 active tasks</span></div>
- </div>
- </div>
- </div>
- <div class="community-card">
- <div class="community-banner" style="background:#FDF2F8;"></div>
- <div class="community-body">
- <div class="community-title">Crypto Earners NG</div>
- <div class="community-desc">Earn USDC doing simple tasks. No wallet experience needed to start.</div>
- <div class="community-meta">
- <div class="community-meta-item"> <span>6,830 members</span></div>
- <div class="community-meta-item"> <span>33 active tasks</span></div>
- </div>
- </div>
- </div>
- <div class="community-card">
- <div class="community-banner" style="background:#EEF2FF;"></div>
- <div class="community-body">
- <div class="community-title">Affiliate Circle</div>
- <div class="community-desc">Refer users to OgaPay and earn commission on every task they complete.</div>
- <div class="community-meta">
- <div class="community-meta-item"> <span>3,218 members</span></div>
- <div class="community-meta-item"> <span>9 active tasks</span></div>
- </div>
- </div>
- </div>
- </div>
+  <div class="reveal tasks-header">
+   <div><span class="section-label">Connect</span><h2 class="section-title">Communities</h2></div>
+   <a href="community.html" class="view-all-btn">View all <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></a>
+  </div>
+  <div class="communities-grid reveal">
+   <a href="community.html" class="community-card"><div class="community-banner" style="background:#EEF2FF;">⚡</div><div class="community-body"><div class="community-title">Oga Raiders</div><div class="community-desc">Nigeria's most active raid community. Daily tasks, leaderboards, and cash prizes.</div><div class="community-meta"><div class="community-meta-item"><span>8,204 members</span></div><div class="community-meta-item"><span>42 active tasks</span></div></div></div></a>
+   <a href="community.html" class="community-card"><div class="community-banner" style="background:#EEF2FF;">🟢</div><div class="community-body"><div class="community-title">Solana NG</div><div class="community-desc">Nigerian Solana ecosystem — airdrops, tasks, and crypto alpha.</div><div class="community-meta"><div class="community-meta-item"><span>5,112 members</span></div><div class="community-meta-item"><span>28 active tasks</span></div></div></div></a>
+   <a href="community.html" class="community-card"><div class="community-banner" style="background:#FEF3C7;">😂</div><div class="community-body"><div class="community-title">Meme Hub</div><div class="community-desc">Create, share, and earn from viral memes. Competitions every week.</div><div class="community-meta"><div class="community-meta-item"><span>12,490 members</span></div><div class="community-meta-item"><span>15 active tasks</span></div></div></div></a>
+   <a href="community.html" class="community-card"><div class="community-banner" style="background:#FDF2F8;">💎</div><div class="community-body"><div class="community-title">Crypto Earners NG</div><div class="community-desc">Earn USDC doing simple tasks. No wallet experience needed to start.</div><div class="community-meta"><div class="community-meta-item"><span>6,830 members</span></div><div class="community-meta-item"><span>33 active tasks</span></div></div></div></a>
+   <a href="community.html" class="community-card"><div class="community-banner" style="background:#EEF2FF;">🤝</div><div class="community-body"><div class="community-title">Affiliate Circle</div><div class="community-desc">Refer users to OgaPay and earn commission on every task they complete.</div><div class="community-meta"><div class="community-meta-item"><span>3,218 members</span></div><div class="community-meta-item"><span>9 active tasks</span></div></div></div></a>
+  </div>
  </div>
 </section>
 
 <!-- ════ PAYMENTS ════ -->
 <section class="section" id="payments">
  <div class="container">
- <div class="reveal">
- <span class="section-label">Dual Payouts</span>
- <h2 class="section-title">Your money, your way</h2>
- <p class="section-sub">Withdraw in Naira to your bank or USDC to your crypto wallet — both instant.</p>
- </div>
- <div class="payment-grid reveal">
- <div class="payment-card ngn-card">
- <div class="payment-icon"></div>
- <h3>Naira Payouts</h3>
- <p>Get paid directly to any Nigerian bank account or mobile money wallet. No waiting, no fees.</p>
- <ul class="payment-features">
- <li><span class="pf-check"></span>All Nigerian banks supported</li>
- <li><span class="pf-check"></span>Instant transfers via Paystack</li>
- <li><span class="pf-check"></span>Minimum withdrawal: ₦500</li>
- <li><span class="pf-check"></span>OPay, PalmPay &amp; mobile wallets</li>
- <li><span class="pf-check"></span>Zero fees under ₦10,000</li>
- </ul>
- </div>
- <div class="payment-card usdc-card">
- <div class="payment-icon"></div>
- <h3>Crypto Payouts</h3>
- <p>Earn USDC on Solana. Send anywhere in the world in seconds. No bank, no borders.</p>
- <ul class="payment-features">
- <li><span class="pf-check"></span>USDC on Solana &amp; Base</li>
- <li><span class="pf-check"></span>Connect any Solana wallet</li>
- <li><span class="pf-check"></span>Minimum withdrawal: $1.00</li>
- <li><span class="pf-check"></span>Near-zero gas fees on Solana</li>
- <li><span class="pf-check"></span>Works in 190+ countries</li>
- </ul>
- </div>
- </div>
+  <div class="reveal">
+   <span class="section-label">Dual Payouts</span>
+   <h2 class="section-title">Your money, your way</h2>
+   <p class="section-sub">Withdraw in Naira to your bank or USDC to your crypto wallet — both instant.</p>
+  </div>
+  <div class="payment-grid reveal">
+   <div class="payment-card ngn-card">
+    <div class="payment-icon">🏦</div>
+    <h3>Naira Payouts</h3>
+    <p>Get paid directly to any Nigerian bank account or mobile money wallet. No waiting, no fees.</p>
+    <ul class="payment-features">
+     <li><span class="pf-check">✓</span>All Nigerian banks supported</li>
+     <li><span class="pf-check">✓</span>Instant transfers via Paystack</li>
+     <li><span class="pf-check">✓</span>Minimum withdrawal: ₦500</li>
+     <li><span class="pf-check">✓</span>OPay, PalmPay &amp; mobile wallets</li>
+     <li><span class="pf-check">✓</span>Zero fees under ₦10,000</li>
+    </ul>
+   </div>
+   <div class="payment-card usdc-card">
+    <div class="payment-icon">💎</div>
+    <h3>Crypto Payouts</h3>
+    <p>Earn USDC on Solana. Send anywhere in the world in seconds. No bank, no borders.</p>
+    <ul class="payment-features">
+     <li><span class="pf-check">✓</span>USDC on Solana &amp; Base</li>
+     <li><span class="pf-check">✓</span>Connect any Solana wallet</li>
+     <li><span class="pf-check">✓</span>Minimum withdrawal: $1.00</li>
+     <li><span class="pf-check">✓</span>Near-zero gas fees on Solana</li>
+     <li><span class="pf-check">✓</span>Works in 190+ countries</li>
+    </ul>
+   </div>
+  </div>
  </div>
 </section>
 
 <!-- ════ TESTIMONIALS ════ -->
 <section class="section section-alt">
  <div class="container">
- <div class="reveal" style="text-align:center;max-width:480px;margin:0 auto;">
- <span class="section-label">Community</span>
- <h2 class="section-title">Real people, real income</h2>
- </div>
- <div class="testi-grid reveal">
- <div class="testi-card">
- <div class="testi-stars"></div>
- <p>"I made ₦18,000 in my first week just doing social tasks between lectures. OgaPay is a legit side hustle."</p>
- <div class="testi-author">
- <div class="testi-avatar" style="background:linear-gradient(180deg,#0627B8 0%,#03045E 100%);">CK</div>
- <div><div class="testi-name">Chukwuemeka K.</div><div class="testi-loc">Lagos, Nigeria</div></div>
- </div>
- </div>
- <div class="testi-card">
- <div class="testi-stars"></div>
- <p>"Being paid in USDC means no terrible exchange rates. I withdrew $50 straight to my Phantom wallet."</p>
- <div class="testi-author">
- <div class="testi-avatar" style="background:#F5B301;color:#fff;">AN</div>
- <div><div class="testi-name">Amara N.</div><div class="testi-loc">Accra, Ghana</div></div>
- </div>
- </div>
- <div class="testi-card">
- <div class="testi-stars"></div>
- <p>"Posted a logo task and got 5 solid designs within 24 hours. Way cheaper and faster than any agency."</p>
- <div class="testi-author">
- <div class="testi-avatar" style="background:linear-gradient(180deg,#0627B8 0%,#03045E 100%);">TO</div>
- <div><div class="testi-name">Tunde O.</div><div class="testi-loc">Abuja, Nigeria</div></div>
- </div>
- </div>
- </div>
+  <div class="reveal" style="text-align:center;max-width:480px;margin:0 auto;">
+   <span class="section-label">Community</span>
+   <h2 class="section-title">Real people, real income</h2>
+  </div>
+  <div class="testi-grid reveal">
+   <div class="testi-card"><div class="testi-stars">★★★★★</div><p>"I made ₦18,000 in my first week just doing social tasks between lectures. OgaPay is a legit side hustle."</p><div class="testi-author"><div class="testi-avatar" style="background:linear-gradient(180deg,#0627B8 0%,#03045E 100%);">CK</div><div><div class="testi-name">Chukwuemeka K.</div><div class="testi-loc">Lagos, Nigeria</div></div></div></div>
+   <div class="testi-card"><div class="testi-stars">★★★★★</div><p>"Being paid in USDC means no terrible exchange rates. I withdrew $50 straight to my Phantom wallet."</p><div class="testi-author"><div class="testi-avatar" style="background:#F5B301;color:#fff;">AN</div><div><div class="testi-name">Amara N.</div><div class="testi-loc">Accra, Ghana</div></div></div></div>
+   <div class="testi-card"><div class="testi-stars">★★★★★</div><p>"Posted a logo task and got 5 solid designs within 24 hours. Way cheaper and faster than any agency."</p><div class="testi-author"><div class="testi-avatar" style="background:linear-gradient(180deg,#0627B8 0%,#03045E 100%);">TO</div><div><div class="testi-name">Tunde O.</div><div class="testi-loc">Abuja, Nigeria</div></div></div></div>
+  </div>
  </div>
 </section>
 
 <!-- ════ FAQ ════ -->
 <section class="section" id="faq">
  <div class="container">
- <div class="reveal" style="text-align:center;max-width:480px;margin:0 auto;">
- <span class="section-label">FAQ</span>
- <h2 class="section-title">Common questions</h2>
- </div>
- <div class="reveal" style="max-width:640px;margin:36px auto 0;display:flex;flex-direction:column;gap:10px;">
- <details style="background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);padding:18px 20px;cursor:pointer;">
- <summary style="font-family:'Outfit',sans-serif;font-size:15px;font-weight:600;color:var(--text);list-style:none;display:flex;justify-content:space-between;align-items:center;">How do I get paid? <span style="color:var(--blue);font-size:18px;">+</span></summary>
- <p style="margin-top:12px;font-size:13.5px;color:var(--text2);line-height:1.7;">Once a task poster approves your submission, funds are released instantly. You can withdraw to your Nigerian bank account via Paystack or to your Solana wallet as USDC.</p>
- </details>
- <details style="background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);padding:18px 20px;cursor:pointer;">
- <summary style="font-family:'Outfit',sans-serif;font-size:15px;font-weight:600;color:var(--text);list-style:none;display:flex;justify-content:space-between;align-items:center;">Do I need crypto experience to earn? <span style="color:var(--blue);font-size:18px;">+</span></summary>
- <p style="margin-top:12px;font-size:13.5px;color:var(--text2);line-height:1.7;">Not at all. You can earn and withdraw entirely in Naira. Crypto is optional — but easy to set up with a free Phantom wallet if you want USDC payouts.</p>
- </details>
- <details style="background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);padding:18px 20px;cursor:pointer;">
- <summary style="font-family:'Outfit',sans-serif;font-size:15px;font-weight:600;color:var(--text);list-style:none;display:flex;justify-content:space-between;align-items:center;">What is the minimum withdrawal? <span style="color:var(--blue);font-size:18px;">+</span></summary>
- <p style="margin-top:12px;font-size:13.5px;color:var(--text2);line-height:1.7;">₦500 for Naira withdrawals and $1.00 USDC for crypto withdrawals. There are no fees for Naira withdrawals under ₦10,000.</p>
- </details>
- <details style="background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);padding:18px 20px;cursor:pointer;">
- <summary style="font-family:'Outfit',sans-serif;font-size:15px;font-weight:600;color:var(--text);list-style:none;display:flex;justify-content:space-between;align-items:center;">How do I post a task as an advertiser? <span style="color:var(--blue);font-size:18px;">+</span></summary>
- <p style="margin-top:12px;font-size:13.5px;color:var(--text2);line-height:1.7;">Create an account, fund your wallet (NGN or USDC), then click "Post a Task". Set your reward, number of slots, proof requirements, and go live in minutes.</p>
- </details>
- </div>
+  <div class="reveal" style="text-align:center;max-width:480px;margin:0 auto;">
+   <span class="section-label">FAQ</span>
+   <h2 class="section-title">Common questions</h2>
+  </div>
+  <div class="reveal" style="max-width:640px;margin:36px auto 0;display:flex;flex-direction:column;gap:10px;">
+   <details style="background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);padding:18px 20px;cursor:pointer;"><summary style="font-family:'Outfit',sans-serif;font-size:15px;font-weight:600;color:var(--text);list-style:none;display:flex;justify-content:space-between;align-items:center;">How do I get paid? <span style="color:var(--blue);font-size:18px;">+</span></summary><p style="margin-top:12px;font-size:13.5px;color:var(--text2);line-height:1.7;">Once a task poster approves your submission, funds are released instantly. You can withdraw to your Nigerian bank account via Paystack or to your Solana wallet as USDC.</p></details>
+   <details style="background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);padding:18px 20px;cursor:pointer;"><summary style="font-family:'Outfit',sans-serif;font-size:15px;font-weight:600;color:var(--text);list-style:none;display:flex;justify-content:space-between;align-items:center;">Do I need crypto experience to earn? <span style="color:var(--blue);font-size:18px;">+</span></summary><p style="margin-top:12px;font-size:13.5px;color:var(--text2);line-height:1.7;">Not at all. You can earn and withdraw entirely in Naira. Crypto is optional — but easy to set up with a free Phantom wallet if you want USDC payouts.</p></details>
+   <details style="background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);padding:18px 20px;cursor:pointer;"><summary style="font-family:'Outfit',sans-serif;font-size:15px;font-weight:600;color:var(--text);list-style:none;display:flex;justify-content:space-between;align-items:center;">What is the minimum withdrawal? <span style="color:var(--blue);font-size:18px;">+</span></summary><p style="margin-top:12px;font-size:13.5px;color:var(--text2);line-height:1.7;">₦500 for Naira withdrawals and $1.00 USDC for crypto withdrawals. There are no fees for Naira withdrawals under ₦10,000.</p></details>
+   <details style="background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);padding:18px 20px;cursor:pointer;"><summary style="font-family:'Outfit',sans-serif;font-size:15px;font-weight:600;color:var(--text);list-style:none;display:flex;justify-content:space-between;align-items:center;">How do I post a task as an advertiser? <span style="color:var(--blue);font-size:18px;">+</span></summary><p style="margin-top:12px;font-size:13.5px;color:var(--text2);line-height:1.7;">Create an account, fund your wallet (NGN or USDC), then click "Post a Task". Set your reward, number of slots, proof requirements, and go live in minutes.</p></details>
+  </div>
  </div>
 </section>
 
 <!-- ════ CTA ════ -->
 <section class="cta-section">
  <div class="container">
- <div class="reveal">
- <h2>Ready to earn with OgaPay?</h2>
- <p>Sign up free. No subscriptions. Get paid in Naira or crypto.</p>
- <div class="cta-buttons">
- <button class="btn btn-white btn-lg">Start Earning Free</button>
- <a href="post-task.html" class="btn btn-outline-white btn-lg">Post Your First Task</a>
- </div>
- </div>
+  <div class="reveal">
+   <h2>Ready to earn with OgaPay?</h2>
+   <p>Sign up free. No subscriptions. Get paid in Naira or crypto.</p>
+   <div class="cta-buttons">
+    <a href="tasks.html" class="btn btn-white btn-lg">Start Earning Free</a>
+    <a href="post-task.html" class="btn btn-outline-white btn-lg">Post Your First Task</a>
+   </div>
+  </div>
  </div>
 </section>
 
 <!-- ════ FOOTER ════ -->
 <footer>
  <div class="container">
- <div class="footer-grid">
- <div class="footer-brand">
- <div style="display:flex;align-items:center;gap:9px;font-family:'Outfit',sans-serif;font-weight:800;font-size:18px;">
- <svg width="26" height="26" viewBox="0 0 100 100" fill="none"><defs><linearGradient id="fg" x1="50" y1="0" x2="50" y2="100" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#0627B8"/><stop offset="100%" stop-color="#03045E"/></linearGradient></defs><rect width="100" height="100" rx="20" fill="url(#fg)"/><rect x="10" y="10" width="35" height="35" rx="7" fill="#8a9ef5" opacity="0.7"/><polygon points="10,10 45,10 10,45" fill="#03045E" opacity="0.45"/><path d="M52 10 H68 Q87 10 87 27.5 Q87 45 68 45 H52 Z" fill="white"/><rect x="10" y="52" width="35" height="35" rx="7" fill="#8a9ef5" opacity="0.55"/><rect x="52" y="52" width="35" height="35" rx="7" fill="#8a9ef5" opacity="0.7"/><polygon points="52,52 87,52 87,87" fill="#03045E" opacity="0.45"/><path d="M52 52 H68 Q87 52 87 69.5 Q87 87 68 87 H52 Z" fill="white"/></svg>
- Oga<span style="color:#0627B8;">Pay</span>
- </div>
- <p>The Nigerian-first microtask marketplace. Earn in Naira or crypto. No barriers, equal opportunities.</p>
- </div>
- <div class="footer-col"><h5>Platform</h5><ul><li><a href="tasks.html">Browse Tasks</a></li><li><a href="post-task.html">Post a Task</a></li><li><a href="store.html">Worker Store</a></li><li><a href="#">Leaderboard</a></li></ul></div>
- <div class="footer-col"><h5>Earn</h5><ul><li><a href="tasks.html?cat=social">Social Tasks</a></li><li><a href="tasks.html?cat=survey">Surveys</a></li><li><a href="tasks.html?cat=freelance">Freelance</a></li><li><a href="tasks.html?ref=1">Referrals</a></li></ul></div>
- <div class="footer-col"><h5>Company</h5><ul><li><a href="#">About</a></li><li><a href="#">Blog</a></li><li><a href="#">Privacy</a></li><li><a href="#">Terms</a></li></ul></div>
- </div>
- <div class="footer-bottom">
- <span>© 2025 OgaPay. All rights reserved.</span>
- <span>Made with for Africa &amp; the World</span>
- </div>
+  <div class="footer-grid">
+   <div class="footer-brand">
+    <div style="display:flex;align-items:center;gap:9px;font-family:'Outfit',sans-serif;font-weight:800;font-size:18px;">
+     <svg width="26" height="26" viewBox="0 0 100 100" fill="none"><defs><linearGradient id="fg" x1="50" y1="0" x2="50" y2="100" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#0627B8"/><stop offset="100%" stop-color="#03045E"/></linearGradient></defs><rect width="100" height="100" rx="20" fill="url(#fg)"/><rect x="10" y="10" width="35" height="35" rx="7" fill="#8a9ef5" opacity="0.7"/><polygon points="10,10 45,10 10,45" fill="#03045E" opacity="0.45"/><path d="M52 10 H68 Q87 10 87 27.5 Q87 45 68 45 H52 Z" fill="white"/><rect x="10" y="52" width="35" height="35" rx="7" fill="#8a9ef5" opacity="0.55"/><rect x="52" y="52" width="35" height="35" rx="7" fill="#8a9ef5" opacity="0.7"/><polygon points="52,52 87,52 87,87" fill="#03045E" opacity="0.45"/><path d="M52 52 H68 Q87 52 87 69.5 Q87 87 68 87 H52 Z" fill="white"/></svg>
+     Oga<span style="color:#0627B8;">Pay</span>
+    </div>
+    <p>The Nigerian-first microtask marketplace. Earn in Naira or crypto. No barriers, equal opportunities.</p>
+   </div>
+   <div class="footer-col"><h5>Platform</h5><ul>
+    <li><a href="tasks.html">Browse Tasks</a></li>
+    <li><a href="post-task.html">Post a Task</a></li>
+    <li><a href="store.html">Worker Store</a></li>
+    <li><a href="dashboard.html">Leaderboard</a></li>
+   </ul></div>
+   <div class="footer-col"><h5>Earn</h5><ul>
+    <li><a href="tasks.html">Social Tasks</a></li>
+    <li><a href="tasks.html">Surveys</a></li>
+    <li><a href="tasks.html">Freelance</a></li>
+    <li><a href="workers.html">Referrals</a></li>
+   </ul></div>
+   <div class="footer-col"><h5>Company</h5><ul>
+    <li><a href="#">About</a></li>
+    <li><a href="#">Blog</a></li>
+    <li><a href="#">Privacy</a></li>
+    <li><a href="#">Terms</a></li>
+   </ul></div>
+  </div>
+  <div class="footer-bottom">
+   <span>© 2025 OgaPay. All rights reserved.</span>
+   <span>Made with ❤️ for Africa &amp; the World</span>
+  </div>
  </div>
 </footer>
 
 <!-- ════ MOBILE BOTTOM NAV ════ -->
 <div class="mobile-nav">
  <div class="mobile-nav-inner">
- <div class="mobile-nav-item active">
- <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
- <span class="mobile-nav-label">Home</span>
- </div>
- <div class="mobile-nav-item">
- <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
- <span class="mobile-nav-label">Tasks</span>
- </div>
- <div class="mobile-nav-item">
- <div class="mobile-nav-create">
- <svg width="18" height="18" fill="none" stroke="white" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
- </div>
- <span class="mobile-nav-label" style="margin-top:4px;">Create</span>
- </div>
- <div class="mobile-nav-item">
- <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
- <span class="mobile-nav-label">Alerts</span>
- </div>
- <div class="mobile-nav-item">
- <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
- <span class="mobile-nav-label">Wallet</span>
- </div>
+  <a href="index.html" class="mobile-nav-item active">
+   <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+   <span class="mobile-nav-label">Home</span>
+  </a>
+  <a href="tasks.html" class="mobile-nav-item">
+   <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+   <span class="mobile-nav-label">Tasks</span>
+  </a>
+  <a href="post-task.html" class="mobile-nav-item">
+   <div class="mobile-nav-create">
+    <svg width="18" height="18" fill="none" stroke="white" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+   </div>
+   <span class="mobile-nav-label" style="margin-top:4px;">Create</span>
+  </a>
+  <a href="dashboard.html" class="mobile-nav-item">
+   <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+   <span class="mobile-nav-label">Alerts</span>
+  </a>
+  <a href="dashboard.html" class="mobile-nav-item">
+   <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+   <span class="mobile-nav-label">Wallet</span>
+  </a>
  </div>
 </div>
 
 <script>
-// Scroll reveal
 const obs = new IntersectionObserver(entries => {
  entries.forEach(e => { if(e.isIntersecting) e.target.classList.add('visible'); });
 }, {threshold: 0.07});
 document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
 
-// Tabs
 document.querySelectorAll('.tab').forEach(tab => {
  tab.addEventListener('click', function() {
- this.closest('.tabs').querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
- this.classList.add('active');
+  this.closest('.tabs').querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  this.classList.add('active');
  });
 });
 
-// Hamburger
 document.getElementById('hamburgerBtn').addEventListener('click', () => {
  document.getElementById('mobileMenu').classList.add('open');
 });
 
-// Mobile nav active
-document.querySelectorAll('.mobile-nav-item').forEach(item => {
- item.addEventListener('click', function() {
- document.querySelectorAll('.mobile-nav-item').forEach(i => i.classList.remove('active'));
- this.classList.add('active');
- });
-});
-
-// Nav active on scroll
-const sections = document.querySelectorAll('section[id], div[id]');
-const navLinks = document.querySelectorAll('.nav-link');
-window.addEventListener('scroll', () => {
- let current = '';
- sections.forEach(s => { if(window.scrollY >= s.offsetTop - 100) current = s.id; });
- navLinks.forEach(l => {
- l.classList.toggle('active', l.getAttribute('href') === '#' + current);
- });
-}, {passive: true});
-
-// Dark mode toggle
 const darkToggleBtn = document.getElementById('darkToggleBtn');
 const iconMoon = document.getElementById('icon-moon');
 const iconSun = document.getElementById('icon-sun');
 const savedTheme = localStorage.getItem('ogapay-theme');
 if(savedTheme === 'dark'){ document.documentElement.setAttribute('data-theme','dark'); iconMoon.style.display='none'; iconSun.style.display=''; }
 darkToggleBtn.addEventListener('click', () => {
-  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-  if(isDark){
-    document.documentElement.removeAttribute('data-theme');
-    localStorage.setItem('ogapay-theme','light');
-    iconMoon.style.display=''; iconSun.style.display='none';
-  } else {
-    document.documentElement.setAttribute('data-theme','dark');
-    localStorage.setItem('ogapay-theme','dark');
-    iconMoon.style.display='none'; iconSun.style.display='';
-  }
+ const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+ if(isDark){
+  document.documentElement.removeAttribute('data-theme');
+  localStorage.setItem('ogapay-theme','light');
+  iconMoon.style.display=''; iconSun.style.display='none';
+ } else {
+  document.documentElement.setAttribute('data-theme','dark');
+  localStorage.setItem('ogapay-theme','dark');
+  iconMoon.style.display='none'; iconSun.style.display='';
+ }
 });
 </script>
 </body>
