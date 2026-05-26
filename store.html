@@ -4,7 +4,6 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0"/>
 <title>OgaPay Store — Browse Creator Services</title>
-<!-- Anti-FOUC: restore theme before paint -->
 <script>
 (function(){
   var t = localStorage.getItem('ogapay-theme');
@@ -34,7 +33,6 @@
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{font-size:16px;-webkit-font-smoothing:antialiased}
 body{font-family:var(--font-sans);color:var(--color-text);background:var(--color-background);min-height:100vh;overflow-x:hidden;transition:background .2s,color .15s}
-
 a{color:var(--color-accent);text-decoration:none}
 button{font-family:var(--font-sans);cursor:pointer}
 
@@ -57,131 +55,175 @@ button{font-family:var(--font-sans);cursor:pointer}
 .nav-auth-btn.primary{background:linear-gradient(135deg,var(--op-blue),var(--op-blue-dark));color:#fff;border:none}
 .nav-auth-btn.primary:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(3,60,227,.35)}
 
-/* ── HERO ── */
-.hero{background:var(--color-surface);border-bottom:1px solid var(--color-border);padding:48px 16px 40px;position:relative;overflow:hidden;isolation:isolate;transition:background .2s,border-color .2s}
-.hero::before{content:'';position:absolute;top:0;right:0;bottom:0;left:0;background:radial-gradient(ellipse 80% 50% at 15% 20%,rgba(3,60,227,.07) 0%,transparent 50%),radial-gradient(ellipse 60% 40% at 85% 30%,rgba(16,185,129,.07) 0%,transparent 50%);pointer-events:none}
-.hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(3,60,227,.3) 50%,transparent)}
-.hero-inner{max-width:900px;margin:0 auto;position:relative;z-index:1}
-.hero-eyebrow{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:var(--radius-full);background:var(--op-blue-light);border:1px solid var(--op-blue-mid);font-size:11.5px;font-weight:700;color:var(--op-blue);text-transform:uppercase;letter-spacing:.06em;margin-bottom:16px}
-.hero-eyebrow svg{width:12px;height:12px;stroke:currentColor;fill:none}
-.hero-title{font-size:clamp(28px,4vw,44px);font-weight:800;letter-spacing:-.03em;color:var(--color-primary);margin-bottom:12px;line-height:1.1}
-.hero-sub{font-size:15px;color:var(--color-text-light);max-width:520px;line-height:1.7;margin-bottom:24px}
-.hero-stats{display:flex;gap:24px;flex-wrap:wrap}
-.hero-stat{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--color-text-lighter)}
-.hero-stat-num{font-size:16px;font-weight:800;color:var(--color-primary);font-family:var(--font-mono)}
-.hero-stat-dot{width:6px;height:6px;border-radius:50%;background:var(--op-blue)}
+/* ── PP HEADER SECTION (matches WURK /products) ── */
+.pp-container{width:100%;max-width:960px;padding:32px 24px 0;margin:0 auto;animation:ppFadeIn .4s ease}
+@keyframes ppFadeIn{0%{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.pp-header{text-align:left;margin-bottom:24px;padding-bottom:8px}
+.pp-title{margin:0 0 6px;font-size:clamp(26px,4vw,32px);font-weight:800;background:linear-gradient(135deg,#4b5563,#6b7280 55%,#9ca3af);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+[data-theme=dark] .pp-title{background:linear-gradient(135deg,#e5e7eb,#d4d4d8 52%,#a1a1aa);-webkit-background-clip:text;background-clip:text}
+.pp-subtitle{margin:0 0 20px;color:var(--color-text-lighter);font-size:14px;font-weight:500}
 
-/* ── SEARCH + FILTERS ── */
-.controls-bar{max-width:900px;margin:0 auto;padding:20px 16px 0;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-.search-wrap{position:relative;flex:1;min-width:200px}
-.search-wrap svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:15px;height:15px;stroke:var(--color-text-lighter);fill:none;pointer-events:none}
-.search-input{width:100%;padding:9px 12px 9px 36px;background:var(--color-background);border:1.5px solid var(--color-border);border-radius:var(--radius-full);font-size:13px;color:var(--color-text);font-family:var(--font-sans);transition:all .2s;outline:none}
-.search-input::placeholder{color:var(--color-text-lighter)}
-.search-input:focus{border-color:var(--op-blue);box-shadow:0 0 0 3px var(--op-blue-light)}
-.filter-pills{display:flex;gap:6px;flex-wrap:wrap}
-.filter-pill{padding:6px 14px;border-radius:var(--radius-full);font-size:12px;font-weight:600;border:1.5px solid var(--color-border);background:var(--color-background);color:var(--color-text-light);cursor:pointer;transition:all .15s;white-space:nowrap}
-.filter-pill:hover{border-color:var(--op-blue);color:var(--op-blue)}
-.filter-pill.active{background:var(--op-blue-light);border-color:var(--op-blue);color:var(--op-blue)}
-.sort-select{padding:7px 12px;border-radius:var(--radius-full);font-size:12px;font-weight:600;border:1.5px solid var(--color-border);background:var(--color-background);color:var(--color-text-light);cursor:pointer;outline:none;font-family:var(--font-sans);transition:background .2s,border-color .2s,color .15s}
+/* ── TOP ACTION BUTTONS (the 3 dark pill buttons in screenshot) ── */
+.pp-top-actions{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px}
+.pp-action-btn{display:inline-flex;align-items:center;gap:8px;padding:10px 18px;border-radius:var(--radius-full);font-size:13.5px;font-weight:600;cursor:pointer;border:none;transition:all .2s;white-space:nowrap}
+.pp-action-btn svg{width:15px;height:15px;stroke:currentColor;fill:none;flex-shrink:0}
+.pp-action-btn-dark{background:linear-gradient(135deg,#1f2937,#111827);color:#fff;box-shadow:0 2px 8px rgba(0,0,0,.18)}
+.pp-action-btn-dark:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(0,0,0,.28)}
+[data-theme=dark] .pp-action-btn-dark{background:linear-gradient(135deg,#f5f5f5,#e5e7eb);color:#0a0a0a;box-shadow:0 4px 14px rgba(0,0,0,.6)}
 
-/* ── MAIN LAYOUT ── */
-.main-wrap{max-width:900px;margin:0 auto;padding:20px 16px 48px}
+/* ── FILTERS PANEL (matches WURK filter box) ── */
+.pp-filters{margin:0 0 20px;background:linear-gradient(135deg,#fefdfb,#f8fafc);border:1px solid rgba(59,130,246,.1);border-radius:16px;padding:20px;transition:background .2s,border-color .2s}
+[data-theme=dark] .pp-filters{background:linear-gradient(140deg,#070707,#0c0c0c);border-color:#383838e6}
+.pp-filters-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
+.pp-filter-label{display:flex;gap:8px;align-items:center;margin-bottom:8px;color:#334155;font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.06em}
+[data-theme=dark] .pp-filter-label{color:#d4d4d8}
+.pp-filter-label svg{width:14px;height:14px;stroke:currentColor;fill:none;color:var(--op-blue)}
+.pp-select{width:100%;padding:11px 14px;border:1.5px solid var(--color-border);border-radius:10px;font-size:14px;background:var(--color-background);color:var(--color-text);transition:all .2s;font-weight:500;font-family:var(--font-sans);cursor:pointer;outline:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236B7280' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;background-size:16px;padding-right:36px}
+.pp-select:hover{border-color:var(--color-primary-light)}
+.pp-select:focus{border-color:var(--op-blue);box-shadow:0 0 0 3px var(--op-blue-light)}
+[data-theme=dark] .pp-select{background-color:#0b0b0b;border-color:#404040f2;color:#f5f5f5;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23737373' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E")}
 
-/* ── RESULTS BAR ── */
-.results-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px}
-.results-count{font-size:13px;color:var(--color-text-lighter)}
-.results-count strong{color:var(--color-text);font-weight:700}
-.view-toggle{display:flex;gap:4px}
-.view-btn{width:30px;height:30px;border-radius:var(--radius-md);border:1px solid var(--color-border);background:var(--color-background);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--color-text-lighter);transition:all .15s}
-.view-btn.active{background:var(--op-blue-light);border-color:var(--op-blue);color:var(--op-blue)}
-.view-btn svg{width:14px;height:14px;stroke:currentColor;fill:none}
+/* ── RESULTS INFO pill (matches WURK "Showing 12 of 158") ── */
+.pp-results-info{margin:0 0 20px;padding:11px 16px;background:linear-gradient(135deg,#f8fafc,#f1f5f9);border:1px solid var(--color-border);border-radius:12px;color:var(--color-text-light);font-size:13.5px;font-weight:500;display:inline-flex;align-items:center;gap:8px}
+[data-theme=dark] .pp-results-info{background:linear-gradient(140deg,#070707,#0c0c0c);border-color:#383838eb;color:#d4d4d8}
+.pp-results-info svg{width:15px;height:15px;stroke:var(--op-blue);fill:none;flex-shrink:0}
+.pp-results-info strong{color:var(--color-text);font-weight:800}
+[data-theme=dark] .pp-results-info strong{color:#f5f5f5}
 
-/* ── PRODUCT GRID ── */
-.products-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
-.products-grid.list-view{grid-template-columns:1fr}
+/* ── PRODUCT GRID (from WURK pp-grid) ── */
+.pp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px;align-items:stretch;padding:4px}
+.pp-main{max-width:960px;margin:0 auto;padding:0 24px 48px}
 
-/* ── PRODUCT CARD ── */
-.product-card{background:var(--color-background);border:1px solid var(--color-border);border-radius:var(--radius-xl);overflow:hidden;transition:all .22s;cursor:pointer;display:flex;flex-direction:column}
-.product-card:hover{border-color:var(--op-blue);box-shadow:0 8px 32px rgba(3,60,227,.12);transform:translateY(-2px)}
-.product-thumb{width:100%;height:140px;display:flex;align-items:center;justify-content:center;position:relative;flex-shrink:0;overflow:hidden}
-.product-thumb svg{width:36px;height:36px;stroke:#fff;fill:none;opacity:.9}
-.thumb-category{position:absolute;top:10px;left:10px;padding:3px 8px;border-radius:var(--radius-full);font-size:10px;font-weight:700;background:rgba(0,0,0,.4);color:#fff;backdrop-filter:blur(4px);text-transform:uppercase;letter-spacing:.04em}
-.product-body{padding:15px;flex:1;display:flex;flex-direction:column}
-.product-title{font-size:14px;font-weight:700;color:var(--color-primary);margin-bottom:5px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.product-desc{font-size:12px;color:var(--color-text-light);line-height:1.6;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:10px;flex:1}
-.product-seller{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--color-surface);border-radius:var(--radius-md);margin-bottom:10px;transition:background .2s}
-.seller-avatar{width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#fff;flex-shrink:0}
-.seller-name{font-size:12px;font-weight:600;color:var(--color-text)}
-.seller-role{font-size:10px;color:var(--color-text-lighter)}
-.product-footer{display:flex;align-items:center;justify-content:space-between;gap:8px}
-.product-price{font-family:var(--font-mono);font-size:15px;font-weight:800;color:var(--op-green)}
-.product-price-ngn{font-size:10px;color:var(--color-text-lighter);margin-top:1px}
-.product-buy-btn{padding:6px 14px;border-radius:var(--radius-full);background:linear-gradient(135deg,var(--op-blue),var(--op-blue-dark));color:#fff;font-size:12px;font-weight:700;border:none;cursor:pointer;transition:all .15s;white-space:nowrap}
-.product-buy-btn:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(3,60,227,.4)}
+/* ── PRODUCT CARD (WURK pp-card) ── */
+.pp-card{border:1.5px solid var(--color-border);border-radius:20px;overflow:hidden;background:linear-gradient(180deg,var(--color-background),var(--color-surface));display:flex;flex-direction:column;position:relative;box-shadow:0 1px 3px rgba(0,0,0,.06),0 4px 8px rgba(0,0,0,.05);min-height:420px;transition:all .3s cubic-bezier(.4,0,.2,1);cursor:pointer}
+.pp-card:hover{transform:translateY(-6px) scale(1.015);box-shadow:0 4px 8px rgba(0,0,0,.08),0 12px 24px rgba(0,0,0,.08),0 20px 40px rgba(3,60,227,.07);border-color:rgba(3,60,227,.3)}
+[data-theme=dark] .pp-card{border-color:#383838e6;background:linear-gradient(180deg,#090909,#060606);box-shadow:0 1px 3px rgba(0,0,0,.5),0 6px 14px rgba(0,0,0,.45)}
+[data-theme=dark] .pp-card:hover{border-color:#828282a3;background:linear-gradient(180deg,#0d0d0d,#080808)}
 
-/* LIST VIEW CARD */
-.products-grid.list-view .product-card{flex-direction:row;height:100px}
-.products-grid.list-view .product-thumb{width:100px;height:100px;flex-shrink:0}
-.products-grid.list-view .product-body{padding:12px;flex-direction:row;align-items:center;gap:12px}
-.products-grid.list-view .product-seller{display:none}
-.products-grid.list-view .product-title{font-size:13px;margin-bottom:2px;-webkit-line-clamp:1}
-.products-grid.list-view .product-desc{display:none}
-.products-grid.list-view .product-info{flex:1;min-width:0}
-.products-grid.list-view .product-footer{flex-shrink:0;flex-direction:column;align-items:flex-end;gap:6px}
+/* Active badge */
+.pp-badge{position:absolute;right:12px;top:12px;padding:5px 12px;border-radius:999px;font-size:11px;font-weight:600;letter-spacing:.025em;text-transform:uppercase;display:inline-flex;gap:6px;align-items:center;z-index:2;background:linear-gradient(135deg,rgba(255,255,255,.97),rgba(240,253,244,.95));border:1.5px solid rgba(34,197,94,.3);color:#16a34a;box-shadow:0 2px 4px rgba(0,0,0,.06),0 4px 12px rgba(34,197,94,.18)}
+[data-theme=dark] .pp-badge{background:linear-gradient(135deg,#141414f5,#0a0a0af2);border-color:#525252e6;color:#e5e7eb}
+.pp-dot{width:7px;height:7px;background:radial-gradient(circle,#22c55e,#16a34a);border-radius:999px;display:inline-block}
+[data-theme=dark] .pp-dot{background:radial-gradient(circle,#e5e7eb,#cbd5e1)}
 
-/* ── SELLER SPOTLIGHT ── */
-.spotlight-section{margin-bottom:28px}
-.section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
-.section-title{font-size:15px;font-weight:700;color:var(--color-primary);display:flex;align-items:center;gap:6px}
-.section-title svg{width:15px;height:15px;stroke:var(--op-blue);fill:none}
+/* Thumbnail */
+.pp-image-wrap{width:100%;position:relative;background:linear-gradient(135deg,#f9fafb,#f3f4f6);display:grid;place-items:center;overflow:hidden;transition:background .2s}
+.pp-image-wrap::before{content:'';display:block;padding-top:60%}
+[data-theme=dark] .pp-image-wrap{background:linear-gradient(135deg,#111,#181818)}
+.pp-image{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;display:block;transition:transform .4s cubic-bezier(.4,0,.2,1)}
+.pp-card:hover .pp-image{transform:scale(1.06)}
+.pp-image-empty{color:#94a3b8;position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px}
+[data-theme=dark] .pp-image-empty{color:#8a8a8a}
+.pp-image-empty svg{width:40px;height:40px;stroke:currentColor;fill:none;opacity:.5}
+.pp-image-empty-text{font-size:11px;letter-spacing:.04em;text-transform:uppercase;opacity:.6}
+
+/* Body */
+.pp-content{padding:16px;display:flex;flex-direction:column;gap:12px;flex:1}
+.pp-name{font-weight:700;font-size:15px;color:var(--color-primary);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.35}
+[data-theme=dark] .pp-name{color:#f5f5f5}
+.pp-desc{color:var(--color-text-light);font-size:13px;line-height:1.55;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+[data-theme=dark] .pp-desc{color:#d4d4d8}
+
+/* Seller row */
+.pp-creator{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:auto;padding:11px 12px;background:linear-gradient(135deg,#f8fafc,#f1f5f9);border-radius:12px;border:1px solid var(--color-border)}
+[data-theme=dark] .pp-creator{background:linear-gradient(140deg,#101010,#0b0b0b);border-color:#383838e6}
+.pp-creator-left{display:flex;align-items:center;gap:10px;min-width:0}
+.pp-avatar{width:36px;height:36px;border-radius:999px;overflow:hidden;border:2px solid var(--color-background);outline:1px solid var(--color-border);background:var(--color-surface);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;flex-shrink:0;transition:all .2s}
+.pp-card:hover .pp-avatar{transform:scale(1.08)}
+[data-theme=dark] .pp-avatar{border-color:#1a1a1a;outline-color:#303030}
+.pp-creator-name{font-weight:600;font-size:13px;color:var(--color-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+[data-theme=dark] .pp-creator-name{color:#f5f5f5}
+.pp-creator-reviews{color:var(--color-text-lighter);font-size:11px}
+[data-theme=dark] .pp-creator-reviews{color:#a3a3a3}
+
+/* Stars */
+.pp-stars{display:inline-flex;gap:2px;align-items:center;padding:3px 7px;background:rgba(251,191,36,.1);border-radius:8px}
+.pp-star{width:13px;height:13px;fill:currentColor}
+.pp-star.filled{color:#fbbf24;filter:drop-shadow(0 1px 2px rgba(251,191,36,.3))}
+.pp-star.empty{color:#e2e8f0}
+[data-theme=dark] .pp-star.empty{color:#4b5563}
+.pp-star-value{margin-left:5px;font-size:12px;font-weight:700;color:#334155}
+[data-theme=dark] .pp-star-value{color:#f3f4f6}
+
+/* Price row */
+.pp-price-row{display:flex;align-items:center;gap:10px;justify-content:space-between;padding:13px 14px;background:linear-gradient(135deg,rgba(34,197,94,.08),rgba(16,185,129,.05),rgba(59,130,246,.04));border-radius:13px;position:relative;overflow:hidden;border:1.5px solid transparent}
+.pp-price-row::before{content:'';position:absolute;inset:0;padding:1.5px;background:linear-gradient(135deg,rgba(34,197,94,.3),rgba(59,130,246,.2));-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);mask-composite:exclude;-webkit-mask-composite:xor;border-radius:13px;pointer-events:none}
+[data-theme=dark] .pp-price-row{background:linear-gradient(135deg,rgba(32,32,32,.9),rgba(18,18,18,.85))}
+[data-theme=dark] .pp-price-row::before{background:linear-gradient(135deg,rgba(96,165,250,.24),rgba(167,139,250,.28))}
+.pp-price-usd{font-weight:900;font-size:18px;background:linear-gradient(135deg,#16a34a,#22c55e,#10b981);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+[data-theme=dark] .pp-price-usd{background:linear-gradient(135deg,#86efac,#4ade80,#34d399);-webkit-background-clip:text;background-clip:text}
+.pp-price-sol{color:var(--color-text-light);font-weight:700;font-size:12px;background:var(--color-background);border:1.5px solid var(--color-border);border-radius:8px;padding:4px 9px;box-shadow:0 2px 4px rgba(0,0,0,.05)}
+[data-theme=dark] .pp-price-sol{color:#e5e7eb;background:#111;border-color:#383838e6}
+
+/* View button (WURK glassmorphism style) */
+.pp-actions{display:flex;justify-content:center;margin-top:4px}
+.pp-view{display:inline-flex;gap:8px;align-items:center;padding:11px 20px;border:none;background:linear-gradient(135deg,rgba(255,255,255,.66),rgba(251,252,253,.6),rgba(248,250,252,.55));backdrop-filter:blur(16px) saturate(1.5);color:var(--color-text-light);border-radius:9999px;cursor:pointer;font-weight:600;font-size:13px;transition:all .3s cubic-bezier(.34,1.56,.64,1);position:relative;overflow:hidden;width:100%;justify-content:center;box-shadow:0 2px 4px rgba(0,0,0,.05),0 4px 8px rgba(0,0,0,.04),0 0 30px -8px rgba(59,130,246,.12),inset 0 1px 1px rgba(255,255,255,.75)}
+.pp-view svg{width:14px;height:14px;stroke:currentColor;fill:none;transition:stroke .2s}
+.pp-view::before{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.4),transparent);transition:left .5s ease}
+.pp-view:hover::before{left:100%}
+.pp-view:hover{transform:translateY(-2px);color:var(--color-text);box-shadow:0 4px 8px rgba(0,0,0,.06),0 8px 16px rgba(0,0,0,.05),inset 0 1px 1px rgba(255,255,255,.9)}
+[data-theme=dark] .pp-view{background:linear-gradient(135deg,rgba(24,24,24,.92),rgba(14,14,14,.9));color:#d4d4d8;box-shadow:0 3px 6px rgba(0,0,0,.4),inset 0 1px 1px rgba(255,255,255,.12)}
+[data-theme=dark] .pp-view:hover{background:linear-gradient(135deg,rgba(34,34,34,.95),rgba(20,20,20,.93));color:#f5f5f5}
+
+/* ── EMPTY STATE ── */
+.pp-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;text-align:center;background:linear-gradient(135deg,var(--color-surface),#f1f5f9);border-radius:20px;border:1px solid var(--color-border);grid-column:1/-1}
+.pp-empty svg{width:48px;height:48px;stroke:var(--color-text-lighter);fill:none;margin-bottom:14px;opacity:.7}
+.pp-empty-title{font-size:16px;font-weight:700;color:var(--color-text-light);margin-bottom:5px}
+.pp-empty-subtitle{font-size:13px;color:var(--color-text-lighter)}
+
+/* ── SKELETON ── */
+.pp-skeleton{background:linear-gradient(90deg,var(--color-border) 25%,var(--color-border-light) 50%,var(--color-border) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:var(--radius-md)}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.pp-skeleton-card{background:var(--color-background);border:1px solid var(--color-border);border-radius:20px;overflow:hidden;min-height:380px}
+.pp-skeleton-thumb{height:175px;background:var(--color-surface)}
+.pp-skeleton-body{padding:16px;display:flex;flex-direction:column;gap:10px}
+
+/* ── SPOTLIGHT SELLERS ── */
+.spotlight-section{max-width:960px;margin:24px auto 0;padding:0 24px}
+.section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.section-title{font-size:14px;font-weight:700;color:var(--color-primary);display:flex;align-items:center;gap:6px}
+.section-title svg{width:14px;height:14px;stroke:var(--op-blue);fill:none}
 .section-link{font-size:12px;color:var(--op-blue);font-weight:600;cursor:pointer}
 .sellers-row{display:flex;gap:10px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
 .sellers-row::-webkit-scrollbar{display:none}
-.seller-card{flex-shrink:0;width:160px;background:var(--color-background);border:1px solid var(--color-border);border-radius:var(--radius-xl);padding:14px;text-align:center;cursor:pointer;transition:all .2s}
+.seller-card{flex-shrink:0;width:150px;background:var(--color-background);border:1px solid var(--color-border);border-radius:var(--radius-xl);padding:14px;text-align:center;cursor:pointer;transition:all .2s}
 .seller-card:hover{border-color:var(--op-blue);transform:translateY(-2px)}
-.seller-card-avatar{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#fff;margin:0 auto 8px}
+[data-theme=dark] .seller-card{background:#0b0b0b;border-color:#383838e6}
+.seller-card-avatar{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#fff;margin:0 auto 8px}
 .seller-card-name{font-size:12px;font-weight:700;color:var(--color-primary);margin-bottom:2px}
-.seller-card-sub{font-size:10px;color:var(--color-text-lighter);margin-bottom:6px}
+[data-theme=dark] .seller-card-name{color:#f5f5f5}
+.seller-card-sub{font-size:10px;color:var(--color-text-lighter);margin-bottom:5px}
 .seller-card-stat{font-size:11px;font-weight:600;color:var(--op-blue)}
 
-/* ── EMPTY ── */
-.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;text-align:center;background:var(--color-surface);border-radius:var(--radius-xl);border:1.5px dashed var(--color-border)}
-.empty-state svg{width:40px;height:40px;stroke:var(--color-text-lighter);fill:none;margin-bottom:14px}
-.empty-title{font-size:15px;font-weight:700;color:var(--color-text-light);margin-bottom:6px}
-.empty-sub{font-size:13px;color:var(--color-text-lighter);margin-bottom:20px}
-
-/* ── PRODUCT MODAL ── */
+/* ── MODAL ── */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1000;display:flex;align-items:center;justify-content:center;padding:16px;opacity:0;pointer-events:none;transition:opacity .2s;backdrop-filter:blur(4px)}
 .modal-overlay.active{opacity:1;pointer-events:all}
-.modal{background:var(--color-background);border:1px solid var(--color-border);border-radius:var(--radius-xl);width:100%;max-width:520px;max-height:90vh;overflow-y:auto;transform:translateY(16px) scale(.97);transition:all .25s}
+.modal{background:var(--color-background);border:1px solid var(--color-border);border-radius:var(--radius-xl);width:100%;max-width:500px;max-height:90vh;overflow-y:auto;transform:translateY(16px) scale(.97);transition:all .25s}
+[data-theme=dark] .modal{background:#0b0b0b;border-color:#383838e6}
 .modal-overlay.active .modal{transform:translateY(0) scale(1)}
-.modal-thumb{width:100%;height:180px;display:flex;align-items:center;justify-content:center;position:relative}
-.modal-thumb svg.thumb-icon{width:48px;height:48px;stroke:#fff;fill:none}
+.modal-thumb{width:100%;height:170px;display:flex;align-items:center;justify-content:center;position:relative}
+.modal-thumb svg.thumb-icon{width:44px;height:44px;stroke:#fff;fill:none}
 .modal-body{padding:20px}
-.modal-title{font-size:18px;font-weight:800;color:var(--color-primary);margin-bottom:6px;letter-spacing:-.02em}
-.modal-desc{font-size:14px;color:var(--color-text-light);line-height:1.7;margin-bottom:16px}
-.modal-meta{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.modal-title{font-size:17px;font-weight:800;color:var(--color-primary);margin-bottom:8px;letter-spacing:-.02em}
+[data-theme=dark] .modal-title{color:#f5f5f5}
+.modal-desc{font-size:13.5px;color:var(--color-text-light);line-height:1.7;margin-bottom:14px}
+.modal-meta{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px}
 .meta-pill{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:var(--radius-full);background:var(--color-surface);border:1px solid var(--color-border);font-size:11px;font-weight:600;color:var(--color-text-light)}
-.modal-seller{display:flex;align-items:center;gap:10px;padding:12px;background:var(--color-surface);border-radius:var(--radius-lg);border:1px solid var(--color-border);margin-bottom:16px}
-.modal-price-row{display:flex;align-items:center;justify-content:space-between;padding-top:16px;border-top:1px solid var(--color-border)}
+.modal-seller{display:flex;align-items:center;gap:10px;padding:12px;background:var(--color-surface);border-radius:var(--radius-lg);border:1px solid var(--color-border);margin-bottom:14px}
+[data-theme=dark] .modal-seller{background:#111;border-color:#383838}
+.modal-price-row{display:flex;align-items:center;justify-content:space-between;padding-top:14px;border-top:1px solid var(--color-border)}
+[data-theme=dark] .modal-price-row{border-top-color:#262626}
 .modal-price{font-family:var(--font-mono);font-size:22px;font-weight:800;color:var(--op-green)}
 .modal-buy-btn{padding:10px 24px;border-radius:var(--radius-full);background:linear-gradient(135deg,var(--op-blue),var(--op-blue-dark));color:#fff;font-size:14px;font-weight:700;border:none;cursor:pointer;transition:all .2s}
 .modal-buy-btn:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(3,60,227,.4)}
-.modal-close{position:absolute;top:12px;right:12px;width:32px;height:32px;border-radius:50%;background:rgba(0,0,0,.4);border:none;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;z-index:10}
-
-/* ── SKELETON ── */
-.skeleton{background:linear-gradient(90deg,var(--color-border) 25%,var(--color-border-light) 50%,var(--color-border) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:var(--radius-md)}
-@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
-.skeleton-card{background:var(--color-background);border:1px solid var(--color-border);border-radius:var(--radius-xl);overflow:hidden}
-.skeleton-thumb{height:140px;background:var(--color-surface)}
-.skeleton-body{padding:15px;display:flex;flex-direction:column;gap:8px}
+.modal-close{position:absolute;top:12px;right:12px;width:30px;height:30px;border-radius:50%;background:rgba(0,0,0,.4);border:none;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px;z-index:10}
 
 /* ── TOAST ── */
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--color-primary);color:var(--color-background);padding:10px 22px;border-radius:var(--radius-full);font-size:13px;font-weight:600;z-index:9999;transition:transform .25s;white-space:nowrap;box-shadow:var(--shadow-lg)}
 .toast.show{transform:translateX(-50%) translateY(0)}
 
 /* ── FOOTER ── */
-.footer{background:var(--color-surface);border-top:1px solid var(--color-border);padding:32px 16px;text-align:center;margin-top:auto;transition:background .2s,border-color .2s}
+.footer{background:var(--color-surface);border-top:1px solid var(--color-border);padding:32px 16px;text-align:center;margin-top:32px}
 .footer-brand{display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:6px}
 .footer-mark{width:24px;height:24px;background:linear-gradient(135deg,var(--op-blue),var(--op-blue-dark));border-radius:6px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:800}
 .footer-name{font-weight:700;font-size:14px;color:var(--color-primary)}
@@ -190,14 +232,14 @@ button{font-family:var(--font-sans);cursor:pointer}
 .footer-links a:hover{color:var(--op-blue)}
 
 @media(max-width:640px){
-  .hero{padding:32px 16px 28px}
-  .hero-stats{gap:16px}
-  .products-grid{grid-template-columns:1fr 1fr}
-  .products-grid.list-view{grid-template-columns:1fr}
-  .hide-mobile{display:none}
+  .pp-container,.pp-main,.spotlight-section{padding-left:14px;padding-right:14px}
+  .pp-grid{grid-template-columns:1fr 1fr}
+  .pp-top-actions{gap:6px}
+  .pp-action-btn{padding:9px 14px;font-size:12.5px}
+  .pp-filters-grid{grid-template-columns:1fr}
 }
 @media(max-width:420px){
-  .products-grid{grid-template-columns:1fr}
+  .pp-grid{grid-template-columns:1fr}
 }
 </style>
 </head>
@@ -211,116 +253,120 @@ button{font-family:var(--font-sans);cursor:pointer}
   </a>
   <div class="nav-links">
     <a class="nav-link" href="index.html#tasks">
-      <svg viewBox="0 0 24 24" stroke-width="2" fill="none"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
+      <svg viewBox="0 0 24 24" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
       Tasks
     </a>
     <a class="nav-link active" href="store.html">
-      <svg viewBox="0 0 24 24" stroke-width="2" fill="none"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <svg viewBox="0 0 24 24" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
       Store
     </a>
     <a class="nav-link" href="index.html#communities">
-      <svg viewBox="0 0 24 24" stroke-width="2" fill="none"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg>
+      <svg viewBox="0 0 24 24" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
       Communities
     </a>
-    <a class="nav-link hide-mobile" href="index.html#payments">
-      <svg viewBox="0 0 24 24" stroke-width="2" fill="none"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+    <a class="nav-link" href="index.html#payments">
+      <svg viewBox="0 0 24 24" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
       Earn
     </a>
   </div>
   <div class="nav-right">
-    <button class="theme-btn" id="theme-btn" onclick="toggleTheme()" aria-label="Toggle theme">
-      <svg id="theme-icon" viewBox="0 0 24 24" stroke-width="2" fill="none"></svg>
+    <button class="theme-btn" onclick="toggleTheme()">
+      <svg id="theme-icon" viewBox="0 0 24 24" stroke-width="2"></svg>
     </button>
-    <button class="nav-auth-btn" id="nav-login-btn" onclick="goLogin()">Log in</button>
-    <button class="nav-auth-btn primary" id="nav-dash-btn" style="display:none" onclick="window.location.href='index.html'">Dashboard</button>
+    <button class="nav-auth-btn" onclick="goLogin()">Log in</button>
+    <button class="nav-auth-btn primary" style="display:none" id="nav-dash-btn" onclick="window.location.href='index.html'">Dashboard</button>
   </div>
 </nav>
 
-<!-- HERO -->
-<div class="hero">
-  <div class="hero-inner">
-    <div class="hero-eyebrow">
-      <svg viewBox="0 0 24 24" stroke-width="2" fill="none"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
-      OgaPay Marketplace
-    </div>
-    <h1 class="hero-title">Browse Creator Services<br>&amp; Digital Products</h1>
-    <p class="hero-sub">Discover services from verified OgaPay workers — design, writing, translation, social media management, and more. Pay in Naira or USDC.</p>
-    <div class="hero-stats">
-      <div class="hero-stat">
-        <div class="hero-stat-dot"></div>
-        <div><span class="hero-stat-num" id="stat-items">—</span> <span>listings</span></div>
+<!-- PP HEADER (matches WURK /products exactly) -->
+<div class="pp-container">
+  <div class="pp-header">
+    <h1 class="pp-title">Discover Products</h1>
+    <p class="pp-subtitle">Browse amazing products and services from OgaPay workers</p>
+  </div>
+
+  <!-- 3 ACTION BUTTONS (Create a job / Browse creators / Open your store) -->
+  <div class="pp-top-actions">
+    <button class="pp-action-btn pp-action-btn-dark" onclick="window.location.href='post-task.html'">
+      <svg viewBox="0 0 24 24" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+      Create a job
+    </button>
+    <button class="pp-action-btn pp-action-btn-dark" onclick="document.getElementById('sellers-row').scrollIntoView({behavior:'smooth'})">
+      <svg viewBox="0 0 24 24" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      Browse creators
+    </button>
+    <button class="pp-action-btn pp-action-btn-dark" onclick="showToast('Store opening coming soon!')">
+      <svg viewBox="0 0 24 24" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Open your store
+    </button>
+  </div>
+
+  <!-- FILTER PANEL (CATEGORY + SORT BY) -->
+  <div class="pp-filters">
+    <div class="pp-filters-grid">
+      <div>
+        <div class="pp-filter-label">
+          <svg viewBox="0 0 24 24" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+          Category
+        </div>
+        <select class="pp-select" id="cat-select" onchange="onFilterChange()">
+          <option value="all">All</option>
+          <option value="SOCIAL_MEDIA">Social Media</option>
+          <option value="DESIGN">Design</option>
+          <option value="CONTENT_WRITING">Writing</option>
+          <option value="TRANSLATION">Translation</option>
+          <option value="DATA_ENTRY">Data Entry</option>
+          <option value="APP_TESTING">App Testing</option>
+          <option value="OTHER">Other</option>
+        </select>
       </div>
-      <div class="hero-stat">
-        <div class="hero-stat-dot" style="background:var(--op-green)"></div>
-        <div>Pay in <strong>₦ Naira</strong> or <strong>USDC</strong></div>
-      </div>
-      <div class="hero-stat">
-        <div class="hero-stat-dot" style="background:var(--op-gold)"></div>
-        <div>Verified sellers only</div>
+      <div>
+        <div class="pp-filter-label">
+          <svg viewBox="0 0 24 24" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+          Sort By
+        </div>
+        <select class="pp-select" id="sort-select" onchange="onSortChange()">
+          <option value="newest">Newest</option>
+          <option value="price_low">Price: Low to High</option>
+          <option value="price_high">Price: High to Low</option>
+          <option value="quality">Quality (High to Low)</option>
+        </select>
       </div>
     </div>
   </div>
 </div>
 
-<!-- CONTROLS -->
-<div class="controls-bar">
-  <div class="search-wrap">
-    <svg viewBox="0 0 24 24" stroke-width="2" fill="none"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-    <input class="search-input" id="search-input" type="text" placeholder="Search services, sellers..." oninput="filterProducts()"/>
+<!-- FEATURED SELLERS -->
+<div class="spotlight-section">
+  <div class="section-head">
+    <div class="section-title">
+      <svg viewBox="0 0 24 24" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      Featured Sellers
+    </div>
+    <span class="section-link">View all →</span>
   </div>
-  <div class="filter-pills" id="filter-pills">
-    <button class="filter-pill active" onclick="setFilter('all',this)">All</button>
-    <button class="filter-pill" onclick="setFilter('SOCIAL_MEDIA',this)">Social Media</button>
-    <button class="filter-pill" onclick="setFilter('DESIGN',this)">Design</button>
-    <button class="filter-pill" onclick="setFilter('CONTENT_WRITING',this)">Writing</button>
-    <button class="filter-pill" onclick="setFilter('TRANSLATION',this)">Translation</button>
-    <button class="filter-pill" onclick="setFilter('DATA_ENTRY',this)">Data Entry</button>
-    <button class="filter-pill" onclick="setFilter('OTHER',this)">Other</button>
-  </div>
-  <select class="sort-select" onchange="sortProducts(this.value)">
-    <option value="newest">Newest</option>
-    <option value="price_low">Price: Low to High</option>
-    <option value="price_high">Price: High to Low</option>
-  </select>
+  <div class="sellers-row" id="sellers-row"></div>
 </div>
 
-<!-- MAIN -->
-<div class="main-wrap">
+<!-- MAIN GRID -->
+<div class="pp-main">
 
-  <!-- Spotlight sellers -->
-  <div class="spotlight-section" id="spotlight-section">
-    <div class="section-head">
-      <div class="section-title">
-        <svg viewBox="0 0 24 24" stroke-width="2" fill="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-        Featured Sellers
-      </div>
-      <span class="section-link">View all →</span>
-    </div>
-    <div class="sellers-row" id="sellers-row"></div>
+  <!-- RESULTS INFO (matches "Showing 12 of 158 products") -->
+  <div class="pp-results-info" id="results-info">
+    <svg viewBox="0 0 24 24" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
+    <span>Loading products...</span>
   </div>
 
-  <!-- Results bar -->
-  <div class="results-bar">
-    <div class="results-count" id="results-count">Loading...</div>
-    <div class="view-toggle">
-      <button class="view-btn active" id="grid-btn" onclick="setView('grid')" title="Grid view">
-        <svg viewBox="0 0 24 24" stroke-width="2" fill="none"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-      </button>
-      <button class="view-btn" id="list-btn" onclick="setView('list')" title="List view">
-        <svg viewBox="0 0 24 24" stroke-width="2" fill="none"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-      </button>
-    </div>
-  </div>
+  <!-- PRODUCT GRID -->
+  <div class="pp-grid" id="products-grid"></div>
 
-  <!-- Products grid (skeletons injected by JS) -->
-  <div class="products-grid" id="products-grid"></div>
 </div>
 
-<!-- PRODUCT MODAL -->
+<!-- MODAL -->
 <div class="modal-overlay" id="modal" onclick="closeModal(event)">
   <div class="modal" id="modal-inner">
     <div class="modal-thumb" id="modal-thumb">
-      <svg class="thumb-icon" viewBox="0 0 24 24" stroke-width="1.5" id="modal-thumb-icon" fill="none"></svg>
+      <svg class="thumb-icon" id="modal-thumb-icon" viewBox="0 0 24 24" stroke-width="1.5" fill="none"></svg>
       <button class="modal-close" onclick="closeModal()">✕</button>
     </div>
     <div class="modal-body">
@@ -360,13 +406,10 @@ button{font-family:var(--font-sans);cursor:pointer}
 const API = 'https://ogapay-production.up.railway.app/api/v1';
 let token = localStorage.getItem('ogapay_token');
 let user = JSON.parse(localStorage.getItem('ogapay_user') || 'null');
-let allItems = [];
-let filtered = [];
-let activeFilter = 'all';
-let activeSort = 'newest';
-let activeView = 'grid';
+let allItems = [], filtered = [];
+let activeFilter = 'all', activeSort = 'newest';
 
-// ── THEME ── (shared key 'ogapay-theme' with index.html)
+/* ── THEME ── */
 function updateThemeIcon() {
   const dark = document.documentElement.getAttribute('data-theme') === 'dark';
   document.getElementById('theme-icon').innerHTML = dark
@@ -382,55 +425,55 @@ function toggleTheme() {
 }
 updateThemeIcon();
 
-// ── AUTH ──
-function initAuth() {
-  if (user && token) {
-    document.getElementById('nav-login-btn').style.display = 'none';
-    document.getElementById('nav-dash-btn').style.display = 'inline-flex';
-  }
-}
+/* ── AUTH ── */
 function goLogin() { window.location.href = 'index.html'; }
+if (user && token) {
+  document.getElementById('nav-dash-btn').style.display = 'inline-flex';
+}
 
-// ── TOAST ──
+/* ── TOAST ── */
 function showToast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg; t.classList.add('show');
   clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('show'), 2500);
 }
 
-// ── FORMAT ──
+/* ── FORMAT ── */
 function fmtNGN(v) { return '₦' + Number(v||0).toLocaleString('en-NG',{minimumFractionDigits:2,maximumFractionDigits:2}); }
 function fmtUSD(v) { return '$' + Number(v||0).toFixed(2); }
 
-// ── CATEGORY CONFIG ──
-const CAT_CONFIG = {
-  SOCIAL_MEDIA:  { label:'Social Media',  color:'#033CE3', bg:'linear-gradient(135deg,#1e3a8a,#2563eb)', icon:'<path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/>' },
-  DATA_ENTRY:    { label:'Data Entry',    color:'#f59e0b', bg:'linear-gradient(135deg,#78350f,#d97706)', icon:'<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/>' },
-  CONTENT_WRITING:{ label:'Writing',      color:'#8b5cf6', bg:'linear-gradient(135deg,#3b0764,#7c3aed)', icon:'<path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>' },
-  APP_TESTING:   { label:'App Testing',  color:'#06b6d4', bg:'linear-gradient(135deg,#164e63,#0891b2)', icon:'<rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/>' },
-  SURVEY:        { label:'Survey',       color:'#10b981', bg:'linear-gradient(135deg,#064e3b,#059669)', icon:'<path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/>' },
-  DESIGN:        { label:'Design',       color:'#ec4899', bg:'linear-gradient(135deg,#831843,#db2777)', icon:'<circle cx="12" cy="12" r="10"/><circle cx="8" cy="10" r="1.5" fill="currentColor"/><circle cx="16" cy="10" r="1.5" fill="currentColor"/>' },
-  TRANSLATION:   { label:'Translation',  color:'#14b8a6', bg:'linear-gradient(135deg,#134e4a,#0d9488)', icon:'<path d="M5 8l6 6"/><path d="M4 14l6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="M22 22l-5-10-5 10"/><path d="M14 18h6"/>' },
-  WEB_RESEARCH:  { label:'Research',     color:'#f97316', bg:'linear-gradient(135deg,#7c2d12,#ea580c)', icon:'<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>' },
-  VIDEO_REVIEW:  { label:'Video',        color:'#ef4444', bg:'linear-gradient(135deg,#7f1d1d,#dc2626)', icon:'<polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/>' },
-  OTHER:         { label:'Other',        color:'#6b7280', bg:'linear-gradient(135deg,#1f2937,#4b5563)', icon:'<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>' },
+/* ── CATEGORY CONFIG ── */
+const CAT = {
+  SOCIAL_MEDIA:   { label:'Social Media',  color:'#033CE3', bg:'linear-gradient(135deg,#1e3a8a,#2563eb)', icon:'<path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/>' },
+  DATA_ENTRY:     { label:'Data Entry',    color:'#f59e0b', bg:'linear-gradient(135deg,#78350f,#d97706)', icon:'<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/>' },
+  CONTENT_WRITING:{ label:'Writing',       color:'#8b5cf6', bg:'linear-gradient(135deg,#3b0764,#7c3aed)', icon:'<path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>' },
+  APP_TESTING:    { label:'App Testing',   color:'#06b6d4', bg:'linear-gradient(135deg,#164e63,#0891b2)', icon:'<rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/>' },
+  SURVEY:         { label:'Survey',        color:'#10b981', bg:'linear-gradient(135deg,#064e3b,#059669)', icon:'<path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/>' },
+  DESIGN:         { label:'Design',        color:'#ec4899', bg:'linear-gradient(135deg,#831843,#db2777)', icon:'<circle cx="12" cy="12" r="10"/><circle cx="8" cy="10" r="1.5" fill="white"/><circle cx="16" cy="10" r="1.5" fill="white"/>' },
+  TRANSLATION:    { label:'Translation',   color:'#14b8a6', bg:'linear-gradient(135deg,#134e4a,#0d9488)', icon:'<path d="M5 8l6 6"/><path d="M4 14l6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="M22 22l-5-10-5 10"/><path d="M14 18h6"/>' },
+  OTHER:          { label:'Other',         color:'#6b7280', bg:'linear-gradient(135deg,#1f2937,#4b5563)', icon:'<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>' },
 };
-function getCat(cat) { return CAT_CONFIG[cat] || CAT_CONFIG.OTHER; }
+function getCat(c) { return CAT[c] || CAT.OTHER; }
+function stars(n) {
+  return Array.from({length:5},(_,i)=>
+    `<svg class="pp-star ${i < Math.round(n) ? 'filled' : 'empty'}" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`
+  ).join('');
+}
 
-// ── SKELETONS ──
+/* ── SKELETONS ── */
 function showSkeletons() {
   document.getElementById('products-grid').innerHTML = Array(6).fill(`
-    <div class="skeleton-card">
-      <div class="skeleton-thumb"></div>
-      <div class="skeleton-body">
-        <div class="skeleton" style="height:14px;width:70%"></div>
-        <div class="skeleton" style="height:12px;width:100%"></div>
-        <div class="skeleton" style="height:12px;width:85%"></div>
+    <div class="pp-skeleton-card">
+      <div class="pp-skeleton-thumb"></div>
+      <div class="pp-skeleton-body">
+        <div class="pp-skeleton" style="height:14px;width:70%"></div>
+        <div class="pp-skeleton" style="height:12px;width:100%"></div>
+        <div class="pp-skeleton" style="height:12px;width:85%"></div>
       </div>
     </div>`).join('');
 }
 
-// ── LOAD STORE ITEMS ──
+/* ── LOAD ── */
 async function loadItems() {
   showSkeletons();
   try {
@@ -438,90 +481,77 @@ async function loadItems() {
       headers: token ? { 'Authorization': 'Bearer ' + token } : {}
     });
     const data = await res.json();
-    if (!data.success) throw new Error('API returned failure');
+    if (!data.success) throw new Error('API error');
     allItems = data.data || [];
-    document.getElementById('stat-items').textContent = allItems.length;
-    buildSpotlight();
-    applyFilters();
-  } catch(e) {
+  } catch {
     allItems = getDemoItems();
-    document.getElementById('stat-items').textContent = allItems.length;
-    buildSpotlight();
-    applyFilters();
   }
+  buildSpotlight();
+  applyFilters();
 }
 
 function getDemoItems() {
   return [
-    { id:'1', name:'Social Media Management Package', description:'Complete social media management for your brand across X, Instagram, and TikTok for one week. Includes daily posts, engagement, and report.', category:'SOCIAL_MEDIA', price:15000, currency:'NGN', metadata:{ seller:'amaka_builds', sellerRole:'Top Rated' }, isActive:true },
-    { id:'2', name:'Logo Design Service', description:'Professional logo design with 3 concepts, unlimited revisions, and source files delivered in 48 hours.', category:'DESIGN', price:8000, currency:'NGN', metadata:{ seller:'chidi_creates', sellerRole:'Pro Seller' }, isActive:true },
-    { id:'3', name:'English to Yoruba Translation', description:'Native Yoruba speaker. Accurate and culturally appropriate translation, up to 1000 words per order.', category:'TRANSLATION', price:5000, currency:'NGN', metadata:{ seller:'tunde_ola', sellerRole:'Verified' }, isActive:true },
-    { id:'4', name:'X Raid Service — 100 Accounts', description:'Coordinated X raid with 100 active accounts. Likes, reposts, and comments on your target post. Results within 2 hours.', category:'SOCIAL_MEDIA', price:12000, currency:'NGN', metadata:{ seller:'raidking_ng', sellerRole:'Pro Seller' }, isActive:true },
-    { id:'5', name:'Blog Article Writing', description:'SEO-optimized 1000-word blog article on any topic. Well-researched, engaging, and plagiarism-free. Delivery in 24 hours.', category:'CONTENT_WRITING', price:6000, currency:'NGN', metadata:{ seller:'writer_amara', sellerRole:'Top Rated' }, isActive:true },
-    { id:'6', name:'Mobile App Testing & Bug Report', description:'Manual testing of your mobile app (iOS or Android). Detailed bug report with screenshots and reproduction steps.', category:'APP_TESTING', price:10000, currency:'NGN', metadata:{ seller:'techtest_ng', sellerRole:'Verified' }, isActive:true },
+    { id:'1', name:'Social Media Management Package', description:'Complete social media management for your brand across X, Instagram, and TikTok for one week. Includes daily posts, engagement, and report.', category:'SOCIAL_MEDIA', price:15000, currency:'NGN', rating:4.8, reviews:42, metadata:{ seller:'amaka_builds', sellerRole:'Top Rated' }, isActive:true },
+    { id:'2', name:'Logo Design Service', description:'Professional logo design with 3 concepts, unlimited revisions, and source files in 48 hours.', category:'DESIGN', price:8000, currency:'NGN', rating:5.0, reviews:18, metadata:{ seller:'chidi_creates', sellerRole:'Pro Seller' }, isActive:true },
+    { id:'3', name:'English to Yoruba Translation', description:'Native Yoruba speaker. Accurate and culturally appropriate translation, up to 1000 words per order.', category:'TRANSLATION', price:5000, currency:'NGN', rating:4.7, reviews:31, metadata:{ seller:'tunde_ola', sellerRole:'Verified' }, isActive:true },
+    { id:'4', name:'X Raid Service — 100 Accounts', description:'Coordinated X raid with 100 active accounts. Likes, reposts, and comments on your target post within 2 hours.', category:'SOCIAL_MEDIA', price:12000, currency:'NGN', rating:4.9, reviews:88, metadata:{ seller:'raidking_ng', sellerRole:'Pro Seller' }, isActive:true },
+    { id:'5', name:'Blog Article Writing', description:'SEO-optimized 1000-word blog article on any topic. Well-researched, engaging, and plagiarism-free. 24-hour delivery.', category:'CONTENT_WRITING', price:6000, currency:'NGN', rating:4.6, reviews:53, metadata:{ seller:'writer_amara', sellerRole:'Top Rated' }, isActive:true },
+    { id:'6', name:'Mobile App Testing & Bug Report', description:'Manual testing of your mobile app (iOS or Android). Detailed bug report with screenshots and reproduction steps.', category:'APP_TESTING', price:10000, currency:'NGN', rating:4.8, reviews:24, metadata:{ seller:'techtest_ng', sellerRole:'Verified' }, isActive:true },
+    { id:'7', name:'Viral Meme Design (x5)', description:'Custom Nigerian-themed memes for social media marketing. High engagement guaranteed.', category:'DESIGN', price:3500, currency:'NGN', rating:5.0, reviews:17, metadata:{ seller:'memecraft_ng', sellerRole:'Pro Seller' }, isActive:true },
+    { id:'8', name:'WhatsApp Group Promotion', description:'Promote your product or service to active Nigerian WhatsApp groups. Reach 10,000+ real users.', category:'SOCIAL_MEDIA', price:4000, currency:'NGN', rating:4.5, reviews:36, metadata:{ seller:'wa_promo_ng', sellerRole:'Verified' }, isActive:true },
+    { id:'9', name:'Data Entry & Spreadsheet Cleaning', description:'Fast and accurate data entry, Excel/Google Sheets cleanup. Up to 500 rows per order.', category:'DATA_ENTRY', price:3000, currency:'NGN', rating:4.7, reviews:61, metadata:{ seller:'data_queen_ng', sellerRole:'Top Rated' }, isActive:true },
   ];
 }
 
-// ── SPOTLIGHT SELLERS ──
+/* ── SPOTLIGHT ── */
 function buildSpotlight() {
   const sellers = {};
   allItems.forEach(item => {
-    const name = item.metadata?.seller || item.seller || 'seller';
-    if (!sellers[name]) sellers[name] = { name, count: 0, role: item.metadata?.sellerRole || 'Seller' };
-    sellers[name].count++;
+    const n = item.metadata?.seller || 'seller';
+    if (!sellers[n]) sellers[n] = { name:n, count:0, role:item.metadata?.sellerRole||'Seller' };
+    sellers[n].count++;
   });
-  const list = Object.values(sellers).slice(0, 6);
+  const list = Object.values(sellers).slice(0,6);
   const colors = ['#033CE3','#10b981','#f59e0b','#ec4899','#8b5cf6','#06b6d4'];
-  document.getElementById('sellers-row').innerHTML = list.length
-    ? list.map((s, i) => `
-        <div class="seller-card" onclick="filterBySeller('${s.name}')">
-          <div class="seller-card-avatar" style="background:${colors[i % colors.length]}">${s.name.substring(0,2).toUpperCase()}</div>
-          <div class="seller-card-name">@${s.name}</div>
-          <div class="seller-card-sub">${s.role}</div>
-          <div class="seller-card-stat">${s.count} listing${s.count !== 1 ? 's' : ''}</div>
-        </div>`).join('')
-    : '<div style="color:var(--color-text-lighter);font-size:13px;padding:20px">No sellers yet</div>';
+  document.getElementById('sellers-row').innerHTML = list.map((s,i) => `
+    <div class="seller-card" onclick="filterBySeller('${s.name}')">
+      <div class="seller-card-avatar" style="background:${colors[i%colors.length]}">${s.name.substring(0,2).toUpperCase()}</div>
+      <div class="seller-card-name">@${s.name}</div>
+      <div class="seller-card-sub">${s.role}</div>
+      <div class="seller-card-stat">${s.count} listing${s.count!==1?'s':''}</div>
+    </div>`).join('');
 }
 
-// ── FILTERS ──
-function setFilter(cat, el) {
-  activeFilter = cat;
-  document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
-  el.classList.add('active');
-  applyFilters();
-}
-function filterBySeller(name) {
-  document.getElementById('search-input').value = name;
-  filterProducts();
-}
-function filterProducts() { applyFilters(); }
-function sortProducts(val) { activeSort = val; applyFilters(); }
-function setView(v) {
-  activeView = v;
-  document.getElementById('products-grid').classList.toggle('list-view', v === 'list');
-  document.getElementById('grid-btn').classList.toggle('active', v === 'grid');
-  document.getElementById('list-btn').classList.toggle('active', v === 'list');
-}
-function applyFilters() {
-  const q = document.getElementById('search-input').value.toLowerCase();
+/* ── FILTERS ── */
+function onFilterChange() { activeFilter = document.getElementById('cat-select').value; applyFilters(); }
+function onSortChange() { activeSort = document.getElementById('sort-select').value; applyFilters(); }
+function filterBySeller(name) { document.getElementById('cat-select').value = 'all'; activeFilter='all'; applyFilters(name); }
+
+function applyFilters(sellerSearch) {
   filtered = allItems.filter(item => {
     if (!item.isActive) return false;
     if (activeFilter !== 'all' && item.category !== activeFilter) return false;
-    if (q && !item.name.toLowerCase().includes(q) && !item.description?.toLowerCase().includes(q) && !(item.metadata?.seller||'').toLowerCase().includes(q)) return false;
+    if (sellerSearch && (item.metadata?.seller||'').toLowerCase() !== sellerSearch.toLowerCase()) return false;
     return true;
   });
-  if (activeSort === 'price_low') filtered.sort((a,b) => Number(a.price) - Number(b.price));
-  else if (activeSort === 'price_high') filtered.sort((a,b) => Number(b.price) - Number(a.price));
-  else filtered.sort((a,b) => new Date(b.createdAt||0) - new Date(a.createdAt||0));
-  document.getElementById('results-count').innerHTML = `<strong>${filtered.length}</strong> listing${filtered.length !== 1 ? 's' : ''} found`;
+  if (activeSort === 'price_low') filtered.sort((a,b) => Number(a.price)-Number(b.price));
+  else if (activeSort === 'price_high') filtered.sort((a,b) => Number(b.price)-Number(a.price));
+  else if (activeSort === 'quality') filtered.sort((a,b) => (b.rating||0)-(a.rating||0));
+  else filtered.sort((a,b) => new Date(b.createdAt||0)-new Date(a.createdAt||0));
+
+  // "Showing X of Y products" — matches WURK exactly
+  document.getElementById('results-info').innerHTML = `
+    <svg viewBox="0 0 24 24" stroke-width="2" style="width:15px;height:15px;stroke:var(--op-blue);fill:none;flex-shrink:0"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
+    Showing <strong>${filtered.length}</strong> of <strong>${allItems.length}</strong> products`;
   renderProducts();
 }
 
-// ── RENDER ──
+/* ── RENDER ── */
 function renderProducts() {
   const grid = document.getElementById('products-grid');
   if (!filtered.length) {
-    grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><svg viewBox="0 0 24 24" stroke-width="1.5" fill="none"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><div class="empty-title">No listings found</div><div class="empty-sub">Try adjusting your search or filters</div></div>';
+    grid.innerHTML = '<div class="pp-empty"><svg viewBox="0 0 24 24" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><div class="pp-empty-title">No listings found</div><div class="pp-empty-subtitle">Try adjusting your filters</div></div>';
     return;
   }
   grid.innerHTML = filtered.map(item => productCard(item)).join('');
@@ -532,99 +562,94 @@ function productCard(item) {
   const seller = item.metadata?.seller || 'seller';
   const initials = seller.substring(0,2).toUpperCase();
   const price = item.currency === 'NGN' ? fmtNGN(item.price) : fmtUSD(item.price);
+  const altPrice = item.currency === 'NGN'
+    ? `≈ $${(Number(item.price)/1620).toFixed(2)} USD`
+    : `≈ ${fmtNGN(Number(item.price)*1620)}`;
+  const rating = item.rating || 4.5;
   return `
-  <div class="product-card" onclick="openModal('${item.id}')">
-    <div class="product-thumb" style="background:${cat.bg}">
-      <svg viewBox="0 0 24 24" stroke-width="1.5" width="36" height="36" stroke="white" fill="none">${cat.icon}</svg>
-      <span class="thumb-category">${cat.label}</span>
+  <div class="pp-card" onclick="openModal('${item.id}')">
+    <span class="pp-badge"><span class="pp-dot"></span>Active</span>
+    <div class="pp-image-wrap">
+      <div class="pp-image-empty" style="background:${cat.bg}">
+        <svg viewBox="0 0 24 24" stroke-width="1.5" width="40" height="40" stroke="#fff" fill="none">${cat.icon}</svg>
+        <span class="pp-image-empty-text" style="color:rgba(255,255,255,.7)">${cat.label}</span>
+      </div>
     </div>
-    <div class="product-body">
-      <div class="product-info">
-        <div class="product-title">${item.name}</div>
-        <div class="product-desc">${item.description || ''}</div>
-      </div>
-      <div class="product-seller">
-        <div class="seller-avatar" style="background:${cat.color}">${initials}</div>
-        <div>
-          <div class="seller-name">@${seller}</div>
-          <div class="seller-role">${item.metadata?.sellerRole || 'Seller'}</div>
+    <div class="pp-content">
+      <div class="pp-name">${item.name}</div>
+      <div class="pp-desc">${item.description||''}</div>
+      <div class="pp-creator">
+        <div class="pp-creator-left">
+          <div class="pp-avatar" style="background:${cat.color}">${initials}</div>
+          <div>
+            <div class="pp-creator-name">@${seller}</div>
+            <div class="pp-creator-reviews">${item.reviews||0} review${(item.reviews||0)!==1?'s':''}</div>
+          </div>
+        </div>
+        <div class="pp-stars">
+          ${stars(rating)}
+          <span class="pp-star-value">${rating.toFixed(1)}</span>
         </div>
       </div>
-      <div class="product-footer">
-        <div>
-          <div class="product-price">${price}</div>
-          ${item.currency === 'NGN' ? `<div class="product-price-ngn">≈ $${(Number(item.price)/1000).toFixed(2)} USD</div>` : ''}
-        </div>
-        <button class="product-buy-btn" onclick="event.stopPropagation();handleBuy('${item.id}')">Buy Now</button>
+      <div class="pp-price-row">
+        <div class="pp-price-usd">${price}</div>
+        <div class="pp-price-sol">${altPrice}</div>
+      </div>
+      <div class="pp-actions">
+        <button class="pp-view" onclick="event.stopPropagation();openModal('${item.id}')">
+          <svg viewBox="0 0 24 24" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          View details
+        </button>
       </div>
     </div>
   </div>`;
 }
 
-// ── MODAL ──
+/* ── MODAL ── */
 function openModal(id) {
   const item = allItems.find(i => i.id === id);
   if (!item) return;
   const cat = getCat(item.category);
   const seller = item.metadata?.seller || 'seller';
-  const initials = seller.substring(0,2).toUpperCase();
   const price = item.currency === 'NGN' ? fmtNGN(item.price) : fmtUSD(item.price);
   document.getElementById('modal-thumb').style.background = cat.bg;
   document.getElementById('modal-thumb-icon').innerHTML = cat.icon;
   document.getElementById('modal-title').textContent = item.name;
   document.getElementById('modal-desc').textContent = item.description || 'No description provided.';
-  document.getElementById('modal-meta').innerHTML = `
-    <span class="meta-pill">${cat.label}</span>
-    <span class="meta-pill">${item.currency}</span>
-    ${item.stock ? `<span class="meta-pill">${item.stock} in stock</span>` : ''}`;
+  document.getElementById('modal-meta').innerHTML = `<span class="meta-pill">${cat.label}</span><span class="meta-pill">${item.currency}</span>`;
   document.getElementById('modal-seller').innerHTML = `
-    <div class="seller-avatar" style="background:${cat.color};width:36px;height:36px;border-radius:8px;flex-shrink:0">${initials}</div>
+    <div class="pp-avatar" style="background:${cat.color};width:36px;height:36px;border-radius:8px;flex-shrink:0">${seller.substring(0,2).toUpperCase()}</div>
     <div>
       <div style="font-size:13px;font-weight:700;color:var(--color-text)">@${seller}</div>
-      <div style="font-size:11px;color:var(--color-text-lighter)">${item.metadata?.sellerRole || 'Seller'}</div>
+      <div style="font-size:11px;color:var(--color-text-lighter)">${item.metadata?.sellerRole||'Seller'}</div>
     </div>`;
   document.getElementById('modal-price').textContent = price;
   document.getElementById('modal-price-alt').textContent = item.currency === 'NGN'
-    ? `≈ $${(Number(item.price)/1000).toFixed(2)} USD`
-    : fmtNGN(Number(item.price) * 1500);
+    ? `≈ $${(Number(item.price)/1620).toFixed(2)} USD`
+    : fmtNGN(Number(item.price)*1620);
   document.getElementById('modal-buy-btn').onclick = () => handleBuy(id);
   document.getElementById('modal').classList.add('active');
 }
 function closeModal(e) {
-  if (!e || e.target === document.getElementById('modal')) {
+  if (!e || e.target === document.getElementById('modal'))
     document.getElementById('modal').classList.remove('active');
-  }
 }
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 
-// ── BUY ──
+/* ── BUY ── */
 async function handleBuy(id) {
-  if (!token) {
-    showToast('Please log in to purchase');
-    document.getElementById('modal').classList.remove('active');
-    setTimeout(() => window.location.href = 'index.html', 800);
-    return;
-  }
+  if (!token) { showToast('Please log in to purchase'); closeModal(); setTimeout(()=>window.location.href='index.html',800); return; }
   try {
     const res = await fetch(API + '/store/' + id + '/purchase', {
-      method: 'POST',
-      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ quantity: 1 })
+      method:'POST', headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
+      body:JSON.stringify({quantity:1})
     });
     const data = await res.json();
-    if (data.success) {
-      showToast('Purchase successful! 🎉');
-      document.getElementById('modal').classList.remove('active');
-    } else {
-      showToast(data.message || 'Purchase failed — check your balance');
-    }
-  } catch {
-    showToast('Network error — please try again');
-  }
+    showToast(data.success ? 'Purchase successful! 🎉' : (data.message || 'Purchase failed'));
+    if (data.success) closeModal();
+  } catch { showToast('Network error — please try again'); }
 }
 
-// ── INIT ──
-initAuth();
 loadItems();
 </script>
 </body>
