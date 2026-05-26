@@ -40,6 +40,8 @@ button{font-family:var(--font);cursor:pointer}
 .theme-btn svg{width:15px;height:15px;stroke:currentColor;fill:none}
 .logout-btn{padding:5px 12px;border-radius:var(--r-full);background:transparent;border:1px solid var(--border);font-size:12px;font-weight:600;color:var(--text-lighter);cursor:pointer;transition:all .15s}
 .logout-btn:hover{border-color:var(--op-red);color:var(--op-red)}
+.home-btn{padding:5px 12px;border-radius:var(--r-full);background:transparent;border:1px solid var(--border);font-size:12px;font-weight:600;color:var(--text-lighter);cursor:pointer;transition:all .15s;text-decoration:none;display:inline-flex;align-items:center;gap:4px}
+.home-btn:hover{border-color:var(--op-blue);color:var(--op-blue)}
 
 /* TABS */
 .tab-bar{background:var(--bg);border-bottom:1px solid var(--border);display:grid;grid-template-columns:repeat(5,1fr);position:sticky;top:56px;z-index:99}
@@ -58,7 +60,7 @@ button{font-family:var(--font);cursor:pointer}
 [data-theme=dark] .card{background:#0b0b0b;border-color:#262626}
 
 /* BUTTONS */
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 18px;border-radius:var(--r-full);font-family:var(--font);font-size:13px;font-weight:600;transition:all .2s;cursor:pointer;border:1.5px solid transparent}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 18px;border-radius:var(--r-full);font-family:var(--font);font-size:13px;font-weight:600;transition:all .2s;cursor:pointer;border:1.5px solid transparent;text-decoration:none}
 .btn svg{width:14px;height:14px;stroke:currentColor;fill:none}
 .btn-primary{background:linear-gradient(135deg,var(--op-blue),var(--op-blue-dark));color:#fff;border:none}
 .btn-primary:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(59,130,246,.4)}
@@ -162,6 +164,13 @@ button{font-family:var(--font);cursor:pointer}
 .empty-title{font-size:14px;font-weight:600;color:var(--text-light);margin-bottom:4px}
 .empty-sub{font-size:12px;color:var(--text-lighter);margin-bottom:16px}
 
+/* LOGIN WALL */
+.login-wall{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9999;flex-direction:column;gap:16px;padding:24px;text-align:center}
+.login-wall-logo{width:56px;height:56px;background:linear-gradient(135deg,var(--op-blue),var(--op-blue-dark));border-radius:14px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:20px;margin-bottom:4px}
+.login-wall h2{font-size:22px;font-weight:800;color:var(--text)}
+.login-wall p{font-size:14px;color:var(--text-lighter);max-width:300px}
+.login-wall-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:4px}
+
 /* TOAST */
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--text);color:var(--bg);padding:9px 20px;border-radius:var(--r-full);font-size:13px;font-weight:600;z-index:999;transition:transform .25s;white-space:nowrap}
 .toast.show{transform:translateX(-50%) translateY(0)}
@@ -183,12 +192,23 @@ button{font-family:var(--font);cursor:pointer}
 [data-theme=dark] .sep{background:#262626}
 
 /* LOADING SCREEN */
-#loading-screen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9999;flex-direction:column;gap:12px}
+#loading-screen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9998;flex-direction:column;gap:12px}
 .loading-logo{width:48px;height:48px;background:linear-gradient(135deg,var(--op-blue),var(--op-blue-dark));border-radius:12px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:18px}
 .loading-text{font-size:14px;color:var(--text-lighter)}
 </style>
 </head>
 <body>
+
+<!-- LOGIN WALL (shown when not logged in) -->
+<div id="login-wall" class="login-wall" style="display:none">
+  <div class="login-wall-logo">OP</div>
+  <h2>Sign in to OgaPay</h2>
+  <p>You need to be logged in to view your dashboard.</p>
+  <div class="login-wall-actions">
+    <a href="index.html" class="btn btn-primary">Go to Homepage</a>
+    <a href="workers.html" class="btn btn-secondary">Sign Up</a>
+  </div>
+</div>
 
 <div id="loading-screen">
   <div class="loading-logo">OP</div>
@@ -197,7 +217,7 @@ button{font-family:var(--font);cursor:pointer}
 
 <!-- NAV -->
 <nav class="app-nav">
-  <a class="nav-logo" href="/">
+  <a class="nav-logo" href="index.html">
     <div class="nav-logo-mark">OP</div>
     OgaPay
   </a>
@@ -207,6 +227,10 @@ button{font-family:var(--font);cursor:pointer}
     <button class="theme-btn" onclick="toggleTheme()">
       <svg id="theme-icon" viewBox="0 0 24 24" stroke-width="2"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
     </button>
+    <a href="index.html" class="home-btn">
+      <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Home
+    </a>
     <button class="logout-btn" onclick="logout()">Logout</button>
   </div>
 </nav>
@@ -242,24 +266,11 @@ button{font-family:var(--font);cursor:pointer}
       <h2 id="greeting" style="font-size:22px;font-weight:800;letter-spacing:-.02em;margin-bottom:4px">Good morning 👋</h2>
       <p style="font-size:14px;color:var(--text-lighter)">Here's what's happening with your account</p>
     </div>
-
-    <!-- Stat grid -->
     <div class="stat-grid">
-      <div class="stat-card">
-        <div class="stat-num" id="stat-tasks">—</div>
-        <div class="stat-label">Tasks Done</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-num" id="stat-earned">—</div>
-        <div class="stat-label">Total Earned</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-num" id="stat-rating">—</div>
-        <div class="stat-label">Avg Rating</div>
-      </div>
+      <div class="stat-card"><div class="stat-num" id="stat-tasks">—</div><div class="stat-label">Tasks Done</div></div>
+      <div class="stat-card"><div class="stat-num" id="stat-earned">—</div><div class="stat-label">Total Earned</div></div>
+      <div class="stat-card"><div class="stat-num" id="stat-rating">—</div><div class="stat-label">Avg Rating</div></div>
     </div>
-
-    <!-- Balance hero -->
     <div class="balance-hero">
       <div class="bh-label">Naira Balance</div>
       <div class="bh-amount" id="overview-ngn">₦0.00</div>
@@ -268,8 +279,6 @@ button{font-family:var(--font);cursor:pointer}
         <div class="bh-token"><div class="bh-token-label">Level</div><div class="bh-token-val" id="overview-level">—</div></div>
       </div>
     </div>
-
-    <!-- Quick actions -->
     <div class="two-col" style="margin-bottom:16px">
       <button class="btn btn-primary btn-block" onclick="showTab('tasks',document.querySelectorAll('.tab-item')[2]);window.scrollTo(0,0)">
         <svg viewBox="0 0 24 24" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
@@ -280,8 +289,6 @@ button{font-family:var(--font);cursor:pointer}
         Wallet
       </button>
     </div>
-
-    <!-- Recent submissions -->
     <div class="sec-head">
       <svg viewBox="0 0 24 24" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg>
       Recent Activity
@@ -308,37 +315,18 @@ button{font-family:var(--font);cursor:pointer}
         </div>
       </div>
     </div>
-
-    <!-- Edit profile form -->
     <div class="card" style="margin-bottom:14px">
       <div class="sec-head">
         <svg viewBox="0 0 24 24" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
         Edit Profile
       </div>
-      <div class="form-group">
-        <label class="form-label">First Name</label>
-        <input class="form-input" id="edit-firstname" type="text" placeholder="First name"/>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Last Name</label>
-        <input class="form-input" id="edit-lastname" type="text" placeholder="Last name"/>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Bio</label>
-        <textarea class="form-input form-textarea" id="edit-bio" placeholder="Tell others about yourself..."></textarea>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Phone</label>
-        <input class="form-input" id="edit-phone" type="tel" placeholder="+234..."/>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Skills (comma separated)</label>
-        <input class="form-input" id="edit-skills" type="text" placeholder="writing, design, social media..."/>
-      </div>
+      <div class="form-group"><label class="form-label">First Name</label><input class="form-input" id="edit-firstname" type="text" placeholder="First name"/></div>
+      <div class="form-group"><label class="form-label">Last Name</label><input class="form-input" id="edit-lastname" type="text" placeholder="Last name"/></div>
+      <div class="form-group"><label class="form-label">Bio</label><textarea class="form-input form-textarea" id="edit-bio" placeholder="Tell others about yourself..."></textarea></div>
+      <div class="form-group"><label class="form-label">Phone</label><input class="form-input" id="edit-phone" type="tel" placeholder="+234..."/></div>
+      <div class="form-group"><label class="form-label">Skills (comma separated)</label><input class="form-input" id="edit-skills" type="text" placeholder="writing, design, social media..."/></div>
       <button class="btn btn-primary btn-block" onclick="saveProfile()">Save Changes</button>
     </div>
-
-    <!-- Referral -->
     <div class="ref-box">
       <div style="font-size:13px;color:var(--text-lighter);margin-bottom:4px">Your Referral Code</div>
       <div class="ref-code" id="referral-code">...</div>
@@ -348,8 +336,6 @@ button{font-family:var(--font);cursor:pointer}
         Copy Code
       </button>
     </div>
-
-    <!-- Referral stats -->
     <div class="card">
       <div class="sec-head">
         <svg viewBox="0 0 24 24" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
@@ -368,7 +354,7 @@ button{font-family:var(--font);cursor:pointer}
         <svg viewBox="0 0 24 24" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
         My Submissions
       </div>
-      <a href="/" class="btn btn-primary btn-sm">
+      <a href="tasks.html" class="btn btn-primary btn-sm">
         <svg viewBox="0 0 24 24" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         Browse Tasks
       </a>
@@ -382,7 +368,6 @@ button{font-family:var(--font);cursor:pointer}
 <!-- ══ WALLET ══ -->
 <div id="page-wallet" class="page">
   <div class="page-wrap">
-    <!-- Balance hero -->
     <div class="balance-hero" style="margin-bottom:16px">
       <div class="bh-label">Naira Balance</div>
       <div class="bh-amount" id="wallet-ngn">₦0.00</div>
@@ -391,20 +376,16 @@ button{font-family:var(--font);cursor:pointer}
         <div class="bh-token"><div class="bh-token-label">Locked</div><div class="bh-token-val" id="wallet-locked">₦0.00</div></div>
       </div>
     </div>
-
-    <!-- Actions -->
     <div class="two-col" style="margin-bottom:16px">
       <button class="btn btn-primary btn-block" onclick="showToast('Deposit coming soon — Paystack integration needed')">
         <svg viewBox="0 0 24 24" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         Deposit
       </button>
-      <button class="btn btn-secondary btn-block" id="withdraw-btn" onclick="showToast('Withdrawal coming soon')">
+      <button class="btn btn-secondary btn-block" onclick="showToast('Withdrawal coming soon')">
         <svg viewBox="0 0 24 24" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 014-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>
         Withdraw
       </button>
     </div>
-
-    <!-- All wallets -->
     <div class="sec-head">
       <svg viewBox="0 0 24 24" stroke-width="2"><path d="M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/></svg>
       All Wallets
@@ -412,8 +393,6 @@ button{font-family:var(--font);cursor:pointer}
     <div class="card" style="margin-bottom:16px">
       <div id="wallets-list"><div style="color:var(--text-lighter);font-size:13px;text-align:center;padding:20px">Loading...</div></div>
     </div>
-
-    <!-- Transaction history -->
     <div class="sec-head">
       <svg viewBox="0 0 24 24" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
       Transaction History
@@ -447,9 +426,14 @@ const API = 'https://ogapay-production.up.railway.app/api/v1';
 let token = localStorage.getItem('ogapay_token');
 let user = JSON.parse(localStorage.getItem('ogapay_user') || 'null');
 
-// ── AUTH GUARD ──
-if (!token || !user) {
-  window.location.href = '/';
+// ── AUTH GUARD — show login wall instead of redirecting ──
+function checkAuth() {
+  if (!token || !user) {
+    document.getElementById('loading-screen').style.display = 'none';
+    document.getElementById('login-wall').style.display = 'flex';
+    return false;
+  }
+  return true;
 }
 
 // ── HELPERS ──
@@ -466,8 +450,16 @@ function apiFetch(path, opts = {}) {
     ...opts,
     headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json', ...(opts.headers || {}) }
   }).then(async r => {
-    if (r.status === 401) { logout(); return; }
+    if (r.status === 401) {
+      token = null;
+      localStorage.removeItem('ogapay_token');
+      document.getElementById('login-wall').style.display = 'flex';
+      return null;
+    }
     return r.json();
+  }).catch(err => {
+    console.warn('API error:', err);
+    return null;
   });
 }
 
@@ -478,7 +470,7 @@ function fmtDate(d) { return new Date(d).toLocaleDateString('en-NG', { day: 'num
 function logout() {
   localStorage.removeItem('ogapay_token');
   localStorage.removeItem('ogapay_user');
-  window.location.href = '/';
+  window.location.href = 'index.html';
 }
 
 function toggleTheme() {
@@ -510,7 +502,7 @@ function showTab(id, el) {
 function setGreeting() {
   const h = new Date().getHours();
   const g = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
-  const name = user ? user.firstName : '';
+  const name = user?.firstName || '';
   document.getElementById('greeting').textContent = g + (name ? ', ' + name : '') + ' 👋';
 }
 
@@ -521,17 +513,11 @@ async function loadProfile() {
   const u = res.data;
   user = u;
   localStorage.setItem('ogapay_user', JSON.stringify(u));
-
-  // nav
   document.getElementById('nav-username').textContent = '@' + u.username;
-
-  // overview
   document.getElementById('stat-tasks').textContent = u.workerProfile?.tasksCompleted ?? 0;
   document.getElementById('stat-earned').textContent = fmtNGN(u.workerProfile?.totalEarned ?? 0);
   document.getElementById('stat-rating').textContent = u.workerProfile?.avgRating ? u.workerProfile.avgRating.toFixed(1) + '★' : 'N/A';
   document.getElementById('overview-level').textContent = u.workerProfile?.level ?? '—';
-
-  // profile tab
   const initials = ((u.firstName || '?')[0] + (u.lastName || '?')[0]).toUpperCase();
   document.getElementById('profile-avatar').textContent = initials;
   document.getElementById('profile-name').textContent = u.firstName + ' ' + u.lastName;
@@ -540,8 +526,6 @@ async function loadProfile() {
   document.getElementById('profile-kyc').textContent = 'KYC: ' + (u.kyc?.status ?? 'Not submitted');
   if (u.kyc?.status === 'APPROVED') document.getElementById('profile-kyc').className = 'badge-pill badge-kyc-approved';
   document.getElementById('referral-code').textContent = u.referralCode ?? '...';
-
-  // pre-fill edit form
   document.getElementById('edit-firstname').value = u.firstName || '';
   document.getElementById('edit-lastname').value = u.lastName || '';
   document.getElementById('edit-bio').value = u.workerProfile?.bio || '';
@@ -554,7 +538,6 @@ async function loadWallets() {
   const res = await apiFetch('/wallets');
   if (!res || !res.success) return;
   const wallets = res.data;
-
   let ngnBal = 0, usdcBal = 0, ngnLocked = 0;
   let html = '';
   wallets.forEach(w => {
@@ -567,7 +550,6 @@ async function loadWallets() {
       <div class="tx-amount" style="color:${color}">${w.currency === 'NGN' ? fmtNGN(w.balance) : w.currency === 'USDC' ? fmtUSD(w.balance) : Number(w.balance).toFixed(4)}</div>
     </div>`;
   });
-
   document.getElementById('wallets-list').innerHTML = html || '<div class="empty-state"><div class="empty-title">No wallets yet</div></div>';
   document.getElementById('nav-balance').textContent = fmtNGN(ngnBal);
   document.getElementById('overview-ngn').textContent = fmtNGN(ngnBal);
@@ -582,34 +564,31 @@ async function loadTransactions() {
   const res = await apiFetch('/users/transactions/history?limit=20');
   if (!res || !res.success) return;
   const txs = res.data;
-
   if (!txs.length) {
-    document.getElementById('tx-list').innerHTML = '<div class="empty-state"><svg viewBox="0 0 24 24" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><div class="empty-title">No transactions yet</div><div class="empty-sub">Your transaction history will appear here</div></div>';
-    document.getElementById('recent-list').innerHTML = '<div class="empty-state"><svg viewBox="0 0 24 24" stroke-width="1.5"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg><div class="empty-title">No activity yet</div><div class="empty-sub">Complete tasks to see your activity here</div></div>';
+    const empty = '<div class="empty-state"><svg viewBox="0 0 24 24" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><div class="empty-title">No transactions yet</div><div class="empty-sub">Your transaction history will appear here</div></div>';
+    document.getElementById('tx-list').innerHTML = empty;
+    document.getElementById('recent-list').innerHTML = empty;
     return;
   }
-
-  const typeColors = { DEPOSIT: '#10b981', WITHDRAWAL: '#ef4444', TASK_PAYMENT: '#3b82f6', REFERRAL_BONUS: '#9945ff', PLATFORM_FEE: '#f59e0b' };
+  const typeColors = { DEPOSIT:'#10b981',WITHDRAWAL:'#ef4444',TASK_PAYMENT:'#3b82f6',REFERRAL_BONUS:'#9945ff',PLATFORM_FEE:'#f59e0b' };
   const typeIcons = {
-    DEPOSIT: '<polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 014-4h14"/>',
-    WITHDRAWAL: '<polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 01-4 4H3"/>',
-    TASK_PAYMENT: '<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/>',
-    REFERRAL_BONUS: '<path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/>',
-    PLATFORM_FEE: '<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/>',
+    DEPOSIT:'<polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 014-4h14"/>',
+    WITHDRAWAL:'<polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 01-4 4H3"/>',
+    TASK_PAYMENT:'<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/>',
+    REFERRAL_BONUS:'<path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/>',
+    PLATFORM_FEE:'<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/>',
   };
-
   const buildTxRow = tx => {
-    const isCredit = ['DEPOSIT', 'TASK_PAYMENT', 'REFERRAL_BONUS'].includes(tx.type);
+    const isCredit = ['DEPOSIT','TASK_PAYMENT','REFERRAL_BONUS'].includes(tx.type);
     const color = typeColors[tx.type] || '#64748b';
     const icon = typeIcons[tx.type] || '<circle cx="12" cy="12" r="10"/>';
     const amt = tx.currency === 'NGN' ? fmtNGN(tx.amount) : fmtUSD(tx.amount);
     return `<div class="tx-row">
       <div class="tx-icon" style="background:${color}22"><svg viewBox="0 0 24 24" stroke="${color}" stroke-width="2" fill="none" width="14" height="14">${icon}</svg></div>
-      <div><div class="tx-desc">${tx.description || tx.type.replace(/_/g, ' ')}</div><div class="tx-date">${fmtDate(tx.createdAt)}</div></div>
+      <div><div class="tx-desc">${tx.description || tx.type.replace(/_/g,' ')}</div><div class="tx-date">${fmtDate(tx.createdAt)}</div></div>
       <div class="tx-amount ${isCredit ? 'tx-credit' : 'tx-debit'}">${isCredit ? '+' : '-'}${amt}</div>
     </div>`;
   };
-
   document.getElementById('tx-list').innerHTML = txs.map(buildTxRow).join('');
   document.getElementById('recent-list').innerHTML = txs.slice(0, 5).map(buildTxRow).join('');
 }
@@ -617,27 +596,17 @@ async function loadTransactions() {
 // ── LOAD SUBMISSIONS ──
 async function loadSubmissions() {
   const res = await apiFetch('/tasks/my/submissions?limit=20');
-  if (!res || !res.success) {
-    document.getElementById('tasks-list').innerHTML = '<div class="empty-state"><svg viewBox="0 0 24 24" stroke-width="1.5"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg><div class="empty-title">No submissions yet</div><div class="empty-sub">Tasks you apply for will appear here</div><a href="/" class="btn btn-primary" style="font-size:13px;padding:8px 18px">Browse Tasks</a></div>';
+  const emptyHTML = `<div class="empty-state"><svg viewBox="0 0 24 24" stroke-width="1.5"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg><div class="empty-title">No submissions yet</div><div class="empty-sub">Tasks you apply for will appear here</div><a href="tasks.html" class="btn btn-primary" style="font-size:13px;padding:8px 18px">Browse Tasks</a></div>`;
+  if (!res || !res.success || !res.data.length) {
+    document.getElementById('tasks-list').innerHTML = emptyHTML;
     return;
   }
-  const subs = res.data;
-  if (!subs.length) {
-    document.getElementById('tasks-list').innerHTML = '<div class="empty-state"><svg viewBox="0 0 24 24" stroke-width="1.5"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg><div class="empty-title">No submissions yet</div><div class="empty-sub">Tasks you apply for will appear here</div><a href="/" class="btn btn-primary" style="font-size:13px;padding:8px 18px">Browse Tasks</a></div>';
-    return;
-  }
-  const statusColor = { PENDING: '#f59e0b', APPROVED: '#10b981', REJECTED: '#ef4444', DISPUTED: '#9945ff' };
-  document.getElementById('tasks-list').innerHTML = subs.map(s => `
+  const statusColor = { PENDING:'#f59e0b',APPROVED:'#10b981',REJECTED:'#ef4444',DISPUTED:'#9945ff' };
+  document.getElementById('tasks-list').innerHTML = res.data.map(s => `
     <div class="task-row">
       <div class="task-icon" style="background:${statusColor[s.status]}22"><svg viewBox="0 0 24 24" stroke="${statusColor[s.status]}" stroke-width="2" fill="none" width="16" height="16"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg></div>
-      <div style="flex:1;min-width:0">
-        <div class="task-title">${s.task?.title || 'Task'}</div>
-        <div class="task-meta">${fmtDate(s.createdAt)} · ${s.task?.category?.replace(/_/g,' ') || ''}</div>
-      </div>
-      <div style="text-align:right;flex-shrink:0">
-        <div class="task-reward">${fmtNGN(s.task?.reward || 0)}</div>
-        <div class="task-status status-${s.status.toLowerCase()}">${s.status}</div>
-      </div>
+      <div style="flex:1;min-width:0"><div class="task-title">${s.task?.title || 'Task'}</div><div class="task-meta">${fmtDate(s.createdAt)} · ${s.task?.category?.replace(/_/g,' ') || ''}</div></div>
+      <div style="text-align:right;flex-shrink:0"><div class="task-reward">${fmtNGN(s.task?.reward || 0)}</div><div class="task-status status-${s.status.toLowerCase()}">${s.status}</div></div>
     </div>`).join('');
 }
 
@@ -647,11 +616,7 @@ async function loadNotifications() {
   if (!res || !res.success) return;
   const notifs = res.data || [];
   const unread = notifs.filter(n => !n.isRead).length;
-  if (unread > 0) {
-    const badge = document.getElementById('notif-count');
-    badge.textContent = unread;
-    badge.style.display = 'inline';
-  }
+  if (unread > 0) { const b = document.getElementById('notif-count'); b.textContent = unread; b.style.display = 'inline'; }
   if (!notifs.length) {
     document.getElementById('notif-list').innerHTML = '<div class="empty-state"><svg viewBox="0 0 24 24" stroke-width="1.5"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg><div class="empty-title">No notifications</div><div class="empty-sub">You\'re all caught up</div></div>';
     return;
@@ -659,11 +624,7 @@ async function loadNotifications() {
   document.getElementById('notif-list').innerHTML = notifs.map(n => `
     <div class="notif-row" onclick="markRead('${n.id}',this)" style="cursor:pointer">
       <div class="notif-dot ${n.isRead ? 'read' : ''}"></div>
-      <div>
-        <div class="notif-title">${n.title}</div>
-        <div class="notif-body">${n.body}</div>
-        <div class="notif-time">${fmtDate(n.createdAt)}</div>
-      </div>
+      <div><div class="notif-title">${n.title}</div><div class="notif-body">${n.body}</div><div class="notif-time">${fmtDate(n.createdAt)}</div></div>
     </div>`).join('');
 }
 
@@ -690,21 +651,15 @@ async function saveProfile() {
     skills: document.getElementById('edit-skills').value.split(',').map(s => s.trim()).filter(Boolean),
   };
   const res = await apiFetch('/users/profile', { method: 'PATCH', body: JSON.stringify(body) });
-  if (res?.success) {
-    showToast('Profile updated!');
-    loadProfile();
-  } else {
-    showToast(res?.message || 'Failed to update profile');
-  }
+  if (res?.success) { showToast('Profile updated!'); loadProfile(); }
+  else showToast(res?.message || 'Failed to update profile');
 }
 
-// ── COPY REFERRAL ──
 function copyReferral() {
   const code = document.getElementById('referral-code').textContent;
   navigator.clipboard.writeText(code).then(() => showToast('Referral code copied!')).catch(() => showToast('Copy failed'));
 }
 
-// ── MARK NOTIF READ ──
 async function markRead(id, el) {
   await apiFetch('/notifications/' + id + '/read', { method: 'PATCH' });
   el.querySelector('.notif-dot')?.classList.add('read');
@@ -721,6 +676,7 @@ async function markAllRead() {
 
 // ── INIT ──
 async function init() {
+  if (!checkAuth()) return;
   setGreeting();
   try {
     await Promise.all([
