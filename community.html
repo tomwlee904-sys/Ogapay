@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0"/>
+<title>OgaPay — Communities</title>
+<script>
+(function(){
+  var t = localStorage.getItem('ogapay-theme');
+  document.documentElement.setAttribute('data-theme', t === 'dark' ? 'dark' : 'light');
+})();
+</script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+/* ── BASE TOKENS ── */
+:root {
+  --color-primary:#0f172a; --color-primary-light:#334155;
+  --color-background:#ffffff; --color-surface:#f8fafc;
+  --color-border:#e2e8f0; --color-border-light:#f1f5f9;
+  --color-text:#1e293b; --color-text-light:#64748b; --color-text-lighter:#94a3b8;
+  --color-error:#ef4444;
+  --font-sans:"Inter",system-ui,sans-serif; --font-mono:"JetBrains Mono",monospace;
+  --radius-sm:.375rem; --radius-md:.5rem; --radius-lg:.75rem;
+  --radius-xl:1rem; --radius-2xl:1.25rem; --radius-full:9999px;
+  --op-blue:#033CE3; --op-blue-dark:#011F9A;
+  --op-blue-light:rgba(3,60,227,.08); --op-blue-mid:rgba(3,60,227,.2);
+}
+[data-theme=dark] {
+  --color-primary:#f5f5f5; --color-primary-light:#d4d4d4;
+  --color-background:#000; --color-surface:#0a0a0a;
+  --color-border:#404040; --color-border-light:#262626;
+  --color-text:#f5f5f5; --color-text-light:#a3a3a3; --color-text-lighter:#737373;
+  --op-blue:#5577F5; --op-blue-dark:#033CE3;
+  --op-blue-light:rgba(85,119,245,.1); --op-blue-mid:rgba(85,119,245,.22);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:16px;-webkit-font-smoothing:antialiased}
+body{font-family:var(--font-sans);color:var(--color-text);background:var(--color-background);min-height:100vh;overflow-x:hidden;transition:background .2s,color .15s}
+a{color:var(--op-blue);text-decoration:none}
+button{font-family:var(--font-sans);cursor:pointer;border:none;background:none}
+
+/* ── NAV ── */
+.app-nav{position:sticky;top:0;z-index:100;background:var(--color-background);border-bottom:1px solid var(--color-border-light);height:56px;display:flex;align-items:center;padding:0 16px;gap:8px;transition:background .2s,border-color .2s}
+.nav-logo{display:flex;align-items:center;gap:8px;font-weight:700;font-size:16px;color:var(--color-text);text-decoration:none;flex-shrink:0}
+.nav-logo-mark{width:30px;height:30px;background:linear-gradient(135deg,var(--op-blue),var(--op-blue-dark));border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:12px}
+.nav-links{display:flex;align-items:center;gap:2px;flex:1;overflow-x:auto;scrollbar-width:none}
+.nav-links::-webkit-scrollbar{display:none}
+.nav-link{display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:999px;font-size:13px;font-weight:500;color:var(--color-text-light);white-space:nowrap;transition:all .15s;text-decoration:none}
+.nav-link:hover{background:var(--color-surface);color:var(--color-text)}
+.nav-link.active{background:var(--op-blue-light);color:var(--op-blue);font-weight:600}
+.nav-link svg{width:14px;height:14px;stroke:currentColor;fill:none}
+.nav-right{display:flex;align-items:center;gap:8px;margin-left:auto;flex-shrink:0}
+.theme-btn{width:32px;height:32px;border-radius:50%;background:var(--color-surface);border:1px solid var(--color-border-light);display:flex;align-items:center;justify-content:center;color:var(--color-text-light);cursor:pointer;transition:all .15s}
+.theme-btn:hover{color:var(--op-blue);border-color:var(--op-blue)}
+.theme-btn svg{width:15px;height:15px;stroke:currentColor;fill:none}
+.nav-auth-btn{padding:6px 14px;border-radius:999px;font-size:13px;font-weight:600;border:1.5px solid var(--color-border);background:var(--color-background);color:var(--color-text-light);cursor:pointer;transition:all .15s}
+.nav-auth-btn:hover{border-color:var(--op-blue);color:var(--op-blue)}
+.nav-auth-btn.primary{background:linear-gradient(135deg,var(--op-blue),var(--op-blue-dark));color:#fff;border:none}
+
+/* ════════════════════════════════════
+   COMMUNITIES CSS — ported 1:1 from
+   WURK Communities-CEblyeBD.css
+   (dark accent swapped → OgaPay blue)
+════════════════════════════════════ */
+.communities-container{width:100%;max-width:1280px;margin:2rem auto;padding:0 1.5rem;animation:fadeInUp .5s ease}
+@keyframes fadeInUp{0%{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+
+/* Header */
+.communities-header{display:flex;align-items:center;justify-content:space-between;gap:1.5rem;margin-bottom:2.5rem;padding-bottom:1.5rem;border-bottom:1px solid var(--color-border);position:relative}
+.communities-header-left{display:flex;align-items:center;gap:1rem;flex:1}
+.communities-back-btn{background:linear-gradient(135deg,#f8fafc,#f1f5f9);color:#475569;border:1px solid var(--color-border);border-radius:var(--radius-lg);padding:.625rem 1.25rem;display:inline-flex;align-items:center;gap:.5rem;cursor:pointer;transition:all .2s ease;font-weight:500;font-size:.875rem}
+.communities-back-btn:hover{background:linear-gradient(135deg,#1e293b,#334155);color:#fff;border-color:transparent;transform:translateX(-3px);box-shadow:0 2px 8px rgba(0,0,0,.1)}
+.communities-back-btn svg{width:16px;height:16px;stroke:currentColor;fill:none;transition:transform .2s ease}
+.communities-back-btn:hover svg{transform:translateX(-2px)}
+.communities-title{font-size:2rem;font-weight:700;color:var(--color-primary);margin:0;letter-spacing:-.02em;display:flex;align-items:center;gap:.75rem}
+.communities-title-icon{color:#475569;display:inline-flex}
+.communities-title-icon svg{width:28px;height:28px;stroke:currentColor;fill:none}
+.communities-create-btn{background:linear-gradient(135deg,#1e293b,#334155);color:#fff;border:none;border-radius:var(--radius-lg);padding:.75rem 1.5rem;display:inline-flex;align-items:center;gap:.5rem;cursor:pointer;transition:all .3s cubic-bezier(.4,0,.2,1);font-weight:600;font-size:.9375rem;box-shadow:0 2px 8px rgba(0,0,0,.1);white-space:nowrap}
+.communities-create-btn svg{width:16px;height:16px;stroke:currentColor;fill:none}
+.communities-create-btn:hover{transform:translateY(-2px);box-shadow:0 4px 16px rgba(0,0,0,.15);background:linear-gradient(135deg,#334155,#475569)}
+
+/* View tabs */
+.communities-view-tabs{display:flex;justify-content:center;gap:.5rem;margin-bottom:2rem;background:var(--color-surface);padding:.5rem;border-radius:var(--radius-xl);border:1px solid var(--color-border)}
+.view-tab{padding:.75rem 1.5rem;border:none;border-radius:var(--radius-lg);background:transparent;color:var(--color-text-light);font-size:.9375rem;font-weight:500;cursor:pointer;transition:all .2s ease;display:inline-flex;align-items:center;gap:.5rem}
+.view-tab svg{width:18px;height:18px;stroke:currentColor;fill:none;transition:all .2s ease}
+.view-tab:hover{color:var(--color-primary-light);background:var(--color-background)}
+.view-tab.active{background:linear-gradient(135deg,#1e293b,#334155);color:#fff;box-shadow:0 1px 4px rgba(0,0,0,.1)}
+.view-tab.active svg{transform:scale(1.05)}
+
+/* Stats */
+.communities-stats{display:flex;justify-content:center;margin-bottom:2.5rem;gap:1rem;flex-wrap:wrap}
+.stat-card{background:var(--color-background);border:1px solid var(--color-border);border-radius:var(--radius-xl);padding:1.25rem;display:flex;align-items:center;gap:1rem;transition:all .3s ease;min-width:230px;max-width:320px;flex:1}
+.stat-card:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.06);border-color:var(--color-border-light)}
+.stat-icon{width:48px;height:48px;border-radius:var(--radius-lg);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.stat-icon svg{width:22px;height:22px;stroke:currentColor;fill:none}
+.stat-icon.total{background:#f1f5f9;color:#475569}
+.stat-icon.active-ic{background:rgba(16,185,129,.1);color:#047857}
+.stat-icon.members{background:#f1f5f9;color:#475569}
+.stat-content{flex:1}
+.stat-value{font-size:1.5rem;font-weight:700;color:var(--color-primary);line-height:1;margin-bottom:.25rem;font-family:var(--font-mono)}
+.stat-label{font-size:.875rem;color:var(--color-text-light)}
+
+/* Controls */
+.communities-controls{display:flex;gap:1rem;margin-bottom:2rem;flex-wrap:wrap}
+.communities-search{flex:1;min-width:250px;position:relative}
+.communities-search-input{width:100%;padding:.75rem 1rem .75rem 2.75rem;border:1px solid var(--color-border);border-radius:var(--radius-lg);background:var(--color-background);font-size:.9375rem;color:var(--color-text);transition:all .2s ease;font-family:var(--font-sans);outline:none}
+.communities-search-input::placeholder{color:var(--color-text-lighter)}
+.communities-search-input:focus{border-color:var(--op-blue);box-shadow:0 0 0 3px var(--op-blue-light)}
+.communities-search-icon{position:absolute;left:1rem;top:50%;transform:translateY(-50%);color:var(--color-text-light);pointer-events:none}
+.communities-search-icon svg{width:16px;height:16px;stroke:currentColor;fill:none}
+.communities-filter{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap}
+.filter-chip{padding:.5rem 1rem;border:1px solid var(--color-border);border-radius:var(--radius-full);background:var(--color-background);color:var(--color-text-light);font-size:.875rem;font-weight:500;cursor:pointer;transition:all .2s ease;white-space:nowrap}
+.filter-chip:hover{border-color:var(--color-border-light);color:var(--color-primary-light);background:var(--color-surface)}
+.filter-chip.active{background:linear-gradient(135deg,#1e293b,#334155);color:#fff;border-color:transparent}
+
+/* Warning banner */
+.communities-warning{background:linear-gradient(135deg,#fef3c7,#fffbeb);border:1px solid #fbbf24;border-left:4px solid #f59e0b;border-radius:var(--radius-xl);padding:1.5rem;display:flex;align-items:center;justify-content:space-between;gap:1.5rem;margin-bottom:2rem}
+.warning-content{display:flex;align-items:center;gap:1rem;flex:1}
+.warning-icon{color:#f59e0b;flex-shrink:0}
+.warning-icon svg{width:22px;height:22px;stroke:currentColor;fill:none}
+.warning-text{color:#92400e;font-size:.9375rem;line-height:1.5;flex:1}
+.warning-action{background:linear-gradient(135deg,#1e293b,#334155);color:#fff;border:none;border-radius:var(--radius-md);padding:.625rem 1.25rem;cursor:pointer;transition:all .2s ease;font-weight:500;font-size:.875rem;white-space:nowrap;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.warning-action:hover{background:linear-gradient(135deg,#334155,#475569);transform:translateY(-1px);box-shadow:0 2px 6px rgba(0,0,0,.15)}
+
+/* Grid */
+.communities-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1.5rem;margin-bottom:2rem}
+
+/* Community card */
+.community-card{background:var(--color-background);border:1px solid var(--color-border);border-radius:var(--radius-xl);overflow:hidden;cursor:pointer;transition:all .3s cubic-bezier(.4,0,.2,1);position:relative;display:flex;flex-direction:column}
+.community-card:hover{transform:translateY(-4px);box-shadow:0 8px 24px rgba(0,0,0,.08);border-color:var(--color-border-light)}
+
+/* Image container */
+.community-image-container{position:relative;width:100%;padding-top:60%;background:var(--color-surface);overflow:hidden}
+.community-image{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;transition:transform .3s ease}
+.community-card:hover .community-image{transform:scale(1.05)}
+.community-image-placeholder{position:absolute;top:0;left:0;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--color-text-lighter);font-size:2.5rem}
+.community-image-placeholder span{font-size:2.5rem;line-height:1;margin-bottom:.5rem}
+.community-image-placeholder small{font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;opacity:.6}
+
+/* Badges */
+.community-badges{position:absolute;top:.75rem;right:.75rem;display:flex;gap:.5rem}
+.community-badge{background:rgba(255,255,255,.95);backdrop-filter:blur(8px);padding:.25rem .75rem;border-radius:var(--radius-full);font-size:.75rem;font-weight:600;display:flex;align-items:center;gap:.25rem;box-shadow:0 2px 8px rgba(0,0,0,.1)}
+.community-badge.featured{background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#fff}
+.community-badge.verified{background:linear-gradient(135deg,#10b981,#059669);color:#fff}
+.community-badge svg{width:11px;height:11px;stroke:currentColor;fill:none}
+
+/* Content */
+.community-content{padding:1.25rem;flex:1;display:flex;flex-direction:column}
+.community-header{display:flex;align-items:flex-start;justify-content:space-between;gap:.75rem;margin-bottom:.75rem}
+.community-info{flex:1;min-width:0}
+.community-name{font-size:1.125rem;font-weight:700;color:var(--color-primary);margin:0 0 .25rem;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.community-meta{display:flex;align-items:center;gap:1rem;font-size:.875rem;color:var(--color-text-light)}
+.community-meta-item{display:flex;align-items:center;gap:.25rem}
+.community-meta-item svg{width:13px;height:13px;stroke:currentColor;fill:none;opacity:.7}
+.community-description{color:var(--color-text-light);font-size:.875rem;line-height:1.55;margin:0 0 1rem;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;flex:1}
+
+/* Footer */
+.community-footer{display:flex;align-items:center;justify-content:space-between;padding-top:1rem;border-top:1px solid var(--color-border)}
+.community-stats{display:flex;gap:1.5rem}
+.community-stat{display:flex;flex-direction:column;align-items:center}
+.community-stat-value{font-size:1rem;font-weight:700;color:var(--color-primary);line-height:1;font-family:var(--font-mono)}
+.community-stat-label{font-size:.75rem;color:var(--color-text-lighter);margin-top:.125rem}
+.community-action{display:flex;align-items:center;gap:.25rem;color:var(--color-text-light);font-size:.875rem;font-weight:500}
+.community-action svg{width:14px;height:14px;stroke:currentColor;fill:none;transition:transform .2s ease}
+.community-card:hover .community-action svg{transform:translateX(3px)}
+.community-card:hover .community-action{color:var(--op-blue)}
+
+/* Skeletons */
+.communities-loading{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1.5rem}
+.community-skeleton{background:var(--color-background);border:1px solid var(--color-border);border-radius:var(--radius-xl);overflow:hidden}
+.skeleton-image{width:100%;padding-top:60%;background:linear-gradient(90deg,var(--color-surface) 25%,var(--color-border) 50%,var(--color-surface) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite}
+.skeleton-content{padding:1.25rem}
+.skeleton-line{height:1rem;background:linear-gradient(90deg,var(--color-surface) 25%,var(--color-border) 50%,var(--color-surface) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:var(--radius-sm);margin-bottom:.75rem}
+.skeleton-line.title{width:70%;height:1.25rem}
+.skeleton-line.text{width:100%}
+.skeleton-line.text:last-child{width:80%}
+@keyframes shimmer{0%{background-position:-200% 0}to{background-position:200% 0}}
+
+/* Empty */
+.communities-empty{text-align:center;padding:4rem 1rem;background:var(--color-surface);border:2px dashed var(--color-border);border-radius:var(--radius-xl);margin:2rem 0}
+.empty-icon{width:80px;height:80px;margin:0 auto 1.5rem;color:var(--color-text-lighter);opacity:.5}
+.empty-icon svg{width:80px;height:80px;stroke:currentColor;fill:none}
+.empty-title{font-size:1.5rem;font-weight:600;color:var(--color-text);margin:0 0 .5rem}
+.empty-description{color:var(--color-text-light);font-size:1rem;margin:0 auto 2rem;max-width:400px}
+.btn-empty-cta{display:inline-flex;align-items:center;gap:.5rem;padding:.875rem 1.75rem;background:linear-gradient(135deg,var(--op-blue),var(--op-blue-dark));color:#fff;border:none;border-radius:var(--radius-full);font-size:.9375rem;font-weight:600;cursor:pointer;transition:all .2s ease}
+.btn-empty-cta:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(3,60,227,.3)}
+
+/* Pagination */
+.communities-pagination{display:flex;align-items:center;justify-content:center;gap:.5rem;margin-top:3rem}
+.pagination-btn{padding:.5rem 1rem;border:1px solid var(--color-border);border-radius:var(--radius-md);background:var(--color-background);color:var(--color-text-light);font-size:.875rem;font-weight:500;cursor:pointer;transition:all .2s ease;font-family:var(--font-sans)}
+.pagination-btn:hover:not(:disabled){border-color:var(--color-border-light);color:var(--color-primary);background:var(--color-surface)}
+.pagination-btn:disabled{opacity:.5;cursor:not-allowed}
+.pagination-btn.active{background:linear-gradient(135deg,#1e293b,#334155);color:#fff;border-color:transparent}
+.pagination-info{padding:0 1rem;color:var(--color-text-light);font-size:.875rem}
+
+/* ── DARK MODE (direct port, accent → OgaPay blue) ── */
+[data-theme=dark] .communities-header{border-bottom-color:#383838e6}
+[data-theme=dark] .communities-back-btn{background:#121212;color:#d4d4d8;border-color:#404040f2}
+[data-theme=dark] .communities-back-btn:hover{background:#1b1b1b;color:#f5f5f5;border-color:#737373eb;box-shadow:0 2px 8px rgba(0,0,0,.45)}
+[data-theme=dark] .communities-title-icon{color:#a3a3a3}
+[data-theme=dark] .communities-create-btn{background:linear-gradient(135deg,#f5f5f5,#e5e7eb);color:#0a0a0a;box-shadow:0 4px 14px rgba(0,0,0,.5)}
+[data-theme=dark] .communities-create-btn:hover{background:linear-gradient(135deg,#fff,#f3f4f6);color:#000;box-shadow:0 8px 22px rgba(0,0,0,.6)}
+[data-theme=dark] .communities-view-tabs{background:#0f0f0f;border-color:#383838e6}
+[data-theme=dark] .view-tab{color:#a3a3a3}
+[data-theme=dark] .view-tab:hover{color:#f5f5f5;background:#1a1a1a}
+[data-theme=dark] .view-tab.active{background:#232323;color:#f5f5f5;box-shadow:inset 0 0 0 1px #737373eb}
+[data-theme=dark] .stat-card{background:#111;border-color:#383838e6}
+[data-theme=dark] .stat-card:hover{border-color:#737373eb;box-shadow:0 8px 18px rgba(0,0,0,.5)}
+[data-theme=dark] .stat-icon.total,[data-theme=dark] .stat-icon.members{background:#1a1a1a;color:#d4d4d8}
+[data-theme=dark] .stat-icon.active-ic{background:rgba(22,163,74,.2);color:#86efac}
+[data-theme=dark] .stat-label{color:#a3a3a3}
+[data-theme=dark] .communities-search-input{background:#111;border-color:#404040f2;color:#f5f5f5}
+[data-theme=dark] .communities-search-input::placeholder{color:#737373}
+[data-theme=dark] .communities-search-input:focus{border-color:rgba(85,119,245,.9);box-shadow:0 0 0 3px rgba(85,119,245,.18)}
+[data-theme=dark] .communities-search-icon{color:#8a8a8a}
+[data-theme=dark] .filter-chip{background:#111;border-color:#404040f2;color:#b4b4b8}
+[data-theme=dark] .filter-chip:hover{background:#1a1a1a;border-color:#737373eb;color:#f5f5f5}
+[data-theme=dark] .filter-chip.active{background:#242424;color:#f5f5f5;border-color:#737373eb}
+[data-theme=dark] .community-card{background:linear-gradient(135deg,rgba(8,8,8,.98),rgba(14,14,14,.9));border-color:#333333eb}
+[data-theme=dark] .community-card:hover{border-color:#525252f2;box-shadow:0 8px 24px rgba(0,0,0,.5),0 0 0 1px rgba(85,119,245,.2)}
+[data-theme=dark] .community-image-container,[data-theme=dark] .community-image-placeholder{background:linear-gradient(135deg,#171717,#0a0a0a)}
+[data-theme=dark] .community-image-placeholder{color:#8a8a8a}
+[data-theme=dark] .community-badge{background:rgba(15,15,15,.92);color:#d4d4d8;box-shadow:0 2px 8px rgba(0,0,0,.5)}
+[data-theme=dark] .community-badge.featured{background:linear-gradient(135deg,rgba(245,158,11,.45),rgba(217,119,6,.48));color:#fde68a}
+[data-theme=dark] .community-badge.verified{background:linear-gradient(135deg,rgba(16,185,129,.42),rgba(5,150,105,.48));color:#6ee7b7}
+[data-theme=dark] .community-meta,[data-theme=dark] .community-meta-item,[data-theme=dark] .community-description,[data-theme=dark] .community-action{color:#a3a3a3}
+[data-theme=dark] .community-footer{border-top-color:#383838e6}
+[data-theme=dark] .community-stat-label{color:#8a8a8a}
+[data-theme=dark] .community-card:hover .community-action{color:#7a99ff}
+[data-theme=dark] .communities-warning{background:linear-gradient(135deg,rgba(120,53,15,.35),rgba(69,26,3,.38));border-color:rgba(245,158,11,.45);border-left-color:rgba(251,191,36,.65)}
+[data-theme=dark] .warning-icon{color:#fbbf24}
+[data-theme=dark] .warning-text{color:#fcd34d}
+[data-theme=dark] .warning-action{background:#181818;color:#f5f5f5;box-shadow:0 2px 8px rgba(0,0,0,.5)}
+[data-theme=dark] .communities-empty{background:#0f0f0f;border-color:#404040e6}
+[data-theme=dark] .empty-title{color:#f5f5f5}
+[data-theme=dark] .empty-description{color:#a3a3a3}
+[data-theme=dark] .pagination-btn{background:#111;border-color:#383838f2;color:#d4d4d8}
+[data-theme=dark] .pagination-btn:hover:not(:disabled){background:#181818;border-color:#737373eb;color:#f5f5f5}
+[data-theme=dark] .pagination-btn:disabled{background:#0f0f0f;color:#737373}
+[data-theme=dark] .pagination-btn.active{background:#242424;border-color:#737373eb}
+[data-theme=dark] .pagination-info{color:#a3a3a3}
+[data-theme=dark] .community-skeleton{background:#111;border-color:#383838e6}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--color-primary);color:var(--color-background);padding:10px 22px;border-radius:999px;font-size:13px;font-weight:600;z-index:9999;transition:transform .25s;white-space:nowrap;box-shadow:0 10px 24px rgba(0,0,0,.12)}
+.toast.show{transform:translateX(-50%) translateY(0)}
+
+/* ── FOOTER ── */
+.footer{background:var(--color-surface);border-top:1px solid var(--color-border-light);padding:32px 16px;text-align:center;margin-top:16px}
+.footer-brand{display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:6px}
+.footer-mark{width:24px;height:24px;background:linear-gradient(135deg,var(--op-blue),var(--op-blue-dark));border-radius:6px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:800}
+.footer-name{font-weight:700;font-size:14px;color:var(--color-primary)}
+.footer-sub{font-size:12px;color:var(--color-text-lighter);margin-bottom:14px}
+.footer-links{display:flex;justify-content:center;gap:20px;font-size:12px;color:var(--color-text-light)}
+.footer-links a:hover{color:var(--op-blue)}
+
+/* ── RESPONSIVE ── */
+@media(max-width:768px){
+  .communities-container{padding:0 1rem;margin:1rem auto}
+  .communities-header{flex-direction:column;align-items:stretch;gap:1rem}
+  .communities-header-left{justify-content:space-between}
+  .communities-title{font-size:1.5rem}
+  .communities-view-tabs{flex-direction:column;padding:.375rem;gap:.375rem}
+  .view-tab{justify-content:center;width:100%;padding:.625rem 1rem}
+  .communities-stats{width:100%}
+  .stat-card{min-width:100%;max-width:100%}
+  .communities-controls{flex-direction:column}
+  .communities-search{min-width:100%}
+  .communities-grid{grid-template-columns:1fr;gap:1rem}
+  .community-footer{flex-direction:column;gap:1rem;align-items:stretch}
+  .community-stats{justify-content:space-around}
+  .communities-warning{flex-direction:column;align-items:stretch;text-align:center}
+  .warning-content{flex-direction:column}
+  .warning-action{width:100%}
+}
+@media(max-width:480px){
+  .communities-title{font-size:1.25rem}
+  .communities-back-btn span,.communities-create-btn span{display:none}
+  .communities-create-btn{padding:.75rem}
+  .stat-card{flex-direction:column;text-align:center}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="app-nav">
+  <a class="nav-logo" href="index.html">
+    <div class="nav-logo-mark">OP</div>
+    OgaPay
+  </a>
+  <div class="nav-links">
+    <a class="nav-link" href="index.html#tasks">
+      <svg viewBox="0 0 24 24" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
+      Tasks
+    </a>
+    <a class="nav-link" href="store.html">
+      <svg viewBox="0 0 24 24" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Store
+    </a>
+    <a class="nav-link" href="workers.html">
+      <svg viewBox="0 0 24 24" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+      Workers
+    </a>
+    <a class="nav-link active" href="communities.html">
+      <svg viewBox="0 0 24 24" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+      Communities
+    </a>
+    <a class="nav-link" href="post-task.html">
+      <svg viewBox="0 0 24 24" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Post a Task
+    </a>
+  </div>
+  <div class="nav-right">
+    <button class="theme-btn" onclick="toggleTheme()">
+      <svg id="theme-icon" viewBox="0 0 24 24" stroke-width="2"></svg>
+    </button>
+    <button class="nav-auth-btn" onclick="window.location.href='index.html'">Log in</button>
+    <button class="nav-auth-btn primary" onclick="window.location.href='index.html'">Get Started</button>
+  </div>
+</nav>
+
+<!-- COMMUNITIES PAGE -->
+<div class="communities-container">
+
+  <!-- Header -->
+  <div class="communities-header">
+    <div class="communities-header-left">
+      <button class="communities-back-btn" onclick="window.location.href='index.html'">
+        <svg viewBox="0 0 24 24" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+        <span>Back</span>
+      </button>
+      <h1 class="communities-title">
+        <span class="communities-title-icon">
+          <svg viewBox="0 0 24 24" stroke-width="1.8"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+        </span>
+        Communities
+      </h1>
+    </div>
+    <button class="communities-create-btn" onclick="showToast('Community creation coming soon!')">
+      <svg viewBox="0 0 24 24" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      <span>Create Community</span>
+    </button>
+  </div>
+
+  <!-- View tabs -->
+  <div class="communities-view-tabs">
+    <button class="view-tab active" id="tab-all" onclick="switchTab('all',this)">
+      <svg viewBox="0 0 24 24" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      All Communities
+    </button>
+    <button class="view-tab" id="tab-joined" onclick="switchTab('joined',this)">
+      <svg viewBox="0 0 24 24" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      Joined
+    </button>
+    <button class="view-tab" id="tab-trending" onclick="switchTab('trending',this)">
+      <svg viewBox="0 0 24 24" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+      Trending
+    </button>
+  </div>
+
+  <!-- Stats -->
+  <div class="communities-stats">
+    <div class="stat-card">
+      <div class="stat-icon total">
+        <svg viewBox="0 0 24 24" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+      </div>
+      <div class="stat-content">
+        <div class="stat-value" id="stat-total">—</div>
+        <div class="stat-label">Total Communities</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon active-ic">
+        <svg viewBox="0 0 24 24" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      </div>
+      <div class="stat-content">
+        <div class="stat-value" id="stat-active">—</div>
+        <div class="stat-label">Active Tasks Today</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon members">
+        <svg viewBox="0 0 24 24" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      </div>
+      <div class="stat-content">
+        <div class="stat-value" id="stat-members">—</div>
+        <div class="stat-label">Total Members</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Connect wallet warning -->
+  <div class="communities-warning" id="wallet-warning">
+    <div class="warning-content">
+      <div class="warning-icon">
+        <svg viewBox="0 0 24 24" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      </div>
+      <div class="warning-text">Connect your wallet to join communities, earn rewards, and participate in community tasks. It only takes 30 seconds.</div>
+    </div>
+    <button class="warning-action" onclick="showToast('Wallet connection coming soon!');document.getElementById(\'wallet-warning\').style.display=\'none\'">Connect Wallet</button>
+  </div>
+
+  <!-- Controls -->
+  <div class="communities-controls">
+    <div class="communities-search">
+      <div class="communities-search-icon">
+        <svg viewBox="0 0 24 24" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </div>
+      <input class="communities-search-input" id="search-input" type="text" placeholder="Search communities..." oninput="applyFilters()"/>
+    </div>
+    <div class="communities-filter" id="filter-chips">
+      <button class="filter-chip active" onclick="setChip('all',this)">All</button>
+      <button class="filter-chip" onclick="setChip('social',this)">Social</button>
+      <button class="filter-chip" onclick="setChip('crypto',this)">Crypto</button>
+      <button class="filter-chip" onclick="setChip('creative',this)">Creative</button>
+      <button class="filter-chip" onclick="setChip('affiliate',this)">Affiliate</button>
+      <button class="filter-chip" onclick="setChip('gaming',this)">Gaming</button>
+    </div>
+  </div>
+
+  <!-- Grid -->
+  <div id="communities-grid" class="communities-loading">
+    <!-- skeletons injected by JS -->
+  </div>
+
+  <!-- Pagination -->
+  <div class="communities-pagination" id="pagination" style="display:none">
+    <button class="pagination-btn" id="prev-btn" onclick="changePage(-1)" disabled>← Prev</button>
+    <span class="pagination-info" id="page-info">Page 1 of 1</span>
+    <button class="pagination-btn" id="next-btn" onclick="changePage(1)">Next →</button>
+  </div>
+
+</div>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="footer-brand">
+    <div class="footer-mark">OP</div>
+    <div class="footer-name">OgaPay</div>
+  </div>
+  <div class="footer-sub">One Platform, Equal Opportunities</div>
+  <div class="footer-links">
+    <a href="index.html">Home</a>
+    <a href="index.html#tasks">Tasks</a>
+    <a href="store.html">Store</a>
+    <a href="workers.html">Workers</a>
+    <a href="#">Support</a>
+  </div>
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = 'https://ogapay-production.up.railway.app/api/v1';
+let token = localStorage.getItem('ogapay_token');
+let allCommunities = [], filtered = [];
+let activeTab = 'all', activeChip = 'all';
+let currentPage = 1;
+const PER_PAGE = 9;
+
+/* ── THEME ── */
+function updateThemeIcon() {
+  const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+  document.getElementById('theme-icon').innerHTML = dark
+    ? '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>'
+    : '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+}
+function toggleTheme() {
+  const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+  const next = dark ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('ogapay-theme', next);
+  updateThemeIcon();
+}
+updateThemeIcon();
+
+/* ── TOAST ── */
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+/* ── DEMO DATA ── */
+const DEMO = [
+  { id:'1', name:'Oga Raiders', category:'social', description:"Nigeria's most active raid community. Daily tasks, leaderboards, and cash prizes for top performers.", members:8204, tasks:42, featured:true, verified:true, bg:'linear-gradient(135deg,#1e3a8a,#2563eb)', emoji:'⚡' },
+  { id:'2', name:'Solana NG', category:'crypto', description:'Nigerian Solana ecosystem — airdrops, tasks, and crypto alpha. Weekly USDC prize pools.', members:5112, tasks:28, featured:false, verified:true, bg:'linear-gradient(135deg,#3b0764,#7c3aed)', emoji:'🟢' },
+  { id:'3', name:'Meme Hub', category:'creative', description:'Create, share, and earn from viral memes. Weekly competitions with Naira prizes.', members:12490, tasks:15, featured:true, verified:false, bg:'linear-gradient(135deg,#78350f,#d97706)', emoji:'😂' },
+  { id:'4', name:'Crypto Earners NG', category:'crypto', description:'Earn USDC doing simple tasks. No wallet experience needed to start. Daily payouts.', members:6830, tasks:33, featured:false, verified:true, bg:'linear-gradient(135deg,#064e3b,#059669)', emoji:'💰' },
+  { id:'5', name:'Affiliate Circle', category:'affiliate', description:'Refer users to OgaPay and earn commission on every task they complete. Monthly bonuses.', members:3218, tasks:9, featured:false, verified:false, bg:'linear-gradient(135deg,#1e293b,#334155)', emoji:'🔗' },
+  { id:'6', name:'X Raid Force', category:'social', description:'Elite X/Twitter raid team. High-value task drops every day. Invitation-only for top earners.', members:2100, tasks:55, featured:true, verified:true, bg:'linear-gradient(135deg,#0f172a,#1e3a8a)', emoji:'🐦' },
+  { id:'7', name:'Design Guild', category:'creative', description:'Graphic designers, video editors, and motion artists. Share work, get hired, earn Naira.', members:1840, tasks:22, featured:false, verified:true, bg:'linear-gradient(135deg,#831843,#db2777)', emoji:'🎨' },
+  { id:'8', name:'Writers Collective', category:'creative', description:'Content writers and bloggers. Daily writing tasks, SEO work, and proofreading gigs.', members:2950, tasks:18, featured:false, verified:false, bg:'linear-gradient(135deg,#1e40af,#3b82f6)', emoji:'✍️' },
+  { id:'9', name:'App Testers NG', category:'affiliate', description:'Mobile app testers for hire. iOS and Android. Bug bounty programs and quality assurance.', members:1430, tasks:12, featured:false, verified:true, bg:'linear-gradient(135deg,#164e63,#0891b2)', emoji:'📱' },
+  { id:'10', name:'Gaming Earners', category:'gaming', description:'Complete gaming tasks, tournaments, and achievements for Naira and USDC rewards.', members:4200, tasks:30, featured:false, verified:false, bg:'linear-gradient(135deg,#3b0764,#6d28d9)', emoji:'🎮' },
+  { id:'11', name:'Telegram Masters', category:'social', description:'Telegram group managers and raid specialists. High-volume task completion every day.', members:3600, tasks:40, featured:false, verified:true, bg:'linear-gradient(135deg,#0c4a6e,#0369a1)', emoji:'📢' },
+  { id:'12', name:'Web3 Lagos', category:'crypto', description:'Lagos-based Web3 community. DeFi tasks, NFT drops, and Solana ecosystem opportunities.', members:2880, tasks:24, featured:true, verified:true, bg:'linear-gradient(135deg,#14532d,#15803d)', emoji:'🌍' },
+];
+
+/* ── LOAD ── */
+async function loadCommunities() {
+  showSkeletons();
+  try {
+    const res = await fetch(API + '/communities', { headers: token ? { 'Authorization': 'Bearer ' + token } : {} });
+    const data = await res.json();
+    if (!data.success) throw new Error();
+    allCommunities = data.data || [];
+  } catch {
+    allCommunities = DEMO;
+  }
+
+  // Update stats
+  const totalMembers = allCommunities.reduce((s, c) => s + (c.members || 0), 0);
+  const totalTasks = allCommunities.reduce((s, c) => s + (c.tasks || 0), 0);
+  document.getElementById('stat-total').textContent = allCommunities.length;
+  document.getElementById('stat-active').textContent = totalTasks;
+  document.getElementById('stat-members').textContent = totalMembers >= 1000 ? (totalMembers/1000).toFixed(1) + 'k' : totalMembers;
+
+  applyFilters();
+}
+
+function showSkeletons() {
+  document.getElementById('communities-grid').innerHTML = Array(6).fill(`
+    <div class="community-skeleton">
+      <div class="skeleton-image"></div>
+      <div class="skeleton-content">
+        <div class="skeleton-line title"></div>
+        <div class="skeleton-line text"></div>
+        <div class="skeleton-line text"></div>
+      </div>
+    </div>`).join('');
+  document.getElementById('communities-grid').className = 'communities-loading';
+}
+
+/* ── CONTROLS ── */
+function switchTab(tab, el) {
+  activeTab = tab;
+  document.querySelectorAll('.view-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  applyFilters();
+}
+
+function setChip(chip, el) {
+  activeChip = chip;
+  document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  applyFilters();
+}
+
+function applyFilters() {
+  const q = document.getElementById('search-input').value.toLowerCase();
+  filtered = allCommunities.filter(c => {
+    if (activeChip !== 'all' && c.category !== activeChip) return false;
+    if (q && !c.name?.toLowerCase().includes(q) && !c.description?.toLowerCase().includes(q)) return false;
+    if (activeTab === 'trending') return (c.tasks || 0) >= 20;
+    return true;
+  });
+
+  if (activeTab === 'trending') filtered.sort((a, b) => (b.tasks || 0) - (a.tasks || 0));
+  else filtered.sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0) || (b.members || 0) - (a.members || 0));
+
+  currentPage = 1;
+  renderPage();
+}
+
+/* ── RENDER ── */
+function renderPage() {
+  const total = filtered.length;
+  const totalPages = Math.max(1, Math.ceil(total / PER_PAGE));
+  const start = (currentPage - 1) * PER_PAGE;
+  const page = filtered.slice(start, start + PER_PAGE);
+
+  const grid = document.getElementById('communities-grid');
+  grid.className = 'communities-grid';
+
+  if (!page.length) {
+    grid.innerHTML = `
+      <div class="communities-empty" style="grid-column:1/-1">
+        <div class="empty-icon"><svg viewBox="0 0 24 24" stroke-width="1.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg></div>
+        <div class="empty-title">No communities found</div>
+        <div class="empty-description">Try adjusting your search or filters, or be the first to create one!</div>
+        <button class="btn-empty-cta" onclick="showToast('Community creation coming soon!')">
+          <svg viewBox="0 0 24 24" stroke-width="2.5" width="16" height="16" stroke="currentColor" fill="none"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Create Community
+        </button>
+      </div>`;
+    document.getElementById('pagination').style.display = 'none';
+    return;
+  }
+
+  grid.innerHTML = page.map(c => communityCard(c)).join('');
+
+  const pag = document.getElementById('pagination');
+  if (totalPages > 1) {
+    pag.style.display = 'flex';
+    document.getElementById('page-info').textContent = `Page ${currentPage} of ${totalPages}`;
+    document.getElementById('prev-btn').disabled = currentPage === 1;
+    document.getElementById('next-btn').disabled = currentPage === totalPages;
+  } else {
+    pag.style.display = 'none';
+  }
+}
+
+function changePage(dir) {
+  currentPage += dir;
+  renderPage();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* ── CARD TEMPLATE ── */
+function fmtNum(n) {
+  if (n >= 1000) return (n / 1000).toFixed(1) + 'k';
+  return String(n);
+}
+
+function communityCard(c) {
+  return `
+  <div class="community-card" onclick="showToast('Opening ${c.name.replace(/'/g,"\\'")}...')">
+    <div class="community-image-container">
+      <div class="community-image-placeholder" style="background:${c.bg || 'linear-gradient(135deg,#1e293b,#334155)'}">
+        <span>${c.emoji || '🌐'}</span>
+        <small>${c.category || 'community'}</small>
+      </div>
+      <div class="community-badges">
+        ${c.featured ? '<span class="community-badge featured"><svg viewBox="0 0 24 24" stroke-width="2" width="11" height="11" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>Featured</span>' : ''}
+        ${c.verified ? '<span class="community-badge verified"><svg viewBox="0 0 24 24" stroke-width="2" width="11" height="11" fill="none"><polyline points="20 6 9 17 4 12"/></svg>Verified</span>' : ''}
+      </div>
+    </div>
+    <div class="community-content">
+      <div class="community-header">
+        <div class="community-info">
+          <h3 class="community-name">${c.name}</h3>
+          <div class="community-meta">
+            <div class="community-meta-item">
+              <svg viewBox="0 0 24 24" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+              ${fmtNum(c.members || 0)} members
+            </div>
+            <div class="community-meta-item">
+              <svg viewBox="0 0 24 24" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
+              ${c.tasks || 0} tasks
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="community-description">${c.description || ''}</p>
+      <div class="community-footer">
+        <div class="community-stats">
+          <div class="community-stat">
+            <div class="community-stat-value">${fmtNum(c.members || 0)}</div>
+            <div class="community-stat-label">Members</div>
+          </div>
+          <div class="community-stat">
+            <div class="community-stat-value">${c.tasks || 0}</div>
+            <div class="community-stat-label">Active Tasks</div>
+          </div>
+        </div>
+        <div class="community-action">
+          View
+          <svg viewBox="0 0 24 24" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+loadCommunities();
+</script>
+</body>
+</html>
