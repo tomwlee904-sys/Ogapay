@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0"/>
+<title>OgaPay — Workers Directory</title>
+<script>
+(function(){
+  var t = localStorage.getItem('ogapay-theme');
+  document.documentElement.setAttribute('data-theme', t === 'dark' ? 'dark' : 'light');
+})();
+</script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+/* ── BASE TOKENS ── */
+:root {
+  --color-primary: #0f172a;
+  --color-primary-light: #334155;
+  --color-accent: #033CE3;
+  --color-background: #ffffff;
+  --color-surface: #f8fafc;
+  --color-border: #e2e8f0;
+  --color-border-light: #f1f5f9;
+  --color-text: #1e293b;
+  --color-text-light: #64748b;
+  --color-text-lighter: #94a3b8;
+  --color-error: #ef4444;
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+  --op-blue: #033CE3;
+  --op-blue-dark: #011F9A;
+  --op-blue-light: rgba(3,60,227,.08);
+  --op-blue-mid: rgba(3,60,227,.2);
+}
+[data-theme=dark] {
+  --color-primary: #f5f5f5;
+  --color-primary-light: #d4d4d4;
+  --color-background: #000;
+  --color-surface: #0a0a0a;
+  --color-border: #404040;
+  --color-border-light: #262626;
+  --color-text: #f5f5f5;
+  --color-text-light: #a3a3a3;
+  --color-text-lighter: #737373;
+  --op-blue: #5577F5;
+  --op-blue-dark: #033CE3;
+  --op-blue-light: rgba(85,119,245,.1);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; -webkit-font-smoothing: antialiased; }
+body { font-family: var(--font-sans); color: var(--color-text); background: var(--color-background); min-height: 100vh; overflow-x: hidden; transition: background .2s, color .15s; }
+a { color: var(--color-accent); text-decoration: none; }
+button { font-family: var(--font-sans); cursor: pointer; border: none; }
+
+/* ── NAV ── */
+.app-nav { position: sticky; top: 0; z-index: 100; background: var(--color-background); border-bottom: 1px solid var(--color-border-light); height: 56px; display: flex; align-items: center; padding: 0 16px; gap: 8px; transition: background .2s, border-color .2s; }
+.nav-logo { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 16px; color: var(--color-text); text-decoration: none; flex-shrink: 0; }
+.nav-logo-mark { width: 30px; height: 30px; background: linear-gradient(135deg, var(--op-blue), var(--op-blue-dark)); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 800; font-size: 12px; }
+.nav-links { display: flex; align-items: center; gap: 2px; flex: 1; overflow-x: auto; scrollbar-width: none; }
+.nav-links::-webkit-scrollbar { display: none; }
+.nav-link { display: flex; align-items: center; gap: 5px; padding: 6px 12px; border-radius: 999px; font-size: 13px; font-weight: 500; color: var(--color-text-light); white-space: nowrap; transition: all .15s; background: none; text-decoration: none; }
+.nav-link:hover { background: var(--color-surface); color: var(--color-text); }
+.nav-link.active { background: var(--op-blue-light); color: var(--op-blue); font-weight: 600; }
+.nav-link svg { width: 14px; height: 14px; stroke: currentColor; fill: none; }
+.nav-right { display: flex; align-items: center; gap: 8px; margin-left: auto; flex-shrink: 0; }
+.theme-btn { width: 32px; height: 32px; border-radius: 50%; background: var(--color-surface); border: 1px solid var(--color-border-light); display: flex; align-items: center; justify-content: center; color: var(--color-text-light); cursor: pointer; transition: all .15s; }
+.theme-btn:hover { color: var(--op-blue); border-color: var(--op-blue); }
+.theme-btn svg { width: 15px; height: 15px; stroke: currentColor; fill: none; }
+.nav-auth-btn { padding: 6px 14px; border-radius: 999px; font-size: 13px; font-weight: 600; border: 1.5px solid var(--color-border); background: var(--color-background); color: var(--color-text-light); cursor: pointer; transition: all .15s; }
+.nav-auth-btn:hover { border-color: var(--op-blue); color: var(--op-blue); }
+.nav-auth-btn.primary { background: linear-gradient(135deg, var(--op-blue), var(--op-blue-dark)); color: #fff; border: none; }
+
+/* ── DIRECTORY CONTAINER (ported 1:1 from WurkersDirectory CSS) ── */
+.wurkers-directory-container {
+  --wd-accent: var(--op-blue);
+  --wd-accent-hover: var(--op-blue-dark);
+  --wd-radius-sm: 6px; --wd-radius-md: 8px; --wd-radius-lg: 12px;
+  --wd-radius-xl: 16px; --wd-radius-full: 999px;
+  --wd-shadow-sm: 0 1px 3px rgba(0,0,0,.04);
+  --wd-shadow-md: 0 4px 12px rgba(0,0,0,.06);
+  --wd-shadow-lg: 0 10px 30px rgba(0,0,0,.1);
+  --wd-shadow-xl: 0 20px 40px rgba(0,0,0,.15);
+  --wd-transition-fast: .2s cubic-bezier(.4,0,.2,1);
+  --wd-transition-base: .3s cubic-bezier(.4,0,.2,1);
+  --wd-transition-slow: .5s cubic-bezier(.4,0,.2,1);
+  width: 100%; max-width: 1280px; margin: 2rem auto;
+  padding: 0 1.5rem;
+  animation: fadeInUp .5s ease;
+}
+@keyframes fadeInUp { 0% { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fadeInDown { 0% { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes slideInLeft { 0% { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes cardFadeIn { 0% { opacity: 0; transform: translateY(20px) scale(.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes shake { 0%,to { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+
+/* Header */
+.wurkers-directory-header { margin-bottom: 2.5rem; padding-bottom: 1.5rem; }
+.wurkers-directory-title { font-size: 2.5rem; font-weight: 700; color: var(--color-primary); margin: 0 0 .5rem; letter-spacing: -.02em; display: flex; align-items: center; gap: .75rem; animation: fadeInDown .6s ease; }
+.wurkers-directory-title-icon { color: #94a3b8; display: inline-flex; }
+.wurkers-directory-title-icon svg { width: 36px; height: 36px; stroke: currentColor; fill: none; }
+.wurkers-directory-subtitle { font-size: 1.125rem; color: var(--color-text-light); font-weight: 400; margin: 0; line-height: 1.6; }
+
+/* Filters section */
+.wurkers-filters-section { background: var(--color-surface); border: 1px solid var(--color-border-light); border-radius: var(--wd-radius-xl); padding: 1.5rem; margin-bottom: 2rem; animation: slideInLeft .6s ease; }
+.wurkers-filters-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; align-items: end; }
+@media (min-width: 768px) { .wurkers-filters-grid { grid-template-columns: 220px 180px 1fr auto; } }
+.filter-group { display: flex; flex-direction: column; gap: .5rem; }
+.filter-label { font-size: .75rem; font-weight: 600; color: var(--color-text-light); text-transform: uppercase; letter-spacing: .05em; display: flex; align-items: center; gap: .5rem; }
+.filter-label svg { width: 14px; height: 14px; stroke: currentColor; fill: none; color: #94a3b8; }
+.filter-select {
+  padding: .75rem 2.5rem .75rem 1rem;
+  background: var(--color-background);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--wd-radius-lg);
+  font-size: .9375rem; color: var(--color-text);
+  cursor: pointer; transition: all var(--wd-transition-fast);
+  appearance: none; font-family: var(--font-sans); outline: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right .75rem center; background-size: 18px;
+}
+.filter-select:hover { border-color: rgba(96,165,250,.45); box-shadow: 0 0 0 3px rgba(59,130,246,.08); }
+.filter-select:focus { border-color: rgba(59,130,246,.4); box-shadow: 0 0 0 3px rgba(59,130,246,.1); }
+.search-group { display: flex; flex-direction: column; gap: .5rem; grid-column: span 2; }
+@media (max-width: 768px) { .search-group { grid-column: span 1; } }
+.search-input-wrapper { display: flex; gap: .5rem; align-items: stretch; }
+.search-input {
+  flex: 1; padding: .75rem 1rem .75rem 2.75rem;
+  background: var(--color-background); border: 1.5px solid var(--color-border);
+  border-radius: var(--wd-radius-lg); font-size: .9375rem; color: var(--color-text);
+  transition: all var(--wd-transition-fast); font-family: var(--font-sans); outline: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'%3E%3C/circle%3E%3Cpath d='m21 21-4.35-4.35'%3E%3C/path%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: left .75rem center; background-size: 20px;
+}
+.search-input::placeholder { color: var(--color-text-lighter); }
+.search-input:hover { border-color: rgba(96,165,250,.45); box-shadow: 0 0 0 3px rgba(59,130,246,.08); }
+.search-input:focus { border-color: rgba(59,130,246,.4); box-shadow: 0 0 0 3px rgba(59,130,246,.1); }
+.btn-search, .btn-clear {
+  padding: .75rem 1.25rem; border-radius: var(--wd-radius-lg);
+  font-size: .875rem; font-weight: 600; cursor: pointer;
+  transition: all var(--wd-transition-fast); display: inline-flex;
+  align-items: center; gap: .5rem; white-space: nowrap; font-family: var(--font-sans);
+}
+.btn-search {
+  background: linear-gradient(135deg, rgba(255,255,255,.85), rgba(239,246,255,.8));
+  color: #64748b; border: 1.5px solid rgba(96,165,250,.3);
+  box-shadow: 0 2px 4px rgba(0,0,0,.05), inset 0 1px 1px rgba(255,255,255,.75);
+}
+.btn-search svg { width: 15px; height: 15px; stroke: currentColor; fill: none; }
+.btn-search:hover { transform: translateY(-1px); background: linear-gradient(135deg, rgba(255,255,255,.95), rgba(219,234,254,.9)); color: #475569; border-color: rgba(59,130,246,.45); box-shadow: 0 4px 12px rgba(0,0,0,.06), 0 0 30px -6px rgba(59,130,246,.2); }
+.btn-clear { background: var(--color-background); color: var(--color-text-light); border: 1.5px solid var(--color-border); }
+.btn-clear svg { width: 14px; height: 14px; stroke: currentColor; fill: none; }
+.btn-clear:hover { border-color: var(--color-error); color: var(--color-error); background: rgba(239,68,68,.05); }
+
+/* Results info */
+.wurkers-results-info { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; padding: .75rem 0; color: var(--color-text-light); font-size: .9375rem; }
+.results-count { font-weight: 600; color: var(--color-text); font-size: 1.125rem; }
+.results-count span { color: var(--color-primary); font-weight: 700; }
+
+/* Loading */
+.wurkers-loading { text-align: center; padding: 4rem 2rem; }
+.loading-spinner { width: 48px; height: 48px; border: 3px solid var(--color-border-light); border-top-color: #94a3b8; border-radius: 50%; margin: 0 auto 1.5rem; animation: spin 1s linear infinite; }
+.loading-text { font-size: 1.125rem; color: var(--color-text-light); font-weight: 500; }
+
+/* Empty */
+.wurkers-empty { text-align: center; padding: 4rem 2rem; background: var(--color-surface); border: 2px dashed var(--color-border); border-radius: var(--wd-radius-xl); }
+.wurkers-empty-icon { width: 80px; height: 80px; margin: 0 auto 1.5rem; color: var(--color-text-lighter); }
+.wurkers-empty-icon svg { width: 80px; height: 80px; stroke: currentColor; fill: none; }
+.wurkers-empty-title { font-size: 1.5rem; font-weight: 600; color: var(--color-text); margin-bottom: .5rem; }
+.wurkers-empty-subtitle { font-size: 1rem; color: var(--color-text-light); line-height: 1.6; }
+
+/* Profile grid */
+.wurkers-profiles-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; animation: fadeInUp .5s ease; }
+@media (min-width: 640px) { .wurkers-profiles-grid { grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); } }
+@media (min-width: 1024px) { .wurkers-profiles-grid { grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); } }
+
+/* Profile card */
+.wurker-profile-card {
+  background: var(--color-background);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--wd-radius-xl);
+  padding: 1.5rem;
+  transition: all var(--wd-transition-base);
+  position: relative; overflow: hidden;
+  display: flex; flex-direction: column; gap: 1rem;
+  animation: cardFadeIn .5s ease backwards;
+}
+.wurker-profile-card:nth-child(odd) { animation-delay: .05s; }
+.wurker-profile-card:nth-child(even) { animation-delay: .1s; }
+.wurker-profile-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, rgba(3,60,227,.6), rgba(85,119,245,.45), rgba(167,139,250,.6));
+  transform: translateX(-100%); transition: transform var(--wd-transition-slow);
+}
+.wurker-profile-card:hover { box-shadow: var(--wd-shadow-lg); border-color: var(--color-border); transform: translateY(-4px); }
+.wurker-profile-card:hover::before { transform: translateX(0); }
+
+/* Card header */
+.wurker-card-header { display: flex; gap: 1rem; align-items: flex-start; }
+.wurker-avatar-wrapper { flex-shrink: 0; }
+.wurker-avatar {
+  width: 64px; height: 64px; border-radius: var(--wd-radius-xl);
+  overflow: hidden; display: flex; align-items: center; justify-content: center;
+  border: 2px solid var(--color-border-light);
+  transition: all var(--wd-transition-fast);
+  font-size: 1.25rem; font-weight: 800; color: #fff; flex-shrink: 0;
+}
+.wurker-profile-card:hover .wurker-avatar { border-color: rgba(96,165,250,.45); transform: scale(1.05); box-shadow: 0 0 0 3px rgba(59,130,246,.1); }
+.wurker-card-info { flex: 1; min-width: 0; }
+.wurker-name-row { display: flex; align-items: center; gap: .25rem; margin-bottom: .5rem; }
+.wurker-name { font-size: 1.125rem; font-weight: 600; color: var(--color-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: -.01em; max-width: calc(100% - 24px); }
+.wurker-unnamed { color: var(--color-text-lighter); font-style: italic; }
+.wurker-verified-star { color: #fbbf24; margin-left: .375rem; flex-shrink: 0; display: inline-flex; }
+.wurker-verified-star svg { width: 16px; height: 16px; fill: currentColor; }
+
+/* Stars */
+.wurker-stars { display: flex; align-items: center; gap: .25rem; }
+.wurker-star { width: 15px; height: 15px; transition: transform var(--wd-transition-fast); }
+.wurker-star svg { width: 15px; height: 15px; }
+.wurker-star.filled svg { color: #fbbf24; fill: currentColor; filter: drop-shadow(0 1px 2px rgba(251,191,36,.3)); }
+.wurker-star.empty svg { color: var(--color-border); fill: currentColor; }
+.wurker-star-value { font-size: .875rem; color: var(--color-text-light); font-weight: 600; margin-left: .5rem; }
+
+/* Bio */
+.wurker-bio { color: var(--color-text); font-size: .9375rem; line-height: 1.6; min-height: 3rem; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.wurker-bio-empty { color: var(--color-text-lighter); font-style: italic; }
+
+/* Stats bar */
+.wurker-card-stats { display: flex; gap: 1.5rem; padding: .75rem 0; border-top: 1px solid var(--color-border-light); border-bottom: 1px solid var(--color-border-light); }
+.wurker-stat { display: flex; flex-direction: column; align-items: center; flex: 1; }
+.wurker-stat-value { font-size: 1.25rem; font-weight: 700; color: var(--color-primary); }
+.wurker-stat-label { font-size: .75rem; color: var(--color-text-lighter); text-transform: uppercase; letter-spacing: .05em; margin-top: .25rem; }
+
+/* Skill tags */
+.wurker-skills { display: flex; gap: 5px; flex-wrap: wrap; }
+.skill-tag { padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; background: var(--op-blue-light); border: 1px solid var(--op-blue-mid); color: var(--op-blue); }
+
+/* View profile btn (glassmorphism — direct port) */
+.wurker-card-action { padding-top: .5rem; }
+.btn-view-profile {
+  width: 100%; padding: .875rem;
+  background: linear-gradient(135deg, rgba(255,255,255,.85), rgba(255,253,248,.8), rgba(255,250,245,.75));
+  color: #64748b; border: 1.5px solid rgba(253,186,116,.25);
+  border-radius: var(--wd-radius-lg); font-size: .9375rem; font-weight: 600;
+  cursor: pointer; transition: all var(--wd-transition-fast);
+  display: inline-flex; align-items: center; justify-content: center; gap: .5rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,.05), inset 0 1px 1px rgba(255,255,255,.75);
+  position: relative; font-family: var(--font-sans);
+}
+.btn-view-profile::before {
+  content: ''; position: absolute; inset: -1.5px; border-radius: var(--wd-radius-lg);
+  padding: 1.5px;
+  background: linear-gradient(145deg, rgba(59,130,246,.2), rgba(96,165,250,.16) 50%, rgba(167,139,250,.2));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+  pointer-events: none; opacity: 0; transition: opacity var(--wd-transition-fast);
+}
+.btn-view-profile:hover::before { opacity: 1; }
+.btn-view-profile:hover { transform: translateY(-2px); background: linear-gradient(135deg, rgba(255,255,255,.95), rgba(239,246,255,.9)); color: #475569; border-color: rgba(59,130,246,.4); box-shadow: 0 4px 12px rgba(0,0,0,.06), 0 0 30px -8px rgba(59,130,246,.18), inset 0 1px 1px rgba(255,255,255,.9); }
+.btn-view-profile svg { width: 15px; height: 15px; stroke: currentColor; fill: none; transition: transform var(--wd-transition-fast); }
+.btn-view-profile:hover svg { transform: translateX(3px); }
+
+/* Pagination */
+.wurkers-pagination { display: flex; align-items: center; justify-content: center; gap: 1rem; margin-top: 3rem; padding: 1.5rem 0; }
+.pagination-btn { padding: .75rem 1.5rem; background: var(--color-background); color: var(--color-text); border: 1.5px solid var(--color-border); border-radius: var(--wd-radius-lg); font-size: .875rem; font-weight: 600; cursor: pointer; transition: all var(--wd-transition-fast); display: inline-flex; align-items: center; gap: .5rem; font-family: var(--font-sans); }
+.pagination-btn:hover:not(:disabled) { border-color: rgba(59,130,246,.4); color: #475569; background: linear-gradient(135deg, rgba(255,255,255,.95), rgba(239,246,255,.9)); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,.06); }
+.pagination-btn:disabled { opacity: .5; cursor: not-allowed; }
+.pagination-btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; transition: transform var(--wd-transition-fast); }
+.pagination-btn.prev:hover:not(:disabled) svg { transform: translateX(-3px); }
+.pagination-btn.next:hover:not(:disabled) svg { transform: translateX(3px); }
+.pagination-info { font-size: .9375rem; color: var(--color-text-light); font-weight: 500; padding: .75rem 1.5rem; background: var(--color-surface); border-radius: var(--wd-radius-lg); border: 1px solid var(--color-border-light); }
+.pagination-current { font-weight: 700; color: var(--color-primary); }
+
+/* ── DARK MODE (direct port of WurkersDirectory dark rules, swapping accent to OgaPay blue) ── */
+[data-theme=dark] .wurkers-directory-container { --wd-shadow-sm: 0 1px 3px rgba(0,0,0,.35); --wd-shadow-md: 0 6px 16px rgba(0,0,0,.35); --wd-shadow-lg: 0 14px 32px rgba(0,0,0,.48); }
+[data-theme=dark] .wurkers-directory-title-icon, [data-theme=dark] .filter-label svg { color: #d4d4d8; }
+[data-theme=dark] .wurkers-filters-section { background: linear-gradient(140deg, #070707, #0c0c0c); border-color: #383838e6; }
+[data-theme=dark] .wurkers-results-info { background: linear-gradient(140deg, #070707, #0c0c0c); border: 1px solid rgba(56,56,56,.92); border-radius: var(--wd-radius-lg); color: #d4d4d8; padding: .75rem 1rem; }
+[data-theme=dark] .results-count, [data-theme=dark] .results-count span { color: #f5f5f5; }
+[data-theme=dark] .filter-select, [data-theme=dark] .search-input { background-color: #0b0b0b; border-color: #404040f2; color: #f5f5f5; }
+[data-theme=dark] .filter-select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23d4d4d8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E"); }
+[data-theme=dark] .filter-select option { background: #0b0b0b; color: #f5f5f5; }
+[data-theme=dark] .filter-select:hover, [data-theme=dark] .search-input:hover { border-color: #737373eb; box-shadow: none; }
+[data-theme=dark] .filter-select:focus, [data-theme=dark] .search-input:focus { border-color: rgba(85,119,245,.9); box-shadow: 0 0 0 3px rgba(85,119,245,.2); }
+[data-theme=dark] .search-input::placeholder { color: #737373; }
+[data-theme=dark] .btn-search { background: linear-gradient(135deg, #f5f5f5, #e5e7eb); color: #0a0a0a; border-color: #e5e7ebe6; box-shadow: 0 4px 14px rgba(0,0,0,.5); }
+[data-theme=dark] .btn-search:hover { background: linear-gradient(135deg, #fafafa, #f3f4f6); box-shadow: 0 8px 18px rgba(0,0,0,.6); }
+[data-theme=dark] .btn-clear, [data-theme=dark] .pagination-btn { background: #111; border-color: #404040f2; color: #d4d4d8; }
+[data-theme=dark] .btn-clear:hover { background: rgba(127,29,29,.28); border-color: rgba(248,113,113,.48); color: #fecaca; }
+[data-theme=dark] .pagination-btn:hover:not(:disabled) { border-color: #737373f2; color: #f5f5f5; background: #161616; box-shadow: 0 8px 18px rgba(0,0,0,.55); }
+[data-theme=dark] .wurker-profile-card { background: linear-gradient(165deg, #070707, #0c0c0c); border-color: #404040e6; box-shadow: var(--wd-shadow-md); }
+[data-theme=dark] .wurker-profile-card::before { background: linear-gradient(90deg, rgba(85,119,245,.42), rgba(147,197,253,.28), rgba(85,119,245,.42)); }
+[data-theme=dark] .wurker-profile-card:hover { border-color: #737373f2; }
+[data-theme=dark] .wurker-avatar { background: #111; border-color: #525252e6; }
+[data-theme=dark] .wurker-card-stats { border-top-color: #262626; border-bottom-color: #262626; }
+[data-theme=dark] .btn-view-profile { background: #111; color: #d4d4d8; border-color: #404040f2; box-shadow: none; }
+[data-theme=dark] .btn-view-profile:hover { background: #161616; color: #f5f5f5; border-color: #737373f2; box-shadow: 0 8px 18px rgba(0,0,0,.55); }
+[data-theme=dark] .pagination-info { background: linear-gradient(140deg, #070707, #0c0c0c); border-color: #383838eb; color: #d4d4d8; }
+[data-theme=dark] .pagination-current { color: #f5f5f5; }
+[data-theme=dark] .wurkers-empty { background: linear-gradient(140deg, #070707, #0b0b0b); border-color: #383838e6; }
+[data-theme=dark] .wurkers-empty-title { color: #f5f5f5; }
+[data-theme=dark] .wurkers-empty-subtitle { color: #a3a3a3; }
+[data-theme=dark] .loading-spinner { border-color: #262626; border-top-color: #5577F5; border-right-color: #7a99ff; }
+[data-theme=dark] .loading-text { color: #d4d4d8; }
+[data-theme=dark] .skill-tag { background: rgba(85,119,245,.12); border-color: rgba(85,119,245,.28); color: #7a99ff; }
+
+/* ── TOAST ── */
+.toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--color-primary); color: var(--color-background); padding: 10px 22px; border-radius: 999px; font-size: 13px; font-weight: 600; z-index: 9999; transition: transform .25s; white-space: nowrap; box-shadow: 0 10px 24px rgba(0,0,0,.12); }
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+/* ── FOOTER ── */
+.footer { background: var(--color-surface); border-top: 1px solid var(--color-border-light); padding: 32px 16px; text-align: center; margin-top: 32px; }
+.footer-brand { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 6px; }
+.footer-mark { width: 24px; height: 24px; background: linear-gradient(135deg, var(--op-blue), var(--op-blue-dark)); border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 10px; font-weight: 800; }
+.footer-name { font-weight: 700; font-size: 14px; color: var(--color-primary); }
+.footer-sub { font-size: 12px; color: var(--color-text-lighter); margin-bottom: 14px; }
+.footer-links { display: flex; justify-content: center; gap: 20px; font-size: 12px; color: var(--color-text-light); }
+.footer-links a:hover { color: var(--op-blue); }
+
+@media (max-width: 640px) {
+  .wurkers-directory-container { padding: 0 1rem; margin: 1rem auto; }
+  .wurkers-directory-title { font-size: 1.75rem; }
+  .wurkers-filters-section { padding: 1rem; }
+  .wurkers-filters-grid { grid-template-columns: 1fr; gap: 1rem; }
+  .search-group { grid-column: span 1; }
+  .search-input-wrapper { flex-direction: column; }
+  .btn-search, .btn-clear { width: 100%; justify-content: center; }
+  .wurkers-profiles-grid { grid-template-columns: 1fr; gap: 1rem; }
+  .wurker-profile-card { padding: 1rem; }
+  .wurkers-pagination { flex-wrap: wrap; gap: .5rem; }
+  .pagination-btn { padding: .625rem 1rem; font-size: .8125rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="app-nav">
+  <a class="nav-logo" href="index.html">
+    <div class="nav-logo-mark">OP</div>
+    OgaPay
+  </a>
+  <div class="nav-links">
+    <a class="nav-link" href="index.html#tasks">
+      <svg viewBox="0 0 24 24" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
+      Tasks
+    </a>
+    <a class="nav-link" href="store.html">
+      <svg viewBox="0 0 24 24" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Store
+    </a>
+    <a class="nav-link active" href="workers.html">
+      <svg viewBox="0 0 24 24" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+      Workers
+    </a>
+    <a class="nav-link" href="index.html#communities">
+      <svg viewBox="0 0 24 24" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg>
+      Communities
+    </a>
+    <a class="nav-link" href="post-task.html">
+      <svg viewBox="0 0 24 24" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Post a Task
+    </a>
+  </div>
+  <div class="nav-right">
+    <button class="theme-btn" onclick="toggleTheme()">
+      <svg id="theme-icon" viewBox="0 0 24 24" stroke-width="2"></svg>
+    </button>
+    <button class="nav-auth-btn" onclick="window.location.href='index.html'">Log in</button>
+    <button class="nav-auth-btn primary" onclick="window.location.href='index.html'">Get Started</button>
+  </div>
+</nav>
+
+<!-- DIRECTORY -->
+<div class="wurkers-directory-container">
+
+  <!-- Header -->
+  <div class="wurkers-directory-header">
+    <h1 class="wurkers-directory-title">
+      <span class="wurkers-directory-title-icon">
+        <svg viewBox="0 0 24 24" stroke-width="1.8"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+      </span>
+      Workers Directory
+    </h1>
+    <p class="wurkers-directory-subtitle">Browse verified OgaPay workers — hire talent for social tasks, design, writing, translation, and more.</p>
+  </div>
+
+  <!-- Filters -->
+  <div class="wurkers-filters-section">
+    <div class="wurkers-filters-grid">
+      <div class="filter-group">
+        <label class="filter-label">
+          <svg viewBox="0 0 24 24" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
+          Skill
+        </label>
+        <select class="filter-select" id="skill-filter" onchange="applyFilters()">
+          <option value="all">All Skills</option>
+          <option value="SOCIAL_MEDIA">Social Media</option>
+          <option value="DESIGN">Design</option>
+          <option value="CONTENT_WRITING">Writing</option>
+          <option value="TRANSLATION">Translation</option>
+          <option value="DATA_ENTRY">Data Entry</option>
+          <option value="APP_TESTING">App Testing</option>
+          <option value="OTHER">Other</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label class="filter-label">
+          <svg viewBox="0 0 24 24" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          Sort by
+        </label>
+        <select class="filter-select" id="sort-filter" onchange="applyFilters()">
+          <option value="rating">Highest Rated</option>
+          <option value="completions">Most Completions</option>
+          <option value="earnings">Top Earners</option>
+          <option value="newest">Newest</option>
+        </select>
+      </div>
+      <div class="filter-group search-group">
+        <label class="filter-label">
+          <svg viewBox="0 0 24 24" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          Search workers
+        </label>
+        <div class="search-input-wrapper">
+          <input class="search-input" id="search-input" type="text" placeholder="Search by name, skill, or bio..." oninput="applyFilters()"/>
+          <button class="btn-search" onclick="applyFilters()">
+            <svg viewBox="0 0 24 24" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            Search
+          </button>
+          <button class="btn-clear" onclick="clearFilters()">
+            <svg viewBox="0 0 24 24" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            Clear
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Results count -->
+  <div class="wurkers-results-info">
+    <div class="results-count" id="results-count">Loading workers...</div>
+  </div>
+
+  <!-- Grid -->
+  <div class="wurkers-profiles-grid" id="profiles-grid">
+    <!-- skeletons injected by JS -->
+  </div>
+
+  <!-- Pagination -->
+  <div class="wurkers-pagination" id="pagination" style="display:none">
+    <button class="pagination-btn prev" id="prev-btn" onclick="changePage(-1)" disabled>
+      <svg viewBox="0 0 24 24" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+      Previous
+    </button>
+    <div class="pagination-info">Page <span class="pagination-current" id="page-current">1</span> of <span id="page-total">1</span></div>
+    <button class="pagination-btn next" id="next-btn" onclick="changePage(1)">
+      Next
+      <svg viewBox="0 0 24 24" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
+  </div>
+
+</div>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="footer-brand">
+    <div class="footer-mark">OP</div>
+    <div class="footer-name">OgaPay</div>
+  </div>
+  <div class="footer-sub">One Platform, Equal Opportunities</div>
+  <div class="footer-links">
+    <a href="index.html">Home</a>
+    <a href="index.html#tasks">Tasks</a>
+    <a href="store.html">Store</a>
+    <a href="#">Support</a>
+    <a href="#">Terms</a>
+  </div>
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = 'https://ogapay-production.up.railway.app/api/v1';
+let token = localStorage.getItem('ogapay_token');
+let allWorkers = [], filtered = [];
+let currentPage = 1;
+const PER_PAGE = 12;
+
+/* ── THEME ── */
+function updateThemeIcon() {
+  const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+  document.getElementById('theme-icon').innerHTML = dark
+    ? '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>'
+    : '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+}
+function toggleTheme() {
+  const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+  const next = dark ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('ogapay-theme', next);
+  updateThemeIcon();
+}
+updateThemeIcon();
+
+/* ── TOAST ── */
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+/* ── DEMO DATA ── */
+const SKILLS = { SOCIAL_MEDIA:'Social Media', DESIGN:'Design', CONTENT_WRITING:'Writing', TRANSLATION:'Translation', DATA_ENTRY:'Data Entry', APP_TESTING:'App Testing', OTHER:'Other' };
+const COLORS = ['#033CE3','#10b981','#f59e0b','#ec4899','#8b5cf6','#06b6d4','#ef4444','#14b8a6'];
+const NAMES = ['Amaka Okonkwo','Chidi Nwosu','Tunde Olatunji','Fatima Bello','Emeka Eze','Ngozi Adeyemi','Seun Afolabi','Kelechi Ike','Yemi Adebayo','Bola Okafor','Uche Nwachukwu','Ife Adegoke','Dami Lawal','Chukwuma Obi','Aisha Mohammed','Tobi Olawale'];
+const BIOS = [
+  'Top-rated social media specialist with 3+ years growing brands on X, Instagram, and TikTok. Specializing in Nigerian audience engagement.',
+  'Professional graphic designer with expertise in logo creation, brand identity, and social media visuals. Portfolio available on request.',
+  'Native Yoruba and Igbo speaker offering fast, accurate translations for documents, websites, and marketing materials.',
+  'Experienced data entry specialist. Fast, accurate, and reliable. Excel, Google Sheets, and online forms. Deadline-focused.',
+  'Mobile app tester (iOS & Android). Detailed bug reports with screenshots and reproduction steps. Expert in fintech and e-commerce apps.',
+  'Content writer specializing in SEO articles, blog posts, and product descriptions. Research-driven, plagiarism-free.',
+  'Social media manager and X raid coordinator. 100+ successful campaigns for Nigerian and diaspora brands.',
+  'Freelance web researcher and data analyst. Quick turnaround, structured reports, and verifiable sources.',
+];
+
+function getDemoWorkers() {
+  return NAMES.map((name, i) => ({
+    id: String(i + 1),
+    name,
+    bio: BIOS[i % BIOS.length],
+    skills: [Object.keys(SKILLS)[i % Object.keys(SKILLS).length]],
+    rating: +(4.2 + Math.random() * 0.8).toFixed(1),
+    completions: Math.floor(20 + Math.random() * 280),
+    earnings: Math.floor(5000 + Math.random() * 95000),
+    verified: i % 3 !== 2,
+    joinedAt: new Date(Date.now() - Math.random() * 1e10).toISOString(),
+    color: COLORS[i % COLORS.length],
+  }));
+}
+
+/* ── LOAD ── */
+async function loadWorkers() {
+  document.getElementById('profiles-grid').innerHTML = `
+    <div style="grid-column:1/-1;text-align:center;padding:4rem 2rem">
+      <div class="loading-spinner"></div>
+      <div class="loading-text">Loading workers...</div>
+    </div>`;
+  try {
+    const res = await fetch(API + '/users/workers', { headers: token ? { 'Authorization': 'Bearer ' + token } : {} });
+    const data = await res.json();
+    if (!data.success) throw new Error();
+    allWorkers = (data.data || []).map((w, i) => ({ ...w, color: COLORS[i % COLORS.length] }));
+  } catch {
+    allWorkers = getDemoWorkers();
+  }
+  applyFilters();
+}
+
+/* ── FILTERS ── */
+function clearFilters() {
+  document.getElementById('skill-filter').value = 'all';
+  document.getElementById('sort-filter').value = 'rating';
+  document.getElementById('search-input').value = '';
+  applyFilters();
+}
+
+function applyFilters() {
+  const skill = document.getElementById('skill-filter').value;
+  const sort = document.getElementById('sort-filter').value;
+  const q = document.getElementById('search-input').value.toLowerCase();
+
+  filtered = allWorkers.filter(w => {
+    if (skill !== 'all' && !(w.skills || []).includes(skill)) return false;
+    if (q && !w.name?.toLowerCase().includes(q) && !w.bio?.toLowerCase().includes(q)) return false;
+    return true;
+  });
+
+  if (sort === 'rating') filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+  else if (sort === 'completions') filtered.sort((a, b) => (b.completions || 0) - (a.completions || 0));
+  else if (sort === 'earnings') filtered.sort((a, b) => (b.earnings || 0) - (a.earnings || 0));
+  else filtered.sort((a, b) => new Date(b.joinedAt || 0) - new Date(a.joinedAt || 0));
+
+  currentPage = 1;
+  renderPage();
+}
+
+/* ── RENDER ── */
+function renderPage() {
+  const total = filtered.length;
+  const totalPages = Math.max(1, Math.ceil(total / PER_PAGE));
+  const start = (currentPage - 1) * PER_PAGE;
+  const page = filtered.slice(start, start + PER_PAGE);
+
+  document.getElementById('results-count').innerHTML =
+    `<span>${total}</span> worker${total !== 1 ? 's' : ''} found`;
+
+  if (!page.length) {
+    document.getElementById('profiles-grid').innerHTML = `
+      <div class="wurkers-empty" style="grid-column:1/-1">
+        <div class="wurkers-empty-icon"><svg viewBox="0 0 24 24" stroke-width="1.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg></div>
+        <div class="wurkers-empty-title">No workers found</div>
+        <div class="wurkers-empty-subtitle">Try adjusting your search or filters</div>
+      </div>`;
+    document.getElementById('pagination').style.display = 'none';
+    return;
+  }
+
+  document.getElementById('profiles-grid').innerHTML = page.map(w => workerCard(w)).join('');
+
+  const pag = document.getElementById('pagination');
+  if (totalPages > 1) {
+    pag.style.display = 'flex';
+    document.getElementById('page-current').textContent = currentPage;
+    document.getElementById('page-total').textContent = totalPages;
+    document.getElementById('prev-btn').disabled = currentPage === 1;
+    document.getElementById('next-btn').disabled = currentPage === totalPages;
+  } else {
+    pag.style.display = 'none';
+  }
+}
+
+function changePage(dir) {
+  currentPage += dir;
+  renderPage();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* ── CARD TEMPLATE ── */
+function stars(r) {
+  return Array.from({ length: 5 }, (_, i) => `
+    <span class="wurker-star ${i < Math.round(r) ? 'filled' : 'empty'}">
+      <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+    </span>`).join('');
+}
+
+function workerCard(w) {
+  const initials = (w.name || 'U').split(' ').map(p => p[0]).join('').substring(0, 2).toUpperCase();
+  const skillLabels = (w.skills || []).map(s => SKILLS[s] || s);
+  return `
+  <div class="wurker-profile-card">
+    <div class="wurker-card-header">
+      <div class="wurker-avatar-wrapper">
+        <div class="wurker-avatar" style="background:${w.color}">${initials}</div>
+      </div>
+      <div class="wurker-card-info">
+        <div class="wurker-name-row">
+          <div class="wurker-name">${w.name || '<span class="wurker-unnamed">Anonymous</span>'}</div>
+          ${w.verified ? `<span class="wurker-verified-star" title="Verified"><svg viewBox="0 0 24 24" width="14" height="14"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span>` : ''}
+        </div>
+        <div class="wurker-stars">
+          ${stars(w.rating || 0)}
+          <span class="wurker-star-value">${(w.rating || 0).toFixed(1)}</span>
+        </div>
+      </div>
+    </div>
+    ${skillLabels.length ? `<div class="wurker-skills">${skillLabels.map(s => `<span class="skill-tag">${s}</span>`).join('')}</div>` : ''}
+    <div class="wurker-bio ${w.bio ? '' : 'wurker-bio-empty'}">${w.bio || 'No bio yet.'}</div>
+    <div class="wurker-card-stats">
+      <div class="wurker-stat">
+        <div class="wurker-stat-value">${w.completions || 0}</div>
+        <div class="wurker-stat-label">Tasks</div>
+      </div>
+      <div class="wurker-stat">
+        <div class="wurker-stat-value">${(w.rating || 0).toFixed(1)}</div>
+        <div class="wurker-stat-label">Rating</div>
+      </div>
+      <div class="wurker-stat">
+        <div class="wurker-stat-value">₦${((w.earnings || 0)/1000).toFixed(0)}k</div>
+        <div class="wurker-stat-label">Earned</div>
+      </div>
+    </div>
+    <div class="wurker-card-action">
+      <button class="btn-view-profile" onclick="showToast('Opening profile for ${w.name?.split("'")[0] || 'worker'}...')">
+        View Profile
+        <svg viewBox="0 0 24 24" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+    </div>
+  </div>`;
+}
+
+loadWorkers();
+</script>
+</body>
+</html>
