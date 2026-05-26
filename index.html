@@ -577,30 +577,76 @@ body.is-authed .mob-hide-authed{display:none!important;}
 /* ════════════════════════════════════════════════════
    HERO
    ════════════════════════════════════════════════════ */
-.hero{padding:72px 0 80px;background:var(--bg);border-bottom:1px solid var(--border);}
-.hero-inner{display:grid;grid-template-columns:1fr 420px;gap:64px;align-items:center;}
-.hero-eyebrow{display:inline-flex;align-items:center;gap:8px;padding:5px 14px;border-radius:var(--radius-pill);background:var(--blue-light);border:1px solid var(--blue-soft);font-size:12.5px;font-weight:600;color:var(--blue);margin-bottom:22px;}
-.hero-h1{font-family:'Outfit',sans-serif;font-size:clamp(36px,4.5vw,58px);font-weight:800;letter-spacing:-1.5px;line-height:1.04;color:var(--text);margin-bottom:18px;}
-.hero-h1 .accent{color:var(--blue);}
-.hero-h1 .accent-gold{color:var(--gold);}
-.hero-sub{font-size:16px;color:var(--text2);line-height:1.75;max-width:420px;margin-bottom:32px;font-weight:400;}
+.hero{
+  padding:80px 0 96px;
+  background:#07080f;
+  border-bottom:1px solid rgba(255,255,255,0.06);
+  position:relative;overflow:hidden;
+}
+/* subtle radial ambient glow behind hero */
+.hero::before{
+  content:'';position:absolute;
+  top:-120px;left:50%;transform:translateX(-50%);
+  width:900px;height:600px;
+  background:radial-gradient(ellipse at center,rgba(109,40,217,0.13) 0%,rgba(99,102,241,0.07) 40%,transparent 70%);
+  pointer-events:none;
+}
+body.is-authed .hero{border-bottom:1px solid rgba(255,255,255,0.06);}
+.hero-inner{display:grid;grid-template-columns:1fr 420px;gap:64px;align-items:center;position:relative;z-index:1;}
+.hero-eyebrow{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:5px 14px;border-radius:var(--radius-pill);
+  background:rgba(109,40,217,0.12);
+  border:1px solid rgba(139,92,246,0.3);
+  font-size:12.5px;font-weight:600;color:#A78BFA;margin-bottom:22px;
+}
+.hero-h1{
+  font-family:'Outfit',sans-serif;
+  font-size:clamp(40px,5vw,64px);
+  font-weight:800;letter-spacing:-2px;line-height:1.04;
+  color:#ffffff;margin-bottom:20px;
+}
+/* The glowing "Earn" word */
+@keyframes earnShift{
+  0%{background-position:0% 50%;}
+  50%{background-position:100% 50%;}
+  100%{background-position:0% 50%;}
+}
+.hero-earn{
+  display:inline-block;
+  background:linear-gradient(135deg,#7C3AED 0%,#A78BFA 30%,#6366F1 60%,#C4B5FD 80%,#7C3AED 100%);
+  background-size:300% 300%;
+  -webkit-background-clip:text;
+  background-clip:text;
+  -webkit-text-fill-color:transparent;
+  animation:earnShift 4s ease infinite;
+  filter:drop-shadow(0 0 18px rgba(139,92,246,0.55));
+}
+.hero-sub{
+  font-size:16.5px;color:rgba(255,255,255,0.55);
+  line-height:1.75;max-width:430px;
+  margin-bottom:32px;font-weight:400;
+}
+/* Override btn colors inside dark hero */
+.hero .trust-item{color:rgba(255,255,255,0.5);}
+.hero .trust-item svg{stroke:rgba(139,92,246,0.9);}
 .hero-cta{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:36px;}
 .hero-trust{display:flex;align-items:center;gap:20px;flex-wrap:wrap;}
 .trust-item{display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:500;color:var(--text2);}
 .trust-item svg{flex-shrink:0;}
 
 /* Analytics card */
-.analytics-card{background:var(--card);border:1.5px solid var(--border);border-radius:20px;padding:24px;box-shadow:var(--shadow-lg);}
+.analytics-card{background:#ffffff;border:1.5px solid rgba(255,255,255,0.12);border-radius:20px;padding:24px;box-shadow:0 24px 64px rgba(0,0,0,0.4),0 0 0 1px rgba(255,255,255,0.06);}
 .ac-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
-.ac-title{font-family:'Outfit',sans-serif;font-size:13.5px;font-weight:600;color:var(--text);}
-.ac-live{display:flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:var(--blue);}
+.ac-title{font-family:'Outfit',sans-serif;font-size:13.5px;font-weight:600;color:#111827;}
+.ac-live{display:flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:#10B981;}
 .ac-stats{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
-.ac-stat{background:var(--bg2);border-radius:var(--radius-sm);padding:14px 16px;}
-.ac-stat-num{font-family:'Outfit',sans-serif;font-size:22px;font-weight:700;color:var(--text);line-height:1.1;margin-bottom:2px;}
-.ac-stat-num.blue{color:var(--blue);}
-.ac-stat-num.gold{color:var(--gold);}
-.ac-stat-label{font-size:11.5px;color:var(--text3);}
-.ac-footer{padding-top:14px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:center;gap:8px;font-size:12px;color:var(--text3);font-weight:500;}
+.ac-stat{background:#F9FAFB;border-radius:var(--radius-sm);padding:14px 16px;}
+.ac-stat-num{font-family:'Outfit',sans-serif;font-size:22px;font-weight:700;color:#111827;line-height:1.1;margin-bottom:2px;}
+.ac-stat-num.blue{color:#0627B8;}
+.ac-stat-num.gold{color:#F5B301;}
+.ac-stat-label{font-size:11.5px;color:#6B7280;}
+.ac-footer{padding-top:14px;border-top:1px solid #E5E7EB;display:flex;align-items:center;justify-content:center;gap:8px;font-size:12px;color:#9CA3AF;font-weight:500;}
 
 /* QUICK BAR */
 .quick-bar{padding:28px 0;border-bottom:1px solid var(--border);background:var(--bg);}
@@ -773,7 +819,7 @@ footer{background:var(--bg);border-top:1px solid var(--border);padding:52px 0 32
 @media(max-width:768px){
   .nav-links{display:none;}
   .nav-right .connect-btn{display:none;}
-  .hero{padding:48px 0 56px;}
+  .hero{padding:56px 0 64px;}
   .section{padding:60px 0;}
   .section-sm{padding:44px 0;}
   .how-grid{grid-template-columns:1fr;}
@@ -1111,10 +1157,9 @@ footer{background:var(--bg);border-top:1px solid var(--border);padding:52px 0 32
           Nigerian-first · Naira + Crypto
         </div>
         <h1 class="hero-h1">
-          Earn in <span class="accent-gold">Naira</span><br>
-          &amp; <span class="accent">Crypto</span>
+          Work → <span class="hero-earn">Earn</span>
         </h1>
-        <p class="hero-sub">OgaPay helps users complete simple online tasks and get rewarded instantly through Naira payouts and crypto rewards.</p>
+        <p class="hero-sub">A modern earning marketplace for tasks, communities, and rewards. Work online and earn in Naira &amp; Crypto.</p>
         <div class="hero-cta">
           <a href="tasks.html" class="btn btn-primary btn-lg">Start Earning</a>
           <a href="post-task.html" class="btn btn-secondary btn-lg">Post a Task</a>
