@@ -241,42 +241,102 @@ button{font-family:var(--font-sans);cursor:pointer}
 @media(max-width:420px){
   .pp-grid{grid-template-columns:1fr}
 }
+
+/* OgaPay connected shell + WURK-inspired refresh */
+:root{--bg:var(--color-background);--bg2:var(--color-surface);--card:var(--color-background);--border:var(--color-border);--border2:#d5deea;--text:var(--color-text);--text2:var(--color-text-light);--text3:var(--color-text-lighter);--brand-blue:linear-gradient(90deg,#2563EB,#3B82F6,#60A5FA,#93C5FD);--earn-gradient:linear-gradient(90deg,#7C3AED,#A78BFA,#6366F1,#C4B5FD,#7C3AED);--nav-h:60px;}
+[data-theme=dark]{--bg:#080b13;--bg2:#0d111d;--card:#111725;--border:#222b3c;--border2:#2d384d;--text:#f4f7fb;--text2:#9aa7bc;--text3:#667186;}
+body{font-family:"DM Sans","Inter",system-ui,sans-serif;background:linear-gradient(180deg,var(--bg) 0%,var(--bg2) 100%);}
+.nav{position:sticky;top:0;z-index:100;height:var(--nav-h);background:rgba(255,255,255,.92);border-bottom:1px solid var(--border);backdrop-filter:blur(18px) saturate(1.4);}
+[data-theme=dark] .nav{background:rgba(8,11,19,.92);}
+.nav-inner{height:100%;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:28px;width:min(1200px,calc(100% - 48px));margin:0 auto;}
+.brand{display:flex;align-items:center;gap:10px;font-family:"Outfit",sans-serif;font-size:19px;font-weight:800;letter-spacing:-.4px;white-space:nowrap;color:var(--text);text-decoration:none;}
+.logo-mark{width:34px;height:34px;display:grid;place-items:center;flex-shrink:0;border-radius:9px;box-shadow:0 8px 22px rgba(37,99,235,.12);overflow:hidden;}
+.logo-mark svg{width:100%;height:100%;display:block;}
+.nav .nav-links{display:flex;align-items:center;justify-content:center;gap:4px;overflow:visible;}
+.nav .nav-link{display:inline-flex;align-items:center;gap:7px;padding:6px 10px;border-radius:8px;color:var(--text2);font-size:14px;font-weight:600;line-height:1;white-space:nowrap;transition:color .14s,background .14s;text-decoration:none;}
+.nav .nav-link svg{width:15px;height:15px;stroke-width:2.2;flex-shrink:0;fill:none;stroke:currentColor;}
+.nav .nav-link.active,.nav .nav-link:hover{color:var(--text);background:var(--bg2);}
+.nav-actions{display:flex;align-items:center;gap:8px;}
+.wallet-btn{height:36px;padding:0 18px;display:inline-flex;align-items:center;gap:8px;border:1.5px solid var(--border2);border-radius:999px;background:var(--card);color:var(--text);font-size:13.5px;font-weight:700;cursor:pointer;transition:border-color .14s,background .14s;}
+.wallet-btn:hover{border-color:var(--text);background:var(--bg2);}
+.wallet-btn svg{width:15px;height:15px;fill:none;stroke:currentColor;}
+.wallet-btn strong{background:var(--brand-blue);-webkit-background-clip:text;background-clip:text;color:transparent;font-size:15px;}
+.icon-btn{width:36px;height:36px;display:grid;place-items:center;border:1.5px solid var(--border);border-radius:8px;background:var(--card);color:var(--text2);cursor:pointer;transition:color .14s,border-color .14s,background .14s;}
+.icon-btn:hover{color:var(--text);border-color:var(--border2);background:var(--bg2);}
+.icon-btn svg{width:17px;height:17px;stroke-width:2.2;fill:none;stroke:currentColor;}
+.mobile-menu{position:fixed;inset:0;z-index:300;display:none;}
+.mobile-menu.open{display:block;}
+.mobile-overlay{position:absolute;inset:0;background:rgba(0,0,0,.3);backdrop-filter:blur(3px);}
+.mobile-drawer{position:absolute;right:0;top:0;bottom:0;width:min(300px,88vw);background:var(--bg);border-left:1px solid var(--border);box-shadow:-8px 0 32px rgba(16,21,37,.12);padding:20px;}
+.drawer-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
+.drawer-links{display:grid;gap:4px;}
+.drawer-links a{display:flex;align-items:center;gap:10px;padding:11px 13px;border-radius:10px;color:var(--text2);font-size:14px;font-weight:700;transition:background .13s,color .13s;text-decoration:none;}
+.drawer-links a:hover,.drawer-links a.active{background:var(--bg2);color:var(--text);}
+.mobile-bottom-nav{display:none;}
+.pp-container{max-width:1120px;padding:38px 24px 0;}
+.pp-header{padding:22px 0 8px;}
+.pp-title{font-family:"Outfit",sans-serif;font-size:clamp(36px,5vw,58px);line-height:1;letter-spacing:-1.8px;font-weight:900;background:var(--earn-gradient);background-size:300% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;animation:gradientShift 5s ease-in-out infinite;}
+.pp-subtitle{font-size:16px;max-width:640px;color:var(--text2);}
+.pp-top-actions{margin-bottom:20px;}
+.pp-action-btn{border-radius:12px;}
+.pp-action-btn-dark{background:#101525;color:#fff;box-shadow:0 10px 26px rgba(16,21,37,.18);}
+.pp-filters{max-width:1120px;border-radius:18px;background:linear-gradient(135deg,rgba(255,255,255,.95),rgba(248,251,255,.9));box-shadow:0 18px 50px rgba(16,21,37,.08);}
+[data-theme=dark] .pp-filters{background:linear-gradient(140deg,#101827,#0b101b);}
+.spotlight-section,.pp-main{max-width:1120px;}
+.pp-card{border-radius:18px;min-height:430px;box-shadow:0 10px 30px rgba(16,21,37,.08);}
+.pp-card:hover{transform:translateY(-4px);box-shadow:0 18px 44px rgba(37,99,235,.13);}
+.pp-image-wrap::before{padding-top:56%;}
+.pp-name{font-size:16px;}
+.footer{background:var(--bg2);border-top:1px solid var(--border);padding:36px 16px;text-align:center;margin-top:42px;}
+.footer-content{max-width:760px;margin:0 auto;}
+.footer-logo{display:flex;align-items:center;justify-content:center;gap:8px;font-family:"Outfit",sans-serif;font-size:18px;font-weight:800;margin-bottom:8px;color:var(--text);}
+.footer-content p{font-size:13px;color:var(--text2);margin:0 0 14px;}
+.footer .footer-links{display:flex;justify-content:center;gap:20px;flex-wrap:wrap;font-size:12px;color:var(--text2);}
+.footer .footer-links a{color:inherit;text-decoration:none;}
+.footer .footer-links a:hover{color:var(--op-blue);}
+@media(max-width:760px){:root{--nav-h:72px}body{padding-bottom:92px}.nav-inner{width:100%;padding:0 24px;gap:12px;grid-template-columns:1fr auto}.brand{font-size:24px;letter-spacing:-.8px;gap:12px}.logo-mark{width:44px;height:44px;border-radius:12px}.nav .nav-links{display:none}.nav-actions{gap:12px}.wallet-btn{display:inline-flex;height:44px;padding:0 18px;border-radius:999px;font-size:0;box-shadow:none}.wallet-btn strong{font-size:15px}.icon-btn{width:44px;height:44px;border:0;background:transparent}.mobile-bottom-nav{position:fixed;left:0;right:0;bottom:0;z-index:250;display:grid;grid-template-columns:repeat(5,1fr);align-items:end;height:88px;padding:8px 12px 10px;background:rgba(255,255,255,.96);border-top:1px solid #e4e9f1;backdrop-filter:blur(18px) saturate(1.25)}[data-theme=dark] .mobile-bottom-nav{background:rgba(8,11,19,.96);border-top-color:var(--border)}.mobile-bottom-nav a{min-width:0;display:grid;justify-items:center;gap:4px;color:var(--text2);font-size:13px;font-weight:800;text-decoration:none}.mobile-bottom-nav svg{width:28px;height:28px;stroke-width:2.2;fill:none;stroke:currentColor}.mobile-bottom-nav .active,.mobile-bottom-nav a:hover{color:var(--text)}.mobile-bottom-nav .create{transform:translateY(-18px);gap:5px;color:var(--text)}.mobile-bottom-nav .create svg{width:58px;height:58px;padding:15px;border-radius:18px;background:#101525;color:#fff;box-shadow:0 10px 22px rgba(16,21,37,.24)}[data-theme=dark] .mobile-bottom-nav .create svg{background:#f4f7fb;color:#101525}.profile-dot{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#101525,#3b465f);display:block}.pp-container{padding-top:24px}.pp-title{font-size:42px}.pp-grid{grid-template-columns:1fr}.footer{margin-bottom:74px}}
+@media(max-width:520px){:root{--nav-h:64px}.nav-inner{padding:0 16px}.brand{font-size:19px;gap:9px}.logo-mark{width:36px;height:36px;border-radius:10px}.wallet-btn{height:40px;padding:0 14px}.icon-btn{width:40px;height:40px}.pp-container,.pp-main,.spotlight-section{padding-left:16px;padding-right:16px}.pp-title{font-size:36px}}
 </style>
 </head>
 <body>
 
 <!-- NAV -->
-<nav class="app-nav">
-  <a class="nav-logo" href="index.html">
-    <div class="nav-logo-mark">OP</div>
-    OgaPay
-  </a>
-  <div class="nav-links">
-    <a class="nav-link" href="index.html#tasks">
-      <svg viewBox="0 0 24 24" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
-      Tasks
+<header class="nav">
+  <div class="nav-inner">
+    <a class="brand" href="index.html" aria-label="OgaPay home">
+      <span class="logo-mark"><svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect width="512" height="512" fill="white"/><rect x="98" y="98" width="107" height="107" rx="20" fill="black"/><path d="M225 98H312C323 98 332 107 332 118V205H225V98Z" fill="black"/><path d="M352 98H392C440 98 470 128 470 176V205H352V98Z" fill="black"/><rect x="98" y="225" width="107" height="107" fill="black"/><rect x="225" y="225" width="107" height="107" fill="black"/><path d="M352 225H470V254C470 302 440 332 392 332H352V225Z" fill="black"/><rect x="98" y="352" width="107" height="107" rx="20" fill="black"/><path d="M225 352H312C323 352 332 361 332 372V439C332 450 323 459 312 459H225V352Z" fill="black"/></svg></span>
+      <span>Oga<span>Pay</span></span>
     </a>
-    <a class="nav-link active" href="store.html">
-      <svg viewBox="0 0 24 24" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-      Store
-    </a>
-    <a class="nav-link" href="index.html#communities">
-      <svg viewBox="0 0 24 24" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
-      Communities
-    </a>
-    <a class="nav-link" href="index.html#payments">
-      <svg viewBox="0 0 24 24" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
-      Earn
-    </a>
+    <nav class="nav-links" aria-label="Primary navigation">
+      <a class="nav-link" href="index.html#jobs"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>All Jobs</a>
+      <a class="nav-link active" href="store.html"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18M16 10a4 4 0 0 1-8 0"/></svg>Store</a>
+      <a class="nav-link" href="index.html#communities"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg>Communities</a>
+      <a class="nav-link" href="index.html#footer"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>FAQ</a>
+    </nav>
+    <div class="nav-actions">
+      <button class="wallet-btn"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.3" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="14" rx="2"/><path d="M16 12h6"/></svg><span class="wallet-label">Balance:</span> <strong>$0.01</strong></button>
+      <button class="icon-btn" id="themeToggle" onclick="toggleTheme()" aria-label="Toggle dark mode"><svg id="theme-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"></svg></button>
+      <button class="icon-btn" id="menuBtn" aria-label="Open menu" aria-controls="mobileMenu" aria-expanded="false"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+    </div>
   </div>
-  <div class="nav-right">
-    <button class="theme-btn" onclick="toggleTheme()">
-      <svg id="theme-icon" viewBox="0 0 24 24" stroke-width="2"></svg>
-    </button>
-    <button class="nav-auth-btn" onclick="goLogin()">Log in</button>
-    <button class="nav-auth-btn primary" style="display:none" id="nav-dash-btn" onclick="window.location.href='index.html'">Dashboard</button>
-  </div>
-</nav>
+</header>
+
+<div class="mobile-menu" id="mobileMenu" aria-hidden="true">
+  <div class="mobile-overlay" data-close-menu></div>
+  <aside class="mobile-drawer" aria-label="Mobile menu">
+    <div class="drawer-head">
+      <a class="brand" href="index.html"><span class="logo-mark"><svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect width="512" height="512" fill="white"/><rect x="98" y="98" width="107" height="107" rx="20" fill="black"/><path d="M225 98H312C323 98 332 107 332 118V205H225V98Z" fill="black"/><path d="M352 98H392C440 98 470 128 470 176V205H352V98Z" fill="black"/><rect x="98" y="225" width="107" height="107" fill="black"/><rect x="225" y="225" width="107" height="107" fill="black"/><path d="M352 225H470V254C470 302 440 332 392 332H352V225Z" fill="black"/><rect x="98" y="352" width="107" height="107" rx="20" fill="black"/><path d="M225 352H312C323 352 332 361 332 372V439C332 450 323 459 312 459H225V352Z" fill="black"/></svg></span><span>Oga<span>Pay</span></span></a>
+      <button class="icon-btn" data-close-menu aria-label="Close menu"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="drawer-links">
+      <a href="index.html#jobs" data-close-menu>All Jobs</a>
+      <a href="store.html" class="active" data-close-menu>Store</a>
+      <a href="index.html#communities" data-close-menu>Communities</a>
+      <a href="index.html#footer" data-close-menu>FAQ</a>
+      <a href="post-task.html" data-close-menu>Create a job</a>
+    </div>
+  </aside>
+</div>
 
 <!-- PP HEADER (matches WURK /products exactly) -->
 <div class="pp-container">
@@ -385,18 +445,19 @@ button{font-family:var(--font-sans);cursor:pointer}
   </div>
 </div>
 
-<!-- FOOTER -->
-<footer class="footer">
-  <div class="footer-brand">
-    <div class="footer-mark">OP</div>
-    <div class="footer-name">OgaPay</div>
-  </div>
-  <div class="footer-sub">One Platform, Equal Opportunities</div>
-  <div class="footer-links">
-    <a href="index.html">Home</a>
-    <a href="index.html#tasks">Tasks</a>
-    <a href="#">Support</a>
-    <a href="#">Terms</a>
+<nav class="mobile-bottom-nav" aria-label="Mobile app navigation">
+  <a href="index.html#jobs"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v13H4V7Z"/><path d="M9 5V3h6v2M8 11h8"/></svg><span>Jobs</span></a>
+  <a href="store.html" class="active"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18M16 10a4 4 0 0 1-8 0"/></svg><span>Store</span></a>
+  <a href="post-task.html" class="create"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span>Create</span></a>
+  <a href="index.html#footer"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg><span>Alerts</span></a>
+  <a href="index.html#footer"><span class="profile-dot"></span><span>Profile</span></a>
+</nav>
+
+<footer class="footer" id="footer">
+  <div class="footer-content">
+    <div class="footer-logo"><span class="logo-mark"><svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect width="512" height="512" fill="white"/><rect x="98" y="98" width="107" height="107" rx="20" fill="black"/><path d="M225 98H312C323 98 332 107 332 118V205H225V98Z" fill="black"/><path d="M352 98H392C440 98 470 128 470 176V205H352V98Z" fill="black"/><rect x="98" y="225" width="107" height="107" fill="black"/><rect x="225" y="225" width="107" height="107" fill="black"/><path d="M352 225H470V254C470 302 440 332 392 332H352V225Z" fill="black"/><rect x="98" y="352" width="107" height="107" rx="20" fill="black"/><path d="M225 352H312C323 352 332 361 332 372V439C332 450 323 459 312 459H225V352Z" fill="black"/></svg></span><span>OgaPay</span></div>
+    <p>Microjob marketplace for services, communities, and rewards.</p>
+    <nav class="footer-links"><a href="post-task.html">Create</a><a href="wallet.html">Wallet</a><a href="blog.html">Blog</a><a href="support.html">Support</a><a href="index.html#jobs">All Jobs</a></nav>
   </div>
 </footer>
 
@@ -424,10 +485,21 @@ function toggleTheme() {
   updateThemeIcon();
 }
 updateThemeIcon();
-
+/* ── MOBILE MENU ── */
+const menu = document.getElementById('mobileMenu');
+const menuBtn = document.getElementById('menuBtn');
+function setMenu(open) {
+  if (!menu || !menuBtn) return;
+  menu.classList.toggle('open', open);
+  menu.setAttribute('aria-hidden', open ? 'false' : 'true');
+  menuBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+}
+if (menuBtn) menuBtn.addEventListener('click', () => setMenu(true));
+document.querySelectorAll('[data-close-menu]').forEach(el => el.addEventListener('click', () => setMenu(false)));
+document.addEventListener('keydown', e => { if (e.key === 'Escape') setMenu(false); });
 /* ── AUTH ── */
 function goLogin() { window.location.href = 'index.html'; }
-if (user && token) {
+if (user && token && document.getElementById('nav-dash-btn')) {
   document.getElementById('nav-dash-btn').style.display = 'inline-flex';
 }
 
