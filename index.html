@@ -732,9 +732,6 @@ body[data-auth="public"] .authed-only,body[data-auth="authed"] .public-only{disp
 .oga-drawer-head{height:88px;display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid #e6e8ee;background:rgba(255,255,255,.72)}
 [data-theme="dark"] .oga-drawer-head{background:rgba(8,11,19,.72);border-bottom-color:#222b3c}
 .oga-drawer-brand{display:flex;align-items:center;gap:12px;font-family:"Outfit",sans-serif;font-size:28px;font-weight:900;letter-spacing:.2px;color:inherit;text-decoration:none}
-.oga-drawer-logo{width:36px;height:36px;border-radius:9px;background:linear-gradient(135deg,#7c3aed,#4f46e5);display:grid;grid-template-columns:1fr 1fr;gap:3px;padding:5px;box-shadow:0 10px 24px rgba(124,58,237,.18)}
-.oga-drawer-logo span{border-radius:3px;background:rgba(255,255,255,.55)}
-.oga-drawer-logo span:nth-child(1),.oga-drawer-logo span:nth-child(3){background:rgba(255,255,255,.28)}
 .oga-drawer-close{width:48px;height:48px;border:1px solid #dfe2e8;border-radius:13px;background:#fff;color:#5c6372;font-size:24px;line-height:1;cursor:pointer;box-shadow:0 1px 2px rgba(16,21,37,.04)}
 [data-theme="dark"] .oga-drawer-close{background:#111725;border-color:#2d384d;color:#cbd5e1}
 .oga-drawer-nav{padding:12px 10px 18px;overflow-y:auto;flex:1}
@@ -772,6 +769,34 @@ body[data-auth="public"] .authed-only,body[data-auth="authed"] .public-only{disp
 [data-theme="dark"] .oga-profile-btn{background:#111725;border-color:#2d384d;color:#f4f7fb}
 @media(max-width:760px){.oga-drawer{width:100vw}.mobile-drawer.oga-drawer{right:0}.oga-drawer-item strong{font-size:20px}.oga-drawer-item small{font-size:17px}}
 @media(max-width:420px){.oga-drawer-brand{font-size:24px}.oga-drawer-head{height:82px}.oga-drawer-item{min-height:68px}.oga-drawer-icon{width:44px;height:44px}.oga-drawer-actions button{font-size:16px}.oga-profile-btn{font-size:19px}}
+
+/* compact drawer sizing */
+.oga-drawer{width:min(360px,92vw)}
+.oga-drawer-head{height:64px;padding:12px 16px}
+.oga-drawer-brand{font-size:19px;gap:10px;letter-spacing:-.4px}
+.oga-drawer-logo.logo-mark{width:34px;height:34px;display:grid;place-items:center;flex-shrink:0;border-radius:9px;background:none;padding:0;gap:0;box-shadow:0 8px 22px rgba(37,99,235,.12);overflow:hidden}
+.oga-drawer-logo.logo-mark svg{width:100%;height:100%;display:block;border-radius:9px}
+.oga-drawer-close{width:36px;height:36px;border-radius:8px;font-size:20px}
+.oga-drawer-nav{padding:10px 8px 12px}
+.oga-drawer-item{min-height:56px;gap:12px;padding:8px 10px;border-radius:10px}
+.oga-drawer-icon{width:36px;height:36px;border-radius:9px}
+.oga-drawer-icon svg{width:18px;height:18px}
+.oga-drawer-icon.create-icon{font-size:20px}
+.oga-drawer-icon.mini{width:34px;height:34px;border-radius:8px}
+.oga-drawer-item strong,.oga-drawer-subnav strong{font-size:15px;line-height:1.15}
+.oga-drawer-item small,.oga-drawer-subnav small{font-size:13px;margin-top:3px;line-height:1.2}
+.oga-drawer-subnav{margin:4px 0 10px 18px;padding:6px 0 6px 22px;border-left-width:2px;gap:4px}
+.oga-drawer-subnav a{gap:10px;padding:6px 8px;border-radius:9px}
+.oga-drawer-chevron{width:15px;height:15px}
+.oga-drawer-foot{padding:8px 8px 0}
+.oga-drawer-actions{height:52px;gap:14px;padding:0 14px}
+.oga-drawer-actions button{font-size:14px;gap:8px}
+.oga-drawer-actions svg{width:16px;height:16px}
+.oga-balance-card{padding:12px 14px;border-radius:12px;margin-bottom:8px}
+.oga-balance-card span{font-size:11px}.oga-balance-card strong{font-size:22px}
+.oga-profile-btn{height:52px;margin-top:10px;font-size:15px;border-width:1.5px}
+@media(max-width:760px){.oga-drawer{width:min(360px,100vw)}.oga-drawer-item strong{font-size:15px}.oga-drawer-item small{font-size:13px}}
+@media(max-width:420px){.oga-drawer{width:100vw}.oga-drawer-brand{font-size:19px}.oga-drawer-head{height:64px}.oga-drawer-item{min-height:56px}.oga-drawer-icon{width:36px;height:36px}.oga-drawer-actions button{font-size:14px}.oga-profile-btn{font-size:15px}}
 </style>
 </head>
 <body>
@@ -802,7 +827,7 @@ body[data-auth="public"] .authed-only,body[data-auth="authed"] .public-only{disp
   <aside class="mobile-drawer oga-drawer" aria-label="OgaPay menu">
     <div class="oga-drawer-head">
       <a class="oga-drawer-brand" href="index (18).html" aria-label="OgaPay home">
-        <span class="oga-drawer-logo" aria-hidden="true"><span></span><span></span><span></span><span></span></span>
+        <span class="oga-drawer-logo logo-mark" aria-hidden="true"><svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="512" height="512" fill="white"/><rect x="98" y="98" width="107" height="107" rx="20" fill="black"/><path d="M225 98H312C323 98 332 107 332 118V205H225V98Z" fill="black"/><path d="M352 98H392C440 98 470 128 470 176V205H352V98Z" fill="black"/><rect x="98" y="225" width="107" height="107" fill="black"/><rect x="225" y="225" width="107" height="107" fill="black"/><path d="M352 225H470V254C470 302 440 332 392 332H352V225Z" fill="black"/><rect x="98" y="352" width="107" height="107" rx="20" fill="black"/><path d="M225 352H312C323 352 332 361 332 372V439C332 450 323 459 312 459H225V352Z" fill="black"/></svg></span>
         <span>Oga Pay</span>
       </a>
       <button class="oga-drawer-close" data-close-menu aria-label="Close menu">x</button>
@@ -1039,7 +1064,7 @@ body[data-auth="public"] .authed-only,body[data-auth="authed"] .public-only{disp
   <div id="screen-connect" class="screen">
     <div style="padding:28px 28px 0; display:flex; align-items:center; justify-content:space-between;">
       <h2 id="authTitle" style="font-size:20px; font-weight:500; margin:0; color:var(--color-text-primary);">Connect to OgaPay</h2>
-      <button onclick="closeModal()" style="border:none; background:none; color:var(--color-text-secondary); cursor:pointer; padding:4px; line-height:1; font-size:20px;" aria-label="Close">Ã—</button>
+      <button onclick="closeModal()" style="border:none; background:none; color:var(--color-text-secondary); cursor:pointer; padding:4px; line-height:1; font-size:20px;" aria-label="Close">x</button>
     </div>
     <p style="padding:8px 28px 0; margin:0; font-size:13.5px; color:var(--color-text-secondary); text-align:center; line-height:1.55;">Choose how you'd like to sign in or create your account</p>
 
@@ -1051,7 +1076,7 @@ body[data-auth="public"] .authed-only,body[data-auth="authed"] .public-only{disp
         </div>
         <div style="flex:1; min-width:0;">
           <div style="font-size:14px; font-weight:500; color:var(--color-text-primary);">Sign in / Sign up</div>
-          <div style="font-size:12px; color:var(--color-text-secondary); margin-top:2px;">Email and password â€” no wallet needed</div>
+          <div style="font-size:12px; color:var(--color-text-secondary); margin-top:2px;">Email and password - no wallet needed</div>
         </div>
         <i class="ti ti-arrow-right" style="font-size:16px; color:var(--color-text-secondary);" aria-hidden="true"></i>
       </button>
@@ -1086,7 +1111,7 @@ body[data-auth="public"] .authed-only,body[data-auth="authed"] .public-only{disp
         <i class="ti ti-arrow-left" style="font-size:14px;" aria-hidden="true"></i> Back
       </button>
       <h2 style="font-size:18px; font-weight:500; margin:0; color:var(--color-text-primary); flex:1;">Connect Your Wallet</h2>
-      <button onclick="closeModal()" style="border:none; background:none; color:var(--color-text-secondary); cursor:pointer; font-size:20px; padding:4px; line-height:1;">Ã—</button>
+      <button onclick="closeModal()" style="border:none; background:none; color:var(--color-text-secondary); cursor:pointer; font-size:20px; padding:4px; line-height:1;">x</button>
     </div>
     <p style="padding:8px 24px 0; margin:0; font-size:13px; color:var(--color-text-secondary); text-align:center;">Choose your preferred wallet to connect and start earning rewards</p>
 
@@ -1098,7 +1123,7 @@ body[data-auth="public"] .authed-only,body[data-auth="authed"] .public-only{disp
         </div>
         <div style="flex:1; min-width:0;">
           <div style="font-size:14px; font-weight:500; color:var(--color-text-primary);">Phantom</div>
-          <div style="font-size:12px; color:var(--color-text-secondary);">Browser wallet Â· Solana</div>
+          <div style="font-size:12px; color:var(--color-text-secondary);">Browser wallet - Solana</div>
         </div>
         <i class="ti ti-arrow-right" style="font-size:16px; color:var(--color-text-secondary);" aria-hidden="true"></i>
       </button>
@@ -1109,7 +1134,7 @@ body[data-auth="public"] .authed-only,body[data-auth="authed"] .public-only{disp
         </div>
         <div style="flex:1; min-width:0;">
           <div style="font-size:14px; font-weight:500; color:var(--color-text-primary);">Solflare</div>
-          <div style="font-size:12px; color:var(--color-text-secondary);">Browser wallet Â· Solana</div>
+          <div style="font-size:12px; color:var(--color-text-secondary);">Browser wallet - Solana</div>
         </div>
         <i class="ti ti-arrow-right" style="font-size:16px; color:var(--color-text-secondary);" aria-hidden="true"></i>
       </button>
@@ -1120,7 +1145,7 @@ body[data-auth="public"] .authed-only,body[data-auth="authed"] .public-only{disp
         </div>
         <div style="flex:1; min-width:0;">
           <div style="font-size:14px; font-weight:500; color:var(--color-text-primary);">Backpack</div>
-          <div style="font-size:12px; color:var(--color-text-secondary);">xNFT wallet Â· Solana</div>
+          <div style="font-size:12px; color:var(--color-text-secondary);">xNFT wallet - Solana</div>
         </div>
         <i class="ti ti-arrow-right" style="font-size:16px; color:var(--color-text-secondary);" aria-hidden="true"></i>
       </button>
@@ -1131,7 +1156,7 @@ body[data-auth="public"] .authed-only,body[data-auth="authed"] .public-only{disp
         </div>
         <div style="flex:1; min-width:0;">
           <div style="font-size:14px; font-weight:500; color:var(--color-text-primary);">WalletConnect</div>
-          <div style="font-size:12px; color:var(--color-text-secondary);">Mobile wallets Â· QR code</div>
+          <div style="font-size:12px; color:var(--color-text-secondary);">Mobile wallets - QR code</div>
         </div>
         <i class="ti ti-arrow-right" style="font-size:16px; color:var(--color-text-secondary);" aria-hidden="true"></i>
       </button>
@@ -1180,7 +1205,7 @@ body[data-auth="public"] .authed-only,body[data-auth="authed"] .public-only{disp
           <button id="tab-signup" onclick="switchTab('signup')" style="flex:1; padding:7px; border:none; border-radius:8px; font-size:13px; font-weight:500; cursor:pointer; background:transparent; color:var(--color-text-secondary);">Sign up</button>
         </div>
       </div>
-      <button onclick="closeModal()" style="border:none; background:none; color:var(--color-text-secondary); cursor:pointer; font-size:20px; padding:4px; line-height:1;">Ã—</button>
+      <button onclick="closeModal()" style="border:none; background:none; color:var(--color-text-secondary); cursor:pointer; font-size:20px; padding:4px; line-height:1;">x</button>
     </div>
 
     <div style="padding:20px 24px 0;">
@@ -1273,7 +1298,7 @@ body[data-auth="public"] .authed-only,body[data-auth="authed"] .public-only{disp
         <i class="ti ti-arrow-left" style="font-size:14px;" aria-hidden="true"></i> Back
       </button>
       <h2 style="font-size:17px; font-weight:500; margin:0; color:var(--color-text-primary);">Sign in with Transaction</h2>
-      <button onclick="closeModal()" style="border:none; background:none; color:var(--color-text-secondary); cursor:pointer; font-size:20px; padding:4px; line-height:1; margin-left:auto;">Ã—</button>
+      <button onclick="closeModal()" style="border:none; background:none; color:var(--color-text-secondary); cursor:pointer; font-size:20px; padding:4px; line-height:1; margin-left:auto;">x</button>
     </div>
     <div style="padding:20px 24px 24px;">
       <div style="background:var(--color-background-secondary); border-radius:14px; padding:16px; margin-bottom:16px; border:0.5px solid var(--color-border-tertiary);">
@@ -1281,7 +1306,7 @@ body[data-auth="public"] .authed-only,body[data-auth="authed"] .public-only{disp
           <i class="ti ti-shield-check" style="font-size:20px; color:#315EFB;" aria-hidden="true"></i>
           <div style="font-size:13.5px; font-weight:500; color:var(--color-text-primary);">How it works</div>
         </div>
-        <p style="font-size:12.5px; color:var(--color-text-secondary); margin:0; line-height:1.6;">Send a tiny SOL transaction (â‰ˆ $0.001) to prove wallet ownership. The funds are returned instantly. No password needed â€” your wallet is your account.</p>
+        <p style="font-size:12.5px; color:var(--color-text-secondary); margin:0; line-height:1.6;">Send a tiny SOL transaction (about $0.001) to prove wallet ownership. The funds are returned instantly. No password needed - your wallet is your account.</p>
       </div>
       <div style="margin-bottom:14px;">
         <label style="font-size:12px; font-weight:500; color:var(--color-text-secondary); display:block; margin-bottom:6px;">Your wallet address</label>
@@ -1302,7 +1327,7 @@ body[data-auth="public"] .authed-only,body[data-auth="authed"] .public-only{disp
         <i class="ti ti-arrow-left" style="font-size:14px;" aria-hidden="true"></i> Back
       </button>
       <h2 style="font-size:17px; font-weight:500; margin:0; color:var(--color-text-primary);">Pair This Device</h2>
-      <button onclick="closeModal()" style="border:none; background:none; color:var(--color-text-secondary); cursor:pointer; font-size:20px; padding:4px; line-height:1; margin-left:auto;">Ã—</button>
+      <button onclick="closeModal()" style="border:none; background:none; color:var(--color-text-secondary); cursor:pointer; font-size:20px; padding:4px; line-height:1; margin-left:auto;">x</button>
     </div>
     <div style="padding:20px 24px 24px;">
       <div style="background:var(--color-background-secondary); border-radius:14px; padding:24px; text-align:center; margin-bottom:16px; border:0.5px solid var(--color-border-tertiary);">
@@ -1331,7 +1356,7 @@ body[data-auth="public"] .authed-only,body[data-auth="authed"] .public-only{disp
       </div>
       <h2 style="font-size:20px; font-weight:500; color:var(--color-text-primary); margin:0 0 8px;">You're connected!</h2>
       <p style="font-size:13.5px; color:var(--color-text-secondary); margin:0 0 28px; line-height:1.6;">Welcome to OgaPay. Start browsing tasks and earning Naira or crypto instantly.</p>
-      <button onclick="closeModal()" style="width:100%; padding:13px; background:linear-gradient(135deg,#315EFB,#011F9A); color:#fff; border:none; border-radius:12px; font-size:14px; font-weight:500; cursor:pointer; margin-bottom:10px;">Browse Tasks â†’</button>
+      <button onclick="closeModal()" style="width:100%; padding:13px; background:linear-gradient(135deg,#315EFB,#011F9A); color:#fff; border:none; border-radius:12px; font-size:14px; font-weight:500; cursor:pointer; margin-bottom:10px;">Browse Tasks -></button>
       <button onclick="closeModal()" style="width:100%; padding:11px; background:var(--color-background-secondary); border:0.5px solid var(--color-border-tertiary); border-radius:12px; font-size:13.5px; cursor:pointer; color:var(--color-text-secondary);">Set up my profile first</button>
     </div>
   </div>
@@ -1345,6 +1370,7 @@ body[data-auth="public"] .authed-only,body[data-auth="authed"] .public-only{disp
 }
 .screen { animation: fadeIn 0.18s ease; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
 
 </style>
 
