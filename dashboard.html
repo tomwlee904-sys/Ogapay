@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0"/>
-<title>OgaPay — Dashboard</title>
+<title>OgaPay - Dashboard</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
 <style>
 :root {
@@ -195,39 +195,46 @@ button{font-family:var(--font);cursor:pointer}
 #loading-screen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9998;flex-direction:column;gap:12px}
 .loading-logo{width:48px;height:48px;background:linear-gradient(135deg,var(--op-blue),var(--op-blue-dark));border-radius:12px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:18px}
 .loading-text{font-size:14px;color:var(--text-lighter)}
+
+/* OgaPay dashboard refresh */
+.op-logo{width:100%;height:100%;display:grid;place-items:center;border-radius:inherit;overflow:hidden;background:#fff}
+.op-logo svg{width:100%;height:100%;display:block;border-radius:inherit}.nav-logo-mark .op-logo,.loading-logo .op-logo,.login-wall-logo .op-logo{width:100%;height:100%}
+.app-nav{height:60px;padding:0 18px;backdrop-filter:blur(18px);background:rgba(255,255,255,.92)}
+[data-theme=dark] .app-nav{background:rgba(0,0,0,.92)}.nav-logo{font-family:var(--font);font-size:18px;font-weight:800}.nav-logo-mark{background:none;padding:0;box-shadow:0 8px 22px rgba(59,130,246,.12)}
+.tab-bar{top:60px;grid-template-columns:repeat(5,minmax(0,1fr));overflow-x:auto}.page-wrap{max-width:1040px;padding:24px 18px 54px}.dashboard-shell{display:grid;grid-template-columns:minmax(0,1.25fr) 340px;gap:18px;align-items:start}.dashboard-main{min-width:0}.dashboard-side{display:grid;gap:14px;position:sticky;top:128px}.quick-actions{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:0 0 18px}.quick-action{min-height:96px;padding:14px;border:1px solid var(--border);border-radius:14px;background:var(--bg);color:var(--text);display:flex;flex-direction:column;justify-content:space-between;text-decoration:none;transition:border-color .15s,transform .15s,box-shadow .15s}.quick-action:hover{border-color:var(--op-blue);transform:translateY(-2px);box-shadow:0 10px 24px rgba(59,130,246,.08)}[data-theme=dark] .quick-action{background:#0b0b0b}.quick-action span{width:34px;height:34px;border-radius:10px;background:var(--op-blue-light);color:var(--op-blue);display:grid;place-items:center;font-weight:900}.quick-action strong{font-size:14px;color:var(--text);display:block}.quick-action small{font-size:11px;color:var(--text-lighter);display:block;margin-top:2px}.insight-list{display:grid;gap:10px}.insight-row{display:flex;justify-content:space-between;gap:12px;padding:12px;border:1px solid var(--border);border-radius:12px;background:var(--surface)}[data-theme=dark] .insight-row{background:#080808}.insight-row span{font-size:12px;color:var(--text-lighter)}.insight-row strong{font-size:13px;color:var(--text)}@media(max-width:880px){.dashboard-shell{grid-template-columns:1fr}.dashboard-side{position:static}.quick-actions{grid-template-columns:repeat(2,minmax(0,1fr))}.nav-right{gap:5px}.user-badge,.logout-btn{display:none}}@media(max-width:520px){.home-btn{font-size:0;padding:8px}.balance-badge{font-size:11px;padding:5px 9px}.page-wrap{padding:18px 14px 44px}.quick-actions{grid-template-columns:1fr 1fr}.quick-action{min-height:88px}.tab-item{font-size:10px}}
 </style>
 </head>
 <body>
 
 <!-- LOGIN WALL (shown when not logged in) -->
 <div id="login-wall" class="login-wall" style="display:none">
-  <div class="login-wall-logo">OP</div>
+  <div class="login-wall-logo"><span class="op-logo" aria-hidden="true"><svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="512" height="512" fill="white"/><rect x="98" y="98" width="107" height="107" rx="20" fill="black"/><path d="M225 98H312C323 98 332 107 332 118V205H225V98Z" fill="black"/><path d="M352 98H392C440 98 470 128 470 176V205H352V98Z" fill="black"/><rect x="98" y="225" width="107" height="107" fill="black"/><rect x="225" y="225" width="107" height="107" fill="black"/><path d="M352 225H470V254C470 302 440 332 392 332H352V225Z" fill="black"/><rect x="98" y="352" width="107" height="107" rx="20" fill="black"/><path d="M225 352H312C323 352 332 361 332 372V439C332 450 323 459 312 459H225V352Z" fill="black"/></svg></span></div>
   <h2>Sign in to OgaPay</h2>
   <p>You need to be logged in to view your dashboard.</p>
   <div class="login-wall-actions">
-    <a href="index.html" class="btn btn-primary">Go to Homepage</a>
-    <a href="workers.html" class="btn btn-secondary">Sign Up</a>
+    <a href="index (18).html" class="btn btn-primary">Go to Homepage</a>
+    <a href="index (18).html" class="btn btn-secondary">Sign Up</a>
   </div>
 </div>
 
 <div id="loading-screen">
-  <div class="loading-logo">OP</div>
+  <div class="loading-logo"><span class="op-logo" aria-hidden="true"><svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="512" height="512" fill="white"/><rect x="98" y="98" width="107" height="107" rx="20" fill="black"/><path d="M225 98H312C323 98 332 107 332 118V205H225V98Z" fill="black"/><path d="M352 98H392C440 98 470 128 470 176V205H352V98Z" fill="black"/><rect x="98" y="225" width="107" height="107" fill="black"/><rect x="225" y="225" width="107" height="107" fill="black"/><path d="M352 225H470V254C470 302 440 332 392 332H352V225Z" fill="black"/><rect x="98" y="352" width="107" height="107" rx="20" fill="black"/><path d="M225 352H312C323 352 332 361 332 372V439C332 450 323 459 312 459H225V352Z" fill="black"/></svg></span></div>
   <div class="loading-text">Loading your dashboard...</div>
 </div>
 
 <!-- NAV -->
 <nav class="app-nav">
-  <a class="nav-logo" href="index.html">
-    <div class="nav-logo-mark">OP</div>
+  <a class="nav-logo" href="index (18).html">
+    <div class="nav-logo-mark"><span class="op-logo" aria-hidden="true"><svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="512" height="512" fill="white"/><rect x="98" y="98" width="107" height="107" rx="20" fill="black"/><path d="M225 98H312C323 98 332 107 332 118V205H225V98Z" fill="black"/><path d="M352 98H392C440 98 470 128 470 176V205H352V98Z" fill="black"/><rect x="98" y="225" width="107" height="107" fill="black"/><rect x="225" y="225" width="107" height="107" fill="black"/><path d="M352 225H470V254C470 302 440 332 392 332H352V225Z" fill="black"/><rect x="98" y="352" width="107" height="107" rx="20" fill="black"/><path d="M225 352H312C323 352 332 361 332 372V439C332 450 323 459 312 459H225V352Z" fill="black"/></svg></span></div>
     OgaPay
   </a>
   <div class="nav-right">
-    <div class="balance-badge">NGN: <span class="val" id="nav-balance">₦0.00</span></div>
+    <div class="balance-badge">NGN: <span class="val" id="nav-balance">NGN 0.00</span></div>
     <div class="user-badge" id="nav-username">...</div>
     <button class="theme-btn" onclick="toggleTheme()">
       <svg id="theme-icon" viewBox="0 0 24 24" stroke-width="2"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
     </button>
-    <a href="index.html" class="home-btn">
+    <a href="index (18).html" class="home-btn">
       <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
       Home
     </a>
@@ -247,7 +254,7 @@ button{font-family:var(--font);cursor:pointer}
   </button>
   <button class="tab-item" onclick="showTab('tasks',this)">
     <svg viewBox="0 0 24 24" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
-    My Tasks
+    My Jobs
   </button>
   <button class="tab-item" onclick="showTab('wallet',this)">
     <svg viewBox="0 0 24 24" stroke-width="2"><path d="M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/><circle cx="17" cy="13" r="1" fill="currentColor"/></svg>
@@ -259,47 +266,69 @@ button{font-family:var(--font);cursor:pointer}
   </button>
 </nav>
 
-<!-- ══ OVERVIEW ══ -->
+<!-- OVERVIEW -->
+<!-- OVERVIEW -->
 <div id="page-overview" class="page active">
-  <div class="page-wrap">
-    <div style="margin-bottom:20px">
-      <h2 id="greeting" style="font-size:22px;font-weight:800;letter-spacing:-.02em;margin-bottom:4px">Good morning 👋</h2>
-      <p style="font-size:14px;color:var(--text-lighter)">Here's what's happening with your account</p>
-    </div>
-    <div class="stat-grid">
-      <div class="stat-card"><div class="stat-num" id="stat-tasks">—</div><div class="stat-label">Tasks Done</div></div>
-      <div class="stat-card"><div class="stat-num" id="stat-earned">—</div><div class="stat-label">Total Earned</div></div>
-      <div class="stat-card"><div class="stat-num" id="stat-rating">—</div><div class="stat-label">Avg Rating</div></div>
-    </div>
-    <div class="balance-hero">
-      <div class="bh-label">Naira Balance</div>
-      <div class="bh-amount" id="overview-ngn">₦0.00</div>
-      <div class="bh-row">
-        <div class="bh-token"><div class="bh-token-label">USDC</div><div class="bh-token-val" id="overview-usdc">$0.00</div></div>
-        <div class="bh-token"><div class="bh-token-label">Level</div><div class="bh-token-val" id="overview-level">—</div></div>
+  <div class="page-wrap dashboard-shell">
+    <div class="overview-main">
+      <div style="margin-bottom:20px">
+        <h2 id="greeting" style="font-size:22px;font-weight:800;letter-spacing:-.02em;margin-bottom:4px">Good morning</h2>
+        <p style="font-size:14px;color:var(--text-lighter)">Here's what's happening with your account</p>
+      </div>
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-num" id="stat-tasks">--</div><div class="stat-label">Jobs Done</div></div>
+        <div class="stat-card"><div class="stat-num" id="stat-earned">--</div><div class="stat-label">Total Earned</div></div>
+        <div class="stat-card"><div class="stat-num" id="stat-rating">--</div><div class="stat-label">Avg Rating</div></div>
+      </div>
+      <div class="balance-hero">
+        <div class="bh-label">Naira Balance</div>
+        <div class="bh-amount" id="overview-ngn">NGN 0.00</div>
+        <div class="bh-row">
+          <div class="bh-token"><div class="bh-token-label">USDC</div><div class="bh-token-val" id="overview-usdc">$0.00</div></div>
+          <div class="bh-token"><div class="bh-token-label">Level</div><div class="bh-token-val" id="overview-level">--</div></div>
+        </div>
+      </div>
+      <div class="quick-actions" aria-label="Dashboard quick actions">
+        <a class="quick-action" href="index (18).html#jobs"><span>J</span><div><strong>Browse Jobs</strong><small>Find paid tasks</small></div></a>
+        <a class="quick-action" href="post-task.html"><span>+</span><div><strong>Create Job</strong><small>Post a task</small></div></a>
+        <a class="quick-action" href="store.html"><span>S</span><div><strong>Store</strong><small>Worker marketplace</small></div></a>
+        <a class="quick-action" href="#" onclick="showTab('wallet',document.querySelectorAll('.tab-item')[3]);return false;"><span>W</span><div><strong>Wallet</strong><small>Balance and history</small></div></a>
+      </div>
+      <div class="two-col" style="margin-bottom:16px">
+        <button class="btn btn-primary btn-block" onclick="showTab('tasks',document.querySelectorAll('.tab-item')[2]);window.scrollTo(0,0)">
+          <svg viewBox="0 0 24 24" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
+          View My Jobs
+        </button>
+        <button class="btn btn-secondary btn-block" onclick="showTab('wallet',document.querySelectorAll('.tab-item')[3]);window.scrollTo(0,0)">
+          <svg viewBox="0 0 24 24" stroke-width="2"><path d="M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/></svg>
+          Wallet
+        </button>
+      </div>
+      <div class="sec-head">
+        <svg viewBox="0 0 24 24" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg>
+        Recent Activity
+      </div>
+      <div class="card">
+        <div id="recent-list"><div style="color:var(--text-lighter);font-size:13px;text-align:center;padding:20px">Loading...</div></div>
       </div>
     </div>
-    <div class="two-col" style="margin-bottom:16px">
-      <button class="btn btn-primary btn-block" onclick="showTab('tasks',document.querySelectorAll('.tab-item')[2]);window.scrollTo(0,0)">
-        <svg viewBox="0 0 24 24" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
-        View My Tasks
-      </button>
-      <button class="btn btn-secondary btn-block" onclick="showTab('wallet',document.querySelectorAll('.tab-item')[3]);window.scrollTo(0,0)">
-        <svg viewBox="0 0 24 24" stroke-width="2"><path d="M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/></svg>
-        Wallet
-      </button>
-    </div>
-    <div class="sec-head">
-      <svg viewBox="0 0 24 24" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg>
-      Recent Activity
-    </div>
-    <div class="card">
-      <div id="recent-list"><div style="color:var(--text-lighter);font-size:13px;text-align:center;padding:20px">Loading...</div></div>
-    </div>
+    <aside class="dashboard-side">
+      <div class="card">
+        <div class="sec-head"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7H14a3.5 3.5 0 0 1 0 7H6"/></svg>Earn Hub</div>
+        <div class="insight-list">
+          <div class="insight-row"><span>Primary flow</span><strong>Jobs -> Submit -> Earn</strong></div>
+          <div class="insight-row"><span>Payout rails</span><strong>NGN / USDC</strong></div>
+          <div class="insight-row"><span>Account status</span><strong id="side-level">Loading</strong></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="sec-head"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18M16 10a4 4 0 0 1-8 0"/></svg>Marketplace</div>
+        <p style="font-size:13px;color:var(--text-lighter);line-height:1.55;margin-bottom:12px">Offer services, buy creator help, and keep your worker profile ready for higher-value jobs.</p>
+        <a class="btn btn-secondary btn-block" href="store.html">Open Store</a>
+      </div>
+    </aside>
   </div>
 </div>
-
-<!-- ══ PROFILE ══ -->
 <div id="page-profile" class="page">
   <div class="page-wrap">
     <div class="profile-card" style="margin-bottom:16px">
@@ -352,11 +381,11 @@ button{font-family:var(--font);cursor:pointer}
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
       <div class="sec-head" style="margin-bottom:0">
         <svg viewBox="0 0 24 24" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
-        My Submissions
+        My Jobs
       </div>
-      <a href="tasks.html" class="btn btn-primary btn-sm">
+      <a href="index (18).html#jobs" class="btn btn-primary btn-sm">
         <svg viewBox="0 0 24 24" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        Browse Tasks
+        Browse Jobs
       </a>
     </div>
     <div class="card">
@@ -370,14 +399,14 @@ button{font-family:var(--font);cursor:pointer}
   <div class="page-wrap">
     <div class="balance-hero" style="margin-bottom:16px">
       <div class="bh-label">Naira Balance</div>
-      <div class="bh-amount" id="wallet-ngn">₦0.00</div>
+      <div class="bh-amount" id="wallet-ngn">NGN 0.00</div>
       <div class="bh-row">
         <div class="bh-token"><div class="bh-token-label">USDC</div><div class="bh-token-val" id="wallet-usdc">$0.00</div></div>
-        <div class="bh-token"><div class="bh-token-label">Locked</div><div class="bh-token-val" id="wallet-locked">₦0.00</div></div>
+        <div class="bh-token"><div class="bh-token-label">Locked</div><div class="bh-token-val" id="wallet-locked">NGN 0.00</div></div>
       </div>
     </div>
-    <div class="two-col" style="margin-bottom:16px">
-      <button class="btn btn-primary btn-block" onclick="showToast('Deposit coming soon — Paystack integration needed')">
+<div class="two-col" style="margin-bottom:16px">
+      <button class="btn btn-primary btn-block" onclick="showToast('Deposit coming soon - Paystack integration needed')">
         <svg viewBox="0 0 24 24" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         Deposit
       </button>
@@ -463,14 +492,14 @@ function apiFetch(path, opts = {}) {
   });
 }
 
-function fmtNGN(val) { return '₦' + Number(val || 0).toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+function fmtNGN(val) { return 'NGN ' + Number(val || 0).toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
 function fmtUSD(val) { return '$' + Number(val || 0).toFixed(2); }
 function fmtDate(d) { return new Date(d).toLocaleDateString('en-NG', { day: 'numeric', month: 'short', year: 'numeric' }); }
 
 function logout() {
   localStorage.removeItem('ogapay_token');
   localStorage.removeItem('ogapay_user');
-  window.location.href = 'index.html';
+  window.location.href = 'index (18).html';
 }
 
 function toggleTheme() {
@@ -503,7 +532,7 @@ function setGreeting() {
   const h = new Date().getHours();
   const g = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
   const name = user?.firstName || '';
-  document.getElementById('greeting').textContent = g + (name ? ', ' + name : '') + ' 👋';
+  document.getElementById('greeting').textContent = g + (name ? ', ' + name : '');
 }
 
 // ── LOAD PROFILE ──
@@ -516,12 +545,13 @@ async function loadProfile() {
   document.getElementById('nav-username').textContent = '@' + u.username;
   document.getElementById('stat-tasks').textContent = u.workerProfile?.tasksCompleted ?? 0;
   document.getElementById('stat-earned').textContent = fmtNGN(u.workerProfile?.totalEarned ?? 0);
-  document.getElementById('stat-rating').textContent = u.workerProfile?.avgRating ? u.workerProfile.avgRating.toFixed(1) + '★' : 'N/A';
-  document.getElementById('overview-level').textContent = u.workerProfile?.level ?? '—';
+  document.getElementById('stat-rating').textContent = u.workerProfile?.avgRating ? u.workerProfile.avgRating.toFixed(1) + ' stars' : 'N/A';
+  document.getElementById('overview-level').textContent = u.workerProfile?.level ?? '--';
+  const sideLevel = document.getElementById('side-level'); if (sideLevel) sideLevel.textContent = u.workerProfile?.level ?? 'Beginner';
   const initials = ((u.firstName || '?')[0] + (u.lastName || '?')[0]).toUpperCase();
   document.getElementById('profile-avatar').textContent = initials;
   document.getElementById('profile-name').textContent = u.firstName + ' ' + u.lastName;
-  document.getElementById('profile-handle').textContent = '@' + u.username + ' · ' + u.email;
+  document.getElementById('profile-handle').textContent = '@' + u.username + ' - ' + u.email;
   document.getElementById('profile-level').textContent = u.workerProfile?.level ?? 'BEGINNER';
   document.getElementById('profile-kyc').textContent = 'KYC: ' + (u.kyc?.status ?? 'Not submitted');
   if (u.kyc?.status === 'APPROVED') document.getElementById('profile-kyc').className = 'badge-pill badge-kyc-approved';
@@ -596,7 +626,7 @@ async function loadTransactions() {
 // ── LOAD SUBMISSIONS ──
 async function loadSubmissions() {
   const res = await apiFetch('/tasks/my/submissions?limit=20');
-  const emptyHTML = `<div class="empty-state"><svg viewBox="0 0 24 24" stroke-width="1.5"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg><div class="empty-title">No submissions yet</div><div class="empty-sub">Tasks you apply for will appear here</div><a href="tasks.html" class="btn btn-primary" style="font-size:13px;padding:8px 18px">Browse Tasks</a></div>`;
+  const emptyHTML = `<div class="empty-state"><svg viewBox="0 0 24 24" stroke-width="1.5"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg><div class="empty-title">No submissions yet</div><div class="empty-sub">Tasks you apply for will appear here</div><a href="index (18).html#jobs" class="btn btn-primary" style="font-size:13px;padding:8px 18px">Browse Jobs</a></div>`;
   if (!res || !res.success || !res.data.length) {
     document.getElementById('tasks-list').innerHTML = emptyHTML;
     return;
@@ -605,7 +635,7 @@ async function loadSubmissions() {
   document.getElementById('tasks-list').innerHTML = res.data.map(s => `
     <div class="task-row">
       <div class="task-icon" style="background:${statusColor[s.status]}22"><svg viewBox="0 0 24 24" stroke="${statusColor[s.status]}" stroke-width="2" fill="none" width="16" height="16"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg></div>
-      <div style="flex:1;min-width:0"><div class="task-title">${s.task?.title || 'Task'}</div><div class="task-meta">${fmtDate(s.createdAt)} · ${s.task?.category?.replace(/_/g,' ') || ''}</div></div>
+      <div style="flex:1;min-width:0"><div class="task-title">${s.task?.title || 'Task'}</div><div class="task-meta">${fmtDate(s.createdAt)} - ${s.task?.category?.replace(/_/g,' ') || ''}</div></div>
       <div style="text-align:right;flex-shrink:0"><div class="task-reward">${fmtNGN(s.task?.reward || 0)}</div><div class="task-status status-${s.status.toLowerCase()}">${s.status}</div></div>
     </div>`).join('');
 }
