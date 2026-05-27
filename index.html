@@ -4,11 +4,12 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>OgaPay - Work to Earn</title>
+<link rel="icon" type="image/svg+xml" href='data:image/svg+xml,%3Csvg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg"%3E%3Crect width="512" height="512" fill="white"/%3E%3Crect x="98" y="98" width="107" height="107" rx="20" fill="black"/%3E%3Cpath d="M225 98H312C323 98 332 107 332 118V205H225V98Z" fill="black"/%3E%3Cpath d="M352 98H392C440 98 470 128 470 176V205H352V98Z" fill="black"/%3E%3Crect x="98" y="225" width="107" height="107" fill="black"/%3E%3Crect x="225" y="225" width="107" height="107" fill="black"/%3E%3Cpath d="M352 225H470V254C470 302 440 332 392 332H352V225Z" fill="black"/%3E%3Crect x="98" y="352" width="107" height="107" rx="20" fill="black"/%3E%3Cpath d="M225 352H312C323 352 332 361 332 372V439C332 450 323 459 312 459H225V352Z" fill="black"/%3E%3C/svg%3E'>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800;900&family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-/* ── tokens ─────────────────────────────── */
+/* â”€â”€ tokens â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 :root{
   --bg:#ffffff;
   --bg2:#f7f9fc;
@@ -19,11 +20,13 @@
   --text2:#66738a;
   --text3:#98a6ba;
   --primary:#0d1323;
-  --accent:#101525;        /* was purple — now neutral dark */
-  --accent2:#16a34a;       /* was teal — now clean green */
+  --accent:#7C3AED;
+  --accent2:#2563EB;
+  --brand-blue:linear-gradient(90deg,#2563EB,#3B82F6,#60A5FA,#93C5FD);
+  --earn-gradient:linear-gradient(90deg,#7C3AED,#A78BFA,#6366F1,#C4B5FD,#7C3AED);
   --gold:#f5b301;
-  --soft-purple:#f4f6fa;   /* was purple tint — now neutral */
-  --soft-green:#f0faf4;
+  --soft-purple:#f4f6fa;   /* was purple tint â€” now neutral */
+  --soft-green:#eef6ff;
   --shadow:0 4px 16px rgba(16,21,37,.07),0 1px 4px rgba(16,21,37,.04);
   --shadow-soft:0 2px 8px rgba(16,21,37,.05);
   --radius:14px;
@@ -39,25 +42,25 @@
   --text2:#9aa7bc;
   --text3:#667186;
   --primary:#f4f7fb;
-  --accent:#f4f7fb;
-  --accent2:#34d399;
+  --accent:#A78BFA;
+  --accent2:#60A5FA;
   --soft-purple:#111725;
-  --soft-green:#10241f;
+  --soft-green:#0d1d34;
   --shadow:0 4px 16px rgba(0,0,0,.28),0 1px 4px rgba(0,0,0,.18);
   --shadow-soft:0 2px 8px rgba(0,0,0,.22);
 }
 
-/* ── reset ───────────────────────────────── */
+/* â”€â”€ reset â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
 body{margin:0;color:var(--text);background:var(--bg);font-family:"DM Sans",system-ui,sans-serif;overflow-x:hidden}
 a{color:inherit;text-decoration:none}
 button{font:inherit}
 
-/* ── layout ──────────────────────────────── */
+/* â”€â”€ layout â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .container{width:min(1200px,calc(100% - 64px));margin:0 auto}
 
-/* ── navbar ──────────────────────────────── */
+/* â”€â”€ navbar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .nav{
   position:sticky;top:0;z-index:100;
   height:var(--nav-h);
@@ -80,9 +83,8 @@ button{font:inherit}
   font-family:"Outfit",sans-serif;font-size:19px;font-weight:800;
   letter-spacing:-.4px;white-space:nowrap;
 }
-.logo-mark{width:32px;height:32px;display:grid;place-items:center;color:#05070b;flex-shrink:0}
-[data-theme="dark"] .logo-mark{color:#fff}
-.logo-mark svg{width:30px;height:30px}
+.logo-mark{width:34px;height:34px;display:grid;place-items:center;flex-shrink:0;border-radius:9px;box-shadow:0 8px 22px rgba(37,99,235,.12)}
+.logo-mark svg{width:100%;height:100%;display:block;border-radius:9px}
 .brand span span{color:var(--text)}   /* no purple accent on brand */
 
 .nav-links{display:flex;align-items:center;justify-content:center;gap:4px}
@@ -120,7 +122,7 @@ button{font:inherit}
 .icon-btn:hover{color:var(--text);border-color:var(--border2);background:var(--bg2)}
 .icon-btn svg{width:17px;height:17px;stroke-width:2.2}
 
-/* ── mobile drawer ───────────────────────── */
+/* â”€â”€ mobile drawer â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .mobile-menu{position:fixed;inset:0;z-index:300;display:none}
 .mobile-menu.open{display:block}
 .mobile-overlay{position:absolute;inset:0;background:rgba(0,0,0,.3);backdrop-filter:blur(3px)}
@@ -140,20 +142,26 @@ button{font:inherit}
 }
 .drawer-links a:hover{background:var(--bg2);color:var(--text)}
 
-/* ── hero ────────────────────────────────── */
+/* â”€â”€ hero â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .hero{
   position:relative;
   display:flex;align-items:center;
   overflow:hidden;
-  background:linear-gradient(180deg,var(--bg) 0%,var(--bg2) 100%);
+  background:
+    radial-gradient(circle at 18% 8%,rgba(124,58,237,.15),transparent 32%),
+    radial-gradient(circle at 84% 18%,rgba(37,99,235,.14),transparent 34%),
+    linear-gradient(180deg,#080b13 0%,#0b1020 70%,var(--bg) 100%);
 }
-/* subtle single-colour grain — no purple blobs */
+/* subtle single-colour grain â€” no purple blobs */
 .hero::before{
   content:"";position:absolute;inset:0;
-  background:radial-gradient(ellipse at 70% 50%,rgba(16,21,37,.03),transparent 60%);
+  background:
+    radial-gradient(ellipse at 62% 42%,rgba(167,139,250,.18),transparent 44%),
+    linear-gradient(110deg,rgba(255,255,255,.04),transparent 48%);
+  animation:ambientFloat 8s ease-in-out infinite alternate;
   pointer-events:none;
 }
-[data-theme="dark"] .hero{background:linear-gradient(180deg,#080b13 0%,#0b101b 100%)}
+[data-theme="dark"] .hero{background:radial-gradient(circle at 18% 8%,rgba(124,58,237,.18),transparent 32%),radial-gradient(circle at 84% 18%,rgba(37,99,235,.16),transparent 34%),linear-gradient(180deg,#080b13 0%,#0b101b 100%)}
 .hero::after{
   content:"";position:absolute;inset:auto 0 0;
   height:80px;
@@ -175,12 +183,19 @@ button{font:inherit}
   font-family:"Outfit",sans-serif;
   font-size:clamp(44px,4.8vw,64px);
   line-height:1;letter-spacing:-2.5px;font-weight:900;
+  color:#fff;
 }
-.hero h1 .arrow{color:var(--text3);font-weight:700}
-.hero h1 .earn{color:var(--text)}   /* removed purple gradient */
+.hero h1 .arrow{color:#fff;font-weight:800}
+.hero h1 .earn{
+  background:var(--earn-gradient);
+  background-size:300% 100%;
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  animation:gradientShift 4s ease-in-out infinite;
+  filter:drop-shadow(0 0 18px rgba(167,139,250,.36));
+}
 .hero p{
   margin:0 0 32px;max-width:480px;
-  color:var(--text2);font-size:17px;line-height:1.65;font-weight:500;
+  color:rgba(244,247,251,.74);font-size:17px;line-height:1.65;font-weight:500;
 }
 .btn-row{display:flex;gap:12px;flex-wrap:wrap}
 .btn{
@@ -201,22 +216,28 @@ button{font:inherit}
 [data-theme="dark"] .btn-primary{background:#f4f7fb;color:#101525;border-color:#f4f7fb}
 [data-theme="dark"] .btn-primary:hover{background:#e2e8f0}
 
-/* ── analytics card ──────────────────────── */
+/* â”€â”€ analytics card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .analytics-card{
   border:1.5px solid var(--border);border-radius:var(--radius);
-  background:var(--card);box-shadow:var(--shadow);overflow:hidden;
+  background:rgba(255,255,255,.9);box-shadow:0 24px 70px rgba(8,11,19,.22);overflow:hidden;
+  backdrop-filter:blur(18px);
 }
+[data-theme="dark"] .analytics-card{background:rgba(17,23,37,.88)}
 .analytics-head{
   height:52px;display:flex;align-items:center;justify-content:space-between;
   padding:0 22px;border-bottom:1px solid var(--border);
   color:var(--text);font-size:13.5px;font-weight:700;
 }
-.live{color:var(--accent2);font-size:11px;font-weight:800;letter-spacing:.8px}
+.live{color:var(--accent2);font-size:11px;font-weight:800;letter-spacing:.8px;position:relative}
+.live::before{content:"";display:inline-block;width:7px;height:7px;margin-right:7px;border-radius:50%;background:#60A5FA;box-shadow:0 0 14px rgba(96,165,250,.9);animation:livePulse 1.8s ease-in-out infinite}
 .analytics-body{padding:20px 22px 24px}
 .stat+.stat{margin-top:18px}
 .stat strong{
   display:block;font-family:"Outfit",sans-serif;
   font-size:30px;line-height:1;font-weight:900;letter-spacing:-.8px;
+  background:var(--brand-blue);background-size:260% 100%;
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  animation:gradientShift 5s ease-in-out infinite;
 }
 .stat span{display:block;margin-top:5px;color:var(--text3);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.6px}
 .analytics-foot{
@@ -225,9 +246,9 @@ button{font:inherit}
   color:var(--text3);font-size:12px;font-weight:700;
   background:var(--bg2);
 }
-.sol{width:14px;height:8px;border-radius:999px;background:linear-gradient(135deg,#9ca3af,#6b7280);transform:skew(-18deg)}
+.sol{width:14px;height:8px;border-radius:999px;background:var(--brand-blue);background-size:240% 100%;transform:skew(-18deg);animation:gradientShift 4s ease-in-out infinite}
 
-/* ── quick buy ───────────────────────────── */
+/* â”€â”€ quick buy â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .quick{position:relative;padding:0 0 56px;z-index:2}
 .section-kicker{
   display:flex;align-items:center;gap:8px;margin-bottom:16px;
@@ -252,7 +273,7 @@ button{font:inherit}
 .quick-name{font-size:14px;font-weight:800}
 .quick-price{margin-top:2px;color:var(--text3);font-size:12px;font-weight:700}
 
-/* ── sections ────────────────────────────── */
+/* â”€â”€ sections â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .section{padding:56px 0}
 .section.center{text-align:center}
 .section-title{
@@ -262,7 +283,7 @@ button{font:inherit}
 }
 .section-sub{margin:12px auto 0;color:var(--text2);font-size:16px;line-height:1.55;font-weight:500}
 
-/* ── paths ───────────────────────────────── */
+/* â”€â”€ paths â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .paths{margin:36px auto 0;display:grid;grid-template-columns:repeat(2,1fr);gap:14px;max-width:680px}
 .path-card{
   min-height:72px;display:flex;align-items:center;gap:16px;
@@ -279,20 +300,20 @@ button{font:inherit}
 }
 .path-card svg{margin-left:auto;color:var(--text3);width:18px;height:18px}
 
-/* ── jobs ────────────────────────────────── */
-.jobs-wrap{padding:48px 0 32px;overflow:hidden}
-.jobs-track{margin-top:40px;display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+/* â”€â”€ jobs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.jobs-wrap{padding:34px 0 30px;overflow:hidden;background:linear-gradient(180deg,var(--bg) 0%,var(--bg2) 100%)}
+.jobs-track{margin-top:24px;display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
 .job-card{
   border:1.5px solid var(--border);border-radius:var(--radius);
   background:var(--card);overflow:hidden;
   box-shadow:var(--shadow-soft);text-align:left;
-  transition:border-color .14s,box-shadow .14s;
+  transition:border-color .18s,box-shadow .18s,transform .18s;
 }
-.job-card:hover{border-color:var(--border2);box-shadow:var(--shadow)}
+.job-card:hover{border-color:#93C5FD;box-shadow:0 14px 36px rgba(37,99,235,.13);transform:translateY(-2px)}
 .job-top{
   display:flex;align-items:center;gap:13px;
-  padding:16px 20px;border-bottom:1px solid var(--border);
-  background:var(--bg2);
+  padding:14px 18px;border-bottom:1px solid var(--border);
+  background:linear-gradient(120deg,rgba(124,58,237,.06),rgba(37,99,235,.08),rgba(147,197,253,.1));
 }
 .avatar{
   width:38px;height:38px;border-radius:50%;flex-shrink:0;
@@ -302,23 +323,23 @@ button{font:inherit}
 }
 .listed{color:var(--text3);font-size:10px;text-transform:uppercase;letter-spacing:1px;font-weight:700}
 .job-name{margin-top:2px;color:var(--text);font-size:14px;font-weight:800}
-.job-body{padding:18px 20px}
+.job-body{padding:15px 18px 16px}
 .progress-line{
   display:flex;justify-content:space-between;align-items:center;
   color:var(--text2);font-size:11px;text-transform:uppercase;letter-spacing:.8px;font-weight:700;
 }
 .progress-line strong{color:var(--text);letter-spacing:0;font-size:13px}
 .progress{height:6px;border-radius:99px;background:var(--bg2);overflow:hidden;margin:10px 0 14px}
-.progress span{display:block;height:100%;background:var(--accent2);border-radius:99px}
+.progress span{display:block;height:100%;background:var(--brand-blue);background-size:240% 100%;border-radius:99px;animation:gradientShift 4s ease-in-out infinite,progressLoad 1.1s ease-out both}
 .meta-row{display:flex;gap:16px;flex-wrap:wrap;color:var(--text2);font-size:12px;font-weight:700;margin-bottom:16px}
-.meta-row span:first-child{color:var(--accent2)}
+.meta-row span:first-child{background:var(--brand-blue);-webkit-background-clip:text;background-clip:text;color:transparent}
 .reward{
   margin:0 0 12px;padding:14px 18px;
   border:1.5px solid var(--border);border-radius:10px;
   display:flex;align-items:center;justify-content:space-between;
-  background:var(--bg2);
+  background:linear-gradient(135deg,rgba(37,99,235,.08),rgba(147,197,253,.14));
 }
-.reward strong{font-family:"Outfit",sans-serif;color:var(--text);font-size:26px;font-weight:900;letter-spacing:-.6px}
+.reward strong{font-family:"Outfit",sans-serif;background:var(--brand-blue);background-size:240% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;font-size:26px;font-weight:900;letter-spacing:-.6px;animation:gradientShift 5s ease-in-out infinite}
 .reward span{color:var(--text2);font-size:12px;font-weight:800}
 .reward small{display:block;margin-top:3px;color:var(--text3);font-size:11px;font-weight:700;letter-spacing:1px}
 .job-tags{color:var(--text3);font-size:12px;font-weight:700;margin-bottom:16px}
@@ -333,7 +354,7 @@ button{font:inherit}
 .dots span{width:24px;height:6px;border-radius:999px;background:var(--border)}
 .dots span.active{background:var(--text)}
 
-/* ── store ───────────────────────────────── */
+/* â”€â”€ store â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .store-grid,.community-grid{margin-top:40px;display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
 .product,.community-card{
   border:1.5px solid var(--border);border-radius:var(--radius);
@@ -368,7 +389,7 @@ button{font:inherit}
   border:1.5px solid var(--border);border-radius:9px;
   background:var(--soft-green);margin-bottom:14px;
 }
-.price strong{color:#16a34a;font-size:20px;font-weight:900}
+.price strong{background:var(--brand-blue);-webkit-background-clip:text;background-clip:text;color:transparent;font-size:20px;font-weight:900}
 .price span{
   padding:6px 12px;border:1.5px solid var(--border);border-radius:7px;
   background:var(--card);color:var(--text2);font-size:12px;font-weight:800;
@@ -388,7 +409,7 @@ button{font:inherit}
 }
 [data-theme="dark"] .pill{background:#f4f7fb;color:#101525;border-color:#f4f7fb}
 
-/* ── communities ─────────────────────────── */
+/* â”€â”€ communities â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .community-art{
   height:120px;display:grid;place-items:center;
   font-family:"Outfit",sans-serif;font-size:32px;font-weight:900;
@@ -398,7 +419,7 @@ button{font:inherit}
 .community-body h3{margin:0 0 8px;font-size:16px;font-weight:800}
 .community-meta{display:flex;gap:16px;margin:12px 0 0;color:var(--text3);font-size:12px;font-weight:700}
 
-/* ── footer ──────────────────────────────── */
+/* â”€â”€ footer â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 footer{
   border-top:1px solid var(--border);
   padding:40px 24px;
@@ -420,7 +441,24 @@ footer{
 }
 .footer-links a:hover{color:var(--text)}
 
-/* ── responsive ──────────────────────────── */
+@keyframes gradientShift{
+  0%,100%{background-position:0% 50%}
+  50%{background-position:100% 50%}
+}
+@keyframes ambientFloat{
+  from{transform:translate3d(-1%,0,0) scale(1)}
+  to{transform:translate3d(1.5%,-1%,0) scale(1.04)}
+}
+@keyframes livePulse{
+  0%,100%{opacity:.55;transform:scale(.82)}
+  50%{opacity:1;transform:scale(1.08)}
+}
+@keyframes progressLoad{
+  from{transform:scaleX(.18);transform-origin:left}
+  to{transform:scaleX(1);transform-origin:left}
+}
+
+/* â”€â”€ responsive â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 @media(max-width:1200px){
   .nav-links{gap:2px}
   .hero-grid{grid-template-columns:1fr;gap:40px}
@@ -462,7 +500,7 @@ footer{
   <div class="nav-inner">
     <a class="brand" href="index.html" aria-label="OgaPay home">
       <span class="logo-mark">
-        <svg viewBox="0 0 100 100" fill="none" aria-hidden="true"><defs><linearGradient id="ogaLogoA" x1="50" y1="0" x2="50" y2="100" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#0d0f14"/><stop offset="100%" stop-color="#1a1d26"/></linearGradient></defs><rect width="100" height="100" rx="20" fill="url(#ogaLogoA)"/><rect x="10" y="10" width="35" height="35" rx="7" fill="#6d6f85" opacity="0.7"/><polygon points="10,10 45,10 10,45" fill="#1a1d26" opacity="0.45"/><path d="M52 10 H68 Q87 10 87 27.5 Q87 45 68 45 H52 Z" fill="white"/><rect x="10" y="52" width="35" height="35" rx="7" fill="#6d6f85" opacity="0.55"/><rect x="52" y="52" width="35" height="35" rx="7" fill="#6d6f85" opacity="0.7"/><polygon points="52,52 87,52 87,87" fill="#1a1d26" opacity="0.45"/><path d="M52 52 H68 Q87 52 87 69.5 Q87 87 68 87 H52 Z" fill="white"/></svg>
+        <svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect width="512" height="512" fill="white"/><rect x="98" y="98" width="107" height="107" rx="20" fill="black"/><path d="M225 98H312C323 98 332 107 332 118V205H225V98Z" fill="black"/><path d="M352 98H392C440 98 470 128 470 176V205H352V98Z" fill="black"/><rect x="98" y="225" width="107" height="107" fill="black"/><rect x="225" y="225" width="107" height="107" fill="black"/><path d="M352 225H470V254C470 302 440 332 392 332H352V225Z" fill="black"/><rect x="98" y="352" width="107" height="107" rx="20" fill="black"/><path d="M225 352H312C323 352 332 361 332 372V439C332 450 323 459 312 459H225V352Z" fill="black"/></svg>
       </span>
       <span>Oga<span>Pay</span></span>
     </a>
@@ -473,7 +511,7 @@ footer{
       <a class="nav-link" href="#footer"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>FAQ</a>
     </nav>
     <div class="nav-actions">
-      <button class="wallet-btn"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.3" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="14" rx="2"/><path d="M16 12h6"/></svg>Connect Wallet</button>
+      <button class="wallet-btn"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.3" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="14" rx="2"/><path d="M16 12h6"/></svg><span class="wallet-label">Balance:</span> <strong>$0.01</strong></button>
       <button class="icon-btn" id="themeToggle" aria-label="Toggle dark mode"><svg id="moonIcon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z"/></svg></button>
       <button class="icon-btn" id="menuBtn" aria-label="Open menu"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
     </div>
@@ -484,7 +522,7 @@ footer{
   <div class="mobile-overlay" data-close-menu></div>
   <aside class="mobile-drawer">
     <div class="drawer-head">
-      <a class="brand" href="index.html"><span>Oga<span>Pay</span></span></a>
+      <a class="brand" href="index.html"><span class="logo-mark"><svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect width="512" height="512" fill="white"/><rect x="98" y="98" width="107" height="107" rx="20" fill="black"/><path d="M225 98H312C323 98 332 107 332 118V205H225V98Z" fill="black"/><path d="M352 98H392C440 98 470 128 470 176V205H352V98Z" fill="black"/><rect x="98" y="225" width="107" height="107" fill="black"/><rect x="225" y="225" width="107" height="107" fill="black"/><path d="M352 225H470V254C470 302 440 332 392 332H352V225Z" fill="black"/><rect x="98" y="352" width="107" height="107" rx="20" fill="black"/><path d="M225 352H312C323 352 332 361 332 372V439C332 450 323 459 312 459H225V352Z" fill="black"/></svg></span><span>Oga<span>Pay</span></span></a>
       <button class="icon-btn" data-close-menu aria-label="Close menu"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
     </div>
     <div class="drawer-links">
@@ -501,7 +539,7 @@ footer{
   <section class="hero">
     <div class="container hero-grid">
       <div class="hero-copy">
-        <h1>Work <span class="arrow">→</span> <span class="earn">Earn</span></h1>
+        <h1>Work <span class="arrow">&rarr;</span> <span class="earn">Earn</span></h1>
         <p>A modern earning marketplace for tasks, communities, and rewards. Work online and earn in Naira &amp; Crypto.</p>
         <div class="btn-row">
           <a class="btn btn-primary" href="#jobs">Start earning <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 12h14M13 5l7 7-7 7"/></svg></a>
@@ -520,14 +558,36 @@ footer{
     </div>
   </section>
 
+  <section class="jobs-wrap center" id="jobs">
+    <div class="container">
+      <h2 class="section-title">All Jobs</h2>
+      <p class="section-sub">Find your next opportunity</p>
+      <div class="jobs-track">
+        <article class="job-card">
+          <div class="job-top"><div class="avatar">BO</div><div><div class="listed">Listed by</div><div class="job-name">BrandOga</div></div></div>
+          <div class="job-body"><div class="progress-line"><span>Progress</span><strong>65/100</strong></div><div class="progress"><span style="width:65%"></span></div><div class="meta-row"><span>Submissions 65</span><span>Open 35</span><span>Status Open</span></div><div class="reward"><div><strong>&#8358;250</strong><small>PER COMPLETION</small></div></div><div class="job-tags">Social | X/Twitter | 50+ followers</div><div class="about"><div class="about-head"><span>About this task</span><span>~2 min</span></div><p>Follow our X account and repost the pinned tweet.</p></div></div>
+        </article>
+        <article class="job-card">
+          <div class="job-top"><div class="avatar" style="background:#f5b301">TK</div><div><div class="listed">Listed by</div><div class="job-name">TechKing</div></div></div>
+          <div class="job-body"><div class="progress-line"><span>Progress</span><strong>40/100</strong></div><div class="progress"><span style="width:40%"></span></div><div class="meta-row"><span>Submissions 40</span><span>Open 60</span><span>Status Open</span></div><div class="reward"><div><strong>$1.50 <span>USDC</span></strong><small>PER COMPLETION</small></div></div><div class="job-tags">Survey | Fintech | Banking apps</div><div class="about"><div class="about-head"><span>About this task</span><span>~5 min</span></div><p>Rate our mobile banking app with eight quick questions.</p></div></div>
+        </article>
+        <article class="job-card">
+          <div class="job-top"><div class="avatar">DS</div><div><div class="listed">Listed by</div><div class="job-name">DesignStudio</div></div></div>
+          <div class="job-body"><div class="progress-line"><span>Progress</span><strong>1/5</strong></div><div class="progress"><span style="width:20%"></span></div><div class="meta-row"><span>Submissions 1</span><span>Open 4</span><span>Status Open</span></div><div class="reward"><div><strong>&#8358;15,000</strong><small>PER ACCEPTED DESIGN</small></div></div><div class="job-tags">Design | PNG + SVG | Portfolio</div><div class="about"><div class="about-head"><span>About this task</span><span>1-2 days</span></div><p>Design a modern logo for a fintech startup.</p></div></div>
+        </article>
+      </div>
+      <div class="dots"><span></span><span class="active"></span><span></span><span></span><span></span></div>
+    </div>
+  </section>
+
   <section class="quick">
     <div class="container">
-      <div class="section-kicker">⚡ Quick buy</div>
+      <div class="section-kicker">Quick buy</div>
       <div class="quick-grid">
-        <a class="quick-card" href="#jobs"><span class="quick-icon">X</span><div><div class="quick-name">X Raid</div><div class="quick-price">₦500</div></div></a>
-        <a class="quick-card featured" href="#jobs"><span class="quick-icon">↻</span><div><div class="quick-name">Reposts</div><div class="quick-price">₦250</div></div></a>
-        <a class="quick-card" href="#jobs"><span class="quick-icon">TG</span><div><div class="quick-name">Telegram Join</div><div class="quick-price">₦250</div></div></a>
-        <a class="quick-card" href="#store"><span class="quick-icon">›</span><div><div class="quick-name">More</div><div class="quick-price">options</div></div></a>
+        <a class="quick-card" href="#jobs"><span class="quick-icon">X</span><div><div class="quick-name">X Raid</div><div class="quick-price">&#8358;500</div></div></a>
+        <a class="quick-card featured" href="#jobs"><span class="quick-icon">R</span><div><div class="quick-name">Reposts</div><div class="quick-price">&#8358;250</div></div></a>
+        <a class="quick-card" href="#jobs"><span class="quick-icon">TG</span><div><div class="quick-name">Telegram Join</div><div class="quick-price">&#8358;250</div></div></a>
+        <a class="quick-card" href="#store"><span class="quick-icon">+</span><div><div class="quick-name">More</div><div class="quick-price">options</div></div></a>
       </div>
     </div>
   </section>
@@ -537,31 +597,9 @@ footer{
       <h2 class="section-title">Get started with OgaPay</h2>
       <p class="section-sub">Whether you're here to earn or promote, choose your path below.</p>
       <div class="paths">
-        <a class="path-card" href="#jobs"><span class="path-icon">₦</span>I'm a Worker <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></a>
-        <a class="path-card" href="post-task.html"><span class="path-icon">↗</span>I'm an Advertiser <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></a>
+        <a class="path-card" href="#jobs"><span class="path-icon">&#8358;</span>I'm a Worker <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></a>
+        <a class="path-card" href="post-task.html"><span class="path-icon">+</span>I'm an Advertiser <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></a>
       </div>
-    </div>
-  </section>
-
-  <section class="jobs-wrap center" id="jobs">
-    <div class="container">
-      <h2 class="section-title">Highlighted Tasks</h2>
-      <p class="section-sub">Featured earning opportunities</p>
-      <div class="jobs-track">
-        <article class="job-card">
-          <div class="job-top"><div class="avatar">BO</div><div><div class="listed">Listed by</div><div class="job-name">BrandOga</div></div></div>
-          <div class="job-body"><div class="progress-line"><span>Progress</span><strong>65/100</strong></div><div class="progress"><span style="width:65%"></span></div><div class="meta-row"><span>Submissions 65</span><span>Open 35</span><span>Status Open</span></div><div class="reward"><div><strong>₦250</strong><small>PER COMPLETION</small></div></div><div class="job-tags">Social | X/Twitter | 50+ followers</div><div class="about"><div class="about-head"><span>About this task</span><span>~2 min</span></div><p>Follow our X account and repost the pinned tweet.</p></div></div>
-        </article>
-        <article class="job-card">
-          <div class="job-top"><div class="avatar" style="background:#f5b301">TK</div><div><div class="listed">Listed by</div><div class="job-name">TechKing</div></div></div>
-          <div class="job-body"><div class="progress-line"><span>Progress</span><strong>40/100</strong></div><div class="progress"><span style="width:40%"></span></div><div class="meta-row"><span>Submissions 40</span><span>Open 60</span><span>Status Open</span></div><div class="reward"><div><strong>$1.50 <span>USDC</span></strong><small>PER COMPLETION</small></div></div><div class="job-tags">Survey | Fintech | Banking apps</div><div class="about"><div class="about-head"><span>About this task</span><span>~5 min</span></div><p>Rate our mobile banking app with eight quick questions.</p></div></div>
-        </article>
-        <article class="job-card">
-          <div class="job-top"><div class="avatar">DS</div><div><div class="listed">Listed by</div><div class="job-name">DesignStudio</div></div></div>
-          <div class="job-body"><div class="progress-line"><span>Progress</span><strong>1/5</strong></div><div class="progress"><span style="width:20%"></span></div><div class="meta-row"><span>Submissions 1</span><span>Open 4</span><span>Status Open</span></div><div class="reward"><div><strong>₦15,000</strong><small>PER ACCEPTED DESIGN</small></div></div><div class="job-tags">Design | PNG + SVG | Portfolio</div><div class="about"><div class="about-head"><span>About this task</span><span>1-2 days</span></div><p>Design a modern logo for a fintech startup.</p></div></div>
-        </article>
-      </div>
-      <div class="dots"><span></span><span class="active"></span><span></span><span></span><span></span></div>
     </div>
   </section>
 
@@ -570,7 +608,7 @@ footer{
       <h2 class="section-title">Worker Store</h2>
       <p class="section-sub">Featured products from workers</p>
       <div class="store-grid">
-        <article class="product"><div class="product-art">Logo Maker<br>Pro</div><div class="product-body"><div class="product-title"><span>Premium Logo Design Pack</span><time>4.9</time></div><p class="product-desc">5 unique logo concepts in PNG, SVG and AI formats. Fast delivery.</p><div class="seller"><div class="avatar">LD</div><div><strong>LogoDoctor</strong><span>42 reviews</span></div></div><div class="price"><strong>₦8,000</strong><span>0.095 SOL</span></div><a class="view-more" href="store.html">View more</a></div></article>
+        <article class="product"><div class="product-art">Logo Maker<br>Pro</div><div class="product-body"><div class="product-title"><span>Premium Logo Design Pack</span><time>4.9</time></div><p class="product-desc">5 unique logo concepts in PNG, SVG and AI formats. Fast delivery.</p><div class="seller"><div class="avatar">LD</div><div><strong>LogoDoctor</strong><span>42 reviews</span></div></div><div class="price"><strong>&#8358;8,000</strong><span>0.095 SOL</span></div><a class="view-more" href="store.html">View more</a></div></article>
         <article class="product"><div class="product-art">AI Brand<br>Videos</div><div class="product-body"><div class="product-title"><span>AI videos</span><time>Dec 14</time></div><p class="product-desc">Bring your Web3 project to life with short AI-powered brand videos.</p><div class="seller"><div class="avatar" style="background:#f5b301">VP</div><div><strong>VisualsPlug</strong><span>New creator</span></div></div><div class="price"><strong>$7.45</strong><span>0.089 SOL</span></div><a class="view-more" href="store.html">View more</a></div></article>
         <article class="product"><div class="product-art">X Verified<br>Followers</div><div class="product-body"><div class="product-title"><span>X Growth Bundle</span><time>Apr 21</time></div><p class="product-desc">Real Nigerian and diaspora accounts with gradual drip delivery.</p><div class="seller"><div class="avatar" style="background:#111">XG</div><div><strong>GrowthPlug</strong><span>88 reviews</span></div></div><div class="price"><strong>$12.00</strong><span>0.143 SOL</span></div><a class="view-more" href="store.html">View more</a></div></article>
       </div>
@@ -592,9 +630,17 @@ footer{
   </section>
 </main>
 
+<nav class="mobile-bottom-nav" aria-label="Mobile app navigation">
+  <a href="#jobs" class="active"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v13H4V7Z"/><path d="M9 5V3h6v2M8 11h8"/></svg><span>Jobs</span></a>
+  <a href="#store"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7H14a3.5 3.5 0 0 1 0 7H6"/></svg><span>Earnings</span></a>
+  <a href="post-task.html" class="create"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span>Create</span></a>
+  <a href="#footer"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg><span>Alerts</span></a>
+  <a href="#footer"><span class="profile-dot"></span><span>Profile</span></a>
+</nav>
+
 <footer id="footer">
   <div class="footer-content">
-    <div class="footer-logo"><span class="logo-mark"><svg viewBox="0 0 100 100" fill="none" aria-hidden="true"><defs><linearGradient id="ogaLogoB" x1="50" y1="0" x2="50" y2="100" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#0d0f14"/><stop offset="100%" stop-color="#1a1d26"/></linearGradient></defs><rect width="100" height="100" rx="20" fill="url(#ogaLogoB)"/><rect x="10" y="10" width="35" height="35" rx="7" fill="#6d6f85" opacity="0.7"/><polygon points="10,10 45,10 10,45" fill="#1a1d26" opacity="0.45"/><path d="M52 10 H68 Q87 10 87 27.5 Q87 45 68 45 H52 Z" fill="white"/><rect x="10" y="52" width="35" height="35" rx="7" fill="#6d6f85" opacity="0.55"/><rect x="52" y="52" width="35" height="35" rx="7" fill="#6d6f85" opacity="0.7"/><polygon points="52,52 87,52 87,87" fill="#1a1d26" opacity="0.45"/><path d="M52 52 H68 Q87 52 87 69.5 Q87 87 68 87 H52 Z" fill="white"/></svg></span>OgaPay</div>
+    <div class="footer-logo"><span class="logo-mark"><svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect width="512" height="512" fill="white"/><rect x="98" y="98" width="107" height="107" rx="20" fill="black"/><path d="M225 98H312C323 98 332 107 332 118V205H225V98Z" fill="black"/><path d="M352 98H392C440 98 470 128 470 176V205H352V98Z" fill="black"/><rect x="98" y="225" width="107" height="107" fill="black"/><rect x="225" y="225" width="107" height="107" fill="black"/><path d="M352 225H470V254C470 302 440 332 392 332H352V225Z" fill="black"/><rect x="98" y="352" width="107" height="107" rx="20" fill="black"/><path d="M225 352H312C323 352 332 361 332 372V439C332 450 323 459 312 459H225V352Z" fill="black"/></svg></span>OgaPay</div>
     <p>Microjob marketplace for tasks, communities, and rewards.</p>
     <nav class="footer-links"><a href="post-task.html">Create</a><a href="wallet.html">Wallet</a><a href="blog.html">Blog</a><a href="support.html">Support</a><a href="#jobs">Tasks</a></nav>
   </div>
