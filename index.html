@@ -1,1217 +1,620 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>OgaPay - One Platform, Equal Opportunities</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --bg: #ffffff;
-      --ink: #101525;
-      --muted: #687386;
-      --faint: #98a2b3;
-      --line: #e4e8ee;
-      --line-strong: #d4dce6;
-      --green: #20bf84;
-      --green-deep: #14795c;
-      --blue: #347ef4;
-      --purple: #6d62e8;
-      --soft: #f8fafc;
-      --shadow: 0 18px 42px rgba(16, 21, 37, 0.10), 0 4px 14px rgba(16, 21, 37, 0.06);
-      --shadow-sm: 0 10px 24px rgba(16, 21, 37, 0.08);
-      --radius: 16px;
-    }
-
-    * { box-sizing: border-box; }
-    html { scroll-behavior: smooth; }
-    body {
-      margin: 0;
-      background: var(--bg);
-      color: var(--ink);
-      font-family: "DM Sans", system-ui, sans-serif;
-      overflow-x: hidden;
-    }
-
-    a { color: inherit; text-decoration: none; }
-    button { font: inherit; }
-
-    .nav {
-      position: sticky;
-      top: 0;
-      z-index: 50;
-      height: 88px;
-      display: flex;
-      align-items: center;
-      border-bottom: 1px solid rgba(228, 232, 238, 0.68);
-      background: rgba(255, 255, 255, 0.86);
-      backdrop-filter: blur(22px);
-      box-shadow: 0 1px 0 rgba(16, 21, 37, 0.02);
-    }
-
-    .nav-inner {
-      width: 100%;
-      max-width: 1820px;
-      margin: 0 auto;
-      padding: 0 38px;
-      display: flex;
-      align-items: center;
-      gap: 54px;
-    }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 18px;
-      font-family: "Outfit", sans-serif;
-      font-weight: 900;
-      font-size: 29px;
-      letter-spacing: -0.9px;
-      color: #05070d;
-      white-space: nowrap;
-    }
-
-    .mark {
-      width: 46px;
-      height: 46px;
-      display: grid;
-      place-items: center;
-      color: #030405;
-    }
-
-    .nav-links {
-      display: flex;
-      align-items: center;
-      gap: 72px;
-      margin-left: 70px;
-      flex: 1;
-    }
-
-    .nav-link {
-      display: inline-flex;
-      align-items: center;
-      gap: 12px;
-      font-size: 18px;
-      font-weight: 700;
-      color: #6c7483;
-      white-space: nowrap;
-    }
-
-    .nav-link.active { color: #111827; }
-    .nav-link svg { width: 20px; height: 20px; stroke-width: 2.2; }
-
-    .nav-right {
-      margin-left: auto;
-      display: flex;
-      align-items: center;
-      gap: 28px;
-      white-space: nowrap;
-    }
-
-    .balance {
-      height: 54px;
-      min-width: 178px;
-      padding: 0 28px;
-      border: 1px solid var(--line);
-      border-radius: 16px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-      color: #7b8493;
-      font-size: 14px;
-      font-weight: 800;
-      letter-spacing: 1px;
-      background: rgba(255, 255, 255, 0.7);
-      box-shadow: 0 8px 22px rgba(16, 21, 37, 0.04);
-    }
-
-    .balance strong { color: var(--green); font-size: 18px; letter-spacing: 0; }
-
-    .wallet {
-      display: inline-flex;
-      align-items: center;
-      gap: 14px;
-      font-size: 18px;
-      font-weight: 700;
-      color: #293241;
-    }
-
-    .avatar {
-      width: 38px;
-      height: 38px;
-      border-radius: 50%;
-      background:
-        radial-gradient(circle at 65% 35%, #ff2c79 0 8%, transparent 9%),
-        radial-gradient(circle at 45% 55%, #2d2a69 0 16%, transparent 17%),
-        #050509;
-      box-shadow: inset 0 0 0 2px #0e1117;
-    }
-
-    .icon-btn {
-      width: 34px;
-      height: 34px;
-      display: grid;
-      place-items: center;
-      border: 0;
-      background: transparent;
-      color: #111827;
-      padding: 0;
-    }
-
-    .icon-btn svg { width: 28px; height: 28px; stroke-width: 2.4; }
-
-    .hero {
-      min-height: 700px;
-      display: flex;
-      align-items: center;
-      position: relative;
-      overflow: hidden;
-      background:
-        radial-gradient(circle at 18% 57%, rgba(139, 111, 255, 0.18), transparent 28%),
-        radial-gradient(circle at 45% 83%, rgba(31, 216, 178, 0.17), transparent 32%),
-        radial-gradient(circle at 84% 50%, rgba(114, 118, 255, 0.18), transparent 30%),
-        linear-gradient(180deg, #fff 0%, #fbfcff 100%);
-    }
-
-    .hero::after {
-      content: "";
-      position: absolute;
-      inset: auto 0 0;
-      height: 170px;
-      background: linear-gradient(180deg, rgba(255,255,255,0), #fff 70%);
-      pointer-events: none;
-    }
-
-    .hero-inner {
-      width: 100%;
-      max-width: 1640px;
-      margin: 0 auto;
-      padding: 70px 64px 92px;
-      display: grid;
-      grid-template-columns: minmax(420px, 1fr) 530px;
-      gap: 130px;
-      align-items: center;
-      position: relative;
-      z-index: 1;
-    }
-
-    .hero-inner > * { min-width: 0; }
-
-    .hero h1 {
-      margin: 0 0 28px;
-      font-family: "Outfit", sans-serif;
-      font-size: clamp(58px, 5vw, 86px);
-      line-height: 0.98;
-      letter-spacing: -3.4px;
-      font-weight: 900;
-    }
-
-    .hero h1 span {
-      background: linear-gradient(90deg, #111827 0%, #7a6fff 100%);
-      -webkit-background-clip: text;
-      background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    .hero-copy {
-      margin: 0 0 44px;
-      max-width: 610px;
-      color: #71798b;
-      font-size: 25px;
-      line-height: 1.48;
-      font-weight: 500;
-    }
-
-    .cta-row { display: flex; gap: 18px; flex-wrap: wrap; }
-
-    .btn {
-      min-width: 200px;
-      height: 64px;
-      padding: 0 32px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 14px;
-      border-radius: 10px;
-      border: 1px solid var(--line);
-      background: #fff;
-      color: #343b49;
-      font-size: 18px;
-      font-weight: 800;
-      box-shadow: 0 8px 18px rgba(16, 21, 37, 0.05);
-      transition: transform 0.18s ease, box-shadow 0.18s ease;
-    }
-
-    .btn:hover { transform: translateY(-2px); box-shadow: var(--shadow-sm); }
-    .btn-dark { background: #101525; color: #fff; border-color: #101525; box-shadow: 0 14px 26px rgba(16, 21, 37, 0.22); }
-    .btn-pill { height: 78px; min-width: 376px; border-radius: 999px; background: #000; color: #fff; font-size: 25px; }
-
-    .overview {
-      border: 1px solid var(--line);
-      border-radius: 20px;
-      background: rgba(255, 255, 255, 0.74);
-      overflow: hidden;
-      box-shadow: 0 28px 70px rgba(16, 21, 37, 0.16);
-      backdrop-filter: blur(12px);
-      min-width: 0;
-    }
-
-    .overview-head {
-      height: 78px;
-      padding: 0 28px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      border-bottom: 1px solid var(--line);
-      color: #485164;
-      font-size: 18px;
-      font-weight: 800;
-    }
-
-    .live {
-      color: var(--green);
-      font-size: 13px;
-      letter-spacing: 1px;
-    }
-
-    .overview-body { padding: 30px 28px 38px; }
-    .stat + .stat { margin-top: 28px; }
-    .stat strong {
-      display: block;
-      color: #111827;
-      font-family: "Outfit", sans-serif;
-      font-size: 42px;
-      font-weight: 900;
-      letter-spacing: -1.3px;
-      line-height: 1;
-    }
-
-    .stat span {
-      display: block;
-      margin-top: 8px;
-      color: #9aa3af;
-      font-size: 15px;
-      font-weight: 700;
-    }
-
-    .overview-foot {
-      height: 62px;
-      border-top: 1px solid var(--line);
-      padding: 0 28px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      color: #a0a9b6;
-      font-size: 15px;
-      font-weight: 700;
-      background: rgba(255, 255, 255, 0.54);
-    }
-
-    .sol {
-      width: 15px;
-      height: 15px;
-      border-radius: 4px;
-      background: linear-gradient(135deg, #8d7cff, #21c992);
-      transform: skew(-16deg);
-    }
-
-    section { padding: 88px 0; }
-    .container { width: min(1520px, calc(100% - 64px)); margin: 0 auto; }
-    .center { text-align: center; }
-    .section-title {
-      margin: 0;
-      font-family: "Outfit", sans-serif;
-      font-size: clamp(42px, 4vw, 64px);
-      line-height: 1;
-      letter-spacing: -2px;
-      font-weight: 900;
-      color: var(--ink);
-    }
-
-    .section-sub {
-      margin: 22px 0 0;
-      color: #707b8d;
-      font-size: 25px;
-      line-height: 1.45;
-    }
-
-    .paths {
-      margin: 38px auto 0;
-      max-width: 700px;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-    }
-
-    .path-card {
-      height: 92px;
-      padding: 0 26px;
-      border: 1px solid var(--line);
-      border-radius: 18px;
-      display: flex;
-      align-items: center;
-      gap: 22px;
-      background: #fff;
-      box-shadow: var(--shadow-sm);
-      font-size: 21px;
-      font-weight: 900;
-      color: #111827;
-    }
-
-    .path-icon {
-      width: 54px;
-      height: 54px;
-      border-radius: 14px;
-      display: grid;
-      place-items: center;
-      background: linear-gradient(135deg, #f6f2ff, #eef5ff);
-      color: #111827;
-      box-shadow: inset 0 0 0 1px rgba(109, 98, 232, 0.08);
-    }
-
-    .path-card svg:last-child { margin-left: auto; color: #a7b0bf; }
-
-    .jobs-band {
-      padding-top: 26px;
-      overflow: hidden;
-    }
-
-    .job-carousel {
-      margin-top: 76px;
-      display: flex;
-      gap: 34px;
-      width: max-content;
-      transform: translateX(-110px);
-    }
-
-    .job-card {
-      width: 420px;
-      min-height: 570px;
-      border: 3px solid var(--line-strong);
-      border-radius: 15px;
-      background: #fff;
-      box-shadow: 0 20px 44px rgba(16, 21, 37, 0.08);
-      overflow: hidden;
-      color: #1f2937;
-    }
-
-    .job-top {
-      height: 86px;
-      padding: 18px 24px;
-      display: flex;
-      align-items: center;
-      gap: 17px;
-      border-bottom: 1px solid #dff6ec;
-      background:
-        radial-gradient(circle at 10% 0%, rgba(128, 99, 255, 0.16), transparent 34%),
-        radial-gradient(circle at 100% 12%, rgba(31, 216, 178, 0.16), transparent 38%),
-        #fff;
-    }
-
-    .job-avatar {
-      width: 46px;
-      height: 46px;
-      border-radius: 50%;
-      display: grid;
-      place-items: center;
-      border: 3px solid #efe6ff;
-      box-shadow: 0 0 0 2px #d6e6ff;
-      background: linear-gradient(135deg, #191a5a, #f6a633);
-      color: #fff;
-      font-size: 17px;
-      font-weight: 900;
-    }
-
-    .listed {
-      color: #a1adbf;
-      text-transform: uppercase;
-      letter-spacing: 1.4px;
-      font-size: 15px;
-      font-weight: 800;
-    }
-
-    .name {
-      margin-top: 4px;
-      color: #1f2937;
-      font-size: 20px;
-      font-weight: 900;
-    }
-
-    .job-body { padding: 25px 22px 24px; }
-    .progress-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      color: #6b7890;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      font-size: 17px;
-      font-weight: 800;
-    }
-
-    .progress-row strong { color: #1f2937; letter-spacing: 0; }
-    .bar {
-      height: 11px;
-      margin: 16px 0 13px;
-      border-radius: 99px;
-      background: #f1f3f5;
-      overflow: hidden;
-    }
-    .bar span { display: block; height: 100%; background: linear-gradient(90deg, #20bf84, #1ab77e); }
-
-    .mini-row {
-      display: flex;
-      gap: 24px;
-      flex-wrap: wrap;
-      color: #397ce8;
-      font-size: 15px;
-      font-weight: 700;
-    }
-
-    .mini-row span { display: inline-flex; align-items: center; gap: 8px; }
-    .mini-row span::before {
-      content: "";
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background: #397ce8;
-    }
-    .mini-row span:first-child { color: var(--green); }
-    .mini-row span:first-child::before { background: var(--green); }
-
-    .reward {
-      margin: 38px 0 0;
-      height: 126px;
-      border: 1px solid #cfeedd;
-      border-radius: 14px;
-      background:
-        radial-gradient(circle at 10% 0%, rgba(32, 191, 132, 0.08), transparent 50%),
-        #fbfffd;
-      display: grid;
-      place-items: center;
-      text-align: center;
-    }
-
-    .reward strong {
-      color: #17795f;
-      font-family: "Outfit", sans-serif;
-      font-size: 40px;
-      font-weight: 900;
-      letter-spacing: -1px;
-    }
-
-    .reward strong span { color: #687386; font-size: 17px; letter-spacing: 0; }
-    .reward small {
-      display: block;
-      margin-top: 10px;
-      color: #6d7890;
-      font-size: 15px;
-      font-weight: 800;
-      letter-spacing: 2px;
-    }
-
-    .job-meta {
-      margin: 12px 0 34px;
-      color: #657287;
-      font-size: 15px;
-      font-weight: 800;
-    }
-
-    .about {
-      padding-top: 18px;
-      border-top: 1px solid #edf0f3;
-      min-height: 140px;
-    }
-
-    .about-head {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 16px;
-      color: #657287;
-      text-transform: uppercase;
-      letter-spacing: 1.4px;
-      font-size: 14px;
-      font-weight: 900;
-    }
-
-    .about p {
-      margin: 0;
-      color: #2f3745;
-      font-size: 18px;
-      line-height: 1.38;
-    }
-
-    .dots {
-      margin: 42px auto 0;
-      display: flex;
-      justify-content: center;
-      gap: 18px;
-    }
-    .dots span {
-      width: 39px;
-      height: 19px;
-      border-radius: 99px;
-      background: #dce3eb;
-    }
-    .dots .active { width: 42px; background: #101525; }
-
-    .store { padding-top: 92px; }
-    .product-grid {
-      margin-top: 70px;
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 32px;
-    }
-
-    .product {
-      border: 1px solid var(--line);
-      border-radius: 19px;
-      overflow: hidden;
-      background: #fff;
-      box-shadow: 0 18px 44px rgba(16, 21, 37, 0.09);
-    }
-
-    .product-img {
-      height: 300px;
-      display: grid;
-      place-items: center;
-      overflow: hidden;
-      color: #111827;
-      font-family: "Outfit", sans-serif;
-      font-weight: 900;
-      text-align: center;
-      position: relative;
-    }
-
-    .portrait {
-      background:
-        linear-gradient(90deg, rgba(156, 93, 35, 0.95) 0 8%, transparent 8% 92%, rgba(156, 93, 35, 0.95) 92%),
-        repeating-linear-gradient(145deg, #c9d0da 0 8px, #b8c1ce 8px 18px);
-    }
-    .portrait::after {
-      content: "";
-      width: 190px;
-      height: 230px;
-      border: 4px solid rgba(28, 37, 52, 0.35);
-      border-radius: 48% 48% 42% 42%;
-      background:
-        radial-gradient(circle at 42% 38%, #263243 0 7px, transparent 8px),
-        radial-gradient(circle at 60% 38%, #263243 0 7px, transparent 8px),
-        radial-gradient(ellipse at 50% 70%, transparent 0 58px, rgba(38, 50, 67, 0.18) 59px),
-        rgba(226, 232, 240, 0.36);
-    }
-
-    .ai-video {
-      background:
-        radial-gradient(circle at 10% 0%, rgba(255, 186, 45, 0.9), transparent 18%),
-        radial-gradient(circle at 95% 10%, rgba(255, 211, 74, 0.9), transparent 16%),
-        radial-gradient(circle at 80% 100%, rgba(255, 143, 23, 0.9), transparent 22%),
-        linear-gradient(135deg, #101010, #62481f);
-      color: #fff;
-      font-size: 42px;
-      line-height: 1.05;
-    }
-    .ai-video span { color: #ff9e16; font-size: 76px; display: block; }
-
-    .followers {
-      background:
-        radial-gradient(circle at 0% 20%, rgba(172, 149, 255, 0.34), transparent 36%),
-        radial-gradient(circle at 100% 48%, rgba(86, 205, 178, 0.22), transparent 35%),
-        linear-gradient(135deg, #eff6ff, #eef2f7);
-      font-size: 38px;
-      line-height: 1.1;
-    }
-
-    .product-body { padding: 24px 24px 20px; }
-    .product-title {
-      display: flex;
-      justify-content: space-between;
-      gap: 20px;
-      margin-bottom: 20px;
-      color: #1f2937;
-      font-size: 21px;
-      font-weight: 900;
-    }
-    .product-title time { color: #9aa3af; font-size: 15px; font-weight: 600; }
-    .product-desc {
-      margin: 0 0 24px;
-      color: #5d6675;
-      font-size: 18px;
-      line-height: 1.45;
-    }
-
-    .seller {
-      height: 78px;
-      padding: 0 18px;
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      background: #f8fafc;
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      margin-bottom: 34px;
-    }
-
-    .seller .job-avatar { width: 46px; height: 46px; border-width: 1px; box-shadow: none; }
-    .seller strong { display: block; font-size: 18px; }
-    .seller span { display: block; color: #8a94a4; margin-top: 3px; font-size: 15px; }
-
-    .price {
-      height: 80px;
-      border: 1px solid #b8efd3;
-      border-radius: 14px;
-      background: #f7fffb;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 20px;
-      margin-bottom: 34px;
-    }
-    .price strong { color: var(--green); font-size: 28px; font-weight: 900; }
-    .price span {
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: #fff;
-      padding: 12px 16px;
-      color: #596273;
-      font-size: 17px;
-      font-weight: 900;
-      box-shadow: 0 4px 9px rgba(16, 21, 37, 0.08);
-    }
-
-    .view-more {
-      height: 52px;
-      border: 1px solid var(--line);
-      border-radius: 999px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-      color: #687386;
-      font-size: 18px;
-      font-weight: 900;
-      background: #fff;
-      box-shadow: 0 7px 16px rgba(16, 21, 37, 0.06);
-    }
-
-    .product-cta { padding: 96px 0 52px; display: flex; justify-content: center; }
-    .all-jobs { padding-top: 92px; }
-    .all-grid {
-      margin-top: 86px;
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 36px;
-    }
-
-    .quick-strip {
-      border-top: 1px solid var(--line);
-      border-bottom: 1px solid var(--line);
-      background: #fff;
-      padding: 28px 0;
-      overflow: hidden;
-    }
-
-    .quick-title {
-      color: #98a2b3;
-      font-size: 13px;
-      font-weight: 900;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      margin-bottom: 14px;
-    }
-
-    .quick-row, .ticker-row {
-      display: flex;
-      gap: 12px;
-      overflow-x: auto;
-      scrollbar-width: none;
-      padding-bottom: 3px;
-    }
-
-    .quick-row::-webkit-scrollbar, .ticker-row::-webkit-scrollbar { display: none; }
-
-    .quick-card {
-      flex: 0 0 auto;
-      min-width: 178px;
-      min-height: 66px;
-      border: 1px solid var(--line);
-      border-radius: 13px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 12px 16px;
-      background: #fff;
-      box-shadow: 0 8px 18px rgba(16, 21, 37, 0.05);
-    }
-
-    .quick-icon {
-      width: 36px;
-      height: 36px;
-      border-radius: 10px;
-      display: grid;
-      place-items: center;
-      background: #eef2ff;
-      color: #101525;
-      font-weight: 900;
-    }
-
-    .quick-card strong { display: block; font-size: 15px; }
-    .quick-card span { color: #687386; font-size: 13px; font-weight: 800; }
-
-    .ticker {
-      border-bottom: 1px solid var(--line);
-      background: #f8fafc;
-      padding: 14px 0;
-    }
-
-    .ticker-row {
-      width: max-content;
-      animation: drift 34s linear infinite;
-    }
-
-    .ticker-item {
-      flex: 0 0 auto;
-      color: #687386;
-      font-size: 14px;
-      font-weight: 800;
-      white-space: nowrap;
-    }
-
-    .ticker-item b { color: var(--green); }
-    @keyframes drift { from { transform: translateX(0); } to { transform: translateX(-50%); } }
-
-    .info-grid {
-      margin-top: 58px;
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 24px;
-    }
-
-    .info-card {
-      border: 1px solid var(--line);
-      border-radius: 18px;
-      background: #fff;
-      padding: 34px;
-      text-align: left;
-      box-shadow: var(--shadow-sm);
-    }
-
-    .info-card h3 {
-      margin: 0 0 12px;
-      font-family: "Outfit", sans-serif;
-      font-size: 25px;
-      letter-spacing: -0.5px;
-    }
-
-    .info-card p, .info-card li {
-      color: #687386;
-      font-size: 17px;
-      line-height: 1.55;
-      font-weight: 600;
-    }
-
-    .info-card ul {
-      margin: 20px 0 0;
-      padding: 0;
-      list-style: none;
-      display: grid;
-      gap: 10px;
-    }
-
-    .info-card li::before {
-      content: "✓";
-      display: inline-grid;
-      place-items: center;
-      width: 20px;
-      height: 20px;
-      margin-right: 10px;
-      border-radius: 50%;
-      background: #ecfdf5;
-      color: var(--green);
-      font-size: 12px;
-      font-weight: 900;
-    }
-
-    .community-grid, .testimonial-grid, .faq-list {
-      margin-top: 58px;
-      display: grid;
-      gap: 18px;
-    }
-
-    .community-grid { grid-template-columns: repeat(4, 1fr); }
-    .testimonial-grid { grid-template-columns: repeat(3, 1fr); }
-
-    .mini-card, .testimonial, .faq-item {
-      border: 1px solid var(--line);
-      border-radius: 18px;
-      background: #fff;
-      text-align: left;
-      box-shadow: var(--shadow-sm);
-      overflow: hidden;
-    }
-
-    .mini-banner {
-      height: 82px;
-      display: grid;
-      place-items: center;
-      background: radial-gradient(circle at 20% 0%, rgba(109, 98, 232, 0.18), transparent 35%), #f7fbff;
-      color: var(--purple);
-      font-size: 32px;
-      font-weight: 900;
-    }
-
-    .mini-body { padding: 18px; }
-    .mini-body h3, .testimonial strong {
-      margin: 0 0 8px;
-      display: block;
-      font-size: 18px;
-      color: #111827;
-    }
-    .mini-body p, .testimonial p, .faq-item p {
-      margin: 0;
-      color: #687386;
-      font-size: 15px;
-      line-height: 1.55;
-      font-weight: 600;
-    }
-
-    .testimonial { padding: 24px; }
-    .stars { color: #f5b301; letter-spacing: 2px; margin-bottom: 14px; }
-
-    .faq-list {
-      max-width: 760px;
-      margin-left: auto;
-      margin-right: auto;
-    }
-
-    .faq-item { padding: 22px 24px; }
-    .faq-item summary {
-      cursor: pointer;
-      list-style: none;
-      font-family: "Outfit", sans-serif;
-      font-size: 19px;
-      font-weight: 800;
-    }
-    .faq-item p { margin-top: 14px; }
-
-    .cta-panel {
-      border-radius: 28px;
-      padding: 76px 32px;
-      background:
-        radial-gradient(circle at 50% 0%, rgba(124, 58, 237, 0.18), transparent 44%),
-        linear-gradient(135deg, #0d0f14, #1c1d2e 52%, #0d0f14);
-      color: #fff;
-      text-align: center;
-      box-shadow: var(--shadow);
-    }
-
-    .cta-panel h2 {
-      margin: 0 0 14px;
-      font-family: "Outfit", sans-serif;
-      font-size: clamp(36px, 4vw, 58px);
-      letter-spacing: -1.5px;
-    }
-
-    .cta-panel p {
-      color: rgba(255, 255, 255, 0.68);
-      font-size: 20px;
-      margin: 0 0 32px;
-    }
-
-    footer {
-      padding: 74px 32px 42px;
-      color: #8a94a4;
-      font-weight: 700;
-      border-top: 1px solid var(--line);
-    }
-
-    .footer-inner {
-      width: min(1520px, calc(100% - 64px));
-      margin: 0 auto;
-      display: grid;
-      grid-template-columns: 2fr repeat(4, 1fr);
-      gap: 34px;
-      text-align: left;
-    }
-
-    .footer-inner h4 {
-      margin: 0 0 14px;
-      color: #111827;
-      font-family: "Outfit", sans-serif;
-    }
-
-    .footer-inner a, .footer-inner p {
-      display: block;
-      margin: 0 0 10px;
-      color: #687386;
-      font-size: 14px;
-      line-height: 1.6;
-    }
-
-    body.dim {
-      background: #0f1524;
-      filter: invert(1) hue-rotate(180deg);
-    }
-
-    body.dim img,
-    body.dim video,
-    body.dim .avatar,
-    body.dim .job-avatar,
-    body.dim .product-img {
-      filter: invert(1) hue-rotate(180deg);
-    }
-
-    @media (max-width: 1160px) {
-      .nav-links { gap: 28px; margin-left: 10px; }
-      .balance, .wallet { display: none; }
-      .hero-inner { grid-template-columns: 1fr; gap: 50px; }
-      .overview { max-width: 560px; }
-      .product-grid, .all-grid { grid-template-columns: 1fr; max-width: 620px; margin-left: auto; margin-right: auto; }
-      .community-grid, .testimonial-grid, .info-grid, .footer-inner { grid-template-columns: 1fr; }
-      .job-carousel { transform: none; width: auto; overflow-x: auto; padding: 0 28px 16px; margin-left: -28px; margin-right: -28px; }
-    }
-
-    @media (max-width: 760px) {
-      .nav { height: 72px; }
-      .nav-inner { padding: 0 18px; gap: 16px; }
-      .brand { font-size: 22px; gap: 10px; }
-      .mark { width: 35px; height: 35px; }
-      .nav-links { display: none; }
-      .hero-inner { display: block; width: auto; max-width: none; padding: 48px 24px 70px; }
-      .hero h1 { font-size: 44px; letter-spacing: -2px; }
-      .hero-copy { max-width: min(320px, calc(100vw - 48px)); font-size: 19px; }
-      .cta-row { display: grid; grid-template-columns: 1fr; }
-      .btn { width: 100%; max-width: calc(100vw - 48px); min-width: 0; }
-      .overview { width: 100%; max-width: calc(100vw - 48px); margin-top: 52px; }
-      .overview-head { padding: 0 22px; }
-      .overview-body { padding: 28px 22px 36px; }
-      .overview-foot { padding: 0 22px; }
-      .container { width: min(100% - 36px, 1520px); }
-      .paths { grid-template-columns: 1fr; }
-      .job-card { width: 330px; }
-      .product-img { height: 220px; }
-      .btn-pill { min-width: 0; width: 100%; font-size: 20px; }
-      .section-sub { font-size: 20px; }
-      .section-title { font-size: 42px; }
-    }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>OgaPay - Work to Earn</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800;900&family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ── tokens ─────────────────────────────── */
+:root{
+  --bg:#ffffff;
+  --bg2:#f7f9fc;
+  --card:#ffffff;
+  --border:#e4e9f1;
+  --border2:#d5deea;
+  --text:#101525;
+  --text2:#66738a;
+  --text3:#98a6ba;
+  --primary:#0d1323;
+  --accent:#101525;        /* was purple — now neutral dark */
+  --accent2:#16a34a;       /* was teal — now clean green */
+  --gold:#f5b301;
+  --soft-purple:#f4f6fa;   /* was purple tint — now neutral */
+  --soft-green:#f0faf4;
+  --shadow:0 4px 16px rgba(16,21,37,.07),0 1px 4px rgba(16,21,37,.04);
+  --shadow-soft:0 2px 8px rgba(16,21,37,.05);
+  --radius:14px;
+  --nav-h:60px;            /* was 92px */
+}
+[data-theme="dark"]{
+  --bg:#080b13;
+  --bg2:#0d111d;
+  --card:#111725;
+  --border:#222b3c;
+  --border2:#2d384d;
+  --text:#f4f7fb;
+  --text2:#9aa7bc;
+  --text3:#667186;
+  --primary:#f4f7fb;
+  --accent:#f4f7fb;
+  --accent2:#34d399;
+  --soft-purple:#111725;
+  --soft-green:#10241f;
+  --shadow:0 4px 16px rgba(0,0,0,.28),0 1px 4px rgba(0,0,0,.18);
+  --shadow-soft:0 2px 8px rgba(0,0,0,.22);
+}
+
+/* ── reset ───────────────────────────────── */
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;color:var(--text);background:var(--bg);font-family:"DM Sans",system-ui,sans-serif;overflow-x:hidden}
+a{color:inherit;text-decoration:none}
+button{font:inherit}
+
+/* ── layout ──────────────────────────────── */
+.container{width:min(1200px,calc(100% - 64px));margin:0 auto}
+
+/* ── navbar ──────────────────────────────── */
+.nav{
+  position:sticky;top:0;z-index:100;
+  height:var(--nav-h);
+  background:rgba(255,255,255,.92);
+  border-bottom:1px solid var(--border);
+  backdrop-filter:blur(18px) saturate(1.4);
+}
+[data-theme="dark"] .nav{background:rgba(8,11,19,.92);border-bottom-color:var(--border)}
+.nav-inner{
+  height:100%;
+  display:grid;
+  grid-template-columns:auto 1fr auto;
+  align-items:center;
+  gap:28px;
+  width:min(1200px,calc(100% - 48px));
+  margin:0 auto;
+}
+.brand{
+  display:flex;align-items:center;gap:10px;
+  font-family:"Outfit",sans-serif;font-size:19px;font-weight:800;
+  letter-spacing:-.4px;white-space:nowrap;
+}
+.logo-mark{width:32px;height:32px;display:grid;place-items:center;color:#05070b;flex-shrink:0}
+[data-theme="dark"] .logo-mark{color:#fff}
+.logo-mark svg{width:30px;height:30px}
+.brand span span{color:var(--text)}   /* no purple accent on brand */
+
+.nav-links{display:flex;align-items:center;justify-content:center;gap:4px}
+.nav-link{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:6px 10px;border-radius:8px;
+  color:var(--text2);font-size:14px;font-weight:600;line-height:1;
+  transition:color .14s,background .14s;
+}
+.nav-link svg{width:15px;height:15px;stroke-width:2.2;flex-shrink:0}
+.nav-link.active,.nav-link:hover{color:var(--text);background:var(--bg2)}
+.nav-link.active{color:var(--text)}
+
+.nav-actions{display:flex;align-items:center;gap:8px}
+.wallet-btn{
+  height:36px;padding:0 18px;
+  display:inline-flex;align-items:center;gap:8px;
+  border:1.5px solid var(--border2);
+  border-radius:999px;
+  background:var(--card);
+  color:var(--text);
+  font-size:13.5px;font-weight:700;
+  cursor:pointer;
+  transition:border-color .14s,background .14s;
+}
+.wallet-btn:hover{border-color:var(--text);background:var(--bg2)}
+.wallet-btn svg{width:15px;height:15px}
+.icon-btn{
+  width:36px;height:36px;
+  display:grid;place-items:center;
+  border:1.5px solid var(--border);border-radius:8px;
+  background:var(--card);color:var(--text2);cursor:pointer;
+  transition:color .14s,border-color .14s,background .14s;
+}
+.icon-btn:hover{color:var(--text);border-color:var(--border2);background:var(--bg2)}
+.icon-btn svg{width:17px;height:17px;stroke-width:2.2}
+
+/* ── mobile drawer ───────────────────────── */
+.mobile-menu{position:fixed;inset:0;z-index:300;display:none}
+.mobile-menu.open{display:block}
+.mobile-overlay{position:absolute;inset:0;background:rgba(0,0,0,.3);backdrop-filter:blur(3px)}
+.mobile-drawer{
+  position:absolute;right:0;top:0;bottom:0;
+  width:min(300px,88vw);
+  background:var(--bg);border-left:1px solid var(--border);
+  box-shadow:-8px 0 32px rgba(16,21,37,.12);padding:20px;
+}
+.drawer-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.drawer-links{display:grid;gap:4px}
+.drawer-links a{
+  display:flex;align-items:center;gap:10px;
+  padding:11px 13px;border-radius:10px;
+  color:var(--text2);font-size:14px;font-weight:700;
+  transition:background .13s,color .13s;
+}
+.drawer-links a:hover{background:var(--bg2);color:var(--text)}
+
+/* ── hero ────────────────────────────────── */
+.hero{
+  position:relative;
+  display:flex;align-items:center;
+  overflow:hidden;
+  background:linear-gradient(180deg,var(--bg) 0%,var(--bg2) 100%);
+}
+/* subtle single-colour grain — no purple blobs */
+.hero::before{
+  content:"";position:absolute;inset:0;
+  background:radial-gradient(ellipse at 70% 50%,rgba(16,21,37,.03),transparent 60%);
+  pointer-events:none;
+}
+[data-theme="dark"] .hero{background:linear-gradient(180deg,#080b13 0%,#0b101b 100%)}
+.hero::after{
+  content:"";position:absolute;inset:auto 0 0;
+  height:80px;
+  background:linear-gradient(transparent,var(--bg));
+  pointer-events:none;
+}
+[data-theme="dark"] .hero::after{background:linear-gradient(transparent,#080b13)}
+
+.hero-grid{
+  position:relative;z-index:1;
+  display:grid;
+  grid-template-columns:minmax(360px,1fr) 420px;
+  gap:72px;align-items:center;
+  padding:56px 0 72px;
+}
+.hero-copy{max-width:560px}
+.hero h1{
+  margin:0 0 20px;
+  font-family:"Outfit",sans-serif;
+  font-size:clamp(44px,4.8vw,64px);
+  line-height:1;letter-spacing:-2.5px;font-weight:900;
+}
+.hero h1 .arrow{color:var(--text3);font-weight:700}
+.hero h1 .earn{color:var(--text)}   /* removed purple gradient */
+.hero p{
+  margin:0 0 32px;max-width:480px;
+  color:var(--text2);font-size:17px;line-height:1.65;font-weight:500;
+}
+.btn-row{display:flex;gap:12px;flex-wrap:wrap}
+.btn{
+  height:44px;min-width:0;padding:0 22px;
+  display:inline-flex;align-items:center;justify-content:center;gap:9px;
+  border-radius:10px;border:1.5px solid var(--border);
+  background:var(--card);color:var(--text);
+  box-shadow:var(--shadow-soft);
+  font-size:14px;font-weight:700;
+  transition:border-color .14s,background .14s,box-shadow .14s;
+}
+.btn:hover{border-color:var(--border2);box-shadow:var(--shadow)}
+.btn-primary{
+  background:var(--primary);color:#fff;border-color:var(--primary);
+  box-shadow:0 4px 14px rgba(16,21,37,.18);
+}
+.btn-primary:hover{background:#1a2340;box-shadow:0 6px 18px rgba(16,21,37,.22)}
+[data-theme="dark"] .btn-primary{background:#f4f7fb;color:#101525;border-color:#f4f7fb}
+[data-theme="dark"] .btn-primary:hover{background:#e2e8f0}
+
+/* ── analytics card ──────────────────────── */
+.analytics-card{
+  border:1.5px solid var(--border);border-radius:var(--radius);
+  background:var(--card);box-shadow:var(--shadow);overflow:hidden;
+}
+.analytics-head{
+  height:52px;display:flex;align-items:center;justify-content:space-between;
+  padding:0 22px;border-bottom:1px solid var(--border);
+  color:var(--text);font-size:13.5px;font-weight:700;
+}
+.live{color:var(--accent2);font-size:11px;font-weight:800;letter-spacing:.8px}
+.analytics-body{padding:20px 22px 24px}
+.stat+.stat{margin-top:18px}
+.stat strong{
+  display:block;font-family:"Outfit",sans-serif;
+  font-size:30px;line-height:1;font-weight:900;letter-spacing:-.8px;
+}
+.stat span{display:block;margin-top:5px;color:var(--text3);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.6px}
+.analytics-foot{
+  height:44px;display:flex;align-items:center;gap:10px;
+  padding:0 22px;border-top:1px solid var(--border);
+  color:var(--text3);font-size:12px;font-weight:700;
+  background:var(--bg2);
+}
+.sol{width:14px;height:8px;border-radius:999px;background:linear-gradient(135deg,#9ca3af,#6b7280);transform:skew(-18deg)}
+
+/* ── quick buy ───────────────────────────── */
+.quick{position:relative;padding:0 0 56px;z-index:2}
+.section-kicker{
+  display:flex;align-items:center;gap:8px;margin-bottom:16px;
+  color:var(--text3);text-transform:uppercase;letter-spacing:2px;
+  font-size:11px;font-weight:800;
+}
+.quick-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.quick-card{
+  display:flex;align-items:center;gap:13px;
+  padding:14px 18px;border:1.5px solid var(--border);border-radius:12px;
+  background:var(--card);box-shadow:var(--shadow-soft);
+  transition:border-color .14s,box-shadow .14s;
+}
+.quick-card:hover{border-color:var(--border2);box-shadow:var(--shadow)}
+[data-theme="dark"] .quick-card{background:var(--card)}
+.quick-card.featured{border-color:var(--text)}
+.quick-icon{
+  width:38px;height:38px;border-radius:9px;
+  display:grid;place-items:center;
+  background:var(--bg2);font-size:15px;font-weight:900;flex-shrink:0;
+}
+.quick-name{font-size:14px;font-weight:800}
+.quick-price{margin-top:2px;color:var(--text3);font-size:12px;font-weight:700}
+
+/* ── sections ────────────────────────────── */
+.section{padding:56px 0}
+.section.center{text-align:center}
+.section-title{
+  margin:0;font-family:"Outfit",sans-serif;
+  font-size:clamp(28px,3vw,40px);
+  line-height:1.05;letter-spacing:-1.2px;font-weight:900;
+}
+.section-sub{margin:12px auto 0;color:var(--text2);font-size:16px;line-height:1.55;font-weight:500}
+
+/* ── paths ───────────────────────────────── */
+.paths{margin:36px auto 0;display:grid;grid-template-columns:repeat(2,1fr);gap:14px;max-width:680px}
+.path-card{
+  min-height:72px;display:flex;align-items:center;gap:16px;
+  padding:16px 20px;border:1.5px solid var(--border);border-radius:12px;
+  background:var(--card);box-shadow:var(--shadow-soft);
+  font-size:17px;font-weight:800;
+  transition:border-color .14s,box-shadow .14s;
+}
+.path-card:hover{border-color:var(--border2);box-shadow:var(--shadow)}
+.path-icon{
+  width:42px;height:42px;border-radius:10px;flex-shrink:0;
+  display:grid;place-items:center;
+  background:var(--bg2);color:var(--text);font-size:18px;
+}
+.path-card svg{margin-left:auto;color:var(--text3);width:18px;height:18px}
+
+/* ── jobs ────────────────────────────────── */
+.jobs-wrap{padding:48px 0 32px;overflow:hidden}
+.jobs-track{margin-top:40px;display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.job-card{
+  border:1.5px solid var(--border);border-radius:var(--radius);
+  background:var(--card);overflow:hidden;
+  box-shadow:var(--shadow-soft);text-align:left;
+  transition:border-color .14s,box-shadow .14s;
+}
+.job-card:hover{border-color:var(--border2);box-shadow:var(--shadow)}
+.job-top{
+  display:flex;align-items:center;gap:13px;
+  padding:16px 20px;border-bottom:1px solid var(--border);
+  background:var(--bg2);
+}
+.avatar{
+  width:38px;height:38px;border-radius:50%;flex-shrink:0;
+  display:grid;place-items:center;color:#fff;
+  background:linear-gradient(135deg,#1e293b,#334155);
+  border:2px solid var(--border);font-size:12px;font-weight:800;
+}
+.listed{color:var(--text3);font-size:10px;text-transform:uppercase;letter-spacing:1px;font-weight:700}
+.job-name{margin-top:2px;color:var(--text);font-size:14px;font-weight:800}
+.job-body{padding:18px 20px}
+.progress-line{
+  display:flex;justify-content:space-between;align-items:center;
+  color:var(--text2);font-size:11px;text-transform:uppercase;letter-spacing:.8px;font-weight:700;
+}
+.progress-line strong{color:var(--text);letter-spacing:0;font-size:13px}
+.progress{height:6px;border-radius:99px;background:var(--bg2);overflow:hidden;margin:10px 0 14px}
+.progress span{display:block;height:100%;background:var(--accent2);border-radius:99px}
+.meta-row{display:flex;gap:16px;flex-wrap:wrap;color:var(--text2);font-size:12px;font-weight:700;margin-bottom:16px}
+.meta-row span:first-child{color:var(--accent2)}
+.reward{
+  margin:0 0 12px;padding:14px 18px;
+  border:1.5px solid var(--border);border-radius:10px;
+  display:flex;align-items:center;justify-content:space-between;
+  background:var(--bg2);
+}
+.reward strong{font-family:"Outfit",sans-serif;color:var(--text);font-size:26px;font-weight:900;letter-spacing:-.6px}
+.reward span{color:var(--text2);font-size:12px;font-weight:800}
+.reward small{display:block;margin-top:3px;color:var(--text3);font-size:11px;font-weight:700;letter-spacing:1px}
+.job-tags{color:var(--text3);font-size:12px;font-weight:700;margin-bottom:16px}
+.about{border-top:1px solid var(--border);padding-top:14px}
+.about-head{
+  display:flex;justify-content:space-between;
+  color:var(--text3);text-transform:uppercase;letter-spacing:1px;
+  font-size:10px;font-weight:800;margin-bottom:8px;
+}
+.about p{margin:0;color:var(--text2);font-size:13px;line-height:1.55}
+.dots{margin:28px auto 0;display:flex;justify-content:center;gap:8px}
+.dots span{width:24px;height:6px;border-radius:999px;background:var(--border)}
+.dots span.active{background:var(--text)}
+
+/* ── store ───────────────────────────────── */
+.store-grid,.community-grid{margin-top:40px;display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.product,.community-card{
+  border:1.5px solid var(--border);border-radius:var(--radius);
+  overflow:hidden;background:var(--card);box-shadow:var(--shadow-soft);text-align:left;
+  transition:border-color .14s,box-shadow .14s;
+}
+.product:hover,.community-card:hover{border-color:var(--border2);box-shadow:var(--shadow)}
+.product-art{
+  height:180px;display:grid;place-items:center;
+  font-family:"Outfit",sans-serif;font-size:26px;font-weight:900;
+  text-align:center;color:#fff;
+  background:linear-gradient(135deg,#1e293b,#334155);
+}
+.product:nth-child(2) .product-art{background:linear-gradient(135deg,#1c1c0f,#3d2f00)}
+.product:nth-child(3) .product-art{background:linear-gradient(135deg,#e8edf5,#d1daea);color:#0d1323}
+.product-body,.community-body{padding:18px 20px}
+.product-title{
+  display:flex;justify-content:space-between;gap:12px;
+  font-size:15px;font-weight:800;color:var(--text);margin-bottom:8px;
+}
+.product-title time{color:var(--text3);font-size:12px;font-weight:700}
+.product-desc,.community-body p{margin:0;color:var(--text2);font-size:13px;line-height:1.55}
+.seller{
+  margin:14px 0;display:flex;align-items:center;gap:11px;
+  padding:11px 14px;border:1.5px solid var(--border);border-radius:9px;background:var(--bg2);
+}
+.seller strong{display:block;font-size:13px;font-weight:800}
+.seller span{display:block;margin-top:2px;color:var(--text2);font-size:12px}
+.price{
+  display:flex;align-items:center;justify-content:space-between;
+  height:52px;padding:0 16px;
+  border:1.5px solid var(--border);border-radius:9px;
+  background:var(--soft-green);margin-bottom:14px;
+}
+.price strong{color:#16a34a;font-size:20px;font-weight:900}
+.price span{
+  padding:6px 12px;border:1.5px solid var(--border);border-radius:7px;
+  background:var(--card);color:var(--text2);font-size:12px;font-weight:800;
+}
+.view-more{
+  height:42px;border:1.5px solid var(--border);border-radius:999px;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--text2);font-size:13px;font-weight:800;background:var(--card);
+  transition:border-color .14s,color .14s;
+}
+.view-more:hover{border-color:var(--border2);color:var(--text)}
+.big-cta{display:flex;justify-content:center;margin-top:44px}
+.pill{
+  height:52px;min-width:260px;border-radius:999px;
+  background:var(--primary);color:#fff;border-color:var(--primary);
+  font-size:14px;font-weight:800;
+}
+[data-theme="dark"] .pill{background:#f4f7fb;color:#101525;border-color:#f4f7fb}
+
+/* ── communities ─────────────────────────── */
+.community-art{
+  height:120px;display:grid;place-items:center;
+  font-family:"Outfit",sans-serif;font-size:32px;font-weight:900;
+  background:var(--bg2);color:var(--text2);
+  border-bottom:1px solid var(--border);
+}
+.community-body h3{margin:0 0 8px;font-size:16px;font-weight:800}
+.community-meta{display:flex;gap:16px;margin:12px 0 0;color:var(--text3);font-size:12px;font-weight:700}
+
+/* ── footer ──────────────────────────────── */
+footer{
+  border-top:1px solid var(--border);
+  padding:40px 24px;
+  text-align:center;
+  background:var(--bg2);
+}
+/* no ::before ::after blobs */
+.footer-content{position:relative;z-index:1}
+.footer-logo{
+  display:flex;justify-content:center;align-items:center;gap:10px;
+  font-family:"Outfit",sans-serif;font-size:18px;font-weight:800;color:var(--text);
+}
+.footer-logo .logo-mark{width:26px;height:26px}
+.footer-logo .logo-mark svg{width:24px;height:24px}
+.footer-content p{color:var(--text2);font-size:13px;margin:12px 0 20px;line-height:1.6}
+.footer-links{
+  display:flex;justify-content:center;flex-wrap:wrap;gap:6px 24px;
+  color:var(--text2);font-size:13px;font-weight:600;
+}
+.footer-links a:hover{color:var(--text)}
+
+/* ── responsive ──────────────────────────── */
+@media(max-width:1200px){
+  .nav-links{gap:2px}
+  .hero-grid{grid-template-columns:1fr;gap:40px}
+  .analytics-card{max-width:480px}
+  .quick-grid,.jobs-track,.store-grid,.community-grid{grid-template-columns:1fr 1fr}
+}
+@media(max-width:760px){
+  :root{--nav-h:54px}
+  .container{width:100%;padding:0 16px}
+  .nav-inner{width:calc(100% - 32px);gap:10px}
+  .brand{font-size:17px}
+  .logo-mark{width:26px;height:26px}
+  .logo-mark svg{width:24px;height:24px}
+  .nav-links,.wallet-btn{display:none}
+  .nav-actions{gap:6px}
+  .hero-grid{display:block;padding:40px 0 52px}
+  .hero-grid>*{width:100%;max-width:100%}
+  .hero h1{font-size:38px;letter-spacing:-1.6px}
+  .hero p{font-size:15px;margin-bottom:24px}
+  .btn-row{display:grid;grid-template-columns:1fr;width:100%}
+  .btn{width:100%;min-width:0;font-size:14px}
+  .analytics-card{margin-top:32px;width:100%;max-width:100%}
+  .analytics-head,.analytics-body,.analytics-foot{padding-left:16px;padding-right:16px}
+  .stat strong{font-size:26px}
+  .quick{padding-top:24px;padding-bottom:36px}
+  .quick-grid,.paths,.jobs-track,.store-grid,.community-grid{grid-template-columns:1fr}
+  .section-title{font-size:26px;letter-spacing:-.8px}
+  .section-sub{font-size:14px}
+  .path-card{font-size:15px}
+  .product-art{height:130px;font-size:20px}
+  .community-art{height:80px;font-size:24px}
+  .footer-links{gap:4px 16px}
+  .pill{min-width:0;width:100%}
+}
+</style>
 </head>
 <body>
-  <header class="nav">
-    <div class="nav-inner">
-      <a class="brand" href="#">
-        <span class="mark" aria-hidden="true">
-          <svg viewBox="0 0 64 64" fill="none">
-            <path d="M4 40h10l7-16 9 25 11-31h8l-6 17h17" stroke="currentColor" stroke-width="8" stroke-linejoin="round"/>
-          </svg>
-        </span>
-        OgaPay
-      </a>
-      <nav class="nav-links" aria-label="Primary navigation">
-        <a class="nav-link active" href="#jobs"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Tasks</a>
-        <a class="nav-link" href="#store"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18M16 10a4 4 0 0 1-8 0"/></svg>Store</a>
-        <a class="nav-link" href="#communities"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg>Communities</a>
-        <a class="nav-link" href="#faq"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>FAQ</a>
-      </nav>
-      <div class="nav-right">
-        <div class="balance">BALANCE: <strong>NGN 0.00</strong></div>
-        <div class="wallet"><span class="avatar"></span>Connect Wallet</div>
-        <button class="icon-btn" id="themeToggle" aria-label="Toggle theme"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z"/></svg></button>
-        <button class="icon-btn" aria-label="Open menu"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
-      </div>
+<header class="nav">
+  <div class="nav-inner">
+    <a class="brand" href="index.html" aria-label="OgaPay home">
+      <span class="logo-mark">
+        <svg viewBox="0 0 100 100" fill="none" aria-hidden="true"><defs><linearGradient id="ogaLogoA" x1="50" y1="0" x2="50" y2="100" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#0d0f14"/><stop offset="100%" stop-color="#1a1d26"/></linearGradient></defs><rect width="100" height="100" rx="20" fill="url(#ogaLogoA)"/><rect x="10" y="10" width="35" height="35" rx="7" fill="#6d6f85" opacity="0.7"/><polygon points="10,10 45,10 10,45" fill="#1a1d26" opacity="0.45"/><path d="M52 10 H68 Q87 10 87 27.5 Q87 45 68 45 H52 Z" fill="white"/><rect x="10" y="52" width="35" height="35" rx="7" fill="#6d6f85" opacity="0.55"/><rect x="52" y="52" width="35" height="35" rx="7" fill="#6d6f85" opacity="0.7"/><polygon points="52,52 87,52 87,87" fill="#1a1d26" opacity="0.45"/><path d="M52 52 H68 Q87 52 87 69.5 Q87 87 68 87 H52 Z" fill="white"/></svg>
+      </span>
+      <span>Oga<span>Pay</span></span>
+    </a>
+    <nav class="nav-links" aria-label="Primary navigation">
+      <a class="nav-link active" href="#jobs"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Tasks</a>
+      <a class="nav-link" href="#store"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18M16 10a4 4 0 0 1-8 0"/></svg>Store</a>
+      <a class="nav-link" href="#communities"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg>Communities</a>
+      <a class="nav-link" href="#footer"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>FAQ</a>
+    </nav>
+    <div class="nav-actions">
+      <button class="wallet-btn"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.3" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="14" rx="2"/><path d="M16 12h6"/></svg>Connect Wallet</button>
+      <button class="icon-btn" id="themeToggle" aria-label="Toggle dark mode"><svg id="moonIcon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z"/></svg></button>
+      <button class="icon-btn" id="menuBtn" aria-label="Open menu"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
     </div>
-  </header>
+  </div>
+</header>
 
-  <main>
-    <section class="hero">
-      <div class="hero-inner">
-        <div>
-          <h1>Work <span>→ Earn</span></h1>
-          <p class="hero-copy">A modern earning marketplace for tasks, communities, and rewards. Work online and earn in Naira &amp; Crypto.</p>
-          <div class="cta-row">
-            <a class="btn btn-dark" href="#jobs">Start Earning <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24"><path d="M5 12h14M13 5l7 7-7 7"/></svg></a>
-            <a class="btn" href="post-task.html">Post a Task</a>
-          </div>
-        </div>
-        <aside class="overview" aria-label="Platform stats">
-          <div class="overview-head"><span>Platform Stats</span><span class="live">LIVE</span></div>
-          <div class="overview-body">
-            <div class="stat"><strong>4,821</strong><span>Active Tasks</span></div>
-            <div class="stat"><strong>NGN&nbsp;182M+</strong><span>Rewards Paid</span></div>
-            <div class="stat"><strong>24,390</strong><span>Online Earners</span></div>
-            <div class="stat"><strong>~3 min</strong><span>Avg. Payout Time</span></div>
-          </div>
-          <div class="overview-foot"><span class="sol"></span>Powered by Solana + Paystack</div>
-        </aside>
-      </div>
-    </section>
+<div class="mobile-menu" id="mobileMenu">
+  <div class="mobile-overlay" data-close-menu></div>
+  <aside class="mobile-drawer">
+    <div class="drawer-head">
+      <a class="brand" href="index.html"><span>Oga<span>Pay</span></span></a>
+      <button class="icon-btn" data-close-menu aria-label="Close menu"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="drawer-links">
+      <a href="#jobs" data-close-menu>Tasks</a>
+      <a href="#store" data-close-menu>Store</a>
+      <a href="#communities" data-close-menu>Communities</a>
+      <a href="#footer" data-close-menu>FAQ</a>
+      <a href="post-task.html" data-close-menu>Create a job</a>
+    </div>
+  </aside>
+</div>
 
-    <div class="quick-strip">
-      <div class="container">
-        <div class="quick-title">Quick Tasks</div>
-        <div class="quick-row">
-          <a class="quick-card" href="tasks.html"><span class="quick-icon">X</span><div><strong>X Raid</strong><span>₦500</span></div></a>
-          <a class="quick-card" href="tasks.html"><span class="quick-icon">TG</span><div><strong>Telegram Join</strong><span>₦250</span></div></a>
-          <a class="quick-card" href="tasks.html"><span class="quick-icon">TT</span><div><strong>TikTok Follow</strong><span>$0.40</span></div></a>
-          <a class="quick-card" href="tasks.html"><span class="quick-icon">APP</span><div><strong>App Download</strong><span>₦750</span></div></a>
-          <a class="quick-card" href="tasks.html"><span class="quick-icon">WA</span><div><strong>WhatsApp Share</strong><span>₦150</span></div></a>
-          <a class="quick-card" href="tasks.html"><span class="quick-icon">YT</span><div><strong>YouTube Like</strong><span>₦80</span></div></a>
+<main>
+  <section class="hero">
+    <div class="container hero-grid">
+      <div class="hero-copy">
+        <h1>Work <span class="arrow">→</span> <span class="earn">Earn</span></h1>
+        <p>A modern earning marketplace for tasks, communities, and rewards. Work online and earn in Naira &amp; Crypto.</p>
+        <div class="btn-row">
+          <a class="btn btn-primary" href="#jobs">Start earning <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 12h14M13 5l7 7-7 7"/></svg></a>
+          <a class="btn" href="post-task.html">Create a job</a>
         </div>
       </div>
-    </div>
-
-    <div class="ticker">
-      <div class="ticker-row">
-        <span class="ticker-item">● Follow on X — <b>₦250</b></span>
-        <span class="ticker-item">● App Download — <b>₦750</b></span>
-        <span class="ticker-item">● Survey — <b>$1.50 USDC</b></span>
-        <span class="ticker-item">● Telegram Join — <b>₦250</b></span>
-        <span class="ticker-item">● Logo Design — <b>₦15,000</b></span>
-        <span class="ticker-item">● Product Review — <b>₦2,000</b></span>
-        <span class="ticker-item">● X Raid — <b>$0.40 USDC</b></span>
-        <span class="ticker-item">● Instagram Like — <b>₦80</b></span>
-        <span class="ticker-item">● Follow on X — <b>₦250</b></span>
-        <span class="ticker-item">● App Download — <b>₦750</b></span>
-        <span class="ticker-item">● Survey — <b>$1.50 USDC</b></span>
-        <span class="ticker-item">● Telegram Join — <b>₦250</b></span>
-      </div>
-    </div>
-
-    <section class="center">
-      <div class="container">
-        <h2 class="section-title">Get started with OgaPay</h2>
-        <p class="section-sub">Whether you're here to earn or promote, choose your path below.</p>
-        <div class="paths">
-          <a class="path-card" href="#jobs"><span class="path-icon">₦</span>I'm a Worker <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></a>
-          <a class="path-card" href="post-task.html"><span class="path-icon">↗</span>I'm an Advertiser <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></a>
+      <aside class="analytics-card">
+        <div class="analytics-head"><span>Platform overview</span><span class="live">LIVE</span></div>
+        <div class="analytics-body">
+          <div class="stat"><strong>4,821</strong><span>Active Jobs</span></div>
+          <div class="stat"><strong>NGN 182M+</strong><span>Rewards distributed</span></div>
+          <div class="stat"><strong>24,390</strong><span>Tasks completed</span></div>
         </div>
-      </div>
-    </section>
+        <div class="analytics-foot"><span class="sol"></span>Powered by Solana</div>
+      </aside>
+    </div>
+  </section>
 
-    <section class="jobs-band center">
-      <div class="container">
-        <h2 class="section-title">Highlighted Tasks</h2>
-        <p class="section-sub">Live tasks ready for workers now</p>
+  <section class="quick">
+    <div class="container">
+      <div class="section-kicker">⚡ Quick buy</div>
+      <div class="quick-grid">
+        <a class="quick-card" href="#jobs"><span class="quick-icon">X</span><div><div class="quick-name">X Raid</div><div class="quick-price">₦500</div></div></a>
+        <a class="quick-card featured" href="#jobs"><span class="quick-icon">↻</span><div><div class="quick-name">Reposts</div><div class="quick-price">₦250</div></div></a>
+        <a class="quick-card" href="#jobs"><span class="quick-icon">TG</span><div><div class="quick-name">Telegram Join</div><div class="quick-price">₦250</div></div></a>
+        <a class="quick-card" href="#store"><span class="quick-icon">›</span><div><div class="quick-name">More</div><div class="quick-price">options</div></div></a>
       </div>
-      <div class="job-carousel">
+    </div>
+  </section>
+
+  <section class="section center">
+    <div class="container">
+      <h2 class="section-title">Get started with OgaPay</h2>
+      <p class="section-sub">Whether you're here to earn or promote, choose your path below.</p>
+      <div class="paths">
+        <a class="path-card" href="#jobs"><span class="path-icon">₦</span>I'm a Worker <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></a>
+        <a class="path-card" href="post-task.html"><span class="path-icon">↗</span>I'm an Advertiser <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></a>
+      </div>
+    </div>
+  </section>
+
+  <section class="jobs-wrap center" id="jobs">
+    <div class="container">
+      <h2 class="section-title">Highlighted Tasks</h2>
+      <p class="section-sub">Featured earning opportunities</p>
+      <div class="jobs-track">
         <article class="job-card">
-          <div class="job-top"><div class="job-avatar">BO</div><div><div class="listed">Listed by</div><div class="name">BrandOga</div></div></div>
-          <div class="job-body"><div class="progress-row"><span>Progress</span><strong>65/100</strong></div><div class="bar"><span style="width:65%"></span></div><div class="mini-row"><span>Submissions 65</span><span>Open 35</span><span>Status Active</span></div><div class="reward"><div><strong>₦250</strong><small>PER COMPLETION</small></div></div><div class="job-meta">Social | X/Twitter | 50+ followers required</div><div class="about"><div class="about-head"><span>About this task</span><span>~2 min</span></div><p>Follow our X account and repost the pinned tweet.</p></div></div>
+          <div class="job-top"><div class="avatar">BO</div><div><div class="listed">Listed by</div><div class="job-name">BrandOga</div></div></div>
+          <div class="job-body"><div class="progress-line"><span>Progress</span><strong>65/100</strong></div><div class="progress"><span style="width:65%"></span></div><div class="meta-row"><span>Submissions 65</span><span>Open 35</span><span>Status Open</span></div><div class="reward"><div><strong>₦250</strong><small>PER COMPLETION</small></div></div><div class="job-tags">Social | X/Twitter | 50+ followers</div><div class="about"><div class="about-head"><span>About this task</span><span>~2 min</span></div><p>Follow our X account and repost the pinned tweet.</p></div></div>
         </article>
         <article class="job-card">
-          <div class="job-top"><div class="job-avatar" style="background:#f5b301">TK</div><div><div class="listed">Listed by</div><div class="name">TechKing</div></div></div>
-          <div class="job-body"><div class="progress-row"><span>Progress</span><strong>40/100</strong></div><div class="bar"><span style="width:40%"></span></div><div class="mini-row"><span>Submissions 40</span><span>Open 60</span><span>Survey</span></div><div class="reward"><div><strong>$1.50</strong><small>USDC PER COMPLETION</small></div></div><div class="job-meta">Survey | Fintech | Must use banking apps</div><div class="about"><div class="about-head"><span>About this task</span><span>~5 min</span></div><p>Rate our mobile banking app in eight quick questions.</p></div></div>
+          <div class="job-top"><div class="avatar" style="background:#f5b301">TK</div><div><div class="listed">Listed by</div><div class="job-name">TechKing</div></div></div>
+          <div class="job-body"><div class="progress-line"><span>Progress</span><strong>40/100</strong></div><div class="progress"><span style="width:40%"></span></div><div class="meta-row"><span>Submissions 40</span><span>Open 60</span><span>Status Open</span></div><div class="reward"><div><strong>$1.50 <span>USDC</span></strong><small>PER COMPLETION</small></div></div><div class="job-tags">Survey | Fintech | Banking apps</div><div class="about"><div class="about-head"><span>About this task</span><span>~5 min</span></div><p>Rate our mobile banking app with eight quick questions.</p></div></div>
         </article>
         <article class="job-card">
-          <div class="job-top"><div class="job-avatar">DS</div><div><div class="listed">Listed by</div><div class="name">DesignStudio</div></div></div>
-          <div class="job-body"><div class="progress-row"><span>Progress</span><strong>1/5</strong></div><div class="bar"><span style="width:20%"></span></div><div class="mini-row"><span>Submissions 1</span><span>Open 4</span><span>Freelance</span></div><div class="reward"><div><strong>₦15,000</strong><small>PER ACCEPTED DESIGN</small></div></div><div class="job-meta">Design | PNG + SVG | Portfolio required</div><div class="about"><div class="about-head"><span>About this task</span><span>1-2 days</span></div><p>Design a modern logo for a fintech startup.</p></div></div>
+          <div class="job-top"><div class="avatar">DS</div><div><div class="listed">Listed by</div><div class="job-name">DesignStudio</div></div></div>
+          <div class="job-body"><div class="progress-line"><span>Progress</span><strong>1/5</strong></div><div class="progress"><span style="width:20%"></span></div><div class="meta-row"><span>Submissions 1</span><span>Open 4</span><span>Status Open</span></div><div class="reward"><div><strong>₦15,000</strong><small>PER ACCEPTED DESIGN</small></div></div><div class="job-tags">Design | PNG + SVG | Portfolio</div><div class="about"><div class="about-head"><span>About this task</span><span>1-2 days</span></div><p>Design a modern logo for a fintech startup.</p></div></div>
         </article>
       </div>
-      <div class="dots" aria-hidden="true"><span></span><span></span><span class="active"></span><span></span><span></span></div>
-    </section>
-
-    <section class="store center" id="store">
-      <div class="container">
-        <h2 class="section-title">Worker Store</h2>
-        <p class="section-sub">Featured products and services from workers</p>
-        <div class="product-grid">
-          <article class="product"><div class="product-img portrait"></div><div class="product-body"><div class="product-title"><span>Premium Logo Design Pack</span><time>4.9</time></div><p class="product-desc">5 unique logo concepts in PNG, SVG and AI formats. Fast delivery.</p><div class="seller"><span class="job-avatar">LD</span><div><strong>LogoDoctor</strong><span>42 reviews</span></div></div><div class="price"><strong>₦8,000</strong><span>0.095 SOL</span></div><a class="view-more" href="store.html">View more</a></div></article>
-          <article class="product"><div class="product-img ai-video">X Growth <span>Bundle</span></div><div class="product-body"><div class="product-title"><span>X Growth Bundle - 500 Followers</span><time>4.7</time></div><p class="product-desc">Real Nigerian + diaspora accounts. Gradual drip delivery over 7 days.</p><div class="seller"><span class="job-avatar" style="background:#f5b301">XG</span><div><strong>GrowthPlug</strong><span>88 reviews</span></div></div><div class="price"><strong>$12.00</strong><span>0.143 SOL</span></div><a class="view-more" href="store.html">View more</a></div></article>
-          <article class="product"><div class="product-img followers">VIRAL MEME<br>DESIGN X5</div><div class="product-body"><div class="product-title"><span>Viral Meme Design (x5)</span><time>5.0</time></div><p class="product-desc">Custom Nigerian-themed memes for social media marketing campaigns.</p><div class="seller"><span class="job-avatar" style="background:#ef4444">MH</span><div><strong>MemeHub</strong><span>17 reviews</span></div></div><div class="price"><strong>₦3,500</strong><span>0.042 SOL</span></div><a class="view-more" href="store.html">View more</a></div></article>
-        </div>
-        <div class="product-cta"><a class="btn btn-pill" href="store.html">Browse all products <svg width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.6" viewBox="0 0 24 24"><path d="M5 12h14M13 5l7 7-7 7"/></svg></a></div>
-      </div>
-    </section>
-
-    <section class="center" id="communities">
-      <div class="container">
-        <h2 class="section-title">Communities</h2>
-        <p class="section-sub">Connect with earners, builders, raiders, and crypto communities.</p>
-        <div class="community-grid">
-          <a class="mini-card" href="communities.html"><div class="mini-banner">⚡</div><div class="mini-body"><h3>Oga Raiders</h3><p>Nigeria's most active raid community. 8,204 members and 42 active tasks.</p></div></a>
-          <a class="mini-card" href="communities.html"><div class="mini-banner">◎</div><div class="mini-body"><h3>Solana NG</h3><p>Nigerian Solana ecosystem, airdrops, tasks, and crypto alpha.</p></div></a>
-          <a class="mini-card" href="communities.html"><div class="mini-banner">★</div><div class="mini-body"><h3>Meme Hub</h3><p>Create, share, and earn from viral memes with weekly competitions.</p></div></a>
-          <a class="mini-card" href="communities.html"><div class="mini-banner">$</div><div class="mini-body"><h3>Crypto Earners NG</h3><p>Earn USDC doing simple tasks. No wallet experience needed.</p></div></a>
-        </div>
-      </div>
-    </section>
-
-    <section class="center">
-      <div class="container">
-        <h2 class="section-title">Your money, your way</h2>
-        <p class="section-sub">Withdraw in Naira to your bank or USDC to your crypto wallet.</p>
-        <div class="info-grid">
-          <div class="info-card"><h3>Naira Payouts</h3><p>Get paid directly to any Nigerian bank account or mobile money wallet.</p><ul><li>All Nigerian banks supported</li><li>Instant transfers via Paystack</li><li>Minimum withdrawal: ₦500</li><li>OPay, PalmPay &amp; mobile wallets</li><li>Zero fees under ₦10,000</li></ul></div>
-          <div class="info-card"><h3>Crypto Payouts</h3><p>Earn USDC on Solana. Send anywhere in the world in seconds.</p><ul><li>USDC on Solana &amp; Base</li><li>Connect any Solana wallet</li><li>Phantom, Backpack &amp; more</li><li>Minimum withdrawal: $1.00</li><li>Near-zero gas fees on Solana</li></ul></div>
-        </div>
-      </div>
-    </section>
-
-    <section class="all-jobs center" id="jobs">
-      <div class="container">
-        <h2 class="section-title">All Tasks</h2>
-        <p class="section-sub">Find your next earning opportunity</p>
-        <div class="all-grid">
-          <article class="job-card"><div class="job-top"><div class="job-avatar" style="background:#ef4444">FO</div><div><div class="listed">Listed by</div><div class="name">FoodieNG</div></div></div><div class="job-body"><div class="progress-row"><span>Progress</span><strong>55/100</strong></div><div class="bar"><span style="width:55%"></span></div><div class="mini-row"><span>Submissions 55</span><span>Open 45</span><span>Active</span></div><div class="reward"><div><strong>₦800</strong><small>PER COMPLETION</small></div></div><div class="job-meta">Survey | Nigeria only</div><div class="about"><div class="about-head"><span>About this task</span><span>~5 min</span></div><p>Share your opinion on Nigerian food delivery apps.</p></div></div></article>
-          <article class="job-card"><div class="job-top"><div class="job-avatar">AL</div><div><div class="listed">Listed by</div><div class="name">AppLaunch</div></div></div><div class="job-body"><div class="progress-row"><span>Progress</span><strong>8/50</strong></div><div class="bar"><span style="width:16%"></span></div><div class="mini-row"><span>Submissions 8</span><span>Open 42</span><span>Active</span></div><div class="reward"><div><strong>$2.00</strong><small>USDC PER TESTER</small></div></div><div class="job-meta">App Testing | Android</div><div class="about"><div class="about-head"><span>About this task</span><span>~15 min</span></div><p>Test our Android app and report bugs found.</p></div></div></article>
-          <article class="job-card"><div class="job-top"><div class="job-avatar" style="background:#f5b301">TK</div><div><div class="listed">Listed by</div><div class="name">TechKing</div></div></div><div class="job-body"><div class="progress-row"><span>Progress</span><strong>40/100</strong></div><div class="bar"><span style="width:40%"></span></div><div class="mini-row"><span>Submissions 40</span><span>Open 60</span><span>Survey</span></div><div class="reward"><div><strong>$1.50</strong><small>USDC PER COMPLETION</small></div></div><div class="job-meta">Survey | Fintech</div><div class="about"><div class="about-head"><span>About this task</span><span>~5 min</span></div><p>Rate a mobile banking app with 8 quick questions.</p></div></div></article>
-        </div>
-      </div>
-    </section>
-
-    <section class="center">
-      <div class="container">
-        <h2 class="section-title">What earners are saying</h2>
-        <p class="section-sub">Real people, real payouts.</p>
-        <div class="testimonial-grid">
-          <div class="testimonial"><div class="stars">★★★★★</div><p>"I made ₦12,000 in my first week just from social tasks. The payouts hit my GTBank account within minutes."</p><br><strong>Adaeze Okonkwo</strong><p>Lagos, Nigeria</p></div>
-          <div class="testimonial"><div class="stars">★★★★★</div><p>"As a Solana developer, I love that OgaPay pays in USDC. Phantom connects in one click."</p><br><strong>Emeka Ihejirika</strong><p>Abuja, Nigeria</p></div>
-          <div class="testimonial"><div class="stars">★★★★★</div><p>"I posted a campaign for my fintech app and got 500 real Nigerian users in 3 days."</p><br><strong>Tobi Fadahunsi</strong><p>Port Harcourt, Nigeria</p></div>
-        </div>
-      </div>
-    </section>
-
-    <section class="center" id="faq">
-      <div class="container">
-        <h2 class="section-title">Common questions</h2>
-        <div class="faq-list">
-          <details class="faq-item"><summary>How do I get paid?</summary><p>Once a task poster approves your submission, funds are released instantly. Withdraw to your Nigerian bank account via Paystack or to your Solana wallet as USDC.</p></details>
-          <details class="faq-item"><summary>Do I need crypto experience to earn?</summary><p>No. You can earn and withdraw entirely in Naira. Crypto is optional.</p></details>
-          <details class="faq-item"><summary>What is the minimum withdrawal?</summary><p>₦500 for Naira withdrawals and $1.00 USDC for crypto withdrawals.</p></details>
-          <details class="faq-item"><summary>How do I post a task as an advertiser?</summary><p>Create an account, fund your wallet, then post a task with reward, slots, and proof requirements.</p></details>
-        </div>
-      </div>
-    </section>
-
-    <section>
-      <div class="container">
-        <div class="cta-panel">
-          <h2>Ready to start earning?</h2>
-          <p>Join 24,000+ Nigerians already making money on OgaPay.</p>
-          <div class="cta-row" style="justify-content:center;"><a class="btn" href="tasks.html">Start Earning Free</a><a class="btn btn-dark" href="post-task.html">Post a Task</a></div>
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <footer>
-    <div class="footer-inner">
-      <div><h4>OgaPay</h4><p>Nigeria's premier task-and-earn platform. Powered by Solana and Paystack for instant dual-currency payouts.</p></div>
-      <div><h4>Jobs</h4><a href="tasks.html">All Jobs</a><a href="monitor.html">Job Monitor</a><a href="bookmarks.html">Bookmarks</a><a href="post-task.html">Post a Job</a></div>
-      <div><h4>Store</h4><a href="store.html">Browse Store</a><a href="my-store.html">My Store</a><a href="my-work.html">My Work</a><a href="messages.html">Messages</a></div>
-      <div><h4>Resources</h4><a href="dashboard.html">Dashboard</a><a href="communities.html">Communities</a><a href="blog.html">Blog</a><a href="#faq">FAQ</a></div>
-      <div><h4>Account</h4><a href="profile.html">My Profile</a><a href="notifications.html">Notifications</a><a href="wallet.html">Wallet</a><a href="settings.html">Settings</a></div>
+      <div class="dots"><span></span><span class="active"></span><span></span><span></span><span></span></div>
     </div>
-  </footer>
+  </section>
 
-  <script>
-    document.getElementById("themeToggle").addEventListener("click", function () {
-      document.body.classList.toggle("dim");
-    });
-  </script>
+  <section class="section center" id="store">
+    <div class="container">
+      <h2 class="section-title">Worker Store</h2>
+      <p class="section-sub">Featured products from workers</p>
+      <div class="store-grid">
+        <article class="product"><div class="product-art">Logo Maker<br>Pro</div><div class="product-body"><div class="product-title"><span>Premium Logo Design Pack</span><time>4.9</time></div><p class="product-desc">5 unique logo concepts in PNG, SVG and AI formats. Fast delivery.</p><div class="seller"><div class="avatar">LD</div><div><strong>LogoDoctor</strong><span>42 reviews</span></div></div><div class="price"><strong>₦8,000</strong><span>0.095 SOL</span></div><a class="view-more" href="store.html">View more</a></div></article>
+        <article class="product"><div class="product-art">AI Brand<br>Videos</div><div class="product-body"><div class="product-title"><span>AI videos</span><time>Dec 14</time></div><p class="product-desc">Bring your Web3 project to life with short AI-powered brand videos.</p><div class="seller"><div class="avatar" style="background:#f5b301">VP</div><div><strong>VisualsPlug</strong><span>New creator</span></div></div><div class="price"><strong>$7.45</strong><span>0.089 SOL</span></div><a class="view-more" href="store.html">View more</a></div></article>
+        <article class="product"><div class="product-art">X Verified<br>Followers</div><div class="product-body"><div class="product-title"><span>X Growth Bundle</span><time>Apr 21</time></div><p class="product-desc">Real Nigerian and diaspora accounts with gradual drip delivery.</p><div class="seller"><div class="avatar" style="background:#111">XG</div><div><strong>GrowthPlug</strong><span>88 reviews</span></div></div><div class="price"><strong>$12.00</strong><span>0.143 SOL</span></div><a class="view-more" href="store.html">View more</a></div></article>
+      </div>
+      <div class="big-cta"><a class="btn pill" href="store.html">Browse all products <svg width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.6" viewBox="0 0 24 24"><path d="M5 12h14M13 5l7 7-7 7"/></svg></a></div>
+    </div>
+  </section>
+
+  <section class="section center" id="communities">
+    <div class="container">
+      <h2 class="section-title">Communities</h2>
+      <p class="section-sub">Discover active OgaPay communities</p>
+      <div class="community-grid">
+        <article class="community-card"><div class="community-art">Raid</div><div class="community-body"><h3>Oga Raiders</h3><p>Nigeria's most active raid community. Daily tasks, leaderboards, and cash prizes.</p><div class="community-meta"><span>8,204 members</span><span>42 tasks</span></div></div></article>
+        <article class="community-card"><div class="community-art">SOL</div><div class="community-body"><h3>Solana NG</h3><p>Nigerian Solana ecosystem for airdrops, tasks, learning, and crypto alpha.</p><div class="community-meta"><span>5,112 members</span><span>28 tasks</span></div></div></article>
+        <article class="community-card"><div class="community-art">Meme</div><div class="community-body"><h3>Meme Hub</h3><p>Create, share, and earn from viral memes. Competitions run every week.</p><div class="community-meta"><span>12,490 members</span><span>15 tasks</span></div></div></article>
+      </div>
+      <div class="big-cta"><a class="btn pill" href="communities.html">View All Communities <svg width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.6" viewBox="0 0 24 24"><path d="M5 12h14M13 5l7 7-7 7"/></svg></a></div>
+    </div>
+  </section>
+</main>
+
+<footer id="footer">
+  <div class="footer-content">
+    <div class="footer-logo"><span class="logo-mark"><svg viewBox="0 0 100 100" fill="none" aria-hidden="true"><defs><linearGradient id="ogaLogoB" x1="50" y1="0" x2="50" y2="100" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#0d0f14"/><stop offset="100%" stop-color="#1a1d26"/></linearGradient></defs><rect width="100" height="100" rx="20" fill="url(#ogaLogoB)"/><rect x="10" y="10" width="35" height="35" rx="7" fill="#6d6f85" opacity="0.7"/><polygon points="10,10 45,10 10,45" fill="#1a1d26" opacity="0.45"/><path d="M52 10 H68 Q87 10 87 27.5 Q87 45 68 45 H52 Z" fill="white"/><rect x="10" y="52" width="35" height="35" rx="7" fill="#6d6f85" opacity="0.55"/><rect x="52" y="52" width="35" height="35" rx="7" fill="#6d6f85" opacity="0.7"/><polygon points="52,52 87,52 87,87" fill="#1a1d26" opacity="0.45"/><path d="M52 52 H68 Q87 52 87 69.5 Q87 87 68 87 H52 Z" fill="white"/></svg></span>OgaPay</div>
+    <p>Microjob marketplace for tasks, communities, and rewards.</p>
+    <nav class="footer-links"><a href="post-task.html">Create</a><a href="wallet.html">Wallet</a><a href="blog.html">Blog</a><a href="support.html">Support</a><a href="#jobs">Tasks</a></nav>
+  </div>
+</footer>
+
+<script>
+(function(){
+  const html=document.documentElement;
+  const themeBtn=document.getElementById("themeToggle");
+  const menu=document.getElementById("mobileMenu");
+  const menuBtn=document.getElementById("menuBtn");
+  function setTheme(next){
+    html.setAttribute("data-theme",next);
+    try{localStorage.setItem("ogapay-theme",next)}catch(e){}
+  }
+  try{setTheme(localStorage.getItem("ogapay-theme")||"light")}catch(e){}
+  themeBtn.addEventListener("click",()=>setTheme(html.getAttribute("data-theme")==="dark"?"light":"dark"));
+  menuBtn.addEventListener("click",()=>menu.classList.add("open"));
+  document.querySelectorAll("[data-close-menu]").forEach(el=>el.addEventListener("click",()=>menu.classList.remove("open")));
+})();
+</script>
 </body>
 </html>
