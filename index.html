@@ -547,7 +547,7 @@ footer{
 }
 @media(max-width:760px){
   :root{--nav-h:72px}
-  body{padding-bottom:92px;background:#fff}
+  body{padding-bottom:92px;background:var(--card)}
   [data-theme="dark"] body{background:#05070b}
   .container{width:100%;padding:0 24px}
   .nav{box-shadow:0 10px 28px rgba(16,21,37,.04)}
@@ -604,7 +604,7 @@ footer{
   [data-theme="dark"] .stat strong{color:#f8fafc}
   .stat span{margin-top:5px;font-size:12px;text-transform:none;letter-spacing:0;line-height:1.2}
   .analytics-foot{display:none}
-  .jobs-wrap{padding:42px 0 40px;background:#fff}
+  .jobs-wrap{padding:42px 0 40px;background:var(--card)}
   .quick{padding-top:34px;padding-bottom:42px;background:linear-gradient(180deg,#fff 0%,#f8fbff 100%)}
   [data-theme="dark"] .jobs-wrap,[data-theme="dark"] .quick{background:#05070b}
   [data-theme="dark"] .section{background:#05070b}
@@ -768,12 +768,12 @@ body.auth-open{overflow:hidden}
 body[data-auth="public"] .authed-only,body[data-auth="authed"] .public-only{display:none!important}
 .wallet-btn[data-auth="public"] strong{display:none}
 .wallet-btn[data-auth="public"]{min-width:104px;justify-content:center}
-.oga-drawer{width:min(500px,100vw);padding:0 0 18px;background:#fbfbfc;color:#151820;border-left:1px solid #e6e8ee;box-shadow:-16px 0 42px rgba(16,21,37,.12);display:flex;flex-direction:column}
+.oga-drawer{width:min(500px,100vw);padding:0 0 18px;background:#fbfbfc;color:var(--text);border-left:1px solid #e6e8ee;box-shadow:-16px 0 42px rgba(16,21,37,.12);display:flex;flex-direction:column}
 [data-theme="dark"] .oga-drawer{background:#080b13;color:#f4f7fb;border-left-color:#222b3c}
 .oga-drawer-head{height:88px;display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid #e6e8ee;background:rgba(255,255,255,.72)}
 [data-theme="dark"] .oga-drawer-head{background:rgba(8,11,19,.72);border-bottom-color:#222b3c}
 .oga-drawer-brand{display:flex;align-items:center;gap:12px;font-family:"Outfit",sans-serif;font-size:28px;font-weight:900;letter-spacing:.2px;color:inherit;text-decoration:none}
-.oga-drawer-close{width:48px;height:48px;border:1px solid #dfe2e8;border-radius:13px;background:#fff;color:#5c6372;font-size:24px;line-height:1;cursor:pointer;box-shadow:0 1px 2px rgba(16,21,37,.04)}
+.oga-drawer-close{width:48px;height:48px;border:1px solid var(--border);border-radius:13px;background:var(--card);color:var(--text2);font-size:24px;line-height:1;cursor:pointer;box-shadow:0 1px 2px rgba(16,21,37,.04)}
 [data-theme="dark"] .oga-drawer-close{background:#111725;border-color:#2d384d;color:#cbd5e1}
 .oga-drawer-nav{padding:12px 10px 18px;overflow-y:auto;flex:1}
 .oga-drawer-section{margin-bottom:6px}
@@ -783,7 +783,7 @@ body[data-auth="public"] .authed-only,body[data-auth="authed"] .public-only{disp
 .oga-drawer-icon{width:48px;height:48px;display:grid;place-items:center;border:1px solid #e0e3e8;border-radius:12px;background:#f9fafb;color:#4f5665;flex:0 0 auto;font-weight:800;font-size:23px}
 .oga-drawer-icon svg{width:22px;height:22px;stroke-width:2;fill:none;stroke:currentColor}
 .oga-drawer-icon.create-icon{background:#f5f0ff;border-color:#f5f0ff;color:#7c3aed}
-.oga-drawer-icon.mini{width:38px;height:38px;border-radius:10px;background:#fff}
+.oga-drawer-icon.mini{width:38px;height:38px;border-radius:10px;background:var(--card)}
 [data-theme="dark"] .oga-drawer-icon{background:#0d111d;border-color:#2d384d;color:#b8c2d2}
 .oga-drawer-item strong,.oga-drawer-subnav strong{display:block;color:#171a22;font-size:21px;line-height:1.1;font-weight:800}
 .oga-drawer-item small,.oga-drawer-subnav small{display:block;margin-top:5px;color:#9ca1ad;font-size:17px;line-height:1.2;font-weight:600}
@@ -802,11 +802,11 @@ body[data-auth="public"] .authed-only,body[data-auth="authed"] .public-only{disp
 .oga-drawer-actions{height:70px;display:flex;align-items:center;justify-content:center;gap:18px;padding:0 18px;border-radius:999px;background:#11151f;color:#fff;box-shadow:0 12px 30px rgba(16,21,37,.18)}
 .oga-drawer-actions button{border:0;background:transparent;color:#fff;font-size:19px;font-weight:900;cursor:pointer;display:inline-flex;align-items:center;gap:10px;white-space:nowrap}
 .oga-drawer-actions svg{width:19px;height:19px;stroke-width:2.3}
-.oga-balance-card{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:16px 20px;margin-bottom:10px;border:1px solid #dfe2e8;border-radius:18px;background:#fff;box-shadow:0 6px 20px rgba(16,21,37,.06)}
+.oga-balance-card{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:16px 20px;margin-bottom:10px;border:1px solid var(--border);border-radius:18px;background:var(--card);box-shadow:0 6px 20px rgba(16,21,37,.06)}
 .oga-balance-card span{color:#8f96a3;font-size:14px;font-weight:800;text-transform:uppercase;letter-spacing:.08em}
 .oga-balance-card strong{font-family:"Outfit",sans-serif;font-size:28px;background:var(--brand-blue);-webkit-background-clip:text;background-clip:text;color:transparent}
 [data-theme="dark"] .oga-balance-card{background:#111725;border-color:#2d384d}
-.oga-profile-btn{width:100%;height:70px;margin-top:12px;border:2px solid #d5d8df;border-radius:999px;background:#fff;color:#151820;font-size:21px;font-weight:900;cursor:pointer}
+.oga-profile-btn{width:100%;height:70px;margin-top:12px;border:2px solid var(--border2);border-radius:999px;background:var(--card);color:var(--text);font-size:21px;font-weight:900;cursor:pointer}
 [data-theme="dark"] .oga-profile-btn{background:#111725;border-color:#2d384d;color:#f4f7fb}
 @media(max-width:760px){.oga-drawer{width:100vw}.mobile-drawer.oga-drawer{right:0}.oga-drawer-item strong{font-size:20px}.oga-drawer-item small{font-size:17px}}
 @media(max-width:420px){.oga-drawer-brand{font-size:24px}.oga-drawer-head{height:82px}.oga-drawer-item{min-height:68px}.oga-drawer-icon{width:44px;height:44px}.oga-drawer-actions button{font-size:16px}.oga-profile-btn{font-size:19px}}
@@ -843,17 +843,17 @@ body[data-auth="public"] .authed-only,body[data-auth="authed"] .public-only{disp
 <body>
 <header class="nav">
   <div class="nav-inner">
-    <a class="brand" href="index (18).html" aria-label="OgaPay home">
+    <a class="brand" href="index.html" aria-label="OgaPay home">
       <span class="logo-mark">
         <svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect width="512" height="512" fill="white"/><rect x="98" y="98" width="107" height="107" rx="20" fill="black"/><path d="M225 98H312C323 98 332 107 332 118V205H225V98Z" fill="black"/><path d="M352 98H392C440 98 470 128 470 176V205H352V98Z" fill="black"/><rect x="98" y="225" width="107" height="107" fill="black"/><rect x="225" y="225" width="107" height="107" fill="black"/><path d="M352 225H470V254C470 302 440 332 392 332H352V225Z" fill="black"/><rect x="98" y="352" width="107" height="107" rx="20" fill="black"/><path d="M225 352H312C323 352 332 361 332 372V439C332 450 323 459 312 459H225V352Z" fill="black"/></svg>
       </span>
       <span>Oga<span>Pay</span></span>
     </a>
     <nav class="nav-links" aria-label="Primary navigation">
-      <a class="nav-link active" href="tasks.html"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>All Jobs</a>
-      <a class="nav-link" href="store.html"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18M16 10a4 4 0 0 1-8 0"/></svg>Store</a>
-      <a class="nav-link" href="#communities"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg>Communities</a>
-      <a class="nav-link" href="#footer"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>FAQ</a>
+      <a class="nav-link active" href="tasks.html" data-navlink><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>All Jobs</a>
+      <a class="nav-link" href="store.html" data-navlink><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18M16 10a4 4 0 0 1-8 0"/></svg>Store</a>
+      <a class="nav-link" href="communities.html" data-navlink><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg>Communities</a>
+      <a class="nav-link" href="notifications.html" data-navlink><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Alerts</a>
     </nav>
     <div class="nav-actions">
       <button class="wallet-btn" type="button" onclick="openAuthModal('screen-connect')"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.3" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="14" rx="2"/><path d="M16 12h6"/></svg><span class="wallet-label">Balance:</span> <strong>$0.01</strong></button>
@@ -867,7 +867,7 @@ body[data-auth="public"] .authed-only,body[data-auth="authed"] .public-only{disp
   <div class="mobile-overlay" data-close-menu></div>
   <aside class="mobile-drawer oga-drawer" aria-label="OgaPay menu">
     <div class="oga-drawer-head">
-      <a class="oga-drawer-brand" href="index (18).html" aria-label="OgaPay home">
+      <a class="oga-drawer-brand" href="index.html" aria-label="OgaPay home">
         <span class="oga-drawer-logo logo-mark" aria-hidden="true"><svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="512" height="512" fill="white"/><rect x="98" y="98" width="107" height="107" rx="20" fill="black"/><path d="M225 98H312C323 98 332 107 332 118V205H225V98Z" fill="black"/><path d="M352 98H392C440 98 470 128 470 176V205H352V98Z" fill="black"/><rect x="98" y="225" width="107" height="107" fill="black"/><rect x="225" y="225" width="107" height="107" fill="black"/><path d="M352 225H470V254C470 302 440 332 392 332H352V225Z" fill="black"/><rect x="98" y="352" width="107" height="107" rx="20" fill="black"/><path d="M225 352H312C323 352 332 361 332 372V439C332 450 323 459 312 459H225V352Z" fill="black"/></svg></span>
         <span>Oga Pay</span>
       </a>
@@ -889,17 +889,17 @@ body[data-auth="public"] .authed-only,body[data-auth="authed"] .public-only{disp
           <svg class="oga-drawer-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
         </button>
         <div class="oga-drawer-subnav">
-          <a href="tasks%20(1).html" data-close-menu><span class="oga-drawer-icon mini"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span><span><strong>All Jobs</strong><small>Browse all available jobs</small></span></a>
-          <a class="authed-only" href="#jobs" data-close-menu><span class="oga-drawer-icon mini"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 3h12v18l-6-4-6 4V3Z"/></svg></span><span><strong>Bookmarks</strong><small>Your saved jobs</small></span></a>
-          <a href="#jobs" data-close-menu><span class="oga-drawer-icon mini"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z"/><circle cx="12" cy="12" r="3"/></svg></span><span><strong>Job Monitor</strong><small>Track new jobs in real time</small></span></a>
+          <a href="tasks.html" data-close-menu><span class="oga-drawer-icon mini"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span><span><strong>All Jobs</strong><small>Browse all available jobs</small></span></a>
+          <a class="authed-only" href="monitor.html" data-close-menu><span class="oga-drawer-icon mini"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 3h12v18l-6-4-6 4V3Z"/></svg></span><span><strong>Bookmarks</strong><small>Your saved jobs</small></span></a>
+          <a href="monitor.html" data-close-menu><span class="oga-drawer-icon mini"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z"/><circle cx="12" cy="12" r="3"/></svg></span><span><strong>Job Monitor</strong><small>Track new jobs in real time</small></span></a>
         </div>
       </section>
 
       <a class="oga-drawer-item" href="store.html" data-close-menu><span class="oga-drawer-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18M16 10a4 4 0 0 1-8 0"/></svg></span><span><strong>Store</strong><small class="public-only">Browse the marketplace</small><small class="authed-only">Marketplace and worker tools</small></span></a>
-      <a class="oga-drawer-item authed-only" href="#communities" data-close-menu><span class="oga-drawer-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg></span><span><strong>Communities</strong><small>Connect with earners</small></span></a>
+      <a class="oga-drawer-item authed-only" href="communities.html" data-close-menu><span class="oga-drawer-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg></span><span><strong>Communities</strong><small>Connect with earners</small></span></a>
       <a class="oga-drawer-item" href="dashboard.html" data-close-menu><span class="oga-drawer-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span><span><strong>Dashboard &amp; Tools</strong><small>Your earning overview</small></span></a>
       <a class="oga-drawer-item" href="blog.html" data-close-menu><span class="oga-drawer-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 4h14v16H5z"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></span><span><strong>Blog</strong><small>Articles and updates</small></span></a>
-      <a class="oga-drawer-item" href="#footer" data-close-menu><span class="oga-drawer-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 1 1 5.8 1c-.6 1-1.9 1.4-2.5 2.3-.3.4-.4.8-.4 1.2M12 17h.01"/></svg></span><span><strong>FAQ</strong><small>Common questions answered</small></span></a>
+      <a class="oga-drawer-item" href="notifications.html" data-close-menu><span class="oga-drawer-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 1 1 5.8 1c-.6 1-1.9 1.4-2.5 2.3-.3.4-.4.8-.4 1.2M12 17h.01"/></svg></span><span><strong>FAQ</strong><small>Common questions answered</small></span></a>
       <a class="oga-drawer-item" href="support.html" data-close-menu><span class="oga-drawer-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4v8Z"/></svg></span><span><strong>Support</strong><small>Get help from our team</small></span></a>
     </nav>
 
@@ -913,29 +913,12 @@ body[data-auth="public"] .authed-only,body[data-auth="authed"] .public-only{disp
     <div class="oga-drawer-foot authed-only">
       <div class="oga-balance-card">
         <span>Balance</span>
-        <strong><div class="mobile-menu" id="mobileMenu">
-  <div class="mobile-overlay" data-close-menu></div>
-  <aside class="mobile-drawer">
-    <div class="drawer-head">
-      <a class="brand" href="index (18).html"><span class="logo-mark"><svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect width="512" height="512" fill="white"/><rect x="98" y="98" width="107" height="107" rx="20" fill="black"/><path d="M225 98H312C323 98 332 107 332 118V205H225V98Z" fill="black"/><path d="M352 98H392C440 98 470 128 470 176V205H352V98Z" fill="black"/><rect x="98" y="225" width="107" height="107" fill="black"/><rect x="225" y="225" width="107" height="107" fill="black"/><path d="M352 225H470V254C470 302 440 332 392 332H352V225Z" fill="black"/><rect x="98" y="352" width="107" height="107" rx="20" fill="black"/><path d="M225 352H312C323 352 332 361 332 372V439C332 450 323 459 312 459H225V352Z" fill="black"/></svg></span><span>Oga<span>Pay</span></span></a>
-      <button class="icon-btn" data-close-menu aria-label="Close menu"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
-    </div>
-    <div class="drawer-links">
-      <a href="tasks%20(1).html" data-close-menu>All Jobs</a>
-      <a href="store.html" data-close-menu>Store</a>
-      <a href="#communities" data-close-menu>Communities</a>
-      <a href="#footer" data-close-menu>FAQ</a>
-      <a href="post-task.html" data-close-menu>Create a job</a>
-    </div>
-  </aside>
-</div>
-
-.01</strong>
+        <strong>₦42,850</strong>
       </div>
       <div class="oga-drawer-actions">
         <button type="button" onclick="setAuthPreview(false)">Switch to Public</button>
       </div>
-      <button class="oga-profile-btn" type="button" onclick="window.location.href='dashboard.html'">My Profile</button>
+      <button class="oga-profile-btn" type="button" onclick="window.location.href='profile.html'">My Profile</button>
     </div>
   </aside>
 </div>
@@ -946,7 +929,7 @@ body[data-auth="public"] .authed-only,body[data-auth="authed"] .public-only{disp
         <h1>Work <span class="arrow">&rarr;</span> <span class="earn">Earn</span></h1>
         <p>A modern earning marketplace for tasks, communities, and rewards. Work online and earn in Naira &amp; Crypto.</p>
         <div class="btn-row">
-          <a class="btn btn-primary" href="tasks%20(1).html">Start earning <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 12h14M13 5l7 7-7 7"/></svg></a>
+          <a class="btn btn-primary" href="tasks.html">Start earning <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 12h14M13 5l7 7-7 7"/></svg></a>
           <a class="btn" href="post-task.html">Create a job</a>
         </div>
       </div>
@@ -988,9 +971,9 @@ body[data-auth="public"] .authed-only,body[data-auth="authed"] .public-only{disp
     <div class="container">
       <div class="section-kicker">Quick buy</div>
       <div class="quick-grid">
-        <a class="quick-card" href="tasks%20(1).html"><span class="quick-icon">X</span><div><div class="quick-name">X Raid</div><div class="quick-price">&#8358;500</div></div></a>
-        <a class="quick-card featured" href="tasks%20(1).html"><span class="quick-icon">R</span><div><div class="quick-name">Reposts</div><div class="quick-price">&#8358;250</div></div></a>
-        <a class="quick-card" href="tasks%20(1).html"><span class="quick-icon">TG</span><div><div class="quick-name">Telegram Join</div><div class="quick-price">&#8358;250</div></div></a>
+        <a class="quick-card" href="tasks.html"><span class="quick-icon">X</span><div><div class="quick-name">X Raid</div><div class="quick-price">&#8358;500</div></div></a>
+        <a class="quick-card featured" href="tasks.html"><span class="quick-icon">R</span><div><div class="quick-name">Reposts</div><div class="quick-price">&#8358;250</div></div></a>
+        <a class="quick-card" href="tasks.html"><span class="quick-icon">TG</span><div><div class="quick-name">Telegram Join</div><div class="quick-price">&#8358;250</div></div></a>
         <a class="quick-card" href="store.html"><span class="quick-icon">+</span><div><div class="quick-name">More</div><div class="quick-price">options</div></div></a>
       </div>
     </div>
@@ -1001,7 +984,7 @@ body[data-auth="public"] .authed-only,body[data-auth="authed"] .public-only{disp
       <h2 class="section-title">Get started with OgaPay</h2>
       <p class="section-sub">Whether you're here to earn or promote, choose your path below.</p>
       <div class="paths">
-        <a class="path-card" href="#" onclick="openAuthModal('screen-email'); return false;"><span class="path-icon">&#8358;</span>I'm a Worker <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></a>
+        <a class="path-card" href="worker.html"><span class="path-icon">&#8358;</span>I'm a Worker <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></a>
         <a class="path-card" href="post-task.html"><span class="path-icon">+</span>I'm an Advertiser <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></a>
       </div>
     </div>
@@ -1035,10 +1018,10 @@ body[data-auth="public"] .authed-only,body[data-auth="authed"] .public-only{disp
 </main>
 
 <nav class="mobile-bottom-nav" aria-label="Mobile app navigation">
-  <a href="tasks%20(1).html" class="active"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v13H4V7Z"/><path d="M9 5V3h6v2M8 11h8"/></svg><span>Jobs</span></a>
+  <a href="tasks.html" class="active"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v13H4V7Z"/><path d="M9 5V3h6v2M8 11h8"/></svg><span>Jobs</span></a>
   <a href="store.html"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18M16 10a4 4 0 0 1-8 0"/></svg><span>Store</span></a>
   <a href="post-task.html" class="create"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span>Create</span></a>
-  <a href="#footer"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg><span>Alerts</span></a>
+  <a href="notifications.html"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><span>Alerts</span></a>
   <a href="dashboard.html"><span class="profile-dot"></span><span>Profile</span></a>
 </nav>
 
@@ -1046,7 +1029,7 @@ body[data-auth="public"] .authed-only,body[data-auth="authed"] .public-only{disp
   <div class="footer-content">
     <div class="footer-logo"><span class="logo-mark"><svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect width="512" height="512" fill="white"/><rect x="98" y="98" width="107" height="107" rx="20" fill="black"/><path d="M225 98H312C323 98 332 107 332 118V205H225V98Z" fill="black"/><path d="M352 98H392C440 98 470 128 470 176V205H352V98Z" fill="black"/><rect x="98" y="225" width="107" height="107" fill="black"/><rect x="225" y="225" width="107" height="107" fill="black"/><path d="M352 225H470V254C470 302 440 332 392 332H352V225Z" fill="black"/><rect x="98" y="352" width="107" height="107" rx="20" fill="black"/><path d="M225 352H312C323 352 332 361 332 372V439C332 450 323 459 312 459H225V352Z" fill="black"/></svg></span>OgaPay</div>
     <p>Microjob marketplace for tasks, communities, and rewards.</p>
-    <nav class="footer-links"><a href="post-task.html">Create</a><a href="wallet.html">Wallet</a><a href="blog.html">Blog</a><a href="support.html">Support</a><a href="tasks%20(1).html">All Jobs</a></nav>
+    <nav class="footer-links"><a href="post-task.html">Create</a><a href="wallet.html">Wallet</a><a href="blog.html">Blog</a><a href="support.html">Support</a><a href="tasks.html">All Jobs</a></nav>
   </div>
 </footer>
 
@@ -1142,7 +1125,7 @@ body[data-auth="public"] .authed-only,body[data-auth="authed"] .public-only{disp
     </div>
 
     <div style="padding:16px 28px 24px; text-align:center;">
-      <p style="font-size:11.5px; color:var(--color-text-secondary); margin:0; line-height:1.6;">By connecting you agree to OgaPay's <a href="#" style="color:#315EFB; text-decoration:none;">Terms of Service</a> and <a href="#" style="color:#315EFB; text-decoration:none;">Privacy Policy</a></p>
+      <p style="font-size:11.5px; color:var(--color-text-secondary); margin:0; line-height:1.6;">By connecting you agree to OgaPay's <a href="terms.html" style="color:var(--accent2); text-decoration:none;">Terms of Service</a> and <a href="privacy.html" style="color:var(--accent2); text-decoration:none;">Privacy Policy</a></p>
     </div>
   </div>
 
@@ -1231,7 +1214,7 @@ body[data-auth="public"] .authed-only,body[data-auth="authed"] .public-only{disp
 
     </div>
     <div style="padding:16px 24px 24px; text-align:center;">
-      <p style="font-size:11.5px; color:var(--color-text-secondary); margin:0; line-height:1.6;">New to crypto? <a href="#" onclick="show('screen-email'); return false;" style="color:#315EFB; text-decoration:none;">Sign up with email instead</a></p>
+      <p style="font-size:11.5px; color:var(--color-text-secondary); margin:0; line-height:1.6;">New to crypto? <a href="dashboard.html" onclick="show('screen-email'); return false;" style="color:var(--accent2); text-decoration:none;">Sign up with email instead</a></p>
     </div>
   </div>
 
@@ -1266,7 +1249,7 @@ body[data-auth="public"] .authed-only,body[data-auth="authed"] .public-only{disp
           </div>
         </div>
         <div style="text-align:right; margin-bottom:18px;">
-          <a href="#" style="font-size:12px; color:#315EFB; text-decoration:none;">Forgot password?</a>
+          <a href="settings.html" style="font-size:12px; color:var(--accent2); text-decoration:none;">Forgot password?</a>
         </div>
         <button onclick="show('screen-success')" style="width:100%; padding:12px; background:linear-gradient(135deg,#315EFB,#011F9A); color:#fff; border:none; border-radius:12px; font-size:14px; font-weight:500; cursor:pointer;">Sign in to OgaPay</button>
       </div>
@@ -1298,7 +1281,7 @@ body[data-auth="public"] .authed-only,body[data-auth="authed"] .public-only{disp
         </div>
         <div style="margin-bottom:16px; display:flex; align-items:flex-start; gap:8px;">
           <input type="checkbox" id="tos" style="width:16px; height:16px; flex-shrink:0; margin-top:2px; accent-color:#315EFB;"/>
-          <label for="tos" style="font-size:12px; color:var(--color-text-secondary); line-height:1.5; font-weight:400;">I agree to OgaPay's <a href="#" style="color:#315EFB; text-decoration:none;">Terms of Service</a> and <a href="#" style="color:#315EFB; text-decoration:none;">Privacy Policy</a></label>
+          <label for="tos" style="font-size:12px; color:var(--color-text-secondary); line-height:1.5; font-weight:400;">I agree to OgaPay's <a href="terms.html" style="color:var(--accent2); text-decoration:none;">Terms of Service</a> and <a href="privacy.html" style="color:var(--accent2); text-decoration:none;">Privacy Policy</a></label>
         </div>
         <button onclick="show('screen-success')" style="width:100%; padding:12px; background:linear-gradient(135deg,#315EFB,#011F9A); color:#fff; border:none; border-radius:12px; font-size:14px; font-weight:500; cursor:pointer;">Create my account</button>
       </div>
