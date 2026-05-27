@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>All Tasks — OgaPay</title>
+<title>All Jobs - OgaPay</title>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet"/>
 <style>
-/* ═══════════════════ DESIGN TOKENS ═══════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• DESIGN TOKENS â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 :root{
   --bg:#FFFFFF;--bg2:#FAFAFB;--card:#FFFFFF;
   --border:#E5E7EB;--border2:#D1D5DB;
@@ -47,16 +47,16 @@ a{color:inherit;text-decoration:none;}
 button{font-family:'DM Sans',sans-serif;cursor:pointer;border:none;background:none;}
 img{max-width:100%;display:block;}
 
-/* ── LAYOUT ── */
+/* â”€â”€ LAYOUT â”€â”€ */
 .container{max-width:1200px;margin:0 auto;padding:0 24px;}
 
-/* ── BUTTONS ── */
+/* â”€â”€ BUTTONS â”€â”€ */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 20px;border-radius:var(--radius-pill);font-size:13.5px;font-weight:600;transition:all 0.18s;cursor:pointer;white-space:nowrap;border:none;}
 .btn-primary{background:var(--blue-grad);color:#fff;}
 .btn-primary:hover{transform:translateY(-1px);box-shadow:var(--shadow-blue);}
 .btn-sm{padding:7px 14px;font-size:12.5px;}
 
-/* ══════════════════ NAVBAR ══════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• NAVBAR â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 .nav{position:sticky;top:0;z-index:500;background:var(--bg);border-bottom:1px solid var(--border);backdrop-filter:blur(12px);}
 .nav-inner{display:flex;align-items:center;gap:6px;padding:0 24px;height:60px;max-width:1200px;margin:0 auto;}
 .nav-logo{display:flex;align-items:center;gap:9px;font-family:'Outfit',sans-serif;font-weight:800;font-size:20px;color:var(--text);flex-shrink:0;margin-right:8px;}
@@ -70,7 +70,7 @@ img{max-width:100%;display:block;}
 .connect-btn:hover{background:var(--blue-light);}
 .dark-toggle{width:34px;height:34px;border-radius:8px;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--text2);background:var(--bg);cursor:pointer;flex-shrink:0;}
 
-/* ══════════════════ HERO SECTION ══════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• HERO SECTION â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 .hero-section{
   background:linear-gradient(135deg,#fafbff,#f8faff 15%,#f5f8ff,#f8fafc,#fafbfc 75%,#f9fafb);
   border-bottom:1px solid rgba(3,60,227,0.08);
@@ -114,7 +114,7 @@ img{max-width:100%;display:block;}
 [data-theme="dark"] .dot-live{animation:livePulseDark 2s infinite;}
 @keyframes livePulseDark{0%,100%{box-shadow:0 0 0 0 rgba(74,110,245,0.4);}50%{box-shadow:0 0 0 5px rgba(74,110,245,0);}}
 
-/* ══════════════════ FILTER / CONTROLS ══════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• FILTER / CONTROLS â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 .controls-section{padding:1.5rem 0 0;}
 .controls-inner{max-width:1200px;margin:0 auto;padding:0 24px;}
 .controls-row{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:1rem;}
@@ -149,12 +149,12 @@ img{max-width:100%;display:block;}
 .results-meta{font-size:12.5px;color:var(--text3);margin-bottom:1.25rem;}
 .results-meta strong{color:var(--text2);}
 
-/* ══════════════════ JOBS GRID ══════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• JOBS GRID â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 .jobs-section{padding:1.25rem 0 4rem;}
 .jobs-inner{max-width:1200px;margin:0 auto;padding:0 24px;}
 .jobs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:1.25rem;align-items:stretch;}
 
-/* ══════════════════ JOB CARD ══════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• JOB CARD â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 .job-card{
   background:var(--card);
   border:1.5px solid var(--border);
@@ -330,13 +330,13 @@ img{max-width:100%;display:block;}
 /* Empty desc */
 .desc-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:56px;color:var(--text3);font-size:12px;font-style:italic;gap:4px;}
 
-/* ══════════════════ LOADING ══════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• LOADING â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 .loading-state{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:400px;gap:1rem;}
 .spinner{width:44px;height:44px;border:3px solid var(--border);border-radius:50%;border-top-color:var(--blue);animation:spin 0.9s ease-in-out infinite;}
 @keyframes spin{to{transform:rotate(360deg)}}
 .loading-text{color:var(--text2);font-size:14px;}
 
-/* ══════════════════ PAGINATION ══════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• PAGINATION â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 .pagination{display:flex;justify-content:center;align-items:center;gap:1rem;padding:2.5rem 0 1rem;}
 .pag-btn{
   display:inline-flex;align-items:center;gap:6px;
@@ -361,11 +361,11 @@ img{max-width:100%;display:block;}
 }
 [data-theme="dark"] .pag-info{background:rgba(13,18,40,0.9);border-color:rgba(74,110,245,0.15);}
 
-/* ══════════════════ BACK LINK ══════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• BACK LINK â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 .back-link{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--text2);font-weight:500;padding:6px 12px;border-radius:8px;border:1px solid var(--border);background:var(--card);transition:all 0.15s;}
 .back-link:hover{color:var(--blue);border-color:var(--blue);background:var(--blue-light);}
 
-/* ══════════════════ RESPONSIVE ══════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• RESPONSIVE â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 @media(max-width:768px){
   .hero-section{padding:2.5rem 1rem 2rem;min-height:auto;}
   .hero-stats{gap:1rem;}
@@ -384,22 +384,185 @@ img{max-width:100%;display:block;}
   .pag-btn{min-width:80px;font-size:12px;padding:8px 16px;}
 }
 
-/* ══════════════════ REVEAL ══════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• REVEAL â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 .reveal{opacity:0;transform:translateY(16px);transition:opacity 0.5s ease,transform 0.5s ease;}
 .reveal.visible{opacity:1;transform:none;}
 
-/* ══════════════════ NO RESULTS ══════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• NO RESULTS â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 .no-results{text-align:center;padding:4rem 1rem;color:var(--text2);}
 .no-results h3{font-family:'Outfit',sans-serif;font-size:1.25rem;font-weight:700;color:var(--text);margin-bottom:8px;}
 .no-results p{font-size:14px;}
+/* Refined All Jobs feed */
+:root{
+  --oga-surface:#ffffff;
+  --oga-ink:#101525;
+  --oga-muted:#66738a;
+  --oga-faint:#98a6ba;
+  --oga-line:#e4e9f1;
+  --oga-card:#ffffff;
+  --oga-soft:#f7f9fc;
+  --oga-blue:linear-gradient(90deg,#2563EB,#3B82F6,#60A5FA,#93C5FD);
+}
+[data-theme="dark"]{
+  --oga-surface:#05070b;
+  --oga-ink:#f8fafc;
+  --oga-muted:#aab4c4;
+  --oga-faint:#667186;
+  --oga-line:#252b36;
+  --oga-card:#080b13;
+  --oga-soft:#0d111d;
+}
+body{background:var(--oga-surface);color:var(--oga-ink)}
+.nav{background:rgba(255,255,255,.94);border-bottom-color:var(--oga-line);backdrop-filter:blur(18px) saturate(1.2)}
+[data-theme="dark"] .nav{background:rgba(5,7,11,.94)}
+.nav-logo{color:var(--oga-ink)}
+.nav-logo span{color:var(--oga-ink)}
+.nav-logo svg{display:none}
+.nav-logo::before{
+  content:"";width:40px;height:40px;border-radius:12px;display:block;flex-shrink:0;
+  background:#fff url('data:image/svg+xml,%3Csvg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg"%3E%3Crect width="512" height="512" fill="white"/%3E%3Crect x="98" y="98" width="107" height="107" rx="20" fill="black"/%3E%3Cpath d="M225 98H312C323 98 332 107 332 118V205H225V98Z" fill="black"/%3E%3Cpath d="M352 98H392C440 98 470 128 470 176V205H352V98Z" fill="black"/%3E%3Crect x="98" y="225" width="107" height="107" fill="black"/%3E%3Crect x="225" y="225" width="107" height="107" fill="black"/%3E%3Cpath d="M352 225H470V254C470 302 440 332 392 332H352V225Z" fill="black"/%3E%3Crect x="98" y="352" width="107" height="107" rx="20" fill="black"/%3E%3Cpath d="M225 352H312C323 352 332 361 332 372V439C332 450 323 459 312 459H225V352Z" fill="black"/%3E%3C/svg%3E') center/cover no-repeat;
+  box-shadow:0 10px 24px rgba(16,21,37,.08);
+}
+.nav-link.active{background:var(--oga-soft);color:var(--oga-ink)}
+.connect-btn{border-color:var(--oga-line);color:var(--oga-ink);background:var(--oga-card)}
+.dark-toggle{background:var(--oga-card);border-color:var(--oga-line);color:var(--oga-ink)}
+.hero-section{
+  min-height:auto;
+  padding:58px 24px 34px;
+  background:
+    radial-gradient(circle at 28% 30%,rgba(124,58,237,.10),transparent 34%),
+    radial-gradient(circle at 74% 42%,rgba(37,99,235,.10),transparent 38%),
+    linear-gradient(180deg,#fff 0%,#f8fbff 100%);
+}
+[data-theme="dark"] .hero-section{
+  background:
+    radial-gradient(circle at 28% 30%,rgba(124,58,237,.22),transparent 34%),
+    radial-gradient(circle at 74% 42%,rgba(6,182,212,.15),transparent 38%),
+    linear-gradient(180deg,#05070b 0%,#05070b 100%);
+}
+.hero-eyebrow{display:none}
+.hero-title{font-size:clamp(36px,7vw,54px);font-weight:900;letter-spacing:-1.4px;color:var(--oga-ink);margin-bottom:10px}
+.hero-title .accent,.hero-title .accent-gold{color:inherit;background:none}
+.hero-desc{max-width:520px;color:var(--oga-muted);font-size:17px;line-height:1.55;margin-bottom:0}
+.hero-stats{display:none}
+.controls-section{padding:28px 0 0;background:var(--oga-surface)}
+.section-title-sm{font-size:24px;font-weight:900;color:var(--oga-ink)}
+.back-link{display:none}
+.sort-wrap{gap:8px;flex-wrap:wrap}
+.sort-label,.sort-select{display:none}
+.feed-actions{display:flex;gap:8px;flex-wrap:wrap}
+.feed-action{
+  height:38px;padding:0 16px;border-radius:999px;border:1.5px solid var(--oga-line);
+  background:var(--oga-card);color:var(--oga-muted);font-size:13px;font-weight:800;
+}
+.feed-action.active{background:var(--oga-ink);border-color:var(--oga-ink);color:var(--oga-surface)}
+[data-theme="dark"] .feed-action.active{background:#f8fafc;color:#05070b;border-color:#f8fafc}
+.fit-note{width:100%;margin:-4px 0 8px;color:var(--oga-faint);font-size:13px;font-weight:600}
+.filter-tabs,.toggle-group{background:var(--oga-soft);border-color:var(--oga-line)}
+.filter-tab,.toggle-btn{color:var(--oga-muted)}
+.filter-tab.active,.toggle-btn.active{background:var(--oga-card);color:#2563EB;box-shadow:none}
+[data-theme="dark"] .filter-tab.active,[data-theme="dark"] .toggle-btn.active{color:#93C5FD}
+.search-input{background:var(--oga-card);border-color:var(--oga-line);color:var(--oga-ink)}
+.results-meta{color:var(--oga-faint)}
+.jobs-section{padding:24px 0 108px;background:var(--oga-surface)}
+.jobs-grid{grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:18px;align-items:stretch}
+.job-card{
+  min-height:430px;background:var(--oga-card);border-color:var(--oga-line);border-radius:14px;
+  box-shadow:0 10px 26px rgba(16,21,37,.06);overflow:hidden;
+}
+[data-theme="dark"] .job-card{background:#080b13;border-color:#252b36;box-shadow:0 14px 32px rgba(0,0,0,.30)}
+.job-card:hover{transform:translateY(-2px);border-color:#93C5FD;box-shadow:0 14px 34px rgba(37,99,235,.13)}
+.card-creator{
+  min-height:68px;padding:13px 18px;background:linear-gradient(120deg,rgba(124,58,237,.06),rgba(37,99,235,.08),rgba(147,197,253,.10));
+  border-bottom-color:var(--oga-line);
+}
+[data-theme="dark"] .card-creator{background:linear-gradient(120deg,rgba(124,58,237,.16),rgba(37,99,235,.10),rgba(6,182,212,.08));border-bottom-color:#252b36}
+.card-creator::after{display:none}
+.creator-avatar{width:40px;height:40px;border-color:var(--oga-line);font-size:12px}
+.creator-label{font-size:10px;color:var(--oga-faint);letter-spacing:1.2px}
+.creator-name{font-size:15px;font-weight:800;color:var(--oga-ink)}
+.card-meta{padding:14px 18px;background:transparent;border-bottom-color:var(--oga-line)}
+[data-theme="dark"] .card-meta{background:transparent;border-bottom-color:#252b36}
+.meta-label{font-size:11px;color:var(--oga-muted);letter-spacing:1px}
+.prog-wrap{padding:14px 18px 0!important;margin:0}
+.prog-row{font-size:12px;color:var(--oga-muted);font-weight:800;text-transform:uppercase;letter-spacing:.7px;margin-bottom:8px}
+.prog-bar{height:6px;background:var(--oga-soft)}
+[data-theme="dark"] .prog-bar{background:#0d1320}
+.prog-fill{background:var(--oga-blue);background-size:240% 100%}
+.card-desc-section{padding:12px 18px 0}
+.desc-label{font-size:10px;color:var(--oga-faint);letter-spacing:1px}
+.desc-box{background:transparent;border:0;border-top:1px solid var(--oga-line);border-radius:0;padding:12px 0 0;min-height:58px}
+[data-theme="dark"] .desc-box{background:transparent;border-color:#252b36}
+.desc-text{font-size:13px;color:var(--oga-muted);line-height:1.48;-webkit-line-clamp:3}
+.card-reward{
+  height:86px;margin:12px 18px 0;padding:12px 16px;border-radius:12px;
+  background:linear-gradient(135deg,rgba(37,99,235,.08),rgba(147,197,253,.14));
+  border-color:var(--oga-line);box-shadow:none;
+}
+[data-theme="dark"] .card-reward{background:linear-gradient(135deg,rgba(37,99,235,.14),rgba(124,58,237,.08));border-color:#252b36}
+.card-reward::before{display:none}
+.reward-label{order:2;color:var(--oga-faint);font-size:11px}
+.reward-value{font-size:30px;color:transparent;background:var(--oga-blue);background-clip:text;-webkit-background-clip:text}
+.reward-symbol{color:#60A5FA}
+.reward-value.gold{color:transparent}
+.reward-badges,.reward-secondary{display:none}
+.card-footer{padding:12px 18px;border-top:0;color:var(--oga-faint)}
+.card-footer .btn-primary{background:var(--oga-ink);color:var(--oga-surface);border-radius:999px}
+[data-theme="dark"] .card-footer .btn-primary{background:#f8fafc;color:#05070b}
+.pagination{padding-bottom:0}
+.pag-btn{background:var(--oga-ink);box-shadow:none}
+[data-theme="dark"] .pag-btn{background:#f8fafc;color:#05070b}
+.pag-info{background:var(--oga-card);border-color:var(--oga-line);color:var(--oga-muted)}
+.auth-modal{position:fixed;inset:0;z-index:900;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(5,7,11,.68);backdrop-filter:blur(10px)}
+.auth-modal.open{display:flex}
+.auth-panel{width:min(420px,100%);border:1px solid var(--oga-line);border-radius:18px;background:var(--oga-card);padding:22px;box-shadow:0 26px 70px rgba(0,0,0,.32)}
+.auth-panel h3{font-size:22px;margin-bottom:8px}
+.auth-panel p{color:var(--oga-muted);font-size:14px;line-height:1.55;margin-bottom:18px}
+.auth-actions{display:grid;gap:10px}
+.auth-actions button{height:48px;border-radius:12px;border:1.5px solid var(--oga-line);background:var(--oga-soft);color:var(--oga-ink);font-weight:800}
+.auth-actions button:first-child{background:var(--oga-ink);color:var(--oga-surface);border-color:var(--oga-ink)}
+[data-theme="dark"] .auth-actions button:first-child{background:#f8fafc;color:#05070b;border-color:#f8fafc}
+.mobile-bottom-nav{display:none}
+@media(max-width:768px){
+  body{padding-bottom:88px}
+  .nav-inner{height:64px;padding:0 16px}
+  .nav-logo{font-size:20px}
+  .nav-logo::before{width:40px;height:40px;border-radius:12px}
+  .hero-section{padding:44px 16px 26px}
+  .hero-title{font-size:38px}
+  .hero-desc{font-size:16px}
+  .controls-inner,.jobs-inner{padding:0 16px}
+  .controls-row{gap:12px}
+  .feed-actions{width:100%;display:grid;grid-template-columns:1fr 1fr}
+  .feed-action.fit{grid-column:1/-1}
+  .jobs-grid{gap:16px}
+  .job-card{min-height:398px;border-radius:16px}
+  .card-creator{min-height:62px;padding:12px 16px}
+  .card-meta,.prog-wrap,.card-desc-section,.card-footer{padding-left:16px!important;padding-right:16px!important}
+  .card-reward{height:78px;margin-left:16px;margin-right:16px}
+  .reward-value{font-size:27px}
+  .mobile-bottom-nav{
+    position:fixed;left:0;right:0;bottom:0;z-index:700;display:grid;grid-template-columns:repeat(5,1fr);
+    height:88px;padding:8px 12px 10px;background:rgba(255,255,255,.96);border-top:1px solid var(--oga-line);
+    backdrop-filter:blur(18px) saturate(1.25);
+  }
+  [data-theme="dark"] .mobile-bottom-nav{background:rgba(5,7,11,.96)}
+  .mobile-bottom-nav a{display:grid;justify-items:center;gap:4px;color:var(--oga-muted);font-size:13px;font-weight:800}
+  .mobile-bottom-nav a.active{color:var(--oga-ink)}
+  .mobile-bottom-nav svg{width:27px;height:27px;stroke-width:2.2}
+  .mobile-bottom-nav .create{transform:translateY(-18px);color:var(--oga-ink)}
+  .mobile-bottom-nav .create svg{width:56px;height:56px;padding:15px;border-radius:18px;background:var(--oga-ink);color:var(--oga-surface);box-shadow:0 10px 22px rgba(16,21,37,.20)}
+  [data-theme="dark"] .mobile-bottom-nav .create svg{background:#f8fafc;color:#05070b}
+  .profile-dot{width:32px;height:32px;border-radius:50%;background:var(--oga-ink);display:block}
+}
 </style>
 </head>
 <body>
 
-<!-- ════ NAVBAR ════ -->
+<!-- â•â•â•â• NAVBAR â•â•â•â• -->
 <header class="nav">
   <div class="nav-inner">
-    <a href="index.html" class="nav-logo">
+    <a href="index (18).html" class="nav-logo">
       <svg width="28" height="28" viewBox="0 0 100 100" fill="none">
         <defs><linearGradient id="ng" x1="50" y1="0" x2="50" y2="100" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#033CE3"/><stop offset="100%" stop-color="#011F9A"/></linearGradient></defs>
         <rect width="100" height="100" rx="20" fill="url(#ng)"/>
@@ -411,14 +574,14 @@ img{max-width:100%;display:block;}
         <polygon points="52,52 87,52 87,87" fill="#011F9A" opacity="0.45"/>
         <path d="M52 52 H68 Q87 52 87 69.5 Q87 87 68 87 H52 Z" fill="white"/>
       </svg>
-      Oga<span>Pay</span>
+      <span class="brand-word">OgaPay</span>
     </a>
     <nav class="nav-links">
-      <a href="index.html" class="nav-link">Home</a>
-      <a href="#" class="nav-link active">Tasks</a>
+      <a href="index (18).html" class="nav-link">Home</a>
+      <a href="#" class="nav-link active">All Jobs</a>
       <a href="store.html" class="nav-link">Store</a>
-      <a href="index.html#communities" class="nav-link">Communities</a>
-      <a href="index.html#payments" class="nav-link">Payments</a>
+      <a href="index (18).html#communities" class="nav-link">Communities</a>
+      <a href="index (18).html#jobs" class="nav-link">Featured</a>
     </nav>
     <div class="nav-right">
       <button class="connect-btn">Connect Wallet</button>
@@ -430,31 +593,31 @@ img{max-width:100%;display:block;}
   </div>
 </header>
 
-<!-- ════ HERO ════ -->
+<!-- â•â•â•â• HERO â•â•â•â• -->
 <section class="hero-section">
   <div class="hero-content reveal">
     <div class="hero-eyebrow"><span class="dot-live"></span> Live Tasks</div>
     <h1 class="hero-title">Earn in <span class="accent-gold">Naira</span> &amp; <span class="accent">Crypto</span></h1>
-    <p class="hero-desc">Browse thousands of active tasks. Get paid in Naira or USDC — no experience required, no interviews, just show up and earn.</p>
+    <p class="hero-desc">Browse thousands of active tasks. Get paid in Naira or USDC â€” no experience required, no interviews, just show up and earn.</p>
     <div class="hero-stats">
       <div class="hero-stat"><span class="hero-stat-val">4,821</span>&nbsp;active tasks</div>
-      <span class="hero-stat-sep">·</span>
-      <div class="hero-stat"><span class="hero-stat-val">₦182M+</span>&nbsp;paid out</div>
-      <span class="hero-stat-sep">·</span>
+      <span class="hero-stat-sep">Â·</span>
+      <div class="hero-stat"><span class="hero-stat-val">â‚¦182M+</span>&nbsp;paid out</div>
+      <span class="hero-stat-sep">Â·</span>
       <div class="hero-stat"><span class="hero-stat-val">24,390</span>&nbsp;earners online</div>
-      <span class="hero-stat-sep">·</span>
+      <span class="hero-stat-sep">Â·</span>
       <div class="hero-stat"><span class="dot-live" style="margin-right:4px;"></span>&nbsp;~3 min avg payout</div>
     </div>
   </div>
 </section>
 
-<!-- ════ CONTROLS ════ -->
+<!-- â•â•â•â• CONTROLS â•â•â•â• -->
 <div class="controls-section">
   <div class="controls-inner">
     <div class="controls-row reveal">
       <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;flex:1;">
-        <h2 class="section-title-sm">All Tasks</h2>
-        <a href="index.html" class="back-link">
+        <h2 class="section-title-sm">All Jobs</h2>
+        <a href="index (18).html" class="back-link">
           <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
           Back to home
         </a>
@@ -468,12 +631,18 @@ img{max-width:100%;display:block;}
           <option value="slots">Slots available</option>
           <option value="time">Quickest to do</option>
         </select>
+        <div class="feed-actions" aria-label="Feed sorting">
+          <button class="feed-action active" data-sort-action="reward-high">Highest Reward</button>
+          <button class="feed-action" data-sort-action="newest">Newest</button>
+          <button class="feed-action fit" id="availableForMeBtn" type="button">Available for me</button>
+        </div>
       </div>
     </div>
+    <p class="fit-note" id="fitNote">Connect your wallet to enable strict Available for me filtering and participation badges.</p>
 
     <div class="controls-row reveal" style="margin-bottom:0.75rem;">
       <div class="filter-tabs" id="filterTabs" role="tablist">
-        <button class="filter-tab active" data-cat="all">All Tasks</button>
+        <button class="filter-tab active" data-cat="all">All Jobs</button>
         <button class="filter-tab" data-cat="social">Social</button>
         <button class="filter-tab" data-cat="survey">Surveys</button>
         <button class="filter-tab" data-cat="freelance">Freelance</button>
@@ -483,14 +652,14 @@ img{max-width:100%;display:block;}
       </div>
       <div class="search-wrap">
         <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input type="text" class="search-input" id="searchInput" placeholder="Search tasks..."/>
+        <input type="text" class="search-input" id="searchInput" placeholder="Search jobs..."/>
       </div>
     </div>
 
     <div class="controls-row reveal" style="margin-bottom:0;">
       <div class="toggle-group">
         <button class="toggle-btn active" data-pay="all">All Currencies</button>
-        <button class="toggle-btn" data-pay="ngn">Naira ₦</button>
+        <button class="toggle-btn" data-pay="ngn">Naira NGN</button>
         <button class="toggle-btn" data-pay="usd">Crypto $</button>
       </div>
       <p class="results-meta" id="resultsMeta" style="margin-bottom:0;"></p>
@@ -498,7 +667,7 @@ img{max-width:100%;display:block;}
   </div>
 </div>
 
-<!-- ════ JOBS GRID ════ -->
+<!-- â•â•â•â• JOBS GRID â•â•â•â• -->
 <div class="jobs-section">
   <div class="jobs-inner">
     <div class="jobs-grid" id="jobsGrid"></div>
@@ -510,50 +679,71 @@ img{max-width:100%;display:block;}
   </div>
 </div>
 
+<div class="auth-modal" id="authModal" aria-hidden="true">
+  <div class="auth-panel">
+    <h3>Connect Your Wallet</h3>
+    <p>Available for me needs your wallet so OgaPay can check eligibility, requirements, and participation badges.</p>
+    <div class="auth-actions">
+      <button type="button" id="connectFromModal">Connect wallet</button>
+      <button type="button" id="closeAuthModal">Not now</button>
+    </div>
+  </div>
+</div>
+
+<nav class="mobile-bottom-nav" aria-label="Mobile app navigation">
+  <a href="tasks%20(1).html" class="active"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v13H4V7Z"/><path d="M9 5V3h6v2M8 11h8"/></svg><span>Jobs</span></a>
+  <a href="store.html"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18M16 10a4 4 0 0 1-8 0"/></svg><span>Store</span></a>
+  <a href="post-task.html" class="create"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span>Create</span></a>
+  <a href="notifications.html"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><span>Alerts</span></a>
+  <a href="dashboard.html"><span class="profile-dot"></span><span>Profile</span></a>
+</nav>
+
 <script>
-/* ══════════════════════════════════════════════
-   DATA — 20 realistic tasks
-══════════════════════════════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   DATA â€” 20 realistic tasks
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 const TASKS = [
   {id:1,lister:"BrandOga",initials:"BO",avatarBg:"linear-gradient(135deg,#033CE3,#011F9A)",title:"Follow our X account & repost the pinned tweet",desc:"Go to our X profile (@BrandOgaNg), follow the account, like and repost our pinned tweet. Take a screenshot as proof of completion.",category:"social",mode:"Social task",timing:"~2 min",slots:35,totalSlots:100,rewardType:"ngn",rewardVal:"250",rewardSec:null,badges:["Active"],requirements:"50+ followers required",featured:false,participating:false},
-  {id:2,lister:"TechKing",initials:"TK",avatarBg:"#F5B301",title:"Rate our mobile banking app — 8 quick questions",desc:"Download TechKing app, use it for 5 minutes, then answer 8 questions about your experience. Honest answers only. Survey link provided after download.",category:"survey",mode:"Survey",timing:"~5 min",slots:60,totalSlots:100,rewardType:"usd",rewardVal:"1.50",rewardSec:"≈ ₦2,370",badges:["Survey"],requirements:"Must have used banking apps",featured:false,participating:false},
-  {id:3,lister:"DesignStudio",initials:"DS",avatarBg:"linear-gradient(135deg,#7c3aed,#4c1d95)",title:"Design a modern logo for a Nigerian fintech startup",desc:"Create 3 unique logo concepts for a fintech brand called 'PaySwift'. Deliver PNG, SVG and AI formats. Brand colours: blue & gold. Reference sheet provided.",category:"freelance",mode:"Freelance",timing:"1–2 days",slots:4,totalSlots:5,rewardType:"ngn",rewardVal:"15,000",rewardSec:null,badges:["Freelance"],requirements:"Portfolio required",featured:true,participating:false},
+  {id:2,lister:"TechKing",initials:"TK",avatarBg:"#F5B301",title:"Rate our mobile banking app â€” 8 quick questions",desc:"Download TechKing app, use it for 5 minutes, then answer 8 questions about your experience. Honest answers only. Survey link provided after download.",category:"survey",mode:"Survey",timing:"~5 min",slots:60,totalSlots:100,rewardType:"usd",rewardVal:"1.50",rewardSec:"â‰ˆ â‚¦2,370",badges:["Survey"],requirements:"Must have used banking apps",featured:false,participating:false},
+  {id:3,lister:"DesignStudio",initials:"DS",avatarBg:"linear-gradient(135deg,#7c3aed,#4c1d95)",title:"Design a modern logo for a Nigerian fintech startup",desc:"Create 3 unique logo concepts for a fintech brand called 'PaySwift'. Deliver PNG, SVG and AI formats. Brand colours: blue & gold. Reference sheet provided.",category:"freelance",mode:"Freelance",timing:"1â€“2 days",slots:4,totalSlots:5,rewardType:"ngn",rewardVal:"15,000",rewardSec:null,badges:["Freelance"],requirements:"Portfolio required",featured:true,participating:false},
   {id:4,lister:"FoodieNG",initials:"FO",avatarBg:"#EF4444",title:"Share your opinion on Nigerian food delivery apps",desc:"We need honest reviews of Chowdeck, Glovo and Bolt Food from Nigerians who have used at least one. Takes about 5 minutes, 10 short questions.",category:"survey",mode:"Survey",timing:"~5 min",slots:45,totalSlots:100,rewardType:"ngn",rewardVal:"800",rewardSec:null,badges:["Survey","Nigeria only"],requirements:"Nigerians only",featured:false,participating:false},
-  {id:5,lister:"AppLaunch",initials:"AL",avatarBg:"linear-gradient(135deg,#033CE3,#011F9A)",title:"Test our Android app and report all bugs found",desc:"Install our beta APK, run through a 15-minute test script covering onboarding, payments and notifications. Submit bug report via our form. Detailed guide provided.",category:"testing",mode:"App test",timing:"~15 min",slots:42,totalSlots:50,rewardType:"usd",rewardVal:"2.00",rewardSec:"≈ ₦3,160",badges:["Active"],requirements:"Android device required",featured:false,participating:true},
+  {id:5,lister:"AppLaunch",initials:"AL",avatarBg:"linear-gradient(135deg,#033CE3,#011F9A)",title:"Test our Android app and report all bugs found",desc:"Install our beta APK, run through a 15-minute test script covering onboarding, payments and notifications. Submit bug report via our form. Detailed guide provided.",category:"testing",mode:"App test",timing:"~15 min",slots:42,totalSlots:50,rewardType:"usd",rewardVal:"2.00",rewardSec:"â‰ˆ â‚¦3,160",badges:["Active"],requirements:"Android device required",featured:false,participating:true},
   {id:6,lister:"GrowthHQ",initials:"GH",avatarBg:"linear-gradient(135deg,#059669,#047857)",title:"Join our Telegram group and stay for 30 days",desc:"Join the official GrowthHQ Telegram community, introduce yourself and remain active. Reward paid at the 30-day mark after verification.",category:"social",mode:"Social task",timing:"~3 min",slots:200,totalSlots:500,rewardType:"ngn",rewardVal:"250",rewardSec:null,badges:["Active"],requirements:"No prior community required",featured:false,participating:false},
-  {id:7,lister:"CryptoNaija",initials:"CN",avatarBg:"linear-gradient(135deg,#f59e0b,#d97706)",title:"Complete our DeFi onboarding survey — Solana ecosystem",desc:"Share your experience with Solana DeFi: which dApps you've used, pain points, and wishlist. Requires at least one Solana transaction in the past 3 months.",category:"crypto",mode:"Survey",timing:"~8 min",slots:150,totalSlots:300,rewardType:"usd",rewardVal:"3.00",rewardSec:"≈ ₦4,740",badges:["Crypto","Survey"],requirements:"Solana wallet required",featured:true,participating:false},
-  {id:8,lister:"ViralMeme",initials:"VM",avatarBg:"linear-gradient(135deg,#ec4899,#be185d)",title:"Create 3 viral Nigerian-themed memes for our brand",desc:"Design 3 funny, relatable memes in the Nigerian internet style for our brand @ViralMemeCo. Theme: everyday hustle. Must be original. PNG 1080x1080px.",category:"content",mode:"Creative",timing:"2–4 hrs",slots:8,totalSlots:10,rewardType:"ngn",rewardVal:"3,500",rewardSec:null,badges:["Content","Creative"],requirements:"Canva or Photoshop access",featured:false,participating:false},
+  {id:7,lister:"CryptoNaija",initials:"CN",avatarBg:"linear-gradient(135deg,#f59e0b,#d97706)",title:"Complete our DeFi onboarding survey â€” Solana ecosystem",desc:"Share your experience with Solana DeFi: which dApps you've used, pain points, and wishlist. Requires at least one Solana transaction in the past 3 months.",category:"crypto",mode:"Survey",timing:"~8 min",slots:150,totalSlots:300,rewardType:"usd",rewardVal:"3.00",rewardSec:"â‰ˆ â‚¦4,740",badges:["Crypto","Survey"],requirements:"Solana wallet required",featured:true,participating:false},
+  {id:8,lister:"ViralMeme",initials:"VM",avatarBg:"linear-gradient(135deg,#ec4899,#be185d)",title:"Create 3 viral Nigerian-themed memes for our brand",desc:"Design 3 funny, relatable memes in the Nigerian internet style for our brand @ViralMemeCo. Theme: everyday hustle. Must be original. PNG 1080x1080px.",category:"content",mode:"Creative",timing:"2â€“4 hrs",slots:8,totalSlots:10,rewardType:"ngn",rewardVal:"3,500",rewardSec:null,badges:["Content","Creative"],requirements:"Canva or Photoshop access",featured:false,participating:false},
   {id:9,lister:"StreamKing",initials:"SK",avatarBg:"linear-gradient(135deg,#dc2626,#991b1b)",title:"Watch our YouTube video to 80% and leave a comment",desc:"Watch at least 80% of our 4-minute product video on YouTube, then leave a genuine comment about what you found interesting. No spam or bot-style comments.",category:"social",mode:"Social task",timing:"~5 min",slots:180,totalSlots:500,rewardType:"ngn",rewardVal:"80",rewardSec:null,badges:["Active","YouTube"],requirements:"YouTube account with 3+ months history",featured:false,participating:true},
-  {id:10,lister:"TalentNG",initials:"TN",avatarBg:"linear-gradient(135deg,#0891b2,#0e7490)",title:"Write a 800-word SEO blog post on Nigerian fintech",desc:"Write an original, well-researched 800-word article targeting the keyword 'best fintech apps in Nigeria'. Must pass Copyscape. Style guide and brief provided on start.",category:"content",mode:"Writing",timing:"2–3 hrs",slots:6,totalSlots:10,rewardType:"ngn",rewardVal:"5,000",rewardSec:null,badges:["Content","Writing"],requirements:"Strong English writing skills",featured:false,participating:false},
-  {id:11,lister:"SolPay",initials:"SP",avatarBg:"linear-gradient(135deg,#6d28d9,#4c1d95)",title:"Connect Phantom wallet and make one test transaction",desc:"Connect your Phantom wallet to our dApp, approve a 0.001 SOL test transaction to verify the integration works correctly. SOL refunded within 24 hours.",category:"crypto",mode:"Blockchain task",timing:"~10 min",slots:80,totalSlots:200,rewardType:"usd",rewardVal:"1.00",rewardSec:"≈ ₦1,580",badges:["Crypto","Solana"],requirements:"Phantom wallet with >0.01 SOL",featured:false,participating:false},
-  {id:12,lister:"PollHive",initials:"PH",avatarBg:"linear-gradient(135deg,#0369a1,#075985)",title:"Complete consumer behaviour survey — grocery shopping",desc:"15-question survey about where and how you buy groceries in Nigeria. Covers Shoprite, Jumia Fresh, local markets vs online. Strictly Nigerians aged 18-45.",category:"survey",mode:"Survey",timing:"~7 min",slots:280,totalSlots:500,rewardType:"ngn",rewardVal:"600",rewardSec:null,badges:["Survey"],requirements:"Nigerians aged 18–45 only",featured:false,participating:false},
-  {id:13,lister:"TikTokNG",initials:"TT",avatarBg:"linear-gradient(135deg,#000000,#1a1a1a)",title:"Follow 3 TikTok accounts and like their latest video",desc:"Follow the 3 provided TikTok accounts (@acc1, @acc2, @acc3) and like their most recent video. Screenshot of follows required as proof.",category:"social",mode:"Social task",timing:"~3 min",slots:400,totalSlots:1000,rewardType:"usd",rewardVal:"0.40",rewardSec:"≈ ₦632",badges:["Active","TikTok"],requirements:"Active TikTok account",featured:false,participating:false},
+  {id:10,lister:"TalentNG",initials:"TN",avatarBg:"linear-gradient(135deg,#0891b2,#0e7490)",title:"Write a 800-word SEO blog post on Nigerian fintech",desc:"Write an original, well-researched 800-word article targeting the keyword 'best fintech apps in Nigeria'. Must pass Copyscape. Style guide and brief provided on start.",category:"content",mode:"Writing",timing:"2â€“3 hrs",slots:6,totalSlots:10,rewardType:"ngn",rewardVal:"5,000",rewardSec:null,badges:["Content","Writing"],requirements:"Strong English writing skills",featured:false,participating:false},
+  {id:11,lister:"SolPay",initials:"SP",avatarBg:"linear-gradient(135deg,#6d28d9,#4c1d95)",title:"Connect Phantom wallet and make one test transaction",desc:"Connect your Phantom wallet to our dApp, approve a 0.001 SOL test transaction to verify the integration works correctly. SOL refunded within 24 hours.",category:"crypto",mode:"Blockchain task",timing:"~10 min",slots:80,totalSlots:200,rewardType:"usd",rewardVal:"1.00",rewardSec:"â‰ˆ â‚¦1,580",badges:["Crypto","Solana"],requirements:"Phantom wallet with >0.01 SOL",featured:false,participating:false},
+  {id:12,lister:"PollHive",initials:"PH",avatarBg:"linear-gradient(135deg,#0369a1,#075985)",title:"Complete consumer behaviour survey â€” grocery shopping",desc:"15-question survey about where and how you buy groceries in Nigeria. Covers Shoprite, Jumia Fresh, local markets vs online. Strictly Nigerians aged 18-45.",category:"survey",mode:"Survey",timing:"~7 min",slots:280,totalSlots:500,rewardType:"ngn",rewardVal:"600",rewardSec:null,badges:["Survey"],requirements:"Nigerians aged 18â€“45 only",featured:false,participating:false},
+  {id:13,lister:"TikTokNG",initials:"TT",avatarBg:"linear-gradient(135deg,#000000,#1a1a1a)",title:"Follow 3 TikTok accounts and like their latest video",desc:"Follow the 3 provided TikTok accounts (@acc1, @acc2, @acc3) and like their most recent video. Screenshot of follows required as proof.",category:"social",mode:"Social task",timing:"~3 min",slots:400,totalSlots:1000,rewardType:"usd",rewardVal:"0.40",rewardSec:"â‰ˆ â‚¦632",badges:["Active","TikTok"],requirements:"Active TikTok account",featured:false,participating:false},
   {id:14,lister:"NaijaReview",initials:"NR",avatarBg:"linear-gradient(135deg,#16a34a,#15803d)",title:"Leave a Google Maps review for 2 Lagos restaurants",desc:"Visit (or have previously visited) either of the 2 Lagos restaurants provided. Leave a genuine, detailed Google Maps review of minimum 50 words for each.",category:"content",mode:"Review",timing:"~15 min",slots:25,totalSlots:50,rewardType:"ngn",rewardVal:"1,500",rewardSec:null,badges:["Content","Review"],requirements:"Google account required",featured:false,participating:false},
-  {id:15,lister:"WebDev Pro",initials:"WD",avatarBg:"linear-gradient(135deg,#475569,#334155)",title:"Test checkout flow on our e-commerce website",desc:"Go through our full e-commerce checkout as a test buyer (no real payment). Record your screen, note any bugs or UX issues, and fill in a structured form.",category:"testing",mode:"UX test",timing:"~20 min",slots:15,totalSlots:20,rewardType:"usd",rewardVal:"4.00",rewardSec:"≈ ₦6,320",badges:["Testing"],requirements:"Desktop/laptop required",featured:true,participating:false},
-  {id:16,lister:"PhotoNG",initials:"PN",avatarBg:"linear-gradient(135deg,#ea580c,#c2410c)",title:"Submit 5 high-quality photos of Lagos street food",desc:"Submit 5 original, high-resolution photos of different Lagos street food items (suya, boli, puff-puff, etc.). Minimum 1080px wide. Must be your own photos.",category:"content",mode:"Photography",timing:"1–2 days",slots:20,totalSlots:30,rewardType:"ngn",rewardVal:"4,000",rewardSec:null,badges:["Content","Creative"],requirements:"Smartphone camera minimum",featured:false,participating:false},
-  {id:17,lister:"DataMind",initials:"DM",avatarBg:"linear-gradient(135deg,#0284c7,#0369a1)",title:"Label 50 images for AI training — Nigerian products",desc:"Tag 50 images of Nigerian consumer products (name, category, brand). Uses our simple web tool, no download required. Training provided before you begin.",category:"freelance",mode:"Data labelling",timing:"~45 min",slots:100,totalSlots:200,rewardType:"ngn",rewardVal:"2,000",rewardSec:null,badges:["Freelance","AI"],requirements:"Good internet connection",featured:false,participating:false},
-  {id:18,lister:"XGrowth",initials:"XG",avatarBg:"linear-gradient(135deg,#1d4ed8,#1e40af)",title:"Retweet 5 posts and quote-tweet one with commentary",desc:"Retweet the 5 provided X posts from our account. Then quote-tweet one of your choosing with a genuine 30+ word comment. No template comments accepted.",category:"social",mode:"Social task",timing:"~5 min",slots:500,totalSlots:1000,rewardType:"usd",rewardVal:"0.25",rewardSec:"≈ ₦395",badges:["Active","X/Twitter"],requirements:"50+ X followers, 30 days old account",featured:false,participating:false},
+  {id:15,lister:"WebDev Pro",initials:"WD",avatarBg:"linear-gradient(135deg,#475569,#334155)",title:"Test checkout flow on our e-commerce website",desc:"Go through our full e-commerce checkout as a test buyer (no real payment). Record your screen, note any bugs or UX issues, and fill in a structured form.",category:"testing",mode:"UX test",timing:"~20 min",slots:15,totalSlots:20,rewardType:"usd",rewardVal:"4.00",rewardSec:"â‰ˆ â‚¦6,320",badges:["Testing"],requirements:"Desktop/laptop required",featured:true,participating:false},
+  {id:16,lister:"PhotoNG",initials:"PN",avatarBg:"linear-gradient(135deg,#ea580c,#c2410c)",title:"Submit 5 high-quality photos of Lagos street food",desc:"Submit 5 original, high-resolution photos of different Lagos street food items (suya, boli, puff-puff, etc.). Minimum 1080px wide. Must be your own photos.",category:"content",mode:"Photography",timing:"1â€“2 days",slots:20,totalSlots:30,rewardType:"ngn",rewardVal:"4,000",rewardSec:null,badges:["Content","Creative"],requirements:"Smartphone camera minimum",featured:false,participating:false},
+  {id:17,lister:"DataMind",initials:"DM",avatarBg:"linear-gradient(135deg,#0284c7,#0369a1)",title:"Label 50 images for AI training â€” Nigerian products",desc:"Tag 50 images of Nigerian consumer products (name, category, brand). Uses our simple web tool, no download required. Training provided before you begin.",category:"freelance",mode:"Data labelling",timing:"~45 min",slots:100,totalSlots:200,rewardType:"ngn",rewardVal:"2,000",rewardSec:null,badges:["Freelance","AI"],requirements:"Good internet connection",featured:false,participating:false},
+  {id:18,lister:"XGrowth",initials:"XG",avatarBg:"linear-gradient(135deg,#1d4ed8,#1e40af)",title:"Retweet 5 posts and quote-tweet one with commentary",desc:"Retweet the 5 provided X posts from our account. Then quote-tweet one of your choosing with a genuine 30+ word comment. No template comments accepted.",category:"social",mode:"Social task",timing:"~5 min",slots:500,totalSlots:1000,rewardType:"usd",rewardVal:"0.25",rewardSec:"â‰ˆ â‚¦395",badges:["Active","X/Twitter"],requirements:"50+ X followers, 30 days old account",featured:false,participating:false},
   {id:19,lister:"VoiceData",initials:"VD",avatarBg:"linear-gradient(135deg,#be185d,#9d174d)",title:"Record 30 voice samples in Yoruba or Pidgin English",desc:"Read 30 short sentences from our provided list in clear Yoruba or Nigerian Pidgin English. Record with your phone mic in a quiet room. File upload provided.",category:"freelance",mode:"Voice recording",timing:"~30 min",slots:50,totalSlots:100,rewardType:"ngn",rewardVal:"7,500",rewardSec:null,badges:["Freelance","Audio"],requirements:"Native Yoruba or Pidgin speaker",featured:true,participating:false},
   {id:20,lister:"CommunityOga",initials:"CO",avatarBg:"linear-gradient(135deg,#033CE3,#011F9A)",title:"Join OgaPay community & share with 5 WhatsApp contacts",desc:"Join the OgaPay WhatsApp community via invite link. Then share the OgaPay referral link with at least 5 contacts on WhatsApp. Screenshots required as proof.",category:"social",mode:"Social task",timing:"~5 min",slots:1500,totalSlots:5000,rewardType:"ngn",rewardVal:"150",rewardSec:null,badges:["Active","WhatsApp"],requirements:"Active WhatsApp account",featured:false,participating:false}
 ];
 
-/* ══════════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    STATE
-══════════════════════════════════════════════ */
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 let currentCat = "all";
 let currentPay = "all";
-let currentSort = "newest";
+let currentSort = "reward-high";
 let searchQuery = "";
 let currentPage = 1;
+let fitOnly = false;
 const PAGE_SIZE = 9;
 
-/* ══════════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    FILTER + SORT
-══════════════════════════════════════════════ */
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 function getFiltered(){
   let tasks = [...TASKS];
   if(currentCat !== "all") tasks = tasks.filter(t => t.category === currentCat);
   if(currentPay !== "all") tasks = tasks.filter(t => t.rewardType === currentPay);
+  if(fitOnly) tasks = tasks.filter(t => t.participating || t.slots > 0);
   if(searchQuery){
     const q = searchQuery.toLowerCase();
     tasks = tasks.filter(t =>
@@ -563,7 +753,8 @@ function getFiltered(){
       t.category.toLowerCase().includes(q)
     );
   }
-  if(currentSort === "reward-high") tasks.sort((a,b) => parseFloat(b.rewardVal.replace(/,/g,"")) - parseFloat(a.rewardVal.replace(/,/g,"")));
+  if(currentSort === "newest") tasks.sort((a,b) => b.id - a.id);
+  else if(currentSort === "reward-high") tasks.sort((a,b) => parseFloat(b.rewardVal.replace(/,/g,"")) - parseFloat(a.rewardVal.replace(/,/g,"")));
   else if(currentSort === "reward-low") tasks.sort((a,b) => parseFloat(a.rewardVal.replace(/,/g,"")) - parseFloat(b.rewardVal.replace(/,/g,"")));
   else if(currentSort === "slots") tasks.sort((a,b) => b.slots - a.slots);
   else if(currentSort === "time"){
@@ -579,19 +770,32 @@ function getFiltered(){
   return tasks;
 }
 
-/* ══════════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    RENDER CARD
-══════════════════════════════════════════════ */
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 function rewardSymbol(t){
-  if(t.rewardType === "ngn") return {sym:"₦", cls:"gold", unit:""};
+  if(t.rewardType === "ngn") return {sym:"NGN", cls:"gold", unit:""};
   return {sym:"$", cls:"", unit:"USDC"};
+}
+
+function cleanText(value){
+  let text = String(value ?? "");
+  try{text = decodeURIComponent(escape(text));}catch(e){}
+  return text
+    .replace(/\u00e2\u20ac\u201c/g,"-")
+    .replace(/\u00e2\u20ac\u201d/g,"-")
+    .replace(/\u00e2\u20ac\u2018|\u00e2\u20ac\u2122/g,"'")
+    .replace(/\u00e2\u2030\u02c6/g,"~")
+    .replace(/\u00e2\u201a\u00a6/g,"NGN ")
+    .replace(/[–—]/g,"-")
+    .replace(/₦/g,"NGN ");
 }
 
 function renderCard(t){
   const prog = Math.round(((t.totalSlots - t.slots) / t.totalSlots) * 100);
   const r = rewardSymbol(t);
   const badgesHtml = t.badges.map(b => {
-    if(b === "Active") return `<span class="badge badge-green">● Active</span>`;
+    if(b === "Active") return `<span class="badge badge-green">â— Active</span>`;
     if(b === "Freelance") return `<span class="badge badge-gold">${b}</span>`;
     if(b === "Survey") return `<span class="badge badge-blue">${b}</span>`;
     if(b === "Crypto"||b==="Solana"||b==="AI") return `<span class="badge badge-blue">${b}</span>`;
@@ -600,18 +804,18 @@ function renderCard(t){
 
   const rewardBadgesHtml = [
     t.slots < 10 ? `<span class="badge-slot">${t.slots} left</span>` : `<span class="badge-slot">${t.slots} slots left</span>`,
-    t.featured ? `<span class="badge badge-gold">⭐ Featured</span>` : "",
-    t.participating ? `<span class="badge-participating">✓ Participating</span>` : "",
+    t.featured ? `<span class="badge badge-gold">â­ Featured</span>` : "",
+    t.participating ? `<span class="badge-participating">âœ“ Participating</span>` : "",
   ].filter(Boolean).join("");
 
-  const btnLabel = t.category === "freelance" ? "Apply →" : "Start →";
+  const btnLabel = t.category === "freelance" ? "Apply ->" : "Start ->";
 
   return `<div class="job-card reveal" data-id="${t.id}">
     <div class="card-creator">
       <div class="creator-avatar" style="background:${t.avatarBg};">${t.initials}</div>
       <div class="creator-info">
         <div class="creator-label">Listed by</div>
-        <div class="creator-name">${t.lister}</div>
+        <div class="creator-name">${cleanText(t.lister)}</div>
       </div>
       <div style="margin-left:auto;">${badgesHtml}</div>
     </div>
@@ -620,10 +824,10 @@ function renderCard(t){
       <div class="meta-top">
         <span class="meta-label">Task details</span>
       </div>
-      <div style="font-family:'Outfit',sans-serif;font-size:14px;font-weight:600;color:var(--text);line-height:1.4;margin-bottom:8px;">${t.title}</div>
+      <div style="font-family:'Outfit',sans-serif;font-size:14px;font-weight:600;color:var(--text);line-height:1.4;margin-bottom:8px;">${cleanText(t.title)}</div>
       <div class="meta-stats">
-        <div class="stat-chip"><span class="stat-chip-dot mode"></span><span class="stat-chip-text">${t.mode}</span></div>
-        <div class="stat-chip"><span class="stat-chip-dot timing"></span><span class="stat-chip-text">${t.timing}</span></div>
+        <div class="stat-chip"><span class="stat-chip-dot mode"></span><span class="stat-chip-text">${cleanText(t.mode)}</span></div>
+        <div class="stat-chip"><span class="stat-chip-dot timing"></span><span class="stat-chip-text">${cleanText(t.timing)}</span></div>
       </div>
     </div>
 
@@ -638,7 +842,7 @@ function renderCard(t){
         Task description
       </div>
       <div class="desc-box">
-        <div class="desc-text">${t.desc}</div>
+        <div class="desc-text">${cleanText(t.desc)}</div>
       </div>
     </div>
 
@@ -649,23 +853,23 @@ function renderCard(t){
         <span class="reward-value ${r.cls}">${t.rewardVal}</span>
         ${r.unit ? `<span class="reward-unit">${r.unit}</span>` : ""}
       </div>
-      ${t.rewardSec ? `<div class="reward-secondary">${t.rewardSec}</div>` : ""}
+      ${t.rewardSec ? `<div class="reward-secondary">${cleanText(t.rewardSec)}</div>` : ""}
       <div class="reward-badges">${rewardBadgesHtml}</div>
     </div>
 
     <div class="card-footer">
       <div class="card-footer-left">
         <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-        <span>${t.requirements}</span>
+        <span>${cleanText(t.requirements)}</span>
       </div>
       <button class="btn btn-primary btn-sm">${btnLabel}</button>
     </div>
   </div>`;
 }
 
-/* ══════════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    RENDER PAGE
-══════════════════════════════════════════════ */
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 function renderPage(){
   const filtered = getFiltered();
   const total = filtered.length;
@@ -720,9 +924,9 @@ function changePage(p){
   window.scrollTo({top: document.querySelector(".controls-section").offsetTop - 80, behavior:"smooth"});
 }
 
-/* ══════════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    EVENTS
-══════════════════════════════════════════════ */
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 document.getElementById("filterTabs").addEventListener("click", e => {
   const btn = e.target.closest(".filter-tab");
   if(!btn) return;
@@ -743,8 +947,49 @@ document.querySelectorAll(".toggle-btn").forEach(btn => {
   });
 });
 
+document.querySelectorAll("[data-sort-action]").forEach(btn => {
+  btn.addEventListener("click", function(){
+    document.querySelectorAll("[data-sort-action]").forEach(b => b.classList.remove("active"));
+    this.classList.add("active");
+    currentSort = this.dataset.sortAction;
+    const select = document.getElementById("sortSelect");
+    if(select) select.value = currentSort;
+    currentPage = 1;
+    renderPage();
+  });
+});
+
+function openAuthModal(){
+  const modal = document.getElementById("authModal");
+  modal.classList.add("open");
+  modal.setAttribute("aria-hidden","false");
+}
+function closeAuthModal(){
+  const modal = document.getElementById("authModal");
+  modal.classList.remove("open");
+  modal.setAttribute("aria-hidden","true");
+}
+document.getElementById("availableForMeBtn").addEventListener("click", function(){
+  const isAuthed = localStorage.getItem("ogapay-authenticated") === "true";
+  this.classList.toggle("active");
+  fitOnly = this.classList.contains("active");
+  if(!isAuthed) openAuthModal();
+  currentPage = 1;
+  renderPage();
+});
+document.getElementById("closeAuthModal").addEventListener("click", closeAuthModal);
+document.getElementById("connectFromModal").addEventListener("click", function(){
+  localStorage.setItem("ogapay-authenticated","true");
+  closeAuthModal();
+  document.querySelectorAll(".connect-btn").forEach(btn => btn.textContent = "Connected");
+});
+document.getElementById("authModal").addEventListener("click", e => {
+  if(e.target.id === "authModal") closeAuthModal();
+});
+
 document.getElementById("sortSelect").addEventListener("change", function(){
   currentSort = this.value;
+  document.querySelectorAll("[data-sort-action]").forEach(b => b.classList.toggle("active", b.dataset.sortAction === currentSort));
   currentPage = 1;
   renderPage();
 });
@@ -759,9 +1004,9 @@ document.getElementById("searchInput").addEventListener("input", function(){
   }, 220);
 });
 
-/* ══════════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    DARK MODE
-══════════════════════════════════════════════ */
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 const darkToggleBtn = document.getElementById("darkToggleBtn");
 const iconMoon = document.getElementById("icon-moon");
 const iconSun = document.getElementById("icon-sun");
@@ -781,17 +1026,24 @@ darkToggleBtn.addEventListener("click", () => {
   localStorage.setItem("ogapay-theme", !isDark ? "dark" : "light");
 });
 
-/* ══════════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    HERO REVEAL
-══════════════════════════════════════════════ */
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 const obs = new IntersectionObserver(entries => {
   entries.forEach(e => { if(e.isIntersecting) e.target.classList.add("visible"); });
 }, {threshold: 0.07});
 document.querySelectorAll(".reveal").forEach(el => obs.observe(el));
 
-/* ══════════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    INIT
-══════════════════════════════════════════════ */
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+document.title = "All Jobs - OgaPay";
+document.querySelector(".hero-title").textContent = "All Jobs";
+document.querySelector(".hero-desc").textContent = "Social, survey, crypto, testing, and custom jobs in one feed. Sort by newest, highest reward, or jobs available for you.";
+document.querySelector(".connect-btn").addEventListener("click", openAuthModal);
+if(localStorage.getItem("ogapay-authenticated") === "true"){
+  document.querySelectorAll(".connect-btn").forEach(btn => btn.textContent = "Connected");
+}
 renderPage();
 </script>
 </body>
