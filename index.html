@@ -856,7 +856,7 @@ body[data-auth="public"] .authed-only,body[data-auth="authed"] .public-only{disp
 
       <a class="oga-drawer-item" href="store.html" data-close-menu><span class="oga-drawer-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18M16 10a4 4 0 0 1-8 0"/></svg></span><span><strong>Store</strong><small class="public-only">Browse the marketplace</small><small class="authed-only">Marketplace and worker tools</small></span></a>
       <a class="oga-drawer-item authed-only" href="#communities" data-close-menu><span class="oga-drawer-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg></span><span><strong>Communities</strong><small>Connect with earners</small></span></a>
-      <a class="oga-drawer-item" href="#jobs" data-close-menu><span class="oga-drawer-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span><span><strong>Dashboard &amp; Tools</strong><small>Your earning overview</small></span></a>
+      <a class="oga-drawer-item" href="dashboard.html" data-close-menu><span class="oga-drawer-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span><span><strong>Dashboard &amp; Tools</strong><small>Your earning overview</small></span></a>
       <a class="oga-drawer-item" href="blog.html" data-close-menu><span class="oga-drawer-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 4h14v16H5z"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></span><span><strong>Blog</strong><small>Articles and updates</small></span></a>
       <a class="oga-drawer-item" href="#footer" data-close-menu><span class="oga-drawer-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 1 1 5.8 1c-.6 1-1.9 1.4-2.5 2.3-.3.4-.4.8-.4 1.2M12 17h.01"/></svg></span><span><strong>FAQ</strong><small>Common questions answered</small></span></a>
       <a class="oga-drawer-item" href="support.html" data-close-menu><span class="oga-drawer-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4v8Z"/></svg></span><span><strong>Support</strong><small>Get help from our team</small></span></a>
@@ -894,7 +894,7 @@ body[data-auth="public"] .authed-only,body[data-auth="authed"] .public-only{disp
       <div class="oga-drawer-actions">
         <button type="button" onclick="setAuthPreview(false)">Switch to Public</button>
       </div>
-      <button class="oga-profile-btn" type="button" onclick="openAuthModal('screen-email')">My Profile</button>
+      <button class="oga-profile-btn" type="button" onclick="window.location.href='dashboard.html'">My Profile</button>
     </div>
   </aside>
 </div>
@@ -998,7 +998,7 @@ body[data-auth="public"] .authed-only,body[data-auth="authed"] .public-only{disp
   <a href="store.html"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18M16 10a4 4 0 0 1-8 0"/></svg><span>Store</span></a>
   <a href="post-task.html" class="create"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span>Create</span></a>
   <a href="#footer"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg><span>Alerts</span></a>
-  <a href="#" onclick="openAuthModal('screen-email'); return false;"><span class="profile-dot"></span><span>Profile</span></a>
+  <a href="dashboard.html"><span class="profile-dot"></span><span>Profile</span></a>
 </nav>
 
 <footer id="footer">
