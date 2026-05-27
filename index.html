@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
 <meta charset="UTF-8" />
@@ -8,8 +8,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800;900&family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
 <style>
-/* â”€â”€ tokens â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ tokens Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
 :root{
   --bg:#ffffff;
   --bg2:#f7f9fc;
@@ -25,7 +26,7 @@
   --brand-blue:linear-gradient(90deg,#2563EB,#3B82F6,#60A5FA,#93C5FD);
   --earn-gradient:linear-gradient(90deg,#7C3AED,#A78BFA,#6366F1,#C4B5FD,#7C3AED);
   --gold:#f5b301;
-  --soft-purple:#f4f6fa;   /* was purple tint â€” now neutral */
+  --soft-purple:#f4f6fa;   /* was purple tint Ã¢â‚¬â€ now neutral */
   --soft-blue:#eef6ff;
   --shadow:0 4px 16px rgba(16,21,37,.07),0 1px 4px rgba(16,21,37,.04);
   --shadow-soft:0 2px 8px rgba(16,21,37,.05);
@@ -50,17 +51,17 @@
   --shadow-soft:0 2px 8px rgba(0,0,0,.22);
 }
 
-/* â”€â”€ reset â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ reset Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
 body{margin:0;color:var(--text);background:var(--bg);font-family:"DM Sans",system-ui,sans-serif;overflow-x:hidden}
 a{color:inherit;text-decoration:none}
 button{font:inherit}
 
-/* â”€â”€ layout â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ layout Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
 .container{width:min(1200px,calc(100% - 64px));margin:0 auto}
 
-/* â”€â”€ navbar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ navbar Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
 .nav{
   position:sticky;top:0;z-index:100;
   height:var(--nav-h);
@@ -123,7 +124,7 @@ button{font:inherit}
 .icon-btn:hover{color:var(--text);border-color:var(--border2);background:var(--bg2)}
 .icon-btn svg{width:17px;height:17px;stroke-width:2.2}
 
-/* â”€â”€ mobile drawer â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ mobile drawer Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
 .mobile-menu{position:fixed;inset:0;z-index:300;display:none}
 .mobile-menu.open{display:block}
 .mobile-overlay{position:absolute;inset:0;background:rgba(0,0,0,.3);backdrop-filter:blur(3px)}
@@ -143,7 +144,7 @@ button{font:inherit}
 }
 .drawer-links a:hover{background:var(--bg2);color:var(--text)}
 
-/* â”€â”€ hero â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ hero Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
 .hero{
   position:relative;
   display:flex;align-items:center;
@@ -221,7 +222,7 @@ button{font:inherit}
 [data-theme="dark"] .btn-primary{background:#f4f7fb;color:#101525;border-color:#f4f7fb}
 [data-theme="dark"] .btn-primary:hover{background:#e2e8f0}
 
-/* â”€â”€ analytics card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ analytics card Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
 .analytics-card{
   position:relative;
   border:1.5px solid var(--border);border-radius:var(--radius);
@@ -261,7 +262,7 @@ button{font:inherit}
 }
 .sol{width:14px;height:8px;border-radius:999px;background:var(--brand-blue);background-size:240% 100%;transform:skew(-18deg);animation:gradientShift 4s ease-in-out infinite}
 
-/* â”€â”€ quick buy â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ quick buy Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
 .quick{position:relative;padding:0 0 56px;z-index:2}
 .section-kicker{
   display:flex;align-items:center;gap:8px;margin-bottom:16px;
@@ -286,7 +287,7 @@ button{font:inherit}
 .quick-name{font-size:14px;font-weight:800}
 .quick-price{margin-top:2px;color:var(--text3);font-size:12px;font-weight:700}
 
-/* â”€â”€ sections â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ sections Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
 .section{padding:56px 0}
 .section.center{text-align:center}
 .section-title{
@@ -296,7 +297,7 @@ button{font:inherit}
 }
 .section-sub{margin:12px auto 0;color:var(--text2);font-size:16px;line-height:1.55;font-weight:500}
 
-/* â”€â”€ paths â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ paths Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
 .paths{margin:36px auto 0;display:grid;grid-template-columns:repeat(2,1fr);gap:14px;max-width:680px}
 .path-card{
   min-height:72px;display:flex;align-items:center;gap:16px;
@@ -313,7 +314,7 @@ button{font:inherit}
 }
 .path-card svg{margin-left:auto;color:var(--text3);width:18px;height:18px}
 
-/* â”€â”€ jobs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ jobs Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
 .jobs-wrap{padding:44px 0 34px;overflow:hidden;background:linear-gradient(180deg,#fff 0%,#f7fbff 100%)}
 .jobs-track{margin-top:24px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;align-items:stretch;grid-auto-rows:1fr}
 .job-card{
@@ -391,7 +392,7 @@ button{font:inherit}
   animation:dotBreathe 2.8s ease-in-out infinite;
 }
 
-/* â”€â”€ store â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ store Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
 .store-grid,.community-grid{margin-top:40px;display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
 .product,.community-card{
   border:1.5px solid var(--border);border-radius:var(--radius);
@@ -446,7 +447,7 @@ button{font:inherit}
 }
 [data-theme="dark"] .pill{background:#f4f7fb;color:#101525;border-color:#f4f7fb}
 
-/* â”€â”€ communities â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ communities Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
 .community-art{
   height:120px;display:grid;place-items:center;
   font-family:"Outfit",sans-serif;font-size:32px;font-weight:900;
@@ -456,7 +457,7 @@ button{font:inherit}
 .community-body h3{margin:0 0 8px;font-size:16px;font-weight:800}
 .community-meta{display:flex;gap:16px;margin:12px 0 0;color:var(--text3);font-size:12px;font-weight:700}
 
-/* â”€â”€ footer â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ footer Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
 footer{
   border-top:1px solid var(--border);
   padding:40px 24px;
@@ -519,7 +520,7 @@ footer{
   to{transform:scaleX(1);transform-origin:left}
 }
 
-/* â”€â”€ responsive â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ responsive Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
 @media(max-width:1200px){
   .nav-links{gap:2px}
   .hero-grid{grid-template-columns:minmax(320px,1fr) minmax(340px,440px);gap:42px;padding:58px 0 72px}
@@ -698,6 +699,29 @@ footer{
   .price{height:78px}
   .community-art{height:190px}
 }
+
+/* auth modal */
+.auth-modal{
+  --color-background-primary:var(--card);
+  --color-background-secondary:var(--bg2);
+  --color-border-tertiary:var(--border);
+  --color-text-primary:var(--text);
+  --color-text-secondary:var(--text2);
+  position:fixed;inset:0;z-index:1000;
+  display:flex;align-items:center;justify-content:center;
+  padding:18px;background:rgba(8,11,19,.58);
+  opacity:0;pointer-events:none;transition:opacity .18s ease;
+  backdrop-filter:blur(8px);
+}
+.auth-modal.open{opacity:1;pointer-events:auto}
+.auth-modal[hidden]{display:none}
+.auth-modal-panel{box-shadow:0 28px 80px rgba(8,11,19,.28);transform:translateY(10px) scale(.985);transition:transform .18s ease;max-height:min(92vh,760px);overflow-y:auto!important}
+.auth-modal.open .auth-modal-panel{transform:none}
+.auth-modal input{width:100%;border:1px solid var(--color-border-tertiary);background:var(--color-background-primary);color:var(--color-text-primary);padding:0 12px;outline:none;font-family:inherit}
+.auth-modal input:focus{border-color:#315EFB;box-shadow:0 0 0 3px rgba(49,94,251,.12)}
+body.auth-open{overflow:hidden}
+[data-theme="dark"] .auth-modal{background:rgba(0,0,0,.72)}
+@media(max-width:520px){.auth-modal{align-items:flex-end;padding:12px}.auth-modal-panel{max-width:100%!important;border-radius:18px!important;max-height:88vh}}
 </style>
 </head>
 <body>
@@ -716,7 +740,7 @@ footer{
       <a class="nav-link" href="#footer"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>FAQ</a>
     </nav>
     <div class="nav-actions">
-      <button class="wallet-btn"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.3" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="14" rx="2"/><path d="M16 12h6"/></svg><span class="wallet-label">Balance:</span> <strong>$0.01</strong></button>
+      <button class="wallet-btn" type="button" onclick="openAuthModal('screen-connect')"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.3" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="14" rx="2"/><path d="M16 12h6"/></svg><span class="wallet-label">Balance:</span> <strong>$0.01</strong></button>
       <button class="icon-btn" id="themeToggle" aria-label="Toggle dark mode"><svg id="moonIcon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z"/></svg></button>
       <button class="icon-btn" id="menuBtn" aria-label="Open menu"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
     </div>
@@ -747,7 +771,7 @@ footer{
         <h1>Work <span class="arrow">&rarr;</span> <span class="earn">Earn</span></h1>
         <p>A modern earning marketplace for tasks, communities, and rewards. Work online and earn in Naira &amp; Crypto.</p>
         <div class="btn-row">
-          <a class="btn btn-primary" href="#jobs">Start earning <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 12h14M13 5l7 7-7 7"/></svg></a>
+          <a class="btn btn-primary" href="#" onclick="openAuthModal('screen-connect'); return false;">Start earning <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 12h14M13 5l7 7-7 7"/></svg></a>
           <a class="btn" href="post-task.html">Create a job</a>
         </div>
       </div>
@@ -802,7 +826,7 @@ footer{
       <h2 class="section-title">Get started with OgaPay</h2>
       <p class="section-sub">Whether you're here to earn or promote, choose your path below.</p>
       <div class="paths">
-        <a class="path-card" href="#jobs"><span class="path-icon">&#8358;</span>I'm a Worker <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></a>
+        <a class="path-card" href="#" onclick="openAuthModal('screen-email'); return false;"><span class="path-icon">&#8358;</span>I'm a Worker <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></a>
         <a class="path-card" href="post-task.html"><span class="path-icon">+</span>I'm an Advertiser <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></a>
       </div>
     </div>
@@ -840,7 +864,7 @@ footer{
   <a href="store.html"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18M16 10a4 4 0 0 1-8 0"/></svg><span>Store</span></a>
   <a href="post-task.html" class="create"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span>Create</span></a>
   <a href="#footer"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg><span>Alerts</span></a>
-  <a href="#footer"><span class="profile-dot"></span><span>Profile</span></a>
+  <a href="#" onclick="openAuthModal('screen-email'); return false;"><span class="profile-dot"></span><span>Profile</span></a>
 </nav>
 
 <footer id="footer">
@@ -865,7 +889,11 @@ footer{
   themeBtn.addEventListener("click",()=>setTheme(html.getAttribute("data-theme")==="dark"?"light":"dark"));
   menuBtn.addEventListener("click",()=>menu.classList.add("open"));
   document.querySelectorAll("[data-close-menu]").forEach(el=>el.addEventListener("click",()=>menu.classList.remove("open")));
-  document.querySelectorAll(".jobs-wrap").forEach(section=>{
+  try{
+    if(localStorage.getItem("ogapay-authenticated")==="true"){
+      document.querySelectorAll(".wallet-btn strong").forEach(el=>el.textContent="Connected");
+    }
+  }catch(e){}  document.querySelectorAll(".jobs-wrap").forEach(section=>{
     const cards=[...section.querySelectorAll(".job-card")];
     const dots=[...section.querySelectorAll(".dots span")];
     if(!cards.length||!dots.length)return;
@@ -894,5 +922,387 @@ footer{
   });
 })();
 </script>
+
+<div id="authModal" class="auth-modal" aria-hidden="true" hidden>
+
+<div id="modal-root" class="auth-modal-panel" role="dialog" aria-modal="true" aria-labelledby="authTitle" style="width:100%; max-width:440px; background:var(--color-background-primary); border-radius:20px; border:0.5px solid var(--color-border-tertiary); overflow:hidden; position:relative;">
+
+  <div id="screen-connect" class="screen">
+    <div style="padding:28px 28px 0; display:flex; align-items:center; justify-content:space-between;">
+      <h2 id="authTitle" style="font-size:20px; font-weight:500; margin:0; color:var(--color-text-primary);">Connect to OgaPay</h2>
+      <button onclick="closeModal()" style="border:none; background:none; color:var(--color-text-secondary); cursor:pointer; padding:4px; line-height:1; font-size:20px;" aria-label="Close">Ã—</button>
+    </div>
+    <p style="padding:8px 28px 0; margin:0; font-size:13.5px; color:var(--color-text-secondary); text-align:center; line-height:1.55;">Choose how you'd like to sign in or create your account</p>
+
+    <div style="padding:20px 20px 8px; display:flex; flex-direction:column; gap:6px;">
+
+      <button onclick="show('screen-email')" style="display:flex; align-items:center; gap:14px; padding:16px; background:var(--color-background-secondary); border:0.5px solid var(--color-border-tertiary); border-radius:14px; text-align:left; width:100%; cursor:pointer; transition:all 0.15s;" onmouseover="this.style.borderColor='#315EFB'" onmouseout="this.style.borderColor='var(--color-border-tertiary)'">
+        <div style="width:40px; height:40px; border-radius:10px; background:#EEF2FF; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+          <i class="ti ti-mail" style="font-size:20px; color:#315EFB;" aria-hidden="true"></i>
+        </div>
+        <div style="flex:1; min-width:0;">
+          <div style="font-size:14px; font-weight:500; color:var(--color-text-primary);">Sign in / Sign up</div>
+          <div style="font-size:12px; color:var(--color-text-secondary); margin-top:2px;">Email and password â€” no wallet needed</div>
+        </div>
+        <i class="ti ti-arrow-right" style="font-size:16px; color:var(--color-text-secondary);" aria-hidden="true"></i>
+      </button>
+
+      <div style="display:flex; align-items:center; gap:10px; padding:4px 4px;">
+        <div style="flex:1; height:0.5px; background:var(--color-border-tertiary);"></div>
+        <span style="font-size:11px; color:var(--color-text-secondary); letter-spacing:0.08em; text-transform:uppercase;">or connect a wallet</span>
+        <div style="flex:1; height:0.5px; background:var(--color-border-tertiary);"></div>
+      </div>
+
+      <button onclick="show('screen-wallet')" style="display:flex; align-items:center; gap:14px; padding:16px; background:var(--color-background-secondary); border:0.5px solid var(--color-border-tertiary); border-radius:14px; text-align:left; width:100%; cursor:pointer; transition:all 0.15s;" onmouseover="this.style.borderColor='#315EFB'" onmouseout="this.style.borderColor='var(--color-border-tertiary)'">
+        <div style="width:40px; height:40px; border-radius:10px; background:#EEF2FF; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+          <i class="ti ti-wallet" style="font-size:20px; color:#315EFB;" aria-hidden="true"></i>
+        </div>
+        <div style="flex:1; min-width:0;">
+          <div style="font-size:14px; font-weight:500; color:var(--color-text-primary);">Connect Wallet</div>
+          <div style="font-size:12px; color:var(--color-text-secondary); margin-top:2px;">Phantom, Solflare, Backpack + more</div>
+        </div>
+        <i class="ti ti-arrow-right" style="font-size:16px; color:var(--color-text-secondary);" aria-hidden="true"></i>
+      </button>
+
+    </div>
+
+    <div style="padding:16px 28px 24px; text-align:center;">
+      <p style="font-size:11.5px; color:var(--color-text-secondary); margin:0; line-height:1.6;">By connecting you agree to OgaPay's <a href="#" style="color:#315EFB; text-decoration:none;">Terms of Service</a> and <a href="#" style="color:#315EFB; text-decoration:none;">Privacy Policy</a></p>
+    </div>
+  </div>
+
+  <div id="screen-wallet" class="screen" style="display:none;">
+    <div style="padding:24px 24px 0; display:flex; align-items:center; gap:12px;">
+      <button onclick="show('screen-connect')" style="border:none; background:var(--color-background-secondary); border-radius:8px; padding:6px 8px; cursor:pointer; display:flex; align-items:center; gap:4px; font-size:12px; color:var(--color-text-secondary);">
+        <i class="ti ti-arrow-left" style="font-size:14px;" aria-hidden="true"></i> Back
+      </button>
+      <h2 style="font-size:18px; font-weight:500; margin:0; color:var(--color-text-primary); flex:1;">Connect Your Wallet</h2>
+      <button onclick="closeModal()" style="border:none; background:none; color:var(--color-text-secondary); cursor:pointer; font-size:20px; padding:4px; line-height:1;">Ã—</button>
+    </div>
+    <p style="padding:8px 24px 0; margin:0; font-size:13px; color:var(--color-text-secondary); text-align:center;">Choose your preferred wallet to connect and start earning rewards</p>
+
+    <div style="padding:16px 16px 0; display:flex; flex-direction:column; gap:6px;">
+
+      <button onclick="show('screen-connecting','Phantom')" style="display:flex; align-items:center; gap:14px; padding:16px; background:var(--color-background-secondary); border:0.5px solid var(--color-border-tertiary); border-radius:14px; text-align:left; width:100%; cursor:pointer; transition:all 0.15s;" onmouseover="this.style.borderColor='#ab9ff2'" onmouseout="this.style.borderColor='var(--color-border-tertiary)'">
+        <div style="width:40px; height:40px; border-radius:10px; background:linear-gradient(135deg,#534bb1,#7b68e8); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+          <svg width="22" height="22" viewBox="0 0 128 128" fill="none"><path d="M119 63.2c0 30.4-24.7 55-55.1 55S8.8 93.6 8.8 63.2 33.5 8.2 63.9 8.2 119 32.8 119 63.2z" fill="url(#pg)"/><defs><linearGradient id="pg" x1="8.8" y1="63.2" x2="119" y2="63.2"><stop stop-color="#534BB1"/><stop offset="1" stop-color="#551BF9"/></linearGradient></defs><path d="M98.4 63.4H88c0-13.5-11-24.4-24.5-24.4S39 49.9 39 63.4H28.6c0-19.3 15.6-34.9 34.9-34.9S98.4 44.1 98.4 63.4z" fill="white" opacity="0.9"/><path d="M87.6 72.6c-2.3 5.6-7.8 9.5-14.2 9.5H54.5c-8.5 0-15.4-6.9-15.4-15.4h10.4v.2c0 2.8 2.2 5 5 5h18.9c2.8 0 5-2.2 5-5v-.2h10.4c0 2.2-.4 4.2-1.2 5.9z" fill="white" opacity="0.9"/></svg>
+        </div>
+        <div style="flex:1; min-width:0;">
+          <div style="font-size:14px; font-weight:500; color:var(--color-text-primary);">Phantom</div>
+          <div style="font-size:12px; color:var(--color-text-secondary);">Browser wallet Â· Solana</div>
+        </div>
+        <i class="ti ti-arrow-right" style="font-size:16px; color:var(--color-text-secondary);" aria-hidden="true"></i>
+      </button>
+
+      <button onclick="show('screen-connecting','Solflare')" style="display:flex; align-items:center; gap:14px; padding:16px; background:var(--color-background-secondary); border:0.5px solid var(--color-border-tertiary); border-radius:14px; text-align:left; width:100%; cursor:pointer; transition:all 0.15s;" onmouseover="this.style.borderColor='#FC8929'" onmouseout="this.style.borderColor='var(--color-border-tertiary)'">
+        <div style="width:40px; height:40px; border-radius:10px; background:linear-gradient(135deg,#181818,#FC8929); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+          <i class="ti ti-sun" style="font-size:20px; color:#FC8929;" aria-hidden="true"></i>
+        </div>
+        <div style="flex:1; min-width:0;">
+          <div style="font-size:14px; font-weight:500; color:var(--color-text-primary);">Solflare</div>
+          <div style="font-size:12px; color:var(--color-text-secondary);">Browser wallet Â· Solana</div>
+        </div>
+        <i class="ti ti-arrow-right" style="font-size:16px; color:var(--color-text-secondary);" aria-hidden="true"></i>
+      </button>
+
+      <button onclick="show('screen-connecting','Backpack')" style="display:flex; align-items:center; gap:14px; padding:16px; background:var(--color-background-secondary); border:0.5px solid var(--color-border-tertiary); border-radius:14px; text-align:left; width:100%; cursor:pointer; transition:all 0.15s;" onmouseover="this.style.borderColor='#e33e3f'" onmouseout="this.style.borderColor='var(--color-border-tertiary)'">
+        <div style="width:40px; height:40px; border-radius:10px; background:linear-gradient(135deg,#111,#e33e3f22); display:flex; align-items:center; justify-content:center; flex-shrink:0; border:0.5px solid #e33e3f44;">
+          <i class="ti ti-backpack" style="font-size:20px; color:#e33e3f;" aria-hidden="true"></i>
+        </div>
+        <div style="flex:1; min-width:0;">
+          <div style="font-size:14px; font-weight:500; color:var(--color-text-primary);">Backpack</div>
+          <div style="font-size:12px; color:var(--color-text-secondary);">xNFT wallet Â· Solana</div>
+        </div>
+        <i class="ti ti-arrow-right" style="font-size:16px; color:var(--color-text-secondary);" aria-hidden="true"></i>
+      </button>
+
+      <button onclick="show('screen-connecting','WalletConnect')" style="display:flex; align-items:center; gap:14px; padding:16px; background:var(--color-background-secondary); border:0.5px solid var(--color-border-tertiary); border-radius:14px; text-align:left; width:100%; cursor:pointer; transition:all 0.15s;" onmouseover="this.style.borderColor='#3B99FC'" onmouseout="this.style.borderColor='var(--color-border-tertiary)'">
+        <div style="width:40px; height:40px; border-radius:10px; background:linear-gradient(135deg,#3B99FC22,#3B99FC44); display:flex; align-items:center; justify-content:center; flex-shrink:0; border:0.5px solid #3B99FC55;">
+          <i class="ti ti-brand-google" style="font-size:20px; color:#3B99FC;" aria-hidden="true"></i>
+        </div>
+        <div style="flex:1; min-width:0;">
+          <div style="font-size:14px; font-weight:500; color:var(--color-text-primary);">WalletConnect</div>
+          <div style="font-size:12px; color:var(--color-text-secondary);">Mobile wallets Â· QR code</div>
+        </div>
+        <i class="ti ti-arrow-right" style="font-size:16px; color:var(--color-text-secondary);" aria-hidden="true"></i>
+      </button>
+
+      <div style="display:flex; align-items:center; gap:10px; padding:4px 4px;">
+        <div style="flex:1; height:0.5px; background:var(--color-border-tertiary);"></div>
+        <span style="font-size:11px; color:var(--color-text-secondary); letter-spacing:0.08em; text-transform:uppercase;">or</span>
+        <div style="flex:1; height:0.5px; background:var(--color-border-tertiary);"></div>
+      </div>
+
+      <button onclick="show('screen-sigtx')" style="display:flex; align-items:center; gap:14px; padding:16px; background:var(--color-background-secondary); border:0.5px solid var(--color-border-tertiary); border-radius:14px; text-align:left; width:100%; cursor:pointer; transition:all 0.15s;" onmouseover="this.style.borderColor='#315EFB'" onmouseout="this.style.borderColor='var(--color-border-tertiary)'">
+        <div style="width:40px; height:40px; border-radius:10px; background:#EEF2FF; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+          <i class="ti ti-shield-check" style="font-size:20px; color:#315EFB;" aria-hidden="true"></i>
+        </div>
+        <div style="flex:1; min-width:0;">
+          <div style="font-size:14px; font-weight:500; color:var(--color-text-primary);">Sign in with Transaction</div>
+          <div style="font-size:12px; color:var(--color-text-secondary);">Safe sign-in with a micro transaction</div>
+        </div>
+        <i class="ti ti-arrow-right" style="font-size:16px; color:var(--color-text-secondary);" aria-hidden="true"></i>
+      </button>
+      <button onclick="show('screen-pair')" style="display:flex; align-items:center; gap:14px; padding:16px; background:var(--color-background-secondary); border:0.5px solid var(--color-border-tertiary); border-radius:14px; text-align:left; width:100%; cursor:pointer; transition:all 0.15s;" onmouseover="this.style.borderColor='#315EFB'" onmouseout="this.style.borderColor='var(--color-border-tertiary)'">
+        <div style="width:40px; height:40px; border-radius:10px; background:#EEF2FF; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+          <i class="ti ti-devices" style="font-size:20px; color:#315EFB;" aria-hidden="true"></i>
+        </div>
+        <div style="flex:1; min-width:0;">
+          <div style="font-size:14px; font-weight:500; color:var(--color-text-primary);">Pair devices</div>
+          <div style="font-size:12px; color:var(--color-text-secondary);">Already have an account? Pair this device</div>
+        </div>
+        <i class="ti ti-arrow-right" style="font-size:16px; color:var(--color-text-secondary);" aria-hidden="true"></i>
+      </button>
+
+    </div>
+    <div style="padding:16px 24px 24px; text-align:center;">
+      <p style="font-size:11.5px; color:var(--color-text-secondary); margin:0; line-height:1.6;">New to crypto? <a href="#" onclick="show('screen-email'); return false;" style="color:#315EFB; text-decoration:none;">Sign up with email instead</a></p>
+    </div>
+  </div>
+
+  <div id="screen-email" class="screen" style="display:none;">
+    <div style="padding:24px 24px 0; display:flex; align-items:center; gap:12px;">
+      <button onclick="show('screen-connect')" style="border:none; background:var(--color-background-secondary); border-radius:8px; padding:6px 8px; cursor:pointer; display:flex; align-items:center; gap:4px; font-size:12px; color:var(--color-text-secondary);">
+        <i class="ti ti-arrow-left" style="font-size:14px;" aria-hidden="true"></i> Back
+      </button>
+      <div style="flex:1;">
+        <div style="display:flex; background:var(--color-background-secondary); border-radius:10px; padding:3px; border:0.5px solid var(--color-border-tertiary);">
+          <button id="tab-login" onclick="switchTab('login')" style="flex:1; padding:7px; border:none; border-radius:8px; font-size:13px; font-weight:500; cursor:pointer; background:#315EFB; color:#fff;">Sign in</button>
+          <button id="tab-signup" onclick="switchTab('signup')" style="flex:1; padding:7px; border:none; border-radius:8px; font-size:13px; font-weight:500; cursor:pointer; background:transparent; color:var(--color-text-secondary);">Sign up</button>
+        </div>
+      </div>
+      <button onclick="closeModal()" style="border:none; background:none; color:var(--color-text-secondary); cursor:pointer; font-size:20px; padding:4px; line-height:1;">Ã—</button>
+    </div>
+
+    <div style="padding:20px 24px 0;">
+      <div id="form-login">
+        <div style="margin-bottom:14px;">
+          <label style="font-size:12px; font-weight:500; color:var(--color-text-secondary); display:block; margin-bottom:6px;">Email address</label>
+          <div style="position:relative;">
+            <i class="ti ti-mail" style="position:absolute; left:11px; top:50%; transform:translateY(-50%); font-size:15px; color:var(--color-text-secondary);" aria-hidden="true"></i>
+            <input type="email" placeholder="you@example.com" style="padding-left:36px; font-size:13.5px; border-radius:10px; height:42px;"/>
+          </div>
+        </div>
+        <div style="margin-bottom:6px;">
+          <label style="font-size:12px; font-weight:500; color:var(--color-text-secondary); display:block; margin-bottom:6px;">Password</label>
+          <div style="position:relative;">
+            <i class="ti ti-lock" style="position:absolute; left:11px; top:50%; transform:translateY(-50%); font-size:15px; color:var(--color-text-secondary);" aria-hidden="true"></i>
+            <input type="password" placeholder="Enter your password" style="padding-left:36px; font-size:13.5px; border-radius:10px; height:42px;"/>
+          </div>
+        </div>
+        <div style="text-align:right; margin-bottom:18px;">
+          <a href="#" style="font-size:12px; color:#315EFB; text-decoration:none;">Forgot password?</a>
+        </div>
+        <button onclick="show('screen-success')" style="width:100%; padding:12px; background:linear-gradient(135deg,#315EFB,#011F9A); color:#fff; border:none; border-radius:12px; font-size:14px; font-weight:500; cursor:pointer;">Sign in to OgaPay</button>
+      </div>
+
+      <div id="form-signup" style="display:none;">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px;">
+          <div>
+            <label style="font-size:12px; font-weight:500; color:var(--color-text-secondary); display:block; margin-bottom:6px;">First name</label>
+            <input type="text" placeholder="Chukwuemeka" style="font-size:13.5px; border-radius:10px; height:42px;"/>
+          </div>
+          <div>
+            <label style="font-size:12px; font-weight:500; color:var(--color-text-secondary); display:block; margin-bottom:6px;">Last name</label>
+            <input type="text" placeholder="Okafor" style="font-size:13.5px; border-radius:10px; height:42px;"/>
+          </div>
+        </div>
+        <div style="margin-bottom:14px;">
+          <label style="font-size:12px; font-weight:500; color:var(--color-text-secondary); display:block; margin-bottom:6px;">Email address</label>
+          <div style="position:relative;">
+            <i class="ti ti-mail" style="position:absolute; left:11px; top:50%; transform:translateY(-50%); font-size:15px; color:var(--color-text-secondary);" aria-hidden="true"></i>
+            <input type="email" placeholder="you@example.com" style="padding-left:36px; font-size:13.5px; border-radius:10px; height:42px;"/>
+          </div>
+        </div>
+        <div style="margin-bottom:14px;">
+          <label style="font-size:12px; font-weight:500; color:var(--color-text-secondary); display:block; margin-bottom:6px;">Password</label>
+          <div style="position:relative;">
+            <i class="ti ti-lock" style="position:absolute; left:11px; top:50%; transform:translateY(-50%); font-size:15px; color:var(--color-text-secondary);" aria-hidden="true"></i>
+            <input type="password" placeholder="Min. 8 characters" style="padding-left:36px; font-size:13.5px; border-radius:10px; height:42px;"/>
+          </div>
+        </div>
+        <div style="margin-bottom:16px; display:flex; align-items:flex-start; gap:8px;">
+          <input type="checkbox" id="tos" style="width:16px; height:16px; flex-shrink:0; margin-top:2px; accent-color:#315EFB;"/>
+          <label for="tos" style="font-size:12px; color:var(--color-text-secondary); line-height:1.5; font-weight:400;">I agree to OgaPay's <a href="#" style="color:#315EFB; text-decoration:none;">Terms of Service</a> and <a href="#" style="color:#315EFB; text-decoration:none;">Privacy Policy</a></label>
+        </div>
+        <button onclick="show('screen-success')" style="width:100%; padding:12px; background:linear-gradient(135deg,#315EFB,#011F9A); color:#fff; border:none; border-radius:12px; font-size:14px; font-weight:500; cursor:pointer;">Create my account</button>
+      </div>
+
+      <div style="display:flex; align-items:center; gap:10px; margin:18px 0 14px;">
+        <div style="flex:1; height:0.5px; background:var(--color-border-tertiary);"></div>
+        <span style="font-size:11px; color:var(--color-text-secondary);">or continue with</span>
+        <div style="flex:1; height:0.5px; background:var(--color-border-tertiary);"></div>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:20px;">
+        <button style="display:flex; align-items:center; justify-content:center; gap:6px; padding:10px; border:0.5px solid var(--color-border-tertiary); border-radius:10px; font-size:13px; font-weight:500; cursor:pointer; background:var(--color-background-secondary); color:var(--color-text-primary);">
+          <i class="ti ti-brand-google" style="font-size:16px; color:#EA4335;" aria-hidden="true"></i> Google
+        </button>
+        <button onclick="show('screen-wallet')" style="display:flex; align-items:center; justify-content:center; gap:6px; padding:10px; border:0.5px solid var(--color-border-tertiary); border-radius:10px; font-size:13px; font-weight:500; cursor:pointer; background:var(--color-background-secondary); color:var(--color-text-primary);">
+          <i class="ti ti-wallet" style="font-size:16px; color:#315EFB;" aria-hidden="true"></i> Wallet
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="screen-connecting" class="screen" style="display:none;">
+    <div style="padding:28px; text-align:center;">
+      <div id="conn-icon" style="width:64px; height:64px; border-radius:16px; background:#EEF2FF; display:flex; align-items:center; justify-content:center; margin:0 auto 16px; font-size:32px;"></div>
+      <h3 id="conn-title" style="font-size:17px; font-weight:500; color:var(--color-text-primary); margin:0 0 6px;">Connecting to Phantom</h3>
+      <p style="font-size:13px; color:var(--color-text-secondary); margin:0 0 24px; line-height:1.5;">Accept the connection request in your wallet</p>
+      <div style="display:flex; justify-content:center; gap:6px; margin-bottom:28px;" id="conn-dots">
+        <div class="dot-anim" style="width:8px; height:8px; border-radius:50%; background:#315EFB; animation:dotPulse 1.4s infinite 0s;"></div>
+        <div class="dot-anim" style="width:8px; height:8px; border-radius:50%; background:#315EFB; animation:dotPulse 1.4s infinite 0.2s;"></div>
+        <div class="dot-anim" style="width:8px; height:8px; border-radius:50%; background:#315EFB; animation:dotPulse 1.4s infinite 0.4s;"></div>
+      </div>
+      <button onclick="show('screen-wallet')" style="color:var(--color-text-secondary); background:none; border:none; font-size:13px; cursor:pointer;">Cancel</button>
+    </div>
+  </div>
+
+  <div id="screen-sigtx" class="screen" style="display:none;">
+    <div style="padding:24px 24px 0; display:flex; align-items:center; gap:12px;">
+      <button onclick="show('screen-wallet')" style="border:none; background:var(--color-background-secondary); border-radius:8px; padding:6px 8px; cursor:pointer; display:flex; align-items:center; gap:4px; font-size:12px; color:var(--color-text-secondary);">
+        <i class="ti ti-arrow-left" style="font-size:14px;" aria-hidden="true"></i> Back
+      </button>
+      <h2 style="font-size:17px; font-weight:500; margin:0; color:var(--color-text-primary);">Sign in with Transaction</h2>
+      <button onclick="closeModal()" style="border:none; background:none; color:var(--color-text-secondary); cursor:pointer; font-size:20px; padding:4px; line-height:1; margin-left:auto;">Ã—</button>
+    </div>
+    <div style="padding:20px 24px 24px;">
+      <div style="background:var(--color-background-secondary); border-radius:14px; padding:16px; margin-bottom:16px; border:0.5px solid var(--color-border-tertiary);">
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+          <i class="ti ti-shield-check" style="font-size:20px; color:#315EFB;" aria-hidden="true"></i>
+          <div style="font-size:13.5px; font-weight:500; color:var(--color-text-primary);">How it works</div>
+        </div>
+        <p style="font-size:12.5px; color:var(--color-text-secondary); margin:0; line-height:1.6;">Send a tiny SOL transaction (â‰ˆ $0.001) to prove wallet ownership. The funds are returned instantly. No password needed â€” your wallet is your account.</p>
+      </div>
+      <div style="margin-bottom:14px;">
+        <label style="font-size:12px; font-weight:500; color:var(--color-text-secondary); display:block; margin-bottom:6px;">Your wallet address</label>
+        <div style="position:relative;">
+          <i class="ti ti-wallet" style="position:absolute; left:11px; top:50%; transform:translateY(-50%); font-size:15px; color:var(--color-text-secondary);" aria-hidden="true"></i>
+          <input type="text" placeholder="Paste your Solana address" style="padding-left:36px; font-size:13px; border-radius:10px; height:42px; font-family:monospace;"/>
+        </div>
+      </div>
+      <button onclick="show('screen-success')" style="width:100%; padding:12px; background:linear-gradient(135deg,#315EFB,#011F9A); color:#fff; border:none; border-radius:12px; font-size:14px; font-weight:500; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;">
+        <i class="ti ti-bolt" style="font-size:16px;" aria-hidden="true"></i> Send verification transaction
+      </button>
+    </div>
+  </div>
+
+  <div id="screen-pair" class="screen" style="display:none;">
+    <div style="padding:24px 24px 0; display:flex; align-items:center; gap:12px;">
+      <button onclick="show('screen-wallet')" style="border:none; background:var(--color-background-secondary); border-radius:8px; padding:6px 8px; cursor:pointer; display:flex; align-items:center; gap:4px; font-size:12px; color:var(--color-text-secondary);">
+        <i class="ti ti-arrow-left" style="font-size:14px;" aria-hidden="true"></i> Back
+      </button>
+      <h2 style="font-size:17px; font-weight:500; margin:0; color:var(--color-text-primary);">Pair This Device</h2>
+      <button onclick="closeModal()" style="border:none; background:none; color:var(--color-text-secondary); cursor:pointer; font-size:20px; padding:4px; line-height:1; margin-left:auto;">Ã—</button>
+    </div>
+    <div style="padding:20px 24px 24px;">
+      <div style="background:var(--color-background-secondary); border-radius:14px; padding:24px; text-align:center; margin-bottom:16px; border:0.5px solid var(--color-border-tertiary);">
+        <div style="width:80px; height:80px; background:var(--color-background-primary); border:0.5px solid var(--color-border-tertiary); border-radius:14px; display:flex; align-items:center; justify-content:center; margin:0 auto 12px;">
+          <i class="ti ti-qrcode" style="font-size:44px; color:var(--color-text-secondary);" aria-hidden="true"></i>
+        </div>
+        <p style="font-size:12.5px; color:var(--color-text-secondary); margin:0; line-height:1.6;">Scan this QR code from your existing OgaPay device to pair this browser</p>
+      </div>
+      <div style="text-align:center; margin-bottom:16px;">
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
+          <div style="flex:1; height:0.5px; background:var(--color-border-tertiary);"></div>
+          <span style="font-size:11px; color:var(--color-text-secondary);">or enter a pairing code</span>
+          <div style="flex:1; height:0.5px; background:var(--color-border-tertiary);"></div>
+        </div>
+        <div style="display:flex; gap:8px; margin-bottom:14px;">
+          <input type="text" placeholder="XXXX-XXXX-XXXX" style="font-size:14px; border-radius:10px; height:42px; text-align:center; font-family:monospace; letter-spacing:0.1em;"/>
+        </div>
+      </div>
+      <button onclick="show('screen-success')" style="width:100%; padding:12px; background:linear-gradient(135deg,#315EFB,#011F9A); color:#fff; border:none; border-radius:12px; font-size:14px; font-weight:500; cursor:pointer;">Pair device</button>
+    </div>
+  </div>
+  <div id="screen-success" class="screen" style="display:none;">
+    <div style="padding:40px 28px; text-align:center;">
+      <div style="width:72px; height:72px; border-radius:50%; background:#d1fae5; display:flex; align-items:center; justify-content:center; margin:0 auto 20px;">
+        <i class="ti ti-check" style="font-size:32px; color:#059669;" aria-hidden="true"></i>
+      </div>
+      <h2 style="font-size:20px; font-weight:500; color:var(--color-text-primary); margin:0 0 8px;">You're connected!</h2>
+      <p style="font-size:13.5px; color:var(--color-text-secondary); margin:0 0 28px; line-height:1.6;">Welcome to OgaPay. Start browsing tasks and earning Naira or crypto instantly.</p>
+      <button onclick="closeModal()" style="width:100%; padding:13px; background:linear-gradient(135deg,#315EFB,#011F9A); color:#fff; border:none; border-radius:12px; font-size:14px; font-weight:500; cursor:pointer; margin-bottom:10px;">Browse Tasks â†’</button>
+      <button onclick="closeModal()" style="width:100%; padding:11px; background:var(--color-background-secondary); border:0.5px solid var(--color-border-tertiary); border-radius:12px; font-size:13.5px; cursor:pointer; color:var(--color-text-secondary);">Set up my profile first</button>
+    </div>
+  </div>
+
+</div>
+
+<style>
+@keyframes dotPulse {
+  0%, 80%, 100% { opacity: 0.25; transform: scale(0.8); }
+  40% { opacity: 1; transform: scale(1); }
+}
+.screen { animation: fadeIn 0.18s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+</style>
+
+<script>
+let authConnectTimer;
+function openAuthModal(screen) {
+  const modal = document.getElementById('authModal');
+  if (!modal) return;
+  modal.hidden = false;
+  modal.setAttribute('aria-hidden', 'false');
+  document.body.classList.add('auth-open');
+  requestAnimationFrame(() => modal.classList.add('open'));
+  show(screen || 'screen-connect');
+}
+function show(id, walletName) {
+  const modal = document.getElementById('authModal');
+  const root = modal || document;
+  clearTimeout(authConnectTimer);
+  root.querySelectorAll('.screen').forEach(s => s.style.display = 'none');
+  const el = document.getElementById(id);
+  if (el) {
+    el.style.display = 'block';
+    el.style.animation = 'none';
+    void el.offsetWidth;
+    el.style.animation = '';
+  }
+  if (id === 'screen-connecting' && walletName) {
+    const title = document.getElementById('conn-title');
+    const icon = document.getElementById('conn-icon');
+    if (title) title.textContent = 'Connecting to ' + walletName;
+    const icons = { Phantom: 'P', Solflare: 'S', Backpack: 'B', WalletConnect: 'W' };
+    if (icon) icon.textContent = icons[walletName] || 'W';
+    authConnectTimer = setTimeout(() => show('screen-success'), 1800);
+  }
+  if (id === 'screen-success') {
+    try { localStorage.setItem('ogapay-authenticated', 'true'); } catch (e) {}
+    document.querySelectorAll('.wallet-btn strong').forEach(el => el.textContent = 'Connected');
+  }
+}
+function switchTab(tab) {
+  const isLogin = tab === 'login';
+  document.getElementById('form-login').style.display = isLogin ? 'block' : 'none';
+  document.getElementById('form-signup').style.display = isLogin ? 'none' : 'block';
+  document.getElementById('tab-login').style.background = isLogin ? '#315EFB' : 'transparent';
+  document.getElementById('tab-login').style.color = isLogin ? '#fff' : 'var(--color-text-secondary)';
+  document.getElementById('tab-signup').style.background = isLogin ? 'transparent' : '#315EFB';
+  document.getElementById('tab-signup').style.color = isLogin ? 'var(--color-text-secondary)' : '#fff';
+}
+function closeModal() {
+  const modal = document.getElementById('authModal');
+  clearTimeout(authConnectTimer);
+  if (!modal) return;
+  modal.classList.remove('open');
+  modal.setAttribute('aria-hidden', 'true');
+  document.body.classList.remove('auth-open');
+  setTimeout(() => {
+    if (!modal.classList.contains('open')) modal.hidden = true;
+    show('screen-connect');
+  }, 180);
+}
+document.addEventListener('keydown', event => {
+  if (event.key === 'Escape') closeModal();
+});
+document.addEventListener('click', event => {
+  if (event.target && event.target.id === 'authModal') closeModal();
+});
+</script>
+</div>
+
 </body>
 </html>
