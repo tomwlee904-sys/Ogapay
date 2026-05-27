@@ -765,7 +765,7 @@ body.auth-open{overflow:hidden}
 @media(max-width:520px){.auth-modal{align-items:flex-end;padding:12px}.auth-modal-panel{max-width:100%!important;border-radius:18px!important;max-height:88vh}}
 
 /* state-aware drawer */
-body[data-auth="public"] .authed-only,body[data-auth="authed"] .public-only{display:none!important}
+.authed-only{display:none!important}.public-only{display:inline-flex!important}body[data-auth="authed"] .authed-only{display:inline-flex!important}body[data-auth="public"] .authed-only,body[data-auth="authed"] .public-only{display:none!important}.oga-drawer-group.authed-only,.oga-drawer-section.public-only,.oga-drawer-foot.public-only{display:block!important}body[data-auth="authed"] .oga-drawer-foot.authed-only{display:block!important}body[data-auth="public"] .oga-drawer-group.authed-only,body[data-auth="public"] .oga-drawer-foot.authed-only,body[data-auth="authed"] .oga-drawer-section.public-only,body[data-auth="authed"] .oga-drawer-foot.public-only{display:none!important}
 .wallet-btn[data-auth="public"] strong{display:none}
 .wallet-btn[data-auth="public"]{min-width:104px;justify-content:center}
 .oga-drawer{width:min(500px,100vw);padding:0 0 18px;background:#fbfbfc;color:var(--text);border-left:1px solid #e6e8ee;box-shadow:-16px 0 42px rgba(16,21,37,.12);display:flex;flex-direction:column}
@@ -850,13 +850,16 @@ body[data-auth="public"] .authed-only,body[data-auth="authed"] .public-only{disp
       <span>Oga<span>Pay</span></span>
     </a>
     <nav class="nav-links" aria-label="Primary navigation">
-      <a class="nav-link active" href="tasks.html" data-navlink><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>All Jobs</a>
-      <a class="nav-link" href="store.html" data-navlink><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18M16 10a4 4 0 0 1-8 0"/></svg>Store</a>
+      <a class="nav-link active" href="index.html" data-navlink><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 10v10h14V10"/></svg>Home</a>
+      <a class="nav-link" href="tasks.html" data-navlink><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Tasks</a>
+      <a class="nav-link" href="store.html" data-navlink><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18M16 10a4 4 0 0 1-8 0"/></svg>Deals</a>
       <a class="nav-link" href="communities.html" data-navlink><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg>Communities</a>
-      <a class="nav-link" href="notifications.html" data-navlink><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Alerts</a>
+      <a class="nav-link" href="index.html#footer" data-navlink><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 1 1 5.8 1c-.6 1-1.9 1.4-2.5 2.3-.3.4-.4.8-.4 1.2M12 17h.01"/></svg>FAQ</a>
     </nav>
     <div class="nav-actions">
-      <button class="wallet-btn" type="button" onclick="openAuthModal('screen-connect')"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.3" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="14" rx="2"/><path d="M16 12h6"/></svg><span class="wallet-label">Balance:</span> <strong>$0.01</strong></button>
+      <a class="wallet-btn public-only" href="login.html"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.3" viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="m10 17 5-5-5-5"/><path d="M15 12H3"/></svg><span class="wallet-label">Login</span></a>
+      <a class="wallet-btn public-only" href="login.html?mode=signup"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.3" viewBox="0 0 24 24"><path d="M5 12h14M13 5l7 7-7 7"/></svg><span class="wallet-label">Get Started</span></a>
+      <a class="wallet-btn authed-only" href="dashboard.html"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.3" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span class="wallet-label">Workspace</span></a>
       <button class="icon-btn" id="themeToggle" aria-label="Toggle dark mode"><svg id="moonIcon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z"/></svg></button>
       <button class="icon-btn" id="menuBtn" aria-label="Open menu"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
     </div>
@@ -875,37 +878,80 @@ body[data-auth="public"] .authed-only,body[data-auth="authed"] .public-only{disp
     </div>
 
     <nav class="oga-drawer-nav" aria-label="Primary menu">
-      <div class="oga-drawer-section authed-only">
-        <a class="oga-drawer-item" href="post-task.html" data-close-menu>
-          <span class="oga-drawer-icon create-icon">+</span>
-          <span><strong>Create Job</strong><small>Post a new task</small></span>
-        </a>
+      <div class="oga-drawer-section public-only">
+        <a class="oga-drawer-item" href="index.html" data-close-menu><span class="oga-drawer-icon">H</span><span><strong>Home</strong><small>Back to the public homepage</small></span></a>
+        <a class="oga-drawer-item" href="tasks.html" data-close-menu><span class="oga-drawer-icon">T</span><span><strong>Tasks</strong><small>Browse micro-jobs</small></span></a>
+        <a class="oga-drawer-item" href="store.html" data-close-menu><span class="oga-drawer-icon">D</span><span><strong>Deals</strong><small>Cashback and worker offers</small></span></a>
+        <a class="oga-drawer-item" href="communities.html" data-close-menu><span class="oga-drawer-icon">C</span><span><strong>Communities</strong><small>Groups and earning feeds</small></span></a>
+        <a class="oga-drawer-item" href="index.html#footer" data-close-menu><span class="oga-drawer-icon">?</span><span><strong>FAQ</strong><small>Common questions answered</small></span></a>
       </div>
 
-      <section class="oga-drawer-group open">
+      <section class="oga-drawer-group open authed-only">
         <button class="oga-drawer-item oga-drawer-group-toggle" type="button" aria-expanded="true">
-          <span class="oga-drawer-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span>
-          <span><strong>Jobs</strong><small>Browse and track jobs</small></span>
+          <span class="oga-drawer-icon">M</span><span><strong>Main</strong><small>Your account basics</small></span>
           <svg class="oga-drawer-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
         </button>
         <div class="oga-drawer-subnav">
-          <a href="tasks.html" data-close-menu><span class="oga-drawer-icon mini"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span><span><strong>All Jobs</strong><small>Browse all available jobs</small></span></a>
-          <a class="authed-only" href="monitor.html" data-close-menu><span class="oga-drawer-icon mini"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 3h12v18l-6-4-6 4V3Z"/></svg></span><span><strong>Bookmarks</strong><small>Your saved jobs</small></span></a>
-          <a href="monitor.html" data-close-menu><span class="oga-drawer-icon mini"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z"/><circle cx="12" cy="12" r="3"/></svg></span><span><strong>Job Monitor</strong><small>Track new jobs in real time</small></span></a>
+          <a href="dashboard.html" data-close-menu><span class="oga-drawer-icon mini">O</span><span><strong>Overview</strong><small>Workspace home</small></span></a>
+          <a href="profile.html" data-close-menu><span class="oga-drawer-icon mini">P</span><span><strong>My Profile</strong><small>Identity and reputation</small></span></a>
+          <a href="wallet.html" data-close-menu><span class="oga-drawer-icon mini">W</span><span><strong>Wallet</strong><small>Naira and USDC payouts</small></span></a>
+          <a href="notifications.html" data-close-menu><span class="oga-drawer-icon mini">N</span><span><strong>Notifications</strong><small>Task and payment alerts</small></span></a>
+          <a href="messages.html" data-close-menu><span class="oga-drawer-icon mini">M</span><span><strong>Messages</strong><small>Chats and support</small></span></a>
         </div>
       </section>
 
-      <a class="oga-drawer-item" href="store.html" data-close-menu><span class="oga-drawer-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18M16 10a4 4 0 0 1-8 0"/></svg></span><span><strong>Store</strong><small class="public-only">Browse the marketplace</small><small class="authed-only">Marketplace and worker tools</small></span></a>
-      <a class="oga-drawer-item authed-only" href="communities.html" data-close-menu><span class="oga-drawer-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg></span><span><strong>Communities</strong><small>Connect with earners</small></span></a>
-      <a class="oga-drawer-item" href="dashboard.html" data-close-menu><span class="oga-drawer-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span><span><strong>Dashboard &amp; Tools</strong><small>Your earning overview</small></span></a>
-      <a class="oga-drawer-item" href="blog.html" data-close-menu><span class="oga-drawer-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 4h14v16H5z"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></span><span><strong>Blog</strong><small>Articles and updates</small></span></a>
-      <a class="oga-drawer-item" href="notifications.html" data-close-menu><span class="oga-drawer-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 1 1 5.8 1c-.6 1-1.9 1.4-2.5 2.3-.3.4-.4.8-.4 1.2M12 17h.01"/></svg></span><span><strong>FAQ</strong><small>Common questions answered</small></span></a>
-      <a class="oga-drawer-item" href="support.html" data-close-menu><span class="oga-drawer-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4v8Z"/></svg></span><span><strong>Support</strong><small>Get help from our team</small></span></a>
+      <section class="oga-drawer-group authed-only">
+        <button class="oga-drawer-item oga-drawer-group-toggle" type="button" aria-expanded="false">
+          <span class="oga-drawer-icon">₦</span><span><strong>Earn</strong><small>Jobs and worker tools</small></span>
+          <svg class="oga-drawer-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+        <div class="oga-drawer-subnav">
+          <a href="tasks.html" data-close-menu><span class="oga-drawer-icon mini">T</span><span><strong>Browse Tasks</strong><small>Available jobs</small></span></a>
+          <a href="monitor.html" data-close-menu><span class="oga-drawer-icon mini">J</span><span><strong>Job Monitor</strong><small>Live task feed</small></span></a>
+          <a href="my-tasks.html" data-close-menu><span class="oga-drawer-icon mini">✓</span><span><strong>My Tasks</strong><small>Accepted work</small></span></a>
+          <a href="communities.html" data-close-menu><span class="oga-drawer-icon mini">C</span><span><strong>Communities</strong><small>Groups and feeds</small></span></a>
+          <a href="worker.html" data-close-menu><span class="oga-drawer-icon mini">W</span><span><strong>Worker Portal</strong><small>Orders and ratings</small></span></a>
+          <a href="leaderboard.html" data-close-menu><span class="oga-drawer-icon mini">L</span><span><strong>Leaderboard</strong><small>Top earners</small></span></a>
+        </div>
+      </section>
+
+      <section class="oga-drawer-group authed-only">
+        <button class="oga-drawer-item oga-drawer-group-toggle" type="button" aria-expanded="false">
+          <span class="oga-drawer-icon">B</span><span><strong>Business</strong><small>Post and measure tasks</small></span>
+          <svg class="oga-drawer-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+        <div class="oga-drawer-subnav">
+          <a href="post-task.html" data-close-menu><span class="oga-drawer-icon mini">+</span><span><strong>Post Task</strong><small>Create a campaign</small></span></a>
+          <a href="analytics.html" data-close-menu><span class="oga-drawer-icon mini">A</span><span><strong>Analytics</strong><small>Performance reports</small></span></a>
+        </div>
+      </section>
+
+      <section class="oga-drawer-group authed-only">
+        <button class="oga-drawer-item oga-drawer-group-toggle" type="button" aria-expanded="false">
+          <span class="oga-drawer-icon">G</span><span><strong>Growth</strong><small>Referrals and rewards</small></span>
+          <svg class="oga-drawer-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+        <div class="oga-drawer-subnav">
+          <a href="referrals.html" data-close-menu><span class="oga-drawer-icon mini">R</span><span><strong>Referrals</strong><small>Invite earners</small></span></a>
+          <a href="vault.html" data-close-menu><span class="oga-drawer-icon mini">V</span><span><strong>Rewards Vault</strong><small>Pool and distributions</small></span></a>
+        </div>
+      </section>
+
+      <section class="oga-drawer-group authed-only">
+        <button class="oga-drawer-item oga-drawer-group-toggle" type="button" aria-expanded="false">
+          <span class="oga-drawer-icon">A</span><span><strong>Account</strong><small>Verification and settings</small></span>
+          <svg class="oga-drawer-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+        <div class="oga-drawer-subnav">
+          <a href="kyc.html" data-close-menu><span class="oga-drawer-icon mini">K</span><span><strong>KYC</strong><small>Verification</small></span></a>
+          <a href="settings.html" data-close-menu><span class="oga-drawer-icon mini">S</span><span><strong>Settings</strong><small>Preferences</small></span></a>
+        </div>
+      </section>
     </nav>
 
     <div class="oga-drawer-foot public-only">
       <div class="oga-drawer-actions">
-        <button type="button" onclick="openAuthModal('screen-connect')"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M16 12h5"/></svg>Connect</button>
+        <button type="button" onclick="window.location.href='login.html'"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M16 12h5"/></svg>Login</button>
         <button type="button" onclick="setAuthPreview(true)">Switch to Authed</button>
       </div>
     </div>
@@ -992,18 +1038,18 @@ body[data-auth="public"] .authed-only,body[data-auth="authed"] .public-only{disp
 
   <section class="section center" id="store">
     <div class="container">
-      <h2 class="section-title">Worker Store</h2>
+      <h2 class="section-title">Deals</h2>
       <p class="section-sub">Featured products from workers</p>
       <div class="store-grid">
         <article class="product"><div class="product-art">Logo Maker<br>Pro</div><div class="product-body"><div class="product-title"><span>Premium Logo Design Pack</span><time>4.9</time></div><p class="product-desc">5 unique logo concepts in PNG, SVG and AI formats. Fast delivery.</p><div class="seller"><div class="avatar">LD</div><div><strong>LogoDoctor</strong><span>42 reviews</span></div></div><div class="price"><strong>&#8358;8,000</strong><span>0.095 SOL</span></div><a class="view-more" href="store.html">View more</a></div></article>
         <article class="product"><div class="product-art">AI Brand<br>Videos</div><div class="product-body"><div class="product-title"><span>AI videos</span><time>Dec 14</time></div><p class="product-desc">Bring your Web3 project to life with short AI-powered brand videos.</p><div class="seller"><div class="avatar" style="background:#f5b301">VP</div><div><strong>VisualsPlug</strong><span>New creator</span></div></div><div class="price"><strong>$7.45</strong><span>0.089 SOL</span></div><a class="view-more" href="store.html">View more</a></div></article>
         <article class="product"><div class="product-art">X Verified<br>Followers</div><div class="product-body"><div class="product-title"><span>X Growth Bundle</span><time>Apr 21</time></div><p class="product-desc">Real Nigerian and diaspora accounts with gradual drip delivery.</p><div class="seller"><div class="avatar" style="background:#111">XG</div><div><strong>GrowthPlug</strong><span>88 reviews</span></div></div><div class="price"><strong>$12.00</strong><span>0.143 SOL</span></div><a class="view-more" href="store.html">View more</a></div></article>
       </div>
-      <div class="big-cta"><a class="btn pill" href="store.html">Browse all products <svg width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.6" viewBox="0 0 24 24"><path d="M5 12h14M13 5l7 7-7 7"/></svg></a></div>
+      <div class="big-cta"><a class="btn pill" href="store.html">Browse all deals <svg width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.6" viewBox="0 0 24 24"><path d="M5 12h14M13 5l7 7-7 7"/></svg></a></div>
     </div>
   </section>
 
-  <section class="section center" id="communities">
+  <section class="section center" id="community-preview">
     <div class="container">
       <h2 class="section-title">Communities</h2>
       <p class="section-sub">Discover active OgaPay communities</p>
@@ -1019,7 +1065,7 @@ body[data-auth="public"] .authed-only,body[data-auth="authed"] .public-only{disp
 
 <nav class="mobile-bottom-nav" aria-label="Mobile app navigation">
   <a href="tasks.html" class="active"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v13H4V7Z"/><path d="M9 5V3h6v2M8 11h8"/></svg><span>Jobs</span></a>
-  <a href="store.html"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18M16 10a4 4 0 0 1-8 0"/></svg><span>Store</span></a>
+  <a href="store.html"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18M16 10a4 4 0 0 1-8 0"/></svg><span>Deals</span></a>
   <a href="post-task.html" class="create"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span>Create</span></a>
   <a href="notifications.html"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><span>Alerts</span></a>
   <a href="dashboard.html"><span class="profile-dot"></span><span>Profile</span></a>
@@ -1472,8 +1518,8 @@ function renderAuthState(isAuthed) {
     btn.setAttribute('data-auth', authed ? 'authed' : 'public');
     const label = btn.querySelector('.wallet-label');
     const strong = btn.querySelector('strong');
-    if (label) label.textContent = authed ? 'Balance:' : 'Connect';
-    if (strong) strong.textContent = authed ? '$0.01' : '';
+    if (strong && label) label.textContent = authed ? 'Balance:' : 'Connect';
+    if (strong) strong.textContent = authed ? '₦42,850' : '';
   });
 }
 function setAuthPreview(isAuthed) {
