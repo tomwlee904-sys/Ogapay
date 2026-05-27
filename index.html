@@ -532,8 +532,10 @@ footer{
 @media(max-width:760px){
   :root{--nav-h:72px}
   body{padding-bottom:92px;background:#fff}
+  [data-theme="dark"] body{background:#05070b}
   .container{width:100%;padding:0 24px}
   .nav{box-shadow:0 10px 28px rgba(16,21,37,.04)}
+  [data-theme="dark"] .nav{background:rgba(5,7,11,.94);box-shadow:none}
   .nav-inner{width:100%;padding:0 24px;gap:12px;grid-template-columns:1fr auto}
   .brand{font-size:24px;letter-spacing:-.8px;gap:12px}
   .logo-mark{width:44px;height:44px;border-radius:12px}
@@ -547,16 +549,22 @@ footer{
   .wallet-btn svg,.wallet-label{display:none}
   .wallet-btn strong{font-size:18px}
   .icon-btn{width:40px;height:40px;border:0;background:transparent;color:#172033}
+  [data-theme="dark"] .icon-btn{color:#f4f7fb}
   .icon-btn svg{width:30px;height:30px;stroke-width:2.35}
   .hero{background:radial-gradient(circle at 50% 38%,rgba(124,58,237,.10),transparent 32%),radial-gradient(circle at 54% 72%,rgba(37,99,235,.11),transparent 42%),linear-gradient(180deg,#fff 0%,#f8fbff 100%)}
   .hero::before{background:radial-gradient(ellipse at 50% 58%,rgba(196,181,253,.17),transparent 48%);opacity:.75}
   .hero::after{height:72px;background:linear-gradient(transparent,#fff)}
+  [data-theme="dark"] .hero{background:radial-gradient(circle at 30% 52%,rgba(124,58,237,.22),transparent 36%),radial-gradient(circle at 70% 58%,rgba(6,182,212,.16),transparent 40%),linear-gradient(180deg,#05070b 0%,#05070b 100%)}
+  [data-theme="dark"] .hero::before{background:radial-gradient(ellipse at 50% 62%,rgba(96,165,250,.14),transparent 48%);opacity:.8}
+  [data-theme="dark"] .hero::after{background:linear-gradient(transparent,#05070b)}
   .hero-grid{display:block;padding:54px 0 30px;text-align:center}
   .hero-grid>*{width:100%;max-width:100%}
   .hero-copy{margin:0 auto}
   .hero h1{font-size:clamp(40px,9vw,56px);letter-spacing:-1.6px;color:#101525;margin-bottom:16px}
   .hero h1 .arrow{color:#a9b3c2}
   .hero p{font-size:18px;line-height:1.48;margin:0 auto 24px;color:#66738a;max-width:620px}
+  [data-theme="dark"] .hero h1,[data-theme="dark"] .hero h1 .arrow{color:#f8fafc}
+  [data-theme="dark"] .hero p{color:#aab4c4}
   .btn-row{display:flex;justify-content:center;gap:12px;width:100%;flex-wrap:nowrap}
   .btn{width:auto;min-width:146px;height:48px;padding:0 20px;border-radius:11px;font-size:16px}
   .analytics-card{
@@ -574,17 +582,22 @@ footer{
     border:1.5px solid var(--border);border-radius:14px;background:rgba(255,255,255,.82);
     box-shadow:var(--shadow-soft);
   }
+  [data-theme="dark"] .stat{background:rgba(8,11,19,.72);border-color:#252b36;box-shadow:none}
   .stat+.stat{margin-top:0}
   .stat strong{font-size:27px;letter-spacing:-.6px;color:#101525;background:none;-webkit-text-fill-color:currentColor;animation:none}
+  [data-theme="dark"] .stat strong{color:#f8fafc}
   .stat span{margin-top:5px;font-size:12px;text-transform:none;letter-spacing:0;line-height:1.2}
   .analytics-foot{display:none}
   .jobs-wrap{padding:42px 0 40px;background:#fff}
   .quick{padding-top:34px;padding-bottom:42px;background:linear-gradient(180deg,#fff 0%,#f8fbff 100%)}
+  [data-theme="dark"] .jobs-wrap,[data-theme="dark"] .quick{background:#05070b}
+  [data-theme="dark"] .section{background:#05070b}
   .section-kicker{font-size:14px;margin-bottom:16px;letter-spacing:2.1px}
   .quick-grid,.paths,.jobs-track,.store-grid,.community-grid{grid-template-columns:1fr}
   .quick-grid{gap:16px}
   .quick-grid{gap:12px}
   .quick-card{min-height:68px;border-radius:14px;padding:14px 18px;box-shadow:0 10px 24px rgba(16,21,37,.07)}
+  [data-theme="dark"] .quick-card,[data-theme="dark"] .path-card,[data-theme="dark"] .product,[data-theme="dark"] .community-card{background:#080b13;border-color:#252b36;box-shadow:none}
   .quick-icon{width:42px;height:42px;font-size:17px;border-radius:11px}
   .quick-name{font-size:16px}
   .quick-price{font-size:14px}
@@ -596,24 +609,30 @@ footer{
   .path-icon{width:50px;height:50px;border-radius:14px;font-size:22px}
   .jobs-track,.store-grid,.community-grid{gap:18px;margin-top:34px}
   .job-card,.product,.community-card{width:min(100%,680px);margin:0 auto;border-radius:18px}
-  .job-card{min-height:430px}
-  .job-top{min-height:76px;padding:18px 22px;gap:14px}
-  .avatar{width:46px;height:46px;font-size:13px}
-  .listed{font-size:14px;letter-spacing:1.6px}
-  .job-name{font-size:19px}
-  .job-body{padding:20px 22px}
-  .progress-line{font-size:15px}
-  .progress-line strong{font-size:16px}
-  .progress{height:8px;margin:13px 0 14px}
-  .meta-row{gap:8px;font-size:15px;margin-bottom:18px}
-  .reward{height:100px;border-radius:15px;justify-content:center;text-align:center}
-  .reward strong{font-size:34px}
-  .reward span{font-size:16px}
-  .reward small{font-size:13px;letter-spacing:1.2px}
-  .job-tags{font-size:15px;margin-bottom:16px}
-  .about{padding-top:16px}
-  .about-head{font-size:12px;margin-bottom:10px}
-  .about p{font-size:15px;line-height:1.45;min-height:44px}
+  .jobs-track{grid-auto-rows:1fr}
+  .job-card{min-height:382px;box-shadow:0 10px 26px rgba(16,21,37,.07)}
+  [data-theme="dark"] .job-card{background:#080b13;border-color:#252b36;box-shadow:none}
+  [data-theme="dark"] .job-card.is-active{border-color:#374151;box-shadow:0 0 0 1px rgba(96,165,250,.12)}
+  .job-top{min-height:64px;padding:13px 18px;gap:12px}
+  [data-theme="dark"] .job-top{background:linear-gradient(120deg,rgba(124,58,237,.12),rgba(37,99,235,.08),rgba(6,182,212,.08));border-bottom-color:#252b36}
+  .avatar{width:40px;height:40px;font-size:12px}
+  .listed{font-size:11px;letter-spacing:1.1px}
+  .job-name{font-size:16px}
+  .job-body{padding:15px 18px 17px}
+  .progress-line{font-size:12px;letter-spacing:.7px}
+  .progress-line strong{font-size:13px}
+  .progress{height:6px;margin:10px 0 12px}
+  .meta-row{gap:7px;font-size:12px;margin-bottom:13px}
+  .reward{height:82px;border-radius:12px;justify-content:center;text-align:center}
+  [data-theme="dark"] .reward{background:linear-gradient(135deg,rgba(37,99,235,.13),rgba(124,58,237,.08));border-color:#252b36}
+  .reward strong{font-size:28px}
+  .reward span{font-size:12px}
+  .reward small{font-size:11px;letter-spacing:1px}
+  .job-tags{font-size:12px;margin-bottom:13px}
+  .about{padding-top:12px}
+  [data-theme="dark"] .about{border-top-color:#252b36}
+  .about-head{font-size:10px;margin-bottom:8px}
+  .about p{font-size:13px;line-height:1.45;min-height:39px}
   .dots{margin-top:24px;gap:14px}
   .dots span{width:38px;height:10px}
   .dots span.active{width:48px}
@@ -646,12 +665,15 @@ footer{
     border-top:1px solid var(--border);box-shadow:0 -10px 30px rgba(16,21,37,.08);
     backdrop-filter:blur(18px) saturate(1.25);
   }
+  [data-theme="dark"] .mobile-bottom-nav{background:rgba(5,7,11,.96);border-top-color:#252b36;box-shadow:none}
   .mobile-bottom-nav a{
     min-width:0;display:grid;justify-items:center;gap:4px;
     color:#66738a;font-size:13px;font-weight:800;
   }
   .mobile-bottom-nav svg{width:28px;height:28px;stroke-width:2.2}
   .mobile-bottom-nav .active,.mobile-bottom-nav a:hover{color:#101525}
+  [data-theme="dark"] .mobile-bottom-nav a{color:#8b96a8}
+  [data-theme="dark"] .mobile-bottom-nav .active,[data-theme="dark"] .mobile-bottom-nav a:hover{color:#f8fafc}
   .mobile-bottom-nav .create{
     transform:translateY(-18px);gap:5px;color:#101525;
   }
@@ -659,7 +681,9 @@ footer{
     width:58px;height:58px;padding:15px;border-radius:18px;
     background:#101525;color:#fff;box-shadow:0 10px 22px rgba(16,21,37,.24);
   }
+  [data-theme="dark"] .mobile-bottom-nav .create svg{background:#f8fafc;color:#05070b;box-shadow:0 0 22px rgba(167,139,250,.18)}
   .profile-dot{width:34px;height:34px;border-radius:50%;background:#05070b;display:block;box-shadow:inset 0 0 0 1px rgba(255,255,255,.14)}
+  [data-theme="dark"] .profile-dot{background:#e5e7eb}
 }
 @media(max-width:520px){
   :root{--nav-h:64px}
@@ -683,16 +707,16 @@ footer{
   .section-title{font-size:38px}
   .section-sub{font-size:17px}
   .job-card,.product,.community-card{border-radius:16px}
-  .job-card{min-height:398px}
-  .job-top{min-height:68px;padding:15px 18px}
-  .avatar{width:40px;height:40px}
-  .listed{font-size:12px}
-  .job-name{font-size:17px}
-  .job-body{padding:16px 18px}
-  .progress-line,.meta-row{font-size:13px}
-  .reward{height:84px}
-  .reward strong{font-size:29px}
-  .about p{font-size:14px;min-height:42px}
+  .job-card{min-height:374px}
+  .job-top{min-height:62px;padding:12px 16px}
+  .avatar{width:38px;height:38px}
+  .listed{font-size:10px}
+  .job-name{font-size:15px}
+  .job-body{padding:14px 16px 16px}
+  .progress-line,.meta-row{font-size:11px}
+  .reward{height:78px}
+  .reward strong{font-size:26px}
+  .about p{font-size:13px;min-height:39px}
   .product-art{height:250px}
   .product-title{font-size:20px}
   .product-desc,.community-body p{font-size:16px}
