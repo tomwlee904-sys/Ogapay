@@ -38,7 +38,232 @@
 <body data-page="tasks.html">
 <header class="nav"><div class="nav-inner"><a class="brand" href="index.html"><span class="logo"><i class="ti ti-layout-grid"></i></span><span>Oga<span>Pay</span></span></a><nav class="nav-links"><a class="nav-link" href="index.html" data-navlink><i class="ti ti-home"></i>Home</a><a class="nav-link active" href="tasks.html" data-navlink><i class="ti ti-layout-grid"></i>Tasks</a><a class="nav-link" href="store.html" data-navlink><i class="ti ti-discount-2"></i>Deals</a><a class="nav-link" href="communities.html" data-navlink><i class="ti ti-users-group"></i>Communities</a><a class="nav-link" href="index.html#footer" data-navlink><i class="ti ti-help-circle"></i>FAQ</a></nav><div class="nav-actions"><a class="pill-btn nav-auth-only" href="post-task.html"><i class="ti ti-square-plus"></i>Post Task</a><button class="icon-btn" id="themeToggle" aria-label="Toggle dark mode"><i class="ti ti-moon"></i></button><button class="menu-btn" id="menuBtn" aria-label="Open menu"><i class="ti ti-menu-2"></i></button></div></div></header>
 <div class="drawer" id="mobileMenu"><div class="overlay" data-close-menu></div><aside class="drawer-panel"><div class="drawer-head"><a class="brand" href="index.html"><span class="logo"><i class="ti ti-layout-grid"></i></span>OgaPay</a><button class="icon-btn" data-close-menu aria-label="Close menu"><i class="ti ti-x"></i></button></div><div class="drawer-section">Main</div><a class="drawer-link" href="dashboard.html" data-close-menu><i class="ti ti-dashboard"></i><span>Overview</span></a><a class="drawer-link" href="profile.html" data-close-menu><i class="ti ti-user-circle"></i><span>My Profile</span></a><a class="drawer-link" href="wallet.html" data-close-menu><i class="ti ti-wallet"></i><span>Wallet</span></a><a class="drawer-link" href="notifications.html" data-close-menu><i class="ti ti-bell"></i><span>Notifications</span></a><a class="drawer-link" href="messages.html" data-close-menu><i class="ti ti-message-2"></i><span>Messages</span></a><div class="drawer-section">Earn</div><a class="drawer-link active" href="tasks.html" data-close-menu><i class="ti ti-briefcase"></i><span>Browse Tasks</span></a><a class="drawer-link" href="monitor.html" data-close-menu><i class="ti ti-eye"></i><span>Job Monitor</span></a><a class="drawer-link" href="my-tasks.html" data-close-menu><i class="ti ti-checklist"></i><span>My Tasks</span></a><a class="drawer-link" href="communities.html" data-close-menu><i class="ti ti-users-group"></i><span>Communities</span></a><a class="drawer-link" href="worker.html" data-close-menu><i class="ti ti-id-badge-2"></i><span>Worker Portal</span></a><a class="drawer-link" href="leaderboard.html" data-close-menu><i class="ti ti-trophy"></i><span>Leaderboard</span></a><div class="drawer-section">Business</div><a class="drawer-link" href="post-task.html" data-close-menu><i class="ti ti-square-plus"></i><span>Post Task</span></a><a class="drawer-link" href="analytics.html" data-close-menu><i class="ti ti-chart-line"></i><span>Analytics</span></a><div class="drawer-section">Growth</div><a class="drawer-link" href="referrals.html" data-close-menu><i class="ti ti-link"></i><span>Referrals</span></a><a class="drawer-link" href="vault.html" data-close-menu><i class="ti ti-building-bank"></i><span>Rewards Vault</span></a><div class="drawer-section">Account</div><a class="drawer-link" href="kyc.html" data-close-menu><i class="ti ti-shield-check"></i><span>KYC</span></a><a class="drawer-link" href="settings.html" data-close-menu><i class="ti ti-settings"></i><span>Settings</span></a><div class="card" style="margin-top:12px"><div class="small">Preview auth state</div><div class="row" style="margin-top:10px"><button class="btn primary" id="authOn">Authed</button><button class="btn" id="authOff">Public</button></div></div></aside></div>
-<div class="app"><aside class="sidebar"><a class="sb-cta" href="post-task.html"><i class="ti ti-square-plus"></i>Post a Task</a><span class="sb-label">Main</span><a class="sb-item" href="dashboard.html"><span class="sb-icon"><i class="ti ti-dashboard"></i></span>Overview</a><a class="sb-item" href="profile.html"><span class="sb-icon"><i class="ti ti-user-circle"></i></span>My Profile</a><a class="sb-item" href="wallet.html"><span class="sb-icon"><i class="ti ti-wallet"></i></span>Wallet</a><a class="sb-item" href="notifications.html"><span class="sb-icon"><i class="ti ti-bell"></i></span>Notifications</a><a class="sb-item" href="messages.html"><span class="sb-icon"><i class="ti ti-message-2"></i></span>Messages</a><span class="sb-label">Earn</span><a class="sb-item active" href="tasks.html"><span class="sb-icon"><i class="ti ti-briefcase"></i></span>Browse Tasks</a><a class="sb-item" href="monitor.html"><span class="sb-icon"><i class="ti ti-eye"></i></span>Job Monitor</a><a class="sb-item" href="my-tasks.html"><span class="sb-icon"><i class="ti ti-checklist"></i></span>My Tasks</a><a class="sb-item" href="communities.html"><span class="sb-icon"><i class="ti ti-users-group"></i></span>Communities</a><a class="sb-item" href="worker.html"><span class="sb-icon"><i class="ti ti-id-badge-2"></i></span>Worker Portal</a><a class="sb-item" href="leaderboard.html"><span class="sb-icon"><i class="ti ti-trophy"></i></span>Leaderboard</a><span class="sb-label">Business</span><a class="sb-item" href="post-task.html"><span class="sb-icon"><i class="ti ti-square-plus"></i></span>Post Task</a><a class="sb-item" href="analytics.html"><span class="sb-icon"><i class="ti ti-chart-line"></i></span>Analytics</a><span class="sb-label">Growth</span><a class="sb-item" href="referrals.html"><span class="sb-icon"><i class="ti ti-link"></i></span>Referrals</a><a class="sb-item" href="vault.html"><span class="sb-icon"><i class="ti ti-building-bank"></i></span>Rewards Vault</a><span class="sb-label">Account</span><a class="sb-item" href="kyc.html"><span class="sb-icon"><i class="ti ti-shield-check"></i></span>KYC</a><a class="sb-item" href="settings.html"><span class="sb-icon"><i class="ti ti-settings"></i></span>Settings</a><div class="sb-user"><div class="avatar-mini">AD</div><div><strong>Ada Danladi</strong><div class="small">Worker · KYC verified</div></div></div></aside><main class="main"><section class="page"><div class="page-head"><div><span class="eyebrow"><i class="ti ti-square-plus"></i>Tasks</span><h1>Post a Task</h1><p class="lead">Create a new task for workers to complete. Set your budget, requirements, and reward.</p></div></div><div class="grid cols-2" style="max-width:720px"><div class="card" style="grid-column:1/-1"><div class="form"><div class="field"><label>Task title</label><input type="text" placeholder="e.g. Like &amp; retweet our pinned post" /></div><div class="field"><label>Category</label><select><option>Social Media</option><option>Data Entry</option><option>Content Writing</option><option>App Testing</option><option>Survey</option><option>Design</option><option>Translation</option><option>Web Research</option><option>Video Review</option><option>Other</option></select></div><div class="field"><label>Description</label><textarea rows="4" placeholder="Describe what workers need to do, how to submit proof, and any requirements."></textarea></div><div class="field"><label>Platform (optional)</label><input type="text" placeholder="e.g. X / Twitter, Telegram, Instagram" /></div><div class="grid cols-2"><div class="field"><label>Reward per task</label><input type="text" placeholder="e.g. 500" /></div><div class="field"><label>Currency</label><select><option>NGN</option><option>USDC</option><option>USDT</option></select></div></div><div class="field"><label>Total slots</label><input type="number" placeholder="Number of workers needed" min="1" /></div><div class="field"><label>Proof requirement</label><input type="text" placeholder="e.g. Screenshot URL, username" /></div><div class="field"><label>Deadline (optional)</label><input type="date" /></div><div style="display:flex;gap:12px;margin-top:8px"><button class="btn primary" style="flex:1;height:48px;font-size:15px"><i class="ti ti-send"></i>Post Task</button><button class="btn" style="flex:0;height:48px">Save Draft</button></div></div></div></div></section></main></div><div class="toast" id="toast">Done</div>
+<div class="app"><aside class="sidebar"><a class="sb-cta" href="post-task.html"><i class="ti ti-square-plus"></i>Post a Task</a><span class="sb-label">Main</span><a class="sb-item" href="dashboard.html"><span class="sb-icon"><i class="ti ti-dashboard"></i></span>Overview</a><a class="sb-item" href="profile.html"><span class="sb-icon"><i class="ti ti-user-circle"></i></span>My Profile</a><a class="sb-item" href="wallet.html"><span class="sb-icon"><i class="ti ti-wallet"></i></span>Wallet</a><a class="sb-item" href="notifications.html"><span class="sb-icon"><i class="ti ti-bell"></i></span>Notifications</a><a class="sb-item" href="messages.html"><span class="sb-icon"><i class="ti ti-message-2"></i></span>Messages</a><span class="sb-label">Earn</span><a class="sb-item active" href="tasks.html"><span class="sb-icon"><i class="ti ti-briefcase"></i></span>Browse Tasks</a><a class="sb-item" href="monitor.html"><span class="sb-icon"><i class="ti ti-eye"></i></span>Job Monitor</a><a class="sb-item" href="my-tasks.html"><span class="sb-icon"><i class="ti ti-checklist"></i></span>My Tasks</a><a class="sb-item" href="communities.html"><span class="sb-icon"><i class="ti ti-users-group"></i></span>Communities</a><a class="sb-item" href="worker.html"><span class="sb-icon"><i class="ti ti-id-badge-2"></i></span>Worker Portal</a><a class="sb-item" href="leaderboard.html"><span class="sb-icon"><i class="ti ti-trophy"></i></span>Leaderboard</a><span class="sb-label">Business</span><a class="sb-item" href="post-task.html"><span class="sb-icon"><i class="ti ti-square-plus"></i></span>Post Task</a><a class="sb-item" href="analytics.html"><span class="sb-icon"><i class="ti ti-chart-line"></i></span>Analytics</a><span class="sb-label">Growth</span><a class="sb-item" href="referrals.html"><span class="sb-icon"><i class="ti ti-link"></i></span>Referrals</a><a class="sb-item" href="vault.html"><span class="sb-icon"><i class="ti ti-building-bank"></i></span>Rewards Vault</a><span class="sb-label">Account</span><a class="sb-item" href="kyc.html"><span class="sb-icon"><i class="ti ti-shield-check"></i></span>KYC</a><a class="sb-item" href="settings.html"><span class="sb-icon"><i class="ti ti-settings"></i></span>Settings</a><div class="sb-user"><div class="avatar-mini">AD</div><div><strong>Ada Danladi</strong><div class="small">Worker · KYC verified</div></div></div></aside><main class="main"><section class="page">
+<div class="page-head">
+  <div>
+    <span class="eyebrow"><i class="ti ti-square-plus"></i>Create Task</span>
+    <h1 style="font-size:clamp(28px,3.6vw,44px)">Post a Task</h1>
+    <p class="lead" style="max-width:540px">Set your budget, choose your currency, and let workers apply. AI can help you write the perfect description.</p>
+  </div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 340px;gap:24px;align-items:start">
+
+  <!-- Main form -->
+  <div style="display:grid;gap:16px">
+    <div class="card" style="padding:24px">
+      <div style="display:grid;gap:18px">
+        <div>
+          <label style="font-size:13px;font-weight:800;color:var(--text2);display:block;margin-bottom:6px">Task title</label>
+          <input type="text" placeholder="e.g. Like &amp; retweet our pinned launch post" style="width:100%;height:50px;padding:0 14px;border:1.5px solid var(--border);border-radius:12px;background:var(--bg);color:var(--text);font-size:15px;outline:none" />
+        </div>
+        <div>
+          <label style="font-size:13px;font-weight:800;color:var(--text2);display:block;margin-bottom:6px">Category</label>
+          <select style="width:100%;height:50px;padding:0 14px;border:1.5px solid var(--border);border-radius:12px;background:var(--bg);color:var(--text);font-size:15px;outline:none;appearance:none">
+            <option>Social Media</option>
+            <option>Data Entry</option>
+            <option>Content Writing</option>
+            <option>App Testing</option>
+            <option>Survey</option>
+            <option>Design</option>
+            <option>Translation</option>
+            <option>Web Research</option>
+            <option>Video Review</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+            <label style="font-size:13px;font-weight:800;color:var(--text2)">Description</label>
+            <button onclick="aiAssist()" style="display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border:1.5px solid var(--border);border-radius:8px;background:var(--bg2);color:var(--accent);font-size:12px;font-weight:700;cursor:pointer"><i class="ti ti-sparkles"></i>AI Assist</button>
+          </div>
+          <textarea id="taskDesc" rows="4" placeholder="Describe what workers need to do, how to submit proof, and any special requirements." style="width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:12px;background:var(--bg);color:var(--text);font-size:14px;line-height:1.6;outline:none;resize:vertical;font-family:inherit"></textarea>
+        </div>
+        <div>
+          <label style="font-size:13px;font-weight:800;color:var(--text2);display:block;margin-bottom:6px">Platform (optional)</label>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <label style="display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border:1.5px solid var(--border);border-radius:10px;background:var(--bg);cursor:pointer;font-size:13px;font-weight:600;transition:all .15s" onclick="selectPlatform(this)">
+              <i class="ti ti-brand-x" style="font-size:18px"></i>X / Twitter
+            </label>
+            <label style="display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border:1.5px solid var(--border);border-radius:10px;background:var(--bg);cursor:pointer;font-size:13px;font-weight:600;transition:all .15s" onclick="selectPlatform(this)">
+              <i class="ti ti-brand-telegram" style="font-size:18px"></i>Telegram
+            </label>
+            <label style="display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border:1.5px solid var(--border);border-radius:10px;background:var(--bg);cursor:pointer;font-size:13px;font-weight:600;transition:all .15s" onclick="selectPlatform(this)">
+              <i class="ti ti-brand-instagram" style="font-size:18px"></i>Instagram
+            </label>
+            <label style="display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border:1.5px solid var(--border);border-radius:10px;background:var(--bg);cursor:pointer;font-size:13px;font-weight:600;transition:all .15s" onclick="selectPlatform(this)">
+              <i class="ti ti-brand-discord" style="font-size:18px"></i>Discord
+            </label>
+            <label style="display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border:1.5px solid var(--border);border-radius:10px;background:var(--bg);cursor:pointer;font-size:13px;font-weight:600;transition:all .15s" onclick="selectPlatform(this)">
+              <i class="ti ti-world" style="font-size:18px"></i>Web / Other
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="padding:24px">
+      <div style="font-size:14px;font-weight:800;margin-bottom:16px">Reward &amp; Budget</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+        <div>
+          <label style="font-size:12px;font-weight:700;color:var(--text2);display:block;margin-bottom:5px">Reward per task</label>
+          <input type="text" id="rewardInput" placeholder="e.g. 500" oninput="calcBudget()" style="width:100%;height:48px;padding:0 14px;border:1.5px solid var(--border);border-radius:10px;background:var(--bg);color:var(--text);font-size:15px;outline:none" />
+        </div>
+        <div>
+          <label style="font-size:12px;font-weight:700;color:var(--text2);display:block;margin-bottom:5px">Currency</label>
+          <div style="display:flex;gap:6px">
+            <button onclick="setCurrency('NGN',this)" class="cur-btn active" data-cur="NGN" style="flex:1;height:48px;border:1.5px solid var(--border2);border-radius:10px;background:var(--primary);color:var(--bg);font-weight:800;font-size:14px;cursor:pointer">NGN</button>
+            <button onclick="setCurrency('USDC',this)" class="cur-btn" data-cur="USDC" style="flex:1;height:48px;border:1.5px solid var(--border);border-radius:10px;background:var(--bg);color:var(--text2);font-weight:700;font-size:14px;cursor:pointer">USDC</button>
+            <button onclick="setCurrency('USDT',this)" class="cur-btn" data-cur="USDT" style="flex:1;height:48px;border:1.5px solid var(--border);border-radius:10px;background:var(--bg);color:var(--text2);font-weight:700;font-size:14px;cursor:pointer">USDT</button>
+          </div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+        <div>
+          <label style="font-size:12px;font-weight:700;color:var(--text2);display:block;margin-bottom:5px">Total slots</label>
+          <input type="number" id="slotsInput" placeholder="e.g. 50" min="1" oninput="calcBudget()" style="width:100%;height:48px;padding:0 14px;border:1.5px solid var(--border);border-radius:10px;background:var(--bg);color:var(--text);font-size:15px;outline:none" />
+        </div>
+        <div>
+          <label style="font-size:12px;font-weight:700;color:var(--text2);display:block;margin-bottom:5px">Total budget</label>
+          <div id="totalBudget" style="width:100%;height:48px;padding:0 14px;border:1.5px dashed var(--border2);border-radius:10px;background:var(--bg2);color:var(--text3);font-size:15px;font-weight:700;display:flex;align-items:center">—</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="padding:24px">
+      <div style="display:grid;gap:16px">
+        <div>
+          <label style="font-size:13px;font-weight:800;color:var(--text2);display:block;margin-bottom:6px">Proof requirement</label>
+          <input type="text" placeholder="e.g. Screenshot URL, username, transaction ID" style="width:100%;height:50px;padding:0 14px;border:1.5px solid var(--border);border-radius:12px;background:var(--bg);color:var(--text);font-size:15px;outline:none" />
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div>
+            <label style="font-size:12px;font-weight:700;color:var(--text2);display:block;margin-bottom:5px">Deadline (optional)</label>
+            <input type="date" style="width:100%;height:48px;padding:0 14px;border:1.5px solid var(--border);border-radius:10px;background:var(--bg);color:var(--text);font-size:15px;outline:none" />
+          </div>
+          <div>
+            <label style="font-size:12px;font-weight:700;color:var(--text2);display:block;margin-bottom:5px">Visibility</label>
+            <select style="width:100%;height:48px;padding:0 14px;border:1.5px solid var(--border);border-radius:10px;background:var(--bg);color:var(--text);font-size:15px;outline:none;appearance:none">
+              <option>Public — all workers</option>
+              <option>Community only</option>
+              <option>Private — invite only</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:12px;padding-top:4px">
+      <button class="btn primary" style="flex:1;height:52px;font-size:16px;border-radius:12px"><i class="ti ti-send"></i>Post Task</button>
+      <button class="btn" style="height:52px;border-radius:12px;padding:0 24px"><i class="ti ti-device-floppy"></i>Draft</button>
+    </div>
+  </div>
+
+  <!-- Summary sidebar -->
+  <div style="position:sticky;top:calc(var(--nav-h) + 24px)">
+    <div class="card" style="padding:20px">
+      <div style="font-size:13px;font-weight:800;margin-bottom:16px;display:flex;align-items:center;gap:8px"><i class="ti ti-eye" style="color:var(--text3)"></i>Task Preview</div>
+      <div id="previewTitle" style="font-family:Outfit;font-size:18px;font-weight:800;margin-bottom:4px;color:var(--text3)">Untitled Task</div>
+      <div id="previewMeta" style="font-size:12px;color:var(--text3);margin-bottom:12px;line-height:1.5">No category selected</div>
+      <div id="previewDesc" style="font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:14px">Your task description will appear here.</div>
+      <div style="border-top:1px solid var(--border);padding-top:12px;display:grid;gap:8px">
+        <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--text2)">Reward</span><span id="previewReward" style="font-weight:700;color:var(--text3)">—</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--text2)">Slots</span><span id="previewSlots" style="font-weight:700;color:var(--text3)">—</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--text2)">Total budget</span><span id="previewTotal" style="font-weight:700;color:var(--text3)">—</span></div>
+      </div>
+    </div>
+    <div class="card" style="padding:16px;margin-top:12px;background:var(--bg2);border-color:transparent">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:36px;height:36px;border-radius:50%;background:var(--brand-blue);display:grid;place-items:center;color:#fff;font-weight:900;font-size:13px">AI</div>
+        <div style="font-size:12px;line-height:1.5;color:var(--text2)"><strong style="color:var(--text)">AI Assist</strong><br />Click the sparkles icon above to auto-generate your task description.</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</section></main></div><div class="toast" id="toast">Done</div>
+
+<script>
+function selectPlatform(el) {
+  document.querySelectorAll('[onclick*="selectPlatform"]').forEach(e => {
+    e.style.borderColor = 'var(--border)';
+    e.style.background = 'var(--bg)';
+  });
+  el.style.borderColor = 'var(--accent)';
+  el.style.background = 'var(--soft-purple)';
+}
+
+function setCurrency(cur, btn) {
+  document.querySelectorAll('.cur-btn').forEach(b => {
+    b.style.background = 'var(--bg)';
+    b.style.color = 'var(--text2)';
+    b.style.borderColor = 'var(--border)';
+    b.style.fontWeight = '700';
+  });
+  btn.style.background = 'var(--primary)';
+  btn.style.color = 'var(--bg)';
+  btn.style.fontWeight = '800';
+  calcBudget();
+}
+
+function calcBudget() {
+  const reward = parseFloat(document.getElementById('rewardInput').value) || 0;
+  const slots = parseInt(document.getElementById('slotsInput').value) || 0;
+  const active = document.querySelector('.cur-btn.active') || document.querySelector('.cur-btn');
+  const cur = active ? active.dataset.cur : 'NGN';
+  const el = document.getElementById('totalBudget');
+  const pReward = document.getElementById('previewReward');
+  const pSlots = document.getElementById('previewSlots');
+  const pTotal = document.getElementById('previewTotal');
+
+  pReward.textContent = reward ? cur + ' ' + reward.toLocaleString() : '—';
+  pSlots.textContent = slots || '—';
+
+  if (reward && slots) {
+    const total = reward * slots;
+    el.textContent = cur + ' ' + total.toLocaleString();
+    el.style.color = 'var(--text)';
+    pTotal.textContent = cur + ' ' + total.toLocaleString();
+  } else {
+    el.textContent = '—';
+    el.style.color = 'var(--text3)';
+    pTotal.textContent = '—';
+  }
+}
+
+function aiAssist() {
+  const desc = document.getElementById('taskDesc');
+  const samples = [
+    'We are looking for workers to help promote our brand on social media. Simply follow our page, like the pinned post, and drop a comment with your username. Submit a screenshot as proof. Quick and easy task!',
+    'Join our Telegram community and stay active for at least 24 hours. Submit your Telegram username and a screenshot showing you are a member. Rewards paid instantly after verification.',
+    'Test our new mobile app and report any bugs or issues you find. Include screenshots and a brief description of each issue. Bonus rewards for critical bug findings.',
+    'Create a short video review (30-60 seconds) of our product and post it on your social media. Share the link to your post as proof. Must keep the video up for at least 48 hours.',
+    'Complete a 5-minute survey about your experience with gig economy platforms. All responses are anonymous and used to improve our services. No special skills required.'
+  ];
+  desc.value = samples[Math.floor(Math.random() * samples.length)];
+  desc.style.borderColor = 'var(--accent)';
+  setTimeout(() => desc.style.borderColor = 'var(--border)', 1200);
+  const toast = document.getElementById('toast');
+  if (toast) { toast.textContent = 'AI description generated!'; toast.classList.add('show'); setTimeout(() => toast.classList.remove('show'), 1800); }
+}
+
+// Live preview updates
+document.addEventListener('input', function(e) {
+  const title = document.querySelector('input[placeholder*="Like & retweet"]');
+  const previewTitle = document.getElementById('previewTitle');
+  if (title && previewTitle) {
+    previewTitle.textContent = title.value.trim() || 'Untitled Task';
+    previewTitle.style.color = title.value.trim() ? 'var(--text)' : 'var(--text3)';
+  }
+  const desc = document.getElementById('taskDesc');
+  const previewDesc = document.getElementById('previewDesc');
+  if (desc && previewDesc) {
+    previewDesc.textContent = desc.value.trim() || 'Your task description will appear here.';
+    previewDesc.style.color = desc.value.trim() ? 'var(--text2)' : 'var(--text3)';
+  }
+});
+</script>
 <script>
 (function(){const html=document.documentElement,theme=document.getElementById('themeToggle'),menu=document.getElementById('mobileMenu'),btn=document.getElementById('menuBtn'),toast=document.getElementById('toast');function setTheme(v){html.setAttribute('data-theme',v);try{localStorage.setItem('ogapay-theme',v)}catch(e){} if(theme) theme.innerHTML='<i class="ti '+(v==='dark'?'ti-sun':'ti-moon')+'"></i>'}setTheme(html.getAttribute('data-theme')||'light');theme&&theme.addEventListener('click',()=>setTheme(html.getAttribute('data-theme')==='dark'?'light':'dark'));function setAuth(v){document.body.classList.toggle('is-authed',v);try{localStorage.setItem('ogapay-authenticated',v?'true':'false')}catch(e){}}let saved=true;try{saved=localStorage.getItem('ogapay-authenticated')!=='false'}catch(e){}setAuth(saved);document.getElementById('authOn')?.addEventListener('click',()=>setAuth(true));document.getElementById('authOff')?.addEventListener('click',()=>setAuth(false));btn&&btn.addEventListener('click',()=>menu.classList.add('open'));document.querySelectorAll('[data-close-menu]').forEach(el=>el.addEventListener('click',()=>menu.classList.remove('open')));function say(text){if(!toast)return;toast.textContent=text;toast.classList.add('show');setTimeout(()=>toast.classList.remove('show'),1800)}document.querySelectorAll('[data-copy]').forEach(el=>el.addEventListener('click',()=>{navigator.clipboard&&navigator.clipboard.writeText(el.getAttribute('data-copy'));say('Copied')}));document.querySelectorAll('[data-toggle-label]').forEach(el=>el.addEventListener('click',()=>{el.classList.toggle('on');say(el.classList.contains('on')?'Enabled':'Disabled')}));document.querySelectorAll('[data-join]').forEach(el=>el.addEventListener('click',()=>{const joined=el.dataset.join==='true';el.dataset.join=String(!joined);el.innerHTML=joined?'<i class="ti ti-user-plus"></i>Join':'<i class="ti ti-check"></i>Joined';say(joined?'Left community':'Joined community')}));document.querySelectorAll('[data-apply]').forEach(el=>el.addEventListener('click',()=>{el.disabled=true;el.classList.add('primary');el.innerHTML='<i class="ti ti-check"></i>Applied';say('Application submitted')}));})();
 </script>
