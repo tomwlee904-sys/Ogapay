@@ -226,7 +226,32 @@ body{font-family:"DM Sans",system-ui,sans-serif;background:#f2f5f9;min-height:10
         </button>
       </div>
 
-      <div style="text-align:center;margin:8px 0 4px">
+      <!-- Email Login Form (hidden) -->
+      <div id="emailLoginForm" style="display:none">
+        <input type="email" id="loginEmail" placeholder="Email address" style="width:100%;height:56px;padding:0 16px;border:1.5px solid #e3e9f2;border-radius:14px;font-size:15px;font-family:inherit;outline:none;margin-bottom:12px;box-sizing:border-box">
+        <input type="password" id="loginPassword" placeholder="Password" style="width:100%;height:56px;padding:0 16px;border:1.5px solid #e3e9f2;border-radius:14px;font-size:15px;font-family:inherit;outline:none;margin-bottom:8px;box-sizing:border-box">
+        <button onclick="emailLogin()" style="width:100%;height:56px;border:none;border-radius:14px;background:#4D5DFF;color:#fff;font-size:16px;font-weight:700;font-family:inherit;cursor:pointer;transition:background .2s" onmouseover="this.style.background='#3b4de0'" onmouseout="this.style.background='#4D5DFF'">Sign In</button>
+        <p id="loginMessage" style="font-size:13px;color:#dc2626;margin:10px 0 0;text-align:center;line-height:1.4"></p>
+        <div style="display:flex;justify-content:space-between;margin-top:12px;font-size:13px">
+          <a href="#" onclick="show('forgot');return false" style="color:#4D5DFF;font-weight:600;text-decoration:none">Forgot password?</a>
+          <a href="#" onclick="show('signup');return false" style="color:#4D5DFF;font-weight:600;text-decoration:none">Create account</a>
+        </div>
+        <p style="text-align:center;margin:14px 0 0"><a href="#" onclick="show('default');return false" style="color:#66738a;font-size:13px;text-decoration:none">&larr; Back</a></p>
+      </div>
+
+      <!-- Signup Form (hidden) -->
+      <div id="signupForm" style="display:none">
+        <h2 style="font-family:Outfit,sans-serif;font-size:24px;font-weight:900;letter-spacing:-.6px;color:#0F172A;margin:0 0 4px">Create account</h2>
+        <p style="font-size:14px;color:#66738a;margin:0 0 20px;line-height:1.5">Join OgaPay to start earning or promoting.</p>
+        <input type="text" id="signupName" placeholder="Full name" style="width:100%;height:56px;padding:0 16px;border:1.5px solid #e3e9f2;border-radius:14px;font-size:15px;font-family:inherit;outline:none;margin-bottom:12px;box-sizing:border-box">
+        <input type="email" id="signupEmail" placeholder="Email address" style="width:100%;height:56px;padding:0 16px;border:1.5px solid #e3e9f2;border-radius:14px;font-size:15px;font-family:inherit;outline:none;margin-bottom:12px;box-sizing:border-box">
+        <input type="password" id="signupPassword" placeholder="Password (min 8 characters)" style="width:100%;height:56px;padding:0 16px;border:1.5px solid #e3e9f2;border-radius:14px;font-size:15px;font-family:inherit;outline:none;margin-bottom:12px;box-sizing:border-box">
+        <button onclick="emailSignup()" style="width:100%;height:56px;border:none;border-radius:14px;background:#4D5DFF;color:#fff;font-size:16px;font-weight:700;font-family:inherit;cursor:pointer;transition:background .2s" onmouseover="this.style.background='#3b4de0'" onmouseout="this.style.background='#4D5DFF'">Create Account</button>
+        <p id="signupMessage" style="font-size:13px;color:#dc2626;margin:10px 0 0;text-align:center;line-height:1.4"></p>
+        <p style="text-align:center;margin:14px 0 0"><a href="#" onclick="show('email');return false" style="color:#4D5DFF;font-size:13px;font-weight:600;text-decoration:none">Already have an account? Sign in</a></p>
+      </div>
+
+      <div style="text-align:center;margin:8px 0 4px" id="forgotLink">
         <a href="#" onclick="showForgotPassword();return false" style="color:#4D5DFF;font-size:14px;font-weight:600;text-decoration:none">Forgot password?</a>
       </div>
 
@@ -241,7 +266,7 @@ body{font-family:"DM Sans",system-ui,sans-serif;background:#f2f5f9;min-height:10
 
       <div class="divider">OR</div>
 
-      <p class="signup-link">New to OgaPay? <a href="login.html?mode=signup">Create an account</a></p>
+      <p class="signup-link" id="signupLink">New to OgaPay? <a href="#" onclick="show('signup');return false">Create an account</a></p>
 
       <div class="security">
         <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
@@ -258,21 +283,141 @@ body{font-family:"DM Sans",system-ui,sans-serif;background:#f2f5f9;min-height:10
 
 <script>
 const API_BASE = 'https://ogapay-production.up.railway.app/api/v1';
+let currentView = 'default';
+
+function show(view) {
+  // Hide all views
+  document.querySelector('.auth-btns').style.display = 'none';
+  document.getElementById('forgotLink').style.display = 'none';
+  document.getElementById('forgotPasswordForm').style.display = 'none';
+  document.getElementById('emailLoginForm').style.display = 'none';
+  document.getElementById('signupForm').style.display = 'none';
+  document.querySelector('.divider').style.display = 'none';
+  document.getElementById('signupLink').style.display = 'none';
+
+  currentView = view;
+
+  if (view === 'default') {
+    document.querySelector('.auth-btns').style.display = '';
+    document.getElementById('forgotLink').style.display = '';
+    document.querySelector('.divider').style.display = '';
+    document.getElementById('signupLink').style.display = '';
+  } else if (view === 'email') {
+    document.getElementById('emailLoginForm').style.display = 'block';
+  } else if (view === 'signup') {
+    document.getElementById('signupForm').style.display = 'block';
+  } else if (view === 'forgot') {
+    document.getElementById('forgotPasswordForm').style.display = 'block';
+  }
+}
+
+// Handle ?mode=signup on page load
+(function init() {
+  const params = new URLSearchParams(location.search);
+  if (params.get('mode') === 'signup') {
+    show('signup');
+  }
+})();
+
+// Email login
+async function emailLogin() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const msgEl = document.getElementById('loginMessage');
+  const btn = document.querySelector('#emailLoginForm button');
+
+  if (!email || !password) {
+    msgEl.textContent = 'Please enter your email and password.';
+    return;
+  }
+
+  msgEl.textContent = '';
+  btn.disabled = true;
+  btn.textContent = 'Signing in...';
+
+  try {
+    const res = await fetch(API_BASE + '/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.message || 'Login failed');
+
+    const payload = json.data || json;
+    const tokens = payload.tokens || payload;
+    const access = tokens.accessToken || tokens.access_token;
+
+    if (access) localStorage.setItem('ogapay_access_token', access);
+    if (tokens.refreshToken) localStorage.setItem('ogapay_refresh_token', tokens.refreshToken);
+    localStorage.setItem('ogapay-authenticated', 'true');
+    if (payload.user) localStorage.setItem('ogapay_user', JSON.stringify(payload.user));
+
+    window.location.href = 'dashboard.html';
+  } catch (err) {
+    msgEl.textContent = err.message;
+    btn.disabled = false;
+    btn.textContent = 'Sign In';
+  }
+}
+
+// Email signup
+async function emailSignup() {
+  const name = document.getElementById('signupName').value.trim();
+  const email = document.getElementById('signupEmail').value.trim();
+  const password = document.getElementById('signupPassword').value;
+  const msgEl = document.getElementById('signupMessage');
+  const btn = document.querySelector('#signupForm button');
+
+  if (!name || !email || !password) {
+    msgEl.textContent = 'Please fill in all fields.';
+    return;
+  }
+  if (password.length < 8) {
+    msgEl.textContent = 'Password must be at least 8 characters.';
+    return;
+  }
+
+  const parts = name.split(/\s+/);
+  const firstName = parts[0];
+  const lastName = parts.slice(1).join(' ') || firstName;
+
+  msgEl.textContent = '';
+  btn.disabled = true;
+  btn.textContent = 'Creating account...';
+
+  try {
+    const res = await fetch(API_BASE + '/auth/signup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ firstName, lastName, email, password, username: email.split('@')[0] })
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.message || 'Signup failed');
+
+    const payload = json.data || json;
+    const tokens = payload.tokens || payload;
+    const access = tokens.accessToken || tokens.access_token;
+
+    if (access) localStorage.setItem('ogapay_access_token', access);
+    if (tokens.refreshToken) localStorage.setItem('ogapay_refresh_token', tokens.refreshToken);
+    localStorage.setItem('ogapay-authenticated', 'true');
+    if (payload.user) localStorage.setItem('ogapay_user', JSON.stringify(payload.user));
+
+    window.location.href = 'dashboard.html';
+  } catch (err) {
+    msgEl.textContent = err.message;
+    btn.disabled = false;
+    btn.textContent = 'Create Account';
+  }
+}
 
 function showForgotPassword() {
-  document.querySelector('.auth-btns').style.display = 'none';
-  document.querySelector('.divider').style.display = 'none';
-  document.querySelector('.signup-link').style.display = 'none';
-  document.querySelector('[style*="text-align:center;margin:8px 0 4px"]').style.display = 'none';
-  document.getElementById('forgotPasswordForm').style.display = 'block';
+  show('forgot');
 }
 
 function showLogin() {
-  document.querySelector('.auth-btns').style.display = '';
-  document.querySelector('.divider').style.display = '';
-  document.querySelector('.signup-link').style.display = '';
-  document.querySelector('[style*="text-align:center;margin:8px 0 4px"]').style.display = '';
-  document.getElementById('forgotPasswordForm').style.display = 'none';
+  show('default');
 }
 
 async function sendResetLink() {
