@@ -226,6 +226,19 @@ body{font-family:"DM Sans",system-ui,sans-serif;background:#f2f5f9;min-height:10
         </button>
       </div>
 
+      <div style="text-align:center;margin:8px 0 4px">
+        <a href="#" onclick="showForgotPassword();return false" style="color:#4D5DFF;font-size:14px;font-weight:600;text-decoration:none">Forgot password?</a>
+      </div>
+
+      <!-- Forgot Password Form (hidden by default) -->
+      <div id="forgotPasswordForm" style="display:none">
+        <p style="font-size:14px;color:#66738a;margin:0 0 16px;line-height:1.5">Enter your email address and we'll send you a link to reset your password.</p>
+        <input type="email" id="resetEmail" placeholder="Enter your email" style="width:100%;height:56px;padding:0 16px;border:1.5px solid #e3e9f2;border-radius:14px;font-size:15px;font-family:inherit;outline:none;margin-bottom:12px;box-sizing:border-box">
+        <button onclick="sendResetLink()" style="width:100%;height:56px;border:none;border-radius:14px;background:#4D5DFF;color:#fff;font-size:16px;font-weight:700;font-family:inherit;cursor:pointer;transition:background .2s" onmouseover="this.style.background='#3b4de0'" onmouseout="this.style.background='#4D5DFF'">Send Reset Link</button>
+        <p id="resetMessage" style="font-size:13px;color:#66738a;margin:12px 0 0;text-align:center;line-height:1.4"></p>
+        <p style="text-align:center;margin:12px 0 0"><a href="#" onclick="showLogin();return false" style="color:#4D5DFF;font-size:13px;font-weight:600;text-decoration:none">Back to login</a></p>
+      </div>
+
       <div class="divider">OR</div>
 
       <p class="signup-link">New to OgaPay? <a href="login.html?mode=signup">Create an account</a></p>
@@ -241,6 +254,60 @@ body{font-family:"DM Sans",system-ui,sans-serif;background:#f2f5f9;min-height:10
   </div>
 
 </div>
+
+
+<script>
+const API_BASE = 'https://ogapay-production.up.railway.app/api/v1';
+
+function showForgotPassword() {
+  document.querySelector('.auth-btns').style.display = 'none';
+  document.querySelector('.divider').style.display = 'none';
+  document.querySelector('.signup-link').style.display = 'none';
+  document.querySelector('[style*="text-align:center;margin:8px 0 4px"]').style.display = 'none';
+  document.getElementById('forgotPasswordForm').style.display = 'block';
+}
+
+function showLogin() {
+  document.querySelector('.auth-btns').style.display = '';
+  document.querySelector('.divider').style.display = '';
+  document.querySelector('.signup-link').style.display = '';
+  document.querySelector('[style*="text-align:center;margin:8px 0 4px"]').style.display = '';
+  document.getElementById('forgotPasswordForm').style.display = 'none';
+}
+
+async function sendResetLink() {
+  const email = document.getElementById('resetEmail').value.trim();
+  const msgEl = document.getElementById('resetMessage');
+  const btn = document.querySelector('#forgotPasswordForm button');
+
+  if (!email || !email.includes('@')) {
+    msgEl.style.color = '#dc2626';
+    msgEl.textContent = 'Please enter a valid email address.';
+    return;
+  }
+
+  msgEl.textContent = '';
+  btn.disabled = true;
+  btn.textContent = 'Sending...';
+
+  try {
+    const res = await fetch(API_BASE + '/auth/forgot-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email })
+    });
+    const json = await res.json();
+    msgEl.style.color = '#16a34a';
+    msgEl.textContent = json.message || 'Check your email for the reset link.';
+  } catch (err) {
+    msgEl.style.color = '#dc2626';
+    msgEl.textContent = 'Something went wrong. Please try again.';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Send Reset Link';
+  }
+}
+</script>
 
 </body>
 </html>
