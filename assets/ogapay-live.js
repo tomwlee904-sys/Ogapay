@@ -1,7 +1,7 @@
 (function () {
   'use strict';
 
-  const API_BASE = (window.OGAPAY_API_BASE || localStorage.getItem('ogapay_api_base') || '/v1').replace(/\/$/, '');
+  const API_BASE = (window.OGAPAY_API_BASE || localStorage.getItem('ogapay_api_base') || 'https://ogapay-production.up.railway.app/api/v1').replace(/\/$/, '');
   const tokenKey = 'ogapay_access_token';
   const refreshKey = 'ogapay_refresh_token';
   const userKey = 'ogapay_user';

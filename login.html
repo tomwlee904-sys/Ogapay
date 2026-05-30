@@ -32,7 +32,7 @@
 <div class="toast" id="toast">Connecting</div>
 <script>
 (function(){
-  const API_BASE=(window.OGAPAY_API_BASE||localStorage.getItem('ogapay_api_base')||'/v1').replace(/\/$/,'');
+  const API_BASE=(window.OGAPAY_API_BASE||localStorage.getItem('ogapay_api_base')||'https://ogapay-production.up.railway.app/api/v1').replace(/\/$/,'');
   const SUPABASE_URL='https://dxotaqwfofmnfzlgzfnz.supabase.co';
   const html=document.documentElement, toast=document.getElementById('toast'), theme=document.getElementById('themeToggle');
   let mode=new URLSearchParams(location.search).get('mode')==='signup'?'signup':'login';
