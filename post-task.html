@@ -3,98 +3,112 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Post a Task - OgaPay</title>
-<script>(function(){try{document.documentElement.setAttribute('data-theme',localStorage.getItem('ogapay-theme')||'light')}catch(e){document.documentElement.setAttribute('data-theme','light')}})();</script>
+<title>Create Task - OgaPay</title>
+<script>(function(){try{document.documentElement.setAttribute('data-theme',localStorage.getItem('ogapay-theme')||'light')}catch(e){}})();</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800;900&family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
 <style>
-:root{
-  --bg:#ffffff;--bg2:#f7f9fc;--card:#ffffff;--border:#e4e9f1;--border2:#d5deea;--text:#101525;--text2:#66738a;--text3:#98a6ba;--primary:#0d1323;--accent:#7C3AED;--accent2:#2563EB;--brand-blue:linear-gradient(90deg,#2563EB,#3B82F6,#60A5FA,#93C5FD);--earn-gradient:linear-gradient(90deg,#7C3AED,#A78BFA,#6366F1,#C4B5FD,#7C3AED);--gold:#f5b301;--soft-purple:#f4f6fa;--soft-blue:#eef6ff;--shadow:0 4px 16px rgba(16,21,37,.07),0 1px 4px rgba(16,21,37,.04);--shadow-soft:0 2px 8px rgba(16,21,37,.05);--radius:14px;--nav-h:60px;
-}
-[data-theme="dark"]{
-  --bg:#080b13;--bg2:#0d111d;--card:#111725;--border:#222b3c;--border2:#2d384d;--text:#f4f7fb;--text2:#9aa7bc;--text3:#667186;--primary:#f4f7fb;--accent:#A78BFA;--accent2:#60A5FA;--soft-purple:#111725;--soft-blue:#0d1d34;--shadow:0 4px 16px rgba(0,0,0,.28),0 1px 4px rgba(0,0,0,.18);--shadow-soft:0 2px 8px rgba(0,0,0,.22);
-}
+:root{--bg:#ffffff;--bg2:#f7f9fc;--card:#ffffff;--border:#e4e9f1;--border2:#d5deea;--text:#101525;--text2:#66738a;--text3:#98a6ba;--primary:#0d1323;--accent:#7C3AED;--accent2:#2563EB;--brand-blue:linear-gradient(90deg,#2563EB,#3B82F6,#60A5FA,#93C5FD);--earn-gradient:linear-gradient(90deg,#7C3AED,#A78BFA,#6366F1,#C4B5FD,#7C3AED);--gold:#f5b301;--soft-purple:#f4f6fa;--soft-blue:#eef6ff;--shadow:0 4px 16px rgba(16,21,37,.07),0 1px 4px rgba(16,21,37,.04);--shadow-soft:0 2px 8px rgba(16,21,37,.05);--shadow-glow:0 0 30px rgba(124,58,237,.15);--radius:14px;--radius-sm:10px;--nav-h:60px}
+[data-theme="dark"]{--bg:#080b13;--bg2:#0d111d;--card:#111725;--border:#222b3c;--border2:#2d384d;--text:#f4f7fb;--text2:#9aa7bc;--text3:#667186;--primary:#f4f7fb;--accent:#A78BFA;--accent2:#60A5FA;--soft-purple:#111725;--soft-blue:#0d1d34;--shadow:0 4px 16px rgba(0,0,0,.28),0 1px 4px rgba(0,0,0,.18);--shadow-soft:0 2px 8px rgba(0,0,0,.22);--shadow-glow:0 0 30px rgba(167,139,250,.12)}
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--text);font-family:"DM Sans",system-ui,sans-serif;overflow-x:hidden}a{color:inherit;text-decoration:none}button,input,select,textarea{font:inherit}button{cursor:pointer}
+/* === Shared styles === */
 .nav{position:sticky;top:0;z-index:100;height:var(--nav-h);background:rgba(255,255,255,.92);border-bottom:1px solid var(--border);backdrop-filter:blur(18px) saturate(1.4)}[data-theme="dark"] .nav{background:rgba(8,11,19,.92)}
 .nav-inner{height:100%;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:22px;width:min(1200px,calc(100% - 48px));margin:0 auto}.brand{display:flex;align-items:center;gap:10px;font-family:"Outfit";font-weight:800;font-size:19px}.logo{width:34px;height:34px;border-radius:9px;background:var(--primary);color:var(--bg);display:grid;place-items:center;font-size:18px}.nav-links{display:flex;justify-content:center;gap:4px}.nav-link{display:inline-flex;align-items:center;gap:7px;padding:7px 10px;border-radius:8px;color:var(--text2);font-size:14px;font-weight:700}.nav-link:hover,.nav-link.active{background:var(--bg2);color:var(--text)}.nav-actions{display:flex;align-items:center;gap:8px}.icon-btn,.menu-btn{width:36px;height:36px;border:1.5px solid var(--border);border-radius:8px;background:var(--card);color:var(--text2);display:grid;place-items:center}.icon-btn:hover,.menu-btn:hover{color:var(--text);background:var(--bg2);border-color:var(--border2)}.pill-btn{height:36px;border:1.5px solid var(--border2);border-radius:999px;background:var(--primary);color:var(--bg);display:inline-flex;align-items:center;gap:8px;padding:0 16px;font-weight:800;font-size:13px}
-.app{display:flex;min-height:calc(100vh - var(--nav-h))}.sidebar{width:244px;position:sticky;top:var(--nav-h);height:calc(100vh - var(--nav-h));border-right:1px solid var(--border);background:var(--bg);padding:14px 10px;overflow:auto;display:none}body.is-authed .sidebar{display:block}.sb-cta{display:flex;align-items:center;justify-content:center;gap:8px;margin:0 0 12px;padding:10px 14px;border-radius:999px;background:var(--primary);color:var(--bg);font-weight:800;font-size:13px}.sb-label,.drawer-section{display:block;padding:12px 8px 5px;color:var(--text3);font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1.4px}.sb-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:9px;color:var(--text2);font-size:13.5px;font-weight:700}.sb-item:hover,.sb-item.active{background:var(--bg2);color:var(--text)}.sb-icon{width:30px;height:30px;border:1px solid var(--border);border-radius:8px;background:var(--bg2);display:grid;place-items:center;color:var(--text3)}.sb-user{margin:14px 0 0;padding:12px;border:1px solid var(--border);border-radius:12px;background:var(--bg2);display:flex;gap:10px;align-items:center}.avatar-mini{width:34px;height:34px;border-radius:50%;background:var(--brand-blue);display:grid;place-items:center;color:var(--card);font-weight:900}.main{flex:1;min-width:0}.page{width:min(1120px,calc(100% - 48px));margin:0 auto;padding:34px 0 72px}.page-head{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-bottom:22px}.eyebrow{display:inline-flex;align-items:center;gap:7px;padding:5px 10px;border:1px solid var(--border);border-radius:999px;color:var(--text2);font-size:12px;font-weight:800}.page h1{font-family:"Outfit";font-size:clamp(30px,4vw,46px);letter-spacing:-1.2px;margin:10px 0 8px}.lead{margin:0;color:var(--text2);max-width:680px;line-height:1.65}.grid{display:grid;gap:16px}.grid.cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}.grid.cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}.grid.cols-4{grid-template-columns:repeat(4,minmax(0,1fr))}.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-soft);padding:18px}.card h2,.card h3{font-family:"Outfit";margin:0 0 10px}.muted{color:var(--text2)}.small{font-size:12.5px;color:var(--text3)}.stat{font-family:"Outfit";font-size:26px;font-weight:900}.badge{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border);background:var(--bg2);border-radius:999px;padding:5px 9px;font-size:12px;font-weight:800;color:var(--text2)}.btn{border:1.5px solid var(--border2);background:var(--card);color:var(--text);border-radius:10px;height:40px;padding:0 14px;display:inline-flex;align-items:center;justify-content:center;gap:8px;font-weight:800}.btn.primary{background:var(--primary);color:var(--bg);border-color:var(--primary)}.btn.danger{color:var(--accent);border-color:var(--border)}.row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.space{justify-content:space-between}.table{width:100%;border-collapse:collapse}.table th,.table td{padding:12px 10px;border-bottom:1px solid var(--border);text-align:left;font-size:13.5px}.table th{color:var(--text3);text-transform:uppercase;font-size:11px;letter-spacing:1px}.form{display:grid;gap:12px}.field{display:grid;gap:6px}.field label{font-size:12px;font-weight:800;color:var(--text2)}.field input,.field select,.field textarea{width:100%;border:1.5px solid var(--border);border-radius:10px;background:var(--bg);color:var(--text);padding:11px 12px}.switch{width:46px;height:26px;border-radius:999px;background:var(--bg2);border:1px solid var(--border);position:relative}.switch:after{content:"";position:absolute;width:20px;height:20px;border-radius:50%;background:var(--text3);left:3px;top:2px}.switch.on:after{left:21px;background:var(--accent2)}.progress{height:9px;border-radius:999px;background:var(--bg2);overflow:hidden}.bar{height:100%;border-radius:inherit;background:var(--brand-blue)}.drawer{position:fixed;inset:0;z-index:300;display:none}.drawer.open{display:block}.overlay{position:absolute;inset:0;background:rgba(0,0,0,.36);backdrop-filter:blur(3px)}.drawer-panel{position:absolute;right:0;top:0;bottom:0;width:min(340px,92vw);background:var(--bg);border-left:1px solid var(--border);padding:16px;overflow:auto}.drawer-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}.drawer-link{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:10px;color:var(--text2);font-weight:800}.drawer-link:hover,.drawer-link.active{background:var(--bg2);color:var(--text)}.toast{position:fixed;right:18px;bottom:18px;background:var(--primary);color:var(--bg);border-radius:12px;padding:12px 14px;font-weight:800;box-shadow:var(--shadow);opacity:0;transform:translateY(8px);transition:.2s;z-index:400}.toast.show{opacity:1;transform:translateY(0)}
-@media(max-width:860px){.nav-links,.pill-btn{display:none}.nav-inner{width:min(100% - 28px,1200px)}.sidebar{display:none!important}.page{width:min(100% - 28px,1120px);padding-top:24px}.page-head{display:block}.grid.cols-2,.grid.cols-3,.grid.cols-4{grid-template-columns:1fr}.table-wrap{overflow:auto}.table{min-width:680px}body{padding-bottom:92px}
-.mobile-bottom-nav{position:fixed;left:0;right:0;bottom:0;z-index:250;display:grid;grid-template-columns:repeat(5,1fr);align-items:end;height:88px;padding:8px 12px 10px;background:rgba(255,255,255,.96);border-top:1px solid var(--border);box-shadow:0 -10px 30px rgba(16,21,37,.08);backdrop-filter:blur(18px) saturate(1.25)}
-[data-theme="dark"] .mobile-bottom-nav{background:rgba(5,7,11,.96);border-top-color:#252b36;box-shadow:none}
-.mobile-bottom-nav a{min-width:0;display:grid;justify-items:center;gap:4px;color:#66738a;font-size:13px;font-weight:800}
-.mobile-bottom-nav svg{width:28px;height:28px;stroke-width:2.2}
-.mobile-bottom-nav .active,.mobile-bottom-nav a:hover{color:#101525}
-[data-theme="dark"] .mobile-bottom-nav a{color:#8b96a8}
-[data-theme="dark"] .mobile-bottom-nav .active,[data-theme="dark"] .mobile-bottom-nav a:hover{color:#f8fafc}
-.mobile-bottom-nav .create{transform:translateY(-18px);gap:5px;color:#101525}
-.mobile-bottom-nav .create svg{width:58px;height:58px;padding:15px;border-radius:18px;background:#101525;color:#fff;box-shadow:0 10px 22px rgba(16,21,37,.24)}
-[data-theme="dark"] .mobile-bottom-nav .create svg{background:#f8fafc;color:#05070b;box-shadow:0 0 22px rgba(167,139,250,.18)}
-.profile-dot{width:34px;height:34px;border-radius:50%;background:#05070b;display:block;box-shadow:inset 0 0 0 1px rgba(255,255,255,.14)}
-[data-theme="dark"] .profile-dot{background:#e5e7eb}}
-
-.ai-btn{padding:8px 14px;border-radius:10px;border:1.5px solid var(--border);background:linear-gradient(135deg,rgba(124,58,237,.08),rgba(99,102,241,.08));color:var(--accent);font-size:13px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:all .2s}
-.ai-btn:hover{background:linear-gradient(135deg,rgba(124,58,237,.16),rgba(99,102,241,.16));border-color:var(--accent);box-shadow:0 0 20px rgba(124,58,237,.15)}
-.ai-btn svg{width:16px;height:16px}
-.ai-modal{position:fixed;inset:0;z-index:500;display:none;align-items:flex-end;justify-content:center}
-.ai-modal.open{display:flex}
-.ai-overlay{position:absolute;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(4px)}
-.ai-panel{position:relative;width:min(520px,calc(100% - 24px));max-height:70vh;background:var(--card);border:1px solid var(--border);border-radius:20px 20px 0 0;padding:24px 24px 32px;overflow:auto;animation:slideUp .3s ease;box-shadow:0 -8px 40px rgba(0,0,0,.18)}
-@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
-.ai-panel-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
-.ai-panel-head h3{font-family:Outfit;font-size:20px;font-weight:800;margin:0;display:flex;align-items:center;gap:10px}
-.ai-panel-head h3 i{color:var(--accent)}
-.ai-close{width:32px;height:32px;border:none;border-radius:8px;background:var(--bg2);color:var(--text3);cursor:pointer;display:grid;place-items:center;font-size:18px}
-.ai-close:hover{background:var(--border);color:var(--text)}
-.ai-modes{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
-.ai-mode{padding:12px 14px;border:1.5px solid var(--border);border-radius:12px;background:var(--bg);cursor:pointer;text-align:left;transition:all .15s;font-family:inherit}
-.ai-mode:hover,.ai-mode.active{border-color:var(--accent);background:linear-gradient(135deg,rgba(124,58,237,.06),rgba(99,102,241,.06))}
-.ai-mode .m-title{font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px}
-.ai-mode .m-desc{font-size:11px;color:var(--text3);margin-top:2px;line-height:1.4}
-.ai-input-area{margin-bottom:12px}
-.ai-input-area textarea{width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:12px;background:var(--bg2);color:var(--text);font-size:14px;line-height:1.6;outline:none;resize:none;font-family:inherit;min-height:60px}
-.ai-input-area textarea:focus{border-color:var(--accent)}
-.ai-generate-btn{width:100%;height:48px;border:none;border-radius:12px;background:linear-gradient(135deg,#7C3AED,#6366F1);color:#fff;font-size:15px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .2s}
-.ai-generate-btn:hover{opacity:.9;box-shadow:0 4px 20px rgba(124,58,237,.3)}
-.ai-generate-btn:disabled{opacity:.5;cursor:not-allowed}
-.ai-result{margin-top:12px;padding:14px;border:1.5px solid var(--border);border-radius:12px;background:var(--bg2);display:none}
-.ai-result.show{display:block}
-.ai-result .r-label{font-size:11px;font-weight:700;color:var(--text3);margin-bottom:6px;text-transform:uppercase;letter-spacing:.8px}
-.ai-result .r-text{font-size:14px;line-height:1.6;color:var(--text)}
-.ai-typing{display:inline;overflow:hidden;border-right:2px solid var(--accent);animation:blink .7s step-end infinite}
-@keyframes blink{50%{border-color:transparent}}
-.ai-result .r-actions{display:flex;gap:8px;margin-top:10px}
-.ai-result .r-actions button{flex:1;height:38px;border:1.5px solid var(--border);border-radius:10px;background:var(--card);color:var(--text);font-weight:700;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all .15s}
-.ai-result .r-actions button:hover{border-color:var(--accent);background:rgba(124,58,237,.06);color:var(--accent)}
-
+.app{display:flex;min-height:calc(100vh - var(--nav-h))}.sidebar{width:244px;position:sticky;top:var(--nav-h);height:calc(100vh - var(--nav-h));border-right:1px solid var(--border);background:var(--bg);padding:14px 10px;overflow:auto;display:none}body.is-authed .sidebar{display:block}.sb-cta{display:flex;align-items:center;justify-content:center;gap:8px;margin:0 0 12px;padding:10px 14px;border-radius:999px;background:var(--primary);color:var(--bg);font-weight:800;font-size:13px}.sb-label,.drawer-section{display:block;padding:12px 8px 5px;color:var(--text3);font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1.4px}.sb-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:9px;color:var(--text2);font-size:13.5px;font-weight:700}.sb-item:hover,.sb-item.active{background:var(--bg2);color:var(--text)}.sb-icon{width:30px;height:30px;border:1px solid var(--border);border-radius:8px;background:var(--bg2);display:grid;place-items:center;color:var(--text3)}.sb-user{margin:14px 0 0;padding:12px;border:1px solid var(--border);border-radius:12px;background:var(--bg2);display:flex;gap:10px;align-items:center}.avatar-mini{width:34px;height:34px;border-radius:50%;background:var(--brand-blue);display:grid;place-items:center;color:var(--card);font-weight:900}.main{flex:1;min-width:0}.page{width:min(1120px,calc(100% - 48px));margin:0 auto;padding:34px 0 72px}.page-head{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-bottom:22px}.eyebrow{display:inline-flex;align-items:center;gap:7px;padding:5px 10px;border:1px solid var(--border);border-radius:999px;color:var(--text2);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.8px}.eyebrow i{font-size:15px;color:var(--accent)}.lead{color:var(--text2);font-size:16px;line-height:1.7;margin:6px 0 0}.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-soft)}.btn{height:48px;padding:0 24px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--card);color:var(--text);font-size:15px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:all .2s}.btn:hover{border-color:var(--border2);box-shadow:var(--shadow)}.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}.btn.primary:hover{box-shadow:0 6px 24px rgba(124,58,237,.3);transform:translateY(-1px)}.btn.outline{background:transparent;border-color:var(--accent);color:var(--accent)}.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(100px);padding:12px 28px;border-radius:999px;background:var(--primary);color:var(--bg);font-weight:700;font-size:14px;z-index:999;opacity:0;transition:all .35s cubic-bezier(.4,0,.2,1);pointer-events:none}.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}.small{font-size:12px;color:var(--text3)}.card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;font-size:13px;font-weight:800;color:var(--text2)}.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.5px}.badge-accent{background:rgba(124,58,237,.12);color:var(--accent)}.badge-blue{background:rgba(37,99,235,.1);color:var(--accent2)}
+/* === Grid fix === */
+@media(max-width:1024px){.page{width:min(1120px,calc(100% - 32px));padding:24px 0 100px}}
+@media(max-width:768px){.app{flex-direction:column}.sidebar{display:none!important}}
 </style>
 </head>
-<body data-page="tasks.html">
-<header class="nav"><div class="nav-inner"><a class="brand" href="index.html"><span class="logo"><i class="ti ti-layout-grid"></i></span><span>Oga<span>Pay</span></span></a><nav class="nav-links"><a class="nav-link" href="index.html" data-navlink><i class="ti ti-home"></i>Home</a><a class="nav-link active" href="tasks.html" data-navlink><i class="ti ti-layout-grid"></i>Tasks</a><a class="nav-link" href="store.html" data-navlink><i class="ti ti-discount-2"></i>Deals</a><a class="nav-link" href="communities.html" data-navlink><i class="ti ti-users-group"></i>Communities</a><a class="nav-link" href="index.html#footer" data-navlink><i class="ti ti-help-circle"></i>FAQ</a></nav><div class="nav-actions"><a class="pill-btn nav-auth-only" href="post-task.html"><i class="ti ti-square-plus"></i>Post Task</a><button class="icon-btn" id="themeToggle" aria-label="Toggle dark mode"><i class="ti ti-moon"></i></button><button class="menu-btn" id="menuBtn" aria-label="Open menu"><i class="ti ti-menu-2"></i></button></div></div></header>
-<div class="drawer" id="mobileMenu"><div class="overlay" data-close-menu></div><aside class="drawer-panel"><div class="drawer-head"><a class="brand" href="index.html"><span class="logo"><i class="ti ti-layout-grid"></i></span>OgaPay</a><button class="icon-btn" data-close-menu aria-label="Close menu"><i class="ti ti-x"></i></button></div><div class="drawer-section">Main</div><a class="drawer-link" href="dashboard.html" data-close-menu><i class="ti ti-dashboard"></i><span>Overview</span></a><a class="drawer-link" href="profile.html" data-close-menu><i class="ti ti-user-circle"></i><span>My Profile</span></a><a class="drawer-link" href="wallet.html" data-close-menu><i class="ti ti-wallet"></i><span>Wallet</span></a><a class="drawer-link" href="notifications.html" data-close-menu><i class="ti ti-bell"></i><span>Notifications</span></a><a class="drawer-link" href="messages.html" data-close-menu><i class="ti ti-message-2"></i><span>Messages</span></a><div class="drawer-section">Earn</div><a class="drawer-link active" href="tasks.html" data-close-menu><i class="ti ti-briefcase"></i><span>Browse Tasks</span></a><a class="drawer-link" href="monitor.html" data-close-menu><i class="ti ti-eye"></i><span>Job Monitor</span></a><a class="drawer-link" href="my-tasks.html" data-close-menu><i class="ti ti-checklist"></i><span>My Tasks</span></a><a class="drawer-link" href="communities.html" data-close-menu><i class="ti ti-users-group"></i><span>Communities</span></a><a class="drawer-link" href="worker.html" data-close-menu><i class="ti ti-id-badge-2"></i><span>Worker Portal</span></a><a class="drawer-link" href="leaderboard.html" data-close-menu><i class="ti ti-trophy"></i><span>Leaderboard</span></a><div class="drawer-section">Business</div><a class="drawer-link" href="post-task.html" data-close-menu><i class="ti ti-square-plus"></i><span>Post Task</span></a><a class="drawer-link" href="analytics.html" data-close-menu><i class="ti ti-chart-line"></i><span>Analytics</span></a><div class="drawer-section">Growth</div><a class="drawer-link" href="referrals.html" data-close-menu><i class="ti ti-link"></i><span>Referrals</span></a><a class="drawer-link" href="vault.html" data-close-menu><i class="ti ti-building-bank"></i><span>Rewards Vault</span></a><div class="drawer-section">Account</div><a class="drawer-link" href="kyc.html" data-close-menu><i class="ti ti-shield-check"></i><span>KYC</span></a><a class="drawer-link" href="settings.html" data-close-menu><i class="ti ti-settings"></i><span>Settings</span></a><div class="card" style="margin-top:12px"><div class="small">Preview auth state</div><div class="row" style="margin-top:10px"><button class="btn primary" id="authOn">Authed</button><button class="btn" id="authOff">Public</button></div></div></aside></div>
-<div class="app"><aside class="sidebar"><a class="sb-cta" href="post-task.html"><i class="ti ti-square-plus"></i>Post a Task</a><span class="sb-label">Main</span><a class="sb-item" href="dashboard.html"><span class="sb-icon"><i class="ti ti-dashboard"></i></span>Overview</a><a class="sb-item" href="profile.html"><span class="sb-icon"><i class="ti ti-user-circle"></i></span>My Profile</a><a class="sb-item" href="wallet.html"><span class="sb-icon"><i class="ti ti-wallet"></i></span>Wallet</a><a class="sb-item" href="notifications.html"><span class="sb-icon"><i class="ti ti-bell"></i></span>Notifications</a><a class="sb-item" href="messages.html"><span class="sb-icon"><i class="ti ti-message-2"></i></span>Messages</a><span class="sb-label">Earn</span><a class="sb-item active" href="tasks.html"><span class="sb-icon"><i class="ti ti-briefcase"></i></span>Browse Tasks</a><a class="sb-item" href="monitor.html"><span class="sb-icon"><i class="ti ti-eye"></i></span>Job Monitor</a><a class="sb-item" href="my-tasks.html"><span class="sb-icon"><i class="ti ti-checklist"></i></span>My Tasks</a><a class="sb-item" href="communities.html"><span class="sb-icon"><i class="ti ti-users-group"></i></span>Communities</a><a class="sb-item" href="worker.html"><span class="sb-icon"><i class="ti ti-id-badge-2"></i></span>Worker Portal</a><a class="sb-item" href="leaderboard.html"><span class="sb-icon"><i class="ti ti-trophy"></i></span>Leaderboard</a><span class="sb-label">Business</span><a class="sb-item" href="post-task.html"><span class="sb-icon"><i class="ti ti-square-plus"></i></span>Post Task</a><a class="sb-item" href="analytics.html"><span class="sb-icon"><i class="ti ti-chart-line"></i></span>Analytics</a><span class="sb-label">Growth</span><a class="sb-item" href="referrals.html"><span class="sb-icon"><i class="ti ti-link"></i></span>Referrals</a><a class="sb-item" href="vault.html"><span class="sb-icon"><i class="ti ti-building-bank"></i></span>Rewards Vault</a><span class="sb-label">Account</span><a class="sb-item" href="kyc.html"><span class="sb-icon"><i class="ti ti-shield-check"></i></span>KYC</a><a class="sb-item" href="settings.html"><span class="sb-icon"><i class="ti ti-settings"></i></span>Settings</a><div class="sb-user"><div class="avatar-mini">AD</div><div><strong>Ada Danladi</strong><div class="small">Worker · KYC verified</div></div></div></aside><main class="main"><section class="page">
+<body>
+
+<nav class="nav">
+<div class="nav-inner">
+<a href="index.html" class="brand"><span class="logo">O</span>OgaPay</a>
+<div class="nav-links">
+<a href="tasks.html" class="nav-link"><i class="ti ti-briefcase"></i>Browse</a>
+<a href="dashboard.html" class="nav-link"><i class="ti ti-dashboard"></i>Dashboard</a>
+<a href="post-task.html" class="nav-link active"><i class="ti ti-square-plus"></i>Create</a>
+</div>
+<div class="nav-actions">
+<button class="icon-btn" onclick="toggleTheme()" title="Toggle theme"><i class="ti ti-sun" id="themeIcon"></i></button>
+<button class="menu-btn" onclick="document.querySelector('.drawer').classList.toggle('open')"><i class="ti ti-menu-2"></i></button>
+</div>
+</div>
+</nav>
+
+<aside class="drawer">
+<div class="drawer-inner">
+<a class="drawer-link" href="dashboard.html" data-close-menu><i class="ti ti-dashboard"></i><span>Dashboard</span></a>
+<a class="drawer-link" href="profile.html" data-close-menu><i class="ti ti-user-circle"></i><span>Profile</span></a>
+<a class="drawer-link" href="wallet.html" data-close-menu><i class="ti ti-wallet"></i><span>Wallet</span></a>
+<a class="drawer-link" href="tasks.html" data-close-menu><i class="ti ti-briefcase"></i><span>Browse Tasks</span></a>
+<a class="drawer-link" href="my-tasks.html" data-close-menu><i class="ti ti-checklist"></i><span>My Tasks</span></a>
+<a class="drawer-link" href="post-task.html" data-close-menu><i class="ti ti-square-plus"></i><span>Post Task</span></a>
+<a class="drawer-link" href="monitor.html" data-close-menu><i class="ti ti-eye"></i><span>Job Monitor</span></a>
+<a class="drawer-link" href="communities.html" data-close-menu><i class="ti ti-users-group"></i><span>Communities</span></a>
+<a class="drawer-link" href="notifications.html" data-close-menu><i class="ti ti-bell"></i><span>Notifications</span></a>
+<a class="drawer-link" href="messages.html" data-close-menu><i class="ti ti-message-2"></i><span>Messages</span></a>
+<a class="drawer-link" href="analytics.html" data-close-menu><i class="ti ti-chart-line"></i><span>Analytics</span></a>
+<a class="drawer-link" href="referrals.html" data-close-menu><i class="ti ti-link"></i><span>Referrals</span></a>
+<a class="drawer-link" href="vault.html" data-close-menu><i class="ti ti-building-bank"></i><span>Rewards Vault</span></a>
+<a class="drawer-link" href="kyc.html" data-close-menu><i class="ti ti-shield-check"></i><span>KYC</span></a>
+<a class="drawer-link" href="settings.html" data-close-menu><i class="ti ti-settings"></i><span>Settings</span></a>
+</div>
+</aside>
+
+<div class="app"><aside class="sidebar">
+<a class="sb-cta" href="post-task.html"><i class="ti ti-square-plus"></i>Post a Task</a>
+<span class="sb-label">Main</span>
+<a class="sb-item" href="dashboard.html"><span class="sb-icon"><i class="ti ti-dashboard"></i></span>Overview</a>
+<a class="sb-item" href="profile.html"><span class="sb-icon"><i class="ti ti-user-circle"></i></span>My Profile</a>
+<a class="sb-item" href="wallet.html"><span class="sb-icon"><i class="ti ti-wallet"></i></span>Wallet</a>
+<a class="sb-item" href="notifications.html"><span class="sb-icon"><i class="ti ti-bell"></i></span>Notifications</a>
+<a class="sb-item" href="messages.html"><span class="sb-icon"><i class="ti ti-message-2"></i></span>Messages</a>
+<span class="sb-label">Earn</span>
+<a class="sb-item active" href="tasks.html"><span class="sb-icon"><i class="ti ti-briefcase"></i></span>Browse Tasks</a>
+<a class="sb-item" href="monitor.html"><span class="sb-icon"><i class="ti ti-eye"></i></span>Job Monitor</a>
+<a class="sb-item" href="my-tasks.html"><span class="sb-icon"><i class="ti ti-checklist"></i></span>My Tasks</a>
+<a class="sb-item" href="communities.html"><span class="sb-icon"><i class="ti ti-users-group"></i></span>Communities</a>
+<a class="sb-item" href="leaderboard.html"><span class="sb-icon"><i class="ti ti-trophy"></i></span>Leaderboard</a>
+<span class="sb-label">Business</span>
+<a class="sb-item" href="post-task.html"><span class="sb-icon"><i class="ti ti-square-plus"></i></span>Post Task</a>
+<a class="sb-item" href="analytics.html"><span class="sb-icon"><i class="ti ti-chart-line"></i></span>Analytics</a>
+<span class="sb-label">Growth</span>
+<a class="sb-item" href="referrals.html"><span class="sb-icon"><i class="ti ti-link"></i></span>Referrals</a>
+<a class="sb-item" href="vault.html"><span class="sb-icon"><i class="ti ti-building-bank"></i></span>Rewards Vault</a>
+<span class="sb-label">Account</span>
+<a class="sb-item" href="kyc.html"><span class="sb-icon"><i class="ti ti-shield-check"></i></span>KYC</a>
+<a class="sb-item" href="settings.html"><span class="sb-icon"><i class="ti ti-settings"></i></span>Settings</a>
+<div class="sb-user"><div class="avatar-mini">AD</div><div><strong>Ada Danladi</strong><div class="small">Worker · KYC verified</div></div></div>
+</aside><main class="main">
+<section class="page">
 <div class="page-head">
   <div>
-    <span class="eyebrow"><i class="ti ti-square-plus"></i>Create Task</span>
-    <h1 style="font-size:clamp(28px,3.6vw,44px)">Post a Task</h1>
-    <p class="lead" style="max-width:540px">Set your budget, choose your currency, and let workers apply. AI can help you write the perfect description.</p>
+    <span class="eyebrow"><i class="ti ti-sparkles"></i>AI-Powered Task Creation</span>
+    <h1 style="font-size:clamp(28px,3.6vw,44px)">Create a Task</h1>
+    <p class="lead" style="max-width:560px">Set your budget in Naira or Crypto, target any platform, and let AI craft the perfect task description.</p>
   </div>
 </div>
 
 <div style="display:grid;grid-template-columns:1fr 340px;gap:24px;align-items:start">
 
-  <!-- Main form -->
+  <!-- === MAIN FORM === -->
   <div style="display:grid;gap:16px">
+
+    <!-- Card: Basic Details -->
     <div class="card" style="padding:24px">
+      <div class="card-head"><i class="ti ti-info-circle" style="font-size:16px;color:var(--accent)"></i> Basic Details</div>
       <div style="display:grid;gap:18px">
         <div>
           <label style="font-size:13px;font-weight:800;color:var(--text2);display:block;margin-bottom:6px">Task title</label>
-          <input type="text" placeholder="e.g. Like &amp; retweet our pinned launch post" style="width:100%;height:50px;padding:0 14px;border:1.5px solid var(--border);border-radius:12px;background:var(--bg);color:var(--text);font-size:15px;outline:none" />
+          <input type="text" id="taskTitle" placeholder="e.g. Like & retweet our pinned launch post" oninput="updatePreview()" style="width:100%;height:50px;padding:0 16px;border:1.5px solid var(--border);border-radius:12px;background:var(--bg);color:var(--text);font-size:15px;outline:none;transition:border-color .2s" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'" />
         </div>
         <div>
           <label style="font-size:13px;font-weight:800;color:var(--text2);display:block;margin-bottom:6px">Category</label>
-          <select style="width:100%;height:50px;padding:0 14px;border:1.5px solid var(--border);border-radius:12px;background:var(--bg);color:var(--text);font-size:15px;outline:none;appearance:none">
+          <select id="taskCategory" onchange="updatePreview()" style="width:100%;height:50px;padding:0 16px;border:1.5px solid var(--border);border-radius:12px;background:var(--bg);color:var(--text);font-size:15px;outline:none;appearance:none;cursor:pointer;transition:border-color .2s" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
             <option>Social Media</option>
             <option>Data Entry</option>
             <option>Content Writing</option>
@@ -107,120 +121,327 @@
             <option>Other</option>
           </select>
         </div>
+      </div>
+    </div>
+
+    <!-- Card: Description + AI -->
+    <div class="card" style="padding:24px">
+      <div class="card-head" style="margin-bottom:12px">
+        <span><i class="ti ti-article" style="font-size:16px;color:var(--accent)"></i> Description</span>
+        <span class="badge badge-accent"><i class="ti ti-sparkles"></i> AI Ready</span>
+      </div>
+      <div>
+        <textarea id="taskDesc" rows="5" oninput="updatePreview()" placeholder="Describe what workers need to do, how to submit proof, and any special requirements." style="width:100%;padding:14px 16px;border:1.5px solid var(--border);border-radius:12px;background:var(--bg);color:var(--text);font-size:14px;line-height:1.7;outline:none;resize:vertical;font-family:inherit;transition:border-color .2s" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+      </div>
+      <!-- AI Quick Actions -->
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px">
+        <button class="ai-chip" onclick="quickAIAction('generate')"><i class="ti ti-sparkles" style="color:var(--accent);font-size:14px"></i> Generate</button>
+        <button class="ai-chip" onclick="quickAIAction('improve')"><i class="ti ti-edit-circle" style="color:var(--accent2);font-size:14px"></i> Improve</button>
+        <button class="ai-chip" onclick="quickAIAction('professional')"><i class="ti ti-briefcase" style="color:var(--accent2);font-size:14px"></i> Professional</button>
+        <button class="ai-chip" onclick="quickAIAction('shorten')"><i class="ti ti-text-decrease" style="color:var(--accent2);font-size:14px"></i> Shorten</button>
+        <button class="ai-chip" onclick="quickAIAction('expand')"><i class="ti ti-text-increase" style="color:var(--accent2);font-size:14px"></i> Expand</button>
+        <button class="ai-chip" onclick="quickAIAction('friendly')"><i class="ti ti-mood-smile" style="color:var(--accent2);font-size:14px"></i> Friendly</button>
+        <button class="ai-chip primary" onclick="openAI()"><i class="ti ti-wand" style="font-size:14px"></i> Open AI Studio</button>
+      </div>
+    </div>
+
+    <!-- Card: Platform Selection (ENLARGED) -->
+    <div class="card" style="padding:24px">
+      <div class="card-head" style="margin-bottom:14px"><i class="ti ti-devices" style="font-size:16px;color:var(--accent)"></i> Target Platform</div>
+      <div class="platform-grid">
+        <label class="platform-card" onclick="selectPlatform(this)">
+          <div class="p-icon"><i class="ti ti-brand-x"></i></div>
+          <span class="p-name">X / Twitter</span>
+        </label>
+        <label class="platform-card" onclick="selectPlatform(this)">
+          <div class="p-icon"><i class="ti ti-brand-telegram"></i></div>
+          <span class="p-name">Telegram</span>
+        </label>
+        <label class="platform-card" onclick="selectPlatform(this)">
+          <div class="p-icon"><i class="ti ti-brand-instagram"></i></div>
+          <span class="p-name">Instagram</span>
+        </label>
+        <label class="platform-card" onclick="selectPlatform(this)">
+          <div class="p-icon"><i class="ti ti-brand-discord"></i></div>
+          <span class="p-name">Discord</span>
+        </label>
+        <label class="platform-card" onclick="selectPlatform(this)">
+          <div class="p-icon"><i class="ti ti-video"></i></div>
+          <span class="p-name">TikTok</span>
+        </label>
+        <label class="platform-card" onclick="selectPlatform(this)">
+          <div class="p-icon"><i class="ti ti-brand-youtube"></i></div>
+          <span class="p-name">YouTube</span>
+        </label>
+        <label class="platform-card" onclick="selectPlatform(this)">
+          <div class="p-icon"><i class="ti ti-brand-whatsapp"></i></div>
+          <span class="p-name">WhatsApp</span>
+        </label>
+        <label class="platform-card" onclick="selectPlatform(this)">
+          <div class="p-icon"><i class="ti ti-world"></i></div>
+          <span class="p-name">Web / Other</span>
+        </label>
+        <label class="platform-card" onclick="selectPlatform(this)">
+          <div class="p-icon"><i class="ti ti-brand-facebook"></i></div>
+          <span class="p-name">Facebook</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Card: Budget & Currency -->
+    <div class="card" style="padding:24px">
+      <div class="card-head"><i class="ti ti-coin" style="font-size:16px;color:var(--accent)"></i> Budget & Rewards</div>
+      <div style="display:grid;gap:16px">
         <div>
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-            <label style="font-size:13px;font-weight:800;color:var(--text2)">Description</label>
-            <button onclick="openAI()" class="ai-btn"><i class="ti ti-sparkles" style="font-size:16px"></i>AI Assist</button>
+          <label style="font-size:13px;font-weight:800;color:var(--text2);display:block;margin-bottom:10px">Currency</label>
+          <div style="display:flex;gap:8px">
+            <button class="cur-btn active" data-cur="NGN" onclick="setCurrency('NGN',this)"><i class="ti ti-currency-naira"></i> NGN</button>
+            <button class="cur-btn" data-cur="USDC" onclick="setCurrency('USDC',this)"><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='16' fill='%232775C9'/%3E%3Cpath fill='%23FFF' d='M20.5 16c0 2.5-2 4.5-4.5 4.5s-4.5-2-4.5-4.5 2-4.5 4.5-4.5 4.5 2 4.5 4.5zm-4.5-7c-1.7 0-3.2.7-4.3 1.7l1.4 1.4c.8-.8 1.8-1.2 2.9-1.2 2.2 0 4 1.8 4 4s-1.8 4-4 4c-1.1 0-2.1-.4-2.9-1.2l-1.4 1.4c1.1 1.1 2.6 1.7 4.3 1.7 3.3 0 6-2.7 6-6s-2.7-6-6-6z'/%3E%3C/svg%3E" style="width:18px;height:18px"> USDC</button>
+            <button class="cur-btn" data-cur="USDT" onclick="setCurrency('USDT',this)"><img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='16' fill='%2326A17B'/%3E%3Cpath fill='%23FFF' d='M16 4C9.4 4 4 9.4 4 16s5.4 12 12 12 12-5.4 12-12S22.6 4 16 4zm0 5.3c3.5 0 6.4 2.8 6.4 6.4s-2.8 6.4-6.4 6.4-6.4-2.8-6.4-6.4 2.9-6.4 6.4-6.4zm3.2 8.6v1.4c0 .3-.2.5-.5.5h-5.4c-.3 0-.5-.2-.5-.5v-1.4c0-.3.2-.5.5-.5h.9v-1.4h-.9c-.3 0-.5-.2-.5-.5s.2-.5.5-.5h.1v-.2c0-.3.2-.5.5-.5h.9v-1.4h.9v1.4h.9c.3 0 .5.2.5.5v.2h.1c.3 0 .5.2.5.5s-.2.5-.5.5h-.9v1.4h.9c.3 0 .5.2.5.5z'/%3E%3C/svg%3E" style="width:18px;height:18px"> USDT</button>
           </div>
-          <textarea id="taskDesc" rows="4" placeholder="Describe what workers need to do, how to submit proof, and any special requirements." style="width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:12px;background:var(--bg);color:var(--text);font-size:14px;line-height:1.6;outline:none;resize:vertical;font-family:inherit"></textarea>
         </div>
-        <div>
-          <label style="font-size:13px;font-weight:800;color:var(--text2);display:block;margin-bottom:6px">Platform (optional)</label>
-          <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <label style="display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border:1.5px solid var(--border);border-radius:10px;background:var(--bg);cursor:pointer;font-size:13px;font-weight:600;transition:all .15s" onclick="selectPlatform(this)">
-              <i class="ti ti-brand-x" style="font-size:18px"></i>X / Twitter
-            </label>
-            <label style="display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border:1.5px solid var(--border);border-radius:10px;background:var(--bg);cursor:pointer;font-size:13px;font-weight:600;transition:all .15s" onclick="selectPlatform(this)">
-              <i class="ti ti-brand-telegram" style="font-size:18px"></i>Telegram
-            </label>
-            <label style="display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border:1.5px solid var(--border);border-radius:10px;background:var(--bg);cursor:pointer;font-size:13px;font-weight:600;transition:all .15s" onclick="selectPlatform(this)">
-              <i class="ti ti-brand-instagram" style="font-size:18px"></i>Instagram
-            </label>
-            <label style="display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border:1.5px solid var(--border);border-radius:10px;background:var(--bg);cursor:pointer;font-size:13px;font-weight:600;transition:all .15s" onclick="selectPlatform(this)">
-              <i class="ti ti-brand-discord" style="font-size:18px"></i>Discord
-            </label>
-            <label style="display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border:1.5px solid var(--border);border-radius:10px;background:var(--bg);cursor:pointer;font-size:13px;font-weight:600;transition:all .15s" onclick="selectPlatform(this)">
-              <i class="ti ti-world" style="font-size:18px"></i>Web / Other
-            </label>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div>
+            <label style="font-size:12px;font-weight:700;color:var(--text2);display:block;margin-bottom:5px">Reward per worker</label>
+            <input type="number" id="rewardInput" placeholder="e.g. 500" min="0" oninput="calcBudget()" style="width:100%;height:48px;padding:0 14px;border:1.5px solid var(--border);border-radius:10px;background:var(--bg);color:var(--text);font-size:15px;outline:none;transition:border-color .2s" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'" />
+          </div>
+          <div>
+            <label style="font-size:12px;font-weight:700;color:var(--text2);display:block;margin-bottom:5px">Total slots</label>
+            <input type="number" id="slotsInput" placeholder="e.g. 50" min="1" oninput="calcBudget()" style="width:100%;height:48px;padding:0 14px;border:1.5px solid var(--border);border-radius:10px;background:var(--bg);color:var(--text);font-size:15px;outline:none;transition:border-color .2s" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'" />
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div>
+            <label style="font-size:12px;font-weight:700;color:var(--text2);display:block;margin-bottom:5px">Total budget</label>
+            <div id="totalBudget" style="width:100%;height:48px;padding:0 14px;border:1.5px dashed var(--border2);border-radius:10px;background:var(--bg2);color:var(--text3);font-size:15px;font-weight:700;display:flex;align-items:center">—</div>
           </div>
         </div>
       </div>
     </div>
 
+    <!-- Card: Requirements -->
     <div class="card" style="padding:24px">
-      <div style="font-size:14px;font-weight:800;margin-bottom:16px">Reward &amp; Budget</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
-        <div>
-          <label style="font-size:12px;font-weight:700;color:var(--text2);display:block;margin-bottom:5px">Reward per task</label>
-          <input type="text" id="rewardInput" placeholder="e.g. 500" oninput="calcBudget()" style="width:100%;height:48px;padding:0 14px;border:1.5px solid var(--border);border-radius:10px;background:var(--bg);color:var(--text);font-size:15px;outline:none" />
-        </div>
-        <div>
-          <label style="font-size:12px;font-weight:700;color:var(--text2);display:block;margin-bottom:5px">Currency</label>
-          <div style="display:flex;gap:6px">
-            <button onclick="setCurrency('NGN',this)" class="cur-btn active" data-cur="NGN" style="flex:1;height:48px;border:1.5px solid var(--border2);border-radius:10px;background:var(--primary);color:var(--bg);font-weight:800;font-size:14px;cursor:pointer">NGN</button>
-            <button onclick="setCurrency('USDC',this)" class="cur-btn" data-cur="USDC" style="flex:1;height:48px;border:1.5px solid var(--border);border-radius:10px;background:var(--bg);color:var(--text2);font-weight:700;font-size:14px;cursor:pointer">USDC</button>
-            <button onclick="setCurrency('USDT',this)" class="cur-btn" data-cur="USDT" style="flex:1;height:48px;border:1.5px solid var(--border);border-radius:10px;background:var(--bg);color:var(--text2);font-weight:700;font-size:14px;cursor:pointer">USDT</button>
-          </div>
-        </div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
-        <div>
-          <label style="font-size:12px;font-weight:700;color:var(--text2);display:block;margin-bottom:5px">Total slots</label>
-          <input type="number" id="slotsInput" placeholder="e.g. 50" min="1" oninput="calcBudget()" style="width:100%;height:48px;padding:0 14px;border:1.5px solid var(--border);border-radius:10px;background:var(--bg);color:var(--text);font-size:15px;outline:none" />
-        </div>
-        <div>
-          <label style="font-size:12px;font-weight:700;color:var(--text2);display:block;margin-bottom:5px">Total budget</label>
-          <div id="totalBudget" style="width:100%;height:48px;padding:0 14px;border:1.5px dashed var(--border2);border-radius:10px;background:var(--bg2);color:var(--text3);font-size:15px;font-weight:700;display:flex;align-items:center">—</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="card" style="padding:24px">
+      <div class="card-head"><i class="ti ti-checklist" style="font-size:16px;color:var(--accent)"></i> Requirements</div>
       <div style="display:grid;gap:16px">
         <div>
           <label style="font-size:13px;font-weight:800;color:var(--text2);display:block;margin-bottom:6px">Proof requirement</label>
-          <input type="text" placeholder="e.g. Screenshot URL, username, transaction ID" style="width:100%;height:50px;padding:0 14px;border:1.5px solid var(--border);border-radius:12px;background:var(--bg);color:var(--text);font-size:15px;outline:none" />
+          <input type="text" placeholder="e.g. Screenshot URL, username, transaction ID" style="width:100%;height:50px;padding:0 16px;border:1.5px solid var(--border);border-radius:12px;background:var(--bg);color:var(--text);font-size:15px;outline:none;transition:border-color .2s" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'" />
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
           <div>
             <label style="font-size:12px;font-weight:700;color:var(--text2);display:block;margin-bottom:5px">Deadline (optional)</label>
-            <input type="date" style="width:100%;height:48px;padding:0 14px;border:1.5px solid var(--border);border-radius:10px;background:var(--bg);color:var(--text);font-size:15px;outline:none" />
+            <input type="date" style="width:100%;height:48px;padding:0 14px;border:1.5px solid var(--border);border-radius:10px;background:var(--bg);color:var(--text);font-size:15px;outline:none;transition:border-color .2s" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'" />
           </div>
           <div>
             <label style="font-size:12px;font-weight:700;color:var(--text2);display:block;margin-bottom:5px">Visibility</label>
-            <select style="width:100%;height:48px;padding:0 14px;border:1.5px solid var(--border);border-radius:10px;background:var(--bg);color:var(--text);font-size:15px;outline:none;appearance:none">
-              <option>Public — all workers</option>
+            <select style="width:100%;height:48px;padding:0 14px;border:1.5px solid var(--border);border-radius:10px;background:var(--bg);color:var(--text);font-size:15px;outline:none;appearance:none;cursor:pointer;transition:border-color .2s" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
+              <option>Public - all workers</option>
               <option>Community only</option>
-              <option>Private — invite only</option>
+              <option>Private - invite only</option>
             </select>
           </div>
         </div>
       </div>
     </div>
 
+    <!-- Submit Buttons -->
     <div style="display:flex;gap:12px;padding-top:4px">
-      <button class="btn primary" style="flex:1;height:52px;font-size:16px;border-radius:12px"><i class="ti ti-send"></i>Post Task</button>
-      <button class="btn" style="height:52px;border-radius:12px;padding:0 24px"><i class="ti ti-device-floppy"></i>Draft</button>
+      <button class="btn primary" style="flex:1;height:54px;font-size:16px;border-radius:12px"><i class="ti ti-send"></i> Post Task</button>
+      <button class="btn" style="height:54px;border-radius:12px;padding:0 28px"><i class="ti ti-device-floppy"></i> Save Draft</button>
     </div>
   </div>
 
-  <!-- Summary sidebar -->
-  <div style="position:sticky;top:calc(var(--nav-h) + 24px)">
+  <!-- === RIGHT: STICKY PREVIEW + AI === -->
+  <div style="position:sticky;top:calc(var(--nav-h) + 24px);display:grid;gap:14px">
+
+    <!-- Preview Card -->
     <div class="card" style="padding:20px">
-      <div style="font-size:13px;font-weight:800;margin-bottom:16px;display:flex;align-items:center;gap:8px"><i class="ti ti-eye" style="color:var(--text3)"></i>Task Preview</div>
+      <div class="card-head" style="margin-bottom:14px"><i class="ti ti-eye" style="color:var(--text3)"></i> Task Preview</div>
       <div id="previewTitle" style="font-family:Outfit;font-size:18px;font-weight:800;margin-bottom:4px;color:var(--text3)">Untitled Task</div>
       <div id="previewMeta" style="font-size:12px;color:var(--text3);margin-bottom:12px;line-height:1.5">No category selected</div>
-      <div id="previewDesc" style="font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:14px">Your task description will appear here.</div>
+      <div id="previewDesc" style="font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:14px;display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden">Your task description will appear here.</div>
       <div style="border-top:1px solid var(--border);padding-top:12px;display:grid;gap:8px">
         <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--text2)">Reward</span><span id="previewReward" style="font-weight:700;color:var(--text3)">—</span></div>
         <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--text2)">Slots</span><span id="previewSlots" style="font-weight:700;color:var(--text3)">—</span></div>
         <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--text2)">Total budget</span><span id="previewTotal" style="font-weight:700;color:var(--text3)">—</span></div>
       </div>
     </div>
-    <div class="card" style="padding:16px;margin-top:12px;background:linear-gradient(135deg,rgba(124,58,237,.06),rgba(99,102,241,.06));border:1px solid rgba(124,58,237,.15)">
+
+    <!-- AI Assist Card -->
+    <div class="card" style="padding:16px;background:linear-gradient(135deg,rgba(124,58,237,.06),rgba(99,102,241,.06));border:1px solid rgba(124,58,237,.15)">
       <div style="display:flex;align-items:center;gap:10px">
-        <div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#7C3AED,#6366F1);display:grid;place-items:center;color:#fff;font-weight:900;font-size:14px"><i class="ti ti-sparkles" style="font-size:16px"></i></div>
-        <div style="font-size:12px;line-height:1.5;color:var(--text2)"><strong style="color:var(--text)">AI Assistant</strong><br />Generate professional descriptions, improve tone, or expand your draft.</div>
+        <div style="width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,#7C3AED,#6366F1);display:grid;place-items:center;color:#fff;font-weight:900;font-size:18px"><i class="ti ti-sparkles" style="font-size:18px"></i></div>
+        <div style="font-size:12px;line-height:1.5;color:var(--text2)"><strong style="color:var(--text)">AI Assistant</strong><br />Generate, improve, or expand your task description.</div>
       </div>
+      <button onclick="openAI()" class="btn primary" style="width:100%;margin-top:12px;height:40px;font-size:13px;border-radius:10px"><i class="ti ti-wand"></i> Open AI Studio</button>
+    </div>
+
+    <!-- Tips Card -->
+    <div class="card" style="padding:16px">
+      <div style="font-size:12px;font-weight:800;color:var(--text2);margin-bottom:8px;display:flex;align-items:center;gap:6px"><i class="ti ti-bulb" style="color:var(--gold)"></i> Pro Tips</div>
+      <ul style="margin:0;padding:0 0 0 16px;font-size:12px;color:var(--text2);line-height:1.8">
+        <li>Clear descriptions get 3x more submissions</li>
+        <li>Higher rewards attract quality workers</li>
+        <li>Use AI to generate professional descriptions</li>
+      </ul>
     </div>
   </div>
 
 </div>
+</section></main></div>
 
-</section></main></div><div class="toast" id="toast">Done</div>
+<div class="toast" id="toast">Done</div>
+
+<!-- === AI STUDIO MODAL === -->
+<div class="ai-modal" id="aiModal">
+  <div class="ai-overlay" onclick="closeAI()"></div>
+  <div class="ai-panel">
+    <div class="ai-panel-head">
+      <div>
+        <h3 style="margin:0;display:flex;align-items:center;gap:8px;font-family:Outfit;font-size:18px"><i class="ti ti-sparkles" style="color:var(--accent)"></i> AI Studio</h3>
+        <p style="margin:4px 0 0;font-size:13px;color:var(--text2)">Choose a mode and let AI craft the perfect task content.</p>
+      </div>
+      <button class="ai-close" onclick="closeAI()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="ai-modes">
+      <button class="ai-mode active" data-mode="generate" onclick="selectAIMode(this)">
+        <div class="m-title"><i class="ti ti-sparkles" style="color:var(--accent)"></i> Generate</div>
+        <div class="m-desc">Create from scratch</div>
+      </button>
+      <button class="ai-mode" data-mode="improve" onclick="selectAIMode(this)">
+        <div class="m-title"><i class="ti ti-edit-circle" style="color:var(--accent2)"></i> Improve</div>
+        <div class="m-desc">Polish your draft</div>
+      </button>
+      <button class="ai-mode" data-mode="professional" onclick="selectAIMode(this)">
+        <div class="m-title"><i class="ti ti-briefcase" style="color:var(--accent2)"></i> Professional</div>
+        <div class="m-desc">Formal business tone</div>
+      </button>
+      <button class="ai-mode" data-mode="shorten" onclick="selectAIMode(this)">
+        <div class="m-title"><i class="ti ti-text-decrease" style="color:var(--accent2)"></i> Shorten</div>
+        <div class="m-desc">Concise version</div>
+      </button>
+      <button class="ai-mode" data-mode="expand" onclick="selectAIMode(this)">
+        <div class="m-title"><i class="ti ti-text-increase" style="color:var(--accent2)"></i> Expand</div>
+        <div class="m-desc">Add more detail</div>
+      </button>
+      <button class="ai-mode" data-mode="friendly" onclick="selectAIMode(this)">
+        <div class="m-title"><i class="ti ti-mood-smile" style="color:var(--accent2)"></i> Friendly</div>
+        <div class="m-desc">Warm & approachable</div>
+      </button>
+    </div>
+    <div class="ai-input-area">
+      <textarea id="aiInput" placeholder="Describe your task briefly, or leave blank to generate from scratch..." rows="2"></textarea>
+    </div>
+    <button class="ai-generate-btn" id="aiGenerateBtn" onclick="runAI()"><i class="ti ti-sparkles"></i> Generate</button>
+    <div class="ai-result" id="aiResult">
+      <div class="r-label">Generated result</div>
+      <div class="r-text" id="aiResultText"></div>
+      <div class="r-actions">
+        <button onclick="applyAIResult()" class="btn primary" style="flex:1;height:40px;font-size:13px"><i class="ti ti-check"></i> Apply to task</button>
+        <button onclick="regenerateAI()" class="btn" style="height:40px;font-size:13px"><i class="ti ti-refresh"></i> Regenerate</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+/* === Platform Grid - ENLARGED === */
+.platform-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.platform-card{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:24px 16px;border:1.5px solid var(--border);border-radius:16px;background:var(--bg);cursor:pointer;font-size:13px;font-weight:700;transition:all .25s cubic-bezier(.4,0,.2,1);text-align:center;min-height:130px;position:relative;overflow:hidden}
+.platform-card::before{content:'';position:absolute;inset:0;opacity:0;background:linear-gradient(135deg,rgba(124,58,237,.04),rgba(99,102,241,.04));transition:opacity .25s}
+.platform-card:hover{transform:translateY(-3px);box-shadow:0 8px 30px rgba(124,58,237,.12);border-color:rgba(124,58,237,.25)}
+.platform-card:hover::before{opacity:1}
+.platform-card .p-icon{width:52px;height:52px;border-radius:14px;background:var(--bg2);border:1px solid var(--border);display:grid;place-items:center;font-size:28px;color:var(--text);transition:all .25s;position:relative;z-index:1}
+.platform-card:hover .p-icon{background:var(--soft-purple);border-color:var(--accent);color:var(--accent);transform:scale(1.08)}
+.platform-card .p-name{position:relative;z-index:1}
+.platform-card.selected{border-color:var(--accent);background:var(--soft-purple);box-shadow:var(--shadow-glow)}
+.platform-card.selected .p-icon{background:rgba(124,58,237,.12);border-color:var(--accent);color:var(--accent)}
+
+/* === Currency Buttons === */
+.cur-btn{height:44px;padding:0 18px;border:1.5px solid var(--border);border-radius:12px;background:var(--bg);color:var(--text2);font-size:14px;font-weight:700;display:inline-flex;align-items:center;gap:8px;transition:all .2s;cursor:pointer}
+.cur-btn:hover{border-color:var(--border2);background:var(--bg2)}
+.cur-btn.active{background:var(--primary);color:var(--bg);border-color:var(--primary)}
+
+/* === AI Chips === */
+.ai-chip{height:32px;padding:0 12px;border:1px solid var(--border);border-radius:999px;background:var(--bg);color:var(--text2);font-size:12px;font-weight:700;display:inline-flex;align-items:center;gap:5px;transition:all .2s;cursor:pointer}
+.ai-chip:hover{border-color:var(--accent);color:var(--accent);background:var(--soft-purple)}
+.ai-chip.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.ai-chip.primary:hover{box-shadow:0 4px 16px rgba(124,58,237,.25);transform:translateY(-1px)}
+
+/* === AI Modal === */
+.ai-modal{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;visibility:hidden;opacity:0;transition:all .3s cubic-bezier(.4,0,.2,1)}
+.ai-modal.open{visibility:visible;opacity:1}
+.ai-overlay{position:absolute;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(4px)}
+.ai-panel{position:relative;width:min(580px,calc(100% - 32px));max-height:85vh;overflow-y:auto;background:var(--card);border:1px solid var(--border);border-radius:20px;padding:28px;transform:translateY(20px) scale(.96);transition:all .3s cubic-bezier(.4,0,.2,1)}
+.ai-modal.open .ai-panel{transform:translateY(0) scale(1)}
+.ai-panel-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px}
+.ai-close{width:36px;height:36px;border-radius:10px;border:1px solid var(--border);background:var(--bg);color:var(--text2);display:grid;place-items:center;font-size:18px;cursor:pointer;transition:all .2s}
+.ai-close:hover{background:var(--bg2);color:var(--text)}
+.ai-modes{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px}
+.ai-mode{padding:12px;border:1.5px solid var(--border);border-radius:12px;background:var(--bg);cursor:pointer;text-align:left;transition:all .2s}
+.ai-mode:hover{border-color:var(--border2)}
+.ai-mode.active{border-color:var(--accent);background:var(--soft-purple)}
+.m-title{font-weight:800;font-size:13px;display:flex;align-items:center;gap:6px;color:var(--text);margin-bottom:3px}.m-desc{font-size:11px;color:var(--text3)}
+.ai-input-area{margin-bottom:12px}
+.ai-input-area textarea{width:100%;padding:14px 16px;border:1.5px solid var(--border);border-radius:12px;background:var(--bg);color:var(--text);font-size:14px;font-family:inherit;line-height:1.6;outline:none;resize:vertical;transition:border-color .2s}
+.ai-input-area textarea:focus{border-color:var(--accent)}
+.ai-generate-btn{width:100%;height:48px;border:none;border-radius:12px;background:var(--accent);color:#fff;font-weight:800;font-size:15px;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;transition:all .2s}
+.ai-generate-btn:hover{box-shadow:0 6px 24px rgba(124,58,237,.3);transform:translateY(-1px)}
+.ai-generate-btn:disabled{opacity:.6;cursor:not-allowed;transform:none}
+.ai-result{margin-top:16px;padding:16px;border:1px solid var(--border);border-radius:12px;background:var(--bg2);display:none}
+.ai-result.show{display:block;animation:fadeSlideIn .3s ease}
+.r-label{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.r-label::after{content:'';flex:1;height:1px;background:var(--border)}
+.r-text{font-size:14px;line-height:1.7;color:var(--text);margin-bottom:14px;white-space:pre-wrap;max-height:280px;overflow-y:auto}
+.r-actions{display:flex;gap:8px}
+
+@keyframes fadeSlideIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* === Drawer === */
+.drawer{position:fixed;top:0;right:0;width:300px;height:100dvh;z-index:200;background:var(--card);border-left:1px solid var(--border);transform:translateX(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);overflow-y:auto}
+.drawer.open{transform:translateX(0)}
+.drawer-inner{padding:24px 16px}
+.drawer-link{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;color:var(--text2);font-size:14px;font-weight:700;transition:all .15s}
+.drawer-link:hover{background:var(--bg2);color:var(--text)}
+.drawer-link i{width:20px;text-align:center}
+.drawer .card{margin-top:12px;padding:14px;border:1px solid var(--border);border-radius:12px}
+.drawer .row{display:flex;gap:8px;margin-top:8px}
+.drawer .row .btn{flex:1;height:36px;font-size:12px;padding:0}
+[data-theme="dark"] .drawer-link:hover{background:var(--bg2)}
+
+/* === Responsive === */
+@media(max-width:1024px){
+  .page{width:min(1120px,calc(100% - 32px));padding:24px 0 100px}
+  .platform-grid{grid-template-columns:repeat(3,1fr);gap:12px}
+  .platform-card{min-height:110px;padding:18px 12px}
+  .platform-card .p-icon{width:44px;height:44px;font-size:24px}
+}
+@media(max-width:768px){
+  .app{flex-direction:column}.sidebar{display:none!important}
+  .page{width:min(1120px,calc(100% - 20px));padding:16px 0 100px}
+  .page-head{flex-direction:column}
+  .platform-grid{grid-template-columns:repeat(3,1fr);gap:10px}
+  .platform-card{min-height:100px;padding:14px 8px;border-radius:14px;gap:8px}
+  .platform-card .p-icon{width:40px;height:40px;font-size:22px;border-radius:12px}
+  .platform-card .p-name{font-size:11px}
+  .ai-modes{grid-template-columns:1fr 1fr;gap:6px}
+  .ai-mode{padding:10px}
+}
+</style>
 
 <script>
 let currentAIMode = 'generate';
+
+function toggleTheme() {
+  const html = document.documentElement;
+  const cur = html.getAttribute('data-theme') || 'light';
+  const next = cur === 'light' ? 'dark' : 'light';
+  html.setAttribute('data-theme', next);
+  localStorage.setItem('ogapay-theme', next);
+  const icon = document.getElementById('themeIcon');
+  if (icon) icon.className = next === 'dark' ? 'ti ti-moon' : 'ti ti-sun';
+}
 
 function openAI() {
   document.getElementById('aiModal').classList.add('open');
@@ -238,114 +459,66 @@ function selectAIMode(el) {
   currentAIMode = el.dataset.mode;
 }
 
+function quickAIAction(mode) {
+  currentAIMode = mode;
+  document.querySelectorAll('.ai-mode').forEach(b => {
+    b.classList.toggle('active', b.dataset.mode === mode);
+  });
+  runAIInline();
+  const toast = document.getElementById('toast');
+  if (toast) { toast.textContent = 'AI ' + mode + ' complete!'; toast.classList.add('show'); setTimeout(() => toast.classList.remove('show'), 1800); }
+}
+
+function runAIInline() {
+  const btn = document.getElementById('aiGenerateBtn');
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<i class="ti ti-loader-2" style="animation:spin 1s linear infinite"></i> Thinking...';
+  }
+  setTimeout(() => {
+    let result = '';
+    const modes = {
+      generate: ['We are looking for motivated workers to help promote our brand across social media platforms. Simply follow our official page, like the pinned post, and leave a thoughtful comment. Submit a screenshot of your engagement as proof of completion. This task takes less than 5 minutes and pays instantly upon verification.','Join our growing Telegram community and participate in the daily discussions. Must remain an active member for at least 24 hours after joining. Submit your Telegram username and a screenshot showing your membership. Bonuses available for the most active members each week.','Help us test our new mobile application and provide detailed feedback on your experience. Navigate through the onboarding flow, complete at least 3 core actions, and report any bugs or UX issues you encounter. Include screenshots for each bug found. Bonus rewards for critical issue discoveries.','Create a 30-60 second authentic video review of our platform and share it on your TikTok or Instagram Reels. Must show genuine reactions and mention at least 3 features you like. Share the public link as proof. Extra bonus if your video gets over 1,000 views within 48 hours.'],
+      improve: ['We need dependable workers to complete social media engagement tasks for our brand. Your responsibilities include following our page, engaging with posted content by liking and sharing, and leaving meaningful comments. To receive payment, please provide clear screenshots documenting each completed action. Payments are processed within 24 hours of verification.','We are seeking detail-oriented individuals to join and participate in our community platform. Selected candidates must maintain active engagement for a minimum of 24 hours after joining. Submission requirements include your community username along with a timestamped screenshot confirming your active membership status.'],
+      professional: ['OgaPay is seeking qualified independent contractors to perform social media engagement services. Scope of work includes: account follow, content interaction (likes/reposts), and constructive comment submission. Deliverables: timestamped screenshots for each action item. Compensation: disbursed within 24 hours of quality assurance review. Duration: estimated 5 minutes per assignment.','Contract position: Community Participation Specialist. The selected candidate will join our official Telegram community and maintain active participation for no less than 24 hours. Performance metrics include engagement quality and membership verification. Deliverables: platform username and dated membership confirmation screenshot.'],
+      shorten: ['Like, follow, and comment on our pinned post. Submit a screenshot. Pays instantly. Takes 2 minutes.','Join our Telegram group, stay active 24h, and submit your username + membership screenshot. Quick payment upon verification.','Test our mobile app: complete onboarding + 3 core actions. Report any bugs with screenshots. Bonus for critical findings.','Create a 30s video review of OgaPay and post on TikTok/IG. Share the link. Bonus for 1K+ views within 48h.'],
+      expand: ['We are looking for enthusiastic and reliable workers to help grow our social media presence through authentic engagement. Here is everything you need to know:\\n\\n1. Follow our official page on the specified platform\\n2. Like and share the pinned post with your network\\n3. Write a genuine, thoughtful comment (minimum 10 words)\\n4. Take a clear screenshot showing all completed actions\\n5. Submit the screenshot through the task submission form\\n\\nRequirements:\\n- Your account must be at least 30 days old\\n- Must have a public profile (not private)\\n- Comment must be relevant and constructive\\n\\nPayment: Rewards are processed automatically within 2 hours of approval. Make sure your submissions are clear and complete to avoid delays.','Join our vibrant Telegram community and become part of Africa\'s fastest-growing gig economy network. As a community member, you will:\\n\\n- Get early access to new tasks and high-paying gigs\\n- Connect with other workers and share tips\\n- Receive exclusive community-only bonus tasks\\n- Participate in weekly giveaways and competitions\\n\\nTo complete this task:\\n1. Join the Telegram group using the provided link\\n2. Introduce yourself in the welcome thread\\n3. Stay active for at least 24 hours (send at least 3 messages)\\n4. Take a screenshot showing your membership and messages\\n5. Submit your Telegram username and screenshot'],
+      friendly: ['Hey there! We are looking for awesome people to help us out with a quick and easy task!\\n\\nHere is what you need to do:\\n- Follow our page\\n- Like our pinned post\\n- Drop a friendly comment\\n- Take a screenshot\\n\\nThat\'s it! Super simple, right? The whole thing takes about 2 minutes and you get paid right after we verify. No complicated steps, no waiting forever.\\n\\nReady to earn? Let\'s go!','Hey! We would love to have you in our Telegram community! It is a great place to connect with other earners, discover new tasks, and be the first to know about high-paying gigs.\\n\\nWhat you need to do:\\n1. Join our group (super easy, one click!)\\n2. Say hello in the chat\\n3. Stick around for 24 hours\\n4. Send us your username and a quick screenshot\\n\\nThat is all! Welcome to the family!']
+    };
+    const modeResults = modes[currentAIMode] || modes.generate;
+    result = modeResults[Math.floor(Math.random() * modeResults.length)];
+    document.getElementById('taskDesc').value = result;
+    updatePreview();
+    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="ti ti-sparkles"></i> Generate'; }
+  }, 600);
+}
+
 function runAI() {
   const input = document.getElementById('aiInput').value.trim();
   const btn = document.getElementById('aiGenerateBtn');
   const resultEl = document.getElementById('aiResult');
   const textEl = document.getElementById('aiResultText');
-  
   btn.disabled = true;
   btn.innerHTML = '<i class="ti ti-loader-2" style="animation:spin 1s linear infinite"></i> Thinking...';
   resultEl.classList.remove('show');
-  
   setTimeout(() => {
     let result = '';
     const modes = {
-      generate: [
-        'We are looking for motivated workers to help promote our brand across social media platforms. Simply follow our official page, like the pinned post, and leave a thoughtful comment. Submit a screenshot of your engagement as proof of completion. This task takes less than 5 minutes and pays instantly upon verification.',
-        'Join our growing Telegram community and participate in the daily discussions. Must remain an active member for at least 24 hours after joining. Submit your Telegram username and a screenshot showing your membership. Bonuses available for the most active members each week.',
-        'Help us test our new mobile application and provide detailed feedback on your experience. Navigate through the onboarding flow, complete at least 3 core actions, and report any bugs or UX issues you encounter. Include screenshots for each bug found. Bonus rewards for critical issue discoveries.',
-        'Create a 30-60 second authentic video review of our platform and share it on your TikTok or Instagram Reels. Must show genuine reactions and mention at least 3 features you like. Share the public link as proof. Extra bonus if your video gets over 1,000 views within 48 hours.'
-      ],
-      improve: [
-        'We need dependable workers to complete social media engagement tasks for our brand. Your responsibilities include following our page, engaging with posted content by liking and sharing, and leaving meaningful comments. To receive payment, please provide clear screenshots documenting each completed action. Payments are processed within 24 hours of verification.',
-        'We are seeking detail-oriented individuals to join and participate in our community platform. Selected candidates must maintain active engagement for a minimum of 24 hours after joining. Submission requirements include your community username along with a timestamped screenshot confirming your active membership status.'
-      ],
-      professional: [
-        'OgaPay is seeking qualified independent contractors to perform social media engagement services. Scope of work includes: account follow, content interaction (likes/reposts), and constructive comment submission. Deliverables: timestamped screenshots for each action item. Compensation: disbursed within 24 hours of quality assurance review. Duration: estimated 5 minutes per assignment.',
-        'Contract position: Community Participation Specialist. The selected candidate will join our official Telegram community and maintain active participation for no less than 24 hours. Performance metrics include engagement quality and membership verification. Deliverables: platform username and dated membership confirmation screenshot.'
-      ],
-      shorten: [
-        'Like, follow, and comment on our pinned post. Submit a screenshot. Pays instantly. Takes 2 minutes.',
-        'Join our Telegram group, stay active 24h, and submit your username + membership screenshot. Quick payment upon verification.',
-        'Test our mobile app: complete onboarding + 3 core actions. Report any bugs with screenshots. Bonus for critical findings.',
-        'Create a 30s video review of OgaPay and post on TikTok/IG. Share the link. Bonus for 1K+ views within 48h.'
-      ],
-      expand: [
-        'We are looking for enthusiastic and reliable workers to help grow our social media presence through authentic engagement. Here is everything you need to know:
-
-1. Follow our official page on the specified platform
-2. Like and share the pinned post with your network
-3. Write a genuine, thoughtful comment (minimum 10 words)
-4. Take a clear screenshot showing all completed actions
-5. Submit the screenshot through the task submission form
-
-Requirements:
-- Your account must be at least 30 days old
-- Must have a public profile (not private)
-- Comment must be relevant and constructive
-
-Payment: Rewards are processed automatically within 2 hours of approval. Make sure your submissions are clear and complete to avoid delays.
-
-Tips for faster approval:
-- Use good lighting when taking screenshots
-- Make sure your username is visible in the screenshot
-- Complete all required actions before submitting',
-        'Join our vibrant Telegram community and become part of Africa's fastest-growing gig economy network. As a community member, you will:
-
-• Get early access to new tasks and high-paying gigs
-• Connect with other workers and share tips
-• Receive exclusive community-only bonus tasks
-• Participate in weekly giveaways and competitions
-
-To complete this task:
-1. Join the Telegram group using the provided link
-2. Introduce yourself in the welcome thread
-3. Stay active for at least 24 hours (send at least 3 messages)
-4. Take a screenshot showing your membership and messages
-5. Submit your Telegram username and screenshot
-
-Note: Spam or promotional messages will result in immediate disqualification. Be genuine and engaging!'
-      ],
-      friendly: [
-        'Hey there! We are looking for awesome people to help us out with a quick and easy task! 🎉
-
-Here is what you need to do:
-✨ Follow our page
-❤️ Like our pinned post
-💬 Drop a friendly comment
-📸 Take a screenshot
-
-That is it! Super simple, right? The whole thing takes about 2 minutes and you get paid right after we verify. No complicated steps, no waiting forever.
-
-Why join?
-⚡ Instant payment
-👍 Super easy
-🎯 No special skills needed
-
-Ready to earn? Let us go! 🚀',
-        'Hey! We would love to have you in our Telegram community! 🤗 It is a great place to connect with other earners, discover new tasks, and be the first to know about high-paying gigs.
-
-What you need to do:
-1. Join our group (super easy, one click!)
-2. Say hello in the chat 👋
-3. Stick around for 24 hours
-4. Send us your username and a quick screenshot
-
-That is all! Welcome to the family! 💪'
-    ];
-    
+      generate: ['We are looking for motivated workers to help promote our brand across social media platforms. Simply follow our official page, like the pinned post, and leave a thoughtful comment. Submit a screenshot of your engagement as proof of completion. This task takes less than 5 minutes and pays instantly upon verification.','Join our growing Telegram community and participate in the daily discussions. Must remain an active member for at least 24 hours after joining. Submit your Telegram username and a screenshot showing your membership. Bonuses available for the most active members each week.','Help us test our new mobile application and provide detailed feedback on your experience. Navigate through the onboarding flow, complete at least 3 core actions, and report any bugs or UX issues you encounter. Include screenshots for each bug found. Bonus rewards for critical issue discoveries.'],
+      improve: ['We need dependable workers to complete social media engagement tasks for our brand. Your responsibilities include following our page, engaging with posted content by liking and sharing, and leaving meaningful comments. To receive payment, please provide clear screenshots documenting each completed action. Payments are processed within 24 hours of verification.'],
+      professional: ['OgaPay is seeking qualified independent contractors to perform social media engagement services. Scope of work includes: account follow, content interaction (likes/reposts), and constructive comment submission. Deliverables: timestamped screenshots for each action item. Compensation: disbursed within 24 hours of quality assurance review.'],
+      shorten: ['Like, follow, and comment on our pinned post. Submit a screenshot. Pays instantly. Takes 2 minutes.','Join our Telegram group, stay active 24h, and submit your username + membership screenshot. Quick payment upon verification.'],
+      expand: ['We are looking for enthusiastic and reliable workers to help grow our social media presence through authentic engagement. Here is everything you need to know:\\n\\n1. Follow our official page on the specified platform\\n2. Like and share the pinned post with your network\\n3. Write a genuine, thoughtful comment (minimum 10 words)\\n4. Take a clear screenshot showing all completed actions\\n5. Submit the screenshot through the task submission form\\n\\nRequirements:\\n- Your account must be at least 30 days old\\n- Must have a public profile (not private)\\n- Comment must be relevant and constructive\\n\\nPayment: Rewards are processed automatically within 2 hours of approval.'],
+      friendly: ['Hey there! We are looking for awesome people to help us out with a quick and easy task!\\n\\nHere is what you need to do:\\n- Follow our page\\n- Like our pinned post\\n- Drop a friendly comment\\n- Take a screenshot\\n\\nThat\'s it! Super simple, right? The whole thing takes about 2 minutes and you get paid right after we verify.']
+    };
     const modeResults = modes[currentAIMode] || modes.generate;
     result = modeResults[Math.floor(Math.random() * modeResults.length)];
-    
     textEl.textContent = '';
     resultEl.classList.add('show');
     btn.disabled = false;
     btn.innerHTML = '<i class="ti ti-sparkles"></i> Generate';
-    
-    // Typewriter effect
     let i = 0;
-    const speed = 15;
+    const speed = 12;
     function typeWriter() {
       if (i < result.length) {
         textEl.textContent += result.charAt(i);
@@ -365,150 +538,58 @@ function regenerateAI() {
 function applyAIResult() {
   const text = document.getElementById('aiResultText').textContent;
   document.getElementById('taskDesc').value = text;
+  updatePreview();
   closeAI();
   const toast = document.getElementById('toast');
   if (toast) { toast.textContent = 'AI content applied!'; toast.classList.add('show'); setTimeout(() => toast.classList.remove('show'), 1800); }
 }
 
 function selectPlatform(el) {
-  document.querySelectorAll('[onclick*="selectPlatform"]').forEach(e => {
-    e.style.borderColor = 'var(--border)';
-    e.style.background = 'var(--bg)';
+  document.querySelectorAll('.platform-card').forEach(e => {
+    e.classList.remove('selected');
   });
-  el.style.borderColor = 'var(--accent)';
-  el.style.background = 'var(--soft-purple)';
+  el.classList.add('selected');
 }
 
 function setCurrency(cur, btn) {
   document.querySelectorAll('.cur-btn').forEach(b => {
-    b.style.background = 'var(--bg)';
-    b.style.color = 'var(--text2)';
-    b.style.borderColor = 'var(--border)';
-    b.style.fontWeight = '700';
+    b.classList.remove('active');
   });
-  btn.style.background = 'var(--primary)';
-  btn.style.color = 'var(--bg)';
-  btn.style.fontWeight = '800';
+  btn.classList.add('active');
   calcBudget();
 }
 
 function calcBudget() {
   const reward = parseFloat(document.getElementById('rewardInput').value) || 0;
   const slots = parseInt(document.getElementById('slotsInput').value) || 0;
-  const active = document.querySelector('.cur-btn.active') || document.querySelector('.cur-btn');
+  const active = document.querySelector('.cur-btn.active');
   const cur = active ? active.dataset.cur : 'NGN';
   const el = document.getElementById('totalBudget');
   const pReward = document.getElementById('previewReward');
   const pSlots = document.getElementById('previewSlots');
   const pTotal = document.getElementById('previewTotal');
-
-  pReward.textContent = reward ? cur + ' ' + reward.toLocaleString() : '—';
-  pSlots.textContent = slots || '—';
-
+  pReward.textContent = reward ? cur + ' ' + reward.toLocaleString() : '---';
+  pSlots.textContent = slots || '---';
   if (reward && slots) {
     const total = reward * slots;
     el.textContent = cur + ' ' + total.toLocaleString();
     el.style.color = 'var(--text)';
     pTotal.textContent = cur + ' ' + total.toLocaleString();
   } else {
-    el.textContent = '—';
+    el.textContent = '---';
     el.style.color = 'var(--text3)';
-    pTotal.textContent = '—';
+    pTotal.textContent = '---';
   }
 }
 
-function aiAssist() {
-  const desc = document.getElementById('taskDesc');
-  const samples = [
-    'We are looking for workers to help promote our brand on social media. Simply follow our page, like the pinned post, and drop a comment with your username. Submit a screenshot as proof. Quick and easy task!',
-    'Join our Telegram community and stay active for at least 24 hours. Submit your Telegram username and a screenshot showing you are a member. Rewards paid instantly after verification.',
-    'Test our new mobile app and report any bugs or issues you find. Include screenshots and a brief description of each issue. Bonus rewards for critical bug findings.',
-    'Create a short video review (30-60 seconds) of our product and post it on your social media. Share the link to your post as proof. Must keep the video up for at least 48 hours.',
-    'Complete a 5-minute survey about your experience with gig economy platforms. All responses are anonymous and used to improve our services. No special skills required.'
-  ];
-  desc.value = samples[Math.floor(Math.random() * samples.length)];
-  desc.style.borderColor = 'var(--accent)';
-  setTimeout(() => desc.style.borderColor = 'var(--border)', 1200);
-  const toast = document.getElementById('toast');
-  if (toast) { toast.textContent = 'AI description generated!'; toast.classList.add('show'); setTimeout(() => toast.classList.remove('show'), 1800); }
+function updatePreview() {
+  const title = document.getElementById('taskTitle').value || 'Untitled Task';
+  const cat = document.getElementById('taskCategory').value;
+  const desc = document.getElementById('taskDesc').value || 'Your task description will appear here.';
+  document.getElementById('previewTitle').textContent = title;
+  document.getElementById('previewMeta').textContent = cat;
+  document.getElementById('previewDesc').textContent = desc;
 }
-
-// Live preview updates
-document.addEventListener('input', function(e) {
-  const title = document.querySelector('input[placeholder*="Like & retweet"]');
-  const previewTitle = document.getElementById('previewTitle');
-  if (title && previewTitle) {
-    previewTitle.textContent = title.value.trim() || 'Untitled Task';
-    previewTitle.style.color = title.value.trim() ? 'var(--text)' : 'var(--text3)';
-  }
-  const desc = document.getElementById('taskDesc');
-  const previewDesc = document.getElementById('previewDesc');
-  if (desc && previewDesc) {
-    previewDesc.textContent = desc.value.trim() || 'Your task description will appear here.';
-    previewDesc.style.color = desc.value.trim() ? 'var(--text2)' : 'var(--text3)';
-  }
-});
 </script>
-<script>
-(function(){const html=document.documentElement,theme=document.getElementById('themeToggle'),menu=document.getElementById('mobileMenu'),btn=document.getElementById('menuBtn'),toast=document.getElementById('toast');function setTheme(v){html.setAttribute('data-theme',v);try{localStorage.setItem('ogapay-theme',v)}catch(e){} if(theme) theme.innerHTML='<i class="ti '+(v==='dark'?'ti-sun':'ti-moon')+'"></i>'}setTheme(html.getAttribute('data-theme')||'light');theme&&theme.addEventListener('click',()=>setTheme(html.getAttribute('data-theme')==='dark'?'light':'dark'));function setAuth(v){document.body.classList.toggle('is-authed',v);try{localStorage.setItem('ogapay-authenticated',v?'true':'false')}catch(e){}}let saved=true;try{saved=localStorage.getItem('ogapay-authenticated')!=='false'}catch(e){}setAuth(saved);document.getElementById('authOn')?.addEventListener('click',()=>setAuth(true));document.getElementById('authOff')?.addEventListener('click',()=>setAuth(false));btn&&btn.addEventListener('click',()=>menu.classList.add('open'));document.querySelectorAll('[data-close-menu]').forEach(el=>el.addEventListener('click',()=>menu.classList.remove('open')));function say(text){if(!toast)return;toast.textContent=text;toast.classList.add('show');setTimeout(()=>toast.classList.remove('show'),1800)}document.querySelectorAll('[data-copy]').forEach(el=>el.addEventListener('click',()=>{navigator.clipboard&&navigator.clipboard.writeText(el.getAttribute('data-copy'));say('Copied')}));document.querySelectorAll('[data-toggle-label]').forEach(el=>el.addEventListener('click',()=>{el.classList.toggle('on');say(el.classList.contains('on')?'Enabled':'Disabled')}));document.querySelectorAll('[data-join]').forEach(el=>el.addEventListener('click',()=>{const joined=el.dataset.join==='true';el.dataset.join=String(!joined);el.innerHTML=joined?'<i class="ti ti-user-plus"></i>Join':'<i class="ti ti-check"></i>Joined';say(joined?'Left community':'Joined community')}));document.querySelectorAll('[data-apply]').forEach(el=>el.addEventListener('click',()=>{el.disabled=true;el.classList.add('primary');el.innerHTML='<i class="ti ti-check"></i>Applied';say('Application submitted')}));})();
-</script>
-<script src="assets/ogapay-live.js"></script><nav class="mobile-bottom-nav" aria-label="Mobile app navigation">
-  <a href="tasks.html" class=""><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v13H4V7Z"/><path d="M9 5V3h6v2M8 11h8"/></svg><span>Jobs</span></a>
-  <a href="store.html" class=""><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18M16 10a4 4 0 0 1-8 0"/></svg><span>Deals</span></a>
-  <a href="post-task.html" class="create active current"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span>Create</span></a>
-  <a href="notifications.html" class=""><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><span>Alerts</span></a>
-  <a href="dashboard.html" class=""><span class="profile-dot"></span><span>Profile</span></a>
-</nav>
-
-<!-- AI Assistant Modal -->
-<div class="ai-modal" id="aiModal">
-  <div class="ai-overlay" onclick="closeAI()"></div>
-  <div class="ai-panel">
-    <div class="ai-panel-head">
-      <h3><i class="ti ti-sparkles"></i>AI Assistant</h3>
-      <button class="ai-close" onclick="closeAI()">✕</button>
-    </div>
-    <p style="font-size:13px;color:var(--text2);margin:0 0 14px;line-height:1.5">Choose a mode, then let AI generate the perfect task content for you.</p>
-    <div class="ai-modes">
-      <button class="ai-mode active" data-mode="generate" onclick="selectAIMode(this)">
-        <div class="m-title"><i class="ti ti-sparkles" style="color:var(--accent)"></i>Generate</div>
-        <div class="m-desc">Create a new task description from scratch</div>
-      </button>
-      <button class="ai-mode" data-mode="improve" onclick="selectAIMode(this)">
-        <div class="m-title"><i class="ti ti-edit-circle" style="color:var(--accent2)"></i>Improve</div>
-        <div class="m-desc">Polish and enhance your current draft</div>
-      </button>
-      <button class="ai-mode" data-mode="professional" onclick="selectAIMode(this)">
-        <div class="m-title"><i class="ti ti-briefcase" style="color:var(--accent2)"></i>Professional</div>
-        <div class="m-desc">Rewrite in a formal, business tone</div>
-      </button>
-      <button class="ai-mode" data-mode="shorten" onclick="selectAIMode(this)">
-        <div class="m-title"><i class="ti ti-text-decrease" style="color:var(--accent2)"></i>Shorten</div>
-        <div class="m-desc">Make it concise and scannable</div>
-      </button>
-      <button class="ai-mode" data-mode="expand" onclick="selectAIMode(this)">
-        <div class="m-title"><i class="ti ti-text-increase" style="color:var(--accent2)"></i>Expand</div>
-        <div class="m-desc">Add more detail and clarity</div>
-      </button>
-      <button class="ai-mode" data-mode="friendly" onclick="selectAIMode(this)">
-        <div class="m-title"><i class="ti ti-mood-smile" style="color:var(--accent2)"></i>Friendly</div>
-        <div class="m-desc">Make it warm and approachable</div>
-      </button>
-    </div>
-    <div class="ai-input-area">
-      <textarea id="aiInput" placeholder="Describe your task briefly, or leave blank to generate from scratch..." rows="2"></textarea>
-    </div>
-    <button class="ai-generate-btn" id="aiGenerateBtn" onclick="runAI()"><i class="ti ti-sparkles"></i> Generate</button>
-    <div class="ai-result" id="aiResult">
-      <div class="r-label">Generated result</div>
-      <div class="r-text" id="aiResultText"></div>
-      <div class="r-actions">
-        <button onclick="applyAIResult()"><i class="ti ti-check"></i>Apply to task</button>
-        <button onclick="regenerateAI()"><i class="ti ti-refresh"></i>Regenerate</button>
-      </div>
-    </div>
-  </div>
-</div>
-
 </body>
 </html>
