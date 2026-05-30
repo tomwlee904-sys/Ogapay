@@ -32,7 +32,7 @@ body{font-family:"DM Sans",system-ui,sans-serif;background:#f2f5f9;min-height:10
 .particles span:nth-child(11){top:78%;left:35%;animation-delay:5.5s;width:3px;height:3px}
 .particles span:nth-child(12){top:35%;left:15%;animation-delay:.8s;width:5px;height:5px}
 @keyframes float{0%,100%{transform:translateY(0) scale(1);opacity:.3}50%{transform:translateY(-18px) scale(1.2);opacity:.6}}
-.left-content{position:relative;z-index:3;display:flex;flex-direction:column;flex:1;min-height:0}
+.left-content{position:relative;z-index:3;display:flex;flex-direction:column;flex:0 0 auto}
 .logo{display:flex;align-items:center;gap:10px;font-family:"Outfit",sans-serif;font-size:18px;font-weight:800;margin-bottom:20px}
 .logo svg{width:32px;height:32px;border-radius:8px;overflow:hidden}
 .logo span{color:#fff}
@@ -48,8 +48,8 @@ body{font-family:"DM Sans",system-ui,sans-serif;background:#f2f5f9;min-height:10
 .feature svg{width:22px;height:22px;stroke:#4D5DFF;stroke-width:2;fill:none;flex-shrink:0}
 
 /* Woman image - integrated into panel */
-.woman{position:absolute;bottom:0;left:0;right:0;height:72%;z-index:1;display:flex;align-items:flex-end;justify-content:center;overflow:hidden;pointer-events:none}
-.woman svg{width:150%;height:auto;flex-shrink:0;display:block;transform:translateY(-18%);filter:brightness(1) contrast(1.02)}
+.woman{position:relative;flex:1;min-height:240px;z-index:1;display:flex;align-items:flex-start;justify-content:center;overflow:hidden;pointer-events:none;width:100%}
+.woman svg{width:100%;height:auto;flex-shrink:0;display:block}
 .woman-fade{position:absolute;top:0;left:0;right:0;height:12%;z-index:2;background:linear-gradient(to bottom,rgba(3,3,65,0.06),transparent 100%);pointer-events:none}
 
 /* Stats card */
@@ -89,7 +89,7 @@ body{font-family:"DM Sans",system-ui,sans-serif;background:#f2f5f9;min-height:10
   .left{min-height:auto;padding:28px 28px 0}
   .left .logo{margin-bottom:28px}
   .copy h1{font-size:clamp(28px,6vw,38px)}
-  .woman{height:55%}
+  .woman{min-height:200px;flex:0 0 auto}
   .features{gap:10px;margin-bottom:0}
   .stats-card{max-width:none;bottom:8px;left:12px}
   .right{min-height:auto;padding:32px 28px}
