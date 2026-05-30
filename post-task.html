@@ -33,6 +33,41 @@
 [data-theme="dark"] .mobile-bottom-nav .create svg{background:#f8fafc;color:#05070b;box-shadow:0 0 22px rgba(167,139,250,.18)}
 .profile-dot{width:34px;height:34px;border-radius:50%;background:#05070b;display:block;box-shadow:inset 0 0 0 1px rgba(255,255,255,.14)}
 [data-theme="dark"] .profile-dot{background:#e5e7eb}}
+
+.ai-btn{padding:8px 14px;border-radius:10px;border:1.5px solid var(--border);background:linear-gradient(135deg,rgba(124,58,237,.08),rgba(99,102,241,.08));color:var(--accent);font-size:13px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:all .2s}
+.ai-btn:hover{background:linear-gradient(135deg,rgba(124,58,237,.16),rgba(99,102,241,.16));border-color:var(--accent);box-shadow:0 0 20px rgba(124,58,237,.15)}
+.ai-btn svg{width:16px;height:16px}
+.ai-modal{position:fixed;inset:0;z-index:500;display:none;align-items:flex-end;justify-content:center}
+.ai-modal.open{display:flex}
+.ai-overlay{position:absolute;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(4px)}
+.ai-panel{position:relative;width:min(520px,calc(100% - 24px));max-height:70vh;background:var(--card);border:1px solid var(--border);border-radius:20px 20px 0 0;padding:24px 24px 32px;overflow:auto;animation:slideUp .3s ease;box-shadow:0 -8px 40px rgba(0,0,0,.18)}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.ai-panel-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.ai-panel-head h3{font-family:Outfit;font-size:20px;font-weight:800;margin:0;display:flex;align-items:center;gap:10px}
+.ai-panel-head h3 i{color:var(--accent)}
+.ai-close{width:32px;height:32px;border:none;border-radius:8px;background:var(--bg2);color:var(--text3);cursor:pointer;display:grid;place-items:center;font-size:18px}
+.ai-close:hover{background:var(--border);color:var(--text)}
+.ai-modes{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
+.ai-mode{padding:12px 14px;border:1.5px solid var(--border);border-radius:12px;background:var(--bg);cursor:pointer;text-align:left;transition:all .15s;font-family:inherit}
+.ai-mode:hover,.ai-mode.active{border-color:var(--accent);background:linear-gradient(135deg,rgba(124,58,237,.06),rgba(99,102,241,.06))}
+.ai-mode .m-title{font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px}
+.ai-mode .m-desc{font-size:11px;color:var(--text3);margin-top:2px;line-height:1.4}
+.ai-input-area{margin-bottom:12px}
+.ai-input-area textarea{width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:12px;background:var(--bg2);color:var(--text);font-size:14px;line-height:1.6;outline:none;resize:none;font-family:inherit;min-height:60px}
+.ai-input-area textarea:focus{border-color:var(--accent)}
+.ai-generate-btn{width:100%;height:48px;border:none;border-radius:12px;background:linear-gradient(135deg,#7C3AED,#6366F1);color:#fff;font-size:15px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .2s}
+.ai-generate-btn:hover{opacity:.9;box-shadow:0 4px 20px rgba(124,58,237,.3)}
+.ai-generate-btn:disabled{opacity:.5;cursor:not-allowed}
+.ai-result{margin-top:12px;padding:14px;border:1.5px solid var(--border);border-radius:12px;background:var(--bg2);display:none}
+.ai-result.show{display:block}
+.ai-result .r-label{font-size:11px;font-weight:700;color:var(--text3);margin-bottom:6px;text-transform:uppercase;letter-spacing:.8px}
+.ai-result .r-text{font-size:14px;line-height:1.6;color:var(--text)}
+.ai-typing{display:inline;overflow:hidden;border-right:2px solid var(--accent);animation:blink .7s step-end infinite}
+@keyframes blink{50%{border-color:transparent}}
+.ai-result .r-actions{display:flex;gap:8px;margin-top:10px}
+.ai-result .r-actions button{flex:1;height:38px;border:1.5px solid var(--border);border-radius:10px;background:var(--card);color:var(--text);font-weight:700;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all .15s}
+.ai-result .r-actions button:hover{border-color:var(--accent);background:rgba(124,58,237,.06);color:var(--accent)}
+
 </style>
 </head>
 <body data-page="tasks.html">
@@ -75,7 +110,7 @@
         <div>
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
             <label style="font-size:13px;font-weight:800;color:var(--text2)">Description</label>
-            <button onclick="aiAssist()" style="display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border:1.5px solid var(--border);border-radius:8px;background:var(--bg2);color:var(--accent);font-size:12px;font-weight:700;cursor:pointer"><i class="ti ti-sparkles"></i>AI Assist</button>
+            <button onclick="openAI()" class="ai-btn"><i class="ti ti-sparkles" style="font-size:16px"></i>AI Assist</button>
           </div>
           <textarea id="taskDesc" rows="4" placeholder="Describe what workers need to do, how to submit proof, and any special requirements." style="width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:12px;background:var(--bg);color:var(--text);font-size:14px;line-height:1.6;outline:none;resize:vertical;font-family:inherit"></textarea>
         </div>
@@ -172,10 +207,10 @@
         <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--text2)">Total budget</span><span id="previewTotal" style="font-weight:700;color:var(--text3)">—</span></div>
       </div>
     </div>
-    <div class="card" style="padding:16px;margin-top:12px;background:var(--bg2);border-color:transparent">
+    <div class="card" style="padding:16px;margin-top:12px;background:linear-gradient(135deg,rgba(124,58,237,.06),rgba(99,102,241,.06));border:1px solid rgba(124,58,237,.15)">
       <div style="display:flex;align-items:center;gap:10px">
-        <div style="width:36px;height:36px;border-radius:50%;background:var(--brand-blue);display:grid;place-items:center;color:#fff;font-weight:900;font-size:13px">AI</div>
-        <div style="font-size:12px;line-height:1.5;color:var(--text2)"><strong style="color:var(--text)">AI Assist</strong><br />Click the sparkles icon above to auto-generate your task description.</div>
+        <div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#7C3AED,#6366F1);display:grid;place-items:center;color:#fff;font-weight:900;font-size:14px"><i class="ti ti-sparkles" style="font-size:16px"></i></div>
+        <div style="font-size:12px;line-height:1.5;color:var(--text2)"><strong style="color:var(--text)">AI Assistant</strong><br />Generate professional descriptions, improve tone, or expand your draft.</div>
       </div>
     </div>
   </div>
@@ -185,6 +220,156 @@
 </section></main></div><div class="toast" id="toast">Done</div>
 
 <script>
+let currentAIMode = 'generate';
+
+function openAI() {
+  document.getElementById('aiModal').classList.add('open');
+  document.getElementById('aiInput').value = document.getElementById('taskDesc').value;
+}
+
+function closeAI() {
+  document.getElementById('aiModal').classList.remove('open');
+  document.getElementById('aiResult').classList.remove('show');
+}
+
+function selectAIMode(el) {
+  document.querySelectorAll('.ai-mode').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  currentAIMode = el.dataset.mode;
+}
+
+function runAI() {
+  const input = document.getElementById('aiInput').value.trim();
+  const btn = document.getElementById('aiGenerateBtn');
+  const resultEl = document.getElementById('aiResult');
+  const textEl = document.getElementById('aiResultText');
+  
+  btn.disabled = true;
+  btn.innerHTML = '<i class="ti ti-loader-2" style="animation:spin 1s linear infinite"></i> Thinking...';
+  resultEl.classList.remove('show');
+  
+  setTimeout(() => {
+    let result = '';
+    const modes = {
+      generate: [
+        'We are looking for motivated workers to help promote our brand across social media platforms. Simply follow our official page, like the pinned post, and leave a thoughtful comment. Submit a screenshot of your engagement as proof of completion. This task takes less than 5 minutes and pays instantly upon verification.',
+        'Join our growing Telegram community and participate in the daily discussions. Must remain an active member for at least 24 hours after joining. Submit your Telegram username and a screenshot showing your membership. Bonuses available for the most active members each week.',
+        'Help us test our new mobile application and provide detailed feedback on your experience. Navigate through the onboarding flow, complete at least 3 core actions, and report any bugs or UX issues you encounter. Include screenshots for each bug found. Bonus rewards for critical issue discoveries.',
+        'Create a 30-60 second authentic video review of our platform and share it on your TikTok or Instagram Reels. Must show genuine reactions and mention at least 3 features you like. Share the public link as proof. Extra bonus if your video gets over 1,000 views within 48 hours.'
+      ],
+      improve: [
+        'We need dependable workers to complete social media engagement tasks for our brand. Your responsibilities include following our page, engaging with posted content by liking and sharing, and leaving meaningful comments. To receive payment, please provide clear screenshots documenting each completed action. Payments are processed within 24 hours of verification.',
+        'We are seeking detail-oriented individuals to join and participate in our community platform. Selected candidates must maintain active engagement for a minimum of 24 hours after joining. Submission requirements include your community username along with a timestamped screenshot confirming your active membership status.'
+      ],
+      professional: [
+        'OgaPay is seeking qualified independent contractors to perform social media engagement services. Scope of work includes: account follow, content interaction (likes/reposts), and constructive comment submission. Deliverables: timestamped screenshots for each action item. Compensation: disbursed within 24 hours of quality assurance review. Duration: estimated 5 minutes per assignment.',
+        'Contract position: Community Participation Specialist. The selected candidate will join our official Telegram community and maintain active participation for no less than 24 hours. Performance metrics include engagement quality and membership verification. Deliverables: platform username and dated membership confirmation screenshot.'
+      ],
+      shorten: [
+        'Like, follow, and comment on our pinned post. Submit a screenshot. Pays instantly. Takes 2 minutes.',
+        'Join our Telegram group, stay active 24h, and submit your username + membership screenshot. Quick payment upon verification.',
+        'Test our mobile app: complete onboarding + 3 core actions. Report any bugs with screenshots. Bonus for critical findings.',
+        'Create a 30s video review of OgaPay and post on TikTok/IG. Share the link. Bonus for 1K+ views within 48h.'
+      ],
+      expand: [
+        'We are looking for enthusiastic and reliable workers to help grow our social media presence through authentic engagement. Here is everything you need to know:
+
+1. Follow our official page on the specified platform
+2. Like and share the pinned post with your network
+3. Write a genuine, thoughtful comment (minimum 10 words)
+4. Take a clear screenshot showing all completed actions
+5. Submit the screenshot through the task submission form
+
+Requirements:
+- Your account must be at least 30 days old
+- Must have a public profile (not private)
+- Comment must be relevant and constructive
+
+Payment: Rewards are processed automatically within 2 hours of approval. Make sure your submissions are clear and complete to avoid delays.
+
+Tips for faster approval:
+- Use good lighting when taking screenshots
+- Make sure your username is visible in the screenshot
+- Complete all required actions before submitting',
+        'Join our vibrant Telegram community and become part of Africa's fastest-growing gig economy network. As a community member, you will:
+
+• Get early access to new tasks and high-paying gigs
+• Connect with other workers and share tips
+• Receive exclusive community-only bonus tasks
+• Participate in weekly giveaways and competitions
+
+To complete this task:
+1. Join the Telegram group using the provided link
+2. Introduce yourself in the welcome thread
+3. Stay active for at least 24 hours (send at least 3 messages)
+4. Take a screenshot showing your membership and messages
+5. Submit your Telegram username and screenshot
+
+Note: Spam or promotional messages will result in immediate disqualification. Be genuine and engaging!'
+      ],
+      friendly: [
+        'Hey there! We are looking for awesome people to help us out with a quick and easy task! 🎉
+
+Here is what you need to do:
+✨ Follow our page
+❤️ Like our pinned post
+💬 Drop a friendly comment
+📸 Take a screenshot
+
+That is it! Super simple, right? The whole thing takes about 2 minutes and you get paid right after we verify. No complicated steps, no waiting forever.
+
+Why join?
+⚡ Instant payment
+👍 Super easy
+🎯 No special skills needed
+
+Ready to earn? Let us go! 🚀',
+        'Hey! We would love to have you in our Telegram community! 🤗 It is a great place to connect with other earners, discover new tasks, and be the first to know about high-paying gigs.
+
+What you need to do:
+1. Join our group (super easy, one click!)
+2. Say hello in the chat 👋
+3. Stick around for 24 hours
+4. Send us your username and a quick screenshot
+
+That is all! Welcome to the family! 💪'
+    ];
+    
+    const modeResults = modes[currentAIMode] || modes.generate;
+    result = modeResults[Math.floor(Math.random() * modeResults.length)];
+    
+    textEl.textContent = '';
+    resultEl.classList.add('show');
+    btn.disabled = false;
+    btn.innerHTML = '<i class="ti ti-sparkles"></i> Generate';
+    
+    // Typewriter effect
+    let i = 0;
+    const speed = 15;
+    function typeWriter() {
+      if (i < result.length) {
+        textEl.textContent += result.charAt(i);
+        i++;
+        setTimeout(typeWriter, speed);
+      }
+    }
+    typeWriter();
+  }, 800);
+}
+
+function regenerateAI() {
+  document.getElementById('aiResult').classList.remove('show');
+  runAI();
+}
+
+function applyAIResult() {
+  const text = document.getElementById('aiResultText').textContent;
+  document.getElementById('taskDesc').value = text;
+  closeAI();
+  const toast = document.getElementById('toast');
+  if (toast) { toast.textContent = 'AI content applied!'; toast.classList.add('show'); setTimeout(() => toast.classList.remove('show'), 1800); }
+}
+
 function selectPlatform(el) {
   document.querySelectorAll('[onclick*="selectPlatform"]').forEach(e => {
     e.style.borderColor = 'var(--border)';
@@ -274,5 +459,56 @@ document.addEventListener('input', function(e) {
   <a href="notifications.html" class=""><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><span>Alerts</span></a>
   <a href="dashboard.html" class=""><span class="profile-dot"></span><span>Profile</span></a>
 </nav>
+
+<!-- AI Assistant Modal -->
+<div class="ai-modal" id="aiModal">
+  <div class="ai-overlay" onclick="closeAI()"></div>
+  <div class="ai-panel">
+    <div class="ai-panel-head">
+      <h3><i class="ti ti-sparkles"></i>AI Assistant</h3>
+      <button class="ai-close" onclick="closeAI()">✕</button>
+    </div>
+    <p style="font-size:13px;color:var(--text2);margin:0 0 14px;line-height:1.5">Choose a mode, then let AI generate the perfect task content for you.</p>
+    <div class="ai-modes">
+      <button class="ai-mode active" data-mode="generate" onclick="selectAIMode(this)">
+        <div class="m-title"><i class="ti ti-sparkles" style="color:var(--accent)"></i>Generate</div>
+        <div class="m-desc">Create a new task description from scratch</div>
+      </button>
+      <button class="ai-mode" data-mode="improve" onclick="selectAIMode(this)">
+        <div class="m-title"><i class="ti ti-edit-circle" style="color:var(--accent2)"></i>Improve</div>
+        <div class="m-desc">Polish and enhance your current draft</div>
+      </button>
+      <button class="ai-mode" data-mode="professional" onclick="selectAIMode(this)">
+        <div class="m-title"><i class="ti ti-briefcase" style="color:var(--accent2)"></i>Professional</div>
+        <div class="m-desc">Rewrite in a formal, business tone</div>
+      </button>
+      <button class="ai-mode" data-mode="shorten" onclick="selectAIMode(this)">
+        <div class="m-title"><i class="ti ti-text-decrease" style="color:var(--accent2)"></i>Shorten</div>
+        <div class="m-desc">Make it concise and scannable</div>
+      </button>
+      <button class="ai-mode" data-mode="expand" onclick="selectAIMode(this)">
+        <div class="m-title"><i class="ti ti-text-increase" style="color:var(--accent2)"></i>Expand</div>
+        <div class="m-desc">Add more detail and clarity</div>
+      </button>
+      <button class="ai-mode" data-mode="friendly" onclick="selectAIMode(this)">
+        <div class="m-title"><i class="ti ti-mood-smile" style="color:var(--accent2)"></i>Friendly</div>
+        <div class="m-desc">Make it warm and approachable</div>
+      </button>
+    </div>
+    <div class="ai-input-area">
+      <textarea id="aiInput" placeholder="Describe your task briefly, or leave blank to generate from scratch..." rows="2"></textarea>
+    </div>
+    <button class="ai-generate-btn" id="aiGenerateBtn" onclick="runAI()"><i class="ti ti-sparkles"></i> Generate</button>
+    <div class="ai-result" id="aiResult">
+      <div class="r-label">Generated result</div>
+      <div class="r-text" id="aiResultText"></div>
+      <div class="r-actions">
+        <button onclick="applyAIResult()"><i class="ti ti-check"></i>Apply to task</button>
+        <button onclick="regenerateAI()"><i class="ti ti-refresh"></i>Regenerate</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
