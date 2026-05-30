@@ -11,7 +11,7 @@
 :root{--bg:#ffffff;--bg2:#fafafa;--card:#ffffff;--card2:#f5f5f5;--border:#e5e5e5;--border2:#d4d4d4;--text:#111111;--text2:#525252;--text3:#a1a1aa;--accent:#7C3AED;--accent2:#2563EB}
 [data-theme="dark"]{--bg:#000000;--bg2:#050505;--card:#111111;--card2:#151515;--border:#232323;--border2:#333333;--text:#ffffff;--text2:#a1a1aa;--accent:#A78BFA;--accent2:#60A5FA}
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:"DM Sans",system-ui,sans-serif;background:#f2f5f9;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:84px 24px 24px}
+body{font-family:"DM Sans",system-ui,sans-serif;background:#f2f5f9;min-height:100vh;display:flex;flex-direction:column;padding:60px 24px 0}
 .wrapper{width:100%;max-width:1350px;display:grid;grid-template-columns:45% 55%;border-radius:24px;overflow:hidden;box-shadow:0 24px 80px rgba(3,3,65,.14),0 8px 32px rgba(3,3,65,.08);min-height:880px;background:#fff}
 
 /* LEFT PANEL */
@@ -101,6 +101,7 @@ body{font-family:"DM Sans",system-ui,sans-serif;background:#f2f5f9;min-height:10
 @media(max-width:768px){
   .left{display:none!important}
   body{padding:60px 0 0;background:#fff}
+  main{padding:0}
   .wrapper{grid-template-columns:1fr;border-radius:0;min-height:100vh;box-shadow:none}
   .right{min-height:100vh;padding:48px 24px;display:flex;flex-direction:column;justify-content:center;align-items:center}
   .right-inner{width:100%;max-width:400px;margin:0 auto}
@@ -157,8 +158,9 @@ body{font-family:"DM Sans",system-ui,sans-serif;background:#f2f5f9;min-height:10
 .icon-btn svg{width:20px;height:20px}
 
 /* Footer */
-.main-footer{border-top:1px solid #e5e5e5;background:#fafafa;padding:48px 24px 24px;margin-top:0}
+.main-footer{border-top:1px solid #e5e5e5;background:#fafafa;padding:48px 24px 24px}
 [data-theme="dark"] .main-footer{background:#050505;border-top-color:#232323}
+main{flex:1;display:flex;align-items:center;justify-content:center;padding:20px 0}
 .footer-inner{max-width:1280px;margin:0 auto}
 .footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:40px;margin-bottom:40px}
 .footer-brand .logo-mark{width:28px;height:28px;display:inline-block;margin-bottom:12px}
@@ -205,6 +207,7 @@ body{padding-top:60px}
 </header>
 
 
+<main>
 <div class="wrapper">
 
   <!-- LEFT PANEL -->
@@ -358,7 +361,7 @@ body{padding-top:60px}
   </div>
 
 </div>
-
+</main>
 
 <script>
 const API_BASE = 'https://ogapay-production.up.railway.app/api/v1';
@@ -591,3 +594,10 @@ async function sendResetLink() {
 
 </body>
 </html>
+
+@media(max-width:768px){
+  .main-footer{padding:32px 20px 24px}
+  .footer-grid{grid-template-columns:1fr!important;gap:24px!important;text-align:center}
+  .footer-brand p{margin:0 auto}
+  .footer-bottom{flex-direction:column;gap:8px;text-align:center}
+}
