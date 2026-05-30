@@ -147,65 +147,51 @@ body{font-family:"DM Sans",system-ui,sans-serif;background:#f2f5f9;min-height:10
       <div class="illustration">
         <div class="illustration-glow"></div>
         <svg viewBox="0 0 240 170" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- Glow behind woman -->
-  <ellipse cx="120" cy="95" rx="100" ry="75" fill="rgba(77,93,255,.18)"/>
-  <ellipse cx="120" cy="95" rx="60" ry="45" fill="rgba(77,93,255,.12)"/>
-  <!-- Laptop -->
-  <rect x="58" y="50" width="124" height="72" rx="8" fill="#1a1a5e" stroke="rgba(255,255,255,.35)" stroke-width="2"/>
-  <rect x="65" y="56" width="110" height="50" rx="4" fill="#0d0d3d"/>
-  <!-- Screen: gradient glow -->
-  <rect x="67" y="58" width="106" height="46" rx="3" fill="url(#screenGrad)"/>
-  <defs>
-    <linearGradient id="screenGrad" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="rgba(77,93,255,.3)"/>
-      <stop offset="100%" stop-color="rgba(77,93,255,.08)"/>
-    </linearGradient>
-  </defs>
-  <!-- Screen dashboard lines -->
-  <rect x="74" y="66" width="80" height="4" rx="2" fill="rgba(77,93,255,.4)"/>
-  <rect x="74" y="75" width="92" height="3" rx="1.5" fill="rgba(255,255,255,.12)"/>
-  <rect x="74" y="82" width="65" height="3" rx="1.5" fill="rgba(255,255,255,.12)"/>
-  <rect x="74" y="89" width="50" height="3" rx="1.5" fill="rgba(255,255,255,.12)"/>
-  <!-- Right panel chart area on screen -->
-  <rect x="148" y="66" width="18" height="28" rx="3" fill="rgba(77,93,255,.25)"/>
+  <!-- Glow -->
+  <ellipse cx="120" cy="90" rx="100" ry="80" fill="#4D5DFF" opacity=".12"/>
+  <!-- Laptop body -->
+  <rect x="50" y="48" width="140" height="80" rx="10" fill="#1E1E5F" stroke="#4D5DFF" stroke-width="2" opacity=".8"/>
+  <!-- Laptop screen -->
+  <rect x="58" y="55" width="124" height="58" rx="4" fill="#0C0C3A" stroke="#4D5DFF" stroke-width="1" opacity=".6"/>
+  <!-- Screen content bars -->
+  <rect x="66" y="64" width="90" height="5" rx="2" fill="#4D5DFF" opacity=".5"/>
+  <rect x="66" y="74" width="108" height="4" rx="2" fill="#fff" opacity=".12"/>
+  <rect x="66" y="82" width="72" height="4" rx="2" fill="#fff" opacity=".12"/>
+  <rect x="66" y="90" width="56" height="4" rx="2" fill="#fff" opacity=".12"/>
+  <rect x="163" y="64" width="14" height="30" rx="3" fill="#4D5DFF" opacity=".35"/>
   <!-- Laptop base -->
-  <rect x="48" y="122" width="144" height="6" rx="3" fill="rgba(255,255,255,.15)"/>
-  <rect x="55" y="128" width="130" height="3" rx="1.5" fill="rgba(255,255,255,.08)"/>
-  <!-- Woman - Body/Torso -->
-  <path d="M100 125 Q95 105 92 92 Q90 82 100 76 L110 72 Q120 68 130 72 L140 76 Q150 82 148 92 Q145 105 140 125" fill="rgba(255,255,255,.18)" stroke="rgba(255,255,255,.3)" stroke-width="1.5"/>
+  <rect x="42" y="128" width="156" height="6" rx="3" fill="#fff" opacity=".15"/>
+  <!-- Woman body -->
+  <path d="M105 125 Q100 106 97 94 Q95 85 102 79 L112 74 Q120 70 128 74 L138 79 Q145 85 143 94 Q140 106 135 125" fill="#fff" opacity=".25" stroke="#fff" stroke-width="2" opacity=".4"/>
   <!-- Head -->
-  <ellipse cx="120" cy="60" rx="16" ry="18" fill="rgba(255,255,255,.2)" stroke="rgba(255,255,255,.35)" stroke-width="1.5"/>
-  <!-- Afro hair - more visible -->
-  <circle cx="106" cy="50" r="9" fill="rgba(255,255,255,.18)"/>
-  <circle cx="120" cy="43" r="10" fill="rgba(255,255,255,.2)"/>
-  <circle cx="134" cy="50" r="9" fill="rgba(255,255,255,.18)"/>
-  <circle cx="112" cy="42" r="8" fill="rgba(255,255,255,.22)"/>
-  <circle cx="128" cy="42" r="8" fill="rgba(255,255,255,.22)"/>
-  <circle cx="120" cy="39" r="7" fill="rgba(255,255,255,.25)"/>
-  <circle cx="108" cy="56" r="5" fill="rgba(255,255,255,.12)"/>
-  <circle cx="132" cy="56" r="5" fill="rgba(255,255,255,.12)"/>
-  <!-- Face features -->
-  <ellipse cx="114" cy="58" rx="2" ry="2.5" fill="rgba(255,255,255,.35)"/>
-  <ellipse cx="126" cy="58" rx="2" ry="2.5" fill="rgba(255,255,255,.35)"/>
-  <path d="M116 66 Q120 70 124 66" stroke="rgba(255,255,255,.3)" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+  <ellipse cx="120" cy="60" rx="16" ry="17" fill="#fff" opacity=".3" stroke="#fff" stroke-width="2" opacity=".45"/>
+  <!-- Hair -->
+  <circle cx="106" cy="50" r="9" fill="#fff" opacity=".25"/>
+  <circle cx="120" cy="43" r="10" fill="#fff" opacity=".28"/>
+  <circle cx="134" cy="50" r="9" fill="#fff" opacity=".25"/>
+  <circle cx="112" cy="41" r="8" fill="#fff" opacity=".3"/>
+  <circle cx="128" cy="41" r="8" fill="#fff" opacity=".3"/>
+  <circle cx="120" cy="38" r="7" fill="#fff" opacity=".35"/>
+  <!-- Eyes -->
+  <circle cx="114" cy="58" r="2" fill="#4D5DFF" opacity=".8"/>
+  <circle cx="126" cy="58" r="2" fill="#4D5DFF" opacity=".8"/>
+  <!-- Smile -->
+  <path d="M116 65 Q120 69 124 65" stroke="#fff" stroke-width="1.5" stroke-linecap="round" opacity=".5"/>
   <!-- Neck -->
-  <rect x="115" y="74" width="10" height="6" rx="3" fill="rgba(255,255,255,.12)"/>
-  <!-- Arms - more visible -->
-  <path d="M98 80 Q85 92 80 108 Q78 115 82 115" stroke="rgba(255,255,255,.2)" stroke-width="7" stroke-linecap="round" fill="none"/>
-  <path d="M142 80 Q155 92 160 108 Q162 115 158 115" stroke="rgba(255,255,255,.2)" stroke-width="7" stroke-linecap="round" fill="none"/>
+  <rect x="115" y="73" width="10" height="5" rx="2" fill="#fff" opacity=".18"/>
+  <!-- Arms -->
+  <path d="M99 80 Q86 92 82 106 Q80 114 83 114" stroke="#fff" stroke-width="8" stroke-linecap="round" opacity=".25"/>
+  <path d="M141 80 Q154 92 158 106 Q160 114 157 114" stroke="#fff" stroke-width="8" stroke-linecap="round" opacity=".25"/>
   <!-- Hands -->
-  <ellipse cx="82" cy="115" rx="5" ry="4" fill="rgba(255,255,255,.15)"/>
-  <ellipse cx="158" cy="115" rx="5" ry="4" fill="rgba(255,255,255,.15)"/>
-  <!-- Decorative stars -->
-  <circle cx="35" cy="38" r="2.5" fill="rgba(77,93,255,.4)"/>
-  <circle cx="205" cy="32" r="2" fill="rgba(77,93,255,.3)"/>
-  <circle cx="30" cy="105" r="2" fill="rgba(77,93,255,.25)"/>
-  <circle cx="210" cy="95" r="2.5" fill="rgba(77,93,255,.35)"/>
-  <circle cx="50" cy="22" r="1.5" fill="rgba(77,93,255,.25)"/>
-  <circle cx="190" cy="25" r="2" fill="rgba(77,93,255,.25)"/>
-  <!-- Small sparkle crosses -->
-  <path d="M195 48 L199 52 M199 48 L195 52" stroke="rgba(77,93,255,.3)" stroke-width="1.5" stroke-linecap="round"/>
-  <path d="M42 55 L46 59 M46 55 L42 59" stroke="rgba(77,93,255,.25)" stroke-width="1.5" stroke-linecap="round"/>
+  <ellipse cx="83" cy="114" rx="5" ry="4" fill="#fff" opacity=".2"/>
+  <ellipse cx="157" cy="114" rx="5" ry="4" fill="#fff" opacity=".2"/>
+  <!-- Stars -->
+  <circle cx="36" cy="38" r="3" fill="#4D5DFF" opacity=".5"/>
+  <circle cx="204" cy="32" r="2" fill="#4D5DFF" opacity=".4"/>
+  <circle cx="32" cy="110" r="2" fill="#4D5DFF" opacity=".35"/>
+  <circle cx="208" cy="100" r="3" fill="#4D5DFF" opacity=".45"/>
+  <circle cx="52" cy="22" r="1.5" fill="#4D5DFF" opacity=".35"/>
+  <circle cx="188" cy="24" r="2" fill="#4D5DFF" opacity=".35"/>
 </svg>
       </div>
     </div>
