@@ -13,7 +13,7 @@ body{font-family:"DM Sans",system-ui,sans-serif;background:#f2f5f9;min-height:10
 .wrapper{width:100%;max-width:1350px;display:grid;grid-template-columns:45% 55%;border-radius:24px;overflow:hidden;box-shadow:0 24px 80px rgba(3,3,65,.14),0 8px 32px rgba(3,3,65,.08);min-height:830px;background:#fff}
 
 /* LEFT PANEL */
-.left{background:#030341;position:relative;overflow:hidden;display:flex;flex-direction:column;padding:40px 40px 0;color:#fff;min-height:830px}
+.left{background:#030341;position:relative;overflow:hidden;display:flex;flex-direction:column;padding:32px 36px 0;color:#fff;min-height:830px}
 .left-bg{position:absolute;inset:0;pointer-events:none;overflow:hidden}
 .particles{position:absolute;inset:0}
 .particles span{position:absolute;width:4px;height:4px;border-radius:50%;background:rgba(77,93,255,.3);animation:float 8s ease-in-out infinite}
@@ -33,7 +33,7 @@ body{font-family:"DM Sans",system-ui,sans-serif;background:#f2f5f9;min-height:10
 .particles span:nth-child(12){top:35%;left:15%;animation-delay:.8s;width:5px;height:5px}
 @keyframes float{0%,100%{transform:translateY(0) scale(1);opacity:.3}50%{transform:translateY(-18px) scale(1.2);opacity:.6}}
 .left-content{position:relative;z-index:3;display:flex;flex-direction:column;flex:1;min-height:0}
-.logo{display:flex;align-items:center;gap:10px;font-family:"Outfit",sans-serif;font-size:18px;font-weight:800;margin-bottom:36px}
+.logo{display:flex;align-items:center;gap:10px;font-family:"Outfit",sans-serif;font-size:18px;font-weight:800;margin-bottom:20px}
 .logo svg{width:32px;height:32px;border-radius:8px;overflow:hidden}
 .logo span{color:#fff}
 .copy{flex:0 0 auto;margin-bottom:12px}
@@ -42,15 +42,15 @@ body{font-family:"DM Sans",system-ui,sans-serif;background:#f2f5f9;min-height:10
 .glow{position:relative;display:inline-block;color:#fff}
 .glow::after{content:"Repeat.";position:absolute;inset:0;color:rgba(77,93,255,.7);filter:blur(10px);animation:pulseGlow 3s ease-in-out infinite;pointer-events:none}
 @keyframes pulseGlow{0%,100%{opacity:.4}50%{opacity:.9}}@keyframes wavePulse{0%,100%{opacity:.5}50%{opacity:.9}}
-.copy p{font-size:15px;line-height:1.55;color:rgba(255,255,255,.7);margin:14px 0 28px;max-width:420px}
-.features{display:grid;gap:12px;margin-bottom:0}
+.copy p{font-size:15px;line-height:1.55;color:rgba(255,255,255,.7);margin:8px 0 16px;max-width:420px}
+.features{display:grid;gap:9px;margin-bottom:0}
 .feature{display:flex;align-items:center;gap:14px;font-size:14px;font-weight:500;color:rgba(255,255,255,.85)}
 .feature svg{width:22px;height:22px;stroke:#4D5DFF;stroke-width:2;fill:none;flex-shrink:0}
 
 /* Woman image - integrated into panel */
-.woman{position:absolute;bottom:0;left:0;right:0;height:58%;z-index:1;display:flex;align-items:flex-end;justify-content:center;overflow:hidden;pointer-events:none}
-.woman svg{width:125%;height:auto;flex-shrink:0;display:block;transform:translateY(2%);filter:brightness(.95) contrast(1.05)}
-.woman-fade{position:absolute;top:0;left:0;right:0;height:45%;z-index:2;background:linear-gradient(to bottom,rgba(3,3,65,0) 0%,rgba(3,3,65,.15) 30%,rgba(3,3,65,.5) 60%,#030341 100%);pointer-events:none}
+.woman{position:absolute;bottom:0;left:0;right:0;height:72%;z-index:1;display:flex;align-items:flex-end;justify-content:center;overflow:hidden;pointer-events:none}
+.woman svg{width:150%;height:auto;flex-shrink:0;display:block;transform:translateY(-18%);filter:brightness(1) contrast(1.02)}
+.woman-fade{position:absolute;top:0;left:0;right:0;height:12%;z-index:2;background:linear-gradient(to bottom,rgba(3,3,65,0.06),transparent 100%);pointer-events:none}
 
 /* Stats card */
 .stats-card{position:absolute;z-index:10;display:flex;align-items:center;gap:14px;padding:18px 22px;background:rgba(255,255,255,.12);border:1px solid rgba(77,93,255,.35);border-radius:16px;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);bottom:36px;left:32px;max-width:270px;box-shadow:0 8px 32px rgba(0,0,0,.3)}
@@ -89,9 +89,9 @@ body{font-family:"DM Sans",system-ui,sans-serif;background:#f2f5f9;min-height:10
   .left{min-height:auto;padding:28px 28px 0}
   .left .logo{margin-bottom:28px}
   .copy h1{font-size:clamp(28px,6vw,38px)}
-  .woman{height:45%}
+  .woman{height:55%}
   .features{gap:10px;margin-bottom:0}
-  .stats-card{max-width:none;bottom:12px;left:12px}
+  .stats-card{max-width:none;bottom:8px;left:12px}
   .right{min-height:auto;padding:32px 28px}
   body{padding:12px}
 }
