@@ -10,10 +10,10 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:"DM Sans",system-ui,sans-serif;background:#f2f5f9;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
-.wrapper{width:100%;max-width:1350px;display:grid;grid-template-columns:45% 55%;border-radius:24px;overflow:hidden;box-shadow:0 24px 80px rgba(3,3,65,.14),0 8px 32px rgba(3,3,65,.08);min-height:830px;background:#fff}
+.wrapper{width:100%;max-width:1350px;display:grid;grid-template-columns:45% 55%;border-radius:24px;overflow:hidden;box-shadow:0 24px 80px rgba(3,3,65,.14),0 8px 32px rgba(3,3,65,.08);min-height:880px;background:#fff}
 
 /* LEFT PANEL */
-.left{background:#030341;position:relative;overflow:hidden;display:flex;flex-direction:column;padding:32px 36px 0;color:#fff;min-height:830px}
+.left{background:#030341;position:relative;overflow:hidden;display:flex;flex-direction:column;padding:24px 36px 0;color:#fff;min-height:880px}
 .left-bg{position:absolute;inset:0;pointer-events:none;overflow:hidden}
 .particles{position:absolute;inset:0}
 .particles span{position:absolute;width:4px;height:4px;border-radius:50%;background:rgba(77,93,255,.3);animation:float 8s ease-in-out infinite}
@@ -33,23 +33,23 @@ body{font-family:"DM Sans",system-ui,sans-serif;background:#f2f5f9;min-height:10
 .particles span:nth-child(12){top:35%;left:15%;animation-delay:.8s;width:5px;height:5px}
 @keyframes float{0%,100%{transform:translateY(0) scale(1);opacity:.3}50%{transform:translateY(-18px) scale(1.2);opacity:.6}}
 .left-content{position:relative;z-index:3;display:flex;flex-direction:column;flex:0 0 auto}
-.logo{display:flex;align-items:center;gap:10px;font-family:"Outfit",sans-serif;font-size:18px;font-weight:800;margin-bottom:20px}
+.logo{display:flex;align-items:center;gap:10px;font-family:"Outfit",sans-serif;font-size:18px;font-weight:800;margin-bottom:16px}
 .logo svg{width:32px;height:32px;border-radius:8px;overflow:hidden}
 .logo span{color:#fff}
 .copy{flex:0 0 auto;margin-bottom:12px}
-.copy h1{font-family:"Outfit",sans-serif;font-size:clamp(32px,3.6vw,48px);font-weight:900;line-height:1.05;letter-spacing:-1.2px;margin:0 0 6px}
+.copy h1{font-family:"Outfit",sans-serif;font-size:clamp(32px,3.6vw,48px);font-weight:900;line-height:1.05;letter-spacing:-1.2px;margin:0 0 4px}
 .copy h1 span{display:block}
 .glow{position:relative;display:inline-block;color:#fff}
 .glow::after{content:"Repeat.";position:absolute;inset:0;color:rgba(77,93,255,.7);filter:blur(10px);animation:pulseGlow 3s ease-in-out infinite;pointer-events:none}
 @keyframes pulseGlow{0%,100%{opacity:.4}50%{opacity:.9}}@keyframes wavePulse{0%,100%{opacity:.5}50%{opacity:.9}}
-.copy p{font-size:15px;line-height:1.55;color:rgba(255,255,255,.7);margin:8px 0 16px;max-width:420px}
-.features{display:grid;gap:9px;margin-bottom:0}
+.copy p{font-size:15px;line-height:1.55;color:rgba(255,255,255,.7);margin:6px 0 12px;max-width:420px}
+.features{display:grid;gap:7px;margin-bottom:0}
 .feature{display:flex;align-items:center;gap:14px;font-size:14px;font-weight:500;color:rgba(255,255,255,.85)}
 .feature svg{width:22px;height:22px;stroke:#4D5DFF;stroke-width:2;fill:none;flex-shrink:0}
 
 /* Woman image - integrated into panel */
 .woman{position:relative;flex:1;min-height:240px;z-index:1;display:flex;align-items:flex-start;justify-content:center;overflow:hidden;pointer-events:none;width:100%}
-.woman svg{width:100%;height:auto;flex-shrink:0;display:block}
+.woman svg{width:110%;height:auto;flex-shrink:0;display:block}
 .woman-fade{position:absolute;top:0;left:0;right:0;height:12%;z-index:2;background:linear-gradient(to bottom,rgba(3,3,65,0.06),transparent 100%);pointer-events:none}
 
 /* Stats card */
@@ -60,7 +60,7 @@ body{font-family:"DM Sans",system-ui,sans-serif;background:#f2f5f9;min-height:10
 .stats-card span{display:block;color:rgba(255,255,255,.65);font-size:12px;font-weight:600;margin-top:4px}
 
 /* RIGHT PANEL */
-.right{background:#fff;padding:48px 48px 40px;display:flex;flex-direction:column;justify-content:center;min-height:830px}
+.right{background:#fff;padding:48px 48px 40px;display:flex;flex-direction:column;justify-content:center;min-height:880px}
 .right-inner{max-width:400px;margin:0 auto;width:100%}
 .right h2{font-family:"Outfit",sans-serif;font-size:32px;font-weight:900;letter-spacing:-.8px;color:#0F172A;margin:0 0 6px}
 .right .sub{color:#66738a;font-size:15px;margin:0 0 28px;line-height:1.5}
@@ -84,18 +84,29 @@ body{font-family:"DM Sans",system-ui,sans-serif;background:#f2f5f9;min-height:10
 .security strong{display:block;font-size:13px;font-weight:700;color:#0F172A;margin-bottom:2px}
 .security span{font-size:12px;color:#94a3b8;line-height:1.4}
 
-@media(max-width:860px){
+@media(max-width:768px){
+  body{padding:12px}
   .wrapper{grid-template-columns:1fr;border-radius:20px;min-height:auto}
-  .left{min-height:auto;padding:28px 28px 0}
+  .left{min-height:auto;padding:24px 24px 0}
   .left .logo{margin-bottom:28px}
   .copy h1{font-size:clamp(28px,6vw,38px)}
-  .woman{min-height:200px;flex:0 0 auto}
-  .features{gap:10px;margin-bottom:0}
-  .stats-card{max-width:none;bottom:8px;left:12px}
+  .woman{min-height:180px;flex:0 0 auto}
+  .features{gap:6px;margin-bottom:0}
+  .stats-card{max-width:none;bottom:8px;left:10px}
   .right{min-height:auto;padding:32px 28px}
   body{padding:12px}
 }
+
+@media(max-width:1024px) and (min-width:769px){
+  .wrapper{max-width:100%;border-radius:20px;grid-template-columns:40% 60%}
+  .left{padding:24px 28px 0}
+  .right{padding:36px 32px}
+  .right-inner{max-width:360px}
+  .auth-btn{height:56px}
+  .copy h1{font-size:clamp(28px,2.8vw,38px)}
+}
 @media(max-width:480px){
+  body{padding:8px}
   .left{min-height:360px;padding:24px 20px 20px}
   .right{padding:24px 20px}
   .auth-btn{height:56px;padding:0 16px;border-radius:14px}
