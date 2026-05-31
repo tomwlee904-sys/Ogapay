@@ -147,7 +147,7 @@ button{font:inherit}
     radial-gradient(circle at 23% 24%,rgba(124,58,237,.12),transparent 32%),
     radial-gradient(circle at 63% 72%,rgba(37,99,235,.10),transparent 38%),
     radial-gradient(circle at 78% 22%,rgba(196,181,253,.12),transparent 28%),
-    linear-gradient(180deg,#fff 0%,#fbfcff 64%,#fafafa 100%);
+    linear-gradient(180deg,var(--bg) 0%,var(--bg2) 64%,var(--bg2) 100%);
 }
 .hero::before{
   content:"";position:absolute;inset:0;
@@ -162,7 +162,7 @@ button{font:inherit}
 .hero::after{
   content:"";position:absolute;inset:auto 0 0;
   height:120px;
-  background:linear-gradient(transparent,#fff);
+  background:linear-gradient(transparent,var(--bg));
   pointer-events:none;
 }
 [data-theme="dark"] .hero::after{background:linear-gradient(transparent,#000000)}
@@ -345,7 +345,7 @@ button{font:inherit}
 .path-card svg{margin-left:auto;color:var(--text3);width:18px;height:18px}
 
 /* Ã¢â€â‚¬Ã¢â€â‚¬ jobs Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
-.jobs-wrap{padding:44px 0 34px;overflow:hidden;background:linear-gradient(180deg,#fff 0%,#fafafa 100%)}
+.jobs-wrap{padding:44px 0 34px;overflow:hidden;background:linear-gradient(180deg,var(--bg) 0%,var(--bg2) 100%)}
 [data-theme="dark"] .jobs-wrap{background:#050505}
 .jobs-track{margin-top:24px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px;align-items:stretch;grid-auto-rows:1fr}
 .job-card{
@@ -605,7 +605,7 @@ footer{
   .icon-btn svg{width:30px;height:30px;stroke-width:2.35}
   .hero{background:radial-gradient(circle at 50% 38%,rgba(124,58,237,.10),transparent 32%),radial-gradient(circle at 54% 72%,rgba(37,99,235,.11),transparent 42%),linear-gradient(180deg,#fff 0%,#f8fbff 100%)}
   .hero::before{background:radial-gradient(ellipse at 50% 58%,rgba(196,181,253,.17),transparent 48%);opacity:.75}
-  .hero::after{height:72px;background:linear-gradient(transparent,#fff)}
+  .hero::after{height:72px;background:linear-gradient(transparent,var(--bg))}
   [data-theme="dark"] .hero{background:radial-gradient(circle at 30% 52%,rgba(124,58,237,.22),transparent 36%),radial-gradient(circle at 70% 58%,rgba(6,182,212,.16),transparent 40%),linear-gradient(180deg,#050505 0%,#050505 100%)}
   [data-theme="dark"] .hero::before{background:radial-gradient(ellipse at 50% 62%,rgba(96,165,250,.14),transparent 48%);opacity:.8}
   [data-theme="dark"] .hero::after{background:linear-gradient(transparent,#000000)}
