@@ -43,12 +43,12 @@
 <script>
 (function(){const html=document.documentElement,theme=document.getElementById('themeToggle'),menu=document.getElementById('mobileMenu'),btn=document.getElementById('menuBtn'),toast=document.getElementById('toast');function setTheme(v){html.setAttribute('data-theme',v);try{localStorage.setItem('ogapay-theme',v)}catch(e){} if(theme) theme.innerHTML='<i class="ti '+(v==='dark'?'ti-sun':'ti-moon')+'"></i>'}setTheme(html.getAttribute('data-theme')||'light');theme&&theme.addEventListener('click',()=>setTheme(html.getAttribute('data-theme')==='dark'?'light':'dark'));function setAuth(v){document.body.classList.toggle('is-authed',v);try{localStorage.setItem('ogapay-authenticated',v?'true':'false')}catch(e){}}let saved=true;try{saved=localStorage.getItem('ogapay-authenticated')!=='false'}catch(e){}setAuth(saved);document.getElementById('authOn')?.addEventListener('click',()=>setAuth(true));document.getElementById('authOff')?.addEventListener('click',()=>setAuth(false));document.querySelectorAll('[data-close-menu]').forEach(el=>el.addEventListener('click',()=>menu.classList.remove('open')));function say(text){if(!toast)return;toast.textContent=text;toast.classList.add('show');setTimeout(()=>toast.classList.remove('show'),1800)}document.querySelectorAll('[data-copy]').forEach(el=>el.addEventListener('click',()=>{navigator.clipboard&&navigator.clipboard.writeText(el.getAttribute('data-copy'));say('Copied')}));document.querySelectorAll('[data-toggle-label]').forEach(el=>el.addEventListener('click',()=>{el.classList.toggle('on');say(el.classList.contains('on')?'Enabled':'Disabled')}));document.querySelectorAll('[data-join]').forEach(el=>el.addEventListener('click',()=>{const joined=el.dataset.join==='true';el.dataset.join=String(!joined);el.innerHTML=joined?'<i class="ti ti-user-plus"></i>Join':'<i class="ti ti-check"></i>Joined';say(joined?'Left community':'Joined community')}));document.querySelectorAll('[data-apply]').forEach(el=>el.addEventListener('click',()=>{el.disabled=true;el.classList.add('primary');el.innerHTML='<i class="ti ti-check"></i>Applied';say('Application submitted')}));})();
 </script>
-<script src="assets/ogapay-live.js"></script><nav class="mobile-bottom-nav" aria-label="Mobile app navigation">
-  <a href="tasks.html" class=""><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v13H4V7Z"/><path d="M9 5V3h6v2M8 11h8"/></svg><span>Jobs</span></a>
-  <a href="store.html" class=""><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18M16 10a4 4 0 0 1-8 0"/></svg><span>Deals</span></a>
-  <a href="post-task.html" class="create "><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span>Create</span></a>
-  <a href="notifications.html" class="active"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><span>Alerts</span></a>
-  <a href="dashboard.html" class=""><span class="profile-dot"></span><span>Profile</span></a>
+<script src="assets/ogapay-live.js"></script><nav class="mobile-bottom-nav">
+<a href="tasks.html"><i class="ti ti-home"></i><span>Home</span></a>
+<a href="tasks.html"><i class="ti ti-briefcase"></i><span>Jobs</span></a>
+<a class="create" href="post-task.html"><i class="ti ti-square-plus"></i></a>
+<a href="notifications.html"><i class="ti ti-bell"></i><span>Alerts</span></a>
+<a href="profile.html"><i class="ti ti-user-circle"></i><span>Profile</span></a>
 </nav>
 </body>
 </html>
