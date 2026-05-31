@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Store - OgaPay</title>
+<script>(function(){try{document.documentElement.setAttribute('data-theme',localStorage.getItem('ogapay-theme')||'light')}catch(e){}})();</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800;900&family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+<style>
+:root{--bg:#ffffff;--bg2:#f7f9fc;--card:#ffffff;--border:#e4e9f1;--border2:#d5deea;--text:#101525;--text2:#66738a;--text3:#98a6ba;--primary:#0d1323;--accent:#7C3AED;--green:#16a34a;--gold:#f5b301;--shadow:0 4px 16px rgba(16,21,37,.07);--radius:14px;--radius-sm:10px;--nav-h:60px}
+[data-theme="dark"]{--bg:#080b13;--bg2:#0d111d;--card:#111725;--border:#222b3c;--border2:#2d384d;--text:#f4f7fb;--text2:#9aa7bc;--text3:#667186;--primary:#f4f7fb;--accent:#A78BFA}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;overflow-x:hidden}a{color:inherit;text-decoration:none}button,input,select,textarea{font:inherit}button{cursor:pointer}
+.nav{position:sticky;top:0;z-index:100;height:var(--nav-h);background:rgba(255,255,255,.92);border-bottom:1px solid var(--border);backdrop-filter:blur(18px)}[data-theme="dark"] .nav{background:rgba(8,11,19,.92)}
+.nav-inner{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:22px;height:100%;width:min(1100px,calc(100% - 32px));margin:0 auto}.brand{display:flex;align-items:center;gap:10px;font-family:"Outfit";font-weight:800;font-size:19px}.logo{width:34px;height:34px;border-radius:9px;background:var(--primary);color:var(--bg);display:grid;place-items:center;font-size:18px}.nav-links{display:flex;gap:4px}.nav-link{display:inline-flex;align-items:center;gap:7px;padding:7px 10px;border-radius:8px;color:var(--text2);font-size:14px;font-weight:700;transition:all .15s}.nav-link:hover,.nav-link.active{background:var(--bg2);color:var(--text)}.nav-actions{display:flex;align-items:center;gap:8px}.icon-btn{width:36px;height:36px;border:1.5px solid var(--border);border-radius:8px;background:var(--card);color:var(--text2);display:grid;place-items:center;transition:all .15s}.icon-btn:hover{color:var(--text);background:var(--bg2)}
+.app{display:flex;width:min(1100px,calc(100% - 32px));margin:0 auto;gap:24px;padding:24px 0 72px;min-height:calc(100vh - var(--nav-h))}.main{flex:1;min-width:0}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow)}.btn{height:44px;padding:0 20px;border:1.5px solid var(--border);border-radius:10px;background:var(--card);color:var(--text);font-size:14px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:all .2s;cursor:pointer;text-decoration:none}.btn:hover{border-color:var(--border2);box-shadow:var(--shadow)}.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}.btn.primary:hover{box-shadow:0 6px 24px rgba(124,58,237,.3);transform:translateY(-1px)}.btn.sm{height:36px;padding:0 14px;font-size:12px}.btn.outline{border-color:var(--accent);color:var(--accent);background:transparent}.btn.danger{background:rgba(239,68,68,.1);color:#ef4444;border-color:transparent}
+.store-head{display:flex;align-items:center;gap:16px;padding:20px;margin-bottom:20px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius)}.store-av{width:56px;height:56px;border-radius:14px;background:linear-gradient(135deg,#7C3AED,#6366F1);display:grid;place-items:center;color:#fff;font-size:24px;font-weight:800;flex-shrink:0}.store-info{flex:1}.store-info h2{margin:0;font-family:Outfit;font-size:20px;font-weight:800}.store-info p{margin:2px 0 0;font-size:13px;color:var(--text2)}.store-stat{display:flex;align-items:center;gap:16px;margin-top:6px;font-size:12px;color:var(--text2)}.store-stat span{display:flex;align-items:center;gap:4px}.st-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--text3);margin-bottom:10px}
+.prod-grid{display:grid;gap:10px}.prod-item{display:flex;align-items:center;gap:12px;padding:14px;background:var(--card);border:1px solid var(--border);border-radius:10px;transition:all .15s}.prod-item:hover{border-color:var(--border2)}.prod-preview{width:48px;height:48px;border-radius:10px;background:var(--bg2);border:1px solid var(--border);display:grid;place-items:center;font-size:20px;flex-shrink:0;color:var(--text2)}.prod-info{flex:1;min-width:0}.prod-info h4{margin:0;font-size:13px;font-weight:700}.prod-info .p-meta{font-size:11px;color:var(--text2);margin-top:1px}.prod-price{font-size:14px;font-weight:800;white-space:nowrap}.prod-status{font-size:10px;padding:2px 8px;border-radius:999px;font-weight:700}.prod-status.active{background:rgba(22,163,74,.1);color:var(--green)}.prod-status.draft{background:var(--border);color:var(--text3)}.prod-actions{display:flex;gap:4px}
+.sidebar-right{width:280px;flex-shrink:0;display:flex;flex-direction:column;gap:12px}.sb-card{padding:16px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm)}.sb-card .sbt{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text3);margin-bottom:10px}.metric{display:grid;grid-template-columns:1fr 1fr;gap:8px;text-align:center}.metric .mv{font-family:Outfit;font-size:20px;font-weight:800}.metric .ml{font-size:10px;color:var(--text3)}.modal{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;visibility:hidden;opacity:0;transition:all .3s}.modal.open{visibility:visible;opacity:1}.modal-overlay{position:absolute;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(4px)}.modal-panel{position:relative;width:min(480px,calc(100% - 32px));max-height:85vh;overflow-y:auto;background:var(--card);border:1px solid var(--border);border-radius:20px;padding:28px;transform:translateY(20px);transition:all .3s}.modal.open .modal-panel{transform:translateY(0)}.modal-panel h2{margin:0 0 4px;font-family:Outfit;font-size:20px}.modal-panel p{color:var(--text2);font-size:14px;margin:0 0 16px}.fg{margin-bottom:14px}.fg label{font-size:12px;font-weight:700;color:var(--text2);margin-bottom:5px;display:block}.fg input,.fg select,.fg textarea{width:100%;height:44px;padding:0 12px;border:1.5px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font-size:14px;outline:none;font-family:inherit;transition:border-color .2s}.fg textarea{height:80px;padding:10px 12px;resize:vertical;line-height:1.5}.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--accent)}
+@media(max-width:768px){.app{flex-direction:column}.sidebar-right{display:none}}
+</style>
+</head>
+<body>
+<nav class="nav"><div class="nav-inner"><a href="index.html" class="brand"><span class="logo">O</span>OgaPay</a><div class="nav-links"><a href="dashboard.html" class="nav-link"><i class="ti ti-dashboard"></i>Dashboard</a><a href="store.html" class="nav-link"><i class="ti ti-store"></i>Marketplace</a><a href="my-store.html" class="nav-link active"><i class="ti ti-building-store"></i>My Store</a></div><div class="nav-actions"><button class="icon-btn" onclick="t()" title="Theme"><i class="ti ti-sun" id="ti"></i></button></div></div></nav>
+<div class="app">
+<main class="main">
+<div class="store-head">
+  <div class="store-av">AD</div>
+  <div class="store-info">
+    <h2>Ada's Design Studio</h2>
+    <p>Premium design and branding services for creators and businesses.</p>
+    <div class="store-stat">
+      <span><i class="ti ti-shopping-cart"></i> 12 sales</span>
+      <span><i class="ti ti-star"></i> 4.9 rating</span>
+      <span><i class="ti ti-eye"></i> 340 views</span>
+      <span><i class="ti ti-clock"></i> Joined Mar 2026</span>
+    </div>
+  </div>
+  <button class="btn primary" onclick="openModal('new')"><i class="ti ti-plus"></i>New Product</button>
+</div>
+
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+  <div class="st-label">Your Products (6)</div>
+  <div style="display:flex;gap:4px">
+    <button class="btn sm" style="background:var(--accent);color:#fff;border-color:var(--accent)">Active</button>
+    <button class="btn sm">Drafts</button>
+    <button class="btn sm">Sold Out</button>
+  </div>
+</div>
+
+<div class="prod-grid">
+  <div class="prod-item">
+    <div class="prod-preview" style="color:var(--accent)"><i class="ti ti-brand-x"></i></div>
+    <div class="prod-info"><h4>X Banner Design</h4><div class="p-meta">Custom X/Twitter header with your brand colors</div></div>
+    <span class="prod-price">₦5,000</span>
+    <span class="prod-status active">Active</span>
+    <div class="prod-actions"><button class="btn sm" onclick="openModal('edit')"><i class="ti ti-edit"></i></button><button class="btn sm danger"><i class="ti ti-trash"></i></button></div>
+  </div>
+  <div class="prod-item">
+    <div class="prod-preview" style="color:var(--gold)"><i class="ti ti-brand-telegram"></i></div>
+    <div class="prod-info"><h4>Telegram Setup Package</h4><div class="p-meta">Channel setup, bots, pinned posts, and launch checklist</div></div>
+    <span class="prod-price">₦9,500</span>
+    <span class="prod-status active">Active</span>
+    <div class="prod-actions"><button class="btn sm"><i class="ti ti-edit"></i></button><button class="btn sm danger"><i class="ti ti-trash"></i></button></div>
+  </div>
+  <div class="prod-item">
+    <div class="prod-preview" style="color:var(--accent2)"><i class="ti ti-palette"></i></div>
+    <div class="prod-info"><h4>Logo Pack - 3 Concepts</h4><div class="p-meta">3 unique logo concepts in PNG, SVG, and AI formats</div></div>
+    <span class="prod-price">₦8,000</span>
+    <span class="prod-status active">Active</span>
+    <div class="prod-actions"><button class="btn sm"><i class="ti ti-edit"></i></button><button class="btn sm danger"><i class="ti ti-trash"></i></button></div>
+  </div>
+  <div class="prod-item">
+    <div class="prod-preview" style="color:var(--green)"><i class="ti ti-video"></i></div>
+    <div class="prod-info"><h4>AI Brand Video</h4><div class="p-meta">Short AI-powered brand videos for social campaigns</div></div>
+    <span class="prod-price">₦12,500</span>
+    <span class="prod-status active">Active</span>
+    <div class="prod-actions"><button class="btn sm"><i class="ti ti-edit"></i></button><button class="btn sm danger"><i class="ti ti-trash"></i></button></div>
+  </div>
+  <div class="prod-item">
+    <div class="prod-preview" style="color:var(--text3)"><i class="ti ti-file-text"></i></div>
+    <div class="prod-info"><h4>Landing Copy Review</h4><div class="p-meta">Conversion-focused copy review for your task page</div></div>
+    <span class="prod-price">₦5,000</span>
+    <span class="prod-status draft">Draft</span>
+    <div class="prod-actions"><button class="btn sm"><i class="ti ti-edit"></i></button><button class="btn sm danger"><i class="ti ti-trash"></i></button></div>
+  </div>
+</div>
+</main>
+<aside class="sidebar-right">
+  <div class="sb-card"><div class="sbt">Store Analytics</div><div class="metric"><div><div class="mv">12</div><div class="ml">Sales</div></div><div><div class="mv">₦84K</div><div class="ml">Revenue</div></div><div><div class="mv">4.9</div><div class="ml">Rating</div></div><div><div class="mv">6</div><div class="ml">Products</div></div></div></div>
+  <div class="sb-card"><div class="sbt">Quick Actions</div>
+    <button class="btn sm" style="width:100%;margin-bottom:6px;justify-content:flex-start" onclick="openModal('new')"><i class="ti ti-plus"></i> Add Product</button>
+    <a href="store.html" class="btn sm" style="width:100%;margin-bottom:6px;justify-content:flex-start"><i class="ti ti-eye"></i> View Store</a>
+    <button class="btn sm" style="width:100%;justify-content:flex-start"><i class="ti ti-settings"></i> Store Settings</button>
+  </div>
+  <div class="sb-card"><div class="sbt">Recent Orders</div>
+    <div style="display:grid;gap:6px">
+      <div style="display:flex;align-items:center;gap:8px;font-size:12px;padding:4px 0"><span style="font-weight:600">Chisom O.</span><span style="color:var(--text2);flex:1">X Banner Design</span><span style="font-weight:700">₦5,000</span></div>
+      <div style="display:flex;align-items:center;gap:8px;font-size:12px;padding:4px 0"><span style="font-weight:600">Michael A.</span><span style="color:var(--text2);flex:1">Logo Pack</span><span style="font-weight:700">₦8,000</span></div>
+    </div>
+  </div>
+</aside>
+</div>
+
+<!-- New/Edit Product Modal -->
+<div class="modal" id="productModal">
+  <div class="modal-overlay" onclick="closeModal()"></div>
+  <div class="modal-panel">
+    <h2 id="modalTitle">New Product</h2>
+    <p>List a new product or service in your store.</p>
+    <div class="fg"><label>Product name</label><input placeholder="e.g. X Banner Design" /></div>
+    <div class="fg"><label>Category</label><select><option>Design & Creative</option><option>Social Media</option><option>Content Writing</option><option>Video & Animation</option></select></div>
+    <div class="fg"><label>Price</label><div style="display:flex;gap:8px"><select style="width:100px;height:44px;border:1.5px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);outline:none"><option>NGN</option><option>USDC</option></select><input type="number" placeholder="e.g. 5000" style="flex:1;height:44px;padding:0 12px;border:1.5px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font-size:14px;outline:none" /></div></div>
+    <div class="fg"><label>Description</label><textarea placeholder="Describe what the buyer gets..." rows="3"></textarea></div>
+    <div class="fg"><label>Delivery time</label><select><option>1-2 days</option><option>3-5 days</option><option>1 week</option><option>2 weeks</option></select></div>
+    <div style="display:flex;gap:8px"><button class="btn primary" style="flex:1" onclick="closeModal()"><i class="ti ti-check"></i> Save Product</button><button class="btn" onclick="closeModal()">Cancel</button></div>
+  </div>
+</div>
+
+<style>
+[data-theme="dark"] .nav-links .nav-link.active{background:var(--bg2)}[data-theme="dark"] .btn.primary:hover{box-shadow:0 6px 24px rgba(167,139,250,.3)}
+</style>
+<script>
+function t(){const h=document.documentElement,d=h.getAttribute('data-theme')||'light',n=d==='light'?'dark':'light';h.setAttribute('data-theme',n);try{localStorage.setItem('ogapay-theme',n)}catch(e){}const i=document.getElementById('ti');if(i)i.className=n==='dark'?'ti ti-sun':'ti ti-moon'}
+(function(){const h=document.documentElement;h.setAttribute('data-theme',h.getAttribute('data-theme')||'light');const d=document.getElementById('ti');if(d)d.className=h.getAttribute('data-theme')==='dark'?'ti ti-sun':'ti ti-moon'})();
+function openModal(t){document.getElementById('productModal').classList.add('open');document.getElementById('modalTitle').textContent=t==='new'?'New Product':'Edit Product'}
+function closeModal(){document.getElementById('productModal').classList.remove('open')}
+</script>
+</body>
+</html>
