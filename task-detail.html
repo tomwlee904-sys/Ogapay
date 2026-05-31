@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Task Detail - OgaPay</title>
+<script>(function(){try{document.documentElement.setAttribute('data-theme',localStorage.getItem('ogapay-theme')||'light')}catch(e){document.documentElement.setAttribute('data-theme','light')}})();</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800;900&family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+<style>
+:root{
+  --bg:#ffffff;--bg2:#f7f9fc;--card:#ffffff;--border:#e4e9f1;--border2:#d5deea;--text:#101525;--text2:#66738a;--text3:#98a6ba;--primary:#0d1323;--accent:#7C3AED;--accent2:#2563EB;--green:#16a34a;--gold:#f5b301;--brand-blue:linear-gradient(90deg,#2563EB,#3B82F6,#60A5FA,#93C5FD);--shadow:0 4px 16px rgba(16,21,37,.07),0 1px 4px rgba(16,21,37,.04);--shadow-soft:0 2px 8px rgba(16,21,37,.05);--radius:14px;--nav-h:60px;
+}
+[data-theme="dark"]{
+  --bg:#080b13;--bg2:#0d111d;--card:#111725;--border:#222b3c;--border2:#2d384d;--text:#f4f7fb;--text2:#9aa7bc;--text3:#667186;--primary:#f4f7fb;--accent:#A78BFA;--accent2:#60A5FA;--shadow:0 4px 16px rgba(0,0,0,.28),0 1px 4px rgba(0,0,0,.18);--shadow-soft:0 2px 8px rgba(0,0,0,.22);
+}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--text);font-family:"DM Sans",system-ui,sans-serif;overflow-x:hidden}a{color:inherit;text-decoration:none}button,input,select,textarea{font:inherit}button{cursor:pointer}
+.nav{position:sticky;top:0;z-index:100;height:var(--nav-h);background:rgba(255,255,255,.92);border-bottom:1px solid var(--border);backdrop-filter:blur(18px) saturate(1.4)}[data-theme="dark"] .nav{background:rgba(8,11,19,.92)}
+.nav-inner{height:100%;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:22px;width:min(1200px,calc(100% - 48px));margin:0 auto}.brand{display:flex;align-items:center;gap:10px;font-family:"Outfit";font-weight:800;font-size:19px}.logo{width:34px;height:34px;border-radius:9px;background:var(--primary);color:var(--bg);display:grid;place-items:center;font-size:18px}.nav-links{display:flex;justify-content:center;gap:4px}.nav-link{display:inline-flex;align-items:center;gap:7px;padding:7px 10px;border-radius:8px;color:var(--text2);font-size:14px;font-weight:700}.nav-link:hover,.nav-link.active{background:var(--bg2);color:var(--text)}.nav-actions{display:flex;align-items:center;gap:8px}.icon-btn,.menu-btn{width:36px;height:36px;border:1.5px solid var(--border);border-radius:8px;background:var(--card);color:var(--text2);display:grid;place-items:center}.icon-btn:hover,.menu-btn:hover{color:var(--text);background:var(--bg2);border-color:var(--border2)}
+.app{display:flex;min-height:calc(100vh - var(--nav-h))}.sidebar{width:244px;position:sticky;top:var(--nav-h);height:calc(100vh - var(--nav-h));border-right:1px solid var(--border);background:var(--bg);padding:14px 10px;overflow:auto;display:none}body.is-authed .sidebar{display:block}.sb-cta{display:flex;align-items:center;justify-content:center;gap:8px;margin:0 0 12px;padding:10px 14px;border-radius:999px;background:var(--primary);color:var(--bg);font-weight:800;font-size:13px;text-decoration:none}.sb-cta:hover{opacity:.9}.sb-label,.drawer-section{display:block;padding:12px 8px 5px;color:var(--text3);font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1.4px}.sb-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:9px;color:var(--text2);font-size:13.5px;font-weight:700;text-decoration:none;transition:all .15s}.sb-item:hover,.sb-item.active{background:var(--bg2);color:var(--text)}.sb-icon{width:30px;height:30px;border:1px solid var(--border);border-radius:8px;background:var(--bg2);display:grid;place-items:center;color:var(--text3);flex-shrink:0}.sb-icon i{font-size:16px}.sb-user{margin:14px 0 0;padding:12px;border:1px solid var(--border);border-radius:12px;background:var(--bg2);display:flex;gap:10px;align-items:center}.avatar-mini{width:34px;height:34px;border-radius:50%;background:var(--brand-blue);display:grid;place-items:center;color:var(--card);font-weight:900;flex-shrink:0}.main{flex:1;min-width:0}.page{width:min(900px,calc(100% - 48px));margin:0 auto;padding:24px 0 72px}.btn{border:1.5px solid var(--border2);background:var(--card);color:var(--text);border-radius:10px;height:40px;padding:0 14px;display:inline-flex;align-items:center;justify-content:center;gap:8px;font-weight:800;font-size:13px;white-space:nowrap;transition:all .15s;cursor:pointer}.btn:hover{background:var(--bg2);border-color:var(--border2)}.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}.btn.primary:hover{opacity:.9}.btn.ghost{background:transparent;border-color:transparent;color:var(--text2)}.btn.ghost:hover{background:var(--bg2);color:var(--text)}.btn-back{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;margin-bottom:20px;border:1.5px solid var(--border);border-radius:10px;background:var(--card);color:var(--text2);font-weight:700;font-size:13px;cursor:pointer;transition:all .15s}.btn-back:hover{background:var(--bg2);border-color:var(--border2);color:var(--text)}.toast{position:fixed;right:18px;bottom:18px;background:var(--primary);color:var(--bg);border-radius:12px;padding:12px 14px;font-weight:800;box-shadow:var(--shadow);opacity:0;transform:translateY(8px);transition:.2s;z-index:400}.toast.show{opacity:1;transform:translateY(0)}
+.drawer{position:fixed;inset:0;z-index:300;display:none}.drawer.open{display:block}.overlay{position:absolute;inset:0;background:rgba(0,0,0,.36);backdrop-filter:blur(3px)}.drawer-panel{position:absolute;right:0;top:0;bottom:0;width:min(340px,92vw);background:var(--bg);border-left:1px solid var(--border);padding:16px;overflow:auto}.drawer-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}.drawer-link{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:10px;color:var(--text2);font-weight:800;text-decoration:none}.drawer-link:hover,.drawer-link.active{background:var(--bg2);color:var(--text)}
+
+/* ── Detail Layout ────────────────────────── */
+.detail-container{animation:fadeIn .3s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* Creator header */
+.detail-creator{display:flex;align-items:center;gap:14px;padding:18px 20px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:20px}.detail-creator-avatar{width:48px;height:48px;border-radius:50%;object-fit:cover;background:var(--brand-blue);display:grid;place-items:center;color:#fff;font-size:20px;font-weight:800;flex-shrink:0}.detail-creator-info{flex:1}.detail-creator-name{font-size:16px;font-weight:800;font-family:Outfit}.detail-creator-label{font-size:12px;color:var(--text3)}.detail-creator .detail-bookmark{width:36px;height:36px;border-radius:50%;border:1px solid var(--border);background:var(--bg2);display:grid;place-items:center;color:var(--text3);cursor:pointer;transition:all .2s;flex-shrink:0}.detail-creator .detail-bookmark:hover{border-color:var(--accent);color:var(--accent)}.detail-creator .detail-bookmark.saved{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+/* Main content grid */
+.detail-grid{display:grid;grid-template-columns:1fr 360px;gap:24px;align-items:start}@media(max-width:860px){.detail-grid{grid-template-columns:1fr}}
+
+/* Left panel */
+.detail-main{display:flex;flex-direction:column;gap:20px}
+
+/* Info card */
+.info-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px}.info-card h2{font-family:Outfit;font-size:17px;font-weight:800;margin:0 0 4px}.info-card .ic-sub{font-size:13px;color:var(--text2);margin:0 0 14px;line-height:1.5}.info-card .ic-meta{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:14px}.info-card .ic-meta span{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text2)}.info-card .ic-meta span i{font-size:16px;color:var(--text3)}
+
+/* Description */
+.desc-content{font-size:14px;line-height:1.7;color:var(--text2);white-space:pre-wrap}.desc-content strong{color:var(--text)}
+
+/* Requirements */
+.requirements{list-style:none;padding:0;margin:0;display:grid;gap:10px}.requirements li{display:flex;align-items:flex-start;gap:10px;padding:12px 14px;background:var(--bg2);border-radius:10px;border:1px solid var(--border);font-size:13px;color:var(--text2);line-height:1.4}.requirements li i{color:var(--accent);flex-shrink:0;margin-top:1px}
+
+/* Right panel */
+.detail-side{display:flex;flex-direction:column;gap:20px;position:sticky;top:calc(var(--nav-h) + 24px)}
+
+/* Reward card */
+.reward-card{background:linear-gradient(135deg,var(--soft-purple,#f4f6fa),var(--soft-blue,#eef6ff));border:1px solid var(--border);border-radius:var(--radius);padding:24px;text-align:center;position:relative;overflow:hidden}.reward-card:before{content:'';position:absolute;top:0;left:-100%;width:100%;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);animation:shimmer 3s ease-in-out infinite}[data-theme="dark"] .reward-card{background:linear-gradient(135deg,#111725,#0d1d34)}.reward-amount{font-family:Outfit;font-size:32px;font-weight:900;color:var(--accent2);letter-spacing:-1px}.reward-amount .usd{font-size:14px;font-weight:600;color:var(--text3);margin-left:6px}.reward-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1.5px;margin-top:2px}
+
+/* Progress card */
+.progress-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px}.progress-card .pc-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}.progress-card .pc-label{font-size:13px;font-weight:700}.progress-card .pc-val{font-size:13px;color:var(--text2)}.progress-card .pc-bar{height:10px;border-radius:999px;background:var(--bg2);overflow:hidden;border:1px solid var(--border)}.progress-card .pc-fill{height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .5s}.progress-card .pc-sub{font-size:11px;color:var(--text3);margin-top:6px;text-align:center}
+
+/* Action card - Apply form */
+.apply-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px}.apply-card h3{font-family:Outfit;font-size:15px;font-weight:800;margin:0 0 4px}.apply-card .ac-sub{font-size:12px;color:var(--text2);margin:0 0 16px}.apply-card .field{margin-bottom:14px}.apply-card .field label{display:block;font-size:12px;font-weight:800;color:var(--text2);margin-bottom:6px}.apply-card textarea{width:100%;min-height:130px;padding:12px;border:1.5px solid var(--border);border-radius:10px;background:var(--bg);color:var(--text);font-size:13.5px;line-height:1.6;resize:vertical;transition:border-color .2s;font-family:inherit}.apply-card textarea:focus{outline:none;border-color:var(--accent)}.apply-card textarea::placeholder{color:var(--text3)}
+
+/* File upload */
+.file-upload{margin-bottom:14px}.file-upload .fu-label{display:block;font-size:12px;font-weight:800;color:var(--text2);margin-bottom:6px}.file-upload .fu-zone{display:flex;flex-direction:column;align-items:center;gap:10px;padding:24px;border:2px dashed var(--border);border-radius:12px;background:var(--bg2);cursor:pointer;transition:all .2s;text-align:center}.file-upload .fu-zone:hover,.file-upload .fu-zone.dragover{border-color:var(--accent);background:var(--soft-purple,#f4f6fa)}.file-upload .fu-zone i{font-size:32px;color:var(--text3)}.file-upload .fu-zone p{margin:0;font-size:13px;color:var(--text2)}.file-upload .fu-zone .fu-hint{font-size:11px;color:var(--text3)}.file-upload input[type="file"]{display:none}.file-list{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}.file-list .file-item{display:flex;align-items:center;gap:8px;padding:6px 12px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;font-size:12px;color:var(--text2)}.file-list .file-item .remove-file{cursor:pointer;color:var(--text3);transition:color .15s}.file-list .file-item .remove-file:hover{color:var(--accent)}
+
+/* Captcha placeholder */
+.captcha-box{display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;margin-bottom:14px}.captcha-box i{font-size:20px;color:var(--accent2)}.captcha-box .cb-text{flex:1;font-size:12px;color:var(--text2)}.captcha-box .cb-btn{height:32px;padding:0 12px;border:1px solid var(--border);border-radius:8px;background:var(--card);color:var(--text);font-size:12px;font-weight:700;cursor:pointer;transition:all .15s}.captcha-box .cb-btn:hover{background:var(--accent);color:#fff;border-color:var(--accent)}.captcha-box .cb-btn.verified{background:var(--green);color:#fff;border-color:var(--green)}
+
+/* Submit area */
+.submit-area{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:4px}.submit-area .btn-submit{flex:1;height:46px;font-size:15px;font-weight:800}
+
+@keyframes shimmer{0%{left:-100%}100%{left:100%}}
+
+@media(max-width:1024px){.detail-grid{grid-template-columns:1fr 300px}}
+@media(max-width:768px){
+  .page{width:min(100% - 24px,900px);padding-top:16px}.nav-links{display:none}.sidebar{display:none!important}.detail-side{position:static}body{padding-bottom:92px}
+}
+
+/* Mobile bottom nav */
+.mobile-bottom-nav{position:fixed;left:0;right:0;bottom:0;z-index:250;display:none;grid-template-columns:repeat(5,1fr);align-items:end;height:88px;padding:8px 12px 10px;background:rgba(255,255,255,.96);border-top:1px solid var(--border);backdrop-filter:blur(18px) saturate(1.25)}[data-theme="dark"] .mobile-bottom-nav{background:rgba(5,7,11,.96);border-top-color:#252b36}.mobile-bottom-nav a{min-width:0;display:grid;justify-items:center;gap:4px;color:#66738a;font-size:13px;font-weight:800;text-decoration:none}.mobile-bottom-nav svg{width:28px;height:28px;stroke-width:2.2}.mobile-bottom-nav .active,.mobile-bottom-nav a:hover{color:#101525}[data-theme="dark"] .mobile-bottom-nav a{color:#8b96a8}[data-theme="dark"] .mobile-bottom-nav .active,.mobile-bottom-nav a:hover{color:#f8fafc}.mobile-bottom-nav .create{transform:translateY(-18px);gap:5px;color:#101525}.mobile-bottom-nav .create svg{width:58px;height:58px;padding:15px;border-radius:18px;background:#101525;color:#fff}[data-theme="dark"] .mobile-bottom-nav .create svg{background:#f8fafc;color:#05070b}@media(max-width:768px){.mobile-bottom-nav{display:grid}}
+</style>
+</head>
+<body>
+
+<nav class="nav"><div class="nav-inner"><a href="index.html" class="brand"><span class="logo">O</span>OgaPay</a><div class="nav-links"><a href="tasks.html" class="nav-link"><i class="ti ti-briefcase"></i>Tasks</a><a href="wurkers.html" class="nav-link"><i class="ti ti-users"></i>Wurkers</a><a href="communities.html" class="nav-link"><i class="ti ti-users-group"></i>Communities</a></div><div class="nav-actions"><button class="icon-btn" onclick="t()" title="Theme"><i class="ti ti-sun" id="ti"></i></button><button class="menu-btn" onclick="document.querySelector('.drawer').classList.toggle('open')"><i class="ti ti-menu-2"></i></button></div></div></nav>
+
+<aside class="drawer">
+<div class="overlay" onclick="this.closest('.drawer').classList.remove('open')"></div>
+<div class="drawer-panel">
+<div class="drawer-head"><a class="brand" href="index.html"><span class="logo">O</span>OgaPay</a><button class="icon-btn" onclick="this.closest('.drawer').classList.remove('open')"><i class="ti ti-x"></i></button></div>
+<div class="drawer-section">Main</div>
+<a class="drawer-link" href="dashboard.html"><i class="ti ti-dashboard"></i>Dashboard</a>
+<a class="drawer-link" href="profile.html"><i class="ti ti-user-circle"></i>My Profile</a>
+<a class="drawer-link" href="wallet.html"><i class="ti ti-wallet"></i>Wallet</a>
+<a class="drawer-link" href="notifications.html"><i class="ti ti-bell"></i>Notifications</a>
+<a class="drawer-link" href="messages.html"><i class="ti ti-message-2"></i>Messages</a>
+<div class="drawer-section">Earn</div>
+<a class="drawer-link" href="tasks.html"><i class="ti ti-briefcase"></i>Browse Tasks</a>
+<a class="drawer-link" href="monitor.html"><i class="ti ti-eye"></i>Job Monitor</a>
+<a class="drawer-link" href="my-tasks.html"><i class="ti ti-checklist"></i>My Tasks</a>
+<a class="drawer-link" href="campaigns.html"><i class="ti ti-megaphone"></i>Campaigns</a>
+<a class="drawer-link" href="communities.html"><i class="ti ti-users-group"></i>Communities</a>
+<a class="drawer-link" href="leaderboard.html"><i class="ti ti-trophy"></i>Leaderboard</a>
+<div class="drawer-section">Business</div>
+<a class="drawer-link" href="post-task.html"><i class="ti ti-square-plus"></i>Post Task</a>
+<a class="drawer-link" href="analytics.html"><i class="ti ti-chart-line"></i>Analytics</a>
+<div class="drawer-section">Growth</div>
+<a class="drawer-link" href="referrals.html"><i class="ti ti-link"></i>Referrals</a>
+<a class="drawer-link" href="vault.html"><i class="ti ti-building-bank"></i>Rewards Vault</a>
+<div class="drawer-section">Account</div>
+<a class="drawer-link" href="kyc.html"><i class="ti ti-shield-check"></i>KYC</a>
+<a class="drawer-link" href="settings.html"><i class="ti ti-settings"></i>Settings</a>
+</div>
+</aside>
+
+<div class="app">
+<aside class="sidebar">
+<a href="post-task.html" class="sb-cta"><i class="ti ti-square-plus"></i>Post a Task</a>
+<span class="sb-label">Main</span>
+<a class="sb-item" href="dashboard.html"><span class="sb-icon"><i class="ti ti-dashboard"></i></span>Dashboard</a>
+<a class="sb-item" href="profile.html"><span class="sb-icon"><i class="ti ti-user-circle"></i></span>Profile</a>
+<a class="sb-item" href="wallet.html"><span class="sb-icon"><i class="ti ti-wallet"></i></span>Wallet</a>
+<a class="sb-item" href="notifications.html"><span class="sb-icon"><i class="ti ti-bell"></i></span>Notifications</a>
+<a class="sb-item" href="messages.html"><span class="sb-icon"><i class="ti ti-message-2"></i></span>Messages</a>
+<span class="sb-label">Earn</span>
+<a class="sb-item active" href="tasks.html"><span class="sb-icon"><i class="ti ti-briefcase"></i></span>Browse Tasks</a>
+<a class="sb-item" href="monitor.html"><span class="sb-icon"><i class="ti ti-eye"></i></span>Job Monitor</a>
+<a class="sb-item" href="my-tasks.html"><span class="sb-icon"><i class="ti ti-checklist"></i></span>My Tasks</a>
+<a class="sb-item" href="campaigns.html"><span class="sb-icon"><i class="ti ti-megaphone"></i></span>Campaigns</a>
+<a class="sb-item" href="communities.html"><span class="sb-icon"><i class="ti ti-users-group"></i></span>Communities</a>
+<a class="sb-item" href="leaderboard.html"><span class="sb-icon"><i class="ti ti-trophy"></i></span>Leaderboard</a>
+<span class="sb-label">Business</span>
+<a class="sb-item" href="post-task.html"><span class="sb-icon"><i class="ti ti-square-plus"></i></span>Post Task</a>
+<a class="sb-item" href="analytics.html"><span class="sb-icon"><i class="ti ti-chart-line"></i></span>Analytics</a>
+<span class="sb-label">Growth</span>
+<a class="sb-item" href="referrals.html"><span class="sb-icon"><i class="ti ti-link"></i></span>Referrals</a>
+<a class="sb-item" href="vault.html"><span class="sb-icon"><i class="ti ti-building-bank"></i></span>Rewards Vault</a>
+<span class="sb-label">Account</span>
+<a class="sb-item" href="kyc.html"><span class="sb-icon"><i class="ti ti-shield-check"></i></span>KYC</a>
+<a class="sb-item" href="settings.html"><span class="sb-icon"><i class="ti ti-settings"></i></span>Settings</a>
+<div class="sb-user"><div class="avatar-mini">AD</div><div><strong>Ada Danladi</strong><div class="small">Worker · KYC verified</div></div></div>
+</aside>
+
+<main class="main">
+<section class="page">
+<div class="detail-container" id="detailContainer">
+<button class="btn-back" onclick="goBack()"><i class="ti ti-arrow-left"></i>Back to Tasks</button>
+
+<!-- Loading -->
+<div id="loading" style="text-align:center;padding:80px 0;color:var(--text3)"><i class="ti ti-loader" style="font-size:36px;animation:spin 1s linear infinite"></i><p style="margin-top:12px">Loading task...</p></div>
+
+<!-- Content (hidden until loaded) -->
+<div id="detailContent" style="display:none">
+</div>
+</div>
+</section>
+</main>
+</div>
+
+<div class="toast" id="toast">Done</div>
+
+<style>
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+
+<nav class="mobile-bottom-nav" aria-label="Mobile app navigation">
+  <a href="tasks.html" class="active"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v13H4V7Z"/><path d="M9 5V3h6v2M8 11h8"/></svg><span>Jobs</span></a>
+  <a href="store.html"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18M16 10a4 4 0 0 1-8 0"/></svg><span>Deals</span></a>
+  <a href="post-task.html" class="create"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span>Create</span></a>
+  <a href="notifications.html"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><span>Alerts</span></a>
+  <a href="dashboard.html"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>Profile</span></a>
+</nav>
+
+<script>
+// ── Sample task data (mirrors tasks.html) ─────────
+const creators = [
+  { name: 'Ada Danladi', initials: 'AD' },
+  { name: 'Chidi Okonkwo', initials: 'CO' },
+  { name: 'Fatima Bello', initials: 'FB' },
+  { name: 'Segun Adeyemi', initials: 'SA' },
+  { name: 'Amara Okafor', initials: 'AO' },
+];
+const tasks = {
+  1:{cat:"social",platform:"X / Twitter",title:"X repost campaign",desc:"Follow and repost the pinned launch post. Earn rewards instantly after verification.\n\nTask Details:\n• Follow @OgaPay on X/Twitter\n• Like and repost the pinned launch post\n• Include #OgaPay in your repost\n• Submit the link to your repost as proof\n\nRequirements:\n• Active X/Twitter account (30+ days old)\n• Profile must be public\n• No bot accounts",pay:"₦500",payUsd:"$0.35",spots:24,total:50,creator:0,highlighted:true},
+  2:{cat:"social",platform:"Telegram",title:"Telegram community join",desc:"Join a verified Telegram group and submit your username.\n\nTask Details:\n• Click the invite link provided\n• Join the Telegram group\n• Send a hello message in the group\n• Submit your Telegram username as proof\n\nRequirements:\n• Active Telegram account\n• No spam or bot accounts",pay:"₦250",payUsd:"$0.18",spots:50,total:200,creator:1,highlighted:false},
+  3:{cat:"content",platform:"Google Play",title:"Android beta test",desc:"Install the beta version of our partner app and report any issues you find.\n\nTask Details:\n• Join the Google Play beta testing program\n• Install the beta app\n• Use the app for at least 5 minutes\n• Report any bugs or UX issues\n• Submit a screenshot of the app running\n\nRequirements:\n• Android device (Android 11+)\n• Google Play account\n• Willingness to provide feedback",pay:"₦2,000",payUsd:"$1.40",spots:10,total:30,creator:2,highlighted:false},
+  4:{cat:"content",platform:"Web",title:"AI survey",desc:"Answer 10 product research questions about AI tools.\n\nTask Details:\n• Click the survey link\n• Answer all 10 questions honestly\n• Provide detailed responses (2-3 sentences each)\n• Submit the completion confirmation code\n\nRequirements:\n• Basic knowledge of AI tools\n• 10-15 minutes of your time\n• English proficiency",pay:"1.50 USDC",payUsd:"$1.50",spots:35,total:100,creator:3,highlighted:true},
+  5:{cat:"crypto",platform:"Web3",title:"Wallet signup QA",desc:"Create a wallet test account and submit proof of completion.\n\nTask Details:\n• Click the referral link\n• Create a new wallet account\n• Complete the onboarding steps\n• Verify your email\n• Submit a screenshot of the dashboard\n\nRequirements:\n• Valid email address\n• Basic understanding of crypto wallets\n• No existing account on the platform",pay:"2 USDC",payUsd:"$2.00",spots:20,total:60,creator:4,highlighted:false},
+  6:{cat:"social",platform:"Instagram",title:"Instagram reel comment",desc:"Leave a relevant comment on the campaign reel.\n\nTask Details:\n• Find the campaign reel on Instagram\n• Watch the full reel (30 seconds)\n• Leave a meaningful comment (3+ words)\n• Like the reel\n• Submit your Instagram username as proof\n\nRequirements:\n• Active Instagram account\n• Public profile\n• No generic comments ('nice', 'cool', etc.)",pay:"₦300",payUsd:"$0.21",spots:15,total:40,creator:0,highlighted:false},
+  7:{cat:"web",platform:"Website",title:"Sign-up & profile setup",desc:"Register on our partner platform and complete your profile.\n\nTask Details:\n• Click the registration link\n• Create a new account\n• Verify your email address\n• Complete your profile (add name, bio, profile pic)\n• Submit a screenshot of your completed profile\n\nRequirements:\n• Valid email address\n• 5-8 minutes of your time",pay:"₦800",payUsd:"$0.56",spots:30,total:80,creator:1,highlighted:false},
+  8:{cat:"social",platform:"TikTok",title:"TikTok video repost",desc:"Repost the campaign video on your TikTok account.\n\nTask Details:\n• Open the campaign TikTok video\n• Repost to your own profile\n• Add a caption with #OgaPay\n• Keep the repost public for at least 24 hours\n• Submit your TikTok profile link\n\nRequirements:\n• Active TikTok account\n• Public profile",pay:"₦450",payUsd:"$0.32",spots:18,total:50,creator:2,highlighted:false},
+  9:{cat:"content",platform:"YouTube",title:"Video feedback",desc:"Watch a 2-minute video and leave constructive feedback.\n\nTask Details:\n• Watch the full video (2 min)\n• Leave a detailed comment with feedback\n• Like the video\n• Subscribe to the channel\n• Submit your YouTube username\n\nRequirements:\n• YouTube account\n• Ability to provide constructive feedback",pay:"1 USDC",payUsd:"$1.00",spots:12,total:40,creator:3,highlighted:false},
+  10:{cat:"crypto",platform:"DeFi",title:"Liquidity pool test",desc:"Test a new DeFi protocol and provide detailed UX feedback.\n\nTask Details:\n• Access the testnet dApp\n• Connect a test wallet\n• Add liquidity to a test pool\n• Perform a swap\n• Complete the feedback form\n• Submit a screen recording (max 30s)\n\nRequirements:\n• MetaMask or similar wallet\n• Basic DeFi knowledge\n• Access to test network",pay:"5 USDC",payUsd:"$5.00",spots:5,total:20,creator:4,highlighted:false},
+  11:{cat:"social",platform:"Discord",title:"Discord community boost",desc:"Join our Discord server and engage with the community.\n\nTask Details:\n• Click the Discord invite link\n• Join the server\n• Read the welcome channel\n• Introduce yourself in the introductions channel\n• React to at least 3 messages\n• Submit your Discord username and tag\n\nRequirements:\n• Discord account\n• No spam accounts",pay:"₦350",payUsd:"$0.25",spots:40,total:150,creator:0,highlighted:false},
+  12:{cat:"web",platform:"Mobile App",title:"App store review",desc:"Download the app and leave a 5-star review with proof.\n\nTask Details:\n• Download the app from App Store/Play Store\n• Create an account and explore\n• Leave a 5-star rating\n• Write a brief review (2-3 sentences)\n• Take a screenshot of your review\n\nRequirements:\n• Smartphone (iOS or Android)\n• App Store or Google Play account",pay:"₦600",payUsd:"$0.42",spots:25,total:75,creator:1,highlighted:false},
+};
+
+// ── State ────────────────────────────────────
+let currentTask = null;
+let uploadedFiles = [];
+let captchaVerified = false;
+let bookmarks = new Set();
+
+try {
+  const saved = JSON.parse(localStorage.getItem('ogapay_bookmarks') || '[]');
+  bookmarks = new Set(saved);
+} catch(e) {}
+
+function saveBookmarks() {
+  try { localStorage.setItem('ogapay_bookmarks', JSON.stringify([...bookmarks])); } catch(e) {}
+}
+
+function getQueryParam(name) {
+  const p = new URLSearchParams(window.location.search);
+  return p.get(name);
+}
+
+function goBack() {
+  window.location.href = 'tasks.html';
+}
+
+function toggleBookmark(id) {
+  if (bookmarks.has(id)) bookmarks.delete(id); else bookmarks.add(id);
+  saveBookmarks();
+  renderBookmarkBtn(id);
+  say(bookmarks.has(id) ? 'Bookmarked' : 'Bookmark removed');
+}
+
+function renderBookmarkBtn(id) {
+  const btn = document.getElementById('bookmarkBtn');
+  if (!btn) return;
+  const saved = bookmarks.has(id);
+  btn.className = 'detail-bookmark' + (saved ? ' saved' : '');
+  btn.innerHTML = '<i class="ti ti-' + (saved ? 'bookmark-filled' : 'bookmark') + '"></i>';
+}
+
+// ── Load and render ──────────────────────────
+function loadTask() {
+  const id = parseInt(getQueryParam('id')) || 1;
+  currentTask = tasks[id];
+  if (!currentTask) { currentTask = tasks[1]; }
+
+  const loading = document.getElementById('loading');
+  const content = document.getElementById('detailContent');
+
+  loading.style.display = 'none';
+  content.style.display = 'block';
+
+  const c = creators[currentTask.creator];
+  const progress = Math.round(((currentTask.total - currentTask.spots) / currentTask.total) * 100);
+  const catIcon = currentTask.cat === 'social' ? 'messages' : currentTask.cat === 'content' ? 'file-text' : currentTask.cat === 'crypto' ? 'coin' : 'globe';
+
+  content.innerHTML = `
+    <!-- Creator header -->
+    <div class="detail-creator">
+      <span class="detail-creator-avatar">${c.initials}</span>
+      <div class="detail-creator-info">
+        <div class="detail-creator-name">${c.name}</div>
+        <div class="detail-creator-label">Posted by · ${currentTask.cat.charAt(0).toUpperCase() + currentTask.cat.slice(1)} Task</div>
+      </div>
+      <button class="detail-bookmark" id="bookmarkBtn" onclick="toggleBookmark(${id})"><i class="ti ti-bookmark"></i></button>
+    </div>
+
+    <div class="detail-grid">
+      <!-- Left: Main content -->
+      <div class="detail-main">
+        <div class="info-card">
+          <h2>${currentTask.title}</h2>
+          <p class="ic-sub">${currentTask.platform}</p>
+          <div class="ic-meta">
+            <span><i class="ti ti-${catIcon}"></i>${currentTask.cat.charAt(0).toUpperCase() + currentTask.cat.slice(1)}</span>
+            <span><i class="ti ti-clock"></i>Estimated 10-15 min</span>
+            <span><i class="ti ti-file-check"></i>Proof required</span>
+          </div>
+          <div class="desc-content">${currentTask.desc}</div>
+        </div>
+
+        <div class="info-card">
+          <h2>Requirements</h2>
+          <p class="ic-sub" style="margin-bottom:12px">Before you apply, make sure you meet these requirements</p>
+          <ul class="requirements">
+            <li><i class="ti ti-circle-check"></i><span>Active account on the required platform</span></li>
+            <li><i class="ti ti-circle-check"></i><span>Ability to provide screenshot proof</span></li>
+            <li><i class="ti ti-circle-check"></i><span>Account must be at least 30 days old</span></li>
+            <li><i class="ti ti-circle-check"></i><span>Profile must be set to public</span></li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Right: Sidebar -->
+      <div class="detail-side">
+        <div class="reward-card">
+          <div class="reward-amount">${currentTask.pay} <span class="usd">${currentTask.payUsd}</span></div>
+          <div class="reward-label">Reward per completion</div>
+        </div>
+
+        <div class="progress-card">
+          <div class="pc-row">
+            <span class="pc-label">Progress</span>
+            <span class="pc-val">${currentTask.total - currentTask.spots} / ${currentTask.total}</span>
+          </div>
+          <div class="pc-bar">
+            <div class="pc-fill" style="width:${progress}%"></div>
+          </div>
+          <div class="pc-sub">${currentTask.spots} spots remaining</div>
+        </div>
+
+        <!-- Apply Form -->
+        <div class="apply-card">
+          <h3>Apply for this task</h3>
+          <p class="ac-sub">Complete the task and submit your proof below</p>
+
+          <div class="field">
+            <label>Proof / Submission</label>
+            <textarea id="proofText" placeholder="Describe what you did or paste any required text..." maxlength="2000"></textarea>
+          </div>
+
+          <div class="file-upload">
+            <div class="fu-label">Attachments</div>
+            <div class="fu-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+              <i class="ti ti-cloud-upload"></i>
+              <p>Drop files here or click to upload</p>
+              <span class="fu-hint">Supports: PNG, JPG, MP4, PDF (max 10MB)</span>
+            </div>
+            <input type="file" id="fileInput" multiple accept="image/*,.pdf,.mp4" onchange="handleFiles(this.files)">
+            <div class="file-list" id="fileList"></div>
+          </div>
+
+          <div class="captcha-box">
+            <i class="ti ti-shield-check"></i>
+            <span class="cb-text">Verify you're human before submitting</span>
+            <button class="cb-btn" id="captchaBtn" onclick="verifyCaptcha()">Verify</button>
+          </div>
+
+          <div class="submit-area">
+            <button class="btn primary btn-submit" id="submitBtn" onclick="submitApplication()" disabled>
+              <i class="ti ti-send"></i>Submit Application
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  renderBookmarkBtn(id);
+  setupDragDrop();
+}
+
+// ── Drag & Drop ──────────────────────────────
+function setupDragDrop() {
+  const zone = document.getElementById('dropZone');
+  if (!zone) return;
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
+  zone.addEventListener('dragleave', () => { zone.classList.remove('dragover'); });
+  zone.addEventListener('drop', e => {
+    e.preventDefault();
+    zone.classList.remove('dragover');
+    handleFiles(e.dataTransfer.files);
+  });
+}
+
+function handleFiles(files) {
+  for (const f of files) {
+    if (f.size > 10 * 1024 * 1024) { say('File too large (max 10MB)'); continue; }
+    uploadedFiles.push(f);
+  }
+  renderFileList();
+}
+
+function removeFile(index) {
+  uploadedFiles.splice(index, 1);
+  renderFileList();
+}
+
+function renderFileList() {
+  const list = document.getElementById('fileList');
+  if (!list) return;
+  if (uploadedFiles.length === 0) { list.innerHTML = ''; return; }
+  list.innerHTML = uploadedFiles.map((f, i) =>
+    '<div class="file-item"><i class="ti ti-file"></i>' + f.name + ' <span style="color:var(--text3);font-size:11px">(' + Math.round(f.size/1024) + 'KB)</span><span class="remove-file" onclick="removeFile(' + i + ')"><i class="ti ti-x"></i></span></div>'
+  ).join('');
+}
+
+// ── Captcha ──────────────────────────────────
+function verifyCaptcha() {
+  const btn = document.getElementById('captchaBtn');
+  if (!btn) return;
+  captchaVerified = true;
+  btn.textContent = 'Verified ✓';
+  btn.className = 'cb-btn verified';
+  btn.disabled = true;
+  checkSubmitReady();
+}
+
+function checkSubmitReady() {
+  const btn = document.getElementById('submitBtn');
+  if (!btn) return;
+  btn.disabled = !captchaVerified;
+  if (!captchaVerified) {
+    btn.innerHTML = '<i class="ti ti-send"></i>Submit Application';
+  }
+}
+
+// ── Submit ───────────────────────────────────
+function submitApplication() {
+  const btn = document.getElementById('submitBtn');
+  if (!btn || btn.disabled) return;
+
+  const proof = document.getElementById('proofText')?.value?.trim();
+  if (!proof && uploadedFiles.length === 0) {
+    say('Please provide proof or upload a file');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.innerHTML = '<i class="ti ti-loader" style="animation:spin 1s linear infinite"></i>Submitting...';
+
+  setTimeout(() => {
+    btn.innerHTML = '<i class="ti ti-check"></i>Submitted!';
+    btn.className = 'btn btn-submit';
+    btn.style.background = 'var(--green)';
+    btn.style.borderColor = 'var(--green)';
+    say('Application submitted successfully!');
+    // Store in my-tasks
+    try {
+      const myTasks = JSON.parse(localStorage.getItem('ogapay_my_tasks') || '[]');
+      myTasks.push({ taskId: currentTask ? (parseInt(getQueryParam('id')) || 1) : 1, title: currentTask?.title || 'Task', submittedAt: new Date().toISOString(), status: 'pending' });
+      localStorage.setItem('ogapay_my_tasks', JSON.stringify(myTasks));
+    } catch(e) {}
+  }, 1500);
+}
+
+// ── Toast ────────────────────────────────────
+function say(text) {
+  const toast = document.getElementById('toast');
+  if (!toast) return;
+  toast.textContent = text;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 1800);
+}
+
+// ── Theme toggle ─────────────────────────────
+function t() {
+  const html = document.documentElement;
+  const cur = html.getAttribute('data-theme') || 'light';
+  const next = cur === 'dark' ? 'light' : 'dark';
+  html.setAttribute('data-theme', next);
+  try { localStorage.setItem('ogapay-theme', next); } catch(e) {}
+  const icon = document.getElementById('ti');
+  if (icon) icon.className = next === 'dark' ? 'ti ti-sun' : 'ti ti-moon';
+}
+
+// ── Init ─────────────────────────────────────
+(function() {
+  const html = document.documentElement;
+  html.setAttribute('data-theme', html.getAttribute('data-theme') || 'light');
+  const icon = document.getElementById('ti');
+  if (icon) icon.className = html.getAttribute('data-theme') === 'dark' ? 'ti ti-sun' : 'ti ti-moon';
+  loadTask();
+})();
+</script>
+<script src="assets/ogapay-live.js"></script>
+</body>
+</html>

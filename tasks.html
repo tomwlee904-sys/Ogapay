@@ -366,8 +366,7 @@ function goPage(page) {
 }
 
 function applyTask(id) {
-  // Navigate to task detail page (Phase B)
-  say('Opening task...');
+  window.location.href = "task-detail.html?id=" + id;
 }
 
 function say(text) {
