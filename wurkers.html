@@ -140,6 +140,7 @@
 
 <script>
 const API_BASE = (window.OGAPAY_API_BASE || localStorage.getItem('ogapay_api_base') || 'https://ogapay-production.up.railway.app/api/v1').replace(/\/$/, '');
+const API_TIMEOUT = 15000; // 15s timeout for API calls
 let currentPage = 1;
 let currentRole = '';
 let currentSearch = '';
@@ -173,7 +174,10 @@ async function loadWurkers() {
     if (currentRole) params.set('role', currentRole);
     if (currentSearch) params.set('search', currentSearch);
 
-    const res = await fetch(API_BASE + '/users/directory/list?' + params.toString());
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT);
+    const res = await fetch(API_BASE + '/users/directory/list?' + params.toString(), { signal: controller.signal });
+    clearTimeout(timeoutId);
     const data = await res.json();
 
     if (!data.success || !data.data || data.data.length === 0) {
@@ -245,7 +249,9 @@ async function loadWurkers() {
     loading.style.display = 'none';
     grid.style.display = 'grid';
   } catch(e) {
-    loading.innerHTML = '<i class="ti ti-cloud-off" style="font-size:32px;color:var(--text3)"></i><p style="margin-top:12px;color:var(--text2)">Failed to load wurkers. Please try again.</p><button class="btn" onclick="loadWurkers()" style="margin-top:12px"><i class="ti ti-refresh"></i>Retry</button>';
+    loading.style.display = 'none';
+    empty.style.display = 'block';
+    empty.innerHTML = '<i class="ti ti-cloud-off" style="font-size:40px;color:var(--text3)"></i><p style="margin-top:12px;font-size:16px">Unable to load wurkers</p><p style="font-size:13px;color:var(--text2);max-width:400px;margin:8px auto">The directory service is being deployed. Please try again in a few minutes.</p><button class="btn" onclick="loadWurkers()" style="margin-top:12px"><i class="ti ti-refresh"></i>Retry</button>';
   }
 }
 
