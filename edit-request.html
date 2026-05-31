@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Edit Request - OgaPay</title>
+<script>(function(){try{document.documentElement.setAttribute('data-theme',localStorage.getItem('ogapay-theme')||'light')}catch(e){}})();</script>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800;900&family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+<style>:root{--bg:#ffffff;--bg2:#f7f9fc;--card:#ffffff;--border:#e4e9f1;--border2:#d5deea;--text:#101525;--text2:#66738a;--text3:#98a6ba;--primary:#0d1323;--accent:#7C3AED;--shadow:0 4px 16px rgba(16,21,37,.07);--radius:14px;--radius-sm:10px;--nav-h:60px}[data-theme="dark"]{--bg:#080b13;--bg2:#0d111d;--card:#111725;--border:#222b3c;--border2:#2d384d;--text:#f4f7fb;--text2:#9aa7bc;--text3:#667186;--primary:#f4f7fb;--accent:#A78BFA}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;overflow-x:hidden}a{color:inherit;text-decoration:none}button,input,select,textarea{font:inherit}button{cursor:pointer}
+.nav{position:sticky;top:0;z-index:100;height:var(--nav-h);background:rgba(255,255,255,.92);border-bottom:1px solid var(--border);backdrop-filter:blur(18px)}[data-theme="dark"] .nav{background:rgba(8,11,19,.92)}
+.nav-inner{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:22px;height:100%;width:min(800px,calc(100% - 32px));margin:0 auto}.brand{display:flex;align-items:center;gap:10px;font-family:"Outfit";font-weight:800;font-size:19px}.logo{width:34px;height:34px;border-radius:9px;background:var(--primary);color:var(--bg);display:grid;place-items:center;font-size:18px}.nav-links{display:flex;gap:4px}.nav-link{display:inline-flex;align-items:center;gap:7px;padding:7px 10px;border-radius:8px;color:var(--text2);font-size:14px;font-weight:700;transition:all .15s}.nav-link:hover,.nav-link.active{background:var(--bg2);color:var(--text)}.nav-actions{display:flex;align-items:center;gap:8px}.icon-btn{width:36px;height:36px;border:1.5px solid var(--border);border-radius:8px;background:var(--card);color:var(--text2);display:grid;place-items:center;transition:all .15s}.icon-btn:hover{color:var(--text);background:var(--bg2)}
+.page{width:min(800px,calc(100% - 32px));margin:0 auto;padding:34px 0 72px}.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow)}.btn{height:44px;padding:0 20px;border:1.5px solid var(--border);border-radius:10px;background:var(--card);color:var(--text);font-size:14px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:all .2s;text-decoration:none}.btn:hover{border-color:var(--border2);box-shadow:var(--shadow)}.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}.btn.primary:hover{box-shadow:0 6px 24px rgba(124,58,237,.3);transform:translateY(-1px)}.full{width:100%}
+.er-head{text-align:center;margin-bottom:28px}.er-head h1{font-family:Outfit;font-size:28px;font-weight:800;margin:0}.er-head p{font-size:14px;color:var(--text2);margin:4px 0 0}
+.form-card{padding:24px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius)}.form-card h3{margin:0 0 14px;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:var(--text3)}.fg{margin-bottom:14px}.fg label{font-size:12px;font-weight:700;color:var(--text2);margin-bottom:5px;display:block}.fg input,.fg select,.fg textarea{width:100%;height:44px;padding:0 12px;border:1.5px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font-size:14px;outline:none;font-family:inherit;transition:border-color .2s}.fg textarea{height:80px;padding:10px 12px;resize:vertical}.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--accent)}
+</style>
+</head>
+<body>
+<nav class="nav"><div class="nav-inner"><a href="index.html" class="brand"><span class="logo">O</span>OgaPay</a><div class="nav-links"><a href="my-tasks.html" class="nav-link"><i class="ti ti-checklist"></i>My Tasks</a><a href="edit-request.html" class="nav-link active"><i class="ti ti-edit"></i>Edit Request</a></div><div class="nav-actions"><button class="icon-btn" onclick="t()" title="Theme"><i class="ti ti-sun" id="ti"></i></button></div></div></nav>
+<main class="page">
+<div class="er-head"><h1>Request Edit</h1><p>Need changes to a submission or task? Submit an edit request to the reviewer.</p></div>
+<div class="form-card">
+  <h3>Edit Request</h3>
+  <div class="fg"><label>Task ID or submission link</label><input placeholder="e.g. submission/abc123" /></div>
+  <div class="fg"><label>Request type</label><select><option>Resubmit proof</option><option>Correct information</option><option>Update submission</option><option>Other</option></select></div>
+  <div class="fg"><label>What needs to change?</label><textarea placeholder="Describe what needs to be edited or updated..." rows="4"></textarea></div>
+  <button class="btn primary full"><i class="ti ti-send"></i>Submit Request</button>
+</div>
+</main>
+<style>[data-theme="dark"] .nav-links .nav-link.active{background:var(--bg2)}</style>
+<script>
+function t(){const h=document.documentElement,d=h.getAttribute('data-theme')||'light',n=d==='light'?'dark':'light';h.setAttribute('data-theme',n);try{localStorage.setItem('ogapay-theme',n)}catch(e){}const i=document.getElementById('ti');if(i)i.className=n==='dark'?'ti ti-sun':'ti ti-moon'}
+(function(){const h=document.documentElement;h.setAttribute('data-theme',h.getAttribute('data-theme')||'light');const d=document.getElementById('ti');if(d)d.className=h.getAttribute('data-theme')==='dark'?'ti ti-sun':'ti ti-moon'})();
+</script>
+</body>
+</html>

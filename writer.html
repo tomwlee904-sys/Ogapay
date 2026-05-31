@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Writer - OgaPay</title>
+<script>(function(){try{document.documentElement.setAttribute('data-theme',localStorage.getItem('ogapay-theme')||'light')}catch(e){}})();</script>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800;900&family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+<style>
+:root{--bg:#ffffff;--bg2:#f7f9fc;--card:#ffffff;--border:#e4e9f1;--border2:#d5deea;--text:#101525;--text2:#66738a;--text3:#98a6ba;--primary:#0d1323;--accent:#7C3AED;--green:#16a34a;--shadow:0 4px 16px rgba(16,21,37,.07);--radius:14px;--radius-sm:10px;--nav-h:60px}
+[data-theme="dark"]{--bg:#080b13;--bg2:#0d111d;--card:#111725;--border:#222b3c;--border2:#2d384d;--text:#f4f7fb;--text2:#9aa7bc;--text3:#667186;--primary:#f4f7fb;--accent:#A78BFA}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;overflow-x:hidden}a{color:inherit;text-decoration:none}button,input,textarea{font:inherit}button{cursor:pointer}
+.nav{position:sticky;top:0;z-index:100;height:var(--nav-h);background:rgba(255,255,255,.92);border-bottom:1px solid var(--border);backdrop-filter:blur(18px)}[data-theme="dark"] .nav{background:rgba(8,11,19,.92)}
+.nav-inner{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:22px;height:100%;width:min(900px,calc(100% - 32px));margin:0 auto}.brand{display:flex;align-items:center;gap:10px;font-family:"Outfit";font-weight:800;font-size:19px}.logo{width:34px;height:34px;border-radius:9px;background:var(--primary);color:var(--bg);display:grid;place-items:center;font-size:18px}.nav-links{display:flex;gap:4px}.nav-link{display:inline-flex;align-items:center;gap:7px;padding:7px 10px;border-radius:8px;color:var(--text2);font-size:14px;font-weight:700;transition:all .15s}.nav-link:hover,.nav-link.active{background:var(--bg2);color:var(--text)}.nav-actions{display:flex;align-items:center;gap:8px}.icon-btn{width:36px;height:36px;border:1.5px solid var(--border);border-radius:8px;background:var(--card);color:var(--text2);display:grid;place-items:center;transition:all .15s}.icon-btn:hover{color:var(--text);background:var(--bg2)}
+.page{width:min(900px,calc(100% - 32px));margin:0 auto;padding:34px 0 72px}.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow)}.btn{height:44px;padding:0 20px;border:1.5px solid var(--border);border-radius:10px;background:var(--card);color:var(--text);font-size:14px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:all .2s;cursor:pointer;text-decoration:none}.btn:hover{border-color:var(--border2);box-shadow:var(--shadow)}.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}.btn.primary:hover{box-shadow:0 6px 24px rgba(124,58,237,.3);transform:translateY(-1px)}.btn.sm{height:34px;padding:0 12px;font-size:12px}.full{width:100%}
+.writer-head{text-align:center;margin-bottom:28px}.writer-head h1{font-family:Outfit;font-size:28px;font-weight:800;margin:0;display:flex;align-items:center;justify-content:center;gap:8px}.writer-head p{font-size:14px;color:var(--text2);margin:4px 0 0}
+.mode-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px}.mode-btn{display:flex;flex-direction:column;align-items:center;gap:6px;padding:16px;border:1.5px solid var(--border);border-radius:12px;background:var(--bg);cursor:pointer;transition:all .2s;font-size:12px;font-weight:600;color:var(--text2)}.mode-btn:hover,.mode-btn.active{border-color:var(--accent);background:rgba(124,58,237,.04);color:var(--text)}.mode-btn.active{border-color:var(--accent);box-shadow:0 0 20px rgba(124,58,237,.08)}.mode-btn .mi{font-size:24px;margin-bottom:2px;color:var(--accent)}.writer-box{padding:20px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:14px}.writer-box label{font-size:12px;font-weight:700;color:var(--text2);margin-bottom:6px;display:block}.writer-box textarea{width:100%;min-height:120px;padding:12px;border:1.5px solid var(--border);border-radius:8px;background:var(--bg2);color:var(--text);font-size:14px;line-height:1.6;outline:none;resize:vertical;font-family:inherit;transition:border-color .2s}.writer-box textarea:focus{border-color:var(--accent);background:var(--bg)}.writer-box .output{min-height:160px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px;font-size:14px;line-height:1.6;color:var(--text);white-space:pre-wrap}
+@media(max-width:768px){.mode-grid{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<nav class="nav"><div class="nav-inner"><a href="index.html" class="brand"><span class="logo">O</span>OgaPay</a><div class="nav-links"><a href="post-task.html" class="nav-link"><i class="ti ti-square-plus"></i>Create</a><a href="writer.html" class="nav-link active"><i class="ti ti-edit"></i>Writer</a></div><div class="nav-actions"><button class="icon-btn" onclick="t()" title="Theme"><i class="ti ti-sun" id="ti"></i></button></div></div></nav>
+<main class="page">
+<div class="writer-head"><h1><i class="ti ti-edit" style="color:var(--accent)"></i> AI Writer</h1><p>Generate task descriptions, social posts, and marketing copy with AI.</p></div>
+<div class="mode-grid">
+  <div class="mode-btn active" onclick="selectMode(this,'task')"><div class="mi"><i class="ti ti-briefcase"></i></div>Task Description</div>
+  <div class="mode-btn" onclick="selectMode(this,'social')"><div class="mi"><i class="ti ti-brand-x"></i></div>Social Post</div>
+  <div class="mode-btn" onclick="selectMode(this,'product')"><div class="mi"><i class="ti ti-store"></i></div>Product Copy</div>
+  <div class="mode-btn" onclick="selectMode(this,"email")"><div class="mi"><i class="ti ti-mail"></i></div>Email</div>
+  <div class="mode-btn" onclick="selectMode(this,"campaign")"><div class="mi"><i class="ti ti-megaphone"></i></div>Campaign</div>
+  <div class="mode-btn" onclick="selectMode(this,'custom')"><div class="mi"><i class="ti ti-wand"></i></div>Custom Prompt</div>
+</div>
+<div class="writer-box"><label>Describe what you need</label><textarea id="writerInput" placeholder="e.g. Write a task description asking workers to follow our X page, like the pinned post, and leave a comment..."></textarea></div>
+<button class="btn primary full" onclick="generate()" id="genBtn"><i class="ti ti-sparkles"></i> Generate</button>
+<div class="writer-box" style="margin-top:14px"><label>Result</label><div class="output" id="writerOutput">Click generate to see AI-written content here.</div></div>
+<div style="display:flex;gap:8px;margin-top:4px">
+  <button class="btn sm" onclick="copyResult()"><i class="ti ti-copy"></i>Copy</button>
+  <button class="btn sm" onclick="document.getElementById('writerOutput').textContent='Click generate to see AI-written content here.'"><i class="ti ti-refresh"></i>Clear</button>
+</div>
+</main>
+<style>[data-theme="dark"] .nav-links .nav-link.active{background:var(--bg2)}</style>
+<script>
+let currentMode='task';const samples={'task':['We are looking for motivated workers to help promote our brand across social media platforms. Simply follow our official page, like the pinned post, and leave a thoughtful comment. Submit a screenshot of your engagement as proof of completion. This task takes less than 5 minutes and pays instantly upon verification.','Join our growing Telegram community and participate in the daily discussions. Must remain an active member for at least 24 hours after joining. Submit your Telegram username and a screenshot showing your membership.'],'social':['Ready to earn? OgaPay is looking for workers to complete simple social media tasks and earn instant rewards. Sign up today and start earning!','Join the fastest growing microtask marketplace in Nigeria. Complete tasks, earn Naira or USDC, and withdraw to your bank or crypto wallet.'],'product':['Premium X Banner Design - Custom designed X/Twitter header with your brand colors, logo, and call-to-action. Includes source files and 2 revisions.','Telegram Setup Package - Complete channel setup including bots, pinned posts, welcome messages, and a launch checklist. Everything you need to start growing.'],'email':['Hi there, Thanks for signing up for OgaPay! Start by completing your profile, then browse available tasks to begin earning. Welcome to the community!'],'campaign':['Boost your brand visibility with our multi-platform campaign package. Reach real Nigerian audiences across X, Instagram, and Telegram. Includes analytics report.'],'custom':['Generated content based on your custom prompt. Our AI will adapt the tone and style to match your requirements.']}
+function t(){const h=document.documentElement,d=h.getAttribute('data-theme')||'light',n=d==='light'?'dark':'light';h.setAttribute('data-theme',n);try{localStorage.setItem('ogapay-theme',n)}catch(e){}const i=document.getElementById('ti');if(i)i.className=n==='dark'?'ti ti-sun':'ti ti-moon'}
+(function(){const h=document.documentElement;h.setAttribute('data-theme',h.getAttribute('data-theme')||'light');const d=document.getElementById('ti');if(d)d.className=h.getAttribute('data-theme')==='dark'?'ti ti-sun':'ti ti-moon'})();
+function selectMode(el,m){document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active'));el.classList.add('active');currentMode=m}
+function generate(){const b=document.getElementById('genBtn'),o=document.getElementById('writerOutput');b.disabled=true;b.innerHTML='<i class="ti ti-loader-2" style="animation:spin 1s linear infinite"></i> Writing...';setTimeout(()=>{const opts=samples[currentMode]||samples.task;o.textContent=opts[Math.floor(Math.random()*opts.length)];b.disabled=false;b.innerHTML='<i class="ti ti-sparkles"></i> Generate'},600)}
+function copyResult(){const t=document.getElementById('writerOutput').textContent;navigator.clipboard&&navigator.clipboard.writeText(t);const e=document.getElementById('toast');if(e){e.textContent='Copied!';e.classList.add('show');setTimeout(()=>e.classList.remove('show'),1800)}}
+</script>
+</body>
+</html>

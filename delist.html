@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Delist Request - OgaPay</title>
+<script>(function(){try{document.documentElement.setAttribute('data-theme',localStorage.getItem('ogapay-theme')||'light')}catch(e){}})();</script>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800;900&family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+<style>:root{--bg:#ffffff;--bg2:#f7f9fc;--card:#ffffff;--border:#e4e9f1;--text:#101525;--text2:#66738a;--radius:14px;--radius-sm:10px;--nav-h:60px}[data-theme="dark"]{--bg:#080b13;--bg2:#0d111d;--card:#111725;--border:#222b3c;--text:#f4f7fb;--text2:#9aa7bc}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif}a{color:inherit;text-decoration:none}button,input,textarea{font:inherit}button{cursor:pointer}
+.nav{position:sticky;top:0;z-index:100;height:var(--nav-h);background:rgba(255,255,255,.92);border-bottom:1px solid var(--border);backdrop-filter:blur(18px)}[data-theme="dark"] .nav{background:rgba(8,11,19,.92)}
+.nav-inner{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:22px;height:100%;width:min(800px,calc(100% - 32px));margin:0 auto}.brand{display:flex;align-items:center;gap:10px;font-family:"Outfit";font-weight:800;font-size:19px}.logo{width:34px;height:34px;border-radius:9px;background:var(--primary,#0d1323);color:var(--bg);display:grid;place-items:center;font-size:18px}
+.page{width:min(800px,calc(100% - 32px));margin:0 auto;padding:34px 0 72px}.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:24px}.card h1{font-family:Outfit;font-size:24px;font-weight:800;margin:0 0 6px}.card p{font-size:14px;color:var(--text2);margin:0 0 16px}.fg{margin-bottom:14px}.fg label{font-size:12px;font-weight:700;color:var(--text2);margin-bottom:5px;display:block}.fg input,.fg select,.fg textarea{width:100%;height:44px;padding:0 12px;border:1.5px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font-size:14px;outline:none;font-family:inherit}.fg textarea{height:80px;padding:10px 12px;resize:vertical}.btn{height:44px;padding:0 20px;border:1.5px solid var(--border);border-radius:10px;background:var(--card);color:var(--text);font-size:14px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:all .2s;text-decoration:none;cursor:pointer}.btn.primary{background:var(--accent,#7C3AED);color:#fff;border-color:var(--accent,#7C3AED)}.full{width:100%}
+</style>
+</head>
+<body>
+<nav class="nav"><div class="nav-inner"><a href="index.html" class="brand"><span class="logo">O</span>OgaPay</a></div></nav>
+<main class="page"><div class="card"><h1>Request Delist</h1><p>Request removal of your content from the OgaPay marketplace.</p>
+<div class="fg"><label>Content type</label><select><option>Task listing</option><option>Product / Store item</option><option>Community</option><option>Account</option></select></div>
+<div class="fg"><label>Content ID or URL</label><input placeholder="e.g. task/abc123 or product/xyz" /></div>
+<div class="fg"><label>Reason</label><textarea placeholder="Why do you want this content delisted?" rows="3"></textarea></div>
+<button class="btn primary full"><i class="ti ti-send"></i>Submit Delist Request</button></div></main>
+</body>
+</html>
