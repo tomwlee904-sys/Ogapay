@@ -4,50 +4,209 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Wallet - OgaPay</title>
-<script>(function(){try{document.documentElement.setAttribute('data-theme',localStorage.getItem('ogapay-theme')||'light')}catch(e){document.documentElement.setAttribute('data-theme','light')}})();</script>
+<script>(function(){try{document.documentElement.setAttribute('data-theme',localStorage.getItem('ogapay-theme')||'light')}catch(e){}})();</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800;900&family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
 <style>
-:root{
-  --bg:#ffffff;--bg2:#f7f9fc;--card:#ffffff;--border:#e4e9f1;--border2:#d5deea;--text:#101525;--text2:#66738a;--text3:#98a6ba;--primary:#0d1323;--accent:#7C3AED;--accent2:#2563EB;--brand-blue:linear-gradient(90deg,#2563EB,#3B82F6,#60A5FA,#93C5FD);--earn-gradient:linear-gradient(90deg,#7C3AED,#A78BFA,#6366F1,#C4B5FD,#7C3AED);--gold:#f5b301;--soft-purple:#f4f6fa;--soft-blue:#eef6ff;--shadow:0 4px 16px rgba(16,21,37,.07),0 1px 4px rgba(16,21,37,.04);--shadow-soft:0 2px 8px rgba(16,21,37,.05);--radius:14px;--nav-h:60px;
-}
-[data-theme="dark"]{
-  --bg:#080b13;--bg2:#0d111d;--card:#111725;--border:#222b3c;--border2:#2d384d;--text:#f4f7fb;--text2:#9aa7bc;--text3:#667186;--primary:#f4f7fb;--accent:#A78BFA;--accent2:#60A5FA;--soft-purple:#111725;--soft-blue:#0d1d34;--shadow:0 4px 16px rgba(0,0,0,.28),0 1px 4px rgba(0,0,0,.18);--shadow-soft:0 2px 8px rgba(0,0,0,.22);
-}
-*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--text);font-family:"DM Sans",system-ui,sans-serif;overflow-x:hidden}a{color:inherit;text-decoration:none}button,input,select,textarea{font:inherit}button{cursor:pointer}
+:root{--bg:#ffffff;--bg2:#f7f9fc;--card:#ffffff;--border:#e4e9f1;--border2:#d5deea;--text:#101525;--text2:#66738a;--text3:#98a6ba;--primary:#0d1323;--accent:#7C3AED;--accent2:#2563EB;--green:#16a34a;--gold:#f5b301;--brand-blue:linear-gradient(90deg,#2563EB,#3B82F6,#60A5FA,#93C5FD);--earn-gradient:linear-gradient(90deg,#7C3AED,#A78BFA,#6366F1,#C4B5FD,#7C3AED);--shadow:0 4px 16px rgba(16,21,37,.07),0 1px 4px rgba(16,21,37,.04);--shadow-soft:0 2px 8px rgba(16,21,37,.05);--shadow-glow:0 0 30px rgba(124,58,237,.15);--radius:14px;--radius-sm:10px;--nav-h:60px}
+[data-theme="dark"]{--bg:#080b13;--bg2:#0d111d;--card:#111725;--border:#222b3c;--border2:#2d384d;--text:#f4f7fb;--text2:#9aa7bc;--text3:#667186;--primary:#f4f7fb;--accent:#A78BFA;--accent2:#60A5FA;--soft-purple:#111725;--shadow:0 4px 16px rgba(0,0,0,.28),0 1px 4px rgba(0,0,0,.18)}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--text);font-family:"DM Sans",system-ui,sans-serif;overflow-x:hidden}a{color:inherit;text-decoration:none}button,input,select{font:inherit}button{cursor:pointer}
 .nav{position:sticky;top:0;z-index:100;height:var(--nav-h);background:rgba(255,255,255,.92);border-bottom:1px solid var(--border);backdrop-filter:blur(18px) saturate(1.4)}[data-theme="dark"] .nav{background:rgba(8,11,19,.92)}
-.nav-inner{height:100%;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:22px;width:min(1200px,calc(100% - 48px));margin:0 auto}.brand{display:flex;align-items:center;gap:10px;font-family:"Outfit";font-weight:800;font-size:19px}.logo{width:34px;height:34px;border-radius:9px;background:var(--primary);color:var(--bg);display:grid;place-items:center;font-size:18px}.nav-links{display:flex;justify-content:center;gap:4px}.nav-link{display:inline-flex;align-items:center;gap:7px;padding:7px 10px;border-radius:8px;color:var(--text2);font-size:14px;font-weight:700}.nav-link:hover,.nav-link.active{background:var(--bg2);color:var(--text)}.nav-actions{display:flex;align-items:center;gap:8px}.icon-btn,.menu-btn{width:36px;height:36px;border:1.5px solid var(--border);border-radius:8px;background:var(--card);color:var(--text2);display:grid;place-items:center}.icon-btn:hover,.menu-btn:hover{color:var(--text);background:var(--bg2);border-color:var(--border2)}.pill-btn{height:36px;border:1.5px solid var(--border2);border-radius:999px;background:var(--primary);color:var(--bg);display:inline-flex;align-items:center;gap:8px;padding:0 16px;font-weight:800;font-size:13px}
-.app{display:flex;min-height:calc(100vh - var(--nav-h))}.sidebar{width:244px;position:sticky;top:var(--nav-h);height:calc(100vh - var(--nav-h));border-right:1px solid var(--border);background:var(--bg);padding:14px 10px;overflow:auto;display:none}body.is-authed .sidebar{display:block}.sb-cta{display:flex;align-items:center;justify-content:center;gap:8px;margin:0 0 12px;padding:10px 14px;border-radius:999px;background:var(--primary);color:var(--bg);font-weight:800;font-size:13px}.sb-label,.drawer-section{display:block;padding:12px 8px 5px;color:var(--text3);font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1.4px}.sb-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:9px;color:var(--text2);font-size:13.5px;font-weight:700}.sb-item:hover,.sb-item.active{background:var(--bg2);color:var(--text)}.sb-icon{width:30px;height:30px;border:1px solid var(--border);border-radius:8px;background:var(--bg2);display:grid;place-items:center;color:var(--text3)}.sb-user{margin:14px 0 0;padding:12px;border:1px solid var(--border);border-radius:12px;background:var(--bg2);display:flex;gap:10px;align-items:center}.avatar-mini{width:34px;height:34px;border-radius:50%;background:var(--brand-blue);display:grid;place-items:center;color:var(--card);font-weight:900}.main{flex:1;min-width:0}.page{width:min(1120px,calc(100% - 48px));margin:0 auto;padding:34px 0 72px}.page-head{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-bottom:22px}.eyebrow{display:inline-flex;align-items:center;gap:7px;padding:5px 10px;border:1px solid var(--border);border-radius:999px;color:var(--text2);font-size:12px;font-weight:800}.page h1{font-family:"Outfit";font-size:clamp(30px,4vw,46px);letter-spacing:-1.2px;margin:10px 0 8px}.lead{margin:0;color:var(--text2);max-width:680px;line-height:1.65}.grid{display:grid;gap:16px}.grid.cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}.grid.cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}.grid.cols-4{grid-template-columns:repeat(4,minmax(0,1fr))}.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-soft);padding:18px}.card h2,.card h3{font-family:"Outfit";margin:0 0 10px}.muted{color:var(--text2)}.small{font-size:12.5px;color:var(--text3)}.stat{font-family:"Outfit";font-size:26px;font-weight:900}.badge{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border);background:var(--bg2);border-radius:999px;padding:5px 9px;font-size:12px;font-weight:800;color:var(--text2)}.btn{border:1.5px solid var(--border2);background:var(--card);color:var(--text);border-radius:10px;height:40px;padding:0 14px;display:inline-flex;align-items:center;justify-content:center;gap:8px;font-weight:800}.btn.primary{background:var(--primary);color:var(--bg);border-color:var(--primary)}.btn.danger{color:var(--accent);border-color:var(--border)}.row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.space{justify-content:space-between}.table{width:100%;border-collapse:collapse}.table th,.table td{padding:12px 10px;border-bottom:1px solid var(--border);text-align:left;font-size:13.5px}.table th{color:var(--text3);text-transform:uppercase;font-size:11px;letter-spacing:1px}.form{display:grid;gap:12px}.field{display:grid;gap:6px}.field label{font-size:12px;font-weight:800;color:var(--text2)}.field input,.field select,.field textarea{width:100%;border:1.5px solid var(--border);border-radius:10px;background:var(--bg);color:var(--text);padding:11px 12px}.switch{width:46px;height:26px;border-radius:999px;background:var(--bg2);border:1px solid var(--border);position:relative}.switch:after{content:"";position:absolute;width:20px;height:20px;border-radius:50%;background:var(--text3);left:3px;top:2px}.switch.on:after{left:21px;background:var(--accent2)}.progress{height:9px;border-radius:999px;background:var(--bg2);overflow:hidden}.bar{height:100%;border-radius:inherit;background:var(--brand-blue)}.drawer{position:fixed;inset:0;z-index:300;display:none}.drawer.open{display:block}.overlay{position:absolute;inset:0;background:rgba(0,0,0,.36);backdrop-filter:blur(3px)}.drawer-panel{position:absolute;right:0;top:0;bottom:0;width:min(340px,92vw);background:var(--bg);border-left:1px solid var(--border);padding:16px;overflow:auto}.drawer-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}.drawer-link{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:10px;color:var(--text2);font-weight:800}.drawer-link:hover,.drawer-link.active{background:var(--bg2);color:var(--text)}.toast{position:fixed;right:18px;bottom:18px;background:var(--primary);color:var(--bg);border-radius:12px;padding:12px 14px;font-weight:800;box-shadow:var(--shadow);opacity:0;transform:translateY(8px);transition:.2s;z-index:400}.toast.show{opacity:1;transform:translateY(0)}
-@media(max-width:860px){.nav-links,.pill-btn{display:none}.nav-inner{width:min(100% - 28px,1200px)}.sidebar{display:none!important}.page{width:min(100% - 28px,1120px);padding-top:24px}.page-head{display:block}.grid.cols-2,.grid.cols-3,.grid.cols-4{grid-template-columns:1fr}.table-wrap{overflow:auto}.table{min-width:680px}body{padding-bottom:92px}
-.mobile-bottom-nav{position:fixed;left:0;right:0;bottom:0;z-index:250;display:grid;grid-template-columns:repeat(5,1fr);align-items:end;height:88px;padding:8px 12px 10px;background:rgba(255,255,255,.96);border-top:1px solid var(--border);box-shadow:0 -10px 30px rgba(16,21,37,.08);backdrop-filter:blur(18px) saturate(1.25)}
-[data-theme="dark"] .mobile-bottom-nav{background:rgba(5,7,11,.96);border-top-color:#252b36;box-shadow:none}
-.mobile-bottom-nav a{min-width:0;display:grid;justify-items:center;gap:4px;color:#66738a;font-size:13px;font-weight:800}
-.mobile-bottom-nav svg{width:28px;height:28px;stroke-width:2.2}
-.mobile-bottom-nav .active,.mobile-bottom-nav a:hover{color:#101525}
-[data-theme="dark"] .mobile-bottom-nav a{color:#8b96a8}
-[data-theme="dark"] .mobile-bottom-nav .active,[data-theme="dark"] .mobile-bottom-nav a:hover{color:#f8fafc}
-.mobile-bottom-nav .create{transform:translateY(-18px);gap:5px;color:#101525}
-.mobile-bottom-nav .create svg{width:58px;height:58px;padding:15px;border-radius:18px;background:#101525;color:#fff;box-shadow:0 10px 22px rgba(16,21,37,.24)}
-[data-theme="dark"] .mobile-bottom-nav .create svg{background:#f8fafc;color:#05070b;box-shadow:0 0 22px rgba(167,139,250,.18)}
-.profile-dot{width:34px;height:34px;border-radius:50%;background:#05070b;display:block;box-shadow:inset 0 0 0 1px rgba(255,255,255,.14)}
-[data-theme="dark"] .profile-dot{background:#e5e7eb}}
+.nav-inner{height:100%;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:22px;width:min(1200px,calc(100% - 48px));margin:0 auto}.brand{display:flex;align-items:center;gap:10px;font-family:"Outfit";font-weight:800;font-size:19px}.logo{width:34px;height:34px;border-radius:9px;background:var(--primary);color:var(--bg);display:grid;place-items:center;font-size:18px}.nav-links{display:flex;justify-content:center;gap:4px}.nav-link{display:inline-flex;align-items:center;gap:7px;padding:7px 10px;border-radius:8px;color:var(--text2);font-size:14px;font-weight:700}.nav-link:hover,.nav-link.active{background:var(--bg2);color:var(--text)}.nav-actions{display:flex;align-items:center;gap:8px}.icon-btn,.menu-btn{width:36px;height:36px;border:1.5px solid var(--border);border-radius:8px;background:var(--card);color:var(--text2);display:grid;place-items:center}.icon-btn:hover,.menu-btn:hover{color:var(--text);background:var(--bg2);border-color:var(--border2)}
+.app{display:flex;min-height:calc(100vh - var(--nav-h))}.sidebar{width:244px;position:sticky;top:var(--nav-h);height:calc(100vh - var(--nav-h));border-right:1px solid var(--border);background:var(--bg);padding:14px 10px;overflow:auto;display:none}body.is-authed .sidebar{display:block}.sb-cta{display:flex;align-items:center;justify-content:center;gap:8px;margin:0 0 12px;padding:10px 14px;border-radius:999px;background:var(--primary);color:var(--bg);font-weight:800;font-size:13px}.sb-label{display:block;padding:12px 8px 5px;color:var(--text3);font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1.4px}.sb-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:9px;color:var(--text2);font-size:13.5px;font-weight:700}.sb-item:hover,.sb-item.active{background:var(--bg2);color:var(--text)}.sb-icon{width:30px;height:30px;border:1px solid var(--border);border-radius:8px;background:var(--bg2);display:grid;place-items:center;color:var(--text3)}.sb-user{margin:14px 0 0;padding:12px;border:1px solid var(--border);border-radius:12px;background:var(--bg2);display:flex;gap:10px;align-items:center}.avatar-mini{width:34px;height:34px;border-radius:50%;background:var(--brand-blue);display:grid;place-items:center;color:var(--card);font-weight:900}.main{flex:1;min-width:0}.page{width:min(1120px,calc(100% - 48px));margin:0 auto;padding:34px 0 72px}.page-head{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-bottom:22px}.eyebrow{display:inline-flex;align-items:center;gap:7px;padding:5px 10px;border:1px solid var(--border);border-radius:999px;color:var(--text2);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.8px}.eyebrow i{font-size:15px;color:var(--accent)}.lead{color:var(--text2);font-size:16px;line-height:1.7;margin:6px 0 0}.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-soft)}.btn{height:48px;padding:0 24px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--card);color:var(--text);font-size:15px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:all .2s;text-decoration:none;cursor:pointer}.btn:hover{border-color:var(--border2);box-shadow:var(--shadow)}.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}.btn.primary:hover{box-shadow:0 6px 24px rgba(124,58,237,.3);transform:translateY(-1px)}.btn.sm{height:38px;padding:0 16px;font-size:13px}.btn.outline{background:transparent;border-color:var(--accent);color:var(--accent)}.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:800}.badge-green{background:rgba(22,163,74,.12);color:var(--green)}.badge-gold{background:rgba(245,179,1,.12);color:var(--gold)}.badge-accent{background:rgba(124,58,237,.12);color:var(--accent)}.badge-blue{background:rgba(37,99,235,.1);color:var(--accent2)}.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(100px);padding:12px 28px;border-radius:999px;background:var(--primary);color:var(--bg);font-weight:700;font-size:14px;z-index:999;opacity:0;transition:all .35s;pointer-events:none;white-space:nowrap}.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}.modal{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;visibility:hidden;opacity:0;transition:all .3s}.modal.open{visibility:visible;opacity:1}.modal-overlay{position:absolute;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(4px)}.modal-panel{position:relative;width:min(440px,calc(100% - 32px));background:var(--card);border:1px solid var(--border);border-radius:20px;padding:28px;transform:translateY(20px);transition:all .3s}.modal.open .modal-panel{transform:translateY(0)}.modal-panel h2{margin:0 0 4px;font-family:Outfit;font-size:20px}.modal-panel p{color:var(--text2);font-size:14px;margin:0 0 20px}.form-group{margin-bottom:16px}.form-group label{display:block;font-size:12px;font-weight:700;color:var(--text2);margin-bottom:5px}.form-group input,.form-group select{width:100%;height:48px;padding:0 14px;border:1.5px solid var(--border);border-radius:10px;background:var(--bg);color:var(--text);font-size:15px;outline:none;transition:border-color .2s}.form-group input:focus,.form-group select:focus{border-color:var(--accent)}
+/* Wallet specific */
+.bal-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}.bal-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;position:relative;overflow:hidden}.bal-card .icon-wrap{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;font-size:22px;margin-bottom:10px}.bal-card .b-label{font-size:12px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.5px}.bal-card .b-amount{font-family:Outfit;font-size:28px;font-weight:800;letter-spacing:-1px;margin:4px 0 6px}.bal-card .b-sub{font-size:12px;color:var(--text2)}.bal-card .b-actions{display:flex;gap:6px;margin-top:12px}.bal-card .b-actions .btn{flex:1;height:36px;font-size:12px;padding:0 12px;border-radius:8px}
+.bal-ngn .icon-wrap{background:rgba(22,163,74,.1);color:var(--green)}.bal-usdc .icon-wrap{background:rgba(37,99,235,.1);color:var(--accent2)}.bal-usdt .icon-wrap{background:rgba(245,179,1,.1);color:var(--gold)}
+.tx-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px}.tx-filters{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}.tx-filter{height:32px;padding:0 14px;border:1px solid var(--border);border-radius:999px;background:var(--bg);color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;transition:all .2s}.tx-filter:hover,.tx-filter.active{border-color:var(--accent);color:var(--accent);background:var(--soft-purple)}.tx-list{display:grid;gap:0}.tx-item{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)}.tx-item:last-child{border:0}.tx-dot{width:36px;height:36px;border-radius:10px;background:var(--bg2);border:1px solid var(--border);display:grid;place-items:center;font-size:18px;flex-shrink:0}.tx-info{flex:1;min-width:0}.tx-info .t{font-size:13px;font-weight:600}.tx-info .m{font-size:11px;color:var(--text3);margin-top:1px}.tx-amt{font-size:14px;font-weight:700}.tx-amt.credit{color:var(--green)}.tx-amt.debit{color:var(--text)}.tx-status{font-size:10px;padding:2px 8px;border-radius:999px;font-weight:700}.tx-status.completed{background:rgba(22,163,74,.1);color:var(--green)}.tx-status.pending{background:rgba(245,179,1,.1);color:var(--gold)}.tx-status.failed{background:rgba(239,68,68,.1);color:var(--red)}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}.rate-card{display:flex;align-items:center;justify-content:space-between;padding:8px 0}.rate-label{font-size:13px;color:var(--text2)}.rate-val{font-weight:700;font-size:14px}
+@media(max-width:1024px){.page{width:min(1120px,calc(100% - 32px))}.bal-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:768px){.app{flex-direction:column}.sidebar{display:none!important}.page{padding:20px 0 100px}.bal-grid{grid-template-columns:1fr}.grid-2{grid-template-columns:1fr}}
 </style>
 </head>
-<body data-page="wallet.html">
-<header class="nav"><div class="nav-inner"><a class="brand" href="index.html"><span class="logo"><i class="ti ti-layout-grid"></i></span><span>Oga<span>Pay</span></span></a><nav class="nav-links"><a class="nav-link" href="index.html" data-navlink><i class="ti ti-home"></i>Home</a><a class="nav-link" href="tasks.html" data-navlink><i class="ti ti-layout-grid"></i>Tasks</a><a class="nav-link" href="store.html" data-navlink><i class="ti ti-discount-2"></i>Deals</a><a class="nav-link" href="communities.html" data-navlink><i class="ti ti-users-group"></i>Communities</a><a class="nav-link" href="index.html#footer" data-navlink><i class="ti ti-help-circle"></i>FAQ</a></nav><div class="nav-actions"><a class="pill-btn nav-auth-only" href="post-task.html"><i class="ti ti-square-plus"></i>Post Task</a><button class="icon-btn" id="themeToggle" aria-label="Toggle dark mode"><i class="ti ti-moon"></i></button><button class="menu-btn" id="menuBtn" aria-label="Open menu"><i class="ti ti-menu-2"></i></button></div></div></header>
-<div class="drawer" id="mobileMenu"><div class="overlay" data-close-menu></div><aside class="drawer-panel"><div class="drawer-head"><a class="brand" href="index.html"><span class="logo"><i class="ti ti-layout-grid"></i></span>OgaPay</a><button class="icon-btn" data-close-menu aria-label="Close menu"><i class="ti ti-x"></i></button></div><div class="drawer-section">Main</div><a class="drawer-link" href="dashboard.html" data-close-menu><i class="ti ti-dashboard"></i><span>Overview</span></a><a class="drawer-link" href="profile.html" data-close-menu><i class="ti ti-user-circle"></i><span>My Profile</span></a><a class="drawer-link active" href="wallet.html" data-close-menu><i class="ti ti-wallet"></i><span>Wallet</span></a><a class="drawer-link" href="notifications.html" data-close-menu><i class="ti ti-bell"></i><span>Notifications</span></a><a class="drawer-link" href="messages.html" data-close-menu><i class="ti ti-message-2"></i><span>Messages</span></a><div class="drawer-section">Earn</div><a class="drawer-link" href="tasks.html" data-close-menu><i class="ti ti-briefcase"></i><span>Browse Tasks</span></a><a class="drawer-link" href="monitor.html" data-close-menu><i class="ti ti-eye"></i><span>Job Monitor</span></a><a class="drawer-link" href="my-tasks.html" data-close-menu><i class="ti ti-checklist"></i><span>My Tasks</span></a><a class="drawer-link" href="communities.html" data-close-menu><i class="ti ti-users-group"></i><span>Communities</span></a><a class="drawer-link" href="worker.html" data-close-menu><i class="ti ti-id-badge-2"></i><span>Worker Portal</span></a><a class="drawer-link" href="leaderboard.html" data-close-menu><i class="ti ti-trophy"></i><span>Leaderboard</span></a><div class="drawer-section">Business</div><a class="drawer-link" href="post-task.html" data-close-menu><i class="ti ti-square-plus"></i><span>Post Task</span></a><a class="drawer-link" href="analytics.html" data-close-menu><i class="ti ti-chart-line"></i><span>Analytics</span></a><div class="drawer-section">Growth</div><a class="drawer-link" href="referrals.html" data-close-menu><i class="ti ti-link"></i><span>Referrals</span></a><a class="drawer-link" href="vault.html" data-close-menu><i class="ti ti-building-bank"></i><span>Rewards Vault</span></a><div class="drawer-section">Account</div><a class="drawer-link" href="kyc.html" data-close-menu><i class="ti ti-shield-check"></i><span>KYC</span></a><a class="drawer-link" href="settings.html" data-close-menu><i class="ti ti-settings"></i><span>Settings</span></a><div class="card" style="margin-top:12px"><div class="small">Preview auth state</div><div class="row" style="margin-top:10px"><button class="btn primary" id="authOn">Authed</button><button class="btn" id="authOff">Public</button></div></div></aside></div>
-<div class="app"><aside class="sidebar"><a class="sb-cta" href="post-task.html"><i class="ti ti-square-plus"></i>Post a Task</a><span class="sb-label">Main</span><a class="sb-item" href="dashboard.html"><span class="sb-icon"><i class="ti ti-dashboard"></i></span>Overview</a><a class="sb-item" href="profile.html"><span class="sb-icon"><i class="ti ti-user-circle"></i></span>My Profile</a><a class="sb-item active" href="wallet.html"><span class="sb-icon"><i class="ti ti-wallet"></i></span>Wallet</a><a class="sb-item" href="notifications.html"><span class="sb-icon"><i class="ti ti-bell"></i></span>Notifications</a><a class="sb-item" href="messages.html"><span class="sb-icon"><i class="ti ti-message-2"></i></span>Messages</a><span class="sb-label">Earn</span><a class="sb-item" href="tasks.html"><span class="sb-icon"><i class="ti ti-briefcase"></i></span>Browse Tasks</a><a class="sb-item" href="monitor.html"><span class="sb-icon"><i class="ti ti-eye"></i></span>Job Monitor</a><a class="sb-item" href="my-tasks.html"><span class="sb-icon"><i class="ti ti-checklist"></i></span>My Tasks</a><a class="sb-item" href="communities.html"><span class="sb-icon"><i class="ti ti-users-group"></i></span>Communities</a><a class="sb-item" href="worker.html"><span class="sb-icon"><i class="ti ti-id-badge-2"></i></span>Worker Portal</a><a class="sb-item" href="leaderboard.html"><span class="sb-icon"><i class="ti ti-trophy"></i></span>Leaderboard</a><span class="sb-label">Business</span><a class="sb-item" href="post-task.html"><span class="sb-icon"><i class="ti ti-square-plus"></i></span>Post Task</a><a class="sb-item" href="analytics.html"><span class="sb-icon"><i class="ti ti-chart-line"></i></span>Analytics</a><span class="sb-label">Growth</span><a class="sb-item" href="referrals.html"><span class="sb-icon"><i class="ti ti-link"></i></span>Referrals</a><a class="sb-item" href="vault.html"><span class="sb-icon"><i class="ti ti-building-bank"></i></span>Rewards Vault</a><span class="sb-label">Account</span><a class="sb-item" href="kyc.html"><span class="sb-icon"><i class="ti ti-shield-check"></i></span>KYC</a><a class="sb-item" href="settings.html"><span class="sb-icon"><i class="ti ti-settings"></i></span>Settings</a><div class="sb-user"><div class="avatar-mini">AD</div><div><strong>Ada Danladi</strong><div class="small">Worker · KYC verified</div></div></div></aside><main class="main"><section class="page"><div class="page-head"><div><span class="eyebrow"><i class="ti ti-wallet"></i>Wallet</span><h1>Wallet</h1><p class="lead">Balances, Nigerian bank withdrawals, USDC rails, and transaction history.</p></div></div><div class="grid cols-3"><div class="card"><div class="small">Naira balance</div><div class="stat">₦131,400</div><button class="btn primary">Withdraw</button></div><div class="card"><div class="small">USDC balance</div><div class="stat">42.8</div><button class="btn primary">Send USDC</button></div><div class="card"><div class="small">Pending escrow</div><div class="stat">₦18,200</div></div></div><article class="card" style="margin-top:16px"><h3>Transactions</h3><table class="table"><tbody><tr><td>Task payout</td><td>₦4,200</td><td>Completed</td></tr><tr><td>USDC withdrawal</td><td>12 USDC</td><td>Processing</td></tr><tr><td>Referral commission</td><td>₦1,850</td><td>Completed</td></tr></tbody></table></article></section></main></div><div class="toast" id="toast">Done</div>
+<body>
+<nav class="nav"><div class="nav-inner"><a href="index.html" class="brand"><span class="logo">O</span>OgaPay</a><div class="nav-links"><a href="tasks.html" class="nav-link"><i class="ti ti-briefcase"></i>Browse</a><a href="dashboard.html" class="nav-link"><i class="ti ti-dashboard"></i>Dashboard</a><a href="wallet.html" class="nav-link active"><i class="ti ti-wallet"></i>Wallet</a><a href="post-task.html" class="nav-link"><i class="ti ti-square-plus"></i>Create</a></div><div class="nav-actions"><button class="icon-btn" onclick="t()" title="Theme"><i class="ti ti-sun" id="ti"></i></button><button class="menu-btn" onclick="document.querySelector('.drawer').classList.toggle('open')"><i class="ti ti-menu-2"></i></button></div></div></nav>
+<aside class="drawer" style="position:fixed;top:0;right:0;width:300px;height:100dvh;z-index:200;background:var(--card);border-left:1px solid var(--border);transform:translateX(100%);transition:transform .3s;overflow-y:auto"><div style="padding:24px 16px">
+<a href="dashboard.html" class="drawer-link"><i class="ti ti-dashboard"></i>Dashboard</a>
+<a href="profile.html" class="drawer-link"><i class="ti ti-user-circle"></i>Profile</a>
+<a href="wallet.html" class="drawer-link"><i class="ti ti-wallet"></i>Wallet</a>
+<a href="tasks.html" class="drawer-link"><i class="ti ti-briefcase"></i>Browse Tasks</a>
+<a href="my-tasks.html" class="drawer-link"><i class="ti ti-checklist"></i>My Tasks</a>
+<a href="post-task.html" class="drawer-link"><i class="ti ti-square-plus"></i>Post Task</a>
+<a href="monitor.html" class="drawer-link"><i class="ti ti-eye"></i>Job Monitor</a>
+<a href="communities.html" class="drawer-link"><i class="ti ti-users-group"></i>Communities</a>
+<a href="notifications.html" class="drawer-link"><i class="ti ti-bell"></i>Notifications</a>
+<a href="messages.html" class="drawer-link"><i class="ti ti-message-2"></i>Messages</a>
+<a href="analytics.html" class="drawer-link"><i class="ti ti-chart-line"></i>Analytics</a>
+<a href="referrals.html" class="drawer-link"><i class="ti ti-link"></i>Referrals</a>
+<a href="vault.html" class="drawer-link"><i class="ti ti-building-bank"></i>Rewards Vault</a>
+<a href="kyc.html" class="drawer-link"><i class="ti ti-shield-check"></i>KYC</a>
+<a href="settings.html" class="drawer-link"><i class="ti ti-settings"></i>Settings</a>
+</div></aside>
+<div class="app"><aside class="sidebar">
+<a class="sb-cta" href="post-task.html"><i class="ti ti-square-plus"></i>Post a Task</a>
+<span class="sb-label">Main</span>
+<a class="sb-item" href="dashboard.html"><span class="sb-icon"><i class="ti ti-dashboard"></i></span>Overview</a>
+<a class="sb-item" href="profile.html"><span class="sb-icon"><i class="ti ti-user-circle"></i></span>My Profile</a>
+<a class="sb-item active" href="wallet.html"><span class="sb-icon"><i class="ti ti-wallet"></i></span>Wallet</a>
+<a class="sb-item" href="notifications.html"><span class="sb-icon"><i class="ti ti-bell"></i></span>Notifications</a>
+<a class="sb-item" href="messages.html"><span class="sb-icon"><i class="ti ti-message-2"></i></span>Messages</a>
+<span class="sb-label">Earn</span>
+<a class="sb-item" href="tasks.html"><span class="sb-icon"><i class="ti ti-briefcase"></i></span>Browse Tasks</a>
+<a class="sb-item" href="monitor.html"><span class="sb-icon"><i class="ti ti-eye"></i></span>Job Monitor</a>
+<a class="sb-item" href="my-tasks.html"><span class="sb-icon"><i class="ti ti-checklist"></i></span>My Tasks</a>
+<a class="sb-item" href="communities.html"><span class="sb-icon"><i class="ti ti-users-group"></i></span>Communities</a>
+<a class="sb-item" href="leaderboard.html"><span class="sb-icon"><i class="ti ti-trophy"></i></span>Leaderboard</a>
+<span class="sb-label">Business</span>
+<a class="sb-item" href="post-task.html"><span class="sb-icon"><i class="ti ti-square-plus"></i></span>Post Task</a>
+<a class="sb-item" href="analytics.html"><span class="sb-icon"><i class="ti ti-chart-line"></i></span>Analytics</a>
+<span class="sb-label">Growth</span>
+<a class="sb-item" href="referrals.html"><span class="sb-icon"><i class="ti ti-link"></i></span>Referrals</a>
+<a class="sb-item" href="vault.html"><span class="sb-icon"><i class="ti ti-building-bank"></i></span>Rewards Vault</a>
+<span class="sb-label">Account</span>
+<a class="sb-item" href="kyc.html"><span class="sb-icon"><i class="ti ti-shield-check"></i></span>KYC</a>
+<a class="sb-item" href="settings.html"><span class="sb-icon"><i class="ti ti-settings"></i></span>Settings</a>
+<div class="sb-user"><div class="avatar-mini">AD</div><div><strong>Ada Danladi</strong><div class="small">Worker <span class="badge badge-accent" style="font-size:9px;padding:1px 6px">Advanced</span></div></div></div>
+</aside><main class="main"><section class="page">
+<div class="page-head">
+  <div>
+    <span class="eyebrow"><i class="ti ti-wallet"></i>Wallet</span>
+    <h1 style="font-size:clamp(24px,3vw,36px)">Your Wallet</h1>
+    <p class="lead">Manage balances, deposit Naira or Crypto, withdraw to bank or wallet.</p>
+  </div>
+  <button class="btn primary" onclick="openModal('deposit')"><i class="ti ti-plus"></i>Deposit</button>
+</div>
+
+<!-- Balance Cards -->
+<div class="bal-grid">
+  <div class="bal-card bal-ngn">
+    <div class="icon-wrap"><i class="ti ti-currency-naira"></i></div>
+    <div class="b-label">Naira Balance</div>
+    <div class="b-amount">₦131,400</div>
+    <div class="b-sub">≈ $87.60 USD</div>
+    <div class="b-actions">
+      <button class="btn primary sm" onclick="openModal('deposit')"><i class="ti ti-plus"></i>Deposit</button>
+      <button class="btn sm" onclick="openModal('withdraw')"><i class="ti ti-arrow-up"></i>Withdraw</button>
+    </div>
+  </div>
+  <div class="bal-card bal-usdc">
+    <div class="icon-wrap"><i class="ti ti-coin"></i></div>
+    <div class="b-label">USDC Balance</div>
+    <div class="b-amount">42.8</div>
+    <div class="b-sub">≈ $42.80 USD</div>
+    <div class="b-actions">
+      <button class="btn primary sm" onclick="openModal('deposit-crypto')"><i class="ti ti-plus"></i>Buy</button>
+      <button class="btn sm" onclick="openModal('send-crypto')"><i class="ti ti-arrow-up"></i>Send</button>
+    </div>
+  </div>
+  <div class="bal-card bal-usdt">
+    <div class="icon-wrap"><i class="ti ti-coin"></i></div>
+    <div class="b-label">USDT Balance</div>
+    <div class="b-amount">12.5</div>
+    <div class="b-sub">≈ $12.50 USD</div>
+    <div class="b-actions">
+      <button class="btn primary sm" onclick="openModal('deposit-crypto')"><i class="ti ti-plus"></i>Buy</button>
+      <button class="btn sm" onclick="openModal('send-crypto')"><i class="ti ti-arrow-up"></i>Send</button>
+    </div>
+  </div>
+</div>
+
+<!-- Exchange Rates + Pending -->
+<div class="grid-2" style="margin-bottom:20px">
+  <div class="card" style="padding:16px">
+    <div style="font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Exchange Rates</div>
+    <div class="rate-card"><span class="rate-label">1 USDC → NGN</span><span class="rate-val">₦1,500</span></div>
+    <div class="rate-card"><span class="rate-label">1 USDT → NGN</span><span class="rate-val">₦1,498</span></div>
+    <div class="rate-card"><span class="rate-label">1 USDC → USDT</span><span class="rate-val">≈ 1.00</span></div>
+  </div>
+  <div class="card" style="padding:16px">
+    <div style="font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Pending Escrow</div>
+    <div style="font-family:Outfit;font-size:32px;font-weight:800;letter-spacing:-1px">₦18,200</div>
+    <div style="font-size:12px;color:var(--text2);margin-top:2px">3 active tasks awaiting approval</div>
+    <a href="monitor.html" class="btn sm" style="margin-top:10px;height:34px;font-size:12px"><i class="ti ti-eye"></i>View Tasks</a>
+  </div>
+</div>
+
+<!-- Transaction History -->
+<div class="tx-card">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+    <h3 style="margin:0;font-size:14px;font-weight:800">Transaction History</h3>
+    <span style="font-size:12px;color:var(--text2)">Last 30 days</span>
+  </div>
+  <div class="tx-filters">
+    <button class="tx-filter active">All</button>
+    <button class="tx-filter">Deposits</button>
+    <button class="tx-filter">Withdrawals</button>
+    <button class="tx-filter">Task Payments</button>
+    <button class="tx-filter">Referrals</button>
+  </div>
+  <div class="tx-list">
+    <div class="tx-item"><div class="tx-dot" style="color:var(--green)"><i class="ti ti-check"></i></div><div class="tx-info"><div class="t">Task payout</div><div class="m">Like & retweet promo post • Mar 28</div></div><div class="tx-amt credit">+₦4,200</div><span class="tx-status completed">Completed</span></div>
+    <div class="tx-item"><div class="tx-dot" style="color:var(--accent2)"><i class="ti ti-arrow-up"></i></div><div class="tx-info"><div class="t">USDC withdrawal</div><div class="m">To 7xQp...9mDa • Mar 27</div></div><div class="tx-amt debit">-12 USDC</div><span class="tx-status pending">Processing</span></div>
+    <div class="tx-item"><div class="tx-dot" style="color:var(--gold)"><i class="ti ti-link"></i></div><div class="tx-info"><div class="t">Referral commission</div><div class="m">Chisom joined via your link • Mar 26</div></div><div class="tx-amt credit">+₦1,850</div><span class="tx-status completed">Completed</span></div>
+    <div class="tx-item"><div class="tx-dot" style="color:var(--green)"><i class="ti ti-check"></i></div><div class="tx-info"><div class="t">Task payout</div><div class="m">Join Telegram community • Mar 25</div></div><div class="tx-amt credit">+₦800</div><span class="tx-status completed">Completed</span></div>
+    <div class="tx-item"><div class="tx-dot" style="color:var(--red)"><i class="ti ti-x"></i></div><div class="tx-info"><div class="t">Failed withdrawal</div><div class="m">Bank transfer - Opay • Mar 24</div></div><div class="tx-amt debit">-₦10,000</div><span class="tx-status failed">Failed</span></div>
+    <div class="tx-item"><div class="tx-dot" style="color:var(--green)"><i class="ti ti-check"></i></div><div class="tx-info"><div class="t">Task payout</div><div class="m">App testing feedback • Mar 23</div></div><div class="tx-amt credit">+₦3,000</div><span class="tx-status completed">Completed</span></div>
+    <div class="tx-item"><div class="tx-dot" style="color:var(--accent2)"><i class="ti ti-coin"></i></div><div class="tx-info"><div class="t">USDC deposit</div><div class="m">From Solana wallet • Mar 22</div></div><div class="tx-amt credit">+20 USDC</div><span class="tx-status completed">Completed</span></div>
+  </div>
+</div>
+</section></main></div>
+
+<!-- Deposit Modal -->
+<div class="modal" id="depositModal">
+  <div class="modal-overlay" onclick="closeModal('deposit')"></div>
+  <div class="modal-panel">
+    <h2>Deposit Naira</h2>
+    <p>Fund your wallet via bank transfer or card.</p>
+    <div class="form-group"><label>Amount (NGN)</label><input type="number" placeholder="e.g. 10000" /></div>
+    <div class="form-group"><label>Payment method</label><select><option>Paystack - Card / Bank Transfer</option><option>Flutterwave - Card / USSD</option></select></div>
+    <button class="btn primary" style="width:100%;margin-top:8px"><i class="ti ti-arrow-right"></i>Continue to Payment</button>
+  </div>
+</div>
+
+<!-- Withdraw Modal -->
+<div class="modal" id="withdrawModal">
+  <div class="modal-overlay" onclick="closeModal('withdraw')"></div>
+  <div class="modal-panel">
+    <h2>Withdraw Naira</h2>
+    <p>Send funds to your Nigerian bank account.</p>
+    <div class="form-group"><label>Amount (NGN)</label><input type="number" placeholder="e.g. 5000" /></div>
+    <div class="form-group"><label>Bank</label><select><option>Opay</option><option>GTBank</option><option>Kuda Bank</option><option>Access Bank</option><option>Moniepoint MFB</option><option>Zenith Bank</option></select></div>
+    <div class="form-group"><label>Account number</label><input type="text" placeholder="0123456789" /></div>
+    <button class="btn primary" style="width:100%;margin-top:8px"><i class="ti ti-arrow-right"></i>Withdraw</button>
+  </div>
+</div>
+
+<!-- Crypto Deposit Modal -->
+<div class="modal" id="depositCryptoModal">
+  <div class="modal-overlay" onclick="closeModal('deposit-crypto')"></div>
+  <div class="modal-panel">
+    <h2>Buy Crypto</h2>
+    <p>Deposit USDC or USDT to your wallet.</p>
+    <div class="form-group"><label>Currency</label><select><option>USDC (Solana)</option><option>USDC (Base)</option><option>USDT (Solana)</option></select></div>
+    <div class="form-group"><label>Amount</label><input type="number" placeholder="e.g. 50" /></div>
+    <div style="padding:12px;border:1px dashed var(--border);border-radius:10px;background:var(--bg2);font-size:12px;color:var(--text2);text-align:center;margin-bottom:16px">
+      Send to: <strong style="color:var(--text);font-family:monospace">7xQp8NairaUsdc9mDa</strong>
+      <button class="btn sm" style="margin-left:8px;height:28px;font-size:11px;padding:0 10px" onclick="copyAddr()"><i class="ti ti-copy"></i>Copy</button>
+    </div>
+    <button class="btn" style="width:100%"><i class="ti ti-refresh"></i>Check Confirmation</button>
+  </div>
+</div>
+
+<div class="toast" id="toast">Done</div>
+
+<style>
+.drawer-link{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;color:var(--text2);font-size:14px;font-weight:700;transition:all .15s;text-decoration:none}
+.drawer-link:hover{background:var(--bg2);color:var(--text)}.drawer-link i{width:20px;text-align:center}
+:root{--red:#ef4444}[data-theme="dark"] .nav-links .nav-link.active{background:var(--bg2)}[data-theme="dark"] .btn.primary:hover{box-shadow:0 6px 24px rgba(167,139,250,.3)}
+</style>
 <script>
-(function(){const html=document.documentElement,theme=document.getElementById('themeToggle'),menu=document.getElementById('mobileMenu'),btn=document.getElementById('menuBtn'),toast=document.getElementById('toast');function setTheme(v){html.setAttribute('data-theme',v);try{localStorage.setItem('ogapay-theme',v)}catch(e){} if(theme) theme.innerHTML='<i class="ti '+(v==='dark'?'ti-sun':'ti-moon')+'"></i>'}setTheme(html.getAttribute('data-theme')||'light');theme&&theme.addEventListener('click',()=>setTheme(html.getAttribute('data-theme')==='dark'?'light':'dark'));function setAuth(v){document.body.classList.toggle('is-authed',v);try{localStorage.setItem('ogapay-authenticated',v?'true':'false')}catch(e){}}let saved=true;try{saved=localStorage.getItem('ogapay-authenticated')!=='false'}catch(e){}setAuth(saved);document.getElementById('authOn')?.addEventListener('click',()=>setAuth(true));document.getElementById('authOff')?.addEventListener('click',()=>setAuth(false));btn&&btn.addEventListener('click',()=>menu.classList.add('open'));document.querySelectorAll('[data-close-menu]').forEach(el=>el.addEventListener('click',()=>menu.classList.remove('open')));function say(text){if(!toast)return;toast.textContent=text;toast.classList.add('show');setTimeout(()=>toast.classList.remove('show'),1800)}document.querySelectorAll('[data-copy]').forEach(el=>el.addEventListener('click',()=>{navigator.clipboard&&navigator.clipboard.writeText(el.getAttribute('data-copy'));say('Copied')}));document.querySelectorAll('[data-toggle-label]').forEach(el=>el.addEventListener('click',()=>{el.classList.toggle('on');say(el.classList.contains('on')?'Enabled':'Disabled')}));document.querySelectorAll('[data-join]').forEach(el=>el.addEventListener('click',()=>{const joined=el.dataset.join==='true';el.dataset.join=String(!joined);el.innerHTML=joined?'<i class="ti ti-user-plus"></i>Join':'<i class="ti ti-check"></i>Joined';say(joined?'Left community':'Joined community')}));document.querySelectorAll('[data-apply]').forEach(el=>el.addEventListener('click',()=>{el.disabled=true;el.classList.add('primary');el.innerHTML='<i class="ti ti-check"></i>Applied';say('Application submitted')}));})();
+function t(){const h=document.documentElement,d=h.getAttribute('data-theme')||'light',n=d==='light'?'dark':'light';h.setAttribute('data-theme',n);try{localStorage.setItem('ogapay-theme',n)}catch(e){}const i=document.getElementById('ti');if(i)i.className=n==='dark'?'ti ti-sun':'ti ti-moon'}
+(function(){const h=document.documentElement;h.setAttribute('data-theme',h.getAttribute('data-theme')||'light');const d=document.getElementById('ti');if(d)d.className=h.getAttribute('data-theme')==='dark'?'ti ti-sun':'ti ti-moon';document.querySelectorAll('[data-close-menu]').forEach(e=>e.addEventListener('click',()=>{document.querySelector('.drawer').classList.remove('open')}));})();
+function openModal(id){document.getElementById(id+'Modal').classList.add('open')}
+function closeModal(id){document.getElementById(id+'Modal').classList.remove('open')}
+function copyAddr(){navigator.clipboard&&navigator.clipboard.writeText('7xQp8NairaUsdc9mDa');const t=document.getElementById('toast');if(t){t.textContent='Address copied!';t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1800)}}
 </script>
-<script src="assets/ogapay-live.js"></script><nav class="mobile-bottom-nav" aria-label="Mobile app navigation">
-  <a href="tasks.html" class=""><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v13H4V7Z"/><path d="M9 5V3h6v2M8 11h8"/></svg><span>Jobs</span></a>
-  <a href="store.html" class=""><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18M16 10a4 4 0 0 1-8 0"/></svg><span>Deals</span></a>
-  <a href="post-task.html" class="create "><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span>Create</span></a>
-  <a href="notifications.html" class=""><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><span>Alerts</span></a>
-  <a href="dashboard.html" class=""><span class="profile-dot"></span><span>Profile</span></a>
-</nav>
 </body>
 </html>

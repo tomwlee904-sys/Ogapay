@@ -22,6 +22,24 @@
 /* Profile summary */
 .prof-summary{display:flex;align-items:center;gap:12px;padding:16px 18px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:18px}.prof-av{width:42px;height:42px;border-radius:50%;background:var(--brand);display:grid;place-items:center;color:#fff;font-size:16px;font-weight:800;flex-shrink:0}.prof-info{flex:1;min-width:0}.prof-info h2{margin:0;font-family:Outfit;font-size:15px;font-weight:700}.prof-info .p-meta{font-size:11px;color:var(--text2);margin-top:1px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}.p-badge{display:inline-flex;align-items:center;gap:3px;padding:1px 6px;border-radius:99px;background:rgba(124,58,237,.1);color:var(--accent);font-size:9px;font-weight:700}
 .page-title{font-family:Outfit;font-size:clamp(20px,2.5vw,28px);font-weight:800;margin:0 0 4px}.page-sub{color:var(--text2);font-size:14px;margin:0 0 20px}
+/* Level badge */
+.level-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:800;letter-spacing:.3px;margin-left:6px;vertical-align:middle}
+.level-beginner{background:rgba(163,163,163,.15);color:#a3a3a3;border:1px solid rgba(163,163,163,.2)}
+.level-intermediate{background:rgba(59,130,246,.12);color:#3b82f6;border:1px solid rgba(59,130,246,.2)}
+.level-adv{background:rgba(124,58,237,.12);color:var(--accent);border:1px solid rgba(124,58,237,.2)}
+.level-expert{background:rgba(245,179,1,.12);color:var(--gold);border:1px solid rgba(245,179,1,.2)}
+.level-legend{background:rgba(239,68,68,.12);color:#ef4444;border:1px solid rgba(239,68,68,.2);position:relative}
+.level-legend::after{content:'\2B50';font-size:8px;margin-left:2px}
+/* XP row */
+.xp-row{display:flex;align-items:center;gap:8px;margin-top:6px}
+.xp-bar-wrap{flex:1;height:6px;border-radius:999px;background:var(--border);overflow:hidden}
+.xp-bar{height:100%;border-radius:999px;background:linear-gradient(90deg,var(--accent),#A78BFA);transition:width .5s ease}
+.xp-label{font-size:10px;color:var(--text3);font-weight:600;white-space:nowrap}
+/* KYC badge */
+.kyc-badge{display:inline-flex;align-items:center;gap:3px;padding:1px 6px;border-radius:99px;font-size:9px;font-weight:700}
+.kyc-badge.verified{background:rgba(22,163,74,.1);color:var(--green)}
+.kyc-badge.pending{background:rgba(245,179,1,.1);color:var(--gold)}
+.kyc-badge.rejected{background:rgba(239,68,68,.1);color:#ef4444}
 /* Stats row */
 .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px}.stat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px 16px}.stat-card .s-n{font-family:Outfit;font-size:20px;font-weight:800;letter-spacing:-.5px}.stat-card .s-l{font-size:11px;color:var(--text3);margin-top:2px;font-weight:500}.stat-card .s-i{color:var(--accent2);font-size:16px;margin-bottom:4px}
 /* Section header */
@@ -94,12 +112,19 @@
     <div class="prof-summary">
       <div class="prof-av">AD</div>
       <div class="prof-info">
-        <h2>Ada Danladi</h2>
+        <h2>Ada Danladi <span class="level-badge level-adv">Advanced</span></h2>
         <div class="p-meta">
           <span>@ada_earns</span>
           <span class="p-badge"><i class="ti ti-badge"></i>Worker</span>
-          <span><i class="ti ti-shield-check" style="color:var(--green)"></i>KYC verified</span>
+          <span class="kyc-badge verified"><i class="ti ti-shield-check"></i>KYC verified</span>
           <a href="profile.html" style="color:var(--accent2);font-weight:600;font-size:11px">Edit profile</a>
+        </div>
+        <!-- XP Progress -->
+        <div class="xp-row">
+          <div class="xp-bar-wrap">
+            <div class="xp-bar" style="width:72%"></div>
+          </div>
+          <div class="xp-label">1,440 / 2,000 XP</div>
         </div>
       </div>
     </div>

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rank Upgrade - OgaPay</title>
+<script>(function(){try{document.documentElement.setAttribute('data-theme',localStorage.getItem('ogapay-theme')||'light')}catch(e){}})();</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800;900&family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+<style>
+:root{--bg:#ffffff;--bg2:#f7f9fc;--card:#ffffff;--border:#e4e9f1;--border2:#d5deea;--text:#101525;--text2:#66738a;--text3:#98a6ba;--primary:#0d1323;--accent:#7C3AED;--accent2:#2563EB;--green:#16a34a;--gold:#f5b301;--shadow:0 4px 16px rgba(16,21,37,.07);--radius:14px;--radius-sm:10px;--nav-h:60px}
+[data-theme="dark"]{--bg:#080b13;--bg2:#0d111d;--card:#111725;--border:#222b3c;--border2:#2d384d;--text:#f4f7fb;--text2:#9aa7bc;--text3:#667186;--primary:#f4f7fb;--accent:#A78BFA;--accent2:#60A5FA;--shadow:0 4px 16px rgba(0,0,0,.28)}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--text);font-family:"DM Sans",system-ui,sans-serif;overflow-x:hidden}a{color:inherit;text-decoration:none}button,input{font:inherit}button{cursor:pointer}
+.nav{position:sticky;top:0;z-index:100;height:var(--nav-h);background:rgba(255,255,255,.92);border-bottom:1px solid var(--border);backdrop-filter:blur(18px) saturate(1.4)}[data-theme="dark"] .nav{background:rgba(8,11,19,.92)}
+.nav-inner{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:22px;height:100%;width:min(900px,calc(100% - 32px));margin:0 auto}.brand{display:flex;align-items:center;gap:10px;font-family:"Outfit";font-weight:800;font-size:19px}.logo{width:34px;height:34px;border-radius:9px;background:var(--primary);color:var(--bg);display:grid;place-items:center;font-size:18px}.nav-links{display:flex;justify-content:center;gap:4px}.nav-link{display:inline-flex;align-items:center;gap:7px;padding:7px 10px;border-radius:8px;color:var(--text2);font-size:14px;font-weight:700}.nav-link:hover,.nav-link.active{background:var(--bg2);color:var(--text)}.nav-actions{display:flex;align-items:center;gap:8px}.icon-btn{width:36px;height:36px;border:1.5px solid var(--border);border-radius:8px;background:var(--card);color:var(--text2);display:grid;place-items:center}.icon-btn:hover{color:var(--text);background:var(--bg2);border-color:var(--border2)}
+.page{width:min(900px,calc(100% - 32px));margin:0 auto;padding:34px 0 72px}.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow)}.btn{height:44px;padding:0 20px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--card);color:var(--text);font-size:14px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:all .2s;text-decoration:none}.btn:hover{border-color:var(--border2);box-shadow:var(--shadow)}.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}.btn.primary:hover{box-shadow:0 6px 24px rgba(124,58,237,.3);transform:translateY(-1px)}.btn.sm{height:36px;padding:0 14px;font-size:12px}
+/* Rank page */
+.rank-header{padding:30px;text-align:center;background:linear-gradient(135deg,rgba(124,58,237,.06),rgba(99,102,241,.06));border:1px solid rgba(124,58,237,.12);border-radius:var(--radius);margin-bottom:24px}.rank-header h1{font-family:Outfit;font-size:32px;font-weight:800;margin:0;letter-spacing:-1px}.rank-header p{color:var(--text2);margin:6px 0 0;font-size:15px}
+.rank-current{display:flex;align-items:center;justify-content:center;gap:20px;padding:20px;margin-top:16px;background:var(--bg);border-radius:12px}.rank-current .rc-icon{width:56px;height:56px;border-radius:50%;display:grid;place-items:center;font-size:28px;font-weight:800}.rank-current .rc-info{text-align:left}.rank-current .rc-info .rl{font-size:11px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.5px}.rank-current .rc-info .rn{font-family:Outfit;font-size:22px;font-weight:800}.rank-current .rc-info .rxp{font-size:12px;color:var(--text2);margin-top:2px}
+.rc-icon.adv{background:rgba(124,58,237,.12);color:var(--accent)}.rc-icon.intermediate{background:rgba(59,130,246,.12);color:var(--accent2)}.rc-icon.expert{background:rgba(245,179,1,.12);color:var(--gold)}.rc-icon.legend{background:rgba(239,68,68,.12);color:#ef4444}.rc-icon.beginner{background:rgba(163,163,163,.12);color:#a3a3a3}
+.rank-track{display:grid;gap:12px;margin-bottom:24px}.rank-card{display:flex;align-items:center;gap:14px;padding:16px 18px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);transition:all .2s}.rank-card.current{border-color:var(--accent);background:rgba(124,58,237,.04);box-shadow:0 0 20px rgba(124,58,237,.08)}.rank-card.locked{opacity:.5}.rank-card .rk-icon{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;font-size:20px;font-weight:800;flex-shrink:0}.rank-card .rk-info{flex:1;min-width:0}.rank-card .rk-info h3{margin:0;font-family:Outfit;font-size:16px;font-weight:800}.rank-card .rk-info p{margin:2px 0 0;font-size:12px;color:var(--text2);line-height:1.4}.rank-card .rk-xp{font-size:11px;color:var(--text3);font-weight:600;white-space:nowrap}.rank-card .rk-status{font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px}.rk-status.active{background:var(--accent);color:#fff}.rk-status.locked{background:var(--border);color:var(--text3)}.rk-status.done{background:rgba(22,163,74,.1);color:var(--green)}
+.perks-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px}.perk-card{padding:16px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);text-align:center}.perk-card .pk-icon{width:40px;height:40px;border-radius:10px;background:rgba(124,58,237,.08);display:grid;place-items:center;margin:0 auto 8px;font-size:20px;color:var(--accent)}.perk-card h4{margin:0;font-size:13px;font-weight:800}.perk-card p{margin:3px 0 0;font-size:11px;color:var(--text2);line-height:1.4}
+@media(max-width:768px){.perks-grid{grid-template-columns:1fr 1fr}.rank-current{flex-direction:column;text-align:center}.rank-current .rc-info{text-align:center}}
+</style>
+</head>
+<body>
+<nav class="nav"><div class="nav-inner"><a href="index.html" class="brand"><span class="logo">O</span>OgaPay</a><div class="nav-links"><a href="dashboard.html" class="nav-link active"><i class="ti ti-dashboard"></i>Dashboard</a><a href="wallet.html" class="nav-link"><i class="ti ti-wallet"></i>Wallet</a></div><div class="nav-actions"><button class="icon-btn" onclick="t()" title="Theme"><i class="ti ti-sun" id="ti"></i></button></div></div></nav>
+<main class="page">
+<div class="rank-header">
+  <h1>Wurker Ranks</h1>
+  <p>Complete tasks, earn XP, and unlock higher ranks with better rewards and lower fees.</p>
+  <div class="rank-current">
+    <div class="rc-icon adv">A</div>
+    <div class="rc-info">
+      <div class="rl">Current Rank</div>
+      <div class="rn">Advanced <span style="font-size:14px;font-weight:400;color:var(--text2)">Wurker</span></div>
+      <div class="rxp">1,440 / 2,000 XP — <strong>560 XP</strong> to reach Expert</div>
+    </div>
+  </div>
+</div>
+
+<!-- Rank Track -->
+<div class="rank-track">
+  <div class="rank-card done">
+    <div class="rk-icon" style="background:rgba(163,163,163,.12);color:#a3a3a3">B</div>
+    <div class="rk-info"><h3>Beginner</h3><p>Start your earning journey. Access basic tasks and communities.</p></div>
+    <div class="rk-xp">0 XP</div>
+    <span class="rk-status done"><i class="ti ti-check"></i> Unlocked</span>
+  </div>
+  <div class="rank-card done">
+    <div class="rk-icon" style="background:rgba(59,130,246,.12);color:#3b82f6">I</div>
+    <div class="rk-info"><h3>Intermediate</h3><p>Unlock higher-paying tasks and referral bonuses.</p></div>
+    <div class="rk-xp">500 XP</div>
+    <span class="rk-status done"><i class="ti ti-check"></i> Unlocked</span>
+  </div>
+  <div class="rank-card current">
+    <div class="rk-icon" style="background:rgba(124,58,237,.12);color:var(--accent)">A</div>
+    <div class="rk-info"><h3>Advanced</h3><p>Lower platform fees, priority support, early access to new tasks.</p></div>
+    <div class="rk-xp">1,000 XP</div>
+    <span class="rk-status active">Current</span>
+  </div>
+  <div class="rank-card locked">
+    <div class="rk-icon" style="background:rgba(245,179,1,.12);color:var(--gold)">E</div>
+    <div class="rk-info"><h3>Expert</h3><p>Create your own store, post custom jobs, access exclusive campaigns.</p></div>
+    <div class="rk-xp">2,000 XP</div>
+    <span class="rk-status locked">Locked</span>
+  </div>
+  <div class="rank-card locked">
+    <div class="rk-icon" style="background:rgba(239,68,68,.12);color:#ef4444;position:relative">L</div>
+    <div class="rk-info"><h3>Legend ⭐</h3><p>Top-tier — revenue sharing, VIP support, governance votes, custom perks.</p></div>
+    <div class="rk-xp">5,000 XP</div>
+    <span class="rk-status locked">Locked</span>
+  </div>
+</div>
+
+<!-- Current Rank Perks -->
+<h3 style="font-family:Outfit;font-size:18px;font-weight:800;margin:0 0 14px">Your Perks</h3>
+<div class="perks-grid">
+  <div class="perk-card"><div class="pk-icon"><i class="ti ti-percentage"></i></div><h4>Lower Fees</h4><p>8% platform fee instead of 10%</p></div>
+  <div class="perk-card"><div class="pk-icon"><i class="ti ti-star"></i></div><h4>Priority Access</h4><p>Early access to new tasks and campaigns</p></div>
+  <div class="perk-card"><div class="pk-icon"><i class="ti ti-headset"></i></div><h4>Priority Support</h4><p>Faster response from support team</p></div>
+  <div class="perk-card"><div class="pk-icon"><i class="ti ti-trophy"></i></div><h4>Elite Badge</h4><p>Show off your rank on your profile</p></div>
+  <div class="perk-card"><div class="pk-icon"><i class="ti ti-link"></i></div><h4>Referral Boost</h4><p>15% commission instead of 10%</p></div>
+  <div class="perk-card"><div class="pk-icon"><i class="ti ti-wallet"></i></div><h4>Higher Limits</h4><p>Increased daily withdrawal limits</p></div>
+</div>
+
+<!-- How to earn XP -->
+<div class="card" style="padding:24px">
+  <h3 style="font-family:Outfit;font-size:16px;font-weight:800;margin:0 0 14px">How to Earn XP</h3>
+  <div style="display:grid;gap:10px">
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)"><span style="width:60px;font-size:12px;font-weight:700;color:var(--accent)">+10 XP</span><span style="font-size:13px">Complete a social media task</span></div>
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)"><span style="width:60px;font-size:12px;font-weight:700;color:var(--accent2)">+25 XP</span><span style="font-size:13px">Complete a custom job</span></div>
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)"><span style="width:60px;font-size:12px;font-weight:700;color:var(--gold)">+50 XP</span><span style="font-size:13px">Refer a new user</span></div>
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)"><span style="width:60px;font-size:12px;font-weight:700;color:var(--green)">+100 XP</span><span style="font-size:13px">Complete KYC verification</span></div>
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 0"><span style="width:60px;font-size:12px;font-weight:700;color:#ef4444">+200 XP</span><span style="font-size:13px">Post a task that gets completed</span></div>
+  </div>
+</div>
+</main>
+<style>
+[data-theme="dark"] .nav-links .nav-link.active{background:var(--bg2)}
+</style>
+<script>
+function t(){const h=document.documentElement,d=h.getAttribute('data-theme')||'light',n=d==='light'?'dark':'light';h.setAttribute('data-theme',n);try{localStorage.setItem('ogapay-theme',n)}catch(e){}const i=document.getElementById('ti');if(i)i.className=n==='dark'?'ti ti-sun':'ti ti-moon'}
+(function(){const h=document.documentElement;h.setAttribute('data-theme',h.getAttribute('data-theme')||'light');const d=document.getElementById('ti');if(d)d.className=h.getAttribute('data-theme')==='dark'?'ti ti-sun':'ti ti-moon'})();
+</script>
+</body>
+</html>
