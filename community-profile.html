@@ -204,6 +204,7 @@
 // ── State ──
 let communityData = null;
 let membersData = [];
+const API_BASE = (window.OGAPAY_API_BASE || localStorage.getItem('ogapay_api_base') || 'https://ogapay-production.up.railway.app/api/v1').replace(/\/$/, '');
 
 // ── Init ──
 async function init() {
@@ -214,7 +215,7 @@ async function init() {
     return;
   }
   try {
-    const res = await fetch('/api/v1/communities/' + slug);
+    const res = await fetch(API_BASE + '/communities/' + slug);
     if (!res.ok) throw new Error('Failed to load');
     communityData = await res.json();
     communityData = communityData.data || communityData;
