@@ -20,7 +20,7 @@
 .nav{position:sticky;top:0;z-index:100;height:var(--nav-h);background:rgba(255,255,255,.92);border-bottom:1px solid var(--border);backdrop-filter:blur(18px) saturate(1.4)}[data-theme="dark"] .nav{background:rgba(8,11,19,.92)}
 .nav-inner{height:100%;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:22px;width:min(1200px,calc(100% - 48px));margin:0 auto}.brand{display:flex;align-items:center;gap:10px;font-family:"Outfit";font-weight:800;font-size:19px}.logo{width:34px;height:34px;border-radius:9px;background:var(--primary);color:var(--bg);display:grid;place-items:center;font-size:18px}.nav-links{display:flex;justify-content:center;gap:4px}.nav-link{display:inline-flex;align-items:center;gap:7px;padding:7px 10px;border-radius:8px;color:var(--text2);font-size:14px;font-weight:700}.nav-link:hover,.nav-link.active{background:var(--bg2);color:var(--text)}.nav-actions{display:flex;align-items:center;gap:8px}.icon-btn,.menu-btn{width:36px;height:36px;border:1.5px solid var(--border);border-radius:8px;background:var(--card);color:var(--text2);display:grid;place-items:center}.icon-btn:hover,.menu-btn:hover{color:var(--text);background:var(--bg2);border-color:var(--border2)}
 .app{display:flex;min-height:calc(100vh - var(--nav-h))}.sidebar{width:244px;position:sticky;top:var(--nav-h);height:calc(100vh - var(--nav-h));border-right:1px solid var(--border);background:var(--bg);padding:14px 10px;overflow:auto;display:none}body.is-authed .sidebar{display:block}.sb-cta{display:flex;align-items:center;justify-content:center;gap:8px;margin:0 0 12px;padding:10px 14px;border-radius:999px;background:var(--primary);color:var(--bg);font-weight:800;font-size:13px;text-decoration:none}.sb-cta:hover{opacity:.9}.sb-label,.drawer-section{display:block;padding:12px 8px 5px;color:var(--text3);font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1.4px}.sb-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:9px;color:var(--text2);font-size:13.5px;font-weight:700;text-decoration:none;transition:all .15s}.sb-item:hover,.sb-item.active{background:var(--bg2);color:var(--text)}.sb-icon{width:30px;height:30px;border:1px solid var(--border);border-radius:8px;background:var(--bg2);display:grid;place-items:center;color:var(--text3);flex-shrink:0}.sb-icon i{font-size:16px}.sb-user{margin:14px 0 0;padding:12px;border:1px solid var(--border);border-radius:12px;background:var(--bg2);display:flex;gap:10px;align-items:center}.avatar-mini{width:34px;height:34px;border-radius:50%;background:var(--brand-blue);display:grid;place-items:center;color:var(--card);font-weight:900;flex-shrink:0}.main{flex:1;min-width:0}.page{width:min(1120px,calc(100% - 48px));margin:0 auto;padding:34px 0 72px}.page-head{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-bottom:22px;flex-wrap:wrap}.eyebrow{display:inline-flex;align-items:center;gap:7px;padding:5px 10px;border:1px solid var(--border);border-radius:999px;color:var(--text2);font-size:12px;font-weight:800}.page h1{font-family:"Outfit";font-size:clamp(24px,3vw,36px);margin:10px 0 4px}.lead{margin:0;color:var(--text2);max-width:680px;line-height:1.65;font-size:14px}.btn{border:1.5px solid var(--border2);background:var(--card);color:var(--text);border-radius:10px;height:40px;padding:0 14px;display:inline-flex;align-items:center;justify-content:center;gap:8px;font-weight:800;font-size:13px;white-space:nowrap;transition:all .15s}.btn:hover{background:var(--bg2);border-color:var(--border2)}.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}.btn.primary:hover{opacity:.9}.btn.sm{height:32px;padding:0 10px;font-size:12px}.btn.ghost{background:transparent;border-color:transparent;color:var(--text2)}.btn.ghost:hover{background:var(--bg2);border-color:var(--border)}
-.filter-bar{display:flex;align-items:center;gap:12px;margin-bottom:24px;flex-wrap:wrap}.filter-bar .search-wrap{flex:1;min-width:200px;position:relative}.filter-bar .search-wrap input{width:100%;height:42px;padding:0 16px 0 40px;border:1.5px solid var(--border);border-radius:10px;background:var(--card);color:var(--text);font-size:14px;outline:none;transition:border-color .2s}.filter-bar .search-wrap input:focus{border-color:var(--accent)}.filter-bar .search-wrap .si{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:18px}.filter-btn-group{display:flex;gap:6px;flex-wrap:wrap}
+.filter-bar{display:flex;align-items:center;gap:12px;margin-bottom:24px;flex-wrap:wrap}.filter-bar .search-wrap{flex:1;min-width:200px;position:relative}.filter-bar .search-wrap input{width:100%;height:42px;padding:0 16px 0 40px;border:1.5px solid var(--border);border-radius:10px;background:var(--card);color:var(--text);font-size:14px;outline:none;transition:border-color .2s}.filter-bar .search-wrap input:focus{border-color:var(--accent)}.filter-bar .search-wrap .si{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:18px}.filter-btn-group{display:flex;gap:6px;flex-wrap:wrap}.view-toggle{display:inline-flex;border:1.5px solid var(--border);border-radius:10px;background:var(--card);overflow:hidden;flex-shrink:0}.view-toggle button{border:0;background:transparent;padding:7px 14px;color:var(--text2);font-weight:700;font-size:12.5px;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all .15s}.view-toggle button.active{background:var(--accent);color:#fff}.view-toggle button:not(.active):hover{background:var(--bg2);color:var(--text)}
 .toast{position:fixed;right:18px;bottom:18px;background:var(--primary);color:var(--bg);border-radius:12px;padding:12px 14px;font-weight:800;box-shadow:var(--shadow);opacity:0;transform:translateY(8px);transition:.2s;z-index:400}.toast.show{opacity:1;transform:translateY(0)}
 .drawer{position:fixed;inset:0;z-index:300;display:none}.drawer.open{display:block}.overlay{position:absolute;inset:0;background:rgba(0,0,0,.36);backdrop-filter:blur(3px)}.drawer-panel{position:absolute;right:0;top:0;bottom:0;width:min(340px,92vw);background:var(--bg);border-left:1px solid var(--border);padding:16px;overflow:auto}.drawer-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}.drawer-link{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:10px;color:var(--text2);font-weight:800;text-decoration:none}.drawer-link:hover,.drawer-link.active{background:var(--bg2);color:var(--text)}
 
@@ -50,7 +50,7 @@
 .tc-foot{margin-top:auto;display:flex;align-items:center;gap:10px;padding:14px 18px;border-top:1px solid var(--border)}.tc-foot .btn{height:38px;font-size:13px;flex:1}
 
 /* Stats row */
-.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px}.stat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;text-align:center}.stat-card .stat-val{font-family:"Outfit";font-size:24px;font-weight:900}.stat-card .stat-lbl{font-size:12px;color:var(--text2);margin-top:2px}
+.tl-container{display:none;margin-bottom:24px}.tl-item{display:flex;gap:16px;padding:16px 0;border-bottom:1px solid var(--border);cursor:pointer;transition:all .2s}.tl-item:hover{background:var(--bg2);margin:0 -12px;padding:16px 12px;border-radius:10px}.tl-item:last-child{border-bottom:none}.tl-line{display:flex;flex-direction:column;align-items:center;width:28px;flex-shrink:0}.tl-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;border:2px solid var(--border);background:var(--card);position:relative;z-index:1}.tl-dot.open{background:var(--green);border-color:var(--green)}.tl-dot.completed{background:var(--text3);border-color:var(--text3)}.tl-dot.in-progress{background:var(--accent2);border-color:var(--accent2)}.tl-stick{width:2px;flex:1;background:var(--border);min-height:20px}.tl-content{flex:1;min-width:0}.tl-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:4px}.tl-title{font-size:15px;font-weight:800}.tl-platform{font-size:12px;color:var(--text3)}.tl-pay{font-family:Outfit;font-size:16px;font-weight:900;color:var(--accent2);white-space:nowrap}.tl-meta{display:flex;gap:12px;margin-top:4px;flex-wrap:wrap}.tl-meta span{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--text2)}.tl-status{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:800}.tl-status.open{background:rgba(22,163,74,.1);color:var(--green)}.tl-status.in-progress{background:rgba(37,99,235,.1);color:var(--accent2)}.tl-status.completed{background:var(--bg2);color:var(--text3)}.tl-time{font-size:12px;color:var(--text3)}.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px}.stat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;text-align:center}.stat-card .stat-val{font-family:"Outfit";font-size:24px;font-weight:900}.stat-card .stat-lbl{font-size:12px;color:var(--text2);margin-top:2px}
 
 /* Pagination */
 .pagination{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:24px}.pagination .page-btn{width:40px;height:40px;border:1.5px solid var(--border);border-radius:10px;background:var(--card);color:var(--text2);display:grid;place-items:center;font-weight:800;font-size:14px;cursor:pointer;transition:all .15s}.pagination .page-btn:hover:not(:disabled){background:var(--bg2);border-color:var(--border2);color:var(--text)}.pagination .page-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}.pagination .page-btn:disabled{opacity:.4;cursor:default}.pagination .page-info{font-size:13px;color:var(--text2);padding:0 8px}
@@ -151,7 +151,7 @@
 </div>
 
 <!-- Filter bar -->
-<div class="filter-bar">
+<div class="view-toggle" id="viewToggle"><button class="active" data-view="grid"><i class="ti ti-layout-grid"></i>All Jobs</button><button data-view="timeline"><i class="ti ti-list"></i>Timeline</button></div><div class="filter-bar">
 <div class="search-wrap">
 <i class="ti ti-search si"></i>
 <input type="text" id="searchInput" placeholder="Search tasks..." oninput="debounceSearch()">
@@ -175,7 +175,7 @@
 <div id="pagination" class="pagination" style="display:none"></div>
 
 <!-- Empty -->
-<div id="emptyState" class="empty-state" style="display:none"><i class="ti ti-briefcase-off"></i><p>No tasks found</p><p class="sub">Try a different category or check back later.</p></div>
+<div id="timelineContainer" class="tl-container"></div><div id="emptyState" class="empty-state" style="display:none"><i class="ti ti-briefcase-off"></i><p>No tasks found</p><p class="sub">Try a different category or check back later.</p></div>
 </section>
 </main>
 </div>
@@ -244,6 +244,8 @@ function toggleBookmark(id) {
   renderTasks();
   say(bookmarks.has(id) ? 'Bookmarked' : 'Bookmark removed');
 }
+
+let currentView = 'grid';
 
 function renderTasks() {
   const grid = document.getElementById('taskGrid');
@@ -358,6 +360,55 @@ function renderTasks() {
     pagination.style.display = 'none';
   }
 }
+
+function renderTimeline(tasks) {
+  const tl = document.getElementById('timelineContainer');
+  if (!tl) return;
+  tl.innerHTML = tasks.map(function(t, i) {
+    var status = t.open ? 'open' : 'completed';
+    var catIcon = t.cat === 'social' ? 'messages' : t.cat === 'content' ? 'file-text' : t.cat === 'crypto' ? 'coin' : 'globe';
+    var statusLabel = status === 'open' ? 'Open' : 'Completed';
+    var statusIcon = status === 'open' ? 'ti ti-circle' : 'ti ti-check-circle';
+    var stickHtml = i < tasks.length - 1 ? '<span class="tl-stick"></span>' : '<span style="width:2px;flex:1"></span>';
+    return '<div class="tl-item" onclick="applyTask(' + t.id + ')">' +
+      '<div class="tl-line"><span class="tl-dot ' + status + '"></span>' + stickHtml + '</div>' +
+      '<div class="tl-content">' +
+        '<div class="tl-top"><div><div class="tl-title">' + t.title + '</div><div class="tl-platform"><i class="ti ti-' + catIcon + '"></i> ' + t.platform + '</div></div>' +
+        '<span class="tl-pay">' + t.pay + '</span></div>' +
+        '<div class="tl-meta">' +
+          '<span class="tl-status ' + status + '"><i class="' + statusIcon + '"></i>' + statusLabel + '</span>' +
+          '<span><i class="ti ti-users"></i>' + t.spots + ' spots left</span>' +
+          '<span class="tl-time"><i class="ti ti-clock"></i>Posted recently</span>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+// View toggle handler
+document.addEventListener('click', function(e) {
+  var vbtn = e.target.closest('.view-toggle button');
+  if (vbtn) {
+    document.querySelectorAll('.view-toggle button').forEach(function(b) { b.classList.remove('active'); });
+    vbtn.classList.add('active');
+    currentView = vbtn.dataset.view;
+    var grid = document.getElementById('taskGrid');
+    var tl = document.getElementById('timelineContainer');
+    var pag = document.getElementById('pagination');
+    var empty = document.getElementById('emptyState');
+    if (currentView === 'timeline') {
+      grid.style.display = 'none';
+      pag.style.display = 'none';
+      empty.style.display = 'none';
+      if (filteredTasks.length === 0) { empty.style.display = 'block'; tl.style.display = 'none'; return; }
+      tl.style.display = 'block';
+      renderTimeline(filteredTasks);
+    } else {
+      tl.style.display = 'none';
+      renderTasks();
+    }
+  }
+});
 
 function goPage(page) {
   currentPage = page;
