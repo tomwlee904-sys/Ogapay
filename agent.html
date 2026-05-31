@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agent Studio - OgaPay</title>
+<script>(function(){try{document.documentElement.setAttribute('data-theme',localStorage.getItem('ogapay-theme')||'light')}catch(e){}})();</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800;900&family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+<style>
+:root{--bg:#ffffff;--bg2:#f7f9fc;--card:#ffffff;--border:#e4e9f1;--border2:#d5deea;--text:#101525;--text2:#66738a;--text3:#98a6ba;--primary:#0d1323;--accent:#7C3AED;--accent2:#2563EB;--green:#16a34a;--gold:#f5b301;--shadow:0 4px 16px rgba(16,21,37,.07);--radius:14px;--radius-sm:10px;--nav-h:60px}
+[data-theme="dark"]{--bg:#080b13;--bg2:#0d111d;--card:#111725;--border:#222b3c;--border2:#2d384d;--text:#f4f7fb;--text2:#9aa7bc;--text3:#667186;--primary:#f4f7fb;--accent:#A78BFA;--accent2:#60A5FA;--shadow:0 4px 16px rgba(0,0,0,.28)}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;overflow-x:hidden}a{color:inherit;text-decoration:none}button,input,select,textarea{font:inherit}button{cursor:pointer}
+.nav{position:sticky;top:0;z-index:100;height:var(--nav-h);background:rgba(255,255,255,.92);border-bottom:1px solid var(--border);backdrop-filter:blur(18px)}[data-theme="dark"] .nav{background:rgba(8,11,19,.92)}
+.nav-inner{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:22px;height:100%;width:min(1100px,calc(100% - 32px));margin:0 auto}.brand{display:flex;align-items:center;gap:10px;font-family:"Outfit";font-weight:800;font-size:19px}.logo{width:34px;height:34px;border-radius:9px;background:var(--primary);color:var(--bg);display:grid;place-items:center;font-size:18px}.nav-links{display:flex;gap:4px}.nav-link{display:inline-flex;align-items:center;gap:7px;padding:7px 10px;border-radius:8px;color:var(--text2);font-size:14px;font-weight:700;transition:all .15s}.nav-link:hover,.nav-link.active{background:var(--bg2);color:var(--text)}.nav-actions{display:flex;align-items:center;gap:8px}.icon-btn{width:36px;height:36px;border:1.5px solid var(--border);border-radius:8px;background:var(--card);color:var(--text2);display:grid;place-items:center;transition:all .15s}.icon-btn:hover{color:var(--text);background:var(--bg2)}
+.page{width:min(1100px,calc(100% - 32px));margin:0 auto;padding:34px 0 72px}.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow)}.btn{height:44px;padding:0 20px;border:1.5px solid var(--border);border-radius:10px;background:var(--card);color:var(--text);font-size:14px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:all .2s;cursor:pointer;text-decoration:none}.btn:hover{border-color:var(--border2);box-shadow:var(--shadow)}.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}.btn.primary:hover{box-shadow:0 6px 24px rgba(124,58,237,.3);transform:translateY(-1px)}.btn.sm{height:34px;padding:0 12px;font-size:12px}.btn.full{width:100%}.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:700;background:rgba(124,58,237,.12);color:var(--accent)}
+.agent-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px}.agent-head h1{font-family:Outfit;font-size:28px;font-weight:800;margin:0;display:flex;align-items:center;gap:10px}.agent-head p{color:var(--text2);font-size:14px;margin:2px 0 0}
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px}.stat-card{padding:16px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);text-align:center}.stat-card .sv{font-family:Outfit;font-size:24px;font-weight:800}.stat-card .sl{font-size:11px;color:var(--text2);margin-top:2px}.stat-card .s-icon{font-size:16px;margin-bottom:4px;color:var(--accent2)}
+.protocol-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:24px}.proto-card{padding:20px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);transition:all .2s}.proto-card:hover{border-color:var(--border2);transform:translateY(-2px)}.proto-card .p-icon{width:44px;height:44px;border-radius:12px;background:rgba(124,58,237,.08);display:grid;place-items:center;font-size:22px;color:var(--accent);margin-bottom:10px}.proto-card h3{margin:0;font-size:15px;font-weight:800}.proto-card p{margin:4px 0 10px;font-size:12px;color:var(--text2);line-height:1.4}.proto-card code{display:block;padding:8px 10px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;font-size:11px;font-family:monospace;color:var(--text2);word-break:break-all}.proto-card .p-foot{margin-top:10px;display:flex;gap:6px}
+.usage-log{display:grid;gap:8px}.log-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}.log-item:last-child{border:0}.log-dot{width:28px;height:28px;border-radius:7px;background:var(--bg2);border:1px solid var(--border);display:grid;place-items:center;font-size:14px;flex-shrink:0}.log-info{flex:1;min-width:0}.log-info .lt{font-size:13px;font-weight:600}.log-info .lm{font-size:11px;color:var(--text2)}.log-cost{font-size:13px;font-weight:700;white-space:nowrap}
+.integration-steps{display:grid;gap:10px;counter-reset:step}.i-step{padding:14px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);display:flex;align-items:flex-start;gap:12px}.i-step .s-num{width:28px;height:28px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center;font-size:12px;font-weight:800;flex-shrink:0;margin-top:2px}.i-step .s-content{flex:1}.i-step .s-content h4{margin:0;font-size:13px;font-weight:800}.i-step .s-content p{margin:2px 0 0;font-size:12px;color:var(--text2);line-height:1.4}
+@media(max-width:1024px){.protocol-grid{grid-template-columns:1fr}}
+@media(max-width:768px){.stats-row{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<nav class="nav"><div class="nav-inner"><a href="index.html" class="brand"><span class="logo">O</span>OgaPay</a><div class="nav-links"><a href="agent.html" class="nav-link active"><i class="ti ti-robot"></i>Agent Studio</a><a href="apikey.html" class="nav-link"><i class="ti ti-key"></i>API Keys</a><a href="dashboard.html" class="nav-link"><i class="ti ti-dashboard"></i>Dashboard</a></div><div class="nav-actions"><button class="icon-btn" onclick="t()" title="Theme"><i class="ti ti-sun" id="ti"></i></button></div></div></nav>
+<main class="page">
+<div class="agent-head">
+  <div><h1><i class="ti ti-robot" style="color:var(--accent)"></i> Agent Studio</h1><p>Let AI agents hire humans through your tasks. Integrate via API, MCP, or direct HTTP.</p></div>
+  <a href="apikey.html" class="btn primary"><i class="ti ti-key"></i>Manage API Keys</a>
+</div>
+<div class="stats-row">
+  <div class="stat-card"><div class="s-icon"><i class="ti ti-robot"></i></div><div class="sv">47</div><div class="sl">Agent Requests</div></div>
+  <div class="stat-card"><div class="s-icon"><i class="ti ti-users"></i></div><div class="sv">23</div><div class="sl">Humans Hired</div></div>
+  <div class="stat-card"><div class="s-icon"><i class="ti ti-coin"></i></div><div class="sv">₦284K</div><div class="sl">Agent Spend</div></div>
+  <div class="stat-card"><div class="s-icon"><i class="ti ti-check"></i></div><div class="sv">94%</div><div class="sl">Completion Rate</div></div>
+</div>
+<h2 style="font-family:Outfit;font-size:18px;font-weight:800;margin:0 0 14px">Integration Protocols</h2>
+<div class="protocol-grid">
+  <div class="proto-card">
+    <div class="p-icon"><i class="ti ti-code"></i></div>
+    <h3>x402 API</h3>
+    <p>HTTP-based protocol. Call an endpoint, get a 402 with pricing, then pay with a signed payment header.</p>
+    <code>GET /api/v1/agent/hire?description=...&amp;winners=10&amp;perUser=0.025</code>
+    <div class="p-foot"><button class="btn sm primary" onclick="copyText('GET /api/v1/agent/hire')"><i class="ti ti-copy"></i> Copy CURL</button><a href="apikey.html" class="btn sm">Get Key</a></div>
+  </div>
+  <div class="proto-card">
+    <div class="p-icon"><i class="ti ti-plug"></i></div>
+    <h3>MCP Server</h3>
+    <p>Model Context Protocol — works with Claude Desktop, Cursor, and any MCP client.</p>
+    <code>endpoint: https://ogapay-five.vercel.app/api/mcp</code>
+    <div class="p-foot"><button class="btn sm" onclick="copyText('https://ogapay-five.vercel.app/api/mcp')"><i class="ti ti-copy"></i> Copy</button></div>
+  </div>
+  <div class="proto-card">
+    <div class="p-icon"><i class="ti ti-wand"></i></div>
+    <h3>OpenClaw Skill</h3>
+    <p>Install the OgaPay skill into your OpenClaw-compatible agent for seamless integration.</p>
+    <code>curl -s https://ogapay.fun/skill.md</code>
+    <div class="p-foot"><button class="btn sm" onclick="copyText('curl -s https://ogapay.fun/skill.md')"><i class="ti ti-copy"></i> Copy</button></div>
+  </div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px">
+  <div class="card" style="padding:20px">
+    <h3 style="font-family:Outfit;font-size:15px;font-weight:800;margin:0 0 12px">Quick Start</h3>
+    <div class="integration-steps">
+      <div class="i-step"><div class="s-num">1</div><div class="s-content"><h4>Get an API key</h4><p>Generate a key from the <a href="apikey.html" style="color:var(--accent);font-weight:600">API Keys page</a> and set your spending limits.</p></div></div>
+      <div class="i-step"><div class="s-num">2</div><div class="s-content"><h4>Hire humans via API</h4><p>Send a POST request with your task description, reward, and the number of workers needed.</p></div></div>
+      <div class="i-step"><div class="s-num">3</div><div class="s-content"><h4>Collect responses</h4><p>Use the returned secret to fetch submissions once workers complete the task.</p></div></div>
+      <div class="i-step"><div class="s-num">4</div><div class="s-content"><h4>Automate workflows</h4><p>Integrate with MCP for Claude/Cursor agents or use the OpenClaw skill.</p></div></div>
+    </div>
+  </div>
+  <div class="card" style="padding:20px">
+    <h3 style="font-family:Outfit;font-size:15px;font-weight:800;margin:0 0 12px">Recent Agent Activity</h3>
+    <div class="usage-log">
+      <div class="log-item"><div class="log-dot" style="color:var(--green)"><i class="ti ti-check"></i></div><div class="log-info"><div class="lt">Logo feedback requested</div><div class="lm">Agent hire · 8 responses · 2h ago</div></div><div class="log-cost">$0.20</div></div>
+      <div class="log-item"><div class="log-dot" style="color:var(--green)"><i class="ti ti-check"></i></div><div class="log-info"><div class="lt">UI review task</div><div class="lm">Agent hire · 5 responses · 5h ago</div></div><div class="log-cost">$0.125</div></div>
+      <div class="log-item"><div class="log-dot" style="color:var(--gold)"><i class="ti ti-clock"></i></div><div class="log-info"><div class="lt">Survey responses</div><div class="lm">Agent hire · In progress · 3/10 done</div></div><div class="log-cost">$0.25</div></div>
+      <div class="log-item"><div class="log-dot" style="color:var(--text3)"><i class="ti ti-x"></i></div><div class="log-info"><div class="lt">Content tagging job</div><div class="lm">Expired · 0 responses</div></div><div class="log-cost">—</div></div>
+    </div>
+  </div>
+</div>
+</main>
+<style>[data-theme="dark"] .nav-links .nav-link.active{background:var(--bg2)}</style>
+<script>
+function t(){const h=document.documentElement,d=h.getAttribute('data-theme')||'light',n=d==='light'?'dark':'light';h.setAttribute('data-theme',n);try{localStorage.setItem('ogapay-theme',n)}catch(e){}const i=document.getElementById('ti');if(i)i.className=n==='dark'?'ti ti-sun':'ti ti-moon'}
+(function(){const h=document.documentElement;h.setAttribute('data-theme',h.getAttribute('data-theme')||'light');const d=document.getElementById('ti');if(d)d.className=h.getAttribute('data-theme')==='dark'?'ti ti-sun':'ti ti-moon'})();
+function copyText(t){navigator.clipboard&&navigator.clipboard.writeText(t);const e=document.getElementById('toast');if(e){e.textContent='Copied!';e.classList.add('show');setTimeout(()=>e.classList.remove('show'),1800)}}
+</script>
+</body>
+</html>
