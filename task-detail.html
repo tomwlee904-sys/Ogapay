@@ -65,7 +65,7 @@
 /* Submit area */
 .submit-area{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:4px}.submit-area .btn-submit{flex:1;height:46px;font-size:15px;font-weight:800}
 
-@keyframes shimmer{0%{left:-100%}100%{left:100%}}
+@keyframes shimmer{0%{left:-100%}100%{left:100%}}.wallet-bar{display:flex;align-items:center;justify-content:space-between;padding:12px 18px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:20px;gap:12px;flex-wrap:wrap}.wallet-bar .wb-left{display:flex;align-items:center;gap:10px}.wallet-bar .wb-icon{width:36px;height:36px;border-radius:50%;background:var(--brand-blue);display:grid;place-items:center;color:#fff;font-size:16px}.wallet-bar .wb-bal{font-size:14px;font-weight:700}.wallet-bar .wb-bal .curr{color:var(--text2);font-weight:400}.wallet-bar .wb-btn{height:34px;padding:0 12px;border:1.5px solid var(--border);border-radius:8px;background:var(--bg2);color:var(--text2);font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:6px}.wallet-bar .wb-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--card)}.wallet-bar .wb-btn.connected{background:var(--green);color:#fff;border-color:var(--green)}.wallet-bar .wb-btn.connected:hover{opacity:.9}.pay-select{margin-bottom:14px}.pay-select label{display:block;font-size:12px;font-weight:800;color:var(--text2);margin-bottom:6px}.pay-options{display:grid;grid-template-columns:1fr 1fr;gap:8px}.pay-option{display:flex;align-items:center;gap:10px;padding:10px 14px;border:1.5px solid var(--border);border-radius:10px;background:var(--bg2);cursor:pointer;transition:all .15s}.pay-option:hover{border-color:var(--border2)}.pay-option.selected{border-color:var(--accent);background:var(--soft-purple,#f4f6fa)}.pay-option .po-icon{width:32px;height:32px;border-radius:8px;display:grid;place-items:center;font-size:16px}.pay-option .po-icon.ngn{background:rgba(22,163,74,.1);color:var(--green)}.pay-option .po-icon.usdc{background:rgba(37,99,235,.1);color:var(--accent2)}.pay-option .po-info{flex:1}.pay-option .po-name{font-size:13px;font-weight:700}.pay-option .po-desc{font-size:11px;color:var(--text3)}
 
 @media(max-width:1024px){.detail-grid{grid-template-columns:1fr 300px}}
 @media(max-width:768px){
@@ -248,7 +248,7 @@ function loadTask() {
 
   content.innerHTML = `
     <!-- Creator header -->
-    <div class="detail-creator">
+    <div class="wallet-bar" id="walletBar"><div class="wb-left"><span class="wb-icon"><i class="ti ti-wallet"></i></span><div><span class="wb-bal" id="walletBalance">₦0.00</span> <span class="curr">balance</span></div></div><button class="wb-btn" id="walletBtn" onclick="toggleWallet()"><i class="ti ti-plug-connected"></i>Connect Wallet</button></div><div class="detail-creator">
       <span class="detail-creator-avatar">${c.initials}</span>
       <div class="detail-creator-info">
         <div class="detail-creator-name">${c.name}</div>
@@ -322,7 +322,7 @@ function loadTask() {
             <div class="file-list" id="fileList"></div>
           </div>
 
-          <div class="captcha-box">
+          <div class="pay-select"><label>Pay with</label><div class="pay-options" id="payOptions"><div class="pay-option selected" data-pay="ngn" onclick="selectPay(this)"><span class="po-icon ngn"><i class="ti ti-coin-naira"></i></span><div class="po-info"><div class="po-name">NGN Wallet</div><div class="po-desc">Pay from Naira balance</div></div></div><div class="pay-option" data-pay="usdc" onclick="selectPay(this)"><span class="po-icon usdc"><i class="ti ti-coin"></i></span><div class="po-info"><div class="po-name">USDC Wallet</div><div class="po-desc">Pay from USDC balance</div></div></div></div></div><div class="captcha-box">
             <i class="ti ti-shield-check"></i>
             <span class="cb-text">Verify you're human before submitting</span>
             <button class="cb-btn" id="captchaBtn" onclick="verifyCaptcha()">Verify</button>
@@ -391,8 +391,8 @@ function verifyCaptcha() {
 function checkSubmitReady() {
   const btn = document.getElementById('submitBtn');
   if (!btn) return;
-  btn.disabled = !captchaVerified;
-  if (!captchaVerified) {
+  btn.disabled = !captchaVerified || !walletConnected;
+  if (btn.disabled) {
     btn.innerHTML = '<i class="ti ti-send"></i>Submit Application';
   }
 }
@@ -402,6 +402,11 @@ function submitApplication() {
   const btn = document.getElementById('submitBtn');
   if (!btn || btn.disabled) return;
 
+  if (!walletConnected) {
+    say('Connect your wallet first');
+    return;
+  }
+
   const proof = document.getElementById('proofText')?.value?.trim();
   if (!proof && uploadedFiles.length === 0) {
     say('Please provide proof or upload a file');
@@ -409,7 +414,28 @@ function submitApplication() {
   }
 
   btn.disabled = true;
-  btn.innerHTML = '<i class="ti ti-loader" style="animation:spin 1s linear infinite"></i>Submitting...';
+  btn.innerHTML = '<i class="ti ti-loader" style="animation:spin 1s linear infinite"></i>Processing payment...';
+  
+  // Deduct from wallet (simulated)
+  var payMethod = document.querySelector('.pay-option.selected');
+  var payCur = payMethod ? payMethod.dataset.pay : 'ngn';
+  var cost = payCur === 'usdc' ? 0.5 : 200;
+  if (payCur === 'ngn' && walletData.ngn < cost) {
+    say('Insufficient NGN balance. Please deposit.');
+    btn.disabled = false;
+    btn.innerHTML = '<i class="ti ti-send"></i>Submit Application';
+    return;
+  }
+  if (payCur === 'usdc' && walletData.usdc < cost) {
+    say('Insufficient USDC balance. Please deposit.');
+    btn.disabled = false;
+    btn.innerHTML = '<i class="ti ti-send"></i>Submit Application';
+    return;
+  }
+  if (payCur === 'ngn') walletData.ngn -= cost;
+  else walletData.usdc -= cost;
+  saveWalletState();
+  updateWalletUI();
 
   setTimeout(() => {
     btn.innerHTML = '<i class="ti ti-check"></i>Submitted!';
@@ -424,6 +450,53 @@ function submitApplication() {
       localStorage.setItem('ogapay_my_tasks', JSON.stringify(myTasks));
     } catch(e) {}
   }, 1500);
+}
+
+// ── Wallet ───────────────────────────────────
+let walletConnected = false;
+let walletData = { ngn: 42000, usdc: 125 };
+
+try {
+  var savedWallet = localStorage.getItem('ogapay_wallet');
+  if (savedWallet) {
+    var w = JSON.parse(savedWallet);
+    walletConnected = w.connected || false;
+    if (w.balances) walletData = w.balances;
+  }
+} catch(e) {}
+
+function saveWalletState() {
+  try { localStorage.setItem('ogapay_wallet', JSON.stringify({ connected: walletConnected, balances: walletData })); } catch(e) {}
+}
+
+function toggleWallet() {
+  walletConnected = !walletConnected;
+  updateWalletUI();
+  saveWalletState();
+  say(walletConnected ? 'Wallet connected' : 'Wallet disconnected');
+}
+
+function updateWalletUI() {
+  var btn = document.getElementById('walletBtn');
+  var bal = document.getElementById('walletBalance');
+  if (!btn || !bal) return;
+  if (walletConnected) {
+    btn.innerHTML = '<i class="ti ti-plug-connected"></i>Connected';
+    btn.className = 'wb-btn connected';
+    var ngnFmt = '₦' + walletData.ngn.toLocaleString();
+    var usdcFmt = walletData.usdc + ' USDC';
+    bal.innerHTML = ngnFmt + ' | ' + usdcFmt;
+  } else {
+    btn.innerHTML = '<i class="ti ti-plug-connected"></i>Connect Wallet';
+    btn.className = 'wb-btn';
+    bal.textContent = '₦0.00';
+  }
+  checkSubmitReady();
+}
+
+function selectPay(el) {
+  document.querySelectorAll('.pay-option').forEach(function(o) { o.classList.remove('selected'); });
+  el.classList.add('selected');
 }
 
 // ── Toast ────────────────────────────────────
@@ -453,6 +526,7 @@ function t() {
   const icon = document.getElementById('ti');
   if (icon) icon.className = html.getAttribute('data-theme') === 'dark' ? 'ti ti-sun' : 'ti ti-moon';
   loadTask();
+  setTimeout(updateWalletUI, 100);
 })();
 </script>
 <script src="assets/ogapay-live.js"></script>
