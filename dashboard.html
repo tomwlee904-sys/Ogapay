@@ -72,7 +72,7 @@
 
 <nav class="nav">
 <div class="nav-inner">
-<a href="index.html" class="brand"><img src="assets/ogapay-logo-dark.svg" alt="OgaPay" class="nav-logo" id="navLogo"></a>
+<a href="index.html" class="brand"><span class="logo">O</span>OgaPay</a>
 <div class="nav-links">
 <a href="tasks.html" class="nav-link"><i class="ti ti-briefcase"></i>Browse</a>
 <a href="dashboard.html" class="nav-link active"><i class="ti ti-dashboard"></i>Dashboard</a>
@@ -236,7 +236,7 @@
 
 <script>
 function t(){const h=document.documentElement,d=h.getAttribute('data-theme')||'dark',n=d==='dark'?'light':'dark';h.setAttribute('data-theme',n);try{localStorage.setItem('ogapay-theme',n)}catch(e){}const i=document.getElementById('ti');if(i)i.className=n==='dark'?'ti ti-sun':'ti ti-moon'}
-(function(){const h=document.documentElement;h.setAttribute('data-theme',h.getAttribute('data-theme')||'dark');const d=document.getElementById('ti');if(d)d.className=h.getAttribute('data-theme')==='dark'?'ti ti-sun':'ti ti-moon';const l=document.getElementById('navLogo');if(l)l.src='assets/ogapay-logo-'+(h.getAttribute('data-theme')==='dark'?'dark':'light')+'.svg';})();
+(function(){const h=document.documentElement;h.setAttribute('data-theme',h.getAttribute('data-theme')||'dark');const d=document.getElementById('ti');if(d)d.className=h.getAttribute('data-theme')==='dark'?'ti ti-sun':'ti ti-moon';})();
 </script>
 <script src="assets/ogapay-live.js"></script>
 <nav class="bot-nav">
