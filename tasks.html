@@ -13,10 +13,12 @@
 :root{
   --bg:#ffffff;--bg2:#f7f9fc;--card:#ffffff;--border:#e4e9f1;--border2:#d5deea;--text:#101525;--text2:#66738a;--text3:#98a6ba;--primary:#0d1323;--accent:#7C3AED;--accent2:#2563EB;--brand-blue:linear-gradient(90deg,#2563EB,#3B82F6,#60A5FA,#93C5FD);--earn-gradient:linear-gradient(90deg,#7C3AED,#A78BFA,#6366F1,#C4B5FD,#7C3AED);--gold:#f5b301;--green:#16a34a;--soft-purple:#f4f6fa;--soft-blue:#eef6ff;--shadow:0 4px 16px rgba(16,21,37,.07),0 1px 4px rgba(16,21,37,.04);--shadow-soft:0 2px 8px rgba(16,21,37,.05);--radius:14px;
 }
+  --nav-h:60px;
 [data-theme="dark"]{
   --bg:#000000;--bg2:#050505;--card:#111111;--border:#232323;--border2:#333333;--text:#f4f7fb;--text2:#a1a1aa;--text3:#667186;--primary:#f4f7fb;--accent:#A78BFA;--accent2:#60A5FA;--soft-purple:#1a1a1a;--soft-blue:#0d1d34;--shadow:0 4px 24px rgba(0,0,0,.5),0 1px 4px rgba(0,0,0,.3);--shadow-soft:0 2px 12px rgba(0,0,0,.4);
 }
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--text);font-family:"DM Sans",system-ui,sans-serif;overflow-x:hidden}a{color:inherit;text-decoration:none}button,input,select,textarea{font:inherit}button{cursor:pointer}
+.app{display:flex;width:min(1200px,calc(100% - 32px));margin:0 auto;gap:24px;padding:24px 0 72px;min-height:calc(100vh - var(--nav-h))}.main{flex:1;min-width:0}
 .page-head{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-bottom:22px;flex-wrap:wrap}.eyebrow{display:inline-flex;align-items:center;gap:7px;padding:5px 10px;border:1px solid var(--border);border-radius:999px;color:var(--text2);font-size:12px;font-weight:800}.page h1{font-family:"Outfit";font-size:clamp(24px,3vw,36px);margin:10px 0 4px}.lead{margin:0;color:var(--text2);max-width:680px;line-height:1.65;font-size:14px}.btn{border:1.5px solid var(--border2);background:var(--card);color:var(--text);border-radius:10px;height:40px;padding:0 14px;display:inline-flex;align-items:center;justify-content:center;gap:8px;font-weight:800;font-size:13px;white-space:nowrap;transition:all .15s}.btn:hover{background:var(--bg2);border-color:var(--border2)}.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}.btn.primary:hover{opacity:.9}.btn.sm{height:32px;padding:0 10px;font-size:12px}.btn.ghost{background:transparent;border-color:transparent;color:var(--text2)}.btn.ghost:hover{background:var(--bg2);border-color:var(--border)}
 .filter-bar{display:flex;align-items:center;gap:12px;margin-bottom:24px;flex-wrap:wrap}.filter-bar .search-wrap{flex:1;min-width:200px;position:relative}.filter-bar .search-wrap input{width:100%;height:42px;padding:0 16px 0 40px;border:1.5px solid var(--border);border-radius:10px;background:var(--card);color:var(--text);font-size:14px;outline:none;transition:border-color .2s}.filter-bar .search-wrap input:focus{border-color:var(--accent)}.filter-bar .search-wrap .si{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:18px}.filter-btn-group{display:flex;gap:6px;flex-wrap:wrap}.view-toggle{display:inline-flex;border:1.5px solid var(--border);border-radius:10px;background:var(--card);overflow:hidden;flex-shrink:0}.view-toggle button{border:0;background:transparent;padding:7px 14px;color:var(--text2);font-weight:700;font-size:12.5px;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all .15s}.view-toggle button.active{background:var(--accent);color:#fff}.view-toggle button:not(.active):hover{background:var(--bg2);color:var(--text)}
 .toast{position:fixed;right:18px;bottom:18px;background:var(--primary);color:var(--bg);border-radius:12px;padding:12px 14px;font-weight:800;box-shadow:var(--shadow);opacity:0;transform:translateY(8px);transition:.2s;z-index:400}.toast.show{opacity:1;transform:translateY(0)}
@@ -64,7 +66,7 @@
 }
 
 /* Mobile bottom nav */
-</style>
+</style><style>
 .nav{background:rgba(0,0,0,.92);border-bottom-color:var(--border)}
 [data-theme="light"] .nav{border-bottom-color:transparent}
 .nav-inner{height:100%;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:28px;width:min(1200px,calc(100% - 48px));margin:0 auto}
@@ -141,14 +143,25 @@ div.oga-drawer-foot.public-only{display:block!important}
 body[data-auth="authed"] div.oga-drawer-foot.authed-only{display:block!important}
 body[data-auth="authed"] div.oga-drawer-foot.public-only{display:none!important}
 @media(max-width:768px){.nav-links{display:none}.nav-inner{width:100%;padding:0 24px;gap:12px;grid-template-columns:1fr auto}}
-</head>
+
+
+/* Mobile bottom nav */
+.mobile-bottom-nav{position:fixed;bottom:0;left:0;right:0;height:68px;z-index:150;background:rgba(255,255,255,.96);border-top:1px solid var(--border);backdrop-filter:blur(18px) saturate(1.25);display:none;justify-content:space-around;align-items:center;padding:0 8px;padding-bottom:env(safe-area-inset-bottom,0px)}
+[data-theme="dark"] .mobile-bottom-nav{background:rgba(0,0,0,.96);border-top-color:#222b3c}
+[data-theme="light"] .mobile-bottom-nav{border-top-color:transparent}
+.mobile-bottom-nav a{min-width:0;display:grid;justify-items:center;gap:3px;color:var(--text3);font-size:11px;font-weight:800;text-decoration:none;transition:color .15s}
+.mobile-bottom-nav a i{font-size:22px}
+.mobile-bottom-nav a:hover,.mobile-bottom-nav a.active{color:var(--accent)}
+.mobile-bottom-nav a.create{transform:translateY(-10px)}
+.mobile-bottom-nav a.create i{width:50px;height:50px;border-radius:16px;background:var(--accent);color:#fff;display:grid;place-items:center;font-size:26px;box-shadow:0 6px 20px rgba(124,58,237,.3)}
+</style></head>
 <body>
 <!-- ═══ SHARED NAVBAR ═══ -->
 <header class="nav">
   <div class="nav-inner">
     <a class="brand" href="index.html" aria-label="OgaPay home">
       <span class="logo-mark">
-        <span style="font-family:Outfit;font-weight:900;font-size:20px">O</span>
+        <svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect width="512" height="512" fill="white"/><rect x="98" y="98" width="107" height="107" rx="20" fill="black"/><path d="M225 98H312C323 98 332 107 332 118V205H225V98Z" fill="black"/><path d="M352 98H392C440 98 470 128 470 176V205H352V98Z" fill="black"/><rect x="98" y="225" width="107" height="107" fill="black"/><rect x="225" y="225" width="107" height="107" fill="black"/><path d="M352 225H470V254C470 302 440 332 392 332H352V225Z" fill="black"/><rect x="98" y="352" width="107" height="107" rx="20" fill="black"/><path d="M225 352H312C323 352 332 361 332 372V439C332 450 323 459 312 459H225V352Z" fill="black"/></svg>
       </span>
       <span>Oga<span>Pay</span></span>
     </a>
@@ -175,7 +188,7 @@ body[data-auth="authed"] div.oga-drawer-foot.public-only{display:none!important}
   <aside class="mobile-drawer oga-drawer" aria-label="OgaPay menu">
     <div class="oga-drawer-head">
       <a class="oga-drawer-brand" href="index.html" aria-label="OgaPay home">
-        <span class="oga-drawer-logo logo-mark" aria-hidden="true"><span style="font-family:Outfit;font-weight:900;font-size:20px">O</span></span>
+        <span class="oga-drawer-logo logo-mark" aria-hidden="true"><svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect width="512" height="512" fill="white"/><rect x="98" y="98" width="107" height="107" rx="20" fill="black"/><path d="M225 98H312C323 98 332 107 332 118V205H225V98Z" fill="black"/><path d="M352 98H392C440 98 470 128 470 176V205H352V98Z" fill="black"/><rect x="98" y="225" width="107" height="107" fill="black"/><rect x="225" y="225" width="107" height="107" fill="black"/><path d="M352 225H470V254C470 302 440 332 392 332H352V225Z" fill="black"/><rect x="98" y="352" width="107" height="107" rx="20" fill="black"/><path d="M225 352H312C323 352 332 361 332 372V439C332 450 323 459 312 459H225V352Z" fill="black"/></svg></span>
         <span>OgaPay</span>
       </a>
       <button class="oga-drawer-close" data-close-menu aria-label="Close menu">&#x2715;</button>

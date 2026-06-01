@@ -37,7 +37,7 @@
 
 /* Mobile bottom nav */
 .mobile-bottom-nav a{min-width:0;display:grid;justify-items:center;gap:4px;color:var(--text3);font-size:13px;font-weight:800;text-decoration:none}.mobile-bottom-nav svg{width:28px;height:28px;stroke-width:2.2}.mobile-bottom-nav .active,.mobile-bottom-nav a:hover{color:var(--text)}.mobile-bottom-nav .create{transform:translateY(-18px);gap:5px}.mobile-bottom-nav .create svg{width:58px;height:58px;padding:15px;border-radius:18px;background:var(--primary);color:var(--bg)}[data-theme="dark"] .mobile-bottom-nav .create svg{background:var(--text);color:var(--bg)}@media(max-width:768px){}
-</style>
+</style><style>
 .nav{background:rgba(0,0,0,.92);border-bottom-color:var(--border)}
 [data-theme="light"] .nav{border-bottom-color:transparent}
 .nav-inner{height:100%;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:28px;width:min(1200px,calc(100% - 48px));margin:0 auto}
@@ -114,14 +114,14 @@ div.oga-drawer-foot.public-only{display:block!important}
 body[data-auth="authed"] div.oga-drawer-foot.authed-only{display:block!important}
 body[data-auth="authed"] div.oga-drawer-foot.public-only{display:none!important}
 @media(max-width:768px){.nav-links{display:none}.nav-inner{width:100%;padding:0 24px;gap:12px;grid-template-columns:1fr auto}}
-</head>
+</style></head>
 <body>
 <!-- ═══ SHARED NAVBAR ═══ -->
 <header class="nav">
   <div class="nav-inner">
     <a class="brand" href="index.html" aria-label="OgaPay home">
       <span class="logo-mark">
-        <span style="font-family:Outfit;font-weight:900;font-size:20px">O</span>
+        <svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect width="512" height="512" fill="white"/><rect x="98" y="98" width="107" height="107" rx="20" fill="black"/><path d="M225 98H312C323 98 332 107 332 118V205H225V98Z" fill="black"/><path d="M352 98H392C440 98 470 128 470 176V205H352V98Z" fill="black"/><rect x="98" y="225" width="107" height="107" fill="black"/><rect x="225" y="225" width="107" height="107" fill="black"/><path d="M352 225H470V254C470 302 440 332 392 332H352V225Z" fill="black"/><rect x="98" y="352" width="107" height="107" rx="20" fill="black"/><path d="M225 352H312C323 352 332 361 332 372V439C332 450 323 459 312 459H225V352Z" fill="black"/></svg>
       </span>
       <span>Oga<span>Pay</span></span>
     </a>
@@ -148,7 +148,7 @@ body[data-auth="authed"] div.oga-drawer-foot.public-only{display:none!important}
   <aside class="mobile-drawer oga-drawer" aria-label="OgaPay menu">
     <div class="oga-drawer-head">
       <a class="oga-drawer-brand" href="index.html" aria-label="OgaPay home">
-        <span class="oga-drawer-logo logo-mark" aria-hidden="true"><span style="font-family:Outfit;font-weight:900;font-size:20px">O</span></span>
+        <span class="oga-drawer-logo logo-mark" aria-hidden="true"><svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect width="512" height="512" fill="white"/><rect x="98" y="98" width="107" height="107" rx="20" fill="black"/><path d="M225 98H312C323 98 332 107 332 118V205H225V98Z" fill="black"/><path d="M352 98H392C440 98 470 128 470 176V205H352V98Z" fill="black"/><rect x="98" y="225" width="107" height="107" fill="black"/><rect x="225" y="225" width="107" height="107" fill="black"/><path d="M352 225H470V254C470 302 440 332 392 332H352V225Z" fill="black"/><rect x="98" y="352" width="107" height="107" rx="20" fill="black"/><path d="M225 352H312C323 352 332 361 332 372V439C332 450 323 459 312 459H225V352Z" fill="black"/></svg></span>
         <span>OgaPay</span>
       </a>
       <button class="oga-drawer-close" data-close-menu aria-label="Close menu">&#x2715;</button>
