@@ -9,31 +9,29 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800;900&family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
-<style>
-:root{--bg:#ffffff;--bg2:#f7f9fc;--card:#ffffff;--border:#e5e5e5;--border2:#d4d4d4;--text:#0f141e;--text2:#525252;--text3:#94a3b8;--primary:#0f141e;--accent:#7C3AED;--accent2:#2563EB;--green:#16a34a;--gold:#f5b301;--shadow:0 4px 16px rgba(16,21,37,.07);--shadow-soft:0 2px 8px rgba(16,21,37,.05);--radius:14px;--radius-sm:10px;--nav-h:60px}
-[data-theme="dark"]{--bg:#000000;--bg2:#050505;--card:#111111;--border:#232323;--border2:#333333;--text:#f4f7fb;--text2:#a1a1aa;--text3:#667186;--primary:#f4f7fb;--accent:#A78BFA;--accent2:#60A5FA;--shadow:0 4px 16px rgba(0,0,0,.28);--shadow-soft:0 2px 8px rgba(0,0,0,.22)}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;overflow-x:hidden}a{color:inherit;text-decoration:none}button,input,select,textarea{font:inherit}button{cursor:pointer}
+<style>:root{--bg:#ffffff;--bg2:#f7f9fc;--card:#ffffff;--border:#e4e9f1;--border2:#d5deea;--text:#101525;--text2:#66738a;--text3:#98a6ba;--primary:#0d1323;--accent:#7C3AED;--accent2:#2563EB;--green:#16a34a;--gold:#f5b301;--brand-blue:linear-gradient(90deg,#2563EB,#3B82F6,#60A5FA,#93C5FD);--earn-gradient:linear-gradient(90deg,#7C3AED,#A78BFA,#6366F1,#C4B5FD,#7C3AED);--shadow:0 4px 16px rgba(16,21,37,.07),0 1px 4px rgba(16,21,37,.04);--shadow-soft:0 2px 8px rgba(16,21,37,.05);--shadow-glow:0 0 30px rgba(124,58,237,.15);--radius:14px;--radius-sm:10px;--nav-h:60px}
+[data-theme="dark"]{--bg:#000000;--bg2:#050505;--card:#111111;--border:#232323;--border2:#333333;--text:#f4f7fb;--text2:#a1a1aa;--text3:#667186;--primary:#f4f7fb;--accent:#A78BFA;--accent2:#60A5FA;--brand-blue:linear-gradient(90deg,#2563EB,#3B82F6,#60A5FA,#93C5FD);--earn-gradient:linear-gradient(90deg,#7C3AED,#A78BFA,#6366F1,#C4B5FD,#7C3AED);--shadow:0 4px 16px rgba(0,0,0,.28),0 1px 4px rgba(0,0,0,.18);--shadow-soft:0 2px 8px rgba(0,0,0,.22);--shadow-glow:0 0 30px rgba(167,139,250,.12)}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;overflow-x:hidden}a{color:inherit;text-decoration:none}button,input,select{font:inherit}button{cursor:pointer}
+/* old nav line removed */
+/* old nav css removed */
+.app{display:flex;width:min(1200px,calc(100% - 32px));margin:0 auto;gap:24px;padding:24px 0 72px;min-height:calc(100vh - var(--nav-h))}.main{flex:1;min-width:0}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow)}.btn{height:44px;padding:0 20px;border:1.5px solid var(--border);border-radius:10px;background:var(--card);color:var(--text);font-size:14px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:all .2s;cursor:pointer;text-decoration:none}.btn:hover{border-color:var(--border2);box-shadow:var(--shadow)}.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}.btn.primary:hover{box-shadow:0 6px 24px rgba(124,58,237,.3);transform:translateY(-1px)}.btn.sm{height:36px;padding:0 14px;font-size:12px}.btn.outline{border-color:var(--accent);color:var(--accent);background:transparent}
+/* Marketplace */
+.market-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px}.market-header h1{font-family:Outfit;font-size:28px;font-weight:800;margin:0}.market-header p{color:var(--text2);font-size:14px;margin:2px 0 0}
+.search-bar{display:flex;align-items:center;gap:8px;padding:0 14px;height:44px;border:1.5px solid var(--border);border-radius:10px;background:var(--bg);flex:1;max-width:360px;transition:border-color .2s}.search-bar:focus-within{border-color:var(--accent)}.search-bar input{flex:1;border:0;background:transparent;color:var(--text);font-size:14px;outline:none;height:100%}.search-bar i{color:var(--text3);font-size:18px}
+.cat-row{display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap}.cat-pill{height:34px;padding:0 14px;border:1px solid var(--border);border-radius:999px;background:var(--bg);color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:5px;text-decoration:none}.cat-pill:hover,.cat-pill.active{background:var(--accent);color:#fff;border-color:var(--accent)}.cat-pill.active{box-shadow:0 4px 12px rgba(124,58,237,.2)}
+.prod-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.prod-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;transition:all .25s;display:flex;flex-direction:column}.prod-card:hover{transform:translateY(-3px);box-shadow:0 12px 32px rgba(16,21,37,.1);border-color:var(--border2)}.prod-card .pc-img{height:140px;background:var(--bg2);display:grid;place-items:center;font-size:32px;color:var(--text3);border-bottom:1px solid var(--border)}.prod-card .pc-body{padding:16px;flex:1;display:flex;flex-direction:column}.prod-card .pc-badge{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:999px;font-size:9px;font-weight:700;background:rgba(124,58,237,.1);color:var(--accent);margin-bottom:6px;width:fit-content}.prod-card h3{margin:0;font-size:14px;font-weight:800;line-height:1.3}.prod-card .pc-desc{font-size:12px;color:var(--text2);margin:4px 0;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.prod-card .pc-meta{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--text3);margin-top:6px}.prod-card .pc-meta span{display:flex;align-items:center;gap:3px}.prod-card .pc-foot{margin-top:auto;padding-top:12px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--border)}.prod-card .pc-price{font-family:Outfit;font-size:18px;font-weight:800}.prod-card .pc-price .sub{font-size:11px;font-weight:500;color:var(--text3)}.sidebar-right{width:260px;flex-shrink:0;display:flex;flex-direction:column;gap:12px}.sb-card{padding:16px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm)}.sb-card .sbt{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text3);margin-bottom:10px}.creator-card{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)}.creator-card:last-child{border:0}.c-av{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#7C3AED,#6366F1);display:grid;place-items:center;color:#fff;font-size:12px;font-weight:800;flex-shrink:0}.c-info{flex:1;min-width:0}.c-info .cn{font-size:12px;font-weight:600}.c-info .cm{font-size:10px;color:var(--text3)}
+@media(max-width:1024px){.prod-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:768px){.app{flex-direction:column}.sidebar-right{display:none}.prod-grid{grid-template-columns:1fr}.market-header{flex-direction:column;align-items:stretch}.search-bar{max-width:100%}}
+.app{display:flex;min-height:calc(100vh - var(--nav-h))}.sidebar{width:244px;position:sticky;top:var(--nav-h);height:calc(100vh - var(--nav-h));border-right:1px solid var(--border);background:var(--bg);padding:14px 10px;overflow:auto;display:none}body.is-authed .sidebar{display:block}.main{flex:1;min-width:0}.page{width:min(1120px,calc(100% - 48px));margin:0 auto;padding:34px 0 72px}
 
-/* === Page layout === */
-.app{display:flex;width:min(1100px,calc(100% - 32px));margin:0 auto;gap:24px;padding:24px 0 72px;min-height:calc(100vh - var(--nav-h))}
-.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow)}
-.btn{height:44px;padding:0 20px;border:1.5px solid var(--border);border-radius:10px;background:var(--card);color:var(--text);font-size:14px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:all .2s;cursor:pointer;text-decoration:none}.btn:hover{border-color:var(--border2);box-shadow:var(--shadow)}.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}.btn.primary:hover{box-shadow:0 6px 24px rgba(124,58,237,.3);transform:translateY(-1px)}.btn.sm{height:34px;padding:0 12px;font-size:12px}.btn.full{width:100%}
-.badge{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:700}.badge-green{background:rgba(22,163,74,.1);color:var(--green)}.badge-accent{background:rgba(124,58,237,.12);color:var(--accent)}
-
-/* === Communities === */
-.comm-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px}.comm-head h1{font-family:Outfit;font-size:28px;font-weight:800;margin:0}.comm-head p{font-size:14px;color:var(--text2);margin:2px 0 0}
-.comm-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:24px}.comm-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;transition:all .25s;display:flex;flex-direction:column}.comm-card:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(16,21,37,.08);border-color:var(--border2)}.comm-card .cc-icon{width:48px;height:48px;border-radius:14px;display:grid;place-items:center;font-size:24px;margin-bottom:12px;color:#fff}.comm-card h3{margin:0;font-size:15px;font-weight:800}.comm-card .cc-desc{font-size:12px;color:var(--text2);margin:4px 0 8px;line-height:1.4}.comm-card .cc-meta{display:flex;gap:10px;font-size:11px;color:var(--text3);margin-bottom:10px}.comm-card .cc-meta span{display:flex;align-items:center;gap:3px}.comm-card .cc-foot{margin-top:auto;display:flex;gap:6px}.cc-foot .btn{flex:1;height:38px;font-size:12px}
-.sidebar-right{width:280px;flex-shrink:0;display:flex;flex-direction:column;gap:12px}.sb-card{padding:16px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm)}.sb-card .sbt{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text3);margin-bottom:10px}.invite-link{display:flex;align-items:center;gap:6px;padding:8px 10px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;font-size:12px;font-family:monospace;color:var(--text2);margin-bottom:8px}.invite-link span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.comm-detail{display:none}.comm-detail.active{display:block}.comm-list.active{display:none}
-.detail-header{display:flex;align-items:center;gap:16px;padding:20px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:20px}.detail-header .back-btn{width:36px;height:36px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text2);display:grid;place-items:center;cursor:pointer;transition:all .15s;font-size:18px;flex-shrink:0}.detail-header .back-btn:hover{background:var(--bg2);color:var(--text)}.detail-header .dh-icon{width:48px;height:48px;border-radius:14px;display:grid;place-items:center;font-size:24px;color:#fff;flex-shrink:0}.detail-header .dh-info{flex:1}.detail-header .dh-info h2{margin:0;font-family:Outfit;font-size:18px;font-weight:800}.detail-header .dh-info p{margin:2px 0 0;font-size:13px;color:var(--text2)}
-.tabs-row{display:flex;gap:4px;margin-bottom:18px;border-bottom:1px solid var(--border);padding-bottom:0}.tab-btn{padding:10px 16px;font-size:13px;font-weight:700;color:var(--text2);cursor:pointer;border:0;background:transparent;border-bottom:2px solid transparent;transition:all .15s;margin-bottom:-1px}.tab-btn:hover{color:var(--text)}.tab-btn.active{color:var(--accent);border-bottom-color:var(--accent)}
-.member-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}.member-row:last-child{border:0}.m-av{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#7C3AED,#6366F1);display:grid;place-items:center;color:#fff;font-size:12px;font-weight:800;flex-shrink:0}.m-info{flex:1;min-width:0}.m-info .mn{font-size:13px;font-weight:600}.m-info .mm{font-size:11px;color:var(--text2)}.m-role{font-size:10px;padding:2px 6px;border-radius:999px;font-weight:700}.m-role.admin{background:rgba(245,179,1,.1);color:var(--gold)}.m-role.mod{background:rgba(124,58,237,.1);color:var(--accent)}.m-role.member{background:var(--border);color:var(--text3)}
-.modal{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;visibility:hidden;opacity:0;transition:all .3s}.modal.open{visibility:visible;opacity:1}.modal-overlay{position:absolute;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(4px)}.modal-panel{position:relative;width:min(460px,calc(100% - 32px));background:var(--card);border:1px solid var(--border);border-radius:20px;padding:28px;transform:translateY(20px);transition:all .3s}.modal.open .modal-panel{transform:translateY(0)}.modal-panel h2{margin:0 0 4px;font-family:Outfit;font-size:20px}.modal-panel p{color:var(--text2);font-size:14px;margin:0 0 16px}.fg{margin-bottom:14px}.fg label{font-size:12px;font-weight:700;color:var(--text2);margin-bottom:5px;display:block}.fg input,.fg select,.fg textarea{width:100%;height:44px;padding:0 12px;border:1.5px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font-size:14px;outline:none;font-family:inherit;transition:border-color .2s}.fg textarea{height:80px;padding:10px 12px;resize:vertical}.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--accent)}
-
-/* === Shared Nav === */
-[data-theme="dark"] .nav{background:rgba(0,0,0,.92);border-bottom-color:var(--border)}
+.page-head{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-bottom:22px;flex-wrap:wrap}.eyebrow{display:inline-flex;align-items:center;gap:7px;padding:5px 10px;border:1px solid var(--border);border-radius:999px;color:var(--text2);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.8px}.eyebrow i{font-size:15px;color:var(--accent)}.lead{color:var(--text2);font-size:16px;line-height:1.7;margin:6px 0 0;max-width:680px}.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-soft)}.btn{height:48px;padding:0 24px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--card);color:var(--text);font-size:15px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:all .2s;cursor:pointer;text-decoration:none}.btn:hover{border-color:var(--border2);box-shadow:var(--shadow)}.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}.btn.primary:hover{box-shadow:0 6px 24px rgba(124,58,237,.3);transform:translateY(-1px)}.btn.sm{height:38px;padding:0 16px;font-size:13px}.btn.outline{background:transparent;border-color:var(--accent);color:var(--accent)}.btn.full{width:100%}.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:800}.badge-accent{background:rgba(124,58,237,.12);color:var(--accent)}.badge-blue{background:rgba(37,99,235,.1);color:var(--accent2)}.badge-green{background:rgba(22,163,74,.12);color:var(--green)}.badge-gold{background:rgba(245,179,1,.12);color:var(--gold)}.small{font-size:12px;color:var(--text3)}.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(100px);padding:12px 28px;border-radius:999px;background:var(--primary);color:var(--bg);font-weight:700;font-size:14px;z-index:999;opacity:0;transition:all .35s;pointer-events:none;white-space:nowrap}.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}.modal{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;visibility:hidden;opacity:0;transition:all .3s}.modal.open{visibility:visible;opacity:1}.modal-overlay{position:absolute;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(4px)}.modal-panel{position:relative;width:min(440px,calc(100% - 32px));background:var(--card);border:1px solid var(--border);border-radius:20px;padding:28px;transform:translateY(20px);transition:all .3s}.modal.open .modal-panel{transform:translateY(0)}.fg{margin-bottom:14px}.fg label{font-size:12px;font-weight:700;color:var(--text2);margin-bottom:5px;display:block}.fg input,.fg select,.fg textarea{width:100%;height:44px;padding:0 12px;border:1.5px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font-size:14px;outline:none}.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--accent)}.fg-h{display:grid;grid-template-columns:1fr 1fr;gap:12px}.grid{display:grid;gap:16px}.grid.cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}.row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.space{justify-content:space-between}
+@media(max-width:768px){.mobile-bottom-nav{display:flex}}@media(min-width:769px){.mobile-bottom-nav{display:none!important}}.mobile-bottom-nav{position:fixed;bottom:0;left:0;right:0;height:68px;z-index:150;background:rgba(255,255,255,.96);border-top:1px solid var(--border);backdrop-filter:blur(18px) saturate(1.25);display:none;justify-content:space-around;align-items:center;padding:0 8px}[data-theme="dark"] .mobile-bottom-nav{background:rgba(0,0,0,.96);border-top-color:#222b3c}[data-theme="light"] .mobile-bottom-nav{border-top-color:transparent}.mobile-bottom-nav a{min-width:0;display:grid;justify-items:center;gap:3px;color:var(--text3);font-size:11px;font-weight:800;text-decoration:none;transition:color .15s}.mobile-bottom-nav a i{font-size:22px}.mobile-bottom-nav a:hover,.mobile-bottom-nav a.active{color:var(--accent)}.mobile-bottom-nav a.create{transform:translateY(-10px)}.mobile-bottom-nav a.create i{width:50px;height:50px;border-radius:16px;background:var(--accent);color:#fff;display:grid;place-items:center;font-size:26px;box-shadow:0 6px 20px rgba(124,58,237,.3)}
+/* === SHARED NAV === */
+/* ═══ SHARED NAVBAR + DRAWER CSS ═══ */
+/* old nav line removed */
+[data-theme="dark"] [data-theme="light"] .nav{background:rgba(255,255,255,.92);backdrop-filter:blur(18px) saturate(1.4);border-bottom-color:transparent}[data-theme="dark"] .nav{background:rgba(0,0,0,.92);}
 [data-theme="light"] .nav{border-bottom-color:transparent}
-.nav{position:sticky;top:0;z-index:200;height:var(--nav-h);background:rgba(255,255,255,.94);border-bottom:1px solid var(--border);backdrop-filter:blur(18px) saturate(1.4)}
 .nav-inner{height:100%;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:28px;width:min(1200px,calc(100% - 48px));margin:0 auto}
 .brand{display:flex;align-items:center;gap:10px;font-family:"Outfit",sans-serif;font-size:19px;font-weight:800;letter-spacing:-.4px;white-space:nowrap}
 .logo-mark{width:34px;height:34px;display:grid;place-items:center;flex-shrink:0;border-radius:9px;box-shadow:0 8px 22px rgba(37,99,235,.12)}
@@ -44,11 +42,12 @@
 .nav-link.active,.nav-link:hover{color:var(--text);background:var(--bg2)}
 .nav-actions{display:flex;align-items:center;gap:8px}
 .wallet-btn{height:36px;padding:0 18px;display:inline-flex;align-items:center;gap:8px;border:1.5px solid var(--border2);border-radius:999px;background:var(--card);color:var(--text);font-size:13.5px;font-weight:700;cursor:pointer;transition:border-color .14s,background .14s;text-decoration:none}
-.wallet-btn:hover{border-color:var(--text);background:var(--bg2)}.wallet-btn svg{width:15px;height:15px}
+.wallet-btn:hover{border-color:var(--text);background:var(--bg2)}
+.wallet-btn svg{width:15px;height:15px}
 .icon-btn{width:36px;height:36px;display:grid;place-items:center;border:1.5px solid var(--border);border-radius:8px;background:var(--card);color:var(--text2);cursor:pointer;transition:color .14s,border-color .14s,background .14s}
-.icon-btn:hover{color:var(--text);border-color:var(--border2);background:var(--bg2)}.icon-btn svg{width:17px;height:17px;stroke-width:2.2}
-
-/* === Drawer === */
+.icon-btn:hover{color:var(--text);border-color:var(--border2);background:var(--bg2)}
+.icon-btn svg{width:17px;height:17px;stroke-width:2.2}
+/* Drawer */
 .mobile-menu{position:fixed;inset:0;z-index:300;display:none;visibility:hidden;pointer-events:none}
 .mobile-menu.open{display:block;visibility:visible;pointer-events:auto}
 .mobile-overlay{position:absolute;inset:0;background:rgba(0,0,0,.3);backdrop-filter:blur(3px)}
@@ -93,9 +92,9 @@
 .oga-drawer-actions svg{width:16px;height:16px;stroke-width:2.3}
 .logout-item strong{color:#dc2626!important}
 .logout-item .oga-drawer-icon{color:#dc2626;border-color:rgba(220,38,38,.2);background:rgba(220,38,38,.05)}
-
-/* === Auth visibility === */
-.authed-only{display:none!important}.public-only{display:flex!important}
+/* auth visibility */
+.authed-only{display:none!important}
+.public-only{display:flex!important}
 body[data-auth="authed"] .authed-only{display:flex!important}
 body[data-auth="authed"] .public-only{display:none!important}
 nav.oga-drawer-nav.authed-only{display:none!important}
@@ -106,14 +105,91 @@ div.oga-drawer-foot.authed-only{display:none!important}
 div.oga-drawer-foot.public-only{display:block!important}
 body[data-auth="authed"] div.oga-drawer-foot.authed-only{display:block!important}
 body[data-auth="authed"] div.oga-drawer-foot.public-only{display:none!important}
-
 @media(max-width:768px){.nav-links{display:none}.nav-inner{width:100%;padding:0 24px;gap:12px;grid-template-columns:1fr auto}}
+
+
+/* COMMUNITIES PAGE */
+.comm-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px}
+.comm-header h1{font-family:Outfit;font-size:28px;font-weight:800;margin:0}
+.comm-header p{color:var(--text2);font-size:14px;margin:2px 0 0}
+.comm-cats{display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap}
+.comm-cat{height:32px;padding:0 14px;border:1px solid var(--border);border-radius:999px;background:var(--bg);color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:5px}
+.comm-cat:hover,.comm-cat.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.comm-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.comm-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;transition:all .2s;cursor:pointer;text-decoration:none;display:flex;flex-direction:column}
+.comm-card:hover{transform:translateY(-3px);border-color:var(--border2);box-shadow:var(--shadow)}
+.comm-card .cc-banner{height:80px;background:linear-gradient(135deg,#7C3AED,#6366F1);position:relative}
+.comm-card .cc-av{width:48px;height:48px;border-radius:12px;background:#fff;position:absolute;bottom:-20px;left:16px;display:grid;place-items:center;font-size:22px;box-shadow:0 4px 12px rgba(0,0,0,.12)}
+.comm-card .cc-body{padding:16px;padding-top:32px;flex:1;display:flex;flex-direction:column}
+.comm-card h3{font-size:15px;font-weight:800;margin:0;font-family:Outfit}
+.comm-card .cc-desc{font-size:12px;color:var(--text2);margin:4px 0;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.comm-card .cc-meta{display:flex;align-items:center;gap:10px;margin-top:8px;font-size:11px;color:var(--text3)}
+.comm-card .cc-meta span{display:flex;align-items:center;gap:3px}
+.comm-card .cc-badge{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:999px;font-size:9px;font-weight:700;margin-bottom:4px;width:fit-content}
+/* Featured community */
+.comm-featured{background:linear-gradient(135deg,rgba(124,58,237,.06),rgba(99,102,241,.06));border:1px solid rgba(124,58,237,.12);border-radius:var(--radius);padding:24px;margin-bottom:24px;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.comm-featured .cf-icon{width:56px;height:56px;border-radius:14px;background:linear-gradient(135deg,#7C3AED,#6366F1);display:grid;place-items:center;font-size:28px;color:#fff;flex-shrink:0}
+.comm-featured .cf-info{flex:1;min-width:200px}
+.comm-featured .cf-info h2{font-family:Outfit;font-size:18px;font-weight:800;margin:0}
+.comm-featured .cf-info p{font-size:13px;color:var(--text2);margin:4px 0 0;line-height:1.4}
+.comm-featured .cf-stats{display:flex;gap:16px}
+.comm-featured .cf-stats span{text-align:center}
+.comm-featured .cf-stats .cf-num{font-family:Outfit;font-size:18px;font-weight:800;display:block}
+.comm-featured .cf-stats .cf-label{font-size:10px;color:var(--text3);text-transform:uppercase}
+/* Sidebar */
+.sidebar-right{width:260px;flex-shrink:0;display:flex;flex-direction:column;gap:12px}
+.sb-card{padding:16px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm)}
+.sb-card .sbt{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text3);margin-bottom:10px}
+.sb-link{display:block;font-size:11px;color:var(--accent);font-weight:700;margin-bottom:8px;text-decoration:none}
+.sb-link i{font-size:12px}
+.sb-comm{display:flex;align-items:center;gap:6px;padding:6px 0;font-size:12px}
+.sb-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0}
+.sb-role{color:var(--text3);margin-left:auto;font-size:10px}
+/* Manage panel */
+.manage-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-top:20px}
+.manage-card h3{font-family:Outfit;font-size:14px;font-weight:800;margin:0 0 12px}
+.manage-card .fg{margin-bottom:12px}
+.manage-card .fg label{font-size:11px;font-weight:700;color:var(--text2);margin-bottom:4px;display:block}
+.manage-card .fg input,.manage-card .fg textarea,.manage-card .fg select{width:100%;height:40px;padding:0 10px;border:1.5px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font-size:13px;outline:none;font-family:inherit;transition:border-color .15s}
+.manage-card .fg textarea{height:70px;padding:8px 10px;resize:vertical}
+.manage-card .fg input:focus,.manage-card .fg textarea:focus,.manage-card .fg select:focus{border-color:var(--accent)}
+.invite-link{display:flex;align-items:center;gap:8px;padding:0 12px;height:40px;border:1.5px solid var(--border);border-radius:8px;background:var(--bg);font-size:12px;font-family:monospace}
+/* Member row */
+.member-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)}.member-row:last-child{border:0}
+.m-av{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#7C3AED,#6366F1);display:grid;place-items:center;color:#fff;font-size:12px;font-weight:800;flex-shrink:0}
+.m-info{flex:1;min-width:0}
+.m-info .mn{font-size:13px;font-weight:600}
+.m-info .mm{font-size:11px;color:var(--text2)}
+.m-role{font-size:10px;padding:2px 6px;border-radius:999px;font-weight:700}
+.m-role.admin{background:rgba(245,179,1,.1);color:var(--gold)}
+.m-role.mod{background:rgba(124,58,237,.1);color:var(--accent)}
+.m-role.member{background:var(--border);color:var(--text3)}
+/* Modal */
+.modal{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;visibility:hidden;opacity:0;transition:all .25s}.modal.open{visibility:visible;opacity:1}
+.modal-overlay{position:absolute;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(4px)}
+.modal-panel{position:relative;width:min(460px,calc(100% - 32px));background:var(--card);border:1px solid var(--border);border-radius:20px;padding:28px;transform:translateY(20px);transition:all .25s}.modal.open .modal-panel{transform:translateY(0)}
+.modal-panel h2{margin:0 0 4px;font-family:Outfit;font-size:20px}.modal-panel p{color:var(--text2);font-size:14px;margin:0 0 16px}
+/* Activity feed */
+.feed-item{display:flex;align-items:flex-start;gap:10px;padding:12px 0;border-bottom:1px solid var(--border)}
+.feed-item:last-child{border:0}
+.feed-item .fi-av{width:32px;height:32px;border-radius:50%;background:var(--bg2);display:grid;place-items:center;font-size:14px;color:var(--text3);flex-shrink:0}
+.feed-item .fi-body{flex:1;min-width:0}
+.feed-item .fi-body .fi-text{font-size:13px;color:var(--text2)}
+.feed-item .fi-body .fi-text strong{color:var(--text)}
+.feed-item .fi-body .fi-time{font-size:11px;color:var(--text3);margin-top:2px}
+/* Badge */
+.comm-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:999px;font-size:9px;font-weight:800;background:rgba(124,58,237,.1);color:var(--accent)}
+/* Tab buttons */
+.tab-row{display:flex;gap:4px;margin-bottom:20px;border-bottom:1px solid var(--border);padding-bottom:0}
+.tab-btn{height:36px;padding:0 16px;border:0;background:transparent;color:var(--text2);font-size:13px;font-weight:700;cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;margin-bottom:-1px}
+.tab-btn:hover{color:var(--text)}
+.tab-btn.active{color:var(--accent);border-bottom-color:var(--accent)}
+/* Responsive */
 @media(max-width:1024px){.comm-grid{grid-template-columns:repeat(2,1fr)}.sidebar-right{display:none}}
-@media(max-width:768px){.app{flex-direction:column}.comm-grid{grid-template-columns:1fr}}
+@media(max-width:768px){.comm-grid{grid-template-columns:1fr}.app{flex-direction:column}.comm-featured{flex-direction:column;align-items:stretch;text-align:center}.comm-featured .cf-icon{margin:0 auto}}
 </style>
 </head>
-<body style="padding-bottom:64px">
-
+<body>
 <!-- ═══ SHARED NAVBAR ═══ -->
 <header class="nav">
   <div class="nav-inner">
@@ -124,260 +200,368 @@ body[data-auth="authed"] div.oga-drawer-foot.public-only{display:none!important}
       <span>Oga<span>Pay</span></span>
     </a>
     <nav class="nav-links" aria-label="Primary navigation">
-      <a class="nav-link" href="index.html" data-navlink><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 10v10h14V10"/></svg>Home</a>
-      <a class="nav-link" href="tasks.html" data-navlink><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Tasks</a>
-      <a class="nav-link" href="store.html" data-navlink><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18M16 10a4 4 0 0 1-8 0"/></svg>Deals</a>
-      <a class="nav-link" href="communities.html" data-navlink><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg>Communities</a>
-      <a class="nav-link" href="faq.html" data-navlink><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 1 1 5.8 1c-.6 1-1.9 1.4-2.5 2.3-.3.4-.4.8-.4 1.2M12 17h.01"/></svg>FAQ</a>
+      <a class="nav-link" href="index.html" data-navlink><i class="ti ti-home"></i>Home</a>
+      <a class="nav-link" href="tasks.html" data-navlink><i class="ti ti-layout-grid"></i>Tasks</a>
+      <a class="nav-link" href="store.html" data-navlink><i class="ti ti-discount-2"></i>Deals</a>
+      <a class="nav-link" href="communities.html" data-navlink><i class="ti ti-users-group"></i>Communities</a>
+      <a class="nav-link" href="faq.html" data-navlink><i class="ti ti-help-circle"></i>FAQ</a>
     </nav>
     <div class="nav-actions">
-      <a class="wallet-btn public-only" href="login.html"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.3" viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="m10 17 5-5-5-5"/><path d="M15 12H3"/></svg><span>Login</span></a>
-      <a class="wallet-btn public-only" href="login.html?mode=signup"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.3" viewBox="0 0 24 24"><path d="M5 12h14M13 5l7 7-7 7"/></svg><span>Get Started</span></a>
-      <button class="icon-btn" id="themeToggle" aria-label="Toggle dark mode"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z"/></svg></button>
-      <button class="icon-btn" id="menuBtn" aria-label="Open menu"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+      <a class="wallet-btn public-only" href="login.html"><i class="ti ti-login"></i><span class="wallet-label">Login</span></a>
+      <a class="wallet-btn public-only" href="login.html?mode=signup"><i class="ti ti-arrow-right"></i><span class="wallet-label">Get Started</span></a>
+      <button class="icon-btn" id="themeToggle" aria-label="Toggle dark mode"><i class="ti ti-moon"></i></button>
+      <button class="icon-btn" id="menuBtn" aria-label="Open menu"><i class="ti ti-menu-2"></i></button>
     </div>
   </div>
 </header>
-
-<!-- ═══ SHARED DRAWER ═══ -->
+<!-- ═══ SHARED DRAWER SIDEBAR ═══ -->
 <div class="mobile-menu" id="mobileMenu">
   <div class="mobile-overlay" data-close-menu></div>
   <aside class="mobile-drawer oga-drawer" aria-label="OgaPay menu">
     <div class="oga-drawer-head">
-      <a class="oga-drawer-brand" href="index.html">
-        <span class="oga-drawer-logo logo-mark"><svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="512" height="512" fill="white"/><rect x="98" y="98" width="107" height="107" rx="20" fill="black"/><path d="M225 98H312C323 98 332 107 332 118V205H225V98Z" fill="black"/><path d="M352 98H392C440 98 470 128 470 176V205H352V98Z" fill="black"/><rect x="98" y="225" width="107" height="107" fill="black"/><rect x="225" y="225" width="107" height="107" fill="black"/><path d="M352 225H470V254C470 302 440 332 392 332H352V225Z" fill="black"/><rect x="98" y="352" width="107" height="107" rx="20" fill="black"/><path d="M225 352H312C323 352 332 361 332 372V439C332 450 323 459 312 459H225V352Z" fill="black"/></svg></span>
+      <a class="oga-drawer-brand" href="index.html" aria-label="OgaPay home">
+        <span class="oga-drawer-logo logo-mark" aria-hidden="true"><svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect width="512" height="512" fill="white"/><rect x="98" y="98" width="107" height="107" rx="20" fill="black"/><path d="M225 98H312C323 98 332 107 332 118V205H225V98Z" fill="black"/><path d="M352 98H392C440 98 470 128 470 176V205H352V98Z" fill="black"/><rect x="98" y="225" width="107" height="107" fill="black"/><rect x="225" y="225" width="107" height="107" fill="black"/><path d="M352 225H470V254C470 302 440 332 392 332H352V225Z" fill="black"/><rect x="98" y="352" width="107" height="107" rx="20" fill="black"/><path d="M225 352H312C323 352 332 361 332 372V439C332 450 323 459 312 459H225V352Z" fill="black"/></svg></span>
         <span>OgaPay</span>
       </a>
       <button class="oga-drawer-close" data-close-menu aria-label="Close menu">&#x2715;</button>
     </div>
 
-    <!-- PUBLIC nav -->
+    <!-- PUBLIC sidebar (non-logged in) -->
     <nav class="oga-drawer-nav public-only" aria-label="Primary menu">
       <div class="oga-drawer-section">
         <section class="oga-drawer-group">
           <button class="oga-drawer-item oga-drawer-group-toggle" type="button" aria-expanded="false">
-            <span class="oga-drawer-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span>
+            <span class="oga-drawer-icon"><i class="ti ti-layout-grid"></i></span>
             <span><strong>Tasks</strong><small>Browse and track tasks</small></span>
-            <svg class="oga-drawer-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
+            <i class="ti ti-chevron-down"></i>
           </button>
           <div class="oga-drawer-subnav">
-            <a href="tasks.html" data-close-menu><span class="oga-drawer-icon mini"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span><span><strong>All Tasks</strong><small>Browse all tasks</small></span></a>
-            <a href="monitor.html" data-close-menu><span class="oga-drawer-icon mini"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg></span><span><strong>Job Monitor</strong><small>Track new tasks</small></span></a>
+            <a href="tasks.html" data-close-menu>
+              <span class="oga-drawer-icon mini"><i class="ti ti-layout-grid"></i></span>
+              <span><strong>All Tasks</strong><small>Browse all tasks</small></span>
+            </a>
+            <a href="monitor.html" data-close-menu>
+              <span class="oga-drawer-icon mini"><i class="ti ti-eye"></i></span>
+              <span><strong>Job Monitor</strong><small>Track new tasks</small></span>
+            </a>
           </div>
         </section>
-        <a class="oga-drawer-item" href="store.html" data-close-menu><span class="oga-drawer-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18M16 10a4 4 0 0 1-8 0"/></svg></span><span><strong>Deals</strong><small>Worker tools and inbox</small></span></a>
-        <a class="oga-drawer-item" href="blog.html" data-close-menu><span class="oga-drawer-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg></span><span><strong>Blog</strong><small>Read articles and updates</small></span></a>
-        <a class="oga-drawer-item" href="vault.html" data-close-menu><span class="oga-drawer-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span><span><strong>Vault</strong><small>Reward pool</small></span></a>
-        <a class="oga-drawer-item" href="faq.html" data-close-menu><span class="oga-drawer-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 1 1 5.8 1c-.6 1-1.9 1.4-2.5 2.3-.3.4-.4.8-.4 1.2M12 17h.01"/></svg></span><span><strong>FAQ</strong><small>Answers and guides</small></span></a>
-        <a class="oga-drawer-item" href="support.html" data-close-menu><span class="oga-drawer-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span><span><strong>Support</strong><small>Get help</small></span></a>
+        <a class="oga-drawer-item" href="store.html" data-close-menu>
+          <span class="oga-drawer-icon"><i class="ti ti-discount-2"></i></span>
+          <span><strong>Deals</strong><small>Worker tools and inbox</small></span>
+        </a>
+        <a class="oga-drawer-item" href="blog.html" data-close-menu>
+          <span class="oga-drawer-icon"><i class="ti ti-news"></i></span>
+          <span><strong>Blog</strong><small>Read articles and updates</small></span>
+        </a>
+        <a class="oga-drawer-item" href="vault.html" data-close-menu>
+          <span class="oga-drawer-icon"><i class="ti ti-building-bank"></i></span>
+          <span><strong>Vault</strong><small>Reward pool</small></span>
+        </a>
+        <a class="oga-drawer-item" href="faq.html" data-close-menu>
+          <span class="oga-drawer-icon"><i class="ti ti-help-circle"></i></span>
+          <span><strong>FAQ</strong><small>Answers and guides</small></span>
+        </a>
+        <a class="oga-drawer-item" href="support.html" data-close-menu>
+          <span class="oga-drawer-icon"><i class="ti ti-message-2"></i></span>
+          <span><strong>Support</strong><small>Get help</small></span>
+        </a>
       </div>
     </nav>
     <div class="oga-drawer-foot public-only">
       <div class="oga-drawer-actions">
-        <button type="button" onclick="window.location.href='login.html'"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="m10 17 5-5-5-5"/><path d="M15 12H3"/></svg>Login</button>
+        <button type="button" onclick="window.location.href='login.html'">
+          <i class="ti ti-login"></i>Login
+        </button>
       </div>
     </div>
 
-    <!-- AUTHED nav -->
+    <!-- AUTHED sidebar (logged-in users) -->
     <nav class="oga-drawer-nav authed-only" aria-label="Authenticated menu" style="display:none">
       <div class="oga-drawer-section">
-        <a class="oga-drawer-item" href="post-task.html" data-close-menu><span class="oga-drawer-icon create-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg></span><span><strong>Create Job</strong><small>Post a new task</small></span></a>
+        <!-- Create Job -->
+        <a class="oga-drawer-item" href="post-task.html" data-close-menu>
+          <span class="oga-drawer-icon create-icon"><i class="ti ti-circle-plus"></i></span>
+          <span><strong>Create Job</strong><small>Post a new task</small></span>
+        </a>
+        <!-- Jobs accordion -->
         <section class="oga-drawer-group">
           <button class="oga-drawer-item oga-drawer-group-toggle" type="button" aria-expanded="false">
-            <span class="oga-drawer-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span>
+            <span class="oga-drawer-icon"><i class="ti ti-layout-grid"></i></span>
             <span><strong>Jobs</strong><small>Browse and track jobs</small></span>
-            <svg class="oga-drawer-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
+            <i class="ti ti-chevron-down"></i>
           </button>
           <div class="oga-drawer-subnav">
-            <a href="tasks.html" data-close-menu><span class="oga-drawer-icon mini"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span><span><strong>All Jobs</strong><small>Browse all jobs</small></span></a>
-            <a href="monitor.html" data-close-menu><span class="oga-drawer-icon mini"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg></span><span><strong>Job Monitor</strong><small>Track new jobs</small></span></a>
+            <a href="tasks.html" data-close-menu>
+              <span class="oga-drawer-icon mini"><i class="ti ti-layout-grid"></i></span>
+              <span><strong>All Jobs</strong><small>Browse all jobs</small></span>
+            </a>
+            <a href="monitor.html" data-close-menu>
+              <span class="oga-drawer-icon mini"><i class="ti ti-eye"></i></span>
+              <span><strong>Job Monitor</strong><small>Track new jobs</small></span>
+            </a>
           </div>
         </section>
+        <!-- Store accordion -->
         <section class="oga-drawer-group">
           <button class="oga-drawer-item oga-drawer-group-toggle" type="button" aria-expanded="false">
-            <span class="oga-drawer-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18M16 10a4 4 0 0 1-8 0"/></svg></span>
+            <span class="oga-drawer-icon"><i class="ti ti-discount-2"></i></span>
             <span><strong>Store</strong><small>Wurker tools and inbox</small></span>
-            <svg class="oga-drawer-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
+            <i class="ti ti-chevron-down"></i>
           </button>
           <div class="oga-drawer-subnav">
-            <a href="store.html" data-close-menu><span class="oga-drawer-icon mini"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18M16 10a4 4 0 0 1-8 0"/></svg></span><span><strong>Wurker Store</strong><small>Browse the store</small></span></a>
-            <a href="my-store.html" data-close-menu><span class="oga-drawer-icon mini"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span><span><strong>My Store</strong><small>Manage your listings</small></span></a>
-            <a href="my-tasks.html" data-close-menu><span class="oga-drawer-icon mini"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg></span><span><strong>My Wurk</strong><small>View your work</small></span></a>
-            <a href="messages.html" data-close-menu><span class="oga-drawer-icon mini"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span><span><strong>Messages</strong><small>Open your inbox</small></span></a>
-            <a href="worker.html" data-close-menu><span class="oga-drawer-icon mini"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span><span><strong>Wurker Portal</strong><small>Open the portal</small></span></a>
+            <a href="store.html" data-close-menu>
+              <span class="oga-drawer-icon mini"><i class="ti ti-discount-2"></i></span>
+              <span><strong>Wurker Store</strong><small>Browse the store</small></span>
+            </a>
+            <a href="my-store.html" data-close-menu>
+              <span class="oga-drawer-icon mini"><i class="ti ti-home"></i></span>
+              <span><strong>My Store</strong><small>Manage your listings</small></span>
+            </a>
+            <a href="my-tasks.html" data-close-menu>
+              <span class="oga-drawer-icon mini"><i class="ti ti-briefcase"></i></span>
+              <span><strong>My Wurk</strong><small>View your work</small></span>
+            </a>
+            <a href="messages.html" data-close-menu>
+              <span class="oga-drawer-icon mini"><i class="ti ti-message-2"></i></span>
+              <span><strong>Messages</strong><small>Open your inbox</small></span>
+            </a>
+            <a href="worker.html" data-close-menu>
+              <span class="oga-drawer-icon mini"><i class="ti ti-user"></i></span>
+              <span><strong>Wurker Portal</strong><small>Open the portal</small></span>
+            </a>
           </div>
         </section>
-        <a class="oga-drawer-item" href="communities.html" data-close-menu><span class="oga-drawer-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg></span><span><strong>Communities</strong><small>Open your communities</small></span></a>
-        <a class="oga-drawer-item" href="blog.html" data-close-menu><span class="oga-drawer-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg></span><span><strong>Blog</strong><small>Read articles and updates</small></span></a>
-        <a class="oga-drawer-item" href="vault.html" data-close-menu><span class="oga-drawer-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span><span><strong>Vault</strong><small>Reward pool</small></span></a>
-        <a class="oga-drawer-item" href="notifications.html" data-close-menu><span class="oga-drawer-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></span><span><strong>Notifications</strong><small>See updates</small></span></a>
-        <a class="oga-drawer-item" href="faq.html" data-close-menu><span class="oga-drawer-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 1 1 5.8 1c-.6 1-1.9 1.4-2.5 2.3-.3.4-.4.8-.4 1.2M12 17h.01"/></svg></span><span><strong>FAQ</strong><small>Answers and guides</small></span></a>
-        <a class="oga-drawer-item" href="support.html" data-close-menu><span class="oga-drawer-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span><span><strong>Support</strong><small>Get help</small></span></a>
+        <a class="oga-drawer-item" href="communities.html" data-close-menu>
+          <span class="oga-drawer-icon"><i class="ti ti-users-group"></i></span>
+          <span><strong>Communities</strong><small>Open your communities</small></span>
+        </a>
+        <a class="oga-drawer-item" href="blog.html" data-close-menu>
+          <span class="oga-drawer-icon"><i class="ti ti-news"></i></span>
+          <span><strong>Blog</strong><small>Read articles and updates</small></span>
+        </a>
+        <a class="oga-drawer-item" href="vault.html" data-close-menu>
+          <span class="oga-drawer-icon"><i class="ti ti-building-bank"></i></span>
+          <span><strong>Vault</strong><small>Reward pool</small></span>
+        </a>
+        <a class="oga-drawer-item" href="notifications.html" data-close-menu>
+          <span class="oga-drawer-icon"><i class="ti ti-bell"></i></span>
+          <span><strong>Notifications</strong><small>See updates</small></span>
+        </a>
+        <a class="oga-drawer-item" href="faq.html" data-close-menu>
+          <span class="oga-drawer-icon"><i class="ti ti-help-circle"></i></span>
+          <span><strong>FAQ</strong><small>Answers and guides</small></span>
+        </a>
+        <a class="oga-drawer-item" href="support.html" data-close-menu>
+          <span class="oga-drawer-icon"><i class="ti ti-message-2"></i></span>
+          <span><strong>Support</strong><small>Get help</small></span>
+        </a>
       </div>
     </nav>
+    <!-- Authed footer: account section -->
     <div class="oga-drawer-foot authed-only" style="display:none">
       <div class="oga-drawer-foot-label">ACCOUNT</div>
-      <a class="oga-drawer-item" href="profile.html" data-close-menu><span class="oga-drawer-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span><span><strong>My Profile</strong></span></a>
-      <a class="oga-drawer-item logout-item" href="login.html" data-close-menu><span class="oga-drawer-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></span><span><strong>Logout</strong></span></a>
+      <a class="oga-drawer-item" href="profile.html" data-close-menu>
+        <span class="oga-drawer-icon"><i class="ti ti-user"></i></span>
+        <span><strong>My Profile</strong></span>
+      </a>
+      <a class="oga-drawer-item logout-item" href="login.html" data-close-menu>
+        <span class="oga-drawer-icon"><i class="ti ti-logout"></i></span>
+        <span><strong>Logout</strong></span>
+      </a>
     </div>
   </aside>
 </div>
-
-<!-- ═══ PAGE CONTENT ═══ -->
 <div class="app">
 <main style="flex:1;min-width:0">
-
-<!-- List View -->
-<div class="comm-list" id="commList">
-  <div class="comm-head">
-    <div><h1>Communities</h1><p>Join communities to collaborate, find tasks, and connect with other workers.</p></div>
-    <button class="btn primary" onclick="openModal()"><i class="ti ti-plus"></i>Create</button>
-  </div>
-  <div class="comm-grid">
-    <div class="comm-card" onclick="openCommunity(this)" data-community="naija-dev">
-      <div class="cc-icon" style="background:linear-gradient(135deg,#7C3AED,#6366F1)"><i class="ti ti-code"></i></div>
-      <h3>Naija Devs</h3>
-      <div class="cc-desc">Nigerian developers building the future. Share gigs, collaborate on projects, and level up.</div>
-      <div class="cc-meta"><span><i class="ti ti-users"></i> 1,247 members</span><span><i class="ti ti-briefcase"></i> 12 tasks</span></div>
-      <div class="cc-foot"><button class="btn primary sm joined" data-joined="true" onclick="event.stopPropagation();toggleJoin(this)"><i class="ti ti-check"></i>Joined</button><button class="btn sm" onclick="event.stopPropagation();openCommunity(this.parentElement.parentElement)"><i class="ti ti-eye"></i>View</button></div>
-    </div>
-    <div class="comm-card" onclick="openCommunity(this)" data-community="crypto-ng">
-      <div class="cc-icon" style="background:linear-gradient(135deg,#2563EB,#3B82F6)"><i class="ti ti-coin"></i></div>
-      <h3>Crypto Nigeria</h3>
-      <div class="cc-desc">Crypto and web3 community for Nigerian earners. Discuss airdrops, tasks, and payouts.</div>
-      <div class="cc-meta"><span><i class="ti ti-users"></i> 3,560 members</span><span><i class="ti ti-briefcase"></i> 8 tasks</span></div>
-      <div class="cc-foot"><button class="btn primary sm" onclick="event.stopPropagation();toggleJoin(this)"><i class="ti ti-user-plus"></i>Join</button><button class="btn sm" onclick="event.stopPropagation();openCommunity(this.parentElement.parentElement)"><i class="ti ti-eye"></i>View</button></div>
-    </div>
-    <div class="comm-card" onclick="openCommunity(this)" data-community="creators-hub">
-      <div class="cc-icon" style="background:linear-gradient(135deg,#f5b301,#f59e0b)"><i class="ti ti-palette"></i></div>
-      <h3>Creators Hub</h3>
-      <div class="cc-desc">For designers, writers, and content creators. Share your store, find collaborators.</div>
-      <div class="cc-meta"><span><i class="ti ti-users"></i> 892 members</span><span><i class="ti ti-briefcase"></i> 5 tasks</span></div>
-      <div class="cc-foot"><button class="btn primary sm" onclick="event.stopPropagation();toggleJoin(this)"><i class="ti ti-user-plus"></i>Join</button><button class="btn sm" onclick="event.stopPropagation();openCommunity(this.parentElement.parentElement)"><i class="ti ti-eye"></i>View</button></div>
-    </div>
-    <div class="comm-card" onclick="openCommunity(this)" data-community="task-hunters">
-      <div class="cc-icon" style="background:linear-gradient(135deg,#16a34a,#22c55e)"><i class="ti ti-target"></i></div>
-      <h3>Task Hunters</h3>
-      <div class="cc-desc">Get notified about high-paying tasks first. Share tips and strategies.</div>
-      <div class="cc-meta"><span><i class="ti ti-users"></i> 2,134 members</span><span><i class="ti ti-briefcase"></i> 24 tasks</span></div>
-      <div class="cc-foot"><button class="btn primary sm" onclick="event.stopPropagation();toggleJoin(this)"><i class="ti ti-user-plus"></i>Join</button><button class="btn sm" onclick="event.stopPropagation();openCommunity(this.parentElement.parentElement)"><i class="ti ti-eye"></i>View</button></div>
-    </div>
-    <div class="comm-card" onclick="openCommunity(this)" data-community="social-earners">
-      <div class="cc-icon" style="background:linear-gradient(135deg,#ec4899,#f472b6)"><i class="ti ti-brand-x"></i></div>
-      <h3>Social Earners</h3>
-      <div class="cc-desc">Social media engagement tasks. X, Instagram, TikTok campaigns and tips.</div>
-      <div class="cc-meta"><span><i class="ti ti-users"></i> 4,891 members</span><span><i class="ti ti-briefcase"></i> 16 tasks</span></div>
-      <div class="cc-foot"><button class="btn primary sm joined" data-joined="true" onclick="event.stopPropagation();toggleJoin(this)"><i class="ti ti-check"></i>Joined</button><button class="btn sm" onclick="event.stopPropagation();openCommunity(this.parentElement.parentElement)"><i class="ti ti-eye"></i>View</button></div>
-    </div>
-    <div class="comm-card" onclick="openCommunity(this)" data-community="freelance-ng">
-      <div class="cc-icon" style="background:linear-gradient(135deg,#6366f1,#8b5cf6)"><i class="ti ti-briefcase"></i></div>
-      <h3>Freelance NG</h3>
-      <div class="cc-desc">Freelancers across all niches. Find clients, post your store, grow your income.</div>
-      <div class="cc-meta"><span><i class="ti ti-users"></i> 1,578 members</span><span><i class="ti ti-briefcase"></i> 9 tasks</span></div>
-      <div class="cc-foot"><button class="btn primary sm" onclick="event.stopPropagation();toggleJoin(this)"><i class="ti ti-user-plus"></i>Join</button><button class="btn sm" onclick="event.stopPropagation();openCommunity(this.parentElement.parentElement)"><i class="ti ti-eye"></i>View</button></div>
-    </div>
-  </div>
+<section class="page" style="width:min(960px,calc(100% - 32px));padding:24px 0 72px">
+<div class="comm-header">
+<div><h1>Communities</h1><p>Connect with like-minded people, collaborate, and earn together</p></div>
+<button class="btn primary" onclick="openModal()" style="height:40px;font-size:13px;padding:0 16px"><i class="ti ti-plus"></i>Create</button>
 </div>
-
-<!-- Detail View -->
-<div class="comm-detail" id="commDetail">
-  <div class="detail-header">
-    <button class="back-btn" onclick="closeCommunity()"><i class="ti ti-arrow-left"></i></button>
-    <div class="dh-icon" id="detailIcon" style="background:linear-gradient(135deg,#7C3AED,#6366F1)"><i class="ti ti-code"></i></div>
-    <div class="dh-info"><h2 id="detailName">Naija Devs</h2><p id="detailMeta">1,247 members · 12 tasks</p></div>
-    <button class="btn primary sm" id="detailJoinBtn"><i class="ti ti-user-plus"></i>Join</button>
-  </div>
-  <div class="tabs-row">
-    <button class="tab-btn active" onclick="switchTab(this,'feed')">Feed</button>
-    <button class="tab-btn" onclick="switchTab(this,'members')">Members</button>
-    <button class="tab-btn" onclick="switchTab(this,'tasks')">Tasks</button>
-    <button class="tab-btn" onclick="switchTab(this,'manage')">Manage</button>
-  </div>
-  <div id="tabFeed"><div class="card" style="padding:16px;text-align:center;color:var(--text2);font-size:13px">Community feed coming soon. Recent activity and announcements will appear here.</div></div>
-  <div id="tabMembers" style="display:none">
-    <div class="card" style="padding:16px">
-      <div class="member-row"><div class="m-av">AD</div><div class="m-info"><div class="mn">Ada Danladi</div><div class="mm">Joined Mar 2026 · 47 tasks</div></div><span class="m-role admin">Admin</span></div>
-      <div class="member-row"><div class="m-av">CO</div><div class="m-info"><div class="mn">Chisom Okafor</div><div class="mm">Joined Mar 2026 · 23 tasks</div></div><span class="m-role mod">Mod</span></div>
-      <div class="member-row"><div class="m-av">MA</div><div class="m-info"><div class="mn">Michael A.</div><div class="mm">Joined Feb 2026 · 12 tasks</div></div><span class="m-role member">Member</span></div>
-      <div class="member-row"><div class="m-av">FT</div><div class="m-info"><div class="mn">Fatima T.</div><div class="mm">Joined Jan 2026 · 8 tasks</div></div><span class="m-role member">Member</span></div>
-    </div>
-  </div>
-  <div id="tabTasks" style="display:none"><div class="card" style="padding:16px;text-align:center;color:var(--text2);font-size:13px">Community tasks will appear here. Members can post tasks exclusive to this community.</div></div>
-  <div id="tabManage" style="display:none">
-    <div class="card" style="padding:16px">
-      <div style="font-size:13px;font-weight:700;margin-bottom:10px">Community Settings</div>
-      <div class="fg"><label>Community name</label><input value="Naija Devs" /></div>
-      <div class="fg"><label>Description</label><textarea>Nigerian developers building the future.</textarea></div>
-      <div class="fg"><label>Invite link</label><div class="invite-link"><span>ogapay.ng/join/naija-devs</span><button class="btn sm" style="flex-shrink:0;height:28px;font-size:11px"><i class="ti ti-copy"></i>Copy</button></div></div>
-      <div style="display:flex;gap:8px"><button class="btn primary sm">Save</button><button class="btn sm">Delete Community</button></div>
-    </div>
-  </div>
+<div class="comm-cats">
+<span class="comm-cat active">All</span>
+<span class="comm-cat"><i class="ti ti-code"></i>Development</span>
+<span class="comm-cat"><i class="ti ti-palette"></i>Design</span>
+<span class="comm-cat"><i class="ti ti-messages"></i>Social</span>
+<span class="comm-cat"><i class="ti ti-coin"></i>Crypto</span>
+<span class="comm-cat"><i class="ti ti-edit"></i>Content</span>
+<span class="comm-cat"><i class="ti ti-trending-up"></i>Marketing</span>
 </div>
-
+<div class="comm-featured">
+<div class="cf-icon"><i class="ti ti-flame"></i></div>
+<div class="cf-info"><h2>Trending Community</h2><p>Naija Devs — Nigeria's largest developer community. 2,400+ members, 150+ tasks completed daily.</p></div>
+<div class="cf-stats"><span><span class="cf-num">2.4k</span><span class="cf-label">Members</span></span><span><span class="cf-num">150</span><span class="cf-label">Tasks/day</span></span><span><span class="cf-num">4.8</span><span class="cf-label">Rating</span></span></div>
+<button class="btn primary sm" style="height:36px;font-size:12px;flex-shrink:0" onclick="openCommunity(this,'naija-devs')"><i class="ti ti-user-plus"></i>Join</button>
+</div>
+<div class="tab-row">
+<button class="tab-btn active" onclick="switchTab(this,'discover')">Discover</button>
+<button class="tab-btn" onclick="switchTab(this,'my')">My Communities</button>
+<button class="tab-btn" onclick="switchTab(this,'feed')">Activity Feed</button>
+</div>
+<div id="tabDiscover">
+<div class="comm-grid">
+<div class="comm-card" onclick="openCommunity(this,'naija-devs')">
+<div class="cc-banner" style="background:linear-gradient(135deg,#7C3AED,transparent 80%)"></div>
+<div class="cc-av">💻</div>
+<div class="cc-body">
+<span class="cc-badge" style="background:rgba(124,58,237,.1);color:var(--accent)"><i class="ti ti-flame"></i>Hot</span>
+<h3>Naija Devs</h3>
+<div class="cc-desc">Nigeria's largest developer community. Code, collaborate, and build.</div>
+<div class="cc-meta"><span><i class="ti ti-users"></i>2.4k members</span><span><i class="ti ti-briefcase"></i>150 tasks</span></div>
+</div>
+</div>
+<div class="comm-card" onclick="openCommunity(this,'social-earners')">
+<div class="cc-banner" style="background:linear-gradient(135deg,#ec4899,transparent 80%)"></div>
+<div class="cc-av">📱</div>
+<div class="cc-body">
+<span class="cc-badge" style="background:rgba(236,72,153,.1);color:#ec4899"><i class="ti ti-flame"></i>Trending</span>
+<h3>Social Earners</h3>
+<div class="cc-desc">Earn crypto by completing social media tasks together.</div>
+<div class="cc-meta"><span><i class="ti ti-users"></i>1.8k members</span><span><i class="ti ti-briefcase"></i>89 tasks</span></div>
+</div>
+</div>
+<div class="comm-card" onclick="openCommunity(this,'crypto-traders')">
+<div class="cc-banner" style="background:linear-gradient(135deg,#f59e0b,transparent 80%)"></div>
+<div class="cc-av">💰</div>
+<div class="cc-body">
+<span class="cc-badge" style="background:rgba(245,158,11,.1);color:#f59e0b"><i class="ti ti-flame"></i>Popular</span>
+<h3>Crypto Traders</h3>
+<div class="cc-desc">DeFi, trading signals, and crypto discussions.</div>
+<div class="cc-meta"><span><i class="ti ti-users"></i>3.1k members</span><span><i class="ti ti-briefcase"></i>210 tasks</span></div>
+</div>
+</div>
+<div class="comm-card" onclick="openCommunity(this,'design-hub')">
+<div class="cc-banner" style="background:linear-gradient(135deg,#2563EB,transparent 80%)"></div>
+<div class="cc-av">🎨</div>
+<div class="cc-body">
+<span class="cc-badge" style="background:rgba(37,99,235,.1);color:#2563EB"><i class="ti ti-flame"></i>New</span>
+<h3>Design Hub</h3>
+<div class="cc-desc">UI/UX designers, graphic artists, and creatives.</div>
+<div class="cc-meta"><span><i class="ti ti-users"></i>950 members</span><span><i class="ti ti-briefcase"></i>45 tasks</span></div>
+</div>
+</div>
+<div class="comm-card" onclick="openCommunity(this,'content-creators')">
+<div class="cc-banner" style="background:linear-gradient(135deg,#10b981,transparent 80%)"></div>
+<div class="cc-av">✍️</div>
+<div class="cc-body">
+<span class="cc-badge" style="background:rgba(16,185,129,.1);color:#10b981"><i class="ti ti-flame"></i>Growing</span>
+<h3>Content Creators</h3>
+<div class="cc-desc">Writers, video editors, and content strategists.</div>
+<div class="cc-meta"><span><i class="ti ti-users"></i>720 members</span><span><i class="ti ti-briefcase"></i>38 tasks</span></div>
+</div>
+</div>
+<div class="comm-card" onclick="openCommunity(this,'task-hunters')">
+<div class="cc-banner" style="background:linear-gradient(135deg,#ef4444,transparent 80%)"></div>
+<div class="cc-av">🎯</div>
+<div class="cc-body">
+<span class="cc-badge" style="background:rgba(239,68,68,.1);color:#ef4444"><i class="ti ti-flame"></i>Active</span>
+<h3>Task Hunters</h3>
+<div class="cc-desc">Find and share the best paying tasks daily.</div>
+<div class="cc-meta"><span><i class="ti ti-users"></i>1.2k members</span><span><i class="ti ti-briefcase"></i>67 tasks</span></div>
+</div>
+</div>
+<div class="comm-card" onclick="openCommunity(this,'ai-and-automation')">
+<div class="cc-banner" style="background:linear-gradient(135deg,#8b5cf6,transparent 80%)"></div>
+<div class="cc-av">🤖</div>
+<div class="cc-body">
+<span class="cc-badge" style="background:rgba(139,92,246,.1);color:#8b5cf6"><i class="ti ti-flame"></i>New</span>
+<h3>AI & Automation</h3>
+<div class="cc-desc">AI tools, bots, and workflow automation.</div>
+<div class="cc-meta"><span><i class="ti ti-users"></i>560 members</span><span><i class="ti ti-briefcase"></i>29 tasks</span></div>
+</div>
+</div>
+<div class="comm-card" onclick="openCommunity(this,'marketing-gurus')">
+<div class="cc-banner" style="background:linear-gradient(135deg,#06b6d4,transparent 80%)"></div>
+<div class="cc-av">📊</div>
+<div class="cc-body">
+<span class="cc-badge" style="background:rgba(6,182,212,.1);color:#06b6d4"><i class="ti ti-flame"></i>Active</span>
+<h3>Marketing Gurus</h3>
+<div class="cc-desc">Growth hacking, social media marketing, and ads.</div>
+<div class="cc-meta"><span><i class="ti ti-users"></i>890 members</span><span><i class="ti ti-briefcase"></i>52 tasks</span></div>
+</div>
+</div>
+</div>
+</div>
+<div id="tabMy" style="display:none">
+<div class="comm-grid">
+<div class="comm-card" onclick="openCommunity(this,'naija-devs')"><div class="cc-banner" style="background:linear-gradient(135deg,#7C3AED,transparent 80%)"></div><div class="cc-av">💻</div><div class="cc-body"><span class="cc-badge" style="background:rgba(245,179,1,.1);color:var(--gold)"><i class="ti ti-crown"></i>Admin</span><h3>Naija Devs</h3><div class="cc-desc">Nigeria's largest developer community.</div><div class="cc-meta"><span><i class="ti ti-users"></i>2.4k members</span><span><i class="ti ti-briefcase"></i>150 tasks</span></div></div></div>
+<div class="comm-card" onclick="openCommunity(this,'social-earners')"><div class="cc-banner" style="background:linear-gradient(135deg,#ec4899,transparent 80%)"></div><div class="cc-av">📱</div><div class="cc-body"><span class="cc-badge" style="background:rgba(124,58,237,.1);color:var(--accent)"><i class="ti ti-user"></i>Member</span><h3>Social Earners</h3><div class="cc-desc">Earn crypto by completing social media tasks.</div><div class="cc-meta"><span><i class="ti ti-users"></i>1.8k members</span><span><i class="ti ti-briefcase"></i>89 tasks</span></div></div></div>
+</div>
+</div>
+<div id="tabFeed" style="display:none">
+<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:6px 18px">
+<div class="feed-item"><div class="fi-av">💻</div><div class="fi-body"><div class="fi-text"><strong>Chidi O.</strong> completed a task in <strong>Naija Devs</strong></div><div class="fi-time">2 min ago</div></div></div>
+<div class="feed-item"><div class="fi-av">📱</div><div class="fi-body"><div class="fi-text"><strong>Ada M.</strong> joined <strong>Social Earners</strong></div><div class="fi-time">15 min ago</div></div></div>
+<div class="feed-item"><div class="fi-av">💰</div><div class="fi-body"><div class="fi-text"><strong>Tunde B.</strong> posted a new task in <strong>Crypto Traders</strong></div><div class="fi-time">1 hour ago</div></div></div>
+<div class="feed-item"><div class="fi-av">🎨</div><div class="fi-body"><div class="fi-text"><strong>Folake O.</strong> reached <strong>Top Contributor</strong> in Design Hub</div><div class="fi-time">2 hours ago</div></div></div>
+<div class="feed-item"><div class="fi-av">🎯</div><div class="fi-body"><div class="fi-text"><strong>Ibrahim N.</strong> shared a tip in <strong>Task Hunters</strong></div><div class="fi-time">3 hours ago</div></div></div>
+</div>
+</div>
+<div class="manage-card" id="manageSection" style="display:none">
+<h3>Manage Community</h3>
+<div class="fg"><label>Community name</label><input id="manageName" value="Naija Devs"></div>
+<div class="fg"><label>Description</label><textarea id="manageDesc" rows="2">Nigerian developers building the future.</textarea></div>
+<div class="fg"><label>Invite link</label><div class="invite-link"><span id="manageLink">ogapay.ng/join/naija-devs</span><button class="btn sm" style="height:28px;font-size:11px;padding:0 10px;flex-shrink:0" onclick="copyInvite()"><i class="ti ti-copy"></i>Copy</button></div></div>
+<div style="display:flex;gap:8px;margin-top:8px"><button class="btn primary sm" onclick="saveManage()">Save</button><button class="btn sm" style="color:#ef4444;border-color:rgba(239,68,68,.2)">Delete Community</button></div>
+</div>
+</section>
 </main>
-
 <aside class="sidebar-right">
-  <div class="sb-card"><div class="sbt">Your Communities</div><a href="community-invites.html" style="display:block;font-size:11px;color:var(--accent);font-weight:700;margin-bottom:8px"><i class="ti ti-mail"></i> Invitations →</a>
-    <div style="display:grid;gap:6px;font-size:12px">
-      <div style="display:flex;align-items:center;gap:6px;padding:6px 0"><div style="width:8px;height:8px;border-radius:2px;background:#7C3AED"></div>Naija Devs <span style="color:var(--text3);margin-left:auto">Admin</span></div>
-      <div style="display:flex;align-items:center;gap:6px;padding:6px 0"><div style="width:8px;height:8px;border-radius:2px;background:#ec4899"></div>Social Earners <span style="color:var(--text3);margin-left:auto">Member</span></div>
-    </div>
-  </div>
-  <div class="sb-card"><div class="sbt">Pending Invites</div>
-    <a href="community-invites.html" style="display:flex;align-items:center;gap:8px;padding:8px 0;font-size:12px;text-decoration:none;color:var(--accent);font-weight:700"><i class="ti ti-mail"></i>View pending invitations →</a>
-  </div>
+<div class="sb-card"><div class="sbt">Your Communities</div>
+<a href="community-invites.html" class="sb-link"><i class="ti ti-mail"></i> Invitations &rarr;</a>
+<div class="sb-comm"><span class="sb-dot" style="background:#7C3AED"></span>Naija Devs <span class="sb-role">Admin</span></div>
+<div class="sb-comm"><span class="sb-dot" style="background:#ec4899"></span>Social Earners <span class="sb-role">Member</span></div>
+</div>
+<div class="sb-card"><div class="sbt">Pending Invites</div>
+<a href="community-invites.html" style="display:flex;align-items:center;gap:8px;padding:6px 0;font-size:12px;color:var(--accent);font-weight:700;text-decoration:none"><i class="ti ti-mail"></i>View pending &rarr;</a>
+</div>
+<div class="sb-card"><div class="sbt">Community Stats</div>
+<div style="display:grid;gap:8px;font-size:12px">
+<div style="display:flex;justify-content:space-between"><span>Active Communities</span><strong>2</strong></div>
+<div style="display:flex;justify-content:space-between"><span>Tasks Completed</span><strong>847</strong></div>
+<div style="display:flex;justify-content:space-between"><span>Earnings</span><strong>₦12,500</strong></div>
+</div></div>
 </aside>
 </div>
-
-<!-- Create Community Modal -->
 <div class="modal" id="createModal">
-  <div class="modal-overlay" onclick="closeModal()"></div>
-  <div class="modal-panel">
-    <h2>Create Community</h2>
-    <p>Start a new community for workers and creators to collaborate.</p>
-    <div class="fg"><label>Community name</label><input placeholder="e.g. Naija Designers" /></div>
-    <div class="fg"><label>Description</label><textarea placeholder="What is this community about?" rows="3"></textarea></div>
-    <div class="fg"><label>Category</label><select><option>Development</option><option>Design</option><option>Social Media</option><option>Content Writing</option><option>Marketing</option><option>General</option></select></div>
-    <button class="btn primary full"><i class="ti ti-users-group"></i>Create Community</button>
-  </div>
-</div>
-
-<!-- ═══ SHARED NAV JS ═══ -->
-<script>
-(function(){
-  const h=document.documentElement;
-  h.setAttribute('data-theme',h.getAttribute('data-theme')||'light');
-  document.querySelectorAll('[data-close-menu]').forEach(e=>e.addEventListener('click',()=>{
-    document.getElementById('mobileMenu')?.classList.remove('open');
-  }));
-})();
-</script>
-<script>
-(function(){
-  try{var th=localStorage.getItem('ogapay-theme')||'light';document.documentElement.setAttribute('data-theme',th);}catch(e){}
-  var authed=false;
-  try{authed=localStorage.getItem('ogapay-authenticated')==='true';}catch(e){}
-  document.body.setAttribute('data-auth',authed?'authed':'public');
-  var themeBtn=document.getElementById('themeToggle');
-  if(themeBtn){themeBtn.addEventListener('click',function(){var html=document.documentElement;var next=html.getAttribute('data-theme')==='dark'?'light':'dark';html.setAttribute('data-theme',next);try{localStorage.setItem('ogapay-theme',next);}catch(e){}});}
-  var menuBtn=document.getElementById('menuBtn');
-  var mobileMenu=document.getElementById('mobileMenu');
-  if(menuBtn&&mobileMenu){menuBtn.addEventListener('click',function(){mobileMenu.classList.add('open');});mobileMenu.querySelectorAll('[data-close-menu]').forEach(function(el){el.addEventListener('click',function(){mobileMenu.classList.remove('open');});});}
-  document.addEventListener('click',function(e){var toggle=e.target.closest('.oga-drawer-group-toggle');if(toggle){var group=toggle.closest('.oga-drawer-group');var open=!group.classList.contains('open');group.classList.toggle('open',open);toggle.setAttribute('aria-expanded',String(open));}});
-  var path=window.location.pathname.split('/').pop()||'index.html';
-  document.querySelectorAll('[data-navlink]').forEach(function(a){if(a.getAttribute('href')===path)a.classList.add('active');});
-})();
-</script>
-
-<!-- ═══ PAGE JS ═══ -->
+<div class="modal-overlay" onclick="closeModal()"></div>
+<div class="modal-panel">
+<h2>Create Community</h2>
+<p>Start a new community for workers and creators to collaborate.</p>
+<div class="fg"><label>Community name</label><input placeholder="e.g. Naija Designers" id="newCommName"></div>
+<div class="fg"><label>Description</label><textarea placeholder="What is this community about?" rows="3" id="newCommDesc"></textarea></div>
+<div class="fg"><label>Category</label><select id="newCommCat"><option>Development</option><option>Design</option><option>Social Media</option><option>Content Writing</option><option>Marketing</option><option>Crypto</option><option>General</option></select></div>
+<button class="btn primary full" onclick="createCommunity()"><i class="ti ti-users-group"></i>Create Community</button>
+</div></div>
 <script>
 function openModal(){document.getElementById('createModal').classList.add('open')}
 function closeModal(){document.getElementById('createModal').classList.remove('open')}
-function toggleJoin(el){const j=el.dataset.joined==='true';el.dataset.joined=String(!j);el.innerHTML=j?'<i class="ti ti-user-plus"></i>Join':'<i class="ti ti-check"></i>Joined';el.classList.toggle('joined',!j)}
-function openCommunity(el,slug){const s=slug||el.getAttribute('data-slug')||el.querySelector('h3')?.textContent?.toLowerCase().replace(/\s+/g,'-')||'community';location.href='community-profile.html?id='+encodeURIComponent(s)}
-function closeCommunity(){document.getElementById('commDetail').classList.remove('active');document.getElementById('commList').classList.remove('active')}
-function switchTab(el,tab){document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));el.classList.add('active');['feed','members','tasks','manage'].forEach(t=>{document.getElementById('tab'+t.charAt(0).toUpperCase()+t.slice(1)).style.display=t===tab?'block':'none'})}
+function createCommunity(){var n=document.getElementById('newCommName')?.value;if(!n||!n.trim()){toast('Please enter a community name');return}closeModal();toast('Community "'+n.trim()+'" created!')}
+function openCommunity(el,slug){var s=slug||el.getAttribute('data-slug')||'community';window.location.href='community-profile.html?id='+encodeURIComponent(s)}
+function switchTab(el,tab){document.querySelectorAll('.tab-btn').forEach(function(b){b.classList.remove('active')});el.classList.add('active');['discover','my','feed'].forEach(function(t){var d=document.getElementById('tab'+t.charAt(0).toUpperCase()+t.slice(1));if(d)d.style.display=t===tab?'block':'none'});var m=document.getElementById('manageSection');if(m)m.style.display=tab==='my'?'block':'none'}
+function copyInvite(){var i=document.getElementById('manageLink');if(i){navigator.clipboard.writeText(i.textContent);toast('Invite link copied!')}}
+function saveManage(){toast('Community settings saved!')}
+var ttt;function toast(m){var t=document.getElementById('toast');if(!t){t=document.createElement('div');t.id='toast';t.style.cssText='position:fixed;right:16px;bottom:16px;background:var(--primary);color:var(--bg);border-radius:10px;padding:10px 14px;font-weight:800;font-size:13px;box-shadow:var(--shadow);opacity:0;transform:translateY(8px);transition:.2s;z-index:400;pointer-events:none';document.body.appendChild(t)}t.textContent=m;t.classList.add('show');t.style.opacity='1';t.style.transform='translateY(0)';clearTimeout(ttt);ttt=setTimeout(function(){t.style.opacity='0';t.style.transform='translateY(8px)'},2500)}
 </script>
 
+<!-- SHARED NAV JS -->
+<script>
+(function(){
+  var th; try{th=localStorage.getItem('ogapay-theme')}catch(e){}
+  var t=th||document.documentElement.getAttribute('data-theme')||'light';
+  document.documentElement.setAttribute('data-theme',t);
+  var authed=false; try{authed=localStorage.getItem('ogapay-authenticated')==='true'}catch(e){}
+  document.body.setAttribute('data-auth',authed?'authed':'public');
+  var themeBtn=document.getElementById('themeToggle');
+  if(themeBtn){themeBtn.addEventListener('click',function(){var h=document.documentElement;var n=h.getAttribute('data-theme')==='dark'?'light':'dark';h.setAttribute('data-theme',n);try{localStorage.setItem('ogapay-theme',n)}catch(e){}})}
+  var menuBtn=document.getElementById('menuBtn');
+  var mobileMenu=document.getElementById('mobileMenu');
+  if(menuBtn&&mobileMenu){menuBtn.addEventListener('click',function(){mobileMenu.classList.add('open')});mobileMenu.querySelectorAll('[data-close-menu]').forEach(function(el){el.addEventListener('click',function(){mobileMenu.classList.remove('open')})})}
+  document.addEventListener('click',function(e){var t=e.target.closest('.oga-drawer-group-toggle');if(t){var g=t.closest('.oga-drawer-group');var o=!g.classList.contains('open');g.classList.toggle('open',o);t.setAttribute('aria-expanded',String(o))}});
+  var p=window.location.pathname.split('/').pop()||'index.html';
+  document.querySelectorAll('[data-navlink]').forEach(function(a){if(a.getAttribute('href')===p)a.classList.add('active')});
+})();
+</script>
 </body>
 </html>
