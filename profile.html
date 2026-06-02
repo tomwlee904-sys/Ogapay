@@ -144,6 +144,11 @@ body[data-auth="authed"] div.oga-drawer-foot.public-only{display:none!important}
 
 @media(max-width:1024px){.links-grid{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:768px){.prof-head{flex-direction:column;align-items:flex-start;gap:12px}.prof-actions{align-self:stretch;justify-content:flex-start}.prof-stats{flex-wrap:wrap}.prof-stat{flex:1 0 50%;border-bottom:1px solid var(--border)}.prof-stat:nth-child(2){border-right:0}.links-grid{grid-template-columns:repeat(2,1fr)}.fg-h{grid-template-columns:1fr}}
+
+.ql-group{margin-bottom:18px}
+.ql-group-label{font-size:11px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.ql-group-label i{font-size:14px}
+.ql-group .links-grid{grid-template-columns:repeat(4,1fr)}
 </style>
 </head>
 <body>
@@ -267,142 +272,74 @@ body[data-auth="authed"] div.oga-drawer-foot.public-only{display:none!important}
   <div class="prof-section">
     <h2><i class="ti ti-link"></i> Quick Links</h2>
     <p class="ps-sub">Navigate to every important place on OgaPay</p>
-    <div class="links-grid">
-      <a href="tasks.html" class="link-card">
-        <div class="lc-icon purple"><i class="ti ti-layout-grid"></i></div>
-        <strong>Browse Tasks</strong>
-        <small>Find work to do</small>
-      </a>
-      <a href="my-tasks.html" class="link-card">
-        <div class="lc-icon blue"><i class="ti ti-briefcase"></i></div>
-        <strong>My Tasks</strong>
-        <small>Track your jobs</small>
-      </a>
-      <a href="post-task.html" class="link-card">
-        <div class="lc-icon green"><i class="ti ti-plus-circle"></i></div>
-        <strong>Post a Task</strong>
-        <small>Hire workers</small>
-      </a>
-      <a href="task-detail.html" class="link-card">
-        <div class="lc-icon teal"><i class="ti ti-file-text"></i></div>
-        <strong>Task Detail</strong>
-        <small>Full task view</small>
-      </a>
-      <a href="store.html" class="link-card">
-        <div class="lc-icon gold"><i class="ti ti-discount-2"></i></div>
-        <strong>Deals</strong>
-        <small>Exclusive offers</small>
-      </a>
-      <a href="my-store.html" class="link-card">
-        <div class="lc-icon pink"><i class="ti ti-building-store"></i></div>
-        <strong>My Store</strong>
-        <small>Your shop</small>
-      </a>
-      <a href="wallet.html" class="link-card">
-        <div class="lc-icon green"><i class="ti ti-wallet"></i></div>
-        <strong>Wallet</strong>
-        <small>Your balance</small>
-      </a>
-      <a href="vault.html" class="link-card">
-        <div class="lc-icon purple"><i class="ti ti-building-bank"></i></div>
-        <strong>Rewards Vault</strong>
-        <small>Earnings history</small>
-      </a>
-      <a href="referrals.html" class="link-card">
-        <div class="lc-icon blue"><i class="ti ti-link"></i></div>
-        <strong>Referrals</strong>
-        <small>Invite friends</small>
-      </a>
-      <a href="communities.html" class="link-card">
-        <div class="lc-icon teal"><i class="ti ti-users-group"></i></div>
-        <strong>Communities</strong>
-        <small>Join groups</small>
-      </a>
-      <a href="community-profile.html" class="link-card">
-        <div class="lc-icon pink"><i class="ti ti-user-circle"></i></div>
-        <strong>Community Profile</strong>
-        <small>Your profile</small>
-      </a>
-      <a href="messages.html" class="link-card">
-        <div class="lc-icon blue"><i class="ti ti-message-2"></i></div>
-        <strong>Messages</strong>
-        <small>Your inbox</small>
-      </a>
-      <a href="notifications.html" class="link-card">
-        <div class="lc-icon red"><i class="ti ti-bell"></i></div>
-        <strong>Notifications</strong>
-        <small>See updates</small>
-      </a>
-      <a href="worker.html" class="link-card">
-        <div class="lc-icon purple"><i class="ti ti-user"></i></div>
-        <strong>Wurker Portal</strong>
-        <small>Worker dashboard</small>
-      </a>
-      <a href="dashboard.html" class="link-card">
-        <div class="lc-icon green"><i class="ti ti-dashboard"></i></div>
-        <strong>Dashboard</strong>
-        <small>Full analytics</small>
-      </a>
-      <a href="settings.html" class="link-card">
-        <div class="lc-icon gold"><i class="ti ti-settings"></i></div>
-        <strong>Settings</strong>
-        <small>Account prefs</small>
-      </a>
-      <a href="kyc.html" class="link-card">
-        <div class="lc-icon red"><i class="ti ti-shield-check"></i></div>
-        <strong>KYC</strong>
-        <small>Get verified</small>
-      </a>
-      <a href="analytics.html" class="link-card">
-        <div class="lc-icon teal"><i class="ti ti-chart-bar"></i></div>
-        <strong>Analytics</strong>
-        <small>Your insights</small>
-      </a>
-      <a href="leaderboard.html" class="link-card">
-        <div class="lc-icon gold"><i class="ti ti-trophy"></i></div>
-        <strong>Leaderboard</strong>
-        <small>Top earners</small>
-      </a>
-      <a href="blog.html" class="link-card">
-        <div class="lc-icon pink"><i class="ti ti-news"></i></div>
-        <strong>Blog</strong>
-        <small>Articles & tips</small>
-      </a>
-      <a href="support.html" class="link-card">
-        <div class="lc-icon red"><i class="ti ti-headset"></i></div>
-        <strong>Support</strong>
-        <small>Get help</small>
-      </a>
-      <a href="faq.html" class="link-card">
-        <div class="lc-icon blue"><i class="ti ti-help-circle"></i></div>
-        <strong>FAQ</strong>
-        <small>Quick answers</small>
-      </a>
-      <a href="wurker-apply.html" class="link-card">
-        <div class="lc-icon green"><i class="ti ti-user-plus"></i></div>
-        <strong>Apply as Wurker</strong>
-        <small>Join as worker</small>
-      </a>
-      <a href="rankupgrade.html" class="link-card">
-        <div class="lc-icon purple"><i class="ti ti-arrow-up-circle"></i></div>
-        <strong>Rank Upgrade</strong>
-        <small>Level up</small>
-      </a>
-      <a href="proof.html" class="link-card">
-        <div class="lc-icon teal"><i class="ti ti-camera"></i></div>
-        <strong>Proof</strong>
-        <small>Submit evidence</small>
-      </a>
-      <a href="monitor.html" class="link-card">
-        <div class="lc-icon gold"><i class="ti ti-eye"></i></div>
-        <strong>Job Monitor</strong>
-        <small>Track activity</small>
-      </a>
-      <a href="report.html" class="link-card">
-        <div class="lc-icon red"><i class="ti ti-flag"></i></div>
-        <strong>Report</strong>
-        <small>Report issue</small>
-      </a>
+
+    <div class="ql-group">
+      <div class="ql-group-label"><i class="ti ti-briefcase"></i> Tasks</div>
+      <div class="links-grid">
+        <a href="tasks.html" class="link-card"><div class="lc-icon purple"><i class="ti ti-layout-grid"></i></div><strong>Browse Tasks</strong><small>Find work to do</small></a>
+        <a href="my-tasks.html" class="link-card"><div class="lc-icon blue"><i class="ti ti-briefcase"></i></div><strong>My Tasks</strong><small>Track your jobs</small></a>
+        <a href="post-task.html" class="link-card"><div class="lc-icon green"><i class="ti ti-plus-circle"></i></div><strong>Post a Task</strong><small>Hire workers</small></a>
+        <a href="task-detail.html" class="link-card"><div class="lc-icon teal"><i class="ti ti-file-text"></i></div><strong>Task Detail</strong><small>Full task view</small></a>
+      </div>
+    </div>
+
+    <div class="ql-group">
+      <div class="ql-group-label"><i class="ti ti-building-store"></i> Store &amp; Wallet</div>
+      <div class="links-grid">
+        <a href="store.html" class="link-card"><div class="lc-icon gold"><i class="ti ti-discount-2"></i></div><strong>Deals</strong><small>Exclusive offers</small></a>
+        <a href="my-store.html" class="link-card"><div class="lc-icon pink"><i class="ti ti-building-store"></i></div><strong>My Store</strong><small>Your shop</small></a>
+        <a href="wallet.html" class="link-card"><div class="lc-icon green"><i class="ti ti-wallet"></i></div><strong>Wallet</strong><small>Your balance</small></a>
+        <a href="vault.html" class="link-card"><div class="lc-icon purple"><i class="ti ti-building-bank"></i></div><strong>Rewards Vault</strong><small>Earnings history</small></a>
+      </div>
+    </div>
+
+    <div class="ql-group">
+      <div class="ql-group-label"><i class="ti ti-users"></i> Community</div>
+      <div class="links-grid">
+        <a href="referrals.html" class="link-card"><div class="lc-icon blue"><i class="ti ti-link"></i></div><strong>Referrals</strong><small>Invite friends</small></a>
+        <a href="communities.html" class="link-card"><div class="lc-icon teal"><i class="ti ti-users-group"></i></div><strong>Communities</strong><small>Join groups</small></a>
+        <a href="community-profile.html" class="link-card"><div class="lc-icon pink"><i class="ti ti-user-circle"></i></div><strong>Community Profile</strong><small>Your profile</small></a>
+        <a href="messages.html" class="link-card"><div class="lc-icon blue"><i class="ti ti-message-2"></i></div><strong>Messages</strong><small>Your inbox</small></a>
+      </div>
+    </div>
+
+    <div class="ql-group">
+      <div class="ql-group-label"><i class="ti ti-user-cog"></i> Account</div>
+      <div class="links-grid">
+        <a href="notifications.html" class="link-card"><div class="lc-icon red"><i class="ti ti-bell"></i></div><strong>Notifications</strong><small>See updates</small></a>
+        <a href="worker.html" class="link-card"><div class="lc-icon purple"><i class="ti ti-user"></i></div><strong>Wurker Portal</strong><small>Worker dashboard</small></a>
+        <a href="dashboard.html" class="link-card"><div class="lc-icon green"><i class="ti ti-dashboard"></i></div><strong>Dashboard</strong><small>Full analytics</small></a>
+        <a href="settings.html" class="link-card"><div class="lc-icon gold"><i class="ti ti-settings"></i></div><strong>Settings</strong><small>Account prefs</small></a>
+      </div>
+    </div>
+
+    <div class="ql-group">
+      <div class="ql-group-label"><i class="ti ti-shield-check"></i> Verification &amp; Growth</div>
+      <div class="links-grid">
+        <a href="kyc.html" class="link-card"><div class="lc-icon red"><i class="ti ti-shield-check"></i></div><strong>KYC</strong><small>Get verified</small></a>
+        <a href="analytics.html" class="link-card"><div class="lc-icon teal"><i class="ti ti-chart-bar"></i></div><strong>Analytics</strong><small>Your insights</small></a>
+        <a href="leaderboard.html" class="link-card"><div class="lc-icon gold"><i class="ti ti-trophy"></i></div><strong>Leaderboard</strong><small>Top earners</small></a>
+        <a href="rankupgrade.html" class="link-card"><div class="lc-icon purple"><i class="ti ti-arrow-up-circle"></i></div><strong>Rank Upgrade</strong><small>Level up</small></a>
+      </div>
+    </div>
+
+    <div class="ql-group">
+      <div class="ql-group-label"><i class="ti ti-lifebuoy"></i> Resources &amp; Support</div>
+      <div class="links-grid">
+        <a href="blog.html" class="link-card"><div class="lc-icon pink"><i class="ti ti-news"></i></div><strong>Blog</strong><small>Articles &amp; tips</small></a>
+        <a href="wurker-apply.html" class="link-card"><div class="lc-icon green"><i class="ti ti-user-plus"></i></div><strong>Apply as Wurker</strong><small>Join as worker</small></a>
+        <a href="faq.html" class="link-card"><div class="lc-icon blue"><i class="ti ti-help-circle"></i></div><strong>FAQ</strong><small>Quick answers</small></a>
+        <a href="support.html" class="link-card"><div class="lc-icon red"><i class="ti ti-headset"></i></div><strong>Support</strong><small>Get help</small></a>
+      </div>
+    </div>
+
+    <div class="ql-group">
+      <div class="ql-group-label"><i class="ti ti-tools"></i> Tools</div>
+      <div class="links-grid">
+        <a href="proof.html" class="link-card"><div class="lc-icon teal"><i class="ti ti-camera"></i></div><strong>Proof</strong><small>Submit evidence</small></a>
+        <a href="monitor.html" class="link-card"><div class="lc-icon gold"><i class="ti ti-eye"></i></div><strong>Job Monitor</strong><small>Track activity</small></a>
+        <a href="report.html" class="link-card"><div class="lc-icon red"><i class="ti ti-flag"></i></div><strong>Report</strong><small>Report issue</small></a>
+      </div>
     </div>
   </div>
 
