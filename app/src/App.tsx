@@ -17,6 +17,9 @@ import MyStore from './pages/MyStore'
 import MyTasks from './pages/MyTasks'
 import FAQ from './pages/FAQ'
 import Earnings from './pages/Earnings'
+import Leaderboard from './pages/Leaderboard'
+import Campaigns from './pages/Campaigns'
+import Support from './pages/Support'
 import NotFound from './pages/NotFound'
 
 export default function App() {
@@ -43,6 +46,9 @@ export default function App() {
           <Route path="/messages" element={<Messages />} />
           <Route path="/faq" element={<FAQ />} />
           <Route path="/earnings" element={<Earnings />} />
+          <Route path="/leaderboard" element={<Leaderboard />} />
+          <Route path="/campaigns" element={<Campaigns />} />
+          <Route path="/support" element={<Support />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </AuthProvider>
