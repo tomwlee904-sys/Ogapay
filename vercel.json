@@ -14,6 +14,7 @@
     { "source": "/login", "destination": "/login.html" },
     { "source": "/reset-password", "destination": "/reset-password.html" },
     { "source": "/auth-callback", "destination": "/auth-callback.html" },
+    { "source": "/communities", "destination": "/communities.html" },
     { "source": "/:path*", "destination": "/index.html" }
   ],
   "headers": [
