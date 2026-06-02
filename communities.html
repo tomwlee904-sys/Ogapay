@@ -14,7 +14,7 @@
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;overflow-x:hidden}a{color:inherit;text-decoration:none}button,input,select{font:inherit}button{cursor:pointer}
 /* old nav line removed */
 /* old nav css removed */
-.app{display:flex;width:min(1200px,calc(100% - 32px));margin:0 auto;gap:24px;padding:24px 0 72px;min-height:calc(100vh - var(--nav-h))}.main{flex:1;min-width:0}
+.app{display:flex;width:min(1200px,calc(100% - 32px));margin:0 auto;gap:24px;padding:calc(var(--nav-h) + 24px) 0 72px;min-height:calc(100vh - var(--nav-h))}.main{flex:1;min-width:0}
 .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow)}.btn{height:44px;padding:0 20px;border:1.5px solid var(--border);border-radius:10px;background:var(--card);color:var(--text);font-size:14px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:all .2s;cursor:pointer;text-decoration:none}.btn:hover{border-color:var(--border2);box-shadow:var(--shadow)}.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}.btn.primary:hover{box-shadow:0 6px 24px rgba(124,58,237,.3);transform:translateY(-1px)}.btn.sm{height:36px;padding:0 14px;font-size:12px}.btn.outline{border-color:var(--accent);color:var(--accent);background:transparent}
 /* Marketplace */
 .market-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px}.market-header h1{font-family:Outfit;font-size:28px;font-weight:800;margin:0}.market-header p{color:var(--text2);font-size:14px;margin:2px 0 0}
@@ -374,7 +374,7 @@ body[data-auth="authed"] div.oga-drawer-foot.public-only{display:none!important}
 </div>
 <div class="app">
 <main style="flex:1;min-width:0">
-<section class="page" style="width:min(960px,calc(100% - 32px));padding:24px 0 72px">
+<section class="page" style="width:min(960px,calc(100% - 32px));padding:calc(var(--nav-h) + 24px) 0 72px">
 <div class="comm-header">
 <div><h1>Communities</h1><p>Connect with like-minded people, collaborate, and earn together</p></div>
 <button class="btn primary" onclick="openModal()" style="height:40px;font-size:13px;padding:0 16px"><i class="ti ti-plus"></i>Create</button>
