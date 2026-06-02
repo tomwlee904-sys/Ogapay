@@ -11,12 +11,11 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
 <style>
 *,*::before,*::after{box-sizing:border-box}
-:root{--bg:#ffffff;--bg2:#f7f9fc;--card:#ffffff;--border:#e4e9f1;--border2:#d5deea;--text:#101525;--text2:#66738a;--text3:#98a6ba;--primary:#0d1323;--accent:#7C3AED;--accent2:#2563EB;--green:#16a34a;--gold:#f5b301;--red:#dc2626;--shadow:0 2px 8px rgba(16,21,37,.06);--shadow-md:0 4px 16px rgba(16,21,37,.08);--radius:14px;--radius-sm:10px;--nav-h:60px}
-[data-theme="dark"]{--bg:#000000;--bg2:#050505;--card:#111111;--border:#232323;--border2:#333333;--text:#f4f7fb;--text2:#a1a1aa;--text3:#667186;--primary:#f4f7fb;--accent:#A78BFA;--accent2:#60A5FA;--green:#16a34a;--gold:#f5b301;--red:#dc2626;--shadow:0 2px 8px rgba(0,0,0,.25);--shadow-md:0 4px 16px rgba(0,0,0,.3)}
+:root{--bg:#ffffff;--bg2:#f7f9fc;--card:#ffffff;--border:#e4e9f1;--border2:#d5deea;--text:#101525;--text2:#66738a;--text3:#98a6ba;--primary:#0d1323;--accent:#7C3AED;--accent2:#2563EB;--green:#16a34a;--gold:#f5b301;--red:#dc2626;--shadow:0 2px 8px rgba(16,21,37,.06);--radius:14px;--radius-sm:10px;--nav-h:60px}
+[data-theme="dark"]{--bg:#000000;--bg2:#050505;--card:#111111;--border:#232323;--border2:#333333;--text:#f4f7fb;--text2:#a1a1aa;--text3:#667186;--primary:#f4f7fb;--accent:#A78BFA;--accent2:#60A5FA;--green:#16a34a;--gold:#f5b301;--red:#dc2626;--shadow:0 2px 8px rgba(0,0,0,.25)}
 html{scroll-behavior:smooth}
-body{margin:0;background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;overflow-x:hidden;-webkit-font-smoothing:antialiased;padding-top:var(--nav-h)}
-a{color:inherit;text-decoration:none}button,input,select,textarea{font:inherit}button{cursor:pointer}
-img{max-width:100%}
+body{margin:0;background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}button,input{font:inherit}button{cursor:pointer}
 
 /* ═══ NAVBAR ═══ */
 .nav{position:fixed;top:0;left:0;right:0;height:var(--nav-h);z-index:200;background:rgba(255,255,255,.94);backdrop-filter:blur(18px) saturate(1.4);border-bottom:1px solid var(--border)}
@@ -68,122 +67,56 @@ div.oga-drawer-foot.authed-only{display:none!important}div.oga-drawer-foot.publi
 body[data-auth="authed"] div.oga-drawer-foot.authed-only{display:block!important}
 body[data-auth="authed"] div.oga-drawer-foot.public-only{display:none!important}
 
-/* ═══ LAYOUT ═══ */
-.wrapper{width:min(1080px,calc(100% - 48px));margin:0 auto;padding:28px 0 72px}
-.bread{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text3);margin-bottom:16px;flex-wrap:wrap}
+/* ═══ PAGE ═══ */
+.wrapper{width:min(680px,calc(100% - 40px));margin:0 auto;padding:calc(var(--nav-h) + 32px) 0 80px}
+.bread{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text3);margin-bottom:20px;flex-wrap:wrap}
 .bread a{color:var(--text2);font-weight:600}.bread a:hover{color:var(--accent)}.bread span{color:var(--text3)}
-.sec{margin-bottom:24px}
-.sec-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
-.sec-head h2{font-family:Outfit;font-size:16px;font-weight:800;margin:0;display:flex;align-items:center;gap:8px}
-.sec-head h2 i{color:var(--accent);font-size:17px}
-.sec-head a{font-size:11px;color:var(--accent2);font-weight:700;display:flex;align-items:center;gap:3px}
-.sec-head .sec-badge{padding:2px 8px;border-radius:999px;font-size:9px;font-weight:700;background:rgba(124,58,237,.1);color:var(--accent);margin-left:6px}
-
-/* ═══ PROFILE HERO ═══ */
-.portal-hero{display:flex;align-items:center;gap:24px;padding:28px;border-radius:var(--radius);border:1px solid var(--border);background:var(--card);margin-bottom:22px;flex-wrap:wrap}
-.portal-hero .ph-avatar{width:80px;height:80px;border-radius:50%;background:var(--bg2);display:grid;place-items:center;font-size:32px;border:3px solid var(--accent);flex-shrink:0;position:relative;overflow:hidden}
-.portal-hero .ph-avatar .ph-verified{position:absolute;bottom:-2px;right:-2px;width:22px;height:22px;background:var(--green);border-radius:50%;border:3px solid var(--card);display:grid;place-items:center;color:#fff;font-size:9px}
-.portal-hero .ph-info{flex:1;min-width:0}
-.portal-hero .ph-info h1{margin:0;font-family:Outfit;font-size:22px;font-weight:900}
-.portal-hero .ph-info .ph-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:4px}
-.portal-hero .ph-info .ph-row .ph-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:999px;font-size:10px;font-weight:800}
-.portal-hero .ph-info .ph-row .ph-badge.gold{background:rgba(245,179,1,.12);color:var(--gold)}
-.portal-hero .ph-info .ph-row .ph-badge.purple{background:rgba(124,58,237,.1);color:var(--accent)}
-.portal-hero .ph-info .ph-meta{display:flex;gap:14px;flex-wrap:wrap;margin-top:6px;font-size:12px;color:var(--text3)}
-.portal-hero .ph-info .ph-meta span{display:flex;align-items:center;gap:4px}
-.portal-hero .ph-actions{display:flex;gap:8px;flex-wrap:wrap}
-.ph-btn{height:34px;padding:0 16px;border-radius:8px;border:1.5px solid var(--border2);background:transparent;color:var(--text);font-size:11px;font-weight:700;display:inline-flex;align-items:center;gap:6px;cursor:pointer;transition:all .15s;text-decoration:none}
-.ph-btn:hover{border-color:var(--accent);color:var(--accent)}
-.ph-btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
-.ph-btn.primary:hover{box-shadow:0 4px 12px rgba(124,58,237,.2)}
-
-/* ═══ PROFILE COMPLETION ═══ */
-.progress-card{padding:16px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--card);margin-bottom:18px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
-.progress-card .pc-bar-wrap{flex:1;min-width:140px}
-.progress-card .pc-bar{height:8px;border-radius:999px;background:var(--bg2);overflow:hidden}
-.progress-card .pc-bar .pc-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,var(--accent),#A78BFA);transition:width .6s ease}
-.progress-card .pc-label{font-size:12px;font-weight:700;display:flex;justify-content:space-between;margin-bottom:4px}
-.progress-card .pc-tip{font-size:11px;color:var(--text3);min-width:80px;text-align:right}
-
-/* ═══ STATS GRID ═══ */
-.stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-bottom:18px}
-.stat-card{padding:14px;border-radius:var(--radius-sm);background:var(--card);border:1px solid var(--border);text-align:center}
-.stat-card .sc-icon{width:32px;height:32px;border-radius:8px;display:grid;place-items:center;font-size:14px;margin:0 auto 6px}
-.stat-card .sc-val{font-family:Outfit;font-size:20px;font-weight:900;letter-spacing:-.3px}
-.stat-card .sc-label{font-size:10px;color:var(--text3);font-weight:500;margin-top:2px}
 
 /* ═══ QUICK NAV GRID ═══ */
-.qnav-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:18px}
-.qnav-item{display:flex;flex-direction:column;align-items:center;gap:6px;padding:16px 8px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--card);text-decoration:none;transition:all .15s;position:relative}
-.qnav-item:hover{border-color:var(--border2);box-shadow:var(--shadow);transform:translateY(-1px)}
+.qnav-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:36px}
+.qnav-item{display:flex;flex-direction:column;align-items:center;gap:6px;padding:16px 8px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--card);text-decoration:none;transition:all .12s;position:relative}
+.qnav-item:hover{border-color:var(--border2);box-shadow:var(--shadow)}
 .qnav-item .qnav-icon{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;font-size:16px}
 .qnav-item .qnav-label{font-size:10px;font-weight:700;color:var(--text);text-align:center;line-height:1.3}
 .qnav-item .qnav-badge{position:absolute;top:-4px;right:-4px;min-width:20px;height:20px;border-radius:999px;background:var(--accent);color:#fff;font-size:8px;font-weight:800;display:grid;place-items:center;padding:0 5px;border:2px solid var(--card)}
 
-/* ═══ SKILLS / EXPERTISE ═══ */
-.tags{display:flex;gap:6px;flex-wrap:wrap}
-.tag{height:30px;padding:0 12px;border:1.5px solid var(--border);border-radius:999px;background:var(--card);color:var(--text2);font-size:11px;font-weight:600;display:inline-flex;align-items:center;gap:5px;transition:all .12s}
-.tag:hover{border-color:var(--accent);color:var(--accent)}
-.tag i{font-size:12px;color:var(--accent)}
-.tag .tag-emoji{font-size:14px}
-.cat-group{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
-.cat-pill{height:28px;padding:0 12px;border:1px solid var(--border);border-radius:999px;background:transparent;color:var(--text2);font-size:11px;font-weight:600;cursor:pointer;transition:all .15s}
-.cat-pill.active,.cat-pill:hover{background:rgba(124,58,237,.08);color:var(--accent);border-color:var(--accent)}
+/* ═══ PROFILE CARD ═══ */
+.profile-card{display:flex;align-items:center;gap:18px;padding:22px;border-radius:var(--radius);border:1px solid var(--border);background:var(--card);margin-bottom:28px}
+.profile-card .pc-avatar{width:56px;height:56px;border-radius:50%;background:var(--bg2);display:grid;place-items:center;font-size:24px;border:2px solid var(--accent);flex-shrink:0;overflow:hidden;position:relative}
+.profile-card .pc-avatar .pc-verified{position:absolute;bottom:-1px;right:-1px;width:18px;height:18px;background:var(--green);border-radius:50%;border:2px solid var(--card);display:grid;place-items:center;color:#fff;font-size:7px}
+.profile-card .pc-info{flex:1;min-width:0}
+.profile-card .pc-info h2{margin:0;font-family:Outfit;font-size:17px;font-weight:900}
+.profile-card .pc-info .pc-bio{font-size:13px;color:var(--text2);margin:3px 0 0;line-height:1.4}
+.profile-card .pc-actions{display:flex;gap:6px;flex-shrink:0}
+.pc-btn{height:32px;padding:0 14px;border:1.5px solid var(--border2);border-radius:8px;background:transparent;color:var(--text);font-size:11px;font-weight:700;display:inline-flex;align-items:center;gap:5px;cursor:pointer;transition:all .12s;text-decoration:none}
+.pc-btn:hover{border-color:var(--accent);color:var(--accent)}
+.pc-btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.pc-btn.primary:hover{box-shadow:0 4px 12px rgba(124,58,237,.2)}
 
-/* ═══ PORTFOLIO ═══ */
-.portfolio-scroll{display:flex;gap:10px;overflow-x:auto;padding-bottom:6px;scroll-snap-type:x mandatory;scrollbar-width:none}
-.portfolio-scroll::-webkit-scrollbar{display:none}
-.portfolio-item{min-width:160px;width:160px;border-radius:var(--radius-sm);border:1px solid var(--border);overflow:hidden;background:var(--card);flex-shrink:0;scroll-snap-align:start;transition:all .15s}
-.portfolio-item:hover{border-color:var(--border2);box-shadow:var(--shadow)}
-.portfolio-item .pi-thumb{height:100px;background:var(--bg2);display:grid;place-items:center;font-size:28px;color:var(--text3);border-bottom:1px solid var(--border)}
-.portfolio-item .pi-info{padding:10px}
-.portfolio-item .pi-info strong{font-size:11px;display:block}
-.portfolio-item .pi-info span{font-size:10px;color:var(--text3);display:block;margin-top:2px}
-
-/* ═══ GIG LIST ═══ */
-.gig-list{display:grid;gap:1px;background:var(--border);border-radius:var(--radius-sm);overflow:hidden}
-.gig-item{display:flex;align-items:center;gap:12px;padding:14px;background:var(--card)}
-.gig-info{flex:1;min-width:0}
-.gig-info .gi-title{font-size:13px;font-weight:700}
-.gig-info .gi-meta{font-size:11px;color:var(--text2);margin-top:3px;display:flex;gap:12px;flex-wrap:wrap}
-.gig-apply{height:30px;padding:0 12px;border:1.5px solid var(--accent);border-radius:8px;background:transparent;color:var(--accent);font-size:10px;font-weight:800;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:all .15s;text-decoration:none;display:inline-flex;align-items:center;gap:4px}
-.gig-apply:hover{background:var(--accent);color:#fff}
-
-/* ═══ REVIEW ITEM ═══ */
-.review-item{padding:14px;background:var(--card);border-bottom:1px solid var(--border);display:flex;gap:10px}
-.review-item:last-child{border-bottom:0}
-.review-item .ri-avatar{width:34px;height:34px;border-radius:50%;background:var(--bg2);display:grid;place-items:center;font-size:14px;flex-shrink:0}
-.review-item .ri-body{flex:1;min-width:0}
-.review-item .ri-body .ri-stars{color:var(--gold);font-size:11px;margin-bottom:2px;display:block}
-.review-item .ri-body .ri-text{font-size:12px;color:var(--text2);line-height:1.5}
-.review-item .ri-body .ri-text strong{color:var(--text)}
-.review-item .ri-body .ri-date{font-size:10px;color:var(--text3);margin-top:4px;display:block}
-
-/* ═══ CONNECT BANNER ═══ */
-.connect-card{padding:16px 18px;border-radius:var(--radius-sm);background:linear-gradient(135deg,rgba(124,58,237,.06),rgba(99,102,241,.04));border:1px solid var(--border);display:flex;align-items:center;gap:14px;margin-bottom:18px}
-.connect-card .cc-icon{width:36px;height:36px;border-radius:8px;background:rgba(124,58,237,.1);color:var(--accent);display:grid;place-items:center;font-size:16px;flex-shrink:0}
-.connect-card .cc-info{flex:1;min-width:0}
-.connect-card .cc-info strong{display:block;font-size:13px;font-weight:700}
-.connect-card .cc-info span{font-size:11px;color:var(--text2);display:block;margin-top:1px}
-.connect-card .cc-btn{height:34px;padding:0 14px;border:0;border-radius:8px;background:var(--accent);color:#fff;font-size:11px;font-weight:700;display:inline-flex;align-items:center;gap:5px;cursor:pointer;white-space:nowrap;transition:all .15s;text-decoration:none}
-.connect-card .cc-btn:hover{box-shadow:0 4px 12px rgba(124,58,237,.2)}
-
-/* ═══ TOAST ═══ */
-#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--card);color:var(--text);padding:12px 24px;border-radius:12px;border:1px solid var(--border);box-shadow:var(--shadow-md);font-size:13px;font-weight:600;z-index:999;opacity:0;transition:all .3s ease;pointer-events:none}
+/* ═══ STATS ROW ═══ */
+.stats-row{display:flex;align-items:center;gap:0;padding:0;margin-bottom:0;flex-wrap:wrap}
+.stat-item{display:flex;align-items:center;gap:8px;padding:8px 16px;position:relative}
+.stat-item+.stat-item::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:1px;height:20px;background:var(--border)}
+.stat-item .si-icon{width:28px;height:28px;border-radius:6px;display:grid;place-items:center;font-size:13px;flex-shrink:0}
+.stat-item .si-info{display:flex;flex-direction:column;gap:1px}
+.stat-item .si-info .si-value{font-family:Outfit;font-size:15px;font-weight:800;letter-spacing:-.2px;line-height:1}
+.stat-item .si-info .si-label{font-size:10px;color:var(--text3);font-weight:500}
+.stat-item .si-info .si-stars{font-size:10px;color:var(--gold);line-height:1}
 
 /* ═══ RESPONSIVE ═══ */
 @media(max-width:768px){
-  .wrapper{width:calc(100% - 20px);padding:16px 0 60px}
-  .qnav-grid{grid-template-columns:repeat(2,1fr)}
-  .stats{grid-template-columns:repeat(3,1fr)}
-  .portfolio-item{min-width:140px;width:140px}
-  .portal-hero{flex-direction:column;align-items:flex-start;padding:20px}
-  .portal-hero .ph-actions{width:100%}
-  .portal-hero .ph-actions .ph-btn{flex:1;justify-content:center}
+  .wrapper{width:calc(100% - 20px);padding-top:calc(var(--nav-h) + 16px)}
+  .qnav-grid{grid-template-columns:repeat(3,1fr)}
+  .profile-card{flex-direction:column;align-items:flex-start;text-align:left;padding:18px}
+  .profile-card .pc-actions{width:100%}
+  .profile-card .pc-actions .pc-btn{flex:1;justify-content:center}
+  .stats-row{flex-direction:column;align-items:flex-start}
+  .stat-item+.stat-item::before{display:none}
+  .stat-item{padding:10px 0;width:100%;border-bottom:1px solid var(--border)}
+  .stat-item:last-child{border-bottom:0}
 }
 @media(max-width:500px){
-  .stats{grid-template-columns:repeat(2,1fr)}
-  .qnav-grid{gap:6px}
+  .qnav-grid{grid-template-columns:repeat(2,1fr);gap:6px}
 }
 </style>
 </head>
@@ -260,67 +193,7 @@ body[data-auth="authed"] div.oga-drawer-foot.public-only{display:none!important}
     <span>Worker Portal</span>
   </nav>
 
-  <!-- ═══ PROFILE HERO ═══ -->
-  <div class="portal-hero">
-    <div class="ph-avatar">
-      <i class="ti ti-user"></i>
-      <div class="ph-verified"><i class="ti ti-check" style="font-size:8px"></i></div>
-    </div>
-    <div class="ph-info">
-      <h1>Chisom Okafor</h1>
-      <div class="ph-row">
-        <span class="ph-badge gold"><i class="ti ti-trophy"></i> Gold Tier</span>
-        <span class="ph-badge purple"><i class="ti ti-star"></i> 4.92 Reputation</span>
-        <span class="ph-badge" style="background:rgba(37,99,235,.1);color:var(--accent2)"><i class="ti ti-user-check"></i> Pro Worker</span>
-      </div>
-      <div class="ph-meta">
-        <span><i class="ti ti-map-pin"></i> Lagos, Nigeria</span>
-        <span><i class="ti ti-users"></i> 234 followers</span>
-        <span><i class="ti ti-users"></i> 89 following</span>
-        <span><i class="ti ti-calendar"></i> Member since Mar 2025</span>
-      </div>
-    </div>
-    <div class="ph-actions">
-      <a class="ph-btn primary" href="profile.html"><i class="ti ti-edit"></i> Edit Profile</a>
-      <a class="ph-btn" href="javascript:void(0)" onclick="showToast('Public profile link copied!')"><i class="ti ti-link"></i> Copy Link</a>
-    </div>
-  </div>
-
-  <!-- ═══ PROFILE COMPLETION ═══ -->
-  <div class="progress-card">
-    <div class="pc-bar-wrap">
-      <div class="pc-label"><span>Profile Completion</span><span>75%</span></div>
-      <div class="pc-bar"><div class="pc-fill" style="width:75%"></div></div>
-    </div>
-    <div class="pc-tip"><i class="ti ti-info-circle"></i> Add bio to reach 85%</div>
-  </div>
-
-  <!-- ═══ CONNECT BANNER ═══ -->
-  <div class="connect-card">
-    <div class="cc-icon"><i class="ti ti-plug-connected"></i></div>
-    <div class="cc-info"><strong>Connect your wallet</strong><span>Link your Solana or Naira wallet to receive payments instantly</span></div>
-    <button class="cc-btn" onclick="showToast('Wallet connected!')"><i class="ti ti-plug-connected"></i> Connect</button>
-  </div>
-
-  <!-- ═══ STATS ═══ -->
-  <div class="sec"><div class="sec-head"><h2><i class="ti ti-analytics"></i> Worker Statistics</h2></div></div>
-  <div class="stats">
-    <div class="stat-card"><div class="sc-icon" style="background:#7C3AED15;color:#7C3AED"><i class="ti ti-checklist"></i></div><div class="sc-val">847</div><div class="sc-label">Tasks Completed</div></div>
-    <div class="stat-card"><div class="sc-icon" style="background:#2563EB15;color:#2563EB"><i class="ti ti-trophy"></i></div><div class="sc-val">12</div><div class="sc-label">Wins</div></div>
-    <div class="stat-card"><div class="sc-icon" style="background:#16a34a15;color:#16a34a"><i class="ti ti-flag"></i></div><div class="sc-val">8</div><div class="sc-label">Challenges</div></div>
-    <div class="stat-card"><div class="sc-icon" style="background:#f5b30115;color:#f5b301"><i class="ti ti-star"></i></div><div class="sc-val">4.92</div><div class="sc-label">Reputation</div></div>
-    <div class="stat-card"><div class="sc-icon" style="background:#7C3AED15;color:#7C3AED"><i class="ti ti-message-star"></i></div><div class="sc-val">124</div><div class="sc-label">Reviews</div></div>
-    <div class="stat-card"><div class="sc-icon" style="background:#2563EB15;color:#2563EB"><i class="ti ti-users"></i></div><div class="sc-val">15</div><div class="sc-label">Communities</div></div>
-    <div class="stat-card"><div class="sc-icon" style="background:#16a34a15;color:#16a34a"><i class="ti ti-coin"></i></div><div class="sc-val">28</div><div class="sc-label">Tips Received</div></div>
-    <div class="stat-card"><div class="sc-icon" style="background:#f5b30115;color:#f5b301"><i class="ti ti-article"></i></div><div class="sc-val">6</div><div class="sc-label">Blog Posts</div></div>
-    <div class="stat-card"><div class="sc-icon" style="background:#7C3AED15;color:#7C3AED"><i class="ti ti-files"></i></div><div class="sc-val">18</div><div class="sc-label">Portfolio Items</div></div>
-    <div class="stat-card"><div class="sc-icon" style="background:#2563EB15;color:#2563EB"><i class="ti ti-user-check"></i></div><div class="sc-val">234</div><div class="sc-label">Followers</div></div>
-    <div class="stat-card"><div class="sc-icon" style="background:#16a34a15;color:#16a34a"><i class="ti ti-user-plus"></i></div><div class="sc-val">89</div><div class="sc-label">Following</div></div>
-    <div class="stat-card"><div class="sc-icon" style="background:#f5b30115;color:#f5b301"><i class="ti ti-link"></i></div><div class="sc-val">View</div><div class="sc-label">Public Profile</div></div>
-  </div>
-
-  <!-- ═══ QUICK NAV ═══ -->
-  <div class="sec"><div class="sec-head"><h2><i class="ti ti-apps"></i> Quick Links</h2></div></div>
+  <!-- ═══ QUICK NAVIGATION ═══ -->
   <div class="qnav-grid">
     <a class="qnav-item" href="my-store.html"><span class="qnav-icon" style="background:#7C3AED15;color:#7C3AED"><i class="ti ti-building-store"></i></span><span class="qnav-label">My Store</span></a>
     <a class="qnav-item" href="blog.html"><span class="qnav-icon" style="background:#2563EB15;color:#2563EB"><i class="ti ti-article"></i></span><span class="qnav-label">My Blogs</span></a>
@@ -333,79 +206,56 @@ body[data-auth="authed"] div.oga-drawer-foot.public-only{display:none!important}
     <a class="qnav-item" href="public-profile.html" style="grid-column:span 2"><span class="qnav-icon" style="background:#7C3AED15;color:#7C3AED"><i class="ti ti-eye"></i></span><span class="qnav-label">View Public Profile</span></a>
   </div>
 
-  <!-- ═══ EXPERTISE CATEGORIES ═══ -->
-  <div class="sec">
-    <div class="sec-head"><h2><i class="ti ti-tags"></i> Expertise</h2></div>
-    <div class="cat-group">
-      <span class="cat-pill active">All</span>
-      <span class="cat-pill">Development</span>
-      <span class="cat-pill">Design</span>
-      <span class="cat-pill">Content Writing</span>
-      <span class="cat-pill">Social Media</span>
-      <span class="cat-pill">App Testing</span>
-      <span class="cat-pill">Marketing</span>
+  <!-- ═══ PROFILE SUMMARY ═══ -->
+  <div class="profile-card">
+    <div class="pc-avatar">
+      <i class="ti ti-user"></i>
+      <div class="pc-verified"><i class="ti ti-check" style="font-size:6px"></i></div>
     </div>
-    <div class="tags">
-      <span class="tag"><i class="ti ti-brand-twitter"></i> Social Media Management</span>
-      <span class="tag"><i class="ti ti-palette"></i> UI/UX Design</span>
-      <span class="tag"><i class="ti ti-device-mobile"></i> Mobile App Testing</span>
-      <span class="tag"><i class="ti ti-edit"></i> Content Writing</span>
-      <span class="tag"><i class="ti ti-video"></i> Video Editing</span>
-      <span class="tag"><i class="ti ti-code"></i> Web Development</span>
-      <span class="tag"><i class="ti ti-database"></i> Data Entry</span>
-      <span class="tag"><i class="ti ti-brand-discord"></i> Community Management</span>
+    <div class="pc-info">
+      <h2>Chisom Okafor</h2>
+      <div class="pc-bio">Gold Tier Worker specializing in social media, content writing, and app testing. 847 tasks completed with 4.9 avg rating.</div>
+    </div>
+    <div class="pc-actions">
+      <a class="pc-btn" href="edit-profile.html"><i class="ti ti-edit"></i> Edit Profile</a>
+      <a class="pc-btn primary" href="public-profile.html"><i class="ti ti-eye"></i> View</a>
     </div>
   </div>
 
-  <!-- ═══ PORTFOLIO ═══ -->
-  <div class="sec">
-    <div class="sec-head"><h2><i class="ti ti-files"></i> Portfolio <span class="sec-badge">18 items</span></h2><a href="javascript:void(0)" onclick="showToast('View all portfolio')">View All <i class="ti ti-chevron-right" style="font-size:10px"></i></a></div>
-    <div class="portfolio-scroll">
-      <div class="portfolio-item"><div class="pi-thumb"><i class="ti ti-palette"></i></div><div class="pi-info"><strong>Brand Identity - TechCo</strong><span>Logo &amp; brand guidelines</span></div></div>
-      <div class="portfolio-item"><div class="pi-thumb"><i class="ti ti-device-mobile"></i></div><div class="pi-info"><strong>FinTech App UI</strong><span>Mobile app screens</span></div></div>
-      <div class="portfolio-item"><div class="pi-thumb"><i class="ti ti-article"></i></div><div class="pi-info"><strong>Blog Post - Crypto 101</strong><span>2,500 word article</span></div></div>
-      <div class="portfolio-item"><div class="pi-thumb"><i class="ti ti-video"></i></div><div class="pi-info"><strong>Product Reel</strong><span>30-second promo video</span></div></div>
-      <div class="portfolio-item"><div class="pi-thumb"><i class="ti ti-code"></i></div><div class="pi-info"><strong>Landing Page Dev</strong><span>React + Tailwind</span></div></div>
+  <!-- ═══ STATISTICS ROW ═══ -->
+  <div class="stats-row">
+    <div class="stat-item">
+      <div class="si-icon" style="background:#7C3AED15;color:#7C3AED"><i class="ti ti-star"></i></div>
+      <div class="si-info"><span class="si-value">124</span><span class="si-label">Reviews</span></div>
+    </div>
+    <div class="stat-item">
+      <div class="si-icon" style="background:#2563EB15;color:#2563EB"><i class="ti ti-flag"></i></div>
+      <div class="si-info"><span class="si-value">8</span><span class="si-label">Challenges</span></div>
+    </div>
+    <div class="stat-item">
+      <div class="si-icon" style="background:#16a34a15;color:#16a34a"><i class="ti ti-trophy"></i></div>
+      <div class="si-info"><span class="si-value">12</span><span class="si-label">Wins</span></div>
+    </div>
+    <div class="stat-item">
+      <div class="si-icon" style="background:#f5b30115;color:#f5b301"><i class="ti ti-heart"></i></div>
+      <div class="si-info"><span class="si-value">34</span><span class="si-label">Compliments</span></div>
+    </div>
+    <div class="stat-item">
+      <div class="si-icon" style="background:#7C3AED15;color:#7C3AED"><i class="ti ti-users"></i></div>
+      <div class="si-info"><span class="si-value">15</span><span class="si-label">Communities</span></div>
+    </div>
+    <div class="stat-item">
+      <div class="si-icon" style="background:#2563EB15;color:#2563EB"><i class="ti ti-coin"></i></div>
+      <div class="si-info"><span class="si-value">28</span><span class="si-label">Tips</span></div>
+    </div>
+    <div class="stat-item">
+      <div class="si-icon" style="background:#16a34a15;color:#16a34a"><i class="ti ti-article"></i></div>
+      <div class="si-info"><span class="si-value">6</span><span class="si-label">Blogs</span></div>
     </div>
   </div>
-
-  <!-- ═══ RECENT COMPLETED JOBS ═══ -->
-  <div class="sec">
-    <div class="sec-head"><h2><i class="ti ti-checkbox"></i> Recent Completed Jobs</h2><a href="my-tasks.html">View All <i class="ti ti-chevron-right" style="font-size:10px"></i></a></div>
-    <div class="gig-list">
-      <div class="gig-item"><div class="gig-info"><div class="gi-title">Social Media Engagement - Retweet Thread</div><div class="gi-meta"><span><i class="ti ti-coin"></i> &#8358;4,200</span><span><i class="ti ti-calendar"></i> Mar 28</span><span style="color:var(--green)">Completed</span></div></div><span class="gig-apply" style="background:var(--green);color:#fff;border-color:var(--green)"><i class="ti ti-check"></i> Done</span></div>
-      <div class="gig-item"><div class="gig-info"><div class="gi-title">App Testing - FinTech UI Feedback</div><div class="gi-meta"><span><i class="ti ti-coin"></i> &#8358;3,000</span><span><i class="ti ti-calendar"></i> Mar 25</span><span style="color:var(--green)">Completed</span></div></div><span class="gig-apply" style="background:var(--green);color:#fff;border-color:var(--green)"><i class="ti ti-check"></i> Done</span></div>
-      <div class="gig-item"><div class="gig-info"><div class="gi-title">Telegram Community Join Campaign</div><div class="gi-meta"><span><i class="ti ti-coin"></i> &#8358;800</span><span><i class="ti ti-calendar"></i> Mar 24</span><span style="color:var(--green)">Completed</span></div></div><span class="gig-apply" style="background:var(--green);color:#fff;border-color:var(--green)"><i class="ti ti-check"></i> Done</span></div>
-      <div class="gig-item"><div class="gig-info"><div class="gi-title">X Banner Design for Crypto Startup</div><div class="gi-meta"><span><i class="ti ti-coin"></i> &#8358;5,000</span><span><i class="ti ti-calendar"></i> Mar 22</span><span style="color:var(--green)">Completed</span></div></div><span class="gig-apply" style="background:var(--green);color:#fff;border-color:var(--green)"><i class="ti ti-check"></i> Done</span></div>
-    </div>
-  </div>
-
-  <!-- ═══ RECENT REVIEWS ═══ -->
-  <div class="sec">
-    <div class="sec-head"><h2><i class="ti ti-message-star"></i> Recent Reviews <span class="sec-badge">4.9 avg</span></h2><a href="javascript:void(0)" onclick="showToast('View all reviews')">View All <i class="ti ti-chevron-right" style="font-size:10px"></i></a></div>
-    <div style="border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden">
-      <div class="review-item">
-        <div class="ri-avatar">💻</div>
-        <div class="ri-body"><span class="ri-stars">★★★★★</span><div class="ri-text"><strong>Ada's Studio</strong>: Great work! Delivered exactly what was requested. Very responsive.</div><span class="ri-date">2h ago</span></div>
-      </div>
-      <div class="review-item">
-        <div class="ri-avatar">📱</div>
-        <div class="ri-body"><span class="ri-stars">★★★★★</span><div class="ri-text"><strong>TechBridge</strong>: Very professional and detailed. Will hire again for sure.</div><span class="ri-date">1d ago</span></div>
-      </div>
-      <div class="review-item">
-        <div class="ri-avatar">🎨</div>
-        <div class="ri-body"><span class="ri-stars">★★★★☆</span><div class="ri-text"><strong>DesignLab</strong>: Good quality output, communication could be faster next time.</div><span class="ri-date">3d ago</span></div>
-      </div>
-      <div class="review-item">
-        <div class="ri-avatar">📊</div>
-        <div class="ri-body"><span class="ri-stars">★★★★★</span><div class="ri-text"><strong>GrowthPlug</strong>: Excellent attention to detail. Highly recommended to others!</div><span class="ri-date">5d ago</span></div>
-      </div>
-    </div>
-  </div>
-
 </div>
 
-<div id="toast"></div>
+<div id="toast" style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--card);color:var(--text);padding:12px 24px;border-radius:12px;border:1px solid var(--border);box-shadow:var(--shadow-md);font-size:13px;font-weight:600;z-index:999;opacity:0;transition:all .3s ease;pointer-events:none"></div>
 
 <script>
 function showToast(msg) {
