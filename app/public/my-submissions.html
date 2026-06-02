@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
-<title>Worker Portal - OgaPay</title>
+<title>My Submissions - OgaPay</title>
 <script>(function(){try{document.documentElement.setAttribute('data-theme',localStorage.getItem('ogapay-theme')||'light')}catch(e){}})();</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -11,8 +11,8 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
 <style>
 *,*::before,*::after{box-sizing:border-box}
-:root{--bg:#ffffff;--bg2:#f7f9fc;--card:#ffffff;--border:#e4e9f1;--border2:#d5deea;--text:#101525;--text2:#66738a;--text3:#98a6ba;--primary:#0d1323;--accent:#7C3AED;--accent2:#2563EB;--green:#16a34a;--gold:#f5b301;--red:#dc2626;--shadow:0 2px 8px rgba(16,21,37,.06);--radius:14px;--radius-sm:10px;--nav-h:60px}
-[data-theme="dark"]{--bg:#000000;--bg2:#050505;--card:#111111;--border:#232323;--border2:#333333;--text:#f4f7fb;--text2:#a1a1aa;--text3:#667186;--primary:#f4f7fb;--accent:#A78BFA;--accent2:#60A5FA;--green:#16a34a;--gold:#f5b301;--red:#dc2626;--shadow:0 2px 8px rgba(0,0,0,.25)}
+:root{--bg:#ffffff;--bg2:#f7f9fc;--card:#ffffff;--border:#e4e9f1;--border2:#d5deea;--text:#101525;--text2:#66738a;--text3:#98a6ba;--primary:#0d1323;--accent:#7C3AED;--accent2:#2563EB;--green:#16a34a;--gold:#f5b301;--red:#dc2626;--shadow:0 2px 8px rgba(16,21,37,.06);--shadow-md:0 4px 16px rgba(16,21,37,.08);--radius:14px;--radius-sm:10px;--nav-h:60px}
+[data-theme="dark"]{--bg:#000000;--bg2:#050505;--card:#111111;--border:#232323;--border2:#333333;--text:#f4f7fb;--text2:#a1a1aa;--text3:#667186;--primary:#f4f7fb;--accent:#A78BFA;--accent2:#60A5FA;--green:#16a34a;--gold:#f5b301;--red:#dc2626;--shadow:0 2px 8px rgba(0,0,0,.25);--shadow-md:0 4px 16px rgba(0,0,0,.3)}
 html{scroll-behavior:smooth}
 body{margin:0;background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;overflow-x:hidden;-webkit-font-smoothing:antialiased}
 a{color:inherit;text-decoration:none}button,input{font:inherit}button{cursor:pointer}
@@ -68,57 +68,36 @@ body[data-auth="authed"] div.oga-drawer-foot.authed-only{display:block!important
 body[data-auth="authed"] div.oga-drawer-foot.public-only{display:none!important}
 
 /* ═══ PAGE ═══ */
-.wrapper{width:min(680px,calc(100% - 40px));margin:0 auto;padding:calc(var(--nav-h) + 32px) 0 80px}
-.bread{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text3);margin-bottom:20px;flex-wrap:wrap}
-.bread a{color:var(--text2);font-weight:600}.bread a:hover{color:var(--accent)}.bread span{color:var(--text3)}
+.wrapper{width:min(640px,calc(100% - 40px));margin:0 auto;padding:calc(var(--nav-h) + 32px) 0 100px}
 
-/* ═══ QUICK NAV GRID ═══ */
-.qnav-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:36px}
-.profile-card{margin-bottom:36px}
-.qnav-item{display:flex;flex-direction:column;align-items:center;gap:6px;padding:16px 8px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--card);text-decoration:none;transition:all .12s;position:relative}
-.qnav-item:hover{border-color:var(--border2);box-shadow:var(--shadow)}
-.qnav-item .qnav-icon{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;font-size:16px}
-.qnav-item .qnav-label{font-size:10px;font-weight:700;color:var(--text);text-align:center;line-height:1.3}
-.qnav-item .qnav-badge{position:absolute;top:-4px;right:-4px;min-width:20px;height:20px;border-radius:999px;background:var(--accent);color:#fff;font-size:8px;font-weight:800;display:grid;place-items:center;padding:0 5px;border:2px solid var(--card)}
+/* ═══ HEADER ═══ */
+.page-head{display:flex;align-items:center;gap:14px;margin-bottom:28px}
+.back-btn{width:36px;height:36px;border:1.5px solid var(--border);border-radius:10px;background:var(--card);color:var(--text2);display:grid;place-items:center;cursor:pointer;transition:all .12s;flex-shrink:0}
+.back-btn:hover{color:var(--text);border-color:var(--border2)}
+.page-head h1{margin:0;font-family:Outfit;font-size:22px;font-weight:900;letter-spacing:-.3px}
 
-/* ═══ PROFILE CARD ═══ */
-.profile-card{display:flex;align-items:center;gap:18px;padding:22px;border-radius:var(--radius);border:1px solid var(--border);background:var(--card);margin-bottom:28px}
-.profile-card .pc-avatar{width:56px;height:56px;border-radius:50%;background:var(--bg2);display:grid;place-items:center;font-size:24px;border:2px solid var(--accent);flex-shrink:0;overflow:hidden;position:relative}
-.profile-card .pc-avatar .pc-verified{position:absolute;bottom:-1px;right:-1px;width:18px;height:18px;background:var(--green);border-radius:50%;border:2px solid var(--card);display:grid;place-items:center;color:#fff;font-size:7px}
-.profile-card .pc-info{flex:1;min-width:0}
-.profile-card .pc-info h2{margin:0;font-family:Outfit;font-size:17px;font-weight:900}
-.profile-card .pc-info .pc-bio{font-size:13px;color:var(--text2);margin:3px 0 0;line-height:1.4}
-.profile-card .pc-actions{display:flex;gap:6px;flex-shrink:0}
-.pc-btn{height:32px;padding:0 14px;border:1.5px solid var(--border2);border-radius:8px;background:transparent;color:var(--text);font-size:11px;font-weight:700;display:inline-flex;align-items:center;gap:5px;cursor:pointer;transition:all .12s;text-decoration:none}
-.pc-btn:hover{border-color:var(--accent);color:var(--accent)}
-.pc-btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
-.pc-btn.primary:hover{box-shadow:0 4px 12px rgba(124,58,237,.2)}
+/* ═══ EMPTY STATE ═══ */
+.empty-state{text-align:center;padding:80px 20px}
+.empty-state .es-icon{width:80px;height:80px;margin:0 auto 20px;border-radius:20px;background:#7C3AED10;color:var(--accent);display:grid;place-items:center;font-size:34px}
+.empty-state h2{margin:0;font-family:Outfit;font-size:18px;font-weight:800}
+.empty-state p{margin:6px 0 0;font-size:14px;color:var(--text2);line-height:1.5}
 
-/* ═══ SECTION SPACING ═══ */
-.sec{margin-bottom:36px}
-.sec-title{font-size:13px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:16px;display:flex;align-items:center;gap:8px}
-
-/* ═══ STATS VERTICAL LIST ═══ */
-.stats-vert{display:flex;flex-direction:column;gap:0;padding:4px 0;border-radius:var(--radius);border:1px solid var(--border);background:var(--card);overflow:hidden}
-.sv-item{display:flex;align-items:center;gap:14px;padding:14px 18px;border-bottom:1px solid var(--border);transition:background .1s}
-.sv-item:last-child{border-bottom:0}
-.sv-item:hover{background:var(--bg2)}
-.sv-item .sv-icon{width:34px;height:34px;border-radius:8px;display:grid;place-items:center;font-size:15px;flex-shrink:0}
-.sv-item .sv-info{flex:1;min-width:0}
-.sv-item .sv-info .sv-label{font-size:14px;font-weight:600;color:var(--text)}
-.sv-item .sv-info .sv-desc{font-size:12px;color:var(--text3);margin-top:1px}
-.sv-item .sv-value{font-family:Outfit;font-size:16px;font-weight:800;color:var(--text);flex-shrink:0}
-@media(max-width:768px){
-  .wrapper{width:calc(100% - 20px);padding-top:calc(var(--nav-h) + 16px)}
-  .qnav-grid{grid-template-columns:repeat(3,1fr)}
-  .profile-card{flex-direction:column;align-items:flex-start;text-align:left;padding:18px}
-  .profile-card .pc-actions{width:100%}
-  .profile-card .pc-actions .pc-btn{flex:1;justify-content:center}
-  .sv-item{padding:12px 14px}
-}
-@media(max-width:500px){
-  .qnav-grid{grid-template-columns:repeat(2,1fr);gap:6px}
-}
+/* ═══ SUBMISSION LIST ═══ */
+.sub-list{display:grid;gap:10px}
+.sub-card{padding:16px 18px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--card);display:flex;align-items:center;gap:14px;transition:all .1s}
+.sub-card:hover{border-color:var(--border2)}
+.sub-card .sc-icon{width:44px;height:44px;border-radius:10px;background:var(--bg2);display:grid;place-items:center;font-size:18px;color:var(--text2);flex-shrink:0}
+.sub-card .sc-info{flex:1;min-width:0}
+.sub-card .sc-info h4{margin:0;font-size:14px;font-weight:700}
+.sub-card .sc-info .sc-meta{font-size:12px;color:var(--text2);margin-top:2px}
+.sub-card .sc-status{font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px;white-space:nowrap}
+.sc-status.pending{background:#f5b30112;color:var(--gold);border:1px solid rgba(245,179,1,.2)}
+.sc-status.approved{background:#16a34a12;color:var(--green);border:1px solid rgba(22,163,74,.2)}
+.sc-status.rejected{background:#dc262612;color:var(--red);border:1px solid rgba(220,38,38,.2)}
+.sc-amount{font-family:Outfit;font-size:15px;font-weight:800;white-space:nowrap}
+.sub-card .sc-action{height:32px;padding:0 12px;border:1.5px solid var(--border2);border-radius:8px;background:transparent;color:var(--text);font-size:11px;font-weight:700;cursor:pointer;transition:all .12s;display:inline-flex;align-items:center;gap:4px}
+.sub-card .sc-action:hover{border-color:var(--accent);color:var(--accent)}
+@media(max-width:500px){.sub-card{flex-wrap:wrap}.sc-amount{width:100%;padding-left:58px}}
 </style>
 </head>
 <body data-auth="public">
@@ -145,7 +124,7 @@ body[data-auth="authed"] div.oga-drawer-foot.public-only{display:none!important}
   </div>
 </header>
 
-<!-- ═══ DRAWER ═══ -->
+<!-- ═══ DRAWER ═══ (same as other pages) ═══ -->
 <div class="mobile-menu" id="mobileMenu">
   <div class="mobile-overlay" data-close-menu></div>
   <div class="oga-drawer">
@@ -188,96 +167,86 @@ body[data-auth="authed"] div.oga-drawer-foot.public-only{display:none!important}
 
 <!-- ═══ PAGE CONTENT ═══ -->
 <div class="wrapper">
-  <nav class="bread">
-    <a href="/"><i class="ti ti-home"></i></a>
-    <i class="ti ti-chevron-right" style="font-size:10px"></i>
-    <span>Worker Portal</span>
-  </nav>
-
-  <!-- ═══ QUICK NAVIGATION ═══ -->
-  <div class="qnav-grid">
-    <a class="qnav-item" href="my-store.html"><span class="qnav-icon" style="background:#7C3AED15;color:#7C3AED"><i class="ti ti-building-store"></i></span><span class="qnav-label">My Store</span></a>
-    <a class="qnav-item" href="blog.html"><span class="qnav-icon" style="background:#2563EB15;color:#2563EB"><i class="ti ti-article"></i></span><span class="qnav-label">My Blogs</span></a>
-    <a class="qnav-item" href="my-tasks.html"><span class="qnav-icon" style="background:#16a34a15;color:#16a34a"><i class="ti ti-briefcase"></i></span><span class="qnav-label">My Work</span><span class="qnav-badge">12</span></a>
-    <a class="qnav-item" href="messages.html"><span class="qnav-icon" style="background:#f5b30115;color:#f5b301"><i class="ti ti-message"></i></span><span class="qnav-label">Messages</span><span class="qnav-badge">3</span></a>
-    <a class="qnav-item" href="communities.html"><span class="qnav-icon" style="background:#7C3AED15;color:#7C3AED"><i class="ti ti-users"></i></span><span class="qnav-label">Communities</span></a>
-    <a class="qnav-item" href="my-submissions.html"><span class="qnav-icon" style="background:#2563EB15;color:#2563EB"><i class="ti ti-file-check"></i></span><span class="qnav-label">My Submissions</span></a>
-    <a class="qnav-item" href="reviews-to-write.html"><span class="qnav-icon" style="background:#16a34a15;color:#16a34a"><i class="ti ti-message-star"></i></span><span class="qnav-label">Reviews To Write</span><span class="qnav-badge">2</span></a>
-    <a class="qnav-item" href="reviews-to-write.html"><span class="qnav-icon" style="background:#f5b30115;color:#f5b301"><i class="ti ti-star"></i></span><span class="qnav-label">My Reviews</span></a>
-    <a class="qnav-item" href="public-profile.html" style="grid-column:span 2"><span class="qnav-icon" style="background:#7C3AED15;color:#7C3AED"><i class="ti ti-eye"></i></span><span class="qnav-label">View Public Profile</span></a>
+  <!-- ═══ PAGE HEADER ═══ -->
+  <div class="page-head">
+    <button class="back-btn" onclick="history.back()"><i class="ti ti-arrow-left"></i></button>
+    <h1>My Submissions</h1>
   </div>
 
-  <!-- ═══ PROFILE SUMMARY ═══ -->
-  <div class="profile-card">
-    <div class="pc-avatar">
-      <i class="ti ti-user"></i>
-      <div class="pc-verified"><i class="ti ti-check" style="font-size:6px"></i></div>
-    </div>
-    <div class="pc-info">
-      <h2>Chisom Okafor</h2>
-      <div class="pc-bio">Gold Tier Worker specializing in social media, content writing, and app testing. 847 tasks completed with 4.9 avg rating.</div>
-    </div>
-    <div class="pc-actions">
-      <a class="pc-btn" href="edit-profile.html"><i class="ti ti-edit"></i> Edit Profile</a>
-      <a class="pc-btn primary" href="public-profile.html"><i class="ti ti-eye"></i> View</a>
-    </div>
+  <!-- ═══ EMPTY STATE (default) ═══ -->
+  <div class="empty-state" id="emptyState">
+    <div class="es-icon"><i class="ti ti-file-check"></i></div>
+    <h2>No submissions yet</h2>
+    <p>Your task submissions will appear here</p>
   </div>
 
-  <!-- ═══ STATISTICS ═══ -->
-  <div class="sec">
-    <div class="sec-title"><i class="ti ti-analytics"></i> Statistics</div>
-    <div class="stats-vert">
-      <div class="sv-item">
-        <div class="sv-icon" style="background:#7C3AED15;color:#7C3AED"><i class="ti ti-star"></i></div>
-        <div class="sv-info"><div class="sv-label">Reviews</div><div class="sv-desc">Feedback from completed tasks</div></div>
-        <div class="sv-value">124</div>
-      </div>
-      <div class="sv-item">
-        <div class="sv-icon" style="background:#2563EB15;color:#2563EB"><i class="ti ti-flag"></i></div>
-        <div class="sv-info"><div class="sv-label">Challenges Participated</div><div class="sv-desc">Community challenges joined</div></div>
-        <div class="sv-value">8</div>
-      </div>
-      <div class="sv-item">
-        <div class="sv-icon" style="background:#16a34a15;color:#16a34a"><i class="ti ti-trophy"></i></div>
-        <div class="sv-info"><div class="sv-label">Wins</div><div class="sv-desc">Challenges &amp; competitions won</div></div>
-        <div class="sv-value">12</div>
-      </div>
-      <div class="sv-item">
-        <div class="sv-icon" style="background:#f5b30115;color:#f5b301"><i class="ti ti-heart"></i></div>
-        <div class="sv-info"><div class="sv-label">Compliments</div><div class="sv-desc">Positive feedback received</div></div>
-        <div class="sv-value">34</div>
-      </div>
-      <div class="sv-item">
-        <div class="sv-icon" style="background:#7C3AED15;color:#7C3AED"><i class="ti ti-users"></i></div>
-        <div class="sv-info"><div class="sv-label">Communities</div><div class="sv-desc">Active communities joined</div></div>
-        <div class="sv-value">15</div>
-      </div>
-      <div class="sv-item">
-        <div class="sv-icon" style="background:#2563EB15;color:#2563EB"><i class="ti ti-coin"></i></div>
-        <div class="sv-info"><div class="sv-label">Tips Received</div><div class="sv-desc">Tips from community members</div></div>
-        <div class="sv-value">28</div>
-      </div>
-      <div class="sv-item">
-        <div class="sv-icon" style="background:#16a34a15;color:#16a34a"><i class="ti ti-article"></i></div>
-        <div class="sv-info"><div class="sv-label">Blogs</div><div class="sv-desc">Published blog posts</div></div>
-        <div class="sv-value">6</div>
-      </div>
-    </div>
-  </div>
-
-
+  <!-- ═══ SUBMISSIONS LIST ═══ -->
+  <div class="sub-list" id="submissionsList"></div>
 </div>
 
-<div id="toast" style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--card);color:var(--text);padding:12px 24px;border-radius:12px;border:1px solid var(--border);box-shadow:var(--shadow-md);font-size:13px;font-weight:600;z-index:999;opacity:0;transition:all .3s ease;pointer-events:none"></div>
+<!-- ═══ TOAST ═══ -->
+<div class="toast" id="toast" style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--card);color:var(--text);padding:12px 24px;border-radius:12px;border:1px solid var(--border);box-shadow:var(--shadow-md);font-size:13px;font-weight:600;z-index:999;opacity:0;transition:all .3s ease;pointer-events:none"></div>
 
 <script>
+function renderSubmissions() {
+  var subs = JSON.parse(localStorage.getItem('ogapay-submissions')||'[]');
+  var empty = document.getElementById('emptyState');
+  var list = document.getElementById('submissionsList');
+  if(subs.length===0) {
+    empty.style.display = '';
+    list.innerHTML = '';
+    return;
+  }
+  empty.style.display = 'none';
+  list.innerHTML = subs.map(function(s){
+    var statusClass = (s.status||'pending').toLowerCase();
+    var statusLabel = s.status || 'Pending';
+    return '<div class="sub-card">'+
+      '<div class="sc-icon"><i class="ti ti-briefcase"></i></div>'+
+      '<div class="sc-info"><h4>'+escHtml(s.taskTitle||'Untitled')+'</h4><div class="sc-meta">Submitted '+formatDate(s.submittedAt||s.createdAt)+'</div></div>'+
+      '<span class="sc-status '+statusClass+'">'+statusLabel+'</span>'+
+      '<span class="sc-amount">&#8358;'+(s.reward||'0')+'</span>'+
+      '<button class="sc-action" onclick="showToast(\'Viewing submission...\')"><i class="ti ti-eye"></i> View</button>'+
+    '</div>';
+  }).join('');
+}
+
+function formatDate(d) {
+  if(!d) return '';
+  var date = new Date(d);
+  var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return months[date.getMonth()]+' '+date.getDate()+', '+date.getFullYear();
+}
+
+function escHtml(s) {
+  if(!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
 function showToast(msg) {
-  var t=document.getElementById('toast');
-  t.textContent=msg; t.style.opacity='1'; t.style.transform='translateX(-50%) translateY(0)';
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.opacity = '1';
+  t.style.transform = 'translateX(-50%) translateY(0)';
   setTimeout(function(){t.style.opacity='0';t.style.transform='translateX(-50%) translateY(100px)'},2500);
 }
 
-// Theme & Nav
+// ─── Demo submissions for testing ───
+(function initDemo(){
+  var existing = JSON.parse(localStorage.getItem('ogapay-submissions')||'[]');
+  if(existing.length===0) {
+    var demos = [
+      {taskTitle:"Social Media Engagement Campaign", status:"Pending", reward:"4,200", submittedAt:"2026-06-01T10:30:00"},
+      {taskTitle:"Logo Design for Web3 Brand", status:"Approved", reward:"12,000", submittedAt:"2026-05-28T14:00:00"},
+      {taskTitle:"Smart Contract Review", status:"Rejected", reward:"25,000", submittedAt:"2026-05-25T09:15:00"},
+      {taskTitle:"Content Writing - Blog Post", status:"Pending", reward:"3,500", submittedAt:"2026-06-02T08:00:00"}
+    ];
+    localStorage.setItem('ogapay-submissions', JSON.stringify(demos));
+  }
+  renderSubmissions();
+})();
+
+// ─── Theme & Nav ───
 (function(){
   var th; try{th=localStorage.getItem('ogapay-theme')}catch(e){}
   var t=th||document.documentElement.getAttribute('data-theme')||'light';
