@@ -74,6 +74,7 @@ body[data-auth="authed"] div.oga-drawer-foot.public-only{display:none!important}
 
 /* ═══ QUICK NAV GRID ═══ */
 .qnav-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:36px}
+.profile-card{margin-bottom:36px}
 .qnav-item{display:flex;flex-direction:column;align-items:center;gap:6px;padding:16px 8px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--card);text-decoration:none;transition:all .12s;position:relative}
 .qnav-item:hover{border-color:var(--border2);box-shadow:var(--shadow)}
 .qnav-item .qnav-icon{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;font-size:16px}
@@ -93,27 +94,27 @@ body[data-auth="authed"] div.oga-drawer-foot.public-only{display:none!important}
 .pc-btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
 .pc-btn.primary:hover{box-shadow:0 4px 12px rgba(124,58,237,.2)}
 
-/* ═══ STATS ROW ═══ */
-.stats-row{display:flex;align-items:center;gap:0;padding:0;margin-bottom:0;flex-wrap:wrap}
-.stat-item{display:flex;align-items:center;gap:8px;padding:8px 16px;position:relative}
-.stat-item+.stat-item::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:1px;height:20px;background:var(--border)}
-.stat-item .si-icon{width:28px;height:28px;border-radius:6px;display:grid;place-items:center;font-size:13px;flex-shrink:0}
-.stat-item .si-info{display:flex;flex-direction:column;gap:1px}
-.stat-item .si-info .si-value{font-family:Outfit;font-size:15px;font-weight:800;letter-spacing:-.2px;line-height:1}
-.stat-item .si-info .si-label{font-size:10px;color:var(--text3);font-weight:500}
-.stat-item .si-info .si-stars{font-size:10px;color:var(--gold);line-height:1}
+/* ═══ SECTION SPACING ═══ */
+.sec{margin-bottom:36px}
+.sec-title{font-size:13px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:16px;display:flex;align-items:center;gap:8px}
 
-/* ═══ RESPONSIVE ═══ */
+/* ═══ STATS VERTICAL LIST ═══ */
+.stats-vert{display:flex;flex-direction:column;gap:0;padding:4px 0;border-radius:var(--radius);border:1px solid var(--border);background:var(--card);overflow:hidden}
+.sv-item{display:flex;align-items:center;gap:14px;padding:14px 18px;border-bottom:1px solid var(--border);transition:background .1s}
+.sv-item:last-child{border-bottom:0}
+.sv-item:hover{background:var(--bg2)}
+.sv-item .sv-icon{width:34px;height:34px;border-radius:8px;display:grid;place-items:center;font-size:15px;flex-shrink:0}
+.sv-item .sv-info{flex:1;min-width:0}
+.sv-item .sv-info .sv-label{font-size:14px;font-weight:600;color:var(--text)}
+.sv-item .sv-info .sv-desc{font-size:12px;color:var(--text3);margin-top:1px}
+.sv-item .sv-value{font-family:Outfit;font-size:16px;font-weight:800;color:var(--text);flex-shrink:0}
 @media(max-width:768px){
   .wrapper{width:calc(100% - 20px);padding-top:calc(var(--nav-h) + 16px)}
   .qnav-grid{grid-template-columns:repeat(3,1fr)}
   .profile-card{flex-direction:column;align-items:flex-start;text-align:left;padding:18px}
   .profile-card .pc-actions{width:100%}
   .profile-card .pc-actions .pc-btn{flex:1;justify-content:center}
-  .stats-row{flex-direction:column;align-items:flex-start}
-  .stat-item+.stat-item::before{display:none}
-  .stat-item{padding:10px 0;width:100%;border-bottom:1px solid var(--border)}
-  .stat-item:last-child{border-bottom:0}
+  .sv-item{padding:12px 14px}
 }
 @media(max-width:500px){
   .qnav-grid{grid-template-columns:repeat(2,1fr);gap:6px}
@@ -222,37 +223,49 @@ body[data-auth="authed"] div.oga-drawer-foot.public-only{display:none!important}
     </div>
   </div>
 
-  <!-- ═══ STATISTICS ROW ═══ -->
-  <div class="stats-row">
-    <div class="stat-item">
-      <div class="si-icon" style="background:#7C3AED15;color:#7C3AED"><i class="ti ti-star"></i></div>
-      <div class="si-info"><span class="si-value">124</span><span class="si-label">Reviews</span></div>
-    </div>
-    <div class="stat-item">
-      <div class="si-icon" style="background:#2563EB15;color:#2563EB"><i class="ti ti-flag"></i></div>
-      <div class="si-info"><span class="si-value">8</span><span class="si-label">Challenges</span></div>
-    </div>
-    <div class="stat-item">
-      <div class="si-icon" style="background:#16a34a15;color:#16a34a"><i class="ti ti-trophy"></i></div>
-      <div class="si-info"><span class="si-value">12</span><span class="si-label">Wins</span></div>
-    </div>
-    <div class="stat-item">
-      <div class="si-icon" style="background:#f5b30115;color:#f5b301"><i class="ti ti-heart"></i></div>
-      <div class="si-info"><span class="si-value">34</span><span class="si-label">Compliments</span></div>
-    </div>
-    <div class="stat-item">
-      <div class="si-icon" style="background:#7C3AED15;color:#7C3AED"><i class="ti ti-users"></i></div>
-      <div class="si-info"><span class="si-value">15</span><span class="si-label">Communities</span></div>
-    </div>
-    <div class="stat-item">
-      <div class="si-icon" style="background:#2563EB15;color:#2563EB"><i class="ti ti-coin"></i></div>
-      <div class="si-info"><span class="si-value">28</span><span class="si-label">Tips</span></div>
-    </div>
-    <div class="stat-item">
-      <div class="si-icon" style="background:#16a34a15;color:#16a34a"><i class="ti ti-article"></i></div>
-      <div class="si-info"><span class="si-value">6</span><span class="si-label">Blogs</span></div>
+  <!-- ═══ STATISTICS ═══ -->
+  <div class="sec">
+    <div class="sec-title"><i class="ti ti-analytics"></i> Statistics</div>
+    <div class="stats-vert">
+      <div class="sv-item">
+        <div class="sv-icon" style="background:#7C3AED15;color:#7C3AED"><i class="ti ti-star"></i></div>
+        <div class="sv-info"><div class="sv-label">Reviews</div><div class="sv-desc">Feedback from completed tasks</div></div>
+        <div class="sv-value">124</div>
+      </div>
+      <div class="sv-item">
+        <div class="sv-icon" style="background:#2563EB15;color:#2563EB"><i class="ti ti-flag"></i></div>
+        <div class="sv-info"><div class="sv-label">Challenges Participated</div><div class="sv-desc">Community challenges joined</div></div>
+        <div class="sv-value">8</div>
+      </div>
+      <div class="sv-item">
+        <div class="sv-icon" style="background:#16a34a15;color:#16a34a"><i class="ti ti-trophy"></i></div>
+        <div class="sv-info"><div class="sv-label">Wins</div><div class="sv-desc">Challenges &amp; competitions won</div></div>
+        <div class="sv-value">12</div>
+      </div>
+      <div class="sv-item">
+        <div class="sv-icon" style="background:#f5b30115;color:#f5b301"><i class="ti ti-heart"></i></div>
+        <div class="sv-info"><div class="sv-label">Compliments</div><div class="sv-desc">Positive feedback received</div></div>
+        <div class="sv-value">34</div>
+      </div>
+      <div class="sv-item">
+        <div class="sv-icon" style="background:#7C3AED15;color:#7C3AED"><i class="ti ti-users"></i></div>
+        <div class="sv-info"><div class="sv-label">Communities</div><div class="sv-desc">Active communities joined</div></div>
+        <div class="sv-value">15</div>
+      </div>
+      <div class="sv-item">
+        <div class="sv-icon" style="background:#2563EB15;color:#2563EB"><i class="ti ti-coin"></i></div>
+        <div class="sv-info"><div class="sv-label">Tips Received</div><div class="sv-desc">Tips from community members</div></div>
+        <div class="sv-value">28</div>
+      </div>
+      <div class="sv-item">
+        <div class="sv-icon" style="background:#16a34a15;color:#16a34a"><i class="ti ti-article"></i></div>
+        <div class="sv-info"><div class="sv-label">Blogs</div><div class="sv-desc">Published blog posts</div></div>
+        <div class="sv-value">6</div>
+      </div>
     </div>
   </div>
+
+
 </div>
 
 <div id="toast" style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--card);color:var(--text);padding:12px 24px;border-radius:12px;border:1px solid var(--border);box-shadow:var(--shadow-md);font-size:13px;font-weight:600;z-index:999;opacity:0;transition:all .3s ease;pointer-events:none"></div>
