@@ -8,7 +8,7 @@ interface LayoutProps {
   sidebar?: boolean
 }
 
-export default function Layout({ children, sidebar = true }: LayoutProps) {
+export default function Layout({ children, sidebar = false }: LayoutProps) {
   const [drawerOpen, setDrawerOpen] = useState(false)
 
   return (
