@@ -489,11 +489,34 @@ function viewJob(id) {
     '</div>' +
     (job.media.length ? '<div class="detail-section"><h4>Media (' + job.media.length + ')</h4><div class="detail-media">' + job.media.map(m => '<div class="media-item"><i class="ti ti-file"></i>' + m + '</div>').join('') + '</div></div>' : '') +
     '<div style="display:flex;gap:10px">' +
-      '<button class="btn btn-primary" style="flex:1" onclick="say(\'Application submitted!\')"><i class="ti ti-send"></i> Apply Now</button>' +
+      '<button class="btn btn-primary" style="flex:1" onclick="applyForJob(' + id + ')"><i class="ti ti-send"></i> Apply Now</button>' +
       '<button class="btn" onclick="say(\'Job saved to watchlist\');toggleWatchlist(' + id + ')"><i class="ti ti-bookmark"></i> Save</button>' +
     '</div>';
 
   switchView('detail');
+}
+
+
+function applyForJob(id) {
+  const job = jobs.find(j => j.id === id);
+  if (!job) return say('Job not found');
+  localStorage.setItem('ogapay_apply_job', JSON.stringify({
+    id: job.id,
+    title: job.task,
+    reward: job.reward,
+    usd: job.usd,
+    time: job.cooldown || '—',
+    slots: job.slots,
+    verify: job.verify,
+    platform: job.platform,
+    req: job.req,
+    desc: job.desc,
+    target: job.target,
+    inst: job.inst,
+    creator: job.creator,
+    creatorStat: job.creatorStat
+  }));
+  window.location.href = 'apply.html?id=' + job.id;
 }
 
 // ═══════════════════════════════════════════════════════════════
