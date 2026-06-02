@@ -198,6 +198,11 @@ img{max-width:100%;display:block}
 .prod-card .p-creator .pn{font-size:13px;font-weight:600}
 .prod-card .p-creator .pv{width:14px;height:14px;color:var(--accent);flex-shrink:0}
 .prod-card .p-creator .pr{color:var(--text3);font-size:12px;margin-left:auto}
+.prod-card .p-creator .pr svg{width:14px;height:14px;vertical-align:middle}
+.prod-card .p-creator .pr{display:flex;align-items:center;gap:2px}
+.rating-stars svg{width:18px;height:18px;fill:var(--gold);stroke:var(--gold)}
+.review-card .rating-stars svg{width:14px;height:14px}
+[data-theme="light"]{--bg:#050816;--bg2:#080B1A;--card:#0B1020;--card2:#0F1428;--border:#1A2040;--border2:#2A3070;--text:#FFFFFF;--text2:#8B8FA3;--text3:#5C6080;--accent:#A855F7}
 .prod-card .p-row{display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:12px;border-top:1px solid var(--border)}
 .prod-card .p-price{display:flex;flex-direction:column}
 .prod-card .p-price .pp-ngn{font-weight:800;font-size:16px;color:var(--text)}
@@ -802,7 +807,7 @@ function getStarHTML(rating){
   let s='';
   for(let i=0;i<5;i++){
     s += i<r
-      ? '<svg viewBox="0 0 24 24" fill="var(--gold)" stroke="var(--gold)" stroke-width="1"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>'
+      ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="var(--gold)" stroke="var(--gold)" stroke-width="1"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>'
       : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color:var(--border2)"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>';
   }
   return s;
@@ -945,6 +950,24 @@ function renderProducts(items){
 }
 
 function renderResultsInfo(){
+function filterLocalProducts(){
+  let items = getMockProducts();
+  if(selectedCategory&&selectedCategory!=='All'){
+    items = items.filter(p=>p.category_main===selectedCategory);
+  }
+  if(searchQuery&&searchQuery.trim()){
+    const q = searchQuery.trim().toLowerCase();
+    items = items.filter(p=>p.name.toLowerCase().includes(q)||p.description.toLowerCase().includes(q));
+  }
+  if(currentSort==='newest')items.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
+  else if(currentSort==='stars_desc')items.sort((a,b)=>Number(b.stars)-Number(a.stars));
+  else if(currentSort==='random')items.sort(()=>Math.random()-0.5);
+  else items.sort((a,b)=>Number(b.stars)-Number(a.stars));
+  products = items;
+  totalProducts = items.length;
+  renderProducts(items);
+  renderResultsInfo();
+}
   $('resultsInfo').innerHTML = 'Showing <strong>'+products.length+'</strong> of <strong>'+totalProducts+'</strong> products';
 }
 
@@ -965,7 +988,7 @@ function filterCategory(cat){
   $('searchInput').value='';
   searchQuery='';
   currentPage=1;
-  fetchProducts(currentPage,selectedCategory,searchQuery,currentSort);
+  filterLocalProducts();
 }
 
 /* ── product detail ───────────────── */
@@ -1240,20 +1263,20 @@ $('searchBtn')?.addEventListener('click',function(){
   searchQuery = $('searchInput').value;
   selectedCategory='All';
   currentPage=1;
-  fetchProducts(currentPage,selectedCategory,searchQuery,currentSort);
+  filterLocalProducts();
 });
 $('searchInput')?.addEventListener('keydown',function(e){
   if(e.key==='Enter'){
     searchQuery = this.value;
     selectedCategory='All';
     currentPage=1;
-    fetchProducts(currentPage,selectedCategory,searchQuery,currentSort);
+    filterLocalProducts();
   }
 });
 $('sortSelect')?.addEventListener('change',function(){
   currentSort = this.value;
   currentPage=1;
-  fetchProducts(currentPage,selectedCategory,searchQuery,currentSort);
+  filterLocalProducts();
 });
 
 /* ── share / report ───────────────── */
@@ -1265,7 +1288,8 @@ function shareProduct(id){
 
 /* ── init ─────────────────────────── */
 (async function init(){
-  await fetchProducts(1,'All','','quality_desc');
+  // Use mock data directly
+  products = getMockProducts(); totalProducts = products.length; renderProducts(products); renderResultsInfo();
   renderCategories();
   renderTrending();
   renderRecent();
@@ -1293,9 +1317,10 @@ function shareProduct(id){
   if(themeBtn){
     themeBtn.addEventListener('click',function(){
       var html=document.documentElement;
-      var next=html.getAttribute('data-theme')==='dark'?'light':'dark';
-      html.setAttribute('data-theme',next);
-      try{localStorage.setItem('ogapay-theme',next);}catch(e){}
+      // Always force dark mode
+      html.setAttribute('data-theme','dark');
+      // theme locked to dark
+      try{localStorage.setItem('ogapay-theme','dark');}catch(e){}
     });
   }
   // Menu open/close
