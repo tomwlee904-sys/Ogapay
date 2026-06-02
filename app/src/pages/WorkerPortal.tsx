@@ -1,82 +1,105 @@
 import Layout from '../components/Layout'
 
+const quickLinks = [
+  { icon: 'ti ti-building-store', label: 'My Store', href: '/app/my-store' },
+  { icon: 'ti ti-article', label: 'My Blogs', href: '/blog' },
+  { icon: 'ti ti-briefcase', label: 'My Work', href: '/app/my-tasks' },
+  { icon: 'ti ti-message', label: 'Messages', href: '/app/messages' },
+  { icon: 'ti ti-users', label: 'Communities', href: '/app/communities' },
+  { icon: 'ti ti-file-check', label: 'My Submissions', href: '/app/submissions' },
+  { icon: 'ti ti-star', label: 'Reviews To Write', href: '/app/reviews' },
+  { icon: 'ti ti-list', label: 'My Reviews', href: '/app/my-reviews' },
+  { icon: 'ti ti-eye', label: 'View Public Profile', href: '/u/username' },
+]
+
+const stats = [
+  { icon: 'ti ti-star', color: '#F59E0B', count: '124', label: 'Reviews' },
+  { icon: 'ti ti-trophy', color: '#7C3AED', count: '8', label: 'Challenges Participated' },
+  { icon: 'ti ti-medal', color: '#16a34a', count: '12', label: 'Wins' },
+  { icon: 'ti ti-heart', color: '#EC4899', count: '34', label: 'Compliments' },
+  { icon: 'ti ti-users', color: '#2563EB', count: '15', label: 'Communities' },
+  { icon: 'ti ti-coin', color: '#F59E0B', count: '28', label: 'Tips Received' },
+  { icon: 'ti ti-article', color: '#7C3AED', count: '6', label: 'Blogs' },
+]
+
 export default function WorkerPortal() {
   return (
     <Layout>
-      <div className="bread"><a href="/app">Home</a> <i className="ti ti-chevron-right" style={{fontSize:10}} /> <span>Worker Portal</span></div>
-      <div className="hero"><div className="greeting">Your workspace</div><h1>Worker Portal</h1></div>
+      <style>{`
+        .wp-bread{display:flex;align-items:center;gap:6px;font-size:13px;margin-bottom:16px;color:var(--text3)}
+        .wp-bread a{color:var(--text2);text-decoration:none}
+        .wp-bread a:hover{color:var(--text)}
+        .wp-hero{margin-bottom:24px}
+        .wp-hero .wph-greeting{color:var(--text2);font-size:13px;font-weight:600;margin-bottom:2px}
+        .wp-hero h1{font-family:Outfit;font-size:28px;font-weight:900;margin:0}
+        .wp-quick-links{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:28px}
+        @media(max-width:600px){.wp-quick-links{grid-template-columns:repeat(2,1fr)}}
+        .wp-ql{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--card);border:1px solid var(--border);border-radius:10px;text-decoration:none;color:var(--text);font-size:13px;font-weight:600;transition:all .2s}
+        .wp-ql:hover{transform:translateY(-2px);border-color:var(--accent);box-shadow:0 0 20px rgba(124,58,237,.06)}
+        .wp-ql i{font-size:18px;width:22px;text-align:center;color:var(--accent)}
+        .wp-profile{display:flex;align-items:center;gap:18px;padding:20px 24px;background:var(--card);border:1px solid var(--border);border-radius:14px;margin-bottom:24px}
+        .wp-avatar{width:56px;height:56px;border-radius:50%;background:var(--bg2);display:grid;place-items:center;border:3px solid var(--accent);flex-shrink:0;overflow:hidden}
+        .wp-avatar i{font-size:24px;color:var(--text3)}
+        .wp-name{font-family:Outfit;font-size:18px;font-weight:800;margin:0 0 2px}
+        .wp-bio{color:var(--text2);font-size:13px;margin:0 0 8px;max-width:320px}
+        .wp-edit-btn{height:32px;padding:0 14px;border-radius:8px;font-weight:600;font-size:11px;display:inline-flex;align-items:center;gap:5px;cursor:pointer;border:1px solid var(--border);background:var(--bg2);color:var(--text2);text-decoration:none;transition:all .2s}
+        .wp-edit-btn:hover{border-color:var(--accent);color:var(--accent)}
+        .wp-stats{margin-bottom:24px}
+        .wp-stat{display:flex;align-items:center;gap:14px;padding:12px 16px;background:var(--card);border:1px solid var(--border);border-radius:10px;margin-bottom:6px;transition:all .2s}
+        .wp-stat:hover{border-color:var(--border2)}
+        .wp-stat-icon{width:32px;height:32px;border-radius:8px;display:grid;place-items:center;font-size:16px;flex-shrink:0}
+        .wp-stat-count{font-family:Outfit;font-size:18px;font-weight:900;min-width:36px}
+        .wp-stat-label{color:var(--text2);font-size:13px;font-weight:600}
+        .wp-section-title{font-family:Outfit;font-size:15px;font-weight:800;margin:0 0 12px;display:flex;align-items:center;gap:6px;color:var(--text)}
+      `}</style>
 
-      <div className="stats">
-        <div className="stat-card"><div className="sc-icon" style={{background:'#7C3AED15',color:'#7C3AED'}}><i className="ti ti-checklist" /></div><div className="sc-val">0</div><div className="sc-label">Active Gigs</div></div>
-        <div className="stat-card"><div className="sc-icon" style={{background:'#16a34a15',color:'#16a34a'}}><i className="ti ti-coin" /></div><div className="sc-val">&#8358;0</div><div className="sc-label">Earnings</div></div>
-        <div className="stat-card"><div className="sc-icon" style={{background:'#2563EB15',color:'#2563EB'}}><i className="ti ti-clock" /></div><div className="sc-val">0</div><div className="sc-label">Hours</div></div>
-        <div className="stat-card"><div className="sc-icon" style={{background:'#f5b30115',color:'#f5b301'}}><i className="ti ti-star" /></div><div className="sc-val">5.0</div><div className="sc-label">Rating</div></div>
+      <div className="wp-bread">
+        <a href="/app">Home</a>
+        <i className="ti ti-chevron-right" style={{fontSize:10}} />
+        <span>Worker Portal</span>
       </div>
 
-      {/* Connect wallet card */}
-      <div className="connect-card">
-        <div className="cc-icon"><i className="ti ti-plug-connected" /></div>
-        <div className="cc-info"><strong>Connect your wallet</strong><span>Link your Solana or Naira wallet to receive payments instantly</span></div>
-        <button className="cc-btn"><i className="ti ti-plug-connected" /> Connect</button>
+      <div className="wp-hero">
+        <div className="wph-greeting">Your workspace</div>
+        <h1>Worker Portal</h1>
       </div>
 
-      {/* Earnings */}
-      <div className="sec">
-        <div className="sec-head"><h2><i className="ti ti-coin" /> Earnings Breakdown</h2></div>
-        <div className="earn-break">
-          <div className="earn-item"><div className="ei-label">This Week</div><div className="ei-val">&#8358;0</div><div className="ei-sub">0 tasks completed</div></div>
-          <div className="earn-item"><div className="ei-label">This Month</div><div className="ei-val">&#8358;0</div><div className="ei-sub">0 tasks completed</div></div>
-          <div className="earn-item"><div className="ei-label">Pending Payout</div><div className="ei-val">&#8358;0</div><div className="ei-sub">Awaiting approval</div></div>
-          <div className="earn-item"><div className="ei-label">Total Withdrawn</div><div className="ei-val">&#8358;0</div><div className="ei-sub">All time</div></div>
+      {/* Quick Links */}
+      <div className="wp-section-title"><i className="ti ti-link" style={{color:'var(--accent)'}} /> Quick Links</div>
+      <div className="wp-quick-links">
+        {quickLinks.map((q, i) => (
+          <a className="wp-ql" href={q.href} key={i}>
+            <i className={q.icon} />
+            {q.label}
+          </a>
+        ))}
+      </div>
+
+      {/* Worker Profile Summary */}
+      <div className="wp-section-title"><i className="ti ti-user" style={{color:'var(--accent)'}} /> Worker Profile</div>
+      <div className="wp-profile">
+        <div className="wp-avatar">
+          <i className="ti ti-user" />
+        </div>
+        <div style={{flex:1}}>
+          <div className="wp-name">User Name</div>
+          <div className="wp-bio">Freelancer &amp; task worker on OgaPay</div>
+          <a className="wp-edit-btn" href="/app/settings"><i className="ti ti-edit" /> Edit Profile</a>
         </div>
       </div>
 
-      {/* Available Gigs */}
-      <div className="sec">
-        <div className="sec-head"><h2><i className="ti ti-briefcase" /> Available Gigs <span className="sec-badge">3</span></h2></div>
-        <div className="search-bar"><i className="ti ti-search" /><input type="text" placeholder="Search gigs..." /></div>
-        <div className="gig-list">
-          {['Social Media Engagement', 'Product Review - Video', 'Community Moderation'].map((g,i) => (
-            <div className="gig-item" key={i}>
-              <div className="gig-info">
-                <div className="gi-title">{g}</div>
-                <div className="gi-meta"><span><i className="ti ti-coin" /> &#8358;{['500','2,000','1,200'][i]}</span><span><i className="ti ti-clock" /> ~{['10','30','20'][i]} min</span></div>
-              </div>
-              <button className="gig-apply" onClick={e=>{const t=e.currentTarget;t.textContent='Applied!';t.classList.add('applied');t.disabled=true}}>Apply</button>
+      {/* Worker Statistics */}
+      <div className="wp-section-title"><i className="ti ti-trending-up" style={{color:'var(--accent)'}} /> Statistics</div>
+      <div className="wp-stats">
+        {stats.map((s, i) => (
+          <div className="wp-stat" key={i}>
+            <div className="wp-stat-icon" style={{background: `${s.color}15`, color: s.color}}>
+              <i className={s.icon} />
             </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Active Orders */}
-      <div className="sec">
-        <div className="sec-head"><h2><i className="ti ti-truck-delivery" /> Active Orders <span className="sec-badge">0</span></h2></div>
-        <div className="table-wrap">
-          <table className="tbl">
-            <thead><tr><th>Order</th><th>Client</th><th>Amount</th><th>Status</th></tr></thead>
-            <tbody><tr><td colSpan={4} style={{textAlign:'center',color:'var(--text3)',padding:24}}>No active orders</td></tr></tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* Skills */}
-      <div className="sec">
-        <div className="sec-head"><h2><i className="ti ti-tag" /> My Skills</h2></div>
-        <div className="skills">
-          {['Social Media','Content Writing','App Testing','UI Design','Community Mgmt','Data Entry'].map(s => (
-            <span className="skill-tag" key={s}><i className="ti ti-bolt" />{s}</span>
-          ))}
-        </div>
-      </div>
-
-      {/* Performance */}
-      <div className="sec">
-        <div className="sec-head"><h2><i className="ti ti-trending-up" /> Performance</h2></div>
-        <div className="metrics">
-          <div className="metric-card"><div className="mc-val">0%</div><div className="mc-label">Completion</div></div>
-          <div className="metric-card"><div className="mc-val">0%</div><div className="mc-label">Acceptance</div></div>
-          <div className="metric-card"><div className="mc-val">—</div><div className="mc-label">Avg Response</div></div>
-        </div>
+            <span className="wp-stat-count" style={{color: s.color}}>{s.count}</span>
+            <span className="wp-stat-label">{s.label}</span>
+          </div>
+        ))}
       </div>
     </Layout>
   )
