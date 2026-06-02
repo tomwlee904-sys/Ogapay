@@ -64,7 +64,7 @@ export default function Dashboard() {
   const bars = graphData[graphPeriod] || graphData['7d']
 
   return (
-    <Layout>
+    <Layout sidebar={false}>
       <style>{`
         .dash-welcome{background:linear-gradient(135deg,rgba(124,58,237,.08),var(--card));border:1px solid var(--border);border-radius:14px;padding:28px 32px;margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px}
         .dash-welcome .dwg{font-family:Outfit;font-size:22px;font-weight:800;margin:0 0 4px}
