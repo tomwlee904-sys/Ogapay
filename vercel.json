@@ -5,6 +5,10 @@
   "installCommand": "cd app && npm install",
   "rewrites": [
     {
+      "source": "/apply.html",
+      "destination": "/wurker-apply.html"
+    },
+    {
       "source": "/submissions",
       "destination": "/my-submissions.html"
     },
