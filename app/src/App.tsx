@@ -15,6 +15,8 @@ import Settings from './pages/Settings'
 import Messages from './pages/Messages'
 import MyStore from './pages/MyStore'
 import MyTasks from './pages/MyTasks'
+import FAQ from './pages/FAQ'
+import Earnings from './pages/Earnings'
 import NotFound from './pages/NotFound'
 
 export default function App() {
@@ -39,6 +41,8 @@ export default function App() {
           <Route path="/referrals" element={<Referrals />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/messages" element={<Messages />} />
+          <Route path="/faq" element={<FAQ />} />
+          <Route path="/earnings" element={<Earnings />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </AuthProvider>
