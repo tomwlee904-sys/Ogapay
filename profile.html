@@ -2,68 +2,66 @@
 <html lang="en" data-theme="dark">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
 <title>Profile - OgaPay</title>
 <script>(function(){try{document.documentElement.setAttribute('data-theme',localStorage.getItem('ogapay-theme')||'dark')}catch(e){}})();</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800;900&family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
 <style>
 *,*::before,*::after{box-sizing:border-box}
 :root{
   --bg:#0A0A0F;--bg2:#0D0D14;--card:#111118;--card2:#16161F;--border:#1E1E2A;--border2:#2A2A38;
   --text:#F0F0F5;--text2:#8888A0;--text3:#5C5C72;
-  --gold:#F5C518;--gold-dim:#C49B0F;--green:#00D97E;--red:#FF4757;--accent:#F5C518;
-  --shadow:0 8px 32px rgba(0,0,0,.45),0 2px 8px rgba(0,0,0,.3);
-  --shadow-sm:0 2px 8px rgba(0,0,0,.25);--radius:14px;--radius-sm:10px;--nav-h:60px;
+  --gold:#F5C518;--green:#00D97E;--red:#FF4757;
+  --shadow:0 4px 20px rgba(0,0,0,.35);--shadow-sm:0 2px 8px rgba(0,0,0,.25);
+  --radius:12px;--radius-sm:8px;--nav-h:60px;
 }
 html{scroll-behavior:smooth}
-body{margin:0;background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;overflow-x:hidden}
+body{margin:0;background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;overflow-x:hidden;-webkit-font-smoothing:antialiased}
 a{color:inherit;text-decoration:none}button,input,textarea{font:inherit}button{cursor:pointer}
 ::selection{background:rgba(245,197,24,.25);color:#fff}
 
-/* ═══ SUBTLE GRAIN ═══ */
-body::before{content:'';position:fixed;inset:0;opacity:.03;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");pointer-events:none;z-index:0}
-
-/* ═══ SHARED NAV ═══ */
-.nav{position:fixed;top:0;left:0;right:0;height:var(--nav-h);z-index:200;background:rgba(10,10,15,.92);backdrop-filter:blur(18px) saturate(1.4);border-bottom:1px solid var(--border)}
+/* ═══ NAVBAR ═══ */
+.nav{position:fixed;top:0;left:0;right:0;height:var(--nav-h);z-index:200;background:rgba(10,10,15,.94);backdrop-filter:blur(18px) saturate(1.4);border-bottom:1px solid var(--border)}
 .nav-inner{height:100%;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:28px;width:min(1200px,calc(100% - 48px));margin:0 auto}
-.brand{display:flex;align-items:center;gap:10px;font-family:Syne,sans-serif;font-size:19px;font-weight:800;letter-spacing:-.4px;white-space:nowrap;color:var(--gold)}
+.brand{display:flex;align-items:center;gap:10px;font-family:Outfit,sans-serif;font-size:19px;font-weight:900;letter-spacing:-.4px;color:var(--gold)}
 .logo-mark{width:34px;height:34px;display:grid;place-items:center;flex-shrink:0;border-radius:9px;overflow:hidden}
 .logo-mark svg{width:100%;height:100%;display:block;border-radius:9px}
 .nav-links{display:flex;align-items:center;justify-content:center;gap:4px}
 .nav-link{display:inline-flex;align-items:center;gap:7px;padding:6px 10px;border-radius:8px;color:var(--text2);font-size:14px;font-weight:600;transition:color .14s,background .14s}
-.nav-link.active,.nav-link:hover{color:var(--text);background:var(--card)}
+.nav-link:hover{color:var(--text);background:var(--card)}
+.nav-link.active{color:var(--gold);background:rgba(245,197,24,.08)}
 .nav-actions{display:flex;align-items:center;gap:8px}
-.wallet-btn{height:36px;padding:0 18px;display:inline-flex;align-items:center;gap:8px;border:1.5px solid var(--border2);border-radius:999px;background:var(--card);color:var(--text);font-size:13.5px;font-weight:700;transition:border-color .14s,background .14s;text-decoration:none}
+.wallet-btn{height:36px;padding:0 18px;display:inline-flex;align-items:center;gap:8px;border:1.5px solid var(--border2);border-radius:999px;background:var(--card);color:var(--text);font-size:13.5px;font-weight:700;transition:border-color .2s;text-decoration:none}
 .wallet-btn:hover{border-color:var(--gold);color:var(--gold)}
-.icon-btn{width:36px;height:36px;display:grid;place-items:center;border:1.5px solid var(--border);border-radius:8px;background:var(--card);color:var(--text2);transition:color .14s,border-color .14s,background .14s}
+.icon-btn{width:36px;height:36px;display:grid;place-items:center;border:1.5px solid var(--border);border-radius:8px;background:var(--card);color:var(--text2);transition:color .2s,border-color .2s}
 .icon-btn:hover{color:var(--gold);border-color:var(--gold)}
-@media(max-width:768px){.nav-links{display:none}.nav-inner{width:100%;padding:0 24px;gap:12px;grid-template-columns:1fr auto}}
+@media(max-width:768px){.nav-links{display:none}.nav-inner{width:100%;padding:0 20px;gap:10px;grid-template-columns:1fr auto}}
 
 /* ═══ DRAWER ═══ */
 .mobile-menu{position:fixed;top:0;left:0;right:0;bottom:0;z-index:300;display:none;visibility:hidden;pointer-events:none}
 .mobile-menu.open{display:block;visibility:visible;pointer-events:auto}
 .mobile-overlay{position:absolute;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(4px)}
-.oga-drawer{position:absolute;right:0;top:0;bottom:0;width:min(360px,92vw);padding:0 0 18px;background:#0D0D14;color:var(--text);border-left:1px solid var(--border);box-shadow:-16px 0 42px rgba(0,0,0,.45);display:flex;flex-direction:column;transform:translateX(100%);transition:transform .25s ease}
+.oga-drawer{position:absolute;right:0;top:0;bottom:0;width:min(340px,90vw);padding:0;background:#0D0D14;border-left:1px solid var(--border);box-shadow:-16px 0 42px rgba(0,0,0,.45);display:flex;flex-direction:column;transform:translateX(100%);transition:transform .25s ease}
 .mobile-menu.open .oga-drawer{transform:translateX(0)}
-.oga-drawer-head{height:64px;display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);background:rgba(13,13,20,.9)}
+.oga-drawer-head{height:64px;display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border)}
 .oga-drawer-close{width:36px;height:36px;border:1px solid var(--border);border-radius:8px;background:var(--card);color:var(--text2);font-size:20px;display:grid;place-items:center;cursor:pointer}
-.oga-drawer-nav{padding:10px 8px 12px;overflow-y:auto;flex:1}
-.oga-drawer-item{width:100%;min-height:56px;display:flex;align-items:center;gap:12px;padding:8px 10px;border:0;border-radius:10px;background:transparent;color:inherit;text-decoration:none;cursor:pointer;font:inherit}
+.oga-drawer-nav{padding:10px 8px;overflow-y:auto;flex:1}
+.oga-drawer-item{width:100%;min-height:52px;display:flex;align-items:center;gap:12px;padding:8px 10px;border:0;border-radius:10px;background:transparent;color:inherit;text-decoration:none;cursor:pointer;font:inherit}
 .oga-drawer-item:hover{background:var(--card)}
 .oga-drawer-icon{width:36px;height:36px;display:grid;place-items:center;border:1px solid var(--border);border-radius:9px;background:var(--bg2);color:var(--text2);flex:0 0 auto;font-size:18px}
-.oga-drawer-item strong{display:block;color:var(--text);font-size:15px;line-height:1.15;font-weight:800}
-.oga-drawer-item small{display:block;margin-top:3px;color:var(--text3);font-size:13px}
-.oga-drawer-chevron{width:15px;height:15px;margin-left:auto;color:var(--text3);stroke-width:2.5;transition:transform .16s ease;flex-shrink:0}
+.oga-drawer-item strong{display:block;color:var(--text);font-size:15px;font-weight:800}
+.oga-drawer-item small{display:block;margin-top:2px;color:var(--text3);font-size:12px;font-weight:500}
+.oga-drawer-chevron{width:14px;height:14px;margin-left:auto;color:var(--text3);transition:transform .16s}
 .oga-drawer-group.open .oga-drawer-chevron{transform:rotate(180deg)}
 .oga-drawer-subnav{display:none;margin:4px 0 10px 18px;padding:6px 0 6px 22px;border-left:2px solid var(--border)}
 .oga-drawer-group.open .oga-drawer-subnav{display:grid;gap:4px}
-.oga-drawer-subnav a{display:flex;align-items:center;gap:10px;padding:6px 8px;border-radius:9px;color:inherit;text-decoration:none}
-.oga-drawer-subnav a:hover{background:var(--card)}
-.oga-drawer-foot{padding:8px 8px 0;border-top:1px solid var(--border);background:rgba(13,13,20,.95)}
-.oga-drawer-foot-label{font-size:11px;font-weight:800;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;padding:8px 10px 4px}
+.oga-drawer-subnav a{display:flex;align-items:center;gap:10px;padding:6px 8px;border-radius:8px;font-size:13px;font-weight:600;color:var(--text2)}
+.oga-drawer-subnav a:hover{background:var(--card);color:var(--text)}
+.oga-drawer-foot{padding:8px 8px 0;border-top:1px solid var(--border)}
+.oga-drawer-foot-label{font-size:10px;font-weight:800;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;padding:8px 10px 4px}
 .authed-only{display:none!important}.public-only{display:flex!important}
 body[data-auth="authed"] .authed-only{display:flex!important}
 body[data-auth="authed"] .public-only{display:none!important}
@@ -74,161 +72,127 @@ div.oga-drawer-foot.authed-only{display:none!important}div.oga-drawer-foot.publi
 body[data-auth="authed"] div.oga-drawer-foot.authed-only{display:block!important}
 body[data-auth="authed"] div.oga-drawer-foot.public-only{display:none!important}
 
-/* ═══ PROFILE PAGE ═══ */
-.app{display:flex;width:min(1200px,calc(100% - 32px));margin:0 auto;padding:24px 0 72px;min-height:calc(100vh - var(--nav-h))}.main{flex:1;min-width:0}
+/* ═══ LAYOUT ═══ */
+.app{display:flex;width:min(1080px,calc(100% - 40px));margin:0 auto;padding:24px 0 72px;min-height:calc(100vh - var(--nav-h))}.main{flex:1;min-width:0}.page{max-width:780px;margin:0 auto;width:100%}
 
-/* ═══ ANIMATIONS ═══ */
-@keyframes goldPulse{0%,100%{box-shadow:0 0 0 0 rgba(245,197,24,.4)}50%{box-shadow:0 0 0 12px rgba(245,197,24,0)}}
-@keyframes shimmer{0%{background-position:-200% center}100%{background-position:200% center}}
-@keyframes countUp{0%{opacity:0;transform:translateY(8px)}100%{opacity:1;transform:translateY(0)}}
-@keyframes verifiedPulse{0%,100%{opacity:1}50%{opacity:.6}}
-@keyframes fadeUp{0%{opacity:0;transform:translateY(16px)}100%{opacity:1;transform:translateY(0)}}
-@keyframes glowBorder{0%,100%{border-color:var(--gold)}50%{border-color:rgba(245,197,24,.3)}}
-.count-anim{animation:countUp .5s ease both}
-.fade-up{animation:fadeUp .5s ease both}
+/* ═══ PROFILE SUMMARY ═══ */
+.profile-summary{display:flex;align-items:center;gap:20px;padding:24px 0 20px;margin-bottom:24px;border-bottom:1px solid var(--border)}
+.profile-av{width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,var(--gold),#C49B0F);display:grid;place-items:center;color:#0A0A0F;font-family:Outfit,sans-serif;font-size:26px;font-weight:900;flex-shrink:0;position:relative}
+.profile-av .v-badge{position:absolute;bottom:-1px;right:-1px;width:18px;height:18px;border-radius:50%;background:var(--green);color:#0A0A0F;display:grid;place-items:center;font-size:9px;border:2px solid var(--bg)}
+.profile-info{flex:1;min-width:0}
+.profile-info h1{margin:0;font-family:Outfit,sans-serif;font-size:22px;font-weight:900;letter-spacing:-.3px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.profile-info .username{color:var(--text2);font-size:14px;margin-top:1px}
+.profile-info .meta-row{display:flex;align-items:center;gap:12px;margin-top:4px;color:var(--text2);font-size:12px;flex-wrap:wrap}
+.profile-info .meta-row span{display:inline-flex;align-items:center;gap:4px}
+.profile-actions{display:flex;gap:8px;flex-shrink:0}
+.profile-actions .pbtn{height:36px;padding:0 16px;border-radius:8px;font-size:12px;font-weight:700;display:inline-flex;align-items:center;gap:6px;cursor:pointer;transition:all .2s;text-decoration:none}
+.profile-actions .pbtn.outline{border:1.5px solid var(--border2);background:transparent;color:var(--text)}
+.profile-actions .pbtn.outline:hover{border-color:var(--gold);color:var(--gold)}
+.profile-actions .pbtn.gold{background:linear-gradient(135deg,var(--gold),#C49B0F);color:#0A0A0F;border:0}
+.profile-actions .pbtn.gold:hover{box-shadow:0 4px 16px rgba(245,197,24,.25)}
+.gold-pill{display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:999px;background:rgba(245,197,24,.1);border:1px solid rgba(245,197,24,.2);color:var(--gold);font-size:10px;font-weight:800;letter-spacing:.2px}
 
-/* ═══ HERO ═══ */
-.prof-wrap{padding:20px 0 56px}
-.prof-hero{display:flex;align-items:center;gap:24px;padding:32px;border-radius:var(--radius);background:var(--card);border:1px solid var(--border);position:relative;overflow:hidden;margin-bottom:24px}
-.prof-hero::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);opacity:.5}
-.prof-av-wrap{position:relative;flex-shrink:0}
-.prof-av{width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#F5C518,#C49B0F);display:grid;place-items:center;color:#0A0A0F;font-family:Syne,sans-serif;font-size:32px;font-weight:800;position:relative;z-index:1}
-.prof-av-ring{position:absolute;inset:-4px;border-radius:50%;border:2px solid var(--gold);animation:goldPulse 2s ease-in-out infinite;z-index:0}
-.prof-verified{position:absolute;bottom:-2px;right:-2px;width:24px;height:24px;border-radius:50%;background:var(--green);color:#0A0A0F;display:grid;place-items:center;font-size:12px;border:2px solid var(--card);z-index:2;animation:verifiedPulse 2s ease-in-out infinite}
-.prof-info{flex:1;min-width:0}
-.prof-info h1{margin:0;font-family:Syne,sans-serif;font-size:24px;font-weight:800;letter-spacing:-.5px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.prof-info .username{color:var(--text2);font-size:14px;font-weight:500;margin-top:2px}
-.prof-info .prof-meta{display:flex;align-items:center;gap:14px;margin-top:6px;color:var(--text2);font-size:12px;flex-wrap:wrap}
-.prof-info .prof-meta span{display:inline-flex;align-items:center;gap:5px}
-.prof-hero-actions{display:flex;gap:8px;flex-shrink:0}
-.ph-btn{height:40px;padding:0 18px;border-radius:8px;font-size:13px;font-weight:700;display:inline-flex;align-items:center;gap:7px;cursor:pointer;transition:all .2s;text-decoration:none}
-.ph-btn.outline{border:1.5px solid var(--border2);background:transparent;color:var(--text)}
-.ph-btn.outline:hover{border-color:var(--gold);color:var(--gold)}
-.ph-btn.gold{background:linear-gradient(135deg,#F5C518,#C49B0F);color:#0A0A0F;border:0}
-.ph-btn.gold:hover{transform:translateY(-1px);box-shadow:0 4px 20px rgba(245,197,24,.3)}
+/* ═══ STATS GRID ═══ */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:28px}
+.stat-card{padding:16px 14px;border-radius:var(--radius-sm);background:var(--card);border:1px solid var(--border);transition:all .2s}
+.stat-card:hover{border-color:var(--border2);transform:translateY(-1px)}
+.stat-card .sc-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.stat-card .sc-icon{font-size:14px;color:var(--gold)}
+.stat-card .sc-num{font-family:Outfit,sans-serif;font-size:22px;font-weight:900;letter-spacing:-.3px;line-height:1}
+.stat-card .sc-label{font-size:11px;color:var(--text3);margin-top:4px;font-weight:600}
+.stat-card .sc-trend{font-size:10px;font-weight:700;margin-top:3px}
+.stat-card .sc-trend.up{color:var(--green)}
+.stat-card .sc-trend.gold{color:var(--gold)}
 
-/* Gold Tier Badge */
-.gold-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:999px;background:linear-gradient(135deg,rgba(245,197,24,.12),rgba(196,155,15,.08));border:1px solid rgba(245,197,24,.2);color:var(--gold);font-size:11px;font-weight:800;letter-spacing:.3px;position:relative;overflow:hidden}
-.gold-badge::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(245,197,24,.08),transparent);background-size:200% 100%;animation:shimmer 3s ease-in-out infinite;pointer-events:none}
+/* ═══ WALLET OVERVIEW ═══ */
+.wallet-card{padding:20px 24px;border-radius:var(--radius);background:var(--card);border:1px solid var(--border);margin-bottom:28px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.wallet-left{display:flex;align-items:center;gap:16px}
+.wallet-icon{width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,rgba(245,197,24,.15),rgba(196,155,15,.05));display:grid;place-items:center;font-size:20px;color:var(--gold);flex-shrink:0}
+.wallet-info h3{font-family:Outfit,sans-serif;font-size:15px;font-weight:800;margin:0 0 2px}
+.wallet-info .wallet-bal{font-family:Outfit,sans-serif;font-size:24px;font-weight:900;letter-spacing:-.5px;color:var(--gold)}
+.wallet-info .wallet-sub{font-size:12px;color:var(--text3);margin-top:1px}
+.wallet-actions{display:flex;gap:8px}
+.wallet-actions .wbtn{height:36px;padding:0 16px;border-radius:8px;font-size:12px;font-weight:700;display:inline-flex;align-items:center;gap:6px;cursor:pointer;transition:all .2s;text-decoration:none}
+.wallet-actions .wbtn.outline{border:1.5px solid var(--border2);background:transparent;color:var(--text)}
+.wallet-actions .wbtn.outline:hover{border-color:var(--gold);color:var(--gold)}
+.wallet-actions .wbtn.gold{background:linear-gradient(135deg,var(--gold),#C49B0F);color:#0A0A0F;border:0}
+.wallet-actions .wbtn.gold:hover{box-shadow:0 4px 16px rgba(245,197,24,.25)}
 
-/* ═══ STATS ═══ */
-.prof-stats{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-bottom:24px}
-.ps-card{padding:16px 12px;border-radius:var(--radius-sm);background:var(--card);border:1px solid var(--border);text-align:center;transition:all .2s}
-.ps-card:hover{transform:translateY(-2px);border-color:var(--gold);box-shadow:0 4px 20px rgba(245,197,24,.08)}
-.ps-card .ps-icon{font-size:16px;margin-bottom:4px;color:var(--gold)}
-.ps-card .ps-num{font-family:Syne,sans-serif;font-size:20px;font-weight:800;letter-spacing:-.3px;color:var(--text)}
-.ps-card .ps-label{font-size:10px;color:var(--text3);margin-top:2px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
-.ps-card .ps-trend{font-size:9px;font-weight:700;margin-top:3px}
-.ps-card .ps-trend.up{color:var(--green)}
-.ps-card .ps-trend.down{color:var(--red)}
+/* ═══ SECTION HEADERS ═══ */
+.sec-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.sec-head h2{font-family:Outfit,sans-serif;font-size:16px;font-weight:800;margin:0;display:flex;align-items:center;gap:8px}
+.sec-head h2 i{color:var(--gold)}
+.sec-head .sec-link{font-size:12px;color:var(--gold);font-weight:700;display:flex;align-items:center;gap:4px;opacity:.8;transition:opacity .15s}
+.sec-head .sec-link:hover{opacity:1}
 
-/* ═══ SKILLS ═══ */
-.prof-section{margin-bottom:28px}
-.prof-section .sec-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
-.prof-section .sec-head h2{font-family:Syne,sans-serif;font-size:15px;font-weight:700;margin:0;display:flex;align-items:center;gap:8px;color:var(--text)}
-.prof-section .sec-head h2 i{color:var(--gold)}
-.prof-section .sec-head a{font-size:12px;color:var(--gold);font-weight:700}
-.skills-row{display:flex;gap:6px;flex-wrap:wrap}
-.skill-pill{height:34px;padding:0 14px;border-radius:999px;border:1.5px solid rgba(245,197,24,.2);background:rgba(245,197,24,.04);color:var(--gold);font-size:12px;font-weight:700;display:inline-flex;align-items:center;gap:6px;transition:all .2s;text-decoration:none}
-.skill-pill:hover{background:rgba(245,197,24,.1);border-color:var(--gold);transform:translateY(-1px)}
-
-/* ═══ TRUST ROW ═══ */
-.trust-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:28px}
-.trust-card{display:flex;align-items:center;gap:12px;padding:16px;border-radius:var(--radius-sm);background:var(--card);border:1px solid var(--border);transition:all .2s}
-.trust-card:hover{border-color:var(--border2);transform:translateY(-1px)}
-.trust-card .tc-icon{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;font-size:16px;flex-shrink:0}
-.trust-card .tc-icon.gold{background:rgba(245,197,24,.1);color:var(--gold)}
-.trust-card .tc-icon.green{background:rgba(0,217,126,.1);color:var(--green)}
-.trust-card .tc-icon.blue{background:rgba(59,130,246,.1);color:#3B82F6}
-.trust-card .tc-body{flex:1;min-width:0}
-.trust-card .tc-body strong{display:block;font-size:13px;font-weight:700}
-.trust-card .tc-body small{font-size:11px;color:var(--text3)}
-
-/* ═══ TOP ACTIONS ═══ */
-.actions-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:0}
-.action-card{display:flex;flex-direction:column;gap:6px;padding:20px;border-radius:var(--radius-sm);background:var(--card);border:1px solid var(--border);text-decoration:none;transition:all .2s;position:relative}
-.action-card:hover{transform:translateY(-2px);border-color:var(--gold);box-shadow:0 4px 20px rgba(245,197,24,.06)}
-.action-card .ac-icon{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font-size:18px;margin-bottom:2px}
-.action-card .ac-icon.gold{background:linear-gradient(135deg,rgba(245,197,24,.15),rgba(196,155,15,.08));color:var(--gold)}
-.action-card .ac-icon.green{background:linear-gradient(135deg,rgba(0,217,126,.12),rgba(0,217,126,.05));color:var(--green)}
-.action-card .ac-icon.blue{background:linear-gradient(135deg,rgba(59,130,246,.12),rgba(59,130,246,.05));color:#3B82F6}
-.action-card .ac-icon.purple{background:linear-gradient(135deg,rgba(139,92,246,.12),rgba(139,92,246,.05));color:#8B5CF6}
+/* ═══ QUICK ACTIONS ═══ */
+.section-gap{margin-bottom:28px}
+.actions-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.action-card{display:flex;flex-direction:column;gap:8px;padding:18px 16px;border-radius:var(--radius-sm);background:var(--card);border:1px solid var(--border);text-decoration:none;transition:all .2s;position:relative}
+.action-card:hover{border-color:var(--gold);transform:translateY(-2px);box-shadow:0 4px 16px rgba(245,197,24,.06)}
+.action-card .ac-icon{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;font-size:16px}
+.action-card .ac-icon.gold{background:linear-gradient(135deg,rgba(245,197,24,.15),rgba(196,155,15,.05));color:var(--gold)}
+.action-card .ac-icon.green{background:linear-gradient(135deg,rgba(0,217,126,.12),rgba(0,217,126,.04));color:var(--green)}
+.action-card .ac-icon.blue{background:linear-gradient(135deg,rgba(59,130,246,.12),rgba(59,130,246,.04));color:#3B82F6}
+.action-card .ac-icon.purple{background:linear-gradient(135deg,rgba(139,92,246,.12),rgba(139,92,246,.04));color:#8B5CF6}
 .action-card strong{font-size:13px;font-weight:800}
-.action-card small{font-size:11px;color:var(--text3);line-height:1.3}
-.action-card .ac-arrow{position:absolute;top:16px;right:16px;color:var(--text3);font-size:14px;transition:transform .2s}
-.action-card:hover .ac-arrow{transform:translateX(3px);color:var(--gold)}
+.action-card small{font-size:11px;color:var(--text3);line-height:1.3;display:block}
+.action-card .ac-arrow{position:absolute;top:14px;right:14px;color:var(--text3);font-size:13px;transition:all .2s}
+.action-card:hover .ac-arrow{color:var(--gold);transform:translateX(3px)}
 
-/* More Tools accordion */
-.more-toggle{display:inline-flex;align-items:center;gap:6px;padding:10px 0;border:0;background:none;color:var(--gold);font-size:12px;font-weight:700;cursor:pointer;transition:all .15s}
-.more-toggle:hover{opacity:.8}
-.more-toggle i{transition:transform .2s}
+/* More tools toggle */
+.more-wrap{margin-top:10px}
+.more-toggle{display:inline-flex;align-items:center;gap:6px;padding:8px 0;border:0;background:none;color:var(--text2);font-size:12px;font-weight:700;cursor:pointer;transition:color .15s}
+.more-toggle:hover{color:var(--gold)}
+.more-toggle i{font-size:14px;transition:transform .2s}
 .more-toggle.open i{transform:rotate(180deg)}
-.more-tools{display:none;margin-top:12px}
+.more-tools{display:none;margin-top:10px}
 .more-tools.open{display:block}
 .more-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
-.more-link{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:8px;border:1px solid var(--border);background:var(--card);text-decoration:none;transition:all .15s}
-.more-link:hover{border-color:var(--border2);background:var(--card2);transform:translateY(-1px)}
-.more-link .ml-icon{width:32px;height:32px;border-radius:8px;display:grid;place-items:center;font-size:14px;flex-shrink:0}
+.more-link{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--card);text-decoration:none;transition:all .15s}
+.more-link:hover{border-color:var(--border2);background:var(--card2)}
+.more-link .ml-icon{width:28px;height:28px;border-radius:7px;display:grid;place-items:center;font-size:12px;flex-shrink:0}
 .more-link strong{font-size:12px;font-weight:700;flex:1}
 .more-link small{font-size:10px;color:var(--text3)}
 
-/* ═══ ACTIVITY STRIP ═══ */
-.activity-strip{display:flex;gap:12px;overflow-x:auto;padding-bottom:8px;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch}
-.activity-strip::-webkit-scrollbar{height:4px}
+/* ═══ RECENT ACTIVITY ═══ */
+.activity-strip{display:flex;gap:10px;overflow-x:auto;padding-bottom:6px;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch}
+.activity-strip::-webkit-scrollbar{height:3px}
 .activity-strip::-webkit-scrollbar-track{background:var(--bg2);border-radius:999px}
 .activity-strip::-webkit-scrollbar-thumb{background:var(--border2);border-radius:999px}
-.activity-strip::-webkit-scrollbar-thumb:hover{background:var(--text3)}
-.activity-card{min-width:240px;scroll-snap-align:start;padding:16px;border-radius:var(--radius-sm);background:var(--card);border:1px solid var(--border);transition:all .2s;flex-shrink:0}
-.activity-card:hover{border-color:var(--border2);transform:translateY(-2px)}
-.activity-card .ac-title{font-size:13px;font-weight:700;margin:0 0 3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.activity-card .ac-meta{font-size:11px;color:var(--text3);margin-bottom:6px}
+.activity-card{min-width:220px;scroll-snap-align:start;padding:14px 16px;border-radius:var(--radius-sm);background:var(--card);border:1px solid var(--border);transition:all .2s;flex-shrink:0}
+.activity-card:hover{border-color:var(--border2)}
+.activity-card .ac-title{font-size:13px;font-weight:700;margin:0 0 2px}
+.activity-card .ac-date{font-size:11px;color:var(--text3);margin-bottom:8px}
 .activity-card .ac-bottom{display:flex;align-items:center;justify-content:space-between}
-.activity-card .ac-earn{font-family:Syne,sans-serif;font-size:14px;font-weight:800;color:var(--green)}
-.activity-card .ac-stars{color:var(--gold);font-size:11px}
+.activity-card .ac-earn{font-family:Outfit,sans-serif;font-size:15px;font-weight:900;color:var(--green)}
+.activity-card .ac-stars{color:var(--gold);font-size:10px}
 
-/* ═══ SETTINGS FORM ═══ */
-.settings-card{padding:24px;border-radius:var(--radius);background:var(--card);border:1px solid var(--border);margin-bottom:14px}
-.settings-card h3{font-family:Syne,sans-serif;font-size:14px;font-weight:700;margin:0 0 16px;display:flex;align-items:center;gap:8px;color:var(--text)}
-.settings-card h3 i{color:var(--gold)}
-.fg{display:grid;gap:4px;margin-bottom:16px;position:relative}
-.fg label{font-size:11px;font-weight:700;color:var(--text3);transition:color .15s}
-.fg input,.fg textarea{height:44px;padding:0 14px;border:1.5px solid var(--border);border-radius:8px;background:var(--bg2);color:var(--text);font-size:13px;outline:none;transition:border-color .2s,box-shadow .2s;font-family:inherit}
-.fg input:focus,.fg textarea:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(245,197,24,.08)}
-.fg input[readonly]{color:var(--text3);cursor:not-allowed}
-.fg textarea{height:90px;padding:10px 14px;resize:vertical}
-.fg-h{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-.char-count{text-align:right;font-size:10px;color:var(--text3);margin-top:2px}
-.save-btn{width:100%;height:48px;border:0;border-radius:8px;background:linear-gradient(135deg,#F5C518,#C49B0F);color:#0A0A0F;font-weight:800;font-size:14px;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;transition:all .2s;margin-top:8px}
-.save-btn:hover{transform:translateY(-1px);box-shadow:0 4px 20px rgba(245,197,24,.3)}
-.save-btn:active{transform:translateY(0)}
-.save-btn .check{display:none}
-.save-btn.saved .check{display:inline}
-.save-btn.saved .default{display:none}
-
-@media(max-width:1024px){.prof-stats{grid-template-columns:repeat(4,1fr)}.actions-grid{grid-template-columns:repeat(2,1fr)}.more-grid{grid-template-columns:repeat(2,1fr)}}
+/* ═══ RESPONSIVE ═══ */
+@media(max-width:900px){.stats-grid{grid-template-columns:repeat(2,1fr)}.actions-row{grid-template-columns:repeat(2,1fr)}.more-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:768px){
-  .prof-hero{flex-direction:column;align-items:flex-start;padding:24px;gap:16px}
-  .prof-hero-actions{width:100%}.ph-btn{flex:1;justify-content:center}
-  .prof-stats{grid-template-columns:repeat(3,1fr);gap:6px}
-  .ps-card{padding:12px 8px}.ps-card .ps-num{font-size:17px}
-  .trust-row{grid-template-columns:1fr}.actions-grid{grid-template-columns:1fr 1fr}
-  .more-grid{grid-template-columns:1fr}.fg-h{grid-template-columns:1fr}
-  .activity-card{min-width:200px}
+  .profile-summary{flex-direction:column;align-items:flex-start;gap:12px}
+  .profile-actions{width:100%}.profile-actions .pbtn{flex:1;justify-content:center}
+  .wallet-card{flex-direction:column;align-items:stretch;padding:18px}
+  .wallet-left{gap:12px}.wallet-actions{justify-content:flex-start}
+  .activity-card{min-width:180px}
 }
-@media(max-width:480px){.prof-stats{grid-template-columns:repeat(2,1fr)}.actions-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:480px){
+  .stats-grid{grid-template-columns:1fr 1fr;gap:8px}
+  .actions-row{grid-template-columns:1fr 1fr;gap:8px}
+  .more-grid{grid-template-columns:1fr}
+}
 </style>
 </head>
 <body>
-<!-- ═══ SHARED NAVBAR ═══ -->
+<!-- ═══ NAVBAR ═══ -->
 <header class="nav">
   <div class="nav-inner">
-    <a class="brand" href="index.html" aria-label="OgaPay home">
-      <span class="logo-mark">
-        <svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect width="512" height="512" fill="white"/><rect x="98" y="98" width="107" height="107" rx="20" fill="black"/><path d="M225 98H312C323 98 332 107 332 118V205H225V98Z" fill="black"/><path d="M352 98H392C440 98 470 128 470 176V205H352V98Z" fill="black"/><rect x="98" y="225" width="107" height="107" fill="black"/><rect x="225" y="225" width="107" height="107" fill="black"/><path d="M352 225H470V254C470 302 440 332 392 332H352V225Z" fill="black"/><rect x="98" y="352" width="107" height="107" rx="20" fill="black"/><path d="M225 352H312C323 352 332 361 332 372V439C332 450 323 459 312 459H225V352Z" fill="black"/></svg>
-      </span>
-      <span style="color:var(--gold)">Oga<span style="color:var(--text)">Pay</span></span>
+    <a class="brand" href="index.html">
+      <span class="logo-mark"><svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect width="512" height="512" fill="white"/><rect x="98" y="98" width="107" height="107" rx="20" fill="black"/><path d="M225 98H312C323 98 332 107 332 118V205H225V98Z" fill="black"/></svg></span>
+      <span>Oga<span style="color:var(--text)">Pay</span></span>
     </a>
-    <nav class="nav-links" aria-label="Primary navigation">
+    <nav class="nav-links">
       <a class="nav-link" href="index.html" data-navlink><i class="ti ti-home"></i>Home</a>
       <a class="nav-link" href="tasks.html" data-navlink><i class="ti ti-layout-grid"></i>Tasks</a>
       <a class="nav-link" href="store.html" data-navlink><i class="ti ti-discount-2"></i>Deals</a>
@@ -248,10 +212,7 @@ body[data-auth="authed"] div.oga-drawer-foot.public-only{display:none!important}
 <div class="mobile-menu" id="mobileMenu">
   <div class="mobile-overlay" data-close-menu></div>
   <aside class="oga-drawer" role="dialog" aria-label="Navigation menu">
-    <div class="oga-drawer-head">
-      <span style="font-family:Syne,sans-serif;font-weight:800;color:var(--gold)">OgaPay</span>
-      <button class="oga-drawer-close" data-close-menu aria-label="Close menu"><i class="ti ti-x"></i></button>
-    </div>
+    <div class="oga-drawer-head"><span style="font-family:Outfit;font-weight:900;color:var(--gold)">OgaPay</span><button class="oga-drawer-close" data-close-menu><i class="ti ti-x"></i></button></div>
     <nav class="oga-drawer-nav public-only">
       <a class="oga-drawer-item" href="tasks.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-layout-grid"></i></span><span><strong>Tasks</strong><small>Browse available tasks</small></span></a>
       <a class="oga-drawer-item" href="store.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-discount-2"></i></span><span><strong>Deals</strong></span></a>
@@ -261,30 +222,15 @@ body[data-auth="authed"] div.oga-drawer-foot.public-only{display:none!important}
       <a class="oga-drawer-item" href="support.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-message-2"></i></span><span><strong>Support</strong></span></a>
     </nav>
     <nav class="oga-drawer-nav authed-only" style="display:none">
-      <a class="oga-drawer-item" href="tasks.html" data-close-menu><span class="oga-drawer-icon create-icon"><i class="ti ti-plus"></i></span><span><strong>Create Job</strong></span></a>
-      <section class="oga-drawer-section">
-        <div class="oga-drawer-group">
-          <button class="oga-drawer-item oga-drawer-group-toggle" aria-expanded="false">
-            <span class="oga-drawer-icon"><i class="ti ti-briefcase"></i></span><span><strong>Jobs</strong></span><svg class="oga-drawer-chevron" viewBox="0 0 15 15" fill="none" stroke="currentColor"><path d="M4 6l3.5 3.5L11 6"/></svg>
-          </button>
-          <div class="oga-drawer-subnav">
-            <a href="my-tasks.html" data-close-menu><strong>My Tasks</strong></a>
-            <a href="post-task.html" data-close-menu><strong>Post a Task</strong></a>
-            <a href="task-detail.html" data-close-menu><strong>Task Detail</strong></a>
-          </div>
-        </div>
-        <div class="oga-drawer-group">
-          <button class="oga-drawer-item oga-drawer-group-toggle" aria-expanded="false">
-            <span class="oga-drawer-icon"><i class="ti ti-building-store"></i></span><span><strong>Store</strong></span><svg class="oga-drawer-chevron" viewBox="0 0 15 15" fill="none" stroke="currentColor"><path d="M4 6l3.5 3.5L11 6"/></svg>
-          </button>
-          <div class="oga-drawer-subnav">
-            <a href="store.html" data-close-menu><strong>Wurker Store</strong></a>
-            <a href="my-store.html" data-close-menu><strong>My Store</strong></a>
-            <a href="messages.html" data-close-menu><strong>Messages</strong></a>
-            <a href="worker.html" data-close-menu><strong>Wurker Portal</strong></a>
-          </div>
-        </div>
-      </section>
+      <a class="oga-drawer-item" href="tasks.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-plus"></i></span><span><strong>Create Job</strong></span></a>
+      <div class="oga-drawer-group">
+        <button class="oga-drawer-item oga-drawer-group-toggle" aria-expanded="false"><span class="oga-drawer-icon"><i class="ti ti-briefcase"></i></span><span><strong>Jobs</strong></span><svg class="oga-drawer-chevron" viewBox="0 0 15 15" fill="none" stroke="currentColor"><path d="M4 6l3.5 3.5L11 6"/></svg></button>
+        <div class="oga-drawer-subnav"><a href="my-tasks.html" data-close-menu><strong>My Tasks</strong></a><a href="post-task.html" data-close-menu><strong>Post a Task</strong></a><a href="task-detail.html" data-close-menu><strong>Task Detail</strong></a></div>
+      </div>
+      <div class="oga-drawer-group">
+        <button class="oga-drawer-item oga-drawer-group-toggle" aria-expanded="false"><span class="oga-drawer-icon"><i class="ti ti-building-store"></i></span><span><strong>Store</strong></span><svg class="oga-drawer-chevron" viewBox="0 0 15 15" fill="none" stroke="currentColor"><path d="M4 6l3.5 3.5L11 6"/></svg></button>
+        <div class="oga-drawer-subnav"><a href="store.html" data-close-menu><strong>Wurker Store</strong></a><a href="my-store.html" data-close-menu><strong>My Store</strong></a><a href="messages.html" data-close-menu><strong>Messages</strong></a><a href="worker.html" data-close-menu><strong>Wurker Portal</strong></a></div>
+      </div>
       <a class="oga-drawer-item" href="communities.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-users-group"></i></span><span><strong>Communities</strong></span></a>
       <a class="oga-drawer-item" href="blog.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-news"></i></span><span><strong>Blog</strong></span></a>
       <a class="oga-drawer-item" href="vault.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-building-bank"></i></span><span><strong>Vault</strong></span></a>
@@ -294,237 +240,147 @@ body[data-auth="authed"] div.oga-drawer-foot.public-only{display:none!important}
     </nav>
     <div class="oga-drawer-foot authed-only" style="display:none">
       <div class="oga-drawer-foot-label">ACCOUNT</div>
-      <a class="oga-drawer-item" href="profile.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-user"></i></span><span><strong>My Profile</strong></span></a>
+      <a class="oga-drawer-item" href="settings.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-settings"></i></span><span><strong>Settings</strong></span></a>
       <a class="oga-drawer-item logout-item" href="login.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-logout"></i></span><span><strong>Logout</strong></span></a>
     </div>
   </aside>
 </div>
 
 <div class="app">
-<aside class="sidebar" style="display:none"></aside>
 <main class="main">
 <section class="page">
 
-<div class="prof-wrap">
-
-  <!-- ═══ HERO ═══ -->
-  <div class="prof-hero fade-up" style="animation-delay:.05s">
-    <div class="prof-av-wrap">
-      <div class="prof-av">JD</div>
-      <div class="prof-av-ring"></div>
-      <div class="prof-verified"><i class="ti ti-check"></i></div>
-    </div>
-    <div class="prof-info">
-      <h1>John Doe <span class="gold-badge"><i class="ti ti-trophy"></i> Gold · Top Earner</span></h1>
+  <!-- ═══ 1. PROFILE SUMMARY ═══ -->
+  <div class="profile-summary">
+    <div class="profile-av">JD<span class="v-badge"><i class="ti ti-check"></i></span></div>
+    <div class="profile-info">
+      <h1>John Doe <span class="gold-pill"><i class="ti ti-trophy"></i> Gold Tier</span></h1>
       <div class="username">@johndoe</div>
-      <div class="prof-meta">
+      <div class="meta-row">
         <span><i class="ti ti-map-pin"></i> Lagos, Nigeria</span>
-        <span><i class="ti ti-mail"></i> john@ogapay.com</span>
         <span><i class="ti ti-calendar"></i> Joined Mar 2026</span>
-        <span style="color:var(--green)"><i class="ti ti-badge-check"></i> KYC Verified</span>
+        <span style="color:var(--green)"><i class="ti ti-badge-check"></i> Verified</span>
+        <span><i class="ti ti-star" style="color:var(--gold)"></i> 8.4K reputation</span>
       </div>
     </div>
-    <div class="prof-hero-actions">
-      <button class="ph-btn outline"><i class="ti ti-edit"></i> Edit Profile</button>
-      <button class="ph-btn gold"><i class="ti ti-share"></i> Share</button>
+    <div class="profile-actions">
+      <button class="pbtn outline"><i class="ti ti-edit"></i> Edit</button>
+      <button class="pbtn gold"><i class="ti ti-share"></i> Share</button>
     </div>
   </div>
 
-  <!-- ═══ STATS BAR ═══ -->
-  <div class="prof-stats">
-    <div class="ps-card fade-up" style="animation-delay:.1s"><div class="ps-icon"><i class="ti ti-briefcase"></i></div><div class="ps-num" data-count="47">0</div><div class="ps-label">Tasks Done</div><div class="ps-trend up">↑ 3 this week</div></div>
-    <div class="ps-card fade-up" style="animation-delay:.15s"><div class="ps-icon"><i class="ti ti-coin"></i></div><div class="ps-num" data-count="284000">₦0</div><div class="ps-label">Total Earned</div><div class="ps-trend up">↑ ₦18K</div></div>
-    <div class="ps-card fade-up" style="animation-delay:.2s"><div class="ps-icon"><i class="ti ti-link"></i></div><div class="ps-num" data-count="12">0</div><div class="ps-label">Referrals</div><div class="ps-trend up">↑ 2</div></div>
-    <div class="ps-card fade-up" style="animation-delay:.25s"><div class="ps-icon"><i class="ti ti-star"></i></div><div class="ps-num" data-count="8400">0</div><div class="ps-label">Reputation</div><div class="ps-trend up">↑ 92%</div></div>
-    <div class="ps-card fade-up" style="animation-delay:.3s"><div class="ps-icon"><i class="ti ti-crown"></i></div><div class="ps-num">Gold</div><div class="ps-label">Tier</div><div class="ps-trend up">🏆 Top earner</div></div>
-    <div class="ps-card fade-up" style="animation-delay:.35s"><div class="ps-icon"><i class="ti ti-percentage"></i></div><div class="ps-num" data-count="96">0<small style="font-family:DM Sans;font-size:12px">%</small></div><div class="ps-label">Completion Rate</div><div class="ps-trend up">↑ 2%</div></div>
-    <div class="ps-card fade-up" style="animation-delay:.4s"><div class="ps-icon"><i class="ti ti-clock"></i></div><div class="ps-num" style="font-size:15px">&lt; 1hr</div><div class="ps-label">Avg. Response</div><div class="ps-trend up">⚡ Fast</div></div>
+  <!-- ═══ 2. STATS ═══ -->
+  <div class="stats-grid">
+    <div class="stat-card"><div class="sc-top"><span class="sc-num" data-count="47">0</span><span class="sc-icon"><i class="ti ti-briefcase"></i></span></div><div class="sc-label">Tasks Done</div><div class="sc-trend up">↑ 3 this week</div></div>
+    <div class="stat-card"><div class="sc-top"><span class="sc-num" data-count="284">₦0</span><span class="sc-icon"><i class="ti ti-coin"></i></span></div><div class="sc-label">Total Earned (₦K)</div><div class="sc-trend up">↑ ₦18K</div></div>
+    <div class="stat-card"><div class="sc-top"><span class="sc-num" data-count="12">0</span><span class="sc-icon"><i class="ti ti-link"></i></span></div><div class="sc-label">Referrals</div><div class="sc-trend up">↑ 2 this month</div></div>
+    <div class="stat-card"><div class="sc-top"><span class="sc-num" data-count="96">0<small style="font-family:DM Sans;font-size:13px">%</small></span><span class="sc-icon"><i class="ti ti-percentage"></i></span></div><div class="sc-label">Completion Rate</div><div class="sc-trend gold">🏆 Top performer</div></div>
   </div>
 
-  <!-- ═══ SKILLS ═══ -->
-  <div class="prof-section fade-up" style="animation-delay:.3s">
-    <div class="sec-head"><h2><i class="ti ti-code"></i> What I Do</h2></div>
-    <div class="skills-row">
-      <span class="skill-pill"><span>📱</span> Social Media</span>
-      <span class="skill-pill"><span>🎨</span> UI Design</span>
-      <span class="skill-pill"><span>🧪</span> App Testing</span>
-      <span class="skill-pill"><span>✍️</span> Content Writing</span>
-      <span class="skill-pill"><span>📊</span> Data Entry</span>
-      <span class="skill-pill"><span>💬</span> Community Mod</span>
-      <span class="skill-pill"><span>🎬</span> Video Editing</span>
-      <span class="skill-pill"><span>🔍</span> Research</span>
+  <!-- ═══ 3. WALLET OVERVIEW ═══ -->
+  <div class="wallet-card">
+    <div class="wallet-left">
+      <div class="wallet-icon"><i class="ti ti-wallet"></i></div>
+      <div class="wallet-info">
+        <h3>Wallet Balance</h3>
+        <div class="wallet-bal">₦284,200</div>
+        <div class="wallet-sub">≈ $492 USDC · Available for withdrawal</div>
+      </div>
+    </div>
+    <div class="wallet-actions">
+      <a href="wallet.html" class="wbtn outline"><i class="ti ti-arrow-up"></i> Withdraw</a>
+      <a href="vault.html" class="wbtn gold"><i class="ti ti-building-bank"></i> Vault</a>
     </div>
   </div>
 
-  <!-- ═══ TRUST ROW ═══ -->
-  <div class="trust-row fade-up" style="animation-delay:.35s">
-    <div class="trust-card"><div class="tc-icon green"><i class="ti ti-shield-check"></i></div><div class="tc-body"><strong>KYC Verified</strong><small>Identity confirmed</small></div></div>
-    <div class="trust-card"><div class="tc-icon gold"><i class="ti ti-star"></i></div><div class="tc-body"><strong>8.4K Reputation</strong><small>92% positive feedback</small></div></div>
-    <div class="trust-card"><div class="tc-icon blue"><i class="ti ti-bolt"></i></div><div class="tc-body"><strong>Responds in &lt; 1hr</strong><small>Usually replies fast</small></div></div>
-  </div>
-
-  <!-- ═══ TOP ACTIONS ═══ -->
-  <div class="prof-section fade-up" style="animation-delay:.4s">
-    <div class="sec-head"><h2><i class="ti ti-zap"></i> Top Actions</h2><a href="#">View all <i class="ti ti-chevron-right" style="font-size:10px"></i></a></div>
-    <div class="actions-grid">
-      <a href="tasks.html" class="action-card">
-        <div class="ac-icon gold"><i class="ti ti-layout-grid"></i></div>
-        <strong>Browse Tasks</strong><small>Find work to do</small>
-        <i class="ti ti-chevron-right ac-arrow"></i>
-      </a>
-      <a href="wallet.html" class="action-card">
-        <div class="ac-icon green"><i class="ti ti-wallet"></i></div>
-        <strong>My Wallet</strong><small>₦284K balance</small>
-        <i class="ti ti-chevron-right ac-arrow"></i>
-      </a>
-      <a href="store.html" class="action-card">
-        <div class="ac-icon blue"><i class="ti ti-building-store"></i></div>
-        <strong>My Store</strong><small>Sell your services</small>
-        <i class="ti ti-chevron-right ac-arrow"></i>
-      </a>
-      <a href="post-task.html" class="action-card">
-        <div class="ac-icon purple"><i class="ti ti-plus-circle"></i></div>
-        <strong>Post a Task</strong><small>Hire workers</small>
-        <i class="ti ti-chevron-right ac-arrow"></i>
-      </a>
+  <!-- ═══ 4. QUICK ACTIONS ═══ -->
+  <div class="section-gap">
+    <div class="sec-head"><h2><i class="ti ti-zap"></i> Quick Actions</h2><a href="settings.html" class="sec-link">Settings <i class="ti ti-chevron-right" style="font-size:10px"></i></a></div>
+    <div class="actions-row">
+      <a href="tasks.html" class="action-card"><div class="ac-icon gold"><i class="ti ti-layout-grid"></i></div><strong>Browse Tasks</strong><small>Find work to earn</small><i class="ti ti-chevron-right ac-arrow"></i></a>
+      <a href="post-task.html" class="action-card"><div class="ac-icon blue"><i class="ti ti-plus-circle"></i></div><strong>Post a Task</strong><small>Hire workers</small><i class="ti ti-chevron-right ac-arrow"></i></a>
+      <a href="store.html" class="action-card"><div class="ac-icon purple"><i class="ti ti-building-store"></i></div><strong>My Store</strong><small>Sell services</small><i class="ti ti-chevron-right ac-arrow"></i></a>
+      <a href="referrals.html" class="action-card"><div class="ac-icon green"><i class="ti ti-link"></i></div><strong>Referrals</strong><small>Invite & earn</small><i class="ti ti-chevron-right ac-arrow"></i></a>
     </div>
 
-    <button class="more-toggle" id="moreToggle" onclick="toggleTools()"><i class="ti ti-chevron-down"></i> More Tools (12)</button>
-    <div class="more-tools" id="moreTools">
-      <div class="more-grid">
-        <a href="my-tasks.html" class="more-link"><span class="ml-icon" style="background:rgba(124,58,237,.1);color:#7C3AED"><i class="ti ti-briefcase"></i></span><strong>My Tasks</strong></a>
-        <a href="task-detail.html" class="more-link"><span class="ml-icon" style="background:rgba(59,130,246,.1);color:#3B82F6"><i class="ti ti-file-text"></i></span><strong>Task Detail</strong></a>
-        <a href="my-store.html" class="more-link"><span class="ml-icon" style="background:rgba(236,72,153,.1);color:#EC4899"><i class="ti ti-building-store"></i></span><strong>My Store</strong></a>
-        <a href="vault.html" class="more-link"><span class="ml-icon" style="background:rgba(245,197,24,.1);color:#F5C518"><i class="ti ti-building-bank"></i></span><strong>Rewards Vault</strong></a>
-        <a href="referrals.html" class="more-link"><span class="ml-icon" style="background:rgba(59,130,246,.1);color:#3B82F6"><i class="ti ti-link"></i></span><strong>Referrals</strong></a>
-        <a href="communities.html" class="more-link"><span class="ml-icon" style="background:rgba(20,184,166,.1);color:#14B8A6"><i class="ti ti-users-group"></i></span><strong>Communities</strong></a>
-        <a href="messages.html" class="more-link"><span class="ml-icon" style="background:rgba(59,130,246,.1);color:#3B82F6"><i class="ti ti-message-2"></i></span><strong>Messages</strong></a>
-        <a href="notifications.html" class="more-link"><span class="ml-icon" style="background:rgba(255,69,87,.1);color:#FF4757"><i class="ti ti-bell"></i></span><strong>Notifications</strong></a>
-        <a href="worker.html" class="more-link"><span class="ml-icon" style="background:rgba(124,58,237,.1);color:#7C3AED"><i class="ti ti-user"></i></span><strong>Wurker Portal</strong></a>
-        <a href="dashboard.html" class="more-link"><span class="ml-icon" style="background:rgba(0,217,126,.1);color:#00D97E"><i class="ti ti-dashboard"></i></span><strong>Dashboard</strong></a>
-        <a href="settings.html" class="more-link"><span class="ml-icon" style="background:rgba(245,197,24,.1);color:#F5C518"><i class="ti ti-settings"></i></span><strong>Settings</strong></a>
-        <a href="kyc.html" class="more-link"><span class="ml-icon" style="background:rgba(255,69,87,.1);color:#FF4757"><i class="ti ti-shield-check"></i></span><strong>KYC</strong></a>
-        <a href="analytics.html" class="more-link"><span class="ml-icon" style="background:rgba(20,184,166,.1);color:#14B8A6"><i class="ti ti-chart-bar"></i></span><strong>Analytics</strong></a>
-        <a href="leaderboard.html" class="more-link"><span class="ml-icon" style="background:rgba(245,197,24,.1);color:#F5C518"><i class="ti ti-trophy"></i></span><strong>Leaderboard</strong></a>
-        <a href="blog.html" class="more-link"><span class="ml-icon" style="background:rgba(236,72,153,.1);color:#EC4899"><i class="ti ti-news"></i></span><strong>Blog</strong></a>
-        <a href="support.html" class="more-link"><span class="ml-icon" style="background:rgba(255,69,87,.1);color:#FF4757"><i class="ti ti-headset"></i></span><strong>Support</strong></a>
-        <a href="faq.html" class="more-link"><span class="ml-icon" style="background:rgba(59,130,246,.1);color:#3B82F6"><i class="ti ti-help-circle"></i></span><strong>FAQ</strong></a>
-        <a href="rankupgrade.html" class="more-link"><span class="ml-icon" style="background:rgba(124,58,237,.1);color:#7C3AED"><i class="ti ti-arrow-up-circle"></i></span><strong>Rank Upgrade</strong></a>
-        <a href="monitor.html" class="more-link"><span class="ml-icon" style="background:rgba(245,197,24,.1);color:#F5C518"><i class="ti ti-eye"></i></span><strong>Job Monitor</strong></a>
-        <a href="report.html" class="more-link"><span class="ml-icon" style="background:rgba(255,69,87,.1);color:#FF4757"><i class="ti ti-flag"></i></span><strong>Report</strong></a>
+    <div class="more-wrap">
+      <button class="more-toggle" id="moreToggle" onclick="toggleTools()"><i class="ti ti-chevron-down"></i> More Tools</button>
+      <div class="more-tools" id="moreTools">
+        <div class="more-grid">
+          <a href="my-tasks.html" class="more-link"><span class="ml-icon" style="background:rgba(139,92,246,.12);color:#8B5CF6"><i class="ti ti-briefcase"></i></span><strong>My Tasks</strong></a>
+          <a href="task-detail.html" class="more-link"><span class="ml-icon" style="background:rgba(59,130,246,.12);color:#3B82F6"><i class="ti ti-file-text"></i></span><strong>Task Detail</strong></a>
+          <a href="my-store.html" class="more-link"><span class="ml-icon" style="background:rgba(236,72,153,.12);color:#EC4899"><i class="ti ti-building-store"></i></span><strong>My Store</strong></a>
+          <a href="vault.html" class="more-link"><span class="ml-icon" style="background:rgba(245,197,24,.12);color:#F5C518"><i class="ti ti-building-bank"></i></span><strong>Rewards Vault</strong></a>
+          <a href="communities.html" class="more-link"><span class="ml-icon" style="background:rgba(20,184,166,.12);color:#14B8A6"><i class="ti ti-users-group"></i></span><strong>Communities</strong></a>
+          <a href="messages.html" class="more-link"><span class="ml-icon" style="background:rgba(59,130,246,.12);color:#3B82F6"><i class="ti ti-message-2"></i></span><strong>Messages</strong></a>
+          <a href="notifications.html" class="more-link"><span class="ml-icon" style="background:rgba(255,69,87,.12);color:#FF4757"><i class="ti ti-bell"></i></span><strong>Notifications</strong></a>
+          <a href="worker.html" class="more-link"><span class="ml-icon" style="background:rgba(124,58,237,.12);color:#7C3AED"><i class="ti ti-user"></i></span><strong>Wurker Portal</strong></a>
+          <a href="dashboard.html" class="more-link"><span class="ml-icon" style="background:rgba(0,217,126,.12);color:#00D97E"><i class="ti ti-dashboard"></i></span><strong>Dashboard</strong></a>
+          <a href="kyc.html" class="more-link"><span class="ml-icon" style="background:rgba(255,69,87,.12);color:#FF4757"><i class="ti ti-shield-check"></i></span><strong>KYC</strong></a>
+          <a href="analytics.html" class="more-link"><span class="ml-icon" style="background:rgba(20,184,166,.12);color:#14B8A6"><i class="ti ti-chart-bar"></i></span><strong>Analytics</strong></a>
+          <a href="leaderboard.html" class="more-link"><span class="ml-icon" style="background:rgba(245,197,24,.12);color:#F5C518"><i class="ti ti-trophy"></i></span><strong>Leaderboard</strong></a>
+          <a href="rankupgrade.html" class="more-link"><span class="ml-icon" style="background:rgba(139,92,246,.12);color:#8B5CF6"><i class="ti ti-arrow-up-circle"></i></span><strong>Rank Upgrade</strong></a>
+          <a href="blog.html" class="more-link"><span class="ml-icon" style="background:rgba(236,72,153,.12);color:#EC4899"><i class="ti ti-news"></i></span><strong>Blog</strong></a>
+          <a href="support.html" class="more-link"><span class="ml-icon" style="background:rgba(255,69,87,.12);color:#FF4757"><i class="ti ti-headset"></i></span><strong>Support</strong></a>
+          <a href="faq.html" class="more-link"><span class="ml-icon" style="background:rgba(59,130,246,.12);color:#3B82F6"><i class="ti ti-help-circle"></i></span><strong>FAQ</strong></a>
+          <a href="monitor.html" class="more-link"><span class="ml-icon" style="background:rgba(245,197,24,.12);color:#F5C518"><i class="ti ti-eye"></i></span><strong>Job Monitor</strong></a>
+          <a href="report.html" class="more-link"><span class="ml-icon" style="background:rgba(255,69,87,.12);color:#FF4757"><i class="ti ti-flag"></i></span><strong>Report</strong></a>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- ═══ RECENT ACTIVITY ═══ -->
-  <div class="prof-section fade-up" style="animation-delay:.45s">
-    <div class="sec-head"><h2><i class="ti ti-history"></i> Recent Activity</h2><a href="my-tasks.html">View All <i class="ti ti-chevron-right" style="font-size:10px"></i></a></div>
+  <!-- ═══ 5. RECENT ACTIVITY ═══ -->
+  <div class="section-gap">
+    <div class="sec-head"><h2><i class="ti ti-history"></i> Recent Activity</h2><a href="my-tasks.html" class="sec-link">View all <i class="ti ti-chevron-right" style="font-size:10px"></i></a></div>
     <div class="activity-strip">
-      <div class="activity-card"><div class="ac-title">Social Media Engagement</div><div class="ac-meta">Completed Mar 28</div><div class="ac-bottom"><span class="ac-earn">+₦4,200</span><span class="ac-stars">⭐⭐⭐⭐⭐</span></div></div>
-      <div class="activity-card"><div class="ac-title">Telegram Community Join</div><div class="ac-meta">Completed Mar 25</div><div class="ac-bottom"><span class="ac-earn">+₦800</span><span class="ac-stars">⭐⭐⭐⭐</span></div></div>
-      <div class="activity-card"><div class="ac-title">X Banner Design</div><div class="ac-meta">Completed Mar 22</div><div class="ac-bottom"><span class="ac-earn">+₦5,000</span><span class="ac-stars">⭐⭐⭐⭐⭐</span></div></div>
-      <div class="activity-card"><div class="ac-title">Logo Pack Sale</div><div class="ac-meta">Sold Mar 20</div><div class="ac-bottom"><span class="ac-earn">+₦8,000</span><span class="ac-stars">⭐⭐⭐⭐</span></div></div>
+      <div class="activity-card"><div class="ac-title">Social Media Engagement</div><div class="ac-date">Mar 28, 2026</div><div class="ac-bottom"><span class="ac-earn">+₦4,200</span><span class="ac-stars">⭐⭐⭐⭐⭐</span></div></div>
+      <div class="activity-card"><div class="ac-title">Telegram Community Join</div><div class="ac-date">Mar 25, 2026</div><div class="ac-bottom"><span class="ac-earn">+₦800</span><span class="ac-stars">⭐⭐⭐⭐</span></div></div>
+      <div class="activity-card"><div class="ac-title">X Banner Design</div><div class="ac-date">Mar 22, 2026</div><div class="ac-bottom"><span class="ac-earn">+₦5,000</span><span class="ac-stars">⭐⭐⭐⭐⭐</span></div></div>
+      <div class="activity-card"><div class="ac-title">Logo Pack Sale</div><div class="ac-date">Mar 20, 2026</div><div class="ac-bottom"><span class="ac-earn">+₦8,000</span><span class="ac-stars">⭐⭐⭐⭐</span></div></div>
     </div>
   </div>
-
-  <!-- ═══ SETTINGS FORM ═══ -->
-  <div class="prof-section fade-up" style="animation-delay:.5s">
-    <div class="settings-card">
-      <h3><i class="ti ti-user"></i> Personal Information</h3>
-      <div class="fg-h">
-        <div class="fg"><label>Full Name</label><input type="text" value="John Doe" id="fullName"></div>
-        <div class="fg"><label>Username</label><input type="text" value="johndoe" readonly></div>
-      </div>
-      <div class="fg-h">
-        <div class="fg"><label>Email</label><input type="email" value="john@ogapay.com"></div>
-        <div class="fg"><label>Phone</label><input type="tel" value="+234 800 000 0000"></div>
-      </div>
-      <div class="fg-h">
-        <div class="fg"><label>Location</label><input type="text" value="Lagos, Nigeria"></div>
-        <div class="fg"><label>KYC Status</label><input type="text" value="Verified ✅" readonly style="color:var(--green);font-weight:700"></div>
-      </div>
-      <div class="fg"><label>Bio</label><textarea id="bioInput" maxlength="200" oninput="updateBioCount()">Experienced tasker and community member. Available for social media, design, and testing tasks.</textarea><div class="char-count"><span id="bioCount">0</span>/200</div></div>
-      <button class="save-btn" id="saveBtn" onclick="saveProfile()"><span class="default"><i class="ti ti-device-floppy"></i> Save Changes</span><span class="check"><i class="ti ti-check"></i> Saved!</span></button>
-    </div>
-  </div>
-</div>
 
 </section>
 </main>
 </div>
 
 <script>
-// Count-up animation
-function animateCounts() {
-  document.querySelectorAll('[data-count]').forEach(function(el) {
-    var target = parseInt(el.getAttribute('data-count'));
-    var isCurrency = el.textContent.trim().startsWith('₦');
-    var suffix = el.querySelector('small') ? el.querySelector('small').textContent : '';
-    var duration = 1200;
-    var start = performance.now();
-    function step(now) {
-      var p = Math.min((now - start) / duration, 1);
-      var eased = 1 - Math.pow(1 - p, 3);
-      var current = Math.round(eased * target);
-      if (isCurrency) {
-        if (target >= 1000) {
-          el.textContent = '₦' + (current / 1000).toFixed(1) + 'K' + suffix;
-        } else {
-          el.textContent = '₦' + current.toLocaleString() + suffix;
-        }
-      } else {
-        el.textContent = current + suffix;
-      }
-      if (p < 1) requestAnimationFrame(step);
-    }
-    requestAnimationFrame(step);
-  });
-}
-
-// Bio char count
-function updateBioCount() {
-  var ta = document.getElementById('bioInput');
-  var ct = document.getElementById('bioCount');
-  if (ta && ct) ct.textContent = ta.value.length;
-}
-
-// Save button animation
-function saveProfile() {
-  var btn = document.getElementById('saveBtn');
-  btn.classList.add('saved');
-  setTimeout(function(){ btn.classList.remove('saved'); }, 2000);
-}
-
-// Toggle more tools
 function toggleTools() {
-  var el = document.getElementById('moreTools');
-  var btn = document.getElementById('moreToggle');
-  el.classList.toggle('open');
-  btn.classList.toggle('open');
+  document.getElementById('moreTools').classList.toggle('open');
+  document.getElementById('moreToggle').classList.toggle('open');
 }
-
-// Theme toggle
+// Count-up
 (function(){
   var th; try{th=localStorage.getItem('ogapay-theme')}catch(e){}
   var t=th||document.documentElement.getAttribute('data-theme')||'dark';
   document.documentElement.setAttribute('data-theme',t);
   var authed=false; try{authed=localStorage.getItem('ogapay-authenticated')==='true'}catch(e){}
   document.body.setAttribute('data-auth',authed?'authed':'public');
-
   var themeBtn=document.getElementById('themeToggle');
   if(themeBtn){themeBtn.addEventListener('click',function(){var h=document.documentElement;var n=h.getAttribute('data-theme')==='dark'?'light':'dark';h.setAttribute('data-theme',n);try{localStorage.setItem('ogapay-theme',n)}catch(e){}})}
-  var menuBtn=document.getElementById('menuBtn');
-  var mobileMenu=document.getElementById('mobileMenu');
+  var menuBtn=document.getElementById('menuBtn');var mobileMenu=document.getElementById('mobileMenu');
   if(menuBtn&&mobileMenu){menuBtn.addEventListener('click',function(){mobileMenu.classList.add('open')});mobileMenu.querySelectorAll('[data-close-menu]').forEach(function(el){el.addEventListener('click',function(){mobileMenu.classList.remove('open')})})}
   document.addEventListener('click',function(e){var t=e.target.closest('.oga-drawer-group-toggle');if(t){var g=t.closest('.oga-drawer-group');var o=!g.classList.contains('open');g.classList.toggle('open',o);t.setAttribute('aria-expanded',String(o))}});
   var p=window.location.pathname.split('/').pop()||'index.html';
   document.querySelectorAll('[data-navlink]').forEach(function(a){if(a.getAttribute('href')===p)a.classList.add('active')});
-
-  // Init bio count
-  updateBioCount();
-
-  // Staggered count-up
-  setTimeout(animateCounts, 300);
+  // Count up
+  setTimeout(function(){
+    document.querySelectorAll('[data-count]').forEach(function(el){
+      var target=parseInt(el.getAttribute('data-count'));
+      var text=el.textContent;
+      var prefix=text.startsWith('₦')?'₦':'';
+      var suffix=el.querySelector('small')?el.querySelector('small').textContent:'';
+      var start=performance.now();
+      function step(now){
+        var p=Math.min((now-start)/1000,1);
+        var cur=Math.round(p*target);
+        el.textContent=prefix+cur+suffix;
+        if(p<1)requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
+    });
+  }, 200);
 })();
 </script>
 </body>
