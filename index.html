@@ -5,13 +5,14 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>OgaPay - Work to Earn</title>
+<script>(function(){try{document.documentElement.setAttribute('data-theme',localStorage.getItem('ogapay-theme')||'light')}catch(e){}})();</script>
 <link rel="icon" type="image/svg+xml" href='data:image/svg+xml,%3Csvg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg"%3E%3Crect width="512" height="512" fill="white"/%3E%3Crect x="98" y="98" width="107" height="107" rx="20" fill="black"/%3E%3Cpath d="M225 98H312C323 98 332 107 332 118V205H225V98Z" fill="black"/%3E%3Cpath d="M352 98H392C440 98 470 128 470 176V205H352V98Z" fill="black"/%3E%3Crect x="98" y="225" width="107" height="107" fill="black"/%3E%3Crect x="225" y="225" width="107" height="107" fill="black"/%3E%3Cpath d="M352 225H470V254C470 302 440 332 392 332H352V225Z" fill="black"/%3E%3Crect x="98" y="352" width="107" height="107" rx="20" fill="black"/%3E%3Cpath d="M225 352H312C323 352 332 361 332 372V439C332 450 323 459 312 459H225V352Z" fill="black"/%3E%3C/svg%3E'>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800;900&family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
 <style>
-/* Ã¢â€â‚¬Ã¢â€â‚¬ tokens Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+/* Ã¢â€ â‚¬Ã¢â€ â‚¬ tokens Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬ */
 :root{
   --bg:#ffffff;
   --bg2:#fafafa;
@@ -50,17 +51,17 @@
   --shadow-soft:0 2px 8px rgba(0,0,0,.4);
 }
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬ reset Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+/* Ã¢â€ â‚¬Ã¢â€ â‚¬ reset Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬ */
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
 body{margin:0;color:var(--text);background:var(--bg);font-family:"DM Sans",system-ui,sans-serif;overflow-x:hidden}
 a{color:inherit;text-decoration:none}
 button{font:inherit}
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬ layout Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+/* Ã¢â€ â‚¬Ã¢â€ â‚¬ layout Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬ */
 .container{width:min(1200px,calc(100% - 64px));margin:0 auto}
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬ navbar Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+/* Ã¢â€ â‚¬Ã¢â€ â‚¬ navbar Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬ */
 .nav{
   position:sticky;top:0;z-index:100;
   height:var(--nav-h);
@@ -83,7 +84,7 @@ button{font:inherit}
   font-family:"Outfit",sans-serif;font-size:19px;font-weight:800;
   letter-spacing:-.4px;white-space:nowrap;
 }
-.logo-mark{width:34px;height:34px;display:grid;place-items:center;flex-shrink:0;border-radius:9px;box-shadow:0 8px 22px rgba(37,99,235,.12)}
+.logo-mark{width:34px;height:34px;display:flex;align-items:center;justify-content:center;flex-shrink:0;border-radius:9px;overflow:hidden;box-shadow:0 8px 22px rgba(37,99,235,.12)}
 .logo-mark svg{width:100%;height:100%;display:block;border-radius:9px}
 .brand span span{color:var(--text)}   /* no purple accent on brand */
 
@@ -123,7 +124,7 @@ button{font:inherit}
 .icon-btn:hover{color:var(--text);border-color:var(--border2);background:var(--bg2)}
 .icon-btn svg{width:17px;height:17px;stroke-width:2.2}
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬ mobile drawer Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+/* Ã¢â€ â‚¬Ã¢â€ â‚¬ mobile drawer Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬ */
 .mobile-menu{position:fixed;inset:0;z-index:300;display:none;visibility:hidden;pointer-events:none}
 .mobile-menu.open{display:block;visibility:visible;pointer-events:auto}
 .mobile-overlay{position:absolute;inset:0;background:rgba(0,0,0,.3);backdrop-filter:blur(3px)}
@@ -143,7 +144,7 @@ button{font:inherit}
 }
 .drawer-links a:hover{background:var(--bg2);color:var(--text)}
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬ hero Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+/* Ã¢â€ â‚¬Ã¢â€ â‚¬ hero Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬ */
 .hero{
   position:relative;
   display:flex;align-items:center;
@@ -221,7 +222,7 @@ button{font:inherit}
 [data-theme="dark"] .btn-primary{background:var(--primary);color:var(--bg);border-color:var(--primary)}
 [data-theme="dark"] .btn-primary:hover{background:var(--border2)}
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬ analytics card Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+/* Ã¢â€ â‚¬Ã¢â€ â‚¬ analytics card Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬ */
 .analytics-card{
   position:relative;
   border:1.5px solid var(--border);border-radius:var(--radius);
@@ -261,7 +262,7 @@ button{font:inherit}
 }
 .sol{width:14px;height:8px;border-radius:999px;background:var(--brand-blue);background-size:240% 100%;transform:skew(-18deg);animation:gradientShift 4s ease-in-out infinite}
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬ quick buy Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+/* Ã¢â€ â‚¬Ã¢â€ â‚¬ quick buy Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬ */
 .quick{position:relative;padding:0 0 56px;z-index:2}
 [data-theme="dark"] .quick{background:#050505}
 .section-kicker{
@@ -287,7 +288,7 @@ button{font:inherit}
 .quick-name{font-size:14px;font-weight:800}
 .quick-price{margin-top:2px;color:var(--text3);font-size:12px;font-weight:700}
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬ sections Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+/* Ã¢â€ â‚¬Ã¢â€ â‚¬ sections Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬ */
 .section{padding:56px 0}
 [data-theme="dark"] .section{background:#050505}
 .section.center{text-align:center}
@@ -332,7 +333,7 @@ button{font:inherit}
 }
 .section-sub{margin:12px auto 0;color:var(--text2);font-size:16px;line-height:1.55;font-weight:500}
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬ paths Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+/* Ã¢â€ â‚¬Ã¢â€ â‚¬ paths Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬ */
 .paths{margin:36px auto 0;display:grid;grid-template-columns:repeat(2,1fr);gap:14px;max-width:680px}
 .path-card{
   min-height:72px;display:flex;align-items:center;gap:16px;
@@ -349,7 +350,7 @@ button{font:inherit}
 }
 .path-card svg{margin-left:auto;color:var(--text3);width:18px;height:18px}
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬ jobs Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+/* Ã¢â€ â‚¬Ã¢â€ â‚¬ jobs Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬ */
 .jobs-wrap{padding:44px 0 34px;overflow:hidden;background:linear-gradient(180deg,#fff 0%,#fafafa 100%)}
 [data-theme="dark"] .jobs-wrap{background:#050505}
 .jobs-track{margin-top:24px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px;align-items:stretch;grid-auto-rows:1fr}
@@ -444,7 +445,7 @@ button{font:inherit}
 [data-theme="dark"] .dots span{background:#232323;box-shadow:none}
 [data-theme="dark"] .dots span.active{background:#A78BFA;box-shadow:0 0 18px rgba(167,139,250,.3)}
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬ store Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+/* Ã¢â€ â‚¬Ã¢â€ â‚¬ store Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬ */
 .store-grid,.community-grid{margin-top:24px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px;align-items:stretch;grid-auto-rows:1fr}
 .product,.community-card{
   border:1.5px solid var(--border);border-radius:var(--radius);
@@ -502,7 +503,7 @@ button{font:inherit}
 }
 [data-theme="dark"] .pill{background:#2a2a2a;color:#ffffff;border-color:#2a2a2a}
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬ communities Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+/* Ã¢â€ â‚¬Ã¢â€ â‚¬ communities Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬ */
 .community-art{
   height:120px;display:grid;place-items:center;
   font-family:"Outfit",sans-serif;font-size:32px;font-weight:900;
@@ -513,7 +514,7 @@ button{font:inherit}
 .community-body h3{margin:0 0 8px;font-size:16px;font-weight:800}
 .community-meta{display:flex;gap:16px;margin:12px 0 0;color:var(--text3);font-size:12px;font-weight:700}
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬ footer Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+/* Ã¢â€ â‚¬Ã¢â€ â‚¬ footer Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬ */
 footer{
   border-top:1px solid var(--border);
   padding:40px 24px;
@@ -577,7 +578,7 @@ footer{
   to{transform:scaleX(1);transform-origin:left}
 }
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬ responsive Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
+/* Ã¢â€ â‚¬Ã¢â€ â‚¬ responsive Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬Ã¢â€ â‚¬ */
 @media(max-width:1024px){
   .nav-links{gap:2px}
   .hero-grid{grid-template-columns:minmax(320px,1fr) minmax(340px,440px);gap:42px;padding:58px 0 72px}
@@ -605,8 +606,8 @@ footer{
   }
   .wallet-btn svg,.wallet-label{display:none}
   .wallet-btn strong{font-size:18px}
-  .icon-btn{width:40px;height:40px;border:0;background:transparent;color:#111111}
-  [data-theme="dark"] .icon-btn{color:#ffffff}
+  .icon-btn{width:40px;height:40px;border:0;background:transparent;color:var(--text2)}
+  [data-theme="dark"] .icon-btn{color:var(--text2)}
   .icon-btn svg{width:30px;height:30px;stroke-width:2.35}
   .hero{background:radial-gradient(circle at 50% 38%,rgba(124,58,237,.10),transparent 32%),radial-gradient(circle at 54% 72%,rgba(37,99,235,.11),transparent 42%),linear-gradient(180deg,#fff 0%,#f8fbff 100%)}
   .hero::before{background:radial-gradient(ellipse at 50% 58%,rgba(196,181,253,.17),transparent 48%);opacity:.75}
@@ -861,7 +862,7 @@ body.auth-open{overflow:hidden}
 .oga-drawer{width:min(360px,92vw)}
 .oga-drawer-head{height:64px;padding:12px 16px}
 .oga-drawer-brand{font-size:19px;gap:10px;letter-spacing:-.4px}
-.oga-drawer-logo.logo-mark{width:34px;height:34px;display:grid;place-items:center;flex-shrink:0;border-radius:9px;background:none;padding:0;gap:0;box-shadow:0 8px 22px rgba(37,99,235,.12);overflow:hidden}
+.oga-drawer-logo.logo-mark{width:34px;height:34px;display:flex;align-items:center;justify-content:center;flex-shrink:0;border-radius:9px;background:none;padding:0;gap:0;box-shadow:0 8px 22px rgba(37,99,235,.12);overflow:hidden}
 .oga-drawer-logo.logo-mark svg{width:100%;height:100%;display:block;border-radius:9px}
 .oga-drawer-close{width:36px;height:36px;border-radius:8px;font-size:20px}
 .oga-drawer-nav{padding:10px 8px 12px}
@@ -922,112 +923,201 @@ body.auth-open{overflow:hidden}
 .platform-pill img{width:22px;height:22px;flex-shrink:0;display:block}
 @media(max-width:800px){.earn-section .container{grid-template-columns:1fr;gap:32px;text-align:center}.earn-sub{margin-left:auto;margin-right:auto}.scroll-col{height:360px}.col-2{display:none}}
 
-@media(max-width:640px){.gs-accordion{grid-template-columns:1fr}}@media(max-width:520px){.gs-drop-inner{padding:0 18px 20px}}</style>
+@media(max-width:640px){.gs-accordion{grid-template-columns:1fr}}@media(max-width:520px){.gs-drop-inner{padding:0 18px 20px}}
+</style>
+<style>
+</style>
 </head>
 <body>
+<div id="root">
+<!-- ═══ SHARED NAVBAR ═══ -->
 <header class="nav">
   <div class="nav-inner">
     <a class="brand" href="index.html" aria-label="OgaPay home">
       <span class="logo-mark">
-        <svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect width="512" height="512" fill="white"/><rect x="98" y="98" width="107" height="107" rx="20" fill="black"/><path d="M225 98H312C323 98 332 107 332 118V205H225V98Z" fill="black"/><path d="M352 98H392C440 98 470 128 470 176V205H352V98Z" fill="black"/><rect x="98" y="225" width="107" height="107" fill="black"/><rect x="225" y="225" width="107" height="107" fill="black"/><path d="M352 225H470V254C470 302 440 332 392 332H352V225Z" fill="black"/><rect x="98" y="352" width="107" height="107" rx="20" fill="black"/><path d="M225 352H312C323 352 332 361 332 372V439C332 450 323 459 312 459H225V352Z" fill="black"/></svg>
+        <svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="512" height="512" fill="white"/><rect x="98" y="98" width="107" height="107" rx="20" fill="black"/><path d="M225 98H312C323 98 332 107 332 118V205H225V98Z" fill="black"/><path d="M352 98H392C440 98 470 128 470 176V205H352V98Z" fill="black"/><rect x="98" y="225" width="107" height="107" fill="black"/><rect x="225" y="225" width="107" height="107" fill="black"/><path d="M352 225H470V254C470 302 440 332 392 332H352V225Z" fill="black"/><rect x="98" y="352" width="107" height="107" rx="20" fill="black"/><path d="M225 352H312C323 352 332 361 332 372V439C332 450 323 459 312 459H225V352Z" fill="black"/></svg>
       </span>
       <span>Oga<span>Pay</span></span>
     </a>
     <nav class="nav-links" aria-label="Primary navigation">
-      <a class="nav-link active" href="index.html" data-navlink><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 10v10h14V10"/></svg>Home</a>
-      <a class="nav-link" href="tasks.html" data-navlink><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Tasks</a>
-      <a class="nav-link" href="store.html" data-navlink><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18M16 10a4 4 0 0 1-8 0"/></svg>Deals</a>
-      <a class="nav-link" href="communities.html" data-navlink><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg>Communities</a>
-      <a class="nav-link" href="index.html#footer" data-navlink><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 1 1 5.8 1c-.6 1-1.9 1.4-2.5 2.3-.3.4-.4.8-.4 1.2M12 17h.01"/></svg>FAQ</a>
+      <a class="nav-link" href="index.html" data-navlink><i class="ti ti-home"></i>Home</a>
+      <a class="nav-link" href="tasks.html" data-navlink><i class="ti ti-layout-grid"></i>Tasks</a>
+      <a class="nav-link" href="store.html" data-navlink><i class="ti ti-discount-2"></i>Deals</a>
+      <a class="nav-link" href="communities.html" data-navlink><i class="ti ti-users-group"></i>Communities</a>
+      <a class="nav-link" href="faq.html" data-navlink><i class="ti ti-help-circle"></i>FAQ</a>
     </nav>
     <div class="nav-actions">
-      <a class="wallet-btn public-only" href="login.html"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.3" viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="m10 17 5-5-5-5"/><path d="M15 12H3"/></svg><span class="wallet-label">Login</span></a>
-      <a class="wallet-btn public-only" href="login.html?mode=signup"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.3" viewBox="0 0 24 24"><path d="M5 12h14M13 5l7 7-7 7"/></svg><span class="wallet-label">Get Started</span></a>
-      <a class="wallet-btn authed-only" href="dashboard.html"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.3" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span class="wallet-label">Workspace</span></a>
-      <button class="icon-btn" id="themeToggle" aria-label="Toggle dark mode"><svg id="moonIcon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z"/></svg></button>
-      <button class="icon-btn" id="menuBtn" aria-label="Open menu"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+      <a class="wallet-btn public-only" href="login.html"><i class="ti ti-login"></i><span class="wallet-label">Login</span></a>
+      <a class="wallet-btn public-only" href="login.html?mode=signup"><i class="ti ti-arrow-right"></i><span class="wallet-label">Get Started</span></a>
+      <button class="icon-btn" id="themeToggle" aria-label="Toggle dark mode"><i class="ti ti-moon"></i></button>
+      <button class="icon-btn" id="menuBtn" aria-label="Open menu"><i class="ti ti-menu-2"></i></button>
     </div>
   </div>
 </header>
 
+<!-- ═══ SHARED DRAWER SIDEBAR ═══ -->
 <div class="mobile-menu" id="mobileMenu">
   <div class="mobile-overlay" data-close-menu></div>
   <aside class="mobile-drawer oga-drawer" aria-label="OgaPay menu">
     <div class="oga-drawer-head">
       <a class="oga-drawer-brand" href="index.html" aria-label="OgaPay home">
         <span class="oga-drawer-logo logo-mark" aria-hidden="true"><svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="512" height="512" fill="white"/><rect x="98" y="98" width="107" height="107" rx="20" fill="black"/><path d="M225 98H312C323 98 332 107 332 118V205H225V98Z" fill="black"/><path d="M352 98H392C440 98 470 128 470 176V205H352V98Z" fill="black"/><rect x="98" y="225" width="107" height="107" fill="black"/><rect x="225" y="225" width="107" height="107" fill="black"/><path d="M352 225H470V254C470 302 440 332 392 332H352V225Z" fill="black"/><rect x="98" y="352" width="107" height="107" rx="20" fill="black"/><path d="M225 352H312C323 352 332 361 332 372V439C332 450 323 459 312 459H225V352Z" fill="black"/></svg></span>
-        <span>Oga Pay</span>
+        <span>OgaPay</span>
       </a>
-      <button class="oga-drawer-close" data-close-menu aria-label="Close menu">x</button>
+      <button class="oga-drawer-close" data-close-menu aria-label="Close menu">&#x2715;</button>
     </div>
 
-    <nav class="oga-drawer-nav" aria-label="Primary menu">
+    <!-- PUBLIC sidebar (non-logged in) -->
+    <nav class="oga-drawer-nav public-only" aria-label="Primary menu">
       <div class="oga-drawer-section">
-
-        <!-- Tasks accordion -->
         <section class="oga-drawer-group">
           <button class="oga-drawer-item oga-drawer-group-toggle" type="button" aria-expanded="false">
-            <span class="oga-drawer-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span>
+            <span class="oga-drawer-icon"><i class="ti ti-layout-grid"></i></span>
             <span><strong>Tasks</strong><small>Browse and track tasks</small></span>
-            <svg class="oga-drawer-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
+            <i class="ti ti-chevron-down"></i>
           </button>
           <div class="oga-drawer-subnav">
             <a href="tasks.html" data-close-menu>
-              <span class="oga-drawer-icon mini"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span>
+              <span class="oga-drawer-icon mini"><i class="ti ti-layout-grid"></i></span>
               <span><strong>All Tasks</strong><small>Browse all tasks</small></span>
             </a>
             <a href="monitor.html" data-close-menu>
-              <span class="oga-drawer-icon mini"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg></span>
+              <span class="oga-drawer-icon mini"><i class="ti ti-eye"></i></span>
               <span><strong>Job Monitor</strong><small>Track new tasks</small></span>
             </a>
           </div>
         </section>
-
-        <!-- Deals -->
         <a class="oga-drawer-item" href="store.html" data-close-menu>
-          <span class="oga-drawer-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18M16 10a4 4 0 0 1-8 0"/></svg></span>
+          <span class="oga-drawer-icon"><i class="ti ti-discount-2"></i></span>
           <span><strong>Deals</strong><small>Worker tools and inbox</small></span>
         </a>
-
-        <!-- Blog -->
         <a class="oga-drawer-item" href="blog.html" data-close-menu>
-          <span class="oga-drawer-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg></span>
+          <span class="oga-drawer-icon"><i class="ti ti-news"></i></span>
           <span><strong>Blog</strong><small>Read articles and updates</small></span>
         </a>
-
-        <!-- Vault -->
         <a class="oga-drawer-item" href="vault.html" data-close-menu>
-          <span class="oga-drawer-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
+          <span class="oga-drawer-icon"><i class="ti ti-building-bank"></i></span>
           <span><strong>Vault</strong><small>Reward pool</small></span>
         </a>
-
-        <!-- FAQ -->
         <a class="oga-drawer-item" href="faq.html" data-close-menu>
-          <span class="oga-drawer-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 1 1 5.8 1c-.6 1-1.9 1.4-2.5 2.3-.3.4-.4.8-.4 1.2M12 17h.01"/></svg></span>
+          <span class="oga-drawer-icon"><i class="ti ti-help-circle"></i></span>
           <span><strong>FAQ</strong><small>Answers and guides</small></span>
         </a>
-
-        <!-- Support -->
         <a class="oga-drawer-item" href="support.html" data-close-menu>
-          <span class="oga-drawer-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
+          <span class="oga-drawer-icon"><i class="ti ti-message-2"></i></span>
           <span><strong>Support</strong><small>Get help</small></span>
         </a>
-
       </div>
     </nav>
-
-    <!-- Login button pinned at bottom -->
-    <div class="oga-drawer-foot">
+    <div class="oga-drawer-foot public-only">
       <div class="oga-drawer-actions">
         <button type="button" onclick="window.location.href='login.html'">
-          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="m10 17 5-5-5-5"/><path d="M15 12H3"/></svg>
-          Login
+          <i class="ti ti-login"></i>Login
         </button>
       </div>
     </div>
+
+    <!-- AUTHED sidebar (logged-in users) -->
+    <nav class="oga-drawer-nav authed-only" aria-label="Authenticated menu" style="display:none">
+      <div class="oga-drawer-section">
+        <!-- Create Job -->
+        <a class="oga-drawer-item" href="post-task.html" data-close-menu>
+          <span class="oga-drawer-icon create-icon"><i class="ti ti-circle-plus"></i></span>
+          <span><strong>Create Job</strong><small>Post a new task</small></span>
+        </a>
+        <!-- Jobs accordion -->
+        <section class="oga-drawer-group">
+          <button class="oga-drawer-item oga-drawer-group-toggle" type="button" aria-expanded="false">
+            <span class="oga-drawer-icon"><i class="ti ti-layout-grid"></i></span>
+            <span><strong>Jobs</strong><small>Browse and track jobs</small></span>
+            <i class="ti ti-chevron-down"></i>
+          </button>
+          <div class="oga-drawer-subnav">
+            <a href="tasks.html" data-close-menu>
+              <span class="oga-drawer-icon mini"><i class="ti ti-layout-grid"></i></span>
+              <span><strong>All Jobs</strong><small>Browse all jobs</small></span>
+            </a>
+            <a href="monitor.html" data-close-menu>
+              <span class="oga-drawer-icon mini"><i class="ti ti-eye"></i></span>
+              <span><strong>Job Monitor</strong><small>Track new jobs</small></span>
+            </a>
+          </div>
+        </section>
+        <!-- Store accordion -->
+        <section class="oga-drawer-group">
+          <button class="oga-drawer-item oga-drawer-group-toggle" type="button" aria-expanded="false">
+            <span class="oga-drawer-icon"><i class="ti ti-discount-2"></i></span>
+            <span><strong>Store</strong><small>Wurker tools and inbox</small></span>
+            <i class="ti ti-chevron-down"></i>
+          </button>
+          <div class="oga-drawer-subnav">
+            <a href="store.html" data-close-menu>
+              <span class="oga-drawer-icon mini"><i class="ti ti-discount-2"></i></span>
+              <span><strong>Wurker Store</strong><small>Browse the store</small></span>
+            </a>
+            <a href="my-store.html" data-close-menu>
+              <span class="oga-drawer-icon mini"><i class="ti ti-home"></i></span>
+              <span><strong>My Store</strong><small>Manage your listings</small></span>
+            </a>
+            <a href="my-tasks.html" data-close-menu>
+              <span class="oga-drawer-icon mini"><i class="ti ti-briefcase"></i></span>
+              <span><strong>My Wurk</strong><small>View your work</small></span>
+            </a>
+            <a href="messages.html" data-close-menu>
+              <span class="oga-drawer-icon mini"><i class="ti ti-message-2"></i></span>
+              <span><strong>Messages</strong><small>Open your inbox</small></span>
+            </a>
+            <a href="worker.html" data-close-menu>
+              <span class="oga-drawer-icon mini"><i class="ti ti-user"></i></span>
+              <span><strong>Wurker Portal</strong><small>Open the portal</small></span>
+            </a>
+          </div>
+        </section>
+        <a class="oga-drawer-item" href="communities.html" data-close-menu>
+          <span class="oga-drawer-icon"><i class="ti ti-users-group"></i></span>
+          <span><strong>Communities</strong><small>Open your communities</small></span>
+        </a>
+        <a class="oga-drawer-item" href="blog.html" data-close-menu>
+          <span class="oga-drawer-icon"><i class="ti ti-news"></i></span>
+          <span><strong>Blog</strong><small>Read articles and updates</small></span>
+        </a>
+        <a class="oga-drawer-item" href="vault.html" data-close-menu>
+          <span class="oga-drawer-icon"><i class="ti ti-building-bank"></i></span>
+          <span><strong>Vault</strong><small>Reward pool</small></span>
+        </a>
+        <a class="oga-drawer-item" href="notifications.html" data-close-menu>
+          <span class="oga-drawer-icon"><i class="ti ti-bell"></i></span>
+          <span><strong>Notifications</strong><small>See updates</small></span>
+        </a>
+        <a class="oga-drawer-item" href="faq.html" data-close-menu>
+          <span class="oga-drawer-icon"><i class="ti ti-help-circle"></i></span>
+          <span><strong>FAQ</strong><small>Answers and guides</small></span>
+        </a>
+        <a class="oga-drawer-item" href="support.html" data-close-menu>
+          <span class="oga-drawer-icon"><i class="ti ti-message-2"></i></span>
+          <span><strong>Support</strong><small>Get help</small></span>
+        </a>
+      </div>
+    </nav>
+    <!-- Authed footer: account section -->
+    <div class="oga-drawer-foot authed-only" style="display:none">
+      <div class="oga-drawer-foot-label">ACCOUNT</div>
+      <a class="oga-drawer-item" href="profile.html" data-close-menu>
+        <span class="oga-drawer-icon"><i class="ti ti-user"></i></span>
+        <span><strong>My Profile</strong></span>
+      </a>
+      <a class="oga-drawer-item logout-item" href="login.html" data-close-menu>
+        <span class="oga-drawer-icon"><i class="ti ti-logout"></i></span>
+        <span><strong>Logout</strong></span>
+      </a>
+    </div>
   </aside>
 </div>
-<main>
+<div class="app">
+<aside class="sidebar" style="display:none"></aside>
+<main class="main">
+<section class="page">
+
   <section class="hero">
     <div class="container hero-grid">
       <div class="hero-copy">
@@ -1461,6 +1551,7 @@ body.auth-open{overflow:hidden}
     </div>
   </section>
 </main>
+</div>
 
 <nav class="mobile-bottom-nav" aria-label="Mobile app navigation">
   <a href="tasks.html" class="active"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v13H4V7Z"/><path d="M9 5V3h6v2M8 11h8"/></svg><span>Jobs</span></a>
@@ -1472,7 +1563,7 @@ body.auth-open{overflow:hidden}
 
 <footer id="footer" class="footer-rich">
   <div class="footer-content">
-    <div><div class="footer-logo"><span class="logo-mark"><svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect width="512" height="512" fill="white"/><rect x="98" y="98" width="107" height="107" rx="20" fill="black"/><path d="M225 98H312C323 98 332 107 332 118V205H225V98Z" fill="black"/><path d="M352 98H392C440 98 470 128 470 176V205H352V98Z" fill="black"/><rect x="98" y="225" width="107" height="107" fill="black"/><rect x="225" y="225" width="107" height="107" fill="black"/><path d="M352 225H470V254C470 302 440 332 392 332H352V225Z" fill="black"/><rect x="98" y="352" width="107" height="107" rx="20" fill="black"/><path d="M225 352H312C323 352 332 361 332 372V439C332 450 323 459 312 459H225V352Z" fill="black"/></svg></span>OgaPay</div><p>Work. Earn. Repeat.</p><div class="social-icons"><a href="#" aria-label="X">X</a><a href="#" aria-label="Telegram">TG</a><a href="#" aria-label="Instagram">IG</a></div></div>
+    <div><div class="footer-logo"><span class="logo-mark"><svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="512" height="512" fill="white"/><rect x="98" y="98" width="107" height="107" rx="20" fill="black"/><path d="M225 98H312C323 98 332 107 332 118V205H225V98Z" fill="black"/><path d="M352 98H392C440 98 470 128 470 176V205H352V98Z" fill="black"/><rect x="98" y="225" width="107" height="107" fill="black"/><rect x="225" y="225" width="107" height="107" fill="black"/><path d="M352 225H470V254C470 302 440 332 392 332H352V225Z" fill="black"/><rect x="98" y="352" width="107" height="107" rx="20" fill="black"/><path d="M225 352H312C323 352 332 361 332 372V439C332 450 323 459 312 459H225V352Z" fill="black"/></svg></span>OgaPay</div><p>Work. Earn. Repeat.</p><div class="social-icons"><a href="#" aria-label="X">X</a><a href="#" aria-label="Telegram">TG</a><a href="#" aria-label="Instagram">IG</a></div></div>
     <div><h4>Platform</h4><nav><a href="tasks.html">Browse Tasks</a><a href="post-task.html">Post a Task</a><a href="store.html">Deals</a><a href="communities.html">Communities</a><a href="leaderboard.html">Leaderboard</a></nav></div>
     <div><h4>Company</h4><nav><a href="about.html">About</a><a href="blog.html">Blog</a><a href="support.html">Support</a><a href="terms.html">Terms of Service</a><a href="privacy.html">Privacy Policy</a></nav></div>
     <div><h4>Earn More</h4><nav><a href="referrals.html">Referrals</a><a href="vault.html">Rewards Vault</a><a href="worker.html">Worker Portal</a><a href="kyc.html">KYC Verification</a></nav></div>
@@ -1871,6 +1962,30 @@ body.auth-open{overflow:hidden}
 @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 
 
+/* auth visibility */
+.authed-only{display:none!important}
+.public-only{display:flex!important}
+body[data-auth="authed"] .authed-only{display:flex!important}
+body[data-auth="authed"] .public-only{display:none!important}
+nav.oga-drawer-nav.authed-only{display:none!important}
+nav.oga-drawer-nav.public-only{display:block!important}
+body[data-auth="authed"] nav.oga-drawer-nav.authed-only{display:block!important}
+body[data-auth="authed"] nav.oga-drawer-nav.public-only{display:none!important}
+div.oga-drawer-foot.authed-only{display:none!important}
+div.oga-drawer-foot.public-only{display:block!important}
+body[data-auth="authed"] div.oga-drawer-foot.authed-only{display:block!important}
+body[data-auth="authed"] div.oga-drawer-foot.public-only{display:none!important}
+@media(max-width:768px){.nav-links{display:none}.nav-inner{width:100%;padding:0 24px;gap:12px;grid-template-columns:1fr auto}}
+
+/* Mobile bottom nav */
+.mobile-bottom-nav{position:fixed;bottom:0;left:0;right:0;height:68px;z-index:150;background:rgba(255,255,255,.96);border-top:1px solid var(--border);backdrop-filter:blur(18px) saturate(1.25);display:none;justify-content:space-around;align-items:center;padding:0 8px;padding-bottom:env(safe-area-inset-bottom,0px)}
+[data-theme="dark"] .mobile-bottom-nav{background:rgba(0,0,0,.96);border-top-color:#222b3c}
+[data-theme="light"] .mobile-bottom-nav{border-top-color:transparent}
+.mobile-bottom-nav a{min-width:0;display:grid;justify-items:center;gap:3px;color:var(--text3);font-size:11px;font-weight:800;text-decoration:none;transition:color .15s}
+.mobile-bottom-nav a i{font-size:22px}
+.mobile-bottom-nav a:hover,.mobile-bottom-nav a.active{color:var(--accent)}
+.mobile-bottom-nav a.create{transform:translateY(-10px)}
+.mobile-bottom-nav a.create i{width:50px;height:50px;border-radius:16px;background:var(--accent);color:#fff;display:grid;place-items:center;font-size:26px;box-shadow:0 6px 20px rgba(124,58,237,.3)}
 </style>
 
 <script>
@@ -1968,6 +2083,14 @@ function setAuthPreview(isAuthed) {
     });
   });
 })();
+  var path=window.location.pathname.split('/').pop()||'index.html';
+  document.querySelectorAll('[data-navlink]').forEach(function(a){
+    if(a.getAttribute('href')===path)a.classList.add('active');
+  });
+
 </script>
-<script src="assets/ogapay-live.js"></script></body>
+
+</div>
+  <script type="module" crossorigin src="/assets/index-DzXGUHWz.js"></script>
+</body>
 </html>
