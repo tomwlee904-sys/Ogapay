@@ -20,7 +20,7 @@
 .og-nav-inner{height:100%;display:flex;align-items:center;justify-content:space-between;width:min(1280px,calc(100% - 32px));margin:0 auto;gap:16px}
 .og-brand{display:flex;align-items:center;gap:10px;font-family:"Outfit",sans-serif;font-weight:800;font-size:19px;color:var(--text);text-decoration:none;flex-shrink:0}
 .og-logo{width:34px;height:34px;border-radius:9px;background:var(--primary);color:var(--bg);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;overflow:hidden}
-.og-logo svg{width:34px;height:34px;display:block;border-radius:9px}
+.og-logo svg{width:100%;height:100%;display:block;border-radius:9px}
 .og-nav-links{display:flex;align-items:center;gap:2px;flex:1;justify-content:center}
 .og-nav-link{display:inline-flex;align-items:center;gap:7px;padding:7px 14px;border-radius:8px;color:var(--text2);font-size:14px;font-weight:700;text-decoration:none;transition:all .15s;white-space:nowrap}
 .og-nav-link:hover,.og-nav-link.active{background:var(--bg2);color:var(--text)}
@@ -74,7 +74,7 @@
 <nav class="og-nav" role="navigation" aria-label="Main">
 <a href="#og-main-content" class="og-skip">Skip to content</a>
 <div class="og-nav-inner">
-<a href="index.html" class="og-brand"><span class="og-logo"><svg xmlns="http://www.w3.org/2000/svg" width="34" height="34" viewBox="0 0 34 34" fill="none"><rect width="34" height="34" rx="8" fill="#7C3AED"/><circle cx="17" cy="17" r="10" fill="#0d1323"/><circle cx="17" cy="17" r="7" fill="#7C3AED"/><circle cx="17" cy="17" r="3" fill="#fff"/></svg></span>OgaPay</a>
+<a href="index.html" class="og-brand"><span class="og-logo"><svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="512" height="512" fill="white"/><rect x="98" y="98" width="107" height="107" rx="20" fill="black"/><path d="M225 98H312C323 98 332 107 332 118V205H225V98Z" fill="black"/><path d="M352 98H392C440 98 470 128 470 176V205H352V98Z" fill="black"/><rect x="98" y="225" width="107" height="107" fill="black"/><rect x="225" y="225" width="107" height="107" fill="black"/><path d="M352 225H470V254C470 302 440 332 392 332H352V225Z" fill="black"/><rect x="98" y="352" width="107" height="107" rx="20" fill="black"/><path d="M225 352H312C323 352 332 361 332 372V439C332 450 323 459 312 459H225V352Z" fill="black"/></svg></span>OgaPay</a>
 <div class="og-nav-links">
 <a href="index.html" class="og-nav-link"><i class="ti ti-home"></i>Home</a>
 <a href="tasks.html" class="og-nav-link"><i class="ti ti-briefcase"></i>Tasks</a>
@@ -134,7 +134,7 @@ catch(e){}const i=document.getElementById('ti');if(i)i.className=n==='dark'?'ti 
 <div class="og-drawer-overlay" id="ogDrawerOverlay"></div>
 <aside class="og-drawer" id="ogDrawer" role="dialog" aria-label="Menu">
 <div class="og-drawer-head">
-<a class="og-brand" href="index.html"><span class="og-logo"><svg xmlns="http://www.w3.org/2000/svg" width="34" height="34" viewBox="0 0 34 34" fill="none"><rect width="34" height="34" rx="8" fill="#7C3AED"/><circle cx="17" cy="17" r="10" fill="#0d1323"/><circle cx="17" cy="17" r="7" fill="#7C3AED"/><circle cx="17" cy="17" r="3" fill="#fff"/></svg></span>OgaPay</a>
+<a class="og-brand" href="index.html"><span class="og-logo"><svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="512" height="512" fill="white"/><rect x="98" y="98" width="107" height="107" rx="20" fill="black"/><path d="M225 98H312C323 98 332 107 332 118V205H225V98Z" fill="black"/><path d="M352 98H392C440 98 470 128 470 176V205H352V98Z" fill="black"/><rect x="98" y="225" width="107" height="107" fill="black"/><rect x="225" y="225" width="107" height="107" fill="black"/><path d="M352 225H470V254C470 302 440 332 392 332H352V225Z" fill="black"/><rect x="98" y="352" width="107" height="107" rx="20" fill="black"/><path d="M225 352H312C323 352 332 361 332 372V439C332 450 323 459 312 459H225V352Z" fill="black"/></svg></span>OgaPay</a>
 <button class="og-theme-btn" id="ogDrawerClose" style="border:none;background:transparent;font-size:20px"><i class="ti ti-x"></i></button>
 </div>
 <div class="og-drawer-body">
