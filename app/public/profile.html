@@ -15,7 +15,7 @@
 [data-theme="dark"]{--bg:#000000;--bg2:#050505;--card:#111111;--border:#232323;--border2:#333333;--text:#f4f7fb;--text2:#a1a1aa;--text3:#667186;--primary:#f4f7fb;--accent:#A78BFA;--accent2:#60A5FA;--green:#16a34a;--gold:#f5b301;--red:#dc2626;--shadow:0 2px 8px rgba(0,0,0,.25);--shadow-md:0 4px 16px rgba(0,0,0,.3)}
 html{scroll-behavior:smooth}
 body{margin:0;background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;overflow-x:hidden;-webkit-font-smoothing:antialiased}
-a{color:inherit;text-decoration:none}button,input,select,textarea{font:inherit}button{cursor:pointer}
+a{color:inherit;text-decoration:none}button,input{font:inherit}button{cursor:pointer}
 
 /* ═══ NAVBAR ═══ */
 .nav{position:fixed;top:0;left:0;right:0;height:var(--nav-h);z-index:200;background:rgba(255,255,255,.94);backdrop-filter:blur(18px) saturate(1.4);border-bottom:1px solid var(--border)}
@@ -49,7 +49,7 @@ a{color:inherit;text-decoration:none}button,input,select,textarea{font:inherit}b
 .oga-drawer-icon{width:36px;height:36px;display:grid;place-items:center;border:1px solid var(--border);border-radius:9px;background:var(--card);color:var(--text2);flex:0 0 auto;font-size:18px}
 .oga-drawer-item strong{display:block;font-size:15px;font-weight:800}
 .oga-drawer-item small{display:block;margin-top:2px;color:var(--text3);font-size:12px}
-.oga-drawer-chevron{width:14px;height:14px;margin-left:auto;color:var(--text3);transition:transform .16s}
+.oga-drawer-chevron{width:14px;height:14px;margin-left:auto;color:var(--text3);transition:transform .16s;display:inline-block}
 .oga-drawer-group.open .oga-drawer-chevron{transform:rotate(180deg)}
 .oga-drawer-subnav{display:none;margin:4px 0 10px 18px;padding:6px 0 6px 22px;border-left:2px solid var(--border)}
 .oga-drawer-group.open .oga-drawer-subnav{display:grid;gap:4px}
@@ -67,140 +67,77 @@ div.oga-drawer-foot.authed-only{display:none!important}div.oga-drawer-foot.publi
 body[data-auth="authed"] div.oga-drawer-foot.authed-only{display:block!important}
 body[data-auth="authed"] div.oga-drawer-foot.public-only{display:none!important}
 
-/* ═══ LAYOUT ═══ */
-.app{display:flex;width:min(1080px,calc(100% - 48px));margin:0 auto;padding:calc(var(--nav-h) + 28px) 0 72px;min-height:calc(100vh - var(--nav-h))}
-.main{flex:1;min-width:0}
-.page{max-width:800px;margin:0 auto;width:100%}
-@media(max-width:768px){.app{width:calc(100% - 24px)}}
-
-/* ═══ SECTIONS ═══ */
-.sec{margin-bottom:22px}
-.sec-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
-.sec-head h2{font-family:Outfit,sans-serif;font-size:15px;font-weight:800;margin:0;display:flex;align-items:center;gap:8px}
-.sec-head h2 i{color:var(--accent);font-size:16px}
-.sec-head a{font-size:11px;color:var(--accent2);font-weight:700}
-.sec-head .sec-badge{padding:2px 8px;border-radius:999px;font-size:9px;font-weight:700;background:rgba(124,58,237,.1);color:var(--accent);margin-left:6px}
-.bread{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text3);margin-bottom:12px;flex-wrap:wrap}
+/* ═══ PAGE ═══ */
+.wrapper{width:min(860px,calc(100% - 40px));margin:0 auto;padding:calc(var(--nav-h) + 32px) 0 80px}
+.bread{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text3);margin-bottom:24px;flex-wrap:wrap}
 .bread a{color:var(--text2);font-weight:600}.bread a:hover{color:var(--accent)}.bread span{color:var(--text3)}
-.hero{margin-bottom:20px}
-.hero .greeting{font-size:13px;color:var(--text2);font-weight:500}
-.hero h1{font-family:Outfit;font-size:24px;font-weight:900;margin:2px 0 0;letter-spacing:-.3px}
 
-/* ═══ PROFILE HEADER ═══ */
-.profile-header{display:grid;grid-template-columns:auto 1fr;gap:22px;padding:24px;border-radius:var(--radius);background:var(--card);border:1px solid var(--border);margin-bottom:18px}
-.profile-avatar{width:88px;height:88px;border-radius:50%;background:var(--bg2);display:grid;place-items:center;border:3px solid var(--accent);position:relative;flex-shrink:0}
-.profile-avatar .pa-inner{width:100%;height:100%;border-radius:50%;display:grid;place-items:center;font-size:36px;color:var(--text3);overflow:hidden}
-.profile-avatar .pa-badge{position:absolute;bottom:0;right:-2px;width:24px;height:24px;background:#16a34a;border-radius:50%;border:3px solid var(--card);display:grid;place-items:center;color:#fff;font-size:11px}
-.profile-info{min-width:0}
-.profile-info h2{margin:0;font-family:Outfit;font-size:20px;font-weight:900}
-.profile-info .pi-user{font-size:13px;color:var(--text2);margin:2px 0 0}
-.profile-info .pi-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:999px;background:linear-gradient(135deg,rgba(124,58,237,.12),rgba(99,102,241,.08));border:1px solid rgba(124,58,237,.2);color:var(--accent);font-size:10px;font-weight:800;margin:8px 0}
-.profile-info .pi-meta{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--text3);margin-top:6px}
-.profile-info .pi-meta span{display:flex;align-items:center;gap:4px}
-.profile-info .pi-actions{display:flex;gap:8px;margin-top:10px}
-.pi-btn{height:34px;padding:0 16px;border-radius:8px;border:1.5px solid var(--border2);background:transparent;color:var(--text);font-size:11px;font-weight:700;display:inline-flex;align-items:center;gap:6px;cursor:pointer;transition:all .15s;text-decoration:none}
-.pi-btn:hover{border-color:var(--accent);color:var(--accent)}
-.pi-btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
-.pi-btn.primary:hover{box-shadow:0 4px 12px rgba(124,58,237,.2)}
+/* ═══ TWO.COLUMN TOP ═══ */
+.top-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px}
+@media(max-width:768px){.top-grid{grid-template-columns:1fr;gap:16px}}
 
-/* ═══ STATS GRID ═══ */
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px}
-.stat-card{padding:16px;border-radius:var(--radius-sm);background:var(--card);border:1px solid var(--border)}
-.stat-card .sc-icon{width:32px;height:32px;border-radius:8px;display:grid;place-items:center;font-size:14px;margin-bottom:8px}
-.stat-card .sc-val{font-family:Outfit;font-size:22px;font-weight:900;letter-spacing:-.3px}
-.stat-card .sc-label{font-size:11px;color:var(--text3);font-weight:500;margin-top:2px}
-.stat-card .sc-badge{font-size:9px;font-weight:700;margin-top:3px;display:inline-flex;align-items:center;gap:3px}
+/* ═══ ACCOUNT CARD ═══ */
+.acct-card{padding:24px;border-radius:var(--radius);border:1px solid var(--border);background:var(--card)}
+.acct-card .acct-head{font-size:13px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.acct-card .acct-bal{font-family:Outfit,sans-serif;font-size:28px;font-weight:900;letter-spacing:-.5px;color:var(--text);margin-bottom:4px}
+.acct-card .acct-avail{font-size:14px;color:var(--text2);margin-bottom:20px}
+.acct-card .acct-avail strong{color:var(--text)}
+.acct-card .acct-actions{display:flex;gap:8px;flex-wrap:wrap}
+.acct-btn{height:38px;padding:0 20px;border-radius:8px;border:1.5px solid var(--border2);background:transparent;color:var(--text);font-size:12.5px;font-weight:700;display:inline-flex;align-items:center;gap:6px;cursor:pointer;transition:all .12s;text-decoration:none}
+.acct-btn:hover{border-color:var(--accent);color:var(--accent)}
+.acct-btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.acct-btn.primary:hover{box-shadow:0 4px 12px rgba(124,58,237,.2)}
 
-/* ═══ SKILLS ═══ */
-.skills{display:flex;gap:6px;flex-wrap:wrap}
-.skill-tag{height:30px;padding:0 12px;border:1.5px solid var(--border);border-radius:999px;background:var(--card);color:var(--text2);font-size:11px;font-weight:600;display:inline-flex;align-items:center;gap:5px}
-.skill-tag i{font-size:12px;color:var(--accent)}
+/* ═══ PROFILE CARD (RIGHT) ═══ */
+.prof-card{padding:24px;border-radius:var(--radius);border:1px solid var(--border);background:var(--card);display:flex;flex-direction:column;gap:12px}
+.prof-card .pr-row{display:flex;align-items:center;gap:16px}
+.prof-card .pr-avatar{width:56px;height:56px;border-radius:50%;background:var(--bg2);display:grid;place-items:center;font-size:24px;border:2px solid var(--accent);flex-shrink:0;overflow:hidden;position:relative}
+.prof-card .pr-avatar .pr-verified{position:absolute;bottom:-1px;right:-1px;width:18px;height:18px;background:var(--green);border-radius:50%;border:2px solid var(--card);display:grid;place-items:center;color:#fff;font-size:7px}
+.prof-card .pr-name h2{margin:0;font-family:Outfit;font-size:18px;font-weight:900}
+.prof-card .pr-name .pr-uname{font-size:13px;color:var(--text2);margin-top:1px}
+.prof-card .pr-bio{font-size:13px;color:var(--text2);line-height:1.5;margin:0}
+.prof-card .pr-meta{display:flex;flex-wrap:wrap;gap:12px;margin-top:2px}
+.pr-tag{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:6px;font-size:11px;font-weight:700;border:1px solid var(--border)}
+.pr-tag.gold{background:#f5b30110;color:var(--gold);border-color:rgba(245,179,1,.2)}
+.pr-tag.green{background:#16a34a10;color:var(--green);border-color:rgba(22,163,74,.2)}
+.pr-tag.purple{background:#7C3AED10;color:var(--accent);border-color:rgba(124,58,237,.2)}
+.prof-card .pr-edit{margin-top:4px}
+.edit-prof-btn{height:34px;padding:0 16px;border-radius:8px;border:1.5px solid var(--border2);background:transparent;color:var(--text);font-size:12px;font-weight:700;display:inline-flex;align-items:center;gap:6px;cursor:pointer;transition:all .12s;text-decoration:none}
+.edit-prof-btn:hover{border-color:var(--accent);color:var(--accent)}
 
-/* ═══ QUICK ACTIONS ═══ */
-.qactions{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-.qaction{display:flex;flex-direction:column;align-items:center;gap:6px;padding:16px 10px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--card);text-decoration:none;transition:all .15s}
-.qaction:hover{border-color:var(--border2);box-shadow:var(--shadow)}
-.qaction .qa-icon{width:36px;height:36px;border-radius:8px;display:grid;place-items:center;font-size:16px}
-.qaction .qa-label{font-size:11px;font-weight:700;color:var(--text2);text-align:center}
-.more-links{display:none;margin-top:6px}
-.more-links.open{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-.more-links-toggle{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;height:40px;margin-top:8px;border:1.5px dashed var(--border);border-radius:var(--radius-sm);background:transparent;color:var(--text3);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s}
-.more-links-toggle:hover{border-color:var(--accent);color:var(--accent)}
-.more-links-toggle.open i{transform:rotate(180deg)}
+/* ═══ REFERRAL CARD ═══ */
+.ref-card{padding:20px 24px;border-radius:var(--radius);border:1px solid var(--border);background:var(--card);margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.ref-card .ref-info{display:flex;align-items:center;gap:12px}
+.ref-card .ref-info .ref-icon{width:40px;height:40px;border-radius:10px;background:#7C3AED15;color:var(--accent);display:grid;place-items:center;font-size:18px;flex-shrink:0}
+.ref-card .ref-info .ref-text strong{display:block;font-size:14px;font-weight:800}
+.ref-card .ref-info .ref-text small{font-size:12px;color:var(--text2)}
+.ref-card .ref-link-wrap{display:flex;align-items:center;gap:6px;flex:1;min-width:200px;max-width:400px}
+.ref-card .ref-link-wrap input{flex:1;height:38px;padding:0 12px;border:1.5px solid var(--border);border-radius:8px;background:var(--bg2);color:var(--text);font-size:12px;font-family:monospace}
+.ref-card .ref-link-wrap .copy-btn{height:38px;width:38px;border:1.5px solid var(--border2);border-radius:8px;background:var(--card);color:var(--text2);display:grid;place-items:center;cursor:pointer;transition:all .12s}
+.ref-card .ref-link-wrap .copy-btn:hover{border-color:var(--accent);color:var(--accent)}
+@media(max-width:768px){.ref-card{flex-direction:column;align-items:stretch;padding:18px}.ref-card .ref-link-wrap{max-width:none}}
 
-/* ═══ WALLET ═══ */
-.wallet-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
-.wallet-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}
-.wallet-action{display:flex;align-items:center;gap:10px;padding:14px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--card);text-decoration:none;transition:all .15s}
-.wallet-action:hover{border-color:var(--border2);box-shadow:var(--shadow)}
-.wallet-action .wa-icon{width:36px;height:36px;border-radius:8px;display:grid;place-items:center;font-size:16px;flex-shrink:0}
-.wallet-action .wa-label{font-size:12px;font-weight:700;color:var(--text)}
+/* ═══ QUICK LINKS ═══ */
+.qnav-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+.qnav-item{display:flex;flex-direction:column;align-items:center;gap:8px;padding:20px 12px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--card);text-decoration:none;transition:all .12s}
+.qnav-item:hover{border-color:var(--border2);box-shadow:var(--shadow)}
+.qnav-item .qnav-icon{width:40px;height:40px;border-radius:10px;display:grid;place-items:center;font-size:18px}
+.qnav-item .qnav-label{font-size:11px;font-weight:700;color:var(--text);text-align:center;line-height:1.3}
+@media(max-width:768px){.qnav-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:500px){.qnav-grid{grid-template-columns:repeat(2,1fr);gap:8px}}
 
-/* ═══ EARNINGS ═══ */
-.earn-tabs{display:flex;gap:4px;margin-bottom:14px}
-.earn-tab{height:30px;padding:0 14px;border:1.5px solid var(--border);border-radius:8px;background:transparent;color:var(--text3);font-size:11px;font-weight:700;cursor:pointer;transition:all .15s}
-.earn-tab.active{border-color:var(--accent);background:rgba(124,58,237,.08);color:var(--accent)}
-.earn-tab:hover{border-color:var(--accent);color:var(--accent)}
-.earn-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
-.earn-card{padding:16px;border-radius:var(--radius-sm);background:var(--card);border:1px solid var(--border)}
-.earn-card .ec-label{font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.3px}
-.earn-card .ec-val{font-family:Outfit;font-size:20px;font-weight:900;letter-spacing:-.3px;margin-top:3px}
-.earn-card .ec-sub{font-size:10px;color:var(--text2);margin-top:1px}
+/* ═══ MORE LINKS ═══ */
+.more-toggle{width:100%;height:44px;border:1.5px dashed var(--border);border-radius:var(--radius-sm);background:transparent;color:var(--text2);font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;transition:all .12s}
+.more-toggle:hover{border-color:var(--accent);color:var(--accent)}
+.more-toggle.open{border-style:solid;border-color:var(--border2);color:var(--text)}
+.more-grid{display:none;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px}
+.more-grid.open{display:grid}
+.more-grid .qnav-item{padding:16px 10px}
+@media(max-width:768px){.more-grid{grid-template-columns:repeat(2,1fr)}}
 
-/* ═══ GRAPH ═══ */
-.graph-wrap{padding:20px 0 10px;border-radius:var(--radius-sm);background:var(--card);border:1px solid var(--border)}
-.graph-bars{display:flex;align-items:flex-end;justify-content:space-between;height:120px;padding:0 20px;gap:6px}
-.graph-bar{flex:1;border-radius:6px 6px 2px 2px;min-height:6px;position:relative;transition:height .4s ease}
-.graph-bar:hover{opacity:.7}
-.graph-bar .bar-tooltip{position:absolute;top:-22px;left:50%;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:2px 8px;border-radius:6px;font-size:9px;font-weight:700;white-space:nowrap;opacity:0;transition:opacity .2s}
-.graph-bar:hover .bar-tooltip{opacity:1}
-.graph-labels{display:flex;justify-content:space-between;padding:10px 20px 0;font-size:10px;color:var(--text3);font-weight:600}
-
-/* ═══ TABLE ═══ */
-.table-wrap{overflow-x:auto;border-radius:var(--radius-sm);border:1px solid var(--border)}
-.tbl{width:100%;border-collapse:collapse;font-size:12px}
-.tbl th{padding:10px 14px;text-align:left;font-size:10px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;background:var(--bg2);border-bottom:1px solid var(--border)}
-.tbl td{padding:12px 14px;border-bottom:1px solid var(--border);color:var(--text2)}
-.tbl tr:last-child td{border-bottom:0}
-.tbl td strong{color:var(--text);font-weight:700}
-.tbl .status{padding:2px 8px;border-radius:999px;font-size:9px;font-weight:700;display:inline-block}
-.tbl .status.paid{background:rgba(22,163,74,.1);color:var(--green)}
-.tbl .status.pending{background:rgba(124,58,237,.1);color:var(--accent)}
-.tbl .amt{font-family:Outfit;font-weight:800}
-.tbl .amt.credit{color:var(--green)}
-.tbl .amt.debit{color:var(--red)}
-
-/* ═══ REFERRAL ═══ */
-.search-bar{display:flex;align-items:center;gap:8px;padding:0 14px;height:42px;border:1.5px solid var(--border);border-radius:10px;background:var(--card);flex:1;max-width:100%;transition:border-color .2s;margin-bottom:14px}
-.search-bar:focus-within{border-color:var(--accent)}
-.search-bar input{flex:1;border:0;background:transparent;color:var(--text);font-size:13px;outline:none}
-.search-bar input::placeholder{color:var(--text3)}
-.search-bar i{color:var(--text3);font-size:16px}
-.cc-btn{height:34px;padding:0 14px;border:0;border-radius:8px;background:var(--accent);color:#fff;font-size:11px;font-weight:700;display:inline-flex;align-items:center;gap:5px;cursor:pointer;white-space:nowrap;transition:all .15s;text-decoration:none}
-
-/* ═══ RESPONSIVE ═══ */
-@media(max-width:768px){
-  .profile-header{grid-template-columns:1fr;text-align:center}
-  .profile-avatar{margin:0 auto}
-  .profile-info .pi-meta{justify-content:center}
-  .profile-info .pi-actions{justify-content:center}
-  .stats{grid-template-columns:repeat(2,1fr)}
-  .wallet-grid{grid-template-columns:repeat(2,1fr)}
-  .wallet-actions{grid-template-columns:1fr}
-  .earn-summary{grid-template-columns:repeat(2,1fr)}
-  .qactions{grid-template-columns:repeat(2,1fr)}
-  .more-links.open{grid-template-columns:repeat(2,1fr)}
-}
-/* GIG LIST */
-.gig-list{display:grid;gap:1px;background:var(--border);border-radius:var(--radius-sm);overflow:hidden}
-.gig-item{display:flex;align-items:center;gap:12px;padding:14px;background:var(--card)}
-.gig-info{flex:1;min-width:0}
-.gig-info .gi-title{font-size:13px;font-weight:700}
-.gig-info .gi-meta{font-size:11px;color:var(--text2);margin-top:3px;display:flex;gap:12px;flex-wrap:wrap}
-
-@media(max-width:500px){
-  .stats{gap:8px}.wallet-grid{grid-template-columns:1fr 1fr}.earn-summary{grid-template-columns:1fr 1fr}
-}
+/* ═══ TOAST ═══ */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--card);color:var(--text);padding:12px 24px;border-radius:12px;border:1px solid var(--border);box-shadow:var(--shadow-md);font-size:13px;font-weight:600;z-index:999;opacity:0;transition:all .3s ease;pointer-events:none}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 </style>
 </head>
 <body data-auth="public">
@@ -269,196 +206,151 @@ body[data-auth="authed"] div.oga-drawer-foot.public-only{display:none!important}
 </div>
 
 <!-- ═══ PAGE CONTENT ═══ -->
-<div class="app">
-<main class="main">
-<section class="page">
+<div class="wrapper">
+  <nav class="bread">
+    <a href="/"><i class="ti ti-home"></i></a>
+    <i class="ti ti-chevron-right" style="font-size:10px"></i>
+    <span>Profile</span>
+  </nav>
 
-  <!-- ═══ 1. PROFILE HEADER ═══ -->
-  <div class="profile-header">
-    <div class="profile-avatar">
-      <div class="pa-inner"><i class="ti ti-user"></i></div>
-      <div class="pa-badge"><i class="ti ti-check" style="font-size:10px"></i></div>
-    </div>
-    <div class="profile-info">
-      <h2>Chisom Okafor</h2>
-      <div class="pi-user">@chisom_ogapay</div>
-      <div class="pi-badge"><i class="ti ti-trophy"></i> Gold Tier · Top Earner</div>
-      <div class="pi-meta">
-        <span><i class="ti ti-calendar"></i> Joined Mar 2025</span>
-        <span><i class="ti ti-map-pin"></i> Lagos, Nigeria</span>
-        <span><i class="ti ti-mail"></i> chisom@email.com</span>
-      </div>
-      <div class="pi-actions">
-        <a class="pi-btn" href="edit-profile.html"><i class="ti ti-edit"></i> Edit Profile</a>
-        <button class="pi-btn primary"><i class="ti ti-share"></i> Share Profile</button>
+  <!-- ═══ TOP TWO-COLUMN GRID ═══ -->
+  <div class="top-grid">
+
+    <!-- LEFT: ACCOUNT INFORMATION -->
+    <div class="acct-card">
+      <div class="acct-head"><i class="ti ti-wallet"></i> Account Information</div>
+      <div class="acct-bal">&#8358;245,800.00</div>
+      <div class="acct-avail">Available Balance: <strong>&#8358;189,420.50</strong></div>
+      <div class="acct-actions">
+        <a class="acct-btn primary" href="wallet.html?action=withdraw"><i class="ti ti-arrow-up"></i> Withdraw</a>
+        <a class="acct-btn" href="wallet.html?action=deposit"><i class="ti ti-arrow-down"></i> Deposit</a>
+        <a class="acct-btn" href="wallet.html?action=transfer"><i class="ti ti-transfer"></i> Transfer</a>
       </div>
     </div>
-  </div>
 
-  <!-- ═══ 2. STATS ═══ -->
-  <div class="stats">
-    <div class="stat-card"><div class="sc-icon" style="background:#7C3AED15;color:#7C3AED"><i class="ti ti-checklist"></i></div><div class="sc-val">847</div><div class="sc-label">Tasks Done</div><div class="sc-badge" style="color:var(--green)"><i class="ti ti-trending-up"></i> +12%</div></div>
-    <div class="stat-card"><div class="sc-icon" style="background:#16a34a15;color:#16a34a"><i class="ti ti-coin"></i></div><div class="sc-val">&#8358;284,500</div><div class="sc-label">Total Earned</div></div>
-    <div class="stat-card"><div class="sc-icon" style="background:#2563EB15;color:#2563EB"><i class="ti ti-affiliate"></i></div><div class="sc-val">43</div><div class="sc-label">Referrals</div></div>
-    <div class="stat-card"><div class="sc-icon" style="background:#f5b30115;color:#f5b301"><i class="ti ti-star"></i></div><div class="sc-val">4.92</div><div class="sc-label">Reputation</div><div class="sc-badge" style="color:var(--gold)">★★★★★</div></div>
-  </div>
-
-  <!-- ═══ 3. SKILLS ═══ -->
-  <div class="sec">
-    <div class="sec-head"><h2><i class="ti ti-tag"></i> What I Do</h2></div>
-    <div class="skills">
-      <span class="skill-tag"><i class="ti ti-brand-twitter"></i> Social Media</span>
-      <span class="skill-tag"><i class="ti ti-palette"></i> UI Design</span>
-      <span class="skill-tag"><i class="ti ti-device-mobile"></i> App Testing</span>
-      <span class="skill-tag"><i class="ti ti-edit"></i> Content Writing</span>
-      <span class="skill-tag"><i class="ti ti-users"></i> Community Mgmt</span>
-      <span class="skill-tag"><i class="ti ti-database"></i> Data Entry</span>
-    </div>
-  </div>
-
-  <!-- ═══ 4. QUICK LINKS ═══ -->
-  <div class="sec">
-    <div class="sec-head"><h2><i class="ti ti-link"></i> Quick Links</h2></div>
-    <div class="qactions">
-      <a class="qaction" href="tasks.html"><span class="qa-icon" style="background:#7C3AED15;color:#7C3AED"><i class="ti ti-checklist"></i></span><span class="qa-label">Browse Tasks</span></a>
-      <a class="qaction" href="wallet.html"><span class="qa-icon" style="background:#2563EB15;color:#2563EB"><i class="ti ti-wallet"></i></span><span class="qa-label">My Wallet</span></a>
-      <a class="qaction" href="store.html"><span class="qa-icon" style="background:#16a34a15;color:#16a34a"><i class="ti ti-building-store"></i></span><span class="qa-label">My Store</span></a>
-      <a class="qaction" href="post-task.html"><span class="qa-icon" style="background:#f5b30115;color:#f5b301"><i class="ti ti-plus-circle"></i></span><span class="qa-label">Post a Task</span></a>
-      <a class="qaction" href="communities.html"><span class="qa-icon" style="background:#7C3AED15;color:#7C3AED"><i class="ti ti-users"></i></span><span class="qa-label">Communities</span></a>
-      <a class="qaction" href="settings.html"><span class="qa-icon" style="background:#dc262615;color:#dc2626"><i class="ti ti-settings"></i></span><span class="qa-label">Settings</span></a>
-    </div>
-    <!-- More Links -->
-    <button class="more-links-toggle" id="moreLinksToggle" onclick="toggleMoreLinks()"><i class="ti ti-chevron-down"></i> More Links <i class="ti ti-chevron-down"></i></button>
-    <div class="more-links" id="moreLinks">
-      <a class="qaction" href="dashboard.html"><span class="qa-icon" style="background:#7C3AED15;color:#7C3AED"><i class="ti ti-dashboard"></i></span><span class="qa-label">Dashboard</span></a>
-      <a class="qaction" href="vault.html"><span class="qa-icon" style="background:#2563EB15;color:#2563EB"><i class="ti ti-vault"></i></span><span class="qa-label">Vault</span></a>
-      <a class="qaction" href="messages.html"><span class="qa-icon" style="background:#16a34a15;color:#16a34a"><i class="ti ti-message"></i></span><span class="qa-label">Messages</span></a>
-      <a class="qaction" href="referrals.html"><span class="qa-icon" style="background:#f5b30115;color:#f5b301"><i class="ti ti-affiliate"></i></span><span class="qa-label">Referrals</span></a>
-      <a class="qaction" href="notifications.html"><span class="qa-icon" style="background:#7C3AED15;color:#7C3AED"><i class="ti ti-bell"></i></span><span class="qa-label">Notifications</span></a>
-      <a class="qaction" href="kyc.html"><span class="qa-icon" style="background:#dc262615;color:#dc2626"><i class="ti ti-id"></i></span><span class="qa-label">KYC</span></a>
-    </div>
-  </div>
-
-  <!-- ═══ 5. REFERRAL ═══ -->
-  <div class="sec">
-    <div class="sec-head"><h2><i class="ti ti-affiliate"></i> Referral Program</h2></div>
-    <div class="search-bar" style="margin-bottom:0">
-      <i class="ti ti-link"></i>
-      <input type="text" value="https://ogapay.app/ref/chisom_ogapay" readonly>
-      <button class="cc-btn" onclick="navigator.clipboard.writeText('https://ogapay.app/ref/chisom_ogapay')">Copy</button>
-    </div>
-  </div>
-
-  <!-- ═══ 6. WALLET OVERVIEW ═══ -->
-  <div class="sec">
-    <div class="sec-head"><h2><i class="ti ti-wallet"></i> Wallet Summary</h2><a href="wallet.html" class="sec-link">Manage <i class="ti ti-chevron-right" style="font-size:10px"></i></a></div>
-    <div class="wallet-grid">
-      <div class="stat-card"><div class="sc-val" style="font-size:20px">&#8358;126,400</div><div class="sc-label">Balance</div></div>
-      <div class="stat-card"><div class="sc-val" style="font-size:20px">45.5 USDC</div><div class="sc-label">Crypto</div></div>
-      <div class="stat-card"><div class="sc-val" style="font-size:20px">&#8358;450K</div><div class="sc-label">Total Deposited</div></div>
-      <div class="stat-card"><div class="sc-val" style="font-size:20px">&#8358;323K</div><div class="sc-label">Total Withdrawn</div></div>
-    </div>
-    <div class="wallet-actions">
-      <a class="wallet-action" href="wallet.html"><span class="wa-icon" style="background:#7C3AED15;color:#7C3AED"><i class="ti ti-plus-circle"></i></span><span class="wa-label">Deposit</span></a>
-      <a class="wallet-action" href="wallet.html"><span class="wa-icon" style="background:#2563EB15;color:#2563EB"><i class="ti ti-logout"></i></span><span class="wa-label">Withdraw</span></a>
-      <a class="wallet-action" href="wallet.html"><span class="wa-icon" style="background:#16a34a15;color:#16a34a"><i class="ti ti-transfer"></i></span><span class="wa-label">Transfer</span></a>
-    </div>
-  </div>
-
-  <!-- ═══ 7. EARNINGS ═══ -->
-  <div class="sec">
-    <div class="sec-head"><h2><i class="ti ti-trending-up"></i> Earnings</h2></div>
-    <div class="earn-tabs">
-      <button class="earn-tab active" onclick="switchEarnTab(this,'7d')">7 Days</button>
-      <button class="earn-tab" onclick="switchEarnTab(this,'30d')">30 Days</button>
-      <button class="earn-tab" onclick="switchEarnTab(this,'all')">All Time</button>
-    </div>
-    <div class="earn-summary">
-      <div class="earn-card"><div class="ec-label">Total Earnings</div><div class="ec-val">&#8358;18,200</div><div class="ec-sub">This week</div></div>
-      <div class="earn-card"><div class="ec-label">Best Day</div><div class="ec-val">&#8358;5,600</div><div class="ec-sub">Wednesday</div></div>
-      <div class="earn-card"><div class="ec-label">Avg Per Task</div><div class="ec-val">&#8358;1,300</div><div class="ec-sub">14 tasks done</div></div>
-      <div class="earn-card"><div class="ec-label">Pending</div><div class="ec-val">&#8358;4,200</div><div class="ec-sub">Awaiting approval</div></div>
-    </div>
-    <div class="graph-wrap">
-      <div class="graph-bars">
-        <div class="graph-bar" style="height:40%;background:linear-gradient(180deg,#7C3AED,#A78BFA)"><div class="bar-tooltip">&#8358;2,100</div></div>
-        <div class="graph-bar" style="height:55%;background:linear-gradient(180deg,#7C3AED,#A78BFA)"><div class="bar-tooltip">&#8358;3,400</div></div>
-        <div class="graph-bar" style="height:90%;background:linear-gradient(180deg,#7C3AED,#A78BFA)"><div class="bar-tooltip">&#8358;5,600</div></div>
-        <div class="graph-bar" style="height:45%;background:linear-gradient(180deg,#7C3AED,#A78BFA)"><div class="bar-tooltip">&#8358;2,800</div></div>
-        <div class="graph-bar" style="height:70%;background:linear-gradient(180deg,#7C3AED,#A78BFA)"><div class="bar-tooltip">&#8358;4,300</div></div>
-        <div class="graph-bar" style="height:30%;background:linear-gradient(180deg,#7C3AED,#A78BFA)"><div class="bar-tooltip">&#8358;1,800</div></div>
-        <div class="graph-bar" style="height:50%;background:linear-gradient(180deg,#7C3AED,#A78BFA)"><div class="bar-tooltip">&#8358;3,100</div></div>
+    <!-- RIGHT: PROFILE INFORMATION -->
+    <div class="prof-card">
+      <div class="pr-row">
+        <div class="pr-avatar">
+          <i class="ti ti-user"></i>
+          <div class="pr-verified"><i class="ti ti-check" style="font-size:6px"></i></div>
+        </div>
+        <div class="pr-name">
+          <h2>Chisom Okafor</h2>
+          <div class="pr-uname">@chisom_okaf</div>
+        </div>
       </div>
-      <div class="graph-labels">
-        <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+      <p class="pr-bio">Gold Tier Worker · 847 tasks completed · 4.9 avg rating</p>
+      <div class="pr-meta">
+        <span class="pr-tag purple"><i class="ti ti-star"></i> Reputation: 8.4K</span>
+        <span class="pr-tag gold"><i class="ti ti-crown"></i> Gold Tier</span>
+        <span class="pr-tag green"><i class="ti ti-badge-check"></i> KYC Verified</span>
+      </div>
+      <div class="pr-edit">
+        <a class="edit-prof-btn" href="edit-profile.html"><i class="ti ti-edit"></i> Edit Profile</a>
       </div>
     </div>
   </div>
 
-  <!-- ═══ 8. TRANSACTION HISTORY ═══ -->
-  <div class="sec">
-    <div class="sec-head"><h2><i class="ti ti-receipt"></i> Transaction History</h2><a href="wallet.html">View all <i class="ti ti-chevron-right" style="font-size:10px"></i></a></div>
-    <div class="table-wrap">
-      <table class="tbl">
-        <thead><tr><th>Date</th><th>Description</th><th>Amount</th><th>Status</th></tr></thead>
-        <tbody>
-          <tr><td>Mar 28</td><td><strong>Task payout</strong><br>Social Media Engagement</td><td class="amt credit">+&#8358;4,200</td><td><span class="status paid">Paid</span></td></tr>
-          <tr><td>Mar 26</td><td><strong>Referral bonus</strong><br>Chisom joined via your link</td><td class="amt credit">+&#8358;1,850</td><td><span class="status paid">Paid</span></td></tr>
-          <tr><td>Mar 25</td><td><strong>Task payout</strong><br>Telegram Community Join</td><td class="amt credit">+&#8358;800</td><td><span class="status paid">Paid</span></td></tr>
-          <tr><td>Mar 24</td><td><strong>Task payout</strong><br>App Testing Feedback</td><td class="amt credit">+&#8358;3,000</td><td><span class="status pending">Pending</span></td></tr>
-          <tr><td>Mar 22</td><td><strong>Task payout</strong><br>X Banner Design</td><td class="amt credit">+&#8358;5,000</td><td><span class="status paid">Paid</span></td></tr>
-        </tbody>
-      </table>
+  <!-- ═══ REFERRAL PROGRAM ═══ -->
+  <div class="ref-card">
+    <div class="ref-info">
+      <div class="ref-icon"><i class="ti ti-link"></i></div>
+      <div class="ref-text">
+        <strong>Referral Program</strong>
+        <small>Invite friends and earn &#8358;500 per referral</small>
+      </div>
+    </div>
+    <div class="ref-link-wrap">
+      <input type="text" id="refLink" value="https://ogapay.com/ref/chisom_okaf" readonly>
+      <button class="copy-btn" onclick="copyRefLink()" title="Copy referral link"><i class="ti ti-copy"></i></button>
     </div>
   </div>
 
-  <!-- ═══ 9. WITHDRAWAL HISTORY ═══ -->
-  <div class="sec">
-    <div class="sec-head"><h2><i class="ti ti-arrow-up"></i> Withdrawal History</h2><a href="wallet.html">Withdraw <i class="ti ti-chevron-right" style="font-size:10px"></i></a></div>
-    <div class="table-wrap">
-      <table class="tbl">
-        <thead><tr><th>Date</th><th>Method</th><th>Amount</th><th>Status</th></tr></thead>
-        <tbody>
-          <tr><td>Mar 18</td><td><strong>Bank Transfer</strong><br>GTBank ****1234</td><td class="amt debit">-&#8358;25,000</td><td><span class="status paid">Completed</span></td></tr>
-          <tr><td>Mar 10</td><td><strong>USDC (Solana)</strong></td><td class="amt debit">-$50.00</td><td><span class="status paid">Completed</span></td></tr>
-          <tr><td>Feb 28</td><td><strong>Bank Transfer</strong><br>Access Bank ****5678</td><td class="amt debit">-&#8358;15,000</td><td><span class="status paid">Completed</span></td></tr>
-          <tr><td>Feb 15</td><td><strong>USDC (Solana)</strong></td><td class="amt debit">-$30.00</td><td><span class="status pending">Processing</span></td></tr>
-        </tbody>
-      </table>
-    </div>
-    <div style="text-align:center;margin-top:10px"><a href="wallet.html" style="font-size:12px;color:var(--accent);font-weight:700">Make a withdrawal <i class="ti ti-chevron-right" style="font-size:10px"></i></a></div>
+  <!-- ═══ QUICK LINKS ═══ -->
+  <div class="qnav-grid">
+    <a class="qnav-item" href="tasks.html">
+      <span class="qnav-icon" style="background:#7C3AED15;color:#7C3AED"><i class="ti ti-checklist"></i></span>
+      <span class="qnav-label">Browse Tasks</span>
+    </a>
+    <a class="qnav-item" href="wallet.html">
+      <span class="qnav-icon" style="background:#2563EB15;color:#2563EB"><i class="ti ti-wallet"></i></span>
+      <span class="qnav-label">Wallet</span>
+    </a>
+    <a class="qnav-item" href="my-store.html">
+      <span class="qnav-icon" style="background:#16a34a15;color:#16a34a"><i class="ti ti-building-store"></i></span>
+      <span class="qnav-label">My Store</span>
+    </a>
+    <a class="qnav-item" href="communities.html">
+      <span class="qnav-icon" style="background:#f5b30115;color:#f5b301"><i class="ti ti-users"></i></span>
+      <span class="qnav-label">Communities</span>
+    </a>
+    <a class="qnav-item" href="notifications.html">
+      <span class="qnav-icon" style="background:#7C3AED15;color:#7C3AED"><i class="ti ti-bell"></i></span>
+      <span class="qnav-label">Notifications</span>
+    </a>
+    <a class="qnav-item" href="settings.html">
+      <span class="qnav-icon" style="background:#2563EB15;color:#2563EB"><i class="ti ti-settings"></i></span>
+      <span class="qnav-label">Settings</span>
+    </a>
   </div>
 
-  <!-- ═══ 10. RECENT ACTIVITY ═══ -->
-  <div class="sec">
-    <div class="sec-head"><h2><i class="ti ti-activity"></i> Recent Activity</h2></div>
-    <div class="gig-list">
-      <div class="gig-item"><div class="gig-info"><div class="gi-title">Completed: Social Media Engagement</div><div class="gi-meta"><span>2h ago</span><span style="color:var(--green)">+&#8358;4,200</span></div></div></div>
-      <div class="gig-item"><div class="gig-info"><div class="gi-title">Withdrawal processed</div><div class="gi-meta"><span>1d ago</span><span style="color:var(--red)">-&#8358;25,000</span></div></div></div>
-      <div class="gig-item"><div class="gig-info"><div class="gi-title">Referral bonus earned</div><div class="gi-meta"><span>2d ago</span><span style="color:var(--green)">+&#8358;1,850</span></div></div></div>
-    </div>
+  <!-- ═══ MORE LINKS ═══ -->
+  <button class="more-toggle" id="moreToggle" onclick="toggleMore()">
+    <i class="ti ti-chevron-down"></i> More Links <i class="ti ti-chevron-down"></i>
+  </button>
+  <div class="more-grid" id="moreGrid">
+    <a class="qnav-item" href="dashboard.html">
+      <span class="qnav-icon" style="background:#7C3AED15;color:#7C3AED"><i class="ti ti-dashboard"></i></span>
+      <span class="qnav-label">Dashboard</span>
+    </a>
+    <a class="qnav-item" href="post-task.html">
+      <span class="qnav-icon" style="background:#2563EB15;color:#2563EB"><i class="ti ti-plus-circle"></i></span>
+      <span class="qnav-label">Post a Task</span>
+    </a>
+    <a class="qnav-item" href="my-tasks.html">
+      <span class="qnav-icon" style="background:#16a34a15;color:#16a34a"><i class="ti ti-briefcase"></i></span>
+      <span class="qnav-label">My Tasks</span>
+    </a>
+    <a class="qnav-item" href="messages.html">
+      <span class="qnav-icon" style="background:#f5b30115;color:#f5b301"><i class="ti ti-message"></i></span>
+      <span class="qnav-label">Messages</span>
+    </a>
+    <a class="qnav-item" href="worker.html">
+      <span class="qnav-icon" style="background:#7C3AED15;color:#7C3AED"><i class="ti ti-briefcase"></i></span>
+      <span class="qnav-label">Worker Portal</span>
+    </a>
+    <a class="qnav-item" href="public-profile.html">
+      <span class="qnav-icon" style="background:#2563EB15;color:#2563EB"><i class="ti ti-eye"></i></span>
+      <span class="qnav-label">Public Profile</span>
+    </a>
   </div>
-
-</section></main></div>
+</div>
 
 <!-- ═══ TOAST ═══ -->
-<div id="toast" style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--card);color:var(--text);padding:12px 24px;border-radius:12px;border:1px solid var(--border);box-shadow:var(--shadow-md);font-size:13px;font-weight:600;z-index:999;opacity:0;transition:all .3s ease;pointer-events:none"></div>
+<div class="toast" id="toast"></div>
 
 <script>
-function toggleMoreLinks() {
-  document.getElementById('moreLinks').classList.toggle('open');
-  document.getElementById('moreLinksToggle').classList.toggle('open');
+function copyRefLink() {
+  var inp = document.getElementById('refLink');
+  inp.select(); inp.setSelectionRange(0, 99999);
+  navigator.clipboard.writeText(inp.value).then(function(){
+    showToast('Referral link copied!');
+  }).catch(function(){
+    inp.select(); document.execCommand('copy');
+    showToast('Referral link copied!');
+  });
 }
-function switchEarnTab(el, period) {
-  document.querySelectorAll('.earn-tab').forEach(function(t){t.classList.remove('active')});
-  el.classList.add('active');
+function toggleMore() {
+  document.getElementById('moreGrid').classList.toggle('open');
+  document.getElementById('moreToggle').classList.toggle('open');
 }
 function showToast(msg) {
-  var t=document.getElementById('toast');
-  t.textContent=msg; t.style.opacity='1'; t.style.transform='translateX(-50%) translateY(0)';
-  setTimeout(function(){t.style.opacity='0';t.style.transform='translateX(-50%) translateY(100px)'},2500);
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(function(){ t.classList.remove('show'); }, 2500);
 }
-
 // Theme & Nav
 (function(){
   var th; try{th=localStorage.getItem('ogapay-theme')}catch(e){}
