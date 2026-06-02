@@ -373,7 +373,7 @@ function switchGraph(btn,period){
 (function(){
   try{var th=localStorage.getItem('ogapay-theme')||'dark';document.documentElement.setAttribute('data-theme',th);}catch(e){}
   try{var authed=localStorage.getItem('ogapay-authenticated')==='true';document.body.setAttribute('data-auth',authed?'authed':'public');}catch(e){}
-  var t=document.getElementById('themeToggle');if(t){t.addEventListener('click',function(){var h=document.documentElement;h.setAttribute('data-theme','dark');try{localStorage.setItem('ogapay-theme','dark');}catch(e){}});}
+  var t=document.getElementById('themeToggle');if(t){t.addEventListener('click',function(){var h=document.documentElement;h.setAttribute('data-theme','dark');try{localStorage.setItem('ogapay-theme',next);}catch(e){}});}
   var m=document.getElementById('menuBtn'),mm=document.getElementById('mobileMenu');if(m&&mm){m.addEventListener('click',function(){mm.classList.add('open');});mm.querySelectorAll('[data-close-menu]').forEach(function(e){e.addEventListener('click',function(){mm.classList.remove('open');});});}
 })();
 </script>
