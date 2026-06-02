@@ -1,36 +1,39 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="light">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Marketplace - OgaPay</title>
-<script>(function(){try{document.documentElement.setAttribute('data-theme',localStorage.getItem('ogapay-theme')||'dark')}catch(e){}})();</script>
+<script>(function(){try{document.documentElement.setAttribute('data-theme',localStorage.getItem('ogapay-theme')||'light')}catch(e){}})();</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800;900&family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 /* ── tokens ─────────────────────────────────── */
 :root{
-  --bg:#050816;
-  --bg2:#080B1A;
-  --card:#0B1020;
-  --card2:#0F1428;
-  --border:#1A2040;
-  --border2:#2A3070;
-  --text:#FFFFFF;
-  --text2:#8B8FA3;
-  --text3:#5C6080;
+  --bg:#ffffff;
+  --bg2:#f7f9fc;
+  --card:#ffffff;
+  --card2:#f3f6fb;
+  --border:#e4e9f1;
+  --border2:#d5deea;
+  --text:#101525;
+  --text2:#66738a;
+  --text3:#98a6ba;
   --accent:#A855F7;
   --accent2:#7C3AED;
-  --accent-dim:rgba(168,85,247,.12);
-  --accent-glow:0 0 40px rgba(168,85,247,.2);
+  --accent-dim:rgba(168,85,247,.10);
+  --accent-glow:0 0 40px rgba(168,85,247,.15);
   --green:#22C55E;
   --gold:#F5B301;
-  --shadow:0 4px 24px rgba(0,0,0,.5);
-  --shadow-lg:0 8px 48px rgba(0,0,0,.6);
+  --shadow:0 4px 16px rgba(16,21,37,.07),0 1px 4px rgba(16,21,37,.04);
+  --shadow-lg:0 8px 48px rgba(16,21,37,.10);
   --radius:14px;
   --radius-sm:10px;
   --nav-h:60px;
+  --primary:#0d1323;
+  --brand-blue:linear-gradient(90deg,#2563EB,#3B82F6,#60A5FA,#93C5FD);
+  --earn-gradient:linear-gradient(90deg,#7C3AED,#A78BFA,#6366F1,#C4B5FD,#7C3AED);
 }
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
@@ -202,7 +205,28 @@ img{max-width:100%;display:block}
 .prod-card .p-creator .pr{display:flex;align-items:center;gap:2px}
 .rating-stars svg{width:18px;height:18px;fill:var(--gold);stroke:var(--gold)}
 .review-card .rating-stars svg{width:14px;height:14px}
-[data-theme="light"]{--bg:#050816;--bg2:#080B1A;--card:#0B1020;--card2:#0F1428;--border:#1A2040;--border2:#2A3070;--text:#FFFFFF;--text2:#8B8FA3;--text3:#5C6080;--accent:#A855F7}
+[data-theme="dark"]{
+  --bg:#050816;
+  --bg2:#080B1A;
+  --card:#0B1020;
+  --card2:#0F1428;
+  --border:#1A2040;
+  --border2:#2A3070;
+  --text:#FFFFFF;
+  --text2:#8B8FA3;
+  --text3:#5C6080;
+  --accent:#A855F7;
+  --accent2:#7C3AED;
+  --accent-dim:rgba(168,85,247,.12);
+  --accent-glow:0 0 40px rgba(168,85,247,.2);
+  --green:#22C55E;
+  --gold:#F5B301;
+  --shadow:0 4px 24px rgba(0,0,0,.5);
+  --shadow-lg:0 8px 48px rgba(0,0,0,.6);
+  --primary:#0B1020;
+  --brand-blue:linear-gradient(90deg,#2563EB,#3B82F6,#60A5FA,#93C5FD);
+  --earn-gradient:linear-gradient(90deg,#7C3AED,#A78BFA,#6366F1,#C4B5FD,#7C3AED);
+}
 .prod-card .p-row{display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:12px;border-top:1px solid var(--border)}
 .prod-card .p-price{display:flex;flex-direction:column}
 .prod-card .p-price .pp-ngn{font-weight:800;font-size:16px;color:var(--text)}
@@ -1312,18 +1336,22 @@ function shareProduct(id){
 /* ── nav js ───────────────────────── */
 (function(){
   // Theme toggle
-  try{var th=localStorage.getItem('ogapay-theme')||'dark';document.documentElement.setAttribute('data-theme',th);}catch(e){}
+  function setTheme(next){
+    document.documentElement.setAttribute('data-theme',next);
+    try{localStorage.setItem('ogapay-theme',next);}catch(e){}
+    var icon=document.getElementById('themeToggle')?.querySelector('svg');
+    if(icon){
+      icon.outerHTML=next==='dark'
+        ?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>'
+        :'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>';
+    }
+  }
+  try{setTheme(localStorage.getItem('ogapay-theme')||'light');}catch(e){setTheme('light')}
   var themeBtn=document.getElementById('themeToggle');
   if(themeBtn){
     themeBtn.addEventListener('click',function(){
-      var html=document.documentElement;
-      // Always force dark mode
-      html.setAttribute('data-theme',next);
-      // Swap icon
-      var iconEl=document.getElementById('themeToggle').querySelector('svg');
-      if(iconEl)iconEl.outerHTML=next==='dark'?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>';
-      // theme locked to dark
-      try{localStorage.setItem('ogapay-theme',next);}catch(e){}
+      var next=document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark';
+      setTheme(next);
     });
   }
   // Menu open/close
