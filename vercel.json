@@ -1,0 +1,26 @@
+{
+  "version": 2,
+  "outputDirectory": "app/dist",
+  "buildCommand": "cd app && npm run build",
+  "rewrites": [
+    { "source": "/blog", "destination": "/blog.html" },
+    { "source": "/about", "destination": "/about.html" },
+    { "source": "/faq", "destination": "/faq.html" },
+    { "source": "/support", "destination": "/support.html" },
+    { "source": "/contact", "destination": "/contact.html" },
+    { "source": "/terms", "destination": "/terms.html" },
+    { "source": "/privacy", "destination": "/privacy.html" },
+    { "source": "/login", "destination": "/login.html" },
+    { "source": "/reset-password", "destination": "/reset-password.html" },
+    { "source": "/auth-callback", "destination": "/auth-callback.html" },
+    { "source": "/:path*", "destination": "/index.html" }
+  ],
+  "headers": [
+    {
+      "source": "/assets/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
+    }
+  ]
+}
