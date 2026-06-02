@@ -33,6 +33,8 @@
 .og-nav-inner{height:100%;display:flex;align-items:center;justify-content:space-between;width:min(1280px,calc(100% - 32px));margin:0 auto;gap:16px}
 .og-brand{display:flex;align-items:center;gap:10px;font-family:"Outfit",sans-serif;font-weight:800;font-size:19px;color:var(--text);text-decoration:none;flex-shrink:0}
 .og-logo{width:34px;height:34px;border-radius:9px;background:var(--primary);color:var(--bg);display:grid;place-items:center;font-size:18px;flex-shrink:0}
+.og-logo svg{width:100%;height:100%;display:block;border-radius:9px}
+.og-logo svg{width:38px!important;height:38px!important;display:block!important;opacity:1!important;visibility:visible!important}
 .og-nav-links{display:flex;align-items:center;gap:2px;flex:1;justify-content:center}
 .og-nav-link{display:inline-flex;align-items:center;gap:7px;padding:7px 14px;border-radius:8px;color:var(--text2);font-size:14px;font-weight:700;text-decoration:none;transition:all .15s;white-space:nowrap}
 .og-nav-link:hover,.og-nav-link.active{background:var(--bg2);color:var(--text)}
@@ -86,7 +88,7 @@
 <nav class="og-nav" role="navigation" aria-label="Main">
 <a href="#og-main-content" class="og-skip">Skip to content</a>
 <div class="og-nav-inner">
-<a href="index.html" class="og-brand"><span class="og-logo">O</span>OgaPay</a>
+<a href="index.html" class="og-brand"><span class="og-logo"><svg xmlns="http://www.w3.org/2000/svg" width="34" height="34" viewBox="0 0 34 34" fill="none"><rect width="34" height="34" rx="8" fill="#0d1323"/><path d="M17 6c6.075 0 11 4.925 11 11s-4.925 11-11 11S6 23.075 6 17 10.925 6 17 6z" fill="#7C3AED" opacity=".9"/><path d="M17 9a8 8 0 018 8 8 8 0 01-8 8 8 8 0 01-8-8 8 8 0 018-8z" fill="#0d1323"/><path d="M17 12c2.76 0 5 2.24 5 5s-2.24 5-5 5-5-2.24-5-5 2.24-5 5-5z" fill="#7C3AED"/><path d="M17 15a2 2 0 012 2 2 2 0 01-2 2 2 2 0 01-2-2 2 2 0 012-2z" fill="#fff"/></svg></span>OgaPay</a>
 <div class="og-nav-links">
 <a href="index.html" class="og-nav-link"><i class="ti ti-home"></i>Home</a>
 <a href="tasks.html" class="og-nav-link"><i class="ti ti-briefcase"></i>Tasks</a>
@@ -140,7 +142,7 @@
 <div class="og-drawer-overlay" id="ogDrawerOverlay"></div>
 <aside class="og-drawer" id="ogDrawer" role="dialog" aria-label="Menu">
 <div class="og-drawer-head">
-<a class="og-brand" href="index.html"><span class="og-logo">O</span>OgaPay</a>
+<a class="og-brand" href="index.html"><span class="og-logo"><svg xmlns="http://www.w3.org/2000/svg" width="34" height="34" viewBox="0 0 34 34" fill="none"><rect width="34" height="34" rx="8" fill="#0d1323"/><path d="M17 6c6.075 0 11 4.925 11 11s-4.925 11-11 11S6 23.075 6 17 10.925 6 17 6z" fill="#7C3AED" opacity=".9"/><path d="M17 9a8 8 0 018 8 8 8 0 01-8 8 8 8 0 01-8-8 8 8 0 018-8z" fill="#0d1323"/><path d="M17 12c2.76 0 5 2.24 5 5s-2.24 5-5 5-5-2.24-5-5 2.24-5 5-5z" fill="#7C3AED"/><path d="M17 15a2 2 0 012 2 2 2 0 01-2 2 2 2 0 01-2-2 2 2 0 012-2z" fill="#fff"/></svg></span>OgaPay</a>
 <button class="og-theme-btn" id="ogDrawerClose" style="border:none;background:transparent;font-size:20px"><i class="ti ti-x"></i></button>
 </div>
 <div class="og-drawer-body">
