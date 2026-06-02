@@ -11,7 +11,7 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
 <style>
 *,*::before,*::after{box-sizing:border-box}
-:root{--bg:#ffffff;--bg2:#f7f9fc;--card:#ffffff;--border:#e4e9f1;--border2:#d5deea;--text:#101525;--text2:#66738a;--text3:#98a6ba;--primary:#0d1323;--accent:#7C3AED;--accent2:#2563EB;--green:#16a34a;--gold:#f5b301;--red:#dc2626;--shadow:0 2px 8px rgba(16,21,37,.06);--shadow-md:0 4px 16px rgba(16,21,37,.08);--radius:12px;--radius-sm:8px;--nav-h:60px}
+:root{--bg:#ffffff;--bg2:#f7f9fc;--card:#ffffff;--border:#e4e9f1;--border2:#d5deea;--text:#101525;--text2:#66738a;--text3:#98a6ba;--primary:#0d1323;--accent:#7C3AED;--accent2:#2563EB;--green:#16a34a;--gold:#f5b301;--red:#dc2626;--shadow:0 2px 8px rgba(16,21,37,.06);--shadow-md:0 4px 16px rgba(16,21,37,.08);--radius:14px;--radius-sm:10px;--nav-h:60px}
 [data-theme="dark"]{--bg:#000000;--bg2:#050505;--card:#111111;--border:#232323;--border2:#333333;--text:#f4f7fb;--text2:#a1a1aa;--text3:#667186;--primary:#f4f7fb;--accent:#A78BFA;--accent2:#60A5FA;--green:#16a34a;--gold:#f5b301;--red:#dc2626;--shadow:0 2px 8px rgba(0,0,0,.25);--shadow-md:0 4px 16px rgba(0,0,0,.3)}
 html{scroll-behavior:smooth}
 body{margin:0;background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;overflow-x:hidden;-webkit-font-smoothing:antialiased}
@@ -68,141 +68,396 @@ body[data-auth="authed"] div.oga-drawer-foot.authed-only{display:block!important
 body[data-auth="authed"] div.oga-drawer-foot.public-only{display:none!important}
 
 /* ═══ LAYOUT ═══ */
-.app{display:flex;width:min(1080px,calc(100% - 40px));margin:0 auto;padding:calc(var(--nav-h) + 24px) 0 72px;min-height:calc(100vh - var(--nav-h))}.main{flex:1;min-width:0}.page{max-width:780px;margin:0 auto;width:100%}
+.app{display:flex;width:min(1080px,calc(100% - 48px));margin:0 auto;padding:calc(var(--nav-h) + 28px) 0 72px;min-height:calc(100vh - var(--nav-h))}
+.main{flex:1;min-width:0}
+.page{max-width:800px;margin:0 auto;width:100%}
+@media(max-width:768px){.app{width:calc(100% - 24px)}}
 
-/* ═══ TWO-COLUMN PROFILE + ACCOUNT ═══ */
-.profile-two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px}
-.profile-card{padding:20px;border-radius:var(--radius);background:var(--card);border:1px solid var(--border)}
-.profile-card .pc-head{display:flex;align-items:center;gap:14px;margin-bottom:12px}
-.profile-card .pc-av{width:48px;height:48px;border-radius:50%;background:var(--accent);display:grid;place-items:center;color:#fff;font-family:Outfit;font-size:20px;font-weight:900;flex-shrink:0;position:relative}
-.profile-card .pc-av .vdot{position:absolute;bottom:-1px;right:-1px;width:16px;height:16px;border-radius:50%;background:var(--green);color:#fff;display:grid;place-items:center;font-size:7px;border:2px solid var(--card)}
-.profile-card .pc-name h2{margin:0;font-family:Outfit;font-size:18px;font-weight:900;letter-spacing:-.2px}
-.profile-card .pc-name .pc-user{font-size:13px;color:var(--text2);margin-top:1px}
-.profile-card .pc-row{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--text2);margin-bottom:4px;flex-wrap:wrap}
-.profile-card .pc-row i{width:16px;color:var(--accent)}
-.profile-card .pc-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:999px;background:rgba(124,58,237,.1);color:var(--accent);font-size:10px;font-weight:800}
+/* ═══ SECTIONS ═══ */
+.sec{margin-bottom:22px}
+.sec-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.sec-head h2{font-family:Outfit,sans-serif;font-size:15px;font-weight:800;margin:0;display:flex;align-items:center;gap:8px}
+.sec-head h2 i{color:var(--accent);font-size:16px}
+.sec-head a{font-size:11px;color:var(--accent2);font-weight:700}
+.sec-head .sec-badge{padding:2px 8px;border-radius:999px;font-size:9px;font-weight:700;background:rgba(124,58,237,.1);color:var(--accent);margin-left:6px}
+.bread{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text3);margin-bottom:12px;flex-wrap:wrap}
+.bread a{color:var(--text2);font-weight:600}.bread a:hover{color:var(--accent)}.bread span{color:var(--text3)}
+.hero{margin-bottom:20px}
+.hero .greeting{font-size:13px;color:var(--text2);font-weight:500}
+.hero h1{font-family:Outfit;font-size:24px;font-weight:900;margin:2px 0 0;letter-spacing:-.3px}
 
+/* ═══ PROFILE HEADER ═══ */
+.profile-header{display:grid;grid-template-columns:auto 1fr;gap:22px;padding:24px;border-radius:var(--radius);background:var(--card);border:1px solid var(--border);margin-bottom:18px}
+.profile-avatar{width:88px;height:88px;border-radius:50%;background:var(--bg2);display:grid;place-items:center;border:3px solid var(--accent);position:relative;flex-shrink:0}
+.profile-avatar .pa-inner{width:100%;height:100%;border-radius:50%;display:grid;place-items:center;font-size:36px;color:var(--text3);overflow:hidden}
+.profile-avatar .pa-badge{position:absolute;bottom:0;right:-2px;width:24px;height:24px;background:#16a34a;border-radius:50%;border:3px solid var(--card);display:grid;place-items:center;color:#fff;font-size:11px}
+.profile-info{min-width:0}
+.profile-info h2{margin:0;font-family:Outfit;font-size:20px;font-weight:900}
+.profile-info .pi-user{font-size:13px;color:var(--text2);margin:2px 0 0}
+.profile-info .pi-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:999px;background:linear-gradient(135deg,rgba(124,58,237,.12),rgba(99,102,241,.08));border:1px solid rgba(124,58,237,.2);color:var(--accent);font-size:10px;font-weight:800;margin:8px 0}
+.profile-info .pi-meta{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--text3);margin-top:6px}
+.profile-info .pi-meta span{display:flex;align-items:center;gap:4px}
+.profile-info .pi-actions{display:flex;gap:8px;margin-top:10px}
+.pi-btn{height:34px;padding:0 16px;border-radius:8px;border:1.5px solid var(--border2);background:transparent;color:var(--text);font-size:11px;font-weight:700;display:inline-flex;align-items:center;gap:6px;cursor:pointer;transition:all .15s;text-decoration:none}
+.pi-btn:hover{border-color:var(--accent);color:var(--accent)}
+.pi-btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.pi-btn.primary:hover{box-shadow:0 4px 12px rgba(124,58,237,.2)}
+
+/* ═══ STATS GRID ═══ */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px}
+.stat-card{padding:16px;border-radius:var(--radius-sm);background:var(--card);border:1px solid var(--border)}
+.stat-card .sc-icon{width:32px;height:32px;border-radius:8px;display:grid;place-items:center;font-size:14px;margin-bottom:8px}
+.stat-card .sc-val{font-family:Outfit;font-size:22px;font-weight:900;letter-spacing:-.3px}
+.stat-card .sc-label{font-size:11px;color:var(--text3);font-weight:500;margin-top:2px}
+.stat-card .sc-badge{font-size:9px;font-weight:700;margin-top:3px;display:inline-flex;align-items:center;gap:3px}
+
+/* ═══ SKILLS ═══ */
+.skills{display:flex;gap:6px;flex-wrap:wrap}
+.skill-tag{height:30px;padding:0 12px;border:1.5px solid var(--border);border-radius:999px;background:var(--card);color:var(--text2);font-size:11px;font-weight:600;display:inline-flex;align-items:center;gap:5px}
+.skill-tag i{font-size:12px;color:var(--accent)}
+
+/* ═══ QUICK ACTIONS ═══ */
+.qactions{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.qaction{display:flex;flex-direction:column;align-items:center;gap:6px;padding:16px 10px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--card);text-decoration:none;transition:all .15s}
+.qaction:hover{border-color:var(--border2);box-shadow:var(--shadow)}
+.qaction .qa-icon{width:36px;height:36px;border-radius:8px;display:grid;place-items:center;font-size:16px}
+.qaction .qa-label{font-size:11px;font-weight:700;color:var(--text2);text-align:center}
+.more-links{display:none;margin-top:6px}
+.more-links.open{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.more-links-toggle{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;height:40px;margin-top:8px;border:1.5px dashed var(--border);border-radius:var(--radius-sm);background:transparent;color:var(--text3);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s}
+.more-links-toggle:hover{border-color:var(--accent);color:var(--accent)}
+.more-links-toggle.open i{transform:rotate(180deg)}
+
+/* ═══ WALLET ═══ */
+.wallet-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.wallet-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}
+.wallet-action{display:flex;align-items:center;gap:10px;padding:14px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--card);text-decoration:none;transition:all .15s}
+.wallet-action:hover{border-color:var(--border2);box-shadow:var(--shadow)}
+.wallet-action .wa-icon{width:36px;height:36px;border-radius:8px;display:grid;place-items:center;font-size:16px;flex-shrink:0}
+.wallet-action .wa-label{font-size:12px;font-weight:700;color:var(--text)}
+
+/* ═══ EARNINGS ═══ */
+.earn-tabs{display:flex;gap:4px;margin-bottom:14px}
+.earn-tab{height:30px;padding:0 14px;border:1.5px solid var(--border);border-radius:8px;background:transparent;color:var(--text3);font-size:11px;font-weight:700;cursor:pointer;transition:all .15s}
+.earn-tab.active{border-color:var(--accent);background:rgba(124,58,237,.08);color:var(--accent)}
+.earn-tab:hover{border-color:var(--accent);color:var(--accent)}
+.earn-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+.earn-card{padding:16px;border-radius:var(--radius-sm);background:var(--card);border:1px solid var(--border)}
+.earn-card .ec-label{font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.3px}
+.earn-card .ec-val{font-family:Outfit;font-size:20px;font-weight:900;letter-spacing:-.3px;margin-top:3px}
+.earn-card .ec-sub{font-size:10px;color:var(--text2);margin-top:1px}
+
+/* ═══ GRAPH ═══ */
+.graph-wrap{padding:20px 0 10px;border-radius:var(--radius-sm);background:var(--card);border:1px solid var(--border)}
+.graph-bars{display:flex;align-items:flex-end;justify-content:space-between;height:120px;padding:0 20px;gap:6px}
+.graph-bar{flex:1;border-radius:6px 6px 2px 2px;min-height:6px;position:relative;transition:height .4s ease}
+.graph-bar:hover{opacity:.7}
+.graph-bar .bar-tooltip{position:absolute;top:-22px;left:50%;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:2px 8px;border-radius:6px;font-size:9px;font-weight:700;white-space:nowrap;opacity:0;transition:opacity .2s}
+.graph-bar:hover .bar-tooltip{opacity:1}
+.graph-labels{display:flex;justify-content:space-between;padding:10px 20px 0;font-size:10px;color:var(--text3);font-weight:600}
+
+/* ═══ TABLE ═══ */
+.table-wrap{overflow-x:auto;border-radius:var(--radius-sm);border:1px solid var(--border)}
+.tbl{width:100%;border-collapse:collapse;font-size:12px}
+.tbl th{padding:10px 14px;text-align:left;font-size:10px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;background:var(--bg2);border-bottom:1px solid var(--border)}
+.tbl td{padding:12px 14px;border-bottom:1px solid var(--border);color:var(--text2)}
+.tbl tr:last-child td{border-bottom:0}
+.tbl td strong{color:var(--text);font-weight:700}
+.tbl .status{padding:2px 8px;border-radius:999px;font-size:9px;font-weight:700;display:inline-block}
+.tbl .status.paid{background:rgba(22,163,74,.1);color:var(--green)}
+.tbl .status.pending{background:rgba(124,58,237,.1);color:var(--accent)}
+.tbl .amt{font-family:Outfit;font-weight:800}
+.tbl .amt.credit{color:var(--green)}
+.tbl .amt.debit{color:var(--red)}
+
+/* ═══ REFERRAL ═══ */
+.search-bar{display:flex;align-items:center;gap:8px;padding:0 14px;height:42px;border:1.5px solid var(--border);border-radius:10px;background:var(--card);flex:1;max-width:100%;transition:border-color .2s;margin-bottom:14px}
+.search-bar:focus-within{border-color:var(--accent)}
+.search-bar input{flex:1;border:0;background:transparent;color:var(--text);font-size:13px;outline:none}
+.search-bar input::placeholder{color:var(--text3)}
+.search-bar i{color:var(--text3);font-size:16px}
+.cc-btn{height:34px;padding:0 14px;border:0;border-radius:8px;background:var(--accent);color:#fff;font-size:11px;font-weight:700;display:inline-flex;align-items:center;gap:5px;cursor:pointer;white-space:nowrap;transition:all .15s;text-decoration:none}
+
+/* ═══ RESPONSIVE ═══ */
+@media(max-width:768px){
+  .profile-header{grid-template-columns:1fr;text-align:center}
+  .profile-avatar{margin:0 auto}
+  .profile-info .pi-meta{justify-content:center}
+  .profile-info .pi-actions{justify-content:center}
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .wallet-grid{grid-template-columns:repeat(2,1fr)}
+  .wallet-actions{grid-template-columns:1fr}
+  .earn-summary{grid-template-columns:repeat(2,1fr)}
+  .qactions{grid-template-columns:repeat(2,1fr)}
+  .more-links.open{grid-template-columns:repeat(2,1fr)}
+}
+/* GIG LIST */
+.gig-list{display:grid;gap:1px;background:var(--border);border-radius:var(--radius-sm);overflow:hidden}
+.gig-item{display:flex;align-items:center;gap:12px;padding:14px;background:var(--card)}
+.gig-info{flex:1;min-width:0}
+.gig-info .gi-title{font-size:13px;font-weight:700}
+.gig-info .gi-meta{font-size:11px;color:var(--text2);margin-top:3px;display:flex;gap:12px;flex-wrap:wrap}
+
+@media(max-width:500px){
+  .stats{gap:8px}.wallet-grid{grid-template-columns:1fr 1fr}.earn-summary{grid-template-columns:1fr 1fr}
+}
 </style>
 </head>
-<body>
+<body data-auth="public">
+
 <!-- ═══ NAVBAR ═══ -->
 <header class="nav">
   <div class="nav-inner">
-    <a class="brand" href="index.html">
-      <span class="logo-mark"><svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect width="512" height="512" fill="white"/><rect x="98" y="98" width="107" height="107" rx="20" fill="black"/><path d="M225 98H312C323 98 332 107 332 118V205H225V98Z" fill="black"/><path d="M352 98H392C440 98 470 128 470 176V205H352V98Z" fill="black"/><rect x="98" y="225" width="107" height="107" fill="black"/><rect x="225" y="225" width="107" height="107" fill="black"/><path d="M352 225H470V254C470 302 440 332 392 332H352V225Z" fill="black"/><rect x="98" y="352" width="107" height="107" rx="20" fill="black"/><path d="M225 352H312C323 352 332 361 332 372V439C332 450 323 459 312 459H225V352Z" fill="black"/></svg></span>
-      <span>Oga<span>Pay</span></span>
+    <a class="brand" href="/">
+      <span class="logo-mark"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 34 34" fill="none"><rect width="34" height="34" rx="8" fill="#0d1323"/><path d="M17 6c6.075 0 11 4.925 11 11s-4.925 11-11 11S6 23.075 6 17 10.925 6 17 6z" fill="#7C3AED" opacity=".9"/><path d="M17 9a8 8 0 018 8 8 8 0 01-8 8 8 8 0 01-8-8 8 8 0 018-8z" fill="#0d1323"/><path d="M17 12c2.76 0 5 2.24 5 5s-2.24 5-5 5-5-2.24-5-5 2.24-5 5-5z" fill="#7C3AED"/><path d="M17 15a2 2 0 012 2 2 2 0 01-2 2 2 2 0 01-2-2 2 2 0 012-2z" fill="#fff"/></svg></span>
+      OgaPay
     </a>
-    <nav class="nav-links">
+    <div class="nav-links">
       <a class="nav-link" href="index.html" data-navlink><i class="ti ti-home"></i>Home</a>
-      <a class="nav-link" href="tasks.html" data-navlink><i class="ti ti-layout-grid"></i>Tasks</a>
-      <a class="nav-link" href="store.html" data-navlink><i class="ti ti-discount-2"></i>Deals</a>
-      <a class="nav-link" href="communities.html" data-navlink><i class="ti ti-users-group"></i>Communities</a>
+      <a class="nav-link" href="tasks.html" data-navlink><i class="ti ti-checklist"></i>Tasks</a>
+      <a class="nav-link" href="store.html" data-navlink><i class="ti ti-building-store"></i>Store</a>
+      <a class="nav-link" href="communities.html" data-navlink><i class="ti ti-users"></i>Communities</a>
       <a class="nav-link" href="faq.html" data-navlink><i class="ti ti-help-circle"></i>FAQ</a>
-    </nav>
+    </div>
     <div class="nav-actions">
-      <a class="wallet-btn public-only" href="login.html"><i class="ti ti-login"></i> Login</a>
-      <a class="wallet-btn public-only" href="login.html?mode=signup"><i class="ti ti-arrow-right"></i> Get Started</a>
-      <button class="icon-btn" id="themeToggle" aria-label="Toggle dark mode"><i class="ti ti-moon"></i></button>
+      <a class="wallet-btn" href="login.html"><i class="ti ti-wallet"></i> &#8358;0.00</a>
+      <button class="icon-btn" id="themeToggle" aria-label="Toggle theme"><i class="ti ti-moon"></i></button>
       <button class="icon-btn" id="menuBtn" aria-label="Open menu"><i class="ti ti-menu-2"></i></button>
     </div>
   </div>
 </header>
 
-<!-- ═══ DRAWER ═══ (kept minimal) -->
-<div class="mobile-menu" id="mobileMenu"><div class="mobile-overlay" data-close-menu></div>
-<aside class="oga-drawer"><div class="oga-drawer-head"><span style="font-family:Outfit;font-weight:900">OgaPay</span><button class="oga-drawer-close" data-close-menu><i class="ti ti-x"></i></button></div>
-<nav class="oga-drawer-nav public-only">
-<a class="oga-drawer-item" href="tasks.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-layout-grid"></i></span><span><strong>Tasks</strong></span></a>
-<a class="oga-drawer-item" href="store.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-discount-2"></i></span><span><strong>Deals</strong></span></a>
-<a class="oga-drawer-item" href="blog.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-news"></i></span><span><strong>Blog</strong></span></a>
-<a class="oga-drawer-item" href="vault.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-building-bank"></i></span><span><strong>Vault</strong></span></a>
-<a class="oga-drawer-item" href="faq.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-help-circle"></i></span><span><strong>FAQ</strong></span></a>
-<a class="oga-drawer-item" href="support.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-message-2"></i></span><span><strong>Support</strong></span></a>
-</nav>
-<nav class="oga-drawer-nav authed-only" style="display:none">
-<a class="oga-drawer-item" href="tasks.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-plus"></i></span><span><strong>Create Job</strong></span></a>
-<div class="oga-drawer-group"><button class="oga-drawer-item oga-drawer-group-toggle" aria-expanded="false"><span class="oga-drawer-icon"><i class="ti ti-briefcase"></i></span><span><strong>Jobs</strong></span><svg class="oga-drawer-chevron" viewBox="0 0 15 15" fill="none" stroke="currentColor"><path d="M4 6l3.5 3.5L11 6"/></svg></button>
-<div class="oga-drawer-subnav"><a href="my-tasks.html" data-close-menu><strong>My Tasks</strong></a><a href="post-task.html" data-close-menu><strong>Post a Task</strong></a><a href="task-detail.html" data-close-menu><strong>Task Detail</strong></a></div></div>
-<div class="oga-drawer-group"><button class="oga-drawer-item oga-drawer-group-toggle" aria-expanded="false"><span class="oga-drawer-icon"><i class="ti ti-building-store"></i></span><span><strong>Store</strong></span><svg class="oga-drawer-chevron" viewBox="0 0 15 15" fill="none" stroke="currentColor"><path d="M4 6l3.5 3.5L11 6"/></svg></button>
-<div class="oga-drawer-subnav"><a href="store.html" data-close-menu><strong>Wurker Store</strong></a><a href="my-store.html" data-close-menu><strong>My Store</strong></a><a href="messages.html" data-close-menu><strong>Messages</strong></a><a href="worker.html" data-close-menu><strong>Wurker Portal</strong></a></div></div>
-<a class="oga-drawer-item" href="communities.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-users-group"></i></span><span><strong>Communities</strong></span></a>
-<a class="oga-drawer-item" href="blog.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-news"></i></span><span><strong>Blog</strong></span></a>
-<a class="oga-drawer-item" href="vault.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-building-bank"></i></span><span><strong>Vault</strong></span></a>
-<a class="oga-drawer-item" href="notifications.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-bell"></i></span><span><strong>Notifications</strong></span></a>
-<a class="oga-drawer-item" href="faq.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-help-circle"></i></span><span><strong>FAQ</strong></span></a>
-<a class="oga-drawer-item" href="support.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-message-2"></i></span><span><strong>Support</strong></span></a>
-</nav>
-<div class="oga-drawer-foot authed-only" style="display:none"><div class="oga-drawer-foot-label">ACCOUNT</div>
-<a class="oga-drawer-item" href="settings.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-settings"></i></span><span><strong>Settings</strong></span></a>
-<a class="oga-drawer-item logout-item" href="login.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-logout"></i></span><span><strong>Logout</strong></span></a>
-</div></aside></div>
-
-<div class="app"><main class="main"><section class="page">
-
-  <!-- ═══ 1. PROFILE SUMMARY ═══ -->
-  <div class="profile-two-col">
-
-    <!-- Profile card -->
-    <div class="profile-card">
-      <div class="pc-head">
-        <div class="pc-av">JD<span class="vdot"><i class="ti ti-check"></i></span></div>
-        <div class="pc-name">
-          <h2>John Doe</h2>
-          <div class="pc-user">@johndoe</div>
-        </div>
-      </div>
-      <div class="pc-row"><i class="ti ti-map-pin"></i> Lagos, Nigeria</div>
-      <div class="pc-row"><i class="ti ti-mail"></i> john@ogapay.com</div>
-      <div class="pc-row"><i class="ti ti-calendar"></i> Joined March 2026</div>
-      <div class="pc-row"><i class="ti ti-star"></i> <span class="pc-badge"><i class="ti ti-trophy"></i> Top Earner</span> <span class="pc-badge"><i class="ti ti-shield-check"></i> KYC</span></div>
+<!-- ═══ DRAWER ═══ -->
+<div class="mobile-menu" id="mobileMenu">
+  <div class="mobile-overlay" data-close-menu></div>
+  <div class="oga-drawer">
+    <div class="oga-drawer-head">
+      <span style="font-family:Outfit;font-weight:900;font-size:17px">Menu</span>
+      <button class="oga-drawer-close" data-close-menu><i class="ti ti-x"></i></button>
     </div>
-
-  </div>
-
-  <!-- ═══ 2. REFERRAL CARD ═══ -->
-  <div class="ref-card">
-    <div class="ref-left">
-      <div class="ref-icon"><i class="ti ti-link"></i></div>
-      <div class="ref-info">
-        <h3>Referral Program</h3>
-        <p>Invite friends and earn commission on their tasks</p>
-        <div class="ref-count">12 referrals</div>
+    <nav class="oga-drawer-nav public-only">
+      <a class="oga-drawer-item" href="tasks.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-checklist"></i></span><span><strong>Tasks</strong><small>Browse available tasks</small></span></a>
+      <a class="oga-drawer-item" href="store.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-building-store"></i></span><span><strong>Store</strong><small>Browse products &amp; gigs</small></span></a>
+      <a class="oga-drawer-item" href="blog.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-article"></i></span><span><strong>Blog</strong><small>Latest insights</small></span></a>
+      <a class="oga-drawer-item" href="faq.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-help-circle"></i></span><span><strong>FAQ</strong><small>Frequently asked questions</small></span></a>
+      <a class="oga-drawer-item" href="support.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-headset"></i></span><span><strong>Support</strong><small>Get help</small></span></a>
+      <div style="padding:12px 10px;margin-top:8px"><a class="wallet-btn" href="login.html" style="width:100%;justify-content:center" data-close-menu><i class="ti ti-login"></i> Login</a></div>
+    </nav>
+    <nav class="oga-drawer-nav authed-only">
+      <a class="oga-drawer-item" href="dashboard.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-dashboard"></i></span><span><strong>Dashboard</strong><small>Your overview</small></span></a>
+      <a class="oga-drawer-item" href="post-task.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-plus-circle"></i></span><span><strong>Create Job</strong><small>Post a new task</small></span></a>
+      <div class="oga-drawer-group">
+        <button class="oga-drawer-item oga-drawer-group-toggle" aria-expanded="false"><span class="oga-drawer-icon"><i class="ti ti-briefcase"></i></span><span><strong>Jobs</strong><small>Manage your tasks</small></span><i class="ti ti-chevron-down oga-drawer-chevron"></i></button>
+        <div class="oga-drawer-subnav"><a href="tasks.html"><i class="ti ti-arrow-right"></i>Browse Tasks</a><a href="my-tasks.html"><i class="ti ti-arrow-right"></i>My Tasks</a></div>
       </div>
-    </div>
-    <div class="ref-actions">
-      <a href="referrals.html" class="rbtn outline"><i class="ti ti-info-circle"></i> Details</a>
-      <a href="referrals.html" class="rbtn primary"><i class="ti ti-share"></i> Share Link</a>
+      <div class="oga-drawer-group">
+        <button class="oga-drawer-item oga-drawer-group-toggle" aria-expanded="false"><span class="oga-drawer-icon"><i class="ti ti-building-store"></i></span><span><strong>Store</strong><small>Marketplace</small></span><i class="ti ti-chevron-down oga-drawer-chevron"></i></button>
+        <div class="oga-drawer-subnav"><a href="store.html"><i class="ti ti-arrow-right"></i>Wurker Store</a><a href="my-store.html"><i class="ti ti-arrow-right"></i>My Store</a><a href="worker.html"><i class="ti ti-arrow-right"></i>Wurker Portal</a><a href="messages.html"><i class="ti ti-arrow-right"></i>Messages</a></div>
+      </div>
+      <a class="oga-drawer-item" href="communities.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-users"></i></span><span><strong>Communities</strong><small>Connect with others</small></span></a>
+      <a class="oga-drawer-item" href="blog.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-article"></i></span><span><strong>Blog</strong><small>Latest insights</small></span></a>
+      <a class="oga-drawer-item" href="notifications.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-bell"></i></span><span><strong>Notifications</strong><small>Alerts &amp; updates</small></span></a>
+      <a class="oga-drawer-item" href="faq.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-help-circle"></i></span><span><strong>FAQ</strong><small>Frequently asked questions</small></span></a>
+      <a class="oga-drawer-item" href="support.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-headset"></i></span><span><strong>Support</strong><small>Get help</small></span></a>
+    </nav>
+    <div class="oga-drawer-foot authed-only">
+      <div class="oga-drawer-foot-label">Account</div>
+      <a class="oga-drawer-item" href="profile.html" data-close-menu><span class="oga-drawer-icon"><i class="ti ti-user"></i></span><span><strong>My Profile</strong><small>View and edit profile</small></span></a>
+      <button class="oga-drawer-item" onclick="localStorage.removeItem('ogapay-authenticated');document.body.setAttribute('data-auth','public')"><span class="oga-drawer-icon"><i class="ti ti-logout"></i></span><span><strong>Logout</strong><small>Sign out</small></span></button>
     </div>
   </div>
+</div>
 
-  <!-- ═══ 3. QUICK LINKS ═══ -->
+<!-- ═══ PAGE CONTENT ═══ -->
+<div class="app">
+<main class="main">
+<section class="page">
+
+  <!-- ═══ 1. PROFILE HEADER ═══ -->
+  <div class="profile-header">
+    <div class="profile-avatar">
+      <div class="pa-inner"><i class="ti ti-user"></i></div>
+      <div class="pa-badge"><i class="ti ti-check" style="font-size:10px"></i></div>
+    </div>
+    <div class="profile-info">
+      <h2>Chisom Okafor</h2>
+      <div class="pi-user">@chisom_ogapay</div>
+      <div class="pi-badge"><i class="ti ti-trophy"></i> Gold Tier · Top Earner</div>
+      <div class="pi-meta">
+        <span><i class="ti ti-calendar"></i> Joined Mar 2025</span>
+        <span><i class="ti ti-map-pin"></i> Lagos, Nigeria</span>
+        <span><i class="ti ti-mail"></i> chisom@email.com</span>
+      </div>
+      <div class="pi-actions">
+        <button class="pi-btn"><i class="ti ti-edit"></i> Edit Profile</button>
+        <button class="pi-btn primary"><i class="ti ti-share"></i> Share Profile</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ 2. STATS ═══ -->
+  <div class="stats">
+    <div class="stat-card"><div class="sc-icon" style="background:#7C3AED15;color:#7C3AED"><i class="ti ti-checklist"></i></div><div class="sc-val">847</div><div class="sc-label">Tasks Done</div><div class="sc-badge" style="color:var(--green)"><i class="ti ti-trending-up"></i> +12%</div></div>
+    <div class="stat-card"><div class="sc-icon" style="background:#16a34a15;color:#16a34a"><i class="ti ti-coin"></i></div><div class="sc-val">&#8358;284,500</div><div class="sc-label">Total Earned</div></div>
+    <div class="stat-card"><div class="sc-icon" style="background:#2563EB15;color:#2563EB"><i class="ti ti-affiliate"></i></div><div class="sc-val">43</div><div class="sc-label">Referrals</div></div>
+    <div class="stat-card"><div class="sc-icon" style="background:#f5b30115;color:#f5b301"><i class="ti ti-star"></i></div><div class="sc-val">4.92</div><div class="sc-label">Reputation</div><div class="sc-badge" style="color:var(--gold)">★★★★★</div></div>
+  </div>
+
+  <!-- ═══ 3. SKILLS ═══ -->
   <div class="sec">
-    <div class="sec-head"><h2><i class="ti ti-link"></i> Quick Links</h2><a href="settings.html" class="sec-link">Settings <i class="ti ti-chevron-right" style="font-size:10px"></i></a></div>
-    <div class="ql-grid">
-      <a href="tasks.html" class="ql-item"><span class="qli-icon" style="background:rgba(124,58,237,.1);color:var(--accent)"><i class="ti ti-layout-grid"></i></span><strong>Browse Tasks</strong></a>
-      <a href="my-tasks.html" class="ql-item"><span class="qli-icon" style="background:rgba(37,99,235,.1);color:var(--accent2)"><i class="ti ti-briefcase"></i></span><strong>My Tasks</strong></a>
-      <a href="post-task.html" class="ql-item"><span class="qli-icon" style="background:rgba(22,163,74,.1);color:var(--green)"><i class="ti ti-plus-circle"></i></span><strong>Post a Task</strong></a>
-      <a href="store.html" class="ql-item"><span class="qli-icon" style="background:rgba(245,179,1,.1);color:var(--gold)"><i class="ti ti-discount-2"></i></span><strong>Deals</strong></a>
-      <a href="my-store.html" class="ql-item"><span class="qli-icon" style="background:rgba(236,72,153,.1);color:#EC4899"><i class="ti ti-building-store"></i></span><strong>My Store</strong></a>
-      <a href="notifications.html" class="ql-item"><span class="qli-icon" style="background:rgba(220,38,38,.1);color:var(--red)"><i class="ti ti-bell"></i></span><strong>Notifications</strong></a>
+    <div class="sec-head"><h2><i class="ti ti-tag"></i> What I Do</h2></div>
+    <div class="skills">
+      <span class="skill-tag"><i class="ti ti-brand-twitter"></i> Social Media</span>
+      <span class="skill-tag"><i class="ti ti-palette"></i> UI Design</span>
+      <span class="skill-tag"><i class="ti ti-device-mobile"></i> App Testing</span>
+      <span class="skill-tag"><i class="ti ti-edit"></i> Content Writing</span>
+      <span class="skill-tag"><i class="ti ti-users"></i> Community Mgmt</span>
+      <span class="skill-tag"><i class="ti ti-database"></i> Data Entry</span>
     </div>
-    <button class="more-links-toggle" id="moreLinksToggle" onclick="toggleMoreLinks()"><i class="ti ti-chevron-down"></i> More Links</button>
+  </div>
+
+  <!-- ═══ 4. QUICK LINKS ═══ -->
+  <div class="sec">
+    <div class="sec-head"><h2><i class="ti ti-link"></i> Quick Links</h2></div>
+    <div class="qactions">
+      <a class="qaction" href="tasks.html"><span class="qa-icon" style="background:#7C3AED15;color:#7C3AED"><i class="ti ti-checklist"></i></span><span class="qa-label">Browse Tasks</span></a>
+      <a class="qaction" href="wallet.html"><span class="qa-icon" style="background:#2563EB15;color:#2563EB"><i class="ti ti-wallet"></i></span><span class="qa-label">My Wallet</span></a>
+      <a class="qaction" href="store.html"><span class="qa-icon" style="background:#16a34a15;color:#16a34a"><i class="ti ti-building-store"></i></span><span class="qa-label">My Store</span></a>
+      <a class="qaction" href="post-task.html"><span class="qa-icon" style="background:#f5b30115;color:#f5b301"><i class="ti ti-plus-circle"></i></span><span class="qa-label">Post a Task</span></a>
+      <a class="qaction" href="communities.html"><span class="qa-icon" style="background:#7C3AED15;color:#7C3AED"><i class="ti ti-users"></i></span><span class="qa-label">Communities</span></a>
+      <a class="qaction" href="settings.html"><span class="qa-icon" style="background:#dc262615;color:#dc2626"><i class="ti ti-settings"></i></span><span class="qa-label">Settings</span></a>
+    </div>
+    <!-- More Links -->
+    <button class="more-links-toggle" id="moreLinksToggle" onclick="toggleMoreLinks()"><i class="ti ti-chevron-down"></i> More Links <i class="ti ti-chevron-down"></i></button>
     <div class="more-links" id="moreLinks">
-      <div class="ql-grid">
-        <a href="referrals.html" class="ql-item"><span class="qli-icon" style="background:rgba(124,58,237,.1);color:var(--accent)"><i class="ti ti-link"></i></span><strong>Referrals</strong></a>
-        <a href="communities.html" class="ql-item"><span class="qli-icon" style="background:rgba(20,184,166,.1);color:#14B8A6"><i class="ti ti-users-group"></i></span><strong>Communities</strong></a>
-        <a href="messages.html" class="ql-item"><span class="qli-icon" style="background:rgba(59,130,246,.1);color:#3B82F6"><i class="ti ti-message-2"></i></span><strong>Messages</strong></a>
-        <a href="worker.html" class="ql-item"><span class="qli-icon" style="background:rgba(124,58,237,.1);color:var(--accent)"><i class="ti ti-user"></i></span><strong>Wurker Portal</strong></a>
-        <a href="dashboard.html" class="ql-item"><span class="qli-icon" style="background:rgba(22,163,74,.1);color:var(--green)"><i class="ti ti-dashboard"></i></span><strong>Dashboard</strong></a>
-        <a href="kyc.html" class="ql-item"><span class="qli-icon" style="background:rgba(220,38,38,.1);color:var(--red)"><i class="ti ti-shield-check"></i></span><strong>KYC</strong></a>
+      <a class="qaction" href="dashboard.html"><span class="qa-icon" style="background:#7C3AED15;color:#7C3AED"><i class="ti ti-dashboard"></i></span><span class="qa-label">Dashboard</span></a>
+      <a class="qaction" href="vault.html"><span class="qa-icon" style="background:#2563EB15;color:#2563EB"><i class="ti ti-vault"></i></span><span class="qa-label">Vault</span></a>
+      <a class="qaction" href="messages.html"><span class="qa-icon" style="background:#16a34a15;color:#16a34a"><i class="ti ti-message"></i></span><span class="qa-label">Messages</span></a>
+      <a class="qaction" href="referrals.html"><span class="qa-icon" style="background:#f5b30115;color:#f5b301"><i class="ti ti-affiliate"></i></span><span class="qa-label">Referrals</span></a>
+      <a class="qaction" href="notifications.html"><span class="qa-icon" style="background:#7C3AED15;color:#7C3AED"><i class="ti ti-bell"></i></span><span class="qa-label">Notifications</span></a>
+      <a class="qaction" href="kyc.html"><span class="qa-icon" style="background:#dc262615;color:#dc2626"><i class="ti ti-id"></i></span><span class="qa-label">KYC</span></a>
+    </div>
+  </div>
+
+  <!-- ═══ 5. REFERRAL ═══ -->
+  <div class="sec">
+    <div class="sec-head"><h2><i class="ti ti-affiliate"></i> Referral Program</h2></div>
+    <div class="search-bar" style="margin-bottom:0">
+      <i class="ti ti-link"></i>
+      <input type="text" value="https://ogapay.app/ref/chisom_ogapay" readonly>
+      <button class="cc-btn" onclick="navigator.clipboard.writeText('https://ogapay.app/ref/chisom_ogapay')">Copy</button>
+    </div>
+  </div>
+
+  <!-- ═══ 6. WALLET OVERVIEW ═══ -->
+  <div class="sec">
+    <div class="sec-head"><h2><i class="ti ti-wallet"></i> Wallet Summary</h2><a href="wallet.html" class="sec-link">Manage <i class="ti ti-chevron-right" style="font-size:10px"></i></a></div>
+    <div class="wallet-grid">
+      <div class="stat-card"><div class="sc-val" style="font-size:20px">&#8358;126,400</div><div class="sc-label">Balance</div></div>
+      <div class="stat-card"><div class="sc-val" style="font-size:20px">45.5 USDC</div><div class="sc-label">Crypto</div></div>
+      <div class="stat-card"><div class="sc-val" style="font-size:20px">&#8358;450K</div><div class="sc-label">Total Deposited</div></div>
+      <div class="stat-card"><div class="sc-val" style="font-size:20px">&#8358;323K</div><div class="sc-label">Total Withdrawn</div></div>
+    </div>
+    <div class="wallet-actions">
+      <a class="wallet-action" href="wallet.html"><span class="wa-icon" style="background:#7C3AED15;color:#7C3AED"><i class="ti ti-plus-circle"></i></span><span class="wa-label">Deposit</span></a>
+      <a class="wallet-action" href="wallet.html"><span class="wa-icon" style="background:#2563EB15;color:#2563EB"><i class="ti ti-logout"></i></span><span class="wa-label">Withdraw</span></a>
+      <a class="wallet-action" href="wallet.html"><span class="wa-icon" style="background:#16a34a15;color:#16a34a"><i class="ti ti-transfer"></i></span><span class="wa-label">Transfer</span></a>
+    </div>
+  </div>
+
+  <!-- ═══ 7. EARNINGS ═══ -->
+  <div class="sec">
+    <div class="sec-head"><h2><i class="ti ti-trending-up"></i> Earnings</h2></div>
+    <div class="earn-tabs">
+      <button class="earn-tab active" onclick="switchEarnTab(this,'7d')">7 Days</button>
+      <button class="earn-tab" onclick="switchEarnTab(this,'30d')">30 Days</button>
+      <button class="earn-tab" onclick="switchEarnTab(this,'all')">All Time</button>
+    </div>
+    <div class="earn-summary">
+      <div class="earn-card"><div class="ec-label">Total Earnings</div><div class="ec-val">&#8358;18,200</div><div class="ec-sub">This week</div></div>
+      <div class="earn-card"><div class="ec-label">Best Day</div><div class="ec-val">&#8358;5,600</div><div class="ec-sub">Wednesday</div></div>
+      <div class="earn-card"><div class="ec-label">Avg Per Task</div><div class="ec-val">&#8358;1,300</div><div class="ec-sub">14 tasks done</div></div>
+      <div class="earn-card"><div class="ec-label">Pending</div><div class="ec-val">&#8358;4,200</div><div class="ec-sub">Awaiting approval</div></div>
+    </div>
+    <div class="graph-wrap">
+      <div class="graph-bars">
+        <div class="graph-bar" style="height:40%;background:linear-gradient(180deg,#7C3AED,#A78BFA)"><div class="bar-tooltip">&#8358;2,100</div></div>
+        <div class="graph-bar" style="height:55%;background:linear-gradient(180deg,#7C3AED,#A78BFA)"><div class="bar-tooltip">&#8358;3,400</div></div>
+        <div class="graph-bar" style="height:90%;background:linear-gradient(180deg,#7C3AED,#A78BFA)"><div class="bar-tooltip">&#8358;5,600</div></div>
+        <div class="graph-bar" style="height:45%;background:linear-gradient(180deg,#7C3AED,#A78BFA)"><div class="bar-tooltip">&#8358;2,800</div></div>
+        <div class="graph-bar" style="height:70%;background:linear-gradient(180deg,#7C3AED,#A78BFA)"><div class="bar-tooltip">&#8358;4,300</div></div>
+        <div class="graph-bar" style="height:30%;background:linear-gradient(180deg,#7C3AED,#A78BFA)"><div class="bar-tooltip">&#8358;1,800</div></div>
+        <div class="graph-bar" style="height:50%;background:linear-gradient(180deg,#7C3AED,#A78BFA)"><div class="bar-tooltip">&#8358;3,100</div></div>
       </div>
+      <div class="graph-labels">
+        <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ 8. TRANSACTION HISTORY ═══ -->
+  <div class="sec">
+    <div class="sec-head"><h2><i class="ti ti-receipt"></i> Transaction History</h2><a href="wallet.html">View all <i class="ti ti-chevron-right" style="font-size:10px"></i></a></div>
+    <div class="table-wrap">
+      <table class="tbl">
+        <thead><tr><th>Date</th><th>Description</th><th>Amount</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td>Mar 28</td><td><strong>Task payout</strong><br>Social Media Engagement</td><td class="amt credit">+&#8358;4,200</td><td><span class="status paid">Paid</span></td></tr>
+          <tr><td>Mar 26</td><td><strong>Referral bonus</strong><br>Chisom joined via your link</td><td class="amt credit">+&#8358;1,850</td><td><span class="status paid">Paid</span></td></tr>
+          <tr><td>Mar 25</td><td><strong>Task payout</strong><br>Telegram Community Join</td><td class="amt credit">+&#8358;800</td><td><span class="status paid">Paid</span></td></tr>
+          <tr><td>Mar 24</td><td><strong>Task payout</strong><br>App Testing Feedback</td><td class="amt credit">+&#8358;3,000</td><td><span class="status pending">Pending</span></td></tr>
+          <tr><td>Mar 22</td><td><strong>Task payout</strong><br>X Banner Design</td><td class="amt credit">+&#8358;5,000</td><td><span class="status paid">Paid</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ═══ 9. WITHDRAWAL HISTORY ═══ -->
+  <div class="sec">
+    <div class="sec-head"><h2><i class="ti ti-arrow-up"></i> Withdrawal History</h2><a href="wallet.html">Withdraw <i class="ti ti-chevron-right" style="font-size:10px"></i></a></div>
+    <div class="table-wrap">
+      <table class="tbl">
+        <thead><tr><th>Date</th><th>Method</th><th>Amount</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td>Mar 18</td><td><strong>Bank Transfer</strong><br>GTBank ****1234</td><td class="amt debit">-&#8358;25,000</td><td><span class="status paid">Completed</span></td></tr>
+          <tr><td>Mar 10</td><td><strong>USDC (Solana)</strong></td><td class="amt debit">-$50.00</td><td><span class="status paid">Completed</span></td></tr>
+          <tr><td>Feb 28</td><td><strong>Bank Transfer</strong><br>Access Bank ****5678</td><td class="amt debit">-&#8358;15,000</td><td><span class="status paid">Completed</span></td></tr>
+          <tr><td>Feb 15</td><td><strong>USDC (Solana)</strong></td><td class="amt debit">-$30.00</td><td><span class="status pending">Processing</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div style="text-align:center;margin-top:10px"><a href="wallet.html" style="font-size:12px;color:var(--accent);font-weight:700">Make a withdrawal <i class="ti ti-chevron-right" style="font-size:10px"></i></a></div>
+  </div>
+
+  <!-- ═══ 10. RECENT ACTIVITY ═══ -->
+  <div class="sec">
+    <div class="sec-head"><h2><i class="ti ti-activity"></i> Recent Activity</h2></div>
+    <div class="gig-list">
+      <div class="gig-item"><div class="gig-info"><div class="gi-title">Completed: Social Media Engagement</div><div class="gi-meta"><span>2h ago</span><span style="color:var(--green)">+&#8358;4,200</span></div></div></div>
+      <div class="gig-item"><div class="gig-info"><div class="gi-title">Withdrawal processed</div><div class="gi-meta"><span>1d ago</span><span style="color:var(--red)">-&#8358;25,000</span></div></div></div>
+      <div class="gig-item"><div class="gig-info"><div class="gi-title">Referral bonus earned</div><div class="gi-meta"><span>2d ago</span><span style="color:var(--green)">+&#8358;1,850</span></div></div></div>
     </div>
   </div>
 
 </section></main></div>
 
+<!-- ═══ TOAST ═══ -->
+<div id="toast" style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--card);color:var(--text);padding:12px 24px;border-radius:12px;border:1px solid var(--border);box-shadow:var(--shadow-md);font-size:13px;font-weight:600;z-index:999;opacity:0;transition:all .3s ease;pointer-events:none"></div>
+
 <script>
-function toggleMoreLinks(){document.getElementById("moreLinks").classList.toggle("open");document.getElementById("moreLinksToggle").classList.toggle("open")}
+function toggleMoreLinks() {
+  document.getElementById('moreLinks').classList.toggle('open');
+  document.getElementById('moreLinksToggle').classList.toggle('open');
+}
+function switchEarnTab(el, period) {
+  document.querySelectorAll('.earn-tab').forEach(function(t){t.classList.remove('active')});
+  el.classList.add('active');
+}
+function showToast(msg) {
+  var t=document.getElementById('toast');
+  t.textContent=msg; t.style.opacity='1'; t.style.transform='translateX(-50%) translateY(0)';
+  setTimeout(function(){t.style.opacity='0';t.style.transform='translateX(-50%) translateY(100px)'},2500);
+}
 
 // Theme & Nav
 (function(){
