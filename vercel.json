@@ -1,7 +1,8 @@
 {
   "version": 2,
   "outputDirectory": "app/dist",
-  "buildCommand": "cd app && npm run build",
+  "buildCommand": "cd app && npm install && npm run build",
+  "installCommand": "cd app && npm install",
   "rewrites": [
     { "source": "/blog", "destination": "/blog.html" },
     { "source": "/about", "destination": "/about.html" },
