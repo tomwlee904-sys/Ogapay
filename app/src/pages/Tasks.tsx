@@ -272,8 +272,9 @@ export default function Tasks() {
   const totalFilled = sampleJobs.reduce((sum, j) => sum + j.filled, 0)
 
   return (
-    <Layout sidebar>
+    <Layout>
       <style>{`
+        .page{max-width:100%!important;padding:0}
         .jobs-section{width:100%;max-width:1280px;margin:0 auto}
         .jobs-section .page-head{margin-bottom:1.25rem}
         .jobs-section .page-head h1{font-family:Outfit;font-size:1.75rem;font-weight:900;margin:0;letter-spacing:-.02em}
