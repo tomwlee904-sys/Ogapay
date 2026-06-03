@@ -1,7 +1,7 @@
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
 
-const OGA_LOGO = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 34 34" fill="none"><rect width="34" height="34" rx="8" fill="#0d1323"/><path d="M17 6c6.075 0 11 4.925 11 11s-4.925 11-11 11S6 23.075 6 17 10.925 6 17 6z" fill="#7C3AED" opacity=".9"/><path d="M17 9a8 8 0 018 8 8 8 0 01-8 8 8 8 0 01-8-8 8 8 0 018-8z" fill="#0d1323"/><path d="M17 12c2.76 0 5 2.24 5 5s-2.24 5-5 5-5-2.24-5-5 2.24-5 5-5z" fill="#7C3AED"/><path d="M17 15a2 2 0 012 2 2 2 0 01-2 2 2 2 0 01-2-2 2 2 0 012-2z" fill="#fff"/></svg>`
+const OGA_LOGO = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 34 34" fill="none"><rect width="34" height="34" rx="6" fill="white"/><rect x="6.5" y="6.5" width="7.1" height="7.1" rx="1.3" fill="black"/><path d="M15 6.5H20.7C21.5 6.5 22.2 7.2 22.2 8V13.6H15V6.5Z" fill="black"/><path d="M23.4 6.5H26C29.2 6.5 31.2 8.5 31.2 11.7V13.6H23.4V6.5Z" fill="black"/><rect x="6.5" y="15" width="7.1" height="7.1" fill="black"/><rect x="15" y="15" width="7.1" height="7.1" fill="black"/><path d="M23.4 15H31.2V16.9C31.2 20.1 29.2 22.1 26 22.1H23.4V15Z" fill="black"/><rect x="6.5" y="23.4" width="7.1" height="7.1" rx="1.3" fill="black"/><path d="M15 23.4H20.7C21.5 23.4 22.2 24.1 22.2 24.9V29.2C22.2 30 21.5 30.7 20.7 30.7H15V23.4Z" fill="black"/></svg>`
 
 interface NavbarProps {
   onMenuToggle: () => void
