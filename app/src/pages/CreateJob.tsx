@@ -1,491 +1,673 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import Layout from '../components/Layout'
 
-// ─── Platform Data (Social Cluster) ───
-const platforms = [
-  { id: 'x', name: 'X / Twitter', icon: 'ti-brand-x', color: '#000000', bg: '#f0f0f0', darkBg: '#1a1a1a' },
-  { id: 'instagram', name: 'Instagram', icon: 'ti-brand-instagram', color: '#E4405F', bg: '#fce8ed', darkBg: '#2a151b' },
-  { id: 'youtube', name: 'YouTube', icon: 'ti-brand-youtube', color: '#FF0000', bg: '#ffe5e5', darkBg: '#2a1515' },
-  { id: 'telegram', name: 'Telegram', icon: 'ti-brand-telegram', color: '#0088cc', bg: '#e5f4ff', darkBg: '#101f2a' },
-  { id: 'discord', name: 'Discord', icon: 'ti-brand-discord', color: '#5865F2', bg: '#eef0ff', darkBg: '#14182a' },
-  { id: 'tiktok', name: 'TikTok', icon: 'ti-brand-tiktok', color: '#000000', bg: '#f5f5f5', darkBg: '#1a1a1a' },
-  { id: 'facebook', name: 'Facebook', icon: 'ti-brand-facebook', color: '#1877F2', bg: '#e5f0ff', darkBg: '#0f1d2a' },
-  { id: 'linkedin', name: 'LinkedIn', icon: 'ti-brand-linkedin', color: '#0A66C2', bg: '#e5f0fa', darkBg: '#0f1a25' },
-  { id: 'whatsapp', name: 'WhatsApp', icon: 'ti-brand-whatsapp', color: '#25D366', bg: '#e5fcee', darkBg: '#102a1a' },
-  { id: 'website', name: 'Website', icon: 'ti-world', color: '#6366F1', bg: '#eeeffc', darkBg: '#14152a' },
+// ─── Action Definitions (from Wurk.fun) ───
+type ActionConfig = {
+  id: string
+  label: string
+  description: string
+  minPer: number         // min SOL per completion
+  maxPerComponent: number // max completions per component
+  icon: string           // SVG path or emoji fallback
+  platformId: string
+}
+
+const ACTIONS: ActionConfig[] = [
+  // X / Twitter
+  { id: 'x_followers', label: 'Followers', description: 'Get X followers', minPer: 0.003, maxPerComponent: 100, icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z', platformId: 'x' },
+  { id: 'x_followers_verified', label: 'Followers (Verified)', description: 'Get X followers (verified accounts)', minPer: 0.01, maxPerComponent: 50, icon: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z', platformId: 'x' },
+  { id: 'reposts', label: 'Reposts', description: 'Get X reposts', minPer: 0.005, maxPerComponent: 100, icon: 'M17 1l4 4-4 4M3 11V9a4 4 0 014-4h14M7 23l-4-4 4-4M21 13v2a4 4 0 01-4 4H3', platformId: 'x' },
+  { id: 'likes', label: 'Likes', description: 'Get X likes', minPer: 0.001, maxPerComponent: 200, icon: 'M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z', platformId: 'x' },
+  { id: 'comments_x', label: 'Comments', description: 'Get X comments', minPer: 0.008, maxPerComponent: 50, icon: 'M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z', platformId: 'x' },
+  { id: 'bookmarks', label: 'Bookmarks', description: 'Get X bookmarks', minPer: 0.002, maxPerComponent: 100, icon: 'M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z', platformId: 'x' },
+  { id: 'x_raid', label: 'Raid', description: 'X raid engagement', minPer: 0.006, maxPerComponent: 50, icon: 'M13 10V3L4 14h7v7l9-11h-7z', platformId: 'x' },
+  // Instagram
+  { id: 'followers_insta', label: 'Followers', description: 'Get Instagram followers', minPer: 0.004, maxPerComponent: 100, icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z', platformId: 'instagram' },
+  { id: 'likes_insta', label: 'Likes', description: 'Get Instagram likes', minPer: 0.001, maxPerComponent: 200, icon: 'M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z', platformId: 'instagram' },
+  { id: 'comments_insta', label: 'Comments', description: 'Get Instagram comments', minPer: 0.008, maxPerComponent: 50, icon: 'M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z', platformId: 'instagram' },
+  // YouTube
+  { id: 'subscribers_youtube', label: 'Subscribers', description: 'Get YouTube subscribers', minPer: 0.005, maxPerComponent: 50, icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z', platformId: 'youtube' },
+  { id: 'likes_youtube', label: 'Likes', description: 'Get YouTube likes', minPer: 0.001, maxPerComponent: 200, icon: 'M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5', platformId: 'youtube' },
+  { id: 'comments_youtube', label: 'Comments', description: 'Get YouTube comments', minPer: 0.008, maxPerComponent: 50, icon: 'M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z', platformId: 'youtube' },
+  // Telegram
+  { id: 'members_telegram', label: 'Members', description: 'Get Telegram members', minPer: 0.002, maxPerComponent: 200, icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z', platformId: 'telegram' },
+  // Discord
+  { id: 'members_discord', label: 'Members', description: 'Get Discord members', minPer: 0.003, maxPerComponent: 100, icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z', platformId: 'discord' },
+  // TikTok
+  { id: 'followers_tiktok', label: 'Followers', description: 'Get TikTok followers', minPer: 0.004, maxPerComponent: 100, icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z', platformId: 'tiktok' },
+  { id: 'likes_tiktok', label: 'Likes', description: 'Get TikTok likes', minPer: 0.001, maxPerComponent: 200, icon: 'M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z', platformId: 'tiktok' },
 ]
 
-const categories = [
-  'Social Media', 'Content Creation', 'Testing & Review', 'Design', 
-  'Video & Animation', 'Data Entry', 'Research', 'Development'
+// Platform definitions
+const PLATFORMS = [
+  { id: 'x', name: 'X / Twitter', color: '#000000', icon: 'ti-brand-x' },
+  { id: 'instagram', name: 'Instagram', color: '#E4405F', icon: 'ti-brand-instagram' },
+  { id: 'youtube', name: 'YouTube', color: '#FF0000', icon: 'ti-brand-youtube' },
+  { id: 'telegram', name: 'Telegram', color: '#0088cc', icon: 'ti-brand-telegram' },
+  { id: 'discord', name: 'Discord', color: '#5865F2', icon: 'ti-brand-discord' },
+  { id: 'tiktok', name: 'TikTok', color: '#000000', icon: 'ti-brand-tiktok' },
 ]
 
-const difficulties = ['Easy', 'Medium', 'Hard']
-const rankRequirements = ['None', 'Bronze', 'Silver', 'Gold', 'Platinum']
+type ComponentState = {
+  enabled: boolean
+  actionId: string
+  budget: number        // total SOL budget for this component
+  amount: number        // number of completions
+}
+
+type ModeType = 'select' | 'quick' | 'social' | 'custom'
 
 export default function CreateJob() {
-  // Tab state
-  const [activeTab, setActiveTab] = useState<'social' | 'custom'>('social')
-
-  // Social Cluster state
-  const [selectedPlatforms, setSelectedPlatforms] = useState<Record<string, { enabled: boolean; quantity: number; rewardPerAction: number }>>({})
-  // Custom Job state
-  const [customForm, setCustomForm] = useState({
-    title: '',
-    description: '',
-    category: 'Social Media',
-    difficulty: 'Easy',
-    reward: 0.025,
-    currency: 'SOL',
-    slots: 50,
-    verificationRequired: false,
-    rankRequired: 'None',
-    estimatedTime: '10 min',
-    instructions: '',
-  })
-
+  const [mode, setMode] = useState<ModeType>('select')
+  const [currency, setCurrency] = useState<'SOL' | 'USDC' | 'NGN'>('SOL')
+  const [components, setComponents] = useState<Record<string, ComponentState>>({})
   const [showSuccess, setShowSuccess] = useState(false)
 
-  const togglePlatform = (id: string) => {
-    setSelectedPlatforms(prev => {
-      const existing = prev[id]
-      if (existing) {
-        return { ...prev, [id]: { ...existing, enabled: !existing.enabled } }
+  // Quick Job mode
+  const [quickUrl, setQuickUrl] = useState('')
+  const [quickPlatform, setQuickPlatform] = useState('x')
+  const [quickAction, setQuickAction] = useState('reposts')
+  const [quickAmount, setQuickAmount] = useState(50)
+  const [quickBudget, setQuickBudget] = useState(0.25)
+
+  // Get available actions for a platform
+  const getActionsForPlatform = (platformId: string) =>
+    ACTIONS.filter(a => a.platformId === platformId)
+
+  // Get default action for a platform
+  const getDefaultAction = (platformId: string) => {
+    const actions = getActionsForPlatform(platformId)
+    return actions[0]?.id || ''
+  }
+
+  // Toggle component (platform+action combination)
+  const toggleComponent = (platformId: string, actionId: string) => {
+    const key = `${platformId}:${actionId}`
+    setComponents(prev => {
+      if (prev[key]) {
+        return { ...prev, [key]: { ...prev[key], enabled: !prev[key].enabled } }
       }
-      return { ...prev, [id]: { enabled: true, quantity: 10, rewardPerAction: 0.005 } }
+      const action = ACTIONS.find(a => a.id === actionId)
+      return {
+        ...prev,
+        [key]: { enabled: true, actionId, budget: action ? action.minPer * 50 : 0.25, amount: 50 }
+      }
     })
   }
 
-  const updatePlatform = (id: string, field: 'quantity' | 'rewardPerAction', value: number) => {
-    setSelectedPlatforms(prev => ({
+  const updateComponent = (key: string, field: 'budget' | 'amount', value: number) => {
+    setComponents(prev => ({
       ...prev,
-      [id]: { ...prev[id], [field]: value }
+      [key]: { ...prev[key], [field]: value }
     }))
   }
 
-  const updateCustomForm = (field: string, value: any) => {
-    setCustomForm(prev => ({ ...prev, [field]: value }))
+  const changeComponentAction = (key: string, newActionId: string) => {
+    setComponents(prev => {
+      const existing = prev[key]
+      const action = ACTIONS.find(a => a.id === newActionId)
+      return {
+        ...prev,
+        [key]: { ...existing, actionId: newActionId, budget: action ? action.minPer * (existing?.amount || 50) : existing?.budget || 0.25 }
+      }
+    })
   }
 
-  // Computed totals
-  const socialTotal = Object.entries(selectedPlatforms)
-    .filter(([, v]) => v.enabled)
-    .reduce((sum, [, v]) => sum + v.quantity * v.rewardPerAction, 0)
+  // Computed values
+  const enabledComponents = Object.entries(components).filter(([, v]) => v.enabled)
 
-  const platformFee = socialTotal * 0.05
-  const socialGrandTotal = socialTotal + platformFee
+  const totalBudget = enabledComponents.reduce((sum, [, v]) => sum + (v.budget || 0), 0)
+  const platformFee = totalBudget * 0.1  // 10% fee like Wurk.fun
+  const grandTotal = totalBudget + platformFee
+  const totalCompletions = enabledComponents.reduce((sum, [, v]) => sum + (v.amount || 0), 0)
 
-  const enabledCount = Object.values(selectedPlatforms).filter(v => v.enabled).length
-  const totalActions = Object.values(selectedPlatforms)
-    .filter(v => v.enabled)
-    .reduce((sum, v) => sum + v.quantity, 0)
+  const formatSol = (val: number) => val.toFixed(3)
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+  const handlePay = () => {
     setShowSuccess(true)
     setTimeout(() => setShowSuccess(false), 4000)
   }
 
-  return (
-    <Layout>
-      <style>{`
-        .page{max-width:100%!important;padding:0}
-        .create-page{width:100%;max-width:1000px;margin:0 auto;padding:2rem 1rem 4rem}
-        .create-page .page-head{margin-bottom:2rem}
-        .create-page .page-head h1{font-family:Outfit;font-size:1.75rem;font-weight:900;margin:0;letter-spacing:-.02em}
-        .create-page .page-head p{color:var(--text2);font-size:.875rem;margin:.25rem 0 0;line-height:1.5}
-        .create-page .page-head .back-link{display:inline-flex;align-items:center;gap:.35rem;font-size:.8125rem;color:var(--text2);margin-bottom:.75rem;cursor:pointer;transition:color .2s}
-        .create-page .page-head .back-link:hover{color:var(--text)}
+  // ─── Mode Selection Screen ───
+  if (mode === 'select') {
+    return (
+      <Layout>
+        <style>{createStyles}</style>
+        <div className="create-page">
+          <div className="create-container create-container--select-mode">
+            <div className="create-wrapper">
+              <div className="create-header">
+                <h1 className="create-title">Create a Job</h1>
+                <p className="create-subtitle">Create social or custom jobs to boost your community's growth and engagement</p>
+              </div>
 
-        /* ── Tab Switcher ── */
-        .create-tabs{display:flex;gap:.5rem;margin-bottom:2rem;background:var(--bg2);border-radius:.75rem;padding:.375rem;border:1px solid var(--border)}
-        .create-tab{flex:1;padding:.625rem 1rem;border:0;border-radius:.5rem;background:transparent;color:var(--text2);font-size:.8125rem;font-weight:700;cursor:pointer;transition:all .15s;text-align:center}
-        .create-tab:hover{color:var(--text)}
-        .create-tab.active{background:var(--card);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.06)}
-        .create-tab i{font-size:1.125rem;display:block;margin-bottom:.25rem}
+              <div className="mode-selection-container">
+                {/* Quick Job */}
+                <div className="mode-card" onClick={() => setMode('quick')}>
+                  <div className="mode-card-badge">1</div>
+                  <div className="mode-card-icon" style={{ background: 'linear-gradient(135deg, #A78BFA, #7C3AED)' }}>
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="white" strokeWidth="2.5">
+                      <path d="M13 3L4 14h7l-1 7 9-11h-7l1-7z" />
+                    </svg>
+                  </div>
+                  <div className="mode-card-text">
+                    <h3>Quick jobs</h3>
+                    <p>Select a preset job and paste your link to get started instantly</p>
+                  </div>
+                  <svg className="mode-card-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M9 18l6-6-6-6" />
+                  </svg>
+                </div>
 
-        /* ── Social Cluster Grid ── */
-        .components-list{max-width:100%;margin:0 auto}
-        .social-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem;margin-bottom:1.5rem}
-        .component-card{background:var(--card);border:2px solid var(--border);border-radius:.875rem;overflow:hidden;transition:all .25s cubic-bezier(.4,0,.2,1);position:relative;cursor:pointer}
-        .component-card:hover{border-color:rgba(124,58,237,.2);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.06)}
-        [data-theme="dark"] .component-card:hover{border-color:rgba(167,139,250,.2);box-shadow:0 8px 24px rgba(0,0,0,.15)}
-        .component-card.selected{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent),0 8px 24px rgba(124,58,237,.08)}
-        .component-card .card-header{display:flex;align-items:center;gap:.75rem;padding:.875rem 1rem;border-bottom:1px solid var(--border);background:var(--bg2)}
-        .component-card .card-header .platform-icon{width:36px;height:36px;border-radius:.5rem;display:grid;place-items:center;font-size:1.125rem;flex-shrink:0}
-        .component-card .card-header .platform-name{font-size:.875rem;font-weight:800;flex:1}
-        .component-card .card-header .check-wrap{position:relative;width:22px;height:22px;flex-shrink:0}
-        .component-card .card-header .check-wrap input{width:22px;height:22px;cursor:pointer;accent-color:var(--accent)}
-        .component-card .card-body{padding:1rem;display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
-        .component-card .card-body .field{display:flex;flex-direction:column;gap:.25rem}
-        .component-card .card-body .field label{font-size:.6875rem;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.04em}
-        .component-card .card-body .field input{height:36px;padding:0 .625rem;border:1.5px solid var(--border);border-radius:.5rem;background:var(--bg);color:var(--text);font-size:.8125rem;font-weight:600;outline:none;transition:border-color .2s}
-        .component-card .card-body .field input:focus{border-color:var(--accent)}
-        .component-card .card-body .field input:disabled{opacity:.4;cursor:not-allowed}
-        .component-card .card-actions{display:flex;gap:.5rem;padding:.75rem 1rem;border-top:1px solid var(--border)}
-        .component-card .card-actions .action-btn{flex:1;height:34px;border:1.5px solid var(--border);border-radius:.5rem;background:var(--card);color:var(--text2);font-size:.75rem;font-weight:700;cursor:pointer;transition:all .15s}
-        .component-card .card-actions .action-btn:hover{border-color:var(--text2);color:var(--text)}
-        .component-card .card-actions .action-btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+                <div className="mode-divider">
+                  <span>OR</span>
+                </div>
 
-        /* ── Custom Form ── */
-        .custom-form{display:grid;gap:1.25rem}
-        .form-card{background:var(--card);border:1px solid var(--border);border-radius:.875rem;padding:1.5rem}
-        .form-card .card-title{font-family:Outfit;font-size:1.0625rem;font-weight:800;margin:0 0 1.25rem;padding-bottom:.75rem;border-bottom:1px solid var(--border)}
-        .form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
-        .form-group{display:flex;flex-direction:column;gap:.35rem}
-        .form-group.full{grid-column:1/-1}
-        .form-group label{font-size:.75rem;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.04em}
-        .form-group input,.form-group select,.form-group textarea{height:42px;padding:0 .75rem;border:1.5px solid var(--border);border-radius:.5rem;background:var(--bg);color:var(--text);font-size:.8125rem;outline:none;transition:border-color .2s}
-        .form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(124,58,237,.08)}
-        .form-group textarea{height:100px;padding:.625rem .75rem;resize:vertical;font-family:inherit;line-height:1.5}
-        .form-group .hint{font-size:.6875rem;color:var(--text3);margin-top:.15rem}
-        .form-group .toggle-wrap{display:flex;align-items:center;gap:.75rem;padding:.5rem 0}
-        .form-group .toggle-wrap input[type=checkbox]{width:44px;height:24px;border-radius:999px;border:1.5px solid var(--border);background:var(--bg2);cursor:pointer;position:relative;appearance:none;transition:all .2s;flex-shrink:0}
-        .form-group .toggle-wrap input[type=checkbox]:checked{background:var(--accent);border-color:var(--accent)}
-        .form-group .toggle-wrap input[type=checkbox]:before{content:'';position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:white;transition:all .2s}
-        .form-group .toggle-wrap input[type=checkbox]:checked:before{left:22px}
+                {/* Social Cluster */}
+                <div className="mode-card" onClick={() => setMode('social')}>
+                  <div className="mode-card-badge">2</div>
+                  <div className="mode-card-icon" style={{ background: 'linear-gradient(135deg, #64748b, #475569)' }}>
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="white" strokeWidth="2.5">
+                      <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+                      <circle cx="9" cy="7" r="4" />
+                      <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" />
+                    </svg>
+                  </div>
+                  <div className="mode-card-text">
+                    <h3>Socials cluster</h3>
+                    <p>Create a bundle of social actions across multiple platforms</p>
+                  </div>
+                  <svg className="mode-card-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M9 18l6-6-6-6" />
+                  </svg>
+                </div>
 
-        /* ── Summary Card ── */
-        .form-summary{margin-top:1.5rem;padding:1.25rem 1.5rem;background:linear-gradient(135deg,var(--bg2),var(--card));border:2px solid var(--border);border-radius:.875rem}
-        .summary-row{display:flex;justify-content:space-between;align-items:center;padding:.5rem 0;font-size:.875rem;color:var(--text2)}
-        .summary-row strong{color:var(--text);font-size:1rem}
-        .summary-row.summary-row-total{border-top:1px solid var(--border);margin-top:.5rem;padding-top:1rem;flex-direction:row}
-        .summary-row.summary-row-total .summary-total-values{display:flex;flex-direction:column;align-items:flex-end;gap:.15rem}
-        .summary-row.summary-row-total .total-amount{font-family:Outfit;font-size:1.375rem;font-weight:900;color:var(--text)}
-        .summary-row.summary-row-total .total-label{color:var(--text2);font-weight:700}
+                <div className="mode-divider">
+                  <span>OR</span>
+                </div>
 
-        /* ── Submit ── */
-        .form-actions-row{display:flex;justify-content:flex-end;gap:.75rem;margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid var(--border)}
-        .btn-primary-submit{height:48px;padding:0 2rem;border:0;border-radius:.625rem;background:linear-gradient(135deg,var(--accent),#9333EA);color:#fff;font-size:.9375rem;font-weight:800;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:.625rem;box-shadow:0 4px 14px rgba(124,58,237,.25)}
-        .btn-primary-submit:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(124,58,237,.35)}
-        .btn-primary-submit:disabled{opacity:.5;cursor:not-allowed;transform:none}
-        .btn-secondary{height:48px;padding:0 1.5rem;border:1.5px solid var(--border);border-radius:.625rem;background:var(--card);color:var(--text);font-size:.875rem;font-weight:700;cursor:pointer;transition:all .15s}
-        .btn-secondary:hover{border-color:var(--text2)}
-
-        /* ── Success State ── */
-        .success-overlay{position:fixed;inset:0;z-index:500;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);animation:fadeIn .2s ease}
-        .success-card{background:var(--card);border:1px solid var(--border);border-radius:1rem;padding:2.5rem;text-align:center;max-width:420px;width:90%;box-shadow:0 24px 48px rgba(0,0,0,.15)}
-        .success-card .success-icon{width:56px;height:56px;border-radius:50%;background:rgba(22,163,74,.12);color:var(--green);display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;font-size:1.5rem}
-        .success-card h2{font-family:Outfit;font-weight:900;margin:0 0 .25rem;font-size:1.25rem}
-        .success-card p{color:var(--text2);font-size:.875rem;margin:0 0 1.5rem;line-height:1.5}
-        .success-card .btn-done{height:44px;padding:0 1.5rem;border:0;border-radius:.5rem;background:var(--accent);color:#fff;font-weight:700;font-size:.875rem;cursor:pointer;transition:all .2s}
-
-        @keyframes fadeIn{from{opacity:0}to{opacity:1}}
-        @keyframes slideUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
-
-        @media(max-width:768px){
-          .create-page{padding:1.25rem .75rem 3rem}
-          .social-grid{grid-template-columns:1fr}
-          .component-card .card-body{grid-template-columns:1fr 1fr}
-          .form-row{grid-template-columns:1fr}
-          .form-summary{padding:1rem}
-          .form-actions-row{flex-direction:column}
-          .form-actions-row .btn-primary-submit{width:100%;justify-content:center}
-          .form-actions-row .btn-secondary{width:100%;justify-content:center}
-        }
-      `}</style>
-
-      <div className="create-page">
-        {/* Page Header */}
-        <div className="page-head">
-          <a className="back-link" href="/app/tasks">
-            <i className="ti ti-arrow-left" />
-            Back to Tasks
-          </a>
-          <h1>Create Job</h1>
-          <p>Post a task and earn rewards. Choose between social media campaigns or custom jobs.</p>
+                {/* Custom Job */}
+                <div className="mode-card" onClick={() => setMode('custom')}>
+                  <div className="mode-card-badge">3</div>
+                  <div className="mode-card-icon" style={{ background: 'linear-gradient(135deg, #10b981, #059669)' }}>
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="white" strokeWidth="2.5">
+                      <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
+                      <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
+                    </svg>
+                  </div>
+                  <div className="mode-card-text">
+                    <h3>Custom Job</h3>
+                    <p>Create a completely custom job with specific requirements</p>
+                  </div>
+                  <svg className="mode-card-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M9 18l6-6-6-6" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
+      </Layout>
+    )
+  }
 
-        {/* Tab Switcher */}
-        <div className="create-tabs">
-          <button className={`create-tab ${activeTab === 'social' ? 'active' : ''}`} onClick={() => setActiveTab('social')}>
-            <i className="ti ti-share" />
-            Social Cluster
-          </button>
-          <button className={`create-tab ${activeTab === 'custom' ? 'active' : ''}`} onClick={() => setActiveTab('custom')}>
-            <i className="ti ti-tool" />
-            Custom Job
-          </button>
+  // ─── Quick Job Mode ───
+  if (mode === 'quick') {
+    const currentActions = getActionsForPlatform(quickPlatform)
+    const selectedAction = ACTIONS.find(a => a.id === quickAction) || currentActions[0]
+    const minBudget = selectedAction ? selectedAction.minPer * quickAmount : 0.25
+    const quickFee = Math.max(quickBudget, minBudget) * 0.1
+    const quickTotal = Math.max(quickBudget, minBudget) + quickFee
+    const perActionReward = Math.max(quickBudget, minBudget) / quickAmount
+
+    return (
+      <Layout>
+        <style>{createStyles}</style>
+        <div className="create-page">
+          <div className="create-container">
+            <div className="create-wrapper">
+              <div className="create-header">
+                <button className="back-btn" onClick={() => setMode('select')}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M19 12H5M12 19l-7-7 7-7" />
+                  </svg>
+                  Back
+                </button>
+                <h1 className="create-title">Quick Job</h1>
+                <p className="create-subtitle">Paste your post URL and configure the job</p>
+              </div>
+
+              <div className="quick-job-form">
+                <div className="form-section">
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label className="form-label">Platform</label>
+                      <select
+                        className="form-select"
+                        value={quickPlatform}
+                        onChange={e => {
+                          setQuickPlatform(e.target.value)
+                          const actions = getActionsForPlatform(e.target.value)
+                          setQuickAction(actions[0]?.id || '')
+                        }}
+                      >
+                        {PLATFORMS.map(p => (
+                          <option key={p.id} value={p.id}>{p.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Action</label>
+                      <select
+                        className="form-select"
+                        value={quickAction}
+                        onChange={e => setQuickAction(e.target.value)}
+                      >
+                        {currentActions.map(a => (
+                          <option key={a.id} value={a.id}>{a.label}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">Post URL</label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      placeholder="https://x.com/username/status/123456789"
+                      value={quickUrl}
+                      onChange={e => setQuickUrl(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label className="form-label">Amount</label>
+                      <input
+                        type="number"
+                        className="form-input"
+                        min={1}
+                        max={selectedAction?.maxPerComponent || 100}
+                        value={quickAmount}
+                        onChange={e => setQuickAmount(Math.min(Number(e.target.value) || 1, selectedAction?.maxPerComponent || 100))}
+                      />
+                      <span className="form-hint">Max: {selectedAction?.maxPerComponent || 100}</span>
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Budget ({currency})</label>
+                      <input
+                        type="number"
+                        className="form-input"
+                        step={0.001}
+                        min={minBudget}
+                        value={quickBudget}
+                        onChange={e => setQuickBudget(Number(e.target.value) || minBudget)}
+                      />
+                      <span className="form-hint">Min: {formatSol(minBudget)} {currency}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="quick-summary">
+                  <div className="summary-row-inline">
+                    <span>Reward per action</span>
+                    <strong>{formatSol(perActionReward)} {currency}</strong>
+                  </div>
+                  <div className="summary-row-inline">
+                    <span>Platform fee (10%)</span>
+                    <strong>{formatSol(quickFee)} {currency}</strong>
+                  </div>
+                  <div className="summary-row-inline summary-total-inline">
+                    <span>Total</span>
+                    <strong>{formatSol(quickTotal)} {currency}</strong>
+                  </div>
+                </div>
+
+                <button className="btn-primary btn-full" onClick={handlePay}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                  </svg>
+                  Continue & Pay
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
+      </Layout>
+    )
+  }
 
-        {/* ════════════════════════════════════ */}
-        {/* SOCIAL CLUSTER TAB */}
-        {/* ════════════════════════════════════ */}
-        {activeTab === 'social' && (
-          <form onSubmit={handleSubmit}>
-            <div className="components-list">
-              <div className="social-grid">
-                {platforms.map(p => {
-                  const selected = selectedPlatforms[p.id]
-                  const enabled = selected?.enabled ?? false
+  // ─── Social Cluster Mode ───
+  if (mode === 'social') {
+    return (
+      <Layout>
+        <style>{createStyles}</style>
+        <div className="create-page">
+          <div className="create-container">
+            <div className="create-wrapper">
+              <div className="create-header">
+                <button className="back-btn" onClick={() => setMode('select')}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M19 12H5M12 19l-7-7 7-7" />
+                  </svg>
+                  Back
+                </button>
+                <h1 className="create-title">Socials Cluster</h1>
+                <p className="create-subtitle" style={{ marginBottom: '0.5rem' }}>
+                  Select platforms and configure actions. Total: <strong>{enabledComponents.length} component{enabledComponents.length !== 1 ? 's' : ''}</strong>
+                  {totalCompletions > 0 && <> · <strong>{totalCompletions}</strong> total completions</>}
+                </p>
+              </div>
+
+              {/* Platform Selector */}
+              <div className="platform-selector">
+                {PLATFORMS.map(p => {
+                  const availableActions = getActionsForPlatform(p.id)
                   return (
-                    <div key={p.id} className={`component-card ${enabled ? 'selected' : ''}`}>
-                      <div className="card-header">
-                        <div className="platform-icon" style={{ 
-                          background: `color-mix(in srgb, ${p.color} 12%, transparent)`, 
-                          color: p.color 
-                        }}>
-                          <i className={`ti ${p.icon}`} />
+                    <div key={p.id} className="platform-section">
+                      <div className="platform-header">
+                        <div className="platform-icon-wrap">
+                          <i className={`ti ${p.icon}`} style={{ color: p.color }} />
                         </div>
                         <span className="platform-name">{p.name}</span>
-                        <div className="check-wrap">
-                          <input type="checkbox" checked={enabled} onChange={() => togglePlatform(p.id)} />
-                        </div>
                       </div>
-                      <div className="card-body">
-                        <div className="field">
-                          <label>Quantity</label>
-                          <input 
-                            type="number" min={1} max={1000} 
-                            value={enabled ? (selected?.quantity ?? 10) : 10}
-                            disabled={!enabled}
-                            onChange={e => updatePlatform(p.id, 'quantity', Math.max(1, parseInt(e.target.value) || 1))}
-                          />
-                        </div>
-                        <div className="field">
-                          <label>Reward (SOL)</label>
-                          <input 
-                            type="number" min={0.001} step={0.001} 
-                            value={enabled ? (selected?.rewardPerAction ?? 0.005) : 0.005}
-                            disabled={!enabled}
-                            onChange={e => updatePlatform(p.id, 'rewardPerAction', Math.max(0.001, parseFloat(e.target.value) || 0.001))}
-                          />
-                        </div>
+                      <div className="platform-actions">
+                        {availableActions.map(action => {
+                          const key = `${p.id}:${action.id}`
+                          const comp = components[key]
+                          const isEnabled = comp?.enabled || false
+                          return (
+                            <div key={action.id} className={`component-card ${isEnabled ? 'component-card--active' : ''}`}>
+                              <label className="component-card-main">
+                                <input
+                                  type="checkbox"
+                                  checked={isEnabled}
+                                  onChange={() => toggleComponent(p.id, action.id)}
+                                />
+                                <div className="component-card-info">
+                                  <div className="component-card-icon-wrap">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                      <path d={action.icon} />
+                                    </svg>
+                                  </div>
+                                  <div>
+                                    <div className="component-card-label">{action.label}</div>
+                                    <div className="component-card-desc">{action.description}</div>
+                                  </div>
+                                </div>
+                              </label>
+                              {isEnabled && comp && (
+                                <div className="component-card-controls">
+                                  <div className="ctrl-group">
+                                    <label>Budget ({currency})</label>
+                                    <input
+                                      type="number"
+                                      className="form-input ctrl-input"
+                                      step={0.001}
+                                      min={action.minPer * comp.amount}
+                                      value={comp.budget}
+                                      onChange={e => updateComponent(key, 'budget', Number(e.target.value) || action.minPer)}
+                                    />
+                                  </div>
+                                  <div className="ctrl-group">
+                                    <label>Amount</label>
+                                    <input
+                                      type="number"
+                                      className="form-input ctrl-input"
+                                      min={1}
+                                      max={action.maxPerComponent}
+                                      value={comp.amount}
+                                      onChange={e => updateComponent(key, 'amount', Math.min(Number(e.target.value) || 1, action.maxPerComponent))}
+                                    />
+                                  </div>
+                                  <div className="ctrl-group ctrl-reward">
+                                    <label>Per action</label>
+                                    <div className="ctrl-reward-value">
+                                      {comp.amount > 0 ? formatSol(comp.budget / comp.amount) : '0.000'} {currency}
+                                    </div>
+                                    <div className="ctrl-reward-min">
+                                      min {formatSol(action.minPer)} {currency}
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          )
+                        })}
                       </div>
-                      {enabled && (
-                        <div className="card-actions">
-                          <div className="action-btn" style={{ cursor: 'default', borderColor: 'transparent', background: 'transparent', color: 'var(--text2)', fontSize: '.6875rem' }}>
-                            {selected!.quantity} × ◎{selected!.rewardPerAction.toFixed(3)}
-                          </div>
-                          <div className="action-btn primary" style={{ cursor: 'default' }}>
-                            = ◎{(selected!.quantity * selected!.rewardPerAction).toFixed(3)}
-                          </div>
-                        </div>
-                      )}
                     </div>
                   )
                 })}
               </div>
-            </div>
-
-            {/* Summary */}
-            <div className="form-summary">
-              <div className="summary-row">
-                <span>Platforms Selected</span>
-                <strong>{enabledCount} of {platforms.length}</strong>
-              </div>
-              <div className="summary-row">
-                <span>Total Actions</span>
-                <strong>{totalActions}</strong>
-              </div>
-              <div className="summary-row">
-                <span>Rewards Total</span>
-                <strong>◎ {socialTotal.toFixed(3)}</strong>
-              </div>
-              <div className="summary-row">
-                <span>Platform Fee (5%)</span>
-                <strong>◎ {platformFee.toFixed(3)}</strong>
-              </div>
-              <div className="summary-row summary-row-total">
-                <span className="total-label">Total to Fund</span>
-                <div className="summary-total-values">
-                  <span className="total-amount">◎ {socialGrandTotal.toFixed(3)}</span>
-                  <span style={{ fontSize: '.75rem', color: 'var(--green)' }}>≈ ${(socialGrandTotal * 128).toFixed(2)} USD</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Actions */}
-            <div className="form-actions-row">
-              <button type="button" className="btn-secondary">
-                <i className="ti ti-file-text" />
-                Save as Template
-              </button>
-              <button type="submit" className="btn-primary-submit" disabled={enabledCount === 0}>
-                <i className="ti ti-wallet" />
-                Create & Fund Job
-              </button>
-            </div>
-          </form>
-        )}
-
-        {/* ════════════════════════════════════ */}
-        {/* CUSTOM JOB TAB */}
-        {/* ════════════════════════════════════ */}
-        {activeTab === 'custom' && (
-          <form onSubmit={handleSubmit}>
-            <div className="custom-form">
-              {/* Basic Info */}
-              <div className="form-card">
-                <h3 className="card-title">Basic Information</h3>
-                <div className="form-row">
-                  <div className="form-group full">
-                    <label>Job Title</label>
-                    <input 
-                      type="text" placeholder="e.g. Social Media Engagement" 
-                      value={customForm.title}
-                      onChange={e => updateCustomForm('title', e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div className="form-group full">
-                    <label>Description</label>
-                    <textarea 
-                      placeholder="Describe what workers need to do. Be specific about requirements, steps, and expected output."
-                      value={customForm.description}
-                      onChange={e => updateCustomForm('description', e.target.value)}
-                      required
-                    />
-                    <span className="hint">Provide clear instructions to get the best results.</span>
-                  </div>
-                  <div className="form-group">
-                    <label>Category</label>
-                    <select value={customForm.category} onChange={e => updateCustomForm('category', e.target.value)}>
-                      {categories.map(c => <option key={c}>{c}</option>)}
-                    </select>
-                  </div>
-                  <div className="form-group">
-                    <label>Difficulty</label>
-                    <select value={customForm.difficulty} onChange={e => updateCustomForm('difficulty', e.target.value)}>
-                      {difficulties.map(d => <option key={d}>{d}</option>)}
-                    </select>
-                  </div>
-                </div>
-              </div>
-
-              {/* Reward & Slots */}
-              <div className="form-card">
-                <h3 className="card-title">Reward & Slots</h3>
-                <div className="form-row">
-                  <div className="form-group">
-                    <label>Reward per Worker</label>
-                    <div style={{ display: 'flex', gap: '.5rem' }}>
-                      <input 
-                        type="number" min={0.001} step={0.001} style={{ flex: 1 }}
-                        value={customForm.reward}
-                        onChange={e => updateCustomForm('reward', Math.max(0.001, parseFloat(e.target.value) || 0.001))}
-                      />
-                      <select 
-                        value={customForm.currency}
-                        onChange={e => updateCustomForm('currency', e.target.value)}
-                        style={{ width: '80px', padding: '0 .5rem', border: '1.5px solid var(--border)', borderRadius: '.5rem', background: 'var(--bg)', color: 'var(--text)', fontWeight: 700, outline: 'none' }}
-                      >
-                        <option>SOL</option>
-                        <option>USDC</option>
-                      </select>
-                    </div>
-                  </div>
-                  <div className="form-group">
-                    <label>Available Slots</label>
-                    <input 
-                      type="number" min={1} max={10000}
-                      value={customForm.slots}
-                      onChange={e => updateCustomForm('slots', Math.max(1, parseInt(e.target.value) || 1))}
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>Est. Completion Time</label>
-                    <input 
-                      type="text" placeholder="e.g. 10 min, 1 hour"
-                      value={customForm.estimatedTime}
-                      onChange={e => updateCustomForm('estimatedTime', e.target.value)}
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>Minimum Rank</label>
-                    <select value={customForm.rankRequired} onChange={e => updateCustomForm('rankRequired', e.target.value)}>
-                      {rankRequirements.map(r => <option key={r}>{r}</option>)}
-                    </select>
-                  </div>
-                </div>
-                <div className="form-group" style={{ marginTop: '.75rem' }}>
-                  <div className="toggle-wrap">
-                    <input 
-                      type="checkbox" 
-                      checked={customForm.verificationRequired}
-                      onChange={e => updateCustomForm('verificationRequired', e.target.checked)}
-                    />
-                    <div>
-                      <div style={{ fontWeight: 700, fontSize: '.8125rem' }}>Require Verification</div>
-                      <div style={{ fontSize: '.75rem', color: 'var(--text3)' }}>Workers must complete KYC to apply</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Instructions */}
-              <div className="form-card">
-                <h3 className="card-title">Instructions</h3>
-                <div className="form-group full">
-                  <label>Worker Instructions</label>
-                  <textarea 
-                    placeholder="Provide detailed step-by-step instructions for workers. Include links, screenshots, or any resources they might need."
-                    style={{ height: '140px' }}
-                    value={customForm.instructions}
-                    onChange={e => updateCustomForm('instructions', e.target.value)}
-                  />
-                  <span className="hint">Good instructions lead to better quality work.</span>
-                </div>
-              </div>
 
               {/* Summary */}
-              <div className="form-summary">
-                <div className="summary-row">
-                  <span>Reward per Worker</span>
-                  <strong>◎ {customForm.reward.toFixed(3)}</strong>
+              {enabledComponents.length > 0 && (
+                <div className="social-summary">
+                  <div className="summary-title">Summary</div>
+                  {enabledComponents.map(([key, comp]) => {
+                    const [, actionId] = key.split(':')
+                    const action = ACTIONS.find(a => a.id === actionId)
+                    const platform = PLATFORMS.find(p => p.id === action?.platformId)
+                    return (
+                      <div key={key} className="summary-item">
+                        <div className="summary-item-label">
+                          <span className="summary-item-platform">{platform?.name}</span>
+                          <span className="summary-item-action">{action?.label}</span>
+                          <span className="summary-item-amount">×{comp.amount}</span>
+                        </div>
+                        <div className="summary-item-value">
+                          {formatSol(comp.budget)} {currency}
+                        </div>
+                      </div>
+                    )
+                  })}
+                  <div className="summary-divider" />
+                  <div className="summary-item">
+                    <span>Total budget</span>
+                    <strong>{formatSol(totalBudget)} {currency}</strong>
+                  </div>
+                  <div className="summary-item">
+                    <span>Platform fee (10%)</span>
+                    <strong>{formatSol(platformFee)} {currency}</strong>
+                  </div>
+                  <div className="summary-item summary-grand-total">
+                    <span>Grand total</span>
+                    <strong>{formatSol(grandTotal)} {currency}</strong>
+                  </div>
+
+                  <button className="btn-primary btn-full" onClick={handlePay} disabled={enabledComponents.length === 0}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                    </svg>
+                    Continue & Pay
+                  </button>
                 </div>
-                <div className="summary-row">
-                  <span>Available Slots</span>
-                  <strong>{customForm.slots}</strong>
+              )}
+            </div>
+          </div>
+        </div>
+      </Layout>
+    )
+  }
+
+  // ─── Custom Job Mode ───
+  return (
+    <Layout>
+      <style>{createStyles}</style>
+      <div className="create-page">
+        <div className="create-container">
+          <div className="create-wrapper">
+            <div className="create-header">
+              <button className="back-btn" onClick={() => setMode('select')}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M19 12H5M12 19l-7-7 7-7" />
+                </svg>
+                Back
+              </button>
+              <h1 className="create-title">Custom Job</h1>
+              <p className="create-subtitle">Create a completely custom job with specific requirements</p>
+            </div>
+
+            <form className="custom-job-form" onSubmit={e => { e.preventDefault(); handlePay() }}>
+              <div className="form-section">
+                <div className="form-group">
+                  <label className="form-label">Job Title</label>
+                  <input type="text" className="form-input" placeholder="e.g. Review my UI design" required />
                 </div>
-                <div className="summary-row">
-                  <span>Total Rewards</span>
-                  <strong>◎ {(customForm.reward * customForm.slots).toFixed(3)}</strong>
+                <div className="form-group">
+                  <label className="form-label">Description</label>
+                  <textarea className="form-input form-textarea" placeholder="Describe what workers need to do..." rows={4} required />
                 </div>
-                <div className="summary-row">
-                  <span>Platform Fee (5%)</span>
-                  <strong>◎ {(customForm.reward * customForm.slots * 0.05).toFixed(3)}</strong>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label className="form-label">Category</label>
+                    <select className="form-select">
+                      <option>Social Media</option>
+                      <option>Content Creation</option>
+                      <option>Testing & Review</option>
+                      <option>Design</option>
+                      <option>Development</option>
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Difficulty</label>
+                    <select className="form-select">
+                      <option>Easy</option>
+                      <option>Medium</option>
+                      <option>Hard</option>
+                    </select>
+                  </div>
                 </div>
-                <div className="summary-row summary-row-total">
-                  <span className="total-label">Total to Fund</span>
-                  <div className="summary-total-values">
-                    <span className="total-amount">◎ {(customForm.reward * customForm.slots * 1.05).toFixed(3)}</span>
-                    <span style={{ fontSize: '.75rem', color: 'var(--green)' }}>≈ ${(customForm.reward * customForm.slots * 1.05 * 128).toFixed(2)} USD</span>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label className="form-label">Reward per Worker ({currency})</label>
+                    <input type="number" className="form-input" step={0.001} min={0.001} defaultValue={0.025} />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Available Slots</label>
+                    <input type="number" className="form-input" min={1} defaultValue={50} />
                   </div>
                 </div>
               </div>
 
-              {/* Actions */}
-              <div className="form-actions-row">
-                <button type="button" className="btn-secondary">
-                  <i className="ti ti-file-text" />
-                  Save as Template
-                </button>
-                <button type="submit" className="btn-primary-submit" disabled={!customForm.title || !customForm.description}>
-                  <i className="ti ti-wallet" />
-                  Create & Fund Job
-                </button>
+              <div className="form-section">
+                <label className="form-label">Instructions</label>
+                <textarea className="form-input form-textarea" placeholder="Provide detailed step-by-step instructions for workers..." rows={5} />
               </div>
-            </div>
-          </form>
-        )}
 
-        {/* Success Overlay */}
-        {showSuccess && (
-          <div className="success-overlay" onClick={() => setShowSuccess(false)}>
-            <div className="success-card" onClick={e => e.stopPropagation()}>
-              <div className="success-icon">
-                <i className="ti ti-check" />
-              </div>
-              <h2>Job Created!</h2>
-              <p>Your job has been posted successfully. Workers can now start applying and completing tasks.</p>
-              <button className="btn-done" onClick={() => setShowSuccess(false)}>
-                View My Jobs
+              <button type="submit" className="btn-primary btn-full">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                </svg>
+                Create & Fund Job
               </button>
-            </div>
+            </form>
           </div>
-        )}
+        </div>
       </div>
     </Layout>
   )
 }
+
+// ─── Styles ───
+const createStyles = `
+.create-page{width:100%;max-width:1000px;margin:0 auto;padding:2rem 1rem 4rem}
+.create-container{width:100%}
+.create-header{margin-bottom:2rem}
+.create-title{font-family:Outfit;font-size:1.75rem;font-weight:900;margin:0;letter-spacing:-.02em;color:var(--text)}
+.create-subtitle{color:var(--text2);font-size:.875rem;margin:.25rem 0 0;line-height:1.5}
+.back-btn{display:inline-flex;align-items:center;gap:6px;font-size:.8125rem;color:var(--text2);margin-bottom:.75rem;cursor:pointer;border:0;background:none;padding:4px 8px;border-radius:6px;transition:all .15s}
+.back-btn:hover{color:var(--text);background:var(--bg2)}
+
+/* Mode Selection */
+.mode-selection-container{max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:0}
+.mode-card{display:flex;align-items:center;gap:14px;padding:1.25rem;border-radius:12px;border:1.5px solid var(--border);background:var(--card);cursor:pointer;transition:all .2s ease;position:relative}
+.mode-card:hover{border-color:var(--accent);box-shadow:0 4px 12px rgba(124,58,237,.08)}
+.mode-card-badge{position:absolute;top:-12px;left:16px;width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#A78BFA,#7C3AED);color:white;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:800;box-shadow:0 2px 8px rgba(124,58,237,.3);border:2px solid var(--card)}
+.mode-card-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.mode-card-text{flex:1;min-width:0}
+.mode-card-text h3{font-size:.9375rem;font-weight:700;margin:0;color:var(--text)}
+.mode-card-text p{font-size:.8125rem;color:var(--text2);margin:2px 0 0;line-height:1.4}
+.mode-card-arrow{color:var(--text3);flex-shrink:0}
+.mode-divider{display:flex;align-items:center;gap:12px;margin:8px 0}
+.mode-divider::before,.mode-divider::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--border),transparent)}
+.mode-divider span{font-size:.625rem;font-weight:800;color:var(--text3);letter-spacing:.08em;text-transform:uppercase}
+
+/* Form Elements */
+.form-section{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.25rem;margin-bottom:1rem}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:600px){.form-row{grid-template-columns:1fr}}
+.form-group{margin-bottom:0;display:flex;flex-direction:column;gap:6px}
+.form-label{font-size:.8125rem;font-weight:700;color:var(--text);margin-bottom:2px}
+.form-input,.form-select{padding:10px 12px;border-radius:8px;border:1.5px solid var(--border);background:var(--bg);color:var(--text);font-size:.875rem;transition:border-color .15s;width:100%;box-sizing:border-box}
+.form-input:focus,.form-select:focus{border-color:var(--accent);outline:none;box-shadow:0 0 0 3px rgba(124,58,237,.12)}
+.form-textarea{resize:vertical;min-height:100px}
+.form-hint{font-size:.6875rem;color:var(--text3);margin-top:2px}
+
+/* Quick Job */
+.quick-job-form{max-width:600px}
+.quick-summary{margin:1rem 0;padding:1rem;border-radius:10px;background:var(--bg2);border:1px solid var(--border)}
+.summary-row-inline{display:flex;justify-content:space-between;align-items:center;padding:4px 0;font-size:.875rem;color:var(--text2)}
+.summary-row-inline strong{color:var(--text)}
+.summary-total-inline{border-top:1px solid var(--border);margin-top:6px;padding-top:8px;font-size:1rem}
+.summary-total-inline strong{font-size:1.125rem;color:var(--accent)}
+
+/* Platform Selector (Social Cluster) */
+.platform-selector{display:flex;flex-direction:column;gap:20px;margin-bottom:1.5rem}
+.platform-section{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1rem;overflow:hidden}
+.platform-header{display:flex;align-items:center;gap:10px;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+.platform-icon-wrap{width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:8px;background:var(--bg2);font-size:18px}
+.platform-name{font-size:.875rem;font-weight:700;color:var(--text)}
+.platform-actions{display:flex;flex-direction:column;gap:8px}
+
+/* Component Card */
+.component-card{border:1px solid var(--border);border-radius:10px;padding:12px;background:var(--bg);transition:all .15s}
+.component-card--active{border-color:var(--accent);background:var(--card)}
+.component-card-main{display:flex;align-items:flex-start;gap:10px;cursor:pointer}
+.component-card-main input[type=checkbox]{width:18px;height:18px;margin-top:3px;accent-color:var(--accent);cursor:pointer}
+.component-card-info{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
+.component-card-icon-wrap{width:28px;height:28px;border-radius:7px;background:var(--bg2);display:flex;align-items:center;justify-content:center;color:var(--accent);flex-shrink:0}
+.component-card-label{font-size:.8125rem;font-weight:700;color:var(--text)}
+.component-card-desc{font-size:.6875rem;color:var(--text3);margin-top:1px}
+.component-card-controls{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
+@media(max-width:600px){.component-card-controls{grid-template-columns:1fr 1fr}}
+.ctrl-group{display:flex;flex-direction:column;gap:4px}
+.ctrl-group label{font-size:.6875rem;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.04em}
+.ctrl-input{padding:6px 8px;font-size:.8125rem;height:32px}
+.ctrl-reward{text-align:right}
+@media(max-width:600px){.ctrl-reward{text-align:left}}
+.ctrl-reward-value{font-size:.875rem;font-weight:700;color:var(--accent)}
+.ctrl-reward-min{font-size:.625rem;color:var(--text3);margin-top:1px}
+
+/* Social Summary */
+.social-summary{margin-top:1.5rem;padding:1.25rem;border-radius:12px;background:var(--card);border:1px solid var(--border)}
+.summary-title{font-size:.8125rem;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px}
+.summary-item{display:flex;justify-content:space-between;align-items:center;padding:6px 0;font-size:.875rem;color:var(--text2)}
+.summary-item-label{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.summary-item-platform{font-weight:600;color:var(--text)}
+.summary-item-action{color:var(--text2)}
+.summary-item-amount{color:var(--text3);font-size:.8125rem}
+.summary-item-value{font-weight:600;color:var(--text)}
+.summary-divider{height:1px;background:var(--border);margin:8px 0}
+.summary-grand-total{font-size:1rem;padding-top:6px;border-top:1px solid var(--border);margin-top:4px}
+.summary-grand-total strong{color:var(--accent);font-size:1.125rem}
+
+/* Buttons */
+.btn-primary{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 24px;border:0;border-radius:10px;background:linear-gradient(135deg,#A78BFA,#7C3AED);color:white;font-size:.875rem;font-weight:700;cursor:pointer;transition:all .15s}
+.btn-primary:hover:not(:disabled){box-shadow:0 4px 12px rgba(124,58,237,.3);transform:translateY(-1px)}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed}
+.btn-full{width:100%;margin-top:1rem}
+
+/* Select mode specific */
+.create-container--select-mode .create-wrapper{max-width:720px;margin:0 auto}
+
+/* Success overlay */
+.success-overlay{position:fixed;inset:0;z-index:999;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center}
+.success-card{background:var(--card);border-radius:16px;padding:2rem;text-align:center;max-width:380px;width:90%;border:1px solid var(--border)}
+.success-icon{width:56px;height:56px;border-radius:50%;background:rgba(16,163,74,.1);display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;color:var(--green)}
+.success-icon svg{width:28px;height:28px}
+.success-card h2{font-size:1.25rem;font-weight:800;margin:0 0 .5rem;color:var(--text)}
+.success-card p{font-size:.8125rem;color:var(--text2);margin:0 0 1.5rem;line-height:1.5}
+.btn-done{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border:0;border-radius:8px;background:var(--accent);color:white;font-size:.8125rem;font-weight:700;cursor:pointer}
+`
