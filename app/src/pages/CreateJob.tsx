@@ -48,19 +48,14 @@ const PLATFORMS = [
   { id: 'tiktok', name: 'TikTok', color: '#000000', icon: 'ti-brand-tiktok' },
 ]
 
-type ComponentState = {
-  enabled: boolean
-  actionId: string
-  budget: number        // total SOL budget for this component
-  amount: number        // number of completions
-}
+
 
 type ModeType = 'select' | 'quick' | 'social' | 'custom'
 
 export default function CreateJob() {
   const [mode, setMode] = useState<ModeType>('select')
   const [currency, setCurrency] = useState<'SOL' | 'USDC' | 'NGN'>('SOL')
-  const [components, setComponents] = useState<Record<string, ComponentState>>({})
+
   const [showSuccess, setShowSuccess] = useState(false)
 
   // Quick Job mode
@@ -80,46 +75,7 @@ export default function CreateJob() {
     return actions[0]?.id || ''
   }
 
-  // Toggle component (platform+action combination)
-  const toggleComponent = (platformId: string, actionId: string) => {
-    const key = `${platformId}:${actionId}`
-    setComponents(prev => {
-      if (prev[key]) {
-        return { ...prev, [key]: { ...prev[key], enabled: !prev[key].enabled } }
-      }
-      const action = ACTIONS.find(a => a.id === actionId)
-      return {
-        ...prev,
-        [key]: { enabled: true, actionId, budget: action ? action.minPer * 50 : 0.25, amount: 50 }
-      }
-    })
-  }
 
-  const updateComponent = (key: string, field: 'budget' | 'amount', value: number) => {
-    setComponents(prev => ({
-      ...prev,
-      [key]: { ...prev[key], [field]: value }
-    }))
-  }
-
-  const changeComponentAction = (key: string, newActionId: string) => {
-    setComponents(prev => {
-      const existing = prev[key]
-      const action = ACTIONS.find(a => a.id === newActionId)
-      return {
-        ...prev,
-        [key]: { ...existing, actionId: newActionId, budget: action ? action.minPer * (existing?.amount || 50) : existing?.budget || 0.25 }
-      }
-    })
-  }
-
-  // Computed values
-  const enabledComponents = Object.entries(components).filter(([, v]) => v.enabled)
-
-  const totalBudget = enabledComponents.reduce((sum, [, v]) => sum + (v.budget || 0), 0)
-  const platformFee = totalBudget * 0.1  // 10% fee like Wurk.fun
-  const grandTotal = totalBudget + platformFee
-  const totalCompletions = enabledComponents.reduce((sum, [, v]) => sum + (v.amount || 0), 0)
 
   const formatSol = (val: number) => val.toFixed(3)
 
@@ -340,9 +296,61 @@ export default function CreateJob() {
 
   // ─── Social Cluster Mode ───
   if (mode === 'social') {
+    // Track which platform each dropdown is configured for
+    type SocialConfig = {
+      enabled: boolean
+      actionId: string
+      budget: number
+      amount: number
+    }
+    const [socialConfigs, setSocialConfigs] = useState<Record<string, SocialConfig>>({})
+
+    const getSocialConfig = (platformId: string) => {
+      if (socialConfigs[platformId]) return socialConfigs[platformId]
+      const actions = getActionsForPlatform(platformId)
+      const defaultAction = actions[0]
+      return {
+        enabled: false,
+        actionId: defaultAction?.id || '',
+        budget: defaultAction ? defaultAction.minPer * 50 : 0.25,
+        amount: 50
+      }
+    }
+
+    const updateSocialConfig = (platformId: string, updates: Partial<SocialConfig>) => {
+      setSocialConfigs(prev => ({
+        ...prev,
+        [platformId]: { ...getSocialConfig(platformId), ...updates }
+      }))
+    }
+
+    const toggleSocialPlatform = (platformId: string) => {
+      const config = getSocialConfig(platformId)
+      updateSocialConfig(platformId, { enabled: !config.enabled })
+    }
+
+    const changePlatformAction = (platformId: string, actionId: string) => {
+      const action = ACTIONS.find(a => a.id === actionId)
+      const config = getSocialConfig(platformId)
+      updateSocialConfig(platformId, {
+        actionId,
+        budget: action ? action.minPer * config.amount : config.budget
+      })
+    }
+
+    const enabledSocialCount = Object.values(socialConfigs).filter(c => c.enabled).length
+    const socialTotalCompletions = Object.values(socialConfigs)
+      .filter(c => c.enabled)
+      .reduce((sum, c) => sum + (c.amount || 0), 0)
+    const socialTotalBudget = Object.values(socialConfigs)
+      .filter(c => c.enabled)
+      .reduce((sum, c) => sum + (c.budget || 0), 0)
+    const socialFee = socialTotalBudget * 0.1
+    const socialGrandTotal = socialTotalBudget + socialFee
+
     return (
       <Layout>
-        <style>{createStyles}</style>
+        <style>{socialClusterStyles}</style>
         <div className="create-page">
           <div className="create-container">
             <div className="create-wrapper">
@@ -355,128 +363,134 @@ export default function CreateJob() {
                 </button>
                 <h1 className="create-title">Socials Cluster</h1>
                 <p className="create-subtitle" style={{ marginBottom: '0.5rem' }}>
-                  Select platforms and configure actions. Total: <strong>{enabledComponents.length} component{enabledComponents.length !== 1 ? 's' : ''}</strong>
-                  {totalCompletions > 0 && <> · <strong>{totalCompletions}</strong> total completions</>}
+                  Select platforms and configure actions. Total: <strong>{enabledSocialCount} platform{enabledSocialCount !== 1 ? 's' : ''}</strong>
+                  {socialTotalCompletions > 0 && <> · <strong>{socialTotalCompletions}</strong> total completions</>}
                 </p>
               </div>
 
-              {/* Platform Selector */}
-              <div className="platform-selector">
+              {/* Platform Cards with Dropdown */}
+              <div className="social-cluster-platforms">
                 {PLATFORMS.map(p => {
-                  const availableActions = getActionsForPlatform(p.id)
+                  const config = getSocialConfig(p.id)
+                  const actions = getActionsForPlatform(p.id)
+                  const selectedAction = ACTIONS.find(a => a.id === config.actionId)
+                  const perAction = config.amount > 0 && config.budget > 0 ? config.budget / config.amount : 0
+                  const minPer = selectedAction?.minPer || 0.001
+                  const maxAmount = selectedAction?.maxPerComponent || 100
+
                   return (
-                    <div key={p.id} className="platform-section">
-                      <div className="platform-header">
-                        <div className="platform-icon-wrap">
-                          <i className={`ti ${p.icon}`} style={{ color: p.color }} />
+                    <div key={p.id} className={`sc-platform-card ${config.enabled ? 'sc-platform-card--active' : ''}`}>
+                      {/* Card Header with Toggle */}
+                      <div className="sc-card-header" onClick={() => toggleSocialPlatform(p.id)}>
+                        <div className="sc-card-toggle">
+                          <div className={`sc-toggle-indicator ${config.enabled ? 'sc-toggle-on' : ''}`}>
+                            {config.enabled && (
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3">
+                                <path d="M20 6L9 17l-5-5" />
+                              </svg>
+                            )}
+                          </div>
                         </div>
-                        <span className="platform-name">{p.name}</span>
+                        <div className="sc-platform-icon" style={{ '--pcolor': p.color } as React.CSSProperties}>
+                          <i className={`ti ${p.icon}`} />
+                        </div>
+                        <span className="sc-platform-name">{p.name}</span>
+                        <svg className="sc-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ transform: config.enabled ? 'rotate(180deg)' : 'rotate(0deg)' }}>
+                          <path d="M6 9l6 6 6-6" />
+                        </svg>
                       </div>
-                      <div className="platform-actions">
-                        {availableActions.map(action => {
-                          const key = `${p.id}:${action.id}`
-                          const comp = components[key]
-                          const isEnabled = comp?.enabled || false
-                          return (
-                            <div key={action.id} className={`component-card ${isEnabled ? 'component-card--active' : ''}`}>
-                              <label className="component-card-main">
-                                <input
-                                  type="checkbox"
-                                  checked={isEnabled}
-                                  onChange={() => toggleComponent(p.id, action.id)}
-                                />
-                                <div className="component-card-info">
-                                  <div className="component-card-icon-wrap">
-                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                      <path d={action.icon} />
-                                    </svg>
-                                  </div>
-                                  <div>
-                                    <div className="component-card-label">{action.label}</div>
-                                    <div className="component-card-desc">{action.description}</div>
-                                  </div>
-                                </div>
-                              </label>
-                              {isEnabled && comp && (
-                                <div className="component-card-controls">
-                                  <div className="ctrl-group">
-                                    <label>Budget ({currency})</label>
-                                    <input
-                                      type="number"
-                                      className="form-input ctrl-input"
-                                      step={0.001}
-                                      min={action.minPer * comp.amount}
-                                      value={comp.budget}
-                                      onChange={e => updateComponent(key, 'budget', Number(e.target.value) || action.minPer)}
-                                    />
-                                  </div>
-                                  <div className="ctrl-group">
-                                    <label>Amount</label>
-                                    <input
-                                      type="number"
-                                      className="form-input ctrl-input"
-                                      min={1}
-                                      max={action.maxPerComponent}
-                                      value={comp.amount}
-                                      onChange={e => updateComponent(key, 'amount', Math.min(Number(e.target.value) || 1, action.maxPerComponent))}
-                                    />
-                                  </div>
-                                  <div className="ctrl-group ctrl-reward">
-                                    <label>Per action</label>
-                                    <div className="ctrl-reward-value">
-                                      {comp.amount > 0 ? formatSol(comp.budget / comp.amount) : '0.000'} {currency}
-                                    </div>
-                                    <div className="ctrl-reward-min">
-                                      min {formatSol(action.minPer)} {currency}
-                                    </div>
-                                  </div>
-                                </div>
-                              )}
+
+                      {/* Expandable Controls */}
+                      {config.enabled && (
+                        <div className="sc-card-body">
+                          <div className="sc-action-row">
+                            <div className="sc-action-group">
+                              <label className="sc-label">Action</label>
+                              <select
+                                className="sc-select"
+                                value={config.actionId}
+                                onChange={e => changePlatformAction(p.id, e.target.value)}
+                              >
+                                {actions.map(a => (
+                                  <option key={a.id} value={a.id}>{a.label}</option>
+                                ))}
+                              </select>
                             </div>
-                          )
-                        })}
-                      </div>
+                            <div className="sc-action-group">
+                              <label className="sc-label">Amount</label>
+                              <input
+                                type="number"
+                                className="sc-input"
+                                min={1}
+                                max={maxAmount}
+                                value={config.amount}
+                                onChange={e => {
+                                  const val = Math.min(Math.max(Number(e.target.value) || 1, 1), maxAmount)
+                                  updateSocialConfig(p.id, { amount: val })
+                                }}
+                              />
+                              <span className="sc-hint">Max {maxAmount}</span>
+                            </div>
+                            <div className="sc-action-group">
+                              <label className="sc-label">Budget (SOL)</label>
+                              <input
+                                type="number"
+                                className="sc-input"
+                                step={0.001}
+                                min={minPer * config.amount}
+                                value={config.budget}
+                                onChange={e => {
+                                  const val = Math.max(Number(e.target.value) || minPer, minPer)
+                                  updateSocialConfig(p.id, { budget: val })
+                                }}
+                              />
+                              <span className="sc-hint">Min {minPer.toFixed(4)} SOL</span>
+                            </div>
+                            <div className="sc-action-group sc-reward-group">
+                              <label className="sc-label">Per action</label>
+                              <div className="sc-reward-value">{perAction.toFixed(4)} SOL</div>
+                              <span className="sc-hint">min {minPer.toFixed(4)}</span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )
                 })}
               </div>
 
               {/* Summary */}
-              {enabledComponents.length > 0 && (
+              {enabledSocialCount > 0 && (
                 <div className="social-summary">
                   <div className="summary-title">Summary</div>
-                  {enabledComponents.map(([key, comp]) => {
-                    const [, actionId] = key.split(':')
-                    const action = ACTIONS.find(a => a.id === actionId)
-                    const platform = PLATFORMS.find(p => p.id === action?.platformId)
+                  {Object.entries(socialConfigs).filter(([, c]) => c.enabled).map(([platformId, c]) => {
+                    const platform = PLATFORMS.find(p => p.id === platformId)
+                    const action = ACTIONS.find(a => a.id === c.actionId)
                     return (
-                      <div key={key} className="summary-item">
+                      <div key={platformId} className="summary-item">
                         <div className="summary-item-label">
                           <span className="summary-item-platform">{platform?.name}</span>
                           <span className="summary-item-action">{action?.label}</span>
-                          <span className="summary-item-amount">×{comp.amount}</span>
+                          <span className="summary-item-amount">×{c.amount}</span>
                         </div>
-                        <div className="summary-item-value">
-                          {formatSol(comp.budget)} {currency}
-                        </div>
+                        <div className="summary-item-value">{c.budget.toFixed(3)} SOL</div>
                       </div>
                     )
                   })}
                   <div className="summary-divider" />
                   <div className="summary-item">
                     <span>Total budget</span>
-                    <strong>{formatSol(totalBudget)} {currency}</strong>
+                    <strong>{socialTotalBudget.toFixed(3)} SOL</strong>
                   </div>
                   <div className="summary-item">
                     <span>Platform fee (10%)</span>
-                    <strong>{formatSol(platformFee)} {currency}</strong>
+                    <strong>{socialFee.toFixed(3)} SOL</strong>
                   </div>
                   <div className="summary-item summary-grand-total">
                     <span>Grand total</span>
-                    <strong>{formatSol(grandTotal)} {currency}</strong>
+                    <strong>{socialGrandTotal.toFixed(3)} SOL</strong>
                   </div>
-
-                  <button className="btn-primary btn-full" onClick={handlePay} disabled={enabledComponents.length === 0}>
+                  <button className="btn-primary btn-full" onClick={handlePay}>
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                     </svg>
@@ -490,7 +504,6 @@ export default function CreateJob() {
       </Layout>
     )
   }
-
   // ─── Custom Job Mode ───
   return (
     <Layout>
@@ -571,6 +584,32 @@ export default function CreateJob() {
 }
 
 // ─── Styles ───
+const socialClusterStyles = `
+.social-cluster-platforms{display:flex;flex-direction:column;gap:16px;margin-bottom:1.5rem}
+.sc-platform-card{border:1px solid var(--border);border-radius:12px;background:var(--card);overflow:hidden;transition:all .15s}
+.sc-platform-card--active{border-color:var(--accent);box-shadow:0 2px 8px rgba(124,58,237,.08)}
+.sc-card-header{display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;user-select:none}
+.sc-card-toggle{flex-shrink:0}
+.sc-toggle-indicator{width:22px;height:22px;border-radius:6px;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;transition:all .15s}
+.sc-toggle-on{background:var(--accent);border-color:var(--accent)}
+.sc-platform-icon{width:32px;height:32px;border-radius:8px;background:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;color:var(--pcolor)}
+.sc-platform-name{font-size:.875rem;font-weight:700;color:var(--text);flex:1}
+.sc-chevron{color:var(--text3);transition:transform .2s}
+.sc-card-body{padding:0 16px 16px;border-top:1px solid var(--border);padding-top:12px}
+.sc-action-row{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px}
+@media(max-width:768px){.sc-action-row{grid-template-columns:1fr 1fr}}
+@media(max-width:480px){.sc-action-row{grid-template-columns:1fr}}
+.sc-action-group{display:flex;flex-direction:column;gap:4px}
+.sc-label{font-size:.6875rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.04em}
+.sc-select{padding:8px 10px;border-radius:8px;border:1.5px solid var(--border);background:var(--bg);color:var(--text);font-size:.8125rem;transition:border-color .15s;width:100%;box-sizing:border-box;cursor:pointer}
+.sc-select:focus{border-color:var(--accent);outline:none;box-shadow:0 0 0 3px rgba(124,58,237,.12)}
+.sc-input{padding:8px 10px;border-radius:8px;border:1.5px solid var(--border);background:var(--bg);color:var(--text);font-size:.8125rem;transition:border-color .15s;width:100%;box-sizing:border-box}
+.sc-input:focus{border-color:var(--accent);outline:none;box-shadow:0 0 0 3px rgba(124,58,237,.12)}
+.sc-hint{font-size:.625rem;color:var(--text3);margin-top:1px}
+.sc-reward-group{text-align:right}
+@media(max-width:480px){.sc-reward-group{text-align:left}}
+.sc-reward-value{font-size:.875rem;font-weight:700;color:var(--accent);padding:6px 0}
+`
 const createStyles = `
 .create-page{width:100%;max-width:1000px;margin:0 auto;padding:2rem 1rem 4rem}
 .create-container{width:100%}
