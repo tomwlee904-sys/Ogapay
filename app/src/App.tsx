@@ -20,6 +20,7 @@ import Earnings from './pages/Earnings'
 import Leaderboard from './pages/Leaderboard'
 import Campaigns from './pages/Campaigns'
 import Support from './pages/Support'
+import CreateJob from './pages/CreateJob'
 import NotFound from './pages/NotFound'
 
 export default function App() {
@@ -31,7 +32,7 @@ export default function App() {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/tasks" element={<Tasks />} />
           <Route path="/tasks/:id" element={<Tasks />} />
-          <Route path="/tasks/new" element={<Dashboard />} />
+          <Route path="/tasks/new" element={<CreateJob />} />
           <Route path="/my-tasks" element={<MyTasks />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/wallet" element={<Wallet />} />
@@ -49,6 +50,9 @@ export default function App() {
           <Route path="/leaderboard" element={<Leaderboard />} />
           <Route path="/campaigns" element={<Campaigns />} />
           <Route path="/support" element={<Support />} />
+          <Route path="/create" element={<CreateJob />} />
+          <Route path="/createcustom" element={<CreateJob />} />
+          <Route path="/createsocial" element={<CreateJob />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </AuthProvider>
