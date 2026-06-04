@@ -2,6 +2,7 @@ import { useState, ReactNode } from 'react'
 import Navbar from './Navbar'
 import Drawer from './Drawer'
 import Sidebar from './Sidebar'
+import Footer from './Footer'
 
 interface LayoutProps {
   children: ReactNode
@@ -23,6 +24,7 @@ export default function Layout({ children, sidebar = false }: LayoutProps) {
           </section>
         </main>
       </div>
+      <Footer />
       <div className="toast" id="appToast" />
     </>
   )

@@ -4,94 +4,9 @@
   "buildCommand": "cd app && npm install && npm run build",
   "installCommand": "cd app && npm install",
   "rewrites": [
-    {
-      "source": "/",
-      "destination": "/app/"
-    },
-    {
-      "source": "/apply.html",
-      "destination": "/wurker-apply.html"
-    },
-    {
-      "source": "/submissions",
-      "destination": "/my-submissions.html"
-    },
-    {
-      "source": "/submit",
-      "destination": "/wurker-apply.html"
-    },
-    {
-      "source": "/apply",
-      "destination": "/wurker-apply.html"
-    },
-    {
-      "source": "/job-history",
-      "destination": "/monitor.html"
-    },
-    {
-      "source": "/job-monitor",
-      "destination": "/monitor.html"
-    },
-    {
-      "source": "/blog",
-      "destination": "/blog.html"
-    },
-    {
-      "source": "/about",
-      "destination": "/about.html"
-    },
-    {
-      "source": "/faq",
-      "destination": "/faq.html"
-    },
-    {
-      "source": "/support",
-      "destination": "/support.html"
-    },
-    {
-      "source": "/contact",
-      "destination": "/contact.html"
-    },
-    {
-      "source": "/terms",
-      "destination": "/terms.html"
-    },
-    {
-      "source": "/privacy",
-      "destination": "/privacy.html"
-    },
-    {
-      "source": "/login",
-      "destination": "/login.html"
-    },
-    {
-      "source": "/reset-password",
-      "destination": "/reset-password.html"
-    },
-    {
-      "source": "/auth-callback",
-      "destination": "/auth-callback.html"
-    },
-    {
-      "source": "/communities",
-      "destination": "/communities.html"
-    },
-    {
-      "source": "/messages",
-      "destination": "/messages.html"
-    },
-    {
-      "source": "/wallet",
-      "destination": "/wallet.html"
-    },
-    {
-      "source": "/worker",
-      "destination": "/worker.html"
-    },
-    {
-      "source": "/:path*",
-      "destination": "/index.html"
-    }
+    { "source": "/assets/(.*)", "destination": "/assets/$1" },
+    { "source": "/(.*)\\.html", "destination": "/$1.html" },
+    { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [
     {

@@ -14,28 +14,25 @@ export default function Navbar({ onMenuToggle }: NavbarProps) {
   return (
     <header className="nav">
       <div className="nav-inner">
-        <a className="brand" href="/app">
+        <a className="brand" href="/">
           <span className="logo-mark" dangerouslySetInnerHTML={{ __html: OGA_LOGO }} />
           OgaPay
         </a>
         <div className="nav-links">
-          <a className="nav-link" href="/" data-navlink="index.html"><i className="ti ti-home" />Home</a>
-          <a className="nav-link" href="/app/tasks" data-navlink="tasks"><i className="ti ti-checklist" />Tasks</a>
-          <a className="nav-link" href="/app/store" data-navlink="store"><i className="ti ti-building-store" />Store</a>
-          <a className="nav-link" href="/app/communities" data-navlink="communities"><i className="ti ti-users" />Communities</a>
-          <a className="nav-link" href="/faq" data-navlink="faq.html"><i className="ti ti-help-circle" />FAQ</a>
+          <a className="nav-link" href="/"><i className="ti ti-home" />Home</a>
+          <a className="nav-link" href="/tasks"><i className="ti ti-checklist" />Tasks</a>
+          <a className="nav-link" href="/store"><i className="ti ti-building-store" />Store</a>
+          <a className="nav-link" href="/communities"><i className="ti ti-users" />Communities</a>
+          <a className="nav-link" href="/faq"><i className="ti ti-help-circle" />FAQ</a>
         </div>
         <div className="nav-actions">
           {!isAuthed && (
             <>
               <a className="wallet-btn" href="/login"><i className="ti ti-login" /> Login</a>
-              <a className="wallet-btn" href="/login" style={{ background: 'var(--accent)', color: '#fff', borderColor: 'var(--accent)' }}>
-                <i className="ti ti-user-plus" /> Get Started
-              </a>
             </>
           )}
           {isAuthed && (
-            <a className="wallet-btn" href="/app/wallet">
+            <a className="wallet-btn" href="/wallet">
               <i className="ti ti-wallet" /> &#8358;0.00
             </a>
           )}

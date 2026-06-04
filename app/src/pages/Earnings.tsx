@@ -51,9 +51,9 @@ export default function Earnings() {
         .en-graph-title{font-family:Outfit;font-size:15px;font-weight:800}
         .en-tabs{display:flex;gap:4px}
         .en-tab{padding:5px 12px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text2);font-size:11px;font-weight:600;cursor:pointer;transition:all .2s}
-        .en-tab:hover,.en-tab.active{border-color:var(--accent);color:var(--accent);background:rgba(124,58,237,.08)}
+        .en-tab:hover,.en-tab.active{border-color:var(--accent);color:var(--accent);background:rgba(31,140,255,.08)}
         .en-graph{display:flex;align-items:flex-end;gap:4px;height:120px}
-        .en-bar{flex:1;border-radius:4px 4px 0 0;min-height:8px;position:relative;background:linear-gradient(to top, rgba(124,58,237,.3), var(--accent));transition:height .3s}
+        .en-bar{flex:1;border-radius:4px 4px 0 0;min-height:8px;position:relative;background:linear-gradient(to top, rgba(31,140,255,.3), var(--accent));transition:height .3s}
         .en-bar .en-val{position:absolute;top:-22px;left:50%;transform:translateX(-50%);font-size:9px;color:var(--text3);white-space:nowrap}
         .en-history{margin-top:16px}
         .en-h-item{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)}
@@ -71,7 +71,7 @@ export default function Earnings() {
       {/* Stats */}
       <div className="en-grid">
         {[
-          { icon: 'ti ti-coin', color: '#7C3AED', num: `NGN ${earningsData.total.toLocaleString()}`, label: 'Total Earned' },
+          { icon: 'ti ti-coin', color: '#1F8CFF', num: `NGN ${earningsData.total.toLocaleString()}`, label: 'Total Earned' },
           { icon: 'ti ti-wallet', color: '#16a34a', num: `NGN ${earningsData.available.toLocaleString()}`, label: 'Available Balance' },
           { icon: 'ti ti-clock', color: '#F59E0B', num: `NGN ${earningsData.pending.toLocaleString()}`, label: 'Pending Earnings' },
           { icon: 'ti ti-trending-up', color: '#2563EB', num: `NGN ${earningsData.month.toLocaleString()}`, label: 'This Month' },
@@ -108,7 +108,7 @@ export default function Earnings() {
       {/* Breakdown */}
       <div className="en-grid" style={{marginBottom:24}}>
         {[
-          { icon: 'ti ti-briefcase', color: '#7C3AED', num: `NGN ${earningsData.total - earningsData.referrals - earningsData.tips - earningsData.vault}`, label: 'From Tasks', sub: `${earningsData.jobs} jobs completed` },
+          { icon: 'ti ti-briefcase', color: '#1F8CFF', num: `NGN ${earningsData.total - earningsData.referrals - earningsData.tips - earningsData.vault}`, label: 'From Tasks', sub: `${earningsData.jobs} jobs completed` },
           { icon: 'ti ti-affiliate', color: '#2563EB', num: `NGN ${earningsData.referrals.toLocaleString()}`, label: 'From Referrals', sub: '3 active referrals' },
           { icon: 'ti ti-gift', color: '#F59E0B', num: `NGN ${earningsData.tips.toLocaleString()}`, label: 'From Tips', sub: '12 tips received' },
           { icon: 'ti ti-vault', color: '#16a34a', num: `NGN ${earningsData.vault.toLocaleString()}`, label: 'From Vault', sub: 'Vault rewards' },

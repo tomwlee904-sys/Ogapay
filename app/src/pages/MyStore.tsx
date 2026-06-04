@@ -19,7 +19,7 @@ export default function MyStore() {
         .mst-hero-left h1{font-family:Outfit;font-size:28px;font-weight:900;margin:0 0 4px}
         .mst-hero-left p{color:var(--text2);font-size:14px;margin:0}
         .mst-add-btn{height:38px;padding:0 16px;border-radius:10px;border:0;background:var(--accent);color:#fff;font-weight:700;font-size:12px;display:inline-flex;align-items:center;gap:6px;cursor:pointer;transition:all .2s;text-decoration:none}
-        .mst-add-btn:hover{box-shadow:0 4px 16px rgba(124,58,237,.2)}
+        .mst-add-btn:hover{box-shadow:0 4px 16px rgba(31,140,255,.2)}
         .mst-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
         @media(max-width:500px){.mst-stats{grid-template-columns:1fr}}
         .mst-stat{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center;transition:all .25s}
@@ -29,7 +29,7 @@ export default function MyStore() {
         .mst-stat .mst-label{font-size:12px;color:var(--text2);margin-top:2px}
         .mst-tabs{display:flex;gap:4px;margin-bottom:14px}
         .mst-tab{padding:6px 14px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text2);font-size:11px;font-weight:600;cursor:pointer;transition:all .2s}
-        .mst-tab:hover,.mst-tab.active{border-color:var(--accent);color:var(--accent);background:rgba(124,58,237,.08)}
+        .mst-tab:hover,.mst-tab.active{border-color:var(--accent);color:var(--accent);background:rgba(31,140,255,.08)}
         .mst-list{display:grid;gap:6px}
         .mst-item{display:flex;align-items:center;gap:14px;padding:14px 16px;background:var(--card);border:1px solid var(--border);border-radius:12px;transition:all .2s}
         .mst-item:hover{border-color:var(--border2)}
@@ -54,7 +54,7 @@ export default function MyStore() {
 
       <div className="mst-stats">
         {[
-          { icon: 'ti ti-building-store', color: '#7C3AED', count: '3', label: 'Products' },
+          { icon: 'ti ti-building-store', color: '#1F8CFF', count: '3', label: 'Products' },
           { icon: 'ti ti-coin', color: '#16a34a', count: 'NGN 0', label: 'Sales' },
           { icon: 'ti ti-shopping-cart', color: '#2563EB', count: '25', label: 'Orders' },
         ].map((s, i) => (

@@ -5,7 +5,7 @@ const campaigns = [
   { id: 1, name: 'Brand Awareness Q3', platform: 'X/Twitter', budget: 'NGN 50,000', reach: '12.4K', engagements: 845, status: 'Active', color: '#16a34a' },
   { id: 2, name: 'Product Launch', platform: 'Instagram', budget: 'NGN 100,000', reach: '28.7K', engagements: 2103, status: 'Active', color: '#16a34a' },
   { id: 3, name: 'Community Growth', platform: 'Telegram', budget: 'NGN 25,000', reach: '5.2K', engagements: 412, status: 'Paused', color: '#F59E0B' },
-  { id: 4, name: 'Holiday Promo', platform: 'Multi-platform', budget: 'NGN 200,000', reach: '45.1K', engagements: 3890, status: 'Draft', color: '#7C3AED' },
+  { id: 4, name: 'Holiday Promo', platform: 'Multi-platform', budget: 'NGN 200,000', reach: '45.1K', engagements: 3890, status: 'Draft', color: '#1F8CFF' },
 ]
 
 export default function Campaigns() {
@@ -22,7 +22,7 @@ export default function Campaigns() {
         .cmp-create p{color:var(--text2);font-size:13px;margin:0;flex:1}
         .cmp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
         .cmp-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px;transition:all .25s}
-        .cmp-card:hover{transform:translateY(-2px);border-color:var(--accent);box-shadow:0 0 20px rgba(124,58,237,.06)}
+        .cmp-card:hover{transform:translateY(-2px);border-color:var(--accent);box-shadow:0 0 20px rgba(31,140,255,.06)}
         .cmp-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
         .cmp-name{font-weight:800;font-size:14px}
         .cmp-status{padding:3px 8px;border-radius:5px;font-size:10px;font-weight:700}
@@ -36,7 +36,7 @@ export default function Campaigns() {
         .cmp-btn{height:30px;padding:0 10px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text2);font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:4px}
         .cmp-btn:hover{border-color:var(--accent);color:var(--accent)}
         .cmp-btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
-        .cmp-btn.primary:hover{box-shadow:0 4px 12px rgba(124,58,237,.2)}
+        .cmp-btn.primary:hover{box-shadow:0 4px 12px rgba(31,140,255,.2)}
         .cmp-empty{text-align:center;padding:48px;color:var(--text2)}
         .cmp-empty i{font-size:36px;color:var(--text3);margin-bottom:10px;display:block}
         /* Modal */

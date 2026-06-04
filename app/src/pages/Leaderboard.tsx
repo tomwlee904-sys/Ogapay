@@ -2,7 +2,7 @@ import { useState } from 'react'
 import Layout from '../components/Layout'
 
 const users = [
-  { rank: 1, name: 'CryptoKing', earnings: 'NGN 125,400', tasks: 342, badge: '🥇', color: '#7C3AED', avatar: 'CK' },
+  { rank: 1, name: 'CryptoKing', earnings: 'NGN 125,400', tasks: 342, badge: '🥇', color: '#1F8CFF', avatar: 'CK' },
   { rank: 2, name: 'TaskMaster', earnings: 'NGN 98,200', tasks: 287, badge: '🥈', color: '#2563EB', avatar: 'TM' },
   { rank: 3, name: 'EarnQueen', earnings: 'NGN 82,500', tasks: 254, badge: '🥉', color: '#16a34a', avatar: 'EQ' },
   { rank: 4, name: 'BizWizard', earnings: 'NGN 67,800', tasks: 198, color: '#F59E0B', avatar: 'BW' },
@@ -13,7 +13,7 @@ const users = [
 ]
 
 const categories = [
-  { id: 'earners', icon: 'ti ti-coin', label: 'Top Earners', color: '#7C3AED', users: users.slice(0, 5) },
+  { id: 'earners', icon: 'ti ti-coin', label: 'Top Earners', color: '#1F8CFF', users: users.slice(0, 5) },
   { id: 'posters', icon: 'ti ti-briefcase', label: 'Top Task Posters', color: '#2563EB', users: users.slice(0, 5) },
   { id: 'referrers', icon: 'ti ti-affiliate', label: 'Top Referrers', color: '#16a34a', users: users.slice(0, 5) },
   { id: 'leaders', icon: 'ti ti-users', label: 'Community Leaders', color: '#F59E0B', users: users.slice(0, 5) },
@@ -38,8 +38,8 @@ export default function Leaderboard() {
   return (
     <Layout>
       <style>{`
-        .lb-hero{text-align:center;padding:36px 20px 28px;margin-bottom:24px;background:linear-gradient(135deg,rgba(124,58,237,.08),rgba(37,99,235,.06),var(--card));border-radius:16px;border:1px solid var(--border);position:relative;overflow:hidden}
-        .lb-hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 30% 40%,rgba(124,58,237,.12),transparent 60%),radial-gradient(ellipse at 70% 60%,rgba(37,99,235,.08),transparent 50%);pointer-events:none}
+        .lb-hero{text-align:center;padding:36px 20px 28px;margin-bottom:24px;background:linear-gradient(135deg,rgba(31,140,255,.08),rgba(37,99,235,.06),var(--card));border-radius:16px;border:1px solid var(--border);position:relative;overflow:hidden}
+        .lb-hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 30% 40%,rgba(31,140,255,.12),transparent 60%),radial-gradient(ellipse at 70% 60%,rgba(37,99,235,.08),transparent 50%);pointer-events:none}
         .lb-hero-inner{position:relative;z-index:1}
         .lb-hero h1{font-family:Outfit;font-size:32px;font-weight:900;margin:0 0 6px}
         .lb-hero p{color:var(--text2);font-size:14px;margin:0 auto;max-width:480px}

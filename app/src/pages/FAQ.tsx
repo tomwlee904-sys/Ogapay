@@ -63,7 +63,7 @@ export default function FAQ() {
   return (
     <Layout>
       <style>{`
-        .faq-hero{text-align:center;padding:32px 20px 24px;margin-bottom:24px;background:linear-gradient(135deg,rgba(124,58,237,.05),var(--card));border-radius:16px;border:1px solid var(--border)}
+        .faq-hero{text-align:center;padding:32px 20px 24px;margin-bottom:24px;background:linear-gradient(135deg,rgba(31,140,255,.05),var(--card));border-radius:16px;border:1px solid var(--border)}
         .faq-hero h1{font-family:Outfit;font-size:32px;font-weight:900;margin:0 0 8px}
         .faq-hero p{color:var(--text2);font-size:14px;margin:0 0 20px;max-width:480px;margin-left:auto;margin-right:auto}
         .faq-search{max-width:480px;margin:0 auto;display:flex;align-items:center;gap:8px;height:44px;padding:0 16px;border:1px solid var(--border);border-radius:12px;background:var(--card);transition:border-color .2s}
@@ -74,7 +74,7 @@ export default function FAQ() {
         .faq-cats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:24px}
         @media(max-width:600px){.faq-cats{grid-template-columns:repeat(2,1fr)}}
         .faq-cat{padding:16px 14px;border:1px solid var(--border);border-radius:12px;background:var(--card);cursor:pointer;transition:all .2s;text-align:center}
-        .faq-cat:hover,.faq-cat.active{border-color:var(--accent);background:rgba(124,58,237,.04)}
+        .faq-cat:hover,.faq-cat.active{border-color:var(--accent);background:rgba(31,140,255,.04)}
         .faq-cat i{font-size:24px;color:var(--accent);margin-bottom:6px;display:block}
         .faq-cat .fc-label{font-weight:700;font-size:12px;margin-bottom:2px}
         .faq-cat .fc-count{font-size:11px;color:var(--text3)}

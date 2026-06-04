@@ -3,11 +3,11 @@ import Layout from '../components/Layout'
 
 const initialNotifications = [
   { id: 1, icon: 'ti ti-coin', title: 'Earnings Received', desc: 'You earned NGN 500 from Social Media Task', time: '2m ago', read: false, color: '#16a34a' },
-  { id: 2, icon: 'ti ti-check', title: 'Task Approved', desc: 'Your submission for Content Review has been approved', time: '1h ago', read: false, color: '#7C3AED' },
+  { id: 2, icon: 'ti ti-check', title: 'Task Approved', desc: 'Your submission for Content Review has been approved', time: '1h ago', read: false, color: '#1F8CFF' },
   { id: 3, icon: 'ti ti-wallet', title: 'Withdrawal Processed', desc: 'Your withdrawal of NGN 2,000 has been sent', time: '3h ago', read: false, color: '#2563EB' },
   { id: 4, icon: 'ti ti-user-plus', title: 'New Referral', desc: 'Someone joined using your referral link', time: '5h ago', read: true, color: '#F59E0B' },
   { id: 5, icon: 'ti ti-message', title: 'New Message', desc: 'You have a new message from Task Creator', time: '1d ago', read: true, color: '#EC4899' },
-  { id: 6, icon: 'ti ti-bullhorn', title: 'Platform Update', desc: 'New features have been added to the platform', time: '2d ago', read: true, color: '#7C3AED' },
+  { id: 6, icon: 'ti ti-bullhorn', title: 'Platform Update', desc: 'New features have been added to the platform', time: '2d ago', read: true, color: '#1F8CFF' },
   { id: 7, icon: 'ti ti-star', title: 'Achievement Unlocked', desc: 'You completed 10 tasks! Keep it up', time: '3d ago', read: true, color: '#F59E0B' },
 ]
 
@@ -32,13 +32,13 @@ export default function Notifications() {
         .nt-hero-right{display:flex;gap:8px}
         .nt-tabs{display:flex;gap:4px;margin-bottom:16px}
         .nt-tab{padding:6px 14px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text2);font-size:11px;font-weight:600;cursor:pointer;transition:all .2s}
-        .nt-tab:hover,.nt-tab.active{border-color:var(--accent);color:var(--accent);background:rgba(124,58,237,.08)}
+        .nt-tab:hover,.nt-tab.active{border-color:var(--accent);color:var(--accent);background:rgba(31,140,255,.08)}
         .nt-mark-btn{height:32px;padding:0 12px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text2);font-size:11px;font-weight:600;cursor:pointer;transition:all .2s}
         .nt-mark-btn:hover{border-color:var(--accent);color:var(--accent)}
         .nt-list{display:grid;gap:6px}
         .nt-item{display:flex;gap:14px;padding:14px 16px;background:var(--card);border:1px solid var(--border);border-radius:12px;transition:all .2s;cursor:pointer}
         .nt-item:hover{border-color:var(--border2)}
-        .nt-item.unread{border-left:3px solid var(--accent);background:rgba(124,58,237,.03)}
+        .nt-item.unread{border-left:3px solid var(--accent);background:rgba(31,140,255,.03)}
         .nt-icon{width:36px;height:36px;border-radius:9px;display:grid;place-items:center;flex-shrink:0;font-size:16px}
         .nt-content{flex:1;min-width:0}
         .nt-title{font-weight:700;font-size:13px;margin-bottom:2px}

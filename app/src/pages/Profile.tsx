@@ -1,169 +1,413 @@
-import { useState } from 'react'
-import { useAuth } from '../context/AuthContext'
-import Layout from '../components/Layout'
+// @ts-nocheck
+import { useState } from "react";
+import Layout from "../components/Layout";
+import { useAuth } from "../context/AuthContext";
 
-const quickLinks = [
-  { icon: 'ti ti-checklist', label: 'Browse Tasks', href: '/app/tasks', color: '#7C3AED' },
-  { icon: 'ti ti-wallet', label: 'Wallet', href: '/app/wallet', color: '#16a34a' },
-  { icon: 'ti ti-building-store', label: 'My Store', href: '/app/my-store', color: '#2563EB' },
-  { icon: 'ti ti-users', label: 'Communities', href: '/app/communities', color: '#EC4899' },
-  { icon: 'ti ti-bell', label: 'Notifications', href: '/app/notifications', color: '#F59E0B' },
-  { icon: 'ti ti-settings', label: 'Settings', href: '/app/settings', color: '#6B7280' },
-]
+const I = ({ n, s = 16, c = "currentColor" }) => (
+  <i className={`ti ti-${n}`} style={{ fontSize: s, color: c, lineHeight: 1, flexShrink: 0 }} />
+);
 
-const moreLinks = [
-  { icon: 'ti ti-briefcase', label: 'Worker Portal', href: '/app/worker-portal' },
-  { icon: 'ti ti-message', label: 'Messages', href: '/app/messages' },
-  { icon: 'ti ti-affiliate', label: 'Referrals', href: '/app/referrals' },
-  { icon: 'ti ti-vault', label: 'Vault', href: '/app/vault' },
-  { icon: 'ti ti-article', label: 'Blog', href: '/blog' },
-  { icon: 'ti ti-headset', label: 'Support', href: '/support' },
-]
+const XIcon = ({ size = 14 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
+    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.739l7.727-8.833L1.255 2.25H8.08l4.253 5.622 5.911-5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+  </svg>
+);
+
+const DONUT_CATS = [
+  { name: "Jobs", color: "#22c55e" },
+  { name: "Referrals", color: "#1F8CFF" },
+  { name: "Tips", color: "#3b82f6" },
+  { name: "Vault", color: "#f59e0b" },
+];
+
+const QUICK_LINKS = [
+  { icon: "activity", label: "Job Monitor", href: "/tasks" },
+  { icon: "safe", label: "Vault", href: "/vault" },
+  { icon: "file-text", label: "Blogs", href: "/blog" },
+  { icon: "briefcase", label: "Available Jobs", href: "/tasks" },
+  { icon: "bookmark", label: "Bookmarks", href: "/bookmarks" },
+  { icon: "circle-plus", label: "Create Job", href: "/create" },
+];
+
+const REFERRAL_DATA = [
+  { name: "Alex T.", joined: "2 days ago", earned: "₦350", status: "Active" },
+  { name: "Chioma O.", joined: "1 week ago", earned: "₦1,200", status: "Active" },
+  { name: "Emeka S.", joined: "2 weeks ago", earned: "₦0", status: "Pending" },
+];
+
+const CHART_DATA = [35, 55, 42, 70, 48, 62, 85];
+
+function Toggle({ on, set }) {
+  return (
+    <button onClick={() => set(v => !v)} style={{
+      width: 44, height: 24, borderRadius: 99, border: "none", cursor: "pointer",
+      background: on ? "var(--text)" : "var(--border)", position: "relative", flexShrink: 0, transition: "background .2s"
+    }}>
+      <span style={{
+        position: "absolute", top: 3, left: on ? 23 : 3, width: 18, height: 18,
+        borderRadius: "50%", background: "#fff", transition: "left .2s",
+        boxShadow: "0 1px 3px rgba(0,0,0,.25)"
+      }} />
+    </button>
+  );
+}
+
+function CopyBtn({ text }) {
+  const [ok, setOk] = useState(false);
+  const copy = () => { navigator.clipboard?.writeText(text); setOk(true); setTimeout(() => setOk(false), 1800); };
+  return (
+    <button onClick={copy} style={{
+      height: 34, padding: "0 14px", borderRadius: 99, border: "1.5px solid var(--border)",
+      background: "var(--card)", fontSize: 12, fontWeight: 700, display: "flex", alignItems: "center", gap: 6, cursor: "pointer",
+      color: ok ? "var(--green)" : "var(--text)"
+    }}>
+      <I n={ok ? "check" : "copy"} s={13} c={ok ? "var(--green)" : "var(--text3)"} /> {ok ? "Copied!" : "Copy"}
+    </button>
+  );
+}
+
+function Card({ children, style = {} }) {
+  return <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 14, overflow: "hidden", ...style }}>{children}</div>;
+}
+
+function CardHead({ left, right }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 18px", borderBottom: "1px solid var(--border)" }}>
+      <span style={{ display: "flex", alignItems: "center", gap: 8, fontFamily: "Outfit,sans-serif", fontSize: 15, fontWeight: 800, color: "var(--text)" }}>{left}</span>
+      {right}
+    </div>
+  );
+}
+
+function CardBody({ children, style = {} }) {
+  return <div style={{ padding: "16px 18px", ...style }}>{children}</div>;
+}
 
 export default function Profile() {
-  const { isAuthed } = useAuth()
-  const [moreOpen, setMoreOpen] = useState(false)
+  const { isAuthed } = useAuth();
+  const [tab, setTab] = useState("profile");
+  const [earnTab, setEarnTab] = useState("7d");
+  const [refHidden, setRefHidden] = useState(false);
 
   if (!isAuthed) {
     return (
       <Layout sidebar={false}>
         <div className="loading"><div className="spinner" /> Sign in to view your profile</div>
       </Layout>
-    )
+    );
   }
 
+  const refLink = "https://ogapay.ng/ref/johndoe";
+
   return (
-    <Layout>
+    <Layout sidebar={false}>
       <style>{`
-        .pf-row{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px}
-        @media(max-width:700px){.pf-row{grid-template-columns:1fr}}
-        .pf-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px;transition:all .25s}
-        .pf-card:hover{border-color:var(--border2)}
-        .pf-card-title{font-size:11px;font-weight:800;color:var(--text3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:14px}
-        .pf-bal{font-family:Outfit;font-size:32px;font-weight:900;color:var(--text);margin:0 0 2px}
-        .pf-bal-sub{font-size:13px;color:var(--text2);margin-bottom:14px}
-        .pf-actions{display:flex;gap:6px;flex-wrap:wrap}
-        .pfa-btn{height:34px;padding:0 14px;border-radius:8px;font-weight:700;font-size:12px;display:inline-flex;align-items:center;gap:5px;cursor:pointer;transition:all .2s;text-decoration:none;border:1px solid var(--border);background:var(--bg2);color:var(--text)}
-        .pfa-btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
-        .pfa-btn.primary:hover{box-shadow:0 4px 20px rgba(124,58,237,.2)}
-        .pfa-btn:hover{border-color:var(--accent);color:var(--accent)}
-        .pf-profile{display:flex;gap:16px;align-items:flex-start}
-        .pf-avatar{width:64px;height:64px;border-radius:50%;background:var(--bg2);display:grid;place-items:center;border:3px solid var(--accent);flex-shrink:0;overflow:hidden}
-        .pf-avatar i{font-size:28px;color:var(--text3)}
-        .pf-name{font-family:Outfit;font-size:20px;font-weight:800;margin:0 0 2px}
-        .pf-uname{color:var(--text2);font-size:13px;margin-bottom:4px}
-        .pf-bio{color:var(--text2);font-size:13px;margin-bottom:10px;max-width:280px}
-        .pf-badges{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px}
-        .pf-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:6px;font-size:10px;font-weight:700;border:1px solid}
-        .pf-badge.verified{border-color:var(--green);color:var(--green);background:rgba(22,163,74,.08)}
-        .pf-badge.rank{border-color:var(--accent);color:var(--accent);background:rgba(124,58,237,.08)}
-        .pf-badge.rep{border-color:var(--gold);color:var(--gold);background:rgba(245,179,1,.08)}
-        .pf-ref-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px 24px;margin-bottom:18px;transition:all .25s}
-        .pf-ref-card:hover{border-color:var(--border2)}
-        .pf-ref-title{font-weight:700;font-size:15px;margin-bottom:4px}
-        .pf-ref-desc{font-size:13px;color:var(--text2);margin-bottom:12px}
-        .pf-ref-row{display:flex;gap:8px}
-        .pf-ref-row input{flex:1;height:36px;padding:0 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg2);color:var(--text);font-size:12px;outline:0}
-        .pf-ref-row input:focus{border-color:var(--accent)}
-        .pf-ref-row button{height:36px;padding:0 14px;border-radius:8px;font-weight:700;font-size:12px;display:inline-flex;align-items:center;gap:5px;cursor:pointer;border:0;background:var(--accent);color:#fff;transition:all .2s}
-        .pf-ref-row button:hover{box-shadow:0 4px 16px rgba(124,58,237,.25)}
-        .pf-quick-links{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px}
-        @media(max-width:500px){.pf-quick-links{grid-template-columns:repeat(2,1fr)}}
-        .pf-ql{display:flex;flex-direction:column;align-items:center;gap:8px;padding:14px 10px;background:var(--card);border:1px solid var(--border);border-radius:12px;text-align:center;cursor:pointer;transition:all .2s;text-decoration:none}
-        .pf-ql:hover{transform:translateY(-2px);border-color:var(--accent);box-shadow:0 0 20px rgba(124,58,237,.06)}
-        .pf-ql i{font-size:22px}
-        .pf-ql span{font-size:12px;font-weight:700;color:var(--text)}
-        .pf-more-btn{width:100%;height:38px;display:flex;align-items:center;justify-content:center;gap:6px;padding:0 14px;border:1px dashed var(--border);border-radius:10px;background:transparent;color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;transition:all .2s}
-        .pf-more-btn:hover{border-color:var(--accent);color:var(--accent)}
-        .pf-more-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
-        @media(max-width:500px){.pf-more-grid{grid-template-columns:repeat(2,1fr)}}
-        .pf-ml{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;text-decoration:none;color:var(--text2);font-size:12px;font-weight:600;transition:all .14s}
-        .pf-ml:hover{background:var(--bg2);color:var(--text)}
-        .pf-ml i{font-size:16px;width:18px;text-align:center}
+        .prf-tabs { display: flex; gap: 6px; margin-bottom: 24px; padding-bottom: 4px; border-bottom: 1px solid var(--border); overflow-x: auto; }
+        .prf-tab { display: inline-flex; align-items: center; gap: 7px; padding: 8px 14px; border: 1px solid transparent; border-radius: 8px; background: transparent; color: var(--text3); font-family: "DM Sans",sans-serif; font-size: 12.5px; font-weight: 700; cursor: pointer; white-space: nowrap; transition: all .15s; }
+        .prf-tab:hover { color: var(--text); background: var(--bg2); }
+        .prf-tab.active { border-color: var(--accent); color: var(--accent); background: rgba(31,140,255,.06); }
+
+        .prf-grid { display: grid; grid-template-columns: 1fr 340px; gap: 22px; align-items: start; }
+        .prf-main { min-width: 0; }
+
+        .prf-hero { display: flex; align-items: center; gap: 18px; margin-bottom: 24px; }
+        .prf-avatar { width: 64px; height: 64px; border-radius: 50%; background: var(--bg2); border: 2px solid var(--border); display: grid; place-items: center; font-size: 24px; font-weight: 900; color: var(--text); flex-shrink: 0; overflow: hidden; }
+        .prf-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .prf-info h1 { font-family: "Outfit",sans-serif; font-size: 22px; font-weight: 900; margin: 0; color: var(--text); }
+        .prf-info .prf-uname { font-size: 13px; color: var(--text3); margin: 2px 0 6px; }
+        .prf-info .prf-bio { font-size: 13px; color: var(--text2); line-height: 1.5; max-width: 400px; }
+        .prf-badges { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+        .prf-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; background: rgba(31,140,255,.08); color: var(--accent); }
+        .prf-badge.green { background: rgba(34,197,94,.08); color: var(--green); }
+        .prf-badge.gold { background: rgba(245,179,1,.1); color: #d97706; }
+
+        .prf-side-cards { display: grid; gap: 14px; }
+
+        .ql-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
+        .ql-item { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 14px 8px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg); cursor: pointer; transition: all .15s; text-decoration: none; color: inherit; }
+        .ql-item:hover { border-color: var(--accent); transform: translateY(-1px); }
+        .ql-item i { font-size: 20px; color: var(--accent); }
+        .ql-item span { font-size: 11px; font-weight: 700; color: var(--text2); text-align: center; }
+
+        .etabs { display: flex; gap: 4px; background: var(--bg2); border-radius: 8px; padding: 2px; }
+        .etab { padding: 4px 12px; border-radius: 6px; border: none; background: transparent; color: var(--text3); font-size: 11px; font-weight: 700; cursor: pointer; transition: all .15s; font-family: "DM Sans",sans-serif; }
+        .etab.active { background: var(--card); color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+
+        .earn-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+        .earn-row:last-child { border-bottom: none; }
+        .earn-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+        .earn-val { font-family: "Outfit",sans-serif; font-size: 18px; font-weight: 900; color: var(--text); margin-left: auto; }
+
+        .chart-simple { display: flex; align-items: flex-end; gap: 5px; height: 80px; padding: 10px 0; }
+        .chart-bar { flex: 1; border-radius: 3px 3px 0 0; background: var(--accent); opacity: .5; min-height: 4px; transition: height .4s; }
+        .chart-bar:hover { opacity: 1; }
+
+        .ref-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+        .ref-table th { text-align: left; padding: 8px 6px; font-weight: 700; color: var(--text3); border-bottom: 1px solid var(--border); font-size: 11px; }
+        .ref-table td { padding: 8px 6px; border-bottom: 1px solid var(--border); color: var(--text2); }
+        .ref-table .empty-td { text-align: center; padding: 32px 6px; color: var(--text3); font-size: 12px; }
+
+        .portal-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; }
+
+        @media (max-width: 768px) {
+          .prf-grid { grid-template-columns: 1fr; }
+          .ql-grid { grid-template-columns: repeat(3,1fr); }
+          .portal-grid { grid-template-columns: repeat(2,1fr); }
+          .prf-hero { flex-direction: column; text-align: center; }
+          .prf-tabs { gap: 4px; }
+          .prf-tab { padding: 6px 10px; font-size: 11px; }
+        }
+        .fade { animation: fadeUp .28s ease both; }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
       `}</style>
 
-      {/* Breadcrumb */}
-      <div className="bread" style={{marginBottom:16}}>
-        <a href="/app" style={{color:'var(--text2)'}}>Home</a>
-        <i className="ti ti-chevron-right" style={{fontSize:10,margin:'0 6px',color:'var(--text3)'}} />
-        <span style={{color:'var(--text)'}}>Profile</span>
-      </div>
-
-      {/* Two-column: Account Info + Profile */}
-      <div className="pf-row">
-        {/* Left: Account Info */}
-        <div className="pf-card">
-          <div className="pf-card-title">Account Information</div>
-          <div className="pf-bal">NGN 12,450.00</div>
-          <div className="pf-bal-sub">Available Balance: NGN 8,250.00</div>
-          <div className="pf-actions">
-            <a href="/app/wallet" className="pfa-btn primary"><i className="ti ti-plus" /> Withdraw</a>
-            <a href="/app/wallet" className="pfa-btn"><i className="ti ti-logout" /> Deposit</a>
-            <a href="/app/wallet" className="pfa-btn"><i className="ti ti-transfer" /> Transfer</a>
-          </div>
-        </div>
-
-        {/* Right: Profile */}
-        <div className="pf-card">
-          <div className="pf-profile">
-            <div className="pf-avatar">
-              <i className="ti ti-user" />
-            </div>
-            <div style={{flex:1}}>
-              <div className="pf-name">User Name</div>
-              <div className="pf-uname">@username</div>
-              <div className="pf-bio">Task poster &amp; community builder on OgaPay</div>
-              <div className="pf-badges">
-                <span className="pf-badge rank"><i className="ti ti-crown" /> Gold Tier</span>
-                <span className="pf-badge rep"><i className="ti ti-star" /> 4.8 Rep</span>
-                <span className="pf-badge verified"><i className="ti ti-circle-check" /> Verified</span>
-              </div>
-              <div className="pf-actions">
-                <a href="/app/settings" className="pfa-btn primary"><i className="ti ti-edit" /> Edit Profile</a>
-                <button className="pfa-btn"><i className="ti ti-share" /> Share</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Referral Program */}
-      <div className="pf-ref-card">
-        <div className="pf-ref-title"><i className="ti ti-affiliate" style={{color:'var(--accent)',marginRight:6}} />Referral Program</div>
-        <div className="pf-ref-desc">Share your referral link and earn rewards when friends join OgaPay</div>
-        <div className="pf-ref-row">
-          <input type="text" value="https://ogapay.app/ref/your-code" readOnly />
-          <button onClick={() => { const t = document.querySelector<HTMLInputElement>('.pf-ref-row input'); t?.select(); try { document.execCommand('copy') } catch {} }}>Copy Link</button>
-        </div>
-      </div>
-
-      {/* Quick Links */}
-      <div className="pf-card-title" style={{padding:'0 2px'}}>Quick Links</div>
-      <div className="pf-quick-links">
-        {quickLinks.map((q, i) => (
-          <a className="pf-ql" href={q.href} key={i}>
-            <i className={q.icon} style={{color: q.color}} />
-            <span>{q.label}</span>
-          </a>
+      {/* ─── TABS ─── */}
+      <div className="prf-tabs">
+        {[
+          { key: "profile", icon: "user", label: "Profile" },
+          { key: "earnings", icon: "currency-naira", label: "Earnings" },
+          { key: "referrals", icon: "affiliate", label: "Referrals" },
+          { key: "alerts", icon: "bell", label: "Alerts" },
+          { key: "portal", icon: "briefcase", label: "Worker Portal" },
+        ].map(t => (
+          <button key={t.key} className={`prf-tab ${tab === t.key ? "active" : ""}`} onClick={() => setTab(t.key)}>
+            <I n={t.icon} s={15} /> {t.label}
+          </button>
         ))}
       </div>
 
-      {/* More Links */}
-      <button className="pf-more-btn" onClick={() => setMoreOpen(!moreOpen)}>
-        <i className={`ti ${moreOpen ? 'ti-chevron-up' : 'ti-chevron-down'}`} />
-        {moreOpen ? 'Less Links' : 'More Links'}
-      </button>
+      {/* ══════════════ PROFILE TAB ══════════════ */}
+      {tab === "profile" && (
+        <div className="fade prf-grid">
+          {/* Main */}
+          <div className="prf-main">
+            <div className="prf-hero">
+              <div className="prf-avatar">
+                <span>👤</span>
+              </div>
+              <div className="prf-info">
+                <h1>John Doe</h1>
+                <div className="prf-uname">@johndoe</div>
+                <div className="prf-bio">Task worker and creator. Building skills on OgaPay.</div>
+                <div className="prf-badges">
+                  <span className="prf-badge"><I n="badge-verified" s={12} /> Verified</span>
+                  <span className="prf-badge green"><I n="star" s={12} /> 4.8 Rating</span>
+                  <span className="prf-badge gold"><I n="crown" s={12} /> Gold Tier</span>
+                </div>
+              </div>
+            </div>
 
-      {moreOpen && (
-        <div className="pf-more-grid">
-          {moreLinks.map((m, i) => (
-            <a className="pf-ml" href={m.href} key={i}>
-              <i className={m.icon} style={{color:'var(--accent)'}} />
-              {m.label}
-            </a>
-          ))}
+            {/* Quick Links */}
+            <div style={{ marginBottom: 22 }}>
+              <div style={{ fontFamily: "Outfit,sans-serif", fontSize: 14, fontWeight: 800, color: "var(--text)", marginBottom: 10 }}>Quick Links</div>
+              <div className="ql-grid">
+                {QUICK_LINKS.map(q => (
+                  <a key={q.label} href={q.href} className="ql-item">
+                    <I n={q.icon} s={20} />
+                    <span>{q.label}</span>
+                  </a>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Side */}
+          <div className="prf-side-cards">
+            <Card>
+              <CardHead left={<><I n="wallet" s={17} /> Wallet</>} right={<a href="/wallet" style={{ fontSize: 12, fontWeight: 700, color: "var(--accent)", textDecoration: "none" }}>Manage</a>} />
+              <CardBody>
+                <div style={{ fontFamily: "Outfit,sans-serif", fontSize: 28, fontWeight: 900, color: "var(--text)", marginBottom: 4 }}>₦12,450</div>
+                <div style={{ fontSize: 12, color: "var(--text3)", marginBottom: 14 }}>Available Balance</div>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <a href="/wallet" style={{ flex: 1, height: 38, borderRadius: 99, background: "var(--accent)", color: "#fff", border: "none", fontWeight: 700, fontSize: 12, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, cursor: "pointer", textDecoration: "none" }}>
+                    <I n="plus" s={13} c="#fff" /> Deposit
+                  </a>
+                  <a href="/wallet" style={{ flex: 1, height: 38, borderRadius: 99, border: "1.5px solid var(--border)", background: "transparent", color: "var(--text)", fontWeight: 700, fontSize: 12, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, cursor: "pointer", textDecoration: "none" }}>
+                    <I n="logout" s={13} /> Withdraw
+                  </a>
+                </div>
+              </CardBody>
+            </Card>
+
+            <Card>
+              <CardHead left={<><I n="settings" s={17} /> Quick Settings</>} />
+              <CardBody>
+                <div style={{ display: "grid", gap: 10 }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <span style={{ fontSize: 12.5, fontWeight: 600, color: "var(--text)" }}>Public Profile</span>
+                    <Toggle on={true} set={() => {}} />
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <span style={{ fontSize: 12.5, fontWeight: 600, color: "var(--text)" }}>Show Earnings</span>
+                    <Toggle on={true} set={() => {}} />
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <span style={{ fontSize: 12.5, fontWeight: 600, color: "var(--text)" }}>Open for Work</span>
+                    <Toggle on={false} set={() => {}} />
+                  </div>
+                </div>
+              </CardBody>
+            </Card>
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════ EARNINGS TAB ══════════════ */}
+      {tab === "earnings" && (
+        <div className="fade" style={{ maxWidth: 1060, margin: "0 auto" }}>
+          <div style={{ display: "grid", gap: 18 }}>
+            {/* Summary */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 14 }}>
+              {[
+                { label: "Total Earned", val: "₦45,200" },
+                { label: "Available", val: "₦12,450" },
+                { label: "Pending", val: "₦3,200" },
+                { label: "This Month", val: "₦8,900" },
+              ].map(s => (
+                <Card key={s.label} style={{ padding: "18px", textAlign: "center" }}>
+                  <div style={{ fontSize: 11, color: "var(--text3)", fontWeight: 700, marginBottom: 4 }}>{s.label}</div>
+                  <div style={{ fontFamily: "Outfit,sans-serif", fontSize: 22, fontWeight: 900, color: "var(--text)" }}>{s.val}</div>
+                </Card>
+              ))}
+            </div>
+
+            {/* Chart */}
+            <Card>
+              <CardHead left={<><I n="chart-area" s={17} /> Earnings Chart</>} right={
+                <div className="etabs">
+                  {["7d", "30d", "all"].map(p => (
+                    <button key={p} className={`etab ${earnTab === p ? "active" : ""}`} onClick={() => setEarnTab(p)}>
+                      {p === "7d" ? "7 Days" : p === "30d" ? "30 Days" : "All Time"}
+                    </button>
+                  ))}
+                </div>
+              } />
+              <CardBody>
+                <div className="chart-simple">
+                  {CHART_DATA.map((v, i) => (
+                    <div key={i} className="chart-bar" style={{ height: `${v}%` }} />
+                  ))}
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: "var(--text3)", fontWeight: 600 }}>
+                  <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+                </div>
+              </CardBody>
+            </Card>
+
+            {/* Category Breakdown */}
+            <Card>
+              <CardHead left={<><I n="pie-chart" s={17} /> Breakdown</>} />
+              <CardBody>
+                {DONUT_CATS.map(c => (
+                  <div key={c.name} className="earn-row">
+                    <div className="earn-dot" style={{ background: c.color }} />
+                    <span style={{ fontSize: 13, color: "var(--text2)", fontWeight: 600 }}>{c.name}</span>
+                    <span className="earn-val">₦0</span>
+                  </div>
+                ))}
+              </CardBody>
+            </Card>
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════ REFERRALS TAB ══════════════ */}
+      {tab === "referrals" && (
+        <div className="fade" style={{ maxWidth: 1060, margin: "0 auto" }}>
+          <Card>
+            <CardHead left={<><I n="affiliate" s={17} /> Referral Program</>} right={<span style={{ fontSize: 12, color: "var(--text3)", fontWeight: 700 }}>Earn 10% forever</span>} />
+            <CardBody>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 18, padding: "12px 16px", background: "var(--bg2)", borderRadius: 10, border: "1px solid var(--border)", flexWrap: "wrap" }}>
+                <span style={{ fontFamily: "monospace", fontSize: 13, color: "var(--text)", flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{refLink}</span>
+                <CopyBtn text={refLink} />
+                <button style={{ height: 34, padding: "0 14px", borderRadius: 99, background: "var(--text)", color: "var(--bg)", border: "none", fontSize: 12, fontWeight: 700, display: "flex", alignItems: "center", gap: 7, cursor: "pointer" }}>
+                  <XIcon size={12} /> Post on X
+                </button>
+              </div>
+              <table className="ref-table">
+                <thead><tr><th>USER</th><th>JOINED</th><th>EARNINGS</th><th>STATUS</th></tr></thead>
+                <tbody>
+                  {REFERRAL_DATA.map(r => (
+                    <tr key={r.name}>
+                      <td style={{ fontWeight: 700, color: "var(--text)" }}>{r.name}</td>
+                      <td>{r.joined}</td>
+                      <td style={{ fontWeight: 700, color: "var(--green)" }}>{r.earned}</td>
+                      <td><span style={{ padding: "2px 8px", borderRadius: 999, fontSize: 11, fontWeight: 700, background: r.status === "Active" ? "rgba(34,197,94,.1)" : "rgba(245,179,1,.1)", color: r.status === "Active" ? "var(--green)" : "#d97706" }}>{r.status}</span></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </CardBody>
+          </Card>
+        </div>
+      )}
+
+      {/* ══════════════ ALERTS TAB ══════════════ */}
+      {tab === "alerts" && (
+        <div className="fade" style={{ maxWidth: 1060, margin: "0 auto" }}>
+          <Card>
+            <CardHead left={<><I n="bell" s={17} /> Alerts</>} right={<button style={{ fontSize: 12, fontWeight: 700, color: "var(--accent)", border: "none", background: "none", cursor: "pointer" }}>Mark all read</button>} />
+            <CardBody style={{ textAlign: "center", padding: "48px 20px" }}>
+              <I n="bell-off" s={40} c="var(--border2)" />
+              <div style={{ fontSize: 13, color: "var(--text3)", marginTop: 12 }}>No alerts yet. We'll notify you about new jobs, earnings, and updates.</div>
+            </CardBody>
+          </Card>
+        </div>
+      )}
+
+      {/* ══════════════ WORKER PORTAL TAB ══════════════ */}
+      {tab === "portal" && (
+        <div className="fade" style={{ maxWidth: 1060, margin: "0 auto", display: "grid", gap: 18 }}>
+          <div className="portal-grid">
+            {[
+              { icon: "briefcase", label: "Tasks Done", val: "0" },
+              { icon: "trophy", label: "Won", val: "0" },
+              { icon: "heart", label: "Compliments", val: "0" },
+              { icon: "currency-naira", label: "Total Earned", val: "₦0" },
+            ].map(s => (
+              <Card key={s.label} style={{ padding: 20, textAlign: "center" }}>
+                <I n={s.icon} s={24} c="var(--text3)" />
+                <div style={{ fontFamily: "Outfit,sans-serif", fontSize: 26, fontWeight: 900, margin: "8px 0 4px", color: "var(--text)" }}>{s.val}</div>
+                <div style={{ fontSize: 11, color: "var(--text3)", fontWeight: 700 }}>{s.label}</div>
+              </Card>
+            ))}
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 18 }}>
+            <Card>
+              <CardHead left={<><I n="layout-dashboard" s={17} /> Worker Portal</>} />
+              <CardBody>
+                <p style={{ fontSize: 13, color: "var(--text2)", lineHeight: 1.6, marginBottom: 16 }}>Build your reputation as a worker on OgaPay. Complete tasks, earn compliments, and rise through the ranks.</p>
+                <div style={{ display: "grid", gap: 10 }}>
+                  {[
+                    { icon: "star", label: "My Reviews", val: "0 reviews", sub: "0.0 rating" },
+                    { icon: "zap", label: "Challenges Participated", val: "0" },
+                    { icon: "gift", label: "Tips Received", val: "0" },
+                    { icon: "users", label: "Communities", val: "0 joined" },
+                  ].map(r => (
+                    <div key={r.label} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: "1px dashed var(--border)", fontSize: 13 }}>
+                      <span style={{ display: "flex", alignItems: "center", gap: 8, color: "var(--text2)", fontWeight: 600 }}>
+                        <I n={r.icon} s={16} c="var(--text3)" />{r.label}
+                      </span>
+                      <div style={{ textAlign: "right" }}>
+                        <div style={{ fontWeight: 800, color: "var(--text)" }}>{r.val}</div>
+                        {r.sub && <div style={{ fontSize: 11, color: "var(--text3)" }}>{r.sub}</div>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardBody>
+            </Card>
+            <Card>
+              <CardHead left={<><I n="user" s={17} /> My Store</>} right={<a href="/my-store" style={{ height: 32, padding: "0 14px", borderRadius: 99, background: "var(--text)", color: "var(--bg)", border: "none", fontWeight: 700, fontSize: 12, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6, textDecoration: "none" }}><I n="external-link" s={12} /> Open Store</a>} />
+              <CardBody style={{ textAlign: "center", padding: "32px 20px" }}>
+                <I n="building-store" s={40} c="var(--border2)" />
+                <div style={{ fontSize: 13, color: "var(--text3)", marginTop: 12 }}>No products listed yet.</div>
+                <div style={{ fontSize: 12, color: "var(--text3)", marginTop: 4 }}>Open your store to sell services and products.</div>
+              </CardBody>
+            </Card>
+          </div>
         </div>
       )}
     </Layout>
-  )
+  );
 }

@@ -40,7 +40,7 @@ export default function Referrals() {
         .rf-ref-row input{flex:1;height:38px;padding:0 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg2);color:var(--text);font-size:13px;outline:0}
         .rf-ref-row input:focus{border-color:var(--accent)}
         .rf-ref-row button{height:38px;padding:0 16px;border-radius:8px;font-weight:700;font-size:12px;display:inline-flex;align-items:center;gap:5px;cursor:pointer;border:0;background:var(--accent);color:#fff;transition:all .2s}
-        .rf-ref-row button:hover{box-shadow:0 4px 16px rgba(124,58,237,.25)}
+        .rf-ref-row button:hover{box-shadow:0 4px 16px rgba(31,140,255,.25)}
         .rf-list{display:grid;gap:6px}
         .rf-item{display:flex;align-items:center;gap:14px;padding:12px 16px;background:var(--card);border:1px solid var(--border);border-radius:10px;transition:all .2s}
         .rf-item:hover{border-color:var(--border2)}
@@ -61,7 +61,7 @@ export default function Referrals() {
 
       <div className="rf-stats">
         {[
-          { icon: 'ti ti-users', color: '#7C3AED', count: '3', label: 'Total Referrals' },
+          { icon: 'ti ti-users', color: '#1F8CFF', count: '3', label: 'Total Referrals' },
           { icon: 'ti ti-coin', color: '#16a34a', count: 'NGN 1,000', label: 'Total Earned' },
           { icon: 'ti ti-trending-up', color: '#2563EB', count: 'NGN 500', label: 'This Month' },
         ].map((s, i) => (

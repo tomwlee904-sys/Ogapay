@@ -1,8 +1,10 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
 import { ThemeProvider } from './context/ThemeContext'
-import Dashboard from './pages/Dashboard'
 import Tasks from './pages/Tasks'
+import OgaPayAuth from "./pages/OgaPayAuth"
+import Dashboard from './pages/Dashboard'
+import HomePage from './pages/HomePage'
 import Profile from './pages/Profile'
 import Wallet from './pages/Wallet'
 import WorkerPortal from './pages/WorkerPortal'
@@ -22,14 +24,14 @@ import Campaigns from './pages/Campaigns'
 import Support from './pages/Support'
 import CreateJob from './pages/CreateJob'
 import NotFound from './pages/NotFound'
+import EditProfile from './pages/EditProfile'
 
 export default function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
         <Routes>
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
-          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/" element={<HomePage />} />
           <Route path="/tasks" element={<Tasks />} />
           <Route path="/tasks/:id" element={<Tasks />} />
           <Route path="/tasks/new" element={<CreateJob />} />
@@ -53,6 +55,9 @@ export default function App() {
           <Route path="/create" element={<CreateJob />} />
           <Route path="/createcustom" element={<CreateJob />} />
           <Route path="/createsocial" element={<CreateJob />} />
+          <Route path="/edit-profile" element={<EditProfile />} />
+          <Route path="/login" element={<OgaPayAuth />} />
+          <Route path="/dashboard" element={<Dashboard />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </AuthProvider>

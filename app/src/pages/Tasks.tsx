@@ -286,7 +286,7 @@ export default function Tasks() {
         .jobs-stat:hover{box-shadow:var(--shadow-md);transform:translateY(-1px)}
         .jobs-stat .stat-val{font-family:Outfit;font-size:1.35rem;font-weight:900;letter-spacing:-.02em;line-height:1.2}
         .jobs-stat .stat-val.green{color:var(--green)}
-        .jobs-stat .stat-val.accent{color:var(--accent)}
+        .jobs-stat .stat-val.accent{color:#1F8CFF}
         .jobs-stat .stat-val.gold{color:var(--gold)}
         .jobs-stat .stat-lbl{font-size:.68rem;color:var(--text2);margin-top:.15rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
 
@@ -296,37 +296,37 @@ export default function Tasks() {
         .filter-tab{padding:.5rem 1rem;border:0;border-radius:.5rem;background:transparent;color:var(--text2);font-size:.8125rem;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap}
         .filter-tab:hover{color:var(--text);background:var(--card)}
         .filter-tab.active{background:var(--card);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.06)}
-        .filter-tab.active:after{content:'';display:block;height:2px;width:20px;background:var(--accent);border-radius:999px;margin:2px auto 0}
+        .filter-tab.active:after{content:'';display:block;height:2px;width:20px;background:#1F8CFF;border-radius:999px;margin:2px auto 0}
         .search-wrap{flex:1;min-width:180px;position:relative}
         .search-wrap input{width:100%;height:38px;padding:0 14px 0 38px;border:1.5px solid var(--border);border-radius:.625rem;background:var(--card);color:var(--text);font-size:.8125rem;outline:none;transition:border-color .2s}
-        .search-wrap input:focus{border-color:var(--accent)}
+        .search-wrap input:focus{border-color:#1F8CFF}
         .search-wrap input::placeholder{color:var(--text3)}
         .search-wrap .search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:16px;pointer-events:none}
 
-        .btn-create{display:inline-flex;align-items:center;gap:.5rem;padding:.625rem 1.125rem;background:linear-gradient(135deg,var(--accent),#9333EA);color:#fff;border:0;border-radius:.625rem;font-size:.8125rem;font-weight:700;cursor:pointer;transition:all .2s;white-space:nowrap;box-shadow:0 4px 14px rgba(124,58,237,.25)}
-        .btn-create:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(124,58,237,.3)}
+        .btn-create{display:inline-flex;align-items:center;gap:.5rem;padding:.625rem 1.125rem;background:linear-gradient(135deg,#1F8CFF,#1F8CFF);color:#fff;border:0;border-radius:.625rem;font-size:.8125rem;font-weight:700;cursor:pointer;transition:all .2s;white-space:nowrap;box-shadow:0 4px 14px rgba(31,140,255,.25)}
+        .btn-create:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(31,140,255,.3)}
 
         /* ── Jobs Grid ── */
         .jobs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:1.25rem}
 
         .job-card{background:var(--card);border:1px solid var(--border);border-radius:.875rem;overflow:hidden;transition:all .25s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;position:relative}
-        .job-card:hover{transform:translateY(-3px);box-shadow:0 8px 30px rgba(0,0,0,.08),0 0 40px rgba(124,58,237,.04);border-color:rgba(124,58,237,.2)}
+        .job-card:hover{transform:translateY(-3px);box-shadow:0 8px 30px rgba(0,0,0,.08),0 0 40px rgba(31,140,255,.04);border-color:rgba(31,140,255,.2)}
         [data-theme="dark"] .job-card:hover{border-color:rgba(167,139,250,.2);box-shadow:0 8px 30px rgba(0,0,0,.3),0 0 40px rgba(167,139,250,.04)}
 
         /* Creator row */
         .job-creator{display:flex;align-items:center;gap:.75rem;padding:.875rem 1rem .75rem;background:linear-gradient(135deg,var(--bg2),var(--card));border-bottom:1px solid var(--border);position:relative}
-        .job-creator:after{content:'';position:absolute;bottom:-1px;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);opacity:.4}
-        .jc-avatar{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-size:.65rem;font-weight:800;color:#fff;flex-shrink:0;background:linear-gradient(135deg,var(--accent),#9333EA)}
+        .job-creator:after{content:'';position:absolute;bottom:-1px;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#1F8CFF,transparent);opacity:.4}
+        .jc-avatar{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-size:.65rem;font-weight:800;color:#fff;flex-shrink:0;background:linear-gradient(135deg,#1F8CFF,#1F8CFF)}
         .jc-info{flex:1;min-width:0}
         .jc-name{font-size:.8125rem;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
         .jc-label{font-size:.625rem;color:var(--text3);text-transform:uppercase;letter-spacing:.04em}
         .jc-bookmark{width:30px;height:30px;border-radius:.5rem;border:1px solid var(--border);background:var(--card);display:grid;place-items:center;color:var(--text3);cursor:pointer;transition:all .2s;flex-shrink:0;font-size:16px}
-        .jc-bookmark:hover{border-color:var(--accent);color:var(--accent)}
-        .jc-bookmark.saved{background:var(--accent);color:#fff;border-color:var(--accent)}
+        .jc-bookmark:hover{border-color:#1F8CFF;color:#1F8CFF}
+        .jc-bookmark.saved{background:#1F8CFF;color:#fff;border-color:#1F8CFF}
 
         /* Meta row */
         .job-meta{display:flex;align-items:center;gap:.5rem;padding:.5rem 1rem;border-bottom:1px solid var(--border);background:var(--bg2);font-size:.75rem;font-weight:600;color:var(--text2)}
-        .job-meta .cat-pill{display:inline-flex;align-items:center;gap:.25rem;padding:2px 8px;border-radius:999px;font-size:.625rem;font-weight:800;background:rgba(124,58,237,.08);color:var(--accent)}
+        .job-meta .cat-pill{display:inline-flex;align-items:center;gap:.25rem;padding:2px 8px;border-radius:999px;font-size:.625rem;font-weight:800;background:rgba(31,140,255,.08);color:#1F8CFF}
         .job-meta .platform{display:flex;align-items:center;gap:.25rem;color:var(--text2)}
 
         /* Description */
@@ -356,14 +356,14 @@ export default function Tasks() {
         /* Progress */
         .job-progress{margin:0 1rem .625rem}
         .job-progress .pr-bar{height:5px;border-radius:999px;background:var(--bg2);overflow:hidden;border:1px solid var(--border)}
-        .job-progress .pr-fill{height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--accent),#9333EA);transition:width .5s}
+        .job-progress .pr-fill{height:100%;border-radius:inherit;background:linear-gradient(90deg,#1F8CFF,#1F8CFF);transition:width .5s}
         .job-progress .pr-stats{display:flex;justify-content:space-between;font-size:.625rem;color:var(--text3);margin-top:2px;font-weight:600}
 
         /* Footer actions */
         .job-foot{margin-top:auto;display:flex;align-items:center;gap:.5rem;padding:.75rem 1rem;border-top:1px solid var(--border);background:var(--bg2)}
         .job-foot .btn{height:34px;font-size:.75rem;flex:1;border:1.5px solid var(--border);background:var(--card);color:var(--text);border-radius:.5rem;padding:0 .75rem;display:inline-flex;align-items:center;justify-content:center;gap:.35rem;font-weight:700;transition:all .15s;cursor:pointer}
         .job-foot .btn:hover{background:var(--bg2);border-color:var(--text2)}
-        .job-foot .btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+        .job-foot .btn.primary{background:#1F8CFF;color:#fff;border-color:#1F8CFF}
         .job-foot .btn.primary:hover{opacity:.9}
 
         /* Empty state */
@@ -509,7 +509,7 @@ export default function Tasks() {
                     {job.difficulty}
                   </span>
                   {job.rankRequired !== 'None' && (
-                    <span className="job-badge" style={{ background: 'rgba(124,58,237,.08)', color: 'var(--accent)', border: '1px solid rgba(124,58,237,.15)' }}>
+                    <span className="job-badge" style={{ background: 'rgba(31,140,255,.08)', color: '#1F8CFF', border: '1px solid rgba(31,140,255,.15)' }}>
                       <i className="ti ti-medal" />
                       {job.rankRequired}
                     </span>

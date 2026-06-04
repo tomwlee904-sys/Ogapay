@@ -29,7 +29,7 @@ export default function Settings() {
         .st-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
         @media(max-width:500px){.st-row{grid-template-columns:1fr}}
         .st-save-btn{height:40px;padding:0 24px;border-radius:10px;border:0;background:var(--accent);color:#fff;font-weight:700;font-size:13px;display:inline-flex;align-items:center;gap:6px;cursor:pointer;transition:all .2s;margin-top:4px}
-        .st-save-btn:hover{box-shadow:0 4px 16px rgba(124,58,237,.2)}
+        .st-save-btn:hover{box-shadow:0 4px 16px rgba(31,140,255,.2)}
         .st-toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--green);color:#fff;padding:10px 20px;border-radius:10px;font-size:13px;font-weight:700;z-index:999;opacity:0;transition:all .3s;pointer-events:none}
         .st-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
       `}</style>

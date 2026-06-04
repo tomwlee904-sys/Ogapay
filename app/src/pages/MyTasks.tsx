@@ -2,7 +2,7 @@ import { useState } from 'react'
 import Layout from '../components/Layout'
 
 const myTasks = [
-  { id: 1, title: 'Social Media Engagement', reward: 500, status: 'In Progress', progress: 60, date: 'Today', color: '#7C3AED' },
+  { id: 1, title: 'Social Media Engagement', reward: 500, status: 'In Progress', progress: 60, date: 'Today', color: '#1F8CFF' },
   { id: 2, title: 'Content Review', reward: 800, status: 'Under Review', progress: 100, date: 'Yesterday', color: '#F59E0B' },
   { id: 3, title: 'App Testing', reward: 1200, status: 'Approved', progress: 100, date: '3 days ago', color: '#16a34a' },
   { id: 4, title: 'Data Entry', reward: 1500, status: 'Rejected', progress: 80, date: '1 week ago', color: '#DC2626' },
@@ -29,7 +29,7 @@ export default function MyTasks() {
         .mt-hero p{color:var(--text2);font-size:14px;margin:0}
         .mt-tabs{display:flex;gap:4px;margin-bottom:14px;flex-wrap:wrap}
         .mt-tab{padding:6px 14px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text2);font-size:11px;font-weight:600;cursor:pointer;transition:all .2s}
-        .mt-tab:hover,.mt-tab.active{border-color:var(--accent);color:var(--accent);background:rgba(124,58,237,.08)}
+        .mt-tab:hover,.mt-tab.active{border-color:var(--accent);color:var(--accent);background:rgba(31,140,255,.08)}
         .mt-list{display:grid;gap:6px}
         .mt-item{display:flex;align-items:center;gap:14px;padding:14px 16px;background:var(--card);border:1px solid var(--border);border-radius:12px;transition:all .2s}
         .mt-item:hover{border-color:var(--border2)}
@@ -62,7 +62,7 @@ export default function MyTasks() {
           <i className="ti ti-checklist" />
           <h3 style={{fontFamily:'Outfit',fontWeight:800,margin:'0 0 4px',color:'var(--text)'}}>No tasks found</h3>
           <p style={{fontSize:13,margin:0}}>Browse available tasks to get started</p>
-          <a href="/app/tasks" className="mst-add-btn" style={{display:'inline-flex',marginTop:12,height:36,padding:'0 16px',borderRadius:8,border:0,background:'var(--accent)',color:'#fff',fontWeight:700,fontSize:12,alignItems:'center',gap:6,textDecoration:'none'}}>Browse Tasks</a>
+          <a href="/tasks" className="mst-add-btn" style={{display:'inline-flex',marginTop:12,height:36,padding:'0 16px',borderRadius:8,border:0,background:'var(--accent)',color:'#fff',fontWeight:700,fontSize:12,alignItems:'center',gap:6,textDecoration:'none'}}>Browse Tasks</a>
         </div>
       ) : (
         <div className="mt-list">

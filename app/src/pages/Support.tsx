@@ -12,7 +12,7 @@ const contactOptions = [
   { icon: 'ti ti-mail', title: 'Email Support', desc: 'Get a response within 24 hours', action: 'support@ogapay.app', href: 'mailto:support@ogapay.app' },
   { icon: 'ti ti-message', title: 'Live Chat', desc: 'Chat with our support team', action: 'Start Chat', href: '#' },
   { icon: 'ti ti-send', title: 'Telegram', desc: 'Join our community group', action: 'Join Group', href: 'https://t.me/ogapay' },
-  { icon: 'ti ti-file-text', title: 'Documentation', desc: 'Read our guides and tutorials', action: 'View Docs', href: '/app/faq' },
+  { icon: 'ti ti-file-text', title: 'Documentation', desc: 'Read our guides and tutorials', action: 'View Docs', href: '/faq' },
 ]
 
 const tickets = [
@@ -28,7 +28,7 @@ export default function Support() {
   return (
     <Layout>
       <style>{`
-        .sp-hero{text-align:center;padding:36px 20px 28px;margin-bottom:24px;background:linear-gradient(135deg,rgba(124,58,237,.08),rgba(37,99,235,.06),var(--card));border-radius:16px;border:1px solid var(--border)}
+        .sp-hero{text-align:center;padding:36px 20px 28px;margin-bottom:24px;background:linear-gradient(135deg,rgba(31,140,255,.08),rgba(37,99,235,.06),var(--card));border-radius:16px;border:1px solid var(--border)}
         .sp-hero h1{font-family:Outfit;font-size:32px;font-weight:900;margin:0 0 6px}
         .sp-hero p{color:var(--text2);font-size:14px;margin:0 0 20px;max-width:480px;margin-left:auto;margin-right:auto}
         .sp-search{max-width:480px;margin:0 auto;display:flex;align-items:center;gap:8px;height:44px;padding:0 16px;border:1px solid var(--border);border-radius:12px;background:var(--card);transition:border-color .2s}
@@ -89,7 +89,7 @@ export default function Support() {
       <div className="sp-section-title"><i className="ti ti-help-circle" style={{color:'var(--accent)'}} /> Help Topics</div>
       <div className="sp-grid">
         {faqCategories.map((c, i) => (
-          <a className="sp-card" href="/app/faq" key={i}>
+          <a className="sp-card" href="/faq" key={i}>
             <i className={c.icon} />
             <h3>{c.title}</h3>
             <p>{c.desc}</p>

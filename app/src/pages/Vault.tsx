@@ -10,7 +10,7 @@ const documents = [
 ]
 
 const stats = [
-  { icon: 'ti ti-vault', color: '#7C3AED', count: '5', label: 'Documents' },
+  { icon: 'ti ti-vault', color: '#1F8CFF', count: '5', label: 'Documents' },
   { icon: 'ti ti-lock', color: '#16a34a', count: '14 MB', label: 'Storage Used' },
   { icon: 'ti ti-shield-check', color: '#2563EB', count: '4', label: 'Verified' },
 ]
@@ -41,7 +41,7 @@ export default function Vault() {
         .vt-search input::placeholder{color:var(--text3)}
         .vt-search i{color:var(--text3);font-size:16px}
         .vt-upload-btn{height:38px;padding:0 14px;border-radius:10px;border:0;background:var(--accent);color:#fff;font-weight:700;font-size:12px;display:inline-flex;align-items:center;gap:6px;cursor:pointer;transition:all .2s}
-        .vt-upload-btn:hover{box-shadow:0 4px 16px rgba(124,58,237,.2)}
+        .vt-upload-btn:hover{box-shadow:0 4px 16px rgba(31,140,255,.2)}
         .vt-list{display:grid;gap:6px}
         .vt-item{display:flex;align-items:center;gap:14px;padding:14px 16px;background:var(--card);border:1px solid var(--border);border-radius:12px;transition:all .2s}
         .vt-item:hover{border-color:var(--border2)}
