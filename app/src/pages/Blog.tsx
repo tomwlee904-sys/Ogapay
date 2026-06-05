@@ -33,7 +33,7 @@ function JoinCommunityTile({ onClick }: { onClick: () => void }) {
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       onClick={onClick}
-      style={{ position: 'relative', overflow: 'hidden', cursor: 'pointer', height: '100%', minHeight: 200 }}
+      style={{ position: 'relative', overflow: 'hidden', cursor: 'pointer', height: '100%', minHeight: 300 }}
     >
       <img src="/assets/join-community.jpg" alt="Join the Community" style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0 }} />
       <div style={{ position: 'absolute', inset: 0, background: hovered ? 'rgba(18,21,102,0.18)' : 'transparent', transition: 'background 0.3s' }} />
@@ -54,7 +54,7 @@ function StartSellingTile({ onClick }: { onClick: () => void }) {
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       onClick={onClick}
-      style={{ background: '#4A1B3A', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1.5rem', position: 'relative', overflow: 'hidden', cursor: 'pointer', height: '100%', minHeight: 180 }}
+      style={{ background: '#4A1B3A', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1.5rem', position: 'relative', overflow: 'hidden', cursor: 'pointer', height: '100%', minHeight: 280 }}
     >
       <div style={{ position: 'absolute', top: 14, left: 14 }}>
         <button onClick={onClick} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'var(--bg)', color: 'var(--text)', fontSize: 13, fontWeight: 600, padding: '7px 14px', borderRadius: 8, border: 'none', cursor: 'pointer' }}>
@@ -103,7 +103,7 @@ function GrowBusinessTile({ onClick }: { onClick: () => void }) {
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       onClick={onClick}
-      style={{ background: '#121566', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden', cursor: 'pointer', height: '100%', minHeight: 180 }}
+      style={{ background: '#121566', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden', cursor: 'pointer', height: '100%', minHeight: 280 }}
     >
       <div style={{ position: 'absolute', top: 14, left: 14 }}>
         <button onClick={onClick} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'var(--bg)', color: 'var(--text)', fontSize: 13, fontWeight: 600, padding: '7px 14px', borderRadius: 8, border: 'none', cursor: 'pointer' }}>
@@ -139,7 +139,7 @@ function GetInspiredTile({ onClick }: { onClick: () => void }) {
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       onClick={onClick}
-      style={{ position: 'relative', overflow: 'hidden', cursor: 'pointer', background: '#FFD6D6', height: '100%', minHeight: 200 }}
+      style={{ position: 'relative', overflow: 'hidden', cursor: 'pointer', background: '#FFD6D6', height: '100%', minHeight: 300 }}
     >
       <img src="/assets/get-inspired.png" alt="Get Inspired" style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0 }} />
       <div style={{ position: 'absolute', inset: 0, background: 'rgba(18,21,102,0.1)', opacity: hovered ? 1 : 0, transition: 'opacity 0.3s' }} />
@@ -275,18 +275,18 @@ export default function Blog() {
         {/* 4 CATEGORY TILES — stacked full width like Fiverr */}
         <div style={{ display: 'flex', flexDirection: 'column' }}>
           {/* Tile 1: Join The Community */}
-          <div style={{ height: 320, position: 'relative' }}>
+          <div style={{ height: 500, position: 'relative' }}>
             <JoinCommunityTile onClick={() => { setActiveCategory('All'); setShowArticles(true) }} />
           </div>
 
           {/* Tiles 2+3: side by side */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', height: 300 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', height: 420 }}>
             <StartSellingTile onClick={() => { setActiveCategory('Freelancers'); setShowArticles(true) }} />
             <GrowBusinessTile onClick={() => { setActiveCategory('Businesses'); setShowArticles(true) }} />
           </div>
 
           {/* Tile 4: Get Inspired */}
-          <div style={{ height: 340, position: 'relative' }}>
+          <div style={{ height: 460, position: 'relative' }}>
             <GetInspiredTile onClick={() => { setActiveCategory('Freelancers'); setShowArticles(true) }} />
           </div>
         </div>
