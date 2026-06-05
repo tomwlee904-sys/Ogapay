@@ -1,9 +1,9 @@
 // @ts-nocheck
 import { useState, useEffect } from "react";
 import womanSvg from "../assets/woman.svg";
-
+ 
 const API_BASE = "https://ogapay-production.up.railway.app/api/v1";
-
+ 
 function LogoMark({ inverse = false }) {
   const fill = inverse ? "#030341" : "white";
   const stroke = inverse ? "white" : "black";
@@ -21,7 +21,7 @@ function LogoMark({ inverse = false }) {
     </svg>
   );
 }
-
+ 
 function GoogleIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -32,7 +32,7 @@ function GoogleIcon() {
     </svg>
   );
 }
-
+ 
 export default function LoginPage() {
   const [theme, setTheme] = useState(() => {
     try { return localStorage.getItem("ogapay-theme") || "light"; } catch { return "light"; }
@@ -48,17 +48,18 @@ export default function LoginPage() {
   const [signupMsg, setSignupMsg] = useState("");
   const [resetMsg, setResetMsg] = useState("");
   const [loading, setLoading] = useState("");
-
+  const [verifyEmail, setVerifyEmail] = useState("");
+ 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
     try { localStorage.setItem("ogapay-theme", theme); } catch {}
   }, [theme]);
-
+ 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get("mode") === "signup") setView("signup");
   }, []);
-
+ 
   const persistAuth = (payload) => {
     const tokens = payload.tokens || payload;
     const access = tokens.accessToken || tokens.access_token;
@@ -67,7 +68,7 @@ export default function LoginPage() {
     localStorage.setItem("ogapay-authenticated", "true");
     if (payload.user) localStorage.setItem("ogapay_user", JSON.stringify(payload.user));
   };
-
+ 
   const handleLogin = async (e) => {
     e.preventDefault();
     if (!loginEmail.trim() || !loginPassword) {
@@ -90,7 +91,7 @@ export default function LoginPage() {
       setLoading("");
     }
   };
-
+ 
   const handleSignup = async (e) => {
     e.preventDefault();
     if (!signupName.trim() || !signupEmail.trim() || !signupPassword) {
@@ -113,14 +114,16 @@ export default function LoginPage() {
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.message || "Signup failed");
-      persistAuth(json.data || json);
-      window.location.href = "/dashboard";
+      // Don't log in yet — wait for email verification
+      setVerifyEmail(signupEmail.trim());
+      show("verify");
     } catch (err) {
       setSignupMsg(err.message);
+    } finally {
       setLoading("");
     }
   };
-
+ 
   const handleReset = async (e) => {
     e.preventDefault();
     if (!resetEmail.trim()) {
@@ -143,9 +146,9 @@ export default function LoginPage() {
       setLoading("");
     }
   };
-
+ 
   const show = (v) => setView(v);
-
+ 
   return <>
     <style>{`
       /* ── LOGIN PAGE SPECIFIC STYLES ── */
@@ -266,7 +269,7 @@ export default function LoginPage() {
       .security svg { width: 20px; height: 20px; stroke: #94a3b8; stroke-width: 1.8; fill: none; flex-shrink: 0; margin-top: 1px; }
       .security strong { display: block; font-size: 13px; font-weight: 700; color: #0F172A; margin-bottom: 2px; }
       .security span { font-size: 12px; color: #94a3b8; line-height: 1.4; }
-
+ 
       @media(max-width: 768px) {
         .login-wrapper { grid-template-columns: 1fr; min-height: auto; border-radius: 16px; }
         .left { min-height: auto; padding: 20px 20px 0; display: none; }
@@ -309,7 +312,7 @@ export default function LoginPage() {
         .footer-grid { grid-template-columns: 1fr; gap: 24px; }
         .footer-bottom { flex-direction: column; text-align: center; }
       }
-
+ 
     `}</style>
     <header className="nav">
       <div className="nav-inner">
@@ -332,7 +335,7 @@ export default function LoginPage() {
         </div>
       </div>
     </header>
-
+ 
     <main style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",padding:"20px 24px",minHeight:"calc(100vh - 60px)"}}>
       <div className="login-wrapper">
         {/* LEFT PANEL */}
@@ -389,7 +392,7 @@ export default function LoginPage() {
             </div>
           </div>
         </div>
-
+ 
         {/* RIGHT PANEL */}
         <div className="right">
           <div className="right-inner">
@@ -420,7 +423,7 @@ export default function LoginPage() {
                 <p style={{textAlign:'center',margin:0,fontSize:'14px',color:'#66738a'}}>New to OgaPay? <a href="#" onClick={(e) => { e.preventDefault(); show("signup"); }} style={{color:'#4D5DFF',fontWeight:'600',textDecoration:'none'}}>Create an account</a></p>
               </>
             )}
-
+ 
             {view === "email" && (
               <form onSubmit={handleLogin}>
                 <h2>Welcome Back</h2>
@@ -432,7 +435,7 @@ export default function LoginPage() {
                 <p style={{textAlign:'center',margin:'14px 0 0'}}><a href="#" onClick={(e) => { e.preventDefault(); show("default"); }} style={{color:'#4D5DFF',fontSize:'13px',fontWeight:'600',textDecoration:'none'}}>&larr; Back</a></p>
               </form>
             )}
-
+ 
             {view === "signup" && (
               <form onSubmit={handleSignup}>
                 <h2>Create account</h2>
@@ -445,7 +448,7 @@ export default function LoginPage() {
                 <p style={{textAlign:'center',margin:'14px 0 0'}}><a href="#" onClick={(e) => { e.preventDefault(); show("default"); }} style={{color:'#4D5DFF',fontSize:'13px',fontWeight:'600',textDecoration:'none'}}>Already have an account? Sign in</a></p>
               </form>
             )}
-
+ 
             {view === "wallet" && (
               <div>
                 <h2>Connect Wallet</h2>
@@ -458,7 +461,7 @@ export default function LoginPage() {
                 <p style={{textAlign:'center',margin:'14px 0 0'}}><a href="#" onClick={(e) => { e.preventDefault(); show("default"); }} style={{color:'#4D5DFF',fontSize:'13px',fontWeight:'600',textDecoration:'none'}}>Back to login</a></p>
               </div>
             )}
-
+ 
             {view === "forgot" && (
               <form onSubmit={handleReset}>
                 <h2>Reset Password</h2>
@@ -469,7 +472,62 @@ export default function LoginPage() {
                 <p style={{textAlign:'center',margin:'12px 0 0'}}><a href="#" onClick={(e) => { e.preventDefault(); show("default"); }} style={{color:'#4D5DFF',fontSize:'13px',fontWeight:'600',textDecoration:'none'}}>Back to login</a></p>
               </form>
             )}
-
+ 
+            {view === "verify" && (
+              <div style={{ textAlign: "center" }}>
+                <div style={{
+                  width: 72, height: 72, borderRadius: "50%",
+                  background: "#eef0ff", display: "grid",
+                  placeItems: "center", margin: "0 auto 24px",
+                }}>
+                  <svg width="34" height="34" viewBox="0 0 24 24" fill="none"
+                    stroke="#4D5DFF" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="2" y="4" width="20" height="16" rx="3"/>
+                    <path d="M22 7l-10 6L2 7"/>
+                  </svg>
+                </div>
+                <h2 style={{ marginBottom: 8 }}>Check your inbox</h2>
+                <p className="sub" style={{ marginBottom: 12 }}>
+                  We sent a verification link to
+                </p>
+                <p style={{
+                  fontWeight: 700, color: "#0F172A", fontSize: 15,
+                  background: "#f4f6ff", border: "1.5px solid #e3e9f2",
+                  borderRadius: 10, padding: "10px 16px", marginBottom: 20,
+                  wordBreak: "break-all",
+                }}>
+                  {verifyEmail}
+                </p>
+                <p style={{ fontSize: 13, color: "#94a3b8", lineHeight: 1.7, margin: "0 0 28px" }}>
+                  Click the link in that email to activate your account.<br />
+                  Can't find it? Check your <strong>spam or junk</strong> folder.
+                </p>
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  <button
+                    onClick={() => { show("signup"); setSignupMsg(""); }}
+                    style={{
+                      background: "none", border: "1.5px solid #e3e9f2",
+                      borderRadius: 12, padding: "12px 20px",
+                      color: "#4D5DFF", fontWeight: 600, fontSize: 14,
+                      cursor: "pointer", fontFamily: "inherit", width: "100%",
+                    }}
+                  >
+                    ← Use a different email
+                  </button>
+                  <button
+                    onClick={() => show("email")}
+                    style={{
+                      background: "none", border: "none",
+                      color: "#94a3b8", fontWeight: 600, fontSize: 13,
+                      cursor: "pointer", fontFamily: "inherit", padding: "8px",
+                    }}
+                  >
+                    Already verified? Sign in
+                  </button>
+                </div>
+              </div>
+            )}
+ 
             <div className="security">
               <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
               <div>
@@ -481,7 +539,7 @@ export default function LoginPage() {
         </div>
       </div>
     </main>
-
+ 
     <footer className="main-footer">
       <div className="footer-inner">
         <div className="footer-grid">
