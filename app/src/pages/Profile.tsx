@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from 'react-router-dom'
 import Layout from "../components/Layout";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
@@ -25,10 +26,21 @@ const DONUT_CATS = [
 const QUICK = [
   { icon: "activity", label: "Job Monitor", page: "jobs" },
   { icon: "safe", label: "Vault", page: "vault" },
-  { icon: "file-text", label: "Blogs", page: "blogs" },
+  { icon: "file-text", label: "Blogs", page: "blog" },
   { icon: "briefcase", label: "Available Jobs", page: "jobs" },
   { icon: "bookmark", label: "Bookmarks", page: "bookmarks" },
   { icon: "circle-plus", label: "Create Job", page: "create" },
+];
+
+const WORKERS = [
+  { id: 1, username: 'Twitter_Automation_god', bio: 'I am a professional software developer and I write code that helps people save time and make money.', rating: 0, reviews: 0 },
+  { id: 2, username: 'Dogo2541', bio: 'Active', rating: 0, reviews: 0 },
+  { id: 3, username: 'Taki.Sakura', bio: 'Always available to help', rating: 0, reviews: 0 },
+  { id: 4, username: 'Blueice', bio: 'That web3 guy', rating: 0, reviews: 0 },
+  { id: 5, username: 'CHOCHO', bio: 'Hi, I\'m CHOCHO, a passionate graphic designer dedicated to transforming ideas into visually compelling and meaningful designs.', rating: 0, reviews: 0 },
+  { id: 6, username: 'Wurk.Brainard', bio: 'Not a hell of an intro. Just a chill guy who\'s kinda into web3. Loves writing articles.', rating: 0, reviews: 0 },
+  { id: 7, username: 'moony', bio: 'No bio available yet', rating: 3.9, reviews: 12 },
+  { id: 8, username: 'ASQUARE', bio: 'Chasing the Big bag', rating: 3.5, reviews: 8 },
 ];
 
 /* ─── Helpers ─── */
@@ -63,6 +75,21 @@ function StatRow({ label, val, info, valClass }) {
       </span>
     </div>
   );
+}
+
+function Stars({ score = 0, size = 12 }) {
+  return (
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 2 }}>
+      {[1, 2, 3, 4, 5].map(i => (
+        <svg key={i} width={size} height={size} viewBox="0 0 24 24"
+          fill={i <= Math.round(score) ? '#facc15' : 'none'}
+          stroke={i <= Math.round(score) ? '#facc15' : 'var(--border2)'} strokeWidth="2">
+          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+        </svg>
+      ))}
+      {score > 0 && <span style={{ fontSize: 10, color: 'var(--text3)', marginLeft: 2 }}>{score.toFixed(1)}</span>}
+    </span>
+  )
 }
 
 /* ─── Sub Pages (tabs) ─── */
@@ -113,56 +140,23 @@ function MyJobsTab() {
   );
 }
 
-function VaultTab() {
-  return (
-    <div className="sub-page">
-      <div className="page-head-sm"><Icon n="safe" s={20} /><h2>Vault</h2></div>
-      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16, marginBottom:20 }}>
-        {["Total Deposited","Current Balance","Total Withdrawn","Rewards Earned"].map(l => (
-          <div className="card card-sm" key={l} style={{ padding:20 }}>
-            <div className="stat-label-xs">{l}</div>
-            <div className="stat-val-lg">$0.00</div>
-          </div>
-        ))}
-      </div>
-      <div className="card card-sm"><div style={{ padding:"0 20px" }}>
-        <table className="tb"><thead><tr>{["AMOUNT","DATE","TX"].map(h => <th key={h}>{h}</th>)}</tr></thead>
-        <tbody><tr><td colSpan={3} className="empty-td">No distributions yet. Hold $OGA to participate.</td></tr></tbody></table>
-      </div></div>
-    </div>
-  );
-}
-
-function ReferralsTab() {
-  return (
-    <div className="sub-page">
-      <div className="page-head-sm"><Icon n="users" s={20} /><h2>Referrals</h2></div>
-      <div className="card card-sm" style={{ marginBottom:20 }}>
-        <div style={{ padding:"16px 20px", borderBottom:"1px solid var(--border)" }}>
-          <div style={{ fontSize:13, fontWeight:700, marginBottom:8 }}>Your Referral Link</div>
-          <div className="ref-box">
-            <span className="ref-url">{refLink}</span>
-            <CopyBtn text={refLink} />
-            <button className="btn-primary btn-sm"><XIcon size={12} /> Post on X</button>
-          </div>
-        </div>
-        <table className="tb"><thead><tr><th>USER</th><th>JOINED</th><th>EARNINGS</th><th>STATUS</th></tr></thead>
-        <tbody><tr><td colSpan={4} className="empty-td">No referrals yet. Share your link to start earning!</td></tr></tbody></table>
-      </div>
-    </div>
-  );
-}
-
 /* ─── Main Component ─── */
 export default function Profile() {
+  const navigate = useNavigate();
   const [tab, setTab] = useState("profile");
   const [showBal, setShowBal] = useState(false);
   const [swBal, setSwBal] = useState(false);
   const [earnPeriod, setEarnPeriod] = useState("7d");
   const [subPage, setSubPage] = useState(null);
+  const [workerSearch, setWorkerSearch] = useState("");
 
   const data = earnPeriod === "7d" ? CHART_7 : CHART_30;
   const totalEarned = data.reduce((a, b) => a + b.val, 0);
+
+  const filteredWorkers = WORKERS.filter(w =>
+    w.username.toLowerCase().includes(workerSearch.toLowerCase()) ||
+    w.bio.toLowerCase().includes(workerSearch.toLowerCase())
+  );
 
   const tabs = [
     { id: "profile", label: "Profile", icon: "user" },
@@ -173,12 +167,14 @@ export default function Profile() {
     { id: "portal", label: "Worker Portal", icon: "layout-dashboard" },
   ];
 
+  if (subPage === "blog") {
+    navigate('/blog');
+  }
+
   if (subPage === "jobs") return <Layout><div className="pg">{subPage === "jobs" && <MyJobsTab />}</div></Layout>;
-  if (subPage === "vault") return <Layout><div className="pg">{subPage === "vault" && <VaultTab />}</div></Layout>;
-  if (subPage === "referrals") return <Layout><div className="pg">{subPage === "referrals" && <ReferralsTab />}</div></Layout>;
-  if (subPage === "blogs") return <Layout><div className="pg"><div className="page-head-sm"><Icon n="file-text" s={20} /><h2>Blogs</h2></div><div className="card card-sm" style={{textAlign:"center", padding:"48px 20px"}}><Icon n="file-text" s={40} c="var(--text3)" /><div style={{fontSize:13,color:"var(--text3)",marginTop:12}}>No blogs yet.</div></div></div></Layout>;
+  if (subPage === "vault") { window.location.href = '/vault'; return null; }
+  if (subPage === "create") { window.location.href = '/create'; return null; }
   if (subPage === "bookmarks") return <Layout><div className="pg"><div className="page-head-sm"><Icon n="bookmark" s={20} /><h2>Bookmarks</h2></div><div className="card card-sm" style={{textAlign:"center", padding:"48px 20px"}}><Icon n="bookmark-off" s={40} c="var(--text3)" /><div style={{fontSize:13,color:"var(--text3)",marginTop:12}}>No bookmarks yet.</div></div></div></Layout>;
-  if (subPage === "create") return <Layout><div className="pg"><div className="page-head-sm"><Icon n="circle-plus" s={20} /><h2>Create Job</h2></div><div className="card card-sm" style={{textAlign:"center", padding:"48px 20px"}}><Icon n="tool" s={40} c="var(--text3)" /><div style={{fontSize:13,color:"var(--text3)",marginTop:12}}>Job creation form coming soon.</div></div></div></Layout>;
 
   return (
     <Layout>
@@ -232,7 +228,7 @@ export default function Profile() {
         .tb td{padding:11px 14px;font-size:13px;color:var(--text2);border-bottom:1px solid var(--border)}
         .empty-td{text-align:center;color:var(--text3);padding:28px 14px}
 
-        .ref-box{background:var(--bg2);border:1px solid var(--border);border-radius:9px;padding:10px 14px;display:flex;align-items:center;gap:10px}
+        .ref-box{background:var(--bg2);border:1px solid var(--border);border-radius:9px;padding:10px 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
         .ref-url{font-family:monospace;font-size:12px;color:var(--text2);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
         .bar-wrap{height:5px;background:var(--bg2);border-radius:99px;overflow:hidden;margin-bottom:10px}
@@ -260,6 +256,25 @@ export default function Profile() {
         .donut{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
         .donut-item{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:var(--text2)}
         .donut-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+
+        .worker-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px}
+        .worker-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px;cursor:pointer;transition:border-color .15s,transform .15s;display:flex;flex-direction:column;gap:10px}
+        .worker-card:hover{border-color:var(--accent);transform:translateY(-2px)}
+        .worker-row{display:flex;align-items:center;gap:10px}
+        .worker-avatar{width:36px;height:36px;border-radius:50%;background:var(--bg2);border:1px solid var(--border);display:grid;place-items:center;flex-shrink:0}
+        .worker-avatar i{font-size:16px;color:var(--text3)}
+        .worker-name{font-size:14px;font-weight:700;color:var(--text)}
+        .worker-bio{font-size:12px;color:var(--text2);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+        .worker-footer{display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:6px;border-top:1px dashed var(--border)}
+
+        .wp-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+        @media(max-width:700px){.wp-stats{grid-template-columns:repeat(2,1fr)}}
+        .stat-tile{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center}
+        .stat-tile i{font-size:22px;margin-bottom:6px}
+        .stat-number{font-family:"Outfit",sans-serif;font-size:22px;font-weight:900;color:var(--text)}
+        .stat-label{font-size:11px;color:var(--text3);font-weight:600;margin-top:2px}
+
+        .avatar-circle{width:52px;height:52px;border-radius:50%;background:var(--primary);color:var(--bg);font-size:18px;font-weight:800;display:grid;place-items:center;flex-shrink:0}
       `}</style>
 
       {/* ─────── Tab Bar ─────── */}
@@ -306,19 +321,19 @@ export default function Profile() {
                   <div style={{fontSize:11,color:"var(--text2)",lineHeight:1.4,marginTop:2}}>Auto-swap rewards to your preferred token. Min swap: 5 $OGA</div>
                   <div style={{display:"flex",gap:5,marginTop:6}}>
                     {["SOL","USDC","NGN"].map(t => (
-                      <span key={t} className="chip">{t}</span>
+                      <span key={t} className="chip" style={{display:"inline-flex",alignItems:"center",gap:4,border:"1.5px solid var(--border)",borderRadius:99,padding:"2px 9px",fontSize:11,fontWeight:700}}>{t}</span>
                     ))}
                   </div>
                 </div>
                 <Toggle on={swBal} set={setSwBal} />
               </div>
-              <div style={{marginTop:8}}><a href="#" style={{fontSize:12,color:"var(--accent)",fontWeight:600}}>View my withdrawals</a></div>
+              <div style={{marginTop:8}}><a href="/wallet" style={{fontSize:12,color:"var(--accent)",fontWeight:600}}>View my withdrawals</a></div>
             </div>
           </div>
 
           {/* ─── RIGHT: Profile Info ─── */}
           <div className="card card-sm">
-            <div className="card-head"><span><Icon n="user" s={16} /> Profile</span><button className="btn-outline btn-sm">Edit</button></div>
+            <div className="card-head"><span><Icon n="user" s={16} /> Profile</span><button className="btn-outline btn-sm" onClick={() => navigate('/edit-profile')}>Edit</button></div>
             <div className="card-body">
               <div style={{display:"flex",alignItems:"center",gap:14,paddingBottom:14,borderBottom:"1px solid var(--border)",marginBottom:14}}>
                 <div className="avatar-circle">TJ</div>
@@ -366,7 +381,13 @@ export default function Profile() {
             <div style={{fontSize:13,fontWeight:700,marginBottom:10,color:"var(--text2)"}}>Quick Links</div>
             <div className="quick-grid">
               {QUICK.map(q => (
-                <div key={q.label} className="quick-item" onClick={() => setSubPage(q.page)}>
+                <div key={q.label} className="quick-item" onClick={() => {
+                  if (q.page === "blog") navigate('/blog');
+                  else if (q.page === "vault") navigate('/vault');
+                  else if (q.page === "create") navigate('/create');
+                  else if (q.page === "jobs") navigate('/tasks');
+                  else setSubPage(q.page);
+                }}>
                   <Icon n={q.icon} s={18} c="var(--text2)" />
                   <span>{q.label}</span>
                 </div>
@@ -493,7 +514,23 @@ export default function Profile() {
       {tab==="jobs" && <MyJobsTab />}
 
       {/* ════════════ REFERRALS TAB ════════════ */}
-      {tab==="referrals" && <ReferralsTab />}
+      {tab==="referrals" && (
+        <div style={{maxWidth:900,margin:"0 auto",padding:"0 0 40px"}}>
+          <div className="page-head-sm"><Icon n="users" s={20} /><h2>Referrals</h2></div>
+          <div className="card card-sm" style={{marginBottom:20}}>
+            <div style={{padding:"16px 20px",borderBottom:"1px solid var(--border)"}}>
+              <div style={{fontSize:13,fontWeight:700,marginBottom:8}}>Your Referral Link</div>
+              <div className="ref-box">
+                <span className="ref-url">{refLink}</span>
+                <CopyBtn text={refLink} />
+                <button className="btn-primary btn-sm"><XIcon size={12} /> Post on X</button>
+              </div>
+            </div>
+            <table className="tb"><thead><tr><th>USER</th><th>JOINED</th><th>EARNINGS</th><th>STATUS</th></tr></thead>
+            <tbody><tr><td colSpan={4} className="empty-td">No referrals yet. Share your link to start earning!</td></tr></tbody></table>
+          </div>
+        </div>
+      )}
 
       {/* ════════════ ALERTS TAB ════════════ */}
       {tab==="alerts" && (
@@ -516,51 +553,51 @@ export default function Profile() {
       {tab==="portal" && (
         <div style={{maxWidth:1060,margin:"0 auto",padding:"0 0 40px"}}>
           <div className="page-head-sm"><Icon n="layout-dashboard" s={20} /><h2>Worker Portal</h2></div>
-          <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:14,marginBottom:18}}>
+
+          {/* Stats */}
+          <div className="wp-stats">
             {[
-              { icon:"briefcase", label:"Tasks Done", val:"0" },
-              { icon:"trophy", label:"Won", val:"0" },
-              { icon:"heart", label:"Compliments", val:"0" },
-              { icon:"currency-naira", label:"Total Earned", val:"₦0" },
+              { icon:"ti ti-star", color:"var(--accent)", label:"Reviews", val:"124" },
+              { icon:"ti ti-zap", color:"#F59E0B", label:"Challenges", val:"8" },
+              { icon:"ti ti-trophy", color:"#16a34a", label:"Won", val:"12" },
+              { icon:"ti ti-heart", color:"#EC4899", label:"Compliments", val:"34" },
             ].map(s => (
-              <div key={s.label} className="card card-sm" style={{padding:18,textAlign:"center"}}>
-                <Icon n={s.icon} s={22} c="var(--text3)" />
-                <div style={{fontFamily:"Outfit,sans-serif",fontSize:24,fontWeight:900,margin:"6px 0 2px"}}>{s.val}</div>
-                <div style={{fontSize:11,color:"var(--text3)",fontWeight:700}}>{s.label}</div>
+              <div key={s.label} className="stat-tile">
+                <i className={s.icon} style={{color:s.color}} />
+                <div className="stat-number">{s.val}</div>
+                <div className="stat-label">{s.label}</div>
               </div>
             ))}
           </div>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:18}}>
-            <div className="card card-sm">
-              <div className="card-head"><span><Icon n="star" s={16} /> Worker Portal</span></div>
-              <div className="card-body">
-                <p style={{fontSize:13,color:"var(--text2)",lineHeight:1.6,marginBottom:14}}>Build your reputation as a worker on OgaPay. Complete tasks, earn compliments, and rise through the ranks.</p>
-                {[
-                  { icon:"star", label:"My Reviews", val:"0 reviews", sub:"0.0 rating" },
-                  { icon:"zap", label:"Challenges Participated", val:"0" },
-                  { icon:"gift", label:"Tips Received", val:"0" },
-                  { icon:"users", label:"Communities", val:"0 joined" },
-                ].map(r => (
-                  <div key={r.label} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"9px 0",borderBottom:"1px dashed var(--border)",fontSize:13}}>
-                    <span style={{display:"flex",alignItems:"center",gap:8,color:"var(--text2)",fontWeight:600}}>
-                      <Icon n={r.icon} s={15} c="var(--text3)" />{r.label}
-                    </span>
-                    <div style={{textAlign:"right"}}>
-                      <div style={{fontWeight:800,color:"var(--text)"}}>{r.val}</div>
-                      {r.sub && <div style={{fontSize:11,color:"var(--text3)"}}>{r.sub}</div>}
-                    </div>
-                  </div>
-                ))}
+
+          {/* Search */}
+          <div className="search-wrap" style={{marginBottom:16}}>
+            <input value={workerSearch} onChange={e => setWorkerSearch(e.target.value)} placeholder="Search workers..." />
+          </div>
+
+          {/* Worker Grid */}
+          <div className="worker-grid">
+            {filteredWorkers.length === 0 ? (
+              <div style={{gridColumn:"1/-1",textAlign:"center",padding:"48px 20px",color:"var(--text3)"}}>
+                <Icon n="search-off" s={32} c="var(--text3)" /><br />No workers found
               </div>
-            </div>
-            <div className="card card-sm">
-              <div className="card-head"><span><Icon n="user" s={16} /> My Store</span><button className="btn-primary btn-sm">Open Store</button></div>
-              <div style={{textAlign:"center",padding:"32px 20px"}}>
-                <Icon n="building-store" s={40} c="var(--text3)" />
-                <div style={{fontSize:13,color:"var(--text3)",marginTop:12}}>No products listed yet.</div>
-                <div style={{fontSize:12,color:"var(--text3)",marginTop:4}}>Open your store to sell services and products.</div>
+            ) : filteredWorkers.map(w => (
+              <div key={w.id} className="worker-card">
+                <div className="worker-row">
+                  <div className="worker-avatar"><i className="ti ti-user" /></div>
+                  <div className="worker-name">{w.username}</div>
+                </div>
+                <div className="worker-bio">{w.bio}</div>
+                <div className="worker-footer">
+                  <Stars score={w.rating} size={11} />
+                  <span style={{fontSize:11,color:"var(--text3)"}}>{w.reviews} reviews</span>
+                </div>
               </div>
-            </div>
+            ))}
+          </div>
+
+          <div style={{marginTop:20,textAlign:"center",fontSize:12,color:"var(--text3)"}}>
+            <i className="ti ti-users" style={{fontSize:14,marginRight:4}} /> Found {filteredWorkers.length} workers
           </div>
         </div>
       )}
