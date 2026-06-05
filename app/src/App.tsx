@@ -2,7 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
 import { ThemeProvider } from './context/ThemeContext'
 import Tasks from './pages/Tasks'
-import OgaPayAuth from "./pages/OgaPayAuth"
+import LoginPage from './pages/LoginPage'
 import Dashboard from './pages/Dashboard'
 import HomePage from './pages/HomePage'
 import Profile from './pages/Profile'
@@ -58,7 +58,7 @@ export default function App() {
           <Route path="/createcustom" element={<CreateJob />} />
           <Route path="/createsocial" element={<CreateJob />} />
           <Route path="/edit-profile" element={<EditProfile />} />
-          <Route path="/login" element={<OgaPayAuth />} />
+          <Route path="/login" element={<LoginPage />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/blog" element={<Blog />} />
           <Route path="/blog/write" element={<BlogEditor />} />

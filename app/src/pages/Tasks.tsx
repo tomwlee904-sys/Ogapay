@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
 
 // ─── Sample Job Data ───
@@ -395,7 +396,7 @@ export default function Tasks() {
             <h1>Jobs</h1>
             <p>Browse available microtasks and earn crypto rewards. Complete tasks and get paid instantly.</p>
           </div>
-          <button className="btn-create">
+          <button className="btn-create" onClick={() => navigate('/create')}>
             <i className="ti ti-plus" />
             Create Job
           </button>
