@@ -1,50 +1,150 @@
 // @ts-nocheck
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Layout from "../components/Layout";
 import { useAuth } from "../context/AuthContext";
 
 const ACCENT = "#1F8CFF";
 
-const navItems = [
-  { id: "home", label: "Home", icon: "ti ti-home" },
-  { id: "tasks", label: "Tasks", icon: "ti ti-checklist" },
-  { id: "wallet", label: "Wallet", icon: "ti ti-wallet" },
-  { id: "referrals", label: "Referrals", icon: "ti ti-affiliate" },
-  { id: "analytics", label: "Analytics", icon: "ti ti-chart-bar" },
-  { id: "settings", label: "Settings", icon: "ti ti-settings" },
-];
+/* ─── INLINE SVG ICONS ────────────────────────────────────────── */
+const Icon = ({ n, s = 18, c = "currentColor" }) => (
+  <i className={`ti ti-${n}`} style={{ fontSize: s, color: c, lineHeight: 1, flexShrink: 0 }} />
+);
 
-const STAT_CARDS = [
-  { icon: "ti ti-coin", label: "Total Earned", value: "₦45,200", change: "+12%", up: true },
-  { icon: "ti ti-wallet", label: "Withdrawable", value: "₦12,450", change: "Available", up: true },
-  { icon: "ti ti-checklist", label: "Tasks Done", value: "47", change: "+8 this week", up: true },
-  { icon: "ti ti-percentage", label: "Success Rate", value: "94%", change: "+2%", up: true },
-];
+/* ─── READ USER FROM localStorage ─────────────────────────────── */
+function getUser() {
+  try { return JSON.parse(localStorage.getItem("ogapay_user")) || {}; } catch { return {}; }
+}
 
-const STEPS = [
-  { key: "role", num: "1", label: "Choose your role", sub: "Worker or creator" },
-  { key: "wallet", num: "2", label: "Connect wallet", sub: "Link your wallet" },
-  { key: "kyc", num: "3", label: "Complete KYC", sub: "Verify identity" },
-  { key: "task", num: "4", label: "Complete first task", sub: "Start earning" },
-];
+function getStep(key) {
+  return localStorage.getItem(key) === "true";
+}
 
-const ACTIVE_TASKS = [
-  { title: "Social Media Engagement", reward: 500, progress: 60 },
-  { title: "Content Review", reward: 1200, progress: 20 },
-  { title: "UI Feedback", reward: 800, progress: 0 },
-];
+function setStep(key) {
+  localStorage.setItem(key, "true");
+}
 
-const RESOURCE_LINKS = [
-  { label: "Our X (Twitter)", icon: "ti ti-brand-x", href: "#" },
-  { label: "Support", icon: "ti ti-headset", href: "#" },
-  { label: "Back to homepage", icon: "ti ti-home", href: "/" },
-];
+/* ─── STYLES (injected inline to preserve exact layout) ────────── */
+const CSS = `
+  .dash-wrap2 { max-width: 960px; margin: 0 auto; padding: 28px 20px 60px; }
+  .dash-intro { display:flex; align-items:center; gap:14px; padding:16px 20px; background:var(--card); border:1px solid var(--border); border-radius:12px; margin-bottom:24px; }
+  .dash-intro-icon { width:40px; height:40px; border-radius:10px; display:grid; place-items:center; flex-shrink:0; }
+  .dash-intro h2 { font-family:"Outfit",sans-serif; font-size:17px; font-weight:800; margin:0 0 2px; }
+  .dash-intro p { font-size:13px; color:var(--text2); margin:0; line-height:1.5; }
+  .dash-intro.complete { background:#052e16; border-color:#166534; }
+  .dash-intro.complete h2, .dash-intro.complete p { color:#fff; }
+  .dash-progress { margin-bottom:24px; }
+  .dash-progress-row { display:flex; justify-content:space-between; font-size:12px; font-weight:700; margin-bottom:6px; }
+  .dash-progress-bar { height:6px; background:var(--border); border-radius:99px; overflow:hidden; }
+  .dash-progress-fill { height:100%; border-radius:99px; background:#111; transition:width .4s ease; }
+  .dash-progress-fill.done { background:#16a34a; }
+  .dash-section-title { font-family:"Outfit",sans-serif; font-size:13px; font-weight:800; letter-spacing:.04em; margin-bottom:14px; display:flex; align-items:center; gap:8px; color:var(--text2); }
+  .dash-step-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:20px; }
+  .dash-step-card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:18px 20px; }
+  .dash-step-card.full { grid-column:1/-1; }
+  .dash-step-badge { display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; border-radius:6px; background:var(--bg2); color:var(--text2); font-size:11px; font-weight:800; margin-bottom:10px; }
+  .dash-step-card h4 { font-family:"Outfit",sans-serif; font-size:14px; font-weight:800; margin:0 0 4px; }
+  .dash-step-card p { font-size:12px; color:var(--text2); margin:0 0 14px; line-height:1.5; }
+  .dash-btn { display:inline-flex; align-items:center; gap:7px; height:38px; padding:0 18px; border-radius:9px; font-size:13px; font-weight:700; border:none; cursor:pointer; background:#111; color:#fff; transition:background .14s,opacity .14s; font-family:inherit; }
+  .dash-btn:hover { opacity:.85; }
+  .dash-btn.green { background:#16a34a; }
+  .dash-btn.outline { background:transparent; border:1.5px solid var(--border); color:var(--text); }
+  .dash-btn.outline:hover { border-color:var(--text2); }
+  .dash-btn.sm { height:34px; padding:0 14px; font-size:12px; }
+  .dash-input { width:100%; height:38px; padding:0 12px; border:1.5px solid var(--border); border-radius:9px; font-size:13px; font-family:inherit; background:var(--bg2); color:var(--text); outline:none; }
+  .dash-input:focus { border-color:#111; }
+  .dash-provider-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:14px; }
+  .dash-provider { display:flex; flex-direction:column; align-items:center; gap:6px; padding:14px 8px; border:1.5px solid var(--border); border-radius:10px; cursor:pointer; transition:border-color .14s,background .14s; font-size:11px; font-weight:700; background:var(--card); }
+  .dash-provider:hover { border-color:var(--text2); }
+  .dash-provider.selected { border-color:#111; background:var(--bg2); }
+  .dash-provider-icon { width:32px; height:32px; display:grid; place-items:center; }
+  .dash-mini-list { display:flex; flex-direction:column; gap:6px; margin-bottom:14px; }
+  .dash-mini-row { display:flex; align-items:center; gap:8px; padding:6px 0; font-size:12px; color:var(--text2); }
+  .dash-mini-row strong { color:var(--text); }
+  .dash-mini-row svg { flex-shrink:0; color:#d4d4d8; }
+  .dash-checklist { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:16px 20px; margin-bottom:20px; }
+  .dash-check-title { font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.08em; color:var(--text2); margin-bottom:10px; }
+  .dash-check-item { display:flex; align-items:center; gap:10px; padding:6px 0; font-size:13px; color:var(--text2); }
+  .dash-check-item.done { color:#9ca3af; text-decoration:line-through; }
+  .dash-check-bullet { width:18px; height:18px; border-radius:50%; border:2px solid var(--border2); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .dash-check-bullet.done { background:#111; border-color:#111; color:#fff; }
+  .dash-announce { background:#111; border:1px solid #232323; border-radius:12px; padding:16px 20px; margin-bottom:24px; display:flex; align-items:center; gap:14px; color:#fff; }
+  .dash-announce p { font-size:13px; margin:0; line-height:1.5; flex:1; }
+  .dash-announce a { color:#a1a1aa; font-size:12px; font-weight:700; text-decoration:none; display:inline-flex; align-items:center; gap:6px; white-space:nowrap; }
+  .dash-announce a:hover { color:#fff; }
+  .dash-stats-row { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:24px; }
+  .dash-stat-card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:18px 20px; display:flex; align-items:center; gap:14px; }
+  .dash-stat-icon { width:40px; height:40px; border-radius:10px; background:var(--bg2); display:grid; place-items:center; flex-shrink:0; }
+  .dash-stat-info { flex:1; }
+  .dash-stat-label { font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.06em; color:var(--text2); margin-bottom:2px; }
+  .dash-stat-value { font-family:"Outfit",sans-serif; font-size:22px; font-weight:900; color:var(--text); }
+  .dash-success-msg { font-size:12px; color:#16a34a; font-weight:700; margin-top:8px; display:flex; align-items:center; gap:6px; }
+  .dash-wallet-addr { font-size:11px; color:var(--text2); font-weight:700; margin-top:6px; font-family:monospace; }
 
-export default function Dashboard() {
-  const { isAuthed } = useAuth();
-  const [activeNav, setActiveNav] = useState("home");
-  const [steps, setSteps] = useState({ role: false, wallet: false, kyc: false, task: false });
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  /* Right panel */
+  .dash-right { display:flex; flex-direction:column; gap:14px; }
+  .dash-right h3 { font-family:"Outfit",sans-serif; font-size:16px; font-weight:800; margin:0 0 2px; }
+  .dash-right-sub { font-size:12px; color:var(--text2); margin:0 0 16px; line-height:1.5; }
+  .dash-res-card { display:flex; align-items:center; gap:12px; padding:13px; border:1.5px solid var(--border); border-radius:10px; cursor:pointer; transition:border-color .14s,background .14s; text-decoration:none; color:inherit; }
+  .dash-res-card:hover { border-color:#a1a1aa; background:var(--bg2); }
+  .dash-res-icon { width:36px; height:36px; border-radius:9px; display:grid; place-items:center; flex-shrink:0; }
+  .dash-res-card h4 { font-size:13px; font-weight:700; margin:0 0 2px; }
+  .dash-res-card p { font-size:11px; color:var(--text2); margin:0; }
+  .dash-divider { border-top:1px solid var(--border); margin:18px 0; }
+  .dash-video { display:flex; align-items:center; gap:12px; padding:10px; border:1.5px solid var(--border); border-radius:10px; }
+  .dash-video-thumb { width:60px; height:40px; border-radius:6px; background:var(--bg2); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; flex-shrink:0; }
+  .dash-video-thumb span { font-size:9px; font-weight:700; color:var(--text2); }
+  .dash-video-meta { flex:1; }
+  .dash-video-meta h4 { font-size:12px; font-weight:700; margin:0 0 2px; }
+  .dash-video-meta small { font-size:10px; color:var(--text2); }
+  .dash-links-title { font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.1em; color:var(--text2); margin:14px 0 8px; }
+  .dash-rlink { display:flex; align-items:center; gap:10px; font-size:12px; font-weight:600; color:var(--text2); text-decoration:none; padding:8px 0; border-bottom:1px solid var(--border); }
+  .dash-rlink:last-child { border-bottom:none; }
+  .dash-rlink:hover { color:var(--text); }
+  .dash-progress-widget { background:var(--bg2); border:1.5px solid var(--border); border-radius:10px; padding:12px 14px; }
+  .dash-progress-widget-title { font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.08em; color:var(--text2); margin-bottom:10px; }
+
+  @media(max-width:768px) {
+    .dash-wrap2 { padding:20px 16px 40px; }
+    .dash-step-grid { grid-template-columns:1fr; }
+    .dash-stats-row { grid-template-columns:1fr; }
+    .dash-provider-grid { grid-template-columns:1fr 1fr; }
+  }
+`;
+
+export default function OgaPayDashboard() {
+  const { user, isAuthed } = useAuth();
+  const [step1, setStep1] = useState(getStep("ogapay_step_profile"));
+  const [step2, setStep2] = useState(getStep("ogapay_step_wallet"));
+  const [step3, setStep3] = useState(getStep("ogapay_step_community"));
+  const [step4, setStep4] = useState(getStep("ogapay_step_task"));
+  const [verifSent, setVerifSent] = useState(false);
+  const [walletConnected, setWalletConnected] = useState(false);
+  const [isNew, setIsNew] = useState(() => {
+    const n = localStorage.getItem("ogapay_is_new_user") === "true";
+    if (n) localStorage.removeItem("ogapay_is_new_user");
+    return n;
+  });
+  const [selProvider, setSelProvider] = useState(null);
+  const [availableTasks] = useState("0");
+  const [totalEarned] = useState("₦0.00");
+
+  const fname = user?.firstName || getUser().firstName || "there";
+  const lname = user?.lastName || getUser().lastName || "";
+  const email = user?.email || getUser().email || "";
+  const initials = `${(fname[0] || "").toUpperCase()}${(lname[0] || "").toUpperCase()}`;
+  const stepsDone = [step1, step2, step3, step4];
+  const completed = stepsDone.filter(Boolean).length;
+  const total = 4;
+  const pct = Math.round((completed / total) * 100);
+  const allDone = completed === total;
+
+  const doStep = (idx, key) => {
+    setStep(key);
+    if (idx === 0) setStep1(true);
+    if (idx === 1) setStep2(true);
+    if (idx === 2) setStep3(true);
+    if (idx === 3) setStep4(true);
+  };
 
   if (!isAuthed) {
     return (
@@ -54,257 +154,300 @@ export default function Dashboard() {
     );
   }
 
-  const pendingCount = Object.values(steps).filter(v => !v).length;
-  const completedCount = Object.values(steps).filter(v => v).length;
-  const completeStep = (key) => setSteps(prev => ({ ...prev, [key]: true }));
+  const checklist = [
+    { label: "Complete your profile & verify email", done: step1 },
+    { label: "Connect a Solana wallet", done: step2 },
+    { label: "Join OgaPay community", done: step3 },
+    { label: "Complete your first task", done: step4 },
+  ];
 
   return (
     <Layout sidebar={false}>
-      <style>{`
-        .db-wrap { max-width: 1100px; margin: 0 auto; padding: 24px 0; }
-        .db-grid { display: grid; grid-template-columns: 1fr 320px; gap: 28px; align-items: start; }
+      <style>{CSS}</style>
+      <div className="dash-wrap2">
 
-        /* Left panel */
-        .db-left { min-width: 0; }
-        .db-greeting { margin-bottom: 20px; }
-        .db-greeting h1 { font-family: "Outfit", sans-serif; font-size: 24px; font-weight: 800; color: var(--text); margin: 0 0 4px; }
-        .db-greeting p { font-size: 14px; color: var(--text2); margin: 0; }
+        {/* ── INTRO / WELCOME BANNER ── */}
+        {allDone ? (
+          <div className="dash-intro complete">
+            <div className="dash-intro-icon" style={{ background: "#16a34a" }}>
+              <Icon n="check" s={20} c="#fff" />
+            </div>
+            <div style={{ flex: 1 }}>
+              <h2>You're all set, {fname}!</h2>
+              <p>Your OgaPay account is fully configured. Head to Jobs to start earning.</p>
+            </div>
+            <a href="/tasks" className="dash-btn" style={{ flexShrink: 0 }}>
+              <Icon n="briefcase" s={14} /> Browse Jobs
+            </a>
+          </div>
+        ) : isNew ? (
+          <div className="dash-intro">
+            <div className="dash-intro-icon" style={{ background: "#dbeafe" }}>
+              <Icon n="hand-wave" s={20} c="#2563eb" />
+            </div>
+            <div style={{ flex: 1 }}>
+              <h2>Welcome to OgaPay, {fname}! 👋</h2>
+              <p>Your account is ready. Complete the 4 steps below to start earning tasks and getting paid.</p>
+            </div>
+          </div>
+        ) : (
+          <div className="dash-intro">
+            <div className="dash-intro-icon" style={{ background: "#dcfce7" }}>
+              <Icon n="check-circle" s={20} c="#16a34a" />
+            </div>
+            <div style={{ flex: 1 }}>
+              <h2>Welcome back, {fname} 👋</h2>
+              <p>Good to see you again. Pick up where you left off.</p>
+            </div>
+          </div>
+        )}
 
-        /* Stat cards */
-        .db-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 24px; }
-        .db-stat { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
-        .db-stat-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
-        .db-stat-icon { width: 32px; height: 32px; border-radius: 8px; display: grid; place-items: center; background: rgba(31,140,255,.08); color: var(--accent); font-size: 16px; }
-        .db-stat-change { font-size: 11px; font-weight: 700; color: var(--green); }
-        .db-stat-val { font-family: "Outfit", sans-serif; font-size: 22px; font-weight: 900; color: var(--text); margin-bottom: 2px; }
-        .db-stat-lbl { font-size: 12px; color: var(--text3); }
-
-        /* Section title */
-        .db-section-title { font-family: "Outfit", sans-serif; font-size: 15px; font-weight: 800; color: var(--text); margin: 0 0 12px; display: flex; align-items: center; gap: 8px; }
-        .db-section-title i { color: var(--accent); font-size: 18px; }
-
-        /* Active tasks */
-        .db-tasks { display: grid; gap: 10px; margin-bottom: 28px; }
-        .db-task { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
-        .db-task-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-        .db-task-title { font-size: 14px; font-weight: 700; color: var(--text); }
-        .db-task-reward { font-size: 14px; font-weight: 800; color: var(--green); }
-        .db-task-bar { height: 6px; background: var(--bg2); border-radius: 999px; overflow: hidden; margin-bottom: 6px; }
-        .db-task-fill { height: 100%; border-radius: inherit; background: var(--accent); transition: width .5s; }
-        .db-task-meta { font-size: 11px; color: var(--text3); }
-
-        /* Earnings chart placeholder */
-        .db-chart-wrap { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 18px; margin-bottom: 28px; }
-        .db-chart-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
-        .db-chart-bars { display: flex; align-items: flex-end; gap: 6px; height: 120px; }
-        .db-chart-bar { flex: 1; border-radius: 4px 4px 0 0; background: var(--accent); opacity: .7; min-height: 4px; transition: height .4s; position: relative; }
-        .db-chart-bar:hover { opacity: 1; }
-        .db-chart-bar .bar-val { position: absolute; top: -18px; left: 50%; transform: translateX(-50%); font-size: 9px; font-weight: 700; color: var(--text2); white-space: nowrap; }
-
-        /* Right panel */
-        .db-right { position: sticky; top: 84px; }
-        .db-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 16px; }
-        .db-card h2 { font-family: "Outfit", sans-serif; font-size: 15px; font-weight: 800; color: var(--text); margin: 0 0 4px; }
-        .db-card p { font-size: 12px; color: var(--text3); margin: 0 0 16px; line-height: 1.5; }
-
-        /* Steps */
-        .step-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; cursor: pointer; border-bottom: 1px solid var(--border); }
-        .step-row:last-child { border-bottom: none; }
-        .step-badge { width: 26px; height: 26px; border-radius: 7px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 11px; font-weight: 700; }
-        .step-badge.done { background: #ECFDF5; color: #10B981; }
-        .step-badge.pending { background: var(--bg2); color: var(--text3); }
-        .step-label { font-size: 12.5px; font-weight: 600; color: var(--text); }
-        .step-sub { font-size: 11px; color: var(--text3); }
-
-        /* Progress widget */
-        .pw-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
-        .pw-track { height: 6px; background: var(--bg2); border-radius: 999px; overflow: hidden; }
-        .pw-fill { height: 100%; border-radius: inherit; background: var(--accent); transition: width .6s; }
-        .pw-done { margin-top: 8px; font-size: 12px; color: var(--green); font-weight: 700; display: flex; align-items: center; gap: 6px; }
-
-        /* Resource card */
-        .res-card { display: flex; align-items: flex-start; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); cursor: pointer; text-decoration: none; color: inherit; }
-        .res-card:last-child { border-bottom: none; }
-        .res-icon { width: 36px; height: 36px; border-radius: 9px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 16px; }
-        .res-card h4 { font-size: 13px; font-weight: 700; color: var(--text); margin: 0 0 2px; }
-        .res-card p { font-size: 12px; color: var(--text3); margin: 0; }
-        .rp-links-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text3); margin-bottom: 8px; padding-top: 12px; }
-        .rp-link { display: flex; align-items: center; gap: 10px; padding: 8px 0; font-size: 13px; color: var(--text2); text-decoration: none; cursor: pointer; border-bottom: 1px solid var(--border); }
-        .rp-link:last-child { border-bottom: none; }
-
-        /* Status banner */
-        .status-banner { margin-top: 16px; background: linear-gradient(135deg, #1F8CFF, #0f5db8); border-radius: 12px; padding: 16px; }
-        .status-banner .sb-lbl { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: rgba(255,255,255,.6); margin-bottom: 6px; }
-        .status-banner .sb-title { font-size: 13.5px; font-weight: 600; color: #fff; margin-bottom: 4px; line-height: 1.5; }
-        .status-banner .sb-title span { color: #F5B301; }
-        .status-banner .sb-sub { font-size: 12px; color: rgba(255,255,255,.65); margin-bottom: 12px; }
-        .sb-btn { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; padding: 8px 16px; border: 0; border-radius: 999px; background: #F5B301; color: #000; font-family: "DM Sans", sans-serif; font-size: 12.5px; font-weight: 700; cursor: pointer; text-decoration: none; }
-
-        /* Video card */
-        .video-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin-bottom: 8px; }
-        .video-thumb { height: 60px; display: flex; align-items: center; justify-content: center; gap: 8px; background: var(--card); }
-        .video-play { width: 28px; height: 28px; border-radius: 50%; background: var(--bg2); display: grid; place-items: center; }
-        .video-meta { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; }
-        .video-meta h4 { font-size: 12px; font-weight: 700; color: var(--text); margin: 0; }
-        .video-meta small { font-size: 10px; color: var(--text3); }
-        .db-section-title { font-family: "Outfit", sans-serif; font-size: 15px; font-weight: 800; color: var(--text); margin: 0 0 12px; display: flex; align-items: center; gap: 8px; }
-        .db-section-title i { color: var(--accent); font-size: 18px; }
-
-        @media (max-width: 768px) {
-          .db-grid { grid-template-columns: 1fr; }
-          .db-stats { grid-template-columns: repeat(2, 1fr); gap: 8px; }
-          .db-right { position: static; }
-        }
-      `}</style>
-
-      <div className="db-wrap">
-        {/* Greeting */}
-        <div className="db-greeting">
-          <h1>👋 Welcome back!</h1>
-          <p>Here's what's happening with your account today.</p>
+        {/* ── PAGE HEADER ── */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+          <div>
+            <h1 style={{ fontFamily: "'Outfit',sans-serif", fontSize: 24, fontWeight: 900, margin: 0 }}>Getting Started</h1>
+            <p style={{ fontSize: 14, color: "var(--text2)", margin: "4px 0 0" }}>Complete your setup to start earning on OgaPay</p>
+          </div>
+          {!allDone && (
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "5px 12px", borderRadius: 20, background: "#2563eb", color: "#fff", fontSize: 12, fontWeight: 700 }}>
+              <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#fff", opacity: .85, display: "inline-block" }} />
+              {total - completed} tasks pending
+            </span>
+          )}
         </div>
 
-        <div className="db-grid">
-          {/* ── LEFT PANEL ── */}
-          <div className="db-left">
-            {/* Stats */}
-            <div className="db-stats">
-              {STAT_CARDS.map(s => (
-                <div key={s.label} className="db-stat">
-                  <div className="db-stat-head">
-                    <div className="db-stat-icon"><i className={s.icon} /></div>
-                    <span className="db-stat-change">{s.change}</span>
-                  </div>
-                  <div className="db-stat-val">{s.value}</div>
-                  <div className="db-stat-lbl">{s.label}</div>
-                </div>
-              ))}
-            </div>
+        {/* ── PROGRESS BAR ── */}
+        <div className="dash-progress">
+          <div className="dash-progress-row">
+            <span>{completed} of {total} steps complete</span>
+            <span style={{ color: allDone ? "#16a34a" : "inherit" }}>{pct}%</span>
+          </div>
+          <div className="dash-progress-bar">
+            <div className={`dash-progress-fill${allDone ? " done" : ""}`} style={{ width: `${pct}%` }} />
+          </div>
+        </div>
 
-            {/* Active Tasks */}
-            <div className="db-section-title"><i className="ti ti-player-play" /> Active Tasks</div>
-            <div className="db-tasks">
-              {ACTIVE_TASKS.map((t, i) => (
-                <div key={i} className="db-task">
-                  <div className="db-task-head">
-                    <span className="db-task-title">{t.title}</span>
-                    <span className="db-task-reward">₦{t.reward.toLocaleString()}</span>
-                  </div>
-                  <div className="db-task-bar">
-                    <div className="db-task-fill" style={{ width: `${t.progress}%` }} />
-                  </div>
-                  <div className="db-task-meta">{t.progress}% complete</div>
-                </div>
-              ))}
-            </div>
+        {/* ── TWO-COLUMN GRID ── */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 280px", gap: 24 }}>
 
-            {/* Earnings Chart Placeholder */}
-            <div className="db-section-title"><i className="ti ti-chart-area" /> Earnings Overview</div>
-            <div className="db-chart-wrap">
-              <div className="db-chart-head">
-                <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text)" }}>This Week</span>
-                <span style={{ fontWeight: 800, fontSize: 18, color: "var(--accent)" }}>₦8,900</span>
+          {/* ── LEFT COLUMN ── */}
+          <div>
+
+            {/* ── STEP 1: PROFILE ── */}
+            <div className="dash-section-title">
+              <Icon n="circle-filled" s={8} /> STEP 1: COMPLETE YOUR PROFILE
+            </div>
+            <div className="dash-step-grid">
+              <div className="dash-step-card">
+                <div className="dash-step-badge">1A</div>
+                <h4>Add Profile Photo &amp; Display Name</h4>
+                <p>Set up your OgaPay identity so task creators can find and trust you.</p>
+                <button className="dash-btn" onClick={() => { window.location.href = "/profile"; doStep(0, "ogapay_step_profile"); }}>
+                  <Icon n="user" s={14} /> Go to Profile
+                </button>
               </div>
-              <div className="db-chart-bars">
-                {[35, 55, 42, 70, 48, 62, 85].map((v, i) => (
-                  <div key={i} className="db-chart-bar" style={{ height: `${v}%` }}>
-                    <span className="bar-val">₦{v * 10}</span>
+              <div className="dash-step-card">
+                <div className="dash-step-badge">1B</div>
+                <h4>Verify Your Email Address</h4>
+                <p>Confirm your email to unlock withdrawals and receive task notifications.</p>
+                <input className="dash-input" value={email} readOnly style={{ marginBottom: 10 }} />
+                <button className={`dash-btn${verifSent ? " green" : ""}`} onClick={() => setVerifSent(true)}>
+                  <Icon n="mail" s={14} /> {verifSent ? "✓ Verification Sent" : "Send Verification Email"}
+                </button>
+                {verifSent && <div className="dash-success-msg"><Icon n="check" s={12} /> Verification email sent!</div>}
+              </div>
+            </div>
+
+            {/* ── STEP 2: WALLET ── */}
+            <div className="dash-section-title">
+              <Icon n="circle-filled" s={8} /> STEP 2: CONNECT YOUR WALLET
+            </div>
+            <div className="dash-step-card full">
+              <div className="dash-step-badge">2</div>
+              <h4>Connect a Solana Wallet</h4>
+              <p>Link your wallet to receive USDC payouts directly. Supports Phantom, Backpack, and Solflare.</p>
+              <div className="dash-provider-grid">
+                {[
+                  { id: "phantom", label: "Phantom", icon: "brand-figma" },
+                  { id: "backpack", label: "Backpack", icon: "backpack" },
+                  { id: "solflare", label: "Solflare", icon: "flare" },
+                ].map(p => (
+                  <div key={p.id} className={`dash-provider${selProvider === p.id ? " selected" : ""}`} onClick={() => setSelProvider(p.id)}>
+                    <div className="dash-provider-icon"><Icon n={p.icon} s={20} /></div>
+                    <span>{p.label}</span>
                   </div>
                 ))}
               </div>
+              <button className={`dash-btn${walletConnected ? " green" : ""}`} onClick={() => { setWalletConnected(true); setStep2(true); doStep(1, "ogapay_step_wallet"); }}>
+                <Icon n="wallet" s={14} /> {walletConnected ? "✓ Wallet Connected" : "Connect Wallet"}
+              </button>
+              {walletConnected && <div className="dash-wallet-addr">F48N...jemX</div>}
             </div>
+
+            {/* ── STEP 3: COMMUNITY ── */}
+            <div className="dash-section-title">
+              <Icon n="circle-filled" s={8} /> STEP 3: JOIN THE COMMUNITY
+            </div>
+            <div className="dash-step-card full">
+              <div className="dash-step-badge">3</div>
+              <h4>Join OgaPay Communities</h4>
+              <p>Stay updated on new tasks, tips, and announcements from other earners.</p>
+              <div className="dash-provider-grid">
+                {[
+                  { id: "telegram", label: "Telegram", icon: "brand-telegram", href: "https://t.me/ogapay" },
+                  { id: "x", label: "X (Twitter)", icon: "brand-x", href: "https://x.com/ogapay_ng" },
+                  { id: "discord", label: "Discord", icon: "brand-discord", href: "https://discord.gg/ogapay" },
+                ].map(p => (
+                  <a key={p.id} href={p.href} target="_blank" rel="noopener noreferrer" className="dash-provider">
+                    <div className="dash-provider-icon"><Icon n={p.icon} s={20} /></div>
+                    <span>{p.label}</span>
+                  </a>
+                ))}
+              </div>
+              <button className={`dash-btn${step3 ? " green" : ""}`} onClick={() => doStep(2, "ogapay_step_community")}>
+                <Icon n="users" s={14} /> {step3 ? "✓ Community Joined" : "I've Joined — Mark as Done"}
+              </button>
+            </div>
+
+            {/* ── STEP 4: FIRST TASK ── */}
+            <div className="dash-section-title">
+              <Icon n="circle-filled" s={8} /> STEP 4: COMPLETE YOUR FIRST TASK
+            </div>
+            <div className="dash-step-card full">
+              <div className="dash-step-badge">4</div>
+              <h4>Complete Your First Task</h4>
+              <p>Browse available tasks, apply for one, submit your proof, and receive your first OGA reward.</p>
+              <div className="dash-mini-list">
+                {["Browse tasks", "Apply & complete", "Submit proof"].map((label, i) => (
+                  <div key={i} className="dash-mini-row">
+                    <span style={{ width: 18, height: 18, borderRadius: "50%", background: "var(--bg2)", display: "grid", placeItems: "center", fontSize: 10, fontWeight: 800, flexShrink: 0 }}>{i + 1}</span>
+                    <strong>{label}</strong>
+                    <Icon n="arrow-right" s={12} style={{ marginLeft: "auto" }} />
+                  </div>
+                ))}
+              </div>
+              <a href="/tasks" className="dash-btn">
+                <Icon n="briefcase" s={14} /> Browse Available Tasks
+              </a>
+            </div>
+
+            {/* ── SETUP CHECKLIST ── */}
+            <div className="dash-checklist">
+              <div className="dash-check-title">Setup Checklist</div>
+              {checklist.map((item, i) => (
+                <div key={i} className={`dash-check-item${item.done ? " done" : ""}`}>
+                  <div className={`dash-check-bullet${item.done ? " done" : ""}`}>
+                    {item.done && <Icon n="check" s={10} c="#fff" />}
+                  </div>
+                  {item.label}
+                </div>
+              ))}
+            </div>
+
+            {/* ── ANNOUNCEMENT ── */}
+            <div className="dash-announce">
+              <Icon n="megaphone" s={18} c="#60a5fa" />
+              <p>OgaPay tasks are now available in Nigeria, Ghana, Kenya and more.</p>
+              <a href="#"><Icon n="file-text" s={13} /> Read our getting started guide ↗</a>
+            </div>
+
+            {/* ── STATS CARDS ── */}
+            <div className="dash-stats-row">
+              <div className="dash-stat-card">
+                <div className="dash-stat-icon"><Icon n="briefcase" s={18} /></div>
+                <div className="dash-stat-info">
+                  <div className="dash-stat-label">Available Tasks</div>
+                  <div className="dash-stat-value">{availableTasks}</div>
+                </div>
+              </div>
+              <div className="dash-stat-card">
+                <div className="dash-stat-icon"><Icon n="currency-naira" s={18} /></div>
+                <div className="dash-stat-info">
+                  <div className="dash-stat-label">Total Earned</div>
+                  <div className="dash-stat-value">{totalEarned}</div>
+                </div>
+              </div>
+            </div>
+
           </div>
 
           {/* ── RIGHT PANEL ── */}
-          <div className="db-right">
-            {/* Onboarding */}
-            <div className="db-card">
-              <h2>Get Started</h2>
-              <p>Complete these steps to start earning.</p>
-              {STEPS.map(item => (
-                <div key={item.key} className="step-row" onClick={() => completeStep(item.key)}>
-                  <div className={`step-badge ${steps[item.key] ? 'done' : 'pending'}`}>
-                    {steps[item.key] ? <i className="ti ti-check" style={{ fontSize: 14 }} /> : item.num}
-                  </div>
-                  <div>
-                    <div className="step-label" style={{ color: steps[item.key] ? 'var(--green)' : 'var(--text)' }}>
-                      {item.label}
-                    </div>
-                    <div className="step-sub">{item.sub}</div>
-                  </div>
-                </div>
-              ))}
+          <div className="dash-right">
+            <h3>Resources</h3>
+            <p className="dash-right-sub">Get help, watch guides, and connect with our community.</p>
+
+            <a href="https://t.me/ogapay" target="_blank" rel="noopener noreferrer" className="dash-res-card">
+              <div className="dash-res-icon" style={{ background: "#0088cc" }}><Icon n="brand-telegram" s={18} c="#fff" /></div>
+              <div>
+                <h4>Telegram Support</h4>
+                <p>Where the talk happens. Join us ↗</p>
+              </div>
+            </a>
+
+            <a href="/docs" className="dash-res-card">
+              <div className="dash-res-icon"><Icon n="book" s={18} /></div>
+              <div>
+                <h4>Documentation</h4>
+                <p>Learn how to earn on OgaPay. Full docs ↗</p>
+              </div>
+            </a>
+
+            <a href="/communities" className="dash-res-card">
+              <div className="dash-res-icon" style={{ background: "#f59e0b" }}><Icon n="users" s={18} c="#fff" /></div>
+              <div>
+                <h4>Community</h4>
+                <p>Join Nigerian Earners Hub ↗</p>
+              </div>
+            </a>
+
+            <div className="dash-divider" />
+
+            <h3 style={{ fontFamily: "'Outfit',sans-serif", fontSize: 15, fontWeight: 800, marginBottom: 4 }}>Video tutorials</h3>
+            <p style={{ fontSize: 12, color: "var(--text2)", marginBottom: 12 }}>Step by step guides to get you started.</p>
+
+            <div className="dash-video">
+              <div className="dash-video-thumb">
+                <Icon n="player-play" s={16} />
+                <span>Coming soon</span>
+              </div>
+              <div className="dash-video-meta">
+                <h4>How to earn your first ₦1,000 on OgaPay</h4>
+                <small>2 MINUTE VIDEO</small>
+              </div>
             </div>
 
-            {/* Progress */}
-            <div className="db-card">
-              <div className="pw-row">
-                <span style={{ fontSize: 11, fontWeight: 800, color: "var(--text3)", textTransform: "uppercase", letterSpacing: ".08em" }}>Your Progress</span>
-                <span style={{ color: completedCount === 4 ? "var(--green)" : "var(--text)" }}>{Math.round(completedCount / 4 * 100)}%</span>
+            <div className="dash-links-title">RESOURCE LINKS</div>
+            <a href="https://x.com/ogapay_ng" target="_blank" rel="noopener noreferrer" className="dash-rlink">
+              <Icon n="brand-x" s={14} /> Our Twitter <Icon n="arrow-up-right" s={12} style={{ marginLeft: "auto" }} />
+            </a>
+            <a href="/support" className="dash-rlink">
+              <Icon n="headset" s={14} /> Support <Icon n="arrow-up-right" s={12} style={{ marginLeft: "auto" }} />
+            </a>
+            <a href="/" className="dash-rlink">
+              <Icon n="home" s={14} /> Back to Home <Icon n="arrow-up-right" s={12} style={{ marginLeft: "auto" }} />
+            </a>
+
+            <div className="dash-divider" />
+
+            <div className="dash-progress-widget">
+              <div className="dash-progress-widget-title">Your Progress</div>
+              <div className="dash-progress-row">
+                <span>{completed}/{total} steps done</span>
+                <span style={{ color: allDone ? "#16a34a" : "inherit" }}>{pct}%</span>
               </div>
-              <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 8, color: "var(--text)" }}>{completedCount}/4 steps done</div>
-              <div className="pw-track">
-                <div className="pw-fill" style={{ width: `${completedCount / 4 * 100}%` }} />
+              <div className="dash-progress-bar">
+                <div className={`dash-progress-fill${allDone ? " done" : ""}`} style={{ width: `${pct}%` }} />
               </div>
-              {completedCount === 4 && (
-                <div className="pw-done"><i className="ti ti-check" /> All steps complete!</div>
+              {allDone && (
+                <div style={{ marginTop: 10, fontSize: 12, color: "#16a34a", fontWeight: 700, display: "flex", alignItems: "center", gap: 6 }}>
+                  <Icon n="check" s={14} c="#16a34a" /> All steps complete!
+                </div>
               )}
             </div>
-
-            {/* Resources */}
-            <div className="db-card">
-              <h2>Resources</h2>
-              <p>Guides, support, and community links.</p>
-              {[
-                { icon: "ti ti-message", bg: "#5865F2", iconC: "#fff", title: "Discord support", desc: "Join the OgaPay community ↗" },
-                { icon: "ti ti-book", bg: "var(--bg2)", iconC: "var(--text)", title: "Documentation", desc: "Learn how OgaPay works ↗" },
-                { icon: "ti ti-users", bg: "#f59e0b", iconC: "#fff", title: "Community", desc: "Nigerian Earners Hub ↗" },
-              ].map(r => (
-                <a key={r.title} href="#" className="res-card">
-                  <div className="res-icon" style={{ background: r.bg, color: r.iconC }}><i className={r.icon} style={{ fontSize: 18 }} /></div>
-                  <div>
-                    <h4>{r.title}</h4>
-                    <p>{r.desc}</p>
-                  </div>
-                </a>
-              ))}
-
-              <div className="rp-links-title">VIDEO TUTORIALS</div>
-              <div className="video-card">
-                <div className="video-thumb">
-                  <div className="video-play"><i className="ti ti-player-play" style={{ fontSize: 14, color: "var(--text3)" }} /></div>
-                  <span style={{ fontSize: 11, color: "var(--text3)", fontWeight: 700 }}>Coming soon</span>
-                </div>
-                <div className="video-meta">
-                  <div>
-                    <h4 style={{ fontSize: 12, fontWeight: 700, color: "var(--text)", margin: 0 }}>Intro to OgaPay</h4>
-                    <small style={{ fontSize: 10, color: "var(--text3)" }}>2 minute video</small>
-                  </div>
-                  <i className="ti ti-arrow-up-right" style={{ fontSize: 14, color: "var(--text3)" }} />
-                </div>
-              </div>
-
-              <div className="rp-links-title">RESOURCE LINKS</div>
-              {RESOURCE_LINKS.map(l => (
-                <a key={l.label} href={l.href} className="rp-link">
-                  <i className={l.icon} style={{ fontSize: 14, color: "var(--text3)" }} />
-                  {l.label}
-                  <i className="ti ti-arrow-up-right" style={{ fontSize: 12, color: "var(--text3)", marginLeft: "auto" }} />
-                </a>
-              ))}
-
-              <div className="status-banner">
-                <div className="sb-lbl">OgaPay is live</div>
-                <div className="sb-title"><span>312 tasks</span> available now</div>
-                <div className="sb-sub">Complete tasks. Get paid in Naira or USDC.</div>
-                <a href="/tasks" className="sb-btn">
-                  <i className="ti ti-briefcase" style={{ fontSize: 14 }} /> Browse Tasks →
-                </a>
-              </div>
-            </div>
           </div>
-        </div>
-      </div>
+
+        </div>{/* end two-column grid */}
+      </div>{/* end dash-wrap2 */}
     </Layout>
   );
 }
