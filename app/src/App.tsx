@@ -23,6 +23,7 @@ import Leaderboard from './pages/Leaderboard'
 import Campaigns from './pages/Campaigns'
 import Support from './pages/Support'
 import CreateJob from './pages/CreateJob'
+import Blog from './pages/Blog'
 import NotFound from './pages/NotFound'
 import EditProfile from './pages/EditProfile'
 
@@ -58,6 +59,7 @@ export default function App() {
           <Route path="/edit-profile" element={<EditProfile />} />
           <Route path="/login" element={<OgaPayAuth />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/blog" element={<Blog />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </AuthProvider>
