@@ -103,11 +103,15 @@ export default function LoginPage() {
         auth: false,
         body: JSON.stringify({ firstName, lastName, email: signupEmail.trim(), password: signupPassword, username: signupEmail.split("@")[0] }),
       });
-      // ✅ FIX: Log in the user immediately after signup so they're authenticated
-      login(result);
-      // Set a flag to show "Welcome" message (5-minute window)
+      
+      // ✅ FIX: Handle both response formats (user directly, or nested in tokens/session)
+      const authPayload = {
+        user: result.user || result,
+        tokens: result.tokens || result.session,
+      };
+      
+      login(authPayload);
       localStorage.setItem("ogapay_is_new_user", "true");
-      // Redirect to dashboard instead of verify screen
       window.location.href = "/dashboard";
     } catch (err) {
       setSignupMsg(err.message);
