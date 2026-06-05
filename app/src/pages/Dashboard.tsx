@@ -455,7 +455,7 @@ export default function OgaPayDashboard() {
                 <span>Coming soon</span>
               </div>
               <div className="dash-video-meta">
-                <h4>How to earn your first ₦1,000 on OgaPay</h4>
+                <h4>How to earn your first ₦100,000 on OgaPay</h4>
                 <small>2 MINUTE VIDEO</small>
               </div>
             </div>
