@@ -49,7 +49,6 @@ export default function LoginPage() {
   const [signupMsg, setSignupMsg] = useState("");
   const [resetMsg, setResetMsg] = useState("");
   const [loading, setLoading] = useState("");
-  const [verifyEmail, setVerifyEmail] = useState("");
  
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
@@ -252,9 +251,6 @@ export default function LoginPage() {
         color: #94a3b8; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;
       }
       .divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: #e3e9f2; }
-      .signup-link { text-align: center; font-size: 14px; color: #66738a; margin: 0 0 32px; }
-      .signup-link a { color: #4D5DFF; font-weight: 700; text-decoration: none; }
-      .signup-link a:hover { text-decoration: underline; }
       .security {
         border-top: 1px solid #e3e9f2; padding-top: 20px; margin-top: auto;
         display: flex; align-items: flex-start; gap: 12px;
@@ -277,35 +273,6 @@ export default function LoginPage() {
         .auth-btn { height: 54px; gap: 12px; padding: 0 12px; border-radius: 14px; }
         .right h2 { font-size: 24px; }
       }
-      /* ── LOGIN FOOTER ── */
-      .main-footer {
-        background: var(--bg2); border-top: 1px solid var(--border);
-        padding: 40px 24px 24px; margin-top: auto;
-      }
-      .footer-inner {
-        max-width: 1120px; margin: 0 auto;
-      }
-      .footer-grid {
-        display: grid;
-        grid-template-columns: 1.5fr repeat(3, 1fr);
-        gap: 40px; margin-bottom: 32px;
-      }
-      .footer-brand .logo-mark { display: inline-block; }
-      .footer-brand .logo-mark svg { width: 28px; height: 28px; border-radius: 8px; overflow: hidden; }
-      .footer-brand p { color: var(--text2); font-size: 13px; margin: 10px 0 0; line-height: 1.6; max-width: 260px; }
-      .footer-col h4 { margin: 0 0 14px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; color: var(--text3); }
-      .footer-col a { display: block; color: var(--text2); font-size: 13px; font-weight: 600; margin-bottom: 10px; text-decoration: none; }
-      .footer-col a:hover { color: var(--text); }
-      .footer-bottom {
-        border-top: 1px solid var(--border); padding-top: 18px;
-        display: flex; justify-content: space-between; gap: 18px;
-        color: var(--text3); font-size: 12px;
-      }
-      @media(max-width: 768px) {
-        .footer-grid { grid-template-columns: 1fr; gap: 24px; }
-        .footer-bottom { flex-direction: column; text-align: center; }
-      }
- 
     `}</style>
     <header className="nav">
       <div className="nav-inner">
@@ -314,13 +281,13 @@ export default function LoginPage() {
           <span>Oga<span>Pay</span></span>
         </a>
         <nav className="nav-links" aria-label="Primary navigation">
-          <a className="nav-link" href="/"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 10.5 12 3 9 7.5"/><path d="M5 10v10h14V10"/></svg>Home</a>
-          <a className="nav-link" href="/tasks"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" r[...]
-          <a className="nav-link" href="/store"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18M16 10a4 4[...]
-          <a className="nav-link" href="/communities"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>[...]
+          <a className="nav-link" href="/"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 10v10h14V10"/></svg>Home</a>
+          <a className="nav-link" href="/tasks"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Tasks</a>
+          <a className="nav-link" href="/store"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18M16 10a4 4 0 1 1-8 0"/></svg>Store</a>
+          <a className="nav-link" href="/communities"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.74"/></svg>Communities</a>
         </nav>
         <div className="nav-actions">
-          <a className="wallet-btn" href="/login"><svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2.3" viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2[...]
+          <a className="wallet-btn" href="/login"><svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2.3" viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M3 10h18M7 15h.01"/></svg>Login</a>
           <a className="wallet-btn" href="/login?mode=signup">Get Started</a>
           <button className="icon-btn" onClick={() => setTheme(t => t === "dark" ? "light" : "dark")} aria-label="Toggle dark mode">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z"/></svg>
@@ -361,11 +328,11 @@ export default function LoginPage() {
                   Instant payouts in Naira and USDC
                 </div>
                 <div className="feature">
-                  <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.[...]
+                  <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.74"/></svg>
                   Join verified communities
                 </div>
                 <div className="feature">
-                  <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><line x1="9" y1="10" x2="15" y2="10"/><line x1="12" y1="7" x2="12" y2="13"/></s[...]
+                  <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><line x1="9" y1="10" x2="15" y2="10"/><line x1="12" y1="7" x2="12" y2="13"/></svg>
                   Promote products and grow faster
                 </div>
               </div>
@@ -377,7 +344,7 @@ export default function LoginPage() {
           </div>
           <div className="stats-card">
             <div className="chart">
-              <svg viewBox="0 0 36 36" fill="none"><path d="M4 28 L10 20 L16 24 L24 10 L32 14" stroke="#4D5DFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/><circle cx="24" cy=[...]
+              <svg viewBox="0 0 36 36" fill="none"><path d="M4 28 L10 20 L16 24 L24 10 L32 14" stroke="#4D5DFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/><circle cx="24" cy="10" r="2" fill="#4D5DFF"/></svg>
             </div>
             <div>
               <strong>24,390+</strong>
@@ -411,9 +378,9 @@ export default function LoginPage() {
                     <strong>Connect Wallet</strong>
                   </button>
                 </div>
-                <a href="#" onClick={(e) => { e.preventDefault(); show("forgot"); }} style={{display:'block',textAlign:'center',margin:'8px 0 4px',color:'#4D5DFF',fontSize:'14px',fontWeight:'600'[...]
+                <a href="#" onClick={(e) => { e.preventDefault(); show("forgot"); }} style={{display:'block',textAlign:'center',margin:'8px 0 4px',color:'#4D5DFF',fontSize:'14px',fontWeight:'600',textDecoration:'none'}}>Forgot password?</a>
                 <div className="divider">OR</div>
-                <p style={{textAlign:'center',margin:0,fontSize:'14px',color:'#66738a'}}>New to OgaPay? <a href="#" onClick={(e) => { e.preventDefault(); show("signup"); }} style={{color:'#4D5DFF[...]
+                <p style={{textAlign:'center',margin:0,fontSize:'14px',color:'#66738a'}}>New to OgaPay? <a href="#" onClick={(e) => { e.preventDefault(); show("signup"); }} style={{color:'#4D5DFF',fontWeight:700,textDecoration:'none'}}>Create account</a></p>
               </>
             )}
  
@@ -421,11 +388,11 @@ export default function LoginPage() {
               <form onSubmit={handleLogin}>
                 <h2>Welcome Back</h2>
                 <p className="sub">Sign in to continue earning with OgaPay</p>
-                <input type="email" value={loginEmail} onChange={e => setLoginEmail(e.target.value)} placeholder="Email address" style={{width:'100%',height:'56px',padding:'0 16px',border:'1.5px [...]
-                <input type="password" value={loginPassword} onChange={e => setLoginPassword(e.target.value)} placeholder="Password" style={{width:'100%',height:'56px',padding:'0 16px',border:'1.[...]
-                <button type="submit" disabled={loading === "login"} style={{width:'100%',height:'56px',border:'none',borderRadius:'14px',background:'#4D5DFF',color:'#fff',fontSize:'16px',fontWei[...]
+                <input type="email" value={loginEmail} onChange={e => setLoginEmail(e.target.value)} placeholder="Email address" style={{width:'100%',height:'56px',padding:'0 16px',border:'1.5px solid #e3e9f2',borderRadius:'12px',fontSize:'14px',marginBottom:'12px',fontFamily:'inherit'}} />
+                <input type="password" value={loginPassword} onChange={e => setLoginPassword(e.target.value)} placeholder="Password" style={{width:'100%',height:'56px',padding:'0 16px',border:'1.5px solid #e3e9f2',borderRadius:'12px',fontSize:'14px',marginBottom:'16px',fontFamily:'inherit'}} />
+                <button type="submit" disabled={loading === "login"} style={{width:'100%',height:'56px',border:'none',borderRadius:'14px',background:'#4D5DFF',color:'#fff',fontSize:'16px',fontWeight:'700',cursor:'pointer'}}>Sign In</button>
                 {loginMsg && <p style={{fontSize:'13px',color:'#dc2626',margin:'10px 0 0',textAlign:'center'}}>{loginMsg}</p>}
-                <p style={{textAlign:'center',margin:'14px 0 0'}}><a href="#" onClick={(e) => { e.preventDefault(); show("default"); }} style={{color:'#4D5DFF',fontSize:'13px',fontWeight:'600',te[...]
+                <p style={{textAlign:'center',margin:'14px 0 0'}}><a href="#" onClick={(e) => { e.preventDefault(); show("default"); }} style={{color:'#4D5DFF',fontSize:'13px',fontWeight:'600',textDecoration:'none'}}>Back to options</a></p>
               </form>
             )}
  
@@ -433,12 +400,12 @@ export default function LoginPage() {
               <form onSubmit={handleSignup}>
                 <h2>Create account</h2>
                 <p className="sub">Join OgaPay to start earning or promoting.</p>
-                <input type="text" value={signupName} onChange={e => setSignupName(e.target.value)} placeholder="Full name" style={{width:'100%',height:'56px',padding:'0 16px',border:'1.5px solid[...]
-                <input type="email" value={signupEmail} onChange={e => setSignupEmail(e.target.value)} placeholder="Email address" style={{width:'100%',height:'56px',padding:'0 16px',border:'1.5p[...]
-                <input type="password" value={signupPassword} onChange={e => setSignupPassword(e.target.value)} placeholder="Password (min 8 characters)" style={{width:'100%',height:'56px',paddin[...]
-                <button type="submit" disabled={loading === "signup"} style={{width:'100%',height:'56px',border:'none',borderRadius:'14px',background:'#4D5DFF',color:'#fff',fontSize:'16px',fontWe[...]
+                <input type="text" value={signupName} onChange={e => setSignupName(e.target.value)} placeholder="Full name" style={{width:'100%',height:'56px',padding:'0 16px',border:'1.5px solid #e3e9f2',borderRadius:'12px',fontSize:'14px',marginBottom:'12px',fontFamily:'inherit'}} />
+                <input type="email" value={signupEmail} onChange={e => setSignupEmail(e.target.value)} placeholder="Email address" style={{width:'100%',height:'56px',padding:'0 16px',border:'1.5px solid #e3e9f2',borderRadius:'12px',fontSize:'14px',marginBottom:'12px',fontFamily:'inherit'}} />
+                <input type="password" value={signupPassword} onChange={e => setSignupPassword(e.target.value)} placeholder="Password (min 8 characters)" style={{width:'100%',height:'56px',padding:'0 16px',border:'1.5px solid #e3e9f2',borderRadius:'12px',fontSize:'14px',marginBottom:'16px',fontFamily:'inherit'}} />
+                <button type="submit" disabled={loading === "signup"} style={{width:'100%',height:'56px',border:'none',borderRadius:'14px',background:'#4D5DFF',color:'#fff',fontSize:'16px',fontWeight:'700',cursor:'pointer'}}>Create Account</button>
                 {signupMsg && <p style={{fontSize:'13px',color:'#dc2626',margin:'10px 0 0',textAlign:'center'}}>{signupMsg}</p>}
-                <p style={{textAlign:'center',margin:'14px 0 0'}}><a href="#" onClick={(e) => { e.preventDefault(); show("default"); }} style={{color:'#4D5DFF',fontSize:'13px',fontWeight:'600',te[...]
+                <p style={{textAlign:'center',margin:'14px 0 0'}}><a href="#" onClick={(e) => { e.preventDefault(); show("default"); }} style={{color:'#4D5DFF',fontSize:'13px',fontWeight:'600',textDecoration:'none'}}>Back to options</a></p>
               </form>
             )}
  
@@ -447,11 +414,11 @@ export default function LoginPage() {
                 <h2>Connect Wallet</h2>
                 <p className="sub">Connect your wallet to sign in.</p>
                 <div style={{padding:'24px 0',textAlign:'center',border:'1.5px dashed #e3e9f2',borderRadius:'14px',marginBottom:'16px'}}>
-                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#4D5DFF" strokeWidth="1.5"><rect x="1" y="4" width="22" height="16" rx="3"/><path d="M18 12h.01M4 12h4"/></sv[...]
-                   <p style={{color:'#66738a',fontSize:'14px',margin:'12px 0 0'}}>Connect your wallet SDK or Web3 provider to this action.</p>
+                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#4D5DFF" strokeWidth="1.5"><rect x="1" y="4" width="22" height="16" rx="3"/><path d="M18 12h.01M4 12h4"/></svg>
+                  <p style={{color:'#66738a',fontSize:'14px',margin:'12px 0 0'}}>Connect your wallet SDK or Web3 provider to this action.</p>
                 </div>
-                <button style={{width:'100%',height:'56px',border:'none',borderRadius:'14px',background:'#4D5DFF',color:'#fff',fontSize:'16px',fontWeight:'700',cursor:'pointer'}}>Connect Wallet</[...]
-                <p style={{textAlign:'center',margin:'14px 0 0'}}><a href="#" onClick={(e) => { e.preventDefault(); show("default"); }} style={{color:'#4D5DFF',fontSize:'13px',fontWeight:'600',te[...]
+                <button style={{width:'100%',height:'56px',border:'none',borderRadius:'14px',background:'#4D5DFF',color:'#fff',fontSize:'16px',fontWeight:'700',cursor:'pointer'}}>Connect Wallet</button>
+                <p style={{textAlign:'center',margin:'14px 0 0'}}><a href="#" onClick={(e) => { e.preventDefault(); show("default"); }} style={{color:'#4D5DFF',fontSize:'13px',fontWeight:'600',textDecoration:'none'}}>Back to options</a></p>
               </div>
             )}
  
@@ -459,10 +426,10 @@ export default function LoginPage() {
               <form onSubmit={handleReset}>
                 <h2>Reset Password</h2>
                 <p className="sub">Enter your email address and we'll send you a link to reset your password.</p>
-                <input type="email" value={resetEmail} onChange={e => setResetEmail(e.target.value)} placeholder="Enter your email" style={{width:'100%',height:'56px',padding:'0 16px',border:'1.5[...]
-                <button type="submit" disabled={loading === "reset"} style={{width:'100%',height:'56px',border:'none',borderRadius:'14px',background:'#4D5DFF',color:'#fff',fontSize:'16px',fontWei[...]
+                <input type="email" value={resetEmail} onChange={e => setResetEmail(e.target.value)} placeholder="Enter your email" style={{width:'100%',height:'56px',padding:'0 16px',border:'1.5px solid #e3e9f2',borderRadius:'12px',fontSize:'14px',marginBottom:'16px',fontFamily:'inherit'}} />
+                <button type="submit" disabled={loading === "reset"} style={{width:'100%',height:'56px',border:'none',borderRadius:'14px',background:'#4D5DFF',color:'#fff',fontSize:'16px',fontWeight:'700',cursor:'pointer'}}>Send Reset Link</button>
                 {resetMsg && <p style={{fontSize:'13px',color: resetMsg.includes("receive") ? '#16a34a' : '#66738a',margin:'12px 0 0',textAlign:'center'}}>{resetMsg}</p>}
-                <p style={{textAlign:'center',margin:'12px 0 0'}}><a href="#" onClick={(e) => { e.preventDefault(); show("default"); }} style={{color:'#4D5DFF',fontSize:'13px',fontWeight:'600',te[...]
+                <p style={{textAlign:'center',margin:'12px 0 0'}}><a href="#" onClick={(e) => { e.preventDefault(); show("default"); }} style={{color:'#4D5DFF',fontSize:'13px',fontWeight:'600',textDecoration:'none'}}>Back to options</a></p>
               </form>
             )}
  
@@ -477,39 +444,5 @@ export default function LoginPage() {
         </div>
       </div>
     </main>
- 
-    <footer className="main-footer">
-      <div className="footer-inner">
-        <div className="footer-grid">
-          <div className="footer-brand">
-            <span className="logo-mark"><LogoMark /></span>
-            <p>OgaPay is a modern earning marketplace. Complete tasks, join communities, and get paid instantly in Naira and USDC.</p>
-          </div>
-          <div className="footer-col">
-            <h4>Platform</h4>
-            <a href="/tasks">Browse Tasks</a>
-            <a href="/store">Deals & Offers</a>
-            <a href="/communities">Communities</a>
-            <a href="/leaderboard">Leaderboard</a>
-          </div>
-          <div className="footer-col">
-            <h4>Resources</h4>
-            <a href="/about">About Us</a>
-            <a href="/blog">Blog</a>
-            <a href="/contact">Contact</a>
-            <a href="/faq">FAQ</a>
-          </div>
-          <div className="footer-col">
-            <h4>Legal</h4>
-            <a href="/terms">Terms of Service</a>
-            <a href="/privacy">Privacy Policy</a>
-          </div>
-        </div>
-        <div className="footer-bottom">
-          <span>&copy; 2026 OgaPay. All rights reserved.</span>
-          <span>Made with care for the gig economy.</span>
-        </div>
-      </div>
-    </footer>
   </>;
 }
