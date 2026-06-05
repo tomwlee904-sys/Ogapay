@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom"
 import { useAuth } from "../context/AuthContext"
 import { useTheme } from "../context/ThemeContext"
 import Footer from "../components/Footer"
+import Drawer from "../components/Drawer"
 
 const categories = ['All', 'News', 'Businesses', 'Freelancers', 'Case Studies']
 
@@ -161,6 +162,7 @@ export default function Blog() {
   const navigate = useNavigate()
   const { isAuthed } = useAuth()
   const { theme, toggle } = useTheme()
+  const [drawerOpen, setDrawerOpen] = useState(false)
 
   const filteredPosts = posts.filter(p =>
     (activeCategory === 'All' || p.category === activeCategory) &&
@@ -194,7 +196,8 @@ export default function Blog() {
 
   if (!showArticles) {
     return (
-      <div style={{ fontFamily: 'inherit', background: '#fff', minHeight: '100vh', color: '#1a1a1a' }}>
+      <div data-theme={theme} style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: '#fff', color: '#1a1a1a' }}>
+        <div style={{ flex: 1 }}>
         <style>{`
           .blog-nav-link:hover { color: #121566 !important; }
           .blog-cat-btn:hover { background: #f0f0f0 !important; }
@@ -228,11 +231,13 @@ export default function Blog() {
           </button>
           {/* Hamburger — right side like Fiverr */}
           <div style={{ marginLeft: 'auto' }}>
-            <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
+            <button onClick={() => setDrawerOpen(true)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#333" strokeWidth="2"><line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="18" x2="21" y2="18" /></svg>
             </button>
           </div>
         </nav>
+
+        <Drawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
 
         {/* HERO — full width, #121566 background, centered text */}
         <div style={{ background: '#121566', padding: '5rem 2rem', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
@@ -277,8 +282,9 @@ export default function Blog() {
 
   // Articles view
   return (
-    <div style={{ fontFamily: 'inherit', background: '#f5f5f3', minHeight: '100vh', color: '#1a1a1a' }}>
-      <nav style={{ background: '#fff', borderBottom: '0.5px solid #e0e0e0', position: 'sticky', top: 0, zIndex: 100 }}>
+    <div data-theme={theme} style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: '#f5f5f3', color: '#1a1a1a' }}>
+      <div style={{ flex: 1 }}>
+        <nav style={{ background: '#fff', borderBottom: '0.5px solid #e0e0e0', position: 'sticky', top: 0, zIndex: 100 }}>
         <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0.875rem 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
           <button onClick={() => setShowArticles(false)} style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', cursor: 'pointer' }}>
             <span style={{ background: '#7F77DD', color: '#fff', fontSize: 12, padding: '3px 10px', borderRadius: 20, fontWeight: 500 }}>OgaPay</span>
@@ -294,6 +300,9 @@ export default function Blog() {
           <div style={{ display: 'flex', gap: 8 }}>
             {isAuthed && <button onClick={() => navigate('/blog/write')} style={{ fontSize: 13, background: '#121566', color: '#fff', padding: '6px 16px', borderRadius: 20, border: 'none', cursor: 'pointer', fontWeight: 500 }}>+ Write Article</button>}
             <a href="/" style={{ fontSize: 13, background: '#121566', color: '#fff', padding: '6px 16px', borderRadius: 20, textDecoration: 'none', fontWeight: 500 }}>Go to OgaPay →</a>
+            <button onClick={() => setDrawerOpen(true)} style={{ background: 'none', border: '1.5px solid #ddd', borderRadius: 6, width: 34, height: 34, display: 'grid', placeItems: 'center', cursor: 'pointer', padding: 0 }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#333" strokeWidth="2"><line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="18" x2="21" y2="18" /></svg>
+            </button>
           </div>
         </div>
       </nav>
@@ -351,6 +360,8 @@ export default function Blog() {
           )}
         </div>
 
+        <Drawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
+        </div>
         <Footer />
       </div>
     </div>

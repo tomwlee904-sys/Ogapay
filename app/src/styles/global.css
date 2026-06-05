@@ -37,8 +37,9 @@
 
 /* Ã¢â€â‚¬Ã¢â€â‚¬ reset Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
 *{box-sizing:border-box}
-html{scroll-behavior:smooth}
-body{margin:0;color:var(--text);background:var(--bg);font-family:"DM Sans",system-ui,sans-serif;overflow-x:hidden}
+#root{margin:0;padding:0;width:100%;min-height:100vh;overflow-x:hidden}
+html{margin:0;padding:0;width:100%;min-height:100vh;overflow-x:hidden;scroll-behavior:smooth}
+body{margin:0;padding:0;width:100%;min-height:100vh;overflow-x:hidden;color:var(--text);background:var(--bg);font-family:"DM Sans",system-ui,sans-serif}
 a{color:inherit;text-decoration:none}
 button{font:inherit}
 
