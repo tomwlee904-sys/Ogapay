@@ -32,17 +32,6 @@ const QUICK = [
   { icon: "circle-plus", label: "Create Job", page: "create" },
 ];
 
-const WORKERS = [
-  { id: 1, username: 'Twitter_Automation_god', bio: 'I am a professional software developer and I write code that helps people save time and make money.', rating: 0, reviews: 0 },
-  { id: 2, username: 'Dogo2541', bio: 'Active', rating: 0, reviews: 0 },
-  { id: 3, username: 'Taki.Sakura', bio: 'Always available to help', rating: 0, reviews: 0 },
-  { id: 4, username: 'Blueice', bio: 'That web3 guy', rating: 0, reviews: 0 },
-  { id: 5, username: 'CHOCHO', bio: 'Hi, I\'m CHOCHO, a passionate graphic designer dedicated to transforming ideas into visually compelling and meaningful designs.', rating: 0, reviews: 0 },
-  { id: 6, username: 'Wurk.Brainard', bio: 'Not a hell of an intro. Just a chill guy who\'s kinda into web3. Loves writing articles.', rating: 0, reviews: 0 },
-  { id: 7, username: 'moony', bio: 'No bio available yet', rating: 3.9, reviews: 12 },
-  { id: 8, username: 'ASQUARE', bio: 'Chasing the Big bag', rating: 3.5, reviews: 8 },
-];
-
 /* ─── Helpers ─── */
 const f = new Intl.NumberFormat("en-US");
 const refLink = "https://ogapay.vercel.app/ref/F48NUF...jemX";
@@ -75,21 +64,6 @@ function StatRow({ label, val, info, valClass }) {
       </span>
     </div>
   );
-}
-
-function Stars({ score = 0, size = 12 }) {
-  return (
-    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 2 }}>
-      {[1, 2, 3, 4, 5].map(i => (
-        <svg key={i} width={size} height={size} viewBox="0 0 24 24"
-          fill={i <= Math.round(score) ? '#facc15' : 'none'}
-          stroke={i <= Math.round(score) ? '#facc15' : 'var(--border2)'} strokeWidth="2">
-          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-        </svg>
-      ))}
-      {score > 0 && <span style={{ fontSize: 10, color: 'var(--text3)', marginLeft: 2 }}>{score.toFixed(1)}</span>}
-    </span>
-  )
 }
 
 /* ─── Sub Pages (tabs) ─── */
@@ -141,6 +115,91 @@ function MyJobsTab() {
 }
 
 /* ─── Main Component ─── */
+/* ─── Worker Portal Content ─── */
+function WorkerPortalContent() {
+  const navigate = useNavigate();
+
+  const navItems = [
+    { icon: 'ti ti-building-store', label: 'My Store' },
+    { icon: 'ti ti-article', label: 'My Blogs' },
+    { icon: 'ti ti-briefcase', label: 'My Work' },
+    { icon: 'ti ti-message', label: 'Messages' },
+    { icon: 'ti ti-users', label: 'Communities' },
+    { icon: 'ti ti-file-check', label: 'My Submissions' },
+    { icon: 'ti ti-pencil', label: 'Reviews to Write' },
+    { icon: 'ti ti-star', label: 'My Reviews' },
+    { icon: 'ti ti-eye', label: 'View My Profile' },
+  ];
+
+  const stats = [
+    { icon: 'ti ti-star', color: '#1F8CFF', count: 124, label: 'Reviews' },
+    { icon: 'ti ti-zap', color: '#F59E0B', count: 8, label: 'Challenges Participated' },
+    { icon: 'ti ti-trophy', color: '#16a34a', count: 12, label: 'Won' },
+    { icon: 'ti ti-heart', color: '#EC4899', count: 34, label: 'Compliments' },
+    { icon: 'ti ti-users', color: '#2563EB', count: 15, label: 'Communities' },
+    { icon: 'ti ti-gift', color: '#1F8CFF', count: 28, label: 'Tips Received' },
+    { icon: 'ti ti-file-text', color: '#F59E0B', count: 6, label: 'Blogs' },
+  ];
+
+  return (
+    <div className="wp-page">
+      <div className="wp-nav-grid">
+        {navItems.slice(0, 5).map((t, i) => (
+          <div key={i} className="wp-nav-tile" style={{ borderRight: i < 4 ? '1px solid var(--border)' : 'none' }}>
+            <i className={t.icon} />
+            <span>{t.label}</span>
+          </div>
+        ))}
+      </div>
+      <div className="wp-nav-grid-2">
+        {navItems.slice(5).map((t, i) => (
+          <div key={i} className="wp-nav-tile" style={{ borderRight: i < 3 ? '1px solid var(--border)' : 'none' }}>
+            <i className={t.icon} />
+            <span>{t.label}</span>
+          </div>
+        ))}
+      </div>
+      <div className="wp-bread">
+        <span onClick={() => navigate('/store')}>Dashboard</span>
+        <i className="ti ti-chevron-right" style={{ fontSize: 10, color: 'var(--border2)' }} />
+        <span className="current">Worker Portal</span>
+      </div>
+      <div className="wp-hero"><h1>Welcome back</h1></div>
+      <div className="wp-stats-row">
+        <span><i className="ti ti-star" /> No wins yet</span>
+        <span><i className="ti ti-users" /> No communities</span>
+        <span><i className="ti ti-heart" /> No compliments</span>
+      </div>
+      <div className="wp-profile-card">
+        <div className="wp-profile-top">
+          <div className="wp-avatar-box"><i className="ti ti-user" /></div>
+          <div className="wp-profile-info">
+            <div className="wp-profile-name">
+              No nickname yet
+              <button className="wp-edit-btn" onClick={() => navigate('/edit-profile')}>
+                <i className="ti ti-pencil" style={{ fontSize: 13 }} /> Edit Profile
+              </button>
+            </div>
+          </div>
+        </div>
+        <div className="wp-bio-box">
+          <div className="wp-bio-label">Bio</div>
+          <div className="wp-bio-text">No bio yet. Add one to tell others about yourself!</div>
+        </div>
+      </div>
+      <div className="wp-stats-list">
+        {stats.map((s, i) => (
+          <div key={i} className="wp-stat-row">
+            <i className={`${s.icon} wp-stat-icon`} style={{ color: s.color }} />
+            <span className="wp-stat-count">{s.count}</span>
+            <span className="wp-stat-label">{s.label}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function Profile() {
   const navigate = useNavigate();
   const [tab, setTab] = useState("profile");
@@ -148,15 +207,10 @@ export default function Profile() {
   const [swBal, setSwBal] = useState(false);
   const [earnPeriod, setEarnPeriod] = useState("7d");
   const [subPage, setSubPage] = useState(null);
-  const [workerSearch, setWorkerSearch] = useState("");
+
 
   const data = earnPeriod === "7d" ? CHART_7 : CHART_30;
   const totalEarned = data.reduce((a, b) => a + b.val, 0);
-
-  const filteredWorkers = WORKERS.filter(w =>
-    w.username.toLowerCase().includes(workerSearch.toLowerCase()) ||
-    w.bio.toLowerCase().includes(workerSearch.toLowerCase())
-  );
 
   const tabs = [
     { id: "profile", label: "Profile", icon: "user" },
@@ -275,6 +329,42 @@ export default function Profile() {
         .stat-label{font-size:11px;color:var(--text3);font-weight:600;margin-top:2px}
 
         .avatar-circle{width:52px;height:52px;border-radius:50%;background:var(--primary);color:var(--bg);font-size:18px;font-weight:800;display:grid;place-items:center;flex-shrink:0}
+        .wp-page{max-width:800px;margin:0 auto;padding:0 0 40px}
+        .wp-nav-grid{display:grid;grid-template-columns:repeat(5,1fr);border-bottom:1px solid var(--border);margin-bottom:24px}
+        .wp-nav-grid-2{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid var(--border);margin-bottom:24px}
+        .wp-nav-tile{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px 8px;gap:10px;cursor:pointer;border-right:1px solid var(--border);transition:all .15s;min-height:90px}
+        .wp-nav-tile:hover{background:var(--bg2)}
+        .wp-nav-tile:last-child{border-right:none}
+        .wp-nav-tile i{font-size:26px;color:var(--text3);transition:color .15s}
+        .wp-nav-tile:hover i{color:var(--accent)}
+        .wp-nav-tile span{font-size:11px;color:var(--text3);text-align:center;line-height:1.3;font-weight:600}
+        .wp-bread{font-size:12px;color:var(--text3);margin-bottom:12px;display:flex;align-items:center;gap:6px}
+        .wp-bread span{cursor:pointer;color:var(--text2)}
+        .wp-bread span:hover{color:var(--accent)}
+        .wp-bread .current{color:var(--text2);font-weight:600}
+        .wp-hero h1{font-size:22px;font-weight:800;margin:0 0 16px;color:var(--text)}
+        .wp-stats-row{display:flex;gap:20px;margin-bottom:24px;flex-wrap:wrap}
+        .wp-stats-row span{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text3)}
+        .wp-stats-row i{font-size:14px;color:var(--text3)}
+        .wp-profile-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:20px}
+        .wp-profile-top{display:flex;align-items:flex-start;gap:16px}
+        .wp-avatar-box{width:72px;height:72px;border-radius:10px;background:var(--bg2);display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1px solid var(--border)}
+        .wp-avatar-box i{font-size:32px;color:var(--text3)}
+        .wp-profile-info{flex:1;min-width:0}
+        .wp-profile-name{font-size:18px;font-weight:800;color:var(--text);display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+        .wp-edit-btn{font-size:12px;padding:7px 14px;border-radius:8px;border:1px solid var(--border);background:var(--bg2);color:var(--text2);cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-family:inherit;font-weight:600;white-space:nowrap;transition:all .15s}
+        .wp-edit-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--card)}
+        .wp-bio-box{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px;margin-top:14px}
+        .wp-bio-label{font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.06em;margin-bottom:6px;text-transform:uppercase}
+        .wp-bio-text{font-size:13px;color:var(--text2);line-height:1.5}
+        .wp-stats-list{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+        .wp-stat-row{display:flex;align-items:center;gap:14px;padding:15px 18px;border-bottom:1px solid var(--border);transition:background .15s}
+        .wp-stat-row:last-child{border-bottom:none}
+        .wp-stat-row:hover{background:var(--bg2)}
+        .wp-stat-icon{font-size:20px;width:24px;text-align:center}
+        .wp-stat-count{font-size:16px;font-weight:800;color:var(--text);min-width:30px}
+        .wp-stat-label{font-size:14px;color:var(--text2);font-weight:500}
+        @media(max-width:600px){.wp-nav-grid{grid-template-columns:repeat(3,1fr)}.wp-nav-grid-2{grid-template-columns:repeat(3,1fr)}.wp-profile-top{flex-direction:column;align-items:center;text-align:center}.wp-profile-name{flex-direction:column;align-items:center}.wp-avatar-box{width:64px;height:64px}}
       `}</style>
 
       {/* ─────── Tab Bar ─────── */}
@@ -551,55 +641,7 @@ export default function Profile() {
 
       {/* ════════════ WORKER PORTAL TAB ════════════ */}
       {tab==="portal" && (
-        <div style={{maxWidth:1060,margin:"0 auto",padding:"0 0 40px"}}>
-          <div className="page-head-sm"><Icon n="layout-dashboard" s={20} /><h2>Worker Portal</h2></div>
-
-          {/* Stats */}
-          <div className="wp-stats">
-            {[
-              { icon:"ti ti-star", color:"var(--accent)", label:"Reviews", val:"124" },
-              { icon:"ti ti-zap", color:"#F59E0B", label:"Challenges", val:"8" },
-              { icon:"ti ti-trophy", color:"#16a34a", label:"Won", val:"12" },
-              { icon:"ti ti-heart", color:"#EC4899", label:"Compliments", val:"34" },
-            ].map(s => (
-              <div key={s.label} className="stat-tile">
-                <i className={s.icon} style={{color:s.color}} />
-                <div className="stat-number">{s.val}</div>
-                <div className="stat-label">{s.label}</div>
-              </div>
-            ))}
-          </div>
-
-          {/* Search */}
-          <div className="search-wrap" style={{marginBottom:16}}>
-            <input value={workerSearch} onChange={e => setWorkerSearch(e.target.value)} placeholder="Search workers..." />
-          </div>
-
-          {/* Worker Grid */}
-          <div className="worker-grid">
-            {filteredWorkers.length === 0 ? (
-              <div style={{gridColumn:"1/-1",textAlign:"center",padding:"48px 20px",color:"var(--text3)"}}>
-                <Icon n="search-off" s={32} c="var(--text3)" /><br />No workers found
-              </div>
-            ) : filteredWorkers.map(w => (
-              <div key={w.id} className="worker-card">
-                <div className="worker-row">
-                  <div className="worker-avatar"><i className="ti ti-user" /></div>
-                  <div className="worker-name">{w.username}</div>
-                </div>
-                <div className="worker-bio">{w.bio}</div>
-                <div className="worker-footer">
-                  <Stars score={w.rating} size={11} />
-                  <span style={{fontSize:11,color:"var(--text3)"}}>{w.reviews} reviews</span>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div style={{marginTop:20,textAlign:"center",fontSize:12,color:"var(--text3)"}}>
-            <i className="ti ti-users" style={{fontSize:14,marginRight:4}} /> Found {filteredWorkers.length} workers
-          </div>
-        </div>
+        <WorkerPortalContent />
       )}
       </div>
     </Layout>
