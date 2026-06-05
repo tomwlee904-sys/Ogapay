@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
 import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
 
@@ -257,6 +258,17 @@ export default function Tasks() {
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState('All')
   const [bookmarked, setBookmarked] = useState<string[]>([])
+  const [selectedJob, setSelectedJob] = useState<any>(null)
+
+  // Load single job if id param present
+  useEffect(() => {
+    if (id) {
+      const job = sampleJobs.find(j => j.id === id)
+      setSelectedJob(job || null)
+    } else {
+      setSelectedJob(null)
+    }
+  }, [id])
 
   const filtered = sampleJobs.filter(job => {
     const matchSearch = search === '' || job.title.toLowerCase().includes(search.toLowerCase()) || job.description.toLowerCase().includes(search.toLowerCase())
@@ -271,6 +283,80 @@ export default function Tasks() {
   const totalRewards = sampleJobs.reduce((sum, j) => sum + j.usdValue, 0)
   const totalSlots = sampleJobs.reduce((sum, j) => sum + j.slots, 0)
   const totalFilled = sampleJobs.reduce((sum, j) => sum + j.filled, 0)
+
+  const [showDetail, setShowDetail] = useState(false)
+  
+  useEffect(() => {
+    if (selectedJob) setShowDetail(true)
+  }, [selectedJob])
+
+  if (showDetail && selectedJob) {
+    const job = selectedJob
+    return (
+      <Layout>
+        <style>{`
+          .jd-page{max-width:800px;margin:0 auto;padding:0 0 40px}
+          .jd-back{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:var(--text2);cursor:pointer;border:none;background:none;padding:8px 0;margin-bottom:16px;transition:color .13s}
+          .jd-back:hover{color:var(--text)}
+          .jd-hero{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:16px}
+          .jd-head{padding:20px 24px;border-bottom:1px solid var(--border)}
+          .jd-title{font-size:20px;font-weight:800;margin:0 0 6px;color:var(--text)}
+          .jd-meta{display:flex;gap:12px;font-size:12px;color:var(--text2);flex-wrap:wrap}
+          .jd-meta span{display:inline-flex;align-items:center;gap:4px}
+          .jd-body{padding:20px 24px}
+          .jd-desc{font-size:14px;color:var(--text2);line-height:1.7;margin-bottom:20px}
+          .jd-info-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px}
+          .jd-info-item{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px 16px}
+          .jd-info-label{font-size:11px;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
+          .jd-info-value{font-size:15px;font-weight:800;color:var(--text)}
+          .jd-info-value.green{color:var(--green,#16a34a)}
+          .jd-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+          .jd-btn-primary{height:44px;padding:0 28px;border-radius:99px;border:none;background:var(--primary);color:var(--bg);font-size:14px;font-weight:700;cursor:pointer}
+          .jd-btn-secondary{height:44px;padding:0 28px;border-radius:99px;border:1.5px solid var(--border);background:transparent;color:var(--text);font-size:14px;font-weight:700;cursor:pointer}
+      `}</style>
+        <div className="jd-page">
+          <button className="jd-back" onClick={() => navigate('/tasks')}><i className="ti ti-arrow-left" /> Back to Jobs</button>
+          <div className="jd-hero">
+            <div className="jd-head">
+              <h1 className="jd-title">{job.title}</h1>
+              <div className="jd-meta">
+                <span><i className="ti ti-tag" /> {job.category}</span>
+                <span><i className="ti ti-device-laptop" /> {job.platform}</span>
+                <span><i className="ti ti-clock" /> {job.timeEstimate}</span>
+                <span><i className="ti ti-shield" /> {job.difficulty}</span>
+              </div>
+            </div>
+            <div className="jd-body">
+              <div className="jd-desc">{job.description}</div>
+              <div className="jd-info-grid">
+                <div className="jd-info-item">
+                  <div className="jd-info-label">Reward</div>
+                  <div className="jd-info-value green">{job.reward} {job.rewardCurrency}</div>
+                  <div style={{fontSize:12,color:'var(--text3)',marginTop:2}}>~ ${job.usdValue} USD</div>
+                </div>
+                <div className="jd-info-item">
+                  <div className="jd-info-label">Slots</div>
+                  <div className="jd-info-value">{job.filled}/{job.slots}</div>
+                </div>
+                <div className="jd-info-item">
+                  <div className="jd-info-label">Creator</div>
+                  <div className="jd-info-value">{job.creator}</div>
+                </div>
+                <div className="jd-info-item">
+                  <div className="jd-info-label">Verification</div>
+                  <div className="jd-info-value">{job.verificationRequired ? 'Required' : 'Not Required'}</div>
+                </div>
+              </div>
+              <div className="jd-actions">
+                <button className="jd-btn-primary" onClick={() => {navigate('/tasks');setShowDetail(false)}}>Apply Now</button>
+                <button className="jd-btn-secondary" onClick={() => navigate('/tasks')}>Save for Later</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Layout>
+    )
+  }
 
   return (
     <Layout>
@@ -447,7 +533,7 @@ export default function Tasks() {
         ) : (
           <div className="jobs-grid">
             {filtered.map(job => (
-              <div className="job-card" key={job.id}>
+              <div className="job-card" key={job.id} onClick={() => navigate(`/tasks/${job.id}`)} style={{cursor:'pointer'}}>
                 {/* Creator */}
                 <div className="job-creator">
                   <div className="jc-avatar">{formatAddress(job.creator)}</div>
