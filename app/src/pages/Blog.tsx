@@ -239,17 +239,17 @@ export default function Blog() {
         <Drawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
 
         {/* HERO — full width, #121566 background, centered text */}
-        <div style={{ background: '#121566', padding: '4rem 2.5rem', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
+        <div style={{ background: '#121566', padding: '4.5rem 3rem', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
           {/* Subtle background circles */}
-          <div style={{ position: 'absolute', top: -80, right: -80, width: 320, height: 320, borderRadius: '50%', background: 'rgba(255,255,255,0.04)' }} />
-          <div style={{ position: 'absolute', bottom: -60, left: -60, width: 240, height: 240, borderRadius: '50%', background: 'rgba(255,255,255,0.03)' }} />
-          <h1 style={{ fontSize: 52, fontWeight: 700, color: '#fff', lineHeight: 1.15, marginBottom: 28, position: 'relative', maxWidth: 600, margin: '0 auto 28px' }}>
+          <div style={{ position: 'absolute', top: -80, right: -80, width: 400, height: 400, borderRadius: '50%', background: 'rgba(255,255,255,0.04)' }} />
+          <div style={{ position: 'absolute', bottom: -60, left: -60, width: 300, height: 300, borderRadius: '50%', background: 'rgba(255,255,255,0.03)' }} />
+          <h1 style={{ fontSize: 56, fontWeight: 700, color: '#fff', lineHeight: 1.15, marginBottom: 28, position: 'relative', maxWidth: 900, margin: '0 auto 32px' }}>
             Spark Your Next{' '}
             <span style={{ color: '#ADDD5A', fontStyle: 'italic' }}>Breakthrough</span>
           </h1>
           <button
             onClick={() => setShowArticles(true)}
-            style={{ background: '#ADDD5A', color: '#1a2a00', border: 'none', borderRadius: 8, padding: '14px 40px', fontSize: 15, fontWeight: 700, cursor: 'pointer', position: 'relative' }}
+            style={{ background: '#ADDD5A', color: '#1a2a00', border: 'none', borderRadius: 8, padding: '16px 48px', fontSize: 16, fontWeight: 700, cursor: 'pointer', position: 'relative' }}
           >
             View All Articles
           </button>
@@ -258,18 +258,18 @@ export default function Blog() {
         {/* 4 CATEGORY TILES — stacked full width like Fiverr */}
         <div style={{ display: 'flex', flexDirection: 'column' }}>
           {/* Tile 1: Join The Community */}
-          <div style={{ height: 280, position: 'relative' }}>
+          <div style={{ height: 320, position: 'relative' }}>
             <JoinCommunityTile onClick={() => { setActiveCategory('All'); setShowArticles(true) }} />
           </div>
 
           {/* Tiles 2+3: side by side */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', height: 280 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', height: 300 }}>
             <StartSellingTile onClick={() => { setActiveCategory('Freelancers'); setShowArticles(true) }} />
             <GrowBusinessTile onClick={() => { setActiveCategory('Businesses'); setShowArticles(true) }} />
           </div>
 
           {/* Tile 4: Get Inspired */}
-          <div style={{ height: 300, position: 'relative' }}>
+          <div style={{ height: 340, position: 'relative' }}>
             <GetInspiredTile onClick={() => { setActiveCategory('Freelancers'); setShowArticles(true) }} />
           </div>
         </div>
