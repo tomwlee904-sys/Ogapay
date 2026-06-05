@@ -1,6 +1,8 @@
-import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
+import { useState, useEffect } from "react"
+import { useNavigate } from "react-router-dom"
+import { useAuth } from "../context/AuthContext"
+import { useTheme } from "../context/ThemeContext"
+import Footer from "../components/Footer"
 
 const categories = ['All', 'News', 'Businesses', 'Freelancers', 'Case Studies']
 
@@ -32,89 +34,7 @@ function JoinCommunityTile({ onClick }: { onClick: () => void }) {
       onClick={onClick}
       style={{ position: 'relative', overflow: 'hidden', cursor: 'pointer', height: '100%', minHeight: 200 }}
     >
-      {/* Warm cozy desk scene */}
-      <svg width="100%" height="100%" viewBox="0 0 700 220" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
-        {/* Warm background wall */}
-        <rect width="700" height="220" fill="#F5EDD6" />
-        {/* Window light */}
-        <rect x="30" y="0" width="120" height="160" rx="4" fill="#D8EAF5" opacity="0.6" />
-        <rect x="35" y="5" width="110" height="150" rx="3" fill="#C8DFF0" opacity="0.5" />
-        <line x1="90" y1="5" x2="90" y2="155" stroke="#B0CBE0" strokeWidth="2" opacity="0.7" />
-        <line x1="35" y1="80" x2="145" y2="80" stroke="#B0CBE0" strokeWidth="2" opacity="0.7" />
-        {/* Plants on windowsill */}
-        <rect x="38" y="145" width="18" height="14" rx="2" fill="#8B6914" />
-        <ellipse cx="47" cy="138" rx="14" ry="18" fill="#2D7A2D" />
-        <ellipse cx="53" cy="133" rx="10" ry="14" fill="#3D9A3D" />
-        <rect x="65" y="148" width="14" height="12" rx="2" fill="#8B6914" />
-        <ellipse cx="72" cy="142" rx="10" ry="13" fill="#2D8A2D" />
-        {/* Desk surface */}
-        <rect x="0" y="165" width="700" height="20" rx="0" fill="#C8A05A" />
-        <rect x="0" y="182" width="700" height="38" fill="#B8904A" />
-        {/* Laptop */}
-        <rect x="280" y="110" width="160" height="54" rx="6" fill="#2A2A2A" />
-        <rect x="286" y="116" width="148" height="44" rx="3" fill="#121566" />
-        {/* Screen glow */}
-        <rect x="290" y="119" width="80" height="10" rx="2" fill="rgba(255,120,60,0.6)" opacity="0.8" />
-        <rect x="290" y="132" width="100" height="6" rx="2" fill="rgba(100,180,255,0.5)" />
-        <rect x="290" y="141" width="60" height="6" rx="2" fill="rgba(100,180,255,0.3)" />
-        <rect x="250" y="163" width="220" height="5" rx="2" fill="#444" />
-        {/* Laptop stand */}
-        <rect x="330" y="163" width="60" height="4" rx="2" fill="#888" />
-        {/* Notebook and pen */}
-        <rect x="150" y="152" width="80" height="16" rx="2" fill="#2A2A2A" />
-        <rect x="153" y="155" width="74" height="10" rx="1" fill="#333" />
-        <line x1="235" y1="154" x2="248" y2="162" stroke="#C0A060" strokeWidth="3" strokeLinecap="round" />
-        {/* Coffee mug */}
-        <rect x="460" y="148" width="36" height="20" rx="4" fill="#F0EDE8" />
-        <path d="M496 153 Q508 153 508 160 Q508 167 496 167" stroke="#DDD" strokeWidth="3" fill="none" strokeLinecap="round" />
-        {/* Candle */}
-        <rect x="140" y="145" width="20" height="22" rx="3" fill="#2A2A2A" />
-        <ellipse cx="150" cy="143" rx="4" ry="6" fill="#FF8C00" opacity="0.9" />
-        <ellipse cx="150" cy="141" rx="2" ry="4" fill="#FFD700" opacity="0.8" />
-        {/* Person — seen from back, natural hair, cream sweater */}
-        {/* Chair */}
-        <rect x="310" y="175" width="100" height="8" rx="4" fill="#CCCCCC" />
-        <rect x="330" y="183" width="60" height="37" rx="3" fill="#DDDDDD" />
-        {/* Body/sweater */}
-        <rect x="295" y="90" width="130" height="80" rx="12" fill="#F0EDE5" />
-        {/* Floral design on back */}
-        <ellipse cx="390" cy="120" rx="18" ry="22" fill="none" stroke="#CCBBAA" strokeWidth="1.5" opacity="0.6" />
-        <circle cx="390" cy="108" r="4" fill="#D4A0A0" opacity="0.5" />
-        <circle cx="402" cy="120" r="3" fill="#D4A0A0" opacity="0.4" />
-        <circle cx="378" cy="120" r="3" fill="#D4A0A0" opacity="0.4" />
-        {/* Arms */}
-        <rect x="268" y="100" width="32" height="65" rx="12" fill="#F0EDE5" />
-        <rect x="420" y="100" width="32" height="65" rx="12" fill="#F0EDE5" />
-        {/* Neck & head */}
-        <rect x="345" y="68" width="30" height="26" rx="8" fill="#5C3A1E" />
-        {/* Natural curly hair */}
-        <ellipse cx="360" cy="62" rx="32" ry="28" fill="#1A0E08" />
-        <ellipse cx="338" cy="54" rx="16" ry="18" fill="#1A0E08" />
-        <ellipse cx="382" cy="54" rx="16" ry="18" fill="#1A0E08" />
-        <ellipse cx="360" cy="40" rx="20" ry="16" fill="#2A1A10" />
-        {/* Hair scrunchie/band */}
-        <ellipse cx="362" cy="42" rx="8" ry="5" fill="#333" />
-        {/* Earring */}
-        <circle cx="330" cy="76" r="4" fill="#D4AA50" />
-        {/* Headphones on pegboard */}
-        <rect x="580" y="20" width="80" height="120" rx="4" fill="#D4C4A0" opacity="0.5" />
-        <path d="M595 35 Q620 25 645 35" stroke="#333" strokeWidth="5" fill="none" strokeLinecap="round" />
-        <circle cx="595" cy="40" r="8" fill="#333" />
-        <circle cx="645" cy="40" r="8" fill="#333" />
-        {/* Pin board photos */}
-        <rect x="578" y="55" width="38" height="28" rx="2" fill="#A0B0C0" opacity="0.7" />
-        <rect x="622" y="58" width="34" height="26" rx="2" fill="#B0C0A0" opacity="0.7" />
-        {/* "Keep going" note */}
-        <rect x="590" y="90" width="50" height="30" rx="2" fill="#F5F5F0" />
-        <line x1="596" y1="100" x2="634" y2="100" stroke="#999" strokeWidth="1.5" />
-        <line x1="596" y1="107" x2="630" y2="107" stroke="#999" strokeWidth="1.5" />
-        <line x1="596" y1="114" x2="620" y2="114" stroke="#999" strokeWidth="1.5" />
-        {/* Pencil cup */}
-        <rect x="490" y="145" width="28" height="22" rx="3" fill="#F0EDE8" />
-        <line x1="496" y1="138" x2="494" y2="148" stroke="#FF6B35" strokeWidth="3" strokeLinecap="round" />
-        <line x1="502" y1="136" x2="500" y2="148" stroke="#333" strokeWidth="3" strokeLinecap="round" />
-        <line x1="508" y1="139" x2="506" y2="148" stroke="#4A90D9" strokeWidth="3" strokeLinecap="round" />
-      </svg>
+      <img src="/assets/join-community.jpg" alt="Join the Community" style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0 }} />
       <div style={{ position: 'absolute', inset: 0, background: hovered ? 'rgba(18,21,102,0.18)' : 'transparent', transition: 'background 0.3s' }} />
       <div style={{ position: 'absolute', top: 14, left: 14 }}>
         <button onClick={onClick} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#fff', color: '#1a1a1a', fontSize: 13, fontWeight: 600, padding: '7px 14px', borderRadius: 8, border: 'none', cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.12)' }}>
@@ -220,34 +140,7 @@ function GetInspiredTile({ onClick }: { onClick: () => void }) {
       onClick={onClick}
       style={{ position: 'relative', overflow: 'hidden', cursor: 'pointer', background: '#FFD6D6', height: '100%', minHeight: 200 }}
     >
-      <svg width="100%" height="100%" viewBox="0 0 700 300" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
-        <rect width="700" height="300" fill="#FFE8E8" />
-        <ellipse cx="420" cy="180" rx="220" ry="160" fill="#E8789A" />
-        <ellipse cx="380" cy="200" rx="180" ry="130" fill="#D4567A" />
-        <path d="M380 120 Q400 140 390 160 Q380 180 400 200" stroke="white" strokeWidth="3" fill="none" strokeLinecap="round" />
-        <path d="M395 115 Q410 130 408 148" stroke="white" strokeWidth="2" fill="none" strokeLinecap="round" />
-        <ellipse cx="80" cy="220" rx="120" ry="90" fill="#2D8A2D" transform="rotate(-20 80 220)" />
-        <ellipse cx="60" cy="240" rx="90" ry="70" fill="#3DAA3D" transform="rotate(-15 60 240)" />
-        <ellipse cx="620" cy="240" rx="100" ry="70" fill="#2D8A2D" />
-        <ellipse cx="640" cy="250" rx="80" ry="60" fill="#4ABB4A" />
-        <ellipse cx="150" cy="280" rx="80" ry="50" fill="#ADDD5A" transform="rotate(10 150 280)" />
-        <ellipse cx="550" cy="285" rx="70" ry="45" fill="#ADDD5A" transform="rotate(-10 550 285)" />
-        <g transform="translate(280, 120)">
-          <rect x="18" y="30" width="28" height="36" rx="5" fill="#2D8A2D" />
-          <rect x="22" y="34" width="8" height="12" rx="2" fill="#E8789A" />
-          <rect x="34" y="34" width="8" height="12" rx="2" fill="#E8789A" />
-          <rect x="10" y="24" width="32" height="40" rx="6" fill="#E8956A" />
-          <path d="M42 32 Q60 28 72 22" stroke="#E8956A" strokeWidth="10" fill="none" strokeLinecap="round" />
-          <rect x="68" y="10" width="30" height="22" rx="3" fill="#ADDD5A" />
-          <path d="M72 16 Q80 20 88 16" stroke="#2D3A1E" strokeWidth="1.5" fill="none" />
-          <path d="M72 21 Q80 25 88 21" stroke="#2D3A1E" strokeWidth="1.5" fill="none" />
-          <circle cx="26" cy="14" r="14" fill="#5C3A1E" />
-          <path d="M12 12 Q14 2 26 0 Q38 2 40 12" fill="#2D1A0E" />
-        </g>
-        <circle cx="500" cy="40" r="3" fill="white" opacity="0.8" />
-        <circle cx="480" cy="60" r="2" fill="white" opacity="0.6" />
-        <circle cx="520" cy="55" r="2" fill="white" opacity="0.7" />
-      </svg>
+      <img src="/assets/get-inspired.png" alt="Get Inspired" style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0 }} />
       <div style={{ position: 'absolute', inset: 0, background: 'rgba(18,21,102,0.1)', opacity: hovered ? 1 : 0, transition: 'opacity 0.3s' }} />
       <div style={{ position: 'absolute', top: 14, left: 14 }}>
         <button onClick={onClick} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#fff', color: '#1a1a1a', fontSize: 13, fontWeight: 600, padding: '7px 14px', borderRadius: 8, border: 'none', cursor: 'pointer' }}>
@@ -267,6 +160,7 @@ export default function Blog() {
   const [allPosts, setAllPosts] = useState<any[]>([])
   const navigate = useNavigate()
   const { isAuthed } = useAuth()
+  const { theme, toggle } = useTheme()
 
   const filteredPosts = posts.filter(p =>
     (activeCategory === 'All' || p.category === activeCategory) &&
@@ -323,6 +217,15 @@ export default function Blog() {
             />
           </div>
           <button onClick={() => setShowArticles(true)} style={{ background: '#121566', color: '#fff', border: 'none', borderRadius: 6, padding: '7px 18px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Search</button>
+          <button onClick={toggle} style={{ background: "none", border: "1.5px solid #ddd", borderRadius: 8, width: 36, height: 36, display: "grid", placeItems: "center", cursor: "pointer", color: "#333", flexShrink: 0 }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              {theme === "dark" ? (
+                <><circle cx="12" cy="12" r="5" /><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" /></>
+              ) : (
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+              )}
+            </svg>
+          </button>
           {/* Hamburger — right side like Fiverr */}
           <div style={{ marginLeft: 'auto' }}>
             <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
@@ -367,38 +270,7 @@ export default function Blog() {
           </div>
         </div>
 
-        {/* FOOTER — 3 columns like Fiverr */}
-        <footer style={{ borderTop: '1px solid #e5e5e5', padding: '3rem 2rem', marginTop: '2rem' }}>
-          <div style={{ maxWidth: 1000, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '2rem' }}>
-            <div>
-              <p style={{ fontSize: 13, fontWeight: 700, color: '#1a1a1a', marginBottom: 16 }}>Categories</p>
-              {['News', 'Businesses', 'Freelancers', 'Case Studies'].map(cat => (
-                <p key={cat} style={{ marginBottom: 10 }}>
-                  <button className="blog-cat-btn" onClick={() => { setActiveCategory(cat); setShowArticles(true) }} style={{ background: 'none', border: 'none', fontSize: 13, color: '#555', cursor: 'pointer', padding: 0, textAlign: 'left' }}>{cat}</button>
-                </p>
-              ))}
-            </div>
-            <div>
-              <p style={{ fontSize: 13, fontWeight: 700, color: '#1a1a1a', marginBottom: 16 }}>About</p>
-              {['About OgaPay', 'Careers', 'Press & News', 'Privacy Policy', 'Terms of Service'].map(item => (
-                <p key={item} style={{ marginBottom: 10 }}>
-                  <a href="/" style={{ fontSize: 13, color: '#555', textDecoration: 'none' }}>{item}</a>
-                </p>
-              ))}
-            </div>
-            <div>
-              <p style={{ fontSize: 13, fontWeight: 700, color: '#1a1a1a', marginBottom: 16 }}>Support</p>
-              {['Help & Support', 'Trust & Safety', 'OgaPay Guides', 'Go to OgaPay.com'].map(item => (
-                <p key={item} style={{ marginBottom: 10 }}>
-                  <a href="/" style={{ fontSize: 13, color: '#555', textDecoration: 'none' }}>{item}</a>
-                </p>
-              ))}
-            </div>
-          </div>
-          <div style={{ maxWidth: 1000, margin: '2rem auto 0', paddingTop: '1.5rem', borderTop: '1px solid #e5e5e5', fontSize: 12, color: '#999' }}>
-            © 2026 OgaPay. All rights reserved.
-          </div>
-        </footer>
+        <Footer />
       </div>
     )
   }
@@ -479,15 +351,7 @@ export default function Blog() {
           )}
         </div>
 
-        {/* Footer in articles view */}
-        <div style={{ borderTop: '0.5px solid #e0e0e0', paddingTop: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 12, color: '#666', flexWrap: 'wrap', gap: 8 }}>
-          <span>© 2026 OgaPay. All rights reserved.</span>
-          <div style={{ display: 'flex', gap: 16 }}>
-            {['News', 'Businesses', 'Freelancers', 'Case Studies'].map(cat => (
-              <button key={cat} onClick={() => setActiveCategory(cat)} style={{ background: 'none', border: 'none', fontSize: 12, color: '#666', cursor: 'pointer', padding: 0 }}>{cat}</button>
-            ))}
-          </div>
-        </div>
+        <Footer />
       </div>
     </div>
   )
