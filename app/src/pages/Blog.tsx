@@ -206,7 +206,7 @@ export default function Blog() {
         {/* Nav — minimal like Fiverr blog */}
         <nav style={{ borderBottom: '1px solid #e5e5e5', padding: '0.875rem 2rem', display: 'flex', alignItems: 'center', gap: 16, background: 'var(--card)', position: 'sticky', top: 0, zIndex: 100 }}>
           <button onClick={() => setShowArticles(false)} style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
-            <span style={{ fontSize: 18, fontWeight: 700, color: 'var(--text)' }}>blog.</span>
+            <span style={{ fontSize: 18, fontWeight: 700, color: '#1a1a1a' }}>blog.</span>
           </button>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, maxWidth: 360, border: '1px solid #ddd', borderRadius: 6, padding: '6px 12px', background: 'var(--bg2)' }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#aaa" strokeWidth="2" style={{ verticalAlign: 'middle', flexShrink: 0 }}><circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" /></svg>
@@ -274,6 +274,7 @@ export default function Blog() {
           </div>
         </div>
 
+        </div>
         <Footer />
       </div>
     )
@@ -286,7 +287,7 @@ export default function Blog() {
         <nav style={{ background: 'var(--card)', borderBottom: '0.5px solid var(--border)', position: 'sticky', top: 0, zIndex: 100 }}>
         <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0.875rem 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
           <button onClick={() => setShowArticles(false)} style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', cursor: 'pointer' }}>
-            <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--text)' }}>blog.</span>
+            <span style={{ fontSize: 16, fontWeight: 700, color: '#1a1a1a' }}>blog.</span>
           </button>
           <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
             {categories.map(cat => (
@@ -357,11 +358,11 @@ export default function Blog() {
             </div>
           )}
         </div>
+        </div>
 
         <Drawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
         </div>
         <Footer />
       </div>
-    </div>
   )
 }
