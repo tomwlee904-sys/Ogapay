@@ -141,7 +141,7 @@ function EarnerCard() {
       {/* Front card */}
       <div style={{ position: 'relative', zIndex: 5, background: '#ADDD5A', borderRadius: 10, width: 140, height: 175, border: '3px solid #ADDD5A', transform: hovered ? 'scale(1.06) translateY(-6px)' : 'scale(1)', transition: 'transform 0.3s cubic-bezier(0.34,1.56,0.64,1)', boxShadow: hovered ? '0 16px 40px rgba(0,0,0,0.4)' : '0 6px 20px rgba(0,0,0,0.25)' }}>
         <div style={{ padding: '0.5rem' }}>
-          <div style={{ height: 90, background: '#2D3A1E', borderRadius: 6, marginBottom: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 32 }}>🧑🏾‍💻</div>
+          <div style={{ height: 90, background: '#1a2a4a', borderRadius: 6, marginBottom: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 32 }}>🧑🏾‍💻</div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
               <div style={{ width: 20, height: 20, borderRadius: '50%', background: '#7F77DD', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, color: '#fff', fontWeight: 700 }}>OG</div>
@@ -149,7 +149,7 @@ function EarnerCard() {
             </div>
             <span style={{ fontSize: 10, color: '#3B6D11', fontWeight: 700 }}>5 ★</span>
           </div>
-          <div style={{ height: 4, background: 'rgba(0,0,0,0.15)', borderRadius: 2 }}><div style={{ width: '80%', height: '100%', background: '#2D3A1E', borderRadius: 2 }} /></div>
+          <div style={{ height: 4, background: 'rgba(0,0,0,0.15)', borderRadius: 2 }}><div style={{ width: '80%', height: '100%', background: '#1a2a4a', borderRadius: 2 }} /></div>
         </div>
       </div>
     </div>
@@ -258,7 +258,7 @@ export default function Blog() {
 
   if (!showArticles) {
     return (
-      <div style={{ fontFamily: 'inherit', background: '#fff', minHeight: '100vh' }}>
+      <div style={{ fontFamily: 'inherit', background: '#fff', minHeight: '100vh', color: '#1a1a1a' }}>
         <style>{`.blog-nav-link:hover{color:#534AB7!important}`}</style>
 
         {/* Nav */}
@@ -268,7 +268,7 @@ export default function Blog() {
             <span style={{ fontSize: 18, fontWeight: 700, color: '#1a1a1a' }}>blog.</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, maxWidth: 380, border: '1px solid #ddd', borderRadius: 6, padding: '6px 12px', background: '#fafafa' }}>
-            <span style={{ fontSize: 14, color: '#aaa' }}>🔍</span>
+            <span style={{ fontSize: 14, color: '#aaa' }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#aaa" strokeWidth="2" style={{verticalAlign:"middle"}}><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg></span>
             <input placeholder="Search by topic or keyword" style={{ border: 'none', background: 'none', outline: 'none', fontSize: 13, color: '#333', width: '100%' }} value={search} onChange={e => setSearch(e.target.value)} onKeyDown={e => e.key === 'Enter' && setShowArticles(true)} />
           </div>
           <button onClick={() => setShowArticles(true)} style={{ background: '#7F77DD', color: '#fff', border: 'none', borderRadius: 6, padding: '7px 18px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Search</button>
@@ -284,9 +284,9 @@ export default function Blog() {
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gridTemplateRows: '420px 300px', gap: 0, maxHeight: 720 }}>
 
           {/* LEFT big hero — spans both rows */}
-          <div style={{ gridRow: '1 / 3', background: '#2D3A1E', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '3rem', position: 'relative', overflow: 'hidden' }}>
-            <div style={{ position: 'absolute', bottom: -60, left: -60, width: 300, height: 300, borderRadius: '50%', background: 'rgba(173,221,90,0.06)' }} />
-            <div style={{ position: 'absolute', top: 40, right: 40, width: 160, height: 160, borderRadius: '50%', background: 'rgba(127,119,221,0.07)' }} />
+          <div style={{ gridRow: '1 / 3', background: '#1a2a4a', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '3rem', position: 'relative', overflow: 'hidden' }}>
+            <div style={{ position: 'absolute', bottom: -60, left: -60, width: 300, height: 300, borderRadius: '50%', background: 'rgba(31,140,255,0.06)' }} />
+            <div style={{ position: 'absolute', top: 40, right: 40, width: 160, height: 160, borderRadius: '50%', background: 'rgba(31,140,255,0.08)' }} />
             <h1 style={{ fontSize: 52, fontWeight: 700, color: '#fff', textAlign: 'center', lineHeight: 1.15, marginBottom: 20, position: 'relative', maxWidth: 520 }}>
               Spark Your Next{' '}
               <span style={{ color: '#1F8CFF', fontStyle: 'italic' }}>Breakthrough</span>
@@ -318,16 +318,16 @@ export default function Blog() {
   }
 
   return (
-    <div style={{ fontFamily: 'inherit', background: 'var(--color-background-tertiary, #f5f5f3)', minHeight: '100vh' }}>
-      <nav style={{ background: 'var(--color-background-primary)', borderBottom: '0.5px solid var(--color-border-tertiary)', position: 'sticky', top: 0, zIndex: 100 }}>
+    <div style={{ fontFamily: 'inherit', background: '#f5f5f3', minHeight: '100vh', color: '#1a1a1a' }}>
+      <nav style={{ background: '#fff', borderBottom: '0.5px solid #e0e0e0', position: 'sticky', top: 0, zIndex: 100 }}>
         <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0.875rem 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
           <button onClick={() => setShowArticles(false)} style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', cursor: 'pointer' }}>
             <span style={{ background: '#7F77DD', color: '#fff', fontSize: 12, padding: '3px 10px', borderRadius: 20, fontWeight: 500 }}>OgaPay</span>
-            <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--color-text-primary)' }}>blog.</span>
+            <span style={{ fontSize: 16, fontWeight: 700, color: '#1a1a1a' }}>blog.</span>
           </button>
           <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
             {categories.map(cat => (
-              <button key={cat} onClick={() => setActiveCategory(cat)} style={{ fontSize: 13, padding: '5px 14px', borderRadius: 20, border: '0.5px solid', borderColor: activeCategory === cat ? '#7F77DD' : 'transparent', background: activeCategory === cat ? '#EEEDFE' : 'transparent', color: activeCategory === cat ? '#534AB7' : 'var(--color-text-secondary)', cursor: 'pointer', fontWeight: activeCategory === cat ? 600 : 400 }}>
+              <button key={cat} onClick={() => setActiveCategory(cat)} style={{ fontSize: 13, padding: '5px 14px', borderRadius: 20, border: '0.5px solid', borderColor: activeCategory === cat ? '#7F77DD' : 'transparent', background: activeCategory === cat ? '#EEEDFE' : 'transparent', color: activeCategory === cat ? '#534AB7' : '#666', cursor: 'pointer', fontWeight: activeCategory === cat ? 600 : 400 }}>
                 {cat}
               </button>
             ))}
@@ -338,9 +338,9 @@ export default function Blog() {
 
       <div style={{ maxWidth: 1100, margin: '0 auto', padding: '2rem 1.5rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
-          <span style={{ fontSize: 16, fontWeight: 500, color: 'var(--color-text-primary)' }}>
+          <span style={{ fontSize: 16, fontWeight: 500, color: '#1a1a1a' }}>
             {activeCategory === 'All' ? 'All articles' : activeCategory}
-            <span style={{ fontSize: 13, color: 'var(--color-text-secondary)', marginLeft: 8 }}>({filteredArticles.length})</span>
+            <span style={{ fontSize: 13, color: '#666', marginLeft: 8 }}>({filteredArticles.length})</span>
           </span>
           <button onClick={() => setShowArticles(false)} style={{ fontSize: 13, color: '#534AB7', background: 'none', border: 'none', cursor: 'pointer' }}>← Back to home</button>
         </div>
@@ -349,13 +349,13 @@ export default function Blog() {
           {filteredArticles.map(post => {
             const badge = badgeColors[post.category] || { bg: '#EEEDFE', color: '#534AB7' }
             return (
-              <div key={post.id} style={{ background: 'var(--color-background-primary)', border: '0.5px solid var(--color-border-tertiary)', borderRadius: 16, overflow: 'hidden', cursor: 'pointer' }}>
+              <div key={post.id} style={{ background: '#fff', border: '0.5px solid #e0e0e0', borderRadius: 16, overflow: 'hidden', cursor: 'pointer' }}>
                 <div style={{ height: 160, background: post.color, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="1.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>
                 <div style={{ padding: '1rem' }}>
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 500, background: badge.bg, color: badge.color, padding: '3px 10px', borderRadius: 20, marginBottom: 8 }}>{post.category}{post.isUserPost && <span style={{fontSize:9,background:badge.color,color:badge.bg,borderRadius:99,padding:'1px 5px'}}>Member</span>}</span>
-                  <p style={{ fontSize: 14, fontWeight: 500, color: 'var(--color-text-primary)', lineHeight: 1.5, marginBottom: 10 }}>{post.title}</p>
-                  <p style={{ fontSize: 13, color: 'var(--color-text-secondary)', lineHeight: 1.6, marginBottom: 10 }}>{post.excerpt}</p>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--color-text-secondary)', flexWrap: 'wrap' }}>
+                  <p style={{ fontSize: 14, fontWeight: 500, color: '#1a1a1a', lineHeight: 1.5, marginBottom: 10 }}>{post.title}</p>
+                  <p style={{ fontSize: 13, color: '#666', lineHeight: 1.6, marginBottom: 10 }}>{post.excerpt}</p>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#666', flexWrap: 'wrap' }}>
                     <div style={{ width: 22, height: 22, borderRadius: '50%', background: '#7F77DD', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 600 }}>{post.authorInitials}</div>
                     <span>{post.author}</span><span>·</span><span>{post.date}</span><span>·</span><span>{post.readTime}</span>
                   </div>
@@ -379,11 +379,11 @@ export default function Blog() {
           )}
         </div>
 
-        <div style={{ borderTop: '0.5px solid var(--color-border-tertiary)', paddingTop: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 12, color: 'var(--color-text-secondary)', flexWrap: 'wrap', gap: 8 }}>
+        <div style={{ borderTop: '0.5px solid #e0e0e0', paddingTop: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 12, color: '#666', flexWrap: 'wrap', gap: 8 }}>
           <span>© 2026 OgaPay. All rights reserved.</span>
           <div style={{ display: 'flex', gap: 16 }}>
             {['News', 'Businesses', 'Freelancers', 'Case Studies'].map(cat => (
-              <button key={cat} onClick={() => setActiveCategory(cat)} style={{ background: 'none', border: 'none', fontSize: 12, color: 'var(--color-text-secondary)', cursor: 'pointer', padding: 0 }}>{cat}</button>
+              <button key={cat} onClick={() => setActiveCategory(cat)} style={{ background: 'none', border: 'none', fontSize: 12, color: '#666', cursor: 'pointer', padding: 0 }}>{cat}</button>
             ))}
           </div>
         </div>
