@@ -25,7 +25,7 @@ function setStep(key) {
 
 /* ─── STYLES (injected inline to preserve exact layout) ────────── */
 const CSS = `
-  .dash-wrap2 { padding: 28px 20px 60px; }
+  .dash-wrap2 { padding: 28px 20px 60px; width: 100%; }
   .dash-intro { display:flex; align-items:center; gap:14px; padding:16px 20px; background:var(--card); border:1px solid var(--border); border-radius:12px; margin-bottom:24px; }
   .dash-intro-icon { width:40px; height:40px; border-radius:10px; display:grid; place-items:center; flex-shrink:0; }
   .dash-intro h2 { font-family:"Outfit",sans-serif; font-size:17px; font-weight:800; margin:0 0 2px; }
@@ -110,8 +110,8 @@ const CSS = `
     .dash-provider-grid { grid-template-columns:1fr 1fr; }
   }
 
-  /* Hide right sidebar on mobile (Bug 2 fix) */
-  @media(max-width:768px) {
+  /* Hide right sidebar on mobile - hidden below 1024px */
+  @media(max-width:1024px) {
     .dash-right { display: none !important; }
   }
 
@@ -133,14 +133,28 @@ export default function OgaPayDashboard() {
     // Check createdAt timestamp - if user created < 5 min ago, show "Welcome"
     try {
       const u = JSON.parse(localStorage.getItem("ogapay_user")) || {};
-      if (u.createdAt) {
-        const elapsed = Date.now() - new Date(u.createdAt).getTime();
-        if (elapsed < 5 * 60 * 1000) return true;
+      let createdTs = u.createdAt || u.created_at || u.metadata?.createdAt || null;
+      if (createdTs) {
+        const ts = typeof createdTs === 'number' ? createdTs * 1000 : new Date(createdTs).getTime();
+        if (!isNaN(ts) && Date.now() - ts < 5 * 60 * 1000) return true;
       }
     } catch {}
+    // Check dedicated registration timestamp (set below when flag is found)
+    const regTs = localStorage.getItem("ogapay_registered_at");
+    if (regTs) {
+      const ts = parseInt(regTs, 10);
+      if (!isNaN(ts) && Date.now() - ts < 5 * 60 * 1000) return true;
+    }
+    // When the new-user flag is found, persist a timestamp so subsequent loads still detect new user
     const n = localStorage.getItem("ogapay_is_new_user") === "true";
-    if (n) localStorage.removeItem("ogapay_is_new_user");
-    return n;
+    if (n) {
+      if (!localStorage.getItem("ogapay_registered_at")) {
+        localStorage.setItem("ogapay_registered_at", String(Date.now()));
+      }
+      localStorage.removeItem("ogapay_is_new_user");
+      return true;
+    }
+    return false;
   });
   const [selProvider, setSelProvider] = useState(null);
   const [availableTasks] = useState("0");
