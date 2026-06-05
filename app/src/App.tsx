@@ -3,7 +3,7 @@ import { AuthProvider } from './context/AuthContext'
 import { ThemeProvider } from './context/ThemeContext'
 import Tasks from './pages/Tasks'
 import OgaPayAuth from "./pages/OgaPayAuth"
-import Onboarding from './pages/Onboarding'
+import Dashboard from './pages/Dashboard'
 import HomePage from './pages/HomePage'
 import Profile from './pages/Profile'
 import Wallet from './pages/Wallet'
@@ -57,7 +57,7 @@ export default function App() {
           <Route path="/createsocial" element={<CreateJob />} />
           <Route path="/edit-profile" element={<EditProfile />} />
           <Route path="/login" element={<OgaPayAuth />} />
-          <Route path="/dashboard" element={<Onboarding />} />
+          <Route path="/dashboard" element={<Dashboard />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </AuthProvider>
