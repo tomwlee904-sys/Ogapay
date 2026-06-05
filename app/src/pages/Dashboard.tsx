@@ -108,8 +108,9 @@ const CSS = `
     .dash-step-grid { grid-template-columns:1fr; }
     .dash-stats-row { grid-template-columns:1fr; }
     .dash-provider-grid { grid-template-columns:1fr 1fr; }
-    .dash-grid { grid-template-columns: 1fr; }
   }
+  .dash-grid { display: flex; flex-direction: column; gap: 24px; }
+  @media(min-width: 769px) { .dash-grid { display: grid; grid-template-columns: 1fr 280px; } }
 
   /* Locked step styling (Bug 2 fix) */
   .dash-step-locked { opacity: 0.35; pointer-events: none; filter: grayscale(0.8); }
@@ -256,7 +257,7 @@ export default function OgaPayDashboard() {
         </div>
 
         {/* ── TWO-COLUMN GRID ── */}
-        <div className="dash-grid" style={{ display: "grid", gridTemplateColumns: "1fr 280px", gap: 24 }}>
+        <div className="dash-grid">
 
           {/* ── LEFT COLUMN ── */}
           <div>
