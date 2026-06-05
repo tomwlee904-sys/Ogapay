@@ -197,7 +197,6 @@ export default function Blog() {
   if (!showArticles) {
     return (
       <div data-theme={theme} style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: 'var(--bg)', color: 'var(--text)' }}>
-        <div style={{ flex: 1 }}>
         <style>{`
           .blog-nav-link:hover { color: #121566 !important; }
           .blog-cat-btn:hover { background: #f0f0f0 !important; }
@@ -274,7 +273,6 @@ export default function Blog() {
           </div>
         </div>
 
-        </div>
         <Footer />
       </div>
     )
@@ -283,7 +281,6 @@ export default function Blog() {
   // Articles view
   return (
     <div data-theme={theme} style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: 'var(--bg)', color: 'var(--text)' }}>
-      <div style={{ flex: 1 }}>
         <nav style={{ background: 'var(--card)', borderBottom: '0.5px solid var(--border)', position: 'sticky', top: 0, zIndex: 100 }}>
         <div style={{ maxWidth: 1400, margin: '0 auto', padding: '0.875rem 2rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
           <button onClick={() => setShowArticles(false)} style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', cursor: 'pointer' }}>
@@ -306,7 +303,7 @@ export default function Blog() {
         </div>
       </nav>
 
-      <div style={{ maxWidth: 1400, margin: '0 auto', padding: '2rem 2rem' }}>
+      <div style={{ maxWidth: 1400, margin: '0 auto', padding: '2rem 2rem 0' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
           <span style={{ fontSize: 16, fontWeight: 500, color: '#1a1a1a' }}>
             {activeCategory === 'All' ? 'All articles' : activeCategory}
@@ -345,7 +342,7 @@ export default function Blog() {
         </div>
 
         {/* Newsletter */}
-        <div style={{ background: '#121566', borderRadius: 16, padding: '2rem', textAlign: 'center', marginBottom: '2.5rem' }}>
+        <div style={{ background: '#121566', borderRadius: 16, padding: '2rem', textAlign: 'center', marginBottom: 0 }}>
           <h2 style={{ fontSize: 20, fontWeight: 500, color: '#fff', marginBottom: 8 }}>Stay in the loop</h2>
           <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.75)', marginBottom: '1.25rem' }}>Get the latest OgaPay tips, earnings stories, and platform updates.</p>
           {subscribed ? (
@@ -361,7 +358,6 @@ export default function Blog() {
         </div>
 
         <Drawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
-        </div>
         <Footer />
       </div>
   )
