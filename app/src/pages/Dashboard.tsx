@@ -104,7 +104,7 @@ const CSS = `
   .dash-progress-widget-title { font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.08em; color:var(--text2); margin-bottom:10px; }
 
   @media(max-width:768px) {
-    .dash-wrap2 { padding:20px 16px 40px; }
+    .dash-wrap2 { padding:20px 0 40px; margin:0 -12px;  }
     .dash-step-grid { grid-template-columns:1fr; }
     .dash-stats-row { grid-template-columns:1fr; }
     .dash-provider-grid { grid-template-columns:1fr 1fr; }
