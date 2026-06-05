@@ -5,6 +5,7 @@ import Tasks from './pages/Tasks'
 import LoginPage from './pages/LoginPage'
 import Dashboard from './pages/Dashboard'
 import HomePage from './pages/HomePage'
+import JobMonitor from './pages/JobMonitor'
 import Profile from './pages/Profile'
 import Wallet from './pages/Wallet'
 import WorkerPortal from './pages/WorkerPortal'
@@ -39,6 +40,7 @@ export default function App() {
           <Route path="/tasks/:id" element={<Tasks />} />
           <Route path="/tasks/new" element={<CreateJob />} />
           <Route path="/my-tasks" element={<MyTasks />} />
+          <Route path="/job-monitor" element={<JobMonitor />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/wallet" element={<Wallet />} />
           <Route path="/worker-portal" element={<WorkerPortal />} />
