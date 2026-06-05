@@ -25,6 +25,8 @@ function setStep(key) {
 
 /* ─── STYLES (injected inline to preserve exact layout) ────────── */
 const CSS = `
+  .app-layout { width: 100% !important; max-width: 100% !important; margin: 0 !important; padding: 20px 0 72px !important; }
+  .app-layout .page { max-width: 100% !important; margin: 0 !important; padding: 0 !important; width: 100% !important; }
   .dash-wrap2 { padding: 28px 20px 60px; width: 100%; }
   .dash-intro { display:flex; align-items:center; gap:14px; padding:16px 20px; background:var(--card); border:1px solid var(--border); border-radius:12px; margin-bottom:24px; }
   .dash-intro-icon { width:40px; height:40px; border-radius:10px; display:grid; place-items:center; flex-shrink:0; }
