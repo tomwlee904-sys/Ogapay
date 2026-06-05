@@ -1,4 +1,5 @@
 import Layout from '../components/Layout'
+import { Link } from 'react-router-dom'
 
 export default function NotFound() {
   return (
@@ -7,7 +8,7 @@ export default function NotFound() {
         <i className="ti ti-mood-confuzed" style={{fontSize:64,color:'var(--text3)',marginBottom:16,display:'block'}} />
         <h1 style={{fontFamily:'Outfit',fontSize:28}}>Page Not Found</h1>
         <p style={{color:'var(--text2)',fontSize:14,marginTop:8}}>This page doesn't exist yet.</p>
-        <a className="cc-btn" href="/app" style={{marginTop:20,display:'inline-flex'}}>Go Home</a>
+        <Link to="/" style={{marginTop:20,display:'inline-flex',height:44,padding:'0 22px',borderRadius:10,background:'var(--text)',color:'var(--bg)',fontSize:14,fontWeight:700,alignItems:'center',textDecoration:'none'}}>Go Home</Link>
       </div>
     </Layout>
   )

@@ -2,223 +2,192 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
 
+const API_BASE = 'https://ogapay-production.up.railway.app/api/v1'
+
 // ─── Sample Job Data (same as Tasks.tsx) ───
-const sampleJobs = [
-  {
-    id: 'job-001',
-    title: 'Social Media Engagement — Retweet & Like',
-    description: 'Retweet the pinned post on X and like it. Comment with "Done" once completed. Must have a public X account with at least 50 followers.',
-    creator: 'WURK Protocol',
-    creatorLabel: 'AI Agent',
-    platform: 'X / Twitter',
-    category: 'Social',
-    difficulty: 'Easy',
-    reward: 0.025,
-    rewardCurrency: 'SOL',
-    usdValue: 3.20,
-    slots: 150,
-    filled: 42,
-    timeEstimate: '5 min',
-    verificationRequired: false,
-    rankRequired: 'None',
-    color: '#16a34a',
-    featured: true,
-  },
-  {
-    id: 'job-002',
-    title: 'App Testing — UI/UX Feedback Session',
-    description: 'Test the new beta version of the OgaPay mobile app. Navigate through the onboarding flow and report any UI bugs or UX improvements.',
-    creator: 'OgaPay Labs',
-    creatorLabel: 'Platform',
-    platform: 'Mobile App',
-    category: 'Testing',
-    difficulty: 'Medium',
-    reward: 0.05,
-    rewardCurrency: 'SOL',
-    usdValue: 6.40,
-    slots: 30,
-    filled: 12,
-    timeEstimate: '25 min',
-    verificationRequired: true,
-    rankRequired: 'Bronze',
-    color: '#F59E0B',
-    featured: false,
-  },
-  {
-    id: 'job-003',
-    title: 'Content Review — Proofread Blog Post',
-    description: 'Review a 500-word blog post about DeFi trends. Check for grammar, spelling, and clarity. Suggest improvements in a short feedback form.',
-    creator: 'Crypto Writers DAO',
-    creatorLabel: 'Community',
-    platform: 'Google Docs',
-    category: 'Content',
-    difficulty: 'Easy',
-    reward: 0.015,
-    rewardCurrency: 'SOL',
-    usdValue: 1.92,
-    slots: 40,
-    filled: 18,
-    timeEstimate: '15 min',
-    verificationRequired: false,
-    rankRequired: 'None',
-    color: '#16a34a',
-    featured: false,
-  },
-  {
-    id: 'job-004',
-    title: 'Video Reaction — Product Review',
-    description: 'Watch a 2-minute product demo video and record a 30-second reaction video with your honest feedback. Upload to the submission portal.',
-    creator: 'DeFi Product XYZ',
-    creatorLabel: 'Protocol',
-    platform: 'YouTube',
-    category: 'Video',
-    difficulty: 'Medium',
-    reward: 0.08,
-    rewardCurrency: 'SOL',
-    usdValue: 10.24,
-    slots: 15,
-    filled: 7,
-    timeEstimate: '30 min',
-    verificationRequired: true,
-    rankRequired: 'Silver',
-    color: '#F59E0B',
-    featured: false,
-  },
-  {
-    id: 'job-005',
-    title: 'Community Engagement — Discord Raid',
-    description: 'Join the OgaPay Discord server, say hi in #introductions, and react to the announcement post. Simple and quick.',
-    creator: 'OgaPay Community',
-    creatorLabel: 'Community',
-    platform: 'Discord',
-    category: 'Social',
-    difficulty: 'Easy',
-    reward: 0.01,
-    rewardCurrency: 'SOL',
-    usdValue: 1.28,
-    slots: 200,
-    filled: 88,
-    timeEstimate: '5 min',
-    verificationRequired: false,
-    rankRequired: 'None',
-    color: '#16a34a',
-    featured: false,
-  },
-  {
-    id: 'job-006',
-    title: 'Data Entry — Product Listing',
-    description: 'Add product listings to the OgaPay marketplace. Each listing requires title, description, price, and category.',
-    creator: 'OgaPay Market',
-    creatorLabel: 'Platform',
-    platform: 'Web App',
-    category: 'Data',
-    difficulty: 'Hard',
-    reward: 0.12,
-    rewardCurrency: 'SOL',
-    usdValue: 15.36,
-    slots: 20,
-    filled: 3,
-    timeEstimate: '45 min',
-    verificationRequired: true,
-    rankRequired: 'Gold',
-    color: '#DC2626',
-    featured: true,
-  },
-  {
-    id: 'job-007',
-    title: 'Logo Design Contest — AI Agent Brand',
-    description: 'Design a logo for an AI agent startup focused on DeFi analytics. Submit your best design. Winner receives the full reward.',
-    creator: 'Agentic Analytics',
-    creatorLabel: 'Startup',
-    platform: 'Figma / PNG',
-    category: 'Design',
-    difficulty: 'Hard',
-    reward: 0.25,
-    rewardCurrency: 'SOL',
-    usdValue: 32.00,
-    slots: 10,
-    filled: 4,
-    timeEstimate: '2 hours',
-    verificationRequired: true,
-    rankRequired: 'Gold',
-    color: '#DC2626',
-    featured: true,
-  },
-  {
-    id: 'job-008',
-    title: 'Twitter Thread — Crypto Education',
-    description: 'Write a 10-tweet thread explaining "What is a Solana Airdrop?" in simple terms. Original content only.',
-    creator: 'Solana Edu DAO',
-    creatorLabel: 'DAO',
-    platform: 'X / Twitter',
-    category: 'Content',
-    difficulty: 'Medium',
-    reward: 0.035,
-    rewardCurrency: 'SOL',
-    usdValue: 4.48,
-    slots: 25,
-    filled: 11,
-    timeEstimate: '30 min',
-    verificationRequired: true,
-    rankRequired: 'Bronze',
-    color: '#F59E0B',
-    featured: false,
-  },
-  {
-    id: 'job-009',
-    title: 'Telegram Group — Join & Verify',
-    description: 'Join the OgaPay Telegram group and type /verify to complete. Must be a real account.',
-    creator: 'OgaPay Team',
-    creatorLabel: 'Platform',
-    platform: 'Telegram',
-    category: 'Social',
-    difficulty: 'Easy',
-    reward: 0.008,
-    rewardCurrency: 'SOL',
-    usdValue: 1.02,
-    slots: 500,
-    filled: 234,
-    timeEstimate: '3 min',
-    verificationRequired: false,
-    rankRequired: 'None',
-    color: '#16a34a',
-    featured: false,
-  },
-]
+const sampleJobs: any[] = []
 
-// ─── Helpers ───
-function formatCreator(name: string) {
-  const words = name.split(' ').filter(Boolean)
-  if (words.length >= 2) return (words[0][0] + words[1][0]).toUpperCase()
-  return (name[0] || '?').toUpperCase()
+const API_CATEGORIES: Record<string, string> = {
+  'SOCIAL_MEDIA': 'Social',
+  'SURVEY': 'Research',
+  'CONTENT': 'Content',
+  'DESIGN': 'Design',
+  'TESTING': 'Testing',
+  'DATA': 'Data',
+  'VIDEO': 'Video',
+  'OTHER': 'Other',
 }
 
-function timeAgo(date: Date) {
-  const diff = Date.now() - date.getTime()
-  const mins = Math.floor(diff / 60000)
-  if (mins < 1) return 'Just now'
-  if (mins < 60) return `${mins}m ago`
-  const hrs = Math.floor(mins / 60)
-  if (hrs < 24) return `${hrs}h ago`
-  const days = Math.floor(hrs / 24)
-  if (days < 7) return `${days}d ago`
-  return date.toLocaleDateString()
+const DIFFICULTY_COLORS: Record<string, string> = {
+  'Easy': '#16a34a',
+  'Medium': '#F59E0B',
+  'Hard': '#DC2626',
 }
 
-// ─── Tab config ───
-const TABS = [
-  { key: 'all', label: 'All Jobs', icon: 'ti ti-list' },
-  { key: 'applied', label: 'My Applications', icon: 'ti ti-send' },
-  { key: 'saved', label: 'Saved', icon: 'ti ti-bookmark' },
-  { key: 'activity', label: 'Activity', icon: 'ti ti-activity' },
-] as const
+function mapApiTask(t: any) {
+  const cat = API_CATEGORIES[t.category] || 'Other'
+  const diff = t.estimatedTime ? (t.estimatedTime <= 10 ? 'Easy' : t.estimatedTime <= 30 ? 'Medium' : t.estimatedTime <= 60 ? 'Hard' : 'Expert') : 'Easy'
+  return {
+    id: t.id,
+    title: t.title,
+    description: t.description,
+    instructions: t.instructions || '',
+    creator: t.poster?.username || 'OgaPay',
+    creatorLabel: t.poster?.posterProfile?.isVerified ? 'Verified' : 'User',
+    platform: t.tags?.[0] || 'Web',
+    category: cat,
+    difficulty: diff,
+    reward: Number(t.reward),
+    rewardCurrency: t.currency,
+    usdValue: 0,
+    slots: t.maxWorkers || 1,
+    filled: t.currentWorkers || 0,
+    timeEstimate: t.estimatedTime ? t.estimatedTime + ' min' : '—',
+    verificationRequired: !!t.proofRequired,
+    rankRequired: 'None',
+    color: DIFFICULTY_COLORS[diff] || '#16a34a',
+    featured: t.poster?.posterProfile?.isVerified || false,
+  }
+}
 
-type TabKey = (typeof TABS)[number]['key']
+async function fetchMyCreatedTasks() {
+  try {
+    const token = localStorage.getItem('ogapay_access_token')
+    if (!token) return []
+    const res = await fetch(API_BASE + '/tasks/my/created', {
+      headers: { 'Authorization': 'Bearer ' + token },
+    })
+    const json = await res.json()
+    if (json.success && json.data) {
+      return json.data.map(mapApiTask)
+    }
+    return []
+  } catch {
+    return []
+  }
+}
 
-// ─── Format address/wallet ───
-function formatAddress(str: string) {
-  if (str.length <= 8) return str
-  return str.slice(0, 5) + '...' + str.slice(-3)
+/* ─── Review Submissions Modal ─── */
+function ReviewSubmissionsModal({ task, onClose }: { task: any; onClose: () => void }) {
+  const [submissions, setSubmissions] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [reviewing, setReviewing] = useState<string | null>(null)
+
+  const fetchSubmissions = async () => {
+    setLoading(true)
+    try {
+      const token = localStorage.getItem('ogapay_access_token')
+      if (!token) return
+      const res = await fetch(API_BASE + '/tasks/' + task.id + '/submissions', {
+        headers: { 'Authorization': 'Bearer ' + token },
+      })
+      const json = await res.json()
+      if (json.success && json.data) setSubmissions(json.data)
+    } catch {}
+    setLoading(false)
+  }
+
+  useEffect(() => { fetchSubmissions() }, [task.id])
+
+  const handleReview = async (submissionId: string, status: string) => {
+    setReviewing(submissionId)
+    try {
+      const token = localStorage.getItem('ogapay_access_token')
+      if (!token) return
+      const res = await fetch(API_BASE + '/tasks/submissions/' + submissionId + '/review', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({ status }),
+      })
+      const json = await res.json()
+      if (json.success) fetchSubmissions()
+    } catch {}
+    setReviewing(null)
+  }
+
+  const statusBadge = (s: string) => {
+    const colors: Record<string, string> = { PENDING: '#F59E0B', APPROVED: '#16a34a', REJECTED: '#DC2626', APPLIED: '#1F8CFF' }
+    return <span style={{ padding: '2px 8px', borderRadius: 4, fontSize: 11, fontWeight: 700, background: (colors[s] || '#666') + '18', color: colors[s] || '#666' }}>{s}</span>
+  }
+
+  return (
+    <div className="review-overlay" onClick={onClose}>
+      <div className="review-modal" onClick={e => e.stopPropagation()} style={{
+        position: 'fixed', inset: 0, zIndex: 1000, display: 'grid', placeItems: 'center',
+        background: 'rgba(0,0,0,0.5)', padding: 20, overflowY: 'auto',
+      }}>
+        <div style={{
+          background: 'var(--card)', borderRadius: 16, maxWidth: 720, width: '100%',
+          maxHeight: '90vh', overflow: 'auto', border: '1px solid var(--border)',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 22px', borderBottom: '1px solid var(--border)' }}>
+            <div>
+              <h2 style={{ fontFamily: 'Outfit', fontSize: 17, fontWeight: 800, margin: 0 }}>Review Submissions</h2>
+              <p style={{ fontSize: 13, color: 'var(--text2)', margin: '4px 0 0' }}>{task.title}</p>
+            </div>
+            <button onClick={onClose} style={{ width: 32, height: 32, borderRadius: 8, border: '1px solid var(--border)', background: 'var(--card)', cursor: 'pointer', display: 'grid', placeItems: 'center', fontSize: 16, color: 'var(--text2)' }}><i className="ti ti-x" /></button>
+          </div>
+
+          <div style={{ padding: '16px 22px' }}>
+            {loading ? (
+              <div style={{ textAlign: 'center', padding: 40, color: 'var(--text3)' }}><i className="ti ti-loader" style={{ animation: 'spin 1s linear infinite', fontSize: 24, display: 'block', marginBottom: 8 }} />Loading submissions...</div>
+            ) : submissions.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: 40, color: 'var(--text3)' }}>
+                <i className="ti ti-inbox" style={{ fontSize: 32, display: 'block', marginBottom: 8 }} />
+                <p style={{ margin: 0, fontSize: 14 }}>No submissions yet for this task.</p>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {submissions.map((s: any) => (
+                  <div key={s.id} style={{
+                    display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px',
+                    background: 'var(--bg2)', borderRadius: 12, border: '1px solid var(--border)',
+                  }}>
+                    {/* Worker avatar */}
+                    <div style={{
+                      width: 36, height: 36, borderRadius: '50%', background: '#121566',
+                      color: '#fff', display: 'grid', placeItems: 'center', fontSize: 12, fontWeight: 700, flexShrink: 0,
+                    }}>
+                      {((s.worker?.firstName?.[0] || '') + (s.worker?.lastName?.[0] || '')) || (s.worker?.username?.[0] || '?')}
+                    </div>
+
+                    {/* Worker info */}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontWeight: 700, fontSize: 13 }}>{s.worker?.username || 'Worker'}</div>
+                      <div style={{ fontSize: 11, color: 'var(--text2)', marginTop: 2 }}>
+                        {s.proof && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><i className="ti ti-link" /><a href={s.proof} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)', textDecoration: 'none' }}>View proof</a></span>}
+                        {s.workerNotes && <span style={{ marginLeft: 8, color: 'var(--text3)' }}>— {s.workerNotes}</span>}
+                      </div>
+                    </div>
+
+                    {/* Status / Actions */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                      {s.status === 'PENDING' ? (
+                        <>
+                          <button onClick={() => handleReview(s.id, 'APPROVED')} disabled={reviewing === s.id} style={{
+                            height: 32, padding: '0 14px', borderRadius: 8, border: 'none',
+                            background: '#16a34a', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer',
+                            opacity: reviewing === s.id ? 0.6 : 1,
+                          }}><i className="ti ti-check" /> Approve</button>
+                          <button onClick={() => handleReview(s.id, 'REJECTED')} disabled={reviewing === s.id} style={{
+                            height: 32, padding: '0 14px', borderRadius: 8, border: '1px solid var(--border)',
+                            background: 'var(--card)', color: '#DC2626', fontSize: 12, fontWeight: 700, cursor: 'pointer',
+                            opacity: reviewing === s.id ? 0.6 : 1,
+                          }}><i className="ti ti-x" /> Reject</button>
+                        </>
+                      ) : (
+                        statusBadge(s.status)
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
 }
 
 export default function JobMonitor() {
@@ -252,7 +221,7 @@ export default function JobMonitor() {
   const [activityFeed, setActivityFeed] = useState<Array<{ type: string; jobId: string; jobTitle: string; time: Date }>>([])
 
   // ─── Filter jobs based on tab ───
-  const filteredJobs = sampleJobs.filter(job => {
+  const filteredJobs = jobs.filter(job => {
     const matchSearch = search === '' || 
       job.title.toLowerCase().includes(search.toLowerCase()) ||
       job.description.toLowerCase().includes(search.toLowerCase()) ||
@@ -266,22 +235,22 @@ export default function JobMonitor() {
   })
 
   // ─── Stats ───
-  const totalJobs = sampleJobs.length
+  const totalJobs = jobs.length
   const totalApplied = appliedJobs.length
   const completedJobs = appliedJobs.filter(id => {
     // Simulate some as completed
-    const job = sampleJobs.find(j => j.id === id)
+    const job = jobs.find(j => j.id === id)
     return job ? job.filled >= job.slots / 2 : false
   }).length
   const totalSaved = bookmarked.length
-  const totalRewards = sampleJobs.reduce((sum, j) => sum + j.usdValue, 0)
+  const totalRewards = jobs.reduce((sum, j) => sum + (j.reward || 0), 0)
 
   // ─── Handlers ───
   const toggleBookmark = (id: string) => {
     setBookmarked(prev => prev.includes(id) ? prev.filter(b => b !== id) : [...prev, id])
   }
 
-  const handleApply = (job: typeof sampleJobs[0]) => {
+  const handleApply = (job: any) => {
     if (!appliedJobs.includes(job.id)) {
       setAppliedJobs(prev => [...prev, job.id])
       setActivityFeed(prev => [{
@@ -718,6 +687,9 @@ export default function JobMonitor() {
                     <div className="jm-actions">
                       <button onClick={() => navigate(`/tasks/${job.id}`)}>
                         <i className="ti ti-eye" /> View Details
+                      </button>
+                      <button onClick={() => setReviewTask(job)} style={{ background: '#121566', color: '#fff', borderColor: '#121566' }}>
+                        <i className="ti ti-clipboard-list" /> Review
                       </button>
                       <button
                         className={`primary ${isApplied ? 'applied' : ''}`}

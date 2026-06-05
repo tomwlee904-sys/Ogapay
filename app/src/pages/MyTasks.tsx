@@ -1,12 +1,28 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Layout from '../components/Layout'
 
-const myTasks = [
-  { id: 1, title: 'Social Media Engagement', reward: 500, status: 'In Progress', progress: 60, date: 'Today', color: '#1F8CFF' },
-  { id: 2, title: 'Content Review', reward: 800, status: 'Under Review', progress: 100, date: 'Yesterday', color: '#F59E0B' },
-  { id: 3, title: 'App Testing', reward: 1200, status: 'Approved', progress: 100, date: '3 days ago', color: '#16a34a' },
-  { id: 4, title: 'Data Entry', reward: 1500, status: 'Rejected', progress: 80, date: '1 week ago', color: '#DC2626' },
-]
+const API_BASE = 'https://ogapay-production.up.railway.app/api/v1'
+
+const STATUS_MAP: Record<string, string> = {
+  APPLIED: 'In Progress',
+  PENDING: 'Under Review',
+  APPROVED: 'Approved',
+  REJECTED: 'Rejected',
+}
+
+const COLOR_MAP: Record<string, string> = {
+  APPLIED: '#1F8CFF',
+  PENDING: '#F59E0B',
+  APPROVED: '#16a34a',
+  REJECTED: '#DC2626',
+}
+
+const PROGRESS_MAP: Record<string, number> = {
+  APPLIED: 40,
+  PENDING: 70,
+  APPROVED: 100,
+  REJECTED: 100,
+}
 
 const tabs = [
   { id: 'all', label: 'All' },
@@ -16,10 +32,46 @@ const tabs = [
   { id: 'rejected', label: 'Rejected' },
 ]
 
+function timeAgo(dateStr: string) {
+  const diff = Date.now() - new Date(dateStr).getTime()
+  const mins = Math.floor(diff / 60000)
+  if (mins < 1) return 'Just now'
+  if (mins < 60) return mins + 'm ago'
+  const hrs = Math.floor(mins / 60)
+  if (hrs < 24) return hrs + 'h ago'
+  const days = Math.floor(hrs / 24)
+  return days + 'd ago'
+}
+
 export default function MyTasks() {
   const [tab, setTab] = useState('all')
+  const [submissions, setSubmissions] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
 
-  const filtered = tab === 'all' ? myTasks : myTasks.filter(t => t.status.toLowerCase() === tab)
+  useEffect(() => {
+    async function fetchSubmissions() {
+      try {
+        const token = localStorage.getItem('ogapay_access_token')
+        if (!token) { setLoading(false); return }
+        const res = await fetch(API_BASE + '/tasks/my/submissions', {
+          headers: { 'Authorization': 'Bearer ' + token },
+        })
+        const json = await res.json()
+        if (json.success && json.data) {
+          setSubmissions(json.data)
+        }
+      } catch {}
+      setLoading(false)
+    }
+    fetchSubmissions()
+  }, [])
+
+  const filtered = tab === 'all'
+    ? submissions
+    : submissions.filter(s => {
+        const display = STATUS_MAP[s.status] || s.status
+        return display.toLowerCase() === tab
+      })
 
   return (
     <Layout>
@@ -57,38 +109,50 @@ export default function MyTasks() {
         ))}
       </div>
 
-      {filtered.length === 0 ? (
+      {loading ? (
+        <div className="mt-empty">
+          <i className="ti ti-loader" style={{animation:'spin 1s linear infinite'}} />
+          <p style={{fontSize:13,margin:0}}>Loading your submissions...</p>
+        </div>
+      ) : filtered.length === 0 ? (
         <div className="mt-empty">
           <i className="ti ti-checklist" />
-          <h3 style={{fontFamily:'Outfit',fontWeight:800,margin:'0 0 4px',color:'var(--text)'}}>No tasks found</h3>
-          <p style={{fontSize:13,margin:0}}>Browse available tasks to get started</p>
-          <a href="/tasks" className="mst-add-btn" style={{display:'inline-flex',marginTop:12,height:36,padding:'0 16px',borderRadius:8,border:0,background:'var(--accent)',color:'#fff',fontWeight:700,fontSize:12,alignItems:'center',gap:6,textDecoration:'none'}}>Browse Tasks</a>
+          <h3 style={{fontFamily:'Outfit',fontWeight:800,margin:'0 0 4px',color:'var(--text)'}}>No submissions yet</h3>
+          <p style={{fontSize:13,margin:0}}>Apply to tasks and submit your work to see them here</p>
+          <a href="/tasks" style={{display:'inline-flex',marginTop:12,height:36,padding:'0 16px',borderRadius:8,border:0,background:'var(--accent)',color:'#fff',fontWeight:700,fontSize:12,alignItems:'center',gap:6,textDecoration:'none'}}>Browse Tasks</a>
         </div>
       ) : (
         <div className="mt-list">
-          {filtered.map(t => (
-            <div className="mt-item" key={t.id}>
-              <div className="mt-icon" style={{background: `${t.color}15`, color: t.color}}>
-                <i className="ti ti-file-text" />
-              </div>
-              <div className="mt-info">
-                <div className="mt-title">{t.title}</div>
-                <div className="mt-progress">
-                  <div className="mt-pf" style={{width: t.progress + '%', background: t.color}} />
+          {filtered.map((s: any) => {
+            const status = STATUS_MAP[s.status] || s.status
+            const color = COLOR_MAP[s.status] || '#1F8CFF'
+            const progress = PROGRESS_MAP[s.status] || 50
+            return (
+              <div className="mt-item" key={s.id}>
+                <div className="mt-icon" style={{background: `${color}15`, color}}>
+                  <i className="ti ti-file-text" />
                 </div>
-                <div className="mt-meta">
-                  <span>{t.date}</span>
-                  <span>{t.progress}% complete</span>
+                <div className="mt-info">
+                  <div className="mt-title">{s.task?.title || 'Task'}</div>
+                  <div className="mt-progress">
+                    <div className="mt-pf" style={{width: progress + '%', background: color}} />
+                  </div>
+                  <div className="mt-meta">
+                    <span>{timeAgo(s.createdAt)}</span>
+                    <span>{progress}% complete</span>
+                  </div>
+                </div>
+                <div className="mt-right">
+                  <div className="mt-reward">{s.task?.currency || 'NGN'} {Number(s.task?.reward || 0).toLocaleString()}</div>
+                  <span className="mt-status" style={{background: `${color}15`, color}}>{status}</span>
                 </div>
               </div>
-              <div className="mt-right">
-                <div className="mt-reward">NGN {t.reward.toLocaleString()}</div>
-                <span className="mt-status" style={{background: `${t.color}15`, color: t.color}}>{t.status}</span>
-              </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       )}
+
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </Layout>
   )
 }

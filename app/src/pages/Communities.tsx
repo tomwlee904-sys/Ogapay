@@ -1,20 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
 
-const communities = [
-  { id: 1, name: 'Solana Builders', category: 'crypto', members: 2840, tasks: 456, rewards: 45000, badge: 'Crypto', desc: 'Building the future on Solana. Discussions, development, and alpha.', trending: true, initials: 'SB' },
-  { id: 2, name: 'Design Masters', category: 'design', members: 1820, tasks: 320, rewards: 28000, badge: 'Design', desc: 'Premium design resources, feedback, and collaborations.', trending: true, initials: 'DM' },
-  { id: 3, name: 'Content Creators Hub', category: 'content', members: 3150, tasks: 540, rewards: 52000, badge: 'Content', desc: 'Create, share, and earn. Video, writing, and multimedia.', trending: true, initials: 'CC' },
-  { id: 4, name: 'Web3 Marketing', category: 'marketing', members: 1240, tasks: 210, rewards: 18000, badge: 'Marketing', desc: 'Web3 marketing strategies, campaigns, and growth hacking.', trending: false, initials: 'WM' },
-  { id: 5, name: 'Crypto Traders', category: 'crypto', members: 4200, tasks: 680, rewards: 95000, badge: 'Crypto', desc: 'Trade signals, analysis, and DeFi strategies.', trending: true, initials: 'CT' },
-  { id: 6, name: 'Business Network', category: 'business', members: 960, tasks: 145, rewards: 12000, badge: 'Business', desc: 'Entrepreneurship, business development, and partnerships.', trending: false, initials: 'BN' },
-  { id: 7, name: 'AI & Automation', category: 'crypto', members: 2100, tasks: 380, rewards: 34000, badge: 'Crypto', desc: 'AI agents, automation tools, and bot development.', trending: true, initials: 'AA' },
-  { id: 8, name: 'Community Managers', category: 'marketing', members: 780, tasks: 190, rewards: 15000, badge: 'Marketing', desc: 'Best practices for community growth and engagement.', trending: false, initials: 'CM' },
-  { id: 9, name: 'UI/UX Collective', category: 'design', members: 1450, tasks: 275, rewards: 22000, badge: 'Design', desc: 'User interface and experience design community.', trending: false, initials: 'UC' },
-  { id: 10, name: 'DeFi Degens', category: 'crypto', members: 3800, tasks: 590, rewards: 78000, badge: 'Crypto', desc: 'Decentralized finance, yield farming, and liquidity.', trending: true, initials: 'DD' },
-  { id: 11, name: 'Content Writers Guild', category: 'content', members: 920, tasks: 167, rewards: 14000, badge: 'Content', desc: 'Professional writing, copywriting, and editing.', trending: false, initials: 'WG' },
-  { id: 12, name: 'Growth Hackers', category: 'marketing', members: 1650, tasks: 290, rewards: 25000, badge: 'Marketing', desc: 'Growth strategies, viral loops, and user acquisition.', trending: false, initials: 'GH' },
-]
+const API_BASE = 'https://ogapay-production.up.railway.app/api/v1'
 
 const filters = ['All', 'Trending', 'New', 'Crypto', 'Business', 'Content', 'Design', 'Marketing']
 
@@ -24,12 +12,33 @@ function getGradient(cat: string) {
 }
 
 export default function Communities() {
+  const navigate = useNavigate()
   const [filter, setFilter] = useState('all')
   const [search, setSearch] = useState('')
+  const [communities, setCommunities] = useState<any[]>([])
+  const [stats, setStats] = useState<any>(null)
+  const [trending, setTrending] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function fetchCommunities() {
+      try {
+        const res = await fetch(API_BASE + '/communities')
+        const json = await res.json()
+        if (json.success && json.data) {
+          setCommunities(json.data.communities || [])
+          setStats(json.data.stats || null)
+          setTrending(json.data.trending || [])
+        }
+      } catch {}
+      setLoading(false)
+    }
+    fetchCommunities()
+  }, [])
 
   const filtered = communities.filter(c => {
     if (filter === 'trending' && !c.trending) return false
-    if (filter === 'new' && c.id > 12) return false
+    if (filter === 'new' && !c.trending) return false
     if (filter !== 'all' && filter !== 'trending' && filter !== 'new' && c.category !== filter) return false
     if (search) {
       const q = search.toLowerCase()
@@ -37,8 +46,6 @@ export default function Communities() {
     }
     return true
   })
-
-  const trending = communities.filter(c => c.trending)
 
   return (
     <Layout>
@@ -100,7 +107,12 @@ export default function Communities() {
       </div>
 
       <div className="ch-stats">
-        {[{ icon: 'ti ti-users', num: '24', label: 'Communities' }, { icon: 'ti ti-users-group', num: '8,420', label: 'Active Members' }, { icon: 'ti ti-checklist', num: '3,280', label: 'Tasks Completed' }, { icon: 'ti ti-coin', num: 'NGN 128K', label: 'Rewards Distributed' }].map((s, i) => (
+        {[
+          { icon: 'ti ti-users', num: stats?.total?.toLocaleString() || '0', label: 'Communities' },
+          { icon: 'ti ti-users-group', num: stats?.members?.toLocaleString() || '0', label: 'Active Members' },
+          { icon: 'ti ti-checklist', num: stats?.tasks?.toLocaleString() || '0', label: 'Tasks Completed' },
+          { icon: 'ti ti-coin', num: stats?.rewards ? 'NGN ' + stats.rewards.toLocaleString() : 'NGN 0', label: 'Rewards Distributed' },
+        ].map((s, i) => (
           <div className="ch-stat" key={i}><div className="csi"><i className={s.icon} /></div><div className="csn">{s.num}</div><div className="csl">{s.label}</div></div>
         ))}
       </div>
@@ -111,51 +123,66 @@ export default function Communities() {
         ))}
       </div>
 
-      <div className="sec-title">Trending Communities</div>
-      <div className="sec-sub">Most active communities this week</div>
-      <div className="ch-trend">
-        {trending.map(c => (
-          <div className="ch-card" key={c.id} style={{ minWidth: 260 }}>
-            <div className="ccb" style={{ background: `linear-gradient(135deg,${getGradient(c.category)})` }} />
-            <div className="cca">{c.initials}</div>
-            <div className="cc-body">
-              <div className="cc-name">{c.name}</div>
-              <div className="cc-badge">{c.badge}</div>
-              <div className="cc-meta"><span><i className="ti ti-users" /> {c.members.toLocaleString()}</span></div>
-              <button className="ch-join" style={{ marginTop: 'auto', height: 30, fontSize: 11 }}>Join</button>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div className="sec-title">All Communities</div>
-      <div className="sec-sub">Discover and join communities that match your interests</div>
-
-      {filtered.length === 0 ? (
-        <div className="ch-empty"><i className="ti ti-users" style={{ fontSize: 32, marginBottom: 8, display: 'block', color: 'var(--text3)' }} />No communities found. Try a different filter.</div>
-      ) : (
-        <div className="ch-grid">
-          {filtered.map(c => (
-            <div className="ch-card" key={c.id}>
-              <div className="ccb" style={{ background: `linear-gradient(135deg,${getGradient(c.category)})` }} />
-              <div className="cca">{c.initials}</div>
-              <div className="cc-body">
-                <div className="cc-name">{c.name}</div>
-                <div className="cc-badge">{c.badge}</div>
-                <div className="cc-meta">
-                  <span><i className="ti ti-users" /> {c.members.toLocaleString()}</span>
-                  <span><i className="ti ti-checklist" /> {c.tasks} tasks</span>
-                </div>
-                <div className="cc-r">Rewards: <strong>NGN {c.rewards.toLocaleString()}</strong>/week</div>
-                <div className="cc-actions">
-                  <button className="ch-join">Join</button>
-                  <button className="ch-preview">Preview</button>
-                </div>
-              </div>
-            </div>
-          ))}
+      {loading ? (
+        <div style={{ textAlign: 'center', padding: 40, color: 'var(--text3)' }}>
+          <i className="ti ti-loader" style={{ animation: 'spin 1s linear infinite', fontSize: 24, display: 'block', marginBottom: 8 }} />
+          Loading communities...
         </div>
+      ) : (
+        <>
+          {trending.length > 0 && (
+            <>
+              <div className="sec-title">Trending Communities</div>
+              <div className="sec-sub">Most active communities this week</div>
+              <div className="ch-trend">
+                {trending.map(c => (
+                  <div className="ch-card" key={c.id} style={{ minWidth: 260 }} onClick={() => navigate('/communities/' + c.id)}>
+                    <div className="ccb" style={{ background: `linear-gradient(135deg,${getGradient(c.category)})` }} />
+                    <div className="cca">{c.initials}</div>
+                    <div className="cc-body">
+                      <div className="cc-name">{c.name}</div>
+                      <div className="cc-badge">{c.badge}</div>
+                      <div className="cc-meta"><span><i className="ti ti-users" /> {c.members?.toLocaleString()}</span></div>
+                      <button className="ch-join" style={{ marginTop: 'auto', height: 30, fontSize: 11 }} onClick={(e) => { e.stopPropagation(); navigate('/communities/' + c.id) }}>Join</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+
+          <div className="sec-title">All Communities</div>
+          <div className="sec-sub">Discover and join communities that match your interests</div>
+
+          {filtered.length === 0 ? (
+            <div className="ch-empty"><i className="ti ti-users" style={{ fontSize: 32, marginBottom: 8, display: 'block', color: 'var(--text3)' }} />No communities found. Try a different filter.</div>
+          ) : (
+            <div className="ch-grid">
+              {filtered.map(c => (
+                <div className="ch-card" key={c.id} onClick={() => navigate('/communities/' + c.id)}>
+                  <div className="ccb" style={{ background: `linear-gradient(135deg,${getGradient(c.category)})` }} />
+                  <div className="cca">{c.initials}</div>
+                  <div className="cc-body">
+                    <div className="cc-name">{c.name}</div>
+                    <div className="cc-badge">{c.badge}</div>
+                    <div className="cc-meta">
+                      <span><i className="ti ti-users" /> {c.members?.toLocaleString()}</span>
+                      <span><i className="ti ti-checklist" /> {c.tasks} tasks</span>
+                    </div>
+                    <div className="cc-r">Rewards: <strong>NGN {c.rewards?.toLocaleString()}</strong>/week</div>
+                    <div className="cc-actions">
+                      <button className="ch-join" onClick={(e) => { e.stopPropagation(); navigate('/communities/' + c.id) }}>Join</button>
+                      <button className="ch-preview" onClick={(e) => { e.stopPropagation(); navigate('/communities/' + c.id) }}>Preview</button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </>
       )}
+
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </Layout>
   )
 }

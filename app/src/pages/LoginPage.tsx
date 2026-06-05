@@ -1,5 +1,7 @@
 // @ts-nocheck
 import { useState, useEffect } from "react";
+import { useAuth } from "../context/AuthContext";
+import { Navigate } from "react-router-dom";
 import womanSvg from "../assets/woman.svg";
 import { API_BASE, apiRequest } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
@@ -34,7 +36,7 @@ function GoogleIcon() {
 }
  
 export default function LoginPage() {
-  const { login } = useAuth();
+  const { login, isAuthed } = useAuth();
   const [theme, setTheme] = useState(() => {
     try { return localStorage.getItem("ogapay-theme") || "light"; } catch { return "light"; }
   });

@@ -2,249 +2,65 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import Layout from '../components/Layout'
 
+const API_BASE = 'https://ogapay-production.up.railway.app/api/v1'
+
 // ─── Sample Job Data ───
-const sampleJobs = [
-  {
-    id: 'job-001',
-    title: 'Social Media Engagement — Retweet & Like',
-    description: 'Retweet the pinned post on X and like it. Comment with "Done" once completed. Must have a public X account with at least 50 followers.',
-    creator: 'WURK Protocol',
-    creatorLabel: 'AI Agent',
-    platform: 'X / Twitter',
-    category: 'Social',
-    difficulty: 'Easy',
-    reward: 0.025,
-    rewardCurrency: 'SOL',
-    usdValue: 3.20,
-    slots: 150,
-    filled: 42,
-    timeEstimate: '5 min',
-    verificationRequired: false,
+const sampleJobs: any[] = []
+
+const API_CATEGORIES: Record<string, string> = {
+  'SOCIAL_MEDIA': 'Social',
+  'SURVEY': 'Research',
+  'CONTENT': 'Content',
+  'DESIGN': 'Design',
+  'TESTING': 'Testing',
+  'DATA': 'Data',
+  'VIDEO': 'Video',
+  'OTHER': 'Other',
+}
+
+const DIFFICULTY_COLORS: Record<string, string> = {
+  'Easy': '#16a34a',
+  'Medium': '#F59E0B',
+  'Hard': '#DC2626',
+}
+
+function mapApiTask(t: any) {
+  const cat = API_CATEGORIES[t.category] || 'Other'
+  const diff = t.estimatedTime ? (t.estimatedTime <= 10 ? 'Easy' : t.estimatedTime <= 30 ? 'Medium' : 'Hard') : 'Easy'
+  return {
+    id: t.id,
+    title: t.title,
+    description: t.description,
+    creator: t.poster?.username || 'OgaPay',
+    creatorLabel: t.poster?.posterProfile?.isVerified ? 'Verified' : 'User',
+    platform: t.tags?.[0] || 'Web',
+    category: cat,
+    difficulty: diff,
+    reward: Number(t.reward),
+    rewardCurrency: t.currency,
+    usdValue: 0,
+    slots: t.maxWorkers || 1,
+    filled: t.currentWorkers || 0,
+    timeEstimate: t.estimatedTime ? t.estimatedTime + ' min' : '—',
+    verificationRequired: !!t.proofRequired,
     rankRequired: 'None',
-    color: '#16a34a',
-    featured: true,
-  },
-  {
-    id: 'job-002',
-    title: 'App Testing — UI/UX Feedback Session',
-    description: 'Test the new beta version of the OgaPay mobile app. Navigate through the onboarding flow and report any UI bugs or UX improvements.',
-    creator: 'OgaPay Labs',
-    creatorLabel: 'Platform',
-    platform: 'Mobile App',
-    category: 'Testing',
-    difficulty: 'Medium',
-    reward: 0.05,
-    rewardCurrency: 'SOL',
-    usdValue: 6.40,
-    slots: 30,
-    filled: 12,
-    timeEstimate: '25 min',
-    verificationRequired: true,
-    rankRequired: 'Bronze',
-    color: '#F59E0B',
+    color: DIFFICULTY_COLORS[diff] || '#16a34a',
     featured: false,
-  },
-  {
-    id: 'job-003',
-    title: 'Content Review — Proofread Blog Post',
-    description: 'Review a 500-word blog post about DeFi trends. Check for grammar, spelling, and clarity. Suggest improvements in a short feedback form.',
-    creator: 'Crypto Writers DAO',
-    creatorLabel: 'Community',
-    platform: 'Google Docs',
-    category: 'Content',
-    difficulty: 'Easy',
-    reward: 0.015,
-    rewardCurrency: 'SOL',
-    usdValue: 1.92,
-    slots: 40,
-    filled: 18,
-    timeEstimate: '15 min',
-    verificationRequired: false,
-    rankRequired: 'None',
-    color: '#16a34a',
-    featured: false,
-  },
-  {
-    id: 'job-004',
-    title: 'Video Reaction — Product Review',
-    description: 'Watch a 2-minute product demo video and record a 30-second reaction video with your honest feedback. Upload to the submission portal.',
-    creator: 'DeFi Product XYZ',
-    creatorLabel: 'Protocol',
-    platform: 'YouTube',
-    category: 'Video',
-    difficulty: 'Medium',
-    reward: 0.08,
-    rewardCurrency: 'SOL',
-    usdValue: 10.24,
-    slots: 15,
-    filled: 7,
-    timeEstimate: '30 min',
-    verificationRequired: true,
-    rankRequired: 'Silver',
-    color: '#F59E0B',
-    featured: false,
-  },
-  {
-    id: 'job-005',
-    title: 'Community Engagement — Discord Raid',
-    description: 'Join the WURK Discord server, say hi in #introductions, and react to the announcement post with an emoji. Simple and quick.',
-    creator: 'WURK Community',
-    creatorLabel: 'Community',
-    platform: 'Discord',
-    category: 'Social',
-    difficulty: 'Easy',
-    reward: 0.01,
-    rewardCurrency: 'SOL',
-    usdValue: 1.28,
-    slots: 200,
-    filled: 88,
-    timeEstimate: '5 min',
-    verificationRequired: false,
-    rankRequired: 'None',
-    color: '#16a34a',
-    featured: false,
-  },
-  {
-    id: 'job-006',
-    title: 'Data Entry — Product Listing',
-    description: 'Add product listings to the OgaPay marketplace. Each listing requires title, description, price, and category. Expect 10 listings per batch.',
-    creator: 'OgaPay Market',
-    creatorLabel: 'Platform',
-    platform: 'Web App',
-    category: 'Data',
-    difficulty: 'Hard',
-    reward: 0.12,
-    rewardCurrency: 'SOL',
-    usdValue: 15.36,
-    slots: 20,
-    filled: 3,
-    timeEstimate: '45 min',
-    verificationRequired: true,
-    rankRequired: 'Gold',
-    color: '#DC2626',
-    featured: true,
-  },
-  {
-    id: 'job-007',
-    title: 'Logo Design Contest — AI Agent Brand',
-    description: 'Design a logo for an AI agent startup focused on DeFi analytics. Submit your best design. Winner receives the full reward.',
-    creator: 'Agentic Analytics',
-    creatorLabel: 'Startup',
-    platform: 'Figma / PNG',
-    category: 'Design',
-    difficulty: 'Hard',
-    reward: 0.25,
-    rewardCurrency: 'SOL',
-    usdValue: 32.00,
-    slots: 10,
-    filled: 4,
-    timeEstimate: '2 hours',
-    verificationRequired: true,
-    rankRequired: 'Gold',
-    color: '#DC2626',
-    featured: true,
-  },
-  {
-    id: 'job-008',
-    title: 'Twitter Thread — Crypto Education',
-    description: 'Write a 10-tweet thread explaining "What is a Solana Airdrop?" in simple terms. Must include images and hashtags. Original content only.',
-    creator: 'Solana Edu DAO',
-    creatorLabel: 'DAO',
-    platform: 'X / Twitter',
-    category: 'Content',
-    difficulty: 'Medium',
-    reward: 0.035,
-    rewardCurrency: 'SOL',
-    usdValue: 4.48,
-    slots: 25,
-    filled: 11,
-    timeEstimate: '30 min',
-    verificationRequired: true,
-    rankRequired: 'Bronze',
-    color: '#F59E0B',
-    featured: false,
-  },
-  {
-    id: 'job-009',
-    title: 'Market Research — DeFi Survey',
-    description: 'Complete a 5-minute survey about your experience with DeFi platforms. Answers are anonymous. Data used to improve UX across protocols.',
-    creator: 'DeFi Research Lab',
-    creatorLabel: 'Research',
-    platform: 'Google Forms',
-    category: 'Research',
-    difficulty: 'Easy',
-    reward: 0.02,
-    rewardCurrency: 'SOL',
-    usdValue: 2.56,
-    slots: 100,
-    filled: 42,
-    timeEstimate: '10 min',
-    verificationRequired: false,
-    rankRequired: 'None',
-    color: '#16a34a',
-    featured: false,
-  },
-  {
-    id: 'job-010',
-    title: 'Beta Testing — New DeFi Dashboard',
-    description: 'Access the beta dashboard, test all features (swap, pool, stake, bridge), and submit a detailed bug report with screenshots.',
-    creator: 'CrossChain Labs',
-    creatorLabel: 'Protocol',
-    platform: 'Web App',
-    category: 'Testing',
-    difficulty: 'Hard',
-    reward: 0.15,
-    rewardCurrency: 'SOL',
-    usdValue: 19.20,
-    slots: 12,
-    filled: 5,
-    timeEstimate: '1 hour',
-    verificationRequired: true,
-    rankRequired: 'Silver',
-    color: '#DC2626',
-    featured: false,
-  },
-  {
-    id: 'job-011',
-    title: 'Copywriting — Product Descriptions',
-    description: 'Write compelling product descriptions for 5 DeFi tools. Each description should be 2-3 sentences highlighting key features and benefits.',
-    creator: 'DeFi Content Hub',
-    creatorLabel: 'Agency',
-    platform: 'Google Docs',
-    category: 'Content',
-    difficulty: 'Medium',
-    reward: 0.04,
-    rewardCurrency: 'SOL',
-    usdValue: 5.12,
-    slots: 18,
-    filled: 9,
-    timeEstimate: '40 min',
-    verificationRequired: false,
-    rankRequired: 'Bronze',
-    color: '#F59E0B',
-    featured: false,
-  },
-  {
-    id: 'job-012',
-    title: 'Telegram Group — Moderation Shift',
-    description: 'Monitor the OgaPay Telegram group for 1 hour. Remove spam, answer basic questions, and pin important announcements. Follow the moderation guide.',
-    creator: 'OgaPay Community',
-    creatorLabel: 'Community',
-    platform: 'Telegram',
-    category: 'Social',
-    difficulty: 'Easy',
-    reward: 0.02,
-    rewardCurrency: 'SOL',
-    usdValue: 2.56,
-    slots: 60,
-    filled: 15,
-    timeEstimate: '1 hour',
-    verificationRequired: false,
-    rankRequired: 'None',
-    color: '#16a34a',
-    featured: false,
-  },
-]
+  }
+}
+
+async function fetchTasks() {
+  try {
+    const res = await fetch(API_BASE + '/tasks')
+    const json = await res.json()
+    if (json.success && json.data) {
+      return json.data.map(mapApiTask)
+    }
+    return []
+  } catch {
+    return []
+  }
+}
 
 const jobFilters = ['All', 'Trending', 'New', 'Social', 'Content', 'Testing', 'Design', 'Video', 'Data', 'Research']
 
@@ -278,11 +94,44 @@ function JobDetailView({ job, onBack }: { job: any; onBack: () => void }) {
     return () => clearInterval(iv)
   }, [])
 
-  const handleApply = () => {
+  const handleApply = async () => {
     if (!applyLink.trim()) { setApplyMsg('Please provide a submission link'); return }
-    setSubmitted(true)
     setApplyMsg('')
-    setTimeout(() => { setShowApplyModal(false); setSubmitted(false); setApplyLink('') }, 2000)
+    try {
+      const token = localStorage.getItem('ogapay_access_token')
+      if (!token) { setApplyMsg('Please log in first'); return }
+      
+      // First apply to the task
+      const applyRes = await fetch(API_BASE + '/tasks/' + job.id + '/apply', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token,
+        },
+      })
+      const applyJson = await applyRes.json()
+      if (!applyRes.ok) throw new Error(applyJson.message || 'Failed to apply')
+      
+      // Then submit proof with the link
+      const submitRes = await fetch(API_BASE + '/tasks/' + job.id + '/submit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token,
+        },
+        body: JSON.stringify({
+          proof: applyLink.trim(),
+          workerNotes: applyMsg || '',
+        }),
+      })
+      const submitJson = await submitRes.json()
+      if (!submitRes.ok) throw new Error(submitJson.message || 'Failed to submit')
+      
+      setSubmitted(true)
+      setTimeout(() => { setShowApplyModal(false); setSubmitted(false); setApplyLink(''); setApplyMsg('') }, 2000)
+    } catch (err) {
+      setApplyMsg(err.message)
+    }
   }
 
   return (
@@ -509,22 +358,33 @@ function JobDetailView({ job, onBack }: { job: any; onBack: () => void }) {
 export default function Tasks() {
   const navigate = useNavigate()
   const { id } = useParams()
+  const [jobs, setJobs] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState('All')
   const [bookmarked, setBookmarked] = useState<string[]>([])
   const [selectedJob, setSelectedJob] = useState<any>(null)
 
+  // Fetch tasks from API
+  useEffect(() => {
+    setLoading(true)
+    fetchTasks().then(data => {
+      setJobs(data)
+      setLoading(false)
+    })
+  }, [])
+
   // Load single job if id param present
   useEffect(() => {
-    if (id) {
-      const job = sampleJobs.find(j => j.id === id)
+    if (id && jobs.length > 0) {
+      const job = jobs.find(j => j.id === id)
       setSelectedJob(job || null)
-    } else {
+    } else if (!id) {
       setSelectedJob(null)
     }
-  }, [id])
+  }, [id, jobs])
 
-  const filtered = sampleJobs.filter(job => {
+  const filtered = jobs.filter(job => {
     const matchSearch = search === '' || job.title.toLowerCase().includes(search.toLowerCase()) || job.description.toLowerCase().includes(search.toLowerCase())
     const matchFilter = filter === 'All' || filter === 'Trending' || filter === 'New' || job.category === filter
     return matchSearch && matchFilter
@@ -534,9 +394,9 @@ export default function Tasks() {
     setBookmarked(prev => prev.includes(id) ? prev.filter(b => b !== id) : [...prev, id])
   }
 
-  const totalRewards = sampleJobs.reduce((sum, j) => sum + j.usdValue, 0)
-  const totalSlots = sampleJobs.reduce((sum, j) => sum + j.slots, 0)
-  const totalFilled = sampleJobs.reduce((sum, j) => sum + j.filled, 0)
+  const totalRewards = jobs.reduce((sum, j) => sum + (j.reward || 0), 0)
+  const totalSlots = jobs.reduce((sum, j) => sum + j.slots, 0)
+  const totalFilled = jobs.reduce((sum, j) => sum + j.filled, 0)
 
   const [showDetail, setShowDetail] = useState(false)
   

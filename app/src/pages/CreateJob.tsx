@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import Layout from '../components/Layout'
 
+const API_BASE = 'https://ogapay-production.up.railway.app/api/v1'
+
 // ─── Types ───
 type TabType = 'socials' | 'custom' | 'templates'
 type WinnerMode = 'challenge' | 'selection' | 'creator_picks' | 'random'
@@ -508,20 +510,94 @@ export default function CreateJob() {
     }
   }
 
-  const handleCreateSocialTask = () => {
-    setShowSuccess(true)
+  const handleCreateSocialTask = async () => {
+    const token = localStorage.getItem('ogapay_access_token')
+    if (!token) { setSubmitError('Please log in first'); return }
+    setSubmitting(true)
+    setSubmitError('')
+    try {
+      // Build description from selected platforms/actions
+      const platformNames = Object.keys(socialConfig).filter(k => socialConfig[k]?.actionId)
+      const actionsDesc = platformNames.map(p => {
+        const action = ACTIONS.find(a => a.id === socialConfig[p]?.actionId)
+        return action ? action.label + ': ' + socialConfig[p].amount : p
+      }).join(', ')
+      const desc = 'Social media engagement task. Actions: ' + actionsDesc + '. Complete all actions as instructed.'
+      
+      // Calculate total cost and per-worker reward
+      const totalWorkers = maxEntries || 100
+      const perWorkerReward = currency === 'NGN' ? Math.max(50, Math.floor(ngnBudget / totalWorkers)) : Math.max(0.01, budget / totalWorkers)
+      
+      const body: any = {
+        title: 'Social Media Engagement — ' + platformNames.join(', '),
+        description: desc,
+        category: 'SOCIAL_MEDIA',
+        reward: perWorkerReward,
+        currency: currency === 'NGN' ? 'NGN' : 'USDC',
+        maxWorkers: totalWorkers,
+        proofRequired: screenshotProof ? 'Screenshot proof required' : '',
+        instructions: 'Follow the instructions for each platform action listed. Submit proof of completion.',
+        estimatedTime: 15,
+      }
+      
+      const res = await fetch(API_BASE + '/tasks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify(body),
+      })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.message || 'Failed to create task')
+      setShowSuccess(true)
+    } catch (err: any) {
+      setSubmitError(err.message)
+    }
+    setSubmitting(false)
   }
 
   const handleCreateCustomTask = async () => {
     if (!title.trim()) { setSubmitError('Please enter a task title'); return }
     if (!description.trim()) { setSubmitError('Please enter a task description'); return }
+    const token = localStorage.getItem('ogapay_access_token')
+    if (!token) { setSubmitError('Please log in first'); return }
     if (currency === 'NGN' && ngnBudget < 500) { setSubmitError('Minimum budget is NGN 500'); return }
     if (currency !== 'NGN' && budget < 0.01) { setSubmitError('Minimum budget is 0.01'); return }
     setSubmitting(true)
     setSubmitError('')
-    await new Promise(r => setTimeout(r, 1000))
+    try {
+      const totalWorkers = maxEntries || 1
+      const perWorkerReward = currency === 'NGN' ? Math.max(50, Math.floor(ngnBudget / totalWorkers)) : Math.max(0.01, budget / totalWorkers)
+      
+      // Map category to API enum
+      const catMap: Record<string, string> = {
+        'social': 'SOCIAL_MEDIA', 'creative': 'CONTENT_WRITING', 'research': 'SURVEY', 'tech': 'APP_TESTING', 'other': 'OTHER',
+      }
+      const apiCategory = catMap[category] || 'OTHER'
+      
+      const body: any = {
+        title: title.trim(),
+        description: description.trim(),
+        category: apiCategory,
+        reward: perWorkerReward,
+        currency: currency === 'NGN' ? 'NGN' : 'USDC',
+        maxWorkers: totalWorkers,
+        proofRequired: screenshotProof ? 'Screenshot or link proof required' : '',
+        instructions: '',
+        estimatedTime: 30,
+      }
+      if (tags.trim()) body.tags = tags.split(',').map(t => t.trim()).filter(Boolean)
+      
+      const res = await fetch(API_BASE + '/tasks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify(body),
+      })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.message || 'Failed to create task')
+      setShowSuccess(true)
+    } catch (err: any) {
+      setSubmitError(err.message)
+    }
     setSubmitting(false)
-    setShowSuccess(true)
   }
 
   const applyTemplate = (preset: typeof TEMPLATE_PRESETS[0]) => {
