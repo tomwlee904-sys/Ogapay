@@ -24,6 +24,7 @@ import Campaigns from './pages/Campaigns'
 import Support from './pages/Support'
 import CreateJob from './pages/CreateJob'
 import Blog from './pages/Blog'
+import BlogEditor from './pages/BlogEditor'
 import NotFound from './pages/NotFound'
 import EditProfile from './pages/EditProfile'
 
@@ -60,6 +61,8 @@ export default function App() {
           <Route path="/login" element={<OgaPayAuth />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/blog" element={<Blog />} />
+          <Route path="/blog/write" element={<BlogEditor />} />
+          <Route path="/blog/edit/:id" element={<BlogEditor />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </AuthProvider>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from 'react-router-dom'
 import Layout from "../components/Layout";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
@@ -198,6 +198,94 @@ function WorkerPortalContent() {
       </div>
     </div>
   );
+}
+
+/* ─── My Blog Posts Section ─── */
+function BlogPostsSection() {
+  const navigate = useNavigate();
+  const [posts, setPosts] = useState<any[]>([]);
+  
+  useEffect(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem('ogapay_user_posts') || '[]')
+      setPosts(stored.reverse())
+    } catch { setPosts([]) }
+  }, [])
+
+  const deletePost = (id: number) => {
+    try {
+      const stored = JSON.parse(localStorage.getItem('ogapay_user_posts') || '[]')
+      const updated = stored.filter((p: any) => p.id !== id)
+      localStorage.setItem('ogapay_user_posts', JSON.stringify(updated))
+      setPosts(updated.reverse())
+    } catch {}
+  }
+
+  const badgeColors: Record<string, string> = {
+    News: '#185FA5', Businesses: '#3B6D11', Freelancers: '#534AB7', 'Case Studies': '#993556',
+  }
+
+  const published = posts.filter(p => p.status === 'published')
+  const drafts = posts.filter(p => p.status === 'draft')
+
+  return (
+    <div className="card card-sm prof-full">
+      <div className="card-head">
+        <span><Icon n="file-text" s={16} /> My Blog Posts</span>
+        <button className="btn-primary btn-sm" onClick={() => navigate('/blog/write')}>
+          <i className="ti ti-plus" style={{fontSize:13}} /> Write Article
+        </button>
+      </div>
+      <div className="card-body">
+        {posts.length === 0 ? (
+          <div style={{textAlign:'center',padding:'32px 20px',color:'var(--text3)'}}>
+            <Icon n="file-text" s={36} c="var(--text3)" />
+            <div style={{fontSize:13,marginTop:10}}>No articles yet. Write your first one!</div>
+          </div>
+        ) : (
+          <div>
+            {drafts.length > 0 && (
+              <div style={{marginBottom:16}}>
+                <div style={{fontSize:11,fontWeight:700,color:'var(--text3)',textTransform:'uppercase',letterSpacing:'.06em',marginBottom:8}}>Drafts ({drafts.length})</div>
+                {drafts.map(p => (
+                  <div key={p.id} style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'10px 0',borderBottom:'1px dashed var(--border)',fontSize:13}}>
+                    <div style={{display:'flex',alignItems:'center',gap:10,flex:1,minWidth:0}}>
+                      <div style={{width:4,height:4,borderRadius:'50%',background:'var(--text3)',flexShrink:0}} />
+                      <span style={{fontWeight:600,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{p.title || 'Untitled'}</span>
+                      <span style={{fontSize:11,color:'var(--text3)',fontWeight:600}}>{p.category}</span>
+                    </div>
+                    <div style={{display:'flex',gap:6}}>
+                      <button className="btn-outline btn-sm" onClick={() => navigate(`/blog/edit/${p.id}`)}>Edit</button>
+                      <button className="btn-sm" style={{height:34,padding:'0 12px',borderRadius:99,border:'1.5px solid #fca5a5',background:'transparent',color:'#dc2626',fontSize:11,fontWeight:700,cursor:'pointer'}} onClick={() => deletePost(p.id)}>Delete</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            {published.length > 0 && (
+              <div>
+                <div style={{fontSize:11,fontWeight:700,color:'var(--text3)',textTransform:'uppercase',letterSpacing:'.06em',marginBottom:8}}>Published ({published.length})</div>
+                {published.map(p => (
+                  <div key={p.id} style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'10px 0',borderBottom:'1px dashed var(--border)',fontSize:13}}>
+                    <div style={{display:'flex',alignItems:'center',gap:10,flex:1,minWidth:0}}>
+                      <div style={{width:18,height:18,borderRadius:4,background:p.coverColor || '#534AB7',flexShrink:0}} />
+                      <span style={{fontWeight:600,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{p.title}</span>
+                      <span style={{fontSize:11,padding:'2px 8px',borderRadius:99,background:'#EEEDFE',color:'#534AB7',fontWeight:600}}>{p.category}</span>
+                      <span style={{fontSize:11,color:'var(--text3)'}}>{p.date}</span>
+                    </div>
+                    <div style={{display:'flex',gap:6}}>
+                      <button className="btn-outline btn-sm" onClick={() => navigate(`/blog/edit/${p.id}`)}>Edit</button>
+                      <button className="btn-sm" style={{height:34,padding:'0 12px',borderRadius:99,border:'1.5px solid #fca5a5',background:'transparent',color:'#dc2626',fontSize:11,fontWeight:700,cursor:'pointer'}} onClick={() => deletePost(p.id)}>Delete</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  )
 }
 
 export default function Profile() {
@@ -547,6 +635,9 @@ export default function Profile() {
               <tbody><tr><td colSpan={5} className="empty-td">No swaps yet</td></tr></tbody></table>
             </div>
           </div>
+
+          {/* ─── FULL WIDTH: My Blog Posts ─── */}
+          <BlogPostsSection />
         </div>
       )}
 
