@@ -226,6 +226,7 @@ export default function Blog() {
   const [email, setEmail] = useState('')
   const [subscribed, setSubscribed] = useState(false)
   const [search, setSearch] = useState('')
+  const [allPosts, setAllPosts] = useState<any[]>([])
   const filteredPosts = posts.filter(p =>
     (activeCategory === 'All' || p.category === activeCategory) &&
     (search === '' || p.title.toLowerCase().includes(search.toLowerCase()))
