@@ -99,14 +99,17 @@ export default function LoginPage() {
     setLoading("signup");
     setSignupMsg("");
     try {
-      await apiRequest("/auth/signup", {
+      const result = await apiRequest("/auth/signup", {
         method: "POST",
         auth: false,
         body: JSON.stringify({ firstName, lastName, email: signupEmail.trim(), password: signupPassword, username: signupEmail.split("@")[0] }),
       });
-      // Don't log in yet — show verify screen
-      setVerifyEmail(signupEmail.trim());
-      show("verify");
+      // ✅ FIX: Log in the user immediately after signup so they're authenticated
+      login(result);
+      // Set a flag to show "Welcome" message (5-minute window)
+      localStorage.setItem("ogapay_is_new_user", "true");
+      // Redirect to dashboard instead of verify screen
+      window.location.href = "/dashboard";
     } catch (err) {
       setSignupMsg(err.message);
     } finally {
@@ -311,13 +314,13 @@ export default function LoginPage() {
           <span>Oga<span>Pay</span></span>
         </a>
         <nav className="nav-links" aria-label="Primary navigation">
-          <a className="nav-link" href="/"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 10v10h14V10"/></svg>Home</a>
-          <a className="nav-link" href="/tasks"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Tasks</a>
-          <a className="nav-link" href="/store"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18M16 10a4 4 0 0 1-8 0"/></svg>Deals</a>
-          <a className="nav-link" href="/communities"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg>Communities</a>
+          <a className="nav-link" href="/"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 10.5 12 3 9 7.5"/><path d="M5 10v10h14V10"/></svg>Home</a>
+          <a className="nav-link" href="/tasks"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" r[...]
+          <a className="nav-link" href="/store"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18M16 10a4 4[...]
+          <a className="nav-link" href="/communities"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>[...]
         </nav>
         <div className="nav-actions">
-          <a className="wallet-btn" href="/login"><svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2.3" viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="m10 17 5-5-5-5"/><path d="M15 12H3"/></svg>Login</a>
+          <a className="wallet-btn" href="/login"><svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2.3" viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2[...]
           <a className="wallet-btn" href="/login?mode=signup">Get Started</a>
           <button className="icon-btn" onClick={() => setTheme(t => t === "dark" ? "light" : "dark")} aria-label="Toggle dark mode">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z"/></svg>
@@ -358,11 +361,11 @@ export default function LoginPage() {
                   Instant payouts in Naira and USDC
                 </div>
                 <div className="feature">
-                  <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                  <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.[...]
                   Join verified communities
                 </div>
                 <div className="feature">
-                  <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><line x1="9" y1="10" x2="15" y2="10"/><line x1="12" y1="7" x2="12" y2="13"/></svg>
+                  <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><line x1="9" y1="10" x2="15" y2="10"/><line x1="12" y1="7" x2="12" y2="13"/></s[...]
                   Promote products and grow faster
                 </div>
               </div>
@@ -374,7 +377,7 @@ export default function LoginPage() {
           </div>
           <div className="stats-card">
             <div className="chart">
-              <svg viewBox="0 0 36 36" fill="none"><path d="M4 28 L10 20 L16 24 L24 10 L32 14" stroke="#4D5DFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/><circle cx="24" cy="10" r="3" fill="#4D5DFF"/></svg>
+              <svg viewBox="0 0 36 36" fill="none"><path d="M4 28 L10 20 L16 24 L24 10 L32 14" stroke="#4D5DFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/><circle cx="24" cy=[...]
             </div>
             <div>
               <strong>24,390+</strong>
@@ -408,9 +411,9 @@ export default function LoginPage() {
                     <strong>Connect Wallet</strong>
                   </button>
                 </div>
-                <a href="#" onClick={(e) => { e.preventDefault(); show("forgot"); }} style={{display:'block',textAlign:'center',margin:'8px 0 4px',color:'#4D5DFF',fontSize:'14px',fontWeight:'600',textDecoration:'none'}}>Forgot password?</a>
+                <a href="#" onClick={(e) => { e.preventDefault(); show("forgot"); }} style={{display:'block',textAlign:'center',margin:'8px 0 4px',color:'#4D5DFF',fontSize:'14px',fontWeight:'600'[...]
                 <div className="divider">OR</div>
-                <p style={{textAlign:'center',margin:0,fontSize:'14px',color:'#66738a'}}>New to OgaPay? <a href="#" onClick={(e) => { e.preventDefault(); show("signup"); }} style={{color:'#4D5DFF',fontWeight:'600',textDecoration:'none'}}>Create an account</a></p>
+                <p style={{textAlign:'center',margin:0,fontSize:'14px',color:'#66738a'}}>New to OgaPay? <a href="#" onClick={(e) => { e.preventDefault(); show("signup"); }} style={{color:'#4D5DFF[...]
               </>
             )}
  
@@ -418,11 +421,11 @@ export default function LoginPage() {
               <form onSubmit={handleLogin}>
                 <h2>Welcome Back</h2>
                 <p className="sub">Sign in to continue earning with OgaPay</p>
-                <input type="email" value={loginEmail} onChange={e => setLoginEmail(e.target.value)} placeholder="Email address" style={{width:'100%',height:'56px',padding:'0 16px',border:'1.5px solid #e3e9f2',borderRadius:'14px',fontSize:'15px',fontFamily:'inherit',outline:'none',marginBottom:'12px',boxSizing:'border-box'}} />
-                <input type="password" value={loginPassword} onChange={e => setLoginPassword(e.target.value)} placeholder="Password" style={{width:'100%',height:'56px',padding:'0 16px',border:'1.5px solid #e3e9f2',borderRadius:'14px',fontSize:'15px',fontFamily:'inherit',outline:'none',marginBottom:'12px',boxSizing:'border-box'}} />
-                <button type="submit" disabled={loading === "login"} style={{width:'100%',height:'56px',border:'none',borderRadius:'14px',background:'#4D5DFF',color:'#fff',fontSize:'16px',fontWeight:'700',fontFamily:'inherit',cursor:'pointer'}}>{loading === "login" ? "Signing in..." : "Sign In"}</button>
+                <input type="email" value={loginEmail} onChange={e => setLoginEmail(e.target.value)} placeholder="Email address" style={{width:'100%',height:'56px',padding:'0 16px',border:'1.5px [...]
+                <input type="password" value={loginPassword} onChange={e => setLoginPassword(e.target.value)} placeholder="Password" style={{width:'100%',height:'56px',padding:'0 16px',border:'1.[...]
+                <button type="submit" disabled={loading === "login"} style={{width:'100%',height:'56px',border:'none',borderRadius:'14px',background:'#4D5DFF',color:'#fff',fontSize:'16px',fontWei[...]
                 {loginMsg && <p style={{fontSize:'13px',color:'#dc2626',margin:'10px 0 0',textAlign:'center'}}>{loginMsg}</p>}
-                <p style={{textAlign:'center',margin:'14px 0 0'}}><a href="#" onClick={(e) => { e.preventDefault(); show("default"); }} style={{color:'#4D5DFF',fontSize:'13px',fontWeight:'600',textDecoration:'none'}}>&larr; Back</a></p>
+                <p style={{textAlign:'center',margin:'14px 0 0'}}><a href="#" onClick={(e) => { e.preventDefault(); show("default"); }} style={{color:'#4D5DFF',fontSize:'13px',fontWeight:'600',te[...]
               </form>
             )}
  
@@ -430,12 +433,12 @@ export default function LoginPage() {
               <form onSubmit={handleSignup}>
                 <h2>Create account</h2>
                 <p className="sub">Join OgaPay to start earning or promoting.</p>
-                <input type="text" value={signupName} onChange={e => setSignupName(e.target.value)} placeholder="Full name" style={{width:'100%',height:'56px',padding:'0 16px',border:'1.5px solid #e3e9f2',borderRadius:'14px',fontSize:'15px',fontFamily:'inherit',outline:'none',marginBottom:'12px',boxSizing:'border-box'}} />
-                <input type="email" value={signupEmail} onChange={e => setSignupEmail(e.target.value)} placeholder="Email address" style={{width:'100%',height:'56px',padding:'0 16px',border:'1.5px solid #e3e9f2',borderRadius:'14px',fontSize:'15px',fontFamily:'inherit',outline:'none',marginBottom:'12px',boxSizing:'border-box'}} />
-                <input type="password" value={signupPassword} onChange={e => setSignupPassword(e.target.value)} placeholder="Password (min 8 characters)" style={{width:'100%',height:'56px',padding:'0 16px',border:'1.5px solid #e3e9f2',borderRadius:'14px',fontSize:'15px',fontFamily:'inherit',outline:'none',marginBottom:'12px',boxSizing:'border-box'}} />
-                <button type="submit" disabled={loading === "signup"} style={{width:'100%',height:'56px',border:'none',borderRadius:'14px',background:'#4D5DFF',color:'#fff',fontSize:'16px',fontWeight:'700',fontFamily:'inherit',cursor:'pointer'}}>{loading === "signup" ? "Creating account..." : "Create Account"}</button>
+                <input type="text" value={signupName} onChange={e => setSignupName(e.target.value)} placeholder="Full name" style={{width:'100%',height:'56px',padding:'0 16px',border:'1.5px solid[...]
+                <input type="email" value={signupEmail} onChange={e => setSignupEmail(e.target.value)} placeholder="Email address" style={{width:'100%',height:'56px',padding:'0 16px',border:'1.5p[...]
+                <input type="password" value={signupPassword} onChange={e => setSignupPassword(e.target.value)} placeholder="Password (min 8 characters)" style={{width:'100%',height:'56px',paddin[...]
+                <button type="submit" disabled={loading === "signup"} style={{width:'100%',height:'56px',border:'none',borderRadius:'14px',background:'#4D5DFF',color:'#fff',fontSize:'16px',fontWe[...]
                 {signupMsg && <p style={{fontSize:'13px',color:'#dc2626',margin:'10px 0 0',textAlign:'center'}}>{signupMsg}</p>}
-                <p style={{textAlign:'center',margin:'14px 0 0'}}><a href="#" onClick={(e) => { e.preventDefault(); show("default"); }} style={{color:'#4D5DFF',fontSize:'13px',fontWeight:'600',textDecoration:'none'}}>Already have an account? Sign in</a></p>
+                <p style={{textAlign:'center',margin:'14px 0 0'}}><a href="#" onClick={(e) => { e.preventDefault(); show("default"); }} style={{color:'#4D5DFF',fontSize:'13px',fontWeight:'600',te[...]
               </form>
             )}
  
@@ -444,11 +447,11 @@ export default function LoginPage() {
                 <h2>Connect Wallet</h2>
                 <p className="sub">Connect your wallet to sign in.</p>
                 <div style={{padding:'24px 0',textAlign:'center',border:'1.5px dashed #e3e9f2',borderRadius:'14px',marginBottom:'16px'}}>
-                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#4D5DFF" strokeWidth="1.5"><rect x="1" y="4" width="22" height="16" rx="3"/><path d="M18 12h.01M4 12h4"/></svg>
-                  <p style={{color:'#66738a',fontSize:'14px',margin:'12px 0 0'}}>Connect your wallet SDK or Web3 provider to this action.</p>
+                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#4D5DFF" strokeWidth="1.5"><rect x="1" y="4" width="22" height="16" rx="3"/><path d="M18 12h.01M4 12h4"/></sv[...]
+                   <p style={{color:'#66738a',fontSize:'14px',margin:'12px 0 0'}}>Connect your wallet SDK or Web3 provider to this action.</p>
                 </div>
-                <button style={{width:'100%',height:'56px',border:'none',borderRadius:'14px',background:'#4D5DFF',color:'#fff',fontSize:'16px',fontWeight:'700',cursor:'pointer'}}>Connect Wallet</button>
-                <p style={{textAlign:'center',margin:'14px 0 0'}}><a href="#" onClick={(e) => { e.preventDefault(); show("default"); }} style={{color:'#4D5DFF',fontSize:'13px',fontWeight:'600',textDecoration:'none'}}>Back to login</a></p>
+                <button style={{width:'100%',height:'56px',border:'none',borderRadius:'14px',background:'#4D5DFF',color:'#fff',fontSize:'16px',fontWeight:'700',cursor:'pointer'}}>Connect Wallet</[...]
+                <p style={{textAlign:'center',margin:'14px 0 0'}}><a href="#" onClick={(e) => { e.preventDefault(); show("default"); }} style={{color:'#4D5DFF',fontSize:'13px',fontWeight:'600',te[...]
               </div>
             )}
  
@@ -456,66 +459,11 @@ export default function LoginPage() {
               <form onSubmit={handleReset}>
                 <h2>Reset Password</h2>
                 <p className="sub">Enter your email address and we'll send you a link to reset your password.</p>
-                <input type="email" value={resetEmail} onChange={e => setResetEmail(e.target.value)} placeholder="Enter your email" style={{width:'100%',height:'56px',padding:'0 16px',border:'1.5px solid #e3e9f2',borderRadius:'14px',fontSize:'15px',fontFamily:'inherit',outline:'none',marginBottom:'12px',boxSizing:'border-box'}} />
-                <button type="submit" disabled={loading === "reset"} style={{width:'100%',height:'56px',border:'none',borderRadius:'14px',background:'#4D5DFF',color:'#fff',fontSize:'16px',fontWeight:'700',fontFamily:'inherit',cursor:'pointer'}}>{loading === "reset" ? "Sending..." : "Send Reset Link"}</button>
+                <input type="email" value={resetEmail} onChange={e => setResetEmail(e.target.value)} placeholder="Enter your email" style={{width:'100%',height:'56px',padding:'0 16px',border:'1.5[...]
+                <button type="submit" disabled={loading === "reset"} style={{width:'100%',height:'56px',border:'none',borderRadius:'14px',background:'#4D5DFF',color:'#fff',fontSize:'16px',fontWei[...]
                 {resetMsg && <p style={{fontSize:'13px',color: resetMsg.includes("receive") ? '#16a34a' : '#66738a',margin:'12px 0 0',textAlign:'center'}}>{resetMsg}</p>}
-                <p style={{textAlign:'center',margin:'12px 0 0'}}><a href="#" onClick={(e) => { e.preventDefault(); show("default"); }} style={{color:'#4D5DFF',fontSize:'13px',fontWeight:'600',textDecoration:'none'}}>Back to login</a></p>
+                <p style={{textAlign:'center',margin:'12px 0 0'}}><a href="#" onClick={(e) => { e.preventDefault(); show("default"); }} style={{color:'#4D5DFF',fontSize:'13px',fontWeight:'600',te[...]
               </form>
-            )}
- 
-            {view === "verify" && (
-              <div style={{ textAlign: "center" }}>
-                <div style={{
-                  width: 72, height: 72, borderRadius: "50%",
-                  background: "#eef0ff", display: "grid",
-                  placeItems: "center", margin: "0 auto 24px",
-                }}>
-                  <svg width="34" height="34" viewBox="0 0 24 24" fill="none"
-                    stroke="#4D5DFF" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="2" y="4" width="20" height="16" rx="3"/>
-                    <path d="M22 7l-10 6L2 7"/>
-                  </svg>
-                </div>
-                <h2 style={{ marginBottom: 8 }}>Check your inbox</h2>
-                <p className="sub" style={{ marginBottom: 12 }}>
-                  We sent a verification link to
-                </p>
-                <p style={{
-                  fontWeight: 700, color: "#0F172A", fontSize: 15,
-                  background: "#f4f6ff", border: "1.5px solid #e3e9f2",
-                  borderRadius: 10, padding: "10px 16px", marginBottom: 20,
-                  wordBreak: "break-all",
-                }}>
-                  {verifyEmail}
-                </p>
-                <p style={{ fontSize: 13, color: "#94a3b8", lineHeight: 1.7, margin: "0 0 28px" }}>
-                  Click the link in that email to activate your account.<br />
-                  Can't find it? Check your <strong>spam or junk</strong> folder.
-                </p>
-                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                  <button
-                    onClick={() => { show("signup"); setSignupMsg(""); }}
-                    style={{
-                      background: "none", border: "1.5px solid #e3e9f2",
-                      borderRadius: 12, padding: "12px 20px",
-                      color: "#4D5DFF", fontWeight: 600, fontSize: 14,
-                      cursor: "pointer", fontFamily: "inherit", width: "100%",
-                    }}
-                  >
-                    ← Use a different email
-                  </button>
-                  <button
-                    onClick={() => show("email")}
-                    style={{
-                      background: "none", border: "none",
-                      color: "#94a3b8", fontWeight: 600, fontSize: 13,
-                      cursor: "pointer", fontFamily: "inherit", padding: "8px",
-                    }}
-                  >
-                    Already verified? Sign in
-                  </button>
-                </div>
-              </div>
             )}
  
             <div className="security">
