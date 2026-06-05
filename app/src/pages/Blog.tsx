@@ -204,7 +204,7 @@ export default function Blog() {
         `}</style>
 
         {/* Nav — minimal like Fiverr blog */}
-        <nav style={{ borderBottom: '1px solid #e5e5e5', padding: '0.875rem 2rem', display: 'flex', alignItems: 'center', gap: 16, background: 'var(--card)', position: 'sticky', top: 0, zIndex: 100 }}>
+        <nav style={{ borderBottom: '1px solid #e5e5e5', padding: '0.875rem 2.5rem', display: 'flex', alignItems: 'center', gap: 20, background: 'var(--card)', position: 'sticky', top: 0, zIndex: 100 }}>
           <button onClick={() => setShowArticles(false)} style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
             <span style={{ fontSize: 18, fontWeight: 700, color: '#1a1a1a' }}>blog.</span>
           </button>
@@ -239,7 +239,7 @@ export default function Blog() {
         <Drawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
 
         {/* HERO — full width, #121566 background, centered text */}
-        <div style={{ background: '#121566', padding: '5rem 2rem', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
+        <div style={{ background: '#121566', padding: '4rem 2.5rem', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
           {/* Subtle background circles */}
           <div style={{ position: 'absolute', top: -80, right: -80, width: 320, height: 320, borderRadius: '50%', background: 'rgba(255,255,255,0.04)' }} />
           <div style={{ position: 'absolute', bottom: -60, left: -60, width: 240, height: 240, borderRadius: '50%', background: 'rgba(255,255,255,0.03)' }} />
@@ -258,18 +258,18 @@ export default function Blog() {
         {/* 4 CATEGORY TILES — stacked full width like Fiverr */}
         <div style={{ display: 'flex', flexDirection: 'column' }}>
           {/* Tile 1: Join The Community */}
-          <div style={{ height: 220, position: 'relative' }}>
+          <div style={{ height: 280, position: 'relative' }}>
             <JoinCommunityTile onClick={() => { setActiveCategory('All'); setShowArticles(true) }} />
           </div>
 
           {/* Tiles 2+3: side by side */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', height: 220 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', height: 280 }}>
             <StartSellingTile onClick={() => { setActiveCategory('Freelancers'); setShowArticles(true) }} />
             <GrowBusinessTile onClick={() => { setActiveCategory('Businesses'); setShowArticles(true) }} />
           </div>
 
           {/* Tile 4: Get Inspired */}
-          <div style={{ height: 240, position: 'relative' }}>
+          <div style={{ height: 300, position: 'relative' }}>
             <GetInspiredTile onClick={() => { setActiveCategory('Freelancers'); setShowArticles(true) }} />
           </div>
         </div>
@@ -285,7 +285,7 @@ export default function Blog() {
     <div data-theme={theme} style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: 'var(--bg)', color: 'var(--text)' }}>
       <div style={{ flex: 1 }}>
         <nav style={{ background: 'var(--card)', borderBottom: '0.5px solid var(--border)', position: 'sticky', top: 0, zIndex: 100 }}>
-        <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0.875rem 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+        <div style={{ maxWidth: 1400, margin: '0 auto', padding: '0.875rem 2rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
           <button onClick={() => setShowArticles(false)} style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', cursor: 'pointer' }}>
             <span style={{ fontSize: 16, fontWeight: 700, color: '#1a1a1a' }}>blog.</span>
           </button>
@@ -306,7 +306,7 @@ export default function Blog() {
         </div>
       </nav>
 
-      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '2rem 1.5rem' }}>
+      <div style={{ maxWidth: 1400, margin: '0 auto', padding: '2rem 2rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
           <span style={{ fontSize: 16, fontWeight: 500, color: '#1a1a1a' }}>
             {activeCategory === 'All' ? 'All articles' : activeCategory}
@@ -315,15 +315,15 @@ export default function Blog() {
           <button onClick={() => setShowArticles(false)} style={{ fontSize: 13, color: '#121566', background: 'none', border: 'none', cursor: 'pointer' }}>← Back to home</button>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.25rem', marginBottom: '2.5rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.5rem', marginBottom: '1.5rem' }}>
           {(filteredArticles || []).map((post: any) => {
             const badge = badgeColors[post.category] || { bg: '#EEEDFE', color: '#534AB7' }
             return (
               <div key={post.id} style={{ background: 'var(--card)', border: '0.5px solid var(--border)', borderRadius: 16, overflow: 'hidden', cursor: 'pointer' }}>
-                <div style={{ height: 160, background: post.color, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ height: 200, background: post.color, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="1.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" /></svg>
                 </div>
-                <div style={{ padding: '1rem' }}>
+                <div style={{ padding: '1.25rem' }}>
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 500, background: badge.bg, color: badge.color, padding: '3px 10px', borderRadius: 20, marginBottom: 8 }}>
                     {post.category}
                     {post.isUserPost && <span style={{ fontSize: 9, background: badge.color, color: badge.bg, borderRadius: 99, padding: '1px 5px' }}>Member</span>}
