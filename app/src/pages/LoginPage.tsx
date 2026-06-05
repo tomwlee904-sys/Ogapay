@@ -1,8 +1,8 @@
 // @ts-nocheck
 import { useState, useEffect } from "react";
 import womanSvg from "../assets/woman.svg";
- 
-const API_BASE = "https://ogapay-production.up.railway.app/api/v1";
+import { API_BASE, apiRequest } from "../lib/api";
+import { useAuth } from "../context/AuthContext";
  
 function LogoMark({ inverse = false }) {
   const fill = inverse ? "#030341" : "white";
@@ -34,6 +34,7 @@ function GoogleIcon() {
 }
  
 export default function LoginPage() {
+  const { login } = useAuth();
   const [theme, setTheme] = useState(() => {
     try { return localStorage.getItem("ogapay-theme") || "light"; } catch { return "light"; }
   });
@@ -60,15 +61,6 @@ export default function LoginPage() {
     if (params.get("mode") === "signup") setView("signup");
   }, []);
  
-  const persistAuth = (payload) => {
-    const tokens = payload.tokens || payload;
-    const access = tokens.accessToken || tokens.access_token;
-    if (access) localStorage.setItem("ogapay_access_token", access);
-    if (tokens.refreshToken) localStorage.setItem("ogapay_refresh_token", tokens.refreshToken);
-    localStorage.setItem("ogapay-authenticated", "true");
-    if (payload.user) localStorage.setItem("ogapay_user", JSON.stringify(payload.user));
-  };
- 
   const handleLogin = async (e) => {
     e.preventDefault();
     if (!loginEmail.trim() || !loginPassword) {
@@ -78,13 +70,12 @@ export default function LoginPage() {
     setLoading("login");
     setLoginMsg("");
     try {
-      const res = await fetch(`${API_BASE}/auth/login`, {
-        method: "POST", headers: { "Content-Type": "application/json" },
+      const result = await apiRequest("/auth/login", {
+        method: "POST",
+        auth: false,
         body: JSON.stringify({ email: loginEmail.trim(), password: loginPassword }),
       });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.message || "Login failed");
-      persistAuth(json.data || json);
+      login(result);
       window.location.href = "/dashboard";
     } catch (err) {
       setLoginMsg(err.message);
@@ -108,15 +99,16 @@ export default function LoginPage() {
     setLoading("signup");
     setSignupMsg("");
     try {
-      const res = await fetch(`${API_BASE}/auth/signup`, {
-        method: "POST", headers: { "Content-Type": "application/json" },
+      const result = await apiRequest("/auth/signup", {
+        method: "POST",
+        auth: false,
         body: JSON.stringify({ firstName, lastName, email: signupEmail.trim(), password: signupPassword, username: signupEmail.split("@")[0] }),
       });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.message || "Signup failed");
+      login(result);
+      window.location.href = "/dashboard";
       // Don't log in yet — wait for email verification
-      setVerifyEmail(signupEmail.trim());
-      show("verify");
+      setVerifyEmail("");
+      return;
     } catch (err) {
       setSignupMsg(err.message);
     } finally {
