@@ -7,7 +7,7 @@ import {
   getStoredUser,
   persistAuthSession,
 } from '../lib/api'
-
+ 
 interface AuthContextType {
   isAuthed: boolean
   user: AuthUser | null
@@ -16,7 +16,7 @@ interface AuthContextType {
   logout: () => Promise<void>
   refreshUser: () => Promise<AuthUser | null>
 }
-
+ 
 const AuthContext = createContext<AuthContextType>({
   isAuthed: false,
   user: null,
@@ -25,16 +25,16 @@ const AuthContext = createContext<AuthContextType>({
   logout: async () => {},
   refreshUser: async () => null,
 })
-
+ 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(() => getStoredUser())
   const [loading, setLoading] = useState(true)
   const isAuthed = Boolean(user)
-
+ 
   useEffect(() => {
     document.body.setAttribute('data-auth', isAuthed ? 'authed' : 'public')
   }, [isAuthed])
-
+ 
   const refreshUser = async () => {
     try {
       const nextUser = await apiRequest<AuthUser>('/auth/me')
@@ -47,7 +47,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return null
     }
   }
-
+ 
   useEffect(() => {
     let mounted = true
     const boot = async () => {
@@ -58,18 +58,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
         return
       }
-      await refreshUser()
-      if (mounted) setLoading(false)
+      try {
+        // 5s timeout so a hanging API never blocks the app forever
+        await Promise.race([
+          refreshUser(),
+          new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('auth timeout')), 5000)
+          ),
+        ])
+      } catch {
+        clearAuthSession()
+        if (mounted) setUser(null)
+      } finally {
+        if (mounted) setLoading(false)
+      }
     }
     boot()
     return () => { mounted = false }
   }, [])
-
+ 
   const login = (payload: { user?: AuthUser; tokens?: { accessToken?: string; refreshToken?: string } }) => {
     persistAuthSession(payload)
     if (payload.user) setUser(payload.user)
   }
-
+ 
   const logout = async () => {
     const refreshToken = getRefreshToken()
     try {
@@ -79,18 +91,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           body: JSON.stringify({ refreshToken }),
         })
       }
-    } catch {
-      // Local logout should still succeed if the API session is already gone.
-    }
+    } catch {}
     clearAuthSession()
     setUser(null)
   }
-
+ 
   return (
     <AuthContext.Provider value={{ isAuthed, user, loading, login, logout, refreshUser }}>
       {children}
     </AuthContext.Provider>
   )
 }
-
+ 
 export const useAuth = () => useContext(AuthContext)
