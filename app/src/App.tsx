@@ -27,7 +27,8 @@ import Blog from './pages/Blog'
 import BlogEditor from './pages/BlogEditor'
 import NotFound from './pages/NotFound'
 import EditProfile from './pages/EditProfile'
-
+import AuthCallback from './pages/AuthCallback'
+ 
 export default function App() {
   return (
     <ThemeProvider>
@@ -59,6 +60,7 @@ export default function App() {
           <Route path="/createsocial" element={<CreateJob />} />
           <Route path="/edit-profile" element={<EditProfile />} />
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/auth/callback" element={<AuthCallback />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/blog" element={<Blog />} />
           <Route path="/blog/write" element={<BlogEditor />} />
