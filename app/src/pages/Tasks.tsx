@@ -1,6 +1,5 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
 
 // ─── Sample Job Data ───
@@ -255,6 +254,8 @@ const formatAddress = (name: string) => {
 }
 
 export default function Tasks() {
+  const navigate = useNavigate()
+  const { id } = useParams()
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState('All')
   const [bookmarked, setBookmarked] = useState<string[]>([])
