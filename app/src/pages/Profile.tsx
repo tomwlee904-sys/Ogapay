@@ -2,32 +2,18 @@ import { useState } from "react";
 import Layout from "../components/Layout";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
-const I = ({ n, s = 16, c = "currentColor" }) => (
-  <i className={`ti ti-${n}`} style={{ fontSize: s, color: c, lineHeight: 1, flexShrink: 0 }} />
+/* ─── Icons ─── */
+const Icon = ({ n, s = 16, c }) => (
+  <i className={`ti ti-${n}`} style={{ fontSize: s, color: c || "var(--text2)", lineHeight: 1, flexShrink: 0 }} />
 );
 
-const Logo = ({ size = 28 }) => (
-  <div style={{ width: size, height: size, borderRadius: 7, overflow: "hidden", flexShrink: 0 }}>
-    <svg width={size} height={size} viewBox="0 0 512 512" fill="none">
-      <rect width="512" height="512" fill="white"/>
-      <rect x="98" y="98" width="107" height="107" rx="20" fill="black"/>
-      <path d="M225 98H312C323 98 332 107 332 118V205H225V98Z" fill="black"/>
-      <path d="M352 98H392C440 98 470 128 470 176V205H352V98Z" fill="black"/>
-      <rect x="98" y="225" width="107" height="107" fill="black"/>
-      <rect x="225" y="225" width="107" height="107" fill="black"/>
-      <path d="M352 225H470V254C470 302 440 332 392 332H352V225Z" fill="black"/>
-      <rect x="98" y="352" width="107" height="107" rx="20" fill="black"/>
-      <path d="M225 352H312C323 352 332 361 332 372V439C332 450 323 459 312 459H225V352Z" fill="black"/>
-    </svg>
-  </div>
-);
-
-const XIcon = ({ size = 14, color = "currentColor" }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill={color}>
+const XIcon = ({ size = 14 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="var(--text)">
     <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.739l7.727-8.833L1.255 2.25H8.08l4.253 5.622 5.911-5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
   </svg>
 );
 
+/* ─── Data ─── */
 const CHART_7 = ["Thu","Fri","Sat","Sun","Mon","Tue","Wed"].map(d => ({ day: d, val: 0 }));
 const CHART_30 = Array.from({ length: 30 }, (_, i) => ({ day: `D${i+1}`, val: 0 }));
 const DONUT_CATS = [
@@ -45,17 +31,14 @@ const QUICK = [
   { icon: "circle-plus", label: "Create Job", page: "create" },
 ];
 
+/* ─── Helpers ─── */
+const f = new Intl.NumberFormat("en-US");
+const refLink = "https://ogapay.vercel.app/ref/F48NUF...jemX";
+
 function Toggle({ on, set }) {
   return (
-    <button onClick={() => set(v => !v)} style={{
-      width: 44, height: 24, borderRadius: 99, border: "none", cursor: "pointer",
-      background: on ? "#111" : "#e5e7eb", position: "relative", flexShrink: 0, transition: "background .2s"
-    }}>
-      <span style={{
-        position: "absolute", top: 3, left: on ? 23 : 3, width: 18, height: 18,
-        borderRadius: "50%", background: "#fff", transition: "left .2s",
-        boxShadow: "0 1px 3px rgba(0,0,0,.25)"
-      }} />
+    <button onClick={() => set(v => !v)} className="tg-btn">
+      <span className={`tg-knob ${on ? "on" : ""}`} />
     </button>
   );
 }
@@ -64,708 +47,524 @@ function CopyBtn({ text }) {
   const [ok, setOk] = useState(false);
   const copy = () => { navigator.clipboard?.writeText(text); setOk(true); setTimeout(() => setOk(false), 1800); };
   return (
-    <button onClick={copy} style={{ height: 34, padding: "0 14px", borderRadius: 99, border: "1.5px solid #e5e7eb", background: "#fff", fontSize: 12, fontWeight: 700, display: "flex", alignItems: "center", gap: 6, cursor: "pointer", color: ok ? "#16a34a" : "#111" }}>
-      <I n={ok ? "check" : "copy"} s={13} c={ok ? "#16a34a" : "#6b7280"} /> {ok ? "Copied!" : "Copy"}
+    <button onClick={copy} className="btn-outline btn-sm">
+      <Icon n={ok ? "check" : "copy"} s={13} c={ok ? "var(--green)" : "var(--text2)"} />
+      {ok ? "Copied!" : "Copy"}
     </button>
   );
 }
 
-function SubPage({ title, icon, onBack, children }) {
+function StatRow({ label, val, info, valClass }) {
   return (
-    <div style={{ fontFamily: "'DM Sans',sans-serif", minHeight: "100vh", background: "#f9fafb" }}>
-      <header style={{ height: 56, background: "#fff", borderBottom: "1px solid #e5e7eb", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 24px", position: "sticky", top: 0, zIndex: 100 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, fontFamily: "Outfit,sans-serif", fontSize: 17, fontWeight: 800 }}>
-          <Logo size={28} /> OgaPay
-        </div>
-        <button onClick={onBack} style={{ height: 36, padding: "0 16px", border: "1.5px solid #e5e7eb", borderRadius: 99, background: "#fff", fontWeight: 700, fontSize: 13, display: "flex", alignItems: "center", gap: 7, cursor: "pointer" }}>
-          <I n="arrow-left" s={14} /> Back to Profile
-        </button>
-      </header>
-      <div style={{ maxWidth: 900, margin: "0 auto", padding: "24px 20px 60px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
-          <I n={icon} s={22} /> <h1 style={{ fontFamily: "Outfit,sans-serif", fontSize: 22, fontWeight: 900 }}>{title}</h1>
-        </div>
-        {children}
-      </div>
-    </div>
-  );
-}
-
-function Card({ children, style = {} }) {
-  return <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 14, overflow: "hidden", ...style }}>{children}</div>;
-}
-function CardHead({ left, right }) {
-  return (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 20px 13px", borderBottom: "1px solid #f3f4f6" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 9, fontSize: 15, fontWeight: 800 }}>{left}</div>
-      {right && <div>{right}</div>}
-    </div>
-  );
-}
-function CardBody({ children, style = {} }) {
-  return <div style={{ padding: "16px 20px", ...style }}>{children}</div>;
-}
-function Row({ label, val, valClass, info, right }) {
-  return (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "9px 0", borderBottom: "1px dashed #f3f4f6", fontSize: 13 }}>
-      <span style={{ color: "#6b7280", fontWeight: 600, display: "flex", alignItems: "center", gap: 6 }}>
-        {label}{info && <I n="info-circle" s={13} c="#d1d5db" />}
+    <div className="stat-row">
+      <span className="stat-label">{label}{info && <Icon n="info-circle" s={13} c="var(--text3)" />}</span>
+      <span className={`stat-val ${valClass === "no" ? "text-red" : valClass === "yes" ? "text-green" : ""}`}>
+        {val}
       </span>
-      {right || <span style={{ fontWeight: 800, color: valClass === "no" ? "#ef4444" : valClass === "yes" ? "#16a34a" : "#111" }}>{val}</span>}
     </div>
   );
 }
 
-function JobsPage({ onBack }) {
+/* ─── Sub Pages (tabs) ─── */
+function MyJobsTab() {
+  const [form, setForm] = useState({ type: "active", search: "" });
+  const s = k => e => setForm(f => ({ ...f, [k]: e.target.value }));
   const jobs = [
-    { title: "Follow @OgaPay on X", reward: "₦150", total: 100, filled: 100, tags: "Twitter · Follow", desc: "Follow our official X account and stay followed for 7 days." },
-    { title: "Repost our product launch tweet", reward: "₦200", total: 50, filled: 48, tags: "Twitter · Repost", desc: "Repost our pinned tweet. Must have 50+ followers." },
-    { title: "Join OgaPay Telegram group", reward: "₦120", total: 200, filled: 140, tags: "Telegram · Join", desc: "Join our Telegram community and stay for 7 days." },
-    { title: "Design a logo for OgaPay Store", reward: "₦15,000", total: 1, filled: 0, tags: "Design · Challenge", desc: "Submit a minimalist logo. Best submission wins the bounty." },
+    { title: "Social Media Engagement — Retweet & Like", tags: "X/Twitter · Social · Easy", desc: "Retweet the pinned post on X and like it.", reward: "0.025 SOL", filled: 42, total: 150 },
+    { title: "App Testing — UI/UX Feedback", tags: "Mobile · Testing · Medium", desc: "Test the new beta version of the OgaPay mobile app.", reward: "0.05 SOL", filled: 12, total: 30 },
+    { title: "Content Review — Proofread Blog Post", tags: "Google Docs · Content · Easy", desc: "Review a 500-word blog post about DeFi trends.", reward: "0.015 SOL", filled: 18, total: 40 },
   ];
   return (
-    <SubPage title="Available Jobs" icon="briefcase" onBack={onBack}>
-      <div style={{ display: "grid", gap: 12 }}>
-        {jobs.map((j, i) => {
-          const pct = Math.round((j.filled / j.total) * 100);
+    <div className="sub-page">
+      <div className="page-head-sm"><Icon n="briefcase" s={20} /><h2>My Jobs</h2></div>
+      <div className="form-row-group" style={{ display:"flex", gap:10, marginBottom:18 }}>
+        {["active","pending","completed"].map(t => (
+          <button key={t} onClick={() => setForm(f => ({...f,type:t}))} className={`pill-btn ${form.type===t?"active":""}`}>{t}</button>
+        ))}
+      </div>
+      <div className="search-wrap" style={{ marginBottom:20 }}>
+        <input value={form.search} onChange={s("search")} placeholder="Search jobs..." />
+      </div>
+      <div style={{ display:"grid", gap:12 }}>
+        {jobs.map((j,i) => {
+          const pct = Math.round((j.filled/j.total)*100);
           return (
-            <Card key={i} style={{ padding: "18px 20px" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, marginBottom: 10 }}>
+            <div className="card card-sm" key={i}>
+              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", gap:12, marginBottom:10 }}>
                 <div>
-                  <div style={{ fontWeight: 800, fontSize: 15, marginBottom: 3 }}>{j.title}</div>
-                  <div style={{ fontSize: 11, color: "#6b7280", fontWeight: 700 }}>{j.tags}</div>
-                  <div style={{ fontSize: 12, color: "#6b7280", marginTop: 6 }}>{j.desc}</div>
+                  <div style={{ fontWeight:700, fontSize:14, marginBottom:2 }}>{j.title}</div>
+                  <div style={{ fontSize:11, color:"var(--text2)", fontWeight:600 }}>{j.tags}</div>
+                  <div style={{ fontSize:12, color:"var(--text2)", marginTop:6 }}>{j.desc}</div>
                 </div>
-                <div style={{ textAlign: "right", flexShrink: 0 }}>
-                  <div style={{ fontFamily: "Outfit,sans-serif", fontSize: 20, fontWeight: 900, color: "#16a34a" }}>{j.reward}</div>
-                  <div style={{ fontSize: 11, color: "#9ca3af" }}>{j.filled}/{j.total} slots</div>
+                <div style={{ textAlign:"right", flexShrink:0 }}>
+                  <div className="text-green" style={{ fontFamily:"Outfit,sans-serif", fontSize:18, fontWeight:800 }}>{j.reward}</div>
+                  <div style={{ fontSize:11, color:"var(--text3)" }}>{j.filled}/{j.total} slots</div>
                 </div>
               </div>
-              <div style={{ height: 6, background: "#f3f4f6", borderRadius: 99, overflow: "hidden", marginBottom: 12 }}>
-                <div style={{ width: `${pct}%`, height: "100%", background: pct === 100 ? "#16a34a" : "#111", borderRadius: 99 }} />
-              </div>
-              <button style={{ height: 36, padding: "0 20px", borderRadius: 99, background: pct === 100 ? "#f3f4f6" : "#111", color: pct === 100 ? "#9ca3af" : "#fff", border: "none", fontWeight: 700, fontSize: 13, cursor: pct === 100 ? "not-allowed" : "pointer" }} disabled={pct === 100}>
-                {pct === 100 ? "Full" : "Apply Now"}
+              <div className="bar-wrap"><div className="bar-fill" style={{ width:`${pct}%`, background:pct===100?"var(--green)":"var(--primary)" }} /></div>
+              <button className="btn-primary btn-sm" disabled={pct===100} style={{ opacity:pct===100?.5:1, cursor:pct===100?"not-allowed":"pointer" }}>
+                {pct===100?"Filled":"Apply Now"}
               </button>
-            </Card>
+            </div>
           );
         })}
       </div>
-    </SubPage>
+    </div>
   );
 }
 
-function VaultPage({ onBack }) {
+function VaultTab() {
   return (
-    <SubPage title="Vault" icon="safe" onBack={onBack}>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 20 }}>
-        {[{ label: "Next Distribution", val: "11h 42m" }, { label: "Your Holdings", val: "50 $OGA" }, { label: "Est. Earnings", val: "₦0.00" }, { label: "Total Distributed", val: "₦0.00" }].map(s => (
-          <Card key={s.label} style={{ padding: "20px" }}>
-            <div style={{ fontSize: 11, color: "#6b7280", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".06em", marginBottom: 6 }}>{s.label}</div>
-            <div style={{ fontFamily: "Outfit,sans-serif", fontSize: 24, fontWeight: 900 }}>{s.val}</div>
-          </Card>
+    <div className="sub-page">
+      <div className="page-head-sm"><Icon n="safe" s={20} /><h2>Vault</h2></div>
+      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16, marginBottom:20 }}>
+        {["Total Deposited","Current Balance","Total Withdrawn","Rewards Earned"].map(l => (
+          <div className="card card-sm" key={l} style={{ padding:20 }}>
+            <div className="stat-label-xs">{l}</div>
+            <div className="stat-val-lg">$0.00</div>
+          </div>
         ))}
       </div>
-      <Card>
-        <CardHead left={<><I n="clock" s={16} /> Distribution History</>} />
-        <div style={{ padding: "0 20px" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead><tr>{["AMOUNT","DATE","TX"].map(h => <th key={h} style={{ fontSize: 11, fontWeight: 800, color: "#6b7280", textTransform: "uppercase", letterSpacing: ".06em", padding: "12px 0", textAlign: "left", borderBottom: "1px solid #e5e7eb" }}>{h}</th>)}</tr></thead>
-            <tbody><tr><td colSpan={3} style={{ textAlign: "center", color: "#9ca3af", fontSize: 13, padding: "28px 0" }}>No distributions yet. Hold $OGA to participate.</td></tr></tbody>
-          </table>
-        </div>
-      </Card>
-    </SubPage>
+      <div className="card card-sm"><div style={{ padding:"0 20px" }}>
+        <table className="tb"><thead><tr>{["AMOUNT","DATE","TX"].map(h => <th key={h}>{h}</th>)}</tr></thead>
+        <tbody><tr><td colSpan={3} className="empty-td">No distributions yet. Hold $OGA to participate.</td></tr></tbody></table>
+      </div></div>
+    </div>
   );
 }
 
-function CreatePage({ onBack }) {
-  const [form, setForm] = useState({ title: "", desc: "", reward: "", slots: "", type: "social" });
-  const s = k => e => setForm(f => ({ ...f, [k]: e.target.value }));
-  const inpStyle = { width: "100%", height: 44, padding: "0 14px", border: "1.5px solid #e5e7eb", borderRadius: 9, fontFamily: "inherit", fontSize: 14, outline: "none", background: "#fafafa" };
+function ReferralsTab() {
   return (
-    <SubPage title="Create Job" icon="circle-plus" onBack={onBack}>
-      <Card>
-        <CardHead left={<><I n="circle-plus" s={16} /> New Job</>} />
-        <CardBody>
-          <div style={{ display: "grid", gap: 16 }}>
-            <div>
-              <div style={{ fontSize: 11, fontWeight: 800, color: "#6b7280", textTransform: "uppercase", letterSpacing: ".06em", marginBottom: 6 }}>Job Type</div>
-              <div style={{ display: "flex", gap: 8 }}>
-                {["social", "custom", "challenge"].map(t => (
-                  <button key={t} onClick={() => setForm(f => ({ ...f, type: t }))} style={{ height: 36, padding: "0 16px", borderRadius: 99, border: "1.5px solid", borderColor: form.type === t ? "#111" : "#e5e7eb", background: form.type === t ? "#111" : "#fff", color: form.type === t ? "#fff" : "#6b7280", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>
-                    {t.charAt(0).toUpperCase() + t.slice(1)}
-                  </button>
-                ))}
-              </div>
-            </div>
-            {[
-              { label: "Job Title", key: "title", ph: "e.g. Follow our X account" },
-              { label: "Description", key: "desc", ph: "Explain what workers need to do...", area: true },
-              { label: "Reward per Worker (₦)", key: "reward", ph: "e.g. 150", type: "number" },
-              { label: "Number of Slots", key: "slots", ph: "e.g. 100", type: "number" },
-            ].map(f => (
-              <div key={f.key}>
-                <div style={{ fontSize: 11, fontWeight: 800, color: "#6b7280", textTransform: "uppercase", letterSpacing: ".06em", marginBottom: 6 }}>{f.label}</div>
-                {f.area
-                  ? <textarea value={form[f.key]} onChange={s(f.key)} placeholder={f.ph} rows={4} style={{ ...inpStyle, height: "auto", padding: "10px 14px", resize: "vertical" }} />
-                  : <input value={form[f.key]} onChange={s(f.key)} placeholder={f.ph} type={f.type || "text"} style={inpStyle} />
-                }
-              </div>
-            ))}
-            {form.reward && form.slots && (
-              <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: 9, padding: "12px 16px", fontSize: 13 }}>
-                <strong>Total budget:</strong> ₦{(parseFloat(form.reward || 0) * parseInt(form.slots || 0)).toLocaleString()}
-              </div>
-            )}
-            <button style={{ height: 46, borderRadius: 10, background: "#111", color: "#fff", border: "none", fontFamily: "inherit", fontSize: 15, fontWeight: 800, cursor: "pointer" }}>
-              Post Job
-            </button>
+    <div className="sub-page">
+      <div className="page-head-sm"><Icon n="users" s={20} /><h2>Referrals</h2></div>
+      <div className="card card-sm" style={{ marginBottom:20 }}>
+        <div style={{ padding:"16px 20px", borderBottom:"1px solid var(--border)" }}>
+          <div style={{ fontSize:13, fontWeight:700, marginBottom:8 }}>Your Referral Link</div>
+          <div className="ref-box">
+            <span className="ref-url">{refLink}</span>
+            <CopyBtn text={refLink} />
+            <button className="btn-primary btn-sm"><XIcon size={12} /> Post on X</button>
           </div>
-        </CardBody>
-      </Card>
-    </SubPage>
+        </div>
+        <table className="tb"><thead><tr><th>USER</th><th>JOINED</th><th>EARNINGS</th><th>STATUS</th></tr></thead>
+        <tbody><tr><td colSpan={4} className="empty-td">No referrals yet. Share your link to start earning!</td></tr></tbody></table>
+      </div>
+    </div>
   );
 }
 
-function BlogsPage({ onBack }) {
-  const [showForm, setShowForm] = useState(false);
-  return (
-    <SubPage title="Blogs" icon="file-text" onBack={onBack}>
-      {showForm
-        ? <Card><CardBody>
-            <div style={{ display: "grid", gap: 14 }}>
-              {[{ label: "Title", ph: "Your blog post title" }, { label: "Content", ph: "Write your post...", area: true }].map(f => (
-                <div key={f.label}>
-                  <div style={{ fontSize: 11, fontWeight: 800, color: "#6b7280", textTransform: "uppercase", letterSpacing: ".06em", marginBottom: 6 }}>{f.label}</div>
-                  {f.area ? <textarea placeholder={f.ph} rows={8} style={{ width: "100%", padding: "10px 14px", border: "1.5px solid #e5e7eb", borderRadius: 9, fontFamily: "inherit", fontSize: 14, resize: "vertical", outline: "none" }} /> : <input placeholder={f.ph} style={{ width: "100%", height: 44, padding: "0 14px", border: "1.5px solid #e5e7eb", borderRadius: 9, fontFamily: "inherit", fontSize: 14, outline: "none" }} />}
-                </div>
-              ))}
-              <div style={{ display: "flex", gap: 10 }}>
-                <button style={{ height: 44, padding: "0 28px", borderRadius: 10, background: "#111", color: "#fff", border: "none", fontFamily: "inherit", fontWeight: 800, fontSize: 14, cursor: "pointer" }}>Publish</button>
-                <button onClick={() => setShowForm(false)} style={{ height: 44, padding: "0 20px", borderRadius: 10, border: "1.5px solid #e5e7eb", background: "#fff", fontFamily: "inherit", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>Cancel</button>
-              </div>
-            </div>
-          </CardBody></Card>
-        : <Card style={{ padding: "48px 20px", textAlign: "center" }}>
-            <I n="file-text" s={44} c="#d1d5db" />
-            <div style={{ marginTop: 14, fontSize: 14, color: "#6b7280" }}>No blog posts yet.</div>
-            <div style={{ fontSize: 13, color: "#9ca3af", marginTop: 4 }}>Share your experience with the OgaPay community.</div>
-            <button onClick={() => setShowForm(true)} style={{ marginTop: 20, height: 40, padding: "0 24px", borderRadius: 99, background: "#111", color: "#fff", border: "none", fontFamily: "inherit", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>
-              Write a Post
-            </button>
-          </Card>
-      }
-    </SubPage>
-  );
-}
-
-function BookmarksPage({ onBack }) {
-  return (
-    <SubPage title="Bookmarks" icon="bookmark" onBack={onBack}>
-      <Card style={{ padding: "48px 20px", textAlign: "center" }}>
-        <I n="bookmark" s={44} c="#d1d5db" />
-        <div style={{ marginTop: 14, fontSize: 14, color: "#6b7280" }}>No bookmarked jobs yet.</div>
-        <div style={{ fontSize: 13, color: "#9ca3af", marginTop: 4 }}>Bookmark jobs to save them for later.</div>
-      </Card>
-    </SubPage>
-  );
-}
-
-export default function OgaPayProfile({ user: propUser }) {
-  const user = propUser || { firstName: "Tom", lastName: "Okonkwo", email: "tom@ogapay.com" };
-  const name = `${user.firstName} ${user.lastName || ""}`.trim();
-  const handle = `@${user.firstName.toLowerCase()}_${(user.lastName || "user").toLowerCase().slice(0, 4)}1`;
-  const initials = `${user.firstName[0]}${user.lastName ? user.lastName[0] : ""}`.toUpperCase();
-
+/* ─── Main Component ─── */
+export default function Profile() {
   const [tab, setTab] = useState("profile");
-  const [page, setPage] = useState("profile");
-  const [autoSwap, setAutoSwap] = useState(false);
-  const [period, setPeriod] = useState("7");
   const [showBal, setShowBal] = useState(false);
-  const refLink = "https://ogapay.ng/?ref=AMR6CGX";
-  const chartData = period === "7" ? CHART_7 : CHART_30;
+  const [swBal, setSwBal] = useState(false);
+  const [earnPeriod, setEarnPeriod] = useState("7d");
+  const [subPage, setSubPage] = useState(null);
 
-  const nav = (p) => setPage(p);
+  const data = earnPeriod === "7d" ? CHART_7 : CHART_30;
+  const totalEarned = data.reduce((a, b) => a + b.val, 0);
 
-  if (page !== "profile") {
-    const pages = { jobs: JobsPage, vault: VaultPage, create: CreatePage, blogs: BlogsPage, bookmarks: BookmarksPage };
-    const Comp = pages[page] || JobsPage;
-    return (
-      <Layout>
-        <Comp onBack={() => setPage("profile")} />
-      </Layout>
-    );
-  }
-
-  const TABS = [
-    { key: "profile", icon: "user", label: "Profile" },
-    { key: "earnings", icon: "currency-dollar", label: "Earnings" },
-    { key: "jobs", icon: "briefcase", label: "My Jobs" },
-    { key: "referrals", icon: "users", label: "Referrals" },
-    { key: "alerts", icon: "bell", label: "Alerts", dot: true },
-    { key: "portal", icon: "layout-dashboard", label: "Worker Portal" },
+  const tabs = [
+    { id: "profile", label: "Profile", icon: "user" },
+    { id: "earnings", label: "Earnings", icon: "currency-dollar" },
+    { id: "jobs", label: "My Jobs", icon: "briefcase" },
+    { id: "referrals", label: "Referrals", icon: "users" },
+    { id: "alerts", label: "Alerts", icon: "bell" },
+    { id: "portal", label: "Worker Portal", icon: "layout-dashboard" },
   ];
 
-  const inpStyle = { width: "100%", height: 44, padding: "0 14px", border: "1.5px solid #e5e7eb", borderRadius: 9, fontFamily: "inherit", fontSize: 13, outline: "none", background: "#fafafa" };
+  if (subPage === "jobs") return <Layout><div className="pg">{subPage === "jobs" && <MyJobsTab />}</div></Layout>;
+  if (subPage === "vault") return <Layout><div className="pg">{subPage === "vault" && <VaultTab />}</div></Layout>;
+  if (subPage === "referrals") return <Layout><div className="pg">{subPage === "referrals" && <ReferralsTab />}</div></Layout>;
+  if (subPage === "blogs") return <Layout><div className="pg"><div className="page-head-sm"><Icon n="file-text" s={20} /><h2>Blogs</h2></div><div className="card card-sm" style={{textAlign:"center", padding:"48px 20px"}}><Icon n="file-text" s={40} c="var(--text3)" /><div style={{fontSize:13,color:"var(--text3)",marginTop:12}}>No blogs yet.</div></div></div></Layout>;
+  if (subPage === "bookmarks") return <Layout><div className="pg"><div className="page-head-sm"><Icon n="bookmark" s={20} /><h2>Bookmarks</h2></div><div className="card card-sm" style={{textAlign:"center", padding:"48px 20px"}}><Icon n="bookmark-off" s={40} c="var(--text3)" /><div style={{fontSize:13,color:"var(--text3)",marginTop:12}}>No bookmarks yet.</div></div></div></Layout>;
+  if (subPage === "create") return <Layout><div className="pg"><div className="page-head-sm"><Icon n="circle-plus" s={20} /><h2>Create Job</h2></div><div className="card card-sm" style={{textAlign:"center", padding:"48px 20px"}}><Icon n="tool" s={40} c="var(--text3)" /><div style={{fontSize:13,color:"var(--text3)",marginTop:12}}>Job creation form coming soon.</div></div></div></Layout>;
 
   return (
     <Layout>
-    <div style={{ fontFamily: "'DM Sans',sans-serif", background: "#f9fafb", minHeight: "100vh", color: "#111", fontSize: 14 }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Outfit:wght@600;700;800;900&display=swap');
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: "DM Sans", sans-serif; }
-        a, button { font: inherit; }
-        .tnav-a:hover { color: #111 !important; background: #f3f4f6 !important; }
-        .qbtn:hover { border-color: #9ca3af !important; background: #f9fafb !important; }
-        .actbtn:hover { background: #222 !important; }
-        .outbtn:hover { border-color: #9ca3af !important; }
-        table { border-collapse: collapse; width: 100%; }
-        thead th { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; color: #6b7280; padding: 12px 16px; border-bottom: 1px solid #e5e7eb; text-align: left; }
-        tbody td { padding: 13px 16px; font-size: 13px; color: #374151; border-bottom: 1px solid #f3f4f6; }
-        tbody tr:last-child td { border-bottom: none; }
-        .empty-td { text-align: center; color: #9ca3af; padding: 28px 16px !important; }
-        @keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
-        .fade { animation: fadeUp .22s ease both; }
-        @media(max-width:760px) {
-          .two-col { grid-template-columns: 1fr !important; }
-          .topbar-nav { display: none !important; }
-          .quick-grid { grid-template-columns: repeat(3,1fr) !important; }
-          .portal-grid { grid-template-columns: repeat(2,1fr) !important; }
-        }
-        @media(max-width:480px) {
-          .quick-grid { grid-template-columns: repeat(2,1fr) !important; }
-        }
+        .pg{max-width:1060px;margin:0 auto;padding:0 20px 60px}
+        .tab-bar{display:flex;gap:0;border-bottom:1px solid var(--border);margin:0 0 24px;overflow-x:auto}
+        .tab-btn{height:44px;padding:0 16px;border:none;border-bottom:2px solid transparent;background:none;color:var(--text2);font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:7px;transition:color .13s,border-color .13s}
+        .tab-btn:hover{color:var(--text)}
+        .tab-btn.active{color:var(--text);border-bottom-color:var(--accent)}
+
+        .prof-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px}
+        @media(max-width:820px){.prof-grid{grid-template-columns:1fr}}
+        .prof-full{grid-column:1/-1}
+
+        .card{border:1px solid var(--border);border-radius:14px;overflow:hidden;box-shadow:none}
+        .card-sm{background:var(--card)}
+        .card-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border);font-size:14px;font-weight:800}
+        .card-body{padding:16px 18px}
+
+        .stat-row{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px dashed var(--border);font-size:13px}
+        .stat-row:last-child{border-bottom:none}
+        .stat-label{color:var(--text2);font-weight:600;display:flex;align-items:center;gap:5px}
+        .stat-val{font-weight:800;color:var(--text)}
+
+        .addr-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px dashed var(--border);font-size:13px}
+        .addr-val{font-family:monospace;font-size:12px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:4px 10px;color:var(--text2)}
+        .action-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}
+        .action-grid .full{grid-column:1/-1}
+
+        .btn-primary{height:36px;padding:0 16px;border-radius:99px;border:none;background:var(--primary);color:var(--bg);font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:opacity .15s}
+        .btn-primary:hover{opacity:.85}
+        .btn-sm{height:34px;padding:0 14px;font-size:12px}
+        .btn-outline{height:34px;padding:0 14px;border-radius:99px;border:1.5px solid var(--border);background:transparent;color:var(--text);font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:border-color .13s,color .13s}
+        .btn-outline:hover{border-color:var(--text)}
+
+        .quick-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-top:4px}
+        @media(max-width:700px){.quick-grid{grid-template-columns:repeat(3,1fr)}}
+        @media(max-width:480px){.quick-grid{grid-template-columns:repeat(2,1fr)}}
+        .quick-item{display:flex;flex-direction:column;align-items:center;gap:7px;padding:14px 8px;border:1.5px solid var(--border);border-radius:12px;background:var(--card);cursor:pointer;font-size:11px;font-weight:700;color:var(--text2);transition:border-color .13s,color .13s}
+        .quick-item:hover{border-color:var(--text);color:var(--text)}
+
+        .earn-top{display:grid;grid-template-columns:1fr 1fr;gap:20px;padding:16px 18px;border-bottom:1px solid var(--border)}
+        @media(max-width:600px){.earn-top{grid-template-columns:1fr}}
+
+        .period-group{display:flex;gap:8px}
+        .period-btn{height:28px;padding:0 12px;border-radius:99px;border:1.5px solid var(--border);font-size:11px;font-weight:700;background:transparent;color:var(--text2);cursor:pointer}
+        .period-btn.active{background:var(--primary);color:var(--bg);border-color:var(--primary)}
+
+        .tb{width:100%;border-collapse:collapse}
+        .tb th{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--text2);padding:10px 14px;text-align:left;border-bottom:1px solid var(--border)}
+        .tb td{padding:11px 14px;font-size:13px;color:var(--text2);border-bottom:1px solid var(--border)}
+        .empty-td{text-align:center;color:var(--text3);padding:28px 14px}
+
+        .ref-box{background:var(--bg2);border:1px solid var(--border);border-radius:9px;padding:10px 14px;display:flex;align-items:center;gap:10px}
+        .ref-url{font-family:monospace;font-size:12px;color:var(--text2);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+        .bar-wrap{height:5px;background:var(--bg2);border-radius:99px;overflow:hidden;margin-bottom:10px}
+        .bar-fill{height:100%;border-radius:99px}
+
+        .page-head-sm{display:flex;align-items:center;gap:8px;margin-bottom:20px}
+        .page-head-sm h2{font-size:20px;font-weight:800;margin:0}
+
+        .text-green{color:var(--green,#16a34a)}
+        .text-red{color:#ef4444}
+        .text-muted{color:var(--text2)}
+        .sub-page{max-width:900px;margin:0 auto;padding:20px 0 40px}
+
+        .tg-btn{width:44px;height:24px;border-radius:99px;border:none;cursor:pointer;background:var(--border2);position:relative;flex-shrink:0;transition:background .2s}
+        .tg-knob{position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:var(--card);transition:left .2s;box-shadow:0 1px 2px rgba(0,0,0,.2)}
+        .tg-knob.on{left:23px}
+
+        .pill-btn{height:34px;padding:0 14px;border-radius:99px;border:1.5px solid var(--border);background:transparent;color:var(--text2);font-size:12px;font-weight:700;cursor:pointer;text-transform:capitalize;transition:all .13s}
+        .pill-btn.active{background:var(--primary);color:var(--bg);border-color:var(--primary)}
+        .pill-btn:hover:not(.active){border-color:var(--text)}
+
+        .search-wrap input{width:100%;height:38px;padding:0 14px;border:1.5px solid var(--border);border-radius:9px;background:var(--card);color:var(--text);font-size:13px;outline:none}
+        .search-wrap input::placeholder{color:var(--text3)}
+
+        .donut{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+        .donut-item{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:var(--text2)}
+        .donut-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
       `}</style>
 
-      {/* ── TOPBAR ── */}
-      <header style={{ height: 56, background: "#fff", borderBottom: "1px solid #e5e7eb", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 24px", position: "sticky", top: 0, zIndex: 100 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, fontFamily: "Outfit,sans-serif", fontSize: 18, fontWeight: 800 }}>
-          <Logo size={28} /> OgaPay
-        </div>
-        <nav className="topbar-nav" style={{ display: "flex", alignItems: "center", gap: 4 }}>
-          {[
-            { icon: "layout-grid", label: "All Jobs", p: "jobs" },
-            { icon: "building-store", label: "Store" },
-            { icon: "safe", label: "Vault", p: "vault" },
-            { icon: "help-circle", label: "FAQ" },
-          ].map(l => (
-            <a key={l.label} className="tnav-a" onClick={() => l.p && nav(l.p)} style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 10px", borderRadius: 7, fontSize: 13, fontWeight: 600, color: "#6b7280", cursor: "pointer", transition: "color .13s,background .13s" }}>
-              <I n={l.icon} s={14} /> {l.label}
-            </a>
-          ))}
-        </nav>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{ border: "1.5px solid #e5e7eb", borderRadius: 99, padding: "5px 14px", fontSize: 13, fontWeight: 700, display: "flex", alignItems: "center", gap: 6 }}>
-            BALANCE: <span style={{ color: "#16a34a", fontWeight: 800 }}>₦0.00</span>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 7, border: "1.5px solid #e5e7eb", borderRadius: 99, padding: "4px 12px 4px 4px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
-            <div style={{ width: 28, height: 28, borderRadius: "50%", background: "#111", display: "grid", placeItems: "center", color: "#fff", fontSize: 11, fontWeight: 800 }}>{initials}</div>
-            F48N...jemX
-          </div>
-          <button style={{ width: 34, height: 34, border: "1.5px solid #e5e7eb", borderRadius: 7, background: "#fff", display: "grid", placeItems: "center", cursor: "pointer" }}>
-            <I n="moon" s={15} c="#6b7280" />
-          </button>
-        </div>
-      </header>
-
-      {/* ── TAB NAV ── */}
-      <div style={{ background: "#fff", borderBottom: "1px solid #e5e7eb", display: "flex", alignItems: "center", padding: "0 24px", overflowX: "auto" }}>
-        {TABS.map(t => (
-          <button key={t.key} onClick={() => setTab(t.key)} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 5, padding: "13px 18px", fontSize: 13, fontWeight: 700, color: tab === t.key ? "#111" : "#6b7280", cursor: "pointer", border: "none", borderBottom: `2px solid ${tab === t.key ? "#111" : "transparent"}`, background: "none", transition: "color .13s,border-color .13s", whiteSpace: "nowrap" }}>
-            <div style={{ position: "relative" }}>
-              <I n={t.icon} s={20} />
-              {t.dot && <span style={{ position: "absolute", top: -2, right: -6, width: 7, height: 7, borderRadius: "50%", background: "#ef4444", border: "1.5px solid #fff" }} />}
-            </div>
-            {t.label}
+      {/* ─────── Tab Bar ─────── */}
+      <div className="pg">
+      <div className="tab-bar">
+        {tabs.map(t => (
+          <button key={t.id} className={`tab-btn ${tab===t.id?"active":""}`} onClick={() => setTab(t.id)}>
+            <Icon n={t.icon} s={15} c={tab===t.id?"var(--text)":"var(--text2)"} /> {t.label}
+            {t.id==="alerts" && <span style={{width:7,height:7,borderRadius:"50%",background:"var(--accent)",display:"inline-block"}} />}
           </button>
         ))}
       </div>
 
-      {/* ══════════════ PROFILE TAB ══════════════ */}
-      {tab === "profile" && (
-        <div className="fade" style={{ maxWidth: 1060, margin: "0 auto", padding: "22px 20px 60px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 18 }} data-grid="two">
-          {/* ── Account Info ── */}
-          <Card>
-            <CardHead
-              left={<><I n="user-circle" s={17} /> Account Information</>}
-              right={<button style={{ width: 30, height: 30, border: "1.5px solid #e5e7eb", borderRadius: 7, background: "#fff", display: "grid", placeItems: "center", cursor: "pointer" }}><I n="refresh" s={14} c="#6b7280" /></button>}
-            />
-            <CardBody>
-              <Row label="Address" right={<span style={{ fontFamily: "monospace", fontSize: 12, background: "#f9fafb", border: "1px solid #e5e7eb", borderRadius: 6, padding: "4px 10px" }}>F48NUF...jemX</span>} />
-              <div onClick={() => setShowBal(v => !v)} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#6b7280", fontWeight: 600, cursor: "pointer", marginTop: 6, marginBottom: 4 }}>
-                Show all balances <span style={{ color: "#9ca3af" }}>3 hidden</span> <I n={showBal ? "chevron-up" : "chevron-down"} s={13} c="#9ca3af" />
+      {/* ════════════ PROFILE TAB ════════════ */}
+      {tab==="profile" && (
+        <div className="prof-grid">
+          {/* ─── LEFT: Account Information ─── */}
+          <div className="card card-sm">
+            <div className="card-head"><span><Icon n="wallet" s={16} /> Account Information</span></div>
+            <div className="card-body">
+              <div className="addr-row">
+                <span style={{fontWeight:600,color:"var(--text2)"}}>Wallet Address</span>
+                <span className="addr-val">F48NUF...jemX <CopyBtn text="F48NUF...jemX" /></span>
               </div>
-              {showBal && (
-                <div style={{ background: "#f9fafb", border: "1px solid #e5e7eb", borderRadius: 9, padding: "10px 14px", marginBottom: 8 }}>
-                  {[{ l: "SOL", v: "0.000 SOL" }, { l: "USDC", v: "0.00 USDC" }, { l: "NGN", v: "₦0.00" }].map(b => (
-                    <div key={b.l} style={{ display: "flex", justifyContent: "space-between", padding: "7px 0", borderBottom: "1px dashed #e5e7eb", fontSize: 13 }}>
-                      <span style={{ color: "#6b7280", fontWeight: 600 }}>{b.l}</span><span style={{ fontWeight: 700 }}>{b.v}</span>
-                    </div>
+              <div className="addr-row">
+                <span style={{fontWeight:600,color:"var(--text2)"}}>Show all balances</span>
+                <Toggle on={showBal} set={setShowBal} />
+              </div>
+              <div style={{padding:"12px 0",borderBottom:"1px dashed var(--border)"}}>
+                <div style={{fontSize:11,fontWeight:700,color:"var(--text3)",textTransform:"uppercase",letterSpacing:".06em",marginBottom:4}}>OGA Balance</div>
+                <div style={{fontSize:16,fontWeight:800}}>50 <span style={{color:"var(--accent)"}}>$OGA</span></div>
+                <div style={{fontSize:12,color:"var(--text2)",marginTop:2}}>≈ $0.00 USD</div>
+              </div>
+              <div className="action-grid">
+                <button className="btn-primary">Withdraw</button>
+                <button className="btn-primary">Deposit</button>
+                <button className="btn-primary full">Swap</button>
+                <button className="btn-outline full">Pair Device</button>
+                <button className="btn-outline full">Link extra wallet</button>
+              </div>
+              <div style={{padding:"12px 0 4px",borderTop:"1px solid var(--border)",display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:12}}>
+                <div>
+                  <div style={{fontSize:12,fontWeight:800}}>Auto Swap</div>
+                  <div style={{fontSize:11,color:"var(--text2)",lineHeight:1.4,marginTop:2}}>Auto-swap rewards to your preferred token. Min swap: 5 $OGA</div>
+                  <div style={{display:"flex",gap:5,marginTop:6}}>
+                    {["SOL","USDC","NGN"].map(t => (
+                      <span key={t} className="chip">{t}</span>
+                    ))}
+                  </div>
+                </div>
+                <Toggle on={swBal} set={setSwBal} />
+              </div>
+              <div style={{marginTop:8}}><a href="#" style={{fontSize:12,color:"var(--accent)",fontWeight:600}}>View my withdrawals</a></div>
+            </div>
+          </div>
+
+          {/* ─── RIGHT: Profile Info ─── */}
+          <div className="card card-sm">
+            <div className="card-head"><span><Icon n="user" s={16} /> Profile</span><button className="btn-outline btn-sm">Edit</button></div>
+            <div className="card-body">
+              <div style={{display:"flex",alignItems:"center",gap:14,paddingBottom:14,borderBottom:"1px solid var(--border)",marginBottom:14}}>
+                <div className="avatar-circle">TJ</div>
+                <div>
+                  <div style={{fontSize:17,fontWeight:800}}>Tom J.</div>
+                  <div style={{fontSize:13,color:"var(--text2)"}}>@tomijimoh</div>
+                </div>
+              </div>
+              <div style={{fontSize:13,lineHeight:1.5,marginBottom:14,color:"var(--text2)"}}>
+                Crypto enthusiast & task earner. Building on Solana.
+              </div>
+              <div style={{display:"flex",gap:20,fontSize:13,fontWeight:700,paddingBottom:14,borderBottom:"1px solid var(--border)",marginBottom:14}}>
+                <span>248 <span style={{fontWeight:400,color:"var(--text2)"}}>Followers</span></span>
+                <span>129 <span style={{fontWeight:400,color:"var(--text2)"}}>Following</span></span>
+              </div>
+              <div>
+                <StatRow label="Rank" val="Level 1" />
+                <StatRow label="Sorsa score" val="0" />
+                <StatRow label="OGA metric" val="0" />
+                <StatRow label="Holdings last vault" val="0 $OGA" />
+                <StatRow label="Verified X account" val="Yes" valClass="yes" />
+                <StatRow label="Seeker user" val="No" valClass="no" />
+                <div className="stat-row" style={{borderBottom:"none"}}>
+                  <span className="stat-label">Human verified</span>
+                  <button className="btn-primary btn-sm">Verify with VeryAI</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* ─── FULL WIDTH: Referral Link ─── */}
+          <div className="card card-sm prof-full">
+            <div className="card-head"><span><Icon n="link" s={16} /> Your Referral Link</span></div>
+            <div className="card-body">
+              <div className="ref-box">
+                <span className="ref-url">{refLink}</span>
+                <CopyBtn text={refLink} />
+                <button className="btn-primary btn-sm"><XIcon size={12} /> Post on X</button>
+              </div>
+            </div>
+          </div>
+
+          {/* ─── FULL WIDTH: Quick Links ─── */}
+          <div className="prof-full">
+            <div style={{fontSize:13,fontWeight:700,marginBottom:10,color:"var(--text2)"}}>Quick Links</div>
+            <div className="quick-grid">
+              {QUICK.map(q => (
+                <div key={q.label} className="quick-item" onClick={() => setSubPage(q.page)}>
+                  <Icon n={q.icon} s={18} c="var(--text2)" />
+                  <span>{q.label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* ─── FULL WIDTH: Earnings ─── */}
+          <div className="card card-sm prof-full">
+            <div className="card-head">
+              <span><Icon n="chart-line" s={16} /> Earnings</span>
+              <div className="period-group">
+                <button className={`period-btn ${earnPeriod==="7d"?"active":""}`} onClick={()=>setEarnPeriod("7d")}>7 days</button>
+                <button className={`period-btn ${earnPeriod==="30d"?"active":""}`} onClick={()=>setEarnPeriod("30d")}>30 days</button>
+              </div>
+            </div>
+            <div className="earn-top">
+              <div>
+                <div style={{fontSize:11,fontWeight:700,color:"var(--text3)",textTransform:"uppercase",letterSpacing:".06em"}}>Total Earned</div>
+                <div style={{fontFamily:"Outfit,sans-serif",fontSize:26,fontWeight:900,margin:"4px 0"}}>{totalEarned.toFixed(2)} $OGA</div>
+                <div style={{fontSize:12,color:"var(--text2)"}}>≈ $0.00 USD</div>
+              </div>
+              <div>
+                <div style={{fontSize:11,fontWeight:700,color:"var(--text3)",marginBottom:6}}>Breakdown</div>
+                <div className="donut">
+                  {DONUT_CATS.map(d => (
+                    <div key={d.name} className="donut-item"><span className="donut-dot" style={{background:d.color}} />{d.name}</div>
                   ))}
                 </div>
-              )}
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: "1px dashed #f3f4f6" }}>
-                <span style={{ color: "#6b7280", fontWeight: 600, fontSize: 13 }}>OGA Balance</span>
-                <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
-                  <span style={{ fontFamily: "Outfit,sans-serif", fontSize: 18, fontWeight: 900 }}>50 <span style={{ color: "#2563eb" }}>$OGA</span></span>
-                  <span style={{ fontSize: 12, color: "#6b7280" }}>₦0.01</span>
+              </div>
+            </div>
+            <div style={{padding:"14px 18px 18px"}}>
+              <div style={{height:160}}>
+                {(totalEarned===0) ? (
+                  <div style={{textAlign:"center",padding:"50px 0",color:"var(--text3)",fontSize:12}}>
+                    <Icon n="chart-bar-off" s={28} c="var(--text3)" /><br />No earnings data yet
+                  </div>
+                ) : (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={data}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                      <XAxis dataKey="day" tick={{fontSize:10,fill:"var(--text3)"}} axisLine={false} tickLine={false} />
+                      <YAxis tick={{fontSize:10,fill:"var(--text3)"}} axisLine={false} tickLine={false} />
+                      <Tooltip contentStyle={{background:"var(--card)",border:"1px solid var(--border)",borderRadius:8,fontSize:12}} />
+                      <Line type="monotone" dataKey="val" stroke="var(--accent)" strokeWidth={2} dot={false} activeDot={{r:4}} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* ─── FULL WIDTH: Withdrawal History ─── */}
+          <div className="card card-sm prof-full">
+            <div className="card-head"><span><Icon n="history" s={16} /> Withdrawal History</span></div>
+            <div style={{overflowX:"auto"}}>
+              <table className="tb"><thead><tr><th>AMOUNT</th><th>TRANSACTION</th><th>DATE</th></tr></thead>
+              <tbody><tr><td colSpan={3} className="empty-td">No withdrawals yet</td></tr></tbody></table>
+            </div>
+          </div>
+
+          {/* ─── FULL WIDTH: Swap History ─── */}
+          <div className="card card-sm prof-full">
+            <div className="card-head"><span><Icon n="arrows-exchange" s={16} /> Swap History</span></div>
+            <div style={{overflowX:"auto"}}>
+              <table className="tb"><thead><tr><th>FROM</th><th>TO</th><th>AMOUNT</th><th>RECEIVED</th><th>DATE</th></tr></thead>
+              <tbody><tr><td colSpan={5} className="empty-td">No swaps yet</td></tr></tbody></table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ════════════ EARNINGS TAB ════════════ */}
+      {tab==="earnings" && (
+        <div style={{maxWidth:900,margin:"0 auto",padding:"0 0 40px"}}>
+          <div className="page-head-sm"><Icon n="currency-dollar" s={20} /><h2>Earnings</h2></div>
+          <div className="card card-sm">
+            <div className="card-head">
+              <span>Overview</span>
+              <div className="period-group">
+                <button className={`period-btn ${earnPeriod==="7d"?"active":""}`} onClick={()=>setEarnPeriod("7d")}>7 days</button>
+                <button className={`period-btn ${earnPeriod==="30d"?"active":""}`} onClick={()=>setEarnPeriod("30d")}>30 days</button>
+              </div>
+            </div>
+            <div className="earn-top">
+              <div>
+                <div style={{fontSize:11,fontWeight:700,color:"var(--text3)",textTransform:"uppercase",letterSpacing:".06em"}}>Total Earned</div>
+                <div style={{fontFamily:"Outfit,sans-serif",fontSize:28,fontWeight:900,margin:"4px 0"}}>{totalEarned.toFixed(2)} $OGA</div>
+                <div style={{fontSize:12,color:"var(--text2)"}}>≈ $0.00 USD</div>
+              </div>
+              <div>
+                <div style={{fontSize:11,fontWeight:700,color:"var(--text3)",marginBottom:8}}>Earning Sources</div>
+                <div className="donut">
+                  {DONUT_CATS.map(d => (
+                    <div key={d.name} className="donut-item"><span className="donut-dot" style={{background:d.color}} />{d.name}</div>
+                  ))}
                 </div>
               </div>
+            </div>
+            <div style={{padding:"14px 18px 18px"}}>
+              <div style={{height:200}}>
+                {totalEarned===0 ? (
+                  <div style={{textAlign:"center",padding:"60px 0",color:"var(--text3)",fontSize:12}}>
+                    <Icon n="chart-bar-off" s={32} c="var(--text3)" /><br />No earnings data yet
+                  </div>
+                ) : (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={data}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                      <XAxis dataKey="day" tick={{fontSize:10,fill:"var(--text3)"}} axisLine={false} tickLine={false} />
+                      <YAxis tick={{fontSize:10,fill:"var(--text3)"}} axisLine={false} tickLine={false} />
+                      <Tooltip contentStyle={{background:"var(--card)",border:"1px solid var(--border)",borderRadius:8,fontSize:12}} />
+                      <Line type="monotone" dataKey="val" stroke="var(--accent)" strokeWidth={2} dot={false} activeDot={{r:4}} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
-              {/* Action buttons */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, margin: "14px 0 10px" }}>
+      {/* ════════════ MY JOBS TAB ════════════ */}
+      {tab==="jobs" && <MyJobsTab />}
+
+      {/* ════════════ REFERRALS TAB ════════════ */}
+      {tab==="referrals" && <ReferralsTab />}
+
+      {/* ════════════ ALERTS TAB ════════════ */}
+      {tab==="alerts" && (
+        <div style={{maxWidth:900,margin:"0 auto",padding:"0 0 40px"}}>
+          <div className="page-head-sm"><Icon n="bell" s={20} /><h2>Alerts</h2></div>
+          <div className="card card-sm">
+            <div className="card-head">
+              <span><Icon n="bell" s={16} /> Notifications</span>
+              <button className="btn-sm" style={{fontSize:12,fontWeight:700,color:"var(--accent)",border:"none",background:"none",cursor:"pointer"}}>Mark all read</button>
+            </div>
+            <div style={{textAlign:"center",padding:"48px 20px"}}>
+              <Icon n="bell-off" s={40} c="var(--text3)" />
+              <div style={{fontSize:13,color:"var(--text3)",marginTop:12}}>No alerts yet. We'll notify you about new jobs, earnings, and updates.</div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ════════════ WORKER PORTAL TAB ════════════ */}
+      {tab==="portal" && (
+        <div style={{maxWidth:1060,margin:"0 auto",padding:"0 0 40px"}}>
+          <div className="page-head-sm"><Icon n="layout-dashboard" s={20} /><h2>Worker Portal</h2></div>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:14,marginBottom:18}}>
+            {[
+              { icon:"briefcase", label:"Tasks Done", val:"0" },
+              { icon:"trophy", label:"Won", val:"0" },
+              { icon:"heart", label:"Compliments", val:"0" },
+              { icon:"currency-naira", label:"Total Earned", val:"₦0" },
+            ].map(s => (
+              <div key={s.label} className="card card-sm" style={{padding:18,textAlign:"center"}}>
+                <Icon n={s.icon} s={22} c="var(--text3)" />
+                <div style={{fontFamily:"Outfit,sans-serif",fontSize:24,fontWeight:900,margin:"6px 0 2px"}}>{s.val}</div>
+                <div style={{fontSize:11,color:"var(--text3)",fontWeight:700}}>{s.label}</div>
+              </div>
+            ))}
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:18}}>
+            <div className="card card-sm">
+              <div className="card-head"><span><Icon n="star" s={16} /> Worker Portal</span></div>
+              <div className="card-body">
+                <p style={{fontSize:13,color:"var(--text2)",lineHeight:1.6,marginBottom:14}}>Build your reputation as a worker on OgaPay. Complete tasks, earn compliments, and rise through the ranks.</p>
                 {[
-                  { label: "Withdraw", icon: "arrow-bar-up", full: false },
-                  { label: "Deposit", icon: "plus", full: false },
-                  { label: "Swap", icon: "arrows-exchange", full: true },
-                  { label: "Pair Device", icon: "device-mobile", full: true, outline: true },
-                  { label: "Link extra wallet", icon: "wallet", full: true, outline: true },
-                ].map(b => (
-                  <button key={b.label} className={b.outline ? "outbtn" : "actbtn"} style={{
-                    height: 40, borderRadius: 99, border: b.outline ? "1.5px solid #e5e7eb" : "none",
-                    background: b.outline ? "#fff" : "#111", color: b.outline ? "#111" : "#fff",
-                    fontSize: 13, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-                    gridColumn: b.full ? "1/-1" : "auto", cursor: "pointer", transition: "background .13s"
-                  }}>
-                    <I n={b.icon} s={14} c={b.outline ? "#6b7280" : "#fff"} /> {b.label}
-                  </button>
+                  { icon:"star", label:"My Reviews", val:"0 reviews", sub:"0.0 rating" },
+                  { icon:"zap", label:"Challenges Participated", val:"0" },
+                  { icon:"gift", label:"Tips Received", val:"0" },
+                  { icon:"users", label:"Communities", val:"0 joined" },
+                ].map(r => (
+                  <div key={r.label} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"9px 0",borderBottom:"1px dashed var(--border)",fontSize:13}}>
+                    <span style={{display:"flex",alignItems:"center",gap:8,color:"var(--text2)",fontWeight:600}}>
+                      <Icon n={r.icon} s={15} c="var(--text3)" />{r.label}
+                    </span>
+                    <div style={{textAlign:"right"}}>
+                      <div style={{fontWeight:800,color:"var(--text)"}}>{r.val}</div>
+                      {r.sub && <div style={{fontSize:11,color:"var(--text3)"}}>{r.sub}</div>}
+                    </div>
+                  </div>
                 ))}
               </div>
-
-              {/* Auto Swap */}
-              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, padding: "13px 0 8px", borderTop: "1px solid #f3f4f6" }}>
-                <div>
-                  <div style={{ fontSize: 13, fontWeight: 800, marginBottom: 3 }}>Auto Swap</div>
-                  <div style={{ fontSize: 12, color: "#6b7280", lineHeight: 1.45, marginBottom: 8 }}>Convert your OGA earnings into another token automatically.</div>
-                  <div style={{ display: "flex", gap: 8 }}>
-                    {[{ l: "SOL", c: "#9945FF" }, { l: "USDC", c: "#2775CA" }, { l: "NGN", c: "#16a34a" }].map(t => (
-                      <div key={t.l} style={{ display: "flex", alignItems: "center", gap: 5, border: "1.5px solid #e5e7eb", borderRadius: 99, padding: "3px 10px", fontSize: 12, fontWeight: 700 }}>
-                        <span style={{ width: 8, height: 8, borderRadius: "50%", background: t.c, display: "inline-block" }} /> {t.l}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                <Toggle on={autoSwap} set={setAutoSwap} />
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "#9ca3af", marginTop: 6 }}>
-                <span>Minimum: 0.001 SOL (~₦7.00)</span>
-                <a onClick={() => setTab("earnings")} style={{ color: "#2563eb", fontWeight: 700, display: "flex", alignItems: "center", gap: 4, cursor: "pointer" }}>View my withdrawals <I n="arrow-down" s={12} c="#2563eb" /></a>
-              </div>
-            </CardBody>
-          </Card>
-
-          {/* ── Right col: Profile + Referral ── */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-            <Card>
-              <CardHead
-                left={<><XIcon size={16} /> Profile</>}
-                right={<a style={{ fontSize: 12, color: "#2563eb", fontWeight: 700, display: "flex", alignItems: "center", gap: 4, cursor: "pointer" }}>Edit <I n="pencil" s={12} c="#2563eb" /></a>}
-              />
-              <CardBody>
-                <div style={{ display: "flex", alignItems: "center", gap: 14, paddingBottom: 14, borderBottom: "1px solid #f3f4f6", marginBottom: 14 }}>
-                  <div style={{ width: 56, height: 56, borderRadius: "50%", background: "#111", display: "grid", placeItems: "center", color: "#fff", fontSize: 20, fontWeight: 900, flexShrink: 0 }}>{initials}</div>
-                  <div>
-                    <div style={{ fontFamily: "Outfit,sans-serif", fontSize: 18, fontWeight: 900 }}>{user.firstName}</div>
-                    <div style={{ fontSize: 13, color: "#6b7280", marginTop: 2 }}>{handle}</div>
-                  </div>
-                </div>
-                <div style={{ fontSize: 13, color: "#374151", lineHeight: 1.5, marginBottom: 14 }}>it's Good you are checking. Tread carefully 😊</div>
-                <div style={{ display: "flex", gap: 20, fontSize: 13, fontWeight: 700, paddingBottom: 14, borderBottom: "1px solid #f3f4f6", marginBottom: 14 }}>
-                  <div><strong>158</strong> <span style={{ color: "#6b7280", fontWeight: 500 }}>Followers</span></div>
-                  <div><strong>205</strong> <span style={{ color: "#6b7280", fontWeight: 500 }}>Following</span></div>
-                </div>
-                <div>
-                  <Row label="Rank" val="Level 1" info />
-                  <Row label="Sorsa score" val="0" />
-                  <Row label="OGA metric score" val="101.81" />
-                  <Row label="Holdings last vault" val="0 $OGA" info />
-                  <Row label="Verified X account" val="No" valClass="no" />
-                  <Row label="Seeker user" val="No" valClass="no" />
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "9px 0", fontSize: 13 }}>
-                    <span style={{ color: "#6b7280", fontWeight: 600, display: "flex", alignItems: "center", gap: 6 }}>Human verified <I n="info-circle" s={13} c="#d1d5db" /></span>
-                    <button style={{ height: 34, padding: "0 16px", borderRadius: 99, background: "#111", color: "#fff", border: "none", fontSize: 12, fontWeight: 700, display: "flex", alignItems: "center", gap: 7, cursor: "pointer" }}>
-                      <I n="sparkles" s={13} c="#fff" /> Verify with VeryAI
-                    </button>
-                  </div>
-                </div>
-              </CardBody>
-            </Card>
-
-            <Card>
-              <CardHead left={<><I n="link" s={17} /> Your Referral Link</>} />
-              <CardBody>
-                <p style={{ fontSize: 13, color: "#6b7280", marginBottom: 12 }}>Share your link and earn ₦500 for every new worker who joins OgaPay.</p>
-                <div style={{ display: "flex", alignItems: "center", gap: 10, background: "#f9fafb", border: "1px solid #e5e7eb", borderRadius: 9, padding: "10px 14px" }}>
-                  <span style={{ fontSize: 12, fontFamily: "monospace", color: "#374151", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{refLink}</span>
-                  <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
-                    <CopyBtn text={refLink} />
-                    <button style={{ height: 34, padding: "0 14px", borderRadius: 99, background: "#111", color: "#fff", border: "none", fontSize: 12, fontWeight: 700, display: "flex", alignItems: "center", gap: 7, cursor: "pointer" }}>
-                      <XIcon size={12} color="#fff" /> Post on X
-                    </button>
-                  </div>
-                </div>
-              </CardBody>
-            </Card>
-          </div>
-
-          {/* ── Quick Links ── */}
-          <div style={{ gridColumn: "1/-1" }}>
-            <Card>
-              <CardHead left={<><I n="zap" s={17} /> Quick Links</>} />
-              <CardBody>
-                <div className="quick-grid" style={{ display: "grid", gridTemplateColumns: "repeat(6,1fr)", gap: 10 }}>
-                  {QUICK.map(q => (
-                    <button key={q.label} className="qbtn" onClick={() => nav(q.page)} style={{ border: "1.5px solid #e5e7eb", borderRadius: 12, padding: "16px 10px", display: "flex", flexDirection: "column", alignItems: "center", gap: 9, fontSize: 12, fontWeight: 700, color: "#374151", background: "#fff", transition: "all .13s", cursor: "pointer" }}>
-                      <I n={q.icon} s={22} c="#6b7280" /> {q.label}
-                    </button>
-                  ))}
-                </div>
-              </CardBody>
-            </Card>
-          </div>
-
-          {/* ── Earnings chart ── */}
-          <div style={{ gridColumn: "1/-1" }}>
-            <Card>
-              <CardHead
-                left={<><I n="currency-dollar" s={17} /> Earnings</>}
-                right={
-                  <div style={{ display: "flex", gap: 6 }}>
-                    {["7", "30"].map(p => (
-                      <button key={p} onClick={() => setPeriod(p)} style={{ height: 30, padding: "0 14px", borderRadius: 99, border: "1.5px solid", borderColor: period === p ? "#111" : "#e5e7eb", background: period === p ? "#111" : "#fff", color: period === p ? "#fff" : "#6b7280", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>{p} days</button>
-                    ))}
-                  </div>
-                }
-              />
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, padding: "18px 20px", borderBottom: "1px solid #f3f4f6" }}>
-                <div>
-                  <div style={{ fontSize: 10, fontWeight: 800, color: "#6b7280", textTransform: "uppercase", letterSpacing: ".08em", marginBottom: 6 }}>EARNED IN {period} DAYS</div>
-                  <div style={{ fontFamily: "Outfit,sans-serif", fontSize: 28, fontWeight: 900, display: "flex", alignItems: "baseline", gap: 8 }}>
-                    0 <span style={{ fontSize: 14, color: "#6b7280", fontWeight: 700 }}>$OGA</span>
-                  </div>
-                  <div style={{ fontSize: 12, color: "#9ca3af", marginTop: 4 }}>Combined across all categories</div>
-                </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
-                  <svg width={80} height={80} viewBox="0 0 80 80">
-                    <circle cx="40" cy="40" r="28" fill="none" stroke="#f3f4f6" strokeWidth="16" />
-                    <text x="40" y="44" textAnchor="middle" fontSize="9" fill="#9ca3af" fontWeight="700">No data</text>
-                  </svg>
-                  <div style={{ display: "grid", gap: 7 }}>
-                    {DONUT_CATS.map(d => (
-                      <div key={d.name} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 20, fontSize: 12 }}>
-                        <span style={{ display: "flex", alignItems: "center", gap: 6, fontWeight: 700 }}>
-                          <span style={{ width: 9, height: 9, borderRadius: "50%", background: d.color, display: "inline-block" }} /> {d.name}
-                        </span>
-                        <span style={{ color: "#6b7280", fontFamily: "monospace", fontSize: 11 }}>0 $OGA</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-              <div style={{ padding: "12px 20px 18px" }}>
-                <ResponsiveContainer width="100%" height={180}>
-                  <LineChart data={chartData} margin={{ top: 4, right: 8, left: -22, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" vertical={false} />
-                    <XAxis dataKey="day" tick={{ fontSize: 11, fill: "#9ca3af" }} axisLine={false} tickLine={false} />
-                    <YAxis tick={{ fontSize: 11, fill: "#9ca3af" }} axisLine={false} tickLine={false} domain={[0, 4]} ticks={[0, 1, 2, 3, 4]} />
-                    <Tooltip contentStyle={{ border: "1px solid #e5e7eb", borderRadius: 8, fontSize: 12 }} />
-                    <Line type="monotone" dataKey="val" stroke="#111" strokeWidth={2} dot={false} />
-                  </LineChart>
-                </ResponsiveContainer>
-                <div style={{ fontSize: 12, color: "#9ca3af", marginTop: 10 }}>No combined earnings activity in this timeframe yet.</div>
-              </div>
-            </Card>
-          </div>
-
-          {/* ── Withdrawal History ── */}
-          <div style={{ gridColumn: "1/-1" }}>
-            <Card>
-              <CardHead left={<><I n="clock" s={17} /> Withdrawal History</>} />
-              <div style={{ overflowX: "auto" }}>
-                <table>
-                  <thead><tr><th>AMOUNT</th><th>TRANSACTION</th><th>DATE</th></tr></thead>
-                  <tbody><tr><td colSpan={3} className="empty-td">No withdrawals yet</td></tr></tbody>
-                </table>
-              </div>
-            </Card>
-          </div>
-
-          {/* ── Swap History ── */}
-          <div style={{ gridColumn: "1/-1" }}>
-            <Card>
-              <CardHead left={<><I n="arrows-exchange" s={17} /> Swap History</>} />
-              <div style={{ overflowX: "auto" }}>
-                <table>
-                  <thead><tr><th>FROM</th><th>TO</th><th>AMOUNT</th><th>RECEIVED</th><th>DATE</th></tr></thead>
-                  <tbody><tr><td colSpan={5} className="empty-td">No swaps yet</td></tr></tbody>
-                </table>
-              </div>
-            </Card>
-          </div>
-        </div>
-      )}
-
-      {/* ══════════════ EARNINGS TAB ══════════════ */}
-      {tab === "earnings" && (
-        <div className="fade" style={{ maxWidth: 1060, margin: "0 auto", padding: "22px 20px 60px", display: "grid", gap: 18 }}>
-          <Card>
-            <CardHead
-              left={<><I n="currency-dollar" s={17} /> Earnings</>}
-              right={<div style={{ display: "flex", gap: 6 }}>{["7","30"].map(p => <button key={p} onClick={() => setPeriod(p)} style={{ height: 30, padding: "0 14px", borderRadius: 99, border: "1.5px solid", borderColor: period === p ? "#111" : "#e5e7eb", background: period === p ? "#111" : "#fff", color: period === p ? "#fff" : "#6b7280", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>{p} days</button>)}</div>}
-            />
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, padding: "18px 20px", borderBottom: "1px solid #f3f4f6" }}>
-              <div>
-                <div style={{ fontSize: 10, fontWeight: 800, color: "#6b7280", textTransform: "uppercase", letterSpacing: ".08em", marginBottom: 6 }}>EARNED IN {period} DAYS</div>
-                <div style={{ fontFamily: "Outfit,sans-serif", fontSize: 28, fontWeight: 900, display: "flex", alignItems: "baseline", gap: 8 }}>0 <span style={{ fontSize: 14, color: "#6b7280", fontWeight: 700 }}>$OGA</span></div>
-                <div style={{ fontSize: 12, color: "#9ca3af", marginTop: 4 }}>Combined across all categories</div>
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
-                <svg width={80} height={80} viewBox="0 0 80 80"><circle cx="40" cy="40" r="28" fill="none" stroke="#f3f4f6" strokeWidth="16" /></svg>
-                <div style={{ display: "grid", gap: 7 }}>
-                  {DONUT_CATS.map(d => (
-                    <div key={d.name} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 20, fontSize: 12 }}>
-                      <span style={{ display: "flex", alignItems: "center", gap: 6, fontWeight: 700 }}><span style={{ width: 9, height: 9, borderRadius: "50%", background: d.color, display: "inline-block" }} />{d.name}</span>
-                      <span style={{ color: "#6b7280", fontFamily: "monospace", fontSize: 11 }}>0 $OGA</span>
-                    </div>
-                  ))}
-                </div>
+            </div>
+            <div className="card card-sm">
+              <div className="card-head"><span><Icon n="user" s={16} /> My Store</span><button className="btn-primary btn-sm">Open Store</button></div>
+              <div style={{textAlign:"center",padding:"32px 20px"}}>
+                <Icon n="building-store" s={40} c="var(--text3)" />
+                <div style={{fontSize:13,color:"var(--text3)",marginTop:12}}>No products listed yet.</div>
+                <div style={{fontSize:12,color:"var(--text3)",marginTop:4}}>Open your store to sell services and products.</div>
               </div>
             </div>
-            <div style={{ padding: "12px 20px 18px" }}>
-              <ResponsiveContainer width="100%" height={200}>
-                <LineChart data={chartData} margin={{ top: 4, right: 8, left: -22, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" vertical={false} />
-                  <XAxis dataKey="day" tick={{ fontSize: 11, fill: "#9ca3af" }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fontSize: 11, fill: "#9ca3af" }} axisLine={false} tickLine={false} domain={[0,4]} ticks={[0,1,2,3,4]} />
-                  <Tooltip contentStyle={{ border: "1px solid #e5e7eb", borderRadius: 8, fontSize: 12 }} />
-                  <Line type="monotone" dataKey="val" stroke="#111" strokeWidth={2} dot={false} />
-                </LineChart>
-              </ResponsiveContainer>
-              <div style={{ fontSize: 12, color: "#9ca3af", marginTop: 10 }}>No combined earnings activity in this timeframe yet.</div>
-            </div>
-          </Card>
-          <Card>
-            <CardHead left={<><I n="clock" s={17} /> Withdrawal History</>} />
-            <div style={{ overflowX: "auto" }}>
-              <table><thead><tr><th>AMOUNT</th><th>TRANSACTION</th><th>DATE</th></tr></thead><tbody><tr><td colSpan={3} className="empty-td">No withdrawals yet</td></tr></tbody></table>
-            </div>
-          </Card>
-          <Card>
-            <CardHead left={<><I n="arrows-exchange" s={17} /> Swap History</>} />
-            <div style={{ overflowX: "auto" }}>
-              <table><thead><tr><th>FROM</th><th>TO</th><th>AMOUNT</th><th>RECEIVED</th><th>DATE</th></tr></thead><tbody><tr><td colSpan={5} className="empty-td">No swaps yet</td></tr></tbody></table>
-            </div>
-          </Card>
-        </div>
-      )}
-
-      {/* ══════════════ MY JOBS TAB ══════════════ */}
-      {tab === "jobs" && (
-        <div className="fade" style={{ maxWidth: 1060, margin: "0 auto", padding: "22px 20px 60px" }}>
-          <Card>
-            <CardHead left={<><I n="briefcase" s={17} /> My Jobs</>} right={<button onClick={() => nav("jobs")} style={{ height: 34, padding: "0 16px", borderRadius: 99, background: "#111", color: "#fff", border: "none", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>Browse Jobs</button>} />
-            <div style={{ overflowX: "auto" }}>
-              <table><thead><tr><th>JOB</th><th>STATUS</th><th>REWARD</th><th>DATE</th></tr></thead><tbody><tr><td colSpan={4} className="empty-td">No jobs yet. <span onClick={() => nav("jobs")} style={{ color: "#2563eb", fontWeight: 700, cursor: "pointer" }}>Browse available jobs →</span></td></tr></tbody></table>
-            </div>
-          </Card>
-        </div>
-      )}
-
-      {/* ══════════════ REFERRALS TAB ══════════════ */}
-      {tab === "referrals" && (
-        <div className="fade" style={{ maxWidth: 1060, margin: "0 auto", padding: "22px 20px 60px", display: "grid", gap: 18 }}>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 16 }}>
-            {[{ l: "Total Referrals", v: "0" }, { l: "Active Referrals", v: "0" }, { l: "Total Earned", v: "₦0" }].map(s => (
-              <Card key={s.l} style={{ padding: 20 }}>
-                <div style={{ fontSize: 11, fontWeight: 800, color: "#6b7280", textTransform: "uppercase", letterSpacing: ".06em", marginBottom: 6 }}>{s.l}</div>
-                <div style={{ fontFamily: "Outfit,sans-serif", fontSize: 26, fontWeight: 900 }}>{s.v}</div>
-              </Card>
-            ))}
-          </div>
-          <Card>
-            <CardHead left={<><I n="link" s={17} /> Your Referral Link</>} />
-            <CardBody>
-              <p style={{ fontSize: 13, color: "#6b7280", marginBottom: 12 }}>Earn ₦500 for every new worker who signs up using your link.</p>
-              <div style={{ display: "flex", alignItems: "center", gap: 10, background: "#f9fafb", border: "1px solid #e5e7eb", borderRadius: 9, padding: "10px 14px", marginBottom: 20 }}>
-                <span style={{ fontSize: 12, fontFamily: "monospace", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{refLink}</span>
-                <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
-                  <CopyBtn text={refLink} />
-                  <button style={{ height: 34, padding: "0 14px", borderRadius: 99, background: "#111", color: "#fff", border: "none", fontSize: 12, fontWeight: 700, display: "flex", alignItems: "center", gap: 7, cursor: "pointer" }}><XIcon size={12} color="#fff" /> Post on X</button>
-                </div>
-              </div>
-              <table><thead><tr><th>USER</th><th>JOINED</th><th>EARNINGS</th><th>STATUS</th></tr></thead><tbody><tr><td colSpan={4} className="empty-td">No referrals yet. Share your link to start earning!</td></tr></tbody></table>
-            </CardBody>
-          </Card>
-        </div>
-      )}
-
-      {/* ══════════════ ALERTS TAB ══════════════ */}
-      {tab === "alerts" && (
-        <div className="fade" style={{ maxWidth: 1060, margin: "0 auto", padding: "22px 20px 60px" }}>
-          <Card>
-            <CardHead left={<><I n="bell" s={17} /> Alerts</>} right={<button style={{ fontSize: 12, fontWeight: 700, color: "#2563eb", border: "none", background: "none", cursor: "pointer" }}>Mark all read</button>} />
-            <CardBody style={{ textAlign: "center", padding: "48px 20px" }}>
-              <I n="bell-off" s={40} c="#d1d5db" />
-              <div style={{ fontSize: 13, color: "#9ca3af", marginTop: 12 }}>No alerts yet. We'll notify you about new jobs, earnings, and updates.</div>
-            </CardBody>
-          </Card>
-        </div>
-      )}
-
-      {/* ══════════════ WORKER PORTAL TAB ══════════════ */}
-      {tab === "portal" && (
-        <div className="fade" style={{ maxWidth: 1060, margin: "0 auto", padding: "22px 20px 60px", display: "grid", gap: 18 }}>
-          <div className="portal-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 14 }}>
-            {[
-              { icon: "briefcase", label: "Tasks Done", val: "0" },
-              { icon: "trophy", label: "Won", val: "0" },
-              { icon: "heart", label: "Compliments", val: "0" },
-              { icon: "currency-naira", label: "Total Earned", val: "₦0" },
-            ].map(s => (
-              <Card key={s.label} style={{ padding: 20, textAlign: "center" }}>
-                <I n={s.icon} s={24} c="#6b7280" />
-                <div style={{ fontFamily: "Outfit,sans-serif", fontSize: 26, fontWeight: 900, margin: "8px 0 4px" }}>{s.val}</div>
-                <div style={{ fontSize: 11, color: "#9ca3af", fontWeight: 700 }}>{s.label}</div>
-              </Card>
-            ))}
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 18 }}>
-            <Card>
-              <CardHead left={<><I n="layout-dashboard" s={17} /> Worker Portal</>} />
-              <CardBody>
-                <p style={{ fontSize: 13, color: "#6b7280", lineHeight: 1.6, marginBottom: 16 }}>Build your reputation as a worker on OgaPay. Complete tasks, earn compliments, and rise through the ranks.</p>
-                <div style={{ display: "grid", gap: 10 }}>
-                  {[
-                    { icon: "star", label: "My Reviews", val: "0 reviews", sub: "0.0 rating" },
-                    { icon: "zap", label: "Challenges Participated", val: "0" },
-                    { icon: "gift", label: "Tips Received", val: "0" },
-                    { icon: "users", label: "Communities", val: "0 joined" },
-                  ].map(r => (
-                    <div key={r.label} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: "1px dashed #f3f4f6", fontSize: 13 }}>
-                      <span style={{ display: "flex", alignItems: "center", gap: 8, color: "#6b7280", fontWeight: 600 }}><I n={r.icon} s={16} c="#9ca3af" />{r.label}</span>
-                      <div style={{ textAlign: "right" }}>
-                        <div style={{ fontWeight: 800 }}>{r.val}</div>
-                        {r.sub && <div style={{ fontSize: 11, color: "#9ca3af" }}>{r.sub}</div>}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardBody>
-            </Card>
-            <Card>
-              <CardHead left={<><I n="user" s={17} /> My Store</>} right={<button style={{ height: 32, padding: "0 14px", borderRadius: 99, background: "#111", color: "#fff", border: "none", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>Open Store</button>} />
-              <CardBody style={{ textAlign: "center", padding: "32px 20px" }}>
-                <I n="building-store" s={40} c="#d1d5db" />
-                <div style={{ fontSize: 13, color: "#9ca3af", marginTop: 12 }}>No products listed yet.</div>
-                <div style={{ fontSize: 12, color: "#9ca3af", marginTop: 4 }}>Open your store to sell services and products.</div>
-              </CardBody>
-            </Card>
           </div>
         </div>
       )}
-    </div>
+      </div>
     </Layout>
   );
 }
