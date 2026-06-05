@@ -74,7 +74,7 @@ function SubPage({ title, icon, onBack, children }) {
   return (
     <div style={{ maxWidth: 900, margin: "0 auto", padding: "24px 20px 40px" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
-        <I n={icon} s={22} /> <h1 style={{ fontFamily: "var(--font-heading)", fontSize: 22, fontWeight: 900 }}>{title}</h1>
+        <I n={icon} s={22} /> <h1 style={{ fontFamily: "Outfit,sans-serif", fontSize: 22, fontWeight: 900 }}>{title}</h1>
       </div>
       {children}
     </div>
@@ -127,7 +127,7 @@ function JobsPage({ onBack }) {
                   <div style={{ fontSize: 12, color: "var(--text2)", marginTop: 6 }}>{j.desc}</div>
                 </div>
                 <div style={{ textAlign: "right", flexShrink: 0 }}>
-                  <div style={{ fontFamily: "var(--font-heading)", fontSize: 20, fontWeight: 900, color: "#16a34a" }}>{j.reward}</div>
+                  <div style={{ fontFamily: "Outfit,sans-serif", fontSize: 20, fontWeight: 900, color: "#16a34a" }}>{j.reward}</div>
                   <div style={{ fontSize: 11, color: "var(--text3)" }}>{j.filled}/{j.total} slots</div>
                 </div>
               </div>
@@ -152,7 +152,7 @@ function VaultPage({ onBack }) {
         {[{ label: "Next Distribution", val: "11h 42m" }, { label: "Your Holdings", val: "50 $OGA" }, { label: "Est. Earnings", val: "₦0.00" }, { label: "Total Distributed", val: "₦0.00" }].map(s => (
           <Card key={s.label} style={{ padding: "20px" }}>
             <div style={{ fontSize: 11, color: "var(--text2)", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".06em", marginBottom: 6 }}>{s.label}</div>
-            <div style={{ fontFamily: "var(--font-heading)", fontSize: 24, fontWeight: 900 }}>{s.val}</div>
+            <div style={{ fontFamily: "Outfit,sans-serif", fontSize: 24, fontWeight: 900 }}>{s.val}</div>
           </Card>
         ))}
       </div>
@@ -305,7 +305,7 @@ export default function OgaPayProfile({ user: propUser }) {
 
       {/* ── TOPBAR ── */}
       <header style={{ height: 56, background: "var(--card)", borderBottom: "1px solid #e5e7eb", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 24px", position: "sticky", top: 0, zIndex: 100 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, fontFamily: "var(--font-heading)", fontSize: 18, fontWeight: 800 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, fontFamily: "Outfit,sans-serif", fontSize: 18, fontWeight: 800 }}>
           <Logo size={28} /> OgaPay
         </div>
         <nav className="topbar-nav" style={{ display: "flex", alignItems: "center", gap: 4 }}>
@@ -373,7 +373,7 @@ export default function OgaPayProfile({ user: propUser }) {
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: "1px dashed #f3f4f6" }}>
                 <span style={{ color: "var(--text2)", fontWeight: 600, fontSize: 13 }}>OGA Balance</span>
                 <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
-                  <span style={{ fontFamily: "var(--font-heading)", fontSize: 18, fontWeight: 900 }}>50 <span style={{ color: "#2563eb" }}>$OGA</span></span>
+                  <span style={{ fontFamily: "Outfit,sans-serif", fontSize: 18, fontWeight: 900 }}>50 <span style={{ color: "#2563eb" }}>$OGA</span></span>
                   <span style={{ fontSize: 12, color: "var(--text2)" }}>₦0.01</span>
                 </div>
               </div>
@@ -431,7 +431,7 @@ export default function OgaPayProfile({ user: propUser }) {
                 <div style={{ display: "flex", alignItems: "center", gap: 14, paddingBottom: 14, borderBottom: "1px solid #f3f4f6", marginBottom: 14 }}>
                   <div style={{ width: 56, height: 56, borderRadius: "50%", background: "#111", display: "grid", placeItems: "center", color: "#fff", fontSize: 20, fontWeight: 900, flexShrink: 0 }}>{initials}</div>
                   <div>
-                    <div style={{ fontFamily: "var(--font-heading)", fontSize: 18, fontWeight: 900 }}>{user.firstName}</div>
+                    <div style={{ fontFamily: "Outfit,sans-serif", fontSize: 18, fontWeight: 900 }}>{user.firstName}</div>
                     <div style={{ fontSize: 13, color: "var(--text2)", marginTop: 2 }}>{handle}</div>
                   </div>
                 </div>
@@ -506,7 +506,7 @@ export default function OgaPayProfile({ user: propUser }) {
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, padding: "18px 20px", borderBottom: "1px solid #f3f4f6" }}>
                 <div>
                   <div style={{ fontSize: 10, fontWeight: 800, color: "var(--text2)", textTransform: "uppercase", letterSpacing: ".08em", marginBottom: 6 }}>EARNED IN {period} DAYS</div>
-                  <div style={{ fontFamily: "var(--font-heading)", fontSize: 28, fontWeight: 900, display: "flex", alignItems: "baseline", gap: 8 }}>
+                  <div style={{ fontFamily: "Outfit,sans-serif", fontSize: 28, fontWeight: 900, display: "flex", alignItems: "baseline", gap: 8 }}>
                     0 <span style={{ fontSize: 14, color: "var(--text2)", fontWeight: 700 }}>$OGA</span>
                   </div>
                   <div style={{ fontSize: 12, color: "var(--text3)", marginTop: 4 }}>Combined across all categories</div>
@@ -582,7 +582,7 @@ export default function OgaPayProfile({ user: propUser }) {
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, padding: "18px 20px", borderBottom: "1px solid #f3f4f6" }}>
               <div>
                 <div style={{ fontSize: 10, fontWeight: 800, color: "var(--text2)", textTransform: "uppercase", letterSpacing: ".08em", marginBottom: 6 }}>EARNED IN {period} DAYS</div>
-                <div style={{ fontFamily: "var(--font-heading)", fontSize: 28, fontWeight: 900, display: "flex", alignItems: "baseline", gap: 8 }}>0 <span style={{ fontSize: 14, color: "var(--text2)", fontWeight: 700 }}>$OGA</span></div>
+                <div style={{ fontFamily: "Outfit,sans-serif", fontSize: 28, fontWeight: 900, display: "flex", alignItems: "baseline", gap: 8 }}>0 <span style={{ fontSize: 14, color: "var(--text2)", fontWeight: 700 }}>$OGA</span></div>
                 <div style={{ fontSize: 12, color: "var(--text3)", marginTop: 4 }}>Combined across all categories</div>
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
@@ -644,7 +644,7 @@ export default function OgaPayProfile({ user: propUser }) {
             {[{ l: "Total Referrals", v: "0" }, { l: "Active Referrals", v: "0" }, { l: "Total Earned", v: "₦0" }].map(s => (
               <Card key={s.l} style={{ padding: 20 }}>
                 <div style={{ fontSize: 11, fontWeight: 800, color: "var(--text2)", textTransform: "uppercase", letterSpacing: ".06em", marginBottom: 6 }}>{s.l}</div>
-                <div style={{ fontFamily: "var(--font-heading)", fontSize: 26, fontWeight: 900 }}>{s.v}</div>
+                <div style={{ fontFamily: "Outfit,sans-serif", fontSize: 26, fontWeight: 900 }}>{s.v}</div>
               </Card>
             ))}
           </div>
@@ -690,7 +690,7 @@ export default function OgaPayProfile({ user: propUser }) {
             ].map(s => (
               <Card key={s.label} style={{ padding: 20, textAlign: "center" }}>
                 <I n={s.icon} s={24} c="#6b7280" />
-                <div style={{ fontFamily: "var(--font-heading)", fontSize: 26, fontWeight: 900, margin: "8px 0 4px" }}>{s.val}</div>
+                <div style={{ fontFamily: "Outfit,sans-serif", fontSize: 26, fontWeight: 900, margin: "8px 0 4px" }}>{s.val}</div>
                 <div style={{ fontSize: 11, color: "var(--text3)", fontWeight: 700 }}>{s.label}</div>
               </Card>
             ))}
