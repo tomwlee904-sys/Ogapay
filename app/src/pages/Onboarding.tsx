@@ -1,4 +1,5 @@
 import { useState } from "react";
+import Layout from "../components/Layout";
 
 const I = ({ n, s = 18, c = "currentColor" }) => (
   <i className={`ti ti-${n}`} style={{ fontSize: s, color: c, lineHeight: 1, flexShrink: 0 }} />
@@ -178,55 +179,8 @@ export default function OgaPayOnboarding() {
     <>
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css" />
       <style>{css}</style>
-
-      <div className="og-wrap">
-
-        {/* ── Topbar (spans full width) ── */}
-        <header className="og-top">
-          <div className="og-crumb">
-            <Logo size={22} />
-            <span style={{ marginLeft: 6 }}>OgaPay</span>
-            <I n="chevron-right" s={13} c="#d4d4d8" />
-            <span>Provider</span>
-            <I n="chevron-right" s={13} c="#d4d4d8" />
-            <span>Statistics</span>
-            <I n="chevron-right" s={13} c="#d4d4d8" />
-            <span className="cur">Getting Started</span>
-          </div>
-          <div className="og-topright">
-            {!allDone && (
-              <span className="og-badge">
-                <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#fff", opacity: .85, display: "inline-block", animation: "pulse 1.8s ease-in-out infinite" }} />
-                {2 - progress} tasks pending
-              </span>
-            )}
-            {allDone && (
-              <span className="og-badge" style={{ background: "#16a34a" }}>
-                <I n="check" s={11} c="#fff" /> Setup complete
-              </span>
-            )}
-            <div className="og-avatar">A</div>
-          </div>
-        </header>
-
-        {/* ── Body grid ── */}
-        <div className="og-body">
-
-          {/* Sidebar */}
-          <aside className="og-side">
-            <div className="og-side-logo"><Logo size={26} /></div>
-            {SIDEBAR_ITEMS.map((s, i) => (
-              <>
-                {i === 4 && <div key="div" className="og-nav-divider" />}
-                <button key={s.key} title={s.tip} className={`og-nav-btn${activeNav === s.key ? " act" : ""}`} onClick={() => setActiveNav(s.key)}>
-                  <I n={s.icon} s={17} />
-                </button>
-              </>
-            ))}
-          </aside>
-
-          {/* Main content */}
-          <main className="og-content">
+      <Layout>
+        <div className="og-content">
 
             {/* Page heading */}
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 4 }}>
@@ -401,94 +355,10 @@ export default function OgaPayOnboarding() {
               </div>
             </div>
 
-          </main>
-
-          {/* ── Right panel ── */}
-          <aside className="og-right">
-            <h2 className="og-rh2">Resources</h2>
-            <p className="og-rsub">Read our documentation, watch our video guides and join our community.</p>
-
-            <a href="#" className="og-res-card">
-              <div className="og-res-icon" style={{ background: "#5865F2" }}>
-                <I n="brand-discord" s={20} c="#fff" />
-              </div>
-              <div>
-                <h4>Discord support</h4>
-                <p>Where the talk happens. Join the Discord ↗</p>
-              </div>
-            </a>
-
-            <a href="#" className="og-res-card">
-              <div className="og-res-icon">
-                <I n="book" s={20} c="#111" />
-              </div>
-              <div>
-                <h4>Documentation</h4>
-                <p>Learn how to use OgaPay. Full docs ↗</p>
-              </div>
-            </a>
-
-            <a href="#" className="og-res-card">
-              <div className="og-res-icon" style={{ background: "#f59e0b" }}>
-                <I n="users-group" s={20} c="#fff" />
-              </div>
-              <div>
-                <h4>Community</h4>
-                <p>Join Nigerian Earners Hub ↗</p>
-              </div>
-            </a>
-
-            <div className="og-divider" />
-
-            <h3 style={{ fontFamily: "Outfit,sans-serif", fontSize: 15, fontWeight: 800, marginBottom: 4 }}>Video tutorials</h3>
-            <p style={{ fontSize: 12, color: "#71717a", marginBottom: 12 }}>Step by step guides to get you started.</p>
-
-            <div className="og-video">
-              <div className="og-video-thumb">
-                <div className="og-video-play">
-                  <I n="player-play" s={16} c="#71717a" />
-                </div>
-                <span style={{ fontSize: 11, color: "#a1a1aa", fontWeight: 700 }}>Coming soon</span>
-              </div>
-              <div className="og-video-meta">
-                <div>
-                  <h4>An introduction to OgaPay API</h4>
-                  <small>2 minute video</small>
-                </div>
-                <I n="arrow-up-right" s={15} c="#a1a1aa" />
-              </div>
-            </div>
-
-            <div className="og-links-title">RESOURCE LINKS</div>
-            {RESOURCE_LINKS.map(l => (
-              <a key={l.label} href="#" className="og-rlink">
-                <I n={l.icon} s={15} c="#a1a1aa" />
-                {l.label}
-                <I n="arrow-up-right" s={13} c="#a1a1aa" style={{ marginLeft: "auto" }} />
-              </a>
-            ))}
-
-            {/* Progress widget */}
-            <div className="og-divider" />
-            <div style={{ background: "#f9f9f9", border: "1.5px solid #e4e4e7", borderRadius: 10, padding: "12px 14px" }}>
-              <div style={{ fontSize: 11, fontWeight: 800, color: "#71717a", textTransform: "uppercase", letterSpacing: ".08em", marginBottom: 10 }}>Your Progress</div>
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, fontWeight: 700, marginBottom: 6, color: "#111" }}>
-                <span>{progress}/2 steps done</span>
-                <span style={{ color: pct === 100 ? "#16a34a" : "#111" }}>{pct}%</span>
-              </div>
-              <div style={{ height: 6, background: "#e4e4e7", borderRadius: 99, overflow: "hidden" }}>
-                <div style={{ height: "100%", width: `${pct}%`, background: pct === 100 ? "#16a34a" : "#111", borderRadius: 99, transition: "width .4s ease" }} />
-              </div>
-              {pct === 100 && (
-                <div style={{ marginTop: 10, fontSize: 12, color: "#16a34a", fontWeight: 700, display: "flex", alignItems: "center", gap: 6 }}>
-                  <I n="check" s={14} c="#16a34a" /> All steps complete!
-                </div>
-              )}
-            </div>
-          </aside>
+          
 
         </div>
-      </div>
+      </Layout>
     </>
   );
 }
