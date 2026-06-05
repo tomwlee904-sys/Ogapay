@@ -99,16 +99,14 @@ export default function LoginPage() {
     setLoading("signup");
     setSignupMsg("");
     try {
-      const result = await apiRequest("/auth/signup", {
+      await apiRequest("/auth/signup", {
         method: "POST",
         auth: false,
         body: JSON.stringify({ firstName, lastName, email: signupEmail.trim(), password: signupPassword, username: signupEmail.split("@")[0] }),
       });
-      login(result);
-      window.location.href = "/dashboard";
-      // Don't log in yet — wait for email verification
-      setVerifyEmail("");
-      return;
+      // Don't log in yet — show verify screen
+      setVerifyEmail(signupEmail.trim());
+      show("verify");
     } catch (err) {
       setSignupMsg(err.message);
     } finally {
@@ -567,3 +565,4 @@ export default function LoginPage() {
     </footer>
   </>;
 }
+ 
