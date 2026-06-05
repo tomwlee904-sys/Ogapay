@@ -49,11 +49,11 @@ function Toggle({ on, set }) {
   return (
     <button onClick={() => set(v => !v)} style={{
       width: 44, height: 24, borderRadius: 99, border: "none", cursor: "pointer",
-      background: on ? "#111" : "var(--border)", position: "relative", flexShrink: 0, transition: "background .2s"
+      background: on ? "#111" : "#e5e7eb", position: "relative", flexShrink: 0, transition: "background .2s"
     }}>
       <span style={{
         position: "absolute", top: 3, left: on ? 23 : 3, width: 18, height: 18,
-        borderRadius: "50%", background: "var(--card)", transition: "left .2s",
+        borderRadius: "50%", background: "#fff", transition: "left .2s",
         boxShadow: "0 1px 3px rgba(0,0,0,.25)"
       }} />
     </button>
@@ -64,7 +64,7 @@ function CopyBtn({ text }) {
   const [ok, setOk] = useState(false);
   const copy = () => { navigator.clipboard?.writeText(text); setOk(true); setTimeout(() => setOk(false), 1800); };
   return (
-    <button onClick={copy} style={{ height: 34, padding: "0 14px", borderRadius: 99, border: "1.5px solid #e5e7eb", background: "var(--card)", fontSize: 12, fontWeight: 700, display: "flex", alignItems: "center", gap: 6, cursor: "pointer", color: ok ? "#16a34a" : "#111" }}>
+    <button onClick={copy} style={{ height: 34, padding: "0 14px", borderRadius: 99, border: "1.5px solid #e5e7eb", background: "#fff", fontSize: 12, fontWeight: 700, display: "flex", alignItems: "center", gap: 6, cursor: "pointer", color: ok ? "#16a34a" : "#111" }}>
       <I n={ok ? "check" : "copy"} s={13} c={ok ? "#16a34a" : "#6b7280"} /> {ok ? "Copied!" : "Copy"}
     </button>
   );
@@ -72,17 +72,27 @@ function CopyBtn({ text }) {
 
 function SubPage({ title, icon, onBack, children }) {
   return (
-    <div style={{ maxWidth: 900, margin: "0 auto", padding: "24px 20px 40px" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
-        <I n={icon} s={22} /> <h1 style={{ fontFamily: "Outfit,sans-serif", fontSize: 22, fontWeight: 900 }}>{title}</h1>
+    <div style={{ fontFamily: "'DM Sans',sans-serif", minHeight: "100vh", background: "#f9fafb" }}>
+      <header style={{ height: 56, background: "#fff", borderBottom: "1px solid #e5e7eb", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 24px", position: "sticky", top: 0, zIndex: 100 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, fontFamily: "Outfit,sans-serif", fontSize: 17, fontWeight: 800 }}>
+          <Logo size={28} /> OgaPay
+        </div>
+        <button onClick={onBack} style={{ height: 36, padding: "0 16px", border: "1.5px solid #e5e7eb", borderRadius: 99, background: "#fff", fontWeight: 700, fontSize: 13, display: "flex", alignItems: "center", gap: 7, cursor: "pointer" }}>
+          <I n="arrow-left" s={14} /> Back to Profile
+        </button>
+      </header>
+      <div style={{ maxWidth: 900, margin: "0 auto", padding: "24px 20px 60px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
+          <I n={icon} s={22} /> <h1 style={{ fontFamily: "Outfit,sans-serif", fontSize: 22, fontWeight: 900 }}>{title}</h1>
+        </div>
+        {children}
       </div>
-      {children}
     </div>
   );
 }
 
 function Card({ children, style = {} }) {
-  return <div style={{ background: "var(--card)", border: "1px solid #e5e7eb", borderRadius: 14, overflow: "hidden", ...style }}>{children}</div>;
+  return <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 14, overflow: "hidden", ...style }}>{children}</div>;
 }
 function CardHead({ left, right }) {
   return (
@@ -98,7 +108,7 @@ function CardBody({ children, style = {} }) {
 function Row({ label, val, valClass, info, right }) {
   return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "9px 0", borderBottom: "1px dashed #f3f4f6", fontSize: 13 }}>
-      <span style={{ color: "var(--text2)", fontWeight: 600, display: "flex", alignItems: "center", gap: 6 }}>
+      <span style={{ color: "#6b7280", fontWeight: 600, display: "flex", alignItems: "center", gap: 6 }}>
         {label}{info && <I n="info-circle" s={13} c="#d1d5db" />}
       </span>
       {right || <span style={{ fontWeight: 800, color: valClass === "no" ? "#ef4444" : valClass === "yes" ? "#16a34a" : "#111" }}>{val}</span>}
@@ -123,18 +133,18 @@ function JobsPage({ onBack }) {
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, marginBottom: 10 }}>
                 <div>
                   <div style={{ fontWeight: 800, fontSize: 15, marginBottom: 3 }}>{j.title}</div>
-                  <div style={{ fontSize: 11, color: "var(--text2)", fontWeight: 700 }}>{j.tags}</div>
-                  <div style={{ fontSize: 12, color: "var(--text2)", marginTop: 6 }}>{j.desc}</div>
+                  <div style={{ fontSize: 11, color: "#6b7280", fontWeight: 700 }}>{j.tags}</div>
+                  <div style={{ fontSize: 12, color: "#6b7280", marginTop: 6 }}>{j.desc}</div>
                 </div>
                 <div style={{ textAlign: "right", flexShrink: 0 }}>
                   <div style={{ fontFamily: "Outfit,sans-serif", fontSize: 20, fontWeight: 900, color: "#16a34a" }}>{j.reward}</div>
-                  <div style={{ fontSize: 11, color: "var(--text3)" }}>{j.filled}/{j.total} slots</div>
+                  <div style={{ fontSize: 11, color: "#9ca3af" }}>{j.filled}/{j.total} slots</div>
                 </div>
               </div>
-              <div style={{ height: 6, background: "var(--border)", borderRadius: 99, overflow: "hidden", marginBottom: 12 }}>
+              <div style={{ height: 6, background: "#f3f4f6", borderRadius: 99, overflow: "hidden", marginBottom: 12 }}>
                 <div style={{ width: `${pct}%`, height: "100%", background: pct === 100 ? "#16a34a" : "#111", borderRadius: 99 }} />
               </div>
-              <button style={{ height: 36, padding: "0 20px", borderRadius: 99, background: pct === 100 ? "var(--border)" : "#111", color: pct === 100 ? "#9ca3af" : "#fff", border: "none", fontWeight: 700, fontSize: 13, cursor: pct === 100 ? "not-allowed" : "pointer" }} disabled={pct === 100}>
+              <button style={{ height: 36, padding: "0 20px", borderRadius: 99, background: pct === 100 ? "#f3f4f6" : "#111", color: pct === 100 ? "#9ca3af" : "#fff", border: "none", fontWeight: 700, fontSize: 13, cursor: pct === 100 ? "not-allowed" : "pointer" }} disabled={pct === 100}>
                 {pct === 100 ? "Full" : "Apply Now"}
               </button>
             </Card>
@@ -151,7 +161,7 @@ function VaultPage({ onBack }) {
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 20 }}>
         {[{ label: "Next Distribution", val: "11h 42m" }, { label: "Your Holdings", val: "50 $OGA" }, { label: "Est. Earnings", val: "₦0.00" }, { label: "Total Distributed", val: "₦0.00" }].map(s => (
           <Card key={s.label} style={{ padding: "20px" }}>
-            <div style={{ fontSize: 11, color: "var(--text2)", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".06em", marginBottom: 6 }}>{s.label}</div>
+            <div style={{ fontSize: 11, color: "#6b7280", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".06em", marginBottom: 6 }}>{s.label}</div>
             <div style={{ fontFamily: "Outfit,sans-serif", fontSize: 24, fontWeight: 900 }}>{s.val}</div>
           </Card>
         ))}
@@ -160,8 +170,8 @@ function VaultPage({ onBack }) {
         <CardHead left={<><I n="clock" s={16} /> Distribution History</>} />
         <div style={{ padding: "0 20px" }}>
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead><tr>{["AMOUNT","DATE","TX"].map(h => <th key={h} style={{ fontSize: 11, fontWeight: 800, color: "var(--text2)", textTransform: "uppercase", letterSpacing: ".06em", padding: "12px 0", textAlign: "left", borderBottom: "1px solid #e5e7eb" }}>{h}</th>)}</tr></thead>
-            <tbody><tr><td colSpan={3} style={{ textAlign: "center", color: "var(--text3)", fontSize: 13, padding: "28px 0" }}>No distributions yet. Hold $OGA to participate.</td></tr></tbody>
+            <thead><tr>{["AMOUNT","DATE","TX"].map(h => <th key={h} style={{ fontSize: 11, fontWeight: 800, color: "#6b7280", textTransform: "uppercase", letterSpacing: ".06em", padding: "12px 0", textAlign: "left", borderBottom: "1px solid #e5e7eb" }}>{h}</th>)}</tr></thead>
+            <tbody><tr><td colSpan={3} style={{ textAlign: "center", color: "#9ca3af", fontSize: 13, padding: "28px 0" }}>No distributions yet. Hold $OGA to participate.</td></tr></tbody>
           </table>
         </div>
       </Card>
@@ -172,7 +182,7 @@ function VaultPage({ onBack }) {
 function CreatePage({ onBack }) {
   const [form, setForm] = useState({ title: "", desc: "", reward: "", slots: "", type: "social" });
   const s = k => e => setForm(f => ({ ...f, [k]: e.target.value }));
-  const inpStyle = { width: "100%", height: 44, padding: "0 14px", border: "1.5px solid #e5e7eb", borderRadius: 9, fontFamily: "inherit", fontSize: 14, outline: "none", background: "var(--bg2)" };
+  const inpStyle = { width: "100%", height: 44, padding: "0 14px", border: "1.5px solid #e5e7eb", borderRadius: 9, fontFamily: "inherit", fontSize: 14, outline: "none", background: "#fafafa" };
   return (
     <SubPage title="Create Job" icon="circle-plus" onBack={onBack}>
       <Card>
@@ -180,10 +190,10 @@ function CreatePage({ onBack }) {
         <CardBody>
           <div style={{ display: "grid", gap: 16 }}>
             <div>
-              <div style={{ fontSize: 11, fontWeight: 800, color: "var(--text2)", textTransform: "uppercase", letterSpacing: ".06em", marginBottom: 6 }}>Job Type</div>
+              <div style={{ fontSize: 11, fontWeight: 800, color: "#6b7280", textTransform: "uppercase", letterSpacing: ".06em", marginBottom: 6 }}>Job Type</div>
               <div style={{ display: "flex", gap: 8 }}>
                 {["social", "custom", "challenge"].map(t => (
-                  <button key={t} onClick={() => setForm(f => ({ ...f, type: t }))} style={{ height: 36, padding: "0 16px", borderRadius: 99, border: "1.5px solid", borderColor: form.type === t ? "#111" : "var(--border)", background: form.type === t ? "#111" : "#fff", color: form.type === t ? "#fff" : "#6b7280", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>
+                  <button key={t} onClick={() => setForm(f => ({ ...f, type: t }))} style={{ height: 36, padding: "0 16px", borderRadius: 99, border: "1.5px solid", borderColor: form.type === t ? "#111" : "#e5e7eb", background: form.type === t ? "#111" : "#fff", color: form.type === t ? "#fff" : "#6b7280", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>
                     {t.charAt(0).toUpperCase() + t.slice(1)}
                   </button>
                 ))}
@@ -196,7 +206,7 @@ function CreatePage({ onBack }) {
               { label: "Number of Slots", key: "slots", ph: "e.g. 100", type: "number" },
             ].map(f => (
               <div key={f.key}>
-                <div style={{ fontSize: 11, fontWeight: 800, color: "var(--text2)", textTransform: "uppercase", letterSpacing: ".06em", marginBottom: 6 }}>{f.label}</div>
+                <div style={{ fontSize: 11, fontWeight: 800, color: "#6b7280", textTransform: "uppercase", letterSpacing: ".06em", marginBottom: 6 }}>{f.label}</div>
                 {f.area
                   ? <textarea value={form[f.key]} onChange={s(f.key)} placeholder={f.ph} rows={4} style={{ ...inpStyle, height: "auto", padding: "10px 14px", resize: "vertical" }} />
                   : <input value={form[f.key]} onChange={s(f.key)} placeholder={f.ph} type={f.type || "text"} style={inpStyle} />
@@ -227,20 +237,20 @@ function BlogsPage({ onBack }) {
             <div style={{ display: "grid", gap: 14 }}>
               {[{ label: "Title", ph: "Your blog post title" }, { label: "Content", ph: "Write your post...", area: true }].map(f => (
                 <div key={f.label}>
-                  <div style={{ fontSize: 11, fontWeight: 800, color: "var(--text2)", textTransform: "uppercase", letterSpacing: ".06em", marginBottom: 6 }}>{f.label}</div>
+                  <div style={{ fontSize: 11, fontWeight: 800, color: "#6b7280", textTransform: "uppercase", letterSpacing: ".06em", marginBottom: 6 }}>{f.label}</div>
                   {f.area ? <textarea placeholder={f.ph} rows={8} style={{ width: "100%", padding: "10px 14px", border: "1.5px solid #e5e7eb", borderRadius: 9, fontFamily: "inherit", fontSize: 14, resize: "vertical", outline: "none" }} /> : <input placeholder={f.ph} style={{ width: "100%", height: 44, padding: "0 14px", border: "1.5px solid #e5e7eb", borderRadius: 9, fontFamily: "inherit", fontSize: 14, outline: "none" }} />}
                 </div>
               ))}
               <div style={{ display: "flex", gap: 10 }}>
                 <button style={{ height: 44, padding: "0 28px", borderRadius: 10, background: "#111", color: "#fff", border: "none", fontFamily: "inherit", fontWeight: 800, fontSize: 14, cursor: "pointer" }}>Publish</button>
-                <button onClick={() => setShowForm(false)} style={{ height: 44, padding: "0 20px", borderRadius: 10, border: "1.5px solid #e5e7eb", background: "var(--card)", fontFamily: "inherit", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>Cancel</button>
+                <button onClick={() => setShowForm(false)} style={{ height: 44, padding: "0 20px", borderRadius: 10, border: "1.5px solid #e5e7eb", background: "#fff", fontFamily: "inherit", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>Cancel</button>
               </div>
             </div>
           </CardBody></Card>
         : <Card style={{ padding: "48px 20px", textAlign: "center" }}>
             <I n="file-text" s={44} c="#d1d5db" />
-            <div style={{ marginTop: 14, fontSize: 14, color: "var(--text2)" }}>No blog posts yet.</div>
-            <div style={{ fontSize: 13, color: "var(--text3)", marginTop: 4 }}>Share your experience with the OgaPay community.</div>
+            <div style={{ marginTop: 14, fontSize: 14, color: "#6b7280" }}>No blog posts yet.</div>
+            <div style={{ fontSize: 13, color: "#9ca3af", marginTop: 4 }}>Share your experience with the OgaPay community.</div>
             <button onClick={() => setShowForm(true)} style={{ marginTop: 20, height: 40, padding: "0 24px", borderRadius: 99, background: "#111", color: "#fff", border: "none", fontFamily: "inherit", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>
               Write a Post
             </button>
@@ -255,8 +265,8 @@ function BookmarksPage({ onBack }) {
     <SubPage title="Bookmarks" icon="bookmark" onBack={onBack}>
       <Card style={{ padding: "48px 20px", textAlign: "center" }}>
         <I n="bookmark" s={44} c="#d1d5db" />
-        <div style={{ marginTop: 14, fontSize: 14, color: "var(--text2)" }}>No bookmarked jobs yet.</div>
-        <div style={{ fontSize: 13, color: "var(--text3)", marginTop: 4 }}>Bookmark jobs to save them for later.</div>
+        <div style={{ marginTop: 14, fontSize: 14, color: "#6b7280" }}>No bookmarked jobs yet.</div>
+        <div style={{ fontSize: 13, color: "#9ca3af", marginTop: 4 }}>Bookmark jobs to save them for later.</div>
       </Card>
     </SubPage>
   );
@@ -297,14 +307,40 @@ export default function OgaPayProfile({ user: propUser }) {
     { key: "portal", icon: "layout-dashboard", label: "Worker Portal" },
   ];
 
-  const inpStyle = { width: "100%", height: 44, padding: "0 14px", border: "1.5px solid #e5e7eb", borderRadius: 9, fontFamily: "inherit", fontSize: 13, outline: "none", background: "var(--bg2)" };
+  const inpStyle = { width: "100%", height: 44, padding: "0 14px", border: "1.5px solid #e5e7eb", borderRadius: 9, fontFamily: "inherit", fontSize: 13, outline: "none", background: "#fafafa" };
 
   return (
     <Layout>
-    <div style={{ background: "var(--bg)", color: "var(--text)", fontSize: 14 }}>
+    <div style={{ fontFamily: "'DM Sans',sans-serif", background: "#f9fafb", minHeight: "100vh", color: "#111", fontSize: 14 }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Outfit:wght@600;700;800;900&display=swap');
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: "DM Sans", sans-serif; }
+        a, button { font: inherit; }
+        .tnav-a:hover { color: #111 !important; background: #f3f4f6 !important; }
+        .qbtn:hover { border-color: #9ca3af !important; background: #f9fafb !important; }
+        .actbtn:hover { background: #222 !important; }
+        .outbtn:hover { border-color: #9ca3af !important; }
+        table { border-collapse: collapse; width: 100%; }
+        thead th { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; color: #6b7280; padding: 12px 16px; border-bottom: 1px solid #e5e7eb; text-align: left; }
+        tbody td { padding: 13px 16px; font-size: 13px; color: #374151; border-bottom: 1px solid #f3f4f6; }
+        tbody tr:last-child td { border-bottom: none; }
+        .empty-td { text-align: center; color: #9ca3af; padding: 28px 16px !important; }
+        @keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
+        .fade { animation: fadeUp .22s ease both; }
+        @media(max-width:760px) {
+          .two-col { grid-template-columns: 1fr !important; }
+          .topbar-nav { display: none !important; }
+          .quick-grid { grid-template-columns: repeat(3,1fr) !important; }
+          .portal-grid { grid-template-columns: repeat(2,1fr) !important; }
+        }
+        @media(max-width:480px) {
+          .quick-grid { grid-template-columns: repeat(2,1fr) !important; }
+        }
+      `}</style>
 
       {/* ── TOPBAR ── */}
-      <header style={{ height: 56, background: "var(--card)", borderBottom: "1px solid #e5e7eb", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 24px", position: "sticky", top: 0, zIndex: 100 }}>
+      <header style={{ height: 56, background: "#fff", borderBottom: "1px solid #e5e7eb", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 24px", position: "sticky", top: 0, zIndex: 100 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, fontFamily: "Outfit,sans-serif", fontSize: 18, fontWeight: 800 }}>
           <Logo size={28} /> OgaPay
         </div>
@@ -315,7 +351,7 @@ export default function OgaPayProfile({ user: propUser }) {
             { icon: "safe", label: "Vault", p: "vault" },
             { icon: "help-circle", label: "FAQ" },
           ].map(l => (
-            <a key={l.label} className="tnav-a" onClick={() => l.p && nav(l.p)} style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 10px", borderRadius: 7, fontSize: 13, fontWeight: 600, color: "var(--text2)", cursor: "pointer", transition: "color .13s,background .13s" }}>
+            <a key={l.label} className="tnav-a" onClick={() => l.p && nav(l.p)} style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 10px", borderRadius: 7, fontSize: 13, fontWeight: 600, color: "#6b7280", cursor: "pointer", transition: "color .13s,background .13s" }}>
               <I n={l.icon} s={14} /> {l.label}
             </a>
           ))}
@@ -328,14 +364,14 @@ export default function OgaPayProfile({ user: propUser }) {
             <div style={{ width: 28, height: 28, borderRadius: "50%", background: "#111", display: "grid", placeItems: "center", color: "#fff", fontSize: 11, fontWeight: 800 }}>{initials}</div>
             F48N...jemX
           </div>
-          <button style={{ width: 34, height: 34, border: "1.5px solid #e5e7eb", borderRadius: 7, background: "var(--card)", display: "grid", placeItems: "center", cursor: "pointer" }}>
+          <button style={{ width: 34, height: 34, border: "1.5px solid #e5e7eb", borderRadius: 7, background: "#fff", display: "grid", placeItems: "center", cursor: "pointer" }}>
             <I n="moon" s={15} c="#6b7280" />
           </button>
         </div>
       </header>
 
       {/* ── TAB NAV ── */}
-      <div style={{ background: "var(--card)", borderBottom: "1px solid #e5e7eb", display: "flex", alignItems: "center", padding: "0 24px", overflowX: "auto" }}>
+      <div style={{ background: "#fff", borderBottom: "1px solid #e5e7eb", display: "flex", alignItems: "center", padding: "0 24px", overflowX: "auto" }}>
         {TABS.map(t => (
           <button key={t.key} onClick={() => setTab(t.key)} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 5, padding: "13px 18px", fontSize: 13, fontWeight: 700, color: tab === t.key ? "#111" : "#6b7280", cursor: "pointer", border: "none", borderBottom: `2px solid ${tab === t.key ? "#111" : "transparent"}`, background: "none", transition: "color .13s,border-color .13s", whiteSpace: "nowrap" }}>
             <div style={{ position: "relative" }}>
@@ -354,27 +390,27 @@ export default function OgaPayProfile({ user: propUser }) {
           <Card>
             <CardHead
               left={<><I n="user-circle" s={17} /> Account Information</>}
-              right={<button style={{ width: 30, height: 30, border: "1.5px solid #e5e7eb", borderRadius: 7, background: "var(--card)", display: "grid", placeItems: "center", cursor: "pointer" }}><I n="refresh" s={14} c="#6b7280" /></button>}
+              right={<button style={{ width: 30, height: 30, border: "1.5px solid #e5e7eb", borderRadius: 7, background: "#fff", display: "grid", placeItems: "center", cursor: "pointer" }}><I n="refresh" s={14} c="#6b7280" /></button>}
             />
             <CardBody>
-              <Row label="Address" right={<span style={{ fontFamily: "monospace", fontSize: 12, background: "var(--bg)", border: "1px solid #e5e7eb", borderRadius: 6, padding: "4px 10px" }}>F48NUF...jemX</span>} />
-              <div onClick={() => setShowBal(v => !v)} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "var(--text2)", fontWeight: 600, cursor: "pointer", marginTop: 6, marginBottom: 4 }}>
-                Show all balances <span style={{ color: "var(--text3)" }}>3 hidden</span> <I n={showBal ? "chevron-up" : "chevron-down"} s={13} c="#9ca3af" />
+              <Row label="Address" right={<span style={{ fontFamily: "monospace", fontSize: 12, background: "#f9fafb", border: "1px solid #e5e7eb", borderRadius: 6, padding: "4px 10px" }}>F48NUF...jemX</span>} />
+              <div onClick={() => setShowBal(v => !v)} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#6b7280", fontWeight: 600, cursor: "pointer", marginTop: 6, marginBottom: 4 }}>
+                Show all balances <span style={{ color: "#9ca3af" }}>3 hidden</span> <I n={showBal ? "chevron-up" : "chevron-down"} s={13} c="#9ca3af" />
               </div>
               {showBal && (
-                <div style={{ background: "var(--bg)", border: "1px solid #e5e7eb", borderRadius: 9, padding: "10px 14px", marginBottom: 8 }}>
+                <div style={{ background: "#f9fafb", border: "1px solid #e5e7eb", borderRadius: 9, padding: "10px 14px", marginBottom: 8 }}>
                   {[{ l: "SOL", v: "0.000 SOL" }, { l: "USDC", v: "0.00 USDC" }, { l: "NGN", v: "₦0.00" }].map(b => (
                     <div key={b.l} style={{ display: "flex", justifyContent: "space-between", padding: "7px 0", borderBottom: "1px dashed #e5e7eb", fontSize: 13 }}>
-                      <span style={{ color: "var(--text2)", fontWeight: 600 }}>{b.l}</span><span style={{ fontWeight: 700 }}>{b.v}</span>
+                      <span style={{ color: "#6b7280", fontWeight: 600 }}>{b.l}</span><span style={{ fontWeight: 700 }}>{b.v}</span>
                     </div>
                   ))}
                 </div>
               )}
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: "1px dashed #f3f4f6" }}>
-                <span style={{ color: "var(--text2)", fontWeight: 600, fontSize: 13 }}>OGA Balance</span>
+                <span style={{ color: "#6b7280", fontWeight: 600, fontSize: 13 }}>OGA Balance</span>
                 <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
                   <span style={{ fontFamily: "Outfit,sans-serif", fontSize: 18, fontWeight: 900 }}>50 <span style={{ color: "#2563eb" }}>$OGA</span></span>
-                  <span style={{ fontSize: 12, color: "var(--text2)" }}>₦0.01</span>
+                  <span style={{ fontSize: 12, color: "#6b7280" }}>₦0.01</span>
                 </div>
               </div>
 
@@ -402,7 +438,7 @@ export default function OgaPayProfile({ user: propUser }) {
               <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, padding: "13px 0 8px", borderTop: "1px solid #f3f4f6" }}>
                 <div>
                   <div style={{ fontSize: 13, fontWeight: 800, marginBottom: 3 }}>Auto Swap</div>
-                  <div style={{ fontSize: 12, color: "var(--text2)", lineHeight: 1.45, marginBottom: 8 }}>Convert your OGA earnings into another token automatically.</div>
+                  <div style={{ fontSize: 12, color: "#6b7280", lineHeight: 1.45, marginBottom: 8 }}>Convert your OGA earnings into another token automatically.</div>
                   <div style={{ display: "flex", gap: 8 }}>
                     {[{ l: "SOL", c: "#9945FF" }, { l: "USDC", c: "#2775CA" }, { l: "NGN", c: "#16a34a" }].map(t => (
                       <div key={t.l} style={{ display: "flex", alignItems: "center", gap: 5, border: "1.5px solid #e5e7eb", borderRadius: 99, padding: "3px 10px", fontSize: 12, fontWeight: 700 }}>
@@ -413,7 +449,7 @@ export default function OgaPayProfile({ user: propUser }) {
                 </div>
                 <Toggle on={autoSwap} set={setAutoSwap} />
               </div>
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "var(--text3)", marginTop: 6 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "#9ca3af", marginTop: 6 }}>
                 <span>Minimum: 0.001 SOL (~₦7.00)</span>
                 <a onClick={() => setTab("earnings")} style={{ color: "#2563eb", fontWeight: 700, display: "flex", alignItems: "center", gap: 4, cursor: "pointer" }}>View my withdrawals <I n="arrow-down" s={12} c="#2563eb" /></a>
               </div>
@@ -432,13 +468,13 @@ export default function OgaPayProfile({ user: propUser }) {
                   <div style={{ width: 56, height: 56, borderRadius: "50%", background: "#111", display: "grid", placeItems: "center", color: "#fff", fontSize: 20, fontWeight: 900, flexShrink: 0 }}>{initials}</div>
                   <div>
                     <div style={{ fontFamily: "Outfit,sans-serif", fontSize: 18, fontWeight: 900 }}>{user.firstName}</div>
-                    <div style={{ fontSize: 13, color: "var(--text2)", marginTop: 2 }}>{handle}</div>
+                    <div style={{ fontSize: 13, color: "#6b7280", marginTop: 2 }}>{handle}</div>
                   </div>
                 </div>
-                <div style={{ fontSize: 13, color: "var(--text2)", lineHeight: 1.5, marginBottom: 14 }}>it's Good you are checking. Tread carefully 😊</div>
+                <div style={{ fontSize: 13, color: "#374151", lineHeight: 1.5, marginBottom: 14 }}>it's Good you are checking. Tread carefully 😊</div>
                 <div style={{ display: "flex", gap: 20, fontSize: 13, fontWeight: 700, paddingBottom: 14, borderBottom: "1px solid #f3f4f6", marginBottom: 14 }}>
-                  <div><strong>158</strong> <span style={{ color: "var(--text2)", fontWeight: 500 }}>Followers</span></div>
-                  <div><strong>205</strong> <span style={{ color: "var(--text2)", fontWeight: 500 }}>Following</span></div>
+                  <div><strong>158</strong> <span style={{ color: "#6b7280", fontWeight: 500 }}>Followers</span></div>
+                  <div><strong>205</strong> <span style={{ color: "#6b7280", fontWeight: 500 }}>Following</span></div>
                 </div>
                 <div>
                   <Row label="Rank" val="Level 1" info />
@@ -448,7 +484,7 @@ export default function OgaPayProfile({ user: propUser }) {
                   <Row label="Verified X account" val="No" valClass="no" />
                   <Row label="Seeker user" val="No" valClass="no" />
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "9px 0", fontSize: 13 }}>
-                    <span style={{ color: "var(--text2)", fontWeight: 600, display: "flex", alignItems: "center", gap: 6 }}>Human verified <I n="info-circle" s={13} c="#d1d5db" /></span>
+                    <span style={{ color: "#6b7280", fontWeight: 600, display: "flex", alignItems: "center", gap: 6 }}>Human verified <I n="info-circle" s={13} c="#d1d5db" /></span>
                     <button style={{ height: 34, padding: "0 16px", borderRadius: 99, background: "#111", color: "#fff", border: "none", fontSize: 12, fontWeight: 700, display: "flex", alignItems: "center", gap: 7, cursor: "pointer" }}>
                       <I n="sparkles" s={13} c="#fff" /> Verify with VeryAI
                     </button>
@@ -460,9 +496,9 @@ export default function OgaPayProfile({ user: propUser }) {
             <Card>
               <CardHead left={<><I n="link" s={17} /> Your Referral Link</>} />
               <CardBody>
-                <p style={{ fontSize: 13, color: "var(--text2)", marginBottom: 12 }}>Share your link and earn ₦500 for every new worker who joins OgaPay.</p>
-                <div style={{ display: "flex", alignItems: "center", gap: 10, background: "var(--bg)", border: "1px solid #e5e7eb", borderRadius: 9, padding: "10px 14px" }}>
-                  <span style={{ fontSize: 12, fontFamily: "monospace", color: "var(--text2)", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{refLink}</span>
+                <p style={{ fontSize: 13, color: "#6b7280", marginBottom: 12 }}>Share your link and earn ₦500 for every new worker who joins OgaPay.</p>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, background: "#f9fafb", border: "1px solid #e5e7eb", borderRadius: 9, padding: "10px 14px" }}>
+                  <span style={{ fontSize: 12, fontFamily: "monospace", color: "#374151", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{refLink}</span>
                   <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
                     <CopyBtn text={refLink} />
                     <button style={{ height: 34, padding: "0 14px", borderRadius: 99, background: "#111", color: "#fff", border: "none", fontSize: 12, fontWeight: 700, display: "flex", alignItems: "center", gap: 7, cursor: "pointer" }}>
@@ -481,7 +517,7 @@ export default function OgaPayProfile({ user: propUser }) {
               <CardBody>
                 <div className="quick-grid" style={{ display: "grid", gridTemplateColumns: "repeat(6,1fr)", gap: 10 }}>
                   {QUICK.map(q => (
-                    <button key={q.label} className="qbtn" onClick={() => nav(q.page)} style={{ border: "1.5px solid #e5e7eb", borderRadius: 12, padding: "16px 10px", display: "flex", flexDirection: "column", alignItems: "center", gap: 9, fontSize: 12, fontWeight: 700, color: "var(--text2)", background: "var(--card)", transition: "all .13s", cursor: "pointer" }}>
+                    <button key={q.label} className="qbtn" onClick={() => nav(q.page)} style={{ border: "1.5px solid #e5e7eb", borderRadius: 12, padding: "16px 10px", display: "flex", flexDirection: "column", alignItems: "center", gap: 9, fontSize: 12, fontWeight: 700, color: "#374151", background: "#fff", transition: "all .13s", cursor: "pointer" }}>
                       <I n={q.icon} s={22} c="#6b7280" /> {q.label}
                     </button>
                   ))}
@@ -498,22 +534,22 @@ export default function OgaPayProfile({ user: propUser }) {
                 right={
                   <div style={{ display: "flex", gap: 6 }}>
                     {["7", "30"].map(p => (
-                      <button key={p} onClick={() => setPeriod(p)} style={{ height: 30, padding: "0 14px", borderRadius: 99, border: "1.5px solid", borderColor: period === p ? "#111" : "var(--border)", background: period === p ? "#111" : "#fff", color: period === p ? "#fff" : "#6b7280", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>{p} days</button>
+                      <button key={p} onClick={() => setPeriod(p)} style={{ height: 30, padding: "0 14px", borderRadius: 99, border: "1.5px solid", borderColor: period === p ? "#111" : "#e5e7eb", background: period === p ? "#111" : "#fff", color: period === p ? "#fff" : "#6b7280", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>{p} days</button>
                     ))}
                   </div>
                 }
               />
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, padding: "18px 20px", borderBottom: "1px solid #f3f4f6" }}>
                 <div>
-                  <div style={{ fontSize: 10, fontWeight: 800, color: "var(--text2)", textTransform: "uppercase", letterSpacing: ".08em", marginBottom: 6 }}>EARNED IN {period} DAYS</div>
+                  <div style={{ fontSize: 10, fontWeight: 800, color: "#6b7280", textTransform: "uppercase", letterSpacing: ".08em", marginBottom: 6 }}>EARNED IN {period} DAYS</div>
                   <div style={{ fontFamily: "Outfit,sans-serif", fontSize: 28, fontWeight: 900, display: "flex", alignItems: "baseline", gap: 8 }}>
-                    0 <span style={{ fontSize: 14, color: "var(--text2)", fontWeight: 700 }}>$OGA</span>
+                    0 <span style={{ fontSize: 14, color: "#6b7280", fontWeight: 700 }}>$OGA</span>
                   </div>
-                  <div style={{ fontSize: 12, color: "var(--text3)", marginTop: 4 }}>Combined across all categories</div>
+                  <div style={{ fontSize: 12, color: "#9ca3af", marginTop: 4 }}>Combined across all categories</div>
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
                   <svg width={80} height={80} viewBox="0 0 80 80">
-                    <circle cx="40" cy="40" r="28" fill="none" stroke="var(--border)" strokeWidth="16" />
+                    <circle cx="40" cy="40" r="28" fill="none" stroke="#f3f4f6" strokeWidth="16" />
                     <text x="40" y="44" textAnchor="middle" fontSize="9" fill="#9ca3af" fontWeight="700">No data</text>
                   </svg>
                   <div style={{ display: "grid", gap: 7 }}>
@@ -522,7 +558,7 @@ export default function OgaPayProfile({ user: propUser }) {
                         <span style={{ display: "flex", alignItems: "center", gap: 6, fontWeight: 700 }}>
                           <span style={{ width: 9, height: 9, borderRadius: "50%", background: d.color, display: "inline-block" }} /> {d.name}
                         </span>
-                        <span style={{ color: "var(--text2)", fontFamily: "monospace", fontSize: 11 }}>0 $OGA</span>
+                        <span style={{ color: "#6b7280", fontFamily: "monospace", fontSize: 11 }}>0 $OGA</span>
                       </div>
                     ))}
                   </div>
@@ -531,14 +567,14 @@ export default function OgaPayProfile({ user: propUser }) {
               <div style={{ padding: "12px 20px 18px" }}>
                 <ResponsiveContainer width="100%" height={180}>
                   <LineChart data={chartData} margin={{ top: 4, right: 8, left: -22, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" vertical={false} />
                     <XAxis dataKey="day" tick={{ fontSize: 11, fill: "#9ca3af" }} axisLine={false} tickLine={false} />
                     <YAxis tick={{ fontSize: 11, fill: "#9ca3af" }} axisLine={false} tickLine={false} domain={[0, 4]} ticks={[0, 1, 2, 3, 4]} />
                     <Tooltip contentStyle={{ border: "1px solid #e5e7eb", borderRadius: 8, fontSize: 12 }} />
                     <Line type="monotone" dataKey="val" stroke="#111" strokeWidth={2} dot={false} />
                   </LineChart>
                 </ResponsiveContainer>
-                <div style={{ fontSize: 12, color: "var(--text3)", marginTop: 10 }}>No combined earnings activity in this timeframe yet.</div>
+                <div style={{ fontSize: 12, color: "#9ca3af", marginTop: 10 }}>No combined earnings activity in this timeframe yet.</div>
               </div>
             </Card>
           </div>
@@ -577,21 +613,21 @@ export default function OgaPayProfile({ user: propUser }) {
           <Card>
             <CardHead
               left={<><I n="currency-dollar" s={17} /> Earnings</>}
-              right={<div style={{ display: "flex", gap: 6 }}>{["7","30"].map(p => <button key={p} onClick={() => setPeriod(p)} style={{ height: 30, padding: "0 14px", borderRadius: 99, border: "1.5px solid", borderColor: period === p ? "#111" : "var(--border)", background: period === p ? "#111" : "#fff", color: period === p ? "#fff" : "#6b7280", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>{p} days</button>)}</div>}
+              right={<div style={{ display: "flex", gap: 6 }}>{["7","30"].map(p => <button key={p} onClick={() => setPeriod(p)} style={{ height: 30, padding: "0 14px", borderRadius: 99, border: "1.5px solid", borderColor: period === p ? "#111" : "#e5e7eb", background: period === p ? "#111" : "#fff", color: period === p ? "#fff" : "#6b7280", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>{p} days</button>)}</div>}
             />
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, padding: "18px 20px", borderBottom: "1px solid #f3f4f6" }}>
               <div>
-                <div style={{ fontSize: 10, fontWeight: 800, color: "var(--text2)", textTransform: "uppercase", letterSpacing: ".08em", marginBottom: 6 }}>EARNED IN {period} DAYS</div>
-                <div style={{ fontFamily: "Outfit,sans-serif", fontSize: 28, fontWeight: 900, display: "flex", alignItems: "baseline", gap: 8 }}>0 <span style={{ fontSize: 14, color: "var(--text2)", fontWeight: 700 }}>$OGA</span></div>
-                <div style={{ fontSize: 12, color: "var(--text3)", marginTop: 4 }}>Combined across all categories</div>
+                <div style={{ fontSize: 10, fontWeight: 800, color: "#6b7280", textTransform: "uppercase", letterSpacing: ".08em", marginBottom: 6 }}>EARNED IN {period} DAYS</div>
+                <div style={{ fontFamily: "Outfit,sans-serif", fontSize: 28, fontWeight: 900, display: "flex", alignItems: "baseline", gap: 8 }}>0 <span style={{ fontSize: 14, color: "#6b7280", fontWeight: 700 }}>$OGA</span></div>
+                <div style={{ fontSize: 12, color: "#9ca3af", marginTop: 4 }}>Combined across all categories</div>
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
-                <svg width={80} height={80} viewBox="0 0 80 80"><circle cx="40" cy="40" r="28" fill="none" stroke="var(--border)" strokeWidth="16" /></svg>
+                <svg width={80} height={80} viewBox="0 0 80 80"><circle cx="40" cy="40" r="28" fill="none" stroke="#f3f4f6" strokeWidth="16" /></svg>
                 <div style={{ display: "grid", gap: 7 }}>
                   {DONUT_CATS.map(d => (
                     <div key={d.name} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 20, fontSize: 12 }}>
                       <span style={{ display: "flex", alignItems: "center", gap: 6, fontWeight: 700 }}><span style={{ width: 9, height: 9, borderRadius: "50%", background: d.color, display: "inline-block" }} />{d.name}</span>
-                      <span style={{ color: "var(--text2)", fontFamily: "monospace", fontSize: 11 }}>0 $OGA</span>
+                      <span style={{ color: "#6b7280", fontFamily: "monospace", fontSize: 11 }}>0 $OGA</span>
                     </div>
                   ))}
                 </div>
@@ -600,14 +636,14 @@ export default function OgaPayProfile({ user: propUser }) {
             <div style={{ padding: "12px 20px 18px" }}>
               <ResponsiveContainer width="100%" height={200}>
                 <LineChart data={chartData} margin={{ top: 4, right: 8, left: -22, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" vertical={false} />
                   <XAxis dataKey="day" tick={{ fontSize: 11, fill: "#9ca3af" }} axisLine={false} tickLine={false} />
                   <YAxis tick={{ fontSize: 11, fill: "#9ca3af" }} axisLine={false} tickLine={false} domain={[0,4]} ticks={[0,1,2,3,4]} />
                   <Tooltip contentStyle={{ border: "1px solid #e5e7eb", borderRadius: 8, fontSize: 12 }} />
                   <Line type="monotone" dataKey="val" stroke="#111" strokeWidth={2} dot={false} />
                 </LineChart>
               </ResponsiveContainer>
-              <div style={{ fontSize: 12, color: "var(--text3)", marginTop: 10 }}>No combined earnings activity in this timeframe yet.</div>
+              <div style={{ fontSize: 12, color: "#9ca3af", marginTop: 10 }}>No combined earnings activity in this timeframe yet.</div>
             </div>
           </Card>
           <Card>
@@ -643,7 +679,7 @@ export default function OgaPayProfile({ user: propUser }) {
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 16 }}>
             {[{ l: "Total Referrals", v: "0" }, { l: "Active Referrals", v: "0" }, { l: "Total Earned", v: "₦0" }].map(s => (
               <Card key={s.l} style={{ padding: 20 }}>
-                <div style={{ fontSize: 11, fontWeight: 800, color: "var(--text2)", textTransform: "uppercase", letterSpacing: ".06em", marginBottom: 6 }}>{s.l}</div>
+                <div style={{ fontSize: 11, fontWeight: 800, color: "#6b7280", textTransform: "uppercase", letterSpacing: ".06em", marginBottom: 6 }}>{s.l}</div>
                 <div style={{ fontFamily: "Outfit,sans-serif", fontSize: 26, fontWeight: 900 }}>{s.v}</div>
               </Card>
             ))}
@@ -651,8 +687,8 @@ export default function OgaPayProfile({ user: propUser }) {
           <Card>
             <CardHead left={<><I n="link" s={17} /> Your Referral Link</>} />
             <CardBody>
-              <p style={{ fontSize: 13, color: "var(--text2)", marginBottom: 12 }}>Earn ₦500 for every new worker who signs up using your link.</p>
-              <div style={{ display: "flex", alignItems: "center", gap: 10, background: "var(--bg)", border: "1px solid #e5e7eb", borderRadius: 9, padding: "10px 14px", marginBottom: 20 }}>
+              <p style={{ fontSize: 13, color: "#6b7280", marginBottom: 12 }}>Earn ₦500 for every new worker who signs up using your link.</p>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, background: "#f9fafb", border: "1px solid #e5e7eb", borderRadius: 9, padding: "10px 14px", marginBottom: 20 }}>
                 <span style={{ fontSize: 12, fontFamily: "monospace", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{refLink}</span>
                 <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
                   <CopyBtn text={refLink} />
@@ -672,7 +708,7 @@ export default function OgaPayProfile({ user: propUser }) {
             <CardHead left={<><I n="bell" s={17} /> Alerts</>} right={<button style={{ fontSize: 12, fontWeight: 700, color: "#2563eb", border: "none", background: "none", cursor: "pointer" }}>Mark all read</button>} />
             <CardBody style={{ textAlign: "center", padding: "48px 20px" }}>
               <I n="bell-off" s={40} c="#d1d5db" />
-              <div style={{ fontSize: 13, color: "var(--text3)", marginTop: 12 }}>No alerts yet. We'll notify you about new jobs, earnings, and updates.</div>
+              <div style={{ fontSize: 13, color: "#9ca3af", marginTop: 12 }}>No alerts yet. We'll notify you about new jobs, earnings, and updates.</div>
             </CardBody>
           </Card>
         </div>
@@ -691,7 +727,7 @@ export default function OgaPayProfile({ user: propUser }) {
               <Card key={s.label} style={{ padding: 20, textAlign: "center" }}>
                 <I n={s.icon} s={24} c="#6b7280" />
                 <div style={{ fontFamily: "Outfit,sans-serif", fontSize: 26, fontWeight: 900, margin: "8px 0 4px" }}>{s.val}</div>
-                <div style={{ fontSize: 11, color: "var(--text3)", fontWeight: 700 }}>{s.label}</div>
+                <div style={{ fontSize: 11, color: "#9ca3af", fontWeight: 700 }}>{s.label}</div>
               </Card>
             ))}
           </div>
@@ -699,7 +735,7 @@ export default function OgaPayProfile({ user: propUser }) {
             <Card>
               <CardHead left={<><I n="layout-dashboard" s={17} /> Worker Portal</>} />
               <CardBody>
-                <p style={{ fontSize: 13, color: "var(--text2)", lineHeight: 1.6, marginBottom: 16 }}>Build your reputation as a worker on OgaPay. Complete tasks, earn compliments, and rise through the ranks.</p>
+                <p style={{ fontSize: 13, color: "#6b7280", lineHeight: 1.6, marginBottom: 16 }}>Build your reputation as a worker on OgaPay. Complete tasks, earn compliments, and rise through the ranks.</p>
                 <div style={{ display: "grid", gap: 10 }}>
                   {[
                     { icon: "star", label: "My Reviews", val: "0 reviews", sub: "0.0 rating" },
@@ -708,10 +744,10 @@ export default function OgaPayProfile({ user: propUser }) {
                     { icon: "users", label: "Communities", val: "0 joined" },
                   ].map(r => (
                     <div key={r.label} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: "1px dashed #f3f4f6", fontSize: 13 }}>
-                      <span style={{ display: "flex", alignItems: "center", gap: 8, color: "var(--text2)", fontWeight: 600 }}><I n={r.icon} s={16} c="#9ca3af" />{r.label}</span>
+                      <span style={{ display: "flex", alignItems: "center", gap: 8, color: "#6b7280", fontWeight: 600 }}><I n={r.icon} s={16} c="#9ca3af" />{r.label}</span>
                       <div style={{ textAlign: "right" }}>
                         <div style={{ fontWeight: 800 }}>{r.val}</div>
-                        {r.sub && <div style={{ fontSize: 11, color: "var(--text3)" }}>{r.sub}</div>}
+                        {r.sub && <div style={{ fontSize: 11, color: "#9ca3af" }}>{r.sub}</div>}
                       </div>
                     </div>
                   ))}
@@ -722,8 +758,8 @@ export default function OgaPayProfile({ user: propUser }) {
               <CardHead left={<><I n="user" s={17} /> My Store</>} right={<button style={{ height: 32, padding: "0 14px", borderRadius: 99, background: "#111", color: "#fff", border: "none", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>Open Store</button>} />
               <CardBody style={{ textAlign: "center", padding: "32px 20px" }}>
                 <I n="building-store" s={40} c="#d1d5db" />
-                <div style={{ fontSize: 13, color: "var(--text3)", marginTop: 12 }}>No products listed yet.</div>
-                <div style={{ fontSize: 12, color: "var(--text3)", marginTop: 4 }}>Open your store to sell services and products.</div>
+                <div style={{ fontSize: 13, color: "#9ca3af", marginTop: 12 }}>No products listed yet.</div>
+                <div style={{ fontSize: 12, color: "#9ca3af", marginTop: 4 }}>Open your store to sell services and products.</div>
               </CardBody>
             </Card>
           </div>
