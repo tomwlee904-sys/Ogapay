@@ -200,6 +200,24 @@ export default function Blog() {
         <style>{`
           .blog-nav-link:hover { color: #121566 !important; }
           .blog-cat-btn:hover { background: #f0f0f0 !important; }
+          .blog-hero {
+            background: #121566;
+            min-height: 500px;
+            padding: 80px 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+          }
+          @media (max-width: 768px) {
+            .blog-hero {
+              min-height: 360px;
+              padding: 56px 24px;
+            }
+          }
         `}</style>
 
         {/* Nav — minimal like Fiverr blog */}
@@ -238,7 +256,7 @@ export default function Blog() {
         <Drawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
 
         {/* HERO — full width, #121566 background, centered text */}
-        <div style={{ background: '#121566', padding: '4.5rem 3rem', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
+        <div className="blog-hero">
           {/* Subtle background circles */}
           <div style={{ position: 'absolute', top: -80, right: -80, width: 400, height: 400, borderRadius: '50%', background: 'rgba(255,255,255,0.04)' }} />
           <div style={{ position: 'absolute', bottom: -60, left: -60, width: 300, height: 300, borderRadius: '50%', background: 'rgba(255,255,255,0.03)' }} />
