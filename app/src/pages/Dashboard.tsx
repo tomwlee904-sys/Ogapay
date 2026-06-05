@@ -25,7 +25,7 @@ function setStep(key) {
 
 /* ─── STYLES (injected inline to preserve exact layout) ────────── */
 const CSS = `
-  .dash-wrap2 { max-width: 960px; margin: 0 auto; padding: 28px 20px 60px; }
+  .dash-wrap2 { padding: 28px 20px 60px; }
   .dash-intro { display:flex; align-items:center; gap:14px; padding:16px 20px; background:var(--card); border:1px solid var(--border); border-radius:12px; margin-bottom:24px; }
   .dash-intro-icon { width:40px; height:40px; border-radius:10px; display:grid; place-items:center; flex-shrink:0; }
   .dash-intro h2 { font-family:"Outfit",sans-serif; font-size:17px; font-weight:800; margin:0 0 2px; }
@@ -109,6 +109,16 @@ const CSS = `
     .dash-stats-row { grid-template-columns:1fr; }
     .dash-provider-grid { grid-template-columns:1fr 1fr; }
   }
+
+  /* Hide right sidebar on mobile (Bug 2 fix) */
+  @media(max-width:768px) {
+    .dash-right { display: none !important; }
+  }
+
+  /* Locked step styling (Bug 2 fix) */
+  .dash-step-locked { opacity: 0.35; pointer-events: none; filter: grayscale(0.8); }
+  .dash-step-locked .dash-btn { pointer-events: none; }
+  .dash-step-locked .dash-provider { pointer-events: none; }
 `;
 
 export default function OgaPayDashboard() {
@@ -120,6 +130,14 @@ export default function OgaPayDashboard() {
   const [verifSent, setVerifSent] = useState(false);
   const [walletConnected, setWalletConnected] = useState(false);
   const [isNew, setIsNew] = useState(() => {
+    // Check createdAt timestamp - if user created < 5 min ago, show "Welcome"
+    try {
+      const u = JSON.parse(localStorage.getItem("ogapay_user")) || {};
+      if (u.createdAt) {
+        const elapsed = Date.now() - new Date(u.createdAt).getTime();
+        if (elapsed < 5 * 60 * 1000) return true;
+      }
+    } catch {}
     const n = localStorage.getItem("ogapay_is_new_user") === "true";
     if (n) localStorage.removeItem("ogapay_is_new_user");
     return n;
@@ -259,6 +277,8 @@ export default function OgaPayDashboard() {
             </div>
 
             {/* ── STEP 2: WALLET ── */}
+            {step1 && (
+            <div className={`${step2 ? "" : "dash-step-locked"}`}>
             <div className="dash-section-title">
               <Icon n="circle-filled" s={8} /> STEP 2: CONNECT YOUR WALLET
             </div>
@@ -283,8 +303,12 @@ export default function OgaPayDashboard() {
               </button>
               {walletConnected && <div className="dash-wallet-addr">F48N...jemX</div>}
             </div>
+            </div>
+            )}
 
             {/* ── STEP 3: COMMUNITY ── */}
+            {step2 && (
+            <div className={`${step3 ? "" : "dash-step-locked"}`}>
             <div className="dash-section-title">
               <Icon n="circle-filled" s={8} /> STEP 3: JOIN THE COMMUNITY
             </div>
@@ -308,8 +332,12 @@ export default function OgaPayDashboard() {
                 <Icon n="users" s={14} /> {step3 ? "✓ Community Joined" : "I've Joined — Mark as Done"}
               </button>
             </div>
+            </div>
+            )}
 
             {/* ── STEP 4: FIRST TASK ── */}
+            {step3 && (
+            <div className={`${step4 ? "" : "dash-step-locked"}`}>
             <div className="dash-section-title">
               <Icon n="circle-filled" s={8} /> STEP 4: COMPLETE YOUR FIRST TASK
             </div>
@@ -330,9 +358,11 @@ export default function OgaPayDashboard() {
                 <Icon n="briefcase" s={14} /> Browse Available Tasks
               </a>
             </div>
+            </div>
+            )}
 
             {/* ── SETUP CHECKLIST ── */}
-            <div className="dash-checklist">
+            <div className="dash-checklist" style={{ display: "none" }}>
               <div className="dash-check-title">Setup Checklist</div>
               {checklist.map((item, i) => (
                 <div key={i} className={`dash-check-item${item.done ? " done" : ""}`}>
