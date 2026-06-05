@@ -4,7 +4,7 @@ import Layout from '../components/Layout'
 import { useAuth } from '../context/AuthContext'
 
 const CATEGORIES = ['News', 'Businesses', 'Freelancers', 'Case Studies']
-const COVER_COLORS = ['#534AB7', '#185FA5', '#3B6D11', '#854F0B', '#993556', '#0F6E56', '#7F77DD', '#1F8CFF']
+const COVER_COLORS = ['#534AB7', '#185FA5', '#3B6D11', '#854F0B', '#993556', '#0F6E56', '#121566', '#121566']
 
 const badgeColors: Record<string, { bg: string; color: string }> = {
   News: { bg: '#E6F1FB', color: '#185FA5' },
@@ -176,7 +176,7 @@ export default function BlogEditor() {
         .be-tb-btn:hover{border-color:var(--accent);color:var(--accent)}
         .be-tb-btn i{font-size:14px}
         .be-actions{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap}
-        .be-btn-primary{height:42px;padding:0 24px;border-radius:99px;border:none;background:#7F77DD;color:#fff;font-size:14px;font-weight:700;cursor:pointer;transition:opacity .15s}
+        .be-btn-primary{height:42px;padding:0 24px;border-radius:99px;border:none;background:#121566;color:#fff;font-size:14px;font-weight:700;cursor:pointer;transition:opacity .15s}
         .be-btn-primary:hover{opacity:.85}
         .be-btn-secondary{height:42px;padding:0 24px;border-radius:99px;border:1.5px solid var(--border);background:transparent;color:var(--text);font-size:14px;font-weight:700;cursor:pointer}
         .be-btn-secondary:hover{border-color:var(--text)}
@@ -203,8 +203,8 @@ export default function BlogEditor() {
 
         {/* Preview Toggle */}
         <div style={{display:'flex',gap:10,marginBottom:20}}>
-          <button onClick={() => setPreview(false)} style={{height:34,padding:'0 16px',borderRadius:99,border:preview?'1.5px solid var(--border)':'none',background:preview?'transparent':'#7F77DD',color:preview?'var(--text2)':'#fff',fontSize:12,fontWeight:700,cursor:'pointer'}}>Edit</button>
-          <button onClick={() => setPreview(true)} style={{height:34,padding:'0 16px',borderRadius:99,border:preview?'none':'1.5px solid var(--border)',background:preview?'#7F77DD':'transparent',color:preview?'#fff':'var(--text2)',fontSize:12,fontWeight:700,cursor:'pointer'}}>Preview</button>
+          <button onClick={() => setPreview(false)} style={{height:34,padding:'0 16px',borderRadius:99,border:preview?'1.5px solid var(--border)':'none',background:preview?'transparent':'#121566',color:preview?'var(--text2)':'#fff',fontSize:12,fontWeight:700,cursor:'pointer'}}>Edit</button>
+          <button onClick={() => setPreview(true)} style={{height:34,padding:'0 16px',borderRadius:99,border:preview?'none':'1.5px solid var(--border)',background:preview?'#121566':'transparent',color:preview?'#fff':'var(--text2)',fontSize:12,fontWeight:700,cursor:'pointer'}}>Preview</button>
         </div>
 
         {preview ? (
