@@ -253,6 +253,259 @@ const formatAddress = (name: string) => {
   return initials
 }
 
+/* ─── Job Detail View ─── */
+function JobDetailView({ job, onBack }: { job: any; onBack: () => void }) {
+  const navigate = useNavigate()
+  const [showApplyModal, setShowApplyModal] = useState(false)
+  const [applyMsg, setApplyMsg] = useState('')
+  const [applyLink, setApplyLink] = useState('')
+  const [submitted, setSubmitted] = useState(false)
+  const [timeLeft, setTimeLeft] = useState('')
+
+  // Countdown timer
+  useEffect(() => {
+    const deadline = new Date(Date.now() + 86400000)
+    const tick = () => {
+      const diff = deadline.getTime() - Date.now()
+      if (diff <= 0) { setTimeLeft('Ended'); return }
+      const h = Math.floor(diff / 3600000)
+      const m = Math.floor((diff % 3600000) / 60000)
+      const s = Math.floor((diff % 60000) / 1000)
+      setTimeLeft(h + 'h ' + m + 'm ' + s + 's')
+    }
+    tick()
+    const iv = setInterval(tick, 1000)
+    return () => clearInterval(iv)
+  }, [])
+
+  const handleApply = () => {
+    if (!applyLink.trim()) { setApplyMsg('Please provide a submission link'); return }
+    setSubmitted(true)
+    setApplyMsg('')
+    setTimeout(() => { setShowApplyModal(false); setSubmitted(false); setApplyLink('') }, 2000)
+  }
+
+  return (
+    <Layout>
+      <style>{/*css*/`
+        .cd-page{max-width:860px;margin:0 auto;padding:0 0 50px}
+        .cd-creator{display:flex;align-items:center;gap:14px;padding:18px 22px;background:var(--card);border:1px solid var(--border);border-radius:14px;margin-bottom:16px}
+        .cd-creator-avatar{width:48px;height:48px;border-radius:50%;overflow:hidden;flex-shrink:0;background:var(--bg2);display:grid;place-items:center;border:2px solid var(--border)}
+        .cd-creator-avatar i{font-size:22px;color:var(--text3)}
+        .cd-creator-info{flex:1;min-width:0}
+        .cd-creator-name{font-size:16px;font-weight:800;color:var(--text);display:flex;align-items:center;gap:8px}
+        .cd-creator-handle{font-size:13px;color:var(--text2);font-weight:500}
+        .cd-creator-wallet{font-family:monospace;font-size:11px;color:var(--text3);background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:3px 8px;display:inline-flex;align-items:center;gap:5px;cursor:pointer;margin-top:4px}
+        .cd-creator-wallet:hover{color:var(--text)}
+        .cd-card{background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:16px}
+        .cd-card-head{padding:20px 24px;border-bottom:1px solid var(--border)}
+        .cd-title{font-size:22px;font-weight:800;margin:0 0 8px;color:var(--text);line-height:1.3}
+        .cd-badge-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px}
+        .cd-badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;padding:4px 10px;border-radius:99px}
+        .cd-badge.open{background:#052e16;color:#4ade80}
+        .cd-badge.challenge{background:#1e1035;color:#c4b5fd}
+        .cd-bounty{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:20px 24px;border-bottom:1px solid var(--border)}
+        @media(max-width:600px){.cd-bounty{grid-template-columns:1fr}}
+        .cd-bounty-item{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px 18px}
+        .cd-bounty-label{font-size:11px;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+        .cd-bounty-sol{font-family:"Outfit",sans-serif;font-size:24px;font-weight:900;color:var(--text)}
+        .cd-bounty-sol span{color:var(--accent);font-size:16px}
+        .cd-bounty-usd{font-size:12px;color:var(--text2);margin-top:2px}
+        .cd-bounty-tag{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;background:#1e1035;color:#c4b5fd;margin-left:6px}
+        .cd-deadline{display:flex;align-items:center;gap:12px;padding:14px 24px;border-bottom:1px solid var(--border);background:var(--bg2)}
+        .cd-deadline-icon{width:36px;height:36px;border-radius:50%;background:var(--card);border:1px solid var(--border);display:grid;place-items:center;flex-shrink:0}
+        .cd-deadline-icon i{font-size:16px}
+        .cd-deadline-info{flex:1}
+        .cd-deadline-label{font-size:11px;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+        .cd-deadline-time{font-size:18px;font-weight:800;color:var(--text);font-family:"Outfit",sans-serif}
+        .cd-deadline-time.urgent{color:#fb923c}
+        .cd-detail-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:20px 24px;border-bottom:1px solid var(--border)}
+        @media(max-width:600px){.cd-detail-grid{grid-template-columns:repeat(2,1fr)}}
+        .cd-detail-label{font-size:11px;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px}
+        .cd-detail-value{font-size:14px;font-weight:700;color:var(--text)}
+        .cd-req-section{padding:20px 24px;border-bottom:1px solid var(--border)}
+        .cd-req-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+        .cd-req-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+        .cd-req-item{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2);padding:6px 10px;background:var(--bg2);border:1px solid var(--border);border-radius:8px}
+        .cd-req-item i{font-size:14px}
+        .cd-desc{padding:20px 24px;border-bottom:1px solid var(--border)}
+        .cd-desc-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px}
+        .cd-desc-text{font-size:13px;color:var(--text2);line-height:1.7;white-space:pre-wrap}
+        .cd-actions{padding:18px 24px;display:flex;gap:10px;flex-wrap:wrap}
+        .cd-btn-primary{height:46px;padding:0 30px;border-radius:99px;border:none;background:linear-gradient(135deg,#a78bfa,#7c3aed);color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:opacity .15s,transform .15s}
+        .cd-btn-primary:hover{opacity:.9;transform:translateY(-1px)}
+        .cd-btn-secondary{height:46px;padding:0 24px;border-radius:99px;border:1.5px solid var(--border);background:transparent;color:var(--text);font-size:13px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:border-color .13s}
+        .cd-btn-secondary:hover{border-color:var(--text)}
+        .cd-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px}
+        .cd-modal{background:var(--card);border:1px solid var(--border);border-radius:16px;max-width:480px;width:100%;max-height:90vh;overflow-y:auto}
+        .cd-modal-head{padding:18px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+        .cd-modal-title{font-size:16px;font-weight:800;color:var(--text)}
+        .cd-modal-close{width:32px;height:32px;border-radius:50%;border:1px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;display:grid;place-items:center}
+        .cd-modal-body{padding:18px 20px}
+        .cd-modal-label{font-size:12px;font-weight:700;color:var(--text2);margin-bottom:6px;display:block}
+        .cd-modal-input{width:100%;height:42px;padding:0 14px;border:1.5px solid var(--border);border-radius:10px;background:var(--bg2);color:var(--text);font-size:13px;outline:none;box-sizing:border-box;font-family:inherit}
+        .cd-modal-input:focus{border-color:#a78bfa}
+        .cd-modal-textarea{width:100%;min-height:100px;padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;background:var(--bg2);color:var(--text);font-size:13px;outline:none;resize:vertical;box-sizing:border-box;font-family:inherit;line-height:1.5}
+        .cd-modal-textarea:focus{border-color:#a78bfa}
+        .cd-modal-actions{display:flex;gap:10px;margin-top:16px}
+        .cd-submit-btn{height:42px;padding:0 24px;border-radius:99px;border:none;background:linear-gradient(135deg,#a78bfa,#7c3aed);color:#fff;font-size:13px;font-weight:700;cursor:pointer;flex:1}
+        .cd-submit-btn:disabled{opacity:.5;cursor:not-allowed}
+        .cd-success{text-align:center;padding:32px 20px}
+        .cd-success i{font-size:40px;color:#4ade80}
+        .cd-success h3{font-size:18px;font-weight:800;color:var(--text);margin:12px 0 4px}
+        .cd-success p{font-size:13px;color:var(--text2)}
+        .cd-back{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:var(--text2);cursor:pointer;border:none;background:none;padding:8px 0;margin-bottom:16px;transition:color .13s}
+        .cd-back:hover{color:var(--text)}
+      `}</style>
+      <div className="cd-page">
+        <button className="cd-back" onClick={onBack}><i className="ti ti-arrow-left" /> Back to Jobs</button>
+
+        <div className="cd-creator">
+          <div className="cd-creator-avatar"><i className="ti ti-user" /></div>
+          <div className="cd-creator-info">
+            <div className="cd-creator-name">
+              {job.creator}
+              <span style={{fontSize:11,fontWeight:600,color:'#a78bfa',background:'#1e1035',padding:'2px 8px',borderRadius:99}}>{job.creatorLabel}</span>
+            </div>
+            <div className="cd-creator-handle">@{job.creator.toLowerCase().replace(/\s+/g,'')}</div>
+            <div className="cd-creator-wallet" onClick={() => {navigator.clipboard?.writeText('F48NUF...jemX')}}>
+              F48NUF...jemX <i className="ti ti-copy" style={{fontSize:10}} />
+            </div>
+          </div>
+          <button className="cd-btn-secondary" style={{height:34,padding:'0 14px',fontSize:11,flexShrink:0}}>
+            <i className="ti ti-share" style={{fontSize:12}} /> Share
+          </button>
+        </div>
+
+        <div className="cd-card">
+          <div className="cd-card-head">
+            <div className="cd-badge-row">
+              <span className="cd-badge open"><span style={{width:6,height:6,borderRadius:'50%',background:'#4ade80',display:'inline-block'}} /> Open</span>
+              <span className="cd-badge challenge"><i className="ti ti-award" style={{fontSize:10}} /> Challenge</span>
+            </div>
+            <h1 className="cd-title">{job.title}</h1>
+            <div style={{display:'flex',gap:10,fontSize:12,color:'var(--text2)',flexWrap:'wrap'}}>
+              <span style={{display:'inline-flex',alignItems:'center',gap:4}}><i className="ti ti-tag" /> {job.category}</span>
+              <span style={{display:'inline-flex',alignItems:'center',gap:4}}><i className="ti ti-device-laptop" /> {job.platform}</span>
+              <span style={{display:'inline-flex',alignItems:'center',gap:4}}><i className="ti ti-clock" /> {job.timeEstimate}</span>
+              <span style={{display:'inline-flex',alignItems:'center',gap:4}}><i className="ti ti-shield" /> {job.difficulty}</span>
+            </div>
+          </div>
+
+          <div className="cd-bounty">
+            <div className="cd-bounty-item">
+              <div className="cd-bounty-label">Reward per worker</div>
+              <div className="cd-bounty-sol">{job.reward} <span>SOL</span></div>
+              <div className="cd-bounty-usd">~ ${job.usdValue} USD</div>
+            </div>
+            <div className="cd-bounty-item">
+              <div className="cd-bounty-label">Total bounty</div>
+              <div className="cd-bounty-sol">{(job.reward * (job.slots || 1)).toFixed(3)} <span>SOL</span></div>
+              <div className="cd-bounty-usd">
+                ~ ${(job.usdValue * (job.slots || 1)).toFixed(2)} USD
+                <span className="cd-bounty-tag"><i className="ti ti-coin" style={{fontSize:9}} /> OGA</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="cd-deadline">
+            <div className="cd-deadline-icon"><i className="ti ti-clock-hour-4" style={{color:'#fb923c'}} /></div>
+            <div className="cd-deadline-info">
+              <div className="cd-deadline-label">Selection deadline</div>
+              <div className={timeLeft.includes('Ended') ? 'cd-deadline-time urgent' : 'cd-deadline-time'}>{timeLeft || 'Calculating...'}</div>
+            </div>
+            <div style={{textAlign:'right'}}>
+              <div className="cd-bounty-label">Applicants</div>
+              <div style={{fontSize:16,fontWeight:800,color:'var(--text)'}}>{job.filled}</div>
+            </div>
+          </div>
+
+          <div className="cd-detail-grid">
+            <div className="cd-detail-item">
+              <div className="cd-detail-label">Slots</div>
+              <div className="cd-detail-value">{job.filled}/{job.slots} filled</div>
+            </div>
+            <div className="cd-detail-item">
+              <div className="cd-detail-label">Selection mode</div>
+              <div className="cd-detail-value">Creator picks</div>
+            </div>
+            <div className="cd-detail-item">
+              <div className="cd-detail-label">Difficulty</div>
+              <div className="cd-detail-value">{job.difficulty}</div>
+            </div>
+            <div className="cd-detail-item">
+              <div className="cd-detail-label">Category</div>
+              <div className="cd-detail-value">{job.category}</div>
+            </div>
+            <div className="cd-detail-item">
+              <div className="cd-detail-label">Max entries</div>
+              <div className="cd-detail-value">Unlimited</div>
+            </div>
+            <div className="cd-detail-item">
+              <div className="cd-detail-label">Rank required</div>
+              <div className="cd-detail-value">{job.rankRequired || 'None'}</div>
+            </div>
+          </div>
+
+          <div className="cd-req-section">
+            <div className="cd-req-title"><i className="ti ti-shield-check" style={{color:'#a78bfa'}} /> Requirements</div>
+            <div className="cd-req-grid">
+              <div className="cd-req-item"><i className="ti ti-circle-check" style={{color:job.verificationRequired?'#4ade80':'var(--text3)'}} /> Screenshot proof {job.verificationRequired ? 'required' : 'optional'}</div>
+              <div className="cd-req-item"><i className="ti ti-user-check" style={{color:'var(--text3)'}} /> KYC verification optional</div>
+              <div className="cd-req-item"><i className="ti ti-id" style={{color:'var(--text3)'}} /> Rank: {job.rankRequired || 'None'}</div>
+              <div className="cd-req-item"><i className="ti ti-eye" style={{color:'var(--text3)'}} /> Submissions: visible to creator</div>
+            </div>
+          </div>
+
+          <div className="cd-desc">
+            <div className="cd-desc-title"><i className="ti ti-file-text" style={{color:'var(--text3)'}} /> Description</div>
+            <div className="cd-desc-text">{job.description}</div>
+          </div>
+
+          <div className="cd-actions">
+            <button className="cd-btn-primary" onClick={() => setShowApplyModal(true)}><i className="ti ti-send" /> Apply Now</button>
+            <button className="cd-btn-secondary"><i className="ti ti-bookmark" /> Save</button>
+            <button className="cd-btn-secondary"><i className="ti ti-flag" /> Report</button>
+          </div>
+        </div>
+      </div>
+
+      {showApplyModal && (
+        <div className="cd-modal-overlay" onClick={() => {if(!submitted)setShowApplyModal(false)}}>
+          <div className="cd-modal" onClick={e => e.stopPropagation()}>
+            {submitted ? (
+              <div className="cd-success">
+                <i className="ti ti-circle-check" />
+                <h3>Application Submitted!</h3>
+                <p>Your submission has been sent to the creator. You'll be notified when a decision is made.</p>
+                <button className="cd-btn-primary" onClick={() => {setShowApplyModal(false);setSubmitted(false);setApplyLink('')}} style={{marginTop:16}}>Done</button>
+              </div>
+            ) : (
+              <>
+                <div className="cd-modal-head">
+                  <span className="cd-modal-title">Apply for this task</span>
+                  <button className="cd-modal-close" onClick={() => setShowApplyModal(false)}><i className="ti ti-x" /></button>
+                </div>
+                <div className="cd-modal-body">
+                  <label className="cd-modal-label">Submission link *</label>
+                  <input className="cd-modal-input" value={applyLink} onChange={e => setApplyLink(e.target.value)} placeholder="https://" style={{marginBottom:14}} />
+                  <label className="cd-modal-label">Message (optional)</label>
+                  <textarea className="cd-modal-textarea" value={applyMsg} onChange={e => setApplyMsg(e.target.value)} placeholder="Add a note to the creator..." />
+                  {applyMsg && <div style={{fontSize:12,color:'#fb923c',marginTop:8}}><i className="ti ti-info-circle" /> Make sure your submission link is correct.</div>}
+                  <div className="cd-modal-actions">
+                    <button className="cd-btn-secondary" onClick={() => setShowApplyModal(false)} style={{flex:1}}>Cancel</button>
+                    <button className="cd-submit-btn" onClick={handleApply} disabled={!applyLink.trim()}>Submit Application</button>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+    </Layout>
+  )
+}
+
 export default function Tasks() {
   const navigate = useNavigate()
   const { id } = useParams()
@@ -292,317 +545,7 @@ export default function Tasks() {
   }, [selectedJob])
 
   if (showDetail && selectedJob) {
-    const job = selectedJob
-    const [showApplyModal, setShowApplyModal] = useState(false)
-    const [applyMsg, setApplyMsg] = useState('')
-    const [applyLink, setApplyLink] = useState('')
-    const [submitted, setSubmitted] = useState(false)
-    const [timeLeft, setTimeLeft] = useState('')
-
-    // Countdown timer
-    useEffect(() => {
-      const deadline = new Date(Date.now() + 86400000) // 24h default
-      const tick = () => {
-        const diff = deadline.getTime() - Date.now()
-        if (diff <= 0) { setTimeLeft('Ended'); return }
-        const h = Math.floor(diff / 3600000)
-        const m = Math.floor((diff % 3600000) / 60000)
-        const s = Math.floor((diff % 60000) / 1000)
-        setTimeLeft(`\${h}h \${m}m \${s}s`)
-      }
-      tick()
-      const iv = setInterval(tick, 1000)
-      return () => clearInterval(iv)
-    }, [])
-
-    const handleApply = () => {
-      if (!applyLink.trim()) { setApplyMsg('Please provide a submission link'); return }
-      setSubmitted(true)
-      setApplyMsg('')
-      setTimeout(() => { setShowApplyModal(false); setSubmitted(false); setApplyLink('') }, 2000)
-    }
-
-    return (
-      <Layout>
-        <style>{`
-          .cd-page{max-width:860px;margin:0 auto;padding:0 0 50px}
-          
-          /* Creator bar */
-          .cd-creator{display:flex;align-items:center;gap:14px;padding:18px 22px;background:var(--card);border:1px solid var(--border);border-radius:14px;margin-bottom:16px}
-          .cd-creator-avatar{width:48px;height:48px;border-radius:50%;overflow:hidden;flex-shrink:0;background:var(--bg2);display:grid;place-items:center;border:2px solid var(--border)}
-          .cd-creator-avatar img{width:100%;height:100%;object-fit:cover}
-          .cd-creator-avatar i{font-size:22px;color:var(--text3)}
-          .cd-creator-info{flex:1;min-width:0}
-          .cd-creator-name{font-size:16px;font-weight:800;color:var(--text);display:flex;align-items:center;gap:8px}
-          .cd-creator-handle{font-size:13px;color:var(--text2);font-weight:500}
-          .cd-creator-wallet{font-family:monospace;font-size:11px;color:var(--text3);background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:3px 8px;display:inline-flex;align-items:center;gap:5px;cursor:pointer;margin-top:4px}
-          .cd-creator-wallet:hover{color:var(--text)}
-
-          /* Main card */
-          .cd-card{background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:16px}
-          .cd-card-head{padding:20px 24px;border-bottom:1px solid var(--border)}
-          .cd-title{font-size:22px;font-weight:800;margin:0 0 8px;color:var(--text);line-height:1.3}
-          .cd-badge-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px}
-          .cd-badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;padding:4px 10px;border-radius:99px}
-          .cd-badge.open{background:#052e16;color:#4ade80}
-          .cd-badge.closed{background:#2d1a0e;color:#fb923c}
-          .cd-badge.challenge{background:#1e1035;color:#c4b5fd}
-          .cd-badge.selection{background:#0c1f3a;color:#93c5fd}
-          .cd-badge.paid{background:#052e16;color:#4ade80}
-
-          /* Bounty section */
-          .cd-bounty{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:20px 24px;border-bottom:1px solid var(--border)}
-          @media(max-width:600px){.cd-bounty{grid-template-columns:1fr}}
-          .cd-bounty-item{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px 18px}
-          .cd-bounty-label{font-size:11px;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
-          .cd-bounty-sol{font-family:"Outfit",sans-serif;font-size:24px;font-weight:900;color:var(--text)}
-          .cd-bounty-sol span{color:var(--accent);font-size:16px}
-          .cd-bounty-usd{font-size:12px;color:var(--text2);margin-top:2px}
-          .cd-bounty-alt{font-family:"Outfit",sans-serif;font-size:20px;font-weight:800;color:var(--text)}
-          .cd-bounty-alt span{color:#a78bfa}
-          .cd-bounty-tag{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;background:#1e1035;color:#c4b5fd;margin-left:6px}
-
-          /* Deadline */
-          .cd-deadline{display:flex;align-items:center;gap:12px;padding:14px 24px;border-bottom:1px solid var(--border);background:var(--bg2)}
-          .cd-deadline-icon{width:36px;height:36px;border-radius:50%;background:var(--card);border:1px solid var(--border);display:grid;place-items:center;flex-shrink:0}
-          .cd-deadline-icon i{font-size:16px}
-          .cd-deadline-info{flex:1}
-          .cd-deadline-label{font-size:11px;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.06em}
-          .cd-deadline-time{font-size:18px;font-weight:800;color:var(--text);font-family:"Outfit",sans-serif}
-          .cd-deadline-time.urgent{color:#fb923c}
-
-          /* Detail grid */
-          .cd-detail-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:20px 24px;border-bottom:1px solid var(--border)}
-          @media(max-width:600px){.cd-detail-grid{grid-template-columns:repeat(2,1fr)}}
-          .cd-detail-item{}
-          .cd-detail-label{font-size:11px;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px}
-          .cd-detail-value{font-size:14px;font-weight:700;color:var(--text)}
-          .cd-detail-value.mono{font-family:monospace;font-size:12px}
-
-          /* Requirements */
-          .cd-req-section{padding:20px 24px;border-bottom:1px solid var(--border)}
-          .cd-req-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px;display:flex;align-items:center;gap:6px}
-          .cd-req-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-          .cd-req-item{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2);padding:6px 10px;background:var(--bg2);border:1px solid var(--border);border-radius:8px}
-          .cd-req-item i{font-size:14px}
-
-          /* Description */
-          .cd-desc{padding:20px 24px;border-bottom:1px solid var(--border)}
-          .cd-desc-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px}
-          .cd-desc-text{font-size:13px;color:var(--text2);line-height:1.7;white-space:pre-wrap}
-
-          /* Actions */
-          .cd-actions{padding:18px 24px;display:flex;gap:10px;flex-wrap:wrap}
-          .cd-btn-primary{height:46px;padding:0 30px;border-radius:99px;border:none;background:linear-gradient(135deg,#a78bfa,#7c3aed);color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:opacity .15s,transform .15s}
-          .cd-btn-primary:hover{opacity:.9;transform:translateY(-1px)}
-          .cd-btn-primary:disabled{opacity:.5;cursor:not-allowed;transform:none}
-          .cd-btn-secondary{height:46px;padding:0 24px;border-radius:99px;border:1.5px solid var(--border);background:transparent;color:var(--text);font-size:13px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:border-color .13s}
-          .cd-btn-secondary:hover{border-color:var(--text)}
-
-          /* Apply Modal */
-          .cd-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px}
-          .cd-modal{background:var(--card);border:1px solid var(--border);border-radius:16px;max-width:480px;width:100%;max-height:90vh;overflow-y:auto}
-          .cd-modal-head{padding:18px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
-          .cd-modal-title{font-size:16px;font-weight:800;color:var(--text)}
-          .cd-modal-close{width:32px;height:32px;border-radius:50%;border:1px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;display:grid;place-items:center}
-          .cd-modal-body{padding:18px 20px}
-          .cd-modal-label{font-size:12px;font-weight:700;color:var(--text2);margin-bottom:6px;display:block}
-          .cd-modal-input{width:100%;height:42px;padding:0 14px;border:1.5px solid var(--border);border-radius:10px;background:var(--bg2);color:var(--text);font-size:13px;outline:none;box-sizing:border-box;font-family:inherit}
-          .cd-modal-input:focus{border-color:#a78bfa}
-          .cd-modal-textarea{width:100%;min-height:100px;padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;background:var(--bg2);color:var(--text);font-size:13px;outline:none;resize:vertical;box-sizing:border-box;font-family:inherit;line-height:1.5}
-          .cd-modal-textarea:focus{border-color:#a78bfa}
-          .cd-modal-actions{display:flex;gap:10px;margin-top:16px}
-          .cd-submit-btn{height:42px;padding:0 24px;border-radius:99px;border:none;background:linear-gradient(135deg,#a78bfa,#7c3aed);color:#fff;font-size:13px;font-weight:700;cursor:pointer;flex:1}
-          .cd-submit-btn:disabled{opacity:.5;cursor:not-allowed}
-          .cd-success{text-align:center;padding:32px 20px}
-          .cd-success i{font-size:40px;color:#4ade80}
-          .cd-success h3{font-size:18px;font-weight:800;color:var(--text);margin:12px 0 4px}
-          .cd-success p{font-size:13px;color:var(--text2)}
-
-          .cd-back{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:var(--text2);cursor:pointer;border:none;background:none;padding:8px 0;margin-bottom:16px;transition:color .13s}
-          .cd-back:hover{color:var(--text)}
-        `}</style>
-
-        <div className="cd-page">
-          <button className="cd-back" onClick={() => navigate('/tasks')}><i className="ti ti-arrow-left" /> Back to Jobs</button>
-
-          {/* Creator Bar */}
-          <div className="cd-creator">
-            <div className="cd-creator-avatar"><i className="ti ti-user" /></div>
-            <div className="cd-creator-info">
-              <div className="cd-creator-name">
-                {job.creator}
-                <span style={{fontSize:11,fontWeight:600,color:'#a78bfa',background:'#1e1035',padding:'2px 8px',borderRadius:99}}>{job.creatorLabel}</span>
-              </div>
-              <div className="cd-creator-handle">@{job.creator.toLowerCase().replace(/\s+/g,'')}</div>
-              <div className="cd-creator-wallet" onClick={() => {navigator.clipboard?.writeText('F48NUF...jemX')}}>
-                F48NUF...jemX <i className="ti ti-copy" style={{fontSize:10}} />
-              </div>
-            </div>
-            <button className="cd-btn-secondary" style={{height:34,padding:'0 14px',fontSize:11,flexShrink:0}}>
-              <i className="ti ti-share" style={{fontSize:12}} /> Share
-            </button>
-          </div>
-
-          {/* Main Card */}
-          <div className="cd-card">
-            {/* Head */}
-            <div className="cd-card-head">
-              <div className="cd-badge-row">
-                <span className="cd-badge open"><span style={{width:6,height:6,borderRadius:'50%',background:'#4ade80',display:'inline-block'}} /> Open</span>
-                <span className="cd-badge challenge"><i className="ti ti-award" style={{fontSize:10}} /> Challenge</span>
-              </div>
-              <h1 className="cd-title">{job.title}</h1>
-              <div style={{display:'flex',gap:10,fontSize:12,color:'var(--text2)',flexWrap:'wrap'}}>
-                <span style={{display:'inline-flex',alignItems:'center',gap:4}}><i className="ti ti-tag" /> {job.category}</span>
-                <span style={{display:'inline-flex',alignItems:'center',gap:4}}><i className="ti ti-device-laptop" /> {job.platform}</span>
-                <span style={{display:'inline-flex',alignItems:'center',gap:4}}><i className="ti ti-clock" /> {job.timeEstimate}</span>
-                <span style={{display:'inline-flex',alignItems:'center',gap:4}}><i className="ti ti-shield" /> {job.difficulty}</span>
-              </div>
-            </div>
-
-            {/* Bounty */}
-            <div className="cd-bounty">
-              <div className="cd-bounty-item">
-                <div className="cd-bounty-label">Reward per worker</div>
-                <div className="cd-bounty-sol">{job.reward} <span>SOL</span></div>
-                <div className="cd-bounty-usd">~ ${job.usdValue} USD</div>
-              </div>
-              <div className="cd-bounty-item">
-                <div className="cd-bounty-label">Total bounty</div>
-                <div className="cd-bounty-sol">{(job.reward * (job.slots || 1)).toFixed(3)} <span>SOL</span></div>
-                <div className="cd-bounty-usd">
-                  ~ ${(job.usdValue * (job.slots || 1)).toFixed(2)} USD
-                  <span className="cd-bounty-tag"><i className="ti ti-coin" style={{fontSize:9}} /> OGA</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Deadline */}
-            <div className="cd-deadline">
-              <div className="cd-deadline-icon"><i className="ti ti-clock-hour-4" style={{color:'#fb923c'}} /></div>
-              <div className="cd-deadline-info">
-                <div className="cd-deadline-label">Selection deadline</div>
-                <div className={timeLeft.includes('Ended') ? 'cd-deadline-time urgent' : 'cd-deadline-time'}>{timeLeft || 'Calculating...'}</div>
-              </div>
-              <div style={{textAlign:'right'}}>
-                <div className="cd-bounty-label">Applicants</div>
-                <div style={{fontSize:16,fontWeight:800,color:'var(--text)'}}>{job.filled}</div>
-              </div>
-            </div>
-
-            {/* Detail Grid */}
-            <div className="cd-detail-grid">
-              <div className="cd-detail-item">
-                <div className="cd-detail-label">Slots</div>
-                <div className="cd-detail-value">{job.filled}/{job.slots} filled</div>
-              </div>
-              <div className="cd-detail-item">
-                <div className="cd-detail-label">Selection mode</div>
-                <div className="cd-detail-value">Creator picks</div>
-              </div>
-              <div className="cd-detail-item">
-                <div className="cd-detail-label">Difficulty</div>
-                <div className="cd-detail-value">{job.difficulty}</div>
-              </div>
-              <div className="cd-detail-item">
-                <div className="cd-detail-label">Category</div>
-                <div className="cd-detail-value">{job.category}</div>
-              </div>
-              <div className="cd-detail-item">
-                <div className="cd-detail-label">Max entries</div>
-                <div className="cd-detail-value">Unlimited</div>
-              </div>
-              <div className="cd-detail-item">
-                <div className="cd-detail-label">Rank required</div>
-                <div className="cd-detail-value">{job.rankRequired || 'None'}</div>
-              </div>
-            </div>
-
-            {/* Requirements */}
-            <div className="cd-req-section">
-              <div className="cd-req-title"><i className="ti ti-shield-check" style={{color:'#a78bfa'}} /> Requirements</div>
-              <div className="cd-req-grid">
-                <div className="cd-req-item">
-                  <i className="ti ti-circle-check" style={{color:job.verificationRequired?'#4ade80':'var(--text3)'}} />
-                  Screenshot proof {job.verificationRequired ? 'required' : 'optional'}
-                </div>
-                <div className="cd-req-item">
-                  <i className="ti ti-user-check" style={{color:'var(--text3)'}} />
-                  KYC verification optional
-                </div>
-                <div className="cd-req-item">
-                  <i className="ti ti-id" style={{color:'var(--text3)'}} />
-                  Rank: {job.rankRequired || 'None'}
-                </div>
-                <div className="cd-req-item">
-                  <i className="ti ti-eye" style={{color:'var(--text3)'}} />
-                  Submissions: visible to creator
-                </div>
-              </div>
-            </div>
-
-            {/* Description */}
-            <div className="cd-desc">
-              <div className="cd-desc-title"><i className="ti ti-file-text" style={{color:'var(--text3)'}} /> Description</div>
-              <div className="cd-desc-text">{job.description}</div>
-            </div>
-
-            {/* Actions */}
-            <div className="cd-actions">
-              <button className="cd-btn-primary" onClick={() => setShowApplyModal(true)}>
-                <i className="ti ti-send" /> Apply Now
-              </button>
-              <button className="cd-btn-secondary">
-                <i className="ti ti-bookmark" /> Save
-              </button>
-              <button className="cd-btn-secondary">
-                <i className="ti ti-flag" /> Report
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Apply Modal */}
-        {showApplyModal && (
-          <div className="cd-modal-overlay" onClick={() => {if(!submitted)setShowApplyModal(false)}}>
-            <div className="cd-modal" onClick={e => e.stopPropagation()}>
-              {submitted ? (
-                <div className="cd-success">
-                  <i className="ti ti-circle-check" />
-                  <h3>Application Submitted!</h3>
-                  <p>Your submission has been sent to the creator. You'll be notified when a decision is made.</p>
-                  <button className="cd-btn-primary" onClick={() => {setShowApplyModal(false);setSubmitted(false);setApplyLink('')}} style={{marginTop:16}}>
-                    Done
-                  </button>
-                </div>
-              ) : (
-                <>
-                  <div className="cd-modal-head">
-                    <span className="cd-modal-title">Apply for this task</span>
-                    <button className="cd-modal-close" onClick={() => setShowApplyModal(false)}><i className="ti ti-x" /></button>
-                  </div>
-                  <div className="cd-modal-body">
-                    <label className="cd-modal-label">Submission link *</label>
-                    <input className="cd-modal-input" value={applyLink} onChange={e => setApplyLink(e.target.value)} placeholder="https://" style={{marginBottom:14}} />
-                    
-                    <label className="cd-modal-label">Message (optional)</label>
-                    <textarea className="cd-modal-textarea" value={applyMsg} onChange={e => setApplyMsg(e.target.value)} placeholder="Add a note to the creator..." />
-
-                    {applyMsg && <div style={{fontSize:12,color:'#fb923c',marginTop:8}}><i className="ti ti-info-circle" /> Make sure your submission link is correct.</div>}
-
-                    <div className="cd-modal-actions">
-                      <button className="cd-btn-secondary" onClick={() => setShowApplyModal(false)} style={{flex:1}}>Cancel</button>
-                      <button className="cd-submit-btn" onClick={handleApply} disabled={!applyLink.trim()}>Submit Application</button>
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-        )}
-      </Layout>
-    )
+    return <JobDetailView job={selectedJob} onBack={() => { setShowDetail(false); navigate('/tasks') }} />
   }
 
   return (
