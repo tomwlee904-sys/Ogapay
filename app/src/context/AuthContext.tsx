@@ -80,6 +80,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = (payload: { user?: AuthUser; tokens?: { accessToken?: string; refreshToken?: string } }) => {
     persistAuthSession(payload)
     if (payload.user) setUser(payload.user)
+    setLoading(false)
   }
 
   const logout = async () => {
