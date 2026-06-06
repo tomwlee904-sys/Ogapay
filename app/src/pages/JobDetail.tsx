@@ -6,6 +6,49 @@ const API_BASE = 'https://ogapay-production.up.railway.app/api/v1'
 const BRAND = '#1F8CFF'
 const BRAND_RGB = '31,140,255'
 
+function pad(n: number) { return String(n).padStart(2, '0') }
+function pct(a: number, b: number) { return b > 0 ? Math.round((a / b) * 100) : 0 }
+
+function useCountdown(deadline: number) {
+  const calc = () => {
+    const diff = deadline - Date.now()
+    if (diff <= 0) return { d: 0, h: 0, m: 0, s: 0 }
+    return { d: Math.floor(diff / 86400000), h: Math.floor((diff % 86400000) / 3600000), m: Math.floor((diff % 3600000) / 60000), s: Math.floor((diff % 60000) / 1000) }
+  }
+  const [t, setT] = useState(calc)
+  useEffect(() => { const id = setInterval(() => setT(calc()), 1000); return () => clearInterval(id) }, [deadline])
+  return t
+}
+
+function Badge({ children, color = 'blue' }: { children: React.ReactNode; color?: string }) {
+  const map: Record<string, { bg: string; text: string; border: string }> = {
+    blue: { bg: `rgba(${BRAND_RGB},0.15)`, text: BRAND, border: `rgba(${BRAND_RGB},0.30)` },
+    green: { bg: 'rgba(22,163,74,0.15)', text: '#16a34a', border: 'rgba(22,163,74,0.30)' },
+    gray: { bg: 'var(--bg2)', text: 'var(--text3)', border: 'var(--border)' },
+  }
+  const c = map[color] || map.gray
+  return (
+    <span style={{ background: c.bg, color: c.text, border: `1px solid ${c.border}`, borderRadius: 999, display: 'inline-flex', alignItems: 'center', gap: 4, padding: '3px 10px', fontSize: 11, fontWeight: 700 }}>
+      {children}
+    </span>
+  )
+}
+
+function CountdownBlock({ deadline }: { deadline: number }) {
+  const { d, h, m, s } = useCountdown(deadline)
+  const units = [{ v: d, l: 'Days' }, { v: h, l: 'Hrs' }, { v: m, l: 'Min' }, { v: s, l: 'Sec' }]
+  return (
+    <div style={{ display: 'flex', gap: 8 }}>
+      {units.map(({ v, l }) => (
+        <div key={l} style={{ flex: 1, background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 12, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '10px 4px' }}>
+          <span style={{ fontSize: 22, fontWeight: 900, fontVariantNumeric: 'tabular-nums', color: 'var(--text)' }}>{pad(v)}</span>
+          <span style={{ fontSize: 10, color: 'var(--text3)', fontWeight: 700, marginTop: 2 }}>{l}</span>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 export default function JobDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -35,6 +78,15 @@ export default function JobDetail() {
     </Layout>
   )
 
+  const reward = Number(job.reward) || 0
+  const slots = job.maxWorkers || 1
+  const filled = job.currentWorkers || 0
+  const slotsLeft = slots - filled
+  const filledPct = pct(filled, slots)
+  const isAlmostFull = slotsLeft < 60
+  const deadline = job.deadline ? new Date(job.deadline).getTime() : Date.now() + 86400000 * 2
+  const creatorName = job.poster?.username || 'OgaPay'
+
   return (
     <Layout>
       {/* Sticky Nav Bar */}
@@ -60,27 +112,102 @@ export default function JobDetail() {
         </div>
       </div>
 
-      {/* Main Content - same as working version */}
-      <div style={{ maxWidth: 768, margin: '0 auto', padding: '20px 16px 120px' }}>
-        <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 16, padding: 24 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
-            <div style={{ width: 44, height: 44, borderRadius: 10, background: BRAND, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 900 }}>
-              {job.poster?.username?.slice(0, 2).toUpperCase() || 'OP'}
+      {/* Main Content */}
+      <div style={{ maxWidth: 768, margin: '0 auto', padding: '16px 16px 140px' }}>
+        {/* Header Card */}
+        <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 16, padding: 20, marginBottom: 16 }}>
+          {/* Brand row */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+            <div style={{ width: 40, height: 40, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 14, fontWeight: 900, flexShrink: 0, background: BRAND }}>
+              {creatorName.slice(0, 2).toUpperCase()}
             </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{creatorName}</span>
+                {job.poster?.posterProfile?.isVerified && <svg width="14" height="14" viewBox="0 0 24 24" fill={BRAND}><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>}
+              </div>
+              <span style={{ fontSize: 11, color: 'var(--text3)' }}>@{creatorName.toLowerCase()}</span>
+            </div>
+            <Badge color="green">
+              <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#16a34a', display: 'inline-block', marginRight: 2 }} /> Open
+            </Badge>
+          </div>
+
+          {/* Title */}
+          <h1 style={{ fontSize: 20, fontWeight: 900, lineHeight: 1.3, margin: '0 0 12px', color: 'var(--text)' }}>{job.title}</h1>
+
+          {/* Badges */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 16 }}>
+            <Badge color="blue">{job.category || 'General'}</Badge>
+            <Badge color="blue">{job.tags?.[0] || 'Web'}</Badge>
+            <Badge color="gray">{job.estimatedTime ? (job.estimatedTime <= 10 ? 'Easy' : job.estimatedTime <= 30 ? 'Medium' : 'Hard') : 'Easy'}</Badge>
+            <Badge color="gray">⏱ {job.estimatedTime ? `${job.estimatedTime} min` : '—'}</Badge>
+          </div>
+
+          {/* Reward & Pool */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 12, padding: '14px 16px', marginBottom: 16 }}>
             <div>
-              <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: 'var(--text)' }}>{job.title}</h2>
-              <p style={{ margin: '4px 0 0', fontSize: 13, color: 'var(--text2)' }}>by {job.poster?.username || 'OgaPay'}</p>
+              <p style={{ fontSize: 11, color: 'var(--text3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 4px' }}>Reward per task</p>
+              <p style={{ fontSize: 28, fontWeight: 900, color: '#16a34a', margin: 0, lineHeight: 1.2 }}>{job.currency === 'USD' ? '$' : '₦'}{reward.toLocaleString()}</p>
+              <p style={{ fontSize: 11, color: 'var(--text3)', margin: '2px 0 0' }}>≈ {job.usdEquiv || `$${(reward * 0.00062).toFixed(2)}`} USD</p>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <p style={{ fontSize: 11, color: 'var(--text3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 4px' }}>Total Pool</p>
+              <p style={{ fontSize: 20, fontWeight: 900, color: 'var(--text)', margin: 0 }}>{job.currency === 'USD' ? '$' : '₦'}{(reward * slots).toLocaleString()}</p>
+              <p style={{ fontSize: 11, color: 'var(--text3)', margin: '2px 0 0' }}>{slots} slots total</p>
             </div>
           </div>
-          <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginBottom: 16 }}>
-            <span style={{ padding: '4px 12px', borderRadius: 999, background: `rgba(${BRAND_RGB},0.15)`, color: BRAND, fontSize: 12, fontWeight: 700 }}>{job.category || 'General'}</span>
-            <span style={{ padding: '4px 12px', borderRadius: 999, background: 'var(--bg2)', color: 'var(--text3)', fontSize: 12, fontWeight: 700 }}>Reward: {job.currency || 'NGN'} {Number(job.reward || 0).toLocaleString()}</span>
+
+          {/* Progress */}
+          <div style={{ marginBottom: 6, display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 12 }}>
+            <span style={{ color: 'var(--text2)', fontWeight: 600 }}>{filled} completed</span>
+            <span style={{ fontWeight: 700, color: isAlmostFull ? '#f5b301' : 'var(--text2)' }}>{slotsLeft} slots left</span>
           </div>
-          <p style={{ fontSize: 14, color: 'var(--text2)', lineHeight: 1.6, margin: '0 0 20px' }}>{job.description || job.instructions || 'No description provided.'}</p>
-          <button onClick={() => navigate(`/tasks/${id}/submit`)} style={{ height: 44, padding: '0 24px', borderRadius: 999, background: BRAND, color: '#fff', border: 'none', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
-            Apply Now
-          </button>
+          <div style={{ height: 8, background: 'var(--bg2)', borderRadius: 999, overflow: 'hidden', marginBottom: 16 }}>
+            <div style={{ height: '100%', borderRadius: 999, background: `linear-gradient(90deg, ${BRAND}, #16a34a)`, width: `${filledPct}%`, transition: 'width 0.8s cubic-bezier(.4,0,.2,1)' }} />
+          </div>
+
+          {/* Meta grid */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 16 }}>
+            {[
+              { label: 'Job ID', value: job.id || id, mono: true },
+              { label: 'Posted', value: job.createdAt ? new Date(job.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Recent' },
+              { label: 'Approval', value: job.approvalTime || 'Within 24 hours' },
+              { label: 'Payout Day', value: job.payoutDay || 'Weekly' },
+            ].map(m => (
+              <div key={m.label} style={{ background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 10, padding: '10px 12px' }}>
+                <p style={{ fontSize: 10, color: 'var(--text3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 2px' }}>{m.label}</p>
+                <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', margin: 0, fontFamily: m.mono ? 'monospace' : undefined }}>{m.value}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Countdown */}
+          <div style={{ marginBottom: 16 }}>
+            <p style={{ fontSize: 11, color: 'var(--text3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 8px' }}>⏳ Time Remaining</p>
+            <CountdownBlock deadline={deadline} />
+          </div>
+
+          {/* Applicants */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ display: 'flex', marginRight: -4 }}>
+              {['#1F8CFF','#16a34a','#f5b301','#dc2626','#3b82f6'].slice(0, Math.min(5, filled)).map((c, i) => (
+                <div key={i} style={{ width: 28, height: 28, borderRadius: '50%', border: '2px solid var(--card)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 10, fontWeight: 900, background: c, marginLeft: i > 0 ? -8 : 0 }}>
+                  {String.fromCharCode(65 + i)}
+                </div>
+              ))}
+            </div>
+            <p style={{ fontSize: 12, color: 'var(--text2)' }}>
+              <span style={{ color: 'var(--text)', fontWeight: 700 }}>{filled}</span> people already completed this
+            </p>
+          </div>
         </div>
+
+        {/* Description + Apply */}
+        <p style={{ fontSize: 14, color: 'var(--text2)', lineHeight: 1.6, margin: '0 0 20px' }}>{job.description || job.instructions || 'No description provided.'}</p>
+        <button onClick={() => navigate(`/tasks/${id}/submit`)} style={{ height: 44, padding: '0 24px', borderRadius: 999, background: BRAND, color: '#fff', border: 'none', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
+          Apply Now
+        </button>
       </div>
 
       {/* Share Panel */}
