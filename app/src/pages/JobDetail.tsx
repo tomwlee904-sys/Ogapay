@@ -24,6 +24,8 @@ function Badge({ children, color = 'blue' }: { children: React.ReactNode; color?
   const map: Record<string, { bg: string; text: string; border: string }> = {
     blue: { bg: `rgba(${BRAND_RGB},0.15)`, text: BRAND, border: `rgba(${BRAND_RGB},0.30)` },
     green: { bg: 'rgba(22,163,74,0.15)', text: '#16a34a', border: 'rgba(22,163,74,0.30)' },
+    amber: { bg: 'rgba(245,179,1,0.15)', text: '#f5b301', border: 'rgba(245,179,1,0.30)' },
+    red: { bg: 'rgba(220,38,38,0.15)', text: '#dc2626', border: 'rgba(220,38,38,0.30)' },
     gray: { bg: 'var(--bg2)', text: 'var(--text3)', border: 'var(--border)' },
   }
   const c = map[color] || map.gray
@@ -54,6 +56,8 @@ export default function JobDetail() {
   const navigate = useNavigate()
   const [job, setJob] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const [activeTab, setActiveTab] = useState('details')
+  const [showApply, setShowApply] = useState(false)
   const [showShare, setShowShare] = useState(false)
   const [bookmarked, setBookmarked] = useState(false)
 
@@ -116,7 +120,6 @@ export default function JobDetail() {
       <div style={{ maxWidth: 768, margin: '0 auto', padding: '16px 16px 140px' }}>
         {/* Header Card */}
         <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 16, padding: 20, marginBottom: 16 }}>
-          {/* Brand row */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
             <div style={{ width: 40, height: 40, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 14, fontWeight: 900, flexShrink: 0, background: BRAND }}>
               {creatorName.slice(0, 2).toUpperCase()}
@@ -132,19 +135,13 @@ export default function JobDetail() {
               <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#16a34a', display: 'inline-block', marginRight: 2 }} /> Open
             </Badge>
           </div>
-
-          {/* Title */}
           <h1 style={{ fontSize: 20, fontWeight: 900, lineHeight: 1.3, margin: '0 0 12px', color: 'var(--text)' }}>{job.title}</h1>
-
-          {/* Badges */}
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 16 }}>
             <Badge color="blue">{job.category || 'General'}</Badge>
             <Badge color="blue">{job.tags?.[0] || 'Web'}</Badge>
             <Badge color="gray">{job.estimatedTime ? (job.estimatedTime <= 10 ? 'Easy' : job.estimatedTime <= 30 ? 'Medium' : 'Hard') : 'Easy'}</Badge>
             <Badge color="gray">⏱ {job.estimatedTime ? `${job.estimatedTime} min` : '—'}</Badge>
           </div>
-
-          {/* Reward & Pool */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 12, padding: '14px 16px', marginBottom: 16 }}>
             <div>
               <p style={{ fontSize: 11, color: 'var(--text3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 4px' }}>Reward per task</p>
@@ -157,8 +154,6 @@ export default function JobDetail() {
               <p style={{ fontSize: 11, color: 'var(--text3)', margin: '2px 0 0' }}>{slots} slots total</p>
             </div>
           </div>
-
-          {/* Progress */}
           <div style={{ marginBottom: 6, display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 12 }}>
             <span style={{ color: 'var(--text2)', fontWeight: 600 }}>{filled} completed</span>
             <span style={{ fontWeight: 700, color: isAlmostFull ? '#f5b301' : 'var(--text2)' }}>{slotsLeft} slots left</span>
@@ -166,8 +161,6 @@ export default function JobDetail() {
           <div style={{ height: 8, background: 'var(--bg2)', borderRadius: 999, overflow: 'hidden', marginBottom: 16 }}>
             <div style={{ height: '100%', borderRadius: 999, background: `linear-gradient(90deg, ${BRAND}, #16a34a)`, width: `${filledPct}%`, transition: 'width 0.8s cubic-bezier(.4,0,.2,1)' }} />
           </div>
-
-          {/* Meta grid */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 16 }}>
             {[
               { label: 'Job ID', value: job.id || id, mono: true },
@@ -181,14 +174,10 @@ export default function JobDetail() {
               </div>
             ))}
           </div>
-
-          {/* Countdown */}
           <div style={{ marginBottom: 16 }}>
             <p style={{ fontSize: 11, color: 'var(--text3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 8px' }}>⏳ Time Remaining</p>
             <CountdownBlock deadline={deadline} />
           </div>
-
-          {/* Applicants */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <div style={{ display: 'flex', marginRight: -4 }}>
               {['#1F8CFF','#16a34a','#f5b301','#dc2626','#3b82f6'].slice(0, Math.min(5, filled)).map((c, i) => (
@@ -203,11 +192,120 @@ export default function JobDetail() {
           </div>
         </div>
 
-        {/* Description + Apply */}
-        <p style={{ fontSize: 14, color: 'var(--text2)', lineHeight: 1.6, margin: '0 0 20px' }}>{job.description || job.instructions || 'No description provided.'}</p>
-        <button onClick={() => navigate(`/tasks/${id}/submit`)} style={{ height: 44, padding: '0 24px', borderRadius: 999, background: BRAND, color: '#fff', border: 'none', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
-          Apply Now
-        </button>
+        {/* Tabs Card */}
+        <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 16, overflow: 'hidden', marginBottom: 16 }}>
+          <div style={{ display: 'flex', borderBottom: '1px solid var(--border)' }}>
+            {['details', 'requirements', 'activity'].map(tab => (
+              <button key={tab} onClick={() => setActiveTab(tab)}
+                style={{
+                  flex: 1, padding: '14px 0', border: 'none', background: 'transparent',
+                  fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em',
+                  cursor: 'pointer', color: activeTab === tab ? 'var(--text)' : 'var(--text3)',
+                  borderBottom: activeTab === tab ? `2px solid ${BRAND}` : '2px solid transparent',
+                  transition: 'color .15s',
+                }}>
+                {tab}
+              </button>
+            ))}
+          </div>
+          <div style={{ padding: 20 }}>
+            {activeTab === 'details' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+                <div>
+                  <h3 style={{ fontSize: 12, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 8px' }}>About This Task</h3>
+                  {(job.description || job.instructions || '').split('\n\n').map((p: string, i: number) => (
+                    <p key={i} style={{ fontSize: 14, color: 'var(--text2)', lineHeight: 1.65, margin: '0 0 8px' }}>{p}</p>
+                  ))}
+                </div>
+                <div>
+                  <h3 style={{ fontSize: 12, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 12px' }}>Steps to Complete</h3>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    {(job.steps || ['Complete the task', 'Submit proof', 'Wait for approval']).map((step: string, i: number) => (
+                      <div key={i} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                        <div style={{ width: 24, height: 24, borderRadius: 8, background: `rgba(${BRAND_RGB},0.15)`, border: `1px solid rgba(${BRAND_RGB},0.30)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 900, color: BRAND, flexShrink: 0, marginTop: 2 }}>
+                          {i + 1}
+                        </div>
+                        <p style={{ fontSize: 14, color: 'var(--text2)', lineHeight: 1.6, margin: 0 }}>{step}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <h3 style={{ fontSize: 12, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 12px' }}>Proof Required</h3>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    {(job.proofRequired || ['Screenshot proof']).map((p: string, i: number) => (
+                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, color: 'var(--text2)' }}>
+                        <svg width="14" height="14" fill="none" stroke={BRAND} strokeWidth="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+                        {p}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <h3 style={{ fontSize: 12, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 8px' }}>Tags</h3>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                    {(job.tags || [job.category || 'General']).map((t: string, i: number) => <Badge key={i} color="gray">{t}</Badge>)}
+                  </div>
+                </div>
+              </div>
+            )}
+            {activeTab === 'requirements' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                <div>
+                  <h3 style={{ fontSize: 12, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 12px' }}>Eligibility Requirements</h3>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    {(job.requirements || ['Valid account', 'Complete submission']).map((r: string, i: number) => (
+                      <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', padding: 10, background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 10 }}>
+                        <svg width="14" height="14" fill="none" stroke="#f5b301" strokeWidth="2" viewBox="0 0 24 24" style={{ flexShrink: 0, marginTop: 2 }}><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                        <p style={{ fontSize: 14, color: 'var(--text2)', lineHeight: 1.6, margin: 0 }}>{r}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div style={{ background: 'rgba(220,38,38,0.08)', border: '1px solid rgba(220,38,38,0.20)', borderRadius: 12, padding: 16 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                    <svg width="14" height="14" fill="none" stroke="#dc2626" strokeWidth="2" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    <p style={{ fontSize: 11, fontWeight: 700, color: '#dc2626', textTransform: 'uppercase', letterSpacing: '0.06em', margin: 0 }}>Warning</p>
+                  </div>
+                  <p style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.6, margin: 0 }}>Submitting fake, edited, or borrowed screenshots will result in immediate rejection and may lead to account suspension.</p>
+                </div>
+              </div>
+            )}
+            {activeTab === 'activity' && (
+              <p style={{ fontSize: 14, color: 'var(--text2)', margin: 0 }}>Task activity and submission stats will appear here once available.</p>
+            )}
+          </div>
+        </div>
+
+        {/* Report link */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
+          <button style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 16px', border: 'none', background: 'transparent', color: 'var(--text3)', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+            <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+            Report this job
+          </button>
+        </div>
+      </div>
+
+      {/* Sticky Bottom CTA */}
+      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 30, padding: 16, background: 'linear-gradient(to top, var(--bg) 60%, transparent)' }}>
+        <div style={{ maxWidth: 768, margin: '0 auto' }}>
+          {slotsLeft > 0 ? (
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button onClick={() => setShowApply(true)}
+                style={{ flex: 1, border: 'none', color: '#fff', fontWeight: 900, padding: '14px 20px', borderRadius: 14, fontSize: 14, cursor: 'pointer', background: BRAND, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                Apply & Earn {job.currency === 'USD' ? '$' : '₦'}{reward.toLocaleString()} →
+              </button>
+              <button onClick={() => setBookmarked(b => !b)}
+                style={{ width: 52, borderRadius: 14, border: '1px solid var(--border)', background: bookmarked ? `rgba(${BRAND_RGB},0.15)` : 'var(--card)', color: bookmarked ? BRAND : 'var(--text3)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                <svg width="16" height="16" fill={bookmarked ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
+              </button>
+            </div>
+          ) : (
+            <button disabled style={{ width: '100%', border: '1px solid var(--border)', background: 'var(--card)', color: 'var(--text3)', fontWeight: 900, padding: '14px 20px', borderRadius: 14, fontSize: 14, cursor: 'not-allowed' }}>All Slots Filled — Job Closed</button>
+          )}
+          <p style={{ textAlign: 'center', fontSize: 12, color: 'var(--text3)', marginTop: 8, fontWeight: 600 }}>{slotsLeft} slots remaining · Payout {job.payoutDay || 'Weekly'}</p>
+        </div>
       </div>
 
       {/* Share Panel */}
@@ -218,6 +316,32 @@ export default function JobDetail() {
             <p style={{ fontWeight: 700, color: 'var(--text)', margin: '0 0 12px', fontSize: 14 }}>Share this Job</p>
             <input readOnly value={`https://ogapay.vercel.app/tasks/${id}`} style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--bg2)', color: 'var(--text)', fontSize: 11, fontFamily: 'monospace', marginBottom: 12 }} />
             <button onClick={() => { navigator.clipboard?.writeText(`https://ogapay.vercel.app/tasks/${id}`); setShowShare(false) }} style={{ padding: '10px 14px', borderRadius: 10, border: 'none', background: BRAND, color: '#fff', fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>Copy Link</button>
+          </div>
+        </div>
+      )}
+
+      {/* Apply Modal */}
+      {showApply && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)' }} onClick={() => setShowApply(false)} />
+          <div style={{ position: 'relative', width: '100%', maxWidth: 480, background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '24px 24px 0 0', overflow: 'hidden' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid var(--border)' }}>
+              <div>
+                <p style={{ fontSize: 11, color: 'var(--text3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 2px' }}>Apply for Job</p>
+                <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 300 }}>{job.title}</p>
+              </div>
+              <button onClick={() => setShowApply(false)} style={{ width: 32, height: 32, borderRadius: 10, background: 'var(--bg2)', border: '1px solid var(--border)', color: 'var(--text3)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+              </button>
+            </div>
+            <div style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(22,163,74,0.10)', border: '1px solid rgba(22,163,74,0.20)', borderRadius: 12, padding: '12px 16px' }}>
+                <span style={{ fontSize: 12, color: 'var(--text2)' }}>Reward on approval</span>
+                <span style={{ fontSize: 18, fontWeight: 900, color: '#16a34a' }}>+{job.currency === 'USD' ? '$' : '₦'}{reward.toLocaleString()}</span>
+              </div>
+              <p style={{ fontSize: 12, color: 'var(--text2)', margin: 0 }}>Submit your application to get started.</p>
+              <button onClick={() => { setShowApply(false); navigate(`/tasks/${id}/submit`) }} style={{ width: '100%', border: 'none', color: '#fff', fontWeight: 700, padding: '14px 20px', borderRadius: 12, fontSize: 14, cursor: 'pointer', background: BRAND }}>Go to Submission →</button>
+            </div>
           </div>
         </div>
       )}
