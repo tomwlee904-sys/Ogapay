@@ -746,13 +746,13 @@ export default function Profile() {
                 <div style={{display:'flex',alignItems:'center',gap:14,paddingBottom:14,borderBottom:'1px solid var(--border)',marginBottom:14}}>
                   {loading ? (
                     <>
-                      <span className="skeleton" style={{width:52,height:52,borderRadius:'50%',display:'inline-block'}} />
+                      <span className="skeleton" style={{width:64,height:64,borderRadius:'50%',display:'inline-block'}} />
                       <div><span className="skeleton" style={{width:120,height:16,display:'block',marginBottom:6}} /><span className="skeleton" style={{width:80,height:12,display:'block'}} /></div>
                     </>
                   ) : (
                     <>
-                      <div style={{width:52,height:52,borderRadius:'50%',background:'var(--text)',color:'var(--bg)',fontSize:18,fontWeight:800,display:'grid',placeItems:'center',flexShrink:0}}>
-                        {user?.avatarUrl ? <img src={user.avatarUrl} alt="" style={{width:52,height:52,borderRadius:'50%',objectFit:'cover'}} /> : (user?.firstName?.[0] || 'U') + (user?.lastName?.[0] || '')}
+                      <div style={{width:64,height:64,borderRadius:'50%',background:'var(--text)',color:'var(--bg)',fontSize:22,fontWeight:800,display:'grid',placeItems:'center',flexShrink:0}}>
+                        {user?.avatarUrl ? <img src={user.avatarUrl} alt="" style={{width:64,height:64,borderRadius:'50%',objectFit:'cover'}} /> : (user?.firstName?.[0] || 'U') + (user?.lastName?.[0] || '')}
                       </div>
                       <div>
                         <div style={{fontSize:17,fontWeight:800}}>{user?.firstName || 'User'} {user?.lastName || ''}</div>
