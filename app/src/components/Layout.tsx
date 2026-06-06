@@ -17,12 +17,12 @@ export default function Layout({ children, sidebar = false }: LayoutProps) {
       <Navbar onMenuToggle={() => setDrawerOpen(true)} />
       <Drawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
       <div className="app-layout">
-        {sidebar && <Sidebar />}
         <main className="main">
           <section className="page">
             {children}
           </section>
         </main>
+        {sidebar && <Sidebar />}
       </div>
       <Footer />
       <div className="toast" id="appToast" />

@@ -31,8 +31,6 @@ export default function Sidebar() {
         <a className="sidebar-link" href="/settings"><i className="ti ti-settings" /> Settings</a>
         <a className="sidebar-link" href="/faq"><i className="ti ti-help-circle" /> FAQ</a>
         <a className="sidebar-link" href="/support"><i className="ti ti-headset" /> Support</a>
-        <a className="sidebar-link" href="/developer"><i className="ti ti-code" /> Developer API</a>
-        <a className="sidebar-link" href="/roadmap"><i className="ti ti-map-pin" /> Roadmap</a>
       </div>
     </aside>
   )
