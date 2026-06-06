@@ -5,7 +5,7 @@ import { Navigate } from "react-router-dom";
 import womanSvg from "../assets/woman.svg";
 import { supabase } from "../lib/supabaseClient";
 import { API_BASE, apiRequest } from "../lib/api";
- 
+
 function LogoMark({ inverse = false }) {
   const fill = inverse ? "#030341" : "white";
   const stroke = inverse ? "white" : "black";
@@ -23,7 +23,7 @@ function LogoMark({ inverse = false }) {
     </svg>
   );
 }
- 
+
 function GoogleIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -34,12 +34,23 @@ function GoogleIcon() {
     </svg>
   );
 }
- 
+
 export default function LoginPage() {
   const { login, isAuthed } = useAuth();
+  
+  // FIX 1: Better theme initialization
   const [theme, setTheme] = useState(() => {
-    try { return localStorage.getItem("ogapay-theme") || "light"; } catch { return "light"; }
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("ogapay-theme");
+      if (saved) return saved;
+      // Check system preference
+      if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) {
+        return "dark";
+      }
+    }
+    return "light";
   });
+  
   const [view, setView] = useState("default");
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
@@ -51,17 +62,18 @@ export default function LoginPage() {
   const [signupMsg, setSignupMsg] = useState("");
   const [resetMsg, setResetMsg] = useState("");
   const [loading, setLoading] = useState("");
- 
+
+  // FIX 1: Sync theme on mount and when it changes
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
     try { localStorage.setItem("ogapay-theme", theme); } catch {}
   }, [theme]);
- 
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get("mode") === "signup") setView("signup");
   }, []);
- 
+
   const handleLogin = async (e) => {
     e.preventDefault();
     if (!loginEmail.trim() || !loginPassword) {
@@ -83,7 +95,7 @@ export default function LoginPage() {
       setLoading("");
     }
   };
- 
+
   const handleSignup = async (e) => {
     e.preventDefault();
     if (!signupName.trim() || !signupEmail.trim() || !signupPassword) {
@@ -105,13 +117,10 @@ export default function LoginPage() {
         auth: false,
         body: JSON.stringify({ firstName, lastName, email: signupEmail.trim(), password: signupPassword, username: signupEmail.split("@")[0] }),
       });
-      
-      // ✅ FIX: Handle both response formats (user directly, or nested in tokens/session)
       const authPayload = {
         user: result.user || result,
         tokens: result.tokens || result.session,
       };
-      
       login(authPayload);
       localStorage.setItem("ogapay_is_new_user", "true");
       window.location.href = "/dashboard";
@@ -121,7 +130,7 @@ export default function LoginPage() {
       setLoading("");
     }
   };
- 
+
   const handleReset = async (e) => {
     e.preventDefault();
     if (!resetEmail.trim()) {
@@ -144,9 +153,9 @@ export default function LoginPage() {
       setLoading("");
     }
   };
- 
+
   const show = (v) => setView(v);
- 
+
   return <>
     <style>{`
       /* ── LOGIN PAGE SPECIFIC STYLES ── */
@@ -252,6 +261,21 @@ export default function LoginPage() {
       .auth-btn-icon { width: 28px; height: 28px; display: grid; place-items: center; flex-shrink: 0; }
       .auth-btn-icon svg { width: 24px; height: 24px; }
       .auth-btn strong { font-size: 15px; font-weight: 600; color: #0F172A; }
+      /* FIX 3: Add style for create account button */
+      .auth-btn.create-account-btn {
+        background: linear-gradient(135deg, #4D5DFF 0%, #667bff 100%);
+        color: white;
+        border: none;
+        justify-content: center;
+        text-align: center;
+      }
+      .auth-btn.create-account-btn strong {
+        color: white;
+      }
+      .auth-btn.create-account-btn:hover {
+        background: linear-gradient(135deg, #3d4feb 0%, #5568e8 100%);
+        box-shadow: 0 6px 20px rgba(77,93,255,.25);
+      }
       .divider {
         display: flex; align-items: center; gap: 16px; margin: 24px 0;
         color: #94a3b8; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;
@@ -264,7 +288,6 @@ export default function LoginPage() {
       .security svg { width: 20px; height: 20px; stroke: #94a3b8; stroke-width: 1.8; fill: none; flex-shrink: 0; margin-top: 1px; }
       .security strong { display: block; font-size: 13px; font-weight: 700; color: #0F172A; margin-bottom: 2px; }
       .security span { font-size: 12px; color: #94a3b8; line-height: 1.4; }
- 
       @media(max-width: 768px) {
         .login-wrapper { grid-template-columns: 1fr; min-height: auto; border-radius: 16px; }
         .left { min-height: auto; padding: 20px 20px 0; display: none; }
@@ -295,13 +318,36 @@ export default function LoginPage() {
         <div className="nav-actions">
           <a className="wallet-btn" href="/login"><svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2.3" viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M3 10h18M7 15h.01"/></svg>Login</a>
           <a className="wallet-btn" href="/login?mode=signup">Get Started</a>
-          <button className="icon-btn" onClick={() => setTheme(t => t === "dark" ? "light" : "dark")} aria-label="Toggle dark mode">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z"/></svg>
+          {/* FIX 2: Add proper theme toggle with icon */}
+          <button 
+            className="icon-btn" 
+            onClick={() => setTheme(t => t === "dark" ? "light" : "dark")} 
+            aria-label="Toggle dark mode"
+            style={{
+              width: 40,
+              height: 40,
+              borderRadius: 20,
+              border: '1.5px solid #e3e9f2',
+              background: theme === 'dark' ? '#4D5DFF' : '#fff',
+              display: 'grid',
+              placeItems: 'center',
+              cursor: 'pointer',
+              transition: 'all .2s'
+            }}
+          >
+            {theme === 'dark' ? (
+              <svg width="20" height="20" fill="none" stroke="white" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+              </svg>
+            ) : (
+              <svg width="20" height="20" fill="none" stroke="#4D5DFF" viewBox="0 0 24 24">
+                <path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z"/>
+              </svg>
+            )}
           </button>
         </div>
       </div>
     </header>
- 
     <main style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",padding:"20px 24px",minHeight:"calc(100vh - 60px)"}}>
       <div className="login-wrapper">
         {/* LEFT PANEL */}
@@ -358,7 +404,6 @@ export default function LoginPage() {
             </div>
           </div>
         </div>
- 
         {/* RIGHT PANEL */}
         <div className="right">
           <div className="right-inner">
@@ -367,6 +412,10 @@ export default function LoginPage() {
                 <h2>Welcome Back</h2>
                 <p className="sub">Sign in to continue earning with OgaPay</p>
                 <div className="auth-btns">
+                  {/* FIX 3: Add Create Account button below Google */}
+                  <button className="auth-btn create-account-btn" onClick={() => show("signup")}>
+                    <strong>Create Account</strong>
+                  </button>
                   <button className="auth-btn" onClick={async () => { try { await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin + '/auth/callback' } }); } catch(e) { window.location.href = '/login?error=auth_init_failed'; } }}>
                     <span className="auth-btn-icon"><GoogleIcon /></span>
                     <strong>Continue with Google</strong>
@@ -386,10 +435,9 @@ export default function LoginPage() {
                 </div>
                 <a href="#" onClick={(e) => { e.preventDefault(); show("forgot"); }} style={{display:'block',textAlign:'center',margin:'8px 0 4px',color:'#4D5DFF',fontSize:'14px',fontWeight:'600',textDecoration:'none'}}>Forgot password?</a>
                 <div className="divider">OR</div>
-                <p style={{textAlign:'center',margin:0,fontSize:'14px',color:'#66738a'}}>New to OgaPay? <a href="#" onClick={(e) => { e.preventDefault(); show("signup"); }} style={{color:'#4D5DFF',fontWeight:700,textDecoration:'none'}}>Create account</a></p>
+                <p style={{textAlign:'center',margin:0,fontSize:'14px',color:'#66738a'}}>Already have an account? <a href="#" onClick={(e) => { e.preventDefault(); show("email"); }} style={{color:'#4D5DFF',fontWeight:700,textDecoration:'none'}}>Sign in</a></p>
               </>
             )}
- 
             {view === "email" && (
               <form onSubmit={handleLogin}>
                 <h2>Welcome Back</h2>
@@ -401,7 +449,6 @@ export default function LoginPage() {
                 <p style={{textAlign:'center',margin:'14px 0 0'}}><a href="#" onClick={(e) => { e.preventDefault(); show("default"); }} style={{color:'#4D5DFF',fontSize:'13px',fontWeight:'600',textDecoration:'none'}}>Back to options</a></p>
               </form>
             )}
- 
             {view === "signup" && (
               <form onSubmit={handleSignup}>
                 <h2>Create account</h2>
@@ -414,7 +461,6 @@ export default function LoginPage() {
                 <p style={{textAlign:'center',margin:'14px 0 0'}}><a href="#" onClick={(e) => { e.preventDefault(); show("default"); }} style={{color:'#4D5DFF',fontSize:'13px',fontWeight:'600',textDecoration:'none'}}>Back to options</a></p>
               </form>
             )}
- 
             {view === "wallet" && (
               <div>
                 <h2>Connect Wallet</h2>
@@ -427,7 +473,6 @@ export default function LoginPage() {
                 <p style={{textAlign:'center',margin:'14px 0 0'}}><a href="#" onClick={(e) => { e.preventDefault(); show("default"); }} style={{color:'#4D5DFF',fontSize:'13px',fontWeight:'600',textDecoration:'none'}}>Back to options</a></p>
               </div>
             )}
- 
             {view === "forgot" && (
               <form onSubmit={handleReset}>
                 <h2>Reset Password</h2>
@@ -438,7 +483,6 @@ export default function LoginPage() {
                 <p style={{textAlign:'center',margin:'12px 0 0'}}><a href="#" onClick={(e) => { e.preventDefault(); show("default"); }} style={{color:'#4D5DFF',fontSize:'13px',fontWeight:'600',textDecoration:'none'}}>Back to options</a></p>
               </form>
             )}
- 
             <div className="security">
               <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
               <div>
