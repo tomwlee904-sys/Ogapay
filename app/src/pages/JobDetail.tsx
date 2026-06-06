@@ -866,7 +866,7 @@ const styles = `
 .jdg-bc-cur { color: var(--text); font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 280px; }
 
 /* ── Header ── */
-.jdg-header { background: var(--card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; margin-bottom: 16px; }
+.jdg-header { background: rgba(255,255,255,0.04); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; overflow: hidden; margin-bottom: 16px; }
 .jdg-brand { display: flex; align-items: center; gap: 12px; padding: 18px 22px 0; cursor: pointer; }
 .jdg-avatar { width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-size: 14px; font-weight: 800; flex-shrink: 0; overflow: hidden; }
 .jdg-avatar img { width: 100%; height: 100%; object-fit: cover; }
@@ -886,24 +886,24 @@ const styles = `
 .jdg-reward-cur { font-size: 14px; font-weight: 700; color: var(--text2); }
 .jdg-reward-usd { font-size: 12px; color: var(--text2); font-weight: 600; margin-top: 2px; }
 .jdg-stats-row { display: flex; gap: 10px; flex-shrink: 0; }
-.jdg-stat-box { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 10px 16px; text-align: center; min-width: 64px; }
+.jdg-stat-box { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 10px 16px; text-align: center; min-width: 64px; }
 .jdg-stat-val { font-size: 18px; font-weight: 900; color: var(--text); font-family: Outfit, sans-serif; }
 .jdg-stat-lbl { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--text3); margin-top: 1px; }
 
 /* ── Progress ── */
 .jdg-progress { padding: 0 22px 12px; }
-.jdg-progress-bar { height: 5px; border-radius: 999px; background: var(--bg2); overflow: hidden; border: 1px solid var(--border); }
+.jdg-progress-bar { height: 5px; border-radius: 999px; background: rgba(255,255,255,0.06); overflow: hidden; border: 1px solid rgba(255,255,255,0.08); }
 .jdg-progress-fill { height: 100%; border-radius: inherit; background: #1F8CFF; transition: width .5s; }
 .jdg-progress-stats { display: flex; justify-content: space-between; font-size: 10px; color: var(--text3); font-weight: 600; margin-top: 3px; }
 
 /* ── Deadline ── */
 .jdg-deadline { display: flex; align-items: center; gap: 12px; padding: 12px 22px; border-top: 1px solid var(--border); }
-.jdg-deadline-icon { width: 36px; height: 36px; border-radius: 50%; background: var(--bg2); border: 1px solid var(--border); display: grid; place-items: center; flex-shrink: 0; }
+.jdg-deadline-icon { width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); display: grid; place-items: center; flex-shrink: 0; }
 .jdg-deadline-icon svg { color: var(--text2); }
 .jdg-deadline.expired .jdg-deadline-icon svg { color: #f59e0b; }
 .jdg-deadline-lbl { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--text3); margin-bottom: 4px; }
 .jdg-cdown { display: flex; gap: 6px; }
-.jdg-cdown-unit { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; text-align: center; min-width: 44px; }
+.jdg-cdown-unit { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 6px 10px; text-align: center; min-width: 44px; }
 .jdg-cdown-val { display: block; font-size: 16px; font-weight: 900; color: var(--text); font-family: Outfit, sans-serif; }
 .jdg-cdown-lbl { display: block; font-size: 9px; font-weight: 700; color: var(--text3); margin-top: 1px; }
 
@@ -912,7 +912,7 @@ const styles = `
 @media (max-width: 860px) { .jdg-cols { grid-template-columns: 1fr; } }
 
 /* ── Cards ── */
-.jdg-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 18px 20px; margin-bottom: 14px; }
+.jdg-card { background: rgba(255,255,255,0.03); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.06); border-radius: 14px; padding: 18px 20px; margin-bottom: 14px; }
 .jdg-card-title { font-family: Outfit, sans-serif; font-size: 15px; font-weight: 800; margin: 0 0 12px; color: var(--text); display: flex; align-items: center; gap: 6px; }
 .jdg-card-head-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
 .jdg-card-head-row .jdg-card-title { margin-bottom: 0; }
@@ -920,7 +920,7 @@ const styles = `
 /* ── Config ── */
 .jdg-config { display: grid; grid-template-columns: repeat(2,1fr); gap: 8px; }
 @media (max-width: 480px) { .jdg-config { grid-template-columns: 1fr; } }
-.jdg-config-item { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; }
+.jdg-config-item { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 8px 12px; }
 .jdg-config-lbl { display: block; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; color: var(--text3); margin-bottom: 2px; }
 .jdg-config-val { font-size: 13px; font-weight: 700; color: var(--text); }
 
@@ -945,7 +945,7 @@ const styles = `
 /* ── Payment ── */
 .jdg-pay-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
 @media (max-width: 480px) { .jdg-pay-grid { grid-template-columns: 1fr; } }
-.jdg-pay-item { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; }
+.jdg-pay-item { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 10px 12px; }
 .jdg-pay-lbl { display: block; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; color: var(--text3); margin-bottom: 2px; }
 .jdg-pay-val { font-size: 14px; font-weight: 800; color: var(--text); }
 
@@ -970,7 +970,7 @@ const styles = `
 
 /* ── Related ── */
 .jdg-related { display: flex; flex-direction: column; gap: 6px; }
-.jdg-rel-card { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; cursor: pointer; transition: border-color .13s; }
+.jdg-rel-card { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; cursor: pointer; transition: border-color .13s; }
 .jdg-rel-card:hover { border-color: var(--text2); }
 .jdg-rel-icon { width: 32px; height: 32px; border-radius: 8px; background: rgba(31,140,255,.1); display: grid; place-items: center; flex-shrink: 0; }
 .jdg-rel-info { flex: 1; min-width: 0; }
@@ -985,7 +985,7 @@ const styles = `
 
 /* ── Right Sidebar ── */
 .jdg-right { display: flex; flex-direction: column; gap: 14px; }
-.jdg-side-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 16px 18px; }
+.jdg-side-card { background: rgba(255,255,255,0.03); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.06); border-radius: 14px; padding: 16px 18px; }
 .jdg-side-title { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; color: var(--text2); margin-bottom: 10px; }
 .jdg-side-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px dashed var(--border); font-size: 12px; }
 .jdg-side-row:last-child { border-bottom: none; }
@@ -1003,7 +1003,7 @@ const styles = `
 .jdg-app-name { font-size: 11px; font-weight: 700; color: var(--text); }
 
 /* ── Sticky Bottom ── */
-.jdg-sticky-bottom { position: fixed; bottom: 0; left: 0; right: 0; z-index: 100; padding: 14px 20px; background: linear-gradient(to top, var(--bg) 60%, transparent); }
+.jdg-sticky-bottom { position: fixed; bottom: 0; left: 0; right: 0; z-index: 100; padding: 14px 20px; background: linear-gradient(to top, rgba(10,10,20,0.9) 60%, transparent); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
 .jdg-sticky-inner { max-width: 1100px; margin: 0 auto; }
 .jdg-btn-apply { width: 100%; height: 50px; font-size: 15px; }
 .jdg-sticky-note { text-align: center; font-size: 11px; color: var(--text3); margin: 6px 0 0; }
@@ -1034,14 +1034,14 @@ const styles = `
 
 /* ── Modal ── */
 .jdg-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.6); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
-.jdg-modal { background: var(--card); border: 1px solid var(--border); border-radius: 16px; max-width: 460px; width: 100%; max-height: 90vh; overflow-y: auto; }
+.jdg-modal { background: rgba(20,20,30,0.85); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; max-width: 460px; width: 100%; max-height: 90vh; overflow-y: auto; }
 .jdg-modal-head { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--border); }
 .jdg-modal-head h3 { font-size: 15px; font-weight: 800; margin: 0; display: flex; align-items: center; gap: 8px; }
 .jdg-modal-x { background: none; border: none; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; cursor: pointer; color: var(--text2); }
 .jdg-modal-x:hover { background: var(--bg2); }
 .jdg-modal-body { padding: 16px 20px; }
 .jdg-modal-label { display: block; font-size: 12px; font-weight: 700; color: var(--text2); margin-bottom: 6px; }
-.jdg-modal-input { width: 100%; padding: 9px 12px; border: 1.5px solid var(--border); border-radius: 8px; background: var(--bg2); color: var(--text); font-size: 13px; font-family: inherit; box-sizing: border-box; }
+.jdg-modal-input { width: 100%; padding: 9px 12px; border: 1.5px solid rgba(255,255,255,0.1); border-radius: 8px; background: rgba(255,255,255,0.04); color: var(--text); font-size: 13px; font-family: inherit; box-sizing: border-box; }
 .jdg-modal-input:focus { outline: none; border-color: #1F8CFF; }
 .jdg-modal-ta { resize: vertical; min-height: 70px; }
 .jdg-modal-info { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; margin-bottom: 14px; }
@@ -1088,4 +1088,19 @@ const styles = `
   .jdg-sticky-applied { flex-wrap: wrap; }
   .jdg-bc-cur { max-width: 160px; }
 }
+
+/* Light theme glass overrides */
+[data-theme="light"] .jdg-header { background: rgba(255,255,255,0.7); border-color: rgba(0,0,0,0.06); }
+[data-theme="light"] .jdg-card { background: rgba(255,255,255,0.6); border-color: rgba(0,0,0,0.04); }
+[data-theme="light"] .jdg-side-card { background: rgba(255,255,255,0.6); border-color: rgba(0,0,0,0.04); }
+[data-theme="light"] .jdg-modal { background: rgba(255,255,255,0.85); border-color: rgba(0,0,0,0.08); }
+[data-theme="light"] .jdg-sticky-bottom { background: linear-gradient(to top, rgba(255,255,255,0.9) 60%, transparent); }
+[data-theme="light"] .jdg-config-item { background: rgba(255,255,255,0.5); border-color: rgba(0,0,0,0.06); }
+[data-theme="light"] .jdg-pay-item { background: rgba(255,255,255,0.5); border-color: rgba(0,0,0,0.06); }
+[data-theme="light"] .jdg-stat-box { background: rgba(255,255,255,0.5); border-color: rgba(0,0,0,0.06); }
+[data-theme="light"] .jdg-cdown-unit { background: rgba(255,255,255,0.5); border-color: rgba(0,0,0,0.06); }
+[data-theme="light"] .jdg-deadline-icon { background: rgba(255,255,255,0.5); border-color: rgba(0,0,0,0.06); }
+[data-theme="light"] .jdg-progress-bar { background: rgba(0,0,0,0.04); border-color: rgba(0,0,0,0.06); }
+[data-theme="light"] .jdg-modal-input { background: rgba(255,255,255,0.5); border-color: rgba(0,0,0,0.08); }
+[data-theme="light"] .jdg-rel-card { background: rgba(255,255,255,0.5); border-color: rgba(0,0,0,0.06); }
 `
