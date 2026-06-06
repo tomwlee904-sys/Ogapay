@@ -1,18 +1,82 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Layout from '../components/Layout'
-
-const transactions = [
-  { date: 'Today', type: 'Deposit', amount: '+NGN 5,000', status: 'Completed', statusColor: 'var(--green)' as const },
-  { date: 'Yesterday', type: 'Withdrawal', amount: '-NGN 2,000', status: 'Processing', statusColor: 'var(--gold)' as const },
-  { date: '3 days ago', type: 'Task Reward', amount: '+NGN 1,200', status: 'Completed', statusColor: 'var(--green)' as const },
-  { date: '5 days ago', type: 'Referral Bonus', amount: '+NGN 300', status: 'Completed', statusColor: 'var(--green)' as const },
-  { date: '1 week ago', type: 'Withdrawal', amount: '-NGN 5,000', status: 'Completed', statusColor: 'var(--green)' as const },
-]
+import { apiRequest } from '../lib/api'
 
 export default function Wallet() {
   const [activeTab, setActiveTab] = useState('all')
+  const [balances, setBalances] = useState<Record<string, { balance: number; lockedBalance: number; available: number }> | null>(null)
+  const [transactions, setTransactions] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
 
-  const filtered = activeTab === 'all' ? transactions : transactions.filter(t => t.type.toLowerCase().includes(activeTab))
+  useEffect(() => {
+    async function load() {
+      try {
+        const [balData, txData] = await Promise.all([
+          apiRequest('/wallet/balance').catch(() => null),
+          apiRequest('/users/transactions/history').catch(() => null),
+        ])
+        if (balData) setBalances(balData)
+        if (txData) setTransactions(Array.isArray(txData) ? txData : [])
+      } catch {}
+      setLoading(false)
+    }
+    load()
+  }, [])
+
+  const ngnBal = balances?.NGN?.balance ?? 0
+  const usdcBal = balances?.USDC?.balance ?? 0
+  const solBal = balances?.SOL?.balance ?? 0
+  const ngnAvailable = balances?.NGN?.available ?? 0
+
+  const totalDeposits = transactions
+    .filter(t => t.type?.toLowerCase() === 'deposit')
+    .reduce((sum, t) => sum + Number(t.amount || 0), 0)
+  const totalWithdrawn = transactions
+    .filter(t => t.type?.toLowerCase() === 'withdrawal')
+    .reduce((sum, t) => sum + Number(t.amount || 0), 0)
+
+  const formatCurrency = (n: number) => {
+    if (n >= 1000) return 'NGN ' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+    return 'NGN ' + n.toFixed(2)
+  }
+
+  const formatDate = (d: string) => {
+    const diff = Date.now() - new Date(d).getTime()
+    const mins = Math.floor(diff / 60000)
+    if (mins < 1) return 'Just now'
+    if (mins < 60) return mins + 'm ago'
+    const hrs = Math.floor(mins / 60)
+    if (hrs < 24) return hrs + 'h ago'
+    const days = Math.floor(hrs / 24)
+    if (days < 7) return days + 'd ago'
+    return new Date(d).toLocaleDateString()
+  }
+
+  const displayType = (t: any) => {
+    const type = (t.type || t.transactionType || '').replace(/_/g, ' ')
+    return type.charAt(0).toUpperCase() + type.slice(1).toLowerCase()
+  }
+
+  const displayAmount = (t: any) => {
+    const amt = Number(t.amount || 0)
+    const cur = t.currency || 'NGN'
+    const prefix = amt >= 0 ? '+' : ''
+    return prefix + cur + ' ' + Math.abs(amt).toLocaleString('en-US', { minimumFractionDigits: 2 })
+  }
+
+  const isCredit = (t: any) => Number(t.amount || 0) >= 0
+
+  const statusColor = (s: string) => {
+    const st = (s || '').toLowerCase()
+    if (st === 'completed' || st === 'approved' || st === 'success') return 'var(--green)'
+    if (st === 'pending' || st === 'processing') return 'var(--gold)'
+    if (st === 'failed' || st === 'rejected') return 'var(--red)'
+    return 'var(--text2)'
+  }
+
+  const filtered = activeTab === 'all'
+    ? transactions
+    : transactions.filter(t => (t.type || t.transactionType || '').toLowerCase().includes(activeTab))
 
   return (
     <Layout>
@@ -54,13 +118,14 @@ export default function Wallet() {
         .sec-title{font-family:Outfit;font-size:18px;font-weight:800;margin:0 0 14px;display:flex;align-items:center;gap:8px}
         .sec-title i{font-size:20px;color:var(--accent)}
         .wl-empty{text-align:center;padding:48px;color:var(--text2);font-size:14px}
+        .wl-loading{text-align:center;padding:48px;color:var(--text3);display:flex;align-items:center;justify-content:center;gap:8px}
       `}</style>
 
       <div className="wl-hero">
         <div>
           <div className="wlh-label">Wallet Balance</div>
-          <div className="wlh-bal">NGN 12,450.00</div>
-          <div className="wlh-sub">$8.42 USDC &middot; 0.045 SOL</div>
+          <div className="wlh-bal">{formatCurrency(ngnAvailable)}</div>
+          <div className="wlh-sub">${usdcBal.toFixed(2)} USDC &middot; {solBal.toFixed(3)} SOL</div>
         </div>
         <div className="wl-actions">
           <a href="#" className="wla-btn primary"><i className="ti ti-plus" /> Deposit</a>
@@ -71,14 +136,14 @@ export default function Wallet() {
 
       <div className="wl-stats">
         {[
-          { icon: 'ti ti-wallet', color: '#1F8CFF', num: 'NGN 12,450', label: 'Balance' },
-          { icon: 'ti ti-coin', color: '#16a34a', num: '$8.42 USDC', label: 'Crypto' },
-          { icon: 'ti ti-trending-up', color: '#2563EB', num: 'NGN 45,200', label: 'Total Deposits' },
-          { icon: 'ti ti-trending-down', color: '#f5b301', num: 'NGN 7,000', label: 'Total Withdrawn' },
+          { icon: 'ti ti-wallet', color: '#1F8CFF', num: formatCurrency(ngnBal), label: 'Balance' },
+          { icon: 'ti ti-coin', color: '#16a34a', num: `$${usdcBal.toFixed(2)} USDC`, label: 'Crypto' },
+          { icon: 'ti ti-trending-up', color: '#2563EB', num: formatCurrency(totalDeposits), label: 'Total Deposits' },
+          { icon: 'ti ti-trending-down', color: '#f5b301', num: formatCurrency(totalWithdrawn), label: 'Total Withdrawn' },
         ].map((s, i) => (
           <div className="wl-stat" key={i}>
             <div className="wsi" style={{ background: `${s.color}15`, color: s.color }}><i className={s.icon} /></div>
-            <div className="wsn">{s.num}</div>
+            <div className="wsn">{loading ? '...' : s.num}</div>
             <div className="wsl">{s.label}</div>
           </div>
         ))}
@@ -107,7 +172,9 @@ export default function Wallet() {
         ))}
       </div>
 
-      {filtered.length === 0 ? (
+      {loading ? (
+        <div className="wl-loading"><span className="spinner" /> Loading transactions...</div>
+      ) : filtered.length === 0 ? (
         <div className="wl-empty"><i className="ti ti-history" style={{ fontSize: 32, marginBottom: 8, display: 'block', color: 'var(--text3)' }} />No transactions found</div>
       ) : (
         <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 14, overflow: 'hidden' }}>
@@ -115,11 +182,11 @@ export default function Wallet() {
             <thead><tr><th>Date</th><th>Type</th><th>Amount</th><th>Status</th></tr></thead>
             <tbody>
               {filtered.map((t, i) => (
-                <tr key={i}>
-                  <td><strong>{t.date}</strong></td>
-                  <td>{t.type}</td>
-                  <td className={`amt ${t.amount.startsWith('+') ? 'plus' : 'minus'}`}>{t.amount}</td>
-                  <td style={{ color: t.statusColor, fontWeight: 600 }}>{t.status}</td>
+                <tr key={t.id || i}>
+                  <td><strong>{formatDate(t.createdAt || t.date)}</strong></td>
+                  <td>{displayType(t)}</td>
+                  <td className={`amt ${isCredit(t) ? 'plus' : 'minus'}`}>{displayAmount(t)}</td>
+                  <td style={{ color: statusColor(t.status), fontWeight: 600 }}>{(t.status || 'Pending').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}</td>
                 </tr>
               ))}
             </tbody>
