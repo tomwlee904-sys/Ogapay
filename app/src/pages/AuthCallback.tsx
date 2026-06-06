@@ -10,24 +10,24 @@ export default function AuthCallback() {
 
     async function handleCallback() {
       try {
-        const { data, error } = await supabase.auth.exchangeCodeForSession(
-          window.location.href
-        );
+        // Wait for Supabase to detect session from URL hash
+        await new Promise(r => setTimeout(r, 800));
+        
+        const { data: { session }, error } = await supabase.auth.getSession();
 
         if (cancelled) return;
 
-        if (data?.session) {
-          localStorage.setItem("ogapay_access_token", data.session.access_token);
+        if (session) {
+          localStorage.setItem("ogapay_access_token", session.access_token);
           localStorage.setItem("ogapay-authenticated", "true");
-          localStorage.setItem("ogapay_user", JSON.stringify(data.session.user));
 
-          const userMeta = data.session.user?.user_metadata || {};
-          const fullName = userMeta.full_name || userMeta.name || data.session.user.email?.split("@")[0] || "User";
+          const userMeta = session.user?.user_metadata || {};
+          const fullName = userMeta.full_name || userMeta.name || session.user.email?.split("@")[0] || "User";
           const parts = fullName.trim().split(/\s+/);
           localStorage.setItem("ogapay_user", JSON.stringify({
             firstName: parts[0],
             lastName: parts.slice(1).join(" ") || "",
-            email: data.session.user.email,
+            email: session.user.email,
             avatar: userMeta.avatar_url || "",
           }));
 
@@ -35,14 +35,34 @@ export default function AuthCallback() {
             localStorage.setItem("ogapay_is_new_user", "true");
           }
 
+          // Sync session with backend
+          try {
+            await fetch('https://ogapay-production.up.railway.app/api/v1/auth/google/exchange', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ access_token: session.access_token }),
+            });
+          } catch {}
+
           setStatus("redirecting");
           window.location.href = "/dashboard";
-        } else {
+        } else if (error) {
           console.error("Auth error:", error);
           setStatus("error");
           setTimeout(() => {
             window.location.href = "/login?error=verification_failed";
           }, 3000);
+        } else {
+          // No session - maybe already handled or expired
+          const stored = localStorage.getItem("ogapay-authenticated");
+          if (stored === "true") {
+            window.location.href = "/dashboard";
+          } else {
+            setStatus("error");
+            setTimeout(() => {
+              window.location.href = "/login?error=no_session";
+            }, 3000);
+          }
         }
       } catch (err) {
         console.error("Auth callback error:", err);
