@@ -155,6 +155,7 @@ function GetInspiredTile({ onClick }: { onClick: () => void }) {
 export default function Blog() {
   const [activeCategory, setActiveCategory] = useState('All')
   const [showArticles, setShowArticles] = useState(false)
+  const [selectedPost, setSelectedPost] = useState<any>(null)
   const [email, setEmail] = useState('')
   const [subscribed, setSubscribed] = useState(false)
   const [search, setSearch] = useState('')
@@ -330,28 +331,49 @@ export default function Blog() {
           <button onClick={() => setShowArticles(false)} style={{ fontSize: 13, color: '#121566', background: 'none', border: 'none', cursor: 'pointer' }}>← Back to home</button>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.5rem', marginBottom: '1.5rem' }}>
+        {/* Article Grid — Fiverr-style */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '1.75rem', marginBottom: '1.5rem' }}>
           {(filteredArticles || []).map((post: any) => {
             const badge = badgeColors[post.category] || { bg: '#EEEDFE', color: '#534AB7' }
             return (
-              <div key={post.id} style={{ background: 'var(--card)', border: '0.5px solid var(--border)', borderRadius: 16, overflow: 'hidden', cursor: 'pointer' }}>
-                <div style={{ height: 200, background: post.color, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="1.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" /></svg>
+              <div key={post.id}
+                onClick={() => setSelectedPost(post)}
+                style={{ background: 'var(--card)', border: '0.5px solid var(--border)', borderRadius: 14, overflow: 'hidden', cursor: 'pointer', transition: 'box-shadow .2s, transform .2s', display: 'flex', flexDirection: 'column' }}
+                onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 8px 30px rgba(0,0,0,0.08)'; e.currentTarget.style.transform = 'translateY(-2px)' }}
+                onMouseLeave={e => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.transform = 'translateY(0)' }}
+              >
+                {/* Colored header block */}
+                <div style={{ height: 200, background: post.color, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
+                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="1.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" /></svg>
+                  <div style={{ position: 'absolute', bottom: 12, left: 12 }}>
+                    <span style={{ fontSize: 10, fontWeight: 600, color: '#fff', background: 'rgba(255,255,255,0.15)', padding: '3px 10px', borderRadius: 20, backdropFilter: 'blur(4px)' }}>
+                      {post.readTime}
+                    </span>
+                  </div>
                 </div>
-                <div style={{ padding: '1.25rem' }}>
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 500, background: badge.bg, color: badge.color, padding: '3px 10px', borderRadius: 20, marginBottom: 8 }}>
+                {/* Card body */}
+                <div style={{ padding: '1.25rem 1.25rem 1.5rem', display: 'flex', flexDirection: 'column', flex: 1 }}>
+                  {/* Category badge */}
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 600, background: badge.bg, color: badge.color, padding: '3px 10px', borderRadius: 20, marginBottom: 10, alignSelf: 'flex-start' }}>
                     {post.category}
-                    {post.isUserPost && <span style={{ fontSize: 9, background: badge.color, color: badge.bg, borderRadius: 99, padding: '1px 5px' }}>Member</span>}
+                    {post.isUserPost && <span style={{ fontSize: 9, background: badge.color, color: '#fff', borderRadius: 99, padding: '1px 6px' }}>Member</span>}
                   </span>
-                  <p style={{ fontSize: 14, fontWeight: 500, color: '#1a1a1a', lineHeight: 1.5, marginBottom: 10 }}>{post.title}</p>
-                  <p style={{ fontSize: 13, color: '#666', lineHeight: 1.6, marginBottom: 10 }}>{post.excerpt}</p>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#666', flexWrap: 'wrap' }}>
-                    <div style={{ width: 22, height: 22, borderRadius: '50%', background: '#121566', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 600 }}>{post.authorInitials}</div>
-                    <span>{post.author}</span>
-                    <span>·</span>
+                  {/* Title */}
+                  <h3 style={{ fontSize: 15, fontWeight: 600, color: 'var(--text)', lineHeight: 1.45, margin: '0 0 8px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                    {post.title}
+                  </h3>
+                  {/* Excerpt */}
+                  <p style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.6, margin: '0 0 auto', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                    {post.excerpt}
+                  </p>
+                  {/* Author row */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--text3)', marginTop: 14, paddingTop: 12, borderTop: '0.5px solid var(--border)' }}>
+                    <div style={{ width: 24, height: 24, borderRadius: '50%', background: post.color || '#121566', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 700, flexShrink: 0 }}>
+                      {post.authorInitials}
+                    </div>
+                    <span style={{ fontWeight: 500, color: 'var(--text2)' }}>{post.author}</span>
+                    <span style={{ color: 'var(--border2)' }}>·</span>
                     <span>{post.date}</span>
-                    <span>·</span>
-                    <span>{post.readTime}</span>
                   </div>
                 </div>
               </div>
@@ -374,6 +396,61 @@ export default function Blog() {
           )}
         </div>
         </div>
+
+        {/* Article Detail Modal */}
+        {selectedPost && (
+          <div style={{ position: 'fixed', inset: 0, zIndex: 500, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '40px 20px', overflowY: 'auto' }}
+            onClick={() => setSelectedPost(null)}>
+            <div style={{ background: 'var(--card)', borderRadius: 16, maxWidth: 720, width: '100%', overflow: 'hidden', boxShadow: '0 20px 60px rgba(0,0,0,0.15)' }}
+              onClick={e => e.stopPropagation()}>
+              {/* Header block */}
+              <div style={{ height: 240, background: selectedPost.color || '#121566', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+                <button onClick={() => setSelectedPost(null)}
+                  style={{ position: 'absolute', top: 16, left: 16, width: 36, height: 36, borderRadius: '50%', background: 'rgba(0,0,0,0.3)', border: 'none', cursor: 'pointer', display: 'grid', placeItems: 'center', color: '#fff', fontSize: 18, backdropFilter: 'blur(4px)' }}>
+                  <i className="ti ti-x" />
+                </button>
+                <div style={{ textAlign: 'center', padding: '0 40px' }}>
+                  <span style={{ fontSize: 11, fontWeight: 600, color: '#fff', background: 'rgba(255,255,255,0.15)', padding: '4px 12px', borderRadius: 20, backdropFilter: 'blur(4px)' }}>
+                    {selectedPost.category}
+                  </span>
+                  <h2 style={{ fontSize: 28, fontWeight: 700, color: '#fff', lineHeight: 1.3, margin: '16px 0 8px' }}>{selectedPost.title}</h2>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, fontSize: 12, color: 'rgba(255,255,255,0.75)' }}>
+                    <div style={{ width: 22, height: 22, borderRadius: '50%', background: 'rgba(255,255,255,0.2)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 700 }}>
+                      {selectedPost.authorInitials}
+                    </div>
+                    <span>{selectedPost.author}</span>
+                    <span>·</span>
+                    <span>{selectedPost.date}</span>
+                    <span>·</span>
+                    <span>{selectedPost.readTime}</span>
+                  </div>
+                </div>
+              </div>
+              {/* Body */}
+              <div style={{ padding: '2rem 2.5rem' }}>
+                <p style={{ fontSize: 15, color: 'var(--text2)', lineHeight: 1.8, margin: '0 0 20px' }}>
+                  {selectedPost.excerpt}
+                </p>
+                <div style={{ fontSize: 14, color: 'var(--text2)', lineHeight: 1.8 }}>
+                  <p>This is a full article preview. In production, each article will have its own detailed content with images, headers, and rich formatting.</p>
+                  <p>OgaPay is building Africa's largest micro-task marketplace, connecting earners with meaningful digital work opportunities across Nigeria, Ghana, Kenya, and beyond.</p>
+                  <p>Stay tuned for the full article publishing system where writers can submit detailed, formatted articles with embedded media, code blocks, and more.</p>
+                </div>
+                <div style={{ marginTop: 24, paddingTop: 16, borderTop: '0.5px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text3)', background: 'var(--bg2)', padding: '4px 12px', borderRadius: 20 }}>#{selectedPost.category.toLowerCase().replace(/ /g,'')}</span>
+                    <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text3)', background: 'var(--bg2)', padding: '4px 12px', borderRadius: 20 }}>#ogapay</span>
+                  </div>
+                  <button onClick={() => { navigator.clipboard?.writeText(window.location.href); }}
+                    style={{ fontSize: 12, color: '#121566', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2M7 11l5 5 5-5M12 4v12"/></svg>
+                    Share article
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         <Drawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
         <Footer />
