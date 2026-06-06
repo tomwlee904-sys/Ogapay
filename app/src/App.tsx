@@ -4,6 +4,7 @@ import { ThemeProvider } from './context/ThemeContext'
 import ProtectedRoute from './components/ProtectedRoute'
 import Tasks from './pages/Tasks'
 import LoginPage from './pages/LoginPage'
+import JobDetail from './pages/JobDetail'
 import Dashboard from './pages/Dashboard'
 import HomePage from './pages/HomePage'
 import JobMonitor from './pages/JobMonitor'
@@ -61,7 +62,7 @@ export default function App() {
           <Route path="/auth/callback" element={<AuthCallback />} />
           <Route path="/blog" element={<Blog />} />
           <Route path="/tasks" element={<Tasks />} />
-          <Route path="/tasks/:id" element={<Tasks />} />
+          <Route path="/tasks/:id" element={<JobDetail />} />
           <Route path="/store" element={<Store />} />
           <Route path="/communities" element={<Communities />} />
           <Route path="/communities/:id" element={<CommunityDetail />} />
