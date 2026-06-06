@@ -33,7 +33,7 @@ function Badge({ children, color = 'blue' }: { children: React.ReactNode; color?
   }
   const c = map[color] || map.gray
   return (
-    <span className="badge" style={{ background: c.bg, color: c.text, border: `1px solid ${c.border}`, borderRadius: 999, display: 'inline-flex', alignItems: 'center', gap: 4, padding: '3px 10px', fontSize: 11, fontWeight: 700 }}>
+    <span  style={{ background: c.bg, color: c.text, border: `1px solid ${c.border}`, borderRadius: 999, display: 'inline-flex', alignItems: 'center', gap: 4, padding: '3px 10px', fontSize: 11, fontWeight: 700 }}>
       {children}
     </span>
   )
@@ -154,16 +154,6 @@ export default function JobDetail() {
 
   return (
     <Layout>
-      <style>{`
-        .card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; }
-        .card-sm { background: var(--card); border: 1px solid var(--border); border-radius: 12px; }
-        .glow { box-shadow: 0 0 0 1px rgba(${BRAND_RGB},0.3), 0 8px 32px rgba(${BRAND_RGB},0.12); }
-        .tab-active { color: var(--text); border-bottom: 2px solid ${BRAND}; }
-        .tab-inactive { color: var(--text3); border-bottom: 2px solid transparent; }
-        .tab-inactive:hover { color: var(--text); }
-        .progress-bar { transition: width 0.8s cubic-bezier(.4,0,.2,1); }
-        .badge { font-family: inherit; }
-      `}</style>
 
       {/* ── Sticky Nav Bar ── */}
       <div style={{ position: 'sticky', top: 0, zIndex: 40, background: 'var(--card)', borderBottom: '1px solid var(--border)', backdropFilter: 'blur(20px)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 16px', height: 52 }}>
@@ -192,7 +182,7 @@ export default function JobDetail() {
       <div style={{ maxWidth: 768, margin: '0 auto', padding: '16px 16px 140px' }}>
 
         {/* ── HEADER CARD ── */}
-        <div className="card" style={{ padding: 20, marginBottom: 16 }}>
+        <div style={{ padding: 20, marginBottom: 16 }}>
           {/* Brand row */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
             <div style={{ width: 40, height: 40, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 14, fontWeight: 900, flexShrink: 0, background: BRAND }}>
@@ -242,7 +232,7 @@ export default function JobDetail() {
             <span style={{ fontWeight: 700, color: isAlmostFull ? '#f5b301' : 'var(--text2)' }}>{job.slotsLeft} slots left</span>
           </div>
           <div style={{ height: 8, background: 'rgba(255,255,255,0.05)', borderRadius: 999, overflow: 'hidden', marginBottom: 16 }}>
-            <div className="progress-bar" style={{ height: '100%', borderRadius: 999, background: `linear-gradient(90deg, ${BRAND}, #16a34a)`, width: `${filledPct}%` }} />
+            <div style={{ height: '100%', borderRadius: 999, background: `linear-gradient(90deg, ${BRAND}, #16a34a)`, width: `${filledPct}%` }} />
           </div>
 
           {/* Meta grid */}
@@ -282,7 +272,7 @@ export default function JobDetail() {
         </div>
 
         {/* ── TABS CARD ── */}
-        <div className="card" style={{ marginBottom: 16 }}>
+        <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 16, marginBottom: 16 }}>
           <div style={{ display: 'flex', borderBottom: '1px solid var(--border)' }}>
             {['details', 'requirements', 'activity'].map(tab => (
               <button key={tab} onClick={() => setActiveTab(tab)}
