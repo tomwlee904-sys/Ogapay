@@ -333,6 +333,7 @@ export default function Profile() {
     <Layout>
       <style>{`
         .pg{width:100%;max-width:100%;margin:0 auto;padding:0 16px 60px}
+        .page{max-width:100%!important;width:100%}
         .tab-bar{display:flex;gap:0;border-bottom:1px solid var(--border);margin:0 0 24px;overflow-x:auto}
         .tab-btn{height:44px;padding:0 16px;border:none;border-bottom:2px solid transparent;background:none;color:var(--text2);font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:7px;transition:color .13s,border-color .13s}
         .tab-btn:hover{color:var(--text)}
