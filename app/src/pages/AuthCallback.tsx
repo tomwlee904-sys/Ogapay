@@ -48,19 +48,24 @@ export default function AuthCallback() {
           window.location.href = "/dashboard";
         } else if (error) {
           console.error("Auth error:", error);
+          // Show actual error detail
+          const errMsg = error.message || error.name || "unknown";
           setStatus("error");
           setTimeout(() => {
-            window.location.href = "/login?error=verification_failed";
-          }, 3000);
+            window.location.href = "/login?error=" + encodeURIComponent(errMsg);
+          }, 4000);
         } else {
           const stored = localStorage.getItem("ogapay-authenticated");
           if (stored === "true") {
             window.location.href = "/dashboard";
           } else {
+            console.log("No session found. URL:", window.location.href);
+            console.log("Hash:", window.location.hash);
+            console.log("Search:", window.location.search);
             setStatus("error");
             setTimeout(() => {
               window.location.href = "/login?error=no_session";
-            }, 3000);
+            }, 4000);
           }
         }
       } catch (err) {
