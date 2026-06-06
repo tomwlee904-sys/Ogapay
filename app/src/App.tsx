@@ -20,6 +20,7 @@ const MyStore = lazy(() => import('./pages/MyStore'))
 const Tasks = lazy(() => import('./pages/Tasks'))
 const JobDetail = lazy(() => import('./pages/JobDetail'))
 const Store = lazy(() => import('./pages/Store'))
+const SubmissionPage = lazy(() => import('./pages/SubmissionPage'))
 const CreateJob = lazy(() => import('./pages/CreateJob'))
 const WorkerPortal = lazy(() => import('./pages/WorkerPortal'))
 const Communities = lazy(() => import('./pages/Communities'))
@@ -93,6 +94,8 @@ export default function App() {
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/blog" element={<Blog />} />
             <Route path="/tasks" element={<Tasks />} />
+<Route path="/tasks/:id/submit" element={<AuthGuard><SubmissionPage /></AuthGuard>} />
+            <Route path="/tasks/:id/submissions" element={<AuthGuard><JobDetail /></AuthGuard>} />
             <Route path="/tasks/:id" element={<JobDetail />} />
             <Route path="/store" element={<Store />} />
             <Route path="/communities" element={<Communities />} />
