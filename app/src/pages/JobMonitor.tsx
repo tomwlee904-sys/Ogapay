@@ -338,7 +338,7 @@ export default function JobMonitor() {
                   <div className="jm-card-footer">
                     <div style={{ fontSize: 11, color: 'var(--text3)' }}>{job.creator}</div>
                     <div className="jm-card-actions" onClick={e => e.stopPropagation()}>
-                      <button className={isApplied ? 'applied' : ''} onClick={() => applyJob(job)}>
+                      <button className={isApplied ? 'applied' : ''} onClick={() => navigate('/tasks/' + job.id)}>
                         <i className={`ti ${isApplied ? 'ti-check' : 'ti-send'}`} /> {isApplied ? 'Applied' : 'Apply'}
                       </button>
                       <button className={isSaved ? 'saved' : ''} onClick={() => toggleBookmark(job.id)}>
