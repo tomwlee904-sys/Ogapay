@@ -1,4 +1,5 @@
 // @ts-nocheck
+// Fix: use client-side PKCE flow — wait for Supabase to detect session from URL hash, then getSession()
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 
@@ -8,31 +9,41 @@ export default function AuthCallback() {
   useEffect(() => {
     let cancelled = false;
 
-    async function handleCallback() {
+    async function handleCallback(attempt = 0) {
       try {
-        console.log("AuthCallback URL:", window.location.href);
-        console.log("AuthCallback hash:", window.location.hash);
-        console.log("AuthCallback search:", window.location.search);
-        const { data, error } = await supabase.auth.exchangeCodeForSession(
-          window.location.href
-        );
+        // Wait for Supabase to process URL hash params (PKCE flow auto-detection)
+        await new Promise(r => setTimeout(r, attempt === 0 ? 1200 : 600));
+
+        const { data: { session }, error } = await supabase.auth.getSession();
 
         if (cancelled) return;
 
-        if (data?.session) {
-          localStorage.setItem("ogapay_access_token", data.session.access_token);
+        if (session) {
+          localStorage.setItem("ogapay_access_token", session.access_token);
           localStorage.setItem("ogapay-authenticated", "true");
-          localStorage.setItem("ogapay_user", JSON.stringify(data.session.user));
 
-          const userMeta = data.session.user?.user_metadata || {};
-          const fullName = userMeta.full_name || userMeta.name || data.session.user.email?.split("@")[0] || "User";
+          const userMeta = session.user?.user_metadata || {};
+          const fullName = userMeta.full_name || userMeta.name || session.user.email?.split("@")[0] || "User";
           const parts = fullName.trim().split(/\s+/);
           localStorage.setItem("ogapay_user", JSON.stringify({
             firstName: parts[0],
             lastName: parts.slice(1).join(" ") || "",
-            email: data.session.user.email,
+            email: session.user.email,
             avatar: userMeta.avatar_url || "",
           }));
+
+          // Sync session with backend (exchange Supabase token for app token)
+          try {
+            const res = await fetch(
+              'https://ogapay-production.up.railway.app/api/v1/auth/google/exchange',
+              {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ access_token: session.access_token }),
+              }
+            );
+            if (res.ok) console.log('Backend session synced');
+          } catch {}
 
           if (!localStorage.getItem("ogapay_is_new_user")) {
             localStorage.setItem("ogapay_is_new_user", "true");
@@ -41,11 +52,17 @@ export default function AuthCallback() {
           setStatus("redirecting");
           window.location.href = "/dashboard";
         } else {
-          console.error("Auth error:", error);
-          setStatus("error");
-          setTimeout(() => {
-            window.location.href = "/login?error=verification_failed";
-          }, 3000);
+          // If no session found and we have hash, retry once
+          if (attempt < 2 && window.location.hash) {
+            return handleCallback(attempt + 1);
+          }
+          if (error) console.error("Auth error:", error);
+          const stored = localStorage.getItem("ogapay-authenticated");
+          if (stored === "true") {
+            window.location.href = "/dashboard";
+          } else {
+            window.location.href = "/login?error=no_session";
+          }
         }
       } catch (err) {
         console.error("Auth callback error:", err);
@@ -60,12 +77,6 @@ export default function AuthCallback() {
 
     handleCallback();
     return () => { cancelled = true; };
-  }, []);
-
-  const [debugUrl, setDebugUrl] = useState("");
-
-  useEffect(() => {
-    setDebugUrl(window.location.href);
   }, []);
 
   const statusMessages = {
@@ -122,18 +133,6 @@ export default function AuthCallback() {
         <p style={{ color: "#66738a", fontSize: 14, margin: "0 0 12px" }}>
           {msg.sub}
         </p>
-        {status === "error" && (
-          <div style={{
-            background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 8, padding: "10px 14px",
-            fontSize: 11, color: "#991b1b", textAlign: "left", wordBreak: "break-all", lineHeight: 1.5,
-            maxHeight: 120, overflow: "auto", fontFamily: "monospace",
-          }}>
-            <div style={{fontWeight:700,marginBottom:4}}>Callback URL:</div>
-            <div style={{marginBottom:8}}>{debugUrl}</div>
-            <div style={{fontWeight:700,marginBottom:4}}>Hash:</div>
-            <div>{debugUrl.split('#')[1] || 'none'}</div>
-          </div>
-        )}
       </div>
     </div>
   );
