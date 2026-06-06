@@ -308,40 +308,19 @@ export default function JobDetail() {
         </div>
       </div>
 
-            {/* Share Panel */}
+      {/* Share Panel */}
       {showShare && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
           <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)' }} onClick={() => setShowShare(false)} />
-          <div style={{ position: 'relative', width: '100%', maxWidth: 380, background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '24px 24px 0 0', padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <p style={{ fontWeight: 700, color: 'var(--text)', margin: 0, fontSize: 14 }}>Share this Job</p>
-              <button onClick={() => setShowShare(false)} style={{ width: 28, height: 28, borderRadius: 8, background: 'var(--bg2)', border: '1px solid var(--border)', color: 'var(--text3)', cursor: 'pointer', display: 'grid', placeItems: 'center' }}>
-                <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
-              </button>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
-              {[
-                { label: 'X (Twitter)', icon: 'X', href: 'https://twitter.com/intent/tweet?text=Earn+' + (job.currency === 'USD' ? '$' : '₦') + reward + '+on+OgaPay!&url=https://ogapay.vercel.app/tasks/' + id },
-                { label: 'WhatsApp', icon: 'W', href: 'https://wa.me/?text=Earn+' + (job.currency === 'USD' ? '$' : '₦') + reward + '+completing+tasks+on+OgaPay:+https://ogapay.vercel.app/tasks/' + id },
-                { label: 'Telegram', icon: 'T', href: 'https://t.me/share/url?url=https://ogapay.vercel.app/tasks/' + id + '&text=Earn+' + (job.currency === 'USD' ? '$' : '₦') + reward + '+on+OgaPay' },
-              ].map(s => (
-                <a key={s.label} href={s.href} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, padding: '10px 8px', background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 12, textDecoration: 'none', color: 'inherit' }}>
-                  <span style={{ fontSize: 20, fontWeight: 900, color: 'var(--text2)' }}>{s.icon}</span>
-                  <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--text2)' }}>{s.label}</span>
-                </a>
-              ))}
-            </div>
-            <div>
-              <p style={{ fontSize: 10, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 6px' }}>Or copy link</p>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <input readOnly value={'https://ogapay.vercel.app/tasks/' + id} style={{ flex: 1, padding: '10px 12px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--bg2)', color: 'var(--text)', fontSize: 11, fontFamily: 'monospace' }} />
-                <button onClick={() => { navigator.clipboard?.writeText('https://ogapay.vercel.app/tasks/' + id); setShowShare(false) }} style={{ padding: '10px 14px', borderRadius: 10, border: 'none', background: BRAND, color: '#fff', fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>Copy</button>
-              </div>
-            </div>
+          <div style={{ position: 'relative', width: '100%', maxWidth: 380, background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '24px 24px 0 0', padding: 20 }}>
+            <p style={{ fontWeight: 700, color: 'var(--text)', margin: '0 0 12px', fontSize: 14 }}>Share this Job</p>
+            <input readOnly value={`https://ogapay.vercel.app/tasks/${id}`} style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--bg2)', color: 'var(--text)', fontSize: 11, fontFamily: 'monospace', marginBottom: 12 }} />
+            <button onClick={() => { navigator.clipboard?.writeText(`https://ogapay.vercel.app/tasks/${id}`); setShowShare(false) }} style={{ padding: '10px 14px', borderRadius: 10, border: 'none', background: BRAND, color: '#fff', fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>Copy Link</button>
           </div>
         </div>
       )}
-{/* Apply Modal */}
+
+      {/* Apply Modal */}
       {showApply && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
           <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)' }} onClick={() => setShowApply(false)} />
