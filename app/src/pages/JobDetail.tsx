@@ -104,7 +104,16 @@ async function fetchTask(id: string): Promise<TaskData | null> {
     let res = await fetch(`${API_BASE}/tasks/${id}`, { headers })
     if (!res.ok) res = await fetch(`${API_BASE}/jobs/${id}`, { headers })
     const json = await res.json()
-    const data = json?.data || json
+    // Handle nested data.task structure from single-task endpoint
+    let data = json?.data?.task || json?.data || json
+    if (!data || !data.id) {
+      // Try /jobs/:id endpoint as alternative
+      if (!res.ok) {
+        const res2 = await fetch(`${API_BASE}/jobs/${id}`, { headers })
+        const json2 = await res2.json()
+        data = json2?.data?.task || json2?.data || json2
+      }
+    }
     if (!data || !data.id) return null
 
     const creatorRaw = data.poster || data.creator || {}

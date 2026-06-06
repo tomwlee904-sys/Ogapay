@@ -22,7 +22,7 @@ async function fetchTask(id: string) {
     const res = await fetch(API_BASE + '/tasks/' + id, { headers })
     if (!res.ok) return null
     const json = await res.json()
-    return json?.data || json
+    return json?.data?.task || json?.data || json
   } catch { return null }
 }
 
