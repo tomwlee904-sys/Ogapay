@@ -55,93 +55,133 @@ const posts = [
 ]
 
 // Tile components (kept from original)
+// Tile 1: Join The Community — photo of woman at cozy desk
 function JoinCommunityTile({ onClick }: { onClick: () => void }) {
   const [hovered, setHovered] = useState(false)
   return (
-    <div onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)} onClick={onClick}
-      style={{ position: 'relative', overflow: 'hidden', cursor: 'pointer', height: '100%', minHeight: 300 }}>
-      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, #121566 0%, #4F46E5 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ textAlign: 'center', padding: 20 }}>
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-          <h3 style={{ color: '#fff', fontSize: 18, fontWeight: 700, margin: '12px 0 4px' }}>Join Our Community</h3>
-          <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: 13, margin: 0 }}>Connect with earners across Africa</p>
-        </div>
-      </div>
-      <div style={{ position: 'absolute', inset: 0, background: hovered ? 'rgba(255,255,255,0.08)' : 'transparent', transition: 'background 0.3s' }} />
+    <div
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      onClick={onClick}
+      style={{ position: 'relative', overflow: 'hidden', cursor: 'pointer', height: '100%', minHeight: 300 }}
+    >
+      <img src="/assets/join-community.jpg" alt="Join the Community" style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0 }} />
+      <div style={{ position: 'absolute', inset: 0, background: hovered ? 'rgba(18,21,102,0.18)' : 'transparent', transition: 'background 0.3s' }} />
       <div style={{ position: 'absolute', top: 14, left: 14, opacity: hovered ? 1 : 0, transform: hovered ? 'translateY(0)' : 'translateY(-8px)', transition: 'all 0.25s ease' }}>
-        <button onClick={onClick} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#fff', color: PRIMARY, fontSize: 13, fontWeight: 600, padding: '7px 14px', borderRadius: 8, border: 'none', cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.12)' }}>
-          Join The Community <span style={{ background: PRIMARY, color: '#fff', borderRadius: 4, padding: '2px 6px', fontSize: 12 }}>→</span>
+        <button onClick={onClick} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'var(--bg)', color: 'var(--text)', fontSize: 13, fontWeight: 600, padding: '7px 14px', borderRadius: 8, border: 'none', cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.12)' }}>
+          Join The Community <span style={{ background: '#1a1a1a', color: '#fff', borderRadius: 4, padding: '2px 6px', fontSize: 12 }}>→</span>
         </button>
       </div>
     </div>
   )
 }
 
+// Tile 2: Start Selling — earner cards (kept from original)
 function StartSellingTile({ onClick }: { onClick: () => void }) {
   const [hovered, setHovered] = useState(false)
   return (
-    <div onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)} onClick={onClick}
-      style={{ position: 'relative', overflow: 'hidden', cursor: 'pointer', height: '100%', minHeight: 300 }}>
-      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, #4F46E5 0%, #6366F1 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ textAlign: 'center', padding: 20 }}>
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="1.5"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/></svg>
-          <h3 style={{ color: '#fff', fontSize: 18, fontWeight: 700, margin: '12px 0 4px' }}>Start Selling</h3>
-          <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: 13, margin: 0 }}>Offer your services on OgaPay Store</p>
+    <div
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      onClick={onClick}
+      style={{ background: '#4A1B3A', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1.5rem', position: 'relative', overflow: 'hidden', cursor: 'pointer', height: '100%', minHeight: 280 }}
+    >
+      <div style={{ position: 'absolute', top: 14, left: 14, opacity: hovered ? 1 : 0, transform: hovered ? 'translateY(0)' : 'translateY(-8px)', transition: 'all 0.25s ease' }}>
+        <button onClick={onClick} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'var(--bg)', color: 'var(--text)', fontSize: 13, fontWeight: 600, padding: '7px 14px', borderRadius: 8, border: 'none', cursor: 'pointer' }}>
+          Start Selling <span style={{ background: '#1a1a1a', color: '#fff', borderRadius: 4, padding: '2px 6px', fontSize: 12 }}>→</span>
+        </button>
+      </div>
+      {/* Card behind-left */}
+      <div style={{ position: 'absolute', width: 130, height: 165, background: '#E8A0B4', borderRadius: 10, transform: hovered ? 'rotate(-12deg) translate(-60px, 10px)' : 'rotate(-6deg) translate(-20px, 4px)', transition: 'transform 0.35s cubic-bezier(0.34,1.56,0.64,1)', border: '2px solid rgba(255,255,255,0.2)' }}>
+        <div style={{ padding: '0.5rem', paddingTop: '0.75rem' }}>
+          <div style={{ height: 80, background: 'rgba(255,255,255,0.2)', borderRadius: 6, marginBottom: 8 }} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}><div style={{ width: 18, height: 18, borderRadius: '50%', background: 'rgba(255,255,255,0.5)' }} /><div style={{ height: 8, background: 'rgba(255,255,255,0.4)', borderRadius: 4, flex: 1 }} /></div>
+          <div style={{ marginTop: 6, fontSize: 10, color: 'rgba(80,20,40,0.8)', fontWeight: 600 }}>5 ★</div>
         </div>
       </div>
-      <div style={{ position: 'absolute', inset: 0, background: hovered ? 'rgba(255,255,255,0.08)' : 'transparent', transition: 'background 0.3s' }} />
-      <div style={{ position: 'absolute', top: 14, left: 14, opacity: hovered ? 1 : 0, transform: hovered ? 'translateY(0)' : 'translateY(-8px)', transition: 'all 0.25s ease' }}>
-        <button onClick={onClick} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#fff', color: PRIMARY, fontSize: 13, fontWeight: 600, padding: '7px 14px', borderRadius: 8, border: 'none', cursor: 'pointer' }}>
-          Start Selling <span style={{ background: PRIMARY, color: '#fff', borderRadius: 4, padding: '2px 6px', fontSize: 12 }}>→</span>
-        </button>
+      {/* Card behind-right */}
+      <div style={{ position: 'absolute', width: 130, height: 165, background: '#F2C4D0', borderRadius: 10, transform: hovered ? 'rotate(12deg) translate(60px, 10px)' : 'rotate(6deg) translate(20px, 4px)', transition: 'transform 0.35s cubic-bezier(0.34,1.56,0.64,1)', border: '2px solid rgba(255,255,255,0.2)' }}>
+        <div style={{ padding: '0.5rem', paddingTop: '0.75rem' }}>
+          <div style={{ height: 80, background: 'rgba(255,255,255,0.25)', borderRadius: 6, marginBottom: 8 }} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}><div style={{ width: 18, height: 18, borderRadius: '50%', background: 'rgba(255,255,255,0.5)' }} /><div style={{ height: 8, background: 'rgba(255,255,255,0.4)', borderRadius: 4, flex: 1 }} /></div>
+          <div style={{ marginTop: 6, fontSize: 10, color: 'rgba(80,20,40,0.8)', fontWeight: 600 }}>5 ★</div>
+        </div>
+      </div>
+      {/* Front card */}
+      <div style={{ position: 'relative', zIndex: 5, background: '#121566', borderRadius: 10, width: 140, height: 175, border: '3px solid #121566', transform: hovered ? 'scale(1.06) translateY(-6px)' : 'scale(1)', transition: 'transform 0.3s cubic-bezier(0.34,1.56,0.64,1)', boxShadow: hovered ? '0 16px 40px rgba(0,0,0,0.4)' : '0 6px 20px rgba(0,0,0,0.25)' }}>
+        <div style={{ padding: '0.5rem' }}>
+          <div style={{ height: 90, background: '#ffffff', borderRadius: 6, marginBottom: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 32 }}>🧑🏾‍💻</div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              <div style={{ width: 20, height: 20, borderRadius: '50%', background: '#121566', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, color: '#fff', fontWeight: 700 }}>OG</div>
+              <span style={{ fontSize: 11, fontWeight: 700, color: '#fff' }}>Chukwudi</span>
+            </div>
+            <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.7)', fontWeight: 700 }}>5 ★</span>
+          </div>
+          <div style={{ height: 4, background: 'rgba(255,255,255,0.2)', borderRadius: 2 }}><div style={{ width: '80%', height: '100%', background: '#ffffff', borderRadius: 2 }} /></div>
+        </div>
       </div>
     </div>
   )
 }
 
+// Tile 3: Grow Your Business — spinning donut on #121566
 function GrowBusinessTile({ onClick }: { onClick: () => void }) {
   const [hovered, setHovered] = useState(false)
   return (
-    <div onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)} onClick={onClick}
-      style={{ position: 'relative', overflow: 'hidden', cursor: 'pointer', height: '100%', minHeight: 300 }}>
-      <div style={{ position: 'absolute', inset: 0, background: PRIMARY, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ textAlign: 'center', padding: 20 }}>
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="1.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-          <h3 style={{ color: '#fff', fontSize: 18, fontWeight: 700, margin: '12px 0 4px' }}>Grow Your Business</h3>
-          <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: 13, margin: 0 }}>Scale with OgaPay for Business</p>
-        </div>
-      </div>
-      <div style={{ position: 'absolute', inset: 0, background: hovered ? 'rgba(255,255,255,0.08)' : 'transparent', transition: 'background 0.3s' }} />
+    <div
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      onClick={onClick}
+      style={{ background: '#121566', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden', cursor: 'pointer', height: '100%', minHeight: 280 }}
+    >
       <div style={{ position: 'absolute', top: 14, left: 14, opacity: hovered ? 1 : 0, transform: hovered ? 'translateY(0)' : 'translateY(-8px)', transition: 'all 0.25s ease' }}>
-        <button onClick={onClick} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#fff', color: PRIMARY, fontSize: 13, fontWeight: 600, padding: '7px 14px', borderRadius: 8, border: 'none', cursor: 'pointer' }}>
-          Grow Your Business <span style={{ background: PRIMARY, color: '#fff', borderRadius: 4, padding: '2px 6px', fontSize: 12 }}>→</span>
+        <button onClick={onClick} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'var(--bg)', color: 'var(--text)', fontSize: 13, fontWeight: 600, padding: '7px 14px', borderRadius: 8, border: 'none', cursor: 'pointer' }}>
+          Grow Your Business <span style={{ background: '#1a1a1a', color: '#fff', borderRadius: 4, padding: '2px 6px', fontSize: 12 }}>→</span>
+        </button>
+      </div>
+      <div style={{ position: 'relative', width: 180, height: 180 }}>
+        <svg
+          width="180" height="180" viewBox="0 0 180 180"
+          style={{ transform: hovered ? 'rotate(360deg)' : 'rotate(0deg)', transition: hovered ? 'transform 1.2s cubic-bezier(0.4,0,0.2,1)' : 'transform 0.6s ease' }}
+        >
+          <circle cx="90" cy="90" r="72" fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="28" />
+          <circle cx="90" cy="90" r="72" fill="none" stroke="rgba(255,255,255,0.55)" strokeWidth="28"
+            strokeDasharray="340 452" strokeDashoffset="113" strokeLinecap="round" />
+          <circle cx="90" cy="90" r="72" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="28"
+            strokeDasharray="68 452" strokeDashoffset="-227" strokeLinecap="round" />
+          <circle cx="90" cy="90" r="44" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="18" />
+          <circle cx="90" cy="90" r="44" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="18"
+            strokeDasharray="220 276" strokeDashoffset="69" strokeLinecap="round" />
+          <circle cx="90" cy="90" r="24" fill="rgba(255,255,255,0.15)" />
+          <text x="90" y="96" textAnchor="middle" fill="white" fontSize="18" fontWeight="bold">↗</text>
+        </svg>
+      </div>
+    </div>
+  )
+}
+
+// Tile 4: Get Inspired — adventure illustration (kept from original)
+function GetInspiredTile({ onClick }: { onClick: () => void }) {
+  const [hovered, setHovered] = useState(false)
+  return (
+    <div
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      onClick={onClick}
+      style={{ position: 'relative', overflow: 'hidden', cursor: 'pointer', background: '#FFD6D6', height: '100%', minHeight: 300 }}
+    >
+      <img src="/assets/get-inspired.png" alt="Get Inspired" style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0 }} />
+      <div style={{ position: 'absolute', inset: 0, background: 'rgba(18,21,102,0.1)', opacity: hovered ? 1 : 0, transition: 'opacity 0.3s' }} />
+      <div style={{ position: 'absolute', top: 14, left: 14, opacity: hovered ? 1 : 0, transform: hovered ? 'translateY(0)' : 'translateY(-8px)', transition: 'all 0.25s ease' }}>
+        <button onClick={onClick} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'var(--bg)', color: 'var(--text)', fontSize: 13, fontWeight: 600, padding: '7px 14px', borderRadius: 8, border: 'none', cursor: 'pointer' }}>
+          Get Inspired <span style={{ background: '#1a1a1a', color: '#fff', borderRadius: 4, padding: '2px 6px', fontSize: 12 }}>→</span>
         </button>
       </div>
     </div>
   )
 }
 
-function GetInspiredTile({ onClick }: { onClick: () => void }) {
-  const [hovered, setHovered] = useState(false)
-  return (
-    <div onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)} onClick={onClick}
-      style={{ position: 'relative', overflow: 'hidden', cursor: 'pointer', height: '100%', minHeight: 300 }}>
-      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, #6366F1 0%, #121566 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ textAlign: 'center', padding: 20 }}>
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="1.5"><path d="M12 2l2.4 7.2H22l-6 4.8 2.4 7.2L12 16l-6.4 4.8L8 14l-6-4.8h7.6z"/></svg>
-          <h3 style={{ color: '#fff', fontSize: 18, fontWeight: 700, margin: '12px 0 4px' }}>Get Inspired</h3>
-          <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: 13, margin: 0 }}>Read success stories from earners</p>
-        </div>
-      </div>
-      <div style={{ position: 'absolute', inset: 0, background: hovered ? 'rgba(255,255,255,0.08)' : 'transparent', transition: 'background 0.3s' }} />
-      <div style={{ position: 'absolute', top: 14, left: 14, opacity: hovered ? 1 : 0, transform: hovered ? 'translateY(0)' : 'translateY(-8px)', transition: 'all 0.25s ease' }}>
-        <button onClick={onClick} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#fff', color: PRIMARY, fontSize: 13, fontWeight: 600, padding: '7px 14px', borderRadius: 8, border: 'none', cursor: 'pointer' }}>
-          Get Inspired <span style={{ background: PRIMARY, color: '#fff', borderRadius: 4, padding: '2px 6px', fontSize: 12 }}>→</span>
-        </button>
-      </div>
-    </div>
-  )
-}
 
 /* ─── Article Card Component ─── */
 function ArticleCard({ post, onClick }: { post: any; onClick: () => void }) {
@@ -256,8 +296,8 @@ function ArticleDetail({ post, onClose, allPosts }: { post: any; onClose: () => 
       </div>
     </div>
   )
-}
 
+}
 export default function Blog() {
   const navigate = useNavigate()
   const { isAuthed } = useAuth()
