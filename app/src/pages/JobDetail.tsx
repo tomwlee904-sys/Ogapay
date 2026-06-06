@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import Layout from "../components/Layout";
 
 // ── MOCK DATA ──────────────────────────────────────────────────────────────
 const JOB = {
@@ -83,7 +84,7 @@ const pct = (a, b) => Math.round((a / b) * 100);
 // ── BADGE ──────────────────────────────────────────────────────────────────
 function Badge({ children, color = "purple" }) {
   const map = {
-    purple: "bg-blue-600/15 text-blue-500 border-blue-600/30",
+    purple: "bg-[#121566]/15 text-[#121566] border-[#121566]/30",
     green:  "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
     amber:  "bg-amber-500/15 text-amber-400 border-amber-500/30",
     blue:   "bg-blue-500/15 text-blue-400 border-blue-500/30",
@@ -163,14 +164,14 @@ function ApplyModal({ job, onClose }) {
                 value={xHandle}
                 onChange={e => setXHandle(e.target.value)}
                 placeholder="@yourusername"
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-600 outline-none focus:border-blue-600 transition-colors"
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-600 outline-none focus:border-purple-500 transition-colors"
               />
             </div>
 
             {/* Proof upload */}
             <div>
               <label className="text-xs font-semibold text-gray-400 block mb-1.5">Screenshot Proof *</label>
-              <label className="flex flex-col items-center justify-center gap-2 border border-dashed border-white/15 rounded-xl px-4 py-6 cursor-pointer hover:border-blue-600/50 hover:bg-blue-600/5 transition-all">
+              <label className="flex flex-col items-center justify-center gap-2 border border-dashed border-white/15 rounded-xl px-4 py-6 cursor-pointer hover:border-purple-500/50 hover:bg-purple-500/5 transition-all">
                 {file ? (
                   <>
                     <svg width="20" height="20" fill="none" stroke="#10b981" strokeWidth="2" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
@@ -196,7 +197,7 @@ function ApplyModal({ job, onClose }) {
                 onChange={e => setNotes(e.target.value)}
                 placeholder="Any extra context for the reviewer..."
                 rows={2}
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-600 outline-none focus:border-blue-600 transition-colors resize-none"
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-600 outline-none focus:border-purple-500 transition-colors resize-none"
               />
             </div>
 
@@ -241,7 +242,7 @@ function ApplyModal({ job, onClose }) {
                 <span className="text-white font-semibold">{job.payoutDay}</span>
               </div>
             </div>
-            <button onClick={onClose} className="w-full border border-white/10 hover:border-blue-600/50 text-gray-300 font-bold py-3 rounded-xl text-sm transition-colors">
+            <button onClick={onClose} className="w-full border border-white/10 hover:border-purple-500/50 text-gray-300 font-bold py-3 rounded-xl text-sm transition-colors">
               Back to Job
             </button>
           </div>
@@ -286,7 +287,7 @@ function SharePanel({ job, onClose }) {
         </div>
         <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-xl px-3 py-2.5">
           <span className="flex-1 text-xs text-gray-400 font-mono truncate">{url}</span>
-          <button onClick={copy} className="flex-shrink-0 text-xs font-bold px-3 py-1.5 rounded-lg bg-blue-600/20 text-blue-500 hover:bg-blue-600/30 transition-colors">
+          <button onClick={copy} className="flex-shrink-0 text-xs font-bold px-3 py-1.5 rounded-lg bg-purple-500/20 text-[#121566] hover:bg-purple-500/30 transition-colors">
             {copied ? "Copied ✓" : "Copy"}
           </button>
         </div>
@@ -306,6 +307,7 @@ export default function JobDetail() {
   const isAlmostFull = JOB.slotsLeft < 60;
 
   return (
+    <Layout>
     <div style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }} className="min-h-screen bg-[#0a0a0f] text-white">
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400&family=DM+Mono:wght@400;500&display=swap');
@@ -348,7 +350,7 @@ export default function JobDetail() {
         </div>
         <div className="flex items-center gap-2">
           <button onClick={() => setBookmarked(b => !b)}
-            className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all border ${bookmarked ? "bg-blue-600/15 border-blue-600/40 text-blue-500" : "bg-white/5 border-white/10 text-gray-400 hover:text-white"}`}>
+            className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all border ${bookmarked ? "bg-[#121566]/15 border-purple-500/40 text-[#121566]" : "bg-white/5 border-white/10 text-gray-400 hover:text-white"}`}>
             <svg width="14" height="14" fill={bookmarked ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
           </button>
           <button onClick={() => setShowShare(true)}
@@ -485,7 +487,7 @@ export default function JobDetail() {
                   <div className="space-y-2.5">
                     {JOB.steps.map((step, i) => (
                       <div key={i} className="flex gap-3 items-start">
-                        <div className="w-6 h-6 rounded-lg bg-blue-600/15 border border-blue-600/30 flex items-center justify-center text-xs font-black text-blue-500 flex-shrink-0 mt-0.5">
+                        <div className="w-6 h-6 rounded-lg bg-[#121566]/15 border border-[#121566]/30 flex items-center justify-center text-xs font-black text-[#121566] flex-shrink-0 mt-0.5">
                           {i + 1}
                         </div>
                         <p className="text-sm text-gray-300 leading-relaxed">{step}</p>
@@ -540,8 +542,8 @@ export default function JobDetail() {
                   </p>
                 </div>
 
-                <div className="bg-blue-600/8 border border-blue-600/20 rounded-xl p-4">
-                  <p className="text-xs font-bold text-blue-500 uppercase tracking-wider mb-1">Plan Required</p>
+                <div className="bg-purple-500/8 border border-[#121566]/20 rounded-xl p-4">
+                  <p className="text-xs font-bold text-[#121566] uppercase tracking-wider mb-1">Plan Required</p>
                   <p className="text-sm text-gray-300">This job is available on the <span className="text-white font-bold">Free Plan</span> and above. No paid membership needed.</p>
                 </div>
               </div>
@@ -603,8 +605,8 @@ export default function JobDetail() {
           <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Similar Jobs</h3>
           <div className="space-y-2">
             {JOB.similarJobs.map(j => (
-              <div key={j.id} className="card p-4 flex items-center gap-3 hover:border-blue-600/30 transition-colors cursor-pointer">
-                <div className="w-10 h-10 rounded-xl bg-blue-600/15 border border-blue-600/20 flex items-center justify-center flex-shrink-0">
+              <div key={j.id} className="card p-4 flex items-center gap-3 hover:border-[#121566]/30 transition-colors cursor-pointer">
+                <div className="w-10 h-10 rounded-xl bg-[#121566]/15 border border-[#121566]/20 flex items-center justify-center flex-shrink-0">
                   <svg width="16" height="16" fill="none" stroke="#121566" strokeWidth="2" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
                 </div>
                 <div className="flex-1 min-w-0">
@@ -642,7 +644,7 @@ export default function JobDetail() {
                 Apply & Earn ₦{JOB.reward.toLocaleString()} →
               </button>
               <button onClick={() => setBookmarked(b => !b)}
-                className={`w-14 rounded-2xl border flex items-center justify-center transition-all ${bookmarked ? "bg-blue-600/15 border-blue-600/40 text-blue-500" : "bg-white/5 border-white/10 text-gray-400 hover:text-white"}`}>
+                className={`w-14 rounded-2xl border flex items-center justify-center transition-all ${bookmarked ? "bg-[#121566]/15 border-purple-500/40 text-[#121566]" : "bg-white/5 border-white/10 text-gray-400 hover:text-white"}`}>
                 <svg width="16" height="16" fill={bookmarked ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
               </button>
             </div>
@@ -661,5 +663,6 @@ export default function JobDetail() {
       {showApply && <ApplyModal job={JOB} onClose={() => setShowApply(false)} />}
       {showShare && <SharePanel job={JOB} onClose={() => setShowShare(false)} />}
     </div>
-  );
+      </Layout>
+    );
 }
