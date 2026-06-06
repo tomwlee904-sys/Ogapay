@@ -1,9 +1,12 @@
+import { useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 
 interface DrawerProps {
   open: boolean
   onClose: () => void
 }
+
+import { useState } from 'react'
 
 export default function Drawer({ open, onClose }: DrawerProps) {
   const { isAuthed, logout } = useAuth()
@@ -130,14 +133,15 @@ export default function Drawer({ open, onClose }: DrawerProps) {
 }
 
 function DrawerGroup({ icon, label, desc, children }: { icon: string; label: string; desc: string; children: React.ReactNode }) {
+  const [expanded, setExpanded] = useState(false)
   return (
-    <div className="oga-drawer-group">
-      <button className="oga-drawer-item oga-drawer-group-toggle" aria-expanded="false">
+    <div className={"oga-drawer-group" + (expanded ? " open" : "")}>
+      <button className="oga-drawer-item oga-drawer-group-toggle" aria-expanded={expanded} onClick={() => setExpanded(!expanded)}>
         <span className="oga-drawer-icon"><i className={icon} /></span>
         <span><strong>{label}</strong><small>{desc}</small></span>
-        <i className="ti ti-chevron-down oga-drawer-chevron" />
+        <i className="ti ti-chevron-down oga-drawer-chevron" style={{ transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)' }} />
       </button>
-      <div className="oga-drawer-subnav">
+      <div className="oga-drawer-subnav" style={{ display: expanded ? 'grid' : 'none' }}>
         {children}
       </div>
     </div>
