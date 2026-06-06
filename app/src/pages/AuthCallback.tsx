@@ -10,6 +10,9 @@ export default function AuthCallback() {
 
     async function handleCallback() {
       try {
+        console.log("AuthCallback URL:", window.location.href);
+        console.log("AuthCallback hash:", window.location.hash);
+        console.log("AuthCallback search:", window.location.search);
         const { data, error } = await supabase.auth.exchangeCodeForSession(
           window.location.href
         );
@@ -59,6 +62,12 @@ export default function AuthCallback() {
     return () => { cancelled = true; };
   }, []);
 
+  const [debugUrl, setDebugUrl] = useState("");
+
+  useEffect(() => {
+    setDebugUrl(window.location.href);
+  }, []);
+
   const statusMessages = {
     processing: { text: "Verifying your account...", sub: "Please wait while we sign you in." },
     redirecting: { text: "Redirecting...", sub: "Taking you to your dashboard." },
@@ -81,7 +90,7 @@ export default function AuthCallback() {
         borderRadius: 14,
         padding: "32px 40px",
         textAlign: "center",
-        maxWidth: 400,
+        maxWidth: 460,
         boxShadow: "0 18px 50px rgba(16,21,37,.1)",
       }}>
         {status === "processing" || status === "redirecting" ? (
@@ -110,9 +119,21 @@ export default function AuthCallback() {
         <p style={{ color: "#101525", fontSize: 16, fontWeight: 700, margin: "0 0 6px" }}>
           {msg.text}
         </p>
-        <p style={{ color: "#66738a", fontSize: 14, margin: 0 }}>
+        <p style={{ color: "#66738a", fontSize: 14, margin: "0 0 12px" }}>
           {msg.sub}
         </p>
+        {status === "error" && (
+          <div style={{
+            background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 8, padding: "10px 14px",
+            fontSize: 11, color: "#991b1b", textAlign: "left", wordBreak: "break-all", lineHeight: 1.5,
+            maxHeight: 120, overflow: "auto", fontFamily: "monospace",
+          }}>
+            <div style={{fontWeight:700,marginBottom:4}}>Callback URL:</div>
+            <div style={{marginBottom:8}}>{debugUrl}</div>
+            <div style={{fontWeight:700,marginBottom:4}}>Hash:</div>
+            <div>{debugUrl.split('#')[1] || 'none'}</div>
+          </div>
+        )}
       </div>
     </div>
   );
