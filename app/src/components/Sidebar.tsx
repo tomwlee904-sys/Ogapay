@@ -10,7 +10,10 @@ export default function Sidebar() {
         <div className="sidebar-section">Main</div>
         <a className="sidebar-link" href="/tasks"><i className="ti ti-checklist" /> Tasks</a>
         <a className="sidebar-link" href="/store"><i className="ti ti-building-store" /> Store</a>
+        <a className="sidebar-link" href="/wurkers"><i className="ti ti-users" /> Wurkers</a>
+        <a className="sidebar-link" href="/writer"><i className="ti ti-edit" /> Writer</a>
         <a className="sidebar-link" href="/worker-portal"><i className="ti ti-briefcase" /> Worker Portal</a>
+        <a className="sidebar-link" href="/analytics"><i className="ti ti-chart-bar" /> Analytics</a>
         <a className="sidebar-link" href="/communities"><i className="ti ti-users" /> Communities</a>
         <a className="sidebar-link" href="/earnings"><i className="ti ti-coin" /> Earnings</a>
         <a className="sidebar-link" href="/leaderboard"><i className="ti ti-trophy" /> Leaderboard</a>

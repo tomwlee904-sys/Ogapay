@@ -37,6 +37,10 @@ import Terms from './pages/Terms'
 import TaskHistory from './pages/TaskHistory'
 import Developer from './pages/Developer'
 import Roadmap from './pages/Roadmap'
+import Wurkers from './pages/Wurkers'
+import WurkerApply from './pages/WurkerApply'
+import Writer from './pages/Writer'
+import Analytics from './pages/Analytics'
 
 function AuthGuard({ children }: { children: React.ReactNode }) {
   return <ProtectedRoute>{children}</ProtectedRoute>
@@ -91,6 +95,10 @@ export default function App() {
 
           <Route path="/developer" element={<Developer />} />
           <Route path="/roadmap" element={<Roadmap />} />
+          <Route path="/wurkers" element={<Wurkers />} />
+          <Route path="/wurker-apply" element={<AuthGuard><WurkerApply /></AuthGuard>} />
+          <Route path="/writer" element={<Writer />} />
+          <Route path="/analytics" element={<AuthGuard><Analytics /></AuthGuard>} />
 
           {/* Catch-all */}
           <Route path="*" element={<NotFound />} />
