@@ -8,6 +8,12 @@ const API_BASE = 'https://ogapay-production.up.railway.app/api/v1'
 function pad(n: number) { return String(n).padStart(2, '0') }
 function pct(a: number, b: number) { return b > 0 ? Math.round((a / b) * 100) : 0 }
 
+function toArray<T>(val: T | T[] | undefined | null, fallback: T[]): T[] {
+  if (Array.isArray(val)) return val
+  if (val !== undefined && val !== null && val !== '') return [val as T]
+  return fallback
+}
+
 function useCountdown(deadline: number) {
   const calc = () => {
     const diff = deadline - Date.now()
@@ -125,7 +131,7 @@ export default function JobDetail() {
     if (!id) return
     setLoading(true)
     setError('')
-    
+
     const fetchJob = async () => {
       try {
         const res = await fetch(`${API_BASE}/tasks/${id}`)
@@ -159,7 +165,7 @@ export default function JobDetail() {
     const totalPool = (reward * slots).toLocaleString()
     const usdEquiv = t.usdEquiv || `$${(reward * 0.00062).toFixed(2)}`
     const creatorName = t.poster?.username || 'OgaPay'
-    
+
     return {
       id: t.id || id || '',
       title: t.title || 'Untitled Task',
@@ -171,7 +177,7 @@ export default function JobDetail() {
       brandVerified: t.poster?.posterProfile?.isVerified || false,
       category: t.category || 'General',
       type: t.estimatedTime ? `${t.estimatedTime} min` : 'Quick Task',
-      platform: t.tags?.[0] || 'Web',
+      platform: Array.isArray(t.tags) && t.tags.length > 0 ? t.tags[0] : (t.tags || 'Web'),
       reward,
       currency: t.currency || 'NGN',
       usdEquiv,
@@ -179,14 +185,19 @@ export default function JobDetail() {
       slotsLeft: slots - filled,
       completions: filled,
       deadline,
-      posted: t.createdAt ? new Date(t.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Recent',
+      posted: t.createdAt
+        ? new Date(t.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+        : 'Recent',
       status: deadline > now ? 'open' : 'closed',
-      difficulty: t.estimatedTime ? (t.estimatedTime <= 10 ? 'Easy' : t.estimatedTime <= 30 ? 'Medium' : 'Hard') : 'Easy',
+      difficulty: t.estimatedTime
+        ? (t.estimatedTime <= 10 ? 'Easy' : t.estimatedTime <= 30 ? 'Medium' : 'Hard')
+        : 'Easy',
       estimatedTime: t.estimatedTime ? `${t.estimatedTime} min` : '—',
-      steps: t.steps || ['Complete the task', 'Submit proof', 'Wait for approval'],
-      requirements: t.requirements || ['Valid account', 'Complete submission'],
-      proofRequired: t.proofRequired || ['Screenshot proof'],
-      tags: t.tags || [t.category || 'General'],
+      // ── FIXED: always coerce to array ──
+      steps: toArray<string>(t.steps, ['Complete the task', 'Submit proof', 'Wait for approval']),
+      requirements: toArray<string>(t.requirements, ['Valid account', 'Complete submission']),
+      proofRequired: toArray<string>(t.proofRequired, ['Screenshot proof']),
+      tags: toArray<string>(t.tags, [t.category || 'General']),
       approvalTime: t.approvalTime || 'Within 24 hours',
       payoutDay: t.payoutDay || 'Weekly',
       totalPool: `${t.currency === 'USD' ? '$' : '₦'}${totalPool}`,
