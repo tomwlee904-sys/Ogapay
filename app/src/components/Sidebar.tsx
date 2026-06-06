@@ -8,11 +8,15 @@ export default function Sidebar() {
     <aside className="sidebar">
       <div className="sidebar-nav">
         <div className="sidebar-section">Main</div>
+        <a className="sidebar-link" href="/dashboard"><i className="ti ti-dashboard" /> Dashboard</a>
+        <a className="sidebar-link" href="/my-tasks"><i className="ti ti-checklist" /> My Tasks</a>
         <a className="sidebar-link" href="/tasks"><i className="ti ti-checklist" /> Tasks</a>
         <a className="sidebar-link" href="/store"><i className="ti ti-building-store" /> Store</a>
         <a className="sidebar-link" href="/wurkers"><i className="ti ti-users" /> Wurkers</a>
+        <a className="sidebar-link" href="/wurker-apply"><i className="ti ti-user-plus" /> Wurker Apply</a>
         <a className="sidebar-link" href="/writer"><i className="ti ti-edit" /> Writer</a>
         <a className="sidebar-link" href="/worker-portal"><i className="ti ti-briefcase" /> Worker Portal</a>
+        <a className="sidebar-link" href="/job-monitor"><i className="ti ti-monitor" /> Job Monitor</a>
         <a className="sidebar-link" href="/analytics"><i className="ti ti-chart-bar" /> Analytics</a>
         <a className="sidebar-link" href="/communities"><i className="ti ti-users" /> Communities</a>
         <a className="sidebar-link" href="/earnings"><i className="ti ti-coin" /> Earnings</a>

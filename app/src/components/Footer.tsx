@@ -27,13 +27,15 @@ const footerLinkHrefs: Record<string, string> = {
   "Worker Portal": "/worker-portal", "Create Task": "/create", "Communities": "/communities",
   "Analytics": "/analytics", "About": "/about", "Blog": "/blog",
   "FAQ": "/faq", "Support": "/support", "Terms": "/terms",
-  "Privacy": "/privacy"
+  "Privacy": "/privacy",
+  "Developer": "/developer",
+  "Roadmap": "/roadmap"
 }
 
 const footerCols = [
   { title: "Earn", links: ["Browse Jobs", "Task Categories", "Leaderboard", "Worker Portal"] },
   { title: "Post", links: ["Create Task", "Communities", "Analytics"] },
-  { title: "Company", links: ["About", "Blog", "FAQ", "Support", "Terms", "Privacy"] },
+  { title: "Company", links: ["About", "Blog", "FAQ", "Support", "Terms", "Privacy", "Developer", "Roadmap"] },
 ]
 
 function TablerIcon({ name, size = 15 }: { name: string; size?: number }) {
