@@ -1,628 +1,385 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect } from 'react'
+import { useParams, useNavigate } from 'react-router-dom'
+import Layout from '../components/Layout'
 
-// ── MOCK DATA ──────────────────────────────────────────────────────────────
-const JOB = {
-  id: "OGA-2025-0842",
-  title: "Follow & Repost OgaPay Launch Announcement on X",
-  brand: "OgaPay Official",
-  brandHandle: "@OgaPayHQ",
-  brandAvatar: "OP",
-  brandVerified: true,
-  category: "Social Media",
-  type: "Easy Task",
-  platform: "X (Twitter)",
-  reward: 450,
-  currency: "NGN",
-  usdEquiv: "$0.28",
-  slots: 200,
-  slotsLeft: 47,
-  completions: 153,
-  deadline: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000 + 4 * 60 * 60 * 1000),
-  posted: "May 29, 2026",
-  status: "open",
-  difficulty: "Easy",
-  estimatedTime: "2–4 mins",
-  memberPlanRequired: "Free",
-  description: `OgaPay is launching its official X presence and we need real engagement from our community to boost visibility.\n\nComplete the following steps and submit your proof to earn ₦450 instantly upon approval.`,
-  steps: [
-    "Follow the official OgaPay X account: @OgaPayHQ",
-    "Repost the pinned announcement post on our profile",
-    "Like the post and leave a genuine comment (minimum 10 words)",
-    "Take a screenshot showing your follow, repost, like, and comment",
-    "Submit the screenshot and your X username below",
-  ],
-  requirements: [
-    "Your X account must be at least 30 days old",
-    "Minimum 10 followers on your X account",
-    "Account must be public (not private) at time of review",
-    "One submission per OgaPay account",
-    "Do not unfollow after submission — accounts are rechecked",
-  ],
-  proofRequired: ["Screenshot of completed actions", "Your X username / profile URL"],
-  tags: ["Twitter", "Social", "Follow", "Repost", "Easy"],
-  approvalTime: "Within 24 hours",
-  payoutDay: "Thursday",
-  totalPool: "₦90,000",
-  applicants: [
-    { initials: "AO", color: "#8b5cf6" },
-    { initials: "EK", color: "#10b981" },
-    { initials: "FB", color: "#f59e0b" },
-    { initials: "TM", color: "#ef4444" },
-    { initials: "NK", color: "#3b82f6" },
-  ],
-  similarJobs: [
-    { id: "OGA-0840", title: "Join OgaPay Telegram Community", reward: 300, slots: 500, left: 212, type: "Social" },
-    { id: "OGA-0839", title: "Like & Comment on Instagram Post", reward: 350, slots: 300, left: 88, type: "Social" },
-    { id: "OGA-0835", title: "OGA Token Airdrop Task", reward: 2000, slots: 100, left: 23, type: "Crypto" },
-  ],
-};
+const API_BASE = 'https://ogapay-production.up.railway.app/api/v1'
 
-// ── HELPERS ────────────────────────────────────────────────────────────────
-function useCountdown(deadline) {
+/* ─── Helpers ─── */
+function pad(n: number) { return String(n).padStart(2, '0') }
+function pct(a: number, b: number) { return b > 0 ? Math.round((a / b) * 100) : 0 }
+
+function useCountdown(deadline: number) {
   const calc = () => {
-    const diff = deadline - Date.now();
-    if (diff <= 0) return { d: 0, h: 0, m: 0, s: 0 };
-    return {
-      d: Math.floor(diff / 86400000),
-      h: Math.floor((diff % 86400000) / 3600000),
-      m: Math.floor((diff % 3600000) / 60000),
-      s: Math.floor((diff % 60000) / 1000),
-    };
-  };
-  const [t, setT] = useState(calc);
-  useEffect(() => {
-    const id = setInterval(() => setT(calc()), 1000);
-    return () => clearInterval(id);
-  }, [deadline]);
-  return t;
+    const diff = deadline - Date.now()
+    if (diff <= 0) return { d: 0, h: 0, m: 0, s: 0 }
+    return { d: Math.floor(diff / 86400000), h: Math.floor((diff % 86400000) / 3600000), m: Math.floor((diff % 3600000) / 60000), s: Math.floor((diff % 60000) / 1000) }
+  }
+  const [t, setT] = useState(calc)
+  useEffect(() => { const id = setInterval(() => setT(calc()), 1000); return () => clearInterval(id) }, [deadline])
+  return t
 }
 
-const pad = (n) => String(n).padStart(2, "0");
-const pct = (a, b) => Math.round((a / b) * 100);
+const BRAND = '#1F8CFF'
+const BRAND_RGB = '31,140,255'
 
-// ── BADGE ──────────────────────────────────────────────────────────────────
-function Badge({ children, color = "purple" }) {
-  const map = {
-    purple: "bg-purple-500/15 text-purple-400 border-purple-500/30",
-    green:  "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
-    amber:  "bg-amber-500/15 text-amber-400 border-amber-500/30",
-    blue:   "bg-blue-500/15 text-blue-400 border-blue-500/30",
-    red:    "bg-red-500/15 text-red-400 border-red-500/30",
-    gray:   "bg-white/5 text-gray-400 border-white/10",
-  };
+/* ─── Badge ─── */
+function Badge({ children, color = 'blue' }: { children: React.ReactNode; color?: string }) {
+  const map: Record<string, { bg: string; text: string; border: string }> = {
+    blue: { bg: `rgba(${BRAND_RGB},0.15)`, text: BRAND, border: `rgba(${BRAND_RGB},0.30)` },
+    green: { bg: 'rgba(22,163,74,0.15)', text: '#16a34a', border: 'rgba(22,163,74,0.30)' },
+    amber: { bg: 'rgba(245,179,1,0.15)', text: '#f5b301', border: 'rgba(245,179,1,0.30)' },
+    red: { bg: 'rgba(220,38,38,0.15)', text: '#dc2626', border: 'rgba(220,38,38,0.30)' },
+    gray: { bg: 'rgba(255,255,255,0.05)', text: 'var(--text3)', border: 'rgba(255,255,255,0.10)' },
+  }
+  const c = map[color] || map.gray
   return (
-    <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold border ${map[color]}`}>
+    <span className="badge" style={{ background: c.bg, color: c.text, border: `1px solid ${c.border}`, borderRadius: 999, display: 'inline-flex', alignItems: 'center', gap: 4, padding: '3px 10px', fontSize: 11, fontWeight: 700 }}>
       {children}
     </span>
-  );
+  )
 }
 
-// ── COUNTDOWN BLOCK ────────────────────────────────────────────────────────
-function CountdownBlock({ deadline }) {
-  const { d, h, m, s } = useCountdown(deadline);
+/* ─── Countdown ─── */
+function CountdownBlock({ deadline }: { deadline: number }) {
+  const { d, h, m, s } = useCountdown(deadline)
   const units = [
-    { v: d, l: "Days" },
-    { v: h, l: "Hrs" },
-    { v: m, l: "Min" },
-    { v: s, l: "Sec" },
-  ];
+    { v: d, l: 'Days' }, { v: h, l: 'Hrs' }, { v: m, l: 'Min' }, { v: s, l: 'Sec' },
+  ]
   return (
-    <div className="flex gap-2">
+    <div style={{ display: 'flex', gap: 8 }}>
       {units.map(({ v, l }) => (
-        <div key={l} className="flex-1 bg-white/5 border border-white/10 rounded-xl flex flex-col items-center py-2.5">
-          <span className="text-xl font-black tabular-nums text-white">{pad(v)}</span>
-          <span className="text-[10px] text-gray-500 font-semibold mt-0.5">{l}</span>
+        <div key={l} style={{ flex: 1, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.10)', borderRadius: 12, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '10px 4px' }}>
+          <span style={{ fontSize: 22, fontWeight: 900, fontVariantNumeric: 'tabular-nums', color: 'var(--text)' }}>{pad(v)}</span>
+          <span style={{ fontSize: 10, color: 'var(--text3)', fontWeight: 700, marginTop: 2 }}>{l}</span>
         </div>
       ))}
     </div>
-  );
+  )
 }
 
-// ── APPLY MODAL ────────────────────────────────────────────────────────────
-function ApplyModal({ job, onClose }) {
-  const [step, setStep] = useState(1); // 1=form 2=success
-  const [xHandle, setXHandle] = useState("");
-  const [notes, setNotes] = useState("");
-  const [file, setFile] = useState(null);
-  const [loading, setLoading] = useState(false);
-
-  const submit = () => {
-    if (!xHandle || !file) return;
-    setLoading(true);
-    setTimeout(() => { setLoading(false); setStep(2); }, 1800);
-  };
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full sm:max-w-lg bg-[#13131f] border border-white/10 rounded-t-3xl sm:rounded-2xl overflow-hidden shadow-2xl">
-
-        {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
-          <div>
-            <p className="text-xs text-gray-500 font-semibold uppercase tracking-wider">Apply for Job</p>
-            <p className="text-sm font-bold text-white mt-0.5 line-clamp-1">{job.title}</p>
-          </div>
-          <button onClick={onClose} className="w-8 h-8 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 transition-colors">
-            <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
-          </button>
-        </div>
-
-        {step === 1 ? (
-          <div className="p-5 space-y-4">
-            {/* Reward reminder */}
-            <div className="flex items-center justify-between bg-emerald-500/10 border border-emerald-500/20 rounded-xl px-4 py-3">
-              <span className="text-sm text-gray-400">Reward on approval</span>
-              <span className="text-lg font-black text-emerald-400">+₦{job.reward.toLocaleString()}</span>
-            </div>
-
-            {/* X handle */}
-            <div>
-              <label className="text-xs font-semibold text-gray-400 block mb-1.5">Your X (Twitter) Username *</label>
-              <input
-                value={xHandle}
-                onChange={e => setXHandle(e.target.value)}
-                placeholder="@yourusername"
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-600 outline-none focus:border-purple-500 transition-colors"
-              />
-            </div>
-
-            {/* Proof upload */}
-            <div>
-              <label className="text-xs font-semibold text-gray-400 block mb-1.5">Screenshot Proof *</label>
-              <label className="flex flex-col items-center justify-center gap-2 border border-dashed border-white/15 rounded-xl px-4 py-6 cursor-pointer hover:border-purple-500/50 hover:bg-purple-500/5 transition-all">
-                {file ? (
-                  <>
-                    <svg width="20" height="20" fill="none" stroke="#10b981" strokeWidth="2" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                    <span className="text-xs text-emerald-400 font-semibold">{file.name}</span>
-                    <span className="text-xs text-gray-500">Click to change</span>
-                  </>
-                ) : (
-                  <>
-                    <svg width="24" height="24" fill="none" stroke="#6b7280" strokeWidth="1.5" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                    <span className="text-xs text-gray-500">Click to upload screenshot</span>
-                    <span className="text-xs text-gray-600">PNG, JPG up to 10MB</span>
-                  </>
-                )}
-                <input type="file" accept="image/*" className="hidden" onChange={e => setFile(e.target.files[0])} />
-              </label>
-            </div>
-
-            {/* Notes */}
-            <div>
-              <label className="text-xs font-semibold text-gray-400 block mb-1.5">Additional Notes <span className="text-gray-600">(optional)</span></label>
-              <textarea
-                value={notes}
-                onChange={e => setNotes(e.target.value)}
-                placeholder="Any extra context for the reviewer..."
-                rows={2}
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-600 outline-none focus:border-purple-500 transition-colors resize-none"
-              />
-            </div>
-
-            {/* Terms note */}
-            <p className="text-xs text-gray-600 leading-relaxed">
-              By submitting you confirm all proof is genuine. Fake submissions result in account suspension.
-            </p>
-
-            <button
-              onClick={submit}
-              disabled={!xHandle || !file || loading}
-              className="w-full bg-[#8b5cf6] hover:bg-[#7c3aed] disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold py-3.5 rounded-xl text-sm transition-all flex items-center justify-center gap-2"
-            >
-              {loading ? (
-                <>
-                  <svg className="animate-spin" width="16" height="16" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="white" strokeWidth="3" strokeDasharray="30 70"/></svg>
-                  Submitting...
-                </>
-              ) : "Submit Application →"}
-            </button>
-          </div>
-        ) : (
-          <div className="p-8 flex flex-col items-center text-center gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center">
-              <svg width="28" height="28" fill="none" stroke="#10b981" strokeWidth="2" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-            </div>
-            <div>
-              <h3 className="text-lg font-black text-white">Submission Received!</h3>
-              <p className="text-sm text-gray-400 mt-1">Your application is under review. You'll be notified within {job.approvalTime.toLowerCase()}.</p>
-            </div>
-            <div className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-left space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-500">Job ID</span>
-                <span className="font-mono text-xs text-gray-300">{job.id}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-500">Reward</span>
-                <span className="font-bold text-emerald-400">₦{job.reward.toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-500">Payout day</span>
-                <span className="text-white font-semibold">{job.payoutDay}</span>
-              </div>
-            </div>
-            <button onClick={onClose} className="w-full border border-white/10 hover:border-purple-500/50 text-gray-300 font-bold py-3 rounded-xl text-sm transition-colors">
-              Back to Job
-            </button>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-// ── SHARE PANEL ────────────────────────────────────────────────────────────
-function SharePanel({ job, onClose }) {
-  const [copied, setCopied] = useState(false);
-  const url = `https://ogapay.net/jobs/${job.id}`;
-  const copy = () => {
-    navigator.clipboard?.writeText(url).catch(() => {});
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-  const shares = [
-    { label: "X (Twitter)", icon: "𝕏", href: `https://twitter.com/intent/tweet?text=Earn+₦${job.reward}+on+OgaPay!&url=${url}`, color: "hover:border-white/30" },
-    { label: "WhatsApp", icon: "💬", href: `https://wa.me/?text=Earn+₦${job.reward}+completing+tasks+on+OgaPay:+${url}`, color: "hover:border-green-500/40" },
-    { label: "Telegram", icon: "✈️", href: `https://t.me/share/url?url=${url}&text=Earn+₦${job.reward}+on+OgaPay`, color: "hover:border-blue-500/40" },
-  ];
-  return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full sm:max-w-sm bg-[#13131f] border border-white/10 rounded-t-3xl sm:rounded-2xl p-5 shadow-2xl space-y-4">
-        <div className="flex items-center justify-between">
-          <p className="font-bold text-white">Share this Job</p>
-          <button onClick={onClose} className="w-7 h-7 rounded-lg bg-white/5 flex items-center justify-center text-gray-400 hover:text-white transition-colors">
-            <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
-          </button>
-        </div>
-        <div className="grid grid-cols-3 gap-3">
-          {shares.map(s => (
-            <a key={s.label} href={s.href} target="_blank" rel="noopener noreferrer"
-              className={`flex flex-col items-center gap-2 py-3 bg-white/5 border border-white/10 rounded-xl ${s.color} transition-colors`}>
-              <span className="text-xl">{s.icon}</span>
-              <span className="text-xs text-gray-400 font-semibold">{s.label}</span>
-            </a>
-          ))}
-        </div>
-        <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-xl px-3 py-2.5">
-          <span className="flex-1 text-xs text-gray-400 font-mono truncate">{url}</span>
-          <button onClick={copy} className="flex-shrink-0 text-xs font-bold px-3 py-1.5 rounded-lg bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 transition-colors">
-            {copied ? "Copied ✓" : "Copy"}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ── MAIN COMPONENT ─────────────────────────────────────────────────────────
+/* ─── Main Component ─── */
 export default function JobDetail() {
-  const [showApply, setShowApply]   = useState(false);
-  const [showShare, setShowShare]   = useState(false);
-  const [bookmarked, setBookmarked] = useState(false);
-  const [activeTab, setActiveTab]   = useState("details"); // details | requirements | activity
+  const { id } = useParams()
+  const navigate = useNavigate()
+  const [job, setJob] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [activeTab, setActiveTab] = useState('details')
+  const [showApply, setShowApply] = useState(false)
+  const [showShare, setShowShare] = useState(false)
+  const [bookmarked, setBookmarked] = useState(false)
 
-  const filledPct = pct(JOB.completions, JOB.slots);
-  const isAlmostFull = JOB.slotsLeft < 60;
+  useEffect(() => {
+    if (!id) return
+    setLoading(true)
+    const fetchJob = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/tasks/${id}`)
+        const json = await res.json()
+        if (json.success && json.data) {
+          setJob(formatTask(json.data.task || json.data))
+        } else {
+          const res2 = await fetch(`${API_BASE}/jobs/${id}`)
+          const json2 = await res2.json()
+          if (json2.success && json2.data) setJob(formatTask(json2.data))
+          else setError('Task not found')
+        }
+      } catch { setError('Failed to load task') }
+      setLoading(false)
+    }
+    fetchJob()
+  }, [id])
+
+  function formatTask(t: any) {
+    const now = Date.now()
+    const deadline = t.deadline ? new Date(t.deadline).getTime() : now + 86400000 * 2
+    const reward = Number(t.reward) || 0
+    const slots = t.maxWorkers || 1
+    const filled = t.currentWorkers || 0
+    const pool = (reward * slots).toLocaleString()
+    const usd = t.usdEquiv || `$${(reward * 0.00062).toFixed(2)}`
+    const name = t.poster?.username || 'OgaPay'
+    return {
+      id: t.id || id || '',
+      title: t.title || 'Untitled Task',
+      description: t.description || t.instructions || '',
+      brand: name, brandHandle: `@${name.toLowerCase()}`,
+      brandAvatar: name.slice(0, 2).toUpperCase(),
+      brandVerified: t.poster?.posterProfile?.isVerified || false,
+      category: t.category || 'General', platform: t.tags?.[0] || 'Web',
+      reward, currency: t.currency || 'NGN', usdEquiv: usd,
+      slots, slotsLeft: slots - filled, completions: filled, deadline,
+      posted: t.createdAt ? new Date(t.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Recent',
+      status: deadline > now ? 'open' : 'closed',
+      difficulty: t.estimatedTime ? (t.estimatedTime <= 10 ? 'Easy' : t.estimatedTime <= 30 ? 'Medium' : 'Hard') : 'Easy',
+      estimatedTime: t.estimatedTime ? `${t.estimatedTime} min` : '—',
+      steps: t.steps || ['Complete the task', 'Submit proof', 'Wait for approval'],
+      requirements: t.requirements || ['Valid account', 'Complete submission'],
+      proofRequired: t.proofRequired || ['Screenshot proof'],
+      tags: t.tags || [t.category || 'General'],
+      approvalTime: t.approvalTime || 'Within 24 hours',
+      payoutDay: t.payoutDay || 'Weekly',
+      totalPool: `${t.currency === 'USD' ? '$' : '₦'}${pool}`,
+      similarJobs: [],
+    }
+  }
+
+  if (loading) {
+    return (
+      <Layout>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '80px 20px', gap: 10, color: 'var(--text3)' }}>
+          <div className="spinner" /> Loading task...
+        </div>
+      </Layout>
+    )
+  }
+
+  if (error || !job) {
+    return (
+      <Layout>
+        <div style={{ maxWidth: 720, margin: '60px auto', padding: '0 20px', textAlign: 'center' }}>
+          <i className="ti ti-alert-circle" style={{ fontSize: 48, color: 'var(--text3)', marginBottom: 16, display: 'block' }} />
+          <h2 style={{ fontSize: 22, fontWeight: 800, color: 'var(--text)', margin: '0 0 8px' }}>Task Not Found</h2>
+          <p style={{ fontSize: 14, color: 'var(--text2)', margin: '0 0 24px' }}>{error || 'This task does not exist or has been removed.'}</p>
+          <button onClick={() => navigate('/tasks')} style={{ height: 44, padding: '0 24px', borderRadius: 999, background: BRAND, color: '#fff', border: 'none', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
+            <i className="ti ti-arrow-left" style={{ marginRight: 6 }} /> Browse Tasks
+          </button>
+        </div>
+      </Layout>
+    )
+  }
+
+  const filledPct = pct(job.completions, job.slots)
+  const isAlmostFull = job.slotsLeft < 60
 
   return (
-    <div style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }} className="min-h-screen bg-[#0a0a0f] text-white">
+    <Layout>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400&family=DM+Mono:wght@400;500&display=swap');
-        * { box-sizing: border-box; }
-        ::-webkit-scrollbar { width: 4px; height: 4px; }
-        ::-webkit-scrollbar-thumb { background: #8b5cf6; border-radius: 4px; }
-        .line-clamp-1 { overflow:hidden;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical; }
-        .line-clamp-2 { overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical; }
-        .tab-active { color:#fff; border-bottom: 2px solid #8b5cf6; }
-        .tab-inactive { color:#6b7280; border-bottom: 2px solid transparent; }
-        .tab-inactive:hover { color:#9ca3af; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        .animate-spin { animation: spin 0.8s linear infinite; }
+        .card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; }
+        .card-sm { background: var(--card); border: 1px solid var(--border); border-radius: 12px; }
+        .glow { box-shadow: 0 0 0 1px rgba(${BRAND_RGB},0.3), 0 8px 32px rgba(${BRAND_RGB},0.12); }
+        .tab-active { color: var(--text); border-bottom: 2px solid ${BRAND}; }
+        .tab-inactive { color: var(--text3); border-bottom: 2px solid transparent; }
+        .tab-inactive:hover { color: var(--text); }
         .progress-bar { transition: width 0.8s cubic-bezier(.4,0,.2,1); }
-        .card { background: #13131f; border: 1px solid rgba(255,255,255,0.07); border-radius: 16px; }
-        .card-sm { background: #13131f; border: 1px solid rgba(255,255,255,0.07); border-radius: 12px; }
-        .glow { box-shadow: 0 0 0 1px rgba(139,92,246,0.3), 0 8px 32px rgba(139,92,246,0.12); }
+        .badge { font-family: inherit; }
       `}</style>
 
-      {/* ── NAV ── */}
-      <nav style={{ background: "rgba(10,10,15,0.85)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(255,255,255,0.07)" }}
-        className="sticky top-0 z-40 px-4 h-13 flex items-center justify-between gap-3"
-        style2={{ height: 52 }}>
-        <div className="flex items-center gap-2">
-          <button className="w-8 h-8 rounded-xl flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/5 transition-colors"
-            onClick={() => window.history.back()}>
+      {/* ── Sticky Nav Bar ── */}
+      <div style={{ position: 'sticky', top: 0, zIndex: 40, background: 'var(--card)', borderBottom: '1px solid var(--border)', backdropFilter: 'blur(20px)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 16px', height: 52 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <button onClick={() => navigate(-1)} style={{ width: 32, height: 32, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text2)', background: 'transparent', border: 'none', cursor: 'pointer' }}>
             <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
           </button>
-          <div className="flex items-center gap-1.5">
-            <div className="w-6 h-6 rounded-lg bg-white flex items-center justify-center">
-              <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
-                <rect x="0" y="0" width="7" height="7" rx="1.5" fill="#0a0a0f"/>
-                <rect x="9" y="0" width="7" height="7" rx="1.5" fill="#0a0a0f"/>
-                <rect x="0" y="9" width="7" height="7" rx="1.5" fill="#0a0a0f"/>
-                <rect x="9" y="9" width="7" height="7" rx="1.5" fill="#8b5cf6"/>
-              </svg>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <div style={{ width: 24, height: 24, borderRadius: 6, background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <svg width="14" height="14" viewBox="0 0 34 34" fill="none"><rect width="34" height="34" rx="6" fill="white"/><rect x="6.5" y="6.5" width="7.1" height="7.1" rx="1.3" fill="black"/><path d="M15 6.5H20.7C21.5 6.5 22.2 7.2 22.2 8V13.6H15V6.5Z" fill="black"/><path d="M23.4 6.5H26C29.2 6.5 31.2 8.5 31.2 11.7V13.6H23.4V6.5Z" fill="black"/><rect x="6.5" y="15" width="7.1" height="7.1" fill="black"/><rect x="15" y="15" width="7.1" height="7.1" fill="black"/><path d="M23.4 15H31.2V16.9C31.2 20.1 29.2 22.1 26 22.1H23.4V15Z" fill="black"/><rect x="6.5" y="23.4" width="7.1" height="7.1" rx="1.3" fill="black"/><path d="M15 23.4H20.7C21.5 23.4 22.2 24.1 22.2 24.9V29.2C22.2 30 21.5 30.7 20.7 30.7H15V23.4Z" fill="black"/></svg>
             </div>
-            <span className="font-black text-sm tracking-tight">OgaPay</span>
+            <span style={{ fontWeight: 900, fontSize: 13, letterSpacing: '-0.3px', color: 'var(--text)' }}>OgaPay</span>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <button onClick={() => setBookmarked(b => !b)}
-            className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all border ${bookmarked ? "bg-purple-500/15 border-purple-500/40 text-purple-400" : "bg-white/5 border-white/10 text-gray-400 hover:text-white"}`}>
-            <svg width="14" height="14" fill={bookmarked ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <button onClick={() => setBookmarked(b => !b)} style={{ width: 32, height: 32, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', border: `1px solid ${bookmarked ? `rgba(${BRAND_RGB},0.40)` : 'var(--border)'}`, background: bookmarked ? `rgba(${BRAND_RGB},0.15)` : 'transparent', color: bookmarked ? BRAND : 'var(--text3)', cursor: 'pointer' }}>
+            <svg width="16" height="16" fill={bookmarked ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
           </button>
-          <button onClick={() => setShowShare(true)}
-            className="w-8 h-8 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-colors">
-            <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          <button onClick={() => setShowShare(true)} style={{ width: 32, height: 32, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--border)', background: 'transparent', color: 'var(--text3)', cursor: 'pointer' }}>
+            <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
           </button>
         </div>
-      </nav>
+      </div>
 
-      <div className="max-w-3xl mx-auto px-4 py-5 pb-32 space-y-4">
+      {/* ── Main Content ── */}
+      <div style={{ maxWidth: 768, margin: '0 auto', padding: '16px 16px 140px' }}>
 
-        {/* ── JOB HEADER ── */}
-        <div className="card p-5">
+        {/* ── HEADER CARD ── */}
+        <div className="card" style={{ padding: 20, marginBottom: 16 }}>
           {/* Brand row */}
-          <div className="flex items-center gap-2.5 mb-4">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-black text-sm flex-shrink-0"
-              style={{ background: "linear-gradient(135deg,#8b5cf6,#4f46e5)" }}>
-              {JOB.brandAvatar}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+            <div style={{ width: 40, height: 40, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 14, fontWeight: 900, flexShrink: 0, background: BRAND }}>
+              {job.brandAvatar}
             </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-1.5">
-                <span className="text-sm font-bold text-white">{JOB.brand}</span>
-                {JOB.brandVerified && (
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="#8b5cf6"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                )}
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{job.brand}</span>
+                {job.brandVerified && <svg width="14" height="14" viewBox="0 0 24 24" fill={BRAND}><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>}
               </div>
-              <span className="text-xs text-gray-500">{JOB.brandHandle}</span>
+              <span style={{ fontSize: 11, color: 'var(--text3)' }}>{job.brandHandle}</span>
             </div>
             <Badge color="green">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block animate-pulse" style={{ animation: "pulse 1.5s infinite" }} />
+              <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#16a34a', display: 'inline-block', marginRight: 2 }} />
               Open
             </Badge>
           </div>
 
           {/* Title */}
-          <h1 className="text-xl font-black leading-tight mb-3">{JOB.title}</h1>
+          <h1 style={{ fontSize: 20, fontWeight: 900, lineHeight: 1.3, margin: '0 0 12px', color: 'var(--text)' }}>{job.title}</h1>
 
-          {/* Tag row */}
-          <div className="flex flex-wrap gap-2 mb-4">
-            <Badge color="purple">{JOB.category}</Badge>
-            <Badge color="blue">{JOB.platform}</Badge>
-            <Badge color="gray">{JOB.difficulty}</Badge>
-            <Badge color="gray">⏱ {JOB.estimatedTime}</Badge>
-            {JOB.memberPlanRequired === "Free" && <Badge color="green">✓ Free Plan</Badge>}
+          {/* Badges */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 16 }}>
+            <Badge color="blue">{job.category}</Badge>
+            <Badge color="blue">{job.platform}</Badge>
+            <Badge color="gray">{job.difficulty}</Badge>
+            <Badge color="gray">⏱ {job.estimatedTime}</Badge>
           </div>
 
           {/* Reward hero */}
-          <div className="flex items-center justify-between bg-white/3 border border-white/8 rounded-xl px-4 py-3 mb-4">
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, padding: '14px 16px', marginBottom: 16 }}>
             <div>
-              <p className="text-xs text-gray-500 font-semibold uppercase tracking-wider mb-0.5">Reward per task</p>
-              <p className="text-3xl font-black text-emerald-400">₦{JOB.reward.toLocaleString()}</p>
-              <p className="text-xs text-gray-500 mt-0.5">≈ {JOB.usdEquiv} USD</p>
+              <p style={{ fontSize: 11, color: 'var(--text3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 4px' }}>Reward per task</p>
+              <p style={{ fontSize: 28, fontWeight: 900, color: '#16a34a', margin: 0, lineHeight: 1.2 }}>{job.currency === 'USD' ? '$' : '₦'}{job.reward.toLocaleString()}</p>
+              <p style={{ fontSize: 11, color: 'var(--text3)', margin: '2px 0 0' }}>≈ {job.usdEquiv} USD</p>
             </div>
-            <div className="text-right">
-              <p className="text-xs text-gray-500 font-semibold uppercase tracking-wider mb-0.5">Total Pool</p>
-              <p className="text-xl font-black text-white">{JOB.totalPool}</p>
-              <p className="text-xs text-gray-500 mt-0.5">{JOB.slots} slots total</p>
+            <div style={{ textAlign: 'right' }}>
+              <p style={{ fontSize: 11, color: 'var(--text3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 4px' }}>Total Pool</p>
+              <p style={{ fontSize: 20, fontWeight: 900, color: 'var(--text)', margin: 0 }}>{job.totalPool}</p>
+              <p style={{ fontSize: 11, color: 'var(--text3)', margin: '2px 0 0' }}>{job.slots} slots total</p>
             </div>
           </div>
 
           {/* Progress */}
-          <div className="mb-1.5 flex items-center justify-between text-xs">
-            <span className="text-gray-400 font-semibold">{JOB.completions} completed</span>
-            <span className={`font-bold ${isAlmostFull ? "text-amber-400" : "text-gray-400"}`}>
-              {JOB.slotsLeft} slots left {isAlmostFull && "⚠️"}
-            </span>
+          <div style={{ marginBottom: 6, display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 12 }}>
+            <span style={{ color: 'var(--text2)', fontWeight: 600 }}>{job.completions} completed</span>
+            <span style={{ fontWeight: 700, color: isAlmostFull ? '#f5b301' : 'var(--text2)' }}>{job.slotsLeft} slots left</span>
           </div>
-          <div className="h-2 bg-white/5 rounded-full overflow-hidden mb-4">
-            <div className="progress-bar h-full rounded-full" style={{ width: `${filledPct}%`, background: "linear-gradient(90deg,#8b5cf6,#10b981)" }} />
+          <div style={{ height: 8, background: 'rgba(255,255,255,0.05)', borderRadius: 999, overflow: 'hidden', marginBottom: 16 }}>
+            <div className="progress-bar" style={{ height: '100%', borderRadius: 999, background: `linear-gradient(90deg, ${BRAND}, #16a34a)`, width: `${filledPct}%` }} />
           </div>
 
           {/* Meta grid */}
-          <div className="grid grid-cols-2 gap-2 mb-4">
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 16 }}>
             {[
-              { label: "Job ID", value: JOB.id, mono: true },
-              { label: "Posted", value: JOB.posted },
-              { label: "Approval", value: JOB.approvalTime },
-              { label: "Payout Day", value: JOB.payoutDay },
+              { label: 'Job ID', value: job.id, mono: true },
+              { label: 'Posted', value: job.posted },
+              { label: 'Approval', value: job.approvalTime },
+              { label: 'Payout Day', value: job.payoutDay },
             ].map(m => (
-              <div key={m.label} className="bg-white/3 border border-white/8 rounded-xl px-3 py-2.5">
-                <p className="text-[10px] text-gray-600 font-semibold uppercase tracking-wider mb-0.5">{m.label}</p>
-                <p className={`text-sm font-bold text-white ${m.mono ? "font-mono text-xs" : ""}`}>{m.value}</p>
+              <div key={m.label} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: '10px 12px' }}>
+                <p style={{ fontSize: 10, color: 'var(--text3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 2px' }}>{m.label}</p>
+                <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', margin: 0, fontFamily: m.mono ? 'monospace' : undefined }}>{m.value}</p>
               </div>
             ))}
           </div>
 
           {/* Countdown */}
-          <div className="mb-4">
-            <p className="text-xs text-gray-500 font-semibold uppercase tracking-wider mb-2">⏳ Time Remaining</p>
-            <CountdownBlock deadline={JOB.deadline} />
+          <div style={{ marginBottom: 16 }}>
+            <p style={{ fontSize: 11, color: 'var(--text3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 8px' }}>⏳ Time Remaining</p>
+            <CountdownBlock deadline={job.deadline} />
           </div>
 
           {/* Applicants */}
-          <div className="flex items-center gap-2">
-            <div className="flex -space-x-2">
-              {JOB.applicants.map((a, i) => (
-                <div key={i} className="w-7 h-7 rounded-full border-2 border-[#13131f] flex items-center justify-center text-white text-xs font-black flex-shrink-0"
-                  style={{ background: a.color, zIndex: JOB.applicants.length - i }}>
-                  {a.initials.charAt(0)}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ display: 'flex', marginRight: -4 }}>
+              {['#1F8CFF','#16a34a','#f5b301','#dc2626','#3b82f6'].slice(0, Math.min(5, job.completions)).map((c, i) => (
+                <div key={i} style={{ width: 28, height: 28, borderRadius: '50%', border: '2px solid var(--card)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 10, fontWeight: 900, background: c, marginLeft: i > 0 ? -8 : 0 }}>
+                  {String.fromCharCode(65 + i)}
                 </div>
               ))}
             </div>
-            <p className="text-xs text-gray-400">
-              <span className="text-white font-bold">{JOB.completions}</span> people already completed this
+            <p style={{ fontSize: 12, color: 'var(--text2)' }}>
+              <span style={{ color: 'var(--text)', fontWeight: 700 }}>{job.completions}</span> people already completed this
             </p>
           </div>
         </div>
 
-        {/* ── TABS ── */}
-        <div className="card overflow-hidden">
-          <div className="flex border-b border-white/7">
-            {["details", "requirements", "activity"].map(tab => (
+        {/* ── TABS CARD ── */}
+        <div className="card" style={{ marginBottom: 16 }}>
+          <div style={{ display: 'flex', borderBottom: '1px solid var(--border)' }}>
+            {['details', 'requirements', 'activity'].map(tab => (
               <button key={tab} onClick={() => setActiveTab(tab)}
-                className={`flex-1 py-3.5 text-xs font-bold uppercase tracking-wider transition-colors ${activeTab === tab ? "tab-active" : "tab-inactive"}`}>
+                style={{
+                  flex: 1, padding: '14px 0', border: 'none', background: 'transparent',
+                  fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em',
+                  cursor: 'pointer',
+                  color: activeTab === tab ? 'var(--text)' : 'var(--text3)',
+                  borderBottom: activeTab === tab ? `2px solid ${BRAND}` : '2px solid transparent',
+                  transition: 'color .15s',
+                }}>
                 {tab}
               </button>
             ))}
           </div>
 
-          <div className="p-5">
-
+          <div style={{ padding: 20 }}>
             {/* DETAILS */}
-            {activeTab === "details" && (
-              <div className="space-y-5">
+            {activeTab === 'details' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
                 <div>
-                  <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">About This Task</h3>
-                  {JOB.description.split("\n\n").map((p, i) => (
-                    <p key={i} className="text-sm text-gray-300 leading-relaxed mb-2">{p}</p>
+                  <h3 style={{ fontSize: 12, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 8px' }}>About This Task</h3>
+                  {(job.description || '').split('\n\n').map((p: string, i: number) => (
+                    <p key={i} style={{ fontSize: 14, color: 'var(--text2)', lineHeight: 1.65, margin: '0 0 8px' }}>{p}</p>
                   ))}
                 </div>
-
                 <div>
-                  <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Steps to Complete</h3>
-                  <div className="space-y-2.5">
-                    {JOB.steps.map((step, i) => (
-                      <div key={i} className="flex gap-3 items-start">
-                        <div className="w-6 h-6 rounded-lg bg-purple-500/15 border border-purple-500/30 flex items-center justify-center text-xs font-black text-purple-400 flex-shrink-0 mt-0.5">
+                  <h3 style={{ fontSize: 12, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 12px' }}>Steps to Complete</h3>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    {job.steps.map((step: string, i: number) => (
+                      <div key={i} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                        <div style={{ width: 24, height: 24, borderRadius: 8, background: `rgba(${BRAND_RGB},0.15)`, border: `1px solid rgba(${BRAND_RGB},0.30)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 900, color: BRAND, flexShrink: 0, marginTop: 2 }}>
                           {i + 1}
                         </div>
-                        <p className="text-sm text-gray-300 leading-relaxed">{step}</p>
+                        <p style={{ fontSize: 14, color: 'var(--text2)', lineHeight: 1.6, margin: 0 }}>{step}</p>
                       </div>
                     ))}
                   </div>
                 </div>
-
                 <div>
-                  <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Proof Required</h3>
-                  <div className="space-y-2">
-                    {JOB.proofRequired.map((p, i) => (
-                      <div key={i} className="flex items-center gap-2.5 text-sm text-gray-300">
-                        <svg width="14" height="14" fill="none" stroke="#8b5cf6" strokeWidth="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+                  <h3 style={{ fontSize: 12, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 12px' }}>Proof Required</h3>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    {job.proofRequired.map((p: string, i: number) => (
+                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, color: 'var(--text2)' }}>
+                        <svg width="14" height="14" fill="none" stroke={BRAND} strokeWidth="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
                         {p}
                       </div>
                     ))}
                   </div>
                 </div>
-
                 <div>
-                  <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Tags</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {JOB.tags.map(t => <Badge key={t} color="gray">{t}</Badge>)}
+                  <h3 style={{ fontSize: 12, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 8px' }}>Tags</h3>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                    {job.tags.map((t: string, i: number) => <Badge key={i} color="gray">{t}</Badge>)}
                   </div>
                 </div>
               </div>
             )}
 
             {/* REQUIREMENTS */}
-            {activeTab === "requirements" && (
-              <div className="space-y-5">
+            {activeTab === 'requirements' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
                 <div>
-                  <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Eligibility Requirements</h3>
-                  <div className="space-y-2.5">
-                    {JOB.requirements.map((r, i) => (
-                      <div key={i} className="flex gap-3 items-start p-3 bg-white/3 border border-white/7 rounded-xl">
-                        <svg width="15" height="15" fill="none" stroke="#f59e0b" strokeWidth="2" viewBox="0 0 24 24" className="flex-shrink-0 mt-0.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                        <p className="text-sm text-gray-300 leading-relaxed">{r}</p>
+                  <h3 style={{ fontSize: 12, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 12px' }}>Eligibility Requirements</h3>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    {job.requirements.map((r: string, i: number) => (
+                      <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', padding: 10, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 10 }}>
+                        <svg width="14" height="14" fill="none" stroke="#f5b301" strokeWidth="2" viewBox="0 0 24 24" style={{ flexShrink: 0, marginTop: 2 }}><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                        <p style={{ fontSize: 14, color: 'var(--text2)', lineHeight: 1.6, margin: 0 }}>{r}</p>
                       </div>
                     ))}
                   </div>
                 </div>
-
-                <div className="bg-red-500/8 border border-red-500/20 rounded-xl p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <svg width="15" height="15" fill="none" stroke="#ef4444" strokeWidth="2" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-                    <p className="text-xs font-bold text-red-400 uppercase tracking-wider">Warning</p>
+                <div style={{ background: 'rgba(220,38,38,0.08)', border: '1px solid rgba(220,38,38,0.20)', borderRadius: 12, padding: 16 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                    <svg width="14" height="14" fill="none" stroke="#dc2626" strokeWidth="2" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    <p style={{ fontSize: 11, fontWeight: 700, color: '#dc2626', textTransform: 'uppercase', letterSpacing: '0.06em', margin: 0 }}>Warning</p>
                   </div>
-                  <p className="text-sm text-gray-400 leading-relaxed">
+                  <p style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.6, margin: 0 }}>
                     Submitting fake, edited, or borrowed screenshots will result in immediate rejection and may lead to account suspension. OgaPay's AI review system checks all submissions.
                   </p>
-                </div>
-
-                <div className="bg-purple-500/8 border border-purple-500/20 rounded-xl p-4">
-                  <p className="text-xs font-bold text-purple-400 uppercase tracking-wider mb-1">Plan Required</p>
-                  <p className="text-sm text-gray-300">This job is available on the <span className="text-white font-bold">Free Plan</span> and above. No paid membership needed.</p>
                 </div>
               </div>
             )}
 
             {/* ACTIVITY */}
-            {activeTab === "activity" && (
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Recent Completions</h3>
-                  <Badge color="green">{JOB.completions} total</Badge>
-                </div>
-                <div className="space-y-2">
-                  {[
-                    { user: "Adaeze O.", time: "2 mins ago", status: "approved" },
-                    { user: "Emeka K.", time: "15 mins ago", status: "approved" },
-                    { user: "Fatima B.", time: "1 hr ago", status: "approved" },
-                    { user: "Tunde M.", time: "2 hrs ago", status: "pending" },
-                    { user: "Ngozi A.", time: "3 hrs ago", status: "approved" },
-                    { user: "Seun T.", time: "4 hrs ago", status: "rejected" },
-                    { user: "Kemi O.", time: "5 hrs ago", status: "approved" },
-                  ].map((a, i) => (
-                    <div key={i} className="flex items-center gap-3 p-3 bg-white/3 border border-white/7 rounded-xl">
-                      <div className="w-8 h-8 rounded-xl flex items-center justify-center text-white text-xs font-black flex-shrink-0"
-                        style={{ background: ["#8b5cf6","#10b981","#f59e0b","#ef4444","#3b82f6","#ec4899","#14b8a6"][i] }}>
-                        {a.user.charAt(0)}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-white">{a.user}</p>
-                        <p className="text-xs text-gray-500">{a.time}</p>
-                      </div>
-                      <Badge color={a.status === "approved" ? "green" : a.status === "pending" ? "amber" : "red"}>
-                        {a.status.charAt(0).toUpperCase() + a.status.slice(1)}
-                      </Badge>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Stats */}
-                <div className="grid grid-cols-3 gap-2 pt-2">
-                  {[
-                    { label: "Approval Rate", value: "89%", color: "text-emerald-400" },
-                    { label: "Avg Review Time", value: "6h", color: "text-white" },
-                    { label: "Rejection Rate", value: "11%", color: "text-red-400" },
-                  ].map(s => (
-                    <div key={s.label} className="bg-white/3 border border-white/7 rounded-xl p-3 text-center">
-                      <p className={`text-lg font-black ${s.color}`}>{s.value}</p>
-                      <p className="text-[10px] text-gray-500 font-semibold mt-0.5">{s.label}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
+            {activeTab === 'activity' && (
+              <p style={{ fontSize: 14, color: 'var(--text2)', margin: 0 }}>
+                Task activity and submission stats will appear here once available.
+              </p>
             )}
           </div>
         </div>
 
-        {/* ── SIMILAR JOBS ── */}
-        <div>
-          <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Similar Jobs</h3>
-          <div className="space-y-2">
-            {JOB.similarJobs.map(j => (
-              <div key={j.id} className="card p-4 flex items-center gap-3 hover:border-purple-500/30 transition-colors cursor-pointer">
-                <div className="w-10 h-10 rounded-xl bg-purple-500/15 border border-purple-500/20 flex items-center justify-center flex-shrink-0">
-                  <svg width="16" height="16" fill="none" stroke="#8b5cf6" strokeWidth="2" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold text-white line-clamp-1">{j.title}</p>
-                  <p className="text-xs text-gray-500 mt-0.5">{j.left} slots left · {j.type}</p>
-                </div>
-                <div className="text-right flex-shrink-0">
-                  <p className="text-sm font-black text-emerald-400">₦{j.reward.toLocaleString()}</p>
-                  <p className="text-xs text-gray-600">{j.id}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
         {/* ── REPORT ── */}
-        <div className="flex items-center justify-center">
-          <button className="flex items-center gap-1.5 text-xs text-gray-600 hover:text-red-400 transition-colors font-semibold py-2 px-4">
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <button style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 16px', border: 'none', background: 'transparent', color: 'var(--text3)', fontSize: 12, fontWeight: 600, cursor: 'pointer', transition: 'color .15s' }}>
             <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
             Report this job
           </button>
@@ -630,36 +387,160 @@ export default function JobDetail() {
       </div>
 
       {/* ── STICKY BOTTOM CTA ── */}
-      <div className="fixed bottom-0 left-0 right-0 z-30 p-4"
-        style={{ background: "linear-gradient(to top, #0a0a0f 60%, transparent)" }}>
-        <div className="max-w-3xl mx-auto">
-          {JOB.slotsLeft > 0 ? (
-            <div className="flex gap-3">
-              <button
-                onClick={() => setShowApply(true)}
-                className="flex-1 glow bg-[#8b5cf6] hover:bg-[#7c3aed] text-white font-black py-4 rounded-2xl text-sm transition-all flex items-center justify-center gap-2 shadow-lg">
+      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 30, padding: 16, background: 'linear-gradient(to top, var(--bg) 60%, transparent)' }}>
+        <div style={{ maxWidth: 768, margin: '0 auto' }}>
+          {job.slotsLeft > 0 ? (
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button onClick={() => setShowApply(true)}
+                className="glow"
+                style={{
+                  flex: 1, border: 'none', color: '#fff', fontWeight: 900,
+                  padding: '14px 20px', borderRadius: 14, fontSize: 14, cursor: 'pointer',
+                  background: BRAND, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                }}>
                 <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                Apply & Earn ₦{JOB.reward.toLocaleString()} →
+                Apply & Earn {job.currency === 'USD' ? '$' : '₦'}{job.reward.toLocaleString()} →
               </button>
               <button onClick={() => setBookmarked(b => !b)}
-                className={`w-14 rounded-2xl border flex items-center justify-center transition-all ${bookmarked ? "bg-purple-500/15 border-purple-500/40 text-purple-400" : "bg-white/5 border-white/10 text-gray-400 hover:text-white"}`}>
-                <svg width="16" height="16" fill={bookmarked ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
+                style={{
+                  width: 52, borderRadius: 14, border: `1px solid ${bookmarked ? `rgba(${BRAND_RGB},0.40)` : 'var(--border)'}`,
+                  background: bookmarked ? `rgba(${BRAND_RGB},0.15)` : 'var(--card)',
+                  color: bookmarked ? BRAND : 'var(--text3)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+                }}>
+                <svg width="16" height="16" fill={bookmarked ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
               </button>
             </div>
           ) : (
-            <button disabled className="w-full bg-white/5 border border-white/10 text-gray-500 font-black py-4 rounded-2xl text-sm cursor-not-allowed">
+            <button disabled style={{ width: '100%', border: '1px solid var(--border)', background: 'var(--card)', color: 'var(--text3)', fontWeight: 900, padding: '14px 20px', borderRadius: 14, fontSize: 14, cursor: 'not-allowed' }}>
               All Slots Filled — Job Closed
             </button>
           )}
-          <p className="text-center text-xs text-gray-600 mt-2 font-semibold">
-            {JOB.slotsLeft} slots remaining · Payout every {JOB.payoutDay}
+          <p style={{ textAlign: 'center', fontSize: 12, color: 'var(--text3)', marginTop: 8, fontWeight: 600 }}>
+            {job.slotsLeft} slots remaining · Payout {job.payoutDay}
           </p>
         </div>
       </div>
 
       {/* ── MODALS ── */}
-      {showApply && <ApplyModal job={JOB} onClose={() => setShowApply(false)} />}
-      {showShare && <SharePanel job={JOB} onClose={() => setShowShare(false)} />}
+      {showApply && <ApplyModal job={job} onClose={() => setShowApply(false)} />}
+      {showShare && <SharePanel job={job} onClose={() => setShowShare(false)} />}
+    </Layout>
+  )
+}
+
+/* ─── Apply Modal ─── */
+function ApplyModal({ job, onClose }: { job: any; onClose: () => void }) {
+  const [step, setStep] = useState(1)
+  const [xHandle, setXHandle] = useState('')
+  const [notes, setNotes] = useState('')
+  const [file, setFile] = useState<File | null>(null)
+  const [loading, setLoading] = useState(false)
+
+  const submit = () => { if (!xHandle || !file) return; setLoading(true); setTimeout(() => { setLoading(false); setStep(2) }, 1800) }
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+      <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)' }} onClick={onClose} />
+      <div style={{ position: 'relative', width: '100%', maxWidth: 480, background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '24px 24px 0 0', overflow: 'hidden', boxShadow: '0 -8px 32px rgba(0,0,0,0.2)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid var(--border)' }}>
+          <div>
+            <p style={{ fontSize: 11, color: 'var(--text3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 2px' }}>Apply for Job</p>
+            <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 300 }}>{job.title}</p>
+          </div>
+          <button onClick={onClose} style={{ width: 32, height: 32, borderRadius: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.10)', color: 'var(--text3)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+          </button>
+        </div>
+
+        {step === 1 ? (
+          <div style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(22,163,74,0.10)', border: '1px solid rgba(22,163,74,0.20)', borderRadius: 12, padding: '12px 16px' }}>
+              <span style={{ fontSize: 12, color: 'var(--text2)' }}>Reward on approval</span>
+              <span style={{ fontSize: 18, fontWeight: 900, color: '#16a34a' }}>+{job.currency === 'USD' ? '$' : '₦'}{job.reward.toLocaleString()}</span>
+            </div>
+            <div>
+              <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text2)', display: 'block', marginBottom: 6 }}>Your X (Twitter) Username *</label>
+              <input value={xHandle} onChange={e => setXHandle(e.target.value)} placeholder="@yourusername" style={{ width: '100%', padding: '12px 14px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--bg2)', color: 'var(--text)', fontSize: 13, outline: 'none' }} />
+            </div>
+            <div>
+              <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text2)', display: 'block', marginBottom: 6 }}>Screenshot Proof *</label>
+              <label style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, border: '2px dashed var(--border)', borderRadius: 12, padding: '20px 16px', cursor: 'pointer' }}>
+                {file ? (
+                  <><svg width="20" height="20" fill="none" stroke="#16a34a" strokeWidth="2" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><span style={{ fontSize: 12, color: '#16a34a', fontWeight: 600 }}>{file.name}</span><span style={{ fontSize: 11, color: 'var(--text3)' }}>Click to change</span></>
+                ) : (
+                  <><svg width="24" height="24" fill="none" stroke="var(--text3)" strokeWidth="1.5" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg><span style={{ fontSize: 12, color: 'var(--text3)' }}>Click to upload screenshot</span><span style={{ fontSize: 10, color: 'var(--text3)' }}>PNG, JPG up to 10MB</span></>
+                )}
+                <input type="file" accept="image/*" style={{ display: 'none' }} onChange={e => setFile(e.target.files?.[0] || null)} />
+              </label>
+            </div>
+            <div>
+              <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text2)', display: 'block', marginBottom: 6 }}>Additional Notes <span style={{ color: 'var(--text3)', fontWeight: 400 }}>(optional)</span></label>
+              <textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Any extra context for the reviewer..." rows={2} style={{ width: '100%', padding: '12px 14px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--bg2)', color: 'var(--text)', fontSize: 13, outline: 'none', resize: 'vertical', fontFamily: 'inherit' }} />
+            </div>
+            <p style={{ fontSize: 12, color: 'var(--text3)', lineHeight: 1.5, margin: 0 }}>By submitting you confirm all proof is genuine. Fake submissions result in account suspension.</p>
+            <button onClick={submit} disabled={!xHandle || !file || loading} style={{ width: '100%', border: 'none', color: '#fff', fontWeight: 700, padding: '14px 20px', borderRadius: 12, fontSize: 14, cursor: 'pointer', background: BRAND, opacity: (!xHandle || !file || loading) ? 0.4 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+              {loading ? <><span className="spinner" style={{ width: 16, height: 16, borderWidth: 2 }} /> Submitting...</> : 'Submit Application →'}
+            </button>
+          </div>
+        ) : (
+          <div style={{ padding: 32, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: 16 }}>
+            <div style={{ width: 56, height: 56, borderRadius: 14, background: 'rgba(22,163,74,0.15)', border: '1px solid rgba(22,163,74,0.30)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <svg width="28" height="28" fill="none" stroke="#16a34a" strokeWidth="2" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            </div>
+            <div>
+              <h3 style={{ fontSize: 18, fontWeight: 900, color: 'var(--text)', margin: '0 0 4px' }}>Submission Received!</h3>
+              <p style={{ fontSize: 13, color: 'var(--text2)', margin: 0 }}>Your application is under review. You'll be notified within {job.approvalTime.toLowerCase()}.</p>
+            </div>
+            <div style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, padding: 14, display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12 }}><span style={{ color: 'var(--text3)' }}>Job ID</span><span style={{ fontFamily: 'monospace', fontSize: 11, color: 'var(--text)' }}>{job.id}</span></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12 }}><span style={{ color: 'var(--text3)' }}>Reward</span><span style={{ fontWeight: 700, color: '#16a34a' }}>{job.currency === 'USD' ? '$' : '₦'}{job.reward.toLocaleString()}</span></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12 }}><span style={{ color: 'var(--text3)' }}>Payout day</span><span style={{ fontWeight: 600, color: 'var(--text)' }}>{job.payoutDay}</span></div>
+            </div>
+            <button onClick={onClose} style={{ width: '100%', border: '1px solid var(--border)', background: 'var(--card)', color: 'var(--text2)', fontWeight: 700, padding: 12, borderRadius: 12, fontSize: 13, cursor: 'pointer' }}>Back to Job</button>
+          </div>
+        )}
+      </div>
     </div>
-  );
+  )
+}
+
+/* ─── Share Panel ─── */
+function SharePanel({ job, onClose }: { job: any; onClose: () => void }) {
+  const [copied, setCopied] = useState(false)
+  const url = `https://ogapay.vercel.app/tasks/${job.id}`
+  const copy = () => { navigator.clipboard?.writeText(url).catch(() => {}); setCopied(true); setTimeout(() => setCopied(false), 2000) }
+  const shares = [
+    { label: 'X (Twitter)', icon: '𝕏', href: `https://twitter.com/intent/tweet?text=Earn+${job.currency === 'USD' ? '$' : '₦'}${job.reward}+on+OgaPay!&url=${url}` },
+    { label: 'WhatsApp', icon: '💬', href: `https://wa.me/?text=Earn+${job.currency === 'USD' ? '$' : '₦'}${job.reward}+completing+tasks+on+OgaPay:+${url}` },
+    { label: 'Telegram', icon: '✈️', href: `https://t.me/share/url?url=${url}&text=Earn+${job.currency === 'USD' ? '$' : '₦'}${job.reward}+on+OgaPay` },
+  ]
+  return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+      <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)' }} onClick={onClose} />
+      <div style={{ position: 'relative', width: '100%', maxWidth: 380, background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '24px 24px 0 0', padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <p style={{ fontWeight: 700, color: 'var(--text)', margin: 0, fontSize: 14 }}>Share this Job</p>
+          <button onClick={onClose} style={{ width: 28, height: 28, borderRadius: 8, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.10)', color: 'var(--text3)', cursor: 'pointer', display: 'grid', placeItems: 'center' }}>
+            <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+          </button>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
+          {shares.map(s => (
+            <a key={s.label} href={s.href} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, padding: '10px 8px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, textDecoration: 'none', color: 'inherit' }}>
+              <span style={{ fontSize: 20 }}>{s.icon}</span>
+              <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--text2)' }}>{s.label}</span>
+            </a>
+          ))}
+        </div>
+        <div>
+          <p style={{ fontSize: 10, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 6px' }}>Or copy link</p>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <input readOnly value={url} style={{ flex: 1, padding: '10px 12px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--bg2)', color: 'var(--text)', fontSize: 11, fontFamily: 'monospace' }} />
+            <button onClick={copy} style={{ padding: '10px 14px', borderRadius: 10, border: 'none', background: BRAND, color: '#fff', fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>{copied ? '✓' : 'Copy'}</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
 }
