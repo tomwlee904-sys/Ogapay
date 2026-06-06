@@ -67,32 +67,25 @@ export default function Drawer({ open, onClose }: DrawerProps) {
 
           {/* Jobs accordion */}
           <DrawerGroup icon="ti ti-briefcase" label="Jobs" desc="Manage your tasks">
-            <DrawerSub href="/tasks" label="Browse Tasks" onClick={onClose} />
-            <DrawerSub href="/my-tasks" label="My Tasks" onClick={onClose} />
-            <DrawerSub href="/task-history" label="Task History" onClick={onClose} />
+            <DrawerSub href="/job-monitor" label="Job Monitor" onClick={onClose} />
+            <DrawerSub href="/bookmarks" label="Bookmarks" onClick={onClose} />
           </DrawerGroup>
 
           {/* Store accordion */}
           <DrawerGroup icon="ti ti-building-store" label="Store" desc="Marketplace">
-            <DrawerSub href="/store" label="Wurker Store" onClick={onClose} />
+            <DrawerSub href="/store" label="Store" onClick={onClose} />
             <DrawerSub href="/my-store" label="My Store" onClick={onClose} />
-            <DrawerSub href="/worker-portal" label="Wurker Portal" onClick={onClose} />
-            <DrawerSub href="/job-monitor" label="Job Monitor" onClick={onClose} />
+            <DrawerSub href="/my-tasks" label="My Work" onClick={onClose} />
             <DrawerSub href="/messages" label="Messages" onClick={onClose} />
+            <DrawerSub href="/worker-portal" label="Worker Portal" onClick={onClose} />
           </DrawerGroup>
 
           <a className="oga-drawer-item" href="/communities" onClick={onClose}>
             <span className="oga-drawer-icon"><i className="ti ti-users" /></span>
             <span><strong>Communities</strong><small>Connect with others</small></span>
           </a>
-          <a className="oga-drawer-item" href="/job-monitor" onClick={onClose}>
-            <span className="oga-drawer-icon"><i className="ti ti-monitor" /></span>
-            <span><strong>Job Monitor</strong><small>Track your jobs</small></span>
-          </a>
-          <a className="oga-drawer-item" href="/wurker-apply" onClick={onClose}>
-            <span className="oga-drawer-icon"><i className="ti ti-user-plus" /></span>
-            <span><strong>Wurker Apply</strong><small>Apply as a wurker</small></span>
-          </a>
+
+
           <a className="oga-drawer-item" href="/blog" onClick={onClose}>
             <span className="oga-drawer-icon"><i className="ti ti-article" /></span>
             <span><strong>Blog</strong><small>Latest insights</small></span>

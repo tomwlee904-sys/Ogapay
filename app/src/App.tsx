@@ -41,6 +41,8 @@ import Wurkers from './pages/Wurkers'
 import WurkerApply from './pages/WurkerApply'
 import Writer from './pages/Writer'
 import Analytics from './pages/Analytics'
+import Bookmarks from './pages/Bookmarks'
+import UserProfile from './pages/UserProfile'
 
 function AuthGuard({ children }: { children: React.ReactNode }) {
   return <ProtectedRoute>{children}</ProtectedRoute>
@@ -101,7 +103,9 @@ export default function App() {
           <Route path="/analytics" element={<AuthGuard><Analytics /></AuthGuard>} />
 
           {/* Catch-all */}
-          <Route path="*" element={<NotFound />} />
+          <Route path="/bookmarks" element={<AuthGuard><Bookmarks /></AuthGuard>} />
+          <Route path="/user/:username" element={<UserProfile />} />
+                    <Route path="*" element={<NotFound />} />
         </Routes>
       </AuthProvider>
     </ThemeProvider>
