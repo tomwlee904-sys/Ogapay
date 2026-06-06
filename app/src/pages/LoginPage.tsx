@@ -3,7 +3,6 @@ import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { Navigate } from "react-router-dom";
 import womanSvg from "../assets/woman.svg";
-import { supabase } from "../lib/supabaseClient";
 import { API_BASE, apiRequest } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
  
@@ -368,7 +367,7 @@ export default function LoginPage() {
                 <h2>Welcome Back</h2>
                 <p className="sub">Sign in to continue earning with OgaPay</p>
                 <div className="auth-btns">
-                  <button className="auth-btn" onClick={() => supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin + '/auth/callback' } })}>
+                  <button className="auth-btn" onClick={() => window.location.href = `https://ogapay-production.up.railway.app/api/v1/auth/google`}>
                     <span className="auth-btn-icon"><GoogleIcon /></span>
                     <strong>Continue with Google</strong>
                   </button>
