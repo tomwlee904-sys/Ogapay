@@ -2,7 +2,7 @@ import { useAuth } from '../context/AuthContext'
 
 export default function Sidebar() {
   const { isAuthed } = useAuth()
-  // Show for all users
+  if (!isAuthed) return null
 
   return (
     <aside className="sidebar">

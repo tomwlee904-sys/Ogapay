@@ -54,7 +54,7 @@ body[data-auth="authed"] div.oga-drawer-foot.authed-only{display:block!important
 body[data-auth="authed"] div.oga-drawer-foot.public-only{display:none!important}
 /* LAYOUT */
 .app-layout{display:flex;width:min(1080px,calc(100% - 40px));margin:0 auto;padding:20px 0 72px;min-height:100vh}
-.app-layout .sidebar{width:220px;flex-shrink:0;position:sticky;top:20px;height:fit-content;display:block;padding:12px 0}
+.app-layout .sidebar{width:220px;flex-shrink:0;position:sticky;top:20px;height:fit-content;display:none;padding:12px 0}
 body[data-auth="authed"] .app-layout .sidebar{display:block}
 .app-layout .main{flex:1;min-width:0}
 .app-layout .page{max-width:min(960px,calc(100% - 40px));margin:0 auto;width:100%}
