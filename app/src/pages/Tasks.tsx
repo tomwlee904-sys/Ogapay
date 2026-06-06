@@ -376,10 +376,25 @@ export default function Tasks() {
 
   // Load single job if id param present
   useEffect(() => {
-    if (id && jobs.length > 0) {
-      const job = jobs.find(j => j.id === id)
-      setSelectedJob(job || null)
-    } else if (!id) {
+    if (id) {
+      // Try to find in loaded jobs first, then fetch directly
+      const found = jobs.find(j => String(j.id) === String(id))
+      if (found) {
+        setSelectedJob(found)
+      } else {
+        // Fetch single task directly
+        fetch(API_BASE + '/tasks/' + id)
+          .then(r => r.json())
+          .then(json => {
+            if (json.success && json.data) {
+              setSelectedJob(mapApiTask(json.data))
+            } else {
+              setSelectedJob(null)
+            }
+          })
+          .catch(() => setSelectedJob(null))
+      }
+    } else {
       setSelectedJob(null)
     }
   }, [id, jobs])
