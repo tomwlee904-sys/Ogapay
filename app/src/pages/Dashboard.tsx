@@ -106,10 +106,46 @@ const CSS = `
   .dash-progress-widget-title { font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.08em; color:var(--text2); margin-bottom:10px; }
 
   @media(max-width:768px) {
-    .dash-wrap2 { padding:20px 0 40px; margin:0 -12px;  }
-    .dash-step-grid { grid-template-columns:1fr; }
+    .dash-wrap2 { padding:16px 10px 40px; }
+    .dash-step-grid { grid-template-columns:1fr; gap:10px; }
+    .dash-stats-row { grid-template-columns:1fr 1fr; gap:8px; }
+    .dash-provider-grid { grid-template-columns:1fr 1fr 1fr; gap:6px; }
+    .dash-intro { padding:12px 14px; gap:10px; }
+    .dash-intro h2 { font-size:15px; }
+    .dash-intro p { font-size:12px; }
+    .dash-intro-icon { width:32px; height:32px; }
+    .dash-section-title { font-size:11px; margin-bottom:10px; }
+    .dash-step-card { padding:14px; }
+    .dash-step-card h4 { font-size:13px; }
+    .dash-step-card p { font-size:11px; }
+    .dash-btn { height:36px; padding:0 14px; font-size:12px; }
+    .dash-btn.sm { height:30px; padding:0 10px; font-size:11px; }
+    .dash-provider { padding:10px 4px; font-size:10px; }
+    .dash-provider-icon { width:26px; height:26px; }
+    .dash-input { height:36px; font-size:12px; }
+    .dash-announce { padding:12px 14px; }
+    .dash-announce p { font-size:12px; }
+    .dash-stat-card { padding:12px 14px; }
+    .dash-stat-value { font-size:18px; }
+    .dash-progress { margin-bottom:16px; }
+    .dash-progress-row { font-size:11px; }
+    .dash-video { flex-direction:column; }
+    .dash-video-thumb { width:100%; height:100px; }
+    .dash-mini-row { font-size:11px; }
+    .dash-right { display:none; }
+    .dash-grid { gap:16px; }
+  }
+  @media(max-width:480px) {
+    .dash-wrap2 { padding:12px 6px 32px; }
     .dash-stats-row { grid-template-columns:1fr; }
-    .dash-provider-grid { grid-template-columns:1fr 1fr; }
+    .dash-step-card { padding:12px; }
+    .dash-intro { flex-direction:column; text-align:center; }
+    .dash-provider-grid { grid-template-columns:1fr 1fr 1fr; gap:4px; }
+    .dash-provider { padding:8px 2px; font-size:9px; }
+    .dash-provider-icon { width:22px; height:22px; }
+
+    .dash-stat-card { padding:10px 12px; }
+    .dash-stat-value { font-size:16px; }
   }
   .dash-grid { display: flex; flex-direction: column; gap: 24px; }
   @media(min-width: 769px) { .dash-grid { display: grid; grid-template-columns: 1fr 280px; } }
