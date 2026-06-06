@@ -35,6 +35,8 @@ import ForgotPassword from './pages/ForgotPassword'
 import Privacy from './pages/Privacy'
 import Terms from './pages/Terms'
 import TaskHistory from './pages/TaskHistory'
+import Developer from './pages/Developer'
+import Roadmap from './pages/Roadmap'
 
 function AuthGuard({ children }: { children: React.ReactNode }) {
   return <ProtectedRoute>{children}</ProtectedRoute>
@@ -86,6 +88,9 @@ export default function App() {
           <Route path="/tasks/new" element={<AuthGuard><CreateJob /></AuthGuard>} />
           <Route path="/edit-profile" element={<AuthGuard><EditProfile /></AuthGuard>} />
           <Route path="/task-history" element={<AuthGuard><TaskHistory /></AuthGuard>} />
+
+          <Route path="/developer" element={<Developer />} />
+          <Route path="/roadmap" element={<Roadmap />} />
 
           {/* Catch-all */}
           <Route path="*" element={<NotFound />} />
