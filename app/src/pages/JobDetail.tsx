@@ -51,6 +51,80 @@ function CountdownBlock({ deadline }: { deadline: number }) {
   )
 }
 
+function ApplyModalContent({ job, reward, currency, title, onClose }: { job: any; reward: number; currency: string; title: string; onClose: () => void }) {
+  const [step, setStep] = useState(1)
+  const [xHandle, setXHandle] = useState('')
+  const [notes, setNotes] = useState('')
+  const [file, setFile] = useState<File | null>(null)
+  const [loading, setLoading] = useState(false)
+  const submit = () => { if (!xHandle || !file) return; setLoading(true); setTimeout(() => { setLoading(false); setStep(2) }, 1800) }
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+      <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)' }} onClick={onClose} />
+      <div style={{ position: 'relative', width: '100%', maxWidth: 480, background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '24px 24px 0 0', overflow: 'hidden' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid var(--border)' }}>
+          <div>
+            <p style={{ fontSize: 11, color: 'var(--text3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 2px' }}>Apply for Job</p>
+            <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 300 }}>{title}</p>
+          </div>
+          <button onClick={onClose} style={{ width: 32, height: 32, borderRadius: 10, background: 'var(--bg2)', border: '1px solid var(--border)', color: 'var(--text3)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+          </button>
+        </div>
+
+        {step === 1 ? (
+          <div style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(22,163,74,0.10)', border: '1px solid rgba(22,163,74,0.20)', borderRadius: 12, padding: '12px 16px' }}>
+              <span style={{ fontSize: 12, color: 'var(--text2)' }}>Reward on approval</span>
+              <span style={{ fontSize: 18, fontWeight: 900, color: '#16a34a' }}>+{currency === 'USD' ? '$' : '₦'}{reward.toLocaleString()}</span>
+            </div>
+            <div>
+              <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text2)', display: 'block', marginBottom: 6 }}>Your X (Twitter) Username *</label>
+              <input value={xHandle} onChange={e => setXHandle(e.target.value)} placeholder="@yourusername" style={{ width: '100%', padding: '12px 14px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--bg2)', color: 'var(--text)', fontSize: 13, outline: 'none' }} />
+            </div>
+            <div>
+              <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text2)', display: 'block', marginBottom: 6 }}>Screenshot Proof *</label>
+              <label style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, border: '2px dashed var(--border)', borderRadius: 12, padding: '20px 16px', cursor: 'pointer' }}>
+                {file ? (
+                  <><svg width="20" height="20" fill="none" stroke="#16a34a" strokeWidth="2" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><span style={{ fontSize: 12, color: '#16a34a', fontWeight: 600 }}>{file.name}</span><span style={{ fontSize: 11, color: 'var(--text3)' }}>Click to change</span></>
+                ) : (
+                  <><svg width="24" height="24" fill="none" stroke="var(--text3)" strokeWidth="1.5" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg><span style={{ fontSize: 12, color: 'var(--text3)' }}>Click to upload screenshot</span><span style={{ fontSize: 10, color: 'var(--text3)' }}>PNG, JPG up to 10MB</span></>
+                )}
+                <input type="file" accept="image/*" style={{ display: 'none' }} onChange={e => setFile(e.target.files?.[0] || null)} />
+              </label>
+            </div>
+            <div>
+              <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text2)', display: 'block', marginBottom: 6 }}>Additional Notes <span style={{ color: 'var(--text3)', fontWeight: 400 }}>(optional)</span></label>
+              <textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Any extra context for the reviewer..." rows={2} style={{ width: '100%', padding: '12px 14px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--bg2)', color: 'var(--text)', fontSize: 13, outline: 'none', resize: 'vertical', fontFamily: 'inherit' }} />
+            </div>
+            <p style={{ fontSize: 12, color: 'var(--text3)', lineHeight: 1.5, margin: 0 }}>By submitting you confirm all proof is genuine. Fake submissions result in account suspension.</p>
+            <button onClick={submit} disabled={!xHandle || !file || loading} style={{ width: '100%', border: 'none', color: '#fff', fontWeight: 700, padding: '14px 20px', borderRadius: 12, fontSize: 14, cursor: 'pointer', background: BRAND, opacity: (!xHandle || !file || loading) ? 0.4 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+              {loading ? <><span className="spinner" style={{ width: 16, height: 16, borderWidth: 2 }} /> Submitting...</> : 'Submit Application →'}
+            </button>
+          </div>
+        ) : (
+          <div style={{ padding: 32, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: 16 }}>
+            <div style={{ width: 56, height: 56, borderRadius: 14, background: 'rgba(22,163,74,0.15)', border: '1px solid rgba(22,163,74,0.30)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <svg width="28" height="28" fill="none" stroke="#16a34a" strokeWidth="2" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            </div>
+            <div>
+              <h3 style={{ fontSize: 18, fontWeight: 900, color: 'var(--text)', margin: '0 0 4px' }}>Submission Received!</h3>
+              <p style={{ fontSize: 13, color: 'var(--text2)', margin: 0 }}>Your application is under review. You\'ll be notified within 24 hours.</p>
+            </div>
+            <div style={{ width: '100%', background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 12, padding: 14, display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12 }}><span style={{ color: 'var(--text3)' }}>Job ID</span><span style={{ fontFamily: 'monospace', fontSize: 11, color: 'var(--text)' }}>{job.id || '—'}</span></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12 }}><span style={{ color: 'var(--text3)' }}>Reward</span><span style={{ fontWeight: 700, color: '#16a34a' }}>{currency === 'USD' ? '$' : '₦'}{reward.toLocaleString()}</span></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12 }}><span style={{ color: 'var(--text3)' }}>Payout day</span><span style={{ fontWeight: 600, color: 'var(--text)' }}>{job.payoutDay || 'Weekly'}</span></div>
+            </div>
+            <button onClick={onClose} style={{ width: '100%', border: '1px solid var(--border)', background: 'var(--card)', color: 'var(--text2)', fontWeight: 700, padding: 12, borderRadius: 12, fontSize: 13, cursor: 'pointer' }}>Back to Job</button>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 export default function JobDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -312,38 +386,35 @@ export default function JobDetail() {
       {showShare && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
           <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)' }} onClick={() => setShowShare(false)} />
-          <div style={{ position: 'relative', width: '100%', maxWidth: 380, background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '24px 24px 0 0', padding: 20 }}>
-            <p style={{ fontWeight: 700, color: 'var(--text)', margin: '0 0 12px', fontSize: 14 }}>Share this Job</p>
-            <input readOnly value={`https://ogapay.vercel.app/tasks/${id}`} style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--bg2)', color: 'var(--text)', fontSize: 11, fontFamily: 'monospace', marginBottom: 12 }} />
-            <button onClick={() => { navigator.clipboard?.writeText(`https://ogapay.vercel.app/tasks/${id}`); setShowShare(false) }} style={{ padding: '10px 14px', borderRadius: 10, border: 'none', background: BRAND, color: '#fff', fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>Copy Link</button>
+          <div style={{ position: 'relative', width: '100%', maxWidth: 380, background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '24px 24px 0 0', padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <p style={{ fontWeight: 700, color: 'var(--text)', margin: 0, fontSize: 14 }}>Share this Job</p>
+              <button onClick={() => setShowShare(false)} style={{ width: 28, height: 28, borderRadius: 8, background: 'var(--bg2)', border: '1px solid var(--border)', color: 'var(--text3)', cursor: 'pointer', display: 'grid', placeItems: 'center' }}>
+                <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+              </button>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
+              {[{label:'X (Twitter)',icon:'𝕏',href:`https://twitter.com/intent/tweet?text=Earn+${job.currency==='USD'?'$':'₦'}${reward}+on+OgaPay!&url=https://ogapay.vercel.app/tasks/${id}`},{label:'WhatsApp',icon:'💬',href:`https://wa.me/?text=Earn+${job.currency==='USD'?'$':'₦'}${reward}+completing+tasks+on+OgaPay:+https://ogapay.vercel.app/tasks/${id}`},{label:'Telegram',icon:'✈️',href:`https://t.me/share/url?url=https://ogapay.vercel.app/tasks/${id}&text=Earn+${job.currency==='USD'?'$':'₦'}${reward}+on+OgaPay`}].map(s => (
+                <a key={s.label} href={s.href} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, padding: '10px 8px', background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 12, textDecoration: 'none', color: 'inherit' }}>
+                  <span style={{ fontSize: 20 }}>{s.icon}</span>
+                  <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--text2)' }}>{s.label}</span>
+                </a>
+              ))}
+            </div>
+            <div>
+              <p style={{ fontSize: 10, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 6px' }}>Or copy link</p>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <input readOnly value={`https://ogapay.vercel.app/tasks/${id}`} style={{ flex: 1, padding: '10px 12px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--bg2)', color: 'var(--text)', fontSize: 11, fontFamily: 'monospace' }} />
+                <button onClick={() => { navigator.clipboard?.writeText(`https://ogapay.vercel.app/tasks/${id}`).catch(()=>{}); setShowShare(false) }} style={{ padding: '10px 14px', borderRadius: 10, border: 'none', background: BRAND, color: '#fff', fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>Copy</button>
+              </div>
+            </div>
           </div>
         </div>
       )}
 
       {/* Apply Modal */}
       {showApply && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
-          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)' }} onClick={() => setShowApply(false)} />
-          <div style={{ position: 'relative', width: '100%', maxWidth: 480, background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '24px 24px 0 0', overflow: 'hidden' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid var(--border)' }}>
-              <div>
-                <p style={{ fontSize: 11, color: 'var(--text3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 2px' }}>Apply for Job</p>
-                <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 300 }}>{job.title}</p>
-              </div>
-              <button onClick={() => setShowApply(false)} style={{ width: 32, height: 32, borderRadius: 10, background: 'var(--bg2)', border: '1px solid var(--border)', color: 'var(--text3)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
-              </button>
-            </div>
-            <div style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(22,163,74,0.10)', border: '1px solid rgba(22,163,74,0.20)', borderRadius: 12, padding: '12px 16px' }}>
-                <span style={{ fontSize: 12, color: 'var(--text2)' }}>Reward on approval</span>
-                <span style={{ fontSize: 18, fontWeight: 900, color: '#16a34a' }}>+{job.currency === 'USD' ? '$' : '₦'}{reward.toLocaleString()}</span>
-              </div>
-              <p style={{ fontSize: 12, color: 'var(--text2)', margin: 0 }}>Submit your application to get started.</p>
-              <button onClick={() => { setShowApply(false); navigate(`/tasks/${id}/submit`) }} style={{ width: '100%', border: 'none', color: '#fff', fontWeight: 700, padding: '14px 20px', borderRadius: 12, fontSize: 14, cursor: 'pointer', background: BRAND }}>Go to Submission →</button>
-            </div>
-          </div>
-        </div>
+        <ApplyModalContent job={job} reward={reward} currency={job.currency || 'NGN'} title={job.title} onClose={() => setShowApply(false)} />
       )}
     </Layout>
   )
