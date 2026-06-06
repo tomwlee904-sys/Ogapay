@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
 
@@ -10,6 +11,27 @@ interface NavbarProps {
 export default function Navbar({ onMenuToggle }: NavbarProps) {
   const { isAuthed } = useAuth()
   const { theme, toggle } = useTheme()
+  const [balance, setBalance] = useState("0.00")
+
+  useEffect(() => {
+    if (!isAuthed) return
+    let cancelled = false
+    async function fetchBal() {
+      try {
+        const token = localStorage.getItem('ogapay_access_token')
+        if (!token) return
+        const res = await fetch('https://ogapay-production.up.railway.app/api/v1/wallet/balance', {
+          headers: { 'Authorization': 'Bearer ' + token },
+        })
+        const json = await res.json()
+        if (!cancelled && json.success && json.data?.NGN) {
+          setBalance(Number(json.data.NGN.available || json.data.NGN.balance || 0).toLocaleString())
+        }
+      } catch {}
+    }
+    fetchBal()
+    return () => { cancelled = true }
+  }, [isAuthed])
 
   return (
     <header className="nav">
@@ -33,7 +55,7 @@ export default function Navbar({ onMenuToggle }: NavbarProps) {
           )}
           {isAuthed && (
             <a className="wallet-btn" href="/wallet">
-              <i className="ti ti-wallet" /> &#8358;0.00
+              <i className="ti ti-wallet" /> &#8358;{balance}
             </a>
           )}
           <button className="icon-btn" id="themeToggle" onClick={toggle} aria-label="Toggle theme">
