@@ -295,6 +295,17 @@ export default function Profile() {
   const [swBal, setSwBal] = useState(false);
   const [earnPeriod, setEarnPeriod] = useState("7d");
   const [subPage, setSubPage] = useState(null);
+  const [accountNumber, setAccountNumber] = useState("0123456789");
+  const [bankName, setBankName] = useState("Access Bank");
+  const [accountName, setAccountName] = useState("Tomijimoh O.");
+  const [editingBank, setEditingBank] = useState(false);
+  const [savingBank, setSavingBank] = useState(false);
+  const [bankMsg, setBankMsg] = useState("");
+  const [showKyc, setShowKyc] = useState(false);
+  const [bvnNumber, setBvnNumber] = useState("");
+  const [kycStep, setKycStep] = useState("idle");
+  const [kycMsg, setKycMsg] = useState("");
+  const [kycLoading, setKycLoading] = useState(false);
 
 
   const data = earnPeriod === "7d" ? CHART_7 : CHART_30;
@@ -506,6 +517,61 @@ export default function Profile() {
                 <Toggle on={swBal} set={setSwBal} />
               </div>
               <div style={{marginTop:8}}><a href="/wallet" style={{fontSize:12,color:"var(--accent)",fontWeight:600}}>View my withdrawals</a></div>
+
+              {/* ─── Bank Account Details ─── */}
+              <div style={{padding:"12px 0 4px",borderTop:"1px solid var(--border)",marginTop:12}}>
+                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:8}}>
+                  <div style={{fontSize:12,fontWeight:800}}>Bank Account (NGN)</div>
+                  <button className="btn-sm" style={{fontSize:11,fontWeight:700,color:"var(--accent)",border:"none",background:"none",cursor:"pointer"}}
+                    onClick={() => setEditingBank(v => !v)}>
+                    <Icon n={editingBank ? "x" : "edit"} s={13} /> {editingBank ? "Cancel" : "Edit"}
+                  </button>
+                </div>
+                {editingBank ? (
+                  <div>
+                    <input className="dash-input" value={accountName} onChange={e => setAccountName(e.target.value)} placeholder="Account holder name" style={{marginBottom:6}} />
+                    <input className="dash-input" value={bankName} onChange={e => setBankName(e.target.value)} placeholder="Bank name" style={{marginBottom:6}} />
+                    <input className="dash-input" value={accountNumber} onChange={e => setAccountNumber(e.target.value)} placeholder="Account number" style={{marginBottom:8}} />
+                    <div style={{display:"flex",gap:8}}>
+                      <button className="dash-btn" style={{height:34,fontSize:12}}
+                        onClick={async () => {
+                          setSavingBank(true); setBankMsg("");
+                          try {
+                            const token = localStorage.getItem('ogapay_access_token');
+                            if (token) {
+                              await fetch('https://ogapay-production.up.railway.app/api/v1/users/me', {
+                                method: 'PATCH',
+                                headers: {'Content-Type':'application/json','Authorization':'Bearer '+token},
+                                body: JSON.stringify({accountNumber, bankName, accountName}),
+                              });
+                            }
+                            setBankMsg("Bank details saved!");
+                            setTimeout(() => { setBankMsg(""); setEditingBank(false); }, 2000);
+                          } catch { setBankMsg("Failed to save"); }
+                          setSavingBank(false);
+                        }}>
+                        <Icon n="check" s={13} /> Save
+                      </button>
+                      {bankMsg && <span style={{fontSize:11,color:"var(--green)",padding:"8px 0"}}>{bankMsg}</span>}
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <div className="addr-row" style={{borderBottom:"none"}}>
+                      <span style={{fontSize:12,color:"var(--text2)"}}>Account Name</span>
+                      <span style={{fontWeight:700,fontSize:13}}>{accountName}</span>
+                    </div>
+                    <div className="addr-row" style={{borderBottom:"none"}}>
+                      <span style={{fontSize:12,color:"var(--text2)"}}>Bank</span>
+                      <span style={{fontWeight:700,fontSize:13}}>{bankName}</span>
+                    </div>
+                    <div className="addr-row" style={{borderBottom:"none"}}>
+                      <span style={{fontSize:12,color:"var(--text2)"}}>Account Number</span>
+                      <span style={{fontWeight:700,fontSize:13,fontFamily:"monospace"}}>{accountNumber}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -536,7 +602,7 @@ export default function Profile() {
                 <StatRow label="Seeker user" val="No" valClass="no" />
                 <div className="stat-row" style={{borderBottom:"none"}}>
                   <span className="stat-label">Human verified</span>
-                  <button className="btn-primary btn-sm">Verify with VeryAI</button>
+                  <button className="btn-primary btn-sm" onClick={() => setShowKyc(true)}>Verify Identity (KYC)</button>
                 </div>
               </div>
             </div>
@@ -586,6 +652,7 @@ export default function Profile() {
               <div>
                 <div style={{fontSize:11,fontWeight:700,color:"var(--text3)",textTransform:"uppercase",letterSpacing:".06em"}}>Total Earned</div>
                 <div style={{fontFamily:"Outfit,sans-serif",fontSize:26,fontWeight:900,margin:"4px 0"}}>{totalEarned.toFixed(2)} $OGA</div>
+                <div style={{fontSize:16,fontWeight:800,marginTop:2}}>≈ NGN 0.00</div>
                 <div style={{fontSize:12,color:"var(--text2)"}}>≈ $0.00 USD</div>
               </div>
               <div>
@@ -735,6 +802,119 @@ export default function Profile() {
         <WorkerPortalContent />
       )}
       </div>
-    </Layout>
+    
+      {/* ─── KYC / BVN Verification Modal ─── */}
+      {showKyc && (
+        <div className="review-overlay" onClick={() => setShowKyc(false)}>
+          <div className="review-modal" onClick={e => e.stopPropagation()} style={{
+            position:'fixed', inset:0, zIndex:1000, display:'grid', placeItems:'center',
+            background:'rgba(0,0,0,0.5)', padding:20, overflowY:'auto',
+          }}>
+            <div style={{
+              background:'var(--card)', borderRadius:16, maxWidth:480, width:'100%',
+              maxHeight:'90vh', overflow:'auto', border:'1px solid var(--border)', padding:'28px 30px',
+            }}>
+              <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:20}}>
+                <h2 style={{fontFamily:'Outfit',fontSize:18,fontWeight:800,margin:0}}>Identity Verification (KYC)</h2>
+                <button onClick={() => setShowKyc(false)} style={{width:32,height:32,borderRadius:8,border:'1px solid var(--border)',background:'var(--card)',cursor:'pointer',display:'grid',placeItems:'center',fontSize:16,color:'var(--text2)'}}><i className="ti ti-x" /></button>
+              </div>
+
+              {kycStep === "idle" && (
+                <div>
+                  <p style={{fontSize:13,color:'var(--text2)',marginBottom:20,lineHeight:1.6}}>
+                    Verify your identity to unlock withdrawals and access all features. 
+                    You can verify using your BVN (Bank Verification Number).
+                  </p>
+                  <div style={{background:'var(--bg2)',borderRadius:10,padding:16,marginBottom:20}}>
+                    <div style={{fontSize:12,fontWeight:700,marginBottom:4}}>Required for:</div>
+                    <div style={{display:'grid',gap:6}}>
+                      {["Withdrawals above NGN 10,000","Task creation (Poster role)","Higher task rewards","Trust & reputation"].map((item,i) => (
+                        <div key={i} style={{display:'flex',alignItems:'center',gap:8,fontSize:12,color:'var(--text2)'}}>
+                          <i className="ti ti-check" style={{color:'#16a34a',fontSize:14}} /> {item}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <button className="dash-btn" style={{width:'100%',justifyContent:'center'}}
+                    onClick={() => setKycStep("bvn")}>
+                    <Icon n="shield-check" s={16} /> Start Verification
+                  </button>
+                  <p style={{fontSize:11,color:'var(--text3)',textAlign:'center',marginTop:12}}>
+                    Your data is encrypted and securely processed.
+                  </p>
+                </div>
+              )}
+
+              {kycStep === "bvn" && (
+                <div>
+                  <p style={{fontSize:13,color:'var(--text2)',marginBottom:16}}>
+                    Enter your BVN (Bank Verification Number) to verify your identity.
+                  </p>
+                  <div style={{marginBottom:16}}>
+                    <label style={{fontSize:12,fontWeight:700,color:'var(--text2)',display:'block',marginBottom:6}}>BVN</label>
+                    <input className="dash-input" value={bvnNumber} onChange={e => setBvnNumber(e.target.value.replace(/\D/g,'').slice(0,11))}
+                      placeholder="Enter 11-digit BVN" maxLength={11}
+                      style={{fontSize:16,letterSpacing:2,fontWeight:700,textAlign:'center'}} />
+                  </div>
+                  {kycMsg && <div style={{fontSize:12,color:kycMsg.includes('successful')?'var(--green)':'#DC2626',marginBottom:12}}>{kycMsg}</div>}
+                  <button className="dash-btn" style={{width:'100%',justifyContent:'center',opacity:bvnNumber.length!==11?0.5:1}}
+                    disabled={bvnNumber.length!==11 || kycLoading}
+                    onClick={async () => {
+                      if (bvnNumber.length !== 11) return;
+                      setKycLoading(true); setKycMsg("");
+                      try {
+                        const token = localStorage.getItem('ogapay_access_token');
+                        if (!token) { setKycMsg("Please log in first"); setKycLoading(false); return; }
+                        const res = await fetch('https://ogapay-production.up.railway.app/api/v1/kyc/submit', {
+                          method: 'POST',
+                          headers: {'Content-Type':'application/json','Authorization':'Bearer '+token},
+                          body: JSON.stringify({
+                            idType: 'BVN',
+                            idNumber: bvnNumber,
+                            dateOfBirth: new Date().toISOString(),
+                          }),
+                        });
+                        const json = await res.json();
+                        if (json.success) {
+                          setKycMsg("KYC submitted successfully! Verification takes 1-24 hours.");
+                          setKycStep("submitted");
+                        } else {
+                          setKycMsg(json.message || "Submission failed");
+                        }
+                      } catch (err) {
+                        setKycMsg("Service unavailable. Try again later.");
+                      }
+                      setKycLoading(false);
+                    }}>
+                    {kycLoading ? <><i className="ti ti-loader" style={{animation:'spin 1s linear infinite'}} /> Submitting...</> : <><Icon n="shield-check" s={16} /> Submit KYC</>}
+                  </button>
+                  <button style={{display:'block',margin:'12px auto 0',border:'none',background:'none',fontSize:12,color:'var(--text3)',cursor:'pointer'}}
+                    onClick={() => { setKycStep("idle"); setKycMsg(""); }}>
+                    Back
+                  </button>
+                </div>
+              )}
+
+              {kycStep === "submitted" && (
+                <div style={{textAlign:'center',padding:'20px 0'}}>
+                  <div style={{width:64,height:64,borderRadius:'50%',background:'#16a34a18',display:'grid',placeItems:'center',margin:'0 auto 16px'}}>
+                    <i className="ti ti-shield-check" style={{fontSize:32,color:'#16a34a'}} />
+                  </div>
+                  <h3 style={{fontFamily:'Outfit',fontSize:17,fontWeight:800,margin:'0 0 8px'}}>Verification Submitted</h3>
+                  <p style={{fontSize:13,color:'var(--text2)',lineHeight:1.6}}>
+                    Your KYC is under review. This typically takes 1-24 hours. 
+                    You'll be notified once your identity is verified.
+                  </p>
+                  <button className="dash-btn" style={{marginTop:20}} onClick={() => setShowKyc(false)}>
+                    Done
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+</Layout>
   );
 }
