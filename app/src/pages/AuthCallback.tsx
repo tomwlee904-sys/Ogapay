@@ -1,7 +1,8 @@
 // @ts-nocheck
-// Fix: use client-side PKCE flow — wait for Supabase to detect session from URL hash, then getSession()
+// Fix: client-side PKCE flow — get Supabase session, exchange with backend for app tokens, redirect to dashboard
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
+import { persistAuthSession } from "../lib/api";
 
 export default function AuthCallback() {
   const [status, setStatus] = useState("processing");
@@ -12,29 +13,19 @@ export default function AuthCallback() {
     async function handleCallback(attempt = 0) {
       try {
         // Wait for Supabase to process URL hash params (PKCE flow auto-detection)
-        await new Promise(r => setTimeout(r, attempt === 0 ? 1200 : 600));
+        await new Promise(r => setTimeout(r, attempt === 0 ? 1500 : 800));
 
         const { data: { session }, error } = await supabase.auth.getSession();
 
         if (cancelled) return;
 
         if (session) {
-          localStorage.setItem("ogapay_access_token", session.access_token);
-          localStorage.setItem("ogapay-authenticated", "true");
+          // Step 1: Exchange Supabase session for backend app tokens
+          let appTokens = null;
+          let appUser = null;
 
-          const userMeta = session.user?.user_metadata || {};
-          const fullName = userMeta.full_name || userMeta.name || session.user.email?.split("@")[0] || "User";
-          const parts = fullName.trim().split(/\s+/);
-          localStorage.setItem("ogapay_user", JSON.stringify({
-            firstName: parts[0],
-            lastName: parts.slice(1).join(" ") || "",
-            email: session.user.email,
-            avatar: userMeta.avatar_url || "",
-          }));
-
-          // Sync session with backend (exchange Supabase token for app token)
           try {
-            const res = await fetch(
+            const exchangeRes = await fetch(
               'https://ogapay-production.up.railway.app/api/v1/auth/google/exchange',
               {
                 method: 'POST',
@@ -42,8 +33,49 @@ export default function AuthCallback() {
                 body: JSON.stringify({ access_token: session.access_token }),
               }
             );
-            if (res.ok) console.log('Backend session synced');
-          } catch {}
+
+            if (exchangeRes.ok) {
+              const exchangeData = await exchangeRes.json();
+              const result = exchangeData.data || exchangeData;
+              appTokens = result.tokens;
+              appUser = result.user;
+              console.log('Backend session synced successfully');
+            } else {
+              console.warn('Backend exchange failed, using Supabase session directly');
+            }
+          } catch (exchangeErr) {
+            console.warn('Backend exchange error, using Supabase session directly:', exchangeErr.message);
+          }
+
+          if (appTokens && appTokens.refreshToken && appTokens.accessToken) {
+            // Use backend app tokens
+            persistAuthSession({
+              user: appUser,
+              tokens: { accessToken: appTokens.accessToken, refreshToken: appTokens.refreshToken },
+            });
+          } else {
+            // Fallback: use Supabase session tokens directly
+            localStorage.setItem("ogapay_access_token", session.access_token);
+            if (session.refresh_token) {
+              localStorage.setItem("ogapay_refresh_token", session.refresh_token);
+            }
+            localStorage.setItem("ogapay-authenticated", "true");
+          }
+
+          // Store user display info
+          const userMeta = session.user?.user_metadata || {};
+          const fullName = userMeta.full_name || userMeta.name || session.user.email?.split("@")[0] || "User";
+          const parts = fullName.trim().split(/\s+/);
+          // Only set ogapay_user display name if backend didn't already store a proper user
+          if (!appUser) {
+            localStorage.setItem("ogapay_user", JSON.stringify({
+              id: session.user.id,
+              firstName: parts[0],
+              lastName: parts.slice(1).join(" ") || "",
+              email: session.user.email,
+              avatar: userMeta.avatar_url || "",
+            }));
+          }
 
           if (!localStorage.getItem("ogapay_is_new_user")) {
             localStorage.setItem("ogapay_is_new_user", "true");
@@ -52,7 +84,7 @@ export default function AuthCallback() {
           setStatus("redirecting");
           window.location.href = "/dashboard";
         } else {
-          // If no session found and we have hash, retry once
+          // Retry once if hash is present
           if (attempt < 2 && window.location.hash) {
             return handleCallback(attempt + 1);
           }
