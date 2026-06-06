@@ -1,6 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from 'react-router-dom'
 import Layout from "../components/Layout";
+import { apiRequest } from "../lib/api";
+import { useAuth } from "../context/AuthContext";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 /* ─── Icons ─── */
@@ -14,7 +16,7 @@ const XIcon = ({ size = 14 }) => (
   </svg>
 );
 
-/* ─── Data ─── */
+/* ─── Static data ─── */
 const CHART_7 = ["Thu","Fri","Sat","Sun","Mon","Tue","Wed"].map(d => ({ day: d, val: 0 }));
 const CHART_30 = Array.from({ length: 30 }, (_, i) => ({ day: `D${i+1}`, val: 0 }));
 const DONUT_CATS = [
@@ -24,17 +26,29 @@ const DONUT_CATS = [
   { name: "Vault", color: "#f59e0b" },
 ];
 const QUICK = [
-  { icon: "activity", label: "Job Monitor", page: "jobs" },
+  { icon: "activity", label: "Job Monitor", page: "monitor" },
   { icon: "safe", label: "Vault", page: "vault" },
   { icon: "file-text", label: "Blogs", page: "blog" },
-  { icon: "briefcase", label: "Available Jobs", page: "jobs" },
+  { icon: "briefcase", label: "Available Jobs", page: "tasks" },
   { icon: "bookmark", label: "Bookmarks", page: "bookmarks" },
   { icon: "circle-plus", label: "Create Job", page: "create" },
 ];
 
 /* ─── Helpers ─── */
 const f = new Intl.NumberFormat("en-US");
-const refLink = "https://ogapay.vercel.app/ref/F48NUF...jemX";
+
+function formatTimeAgo(dateStr: string) {
+  if (!dateStr) return '';
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'Just now';
+  if (mins < 60) return mins + 'm ago';
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return hrs + 'h ago';
+  const days = Math.floor(hrs / 24);
+  if (days < 30) return days + 'd ago';
+  return new Date(dateStr).toLocaleDateString();
+}
 
 function Toggle({ on, set }) {
   return (
@@ -66,15 +80,48 @@ function StatRow({ label, val, info, valClass }) {
   );
 }
 
+/* ─── Toast helper ─── */
+function showToast(msg: string) {
+  const el = document.getElementById('appToast');
+  if (!el) return;
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 3000);
+}
+
 /* ─── Sub Pages (tabs) ─── */
 function MyJobsTab() {
   const [form, setForm] = useState({ type: "active", search: "" });
   const s = k => e => setForm(f => ({ ...f, [k]: e.target.value }));
-  const jobs = [
-    { title: "Social Media Engagement — Retweet & Like", tags: "X/Twitter · Social · Easy", desc: "Retweet the pinned post on X and like it.", reward: "0.025 SOL", filled: 42, total: 150 },
-    { title: "App Testing — UI/UX Feedback", tags: "Mobile · Testing · Medium", desc: "Test the new beta version of the OgaPay mobile app.", reward: "0.05 SOL", filled: 12, total: 30 },
-    { title: "Content Review — Proofread Blog Post", tags: "Google Docs · Content · Easy", desc: "Review a 500-word blog post about DeFi trends.", reward: "0.015 SOL", filled: 18, total: 40 },
-  ];
+  const [jobs, setJobs] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const token = localStorage.getItem('ogapay_access_token');
+        if (!token) { setLoading(false); return; }
+        const res = await fetch('https://ogapay-production.up.railway.app/api/v1/tasks/my/submissions', {
+          headers: { 'Authorization': 'Bearer ' + token },
+        });
+        const json = await res.json();
+        if (json.success && json.data) setJobs(json.data);
+      } catch {}
+      setLoading(false);
+    })();
+  }, []);
+
+  const filtered = jobs.filter(j => {
+    if (form.type === 'active') return j.status === 'APPLIED' || j.status === 'PENDING';
+    if (form.type === 'pending') return j.status === 'PENDING';
+    if (form.type === 'completed') return j.status === 'APPROVED' || j.status === 'REJECTED';
+    return true;
+  }).filter(j => {
+    if (!form.search) return true;
+    const q = form.search.toLowerCase();
+    return (j.task?.title || '').toLowerCase().includes(q);
+  });
+
   return (
     <div className="sub-page">
       <div className="page-head-sm"><Icon n="briefcase" s={20} /><h2>My Jobs</h2></div>
@@ -86,219 +133,138 @@ function MyJobsTab() {
       <div className="search-wrap" style={{ marginBottom:20 }}>
         <input value={form.search} onChange={s("search")} placeholder="Search jobs..." />
       </div>
-      <div style={{ display:"grid", gap:12 }}>
-        {jobs.map((j,i) => {
-          const pct = Math.round((j.filled/j.total)*100);
-          return (
-            <div className="card card-sm" key={i}>
-              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", gap:12, marginBottom:10 }}>
-                <div>
-                  <div style={{ fontWeight:700, fontSize:14, marginBottom:2 }}>{j.title}</div>
-                  <div style={{ fontSize:11, color:"var(--text2)", fontWeight:600 }}>{j.tags}</div>
-                  <div style={{ fontSize:12, color:"var(--text2)", marginTop:6 }}>{j.desc}</div>
-                </div>
-                <div style={{ textAlign:"right", flexShrink:0 }}>
-                  <div className="text-green" style={{ fontFamily:"Outfit,sans-serif", fontSize:18, fontWeight:800 }}>{j.reward}</div>
-                  <div style={{ fontSize:11, color:"var(--text3)" }}>{j.filled}/{j.total} slots</div>
+      {loading ? (
+        <div className="loading"><span className="spinner" /> Loading...</div>
+      ) : filtered.length === 0 ? (
+        <div className="card card-sm" style={{textAlign:'center',padding:'48px 20px',color:'var(--text3)',fontSize:13}}>
+          <Icon n="briefcase-off" s={32} c="var(--text3)" />
+          <div style={{marginTop:12}}>No jobs found</div>
+        </div>
+      ) : (
+        <div style={{ display:"grid", gap:12 }}>
+          {filtered.map((j,i) => {
+            const task = j.task || {};
+            const reward = Number(task.reward || 0);
+            const currency = task.currency || 'NGN';
+            const pct = task.maxWorkers ? Math.round(((task.currentWorkers || 0) / task.maxWorkers) * 100) : 0;
+            return (
+              <div className="card card-sm" key={j.id || i}>
+                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", gap:12, marginBottom:10 }}>
+                  <div>
+                    <div style={{ fontWeight:700, fontSize:14, marginBottom:2 }}>{task.title || 'Untitled Task'}</div>
+                    <div style={{ fontSize:11, color:"var(--text2)", fontWeight:600 }}>{(j.status || '').replace(/_/g, ' ')}</div>
+                    {task.description && <div style={{ fontSize:12, color:"var(--text2)", marginTop:6 }}>{task.description}</div>}
+                  </div>
+                  <div style={{ textAlign:"right", flexShrink:0 }}>
+                    <div className="text-green" style={{ fontFamily:"Outfit,sans-serif", fontSize:18, fontWeight:800 }}>
+                      {currency} {Number(reward).toLocaleString()}
+                    </div>
+                    {task.maxWorkers && <div style={{ fontSize:11, color:"var(--text3)" }}>{task.currentWorkers || 0}/{task.maxWorkers} slots</div>}
+                  </div>
                 </div>
               </div>
-              <div className="bar-wrap"><div className="bar-fill" style={{ width:`${pct}%`, background:pct===100?"var(--green)":"var(--primary)" }} /></div>
-              <button className="btn-primary btn-sm" disabled={pct===100} style={{ opacity:pct===100?.5:1, cursor:pct===100?"not-allowed":"pointer" }}>
-                {pct===100?"Filled":"Apply Now"}
-              </button>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
 
-/* ─── Main Component ─── */
-/* ─── Worker Portal Content ─── */
-function WorkerPortalContent() {
-  const navigate = useNavigate();
+function ReferralsTab() {
+  const [stats, setStats] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
-  const navItems = [
-    { icon: 'ti ti-building-store', label: 'My Store' },
-    { icon: 'ti ti-article', label: 'My Blogs' },
-    { icon: 'ti ti-briefcase', label: 'My Work' },
-    { icon: 'ti ti-message', label: 'Messages' },
-    { icon: 'ti ti-users', label: 'Communities' },
-    { icon: 'ti ti-file-check', label: 'My Submissions' },
-    { icon: 'ti ti-pencil', label: 'Reviews to Write' },
-    { icon: 'ti ti-star', label: 'My Reviews' },
-    { icon: 'ti ti-eye', label: 'View My Profile' },
-  ];
-
-  const stats = [
-    { icon: 'ti ti-star', color: '#1F8CFF', count: 124, label: 'Reviews' },
-    { icon: 'ti ti-zap', color: '#F59E0B', count: 8, label: 'Challenges Participated' },
-    { icon: 'ti ti-trophy', color: '#16a34a', count: 12, label: 'Won' },
-    { icon: 'ti ti-heart', color: '#EC4899', count: 34, label: 'Compliments' },
-    { icon: 'ti ti-users', color: '#2563EB', count: 15, label: 'Communities' },
-    { icon: 'ti ti-gift', color: '#1F8CFF', count: 28, label: 'Tips Received' },
-    { icon: 'ti ti-file-text', color: '#F59E0B', count: 6, label: 'Blogs' },
-  ];
-
-  return (
-    <div className="wp-page">
-      <div className="wp-nav-grid">
-        {navItems.slice(0, 5).map((t, i) => (
-          <div key={i} className="wp-nav-tile" style={{ borderRight: i < 4 ? '1px solid var(--border)' : 'none' }}>
-            <i className={t.icon} />
-            <span>{t.label}</span>
-          </div>
-        ))}
-      </div>
-      <div className="wp-nav-grid-2">
-        {navItems.slice(5).map((t, i) => (
-          <div key={i} className="wp-nav-tile" style={{ borderRight: i < 3 ? '1px solid var(--border)' : 'none' }}>
-            <i className={t.icon} />
-            <span>{t.label}</span>
-          </div>
-        ))}
-      </div>
-      <div className="wp-bread">
-        <span onClick={() => navigate('/store')}>Dashboard</span>
-        <i className="ti ti-chevron-right" style={{ fontSize: 10, color: 'var(--border2)' }} />
-        <span className="current">Worker Portal</span>
-      </div>
-      <div className="wp-hero"><h1>Welcome back</h1></div>
-      <div className="wp-stats-row">
-        <span><i className="ti ti-star" /> No wins yet</span>
-        <span><i className="ti ti-users" /> No communities</span>
-        <span><i className="ti ti-heart" /> No compliments</span>
-      </div>
-      <div className="wp-profile-card">
-        <div className="wp-profile-top">
-          <div className="wp-avatar-box"><i className="ti ti-user" /></div>
-          <div className="wp-profile-info">
-            <div className="wp-profile-name">
-              No nickname yet
-              <button className="wp-edit-btn" onClick={() => navigate('/edit-profile')}>
-                <i className="ti ti-pencil" style={{ fontSize: 13 }} /> Edit Profile
-              </button>
-            </div>
-          </div>
-        </div>
-        <div className="wp-bio-box">
-          <div className="wp-bio-label">Bio</div>
-          <div className="wp-bio-text">No bio yet. Add one to tell others about yourself!</div>
-        </div>
-      </div>
-      <div className="wp-stats-list">
-        {stats.map((s, i) => (
-          <div key={i} className="wp-stat-row">
-            <i className={`${s.icon} wp-stat-icon`} style={{ color: s.color }} />
-            <span className="wp-stat-count">{s.count}</span>
-            <span className="wp-stat-label">{s.label}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-/* ─── My Blog Posts Section ─── */
-function BlogPostsSection() {
-  const navigate = useNavigate();
-  const [posts, setPosts] = useState<any[]>([]);
-  
   useEffect(() => {
-    try {
-      const stored = JSON.parse(localStorage.getItem('ogapay_user_posts') || '[]')
-      setPosts(stored.reverse())
-    } catch { setPosts([]) }
-  }, [])
-
-  const deletePost = (id: number) => {
-    try {
-      const stored = JSON.parse(localStorage.getItem('ogapay_user_posts') || '[]')
-      const updated = stored.filter((p: any) => p.id !== id)
-      localStorage.setItem('ogapay_user_posts', JSON.stringify(updated))
-      setPosts(updated.reverse())
-    } catch {}
-  }
-
-  const badgeColors: Record<string, string> = {
-    News: '#185FA5', Businesses: '#3B6D11', Freelancers: '#534AB7', 'Case Studies': '#993556',
-  }
-
-  const published = posts.filter(p => p.status === 'published')
-  const drafts = posts.filter(p => p.status === 'draft')
+    (async () => {
+      try {
+        const data = await apiRequest('/users/referrals/stats').catch(() => null);
+        if (data) setStats(data);
+      } catch {}
+      setLoading(false);
+    })();
+  }, []);
 
   return (
-    <div className="card card-sm prof-full">
-      <div className="card-head">
-        <span><Icon n="file-text" s={16} /> My Blog Posts</span>
-        <button className="btn-primary btn-sm" onClick={() => navigate('/blog/write')}>
-          <i className="ti ti-plus" style={{fontSize:13}} /> Write Article
-        </button>
-      </div>
-      <div className="card-body">
-        {posts.length === 0 ? (
-          <div style={{textAlign:'center',padding:'32px 20px',color:'var(--text3)'}}>
-            <Icon n="file-text" s={36} c="var(--text3)" />
-            <div style={{fontSize:13,marginTop:10}}>No articles yet. Write your first one!</div>
+    <div className="sub-page">
+      <div className="page-head-sm"><Icon n="users" s={20} /><h2>Referrals</h2></div>
+      {loading ? (
+        <div className="loading"><span className="spinner" /> Loading...</div>
+      ) : stats ? (
+        <div className="card card-sm">
+          <div className="card-body">
+            <StatRow label="Total Referrals" val={stats.totalReferrals ?? stats.total ?? 0} />
+            <StatRow label="Active Referrals" val={stats.activeReferrals ?? stats.active ?? 0} />
+            <StatRow label="Referral Earnings" val={`NGN ${Number(stats.totalEarnings || stats.earnings || 0).toLocaleString()}`} />
+            <StatRow label="Referral Code" val={stats.referralCode || '—'} />
           </div>
-        ) : (
-          <div>
-            {drafts.length > 0 && (
-              <div style={{marginBottom:16}}>
-                <div style={{fontSize:11,fontWeight:700,color:'var(--text3)',textTransform:'uppercase',letterSpacing:'.06em',marginBottom:8}}>Drafts ({drafts.length})</div>
-                {drafts.map(p => (
-                  <div key={p.id} style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'10px 0',borderBottom:'1px dashed var(--border)',fontSize:13}}>
-                    <div style={{display:'flex',alignItems:'center',gap:10,flex:1,minWidth:0}}>
-                      <div style={{width:4,height:4,borderRadius:'50%',background:'var(--text3)',flexShrink:0}} />
-                      <span style={{fontWeight:600,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{p.title || 'Untitled'}</span>
-                      <span style={{fontSize:11,color:'var(--text3)',fontWeight:600}}>{p.category}</span>
-                    </div>
-                    <div style={{display:'flex',gap:6}}>
-                      <button className="btn-outline btn-sm" onClick={() => navigate(`/blog/edit/${p.id}`)}>Edit</button>
-                      <button className="btn-sm" style={{height:34,padding:'0 12px',borderRadius:99,border:'1.5px solid #fca5a5',background:'transparent',color:'#dc2626',fontSize:11,fontWeight:700,cursor:'pointer'}} onClick={() => deletePost(p.id)}>Delete</button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-            {published.length > 0 && (
-              <div>
-                <div style={{fontSize:11,fontWeight:700,color:'var(--text3)',textTransform:'uppercase',letterSpacing:'.06em',marginBottom:8}}>Published ({published.length})</div>
-                {published.map(p => (
-                  <div key={p.id} style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'10px 0',borderBottom:'1px dashed var(--border)',fontSize:13}}>
-                    <div style={{display:'flex',alignItems:'center',gap:10,flex:1,minWidth:0}}>
-                      <div style={{width:18,height:18,borderRadius:4,background:p.coverColor || '#534AB7',flexShrink:0}} />
-                      <span style={{fontWeight:600,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{p.title}</span>
-                      <span style={{fontSize:11,padding:'2px 8px',borderRadius:99,background:'#EEEDFE',color:'#534AB7',fontWeight:600}}>{p.category}</span>
-                      <span style={{fontSize:11,color:'var(--text3)'}}>{p.date}</span>
-                    </div>
-                    <div style={{display:'flex',gap:6}}>
-                      <button className="btn-outline btn-sm" onClick={() => navigate(`/blog/edit/${p.id}`)}>Edit</button>
-                      <button className="btn-sm" style={{height:34,padding:'0 12px',borderRadius:99,border:'1.5px solid #fca5a5',background:'transparent',color:'#dc2626',fontSize:11,fontWeight:700,cursor:'pointer'}} onClick={() => deletePost(p.id)}>Delete</button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-      </div>
+        </div>
+      ) : (
+        <div className="card card-sm" style={{textAlign:'center',padding:'48px 20px',color:'var(--text3)',fontSize:13}}>
+          <Icon n="users-off" s={32} c="var(--text3)" />
+          <div style={{marginTop:12}}>No referral data yet</div>
+        </div>
+      )}
     </div>
-  )
+  );
 }
 
+function AlertsTab() {
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const data = await apiRequest('/notifications').catch(() => null);
+        if (Array.isArray(data)) setNotifications(data);
+        else if (data?.data && Array.isArray(data.data)) setNotifications(data.data);
+      } catch {}
+      setLoading(false);
+    })();
+  }, []);
+
+  return (
+    <div className="sub-page">
+      <div className="page-head-sm"><Icon n="bell" s={20} /><h2>Alerts</h2></div>
+      {loading ? (
+        <div className="loading"><span className="spinner" /> Loading...</div>
+      ) : notifications.length === 0 ? (
+        <div className="card card-sm" style={{textAlign:'center',padding:'48px 20px',color:'var(--text3)',fontSize:13}}>
+          <Icon n="bell-off" s={32} c="var(--text3)" />
+          <div style={{marginTop:12}}>No notifications yet</div>
+        </div>
+      ) : (
+        <div style={{display:'grid',gap:8}}>
+          {notifications.map((n,i) => (
+            <div className="card card-sm" key={n.id || i} style={{padding:'14px 18px',display:'flex',alignItems:'center',gap:12}}>
+              <Icon n={n.icon || 'bell'} s={18} c="var(--accent)" />
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontWeight:600,fontSize:13}}>{n.title || n.message}</div>
+                {n.description && <div style={{fontSize:11,color:'var(--text3)',marginTop:2}}>{n.description}</div>}
+              </div>
+              <div style={{fontSize:10,color:'var(--text3)',whiteSpace:'nowrap'}}>{formatTimeAgo(n.createdAt)}</div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ─── Main Profile Component ─── */
 export default function Profile() {
   const navigate = useNavigate();
+  const { user: authUser } = useAuth();
   const [tab, setTab] = useState("profile");
   const [showBal, setShowBal] = useState(false);
   const [swBal, setSwBal] = useState(false);
   const [earnPeriod, setEarnPeriod] = useState("7d");
   const [subPage, setSubPage] = useState(null);
-  const [accountNumber, setAccountNumber] = useState("0123456789");
-  const [bankName, setBankName] = useState("Access Bank");
-  const [accountName, setAccountName] = useState("Tomijimoh O.");
-  const [editingBank, setEditingBank] = useState(false);
+  const [accountNumber, setAccountNumber] = useState(() => localStorage.getItem('ogapay_bank_account') || "");
+  const [bankName, setBankName] = useState(() => localStorage.getItem('ogapay_bank_name') || "");
+  const [accountName, setAccountName] = useState(() => localStorage.getItem('ogapay_account_name') || "");
+  const [editingBank, setEditingBank] = useState(!localStorage.getItem('ogapay_bank_account'));
   const [savingBank, setSavingBank] = useState(false);
   const [bankMsg, setBankMsg] = useState("");
   const [showKyc, setShowKyc] = useState(false);
@@ -307,9 +273,117 @@ export default function Profile() {
   const [kycMsg, setKycMsg] = useState("");
   const [kycLoading, setKycLoading] = useState(false);
 
+  // ── Edit Profile Modal State ──
+  const [showEdit, setShowEdit] = useState(false);
+  const [editForm, setEditForm] = useState({ firstName: '', lastName: '', username: '', bio: '', avatarUrl: '' });
+  const [editErrors, setEditErrors] = useState<Record<string, string>>({});
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [usernameCheck, setUsernameCheck] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle');
+  const usernameCheckTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const data = earnPeriod === "7d" ? CHART_7 : CHART_30;
-  const totalEarned = data.reduce((a, b) => a + b.val, 0);
+  // ── API Data state ──
+  const [profileData, setProfileData] = useState<any>(null);
+  const [walletBal, setWalletBal] = useState<any>(null);
+  const [transactions, setTransactions] = useState<any[]>([]);
+  const [referralStats, setReferralStats] = useState<any>(null);
+  const [kycStatus, setKycStatus] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  // ── Fetch all data on mount ──
+  useEffect(() => {
+    (async () => {
+      setLoading(true);
+      try {
+        const [userData, balData, txData, refData, kycData] = await Promise.all([
+          apiRequest('/users/me').catch(() => null),
+          apiRequest('/wallet/balance').catch(() => null),
+          apiRequest('/users/transactions/history').catch(() => null),
+          apiRequest('/users/referrals/stats').catch(() => null),
+          apiRequest('/kyc/status').catch(() => null),
+        ]);
+        if (userData) setProfileData(userData);
+        if (balData) setWalletBal(balData);
+        if (txData) setTransactions(Array.isArray(txData) ? txData : txData?.data || []);
+        if (refData) setReferralStats(refData);
+        if (kycData) setKycStatus(kycData);
+      } catch (err) {
+        showToast('Failed to load profile data');
+      }
+      setLoading(false);
+    })();
+  }, []);
+
+  const parseUser = (d: any) => {
+    if (!d) return null;
+    return {
+      id: d.id || d.sub || '',
+      email: d.email || '',
+      firstName: d.firstName || d.first_name || '',
+      lastName: d.lastName || d.last_name || '',
+      username: d.username || '',
+      avatarUrl: d.avatarUrl || d.avatar_url || null,
+      role: d.role || 'WORKER',
+      referralCode: d.referralCode || d.referral_code || '',
+      isEmailVerified: d.isEmailVerified ?? d.is_email_verified ?? false,
+      createdAt: d.createdAt || d.created_at || '',
+      wallets: d.wallets || [],
+      workerProfile: d.workerProfile || d.worker_profile || null,
+      kyc: d.kyc || null,
+      _count: d._count || { tasksCreated: 0, taskSubmissions: 0 },
+    };
+  };
+
+  const user = parseUser(profileData);
+
+  // Computed wallet info
+  const wallets = user?.wallets || [];
+  const cryptoWallet = wallets.find((w: any) => w.currency !== 'NGN');
+  const walletAddress = cryptoWallet?.walletAddress || '';
+  const shortAddr = walletAddress ? walletAddress.slice(0, 6) + '...' + walletAddress.slice(-4) : '';
+  const hasWallet = !!walletAddress;
+
+  const ngnBal = walletBal?.NGN?.balance ?? 0;
+  const usdcBal = walletBal?.USDC?.balance ?? 0;
+  const solBal = walletBal?.SOL?.balance ?? 0;
+  const totalNgn = walletBal?.NGN?.available ?? ngnBal;
+
+  const formatNgn = (n: number) => 'NGN ' + Number(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  // Earnings from transactions
+  const earningsTotal = transactions
+    .filter((t: any) => Number(t.amount || 0) > 0)
+    .reduce((sum: number, t: any) => sum + Number(t.amount || 0), 0);
+
+  const withdrawals = transactions.filter((t: any) => (t.type || '').toLowerCase().includes('withdraw'));
+  const swaps: any[] = [];  // No swap endpoint yet
+
+  // Referral link
+  const refCode = user?.referralCode || referralStats?.referralCode || '';
+  const refUrl = refCode ? `https://ogapay.vercel.app/ref/${refCode}` : '';
+
+  // KYC status
+  const isKycVerified = kycStatus?.status === 'APPROVED' || profileData?.kyc?.status === 'APPROVED';
+
+  // Bank account save
+  const saveBank = () => {
+    if (!accountNumber || !bankName || !accountName) {
+      setBankMsg('Please fill all fields');
+      return;
+    }
+    setSavingBank(true);
+    localStorage.setItem('ogapay_bank_account', accountNumber);
+    localStorage.setItem('ogapay_bank_name', bankName);
+    localStorage.setItem('ogapay_account_name', accountName);
+    setTimeout(() => {
+      setEditingBank(false);
+      setBankMsg('');
+      setSavingBank(false);
+      showToast('Bank account saved');
+    }, 300);
+  };
+
+  // Chart data
+  const chartData = earnPeriod === '7d' ? CHART_7 : CHART_30;
 
   const tabs = [
     { id: "profile", label: "Profile", icon: "user" },
@@ -320,14 +394,32 @@ export default function Profile() {
     { id: "portal", label: "Worker Portal", icon: "layout-dashboard" },
   ];
 
-  if (subPage === "blog") {
-    navigate('/blog');
-  }
+  // Navigate for subpages
+  if (subPage === "blog") { navigate('/blog'); return null; }
+  if (subPage === "jobs" || subPage === "monitor") { navigate('/tasks'); return null; }
+  if (subPage === "vault") { navigate('/vault'); return null; }
+  if (subPage === "create") { navigate('/create'); return null; }
+  if (subPage === "bookmarks") { navigate('/bookmarks'); return null; }
+  if (subPage === "portal") { setTab("portal"); setSubPage(null); }
 
-  if (subPage === "jobs") return <Layout><div className="pg">{subPage === "jobs" && <MyJobsTab />}</div></Layout>;
-  if (subPage === "vault") { window.location.href = '/vault'; return null; }
-  if (subPage === "create") { window.location.href = '/create'; return null; }
-  if (subPage === "bookmarks") return <Layout><div className="pg"><div className="page-head-sm"><Icon n="bookmark" s={20} /><h2>Bookmarks</h2></div><div className="card card-sm" style={{textAlign:"center", padding:"48px 20px"}}><Icon n="bookmark-off" s={40} c="var(--text3)" /><div style={{fontSize:13,color:"var(--text3)",marginTop:12}}>No bookmarks yet.</div></div></div></Layout>;
+  // Render tab content
+  if (tab === "jobs") return <Layout><div className="pg">{tab === "jobs" && <MyJobsTab />}</div></Layout>;
+  if (tab === "referrals") return <Layout><div className="pg"><ReferralsTab /></div></Layout>;
+  if (tab === "alerts") return <Layout><div className="pg"><AlertsTab /></div></Layout>;
+  if (tab === "portal") {
+    return <Layout>
+      <div className="pg">
+        <div className="page-head-sm"><Icon n="layout-dashboard" s={20} /><h2>Worker Portal</h2></div>
+        <div className="card card-sm" style={{textAlign:'center',padding:'48px 20px'}}>
+          <Icon n="briefcase" s={40} c="var(--text3)" />
+          <div style={{fontSize:14,color:'var(--text2)',marginTop:12}}>Worker portal is available at <a href="/worker-portal" style={{color:'var(--accent)',fontWeight:600,textDecoration:'underline'}}>/worker-portal</a></div>
+          <button className="dash-btn" style={{marginTop:16}} onClick={() => navigate('/worker-portal')}>
+            <Icon n="external-link" s={14} /> Open Worker Portal
+          </button>
+        </div>
+      </div>
+    </Layout>;
+  }
 
   return (
     <Layout>
@@ -338,584 +430,732 @@ export default function Profile() {
         .tab-btn{height:44px;padding:0 16px;border:none;border-bottom:2px solid transparent;background:none;color:var(--text2);font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:7px;transition:color .13s,border-color .13s}
         .tab-btn:hover{color:var(--text)}
         .tab-btn.active{color:var(--text);border-bottom-color:var(--accent)}
-
         .prof-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px}
         @media(max-width:820px){.prof-grid{grid-template-columns:1fr}}
         .prof-full{grid-column:1/-1}
-
         .card{border:1px solid var(--border);border-radius:14px;overflow:hidden;box-shadow:none}
         .card-sm{background:var(--card)}
         .card-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border);font-size:14px;font-weight:800}
         .card-body{padding:16px 18px}
-
         .stat-row{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px dashed var(--border);font-size:13px}
         .stat-row:last-child{border-bottom:none}
         .stat-label{color:var(--text2);font-weight:600;display:flex;align-items:center;gap:5px}
         .stat-val{font-weight:800;color:var(--text)}
-
-        .addr-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px dashed var(--border);font-size:13px}
-        .addr-val{font-family:monospace;font-size:12px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:4px 10px;color:var(--text2)}
-        .action-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}
-        .action-grid .full{grid-column:1/-1}
-
-        .btn-primary{height:36px;padding:0 16px;border-radius:99px;border:none;background:var(--primary);color:var(--bg);font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:opacity .15s}
-        .btn-primary:hover{opacity:.85}
-        .btn-sm{height:34px;padding:0 14px;font-size:12px}
-        .btn-outline{height:34px;padding:0 14px;border-radius:99px;border:1.5px solid var(--border);background:transparent;color:var(--text);font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:border-color .13s,color .13s}
-        .btn-outline:hover{border-color:var(--text)}
-
-        .quick-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-top:4px}
+        .text-red{color:#ef4444!important}
+        .text-green{color:#16a34a!important}
+        .quick-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:24px}
         @media(max-width:700px){.quick-grid{grid-template-columns:repeat(3,1fr)}}
         @media(max-width:480px){.quick-grid{grid-template-columns:repeat(2,1fr)}}
-        .quick-item{display:flex;flex-direction:column;align-items:center;gap:7px;padding:14px 8px;border:1.5px solid var(--border);border-radius:12px;background:var(--card);cursor:pointer;font-size:11px;font-weight:700;color:var(--text2);transition:border-color .13s,color .13s}
-        .quick-item:hover{border-color:var(--text);color:var(--text)}
-
-        .earn-top{display:grid;grid-template-columns:1fr 1fr;gap:20px;padding:16px 18px;border-bottom:1px solid var(--border)}
+        .quick-tile{border:1.5px solid var(--border);border-radius:12px;padding:16px 10px;display:flex;flex-direction:column;align-items:center;gap:8px;font-size:12px;font-weight:700;color:var(--text2);background:var(--card);cursor:pointer;transition:border-color .13s,color .13s;text-decoration:none}
+        .quick-tile:hover{border-color:var(--border2);color:var(--text)}
+        .quick-tile i{font-size:22px}
+        .earn-card{background:var(--card);border:1px solid var(--border);border-radius:14px;margin-bottom:24px;overflow:hidden}
+        .earn-top{display:grid;grid-template-columns:1fr 1fr;gap:20px;padding:18px 20px;border-bottom:1px solid var(--border)}
         @media(max-width:600px){.earn-top{grid-template-columns:1fr}}
-
-        .period-group{display:flex;gap:8px}
-        .period-btn{height:28px;padding:0 12px;border-radius:99px;border:1.5px solid var(--border);font-size:11px;font-weight:700;background:transparent;color:var(--text2);cursor:pointer}
-        .period-btn.active{background:var(--primary);color:var(--bg);border-color:var(--primary)}
-
-        .tb{width:100%;border-collapse:collapse}
-        .tb th{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--text2);padding:10px 14px;text-align:left;border-bottom:1px solid var(--border)}
-        .tb td{padding:11px 14px;font-size:13px;color:var(--text2);border-bottom:1px solid var(--border)}
-        .empty-td{text-align:center;color:var(--text3);padding:28px 14px}
-
-        .ref-box{background:var(--bg2);border:1px solid var(--border);border-radius:9px;padding:10px 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-        .ref-url{font-family:monospace;font-size:12px;color:var(--text2);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-
-        .bar-wrap{height:5px;background:var(--bg2);border-radius:99px;overflow:hidden;margin-bottom:10px}
-        .bar-fill{height:100%;border-radius:99px}
-
+        .earn-chart{padding:16px 20px 20px}
         .page-head-sm{display:flex;align-items:center;gap:8px;margin-bottom:20px}
         .page-head-sm h2{font-size:20px;font-weight:800;margin:0}
-
-        .text-green{color:var(--green,#16a34a)}
-        .text-red{color:#ef4444}
-        .text-muted{color:var(--text2)}
-        .sub-page{max-width:900px;margin:0 auto;padding:20px 0 40px}
-
-        .tg-btn{width:44px;height:24px;border-radius:99px;border:none;cursor:pointer;background:var(--border2);position:relative;flex-shrink:0;transition:background .2s}
-        .tg-knob{position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:var(--card);transition:left .2s;box-shadow:0 1px 2px rgba(0,0,0,.2)}
-        .tg-knob.on{left:23px}
-
-        .pill-btn{height:34px;padding:0 14px;border-radius:99px;border:1.5px solid var(--border);background:transparent;color:var(--text2);font-size:12px;font-weight:700;cursor:pointer;text-transform:capitalize;transition:all .13s}
-        .pill-btn.active{background:var(--primary);color:var(--bg);border-color:var(--primary)}
+        .pill-btn{height:32px;padding:0 14px;border-radius:99px;border:1.5px solid var(--border);background:transparent;color:var(--text2);font-size:12px;font-weight:700;cursor:pointer;transition:all .13s;font-family:inherit;white-space:nowrap}
+        .pill-btn.active{background:var(--text);color:var(--bg);border-color:var(--text)}
         .pill-btn:hover:not(.active){border-color:var(--text)}
-
-        .search-wrap input{width:100%;height:38px;padding:0 14px;border:1.5px solid var(--border);border-radius:9px;background:var(--card);color:var(--text);font-size:13px;outline:none}
-        .search-wrap input::placeholder{color:var(--text3)}
-
-        .donut{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
-        .donut-item{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:var(--text2)}
-        .donut-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-
-        .worker-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px}
-        .worker-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px;cursor:pointer;transition:border-color .15s,transform .15s;display:flex;flex-direction:column;gap:10px}
-        .worker-card:hover{border-color:var(--accent);transform:translateY(-2px)}
-        .worker-row{display:flex;align-items:center;gap:10px}
-        .worker-avatar{width:36px;height:36px;border-radius:50%;background:var(--bg2);border:1px solid var(--border);display:grid;place-items:center;flex-shrink:0}
-        .worker-avatar i{font-size:16px;color:var(--text3)}
-        .worker-name{font-size:14px;font-weight:700;color:var(--text)}
-        .worker-bio{font-size:12px;color:var(--text2);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-        .worker-footer{display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:6px;border-top:1px dashed var(--border)}
-
-        .wp-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
-        @media(max-width:700px){.wp-stats{grid-template-columns:repeat(2,1fr)}}
-        .stat-tile{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center}
-        .stat-tile i{font-size:22px;margin-bottom:6px}
-        .stat-number{font-family:"Outfit",sans-serif;font-size:22px;font-weight:900;color:var(--text)}
-        .stat-label{font-size:11px;color:var(--text3);font-weight:600;margin-top:2px}
-
-        .avatar-circle{width:52px;height:52px;border-radius:50%;background:var(--primary);color:var(--bg);font-size:18px;font-weight:800;display:grid;place-items:center;flex-shrink:0}
-        .wp-page{max-width:800px;margin:0 auto;padding:0 0 40px}
-        .wp-nav-grid{display:grid;grid-template-columns:repeat(5,1fr);border-bottom:1px solid var(--border);margin-bottom:24px}
-        .wp-nav-grid-2{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid var(--border);margin-bottom:24px}
-        .wp-nav-tile{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px 8px;gap:10px;cursor:pointer;border-right:1px solid var(--border);transition:all .15s;min-height:90px}
-        .wp-nav-tile:hover{background:var(--bg2)}
-        .wp-nav-tile:last-child{border-right:none}
-        .wp-nav-tile i{font-size:26px;color:var(--text3);transition:color .15s}
-        .wp-nav-tile:hover i{color:var(--accent)}
-        .wp-nav-tile span{font-size:11px;color:var(--text3);text-align:center;line-height:1.3;font-weight:600}
-        .wp-bread{font-size:12px;color:var(--text3);margin-bottom:12px;display:flex;align-items:center;gap:6px}
-        .wp-bread span{cursor:pointer;color:var(--text2)}
-        .wp-bread span:hover{color:var(--accent)}
-        .wp-bread .current{color:var(--text2);font-weight:600}
-        .wp-hero h1{font-size:22px;font-weight:800;margin:0 0 16px;color:var(--text)}
-        .wp-stats-row{display:flex;gap:20px;margin-bottom:24px;flex-wrap:wrap}
-        .wp-stats-row span{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text3)}
-        .wp-stats-row i{font-size:14px;color:var(--text3)}
-        .wp-profile-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:20px}
-        .wp-profile-top{display:flex;align-items:flex-start;gap:16px}
-        .wp-avatar-box{width:72px;height:72px;border-radius:10px;background:var(--bg2);display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1px solid var(--border)}
-        .wp-avatar-box i{font-size:32px;color:var(--text3)}
-        .wp-profile-info{flex:1;min-width:0}
-        .wp-profile-name{font-size:18px;font-weight:800;color:var(--text);display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
-        .wp-edit-btn{font-size:12px;padding:7px 14px;border-radius:8px;border:1px solid var(--border);background:var(--bg2);color:var(--text2);cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-family:inherit;font-weight:600;white-space:nowrap;transition:all .15s}
-        .wp-edit-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--card)}
-        .wp-bio-box{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px;margin-top:14px}
-        .wp-bio-label{font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.06em;margin-bottom:6px;text-transform:uppercase}
-        .wp-bio-text{font-size:13px;color:var(--text2);line-height:1.5}
-        .wp-stats-list{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden}
-        .wp-stat-row{display:flex;align-items:center;gap:14px;padding:15px 18px;border-bottom:1px solid var(--border);transition:background .15s}
-        .wp-stat-row:last-child{border-bottom:none}
-        .wp-stat-row:hover{background:var(--bg2)}
-        .wp-stat-icon{font-size:20px;width:24px;text-align:center}
-        .wp-stat-count{font-size:16px;font-weight:800;color:var(--text);min-width:30px}
-        .wp-stat-label{font-size:14px;color:var(--text2);font-weight:500}
-        @media(max-width:600px){.wp-nav-grid{grid-template-columns:repeat(3,1fr)}.wp-nav-grid-2{grid-template-columns:repeat(3,1fr)}.wp-profile-top{flex-direction:column;align-items:center;text-align:center}.wp-profile-name{flex-direction:column;align-items:center}.wp-avatar-box{width:64px;height:64px}}
+        .search-wrap{position:relative}
+        .search-wrap input{width:100%;height:40px;padding:0 14px 0 36px;border:1.5px solid var(--border);border-radius:10px;background:var(--card);color:var(--text);font-size:13px;outline:none;transition:border-color .13s}
+        .search-wrap input:focus{border-color:var(--accent)}
+        .tg-btn{width:40px;height:22px;border-radius:99px;border:none;background:var(--border);cursor:pointer;position:relative;flex-shrink:0;transition:background .2s;padding:0}
+        .tg-btn .tg-knob{width:16px;height:16px;border-radius:50%;background:white;position:absolute;top:3px;left:3px;transition:all .2s;box-shadow:0 1px 3px rgba(0,0,0,.15)}
+        .tg-btn .tg-knob.on{left:21px;background:var(--accent)}
+        .tg-btn:has(.on){background:rgba(31,140,255,.2)}
+        .btn-outline{height:34px;padding:0 14px;border-radius:99px;border:1.5px solid var(--border);background:transparent;color:var(--text2);font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all .13s;font-family:inherit}
+        .btn-outline:hover{border-color:var(--text);color:var(--text)}
+        .btn-sm{height:30px;padding:0 12px;font-size:11px}
+        .dash-btn{height:40px;padding:0 18px;border-radius:99px;border:none;background:var(--text);color:var(--bg);font-size:13px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:7px;transition:opacity .13s;font-family:inherit}
+        .dash-btn:hover{opacity:.85}
+        .dash-input{width:100%;height:42px;padding:0 14px;border:1.5px solid var(--border);border-radius:10px;background:var(--card);color:var(--text);font-size:14px;outline:none;transition:border-color .13s;font-family:inherit}
+        .dash-input:focus{border-color:var(--accent)}
+        .sub-page{max-width:860px}
+        .sub-page .card-body .stat-row:first-child{padding-top:0}
+        .sub-page .card-body .stat-row:last-child{border-bottom:none}
+        .form-row-group{display:flex;gap:8px;flex-wrap:wrap}
+        .skeleton{background:var(--bg2);border-radius:8px;animation:pulse 1.5s ease-in-out infinite;min-height:16px}
+        @keyframes pulse{0%{opacity:.6}50%{opacity:.3}100%{opacity:.6}}
+        .onboarding-banner{display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(31,140,255,.08);border:1px solid rgba(31,140,255,.15);border-radius:12px;margin-bottom:12px;font-size:13px}
+        .onboarding-banner .ob-msg{flex:1;color:var(--text)}
+        .onboarding-banner .ob-btn{height:32px;padding:0 14px;border-radius:8px;border:none;background:var(--accent);color:#fff;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:inherit}
+        .onboarding-banner .ob-close{width:28px;height:28px;border:none;background:none;color:var(--text3);cursor:pointer;display:grid;place-items:center;font-size:16px;flex-shrink:0}
       `}</style>
 
-      {/* ─────── Tab Bar ─────── */}
-      <div className="pg">
+      {/* Onboarding banners */}
+      {!loading && !hasWallet && (
+        <div className="onboarding-banner">
+          <i className="ti ti-wallet" style={{color:'var(--accent)',fontSize:20}} />
+          <span className="ob-msg">Connect your wallet to unlock full features</span>
+          <button className="ob-btn" onClick={() => showToast('Wallet connection coming soon')}>Connect Wallet</button>
+          <button className="ob-close" onClick={e => (e.currentTarget.closest('.onboarding-banner')!.style.display='none')}><i className="ti ti-x" /></button>
+        </div>
+      )}
+      {!loading && !accountNumber && (
+        <div className="onboarding-banner">
+          <i className="ti ti-building-bank" style={{color:'#f59e0b',fontSize:20}} />
+          <span className="ob-msg">Add a bank account to withdraw in Naira</span>
+          <button className="ob-btn" onClick={() => setEditingBank(true)}>Add Bank Account</button>
+          <button className="ob-close" onClick={e => (e.currentTarget.closest('.onboarding-banner')!.style.display='none')}><i className="ti ti-x" /></button>
+        </div>
+      )}
+      {!loading && !isKycVerified && (
+        <div className="onboarding-banner">
+          <i className="ti ti-shield-check" style={{color:'#DC2626',fontSize:20}} />
+          <span className="ob-msg">Complete identity verification to withdraw</span>
+          <button className="ob-btn" onClick={() => setShowKyc(true)}>Verify Now</button>
+          <button className="ob-close" onClick={e => (e.currentTarget.closest('.onboarding-banner')!.style.display='none')}><i className="ti ti-x" /></button>
+        </div>
+      )}
+
+      {/* Tab Bar */}
       <div className="tab-bar">
         {tabs.map(t => (
-          <button key={t.id} className={`tab-btn ${tab===t.id?"active":""}`} onClick={() => setTab(t.id)}>
-            <Icon n={t.icon} s={15} c={tab===t.id?"var(--text)":"var(--text2)"} /> {t.label}
-            {t.id==="alerts" && <span style={{width:7,height:7,borderRadius:"50%",background:"var(--accent)",display:"inline-block"}} />}
+          <button key={t.id} className={`tab-btn ${tab === t.id ? 'active' : ''}`} onClick={() => setTab(t.id)}>
+            <i className={`ti ti-${t.icon}`} />
+            {t.label}
           </button>
         ))}
       </div>
 
-      {/* ════════════ PROFILE TAB ════════════ */}
-      {tab==="profile" && (
-        <div className="prof-grid">
-          {/* ─── LEFT: Account Information ─── */}
-          <div className="card card-sm">
-            <div className="card-head"><span><Icon n="wallet" s={16} /> Account Information</span></div>
-            <div className="card-body">
-              <div className="addr-row">
-                <span style={{fontWeight:600,color:"var(--text2)"}}>Wallet Address</span>
-                <span className="addr-val">F48NUF...jemX <CopyBtn text="F48NUF...jemX" /></span>
+      {/* Tab: Earnings */}
+      {tab === "earnings" && (
+        <div>
+          <div className="earn-card">
+            <div className="earn-top">
+              <div>
+                <div style={{fontSize:12,fontWeight:600,color:'var(--text3)',marginBottom:4}}>TOTAL EARNED</div>
+                <div style={{fontFamily:'Outfit',fontSize:32,fontWeight:900,color:'var(--text)'}}>
+                  {loading ? <span className="skeleton" style={{width:120,display:'inline-block'}} /> : formatNgn(earningsTotal)}
+                </div>
+                <div style={{fontSize:12,color:'var(--text2)',marginTop:2}}>
+                  ≈ ${Number(usdcBal || 0).toFixed(2)} USDC
+                </div>
               </div>
-              <div className="addr-row">
-                <span style={{fontWeight:600,color:"var(--text2)"}}>Show all balances</span>
-                <Toggle on={showBal} set={setShowBal} />
+              <div style={{textAlign:'right'}}>
+                <div className="form-row-group" style={{justifyContent:'flex-end',marginBottom:12}}>
+                  {['7d','30d'].map(p => (
+                    <button key={p} className={`pill-btn ${earnPeriod===p?'active':''}`} onClick={() => setEarnPeriod(p)}>{p}</button>
+                  ))}
+                </div>
+                <div style={{display:'flex',gap:16,justifyContent:'flex-end',flexWrap:'wrap'}}>
+                  {DONUT_CATS.map(c => (
+                    <div key={c.name} style={{display:'flex',alignItems:'center',gap:6,fontSize:12,color:'var(--text2)'}}>
+                      <span style={{width:8,height:8,borderRadius:'50%',background:c.color,display:'inline-block'}} />
+                      {c.name}
+                    </div>
+                  ))}
+                </div>
               </div>
-              <div style={{padding:"12px 0",borderBottom:"1px dashed var(--border)"}}>
-                <div style={{fontSize:11,fontWeight:700,color:"var(--text3)",textTransform:"uppercase",letterSpacing:".06em",marginBottom:4}}>OGA Balance</div>
-                <div style={{fontSize:16,fontWeight:800}}>50 <span style={{color:"var(--accent)"}}>$OGA</span></div>
-                <div style={{fontSize:12,color:"var(--text2)",marginTop:2}}>≈ $0.00 USD</div>
-              </div>
-              <div className="action-grid">
-                <button className="btn-primary">Withdraw</button>
-                <button className="btn-primary">Deposit</button>
-                <button className="btn-primary full">Swap</button>
-                <button className="btn-outline full">Pair Device</button>
-                <button className="btn-outline full">Link extra wallet</button>
-              </div>
-              <div style={{padding:"12px 0 4px",borderTop:"1px solid var(--border)",display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:12}}>
-                <div>
-                  <div style={{fontSize:12,fontWeight:800}}>Auto Swap</div>
-                  <div style={{fontSize:11,color:"var(--text2)",lineHeight:1.4,marginTop:2}}>Auto-swap rewards to your preferred token. Min swap: 5 $OGA</div>
-                  <div style={{display:"flex",gap:5,marginTop:6}}>
-                    {["SOL","USDC","NGN"].map(t => (
-                      <span key={t} className="chip" style={{display:"inline-flex",alignItems:"center",gap:4,border:"1.5px solid var(--border)",borderRadius:99,padding:"2px 9px",fontSize:11,fontWeight:700}}>{t}</span>
-                    ))}
+            </div>
+            <div className="earn-chart">
+              <div style={{height:180,width:'100%'}}>
+                {loading ? (
+                  <div className="loading"><span className="spinner" /></div>
+                ) : earningsTotal === 0 ? (
+                  <div style={{display:'flex',alignItems:'center',justifyContent:'center',height:'100%',color:'var(--text3)',fontSize:13,gap:8}}>
+                    <i className="ti ti-chart-bar-off" /> No earnings data yet
                   </div>
-                </div>
-                <Toggle on={swBal} set={setSwBal} />
+                ) : (
+                  <ResponsiveContainer width="100%" height={180}>
+                    <LineChart data={chartData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                      <XAxis dataKey="day" tick={{fontSize:11,fill:'var(--text3)'}} axisLine={{stroke:'var(--border)'}} tickLine={false} />
+                      <YAxis tick={{fontSize:11,fill:'var(--text3)'}} axisLine={false} tickLine={false} />
+                      <Tooltip contentStyle={{background:'var(--card)',border:'1px solid var(--border)',borderRadius:8,fontSize:12}} />
+                      <Line type="monotone" dataKey="val" stroke="#1F8CFF" strokeWidth={2} dot={{fill:'#1F8CFF',r:3}} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                )}
               </div>
-              <div style={{marginTop:8}}><a href="/wallet" style={{fontSize:12,color:"var(--accent)",fontWeight:600}}>View my withdrawals</a></div>
+            </div>
+          </div>
+        </div>
+      )}
 
-              {/* ─── Bank Account Details ─── */}
-              <div style={{padding:"12px 0 4px",borderTop:"1px solid var(--border)",marginTop:12}}>
-                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:8}}>
-                  <div style={{fontSize:12,fontWeight:800}}>Bank Account (NGN)</div>
-                  <button className="btn-sm" style={{fontSize:11,fontWeight:700,color:"var(--accent)",border:"none",background:"none",cursor:"pointer"}}
-                    onClick={() => setEditingBank(v => !v)}>
-                    <Icon n={editingBank ? "x" : "edit"} s={13} /> {editingBank ? "Cancel" : "Edit"}
-                  </button>
+      {/* Tab: Profile (default) */}
+      {tab === "profile" && (
+        <>
+          {/* 2-column grid */}
+          <div className="prof-grid">
+            {/* LEFT: Account Information */}
+            <div className="card">
+              <div className="card-head">
+                <span><Icon n="wallet" s={15} /> Account Information</span>
+                {loading ? <span className="skeleton" style={{width:60,height:14}} /> : null}
+              </div>
+              <div className="card-body">
+                {/* Wallet address row */}
+                <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'10px 0',borderBottom:'1px dashed var(--border)',fontSize:13}}>
+                  <span style={{color:'var(--text2)',fontWeight:600}}>Wallet Address</span>
+                  {loading ? (
+                    <span className="skeleton" style={{width:120,height:14}} />
+                  ) : hasWallet ? (
+                    <div style={{display:'flex',alignItems:'center',gap:6}}>
+                      <span style={{fontFamily:'monospace',fontSize:12,background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:6,padding:'4px 10px'}}>{shortAddr}</span>
+                      <CopyBtn text={walletAddress} />
+                    </div>
+                  ) : (
+                    <span style={{color:'var(--text3)',fontSize:12}}>Not connected</span>
+                  )}
                 </div>
-                {editingBank ? (
-                  <div>
-                    <input className="dash-input" value={accountName} onChange={e => setAccountName(e.target.value)} placeholder="Account holder name" style={{marginBottom:6}} />
-                    <input className="dash-input" value={bankName} onChange={e => setBankName(e.target.value)} placeholder="Bank name" style={{marginBottom:6}} />
-                    <input className="dash-input" value={accountNumber} onChange={e => setAccountNumber(e.target.value)} placeholder="Account number" style={{marginBottom:8}} />
-                    <div style={{display:"flex",gap:8}}>
-                      <button className="dash-btn" style={{height:34,fontSize:12}}
-                        onClick={async () => {
-                          setSavingBank(true); setBankMsg("");
+
+                {/* Show all balances toggle */}
+                <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'10px 0',borderBottom:'1px dashed var(--border)',fontSize:13}}>
+                  <span style={{color:'var(--text2)',fontWeight:600}}>
+                    Show all balances
+                    {!hasWallet && <span style={{marginLeft:6,fontSize:11,color:'var(--text3)',fontWeight:400}}>(connect wallet)</span>}
+                  </span>
+                  <Toggle on={showBal} set={setShowBal} />
+                </div>
+
+                {showBal && (
+                  <>
+                    {/* OGA Balance */}
+                    <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'10px 0',borderBottom:'1px dashed var(--border)',fontSize:16}}>
+                      <span style={{fontWeight:800}}>
+                        {loading ? <span className="skeleton" style={{width:80,height:16}} /> : <>
+                          {Number(totalNgn).toLocaleString()} <span style={{color:'#2563eb'}}>$OGA</span>
+                        </>}
+                      </span>
+                      {!loading && <span style={{fontSize:12,color:'var(--text2)'}}>≈ {formatNgn(ngnBal)}</span>}
+                    </div>
+
+                    {/* Quick actions */}
+                    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,margin:'14px 0'}}>
+                      <button className="dash-btn" style={{width:'100%',justifyContent:'center'}}><Icon n="logout" s={14} c="var(--bg)" /> Withdraw</button>
+                      <button className="dash-btn" style={{width:'100%',justifyContent:'center'}}><Icon n="plus" s={14} c="var(--bg)" /> Deposit</button>
+                    </div>
+
+                    {hasWallet && (
+                      <button className="dash-btn" style={{width:'100%',justifyContent:'center',marginBottom:10,background:'transparent',border:'1.5px solid var(--border)',color:'var(--text)'}}>
+                        <Icon n="transfer" s={14} /> Swap
+                      </button>
+                    )}
+
+                    {!hasWallet && (
+                      <button className="dash-btn" style={{width:'100%',justifyContent:'center',marginBottom:10,background:'var(--accent)'}}>
+                        <Icon n="wallet" s={14} c="#fff" /> Connect Wallet
+                      </button>
+                    )}
+
+                    {hasWallet && (
+                      <>
+                        <button className="dash-btn" style={{width:'100%',justifyContent:'center',marginBottom:10,background:'transparent',border:'1.5px solid var(--border)',color:'var(--text)'}}>
+                          <Icon n="device-mobile" s={14} /> Pair Device
+                        </button>
+                        <button className="dash-btn" style={{width:'100%',justifyContent:'center',marginBottom:10,background:'transparent',border:'1.5px solid var(--border)',color:'var(--text)'}}>
+                          <Icon n="link" s={14} /> Link Extra Wallet
+                        </button>
+
+                        {/* Auto Swap */}
+                        <div style={{padding:'13px 0 8px',borderTop:'1px solid var(--border)',display:'flex',alignItems:'flex-start',justifyContent:'space-between',gap:12}}>
+                          <div>
+                            <div style={{fontSize:13,fontWeight:800}}>Auto Swap</div>
+                            <div style={{fontSize:12,color:'var(--text2)',lineHeight:1.45}}>Auto-convert earnings to preferred token</div>
+                            <div style={{display:'inline-flex',alignItems:'center',gap:5,border:'1.5px solid var(--border)',borderRadius:99,padding:'3px 10px',fontSize:12,fontWeight:700,marginTop:8}}>
+                              <span>SOL</span><span style={{color:'var(--text3)'}}>·</span><span>USDC</span><span style={{color:'var(--text3)'}}>·</span><span>NGN</span>
+                            </div>
+                          </div>
+                          <Toggle on={swBal} set={setSwBal} />
+                        </div>
+                        <div style={{fontSize:11,color:'var(--text3)',marginTop:8}}>
+                          Min swap: 0.01 SOL — <a href="#" style={{color:'var(--accent)',textDecoration:'none'}} onClick={e => {e.preventDefault(); setSubPage('withdrawals')}}>View my withdrawals</a>
+                        </div>
+                      </>
+                    )}
+                  </>
+                )}
+
+                {/* Bank Account Section */}
+                <div style={{padding:'13px 0 0',borderTop:'1px solid var(--border)',marginTop:13}}>
+                  <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:10}}>
+                    <div style={{fontSize:13,fontWeight:800}}>Bank Account (NGN)</div>
+                    {accountNumber && !editingBank && (
+                      <button className="btn-outline btn-sm" onClick={() => setEditingBank(true)}>
+                        <Icon n="edit" s={12} /> Edit
+                      </button>
+                    )}
+                  </div>
+                  {editingBank ? (
+                    <div>
+                      <div style={{marginBottom:10}}>
+                        <label style={{fontSize:11,fontWeight:700,color:'var(--text2)',display:'block',marginBottom:4}}>Account Number</label>
+                        <input className="dash-input" value={accountNumber} onChange={e => setAccountNumber(e.target.value.replace(/\D/g,''))} placeholder="0123456789" />
+                      </div>
+                      <div style={{marginBottom:10}}>
+                        <label style={{fontSize:11,fontWeight:700,color:'var(--text2)',display:'block',marginBottom:4}}>Bank Name</label>
+                        <input className="dash-input" value={bankName} onChange={e => setBankName(e.target.value)} placeholder="Access Bank" />
+                      </div>
+                      <div style={{marginBottom:10}}>
+                        <label style={{fontSize:11,fontWeight:700,color:'var(--text2)',display:'block',marginBottom:4}}>Account Name</label>
+                        <input className="dash-input" value={accountName} onChange={e => setAccountName(e.target.value)} placeholder="John Doe" />
+                      </div>
+                      {bankMsg && <div style={{fontSize:12,color:'#DC2626',marginBottom:8}}>{bankMsg}</div>}
+                      <button className="dash-btn" onClick={saveBank} disabled={savingBank} style={{opacity:savingBank?0.6:1}}>
+                        {savingBank ? 'Saving...' : 'Save Bank Account'}
+                      </button>
+                    </div>
+                  ) : accountNumber ? (
+                    <div>
+                      <div className="stat-row" style={{borderBottom:'none',padding:'6px 0'}}>
+                        <span className="stat-label">Bank</span>
+                        <span className="stat-val">{bankName}</span>
+                      </div>
+                      <div className="stat-row" style={{borderBottom:'none',padding:'6px 0'}}>
+                        <span className="stat-label">Account Name</span>
+                        <span className="stat-val">{accountName}</span>
+                      </div>
+                      <div className="stat-row" style={{borderBottom:'none',padding:'6px 0'}}>
+                        <span className="stat-label">Account Number</span>
+                        <span className="stat-val" style={{fontFamily:'monospace',fontSize:14}}>{accountNumber}</span>
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={{fontSize:12,color:'var(--text3)'}}>No bank account linked. 
+                      <button style={{border:'none',background:'none',color:'var(--accent)',fontWeight:700,cursor:'pointer',fontSize:12,fontFamily:'inherit'}} onClick={() => setEditingBank(true)}>Add one now</button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* RIGHT: Profile Card */}
+            <div className="card">
+              <div className="card-head">
+                <span><Icon n="user" s={15} /> Profile</span>
+                <button className="btn-outline btn-sm" onClick={() => {
+                  setEditForm({
+                    firstName: user?.firstName || '',
+                    lastName: user?.lastName || '',
+                    username: user?.username || '',
+                    bio: profileData?.workerProfile?.bio || '',
+                    avatarUrl: user?.avatarUrl || '',
+                  });
+                  setEditErrors({});
+                  setUsernameCheck('idle');
+                  setShowEdit(true);
+                }}>
+                  <Icon n="edit" s={12} /> Edit
+                </button>
+              </div>
+              <div className="card-body">
+                {/* User info */}
+                <div style={{display:'flex',alignItems:'center',gap:14,paddingBottom:14,borderBottom:'1px solid var(--border)',marginBottom:14}}>
+                  {loading ? (
+                    <>
+                      <span className="skeleton" style={{width:52,height:52,borderRadius:'50%',display:'inline-block'}} />
+                      <div><span className="skeleton" style={{width:120,height:16,display:'block',marginBottom:6}} /><span className="skeleton" style={{width:80,height:12,display:'block'}} /></div>
+                    </>
+                  ) : (
+                    <>
+                      <div style={{width:52,height:52,borderRadius:'50%',background:'var(--text)',color:'var(--bg)',fontSize:18,fontWeight:800,display:'grid',placeItems:'center',flexShrink:0}}>
+                        {user?.avatarUrl ? <img src={user.avatarUrl} alt="" style={{width:52,height:52,borderRadius:'50%',objectFit:'cover'}} /> : (user?.firstName?.[0] || 'U') + (user?.lastName?.[0] || '')}
+                      </div>
+                      <div>
+                        <div style={{fontSize:17,fontWeight:800}}>{user?.firstName || 'User'} {user?.lastName || ''}</div>
+                        <div style={{fontSize:13,color:'var(--text2)'}}>@{user?.username || 'user'}</div>
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                {/* Bio */}
+                {!loading && (profileData?.workerProfile?.bio || profileData?.bio) && (
+                  <div style={{fontSize:13,lineHeight:1.5,marginBottom:14}}>
+                    {profileData.workerProfile?.bio || profileData.bio}
+                  </div>
+                )}
+
+                {/* Followers */}
+                <div style={{display:'flex',gap:20,fontSize:13,fontWeight:700,paddingBottom:14,borderBottom:'1px solid var(--border)',marginBottom:14}}>
+                  <span>{profileData?._count?.taskSubmissions || 0} <span style={{fontWeight:400,color:'var(--text2)'}}>Submissions</span></span>
+                  <span>{profileData?._count?.tasksCreated || 0} <span style={{fontWeight:400,color:'var(--text2)'}}>Tasks Created</span></span>
+                </div>
+
+                {/* Stats */}
+                {loading ? (
+                  <div><span className="skeleton" style={{width:'100%',height:14,display:'block',marginBottom:8}} /><span className="skeleton" style={{width:'80%',height:14,display:'block',marginBottom:8}} /><span className="skeleton" style={{width:'60%',height:14,display:'block'}} /></div>
+                ) : (
+                  <>
+                    <StatRow label="Rank" val={profileData?.workerProfile?.level || 'Beginner'} />
+                    <StatRow label="Sorsa Score" val={profileData?.workerProfile?.reputationScore?.toFixed(1) || '0.0'} info />
+                    <StatRow label="Tasks Completed" val={profileData?.workerProfile?.tasksCompleted ?? 0} />
+                    <StatRow label="Success Rate" val={profileData?.workerProfile?.successRate ? profileData.workerProfile.successRate + '%' : '0%'} />
+                    <StatRow label="Total Earned" val={profileData?.workerProfile?.totalEarned ? formatNgn(Number(profileData.workerProfile.totalEarned)) : formatNgn(0)} />
+                    <StatRow label="Avg Rating" val={profileData?.workerProfile?.avgRating?.toFixed(1) || '0.0'} info />
+                    <StatRow label="Verified X Account" val={profileData?.x_connected ? 'Yes' : 'No'} valClass={profileData?.x_connected ? 'yes' : 'no'} />
+                    {!profileData?.x_connected && (
+                      <button className="dash-btn" style={{width:'100%',justifyContent:'center',marginTop:10,background:'transparent',border:'1.5px solid var(--border)',color:'var(--text)'}}>
+                        <XIcon size={14} /> Connect X Account
+                      </button>
+                    )}
+                    <StatRow label="Seeker User" val={profileData?.role === 'POSTER' ? 'Yes' : 'No'} valClass={profileData?.role === 'POSTER' ? 'yes' : 'no'} />
+                    <StatRow label="Human Verified" val={isKycVerified ? 'Yes' : 'No'} valClass={isKycVerified ? 'yes' : 'no'} />
+                    {!isKycVerified && (
+                      <button className="dash-btn" style={{width:'100%',justifyContent:'center',marginTop:8}} onClick={() => setShowKyc(true)}>
+                        <Icon n="shield-check" s={14} c="var(--bg)" /> Verify Identity (KYC)
+                      </button>
+                    )}
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Referral Link - full width */}
+          <div className="card prof-full" style={{marginBottom:20}}>
+            <div className="card-head"><span><Icon n="affiliate" s={15} /> Your Referral Link</span></div>
+            <div className="card-body">
+              {loading ? (
+                <span className="skeleton" style={{width:'60%',height:14,display:'inline-block'}} />
+              ) : refUrl ? (
+                <>
+                  <div style={{background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:9,padding:'10px 14px',display:'flex',alignItems:'center',gap:10}}>
+                    <span style={{fontFamily:'monospace',fontSize:12,flex:1,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{refUrl}</span>
+                    <CopyBtn text={refUrl} />
+                  </div>
+                  <div style={{display:'flex',gap:8,marginTop:10}}>
+                    <button className="dash-btn" style={{background:'transparent',border:'1.5px solid var(--border)',color:'var(--text)'}}>
+                      <XIcon size={14} /> Post on X
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <div style={{fontSize:12,color:'var(--text3)'}}>Generate your referral link by completing your profile.</div>
+              )}
+            </div>
+          </div>
+
+          {/* Quick Links */}
+          <div className="quick-grid" style={{marginBottom:24}}>
+            {QUICK.map((q,i) => (
+              <a className="quick-tile" key={i} onClick={() => {
+                if (q.page === 'blog') navigate('/blog');
+                else if (q.page === 'vault') navigate('/vault');
+                else if (q.page === 'create') navigate('/create');
+                else if (q.page === 'tasks') navigate('/tasks');
+                else if (q.page === 'monitor') navigate('/tasks');
+                else if (q.page === 'bookmarks') navigate('/bookmarks');
+                else setSubPage(q.page);
+              }}>
+                <Icon n={q.icon} s={22} c="var(--text2)" />
+                {q.label}
+              </a>
+            ))}
+          </div>
+
+          {/* Withdrawal History */}
+          <div className="card prof-full" style={{marginBottom:20}}>
+            <div className="card-head"><span><Icon n="history" s={15} /> Withdrawal History</span></div>
+            <div style={{overflowX:'auto'}}>
+              {loading ? (
+                <div className="loading"><span className="spinner" /> Loading...</div>
+              ) : withdrawals.length === 0 ? (
+                <div style={{textAlign:'center',color:'var(--text3)',padding:'28px 16px',fontSize:13}}>
+                  <Icon n="history-off" s={28} c="var(--text3)" />
+                  <div style={{marginTop:8}}>No withdrawals yet</div>
+                </div>
+              ) : (
+                <table style={{width:'100%',borderCollapse:'collapse'}}>
+                  <thead>
+                    <tr>
+                      <th style={{fontSize:11,fontWeight:800,textTransform:'uppercase',letterSpacing:'.06em',color:'var(--text2)',padding:'12px 16px',borderBottom:'1px solid var(--border)',textAlign:'left'}}>Amount</th>
+                      <th style={{fontSize:11,fontWeight:800,textTransform:'uppercase',letterSpacing:'.06em',color:'var(--text2)',padding:'12px 16px',borderBottom:'1px solid var(--border)',textAlign:'left'}}>Transaction</th>
+                      <th style={{fontSize:11,fontWeight:800,textTransform:'uppercase',letterSpacing:'.06em',color:'var(--text2)',padding:'12px 16px',borderBottom:'1px solid var(--border)',textAlign:'left'}}>Date</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {withdrawals.map((w: any,i: number) => (
+                      <tr key={w.id || i}>
+                        <td style={{padding:'13px 16px',fontSize:13,color:'var(--text2)',borderBottom:'1px solid var(--border)',fontWeight:700}}>
+                          {w.currency || 'NGN'} {Math.abs(Number(w.amount || 0)).toLocaleString()}
+                        </td>
+                        <td style={{padding:'13px 16px',fontSize:13,color:'var(--text2)',borderBottom:'1px solid var(--border)',fontFamily:'monospace',fontSize:12}}>{w.reference || w.id || '—'}</td>
+                        <td style={{padding:'13px 16px',fontSize:13,color:'var(--text2)',borderBottom:'1px solid var(--border)'}}>{formatTimeAgo(w.createdAt || w.date)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </div>
+
+          {/* Swap History */}
+          <div className="card prof-full" style={{marginBottom:20}}>
+            <div className="card-head"><span><Icon n="transfer" s={15} /> Swap History</span></div>
+            <div style={{overflowX:'auto'}}>
+              <div style={{textAlign:'center',color:'var(--text3)',padding:'28px 16px',fontSize:13}}>
+                <Icon n="transfer" s={28} c="var(--text3)" />
+                <div style={{marginTop:8}}>No swaps yet</div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Edit Profile Modal */}
+      {showEdit && (
+        <div style={{position:'fixed',inset:0,zIndex:400,background:'rgba(0,0,0,.5)',display:'flex',alignItems:'center',justifyContent:'center',padding:20}} onClick={() => setShowEdit(false)}>
+          <div style={{background:'var(--card)',border:'1px solid var(--border)',borderRadius:16,maxWidth:520,width:'100%',padding:28,maxHeight:'90vh',overflowY:'auto'}} onClick={e => e.stopPropagation()}>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:24}}>
+              <h3 style={{fontFamily:'Outfit',fontSize:20,fontWeight:800,margin:0}}><i className="ti ti-user-edit" style={{color:'var(--accent)',marginRight:8}} />Edit Profile</h3>
+              <button style={{width:32,height:32,border:'1px solid var(--border)',borderRadius:8,background:'var(--bg2)',cursor:'pointer',display:'grid',placeItems:'center',color:'var(--text3)',fontSize:18}} onClick={() => setShowEdit(false)}>
+                <i className="ti ti-x" />
+              </button>
+            </div>
+
+            {/* Avatar */}
+            <div style={{display:'flex',alignItems:'center',gap:16,marginBottom:24}}>
+              <div style={{width:72,height:72,borderRadius:'50%',background:'var(--bg2)',border:'2px solid var(--border)',overflow:'hidden',flexShrink:0,display:'grid',placeItems:'center'}}>
+                {editForm.avatarUrl ? (
+                  <img src={editForm.avatarUrl} alt="" style={{width:'100%',height:'100%',objectFit:'cover'}} />
+                ) : (
+                  <span style={{fontSize:24,fontWeight:800,color:'var(--text3)'}}>{(editForm.firstName?.[0] || 'U') + (editForm.lastName?.[0] || '')}</span>
+                )}
+              </div>
+              <div>
+                <div style={{fontSize:13,fontWeight:700,marginBottom:4}}>Profile Photo</div>
+                <label style={{display:'inline-flex',alignItems:'center',gap:6,height:34,padding:'0 14px',borderRadius:8,border:'1.5px solid var(--border)',background:'var(--bg2)',cursor:'pointer',fontSize:12,fontWeight:600,color:'var(--text2)',fontFamily:'inherit'}}>
+                  <i className="ti ti-camera" /> Change Photo
+                  <input type="text" style={{display:'none'}} placeholder="Paste image URL" 
+                    onBlur={e => setEditForm(f => ({...f, avatarUrl: e.target.value}))} />
+                </label>
+                <div style={{fontSize:11,color:'var(--text3)',marginTop:4}}>Paste an image URL or leave blank for initials</div>
+                <input type="text" placeholder="https://example.com/photo.jpg" style={{width:'100%',marginTop:8,padding:'6px 10px',border:'1px solid var(--border)',borderRadius:6,fontSize:12,background:'var(--bg2)',color:'var(--text)',outline:'none'}}
+                  value={editForm.avatarUrl} onChange={e => setEditForm(f => ({...f, avatarUrl: e.target.value}))} />
+              </div>
+            </div>
+
+            {/* First & Last Name */}
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:16}}>
+              <div>
+                <label style={{display:'block',fontSize:11,fontWeight:700,color:'var(--text3)',marginBottom:4,textTransform:'uppercase',letterSpacing:'.04em'}}>First Name</label>
+                <input className="dash-input" value={editForm.firstName} onChange={e => setEditForm(f => ({...f, firstName: e.target.value}))} placeholder="John" />
+              </div>
+              <div>
+                <label style={{display:'block',fontSize:11,fontWeight:700,color:'var(--text3)',marginBottom:4,textTransform:'uppercase',letterSpacing:'.04em'}}>Last Name</label>
+                <input className="dash-input" value={editForm.lastName} onChange={e => setEditForm(f => ({...f, lastName: e.target.value}))} placeholder="Doe" />
+              </div>
+            </div>
+
+            {/* Username */}
+            <div style={{marginBottom:16}}>
+              <label style={{display:'block',fontSize:11,fontWeight:700,color:'var(--text3)',marginBottom:4,textTransform:'uppercase',letterSpacing:'.04em'}}>Username</label>
+              <div style={{display:'flex',gap:8,alignItems:'center'}}>
+                <div style={{flex:1,position:'relative'}}>
+                  <span style={{position:'absolute',left:12,top:'50%',transform:'translateY(-50%)',fontSize:13,color:'var(--text3)',fontWeight:600}}>@</span>
+                  <input className="dash-input" style={{paddingLeft:28}} value={editForm.username} 
+                    onChange={e => {
+                      const val = e.target.value.replace(/[^a-zA-Z0-9_]/g,'').toLowerCase();
+                      setEditForm(f => ({...f, username: val}));
+                      setEditErrors(e => ({...e, username: ''}));
+                      if (usernameCheckTimer.current) clearTimeout(usernameCheckTimer.current);
+                      if (val && val !== (user?.username || '')) {
+                        setUsernameCheck('checking');
+                        usernameCheckTimer.current = setTimeout(async () => {
                           try {
                             const token = localStorage.getItem('ogapay_access_token');
-                            if (token) {
-                              await fetch('https://ogapay-production.up.railway.app/api/v1/users/me', {
-                                method: 'PATCH',
-                                headers: {'Content-Type':'application/json','Authorization':'Bearer '+token},
-                                body: JSON.stringify({accountNumber, bankName, accountName}),
-                              });
-                            }
-                            setBankMsg("Bank details saved!");
-                            setTimeout(() => { setBankMsg(""); setEditingBank(false); }, 2000);
-                          } catch { setBankMsg("Failed to save"); }
-                          setSavingBank(false);
-                        }}>
-                        <Icon n="check" s={13} /> Save
-                      </button>
-                      {bankMsg && <span style={{fontSize:11,color:"var(--green)",padding:"8px 0"}}>{bankMsg}</span>}
-                    </div>
-                  </div>
-                ) : (
-                  <div>
-                    <div className="addr-row" style={{borderBottom:"none"}}>
-                      <span style={{fontSize:12,color:"var(--text2)"}}>Account Name</span>
-                      <span style={{fontWeight:700,fontSize:13}}>{accountName}</span>
-                    </div>
-                    <div className="addr-row" style={{borderBottom:"none"}}>
-                      <span style={{fontSize:12,color:"var(--text2)"}}>Bank</span>
-                      <span style={{fontWeight:700,fontSize:13}}>{bankName}</span>
-                    </div>
-                    <div className="addr-row" style={{borderBottom:"none"}}>
-                      <span style={{fontSize:12,color:"var(--text2)"}}>Account Number</span>
-                      <span style={{fontWeight:700,fontSize:13,fontFamily:"monospace"}}>{accountNumber}</span>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* ─── RIGHT: Profile Info ─── */}
-          <div className="card card-sm">
-            <div className="card-head"><span><Icon n="user" s={16} /> Profile</span><button className="btn-outline btn-sm" onClick={() => navigate('/edit-profile')}>Edit</button></div>
-            <div className="card-body">
-              <div style={{display:"flex",alignItems:"center",gap:14,paddingBottom:14,borderBottom:"1px solid var(--border)",marginBottom:14}}>
-                <div className="avatar-circle">TJ</div>
-                <div>
-                  <div style={{fontSize:17,fontWeight:800}}>Tom J.</div>
-                  <div style={{fontSize:13,color:"var(--text2)"}}>@tomijimoh</div>
-                </div>
-              </div>
-              <div style={{fontSize:13,lineHeight:1.5,marginBottom:14,color:"var(--text2)"}}>
-                Crypto enthusiast & task earner. Building on Solana.
-              </div>
-              <div style={{display:"flex",gap:20,fontSize:13,fontWeight:700,paddingBottom:14,borderBottom:"1px solid var(--border)",marginBottom:14}}>
-                <span>248 <span style={{fontWeight:400,color:"var(--text2)"}}>Followers</span></span>
-                <span>129 <span style={{fontWeight:400,color:"var(--text2)"}}>Following</span></span>
-              </div>
-              <div>
-                <StatRow label="Rank" val="Level 1" />
-                <StatRow label="Sorsa score" val="0" />
-                <StatRow label="OGA metric" val="0" />
-                <StatRow label="Holdings last vault" val="0 $OGA" />
-                <StatRow label="Verified X account" val="Yes" valClass="yes" />
-                <StatRow label="Seeker user" val="No" valClass="no" />
-                <div className="stat-row" style={{borderBottom:"none"}}>
-                  <span className="stat-label">Human verified</span>
-                  <button className="btn-primary btn-sm" onClick={() => setShowKyc(true)}>Verify Identity (KYC)</button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* ─── FULL WIDTH: Referral Link ─── */}
-          <div className="card card-sm prof-full">
-            <div className="card-head"><span><Icon n="link" s={16} /> Your Referral Link</span></div>
-            <div className="card-body">
-              <div className="ref-box">
-                <span className="ref-url">{refLink}</span>
-                <CopyBtn text={refLink} />
-                <button className="btn-primary btn-sm"><XIcon size={12} /> Post on X</button>
-              </div>
-            </div>
-          </div>
-
-          {/* ─── FULL WIDTH: Quick Links ─── */}
-          <div className="prof-full">
-            <div style={{fontSize:13,fontWeight:700,marginBottom:10,color:"var(--text2)"}}>Quick Links</div>
-            <div className="quick-grid">
-              {QUICK.map(q => (
-                <div key={q.label} className="quick-item" onClick={() => {
-                  if (q.page === "blog") navigate('/blog');
-                  else if (q.page === "vault") navigate('/vault');
-                  else if (q.page === "create") navigate('/create');
-                  else if (q.page === "jobs") navigate('/tasks');
-                  else setSubPage(q.page);
-                }}>
-                  <Icon n={q.icon} s={18} c="var(--text2)" />
-                  <span>{q.label}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* ─── FULL WIDTH: Earnings ─── */}
-          <div className="card card-sm prof-full">
-            <div className="card-head">
-              <span><Icon n="chart-line" s={16} /> Earnings</span>
-              <div className="period-group">
-                <button className={`period-btn ${earnPeriod==="7d"?"active":""}`} onClick={()=>setEarnPeriod("7d")}>7 days</button>
-                <button className={`period-btn ${earnPeriod==="30d"?"active":""}`} onClick={()=>setEarnPeriod("30d")}>30 days</button>
-              </div>
-            </div>
-            <div className="earn-top">
-              <div>
-                <div style={{fontSize:11,fontWeight:700,color:"var(--text3)",textTransform:"uppercase",letterSpacing:".06em"}}>Total Earned</div>
-                <div style={{fontFamily:"Outfit,sans-serif",fontSize:26,fontWeight:900,margin:"4px 0"}}>{totalEarned.toFixed(2)} $OGA</div>
-                <div style={{fontSize:16,fontWeight:800,marginTop:2}}>≈ NGN 0.00</div>
-                <div style={{fontSize:12,color:"var(--text2)"}}>≈ $0.00 USD</div>
-              </div>
-              <div>
-                <div style={{fontSize:11,fontWeight:700,color:"var(--text3)",marginBottom:6}}>Breakdown</div>
-                <div className="donut">
-                  {DONUT_CATS.map(d => (
-                    <div key={d.name} className="donut-item"><span className="donut-dot" style={{background:d.color}} />{d.name}</div>
-                  ))}
-                </div>
-              </div>
-            </div>
-            <div style={{padding:"14px 18px 18px"}}>
-              <div style={{height:160}}>
-                {(totalEarned===0) ? (
-                  <div style={{textAlign:"center",padding:"50px 0",color:"var(--text3)",fontSize:12}}>
-                    <Icon n="chart-bar-off" s={28} c="var(--text3)" /><br />No earnings data yet
-                  </div>
-                ) : (
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={data}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                      <XAxis dataKey="day" tick={{fontSize:10,fill:"var(--text3)"}} axisLine={false} tickLine={false} />
-                      <YAxis tick={{fontSize:10,fill:"var(--text3)"}} axisLine={false} tickLine={false} />
-                      <Tooltip contentStyle={{background:"var(--card)",border:"1px solid var(--border)",borderRadius:8,fontSize:12}} />
-                      <Line type="monotone" dataKey="val" stroke="var(--accent)" strokeWidth={2} dot={false} activeDot={{r:4}} />
-                    </LineChart>
-                  </ResponsiveContainer>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* ─── FULL WIDTH: Withdrawal History ─── */}
-          <div className="card card-sm prof-full">
-            <div className="card-head"><span><Icon n="history" s={16} /> Withdrawal History</span></div>
-            <div style={{overflowX:"auto"}}>
-              <table className="tb"><thead><tr><th>AMOUNT</th><th>TRANSACTION</th><th>DATE</th></tr></thead>
-              <tbody><tr><td colSpan={3} className="empty-td">No withdrawals yet</td></tr></tbody></table>
-            </div>
-          </div>
-
-          {/* ─── FULL WIDTH: Swap History ─── */}
-          <div className="card card-sm prof-full">
-            <div className="card-head"><span><Icon n="arrows-exchange" s={16} /> Swap History</span></div>
-            <div style={{overflowX:"auto"}}>
-              <table className="tb"><thead><tr><th>FROM</th><th>TO</th><th>AMOUNT</th><th>RECEIVED</th><th>DATE</th></tr></thead>
-              <tbody><tr><td colSpan={5} className="empty-td">No swaps yet</td></tr></tbody></table>
-            </div>
-          </div>
-
-          {/* ─── FULL WIDTH: My Blog Posts ─── */}
-          <BlogPostsSection />
-        </div>
-      )}
-
-      {/* ════════════ EARNINGS TAB ════════════ */}
-      {tab==="earnings" && (
-        <div style={{maxWidth:900,margin:"0 auto",padding:"0 0 40px"}}>
-          <div className="page-head-sm"><Icon n="currency-dollar" s={20} /><h2>Earnings</h2></div>
-          <div className="card card-sm">
-            <div className="card-head">
-              <span>Overview</span>
-              <div className="period-group">
-                <button className={`period-btn ${earnPeriod==="7d"?"active":""}`} onClick={()=>setEarnPeriod("7d")}>7 days</button>
-                <button className={`period-btn ${earnPeriod==="30d"?"active":""}`} onClick={()=>setEarnPeriod("30d")}>30 days</button>
-              </div>
-            </div>
-            <div className="earn-top">
-              <div>
-                <div style={{fontSize:11,fontWeight:700,color:"var(--text3)",textTransform:"uppercase",letterSpacing:".06em"}}>Total Earned</div>
-                <div style={{fontFamily:"Outfit,sans-serif",fontSize:28,fontWeight:900,margin:"4px 0"}}>{totalEarned.toFixed(2)} $OGA</div>
-                <div style={{fontSize:12,color:"var(--text2)"}}>≈ $0.00 USD</div>
-              </div>
-              <div>
-                <div style={{fontSize:11,fontWeight:700,color:"var(--text3)",marginBottom:8}}>Earning Sources</div>
-                <div className="donut">
-                  {DONUT_CATS.map(d => (
-                    <div key={d.name} className="donut-item"><span className="donut-dot" style={{background:d.color}} />{d.name}</div>
-                  ))}
-                </div>
-              </div>
-            </div>
-            <div style={{padding:"14px 18px 18px"}}>
-              <div style={{height:200}}>
-                {totalEarned===0 ? (
-                  <div style={{textAlign:"center",padding:"60px 0",color:"var(--text3)",fontSize:12}}>
-                    <Icon n="chart-bar-off" s={32} c="var(--text3)" /><br />No earnings data yet
-                  </div>
-                ) : (
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={data}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                      <XAxis dataKey="day" tick={{fontSize:10,fill:"var(--text3)"}} axisLine={false} tickLine={false} />
-                      <YAxis tick={{fontSize:10,fill:"var(--text3)"}} axisLine={false} tickLine={false} />
-                      <Tooltip contentStyle={{background:"var(--card)",border:"1px solid var(--border)",borderRadius:8,fontSize:12}} />
-                      <Line type="monotone" dataKey="val" stroke="var(--accent)" strokeWidth={2} dot={false} activeDot={{r:4}} />
-                    </LineChart>
-                  </ResponsiveContainer>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ════════════ MY JOBS TAB ════════════ */}
-      {tab==="jobs" && <MyJobsTab />}
-
-      {/* ════════════ REFERRALS TAB ════════════ */}
-      {tab==="referrals" && (
-        <div style={{maxWidth:900,margin:"0 auto",padding:"0 0 40px"}}>
-          <div className="page-head-sm"><Icon n="users" s={20} /><h2>Referrals</h2></div>
-          <div className="card card-sm" style={{marginBottom:20}}>
-            <div style={{padding:"16px 20px",borderBottom:"1px solid var(--border)"}}>
-              <div style={{fontSize:13,fontWeight:700,marginBottom:8}}>Your Referral Link</div>
-              <div className="ref-box">
-                <span className="ref-url">{refLink}</span>
-                <CopyBtn text={refLink} />
-                <button className="btn-primary btn-sm"><XIcon size={12} /> Post on X</button>
-              </div>
-            </div>
-            <table className="tb"><thead><tr><th>USER</th><th>JOINED</th><th>EARNINGS</th><th>STATUS</th></tr></thead>
-            <tbody><tr><td colSpan={4} className="empty-td">No referrals yet. Share your link to start earning!</td></tr></tbody></table>
-          </div>
-        </div>
-      )}
-
-      {/* ════════════ ALERTS TAB ════════════ */}
-      {tab==="alerts" && (
-        <div style={{maxWidth:900,margin:"0 auto",padding:"0 0 40px"}}>
-          <div className="page-head-sm"><Icon n="bell" s={20} /><h2>Alerts</h2></div>
-          <div className="card card-sm">
-            <div className="card-head">
-              <span><Icon n="bell" s={16} /> Notifications</span>
-              <button className="btn-sm" style={{fontSize:12,fontWeight:700,color:"var(--accent)",border:"none",background:"none",cursor:"pointer"}}>Mark all read</button>
-            </div>
-            <div style={{textAlign:"center",padding:"48px 20px"}}>
-              <Icon n="bell-off" s={40} c="var(--text3)" />
-              <div style={{fontSize:13,color:"var(--text3)",marginTop:12}}>No alerts yet. We'll notify you about new jobs, earnings, and updates.</div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ════════════ WORKER PORTAL TAB ════════════ */}
-      {tab==="portal" && (
-        <WorkerPortalContent />
-      )}
-      </div>
-    
-      {/* ─── KYC / BVN Verification Modal ─── */}
-      {showKyc && (
-        <div className="review-overlay" onClick={() => setShowKyc(false)}>
-          <div className="review-modal" onClick={e => e.stopPropagation()} style={{
-            position:'fixed', inset:0, zIndex:1000, display:'grid', placeItems:'center',
-            background:'rgba(0,0,0,0.5)', padding:20, overflowY:'auto',
-          }}>
-            <div style={{
-              background:'var(--card)', borderRadius:16, maxWidth:480, width:'100%',
-              maxHeight:'90vh', overflow:'auto', border:'1px solid var(--border)', padding:'28px 30px',
-            }}>
-              <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:20}}>
-                <h2 style={{fontFamily:'Outfit',fontSize:18,fontWeight:800,margin:0}}>Identity Verification (KYC)</h2>
-                <button onClick={() => setShowKyc(false)} style={{width:32,height:32,borderRadius:8,border:'1px solid var(--border)',background:'var(--card)',cursor:'pointer',display:'grid',placeItems:'center',fontSize:16,color:'var(--text2)'}}><i className="ti ti-x" /></button>
-              </div>
-
-              {kycStep === "idle" && (
-                <div>
-                  <p style={{fontSize:13,color:'var(--text2)',marginBottom:20,lineHeight:1.6}}>
-                    Verify your identity to unlock withdrawals and access all features. 
-                    You can verify using your BVN (Bank Verification Number).
-                  </p>
-                  <div style={{background:'var(--bg2)',borderRadius:10,padding:16,marginBottom:20}}>
-                    <div style={{fontSize:12,fontWeight:700,marginBottom:4}}>Required for:</div>
-                    <div style={{display:'grid',gap:6}}>
-                      {["Withdrawals above NGN 10,000","Task creation (Poster role)","Higher task rewards","Trust & reputation"].map((item,i) => (
-                        <div key={i} style={{display:'flex',alignItems:'center',gap:8,fontSize:12,color:'var(--text2)'}}>
-                          <i className="ti ti-check" style={{color:'#16a34a',fontSize:14}} /> {item}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  <button className="dash-btn" style={{width:'100%',justifyContent:'center'}}
-                    onClick={() => setKycStep("bvn")}>
-                    <Icon n="shield-check" s={16} /> Start Verification
-                  </button>
-                  <p style={{fontSize:11,color:'var(--text3)',textAlign:'center',marginTop:12}}>
-                    Your data is encrypted and securely processed.
-                  </p>
-                </div>
-              )}
-
-              {kycStep === "bvn" && (
-                <div>
-                  <p style={{fontSize:13,color:'var(--text2)',marginBottom:16}}>
-                    Enter your BVN (Bank Verification Number) to verify your identity.
-                  </p>
-                  <div style={{marginBottom:16}}>
-                    <label style={{fontSize:12,fontWeight:700,color:'var(--text2)',display:'block',marginBottom:6}}>BVN</label>
-                    <input className="dash-input" value={bvnNumber} onChange={e => setBvnNumber(e.target.value.replace(/\D/g,'').slice(0,11))}
-                      placeholder="Enter 11-digit BVN" maxLength={11}
-                      style={{fontSize:16,letterSpacing:2,fontWeight:700,textAlign:'center'}} />
-                  </div>
-                  {kycMsg && <div style={{fontSize:12,color:kycMsg.includes('successful')?'var(--green)':'#DC2626',marginBottom:12}}>{kycMsg}</div>}
-                  <button className="dash-btn" style={{width:'100%',justifyContent:'center',opacity:bvnNumber.length!==11?0.5:1}}
-                    disabled={bvnNumber.length!==11 || kycLoading}
-                    onClick={async () => {
-                      if (bvnNumber.length !== 11) return;
-                      setKycLoading(true); setKycMsg("");
-                      try {
-                        const token = localStorage.getItem('ogapay_access_token');
-                        if (!token) { setKycMsg("Please log in first"); setKycLoading(false); return; }
-                        const res = await fetch('https://ogapay-production.up.railway.app/api/v1/kyc/submit', {
-                          method: 'POST',
-                          headers: {'Content-Type':'application/json','Authorization':'Bearer '+token},
-                          body: JSON.stringify({
-                            idType: 'BVN',
-                            idNumber: bvnNumber,
-                            dateOfBirth: new Date().toISOString(),
-                          }),
-                        });
-                        const json = await res.json();
-                        if (json.success) {
-                          setKycMsg("KYC submitted successfully! Verification takes 1-24 hours.");
-                          setKycStep("submitted");
-                        } else {
-                          setKycMsg(json.message || "Submission failed");
-                        }
-                      } catch (err) {
-                        setKycMsg("Service unavailable. Try again later.");
+                            if (!token) return;
+                            const res = await fetch('https://ogapay-production.up.railway.app/api/v1/users/directory/list?search=' + encodeURIComponent(val) + '&limit=1', {
+                              headers: {'Authorization': 'Bearer ' + token},
+                            });
+                            const json = await res.json();
+                            const users = json.data || [];
+                            const taken = users.some((u: any) => u.username?.toLowerCase() === val);
+                            setUsernameCheck(taken ? 'taken' : 'available');
+                          } catch { setUsernameCheck('idle'); }
+                        }, 600);
+                      } else {
+                        setUsernameCheck('idle');
                       }
-                      setKycLoading(false);
-                    }}>
-                    {kycLoading ? <><i className="ti ti-loader" style={{animation:'spin 1s linear infinite'}} /> Submitting...</> : <><Icon n="shield-check" s={16} /> Submit KYC</>}
-                  </button>
-                  <button style={{display:'block',margin:'12px auto 0',border:'none',background:'none',fontSize:12,color:'var(--text3)',cursor:'pointer'}}
-                    onClick={() => { setKycStep("idle"); setKycMsg(""); }}>
-                    Back
-                  </button>
+                    }}
+                    placeholder="username" />
                 </div>
-              )}
+                {usernameCheck === 'checking' && <span className="spinner" style={{width:16,height:16,borderWidth:2}} />}
+                {usernameCheck === 'available' && <i className="ti ti-check" style={{color:'#16a34a',fontSize:18}} />}
+                {usernameCheck === 'taken' && <i className="ti ti-x" style={{color:'#DC2626',fontSize:18}} />}
+              </div>
+              {usernameCheck === 'taken' && <div style={{fontSize:11,color:'#DC2626',marginTop:4}}>Username is taken</div>}
+              {usernameCheck === 'available' && <div style={{fontSize:11,color:'#16a34a',marginTop:4}}>Username is available</div>}
+              {editErrors.username && <div style={{fontSize:11,color:'#DC2626',marginTop:4}}>{editErrors.username}</div>}
+            </div>
 
-              {kycStep === "submitted" && (
-                <div style={{textAlign:'center',padding:'20px 0'}}>
-                  <div style={{width:64,height:64,borderRadius:'50%',background:'#16a34a18',display:'grid',placeItems:'center',margin:'0 auto 16px'}}>
-                    <i className="ti ti-shield-check" style={{fontSize:32,color:'#16a34a'}} />
-                  </div>
-                  <h3 style={{fontFamily:'Outfit',fontSize:17,fontWeight:800,margin:'0 0 8px'}}>Verification Submitted</h3>
-                  <p style={{fontSize:13,color:'var(--text2)',lineHeight:1.6}}>
-                    Your KYC is under review. This typically takes 1-24 hours. 
-                    You'll be notified once your identity is verified.
-                  </p>
-                  <button className="dash-btn" style={{marginTop:20}} onClick={() => setShowKyc(false)}>
-                    Done
-                  </button>
-                </div>
-              )}
+            {/* Bio */}
+            <div style={{marginBottom:20}}>
+              <label style={{display:'block',fontSize:11,fontWeight:700,color:'var(--text3)',marginBottom:4,textTransform:'uppercase',letterSpacing:'.04em'}}>
+                Bio <span style={{fontWeight:400,textTransform:'none'}}>({editForm.bio.length}/160)</span>
+              </label>
+              <textarea className="dash-input" style={{height:80,padding:'10px 14px',resize:'vertical',fontFamily:'inherit',lineHeight:1.5}}
+                value={editForm.bio} onChange={e => {
+                  if (e.target.value.length <= 160) setEditForm(f => ({...f, bio: e.target.value}));
+                }} placeholder="Tell task posters about yourself..." />
+              {editErrors.bio && <div style={{fontSize:11,color:'#DC2626',marginTop:4}}>{editErrors.bio}</div>}
+            </div>
+
+            {editErrors.general && <div style={{fontSize:12,color:'#DC2626',marginBottom:12,textAlign:'center'}}>{editErrors.general}</div>}
+
+            {/* Actions */}
+            <div style={{display:'flex',gap:12}}>
+              <button className="dash-btn" style={{flex:1,justifyContent:'center',opacity:savingProfile?0.6:1}} disabled={savingProfile}
+                onClick={async () => {
+                  if (!editForm.firstName.trim()) { setEditErrors({firstName:'First name is required'}); return; }
+                  if (!editForm.username.trim()) { setEditErrors({username:'Username is required'}); return; }
+                  if (usernameCheck === 'taken') { setEditErrors({username:'This username is taken'}); return; }
+                  setSavingProfile(true); setEditErrors({});
+                  try {
+                    const body: Record<string, string> = {};
+                    if (editForm.firstName !== (user?.firstName || '')) body.firstName = editForm.firstName;
+                    if (editForm.lastName !== (user?.lastName || '')) body.lastName = editForm.lastName;
+                    if (editForm.username !== (user?.username || '')) body.username = editForm.username;
+                    if (editForm.avatarUrl !== (user?.avatarUrl || '')) body.avatarUrl = editForm.avatarUrl;
+
+                    // Bio is on workerProfile
+                    let bioChanged = editForm.bio !== (profileData?.workerProfile?.bio || '');
+                    
+                    const token = localStorage.getItem('ogapay_access_token');
+                    if (!token) { setEditErrors({general:'Please log in first'}); setSavingProfile(false); return; }
+
+                    if (Object.keys(body).length > 0) {
+                      const res = await fetch('https://ogapay-production.up.railway.app/api/v1/users/me', {
+                        method: 'PATCH',
+                        headers: {'Content-Type':'application/json','Authorization':'Bearer '+token},
+                        body: JSON.stringify(body),
+                      });
+                      if (!res.ok) {
+                        const err = await res.json().catch(() => ({}));
+                        throw new Error(err.message || 'Failed to update profile');
+                      }
+                      // Re-fetch profile
+                      const userRes = await fetch('https://ogapay-production.up.railway.app/api/v1/users/me', {
+                        headers: {'Authorization':'Bearer '+token},
+                      });
+                      const userJson = await userRes.json();
+                      if (userJson.success && userJson.data) setProfileData(userJson.data);
+                    }
+
+                    if (bioChanged) {
+                      await fetch('https://ogapay-production.up.railway.app/api/v1/users/me', {
+                        method: 'PATCH',
+                        headers: {'Content-Type':'application/json','Authorization':'Bearer '+token},
+                        body: JSON.stringify({ bio: editForm.bio }),
+                      }).catch(() => {});
+                    }
+
+                    setShowEdit(false);
+                    showToast('Profile updated successfully');
+                  } catch (err: any) {
+                    setEditErrors({general: err.message || 'Failed to save'});
+                  }
+                  setSavingProfile(false);
+                }}>
+                {savingProfile ? <><span className="spinner" style={{width:14,height:14,borderWidth:2}} /> Saving...</> : <><i className="ti ti-check" /> Save Changes</>}
+              </button>
+              <button className="btn-outline" style={{flex:1,justifyContent:'center'}} onClick={() => setShowEdit(false)}>Cancel</button>
             </div>
           </div>
         </div>
       )}
 
-</Layout>
+      {/* KYC Modal */}
+      {showKyc && (
+        <div style={{position:'fixed',inset:0,zIndex:400,background:'rgba(0,0,0,.5)',display:'flex',alignItems:'center',justifyContent:'center',padding:20}} onClick={() => setShowKyc(false)}>
+          <div style={{background:'var(--card)',border:'1px solid var(--border)',borderRadius:16,maxWidth:480,width:'100%',padding:28}} onClick={e => e.stopPropagation()}>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}>
+              <h3 style={{fontFamily:'Outfit',fontSize:18,fontWeight:800,margin:0}}>Identity Verification (KYC)</h3>
+              <button style={{width:32,height:32,border:'1px solid var(--border)',borderRadius:8,background:'var(--bg2)',cursor:'pointer',display:'grid',placeItems:'center',color:'var(--text3)',fontSize:18}} onClick={() => setShowKyc(false)}>
+                <i className="ti ti-x" />
+              </button>
+            </div>
+
+            {kycStep === "idle" && (
+              <div>
+                <p style={{fontSize:13,color:'var(--text2)',lineHeight:1.6,marginBottom:20}}>
+                  Verify your identity to unlock withdrawals and access all features. 
+                  You'll need a valid government ID (NIN, BVN, or Passport).
+                </p>
+                <div style={{background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:12,padding:16,marginBottom:20}}>
+                  <div style={{fontSize:12,fontWeight:700,color:'var(--text2)',marginBottom:10}}>Required for verification:</div>
+                  {["Valid government ID (NIN, BVN, Passport)","Selfie photo matching your ID","Nigerian phone number"].map((item,i) => (
+                    <div key={i} style={{display:'flex',alignItems:'center',gap:8,fontSize:12,color:'var(--text2)'}}>
+                      <i className="ti ti-check" style={{color:'#16a34a',fontSize:14}} /> {item}
+                    </div>
+                  ))}
+                </div>
+                <button className="dash-btn" style={{width:'100%',justifyContent:'center'}} onClick={() => setKycStep("bvn")}>
+                  <Icon n="shield-check" s={16} /> Start Verification
+                </button>
+                <p style={{fontSize:11,color:'var(--text3)',textAlign:'center',marginTop:12}}>
+                  Your data is encrypted and securely processed.
+                </p>
+              </div>
+            )}
+
+            {kycStep === "bvn" && (
+              <div>
+                <p style={{fontSize:13,color:'var(--text2)',marginBottom:16}}>
+                  Enter your BVN to verify your identity.
+                </p>
+                <div style={{marginBottom:16}}>
+                  <label style={{fontSize:12,fontWeight:700,color:'var(--text2)',display:'block',marginBottom:6}}>BVN</label>
+                  <input className="dash-input" value={bvnNumber} onChange={e => setBvnNumber(e.target.value.replace(/\D/g,'').slice(0,11))}
+                    placeholder="Enter 11-digit BVN" maxLength={11}
+                    style={{fontSize:16,letterSpacing:2,fontWeight:700,textAlign:'center'}} />
+                </div>
+                {kycMsg && <div style={{fontSize:12,color:kycMsg.includes('successful')?'var(--green)':'#DC2626',marginBottom:12}}>{kycMsg}</div>}
+                <button className="dash-btn" style={{width:'100%',justifyContent:'center',opacity:bvnNumber.length!==11?0.5:1}}
+                  disabled={bvnNumber.length!==11 || kycLoading}
+                  onClick={async () => {
+                    if (bvnNumber.length !== 11) return;
+                    setKycLoading(true); setKycMsg("");
+                    try {
+                      const token = localStorage.getItem('ogapay_access_token');
+                      if (!token) { setKycMsg("Please log in first"); setKycLoading(false); return; }
+                      const res = await fetch('https://ogapay-production.up.railway.app/api/v1/kyc/submit', {
+                        method: 'POST',
+                        headers: {'Content-Type':'application/json','Authorization':'Bearer '+token},
+                        body: JSON.stringify({ idType: 'BVN', idNumber: bvnNumber, dateOfBirth: new Date().toISOString() }),
+                      });
+                      const json = await res.json();
+                      if (json.success) {
+                        setKycMsg("KYC submitted successfully! Verification takes 1-24 hours.");
+                        setKycStep("submitted");
+                      } else {
+                        setKycMsg(json.message || "Submission failed");
+                      }
+                    } catch (err) {
+                      setKycMsg("Service unavailable. Try again later.");
+                    }
+                    setKycLoading(false);
+                  }}>
+                  {kycLoading ? <><i className="ti ti-loader" style={{animation:'spin 1s linear infinite'}} /> Submitting...</> : <><Icon n="shield-check" s={16} /> Submit KYC</>}
+                </button>
+                <button style={{display:'block',margin:'12px auto 0',border:'none',background:'none',fontSize:12,color:'var(--text3)',cursor:'pointer'}}
+                  onClick={() => { setKycStep("idle"); setKycMsg(""); }}>
+                  Back
+                </button>
+              </div>
+            )}
+
+            {kycStep === "submitted" && (
+              <div style={{textAlign:'center',padding:'20px 0'}}>
+                <div style={{width:64,height:64,borderRadius:'50%',background:'#16a34a18',display:'grid',placeItems:'center',margin:'0 auto 16px'}}>
+                  <i className="ti ti-shield-check" style={{fontSize:32,color:'#16a34a'}} />
+                </div>
+                <h3 style={{fontFamily:'Outfit',fontSize:17,fontWeight:800,margin:'0 0 8px'}}>Verification Submitted</h3>
+                <p style={{fontSize:13,color:'var(--text2)',lineHeight:1.6}}>
+                  Your KYC is under review. This typically takes 1-24 hours. 
+                  You'll be notified once your identity is verified.
+                </p>
+                <button className="dash-btn" style={{marginTop:20}} onClick={() => setShowKyc(false)}>Done</button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+    </Layout>
   );
 }

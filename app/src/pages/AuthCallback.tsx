@@ -77,6 +77,54 @@ export default function AuthCallback() {
             }));
           }
 
+
+          // Auto-sync Google profile to backend on first login if fields are empty
+          if (appTokens && appTokens.accessToken) {
+            try {
+              const meta = session.user?.user_metadata || {};
+              const fullName = meta.full_name || meta.name || '';
+              const parts = fullName.trim().split(/\s+/);
+              const firstName = parts[0] || '';
+              const lastName = parts.slice(1).join(' ') || '';
+              const avatarUrl = meta.avatar_url || meta.picture || '';
+
+              // Only sync if we have Google data to populate
+              if (firstName || avatarUrl) {
+                // Check current profile first
+                const profileRes = await fetch(
+                  'https://ogapay-production.up.railway.app/api/v1/users/me',
+                  { headers: { 'Authorization': 'Bearer ' + appTokens.accessToken } }
+                );
+                if (profileRes.ok) {
+                  const profileData = await profileRes.json();
+                  const current = profileData.data || profileData;
+                  const updateBody: Record<string, string> = {};
+
+                  // Only populate empty fields
+                  if (!current.firstName && firstName) updateBody.firstName = firstName;
+                  if (!current.lastName && lastName) updateBody.lastName = lastName;
+                  if (!current.avatarUrl && avatarUrl) updateBody.avatarUrl = avatarUrl;
+
+                  if (Object.keys(updateBody).length > 0) {
+                    await fetch(
+                      'https://ogapay-production.up.railway.app/api/v1/users/me',
+                      {
+                        method: 'PATCH',
+                        headers: {
+                          'Content-Type': 'application/json',
+                          'Authorization': 'Bearer ' + appTokens.accessToken,
+                        },
+                        body: JSON.stringify(updateBody),
+                      }
+                    );
+                  }
+                }
+              }
+            } catch (syncErr) {
+              console.warn('Profile sync skipped:', syncErr.message);
+            }
+          }
+
           if (!localStorage.getItem("ogapay_is_new_user")) {
             localStorage.setItem("ogapay_is_new_user", "true");
           }
