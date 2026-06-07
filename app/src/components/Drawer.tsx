@@ -1,12 +1,11 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
 interface DrawerProps {
   open: boolean
   onClose: () => void
 }
-
-import { useState } from 'react'
 
 export default function Drawer({ open, onClose }: DrawerProps) {
   const { isAuthed, logout } = useAuth()
@@ -63,7 +62,7 @@ export default function Drawer({ open, onClose }: DrawerProps) {
           </a>
 
           {/* Create Job */}
-          <a className="oga-drawer-item" href="/tasks/new" onClick={onClose}>
+          <a className="oga-drawer-item" href="/create" onClick={onClose}>
             <span className="oga-drawer-icon"><i className="ti ti-plus-circle" /></span>
             <span><strong>Create Job</strong><small>Post a new task</small></span>
           </a>
