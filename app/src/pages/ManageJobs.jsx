@@ -105,9 +105,9 @@ function CreateJobModal({ onClose, onCreate }) {
   const types = ["social", "crypto", "survey", "content", "referral"];
 
   return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 100, display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
+    <div style={{ position: "fixed", inset: 0, zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center" }}>
       <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.6)" }} onClick={onClose} />
-      <div style={{ position: "relative", width: "100%", maxWidth: 520, background: S.card, border: `1px solid ${S.border2}`, borderRadius: "24px 24px 0 0", maxHeight: "90vh", overflowY: "auto" }}>
+      <div style={{ position: "relative", width: "100%", maxWidth: 520, background: S.card, border: `1px solid ${S.border2}`, borderRadius: 24, maxHeight: "90vh", overflowY: "auto" }}>
         {/* Header */}
         <div style={{ position: "sticky", top: 0, background: S.card, borderBottom: `1px solid ${S.border}`, padding: "16px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", zIndex: 10 }}>
           <div>
@@ -273,6 +273,11 @@ const inputStyle = {
 function JobDrawer({ job, onClose, onStatusChange }) {
   const [activeTab, setActiveTab] = useState("overview");
 
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = ""; };
+  }, []);
+
   const tabStyle = (t) => ({
     padding: "10px 14px", fontSize: 11, fontWeight: 700, textTransform: "uppercase",
     letterSpacing: "0.06em", cursor: "pointer", background: "transparent",
@@ -286,9 +291,9 @@ function JobDrawer({ job, onClose, onStatusChange }) {
     : `${v.toFixed(4)} ${job.currency}`;
 
   return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 90, display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
+    <div style={{ position: "fixed", inset: 0, zIndex: 90, display: "flex", alignItems: "center", justifyContent: "center" }}>
       <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.6)" }} onClick={onClose} />
-      <div style={{ position: "relative", width: "100%", maxWidth: 520, background: S.card, border: `1px solid ${S.border2}`, borderRadius: "24px 24px 0 0", maxHeight: "92vh", display: "flex", flexDirection: "column" }}>
+      <div style={{ position: "relative", width: "100%", maxWidth: 520, background: S.card, border: `1px solid ${S.border2}`, borderRadius: 24, maxHeight: "85vh", display: "flex", flexDirection: "column" }}>
         <div style={{ display: "flex", justifyContent: "center", paddingTop: 12, paddingBottom: 4, flexShrink: 0 }}>
           <div style={{ width: 36, height: 4, borderRadius: 2, background: "var(--border)" }} />
         </div>
