@@ -881,6 +881,7 @@ function ApplyModal({ open, onClose, jobId, jobTitle, reward, currency }: {
   open: boolean; onClose: () => void; jobId: string;
   jobTitle: string; reward: number; currency: string;
 }) {
+  const { fmt } = useCurrency()
   const [step, setStep] = useState<'form' | 'success'>('form')
   const [applyLink, setApplyLink] = useState('')
   const [applyMsg, setApplyMsg] = useState('')
