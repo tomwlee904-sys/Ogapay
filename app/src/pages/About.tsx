@@ -23,21 +23,21 @@ export default function About() {
 
                         /* ---- Hero ---- */
         .ab-hero{background:#191C6B;min-height:100vh;display:flex;align-items:center;overflow:hidden}
-        .ab-hero-inner{width:100%;max-width:1280px;margin:0 auto;padding:0 40px;display:grid;grid-template-columns:380px 1fr;gap:0;align-items:center;height:100vh}
+        .ab-hero-inner{width:100%;max-width:1280px;margin:0 auto;padding:0 40px;display:grid;grid-template-columns:1fr 1.8fr;gap:0;align-items:center;height:100vh}
         @media(max-width:900px){.ab-hero-inner{grid-template-columns:1fr;padding:60px 24px;text-align:center;height:auto;min-height:100vh}}
         .ab-hero-left{display:flex;flex-direction:column;gap:6px;z-index:2}
         .ab-hero-tag{color:#16a34a;font-size:13px;font-weight:800;letter-spacing:.14em;margin:0 0 8px}
-        .ab-hero-stack{font-family:Outfit,sans-serif;font-size:76px;font-weight:900;line-height:.95;color:#fff;margin:0}
-        .ab-hero-stack .green{color:#16a34a;font-family:'DM Serif Display',Georgia,serif;font-style:italic;font-weight:400;font-size:76px;display:inline}
+        .ab-hero-heading{font-family:Outfit,sans-serif;font-size:76px;font-weight:900;line-height:.95;color:#fff;margin:0}
+        .ab-hero-heading .green{color:#16a34a;font-family:'DM Serif Display',Georgia,serif;font-style:italic;font-weight:400;font-size:76px;display:inline}
         @media(max-width:768px){
-          .ab-hero-stack{font-size:48px}
-          .ab-hero-stack .green{font-size:48px}
+          .ab-hero-heading{font-size:48px}
+          .ab-hero-heading .green{font-size:48px}
         }
         .ab-hero-sub{color:rgba(255,255,255,.65);font-size:16px;line-height:1.6;margin:14px 0 0;max-width:300px}
         @media(max-width:900px){.ab-hero-sub{max-width:none;margin-left:auto;margin-right:auto}}
         .ab-hero-right{position:relative;height:100vh;display:flex;align-items:flex-end;justify-content:center;overflow:visible;margin-right:-40px}
         @media(max-width:900px){.ab-hero-right{display:none}}
-        .ab-hero-right .person-img{height:92vh;width:auto;max-width:none;object-fit:contain;object-position:bottom center;position:relative;z-index:1;filter:drop-shadow(0 30px 80px rgba(0,0,0,.5))}/* ---- Floating cards ---- */
+        .ab-hero-img{height:95vh;width:auto;max-width:none;object-fit:contain;object-position:bottom center;position:relative;z-index:1;filter:drop-shadow(0 30px 80px rgba(0,0,0,.5))}/* ---- Floating cards ---- */
         .ab-card{position:absolute;border-radius:14px;background:#fff;box-shadow:0 12px 40px rgba(0,0,0,.25);overflow:hidden;cursor:pointer;transition:transform .35s ease,box-shadow .35s ease;z-index:5;backface-visibility:hidden}
         .ab-card:hover{transform:translateY(-10px) scale(1.05)!important;box-shadow:0 20px 50px rgba(0,0,0,.35)!important}
         .ab-card-top{height:65px;border-radius:10px 10px 0 0}
@@ -114,93 +114,82 @@ export default function About() {
           <div className="ab-hero-inner">
             <div className="ab-hero-left">
               <div className="ab-hero-tag">ABOUT US</div>
-              <div className="ab-hero-stack">
-                Work.<br />
-                Earn.<br />
-                Grow.
-              </div>
-              <div className="ab-hero-stack" style={{ color: GREEN, fontFamily: "'DM Serif Display', Georgia, serif", fontStyle: 'italic', fontWeight: 400, fontSize: 80 }}>Change.</div>
-              <p className="ab-hero-sub">
-                Join thousands of talented Nigerian workers and task creators building better futures together.
-              </p>
+              <div className="ab-hero-heading">Work.<br />Earn.<br />Grow.</div>
+              <div className="ab-hero-heading"><span className="green">Change.</span></div>
+              <p className="ab-hero-sub">Join thousands of talented Nigerian workers and task creators building better futures together.</p>
             </div>
-
             <div className="ab-hero-right">
               <img
-                src="/about-hero.svg"
+                src="https://images.unsplash.com/photo-1589156280159-27698b4d932e?w=600&q=80&auto=format&fit=crop"
                 alt="OgaPay worker"
-                onError={(e) => { e.currentTarget.style.display = 'none' }}
+                className="ab-hero-img"
               />
 
-              {/* Card 1 */}
+              {/* Card 1 - chidi */}
               <div
-                className={`ab-card ${bouncing === 'chidi' ? 'bouncing' : ''}`}
-                style={{ width: 195, left: '-8%', bottom: '30%', transform: 'rotate(-6deg)' }}
-                onClick={() => handleCardClick('chidi')}
+                onClick={() => { setBouncing('chidi'); setTimeout(() => setBouncing(null), 500); }}
+                className="ab-card"
+                style={{ left: '-6%', bottom: '28%', transform: 'rotate(-5deg)', width: 200 }}
+                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-10px) scale(1.05) rotate(-5deg)'; e.currentTarget.style.boxShadow = '0 20px 50px rgba(0,0,0,.4)'; }}
+                onMouseLeave={e => { e.currentTarget.style.transform = 'rotate(-5deg)'; e.currentTarget.style.boxShadow = '0 12px 40px rgba(0,0,0,.3)'; }}
               >
                 <div className="ab-card-top" style={{ background: '#f4a0b5' }} />
                 <div className="ab-card-bottom">
-                  <span className="ab-card-avatar" style={{ background: '#f97316' }} />
+                  <div className="ab-card-avatar" style={{ background: '#f97316' }} />
                   <span className="ab-card-name">chidi</span>
                   <div className="ab-card-rating">★★★★★</div>
-                  <div className="ab-card-lines">
-                    <div className="ab-card-line" />
-                    <div className="ab-card-line" />
-                  </div>
+                  <div className="ab-card-lines"><div className="ab-card-line" /><div className="ab-card-line" /></div>
                 </div>
               </div>
 
-              {/* Card 2 */}
+              {/* Card 2 - amaka */}
               <div
-                className={`ab-card ${bouncing === 'amaka' ? 'bouncing' : ''}`}
-                style={{ width: 200, right: '-2%', top: '5%', transform: 'rotate(4deg)' }}
-                onClick={() => handleCardClick('amaka')}
+                onClick={() => { setBouncing('amaka'); setTimeout(() => setBouncing(null), 500); }}
+                className="ab-card"
+                style={{ right: '-2%', top: '5%', transform: 'rotate(4deg)', width: 210 }}
+                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-10px) scale(1.05) rotate(4deg)'; e.currentTarget.style.boxShadow = '0 20px 50px rgba(0,0,0,.4)'; }}
+                onMouseLeave={e => { e.currentTarget.style.transform = 'rotate(4deg)'; e.currentTarget.style.boxShadow = '0 12px 40px rgba(0,0,0,.3)'; }}
               >
                 <div className="ab-card-top" style={{ background: '#8b7355' }} />
                 <div className="ab-card-bottom">
-                  <span className="ab-card-avatar" style={{ background: '#7c3aed' }} />
+                  <div className="ab-card-avatar" style={{ background: '#7c3aed' }} />
                   <span className="ab-card-name">amaka</span>
                   <div className="ab-card-rating">★★★★★</div>
-                  <div className="ab-card-lines">
-                    <div className="ab-card-line" />
-                    <div className="ab-card-line" />
-                  </div>
+                  <div className="ab-card-lines"><div className="ab-card-line" /><div className="ab-card-line" /></div>
                 </div>
               </div>
 
-              {/* Card 3 */}
+              {/* Card 3 - tunde */}
               <div
-                className={`ab-card ${bouncing === 'tunde' ? 'bouncing' : ''}`}
-                style={{ width: 190, right: '-6%', bottom: '20%', transform: 'rotate(-4deg)' }}
-                onClick={() => handleCardClick('tunde')}
+                onClick={() => { setBouncing('tunde'); setTimeout(() => setBouncing(null), 500); }}
+                className="ab-card"
+                style={{ right: '-5%', bottom: '18%', transform: 'rotate(-3deg)', width: 200 }}
+                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-10px) scale(1.05) rotate(-3deg)'; e.currentTarget.style.boxShadow = '0 20px 50px rgba(0,0,0,.4)'; }}
+                onMouseLeave={e => { e.currentTarget.style.transform = 'rotate(-3deg)'; e.currentTarget.style.boxShadow = '0 12px 40px rgba(0,0,0,.3)'; }}
               >
                 <div className="ab-card-top" style={{ background: '#c8e86b' }} />
                 <div className="ab-card-bottom">
-                  <span className="ab-card-avatar" style={{ background: '#14b8a6' }} />
+                  <div className="ab-card-avatar" style={{ background: '#14b8a6' }} />
                   <span className="ab-card-name">tunde</span>
                   <div className="ab-card-rating">★★★★★</div>
-                  <div className="ab-card-lines">
-                    <div className="ab-card-line" />
-                    <div className="ab-card-line" />
-                  </div>
+                  <div className="ab-card-lines"><div className="ab-card-line" /><div className="ab-card-line" /></div>
                 </div>
               </div>
 
-              {/* Card 4 */}
+              {/* Card 4 - chioma */}
               <div
-                className={`ab-card ${bouncing === 'chioma' ? 'bouncing' : ''}`}
-                style={{ width: 185, left: '0%', top: '12%', transform: 'rotate(-3deg)' }}
-                onClick={() => handleCardClick('chioma')}
+                onClick={() => { setBouncing('chioma'); setTimeout(() => setBouncing(null), 500); }}
+                className="ab-card"
+                style={{ left: '2%', top: '12%', transform: 'rotate(-2deg)', width: 195 }}
+                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-10px) scale(1.05) rotate(-2deg)'; e.currentTarget.style.boxShadow = '0 20px 50px rgba(0,0,0,.4)'; }}
+                onMouseLeave={e => { e.currentTarget.style.transform = 'rotate(-2deg)'; e.currentTarget.style.boxShadow = '0 12px 40px rgba(0,0,0,.3)'; }}
               >
                 <div className="ab-card-top" style={{ background: '#7ec8e3' }} />
                 <div className="ab-card-bottom">
-                  <span className="ab-card-avatar" style={{ background: '#e91e63' }} />
+                  <div className="ab-card-avatar" style={{ background: '#e91e63' }} />
                   <span className="ab-card-name">chioma</span>
                   <div className="ab-card-rating">★★★★★</div>
-                  <div className="ab-card-lines">
-                    <div className="ab-card-line" />
-                    <div className="ab-card-line" />
-                  </div>
+                  <div className="ab-card-lines"><div className="ab-card-line" /><div className="ab-card-line" /></div>
                 </div>
               </div>
             </div>
