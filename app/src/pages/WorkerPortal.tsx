@@ -3,87 +3,86 @@ import { useNavigate } from 'react-router-dom'
 import { API_BASE } from '../lib/api'
 import Layout from '../components/Layout'
 
-const navItems = [
-  { icon: 'ti ti-building-store', label: 'My Store' },
-  { icon: 'ti ti-article', label: 'My Blogs' },
-  { icon: 'ti ti-briefcase', label: 'My Work' },
-  { icon: 'ti ti-message', label: 'Messages' },
-  { icon: 'ti ti-users', label: 'Communities' },
-  { icon: 'ti ti-file-check', label: 'My Submissions' },
-  { icon: 'ti ti-pencil', label: 'Reviews to Write' },
-  { icon: 'ti ti-star', label: 'My Reviews' },
-  { icon: 'ti ti-eye', label: 'View My Profile' },
-]
-
-const [stats, setStats] = useState([
-  { icon: 'ti ti-star', color: '#1F8CFF', count: 0, label: 'Reviews' },
-  { icon: 'ti ti-zap', color: '#F59E0B', count: 0, label: 'Challenges Participated' },
-  { icon: 'ti ti-trophy', color: '#16a34a', count: 0, label: 'Won' },
-  { icon: 'ti ti-heart', color: '#EC4899', count: 0, label: 'Compliments' },
-  { icon: 'ti ti-users', color: '#2563EB', count: 0, label: 'Communities' },
-  { icon: 'ti ti-gift', color: '#1F8CFF', count: 0, label: 'Tips Received' },
-  { icon: 'ti ti-file-text', color: '#F59E0B', count: 0, label: 'Blogs' },
-])
-
-useEffect(() => {
-  async function loadWorkerStats() {
-    try {
-      const token = localStorage.getItem('ogapay_access_token')
-      if (!token) return
-      const headers = { 'Authorization': 'Bearer ' + token }
-
-      const [sumRes, subRes] = await Promise.all([
-        fetch(API_BASE + '/dashboard/summary', { headers }).catch(() => null),
-        fetch(API_BASE + '/users/me/submissions', { headers }).catch(() => null),
-      ])
-
-      // Parse dashboard summary
-      let submissions = 0, reviews = 0
-      if (sumRes && sumRes.ok) {
-        const sumJson = await sumRes.json()
-        if (sumJson.success && sumJson.data) {
-          submissions = sumJson.data.metrics?.submissions || 0
-        }
-      }
-
-      // Parse submissions for stats
-      let approved = 0, rejected = 0, pending = 0
-      if (subRes && subRes.ok) {
-        const subJson = await subRes.json()
-        if (subJson.success && Array.isArray(subJson.data)) {
-          subJson.data.forEach((s: any) => {
-            if (s.status === 'APPROVED') approved++
-            else if (s.status === 'REJECTED') rejected++
-            else pending++
-          })
-        }
-      }
-
-      setStats([
-        { icon: 'ti ti-star', color: '#1F8CFF', count: reviews || 0, label: 'Reviews' },
-        { icon: 'ti ti-zap', color: '#F59E0B', count: submissions || 0, label: 'Tasks Done' },
-        { icon: 'ti ti-trophy', color: '#16a34a', count: approved || 0, label: 'Approved' },
-        { icon: 'ti ti-heart', color: '#EC4899', count: pending || 0, label: 'Pending Review' },
-        { icon: 'ti ti-users', color: '#2563EB', count: 0, label: 'Communities' },
-        { icon: 'ti ti-gift', color: '#1F8CFF', count: 0, label: 'Tips Received' },
-        { icon: 'ti ti-file-text', color: '#F59E0B', count: 0, label: 'Blogs' },
-      ])
-    } catch (e) {
-      // Keep defaults
-    }
-  }
-  loadWorkerStats()
-}, [])
-
 export default function WorkerPortal() {
   const navigate = useNavigate()
+
+  const navItems = [
+    { icon: 'ti ti-building-store', label: 'My Store', route: '/my-store' },
+    { icon: 'ti ti-article', label: 'My Blogs', route: '/blog' },
+    { icon: 'ti ti-briefcase', label: 'My Work', route: '/my-tasks' },
+    { icon: 'ti ti-message', label: 'Messages', route: '/messages' },
+    { icon: 'ti ti-users', label: 'Communities', route: '/communities' },
+    { icon: 'ti ti-file-check', label: 'My Submissions', route: '/my-tasks' },
+    { icon: 'ti ti-pencil', label: 'Reviews to Write', route: '/tasks' },
+    { icon: 'ti ti-star', label: 'My Reviews', route: '/profile' },
+    { icon: 'ti ti-eye', label: 'View My Profile', route: '/profile' },
+  ]
+
+  const [stats, setStats] = useState([
+    { icon: 'ti ti-star', color: '#1F8CFF', count: 0, label: 'Reviews' },
+    { icon: 'ti ti-zap', color: '#F59E0B', count: 0, label: 'Challenges Participated' },
+    { icon: 'ti ti-trophy', color: '#16a34a', count: 0, label: 'Won' },
+    { icon: 'ti ti-heart', color: '#EC4899', count: 0, label: 'Compliments' },
+    { icon: 'ti ti-users', color: '#2563EB', count: 0, label: 'Communities' },
+    { icon: 'ti ti-gift', color: '#1F8CFF', count: 0, label: 'Tips Received' },
+    { icon: 'ti ti-file-text', color: '#F59E0B', count: 0, label: 'Blogs' },
+  ])
+
+  useEffect(() => {
+    async function loadWorkerStats() {
+      try {
+        const token = localStorage.getItem('ogapay_access_token')
+        if (!token) return
+        const headers = { 'Authorization': 'Bearer ' + token }
+
+        const [sumRes, subRes] = await Promise.all([
+          fetch(API_BASE + '/dashboard/summary', { headers }).catch(() => null),
+          fetch(API_BASE + '/tasks/my/submissions', { headers }).catch(() => null),
+        ])
+
+        // Parse dashboard summary
+        let submissions = 0, reviews = 0
+        if (sumRes && sumRes.ok) {
+          const sumJson = await sumRes.json()
+          if (sumJson.success && sumJson.data) {
+            submissions = sumJson.data.metrics?.submissions || 0
+          }
+        }
+
+        // Parse submissions for stats
+        let approved = 0, rejected = 0, pending = 0
+        if (subRes && subRes.ok) {
+          const subJson = await subRes.json()
+          const subs = subJson.data || subJson.submissions || []
+          if (Array.isArray(subs)) {
+            subs.forEach((s: any) => {
+              if (s.status === 'APPROVED') approved++
+              else if (s.status === 'REJECTED') rejected++
+              else pending++
+            })
+          }
+        }
+
+        setStats([
+          { icon: 'ti ti-star', color: '#1F8CFF', count: reviews || 0, label: 'Reviews' },
+          { icon: 'ti ti-zap', color: '#F59E0B', count: submissions || 0, label: 'Tasks Done' },
+          { icon: 'ti ti-trophy', color: '#16a34a', count: approved || 0, label: 'Approved' },
+          { icon: 'ti ti-heart', color: '#EC4899', count: pending || 0, label: 'Pending Review' },
+          { icon: 'ti ti-users', color: '#2563EB', count: 0, label: 'Communities' },
+          { icon: 'ti ti-gift', color: '#1F8CFF', count: 0, label: 'Tips Received' },
+          { icon: 'ti ti-file-text', color: '#F59E0B', count: 0, label: 'Blogs' },
+        ])
+      } catch (e) {
+        console.warn('Failed to load worker stats:', e)
+      }
+    }
+    loadWorkerStats()
+  }, [])
 
   return (
     <Layout>
       <style>{`
         .wp-page{max-width:800px;margin:0 auto;padding:0 0 40px}
-
-        /* Nav Grid */
         .wp-nav-grid{display:grid;grid-template-columns:repeat(5,1fr);border-bottom:1px solid var(--border);margin-bottom:24px}
         .wp-nav-grid-2{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid var(--border);margin-bottom:24px}
         .wp-nav-tile{
@@ -97,22 +96,14 @@ export default function WorkerPortal() {
         .wp-nav-tile i{font-size:26px;color:var(--text3);transition:color .15s}
         .wp-nav-tile:hover i{color:var(--accent)}
         .wp-nav-tile span{font-size:11px;color:var(--text3);text-align:center;line-height:1.3;font-weight:600}
-
-        /* Breadcrumb */
         .wp-bread{font-size:12px;color:var(--text3);margin-bottom:12px;display:flex;align-items:center;gap:6px}
         .wp-bread span{cursor:pointer;color:var(--text2)}
         .wp-bread span:hover{color:var(--accent)}
         .wp-bread .current{color:var(--text2);font-weight:600}
-
-        /* Hero */
         .wp-hero h1{font-size:22px;font-weight:800;margin:0 0 16px;color:var(--text)}
-
-        /* Stats Summary */
         .wp-stats-row{display:flex;gap:20px;margin-bottom:24px;flex-wrap:wrap}
         .wp-stats-row span{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text3)}
         .wp-stats-row i{font-size:14px;color:var(--text3)}
-
-        /* Profile Card */
         .wp-profile-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:20px}
         .wp-profile-top{display:flex;align-items:flex-start;gap:16px}
         .wp-avatar-box{width:72px;height:72px;border-radius:10px;background:var(--bg2);display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1px solid var(--border)}
@@ -129,8 +120,6 @@ export default function WorkerPortal() {
         .wp-bio-box{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px;margin-top:14px}
         .wp-bio-label{font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.06em;margin-bottom:6px;text-transform:uppercase}
         .wp-bio-text{font-size:13px;color:var(--text2);line-height:1.5}
-
-        /* Stats List */
         .wp-stats-list{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden}
         .wp-stat-row{
           display:flex;align-items:center;gap:14px;
@@ -142,7 +131,6 @@ export default function WorkerPortal() {
         .wp-stat-icon{font-size:20px;width:24px;text-align:center}
         .wp-stat-count{font-size:16px;font-weight:800;color:var(--text);min-width:30px}
         .wp-stat-label{font-size:14px;color:var(--text2);font-weight:500}
-
         @media(max-width:600px){
           .wp-nav-grid{grid-template-columns:repeat(3,1fr)}
           .wp-nav-grid-2{grid-template-columns:repeat(3,1fr)}
@@ -156,7 +144,7 @@ export default function WorkerPortal() {
         {/* Navigation Tiles */}
         <div className="wp-nav-grid">
           {navItems.slice(0, 5).map((t, i) => (
-            <div key={i} className="wp-nav-tile" style={{ borderRight: i < 4 ? '1px solid var(--border)' : 'none' }}>
+            <div key={i} className="wp-nav-tile" onClick={() => navigate(t.route)} style={{ borderRight: i < 4 ? '1px solid var(--border)' : 'none' }}>
               <i className={t.icon} />
               <span>{t.label}</span>
             </div>
@@ -164,7 +152,7 @@ export default function WorkerPortal() {
         </div>
         <div className="wp-nav-grid-2">
           {navItems.slice(5).map((t, i) => (
-            <div key={i} className="wp-nav-tile" style={{ borderRight: i < 3 ? '1px solid var(--border)' : 'none' }}>
+            <div key={i} className="wp-nav-tile" onClick={() => navigate(t.route)} style={{ borderRight: i < 3 ? '1px solid var(--border)' : 'none' }}>
               <i className={t.icon} />
               <span>{t.label}</span>
             </div>

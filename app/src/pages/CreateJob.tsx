@@ -146,6 +146,24 @@ const CATEGORIES = {
   "Other": ["Miscellaneous"],
 };
 
+// ── CATEGORY MAP (frontend -> backend) ─────────────────────────────────────
+const CATEGORY_MAP: Record<string, string> = {
+  'Social Media': 'SOCIAL_MEDIA',
+  'Content Creation': 'CONTENT_WRITING',
+  'Development': 'OTHER',
+  'Marketing': 'OTHER',
+  'Community': 'OTHER',
+  'Other': 'OTHER',
+  'Design': 'DESIGN',
+  'Survey': 'SURVEY',
+  'Data': 'DATA_ENTRY',
+  'Testing': 'APP_TESTING',
+  'Video': 'VIDEO_REVIEW',
+  'Research': 'SURVEY',
+  'Services': 'OTHER',
+  'SOCIAL_MEDIA': 'SOCIAL_MEDIA',
+};
+
 // ── PUBLIC TEMPLATES ───────────────────────────────────────────────────────
 const PUBLIC_TEMPLATES = [
   { title: "Follow & Repost on X", platform: "X / Twitter", bounty: 0.5, winners: 50, category: "Social Media", desc: "Follow our account and repost the pinned post for a reward." },
@@ -451,13 +469,20 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }) {
       const token = localStorage.getItem("ogapay_access_token");
       if (!token) { setSubmitError("Please log in first"); setSubmitting(false); return; }
 
+      // Validate reward minimum for NGN
+      if (currency === 'NGN' && bountyNum < 50) {
+        setSubmitError('Minimum reward is 50 NGN. Please increase the reward amount.');
+        setSubmitting(false);
+        return;
+      }
+
       const body = {
         title: title.trim(),
         description: description.trim(),
         reward: bountyNum,
         maxWorkers: parseInt(challengeWinners) || 1,
         maxEntries: maxEntries ? parseInt(maxEntries) : undefined,
-        category: (category || "Other").toUpperCase(),
+        category: CATEGORY_MAP[category] || CATEGORY_MAP[category || "Other"] || CATEGORY_MAP["Other"] || "OTHER",
         estimatedTime: selectionTime === "1h" ? 60 : selectionTime === "6h" ? 360 : selectionTime === "12h" ? 720 : selectionTime === "24h" ? 1440 : selectionTime === "48h" ? 2880 : selectionTime === "72h" ? 4320 : 10080,
         instructions: description.trim(),
         tags: [category || "general"].filter(Boolean),
@@ -466,6 +491,7 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }) {
         status: "OPEN",
       };
 
+      console.log('📤 Creating task with body:', JSON.stringify(body));
       const res = await fetch(`${API_BASE}/tasks`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
@@ -474,16 +500,22 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }) {
 
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err.message || err.error || "Failed to create task");
+        const statusMsg = res.status === 403 ? ' (Forbidden — your account needs Poster role to create tasks)' : '';
+        throw new Error((err.message || err.error || "Failed to create task") + statusMsg);
       }
 
       // Capture the created task and pass its ID
       const result = await res.json().catch(() => ({}));
+      console.log('📥 Task creation response:', result);
+      if (result.success === false) {
+        throw new Error(result.message || result.error || "Failed to create task");
+      }
       const createdTask = result.data || result.task || result;
       const taskId = createdTask?.id || createdTask?._id || "";
+      console.log('✅ Task created with ID:', taskId);
       
       // Pass taskId to onCreate for redirect
-      onCreate();
+      onCreate(taskId);
     } catch (err) {
       setSubmitError(err.message || "Failed to create task. Please try again.");
     } finally {
@@ -868,7 +900,7 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }) {
 }
 
 // ── SUCCESS MODAL ─────────────────────────────────────────────────────────
-function SuccessModal({ onClose }) {
+function SuccessModal({ onClose, taskId }) {
   const navigate = useNavigate();
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -889,12 +921,12 @@ function SuccessModal({ onClose }) {
           Your job has been submitted and is now live. Workers can start completing it immediately.
         </p>
         <div style={{ display: "flex", gap: 10 }}>
-          <button onClick={() => navigate("/tasks")}
+          <button onClick={() => navigate(taskId ? "/tasks/" + taskId : "/tasks")}
             style={{
               flex: 1, padding: "12px", borderRadius: 10, border: `1px solid ${C.border}`,
               background: C.card, color: C.text, fontSize: 13, fontWeight: 600,
               cursor: "pointer", fontFamily: "inherit"
-            }}>View Tasks</button>
+            }}>View Task</button>
           <button onClick={() => navigate("/manage-jobs")}
             style={{
               flex: 1, padding: "12px", borderRadius: 10, border: "none",
@@ -946,11 +978,67 @@ function CreateTask() {
     transition: "color 0.2s, border-color 0.2s",
   });
 
+  const userRole = (user as any)?.role || '';
+  // Block if role is explicitly set and not poster/admin
+  // State for upgrade flow
+  const [upgrading, setUpgrading] = useState(false);
+  const [upgradeMsg, setUpgradeMsg] = useState('');
+
+  if (!userRole || (userRole !== "POSTER" && userRole !== "ADMIN")) {
+    const handleUpgrade = async () => {
+      setUpgrading(true);
+      setUpgradeMsg('');
+      try {
+        const token = localStorage.getItem("ogapay_access_token");
+        if (!token) { setUpgradeMsg('Please log in first'); setUpgrading(false); return; }
+        const res = await fetch('https://ogapay-production.up.railway.app/api/v1/users/me', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+          body: JSON.stringify({ role: 'POSTER' }),
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.message || 'Upgrade failed');
+        }
+        setUpgradeMsg('Account upgraded! Refreshing...');
+        setTimeout(() => window.location.reload(), 1500);
+      } catch (e) {
+        setUpgradeMsg(e.message || 'Failed to upgrade. Contact support.');
+      } finally {
+        setUpgrading(false);
+      }
+    };
+
+    return (
+      <Layout>
+        <div style={{ maxWidth: 500, margin: '60px auto', padding: '0 20px', textAlign: 'center' }}>
+          <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'rgba(245,158,11,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+            <svg width="28" height="28" fill="none" stroke="#F59E0B" strokeWidth="2" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          </div>
+          <h2 style={{ fontSize: 20, fontWeight: 800, color: 'var(--text)', margin: '0 0 8px' }}>Poster Account Required</h2>
+          <p style={{ fontSize: 14, color: 'var(--text2)', lineHeight: 1.6, margin: '0 0 20px' }}>You need a Poster account to create jobs. Your current role does not have permission to post tasks.</p>
+          <button onClick={handleUpgrade} disabled={upgrading}
+            style={{
+              padding: '12px 32px', borderRadius: 10, border: 'none',
+              background: upgrading ? 'var(--border)' : '#121566', color: '#fff',
+              fontSize: 14, fontWeight: 700, cursor: upgrading ? 'not-allowed' : 'pointer',
+              fontFamily: 'inherit'
+            }}>
+            {upgrading ? 'Upgrading...' : 'Upgrade to Poster Account'}
+          </button>
+          {upgradeMsg && (
+            <p style={{ marginTop: 12, fontSize: 13, fontWeight: 600, color: upgradeMsg.includes('refreshing') ? '#16a34a' : '#DC2626' }}>{upgradeMsg}</p>
+          )}
+        </div>
+      </Layout>
+    );
+  }
+
   if (showCustom) {
     return <CustomJobWizard
       initialTemplate={customTemplate}
       onClose={() => { setShowCustom(false); setCustomTemplate(null); }}
-      onCreate={() => { setShowCustom(false); setCustomTemplate(null); setSuccess(true); }}
+      onCreate={(taskId) => { setShowCustom(false); setCustomTemplate(null); setSuccess(taskId || true); }}
     />;
   }
 
@@ -1023,7 +1111,7 @@ function CreateTask() {
               <PlatformDetail
                 platform={selectedPlatform}
                 onBack={() => setSelectedPlatform(null)}
-                onCreated={() => setSuccess(true)}
+                onCreated={(taskId) => setSuccess(taskId || "true")}
               />
             )}
           </div>
@@ -1065,7 +1153,7 @@ function CreateTask() {
               <ServiceForm
                 service={selectedService}
                 onBack={() => { setSelectedService(null); setShowServiceForm(false); }}
-                onCreated={() => { setSelectedService(null); setShowServiceForm(false); setSuccess(true); }}
+                onCreated={(taskId) => { setSelectedService(null); setShowServiceForm(false); setSuccess(taskId || "true"); }}
               />
             )}
           </div>
@@ -1260,13 +1348,14 @@ function CreateTask() {
       </div>
 
       {showMainTemplates && <TemplatesModal onClose={() => setShowMainTemplates(false)} onUse={tpl => { setCustomTemplate(tpl); setShowCustom(true); }} />}
-      {success && <SuccessModal onClose={() => setSuccess(false)} />}
+      {success && <SuccessModal taskId={typeof success === 'string' && success !== 'true' ? success : undefined} onClose={() => setSuccess(false)} />}
     </Layout>
   );
 }
 
 // ── PLATFORM DETAIL ────────────────────────────────────────────────────────
 function PlatformDetail({ platform, onBack, onCreated }) {
+  const [submitError, setSubmitError] = useState("");
   const navigate = useNavigate();
   const [action, setAction] = useState(platform.actions[0] || "");
   const [url, setUrl] = useState("");
@@ -1279,10 +1368,12 @@ function PlatformDetail({ platform, onBack, onCreated }) {
   }, [quantity, platform]);
 
   const handleCreate = async () => {
-    if (!url.trim()) return;
+    if (!url.trim()) { setSubmitError("Please enter a URL"); return; }
     setSubmitting(true);
+    setSubmitError("");
     try {
       const token = localStorage.getItem("ogapay_access_token");
+      if (!token) { setSubmitError("Please log in first"); setSubmitting(false); return; }
       const body = {
         title: `${action} on ${platform.name}`,
         description: `Perform ${action.toLowerCase()} on ${platform.name}: ${url}`,
@@ -1292,18 +1383,29 @@ function PlatformDetail({ platform, onBack, onCreated }) {
         reward: budget,
         quantity: parseInt(quantity) || 10,
         maxWorkers: parseInt(quantity) || 10,
-        category: "Social Media",
+        category: CATEGORY_MAP["Social Media"] || "SOCIAL_MEDIA",
         currency: "SOL",
         status: "OPEN",
       };
-      await fetch(`${API_BASE}/tasks`, {
+      const res = await fetch(`${API_BASE}/tasks`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${localStorage.getItem("ogapay_access_token")}` },
         body: JSON.stringify(body),
       });
-      onCreated();
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        const statusMsg = res.status === 403 ? ' (Forbidden — your account needs Poster role)' : '';
+        throw new Error((err.message || err.error || "Failed to create task") + statusMsg);
+      }
+      const result = await res.json().catch(() => ({}));
+      if (result.success === false) {
+        throw new Error(result.message || result.error || "Failed to create task");
+      }
+      const createdTask = result.data || result.task || result;
+      const taskId = createdTask?.id || createdTask?._id || "";
+      onCreated(taskId);
     } catch (e) {
-      // error handled silently
+      setSubmitError(e?.message || "Failed to create task");
     } finally {
       setSubmitting(false);
     }
@@ -1372,6 +1474,7 @@ function PlatformDetail({ platform, onBack, onCreated }) {
 
 // ── SERVICE FORM ───────────────────────────────────────────────────────────
 function ServiceForm({ service, onBack, onCreated }) {
+  const [submitError, setSubmitError] = useState("");
   const [url, setUrl] = useState("");
   const [quantity, setQuantity] = useState(10);
   const [budget, setBudget] = useState(service.pricePerAction * 10 / 1000000);
@@ -1382,10 +1485,12 @@ function ServiceForm({ service, onBack, onCreated }) {
   }, [quantity, service]);
 
   const handleCreate = async () => {
-    if (!url.trim()) return;
+    if (!url.trim()) { setSubmitError("Please enter a URL"); return; }
     setSubmitting(true);
+    setSubmitError("");
     try {
       const token = localStorage.getItem("ogapay_access_token");
+      if (!token) { setSubmitError("Please log in first"); setSubmitting(false); return; }
       const body = {
         title: `${service.name} Campaign`,
         description: `${service.name} campaign targeting: ${url}`,
@@ -1395,18 +1500,29 @@ function ServiceForm({ service, onBack, onCreated }) {
         reward: budget,
         quantity: parseInt(quantity) || 10,
         maxWorkers: parseInt(quantity) || 10,
-        category: "Services",
+        category: CATEGORY_MAP["Services"] || CATEGORY_MAP["Other"] || "OTHER",
         currency: "SOL",
         status: "OPEN",
       };
-      await fetch(`${API_BASE}/tasks`, {
+      const res = await fetch(`${API_BASE}/tasks`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify(body),
       });
-      onCreated();
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        const statusMsg = res.status === 403 ? ' (Forbidden — your account needs Poster role)' : '';
+        throw new Error((err.message || err.error || "Failed to create task") + statusMsg);
+      }
+      const result = await res.json().catch(() => ({}));
+      if (result.success === false) {
+        throw new Error(result.message || result.error || "Failed to create task");
+      }
+      const createdTask = result.data || result.task || result;
+      const taskId = createdTask?.id || createdTask?._id || "";
+      onCreated(taskId);
     } catch (e) {
-      // error handled silently
+      setSubmitError(e?.message || "Failed to create task");
     } finally {
       setSubmitting(false);
     }

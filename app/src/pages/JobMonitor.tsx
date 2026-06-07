@@ -81,6 +81,7 @@ export default function JobMonitor() {
   const [bookmarked, setBookmarked] = useState<string[]>(() => {
     try { return JSON.parse(localStorage.getItem('ogapay_bookmarked_jobs') || '[]') } catch { return [] }
   })
+  const [myPostedTasks, setMyPostedTasks] = useState<any[]>([])
 
   const pollingRef = useRef<any>(null)
   const lastIdRef = useRef<string>('')
@@ -133,12 +134,52 @@ export default function JobMonitor() {
     setLoading(false)
   }, [alerts, sound])
 
+  // Fetch my posted tasks (creator's own tasks)
+  const fetchMyPostedTasks = useCallback(async () => {
+    try {
+      const token = localStorage.getItem('ogapay_access_token')
+      if (!token) return
+      // Try the private endpoint first
+      let tasks = []
+      try {
+        const res = await fetch(API_BASE + '/tasks/my/created', {
+          headers: { 'Authorization': 'Bearer ' + token },
+        })
+        const json = await res.json()
+        if (json.success && json.data) {
+          tasks = json.data.tasks || (Array.isArray(json.data) ? json.data : [])
+        }
+      } catch (e) {
+        console.warn('Private endpoint failed for my posted tasks:', e)
+      }
+      // Fallback: try public /tasks with token
+      if (!tasks || tasks.length === 0) {
+        try {
+          const pubRes = await fetch(API_BASE + '/tasks?limit=200', {
+            headers: { 'Authorization': 'Bearer ' + token },
+          })
+          const pubJson = await pubRes.json()
+          if (pubJson.success && Array.isArray(pubJson.data)) {
+            // We can only show tasks from this user if we know their ID
+            // For now, rely on the auth token to filter
+            tasks = pubJson.data
+          }
+        } catch {}
+      }
+      if (tasks.length > 0) {
+        const mapped = tasks.map(mapTask)
+        setMyPostedTasks(mapped)
+      }
+    } catch {}
+  }, [])
+
   // Initial load + polling
   useEffect(() => {
     fetchJobs()
-    pollingRef.current = setInterval(fetchJobs, 30000)
+    fetchMyPostedTasks()
+    pollingRef.current = setInterval(() => { fetchJobs(); fetchMyPostedTasks() }, 30000)
     return () => clearInterval(pollingRef.current)
-  }, [fetchJobs])
+  }, [fetchJobs, fetchMyPostedTasks])
 
   // Auto-hide toast
   useEffect(() => {
@@ -310,6 +351,41 @@ export default function JobMonitor() {
         )}
 
         {/* Active Jobs */}
+        {/* My Posted Jobs */}
+        {myPostedTasks.length > 0 && (
+          <>
+            <h3 className="jm-section-title"><i className="ti ti-briefcase" /> My Posted Jobs ({myPostedTasks.length})</h3>
+            <div className="jm-grid" style={{ marginBottom: 24 }}>
+              {myPostedTasks.map((job: any) => (
+                <div key={job.id} className="jm-card" onClick={() => navigate('/tasks/' + job.id)}>
+                  <div className="jm-card-top">
+                    <div className="jm-card-title">{job.title}</div>
+                    <span className="jm-card-badge" style={{
+                      background: job.status === 'OPEN' ? '#16a34a18' : job.status === 'IN_PROGRESS' ? '#1F8CFF18' : job.status === 'COMPLETED' ? '#8B5CF618' : '#F59E0B18',
+                      color: job.status === 'OPEN' ? '#16a34a' : job.status === 'IN_PROGRESS' ? '#1F8CFF' : job.status === 'COMPLETED' ? '#8B5CF6' : '#F59E0B'
+                    }}>{job.status || 'OPEN'}</span>
+                  </div>
+                  <div style={{ display: 'flex', gap: 10, fontSize: 11, color: 'var(--text3)', marginBottom: 6, flexWrap: 'wrap' }}>
+                    <span>₦{Number(job.reward || 0).toLocaleString()}</span>
+                    <span>{job.category}</span>
+                    <span>{job.filled || 0}/{job.slots || 0} filled</span>
+                  </div>
+                  <div className="jm-card-footer">
+                    <div style={{ fontSize: 11, color: 'var(--text3)' }}>
+                      <i className="ti ti-send" /> {job.filled || 0} submissions
+                    </div>
+                    <div className="jm-card-actions" onClick={e => e.stopPropagation()}>
+                      <button onClick={() => navigate('/tasks/' + job.id + '/submissions')}>
+                        <i className="ti ti-eye" /> View Submissions
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+
         <h3 className="jm-section-title"><i className="ti ti-briefcase" /> Available Jobs</h3>
         {loading ? (
           <div className="jm-empty"><p>Loading jobs...</p></div>

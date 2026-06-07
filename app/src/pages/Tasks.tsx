@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import Layout from '../components/Layout'
 
 const API_BASE = 'https://ogapay-production.up.railway.app/api/v1'
@@ -365,6 +365,8 @@ export default function Tasks() {
   const [bookmarked, setBookmarked] = useState<string[]>([])
   const [selectedJob, setSelectedJob] = useState<any>(null)
 
+  const location = useLocation()
+
   // Fetch tasks from API
   useEffect(() => {
     setLoading(true)
@@ -372,7 +374,7 @@ export default function Tasks() {
       setJobs(data)
       setLoading(false)
     })
-  }, [])
+  }, [location.key])
 
   // Load single job if id param present
   useEffect(() => {

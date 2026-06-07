@@ -1083,51 +1083,83 @@ export default function MyJobs() {
 
   useEffect(() => {
     if (!isAuthed) { setLoading(false); return; }
+    const mapTaskToJob = (t) => ({
+      id: t.id || t._id,
+      customId: t.customId || "",
+      title: t.title || "Untitled Task",
+      type: t.type || t.mode || (t.category || "").toLowerCase() || "custom",
+      platform: Array.isArray(t.tags) ? t.tags[0] || "OgaPay" : t.platform || "OgaPay",
+      status: (t.status || "active").toLowerCase(),
+      selectionType: t.winnerMode || (t.type === "challenge" ? "random" : "creator"),
+      reward: Number(t.reward) || 0,
+      currency: t.currency || "NGN",
+      budget: Number(t.reward) * (t.maxWorkers || 1) || 0,
+      spent: Number(t.currentWorkers || 0) * Number(t.reward || 0),
+      remaining: Number(t.reward) * (t.maxWorkers || 1) - Number(t.currentWorkers || 0) * Number(t.reward || 0),
+      slots: t.maxWorkers || 1,
+      winners: t.currentWorkers || 0,
+      pending: 0,
+      rejected: 0,
+      approvalRate: t.maxWorkers > 0 ? Math.round((t.currentWorkers || 0) / t.maxWorkers * 100) : 0,
+      avgFillTime: "N/A",
+      deadline: t.deadline ? new Date(t.deadline).toLocaleDateString() : "N/A",
+      posted: t.createdAt ? new Date(t.createdAt).toLocaleDateString() : "N/A",
+      secret: t.escrowTxId || "",
+      submissions: [],
+    });
+
     const fetchJobs = async () => {
       try {
         const token = localStorage.getItem("ogapay_access_token");
         if (!token) { setLoading(false); return; }
-        // Fetch all tasks from the public endpoint, then filter by user
-        const res = await fetch(API_BASE + "/tasks/my/created", {
-          headers: { Authorization: "Bearer " + token },
-        });
-        const json = await res.json();
-        if (json.success && json.data) {
-          const tasks = Array.isArray(json.data) ? json.data : (json.data.tasks || []);
-          // Get user ID from auth context
-          const mapped = tasks.map(t => ({
-            id: t.id || t._id,
-            customId: t.customId || "",
-            title: t.title || "Untitled Task",
-            type: t.type || t.mode || (t.category || "").toLowerCase() || "custom",
-            platform: Array.isArray(t.tags) ? t.tags[0] || "OgaPay" : t.platform || "OgaPay",
-            status: (t.status || "active").toLowerCase(),
-            selectionType: t.winnerMode || (t.type === "challenge" ? "random" : "creator"),
-            reward: Number(t.reward) || 0,
-            currency: t.currency || "NGN",
-            budget: Number(t.reward) * (t.maxWorkers || 1) || 0,
-            spent: Number(t.currentWorkers || 0) * Number(t.reward || 0),
-            remaining: Number(t.reward) * (t.maxWorkers || 1) - Number(t.currentWorkers || 0) * Number(t.reward || 0),
-            slots: t.maxWorkers || 1,
-            winners: t.currentWorkers || 0,
-            pending: 0,
-            rejected: 0,
-            approvalRate: t.maxWorkers > 0 ? Math.round((t.currentWorkers || 0) / t.maxWorkers * 100) : 0,
-            avgFillTime: "N/A",
-            deadline: t.deadline ? new Date(t.deadline).toLocaleDateString() : "N/A",
-            posted: t.createdAt ? new Date(t.createdAt).toLocaleDateString() : "N/A",
-            secret: t.escrowTxId || "",
-            submissions: [],
-          }));
-          // Merge localStorage status overrides
-          try {
-            const stored = JSON.parse(localStorage.getItem('ogapay_job_statuses') || '{}');
-            mapped.forEach(j => {
-              if (stored[j.id]) j.status = stored[j.id];
-            });
-          } catch(e) {}
-          setJobs(mapped);
+        
+        console.log('🔍 Fetching my created tasks with token:', token ? token.slice(0, 20) + '...' : 'NONE');
+        // Try the private endpoint first
+        let tasks = [];
+        try {
+          const res = await fetch(API_BASE + "/tasks/my/created", {
+            headers: { Authorization: "Bearer " + token },
+          });
+          console.log('📥 Private endpoint status:', res.status);
+          const json = await res.json();
+          console.log('📥 Private endpoint response:', json);
+          if (json.success && json.data) {
+            tasks = Array.isArray(json.data) ? json.data : (json.data.tasks || []);
+          } else {
+            console.warn('⚠️ Private endpoint no data:', json);
+          }
+        } catch (e) {
+          console.warn("Private endpoint failed, trying public fallback:", e);
         }
+        
+        // Fallback: if private endpoint returned nothing, try public /tasks and filter by user
+        if (!tasks || tasks.length === 0) {
+          try {
+            const pubRes = await fetch(API_BASE + "/tasks?limit=200", {
+              headers: { Authorization: "Bearer " + token },
+            });
+            const pubJson = await pubRes.json();
+            if (pubJson.success && Array.isArray(pubJson.data)) {
+              const userId = (user as any)?.id || '';
+              if (userId) {
+                tasks = pubJson.data.filter((t: any) => t.posterId === userId);
+              }
+            }
+          } catch (e) {
+            console.warn("Public fallback also failed:", e);
+          }
+        }
+        
+        console.log('📊 Final tasks count:', tasks.length);
+        const mapped = tasks.map(mapTaskToJob);
+        // Merge localStorage status overrides
+        try {
+          const stored = JSON.parse(localStorage.getItem('ogapay_job_statuses') || '{}');
+          mapped.forEach(j => {
+            if (stored[j.id]) j.status = stored[j.id];
+          });
+        } catch(e) {}
+        setJobs(mapped);
       } catch (e) {
         console.warn("Failed to fetch jobs:", e);
       }
