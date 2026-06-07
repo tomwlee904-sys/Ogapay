@@ -897,7 +897,22 @@ function JobsListPage({ jobs, setJobs, showToast }) {
 
   const handleStatusChange = (id, status) => {
     setJobs(j => j.map(job => job.id === id ? { ...job, status } : job));
-    showToast(`Job ${status === "active" ? "resumed" : "paused"} successfully`);
+    // Persist status change locally (backend PATCH not available yet)
+    try {
+      const stored = JSON.parse(localStorage.getItem('ogapay_job_statuses') || '{}');
+      stored[id] = status;
+      localStorage.setItem('ogapay_job_statuses', JSON.stringify(stored));
+      // Attempt API call
+      const token = localStorage.getItem('ogapay_access_token');
+      if (token) {
+        fetch(API_BASE + '/tasks/' + id, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+          body: JSON.stringify({ status: status.toUpperCase() }),
+        }).catch(() => {});
+      }
+    } catch(e) {}
+    showToast('Job ' + (status === 'active' ? 'resumed' : status === 'paused' ? 'paused' : 'closed') + ' successfully');
   };
 
   const handleCreate = (form) => {
@@ -1028,7 +1043,13 @@ function JobsListPage({ jobs, setJobs, showToast }) {
             <span style={{ fontSize: 12, color: "var(--text3)", fontFamily: "monospace", fontWeight: 600 }}>{job.id}</span>
             <div style={{ display: "flex", gap: 6 }}>
               <span style={{ fontSize: 12, color: "var(--text2)", fontWeight: 600 }}>Deadline: {job.deadline}</span>
-              <span style={{ display:"inline-flex", alignItems:"center", justifyContent:"center", height:40, padding:"0 18px", borderRadius:10, background:"var(--text)", color:"var(--bg)", fontSize:13, fontWeight:800, gap:6 }}><i className="ti ti-eye" style={{fontSize:15}} /> View</span>
+              <div style={{ display: "flex", gap: 6 }}>
+                <span onClick={(e) => { e.stopPropagation(); 
+                  try { sessionStorage.setItem('ogapay_edit_task', JSON.stringify(job)); } catch(e) {}
+                  window.location.href = '/create?edit=' + job.id;
+                }} style={{ display:"inline-flex", alignItems:"center", justifyContent:"center", height:40, padding:"0 14px", borderRadius:10, background:"var(--bg2)", border:"1px solid var(--border)", color:"var(--text2)", fontSize:12, fontWeight:700, gap:5, cursor:"pointer" }}><i className="ti ti-edit" style={{fontSize:14}} /> Edit</span>
+                <span style={{ display:"inline-flex", alignItems:"center", justifyContent:"center", height:40, padding:"0 18px", borderRadius:10, background:"var(--text)", color:"var(--bg)", fontSize:13, fontWeight:800, gap:6, cursor:"pointer" }}><i className="ti ti-eye" style={{fontSize:15}} /> View</span>
+              </div>
             </div>
           </div>
         </div>
@@ -1101,6 +1122,13 @@ export default function MyJobs() {
             secret: t.escrowTxId || "",
             submissions: [],
           }));
+          // Merge localStorage status overrides
+          try {
+            const stored = JSON.parse(localStorage.getItem('ogapay_job_statuses') || '{}');
+            mapped.forEach(j => {
+              if (stored[j.id]) j.status = stored[j.id];
+            });
+          } catch(e) {}
           setJobs(mapped);
         }
       } catch (e) {

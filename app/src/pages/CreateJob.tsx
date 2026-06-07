@@ -913,6 +913,22 @@ function CreateTask() {
   const { user } = useAuth();
   const { fmt } = useCurrency();
   const [showCustom, setShowCustom] = useState(false);
+  
+  // Check for edit task data from ManageJobs
+  useEffect(() => {
+    try {
+      const editData = sessionStorage.getItem('ogapay_edit_task');
+      if (editData) {
+        const task = JSON.parse(editData);
+        // If we have edit data and are on the custom tab, pre-fill the wizard
+        if (task.title && task.platform) {
+          // Store for the CustomJobWizard to pick up
+          window.__ogapay_edit_task = task;
+        }
+        sessionStorage.removeItem('ogapay_edit_task');
+      }
+    } catch(e) {}
+  }, []);
   const [customTemplate, setCustomTemplate] = useState(null);
   const [activeTab, setActiveTab] = useState("socials");
   const [success, setSuccess] = useState(false);
