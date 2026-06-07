@@ -979,7 +979,7 @@ function CreateTask() {
   });
 
   const userRole = (user as any)?.role || '';
-  const liveRole = (() => { try { return JSON.parse(localStorage.getItem('ogapay_user') || '{}').role || ''; } catch { return ''; } })();
+  const liveRole = (() => { try { return localStorage.getItem('ogapay_role_override') || JSON.parse(localStorage.getItem('ogapay_user') || '{}').role || ''; } catch { return ''; } })();
   const effectiveRole = userRole || liveRole;
   // Block if role is explicitly set and not poster/admin
   // State for upgrade flow
@@ -1002,14 +1002,14 @@ function CreateTask() {
           const err = await res.json().catch(() => ({}));
           throw new Error(err.message || 'Upgrade failed');
         }
-        // Update cached user so auth context sees POSTER role
+        // Write POSTER role to localStorage — set a flag so refreshUser can't overwrite it
         try {
           const stored = JSON.parse(localStorage.getItem('ogapay_user') || '{}');
           stored.role = 'POSTER';
           localStorage.setItem('ogapay_user', JSON.stringify(stored));
+          localStorage.setItem('ogapay_role_override', 'POSTER');
         } catch(e) {}
         setUpgradeMsg('Account upgraded! You can now create jobs.');
-        // Navigate(0) does a soft reload — localStorage role is now POSTER so the gate passes
         setTimeout(() => navigate(0), 800);
       } catch (e) {
         setUpgradeMsg(e.message || 'Failed to upgrade. Contact support.');
