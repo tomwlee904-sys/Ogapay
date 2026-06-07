@@ -455,20 +455,15 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }) {
         title: title.trim(),
         description: description.trim(),
         reward: bountyNum,
-        maxWinners: parseInt(challengeWinners) || 1,
+        maxWorkers: parseInt(challengeWinners) || 1,
         maxEntries: maxEntries ? parseInt(maxEntries) : undefined,
-        category: category || "Other",
-        subcategory: subcategory || undefined,
-        selectionTime,
-        hideSubmissions: hideSubmissions === "Yes",
-        screenshotProof: screenshotProof === "Yes",
-        watermarks: watermarks === "Yes",
-        mode: mode.toLowerCase(),
-        winnerMode: winnerMode === "Random winner selection" ? "random" : "creator_picks",
-        audience: audience.toLowerCase(),
-        extraRequirements: extraReqs,
+        category: (category || "Other").toUpperCase(),
+        estimatedTime: selectionTime === "1h" ? 60 : selectionTime === "6h" ? 360 : selectionTime === "12h" ? 720 : selectionTime === "24h" ? 1440 : selectionTime === "48h" ? 2880 : selectionTime === "72h" ? 4320 : 10080,
+        instructions: description.trim(),
+        tags: [category || "general"].filter(Boolean),
+        proofRequired: screenshotProof === "Yes" ? "Screenshot proof required" : undefined,
         currency,
-        status: "open",
+        status: "OPEN",
       };
 
       const res = await fetch(`${API_BASE}/tasks`, {
@@ -482,6 +477,12 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }) {
         throw new Error(err.message || err.error || "Failed to create task");
       }
 
+      // Capture the created task and pass its ID
+      const result = await res.json().catch(() => ({}));
+      const createdTask = result.data || result.task || result;
+      const taskId = createdTask?.id || createdTask?._id || "";
+      
+      // Pass taskId to onCreate for redirect
       onCreate();
     } catch (err) {
       setSubmitError(err.message || "Failed to create task. Please try again.");
@@ -1274,10 +1275,10 @@ function PlatformDetail({ platform, onBack, onCreated }) {
         url: url.trim(),
         reward: budget,
         quantity: parseInt(quantity) || 10,
-        maxWinners: parseInt(quantity) || 10,
+        maxWorkers: parseInt(quantity) || 10,
         category: "Social Media",
         currency: "SOL",
-        status: "open",
+        status: "OPEN",
       };
       await fetch(`${API_BASE}/tasks`, {
         method: "POST",
@@ -1377,10 +1378,10 @@ function ServiceForm({ service, onBack, onCreated }) {
         url: url.trim(),
         reward: budget,
         quantity: parseInt(quantity) || 10,
-        maxWinners: parseInt(quantity) || 10,
+        maxWorkers: parseInt(quantity) || 10,
         category: "Services",
         currency: "SOL",
-        status: "open",
+        status: "OPEN",
       };
       await fetch(`${API_BASE}/tasks`, {
         method: "POST",
