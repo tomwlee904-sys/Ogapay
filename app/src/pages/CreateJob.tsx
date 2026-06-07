@@ -942,7 +942,7 @@ function SuccessModal({ onClose, taskId }) {
 // ── MAIN CREATE TASK COMPONENT ─────────────────────────────────────────────
 function CreateTask() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const { fmt } = useCurrency();
   const [showCustom, setShowCustom] = useState(false);
   
@@ -1000,14 +1000,20 @@ function CreateTask() {
           const err = await res.json().catch(() => ({}));
           throw new Error(err.message || 'Upgrade failed');
         }
-        // Update cached user so auth context sees POSTER role on reload
+        // Update cached user so auth context sees POSTER role
         try {
           const stored = JSON.parse(localStorage.getItem('ogapay_user') || '{}');
           stored.role = 'POSTER';
           localStorage.setItem('ogapay_user', JSON.stringify(stored));
         } catch(e) {}
-        setUpgradeMsg('Account upgraded! Redirecting...');
-        setTimeout(() => window.location.reload(), 500);
+        setUpgradeMsg('Account upgraded! You can now create jobs.');
+        // Refresh auth context user so role updates without page reload
+        if (typeof refreshUser === 'function') {
+          await refreshUser();
+        } else {
+          // fallback: force re-render by navigating to same page
+          setTimeout(() => navigate('/create-job', { replace: true }), 300);
+        }
       } catch (e) {
         setUpgradeMsg(e.message || 'Failed to upgrade. Contact support.');
       } finally {
