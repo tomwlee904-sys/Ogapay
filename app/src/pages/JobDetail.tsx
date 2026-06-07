@@ -262,7 +262,7 @@ export default function JobDetail() {
   if (loading) return <PageLoader />
   if (error || !job) return <ErrorState message={error || 'Task not found'} onBack={() => navigate(-1)} />
 
-  const isOpen = job.status === 'open' || job.status === 'active'
+  const isOpen = job.status === 'OPEN' || job.status === 'ACTIVE'
   const slotPct = pct(job.completions, job.slots)
 
   return (
