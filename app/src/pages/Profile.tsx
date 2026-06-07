@@ -32,6 +32,7 @@ const QUICK = [
   { icon: "briefcase", label: "Available Jobs", page: "tasks" },
   { icon: "bookmark", label: "Bookmarks", page: "bookmarks" },
   { icon: "circle-plus", label: "Create Job", page: "create" },
+  { icon: "briefcase", label: "Manage Jobs", page: "manage" },
 ];
 
 /* ─── Helpers ─── */
@@ -396,14 +397,14 @@ export default function Profile() {
 
   // Navigate for subpages
   if (subPage === "blog") { navigate('/blog'); return null; }
-  if (subPage === "jobs" || subPage === "monitor") { navigate('/tasks'); return null; }
+  if (subPage === "monitor") { navigate('/tasks'); return null; }
   if (subPage === "vault") { navigate('/vault'); return null; }
   if (subPage === "create") { navigate('/create'); return null; }
   if (subPage === "bookmarks") { navigate('/bookmarks'); return null; }
   if (subPage === "portal") { setTab("portal"); setSubPage(null); }
 
   // Render tab content
-  if (tab === "jobs") return <Layout><div className="pg">{tab === "jobs" && <MyJobsTab />}</div></Layout>;
+  if (tab === "jobs") { navigate('/manage-jobs'); return null; }
   if (tab === "referrals") return <Layout><div className="pg"><ReferralsTab /></div></Layout>;
   if (tab === "alerts") return <Layout><div className="pg"><AlertsTab /></div></Layout>;
   if (tab === "portal") {
@@ -838,6 +839,7 @@ export default function Profile() {
                 else if (q.page === 'create') navigate('/create');
                 else if (q.page === 'tasks') navigate('/tasks');
                 else if (q.page === 'monitor') navigate('/tasks');
+                else if (q.page === 'manage') navigate('/manage-jobs');
                 else if (q.page === 'bookmarks') navigate('/bookmarks');
                 else setSubPage(q.page);
               }}>
