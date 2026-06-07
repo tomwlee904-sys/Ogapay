@@ -531,7 +531,7 @@ export default function Profile() {
               <div>
                 <div style={{fontSize:12,fontWeight:600,color:'var(--text3)',marginBottom:4}}>TOTAL EARNED</div>
                 <div style={{fontFamily:'Outfit',fontSize:32,fontWeight:900,color:'var(--text)'}}>
-                  {loading ? <span className="skeleton" style={{width:120,display:'inline-block'}} /> : formatNgn(earningsTotal)}
+                  {loading ? <span className="skeleton" style={{width:120,display:'inline-block'}} /> : fmt(earningsTotal, "NGN")}
                 </div>
                 <div style={{fontSize:12,color:'var(--text2)',marginTop:2}}>
                   ≈ ${Number(usdcBal || 0).toFixed(2)} USDC
@@ -623,7 +623,7 @@ export default function Profile() {
                           {Number(totalNgn).toLocaleString()} <span style={{color:'#2563eb'}}>$OGA</span>
                         </>}
                       </span>
-                      {!loading && <span style={{fontSize:12,color:'var(--text2)'}}>≈ {formatNgn(ngnBal)}</span>}
+                      {!loading && <span style={{fontSize:12,color:'var(--text2)'}}>≈ {fmt(ngnBal, "NGN")}</span>}
                     </div>
 
                     {/* Quick actions */}
@@ -787,7 +787,7 @@ export default function Profile() {
                     <StatRow label="Sorsa Score" val={profileData?.workerProfile?.reputationScore?.toFixed(1) || '0.0'} info />
                     <StatRow label="Tasks Completed" val={profileData?.workerProfile?.tasksCompleted ?? 0} />
                     <StatRow label="Success Rate" val={profileData?.workerProfile?.successRate ? profileData.workerProfile.successRate + '%' : '0%'} />
-                    <StatRow label="Total Earned" val={profileData?.workerProfile?.totalEarned ? formatNgn(Number(profileData.workerProfile.totalEarned)) : formatNgn(0)} />
+                    <StatRow label="Total Earned" val={profileData?.workerProfile?.totalEarned ? fmt(Number(profileData.workerProfile.totalEarned), "NGN") : fmt(0, "NGN")} />
                     <StatRow label="Avg Rating" val={profileData?.workerProfile?.avgRating?.toFixed(1) || '0.0'} info />
                     <StatRow label="Verified X Account" val={profileData?.x_connected ? 'Yes' : 'No'} valClass={profileData?.x_connected ? 'yes' : 'no'} />
                     {!profileData?.x_connected && (
