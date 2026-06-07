@@ -35,9 +35,9 @@ export default function About() {
         }
         .ab-hero-sub{color:rgba(255,255,255,.7);font-size:16px;line-height:1.5;margin:14px 0 0;max-width:280px}
         @media(max-width:768px){.ab-hero-sub{max-width:none;margin-left:auto;margin-right:auto}}
-        .ab-hero-right{position:relative;height:500px;display:flex;align-items:center;justify-content:center;border-radius:12px;overflow:hidden}
+        .ab-hero-right{position:relative;height:500px;display:flex;align-items:center;justify-content:center;border-radius:16px;overflow:hidden;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)}
         @media(max-width:900px){.ab-hero-right{display:none}}
-        .ab-hero-right img{width:100%;height:100%;object-fit:cover;object-position:center top;border-radius:12px}
+        .ab-hero-right img{width:100%;height:100%;object-fit:cover;object-position:center;border-radius:12px;padding:4px}
 
         /* ── Floating cards ── */
         .ab-card{position:absolute;width:160px;border-radius:12px;background:#fff;box-shadow:0 8px 32px rgba(0,0,0,.2);overflow:hidden;cursor:pointer;transition:transform .3s ease,box-shadow .3s ease;z-index:3}

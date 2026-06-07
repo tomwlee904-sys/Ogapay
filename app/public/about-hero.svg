@@ -1,20 +1,76 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 700" fill="none">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 600" fill="none">
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0%" stop-color="#1a1a3e"/>
       <stop offset="100%" stop-color="#2d2d6b"/>
     </linearGradient>
   </defs>
-  <rect width="600" height="700" fill="url(#bg)"/>
-  <!-- Person silhouette -->
-  <circle cx="300" cy="220" r="80" fill="rgba(255,255,255,0.08)"/>
-  <ellipse cx="300" cy="520" rx="140" ry="160" fill="rgba(255,255,255,0.06)"/>
-  <!-- Floating icons -->
-  <rect x="60" y="140" width="48" height="48" rx="12" fill="rgba(255,255,255,0.08)"/>
-  <rect x="500" y="200" width="40" height="40" rx="10" fill="rgba(255,255,255,0.06)"/>
-  <rect x="80" y="420" width="36" height="36" rx="9" fill="rgba(255,255,255,0.05)"/>
-  <rect x="490" y="450" width="44" height="44" rx="11" fill="rgba(255,255,255,0.07)"/>
-  <!-- Lines -->
-  <rect x="120" y="150" width="80" height="6" rx="3" fill="rgba(255,255,255,0.06)"/>
-  <rect x="120" y="164" width="60" height="6" rx="3" fill="rgba(255,255,255,0.04)"/>
+  <rect width="520" height="600" fill="url(#bgGrad)"/>
+
+  <!-- Desk -->
+  <rect x="60" y="420" width="400" height="14" rx="4" fill="rgba(255,255,255,0.12)"/>
+  <rect x="80" y="434" width="12" height="80" rx="3" fill="rgba(255,255,255,0.08)"/>
+  <rect x="300" y="434" width="12" height="80" rx="3" fill="rgba(255,255,255,0.08)"/>
+
+  <!-- Laptop -->
+  <rect x="140" y="340" width="180" height="120" rx="8" fill="rgba(255,255,255,0.08)"/>
+  <rect x="146" y="346" width="168" height="94" rx="4" fill="rgba(255,255,255,0.12)"/>
+  <rect x="150" y="350" width="160" height="86" rx="3" fill="#0a0a2e"/>
+  <!-- Screen glow -->
+  <rect x="156" y="356" width="148" height="74" rx="2" fill="#1a1a4e"/>
+  <rect x="160" y="360" width="140" height="6" rx="2" fill="rgba(31,140,255,0.3)"/>
+  <rect x="160" y="372" width="100" height="4" rx="2" fill="rgba(255,255,255,0.15)"/>
+  <rect x="160" y="382" width="120" height="4" rx="2" fill="rgba(255,255,255,0.1)"/>
+  <rect x="160" y="392" width="80" height="4" rx="2" fill="rgba(255,255,255,0.1)"/>
+  <rect x="160" y="402" width="110" height="4" rx="2" fill="rgba(255,255,255,0.08)"/>
+  <rect x="160" y="412" width="60" height="4" rx="2" fill="rgba(31,140,255,0.3)"/>
+  <!-- Laptop base -->
+  <rect x="130" y="458" width="200" height="6" rx="3" fill="rgba(255,255,255,0.06)"/>
+
+  <!-- Person - Head -->
+  <circle cx="260" cy="140" r="45" fill="rgba(255,255,255,0.12)"/>
+  <circle cx="260" cy="140" r="42" fill="rgba(255,180,140,0.15)"/>
+  <!-- Hair -->
+  <ellipse cx="260" cy="118" rx="44" ry="32" fill="rgba(40,30,20,0.4)"/>
+  <ellipse cx="260" cy="108" rx="38" ry="24" fill="rgba(40,30,20,0.5)"/>
+
+  <!-- Face features -->
+  <ellipse cx="248" cy="134" rx="3" ry="3.5" fill="rgba(40,30,20,0.3)"/>
+  <ellipse cx="272" cy="134" rx="3" ry="3.5" fill="rgba(40,30,20,0.3)"/>
+  <ellipse cx="260" cy="148" rx="6" ry="4" fill="rgba(180,100,80,0.25)"/>
+  <!-- Smile -->
+  <path d="M250 152 Q260 162 270 152" stroke="rgba(40,30,20,0.2)" stroke-width="2" fill="none" stroke-linecap="round"/>
+
+  <!-- Body -->
+  <path d="M200 195 Q200 185 210 185 L310 185 Q320 185 320 195 L320 350 Q320 360 310 360 L210 360 Q200 360 200 350 Z" fill="rgba(255,255,255,0.1)"/>
+  <!-- Top/shirt -->
+  <path d="M210 185 L220 220 L300 220 L310 185" fill="rgba(31,140,255,0.15)"/>
+
+  <!-- Arms reaching to keyboard -->
+  <path d="M210 220 Q170 260 200 340 Q205 355 215 350" stroke="rgba(255,180,140,0.2)" stroke-width="14" fill="none" stroke-linecap="round"/>
+  <path d="M310 220 Q350 260 320 340 Q315 355 305 350" stroke="rgba(255,180,140,0.2)" stroke-width="14" fill="none" stroke-linecap="round"/>
+
+  <!-- Hands -->
+  <circle cx="215" cy="348" r="8" fill="rgba(255,180,140,0.2)"/>
+  <circle cx="305" cy="348" r="8" fill="rgba(255,180,140,0.2)"/>
+
+  <!-- Floating decorative elements -->
+  <circle cx="80" cy="120" r="20" fill="rgba(31,140,255,0.08)"/>
+  <rect x="70" y="135" width="60" height="6" rx="3" fill="rgba(255,255,255,0.04)"/>
+  <rect x="70" y="148" width="45" height="6" rx="3" fill="rgba(255,255,255,0.03)"/>
+
+  <circle cx="440" cy="200" r="16" fill="rgba(22,163,74,0.08)"/>
+  <rect x="425" y="222" width="50" height="6" rx="3" fill="rgba(255,255,255,0.04)"/>
+  <rect x="425" y="234" width="35" height="6" rx="3" fill="rgba(255,255,255,0.03)"/>
+
+  <circle cx="60" cy="320" r="12" fill="rgba(31,140,255,0.06)"/>
+  <circle cx="460" cy="380" r="10" fill="rgba(22,163,74,0.06)"/>
+  <circle cx="90" cy="460" r="14" fill="rgba(255,255,255,0.04)"/>
+  <circle cx="440" cy="480" r="8" fill="rgba(31,140,255,0.05)"/>
+
+  <!-- Dots -->
+  <circle cx="120" cy="200" r="3" fill="rgba(255,255,255,0.05)"/>
+  <circle cx="400" cy="150" r="3" fill="rgba(255,255,255,0.04)"/>
+  <circle cx="450" cy="300" r="2" fill="rgba(255,255,255,0.04)"/>
+  <circle cx="70" cy="380" r="2" fill="rgba(255,255,255,0.04)"/>
 </svg>
