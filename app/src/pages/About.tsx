@@ -9,7 +9,6 @@ function TablerIcon({ name, size = 20 }: { name: string; size?: number }) {
 }
 
 export default function About() {
-  const [imgError, setImgError] = useState(false)
   const [bouncing, setBouncing] = useState<string | null>(null)
 
   const handleCardClick = useCallback((id: string) => {
@@ -23,20 +22,22 @@ export default function About() {
         .ab-page{max-width:100%!important;padding:0}
 
         /* ── Hero ── */
-        .ab-hero{position:relative;min-height:580px;overflow:hidden;background:${NAVY}}
-        .ab-hero-img{width:100%;height:100%;position:absolute;inset:0;object-fit:cover;object-position:center top}
-        .ab-hero-overlay{position:absolute;inset:0;background:linear-gradient(90deg,rgba(25,28,107,.7) 0%,rgba(25,28,107,.3) 50%,rgba(25,28,107,.1) 100%)}
-        .ab-hero-text{position:absolute;left:40px;bottom:60px;z-index:2}
-        @media(max-width:768px){.ab-hero-text{left:24px;bottom:40px;right:24px}}
+        .ab-hero{background:${NAVY};min-height:580px;display:flex;align-items:center}
+        .ab-hero-inner{width:100%;max-width:1200px;margin:0 auto;padding:60px 40px;display:grid;grid-template-columns:4fr 6fr;gap:40px;align-items:center}
+        @media(max-width:900px){.ab-hero-inner{grid-template-columns:1fr;padding:48px 24px;text-align:center}}
+        .ab-hero-left{display:flex;flex-direction:column;gap:4px;z-index:2}
         .ab-hero-tag{color:${GREEN};font-size:12px;font-weight:800;letter-spacing:.12em;margin:0 0 8px}
         .ab-hero-stack{font-family:Outfit,sans-serif;font-size:72px;font-weight:900;line-height:1;color:#fff;margin:0}
-        .ab-hero-stack .green{color:${GREEN};font-family:'DM Serif Display',Georgia,serif;font-style:italic;font-weight:400;font-size:72px}
+        .ab-hero-stack .green{color:${GREEN};font-family:'DM Serif Display',Georgia,serif;font-style:italic;font-weight:400;font-size:72px;display:inline}
         @media(max-width:768px){
           .ab-hero-stack{font-size:48px}
           .ab-hero-stack .green{font-size:48px}
         }
-        .ab-hero-sub{color:rgba(255,255,255,.7);font-size:16px;line-height:1.5;margin:14px 0 0;max-width:300px}
-        @media(max-width:768px){.ab-hero-sub{max-width:none}}
+        .ab-hero-sub{color:rgba(255,255,255,.7);font-size:16px;line-height:1.5;margin:14px 0 0;max-width:280px}
+        @media(max-width:768px){.ab-hero-sub{max-width:none;margin-left:auto;margin-right:auto}}
+        .ab-hero-right{position:relative;height:500px;display:flex;align-items:center;justify-content:center;border-radius:12px;overflow:hidden}
+        @media(max-width:900px){.ab-hero-right{display:none}}
+        .ab-hero-right img{width:100%;height:100%;object-fit:cover;object-position:center top;border-radius:12px}
 
         /* ── Floating cards ── */
         .ab-card{position:absolute;width:160px;border-radius:12px;background:#fff;box-shadow:0 8px 32px rgba(0,0,0,.2);overflow:hidden;cursor:pointer;transition:transform .3s ease,box-shadow .3s ease;z-index:3}
@@ -55,7 +56,7 @@ export default function About() {
         }
         .ab-card.bouncing{animation:cardBounce .5s ease}
 
-        @media(max-width:768px){.ab-card{display:none}}
+        @media(max-width:900px){.ab-card{display:none}}
 
         /* ── Mission ── */
         .ab-mission{padding:80px 0;background:#fff}
@@ -117,33 +118,26 @@ export default function About() {
       <div className="ab-page">
         {/* ── Hero ── */}
         <section className="ab-hero">
-          <img
-            src="/about-hero.jpg"
-            alt="OgaPay worker"
-            className="ab-hero-img"
-            onError={() => setImgError(true)}
-            style={{ display: imgError ? 'none' : undefined }}
-          />
-          {imgError && (
-            <div style={{
-              position: 'absolute', inset: 0,
-              background: `linear-gradient(135deg, ${NAVY}, #2a2d7a)`,
-            }} />
-          )}
-          <div className="ab-hero-overlay" />
-
-          <div className="ab-hero-text">
-            <div className="ab-hero-tag">ABOUT US</div>
-            <div className="ab-hero-stack">
-              Work.<br />
-              Earn.<br />
-              Grow.
+          <div className="ab-hero-inner">
+            <div className="ab-hero-left">
+              <div className="ab-hero-tag">ABOUT US</div>
+              <div className="ab-hero-stack">
+                Work.<br />
+                Earn.<br />
+                Grow.
+              </div>
+              <div className="ab-hero-stack" style={{ color: GREEN, fontFamily: "'DM Serif Display', Georgia, serif", fontStyle: 'italic', fontWeight: 400, fontSize: 72 }}>Change.</div>
+              <p className="ab-hero-sub">
+                Join thousands of talented Nigerian workers and task creators building better futures together.
+              </p>
             </div>
-            <div className="ab-hero-stack" style={{ color: GREEN, fontFamily: "'DM Serif Display', Georgia, serif", fontStyle: 'italic', fontWeight: 400, fontSize: 72 }}>Change.</div>
-            <p className="ab-hero-sub">
-              Join thousands of talented Nigerian workers and task creators building better futures together.
-            </p>
-          </div>
+
+            <div className="ab-hero-right">
+              <img
+                src="/about-hero.svg"
+                alt="OgaPay worker"
+                onError={(e) => { e.currentTarget.style.display = 'none' }}
+              />
 
           {/* Card 1 — chidi */}
           <div
@@ -196,6 +190,8 @@ export default function About() {
                 <div className="ab-card-line" />
                 <div className="ab-card-line" />
               </div>
+            </div>
+          </div>
             </div>
           </div>
         </section>
