@@ -1009,13 +1009,8 @@ function CreateTask() {
           localStorage.setItem('ogapay_user', JSON.stringify(stored));
         } catch(e) {}
         setUpgradeMsg('Account upgraded! You can now create jobs.');
-        // Refresh auth context user so role updates without page reload
-        if (typeof refreshUser === 'function') {
-          await refreshUser();
-        } else {
-          // fallback: force re-render by navigating to same page
-          setTimeout(() => navigate('/create-job', { replace: true }), 300);
-        }
+        // Navigate(0) does a soft reload — localStorage role is now POSTER so the gate passes
+        setTimeout(() => navigate(0), 800);
       } catch (e) {
         setUpgradeMsg(e.message || 'Failed to upgrade. Contact support.');
       } finally {
