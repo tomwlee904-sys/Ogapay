@@ -43,6 +43,7 @@ const EditProfile = lazy(() => import('./pages/EditProfile'))
 const TaskHistory = lazy(() => import('./pages/TaskHistory'))
 const Developer = lazy(() => import('./pages/Developer'))
 const Roadmap = lazy(() => import('./pages/Roadmap'))
+const About = lazy(() => import('./pages/About'))
 const Workers = lazy(() => import('./pages/Workers'))
 const Wurkers = lazy(() => import('./pages/Wurkers'))
 const WorkerApply = lazy(() => import('./pages/WorkerApply'))
@@ -191,6 +192,7 @@ export default function App() {
             {/* ── Developer & Roadmap ── */}
             <Route path="/developer" element={<AuthGuard><Developer /></AuthGuard>} />
             <Route path="/roadmap" element={<Roadmap />} />
+            <Route path="/about" element={<About />} />
 
             {/* ── Admin ── */}
             <Route path="/admin" element={<AuthGuard><Admin /></AuthGuard>} />
