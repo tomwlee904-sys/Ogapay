@@ -304,7 +304,13 @@ export default function Profile() {
           apiRequest('/users/referrals/stats').catch(() => null),
           apiRequest('/kyc/status').catch(() => null),
         ]);
-        if (userData) setProfileData(userData);
+        if (userData) {
+          setProfileData(userData);
+          // Load bank details from backend if available
+          if (userData.bankAccount) setAccountNumber(userData.bankAccount);
+          if (userData.bankName) setBankName(userData.bankName);
+          if (userData.accountName) setAccountName(userData.accountName);
+        }
         if (balData) setWalletBal(balData);
         if (txData) setTransactions(Array.isArray(txData) ? txData : txData?.data || []);
         if (refData) setReferralStats(refData);
@@ -368,21 +374,32 @@ export default function Profile() {
   const isKycVerified = kycStatus?.status === 'APPROVED' || profileData?.kyc?.status === 'APPROVED';
 
   // Bank account save
-  const saveBank = () => {
+  const saveBank = async () => {
     if (!accountNumber || !bankName || !accountName) {
       setBankMsg('Please fill all fields');
       return;
     }
     setSavingBank(true);
-    localStorage.setItem('ogapay_bank_account', accountNumber);
-    localStorage.setItem('ogapay_bank_name', bankName);
-    localStorage.setItem('ogapay_account_name', accountName);
-    setTimeout(() => {
+    setBankMsg('');
+    try {
+      await apiRequest('/users/me', {
+        method: 'PATCH',
+        body: JSON.stringify({
+          bankAccount: accountNumber,
+          bankName: bankName,
+          accountName: accountName,
+        }),
+      });
+      localStorage.setItem('ogapay_bank_account', accountNumber);
+      localStorage.setItem('ogapay_bank_name', bankName);
+      localStorage.setItem('ogapay_account_name', accountName);
       setEditingBank(false);
-      setBankMsg('');
       setSavingBank(false);
       showToast('Bank account saved');
-    }, 300);
+    } catch (err) {
+      setBankMsg('Failed to save bank details. Please try again.');
+      setSavingBank(false);
+    }
   };
 
   // Chart data
@@ -923,11 +940,25 @@ export default function Profile() {
               <div>
                 <div style={{fontSize:13,fontWeight:700,marginBottom:4}}>Profile Photo</div>
                 <label style={{display:'inline-flex',alignItems:'center',gap:6,height:34,padding:'0 14px',borderRadius:8,border:'1.5px solid var(--border)',background:'var(--bg2)',cursor:'pointer',fontSize:12,fontWeight:600,color:'var(--text2)',fontFamily:'inherit'}}>
-                  <i className="ti ti-camera" /> Change Photo
-                  <input type="text" style={{display:'none'}} placeholder="Paste image URL" 
-                    onBlur={e => setEditForm(f => ({...f, avatarUrl: e.target.value}))} />
+                  <i className="ti ti-camera" /> Upload Photo
+                  <input type="file" accept="image/*" style={{display:'none'}}
+                    onChange={e => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      // Validate file size (max 2MB)
+                      if (file.size > 2 * 1024 * 1024) {
+                        setEditErrors(prev => ({...prev, avatar: 'Image must be under 2MB'}));
+                        return;
+                      }
+                      const reader = new FileReader();
+                      reader.onload = (ev) => {
+                        const dataUrl = ev.target?.result as string;
+                        setEditForm(f => ({...f, avatarUrl: dataUrl}));
+                      };
+                      reader.readAsDataURL(file);
+                    }} />
                 </label>
-                <div style={{fontSize:11,color:'var(--text3)',marginTop:4}}>Paste an image URL or leave blank for initials</div>
+                <div style={{fontSize:11,color:'var(--text3)',marginTop:4}}>Upload a photo from your device, or paste a URL below</div>
                 <input type="text" placeholder="https://example.com/photo.jpg" style={{width:'100%',marginTop:8,padding:'6px 10px',border:'1px solid var(--border)',borderRadius:6,fontSize:12,background:'var(--bg2)',color:'var(--text)',outline:'none'}}
                   value={editForm.avatarUrl} onChange={e => setEditForm(f => ({...f, avatarUrl: e.target.value}))} />
               </div>
