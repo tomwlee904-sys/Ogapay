@@ -38,6 +38,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const refreshUser = async () => {
     try {
       const nextUser = await apiRequest<AuthUser>('/auth/me')
+      // If a role override is set (e.g. after manual upgrade), preserve it
+      const roleOverride = localStorage.getItem('ogapay_role_override')
+      if (roleOverride) {
+        nextUser.role = roleOverride as any
+      }
       setUser(nextUser)
       persistAuthSession({ user: nextUser })
       return nextUser
