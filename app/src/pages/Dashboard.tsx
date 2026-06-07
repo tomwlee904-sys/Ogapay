@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import Layout from "../components/Layout";
 import { useAuth } from "../context/AuthContext";
+import { API_BASE } from "../lib/api";
 
 const ACCENT = "#1F8CFF";
 
@@ -192,8 +193,59 @@ export default function OgaPayDashboard() {
     return false;
   });
   const [selProvider, setSelProvider] = useState(null);
-  const [availableTasks] = useState("0");
-  const [totalEarned] = useState("₦0.00");
+  const [availableTasks, setAvailableTasks] = useState("0");
+  const [totalEarned, setTotalEarned] = useState("₦0.00");
+  const [dashLoading, setDashLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadDashboard() {
+      try {
+        const token = localStorage.getItem("ogapay_access_token");
+        const headers: any = {};
+        if (token) headers["Authorization"] = "Bearer " + token;
+
+        // Fetch dashboard summary
+        const [sumRes, tasksRes] = await Promise.all([
+          fetch(API_BASE + "/dashboard/summary", { headers }).catch(() => null),
+          fetch(API_BASE + "/tasks?limit=1&status=OPEN", { headers }).catch(() => null),
+        ]);
+
+        if (sumRes && sumRes.ok) {
+          const sumJson = await sumRes.json();
+          if (sumJson.success && sumJson.data) {
+            const metrics = sumJson.data.metrics || {};
+            if (metrics.postedTasks !== undefined) {
+              // update stats if needed
+            }
+          }
+        }
+
+        if (tasksRes && tasksRes.ok) {
+          const tasksJson = await tasksRes.json();
+          if (tasksJson.success && tasksJson.data) {
+            const taskData = tasksJson.data.tasks || tasksJson.data;
+            if (Array.isArray(taskData)) {
+              setAvailableTasks(String(taskData.length));
+            }
+          }
+        }
+
+        // Fetch earnings
+        const earnRes = await fetch(API_BASE + "/users/me/earnings", { headers }).catch(() => null);
+        if (earnRes && earnRes.ok) {
+          const earnJson = await earnRes.json();
+          if (earnJson.success && earnJson.data) {
+            const total = earnJson.data.total || earnJson.data.totalEarned || 0;
+            setTotalEarned("₦" + Number(total).toLocaleString());
+          }
+        }
+      } catch (e) {
+        // Keep defaults
+      }
+      setDashLoading(false);
+    }
+    loadDashboard();
+  }, []);
 
   const fname = user?.firstName || getUser().firstName || "there";
   const lname = user?.lastName || getUser().lastName || "";

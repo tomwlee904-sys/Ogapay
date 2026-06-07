@@ -1,4 +1,6 @@
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { API_BASE } from '../lib/api'
 import Layout from '../components/Layout'
 
 const navItems = [
@@ -13,15 +15,65 @@ const navItems = [
   { icon: 'ti ti-eye', label: 'View My Profile' },
 ]
 
-const stats = [
-  { icon: 'ti ti-star', color: '#1F8CFF', count: 124, label: 'Reviews' },
-  { icon: 'ti ti-zap', color: '#F59E0B', count: 8, label: 'Challenges Participated' },
-  { icon: 'ti ti-trophy', color: '#16a34a', count: 12, label: 'Won' },
-  { icon: 'ti ti-heart', color: '#EC4899', count: 34, label: 'Compliments' },
-  { icon: 'ti ti-users', color: '#2563EB', count: 15, label: 'Communities' },
-  { icon: 'ti ti-gift', color: '#1F8CFF', count: 28, label: 'Tips Received' },
-  { icon: 'ti ti-file-text', color: '#F59E0B', count: 6, label: 'Blogs' },
-]
+const [stats, setStats] = useState([
+  { icon: 'ti ti-star', color: '#1F8CFF', count: 0, label: 'Reviews' },
+  { icon: 'ti ti-zap', color: '#F59E0B', count: 0, label: 'Challenges Participated' },
+  { icon: 'ti ti-trophy', color: '#16a34a', count: 0, label: 'Won' },
+  { icon: 'ti ti-heart', color: '#EC4899', count: 0, label: 'Compliments' },
+  { icon: 'ti ti-users', color: '#2563EB', count: 0, label: 'Communities' },
+  { icon: 'ti ti-gift', color: '#1F8CFF', count: 0, label: 'Tips Received' },
+  { icon: 'ti ti-file-text', color: '#F59E0B', count: 0, label: 'Blogs' },
+])
+
+useEffect(() => {
+  async function loadWorkerStats() {
+    try {
+      const token = localStorage.getItem('ogapay_access_token')
+      if (!token) return
+      const headers = { 'Authorization': 'Bearer ' + token }
+
+      const [sumRes, subRes] = await Promise.all([
+        fetch(API_BASE + '/dashboard/summary', { headers }).catch(() => null),
+        fetch(API_BASE + '/users/me/submissions', { headers }).catch(() => null),
+      ])
+
+      // Parse dashboard summary
+      let submissions = 0, reviews = 0
+      if (sumRes && sumRes.ok) {
+        const sumJson = await sumRes.json()
+        if (sumJson.success && sumJson.data) {
+          submissions = sumJson.data.metrics?.submissions || 0
+        }
+      }
+
+      // Parse submissions for stats
+      let approved = 0, rejected = 0, pending = 0
+      if (subRes && subRes.ok) {
+        const subJson = await subRes.json()
+        if (subJson.success && Array.isArray(subJson.data)) {
+          subJson.data.forEach((s: any) => {
+            if (s.status === 'APPROVED') approved++
+            else if (s.status === 'REJECTED') rejected++
+            else pending++
+          })
+        }
+      }
+
+      setStats([
+        { icon: 'ti ti-star', color: '#1F8CFF', count: reviews || 0, label: 'Reviews' },
+        { icon: 'ti ti-zap', color: '#F59E0B', count: submissions || 0, label: 'Tasks Done' },
+        { icon: 'ti ti-trophy', color: '#16a34a', count: approved || 0, label: 'Approved' },
+        { icon: 'ti ti-heart', color: '#EC4899', count: pending || 0, label: 'Pending Review' },
+        { icon: 'ti ti-users', color: '#2563EB', count: 0, label: 'Communities' },
+        { icon: 'ti ti-gift', color: '#1F8CFF', count: 0, label: 'Tips Received' },
+        { icon: 'ti ti-file-text', color: '#F59E0B', count: 0, label: 'Blogs' },
+      ])
+    } catch (e) {
+      // Keep defaults
+    }
+  }
+  loadWorkerStats()
+}, [])
 
 export default function WorkerPortal() {
   const navigate = useNavigate()
