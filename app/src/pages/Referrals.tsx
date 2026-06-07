@@ -1,18 +1,53 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Layout from '../components/Layout'
+import { apiRequest } from '../lib/api'
+import { useAuth } from '../context/AuthContext'
 
-const referrals = [
-  { name: 'John Doe', date: '2 days ago', earnings: 'NGN 500', status: 'Active' },
-  { name: 'Jane Smith', date: '1 week ago', earnings: 'NGN 300', status: 'Active' },
-  { name: 'Mike Johnson', date: '2 weeks ago', earnings: 'NGN 200', status: 'Active' },
-]
+function formatTimeAgo(dateStr: string) {
+  const date = new Date(dateStr)
+  const now = new Date()
+  const diff = now.getTime() - date.getTime()
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24))
+  if (days === 0) return 'Today'
+  if (days === 1) return 'Yesterday'
+  if (days < 7) return `${days} days ago`
+  if (days < 14) return '1 week ago'
+  return date.toLocaleDateString()
+}
 
 export default function Referrals() {
+  const { user } = useAuth()
   const [copied, setCopied] = useState(false)
+  const [stats, setStats] = useState<any>(null)
+  const [referrals, setReferrals] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const [statsData, txData] = await Promise.all([
+          apiRequest('/users/referrals/stats').catch(() => null),
+          apiRequest('/users/transactions/history?type=REFERRAL_BONUS').catch(() => null),
+        ])
+        if (statsData) setStats(statsData)
+        if (txData) {
+          const list = Array.isArray(txData) ? txData : txData?.data ?? txData?.transactions ?? []
+          setReferrals(list.filter((t: any) => t.type === 'REFERRAL_BONUS'))
+        }
+      } catch {}
+      setLoading(false)
+    })()
+  }, [])
+
+  const totalReferrals = stats?.totalReferrals ?? stats?.total ?? referrals.length
+  const totalEarned = stats?.totalEarnings ?? stats?.earnings ?? 0
+  const monthEarned = stats?.monthEarnings ?? stats?.month ?? 0
+  const refCode = user?.referralCode || stats?.referralCode || ''
+  const refUrl = refCode ? `https://ogapay.app/ref/${refCode}` : 'https://ogapay.app/ref/your-code'
 
   const copyLink = async () => {
     try {
-      await navigator.clipboard.writeText('https://ogapay.app/ref/your-code')
+      await navigator.clipboard.writeText(refUrl)
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     } catch {}
@@ -61,9 +96,9 @@ export default function Referrals() {
 
       <div className="rf-stats">
         {[
-          { icon: 'ti ti-users', color: '#1F8CFF', count: '3', label: 'Total Referrals' },
-          { icon: 'ti ti-coin', color: '#16a34a', count: 'NGN 1,000', label: 'Total Earned' },
-          { icon: 'ti ti-trending-up', color: '#2563EB', count: 'NGN 500', label: 'This Month' },
+          { icon: 'ti ti-users', color: '#1F8CFF', count: loading ? '...' : String(totalReferrals), label: 'Total Referrals' },
+          { icon: 'ti ti-coin', color: '#16a34a', count: loading ? '...' : `NGN ${Number(totalEarned).toLocaleString()}`, label: 'Total Earned' },
+          { icon: 'ti ti-trending-up', color: '#2563EB', count: loading ? '...' : `NGN ${Number(monthEarned).toLocaleString()}`, label: 'This Month' },
         ].map((s, i) => (
           <div className="rf-stat" key={i}>
             <i className={s.icon} style={{color: s.color}} />
@@ -77,7 +112,7 @@ export default function Referrals() {
         <div className="rf-ref-title"><i className="ti ti-link" style={{color:'var(--accent)',marginRight:6}} />Your Referral Link</div>
         <div className="rf-ref-desc">Share this link with friends — you earn when they sign up and complete tasks</div>
         <div className="rf-ref-row">
-          <input type="text" value="https://ogapay.app/ref/your-code" readOnly />
+          <input type="text" value={refUrl} readOnly />
           <button onClick={copyLink}>{copied ? 'Copied!' : 'Copy Link'}</button>
         </div>
       </div>
@@ -86,7 +121,9 @@ export default function Referrals() {
         <i className="ti ti-list" style={{color:'var(--accent)',marginRight:6}} />Referral History
       </div>
 
-      {referrals.length === 0 ? (
+      {loading ? (
+        <div style={{textAlign:'center',padding:'32px 20px',color:'var(--text2)',fontSize:14}}>Loading...</div>
+      ) : referrals.length === 0 ? (
         <div className="rf-empty">
           <i className="ti ti-users" />
           <h3 style={{fontFamily:'Outfit',fontWeight:800,margin:'0 0 4px',color:'var(--text)'}}>No referrals yet</h3>
@@ -98,10 +135,10 @@ export default function Referrals() {
             <div className="rf-item" key={i}>
               <div className="rf-avatar"><i className="ti ti-user" /></div>
               <div className="rf-info">
-                <div className="rf-name">{r.name}</div>
-                <div className="rf-date">{r.date}</div>
+                <div className="rf-name">{r.description || 'Referred User'}</div>
+                <div className="rf-date">{formatTimeAgo(r.createdAt || r.date)}</div>
               </div>
-              <div className="rf-earn">{r.earnings}</div>
+              <div className="rf-earn">+NGN {Number(r.amount || 0).toLocaleString()}</div>
             </div>
           ))}
         </div>

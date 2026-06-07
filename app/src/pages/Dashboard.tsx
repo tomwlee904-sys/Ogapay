@@ -1,8 +1,7 @@
-// @ts-nocheck
 import { useState, useEffect } from "react";
 import Layout from "../components/Layout";
 import { useAuth } from "../context/AuthContext";
-import { API_BASE } from "../lib/api";
+import { apiRequest } from "../lib/api";
 
 const ACCENT = "#1F8CFF";
 
@@ -10,19 +9,6 @@ const ACCENT = "#1F8CFF";
 const Icon = ({ n, s = 18, c = "currentColor" }) => (
   <i className={`ti ti-${n}`} style={{ fontSize: s, color: c, lineHeight: 1, flexShrink: 0 }} />
 );
-
-/* ─── READ USER FROM localStorage ─────────────────────────────── */
-function getUser() {
-  try { return JSON.parse(localStorage.getItem("ogapay_user")) || {}; } catch { return {}; }
-}
-
-function getStep(key) {
-  return localStorage.getItem(key) === "true";
-}
-
-function setStep(key) {
-  localStorage.setItem(key, "true");
-}
 
 /* ─── STYLES (injected inline to preserve exact layout) ────────── */
 const CSS = `
@@ -151,7 +137,7 @@ const CSS = `
   .dash-grid { display: flex; flex-direction: column; gap: 24px; }
   @media(min-width: 769px) { .dash-grid { display: grid; grid-template-columns: 1fr 280px; } }
 
-  /* Locked step styling (Bug 2 fix) */
+  /* Locked step styling */
   .dash-step-locked { opacity: 0.35; pointer-events: none; filter: grayscale(0.8); }
   .dash-step-locked .dash-btn { pointer-events: none; }
   .dash-step-locked .dash-provider { pointer-events: none; }
@@ -159,111 +145,76 @@ const CSS = `
 
 export default function OgaPayDashboard() {
   const { user, isAuthed } = useAuth();
-  const [step1, setStep1] = useState(getStep("ogapay_step_profile"));
-  const [step2, setStep2] = useState(getStep("ogapay_step_wallet"));
-  const [step3, setStep3] = useState(getStep("ogapay_step_community"));
-  const [step4, setStep4] = useState(getStep("ogapay_step_task"));
-  const [verifSent, setVerifSent] = useState(false);
-  const [walletConnected, setWalletConnected] = useState(false);
-  const [isNew, setIsNew] = useState(() => {
-    // Check createdAt timestamp - if user created < 5 min ago, show "Welcome"
-    try {
-      const u = JSON.parse(localStorage.getItem("ogapay_user")) || {};
-      let createdTs = u.createdAt || u.created_at || u.metadata?.createdAt || null;
-      if (createdTs) {
-        const ts = typeof createdTs === 'number' ? createdTs * 1000 : new Date(createdTs).getTime();
-        if (!isNaN(ts) && Date.now() - ts < 5 * 60 * 1000) return true;
-      }
-    } catch {}
-    // Check dedicated registration timestamp (set below when flag is found)
-    const regTs = localStorage.getItem("ogapay_registered_at");
-    if (regTs) {
-      const ts = parseInt(regTs, 10);
-      if (!isNaN(ts) && Date.now() - ts < 5 * 60 * 1000) return true;
-    }
-    // When the new-user flag is found, persist a timestamp so subsequent loads still detect new user
-    const n = localStorage.getItem("ogapay_is_new_user") === "true";
-    if (n) {
-      if (!localStorage.getItem("ogapay_registered_at")) {
-        localStorage.setItem("ogapay_registered_at", String(Date.now()));
-      }
-      localStorage.removeItem("ogapay_is_new_user");
-      return true;
-    }
-    return false;
-  });
-  const [selProvider, setSelProvider] = useState(null);
+  const [dashLoading, setDashLoading] = useState(true);
+  const [summaryData, setSummaryData] = useState<any>(null);
   const [availableTasks, setAvailableTasks] = useState("0");
   const [totalEarned, setTotalEarned] = useState("₦0.00");
-  const [dashLoading, setDashLoading] = useState(true);
+  const [communityJoined, setCommunityJoined] = useState(false);
+
+  const [isNew, setIsNew] = useState(() => {
+    if (!user?.createdAt) return false;
+    const ts = new Date(user.createdAt).getTime();
+    return !isNaN(ts) && Date.now() - ts < 5 * 60 * 1000;
+  });
 
   useEffect(() => {
     async function loadDashboard() {
+      setDashLoading(true);
       try {
-        const token = localStorage.getItem("ogapay_access_token");
-        const headers: any = {};
-        if (token) headers["Authorization"] = "Bearer " + token;
-
-        // Fetch dashboard summary
-        const [sumRes, tasksRes] = await Promise.all([
-          fetch(API_BASE + "/dashboard/summary", { headers }).catch(() => null),
-          fetch(API_BASE + "/tasks?limit=1&status=OPEN", { headers }).catch(() => null),
+        const [summary, tasksResponse, earningsResponse] = await Promise.all([
+          apiRequest<any>("/dashboard/summary").catch(() => null),
+          apiRequest<any>("/tasks?limit=1&status=OPEN").catch(() => null),
+          apiRequest<any>("/users/me/earnings").catch(() => null),
         ]);
 
-        if (sumRes && sumRes.ok) {
-          const sumJson = await sumRes.json();
-          if (sumJson.success && sumJson.data) {
-            const metrics = sumJson.data.metrics || {};
-            if (metrics.postedTasks !== undefined) {
-              // update stats if needed
-            }
+        if (summary) setSummaryData(summary);
+
+        if (tasksResponse) {
+          const tasks = tasksResponse.tasks ?? tasksResponse;
+          if (Array.isArray(tasks)) {
+            setAvailableTasks(String(tasks.length));
+          } else if (tasksResponse.total !== undefined) {
+            setAvailableTasks(String(tasksResponse.total));
           }
         }
 
-        if (tasksRes && tasksRes.ok) {
-          const tasksJson = await tasksRes.json();
-          if (tasksJson.success && tasksJson.data) {
-            const taskData = tasksJson.data.tasks || tasksJson.data;
-            if (Array.isArray(taskData)) {
-              setAvailableTasks(String(taskData.length));
-            }
-          }
-        }
-
-        // Fetch earnings
-        const earnRes = await fetch(API_BASE + "/users/me/earnings", { headers }).catch(() => null);
-        if (earnRes && earnRes.ok) {
-          const earnJson = await earnRes.json();
-          if (earnJson.success && earnJson.data) {
-            const total = earnJson.data.total || earnJson.data.totalEarned || 0;
-            setTotalEarned("₦" + Number(total).toLocaleString());
-          }
+        if (earningsResponse) {
+          const total = earningsResponse.total ?? earningsResponse.totalEarned ?? 0;
+          setTotalEarned("₦" + Number(total).toLocaleString());
         }
       } catch (e) {
-        // Keep defaults
+        // keep defaults
       }
       setDashLoading(false);
     }
     loadDashboard();
+    const onFocus = () => loadDashboard();
+    window.addEventListener('focus', onFocus);
+    return () => window.removeEventListener('focus', onFocus);
   }, []);
 
-  const fname = user?.firstName || getUser().firstName || "there";
-  const lname = user?.lastName || getUser().lastName || "";
-  const email = user?.email || getUser().email || "";
+  const fname = user?.firstName || "there";
+  const lname = user?.lastName || "";
+  const email = user?.email || "";
+  const isEmailVerified = user?.isEmailVerified || false;
   const initials = `${(fname[0] || "").toUpperCase()}${(lname[0] || "").toUpperCase()}`;
-  const stepsDone = [step1, step2, step3, step4];
+
+  const metrics = summaryData?.metrics || {};
+  const postedTasks = metrics.postedTasks ?? 0;
+  const totalSpent = metrics.totalSpent ?? 0;
+  const activeTasks = metrics.activeTasks ?? 0;
+  const completedTasks = metrics.completedTasks ?? 0;
+  const walletConnected = metrics.walletConnected ?? false;
+
+  const step1Done = !!(fname && lname && isEmailVerified);
+  const step2Done = !!walletConnected;
+  const step3Done = communityJoined;
+  const step4Done = completedTasks > 0;
+  const stepsDone = [step1Done, step2Done, step3Done, step4Done];
   const completed = stepsDone.filter(Boolean).length;
   const total = 4;
   const pct = Math.round((completed / total) * 100);
   const allDone = completed === total;
-
-  const doStep = (idx, key) => {
-    setStep(key);
-    if (idx === 0) setStep1(true);
-    if (idx === 1) setStep2(true);
-    if (idx === 2) setStep3(true);
-    if (idx === 3) setStep4(true);
-  };
 
   if (!isAuthed) {
     return (
@@ -274,10 +225,10 @@ export default function OgaPayDashboard() {
   }
 
   const checklist = [
-    { label: "Complete your profile & verify email", done: step1 },
-    { label: "Connect a Solana wallet", done: step2 },
-    { label: "Join OgaPay community", done: step3 },
-    { label: "Complete your first task", done: step4 },
+    { label: "Complete your profile & verify email", done: step1Done },
+    { label: "Connect a Solana wallet", done: step2Done },
+    { label: "Join OgaPay community", done: step3Done },
+    { label: "Complete your first task", done: step4Done },
   ];
 
   return (
@@ -305,7 +256,7 @@ export default function OgaPayDashboard() {
               <Icon n="hand-wave" s={20} c="#2563eb" />
             </div>
             <div style={{ flex: 1 }}>
-              <h2>Welcome to OgaPay, {fname}! 👋</h2>
+              <h2>Welcome to OgaPay, {fname}!</h2>
               <p>Your account is ready. Complete the 4 steps below to start earning tasks and getting paid.</p>
             </div>
           </div>
@@ -315,7 +266,7 @@ export default function OgaPayDashboard() {
               <Icon n="check-circle" s={20} c="#16a34a" />
             </div>
             <div style={{ flex: 1 }}>
-              <h2>Welcome back, {fname} 👋</h2>
+              <h2>Welcome back, {fname}</h2>
               <p>Good to see you again. Pick up where you left off.</p>
             </div>
           </div>
@@ -361,25 +312,32 @@ export default function OgaPayDashboard() {
                 <div className="dash-step-badge">1A</div>
                 <h4>Add Profile Photo &amp; Display Name</h4>
                 <p>Set up your OgaPay identity so task creators can find and trust you.</p>
-                <button className="dash-btn" onClick={() => { window.location.href = "/profile"; doStep(0, "ogapay_step_profile"); }}>
-                  <Icon n="user" s={14} /> Go to Profile
-                </button>
+                {step1Done ? (
+                  <div className="dash-success-msg"><Icon n="check" s={12} /> Profile Complete</div>
+                ) : (
+                  <button className="dash-btn" onClick={() => { window.location.href = "/profile"; }}>
+                    <Icon n="user" s={14} /> Go to Profile
+                  </button>
+                )}
               </div>
               <div className="dash-step-card">
                 <div className="dash-step-badge">1B</div>
                 <h4>Verify Your Email Address</h4>
                 <p>Confirm your email to unlock withdrawals and receive task notifications.</p>
                 <input className="dash-input" value={email} readOnly style={{ marginBottom: 10 }} />
-                <button className={`dash-btn${verifSent ? " green" : ""}`} onClick={() => setVerifSent(true)}>
-                  <Icon n="mail" s={14} /> {verifSent ? "✓ Verification Sent" : "Send Verification Email"}
-                </button>
-                {verifSent && <div className="dash-success-msg"><Icon n="check" s={12} /> Verification email sent!</div>}
+                {isEmailVerified ? (
+                  <div className="dash-success-msg"><Icon n="check" s={12} /> Email Verified</div>
+                ) : (
+                  <button className="dash-btn" onClick={() => window.location.href = "/profile"}>
+                    <Icon n="mail" s={14} /> Verify Email
+                  </button>
+                )}
               </div>
             </div>
 
             {/* ── STEP 2: WALLET ── */}
-            {step1 && (
-            <div className={`${step2 ? "" : "dash-step-locked"}`}>
+            {step1Done && (
+            <div className={`${step2Done ? "" : "dash-step-locked"}`}>
             <div className="dash-section-title">
               <Icon n="circle-filled" s={8} /> STEP 2: CONNECT YOUR WALLET
             </div>
@@ -393,23 +351,26 @@ export default function OgaPayDashboard() {
                   { id: "backpack", label: "Backpack", icon: "backpack" },
                   { id: "solflare", label: "Solflare", icon: "flare" },
                 ].map(p => (
-                  <div key={p.id} className={`dash-provider${selProvider === p.id ? " selected" : ""}`} onClick={() => setSelProvider(p.id)}>
+                  <div key={p.id} className="dash-provider">
                     <div className="dash-provider-icon"><Icon n={p.icon} s={20} /></div>
                     <span>{p.label}</span>
                   </div>
                 ))}
               </div>
-              <button className={`dash-btn${walletConnected ? " green" : ""}`} onClick={() => { setWalletConnected(true); setStep2(true); doStep(1, "ogapay_step_wallet"); }}>
-                <Icon n="wallet" s={14} /> {walletConnected ? "✓ Wallet Connected" : "Connect Wallet"}
-              </button>
-              {walletConnected && <div className="dash-wallet-addr">F48N...jemX</div>}
+              {step2Done ? (
+                <div className="dash-success-msg"><Icon n="check" s={12} /> Wallet Connected</div>
+              ) : (
+                <button className="dash-btn outline" onClick={() => window.location.href = "/profile"}>
+                  <Icon n="wallet" s={14} /> Connect in Settings
+                </button>
+              )}
             </div>
             </div>
             )}
 
             {/* ── STEP 3: COMMUNITY ── */}
-            {step2 && (
-            <div className={`${step3 ? "" : "dash-step-locked"}`}>
+            {step2Done && (
+            <div className={`${step3Done ? "" : "dash-step-locked"}`}>
             <div className="dash-section-title">
               <Icon n="circle-filled" s={8} /> STEP 3: JOIN THE COMMUNITY
             </div>
@@ -429,16 +390,20 @@ export default function OgaPayDashboard() {
                   </a>
                 ))}
               </div>
-              <button className={`dash-btn${step3 ? " green" : ""}`} onClick={() => doStep(2, "ogapay_step_community")}>
-                <Icon n="users" s={14} /> {step3 ? "✓ Community Joined" : "I've Joined — Mark as Done"}
-              </button>
+              {step3Done ? (
+                <div className="dash-success-msg"><Icon n="check" s={12} /> Community Joined</div>
+              ) : (
+                <button className={`dash-btn${step3Done ? " green" : ""}`} onClick={() => setCommunityJoined(true)}>
+                  <Icon n="users" s={14} /> I've Joined — Mark as Done
+                </button>
+              )}
             </div>
             </div>
             )}
 
             {/* ── STEP 4: FIRST TASK ── */}
-            {step3 && (
-            <div className={`${step4 ? "" : "dash-step-locked"}`}>
+            {step3Done && (
+            <div className={`${step4Done ? "" : "dash-step-locked"}`}>
             <div className="dash-section-title">
               <Icon n="circle-filled" s={8} /> STEP 4: COMPLETE YOUR FIRST TASK
             </div>
@@ -455,9 +420,13 @@ export default function OgaPayDashboard() {
                   </div>
                 ))}
               </div>
-              <a href="/tasks" className="dash-btn">
-                <Icon n="briefcase" s={14} /> Browse Available Tasks
-              </a>
+              {step4Done ? (
+                <div className="dash-success-msg"><Icon n="check" s={12} /> First task completed!</div>
+              ) : (
+                <a href="/tasks" className="dash-btn">
+                  <Icon n="briefcase" s={14} /> Browse Available Tasks
+                </a>
+              )}
             </div>
             </div>
             )}
@@ -479,7 +448,7 @@ export default function OgaPayDashboard() {
             <div className="dash-announce">
               <Icon n="megaphone" s={18} c="#60a5fa" />
               <p>OgaPay tasks are now available in Nigeria, Ghana, Kenya and more.</p>
-              <a href="#"><Icon n="file-text" s={13} /> Read our getting started guide ↗</a>
+              <a href="#"><Icon n="file-text" s={13} /> Read our getting started guide</a>
             </div>
 
             {/* ── STATS CARDS ── */}
@@ -498,6 +467,20 @@ export default function OgaPayDashboard() {
                   <div className="dash-stat-value">{totalEarned}</div>
                 </div>
               </div>
+              <div className="dash-stat-card">
+                <div className="dash-stat-icon"><Icon n="file-text" s={18} /></div>
+                <div className="dash-stat-info">
+                  <div className="dash-stat-label">Tasks Posted</div>
+                  <div className="dash-stat-value">{postedTasks}</div>
+                </div>
+              </div>
+              <div className="dash-stat-card">
+                <div className="dash-stat-icon"><Icon n="activity" s={18} /></div>
+                <div className="dash-stat-info">
+                  <div className="dash-stat-label">Active Tasks</div>
+                  <div className="dash-stat-value">{activeTasks}</div>
+                </div>
+              </div>
             </div>
 
           </div>
@@ -511,7 +494,7 @@ export default function OgaPayDashboard() {
               <div className="dash-res-icon" style={{ background: "#0088cc" }}><Icon n="brand-telegram" s={18} c="#fff" /></div>
               <div>
                 <h4>Telegram Support</h4>
-                <p>Where the talk happens. Join us ↗</p>
+                <p>Where the talk happens. Join us</p>
               </div>
             </a>
 
@@ -519,7 +502,7 @@ export default function OgaPayDashboard() {
               <div className="dash-res-icon"><Icon n="book" s={18} /></div>
               <div>
                 <h4>Documentation</h4>
-                <p>Learn how to earn on OgaPay. Full docs ↗</p>
+                <p>Learn how to earn on OgaPay. Full docs</p>
               </div>
             </a>
 
@@ -527,7 +510,7 @@ export default function OgaPayDashboard() {
               <div className="dash-res-icon" style={{ background: "#f59e0b" }}><Icon n="users" s={18} c="#fff" /></div>
               <div>
                 <h4>Community</h4>
-                <p>Join Nigerian Earners Hub ↗</p>
+                <p>Join Nigerian Earners Hub</p>
               </div>
             </a>
 
@@ -542,7 +525,7 @@ export default function OgaPayDashboard() {
                 <span>Coming soon</span>
               </div>
               <div className="dash-video-meta">
-                <h4>How to earn your first ₦100,000 on OgaPay</h4>
+                <h4>How to earn your first on OgaPay</h4>
                 <small>2 MINUTE VIDEO</small>
               </div>
             </div>

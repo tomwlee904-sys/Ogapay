@@ -1,11 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import Layout from '../components/Layout'
-
-const API_BASE = 'https://ogapay-production.up.railway.app/api/v1'
-
-// ─── Sample Job Data ───
-const sampleJobs: any[] = []
+import { apiRequest } from '../lib/api'
 
 const API_CATEGORIES: Record<string, string> = {
   'SOCIAL_MEDIA': 'Social',
@@ -51,10 +47,10 @@ function mapApiTask(t: any) {
 
 async function fetchTasks() {
   try {
-    const res = await fetch(API_BASE + '/tasks')
-    const json = await res.json()
-    if (json.success && json.data) {
-      return json.data.map(mapApiTask)
+    const data = await apiRequest<any>('/tasks').catch(() => null)
+    if (data) {
+      const tasks = Array.isArray(data) ? data : (data.tasks || [])
+      return tasks.map(mapApiTask)
     }
     return []
   } catch {
@@ -98,34 +94,11 @@ function JobDetailView({ job, onBack }: { job: any; onBack: () => void }) {
     if (!applyLink.trim()) { setApplyMsg('Please provide a submission link'); return }
     setApplyMsg('')
     try {
-      const token = localStorage.getItem('ogapay_access_token')
-      if (!token) { setApplyMsg('Please log in first'); return }
-      
-      // First apply to the task
-      const applyRes = await fetch(API_BASE + '/tasks/' + job.id + '/apply', {
+      await apiRequest('/tasks/' + job.id + '/apply', { method: 'POST' })
+      await apiRequest('/tasks/' + job.id + '/submit', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + token,
-        },
+        body: JSON.stringify({ proof: applyLink.trim(), workerNotes: notes || '' }),
       })
-      const applyJson = await applyRes.json()
-      if (!applyRes.ok) throw new Error(applyJson.message || 'Failed to apply')
-      
-      // Then submit proof with the link
-      const submitRes = await fetch(API_BASE + '/tasks/' + job.id + '/submit', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + token,
-        },
-        body: JSON.stringify({
-          proof: applyLink.trim(),
-          workerNotes: applyMsg || '',
-        }),
-      })
-      const submitJson = await submitRes.json()
-      if (!submitRes.ok) throw new Error(submitJson.message || 'Failed to submit')
       
       setSubmitted(true)
       setTimeout(() => { setShowApplyModal(false); setSubmitted(false); setApplyLink(''); setApplyMsg('') }, 2000)
@@ -369,11 +342,16 @@ export default function Tasks() {
 
   // Fetch tasks from API
   useEffect(() => {
-    setLoading(true)
-    fetchTasks().then(data => {
-      setJobs(data)
-      setLoading(false)
-    })
+    const load = () => {
+      setLoading(true)
+      fetchTasks().then(data => {
+        setJobs(data)
+        setLoading(false)
+      })
+    }
+    load()
+    window.addEventListener('focus', load)
+    return () => window.removeEventListener('focus', load)
   }, [location.key])
 
   // Load single job if id param present
@@ -385,11 +363,10 @@ export default function Tasks() {
         setSelectedJob(found)
       } else {
         // Fetch single task directly
-        fetch(API_BASE + '/tasks/' + id)
-          .then(r => r.json())
-          .then(json => {
-            if (json.success && json.data) {
-              setSelectedJob(mapApiTask(json.data))
+        apiRequest<any>('/tasks/' + id)
+          .then(data => {
+            if (data) {
+              setSelectedJob(mapApiTask(data))
             } else {
               setSelectedJob(null)
             }
@@ -562,7 +539,7 @@ export default function Tasks() {
             <div className="stat-lbl">Total Rewards</div>
           </div>
           <div className="jobs-stat">
-            <div className="stat-val accent">{sampleJobs.length}</div>
+            <div className="stat-val accent">{jobs.length}</div>
             <div className="stat-lbl">Active Jobs</div>
           </div>
           <div className="jobs-stat">

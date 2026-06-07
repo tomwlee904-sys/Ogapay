@@ -1,25 +1,87 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { apiRequest } from '../lib/api'
 import Layout from '../components/Layout'
 
-const initialNotifications = [
-  { id: 1, icon: 'ti ti-coin', title: 'Earnings Received', desc: 'You earned NGN 500 from Social Media Task', time: '2m ago', read: false, color: '#16a34a' },
-  { id: 2, icon: 'ti ti-check', title: 'Task Approved', desc: 'Your submission for Content Review has been approved', time: '1h ago', read: false, color: '#1F8CFF' },
-  { id: 3, icon: 'ti ti-wallet', title: 'Withdrawal Processed', desc: 'Your withdrawal of NGN 2,000 has been sent', time: '3h ago', read: false, color: '#2563EB' },
-  { id: 4, icon: 'ti ti-user-plus', title: 'New Referral', desc: 'Someone joined using your referral link', time: '5h ago', read: true, color: '#F59E0B' },
-  { id: 5, icon: 'ti ti-message', title: 'New Message', desc: 'You have a new message from Task Creator', time: '1d ago', read: true, color: '#EC4899' },
-  { id: 6, icon: 'ti ti-bullhorn', title: 'Platform Update', desc: 'New features have been added to the platform', time: '2d ago', read: true, color: '#1F8CFF' },
-  { id: 7, icon: 'ti ti-star', title: 'Achievement Unlocked', desc: 'You completed 10 tasks! Keep it up', time: '3d ago', read: true, color: '#F59E0B' },
-]
+function timeAgo(date: string | Date) {
+  const diff = Date.now() - new Date(date).getTime()
+  const mins = Math.floor(diff / 60000)
+  if (mins < 1) return 'just now'
+  if (mins < 60) return `${mins}m ago`
+  const hrs = Math.floor(mins / 60)
+  if (hrs < 24) return `${hrs}h ago`
+  const days = Math.floor(hrs / 24)
+  if (days < 30) return `${days}d ago`
+  return `${Math.floor(days / 30)}mo ago`
+}
+
+const iconMap: Record<string, { icon: string; color: string }> = {
+  earnings: { icon: 'ti ti-coin', color: '#16a34a' },
+  task: { icon: 'ti ti-check', color: '#1F8CFF' },
+  withdrawal: { icon: 'ti ti-wallet', color: '#2563EB' },
+  referral: { icon: 'ti ti-user-plus', color: '#F59E0B' },
+  message: { icon: 'ti ti-message', color: '#EC4899' },
+  update: { icon: 'ti ti-bullhorn', color: '#1F8CFF' },
+  achievement: { icon: 'ti ti-star', color: '#F59E0B' },
+}
+
+function guessMeta(title = '') {
+  const t = title.toLowerCase()
+  if (t.includes('earn') || t.includes('payment') || t.includes('reward')) return iconMap.earnings
+  if (t.includes('approv') || t.includes('task') || t.includes('submit')) return iconMap.task
+  if (t.includes('withdraw') || t.includes('wallet')) return iconMap.withdrawal
+  if (t.includes('refer') || t.includes('referral')) return iconMap.referral
+  if (t.includes('message') || t.includes('chat')) return iconMap.message
+  if (t.includes('update') || t.includes('platform') || t.includes('new')) return iconMap.update
+  if (t.includes('achie') || t.includes('badge') || t.includes('star')) return iconMap.achievement
+  return { icon: 'ti ti-bell', color: '#1F8CFF' }
+}
 
 export default function Notifications() {
-  const [notifs, setNotifs] = useState(initialNotifications)
+  const [notifs, setNotifs] = useState<any[]>([])
   const [filter, setFilter] = useState('all')
+  const [loading, setLoading] = useState(true)
 
-  const filtered = filter === 'all' ? notifs : filter === 'unread' ? notifs.filter(n => !n.read) : notifs.filter(n => n.read)
-  const unreadCount = notifs.filter(n => !n.read).length
+  const fetchNotifs = async () => {
+    setLoading(true)
+    try {
+      const data = await apiRequest<any>('/notifications?limit=50')
+      const items = Array.isArray(data) ? data : data?.notifications ?? []
+      setNotifs(items)
+    } catch {
+      setNotifs([])
+    }
+    setLoading(false)
+  }
 
-  const markAllRead = () => {
-    setNotifs(notifs.map(n => ({ ...n, read: true })))
+  useEffect(() => { fetchNotifs() }, [])
+
+  const mapNotif = (n: any) => ({
+    ...n,
+    id: n.id,
+    icon: n.icon || guessMeta(n.title).icon,
+    color: n.color || guessMeta(n.title).color,
+    title: n.title,
+    desc: n.body || n.description || '',
+    time: n.createdAt ? timeAgo(n.createdAt) : '',
+    read: n.read ?? n.isRead ?? false,
+  })
+
+  const mapped = notifs.map(mapNotif)
+  const filtered = filter === 'all' ? mapped : filter === 'unread' ? mapped.filter(n => !n.read) : mapped.filter(n => n.read)
+  const unreadCount = mapped.filter(n => !n.read).length
+
+  const markAllRead = async () => {
+    try {
+      await apiRequest('/notifications/read-all', { method: 'PATCH' })
+    } catch {}
+    fetchNotifs()
+  }
+
+  const markOneRead = async (id: string | number) => {
+    try {
+      await apiRequest(`/notifications/${id}/read`, { method: 'PATCH' })
+    } catch {}
+    fetchNotifs()
   }
 
   return (
@@ -46,6 +108,9 @@ export default function Notifications() {
         .nt-time{font-size:11px;color:var(--text3)}
         .nt-empty{text-align:center;padding:48px 20px;color:var(--text2)}
         .nt-empty i{font-size:36px;color:var(--text3);margin-bottom:12px;display:block}
+        .nt-loading{text-align:center;padding:48px 20px;color:var(--text2)}
+        .nt-spinner{display:inline-block;width:24px;height:24px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite}
+        @keyframes spin{to{transform:rotate(360deg)}}
       `}</style>
 
       <div className="nt-hero">
@@ -70,7 +135,9 @@ export default function Notifications() {
         ))}
       </div>
 
-      {filtered.length === 0 ? (
+      {loading ? (
+        <div className="nt-loading"><div className="nt-spinner" /></div>
+      ) : filtered.length === 0 ? (
         <div className="nt-empty">
           <i className="ti ti-bell-off" />
           <h3 style={{fontFamily:'Outfit',fontWeight:800,margin:'0 0 4px',color:'var(--text)'}}>All caught up!</h3>
@@ -79,9 +146,7 @@ export default function Notifications() {
       ) : (
         <div className="nt-list">
           {filtered.map(n => (
-            <div className={`nt-item ${!n.read ? 'unread' : ''}`} key={n.id} onClick={() => {
-              setNotifs(notifs.map(x => x.id === n.id ? { ...x, read: true } : x))
-            }}>
+            <div className={`nt-item ${!n.read ? 'unread' : ''}`} key={n.id} onClick={() => { if (!n.read) markOneRead(n.id) }}>
               <div className="nt-icon" style={{background: `${n.color}15`, color: n.color}}>
                 <i className={n.icon} />
               </div>

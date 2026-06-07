@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "../components/Layout";
-import { API_BASE } from "../lib/api";
+import { API_BASE, apiRequest } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import CurrencySelector from "../components/CurrencySelector";
 import { useCurrency } from "../context/CurrencyContext";
@@ -421,6 +421,7 @@ function TemplatesModal({ onClose, onUse, myTemplates = [] }) {
 // ── CUSTOM JOB WIZARD ──────────────────────────────────────────────────────
 function CustomJobWizard({ onClose, onCreate, initialTemplate = null }) {
   const navigate = useNavigate();
+  const { isAuthed } = useAuth();
   const [wizardStep, setWizardStep] = useState(1);
   const [showInfo, setShowInfo] = useState(false);
   const [showTemplates, setShowTemplates] = useState(false);
@@ -466,8 +467,7 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }) {
     setSubmitError("");
 
     try {
-      const token = localStorage.getItem("ogapay_access_token");
-      if (!token) { setSubmitError("Please log in first"); setSubmitting(false); return; }
+      if (!isAuthed) { setSubmitError("Please log in first"); setSubmitting(false); return; }
 
       // Validate reward minimum for NGN
       if (currency === 'NGN' && bountyNum < 50) {
@@ -492,23 +492,13 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }) {
       };
 
       console.log('📤 Creating task with body:', JSON.stringify(body));
-      const res = await fetch(`${API_BASE}/tasks`, {
+      const result = await apiRequest('/tasks', {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify(body),
       });
-
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        const statusMsg = res.status === 403 ? ' (Forbidden — your account needs Poster role to create tasks)' : '';
-        throw new Error((err.message || err.error || "Failed to create task") + statusMsg);
-      }
-
-      // Capture the created task and pass its ID
-      const result = await res.json().catch(() => ({}));
       console.log('📥 Task creation response:', result);
-      if (result.success === false) {
-        throw new Error(result.message || result.error || "Failed to create task");
+      if (!result || result.success === false) {
+        throw new Error(result?.message || result?.error || "Failed to create task");
       }
       const createdTask = result.data || result.task || result;
       const taskId = createdTask?.id || createdTask?._id || "";
@@ -942,7 +932,7 @@ function SuccessModal({ onClose, taskId }) {
 // ── MAIN CREATE TASK COMPONENT ─────────────────────────────────────────────
 function CreateTask() {
   const navigate = useNavigate();
-  const { user, refreshUser } = useAuth();
+  const { user, refreshUser, isAuthed } = useAuth();
   const { fmt } = useCurrency();
   const [showCustom, setShowCustom] = useState(false);
   
@@ -992,17 +982,11 @@ function CreateTask() {
       setUpgrading(true);
       setUpgradeMsg('');
       try {
-        const token = localStorage.getItem("ogapay_access_token");
-        if (!token) { setUpgradeMsg('Please log in first'); setUpgrading(false); return; }
-        const res = await fetch('https://ogapay-production.up.railway.app/api/v1/users/me', {
+        if (!isAuthed) { setUpgradeMsg('Please log in first'); setUpgrading(false); return; }
+        await apiRequest('/users/me', {
           method: 'PATCH',
-          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
           body: JSON.stringify({ role: 'POSTER' }),
         });
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({}));
-          throw new Error(err.message || 'Upgrade failed');
-        }
         // Write POSTER role to localStorage — set a flag so refreshUser can't overwrite it
         try {
           const stored = JSON.parse(localStorage.getItem('ogapay_user') || '{}');
@@ -1367,6 +1351,7 @@ function CreateTask() {
 function PlatformDetail({ platform, onBack, onCreated }) {
   const [submitError, setSubmitError] = useState("");
   const navigate = useNavigate();
+  const { isAuthed } = useAuth();
   const [action, setAction] = useState(platform.actions[0] || "");
   const [url, setUrl] = useState("");
   const [quantity, setQuantity] = useState(10);
@@ -1385,8 +1370,7 @@ function PlatformDetail({ platform, onBack, onCreated }) {
     setSubmitting(true);
     setSubmitError("");
     try {
-      const token = localStorage.getItem("ogapay_access_token");
-      if (!token) { setSubmitError("Please log in first"); setSubmitting(false); return; }
+      if (!isAuthed) { setSubmitError("Please log in first"); setSubmitting(false); return; }
       const body = {
         title: `${action} on ${platform.name}`,
         description: `Perform ${action.toLowerCase()} on ${platform.name}: ${url}`,
@@ -1400,19 +1384,12 @@ function PlatformDetail({ platform, onBack, onCreated }) {
         currency,
         status: "OPEN",
       };
-      const res = await fetch(`${API_BASE}/tasks`, {
+      const result = await apiRequest('/tasks', {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${localStorage.getItem("ogapay_access_token")}` },
         body: JSON.stringify(body),
       });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        const statusMsg = res.status === 403 ? ' (Forbidden — your account needs Poster role)' : '';
-        throw new Error((err.message || err.error || "Failed to create task") + statusMsg);
-      }
-      const result = await res.json().catch(() => ({}));
-      if (result.success === false) {
-        throw new Error(result.message || result.error || "Failed to create task");
+      if (!result || result.success === false) {
+        throw new Error(result?.message || result?.error || "Failed to create task");
       }
       const createdTask = result.data || result.task || result;
       const taskId = createdTask?.id || createdTask?._id || "";
@@ -1487,6 +1464,7 @@ function PlatformDetail({ platform, onBack, onCreated }) {
 
 // ── SERVICE FORM ───────────────────────────────────────────────────────────
 function ServiceForm({ service, onBack, onCreated }) {
+  const { isAuthed } = useAuth();
   const [submitError, setSubmitError] = useState("");
   const [url, setUrl] = useState("");
   const [quantity, setQuantity] = useState(10);
@@ -1505,8 +1483,7 @@ function ServiceForm({ service, onBack, onCreated }) {
     setSubmitting(true);
     setSubmitError("");
     try {
-      const token = localStorage.getItem("ogapay_access_token");
-      if (!token) { setSubmitError("Please log in first"); setSubmitting(false); return; }
+      if (!isAuthed) { setSubmitError("Please log in first"); setSubmitting(false); return; }
       const body = {
         title: `${service.name} Campaign`,
         description: `${service.name} campaign targeting: ${url}`,
@@ -1520,19 +1497,12 @@ function ServiceForm({ service, onBack, onCreated }) {
         currency,
         status: "OPEN",
       };
-      const res = await fetch(`${API_BASE}/tasks`, {
+      const result = await apiRequest('/tasks', {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify(body),
       });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        const statusMsg = res.status === 403 ? ' (Forbidden — your account needs Poster role)' : '';
-        throw new Error((err.message || err.error || "Failed to create task") + statusMsg);
-      }
-      const result = await res.json().catch(() => ({}));
-      if (result.success === false) {
-        throw new Error(result.message || result.error || "Failed to create task");
+      if (!result || result.success === false) {
+        throw new Error(result?.message || result?.error || "Failed to create task");
       }
       const createdTask = result.data || result.task || result;
       const taskId = createdTask?.id || createdTask?._id || "";

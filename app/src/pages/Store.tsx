@@ -1,8 +1,32 @@
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
+import { apiRequest } from '../lib/api'
 
-// ─── Mock Data ──────────────────────────────────────────────────────────────
+// ─── Types ──────────────────────────────────────────────────────────────────
+interface StoreItem {
+  id: string
+  title: string
+  description: string
+  price: number
+  currency: string
+  seller: string
+  rating: number
+  reviewsCount: number
+  image: string
+  category: string
+  createdAt: string
+}
+
+interface StoreResponse {
+  items: StoreItem[]
+  total: number
+  page: number
+  limit: number
+  totalPages?: number
+}
+
+// ─── Static Categories ──────────────────────────────────────────────────────
 const CATEGORIES = [
   { id: 'design', name: 'Design', icon: 'ti ti-palette', count: 12 },
   { id: 'social', name: 'Social Media', icon: 'ti ti-share', count: 8 },
@@ -15,31 +39,28 @@ const CATEGORIES = [
   { id: 'templates', name: 'Templates', icon: 'ti ti-files', count: 11 },
 ]
 
-const PRODUCTS = [
-  { id: 1, title: 'X Premium Membership', desc: 'Get your X (Twitter) account upgraded to premium for 3 months without any hassle. Quick setup.', seller: 'Afzan', rating: 5.0, reviews: 1, price: 'NGN 4,120', sol: '0.037 SOL', date: '1 week ago', img: 'https://picsum.photos/seed/xpremium/400/250', category: 'social' },
-  { id: 2, title: 'High-CTR YouTube Thumbnail Design', desc: 'Struggling to get views? The secret is in the Thumbnail! Even the best videos fail without an eye-catching design.', seller: 'Kashem', rating: 0, reviews: 0, price: 'NGN 55,965', sol: '0.500 SOL', date: 'Feb 6', img: 'https://picsum.photos/seed/thumb/400/250', category: 'design' },
-  { id: 3, title: 'Professional Responsive Websites', desc: 'I create modern, mobile-friendly websites that look great on all devices and convert visitors into users.', seller: 'SatoshiShadow', rating: 0, reviews: 0, price: 'NGN 43,530', sol: '0.389 SOL', date: 'Jan 15', img: 'https://picsum.photos/seed/webdev/400/250', category: 'dev' },
-  { id: 4, title: 'Web Design & Development', desc: 'Premium website design tailored to your brand. Fast delivery, clean code, and stunning visuals guaranteed.', seller: 'Segun567', rating: 0, reviews: 0, price: 'NGN 434,925', sol: '3.889 SOL', date: 'Dec 13', img: 'https://picsum.photos/seed/webdesign/400/250', category: 'dev' },
-  { id: 5, title: 'High CTR YouTube Thumbnails', desc: 'The secret is in the Thumbnail! Even the best videos fail without an eye-catching design. I specialise in high CTR thumbnails.', seller: 'ZulqarnianChann', rating: 0, reviews: 0, price: 'NGN 6,228', sol: '0.056 SOL', date: '2 days ago', img: 'https://picsum.photos/seed/ytthumb/400/250', category: 'design' },
-  { id: 6, title: 'SolPass — Solana Event Platform', desc: 'SolPass is a Solana-powered event attendance and verification platform that enables organizers to create events and generate tickets.', seller: 'toxictoad', rating: 0, reviews: 0, price: 'NGN 37,296', sol: '0.333 SOL', date: '2 days ago', img: 'https://picsum.photos/seed/solpass/400/250', category: 'crypto' },
-  { id: 7, title: 'Community Management Package', desc: 'Full-service community management for your Web3 project. Engagement, moderation, and growth strategies.', seller: 'BlueTick', rating: 4.6, reviews: 203, price: 'NGN 35,000', sol: '0.313 SOL', date: '3 days ago', img: 'https://picsum.photos/seed/community/400/250', category: 'communities' },
-  { id: 8, title: 'Smart Contract Audit', desc: 'Comprehensive smart contract security audit for Solana and EVM chains. Protect your users and funds.', seller: 'CryptoPro', rating: 4.9, reviews: 42, price: 'NGN 95,000', sol: '0.849 SOL', date: '1 week ago', img: 'https://picsum.photos/seed/audit/400/250', category: 'crypto' },
-  { id: 9, title: 'AI Chatbot Setup', desc: 'Custom AI chatbot for your business. Trained on your data, deployed on your website or Telegram.', seller: 'Toxictoad', rating: 4.8, reviews: 28, price: 'NGN 45,000', sol: '0.402 SOL', date: '5 days ago', img: 'https://picsum.photos/seed/aibot/400/250', category: 'ai' },
-  { id: 10, title: 'Content Writing Pack', desc: 'SEO-optimized content for your platform. Blog posts, landing pages, and social media copy.', seller: 'Sidmaurya', rating: 4.4, reviews: 158, price: 'NGN 12,000', sol: '0.107 SOL', date: '1 week ago', img: 'https://picsum.photos/seed/content/400/250', category: 'content' },
-  { id: 11, title: 'Logo Design Bundle', desc: 'Professional logo design with multiple concepts, unlimited revisions, and source files included.', seller: 'DesignLab', rating: 4.5, reviews: 67, price: 'NGN 15,000', sol: '0.134 SOL', date: '2 weeks ago', img: 'https://picsum.photos/seed/logo/400/250', category: 'design' },
-  { id: 12, title: 'Social Media Growth Kit', desc: 'Organic social media growth strategies for X, Instagram, and TikTok. Real followers, real engagement.', seller: 'Afzan', rating: 4.7, reviews: 312, price: 'NGN 25,000', sol: '0.223 SOL', date: '3 days ago', img: 'https://picsum.photos/seed/social/400/250', category: 'social' },
-]
+// ─── Helpers ────────────────────────────────────────────────────────────────
+function formatPrice(item: StoreItem): string {
+  const sym: Record<string, string> = { NGN: 'NGN ', SOL: '◎', USDC: '$' }
+  const prefix = sym[item.currency] || ''
+  if (item.currency === 'NGN') return `${prefix}${Math.round(item.price).toLocaleString('en-US')}`
+  return `${prefix}${item.price.toFixed(item.price < 1 ? 4 : 2)}${item.currency === 'SOL' ? ' SOL' : ''}`
+}
 
-const WORKERS = [
-  { id: 1, username: 'Twitter_Automation_god', bio: 'I am a professional software developer and I write code that helps people save time and make money.', rating: 0, reviews: 0 },
-  { id: 2, username: 'Dogo2541', bio: 'Active', rating: 0, reviews: 0 },
-  { id: 3, username: 'Taki.Sakura', bio: 'Always available to help', rating: 0, reviews: 0 },
-  { id: 4, username: 'Blueice', bio: 'That web3 guy', rating: 0, reviews: 0 },
-  { id: 5, username: 'CHOCHO', bio: 'Hi, I\'m CHOCHO, a passionate graphic designer dedicated to transforming ideas into visually compelling and meaningful designs.', rating: 0, reviews: 0 },
-  { id: 6, username: 'Wurk.Brainard', bio: 'Not a hell of an intro. Just a chill guy who\'s kinda into web3. Loves writing articles.', rating: 0, reviews: 0 },
-  { id: 7, username: 'moony', bio: 'No bio available yet', rating: 3.9, reviews: 12 },
-  { id: 8, username: 'ASQUARE', bio: 'Chasing the Big bag', rating: 3.5, reviews: 8 },
-]
+function formatSol(price: number, currency: string): string {
+  if (currency === 'SOL') return `◎${price.toFixed(3)} SOL`
+  return `◎${(price / 145).toFixed(3)} SOL`
+}
+
+function timeAgo(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime()
+  const days = Math.floor(diff / 86400000)
+  if (days === 0) return 'Today'
+  if (days === 1) return 'Yesterday'
+  if (days < 7) return `${days} days ago`
+  if (days < 30) return `${Math.floor(days / 7)} week${Math.floor(days / 7) > 1 ? 's' : ''} ago`
+  return `${Math.floor(days / 30)} month${Math.floor(days / 30) > 1 ? 's' : ''} ago`
+}
 
 // ─── Stars Component ────────────────────────────────────────────────────────
 function Stars({ score = 0, size = 12 }: { score?: number; size?: number }) {
@@ -169,6 +190,12 @@ const S: {[key: string]: React.CSSProperties} = {
     transition: 'all 0.15s',
   },
   catTileLabel: { fontSize: 10, color: 'var(--text3)', textAlign: 'center', lineHeight: 1.3 },
+  loadingWrap: { display: 'flex', flexDirection: 'column' as const, alignItems: 'center', justifyContent: 'center', padding: '60px 20px', gap: 16 },
+  errorBox: {
+    background: 'rgba(239,68,68,0.10)', border: '1px solid rgba(239,68,68,0.30)',
+    borderRadius: 10, padding: 20, textAlign: 'center' as const,
+    color: '#ef4444', fontSize: 13, lineHeight: 1.6,
+  },
 }
 
 // ─── Store Page ─────────────────────────────────────────────────────────────
@@ -178,14 +205,43 @@ function StorePage({ onViewProduct }: { onViewProduct: (product: any) => void })
   const [sort, setSort] = useState('quality_desc')
   const [page, setPage] = useState(1)
 
-  const filtered = PRODUCTS.filter(p => {
-    if (category && p.category !== category) return false
-    if (search) {
-      const q = search.toLowerCase()
-      return p.title.toLowerCase().includes(q) || p.desc.toLowerCase().includes(q) || p.seller.toLowerCase().includes(q)
+  const [products, setProducts] = useState<StoreItem[]>([])
+  const [total, setTotal] = useState(0)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  const fetchProducts = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const params = new URLSearchParams()
+      if (category) params.set('category', category)
+      if (search) params.set('search', search)
+      if (sort) params.set('sort', sort)
+      params.set('page', String(page))
+      params.set('limit', '8')
+
+      const res = await apiRequest<StoreResponse>(`/store?${params.toString()}`)
+      const items = Array.isArray(res) ? res : res?.items ?? []
+      const totalCount = res?.total ?? items.length
+      setProducts(items)
+      setTotal(totalCount)
+    } catch (err: any) {
+      setError(err?.message || 'Failed to load store items')
+      setProducts([])
+      setTotal(0)
+    } finally {
+      setLoading(false)
     }
-    return true
-  })
+  }, [category, search, sort, page])
+
+  useEffect(() => {
+    fetchProducts()
+  }, [fetchProducts])
+
+  const filtered = products
+
+  const totalPages = Math.ceil(total / 8) || 1
 
   return (
     <div style={S.page}>
@@ -197,7 +253,7 @@ function StorePage({ onViewProduct }: { onViewProduct: (product: any) => void })
 
       {/* Category Tiles */}
       <div style={S.categoryGrid}>
-        <div key="all" onClick={() => setCategory('')} style={{
+        <div key="all" onClick={() => { setCategory(''); setPage(1) }} style={{
           ...S.catTile,
           borderColor: !category ? '#1F8CFF' : 'var(--border)',
           background: !category ? 'rgba(31,140,255,0.10)' : 'var(--card)',
@@ -206,7 +262,7 @@ function StorePage({ onViewProduct }: { onViewProduct: (product: any) => void })
           <span style={{ ...S.catTileLabel, color: !category ? '#1F8CFF' : 'var(--text3)', fontWeight: !category ? 700 : 500 }}>All</span>
         </div>
         {CATEGORIES.map(c => (
-          <div key={c.id} onClick={() => setCategory(category === c.id ? '' : c.id)} style={{
+          <div key={c.id} onClick={() => { setCategory(category === c.id ? '' : c.id); setPage(1) }} style={{
             ...S.catTile,
             borderColor: category === c.id ? '#1F8CFF' : 'var(--border)',
             background: category === c.id ? 'rgba(31,140,255,0.10)' : 'var(--card)',
@@ -228,7 +284,7 @@ function StorePage({ onViewProduct }: { onViewProduct: (product: any) => void })
           />
           <i className="ti ti-search" style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text3)', fontSize: 14 }} />
         </div>
-        <select style={S.select} value={sort} onChange={e => setSort(e.target.value)}>
+        <select style={S.select} value={sort} onChange={e => { setSort(e.target.value); setPage(1) }}>
           <option value="quality_desc">Best Quality</option>
           <option value="newest">Newest</option>
           <option value="stars_desc">Top Rated</option>
@@ -238,48 +294,81 @@ function StorePage({ onViewProduct }: { onViewProduct: (product: any) => void })
 
       <div style={{ ...S.resultsCount, marginBottom: 12 }}>
         <i className="ti ti-grid" style={{ fontSize: 14 }} />
-        Showing {filtered.length} of {PRODUCTS.length} products
+        Showing {filtered.length} of {total} products
       </div>
 
-      <div style={S.grid2}>
-        {filtered.slice((page - 1) * 8, page * 8).map(p => (
-          <div key={p.id} style={S.card} onClick={() => onViewProduct(p)}>
-            <div style={{ position: 'relative', height: 150, overflow: 'hidden' }}>
-              <img src={p.img} alt={p.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              <ActiveBadge />
-            </div>
-            <div style={S.cardBody}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 4 }}>
-                <span style={S.cardTitle}>{p.title}</span>
-                <span style={{ fontSize: 10, color: 'var(--text3)', whiteSpace: 'nowrap', flexShrink: 0 }}>{p.date}</span>
-              </div>
-              <p style={S.cardDesc}>{p.desc}</p>
-              <div style={S.sellerRow}>
-                <Avatar size={24} />
-                <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--text2)' }}>{p.seller}</span>
-                {p.reviews > 0
-                  ? <span style={{ marginLeft: 'auto' }}><Stars score={p.rating} size={11} /></span>
-                  : <span style={S.newBadge}>New creator</span>
-                }
-              </div>
-              <div style={S.priceRow}>
-                <span style={S.priceMain}>{p.price}</span>
-                <span style={S.priceSub}>{p.sol}</span>
-              </div>
-              <button style={S.btnOutlineFull}>
-                <i className="ti ti-eye" style={{ fontSize: 13 }} /> View more
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
 
-      {(filtered.length > 8 || page > 1) && (
+      {/* Loading State */}
+      {loading && (
+        <div style={S.loadingWrap}>
+          <i className="ti ti-loader" style={{ fontSize: 28, color: '#1F8CFF', animation: 'spin 1s linear infinite' }} />
+          <span style={{ fontSize: 13, color: 'var(--text3)' }}>Loading products...</span>
+        </div>
+      )}
+
+      {/* Error State */}
+      {!loading && error && (
+        <div style={S.errorBox}>
+          <i className="ti ti-alert-circle" style={{ fontSize: 20, display: 'block', marginBottom: 8 }} />
+          {error}
+          <button onClick={fetchProducts} style={{ ...S.btnOutline, marginTop: 12, display: 'inline-flex' }}>
+            <i className="ti ti-refresh" /> Retry
+          </button>
+        </div>
+      )}
+
+      {/* Empty State */}
+      {!loading && !error && filtered.length === 0 && (
+        <div style={S.loadingWrap}>
+          <i className="ti ti-search-off" style={{ fontSize: 28, color: 'var(--text3)' }} />
+          <span style={{ fontSize: 13, color: 'var(--text3)' }}>No products found. Try a different search or category.</span>
+        </div>
+      )}
+
+      {/* Product Grid */}
+      {!loading && !error && (
+        <div style={S.grid2}>
+          {filtered.slice((page - 1) * 8, page * 8).map(p => (
+            <div key={p.id} style={S.card} onClick={() => onViewProduct(p)}>
+              <div style={{ position: 'relative', height: 150, overflow: 'hidden' }}>
+                <img src={p.image} alt={p.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <ActiveBadge />
+              </div>
+              <div style={S.cardBody}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 4 }}>
+                  <span style={S.cardTitle}>{p.title}</span>
+                  <span style={{ fontSize: 10, color: 'var(--text3)', whiteSpace: 'nowrap', flexShrink: 0 }}>{timeAgo(p.createdAt)}</span>
+                </div>
+                <p style={S.cardDesc}>{p.description}</p>
+                <div style={S.sellerRow}>
+                  <Avatar size={24} />
+                  <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--text2)' }}>{p.seller}</span>
+                  {p.reviewsCount > 0
+                    ? <span style={{ marginLeft: 'auto' }}><Stars score={p.rating} size={11} /></span>
+                    : <span style={S.newBadge}>New creator</span>
+                  }
+                </div>
+                <div style={S.priceRow}>
+                  <span style={S.priceMain}>{formatPrice(p)}</span>
+                  <span style={S.priceSub}>{formatSol(p.price, p.currency)}</span>
+                </div>
+                <button style={S.btnOutlineFull}>
+                  <i className="ti ti-eye" style={{ fontSize: 13 }} /> View more
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Pagination */}
+      {!loading && !error && totalPages > 1 && (
         <div style={S.paginationRow}>
           <button style={S.btnOutline} disabled={page === 1} onClick={() => setPage(p => Math.max(1, p - 1))}>
             <i className="ti ti-chevron-left" style={{ fontSize: 14 }} />
           </button>
-          {Array.from({ length: Math.ceil(filtered.length / 8) }, (_, i) => i + 1).map(p => (
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
             <button key={p} onClick={() => setPage(p)} style={{
               ...S.btnOutline,
               background: page === p ? '#1F8CFF' : 'var(--card)',
@@ -288,7 +377,7 @@ function StorePage({ onViewProduct }: { onViewProduct: (product: any) => void })
               minWidth: 32, justifyContent: 'center',
             }}>{p}</button>
           ))}
-          <button style={S.btnOutline} disabled={page >= Math.ceil(filtered.length / 8)} onClick={() => setPage(p => p + 1)}>
+          <button style={S.btnOutline} disabled={page >= totalPages} onClick={() => setPage(p => p + 1)}>
             <i className="ti ti-chevron-right" style={{ fontSize: 14 }} />
           </button>
         </div>
@@ -298,8 +387,27 @@ function StorePage({ onViewProduct }: { onViewProduct: (product: any) => void })
 }
 
 // ─── Product Detail Page ────────────────────────────────────────────────────
-function ProductDetailPage({ product, onBack }: { product: any; onBack: () => void }) {
-  const p = product || PRODUCTS[0]
+function ProductDetailPage({ product, onBack, onPurchase }: { product: StoreItem; onBack: () => void; onPurchase: (item: StoreItem) => void }) {
+  const [purchasing, setPurchasing] = useState(false)
+  const [purchaseError, setPurchaseError] = useState<string | null>(null)
+  const [purchased, setPurchased] = useState(false)
+
+  const handlePurchase = async () => {
+    setPurchasing(true)
+    setPurchaseError(null)
+    try {
+      await apiRequest(`/store/${product.id}/purchase`, { method: 'POST' })
+      setPurchased(true)
+      onPurchase(product)
+    } catch (err: any) {
+      setPurchaseError(err?.message || 'Purchase failed')
+    } finally {
+      setPurchasing(false)
+    }
+  }
+
+  const p = product
+
   return (
     <div style={S.page}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16, cursor: 'pointer', color: 'var(--text2)', fontSize: 13 }} onClick={onBack}>
@@ -307,7 +415,7 @@ function ProductDetailPage({ product, onBack }: { product: any; onBack: () => vo
       </div>
 
       <div style={{ position: 'relative' }}>
-        <img src={p.img} alt={p.title} style={{ width: '100%', height: 200, objectFit: 'cover', borderRadius: 10, marginBottom: 16 }} />
+        <img src={p.image} alt={p.title} style={{ width: '100%', height: 200, objectFit: 'cover', borderRadius: 10, marginBottom: 16 }} />
         <ActiveBadge />
       </div>
 
@@ -317,7 +425,7 @@ function ProductDetailPage({ product, onBack }: { product: any; onBack: () => vo
         <Avatar size={32} />
         <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>{p.seller}</span>
         <span style={{ marginLeft: 'auto' }}><Stars score={p.rating} size={13} /></span>
-        <span style={{ fontSize: 11, color: 'var(--text3)' }}>({p.reviews} reviews)</span>
+        <span style={{ fontSize: 11, color: 'var(--text3)' }}>({p.reviewsCount} reviews)</span>
       </div>
 
       <div style={{
@@ -325,18 +433,44 @@ function ProductDetailPage({ product, onBack }: { product: any; onBack: () => vo
         margin: '14px 0', padding: 14, background: 'var(--card)',
         border: '1px solid var(--border)', borderRadius: 8,
       }}>
-        <span style={{ fontSize: 22, fontWeight: 800, color: 'var(--green)' }}>{p.price}</span>
-        <span style={{ fontSize: 12, color: 'var(--text3)' }}>{p.sol}</span>
+        <span style={{ fontSize: 22, fontWeight: 800, color: 'var(--green)' }}>{formatPrice(p)}</span>
+        <span style={{ fontSize: 12, color: 'var(--text3)' }}>{formatSol(p.price, p.currency)}</span>
       </div>
 
       <div>
         <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', letterSpacing: '0.06em', marginBottom: 8 }}>DESCRIPTION</div>
-        <p style={{ fontSize: 13, lineHeight: 1.7, color: 'var(--text2)' }}>{p.desc}</p>
+        <p style={{ fontSize: 13, lineHeight: 1.7, color: 'var(--text2)' }}>{p.description}</p>
       </div>
 
+      {purchaseError && (
+        <div style={{ ...S.errorBox, marginTop: 12, padding: 10, fontSize: 12 }}>
+          <i className="ti ti-alert-circle" style={{ marginRight: 6 }} />{purchaseError}
+        </div>
+      )}
+
+      {purchased && (
+        <div style={{
+          background: 'rgba(34,197,94,0.10)', border: '1px solid rgba(34,197,94,0.30)',
+          borderRadius: 10, padding: 14, textAlign: 'center', marginTop: 12,
+          color: '#22c55e', fontSize: 13,
+        }}>
+          <i className="ti ti-circle-check" style={{ marginRight: 6 }} />Purchase successful!
+        </div>
+      )}
+
       <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 8, marginTop: 20 }}>
-        <button style={{ ...S.btnPrimary, justifyContent: 'center', padding: 13, fontSize: 14 }}>
-          <i className="ti ti-shopping-cart" style={{ fontSize: 16 }} /> Order Now
+        <button
+          style={{ ...S.btnPrimary, justifyContent: 'center', padding: 13, fontSize: 14, opacity: purchasing || purchased ? 0.6 : 1 }}
+          onClick={handlePurchase}
+          disabled={purchasing || purchased}
+        >
+          {purchasing ? (
+            <><i className="ti ti-loader" style={{ fontSize: 16, animation: 'spin 1s linear infinite' }} /> Processing...</>
+          ) : purchased ? (
+            <><i className="ti ti-circle-check" style={{ fontSize: 16 }} /> Purchased</>
+          ) : (
+            <><i className="ti ti-shopping-cart" style={{ fontSize: 16 }} /> Order Now</>
+          )}
         </button>
         <button style={{ ...S.btnOutline, justifyContent: 'center', padding: 13, fontSize: 13 }}>
           <i className="ti ti-message" style={{ fontSize: 16 }} /> Message Seller
@@ -345,7 +479,7 @@ function ProductDetailPage({ product, onBack }: { product: any; onBack: () => vo
 
       <div style={{ marginTop: 28 }}>
         <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', letterSpacing: '0.06em', marginBottom: 8 }}>REVIEWS</div>
-        {p.reviews > 0 ? (
+        {p.reviewsCount > 0 ? (
           <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 8, padding: 12 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <Avatar size={28} /><span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text)' }}>UserABC</span>
@@ -363,6 +497,17 @@ function ProductDetailPage({ product, onBack }: { product: any; onBack: () => vo
 
 // ─── Workers Page ───────────────────────────────────────────────────────────
 function WorkersPage({ onViewWorker }: { onViewWorker: (worker: any) => void }) {
+  const WORKERS = [
+    { id: 1, username: 'Twitter_Automation_god', bio: 'I am a professional software developer and I write code that helps people save time and make money.', rating: 0, reviews: 0 },
+    { id: 2, username: 'Dogo2541', bio: 'Active', rating: 0, reviews: 0 },
+    { id: 3, username: 'Taki.Sakura', bio: 'Always available to help', rating: 0, reviews: 0 },
+    { id: 4, username: 'Blueice', bio: 'That web3 guy', rating: 0, reviews: 0 },
+    { id: 5, username: 'CHOCHO', bio: 'Hi, I\'m CHOCHO, a passionate graphic designer dedicated to transforming ideas into visually compelling and meaningful designs.', rating: 0, reviews: 0 },
+    { id: 6, username: 'Wurk.Brainard', bio: 'Not a hell of an intro. Just a chill guy who\'s kinda into web3. Loves writing articles.', rating: 0, reviews: 0 },
+    { id: 7, username: 'moony', bio: 'No bio available yet', rating: 3.9, reviews: 12 },
+    { id: 8, username: 'ASQUARE', bio: 'Chasing the Big bag', rating: 3.5, reviews: 8 },
+  ]
+
   return (
     <div style={S.page}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
@@ -422,6 +567,13 @@ function WorkersPage({ onViewWorker }: { onViewWorker: (worker: any) => void }) 
 
 // ─── Worker Profile Page ────────────────────────────────────────────────────
 function WorkerProfilePage({ worker, onBack }: { worker: any; onBack: () => void }) {
+  const PRODUCTS = [
+    { id: 1, title: 'X Premium Membership', desc: 'Get your X (Twitter) account upgraded to premium for 3 months without any hassle. Quick setup.', seller: 'Afzan', rating: 5.0, reviews: 1, price: 'NGN 4,120', sol: '0.037 SOL', date: '1 week ago', img: 'https://picsum.photos/seed/xpremium/400/250', category: 'social' },
+    { id: 2, title: 'High-CTR YouTube Thumbnail Design', desc: 'Struggling to get views? The secret is in the Thumbnail! Even the best videos fail without an eye-catching design.', seller: 'Kashem', rating: 0, reviews: 0, price: 'NGN 55,965', sol: '0.500 SOL', date: 'Feb 6', img: 'https://picsum.photos/seed/thumb/400/250', category: 'design' },
+  ]
+  const WORKERS = [
+    { id: 1, username: 'Twitter_Automation_god', bio: 'I am a professional software developer and I write code that helps people save time and make money.', rating: 0, reviews: 0 },
+  ]
   const w = worker || WORKERS[0]
   const [activeTab, setActiveTab] = useState('Products')
   const tabs = ['Products', 'Reviews', 'Blogs']
@@ -574,6 +726,10 @@ export default function Store() {
     setActiveView('workers')
   }
 
+  const handlePurchase = async (_item: any) => {
+    // Purchase succeeded — could navigate back or refresh
+  }
+
   const showNav = ['store', 'workers', 'worker-portal'].includes(activeView)
 
   return (
@@ -590,7 +746,7 @@ export default function Store() {
 
         {activeView === 'store' && <StorePage onViewProduct={handleViewProduct} />}
         {activeView === 'workers' && <WorkersPage onViewWorker={handleViewWorker} />}
-        {activeView === 'product' && <ProductDetailPage product={selectedProduct} onBack={handleBackToStore} />}
+        {activeView === 'product' && <ProductDetailPage product={selectedProduct} onBack={handleBackToStore} onPurchase={handlePurchase} />}
         {activeView === 'worker-profile' && <WorkerProfilePage worker={selectedWorker} onBack={handleBackToWorkers} />}
       </div>
     </Layout>

@@ -1,31 +1,19 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Layout from '../components/Layout'
-import CurrencySelector from '../components/CurrencySelector'
 import { useCurrency } from '../context/CurrencyContext'
-
-const earningsData = {
-  total: 45200,
-  available: 12450,
-  pending: 3200,
-  month: 8900,
-  jobs: 124,
-  referrals: 2300,
-  tips: 450,
-  vault: 1200,
-}
+import { apiRequest } from '../lib/api'
 
 const graphValues: Record<string, number[]> = {
   '7d': [35, 55, 42, 70, 48, 62, 85],
   '30d': [45, 62, 38, 55, 72, 48, 58, 65, 42, 58, 70, 52, 48, 62, 78, 55, 48, 62, 70, 52, 58, 45, 62, 68, 52, 58, 72, 48, 55, 62],
 }
 
-const history = [
-  { date: 'Today', source: 'Task: Social Media', amount: '+NGN 500', type: 'Task' },
-  { date: 'Yesterday', source: 'Referral Bonus', amount: '+NGN 300', type: 'Referral' },
-  { date: '3 days ago', source: 'Tip Received', amount: '+NGN 200', type: 'Tip' },
-  { date: '5 days ago', source: 'Task: Content Review', amount: '+NGN 800', type: 'Task' },
-  { date: '1 week ago', source: 'Vault Reward', amount: '+NGN 150', type: 'Vault' },
-]
+type HistoryItem = {
+  date: string
+  source: string
+  amount: number
+  type: string
+}
 
 export default function Earnings() {
   const { fmt } = useCurrency()
@@ -33,7 +21,130 @@ export default function Earnings() {
   const [tab, setTab] = useState('all')
   const bars = graphValues[period] || graphValues['7d']
 
-  const filtered = tab === 'all' ? history : history.filter(h => h.type.toLowerCase() === tab)
+  const [loading, setLoading] = useState(true)
+  const [totalEarned, setTotalEarned] = useState<number | null>(null)
+  const [availableBalance, setAvailableBalance] = useState<number | null>(null)
+  const [pendingEarnings, setPendingEarnings] = useState<number | null>(null)
+  const [monthEarnings, setMonthEarnings] = useState<number | null>(null)
+  const [jobsCompleted, setJobsCompleted] = useState(0)
+  const [referrals, setReferrals] = useState<number | null>(null)
+  const [tips, setTips] = useState<number | null>(null)
+  const [vault, setVault] = useState<number | null>(null)
+  const [history, setHistory] = useState<HistoryItem[]>([])
+
+  useEffect(() => {
+    async function fetchData() {
+      setLoading(true)
+
+      let total: number | null = null
+      let balance: number | null = null
+      let transactions: any[] = []
+
+      try {
+        const data = await apiRequest('/users/me/earnings')
+        total = data?.total ?? null
+      } catch { /* fall back to computation */ }
+
+      try {
+        const data = await apiRequest('/wallet/balance')
+        balance = data?.balance ?? data?.availableBalance ?? null
+      } catch { /* ignore */ }
+
+      try {
+        const data = await apiRequest('/users/transactions/history')
+        transactions = Array.isArray(data) ? data : data?.transactions ?? data?.data ?? []
+      } catch { /* ignore */ }
+
+      if (total === null && transactions.length > 0) {
+        total = transactions
+          .filter((t: any) => t.status === 'completed' || t.status === 'successful')
+          .filter((t: any) => ['TASK_PAYMENT', 'REFERRAL_BONUS', 'TIP', 'VAULT_REWARD'].includes(t.type))
+          .reduce((s: number, t: any) => s + (t.amount || 0), 0)
+      }
+
+      const now = new Date()
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
+      const monthTotal = transactions
+        .filter((t: any) => {
+          const d = new Date(t.createdAt || t.date)
+          return d >= monthStart && (t.status === 'completed' || t.status === 'successful')
+        })
+        .filter((t: any) => ['TASK_PAYMENT', 'REFERRAL_BONUS', 'TIP', 'VAULT_REWARD'].includes(t.type))
+        .reduce((s: number, t: any) => s + (t.amount || 0), 0)
+
+      const pending = transactions
+        .filter((t: any) => t.status === 'pending')
+        .reduce((s: number, t: any) => s + (t.amount || 0), 0)
+
+      const referralTotal = transactions
+        .filter((t: any) => t.type === 'REFERRAL_BONUS' && (t.status === 'completed' || t.status === 'successful'))
+        .reduce((s: number, t: any) => s + (t.amount || 0), 0)
+
+      const tipsTotal = transactions
+        .filter((t: any) => t.type === 'TIP' && (t.status === 'completed' || t.status === 'successful'))
+        .reduce((s: number, t: any) => s + (t.amount || 0), 0)
+
+      const vaultTotal = transactions
+        .filter((t: any) => t.type === 'VAULT_REWARD' && (t.status === 'completed' || t.status === 'successful'))
+        .reduce((s: number, t: any) => s + (t.amount || 0), 0)
+
+      const jobs = transactions
+        .filter((t: any) => t.type === 'TASK_PAYMENT' && (t.status === 'completed' || t.status === 'successful'))
+        .length
+
+      const incomeHistory: HistoryItem[] = transactions
+        .filter((t: any) => ['TASK_PAYMENT', 'REFERRAL_BONUS', 'TIP', 'VAULT_REWARD'].includes(t.type))
+        .map((t: any) => ({
+          date: t.createdAt || t.date,
+          source: t.description || t.type,
+          amount: t.amount || 0,
+          type: t.type === 'TASK_PAYMENT' ? 'task' : t.type === 'REFERRAL_BONUS' ? 'referral' : t.type === 'TIP' ? 'tip' : 'vault',
+        }))
+
+      setTotalEarned(total)
+      setAvailableBalance(balance)
+      setPendingEarnings(pending || null)
+      setMonthEarnings(monthTotal || null)
+      setJobsCompleted(jobs)
+      setReferrals(referralTotal || null)
+      setTips(tipsTotal || null)
+      setVault(vaultTotal || null)
+      setHistory(incomeHistory)
+      setLoading(false)
+    }
+
+    fetchData()
+  }, [])
+
+  const dv = (v: number | null) => v !== null ? fmt(v, 'NGN') : '?'
+
+  const tasksFromEarnings = totalEarned !== null
+    ? fmt(totalEarned - (referrals ?? 0) - (tips ?? 0) - (vault ?? 0), 'NGN')
+    : '?'
+
+  const filtered = tab === 'all' ? history : history.filter(h => h.type === tab)
+
+  const formatDate = (d: string) => {
+    const date = new Date(d)
+    const now = new Date()
+    const diff = now.getTime() - date.getTime()
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24))
+    if (days === 0) return 'Today'
+    if (days === 1) return 'Yesterday'
+    if (days < 7) return `${days} days ago`
+    if (days < 14) return '1 week ago'
+    return date.toLocaleDateString()
+  }
+
+  const formatAmount = (amount: number) => `+NGN ${amount.toLocaleString()}`
+
+  if (loading) {
+    return (
+      <Layout>
+        <div style={{ display: 'grid', placeItems: 'center', minHeight: 300, color: 'var(--text2)' }}>Loading...</div>
+      </Layout>
+    )
+  }
 
   return (
     <Layout>
@@ -71,13 +182,12 @@ export default function Earnings() {
         <p>Track your income from tasks, referrals, tips, and vault rewards</p>
       </div>
 
-      {/* Stats */}
       <div className="en-grid">
         {[
-          { icon: 'ti ti-coin', color: '#1F8CFF', num: fmt(earningsData.total, 'NGN'), label: 'Total Earned' },
-          { icon: 'ti ti-wallet', color: '#16a34a', num: fmt(earningsData.available, 'NGN'), label: 'Available Balance' },
-          { icon: 'ti ti-clock', color: '#F59E0B', num: fmt(earningsData.pending, 'NGN'), label: 'Pending Earnings' },
-          { icon: 'ti ti-trending-up', color: '#2563EB', num: fmt(earningsData.month, 'NGN'), label: 'This Month' },
+          { icon: 'ti ti-coin', color: '#1F8CFF', num: dv(totalEarned), label: 'Total Earned' },
+          { icon: 'ti ti-wallet', color: '#16a34a', num: dv(availableBalance), label: 'Available Balance' },
+          { icon: 'ti ti-clock', color: '#F59E0B', num: dv(pendingEarnings), label: 'Pending Earnings' },
+          { icon: 'ti ti-trending-up', color: '#2563EB', num: dv(monthEarnings), label: 'This Month' },
         ].map((s, i) => (
           <div className="en-stat" key={i}>
             <div className="esi" style={{ background: `${s.color}15`, color: s.color }}><i className={s.icon} /></div>
@@ -87,7 +197,6 @@ export default function Earnings() {
         ))}
       </div>
 
-      {/* Graph */}
       <div className="en-graph-card">
         <div className="en-graph-header">
           <span className="en-graph-title"><i className="ti ti-trending-up" style={{color:'var(--accent)',marginRight:6}} />Earnings Overview</span>
@@ -108,13 +217,12 @@ export default function Earnings() {
         </div>
       </div>
 
-      {/* Breakdown */}
       <div className="en-grid" style={{marginBottom:24}}>
         {[
-          { icon: 'ti ti-briefcase', color: '#1F8CFF', num: `NGN ${earningsData.total - earningsData.referrals - earningsData.tips - earningsData.vault}`, label: 'From Tasks', sub: `${earningsData.jobs} jobs completed` },
-          { icon: 'ti ti-affiliate', color: '#2563EB', num: fmt(earningsData.referrals, 'NGN'), label: 'From Referrals', sub: '3 active referrals' },
-          { icon: 'ti ti-gift', color: '#F59E0B', num: `NGN ${earningsData.tips.toLocaleString()}`, label: 'From Tips', sub: '12 tips received' },
-          { icon: 'ti ti-vault', color: '#16a34a', num: `NGN ${earningsData.vault.toLocaleString()}`, label: 'From Vault', sub: 'Vault rewards' },
+          { icon: 'ti ti-briefcase', color: '#1F8CFF', num: tasksFromEarnings, label: 'From Tasks', sub: `${jobsCompleted} jobs completed` },
+          { icon: 'ti ti-affiliate', color: '#2563EB', num: dv(referrals), label: 'From Referrals', sub: 'Referral bonuses' },
+          { icon: 'ti ti-gift', color: '#F59E0B', num: dv(tips), label: 'From Tips', sub: 'Tips received' },
+          { icon: 'ti ti-vault', color: '#16a34a', num: dv(vault), label: 'From Vault', sub: 'Vault rewards' },
         ].map((s, i) => (
           <div className="en-stat" key={i}>
             <div className="esi" style={{ background: `${s.color}15`, color: s.color }}><i className={s.icon} /></div>
@@ -125,7 +233,6 @@ export default function Earnings() {
         ))}
       </div>
 
-      {/* History */}
       <div className="en-graph-card">
         <div className="en-graph-header">
           <span className="en-graph-title"><i className="ti ti-history" style={{color:'var(--accent)',marginRight:6}} />Earnings History</span>
@@ -140,9 +247,9 @@ export default function Earnings() {
         <div className="en-history">
           {filtered.map((h, i) => (
             <div className="en-h-item" key={i}>
-              <span className="en-h-date">{h.date}</span>
+              <span className="en-h-date">{formatDate(h.date)}</span>
               <span className="en-h-source">{h.source}</span>
-              <span className="en-h-amount">{h.amount}</span>
+              <span className="en-h-amount">{formatAmount(h.amount)}</span>
             </div>
           ))}
           {filtered.length === 0 && (

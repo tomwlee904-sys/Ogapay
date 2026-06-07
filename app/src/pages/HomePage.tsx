@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { API_BASE } from "../lib/api";
 
 /* ─── GLOBAL STYLES ────────────────────────────────────────────────────────── */
 const GlobalStyles = () => (
@@ -419,10 +420,21 @@ function Navbar({ theme, toggleTheme, openDrawer, isAuthed, navigate }) {
 
 /* ─── HERO ─────────────────────────────────────────────────────────────────── */
 function Hero({ openAuth, navigate, isAuthed }) {
-  const stats = [
-    { val: "₦2.4M+", label: "Total Paid Out" },
-    { val: "18,400+", label: "Active Workers" },
-    { val: "94,000+", label: "Tasks Done" },
+  const [platformStats, setPlatformStats] = useState(null);
+  useEffect(() => {
+    fetch(`${API_BASE}/platform`)
+      .then(r => r.json())
+      .then(d => d?.data && setPlatformStats(d.data))
+      .catch(() => {});
+  }, []);
+  const stats = platformStats ? [
+    { val: `₦${(platformStats.totalPaid / 1000000).toFixed(1)}M+`, label: "Total Paid Out" },
+    { val: `${(platformStats.activeWorkers / 1000).toFixed(1)}K+`, label: "Active Workers" },
+    { val: `${(platformStats.tasksDone / 1000).toFixed(1)}K+`, label: "Tasks Done" },
+  ] : [
+    { val: "₦0", label: "Total Paid Out" },
+    { val: "0", label: "Active Workers" },
+    { val: "0", label: "Tasks Done" },
   ];
   return (
     <section className="hero">
@@ -594,11 +606,28 @@ function EarnPaths() {
 /* ─── FEATURED JOBS ─────────────────────────────────────────────────────────── */
 function FeaturedJobs() {
   const [active, setActive] = useState(0);
-  const jobs = [
-    { name: "TechStartup NG", ago: "2 MIN AGO", task: "Repost product launch tweet", reward: "₦1,200", slots: 50, filled: 23, tags: "Twitter · Repost · Beginner", desc: "Repost our new product launch tweet and earn instantly. Must have active X account with 50+ followers." },
-    { name: "CryptoHub Africa", ago: "8 MIN AGO", task: "Join Telegram & stay 7 days", reward: "₦2,500", slots: 200, filled: 140, tags: "Telegram · Join · Community", desc: "Join our Telegram community and remain active for 7 days to claim your reward automatically." },
-    { name: "CreativeNG", ago: "15 MIN AGO", task: "Design a logo — best wins", reward: "₦25,000", slots: 1, filled: 0, tags: "Design · Creative · Challenge", desc: "Create a minimalist logo for a new Nigerian fintech brand. Best submission wins the full bounty." },
-  ];
+  const [jobs, setJobs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    fetch(`${API_BASE}/tasks?limit=3&status=OPEN`)
+      .then(r => r.json())
+      .then(d => {
+        if (d?.data) {
+          setJobs(d.data.map(t => ({
+            name: t.poster?.businessName || t.poster?.firstName || "Anonymous",
+            ago: "RECENT",
+            task: t.title,
+            reward: `₦${Number(t.rewardPerSlot || t.budget || 0).toLocaleString()}`,
+            slots: t.maxSlots || t.slots || 1,
+            filled: t.filledSlots || 0,
+            tags: [t.category, t.difficulty].filter(Boolean).join(" · "),
+            desc: t.description || "",
+          })));
+        }
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
   return (
     <section style={{ padding: "44px 0 34px", background: "var(--bg)" }}>
       <div className="container">
