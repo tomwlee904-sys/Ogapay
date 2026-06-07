@@ -985,8 +985,9 @@ function CreateTask() {
   // State for upgrade flow
   const [upgrading, setUpgrading] = useState(false);
   const [upgradeMsg, setUpgradeMsg] = useState('');
+  const [upgraded, setUpgraded] = useState(false);
 
-  if (effectiveRole !== "POSTER" && effectiveRole !== "ADMIN") {
+  if (!upgraded && effectiveRole !== "POSTER" && effectiveRole !== "ADMIN") {
     const handleUpgrade = async () => {
       setUpgrading(true);
       setUpgradeMsg('');
@@ -1010,7 +1011,7 @@ function CreateTask() {
           localStorage.setItem('ogapay_role_override', 'POSTER');
         } catch(e) {}
         setUpgradeMsg('Account upgraded! You can now create jobs.');
-        setTimeout(() => navigate(0), 800);
+        setTimeout(() => setUpgraded(true), 800);
       } catch (e) {
         setUpgradeMsg(e.message || 'Failed to upgrade. Contact support.');
       } finally {
