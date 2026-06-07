@@ -59,20 +59,60 @@ function PageLoader() {
   return (
     <div style={{
       display: 'flex',
+      flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'center',
-      minHeight: '60vh',
+      minHeight: '100vh',
+      background: '#000638',
       padding: 40,
     }}>
-      <div style={{
-        width: 32,
-        height: 32,
-        border: '3px solid var(--border)',
-        borderTopColor: 'var(--accent)',
-        borderRadius: '50%',
-        animation: 'pageLoaderSpin .6s linear infinite',
-      }} />
-      <style>{`@keyframes pageLoaderSpin{to{transform:rotate(360deg)}}`}</style>
+      {/* Logo with spinning ring */}
+      <div style={{ position: 'relative', width: 80, height: 80, marginBottom: 24 }}>
+        {/* Spinning ring */}
+        <div style={{
+          position: 'absolute', inset: -4,
+          borderRadius: '50%',
+          border: '3px solid rgba(255,255,255,0.1)',
+          borderTopColor: '#4F46E5',
+          animation: 'splashSpin .8s linear infinite',
+        }} />
+        {/* Logo */}
+        <div style={{
+          width: '100%', height: '100%',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 34 34" fill="none" width="48" height="48">
+            <rect width="34" height="34" rx="6" fill="white"/>
+            <rect x="6.5" y="6.5" width="7.1" height="7.1" rx="1.3" fill="black"/>
+            <path d="M15 6.5H20.7C21.5 6.5 22.2 7.2 22.2 8V13.6H15V6.5Z" fill="black"/>
+            <path d="M23.4 6.5H26C29.2 6.5 31.2 8.5 31.2 11.7V13.6H23.4V6.5Z" fill="black"/>
+            <rect x="6.5" y="15" width="7.1" height="7.1" fill="black"/>
+            <rect x="15" y="15" width="7.1" height="7.1" fill="black"/>
+            <path d="M23.4 15H31.2V16.9C31.2 20.1 29.2 22.1 26 22.1H23.4V15Z" fill="black"/>
+            <rect x="6.5" y="23.4" width="7.1" height="7.1" rx="1.3" fill="black"/>
+            <path d="M15 23.4H20.7C21.5 23.4 22.2 24.1 22.2 24.9V29.2C22.2 30 21.5 30.7 20.7 30.7H15V23.4Z" fill="black"/>
+          </svg>
+        </div>
+      </div>
+      {/* Brand name */}
+      <h1 style={{
+        fontFamily: "'Outfit', sans-serif",
+        fontSize: 28,
+        fontWeight: 900,
+        color: '#ffffff',
+        margin: '0 0 8px',
+        letterSpacing: '-0.03em',
+      }}>OgaPay</h1>
+      {/* Loading dots */}
+      <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
+        <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#4F46E5', animation: 'splashDot 1.2s ease-in-out infinite', animationDelay: '0s' }} />
+        <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#6366F1', animation: 'splashDot 1.2s ease-in-out infinite', animationDelay: '0.2s' }} />
+        <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#818CF8', animation: 'splashDot 1.2s ease-in-out infinite', animationDelay: '0.4s' }} />
+      </div>
+      <style>{`
+        @keyframes splashSpin{to{transform:rotate(360deg)}}
+        @keyframes splashDot{0%,80%,100%{transform:scale(0.6);opacity:0.3}40%{transform:scale(1);opacity:1}}
+      `}</style>
     </div>
   )
 }
