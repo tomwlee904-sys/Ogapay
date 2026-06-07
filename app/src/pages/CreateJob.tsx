@@ -1000,8 +1000,14 @@ function CreateTask() {
           const err = await res.json().catch(() => ({}));
           throw new Error(err.message || 'Upgrade failed');
         }
-        setUpgradeMsg('Account upgraded! Refreshing...');
-        setTimeout(() => window.location.reload(), 1500);
+        // Update cached user so auth context sees POSTER role on reload
+        try {
+          const stored = JSON.parse(localStorage.getItem('ogapay_user') || '{}');
+          stored.role = 'POSTER';
+          localStorage.setItem('ogapay_user', JSON.stringify(stored));
+        } catch(e) {}
+        setUpgradeMsg('Account upgraded! Redirecting...');
+        setTimeout(() => window.location.reload(), 500);
       } catch (e) {
         setUpgradeMsg(e.message || 'Failed to upgrade. Contact support.');
       } finally {
