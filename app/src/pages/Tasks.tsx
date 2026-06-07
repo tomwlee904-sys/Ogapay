@@ -152,7 +152,7 @@ function JobDetailView({ job, onBack }: { job: any; onBack: () => void }) {
         .cd-badge-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px}
         .cd-badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;padding:4px 10px;border-radius:99px}
         .cd-badge.open{background:#052e16;color:#4ade80}
-        .cd-badge.challenge{background:#1e1035;color:#c4b5fd}
+        .cd-badge.challenge{background:rgba(18,21,102,0.12);color:#c4b5fd}
         .cd-bounty{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:20px 24px;border-bottom:1px solid var(--border)}
         @media(max-width:600px){.cd-bounty{grid-template-columns:1fr}}
         .cd-bounty-item{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px 18px}
@@ -160,7 +160,7 @@ function JobDetailView({ job, onBack }: { job: any; onBack: () => void }) {
         .cd-bounty-sol{font-family:"Outfit",sans-serif;font-size:24px;font-weight:900;color:var(--text)}
         .cd-bounty-sol span{color:var(--accent);font-size:16px}
         .cd-bounty-usd{font-size:12px;color:var(--text2);margin-top:2px}
-        .cd-bounty-tag{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;background:#1e1035;color:#c4b5fd;margin-left:6px}
+        .cd-bounty-tag{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;background:rgba(18,21,102,0.12);color:#c4b5fd;margin-left:6px}
         .cd-deadline{display:flex;align-items:center;gap:12px;padding:14px 24px;border-bottom:1px solid var(--border);background:var(--bg2)}
         .cd-deadline-icon{width:36px;height:36px;border-radius:50%;background:var(--card);border:1px solid var(--border);display:grid;place-items:center;flex-shrink:0}
         .cd-deadline-icon i{font-size:16px}
@@ -181,7 +181,7 @@ function JobDetailView({ job, onBack }: { job: any; onBack: () => void }) {
         .cd-desc-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px}
         .cd-desc-text{font-size:13px;color:var(--text2);line-height:1.7;white-space:pre-wrap}
         .cd-actions{padding:18px 24px;display:flex;gap:10px;flex-wrap:wrap}
-        .cd-btn-primary{height:46px;padding:0 30px;border-radius:99px;border:none;background:linear-gradient(135deg,#a78bfa,#7c3aed);color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:opacity .15s,transform .15s}
+        .cd-btn-primary{height:46px;padding:0 30px;border-radius:99px;border:none;background:#121566;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:opacity .15s,transform .15s}
         .cd-btn-primary:hover{opacity:.9;transform:translateY(-1px)}
         .cd-btn-secondary{height:46px;padding:0 24px;border-radius:99px;border:1.5px solid var(--border);background:transparent;color:var(--text);font-size:13px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:border-color .13s}
         .cd-btn-secondary:hover{border-color:var(--text)}
@@ -193,11 +193,11 @@ function JobDetailView({ job, onBack }: { job: any; onBack: () => void }) {
         .cd-modal-body{padding:18px 20px}
         .cd-modal-label{font-size:12px;font-weight:700;color:var(--text2);margin-bottom:6px;display:block}
         .cd-modal-input{width:100%;height:42px;padding:0 14px;border:1.5px solid var(--border);border-radius:10px;background:var(--bg2);color:var(--text);font-size:13px;outline:none;box-sizing:border-box;font-family:inherit}
-        .cd-modal-input:focus{border-color:#a78bfa}
+        .cd-modal-input:focus{border-color:#121566}
         .cd-modal-textarea{width:100%;min-height:100px;padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;background:var(--bg2);color:var(--text);font-size:13px;outline:none;resize:vertical;box-sizing:border-box;font-family:inherit;line-height:1.5}
-        .cd-modal-textarea:focus{border-color:#a78bfa}
+        .cd-modal-textarea:focus{border-color:#121566}
         .cd-modal-actions{display:flex;gap:10px;margin-top:16px}
-        .cd-submit-btn{height:42px;padding:0 24px;border-radius:99px;border:none;background:linear-gradient(135deg,#a78bfa,#7c3aed);color:#fff;font-size:13px;font-weight:700;cursor:pointer;flex:1}
+        .cd-submit-btn{height:42px;padding:0 24px;border-radius:99px;border:none;background:#121566;color:#fff;font-size:13px;font-weight:700;cursor:pointer;flex:1}
         .cd-submit-btn:disabled{opacity:.5;cursor:not-allowed}
         .cd-success{text-align:center;padding:32px 20px}
         .cd-success i{font-size:40px;color:#4ade80}
@@ -214,7 +214,7 @@ function JobDetailView({ job, onBack }: { job: any; onBack: () => void }) {
           <div className="cd-creator-info">
             <div className="cd-creator-name">
               {job.creator}
-              <span style={{fontSize:11,fontWeight:600,color:'#a78bfa',background:'#1e1035',padding:'2px 8px',borderRadius:99}}>{job.creatorLabel}</span>
+              <span style={{fontSize:11,fontWeight:600,color:'#121566',background:'rgba(18,21,102,0.12)',padding:'2px 8px',borderRadius:99}}>{job.creatorLabel}</span>
             </div>
             <div className="cd-creator-handle">@{job.creator.toLowerCase().replace(/\s+/g,'')}</div>
             <div className="cd-creator-wallet" onClick={() => {navigator.clipboard?.writeText('F48NUF...jemX')}}>
@@ -297,7 +297,7 @@ function JobDetailView({ job, onBack }: { job: any; onBack: () => void }) {
           </div>
 
           <div className="cd-req-section">
-            <div className="cd-req-title"><i className="ti ti-shield-check" style={{color:'#a78bfa'}} /> Requirements</div>
+            <div className="cd-req-title"><i className="ti ti-shield-check" style={{color:'#121566'}} /> Requirements</div>
             <div className="cd-req-grid">
               <div className="cd-req-item"><i className="ti ti-circle-check" style={{color:job.verificationRequired?'#4ade80':'var(--text3)'}} /> Screenshot proof {job.verificationRequired ? 'required' : 'optional'}</div>
               <div className="cd-req-item"><i className="ti ti-user-check" style={{color:'var(--text3)'}} /> KYC verification optional</div>
