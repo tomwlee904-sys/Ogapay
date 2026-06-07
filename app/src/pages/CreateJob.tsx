@@ -979,12 +979,14 @@ function CreateTask() {
   });
 
   const userRole = (user as any)?.role || '';
+  const liveRole = (() => { try { return JSON.parse(localStorage.getItem('ogapay_user') || '{}').role || ''; } catch { return ''; } })();
+  const effectiveRole = userRole || liveRole;
   // Block if role is explicitly set and not poster/admin
   // State for upgrade flow
   const [upgrading, setUpgrading] = useState(false);
   const [upgradeMsg, setUpgradeMsg] = useState('');
 
-  if (!userRole || (userRole !== "POSTER" && userRole !== "ADMIN")) {
+  if (effectiveRole !== "POSTER" && effectiveRole !== "ADMIN") {
     const handleUpgrade = async () => {
       setUpgrading(true);
       setUpgradeMsg('');
@@ -1039,7 +1041,7 @@ function CreateTask() {
             {upgrading ? 'Upgrading...' : 'Upgrade to Poster Account'}
           </button>
           {upgradeMsg && (
-            <p style={{ marginTop: 12, fontSize: 13, fontWeight: 600, color: upgradeMsg.includes('refreshing') ? '#16a34a' : '#DC2626' }}>{upgradeMsg}</p>
+            <p style={{ marginTop: 12, fontSize: 13, fontWeight: 600, color: upgradeMsg.includes('upgraded') ? '#16a34a' : '#DC2626' }}>{upgradeMsg}</p>
           )}
         </div>
       </Layout>
