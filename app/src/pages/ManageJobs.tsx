@@ -951,7 +951,7 @@ function JobsListPage({ jobs, setJobs, showToast }) {
   return (
     <div style={{ maxWidth: "100%", padding: "24px 28px 60px" }}>
       {/* Summary stats */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr 1fr", gap: 8, marginBottom: 16 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 8, marginBottom: 16 }}>
         {[
           { label: "Active", value: totals.active, color: "var(--green)" },
           { label: "Paused", value: totals.paused, color: "#f59e0b" },
@@ -960,8 +960,8 @@ function JobsListPage({ jobs, setJobs, showToast }) {
           { label: "Spent", value: `₦${(totals.totalSpent / 1000).toFixed(0)}k`, color: "var(--text)" },
         ].map(s => (
           <div key={s.label} style={{ background: "var(--card)", border: `1px solid ${"var(--border)"}`, borderRadius: 12, padding: "10px 8px", textAlign: "center" }}>
-            <div style={{ fontSize: 16, fontWeight: 900, color: s.color }}>{s.value}</div>
-            <div style={{ fontSize: 10, color: "var(--text3)", fontWeight: 600, marginTop: 2 }}>{s.label}</div>
+            <div style={{ fontSize: 20, fontWeight: 900, color: s.color }}>{s.value}</div>
+            <div style={{ fontSize: 12, color: "var(--text3)", fontWeight: 700, marginTop: 3 }}>{s.label}</div>
           </div>
         ))}
       </div>
@@ -970,7 +970,7 @@ function JobsListPage({ jobs, setJobs, showToast }) {
       <div style={{ display: "flex", gap: 6, marginBottom: 16, overflowX: "auto", paddingBottom: 2 }}>
         {["all", "active", "paused", "completed"].map(f => (
           <button key={f} onClick={() => setFilter(f)}
-            style={{ flexShrink: 0, padding: "6px 14px", borderRadius: 99, fontSize: 12, fontWeight: 700, cursor: "pointer", border: `1px solid ${filter === f ? "var(--accent)" : "var(--border)"}`, background: filter === f ? "var(--bg2)" : "rgba(255,255,255,0.03)", color: filter === f ? "var(--accent)" : "var(--text3)", fontFamily: "inherit" }}>
+            style={{ flexShrink: 0, padding: "8px 18px", borderRadius: 99, fontSize: 13, fontWeight: 700, cursor: "pointer", border: `1px solid ${filter === f ? "var(--accent)" : "var(--border)"}`, background: filter === f ? "var(--text)" : "var(--card)", color: filter === f ? "var(--bg)" : "var(--text2)", fontFamily: "inherit" }}>
             {f.charAt(0).toUpperCase() + f.slice(1)}
             <span style={{ marginLeft: 6, fontSize: 11, opacity: 0.7 }}>
               {f === "all" ? jobs.length : jobs.filter(j => j.status === f).length}
@@ -988,13 +988,13 @@ function JobsListPage({ jobs, setJobs, showToast }) {
         </div>
       ) : filtered.map(job => (
         <div key={job.id} onClick={() => setSelectedJob(job)}
-          style={{ background: "var(--card)", border: `1px solid ${"var(--border)"}`, borderRadius: 18, padding: 16, marginBottom: 10, cursor: "pointer", transition: "border-color 0.15s" }}
-          onMouseEnter={e => e.currentTarget.style.borderColor = "rgba(139,92,246,0.4)"}
+          style={{ background: "var(--card)", border: `1px solid ${"var(--border)"}`, borderRadius: 18, padding: "20px 22px", marginBottom: 12, cursor: "pointer", transition: "border-color 0.15s" }}
+          onMouseEnter={e => e.currentTarget.style.borderColor = "var(--accent)"}
           onMouseLeave={e => e.currentTarget.style.borderColor = "var(--border)"}>
 
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10, marginBottom: 12 }}>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 14, fontWeight: 800, color: "var(--text)", marginBottom: 6, lineHeight: 1.3 }}>{job.title}</div>
+              <div style={{ fontSize: 17, fontWeight: 800, color: "var(--text)", marginBottom: 8, lineHeight: 1.3 }}>{job.title}</div>
               <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                 <Badge label={job.platform} />
                 <Badge label={job.selectionType === "creator" ? "👤 Manual" : "🎲 Auto"} />
@@ -1002,12 +1002,12 @@ function JobsListPage({ jobs, setJobs, showToast }) {
               </div>
             </div>
             <div style={{ textAlign: "right", flexShrink: 0 }}>
-              <div style={{ fontSize: 18, fontWeight: 900, color: "var(--green)" }}>₦{job.reward.toLocaleString()}</div>
-              <div style={{ fontSize: 10, color: "var(--text3)", marginTop: 2 }}>per slot</div>
+              <div style={{ fontSize: 22, fontWeight: 900, color: "var(--green)" }}>₦{job.reward.toLocaleString()}</div>
+              <div style={{ fontSize: 12, color: "var(--text3)", marginTop: 2, fontWeight: 600 }}>per slot</div>
             </div>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 8, marginBottom: 12 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 8, marginBottom: 12 }}>
             {[
               { label: "Winners", value: job.winners, color: "var(--green)" },
               { label: "Pending", value: job.pending, color: "#f59e0b" },
@@ -1015,25 +1015,25 @@ function JobsListPage({ jobs, setJobs, showToast }) {
               { label: "Left", value: job.slots - job.winners - job.pending, color: "var(--text3)" },
             ].map(s => (
               <div key={s.label} style={{ background: "var(--bg2)", border: `1px solid ${"var(--border)"}`, borderRadius: 10, padding: "8px", textAlign: "center" }}>
-                <div style={{ fontSize: 15, fontWeight: 900, color: s.color }}>{s.value}</div>
-                <div style={{ fontSize: 10, color: "var(--text3)", fontWeight: 600, marginTop: 1 }}>{s.label}</div>
+                <div style={{ fontSize: 20, fontWeight: 900, color: s.color }}>{s.value}</div>
+                <div style={{ fontSize: 12, color: "var(--text3)", fontWeight: 700, marginTop: 2 }}>{s.label}</div>
               </div>
             ))}
           </div>
 
           <div style={{ marginBottom: 10 }}>
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5 }}>
-              <span style={{ fontSize: 11, color: "var(--text3)" }}>{pct(job.winners, job.slots)}% complete</span>
-              <span style={{ fontSize: 11, color: "var(--text3)" }}>₦{job.remaining.toLocaleString()} remaining</span>
+              <span style={{ fontSize: 12, color: "var(--text2)", fontWeight: 600 }}>{pct(job.winners, job.slots)}% complete</span>
+              <span style={{ fontSize: 12, color: "var(--text2)", fontWeight: 600 }}>₦{job.remaining.toLocaleString()} remaining</span>
             </div>
             <ProgressBar value={job.winners} max={job.slots} />
           </div>
 
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <span style={{ fontSize: 11, color: "var(--text3)", fontFamily: "monospace" }}>{job.id}</span>
+            <span style={{ fontSize: 12, color: "var(--text3)", fontFamily: "monospace", fontWeight: 600 }}>{job.id}</span>
             <div style={{ display: "flex", gap: 6 }}>
-              <span style={{ fontSize: 11, color: "var(--text3)" }}>Deadline: {job.deadline}</span>
-              <span style={{ fontSize: 11, color: "var(--accent)", fontWeight: 600 }}>View →</span>
+              <span style={{ fontSize: 12, color: "var(--text2)", fontWeight: 600 }}>Deadline: {job.deadline}</span>
+              <span style={{ display:"inline-flex", alignItems:"center", justifyContent:"center", height:40, padding:"0 18px", borderRadius:10, background:"var(--text)", color:"var(--bg)", fontSize:13, fontWeight:800, gap:6 }}><i className="ti ti-eye" style={{fontSize:15}} /> View</span>
             </div>
           </div>
         </div>
