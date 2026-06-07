@@ -608,7 +608,7 @@ function BlacklistPage() {
   };
 
   return (
-    <div style={{ maxWidth: "100%", padding: "24px 28px 60px" }}>
+    <div style={{ width: "100%" }}>
       {toast && <div style={{ position: "fixed", top: 20, left: "50%", transform: "translateX(-50%)", background: "var(--card)", border: "1px solid var(--border)", borderRadius: 12, padding: "10px 20px", fontSize: 13, fontWeight: 600, color: "var(--text)", zIndex: 200, whiteSpace: "nowrap" }}>{toast}</div>}
 
       {/* Header */}
@@ -741,7 +741,7 @@ function TemplatesPage({ onUseTemplate }) {
   const list = tab === "mine" ? templates.mine : templates.public;
 
   return (
-    <div style={{ maxWidth: "100%", padding: "24px 28px 60px" }}>
+    <div style={{ width: "100%" }}>
       {toast && <div style={{ position: "fixed", top: 20, left: "50%", transform: "translateX(-50%)", background: "var(--card)", border: "1px solid var(--border)", borderRadius: 12, padding: "10px 20px", fontSize: 13, fontWeight: 600, color: "var(--text)", zIndex: 200, whiteSpace: "nowrap" }}>{toast}</div>}
 
       {/* Header */}
@@ -942,7 +942,7 @@ function JobsListPage({ jobs, setJobs, showToast }) {
   };
 
   return (
-    <div style={{ maxWidth: "100%", padding: "24px 28px 60px" }}>
+    <div style={{ width: "100%" }}>
       {/* Summary stats */}
       <div class="mj-stats-grid" style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 8, marginBottom: 16 }}>
         {[
@@ -1067,7 +1067,7 @@ export default function MyJobs() {
   const navRightLabel = page === "jobs" ? "+ Create Job" : page === "templates" ? "+ New Template" : null;
 
   return (
-    <Layout><div class="mj-page" style={{ padding: "28px 24px 60px", width: "100%", maxWidth: "100%" }}>
+    <Layout><div class="mj-page">
       <style>{`
         .mj-page { padding: 28px 24px 60px; width: 100%; max-width: 100%; }
         
@@ -1112,7 +1112,7 @@ export default function MyJobs() {
 
 
       {/* Sub tab nav — full labels */}
-      <div style={{ background: "var(--card)", borderBottom: `1px solid ${"var(--border)"}`, display: "flex", overflowX: "auto" }}>
+      <div class="mj-tab-bar">
         {PAGE_TABS.map(t => (
           <button key={t.id} onClick={() => setPage(t.id)}
             style={{ flex: 1, padding: "12px 8px", fontSize: 12, fontWeight: 700, cursor: "pointer", border: "none", fontFamily: "inherit", background: "transparent", color: page === t.id ? "var(--accent)" : "var(--text3)", borderBottom: page === t.id ? `2px solid ${"var(--accent)"}` : "2px solid transparent", transition: "all 0.15s", whiteSpace: "nowrap", display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
@@ -1122,18 +1122,12 @@ export default function MyJobs() {
       </div>
 
       {/* Page content */}
-      {page === "jobs" && (
-        <JobsListPage jobs={jobs} setJobs={setJobs} showToast={showToast} />
-      )}
-      {page === "blacklist" && (
-        <BlacklistPage />
-      )}
-      {page === "templates" && (
-        <TemplatesPage onUseTemplate={(tpl) => {
+      {page === "jobs" && <div class="mj-content"><JobsListPage jobs={jobs} setJobs={setJobs} showToast={showToast} /></div>}
+      {page === "blacklist" && <div class="mj-content"><BlacklistPage /></div>}
+      {page === "templates" && <div class="mj-content"><TemplatesPage onUseTemplate={(tpl) => {
           setPage("jobs");
           showToast("Template loaded — create your job below!");
-        }} />
-      )}
+        }} /></div>}
   </div>
 </Layout>
   );
