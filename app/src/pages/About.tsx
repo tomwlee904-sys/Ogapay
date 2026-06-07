@@ -1,4 +1,3 @@
-import { useState, useCallback } from 'react'
 import Layout from '../components/Layout'
 
 const NAVY = '#191C6B'
@@ -9,12 +8,6 @@ function TablerIcon({ name, size = 20 }: { name: string; size?: number }) {
 }
 
 export default function About() {
-  const [bouncing, setBouncing] = useState<string | null>(null)
-
-  const handleCardClick = useCallback((id: string) => {
-    setBouncing(id)
-    setTimeout(() => setBouncing(null), 500)
-  }, [])
 
   return (
     <Layout sidebar={false}>
@@ -22,35 +15,19 @@ export default function About() {
         .ab-page{max-width:100%!important;padding:0}
 
                         /* ---- Hero ---- */
-        .ab-hero{background:#191C6B;min-height:100vh;display:flex;align-items:center;overflow:hidden}
-        .ab-hero-inner{width:100%;max-width:1280px;margin:0 auto;padding:0 40px;display:grid;grid-template-columns:1fr 1.8fr;gap:0;align-items:center;height:100vh}
-        @media(max-width:900px){.ab-hero-inner{grid-template-columns:1fr;padding:60px 24px;text-align:center;height:auto;min-height:100vh}}
-        .ab-hero-left{display:flex;flex-direction:column;gap:6px;z-index:2}
-        .ab-hero-tag{color:#16a34a;font-size:13px;font-weight:800;letter-spacing:.14em;margin:0 0 8px}
-        .ab-hero-heading{font-family:Outfit,sans-serif;font-size:76px;font-weight:900;line-height:.95;color:#fff;margin:0}
-        .ab-hero-heading .green{color:#16a34a;font-family:'DM Serif Display',Georgia,serif;font-style:italic;font-weight:400;font-size:76px;display:inline}
+        .ab-hero{position:relative;min-height:600px;display:flex;align-items:center;overflow:hidden;background:#191C6B}
+        .ab-hero-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center}
+        .ab-hero-overlay{position:absolute;inset:0;background:linear-gradient(135deg,rgba(25,28,107,.85) 0%,rgba(25,28,107,.6) 50%,rgba(25,28,107,.4) 100%)}
+        .ab-hero-inner{position:relative;z-index:2;width:100%;max-width:1100px;margin:0 auto;padding:80px 40px}
+        .ab-hero-tag{color:#16a34a;font-size:13px;font-weight:800;letter-spacing:.14em;margin:0 0 12px;display:inline-block;background:rgba(22,163,74,.12);padding:4px 14px;border-radius:999px}
+        .ab-hero-heading{font-family:Outfit,sans-serif;font-size:72px;font-weight:900;line-height:.92;color:#fff;margin:0}
+        .ab-hero-heading .green{color:#16a34a;font-family:'DM Serif Display',Georgia,serif;font-style:italic;font-weight:400;font-size:72px}
         @media(max-width:768px){
-          .ab-hero-heading{font-size:48px}
-          .ab-hero-heading .green{font-size:48px}
+          .ab-hero-heading{font-size:40px}
+          .ab-hero-heading .green{font-size:40px}
         }
-        .ab-hero-sub{color:rgba(255,255,255,.65);font-size:16px;line-height:1.6;margin:14px 0 0;max-width:300px}
-        @media(max-width:900px){.ab-hero-sub{max-width:none;margin-left:auto;margin-right:auto}}
-        .ab-hero-right{position:relative;height:100vh;display:flex;align-items:flex-end;justify-content:center;overflow:visible;margin-right:-40px}
-        @media(max-width:900px){.ab-hero-right{display:none}}
-        .ab-hero-img{height:95vh;width:auto;max-width:none;object-fit:contain;object-position:bottom center;position:relative;z-index:1;filter:drop-shadow(0 30px 80px rgba(0,0,0,.5))}/* ---- Floating cards ---- */
-        .ab-card{position:absolute;border-radius:14px;background:#fff;box-shadow:0 12px 40px rgba(0,0,0,.25);overflow:hidden;cursor:pointer;transition:transform .35s ease,box-shadow .35s ease;z-index:5;backface-visibility:hidden}
-        .ab-card:hover{transform:translateY(-10px) scale(1.05)!important;box-shadow:0 20px 50px rgba(0,0,0,.35)!important}
-        .ab-card-top{height:65px;border-radius:10px 10px 0 0}
-        .ab-card-bottom{padding:12px 14px 14px}
-        .ab-card-avatar{width:26px;height:26px;border-radius:50%;display:inline-block;vertical-align:middle;margin-right:7px;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.1)}
-        .ab-card-name{font-size:13px;font-weight:700;color:#222;display:inline;vertical-align:middle}
-        .ab-card-rating{font-size:11px;color:${GREEN};margin:5px 0 7px;letter-spacing:1px}
-        .ab-card-lines{display:flex;flex-direction:column;gap:4px}
-        .ab-card-line{height:7px;border-radius:3px;background:#f0f0f0;width:100%}
-        .ab-card-line:nth-child(2){width:60%}
-        @keyframes cardBounce{0%{transform:scale(1)}40%{transform:scale(1.08)}70%{transform:scale(.96)}100%{transform:scale(1)}}
-        .ab-card.bouncing{animation:cardBounce .5s ease}
-        @media(max-width:900px){.ab-card{display:none}}
+        .ab-hero-sub{color:rgba(255,255,255,.75);font-size:17px;line-height:1.7;margin:16px 0 0;max-width:520px}
+        @media(max-width:600px){.ab-hero-sub{font-size:15px;max-width:none}}
 /* ── Mission ── */
         .ab-mission{padding:80px 0;background:#fff}
         .ab-mission-inner{max-width:1100px;margin:0 auto;padding:0 40px;display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center}
@@ -111,88 +88,23 @@ export default function About() {
       <div className="ab-page">
                 {/* ---- Hero ---- */}
         <section className="ab-hero">
+          <img
+            src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1200&q=80&auto=format&fit=crop"
+            alt="Nigerian workers collaborating"
+            className="ab-hero-bg"
+          />
+          <div className="ab-hero-overlay" />
           <div className="ab-hero-inner">
-            <div className="ab-hero-left">
-              <div className="ab-hero-tag">ABOUT US</div>
-              <div className="ab-hero-heading">Work.<br />Earn.<br />Grow.</div>
-              <div className="ab-hero-heading"><span className="green">Change.</span></div>
-              <p className="ab-hero-sub">Join thousands of talented Nigerian workers and task creators building better futures together.</p>
+            <div className="ab-hero-tag">ABOUT US</div>
+            <div className="ab-hero-heading">
+              Work.<br />
+              Earn.<br />
+              Grow.<br />
+              <span className="green">Change.</span>
             </div>
-            <div className="ab-hero-right">
-              <img
-                src="https://images.unsplash.com/photo-1589156280159-27698b4d932e?w=600&q=80&auto=format&fit=crop"
-                alt="OgaPay worker"
-                className="ab-hero-img"
-              />
-
-              {/* Card 1 - chidi */}
-              <div
-                onClick={() => { setBouncing('chidi'); setTimeout(() => setBouncing(null), 500); }}
-                className="ab-card"
-                style={{ left: '-6%', bottom: '28%', transform: 'rotate(-5deg)', width: 200 }}
-                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-10px) scale(1.05) rotate(-5deg)'; e.currentTarget.style.boxShadow = '0 20px 50px rgba(0,0,0,.4)'; }}
-                onMouseLeave={e => { e.currentTarget.style.transform = 'rotate(-5deg)'; e.currentTarget.style.boxShadow = '0 12px 40px rgba(0,0,0,.3)'; }}
-              >
-                <div className="ab-card-top" style={{ background: '#f4a0b5' }} />
-                <div className="ab-card-bottom">
-                  <div className="ab-card-avatar" style={{ background: '#f97316' }} />
-                  <span className="ab-card-name">chidi</span>
-                  <div className="ab-card-rating">★★★★★</div>
-                  <div className="ab-card-lines"><div className="ab-card-line" /><div className="ab-card-line" /></div>
-                </div>
-              </div>
-
-              {/* Card 2 - amaka */}
-              <div
-                onClick={() => { setBouncing('amaka'); setTimeout(() => setBouncing(null), 500); }}
-                className="ab-card"
-                style={{ right: '-2%', top: '5%', transform: 'rotate(4deg)', width: 210 }}
-                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-10px) scale(1.05) rotate(4deg)'; e.currentTarget.style.boxShadow = '0 20px 50px rgba(0,0,0,.4)'; }}
-                onMouseLeave={e => { e.currentTarget.style.transform = 'rotate(4deg)'; e.currentTarget.style.boxShadow = '0 12px 40px rgba(0,0,0,.3)'; }}
-              >
-                <div className="ab-card-top" style={{ background: '#8b7355' }} />
-                <div className="ab-card-bottom">
-                  <div className="ab-card-avatar" style={{ background: '#7c3aed' }} />
-                  <span className="ab-card-name">amaka</span>
-                  <div className="ab-card-rating">★★★★★</div>
-                  <div className="ab-card-lines"><div className="ab-card-line" /><div className="ab-card-line" /></div>
-                </div>
-              </div>
-
-              {/* Card 3 - tunde */}
-              <div
-                onClick={() => { setBouncing('tunde'); setTimeout(() => setBouncing(null), 500); }}
-                className="ab-card"
-                style={{ right: '-5%', bottom: '18%', transform: 'rotate(-3deg)', width: 200 }}
-                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-10px) scale(1.05) rotate(-3deg)'; e.currentTarget.style.boxShadow = '0 20px 50px rgba(0,0,0,.4)'; }}
-                onMouseLeave={e => { e.currentTarget.style.transform = 'rotate(-3deg)'; e.currentTarget.style.boxShadow = '0 12px 40px rgba(0,0,0,.3)'; }}
-              >
-                <div className="ab-card-top" style={{ background: '#c8e86b' }} />
-                <div className="ab-card-bottom">
-                  <div className="ab-card-avatar" style={{ background: '#14b8a6' }} />
-                  <span className="ab-card-name">tunde</span>
-                  <div className="ab-card-rating">★★★★★</div>
-                  <div className="ab-card-lines"><div className="ab-card-line" /><div className="ab-card-line" /></div>
-                </div>
-              </div>
-
-              {/* Card 4 - chioma */}
-              <div
-                onClick={() => { setBouncing('chioma'); setTimeout(() => setBouncing(null), 500); }}
-                className="ab-card"
-                style={{ left: '2%', top: '12%', transform: 'rotate(-2deg)', width: 195 }}
-                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-10px) scale(1.05) rotate(-2deg)'; e.currentTarget.style.boxShadow = '0 20px 50px rgba(0,0,0,.4)'; }}
-                onMouseLeave={e => { e.currentTarget.style.transform = 'rotate(-2deg)'; e.currentTarget.style.boxShadow = '0 12px 40px rgba(0,0,0,.3)'; }}
-              >
-                <div className="ab-card-top" style={{ background: '#7ec8e3' }} />
-                <div className="ab-card-bottom">
-                  <div className="ab-card-avatar" style={{ background: '#e91e63' }} />
-                  <span className="ab-card-name">chioma</span>
-                  <div className="ab-card-rating">★★★★★</div>
-                  <div className="ab-card-lines"><div className="ab-card-line" /><div className="ab-card-line" /></div>
-                </div>
-              </div>
-            </div>
+            <p className="ab-hero-sub">
+              Join thousands of talented Nigerian workers and task creators building better futures together.
+            </p>
           </div>
         </section>
 
