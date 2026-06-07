@@ -1370,15 +1370,18 @@ function PlatformDetail({ platform, onBack, onCreated }) {
   const [action, setAction] = useState(platform.actions[0] || "");
   const [url, setUrl] = useState("");
   const [quantity, setQuantity] = useState(10);
+  const [currency, setCurrency] = useState("SOL");
   const [budget, setBudget] = useState(platform.pricePerAction * 10 / 1000000);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    setBudget(platform.pricePerAction * quantity / 1000000);
-  }, [quantity, platform]);
+    const divisor = currency === 'NGN' ? 1 : 1000000;
+    setBudget(platform.pricePerAction * quantity / divisor);
+  }, [quantity, platform, currency]);
 
   const handleCreate = async () => {
     if (!url.trim()) { setSubmitError("Please enter a URL"); return; }
+    if (currency === 'NGN' && budget < 50) { setSubmitError("Minimum reward is 50 NGN"); setSubmitting(false); return; }
     setSubmitting(true);
     setSubmitError("");
     try {
@@ -1394,7 +1397,7 @@ function PlatformDetail({ platform, onBack, onCreated }) {
         quantity: parseInt(quantity) || 10,
         maxWorkers: parseInt(quantity) || 10,
         category: CATEGORY_MAP["Social Media"] || "SOCIAL_MEDIA",
-        currency: "SOL",
+        currency,
         status: "OPEN",
       };
       const res = await fetch(`${API_BASE}/tasks`, {
@@ -1461,13 +1464,13 @@ function PlatformDetail({ platform, onBack, onCreated }) {
         }}>
           <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13 }}>
             <span style={{ color: C.text2 }}>Estimated cost</span>
-            <span style={{ fontWeight: 700, color: C.text }}>{budget.toFixed(4)} SOL</span>
-          </div>
-          <div style={{ fontSize: 11, color: C.text3, marginTop: 2 }}>
-            {quantity} {action.toLowerCase()} x {platform.pricePerAction} units
-          </div>
-        </div>
-        <button onClick={handleCreate} disabled={submitting || !url.trim()}
+          <span style={{ fontWeight: 700, color: C.text }}>{currency === 'NGN' ? `₦${budget.toFixed(2)}` : `${budget.toFixed(6)} ${currency}`}</span>
+           </div>
+           <div style={{ fontSize: 11, color: C.text3, marginTop: 2 }}>
+             {quantity} {action.toLowerCase()} x {platform.pricePerAction} units
+           </div>
+         </div>
+         <button onClick={handleCreate} disabled={submitting || !url.trim()}
           style={{
             width: "100%", padding: "12px", borderRadius: 10, border: "none",
             background: submitting || !url.trim() ? C.border : C.accent,
@@ -1487,15 +1490,18 @@ function ServiceForm({ service, onBack, onCreated }) {
   const [submitError, setSubmitError] = useState("");
   const [url, setUrl] = useState("");
   const [quantity, setQuantity] = useState(10);
+  const [currency, setCurrency] = useState("SOL");
   const [budget, setBudget] = useState(service.pricePerAction * 10 / 1000000);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    setBudget(service.pricePerAction * quantity / 1000000);
-  }, [quantity, service]);
+    const divisor = currency === 'NGN' ? 1 : 1000000;
+    setBudget(service.pricePerAction * quantity / divisor);
+  }, [quantity, service, currency]);
 
   const handleCreate = async () => {
     if (!url.trim()) { setSubmitError("Please enter a URL"); return; }
+    if (currency === 'NGN' && budget < 50) { setSubmitError("Minimum reward is 50 NGN"); setSubmitting(false); return; }
     setSubmitting(true);
     setSubmitError("");
     try {
@@ -1511,7 +1517,7 @@ function ServiceForm({ service, onBack, onCreated }) {
         quantity: parseInt(quantity) || 10,
         maxWorkers: parseInt(quantity) || 10,
         category: CATEGORY_MAP["Services"] || CATEGORY_MAP["Other"] || "OTHER",
-        currency: "SOL",
+        currency,
         status: "OPEN",
       };
       const res = await fetch(`${API_BASE}/tasks`, {
@@ -1562,6 +1568,7 @@ function ServiceForm({ service, onBack, onCreated }) {
               fontFamily: "inherit", background: C.card, boxSizing: "border-box"
             }} />
         </div>
+        <SelectField label="Currency" value={currency} onChange={setCurrency} options={["SOL", "USDC", "NGN"]} />
         <div>
           <label style={{ fontSize: 12, fontWeight: 600, color: C.text2, display: "block", marginBottom: 6 }}>Quantity</label>
           <input type="number" min={1} value={quantity} onChange={e => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
@@ -1577,7 +1584,7 @@ function ServiceForm({ service, onBack, onCreated }) {
         }}>
           <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13 }}>
             <span style={{ color: C.text2 }}>Estimated cost</span>
-            <span style={{ fontWeight: 700, color: C.text }}>{budget.toFixed(4)} SOL</span>
+            <span style={{ fontWeight: 700, color: C.text }}>{currency === 'NGN' ? `₦${budget.toFixed(2)}` : `${budget.toFixed(6)} ${currency}`}</span>
           </div>
         </div>
         <button onClick={handleCreate} disabled={submitting || !url.trim()}
