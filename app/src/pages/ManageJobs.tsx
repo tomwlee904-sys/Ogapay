@@ -1,6 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "../components/Layout";
+import { API_BASE } from "../lib/api";
+import { useAuth } from "../context/AuthContext";
 
 // ── MOCK DATA ──────────────────────────────────────────────────────────────
 const JOBS = [
@@ -1052,9 +1054,65 @@ function JobsListPage({ jobs, setJobs, showToast }) {
 
 // ── MAIN PAGE ──────────────────────────────────────────────────────────────
 export default function MyJobs() {
-  const [jobs, setJobs] = useState(JOBS);
-  const [page, setPage] = useState("jobs"); // "jobs" | "blacklist" | "templates"
+  const [jobs, setJobs] = useState([]);
+  const [page, setPage] = useState("jobs");
   const [toast, setToast] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const { user, isAuthed } = useAuth();
+
+  useEffect(() => {
+    if (!isAuthed) { setLoading(false); return; }
+    const fetchJobs = async () => {
+      try {
+        const token = localStorage.getItem("ogapay_access_token");
+        if (!token) { setLoading(false); return; }
+        const res = await fetch(API_BASE + "/users/me/tasks", {
+          headers: { Authorization: "Bearer " + token },
+        });
+        const json = await res.json();
+        if (json.success && json.data) {
+          const tasks = Array.isArray(json.data) ? json.data : (json.data.tasks || []);
+          const mapped = tasks.map(t => ({
+            id: t.id || t._id,
+            customId: t.customId || "",
+            title: t.title || "Untitled Task",
+            type: t.type || t.mode || "custom",
+            platform: t.platform || "OgaPay",
+            status: t.status || "active",
+            selectionType: t.selectionType || t.winnerMode || "random",
+            reward: Number(t.reward) || Number(t.bounty) || 0,
+            currency: t.currency || "NGN",
+            budget: Number(t.budget) || Number(t.reward) * (Number(t.maxEntries) || 1) || 0,
+            spent: Number(t.spent) || 0,
+            remaining: Number(t.remaining) || 0,
+            slots: Number(t.maxParticipants) || Number(t.maxEntries) || 1,
+            winners: Number(t.completions) || Number(t.submissions) || 0,
+            pending: Number(t.pending) || 0,
+            rejected: Number(t.rejected) || 0,
+            approvalRate: t.approvalRate || Math.round((Number(t.completions) || 0) / Math.max(Number(t.maxEntries) || 1, 1) * 100),
+            avgFillTime: t.avgFillTime || "N/A",
+            deadline: t.deadline ? new Date(t.deadline).toLocaleDateString() : "N/A",
+            posted: t.createdAt ? new Date(t.createdAt).toLocaleDateString() : "N/A",
+            secret: t.secret || "",
+            submissions: Array.isArray(t.submissions) ? t.submissions.slice(0, 10).map(s => ({
+              id: s.id || s._id,
+              user: s.userName || s.user?.name || "Anonymous",
+              handle: s.userHandle || s.user?.handle || "",
+              time: s.createdAt ? new Date(s.createdAt).toLocaleString() : "N/A",
+              status: s.status || "pending",
+              proof: s.proof || "",
+              score: s.score || s.quality || 0,
+            })) : [],
+          }));
+          setJobs(mapped);
+        }
+      } catch (e) {
+        console.warn("Failed to fetch jobs:", e);
+      }
+      setLoading(false);
+    };
+    fetchJobs();
+  }, [isAuthed]);
 
   const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(null), 3000); };
 

@@ -491,7 +491,7 @@ export default function Profile() {
         <div className="onboarding-banner">
           <i className="ti ti-wallet" style={{color:'var(--accent)',fontSize:20}} />
           <span className="ob-msg">Connect your wallet to unlock full features</span>
-          <button className="ob-btn" onClick={() => showToast('Wallet connection coming soon')}>Connect Wallet</button>
+          <button className="ob-btn" onClick={() => navigate('/wallet')}>Connect Wallet</button>
           <button className="ob-close" onClick={e => (e.currentTarget.closest('.onboarding-banner')!.style.display='none')}><i className="ti ti-x" /></button>
         </div>
       )}
