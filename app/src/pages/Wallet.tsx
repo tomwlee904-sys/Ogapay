@@ -1,12 +1,15 @@
 import { useState, useEffect } from 'react'
 import Layout from '../components/Layout'
 import { apiRequest } from '../lib/api'
+import CurrencySelector from '../components/CurrencySelector'
+import { useCurrency } from '../context/CurrencyContext'
 
 export default function Wallet() {
   const [activeTab, setActiveTab] = useState('all')
   const [balances, setBalances] = useState<Record<string, { balance: number; lockedBalance: number; available: number }> | null>(null)
   const [transactions, setTransactions] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const { fmt, fmtAll, preferredCurrency } = useCurrency()
 
   useEffect(() => {
     async function load() {
@@ -124,7 +127,7 @@ export default function Wallet() {
       <div className="wl-hero">
         <div>
           <div className="wlh-label">Wallet Balance</div>
-          <div className="wlh-bal">{formatCurrency(ngnAvailable)}</div>
+          <div className="wlh-bal">{fmt(ngnAvailable, 'NGN')}</div>
           <div className="wlh-sub">${usdcBal.toFixed(2)} USDC &middot; {solBal.toFixed(3)} SOL</div>
         </div>
         <div className="wl-actions">
@@ -136,10 +139,10 @@ export default function Wallet() {
 
       <div className="wl-stats">
         {[
-          { icon: 'ti ti-wallet', color: '#1F8CFF', num: formatCurrency(ngnBal), label: 'Balance' },
+          { icon: 'ti ti-wallet', color: '#1F8CFF', num: fmt(ngnBal, 'NGN'), label: 'Balance' },
           { icon: 'ti ti-coin', color: '#16a34a', num: `$${usdcBal.toFixed(2)} USDC`, label: 'Crypto' },
-          { icon: 'ti ti-trending-up', color: '#2563EB', num: formatCurrency(totalDeposits), label: 'Total Deposits' },
-          { icon: 'ti ti-trending-down', color: '#f5b301', num: formatCurrency(totalWithdrawn), label: 'Total Withdrawn' },
+          { icon: 'ti ti-trending-up', color: '#2563EB', num: fmt(totalDeposits, 'NGN'), label: 'Total Deposits' },
+          { icon: 'ti ti-trending-down', color: '#f5b301', num: fmt(totalWithdrawn, 'NGN'), label: 'Total Withdrawn' },
         ].map((s, i) => (
           <div className="wl-stat" key={i}>
             <div className="wsi" style={{ background: `${s.color}15`, color: s.color }}><i className={s.icon} /></div>

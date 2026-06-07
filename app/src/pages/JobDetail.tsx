@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
+import CurrencySelector from '../components/CurrencySelector'
+import { useCurrency } from '../context/CurrencyContext'
 
 const API_BASE = 'https://ogapay-production.up.railway.app/api/v1'
 const BRAND = '#121566'
@@ -157,6 +159,7 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
 
 /* ─── Main Component ─── */
 export default function JobDetail() {
+  const { fmt, fmtAll, preferredCurrency } = useCurrency()
   const { id } = useParams()
   const navigate = useNavigate()
   const [job, setJob] = useState<JobData | null>(null)
@@ -438,7 +441,7 @@ export default function JobDetail() {
                 gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
                 gap: 12, marginBottom: 16,
               }}>
-                <StatCard label="Reward" value={`${job.currency === 'USD' ? '$' : '₦'}${job.reward.toLocaleString()}`} color="#16a34a" />
+                <StatCard label="Reward" value={fmt(job.reward, job.currency === 'USD' ? 'USDC' : 'NGN')} color="#16a34a" />
                 <StatCard label="Total Slots" value={String(job.slots)} />
                 <StatCard label="Filled" value={String(job.completions)} color={BRAND} />
                 <StatCard label="Remaining" value={String(job.slots - job.completions)} color="#b8860b" />
@@ -499,7 +502,7 @@ export default function JobDetail() {
                   Job Information
                 </SectionTitle>
                 <InfoRow label="Platform" value={job.platform} />
-                <InfoRow label="Reward" value={`${job.currency === 'USD' ? '$' : '₦'}${job.reward.toLocaleString()}`} />
+                <InfoRow label="Reward" value={fmt(job.reward, job.currency === 'USD' ? 'USDC' : 'NGN')} />
                 <InfoRow label="Selection Type" value={job.type === 'challenge' ? 'Challenge (Multiple Winners)' : 'Selection (Single Winner)'} />
                 <InfoRow label="Posted" value={new Date(job.posted).toLocaleDateString()} />
                 <InfoRow label="Deadline" value={new Date(job.deadline).toLocaleDateString()} />
@@ -949,7 +952,7 @@ function ApplyModal({ open, onClose, jobId, jobTitle, reward, currency }: {
               <div>
                 <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: 'var(--text)' }}>Apply for this Job</h3>
                 <p style={{ margin: '4px 0 0', fontSize: 13, color: 'var(--text2)' }}>
-                  {currency === 'USD' ? '$' : '₦'}{reward.toLocaleString()} · {jobTitle}
+                  {fmt(reward, currency === 'USD' ? 'USDC' : 'NGN')} · {jobTitle}
                 </p>
               </div>
               <button onClick={onClose} style={{

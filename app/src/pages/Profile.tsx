@@ -255,6 +255,7 @@ function AlertsTab() {
 
 /* ─── Main Profile Component ─── */
 export default function Profile() {
+  const { fmt, preferredCurrency } = useCurrency()
   const navigate = useNavigate();
   const { user: authUser } = useAuth();
   const [tab, setTab] = useState("profile");
@@ -348,7 +349,7 @@ export default function Profile() {
   const solBal = walletBal?.SOL?.balance ?? 0;
   const totalNgn = walletBal?.NGN?.available ?? ngnBal;
 
-  const formatNgn = (n: number) => 'NGN ' + Number(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  // formatNgn replaced by useCurrency fmt
 
   // Earnings from transactions
   const earningsTotal = transactions

@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import Layout from '../components/Layout'
+import CurrencySelector from '../components/CurrencySelector'
+import { useCurrency } from '../context/CurrencyContext'
 
 const earningsData = {
   total: 45200,
@@ -26,6 +28,7 @@ const history = [
 ]
 
 export default function Earnings() {
+  const { fmt } = useCurrency()
   const [period, setPeriod] = useState('7d')
   const [tab, setTab] = useState('all')
   const bars = graphValues[period] || graphValues['7d']
@@ -71,10 +74,10 @@ export default function Earnings() {
       {/* Stats */}
       <div className="en-grid">
         {[
-          { icon: 'ti ti-coin', color: '#1F8CFF', num: `NGN ${earningsData.total.toLocaleString()}`, label: 'Total Earned' },
-          { icon: 'ti ti-wallet', color: '#16a34a', num: `NGN ${earningsData.available.toLocaleString()}`, label: 'Available Balance' },
-          { icon: 'ti ti-clock', color: '#F59E0B', num: `NGN ${earningsData.pending.toLocaleString()}`, label: 'Pending Earnings' },
-          { icon: 'ti ti-trending-up', color: '#2563EB', num: `NGN ${earningsData.month.toLocaleString()}`, label: 'This Month' },
+          { icon: 'ti ti-coin', color: '#1F8CFF', num: fmt(earningsData.total, 'NGN'), label: 'Total Earned' },
+          { icon: 'ti ti-wallet', color: '#16a34a', num: fmt(earningsData.available, 'NGN'), label: 'Available Balance' },
+          { icon: 'ti ti-clock', color: '#F59E0B', num: fmt(earningsData.pending, 'NGN'), label: 'Pending Earnings' },
+          { icon: 'ti ti-trending-up', color: '#2563EB', num: fmt(earningsData.month, 'NGN'), label: 'This Month' },
         ].map((s, i) => (
           <div className="en-stat" key={i}>
             <div className="esi" style={{ background: `${s.color}15`, color: s.color }}><i className={s.icon} /></div>
@@ -109,7 +112,7 @@ export default function Earnings() {
       <div className="en-grid" style={{marginBottom:24}}>
         {[
           { icon: 'ti ti-briefcase', color: '#1F8CFF', num: `NGN ${earningsData.total - earningsData.referrals - earningsData.tips - earningsData.vault}`, label: 'From Tasks', sub: `${earningsData.jobs} jobs completed` },
-          { icon: 'ti ti-affiliate', color: '#2563EB', num: `NGN ${earningsData.referrals.toLocaleString()}`, label: 'From Referrals', sub: '3 active referrals' },
+          { icon: 'ti ti-affiliate', color: '#2563EB', num: fmt(earningsData.referrals, 'NGN'), label: 'From Referrals', sub: '3 active referrals' },
           { icon: 'ti ti-gift', color: '#F59E0B', num: `NGN ${earningsData.tips.toLocaleString()}`, label: 'From Tips', sub: '12 tips received' },
           { icon: 'ti ti-vault', color: '#16a34a', num: `NGN ${earningsData.vault.toLocaleString()}`, label: 'From Vault', sub: 'Vault rewards' },
         ].map((s, i) => (

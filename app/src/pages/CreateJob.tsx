@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import Layout from "../components/Layout";
 import { API_BASE } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
+import CurrencySelector from "../components/CurrencySelector";
+import { useCurrency } from "../context/CurrencyContext";
 
 // ── COLOR TOKENS ──────────────────────────────────────────────────────────
 const C = {
@@ -23,9 +25,7 @@ const SELECTION_TIMES = ["1h", "6h", "12h", "24h", "48h", "72h", "7 days"];
 const PLATFORM_FEE_PCT = 10;
 const SOL_TO_USD = 145;
 
-function fmt(n, decimals = 2) {
-  return Number(n).toLocaleString("en", { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
-}
+// fmt replaced by useCurrency
 
 // ── SVG ICONS (no emojis) ──────────────────────────────────────────────────
 const IconFile = () => (
@@ -910,6 +910,7 @@ function SuccessModal({ onClose }) {
 function CreateTask() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { fmt } = useCurrency();
   const [showCustom, setShowCustom] = useState(false);
   const [customTemplate, setCustomTemplate] = useState(null);
   const [activeTab, setActiveTab] = useState("socials");

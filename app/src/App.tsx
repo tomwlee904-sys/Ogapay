@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
 import { ThemeProvider } from './context/ThemeContext'
+import { CurrencyProvider, useCurrency } from './context/CurrencyContext'
 import ProtectedRoute from './components/ProtectedRoute'
 
 // ─── Lazy-loaded pages ───
@@ -85,6 +86,7 @@ export default function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
+          <CurrencyProvider>
         <Suspense fallback={<PageLoader />}>
           <Routes>
             {/* ── Public routes ── */}
@@ -158,7 +160,8 @@ export default function App() {
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
-      </AuthProvider>
+      </CurrencyProvider>
+          </AuthProvider>
     </ThemeProvider>
   )
 }
