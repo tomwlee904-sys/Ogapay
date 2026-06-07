@@ -49,6 +49,7 @@ const WurkerApply = lazy(() => import('./pages/WurkerApply'))
 const Writer = lazy(() => import('./pages/Writer'))
 const Analytics = lazy(() => import('./pages/Analytics'))
 const Bookmarks = lazy(() => import('./pages/Bookmarks'))
+const ManageJobs = lazy(() => import('./pages/ManageJobs'))
 const UserProfile = lazy(() => import('./pages/UserProfile'))
 const Admin = lazy(() => import('./pages/Admin'))
 
@@ -124,6 +125,7 @@ export default function App() {
             <Route path="/my-store" element={<AuthGuard><MyStore /></AuthGuard>} />
             <Route path="/campaigns" element={<AuthGuard><Campaigns /></AuthGuard>} />
             <Route path="/job-monitor" element={<AuthGuard><JobMonitor /></AuthGuard>} />
+            <Route path="/manage-jobs" element={<AuthGuard><ManageJobs /></AuthGuard>} />
             <Route path="/edit-profile" element={<AuthGuard><EditProfile /></AuthGuard>} />
             <Route path="/task-history" element={<AuthGuard><TaskHistory /></AuthGuard>} />
             <Route path="/bookmarks" element={<AuthGuard><Bookmarks /></AuthGuard>} />
