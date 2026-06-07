@@ -1088,17 +1088,14 @@ export default function MyJobs() {
         const token = localStorage.getItem("ogapay_access_token");
         if (!token) { setLoading(false); return; }
         // Fetch all tasks from the public endpoint, then filter by user
-        const res = await fetch(API_BASE + "/tasks", {
+        const res = await fetch(API_BASE + "/tasks/my/created", {
           headers: { Authorization: "Bearer " + token },
         });
         const json = await res.json();
         if (json.success && json.data) {
           const tasks = Array.isArray(json.data) ? json.data : (json.data.tasks || []);
           // Get user ID from auth context
-          const userId = user?.id || "";
-          // Filter tasks created by this user, or show all if we can't determine the user
-          const userTasks = userId ? tasks.filter(t => String(t.posterId) === String(userId)) : tasks;
-          const mapped = userTasks.map(t => ({
+          const mapped = tasks.map(t => ({
             id: t.id || t._id,
             customId: t.customId || "",
             title: t.title || "Untitled Task",
