@@ -35,9 +35,9 @@ export default function About() {
         }
         .ab-hero-sub{color:rgba(255,255,255,.65);font-size:17px;line-height:1.6;margin:16px 0 0;max-width:320px}
         @media(max-width:900px){.ab-hero-sub{max-width:none;margin-left:auto;margin-right:auto}}
-        .ab-hero-right{position:relative;height:85vh;min-height:520px;max-height:720px;display:flex;align-items:flex-end;justify-content:center;overflow:visible}
+        .ab-hero-right{position:relative;height:90vh;min-height:580px;max-height:780px;display:flex;align-items:flex-end;justify-content:center;overflow:visible}
         @media(max-width:900px){.ab-hero-right{display:none}}
-        .ab-hero-right img{width:auto;height:88%;max-width:110%;object-fit:contain;object-position:bottom center;position:relative;z-index:1;filter:drop-shadow(0 20px 60px rgba(0,0,0,.3))}
+        .ab-hero-right img{width:auto;height:95%;max-width:120%;object-fit:contain;object-position:bottom center;position:relative;z-index:1;filter:drop-shadow(0 30px 80px rgba(0,0,0,.4))}
         /* ---- Floating cards ---- */
         .ab-card{position:absolute;border-radius:14px;background:#fff;box-shadow:0 12px 40px rgba(0,0,0,.25);overflow:hidden;cursor:pointer;transition:transform .35s ease,box-shadow .35s ease;z-index:5;backface-visibility:hidden}
         .ab-card:hover{transform:translateY(-10px) scale(1.05)!important;box-shadow:0 20px 50px rgba(0,0,0,.35)!important}
@@ -136,7 +136,7 @@ export default function About() {
               {/* Card 1 */}
               <div
                 className={`ab-card ${bouncing === 'chidi' ? 'bouncing' : ''}`}
-                style={{ width: 180, left: '-6%', bottom: '28%', transform: 'rotate(-6deg)' }}
+                style={{ width: 195, left: '-8%', bottom: '30%', transform: 'rotate(-6deg)' }}
                 onClick={() => handleCardClick('chidi')}
               >
                 <div className="ab-card-top" style={{ background: '#f4a0b5' }} />
@@ -154,7 +154,7 @@ export default function About() {
               {/* Card 2 */}
               <div
                 className={`ab-card ${bouncing === 'amaka' ? 'bouncing' : ''}`}
-                style={{ width: 185, right: '0%', top: '6%', transform: 'rotate(4deg)' }}
+                style={{ width: 200, right: '-2%', top: '5%', transform: 'rotate(4deg)' }}
                 onClick={() => handleCardClick('amaka')}
               >
                 <div className="ab-card-top" style={{ background: '#8b7355' }} />
@@ -172,7 +172,7 @@ export default function About() {
               {/* Card 3 */}
               <div
                 className={`ab-card ${bouncing === 'tunde' ? 'bouncing' : ''}`}
-                style={{ width: 175, right: '-4%', bottom: '18%', transform: 'rotate(-4deg)' }}
+                style={{ width: 190, right: '-6%', bottom: '20%', transform: 'rotate(-4deg)' }}
                 onClick={() => handleCardClick('tunde')}
               >
                 <div className="ab-card-top" style={{ background: '#c8e86b' }} />
@@ -190,7 +190,7 @@ export default function About() {
               {/* Card 4 */}
               <div
                 className={`ab-card ${bouncing === 'chioma' ? 'bouncing' : ''}`}
-                style={{ width: 170, left: '2%', top: '14%', transform: 'rotate(-3deg)' }}
+                style={{ width: 185, left: '0%', top: '12%', transform: 'rotate(-3deg)' }}
                 onClick={() => handleCardClick('chioma')}
               >
                 <div className="ab-card-top" style={{ background: '#7ec8e3' }} />
