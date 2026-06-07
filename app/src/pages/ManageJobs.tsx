@@ -84,13 +84,6 @@ const TEMPLATES_INIT = {
   ],
 };
 
-const S = {
-  bg: "#0a0a0f", card: "#13131f", border: "rgba(255,255,255,0.07)",
-  border2: "rgba(255,255,255,0.12)", text: "#fff", text2: "#9ca3af",
-  text3: "#6b7280", purple: "#8b5cf6", green: "#10b981",
-  amber: "#f59e0b", red: "#ef4444", blue: "#3b82f6",
-};
-
 const statusColor = { active: "var(--green)", paused: "#f59e0b", completed: "var(--text3)" };
 const statusBg = {
   active: "rgba(16,185,129,0.12)", paused: "rgba(245,158,11,0.12)",
@@ -951,7 +944,7 @@ function JobsListPage({ jobs, setJobs, showToast }) {
   return (
     <div style={{ maxWidth: "100%", padding: "24px 28px 60px" }}>
       {/* Summary stats */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 8, marginBottom: 16 }}>
+      <div class="mj-stats-grid" style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 8, marginBottom: 16 }}>
         {[
           { label: "Active", value: totals.active, color: "var(--green)" },
           { label: "Paused", value: totals.paused, color: "#f59e0b" },
@@ -967,7 +960,7 @@ function JobsListPage({ jobs, setJobs, showToast }) {
       </div>
 
       {/* Filter pills */}
-      <div style={{ display: "flex", gap: 6, marginBottom: 16, overflowX: "auto", paddingBottom: 2 }}>
+      <div class="mj-filters" style={{ display: "flex", gap: 6, marginBottom: 16, overflowX: "auto", paddingBottom: 2 }}>
         {["all", "active", "paused", "completed"].map(f => (
           <button key={f} onClick={() => setFilter(f)}
             style={{ flexShrink: 0, padding: "8px 18px", borderRadius: 99, fontSize: 13, fontWeight: 700, cursor: "pointer", border: `1px solid ${filter === f ? "var(--accent)" : "var(--border)"}`, background: filter === f ? "var(--text)" : "var(--card)", color: filter === f ? "var(--bg)" : "var(--text2)", fontFamily: "inherit" }}>
@@ -1007,7 +1000,7 @@ function JobsListPage({ jobs, setJobs, showToast }) {
             </div>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 8, marginBottom: 12 }}>
+          <div class="mj-job-stats" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 8, marginBottom: 12 }}>
             {[
               { label: "Winners", value: job.winners, color: "var(--green)" },
               { label: "Pending", value: job.pending, color: "#f59e0b" },
@@ -1075,6 +1068,39 @@ export default function MyJobs() {
 
   return (
     <Layout><div class="mj-page" style={{ padding: "28px 24px 60px", width: "100%", maxWidth: "100%" }}>
+      <style>{`
+        .mj-page { padding: 28px 24px 60px; width: 100%; max-width: 100%; }
+        
+        /* Summary stats grid - responsive */
+        .mj-stats-grid { display: grid; grid-template-columns: repeat(5,1fr); gap: 8px; margin-bottom: 16px; }
+        
+        /* Job stats grid */
+        .mj-job-stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; margin-bottom: 12px; }
+        
+        /* Filter pills scrollable */
+        .mj-filters { display: flex; gap: 6px; margin-bottom: 16px; overflow-x: auto; padding-bottom: 2px; -webkit-overflow-scrolling: touch; }
+        
+        /* Mobile */
+        @media(max-width:768px) {
+          .mj-page { padding: 16px 12px 60px; }
+          .mj-stats-grid { grid-template-columns: repeat(3,1fr); gap: 6px; }
+          .mj-stats-grid > *:nth-child(n+4) { display: none; } /* hide last 2 on smallest screens */
+          .mj-job-stats { grid-template-columns: repeat(2,1fr); gap: 6px; }
+          .mj-filters { gap: 4px; }
+        }
+        
+        @media(max-width:480px) {
+          .mj-page { padding: 12px 10px 60px; }
+          .mj-stats-grid { grid-template-columns: repeat(3,1fr); gap: 4px; }
+          .mj-job-stats { grid-template-columns: repeat(2,1fr); gap: 4px; }
+        }
+        
+        /* Tablet */
+        @media(min-width:769px) and (max-width:1023px) {
+          .mj-page { padding: 20px 20px 60px; }
+        }
+      `}</style>
+
 
 
       {/* Toast */}
@@ -1084,34 +1110,6 @@ export default function MyJobs() {
         </div>
       )}
 
-      {/* Top Nav */}
-      <nav style={{ background: "var(--card)", borderBottom: `1px solid ${"var(--border)"}`, padding: "0 16px", height: 50, display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 40 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <div style={{ width: 24, height: 24, borderRadius: 8, background: "#fff", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <svg width="11" height="11" viewBox="0 0 16 16" fill="none">
-              <rect x="0" y="0" width="7" height="7" rx="1.5" fill="#0a0a0f"/>
-              <rect x="9" y="0" width="7" height="7" rx="1.5" fill="#0a0a0f"/>
-              <rect x="0" y="9" width="7" height="7" rx="1.5" fill="#0a0a0f"/>
-              <rect x="9" y="9" width="7" height="7" rx="1.5" fill="#8b5cf6"/>
-            </svg>
-          </div>
-          <span style={{ fontWeight: 900, fontSize: 14 }}>OgaPay</span>
-          <span style={{ color: "var(--text3)", fontSize: 13 }}>
-            / {PAGE_TABS.find(t => t.id === page)?.label}
-          </span>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <div style={{ display: "flex", gap: 4, background: "var(--bg2)", border: `1px solid ${"var(--border)"}`, borderRadius: 10, padding: 3 }}>
-            {PAGE_TABS.map(t => (
-              <button key={t.id} onClick={() => setPage(t.id)}
-                style={{ padding: "5px 10px", borderRadius: 8, fontSize: 11, fontWeight: 700, cursor: "pointer", border: "none", fontFamily: "inherit", background: page === t.id ? "var(--accent)" : "transparent", color: page === t.id ? "#fff" : "var(--text3)", transition: "all 0.15s", display: "flex", alignItems: "center", gap: 4, whiteSpace: "nowrap" }}>
-                <span>{t.icon}</span>
-                <span style={{ display: "none" }}>{t.label}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-      </nav>
 
       {/* Sub tab nav — full labels */}
       <div style={{ background: "var(--card)", borderBottom: `1px solid ${"var(--border)"}`, display: "flex", overflowX: "auto" }}>
