@@ -91,12 +91,12 @@ const S = {
   amber: "#f59e0b", red: "#ef4444", blue: "#3b82f6",
 };
 
-const statusColor = { active: S.green, paused: S.amber, completed: S.text3 };
+const statusColor = { active: "var(--green)", paused: "#f59e0b", completed: "var(--text3)" };
 const statusBg = {
   active: "rgba(16,185,129,0.12)", paused: "rgba(245,158,11,0.12)",
   completed: "rgba(255,255,255,0.05)",
 };
-const subColor = { approved: S.green, pending: S.amber, rejected: S.red };
+const subColor = { approved: "var(--green)", pending: "#f59e0b", rejected: "var(--red)" };
 const subBg = {
   approved: "rgba(16,185,129,0.12)", pending: "rgba(245,158,11,0.12)",
   rejected: "rgba(239,68,68,0.12)",
@@ -106,7 +106,7 @@ function pct(a, b) { return b ? Math.round((a / b) * 100) : 0; }
 
 function Badge({ label, color, bg }) {
   return (
-    <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 10px", borderRadius: 99, background: bg || "rgba(255,255,255,0.07)", color: color || S.text2, display: "inline-flex", alignItems: "center", gap: 4 }}>
+    <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 10px", borderRadius: 99, background: bg || "rgba(255,255,255,0.07)", color: color || "var(--text2)", display: "inline-flex", alignItems: "center", gap: 4 }}>
       {label}
     </span>
   );
@@ -114,9 +114,9 @@ function Badge({ label, color, bg }) {
 
 function StatBox({ label, value, color }) {
   return (
-    <div style={{ background: "rgba(255,255,255,0.03)", border: `1px solid ${S.border}`, borderRadius: 12, padding: "12px 14px", flex: 1 }}>
-      <div style={{ fontSize: 18, fontWeight: 900, color: color || S.text }}>{value}</div>
-      <div style={{ fontSize: 11, color: S.text3, marginTop: 3, fontWeight: 600 }}>{label}</div>
+    <div style={{ background: "rgba(255,255,255,0.03)", border: `1px solid ${"var(--border)"}`, borderRadius: 12, padding: "12px 14px", flex: 1 }}>
+      <div style={{ fontSize: 18, fontWeight: 900, color: color || "var(--text)" }}>{value}</div>
+      <div style={{ fontSize: 11, color: "var(--text3)", marginTop: 3, fontWeight: 600 }}>{label}</div>
     </div>
   );
 }
@@ -124,7 +124,7 @@ function StatBox({ label, value, color }) {
 function ProgressBar({ value, max, color }) {
   return (
     <div style={{ height: 5, background: "rgba(255,255,255,0.06)", borderRadius: 3, overflow: "hidden" }}>
-      <div style={{ width: `${pct(value, max)}%`, height: "100%", background: color || `linear-gradient(90deg,${S.purple},${S.green})`, borderRadius: 3, transition: "width 0.6s ease" }} />
+      <div style={{ width: `${pct(value, max)}%`, height: "100%", background: color || `linear-gradient(90deg,${"var(--accent)"},${"var(--green)"})`, borderRadius: 3, transition: "width 0.6s ease" }} />
     </div>
   );
 }
@@ -147,23 +147,23 @@ function CreateJobModal({ onClose, onCreate }) {
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 100, display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
       <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.8)" }} onClick={onClose} />
-      <div style={{ position: "relative", width: "100%", maxWidth: 520, background: "#13131f", border: `1px solid ${S.border2}`, borderRadius: "24px 24px 0 0", maxHeight: "90vh", overflowY: "auto" }}>
+      <div style={{ position: "relative", width: "100%", maxWidth: 520, background: "#13131f", border: `1px solid ${"var(--border2)"}`, borderRadius: "24px 24px 0 0", maxHeight: "90vh", overflowY: "auto" }}>
         {/* Header */}
-        <div style={{ position: "sticky", top: 0, background: "#13131f", borderBottom: `1px solid ${S.border}`, padding: "16px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", zIndex: 10 }}>
+        <div style={{ position: "sticky", top: 0, background: "#13131f", borderBottom: `1px solid ${"var(--border)"}`, padding: "16px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", zIndex: 10 }}>
           <div>
-            <div style={{ fontSize: 10, color: S.text3, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em" }}>Step {step} of 3</div>
-            <div style={{ fontSize: 15, fontWeight: 800, color: S.text, marginTop: 2 }}>
+            <div style={{ fontSize: 10, color: "var(--text3)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em" }}>Step {step} of 3</div>
+            <div style={{ fontSize: 15, fontWeight: 800, color: "var(--text)", marginTop: 2 }}>
               {step === 1 ? "Job Details" : step === 2 ? "Budget & Slots" : "Review & Launch"}
             </div>
           </div>
-          <button onClick={onClose} style={{ width: 30, height: 30, borderRadius: 10, background: "rgba(255,255,255,0.06)", border: `1px solid ${S.border}`, color: S.text3, cursor: "pointer", fontSize: 14 }}>✕</button>
+          <button onClick={onClose} style={{ width: 30, height: 30, borderRadius: 10, background: "rgba(255,255,255,0.06)", border: `1px solid ${"var(--border)"}`, color: "var(--text3)", cursor: "pointer", fontSize: 14 }}>✕</button>
         </div>
 
         <div style={{ padding: 20 }}>
           {/* Step indicator */}
           <div style={{ display: "flex", gap: 6, marginBottom: 20 }}>
             {[1, 2, 3].map(s => (
-              <div key={s} style={{ flex: 1, height: 4, borderRadius: 2, background: s <= step ? S.purple : "rgba(255,255,255,0.08)" }} />
+              <div key={s} style={{ flex: 1, height: 4, borderRadius: 2, background: s <= step ? "var(--accent)" : "rgba(255,255,255,0.08)" }} />
             ))}
           </div>
 
@@ -210,7 +210,7 @@ function CreateJobModal({ onClose, onCreate }) {
                 </Field>
               </div>
               <div style={{ background: "rgba(16,185,129,0.08)", border: "1px solid rgba(16,185,129,0.2)", borderRadius: 12, padding: 14 }}>
-                <div style={{ fontSize: 11, color: S.green, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8 }}>Budget Summary</div>
+                <div style={{ fontSize: 11, color: "var(--green)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8 }}>Budget Summary</div>
                 {[
                   ["Reward per worker", form.reward ? `₦${parseInt(form.reward).toLocaleString()}` : "—"],
                   ["Total slots", form.slots || "—"],
@@ -218,8 +218,8 @@ function CreateJobModal({ onClose, onCreate }) {
                   ["Platform fee (5%)", form.reward && form.slots ? `₦${Math.round(parseInt(form.reward) * parseInt(form.slots) * 0.05).toLocaleString()}` : "—"],
                 ].map(([k, v]) => (
                   <div key={k} style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-                    <span style={{ fontSize: 12, color: S.text2 }}>{k}</span>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: S.text }}>{v}</span>
+                    <span style={{ fontSize: 12, color: "var(--text2)" }}>{k}</span>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: "var(--text)" }}>{v}</span>
                   </div>
                 ))}
               </div>
@@ -227,9 +227,9 @@ function CreateJobModal({ onClose, onCreate }) {
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
                   {["random", "creator"].map(t => (
                     <div key={t} onClick={() => set("selectionType", t)}
-                      style={{ padding: "12px", borderRadius: 12, border: `1px solid ${form.selectionType === t ? S.purple : S.border}`, background: form.selectionType === t ? "rgba(139,92,246,0.1)" : "rgba(255,255,255,0.03)", cursor: "pointer" }}>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: form.selectionType === t ? S.purple : S.text }}>{t === "random" ? "🎲 Random" : "👤 You Choose"}</div>
-                      <div style={{ fontSize: 11, color: S.text3, marginTop: 4 }}>
+                      style={{ padding: "12px", borderRadius: 12, border: `1px solid ${form.selectionType === t ? "var(--accent)" : "var(--border)"}`, background: form.selectionType === t ? "rgba(139,92,246,0.1)" : "rgba(255,255,255,0.03)", cursor: "pointer" }}>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: form.selectionType === t ? "var(--accent)" : "var(--text)" }}>{t === "random" ? "🎲 Random" : "👤 You Choose"}</div>
+                      <div style={{ fontSize: 11, color: "var(--text3)", marginTop: 4 }}>
                         {t === "random" ? "Winners auto-selected when timer closes" : "You manually pick winners from submissions"}
                       </div>
                     </div>
@@ -250,8 +250,8 @@ function CreateJobModal({ onClose, onCreate }) {
 
           {step === 3 && (
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              <div style={{ background: "rgba(255,255,255,0.03)", border: `1px solid ${S.border}`, borderRadius: 14, padding: 16 }}>
-                <div style={{ fontSize: 11, color: S.text3, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12 }}>Job Summary</div>
+              <div style={{ background: "rgba(255,255,255,0.03)", border: `1px solid ${"var(--border)"}`, borderRadius: 14, padding: 16 }}>
+                <div style={{ fontSize: 11, color: "var(--text3)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12 }}>Job Summary</div>
                 {[
                   ["Title", form.title || "—"],
                   ["Type", form.type],
@@ -263,14 +263,14 @@ function CreateJobModal({ onClose, onCreate }) {
                   ["Proof Required", form.attachmentRequired === "yes" ? "Yes" : "No"],
                   ["Deadline", form.deadline || "Not set"],
                 ].map(([k, v]) => (
-                  <div key={k} style={{ display: "flex", justifyContent: "space-between", padding: "7px 0", borderBottom: `1px solid ${S.border}` }}>
-                    <span style={{ fontSize: 12, color: S.text3 }}>{k}</span>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: S.text }}>{v}</span>
+                  <div key={k} style={{ display: "flex", justifyContent: "space-between", padding: "7px 0", borderBottom: `1px solid ${"var(--border)"}` }}>
+                    <span style={{ fontSize: 12, color: "var(--text3)" }}>{k}</span>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: "var(--text)" }}>{v}</span>
                   </div>
                 ))}
               </div>
               <div style={{ background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.2)", borderRadius: 12, padding: 12 }}>
-                <div style={{ fontSize: 12, color: S.amber, lineHeight: 1.6 }}>
+                <div style={{ fontSize: 12, color: "#f59e0b", lineHeight: 1.6 }}>
                   ⚠ Your wallet will be charged <strong>₦{form.reward && form.slots ? (parseInt(form.reward) * parseInt(form.slots) * 1.05).toLocaleString() : "—"}</strong> (budget + 5% platform fee) to launch this job.
                 </div>
               </div>
@@ -281,7 +281,7 @@ function CreateJobModal({ onClose, onCreate }) {
           <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
             {step > 1 && (
               <button onClick={() => setStep(s => s - 1)}
-                style={{ flex: 1, background: "rgba(255,255,255,0.05)", border: `1px solid ${S.border}`, borderRadius: 14, padding: 14, fontSize: 13, fontWeight: 700, color: S.text2, cursor: "pointer" }}>
+                style={{ flex: 1, background: "rgba(255,255,255,0.05)", border: `1px solid ${"var(--border)"}`, borderRadius: 14, padding: 14, fontSize: 13, fontWeight: 700, color: "var(--text2)", cursor: "pointer" }}>
                 ← Back
               </button>
             )}
@@ -290,7 +290,7 @@ function CreateJobModal({ onClose, onCreate }) {
                 if (step < 3) { setStep(s => s + 1); }
                 else { onCreate(form); onClose(); }
               }}
-              style={{ flex: 2, background: S.purple, border: "none", borderRadius: 14, padding: 14, fontSize: 13, fontWeight: 800, color: "#fff", cursor: "pointer" }}>
+              style={{ flex: 2, background: "var(--accent)", border: "none", borderRadius: 14, padding: 14, fontSize: 13, fontWeight: 800, color: "#fff", cursor: "pointer" }}>
               {step < 3 ? "Continue →" : "🚀 Launch Job"}
             </button>
           </div>
@@ -304,7 +304,7 @@ function CreateJobModal({ onClose, onCreate }) {
 function Field({ label, children }) {
   return (
     <div>
-      <label style={{ fontSize: 11, color: S.text3, fontWeight: 600, display: "block", marginBottom: 5 }}>{label}</label>
+      <label style={{ fontSize: 11, color: "var(--text3)", fontWeight: 600, display: "block", marginBottom: 5 }}>{label}</label>
       {children}
     </div>
   );
@@ -335,14 +335,14 @@ function JobDrawer({ job, onClose, onStatusChange }) {
     padding: "10px 14px", fontSize: 11, fontWeight: 700, textTransform: "uppercase",
     letterSpacing: "0.06em", cursor: "pointer", background: "transparent",
     border: "none", fontFamily: "inherit", whiteSpace: "nowrap",
-    color: activeTab === t ? S.purple : S.text3,
-    borderBottom: activeTab === t ? `2px solid ${S.purple}` : "2px solid transparent",
+    color: activeTab === t ? "var(--accent)" : "var(--text3)",
+    borderBottom: activeTab === t ? `2px solid ${"var(--accent)"}` : "2px solid transparent",
   });
 
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 90, display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
       <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.75)" }} onClick={onClose} />
-      <div style={{ position: "relative", width: "100%", maxWidth: 520, background: "#13131f", border: `1px solid ${S.border2}`, borderRadius: "24px 24px 0 0", maxHeight: "92vh", display: "flex", flexDirection: "column" }}>
+      <div style={{ position: "relative", width: "100%", maxWidth: 520, background: "#13131f", border: `1px solid ${"var(--border2)"}`, borderRadius: "24px 24px 0 0", maxHeight: "92vh", display: "flex", flexDirection: "column" }}>
 
         {/* Drag pill */}
         <div style={{ display: "flex", justifyContent: "center", paddingTop: 12, paddingBottom: 4, flexShrink: 0 }}>
@@ -353,19 +353,19 @@ function JobDrawer({ job, onClose, onStatusChange }) {
         <div style={{ padding: "0 20px 14px", flexShrink: 0 }}>
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10 }}>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 15, fontWeight: 900, color: S.text, marginBottom: 4 }}>{job.title}</div>
+              <div style={{ fontSize: 15, fontWeight: 900, color: "var(--text)", marginBottom: 4 }}>{job.title}</div>
               <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                <Badge label={job.id} color={S.text3} />
+                <Badge label={job.id} color={"var(--text3)"} />
                 <Badge label={job.status.toUpperCase()} color={statusColor[job.status]} bg={statusBg[job.status]} />
                 <Badge label={job.selectionType === "creator" ? "👤 Manual" : "🎲 Auto"} />
               </div>
             </div>
-            <button onClick={onClose} style={{ width: 30, height: 30, borderRadius: 10, background: "rgba(255,255,255,0.06)", border: `1px solid ${S.border}`, color: S.text3, cursor: "pointer", flexShrink: 0, fontSize: 13 }}>✕</button>
+            <button onClick={onClose} style={{ width: 30, height: 30, borderRadius: 10, background: "rgba(255,255,255,0.06)", border: `1px solid ${"var(--border)"}`, color: "var(--text3)", cursor: "pointer", flexShrink: 0, fontSize: 13 }}>✕</button>
           </div>
         </div>
 
         {/* Tab nav */}
-        <div style={{ display: "flex", borderBottom: `1px solid ${S.border}`, overflowX: "auto", flexShrink: 0 }}>
+        <div style={{ display: "flex", borderBottom: `1px solid ${"var(--border)"}`, overflowX: "auto", flexShrink: 0 }}>
           {["overview", "submissions", "analytics", "settings"].map(t => (
             <button key={t} style={tabStyle(t)} onClick={() => setActiveTab(t)}>{t}</button>
           ))}
@@ -379,60 +379,60 @@ function JobDrawer({ job, onClose, onStatusChange }) {
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               {/* Stats */}
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-                <StatBox label="Winners" value={job.winners} color={S.green} />
-                <StatBox label="Pending" value={job.pending} color={S.amber} />
-                <StatBox label="Rejected" value={job.rejected} color={S.red} />
+                <StatBox label="Winners" value={job.winners} color={"var(--green)"} />
+                <StatBox label="Pending" value={job.pending} color={"#f59e0b"} />
+                <StatBox label="Rejected" value={job.rejected} color={"var(--red)"} />
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-                <StatBox label="Approval Rate" value={`${job.approvalRate}%`} color={S.green} />
+                <StatBox label="Approval Rate" value={`${job.approvalRate}%`} color={"var(--green)"} />
                 <StatBox label="Avg Fill Time" value={job.avgFillTime} />
               </div>
 
               {/* Budget */}
-              <div style={{ background: "rgba(255,255,255,0.03)", border: `1px solid ${S.border}`, borderRadius: 12, padding: 14 }}>
-                <div style={{ fontSize: 11, color: S.text3, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10 }}>Budget</div>
+              <div style={{ background: "rgba(255,255,255,0.03)", border: `1px solid ${"var(--border)"}`, borderRadius: 12, padding: 14 }}>
+                <div style={{ fontSize: 11, color: "var(--text3)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10 }}>Budget</div>
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-                  <span style={{ fontSize: 13, color: S.text2 }}>Total budget</span>
-                  <span style={{ fontSize: 13, fontWeight: 800, color: S.text }}>₦{job.budget.toLocaleString()}</span>
+                  <span style={{ fontSize: 13, color: "var(--text2)" }}>Total budget</span>
+                  <span style={{ fontSize: 13, fontWeight: 800, color: "var(--text)" }}>₦{job.budget.toLocaleString()}</span>
                 </div>
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-                  <span style={{ fontSize: 13, color: S.text2 }}>Spent</span>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: S.red }}>₦{job.spent.toLocaleString()}</span>
+                  <span style={{ fontSize: 13, color: "var(--text2)" }}>Spent</span>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: "var(--red)" }}>₦{job.spent.toLocaleString()}</span>
                 </div>
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
-                  <span style={{ fontSize: 13, color: S.text2 }}>Remaining</span>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: S.green }}>₦{job.remaining.toLocaleString()}</span>
+                  <span style={{ fontSize: 13, color: "var(--text2)" }}>Remaining</span>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: "var(--green)" }}>₦{job.remaining.toLocaleString()}</span>
                 </div>
                 <ProgressBar value={job.spent} max={job.budget} />
-                <div style={{ fontSize: 11, color: S.text3, marginTop: 6 }}>{pct(job.spent, job.budget)}% of budget used</div>
+                <div style={{ fontSize: 11, color: "var(--text3)", marginTop: 6 }}>{pct(job.spent, job.budget)}% of budget used</div>
               </div>
 
               {/* Slots */}
-              <div style={{ background: "rgba(255,255,255,0.03)", border: `1px solid ${S.border}`, borderRadius: 12, padding: 14 }}>
+              <div style={{ background: "rgba(255,255,255,0.03)", border: `1px solid ${"var(--border)"}`, borderRadius: 12, padding: 14 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-                  <span style={{ fontSize: 11, color: S.text3, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em" }}>Slots</span>
-                  <span style={{ fontSize: 12, color: S.text2, fontWeight: 600 }}>{job.winners} / {job.slots} filled</span>
+                  <span style={{ fontSize: 11, color: "var(--text3)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em" }}>Slots</span>
+                  <span style={{ fontSize: 12, color: "var(--text2)", fontWeight: 600 }}>{job.winners} / {job.slots} filled</span>
                 </div>
                 <ProgressBar value={job.winners} max={job.slots} />
               </div>
 
               {/* Secret */}
               <div style={{ background: "rgba(139,92,246,0.06)", border: "1px solid rgba(139,92,246,0.2)", borderRadius: 12, padding: 14 }}>
-                <div style={{ fontSize: 11, color: S.purple, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8 }}>Job Secret (API)</div>
+                <div style={{ fontSize: 11, color: "var(--accent)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8 }}>Job Secret (API)</div>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ flex: 1, fontFamily: "monospace", fontSize: 12, color: S.text2, background: "rgba(0,0,0,0.3)", padding: "8px 10px", borderRadius: 8, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{job.secret}</span>
-                  <button onClick={copySecret} style={{ flexShrink: 0, background: copiedSecret ? "rgba(16,185,129,0.2)" : "rgba(139,92,246,0.2)", border: "none", borderRadius: 8, padding: "7px 12px", fontSize: 11, fontWeight: 700, color: copiedSecret ? S.green : S.purple, cursor: "pointer", fontFamily: "inherit" }}>
+                  <span style={{ flex: 1, fontFamily: "monospace", fontSize: 12, color: "var(--text2)", background: "rgba(0,0,0,0.3)", padding: "8px 10px", borderRadius: 8, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{job.secret}</span>
+                  <button onClick={copySecret} style={{ flexShrink: 0, background: copiedSecret ? "rgba(16,185,129,0.2)" : "rgba(139,92,246,0.2)", border: "none", borderRadius: 8, padding: "7px 12px", fontSize: 11, fontWeight: 700, color: copiedSecret ? "var(--green)" : "var(--accent)", cursor: "pointer", fontFamily: "inherit" }}>
                     {copiedSecret ? "Copied ✓" : "Copy"}
                   </button>
                 </div>
-                <div style={{ fontSize: 11, color: S.text3, marginTop: 8, lineHeight: 1.5 }}>Use this secret to view submissions via API or choose winners programmatically.</div>
+                <div style={{ fontSize: 11, color: "var(--text3)", marginTop: 8, lineHeight: 1.5 }}>Use this secret to view submissions via API or choose winners programmatically.</div>
               </div>
 
               {/* Info */}
               {[["Platform", job.platform], ["Reward/slot", `₦${job.reward.toLocaleString()}`], ["Selection", job.selectionType], ["Posted", job.posted], ["Deadline", job.deadline]].map(([k, v]) => (
-                <div key={k} style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: `1px solid ${S.border}` }}>
-                  <span style={{ fontSize: 12, color: S.text3 }}>{k}</span>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: S.text }}>{v}</span>
+                <div key={k} style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: `1px solid ${"var(--border)"}` }}>
+                  <span style={{ fontSize: 12, color: "var(--text3)" }}>{k}</span>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: "var(--text)" }}>{v}</span>
                 </div>
               ))}
             </div>
@@ -443,25 +443,25 @@ function JobDrawer({ job, onClose, onStatusChange }) {
             <div>
               {job.selectionType === "creator" && manualWinners.length > 0 && (
                 <div style={{ background: "rgba(139,92,246,0.1)", border: "1px solid rgba(139,92,246,0.3)", borderRadius: 12, padding: 12, marginBottom: 14, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                  <span style={{ fontSize: 12, color: S.purple, fontWeight: 600 }}>{manualWinners.length} winner(s) selected</span>
-                  <button style={{ background: S.purple, border: "none", borderRadius: 8, padding: "6px 14px", fontSize: 12, fontWeight: 700, color: "#fff", cursor: "pointer", fontFamily: "inherit" }}>
+                  <span style={{ fontSize: 12, color: "var(--accent)", fontWeight: 600 }}>{manualWinners.length} winner(s) selected</span>
+                  <button style={{ background: "var(--accent)", border: "none", borderRadius: 8, padding: "6px 14px", fontSize: 12, fontWeight: 700, color: "#fff", cursor: "pointer", fontFamily: "inherit" }}>
                     Confirm Winners →
                   </button>
                 </div>
               )}
 
               {job.submissions.length === 0 ? (
-                <div style={{ textAlign: "center", padding: "40px 0", color: S.text3, fontSize: 13 }}>No submissions yet</div>
+                <div style={{ textAlign: "center", padding: "40px 0", color: "var(--text3)", fontSize: 13 }}>No submissions yet</div>
               ) : (
                 job.submissions.map(sub => (
-                  <div key={sub.id} style={{ background: "rgba(255,255,255,0.03)", border: `1px solid ${S.border}`, borderRadius: 14, padding: 14, marginBottom: 10 }}>
+                  <div key={sub.id} style={{ background: "rgba(255,255,255,0.03)", border: `1px solid ${"var(--border)"}`, borderRadius: 14, padding: 14, marginBottom: 10 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
                       <div style={{ width: 34, height: 34, borderRadius: 10, background: `hsl(${sub.id.charCodeAt(4) * 30},60%,45%)`, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 12, fontWeight: 900, flexShrink: 0 }}>
                         {sub.user[0]}
                       </div>
                       <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: 13, fontWeight: 700, color: S.text }}>{sub.user}</div>
-                        <div style={{ fontSize: 11, color: S.text3 }}>{sub.handle} · {sub.time}</div>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text)" }}>{sub.user}</div>
+                        <div style={{ fontSize: 11, color: "var(--text3)" }}>{sub.handle} · {sub.time}</div>
                       </div>
                       <Badge label={sub.status.charAt(0).toUpperCase() + sub.status.slice(1)} color={subColor[sub.status]} bg={subBg[sub.status]} />
                     </div>
@@ -469,26 +469,26 @@ function JobDrawer({ job, onClose, onStatusChange }) {
                     {/* Score bar */}
                     <div style={{ marginBottom: 10 }}>
                       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-                        <span style={{ fontSize: 10, color: S.text3, fontWeight: 600 }}>AI Score</span>
-                        <span style={{ fontSize: 10, fontWeight: 800, color: sub.score >= 80 ? S.green : sub.score >= 60 ? S.amber : S.red }}>{sub.score}/100</span>
+                        <span style={{ fontSize: 10, color: "var(--text3)", fontWeight: 600 }}>AI Score</span>
+                        <span style={{ fontSize: 10, fontWeight: 800, color: sub.score >= 80 ? "var(--green)" : sub.score >= 60 ? "#f59e0b" : "var(--red)" }}>{sub.score}/100</span>
                       </div>
-                      <ProgressBar value={sub.score} max={100} color={sub.score >= 80 ? S.green : sub.score >= 60 ? S.amber : S.red} />
+                      <ProgressBar value={sub.score} max={100} color={sub.score >= 80 ? "var(--green)" : sub.score >= 60 ? "#f59e0b" : "var(--red)"} />
                     </div>
 
                     {/* Proof + actions */}
                     <div style={{ display: "flex", gap: 8 }}>
-                      <button style={{ flex: 1, background: "rgba(255,255,255,0.05)", border: `1px solid ${S.border}`, borderRadius: 10, padding: "8px 0", fontSize: 11, fontWeight: 700, color: S.text2, cursor: "pointer", fontFamily: "inherit" }}>
+                      <button style={{ flex: 1, background: "rgba(255,255,255,0.05)", border: `1px solid ${"var(--border)"}`, borderRadius: 10, padding: "8px 0", fontSize: 11, fontWeight: 700, color: "var(--text2)", cursor: "pointer", fontFamily: "inherit" }}>
                         📎 View Proof
                       </button>
                       {sub.status === "pending" && (
                         <>
-                          <button style={{ flex: 1, background: "rgba(16,185,129,0.12)", border: "1px solid rgba(16,185,129,0.3)", borderRadius: 10, padding: "8px 0", fontSize: 11, fontWeight: 700, color: S.green, cursor: "pointer", fontFamily: "inherit" }}>✓ Approve</button>
-                          <button style={{ flex: 1, background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.25)", borderRadius: 10, padding: "8px 0", fontSize: 11, fontWeight: 700, color: S.red, cursor: "pointer", fontFamily: "inherit" }}>✕ Reject</button>
+                          <button style={{ flex: 1, background: "rgba(16,185,129,0.12)", border: "1px solid rgba(16,185,129,0.3)", borderRadius: 10, padding: "8px 0", fontSize: 11, fontWeight: 700, color: "var(--green)", cursor: "pointer", fontFamily: "inherit" }}>✓ Approve</button>
+                          <button style={{ flex: 1, background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.25)", borderRadius: 10, padding: "8px 0", fontSize: 11, fontWeight: 700, color: "var(--red)", cursor: "pointer", fontFamily: "inherit" }}>✕ Reject</button>
                         </>
                       )}
                       {job.selectionType === "creator" && sub.status === "approved" && (
                         <button onClick={() => toggleWinner(sub.id)}
-                          style={{ flex: 1, background: manualWinners.includes(sub.id) ? "rgba(139,92,246,0.2)" : "rgba(255,255,255,0.04)", border: `1px solid ${manualWinners.includes(sub.id) ? S.purple : S.border}`, borderRadius: 10, padding: "8px 0", fontSize: 11, fontWeight: 700, color: manualWinners.includes(sub.id) ? S.purple : S.text2, cursor: "pointer", fontFamily: "inherit" }}>
+                          style={{ flex: 1, background: manualWinners.includes(sub.id) ? "rgba(139,92,246,0.2)" : "rgba(255,255,255,0.04)", border: `1px solid ${manualWinners.includes(sub.id) ? "var(--accent)" : "var(--border)"}`, borderRadius: 10, padding: "8px 0", fontSize: 11, fontWeight: 700, color: manualWinners.includes(sub.id) ? "var(--accent)" : "var(--text2)", cursor: "pointer", fontFamily: "inherit" }}>
                           {manualWinners.includes(sub.id) ? "★ Winner" : "☆ Pick"}
                         </button>
                       )}
@@ -503,36 +503,36 @@ function JobDrawer({ job, onClose, onStatusChange }) {
           {activeTab === "analytics" && (
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-                <StatBox label="Completion %" value={`${pct(job.winners, job.slots)}%`} color={S.purple} />
-                <StatBox label="Approval %" value={`${job.approvalRate}%`} color={S.green} />
+                <StatBox label="Completion %" value={`${pct(job.winners, job.slots)}%`} color={"var(--accent)"} />
+                <StatBox label="Approval %" value={`${job.approvalRate}%`} color={"var(--green)"} />
                 <StatBox label="Avg Fill" value={job.avgFillTime} />
               </div>
 
               {/* Fake bar chart */}
-              <div style={{ background: "rgba(255,255,255,0.03)", border: `1px solid ${S.border}`, borderRadius: 14, padding: 16 }}>
-                <div style={{ fontSize: 11, color: S.text3, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 14 }}>Submissions Per Day</div>
+              <div style={{ background: "rgba(255,255,255,0.03)", border: `1px solid ${"var(--border)"}`, borderRadius: 14, padding: 16 }}>
+                <div style={{ fontSize: 11, color: "var(--text3)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 14 }}>Submissions Per Day</div>
                 <div style={{ display: "flex", alignItems: "flex-end", gap: 6, height: 80 }}>
                   {[12, 28, 45, 33, 15, 22, 40].map((v, i) => (
                     <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
-                      <div style={{ width: "100%", height: `${(v / 50) * 70}px`, borderRadius: "4px 4px 0 0", background: i === 6 ? S.purple : "rgba(139,92,246,0.35)" }} />
-                      <span style={{ fontSize: 9, color: S.text3 }}>{["M", "T", "W", "T", "F", "S", "S"][i]}</span>
+                      <div style={{ width: "100%", height: `${(v / 50) * 70}px`, borderRadius: "4px 4px 0 0", background: i === 6 ? "var(--accent)" : "rgba(139,92,246,0.35)" }} />
+                      <span style={{ fontSize: 9, color: "var(--text3)" }}>{["M", "T", "W", "T", "F", "S", "S"][i]}</span>
                     </div>
                   ))}
                 </div>
               </div>
 
               {/* Status breakdown */}
-              <div style={{ background: "rgba(255,255,255,0.03)", border: `1px solid ${S.border}`, borderRadius: 14, padding: 16 }}>
-                <div style={{ fontSize: 11, color: S.text3, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12 }}>Status Breakdown</div>
+              <div style={{ background: "rgba(255,255,255,0.03)", border: `1px solid ${"var(--border)"}`, borderRadius: 14, padding: 16 }}>
+                <div style={{ fontSize: 11, color: "var(--text3)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12 }}>Status Breakdown</div>
                 {[
-                  { label: "Approved", value: job.winners, total: job.slots, color: S.green },
-                  { label: "Pending", value: job.pending, total: job.slots, color: S.amber },
-                  { label: "Rejected", value: job.rejected, total: job.slots, color: S.red },
-                  { label: "Remaining", value: job.slots - job.winners - job.pending - job.rejected, total: job.slots, color: S.text3 },
+                  { label: "Approved", value: job.winners, total: job.slots, color: "var(--green)" },
+                  { label: "Pending", value: job.pending, total: job.slots, color: "#f59e0b" },
+                  { label: "Rejected", value: job.rejected, total: job.slots, color: "var(--red)" },
+                  { label: "Remaining", value: job.slots - job.winners - job.pending - job.rejected, total: job.slots, color: "var(--text3)" },
                 ].map(row => (
                   <div key={row.label} style={{ marginBottom: 10 }}>
                     <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-                      <span style={{ fontSize: 12, color: S.text2 }}>{row.label}</span>
+                      <span style={{ fontSize: 12, color: "var(--text2)" }}>{row.label}</span>
                       <span style={{ fontSize: 12, fontWeight: 700, color: row.color }}>{row.value}</span>
                     </div>
                     <ProgressBar value={row.value} max={job.slots} color={row.color} />
@@ -548,27 +548,27 @@ function JobDrawer({ job, onClose, onStatusChange }) {
               {job.status !== "completed" && (
                 <>
                   <button onClick={() => { onStatusChange(job.id, job.status === "active" ? "paused" : "active"); onClose(); }}
-                    style={{ width: "100%", background: job.status === "active" ? "rgba(245,158,11,0.1)" : "rgba(16,185,129,0.1)", border: `1px solid ${job.status === "active" ? "rgba(245,158,11,0.3)" : "rgba(16,185,129,0.3)"}`, borderRadius: 14, padding: 14, fontSize: 13, fontWeight: 700, color: job.status === "active" ? S.amber : S.green, cursor: "pointer", fontFamily: "inherit" }}>
+                    style={{ width: "100%", background: job.status === "active" ? "rgba(245,158,11,0.1)" : "rgba(16,185,129,0.1)", border: `1px solid ${job.status === "active" ? "rgba(245,158,11,0.3)" : "rgba(16,185,129,0.3)"}`, borderRadius: 14, padding: 14, fontSize: 13, fontWeight: 700, color: job.status === "active" ? "#f59e0b" : "var(--green)", cursor: "pointer", fontFamily: "inherit" }}>
                     {job.status === "active" ? "⏸ Pause Job" : "▶ Resume Job"}
                   </button>
-                  <button style={{ width: "100%", background: "rgba(255,255,255,0.04)", border: `1px solid ${S.border}`, borderRadius: 14, padding: 14, fontSize: 13, fontWeight: 700, color: S.text2, cursor: "pointer", fontFamily: "inherit" }}>
-                    💰 Top Up Budget
+                  <button style={{ width: "100%", background: "rgba(255,255,255,0.04)", border: `1px solid ${"var(--border)"}`, borderRadius: 14, padding: 14, fontSize: 13, fontWeight: 700, color: "var(--text2)", cursor: "pointer", fontFamily: "inherit" }}>
+                    <i className="ti ti-coin" /> Top Up Budget
                   </button>
-                  <button style={{ width: "100%", background: "rgba(255,255,255,0.04)", border: `1px solid ${S.border}`, borderRadius: 14, padding: 14, fontSize: 13, fontWeight: 700, color: S.text2, cursor: "pointer", fontFamily: "inherit" }}>
-                    ✏️ Edit Job Details
+                  <button style={{ width: "100%", background: "rgba(255,255,255,0.04)", border: `1px solid ${"var(--border)"}`, borderRadius: 14, padding: 14, fontSize: 13, fontWeight: 700, color: "var(--text2)", cursor: "pointer", fontFamily: "inherit" }}>
+                    <i className="ti ti-edit" /> Edit Job Details
                   </button>
-                  <button style={{ width: "100%", background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 14, padding: 14, fontSize: 13, fontWeight: 700, color: S.red, cursor: "pointer", fontFamily: "inherit" }}>
-                    🗑 Close & Refund Remaining
+                  <button style={{ width: "100%", background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 14, padding: 14, fontSize: 13, fontWeight: 700, color: "var(--red)", cursor: "pointer", fontFamily: "inherit" }}>
+                    <i className="ti ti-trash" /> Close & Refund Remaining
                   </button>
                 </>
               )}
               {job.status === "completed" && (
                 <div style={{ textAlign: "center", padding: "20px 0" }}>
-                  <div style={{ fontSize: 32, marginBottom: 10 }}>✅</div>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: S.text }}>Job Completed</div>
-                  <div style={{ fontSize: 12, color: S.text3, marginTop: 6 }}>All slots filled. Budget fully distributed.</div>
-                  <button style={{ marginTop: 16, background: "rgba(139,92,246,0.15)", border: "1px solid rgba(139,92,246,0.3)", borderRadius: 12, padding: "10px 24px", fontSize: 13, fontWeight: 700, color: S.purple, cursor: "pointer", fontFamily: "inherit" }}>
-                    📋 Download Report
+                  <div style={{ fontSize: 32, marginBottom: 10 }}><i className="ti ti-circle-check" style={{color:"var(--green)"}} /></div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text)" }}>Job Completed</div>
+                  <div style={{ fontSize: 12, color: "var(--text3)", marginTop: 6 }}>All slots filled. Budget fully distributed.</div>
+                  <button style={{ marginTop: 16, background: "rgba(139,92,246,0.15)", border: "1px solid rgba(139,92,246,0.3)", borderRadius: 12, padding: "10px 24px", fontSize: 13, fontWeight: 700, color: "var(--accent)", cursor: "pointer", fontFamily: "inherit" }}>
+                    <i className="ti ti-clipboard" /> Download Report
                   </button>
                 </div>
               )}
@@ -616,85 +616,85 @@ function BlacklistPage() {
 
   return (
     <div style={{ maxWidth: 560, margin: "0 auto", padding: "16px 14px 80px" }}>
-      {toast && <div style={{ position: "fixed", top: 20, left: "50%", transform: "translateX(-50%)", background: "#13131f", border: "1px solid rgba(139,92,246,0.4)", borderRadius: 12, padding: "10px 20px", fontSize: 13, fontWeight: 600, color: S.text, zIndex: 200, whiteSpace: "nowrap" }}>{toast}</div>}
+      {toast && <div style={{ position: "fixed", top: 20, left: "50%", transform: "translateX(-50%)", background: "var(--card)", border: "1px solid var(--border)", borderRadius: 12, padding: "10px 20px", fontSize: 13, fontWeight: 600, color: "var(--text)", zIndex: 200, whiteSpace: "nowrap" }}>{toast}</div>}
 
       {/* Header */}
       <div style={{ marginBottom: 20 }}>
-        <h2 style={{ fontSize: 22, fontWeight: 900, color: S.text, marginBottom: 6 }}>Creator Blacklist</h2>
-        <p style={{ fontSize: 13, color: S.text3, lineHeight: 1.5 }}>Blocked users cannot participate in your future jobs.</p>
+        <h2 style={{ fontSize: 22, fontWeight: 900, color: "var(--text)", marginBottom: 6 }}>Creator Blacklist</h2>
+        <p style={{ fontSize: 13, color: "var(--text3)", lineHeight: 1.5 }}>Blocked users cannot participate in your future jobs.</p>
         <div style={{ marginTop: 10 }}>
-          <span style={{ fontSize: 12, fontWeight: 700, padding: "4px 12px", borderRadius: 99, background: "rgba(255,255,255,0.06)", border: `1px solid ${S.border}`, color: S.text2 }}>
+          <span style={{ fontSize: 12, fontWeight: 700, padding: "4px 12px", borderRadius: 99, background: "rgba(255,255,255,0.06)", border: `1px solid ${"var(--border)"}`, color: "var(--text2)" }}>
             {blocked.length} blocked
           </span>
         </div>
       </div>
 
       {/* Search box */}
-      <div style={{ background: "#13131f", border: `1px solid ${S.border}`, borderRadius: 16, padding: 16, marginBottom: 16 }}>
-        <div style={{ fontSize: 13, fontWeight: 700, color: S.text, marginBottom: 12 }}>Search by OgaPay username or X handle</div>
+      <div style={{ background: "#13131f", border: `1px solid ${"var(--border)"}`, borderRadius: 16, padding: 16, marginBottom: 16 }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text)", marginBottom: 12 }}>Search by OgaPay username or X handle</div>
         <input
           value={search}
           onChange={e => { setSearch(e.target.value); setSearched(false); setSearchResult(null); }}
           onKeyDown={e => e.key === "Enter" && handleSearch()}
           placeholder="nickname or @xhandle"
-          style={{ width: "100%", background: "rgba(255,255,255,0.05)", border: `1px solid ${S.border}`, borderRadius: 10, padding: "11px 14px", fontSize: 13, color: S.text, outline: "none", marginBottom: 10, boxSizing: "border-box", fontFamily: "inherit" }}
+          style={{ width: "100%", background: "rgba(255,255,255,0.05)", border: `1px solid ${"var(--border)"}`, borderRadius: 10, padding: "11px 14px", fontSize: 13, color: "var(--text)", outline: "none", marginBottom: 10, boxSizing: "border-box", fontFamily: "inherit" }}
         />
         <button onClick={handleSearch}
-          style={{ width: "100%", background: "rgba(139,92,246,0.15)", border: "1px solid rgba(139,92,246,0.3)", borderRadius: 10, padding: "11px", fontSize: 13, fontWeight: 700, color: S.purple, cursor: "pointer", fontFamily: "inherit" }}>
+          style={{ width: "100%", background: "rgba(139,92,246,0.15)", border: "1px solid rgba(139,92,246,0.3)", borderRadius: 10, padding: "11px", fontSize: 13, fontWeight: 700, color: "var(--accent)", cursor: "pointer", fontFamily: "inherit" }}>
           Search
         </button>
 
         {/* Search result */}
         {searched && searchResult && (
-          <div style={{ marginTop: 12, background: "rgba(255,255,255,0.03)", border: `1px solid ${S.border}`, borderRadius: 12, padding: 14, display: "flex", alignItems: "center", gap: 12 }}>
-            <div style={{ width: 36, height: 36, borderRadius: 10, background: "rgba(139,92,246,0.2)", display: "flex", alignItems: "center", justifyContent: "center", color: S.purple, fontWeight: 900, fontSize: 14, flexShrink: 0 }}>
+          <div style={{ marginTop: 12, background: "rgba(255,255,255,0.03)", border: `1px solid ${"var(--border)"}`, borderRadius: 12, padding: 14, display: "flex", alignItems: "center", gap: 12 }}>
+            <div style={{ width: 36, height: 36, borderRadius: 10, background: "rgba(139,92,246,0.2)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--accent)", fontWeight: 900, fontSize: 14, flexShrink: 0 }}>
               {searchResult.user[0]?.toUpperCase()}
             </div>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: S.text }}>{searchResult.user}</div>
-              <div style={{ fontSize: 11, color: S.text3 }}>{searchResult.handle}</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text)" }}>{searchResult.user}</div>
+              <div style={{ fontSize: 11, color: "var(--text3)" }}>{searchResult.handle}</div>
             </div>
             {searchResult.alreadyBlocked ? (
-              <span style={{ fontSize: 11, fontWeight: 700, color: S.red, background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 8, padding: "4px 10px" }}>Already blocked</span>
+              <span style={{ fontSize: 11, fontWeight: 700, color: "var(--red)", background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 8, padding: "4px 10px" }}>Already blocked</span>
             ) : (
               <button onClick={blockUser}
-                style={{ background: "rgba(239,68,68,0.12)", border: "1px solid rgba(239,68,68,0.3)", borderRadius: 10, padding: "7px 14px", fontSize: 12, fontWeight: 700, color: S.red, cursor: "pointer", fontFamily: "inherit" }}>
+                style={{ background: "rgba(239,68,68,0.12)", border: "1px solid rgba(239,68,68,0.3)", borderRadius: 10, padding: "7px 14px", fontSize: 12, fontWeight: 700, color: "var(--red)", cursor: "pointer", fontFamily: "inherit" }}>
                 Block
               </button>
             )}
           </div>
         )}
         {searched && !searchResult && (
-          <div style={{ marginTop: 12, fontSize: 12, color: S.text3, textAlign: "center", padding: "12px 0" }}>No user found for "{search}"</div>
+          <div style={{ marginTop: 12, fontSize: 12, color: "var(--text3)", textAlign: "center", padding: "12px 0" }}>No user found for "{search}"</div>
         )}
       </div>
 
       {/* Blocked list */}
-      <div style={{ background: "#13131f", border: `1px solid ${S.border}`, borderRadius: 16, overflow: "hidden" }}>
-        <div style={{ padding: "14px 16px", borderBottom: `1px solid ${S.border}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <span style={{ fontSize: 14, fontWeight: 800, color: S.text }}>Blocked users</span>
-          <span style={{ fontSize: 12, color: S.text3 }}>Page 1 of 1</span>
+      <div style={{ background: "#13131f", border: `1px solid ${"var(--border)"}`, borderRadius: 16, overflow: "hidden" }}>
+        <div style={{ padding: "14px 16px", borderBottom: `1px solid ${"var(--border)"}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <span style={{ fontSize: 14, fontWeight: 800, color: "var(--text)" }}>Blocked users</span>
+          <span style={{ fontSize: 12, color: "var(--text3)" }}>Page 1 of 1</span>
         </div>
 
         {blocked.length === 0 ? (
           <div style={{ padding: "32px 16px", textAlign: "center" }}>
             <div style={{ fontSize: 28, marginBottom: 10 }}>🚫</div>
-            <div style={{ fontSize: 13, color: S.text3 }}>You have not blocked anyone yet.</div>
+            <div style={{ fontSize: 13, color: "var(--text3)" }}>You have not blocked anyone yet.</div>
           </div>
         ) : blocked.map((b, i) => (
-          <div key={b.id} style={{ padding: "14px 16px", borderBottom: i < blocked.length - 1 ? `1px solid ${S.border}` : "none", display: "flex", alignItems: "center", gap: 12 }}>
-            <div style={{ width: 36, height: 36, borderRadius: 10, background: b.color || S.red, opacity: 0.8, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 900, fontSize: 14, flexShrink: 0 }}>
+          <div key={b.id} style={{ padding: "14px 16px", borderBottom: i < blocked.length - 1 ? `1px solid ${"var(--border)"}` : "none", display: "flex", alignItems: "center", gap: 12 }}>
+            <div style={{ width: 36, height: 36, borderRadius: 10, background: b.color || "var(--red)", opacity: 0.8, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 900, fontSize: 14, flexShrink: 0 }}>
               {b.user[0].toUpperCase()}
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: S.text }}>{b.user}</div>
-              <div style={{ fontSize: 11, color: S.text3, marginTop: 2 }}>{b.handle}</div>
-              <div style={{ fontSize: 11, color: S.red, marginTop: 3, opacity: 0.8 }}>{b.reason}</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text)" }}>{b.user}</div>
+              <div style={{ fontSize: 11, color: "var(--text3)", marginTop: 2 }}>{b.handle}</div>
+              <div style={{ fontSize: 11, color: "var(--red)", marginTop: 3, opacity: 0.8 }}>{b.reason}</div>
             </div>
             <div style={{ textAlign: "right", flexShrink: 0 }}>
-              <div style={{ fontSize: 10, color: S.text3, marginBottom: 6 }}>{b.blockedAt}</div>
+              <div style={{ fontSize: 10, color: "var(--text3)", marginBottom: 6 }}>{b.blockedAt}</div>
               <button onClick={() => unblock(b.id)}
-                style={{ background: "rgba(255,255,255,0.05)", border: `1px solid ${S.border}`, borderRadius: 8, padding: "5px 12px", fontSize: 11, fontWeight: 700, color: S.text2, cursor: "pointer", fontFamily: "inherit" }}>
+                style={{ background: "rgba(255,255,255,0.05)", border: `1px solid ${"var(--border)"}`, borderRadius: 8, padding: "5px 12px", fontSize: 11, fontWeight: 700, color: "var(--text2)", cursor: "pointer", fontFamily: "inherit" }}>
                 Unblock
               </button>
             </div>
@@ -704,7 +704,7 @@ function BlacklistPage() {
 
       {blocked.length > 0 && (
         <div style={{ marginTop: 12, padding: "12px 14px", background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.15)", borderRadius: 12 }}>
-          <div style={{ fontSize: 12, color: S.text3, lineHeight: 1.6 }}>
+          <div style={{ fontSize: 12, color: "var(--text3)", lineHeight: 1.6 }}>
             ⛔ Blocked users are automatically excluded from all your current and future job listings on OgaPay.
           </div>
         </div>
@@ -749,23 +749,23 @@ function TemplatesPage({ onUseTemplate }) {
 
   return (
     <div style={{ maxWidth: 560, margin: "0 auto", padding: "16px 14px 80px" }}>
-      {toast && <div style={{ position: "fixed", top: 20, left: "50%", transform: "translateX(-50%)", background: "#13131f", border: "1px solid rgba(139,92,246,0.4)", borderRadius: 12, padding: "10px 20px", fontSize: 13, fontWeight: 600, color: S.text, zIndex: 200, whiteSpace: "nowrap" }}>{toast}</div>}
+      {toast && <div style={{ position: "fixed", top: 20, left: "50%", transform: "translateX(-50%)", background: "var(--card)", border: "1px solid var(--border)", borderRadius: 12, padding: "10px 20px", fontSize: 13, fontWeight: 600, color: "var(--text)", zIndex: 200, whiteSpace: "nowrap" }}>{toast}</div>}
 
       {/* Header */}
       <div style={{ marginBottom: 20 }}>
-        <h2 style={{ fontSize: 22, fontWeight: 900, color: S.text, marginBottom: 6 }}>Custom Job Templates</h2>
-        <p style={{ fontSize: 13, color: S.text3 }}>Review, update, delete, and fork templates in one place.</p>
+        <h2 style={{ fontSize: 22, fontWeight: 900, color: "var(--text)", marginBottom: 6 }}>Custom Job Templates</h2>
+        <p style={{ fontSize: 13, color: "var(--text3)" }}>Review, update, delete, and fork templates in one place.</p>
       </div>
 
       {/* Tab toggle */}
-      <div style={{ background: "#13131f", border: `1px solid ${S.border}`, borderRadius: 14, overflow: "hidden", marginBottom: 16 }}>
+      <div style={{ background: "#13131f", border: `1px solid ${"var(--border)"}`, borderRadius: 14, overflow: "hidden", marginBottom: 16 }}>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr" }}>
           {[
             { id: "mine", label: `My templates (${templates.mine.length})` },
             { id: "public", label: `Public templates (${templates.public.length})` },
           ].map(t => (
             <button key={t.id} onClick={() => setTab(t.id)}
-              style={{ padding: "13px 0", fontSize: 13, fontWeight: 700, cursor: "pointer", border: "none", fontFamily: "inherit", background: tab === t.id ? S.text : "transparent", color: tab === t.id ? S.bg : S.text3, borderBottom: tab !== t.id ? `1px solid ${S.border}` : "none", transition: "all 0.15s" }}>
+              style={{ padding: "13px 0", fontSize: 13, fontWeight: 700, cursor: "pointer", border: "none", fontFamily: "inherit", background: tab === t.id ? "var(--text)" : "transparent", color: tab === t.id ? "var(--bg)" : "var(--text3)", borderBottom: tab !== t.id ? `1px solid ${"var(--border)"}` : "none", transition: "all 0.15s" }}>
               {t.label}
             </button>
           ))}
@@ -773,9 +773,9 @@ function TemplatesPage({ onUseTemplate }) {
 
         {/* Create button — only on mine tab */}
         {tab === "mine" && (
-          <div style={{ padding: "12px 14px", borderTop: `1px solid ${S.border}` }}>
+          <div style={{ padding: "12px 14px", borderTop: `1px solid ${"var(--border)"}` }}>
             <button onClick={() => setShowCreate(!showCreate)}
-              style={{ width: "100%", background: showCreate ? "rgba(255,255,255,0.05)" : S.text, border: "none", borderRadius: 10, padding: "12px", fontSize: 13, fontWeight: 800, color: showCreate ? S.text2 : S.bg, cursor: "pointer", fontFamily: "inherit", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+              style={{ width: "100%", background: showCreate ? "rgba(255,255,255,0.05)" : "var(--text)", border: "none", borderRadius: 10, padding: "12px", fontSize: 13, fontWeight: 800, color: showCreate ? "var(--text2)" : "var(--bg)", cursor: "pointer", fontFamily: "inherit", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
               {showCreate ? "✕ Cancel" : "+ Create template"}
             </button>
 
@@ -788,35 +788,35 @@ function TemplatesPage({ onUseTemplate }) {
                   { label: "Description", key: "description", placeholder: "What should workers do?", multi: true },
                 ].map(f => (
                   <div key={f.key}>
-                    <label style={{ fontSize: 11, color: S.text3, fontWeight: 600, display: "block", marginBottom: 4 }}>{f.label}</label>
+                    <label style={{ fontSize: 11, color: "var(--text3)", fontWeight: 600, display: "block", marginBottom: 4 }}>{f.label}</label>
                     {f.multi ? (
                       <textarea value={newTpl[f.key]} onChange={e => setNewTpl(p => ({ ...p, [f.key]: e.target.value }))} placeholder={f.placeholder} rows={3}
-                        style={{ width: "100%", background: "rgba(255,255,255,0.05)", border: `1px solid ${S.border}`, borderRadius: 10, padding: "10px 12px", fontSize: 13, color: S.text, outline: "none", resize: "none", boxSizing: "border-box", fontFamily: "inherit" }} />
+                        style={{ width: "100%", background: "rgba(255,255,255,0.05)", border: `1px solid ${"var(--border)"}`, borderRadius: 10, padding: "10px 12px", fontSize: 13, color: "var(--text)", outline: "none", resize: "none", boxSizing: "border-box", fontFamily: "inherit" }} />
                     ) : (
                       <input value={newTpl[f.key]} onChange={e => setNewTpl(p => ({ ...p, [f.key]: e.target.value }))} placeholder={f.placeholder}
-                        style={{ width: "100%", background: "rgba(255,255,255,0.05)", border: `1px solid ${S.border}`, borderRadius: 10, padding: "10px 12px", fontSize: 13, color: S.text, outline: "none", boxSizing: "border-box", fontFamily: "inherit" }} />
+                        style={{ width: "100%", background: "rgba(255,255,255,0.05)", border: `1px solid ${"var(--border)"}`, borderRadius: 10, padding: "10px 12px", fontSize: 13, color: "var(--text)", outline: "none", boxSizing: "border-box", fontFamily: "inherit" }} />
                     )}
                   </div>
                 ))}
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                   <div>
-                    <label style={{ fontSize: 11, color: S.text3, fontWeight: 600, display: "block", marginBottom: 4 }}>Platform</label>
+                    <label style={{ fontSize: 11, color: "var(--text3)", fontWeight: 600, display: "block", marginBottom: 4 }}>Platform</label>
                     <select value={newTpl.platform} onChange={e => setNewTpl(p => ({ ...p, platform: e.target.value }))}
-                      style={{ width: "100%", background: "rgba(255,255,255,0.05)", border: `1px solid ${S.border}`, borderRadius: 10, padding: "10px 12px", fontSize: 13, color: S.text, outline: "none", fontFamily: "inherit" }}>
+                      style={{ width: "100%", background: "rgba(255,255,255,0.05)", border: `1px solid ${"var(--border)"}`, borderRadius: 10, padding: "10px 12px", fontSize: 13, color: "var(--text)", outline: "none", fontFamily: "inherit" }}>
                       {["X (Twitter)", "Instagram", "Telegram", "Discord", "YouTube", "On-chain", "Other"].map(p => <option key={p} value={p}>{p}</option>)}
                     </select>
                   </div>
                   <div>
-                    <label style={{ fontSize: 11, color: S.text3, fontWeight: 600, display: "block", marginBottom: 4 }}>Visibility</label>
+                    <label style={{ fontSize: 11, color: "var(--text3)", fontWeight: 600, display: "block", marginBottom: 4 }}>Visibility</label>
                     <select value={newTpl.visibility} onChange={e => setNewTpl(p => ({ ...p, visibility: e.target.value }))}
-                      style={{ width: "100%", background: "rgba(255,255,255,0.05)", border: `1px solid ${S.border}`, borderRadius: 10, padding: "10px 12px", fontSize: 13, color: S.text, outline: "none", fontFamily: "inherit" }}>
+                      style={{ width: "100%", background: "rgba(255,255,255,0.05)", border: `1px solid ${"var(--border)"}`, borderRadius: 10, padding: "10px 12px", fontSize: 13, color: "var(--text)", outline: "none", fontFamily: "inherit" }}>
                       <option value="private">🔒 Private</option>
                       <option value="community">🌍 Community</option>
                     </select>
                   </div>
                 </div>
                 <button onClick={saveTemplate}
-                  style={{ width: "100%", background: S.purple, border: "none", borderRadius: 10, padding: "12px", fontSize: 13, fontWeight: 800, color: "#fff", cursor: "pointer", fontFamily: "inherit" }}>
+                  style={{ width: "100%", background: "var(--accent)", border: "none", borderRadius: 10, padding: "12px", fontSize: 13, fontWeight: 800, color: "#fff", cursor: "pointer", fontFamily: "inherit" }}>
                   Save Template
                 </button>
               </div>
@@ -826,28 +826,28 @@ function TemplatesPage({ onUseTemplate }) {
       </div>
 
       {/* Template list */}
-      <div style={{ background: "#13131f", border: `1px solid ${S.border}`, borderRadius: 16, overflow: "hidden" }}>
-        <div style={{ padding: "14px 16px", borderBottom: `1px solid ${S.border}` }}>
-          <span style={{ fontSize: 14, fontWeight: 800, color: S.text }}>
+      <div style={{ background: "#13131f", border: `1px solid ${"var(--border)"}`, borderRadius: 16, overflow: "hidden" }}>
+        <div style={{ padding: "14px 16px", borderBottom: `1px solid ${"var(--border)"}` }}>
+          <span style={{ fontSize: 14, fontWeight: 800, color: "var(--text)" }}>
             {tab === "mine" ? "My templates" : "Public templates"}
           </span>
         </div>
 
         {list.length === 0 ? (
           <div style={{ padding: "40px 16px", textAlign: "center" }}>
-            <div style={{ fontSize: 28, marginBottom: 10 }}>📋</div>
-            <div style={{ fontSize: 13, color: S.text3 }}>No templates yet. Create one above!</div>
+            <div style={{ fontSize: 28, marginBottom: 10 }}><i className="ti ti-clipboard" /></div>
+            <div style={{ fontSize: 13, color: "var(--text3)" }}>No templates yet. Create one above!</div>
           </div>
         ) : list.map((tpl, i) => (
-          <div key={tpl.id} style={{ borderBottom: i < list.length - 1 ? `1px solid ${S.border}` : "none" }}>
+          <div key={tpl.id} style={{ borderBottom: i < list.length - 1 ? `1px solid ${"var(--border)"}` : "none" }}>
             {/* Template row */}
             <div onClick={() => setExpandedId(expandedId === tpl.id ? null : tpl.id)}
               style={{ padding: "14px 16px", cursor: "pointer", transition: "background 0.15s" }}
               onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.02)"}
               onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: S.text, marginBottom: 4, lineHeight: 1.3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{tpl.title}</div>
-              <div style={{ fontSize: 11, color: S.purple, marginBottom: 2 }}>{tpl.category || "No category"}</div>
-              <div style={{ fontSize: 11, color: S.text3 }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text)", marginBottom: 4, lineHeight: 1.3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{tpl.title}</div>
+              <div style={{ fontSize: 11, color: "var(--accent)", marginBottom: 2 }}>{tpl.category || "No category"}</div>
+              <div style={{ fontSize: 11, color: "var(--text3)" }}>
                 {tpl.visibility === "private" ? "🔒 Private" : "🌍 Community"} · {tpl.updatedAt}
               </div>
             </div>
@@ -856,22 +856,22 @@ function TemplatesPage({ onUseTemplate }) {
             {expandedId === tpl.id && (
               <div style={{ padding: "0 16px 14px", display: "flex", flexDirection: "column", gap: 10 }}>
                 {tpl.description && (
-                  <div style={{ background: "rgba(255,255,255,0.03)", border: `1px solid ${S.border}`, borderRadius: 10, padding: "10px 12px", fontSize: 12, color: S.text2, lineHeight: 1.6 }}>
+                  <div style={{ background: "rgba(255,255,255,0.03)", border: `1px solid ${"var(--border)"}`, borderRadius: 10, padding: "10px 12px", fontSize: 12, color: "var(--text2)", lineHeight: 1.6 }}>
                     {tpl.description}
                   </div>
                 )}
                 <div style={{ display: "flex", gap: 8 }}>
                   <button onClick={() => { onUseTemplate(tpl); showToast("Template loaded into Create Job!"); }}
-                    style={{ flex: 2, background: S.purple, border: "none", borderRadius: 10, padding: "10px 0", fontSize: 12, fontWeight: 800, color: "#fff", cursor: "pointer", fontFamily: "inherit" }}>
+                    style={{ flex: 2, background: "var(--accent)", border: "none", borderRadius: 10, padding: "10px 0", fontSize: 12, fontWeight: 800, color: "#fff", cursor: "pointer", fontFamily: "inherit" }}>
                     Use Template →
                   </button>
                   <button onClick={() => forkTemplate(tpl)}
-                    style={{ flex: 1, background: "rgba(255,255,255,0.05)", border: `1px solid ${S.border}`, borderRadius: 10, padding: "10px 0", fontSize: 12, fontWeight: 700, color: S.text2, cursor: "pointer", fontFamily: "inherit" }}>
+                    style={{ flex: 1, background: "rgba(255,255,255,0.05)", border: `1px solid ${"var(--border)"}`, borderRadius: 10, padding: "10px 0", fontSize: 12, fontWeight: 700, color: "var(--text2)", cursor: "pointer", fontFamily: "inherit" }}>
                     Fork
                   </button>
                   {tab === "mine" && (
                     <button onClick={() => deleteTemplate(tpl.id)}
-                      style={{ flex: 1, background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 10, padding: "10px 0", fontSize: 12, fontWeight: 700, color: S.red, cursor: "pointer", fontFamily: "inherit" }}>
+                      style={{ flex: 1, background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 10, padding: "10px 0", fontSize: 12, fontWeight: 700, color: "var(--red)", cursor: "pointer", fontFamily: "inherit" }}>
                       Delete
                     </button>
                   )}
@@ -884,7 +884,7 @@ function TemplatesPage({ onUseTemplate }) {
 
       {tab === "public" && (
         <div style={{ marginTop: 12, padding: "12px 14px", background: "rgba(139,92,246,0.06)", border: "1px solid rgba(139,92,246,0.15)", borderRadius: 12 }}>
-          <div style={{ fontSize: 12, color: S.text3, lineHeight: 1.6 }}>
+          <div style={{ fontSize: 12, color: "var(--text3)", lineHeight: 1.6 }}>
             🌍 Community templates are created and shared by other OgaPay job creators. Fork any template to customise it for your own jobs.
           </div>
         </div>
@@ -953,15 +953,15 @@ function JobsListPage({ jobs, setJobs, showToast }) {
       {/* Summary stats */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr 1fr", gap: 8, marginBottom: 16 }}>
         {[
-          { label: "Active", value: totals.active, color: S.green },
-          { label: "Paused", value: totals.paused, color: S.amber },
-          { label: "Done", value: totals.completed, color: S.text3 },
-          { label: "Winners", value: totals.totalWinners, color: S.purple },
-          { label: "Spent", value: `₦${(totals.totalSpent / 1000).toFixed(0)}k`, color: S.text },
+          { label: "Active", value: totals.active, color: "var(--green)" },
+          { label: "Paused", value: totals.paused, color: "#f59e0b" },
+          { label: "Done", value: totals.completed, color: "var(--text3)" },
+          { label: "Winners", value: totals.totalWinners, color: "var(--accent)" },
+          { label: "Spent", value: `₦${(totals.totalSpent / 1000).toFixed(0)}k`, color: "var(--text)" },
         ].map(s => (
-          <div key={s.label} style={{ background: "#13131f", border: `1px solid ${S.border}`, borderRadius: 12, padding: "10px 8px", textAlign: "center" }}>
+          <div key={s.label} style={{ background: "#13131f", border: `1px solid ${"var(--border)"}`, borderRadius: 12, padding: "10px 8px", textAlign: "center" }}>
             <div style={{ fontSize: 16, fontWeight: 900, color: s.color }}>{s.value}</div>
-            <div style={{ fontSize: 10, color: S.text3, fontWeight: 600, marginTop: 2 }}>{s.label}</div>
+            <div style={{ fontSize: 10, color: "var(--text3)", fontWeight: 600, marginTop: 2 }}>{s.label}</div>
           </div>
         ))}
       </div>
@@ -970,7 +970,7 @@ function JobsListPage({ jobs, setJobs, showToast }) {
       <div style={{ display: "flex", gap: 6, marginBottom: 16, overflowX: "auto", paddingBottom: 2 }}>
         {["all", "active", "paused", "completed"].map(f => (
           <button key={f} onClick={() => setFilter(f)}
-            style={{ flexShrink: 0, padding: "6px 14px", borderRadius: 99, fontSize: 12, fontWeight: 700, cursor: "pointer", border: `1px solid ${filter === f ? S.purple : S.border}`, background: filter === f ? "rgba(139,92,246,0.15)" : "rgba(255,255,255,0.03)", color: filter === f ? S.purple : S.text3, fontFamily: "inherit" }}>
+            style={{ flexShrink: 0, padding: "6px 14px", borderRadius: 99, fontSize: 12, fontWeight: 700, cursor: "pointer", border: `1px solid ${filter === f ? "var(--accent)" : "var(--border)"}`, background: filter === f ? "rgba(139,92,246,0.15)" : "rgba(255,255,255,0.03)", color: filter === f ? "var(--accent)" : "var(--text3)", fontFamily: "inherit" }}>
             {f.charAt(0).toUpperCase() + f.slice(1)}
             <span style={{ marginLeft: 6, fontSize: 11, opacity: 0.7 }}>
               {f === "all" ? jobs.length : jobs.filter(j => j.status === f).length}
@@ -981,20 +981,20 @@ function JobsListPage({ jobs, setJobs, showToast }) {
 
       {/* Job cards */}
       {filtered.length === 0 ? (
-        <div style={{ textAlign: "center", padding: "60px 0", color: S.text3 }}>
-          <div style={{ fontSize: 32, marginBottom: 12 }}>📋</div>
+        <div style={{ textAlign: "center", padding: "60px 0", color: "var(--text3)" }}>
+          <div style={{ fontSize: 32, marginBottom: 12 }}><i className="ti ti-clipboard" /></div>
           <div style={{ fontSize: 14, fontWeight: 600 }}>No jobs found</div>
           <div style={{ fontSize: 12, marginTop: 6 }}>Create your first job to get started</div>
         </div>
       ) : filtered.map(job => (
         <div key={job.id} onClick={() => setSelectedJob(job)}
-          style={{ background: "#13131f", border: `1px solid ${S.border}`, borderRadius: 18, padding: 16, marginBottom: 10, cursor: "pointer", transition: "border-color 0.15s" }}
+          style={{ background: "#13131f", border: `1px solid ${"var(--border)"}`, borderRadius: 18, padding: 16, marginBottom: 10, cursor: "pointer", transition: "border-color 0.15s" }}
           onMouseEnter={e => e.currentTarget.style.borderColor = "rgba(139,92,246,0.4)"}
-          onMouseLeave={e => e.currentTarget.style.borderColor = S.border}>
+          onMouseLeave={e => e.currentTarget.style.borderColor = "var(--border)"}>
 
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10, marginBottom: 12 }}>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 14, fontWeight: 800, color: S.text, marginBottom: 6, lineHeight: 1.3 }}>{job.title}</div>
+              <div style={{ fontSize: 14, fontWeight: 800, color: "var(--text)", marginBottom: 6, lineHeight: 1.3 }}>{job.title}</div>
               <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                 <Badge label={job.platform} />
                 <Badge label={job.selectionType === "creator" ? "👤 Manual" : "🎲 Auto"} />
@@ -1002,38 +1002,38 @@ function JobsListPage({ jobs, setJobs, showToast }) {
               </div>
             </div>
             <div style={{ textAlign: "right", flexShrink: 0 }}>
-              <div style={{ fontSize: 18, fontWeight: 900, color: S.green }}>₦{job.reward.toLocaleString()}</div>
-              <div style={{ fontSize: 10, color: S.text3, marginTop: 2 }}>per slot</div>
+              <div style={{ fontSize: 18, fontWeight: 900, color: "var(--green)" }}>₦{job.reward.toLocaleString()}</div>
+              <div style={{ fontSize: 10, color: "var(--text3)", marginTop: 2 }}>per slot</div>
             </div>
           </div>
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 8, marginBottom: 12 }}>
             {[
-              { label: "Winners", value: job.winners, color: S.green },
-              { label: "Pending", value: job.pending, color: S.amber },
-              { label: "Rejected", value: job.rejected, color: S.red },
-              { label: "Left", value: job.slots - job.winners - job.pending, color: S.text3 },
+              { label: "Winners", value: job.winners, color: "var(--green)" },
+              { label: "Pending", value: job.pending, color: "#f59e0b" },
+              { label: "Rejected", value: job.rejected, color: "var(--red)" },
+              { label: "Left", value: job.slots - job.winners - job.pending, color: "var(--text3)" },
             ].map(s => (
-              <div key={s.label} style={{ background: "rgba(255,255,255,0.03)", border: `1px solid ${S.border}`, borderRadius: 10, padding: "8px", textAlign: "center" }}>
+              <div key={s.label} style={{ background: "rgba(255,255,255,0.03)", border: `1px solid ${"var(--border)"}`, borderRadius: 10, padding: "8px", textAlign: "center" }}>
                 <div style={{ fontSize: 15, fontWeight: 900, color: s.color }}>{s.value}</div>
-                <div style={{ fontSize: 10, color: S.text3, fontWeight: 600, marginTop: 1 }}>{s.label}</div>
+                <div style={{ fontSize: 10, color: "var(--text3)", fontWeight: 600, marginTop: 1 }}>{s.label}</div>
               </div>
             ))}
           </div>
 
           <div style={{ marginBottom: 10 }}>
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5 }}>
-              <span style={{ fontSize: 11, color: S.text3 }}>{pct(job.winners, job.slots)}% complete</span>
-              <span style={{ fontSize: 11, color: S.text3 }}>₦{job.remaining.toLocaleString()} remaining</span>
+              <span style={{ fontSize: 11, color: "var(--text3)" }}>{pct(job.winners, job.slots)}% complete</span>
+              <span style={{ fontSize: 11, color: "var(--text3)" }}>₦{job.remaining.toLocaleString()} remaining</span>
             </div>
             <ProgressBar value={job.winners} max={job.slots} />
           </div>
 
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <span style={{ fontSize: 11, color: S.text3, fontFamily: "monospace" }}>{job.id}</span>
+            <span style={{ fontSize: 11, color: "var(--text3)", fontFamily: "monospace" }}>{job.id}</span>
             <div style={{ display: "flex", gap: 6 }}>
-              <span style={{ fontSize: 11, color: S.text3 }}>Deadline: {job.deadline}</span>
-              <span style={{ fontSize: 11, color: S.purple, fontWeight: 600 }}>View →</span>
+              <span style={{ fontSize: 11, color: "var(--text3)" }}>Deadline: {job.deadline}</span>
+              <span style={{ fontSize: 11, color: "var(--accent)", fontWeight: 600 }}>View →</span>
             </div>
           </div>
         </div>
@@ -1041,9 +1041,9 @@ function JobsListPage({ jobs, setJobs, showToast }) {
 
       {jobs.length === 0 && (
         <button onClick={() => setShowCreate(true)}
-          style={{ width: "100%", background: "transparent", border: `2px dashed ${S.border}`, borderRadius: 18, padding: "32px 0", display: "flex", flexDirection: "column", alignItems: "center", gap: 10, cursor: "pointer", fontFamily: "inherit" }}>
+          style={{ width: "100%", background: "transparent", border: `2px dashed ${"var(--border)"}`, borderRadius: 18, padding: "32px 0", display: "flex", flexDirection: "column", alignItems: "center", gap: 10, cursor: "pointer", fontFamily: "inherit" }}>
           <span style={{ fontSize: 32 }}>+</span>
-          <span style={{ fontSize: 14, fontWeight: 700, color: S.text2 }}>Create your first job</span>
+          <span style={{ fontSize: 14, fontWeight: 700, color: "var(--text2)" }}>Create your first job</span>
         </button>
       )}
 
@@ -1066,31 +1066,26 @@ export default function MyJobs() {
   const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(null), 3000); };
 
   const PAGE_TABS = [
-    { id: "jobs", label: "My Jobs", icon: "💼" },
-    { id: "templates", label: "Templates", icon: "📋" },
-    { id: "blacklist", label: "Blacklist", icon: "🚫" },
+    { id: "jobs", label: "My Jobs", icon: "briefcase" },
+    { id: "templates", label: "Templates", icon: "files" },
+    { id: "blacklist", label: "Blacklist", icon: "ban" },
   ];
 
   const navRightLabel = page === "jobs" ? "+ Create Job" : page === "templates" ? "+ New Template" : null;
 
   return (
-    <Layout><div style={{ background: "var(--bg)", color: "var(--text)", fontFamily: "'DM Sans', system-ui, sans-serif" }}>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&family=DM+Mono:wght@400;500&display=swap');
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        ::-webkit-scrollbar { width: 3px; height: 3px; }
-        ::-webkit-scrollbar-thumb { background: #8b5cf6; border-radius: 3px; }
-      `}</style>
+    <Layout><div class="mj-page" style={{ padding: "28px 24px 60px", width: "100%", maxWidth: "100%" }}>
+
 
       {/* Toast */}
       {toast && (
-        <div style={{ position: "fixed", top: 20, left: "50%", transform: "translateX(-50%)", background: "#13131f", border: "1px solid rgba(139,92,246,0.4)", borderRadius: 12, padding: "10px 20px", fontSize: 13, fontWeight: 600, color: S.text, zIndex: 200, whiteSpace: "nowrap", boxShadow: "0 8px 32px rgba(0,0,0,0.4)" }}>
+        <div style={{ position: "fixed", top: 20, left: "50%", transform: "translateX(-50%)", background: "var(--card)", border: "1px solid var(--border)", borderRadius: 12, padding: "10px 20px", fontSize: 13, fontWeight: 600, color: "var(--text)", zIndex: 200, whiteSpace: "nowrap", boxShadow: "var(--shadow-md)" }}>
           {toast}
         </div>
       )}
 
       {/* Top Nav */}
-      <nav style={{ background: "rgba(10,10,15,0.97)", borderBottom: `1px solid ${S.border}`, padding: "0 16px", height: 50, display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 40 }}>
+      <nav style={{ background: "var(--card)", borderBottom: `1px solid ${"var(--border)"}`, padding: "0 16px", height: 50, display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 40 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <div style={{ width: 24, height: 24, borderRadius: 8, background: "#fff", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <svg width="11" height="11" viewBox="0 0 16 16" fill="none">
@@ -1101,15 +1096,15 @@ export default function MyJobs() {
             </svg>
           </div>
           <span style={{ fontWeight: 900, fontSize: 14 }}>OgaPay</span>
-          <span style={{ color: S.text3, fontSize: 13 }}>
+          <span style={{ color: "var(--text3)", fontSize: 13 }}>
             / {PAGE_TABS.find(t => t.id === page)?.label}
           </span>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <div style={{ display: "flex", gap: 4, background: "rgba(255,255,255,0.05)", border: `1px solid ${S.border}`, borderRadius: 10, padding: 3 }}>
+          <div style={{ display: "flex", gap: 4, background: "rgba(255,255,255,0.05)", border: `1px solid ${"var(--border)"}`, borderRadius: 10, padding: 3 }}>
             {PAGE_TABS.map(t => (
               <button key={t.id} onClick={() => setPage(t.id)}
-                style={{ padding: "5px 10px", borderRadius: 8, fontSize: 11, fontWeight: 700, cursor: "pointer", border: "none", fontFamily: "inherit", background: page === t.id ? S.purple : "transparent", color: page === t.id ? "#fff" : S.text3, transition: "all 0.15s", display: "flex", alignItems: "center", gap: 4, whiteSpace: "nowrap" }}>
+                style={{ padding: "5px 10px", borderRadius: 8, fontSize: 11, fontWeight: 700, cursor: "pointer", border: "none", fontFamily: "inherit", background: page === t.id ? "var(--accent)" : "transparent", color: page === t.id ? "#fff" : "var(--text3)", transition: "all 0.15s", display: "flex", alignItems: "center", gap: 4, whiteSpace: "nowrap" }}>
                 <span>{t.icon}</span>
                 <span style={{ display: "none" }}>{t.label}</span>
               </button>
@@ -1119,11 +1114,11 @@ export default function MyJobs() {
       </nav>
 
       {/* Sub tab nav — full labels */}
-      <div style={{ background: "rgba(10,10,15,0.97)", borderBottom: `1px solid ${S.border}`, display: "flex", overflowX: "auto" }}>
+      <div style={{ background: "var(--card)", borderBottom: `1px solid ${"var(--border)"}`, display: "flex", overflowX: "auto" }}>
         {PAGE_TABS.map(t => (
           <button key={t.id} onClick={() => setPage(t.id)}
-            style={{ flex: 1, padding: "12px 8px", fontSize: 12, fontWeight: 700, cursor: "pointer", border: "none", fontFamily: "inherit", background: "transparent", color: page === t.id ? S.purple : S.text3, borderBottom: page === t.id ? `2px solid ${S.purple}` : "2px solid transparent", transition: "all 0.15s", whiteSpace: "nowrap", display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
-            {t.icon} {t.label}
+            style={{ flex: 1, padding: "12px 8px", fontSize: 12, fontWeight: 700, cursor: "pointer", border: "none", fontFamily: "inherit", background: "transparent", color: page === t.id ? "var(--accent)" : "var(--text3)", borderBottom: page === t.id ? `2px solid ${"var(--accent)"}` : "2px solid transparent", transition: "all 0.15s", whiteSpace: "nowrap", display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
+            <i className={`ti ti-${t.icon}`} style={{fontSize:16}} /> {t.label}
           </button>
         ))}
       </div>
