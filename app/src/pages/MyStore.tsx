@@ -68,6 +68,7 @@ export default function MyStore() {
   const [formThumbnailPreview, setFormThumbnailPreview] = useState('')
   const [formDescription, setFormDescription] = useState('')
   const [formPrice, setFormPrice] = useState(0.1)
+  const [formCurrency, setFormCurrency] = useState('SOL')
   const [formRevisions, setFormRevisions] = useState(3)
   const [formDelivery, setFormDelivery] = useState('3 days')
   const [formAttachments, setFormAttachments] = useState([])
@@ -149,6 +150,7 @@ export default function MyStore() {
     setFormThumbnailPreview('')
     setFormDescription('')
     setFormPrice(0.1)
+    setFormCurrency('SOL')
     setFormRevisions(3)
     setFormDelivery('3 days')
     setFormAttachments([])
@@ -165,6 +167,7 @@ export default function MyStore() {
     setFormSubcategory(p.subcategory || '')
     setFormDescription(p.description || '')
     setFormPrice(p.price || 0.1)
+    setFormCurrency(p.currency || 'SOL')
     setFormRevisions(p.revisions || 3)
     setFormDelivery(p.delivery || '3 days')
     setFormTags(p.tags || [])
@@ -393,7 +396,7 @@ export default function MyStore() {
         category: formCategory,
         description: formDescription,
         price: formPrice,
-        currency: 'SOL',
+        currency: formCurrency,
         imageUrl,
         subcategory: formSubcategory || undefined,
         revisions: formRevisions,
@@ -452,9 +455,13 @@ export default function MyStore() {
   }
 
   // ── Format price display ───────────────────────────────────────────────────
+  const CURRENCY_SYMBOLS = { NGN: '₦', USDC: '$', USDT: '$', ETH: 'Ξ', SOL: '◎', MATIC: 'MATIC' }
   const fmtPrice = (p) => {
-    if (p.currency === 'NGN') return '₦' + Number(p.price || p.price || 0).toLocaleString()
-    return Number(p.price || 0).toFixed(2) + ' SOL'
+    const c = p.currency || 'SOL'
+    const sym = CURRENCY_SYMBOLS[c] || c + ' '
+    if (c === 'NGN') return sym + Number(p.price || 0).toLocaleString()
+    if (c === 'USDC' || c === 'USDT') return sym + Number(p.price || 0).toFixed(2)
+    return sym + Number(p.price || 0).toFixed(2)
   }
 
   // ── Render ─────────────────────────────────────────────────────────────────
@@ -642,10 +649,17 @@ export default function MyStore() {
               {formErrors.name && <div className="field-error">{formErrors.name}</div>}
             </div>
             <div className="mst-field">
-              <label>Price (SOL) *<span className="mst-tooltip" data-tip="Set a competitive price. Click sparkle to get an AI-suggested price based on your category">?</span></label>
+              <label>Price *<span className="mst-tooltip" data-tip="Set a competitive price. Click sparkle to get an AI-suggested price based on your category">?</span></label>
               <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
                 <input type="number" step="0.01" min="0" value={formPrice} onChange={e => setFormPrice(parseFloat(e.target.value) || 0)}
                   className={formErrors.price ? 'error' : ''} style={{ flex: 1 }} />
+                <select value={formCurrency} onChange={e => setFormCurrency(e.target.value)}
+                  style={{ width: 'auto', minWidth: 80, padding: '0 8px', height: 38, border: '1px solid var(--border)', borderRadius: 8, background: 'var(--bg2)', color: 'var(--text)', fontSize: 13, outline: 'none', fontFamily: 'inherit', cursor: 'pointer' }}>
+                  <option value="SOL">◎ SOL</option>
+                  <option value="NGN">₦ NGN</option>
+                  <option value="USDC">$ USDC</option>
+                  <option value="USDT">$ USDT</option>
+                </select>
                 <button type="button" className="mst-btn-ai-sm" onClick={handleSuggestPrice} disabled={suggestingPrice} title="Suggest price with AI">
                   {suggestingPrice ? <span className="spinner" style={{ width: 10, height: 10, borderWidth: 2 }} /> : <i className="ti ti-sparkles" />}
                   AI
