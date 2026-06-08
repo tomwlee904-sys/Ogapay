@@ -25,12 +25,11 @@ const footerSocialLinks: Record<string, string> = {
 const footerLinkHrefs: Record<string, string> = {
   "Browse Jobs": "/tasks", "Task Categories": "/tasks", "Leaderboard": "/leaderboard",
   "Worker Portal": "/worker-portal", "Create Task": "/create", "Communities": "/communities",
-  "Campaigns": "/campaigns", "Analytics": "/analytics", "About": "/about", "Blog": "/blog",
-  "FAQ": "/faq", "Support": "/support", "Terms": "/terms",
+  "About": "/about", "Blog": "/blog",
+  "FAQ": "/faq", "Terms": "/terms",
   "Privacy": "/privacy",
   "Developer": "/developer",
-  "Roadmap": "/roadmap"
-}
+  }
 
 const footerCols = [
   { title: "Earn", links: ["Browse Jobs", "Task Categories", "Leaderboard", "Worker Portal"] },

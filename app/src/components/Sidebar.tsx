@@ -12,29 +12,22 @@ export default function Sidebar() {
         <a className="sidebar-link" href="/my-tasks"><i className="ti ti-checklist" /> My Tasks</a>
         <a className="sidebar-link" href="/tasks"><i className="ti ti-checklist" /> Tasks</a>
         <a className="sidebar-link" href="/store"><i className="ti ti-building-store" /> Store</a>
-        <a className="sidebar-link" href="/wurkers"><i className="ti ti-users" /> Wurkers</a>
         <a className="sidebar-link" href="/wurker-apply"><i className="ti ti-user-plus" /> Wurker Apply</a>
-        <a className="sidebar-link" href="/writer"><i className="ti ti-edit" /> Writer</a>
         <a className="sidebar-link" href="/worker-portal"><i className="ti ti-briefcase" /> Worker Portal</a>
         <a className="sidebar-link" href="/job-monitor"><i className="ti ti-monitor" /> Job Monitor</a>
-        <a className="sidebar-link" href="/analytics"><i className="ti ti-chart-bar" /> Analytics</a>
         <a className="sidebar-link" href="/communities"><i className="ti ti-users" /> Communities</a>
         <a className="sidebar-link" href="/earnings"><i className="ti ti-coin" /> Earnings</a>
         <a className="sidebar-link" href="/leaderboard"><i className="ti ti-trophy" /> Leaderboard</a>
-        <a className="sidebar-link" href="/campaigns"><i className="ti ti-megaphone" /> Campaigns</a>
 
         <div className="sidebar-section">Finance</div>
         <a className="sidebar-link" href="/wallet"><i className="ti ti-wallet" /> Wallet</a>
         <a className="sidebar-link" href="/referrals"><i className="ti ti-affiliate" /> Referrals</a>
-        <a className="sidebar-link" href="/vault"><i className="ti ti-vault" /> Vault</a>
 
         <div className="sidebar-section">Account</div>
         <a className="sidebar-link" href="/profile"><i className="ti ti-user" /> Profile</a>
         <a className="sidebar-link" href="/notifications"><i className="ti ti-bell" /> Notifications</a>
-        <a className="sidebar-link" href="/messages"><i className="ti ti-message" /> Messages</a>
         <a className="sidebar-link" href="/settings"><i className="ti ti-settings" /> Settings</a>
         <a className="sidebar-link" href="/faq"><i className="ti ti-help-circle" /> FAQ</a>
-        <a className="sidebar-link" href="/support"><i className="ti ti-headset" /> Support</a>
       </div>
     </aside>
   )

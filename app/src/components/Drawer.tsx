@@ -35,7 +35,6 @@ export default function Drawer({ open, onClose }: DrawerProps) {
             <span className="oga-drawer-icon"><i className="ti ti-article" /></span>
             <span><strong>Blog</strong><small>Latest insights</small></span>
           </a>
-          <a className="oga-drawer-item" href="/vault" onClick={onClose}>
             <span className="oga-drawer-icon"><i className="ti ti-vault" /></span>
             <span><strong>Vault</strong><small>Secure storage</small></span>
           </a>
@@ -43,7 +42,6 @@ export default function Drawer({ open, onClose }: DrawerProps) {
             <span className="oga-drawer-icon"><i className="ti ti-help-circle" /></span>
             <span><strong>FAQ</strong><small>Frequently asked questions</small></span>
           </a>
-          <a className="oga-drawer-item" href="/support" onClick={onClose}>
             <span className="oga-drawer-icon"><i className="ti ti-headset" /></span>
             <span><strong>Support</strong><small>Get help</small></span>
           </a>
@@ -70,7 +68,6 @@ export default function Drawer({ open, onClose }: DrawerProps) {
           {/* Jobs accordion */}
           <DrawerGroup icon="ti ti-briefcase" label="Jobs" desc="Manage your tasks">
             <DrawerSub href="/job-monitor" label="Job Monitor" onClick={onClose} />
-            <DrawerSub href="/bookmarks" label="Bookmarks" onClick={onClose} />
           </DrawerGroup>
 
           {/* Store accordion */}
@@ -78,11 +75,9 @@ export default function Drawer({ open, onClose }: DrawerProps) {
             <DrawerSub href="/store" label="Store" onClick={onClose} />
             <DrawerSub href="/my-store" label="My Store" onClick={onClose} />
             <DrawerSub href="/my-tasks" label="My Work" onClick={onClose} />
-            <DrawerSub href="/messages" label="Messages" onClick={onClose} />
             <DrawerSub href="/worker-portal" label="Worker Portal" onClick={onClose} />
           </DrawerGroup>
 
-          <a className="oga-drawer-item" href="/campaigns" onClick={onClose}>
             <span className="oga-drawer-icon"><i className="ti ti-megaphone" /></span>
             <span><strong>Campaigns</strong><small>Marketing campaigns</small></span>
           </a>
@@ -96,7 +91,6 @@ export default function Drawer({ open, onClose }: DrawerProps) {
             <span className="oga-drawer-icon"><i className="ti ti-article" /></span>
             <span><strong>Blog</strong><small>Latest insights</small></span>
           </a>
-          <a className="oga-drawer-item" href="/vault" onClick={onClose}>
             <span className="oga-drawer-icon"><i className="ti ti-vault" /></span>
             <span><strong>Vault</strong><small>Secure documents</small></span>
           </a>
@@ -108,7 +102,6 @@ export default function Drawer({ open, onClose }: DrawerProps) {
             <span className="oga-drawer-icon"><i className="ti ti-help-circle" /></span>
             <span><strong>FAQ</strong><small>Frequently asked questions</small></span>
           </a>
-          <a className="oga-drawer-item" href="/support" onClick={onClose}>
             <span className="oga-drawer-icon"><i className="ti ti-headset" /></span>
             <span><strong>Support</strong><small>Get help</small></span>
           </a>
