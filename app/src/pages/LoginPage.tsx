@@ -88,7 +88,17 @@ export default function LoginPage() {
         auth: false,
         body: JSON.stringify({ email: loginEmail.trim(), password: loginPassword }),
       });
-      login(result);
+      console.log('[LoginPage] Login API response keys:', Object.keys(result || {}));
+      console.log('[LoginPage] Has tokens?', !!result?.tokens, 'Has user?', !!result?.user);
+      // Normalize auth payload to handle multiple API response formats
+      const loginPayload = {
+        user: result.user || result,
+        tokens: result.tokens || result.session || 
+          (result.accessToken ? { accessToken: result.accessToken, refreshToken: result.refreshToken || result.accessToken } : undefined) ||
+          (result.token ? { accessToken: result.token, refreshToken: result.refreshToken || result.token } : undefined),
+      };
+      console.log('[LoginPage] Normalized payload - user?', !!loginPayload.user, 'tokens?', !!loginPayload.tokens);
+      login(loginPayload);
       window.location.href = "/dashboard";
     } catch (err) {
       setLoginMsg(err.message);
@@ -117,10 +127,13 @@ export default function LoginPage() {
         auth: false,
         body: JSON.stringify({ firstName, lastName, email: signupEmail.trim(), password: signupPassword, username: signupEmail.split("@")[0] }),
       });
+      console.log('[SignupPage] Signup API response keys:', Object.keys(result || {}));
+      console.log('[SignupPage] Has tokens?', !!result?.tokens, 'Has session?', !!result?.session, 'Has user?', !!result?.user);
       const authPayload = {
         user: result.user || result,
         tokens: result.tokens || result.session,
       };
+      console.log('[SignupPage] authPayload user?', !!authPayload.user, 'tokens?', !!authPayload.tokens);
       login(authPayload);
       localStorage.setItem("ogapay_is_new_user", "true");
       window.location.href = "/dashboard";

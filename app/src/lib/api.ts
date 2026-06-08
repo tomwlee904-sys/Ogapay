@@ -46,15 +46,20 @@ export function getStoredUser(): AuthUser | null {
   }
 }
 
-export function persistAuthSession(payload: { user?: AuthUser; tokens?: Partial<AuthTokens> }) {
+export function persistAuthSession(payload: { user?: AuthUser; tokens?: Partial<AuthTokens>; accessToken?: string; refreshToken?: string }) {
+  // Support both nested tokens object and top-level accessToken/refreshToken
   const tokens = payload.tokens || {}
-  if (tokens.accessToken) localStorage.setItem(ACCESS_TOKEN_KEY, tokens.accessToken)
-  if (tokens.refreshToken) localStorage.setItem(REFRESH_TOKEN_KEY, tokens.refreshToken)
+  const accessToken = tokens.accessToken || (payload as any).accessToken || ''
+  const refreshToken = tokens.refreshToken || (payload as any).refreshToken || ''
+  console.log('[persistAuthSession] Storing - user?', !!payload.user, 'accessToken?', !!accessToken, 'refreshToken?', !!refreshToken)
+  if (accessToken) localStorage.setItem(ACCESS_TOKEN_KEY, accessToken)
+  if (refreshToken) localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken)
   if (payload.user) localStorage.setItem(USER_KEY, JSON.stringify(payload.user))
-  if (tokens.accessToken || payload.user) localStorage.setItem(LEGACY_AUTH_KEY, 'true')
+  if (accessToken || payload.user) localStorage.setItem(LEGACY_AUTH_KEY, 'true')
 }
 
 export function clearAuthSession() {
+  console.log('[clearAuthSession] Clearing ALL auth data from localStorage - stack:', new Error().stack?.split('\n').slice(2,6).join(' | '))
   try {
     localStorage.removeItem(ACCESS_TOKEN_KEY)
     localStorage.removeItem(REFRESH_TOKEN_KEY)
@@ -83,8 +88,13 @@ export async function refreshAuthSession() {
     body: JSON.stringify({ refreshToken }),
   })
   const data = await parseResponse(res)
-  if (data?.tokens) persistAuthSession({ tokens: data.tokens })
-  return data?.tokens || null
+  // Support both nested tokens object and top-level accessToken/refreshToken
+  const tokenObj = data?.tokens || data
+  if (tokenObj?.accessToken) {
+    persistAuthSession({ tokens: tokenObj })
+    return tokenObj
+  }
+  return null
 }
 
 export async function apiRequest<T = unknown>(path: string, options: ApiOptions = {}): Promise<T> {
@@ -104,11 +114,15 @@ export async function apiRequest<T = unknown>(path: string, options: ApiOptions 
   const res = await fetch(url, { ...init, headers: requestHeaders })
 
   if (res.status === 401 && auth && retryOnUnauthorized) {
+    console.log('[apiRequest] 401 on', path, '- attempting refresh')
     const refreshed = await refreshAuthSession().catch(() => null)
     if (refreshed?.accessToken) {
+      console.log('[apiRequest] Refresh succeeded for', path)
       return apiRequest<T>(path, { ...options, retryOnUnauthorized: false })
     }
-    clearAuthSession()
+    console.log('[apiRequest] Refresh failed for', path, '- NOT clearing auth (letting caller handle error)')
+    // Don't call clearAuthSession here — let the caller's error handling
+    // decide what to do. AuthContext's refreshUser() handles central logout.
   }
 
   return parseResponse(res)
