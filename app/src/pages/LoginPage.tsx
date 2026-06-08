@@ -453,7 +453,22 @@ export default function LoginPage() {
                   <button className="auth-btn create-account-btn" onClick={() => show("signup")}>
                     <strong>Create Account</strong>
                   </button>
-                  <button className="auth-btn" onClick={async () => { try { await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin + '/auth/callback' } }); } catch(e) { window.location.href = '/login?error=auth_init_failed'; } }}>
+                  <button className="auth-btn" onClick={async () => { 
+  try { 
+    await supabase.auth.signInWithOAuth({ 
+      provider: 'google', 
+      options: { redirectTo: window.location.origin + '/auth/callback' } 
+    }); 
+  } catch(e) { 
+    console.warn('Supabase OAuth failed, trying backend redirect:', e.message);
+    try {
+      // Fallback: use backend /auth/google endpoint
+      window.location.href = API_BASE + '/auth/google';
+    } catch(e2) {
+      window.location.href = '/login?error=auth_init_failed';
+    }
+  } 
+}}>
                     <span className="auth-btn-icon"><GoogleIcon /></span>
                     <strong>Continue with Google</strong>
                   </button>

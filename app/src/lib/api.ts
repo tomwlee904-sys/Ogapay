@@ -47,7 +47,6 @@ export function getStoredUser(): AuthUser | null {
 }
 
 export function persistAuthSession(payload: { user?: AuthUser; tokens?: Partial<AuthTokens>; accessToken?: string; refreshToken?: string }) {
-  // Support both nested tokens object and top-level accessToken/refreshToken
   const tokens = payload.tokens || {}
   const accessToken = tokens.accessToken || (payload as any).accessToken || ''
   const refreshToken = tokens.refreshToken || (payload as any).refreshToken || ''
@@ -59,13 +58,20 @@ export function persistAuthSession(payload: { user?: AuthUser; tokens?: Partial<
 }
 
 export function clearAuthSession() {
-  console.log('[clearAuthSession] Clearing ALL auth data from localStorage - stack:', new Error().stack?.split('\n').slice(2,6).join(' | '))
+  console.log('[clearAuthSession] Clearing ALL auth data from localStorage')
   try {
     localStorage.removeItem(ACCESS_TOKEN_KEY)
     localStorage.removeItem(REFRESH_TOKEN_KEY)
     localStorage.removeItem(USER_KEY)
     localStorage.removeItem(LEGACY_AUTH_KEY)
+    localStorage.removeItem('ogapay_auth_provider')
+    localStorage.removeItem('ogapay_supabase_user')
   } catch {}
+}
+
+/** Safely read localStorage value */
+function ls(key: string): string | null {
+  try { return localStorage.getItem(key) } catch { return null }
 }
 
 async function parseResponse(res: Response) {
@@ -78,21 +84,50 @@ async function parseResponse(res: Response) {
   return json?.data ?? json
 }
 
+/**
+ * Try to refresh the auth session.
+ * First tries backend /auth/refresh (for backend JWTs).
+ * If that fails and auth_provider is 'supabase', tries Supabase SDK refresh.
+ */
 export async function refreshAuthSession() {
+  const isSupabase = ls('ogapay_auth_provider') === 'supabase'
+
+  if (isSupabase) {
+    // Use Supabase SDK to refresh the session
+    try {
+      const { default: supabaseModule } = await import('../lib/supabaseClient')
+      const { data: { session }, error } = await supabaseModule.supabase.auth.refreshSession()
+      if (!error && session) {
+        localStorage.setItem(ACCESS_TOKEN_KEY, session.access_token)
+        if (session.refresh_token) {
+          localStorage.setItem(REFRESH_TOKEN_KEY, session.refresh_token)
+        }
+        console.log('[refreshAuthSession] Supabase refresh succeeded')
+        return { accessToken: session.access_token, refreshToken: session.refresh_token }
+      }
+    } catch (e) {
+      console.warn('[refreshAuthSession] Supabase refresh failed:', e)
+    }
+  }
+
+  // Fallback to backend refresh
   const refreshToken = getRefreshToken()
   if (!refreshToken) return null
 
-  const res = await fetch(`${API_BASE}/auth/refresh`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ refreshToken }),
-  })
-  const data = await parseResponse(res)
-  // Support both nested tokens object and top-level accessToken/refreshToken
-  const tokenObj = data?.tokens || data
-  if (tokenObj?.accessToken) {
-    persistAuthSession({ tokens: tokenObj })
-    return tokenObj
+  try {
+    const res = await fetch(`${API_BASE}/auth/refresh`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refreshToken }),
+    })
+    const data = await parseResponse(res)
+    const tokenObj = data?.tokens || data
+    if (tokenObj?.accessToken) {
+      persistAuthSession({ tokens: tokenObj })
+      return tokenObj
+    }
+  } catch {
+    // Both methods failed
   }
   return null
 }
@@ -120,8 +155,13 @@ export async function apiRequest<T = unknown>(path: string, options: ApiOptions 
       console.log('[apiRequest] Refresh succeeded for', path)
       return apiRequest<T>(path, { ...options, retryOnUnauthorized: false })
     }
-    console.log('[apiRequest] Refresh failed for', path, '- clearing auth')
-    clearAuthSession()
+    console.log('[apiRequest] Refresh failed for', path, '- keeping user data, not clearing auth')
+    // Don't clear auth on 401 — let the AuthContext handle it.
+    // The 401 may be because the backend doesn't recognize the token (old Railway code).
+    // If auth_provider is supabase, the user should still be considered logged in.
+    if (ls('ogapay_auth_provider') !== 'supabase') {
+      clearAuthSession()
+    }
   }
 
   return parseResponse(res)
