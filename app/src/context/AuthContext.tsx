@@ -89,17 +89,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const logout = async () => {
-    const refreshToken = getRefreshToken()
-    try {
-      if (refreshToken) {
-        await apiRequest('/auth/logout', {
-          method: 'POST',
-          body: JSON.stringify({ refreshToken }),
-        })
-      }
-    } catch {}
     clearAuthSession()
     setUser(null)
+    const refreshToken = getRefreshToken()
+    if (refreshToken) {
+      apiRequest('/auth/logout', {
+        method: 'POST',
+        body: JSON.stringify({ refreshToken }),
+      }).catch(() => {})
+    }
   }
 
   return (

@@ -125,7 +125,7 @@ export default function Drawer({ open, onClose }: DrawerProps) {
             <span className="oga-drawer-icon"><i className="ti ti-settings" /></span>
             <span><strong>Settings</strong><small>Account preferences</small></span>
           </a>
-          <button className="oga-drawer-item" onClick={() => { logout(); onClose() }}>
+          <button className="oga-drawer-item" onClick={() => { logout(); onClose(); window.location.href = '/' }}>
             <span className="oga-drawer-icon"><i className="ti ti-logout" /></span>
             <span><strong>Logout</strong><small>Sign out of your account</small></span>
           </button>

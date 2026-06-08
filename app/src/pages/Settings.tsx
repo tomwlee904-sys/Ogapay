@@ -160,8 +160,8 @@ export default function Settings() {
   }
 
   // ── logout ─────────────────────────────────────────────────────────────────
-  const handleLogout = async () => {
-    await logout()
+  const handleLogout = () => {
+    logout()
     navigate('/')
   }
 
