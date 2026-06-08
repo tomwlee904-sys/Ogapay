@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { useAuth } from '../context/AuthContext'
+import { uploadImage } from '../lib/upload'
 
 const CATEGORIES = ['News', 'Businesses', 'Freelancers', 'Case Studies']
 const COVER_COLORS = ['#534AB7', '#185FA5', '#3B6D11', '#854F0B', '#993556', '#0F6E56', '#121566', '#121566']
@@ -49,9 +50,11 @@ export default function BlogEditor() {
     category: 'News',
     body: '',
     coverColor: '#534AB7',
+    coverImage: '',
     tags: '',
     status: 'published' as 'draft' | 'published',
   })
+  const [uploadingCover, setUploadingCover] = useState(false)
 
   const s = (k: string) => (e: any) => setForm(f => ({ ...f, [k]: e.target.value }))
 
@@ -71,7 +74,8 @@ export default function BlogEditor() {
           title: post.title,
           category: post.category,
           body: post.body,
-          coverColor: post.coverColor,
+          coverColor: post.coverColor || '#534AB7',
+          coverImage: (post as any).coverImage || '',
           tags: post.tags,
           status: post.status,
         })
@@ -120,12 +124,13 @@ export default function BlogEditor() {
     const authorName = `${firstName} ${lastName}`.trim() || 'OgaPay Member'
     const initials = (firstName[0] || 'U') + (lastName[0] || 'M')
 
-    const post: PostData = {
+    const post: any = {
       id: id ? parseInt(id) : generateId(),
       title: form.title,
       category: form.category,
       body: form.body,
       coverColor: form.coverColor,
+      coverImage: form.coverImage,
       authorName,
       authorInitials: initials,
       date: formatDate(),
@@ -210,7 +215,7 @@ export default function BlogEditor() {
         {preview ? (
           <div>
             <div className="preview-card">
-              <div className="preview-cover" style={{background:form.coverColor}}>
+              <div className="preview-cover" style={{background:form.coverColor, backgroundImage:form.coverImage ? `url(${form.coverImage})` : undefined, backgroundSize:'cover', backgroundPosition:'center'}}>
                 <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="1.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
               </div>
               <div className="preview-body">
@@ -248,6 +253,45 @@ export default function BlogEditor() {
                     <div key={c} className={`color-swatch ${form.coverColor===c?'selected':''}`} style={{background:c}} onClick={() => setForm(f => ({...f, coverColor: c}))} />
                   ))}
                 </div>
+              </div>
+            </div>
+
+            {/* Cover Image */}
+            <div style={{marginBottom:16}}>
+              <label className="be-label">Cover Image <span style={{fontWeight:400,color:'var(--text3)'}}>(optional)</span></label>
+              <div style={{display:'flex',alignItems:'center',gap:12,flexWrap:'wrap'}}>
+                {form.coverImage && (
+                  <img src={form.coverImage} alt="cover" style={{width:80,height:48,borderRadius:6,objectFit:'cover',border:'1px solid var(--border)'}} />
+                )}
+                <label style={{
+                  display:'inline-flex',alignItems:'center',gap:6,height:36,padding:'0 16px',
+                  borderRadius:8,border:'1.5px solid var(--border)',background:'var(--bg2)',
+                  cursor:'pointer',fontSize:12,fontWeight:600,color:'var(--text2)',fontFamily:'inherit'
+                }}>
+                  <i className="ti ti-photo" /> {form.coverImage ? 'Change Image' : 'Upload Cover'}
+                  <input type="file" accept="image/*" style={{display:'none'}}
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0]
+                      if (!file) return
+                      if (file.size > 5 * 1024 * 1024) { setError('Image must be under 5MB'); return }
+                      setUploadingCover(true)
+                      try {
+                        const url = await uploadImage(file, 'blog-covers')
+                        setForm(f => ({...f, coverImage: url}))
+                        setError('')
+                      } catch (err) {
+                        setError('Failed to upload cover image')
+                      }
+                      setUploadingCover(false)
+                    }} />
+                </label>
+                {uploadingCover && <span style={{fontSize:11,color:'var(--text3)'}}>Uploading...</span>}
+                {form.coverImage && (
+                  <button type="button" onClick={() => setForm(f => ({...f, coverImage: ''}))}
+                    style={{background:'none',border:'none',cursor:'pointer',color:'var(--text3)',fontSize:11,textDecoration:'underline',fontFamily:'inherit'}}>
+                    Remove
+                  </button>
+                )}
               </div>
             </div>
 

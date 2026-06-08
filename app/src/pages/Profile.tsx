@@ -5,6 +5,7 @@ import { apiRequest } from "../lib/api";
 import { useCurrency } from "../context/CurrencyContext";
 import { useAuth } from "../context/AuthContext";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { uploadImage } from '../lib/upload'
 
 /* ─── Icons ─── */
 const Icon = ({ n, s = 16, c }) => (
@@ -275,6 +276,9 @@ export default function Profile() {
   const [kycStep, setKycStep] = useState("idle");
   const [kycMsg, setKycMsg] = useState("");
   const [kycLoading, setKycLoading] = useState(false);
+  const [kycDocument, setKycDocument] = useState<File | null>(null);
+  const [kycDocumentPreview, setKycDocumentPreview] = useState("");
+  const [kycUploading, setKycUploading] = useState(false);
 
   // ── Edit Profile Modal State ──
   const [showEdit, setShowEdit] = useState(false);
@@ -942,20 +946,25 @@ export default function Profile() {
                 <label style={{display:'inline-flex',alignItems:'center',gap:6,height:34,padding:'0 14px',borderRadius:8,border:'1.5px solid var(--border)',background:'var(--bg2)',cursor:'pointer',fontSize:12,fontWeight:600,color:'var(--text2)',fontFamily:'inherit'}}>
                   <i className="ti ti-camera" /> Upload Photo
                   <input type="file" accept="image/*" style={{display:'none'}}
-                    onChange={e => {
+                    onChange={async (e) => {
                       const file = e.target.files?.[0];
                       if (!file) return;
-                      // Validate file size (max 2MB)
-                      if (file.size > 2 * 1024 * 1024) {
-                        setEditErrors(prev => ({...prev, avatar: 'Image must be under 2MB'}));
+                      // Validate file size (max 5MB)
+                      if (file.size > 5 * 1024 * 1024) {
+                        setEditErrors(prev => ({...prev, avatar: 'Image must be under 5MB'}));
                         return;
                       }
-                      const reader = new FileReader();
-                      reader.onload = (ev) => {
-                        const dataUrl = ev.target?.result as string;
-                        setEditForm(f => ({...f, avatarUrl: dataUrl}));
-                      };
-                      reader.readAsDataURL(file);
+                      try {
+                        const url = await uploadImage(file, 'avatars');
+                        setEditForm(f => ({...f, avatarUrl: url}));
+                      } catch {
+                        // Fallback to base64
+                        const reader = new FileReader();
+                        reader.onload = (ev) => {
+                          setEditForm(f => ({...f, avatarUrl: ev.target?.result as string}));
+                        };
+                        reader.readAsDataURL(file);
+                      }
                     }} />
                 </label>
                 <div style={{fontSize:11,color:'var(--text3)',marginTop:4}}>Upload a photo from your device, or paste a URL below</div>
@@ -1119,12 +1128,82 @@ export default function Profile() {
                     </div>
                   ))}
                 </div>
-                <button className="dash-btn" style={{width:'100%',justifyContent:'center'}} onClick={() => setKycStep("bvn")}>
+                <button className="dash-btn" style={{width:'100%',justifyContent:'center'}} onClick={() => setKycStep("document")}>
                   <Icon n="shield-check" s={16} /> Start Verification
                 </button>
                 <p style={{fontSize:11,color:'var(--text3)',textAlign:'center',marginTop:12}}>
                   Your data is encrypted and securely processed.
                 </p>
+              </div>
+            )}
+
+            {kycStep === "document" && (
+              <div>
+                <p style={{fontSize:13,color:'var(--text2)',marginBottom:16}}>
+                  Upload a valid government ID (NIN slip, Passport, or Driver's License).
+                </p>
+                <div style={{marginBottom:16}}>
+                  <label style={{fontSize:12,fontWeight:700,color:'var(--text2)',display:'block',marginBottom:6}}>Government ID</label>
+                  <div style={{
+                    border: '2px dashed var(--border)', borderRadius: 12, padding: 24, textAlign: 'center',
+                    cursor: 'pointer', background: 'var(--bg2)', transition: 'border-color .2s'
+                  }}
+                    onDragOver={e => { e.preventDefault(); e.currentTarget.style.borderColor = '#121566' }}
+                    onDragLeave={e => { e.currentTarget.style.borderColor = 'var(--border)' }}
+                    onClick={() => document.getElementById('kyc-doc-input')?.click()}>
+                    {kycDocumentPreview ? (
+                      <img src={kycDocumentPreview} alt="ID preview" style={{maxHeight:160,maxWidth:'100%',borderRadius:8,objectFit:'contain',marginBottom:8}} />
+                    ) : (
+                      <>
+                        <i className="ti ti-upload" style={{fontSize:32,color:'var(--text3)',display:'block',marginBottom:8}} />
+                        <span style={{fontSize:13,fontWeight:700,color:'var(--text2)',display:'block'}}>Click to upload ID document</span>
+                        <span style={{fontSize:11,color:'var(--text3)',marginTop:4,display:'block'}}>PNG, JPG, or PDF (max 5MB)</span>
+                      </>
+                    )}
+                  </div>
+                  <input id="kyc-doc-input" type="file" accept="image/*,.pdf" style={{display:'none'}}
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0]
+                      if (!file) return
+                      if (file.size > 5 * 1024 * 1024) { setKycMsg('File must be under 5MB'); return }
+                      setKycDocument(file)
+                      // Show preview for images
+                      if (file.type.startsWith('image/')) {
+                        const reader = new FileReader()
+                        reader.onload = (ev) => setKycDocumentPreview(ev.target?.result as string)
+                        reader.readAsDataURL(file)
+                      } else {
+                        setKycDocumentPreview('')
+                      }
+                      setKycMsg('')
+                    }} />
+                </div>
+                <div style={{display:'flex',gap:8}}>
+                  <button className="btn-outline" style={{flex:1,justifyContent:'center'}} onClick={() => setKycStep("idle")}>
+                    Back
+                  </button>
+                  <button className="dash-btn" style={{flex:1,justifyContent:'center',opacity:kycDocument?1:0.5,fontSize:12}}
+                    disabled={!kycDocument}
+                    onClick={async () => {
+                      if (!kycDocument) return
+                      setKycUploading(true)
+                      setKycMsg('')
+                      try {
+                        const url = await uploadImage(kycDocument, 'kyc-docs')
+                        // Store the uploaded document URL and move to BVN step
+                        localStorage.setItem('ogapay_kyc_document_url', url)
+                        setKycDocument(null)
+                        setKycDocumentPreview('')
+                        setKycMsg('ID uploaded successfully. Now enter your BVN.')
+                        setKycStep("bvn")
+                      } catch (err) {
+                        setKycMsg('Failed to upload document. Please try again.')
+                      }
+                      setKycUploading(false)
+                    }}>
+                    {kycUploading ? 'Uploading...' : 'Continue'}
+                  </button>
+                </div>
               </div>
             )}
 
