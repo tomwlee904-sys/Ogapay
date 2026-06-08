@@ -451,7 +451,7 @@ function Hero({ openAuth, navigate, isAuthed }) {
             </p>
             <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
               <a href="/tasks" className="btn-primary"><I n="briefcase" s={16} /> Browse Jobs</a>
-              <button onClick={openAuth} className="btn-outline"><I n="user-plus" s={16} /> Get Started Free</button>
+              <button onClick={() => document.getElementById('featured-jobs')?.scrollIntoView({ behavior: 'smooth' })} className="btn-outline"><I n="user-plus" s={16} /> Get Started Free</button>
             </div>
           </div>
 
@@ -659,7 +659,7 @@ function FeaturedJobs() {
     }, 4000);
   };
   return (
-    <section style={{ padding: "44px 0 34px", background: "var(--bg)" }}>
+    <section id="featured-jobs" style={{ padding: "44px 0 34px", background: "var(--bg)" }}>
       <div className="container">
         <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 24 }}>
           <div>
