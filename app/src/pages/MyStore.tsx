@@ -361,40 +361,50 @@ export default function MyStore() {
     }
   }
 
+  // ── Upload thumbnail helper ────────────────────────────────────────────────
+  const uploadThumbnail = async (file) => {
+    const token = getToken()
+    const fd = new FormData()
+    fd.append('file', file)
+    const res = await fetch(API_BASE + '/uploads/store', {
+      method: 'POST',
+      headers: token ? { Authorization: 'Bearer ' + token } : {},
+      body: fd,
+    })
+    if (!res.ok) throw new Error('Thumbnail upload failed')
+    const data = await res.json()
+    return data?.data?.url || data?.url || ''
+  }
+
   // ── Save product ───────────────────────────────────────────────────────────
   const handleSave = async (e) => {
     e.preventDefault()
     if (!validateForm()) return
     setSaving(true)
 
-    const fd = new FormData()
-    fd.append('name', formName.trim())
-    fd.append('category', formCategory)
-    fd.append('subcategory', formSubcategory)
-    fd.append('description', formDescription)
-    fd.append('price', String(formPrice))
-    fd.append('revisions', String(formRevisions))
-    fd.append('delivery', formDelivery)
-    fd.append('status', 'ACTIVE')
-    if (formThumbnail) fd.append('thumbnail', formThumbnail)
-    formAttachments.forEach(f => fd.append('attachments', f))
-    formTags.forEach(t => fd.append('tags', t))
-
     try {
-      const token = getToken()
-      const url = API_BASE + (editingId ? `/store/products/${editingId}` : '/store/products')
-      const method = editingId ? 'PATCH' : 'POST'
-
-      const res = await fetch(url, {
-        method,
-        headers: token ? { Authorization: 'Bearer ' + token } : {},
-        body: fd,
-      })
-
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}))
-        throw new Error(err.message || err.error || 'Failed to save product')
+      let imageUrl = formThumbnailPreview || ''
+      if (formThumbnail) {
+        imageUrl = await uploadThumbnail(formThumbnail)
       }
+
+      const payload = {
+        name: formName.trim(),
+        category: formCategory,
+        description: formDescription,
+        price: formPrice,
+        currency: 'SOL',
+        imageUrl,
+        subcategory: formSubcategory || undefined,
+        revisions: formRevisions,
+        delivery: formDelivery,
+        tags: formTags.length > 0 ? formTags : undefined,
+      }
+
+      await apiRequest(editingId ? `/store/products/${editingId}` : '/store/products', {
+        method: editingId ? 'PATCH' : 'POST',
+        body: JSON.stringify(payload),
+      })
 
       showToast(editingId ? 'Product updated!' : 'Product created!', 'success')
       setShowForm(false)
