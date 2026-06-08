@@ -332,8 +332,8 @@ export default function Profile() {
       email: d.email || '',
       firstName: d.firstName || d.first_name || '',
       lastName: d.lastName || d.last_name || '',
-      username: d.username || '',
-      avatarUrl: d.avatarUrl || d.avatar_url || null,
+      username: d.username || d.userName || d.user_name || '',
+      avatarUrl: d.avatarUrl || d.avatar_url || d.avatar || d.picture || null,
       role: d.role || 'WORKER',
       referralCode: d.referralCode || d.referral_code || '',
       isEmailVerified: d.isEmailVerified ?? d.is_email_verified ?? false,
@@ -945,12 +945,7 @@ export default function Profile() {
                         setEditForm(f => ({...f, avatarUrl: url}));
                       } catch {
                         const el = document.getElementById('appToast');
-                        if (el) { el.textContent = 'Image upload failed, using local copy'; el.classList.add('show'); setTimeout(() => el.classList.remove('show'), 2500); }
-                        const reader = new FileReader();
-                        reader.onload = (ev) => {
-                          setEditForm(f => ({...f, avatarUrl: ev.target?.result as string}));
-                        };
-                        reader.readAsDataURL(file);
+                        if (el) { el.textContent = 'Image upload failed. Try a smaller file or paste a URL instead.'; el.classList.add('show'); setTimeout(() => el.classList.remove('show'), 3500); }
                       }
                     }} />
                 </label>
@@ -1036,7 +1031,7 @@ export default function Profile() {
                     if (editForm.firstName !== (user?.firstName || '')) body.firstName = editForm.firstName;
                     if (editForm.lastName !== (user?.lastName || '')) body.lastName = editForm.lastName;
                     if (editForm.username !== (user?.username || '')) body.username = editForm.username;
-                    if (editForm.avatarUrl !== (user?.avatarUrl || '')) body.avatarUrl = editForm.avatarUrl;
+                    if (editForm.avatarUrl !== (user?.avatarUrl || '') && editForm.avatarUrl && !editForm.avatarUrl.startsWith('data:')) body.avatarUrl = editForm.avatarUrl;
 
                     // Bio is on workerProfile
                     let bioChanged = editForm.bio !== (profileData?.workerProfile?.bio || '');
