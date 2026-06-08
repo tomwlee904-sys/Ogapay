@@ -6,15 +6,6 @@ import Layout from '../components/Layout'
 export default function WorkerPortal() {
   const navigate = useNavigate()
 
-  const CATEGORIES = [
-    { key: 'social', icon: 'ti ti-brand-twitter', label: 'Social Tasks', color: '#0ea5e9', bg: '#0ea5e915' },
-    { key: 'writing', icon: 'ti ti-pencil', label: 'Writing', color: '#2563EB', bg: '#2563EB15' },
-    { key: 'design', icon: 'ti ti-brush', label: 'Design', color: '#7c3aed', bg: '#7c3aed15' },
-    { key: 'app-testing', icon: 'ti ti-device-mobile', label: 'App Testing', color: '#f59e0b', bg: '#f59e0b15' },
-    { key: 'research', icon: 'ti ti-search', label: 'Research', color: '#16a34a', bg: '#16a34a15' },
-    { key: 'dev', icon: 'ti ti-code', label: 'Dev Tasks', color: '#191C6B', bg: '#191C6B15' },
-  ]
-
   const workspaceItems = [
     { icon: 'ti ti-brand-x', label: 'Social', route: '/worker/social', color: '#1F8CFF' },
     { icon: 'ti ti-pencil', label: 'Writing', route: '/worker/writing', color: '#7c3aed' },
@@ -162,21 +153,6 @@ export default function WorkerPortal() {
         .wp-stat-icon{font-size:20px;width:24px;text-align:center}
         .wp-stat-count{font-size:16px;font-weight:800;color:var(--text);min-width:30px}
         .wp-stat-label{font-size:14px;color:var(--text2);font-weight:500}
-        .wp-cat-section{margin-bottom:24px}
-        .wp-cat-title{font-size:15px;font-weight:800;color:var(--text);margin-bottom:12px}
-        .wp-cat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-        @media(max-width:500px){.wp-cat-grid{grid-template-columns:repeat(2,1fr)}}
-        .wp-cat-card{
-          display:flex;align-items:center;gap:12px;
-          padding:14px 16px;border-radius:12px;
-          border:1px solid var(--border);background:var(--card);
-          cursor:pointer;transition:all .2s;text-decoration:none;
-        }
-        .wp-cat-card:hover{transform:translateY(-2px);box-shadow:0 4px 16px rgba(0,0,0,.08)}
-        .wp-cat-card i{font-size:20px}
-        .wp-cat-card-info{flex:1;min-width:0}
-        .wp-cat-card-label{font-size:13px;font-weight:700;color:var(--text)}
-        .wp-cat-card-arrow{font-size:14px;color:var(--text3)}
         @media(max-width:600px){
           .wp-nav-grid{grid-template-columns:repeat(3,1fr)}
           .wp-nav-grid-2{grid-template-columns:repeat(3,1fr)}
@@ -235,28 +211,6 @@ export default function WorkerPortal() {
           <span><i className="ti ti-heart" /> No compliments</span>
         </div>
 
-        {/* Browse by Category */}
-        <div className="wp-cat-section">
-          <div className="wp-cat-title">Browse by Category</div>
-          <div className="wp-cat-grid">
-            {CATEGORIES.map(c => (
-              <div
-                key={c.key}
-                className="wp-cat-card"
-                onClick={() => navigate(`/worker-portal/${c.key}`)}
-                style={{ borderColor: c.bg }}
-              >
-                <div style={{ width: 36, height: 36, borderRadius: 8, background: c.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <i className={c.icon} style={{ color: c.color, fontSize: 18 }} />
-                </div>
-                <div className="wp-cat-card-info">
-                  <div className="wp-cat-card-label">{c.label}</div>
-                </div>
-                <i className="ti ti-chevron-right wp-cat-card-arrow" />
-              </div>
-            ))}
-          </div>
-        </div>
 
         {/* Profile Card */}
         <div className="wp-profile-card">
