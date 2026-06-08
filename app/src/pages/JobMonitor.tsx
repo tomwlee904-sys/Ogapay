@@ -28,6 +28,7 @@ function mapTask(t: any) {
     proofRequired: !!t.proofRequired, color: DIFF_COLORS[diff] || '#16a34a',
     featured: t.poster?.posterProfile?.isVerified || false,
     createdAt: t.createdAt,
+    status: t.status,
   }
 }
 
@@ -125,6 +126,7 @@ export default function JobMonitor() {
                 gain.gain.value = 0.15
                 osc.start()
                 osc.stop(ctx.currentTime + 0.15)
+                osc.onended = () => ctx.close().catch(() => {})
               } catch {}
             }
           }
@@ -414,7 +416,7 @@ export default function JobMonitor() {
                   <div className="jm-card-footer">
                     <div style={{ fontSize: 11, color: 'var(--text3)' }}>{job.creator}</div>
                     <div className="jm-card-actions" onClick={e => e.stopPropagation()}>
-                      <button className={isApplied ? 'applied' : ''} onClick={() => navigate('/tasks/' + job.id)}>
+                      <button className={isApplied ? 'applied' : ''} onClick={e => { e.stopPropagation(); isApplied ? navigate('/tasks/' + job.id) : applyJob(job) }}>
                         <i className={`ti ${isApplied ? 'ti-check' : 'ti-send'}`} /> {isApplied ? 'Applied' : 'Apply'}
                       </button>
                       <button className={isSaved ? 'saved' : ''} onClick={() => toggleBookmark(job.id)}>

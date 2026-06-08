@@ -1344,6 +1344,7 @@ function CreateTask() {
 
       {showMainTemplates && <TemplatesModal onClose={() => setShowMainTemplates(false)} onUse={tpl => { setCustomTemplate(tpl); setShowCustom(true); }} />}
       {success && <SuccessModal taskId={typeof success === 'string' && success !== 'true' ? success : undefined} onClose={() => setSuccess(false)} />}
+      <AiAssistant />
     </Layout>
   );
 }
@@ -1569,6 +1570,101 @@ function ServiceForm({ service, onBack, onCreated }) {
           {submitting ? "Creating..." : `Create ${service.name} Campaign`}
         </button>
       </div>
+    </div>
+  );
+}
+
+/* ─── AI ASSISTANT ────────────────────────────────────────────────────────── */
+function AiAssistant() {
+  const [open, setOpen] = useState(false);
+  const [messages, setMessages] = useState<{role:string;text:string}[]>([
+    {role:'assistant',text:'Hi! I can help you create a task. Ask me anything about filling in the form, choosing settings, or how tasks work.'}
+  ]);
+  const [input, setInput] = useState('');
+  const [loading, setLoading] = useState(false);
+  const endRef = useRef<HTMLDivElement>(null);
+  useEffect(() => { endRef.current?.scrollIntoView({behavior:'smooth'}) }, [messages]);
+
+  const ask = async () => {
+    if (!input.trim() || loading) return;
+    const q = input.trim();
+    setInput('');
+    setMessages(p => [...p, {role:'user', text:q}]);
+    setLoading(true);
+    try {
+      const res = await apiRequest<{answer:string}>('/ai/chat', {
+        method:'POST',
+        body: JSON.stringify({ question: q }),
+      });
+      setMessages(p => [...p, {role:'assistant', text: res?.answer || 'No response'}]);
+    } catch {
+      setMessages(p => [...p, {role:'assistant', text: 'Sorry, I had trouble answering. Try rephrasing your question.'}]);
+    } finally { setLoading(false) }
+  };
+
+  return (
+    <div style={{ position:'fixed', bottom: 24, right: 24, zIndex: 999 }}>
+      {open && (
+        <div style={{
+          position:'absolute', bottom: 56, right: 0, width: 350, height: 460,
+          background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 16,
+          boxShadow: '0 8px 40px rgba(0,0,0,0.12)', display: 'flex', flexDirection: 'column',
+          overflow: 'hidden',
+        }}>
+          <div style={{
+            padding: '14px 16px', borderBottom: '1px solid var(--border)', display: 'flex',
+            alignItems: 'center', justifyContent: 'space-between', background: 'var(--accent)', color: '#fff',
+          }}>
+            <div style={{ display:'flex', alignItems:'center', gap: 8 }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2a4 4 0 0 1 4 4v2a4 4 0 0 1-8 0V6a4 4 0 0 1 4-4z"/><path d="M5 13h14"/><path d="M12 18v4"/><path d="M8 22h8"/></svg>
+              <span style={{ fontWeight: 700, fontSize: 14 }}>AI Assistant</span>
+            </div>
+            <button onClick={() => setOpen(false)} style={{ background:'none', border:'none', color:'#fff', cursor:'pointer', padding: 2, fontSize: 16 }}>
+              <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+          <div style={{ flex:1, overflowY:'auto', padding: 12, display:'flex', flexDirection:'column', gap: 8 }}>
+            {messages.map((m,i) => (
+              <div key={i} style={{
+                maxWidth:'85%', padding:'8px 12px', borderRadius: 12, fontSize: 13, lineHeight: 1.5,
+                alignSelf: m.role === 'user' ? 'flex-end' : 'flex-start',
+                background: m.role === 'user' ? 'var(--accent)' : 'var(--bg2)',
+                color: m.role === 'user' ? '#fff' : 'var(--text)',
+                borderBottomRightRadius: m.role === 'user' ? 4 : 12,
+                borderBottomLeftRadius: m.role === 'assistant' ? 4 : 12,
+              }}>{m.text}</div>
+            ))}
+            {loading && <div style={{ alignSelf:'flex-start', fontSize:12, color:'var(--text3)', padding:'4px 8px' }}>Thinking...</div>}
+            <div ref={endRef} />
+          </div>
+          <div style={{ display:'flex', alignItems:'center', gap: 6, padding:'10px 12px', borderTop:'1px solid var(--border)' }}>
+            <input
+              type="text"
+              placeholder="Ask me anything..."
+              value={input}
+              onChange={e => setInput(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') ask() }}
+              style={{
+                flex:1, border:'1px solid var(--border)', borderRadius: 10, padding:'8px 12px', fontSize:13,
+                background:'var(--bg)', color:'var(--text)', outline:'none', fontFamily:'inherit',
+              }}
+            />
+            <button onClick={ask} disabled={!input.trim() || loading} style={{
+              width: 34, height: 34, borderRadius: 8, border:'none', background:'var(--accent)', color:'#fff',
+              cursor:'pointer', display:'grid', placeItems:'center', fontSize:14,               opacity: (!input.trim()||loading) ? 0.5 : 1
+            }}>
+              <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            </button>
+          </div>
+        </div>
+      )}
+      <button onClick={() => setOpen(!open)} style={{
+        width: 50, height: 50, borderRadius: '50%', border:'none', background:'var(--accent)', color:'#fff',
+        cursor:'pointer', display:'grid', placeItems:'center', fontSize:22, boxShadow:'0 4px 16px rgba(0,0,0,0.2)',
+        transition:'transform .2s', transform: open ? 'rotate(45deg)' : 'rotate(0deg)',
+      }}>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2a4 4 0 0 1 4 4v2a4 4 0 0 1-8 0V6a4 4 0 0 1 4-4z"/><path d="M5 13h14"/><path d="M12 18v4"/><path d="M8 22h8"/></svg>
+      </button>
     </div>
   );
 }
