@@ -24,10 +24,10 @@ type ApiOptions = RequestInit & {
   retryOnUnauthorized?: boolean
 }
 
-const ACCESS_TOKEN_KEY = 'ogapay_access_token'
-const REFRESH_TOKEN_KEY = 'ogapay_refresh_token'
-const USER_KEY = 'ogapay_user'
-const LEGACY_AUTH_KEY = 'ogapay-authenticated'
+export const ACCESS_TOKEN_KEY = 'ogapay_access_token'
+export const REFRESH_TOKEN_KEY = 'ogapay_refresh_token'
+export const USER_KEY = 'ogapay_user'
+export const LEGACY_AUTH_KEY = 'ogapay-authenticated'
 
 export function getAccessToken() {
   try { return localStorage.getItem(ACCESS_TOKEN_KEY) } catch { return null }

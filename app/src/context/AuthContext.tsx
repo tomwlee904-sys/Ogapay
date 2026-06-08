@@ -7,6 +7,7 @@ import {
   getRefreshToken,
   getStoredUser,
   persistAuthSession,
+  REFRESH_TOKEN_KEY,
 } from '../lib/api'
 
 interface AuthContextType {
@@ -38,10 +39,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const refreshUser = async () => {
     try {
-      console.log('[refreshUser] Calling /auth/me...')
       const nextUser = await apiRequest<AuthUser>('/auth/me')
-      console.log('[refreshUser] /auth/me succeeded, user:', nextUser?.email || nextUser?.id)
-      // If a role override is set (e.g. after manual upgrade), preserve it
       const roleOverride = localStorage.getItem('ogapay_role_override')
       if (roleOverride) {
         nextUser.role = roleOverride as any
@@ -50,12 +48,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       persistAuthSession({ user: nextUser })
       return nextUser
     } catch {
-      console.log('[refreshUser] /auth/me FAILED -> clearing auth, tokens:', 
-        'accessToken:', !!localStorage.getItem('ogapay_access_token'),
-        'refreshToken:', !!localStorage.getItem('ogapay_refresh_token'),
-        'user:', !!localStorage.getItem('ogapay_user'))
-      clearAuthSession()
-      setUser(null)
+      // Only log out if auth was already cleared by apiRequest (401 + refresh failed).
+      // Keep the user logged in on transient/network errors so a deploy or blip doesn't boot them.
+      if (!getAccessToken()) {
+        clearAuthSession()
+        setUser(null)
+      }
       return null
     }
   }
@@ -64,13 +62,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let mounted = true
     const boot = async () => {
       if (!getRefreshToken()) {
-        // If no refresh token but we have an access token, copy it
         const accessFallback = getAccessToken()
         if (accessFallback) {
-          console.log('[AuthBoot] No refresh token, using access token as fallback')
           localStorage.setItem(REFRESH_TOKEN_KEY, accessFallback)
         } else {
-          console.log('[AuthBoot] No token at all -> setting user=null')
           if (mounted) {
             setUser(null)
             setLoading(false)
@@ -78,20 +73,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return
         }
       }
-      console.log('[AuthBoot] Calling refreshUser (5s timeout)...')
       try {
-        // 5s timeout so a hanging API never blocks the app forever
         await Promise.race([
           refreshUser(),
           new Promise((_, reject) =>
-            setTimeout(() => reject(new Error('auth timeout')), 5000)
+            setTimeout(() => reject(new Error('auth timeout')), 15000)
           ),
         ])
-        console.log('[AuthBoot] refreshUser completed OK')
       } catch {
-        console.log('[AuthBoot] refreshUser failed/timeout -> clearing auth')
-        clearAuthSession()
-        if (mounted) setUser(null)
+        if (!getAccessToken()) {
+          clearAuthSession()
+          if (mounted) setUser(null)
+        }
       } finally {
         if (mounted) setLoading(false)
       }
