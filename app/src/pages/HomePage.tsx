@@ -507,29 +507,49 @@ function TrustBar() {
 
 /* ─── QUICK TASKS ────────────────────────────────────────────────────────────── */
 function QuickTasks() {
+  const [selectedTask, setSelectedTask] = useState(null)
+  const [quickUrl, setQuickUrl] = useState('')
   const tasks = [
-    { icon: "brand-x", name: "X Follow", price: "₦150 / 100", featured: false },
-    { icon: "brand-telegram", name: "Telegram Join", price: "₦120 / 100", featured: false },
-    { icon: "brand-youtube", name: "YouTube Like", price: "₦200 / 100", featured: true },
-    { icon: "brand-instagram", name: "IG Follow", price: "₦180 / 100", featured: false },
+    { icon: "brand-x", name: "X Follow", price: "₦150 / 100", featured: false, key: 'x-follow', placeholder: 'Paste your X (Twitter) profile URL...' },
+    { icon: "brand-telegram", name: "Telegram Join", price: "₦120 / 100", featured: false, key: 'telegram-join', placeholder: 'Paste your Telegram group/channel link...' },
+    { icon: "brand-youtube", name: "YouTube Like", price: "₦200 / 100", featured: true, key: 'youtube-like', placeholder: 'Paste your YouTube video URL...' },
+    { icon: "brand-instagram", name: "IG Follow", price: "₦180 / 100", featured: false, key: 'ig-follow', placeholder: 'Paste your Instagram profile URL...' },
   ];
   return (
     <section style={{ position: "relative", padding: "0 0 56px", background: "var(--bg)" }}>
       <div className="container">
         <div className="section-kicker"><I n="zap" s={13} /> QUICK TASKS</div>
         <div className="quick-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 12 }}>
-          {tasks.map(t => (
-            <div key={t.name} className="card-base" style={{ display: "flex", alignItems: "center", gap: 13, padding: "14px 18px", border: t.featured ? "1.5px solid var(--text)" : "1.5px solid var(--border)", cursor: "pointer" }}>
-              <div style={{ width: 38, height: 38, borderRadius: 9, display: "grid", placeItems: "center", background: "var(--bg2)", flexShrink: 0 }}>
-                <I n={t.icon} s={20} />
+          {tasks.map(t => {
+            const isSelected = selectedTask?.key === t.key
+            return (
+              <div key={t.name} onClick={() => { setSelectedTask(t); setQuickUrl('') }}
+                style={{ display: "flex", alignItems: "center", gap: 13, padding: "14px 18px", border: isSelected ? "2px solid #191C6B" : t.featured ? "1.5px solid var(--text)" : "1.5px solid var(--border)", borderRadius: 'var(--radius)', background: isSelected ? '#191C6B08' : 'var(--card)', cursor: "pointer", overflow: 'hidden', boxShadow: isSelected ? '0 0 0 1px rgba(25,28,107,.08)' : 'var(--shadow-soft)', transition: 'border-color .14s, box-shadow .14s, background .14s' }}>
+                <div style={{ width: 38, height: 38, borderRadius: 9, display: "grid", placeItems: "center", background: "var(--bg2)", flexShrink: 0 }}>
+                  <I n={t.icon} s={20} />
+                </div>
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 800 }}>{t.name}</div>
+                  <div style={{ marginTop: 2, color: "var(--text3)", fontSize: 12, fontWeight: 700 }}>{t.price}</div>
+                </div>
               </div>
-              <div>
-                <div style={{ fontSize: 14, fontWeight: 800 }}>{t.name}</div>
-                <div style={{ marginTop: 2, color: "var(--text3)", fontSize: 12, fontWeight: 700 }}>{t.price}</div>
-              </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
+        {selectedTask && (
+          <div style={{ display:'flex', gap:10, marginTop:16, alignItems:'center' }}>
+            <input value={quickUrl} onChange={e => setQuickUrl(e.target.value)}
+              placeholder={selectedTask.placeholder}
+              style={{ flex:1, height:52, padding:'0 18px', borderRadius:12, border:'1.5px solid var(--border)', background:'var(--card)', color:'var(--text)', fontSize:14, fontFamily:'inherit', outline:'none' }} />
+            <button onClick={() => {
+              if (!quickUrl.trim()) return;
+              window.location.href = `/create?type=${selectedTask.key}&url=${encodeURIComponent(quickUrl)}`;
+            }}
+              style={{ height:52, padding:'0 24px', borderRadius:12, border:'none', background:'#191C6B', color:'#fff', fontSize:15, fontWeight:800, cursor:'pointer', display:'flex', alignItems:'center', gap:8, fontFamily:'inherit', whiteSpace:'nowrap' }}>
+              Let's go <i className="ti ti-arrow-right" />
+            </button>
+          </div>
+        )}
       </div>
     </section>
   );
