@@ -453,7 +453,7 @@ export default function LoginPage() {
                   <button className="auth-btn create-account-btn" onClick={() => show("signup")}>
                     <strong>Create Account</strong>
                   </button>
-                  <button className="auth-btn" onClick={async () => { try { await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin + '/auth/callback' } }); } catch(e) { window.location.href = '/login?error=auth_init_failed'; } }}>
+                  <button className="auth-btn" onClick={async () => { try { console.log('[GoogleLogin] Redirecting to backend /auth/google'); window.location.href = 'https://ogapay-production.up.railway.app/api/v1/auth/google'; } catch(e) { console.error('[GoogleLogin] error:', e.message); window.location.href = '/login?error=' + encodeURIComponent(e.message || 'auth_init_failed'); } }}>
                     <span className="auth-btn-icon"><GoogleIcon /></span>
                     <strong>Continue with Google</strong>
                   </button>
