@@ -636,7 +636,7 @@ function FeaturedJobs() {
   const intervalRef = useRef(null);
   useEffect(() => { injectSkeletonStyles(); }, []);
   useEffect(() => {
-    fetch(`${API_BASE}/tasks?status=ACTIVE&limit=6&sortBy=reward&sortOrder=desc`)
+    fetch(`${API_BASE}/tasks?status=OPEN&limit=6&sortBy=reward&sortOrder=desc`)
       .then(r => r.json())
       .then(d => {
         const list = d?.data?.tasks || d?.data || [];
