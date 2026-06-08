@@ -7,7 +7,6 @@ import {
   getRefreshToken,
   getStoredUser,
   persistAuthSession,
-  REFRESH_TOKEN_KEY,
 } from '../lib/api'
 
 interface AuthContextType {
@@ -62,16 +61,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let mounted = true
     const boot = async () => {
       if (!getRefreshToken()) {
-        const accessFallback = getAccessToken()
-        if (accessFallback) {
-          localStorage.setItem(REFRESH_TOKEN_KEY, accessFallback)
-        } else {
-          if (mounted) {
-            setUser(null)
-            setLoading(false)
-          }
-          return
+        if (mounted) {
+          setUser(null)
+          setLoading(false)
         }
+        return
       }
       try {
         await Promise.race([
