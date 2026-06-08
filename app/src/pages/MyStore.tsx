@@ -74,6 +74,9 @@ export default function MyStore() {
   const [formTags, setFormTags] = useState([])
   const [formTagInput, setFormTagInput] = useState('')
   const [generating, setGenerating] = useState(false)
+  const [suggestingTags, setSuggestingTags] = useState(false)
+  const [suggestingPrice, setSuggestingPrice] = useState(false)
+  const [suggestingAll, setSuggestingAll] = useState(false)
 
   // ── Delete confirmation ────────────────────────────────────────────────────
   const [deleteTarget, setDeleteTarget] = useState(null)
@@ -224,6 +227,115 @@ export default function MyStore() {
     if (e.key === 'Enter') {
       e.preventDefault()
       addTag()
+    }
+  }
+
+  // ── Smart defaults when category changes ───────────────────────────────────
+  const onCategoryChange = (e) => {
+    const cat = e.target.value
+    setFormCategory(cat)
+    setFormSubcategory('')
+    const deliveryDefaults = {
+      'Web & App Build': '14 days',
+      'Bots & Automations': '7 days',
+      'Blockchain & Crypto Dev': '14 days',
+      'Data & Dashboards': '3 days',
+      'AI & Machine Learning': '14 days',
+      'Graphics & Design': '3 days',
+      'Video & Animation': '7 days',
+      'Music & Audio': '3 days',
+      'Writing & Translation': '1 day',
+      'Social & Growth Web3': '3 days',
+      'Marketing & Ads': '7 days',
+      'Community Raids & Engagement': '1 day',
+      'Product & Operations': '7 days',
+      'Consulting & Advisory': '7 days',
+    }
+    const revisionsDefaults = {
+      'Web & App Build': 5,
+      'Bots & Automations': 5,
+      'Blockchain & Crypto Dev': 5,
+      'Graphics & Design': 5,
+      'Video & Animation': 4,
+      'Writing & Translation': 3,
+    }
+    if (cat && deliveryDefaults[cat]) setFormDelivery(deliveryDefaults[cat])
+    if (cat && revisionsDefaults[cat]) setFormRevisions(revisionsDefaults[cat])
+  }
+
+  // ── AI suggest tags ─────────────────────────────────────────────────────────
+  const handleSuggestTags = async () => {
+    if (!formName.trim()) {
+      setFormErrors(prev => ({ ...prev, name: 'Enter a product name first' }))
+      return
+    }
+    setSuggestingTags(true)
+    try {
+      const result = await apiRequest('/ai/suggest', {
+        method: 'POST',
+        body: JSON.stringify({ name: formName, category: formCategory }),
+      })
+      const tags = result?.tags || result?.data?.tags || []
+      if (tags.length > 0) setFormTags(tags)
+      showToast('Tags suggested!', 'success')
+    } catch (err) {
+      showToast(err.message || 'Tag suggestion failed', 'error')
+    } finally {
+      setSuggestingTags(false)
+    }
+  }
+
+  // ── AI suggest price ────────────────────────────────────────────────────────
+  const handleSuggestPrice = async () => {
+    if (!formName.trim()) {
+      setFormErrors(prev => ({ ...prev, name: 'Enter a product name first' }))
+      return
+    }
+    setSuggestingPrice(true)
+    try {
+      const result = await apiRequest('/ai/suggest', {
+        method: 'POST',
+        body: JSON.stringify({ name: formName, category: formCategory }),
+      })
+      const price = result?.priceSuggestion || result?.data?.priceSuggestion
+      if (price) setFormPrice(price)
+      showToast('Price suggested!', 'success')
+    } catch (err) {
+      showToast(err.message || 'Price suggestion failed', 'error')
+    } finally {
+      setSuggestingPrice(false)
+    }
+  }
+
+  // ── AI generate all (description + tags + price) ───────────────────────────
+  const handleGenerateAll = async () => {
+    if (!formName.trim()) {
+      setFormErrors(prev => ({ ...prev, name: 'Enter a product name first' }))
+      return
+    }
+    setSuggestingAll(true)
+    try {
+      const [descResult, suggestResult] = await Promise.all([
+        apiRequest('/ai/generate-description', {
+          method: 'POST',
+          body: JSON.stringify({ name: formName, category: formCategory }),
+        }),
+        apiRequest('/ai/suggest', {
+          method: 'POST',
+          body: JSON.stringify({ name: formName, category: formCategory }),
+        }),
+      ])
+      const desc = descResult?.description || descResult?.text || descResult?.data?.description || ''
+      if (desc) setFormDescription(desc)
+      const tags = suggestResult?.tags || suggestResult?.data?.tags || []
+      if (tags.length > 0) setFormTags(tags)
+      const price = suggestResult?.priceSuggestion || suggestResult?.data?.priceSuggestion
+      if (price) setFormPrice(price)
+      showToast('Product details generated!', 'success')
+    } catch (err) {
+      showToast(err.message || 'AI generation failed', 'error')
+    } finally {
+      setSuggestingAll(false)
     }
   }
 
@@ -417,6 +529,11 @@ export default function MyStore() {
         .mst-btn-secondary{height:38px;padding:0 16px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text2);font-weight:600;font-size:12px;display:inline-flex;align-items:center;gap:6px;cursor:pointer;transition:all .2s;font-family:inherit}
         .mst-btn-secondary:hover{border-color:var(--accent);color:var(--accent)}
         .mst-btn-ai{height:38px;padding:0 16px;border-radius:10px;border:0;background:linear-gradient(135deg,#7c3aed,#6366f1);color:#fff;font-weight:700;font-size:12px;display:inline-flex;align-items:center;gap:6px;cursor:pointer;transition:all .2s;font-family:inherit}
+        .mst-tooltip{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:var(--text3);color:#fff;font-size:9px;font-weight:800;cursor:help;margin-left:4px;vertical-align:middle;line-height:1;position:relative}
+        .mst-tooltip:hover::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 4px);left:50%;transform:translateX(-50%);background:#1a1d23;color:#fff;font-size:11px;font-weight:500;padding:6px 10px;border-radius:6px;white-space:nowrap;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,0.15);pointer-events:none;max-width:240px;white-space:normal;text-transform:none;letter-spacing:normal}
+        .mst-btn-ai-sm{height:28px;padding:0 10px;border-radius:8px;border:0;background:linear-gradient(135deg,#7c3aed,#6366f1);color:#fff;font-weight:700;font-size:11px;display:inline-flex;align-items:center;gap:4px;cursor:pointer;transition:all .2s;font-family:inherit}
+        .mst-btn-ai-sm:hover{box-shadow:0 4px 16px rgba(124,58,237,.3)}
+        .mst-btn-ai-sm:disabled{opacity:0.5;cursor:not-allowed}
         .mst-btn-ai:hover{box-shadow:0 4px 16px rgba(124,58,237,.3)}
         .mst-btn-ai:disabled{opacity:0.5;cursor:not-allowed}
         .mst-btn-danger{height:38px;padding:0 16px;border-radius:10px;border:1px solid var(--red);background:transparent;color:var(--red);font-weight:600;font-size:12px;display:inline-flex;align-items:center;gap:6px;cursor:pointer;transition:all .2s;font-family:inherit}
@@ -496,30 +613,42 @@ export default function MyStore() {
         <form className="mst-form" onSubmit={handleSave}>
           <div className="mst-form-top">
             <h2>{editingId ? 'Edit Product' : 'Add New Product'}</h2>
-            <button type="button" className="mst-btn-secondary" onClick={() => { setShowForm(false); resetForm() }}>
-              <i className="ti ti-x" /> Close Form
-            </button>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <button type="button" className="mst-btn-ai" onClick={handleGenerateAll} disabled={suggestingAll} style={{ height: 30, fontSize: 11, padding: '0 12px' }}>
+                {suggestingAll ? <span className="spinner" style={{ width: 12, height: 12, borderWidth: 2 }} /> : <i className="ti ti-sparkles" />}
+                Generate All with AI
+              </button>
+              <button type="button" className="mst-btn-secondary" onClick={() => { setShowForm(false); resetForm() }}>
+                <i className="ti ti-x" /> Close Form
+              </button>
+            </div>
           </div>
 
           <div className="mst-form-row">
             <div className="mst-field">
-              <label>Product Name *</label>
+              <label>Product Name *<span className="mst-tooltip" data-tip="Give your product a clear, descriptive title that buyers can easily search for">?</span></label>
               <input type="text" value={formName} onChange={e => setFormName(e.target.value)}
                 className={formErrors.name ? 'error' : ''} placeholder="e.g. Social Media Growth Package" />
               {formErrors.name && <div className="field-error">{formErrors.name}</div>}
             </div>
             <div className="mst-field">
-              <label>Price (SOL) *</label>
-              <input type="number" step="0.01" min="0" value={formPrice} onChange={e => setFormPrice(parseFloat(e.target.value) || 0)}
-                className={formErrors.price ? 'error' : ''} />
+              <label>Price (SOL) *<span className="mst-tooltip" data-tip="Set a competitive price. Click sparkle to get an AI-suggested price based on your category">?</span></label>
+              <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                <input type="number" step="0.01" min="0" value={formPrice} onChange={e => setFormPrice(parseFloat(e.target.value) || 0)}
+                  className={formErrors.price ? 'error' : ''} style={{ flex: 1 }} />
+                <button type="button" className="mst-btn-ai-sm" onClick={handleSuggestPrice} disabled={suggestingPrice} title="Suggest price with AI">
+                  {suggestingPrice ? <span className="spinner" style={{ width: 10, height: 10, borderWidth: 2 }} /> : <i className="ti ti-sparkles" />}
+                  AI
+                </button>
+              </div>
               {formErrors.price && <div className="field-error">{formErrors.price}</div>}
             </div>
           </div>
 
           <div className="mst-form-row">
             <div className="mst-field">
-              <label>Category *</label>
-              <select value={formCategory} onChange={e => { setFormCategory(e.target.value); setFormSubcategory('') }}
+              <label>Category *<span className="mst-tooltip" data-tip="Choose the category that best fits your product. Delivery time and revisions will auto-adjust">?</span></label>
+              <select value={formCategory} onChange={onCategoryChange}
                 className={formErrors.category ? 'error' : ''}>
                 <option value="">Select a category</option>
                 {Object.keys(CATEGORIES).map(c => (
@@ -529,7 +658,7 @@ export default function MyStore() {
               {formErrors.category && <div className="field-error">{formErrors.category}</div>}
             </div>
             <div className="mst-field">
-              <label>Subcategory *</label>
+              <label>Subcategory *<span className="mst-tooltip" data-tip="Narrow down your product type within the selected category">?</span></label>
               <select value={formSubcategory} onChange={e => setFormSubcategory(e.target.value)}
                 className={formErrors.subcategory ? 'error' : ''}
                 disabled={!formCategory}>
@@ -544,11 +673,11 @@ export default function MyStore() {
 
           <div className="mst-form-row">
             <div className="mst-field">
-              <label>Revisions</label>
+              <label>Revisions<span className="mst-tooltip" data-tip="Number of free revisions included. Auto-set based on category but you can change it">?</span></label>
               <input type="number" min="0" value={formRevisions} onChange={e => setFormRevisions(parseInt(e.target.value) || 0)} />
             </div>
             <div className="mst-field">
-              <label>Expected Delivery *</label>
+              <label>Expected Delivery *<span className="mst-tooltip" data-tip="How long buyers should expect to wait. Auto-adjusted per category">?</span></label>
               <select value={formDelivery} onChange={e => setFormDelivery(e.target.value)}>
                 {DELIVERY_OPTIONS.map(d => (
                   <option key={d} value={d}>{d}</option>
@@ -558,7 +687,7 @@ export default function MyStore() {
           </div>
 
           <div className="mst-field">
-            <label>Thumbnail</label>
+            <label>Thumbnail<span className="mst-tooltip" data-tip="Upload an eye-catching image that represents your product. Recommended: 1200x800px">?</span></label>
             <div style={{ display: 'flex', gap: 14, alignItems: 'center', flexWrap: 'wrap' }}>
               <label className="mst-thumb-area">
                 {formThumbnailPreview ? (
@@ -578,8 +707,8 @@ export default function MyStore() {
 
           <div className="mst-field">
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-              <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '.04em', margin: 0 }}>
-                Description
+              <label style={{ display: 'flex', alignItems: 'center', gap: 2, fontSize: 11, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '.04em', margin: 0 }}>
+                Description<span className="mst-tooltip" data-tip="Describe what you offer, what buyers get, and why they should choose you">?</span>
               </label>
               <button type="button" className="mst-btn-ai" onClick={handleGenerateAI} disabled={generating} style={{ height: 28, fontSize: 11, padding: '0 10px' }}>
                 {generating ? <span className="spinner" style={{ width: 12, height: 12, borderWidth: 2 }} /> : <i className="ti ti-sparkles" />}
@@ -590,11 +719,15 @@ export default function MyStore() {
           </div>
 
           <div className="mst-field">
-            <label>Tags *</label>
+            <label>Tags *<span className="mst-tooltip" data-tip="Add keywords buyers might search for. Click sparkle for AI-suggested tags based on your product name and category">?</span></label>
             <div style={{ display: 'flex', gap: 6 }}>
               <input type="text" value={formTagInput} onChange={e => setFormTagInput(e.target.value)}
                 onKeyDown={handleTagKeyDown} placeholder="Type a tag and press Enter" style={{ flex: 1 }} />
               <button type="button" className="mst-btn-secondary" onClick={addTag} style={{ flexShrink: 0 }}>Add</button>
+              <button type="button" className="mst-btn-ai-sm" onClick={handleSuggestTags} disabled={suggestingTags} title="Suggest tags with AI">
+                {suggestingTags ? <span className="spinner" style={{ width: 10, height: 10, borderWidth: 2 }} /> : <i className="ti ti-sparkles" />}
+                Tags
+              </button>
             </div>
             {formTags.length > 0 && (
               <div className="mst-tags" style={{ marginTop: 8 }}>
@@ -610,7 +743,7 @@ export default function MyStore() {
           </div>
 
           <div className="mst-field">
-            <label>Attachments (up to 5 files)</label>
+            <label>Attachments (up to 5 files)<span className="mst-tooltip" data-tip="Include sample files, portfolios, or delivery examples to build buyer trust">?</span></label>
             <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
               <label className="mst-btn-secondary" style={{ cursor: 'pointer' }}>
                 <i className="ti ti-upload" /> Choose Files
