@@ -7,12 +7,18 @@ const WORKSPACES: Record<string, { label: string; icon: string; desc: string; co
   social: { label: 'Social Workspace', icon: 'brand-x', desc: 'Social media tasks — follows, likes, shares, comments', color: '#1F8CFF' },
   writing: { label: 'Writing Workspace', icon: 'pencil', desc: 'Content writing, copywriting, translations, articles', color: '#7c3aed' },
   design: { label: 'Design Workspace', icon: 'photo', desc: 'Graphic design, UI/UX, video editing, animations', color: '#EC4899' },
+  testing: { label: 'App Testing Workspace', icon: 'device-mobile', desc: 'App testing, QA, beta testing, bug reporting', color: '#059669' },
+  research: { label: 'Research Workspace', icon: 'search', desc: 'Web research, data collection, market analysis', color: '#d97706' },
+  development: { label: 'Dev Workspace', icon: 'code', desc: 'Software development, smart contracts, automation', color: '#2563eb' },
 }
 
 const CATEGORY_MAP: Record<string, string> = {
   social: 'Social',
   writing: 'Content',
   design: 'Design',
+  testing: 'Testing',
+  research: 'Research',
+  development: 'Development',
 }
 
 export default function WorkerWorkspace() {
