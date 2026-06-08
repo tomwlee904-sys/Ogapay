@@ -618,27 +618,31 @@ function FeaturedJobs() {
   const [active, setActive] = useState(0);
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const intervalRef = useRef(null);
   useEffect(() => { injectSkeletonStyles(); }, []);
   useEffect(() => {
-    fetch(`${API_BASE}/tasks?limit=3&status=OPEN`)
+    fetch(`${API_BASE}/tasks?status=ACTIVE&limit=6&sortBy=reward&sortOrder=desc`)
       .then(r => r.json())
       .then(d => {
-        if (d?.data) {
-          setJobs(d.data.map(t => ({
-            name: t.poster?.businessName || t.poster?.firstName || "Anonymous",
-            ago: "RECENT",
-            task: t.title,
-            reward: `₦${Number(t.rewardPerSlot || t.budget || 0).toLocaleString()}`,
-            slots: t.maxSlots || t.slots || 1,
-            filled: t.filledSlots || 0,
-            tags: [t.category, t.difficulty].filter(Boolean).join(" · "),
-            desc: t.description || "",
-          })));
-        }
-        setLoading(false);
+        const list = d?.data?.tasks || d?.data || [];
+        setJobs(list);
       })
-      .catch(() => setLoading(false));
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, []);
+  useEffect(() => {
+    if (jobs.length === 0) return;
+    intervalRef.current = setInterval(() => {
+      setActive(prev => (prev + 1) % jobs.length);
+    }, 4000);
+    return () => clearInterval(intervalRef.current);
+  }, [jobs.length]);
+  const pauseSlider = () => clearInterval(intervalRef.current);
+  const resumeSlider = () => {
+    intervalRef.current = setInterval(() => {
+      setActive(prev => (prev + 1) % jobs.length);
+    }, 4000);
+  };
   return (
     <section style={{ padding: "44px 0 34px", background: "var(--bg)" }}>
       <div className="container">
@@ -650,9 +654,9 @@ function FeaturedJobs() {
           <a href="/tasks" style={{ color: "var(--text2)", fontSize: 14, fontWeight: 700, display: "flex", alignItems: "center", gap: 6 }}>View all <I n="chevron-right" s={16} /></a>
         </div>
 
-        <div className="jobs-track" style={{ display: "grid", gridTemplateColumns: "repeat(3,minmax(0,1fr))", gap: 24 }}>
-          {loading ? (
-            Array.from({ length: 3 }, (_, i) => (
+        {loading ? (
+          <div className="jobs-track" style={{ display: "grid", gridTemplateColumns: "repeat(3,minmax(0,1fr))", gap: 24 }}>
+            {Array.from({ length: 3 }, (_, i) => (
               <div key={i} style={{ border: '1.5px solid var(--border)', borderRadius: 16, background: 'var(--card)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
                 <div style={{ padding: '18px 18px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 13 }}>
                   <div className="sk" style={{ width: 38, height: 38, borderRadius: '50%' }} />
@@ -669,64 +673,93 @@ function FeaturedJobs() {
                   <div className="sk" style={{ height: 40, borderRadius: 8 }} />
                 </div>
               </div>
-            ))
-          ) : (
-            jobs.map((j, i) => {
-            const pct = Math.round((j.filled / j.slots) * 100);
-            return (
-              <div key={i} onClick={() => setActive(i)} className="job-card" style={{
-                position: "relative", border: `1.5px solid ${active === i ? "#315EFB" : "var(--border)"}`,
-                borderRadius: 16, background: "var(--card)", overflow: "hidden",
-                boxShadow: active === i ? "0 16px 42px rgba(37,99,235,.14),0 0 0 1px rgba(31,140,255,.14)" : "var(--shadow-soft)",
-                display: "flex", flexDirection: "column", cursor: "pointer",
-                transition: "border-color .28s, box-shadow .28s, transform .28s",
-              }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 13, minHeight: 70, padding: "13px 18px", borderBottom: "1px solid var(--border)", background: "linear-gradient(120deg,rgba(31,140,255,.08),rgba(37,99,235,.08),rgba(147,197,253,.1))" }}>
-                  <div style={{ width: 38, height: 38, borderRadius: "50%", display: "grid", placeItems: "center", color: "#fff", background: "linear-gradient(135deg,#232323,#333)", border: "2px solid var(--border)", fontSize: 12, fontWeight: 800, flexShrink: 0 }}>
-                    {j.name.charAt(0)}
-                  </div>
-                  <div>
-                    <div style={{ color: "var(--text3)", fontSize: 10, textTransform: "uppercase", letterSpacing: 1, fontWeight: 700 }}>{j.ago}</div>
-                    <div style={{ marginTop: 2, fontSize: 14, fontWeight: 800 }}>{j.name}</div>
-                  </div>
-                </div>
-                <div style={{ position: "relative", zIndex: 1, padding: "18px 20px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", color: "var(--text2)", fontSize: 11, textTransform: "uppercase", letterSpacing: ".8px", fontWeight: 700 }}>
-                    <span>Progress</span>
-                    <strong style={{ color: "var(--text)", letterSpacing: 0, fontSize: 13 }}>{j.filled}/{j.slots} slots</strong>
-                  </div>
-                  <div className="progress-bar" style={{ height: 10, borderRadius: 99, background: "var(--bg2)", overflow: "hidden", margin: "12px 0 14px", position: "relative" }}>
-                    <span style={{ width: `${pct}%` }} />
-                  </div>
-                  <div style={{ height: 100, margin: "0 0 12px", padding: "14px 18px", border: "1.5px solid var(--border)", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "space-between", background: "linear-gradient(135deg,rgba(37,99,235,.08),rgba(147,197,253,.14))" }}>
-                    <div>
-                      <strong className="grad-text" style={{ fontFamily: "Outfit,sans-serif", fontSize: 32, fontWeight: 900, letterSpacing: "-.6px", display: "block" }}>{j.reward}</strong>
-                      <small style={{ display: "block", marginTop: 3, color: "var(--text3)", fontSize: 11, fontWeight: 700, letterSpacing: 1 }}>REWARD / SLOT</small>
+            ))}
+          </div>
+        ) : jobs.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '48px 20px', color: 'var(--text2)' }}>
+            <i className="ti ti-briefcase-off" style={{ fontSize: 36, color: 'var(--text3)', marginBottom: 12, display: 'block' }} />
+            <h3 style={{ fontFamily: 'Outfit,sans-serif', fontWeight: 800, margin: '0 0 4px', color: 'var(--text)' }}>No featured tasks right now</h3>
+            <p style={{ fontSize: 13, margin: '0 0 16px' }}>Check back soon for new opportunities.</p>
+            <a href="/tasks" className="btn-primary"><I n="briefcase" s={16} /> Browse All Tasks</a>
+          </div>
+        ) : (
+          <div style={{ position: 'relative' }} onMouseEnter={pauseSlider} onMouseLeave={resumeSlider}>
+            <button className="hide-mobile" onClick={() => setActive(prev => (prev - 1 + jobs.length) % jobs.length)}
+              style={{ position:'absolute', left:-20, top:'50%', transform:'translateY(-50%)', width:40, height:40, borderRadius:'50%', border:'1.5px solid var(--border)', background:'var(--card)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', zIndex:10, boxShadow:'var(--shadow-soft)' }}>
+              <I n="chevron-left" s={18} />
+            </button>
+            <button className="hide-mobile" onClick={() => setActive(prev => (prev + 1) % jobs.length)}
+              style={{ position:'absolute', right:-20, top:'50%', transform:'translateY(-50%)', width:40, height:40, borderRadius:'50%', border:'1.5px solid var(--border)', background:'var(--card)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', zIndex:10, boxShadow:'var(--shadow-soft)' }}>
+              <I n="chevron-right" s={18} />
+            </button>
+            <div className="jobs-track" style={{ display: "grid", gridTemplateColumns: "repeat(3,minmax(0,1fr))", gap: 24 }}>
+              {[0,1,2].map(offset => {
+                const idx = (active + offset) % jobs.length;
+                const t = jobs[idx];
+                if (!t) return null;
+                const reward = t.reward || t.budget || 0;
+                const currency = t.currency || 'NGN';
+                const filled = t.filledSlots || 0;
+                const slots = t.maxSlots || t.slots || 1;
+                const pct = Math.round((filled / slots) * 100);
+                const poster = t.poster || {};
+                const posterName = poster.businessName || poster.firstName || "Anonymous";
+                return (
+                  <div key={t.id || idx} className="job-card" style={{
+                    position: "relative", border: `1.5px solid ${offset === 0 ? "#315EFB" : "var(--border)"}`,
+                    borderRadius: 16, background: "var(--card)", overflow: "hidden",
+                    boxShadow: offset === 0 ? "0 16px 42px rgba(37,99,235,.14),0 0 0 1px rgba(31,140,255,.14)" : "var(--shadow-soft)",
+                    display: "flex", flexDirection: "column",
+                    transition: "border-color .28s, box-shadow .28s, transform .28s",
+                  }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 13, minHeight: 70, padding: "13px 18px", borderBottom: "1px solid var(--border)", background: "linear-gradient(120deg,rgba(31,140,255,.08),rgba(37,99,235,.08),rgba(147,197,253,.1))" }}>
+                      <div style={{ width: 38, height: 38, borderRadius: "50%", display: "grid", placeItems: "center", color: "#fff", background: "linear-gradient(135deg,#232323,#333)", border: "2px solid var(--border)", fontSize: 12, fontWeight: 800, flexShrink: 0 }}>
+                        {posterName.charAt(0)}
+                      </div>
+                      <div>
+                        <div style={{ color: "var(--text3)", fontSize: 10, textTransform: "uppercase", letterSpacing: 1, fontWeight: 700 }}>RECENT</div>
+                        <div style={{ marginTop: 2, fontSize: 14, fontWeight: 800 }}>{posterName}</div>
+                      </div>
+                    </div>
+                    <div style={{ position: "relative", zIndex: 1, padding: "18px 20px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", color: "var(--text2)", fontSize: 11, textTransform: "uppercase", letterSpacing: ".8px", fontWeight: 700 }}>
+                        <span>Progress</span>
+                        <strong style={{ color: "var(--text)", letterSpacing: 0, fontSize: 13 }}>{filled}/{slots} slots</strong>
+                      </div>
+                      <div className="progress-bar" style={{ height: 10, borderRadius: 99, background: "var(--bg2)", overflow: "hidden", margin: "12px 0 14px", position: "relative" }}>
+                        <span style={{ width: `${pct}%` }} />
+                      </div>
+                      <div style={{ height: 100, margin: "0 0 12px", padding: "14px 18px", border: "1.5px solid var(--border)", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "space-between", background: "linear-gradient(135deg,rgba(37,99,235,.08),rgba(147,197,253,.14))" }}>
+                        <div>
+                          <strong className="grad-text" style={{ fontFamily: "Outfit,sans-serif", fontSize: 32, fontWeight: 900, letterSpacing: "-.6px", display: "block" }}>{currency === 'NGN' ? '₦' : ''}{Number(reward).toLocaleString()}{currency !== 'NGN' ? ' ' + currency : ''}</strong>
+                          <small style={{ display: "block", marginTop: 3, color: "var(--text3)", fontSize: 11, fontWeight: 700, letterSpacing: 1 }}>REWARD / SLOT</small>
+                        </div>
+                      </div>
+                      <div style={{ color: "var(--text3)", fontSize: 12, fontWeight: 700, marginBottom: 14, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.category || ''}</div>
+                      <div style={{ borderTop: "1px solid var(--border)", paddingTop: 12, marginTop: "auto" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 6, color: "var(--text3)", fontSize: 10, fontWeight: 800, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>
+                          <I n="info-circle" s={13} /> ABOUT
+                        </div>
+                        <p style={{ margin: "0 0 12px", color: "var(--text2)", fontSize: 13, lineHeight: 1.5 }}>{(t.description || '').slice(0, 120)}{(t.description || '').length > 120 ? '...' : ''}</p>
+                      </div>
+                      <a href={`/tasks/${t.id}`} style={{ height: 40, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, background: offset === 0 ? "#111" : "var(--bg2)", color: offset === 0 ? "#fff" : "var(--text)", borderRadius: 8, border: "1.5px solid var(--border)", fontSize: 13, fontWeight: 800, textDecoration: "none", transition: "background .14s, color .14s" }}>
+                        <I n="arrow-right" s={15} /> Apply Now
+                      </a>
                     </div>
                   </div>
-                  <div style={{ color: "var(--text3)", fontSize: 12, fontWeight: 700, marginBottom: 14, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{j.tags}</div>
-                  <div style={{ borderTop: "1px solid var(--border)", paddingTop: 12, marginTop: "auto" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 6, color: "var(--text3)", fontSize: 10, fontWeight: 800, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>
-                      <I n="info-circle" s={13} /> ABOUT
-                    </div>
-                    <p style={{ margin: "0 0 12px", color: "var(--text2)", fontSize: 13, lineHeight: 1.5 }}>{j.desc}</p>
-                  </div>
-                  <a href="/tasks" style={{ height: 40, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, background: active === i ? "#111" : "var(--bg2)", color: active === i ? "#fff" : "var(--text)", borderRadius: 8, border: "1.5px solid var(--border)", fontSize: 13, fontWeight: 800, textDecoration: "none", transition: "background .14s, color .14s" }}>
-                    <I n="arrow-right" s={15} /> Apply Now
-                  </a>
-                </div>
-              </div>
-            );
-          })
-          )}
-        </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
-        {/* Dots */}
-        <div style={{ display: "flex", justifyContent: "center", gap: 10, marginTop: 28 }}>
-          {jobs.map((_, i) => (
-            <span key={i} onClick={() => setActive(i)} style={{ width: active === i ? 44 : 34, height: 9, borderRadius: 999, cursor: "pointer", background: active === i ? "#111" : "#dfe5ee", transition: "width .34s, background .34s", animation: active === i ? "dotBreathe 2.8s ease-in-out infinite" : "none" }} />
-          ))}
-        </div>
+        {jobs.length > 0 && (
+          <div style={{ display: "flex", justifyContent: "center", gap: 10, marginTop: 28 }}>
+            {jobs.map((_, i) => (
+              <span key={i} onClick={() => setActive(i)} style={{ width: active === i ? 44 : 34, height: 9, borderRadius: 999, cursor: "pointer", background: active === i ? "#191C6B" : "#dfe5ee", transition: "width .34s, background .34s", animation: active === i ? "dotBreathe 2.8s ease-in-out infinite" : "none" }} />
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );
@@ -734,11 +767,31 @@ function FeaturedJobs() {
 
 /* ─── STORE SECTION ─────────────────────────────────────────────────────────── */
 function StoreSection() {
-  const products = [
-    { art: "X PRO", artBg: "linear-gradient(135deg,#232323,#333)", artColor: "#fff", name: "X Premium Setup", seller: "AfzanNG", role: "Top Seller", price: "₦4,120", sol: "0.037 SOL", date: "1 week ago" },
-    { art: "YT ↑", artBg: "linear-gradient(135deg,#1a1a1a,#2a2a2a)", artColor: "#fff", name: "YouTube Thumbnail Design", seller: "KashemCreates", role: "Verified", price: "₦55,965", sol: "0.500 SOL", date: "Feb 6" },
-    { art: "WEB", artBg: "linear-gradient(135deg,#e8edf5,#d1daea)", artColor: "#111", name: "Professional Website", seller: "SatoshiShadow", role: "New Creator", price: "₦43,530", sol: "0.389 SOL", date: "Jan 15" },
-  ];
+  const [products, setProducts] = useState([]);
+  const [active, setActive] = useState(0);
+  const intervalRef = useRef(null);
+  useEffect(() => {
+    fetch(`${API_BASE}/store?limit=6`)
+      .then(r => r.json())
+      .then(d => {
+        const list = d?.data || [];
+        setProducts(list);
+      })
+      .catch(() => {});
+  }, []);
+  useEffect(() => {
+    if (products.length === 0) return;
+    intervalRef.current = setInterval(() => {
+      setActive(prev => (prev + 1) % products.length);
+    }, 5000);
+    return () => clearInterval(intervalRef.current);
+  }, [products.length]);
+  const pauseSlider = () => clearInterval(intervalRef.current);
+  const resumeSlider = () => {
+    intervalRef.current = setInterval(() => {
+      setActive(prev => (prev + 1) % products.length);
+    }, 5000);
+  };
   return (
     <section style={{ padding: "56px 0", background: "var(--bg)" }}>
       <div className="container">
@@ -749,33 +802,69 @@ function StoreSection() {
           </div>
           <a href="/store" style={{ color: "var(--text2)", fontSize: 14, fontWeight: 700, display: "flex", alignItems: "center", gap: 6 }}>View all <I n="chevron-right" s={16} /></a>
         </div>
-        <div className="store-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3,minmax(0,1fr))", gap: 24 }}>
-          {products.map((p, i) => (
-            <div key={i} className="card-base" style={{ display: "flex", flexDirection: "column", minHeight: 520 }}>
-              <div style={{ height: 180, display: "grid", placeItems: "center", fontFamily: "Outfit,sans-serif", fontSize: 26, fontWeight: 900, color: p.artColor, background: p.artBg }}>{p.art}</div>
-              <div style={{ padding: "18px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", gap: 12, fontSize: 15, fontWeight: 800, marginBottom: 8 }}>
-                  <span>{p.name}</span>
-                  <time style={{ color: "var(--text3)", fontSize: 12, fontWeight: 700, whiteSpace: "nowrap" }}>{p.date}</time>
-                </div>
-                <div style={{ margin: "14px 0", display: "flex", alignItems: "center", gap: 11, padding: "11px 14px", border: "1.5px solid var(--border)", borderRadius: 9, background: "var(--bg2)" }}>
-                  <div style={{ width: 36, height: 36, borderRadius: "50%", background: "#232323", display: "grid", placeItems: "center", color: "#fff", fontSize: 11, fontWeight: 800, flexShrink: 0 }}>{p.seller.charAt(0)}</div>
-                  <div>
-                    <strong style={{ display: "block", fontSize: 13, fontWeight: 800 }}>{p.seller}</strong>
-                    <span style={{ display: "block", marginTop: 2, color: "var(--text2)", fontSize: 12 }}>{p.role}</span>
+        {products.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '48px 20px', color: 'var(--text2)' }}>
+            <i className="ti ti-building-store-off" style={{ fontSize: 36, color: 'var(--text3)', marginBottom: 12, display: 'block' }} />
+            <p style={{ fontSize: 13, margin: 0 }}>No products available yet.</p>
+          </div>
+        ) : (
+          <div style={{ position: 'relative' }} onMouseEnter={pauseSlider} onMouseLeave={resumeSlider}>
+            <button className="hide-mobile" onClick={() => setActive(prev => (prev - 1 + products.length) % products.length)}
+              style={{ position:'absolute', left:-20, top:'50%', transform:'translateY(-50%)', width:40, height:40, borderRadius:'50%', border:'1.5px solid var(--border)', background:'var(--card)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', zIndex:10, boxShadow:'var(--shadow-soft)' }}>
+              <I n="chevron-left" s={18} />
+            </button>
+            <button className="hide-mobile" onClick={() => setActive(prev => (prev + 1) % products.length)}
+              style={{ position:'absolute', right:-20, top:'50%', transform:'translateY(-50%)', width:40, height:40, borderRadius:'50%', border:'1.5px solid var(--border)', background:'var(--card)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', zIndex:10, boxShadow:'var(--shadow-soft)' }}>
+              <I n="chevron-right" s={18} />
+            </button>
+            <div className="store-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3,minmax(0,1fr))", gap: 24 }}>
+              {[0,1,2].map(offset => {
+                const idx = (active + offset) % products.length;
+                const p = products[idx];
+                if (!p) return null;
+                const sellerName = p.seller || 'Anonymous';
+                const initials = (p.title || p.name || '???').slice(0, 3).toUpperCase();
+                return (
+                  <div key={p.id || idx} className="card-base" style={{ display: "flex", flexDirection: "column", minHeight: 520 }}>
+                    <div style={{ height: 180, display: "grid", placeItems: "center", fontFamily: "Outfit,sans-serif", fontSize: 26, fontWeight: 900, background: "linear-gradient(135deg,#232323,#333)", color: "#fff", overflow: "hidden" }}>
+                      {p.image ? (
+                        <img src={p.image} alt={p.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      ) : (
+                        initials
+                      )}
+                    </div>
+                    <div style={{ padding: "18px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", gap: 12, fontSize: 15, fontWeight: 800, marginBottom: 8 }}>
+                        <span>{p.title || p.name}</span>
+                        <time style={{ color: "var(--text3)", fontSize: 12, fontWeight: 700, whiteSpace: "nowrap" }}>{p.createdAt ? new Date(p.createdAt).toLocaleDateString() : ''}</time>
+                      </div>
+                      <div style={{ margin: "14px 0", display: "flex", alignItems: "center", gap: 11, padding: "11px 14px", border: "1.5px solid var(--border)", borderRadius: 9, background: "var(--bg2)" }}>
+                        <div style={{ width: 36, height: 36, borderRadius: "50%", background: "#232323", display: "grid", placeItems: "center", color: "#fff", fontSize: 11, fontWeight: 800, flexShrink: 0 }}>{sellerName.charAt(0)}</div>
+                        <div>
+                          <strong style={{ display: "block", fontSize: 13, fontWeight: 800 }}>{sellerName}</strong>
+                        </div>
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", height: 52, padding: "0 16px", border: "1.5px solid var(--border)", borderRadius: 9, background: "var(--card2)", marginBottom: 14, marginTop: "auto" }}>
+                        <strong className="grad-text" style={{ fontFamily: "Outfit,sans-serif", fontSize: 20, fontWeight: 900 }}>{Number(p.price || 0).toFixed(2)} {p.currency || 'SOL'}</strong>
+                        <span style={{ padding: "6px 12px", border: "1.5px solid var(--border)", borderRadius: 7, background: "var(--card)", color: "var(--text2)", fontSize: 12, fontWeight: 800 }}>{Number(p.price || 0).toFixed(2)} SOL</span>
+                      </div>
+                      <a href={`/store/${p.id}`} style={{ height: 42, border: "1.5px solid var(--border)", borderRadius: 999, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text2)", fontSize: 13, fontWeight: 800, background: "var(--card)", textDecoration: "none", transition: "border-color .14s, color .14s" }}>
+                        View more
+                      </a>
+                    </div>
                   </div>
-                </div>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", height: 52, padding: "0 16px", border: "1.5px solid var(--border)", borderRadius: 9, background: "var(--card2)", marginBottom: 14, marginTop: "auto" }}>
-                  <strong className="grad-text" style={{ fontFamily: "Outfit,sans-serif", fontSize: 20, fontWeight: 900 }}>{p.price}</strong>
-                  <span style={{ padding: "6px 12px", border: "1.5px solid var(--border)", borderRadius: 7, background: "var(--card)", color: "var(--text2)", fontSize: 12, fontWeight: 800 }}>{p.sol}</span>
-                </div>
-                <a href="/store" style={{ height: 42, border: "1.5px solid var(--border)", borderRadius: 999, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text2)", fontSize: 13, fontWeight: 800, background: "var(--card)", textDecoration: "none", transition: "border-color .14s, color .14s" }}>
-                  View more
-                </a>
-              </div>
+                );
+              })}
             </div>
-          ))}
-        </div>
+          </div>
+        )}
+        {products.length > 0 && (
+          <div style={{ display: "flex", justifyContent: "center", gap: 10, marginTop: 28 }}>
+            {products.map((_, i) => (
+              <span key={i} onClick={() => setActive(i)} style={{ width: active === i ? 44 : 34, height: 9, borderRadius: 999, cursor: "pointer", background: active === i ? "#191C6B" : "#dfe5ee", transition: "width .34s, background .34s", animation: active === i ? "dotBreathe 2.8s ease-in-out infinite" : "none" }} />
+            ))}
+          </div>
+        )}
         <div style={{ display: "flex", justifyContent: "center", marginTop: 28 }}>
           <a href="/store" className="btn-pill"><I n="building-store" s={16} /> Explore All Products</a>
         </div>
