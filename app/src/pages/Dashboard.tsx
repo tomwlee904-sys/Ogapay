@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import Layout from "../components/Layout";
 import { useAuth } from "../context/AuthContext";
 import { apiRequest } from "../lib/api";
@@ -75,20 +74,6 @@ const CSS = `
   .dash-right { display:flex; flex-direction:column; gap:14px; }
   .dash-right h3 { font-family:"Outfit",sans-serif; font-size:16px; font-weight:800; margin:0 0 2px; }
   .dash-right-sub { font-size:12px; color:var(--text2); margin:0 0 16px; line-height:1.5; }
-  @keyframes checkPop { 0%{transform:scale(0)} 70%{transform:scale(1.2)} 100%{transform:scale(1)} }
-  @keyframes fadeSlideIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
-  @keyframes confettiFall { 0%{transform:translateY(-10px) rotate(0deg);opacity:1} 100%{transform:translateY(120px) rotate(720deg);opacity:0} }
-  .dash-check-anim { animation: checkPop .4s ease forwards }
-  .dash-step-unlock { animation: fadeSlideIn .4s ease forwards }
-  .dash-progress-fill { height:100%; border-radius:99px; background:#111; transition:width 1.2s cubic-bezier(0.22,1,0.36,1); }
-  .dash-stat-card { cursor:pointer; transition:all .2s; }
-  .dash-stat-card:hover { transform:translateY(-2px); box-shadow:0 4px 20px rgba(0,0,0,.06); }
-  .dash-res-card { cursor:pointer; transition:all .2s; text-decoration:none; display:flex; align-items:center; gap:14px; padding:14px; border-radius:10px; background:var(--card); border:1px solid var(--border); margin-bottom:10px; }
-  .dash-res-card:hover { transform:translateX(4px); border-color:#191C6B; }
-  .dash-confetti { position:relative; overflow:hidden; }
-  .dash-confetti-dot { position:absolute; width:6px; height:6px; border-radius:50%; animation:confettiFall 1.5s ease forwards; }
-  .dash-tier-badge { display:inline-flex; align-items:center; gap:4px; border-radius:20px; padding:3px 10px; font-size:11px; font-weight:800; letter-spacing:0.06em; }
-  .dash-earn-link { color:#191C6B; font-size:11px; font-weight:700; text-decoration:none; display:inline-flex; align-items:center; gap:4px; }
   .dash-res-card { display:flex; align-items:center; gap:12px; padding:13px; border:1.5px solid var(--border); border-radius:10px; cursor:pointer; transition:border-color .14s,background .14s; text-decoration:none; color:inherit; }
   .dash-res-card:hover { border-color:#a1a1aa; background:var(--bg2); }
   .dash-res-icon { width:36px; height:36px; border-radius:9px; display:grid; place-items:center; flex-shrink:0; }
@@ -160,14 +145,12 @@ const CSS = `
 `;
 
 export default function OgaPayDashboard() {
-  const navigate = useNavigate();
   const { user, isAuthed } = useAuth();
   const [dashLoading, setDashLoading] = useState(true);
   const [summaryData, setSummaryData] = useState<any>(null);
   const [availableTasks, setAvailableTasks] = useState("0");
   const [totalEarned, setTotalEarned] = useState("₦0.00");
   const [communityJoined, setCommunityJoined] = useState(false);
-  const [barPct, setBarPct] = useState(0);
 
   const [isNew, setIsNew] = useState(() => {
     if (!user?.createdAt) return false;
@@ -180,19 +163,12 @@ export default function OgaPayDashboard() {
   useEffect(() => {
     async function loadDashboard() {
       setDashLoading(true);
-      console.log('[Dashboard] loadDashboard starting');
       try {
-        console.log('[Dashboard] Making API calls...');
         const [summary, tasksResponse, earningsResponse] = await Promise.all([
-          apiRequest<any>("/dashboard/summary").catch(e => { console.log('[Dashboard] /dashboard/summary error:', e.message); return null; }),
-          apiRequest<any>("/tasks?limit=1&status=OPEN").catch(e => { console.log('[Dashboard] /tasks error:', e.message); return null; }),
-          apiRequest<any>("/users/me/earnings").catch(e => { console.log('[Dashboard] /users/me/earnings error:', e.message); return null; }),
+          apiRequest<any>("/dashboard/summary").catch(() => null),
+          apiRequest<any>("/tasks?limit=1&status=OPEN").catch(() => null),
+          apiRequest<any>("/users/me/earnings").catch(() => null),
         ]);
-        console.log('[Dashboard] API results:', {
-          summary: summary ? 'received' : 'null',
-          tasks: tasksResponse ? 'received' : 'null',
-          earnings: earningsResponse ? 'received' : 'null'
-        });
 
         if (summary) setSummaryData(summary);
 
@@ -220,12 +196,6 @@ export default function OgaPayDashboard() {
     return () => window.removeEventListener('focus', onFocus);
   }, []);
 
-  /* ── Animate progress bar on page load ── */
-  useEffect(() => {
-    const timer = setTimeout(() => setBarPct(pct), 150);
-    return () => clearTimeout(timer);
-  }, [pct]);
-
   const fname = user?.firstName || "there";
   const lname = user?.lastName || "";
   const email = user?.email || "";
@@ -237,17 +207,7 @@ export default function OgaPayDashboard() {
   const totalSpent = metrics.totalSpent ?? 0;
   const activeTasks = metrics.activeTasks ?? 0;
   const completedTasks = metrics.completedTasks ?? 0;
-  const tasksCompleted = metrics.tasksCompleted ?? completedTasks ?? 0;
   const walletConnected = metrics.walletConnected ?? false;
-
-  const getTier = (tc: number) => {
-    if (tc >= 100) return { name: 'OgaBoss', color: '#f59e0b', next: null, nextAt: null }
-    if (tc >= 50) return { name: 'Pro', color: '#7c3aed', next: 'OgaBoss', nextAt: 100 }
-    if (tc >= 20) return { name: 'Earner', color: '#16a34a', next: 'Pro', nextAt: 50 }
-    if (tc >= 5) return { name: 'Hustler', color: '#191C6B', next: 'Earner', nextAt: 20 }
-    return { name: 'Starter', color: '#94a3b8', next: 'Hustler', nextAt: 5 }
-  }
-  const tier = getTier(tasksCompleted);
 
   const step1Done = !!(fname && lname && isEmailVerified);
   const step2Done = !!walletConnected;
@@ -289,103 +249,36 @@ export default function OgaPayDashboard() {
 
         {/* ── INTRO / WELCOME BANNER ── */}
         {allDone ? (
-          <div className="dash-intro complete dash-confetti" onClick={() => navigate('/profile')} style={{cursor:'pointer'}}>
+          <div className="dash-intro complete">
             <div className="dash-intro-icon" style={{ background: "#16a34a" }}>
               <Icon n="check" s={20} c="#fff" />
             </div>
             <div style={{ flex: 1 }}>
-              <h2>You are ready to earn on OgaPay!</h2>
-              <p>Your account is fully configured. Head to Jobs to start earning.</p>
+              <h2>You're all set, {fname}!</h2>
+              <p>Your OgaPay account is fully configured. Head to Jobs to start earning.</p>
             </div>
             <a href="/tasks" className="dash-btn" style={{ flexShrink: 0 }}>
               <Icon n="briefcase" s={14} /> Browse Jobs
             </a>
-            <div className="dash-confetti-dot" style={{left:'10%',top:10,background:'#f59e0b',animationDelay:'0s'}} />
-            <div className="dash-confetti-dot" style={{left:'30%',top:5,background:'#ec4899',animationDelay:'0.15s'}} />
-            <div className="dash-confetti-dot" style={{left:'50%',top:8,background:'#16a34a',animationDelay:'0.3s'}} />
-            <div className="dash-confetti-dot" style={{left:'70%',top:3,background:'#1F8CFF',animationDelay:'0.45s'}} />
-            <div className="dash-confetti-dot" style={{left:'90%',top:6,background:'#7c3aed',animationDelay:'0.6s'}} />
           </div>
         ) : isNew ? (
-          <div className="dash-intro" onClick={() => navigate('/profile')} style={{cursor:'pointer'}}>
-            <div className="dash-intro-icon" style={{ background: user?.avatarUrl ? 'transparent' : '#191C6B', padding: 0, overflow: 'hidden' }}>
-              {user?.avatarUrl ? (
-                <img src={user.avatarUrl} alt="" style={{width:40,height:40,borderRadius:10,objectFit:'cover'}} />
-              ) : (
-                <span style={{fontSize:16,fontWeight:800,color:'#fff'}}>{initials || 'U'}</span>
-              )}
+          <div className="dash-intro">
+            <div className="dash-intro-icon" style={{ background: "#191C6B" }}>
+              <Icon n="hand-wave" s={20} c="#191C6B" />
             </div>
             <div style={{ flex: 1 }}>
-              <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:4,flexWrap:'wrap'}}>
-                <h2 style={{margin:0}}>Welcome to OgaPay, {fname}!</h2>
-                <span className="dash-tier-badge" style={{background:tier.color + '18',color:tier.color,border:'1px solid ' + tier.color + '30'}}>
-                  <Icon n="award" s={11} /> {tier.name}
-                </span>
-              </div>
+              <h2>Welcome to OgaPay, {fname}!</h2>
               <p>Your account is ready. Complete the 4 steps below to start earning tasks and getting paid.</p>
-              <div style={{display:'flex',gap:20,marginTop:8,flexWrap:'wrap'}}>
-                <span style={{fontSize:12,color:'var(--text2)',display:'inline-flex',alignItems:'center',gap:4}}>
-                  <Icon n="check-circle" s={13} c="#16a34a" /> {tasksCompleted} Tasks Done
-                </span>
-                <span style={{fontSize:12,color:'var(--text2)',display:'inline-flex',alignItems:'center',gap:4}}>
-                  <Icon n="currency-naira" s={13} c="#191C6B" /> {totalEarned}
-                </span>
-                <span style={{fontSize:12,color:'var(--text2)',display:'inline-flex',alignItems:'center',gap:4}}>
-                  <Icon n="award" s={13} c={tier.color} /> {tier.name}
-                </span>
-              </div>
-              {tier.next && (
-                <div style={{marginTop:8}}>
-                  <div style={{display:'flex',justifyContent:'space-between',fontSize:10,color:'var(--text3)',fontWeight:600,marginBottom:4}}>
-                    <span>{tier.name}</span>
-                    <span>{tasksCompleted} / {tier.nextAt} tasks to {tier.next}</span>
-                  </div>
-                  <div style={{height:5,background:'var(--border)',borderRadius:99,overflow:'hidden'}}>
-                    <div style={{height:'100%',width:Math.min(100,(tasksCompleted/tier.nextAt)*100)+'%',background:tier.color,borderRadius:99,transition:'width 1s ease'}} />
-                  </div>
-                </div>
-              )}
             </div>
           </div>
         ) : (
-          <div className="dash-intro" onClick={() => navigate('/profile')} style={{cursor:'pointer'}}>
-            <div className="dash-intro-icon" style={{ background: user?.avatarUrl ? 'transparent' : '#dcfce7', padding: 0, overflow: 'hidden' }}>
-              {user?.avatarUrl ? (
-                <img src={user.avatarUrl} alt="" style={{width:40,height:40,borderRadius:10,objectFit:'cover'}} />
-              ) : (
-                <span style={{fontSize:16,fontWeight:800,color:'#16a34a'}}>{initials || 'U'}</span>
-              )}
+          <div className="dash-intro">
+            <div className="dash-intro-icon" style={{ background: "#dcfce7" }}>
+              <Icon n="check-circle" s={20} c="#16a34a" />
             </div>
             <div style={{ flex: 1 }}>
-              <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:4,flexWrap:'wrap'}}>
-                <h2 style={{margin:0}}>Welcome back, {fname}</h2>
-                <span className="dash-tier-badge" style={{background:tier.color + '18',color:tier.color,border:'1px solid ' + tier.color + '30'}}>
-                  <Icon n="award" s={11} /> {tier.name}
-                </span>
-              </div>
+              <h2>Welcome back, {fname}</h2>
               <p>Good to see you again. Pick up where you left off.</p>
-              <div style={{display:'flex',gap:20,marginTop:8,flexWrap:'wrap'}}>
-                <span style={{fontSize:12,color:'var(--text2)',display:'inline-flex',alignItems:'center',gap:4}}>
-                  <Icon n="check-circle" s={13} c="#16a34a" /> {tasksCompleted} Tasks Done
-                </span>
-                <span style={{fontSize:12,color:'var(--text2)',display:'inline-flex',alignItems:'center',gap:4}}>
-                  <Icon n="currency-naira" s={13} c="#191C6B" /> {totalEarned}
-                </span>
-                <span style={{fontSize:12,color:'var(--text2)',display:'inline-flex',alignItems:'center',gap:4}}>
-                  <Icon n="award" s={13} c={tier.color} /> {tier.name}
-                </span>
-              </div>
-              {tier.next && (
-                <div style={{marginTop:8}}>
-                  <div style={{display:'flex',justifyContent:'space-between',fontSize:10,color:'var(--text3)',fontWeight:600,marginBottom:4}}>
-                    <span>{tier.name}</span>
-                    <span>{tasksCompleted} / {tier.nextAt} tasks to {tier.next}</span>
-                  </div>
-                  <div style={{height:5,background:'var(--border)',borderRadius:99,overflow:'hidden'}}>
-                    <div style={{height:'100%',width:Math.min(100,(tasksCompleted/tier.nextAt)*100)+'%',background:tier.color,borderRadius:99,transition:'width 1s ease'}} />
-                  </div>
-                </div>
-              )}
             </div>
           </div>
         )}
@@ -411,7 +304,7 @@ export default function OgaPayDashboard() {
             <span style={{ color: allDone ? "#16a34a" : "inherit" }}>{pct}%</span>
           </div>
           <div className="dash-progress-bar">
-            <div className={`dash-progress-fill${allDone ? " done" : ""}`} style={{ width: `${barPct}%` }} />
+            <div className={`dash-progress-fill${allDone ? " done" : ""}`} style={{ width: `${pct}%` }} />
           </div>
         </div>
 
@@ -431,7 +324,7 @@ export default function OgaPayDashboard() {
                 <h4>Add Profile Photo &amp; Display Name</h4>
                 <p>Set up your OgaPay identity so task creators can find and trust you.</p>
                 {step1Done ? (
-                  <div className="dash-success-msg dash-check-anim"><Icon n="check" s={12} /> Profile Complete</div>
+                  <div className="dash-success-msg"><Icon n="check" s={12} /> Profile Complete</div>
                 ) : (
                   <button className="dash-btn" onClick={() => { window.location.href = "/profile"; }}>
                     <Icon n="user" s={14} /> Go to Profile
@@ -444,7 +337,7 @@ export default function OgaPayDashboard() {
                 <p>Confirm your email to unlock withdrawals and receive task notifications.</p>
                 <input className="dash-input" value={email} readOnly style={{ marginBottom: 10 }} />
                 {isEmailVerified ? (
-                  <div className="dash-success-msg dash-check-anim"><Icon n="check" s={12} /> Email Verified</div>
+                  <div className="dash-success-msg"><Icon n="check" s={12} /> Email Verified</div>
                 ) : (
                   <button className="dash-btn" onClick={() => window.location.href = "/profile"}>
                     <Icon n="mail" s={14} /> Verify Email
@@ -455,7 +348,7 @@ export default function OgaPayDashboard() {
 
             {/* ── STEP 2: WALLET ── */}
             {step1Done && (
-            <div className={`${step2Done ? "dash-step-unlock" : "dash-step-locked"}`}>
+            <div className={`${step2Done ? "" : "dash-step-locked"}`}>
             <div className="dash-section-title">
               <Icon n="circle-filled" s={8} /> STEP 2: CONNECT YOUR WALLET
             </div>
@@ -476,7 +369,7 @@ export default function OgaPayDashboard() {
                 ))}
               </div>
               {step2Done ? (
-                <div className="dash-success-msg dash-check-anim"><Icon n="check" s={12} /> Wallet Connected</div>
+                <div className="dash-success-msg"><Icon n="check" s={12} /> Wallet Connected</div>
               ) : (
                 <button className="dash-btn outline" onClick={() => window.location.href = "/profile"}>
                   <Icon n="wallet" s={14} /> Connect in Settings
@@ -488,7 +381,7 @@ export default function OgaPayDashboard() {
 
             {/* ── STEP 3: COMMUNITY ── */}
             {step2Done && (
-            <div className={`${step3Done ? "dash-step-unlock" : "dash-step-locked"}`}>
+            <div className={`${step3Done ? "" : "dash-step-locked"}`}>
             <div className="dash-section-title">
               <Icon n="circle-filled" s={8} /> STEP 3: JOIN THE COMMUNITY
             </div>
@@ -509,7 +402,7 @@ export default function OgaPayDashboard() {
                 ))}
               </div>
               {step3Done ? (
-                <div className="dash-success-msg dash-check-anim"><Icon n="check" s={12} /> Community Joined</div>
+                <div className="dash-success-msg"><Icon n="check" s={12} /> Community Joined</div>
               ) : (
                 <button className={`dash-btn${step3Done ? " green" : ""}`} onClick={() => setCommunityJoined(true)}>
                   <Icon n="users" s={14} /> I've Joined — Mark as Done
@@ -521,7 +414,7 @@ export default function OgaPayDashboard() {
 
             {/* ── STEP 4: FIRST TASK ── */}
             {step3Done && (
-            <div className={`${step4Done ? "dash-step-unlock" : "dash-step-locked"}`}>
+            <div className={`${step4Done ? "" : "dash-step-locked"}`}>
             <div className="dash-section-title">
               <Icon n="circle-filled" s={8} /> STEP 4: COMPLETE YOUR FIRST TASK
             </div>
@@ -539,7 +432,7 @@ export default function OgaPayDashboard() {
                 ))}
               </div>
               {step4Done ? (
-                <div className="dash-success-msg dash-check-anim"><Icon n="check" s={12} /> First task completed!</div>
+                <div className="dash-success-msg"><Icon n="check" s={12} /> First task completed!</div>
               ) : (
                 <a href="/tasks" className="dash-btn">
                   <Icon n="briefcase" s={14} /> Browse Available Tasks
@@ -571,37 +464,28 @@ export default function OgaPayDashboard() {
 
             {/* ── STATS CARDS ── */}
             <div className="dash-stats-row">
-              <div className="dash-stat-card" onClick={() => navigate('/tasks')}
-                onMouseEnter={e => e.currentTarget.style.borderColor='#191C6B'}
-                onMouseLeave={e => e.currentTarget.style.borderColor='var(--border)'}>
+              <div className="dash-stat-card">
                 <div className="dash-stat-icon"><Icon n="briefcase" s={18} /></div>
                 <div className="dash-stat-info">
                   <div className="dash-stat-label">Available Tasks</div>
                   <div className="dash-stat-value">{availableTasks}</div>
                 </div>
               </div>
-              <div className="dash-stat-card" onClick={() => navigate('/wallet')}
-                onMouseEnter={e => e.currentTarget.style.borderColor='#191C6B'}
-                onMouseLeave={e => e.currentTarget.style.borderColor='var(--border)'}>
+              <div className="dash-stat-card">
                 <div className="dash-stat-icon"><Icon n="currency-naira" s={18} /></div>
                 <div className="dash-stat-info">
                   <div className="dash-stat-label">Total Earned</div>
                   <div className="dash-stat-value">{totalEarned}</div>
-                  <a href="/tasks" className="dash-earn-link"><Icon n="trending-up" s={11} /> Start Earning <Icon n="arrow-right" s={11} /></a>
                 </div>
               </div>
-              <div className="dash-stat-card" onClick={() => navigate('/my-tasks')}
-                onMouseEnter={e => e.currentTarget.style.borderColor='#191C6B'}
-                onMouseLeave={e => e.currentTarget.style.borderColor='var(--border)'}>
+              <div className="dash-stat-card">
                 <div className="dash-stat-icon"><Icon n="file-text" s={18} /></div>
                 <div className="dash-stat-info">
                   <div className="dash-stat-label">Tasks Posted</div>
                   <div className="dash-stat-value">{postedTasks}</div>
                 </div>
               </div>
-              <div className="dash-stat-card" onClick={() => navigate('/my-tasks')}
-                onMouseEnter={e => e.currentTarget.style.borderColor='#191C6B'}
-                onMouseLeave={e => e.currentTarget.style.borderColor='var(--border)'}>
+              <div className="dash-stat-card">
                 <div className="dash-stat-icon"><Icon n="activity" s={18} /></div>
                 <div className="dash-stat-info">
                   <div className="dash-stat-label">Active Tasks</div>
@@ -617,29 +501,29 @@ export default function OgaPayDashboard() {
             <h3>Resources</h3>
             <p className="dash-right-sub">Get help, watch guides, and connect with our community.</p>
 
-            <div className="dash-res-card" onClick={() => window.open('https://t.me/ogapaycommunity', '_blank')}>
+            <a href="https://t.me/ogapay" target="_blank" rel="noopener noreferrer" className="dash-res-card">
               <div className="dash-res-icon" style={{ background: "#0088cc" }}><Icon n="brand-telegram" s={18} c="#fff" /></div>
               <div>
                 <h4>Telegram Support</h4>
                 <p>Where the talk happens. Join us</p>
               </div>
-            </div>
+            </a>
 
-            <div className="dash-res-card" onClick={() => navigate('/faq')}>
+            <a href="/docs" className="dash-res-card">
               <div className="dash-res-icon"><Icon n="book" s={18} /></div>
               <div>
                 <h4>Documentation</h4>
                 <p>Learn how to earn on OgaPay. Full docs</p>
               </div>
-            </div>
+            </a>
 
-            <div className="dash-res-card" onClick={() => navigate('/communities')}>
+            <a href="/communities" className="dash-res-card">
               <div className="dash-res-icon" style={{ background: "#f59e0b" }}><Icon n="users" s={18} c="#fff" /></div>
               <div>
                 <h4>Community</h4>
                 <p>Join Nigerian Earners Hub</p>
               </div>
-            </div>
+            </a>
 
             <div className="dash-divider" />
 
@@ -677,7 +561,7 @@ export default function OgaPayDashboard() {
                 <span style={{ color: allDone ? "#16a34a" : "inherit" }}>{pct}%</span>
               </div>
               <div className="dash-progress-bar">
-                <div className={`dash-progress-fill${allDone ? " done" : ""}`} style={{ width: `${barPct}%` }} />
+                <div className={`dash-progress-fill${allDone ? " done" : ""}`} style={{ width: `${pct}%` }} />
               </div>
               {allDone && (
                 <div style={{ marginTop: 10, fontSize: 12, color: "#16a34a", fontWeight: 700, display: "flex", alignItems: "center", gap: 6 }}>
