@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 600" fill="none">
+  <rect width="400" height="600" fill="#f5f0ff"/>
+  <!-- Woman silhouette -->
+  <circle cx="200" cy="160" r="60" fill="#7C3AED" opacity="0.3"/>
+  <path d="M120 400c0-80 40-120 80-120s80 40 80 120" fill="#7C3AED" opacity="0.2"/>
+  <path d="M100 400c0-100 50-150 100-150s100 50 100 150" fill="#7C3AED" opacity="0.15"/>
+</svg>
