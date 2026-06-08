@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { injectSkeletonStyles } from "../components/SkeletonLoader";
 import { API_BASE } from "../lib/api";
@@ -573,6 +573,15 @@ function HowItWorks() {
 }
 
 /* ─── EARN PATHS ────────────────────────────────────────────────────────────── */
+const WORKSPACE_SLUGS: Record<string, string> = {
+  "Social Tasks": "social",
+  "Writing": "writing",
+  "Design": "design",
+  "App Testing": "testing",
+  "Research": "research",
+  "Dev Tasks": "development",
+};
+
 function EarnPaths() {
   const paths = [
     { icon: "brand-x", label: "Social Tasks" },
@@ -590,13 +599,13 @@ function EarnPaths() {
         <p className="section-sub" style={{ maxWidth: 480 }}>Pick tasks that match your skills and interests.</p>
         <div className="paths" style={{ margin: "36px auto 0", display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 14, maxWidth: 680 }}>
           {paths.map(p => (
-            <a key={p.label} href="/tasks" className="card-base" style={{ minHeight: 72, display: "flex", alignItems: "center", gap: 16, padding: "16px 20px", fontSize: 17, fontWeight: 800, textDecoration: "none" }}>
+            <Link key={p.label} to={"/worker/" + WORKSPACE_SLUGS[p.label]} className="card-base" style={{ minHeight: 72, display: "flex", alignItems: "center", gap: 16, padding: "16px 20px", fontSize: 17, fontWeight: 800, textDecoration: "none" }}>
               <div style={{ width: 42, height: 42, borderRadius: 10, display: "grid", placeItems: "center", background: "var(--bg2)", flexShrink: 0 }}>
                 <I n={p.icon} s={20} />
               </div>
               {p.label}
               <I n="chevron-right" s={18} c="var(--text3)" style={{ marginLeft: "auto" }} />
-            </a>
+            </Link>
           ))}
         </div>
       </div>

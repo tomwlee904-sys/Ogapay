@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate, useParams, useLocation } from 'react-router-dom'
+import { useNavigate, useParams, useLocation, useSearchParams } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { apiRequest } from '../lib/api'
 import { SkeletonPage, injectSkeletonStyles } from "../components/SkeletonLoader";
@@ -12,6 +12,7 @@ const API_CATEGORIES: Record<string, string> = {
   'TESTING': 'Testing',
   'DATA': 'Data',
   'VIDEO': 'Video',
+  'DEVELOPMENT': 'Development',
   'OTHER': 'Other',
 }
 
@@ -46,9 +47,13 @@ function mapApiTask(t: any) {
   }
 }
 
-async function fetchTasks() {
+async function fetchTasks(category?: string) {
   try {
-    const data = await apiRequest<any>('/tasks').catch(() => null)
+    let url = '/tasks'
+    if (category && category !== 'All' && category !== 'Trending' && category !== 'New') {
+      url += '?category=' + encodeURIComponent(category)
+    }
+    const data = await apiRequest<any>(url).catch(() => null)
     if (data) {
       const tasks = Array.isArray(data) ? data : (data.tasks || [])
       return tasks.map(mapApiTask)
@@ -59,7 +64,7 @@ async function fetchTasks() {
   }
 }
 
-const jobFilters = ['All', 'Trending', 'New', 'Social', 'Content', 'Testing', 'Design', 'Video', 'Data', 'Research']
+const jobFilters = ['All', 'Trending', 'New', 'Social', 'Content', 'Testing', 'Design', 'Video', 'Data', 'Research', 'Development']
 
 const formatAddress = (name: string) => {
   const initials = name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
@@ -332,10 +337,12 @@ function JobDetailView({ job, onBack }: { job: any; onBack: () => void }) {
 export default function Tasks() {
   const navigate = useNavigate()
   const { id } = useParams()
+  const [searchParams] = useSearchParams()
   const [jobs, setJobs] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
-  const [filter, setFilter] = useState('All')
+  const initialCategory = searchParams.get('category') || 'All'
+  const [filter, setFilter] = useState(initialCategory)
   const [bookmarked, setBookmarked] = useState<string[]>([])
   const [selectedJob, setSelectedJob] = useState<any>(null)
 
@@ -346,7 +353,7 @@ export default function Tasks() {
   useEffect(() => {
     const load = () => {
       setLoading(true)
-      fetchTasks().then(data => {
+      fetchTasks(filter).then(data => {
         setJobs(data)
         setLoading(false)
       })
@@ -354,7 +361,7 @@ export default function Tasks() {
     load()
     window.addEventListener('focus', load)
     return () => window.removeEventListener('focus', load)
-  }, [location.key])
+  }, [location.key, filter])
 
   // Load single job if id param present
   useEffect(() => {
@@ -581,7 +588,7 @@ export default function Tasks() {
         {filtered.length === 0 ? (
           <div className="empty-state">
             <i className="ti ti-search-off" />
-            <h3>No jobs found</h3>
+            <h3>{filter !== 'All' && filter !== 'Trending' && filter !== 'New' ? `No ${filter} Tasks Available` : 'No jobs found'}</h3>
             <p>Try adjusting your search or filter to find what you're looking for.</p>
           </div>
         ) : (

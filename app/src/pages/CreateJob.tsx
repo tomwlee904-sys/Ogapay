@@ -476,6 +476,7 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }) {
         return;
       }
 
+      const attachmentNames = attachments.map(f => f.name);
       const body = {
         title: title.trim(),
         description: description.trim(),
@@ -485,7 +486,7 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }) {
         category: CATEGORY_MAP[category] || CATEGORY_MAP[category || "Other"] || CATEGORY_MAP["Other"] || "OTHER",
         estimatedTime: selectionTime === "1h" ? 60 : selectionTime === "6h" ? 360 : selectionTime === "12h" ? 720 : selectionTime === "24h" ? 1440 : selectionTime === "48h" ? 2880 : selectionTime === "72h" ? 4320 : 10080,
         instructions: description.trim(),
-        tags: [category || "general"].filter(Boolean),
+        tags: [category || "general", ...attachmentNames].filter(Boolean),
         proofRequired: screenshotProof === "Yes" ? "Screenshot proof required" : undefined,
         currency,
         status: "OPEN",
