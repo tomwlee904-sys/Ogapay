@@ -68,6 +68,7 @@ export default function AuthCallback() {
                   lastName: userMeta.family_name || nParts.slice(1).join(' ') || '',
                   username: (session.user.email || 'user').split('@')[0],
                   role: 'WORKER',
+                  avatarUrl: userMeta.avatar_url || userMeta.picture || '',
                 }),
               });
 
@@ -137,8 +138,8 @@ export default function AuthCallback() {
             userMetadata: userMeta || {},
           }));
 
-          // Auto-sync Google profile to backend if we have app tokens
-          if (appTokens && appTokens.accessToken && !appUser) {
+          // Auto-sync Google profile to backend (runs even if appUser exists to catch missing avatarUrl)
+          if (appTokens && appTokens.accessToken) {
             try {
               const meta = session.user?.user_metadata || {};
               const gName = meta.full_name || meta.name || '';
@@ -147,14 +148,14 @@ export default function AuthCallback() {
               const lastName = meta.family_name || gParts.slice(1).join(' ') || '';
               const avatarUrl = meta.avatar_url || meta.picture || '';
 
-              if (firstName || avatarUrl) {
+              if (firstName || lastName || avatarUrl) {
                 const profileRes = await fetch(BACKEND_URL + '/users/me', {
                   headers: { 'Authorization': 'Bearer ' + appTokens.accessToken }
                 });
                 if (profileRes.ok) {
                   const profileData = await profileRes.json();
                   const current = profileData.data || profileData;
-                  const updateBody = {};
+                  const updateBody: Record<string, string> = {};
 
                   if (!current.firstName && firstName) updateBody.firstName = firstName;
                   if (!current.lastName && lastName) updateBody.lastName = lastName;

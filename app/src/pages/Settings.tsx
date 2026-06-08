@@ -64,7 +64,7 @@ export default function Settings() {
           setTwoFactorEnabled(data.twoFactorEnabled ?? false)
         }
       } catch {
-        // fall back to defaults
+        showToast('Failed to load settings', 'error')
       } finally {
         setLoading(false)
       }

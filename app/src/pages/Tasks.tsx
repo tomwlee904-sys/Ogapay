@@ -60,6 +60,8 @@ async function fetchTasks(category?: string) {
     }
     return []
   } catch {
+    const el = document.getElementById('appToast')
+    if (el) { el.textContent = 'Failed to load tasks'; el.classList.add('show'); setTimeout(() => el.classList.remove('show'), 3000) }
     return []
   }
 }

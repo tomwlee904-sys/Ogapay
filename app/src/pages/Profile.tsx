@@ -944,7 +944,8 @@ export default function Profile() {
                         const url = await uploadImage(file, 'avatars');
                         setEditForm(f => ({...f, avatarUrl: url}));
                       } catch {
-                        // Fallback to base64
+                        const el = document.getElementById('appToast');
+                        if (el) { el.textContent = 'Image upload failed, using local copy'; el.classList.add('show'); setTimeout(() => el.classList.remove('show'), 2500); }
                         const reader = new FileReader();
                         reader.onload = (ev) => {
                           setEditForm(f => ({...f, avatarUrl: ev.target?.result as string}));
@@ -1051,10 +1052,11 @@ export default function Profile() {
                     }
 
                     if (bioChanged) {
-                      await apiRequest('/users/me', {
+                      const bioRes = await apiRequest('/users/me', {
                         method: 'PATCH',
                         body: JSON.stringify({ bio: editForm.bio }),
-                      }).catch(() => {});
+                      }).catch(() => null);
+                      if (!bioRes) throw new Error('Failed to update profile');
                     }
 
                     setShowEdit(false);

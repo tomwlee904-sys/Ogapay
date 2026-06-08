@@ -195,7 +195,8 @@ export default function OgaPayDashboard() {
           setTotalEarned("₦" + Number(total).toLocaleString());
         }
       } catch (e) {
-        // keep defaults
+        const el = document.getElementById('appToast')
+        if (el) { el.textContent = 'Could not load dashboard data'; el.classList.add('show'); setTimeout(() => el.classList.remove('show'), 3000) }
       }
       setDashLoading(false);
     }

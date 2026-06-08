@@ -9,6 +9,7 @@ export default function Wallet() {
   const [balances, setBalances] = useState<Record<string, { balance: number; lockedBalance: number; available: number }> | null>(null)
   const [transactions, setTransactions] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState('')
   const { fmt, fmtAll, preferredCurrency } = useCurrency()
 
   useEffect(() => {
@@ -20,7 +21,10 @@ export default function Wallet() {
         ])
         if (balData) setBalances(balData)
         if (txData) setTransactions(Array.isArray(txData) ? txData : [])
-      } catch {}
+        if (!balData && !txData) setLoadError('Could not load wallet data. Try again later.')
+      } catch {
+        setLoadError('Could not load wallet data. Try again later.')
+      }
       setLoading(false)
     }
     load()
@@ -177,6 +181,8 @@ export default function Wallet() {
 
       {loading ? (
         <div className="wl-loading"><span className="spinner" /> Loading transactions...</div>
+      ) : loadError ? (
+        <div className="wl-empty"><i className="ti ti-alert-triangle" style={{ fontSize: 32, marginBottom: 8, display: 'block', color: '#DC2626' }} />{loadError}</div>
       ) : filtered.length === 0 ? (
         <div className="wl-empty"><i className="ti ti-history" style={{ fontSize: 32, marginBottom: 8, display: 'block', color: 'var(--text3)' }} />No transactions found</div>
       ) : (

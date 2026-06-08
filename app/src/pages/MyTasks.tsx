@@ -60,8 +60,10 @@ export default function MyTasks() {
         if (json.success && json.data) {
           setSubmissions(json.data)
         }
-      } catch {}
-      setLoading(false)
+      } catch {
+        const el = document.getElementById('appToast')
+        if (el) { el.textContent = 'Failed to load submissions'; el.classList.add('show'); setTimeout(() => el.classList.remove('show'), 3000) }
+      } finally { setLoading(false) }
     }
     fetchSubmissions()
   }, [])
