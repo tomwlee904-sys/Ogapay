@@ -120,9 +120,8 @@ export async function apiRequest<T = unknown>(path: string, options: ApiOptions 
       console.log('[apiRequest] Refresh succeeded for', path)
       return apiRequest<T>(path, { ...options, retryOnUnauthorized: false })
     }
-    console.log('[apiRequest] Refresh failed for', path, '- NOT clearing auth (letting caller handle error)')
-    // Don't call clearAuthSession here — let the caller's error handling
-    // decide what to do. AuthContext's refreshUser() handles central logout.
+    console.log('[apiRequest] Refresh failed for', path, '- clearing auth')
+    clearAuthSession()
   }
 
   return parseResponse(res)

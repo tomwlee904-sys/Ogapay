@@ -47,8 +47,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       persistAuthSession({ user: nextUser })
       return nextUser
     } catch {
-      // Only log out if auth was already cleared by apiRequest (401 + refresh failed).
-      // Keep the user logged in on transient/network errors so a deploy or blip doesn't boot them.
+      // apiRequest clears auth on 401 + failed refresh, otherwise the error is a transient/server
+      // blip and the session is still valid. Only log out if tokens are already gone.
       if (!getAccessToken()) {
         clearAuthSession()
         setUser(null)
