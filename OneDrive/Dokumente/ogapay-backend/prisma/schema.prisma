@@ -119,6 +119,10 @@ model User {
   isBanned        Boolean   @default(false) @map("is_banned")
   referralCode    String    @unique @map("referral_code")
   referredById    String?   @map("referred_by_id")
+  twitter         String?
+  telegram        String?
+  discord         String?
+  website         String?
   lastLoginAt     DateTime? @map("last_login_at")
   createdAt       DateTime  @default(now()) @map("created_at")
   updatedAt       DateTime  @updatedAt @map("updated_at")

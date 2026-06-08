@@ -796,12 +796,9 @@ export default function Profile() {
                     <StatRow label="Success Rate" val={profileData?.workerProfile?.successRate ? profileData.workerProfile.successRate + '%' : '0%'} />
                     <StatRow label="Total Earned" val={profileData?.workerProfile?.totalEarned ? fmt(Number(profileData.workerProfile.totalEarned), "NGN") : fmt(0, "NGN")} />
                     <StatRow label="Avg Rating" val={profileData?.workerProfile?.avgRating?.toFixed(1) || '0.0'} info />
-                    <StatRow label="Verified X Account" val={profileData?.x_connected ? 'Yes' : 'No'} valClass={profileData?.x_connected ? 'yes' : 'no'} />
-                    {!profileData?.x_connected && (
-                      <button className="dash-btn" style={{width:'100%',justifyContent:'center',marginTop:10,background:'transparent',border:'1.5px solid var(--border)',color:'var(--text)'}}>
-                        <XIcon size={14} /> Connect X Account
-                      </button>
-                    )}
+                    <StatRow label="Nickname" val={profileData?.workerProfile?.nickname || '-'} />
+                    <StatRow label="Skills" val={profileData?.workerProfile?.skills?.length ? profileData.workerProfile.skills.slice(0,3).join(', ')+(profileData.workerProfile.skills.length>3?' +'+profileData.workerProfile.skills.length-3:'') : '-'} />
+                    <StatRow label="Categories" val={profileData?.workerProfile?.categories?.length ? profileData.workerProfile.categories.join(', ') : '-'} />
                     <StatRow label="Seeker User" val={profileData?.role === 'POSTER' ? 'Yes' : 'No'} valClass={profileData?.role === 'POSTER' ? 'yes' : 'no'} />
                     <StatRow label="Human Verified" val={isKycVerified ? 'Yes' : 'No'} valClass={isKycVerified ? 'yes' : 'no'} />
                     {!isKycVerified && (
@@ -1027,15 +1024,13 @@ export default function Profile() {
                   if (usernameCheck === 'taken') { setEditErrors({username:'This username is taken'}); return; }
                   setSavingProfile(true); setEditErrors({});
                   try {
-                    const body: Record<string, string> = {};
+                    const body: Record<string, any> = {};
                     if (editForm.firstName !== (user?.firstName || '')) body.firstName = editForm.firstName;
                     if (editForm.lastName !== (user?.lastName || '')) body.lastName = editForm.lastName;
                     if (editForm.username !== (user?.username || '')) body.username = editForm.username;
                     if (editForm.avatarUrl !== (user?.avatarUrl || '') && editForm.avatarUrl && !editForm.avatarUrl.startsWith('data:')) body.avatarUrl = editForm.avatarUrl;
+                    if (editForm.bio !== (profileData?.workerProfile?.bio || '')) body.bio = editForm.bio;
 
-                    // Bio is on workerProfile
-                    let bioChanged = editForm.bio !== (profileData?.workerProfile?.bio || '');
-                    
                     if (Object.keys(body).length > 0) {
                       const updated = await apiRequest('/users/me', {
                         method: 'PATCH',
@@ -1044,14 +1039,6 @@ export default function Profile() {
                       if (!updated) throw new Error('Failed to update profile');
                       const userData = await apiRequest('/users/me').catch(() => null);
                       if (userData) setProfileData(userData);
-                    }
-
-                    if (bioChanged) {
-                      const bioRes = await apiRequest('/users/me', {
-                        method: 'PATCH',
-                        body: JSON.stringify({ bio: editForm.bio }),
-                      }).catch(() => null);
-                      if (!bioRes) throw new Error('Failed to update profile');
                     }
 
                     setShowEdit(false);

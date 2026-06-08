@@ -1,117 +1,157 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { useAuth } from '../context/AuthContext'
 import { apiRequest } from '../lib/api'
+import { uploadImage } from '../lib/upload'
+
+const CATEGORIES = [
+  'SOCIAL_MEDIA', 'DATA_ENTRY', 'CONTENT_WRITING', 'APP_TESTING',
+  'SURVEY', 'DESIGN', 'TRANSLATION', 'WEB_RESEARCH', 'VIDEO_REVIEW', 'OTHER',
+]
+const CATEGORY_LABELS: Record<string, string> = {
+  SOCIAL_MEDIA: 'Social Media', DATA_ENTRY: 'Data Entry', CONTENT_WRITING: 'Content Writing',
+  APP_TESTING: 'App Testing', SURVEY: 'Survey', DESIGN: 'Design',
+  TRANSLATION: 'Translation', WEB_RESEARCH: 'Web Research', VIDEO_REVIEW: 'Video Review',
+  OTHER: 'Other',
+}
 
 export default function EditProfile() {
   const navigate = useNavigate()
-  const { user, refreshUser } = useAuth()
+  const { refreshUser } = useAuth()
   const [saved, setSaved] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(true)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
-  // Form state
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [username, setUsername] = useState('')
-  const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
+  const [avatarUrl, setAvatarUrl] = useState('')
   const [bio, setBio] = useState('')
-  const [country, setCountry] = useState('')
-  const [city, setCity] = useState('')
-  const [timezone, setTimezone] = useState('')
-  const [publicProfile, setPublicProfile] = useState('yes')
-  const [showEarnings, setShowEarnings] = useState('yes')
+  const [nickname, setNickname] = useState('')
+  const [description, setDescription] = useState('')
+  const [skillsInput, setSkillsInput] = useState('')
+  const [skills, setSkills] = useState<string[]>([])
+  const [categories, setCategories] = useState<string[]>([])
+  const [tags, setTags] = useState<string[]>([])
+  const [tagInput, setTagInput] = useState('')
+  const [isPublic, setIsPublic] = useState(true)
+
   const [twitter, setTwitter] = useState('')
   const [telegram, setTelegram] = useState('')
   const [discord, setDiscord] = useState('')
   const [website, setWebsite] = useState('')
-  const [category, setCategory] = useState('')
-  const [experience, setExperience] = useState('')
-  const [skills, setSkills] = useState('')
 
-  // Load existing data
   useEffect(() => {
-    if (!user) {
-      setLoading(false)
-      return
-    }
-    ;(async () => {
+    (async () => {
       try {
         const data: any = await apiRequest('/users/me')
         if (data) {
-          setFirstName(data.firstName || user.firstName || '')
-          setLastName(data.lastName || user.lastName || '')
-          setUsername(data.username || user.username || '')
-          setEmail(data.email || user.email || '')
+          setFirstName(data.firstName || '')
+          setLastName(data.lastName || '')
+          setUsername(data.username || '')
           setPhone(data.phone || '')
-          setBio(data.bio || '')
-          setCountry(data.country || '')
-          setCity(data.city || '')
-          setTimezone(data.timezone || '')
-          setPublicProfile(data.isPublic !== false ? 'yes' : 'no')
-          setShowEarnings(data.showEarnings !== false ? 'yes' : 'no')
+          setAvatarUrl(data.avatarUrl || '')
           setTwitter(data.twitter || '')
           setTelegram(data.telegram || '')
           setDiscord(data.discord || '')
           setWebsite(data.website || '')
-          setCategory(data.category || '')
-          setExperience(data.experience || '')
-          setSkills(data.skills || '')
-        } else {
-          // Fall back to auth user
-          setFirstName(user.firstName || '')
-          setLastName(user.lastName || '')
-          setUsername(user.username || '')
-          setEmail(user.email || '')
+
+          const wp = data.workerProfile || {}
+          setBio(wp.bio || '')
+          setNickname(wp.nickname || '')
+          setDescription(wp.description || '')
+          setSkills(wp.skills || [])
+          setCategories(wp.categories || [])
+          setTags(wp.tags || [])
+          setIsPublic(wp.isPublic !== false)
         }
       } catch {
-        if (user) {
-          setFirstName(user.firstName || '')
-          setLastName(user.lastName || '')
-          setUsername(user.username || '')
-          setEmail(user.email || '')
-        }
+        setError('Failed to load profile')
       } finally {
         setLoading(false)
       }
     })()
-  }, [user])
+  }, [])
+
+  const toggleCategory = (cat: string) => {
+    setCategories(prev =>
+      prev.includes(cat) ? prev.filter(c => c !== cat) : prev.length < 3 ? [...prev, cat] : prev
+    )
+  }
+
+  const addSkill = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault()
+      const val = skillsInput.trim()
+      if (val && !skills.includes(val)) {
+        setSkills(prev => [...prev, val])
+        setSkillsInput('')
+      }
+    }
+  }
+
+  const removeSkill = (s: string) => setSkills(prev => prev.filter(v => v !== s))
+
+  const addTag = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault()
+      const val = tagInput.trim()
+      if (val && !tags.includes(val)) {
+        setTags(prev => [...prev, val])
+        setTagInput('')
+      }
+    }
+  }
+
+  const removeTag = (t: string) => setTags(prev => prev.filter(v => v !== t))
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    try {
+      const url = await uploadImage(file, 'avatars')
+      setAvatarUrl(url)
+    } catch {
+      setError('Avatar upload failed')
+    }
+  }
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
     setSaving(true)
     try {
+      const body: Record<string, any> = {
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        username: username.trim(),
+        phone: phone.trim(),
+        avatarUrl: avatarUrl,
+        bio: bio.trim(),
+        nickname: nickname.trim(),
+        description: description.trim(),
+        skills,
+        categories,
+        tags,
+        isPublic,
+        twitter: twitter.trim(),
+        telegram: telegram.trim(),
+        discord: discord.trim(),
+        website: website.trim(),
+      }
       await apiRequest('/users/me', {
         method: 'PATCH',
-        body: JSON.stringify({
-          firstName: firstName.trim(),
-          lastName: lastName.trim(),
-          username: username.trim(),
-          phone: phone.trim(),
-          bio: bio.trim(),
-          country: country.trim(),
-          city: city.trim(),
-          timezone: timezone.trim(),
-          isPublic: publicProfile === 'yes',
-          showEarnings: showEarnings === 'yes',
-          twitter: twitter.trim(),
-          telegram: telegram.trim(),
-          discord: discord.trim(),
-          website: website.trim(),
-          category,
-          experience,
-          skills: skills.trim(),
-        }),
+        body: JSON.stringify(body),
       })
       await refreshUser()
       setSaved(true)
       setTimeout(() => setSaved(false), 2500)
     } catch (err: any) {
-      setError(err.message || 'Failed to save profile. Please try again.')
+      setError(err.message || 'Failed to save profile')
     } finally {
       setSaving(false)
     }
@@ -136,64 +176,41 @@ export default function EditProfile() {
         .ep-bread span{cursor:pointer;color:var(--text2)}
         .ep-bread span:hover{color:var(--accent)}
         .ep-bread .current{color:var(--text2);font-weight:600}
-
-        .ep-header{display:flex;gap:2rem;margin-bottom:2rem}
-        .ep-avatar-wrap{width:120px;height:120px;border-radius:16px;overflow:hidden;flex-shrink:0;position:relative;border:3px solid var(--card);box-shadow:0 4px 12px rgba(0,0,0,0.08);transition:all .3s ease;cursor:pointer}
-        .ep-avatar-wrap:hover{transform:scale(1.03);box-shadow:0 8px 20px rgba(0,0,0,0.12)}
-        .ep-avatar-wrap img{width:100%;height:100%;object-fit:cover;transition:transform .3s ease}
-        .ep-avatar-wrap:hover img{transform:scale(1.1)}
-        .ep-avatar-empty{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--bg2),var(--border))}
-        .ep-avatar-empty i{font-size:40px;color:var(--text3)}
-        .ep-avatar-overlay{
-          position:absolute;inset:0;background:rgba(0,0,0,0.5);
-          display:flex;align-items:center;justify-content:center;
-          opacity:0;transition:opacity .3s;border-radius:13px;
-        }
+        .ep-avatar-wrap{width:100px;height:100px;border-radius:50%;overflow:hidden;flex-shrink:0;position:relative;border:3px solid var(--card);box-shadow:0 4px 12px rgba(0,0,0,0.08);cursor:pointer}
+        .ep-avatar-wrap img{width:100%;height:100%;object-fit:cover}
+        .ep-avatar-empty{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:var(--bg2);border-radius:50%}
+        .ep-avatar-empty i{font-size:36px;color:var(--text3)}
+        .ep-avatar-overlay{position:absolute;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .3s;border-radius:50%}
         .ep-avatar-wrap:hover .ep-avatar-overlay{opacity:1}
-        .ep-avatar-overlay i{color:#fff;font-size:24px}
-        .ep-info{flex:1;display:flex;flex-direction:column;gap:.75rem;justify-content:center}
-        .ep-name-row{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem}
-        .ep-name{display:flex;align-items:center;gap:.75rem}
-        .ep-name h2{font-size:1.75rem;font-weight:800;color:var(--text);margin:0;letter-spacing:-.02em}
-        .ep-badge{font-size:11px;font-weight:600;color:#22c55e;background:#052e16;padding:3px 10px;border-radius:20px;display:inline-flex;align-items:center;gap:4px}
-        .ep-badge i{font-size:10px}
-
-        .ep-bio-section{background:var(--bg2);border-radius:12px;padding:1.25rem;margin-top:.5rem;border:1px solid var(--border)}
-        .ep-bio-label{font-size:.75rem;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.75rem}
-        .ep-bio-text{white-space:pre-wrap;color:var(--text2);line-height:1.7;font-size:.9rem}
-
-        /* Form */
+        .ep-avatar-overlay i{color:#fff;font-size:22px}
         .ep-section{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px;margin-bottom:16px}
         .ep-section-title{font-weight:800;font-size:14px;margin-bottom:16px;display:flex;align-items:center;gap:8px;color:var(--text)}
         .ep-section-title i{color:var(--accent)}
         .ep-field{margin-bottom:14px}
         .ep-field:last-child{margin-bottom:0}
         .ep-field label{display:block;font-size:11px;font-weight:700;color:var(--text3);margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em}
-        .ep-field input,.ep-field textarea,.ep-field select{
-          width:100%;padding:0 12px;border:1px solid var(--border);border-radius:8px;
-          background:var(--bg2);color:var(--text);font-size:13px;
-          outline:0;transition:border-color .2s;height:38px;box-sizing:border-box;
-        }
-        .ep-field textarea{height:80px;padding:10px 12px;resize:vertical;font-family:inherit}
+        .ep-field input,.ep-field textarea,.ep-field select{width:100%;padding:0 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg2);color:var(--text);font-size:13px;outline:0;transition:border-color .2s;height:38px;box-sizing:border-box;font-family:inherit}
+        .ep-field textarea{height:80px;padding:10px 12px;resize:vertical}
         .ep-field input:focus,.ep-field textarea:focus,.ep-field select:focus{border-color:var(--accent)}
         .ep-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-        @media(max-width:600px){
-          .ep-header{flex-direction:column;align-items:center;text-align:center;gap:1rem}
-          .ep-avatar-wrap{width:90px;height:90px}
-          .ep-name-row{flex-direction:column;align-items:center}
-          .ep-row{grid-template-columns:1fr}
-        }
-        .ep-save-btn{
-          height:42px;padding:0 28px;border-radius:10px;border:0;
-          background:var(--accent);color:#fff;font-weight:700;font-size:14px;
-          display:inline-flex;align-items:center;gap:8px;cursor:pointer;
-          transition:all .2s;font-family:inherit;
-        }
+        @media(max-width:600px){.ep-row{grid-template-columns:1fr}}
+        .ep-save-btn{height:42px;padding:0 28px;border-radius:10px;border:0;background:var(--accent);color:#fff;font-weight:700;font-size:14px;display:inline-flex;align-items:center;gap:8px;cursor:pointer;transition:all .2s;font-family:inherit}
         .ep-save-btn:hover{box-shadow:0 4px 16px rgba(31,140,255,.25);transform:translateY(-1px)}
         .ep-save-btn:disabled{opacity:.6;cursor:not-allowed;transform:none}
-        .ep-toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--green);color:#fff;padding:10px 24px;border-radius:10px;font-size:13px;font-weight:700;z-index:999;opacity:0;transition:all .3s;pointer-events:none}
+        .ep-toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:#16a34a;color:#fff;padding:10px 24px;border-radius:10px;font-size:13px;font-weight:700;z-index:999;opacity:0;transition:all .3s;pointer-events:none}
         .ep-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
         .ep-error{background:rgba(220,38,38,.1);color:#dc2626;border:1px solid rgba(220,38,38,.2);border-radius:8px;padding:10px 14px;font-size:12px;font-weight:600;margin-bottom:12px}
+        .chip{display:inline-flex;align-items:center;gap:4px;padding:5px 12px;border-radius:99px;border:1.5px solid var(--border);font-size:12px;font-weight:600;color:var(--text2);cursor:pointer;background:var(--bg2);transition:all .13s;margin:0 6px 6px 0}
+        .chip.selected{background:var(--text);color:var(--bg);border-color:var(--text)}
+        .tag{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:99px;background:var(--bg2);border:1px solid var(--border);font-size:12px;font-weight:600;margin:0 6px 6px 0}
+        .tag .remove{cursor:pointer;color:var(--text3);font-size:14px;line-height:1;margin-left:2px}
+        .tag .remove:hover{color:var(--text)}
+        .ep-toggle{display:flex;align-items:center;gap:10px;font-size:13px;font-weight:600;color:var(--text2)}
+        .ep-toggle .tg-btn{width:40px;height:22px;border-radius:99px;border:none;background:var(--border);cursor:pointer;position:relative;flex-shrink:0;padding:0}
+        .ep-toggle .tg-btn .knob{width:16px;height:16px;border-radius:50%;background:white;position:absolute;top:3px;left:3px;transition:all .2s;box-shadow:0 1px 3px rgba(0,0,0,.15)}
+        .ep-toggle .tg-btn.on{background:rgba(31,140,255,.2)}
+        .ep-toggle .tg-btn.on .knob{left:21px;background:var(--accent)}
+        .ep-hint{font-size:10px;color:var(--text3);margin-top:4px;display:block}
       `}</style>
 
       <div className="ep-page">
@@ -203,32 +220,32 @@ export default function EditProfile() {
           <span className="current">Edit Profile</span>
         </div>
 
-        {/* Header */}
-        <div className="ep-header">
-          <div className="ep-avatar-wrap">
-            {user?.avatarUrl ? (
-              <img src={user.avatarUrl} alt="avatar" />
-            ) : (
-              <div className="ep-avatar-empty"><i className="ti ti-user" /></div>
-            )}
-            <div className="ep-avatar-overlay"><i className="ti ti-camera" /></div>
-          </div>
-          <div className="ep-info">
-            <div className="ep-name-row">
-              <div className="ep-name">
-                <h2>{firstName || lastName ? `${firstName} ${lastName}` : 'Edit Profile'}</h2>
-                <span className="ep-badge"><i className="ti ti-circle-check-filled" /> {user?.isEmailVerified ? 'Verified' : 'Unverified'}</span>
-              </div>
-            </div>
-            <div className="ep-bio-section">
-              <div className="ep-bio-label">Bio</div>
-              <div className="ep-bio-text">{bio || 'No bio yet — tell others about yourself'}</div>
-            </div>
-          </div>
-        </div>
-
         <form onSubmit={handleSave}>
           {error && <div className="ep-error"><i className="ti ti-alert-circle" style={{marginRight:6}} />{error}</div>}
+
+          {/* Avatar */}
+          <div className="ep-section">
+            <div className="ep-section-title"><i className="ti ti-camera" /> Profile Photo</div>
+            <div style={{display:'flex',alignItems:'center',gap:20}}>
+              <div className="ep-avatar-wrap" onClick={() => fileInputRef.current?.click()}>
+                {avatarUrl ? (
+                  <img src={avatarUrl} alt="avatar" />
+                ) : (
+                  <div className="ep-avatar-empty"><i className="ti ti-user" /></div>
+                )}
+                <div className="ep-avatar-overlay"><i className="ti ti-camera" /></div>
+              </div>
+              <div>
+                <button type="button" className="ep-save-btn" style={{height:34,fontSize:12,padding:'0 14px'}} onClick={() => fileInputRef.current?.click()}>
+                  <i className="ti ti-upload" /> Upload Photo
+                </button>
+                <div className="ep-hint">Click to upload or paste a URL below</div>
+                <input type="text" placeholder="https://example.com/photo.jpg" style={{width:280,marginTop:6,padding:'6px 10px',border:'1px solid var(--border)',borderRadius:6,fontSize:12,background:'var(--bg2)',color:'var(--text)',outline:'none',fontFamily:'inherit'}}
+                  value={avatarUrl} onChange={e => setAvatarUrl(e.target.value)} />
+              </div>
+            </div>
+            <input ref={fileInputRef} type="file" accept="image/*" style={{display:'none'}} onChange={handleAvatarUpload} />
+          </div>
 
           {/* Basic Information */}
           <div className="ep-section">
@@ -236,79 +253,95 @@ export default function EditProfile() {
             <div className="ep-row">
               <div className="ep-field">
                 <label>First Name</label>
-                <input type="text" value={firstName} onChange={e => setFirstName(e.target.value)} placeholder="Your first name" />
+                <input type="text" value={firstName} onChange={e => setFirstName(e.target.value)} />
               </div>
               <div className="ep-field">
                 <label>Last Name</label>
-                <input type="text" value={lastName} onChange={e => setLastName(e.target.value)} placeholder="Your last name" />
+                <input type="text" value={lastName} onChange={e => setLastName(e.target.value)} />
               </div>
             </div>
             <div className="ep-row">
               <div className="ep-field">
                 <label>Username</label>
-                <input type="text" value={username} onChange={e => setUsername(e.target.value)} placeholder="Choose a username" />
+                <input type="text" value={username} onChange={e => setUsername(e.target.value)} />
               </div>
               <div className="ep-field">
-                <label>Email</label>
-                <input type="email" value={email} disabled style={{opacity:.6}} />
+                <label>Phone</label>
+                <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="+234..." />
               </div>
             </div>
-            <div className="ep-field">
-              <label>Phone</label>
-              <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="+234..." />
-            </div>
-          </div>
-
-          {/* Location */}
-          <div className="ep-section">
-            <div className="ep-section-title"><i className="ti ti-map-pin" /> Location</div>
             <div className="ep-row">
               <div className="ep-field">
-                <label>Country</label>
-                <input type="text" value={country} onChange={e => setCountry(e.target.value)} placeholder="Nigeria" />
+                <label>Nickname</label>
+                <input type="text" value={nickname} onChange={e => setNickname(e.target.value)} placeholder="How others see you" />
               </div>
-              <div className="ep-field">
-                <label>City</label>
-                <input type="text" value={city} onChange={e => setCity(e.target.value)} placeholder="Lagos" />
-              </div>
-            </div>
-            <div className="ep-field">
-              <label>Timezone</label>
-              <select value={timezone} onChange={e => setTimezone(e.target.value)}>
-                <option value="">Select timezone</option>
-                <option value="Africa/Lagos">Africa/Lagos (WAT)</option>
-                <option value="Africa/Accra">Africa/Accra (GMT)</option>
-                <option value="Africa/Nairobi">Africa/Nairobi (EAT)</option>
-                <option value="Africa/Cairo">Africa/Cairo (EET)</option>
-                <option value="Europe/London">Europe/London (GMT/BST)</option>
-                <option value="America/New_York">America/New_York (EST/EDT)</option>
-              </select>
-            </div>
-          </div>
-
-          {/* Profile Settings */}
-          <div className="ep-section">
-            <div className="ep-section-title"><i className="ti ti-settings" /> Profile Settings</div>
-            <div className="ep-field">
-              <label>Bio</label>
-              <textarea value={bio} onChange={e => setBio(e.target.value)} placeholder="Tell others about yourself, your skills, and what you do on OgaPay..." maxLength={500} />
-              <span style={{fontSize:10,color:'var(--text3)',marginTop:4,display:'block'}}>{bio.length}/500</span>
-            </div>
-            <div className="ep-row">
               <div className="ep-field">
                 <label>Public Profile</label>
-                <select value={publicProfile} onChange={e => setPublicProfile(e.target.value)}>
-                  <option value="yes">Visible to everyone</option>
-                  <option value="no">Hidden</option>
-                </select>
+                <div className="ep-toggle">
+                  <button type="button" className={`tg-btn ${isPublic ? 'on' : ''}`} onClick={() => setIsPublic(!isPublic)}>
+                    <span className="knob" />
+                  </button>
+                  {isPublic ? 'Visible to everyone' : 'Hidden'}
+                </div>
               </div>
-              <div className="ep-field">
-                <label>Show Earnings</label>
-                <select value={showEarnings} onChange={e => setShowEarnings(e.target.value)}>
-                  <option value="yes">Visible on profile</option>
-                  <option value="no">Hidden</option>
-                </select>
-              </div>
+            </div>
+          </div>
+
+          {/* Bio & Description */}
+          <div className="ep-section">
+            <div className="ep-section-title"><i className="ti ti-file-text" /> Bio & Description</div>
+            <div className="ep-field">
+              <label>Bio</label>
+              <textarea value={bio} onChange={e => { if (e.target.value.length <= 500) setBio(e.target.value) }} placeholder="Short bio about yourself..." maxLength={500} />
+              <span className="ep-hint">{bio.length}/500</span>
+            </div>
+            <div className="ep-field">
+              <label>Description</label>
+              <textarea value={description} onChange={e => { if (e.target.value.length <= 1000) setDescription(e.target.value) }} placeholder="Detailed description of your skills and experience..." maxLength={1000} style={{height:100}} />
+              <span className="ep-hint">{description.length}/1000</span>
+            </div>
+          </div>
+
+          {/* Categories */}
+          <div className="ep-section">
+            <div className="ep-section-title"><i className="ti ti-category" /> Categories (max 3)</div>
+            <div>
+              {CATEGORIES.map(cat => (
+                <span key={cat} className={`chip ${categories.includes(cat) ? 'selected' : ''}`} onClick={() => toggleCategory(cat)}>
+                  {CATEGORY_LABELS[cat] || cat}
+                </span>
+              ))}
+            </div>
+            <span className="ep-hint" style={{marginTop:8}}>{categories.length}/3 selected</span>
+          </div>
+
+          {/* Skills */}
+          <div className="ep-section">
+            <div className="ep-section-title"><i className="ti ti-star" /> Skills</div>
+            <div className="ep-field">
+              <label>Add Skill</label>
+              <input type="text" value={skillsInput} onChange={e => setSkillsInput(e.target.value)} onKeyDown={addSkill} placeholder="Type a skill and press Enter" />
+            </div>
+            <div style={{marginTop:8}}>
+              {skills.map(s => (
+                <span key={s} className="tag">{s} <span className="remove" onClick={() => removeSkill(s)}>&times;</span></span>
+              ))}
+              {!skills.length && <span className="ep-hint">No skills added yet</span>}
+            </div>
+          </div>
+
+          {/* Tags */}
+          <div className="ep-section">
+            <div className="ep-section-title"><i className="ti ti-tags" /> Tags</div>
+            <div className="ep-field">
+              <label>Add Tag</label>
+              <input type="text" value={tagInput} onChange={e => setTagInput(e.target.value)} onKeyDown={addTag} placeholder="Type a tag and press Enter" />
+            </div>
+            <div style={{marginTop:8}}>
+              {tags.map(t => (
+                <span key={t} className="tag">{t} <span className="remove" onClick={() => removeTag(t)}>&times;</span></span>
+              ))}
+              {!tags.length && <span className="ep-hint">No tags added yet</span>}
             </div>
           </div>
 
@@ -334,40 +367,6 @@ export default function EditProfile() {
                 <label><i className="ti ti-world" style={{fontSize:12}} /> Website</label>
                 <input type="text" value={website} onChange={e => setWebsite(e.target.value)} placeholder="https://..." />
               </div>
-            </div>
-          </div>
-
-          {/* Skills & Expertise */}
-          <div className="ep-section">
-            <div className="ep-section-title"><i className="ti ti-star" /> Skills & Expertise</div>
-            <div className="ep-row">
-              <div className="ep-field">
-                <label>Category</label>
-                <select value={category} onChange={e => setCategory(e.target.value)}>
-                  <option value="">Select expertise</option>
-                  <option value="design">Design</option>
-                  <option value="writing">Writing</option>
-                  <option value="social">Social Media</option>
-                  <option value="dev">Development</option>
-                  <option value="marketing">Marketing</option>
-                  <option value="community">Community</option>
-                  <option value="research">Research</option>
-                </select>
-              </div>
-              <div className="ep-field">
-                <label>Experience</label>
-                <select value={experience} onChange={e => setExperience(e.target.value)}>
-                  <option value="">Select level</option>
-                  <option value="beginner">Beginner</option>
-                  <option value="intermediate">Intermediate</option>
-                  <option value="expert">Expert</option>
-                </select>
-              </div>
-            </div>
-            <div className="ep-field">
-              <label>Skill Tags</label>
-              <input type="text" value={skills} onChange={e => setSkills(e.target.value)} placeholder="e.g. Design, Writing, Marketing" />
-              <span style={{fontSize:10,color:'var(--text3)',marginTop:4,display:'block'}}>Separate with commas</span>
             </div>
           </div>
 

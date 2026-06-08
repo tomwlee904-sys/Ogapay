@@ -1,54 +1,47 @@
-import { supabase } from './supabaseClient'
+import { API_BASE, getAccessToken } from './api'
 
-const BUCKET = 'ogapay-uploads'
-
-/**
- * Upload an image file to Supabase Storage and return a public URL.
- * Falls back to base64 data URL if upload fails.
- */
-export async function uploadImage(
-  file: File,
-  folder: string = 'general'
-): Promise<string> {
-  // Generate unique filename
-  const ext = file.name.split('.').pop() || 'jpg'
-  const filename = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`
-  const path = `${folder}/${filename}`
-
-  try {
-    const { data, error } = await supabase.storage
-      .from(BUCKET)
-      .upload(path, file, {
-        cacheControl: '3600',
-        upsert: false,
-      })
-
-    if (error) throw error
-
-    // Get public URL
-    const { data: publicUrl } = supabase.storage
-      .from(BUCKET)
-      .getPublicUrl(data.path)
-
-    return publicUrl.publicUrl
-  } catch (err) {
-    console.warn('Supabase upload failed, falling back to base64:', err)
-    // Fallback: convert to base64 data URL
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader()
-      reader.onload = () => resolve(reader.result as string)
-      reader.onerror = reject
-      reader.readAsDataURL(file)
-    })
-  }
+interface IKResponse {
+  url: string
+  fileId: string
+  thumbnailUrl?: string
 }
 
-/**
- * Upload multiple files at once.
- */
-export async function uploadImages(
-  files: File[],
-  folder: string = 'general'
-): Promise<string[]> {
-  return Promise.all(files.map(f => uploadImage(f, folder)))
+export async function uploadImage(
+  file: File,
+  folder: string = 'profiles'
+): Promise<string> {
+  const token = getAccessToken()
+  if (!token) throw new Error('Not authenticated')
+
+  const res = await fetch(`${API_BASE}/imagekit/auth`, {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  const json = await res.json()
+  const creds = json?.data || json
+  if (!creds?.publicKey || !creds?.urlEndpoint || !creds?.token || !creds?.signature) {
+    throw new Error('ImageKit not configured')
+  }
+
+  const formData = new FormData()
+  formData.append('file', file)
+  formData.append('fileName', file.name || 'upload')
+  formData.append('useUniqueFileName', 'true')
+  formData.append('folder', folder)
+  formData.append('publicKey', creds.publicKey)
+  formData.append('signature', creds.signature)
+  formData.append('expire', String(creds.expire))
+  formData.append('token', creds.token)
+
+  const uploadRes = await fetch(`https://upload.imagekit.io/api/v1/files/upload`, {
+    method: 'POST',
+    body: formData,
+  })
+
+  if (!uploadRes.ok) {
+    const errText = await uploadRes.text()
+    throw new Error(errText || 'ImageKit upload failed')
+  }
+
+  const result: IKResponse = await uploadRes.json()
+  return result.url
 }
