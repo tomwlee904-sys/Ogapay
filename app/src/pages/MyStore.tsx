@@ -91,7 +91,7 @@ export default function MyStore() {
     setLoading(true)
     setError('')
     try {
-      const data = await apiRequest('/store/my')
+      const data = await apiRequest('/store/my-products')
       if (Array.isArray(data)) {
         setProducts(data)
       } else if (data?.products) {
