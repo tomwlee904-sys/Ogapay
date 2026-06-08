@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { apiRequest } from '../lib/api'
+import { SkeletonPage, injectSkeletonStyles } from "../components/SkeletonLoader";
 
 const API_CATEGORIES: Record<string, string> = {
   'SOCIAL_MEDIA': 'Social',
@@ -154,7 +155,7 @@ function JobDetailView({ job, onBack }: { job: any; onBack: () => void }) {
         .cd-desc-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px}
         .cd-desc-text{font-size:13px;color:var(--text2);line-height:1.7;white-space:pre-wrap}
         .cd-actions{padding:18px 24px;display:flex;gap:10px;flex-wrap:wrap}
-        .cd-btn-primary{height:46px;padding:0 30px;border-radius:99px;border:none;background:#121566;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:opacity .15s,transform .15s}
+        .cd-btn-primary{height:46px;padding:0 30px;border-radius:99px;border:none;background:#191C6B;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:opacity .15s,transform .15s}
         .cd-btn-primary:hover{opacity:.9;transform:translateY(-1px)}
         .cd-btn-secondary{height:46px;padding:0 24px;border-radius:99px;border:1.5px solid var(--border);background:transparent;color:var(--text);font-size:13px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:border-color .13s}
         .cd-btn-secondary:hover{border-color:var(--text)}
@@ -166,11 +167,11 @@ function JobDetailView({ job, onBack }: { job: any; onBack: () => void }) {
         .cd-modal-body{padding:18px 20px}
         .cd-modal-label{font-size:12px;font-weight:700;color:var(--text2);margin-bottom:6px;display:block}
         .cd-modal-input{width:100%;height:42px;padding:0 14px;border:1.5px solid var(--border);border-radius:10px;background:var(--bg2);color:var(--text);font-size:13px;outline:none;box-sizing:border-box;font-family:inherit}
-        .cd-modal-input:focus{border-color:#121566}
+        .cd-modal-input:focus{border-color:#191C6B}
         .cd-modal-textarea{width:100%;min-height:100px;padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;background:var(--bg2);color:var(--text);font-size:13px;outline:none;resize:vertical;box-sizing:border-box;font-family:inherit;line-height:1.5}
-        .cd-modal-textarea:focus{border-color:#121566}
+        .cd-modal-textarea:focus{border-color:#191C6B}
         .cd-modal-actions{display:flex;gap:10px;margin-top:16px}
-        .cd-submit-btn{height:42px;padding:0 24px;border-radius:99px;border:none;background:#121566;color:#fff;font-size:13px;font-weight:700;cursor:pointer;flex:1}
+        .cd-submit-btn{height:42px;padding:0 24px;border-radius:99px;border:none;background:#191C6B;color:#fff;font-size:13px;font-weight:700;cursor:pointer;flex:1}
         .cd-submit-btn:disabled{opacity:.5;cursor:not-allowed}
         .cd-success{text-align:center;padding:32px 20px}
         .cd-success i{font-size:40px;color:#4ade80}
@@ -187,7 +188,7 @@ function JobDetailView({ job, onBack }: { job: any; onBack: () => void }) {
           <div className="cd-creator-info">
             <div className="cd-creator-name">
               {job.creator}
-              <span style={{fontSize:11,fontWeight:600,color:'#121566',background:'rgba(18,21,102,0.12)',padding:'2px 8px',borderRadius:99}}>{job.creatorLabel}</span>
+              <span style={{fontSize:11,fontWeight:600,color:'#191C6B',background:'rgba(18,21,102,0.12)',padding:'2px 8px',borderRadius:99}}>{job.creatorLabel}</span>
             </div>
             <div className="cd-creator-handle">@{job.creator.toLowerCase().replace(/\s+/g,'')}</div>
             <div className="cd-creator-wallet" onClick={() => {navigator.clipboard?.writeText('F48NUF...jemX')}}>
@@ -270,7 +271,7 @@ function JobDetailView({ job, onBack }: { job: any; onBack: () => void }) {
           </div>
 
           <div className="cd-req-section">
-            <div className="cd-req-title"><i className="ti ti-shield-check" style={{color:'#121566'}} /> Requirements</div>
+            <div className="cd-req-title"><i className="ti ti-shield-check" style={{color:'#191C6B'}} /> Requirements</div>
             <div className="cd-req-grid">
               <div className="cd-req-item"><i className="ti ti-circle-check" style={{color:job.verificationRequired?'#4ade80':'var(--text3)'}} /> Screenshot proof {job.verificationRequired ? 'required' : 'optional'}</div>
               <div className="cd-req-item"><i className="ti ti-user-check" style={{color:'var(--text3)'}} /> KYC verification optional</div>
@@ -339,6 +340,7 @@ export default function Tasks() {
   const [selectedJob, setSelectedJob] = useState<any>(null)
 
   const location = useLocation()
+  useEffect(() => { injectSkeletonStyles(); }, []);
 
   // Fetch tasks from API
   useEffect(() => {
@@ -398,6 +400,14 @@ export default function Tasks() {
     if (selectedJob) setShowDetail(true)
   }, [selectedJob])
 
+  if (loading) {
+    return (
+      <Layout>
+        <SkeletonPage />
+      </Layout>
+    );
+  }
+
   if (showDetail && selectedJob) {
     return <JobDetailView job={selectedJob} onBack={() => { setShowDetail(false); navigate('/tasks') }} />
   }
@@ -417,7 +427,7 @@ export default function Tasks() {
         .jobs-stat:hover{box-shadow:var(--shadow-md);transform:translateY(-1px)}
         .jobs-stat .stat-val{font-family:Outfit;font-size:1.35rem;font-weight:900;letter-spacing:-.02em;line-height:1.2}
         .jobs-stat .stat-val.green{color:var(--green)}
-        .jobs-stat .stat-val.accent{color:#1F8CFF}
+        .jobs-stat .stat-val.accent{color:#191C6B}
         .jobs-stat .stat-val.gold{color:var(--gold)}
         .jobs-stat .stat-lbl{font-size:.68rem;color:var(--text2);margin-top:.15rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
 
@@ -427,14 +437,14 @@ export default function Tasks() {
         .filter-tab{padding:.5rem 1rem;border:0;border-radius:.5rem;background:transparent;color:var(--text2);font-size:.8125rem;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap}
         .filter-tab:hover{color:var(--text);background:var(--card)}
         .filter-tab.active{background:var(--card);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.06)}
-        .filter-tab.active:after{content:'';display:block;height:2px;width:20px;background:#1F8CFF;border-radius:999px;margin:2px auto 0}
+        .filter-tab.active:after{content:'';display:block;height:2px;width:20px;background:#191C6B;border-radius:999px;margin:2px auto 0}
         .search-wrap{flex:1;min-width:180px;position:relative}
         .search-wrap input{width:100%;height:38px;padding:0 14px 0 38px;border:1.5px solid var(--border);border-radius:.625rem;background:var(--card);color:var(--text);font-size:.8125rem;outline:none;transition:border-color .2s}
-        .search-wrap input:focus{border-color:#1F8CFF}
+        .search-wrap input:focus{border-color:#191C6B}
         .search-wrap input::placeholder{color:var(--text3)}
         .search-wrap .search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:16px;pointer-events:none}
 
-        .btn-create{display:inline-flex;align-items:center;gap:.5rem;padding:.625rem 1.125rem;background:linear-gradient(135deg,#1F8CFF,#1F8CFF);color:#fff;border:0;border-radius:.625rem;font-size:.8125rem;font-weight:700;cursor:pointer;transition:all .2s;white-space:nowrap;box-shadow:0 4px 14px rgba(31,140,255,.25)}
+        .btn-create{display:inline-flex;align-items:center;gap:.5rem;padding:.625rem 1.125rem;background:linear-gradient(135deg,#191C6B,#191C6B);color:#fff;border:0;border-radius:.625rem;font-size:.8125rem;font-weight:700;cursor:pointer;transition:all .2s;white-space:nowrap;box-shadow:0 4px 14px rgba(31,140,255,.25)}
         .btn-create:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(31,140,255,.3)}
 
         /* ── Jobs Grid ── */
@@ -446,18 +456,18 @@ export default function Tasks() {
 
         /* Creator row */
         .job-creator{display:flex;align-items:center;gap:.75rem;padding:.875rem 1rem .75rem;background:linear-gradient(135deg,var(--bg2),var(--card));border-bottom:1px solid var(--border);position:relative}
-        .job-creator:after{content:'';position:absolute;bottom:-1px;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#1F8CFF,transparent);opacity:.4}
-        .jc-avatar{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-size:.65rem;font-weight:800;color:#fff;flex-shrink:0;background:linear-gradient(135deg,#1F8CFF,#1F8CFF)}
+        .job-creator:after{content:'';position:absolute;bottom:-1px;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#191C6B,transparent);opacity:.4}
+        .jc-avatar{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-size:.65rem;font-weight:800;color:#fff;flex-shrink:0;background:linear-gradient(135deg,#191C6B,#191C6B)}
         .jc-info{flex:1;min-width:0}
         .jc-name{font-size:.8125rem;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
         .jc-label{font-size:.625rem;color:var(--text3);text-transform:uppercase;letter-spacing:.04em}
         .jc-bookmark{width:30px;height:30px;border-radius:.5rem;border:1px solid var(--border);background:var(--card);display:grid;place-items:center;color:var(--text3);cursor:pointer;transition:all .2s;flex-shrink:0;font-size:16px}
-        .jc-bookmark:hover{border-color:#1F8CFF;color:#1F8CFF}
-        .jc-bookmark.saved{background:#1F8CFF;color:#fff;border-color:#1F8CFF}
+        .jc-bookmark:hover{border-color:#191C6B;color:#191C6B}
+        .jc-bookmark.saved{background:#191C6B;color:#fff;border-color:#191C6B}
 
         /* Meta row */
         .job-meta{display:flex;align-items:center;gap:.5rem;padding:.5rem 1rem;border-bottom:1px solid var(--border);background:var(--bg2);font-size:.75rem;font-weight:600;color:var(--text2)}
-        .job-meta .cat-pill{display:inline-flex;align-items:center;gap:.25rem;padding:2px 8px;border-radius:999px;font-size:.625rem;font-weight:800;background:rgba(31,140,255,.08);color:#1F8CFF}
+        .job-meta .cat-pill{display:inline-flex;align-items:center;gap:.25rem;padding:2px 8px;border-radius:999px;font-size:.625rem;font-weight:800;background:rgba(31,140,255,.08);color:#191C6B}
         .job-meta .platform{display:flex;align-items:center;gap:.25rem;color:var(--text2)}
 
         /* Description */
@@ -487,14 +497,14 @@ export default function Tasks() {
         /* Progress */
         .job-progress{margin:0 1rem .625rem}
         .job-progress .pr-bar{height:5px;border-radius:999px;background:var(--bg2);overflow:hidden;border:1px solid var(--border)}
-        .job-progress .pr-fill{height:100%;border-radius:inherit;background:linear-gradient(90deg,#1F8CFF,#1F8CFF);transition:width .5s}
+        .job-progress .pr-fill{height:100%;border-radius:inherit;background:linear-gradient(90deg,#191C6B,#191C6B);transition:width .5s}
         .job-progress .pr-stats{display:flex;justify-content:space-between;font-size:.625rem;color:var(--text3);margin-top:2px;font-weight:600}
 
         /* Footer actions */
         .job-foot{margin-top:auto;display:flex;align-items:center;gap:.5rem;padding:.75rem 1rem;border-top:1px solid var(--border);background:var(--bg2)}
         .job-foot .btn{height:34px;font-size:.75rem;flex:1;border:1.5px solid var(--border);background:var(--card);color:var(--text);border-radius:.5rem;padding:0 .75rem;display:inline-flex;align-items:center;justify-content:center;gap:.35rem;font-weight:700;transition:all .15s;cursor:pointer}
         .job-foot .btn:hover{background:var(--bg2);border-color:var(--text2)}
-        .job-foot .btn.primary{background:#1F8CFF;color:#fff;border-color:#1F8CFF}
+        .job-foot .btn.primary{background:#191C6B;color:#fff;border-color:#191C6B}
         .job-foot .btn.primary:hover{opacity:.9}
 
         /* Empty state */
@@ -640,7 +650,7 @@ export default function Tasks() {
                     {job.difficulty}
                   </span>
                   {job.rankRequired !== 'None' && (
-                    <span className="job-badge" style={{ background: 'rgba(31,140,255,.08)', color: '#1F8CFF', border: '1px solid rgba(31,140,255,.15)' }}>
+                    <span className="job-badge" style={{ background: 'rgba(31,140,255,.08)', color: '#191C6B', border: '1px solid rgba(31,140,255,.15)' }}>
                       <i className="ti ti-medal" />
                       {job.rankRequired}
                     </span>

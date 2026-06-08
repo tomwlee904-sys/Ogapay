@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import Layout from '../components/Layout'
 import { useCurrency } from '../context/CurrencyContext'
 import { apiRequest } from '../lib/api'
+import { SkeletonPage, SkeletonStats, injectSkeletonStyles } from "../components/SkeletonLoader"
 
 const graphValues: Record<string, number[]> = {
   '7d': [35, 55, 42, 70, 48, 62, 85],
@@ -41,19 +42,15 @@ export default function Earnings() {
       let transactions: any[] = []
 
       try {
-        const data = await apiRequest('/users/me/earnings')
-        total = data?.total ?? null
-      } catch { /* fall back to computation */ }
-
-      try {
-        const data = await apiRequest('/wallet/balance')
-        balance = data?.balance ?? data?.availableBalance ?? null
-      } catch { /* ignore */ }
-
-      try {
-        const data = await apiRequest('/users/transactions/history')
-        transactions = Array.isArray(data) ? data : data?.transactions ?? data?.data ?? []
-      } catch { /* ignore */ }
+        const [earningsData, balanceData, txData] = await Promise.all([
+          apiRequest('/users/me/earnings').catch(() => null),
+          apiRequest('/wallet/balance').catch(() => null),
+          apiRequest('/users/transactions/history').catch(() => null),
+        ])
+        total = earningsData?.total ?? null
+        balance = balanceData?.balance ?? balanceData?.availableBalance ?? null
+        transactions = Array.isArray(txData) ? txData : txData?.transactions ?? txData?.data ?? []
+      } catch {}
 
       if (total === null && transactions.length > 0) {
         total = transactions
@@ -116,6 +113,8 @@ export default function Earnings() {
     fetchData()
   }, [])
 
+  useEffect(() => { injectSkeletonStyles(); }, []);
+
   const dv = (v: number | null) => v !== null ? fmt(v, 'NGN') : '?'
 
   const tasksFromEarnings = totalEarned !== null
@@ -141,7 +140,7 @@ export default function Earnings() {
   if (loading) {
     return (
       <Layout>
-        <div style={{ display: 'grid', placeItems: 'center', minHeight: 300, color: 'var(--text2)' }}>Loading...</div>
+        <SkeletonPage />
       </Layout>
     )
   }
@@ -184,10 +183,10 @@ export default function Earnings() {
 
       <div className="en-grid">
         {[
-          { icon: 'ti ti-coin', color: '#1F8CFF', num: dv(totalEarned), label: 'Total Earned' },
+          { icon: 'ti ti-coin', color: '#191C6B', num: dv(totalEarned), label: 'Total Earned' },
           { icon: 'ti ti-wallet', color: '#16a34a', num: dv(availableBalance), label: 'Available Balance' },
           { icon: 'ti ti-clock', color: '#F59E0B', num: dv(pendingEarnings), label: 'Pending Earnings' },
-          { icon: 'ti ti-trending-up', color: '#2563EB', num: dv(monthEarnings), label: 'This Month' },
+          { icon: 'ti ti-trending-up', color: '#191C6B', num: dv(monthEarnings), label: 'This Month' },
         ].map((s, i) => (
           <div className="en-stat" key={i}>
             <div className="esi" style={{ background: `${s.color}15`, color: s.color }}><i className={s.icon} /></div>
@@ -219,8 +218,8 @@ export default function Earnings() {
 
       <div className="en-grid" style={{marginBottom:24}}>
         {[
-          { icon: 'ti ti-briefcase', color: '#1F8CFF', num: tasksFromEarnings, label: 'From Tasks', sub: `${jobsCompleted} jobs completed` },
-          { icon: 'ti ti-affiliate', color: '#2563EB', num: dv(referrals), label: 'From Referrals', sub: 'Referral bonuses' },
+          { icon: 'ti ti-briefcase', color: '#191C6B', num: tasksFromEarnings, label: 'From Tasks', sub: `${jobsCompleted} jobs completed` },
+          { icon: 'ti ti-affiliate', color: '#191C6B', num: dv(referrals), label: 'From Referrals', sub: 'Referral bonuses' },
           { icon: 'ti ti-gift', color: '#F59E0B', num: dv(tips), label: 'From Tips', sub: 'Tips received' },
           { icon: 'ti ti-vault', color: '#16a34a', num: dv(vault), label: 'From Vault', sub: 'Vault rewards' },
         ].map((s, i) => (

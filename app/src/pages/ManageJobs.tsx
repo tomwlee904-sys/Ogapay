@@ -1,12 +1,14 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "../components/Layout";
 import { apiRequest } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
+import { SkeletonPage, injectSkeletonStyles } from "../components/SkeletonLoader";
+import { useToast } from "../components/Toast";
 
 const statusColor = {
   open: "var(--green)",
-  in_progress: "#3b82f6",
+  in_progress: "#191C6B",
   completed: "var(--text3)",
   draft: "#f59e0b",
   disputed: "var(--red)",
@@ -344,13 +346,11 @@ function JobDrawer({ job, onClose, onStatusChange }) {
 
 // ── BLACKLIST PAGE ─────────────────────────────────────────────────────────
 function BlacklistPage() {
+  const { toast } = useToast();
   const [blocked, setBlocked] = useState([]);
   const [search, setSearch] = useState("");
   const [searchResult, setSearchResult] = useState(null);
   const [searched, setSearched] = useState(false);
-  const [toast, setToast] = useState(null);
-
-  const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(null), 3000); };
 
   const handleSearch = () => {
     setSearched(true);
@@ -368,18 +368,16 @@ function BlacklistPage() {
     const newEntry = { id: `BL-${Date.now()}`, user: searchResult.user, handle: searchResult.handle, reason: "Manually blocked by creator", blockedAt: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }), color: "#8b5cf6" };
     setBlocked(b => [newEntry, ...b]);
     setSearch(""); setSearchResult(null); setSearched(false);
-    showToast("User blocked successfully");
+    toast("User blocked successfully");
   };
 
   const unblock = (id) => {
     setBlocked(b => b.filter(x => x.id !== id));
-    showToast("User unblocked");
+    toast("User unblocked");
   };
 
   return (
     <div style={{ width: "100%" }}>
-      {toast && <div style={{ position: "fixed", top: 20, left: "50%", transform: "translateX(-50%)", background: "var(--card)", border: "1px solid var(--border)", borderRadius: 12, padding: "10px 20px", fontSize: 13, fontWeight: 600, color: "var(--text)", zIndex: 200, whiteSpace: "nowrap" }}>{toast}</div>}
-
       {/* Header */}
       <div style={{ marginBottom: 20 }}>
         <h2 style={{ fontSize: 22, fontWeight: 900, color: "var(--text)", marginBottom: 6 }}>Creator Blacklist</h2>
@@ -477,14 +475,12 @@ function BlacklistPage() {
 
 // ── TEMPLATES PAGE ─────────────────────────────────────────────────────────
 function TemplatesPage({ onUseTemplate }) {
+  const { toast } = useToast();
   const [tab, setTab] = useState("mine");
   const [templates, setTemplates] = useState({ mine: [], public: [] });
   const [showCreate, setShowCreate] = useState(false);
   const [newTpl, setNewTpl] = useState({ title: "", category: "", description: "", platform: "X (Twitter)", reward: "", slots: "", visibility: "private" });
-  const [toast, setToast] = useState(null);
   const [expandedId, setExpandedId] = useState(null);
-
-  const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(null), 3000); };
 
   const saveTemplate = () => {
     if (!newTpl.title.trim()) return;
@@ -492,26 +488,25 @@ function TemplatesPage({ onUseTemplate }) {
     setTemplates(prev => ({ ...prev, mine: [t, ...prev.mine] }));
     setNewTpl({ title: "", category: "", description: "", platform: "X (Twitter)", reward: "", slots: "", visibility: "private" });
     setShowCreate(false);
-    showToast("Template saved!");
+    toast("Template saved!");
   };
 
   const deleteTemplate = (id) => {
     setTemplates(prev => ({ ...prev, mine: prev.mine.filter(t => t.id !== id) }));
-    showToast("Template deleted");
+    toast("Template deleted");
   };
 
   const forkTemplate = (tpl) => {
     const forked = { ...tpl, id: `TPL-${Date.now()}`, title: `${tpl.title} (copy)`, visibility: "private", updatedAt: new Date().toLocaleString() };
     setTemplates(prev => ({ ...prev, mine: [forked, ...prev.mine] }));
     setTab("mine");
-    showToast("Template forked to My Templates!");
+    toast("Template forked to My Templates!");
   };
 
   const list = tab === "mine" ? templates.mine : templates.public;
 
   return (
     <div style={{ width: "100%" }}>
-      {toast && <div style={{ position: "fixed", top: 20, left: "50%", transform: "translateX(-50%)", background: "var(--card)", border: "1px solid var(--border)", borderRadius: 12, padding: "10px 20px", fontSize: 13, fontWeight: 600, color: "var(--text)", zIndex: 200, whiteSpace: "nowrap" }}>{toast}</div>}
 
       {/* Header */}
       <div style={{ marginBottom: 20 }}>
@@ -623,7 +618,7 @@ function TemplatesPage({ onUseTemplate }) {
                   </div>
                 )}
                 <div style={{ display: "flex", gap: 8 }}>
-                  <button onClick={() => { onUseTemplate(tpl); showToast("Template loaded into Create Job!"); }}
+                  <button onClick={() => { onUseTemplate(tpl); toast("Template loaded into Create Job!"); }}
                     style={{ flex: 2, background: "var(--accent)", border: "none", borderRadius: 10, padding: "10px 0", fontSize: 12, fontWeight: 800, color: "#fff", cursor: "pointer", fontFamily: "inherit" }}>
                     Use Template →
                   </button>
@@ -656,7 +651,8 @@ function TemplatesPage({ onUseTemplate }) {
 }
 
 // ── JOBS LIST PAGE ─────────────────────────────────────────────────────────
-function JobsListPage({ jobs, setJobs, showToast }) {
+function JobsListPage({ jobs, setJobs }) {
+  const { toast } = useToast();
   const [filter, setFilter] = useState("all");
   const [selectedJob, setSelectedJob] = useState(null);
 
@@ -671,7 +667,7 @@ function JobsListPage({ jobs, setJobs, showToast }) {
         body: JSON.stringify({ status: status.toUpperCase() }),
       }).catch(() => {});
     } catch(e) {}
-    showToast(status === 'open' ? 'Job resumed' : status === 'draft' ? 'Job paused' : 'Status updated');
+    toast(status === 'open' ? 'Job resumed' : status === 'draft' ? 'Job paused' : 'Status updated');
   };
 
   const statusFilters = ["all", "open", "in_progress", "completed", "draft", "cancelled", "expired"];
@@ -686,7 +682,7 @@ function JobsListPage({ jobs, setJobs, showToast }) {
   };
 
   const goToCreateJob = () => {
-    showToast("Please use the Create Job page to create new jobs");
+    toast("Please use the Create Job page to create new jobs");
   };
 
   return (
@@ -695,7 +691,7 @@ function JobsListPage({ jobs, setJobs, showToast }) {
       <div class="mj-stats-grid" style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 8, marginBottom: 16 }}>
         {[
           { label: "Open", value: stats.open, color: "var(--green)" },
-          { label: "In Progress", value: stats.in_progress, color: "#3b82f6" },
+          { label: "In Progress", value: stats.in_progress, color: "#191C6B" },
           { label: "Completed", value: stats.completed, color: "var(--text3)" },
           { label: "Winners", value: stats.totalWinners, color: "var(--accent)" },
           { label: "Spent", value: `₦${(stats.totalSpent / 1000).toFixed(0)}k`, color: "var(--text)" },
@@ -803,14 +799,16 @@ function JobsListPage({ jobs, setJobs, showToast }) {
 
 // ── MAIN PAGE ──────────────────────────────────────────────────────────────
 export default function MyJobs() {
+  const { toast } = useToast();
   const [jobs, setJobs] = useState([]);
   const [page, setPage] = useState("jobs");
-  const [toast, setToast] = useState(null);
   const [loading, setLoading] = useState(true);
   const { user, isAuthed } = useAuth();
 
+  const mounted = useRef(true);
+
   const fetchJobs = useCallback(async () => {
-    if (!isAuthed) { setLoading(false); return; }
+    if (!isAuthed) { if (mounted.current) setLoading(false); return; }
     const mapTaskToJob = (t) => ({
       id: t.id || t._id,
       customId: t.customId || "",
@@ -838,25 +836,30 @@ export default function MyJobs() {
 
     try {
       const tasks = await apiRequest('/tasks/my/created').catch(() => null) || [];
+      if (!mounted.current) return;
       const mapped = (Array.isArray(tasks) ? tasks : (tasks?.tasks || [])).map(mapTaskToJob);
       const stored = JSON.parse(localStorage.getItem('ogapay_job_statuses') || '{}');
       mapped.forEach(j => { if (stored[j.id]) j.status = stored[j.id]; });
       setJobs(mapped);
     } catch (e) {
+      if (!mounted.current) return;
       console.warn("Failed to fetch jobs:", e);
     }
-    setLoading(false);
+    if (mounted.current) setLoading(false);
   }, [isAuthed]);
 
-  useEffect(() => { fetchJobs(); }, [fetchJobs]);
+  useEffect(() => { fetchJobs(); return () => { mounted.current = false; }; }, [fetchJobs]);
+
+  const fetchJobsRef = useRef(fetchJobs);
+  fetchJobsRef.current = fetchJobs;
 
   useEffect(() => {
-    const onFocus = () => { setLoading(true); fetchJobs(); };
+    const onFocus = () => { setLoading(true); fetchJobsRef.current(); };
     window.addEventListener('focus', onFocus);
     return () => window.removeEventListener('focus', onFocus);
-  }, [fetchJobs]);
+  }, []);
 
-  const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(null), 3000); };
+  useEffect(() => { injectSkeletonStyles(); }, []);
 
   const PAGE_TABS = [
     { id: "jobs", label: "My Jobs", icon: "briefcase" },
@@ -866,6 +869,13 @@ export default function MyJobs() {
 
   const navRightLabel = page === "jobs" ? "+ Create Job" : page === "templates" ? "+ New Template" : null;
 
+  if (loading) {
+    return (
+      <Layout>
+        <SkeletonPage />
+      </Layout>
+    );
+  }
   return (
     <Layout><div class="mj-page">
       <style>{`
@@ -902,15 +912,6 @@ export default function MyJobs() {
       `}</style>
 
 
-
-      {/* Toast */}
-      {toast && (
-        <div style={{ position: "fixed", top: 20, left: "50%", transform: "translateX(-50%)", background: "var(--card)", border: "1px solid var(--border)", borderRadius: 12, padding: "10px 20px", fontSize: 13, fontWeight: 600, color: "var(--text)", zIndex: 200, whiteSpace: "nowrap", boxShadow: "var(--shadow-md)" }}>
-          {toast}
-        </div>
-      )}
-
-
       {/* Sub tab nav — full labels */}
       <div class="mj-tab-bar">
         {PAGE_TABS.map(t => (
@@ -922,11 +923,11 @@ export default function MyJobs() {
       </div>
 
       {/* Page content */}
-      {page === "jobs" && <div class="mj-content"><JobsListPage jobs={jobs} setJobs={setJobs} showToast={showToast} /></div>}
+      {page === "jobs" && <div class="mj-content"><JobsListPage jobs={jobs} setJobs={setJobs} /></div>}
       {page === "blacklist" && <div class="mj-content"><BlacklistPage /></div>}
       {page === "templates" && <div class="mj-content"><TemplatesPage onUseTemplate={(tpl) => {
           setPage("jobs");
-          showToast("Template loaded — create your job below!");
+          toast("Template loaded — create your job below!");
         }} /></div>}
   </div>
 </Layout>

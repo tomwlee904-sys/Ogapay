@@ -70,23 +70,23 @@ export default function UserProfile() {
             {/* Profile Card */}
             <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 14, overflow: "hidden" }}>
               {/* Cover */}
-              <div style={{ height: 120, background: "linear-gradient(135deg, #121566, #4F46E5)" }} />
+              <div style={{ height: 120, background: "linear-gradient(135deg, #191C6B, #191C6B)" }} />
               
               <div style={{ padding: "0 24px 24px" }}>
                 {/* Avatar */}
                 <div style={{ display: "flex", alignItems: "flex-end", gap: 16, marginTop: -40 }}>
                   {profile.pfp_url ? (
-                    <img src={profile.pfp_url} alt={profile.firstName || username}
+                    <img src={profile.pfp_url} alt={profile.firstName || username} loading="lazy"
                       style={{ width: 72, height: 72, borderRadius: "50%", border: "4px solid var(--card)", objectFit: "cover" }} />
                   ) : (
-                    <div style={{ width: 72, height: 72, borderRadius: "50%", border: "4px solid var(--card)", background: "#121566", color: "#fff", display: "grid", placeItems: "center", fontSize: 24, fontWeight: 800 }}>
+                    <div style={{ width: 72, height: 72, borderRadius: "50%", border: "4px solid var(--card)", background: "#191C6B", color: "#fff", display: "grid", placeItems: "center", fontSize: 24, fontWeight: 800 }}>
                       {initials}
                     </div>
                   )}
                   <div style={{ flex: 1, marginTop: 40 }}>
                     <h1 style={{ fontSize: 20, fontWeight: 800, margin: 0 }}>
                       {profile.firstName} {profile.lastName}
-                      {profile.verified_creator ? <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11, fontWeight: 600, color: "#2563EB", background: "#DBEAFE", padding: "2px 8px", borderRadius: 20, marginLeft: 8, verticalAlign: "middle" }}>✓ Verified Creator</span> : null}
+                      {profile.verified_creator ? <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11, fontWeight: 600, color: "#191C6B", background: "#191C6B", padding: "2px 8px", borderRadius: 20, marginLeft: 8, verticalAlign: "middle" }}>✓ Verified Creator</span> : null}
                     </h1>
                     {profile.username && <p style={{ fontSize: 13, color: "var(--text2)", margin: "2px 0 0" }}>@{profile.username}</p>}
                   </div>

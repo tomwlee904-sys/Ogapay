@@ -25,7 +25,7 @@ const footerSocialLinks: Record<string, string> = {
 const footerLinkHrefs: Record<string, string> = {
   "Browse Jobs": "/tasks", "Task Categories": "/tasks", "Leaderboard": "/leaderboard",
   "Worker Portal": "/worker-portal", "Create Task": "/create", "Communities": "/communities",
-  "Analytics": "/analytics", "About": "/about", "Blog": "/blog",
+  "Campaigns": "/campaigns", "Analytics": "/analytics", "About": "/about", "Blog": "/blog",
   "FAQ": "/faq", "Support": "/support", "Terms": "/terms",
   "Privacy": "/privacy",
   "Developer": "/developer",
@@ -34,7 +34,7 @@ const footerLinkHrefs: Record<string, string> = {
 
 const footerCols = [
   { title: "Earn", links: ["Browse Jobs", "Task Categories", "Leaderboard", "Worker Portal"] },
-  { title: "Post", links: ["Create Task", "Communities", "Analytics"] },
+  { title: "Post", links: ["Create Task", "Campaigns", "Communities", "Analytics"] },
   { title: "Company", links: ["About", "Blog", "FAQ", "Support", "Terms", "Privacy", "Developer", "Roadmap"] },
 ]
 
@@ -44,57 +44,35 @@ function TablerIcon({ name, size = 15 }: { name: string; size?: number }) {
 
 export default function Footer() {
   return (
-    <footer className="footer-rich" style={{ position: 'relative', overflow: 'hidden' }}>
-      {/* Video Background */}
-      <video
-        autoPlay
-        muted
-        loop
-        playsInline
-        style={{
-          position: 'absolute',
-          inset: 0,
-          width: '100%',
-          height: '100%',
-          objectFit: 'cover',
-          opacity: 0.15,
-          pointerEvents: 'none',
-        }}
-      >
-        <source src="https://ogapay-five.vercel.app/videos/ogapay-bg.mp4" type="video/mp4" />
-      </video>
-
-      {/* Overlay Content */}
-      <div style={{ position: 'relative', zIndex: 1 }}>
-        <div className="footer-content">
-          <div>
-            <div className="footer-logo" style={{ display: "flex", alignItems: "center", gap: 10, fontFamily: "Outfit,sans-serif", fontSize: 18, fontWeight: 800 }}>
-              <LogoMark size={26} /> OgaPay
-            </div>
-            <p>Nigeria's microtask marketplace — work, earn, and grow your income.</p>
-            <div className="social-icons">
-              {Object.entries(footerSocialLinks).map(([ic, href]) => (
-                <a key={ic} href={href} target="_blank" rel="noopener noreferrer">
-                  <TablerIcon name={ic} />
-                </a>
-              ))}
-            </div>
+    <footer className="footer-rich">
+      <div className="footer-content">
+        <div>
+          <div className="footer-logo" style={{ display: "flex", alignItems: "center", gap: 10, fontFamily: "Outfit,sans-serif", fontSize: 18, fontWeight: 800 }}>
+            <LogoMark size={26} /> OgaPay
           </div>
-          {footerCols.map(col => (
-            <div key={col.title}>
-              <h4>{col.title}</h4>
-              <nav>
-                {col.links.map(l => (
-                  <a key={l} href={footerLinkHrefs[l] || "/"}>{l}</a>
-                ))}
-              </nav>
-            </div>
-          ))}
+          <p>Nigeria's microtask marketplace — work, earn, and grow your income.</p>
+          <div className="social-icons">
+            {Object.entries(footerSocialLinks).map(([ic, href]) => (
+              <a key={ic} href={href} target="_blank" rel="noopener noreferrer">
+                <TablerIcon name={ic} />
+              </a>
+            ))}
+          </div>
         </div>
-        <div className="footer-bottom">
-          <span>© 2026 OgaPay Technologies Ltd. All rights reserved.</span>
-          <span>Made with care for the gig economy.</span>
-        </div>
+        {footerCols.map(col => (
+          <div key={col.title}>
+            <h4>{col.title}</h4>
+            <nav>
+              {col.links.map(l => (
+                <a key={l} href={footerLinkHrefs[l] || "/"}>{l}</a>
+              ))}
+            </nav>
+          </div>
+        ))}
+      </div>
+      <div className="footer-bottom">
+        <span>© 2026 OgaPay Technologies Ltd. All rights reserved.</span>
+        <span>Made with care for the gig economy.</span>
       </div>
     </footer>
   )

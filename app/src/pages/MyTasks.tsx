@@ -11,7 +11,7 @@ const STATUS_MAP: Record<string, string> = {
 }
 
 const COLOR_MAP: Record<string, string> = {
-  APPLIED: '#1F8CFF',
+  APPLIED: '#191C6B',
   PENDING: '#F59E0B',
   APPROVED: '#16a34a',
   REJECTED: '#DC2626',
@@ -125,7 +125,7 @@ export default function MyTasks() {
         <div className="mt-list">
           {filtered.map((s: any) => {
             const status = STATUS_MAP[s.status] || s.status
-            const color = COLOR_MAP[s.status] || '#1F8CFF'
+            const color = COLOR_MAP[s.status] || '#191C6B'
             const progress = PROGRESS_MAP[s.status] || 50
             return (
               <div className="mt-item" key={s.id}>

@@ -74,9 +74,9 @@ export default function CommunityDetail() {
       ) : (
         <>
           <div className="cd-hero">
-            <div className="cd-hero-bg" style={{ background: `linear-gradient(135deg,${community.accentColor || '#1F8CFF'},${community.accentColor || '#1F8CFF'}88)` }} />
+            <div className="cd-hero-bg" style={{ background: `linear-gradient(135deg,${community.accentColor || '#191C6B'},${community.accentColor || '#191C6B'}88)` }} />
             <div className="cd-hero-info">
-              <div className="cd-avatar" style={{ background: community.accentColor || '#1F8CFF' }}>{community.initials || community.name?.slice(0, 2)?.toUpperCase()}</div>
+              <div className="cd-avatar" style={{ background: community.accentColor || '#191C6B' }}>{community.initials || community.name?.slice(0, 2)?.toUpperCase()}</div>
               <div style={{ flex: 1 }}>
                 <h1 className="cd-name">{community.name}</h1>
               </div>
@@ -92,7 +92,7 @@ export default function CommunityDetail() {
               disabled={joining || joined}
               style={{
                 marginLeft: 'auto', height: 36, padding: '0 20px', borderRadius: 8, border: joined ? '1px solid var(--border)' : 'none',
-                background: joined ? 'rgba(22,163,74,.1)' : '#1F8CFF', color: joined ? '#16a34a' : '#fff',
+                background: joined ? 'rgba(22,163,74,.1)' : '#191C6B', color: joined ? '#16a34a' : '#fff',
                 fontSize: 13, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
               }}
             >

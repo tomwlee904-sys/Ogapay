@@ -3,8 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { API_BASE, getAccessToken, getStoredUser } from '../lib/api'
 
-const OGAPAY_BLUE = '#121566'
-const OGAPAY_BLUE_LIGHT = '#EEEDFE'
+const OGAPAY_BLUE = '#191C6B'
+const OGAPAY_BLUE_LIGHT = '#191C6B'
 
 type OnboardingStatus = {
   walletConnected: boolean
@@ -399,7 +399,7 @@ const spStyles = `
 .sp-task-context { display: flex; align-items: center; gap: 14px; padding: 14px 16px; background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 20px; cursor: pointer; }
 .sp-tc-reward { text-align: center; flex-shrink: 0; }
 .sp-tc-rl { display: block; font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; color: var(--text3); }
-.sp-tc-rv { font-size: 14px; font-weight: 900; color: #121566; font-family: Outfit, sans-serif; }
+.sp-tc-rv { font-size: 14px; font-weight: 900; color: #191C6B; font-family: Outfit, sans-serif; }
 .sp-tc-info { flex: 1; min-width: 0; }
 .sp-tc-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
 .sp-tc-meta { font-size: 11px; color: var(--text2); }
@@ -415,13 +415,13 @@ const spStyles = `
 .sp-field { margin-bottom: 18px; }
 .sp-label { display: block; font-size: 12px; font-weight: 700; color: var(--text2); margin-bottom: 6px; }
 .sp-input, .sp-textarea { width: 100%; padding: 10px 12px; border: 1.5px solid var(--border); border-radius: 8px; background: var(--bg2); color: var(--text); font-size: 13px; font-family: inherit; transition: border-color .13s; box-sizing: border-box; }
-.sp-input:focus, .sp-textarea:focus { outline: none; border-color: #121566; }
+.sp-input:focus, .sp-textarea:focus { outline: none; border-color: #191C6B; }
 .sp-textarea { resize: vertical; min-height: 100px; }
 .sp-hint { display: block; font-size: 11px; color: var(--text3); margin-top: 4px; }
 
 /* Upload */
 .sp-upload-area { border: 2px dashed var(--border); border-radius: 12px; padding: 28px; text-align: center; cursor: pointer; transition: border-color .13s, background .13s; }
-.sp-upload-area:hover { border-color: #121566; background: rgba(18,21,102,.03); }
+.sp-upload-area:hover { border-color: #191C6B; background: rgba(18,21,102,.03); }
 .sp-upload-area i { font-size: 28px; color: var(--text3); display: block; margin-bottom: 8px; }
 .sp-upload-area span { display: block; font-size: 13px; font-weight: 700; color: var(--text2); }
 .sp-upload-hint { font-size: 11px !important; font-weight: 500 !important; color: var(--text3) !important; margin-top: 4px; }
@@ -486,7 +486,7 @@ const spStyles = `
   border: 1.5px solid transparent; cursor: pointer; transition: all .13s;
   text-decoration: none; font-family: inherit; white-space: nowrap;
 }
-.sp-btn-primary { background: #121566; color: #fff; border-color: #121566; }
+.sp-btn-primary { background: #191C6B; color: #fff; border-color: #191C6B; }
 .sp-btn-primary:hover { opacity: .9; }
 .sp-btn-primary:disabled { opacity: .4; cursor: not-allowed; }
 .sp-btn-outline { background: transparent; border-color: var(--border); color: var(--text); }

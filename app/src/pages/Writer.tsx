@@ -29,7 +29,7 @@ export default function Writer() {
     <Layout>
       <style>{`
         .wr-page{max-width:900px;margin:0 auto;padding:0 0 40px}
-        .wr-hero{background:linear-gradient(135deg,#121566,#1F8CFF);border-radius:16px;padding:36px 32px;margin-bottom:28px;color:#fff}
+        .wr-hero{background:linear-gradient(135deg,#191C6B,#191C6B);border-radius:16px;padding:36px 32px;margin-bottom:28px;color:#fff}
         .wr-hero h1{font-family:Outfit;font-size:28px;font-weight:900;margin:0 0 6px}
         .wr-hero p{font-size:14px;opacity:.85;margin:0;line-height:1.6;max-width:500px}
         .wr-section{margin-bottom:28px}
@@ -59,7 +59,7 @@ export default function Writer() {
           <div className="wr-grid">
             {templates.map(t => (
               <div className="wr-card" key={t.id} onClick={() => navigate('/create')}>
-                <div className="wr-card-icon" style={{background:`#1F8CFF18`,color:'#1F8CFF'}}><i className={`ti ti-${t.icon}`} style={{fontSize:20}} /></div>
+                <div className="wr-card-icon" style={{background:`#191C6B18`,color:'#191C6B'}}><i className={`ti ti-${t.icon}`} style={{fontSize:20}} /></div>
                 <h3>{t.title}</h3>
                 <p>{t.tasks} tasks available</p>
                 <div className="meta"><span><i className="ti ti-coin" /> {t.reward}</span></div>

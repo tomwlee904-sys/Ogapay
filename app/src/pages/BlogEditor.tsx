@@ -4,12 +4,12 @@ import Layout from '../components/Layout'
 import { useAuth } from '../context/AuthContext'
 
 const CATEGORIES = ['News', 'Businesses', 'Freelancers', 'Case Studies']
-const COVER_COLORS = ['#534AB7', '#185FA5', '#3B6D11', '#854F0B', '#993556', '#0F6E56', '#121566', '#121566']
+const COVER_COLORS = ['#191C6B', '#191C6B', '#3B6D11', '#854F0B', '#993556', '#0F6E56', '#191C6B', '#191C6B']
 
 const badgeColors: Record<string, { bg: string; color: string }> = {
-  News: { bg: '#E6F1FB', color: '#185FA5' },
+  News: { bg: '#E6F1FB', color: '#191C6B' },
   Businesses: { bg: '#EAF3DE', color: '#3B6D11' },
-  Freelancers: { bg: '#EEEDFE', color: '#534AB7' },
+  Freelancers: { bg: '#191C6B', color: '#191C6B' },
   'Case Studies': { bg: '#FBEAF0', color: '#993556' },
 }
 
@@ -48,7 +48,7 @@ export default function BlogEditor() {
     title: '',
     category: 'News',
     body: '',
-    coverColor: '#534AB7',
+    coverColor: '#191C6B',
     tags: '',
     status: 'published' as 'draft' | 'published',
   })
@@ -176,7 +176,7 @@ export default function BlogEditor() {
         .be-tb-btn:hover{border-color:var(--accent);color:var(--accent)}
         .be-tb-btn i{font-size:14px}
         .be-actions{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap}
-        .be-btn-primary{height:42px;padding:0 24px;border-radius:99px;border:none;background:#121566;color:#fff;font-size:14px;font-weight:700;cursor:pointer;transition:opacity .15s}
+        .be-btn-primary{height:42px;padding:0 24px;border-radius:99px;border:none;background:#191C6B;color:#fff;font-size:14px;font-weight:700;cursor:pointer;transition:opacity .15s}
         .be-btn-primary:hover{opacity:.85}
         .be-btn-secondary{height:42px;padding:0 24px;border-radius:99px;border:1.5px solid var(--border);background:transparent;color:var(--text);font-size:14px;font-weight:700;cursor:pointer}
         .be-btn-secondary:hover{border-color:var(--text)}
@@ -203,8 +203,8 @@ export default function BlogEditor() {
 
         {/* Preview Toggle */}
         <div style={{display:'flex',gap:10,marginBottom:20}}>
-          <button onClick={() => setPreview(false)} style={{height:34,padding:'0 16px',borderRadius:99,border:preview?'1.5px solid var(--border)':'none',background:preview?'transparent':'#121566',color:preview?'var(--text2)':'#fff',fontSize:12,fontWeight:700,cursor:'pointer'}}>Edit</button>
-          <button onClick={() => setPreview(true)} style={{height:34,padding:'0 16px',borderRadius:99,border:preview?'none':'1.5px solid var(--border)',background:preview?'#121566':'transparent',color:preview?'#fff':'var(--text2)',fontSize:12,fontWeight:700,cursor:'pointer'}}>Preview</button>
+          <button onClick={() => setPreview(false)} style={{height:34,padding:'0 16px',borderRadius:99,border:preview?'1.5px solid var(--border)':'none',background:preview?'transparent':'#191C6B',color:preview?'var(--text2)':'#fff',fontSize:12,fontWeight:700,cursor:'pointer'}}>Edit</button>
+          <button onClick={() => setPreview(true)} style={{height:34,padding:'0 16px',borderRadius:99,border:preview?'none':'1.5px solid var(--border)',background:preview?'#191C6B':'transparent',color:preview?'#fff':'var(--text2)',fontSize:12,fontWeight:700,cursor:'pointer'}}>Preview</button>
         </div>
 
         {preview ? (
@@ -214,7 +214,7 @@ export default function BlogEditor() {
                 <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="1.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
               </div>
               <div className="preview-body">
-                <span style={{display:'inline-block',fontSize:11,fontWeight:500,background:badgeColors[form.category]?.bg||'#EEEDFE',color:badgeColors[form.category]?.color||'#534AB7',padding:'3px 10px',borderRadius:20,marginBottom:8}}>{form.category}</span>
+                <span style={{display:'inline-block',fontSize:11,fontWeight:500,background:badgeColors[form.category]?.bg||'#191C6B',color:badgeColors[form.category]?.color||'#191C6B',padding:'3px 10px',borderRadius:20,marginBottom:8}}>{form.category}</span>
                 <h1>{form.title || 'Untitled Article'}</h1>
                 {form.body.split('\n').map((line, i) => {
                   if (line.startsWith('### ')) return <h3 key={i} style={{fontSize:16,fontWeight:700,margin:'16px 0 8px',color:'var(--text)'}}>{line.replace('### ','')}</h3>

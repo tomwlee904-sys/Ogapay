@@ -5,7 +5,7 @@ const campaigns = [
   { id: 1, name: 'Brand Awareness Q3', platform: 'X/Twitter', budget: 'NGN 50,000', reach: '12.4K', engagements: 845, status: 'Active', color: '#16a34a' },
   { id: 2, name: 'Product Launch', platform: 'Instagram', budget: 'NGN 100,000', reach: '28.7K', engagements: 2103, status: 'Active', color: '#16a34a' },
   { id: 3, name: 'Community Growth', platform: 'Telegram', budget: 'NGN 25,000', reach: '5.2K', engagements: 412, status: 'Paused', color: '#F59E0B' },
-  { id: 4, name: 'Holiday Promo', platform: 'Multi-platform', budget: 'NGN 200,000', reach: '45.1K', engagements: 3890, status: 'Draft', color: '#1F8CFF' },
+  { id: 4, name: 'Holiday Promo', platform: 'Multi-platform', budget: 'NGN 200,000', reach: '45.1K', engagements: 3890, status: 'Draft', color: '#191C6B' },
 ]
 
 export default function Campaigns() {

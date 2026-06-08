@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { injectSkeletonStyles } from "../components/SkeletonLoader";
 import { API_BASE } from "../lib/api";
 
 /* ─── GLOBAL STYLES ────────────────────────────────────────────────────────── */
@@ -608,6 +609,7 @@ function FeaturedJobs() {
   const [active, setActive] = useState(0);
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
+  useEffect(() => { injectSkeletonStyles(); }, []);
   useEffect(() => {
     fetch(`${API_BASE}/tasks?limit=3&status=OPEN`)
       .then(r => r.json())
@@ -640,7 +642,27 @@ function FeaturedJobs() {
         </div>
 
         <div className="jobs-track" style={{ display: "grid", gridTemplateColumns: "repeat(3,minmax(0,1fr))", gap: 24 }}>
-          {jobs.map((j, i) => {
+          {loading ? (
+            Array.from({ length: 3 }, (_, i) => (
+              <div key={i} style={{ border: '1.5px solid var(--border)', borderRadius: 16, background: 'var(--card)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+                <div style={{ padding: '18px 18px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 13 }}>
+                  <div className="sk" style={{ width: 38, height: 38, borderRadius: '50%' }} />
+                  <div style={{ flex: 1, display: 'grid', gap: 6 }}>
+                    <div className="sk" style={{ height: 10, width: '40%' }} />
+                    <div className="sk" style={{ height: 14, width: '60%' }} />
+                  </div>
+                </div>
+                <div style={{ padding: '18px 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  <div className="sk" style={{ height: 10, width: '30%' }} />
+                  <div className="sk" style={{ height: 10, borderRadius: 99 }} />
+                  <div className="sk" style={{ height: 100, borderRadius: 10 }} />
+                  <div className="sk" style={{ height: 10, width: '50%' }} />
+                  <div className="sk" style={{ height: 40, borderRadius: 8 }} />
+                </div>
+              </div>
+            ))
+          ) : (
+            jobs.map((j, i) => {
             const pct = Math.round((j.filled / j.slots) * 100);
             return (
               <div key={i} onClick={() => setActive(i)} className="job-card" style={{
@@ -650,7 +672,6 @@ function FeaturedJobs() {
                 display: "flex", flexDirection: "column", cursor: "pointer",
                 transition: "border-color .28s, box-shadow .28s, transform .28s",
               }}>
-                {/* Top */}
                 <div style={{ display: "flex", alignItems: "center", gap: 13, minHeight: 70, padding: "13px 18px", borderBottom: "1px solid var(--border)", background: "linear-gradient(120deg,rgba(31,140,255,.08),rgba(37,99,235,.08),rgba(147,197,253,.1))" }}>
                   <div style={{ width: 38, height: 38, borderRadius: "50%", display: "grid", placeItems: "center", color: "#fff", background: "linear-gradient(135deg,#232323,#333)", border: "2px solid var(--border)", fontSize: 12, fontWeight: 800, flexShrink: 0 }}>
                     {j.name.charAt(0)}
@@ -660,7 +681,6 @@ function FeaturedJobs() {
                     <div style={{ marginTop: 2, fontSize: 14, fontWeight: 800 }}>{j.name}</div>
                   </div>
                 </div>
-                {/* Body */}
                 <div style={{ position: "relative", zIndex: 1, padding: "18px 20px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", color: "var(--text2)", fontSize: 11, textTransform: "uppercase", letterSpacing: ".8px", fontWeight: 700 }}>
                     <span>Progress</span>
@@ -688,7 +708,8 @@ function FeaturedJobs() {
                 </div>
               </div>
             );
-          })}
+          })
+          )}
         </div>
 
         {/* Dots */}

@@ -392,7 +392,7 @@ export default function LoginPage() {
           </div>
           <div className="woman">
             <div className="woman-fade"></div>
-            <img src={womanSvg} alt="" style={{width:'110%',height:'auto',flexShrink:0,display:'block',marginTop:'-120px'}} />
+            <img src={womanSvg} alt="" loading="lazy" style={{width:'110%',height:'auto',flexShrink:0,display:'block',marginTop:'-120px'}} />
           </div>
           <div className="stats-card">
             <div className="chart">
@@ -444,7 +444,7 @@ export default function LoginPage() {
                 <p className="sub">Sign in to continue earning with OgaPay</p>
                 <input type="email" value={loginEmail} onChange={e => setLoginEmail(e.target.value)} placeholder="Email address" style={{width:'100%',height:'56px',padding:'0 16px',border:'1.5px solid #e3e9f2',borderRadius:'12px',fontSize:'14px',marginBottom:'12px',fontFamily:'inherit'}} />
                 <input type="password" value={loginPassword} onChange={e => setLoginPassword(e.target.value)} placeholder="Password" style={{width:'100%',height:'56px',padding:'0 16px',border:'1.5px solid #e3e9f2',borderRadius:'12px',fontSize:'14px',marginBottom:'16px',fontFamily:'inherit'}} />
-                <button type="submit" disabled={loading === "login"} style={{width:'100%',height:'56px',border:'none',borderRadius:'14px',background:'#4D5DFF',color:'#fff',fontSize:'16px',fontWeight:'700',cursor:'pointer'}}>Sign In</button>
+                <button type="submit" disabled={loading === "login"} style={{width:'100%',height:'56px',border:'none',borderRadius:'14px',background:'#4D5DFF',color:'#fff',fontSize:'16px',fontWeight:'700',cursor:'pointer'}}>{loading === "login" ? <><i class="ti ti-loader" style={{animation:'spin 1s linear infinite',display:'inline-block'}} /> Signing in...</> : 'Sign In'}</button>
                 {loginMsg && <p style={{fontSize:'13px',color:'#dc2626',margin:'10px 0 0',textAlign:'center'}}>{loginMsg}</p>}
                 <p style={{textAlign:'center',margin:'14px 0 0'}}><a href="#" onClick={(e) => { e.preventDefault(); show("default"); }} style={{color:'#4D5DFF',fontSize:'13px',fontWeight:'600',textDecoration:'none'}}>Back to options</a></p>
               </form>
@@ -456,7 +456,7 @@ export default function LoginPage() {
                 <input type="text" value={signupName} onChange={e => setSignupName(e.target.value)} placeholder="Full name" style={{width:'100%',height:'56px',padding:'0 16px',border:'1.5px solid #e3e9f2',borderRadius:'12px',fontSize:'14px',marginBottom:'12px',fontFamily:'inherit'}} />
                 <input type="email" value={signupEmail} onChange={e => setSignupEmail(e.target.value)} placeholder="Email address" style={{width:'100%',height:'56px',padding:'0 16px',border:'1.5px solid #e3e9f2',borderRadius:'12px',fontSize:'14px',marginBottom:'12px',fontFamily:'inherit'}} />
                 <input type="password" value={signupPassword} onChange={e => setSignupPassword(e.target.value)} placeholder="Password (min 8 characters)" style={{width:'100%',height:'56px',padding:'0 16px',border:'1.5px solid #e3e9f2',borderRadius:'12px',fontSize:'14px',marginBottom:'16px',fontFamily:'inherit'}} />
-                <button type="submit" disabled={loading === "signup"} style={{width:'100%',height:'56px',border:'none',borderRadius:'14px',background:'#4D5DFF',color:'#fff',fontSize:'16px',fontWeight:'700',cursor:'pointer'}}>Create Account</button>
+                <button type="submit" disabled={loading === "signup"} style={{width:'100%',height:'56px',border:'none',borderRadius:'14px',background:'#4D5DFF',color:'#fff',fontSize:'16px',fontWeight:'700',cursor:'pointer'}}>{loading === "signup" ? <><i class="ti ti-loader" style={{animation:'spin 1s linear infinite',display:'inline-block'}} /> Creating...</> : 'Create Account'}</button>
                 {signupMsg && <p style={{fontSize:'13px',color:'#dc2626',margin:'10px 0 0',textAlign:'center'}}>{signupMsg}</p>}
                 <p style={{textAlign:'center',margin:'14px 0 0'}}><a href="#" onClick={(e) => { e.preventDefault(); show("default"); }} style={{color:'#4D5DFF',fontSize:'13px',fontWeight:'600',textDecoration:'none'}}>Back to options</a></p>
               </form>
@@ -478,7 +478,7 @@ export default function LoginPage() {
                 <h2>Reset Password</h2>
                 <p className="sub">Enter your email address and we'll send you a link to reset your password.</p>
                 <input type="email" value={resetEmail} onChange={e => setResetEmail(e.target.value)} placeholder="Enter your email" style={{width:'100%',height:'56px',padding:'0 16px',border:'1.5px solid #e3e9f2',borderRadius:'12px',fontSize:'14px',marginBottom:'16px',fontFamily:'inherit'}} />
-                <button type="submit" disabled={loading === "reset"} style={{width:'100%',height:'56px',border:'none',borderRadius:'14px',background:'#4D5DFF',color:'#fff',fontSize:'16px',fontWeight:'700',cursor:'pointer'}}>Send Reset Link</button>
+                <button type="submit" disabled={loading === "reset"} style={{width:'100%',height:'56px',border:'none',borderRadius:'14px',background:'#4D5DFF',color:'#fff',fontSize:'16px',fontWeight:'700',cursor:'pointer'}}>{loading === "reset" ? <><i class="ti ti-loader" style={{animation:'spin 1s linear infinite',display:'inline-block'}} /> Sending...</> : 'Send Reset Link'}</button>
                 {resetMsg && <p style={{fontSize:'13px',color: resetMsg.includes("receive") ? '#16a34a' : '#66738a',margin:'12px 0 0',textAlign:'center'}}>{resetMsg}</p>}
                 <p style={{textAlign:'center',margin:'12px 0 0'}}><a href="#" onClick={(e) => { e.preventDefault(); show("default"); }} style={{color:'#4D5DFF',fontSize:'13px',fontWeight:'600',textDecoration:'none'}}>Back to options</a></p>
               </form>

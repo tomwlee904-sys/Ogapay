@@ -139,9 +139,9 @@ export default function Wallet() {
 
       <div className="wl-stats">
         {[
-          { icon: 'ti ti-wallet', color: '#1F8CFF', num: fmt(ngnBal, 'NGN'), label: 'Balance' },
+          { icon: 'ti ti-wallet', color: '#191C6B', num: fmt(ngnBal, 'NGN'), label: 'Balance' },
           { icon: 'ti ti-coin', color: '#16a34a', num: `$${usdcBal.toFixed(2)} USDC`, label: 'Crypto' },
-          { icon: 'ti ti-trending-up', color: '#2563EB', num: fmt(totalDeposits, 'NGN'), label: 'Total Deposits' },
+          { icon: 'ti ti-trending-up', color: '#191C6B', num: fmt(totalDeposits, 'NGN'), label: 'Total Deposits' },
           { icon: 'ti ti-trending-down', color: '#f5b301', num: fmt(totalWithdrawn, 'NGN'), label: 'Total Withdrawn' },
         ].map((s, i) => (
           <div className="wl-stat" key={i}>
@@ -154,8 +154,8 @@ export default function Wallet() {
 
       <div className="wl-grid">
         {[
-          { icon: 'ti ti-plus-circle', color: '#1F8CFF', label: 'Deposit', desc: 'Add funds to your wallet' },
-          { icon: 'ti ti-logout', color: '#2563EB', label: 'Withdraw', desc: 'Withdraw to bank or crypto' },
+          { icon: 'ti ti-plus-circle', color: '#191C6B', label: 'Deposit', desc: 'Add funds to your wallet' },
+          { icon: 'ti ti-logout', color: '#191C6B', label: 'Withdraw', desc: 'Withdraw to bank or crypto' },
           { icon: 'ti ti-transfer', color: '#16a34a', label: 'Transfer', desc: 'Send to another user' },
         ].map((c, i) => (
           <a className="wl-card" href="#" key={i}>

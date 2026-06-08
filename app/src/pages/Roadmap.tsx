@@ -70,7 +70,7 @@ const phases = [
 
 const statusStyles = {
   done: { bg: "#16a34a18", color: "#16a34a", label: "Complete" },
-  active: { bg: "#1F8CFF18", color: "#1F8CFF", label: "In Progress" },
+  active: { bg: "#191C6B18", color: "#191C6B", label: "In Progress" },
   upcoming: { bg: "var(--bg2)", color: "var(--text3)", label: "Upcoming" },
 }
 
@@ -87,7 +87,7 @@ export default function Roadmap() {
         .rm-phase{position:relative;padding-left:68px;margin-bottom:28px}
         .rm-dot{position:absolute;left:18px;top:6px;width:22px;height:22px;border-radius:50%;border:2px solid var(--border);background:var(--card);display:grid;place-items:center;z-index:1;font-size:10px}
         .rm-dot.done{border-color:#16a34a;background:#16a34a;color:#fff}
-        .rm-dot.active{border-color:#1F8CFF;background:#1F8CFF;color:#fff;animation:pulse 2s infinite}
+        .rm-dot.active{border-color:#191C6B;background:#191C6B;color:#fff;animation:pulse 2s infinite}
         .rm-dot.upcoming{background:var(--card);color:var(--text3)}
         @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(31,140,255,.4)}50%{box-shadow:0 0 0 6px rgba(31,140,255,0)}}
         .rm-phase-header{display:flex;align-items:center;gap:10px;margin-bottom:12px}
@@ -97,7 +97,7 @@ export default function Roadmap() {
         .rm-item{display:flex;align-items:center;gap:10px;padding:7px 0;font-size:13px;color:var(--text2)}
         .rm-item.done{color:var(--text)}
         .rm-item.done i{color:#16a34a}
-        .rm-item.active i{color:#1F8CFF}
+        .rm-item.active i{color:#191C6B}
       `}</style>
 
       <div className="rm-page">

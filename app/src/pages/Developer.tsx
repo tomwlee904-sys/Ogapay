@@ -24,7 +24,7 @@ export default function Developer() {
     <Layout>
       <style>{`
         .dev-page{max-width:900px;margin:0 auto;padding:0 0 60px}
-        .dev-hero{background:linear-gradient(135deg,#121566,#1F8CFF);border-radius:16px;padding:40px 36px;margin-bottom:32px;color:#fff}
+        .dev-hero{background:linear-gradient(135deg,#191C6B,#191C6B);border-radius:16px;padding:40px 36px;margin-bottom:32px;color:#fff}
         .dev-hero h1{font-family:Outfit;font-size:32px;font-weight:900;margin:0 0 8px}
         .dev-hero p{font-size:14px;opacity:.85;line-height:1.6;margin:0;max-width:600px}
         .dev-section{margin-bottom:32px}
@@ -36,7 +36,7 @@ export default function Developer() {
         .endpoint-row:last-child{border-bottom:none}
         .method{display:inline-flex;align-items:center;justify-content:center;min-width:52px;height:24px;border-radius:5px;font-size:10px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;flex-shrink:0}
         .method.get{background:#16a34a18;color:#16a34a}
-        .method.post{background:#1F8CFF18;color:#1F8CFF}
+        .method.post{background:#191C6B18;color:#191C6B}
         .method.patch{background:#F59E0B18;color:#F59E0B}
         .endpoint-path{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text);font-weight:600;flex-shrink:0}
         .endpoint-desc{color:var(--text2);flex:1}
@@ -45,7 +45,7 @@ export default function Developer() {
         .endpoint-auth.private{background:#F59E0B18;color:#F59E0B}
         .code-block{background:#0a0a0a;border-radius:8px;padding:16px 18px;font-family:'JetBrains Mono',monospace;font-size:12px;color:#e5e5e5;overflow-x:auto;line-height:1.6;margin:12px 0}
         .code-block .comment{color:#6b7280}
-        .code-block .keyword{color:#93c5fd}
+        .code-block .keyword{color:#191C6B}
         .code-block .string{color:#86efac}
         .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:24px}
         @media(max-width:600px){.grid-2{grid-template-columns:1fr}}
@@ -67,7 +67,7 @@ export default function Developer() {
         {/* Quick Start */}
         <div className="grid-2">
           {[
-            { icon: "key", color: "#1F8CFF", title: "API Key", desc: "Get your API key from your profile settings to authenticate requests.", link: "/settings", label: "Go to Settings" },
+            { icon: "key", color: "#191C6B", title: "API Key", desc: "Get your API key from your profile settings to authenticate requests.", link: "/settings", label: "Go to Settings" },
             { icon: "book", color: "#16a34a", title: "Documentation", desc: "Read the full API reference with examples and response schemas.", link: "#", label: "View Docs" },
             { icon: "terminal", color: "#8B5CF6", title: "Quick Start", desc: "Learn the basics of creating tasks, applying, and submitting proofs.", link: "#", label: "Get Started" },
             { icon: "message", color: "#F59E0B", title: "Support", desc: "Join our Telegram group for developer support and updates.", link: "https://t.me/ogapay", label: "Join Telegram" },

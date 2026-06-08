@@ -2,8 +2,9 @@ import { useState, useEffect } from "react";
 import Layout from "../components/Layout";
 import { useAuth } from "../context/AuthContext";
 import { apiRequest } from "../lib/api";
+import { SkeletonPage, injectSkeletonStyles } from "../components/SkeletonLoader";
 
-const ACCENT = "#1F8CFF";
+const ACCENT = "#191C6B";
 
 /* ─── INLINE SVG ICONS ────────────────────────────────────────── */
 const Icon = ({ n, s = 18, c = "currentColor" }) => (
@@ -157,6 +158,8 @@ export default function OgaPayDashboard() {
     return !isNaN(ts) && Date.now() - ts < 5 * 60 * 1000;
   });
 
+  useEffect(() => { injectSkeletonStyles(); }, []);
+
   useEffect(() => {
     async function loadDashboard() {
       setDashLoading(true);
@@ -224,6 +227,14 @@ export default function OgaPayDashboard() {
     );
   }
 
+  if (dashLoading) {
+    return (
+      <Layout sidebar={false}>
+        <SkeletonPage />
+      </Layout>
+    );
+  }
+
   const checklist = [
     { label: "Complete your profile & verify email", done: step1Done },
     { label: "Connect a Solana wallet", done: step2Done },
@@ -252,8 +263,8 @@ export default function OgaPayDashboard() {
           </div>
         ) : isNew ? (
           <div className="dash-intro">
-            <div className="dash-intro-icon" style={{ background: "#dbeafe" }}>
-              <Icon n="hand-wave" s={20} c="#2563eb" />
+            <div className="dash-intro-icon" style={{ background: "#191C6B" }}>
+              <Icon n="hand-wave" s={20} c="#191C6B" />
             </div>
             <div style={{ flex: 1 }}>
               <h2>Welcome to OgaPay, {fname}!</h2>
@@ -279,7 +290,7 @@ export default function OgaPayDashboard() {
             <p style={{ fontSize: 14, color: "var(--text2)", margin: "4px 0 0" }}>Complete your setup to start earning on OgaPay</p>
           </div>
           {!allDone && (
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "5px 12px", borderRadius: 20, background: "#2563eb", color: "#fff", fontSize: 12, fontWeight: 700 }}>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "5px 12px", borderRadius: 20, background: "#191C6B", color: "#fff", fontSize: 12, fontWeight: 700 }}>
               <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#fff", opacity: .85, display: "inline-block" }} />
               {total - completed} tasks pending
             </span>
@@ -446,7 +457,7 @@ export default function OgaPayDashboard() {
 
             {/* ── ANNOUNCEMENT ── */}
             <div className="dash-announce">
-              <Icon n="megaphone" s={18} c="#60a5fa" />
+              <Icon n="megaphone" s={18} c="#191C6B" />
               <p>OgaPay tasks are now available in Nigeria, Ghana, Kenya and more.</p>
               <a href="#"><Icon n="file-text" s={13} /> Read our getting started guide</a>
             </div>

@@ -7,8 +7,8 @@ const API_BASE = 'https://ogapay-production.up.railway.app/api/v1'
 const filters = ['All', 'Trending', 'New', 'Crypto', 'Business', 'Content', 'Design', 'Marketing']
 
 function getGradient(cat: string) {
-  const g: Record<string, string> = { crypto: '#1a1a4e,#1F8CFF', design: '#4a1a4e,#EC4899', content: '#1a4e3a,#22C55E', marketing: '#4e3a1a,#F5B301', business: '#1a2a4e,#3B82F6' }
-  return g[cat] || '#1a1a4e,#1F8CFF'
+  const g: Record<string, string> = { crypto: '#1a1a4e,#191C6B', design: '#4a1a4e,#EC4899', content: '#1a4e3a,#22C55E', marketing: '#4e3a1a,#F5B301', business: '#1a2a4e,#191C6B' }
+  return g[cat] || '#1a1a4e,#191C6B'
 }
 
 export default function Communities() {
@@ -51,41 +51,41 @@ export default function Communities() {
     <Layout>
       <style>{`
         .ch-hero{text-align:center;padding:20px 24px 36px;background:radial-gradient(ellipse at 50% 0%,rgba(31,140,255,.08) 0%,transparent 70%);border-radius:14px;margin-bottom:28px}
-        .ch-hero h1{font-family:Outfit;font-size:38px;font-weight:900;margin:0 0 8px;background:linear-gradient(135deg,#fff 30%,#1F8CFF 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+        .ch-hero h1{font-family:Outfit;font-size:38px;font-weight:900;margin:0 0 8px;background:linear-gradient(135deg,#fff 30%,#191C6B 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
         .ch-hero p{color:var(--text2);font-size:14px;max-width:500px;margin:0 auto 20px;line-height:1.6}
         .ch-search{display:flex;align-items:center;gap:0;max-width:500px;margin:0 auto;background:var(--card);border:1.5px solid var(--border);border-radius:12px;overflow:hidden;transition:all .2s}
-        .ch-search:focus-within{border-color:#1F8CFF;box-shadow:0 0 0 3px rgba(31,140,255,.1)}
+        .ch-search:focus-within{border-color:#191C6B;box-shadow:0 0 0 3px rgba(31,140,255,.1)}
         .ch-search input{flex:1;border:0;background:transparent;color:var(--text);font-size:14px;padding:12px 16px;outline:none}
         .ch-search input::placeholder{color:var(--text3)}
         .ch-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:28px}
         @media(max-width:768px){.ch-stats{grid-template-columns:repeat(2,1fr)}}
         .ch-stat{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;text-align:center}
-        .ch-stat .csi{width:34px;height:34px;border-radius:8px;background:rgba(31,140,255,.08);color:#1F8CFF;display:grid;place-items:center;margin:0 auto 6px;font-size:18px}
+        .ch-stat .csi{width:34px;height:34px;border-radius:8px;background:rgba(31,140,255,.08);color:#191C6B;display:grid;place-items:center;margin:0 auto 6px;font-size:18px}
         .ch-stat .csn{font-family:Outfit;font-size:22px;font-weight:800}
         .ch-stat .csl{color:var(--text2);font-size:12px;margin-top:2px}
         .ch-filters{display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap}
         .ch-pill{height:32px;padding:0 14px;border-radius:999px;border:1px solid var(--border);background:var(--bg);color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:4px}
-        .ch-pill:hover,.ch-pill.active{background:#1F8CFF;color:#fff;border-color:#1F8CFF}
+        .ch-pill:hover,.ch-pill.active{background:#191C6B;color:#fff;border-color:#191C6B}
         .ch-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:28px}
         @media(max-width:1024px){.ch-grid{grid-template-columns:repeat(2,1fr)}}
         @media(max-width:640px){.ch-grid{grid-template-columns:1fr}}
         .ch-card{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;transition:all .3s;cursor:pointer;display:flex;flex-direction:column}
-        .ch-card:hover{transform:translateY(-4px);border-color:#1F8CFF;box-shadow:0 8px 24px rgba(31,140,255,.1)}
+        .ch-card:hover{transform:translateY(-4px);border-color:#191C6B;box-shadow:0 8px 24px rgba(31,140,255,.1)}
         .ch-card .ccb{height:90px;position:relative;overflow:hidden}
-        .ch-card .cca{width:48px;height:48px;border-radius:50%;border:3px solid var(--card);background:var(--bg2);display:grid;place-items:center;font-size:16px;font-weight:800;color:#1F8CFF;margin-top:-24px;margin-left:14px;position:relative;z-index:1}
+        .ch-card .cca{width:48px;height:48px;border-radius:50%;border:3px solid var(--card);background:var(--bg2);display:grid;place-items:center;font-size:16px;font-weight:800;color:#191C6B;margin-top:-24px;margin-left:14px;position:relative;z-index:1}
         .ch-card .cc-body{padding:6px 14px 14px;flex:1;display:flex;flex-direction:column}
         .ch-card .cc-name{font-weight:700;font-size:15px;margin-bottom:2px}
-        .ch-card .cc-badge{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:700;background:rgba(31,140,255,.08);color:#1F8CFF;width:fit-content;margin-bottom:6px}
+        .ch-card .cc-badge{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:700;background:rgba(31,140,255,.08);color:#191C6B;width:fit-content;margin-bottom:6px}
         .ch-card .cc-meta{display:flex;gap:12px;margin-bottom:8px;flex-wrap:wrap}
         .ch-card .cc-meta span{display:flex;align-items:center;gap:4px;color:var(--text2);font-size:12px}
         .ch-card .cc-r{color:var(--text2);font-size:12px;margin-bottom:8px}
         .ch-card .cc-r strong{color:var(--green)}
         .ch-card .cc-actions{display:flex;gap:8px;margin-top:auto}
         .ch-card .cc-actions button{flex:1;height:32px;border-radius:8px;font-size:11px;font-weight:700;transition:all .2s;cursor:pointer}
-        .ch-join{border:1px solid #1F8CFF;background:transparent;color:#1F8CFF}
-        .ch-join:hover{background:#1F8CFF;color:#fff}
+        .ch-join{border:1px solid #191C6B;background:transparent;color:#191C6B}
+        .ch-join:hover{background:#191C6B;color:#fff}
         .ch-preview{border:1px solid var(--border);background:transparent;color:var(--text2)}
-        .ch-preview:hover{border-color:#1F8CFF;color:#1F8CFF}
+        .ch-preview:hover{border-color:#191C6B;color:#191C6B}
         .ch-trend{display:flex;gap:14px;overflow-x:auto;padding:4px 0 16px;scroll-snap-type:x mandatory}
         .ch-trend::-webkit-scrollbar{height:4px}
         .ch-trend::-webkit-scrollbar-thumb{background:var(--border2);border-radius:999px}
@@ -100,7 +100,7 @@ export default function Communities() {
         <p>Discover and join vibrant communities. Connect with creators, earn rewards, and grow together.</p>
         <div className="ch-search">
           <input type="text" placeholder="Search communities..." value={search} onChange={e => setSearch(e.target.value)} />
-          <button style={{ height: 44, padding: '0 18px', border: 0, background: '#1F8CFF', color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
+          <button style={{ height: 44, padding: '0 18px', border: 0, background: '#191C6B', color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
             <i className="ti ti-search" /> Search
           </button>
         </div>

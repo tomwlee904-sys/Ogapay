@@ -10,9 +10,9 @@ const documents = [
 ]
 
 const stats = [
-  { icon: 'ti ti-vault', color: '#1F8CFF', count: '5', label: 'Documents' },
+  { icon: 'ti ti-vault', color: '#191C6B', count: '5', label: 'Documents' },
   { icon: 'ti ti-lock', color: '#16a34a', count: '14 MB', label: 'Storage Used' },
-  { icon: 'ti ti-shield-check', color: '#2563EB', count: '4', label: 'Verified' },
+  { icon: 'ti ti-shield-check', color: '#191C6B', count: '4', label: 'Verified' },
 ]
 
 export default function Vault() {

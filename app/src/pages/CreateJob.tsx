@@ -117,7 +117,7 @@ const PLATFORMS = [
 
 // ── SERVICE CATEGORIES (18 new quick services) ────────────────────────────
 const SERVICES = [
-  { id: "website_visits", name: "Website Visits", icon: <IconGlobe />, color: "#2563eb", fields: ["url", "duration", "count"], pricePerAction: 10, urlPlaceholder: "https://example.com" },
+  { id: "website_visits", name: "Website Visits", icon: <IconGlobe />, color: "#191C6B", fields: ["url", "duration", "count"], pricePerAction: 10, urlPlaceholder: "https://example.com" },
   { id: "app_downloads", name: "App Downloads", icon: <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>, color: "#059669", fields: ["app_url", "platform", "count"], pricePerAction: 15, urlPlaceholder: "https://apps.apple.com/..." },
   { id: "survey_campaigns", name: "Survey Campaigns", icon: <IconMail />, color: "#7c3aed", fields: ["survey_url", "questions", "count"], pricePerAction: 25, urlPlaceholder: "https://forms.gle/..." },
   { id: "email_signups", name: "Email Signups", icon: <IconMail />, color: "#0891b2", fields: ["signup_url", "count"], pricePerAction: 8, urlPlaceholder: "https://example.com/signup" },
@@ -127,12 +127,12 @@ const SERVICES = [
   { id: "google_maps_reviews", name: "Google Maps Reviews", icon: <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>, color: "#ea580c", fields: ["place_id", "min_rating", "count"], pricePerAction: 15, urlPlaceholder: "Google Maps place ID" },
   { id: "influencer_campaigns", name: "Influencer Campaigns", icon: <IconUsers />, color: "#db2777", fields: ["campaign_brief", "platform", "reach"], pricePerAction: 100, urlPlaceholder: "Campaign description" },
   { id: "nft_mint_campaigns", name: "NFT Mint Campaigns", icon: <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>, color: "#7c3aed", fields: ["nft_address", "network", "count"], pricePerAction: 50, urlPlaceholder: "Solana NFT address" },
-  { id: "token_holder_campaigns", name: "Token Holder Campaigns", icon: <IconWallet />, color: "#2563eb", fields: ["token_address", "min_holdings", "network"], pricePerAction: 40, urlPlaceholder: "Token mint address" },
+  { id: "token_holder_campaigns", name: "Token Holder Campaigns", icon: <IconWallet />, color: "#191C6B", fields: ["token_address", "min_holdings", "network"], pricePerAction: 40, urlPlaceholder: "Token mint address" },
   { id: "beta_testing", name: "Beta Testing", icon: <IconSettings />, color: "#0891b2", fields: ["app_url", "test_instructions", "slots"], pricePerAction: 35, urlPlaceholder: "https://testflight.apple.com/..." },
   { id: "waitlist_registration", name: "Waitlist Registration", icon: <IconFile />, color: "#d97706", fields: ["waitlist_url", "count"], pricePerAction: 5, urlPlaceholder: "https://example.com/waitlist" },
   { id: "referral_campaigns", name: "Referral Campaigns", icon: <IconExternalLink />, color: "#059669", fields: ["referral_code", "referral_url", "count"], pricePerAction: 20, urlPlaceholder: "https://example.com/ref/..." },
   { id: "affiliate_campaigns", name: "Affiliate Campaigns", icon: <IconGlobe />, color: "#dc2626", fields: ["affiliate_link", "commission", "count"], pricePerAction: 25, urlPlaceholder: "https://example.com/affiliate" },
-  { id: "data_entry_jobs", name: "Data Entry Jobs", icon: <IconFile />, color: "#4f46e5", fields: ["instructions", "format", "count"], pricePerAction: 10, urlPlaceholder: "Job description" },
+  { id: "data_entry_jobs", name: "Data Entry Jobs", icon: <IconFile />, color: "#191C6B", fields: ["instructions", "format", "count"], pricePerAction: 10, urlPlaceholder: "Job description" },
   { id: "freelance_jobs", name: "Freelance Jobs", icon: <IconSettings />, color: "#ea580c", fields: ["job_description", "skills", "budget"], pricePerAction: 50, urlPlaceholder: "Project description" },
   { id: "escrow_projects", name: "Escrow Projects", icon: <IconWallet />, color: "#7c3aed", fields: ["project_scope", "milestones", "total_budget"], pricePerAction: 100, urlPlaceholder: "Project scope document" },
 ];
@@ -1014,7 +1014,7 @@ function CreateTask() {
           <button onClick={handleUpgrade} disabled={upgrading}
             style={{
               padding: '12px 32px', borderRadius: 10, border: 'none',
-              background: upgrading ? 'var(--border)' : '#121566', color: '#fff',
+              background: upgrading ? 'var(--border)' : '#191C6B', color: '#fff',
               fontSize: 14, fontWeight: 700, cursor: upgrading ? 'not-allowed' : 'pointer',
               fontFamily: 'inherit'
             }}>

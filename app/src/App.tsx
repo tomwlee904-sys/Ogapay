@@ -4,6 +4,8 @@ import { AuthProvider } from './context/AuthContext'
 import { ThemeProvider } from './context/ThemeContext'
 import { CurrencyProvider, useCurrency } from './context/CurrencyContext'
 import ProtectedRoute from './components/ProtectedRoute'
+import ErrorBoundary from './components/ErrorBoundary'
+import { ToastProvider } from './components/Toast'
 
 // ─── Lazy-loaded pages ───
 const HomePage = lazy(() => import('./pages/HomePage'))
@@ -53,6 +55,7 @@ const Bookmarks = lazy(() => import('./pages/Bookmarks'))
 const ManageJobs = lazy(() => import('./pages/ManageJobs'))
 const UserProfile = lazy(() => import('./pages/UserProfile'))
 const Admin = lazy(() => import('./pages/Admin'))
+const WorkspacePortal = lazy(() => import('./pages/WorkspacePortal'))
 
 // ─── Loader ───
 function PageLoader() {
@@ -127,6 +130,8 @@ export default function App() {
     <ThemeProvider>
       <AuthProvider>
           <CurrencyProvider>
+        <ToastProvider>
+        <ErrorBoundary>
         <Suspense fallback={<PageLoader />}>
           <Routes>
             {/* ── Public routes ── */}
@@ -160,6 +165,7 @@ export default function App() {
             <Route path="/earnings" element={<AuthGuard><Earnings /></AuthGuard>} />
             <Route path="/referrals" element={<AuthGuard><Referrals /></AuthGuard>} />
             <Route path="/worker-portal" element={<AuthGuard><WorkerPortal /></AuthGuard>} />
+            <Route path="/worker-portal/:category" element={<AuthGuard><WorkspacePortal /></AuthGuard>} />
             <Route path="/settings" element={<AuthGuard><Settings /></AuthGuard>} />
             <Route path="/notifications" element={<AuthGuard><Notifications /></AuthGuard>} />
             <Route path="/messages" element={<AuthGuard><Messages /></AuthGuard>} />
@@ -200,6 +206,8 @@ export default function App() {
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
+        </ErrorBoundary>
+        </ToastProvider>
       </CurrencyProvider>
           </AuthProvider>
     </ThemeProvider>

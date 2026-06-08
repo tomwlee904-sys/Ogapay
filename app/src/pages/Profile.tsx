@@ -23,7 +23,7 @@ const CHART_30 = Array.from({ length: 30 }, (_, i) => ({ day: `D${i+1}`, val: 0 
 const DONUT_CATS = [
   { name: "Jobs", color: "#22c55e" },
   { name: "Referrals", color: "#a855f7" },
-  { name: "Tips", color: "#3b82f6" },
+  { name: "Tips", color: "#191C6B" },
   { name: "Vault", color: "#f59e0b" },
 ];
 const QUICK = [
@@ -101,13 +101,11 @@ function MyJobsTab() {
   useEffect(() => {
     (async () => {
       try {
-        const token = localStorage.getItem('ogapay_access_token');
-        if (!token) { setLoading(false); return; }
-        const res = await fetch('https://ogapay-production.up.railway.app/api/v1/tasks/my/submissions', {
-          headers: { 'Authorization': 'Bearer ' + token },
-        });
-        const json = await res.json();
-        if (json.success && json.data) setJobs(json.data);
+                        const data = await apiRequest('/tasks/my/submissions').catch(() => null);
+                        if (data) {
+                          const list = Array.isArray(data) ? data : data?.data || data?.tasks || [];
+                          setJobs(list);
+                        }
       } catch {}
       setLoading(false);
     })();
@@ -173,11 +171,12 @@ function MyJobsTab() {
   );
 }
 
-function ReferralsTab() {
-  const [stats, setStats] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+function ReferralsTab({ initialStats }: { initialStats?: any }) {
+  const [stats, setStats] = useState<any>(initialStats ?? null);
+  const [loading, setLoading] = useState(!initialStats);
 
   useEffect(() => {
+    if (initialStats) return;
     (async () => {
       try {
         const data = await apiRequest('/users/referrals/stats').catch(() => null);
@@ -407,22 +406,9 @@ export default function Profile() {
 
   // Render tab content
   if (tab === "jobs") { navigate('/manage-jobs'); return null; }
-  if (tab === "referrals") return <Layout><div className="pg"><ReferralsTab /></div></Layout>;
+  if (tab === "referrals") return <Layout><div className="pg"><ReferralsTab initialStats={referralStats} /></div></Layout>;
   if (tab === "alerts") return <Layout><div className="pg"><AlertsTab /></div></Layout>;
-  if (tab === "portal") {
-    return <Layout>
-      <div className="pg">
-        <div className="page-head-sm"><Icon n="layout-dashboard" s={20} /><h2>Worker Portal</h2></div>
-        <div className="card card-sm" style={{textAlign:'center',padding:'48px 20px'}}>
-          <Icon n="briefcase" s={40} c="var(--text3)" />
-          <div style={{fontSize:14,color:'var(--text2)',marginTop:12}}>Worker portal is available at <a href="/worker-portal" style={{color:'var(--accent)',fontWeight:600,textDecoration:'underline'}}>/worker-portal</a></div>
-          <button className="dash-btn" style={{marginTop:16}} onClick={() => navigate('/worker-portal')}>
-            <Icon n="external-link" s={14} /> Open Worker Portal
-          </button>
-        </div>
-      </div>
-    </Layout>;
-  }
+  if (tab === "portal") { navigate('/worker-portal'); return null; }
 
   return (
     <Layout>
@@ -516,7 +502,7 @@ export default function Profile() {
       {/* Tab Bar */}
       <div className="tab-bar">
         {tabs.map(t => (
-          <button key={t.id} className={`tab-btn ${tab === t.id ? 'active' : ''}`} onClick={() => setTab(t.id)}>
+          <button key={t.id} className={`tab-btn ${tab === t.id ? 'active' : ''}`} onClick={() => t.id === 'portal' ? navigate('/worker-portal') : setTab(t.id)}>
             <i className={`ti ti-${t.icon}`} />
             {t.label}
           </button>
@@ -568,7 +554,7 @@ export default function Profile() {
                       <XAxis dataKey="day" tick={{fontSize:11,fill:'var(--text3)'}} axisLine={{stroke:'var(--border)'}} tickLine={false} />
                       <YAxis tick={{fontSize:11,fill:'var(--text3)'}} axisLine={false} tickLine={false} />
                       <Tooltip contentStyle={{background:'var(--card)',border:'1px solid var(--border)',borderRadius:8,fontSize:12}} />
-                      <Line type="monotone" dataKey="val" stroke="#1F8CFF" strokeWidth={2} dot={{fill:'#1F8CFF',r:3}} />
+                      <Line type="monotone" dataKey="val" stroke="#191C6B" strokeWidth={2} dot={{fill:'#191C6B',r:3}} />
                     </LineChart>
                   </ResponsiveContainer>
                 )}
@@ -620,7 +606,7 @@ export default function Profile() {
                     <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'10px 0',borderBottom:'1px dashed var(--border)',fontSize:16}}>
                       <span style={{fontWeight:800}}>
                         {loading ? <span className="skeleton" style={{width:80,height:16}} /> : <>
-                          {Number(totalNgn).toLocaleString()} <span style={{color:'#2563eb'}}>$OGA</span>
+                          {Number(totalNgn).toLocaleString()} <span style={{color:'#191C6B'}}>$OGA</span>
                         </>}
                       </span>
                       {!loading && <span style={{fontSize:12,color:'var(--text2)'}}>≈ {fmt(ngnBal, "NGN")}</span>}
@@ -755,7 +741,7 @@ export default function Profile() {
                   ) : (
                     <>
                       <div style={{width:64,height:64,borderRadius:'50%',background:'var(--text)',color:'var(--bg)',fontSize:22,fontWeight:800,display:'grid',placeItems:'center',flexShrink:0}}>
-                        {user?.avatarUrl ? <img src={user.avatarUrl} alt="" style={{width:64,height:64,borderRadius:'50%',objectFit:'cover'}} /> : (user?.firstName?.[0] || 'U') + (user?.lastName?.[0] || '')}
+                        {user?.avatarUrl ? <img src={user.avatarUrl} alt="" loading="lazy" style={{width:64,height:64,borderRadius:'50%',objectFit:'cover'}} /> : (user?.firstName?.[0] || 'U') + (user?.lastName?.[0] || '')}
                       </div>
                       <div>
                         <div style={{fontSize:17,fontWeight:800}}>{user?.firstName || 'User'} {user?.lastName || ''}</div>
@@ -877,7 +863,7 @@ export default function Profile() {
                         <td style={{padding:'13px 16px',fontSize:13,color:'var(--text2)',borderBottom:'1px solid var(--border)',fontWeight:700}}>
                           {w.currency || 'NGN'} {Math.abs(Number(w.amount || 0)).toLocaleString()}
                         </td>
-                        <td style={{padding:'13px 16px',fontSize:13,color:'var(--text2)',borderBottom:'1px solid var(--border)',fontFamily:'monospace',fontSize:12}}>{w.reference || w.id || '—'}</td>
+                        <td style={{padding:'13px 16px',fontSize:12,color:'var(--text2)',borderBottom:'1px solid var(--border)',fontFamily:'monospace'}}>{w.reference || w.id || '—'}</td>
                         <td style={{padding:'13px 16px',fontSize:13,color:'var(--text2)',borderBottom:'1px solid var(--border)'}}>{formatTimeAgo(w.createdAt || w.date)}</td>
                       </tr>
                     ))}
@@ -915,7 +901,7 @@ export default function Profile() {
             <div style={{display:'flex',alignItems:'center',gap:16,marginBottom:24}}>
               <div style={{width:72,height:72,borderRadius:'50%',background:'var(--bg2)',border:'2px solid var(--border)',overflow:'hidden',flexShrink:0,display:'grid',placeItems:'center'}}>
                 {editForm.avatarUrl ? (
-                  <img src={editForm.avatarUrl} alt="" style={{width:'100%',height:'100%',objectFit:'cover'}} />
+                  <img src={editForm.avatarUrl} alt="" loading="lazy" style={{width:'100%',height:'100%',objectFit:'cover'}} />
                 ) : (
                   <span style={{fontSize:24,fontWeight:800,color:'var(--text3)'}}>{(editForm.firstName?.[0] || 'U') + (editForm.lastName?.[0] || '')}</span>
                 )}
@@ -961,13 +947,8 @@ export default function Profile() {
                         setUsernameCheck('checking');
                         usernameCheckTimer.current = setTimeout(async () => {
                           try {
-                            const token = localStorage.getItem('ogapay_access_token');
-                            if (!token) return;
-                            const res = await fetch('https://ogapay-production.up.railway.app/api/v1/users/directory/list?search=' + encodeURIComponent(val) + '&limit=1', {
-                              headers: {'Authorization': 'Bearer ' + token},
-                            });
-                            const json = await res.json();
-                            const users = json.data || [];
+                            const result = await apiRequest('/users/directory/list?search=' + encodeURIComponent(val) + '&limit=1').catch(() => null);
+                            const users = result?.data || result || [];
                             const taken = users.some((u: any) => u.username?.toLowerCase() === val);
                             setUsernameCheck(taken ? 'taken' : 'available');
                           } catch { setUsernameCheck('idle'); }
@@ -1019,31 +1000,19 @@ export default function Profile() {
                     // Bio is on workerProfile
                     let bioChanged = editForm.bio !== (profileData?.workerProfile?.bio || '');
                     
-                    const token = localStorage.getItem('ogapay_access_token');
-                    if (!token) { setEditErrors({general:'Please log in first'}); setSavingProfile(false); return; }
-
                     if (Object.keys(body).length > 0) {
-                      const res = await fetch('https://ogapay-production.up.railway.app/api/v1/users/me', {
+                      const updated = await apiRequest('/users/me', {
                         method: 'PATCH',
-                        headers: {'Content-Type':'application/json','Authorization':'Bearer '+token},
                         body: JSON.stringify(body),
-                      });
-                      if (!res.ok) {
-                        const err = await res.json().catch(() => ({}));
-                        throw new Error(err.message || 'Failed to update profile');
-                      }
-                      // Re-fetch profile
-                      const userRes = await fetch('https://ogapay-production.up.railway.app/api/v1/users/me', {
-                        headers: {'Authorization':'Bearer '+token},
-                      });
-                      const userJson = await userRes.json();
-                      if (userJson.success && userJson.data) setProfileData(userJson.data);
+                      }).catch(() => null);
+                      if (!updated) throw new Error('Failed to update profile');
+                      const userData = await apiRequest('/users/me').catch(() => null);
+                      if (userData) setProfileData(userData);
                     }
 
                     if (bioChanged) {
-                      await fetch('https://ogapay-production.up.railway.app/api/v1/users/me', {
+                      await apiRequest('/users/me', {
                         method: 'PATCH',
-                        headers: {'Content-Type':'application/json','Authorization':'Bearer '+token},
                         body: JSON.stringify({ bio: editForm.bio }),
                       }).catch(() => {});
                     }
@@ -1115,15 +1084,11 @@ export default function Profile() {
                     if (bvnNumber.length !== 11) return;
                     setKycLoading(true); setKycMsg("");
                     try {
-                      const token = localStorage.getItem('ogapay_access_token');
-                      if (!token) { setKycMsg("Please log in first"); setKycLoading(false); return; }
-                      const res = await fetch('https://ogapay-production.up.railway.app/api/v1/kyc/submit', {
+                      const json = await apiRequest('/kyc/submit', {
                         method: 'POST',
-                        headers: {'Content-Type':'application/json','Authorization':'Bearer '+token},
                         body: JSON.stringify({ idType: 'BVN', idNumber: bvnNumber, dateOfBirth: new Date().toISOString() }),
-                      });
-                      const json = await res.json();
-                      if (json.success) {
+                      }).catch(() => null);
+                      if (json && json.success) {
                         setKycMsg("KYC submitted successfully! Verification takes 1-24 hours.");
                         setKycStep("submitted");
                       } else {

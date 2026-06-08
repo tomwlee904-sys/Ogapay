@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import Layout from '../components/Layout'
 import { apiRequest } from '../lib/api'
 import { useAuth } from '../context/AuthContext'
+import { SkeletonStats, SkeletonPage, injectSkeletonStyles } from "../components/SkeletonLoader";
 
 function formatTimeAgo(dateStr: string) {
   const date = new Date(dateStr)
@@ -38,6 +39,8 @@ export default function Referrals() {
       setLoading(false)
     })()
   }, [])
+
+  useEffect(() => { injectSkeletonStyles(); }, []);
 
   const totalReferrals = stats?.totalReferrals ?? stats?.total ?? referrals.length
   const totalEarned = stats?.totalEarnings ?? stats?.earnings ?? 0
@@ -96,9 +99,9 @@ export default function Referrals() {
 
       <div className="rf-stats">
         {[
-          { icon: 'ti ti-users', color: '#1F8CFF', count: loading ? '...' : String(totalReferrals), label: 'Total Referrals' },
-          { icon: 'ti ti-coin', color: '#16a34a', count: loading ? '...' : `NGN ${Number(totalEarned).toLocaleString()}`, label: 'Total Earned' },
-          { icon: 'ti ti-trending-up', color: '#2563EB', count: loading ? '...' : `NGN ${Number(monthEarned).toLocaleString()}`, label: 'This Month' },
+          { icon: 'ti ti-users', color: '#191C6B', count: String(totalReferrals), label: 'Total Referrals' },
+          { icon: 'ti ti-coin', color: '#16a34a', count: `NGN ${Number(totalEarned).toLocaleString()}`, label: 'Total Earned' },
+          { icon: 'ti ti-trending-up', color: '#191C6B', count: `NGN ${Number(monthEarned).toLocaleString()}`, label: 'This Month' },
         ].map((s, i) => (
           <div className="rf-stat" key={i}>
             <i className={s.icon} style={{color: s.color}} />
@@ -122,7 +125,7 @@ export default function Referrals() {
       </div>
 
       {loading ? (
-        <div style={{textAlign:'center',padding:'32px 20px',color:'var(--text2)',fontSize:14}}>Loading...</div>
+        <SkeletonPage />
       ) : referrals.length === 0 ? (
         <div className="rf-empty">
           <i className="ti ti-users" />

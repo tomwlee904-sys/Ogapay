@@ -67,7 +67,7 @@ export default function Analytics() {
 
         <div className="an-stats">
           {[
-            { icon: 'checklist', color: '#1F8CFF', val: totals.tasks, label: 'Tasks Completed' },
+            { icon: 'checklist', color: '#191C6B', val: totals.tasks, label: 'Tasks Completed' },
             { icon: 'coin', color: '#16a34a', val: `NGN ${totals.earnings.toLocaleString()}`, label: 'Total Earnings' },
             { icon: 'trending-up', color: '#8B5CF6', val: '98%', label: 'Success Rate' },
             { icon: 'star', color: '#F59E0B', val: '4.8', label: 'Avg Rating' },
@@ -90,7 +90,7 @@ export default function Analytics() {
                   <XAxis dataKey={xKey} tick={{fontSize:10,fill:'var(--text3)'}} axisLine={false} tickLine={false} />
                   <YAxis tick={{fontSize:10,fill:'var(--text3)'}} axisLine={false} tickLine={false} />
                   <Tooltip contentStyle={{background:'var(--card)',border:'1px solid var(--border)',borderRadius:8,fontSize:12}} />
-                  <Bar dataKey="tasks" fill="#1F8CFF" radius={[4,4,0,0]} />
+                  <Bar dataKey="tasks" fill="#191C6B" radius={[4,4,0,0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>

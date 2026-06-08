@@ -1,11 +1,12 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
 import CurrencySelector from '../components/CurrencySelector'
 import { useCurrency } from '../context/CurrencyContext'
+import { SkeletonPage, injectSkeletonStyles } from '../components/SkeletonLoader'
 
 const API_BASE = 'https://ogapay-production.up.railway.app/api/v1'
-const BRAND = '#121566'
+const BRAND = '#191C6B'
 const BRAND_LIGHT = 'rgba(18,21,102,0.10)'
 
 /* ─── Helpers ─── */
@@ -198,6 +199,8 @@ export default function JobDetail() {
     fetchJob()
   }, [id])
 
+  useEffect(() => { injectSkeletonStyles(); }, [])
+
   function formatTask(t: any): JobData {
     const now = Date.now()
     const parsedDeadline = t.deadline
@@ -259,7 +262,7 @@ export default function JobDetail() {
 
   const noop = false
 
-  if (loading) return <PageLoader />
+  if (loading) return <Layout><SkeletonPage /></Layout>
   if (error || !job) return <ErrorState message={error || 'Task not found'} onBack={() => navigate(-1)} />
 
   const isOpen = job.status === 'OPEN' || job.status === 'ACTIVE'
@@ -349,7 +352,7 @@ export default function JobDetail() {
               border: '2px solid var(--border)', color: BRAND, fontSize: 20, fontWeight: 800,
             }}>
               {job.brandAvatar ? (
-                <img src={job.brandAvatar} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <img src={job.brandAvatar} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               ) : (
                 (job.brand || 'O')[0]
               )}
@@ -387,10 +390,10 @@ export default function JobDetail() {
               <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{
                 flex: '0 0 auto', padding: '10px 20px',
                 fontSize: 13, fontWeight: 700, fontFamily: 'inherit',
-                border: 'none', borderRadius: 10, cursor: 'pointer',
                 background: activeTab === tab.id ? BRAND : 'var(--card)',
                 color: activeTab === tab.id ? '#fff' : 'var(--text2)',
                 border: activeTab === tab.id ? 'none' : '1px solid var(--border)',
+                borderRadius: 10, cursor: 'pointer',
                 whiteSpace: 'nowrap', transition: 'all 0.15s',
                 minHeight: 44,
               }}>
@@ -462,7 +465,7 @@ export default function JobDetail() {
                 }}>
                   <div style={{
                     height: '100%', borderRadius: 99,
-                    background: `linear-gradient(90deg, ${BRAND}, #4F46E5)`,
+                    background: `linear-gradient(90deg, ${BRAND}, #191C6B)`,
                     width: `${Math.min(slotPct, 100)}%`,
                     transition: 'width 0.5s ease',
                   }} />
@@ -721,7 +724,7 @@ export default function JobDetail() {
               <h3 style={{ margin: '0 0 6px', fontSize: 16, fontWeight: 800, color: 'var(--text)' }}>
                 Submissions & Activity
               </h3>
-              <p style={{ margin: '0 0 16px', fontSize: 13, color: 'var(--text2)', maxWidth: 320, margin: '0 auto 16px', lineHeight: 1.5 }}>
+              <p style={{ margin: '0 auto 16px', fontSize: 13, color: 'var(--text2)', maxWidth: 320, lineHeight: 1.5 }}>
                 View all submissions for this task, approve or reject work, and manage payouts.
               </p>
               <button onClick={() => navigate(`/tasks/${job.id}/submissions`)} style={{
@@ -758,7 +761,7 @@ export default function JobDetail() {
               <h3 style={{ margin: '0 0 6px', fontSize: 16, fontWeight: 800, color: 'var(--text)' }}>
                 Report an Issue
               </h3>
-              <p style={{ margin: '0 0 16px', fontSize: 13, color: 'var(--text2)', maxWidth: 320, margin: '0 auto 16px', lineHeight: 1.5 }}>
+              <p style={{ margin: '0 auto 16px', fontSize: 13, color: 'var(--text2)', maxWidth: 320, lineHeight: 1.5 }}>
                 If you need to report a problem with this task or a user, click below.
               </p>
               <button style={{
@@ -814,30 +817,6 @@ export default function JobDetail() {
   )
 }
 
-/* ── Page Loader ── */
-function PageLoader() {
-  return (
-    <Layout>
-      <div style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        minHeight: '60vh',
-      }}>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{
-            width: 48, height: 48, borderRadius: '50%',
-            border: '4px solid var(--border)',
-            borderTopColor: BRAND,
-            animation: 'jd-spin 0.8s linear infinite',
-            margin: '0 auto 16px',
-          }} />
-          <style>{`@keyframes jd-spin { to { transform: rotate(360deg) } }`}</style>
-          <div style={{ fontSize: 14, color: 'var(--text2)', fontWeight: 600 }}>Loading job details...</div>
-        </div>
-      </div>
-    </Layout>
-  )
-}
-
 /* ── Error State ── */
 function ErrorState({ message, onBack }: { message: string; onBack: () => void }) {
   return (
@@ -884,17 +863,26 @@ function ApplyModal({ open, onClose, jobId, jobTitle, reward, currency }: {
   const { fmt } = useCurrency()
   const [step, setStep] = useState<'form' | 'success'>('form')
   const [applyLink, setApplyLink] = useState('')
-  const [applyMsg, setApplyMsg] = useState('')
   const [notes, setNotes] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
+  const [files, setFiles] = useState<File[]>([])
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const handleFileAdd = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) setFiles(prev => [...prev, ...Array.from(e.target.files!)])
+  }
+
+  const handleRemoveFile = (index: number) => {
+    setFiles(prev => prev.filter((_, i) => i !== index))
+  }
 
   useEffect(() => {
-    if (!open) { setStep('form'); setApplyLink(''); setNotes(''); setError('') }
+    if (!open) { setStep('form'); setApplyLink(''); setNotes(''); setError(''); setFiles([]) }
   }, [open])
 
   const handleSubmit = async () => {
-    if (!applyLink.trim()) { setError('Please provide a submission link'); return }
+    if (!applyLink.trim() && files.length === 0) { setError('Please provide a submission link or attach files'); return }
     setError('')
     setSubmitting(true)
     try {
@@ -908,10 +896,15 @@ function ApplyModal({ open, onClose, jobId, jobTitle, reward, currency }: {
       const applyJson = await applyRes.json()
       if (!applyRes.ok) throw new Error(applyJson.message || 'Failed to apply')
 
+      const formData = new FormData()
+      if (applyLink.trim()) formData.append('proof', applyLink.trim())
+      if (notes.trim()) formData.append('workerNotes', notes.trim())
+      files.forEach(f => formData.append('attachments', f))
+
       const submitRes = await fetch(`${API_BASE}/tasks/${jobId}/submit`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ proof: applyLink.trim(), workerNotes: notes || '' }),
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
       })
       const submitJson = await submitRes.json()
       if (!submitRes.ok) throw new Error(submitJson.message || 'Failed to submit')
@@ -996,6 +989,52 @@ function ApplyModal({ open, onClose, jobId, jobTitle, reward, currency }: {
                   fontSize: 14, outline: 'none', fontFamily: 'inherit',
                   resize: 'vertical', lineHeight: 1.5, minHeight: 100,
                 }} />
+            </div>
+
+            <div style={{ marginBottom: 16 }}>
+              <label style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', display: 'block', marginBottom: 6 }}>
+                Attachments (optional)
+              </label>
+              <input ref={fileInputRef} type="file" multiple accept="image/*,.pdf,.doc,.docx,.txt"
+                onChange={handleFileAdd} style={{ display: 'none' }} />
+              <div onClick={() => fileInputRef.current?.click()} style={{
+                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
+                padding: '24px 16px', borderRadius: 12, border: '1.5px dashed var(--border)',
+                background: 'var(--bg2)', color: 'var(--text3)', cursor: 'pointer',
+                fontSize: 13, fontWeight: 600, fontFamily: 'inherit',
+              }}>
+                <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path d="M12 5v14M5 12h14"/>
+                </svg>
+                <span>Click to upload files</span>
+                <span style={{ fontSize: 11, color: 'var(--text3)' }}>Images, PDFs, or documents</span>
+              </div>
+              {files.length > 0 && (
+                <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  {files.map((f, i) => (
+                    <div key={i} style={{
+                      display: 'flex', alignItems: 'center', gap: 8,
+                      padding: '8px 10px', borderRadius: 8, background: 'var(--bg2)',
+                      border: '1px solid var(--border)', fontSize: 12,
+                    }}>
+                      <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/>
+                        <polyline points="13 2 13 9 20 9"/>
+                      </svg>
+                      <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: 'var(--text)' }}>{f.name}</span>
+                      <span style={{ color: 'var(--text3)' }}>{(f.size / 1024).toFixed(0)} KB</span>
+                      <button onClick={() => handleRemoveFile(i)} style={{
+                        background: 'none', border: 'none', color: 'var(--text3)', cursor: 'pointer',
+                        padding: 2, display: 'grid', placeItems: 'center', fontFamily: 'inherit',
+                      }}>
+                        <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                          <path d="M18 6L6 18M6 6l12 12"/>
+                        </svg>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {error && (

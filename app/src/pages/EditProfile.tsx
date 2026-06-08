@@ -1,16 +1,16 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
+import { useToast } from '../components/Toast'
 
 export default function EditProfile() {
   const navigate = useNavigate()
-  const [saved, setSaved] = useState(false)
+  const toast = useToast()
   const [avatarHover, setAvatarHover] = useState(false)
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault()
-    setSaved(true)
-    setTimeout(() => setSaved(false), 2000)
+    toast.toast('Profile updated successfully')
   }
 
   return (
@@ -75,8 +75,7 @@ export default function EditProfile() {
           transition:all .2s;font-family:inherit;
         }
         .ep-save-btn:hover{box-shadow:0 4px 16px rgba(31,140,255,.25);transform:translateY(-1px)}
-        .ep-toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--green);color:#fff;padding:10px 24px;border-radius:10px;font-size:13px;font-weight:700;z-index:999;opacity:0;transition:all .3s;pointer-events:none}
-        .ep-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
       `}</style>
 
       <div className="ep-page">
@@ -240,7 +239,6 @@ export default function EditProfile() {
         </form>
       </div>
 
-      <div className={`ep-toast ${saved ? 'show' : ''}`}>Profile updated successfully</div>
     </Layout>
   )
 }

@@ -2,8 +2,8 @@ import { useState } from 'react'
 import Layout from '../components/Layout'
 
 const users = [
-  { rank: 1, name: 'CryptoKing', earnings: 'NGN 125,400', tasks: 342, badge: '🥇', color: '#1F8CFF', avatar: 'CK' },
-  { rank: 2, name: 'TaskMaster', earnings: 'NGN 98,200', tasks: 287, badge: '🥈', color: '#2563EB', avatar: 'TM' },
+  { rank: 1, name: 'CryptoKing', earnings: 'NGN 125,400', tasks: 342, badge: '🥇', color: '#191C6B', avatar: 'CK' },
+  { rank: 2, name: 'TaskMaster', earnings: 'NGN 98,200', tasks: 287, badge: '🥈', color: '#191C6B', avatar: 'TM' },
   { rank: 3, name: 'EarnQueen', earnings: 'NGN 82,500', tasks: 254, badge: '🥉', color: '#16a34a', avatar: 'EQ' },
   { rank: 4, name: 'BizWizard', earnings: 'NGN 67,800', tasks: 198, color: '#F59E0B', avatar: 'BW' },
   { rank: 5, name: 'SolaPro', earnings: 'NGN 54,200', tasks: 167, color: '#EC4899', avatar: 'SP' },
@@ -13,8 +13,8 @@ const users = [
 ]
 
 const categories = [
-  { id: 'earners', icon: 'ti ti-coin', label: 'Top Earners', color: '#1F8CFF', users: users.slice(0, 5) },
-  { id: 'posters', icon: 'ti ti-briefcase', label: 'Top Task Posters', color: '#2563EB', users: users.slice(0, 5) },
+  { id: 'earners', icon: 'ti ti-coin', label: 'Top Earners', color: '#191C6B', users: users.slice(0, 5) },
+  { id: 'posters', icon: 'ti ti-briefcase', label: 'Top Task Posters', color: '#191C6B', users: users.slice(0, 5) },
   { id: 'referrers', icon: 'ti ti-affiliate', label: 'Top Referrers', color: '#16a34a', users: users.slice(0, 5) },
   { id: 'leaders', icon: 'ti ti-users', label: 'Community Leaders', color: '#F59E0B', users: users.slice(0, 5) },
 ]

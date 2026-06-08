@@ -82,6 +82,10 @@ export default function Drawer({ open, onClose }: DrawerProps) {
             <DrawerSub href="/worker-portal" label="Worker Portal" onClick={onClose} />
           </DrawerGroup>
 
+          <a className="oga-drawer-item" href="/campaigns" onClick={onClose}>
+            <span className="oga-drawer-icon"><i className="ti ti-megaphone" /></span>
+            <span><strong>Campaigns</strong><small>Marketing campaigns</small></span>
+          </a>
           <a className="oga-drawer-item" href="/communities" onClick={onClose}>
             <span className="oga-drawer-icon"><i className="ti ti-users" /></span>
             <span><strong>Communities</strong><small>Connect with others</small></span>
@@ -138,7 +142,7 @@ function DrawerGroup({ icon, label, desc, children }: { icon: string; label: str
       <button className="oga-drawer-item oga-drawer-group-toggle" aria-expanded={expanded} onClick={() => setExpanded(!expanded)}>
         <span className="oga-drawer-icon"><i className={icon} /></span>
         <span><strong>{label}</strong><small>{desc}</small></span>
-        <i className="ti ti-chevron-down oga-drawer-chevron" style={{ transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)' }} />
+        <i className="ti ti-chevron-down oga-drawer-chevron" />
       </button>
       <div className="oga-drawer-subnav" style={{ display: expanded ? 'grid' : 'none' }}>
         {children}
