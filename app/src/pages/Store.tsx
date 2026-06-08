@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { apiRequest } from '../lib/api'
 import { SkeletonPage, injectSkeletonStyles } from '../components/SkeletonLoader'
@@ -748,10 +748,26 @@ function StoreNav({ activeView, onChange }: { activeView: string; onChange: (v: 
 
 export default function Store() {
   const navigate = useNavigate()
-  const [activeView, setActiveView] = useState('store')
+  const { id } = useParams()
+  const [activeView, setActiveView] = useState(id ? 'product' : 'store')
   const [selectedProduct, setSelectedProduct] = useState<StoreItem | null>(null)
   const [selectedWorker, setSelectedWorker] = useState<WorkerItem | null>(null)
   const [refreshKey, setRefreshKey] = useState(0)
+  const [loadingProduct, setLoadingProduct] = useState(false)
+  const [productError, setProductError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!id) return
+    setLoadingProduct(true)
+    setProductError(null)
+    apiRequest<StoreItem>(`/store/${id}`, { method: 'GET', auth: false })
+      .then(product => {
+        setSelectedProduct(product)
+        setActiveView('product')
+      })
+      .catch(err => setProductError(err.message || 'Product not found'))
+      .finally(() => setLoadingProduct(false))
+  }, [id])
 
   const handleViewProduct = (product: any) => {
     setSelectedProduct(product)
@@ -766,6 +782,7 @@ export default function Store() {
   const handleBackToStore = () => {
     setSelectedProduct(null)
     setActiveView('store')
+    if (id) navigate('/store', { replace: true })
   }
 
   const handleBackToWorkers = () => {
@@ -789,9 +806,26 @@ export default function Store() {
           }} />
         )}
 
+        {id && loadingProduct && (
+          <div style={{ padding: '60px 20px', textAlign: 'center' }}>
+            <i className="ti ti-loader" style={{ fontSize: 24, color: 'var(--text3)', animation: 'spin 1s linear infinite', display: 'block', marginBottom: 12 }} />
+            <span style={{ fontSize: 13, color: 'var(--text3)' }}>Loading product...</span>
+          </div>
+        )}
+
+        {id && productError && !loadingProduct && (
+          <div style={{ padding: '40px 20px', textAlign: 'center' }}>
+            <i className="ti ti-alert-circle" style={{ fontSize: 28, color: '#ef4444', display: 'block', marginBottom: 12 }} />
+            <p style={{ fontSize: 14, color: '#ef4444', marginBottom: 16 }}>{productError}</p>
+            <button onClick={() => navigate('/store')} style={S.btnPrimary}>
+              <i className="ti ti-arrow-left" /> Back to Store
+            </button>
+          </div>
+        )}
+
         {activeView === 'store' && <StorePage onViewProduct={handleViewProduct} key={refreshKey} />}
         {activeView === 'workers' && <WorkersPage onViewWorker={handleViewWorker} />}
-        {activeView === 'product' && <ProductDetailPage product={selectedProduct!} onBack={handleBackToStore} onPurchase={handlePurchase} refreshProducts={refreshProducts} />}
+        {activeView === 'product' && selectedProduct && <ProductDetailPage product={selectedProduct!} onBack={handleBackToStore} onPurchase={handlePurchase} refreshProducts={refreshProducts} />}
         {activeView === 'worker-profile' && <WorkerProfilePage worker={selectedWorker!} onBack={handleBackToWorkers} />}
       </div>
     </Layout>

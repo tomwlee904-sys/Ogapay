@@ -147,6 +147,7 @@ export default function App() {
 <Route path="/tasks/:id/submit" element={<AuthGuard><SubmissionPage /></AuthGuard>} />
             <Route path="/tasks/:id/submissions" element={<AuthGuard><JobDetail /></AuthGuard>} />
             <Route path="/tasks/:id" element={<JobDetail />} />
+            <Route path="/store/:id" element={<Store />} />
             <Route path="/store" element={<Store />} />
             <Route path="/communities" element={<Communities />} />
             <Route path="/communities/:id" element={<CommunityDetail />} />
