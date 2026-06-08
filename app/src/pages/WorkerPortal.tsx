@@ -15,6 +15,16 @@ export default function WorkerPortal() {
     { key: 'dev', icon: 'ti ti-code', label: 'Dev Tasks', color: '#191C6B', bg: '#191C6B15' },
   ]
 
+  const workspaceItems = [
+    { icon: 'ti ti-brand-x', label: 'Social', route: '/worker/social', color: '#1F8CFF' },
+    { icon: 'ti ti-pencil', label: 'Writing', route: '/worker/writing', color: '#7c3aed' },
+    { icon: 'ti ti-photo', label: 'Design', route: '/worker/design', color: '#EC4899' },
+    { icon: 'ti ti-device-mobile', label: 'App Testing', route: '/worker/testing', color: '#059669' },
+    { icon: 'ti ti-search', label: 'Research', route: '/worker/research', color: '#d97706' },
+    { icon: 'ti ti-code', label: 'Dev', route: '/worker/development', color: '#2563eb' },
+  ]
+  ]
+
   const navItems = [
     { icon: 'ti ti-building-store', label: 'My Store', route: '/my-store' },
     { icon: 'ti ti-article', label: 'My Blogs', route: '/blog' },
@@ -94,6 +104,19 @@ export default function WorkerPortal() {
         .wp-page{max-width:800px;margin:0 auto;padding:0 0 40px}
         .wp-nav-grid{display:grid;grid-template-columns:repeat(5,1fr);border-bottom:1px solid var(--border);margin-bottom:24px}
         .wp-nav-grid-2{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid var(--border);margin-bottom:24px}
+        .wp-workspace-label{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+        .wp-workspace-grid{display:grid;grid-template-columns:repeat(6,1fr);margin-bottom:24px;gap:8px}
+        .wp-ws-tile{
+          display:flex;flex-direction:column;align-items:center;justify-content:center;
+          padding:14px 6px;gap:8px;cursor:pointer;
+          border:1px solid var(--border);border-radius:10px;
+          transition:all .2s;min-height:76px;background:var(--card);
+        }
+        .wp-ws-tile:hover{transform:translateY(-2px);box-shadow:0 4px 16px rgba(0,0,0,.06)}
+        .wp-ws-tile i{font-size:20px}
+        .wp-ws-tile span{font-size:10px;color:var(--text3);text-align:center;line-height:1.2;font-weight:600}
+        @media(max-width:700px){.wp-workspace-grid{grid-template-columns:repeat(3,1fr)}}
+        @media(max-width:400px){.wp-workspace-grid{grid-template-columns:repeat(2,1fr)}}
         .wp-nav-tile{
           display:flex;flex-direction:column;align-items:center;justify-content:center;
           padding:20px 8px;gap:10px;cursor:pointer;
@@ -179,6 +202,17 @@ export default function WorkerPortal() {
             <div key={i} className="wp-nav-tile" onClick={() => navigate(t.route)} style={{ borderRight: i < 3 ? '1px solid var(--border)' : 'none' }}>
               <i className={t.icon} />
               <span>{t.label}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* Workspaces */}
+        <div className="wp-workspace-label"><i className="ti ti-layout-grid" style={{fontSize:12}} /> Workspaces</div>
+        <div className="wp-workspace-grid">
+          {workspaceItems.map((w, i) => (
+            <div key={i} className="wp-ws-tile" onClick={() => navigate(w.route)}>
+              <i className={w.icon} style={{ color: w.color }} />
+              <span>{w.label}</span>
             </div>
           ))}
         </div>
