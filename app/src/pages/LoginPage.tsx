@@ -88,16 +88,40 @@ export default function LoginPage() {
         auth: false,
         body: JSON.stringify({ email: loginEmail.trim(), password: loginPassword }),
       });
-      console.log('[LoginPage] Login API response keys:', Object.keys(result || {}));
-      console.log('[LoginPage] Has tokens?', !!result?.tokens, 'Has user?', !!result?.user);
-      // Normalize auth payload to handle multiple API response formats
+      // DEBUG: dump the full response
+      console.log('[LoginPage] FULL API RESPONSE:', JSON.stringify(result, null, 2));
+      console.log('[LoginPage] Response type:', typeof result, 'isArray:', Array.isArray(result));
+      console.log('[LoginPage] Keys:', result ? Object.keys(result) : 'null');
+      
+      // Try ALL possible token locations
+      const possibleToken = 
+        result?.tokens?.accessToken || 
+        result?.tokens?.token ||
+        result?.session?.accessToken ||
+        result?.session?.token ||
+        result?.accessToken ||
+        result?.token ||
+        result?.data?.accessToken ||
+        result?.data?.token ||
+        result?.data?.tokens?.accessToken ||
+        null;
+      
+      const possibleRefresh = 
+        result?.tokens?.refreshToken || 
+        result?.session?.refreshToken ||
+        result?.refreshToken ||
+        result?.data?.refreshToken ||
+        result?.data?.tokens?.refreshToken ||
+        possibleToken; // fallback: use access token as refresh
+      
+      console.log('[LoginPage] Extracted token:', possibleToken ? possibleToken.substring(0, 20) + '...' : 'null');
+      console.log('[LoginPage] Extracted refresh:', possibleRefresh ? possibleRefresh.substring(0, 20) + '...' : 'null');
+      
       const loginPayload = {
         user: result.user || result,
-        tokens: result.tokens || result.session || 
-          (result.accessToken ? { accessToken: result.accessToken, refreshToken: result.refreshToken || result.accessToken } : undefined) ||
-          (result.token ? { accessToken: result.token, refreshToken: result.refreshToken || result.token } : undefined),
+        tokens: possibleToken ? { accessToken: possibleToken, refreshToken: possibleRefresh || possibleToken } : undefined,
       };
-      console.log('[LoginPage] Normalized payload - user?', !!loginPayload.user, 'tokens?', !!loginPayload.tokens);
+      console.log('[LoginPage] Final payload - user?', !!loginPayload.user, 'tokens?', !!loginPayload.tokens);
       login(loginPayload);
       window.location.href = "/dashboard";
     } catch (err) {
