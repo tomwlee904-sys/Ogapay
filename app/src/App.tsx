@@ -38,6 +38,8 @@ const Privacy = lazy(() => import('./pages/Privacy'))
 const Terms = lazy(() => import('./pages/Terms'))
 const Blog = lazy(() => import('./pages/Blog'))
 const BlogEditor = lazy(() => import('./pages/BlogEditor'))
+const ArticleDetail = lazy(() => import('./pages/ArticleDetail'))
+const AdminBlog = lazy(() => import('./pages/AdminBlog'))
 const Campaigns = lazy(() => import('./pages/Campaigns'))
 const Leaderboard = lazy(() => import('./pages/Leaderboard'))
 const JobMonitor = lazy(() => import('./pages/JobMonitor'))
@@ -143,6 +145,7 @@ export default function App() {
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/blog" element={<Blog />} />
+            <Route path="/blog/:slug" element={<ArticleDetail />} />
             <Route path="/tasks" element={<Tasks />} />
 <Route path="/tasks/:id/submit" element={<AuthGuard><SubmissionPage /></AuthGuard>} />
             <Route path="/tasks/:id/submissions" element={<AuthGuard><JobDetail /></AuthGuard>} />
@@ -205,6 +208,7 @@ export default function App() {
 
             {/* ── Admin ── */}
             <Route path="/admin" element={<AuthGuard><Admin /></AuthGuard>} />
+            <Route path="/admin/blog" element={<AuthGuard><AdminBlog /></AuthGuard>} />
             <Route path="/admin/*" element={<AuthGuard><Admin /></AuthGuard>} />
 
             {/* ── Catch-all ── */}
