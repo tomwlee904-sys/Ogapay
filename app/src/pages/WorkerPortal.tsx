@@ -23,7 +23,6 @@ export default function WorkerPortal() {
     { icon: 'ti ti-search', label: 'Research', route: '/worker/research', color: '#d97706' },
     { icon: 'ti ti-code', label: 'Dev', route: '/worker/development', color: '#2563eb' },
   ]
-  ]
 
   const navItems = [
     { icon: 'ti ti-building-store', label: 'My Store', route: '/my-store' },
