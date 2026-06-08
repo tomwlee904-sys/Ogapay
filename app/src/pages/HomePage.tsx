@@ -564,15 +564,10 @@ function HowItWorks() {
             </div>
           ))}
         </div>
-        <div style={{ display: "flex", justifyContent: "center", marginTop: 32 }}>
-          <a href="/register" className="btn-pill"><I n="rocket" s={16} /> Start Earning Today</a>
-        </div>
       </div>
     </section>
   );
 }
-
-/* ─── EARN PATHS ────────────────────────────────────────────────────────────── */
 const WORKSPACE_SLUGS: Record<string, string> = {
   "Social Tasks": "social",
   "Writing": "writing",
