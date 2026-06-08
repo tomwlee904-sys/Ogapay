@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import Layout from "../components/Layout";
 import { useAuth } from "../context/AuthContext";
 import { apiRequest } from "../lib/api";
@@ -144,7 +145,15 @@ const CSS = `
   .dash-step-locked .dash-provider { pointer-events: none; }
 `;
 
+function getGreeting() {
+  const h = new Date().getHours();
+  if (h < 12) return "Good morning";
+  if (h < 17) return "Good afternoon";
+  return "Good evening";
+}
+
 export default function OgaPayDashboard() {
+  const navigate = useNavigate();
   const { user, isAuthed } = useAuth();
   const [dashLoading, setDashLoading] = useState(true);
   const [summaryData, setSummaryData] = useState<any>(null);
@@ -249,7 +258,7 @@ export default function OgaPayDashboard() {
 
         {/* ── INTRO / WELCOME BANNER ── */}
         {allDone ? (
-          <div className="dash-intro complete">
+          <div className="dash-intro complete" onClick={() => navigate('/profile')} style={{ cursor: 'pointer' }}>
             <div className="dash-intro-icon" style={{ background: "#16a34a" }}>
               <Icon n="check" s={20} c="#fff" />
             </div>
@@ -262,7 +271,7 @@ export default function OgaPayDashboard() {
             </a>
           </div>
         ) : isNew ? (
-          <div className="dash-intro">
+          <div className="dash-intro" onClick={() => navigate('/profile')} style={{ cursor: 'pointer' }}>
             <div className="dash-intro-icon" style={{ background: "#191C6B" }}>
               <Icon n="hand-wave" s={20} c="#191C6B" />
             </div>
@@ -272,14 +281,32 @@ export default function OgaPayDashboard() {
             </div>
           </div>
         ) : (
-          <div className="dash-intro">
+          <div className="dash-intro" onClick={() => navigate('/profile')} style={{ cursor: 'pointer' }}>
             <div className="dash-intro-icon" style={{ background: "#dcfce7" }}>
               <Icon n="check-circle" s={20} c="#16a34a" />
             </div>
             <div style={{ flex: 1 }}>
-              <h2>Welcome back, {fname}</h2>
+              <h2>{getGreeting()}, {fname}</h2>
               <p>Good to see you again. Pick up where you left off.</p>
             </div>
+          </div>
+        )}
+
+        {/* ── KYC NUDGE ── */}
+        {user && !((user as any).kyc?.status?.includes('APPROVED')) && (
+          <div onClick={() => navigate('/vault')} style={{ padding: '12px 16px', background: '#fef3c7', border: '1px solid #f59e0b', borderRadius: 10, marginBottom: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10 }}>
+            <i className="ti ti-shield-off" style={{ fontSize: 18, color: '#92400e' }} />
+            <span style={{ fontSize: 13, fontWeight: 700, color: '#92400e', flex: 1 }}>Complete your KYC verification to unlock withdrawals</span>
+            <i className="ti ti-arrow-right" style={{ fontSize: 16, color: '#92400e' }} />
+          </div>
+        )}
+
+        {/* ── EMAIL VERIFICATION NUDGE ── */}
+        {user && !isEmailVerified && (
+          <div style={{ padding: '12px 16px', background: '#dbeafe', border: '1px solid #60a5fa', borderRadius: 10, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 10 }}>
+            <i className="ti ti-mail-exclamation" style={{ fontSize: 18, color: '#1e40af' }} />
+            <span style={{ fontSize: 13, fontWeight: 700, color: '#1e40af', flex: 1 }}>Verify your email to receive task notifications</span>
+            <span onClick={() => navigate('/settings')} style={{ fontSize: 12, fontWeight: 800, color: '#1e40af', cursor: 'pointer', whiteSpace: 'nowrap' }}>Resend</span>
           </div>
         )}
 
@@ -464,28 +491,30 @@ export default function OgaPayDashboard() {
 
             {/* ── STATS CARDS ── */}
             <div className="dash-stats-row">
-              <div className="dash-stat-card">
+              <div className="dash-stat-card" onClick={() => navigate('/tasks')} style={{ cursor: 'pointer' }}>
                 <div className="dash-stat-icon"><Icon n="briefcase" s={18} /></div>
                 <div className="dash-stat-info">
                   <div className="dash-stat-label">Available Tasks</div>
                   <div className="dash-stat-value">{availableTasks}</div>
+                  {availableTasks === "0" && <div style={{ fontSize: 11, fontWeight: 700, color: '#191C6B', marginTop: 2 }}>Browse tasks &rarr;</div>}
                 </div>
               </div>
-              <div className="dash-stat-card">
+              <div className="dash-stat-card" onClick={() => navigate('/wallet')} style={{ cursor: 'pointer' }}>
                 <div className="dash-stat-icon"><Icon n="currency-naira" s={18} /></div>
                 <div className="dash-stat-info">
                   <div className="dash-stat-label">Total Earned</div>
                   <div className="dash-stat-value">{totalEarned}</div>
+                  {(totalEarned === "₦0.00" || totalEarned === "N/A") && <div style={{ fontSize: 11, fontWeight: 700, color: '#191C6B', marginTop: 2 }}>Start earning &rarr;</div>}
                 </div>
               </div>
-              <div className="dash-stat-card">
+              <div className="dash-stat-card" onClick={() => navigate('/my-tasks')} style={{ cursor: 'pointer' }}>
                 <div className="dash-stat-icon"><Icon n="file-text" s={18} /></div>
                 <div className="dash-stat-info">
                   <div className="dash-stat-label">Tasks Posted</div>
                   <div className="dash-stat-value">{postedTasks}</div>
                 </div>
               </div>
-              <div className="dash-stat-card">
+              <div className="dash-stat-card" onClick={() => navigate('/my-tasks')} style={{ cursor: 'pointer' }}>
                 <div className="dash-stat-icon"><Icon n="activity" s={18} /></div>
                 <div className="dash-stat-info">
                   <div className="dash-stat-label">Active Tasks</div>
@@ -509,7 +538,7 @@ export default function OgaPayDashboard() {
               </div>
             </a>
 
-            <a href="/docs" className="dash-res-card">
+            <a href="/faq" className="dash-res-card">
               <div className="dash-res-icon"><Icon n="book" s={18} /></div>
               <div>
                 <h4>Documentation</h4>
