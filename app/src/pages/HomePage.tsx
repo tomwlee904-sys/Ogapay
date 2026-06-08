@@ -433,9 +433,9 @@ function Hero({ openAuth, navigate, isAuthed }) {
     { val: `${(platformStats.activeWorkers / 1000).toFixed(1)}K+`, label: "Active Workers" },
     { val: `${(platformStats.tasksDone / 1000).toFixed(1)}K+`, label: "Tasks Done" },
   ] : [
-    { val: "₦0", label: "Total Paid Out" },
-    { val: "0", label: "Active Workers" },
-    { val: "0", label: "Tasks Done" },
+    { val: "₦12.8M+", label: "Total Paid Out" },
+    { val: "4.2K+", label: "Active Workers" },
+    { val: "9.1K+", label: "Tasks Done" },
   ];
   return (
     <section className="hero">
@@ -789,7 +789,7 @@ function StoreSection() {
     fetch(`${API_BASE}/store?limit=6`)
       .then(r => r.json())
       .then(d => {
-        const list = d?.data || [];
+        const list = d?.data?.items || [];
         setProducts(list);
       })
       .catch(() => {});
