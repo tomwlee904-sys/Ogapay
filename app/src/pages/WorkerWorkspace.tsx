@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { API_BASE } from '../lib/api'
@@ -95,9 +95,12 @@ export default function WorkerWorkspace() {
   const [leaders, setLeaders] = useState<any[] | null>(null)
   const [leadersLoading, setLeadersLoading] = useState(true)
 
+  const refreshInterval = useRef<ReturnType<typeof setInterval> | null>(null)
+
   useEffect(() => {
     if (!ws || !apiCategory) { setLoading(false); return }
-    ;(async () => {
+
+    const fetchData = async () => {
       try {
         const token = localStorage.getItem('ogapay_access_token')
         const headers: Record<string, string> = {}
@@ -128,7 +131,16 @@ export default function WorkerWorkspace() {
         }
       } catch { setError('Failed to load tasks') }
       setLoading(false)
-    })()
+    }
+
+    fetchData()
+
+    // Poll every 30 seconds for new tasks
+    refreshInterval.current = setInterval(fetchData, 30000)
+
+    return () => {
+      if (refreshInterval.current) clearInterval(refreshInterval.current)
+    }
   }, [category])
 
   // Fetch leaderboard
