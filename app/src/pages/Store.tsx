@@ -376,8 +376,8 @@ function StorePage({ onViewProduct }: { onViewProduct: (product: any) => void })
   )
 }
 
-function ProductDetailPage({ product, onBack, onPurchase, refreshProducts }: {
-  const { sol } = useLivePrice() product: StoreItem; onBack: () => void; onPurchase: (item: StoreItem) => void; refreshProducts: () => void }) {
+function ProductDetailPage({ product, onBack, onPurchase, refreshProducts }: { product: StoreItem; onBack: () => void; onPurchase: (item: StoreItem) => void; refreshProducts: () => void }) {
+  const { sol } = useLivePrice()
   const [purchasing, setPurchasing] = useState(false)
   const [purchaseError, setPurchaseError] = useState<string | null>(null)
   const [purchased, setPurchased] = useState(false)
