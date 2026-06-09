@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import Layout from '../components/Layout'
 import { apiRequest } from '../lib/api'
+import { useToast } from '../components/Toast'
 
 const faqCategories = [
   { icon: 'ti ti-wallet', title: 'Payments', desc: 'Withdrawals, deposits, and billing', count: 6 },
@@ -21,6 +22,28 @@ export default function Support() {
   const [search, setSearch] = useState('')
   const [tickets, setTickets] = useState<any[]>([])
   const [loadingTickets, setLoadingTickets] = useState(true)
+  const [ticketForm, setTicketForm] = useState({ subject: '', category: 'Account & Login', priority: 'Medium', description: '' })
+  const [submittingTicket, setSubmittingTicket] = useState(false)
+  const { toast } = useToast()
+
+  const submitTicket = async () => {
+    if (!ticketForm.description.trim()) {
+      toast('Please fill in the description', 'error')
+      return
+    }
+    setSubmittingTicket(true)
+    try {
+      await apiRequest<any>('/support/tickets', { method: 'POST', body: JSON.stringify(ticketForm) })
+      toast('Ticket submitted! We\'ll respond within 24 hours.', 'success')
+      setShowTicket(false)
+      setTicketForm({ subject: '', category: 'Account & Login', priority: 'Medium', description: '' })
+      const res = await apiRequest<any>('/support/tickets').catch(() => null)
+      if (res) setTickets(Array.isArray(res) ? res : res.data || [])
+    } catch (e: any) {
+      toast(e?.message || 'Failed to submit ticket', 'error')
+    }
+    setSubmittingTicket(false)
+  }
 
   useEffect(() => {
     (async () => {
@@ -161,11 +184,11 @@ export default function Support() {
           <h2>New Support Ticket</h2>
           <div className="sp-field">
             <label>Subject</label>
-            <input type="text" placeholder="Brief description of your issue" />
+            <input type="text" placeholder="Brief description of your issue" value={ticketForm.subject} onChange={e => setTicketForm(p => ({...p, subject: e.target.value}))} />
           </div>
           <div className="sp-field">
             <label>Category</label>
-            <select>
+            <select value={ticketForm.category} onChange={e => setTicketForm(p => ({...p, category: e.target.value}))}>
               <option>Payments & Withdrawals</option>
               <option>Account & Login</option>
               <option>Tasks & Submissions</option>
@@ -176,7 +199,7 @@ export default function Support() {
           </div>
           <div className="sp-field">
             <label>Priority</label>
-            <select>
+            <select value={ticketForm.priority} onChange={e => setTicketForm(p => ({...p, priority: e.target.value}))}>
               <option>Low</option>
               <option>Medium</option>
               <option>High</option>
@@ -184,11 +207,11 @@ export default function Support() {
           </div>
           <div className="sp-field">
             <label>Description</label>
-            <textarea placeholder="Describe your issue in detail..." />
+            <textarea placeholder="Describe your issue in detail..." value={ticketForm.description} onChange={e => setTicketForm(p => ({...p, description: e.target.value}))} />
           </div>
           <div className="sp-modal-actions">
             <button className="cmp-btn" onClick={() => setShowTicket(false)}>Cancel</button>
-            <button className="cmp-btn primary" style={{background:'var(--accent)',color:'#fff',border:'0'}} onClick={() => setShowTicket(false)}>Submit Ticket</button>
+            <button className="cmp-btn primary" style={{background:'var(--accent)',color:'#fff',border:'0'}} onClick={submitTicket} disabled={submittingTicket}>{submittingTicket ? 'Submitting...' : 'Submit Ticket'}</button>
           </div>
         </div>
       </div>

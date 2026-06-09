@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import Layout from '../components/Layout'
 import { useCurrency } from '../context/CurrencyContext'
+import { useAuth } from '../context/AuthContext'
 import { apiRequest } from '../lib/api'
 import { SkeletonPage, SkeletonStats, injectSkeletonStyles } from "../components/SkeletonLoader"
 
@@ -29,6 +30,7 @@ type HistoryItem = {
 
 export default function Earnings() {
   const { fmt } = useCurrency()
+  const { user: authUser } = useAuth()
   const [period, setPeriod] = useState('7d')
   const [tab, setTab] = useState('all')
 
@@ -43,85 +45,88 @@ export default function Earnings() {
   const [vault, setVault] = useState<number | null>(null)
   const [history, setHistory] = useState<HistoryItem[]>([])
 
-  useEffect(() => {
-    async function fetchData() {
-      setLoading(true)
+  async function loadData() {
+    setLoading(true)
 
-      let total: number | null = null
-      let balance: number | null = null
-      let transactions: any[] = []
+    let total: number | null = null
+    let balance: number | null = null
+    let transactions: any[] = []
 
-      try {
-        const [earningsData, balanceData, txData] = await Promise.all([
-          apiRequest('/users/me/earnings').catch(() => null),
-          apiRequest('/wallet/balance').catch(() => null),
-          apiRequest('/users/transactions/history').catch(() => null),
-        ])
-        total = earningsData?.total ?? null
-        balance = balanceData?.balance ?? balanceData?.availableBalance ?? null
-        transactions = Array.isArray(txData) ? txData : txData?.transactions ?? txData?.data ?? []
-      } catch {}
+    try {
+      const [earningsData, balanceData, txData] = await Promise.all([
+        apiRequest('/users/me/earnings').catch(() => null),
+        apiRequest('/wallet/balance').catch(() => null),
+        apiRequest('/users/transactions/history').catch(() => null),
+      ])
+      total = earningsData?.total ?? null
+      balance = balanceData?.balance ?? balanceData?.availableBalance ?? null
+      transactions = Array.isArray(txData) ? txData : txData?.transactions ?? txData?.data ?? []
+    } catch {}
 
-      if (total === null && transactions.length > 0) {
-        total = transactions
-          .filter((t: any) => t.status === 'completed' || t.status === 'successful')
-          .filter((t: any) => ['TASK_PAYMENT', 'REFERRAL_BONUS', 'TIP', 'VAULT_REWARD'].includes(t.type))
-          .reduce((s: number, t: any) => s + (t.amount || 0), 0)
-      }
-
-      const now = new Date()
-      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
-      const monthTotal = transactions
-        .filter((t: any) => {
-          const d = new Date(t.createdAt || t.date)
-          return d >= monthStart && (t.status === 'completed' || t.status === 'successful')
-        })
+    if (total === null && transactions.length > 0) {
+      total = transactions
+        .filter((t: any) => t.status === 'completed' || t.status === 'successful')
         .filter((t: any) => ['TASK_PAYMENT', 'REFERRAL_BONUS', 'TIP', 'VAULT_REWARD'].includes(t.type))
         .reduce((s: number, t: any) => s + (t.amount || 0), 0)
-
-      const pending = transactions
-        .filter((t: any) => t.status === 'pending')
-        .reduce((s: number, t: any) => s + (t.amount || 0), 0)
-
-      const referralTotal = transactions
-        .filter((t: any) => t.type === 'REFERRAL_BONUS' && (t.status === 'completed' || t.status === 'successful'))
-        .reduce((s: number, t: any) => s + (t.amount || 0), 0)
-
-      const tipsTotal = transactions
-        .filter((t: any) => t.type === 'TIP' && (t.status === 'completed' || t.status === 'successful'))
-        .reduce((s: number, t: any) => s + (t.amount || 0), 0)
-
-      const vaultTotal = transactions
-        .filter((t: any) => t.type === 'VAULT_REWARD' && (t.status === 'completed' || t.status === 'successful'))
-        .reduce((s: number, t: any) => s + (t.amount || 0), 0)
-
-      const jobs = transactions
-        .filter((t: any) => t.type === 'TASK_PAYMENT' && (t.status === 'completed' || t.status === 'successful'))
-        .length
-
-      const incomeHistory: HistoryItem[] = transactions
-        .filter((t: any) => ['TASK_PAYMENT', 'REFERRAL_BONUS', 'TIP', 'VAULT_REWARD'].includes(t.type))
-        .map((t: any) => ({
-          date: t.createdAt || t.date,
-          source: t.description || t.type,
-          amount: t.amount || 0,
-          type: t.type === 'TASK_PAYMENT' ? 'task' : t.type === 'REFERRAL_BONUS' ? 'referral' : t.type === 'TIP' ? 'tip' : 'vault',
-        }))
-
-      setTotalEarned(total)
-      setAvailableBalance(balance)
-      setPendingEarnings(pending || null)
-      setMonthEarnings(monthTotal || null)
-      setJobsCompleted(jobs)
-      setReferrals(referralTotal || null)
-      setTips(tipsTotal || null)
-      setVault(vaultTotal || null)
-      setHistory(incomeHistory)
-      setLoading(false)
     }
 
-    fetchData()
-  }, [])
+    const now = new Date()
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
+    const monthTotal = transactions
+      .filter((t: any) => {
+        const d = new Date(t.createdAt || t.date)
+        return d >= monthStart && (t.status === 'completed' || t.status === 'successful')
+      })
+      .filter((t: any) => ['TASK_PAYMENT', 'REFERRAL_BONUS', 'TIP', 'VAULT_REWARD'].includes(t.type))
+      .reduce((s: number, t: any) => s + (t.amount || 0), 0)
+
+    const pending = transactions
+      .filter((t: any) => t.status === 'pending')
+      .reduce((s: number, t: any) => s + (t.amount || 0), 0)
+
+    const referralTotal = transactions
+      .filter((t: any) => t.type === 'REFERRAL_BONUS' && (t.status === 'completed' || t.status === 'successful'))
+      .reduce((s: number, t: any) => s + (t.amount || 0), 0)
+
+    const tipsTotal = transactions
+      .filter((t: any) => t.type === 'TIP' && (t.status === 'completed' || t.status === 'successful'))
+      .reduce((s: number, t: any) => s + (t.amount || 0), 0)
+
+    const vaultTotal = transactions
+      .filter((t: any) => t.type === 'VAULT_REWARD' && (t.status === 'completed' || t.status === 'successful'))
+      .reduce((s: number, t: any) => s + (t.amount || 0), 0)
+
+    const jobs = transactions
+      .filter((t: any) => t.type === 'TASK_PAYMENT' && (t.status === 'completed' || t.status === 'successful'))
+      .length
+
+    const incomeHistory: HistoryItem[] = transactions
+      .filter((t: any) => ['TASK_PAYMENT', 'REFERRAL_BONUS', 'TIP', 'VAULT_REWARD'].includes(t.type))
+      .map((t: any) => ({
+        date: t.createdAt || t.date,
+        source: t.description || t.type,
+        amount: t.amount || 0,
+        type: t.type === 'TASK_PAYMENT' ? 'task' : t.type === 'REFERRAL_BONUS' ? 'referral' : t.type === 'TIP' ? 'tip' : 'vault',
+      }))
+
+    setTotalEarned(total)
+    setAvailableBalance(balance)
+    setPendingEarnings(pending || null)
+    setMonthEarnings(monthTotal || null)
+    setJobsCompleted(jobs)
+    setReferrals(referralTotal || null)
+    setTips(tipsTotal || null)
+    setVault(vaultTotal || null)
+    setHistory(incomeHistory)
+    setLoading(false)
+  }
+
+  useEffect(() => {
+    loadData()
+    const onFocus = () => loadData()
+    window.addEventListener('focus', onFocus)
+    return () => window.removeEventListener('focus', onFocus)
+  }, [authUser])
 
   useEffect(() => { injectSkeletonStyles(); }, []);
 

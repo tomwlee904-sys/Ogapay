@@ -1,4 +1,3 @@
-// @ts-nocheck
 function LogoMark({ size = 26 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ borderRadius: 8, overflow: 'hidden', flexShrink: 0 }}>
@@ -26,9 +25,10 @@ const footerSocialLinks: Record<string, string> = {
 const footerLinkHrefs: Record<string, string> = {
   "Browse Jobs": "/tasks", "Task Categories": "/tasks", "Leaderboard": "/leaderboard",
   "Worker Portal": "/worker-portal", "Create Task": "/create", "Communities": "/communities",
+  "Campaigns": "/campaigns", "Analytics": "/analytics",
   "About": "/about", "Blog": "/blog",
-  "FAQ": "/faq", "Terms": "/terms",
-  "Privacy": "/privacy",
+  "FAQ": "/faq", "Support": "/support", "Terms": "/terms",
+  "Privacy": "/privacy", "Roadmap": "/roadmap",
   "Developer": "/developer",
   }
 

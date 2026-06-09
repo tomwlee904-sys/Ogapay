@@ -688,7 +688,7 @@ function JobsListPage({ jobs, setJobs }) {
   return (
     <div style={{ width: "100%" }}>
       {/* Summary stats */}
-      <div class="mj-stats-grid" style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 8, marginBottom: 16 }}>
+      <div className="mj-stats-grid" style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 8, marginBottom: 16 }}>
         {[
           { label: "Open", value: stats.open, color: "var(--green)" },
           { label: "In Progress", value: stats.in_progress, color: "#191C6B" },
@@ -704,7 +704,7 @@ function JobsListPage({ jobs, setJobs }) {
       </div>
 
       {/* Filter pills */}
-      <div class="mj-filters" style={{ display: "flex", gap: 6, marginBottom: 16, overflowX: "auto", paddingBottom: 2 }}>
+      <div className="mj-filters" style={{ display: "flex", gap: 6, marginBottom: 16, overflowX: "auto", paddingBottom: 2 }}>
         {statusFilters.map(f => (
           <button key={f} onClick={() => setFilter(f)}
             style={{ flexShrink: 0, padding: "8px 18px", borderRadius: 99, fontSize: 13, fontWeight: 700, cursor: "pointer", border: `1px solid ${filter === f ? "var(--accent)" : "var(--border)"}`, background: filter === f ? "var(--text)" : "var(--card)", color: filter === f ? "var(--bg)" : "var(--text2)", fontFamily: "inherit" }}>
@@ -744,7 +744,7 @@ function JobsListPage({ jobs, setJobs }) {
             </div>
           </div>
 
-          <div class="mj-job-stats" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 8, marginBottom: 12 }}>
+          <div className="mj-job-stats" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 8, marginBottom: 12 }}>
             {[
               { label: "Winners", value: job.winners, color: "var(--green)" },
               { label: "Pending", value: job.pending, color: "#f59e0b" },
@@ -804,6 +804,7 @@ export default function MyJobs() {
   const [page, setPage] = useState("jobs");
   const [loading, setLoading] = useState(true);
   const { user, isAuthed } = useAuth();
+  const { user: authUser } = useAuth();
 
   const mounted = useRef(true);
 
@@ -848,16 +849,15 @@ export default function MyJobs() {
     if (mounted.current) setLoading(false);
   }, [isAuthed]);
 
-  useEffect(() => { fetchJobs(); return () => { mounted.current = false; }; }, [fetchJobs]);
-
-  const fetchJobsRef = useRef(fetchJobs);
-  fetchJobsRef.current = fetchJobs;
-
   useEffect(() => {
-    const onFocus = () => { setLoading(true); fetchJobsRef.current(); };
-    window.addEventListener('focus', onFocus);
-    return () => window.removeEventListener('focus', onFocus);
-  }, []);
+    fetchJobs()
+    const onFocus = () => fetchJobs()
+    window.addEventListener('focus', onFocus)
+    return () => {
+      window.removeEventListener('focus', onFocus)
+      mounted.current = false
+    }
+  }, [authUser])
 
   useEffect(() => { injectSkeletonStyles(); }, []);
 
@@ -877,7 +877,7 @@ export default function MyJobs() {
     );
   }
   return (
-    <Layout><div class="mj-page">
+    <Layout><div className="mj-page">
       <style>{`
         .mj-page { padding: 28px 24px 60px; width: 100%; max-width: 100%; }
         
@@ -913,7 +913,7 @@ export default function MyJobs() {
 
 
       {/* Sub tab nav — full labels */}
-      <div class="mj-tab-bar">
+      <div className="mj-tab-bar">
         {PAGE_TABS.map(t => (
           <button key={t.id} onClick={() => setPage(t.id)}
             style={{ flex: 1, padding: "12px 8px", fontSize: 12, fontWeight: 700, cursor: "pointer", border: "none", fontFamily: "inherit", background: "transparent", color: page === t.id ? "var(--accent)" : "var(--text3)", borderBottom: page === t.id ? `2px solid ${"var(--accent)"}` : "2px solid transparent", transition: "all 0.15s", whiteSpace: "nowrap", display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
@@ -923,9 +923,9 @@ export default function MyJobs() {
       </div>
 
       {/* Page content */}
-      {page === "jobs" && <div class="mj-content"><JobsListPage jobs={jobs} setJobs={setJobs} /></div>}
-      {page === "blacklist" && <div class="mj-content"><BlacklistPage /></div>}
-      {page === "templates" && <div class="mj-content"><TemplatesPage onUseTemplate={(tpl) => {
+      {page === "jobs" && <div className="mj-content"><JobsListPage jobs={jobs} setJobs={setJobs} /></div>}
+      {page === "blacklist" && <div className="mj-content"><BlacklistPage /></div>}
+      {page === "templates" && <div className="mj-content"><TemplatesPage onUseTemplate={(tpl) => {
           setPage("jobs");
           toast("Template loaded — create your job below!");
         }} /></div>}

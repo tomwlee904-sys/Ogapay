@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import { useAuth } from '../context/AuthContext'
 import Layout from '../components/Layout'
 import { apiRequest } from '../lib/api'
 import { SkeletonPage, injectSkeletonStyles } from '../components/SkeletonLoader'
@@ -30,13 +31,14 @@ const S: Record<string, React.CSSProperties> = {
 }
 
 export default function Vault() {
+  const { user: authUser } = useAuth()
   const [docs, setDocs] = useState<any[]>([])
   const [stats, setStats] = useState({ count: '0', totalSize: '0 B', verified: '0' })
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const fetchDocs = useCallback(async () => {
+  const fetchDocs = async () => {
     setLoading(true)
     try {
       const [docsData, statsData] = await Promise.all([
@@ -50,9 +52,15 @@ export default function Vault() {
       const el = document.getElementById('appToast')
       if (el) { el.textContent = 'Failed to load vault'; el.classList.add('show'); setTimeout(() => el.classList.remove('show'), 3000) }
     } finally { setLoading(false) }
-  }, [])
+  }
 
-  useEffect(() => { fetchDocs(); injectSkeletonStyles() }, [fetchDocs])
+  useEffect(() => {
+    fetchDocs();
+    injectSkeletonStyles();
+    const onFocus = () => fetchDocs();
+    window.addEventListener('focus', onFocus);
+    return () => window.removeEventListener('focus', onFocus);
+  }, [authUser])
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -61,7 +69,7 @@ export default function Vault() {
     const fd = new FormData()
     fd.append('file', file)
     try {
-      const res = await fetch(`${API_BASE}/uploads/vault`, {
+      const res = await fetch(`${API_BASE}/uploads/proof`, {
         method: 'POST',
         headers: token ? { Authorization: 'Bearer ' + token } : {},
         body: fd,

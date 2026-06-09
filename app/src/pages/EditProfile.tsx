@@ -19,6 +19,7 @@ const CATEGORY_LABELS: Record<string, string> = {
 export default function EditProfile() {
   const navigate = useNavigate()
   const { refreshUser } = useAuth()
+  const { user: authUser } = useAuth()
   const [saved, setSaved] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -46,7 +47,7 @@ export default function EditProfile() {
   const [website, setWebsite] = useState('')
 
   useEffect(() => {
-    (async () => {
+    const fetchData = async () => {
       try {
         const data: any = await apiRequest('/users/me')
         if (data) {
@@ -74,8 +75,12 @@ export default function EditProfile() {
       } finally {
         setLoading(false)
       }
-    })()
-  }, [])
+    }
+    fetchData()
+    const onFocus = () => fetchData()
+    window.addEventListener('focus', onFocus)
+    return () => window.removeEventListener('focus', onFocus)
+  }, [authUser])
 
   const toggleCategory = (cat: string) => {
     setCategories(prev =>

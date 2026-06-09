@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { apiRequest } from '../lib/api'
 import Layout from '../components/Layout'
 import { SkeletonPage, injectSkeletonStyles } from '../components/SkeletonLoader'
+import { useAuth } from '../context/AuthContext'
 
 function timeAgo(date: string | Date) {
   const diff = Date.now() - new Date(date).getTime()
@@ -38,6 +39,7 @@ function guessMeta(title = '') {
 }
 
 export default function Notifications() {
+  const { user: authUser } = useAuth()
   const [notifs, setNotifs] = useState<any[]>([])
   const [filter, setFilter] = useState('all')
   const [loading, setLoading] = useState(true)
@@ -54,7 +56,12 @@ export default function Notifications() {
     setLoading(false)
   }
 
-  useEffect(() => { fetchNotifs() }, [])
+  useEffect(() => {
+    fetchNotifs();
+    const onFocus = () => fetchNotifs();
+    window.addEventListener('focus', onFocus);
+    return () => window.removeEventListener('focus', onFocus);
+  }, [authUser])
 
   useEffect(() => { injectSkeletonStyles(); }, [])
 

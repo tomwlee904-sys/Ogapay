@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
 import Layout from '../components/Layout'
 
 const API_BASE = 'https://ogapay-production.up.railway.app/api/v1'
@@ -13,6 +14,7 @@ function getGradient(cat: string) {
 
 export default function Communities() {
   const navigate = useNavigate()
+  const { user: authUser } = useAuth()
   const [filter, setFilter] = useState('all')
   const [search, setSearch] = useState('')
   const [communities, setCommunities] = useState<any[]>([])
@@ -34,7 +36,10 @@ export default function Communities() {
       setLoading(false)
     }
     fetchCommunities()
-  }, [])
+    const onFocus = () => fetchCommunities()
+    window.addEventListener('focus', onFocus)
+    return () => window.removeEventListener('focus', onFocus)
+  }, [authUser])
 
   const filtered = communities.filter(c => {
     if (filter === 'trending' && !c.trending) return false

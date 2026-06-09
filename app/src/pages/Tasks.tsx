@@ -80,6 +80,7 @@ function JobDetailView({ job, onBack }: { job: any; onBack: () => void }) {
   const [applyMsg, setApplyMsg] = useState('')
   const [applyLink, setApplyLink] = useState('')
   const [submitted, setSubmitted] = useState(false)
+  const [notes, setNotes] = useState('')
   const [timeLeft, setTimeLeft] = useState('')
 
   // Countdown timer

@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
 import { API_BASE } from '../lib/api'
 import Layout from '../components/Layout'
 
 export default function WorkerPortal() {
   const navigate = useNavigate()
+  const { user: authUser } = useAuth()
 
   const workspaceItems = [
     { icon: 'ti ti-brand-x', label: 'Social', route: '/worker/social', color: '#1F8CFF' },
@@ -86,7 +88,10 @@ export default function WorkerPortal() {
       }
     }
     loadWorkerStats()
-  }, [])
+    const onFocus = () => loadWorkerStats()
+    window.addEventListener('focus', onFocus)
+    return () => window.removeEventListener('focus', onFocus)
+  }, [authUser])
 
   return (
     <Layout>

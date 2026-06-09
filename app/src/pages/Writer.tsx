@@ -1,6 +1,7 @@
 // @ts-nocheck
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
 import Layout from '../components/Layout'
 import { apiRequest } from '../lib/api'
 
@@ -24,6 +25,7 @@ const templateIcons: Record<string, string> = {
 
 export default function Writer() {
   const navigate = useNavigate()
+  const { user: authUser } = useAuth()
   const [templates, setTemplates] = useState<any[]>([])
   const [recentJobs, setRecentJobs] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -58,7 +60,40 @@ export default function Writer() {
       } catch {}
       setLoading(false)
     })()
-  }, [])
+    const onFocus = () => {
+      (async () => {
+        try {
+          const [tasksRes] = await Promise.all([
+            apiRequest<any>('/tasks?limit=10&sortBy=createdAt&sortOrder=desc'),
+          ])
+          const tasks = Array.isArray(tasksRes) ? tasksRes : tasksRes?.data || tasksRes?.tasks || []
+
+          const cats = new Map<string, number>()
+          tasks.forEach(t => {
+            const cat = t.category || 'Other'
+            cats.set(cat, (cats.get(cat) || 0) + 1)
+          })
+          setTemplates(Array.from(cats.entries()).map(([cat, count]) => ({
+            id: cat,
+            title: cat.replace(/_/g, ' '),
+            icon: templateIcons[cat] || 'file-text',
+            tasks: count,
+          })))
+
+          setRecentJobs(tasks.slice(0, 5).map(t => ({
+            id: t.id,
+            title: t.title,
+            budget: `${t.currency || 'NGN'} ${Number(t.reward || 0).toLocaleString()}`,
+            slots: t.maxWorkers || t.remainingSlots || '—',
+            time: t.createdAt ? new Date(t.createdAt).toLocaleDateString() : '—',
+          })))
+        } catch {}
+        setLoading(false)
+      })()
+    }
+    window.addEventListener('focus', onFocus)
+    return () => window.removeEventListener('focus', onFocus)
+  }, [authUser])
 
   return (
     <Layout>

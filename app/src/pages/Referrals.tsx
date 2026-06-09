@@ -18,13 +18,14 @@ function formatTimeAgo(dateStr: string) {
 
 export default function Referrals() {
   const { user } = useAuth()
+  const { user: authUser } = useAuth()
   const [copied, setCopied] = useState(false)
   const [stats, setStats] = useState<any>(null)
   const [referrals, setReferrals] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    (async () => {
+    const fetchData = async () => {
       try {
         const [statsData, txData] = await Promise.all([
           apiRequest('/users/referrals/stats').catch(() => null),
@@ -37,8 +38,12 @@ export default function Referrals() {
         }
       } catch {}
       setLoading(false)
-    })()
-  }, [])
+    }
+    fetchData()
+    const onFocus = () => fetchData()
+    window.addEventListener('focus', onFocus)
+    return () => window.removeEventListener('focus', onFocus)
+  }, [authUser])
 
   useEffect(() => { injectSkeletonStyles(); }, []);
 

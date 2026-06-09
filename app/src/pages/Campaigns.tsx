@@ -2,31 +2,38 @@ import { useState, useEffect } from 'react'
 import Layout from '../components/Layout'
 import { apiRequest } from '../lib/api'
 import { getAccessToken } from '../lib/api'
+import { useAuth } from '../context/AuthContext'
 
 export default function Campaigns() {
+  const { user: authUser } = useAuth()
   const [showModal, setShowModal] = useState(false)
   const [campaigns, setCampaigns] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [form, setForm] = useState({ name: '', platform: 'X/Twitter', budget: '', description: '' })
 
+  const fetchData = async () => {
+    try {
+      const res = await apiRequest<any>('/campaigns')
+      const items = Array.isArray(res) ? res : res?.data || []
+      setCampaigns(items)
+    } catch {}
+    setLoading(false)
+  }
+
   useEffect(() => {
-    (async () => {
-      try {
-        const res = await apiRequest<any>('/campaign')
-        const items = Array.isArray(res) ? res : res?.data || []
-        setCampaigns(items)
-      } catch {}
-      setLoading(false)
-    })()
-  }, [])
+    fetchData()
+    const onFocus = () => fetchData()
+    window.addEventListener('focus', onFocus)
+    return () => window.removeEventListener('focus', onFocus)
+  }, [authUser])
 
   const handleCreate = async () => {
     if (!form.name || !form.budget) return
     setSaving(true)
     try {
       const token = getAccessToken()
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'https://ogapay-production.up.railway.app/api/v1'}/campaign`, {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'https://ogapay-production.up.railway.app/api/v1'}/campaigns`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({
@@ -152,8 +159,8 @@ export default function Campaigns() {
                   <div className="cmp-fill" style={{width:'0%',background:'var(--accent)'}} />
                 </div>
                 <div className="cmp-actions">
-                  <button className="cmp-btn"><i className="ti ti-edit" /> Edit</button>
-                  <button className="cmp-btn"><i className="ti ti-chart-bar" /> Stats</button>
+                  <button className="cmp-btn" onClick={() => document.getElementById('appToast') && (document.getElementById('appToast')!.textContent = 'Edit coming soon') || document.getElementById('appToast')!.classList.add('show') || setTimeout(() => document.getElementById('appToast')?.classList.remove('show'), 2000)}><i className="ti ti-edit" /> Edit</button>
+                  <button className="cmp-btn" onClick={() => document.getElementById('appToast') && (document.getElementById('appToast')!.textContent = 'Stats coming soon') || document.getElementById('appToast')!.classList.add('show') || setTimeout(() => document.getElementById('appToast')?.classList.remove('show'), 2000)}><i className="ti ti-chart-bar" /> Stats</button>
                 </div>
               </div>
             )

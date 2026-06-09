@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
+import { useAuth } from '../context/AuthContext'
 
 const API_BASE = 'https://ogapay-production.up.railway.app/api/v1'
 
@@ -46,29 +47,34 @@ function timeAgo(dateStr: string) {
 
 export default function MyTasks() {
   const navigate = useNavigate()
+  const { user: authUser } = useAuth()
   const [tab, setTab] = useState('all')
   const [submissions, setSubmissions] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
+  const fetchData = async () => {
+    try {
+      const token = localStorage.getItem('ogapay_access_token')
+      if (!token) { setLoading(false); return }
+      const res = await fetch(API_BASE + '/tasks/my/submissions', {
+        headers: { 'Authorization': 'Bearer ' + token },
+      })
+      const json = await res.json()
+      if (json.success && json.data) {
+        setSubmissions(json.data)
+      }
+    } catch {
+      const el = document.getElementById('appToast')
+      if (el) { el.textContent = 'Failed to load submissions'; el.classList.add('show'); setTimeout(() => el.classList.remove('show'), 3000) }
+    } finally { setLoading(false) }
+  }
+
   useEffect(() => {
-    async function fetchSubmissions() {
-      try {
-        const token = localStorage.getItem('ogapay_access_token')
-        if (!token) { setLoading(false); return }
-        const res = await fetch(API_BASE + '/tasks/my/submissions', {
-          headers: { 'Authorization': 'Bearer ' + token },
-        })
-        const json = await res.json()
-        if (json.success && json.data) {
-          setSubmissions(json.data)
-        }
-      } catch {
-        const el = document.getElementById('appToast')
-        if (el) { el.textContent = 'Failed to load submissions'; el.classList.add('show'); setTimeout(() => el.classList.remove('show'), 3000) }
-      } finally { setLoading(false) }
-    }
-    fetchSubmissions()
-  }, [])
+    fetchData()
+    const onFocus = () => fetchData()
+    window.addEventListener('focus', onFocus)
+    return () => window.removeEventListener('focus', onFocus)
+  }, [authUser])
 
   const filtered = tab === 'all'
     ? submissions

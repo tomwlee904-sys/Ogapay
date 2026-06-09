@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
+import { apiRequest } from '../lib/api'
 
 const Icon = ({ n, s = 18, c }) => (
   <i className={`ti ti-${n}`} style={{ fontSize: s, color: c || "var(--text2)", lineHeight: 1, flexShrink: 0 }} />
@@ -18,8 +19,16 @@ export default function WurkerApply() {
 
   const handleSubmit = async () => {
     setSubmitting(true)
-    await new Promise(r => setTimeout(r, 1000))
-    setSubmitted(true)
+    try {
+      await apiRequest('/wurker/apply', {
+        method: 'POST',
+        body: { skills: form.skills, experience: form.experience, availability: form.availability, portfolio: form.portfolio, whyYou: form.whyYou }
+      })
+      setSubmitted(true)
+    } catch (e) {
+      const el = document.getElementById('appToast')
+      if (el) { el.textContent = e?.message || 'Submission failed'; el.classList.add('show'); setTimeout(() => el.classList.remove('show'), 3000) }
+    }
     setSubmitting(false)
   }
 

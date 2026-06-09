@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useAuth } from '../context/AuthContext'
 import Layout from '../components/Layout'
 import { apiRequest } from '../lib/api'
 import CurrencySelector from '../components/CurrencySelector'
@@ -12,26 +13,31 @@ export default function Wallet() {
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState('')
   const { fmt, fmtAll, preferredCurrency } = useCurrency()
+  const { user: authUser } = useAuth()
   const [showFundModal, setShowFundModal] = useState(false)
   const [fundStep, setFundStep] = useState<'deposit' | 'withdraw'>('deposit')
 
-  useEffect(() => {
-    async function load() {
-      try {
-        const [balData, txData] = await Promise.all([
-          apiRequest('/wallet/balance').catch(() => null),
-          apiRequest('/users/transactions/history').catch(() => null),
-        ])
-        if (balData) setBalances(balData)
-        if (txData) setTransactions(Array.isArray(txData) ? txData : [])
-        if (!balData && !txData) setLoadError('Could not load wallet data. Try again later.')
-      } catch {
-        setLoadError('Could not load wallet data. Try again later.')
-      }
-      setLoading(false)
+  async function loadWallet() {
+    try {
+      const [balData, txData] = await Promise.all([
+        apiRequest('/wallet/balance').catch(() => null),
+        apiRequest('/users/transactions/history').catch(() => null),
+      ])
+      if (balData) setBalances(balData)
+      if (txData) setTransactions(Array.isArray(txData) ? txData : [])
+      if (!balData && !txData) setLoadError('Could not load wallet data. Try again later.')
+    } catch {
+      setLoadError('Could not load wallet data. Try again later.')
     }
-    load()
-  }, [])
+    setLoading(false)
+  }
+
+  useEffect(() => {
+    loadWallet();
+    const onFocus = () => loadWallet();
+    window.addEventListener('focus', onFocus);
+    return () => window.removeEventListener('focus', onFocus);
+  }, [authUser]);
 
   const ngnBal = balances?.NGN?.balance ?? 0
   const usdcBal = balances?.USDC?.balance ?? 0

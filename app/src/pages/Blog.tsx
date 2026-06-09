@@ -102,7 +102,7 @@ export default function Blog() {
   const [apiPosts, setApiPosts] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const navigate = useNavigate()
-  const { isAuthed } = useAuth()
+  const { isAuthed, user: authUser } = useAuth()
   const { theme, toggle } = useTheme()
   const [drawerOpen, setDrawerOpen] = useState(false)
 
@@ -114,7 +114,18 @@ export default function Blog() {
       } catch { setApiPosts([]) }
       setLoading(false)
     })()
-  }, [])
+    const onFocus = () => {
+      (async () => {
+        try {
+          const res = await apiRequest<any>('/blog?limit=50')
+          setApiPosts(res.posts || res.data || (Array.isArray(res) ? res : []))
+        } catch { setApiPosts([]) }
+        setLoading(false)
+      })()
+    }
+    window.addEventListener('focus', onFocus)
+    return () => window.removeEventListener('focus', onFocus)
+  }, [authUser])
 
   const userPosts = (() => {
     try {

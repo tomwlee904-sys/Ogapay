@@ -42,6 +42,7 @@ function statusBg(s) {
 
 export default function MyStore() {
   const { user, isAuthed } = useAuth()
+  const { user: authUser } = useAuth()
   const getToken = () => localStorage.getItem('ogapay_access_token')
 
   // ── Tab state ──────────────────────────────────────────────────────────────
@@ -114,7 +115,10 @@ export default function MyStore() {
   useEffect(() => {
     if (isAuthed) fetchProducts()
     else setLoading(false)
-  }, [isAuthed, fetchProducts])
+    const onFocus = () => { if (isAuthed) fetchProducts() }
+    window.addEventListener('focus', onFocus)
+    return () => window.removeEventListener('focus', onFocus)
+  }, [authUser])
 
   // ── Close menu on outside click ────────────────────────────────────────────
   useEffect(() => {
