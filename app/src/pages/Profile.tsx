@@ -6,6 +6,7 @@ import { useCurrency } from "../context/CurrencyContext";
 import { useAuth } from "../context/AuthContext";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { uploadImage } from '../lib/upload'
+import bs58 from "bs58"
 
 /* ─── Icons ─── */
 const Icon = ({ n, s = 16, c }) => (
@@ -294,6 +295,9 @@ export default function Profile() {
   const [referralStats, setReferralStats] = useState<any>(null);
   const [kycStatus, setKycStatus] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [connecting, setConnecting] = useState<string | null>(null);
+  const [detectedWallets, setDetectedWallets] = useState<string[]>([]);
+  const [showWalletOptions, setShowWalletOptions] = useState(false);
 
   // ── Fetch all data on mount ──
   useEffect(() => {
@@ -323,6 +327,17 @@ export default function Profile() {
       }
       setLoading(false);
     })();
+  }, []);
+
+  // Detect installed Solana wallets
+  useEffect(() => {
+    const found: string[] = [];
+    if (typeof window !== "undefined") {
+      if ((window as any).phantom?.solana?.isPhantom) found.push("phantom");
+      if ((window as any).backpack?.isBackpack) found.push("backpack");
+      if ((window as any).solflare?.isSolflare) found.push("solflare");
+    }
+    setDetectedWallets(found);
   }, []);
 
   const parseUser = (d: any) => {
@@ -404,6 +419,46 @@ export default function Profile() {
       setSavingBank(false);
     }
   };
+
+  async function connectWallet(id: string) {
+    if (!detectedWallets.includes(id)) return;
+    setConnecting(id);
+    try {
+      let wallet: any;
+      if (id === "phantom") wallet = (window as any).phantom?.solana;
+      else if (id === "backpack") wallet = (window as any).backpack;
+      else if (id === "solflare") wallet = (window as any).solflare;
+      if (!wallet?.connect) { setConnecting(null); return; }
+
+      const resp = await wallet.connect();
+      const pubKey = resp?.publicKey?.toString();
+      if (!pubKey) throw new Error("No public key");
+
+      const nonceRes = await apiRequest<{ nonce: string; message: string }>("/wallet/nonce", {
+        method: "POST",
+        body: JSON.stringify({ wallet: pubKey }),
+      });
+      if (!nonceRes?.nonce) throw new Error("No nonce received");
+
+      const encodedMessage = new TextEncoder().encode(nonceRes.message);
+      const signedResult = await wallet.signMessage(encodedMessage);
+      const signatureBytes = signedResult?.signature ?? signedResult;
+      const signature = bs58.encode(signatureBytes);
+
+      await apiRequest("/wallet/verify", {
+        method: "POST",
+        body: JSON.stringify({ wallet: pubKey, signature }),
+      });
+
+      setShowWalletOptions(false);
+      // Reload profile data to refresh wallet state
+      setTimeout(() => window.location.reload(), 500);
+    } catch (e: any) {
+      console.error("Wallet verification failed", e);
+      showToast(e?.message || "Wallet verification failed");
+    }
+    setConnecting(null);
+  }
 
   // Chart data
   const chartData = earnPeriod === '7d' ? CHART_7 : CHART_30;
@@ -499,7 +554,7 @@ export default function Profile() {
         <div className="onboarding-banner">
           <i className="ti ti-wallet" style={{color:'var(--accent)',fontSize:20}} />
           <span className="ob-msg">Connect your wallet to unlock full features</span>
-          <button className="ob-btn" onClick={() => navigate('/wallet')}>Connect Wallet</button>
+          <button className="ob-btn" onClick={() => setShowWalletOptions(true)}>Connect Wallet</button>
           <button className="ob-close" onClick={e => (e.currentTarget.closest('.onboarding-banner')!.style.display='none')}><i className="ti ti-x" /></button>
         </div>
       )}
@@ -646,7 +701,7 @@ export default function Profile() {
                     )}
 
                     {!hasWallet && (
-                      <button className="dash-btn" style={{width:'100%',justifyContent:'center',marginBottom:10,background:'var(--accent)'}}>
+                      <button className="dash-btn" style={{width:'100%',justifyContent:'center',marginBottom:10,background:'var(--accent)'}} onClick={() => setShowWalletOptions(true)}>
                         <Icon n="wallet" s={14} c="#fff" /> Connect Wallet
                       </button>
                     )}
@@ -1215,6 +1270,52 @@ export default function Profile() {
                 <button className="dash-btn" style={{marginTop:20}} onClick={() => setShowKyc(false)}>Done</button>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* ── Wallet Provider Selector Modal ── */}
+      {showWalletOptions && (
+        <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.5)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:1000}}
+          onClick={() => setShowWalletOptions(false)}>
+          <div onClick={e => e.stopPropagation()} style={{background:'var(--card)',border:'1px solid var(--border)',borderRadius:16,padding:24,maxWidth:380,width:'90%'}}>
+            <h3 style={{margin:'0 0 4px',fontSize:16,fontWeight:800}}>Connect a Solana Wallet</h3>
+            <p style={{color:'var(--text2)',fontSize:13,margin:'0 0 16px',lineHeight:1.5}}>
+              Select a wallet provider to connect. You'll be asked to sign a message to verify ownership.
+            </p>
+            <div style={{display:'grid',gap:10}}>
+              {[
+                { id:'phantom', label:'Phantom', icon:'brand-phantom' },
+                { id:'backpack', label:'Backpack', icon:'brand-backpack' },
+                { id:'solflare', label:'Solflare', icon:'brand-flare' },
+              ].map(p => {
+                const installed = detectedWallets.includes(p.id);
+                return (
+                  <button key={p.id}
+                    onClick={() => connectWallet(p.id)}
+                    disabled={!installed || connecting === p.id}
+                    style={{
+                      display:'flex',alignItems:'center',gap:12,padding:'14px 16px',
+                      borderRadius:10,border:'1.5px solid var(--border)',
+                      background:'var(--bg2)',cursor:installed && connecting !== p.id ? 'pointer' : 'default',
+                      fontFamily:'inherit',fontSize:13,fontWeight:700,color:'var(--text)',
+                      opacity:installed ? 1 : 0.5,transition:'border-color .13s',
+                    }}>
+                    <div style={{width:32,height:32,borderRadius:8,background:'var(--card)',display:'grid',placeItems:'center',flexShrink:0}}>
+                      <Icon n={p.icon} s={18} />
+                    </div>
+                    <span style={{flex:1,textAlign:'left'}}>{p.label}</span>
+                    {connecting === p.id && <span className="spinner" style={{width:16,height:16,borderWidth:2}} />}
+                    {!installed && <span style={{fontSize:10,color:'var(--text3)',fontWeight:400}}>Not installed</span>}
+                  </button>
+                );
+              })}
+            </div>
+            <button onClick={() => setShowWalletOptions(false)}
+              style={{width:'100%',marginTop:12,height:38,borderRadius:10,border:'1px solid var(--border)',
+                background:'transparent',color:'var(--text2)',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>
+              Cancel
+            </button>
           </div>
         </div>
       )}
