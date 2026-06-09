@@ -1218,6 +1218,102 @@ function Communities() {
     })()
   }, [])
   if (loading) return null
+  const cardStyle = {
+    borderRadius: 16,
+    border: '1px solid #e5e7eb',
+    background: '#fff',
+    display: 'flex',
+    flexDirection: 'column',
+    overflow: 'hidden',
+    height: '100%',
+  };
+  const coverStyle = (accent: string) => ({
+    width: '100%',
+    height: 192,
+    position: 'relative' as const,
+    background: accent ? `${accent}20` : '#f5f5f5',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontFamily: 'Outfit,sans-serif',
+    fontSize: 42,
+    fontWeight: 900,
+    color: accent || '#9ca3af',
+    flexShrink: 0,
+  });
+  const badgeStyle = {
+    position: 'absolute' as const,
+    top: 12,
+    left: 12,
+    background: '#22c55e',
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: 600,
+    padding: '4px 12px',
+    borderRadius: 999,
+  };
+  const bodyStyle = {
+    padding: 16,
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: 8,
+    flex: 1,
+  };
+  const titleStyle = {
+    fontSize: 15,
+    fontWeight: 700,
+    color: '#111827',
+    margin: 0,
+  };
+  const statRowStyle = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 16,
+    fontSize: 12,
+    color: '#9ca3af',
+  };
+  const descStyle = {
+    fontSize: 14,
+    color: '#6b7280',
+    display: '-webkit-box',
+    WebkitLineClamp: 3,
+    WebkitBoxOrient: 'vertical',
+    overflow: 'hidden',
+    margin: 0,
+    lineHeight: 1.4,
+    minHeight: 58,
+  };
+  const bottomRowStyle = {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 'auto',
+    padding: '0 16px 16px',
+  };
+  const distributedStyle = {
+    fontSize: 14,
+    fontWeight: 600,
+    color: '#1f2937',
+  };
+  const distributedLabelStyle = {
+    fontSize: 12,
+    color: '#9ca3af',
+    fontWeight: 400,
+    marginLeft: 4,
+  };
+  const viewBtnStyle = {
+    fontSize: 14,
+    fontWeight: 600,
+    color: '#1f2937',
+    display: 'flex',
+    alignItems: 'center',
+    gap: 4,
+    border: 'none',
+    background: 'none',
+    cursor: 'pointer',
+    marginLeft: 'auto',
+    textDecoration: 'none',
+  };
   return (
     <section style={{ padding: "56px 0", background: "var(--bg)" }}>
       <div className="container">
@@ -1229,24 +1325,36 @@ function Communities() {
           <a href="/communities" style={{ color: "var(--text2)", fontSize: 14, fontWeight: 700, display: "flex", alignItems: "center", gap: 6 }}>View all <I n="chevron-right" s={16} /></a>
         </div>
         <div className="community-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3,minmax(0,1fr))", gap: 24 }}>
-          {comms.map((c, i) => (
-            <div key={c.id || i} className="card-base" style={{ display: "flex", flexDirection: "column", minHeight: 380 }}>
-              <div style={{ height: 120, display: "grid", placeItems: "center", fontFamily: "Outfit,sans-serif", fontSize: 32, fontWeight: 900, background: c.accentColor ? `${c.accentColor}18` : 'var(--bg2)', color: c.accentColor || 'var(--text2)', borderBottom: "1px solid var(--border)" }}>
-                {c.iconUrl ? <img src={c.iconUrl} alt={c.name} style={{height:48,width:48,borderRadius:8,objectFit:'cover'}} /> : (c.name || '?').slice(0, 2).toUpperCase()}
-              </div>
-              <div style={{ padding: "18px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
-                <h3 style={{ margin: "0 0 8px", fontSize: 16, fontWeight: 800 }}>{c.name}</h3>
-                <p style={{ margin: 0, color: "var(--text2)", fontSize: 13, lineHeight: 1.55 }}>{c.description || ''}</p>
-                <div style={{ display: "flex", gap: 16, margin: "12px 0", color: "var(--text3)", fontSize: 12, fontWeight: 700 }}>
-                  <span style={{ display: "flex", alignItems: "center", gap: 5 }}><I n="users" s={13} /> {(c.memberCount || c.members || 0).toLocaleString()}</span>
-                  <span style={{ display: "flex", alignItems: "center", gap: 5 }}><I n="briefcase" s={13} /> {c.taskCount || 0} tasks</span>
+          {comms.map((c, i) => {
+            const accent = c.accent || c.accentColor || '#3b82f6';
+            return (
+              <div key={c.id || i} style={cardStyle}>
+                <div style={coverStyle(accent)}>
+                  {(c.name || '?').slice(0, 2).toUpperCase()}
+                  {c.trending && <span style={badgeStyle}>ACTIVE</span>}
                 </div>
-                <a href="/communities" style={{ marginTop: "auto", height: 42, border: "1.5px solid var(--border)", borderRadius: 999, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text2)", fontSize: 13, fontWeight: 800, background: "var(--card)", textDecoration: "none" }}>
-                  Join Community
-                </a>
+                <div style={bodyStyle}>
+                  <h3 style={titleStyle}>{c.name}</h3>
+                  <div style={statRowStyle}>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><I n="users" s={12} /> {(c.members || c.memberCount || 0).toLocaleString()} members</span>
+                    {(c.tasks || c.taskCount) ? <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><I n="briefcase" s={12} /> {c.tasks || c.taskCount || 0} jobs</span> : null}
+                  </div>
+                  <p style={descStyle}>{c.desc || c.description || ''}</p>
+                </div>
+                <div style={bottomRowStyle}>
+                  {(c.rewards) ? (
+                    <span style={distributedStyle}>
+                      ₦{Number(c.rewards).toLocaleString()}
+                      <span style={distributedLabelStyle}>distributed</span>
+                    </span>
+                  ) : <span />}
+                  <a href="/communities" style={viewBtnStyle}>
+                    View <I n="chevron-right" s={14} />
+                  </a>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </section>
