@@ -78,6 +78,16 @@ function getTimeAgo(dateStr: string): string {
   return d.toLocaleDateString()
 }
 
+function formatReward(reward: number | string, currency?: string): string {
+  const cur = (currency || 'NGN').toUpperCase()
+  const amount = Number(reward) || 0
+  if (cur === 'NGN') return '₦' + amount.toLocaleString()
+  if (cur === 'OGA' || cur === 'SOGA') return amount + ' $OGA'
+  if (cur === 'SOL') return amount + ' SOL'
+  if (cur === 'USDC') return '$' + amount
+  return amount + ' ' + cur
+}
+
 export default function WorkerWorkspace() {
   const { category } = useParams()
   const navigate = useNavigate()
@@ -110,6 +120,10 @@ export default function WorkerWorkspace() {
           fetch(API_BASE + '/tasks?category=' + encodeURIComponent(apiCategory), { headers }),
           fetch(API_BASE + '/tasks/my/submissions', { headers }).catch(() => null),
         ])
+
+        if (!subRes) {
+          console.warn('[WorkerWorkspace] Submissions fetch failed — completions unavailable')
+        }
 
         if (tasksRes.ok) {
           const json = await tasksRes.json()
@@ -159,10 +173,12 @@ export default function WorkerWorkspace() {
         if (res.ok) {
           const json = await res.json()
           if (json.success && json.data) {
-            setLeaders(Array.isArray(json.data) ? json.data : json.data.leaders || json.data.earners || [])
+            setLeaders(Array.isArray(json.data) ? json.data : json.data.topEarners || json.data.leaders || json.data.earners || [])
           }
         }
-      } catch {}
+      } catch (e) {
+        console.error('[WorkerWorkspace] Leaderboard fetch failed:', e)
+      }
       setLeadersLoading(false)
     })()
   }, [category])
@@ -207,8 +223,8 @@ export default function WorkerWorkspace() {
     <Layout>
       <style>{`
         .ws-header{background:${ws.color};padding:36px 32px;border-radius:16px;margin-bottom:24px;color:#fff}
-        .ws-header h1{font-size:28px;font-weight:900;margin:0 0 6px}
-        .ws-header p{font-size:14px;opacity:.85;margin:0}
+        .ws-header h1{font-size:28px;font-weight:900;margin:0 0 6px;word-break:break-word}
+        .ws-header p{font-size:14px;opacity:.85;margin:0;word-break:break-word}
         .ws-stat-bar{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px}
         .ws-stat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center}
         .ws-stat-num{font-size:22px;font-weight:900;color:${ws.color}}
@@ -260,7 +276,7 @@ export default function WorkerWorkspace() {
           .ws-stat-bar{grid-template-columns:repeat(3,1fr);gap:8px}
           .ws-stat-num{font-size:16px}
           .ws-grid{grid-template-columns:1fr}
-          .ws-related-grid{grid-template-columns:repeat(3,1fr);gap:8px}
+          .ws-related-grid{grid-template-columns:repeat(2,1fr);gap:8px}
           .ws-featured-card{flex-direction:column;align-items:flex-start;gap:8px}
         }
       `}</style>
@@ -302,7 +318,7 @@ export default function WorkerWorkspace() {
             </div>
 
             {/* ── Subcategory pills ── */}
-            <div className="ws-pills">
+            <div className="ws-pills" style={{ overflowX: 'auto', whiteSpace: 'nowrap', flexWrap: 'nowrap' }}>
               {subs.map(s => (
                 <button key={s} className={`ws-pill ${activeSub === s ? 'active' : ''}`} onClick={() => setActiveSub(s)}>
                   {s}
@@ -323,7 +339,7 @@ export default function WorkerWorkspace() {
                       <div style={{ fontSize: 12, color: 'var(--text3)' }}>{getTimeAgo(t.createdAt || t.date)}</div>
                     </div>
                     <div style={{ fontSize: 17, fontWeight: 900, color: ws.color, whiteSpace: 'nowrap' }}>
-                      {t.reward} {t.currency || 'SOL'}
+                      {formatReward(t.reward, t.currency)}
                     </div>
                   </div>
                 ))}
@@ -341,10 +357,10 @@ export default function WorkerWorkspace() {
             ) : (
               <div className="ws-grid">
                 {filteredTasks.map((task: any) => (
-                  <div key={task.id || task._id} className="ws-card">
+                  <div key={task.id || task._id} className="ws-card" onClick={() => navigate('/tasks/' + (task.id || task._id))} style={{ cursor: 'pointer' }}>
                     <div className="ws-card-top">
                       <div className="ws-card-title">{task.title}</div>
-                      <div className="ws-card-reward">{task.reward} {task.currency || 'SOL'}</div>
+                      <div className="ws-card-reward">{formatReward(task.reward, task.currency)}</div>
                     </div>
                     <div className="ws-card-meta">
                       {task.category && <span><i className="ti ti-tag" style={{fontSize:11}} /> {task.category}</span>}
