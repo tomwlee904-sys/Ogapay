@@ -22,12 +22,9 @@ export default function Navbar({ onMenuToggle }: NavbarProps) {
       try {
         const token = localStorage.getItem('ogapay_access_token')
         if (!token) return
-        const res = await fetch('https://ogapay-production.up.railway.app/api/v1/wallet/balance', {
-          headers: { 'Authorization': 'Bearer ' + token },
-        })
-        const json = await res.json()
-        if (!cancelled && json.success && json.data?.NGN) {
-          setBalance(Number(json.data.NGN.available || json.data.NGN.balance || 0).toLocaleString())
+        const json: any = await apiRequest('/wallet/balance')
+        if (!cancelled && json?.NGN) {
+          setBalance(Number(json.NGN.available || json.NGN.balance || 0).toLocaleString())
         }
       } catch {}
     }

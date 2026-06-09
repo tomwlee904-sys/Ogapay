@@ -1,3 +1,4 @@
+import { useLivePrice } from "../hooks/useLivePrice"
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import Layout from '../components/Layout'
@@ -92,9 +93,9 @@ function formatPrice(item: StoreItem): string {
   return `${prefix}${item.price.toFixed(item.price < 1 ? 4 : 2)}${item.currency === 'SOL' ? ' SOL' : ''}`
 }
 
-function formatSol(price: number, currency: string): string {
+function formatSol(price: number, currency: string, solRate?: number): string {
   if (currency === 'SOL') return `◎${price.toFixed(3)} SOL`
-  return `◎${(price / 145).toFixed(3)} SOL`
+  return `◎${solRate ? (price / solRate).toFixed(3) : (price / 145).toFixed(3)} SOL`
 }
 
 function timeAgo(dateStr: string): string {
@@ -213,6 +214,7 @@ const S: {[key: string]: React.CSSProperties} = {
 }
 
 function StorePage({ onViewProduct }: { onViewProduct: (product: any) => void }) {
+  const { sol } = useLivePrice()
   const [search, setSearch] = useState('')
   const [category, setCategory] = useState('')
   const [sort, setSort] = useState('newest')
@@ -342,7 +344,7 @@ function StorePage({ onViewProduct }: { onViewProduct: (product: any) => void })
                 </div>
                 <div style={S.priceRow}>
                   <span style={S.priceMain}>{formatPrice(p)}</span>
-                  <span style={S.priceSub}>{formatSol(p.price, p.currency)}</span>
+                  <span style={S.priceSub}>{formatSol(p.price, p.currency, sol.ngn)}</span>
                 </div>
                 <button style={S.btnOutlineFull}>
                   <i className="ti ti-eye" style={{ fontSize: 13 }} /> View more
@@ -374,7 +376,8 @@ function StorePage({ onViewProduct }: { onViewProduct: (product: any) => void })
   )
 }
 
-function ProductDetailPage({ product, onBack, onPurchase, refreshProducts }: { product: StoreItem; onBack: () => void; onPurchase: (item: StoreItem) => void; refreshProducts: () => void }) {
+function ProductDetailPage({ product, onBack, onPurchase, refreshProducts }: {
+  const { sol } = useLivePrice() product: StoreItem; onBack: () => void; onPurchase: (item: StoreItem) => void; refreshProducts: () => void }) {
   const [purchasing, setPurchasing] = useState(false)
   const [purchaseError, setPurchaseError] = useState<string | null>(null)
   const [purchased, setPurchased] = useState(false)
@@ -451,7 +454,7 @@ function ProductDetailPage({ product, onBack, onPurchase, refreshProducts }: { p
 
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, margin: '14px 0', padding: 14, background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 8 }}>
         <span style={{ fontSize: 22, fontWeight: 800, color: 'var(--green)' }}>{formatPrice(p)}</span>
-        <span style={{ fontSize: 12, color: 'var(--text3)' }}>{formatSol(p.price, p.currency)}</span>
+        <span style={{ fontSize: 12, color: 'var(--text3)' }}>{formatSol(p.price, p.currency, sol.ngn)}</span>
       </div>
 
       <div>
