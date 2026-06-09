@@ -789,7 +789,8 @@ function StoreSection() {
     fetch(`${API_BASE}/store?limit=6`)
       .then(r => r.json())
       .then(d => {
-        const list = d?.data?.items || [];
+        const raw = d?.data;
+        const list = Array.isArray(raw) ? raw : raw?.items ?? [];
         setProducts(list);
       })
       .catch(() => {});
