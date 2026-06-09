@@ -29,6 +29,8 @@ const REFRESH_TOKEN_KEY = 'ogapay_refresh_token'
 const USER_KEY = 'ogapay_user'
 const LEGACY_AUTH_KEY = 'ogapay-authenticated'
 
+let refreshInProgress: Promise<AuthTokens | null> | null = null
+
 export function getAccessToken() {
   try { return localStorage.getItem(ACCESS_TOKEN_KEY) } catch { return null }
 }
@@ -89,47 +91,53 @@ async function parseResponse(res: Response) {
  * First tries backend /auth/refresh (for backend JWTs).
  * If that fails and auth_provider is 'supabase', tries Supabase SDK refresh.
  */
-export async function refreshAuthSession() {
-  const isSupabase = ls('ogapay_auth_provider') === 'supabase'
+export async function refreshAuthSession(): Promise<AuthTokens | null> {
+  if (refreshInProgress) return refreshInProgress
 
-  if (isSupabase) {
-    // Use Supabase SDK to refresh the session
-    try {
-      const { default: supabaseModule } = await import('../lib/supabaseClient')
-      const { data: { session }, error } = await supabaseModule.supabase.auth.refreshSession()
-      if (!error && session) {
-        localStorage.setItem(ACCESS_TOKEN_KEY, session.access_token)
-        if (session.refresh_token) {
-          localStorage.setItem(REFRESH_TOKEN_KEY, session.refresh_token)
+  refreshInProgress = (async () => {
+    const isSupabase = ls('ogapay_auth_provider') === 'supabase'
+
+    if (isSupabase) {
+      try {
+        const supabaseModule = await import('../lib/supabaseClient')
+        const { data: { session }, error } = await supabaseModule.supabase.auth.refreshSession()
+        if (!error && session) {
+          localStorage.setItem(ACCESS_TOKEN_KEY, session.access_token)
+          if (session.refresh_token) {
+            localStorage.setItem(REFRESH_TOKEN_KEY, session.refresh_token)
+          }
+          console.log('[refreshAuthSession] Supabase refresh succeeded')
+          return { accessToken: session.access_token, refreshToken: session.refresh_token }
         }
-        console.log('[refreshAuthSession] Supabase refresh succeeded')
-        return { accessToken: session.access_token, refreshToken: session.refresh_token }
+      } catch (e) {
+        console.warn('[refreshAuthSession] Supabase refresh failed:', e)
       }
-    } catch (e) {
-      console.warn('[refreshAuthSession] Supabase refresh failed:', e)
     }
-  }
 
-  // Fallback to backend refresh
-  const refreshToken = getRefreshToken()
-  if (!refreshToken) return null
+    // Fallback to backend refresh
+    const refreshToken = getRefreshToken()
+    if (!refreshToken) return null
 
-  try {
-    const res = await fetch(`${API_BASE}/auth/refresh`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ refreshToken }),
-    })
-    const data = await parseResponse(res)
-    const tokenObj = data?.tokens || data
-    if (tokenObj?.accessToken) {
-      persistAuthSession({ tokens: tokenObj })
-      return tokenObj
+    try {
+      const res = await fetch(`${API_BASE}/auth/refresh`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refreshToken }),
+      })
+      const data = await parseResponse(res)
+      const tokenObj = data?.tokens || data
+      if (tokenObj?.accessToken) {
+        persistAuthSession({ tokens: tokenObj })
+        return tokenObj
+      }
+    } catch {
+      // Both methods failed
     }
-  } catch {
-    // Both methods failed
-  }
-  return null
+    return null
+  })()
+
+  refreshInProgress.finally(() => { refreshInProgress = null })
+  return refreshInProgress
 }
 
 export async function apiRequest<T = unknown>(path: string, options: ApiOptions = {}): Promise<T> {
