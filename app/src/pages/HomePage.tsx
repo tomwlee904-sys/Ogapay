@@ -808,6 +808,116 @@ function StoreSection() {
       setActive(prev => (prev + 1) % products.length);
     }, 5000);
   };
+  const cardStyle = {
+    borderRadius: 16,
+    boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
+    border: '1px solid #e5e5e5',
+    padding: 12,
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 12,
+    background: '#fff',
+    height: '100%',
+  };
+  const imgWrapStyle = {
+    width: '100%',
+    height: 200,
+    overflow: 'hidden',
+    borderRadius: 12,
+    background: '#f5f5f5',
+    flexShrink: 0,
+  };
+  const titleRowStyle = {
+    display: 'flex',
+    justifyContent: 'space-between',
+    gap: 12,
+    alignItems: 'flex-start',
+  };
+  const titleStyle = {
+    fontSize: 15,
+    fontWeight: 600,
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+    flex: 1,
+    margin: 0,
+  };
+  const dateStyle = {
+    color: '#a1a1aa',
+    fontSize: 12,
+    whiteSpace: 'nowrap',
+    flexShrink: 0,
+    marginTop: 1,
+  };
+  const descStyle = {
+    fontSize: 14,
+    color: '#6b7280',
+    display: '-webkit-box',
+    WebkitLineClamp: 2,
+    WebkitBoxOrient: 'vertical',
+    overflow: 'hidden',
+    margin: 0,
+    lineHeight: 1.4,
+    minHeight: 39,
+  };
+  const creatorStyle = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 10,
+    padding: '8px 10px',
+    background: '#f5f5f5',
+    borderRadius: 12,
+  };
+  const avatarStyle = {
+    width: 36,
+    height: 36,
+    borderRadius: '50%',
+    background: '#232323',
+    display: 'grid',
+    placeItems: 'center',
+    color: '#fff',
+    fontSize: 11,
+    fontWeight: 800,
+    flexShrink: 0,
+  };
+  const priceRowStyle = {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    border: '1px solid #e5e5e5',
+    borderRadius: 12,
+    padding: '8px 12px',
+  };
+  const primaryPriceStyle = {
+    color: '#22c55e',
+    fontWeight: 700,
+    fontSize: 18,
+  };
+  const cryptoPriceStyle = {
+    color: '#374151',
+    fontSize: 14,
+  };
+  const viewBtnStyle = {
+    width: '100%',
+    border: '1px solid #e5e5e5',
+    borderRadius: 12,
+    paddingTop: 10,
+    paddingBottom: 10,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    color: '#525252',
+    fontSize: 14,
+    fontWeight: 500,
+    textDecoration: 'none',
+    background: '#fff',
+    cursor: 'pointer',
+  };
+  const formatPrice = (price) => {
+    const n = Number(price || 0);
+    return n >= 1000 ? n.toLocaleString() : n.toFixed(2);
+  };
   return (
     <section style={{ padding: "56px 0", background: "var(--bg)" }}>
       <div className="container">
@@ -839,35 +949,37 @@ function StoreSection() {
                 const p = products[idx];
                 if (!p) return null;
                 const sellerName = p.seller || 'Anonymous';
-                const initials = (p.title || p.name || '???').slice(0, 3).toUpperCase();
+                const currency = p.currency || 'NGN';
                 return (
-                  <div key={p.id || idx} className="card-base" style={{ display: "flex", flexDirection: "column", minHeight: 520 }}>
-                    <div style={{ height: 180, display: "grid", placeItems: "center", fontFamily: "Outfit,sans-serif", fontSize: 26, fontWeight: 900, background: "linear-gradient(135deg,#232323,#333)", color: "#fff", overflow: "hidden" }}>
+                  <div key={p.id || idx} style={cardStyle}>
+                    <div style={imgWrapStyle}>
                       {p.image ? (
                         <img src={p.image} alt={p.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                       ) : (
-                        initials
+                        <div style={{ display: 'grid', placeItems: 'center', height: '100%', fontFamily: 'Outfit,sans-serif', fontSize: 26, fontWeight: 900, background: 'linear-gradient(135deg,#232323,#333)', color: '#fff' }}>
+                          {(p.title || '???').slice(0, 3).toUpperCase()}
+                        </div>
                       )}
                     </div>
-                    <div style={{ padding: "18px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", gap: 12, fontSize: 15, fontWeight: 800, marginBottom: 8 }}>
-                        <span>{p.title || p.name}</span>
-                        <time style={{ color: "var(--text3)", fontSize: 12, fontWeight: 700, whiteSpace: "nowrap" }}>{p.createdAt ? new Date(p.createdAt).toLocaleDateString() : ''}</time>
-                      </div>
-                      <div style={{ margin: "14px 0", display: "flex", alignItems: "center", gap: 11, padding: "11px 14px", border: "1.5px solid var(--border)", borderRadius: 9, background: "var(--bg2)" }}>
-                        <div style={{ width: 36, height: 36, borderRadius: "50%", background: "#232323", display: "grid", placeItems: "center", color: "#fff", fontSize: 11, fontWeight: 800, flexShrink: 0 }}>{sellerName.charAt(0)}</div>
-                        <div>
-                          <strong style={{ display: "block", fontSize: 13, fontWeight: 800 }}>{sellerName}</strong>
-                        </div>
-                      </div>
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", height: 52, padding: "0 16px", border: "1.5px solid var(--border)", borderRadius: 9, background: "var(--card2)", marginBottom: 14, marginTop: "auto" }}>
-                        <strong className="grad-text" style={{ fontFamily: "Outfit,sans-serif", fontSize: 20, fontWeight: 900 }}>{Number(p.price || 0).toFixed(2)} {p.currency || 'SOL'}</strong>
-                        <span style={{ padding: "6px 12px", border: "1.5px solid var(--border)", borderRadius: 7, background: "var(--card)", color: "var(--text2)", fontSize: 12, fontWeight: 800 }}>{Number(p.price || 0).toFixed(2)} SOL</span>
-                      </div>
-                      <a href={`/store/${p.id}`} style={{ height: 42, border: "1.5px solid var(--border)", borderRadius: 999, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text2)", fontSize: 13, fontWeight: 800, background: "var(--card)", textDecoration: "none", transition: "border-color .14s, color .14s" }}>
-                        View more
-                      </a>
+                    <div style={titleRowStyle}>
+                      <span style={titleStyle}>{p.title || p.name}</span>
+                      <time style={dateStyle}>{p.createdAt ? new Date(p.createdAt).toLocaleDateString() : ''}</time>
                     </div>
+                    {p.description && <p style={descStyle}>{p.description}</p>}
+                    <div style={creatorStyle}>
+                      <div style={avatarStyle}>{sellerName.charAt(0).toUpperCase()}</div>
+                      <div>
+                        <div style={{ fontWeight: 700, fontSize: 13 }}>{sellerName}</div>
+                        <div style={{ fontSize: 11, color: '#a1a1aa' }}>New creator</div>
+                      </div>
+                    </div>
+                    <div style={priceRowStyle}>
+                      <span style={primaryPriceStyle}>{formatPrice(p.price)} {currency}</span>
+                      <span style={cryptoPriceStyle}>{formatPrice(p.price)} {currency}</span>
+                    </div>
+                    <a href={`/store/${p.id}`} style={viewBtnStyle}>
+                      <I n="eye" s={16} /> View more
+                    </a>
                   </div>
                 );
               })}
