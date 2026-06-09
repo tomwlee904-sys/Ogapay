@@ -48,7 +48,8 @@ export default function Navbar({ onMenuToggle }: NavbarProps) {
     fetchUnread()
     const onFocus = () => fetchUnread()
     window.addEventListener('focus', onFocus)
-    return () => { cancelled = true; window.removeEventListener('focus', onFocus) }
+    const interval = setInterval(fetchUnread, 30000)
+    return () => { cancelled = true; window.removeEventListener('focus', onFocus); clearInterval(interval) }
   }, [isAuthed])
 
   return (

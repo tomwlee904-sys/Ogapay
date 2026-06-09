@@ -18,15 +18,15 @@ function mapTask(t: any) {
   const cat = CATEGORIES[t.category] || 'Other'
   const diff = t.estimatedTime ? (t.estimatedTime <= 10 ? 'Easy' : t.estimatedTime <= 30 ? 'Medium' : t.estimatedTime <= 60 ? 'Hard' : 'Expert') : 'Easy'
   return {
-    id: t.id, title: t.title, description: t.description, instructions: t.instructions || '',
-    creator: t.poster?.username || 'OgaPay',
+    id: t.id, title: t.title, description: t.description || '', instructions: t.instructions || '',
+    creator: t.poster?.username || t.creator || 'OgaPay',
     creatorLabel: t.poster?.posterProfile?.isVerified ? 'Verified' : 'User',
     platform: t.tags?.[0] || 'Web', category: cat, difficulty: diff,
     reward: Number(t.reward), currency: t.currency || 'NGN',
     slots: t.maxWorkers || 1, filled: t.currentWorkers || 0,
     timeEstimate: t.estimatedTime ? t.estimatedTime + ' min' : '—',
     proofRequired: !!t.proofRequired, color: DIFF_COLORS[diff] || '#16a34a',
-    featured: t.poster?.posterProfile?.isVerified || false,
+    featured: t.poster?.posterProfile?.isVerified || t.featured || false,
     createdAt: t.createdAt,
     status: t.status,
   }
@@ -83,6 +83,7 @@ export default function JobMonitor() {
     try { return JSON.parse(localStorage.getItem('ogapay_bookmarked_jobs') || '[]') } catch { return [] }
   })
   const [myPostedTasks, setMyPostedTasks] = useState<any[]>([])
+  const [monitorSummary, setMonitorSummary] = useState<any>(null)
 
   const pollingRef = useRef<any>(null)
   const lastIdRef = useRef<string>('')
@@ -136,41 +137,21 @@ export default function JobMonitor() {
     setLoading(false)
   }, [alerts, sound])
 
-  // Fetch my posted tasks (creator's own tasks)
+  // Fetch my posted tasks (creator's own tasks) via /jobs/monitor
   const fetchMyPostedTasks = useCallback(async () => {
     try {
       const token = localStorage.getItem('ogapay_access_token')
       if (!token) return
-      // Try the private endpoint first
-      let tasks = []
-      try {
-        const res = await fetch(API_BASE + '/tasks/my/created', {
-          headers: { 'Authorization': 'Bearer ' + token },
-        })
-        const json = await res.json()
-        if (json.success && json.data) {
-          tasks = json.data.tasks || (Array.isArray(json.data) ? json.data : [])
+      const res = await fetch(API_BASE + '/jobs/monitor', {
+        headers: { 'Authorization': 'Bearer ' + token },
+      })
+      const json = await res.json()
+      if (json.success && json.data) {
+        const { summary, jobs } = json.data
+        if (summary && summary.totalJobs > 0) {
+          setMonitorSummary(summary)
+          setMyPostedTasks(jobs.map((j: any) => mapTask(j)))
         }
-      } catch (e) {
-        console.warn('Private endpoint failed for my posted tasks:', e)
-      }
-      // Fallback: try public /tasks with token
-      if (!tasks || tasks.length === 0) {
-        try {
-          const pubRes = await fetch(API_BASE + '/tasks?limit=200', {
-            headers: { 'Authorization': 'Bearer ' + token },
-          })
-          const pubJson = await pubRes.json()
-          if (pubJson.success && Array.isArray(pubJson.data)) {
-            // We can only show tasks from this user if we know their ID
-            // For now, rely on the auth token to filter
-            tasks = pubJson.data
-          }
-        } catch {}
-      }
-      if (tasks.length > 0) {
-        const mapped = tasks.map(mapTask)
-        setMyPostedTasks(mapped)
       }
     } catch {}
   }, [])
@@ -296,36 +277,71 @@ export default function JobMonitor() {
           </div>
         </div>
 
-        {/* Stats */}
+        {/* Stats — show poster monitor summary when available, else worker stats */}
         <div className="jm-stats">
-          <div className="jm-stat">
-            <div className="jm-stat-top">
-              <div className="jm-stat-icon" style={{ background: '#191C6B12', color: '#191C6B' }}><i className="ti ti-briefcase" /></div>
-            </div>
-            <div className="jm-stat-count">{allJobs.length}</div>
-            <div className="jm-stat-label">Total Jobs</div>
-          </div>
-          <div className="jm-stat">
-            <div className="jm-stat-top">
-              <div className="jm-stat-icon" style={{ background: '#16a34a12', color: '#16a34a' }}><i className="ti ti-clock" /></div>
-            </div>
-            <div className="jm-stat-count">{activeJobs.length}</div>
-            <div className="jm-stat-label">Active</div>
-          </div>
-          <div className="jm-stat">
-            <div className="jm-stat-top">
-              <div className="jm-stat-icon" style={{ background: '#F59E0B12', color: '#F59E0B' }}><i className="ti ti-send" /></div>
-            </div>
-            <div className="jm-stat-count">{appliedList.length}</div>
-            <div className="jm-stat-label">Applied</div>
-          </div>
-          <div className="jm-stat">
-            <div className="jm-stat-top">
-              <div className="jm-stat-icon" style={{ background: '#8B5CF612', color: '#8B5CF6' }}><i className="ti ti-bookmark" /></div>
-            </div>
-            <div className="jm-stat-count">{savedList.length}</div>
-            <div className="jm-stat-label">Saved</div>
-          </div>
+          {monitorSummary ? (
+            <>
+              <div className="jm-stat">
+                <div className="jm-stat-top">
+                  <div className="jm-stat-icon" style={{ background: '#191C6B12', color: '#191C6B' }}><i className="ti ti-briefcase" /></div>
+                </div>
+                <div className="jm-stat-count">{monitorSummary.totalJobs}</div>
+                <div className="jm-stat-label">Total Jobs</div>
+              </div>
+              <div className="jm-stat">
+                <div className="jm-stat-top">
+                  <div className="jm-stat-icon" style={{ background: '#16a34a12', color: '#16a34a' }}><i className="ti ti-clock" /></div>
+                </div>
+                <div className="jm-stat-count">{monitorSummary.activeJobs}</div>
+                <div className="jm-stat-label">Active</div>
+              </div>
+              <div className="jm-stat">
+                <div className="jm-stat-top">
+                  <div className="jm-stat-icon" style={{ background: '#F59E0B12', color: '#F59E0B' }}><i className="ti ti-send" /></div>
+                </div>
+                <div className="jm-stat-count">{monitorSummary.totalSubmissions}</div>
+                <div className="jm-stat-label">Submissions</div>
+              </div>
+              <div className="jm-stat">
+                <div className="jm-stat-top">
+                  <div className="jm-stat-icon" style={{ background: '#DC262612', color: '#DC2626' }}><i className="ti ti-eye" /></div>
+                </div>
+                <div className="jm-stat-count">{monitorSummary.pendingReview}</div>
+                <div className="jm-stat-label">Pending Review</div>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="jm-stat">
+                <div className="jm-stat-top">
+                  <div className="jm-stat-icon" style={{ background: '#191C6B12', color: '#191C6B' }}><i className="ti ti-briefcase" /></div>
+                </div>
+                <div className="jm-stat-count">{allJobs.length}</div>
+                <div className="jm-stat-label">Total Jobs</div>
+              </div>
+              <div className="jm-stat">
+                <div className="jm-stat-top">
+                  <div className="jm-stat-icon" style={{ background: '#16a34a12', color: '#16a34a' }}><i className="ti ti-clock" /></div>
+                </div>
+                <div className="jm-stat-count">{activeJobs.length}</div>
+                <div className="jm-stat-label">Active</div>
+              </div>
+              <div className="jm-stat">
+                <div className="jm-stat-top">
+                  <div className="jm-stat-icon" style={{ background: '#F59E0B12', color: '#F59E0B' }}><i className="ti ti-send" /></div>
+                </div>
+                <div className="jm-stat-count">{appliedList.length}</div>
+                <div className="jm-stat-label">Applied</div>
+              </div>
+              <div className="jm-stat">
+                <div className="jm-stat-top">
+                  <div className="jm-stat-icon" style={{ background: '#8B5CF612', color: '#8B5CF6' }}><i className="ti ti-bookmark" /></div>
+                </div>
+                <div className="jm-stat-count">{savedList.length}</div>
+                <div className="jm-stat-label">Saved</div>
+              </div>
+            </>
+          )}
         </div>
 
         {/* Latest Job */}

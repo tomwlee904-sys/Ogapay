@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
 
 const API_BASE = 'https://ogapay-production.up.railway.app/api/v1'
@@ -44,6 +45,7 @@ function timeAgo(dateStr: string) {
 }
 
 export default function MyTasks() {
+  const navigate = useNavigate()
   const [tab, setTab] = useState('all')
   const [submissions, setSubmissions] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -130,7 +132,7 @@ export default function MyTasks() {
             const color = COLOR_MAP[s.status] || '#191C6B'
             const progress = PROGRESS_MAP[s.status] || 50
             return (
-              <div className="mt-item" key={s.id}>
+              <div className="mt-item" key={s.id} onClick={() => navigate('/tasks/' + (s.task?.id || s.taskId))} style={{cursor:'pointer'}}>
                 <div className="mt-icon" style={{background: `${color}15`, color}}>
                   <i className="ti ti-file-text" />
                 </div>
