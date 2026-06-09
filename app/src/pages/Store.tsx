@@ -334,7 +334,7 @@ function StorePage({ onViewProduct }: { onViewProduct: (product: any) => void })
                 <p style={S.cardDesc}>{p.description}</p>
                 <div style={S.sellerRow}>
                   <Avatar size={24} url={p.sellerAvatar} />
-                  <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--text2)' }}>{p.seller}</span>
+                  <span style={{ fontSize: 11, fontWeight: 500, color: "var(--accent)", cursor: "pointer", textDecoration: "underline" }} onClick={() => navigate("/messages?user=" + encodeURIComponent(p.seller))}>{p.seller}</span>
                   {p.reviewsCount > 0
                     ? <span style={{ marginLeft: 'auto' }}><Stars score={p.rating} size={11} /></span>
                     : <span style={S.newBadge}>New creator</span>
@@ -444,7 +444,7 @@ function ProductDetailPage({ product, onBack, onPurchase, refreshProducts }: { p
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
         <Avatar size={32} url={p.sellerAvatar} />
-        <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>{p.seller}</span>
+        <span style={{ fontSize: 13, fontWeight: 600, color: "var(--accent)", cursor: "pointer", textDecoration: "underline" }} onClick={() => navigate("/messages?user=" + encodeURIComponent(p.seller))}>{p.seller}</span>
         <span style={{ marginLeft: 'auto' }}><Stars score={p.rating} size={13} /></span>
         <span style={{ fontSize: 11, color: 'var(--text3)' }}>({p.reviewsCount} reviews)</span>
       </div>

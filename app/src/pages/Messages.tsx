@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from "react-router-dom"
 import Layout from '../components/Layout'
 import { apiRequest } from '../lib/api'
 import { useAuth } from '../context/AuthContext'
@@ -18,6 +18,7 @@ interface Message {
 
 export default function Messages() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const { isAuthed } = useAuth()
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [search, setSearch] = useState('')
@@ -49,7 +50,37 @@ export default function Messages() {
     } catch {} finally { setMsgLoading(false) }
   }, [])
 
-  useEffect(() => { fetchConversations() }, [fetchConversations])
+  useEffect(() => {
+    const initChat = async () => {
+      await fetchConversations()
+      const userParam = searchParams.get("user")
+      if (userParam) {
+        try {
+          const users = await apiRequest<any[]>(`/users/directory/list?search=${encodeURIComponent(userParam)}`)
+          if (Array.isArray(users) && users.length > 0) {
+            const target = users[0]
+            const existing = conversations.find(c =>
+              c.participants.some(p => p.id === target.id)
+            )
+            if (existing) {
+              setActiveConv(existing.id)
+            } else {
+              const msgRes = await apiRequest<any>("/messages", {
+                method: "POST",
+                body: JSON.stringify({ recipientId: target.id, content: "Hello! I am interested in your product." }),
+              })
+              if (msgRes?.id || msgRes?.data?.id) {
+                await fetchConversations()
+              }
+            }
+          }
+        } catch (e) {
+          console.log("Could not auto-start chat:", e)
+        }
+      }
+    }
+    initChat()
+  }, [fetchConversations, searchParams, conversations])
 
   // Polling for new messages in active conversation
   useEffect(() => {
@@ -93,7 +124,7 @@ export default function Messages() {
     } catch {
       // Try as username
       try {
-        const users = await apiRequest<any[]>('/users/search?q=' + encodeURIComponent(recipientInput.trim()))
+        const users = await apiRequest<any[]>('/users/directory/list?search=' + encodeURIComponent(recipientInput.trim()))
         if (Array.isArray(users) && users.length > 0) {
           await apiRequest('/messages', {
             method: 'POST',
