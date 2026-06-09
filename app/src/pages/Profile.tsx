@@ -593,6 +593,13 @@ export default function Profile() {
         </div>
       )}
 
+      {/* Back to Dashboard */}
+      <div style={{ marginBottom: 12 }}>
+        <button onClick={() => navigate('/dashboard')} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 700, color: 'var(--text2)', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'inherit' }}>
+          <i className="ti ti-arrow-left" style={{ fontSize: 14 }} /> Back to Dashboard
+        </button>
+      </div>
+
       {/* Tab Bar */}
       <div className="tab-bar">
         {tabs.map(t => (
