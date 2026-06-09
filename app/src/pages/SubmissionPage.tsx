@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { API_BASE, getAccessToken, getStoredUser } from '../lib/api'
+import { uploadImage } from '../lib/upload'
 
 const OGAPAY_BLUE = '#191C6B'
 const OGAPAY_BLUE_LIGHT = '#191C6B'
@@ -115,16 +116,30 @@ export default function SubmissionPage() {
       const applyJson = await applyRes.json()
       if (!applyRes.ok) throw new Error(applyJson.message || 'Failed to apply')
 
-      // 2. Submit with proof using FormData
-      const formData = new FormData()
-      if (comment.trim()) formData.append('workerNotes', comment.trim())
-      if (link.trim()) formData.append('proof', link.trim())
-      files.forEach(f => formData.append('attachments', f))
+      // 2. Upload files to ImageKit first, then submit URLs
+      const uploadedUrls: string[] = []
+      if (files.length > 0) {
+        for (const f of files) {
+          try {
+            const url = await uploadImage(f, 'task-proofs')
+            uploadedUrls.push(url)
+          } catch (uploadErr: any) {
+            setError('Failed to upload ' + f.name + ': ' + (uploadErr.message || 'Upload error'))
+            setSubmitting(false)
+            return
+          }
+        }
+      }
+
+      const submitBody: Record<string, any> = {}
+      if (comment.trim()) submitBody.workerNotes = comment.trim()
+      if (link.trim()) submitBody.proof = link.trim()
+      if (uploadedUrls.length > 0) submitBody.attachments = uploadedUrls
 
       const submitRes = await fetch(API_BASE + '/tasks/' + id + '/submit', {
         method: 'POST',
-        headers: { 'Authorization': 'Bearer ' + token },
-        body: formData,
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify(submitBody),
       })
       const submitJson = await submitRes.json()
       if (!submitRes.ok) throw new Error(submitJson.message || 'Failed to submit')
