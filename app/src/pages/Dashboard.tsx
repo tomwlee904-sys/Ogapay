@@ -258,7 +258,7 @@ export default function OgaPayDashboard() {
   const twitterConnected = metrics.twitterConnected ?? false;
 
   const step1Done = !!(fname && lname && isEmailVerified);
-  const step2Done = !!walletConnected;
+  const step2Done = !!walletConnected || bankSaved;
   const step3Done = communityJoined || twitterConnected;
   const step4Done = completedTasks > 0;
   const stepsDone = [step1Done, step2Done, step3Done, step4Done];
@@ -515,8 +515,7 @@ export default function OgaPayDashboard() {
             </div>
 
             {/* ── STEP 2: WALLET ── */}
-            {step1Done && (
-            <div className={`${step2Done ? "dash-step-locked" : ""}`}>
+            <div className={`${!step1Done || step2Done ? "dash-step-locked" : ""}`}>
             <div className="dash-section-title">
               <Icon n="circle-filled" s={8} /> STEP 2: CONNECT YOUR WALLET
             </div>
@@ -568,11 +567,9 @@ export default function OgaPayDashboard() {
               </div>
             </div>
             </div>
-            )}
 
             {/* ── STEP 3: COMMUNITY ── */}
-            {step2Done && (
-            <div className={`${step3Done ? "dash-step-locked" : ""}`}>
+            <div className={`${!step2Done || step3Done ? "dash-step-locked" : ""}`}>
             <div className="dash-section-title">
               <Icon n="circle-filled" s={8} /> STEP 3: JOIN THE COMMUNITY
             </div>
@@ -609,11 +606,9 @@ export default function OgaPayDashboard() {
               )}
             </div>
             </div>
-            )}
 
             {/* ── STEP 4: FIRST TASK ── */}
-            {step3Done && (
-            <div className={`${step4Done ? "dash-step-locked" : ""}`}>
+            <div className={`${!step3Done || step4Done ? "dash-step-locked" : ""}`}>
             <div className="dash-section-title">
               <Icon n="circle-filled" s={8} /> STEP 4: COMPLETE YOUR FIRST TASK
             </div>
@@ -639,7 +634,6 @@ export default function OgaPayDashboard() {
               )}
             </div>
             </div>
-            )}
 
             {/* ── SETUP CHECKLIST ── */}
             <div className="dash-checklist" style={{ display: "none" }}>
