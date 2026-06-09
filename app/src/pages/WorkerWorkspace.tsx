@@ -13,12 +13,12 @@ const WORKSPACES: Record<string, { label: string; icon: string; desc: string; co
 }
 
 const CATEGORY_MAP: Record<string, string> = {
-  social: 'Social',
-  writing: 'Content',
-  design: 'Design',
-  testing: 'Testing',
-  research: 'Research',
-  development: 'Development',
+  social: 'SOCIAL_MEDIA',
+  writing: 'CONTENT_WRITING',
+  design: 'DESIGN',
+  testing: 'APP_TESTING',
+  research: 'WEB_RESEARCH',
+  development: 'OTHER',
 }
 
 const SUBCATEGORIES: Record<string, string[]> = {
@@ -125,11 +125,15 @@ export default function WorkerWorkspace() {
           const catSubs = submissions.filter((s: any) => {
             const t = s.task || s
             const cat = t.category || ''
-            return cat.toLowerCase() === apiCategory.toLowerCase()
+            return cat.toUpperCase() === apiCategory.toUpperCase() ||
+       cat.toUpperCase().replace(/[_\s]/g, '') === apiCategory.toUpperCase().replace(/[_\s]/g, '')
           })
           setMyCompletions(catSubs.length)
         }
-      } catch { setError('Failed to load tasks') }
+      } catch (e) {
+        console.error('[WorkerWorkspace] Failed to load tasks:', e)
+        setError('Failed to load tasks. Please try again.')
+      }
       setLoading(false)
     }
 
