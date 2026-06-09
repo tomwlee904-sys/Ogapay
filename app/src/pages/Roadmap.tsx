@@ -7,7 +7,7 @@ const Icon = ({ n, s = 18, c }) => (
 
 const phases = [
   {
-    title: "Phase 1 — Launch",
+    title: "Phase 1 — Foundation",
     status: "done",
     items: [
       "User registration & login (email + Google OAuth)",
@@ -20,7 +20,7 @@ const phases = [
   },
   {
     title: "Phase 2 — Growth",
-    status: "active",
+    status: "done",
     items: [
       "KYC/BVN verification for enhanced trust",
       "Real-time wallet balance & transaction history",
@@ -31,19 +31,31 @@ const phases = [
     ],
   },
   {
-    title: "Phase 3 — Marketplace",
-    status: "upcoming",
+    title: "Phase 3 — Marketplace & Multi-Currency",
+    status: "done",
     items: [
       "Store / Service marketplace launch",
       "Escrow payment system for task rewards",
       "Multi-currency support (NGN, USDC, SOL)",
-      "Seller verification & rating system",
-      "Dispute resolution system",
-      "Advanced analytics for posters",
+      "Web3 wallet integration (Phantom, Backpack, Solflare)",
+      "Cryptocurrency deposits via x402 protocol",
+      "SOL → USDC auto-swap via Jupiter API",
     ],
   },
   {
-    title: "Phase 4 — AI & Automation",
+    title: "Phase 4 — Payments & Platform",
+    status: "active",
+    items: [
+      "NGN deposits via Paystack & Flutterwave",
+      "Withdrawals to bank accounts & crypto wallets",
+      "Tabbed deposit flow (Crypto vs Bank)",
+      "FundWalletModal with inline wallet connection",
+      "Cashback rewards program",
+      "Subscription membership tiers",
+    ],
+  },
+  {
+    title: "Phase 5 — AI & Automation",
     status: "upcoming",
     items: [
       "AI agent integration via REST API",
@@ -51,11 +63,11 @@ const phases = [
       "AI-powered content verification",
       "Smart contract-based escrow on Solana",
       "Mobile app (iOS & Android)",
-      "Web3 wallet integration (Phantom, Backpack)",
+      "Advanced analytics for posters",
     ],
   },
   {
-    title: "Phase 5 — Scale",
+    title: "Phase 6 — Scale",
     status: "upcoming",
     items: [
       "International expansion (Ghana, Kenya, South Africa)",

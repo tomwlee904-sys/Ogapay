@@ -18,6 +18,8 @@ export default function Sidebar() {
         <a className="sidebar-link" href="/communities"><i className="ti ti-users" /> Communities</a>
         <a className="sidebar-link" href="/earnings"><i className="ti ti-coin" /> Earnings</a>
         <a className="sidebar-link" href="/leaderboard"><i className="ti ti-trophy" /> Leaderboard</a>
+        <a className="sidebar-link" href="/campaigns"><i className="ti ti-megaphone" /> Campaigns</a>
+        <a className="sidebar-link" href="/roadmap"><i className="ti ti-map-pin" /> Roadmap</a>
 
         <div className="sidebar-section">Finance</div>
         <a className="sidebar-link" href="/wallet"><i className="ti ti-wallet" /> Wallet</a>
