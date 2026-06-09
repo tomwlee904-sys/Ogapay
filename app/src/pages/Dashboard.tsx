@@ -168,6 +168,7 @@ export default function OgaPayDashboard() {
   const [bankName, setBankName] = useState("");
   const [savingBank, setSavingBank] = useState(false);
   const [bankSaved, setBankSaved] = useState(false);
+  const [twitterAuthenticating, setTwitterAuthenticating] = useState(false);
 
   const [isNew, setIsNew] = useState(() => {
     if (!user?.createdAt) return false;
@@ -254,10 +255,11 @@ export default function OgaPayDashboard() {
   const activeTasks = metrics.activeTasks ?? 0;
   const completedTasks = metrics.completedTasks ?? 0;
   const walletConnected = metrics.walletConnected ?? false;
+  const twitterConnected = metrics.twitterConnected ?? false;
 
   const step1Done = !!(fname && lname && isEmailVerified);
   const step2Done = !!walletConnected;
-  const step3Done = communityJoined;
+  const step3Done = communityJoined || twitterConnected;
   const step4Done = completedTasks > 0;
   const stepsDone = [step1Done, step2Done, step3Done, step4Done];
   const completed = stepsDone.filter(Boolean).length;
@@ -311,6 +313,48 @@ export default function OgaPayDashboard() {
     }
     setConnecting(null);
   }
+
+  async function connectTwitter() {
+    setTwitterAuthenticating(true);
+    try {
+      const res = await apiRequest<{ authUrl: string }>('/twitter/init', { method: 'POST' });
+      if (res?.authUrl) {
+        window.location.href = res.authUrl;
+      }
+    } catch (e) {
+      setTwitterAuthenticating(false);
+      const el = document.getElementById('appToast');
+      if (el) {
+        el.textContent = 'Failed to start Twitter connection';
+        el.classList.add('show');
+        setTimeout(() => el.classList.remove('show'), 3000);
+      }
+    }
+  }
+
+  // Check for Twitter OAuth success on mount/focus
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('twitter') === 'connected') {
+      // Clean URL and refetch dashboard
+      window.history.replaceState({}, '', window.location.pathname);
+      // Trigger refetch
+      const el = document.getElementById('appToast');
+      if (el) {
+        el.textContent = 'Twitter connected successfully!';
+        el.classList.add('show');
+        setTimeout(() => el.classList.remove('show'), 4000);
+      }
+      // Refetch dashboard data
+      const refetch = async () => {
+        try {
+          const summary = await apiRequest<any>('/dashboard/summary');
+          if (summary) setSummaryData(summary);
+        } catch {}
+      };
+      refetch();
+    }
+  }, []);
 
   async function saveBank() {
     if (!bankAccount || bankAccount.length < 10 || !bankName) return;
@@ -539,14 +583,22 @@ export default function OgaPayDashboard() {
               <div className="dash-provider-grid">
                 {[
                   { id: "telegram", label: "Telegram", icon: "brand-telegram", href: "https://t.me/ogapay" },
-                  { id: "x", label: "X (Twitter)", icon: "brand-x", href: "https://x.com/ogapay_ng" },
+                  { id: "x", label: "X (Twitter)", icon: "brand-x", connect: true },
+                  { id: "facebook", label: "Facebook", icon: "brand-facebook", href: "https://www.facebook.com/share/18bRPkuPVy/" },
                   { id: "discord", label: "Discord", icon: "brand-discord", href: "https://discord.gg/ogapay" },
-                ].map(p => (
-                  <a key={p.id} href={p.href} target="_blank" rel="noopener noreferrer" className="dash-provider">
-                    <div className="dash-provider-icon"><Icon n={p.icon} s={20} /></div>
-                    <span>{p.label}</span>
-                  </a>
-                ))}
+                ].map(p =>
+                  p.connect ? (
+                    <button key={p.id} onClick={connectTwitter} disabled={twitterAuthenticating} className="dash-provider" style={{ border: '1.5px solid var(--border)', borderRadius: 10, background: 'var(--card)', cursor: twitterAuthenticating ? 'default' : 'pointer', fontFamily: 'inherit', fontSize: 11, fontWeight: 700, padding: '14px 8px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, opacity: twitterAuthenticating ? 0.6 : 1 }}>
+                      <div className="dash-provider-icon"><Icon n={p.icon} s={20} /></div>
+                      <span>{twitterAuthenticating ? 'Connecting...' : p.label}</span>
+                    </button>
+                  ) : (
+                    <a key={p.id} href={p.href} target="_blank" rel="noopener noreferrer" className="dash-provider">
+                      <div className="dash-provider-icon"><Icon n={p.icon} s={20} /></div>
+                      <span>{p.label}</span>
+                    </a>
+                  )
+                )}
               </div>
               {step3Done ? (
                 <div className="dash-success-msg"><Icon n="check" s={12} /> Community Joined</div>
@@ -691,7 +743,7 @@ export default function OgaPayDashboard() {
             </div>
 
             <div className="dash-links-title">RESOURCE LINKS</div>
-            <a href="https://x.com/ogapay_ng" target="_blank" rel="noopener noreferrer" className="dash-rlink">
+            <a href="https://x.com/Ogapayhq" target="_blank" rel="noopener noreferrer" className="dash-rlink">
               <Icon n="brand-x" s={14} /> Our Twitter <Icon n="arrow-up-right" s={12} style={{ marginLeft: "auto" }} />
             </a>
             <a href="/support" className="dash-rlink">

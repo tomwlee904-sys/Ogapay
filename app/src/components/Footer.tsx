@@ -16,9 +16,10 @@ function LogoMark({ size = 26 }: { size?: number }) {
 }
 
 const footerSocialLinks: Record<string, string> = {
-  "brand-x": "https://x.com/ogapay",
+  "brand-x": "https://x.com/Ogapayhq",
   "brand-telegram": "https://t.me/ogapay",
-  "brand-instagram": "https://instagram.com/ogapay",
+  "brand-instagram": "https://instagram.com/ogapayhq?igsh=ajJrZzJ3Z2tjMXZm",
+  "brand-facebook": "https://www.facebook.com/share/18bRPkuPVy/",
   "brand-tiktok": "https://tiktok.com/@ogapay"
 }
 
