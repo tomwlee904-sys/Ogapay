@@ -262,6 +262,10 @@ export default function OgaPayDashboard() {
         if (resp?.publicKey) {
           const addr = resp.publicKey.toString();
           setWalletAddress(addr);
+          await apiRequest("/users/me", {
+            method: "PATCH",
+            body: JSON.stringify({ walletAddress: addr }),
+          });
         }
       }
     } catch (e) {
