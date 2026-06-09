@@ -67,18 +67,19 @@ export default function BlogEditor() {
   // Load existing post for editing
   useEffect(() => {
     if (!id) return
-    apiRequest<PostData[]>('/blog/user/mine')
-      .then(posts => {
-        const post = posts.find(p => p.id === parseInt(id))
+    apiRequest<any>('/blog/user/mine')
+      .then(data => {
+        const list = data?.posts || data?.data || (Array.isArray(data) ? data : [])
+        const post = list.find((p: any) => p.id === id)
         if (post) {
           setForm({
             title: post.title,
-            category: post.category,
-            body: post.body,
+            category: post.category || 'News',
+            body: post.content || post.body || '',
             coverColor: post.coverColor || '#534AB7',
-            coverImage: (post as any).coverImage || '',
-            tags: post.tags,
-            status: post.status,
+            coverImage: post.coverImage || '',
+            tags: Array.isArray(post.tags) ? post.tags.join(', ') : post.tags || '',
+            status: post.isPublished ? 'published' : 'draft',
           })
         } else {
           setError('Post not found')

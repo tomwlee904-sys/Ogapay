@@ -212,6 +212,83 @@ function ReferralsTab({ initialStats }: { initialStats?: any }) {
   );
 }
 
+function MyBlogTab() {
+  const [posts, setPosts] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [deleting, setDeleting] = useState<string | null>(null)
+  const navigate = useNavigate()
+
+  const loadPosts = async () => {
+    setLoading(true)
+    try {
+      const data = await apiRequest<any>('/blog/user/mine')
+      setPosts(data.posts || data.data || (Array.isArray(data) ? data : []))
+    } catch { setPosts([]) }
+    setLoading(false)
+  }
+
+  useEffect(() => { loadPosts() }, [])
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Delete this post?')) return
+    setDeleting(id)
+    try {
+      await apiRequest(`/blog/user/${id}`, { method: 'DELETE' })
+      setPosts(p => p.filter(x => x.id !== id))
+    } catch {}
+    setDeleting(null)
+  }
+
+  return (
+    <div className="sub-page">
+      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:16}}>
+        <div className="page-head-sm"><Icon n="file-text" s={20} /><h2>My Blog Posts</h2></div>
+        <button onClick={() => navigate('/blog/write')} style={{height:36,padding:'0 16px',borderRadius:8,border:'none',background:'#191C6B',color:'#fff',fontSize:12,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',gap:6,fontFamily:'inherit'}}>
+          <Icon n="plus" s={14} c="#fff" /> New Post
+        </button>
+      </div>
+      {loading ? (
+        <div className="loading"><span className="spinner" /> Loading...</div>
+      ) : posts.length === 0 ? (
+        <div className="card card-sm" style={{textAlign:'center',padding:'48px 20px',color:'var(--text3)',fontSize:13}}>
+          <Icon n="file-text" s={32} c="var(--text3)" />
+          <div style={{marginTop:12}}>No blog posts yet</div>
+          <button onClick={() => navigate('/blog/write')} style={{marginTop:12,height:36,padding:'0 16px',borderRadius:8,border:'1px solid var(--border)',background:'transparent',color:'var(--text)',fontSize:12,fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>
+            Write your first post
+          </button>
+        </div>
+      ) : (
+        <div style={{display:'grid',gap:8}}>
+          {posts.map((p: any) => (
+            <div className="card card-sm" key={p.id} style={{padding:'14px 18px',display:'flex',alignItems:'center',gap:12}}>
+              <Icon n={p.isPublished ? 'check-circle' : 'edit'} s={18} c={p.isPublished ? '#16a34a' : '#f59e0b'} />
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontWeight:600,fontSize:13,display:'flex',alignItems:'center',gap:8}}>
+                  {p.title || 'Untitled'}
+                  <span style={{fontSize:10,fontWeight:600,padding:'1px 8px',borderRadius:99,background:p.isPublished ? '#16a34a18' : '#f59e0b18',color:p.isPublished ? '#16a34a' : '#f59e0b'}}>
+                    {p.isPublished ? 'Published' : 'Draft'}
+                  </span>
+                </div>
+                <div style={{fontSize:11,color:'var(--text3)',marginTop:2}}>
+                  {p.category && `${p.category} · `}{p.viewCount || 0} views · {p.createdAt ? new Date(p.createdAt).toLocaleDateString() : ''}
+                </div>
+              </div>
+              <div style={{display:'flex',gap:6}}>
+                <button onClick={() => navigate(`/blog/write/${p.id}`)} style={{height:30,padding:'0 10px',borderRadius:6,border:'1px solid var(--border)',background:'transparent',color:'var(--text2)',fontSize:11,fontWeight:600,cursor:'pointer',display:'flex',alignItems:'center',gap:4,fontFamily:'inherit'}}>
+                  <Icon n="edit" s={12} /> Edit
+                </button>
+                <button onClick={() => handleDelete(p.id)} disabled={deleting === p.id} style={{height:30,padding:'0 10px',borderRadius:6,border:'1px solid #fca5a5',background:'transparent',color:'#dc2626',fontSize:11,fontWeight:600,cursor:'pointer',display:'flex',alignItems:'center',gap:4,fontFamily:'inherit'}}>
+                  {deleting === p.id ? '...' : <><Icon n="trash" s={12} /> Delete</>}
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 function AlertsTab() {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -488,6 +565,7 @@ export default function Profile() {
     { id: "referrals", label: "Referrals", icon: "users" },
     { id: "alerts", label: "Alerts", icon: "bell" },
     { id: "portal", label: "Worker Portal", icon: "layout-dashboard" },
+    { id: "blog", label: "My Blog", icon: "file-text" },
   ];
 
   // Navigate for subpages
@@ -502,6 +580,7 @@ export default function Profile() {
   if (tab === "jobs") { navigate('/manage-jobs'); return null; }
   if (tab === "referrals") return <Layout><div className="pg"><ReferralsTab initialStats={referralStats} /></div></Layout>;
   if (tab === "alerts") return <Layout><div className="pg"><AlertsTab /></div></Layout>;
+  if (tab === "blog") return <Layout><div className="pg"><MyBlogTab /></div></Layout>;
   if (tab === "portal") { navigate('/worker-portal'); return null; }
 
   return (
