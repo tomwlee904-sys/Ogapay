@@ -173,6 +173,17 @@ export default function OgaPayDashboard() {
 
   useEffect(() => { injectSkeletonStyles(); }, []);
 
+  // Detect installed Solana wallets immediately (not waiting for API calls)
+  useEffect(() => {
+    const found: string[] = [];
+    if (typeof window !== "undefined") {
+      if ((window as any).phantom?.solana?.isPhantom) found.push("phantom");
+      if ((window as any).backpack?.isBackpack) found.push("backpack");
+      if ((window as any).solflare?.isSolflare) found.push("solflare");
+    }
+    setDetectedWallets(found);
+  }, []);
+
   useEffect(() => {
     async function loadDashboard() {
       setDashLoading(true);
@@ -207,14 +218,6 @@ export default function OgaPayDashboard() {
           }
         } catch (_) {}
 
-        // Detect installed Solana wallets
-        const found: string[] = [];
-        if (typeof window !== "undefined") {
-          if ((window as any).phantom?.solana?.isPhantom) found.push("phantom");
-          if ((window as any).backpack?.isBackpack) found.push("backpack");
-          if ((window as any).solflare?.isSolflare) found.push("solflare");
-        }
-        setDetectedWallets(found);
       } catch (e) {
         const el = document.getElementById('appToast')
         if (el) { el.textContent = 'Could not load dashboard data'; el.classList.add('show'); setTimeout(() => el.classList.remove('show'), 3000) }
