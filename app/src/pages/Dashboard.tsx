@@ -444,7 +444,7 @@ export default function OgaPayDashboard() {
 
             {/* ── STEP 2: WALLET ── */}
             {step1Done && (
-            <div className={`${step2Done ? "" : "dash-step-locked"}`}>
+            <div className={`${step2Done ? "dash-step-locked" : ""}`}>
             <div className="dash-section-title">
               <Icon n="circle-filled" s={8} /> STEP 2: CONNECT YOUR WALLET
             </div>
@@ -486,7 +486,7 @@ export default function OgaPayDashboard() {
 
             {/* ── STEP 3: COMMUNITY ── */}
             {step2Done && (
-            <div className={`${step3Done ? "" : "dash-step-locked"}`}>
+            <div className={`${step3Done ? "dash-step-locked" : ""}`}>
             <div className="dash-section-title">
               <Icon n="circle-filled" s={8} /> STEP 3: JOIN THE COMMUNITY
             </div>
@@ -519,7 +519,7 @@ export default function OgaPayDashboard() {
 
             {/* ── STEP 4: FIRST TASK ── */}
             {step3Done && (
-            <div className={`${step4Done ? "" : "dash-step-locked"}`}>
+            <div className={`${step4Done ? "dash-step-locked" : ""}`}>
             <div className="dash-section-title">
               <Icon n="circle-filled" s={8} /> STEP 4: COMPLETE YOUR FIRST TASK
             </div>
