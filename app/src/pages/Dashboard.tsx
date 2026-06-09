@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Layout from "../components/Layout";
 import { useAuth } from "../context/AuthContext";
 import { apiRequest } from "../lib/api";
+import bs58 from "bs58";
 import { SkeletonPage, injectSkeletonStyles } from "../components/SkeletonLoader";
 
 const ACCENT = "#191C6B";
@@ -257,19 +258,41 @@ export default function OgaPayDashboard() {
       if (id === "phantom") wallet = (window as any).phantom?.solana;
       else if (id === "backpack") wallet = (window as any).backpack;
       else if (id === "solflare") wallet = (window as any).solflare;
-      if (wallet?.connect) {
-        const resp = await wallet.connect();
-        if (resp?.publicKey) {
-          const addr = resp.publicKey.toString();
-          setWalletAddress(addr);
-          await apiRequest("/users/me", {
-            method: "PATCH",
-            body: JSON.stringify({ walletAddress: addr }),
-          });
-        }
+      if (!wallet?.connect) { setConnecting(null); return; }
+
+      // Step 1: Connect wallet — get public key
+      const resp = await wallet.connect();
+      const pubKey = resp?.publicKey?.toString();
+      if (!pubKey) throw new Error("No public key");
+
+      // Step 2: Request a nonce from the backend
+      const nonceRes = await apiRequest<{ nonce: string; message: string }>("/wallet/nonce", {
+        method: "POST",
+        body: JSON.stringify({ wallet: pubKey }),
+      });
+      if (!nonceRes?.nonce) throw new Error("No nonce received");
+
+      // Step 3: Sign the message with the wallet
+      const encodedMessage = new TextEncoder().encode(nonceRes.message);
+      const signedResult = await wallet.signMessage(encodedMessage);
+      const signatureBytes = signedResult?.signature ?? signedResult;
+      const signature = bs58.encode(signatureBytes);
+
+      // Step 4: Submit signature for verification
+      await apiRequest("/wallet/verify", {
+        method: "POST",
+        body: JSON.stringify({ wallet: pubKey, signature }),
+      });
+
+      setWalletAddress(pubKey);
+    } catch (e: any) {
+      console.error("Wallet verification failed", e);
+      const el = document.getElementById("appToast");
+      if (el) {
+        el.textContent = e?.message || "Wallet verification failed";
+        el.classList.add("show");
+        setTimeout(() => el.classList.remove("show"), 3000);
       }
-    } catch (e) {
-      console.error("Wallet connect failed", e);
     }
     setConnecting(null);
   }
