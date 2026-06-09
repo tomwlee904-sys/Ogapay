@@ -92,29 +92,6 @@ export default function FundWalletModal({ onClose, onDone, initialStep }: Props)
     return null;
   }
 
-  // ─── Wallet address entered → estimate crypto deposit ───
-  async function handleEstimate() {
-    const amt = parseFloat(amountUsdc);
-    if (!amt || amt <= 0) { setError('Enter a valid amount'); return; }
-    if (!/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(walletAddr.trim())) {
-      setError('Invalid Solana wallet address'); return;
-    }
-    setError('');
-    setEstimating(true);
-    try {
-      const data = await apiRequest<any>('/wallet/fund/estimate', {
-        method: 'POST',
-        body: JSON.stringify({ amount: amt, userWallet: walletAddr.trim() }),
-      });
-      setEstimate(data);
-      if (data?.needsSwap && data?.quote) setStep('swap');
-      else setStep('sign');
-    } catch (e: any) {
-      setError(e.message || 'Estimation failed');
-    }
-    setEstimating(false);
-  }
-
   async function handleSwap() {
     const wallet = getWallet();
     if (!wallet || !estimate?.quote) return;
@@ -243,28 +220,6 @@ export default function FundWalletModal({ onClose, onDone, initialStep }: Props)
     setWdSubmitting(false);
   }
 
-  // ─── Entry: user fills wallet OR bank, branches accordingly ───
-  function handleContinue() {
-    setError('');
-    const walletTrimmed = walletAddr.trim();
-    const hasWallet = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(walletTrimmed);
-    const hasBank = ngnAccount.length >= 10 && ngnBank.trim().length > 0;
-
-    if (hasWallet && hasBank) {
-      setError('Fill in either wallet address OR bank details, not both');
-      return;
-    }
-    if (hasWallet) {
-      setStep('estimate');
-      return;
-    }
-    if (hasBank) {
-      setStep('ngnOptions');
-      return;
-    }
-    setError('Enter a wallet address or bank account number to continue');
-  }
-
   // ─── Render helpers ───
   function renderHeader(title: string) {
     return (
@@ -296,58 +251,89 @@ export default function FundWalletModal({ onClose, onDone, initialStep }: Props)
   }
 
   // ═══════════════════════════════════════════════════
-  //  STEP: select — entry form (wallet OR bank)
+  //  STEP: select — tabbed entry (Crypto OR Bank)
   // ═══════════════════════════════════════════════════
+  const [entryTab, setEntryTab] = useState<'crypto' | 'bank'>('crypto');
   if (step === 'select') {
+    const tabStyle = (active: boolean): React.CSSProperties => ({
+      ...BTN, flex: 1, justifyContent: 'center', borderRadius: 9,
+      background: active ? 'var(--text)' : 'transparent',
+      color: active ? 'var(--bg)' : 'var(--text2)',
+      border: active ? 'none' : '1.5px solid var(--border)',
+    });
     return (
       <div style={MODAL_STYLE} onClick={onClose}>
         <div style={INNER_STYLE} onClick={e => e.stopPropagation()}>
           {renderHeader('Fund Wallet')}
           {renderError()}
-          <p style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.6, marginBottom: 16 }}>
-            Enter your Solana wallet address <strong>or</strong> your Nigerian bank account to fund your OgaPay wallet.
-          </p>
-          <div style={{ marginBottom: 16 }}>
-            <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--text3)', marginBottom: 4 }}>Solana Wallet Address</label>
-            <input style={INPUT} placeholder="5RrYLh..." value={walletAddr} onChange={e => setWalletAddr(e.target.value)} />
-          </div>
-          <div style={{ textAlign: 'center', fontSize: 11, fontWeight: 700, color: 'var(--text3)', marginBottom: 12, letterSpacing: '.1em', textTransform: 'uppercase' }}>— Or —</div>
-          <div style={{ marginBottom: 12 }}>
-            <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--text3)', marginBottom: 4 }}>Account Number</label>
-            <input style={INPUT} placeholder="0123456789" maxLength={10} value={ngnAccount} onChange={e => setNgnAccount(e.target.value.replace(/\D/g, '').slice(0, 10))} />
-          </div>
-          <div style={{ marginBottom: 20 }}>
-            <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--text3)', marginBottom: 4 }}>Bank Name</label>
-            <input style={INPUT} placeholder="Access Bank" value={ngnBank} onChange={e => setNgnBank(e.target.value)} />
-          </div>
-          <button style={{ ...BTN, background: 'var(--text)', color: 'var(--bg)', width: '100%' }} onClick={handleContinue}>
-            Continue
-          </button>
-        </div>
-      </div>
-    );
-  }
 
-  // ═══════════════════════════════════════════════════
-  //  STEP: estimate — crypto deposit amount
-  // ═══════════════════════════════════════════════════
-  if (step === 'estimate') {
-    return (
-      <div style={MODAL_STYLE} onClick={onClose}>
-        <div style={INNER_STYLE} onClick={e => e.stopPropagation()}>
-          {renderHeader('Deposit USDC')}
-          {renderError()}
-          <p style={{ fontSize: 13, color: 'var(--text2)', marginBottom: 12 }}>Amount to deposit from your wallet <span style={{ fontFamily: 'monospace', fontSize: 11 }}>{walletAddr.slice(0, 8)}...</span></p>
-          <div style={{ marginBottom: 16 }}>
-            <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--text3)', marginBottom: 4 }}>Amount (USDC)</label>
-            <input style={INPUT} type="number" step="0.01" min="0" placeholder="10.00" value={amountUsdc} onChange={e => setAmountUsdc(e.target.value)} />
-          </div>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <button style={{ ...BTN, background: 'transparent', border: '1.5px solid var(--border)', color: 'var(--text2)', flex: 1 }} onClick={() => setStep('select')}>Back</button>
-            <button style={{ ...BTN, background: 'var(--text)', color: 'var(--bg)', flex: 1, opacity: estimating ? 0.6 : 1 }} disabled={estimating} onClick={handleEstimate}>
-              {estimating ? <><span className="spinner" style={{ width: 14, height: 14, borderWidth: 2 }} /> Checking...</> : 'Continue'}
+          <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
+            <button style={tabStyle(entryTab === 'crypto')} onClick={() => setEntryTab('crypto')}>
+              <i className="ti ti-currency-dollar" /> Crypto (USDC)
+            </button>
+            <button style={tabStyle(entryTab === 'bank')} onClick={() => setEntryTab('bank')}>
+              <i className="ti ti-building-bank" /> Bank (NGN)
             </button>
           </div>
+
+          {entryTab === 'crypto' ? (
+            <>
+              <p style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.6, marginBottom: 16 }}>
+                Deposit USDC from your Solana wallet. Enter your wallet address and the amount.
+              </p>
+              <div style={{ marginBottom: 16 }}>
+                <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--text3)', marginBottom: 4 }}>Solana Wallet Address</label>
+                <input style={INPUT} placeholder="5RrYLh..." value={walletAddr} onChange={e => { setWalletAddr(e.target.value); setError(''); }} />
+              </div>
+              <div style={{ marginBottom: 20 }}>
+                <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--text3)', marginBottom: 4 }}>Amount (USDC)</label>
+                <input style={INPUT} type="number" step="0.01" min="0" placeholder="10.00" value={amountUsdc} onChange={e => { setAmountUsdc(e.target.value); setError(''); }} />
+              </div>
+              <button style={{ ...BTN, background: 'var(--text)', color: 'var(--bg)', width: '100%', justifyContent: 'center', opacity: estimating ? 0.6 : 1 }} disabled={estimating}
+                onClick={async () => {
+                  if (!/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(walletAddr.trim())) { setError('Invalid Solana wallet address'); return; }
+                  if (!parseFloat(amountUsdc) || parseFloat(amountUsdc) <= 0) { setError('Enter a valid amount'); return; }
+                  setError(''); setEstimating(true);
+                  try {
+                    const data = await apiRequest<any>('/wallet/fund/estimate', {
+                      method: 'POST', body: JSON.stringify({ amount: parseFloat(amountUsdc), userWallet: walletAddr.trim() }),
+                    });
+                    setEstimate(data);
+                    if (data?.needsSwap && data?.quote) setStep('swap'); else setStep('sign');
+                  } catch (e: any) { setError(e.message || 'Estimation failed'); }
+                  setEstimating(false);
+                }}>
+                {estimating ? <><span className="spinner" style={{ width: 14, height: 14, borderWidth: 2 }} /> Checking...</> : 'Continue'}
+              </button>
+            </>
+          ) : (
+            <>
+              <p style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.6, marginBottom: 16 }}>
+                Deposit Naira via bank transfer, card, or USSD using Paystack or Flutterwave.
+              </p>
+              <div style={{ marginBottom: 12 }}>
+                <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--text3)', marginBottom: 4 }}>Account Number</label>
+                <input style={INPUT} placeholder="0123456789" maxLength={10} value={ngnAccount} onChange={e => { setNgnAccount(e.target.value.replace(/\D/g, '').slice(0, 10)); setError(''); }} />
+              </div>
+              <div style={{ marginBottom: 12 }}>
+                <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--text3)', marginBottom: 4 }}>Bank Name</label>
+                <input style={INPUT} placeholder="Access Bank" value={ngnBank} onChange={e => { setNgnBank(e.target.value); setError(''); }} />
+              </div>
+              <div style={{ marginBottom: 20 }}>
+                <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--text3)', marginBottom: 4 }}>Amount (NGN)</label>
+                <input style={INPUT} type="number" step="100" min="100" placeholder="1000" value={ngnAmount} onChange={e => { setNgnAmount(e.target.value); setError(''); }} />
+              </div>
+              <button style={{ ...BTN, background: 'var(--text)', color: 'var(--bg)', width: '100%', justifyContent: 'center' }}
+                onClick={() => {
+                  if (!ngnAccount || ngnAccount.length < 10) { setError('Enter a valid 10-digit account number'); return; }
+                  if (!ngnBank.trim()) { setError('Enter your bank name'); return; }
+                  if (!parseFloat(ngnAmount) || parseFloat(ngnAmount) < 100) { setError('Minimum deposit is ₦100'); return; }
+                  setStep('ngnOptions');
+                }}>
+                Continue
+              </button>
+            </>
+          )}
         </div>
       </div>
     );
@@ -383,7 +369,7 @@ export default function FundWalletModal({ onClose, onDone, initialStep }: Props)
             </div>
           )}
           <div style={{ display: 'flex', gap: 8 }}>
-            <button style={{ ...BTN, background: 'transparent', border: '1.5px solid var(--border)', color: 'var(--text2)', flex: 1 }} onClick={() => setStep('estimate')}>Back</button>
+            <button style={{ ...BTN, background: 'transparent', border: '1.5px solid var(--border)', color: 'var(--text2)', flex: 1 }} onClick={() => { setStep('select'); setEntryTab('crypto'); }}>Back</button>
             <button style={{ ...BTN, background: '#16a34a', color: '#fff', flex: 1, opacity: swapSigning ? 0.6 : 1 }} disabled={swapSigning} onClick={handleSwap}>
               {swapSigning ? <><span className="spinner" style={{ width: 14, height: 14, borderWidth: 2 }} /> Signing...</> : 'Sign Swap'}
             </button>
@@ -420,7 +406,7 @@ export default function FundWalletModal({ onClose, onDone, initialStep }: Props)
           <button style={{ ...BTN, background: 'var(--text)', color: 'var(--bg)', width: '100%' }} onClick={handleSignTransfer}>
             <i className="ti ti-wallet" /> Sign with {detectedWallets[0] ? detectedWallets[0].charAt(0).toUpperCase() + detectedWallets[0].slice(1) : 'Wallet'}
           </button>
-          <button style={{ ...BTN, background: 'transparent', border: '1.5px solid var(--border)', color: 'var(--text2)', width: '100%', marginTop: 8, justifyContent: 'center' }} onClick={() => setStep('estimate')}>Back</button>
+          <button style={{ ...BTN, background: 'transparent', border: '1.5px solid var(--border)', color: 'var(--text2)', width: '100%', marginTop: 8, justifyContent: 'center' }} onClick={() => { setStep('select'); setEntryTab('crypto'); }}>Back</button>
         </div>
       </div>
     );
