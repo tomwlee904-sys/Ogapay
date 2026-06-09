@@ -260,7 +260,7 @@ export default function OgaPayDashboard() {
   const twitterConnected = metrics.twitterConnected ?? false;
 
   const step1Done = !!(fname && lname && isEmailVerified);
-  const step2Done = !!walletConnected || bankSaved;
+  const step2Done = !!walletConnected || bankSaved || !!walletAddress;
   const step3Done = communityJoined || twitterConnected;
   const step4Done = completedTasks > 0;
   const stepsDone = [step1Done, step2Done, step3Done, step4Done];
@@ -304,6 +304,7 @@ export default function OgaPayDashboard() {
       });
 
       setWalletAddress(pubKey);
+      setSummaryData(prev => prev ? { ...prev, metrics: { ...prev.metrics, walletConnected: true } } : prev);
       refreshUser();
     } catch (e: any) {
       console.error("Wallet verification failed", e);
