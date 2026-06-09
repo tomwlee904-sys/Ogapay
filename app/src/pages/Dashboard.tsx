@@ -164,6 +164,10 @@ export default function OgaPayDashboard() {
   const [detectedWallets, setDetectedWallets] = useState<string[]>([]);
   const [connecting, setConnecting] = useState<string | null>(null);
   const [walletAddress, setWalletAddress] = useState("");
+  const [bankAccount, setBankAccount] = useState("");
+  const [bankName, setBankName] = useState("");
+  const [savingBank, setSavingBank] = useState(false);
+  const [bankSaved, setBankSaved] = useState(false);
 
   const [isNew, setIsNew] = useState(() => {
     if (!user?.createdAt) return false;
@@ -216,6 +220,14 @@ export default function OgaPayDashboard() {
           if (Array.isArray(myComs)) {
             setCommunityJoined(myComs.length > 0);
           }
+        } catch (_) {}
+
+        // Load bank details from user profile
+        try {
+          const me = await apiRequest<any>("/users/me");
+          if (me?.bankAccount) setBankAccount(me.bankAccount);
+          if (me?.bankName) setBankName(me.bankName);
+          if (me?.bankAccount && me?.bankName) setBankSaved(true);
         } catch (_) {}
 
       } catch (e) {
@@ -298,6 +310,19 @@ export default function OgaPayDashboard() {
       }
     }
     setConnecting(null);
+  }
+
+  async function saveBank() {
+    if (!bankAccount || bankAccount.length < 10 || !bankName) return;
+    setSavingBank(true);
+    try {
+      await apiRequest("/users/me", {
+        method: "PATCH",
+        body: JSON.stringify({ bankAccount, bankName }),
+      });
+      setBankSaved(true);
+    } catch { /* ignore */ }
+    setSavingBank(false);
   }
 
   if (!isAuthed) {
@@ -483,6 +508,20 @@ export default function OgaPayDashboard() {
                   <Icon n="wallet" s={14} /> Connect in Settings
                 </button>
               )}
+
+              <div className="dash-divider" style={{ margin: "16px 0" }} />
+              <div style={{ textAlign: "center", fontSize: 11, fontWeight: 800, color: "var(--text2)", marginBottom: 12, textTransform: "uppercase", letterSpacing: ".1em" }}>— Or add a Nigerian bank account —</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <input className="dash-input" value={bankAccount} onChange={e => setBankAccount(e.target.value.replace(/\D/g, "").slice(0, 10))} placeholder="Account number" maxLength={10} />
+                <input className="dash-input" value={bankName} onChange={e => setBankName(e.target.value)} placeholder="Bank name (e.g. Access Bank)" />
+                {bankSaved ? (
+                  <div className="dash-success-msg"><Icon n="check" s={12} /> Bank account saved</div>
+                ) : (
+                  <button className="dash-btn" onClick={saveBank} disabled={savingBank || bankAccount.length < 10 || !bankName} style={{ opacity: (savingBank || bankAccount.length < 10 || !bankName) ? 0.5 : 1 }}>
+                    <Icon n="device-floppy" s={14} /> {savingBank ? "Saving..." : "Save Bank Details"}
+                  </button>
+                )}
+              </div>
             </div>
             </div>
             )}
