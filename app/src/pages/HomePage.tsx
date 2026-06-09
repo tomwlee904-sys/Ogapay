@@ -658,6 +658,138 @@ function FeaturedJobs() {
       setActive(prev => (prev + 1) % jobs.length);
     }, 4000);
   };
+  const isActive = (offset) => offset === 0;
+  const cardOuter = (active_) => ({
+    borderRadius: 16,
+    border: `2px solid ${active_ ? '#3b82f6' : '#e5e7eb'}`,
+    padding: 16,
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 12,
+    background: active_ ? '#fff' : '#f9fafb',
+    height: '100%',
+  });
+  const creatorRowStyle = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 12,
+  };
+  const avatarStyle = {
+    width: 40,
+    height: 40,
+    borderRadius: '50%',
+    background: '#1f2937',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    color: '#fff',
+    fontWeight: 700,
+    fontSize: 14,
+    flexShrink: 0,
+  };
+  const recentLabelStyle = {
+    fontSize: 12,
+    color: '#9ca3af',
+    textTransform: 'uppercase',
+    letterSpacing: '0.025em',
+    margin: 0,
+  };
+  const creatorNameStyle = {
+    fontWeight: 600,
+    fontSize: 14,
+    margin: 0,
+  };
+  const progressRowStyle = {
+    display: 'flex',
+    justifyContent: 'space-between',
+    fontSize: 12,
+    color: '#9ca3af',
+    textTransform: 'uppercase',
+    marginBottom: 4,
+  };
+  const progressCountStyle = {
+    fontWeight: 600,
+    color: '#000',
+  };
+  const progressTrackStyle = {
+    width: '100%',
+    background: '#e5e7eb',
+    borderRadius: 999,
+    height: 6,
+    overflow: 'hidden',
+  };
+  const progressFillStyle = (pct) => ({
+    width: `${pct}%`,
+    background: '#3b82f6',
+    height: 6,
+    borderRadius: 999,
+  });
+  const rewardBoxStyle = {
+    background: '#eff6ff',
+    borderRadius: 12,
+    padding: 16,
+  };
+  const rewardAmountStyle = {
+    fontSize: 30,
+    fontWeight: 700,
+    color: '#3b82f6',
+    margin: 0,
+  };
+  const rewardLabelStyle = {
+    fontSize: 12,
+    color: '#9ca3af',
+    textTransform: 'uppercase',
+    letterSpacing: '0.1em',
+    marginTop: 4,
+    margin: 0,
+  };
+  const categoryStyle = {
+    fontSize: 12,
+    color: '#9ca3af',
+    textTransform: 'uppercase',
+    letterSpacing: '0.025em',
+    margin: 0,
+  };
+  const dividerStyle = {
+    border: 'none',
+    borderTop: '1px solid #e5e7eb',
+    margin: 0,
+  };
+  const aboutLabelStyle = {
+    fontSize: 12,
+    color: '#9ca3af',
+    textTransform: 'uppercase',
+    letterSpacing: '0.025em',
+    marginBottom: 4,
+    margin: 0,
+  };
+  const descStyle = {
+    fontSize: 14,
+    color: '#6b7280',
+    display: '-webkit-box',
+    WebkitLineClamp: 3,
+    WebkitBoxOrient: 'vertical',
+    overflow: 'hidden',
+    margin: 0,
+    lineHeight: 1.4,
+    minHeight: 58,
+  };
+  const applyBtnStyle = {
+    width: '100%',
+    background: '#000',
+    color: '#fff',
+    borderRadius: 12,
+    paddingTop: 12,
+    paddingBottom: 12,
+    fontSize: 14,
+    fontWeight: 600,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    border: 'none',
+    cursor: 'pointer',
+    textDecoration: 'none',
+  };
   return (
     <section id="featured-jobs" style={{ padding: "44px 0 34px", background: "var(--bg)" }}>
       <div className="container">
@@ -713,54 +845,43 @@ function FeaturedJobs() {
                 const t = jobs[idx];
                 if (!t) return null;
                 const reward = t.reward || t.budget || 0;
-                const currency = t.currency || 'NGN';
                 const filled = t.filledSlots || 0;
                 const slots = t.maxSlots || t.slots || 1;
-                const pct = Math.round((filled / slots) * 100);
+                const pct = Math.min(Math.round((filled / slots) * 100), 100);
                 const poster = t.poster || {};
                 const posterName = poster.businessName || poster.firstName || "Anonymous";
+                const active_ = isActive(offset);
                 return (
-                  <div key={t.id || idx} className="job-card" style={{
-                    position: "relative", border: `1.5px solid ${offset === 0 ? "#315EFB" : "var(--border)"}`,
-                    borderRadius: 16, background: "var(--card)", overflow: "hidden",
-                    boxShadow: offset === 0 ? "0 16px 42px rgba(37,99,235,.14),0 0 0 1px rgba(31,140,255,.14)" : "var(--shadow-soft)",
-                    display: "flex", flexDirection: "column",
-                    transition: "border-color .28s, box-shadow .28s, transform .28s",
-                  }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 13, minHeight: 70, padding: "13px 18px", borderBottom: "1px solid var(--border)", background: "linear-gradient(120deg,rgba(31,140,255,.08),rgba(37,99,235,.08),rgba(147,197,253,.1))" }}>
-                      <div style={{ width: 38, height: 38, borderRadius: "50%", display: "grid", placeItems: "center", color: "#fff", background: "linear-gradient(135deg,#232323,#333)", border: "2px solid var(--border)", fontSize: 12, fontWeight: 800, flexShrink: 0 }}>
-                        {posterName.charAt(0)}
-                      </div>
+                  <div key={t.id || idx} style={cardOuter(active_)}>
+                    <div style={creatorRowStyle}>
+                      <div style={avatarStyle}>{posterName.charAt(0).toUpperCase()}</div>
                       <div>
-                        <div style={{ color: "var(--text3)", fontSize: 10, textTransform: "uppercase", letterSpacing: 1, fontWeight: 700 }}>RECENT</div>
-                        <div style={{ marginTop: 2, fontSize: 14, fontWeight: 800 }}>{posterName}</div>
+                        <p style={recentLabelStyle}>Recent</p>
+                        <p style={creatorNameStyle}>{posterName}</p>
                       </div>
                     </div>
-                    <div style={{ position: "relative", zIndex: 1, padding: "18px 20px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", color: "var(--text2)", fontSize: 11, textTransform: "uppercase", letterSpacing: ".8px", fontWeight: 700 }}>
+                    <div>
+                      <div style={progressRowStyle}>
                         <span>Progress</span>
-                        <strong style={{ color: "var(--text)", letterSpacing: 0, fontSize: 13 }}>{filled}/{slots} slots</strong>
+                        <span style={progressCountStyle}>{filled}/{slots} Slots</span>
                       </div>
-                      <div className="progress-bar" style={{ height: 10, borderRadius: 99, background: "var(--bg2)", overflow: "hidden", margin: "12px 0 14px", position: "relative" }}>
-                        <span style={{ width: `${pct}%` }} />
+                      <div style={progressTrackStyle}>
+                        <div style={progressFillStyle(pct)} />
                       </div>
-                      <div style={{ height: 100, margin: "0 0 12px", padding: "14px 18px", border: "1.5px solid var(--border)", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "space-between", background: "linear-gradient(135deg,rgba(37,99,235,.08),rgba(147,197,253,.14))" }}>
-                        <div>
-                          <strong className="grad-text" style={{ fontFamily: "Outfit,sans-serif", fontSize: 32, fontWeight: 900, letterSpacing: "-.6px", display: "block" }}>{currency === 'NGN' ? '₦' : ''}{Number(reward).toLocaleString()}{currency !== 'NGN' ? ' ' + currency : ''}</strong>
-                          <small style={{ display: "block", marginTop: 3, color: "var(--text3)", fontSize: 11, fontWeight: 700, letterSpacing: 1 }}>REWARD / SLOT</small>
-                        </div>
-                      </div>
-                      <div style={{ color: "var(--text3)", fontSize: 12, fontWeight: 700, marginBottom: 14, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.category || ''}</div>
-                      <div style={{ borderTop: "1px solid var(--border)", paddingTop: 12, marginTop: "auto" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 6, color: "var(--text3)", fontSize: 10, fontWeight: 800, textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>
-                          <I n="info-circle" s={13} /> ABOUT
-                        </div>
-                        <p style={{ margin: "0 0 12px", color: "var(--text2)", fontSize: 13, lineHeight: 1.5 }}>{(t.description || '').slice(0, 120)}{(t.description || '').length > 120 ? '...' : ''}</p>
-                      </div>
-                      <a href={`/tasks/${t.id}`} style={{ height: 40, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, background: offset === 0 ? "#111" : "var(--bg2)", color: offset === 0 ? "#fff" : "var(--text)", borderRadius: 8, border: "1.5px solid var(--border)", fontSize: 13, fontWeight: 800, textDecoration: "none", transition: "background .14s, color .14s" }}>
-                        <I n="arrow-right" s={15} /> Apply Now
-                      </a>
                     </div>
+                    <div style={rewardBoxStyle}>
+                      <p style={rewardAmountStyle}>₦{Number(reward).toLocaleString()}</p>
+                      <p style={rewardLabelStyle}>Reward / Slot</p>
+                    </div>
+                    <p style={categoryStyle}>{t.category || ''}</p>
+                    <hr style={dividerStyle} />
+                    <div>
+                      <p style={aboutLabelStyle}>About</p>
+                      <p style={descStyle}>{t.description || ''}</p>
+                    </div>
+                    <a href={`/tasks/${t.id}`} style={applyBtnStyle}>
+                      Apply Now
+                    </a>
                   </div>
                 );
               })}
