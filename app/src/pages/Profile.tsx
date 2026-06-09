@@ -299,35 +299,38 @@ export default function Profile() {
   const [detectedWallets, setDetectedWallets] = useState<string[]>([]);
   const [showWalletOptions, setShowWalletOptions] = useState(false);
 
-  // ── Fetch all data on mount ──
-  useEffect(() => {
-    (async () => {
-      setLoading(true);
-      try {
-        const [userData, balData, txData, refData, kycData] = await Promise.all([
-          apiRequest('/users/me').catch(() => null),
-          apiRequest('/wallet/balance').catch(() => null),
-          apiRequest('/users/transactions/history').catch(() => null),
-          apiRequest('/users/referrals/stats').catch(() => null),
-          apiRequest('/kyc/status').catch(() => null),
-        ]);
-        if (userData) {
-          setProfileData(userData);
-          // Load bank details from backend if available
-          if (userData.bankAccount) setAccountNumber(userData.bankAccount);
-          if (userData.bankName) setBankName(userData.bankName);
-          if (userData.accountName) setAccountName(userData.accountName);
-        }
-        if (balData) setWalletBal(balData);
-        if (txData) setTransactions(Array.isArray(txData) ? txData : txData?.data || []);
-        if (refData) setReferralStats(refData);
-        if (kycData) setKycStatus(kycData);
-      } catch (err) {
-        showToast('Failed to load profile data');
+  // ── Fetch all data on mount & when authUser changes (e.g. wallet connected on Dashboard) ──
+  const loadProfile = async () => {
+    try {
+      const [userData, balData, txData, refData, kycData] = await Promise.all([
+        apiRequest('/users/me').catch(() => null),
+        apiRequest('/wallet/balance').catch(() => null),
+        apiRequest('/users/transactions/history').catch(() => null),
+        apiRequest('/users/referrals/stats').catch(() => null),
+        apiRequest('/kyc/status').catch(() => null),
+      ]);
+      if (userData) {
+        setProfileData(userData);
+        if (userData.bankAccount) setAccountNumber(userData.bankAccount);
+        if (userData.bankName) setBankName(userData.bankName);
+        if (userData.accountName) setAccountName(userData.accountName);
       }
-      setLoading(false);
-    })();
-  }, []);
+      if (balData) setWalletBal(balData);
+      if (txData) setTransactions(Array.isArray(txData) ? txData : txData?.data || []);
+      if (refData) setReferralStats(refData);
+      if (kycData) setKycStatus(kycData);
+    } catch (err) {
+      showToast('Failed to load profile data');
+    }
+  };
+
+  useEffect(() => {
+    setLoading(true);
+    loadProfile().finally(() => setLoading(false));
+    const onFocus = () => loadProfile();
+    window.addEventListener('focus', onFocus);
+    return () => window.removeEventListener('focus', onFocus);
+  }, [authUser]);
 
   // Detect installed Solana wallets
   useEffect(() => {
