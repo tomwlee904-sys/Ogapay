@@ -155,7 +155,7 @@ function getGreeting() {
 
 export default function OgaPayDashboard() {
   const navigate = useNavigate();
-  const { user, isAuthed } = useAuth();
+  const { user, isAuthed, refreshUser } = useAuth();
   const [dashLoading, setDashLoading] = useState(true);
   const [summaryData, setSummaryData] = useState<any>(null);
   const [availableTasks, setAvailableTasks] = useState("0");
@@ -302,6 +302,7 @@ export default function OgaPayDashboard() {
       });
 
       setWalletAddress(pubKey);
+      refreshUser();
     } catch (e: any) {
       console.error("Wallet verification failed", e);
       const el = document.getElementById("appToast");
