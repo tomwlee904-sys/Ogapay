@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { useAuth } from '../context/AuthContext'
 import { uploadImage } from '../lib/upload'
+import { apiRequest } from '../lib/api'
 
 const CATEGORIES = ['News', 'Businesses', 'Freelancers', 'Case Studies']
 const COVER_COLORS = ['#534AB7', '#185FA5', '#3B6D11', '#854F0B', '#993556', '#0F6E56', '#121566', '#121566']
@@ -66,23 +67,24 @@ export default function BlogEditor() {
   // Load existing post for editing
   useEffect(() => {
     if (!id) return
-    try {
-      const stored = JSON.parse(localStorage.getItem('ogapay_user_posts') || '[]') as PostData[]
-      const post = stored.find(p => p.id === parseInt(id))
-      if (post) {
-        setForm({
-          title: post.title,
-          category: post.category,
-          body: post.body,
-          coverColor: post.coverColor || '#534AB7',
-          coverImage: (post as any).coverImage || '',
-          tags: post.tags,
-          status: post.status,
-        })
-      } else {
-        setError('Post not found')
-      }
-    } catch {}
+    apiRequest<PostData[]>('/blog/user/mine')
+      .then(posts => {
+        const post = posts.find(p => p.id === parseInt(id))
+        if (post) {
+          setForm({
+            title: post.title,
+            category: post.category,
+            body: post.body,
+            coverColor: post.coverColor || '#534AB7',
+            coverImage: (post as any).coverImage || '',
+            tags: post.tags,
+            status: post.status,
+          })
+        } else {
+          setError('Post not found')
+        }
+      })
+      .catch(() => setError('Failed to load post'))
   }, [id])
 
   // Formatting helpers
@@ -109,7 +111,7 @@ export default function BlogEditor() {
     setForm(f => ({ ...f, body: newText }))
   }
 
-  const save = (status: 'draft' | 'published') => {
+  const save = async (status: 'draft' | 'published') => {
     if (!form.title.trim()) {
       setError('Please enter a title')
       return
@@ -124,11 +126,10 @@ export default function BlogEditor() {
     const authorName = `${firstName} ${lastName}`.trim() || 'OgaPay Member'
     const initials = (firstName[0] || 'U') + (lastName[0] || 'M')
 
-    const post: any = {
-      id: id ? parseInt(id) : generateId(),
+    const payload = {
       title: form.title,
       category: form.category,
-      body: form.body,
+      content: form.body,
       coverColor: form.coverColor,
       coverImage: form.coverImage,
       authorName,
@@ -139,14 +140,11 @@ export default function BlogEditor() {
     }
 
     try {
-      const stored = JSON.parse(localStorage.getItem('ogapay_user_posts') || '[]') as PostData[]
-      let updated: PostData[]
       if (id) {
-        updated = stored.map(p => p.id === parseInt(id) ? post : p)
+        await apiRequest(`/blog/user/${id}`, { method: 'PUT', body: JSON.stringify(payload) })
       } else {
-        updated = [...stored, post]
+        await apiRequest('/blog/user', { method: 'POST', body: JSON.stringify(payload) })
       }
-      localStorage.setItem('ogapay_user_posts', JSON.stringify(updated))
       setSaved(true)
       setTimeout(() => {
         if (status === 'published') navigate('/blog')

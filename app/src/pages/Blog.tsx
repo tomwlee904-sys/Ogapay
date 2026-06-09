@@ -98,13 +98,28 @@ export default function Blog() {
   const [showArticles, setShowArticles] = useState(false)
   const [email, setEmail] = useState('')
   const [subscribed, setSubscribed] = useState(false)
+  const [subscribing, setSubscribing] = useState(false)
   const [search, setSearch] = useState('')
   const [apiPosts, setApiPosts] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [hoveredCard, setHoveredCard] = useState<string | null>(null)
   const navigate = useNavigate()
   const { isAuthed, user: authUser } = useAuth()
   const { theme, toggle } = useTheme()
   const [drawerOpen, setDrawerOpen] = useState(false)
+
+  const [bookmarked, setBookmarked] = useState<string[]>(() => {
+    try { return JSON.parse(localStorage.getItem('ogapay_bookmarked_posts') || '[]') }
+    catch { return [] }
+  })
+
+  useEffect(() => {
+    localStorage.setItem('ogapay_bookmarked_posts', JSON.stringify(bookmarked))
+  }, [bookmarked])
+
+  const toggleBookmark = (id: string) => {
+    setBookmarked(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])
+  }
 
   useEffect(() => {
     (async () => {
@@ -127,24 +142,32 @@ export default function Blog() {
     return () => window.removeEventListener('focus', onFocus)
   }, [authUser])
 
-  const userPosts = (() => {
-    try {
-      return JSON.parse(localStorage.getItem('ogapay_user_posts') || '[]')
-        .filter((p: any) => p.status === 'published')
-        .map((p: any) => ({
-          id: `u${p.id}`, category: p.category, title: p.title,
-          excerpt: p.body.split('\n').find((l: string) => l.trim() && !l.startsWith('-') && !l.startsWith('#')) || p.body.substring(0, 120),
-          author: { firstName: p.authorName, lastName: '' },
-          authorInitials: p.authorInitials,
-          date: p.date,
-          readTime: p.body.length > 500 ? `${Math.ceil(p.body.length / 500)} min read` : '1 min read',
-          color: p.coverColor, isUserPost: true,
-        }))
-    } catch { return [] }
-  })()
+  const allPosts = apiPosts
 
-  const allPosts = [...apiPosts, ...userPosts]
-  const filteredArticles = showArticles && (activeCategory === 'All' ? allPosts : allPosts.filter(p => p.category === activeCategory))
+  const filteredByCategory = showArticles && (activeCategory === 'All' ? allPosts : allPosts.filter((p: any) => p.category === activeCategory))
+
+  const searchedArticles = search.trim()
+    ? (filteredByCategory || []).filter((p: any) =>
+        (p.title || '').toLowerCase().includes(search.toLowerCase()) ||
+        (p.excerpt || '').toLowerCase().includes(search.toLowerCase())
+      )
+    : filteredByCategory
+
+  const popularArticles = [...allPosts]
+    .sort((a: any, b: any) => (b.viewCount || 0) - (a.viewCount || 0))
+    .slice(0, 3)
+
+  const handleSubscribe = async () => {
+    if (!email.trim()) return
+    setSubscribing(true)
+    try {
+      await apiRequest('/blog/newsletter/subscribe', { method: 'POST', body: JSON.stringify({ email: email.trim() }) })
+      setSubscribed(true)
+    } catch {
+      setSubscribed(true)
+    }
+    setSubscribing(false)
+  }
 
   if (!showArticles) {
     return (
@@ -200,6 +223,7 @@ export default function Blog() {
 
   return (
     <div data-theme={theme} style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: 'var(--bg)', color: 'var(--text)' }}>
+      <link rel="alternate" type="application/rss+xml" title="OgaPay Blog RSS" href="/blog/rss.xml" />
       <nav style={{ background: 'var(--card)', borderBottom: '0.5px solid var(--border)', position: 'sticky', top: 0, zIndex: 100 }}>
         <div style={{ maxWidth: 1400, margin: '0 auto', padding: '0.875rem 2rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
           <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none' }}>
@@ -214,6 +238,9 @@ export default function Blog() {
             ))}
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
+            <a href="/blog/rss.xml" target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', color: '#666', cursor: 'pointer', textDecoration: 'none', padding: '6px 8px' }} title="RSS Feed">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="6" cy="18" r="2"/><path d="M4 11a9 9 0 0 1 9 9"/><path d="M4 4a16 16 0 0 1 16 16"/></svg>
+            </a>
             {isAuthed && <button onClick={() => navigate('/blog/write')} style={{ fontSize: 13, background: '#191C6B', color: '#fff', padding: '6px 16px', borderRadius: 20, border: 'none', cursor: 'pointer', fontWeight: 500 }}>+ Write Article</button>}
             <a href="/" style={{ fontSize: 13, background: '#191C6B', color: '#fff', padding: '6px 16px', borderRadius: 20, textDecoration: 'none', fontWeight: 500 }}>Go to OgaPay →</a>
             <button onClick={() => setDrawerOpen(true)} style={{ background: 'none', border: '1.5px solid #ddd', borderRadius: 6, width: 34, height: 34, display: 'grid', placeItems: 'center', cursor: 'pointer', padding: 0 }}>
@@ -227,10 +254,43 @@ export default function Blog() {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
           <span style={{ fontSize: 16, fontWeight: 500, color: '#1a1a1a' }}>
             {activeCategory === 'All' ? 'All articles' : activeCategory}
-            <span style={{ fontSize: 13, color: '#666', marginLeft: 8 }}>({(filteredArticles || []).length})</span>
+            <span style={{ fontSize: 13, color: '#666', marginLeft: 8 }}>({(searchedArticles || []).length})</span>
           </span>
           <button onClick={() => setShowArticles(false)} style={{ fontSize: 13, color: '#191C6B', background: 'none', border: 'none', cursor: 'pointer' }}>← Back to home</button>
         </div>
+
+        {popularArticles.length > 0 && (
+          <div style={{ marginBottom: '2.5rem' }}>
+            <h2 style={{ fontSize: 18, fontWeight: 600, color: 'var(--text)', marginBottom: '1rem' }}>Popular articles</h2>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1rem' }}>
+              {popularArticles.map((post: any) => {
+                const badge = badgeColors[post.category] || { bg: '#191C6B', color: '#191C6B' }
+                const authorName = post.author ? `${post.author.firstName || ''} ${post.author.lastName || ''}`.trim() : post.authorName || 'OgaPay'
+                const initials = post.authorInitials || ((post.author?.firstName?.[0] || '') + (post.author?.lastName?.[0] || '')) || 'OG'
+                return (
+                  <div key={`pop-${post.id}`} onClick={() => { if (post.slug) navigate(`/blog/${post.slug}`) }} style={{ background: 'var(--card)', border: '0.5px solid var(--border)', borderRadius: 12, overflow: 'hidden', cursor: 'pointer', transition: 'box-shadow 0.2s, transform 0.2s' }}
+                    onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 8px 30px rgba(0,0,0,0.08)'; e.currentTarget.style.transform = 'translateY(-2px)' }}
+                    onMouseLeave={e => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.transform = 'none' }}>
+                    <div style={{ height: 140, background: post.color || post.coverColor || '#191C6B', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundImage: post.coverImage ? `url(${post.coverImage})` : undefined, backgroundSize: 'cover', backgroundPosition: 'center' }}>
+                      {!post.coverImage && <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="1.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>}
+                    </div>
+                    <div style={{ padding: '0.75rem 1rem' }}>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10, fontWeight: 500, background: badge.bg, color: badge.color, padding: '2px 8px', borderRadius: 20, marginBottom: 6 }}>
+                        {post.category}
+                      </span>
+                      <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', lineHeight: 1.4, marginBottom: 4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{post.title}</p>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: 'var(--text3)' }}>
+                        <span>{authorName}</span>
+                        <span>·</span>
+                        <span>{post.viewCount || 0} views</span>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
 
         {loading ? (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.5rem' }}>
@@ -248,15 +308,16 @@ export default function Blog() {
           </div>
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.5rem', marginBottom: '1.5rem' }}>
-            {(filteredArticles || []).map((post: any) => {
+            {(searchedArticles || []).map((post: any) => {
               const badge = badgeColors[post.category] || { bg: '#191C6B', color: '#191C6B' }
               const authorName = post.author ? `${post.author.firstName || ''} ${post.author.lastName || ''}`.trim() : post.authorName || 'OgaPay'
               const initials = post.authorInitials || ((post.author?.firstName?.[0] || '') + (post.author?.lastName?.[0] || '')) || 'OG'
+              const isBookmarked = bookmarked.includes(String(post.id))
               return (
-                <div key={post.id} onClick={() => { if (post.slug && !post.isUserPost) navigate(`/blog/${post.slug}`); else navigate(`/blog?post=${post.id}`) }} style={{ background: 'var(--card)', border: '0.5px solid var(--border)', borderRadius: 16, overflow: 'hidden', cursor: 'pointer', transition: 'box-shadow 0.2s, transform 0.2s' }}
-                  onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 8px 30px rgba(0,0,0,0.08)'; e.currentTarget.style.transform = 'translateY(-2px)' }}
-                  onMouseLeave={e => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.transform = 'none' }}>
-                  <div style={{ height: 200, background: post.color || post.coverColor || '#191C6B', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundImage: post.coverImage ? `url(${post.coverImage})` : undefined, backgroundSize: 'cover', backgroundPosition: 'center' }}>
+                <div key={post.id} onClick={() => { if (post.slug) navigate(`/blog/${post.slug}`) }} style={{ background: 'var(--card)', border: '0.5px solid var(--border)', borderRadius: 16, overflow: 'hidden', cursor: 'pointer', transition: 'box-shadow 0.2s, transform 0.2s', position: 'relative' }}
+                  onMouseEnter={e => { setHoveredCard(String(post.id)); e.currentTarget.style.boxShadow = '0 8px 30px rgba(0,0,0,0.08)'; e.currentTarget.style.transform = 'translateY(-2px)' }}
+                  onMouseLeave={e => { setHoveredCard(null); e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.transform = 'none' }}>
+                  <div style={{ height: 200, background: post.color || post.coverColor || '#191C6B', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundImage: post.coverImage ? `url(${post.coverImage})` : undefined, backgroundSize: 'cover', backgroundPosition: 'center', position: 'relative' }}>
                     {!post.coverImage && (() => {
                       const cat = (post.category || '').toLowerCase();
                       const s = "rgba(255,255,255,0.3)";
@@ -266,11 +327,21 @@ export default function Blog() {
                       if (cat === 'community') return <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke={s} strokeWidth="1.5"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><circle cx="17" cy="9" r="3.5"/></svg>;
                       return <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke={s} strokeWidth="1.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>;
                     })()}
+                    <button onClick={e => { e.stopPropagation(); toggleBookmark(String(post.id)) }} style={{ position: 'absolute', top: 8, right: 8, background: 'rgba(255,255,255,0.85)', border: 'none', borderRadius: 6, width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: 15, color: isBookmarked ? '#191C6B' : '#999', boxShadow: '0 1px 4px rgba(0,0,0,0.1)' }}>
+                      {isBookmarked ? '\u2605' : '\u2606'}
+                    </button>
+                    <div style={{ position: 'absolute', bottom: 8, right: 8, display: 'flex', gap: 4, opacity: hoveredCard === String(post.id) ? 1 : 0, transition: 'opacity 0.2s' }}>
+                      <button onClick={e => { e.stopPropagation(); navigator.clipboard.writeText(`${window.location.origin}/blog/${post.slug}`) }} style={{ background: 'rgba(255,255,255,0.9)', border: 'none', borderRadius: 4, padding: '4px 8px', fontSize: 11, cursor: 'pointer', color: '#333' }} title="Copy link">
+                        🔗
+                      </button>
+                      <button onClick={e => { e.stopPropagation(); window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(`${window.location.origin}/blog/${post.slug}`)}&text=${encodeURIComponent(post.title)}`, '_blank', 'noopener') }} style={{ background: 'rgba(255,255,255,0.9)', border: 'none', borderRadius: 4, padding: '4px 8px', fontSize: 11, cursor: 'pointer', color: '#333' }} title="Share on X">
+                        𝕏
+                      </button>
+                    </div>
                   </div>
                   <div style={{ padding: '1.25rem' }}>
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 500, background: badge.bg, color: badge.color, padding: '3px 10px', borderRadius: 20, marginBottom: 8 }}>
                       {post.category}
-                      {post.isUserPost && <span style={{ fontSize: 9, background: badge.color, color: badge.bg, borderRadius: 99, padding: '1px 5px' }}>Member</span>}
                     </span>
                     <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)', lineHeight: 1.5, marginBottom: 10 }}>{post.title}</p>
                     <p style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.6, marginBottom: 10, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{post.excerpt}</p>
@@ -296,9 +367,9 @@ export default function Blog() {
             <p style={{ color: '#ADDD5A', fontWeight: 600, fontSize: 14 }}>✓ You're subscribed!</p>
           ) : (
             <div style={{ display: 'flex', gap: 8, maxWidth: 420, margin: '0 auto', flexWrap: 'wrap', justifyContent: 'center' }}>
-              <input type="email" placeholder="Enter your email address" value={email} onChange={e => setEmail(e.target.value)} onKeyDown={e => e.key === 'Enter' && email.trim() && setSubscribed(true)}
+              <input type="email" placeholder="Enter your email address" value={email} onChange={e => setEmail(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSubscribe()}
                 style={{ flex: 1, minWidth: 200, padding: '8px 14px', borderRadius: 20, border: 'none', fontSize: 13, background: 'rgba(255,255,255,0.15)', color: '#fff', outline: 'none' }} />
-              <button onClick={() => email.trim() && setSubscribed(true)} style={{ background: '#ADDD5A', color: '#1a2a00', border: 'none', padding: '8px 18px', borderRadius: 20, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Subscribe</button>
+              <button onClick={handleSubscribe} disabled={subscribing} style={{ background: '#ADDD5A', color: '#1a2a00', border: 'none', padding: '8px 18px', borderRadius: 20, fontSize: 13, fontWeight: 700, cursor: 'pointer', opacity: subscribing ? 0.6 : 1 }}>Subscribe</button>
             </div>
           )}
         </div>

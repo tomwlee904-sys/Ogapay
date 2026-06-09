@@ -41,6 +41,8 @@ export default function ArticleDetail() {
   const [related, setRelated] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const [progress, setProgress] = useState(0)
+  const [bookmarked, setBookmarked] = useState(false)
 
   useEffect(() => {
     if (!slug) return
@@ -54,6 +56,22 @@ export default function ArticleDetail() {
       .catch(() => navigate('/blog'))
       .finally(() => setLoading(false))
   }, [slug, navigate])
+
+  useEffect(() => {
+    const onScroll = () => {
+      const winScroll = window.scrollY
+      const height = document.documentElement.scrollHeight - window.innerHeight
+      setProgress(height > 0 ? (winScroll / height) * 100 : 0)
+    }
+    window.addEventListener('scroll', onScroll)
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
+  useEffect(() => {
+    if (!slug) return
+    const stored = JSON.parse(localStorage.getItem('ogapay_bookmarked_posts') || '[]')
+    setBookmarked(stored.includes(slug))
+  }, [slug])
 
   if (loading) {
     return (
@@ -81,6 +99,19 @@ export default function ArticleDetail() {
   }
   const badge = badgeColors[post.category] || { bg: '#191C6B', color: '#191C6B' }
 
+  const toggleBookmark = () => {
+    if (!slug) return
+    const stored = JSON.parse(localStorage.getItem('ogapay_bookmarked_posts') || '[]')
+    if (stored.includes(slug)) {
+      localStorage.setItem('ogapay_bookmarked_posts', JSON.stringify(stored.filter((s: string) => s !== slug)))
+      setBookmarked(false)
+    } else {
+      stored.push(slug)
+      localStorage.setItem('ogapay_bookmarked_posts', JSON.stringify(stored))
+      setBookmarked(true)
+    }
+  }
+
   return (
     <div data-theme={theme} style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: 'var(--bg)', color: 'var(--text)' }}>
       <style>{`
@@ -97,6 +128,8 @@ export default function ArticleDetail() {
         .ad-content pre { background: #1a1a2e; color: #e4e4e4; padding: 16px 20px; border-radius: 12px; overflow-x: auto; font-size: 13px; line-height: 1.6; margin: 20px 0; }
         .ad-content code { background: rgba(25,28,107,0.08); padding: 2px 6px; border-radius: 4px; font-size: 14px; }
       `}</style>
+
+      <div style={{ position: 'fixed', top: 0, left: 0, height: 3, background: '#191C6B', zIndex: 9999, width: `${progress}%`, transition: 'width 0.1s' }} />
 
       <nav style={{ borderBottom: '1px solid var(--border)', padding: '0.875rem 2.5rem', display: 'flex', alignItems: 'center', gap: 20, background: 'var(--card)', position: 'sticky', top: 0, zIndex: 100 }}>
         <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none' }}>
@@ -162,12 +195,26 @@ export default function ArticleDetail() {
             </div>
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
-            {['Copy Link', 'Share on X', 'Share on LinkedIn'].map(label => (
-              <button key={label} onClick={() => { if (label === 'Copy Link') navigator.clipboard.writeText(window.location.href) }}
+            {['Copy Link', 'Share on X', 'Share on LinkedIn', 'Share on Facebook'].map(label => (
+              <button key={label} onClick={() => {
+                const url = window.location.href
+                const text = post?.title || ''
+                if (label === 'Copy Link') navigator.clipboard.writeText(url)
+                else if (label === 'Share on X') window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank', 'noopener')
+                else if (label === 'Share on LinkedIn') window.open(`https://linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`, '_blank', 'noopener')
+                else if (label === 'Share on Facebook') window.open(`https://facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`, '_blank', 'noopener')
+              }}
                 style={{ height: 34, padding: '0 12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg2)', color: 'var(--text2)', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
                 {label}
               </button>
             ))}
+            <button onClick={toggleBookmark} style={{ height: 34, width: 34, padding: 0, borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg2)', color: bookmarked ? '#191C6B' : 'var(--text2)', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              {bookmarked ? (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="#191C6B" stroke="#191C6B" strokeWidth="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+              ) : (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+              )}
+            </button>
           </div>
         </div>
       </article>
