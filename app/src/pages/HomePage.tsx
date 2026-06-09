@@ -971,11 +971,19 @@ function GetStarted({ openAuth, navigate }) {
 
 /* ─── COMMUNITIES ────────────────────────────────────────────────────────────── */
 function Communities() {
-  const comms = [
-    { art: "₦NG", name: "Nigerian Earners Hub", members: "4,200", tasks: "1,100", desc: "The largest OgaPay community for Nigerian earners. Tips, job alerts, and daily support." },
-    { art: "W3", name: "Web3 Workers Africa", members: "2,800", tasks: "780", desc: "Web3, crypto, and blockchain tasks for Africa-based workers and creators." },
-    { art: "DS", name: "Design & Creatives NG", members: "1,600", tasks: "420", desc: "Logo design, video editing, writing, and all things creative — jobs posted daily." },
-  ];
+  const [comms, setComms] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch(`${API_BASE}/communities`).then(r => r.json())
+        const data = Array.isArray(res) ? res : res?.data?.communities || res?.data || []
+        setComms(data.slice(0, 3))
+      } catch {}
+      setLoading(false)
+    })()
+  }, [])
+  if (loading) return null
   return (
     <section style={{ padding: "56px 0", background: "var(--bg)" }}>
       <div className="container">
@@ -988,14 +996,16 @@ function Communities() {
         </div>
         <div className="community-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3,minmax(0,1fr))", gap: 24 }}>
           {comms.map((c, i) => (
-            <div key={i} className="card-base" style={{ display: "flex", flexDirection: "column", minHeight: 380 }}>
-              <div style={{ height: 120, display: "grid", placeItems: "center", fontFamily: "Outfit,sans-serif", fontSize: 32, fontWeight: 900, background: "var(--bg2)", color: "var(--text2)", borderBottom: "1px solid var(--border)" }}>{c.art}</div>
+            <div key={c.id || i} className="card-base" style={{ display: "flex", flexDirection: "column", minHeight: 380 }}>
+              <div style={{ height: 120, display: "grid", placeItems: "center", fontFamily: "Outfit,sans-serif", fontSize: 32, fontWeight: 900, background: c.accentColor ? `${c.accentColor}18` : 'var(--bg2)', color: c.accentColor || 'var(--text2)', borderBottom: "1px solid var(--border)" }}>
+                {c.iconUrl ? <img src={c.iconUrl} alt={c.name} style={{height:48,width:48,borderRadius:8,objectFit:'cover'}} /> : (c.name || '?').slice(0, 2).toUpperCase()}
+              </div>
               <div style={{ padding: "18px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
                 <h3 style={{ margin: "0 0 8px", fontSize: 16, fontWeight: 800 }}>{c.name}</h3>
-                <p style={{ margin: 0, color: "var(--text2)", fontSize: 13, lineHeight: 1.55 }}>{c.desc}</p>
+                <p style={{ margin: 0, color: "var(--text2)", fontSize: 13, lineHeight: 1.55 }}>{c.description || ''}</p>
                 <div style={{ display: "flex", gap: 16, margin: "12px 0", color: "var(--text3)", fontSize: 12, fontWeight: 700 }}>
-                  <span style={{ display: "flex", alignItems: "center", gap: 5 }}><I n="users" s={13} /> {c.members}</span>
-                  <span style={{ display: "flex", alignItems: "center", gap: 5 }}><I n="briefcase" s={13} /> {c.tasks} tasks</span>
+                  <span style={{ display: "flex", alignItems: "center", gap: 5 }}><I n="users" s={13} /> {(c.memberCount || c.members || 0).toLocaleString()}</span>
+                  <span style={{ display: "flex", alignItems: "center", gap: 5 }}><I n="briefcase" s={13} /> {c.taskCount || 0} tasks</span>
                 </div>
                 <a href="/communities" style={{ marginTop: "auto", height: 42, border: "1.5px solid var(--border)", borderRadius: 999, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text2)", fontSize: 13, fontWeight: 800, background: "var(--card)", textDecoration: "none" }}>
                   Join Community

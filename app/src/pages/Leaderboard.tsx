@@ -1,22 +1,28 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Layout from '../components/Layout'
+import { apiRequest } from '../lib/api'
 
-const users = [
-  { rank: 1, name: 'CryptoKing', earnings: 'NGN 125,400', tasks: 342, badge: '🥇', color: '#191C6B', avatar: 'CK' },
-  { rank: 2, name: 'TaskMaster', earnings: 'NGN 98,200', tasks: 287, badge: '🥈', color: '#191C6B', avatar: 'TM' },
-  { rank: 3, name: 'EarnQueen', earnings: 'NGN 82,500', tasks: 254, badge: '🥉', color: '#16a34a', avatar: 'EQ' },
-  { rank: 4, name: 'BizWizard', earnings: 'NGN 67,800', tasks: 198, color: '#F59E0B', avatar: 'BW' },
-  { rank: 5, name: 'SolaPro', earnings: 'NGN 54,200', tasks: 167, color: '#EC4899', avatar: 'SP' },
-  { rank: 6, name: 'Web3Ninja', earnings: 'NGN 42,100', tasks: 143, color: '#6366F1', avatar: 'WN' },
-  { rank: 7, name: 'GigHunter', earnings: 'NGN 35,600', tasks: 121, color: '#14B8A6', avatar: 'GH' },
-  { rank: 8, name: 'ChainWurk', earnings: 'NGN 28,400', tasks: 98, color: '#F97316', avatar: 'CW' },
-]
+interface LeaderEntry {
+  rank: number
+  name: string
+  username: string
+  avatarUrl?: string
+  earnings: number
+  tasks: number
+}
+
+interface MyRank {
+  rank: number | null
+  profile?: { totalEarned: number; tasksCompleted: number; reputationScore: number }
+}
+
+const periodTabs = ['Weekly', 'Monthly', 'All Time']
 
 const categories = [
-  { id: 'earners', icon: 'ti ti-coin', label: 'Top Earners', color: '#191C6B', users: users.slice(0, 5) },
-  { id: 'posters', icon: 'ti ti-briefcase', label: 'Top Task Posters', color: '#191C6B', users: users.slice(0, 5) },
-  { id: 'referrers', icon: 'ti ti-affiliate', label: 'Top Referrers', color: '#16a34a', users: users.slice(0, 5) },
-  { id: 'leaders', icon: 'ti ti-users', label: 'Community Leaders', color: '#F59E0B', users: users.slice(0, 5) },
+  { id: 'earners', icon: 'ti ti-coin', label: 'Top Earners', color: '#191C6B' },
+  { id: 'posters', icon: 'ti ti-briefcase', label: 'Top Task Posters', color: '#191C6B' },
+  { id: 'referrers', icon: 'ti ti-affiliate', label: 'Top Referrers', color: '#16a34a' },
+  { id: 'leaders', icon: 'ti ti-users', label: 'Community Leaders', color: '#F59E0B' },
 ]
 
 const achievements = [
@@ -28,12 +34,40 @@ const achievements = [
   { icon: '👑', name: 'Community Leader', desc: 'Lead a community' },
 ]
 
-const periodTabs = ['Weekly', 'Monthly', 'All Time']
+function getInitials(name: string) {
+  return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2) || '?'
+}
 
 export default function Leaderboard() {
   const [period, setPeriod] = useState('Monthly')
   const [catTab, setCatTab] = useState('earners')
+  const [leaders, setLeaders] = useState<LeaderEntry[]>([])
+  const [myRank, setMyRank] = useState<MyRank | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const [lbData, meData] = await Promise.all([
+          apiRequest<any>('/leaderboard'),
+          apiRequest<MyRank>('/leaderboard/me').catch(() => null),
+        ])
+        const top = lbData?.topEarners || lbData?.data?.topEarners || (Array.isArray(lbData) ? lbData : [])
+        setLeaders(top)
+        if (meData) setMyRank(meData)
+      } catch {}
+      setLoading(false)
+    })()
+  }, [])
+
   const currentCat = categories.find(c => c.id === catTab) || categories[0]
+  const top3 = leaders.slice(0, 3)
+  const podium = top3.length >= 3
+    ? [top3[1], top3[0], top3[2]]
+    : top3
+
+  const totalEarnings = leaders.reduce((s, u) => s + (u.earnings || 0), 0)
+  const totalTasks = leaders.reduce((s, u) => s + (u.tasks || 0), 0)
 
   return (
     <Layout>
@@ -57,7 +91,8 @@ export default function Leaderboard() {
         .lb-pcard:hover{transform:translateY(-3px)}
         .lb-pcard.first{background:linear-gradient(180deg,rgba(245,179,1,.08),transparent);border-color:rgba(245,179,1,.25);padding:24px 14px}
         .lb-pcard.first .lb-av{width:52px;height:52px;font-size:20px}
-        .lb-pcard .lb-av{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 8px;font-weight:900;color:#fff;font-family:Outfit;font-size:18px}
+        .lb-pcard .lb-av{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 8px;font-weight:900;color:#fff;font-family:Outfit;font-size:18px;overflow:hidden}
+        .lb-pcard .lb-av img{width:100%;height:100%;object-fit:cover}
         .lb-pcard .lb-pname{font-weight:800;font-size:13px}
         .lb-pcard .lb-pearn{font-size:15px;font-weight:900;color:var(--accent);margin-top:2px}
         .lb-pcard .lb-prank{font-size:11px;color:var(--text3);margin-bottom:4px}
@@ -71,7 +106,8 @@ export default function Leaderboard() {
         .lb-cat-list{padding:0 14px 12px}
         .lb-cat-row{display:flex;align-items:center;gap:8px;padding:6px 0;font-size:12px}
         .lb-cat-rr{width:20px;font-weight:800;color:var(--text3);text-align:center}
-        .lb-cat-av{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#fff;flex-shrink:0}
+        .lb-cat-av{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#fff;flex-shrink:0;overflow:hidden}
+        .lb-cat-av img{width:100%;height:100%;object-fit:cover}
         .lb-cat-name{flex:1;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
         .lb-cat-sc{font-weight:800;color:var(--accent)}
         .lb-user-card{background:linear-gradient(135deg,var(--card),var(--bg2));border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:24px}
@@ -102,10 +138,10 @@ export default function Leaderboard() {
 
       <div className="lb-stats">
         {[
-          { num: 'NGN 2.4M', label: 'Total Rewards Paid' },
-          { num: '12,847', label: 'Tasks Completed' },
-          { num: '3,240', label: 'Active Workers' },
-          { num: '186', label: 'Communities' },
+          { num: loading ? '...' : `NGN ${(totalEarnings / 1000).toFixed(1)}M`, label: 'Total Rewards Paid' },
+          { num: loading ? '...' : totalTasks.toLocaleString(), label: 'Tasks Completed' },
+          { num: loading ? '...' : leaders.length.toString(), label: 'Workers' },
+          { num: loading ? '...' : `${leaders.filter(u => u.earnings > 0).length}`, label: 'Active Earners' },
         ].map((s, i) => (
           <div className="lb-stat" key={i}>
             <div className="lb-num">{s.num}</div>
@@ -114,26 +150,33 @@ export default function Leaderboard() {
         ))}
       </div>
 
-      {/* Period tabs */}
       <div className="lb-period">
         {periodTabs.map(p => (
           <button key={p} className={period === p ? 'active' : ''} onClick={() => setPeriod(p)}>{p}</button>
         ))}
       </div>
 
-      {/* Podium */}
       <div className="lb-podium">
-        {[users[1], users[0], users[2]].map((u, i) => (
-          <div key={i} className={`lb-pcard ${i === 1 ? 'first' : i === 0 ? 'second' : 'third'}`}>
-            <div className="lb-prank">#{u.rank}</div>
-            <div className="lb-av" style={{background: u.color}}>{u.avatar}</div>
-            <div className="lb-pname">{u.name}</div>
-            <div className="lb-pearn">{u.earnings}</div>
+        {podium.length > 0 ? podium.map((u, i) => {
+          const initials = getInitials(u.name)
+          const rank = i === 1 ? 1 : i === 0 ? 2 : 3
+          return (
+            <div key={i} className={`lb-pcard ${i === 1 ? 'first' : ''}`}>
+              <div className="lb-prank">#{rank}</div>
+              <div className="lb-av" style={{ background: '#191C6B' }}>
+                {u.avatarUrl ? <img src={u.avatarUrl} alt={u.name} /> : initials}
+              </div>
+              <div className="lb-pname">{u.name}</div>
+              <div className="lb-pearn">NGN {u.earnings?.toLocaleString()}</div>
+            </div>
+          )
+        }) : (
+          <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: 24, color: 'var(--text2)' }}>
+            {loading ? 'Loading...' : 'No ranked workers yet'}
           </div>
-        ))}
+        )}
       </div>
 
-      {/* Categories */}
       <div className="lb-cats">
         {categories.map(c => (
           <div className="lb-cat" key={c.id}>
@@ -142,28 +185,33 @@ export default function Leaderboard() {
               <h3>{c.label}</h3>
             </div>
             <div className="lb-cat-list">
-              {c.users.map((u, i) => (
-                <div className="lb-cat-row" key={i}>
-                  <span className="lb-cat-rr">#{i + 1}</span>
-                  <div className="lb-cat-av" style={{background: u.color}}>{u.avatar}</div>
-                  <span className="lb-cat-name">{u.name}</span>
-                  <span className="lb-cat-sc">{u.earnings}</span>
-                </div>
-              ))}
+              {leaders.slice(0, 5).map((u, i) => {
+                const initials = getInitials(u.name)
+                return (
+                  <div className="lb-cat-row" key={i}>
+                    <span className="lb-cat-rr">#{i + 1}</span>
+                    <div className="lb-cat-av" style={{background: '#191C6B'}}>
+                      {u.avatarUrl ? <img src={u.avatarUrl} alt={u.name} /> : initials}
+                    </div>
+                    <span className="lb-cat-name">{u.name}</span>
+                    <span className="lb-cat-sc">NGN {u.earnings?.toLocaleString()}</span>
+                  </div>
+                )
+              })}
+              {leaders.length === 0 && <div style={{padding: 12, color: 'var(--text2)', fontSize: 12, textAlign: 'center'}}>No data yet</div>}
             </div>
           </div>
         ))}
       </div>
 
-      {/* User ranking */}
       <div className="lb-user-card">
         <h3><i className="ti ti-trophy" style={{color:'var(--accent)'}} /> My Ranking</h3>
         <div className="lb-ur-grid">
           {[
-            { val: '#--', label: 'Position' },
-            { val: 'NGN 0', label: 'Earnings' },
-            { val: '0', label: 'Tasks Done' },
-            { val: '0', label: 'Referrals' },
+            { val: myRank?.rank != null ? `#${myRank.rank}` : '#--', label: 'Position' },
+            { val: myRank?.profile ? `NGN ${myRank.profile.totalEarned?.toLocaleString()}` : 'NGN 0', label: 'Earnings' },
+            { val: myRank?.profile ? `${myRank.profile.tasksCompleted}` : '0', label: 'Tasks Done' },
+            { val: '—', label: 'Referrals' },
           ].map((r, i) => (
             <div className="lb-ur-item" key={i}>
               <div className="urv">{r.val}</div>
@@ -172,10 +220,9 @@ export default function Leaderboard() {
           ))}
         </div>
         <div className="lb-progress"><div className="lb-bar" /></div>
-        <div className="lb-next">Complete 5 more tasks to reach Silver Tier</div>
+        <div className="lb-next">Complete more tasks to climb the leaderboard</div>
       </div>
 
-      {/* Achievements */}
       <div className="lb-ach">
         {achievements.map((a, i) => (
           <div className="lb-ach-item" key={i}>

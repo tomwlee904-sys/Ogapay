@@ -17,13 +17,10 @@ export default function Settings() {
   const [savingEmail, setSavingEmail] = useState(false)
   const [savingPublic, setSavingPublic] = useState(false)
 
-  // ── toggles (localStorage) ─────────────────────────────────────────────────
-  const [pushNotifications, setPushNotifications] = useState(() =>
-    localStorage.getItem('ogapay_push_notifications') === 'true',
-  )
-  const [currency, setCurrency] = useState(() =>
-    localStorage.getItem('ogapay_currency') || 'NGN',
-  )
+  // ── toggles (API-backed) ───────────────────────────────────────────────────
+  const [pushNotifications, setPushNotifications] = useState(false)
+  const [currency, setCurrency] = useState('NGN')
+  const [savingPush, setSavingPush] = useState(false)
 
   // ── password ───────────────────────────────────────────────────────────────
   const [showPasswordForm, setShowPasswordForm] = useState(false)
@@ -62,6 +59,8 @@ export default function Settings() {
           setEmailNotifications(data.emailNotifications ?? false)
           setIsPublic(data.isPublic ?? false)
           setTwoFactorEnabled(data.twoFactorEnabled ?? false)
+          setPushNotifications(data.pushNotifications ?? false)
+          setCurrency(data.currency ?? 'NGN')
         }
       } catch {
         showToast('Failed to load settings', 'error')
@@ -109,19 +108,39 @@ export default function Settings() {
     }
   }
 
-  // ── push notifications toggle (localStorage) ──────────────────────────────
-  const handlePushToggle = () => {
+  // ── push notifications toggle (API-backed) ─────────────────────────────────
+  const handlePushToggle = async () => {
     const next = !pushNotifications
     setPushNotifications(next)
-    localStorage.setItem('ogapay_push_notifications', String(next))
-    showToast('Settings saved!', 'success')
+    setSavingPush(true)
+    try {
+      await apiRequest('/users/me', {
+        method: 'PATCH',
+        body: JSON.stringify({ pushNotifications: next }),
+      })
+      showToast('Settings saved!', 'success')
+    } catch (err: any) {
+      setPushNotifications(!next)
+      showToast(err.message || 'Failed to save setting', 'error')
+    } finally {
+      setSavingPush(false)
+    }
   }
 
-  // ── currency selector (localStorage) ───────────────────────────────────────
-  const handleCurrencyChange = (c: string) => {
+  // ── currency selector (API-backed) ────────────────────────────────────────
+  const handleCurrencyChange = async (c: string) => {
+    const prev = currency
     setCurrency(c)
-    localStorage.setItem('ogapay_currency', c)
-    showToast('Settings saved!', 'success')
+    try {
+      await apiRequest('/users/me', {
+        method: 'PATCH',
+        body: JSON.stringify({ currency: c }),
+      })
+      showToast('Settings saved!', 'success')
+    } catch (err: any) {
+      setCurrency(prev)
+      showToast(err.message || 'Failed to save setting', 'error')
+    }
   }
 
   // ── password change ────────────────────────────────────────────────────────
@@ -278,7 +297,7 @@ export default function Settings() {
               <div style={{ fontWeight: 700, fontSize: 13 }}>Push Notifications</div>
               <div style={{ fontSize: 12, color: 'var(--text2)' }}>Receive push notifications in your browser</div>
             </div>
-            <Toggle on={pushNotifications} onChange={handlePushToggle} />
+            <Toggle on={pushNotifications} onChange={handlePushToggle} disabled={savingPush} />
           </div>
 
           {/* Currency Display */}

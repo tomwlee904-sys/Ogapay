@@ -1,29 +1,64 @@
 // @ts-nocheck
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
+import { apiRequest } from '../lib/api'
 
 const Icon = ({ n, s = 18, c }) => (
   <i className={`ti ti-${n}`} style={{ fontSize: s, color: c || "var(--text2)", lineHeight: 1, flexShrink: 0 }} />
 )
 
-const templates = [
-  { id: 1, title: 'Product Description', icon: 'shopping-cart', tasks: 12, reward: 'NGN 500-2,000' },
-  { id: 2, title: 'Blog Post Writing', icon: 'article', tasks: 8, reward: 'NGN 1,000-5,000' },
-  { id: 3, title: 'Social Media Copy', icon: 'messages', tasks: 15, reward: 'NGN 300-1,500' },
-  { id: 4, title: 'Proofreading & Editing', icon: 'spellcheck', tasks: 6, reward: 'NGN 400-2,000' },
-  { id: 5, title: 'SEO Content', icon: 'trending-up', tasks: 4, reward: 'NGN 2,000-8,000' },
-  { id: 6, title: 'Script Writing', icon: 'video', tasks: 3, reward: 'NGN 3,000-10,000' },
-]
-
-const recentJobs = [
-  { id: 1, title: 'Write 5 product descriptions for fashion items', budget: 'NGN 2,500', slots: 3, time: '2h ago' },
-  { id: 2, title: 'Proofread 500-word DeFi article', budget: 'NGN 800', slots: 5, time: '5h ago' },
-  { id: 3, title: 'Create Twitter thread about Solana ecosystem', budget: 'NGN 1,200', slots: 2, time: '1d ago' },
-]
+const templateIcons: Record<string, string> = {
+  'Content Writing': 'edit',
+  'Social Media': 'messages',
+  'Graphic Design': 'photo',
+  'Video Editing': 'video',
+  'Data Entry': 'database',
+  Research: 'search',
+  'Web Development': 'code',
+  Testing: 'bug',
+  Community: 'users',
+  Translation: 'language',
+  Other: 'file-text',
+}
 
 export default function Writer() {
   const navigate = useNavigate()
+  const [templates, setTemplates] = useState<any[]>([])
+  const [recentJobs, setRecentJobs] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const [tasksRes] = await Promise.all([
+          apiRequest<any>('/tasks?limit=10&sortBy=createdAt&sortOrder=desc'),
+        ])
+        const tasks = Array.isArray(tasksRes) ? tasksRes : tasksRes?.data || tasksRes?.tasks || []
+
+        const cats = new Map<string, number>()
+        tasks.forEach(t => {
+          const cat = t.category || 'Other'
+          cats.set(cat, (cats.get(cat) || 0) + 1)
+        })
+        setTemplates(Array.from(cats.entries()).map(([cat, count]) => ({
+          id: cat,
+          title: cat.replace(/_/g, ' '),
+          icon: templateIcons[cat] || 'file-text',
+          tasks: count,
+        })))
+
+        setRecentJobs(tasks.slice(0, 5).map(t => ({
+          id: t.id,
+          title: t.title,
+          budget: `${t.currency || 'NGN'} ${Number(t.reward || 0).toLocaleString()}`,
+          slots: t.maxWorkers || t.remainingSlots || '—',
+          time: t.createdAt ? new Date(t.createdAt).toLocaleDateString() : '—',
+        })))
+      } catch {}
+      setLoading(false)
+    })()
+  }, [])
 
   return (
     <Layout>
@@ -46,6 +81,7 @@ export default function Writer() {
         .wr-list-item:hover{border-color:var(--accent)}
         .wr-list-item .l-title{font-size:13px;font-weight:700;margin-bottom:4px}
         .wr-list-item .l-meta{font-size:11px;color:var(--text3);display:flex;gap:10px}
+        .wr-loading{text-align:center;padding:48px;color:var(--text2);display:flex;align-items:center;justify-content:center;gap:8px}
       `}</style>
 
       <div className="wr-page">
@@ -54,38 +90,46 @@ export default function Writer() {
           <p>Find writing tasks, manage your content projects, and earn from your words. Browse available writing jobs or create your own.</p>
         </div>
 
-        <div className="wr-section">
-          <h2><Icon n="template" s={18} /> Writing Templates</h2>
-          <div className="wr-grid">
-            {templates.map(t => (
-              <div className="wr-card" key={t.id} onClick={() => navigate('/create')}>
-                <div className="wr-card-icon" style={{background:`#191C6B18`,color:'#191C6B'}}><i className={`ti ti-${t.icon}`} style={{fontSize:20}} /></div>
-                <h3>{t.title}</h3>
-                <p>{t.tasks} tasks available</p>
-                <div className="meta"><span><i className="ti ti-coin" /> {t.reward}</span></div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="wr-section">
-          <h2><Icon n="clock" s={18} /> Recent Writing Jobs</h2>
-          <div className="wr-list">
-            {recentJobs.map(j => (
-              <div className="wr-list-item" key={j.id} onClick={() => navigate('/tasks')}>
-                <div>
-                  <div className="l-title">{j.title}</div>
-                  <div className="l-meta">
-                    <span><i className="ti ti-coin" /> {j.budget}</span>
-                    <span><i className="ti ti-users" /> {j.slots} slots</span>
-                    <span>{j.time}</span>
+        {loading ? (
+          <div className="wr-loading"><span className="spinner" /> Loading...</div>
+        ) : (
+          <>
+            <div className="wr-section">
+              <h2><Icon n="template" s={18} /> Active Categories</h2>
+              <div className="wr-grid">
+                {templates.map(t => (
+                  <div className="wr-card" key={t.id} onClick={() => navigate('/tasks')}>
+                    <div className="wr-card-icon" style={{background:'#191C6B18',color:'#191C6B'}}><i className={`ti ti-${t.icon}`} style={{fontSize:20}} /></div>
+                    <h3>{t.title}</h3>
+                    <p>{t.tasks} task{t.tasks !== 1 ? 's' : ''} available</p>
                   </div>
-                </div>
-                <i className="ti ti-arrow-right" style={{color:'var(--text3)',fontSize:16}} />
+                ))}
               </div>
-            ))}
-          </div>
-        </div>
+            </div>
+
+            <div className="wr-section">
+              <h2><Icon n="clock" s={18} /> Recent Tasks</h2>
+              <div className="wr-list">
+                {recentJobs.map(j => (
+                  <div className="wr-list-item" key={j.id} onClick={() => navigate(`/tasks/${j.id}`)}>
+                    <div>
+                      <div className="l-title">{j.title}</div>
+                      <div className="l-meta">
+                        <span><i className="ti ti-coin" /> {j.budget}</span>
+                        <span><i className="ti ti-users" /> {j.slots} slots</span>
+                        <span>{j.time}</span>
+                      </div>
+                    </div>
+                    <i className="ti ti-arrow-right" style={{color:'var(--text3)',fontSize:16}} />
+                  </div>
+                ))}
+                {recentJobs.length === 0 && (
+                  <div style={{textAlign:'center',padding:24,color:'var(--text2)',fontSize:13}}>No recent tasks found</div>
+                )}
+              </div>
+            </div>
+          </>
+        )}
 
         <div className="wr-section">
           <h2><Icon n="book" s={18} /> Writing Resources</h2>

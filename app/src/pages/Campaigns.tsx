@@ -1,15 +1,51 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Layout from '../components/Layout'
-
-const campaigns = [
-  { id: 1, name: 'Brand Awareness Q3', platform: 'X/Twitter', budget: 'NGN 50,000', reach: '12.4K', engagements: 845, status: 'Active', color: '#16a34a' },
-  { id: 2, name: 'Product Launch', platform: 'Instagram', budget: 'NGN 100,000', reach: '28.7K', engagements: 2103, status: 'Active', color: '#16a34a' },
-  { id: 3, name: 'Community Growth', platform: 'Telegram', budget: 'NGN 25,000', reach: '5.2K', engagements: 412, status: 'Paused', color: '#F59E0B' },
-  { id: 4, name: 'Holiday Promo', platform: 'Multi-platform', budget: 'NGN 200,000', reach: '45.1K', engagements: 3890, status: 'Draft', color: '#191C6B' },
-]
+import { apiRequest } from '../lib/api'
+import { getAccessToken } from '../lib/api'
 
 export default function Campaigns() {
   const [showModal, setShowModal] = useState(false)
+  const [campaigns, setCampaigns] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [form, setForm] = useState({ name: '', platform: 'X/Twitter', budget: '', description: '' })
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await apiRequest<any>('/campaign')
+        const items = Array.isArray(res) ? res : res?.data || []
+        setCampaigns(items)
+      } catch {}
+      setLoading(false)
+    })()
+  }, [])
+
+  const handleCreate = async () => {
+    if (!form.name || !form.budget) return
+    setSaving(true)
+    try {
+      const token = getAccessToken()
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'https://ogapay-production.up.railway.app/api/v1'}/campaign`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          name: form.name,
+          platforms: [form.platform],
+          budget: parseFloat(form.budget),
+          currency: 'NGN',
+          description: form.description,
+        }),
+      })
+      const json = await res.json()
+      if (json.data) {
+        setCampaigns(prev => [json.data, ...prev])
+        setShowModal(false)
+        setForm({ name: '', platform: 'X/Twitter', budget: '', description: '' })
+      }
+    } catch {}
+    setSaving(false)
+  }
 
   return (
     <Layout>
@@ -39,7 +75,6 @@ export default function Campaigns() {
         .cmp-btn.primary:hover{box-shadow:0 4px 12px rgba(31,140,255,.2)}
         .cmp-empty{text-align:center;padding:48px;color:var(--text2)}
         .cmp-empty i{font-size:36px;color:var(--text3);margin-bottom:10px;display:block}
-        /* Modal */
         .cmp-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:400;display:none;align-items:center;justify-content:center;padding:20px}
         .cmp-overlay.open{display:flex}
         .cmp-modal{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;width:min(480px,100%);max-height:80vh;overflow-y:auto}
@@ -49,6 +84,7 @@ export default function Campaigns() {
         .cmp-field input,.cmp-field select{width:100%;height:38px;padding:0 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg2);color:var(--text);font-size:13px;outline:0}
         .cmp-field input:focus,.cmp-field select:focus{border-color:var(--accent)}
         .cmp-modal-actions{display:flex;gap:8px;margin-top:16px;justify-content:flex-end}
+        .cmp-loading{text-align:center;padding:48px;color:var(--text2);display:flex;align-items:center;justify-content:center;gap:8px}
       `}</style>
 
       <div className="cmp-head">
@@ -71,7 +107,9 @@ export default function Campaigns() {
         </button>
       </div>
 
-      {campaigns.length === 0 ? (
+      {loading ? (
+        <div className="cmp-loading"><span className="spinner" /> Loading campaigns...</div>
+      ) : campaigns.length === 0 ? (
         <div className="cmp-empty">
           <i className="ti ti-megaphone" />
           <h3 style={{fontFamily:'Outfit',fontWeight:800,margin:'0 0 4px',color:'var(--text)'}}>No campaigns yet</h3>
@@ -79,54 +117,60 @@ export default function Campaigns() {
         </div>
       ) : (
         <div className="cmp-grid">
-          {campaigns.map(c => (
-            <div className="cmp-card" key={c.id}>
-              <div className="cmp-top">
-                <span className="cmp-name">{c.name}</span>
-                <span className="cmp-status" style={{background: `${c.color}15`, color: c.color}}>{c.status}</span>
-              </div>
-              <div className="cmp-meta">
-                <div className="cmp-m-item">
-                  <div className="cmm-label">Platform</div>
-                  <div className="cmm-val">{c.platform}</div>
+          {campaigns.map(c => {
+            const platform = Array.isArray(c.platforms) ? c.platforms.join(', ') : c.platform || '—'
+            const budget = c.currency === 'NGN' ? `NGN ${Number(c.budget).toLocaleString()}` : `${c.currency} ${Number(c.budget).toLocaleString()}`
+            const status = (c.status || 'draft').replace(/_/g, ' ')
+            const statusColor = status.toLowerCase() === 'active' ? '#16a34a' : status.toLowerCase() === 'paused' ? '#F59E0B' : '#191C6B'
+            return (
+              <div className="cmp-card" key={c.id}>
+                <div className="cmp-top">
+                  <span className="cmp-name">{c.name}</span>
+                  <span className="cmp-status" style={{background: `${statusColor}15`, color: statusColor}}>
+                    {status.replace(/\b\w/g, l => l.toUpperCase())}
+                  </span>
                 </div>
-                <div className="cmp-m-item">
-                  <div className="cmm-label">Budget</div>
-                  <div className="cmm-val">{c.budget}</div>
+                <div className="cmp-meta">
+                  <div className="cmp-m-item">
+                    <div className="cmm-label">Platform</div>
+                    <div className="cmm-val">{platform}</div>
+                  </div>
+                  <div className="cmp-m-item">
+                    <div className="cmm-label">Budget</div>
+                    <div className="cmm-val">{budget}</div>
+                  </div>
+                  <div className="cmp-m-item">
+                    <div className="cmm-label">Spent</div>
+                    <div className="cmm-val">—</div>
+                  </div>
+                  <div className="cmp-m-item">
+                    <div className="cmm-label">Engagements</div>
+                    <div className="cmm-val">—</div>
+                  </div>
                 </div>
-                <div className="cmp-m-item">
-                  <div className="cmm-label">Reach</div>
-                  <div className="cmm-val">{c.reach}</div>
+                <div className="cmp-bar">
+                  <div className="cmp-fill" style={{width:'0%',background:'var(--accent)'}} />
                 </div>
-                <div className="cmp-m-item">
-                  <div className="cmm-label">Engagements</div>
-                  <div className="cmm-val">{c.engagements.toLocaleString()}</div>
+                <div className="cmp-actions">
+                  <button className="cmp-btn"><i className="ti ti-edit" /> Edit</button>
+                  <button className="cmp-btn"><i className="ti ti-chart-bar" /> Stats</button>
                 </div>
               </div>
-              <div className="cmp-bar">
-                <div className="cmp-fill" style={{width:'60%',background:'var(--accent)'}} />
-              </div>
-              <div className="cmp-actions">
-                <button className="cmp-btn"><i className="ti ti-edit" /> Edit</button>
-                <button className="cmp-btn"><i className="ti ti-chart-bar" /> Stats</button>
-                <button className="cmp-btn" style={{marginLeft:'auto',color:'var(--red)'}}><i className="ti ti-pause" /></button>
-              </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       )}
 
-      {/* Modal */}
       <div className={`cmp-overlay ${showModal ? 'open' : ''}`} onClick={() => setShowModal(false)}>
         <div className="cmp-modal" onClick={e => e.stopPropagation()}>
           <h2>New Campaign</h2>
           <div className="cmp-field">
             <label>Campaign Name</label>
-            <input type="text" placeholder="e.g. Brand Awareness Q3" />
+            <input type="text" placeholder="e.g. Brand Awareness Q3" value={form.name} onChange={e => setForm(f => ({...f, name: e.target.value}))} />
           </div>
           <div className="cmp-field">
             <label>Platform</label>
-            <select>
+            <select value={form.platform} onChange={e => setForm(f => ({...f, platform: e.target.value}))}>
               <option>X/Twitter</option>
               <option>Telegram</option>
               <option>Instagram</option>
@@ -135,24 +179,15 @@ export default function Campaigns() {
           </div>
           <div className="cmp-field">
             <label>Budget (NGN)</label>
-            <input type="text" placeholder="e.g. 50000" />
+            <input type="number" placeholder="e.g. 50000" value={form.budget} onChange={e => setForm(f => ({...f, budget: e.target.value}))} />
           </div>
           <div className="cmp-field">
-            <label>Target Audience</label>
-            <input type="text" placeholder="e.g. Crypto enthusiasts, 18-35" />
-          </div>
-          <div className="cmp-field">
-            <label>Duration</label>
-            <select>
-              <option>7 Days</option>
-              <option>14 Days</option>
-              <option>30 Days</option>
-              <option>Custom</option>
-            </select>
+            <label>Description</label>
+            <input type="text" placeholder="Campaign description" value={form.description} onChange={e => setForm(f => ({...f, description: e.target.value}))} />
           </div>
           <div className="cmp-modal-actions">
             <button className="cmp-btn" onClick={() => setShowModal(false)}>Cancel</button>
-            <button className="cmp-btn primary" onClick={() => setShowModal(false)}>Launch Campaign</button>
+            <button className="cmp-btn primary" disabled={saving} onClick={handleCreate}>{saving ? 'Creating...' : 'Launch Campaign'}</button>
           </div>
         </div>
       </div>

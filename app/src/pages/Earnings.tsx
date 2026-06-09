@@ -4,9 +4,20 @@ import { useCurrency } from '../context/CurrencyContext'
 import { apiRequest } from '../lib/api'
 import { SkeletonPage, SkeletonStats, injectSkeletonStyles } from "../components/SkeletonLoader"
 
-const graphValues: Record<string, number[]> = {
-  '7d': [35, 55, 42, 70, 48, 62, 85],
-  '30d': [45, 62, 38, 55, 72, 48, 58, 65, 42, 58, 70, 52, 48, 62, 78, 55, 48, 62, 70, 52, 58, 45, 62, 68, 52, 58, 72, 48, 55, 62],
+function computeGraphValues(transactions: any[], days: number): number[] {
+  const now = Date.now()
+  const dayMs = 86400000
+  const buckets: number[] = new Array(days).fill(0)
+  const counts: number[] = new Array(days).fill(0)
+  for (const t of transactions) {
+    const d = new Date(t.createdAt || t.date).getTime()
+    const idx = Math.floor((now - d) / dayMs)
+    if (idx >= 0 && idx < days && (t.status === 'completed' || t.status === 'successful')) {
+      buckets[idx] += Number(t.amount || 0)
+      counts[idx]++
+    }
+  }
+  return buckets.reverse().map((v, i) => Math.round(v / (counts[i] || 1) / 10) * 10 || 0)
 }
 
 type HistoryItem = {
@@ -20,7 +31,6 @@ export default function Earnings() {
   const { fmt } = useCurrency()
   const [period, setPeriod] = useState('7d')
   const [tab, setTab] = useState('all')
-  const bars = graphValues[period] || graphValues['7d']
 
   const [loading, setLoading] = useState(true)
   const [totalEarned, setTotalEarned] = useState<number | null>(null)
@@ -115,6 +125,9 @@ export default function Earnings() {
 
   useEffect(() => { injectSkeletonStyles(); }, []);
 
+  const allTx = history.length > 0 ? history.map(h => ({ ...h, createdAt: h.date, status: 'completed', amount: h.amount })) : []
+  const bars = allTx.length > 0 ? computeGraphValues(allTx, period === '7d' ? 7 : 30) : []
+
   const dv = (v: number | null) => v !== null ? fmt(v, 'NGN') : '?'
 
   const tasksFromEarnings = totalEarned !== null
@@ -208,11 +221,15 @@ export default function Earnings() {
           </div>
         </div>
         <div className="en-graph">
-          {bars.map((b, i) => (
-            <div key={i} className="en-bar" style={{ height: Math.min(b * 1.1, 90) + '%' }}>
-              <div className="en-val">NGN {b * 10}</div>
-            </div>
-          ))}
+          {bars.map((b, i) => {
+            const h = Math.min(Math.max(b / Math.max(...bars, 1) * 100, 4), 100)
+            return (
+              <div key={i} className="en-bar" style={{ height: h + '%' }}>
+                <div className="en-val">NGN {b.toLocaleString()}</div>
+              </div>
+            )
+          })}
+          {bars.length === 0 && <div style={{width:'100%',textAlign:'center',color:'var(--text2)',fontSize:12,padding:24}}>No earnings data yet</div>}
         </div>
       </div>
 

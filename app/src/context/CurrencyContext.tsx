@@ -12,7 +12,8 @@ import {
   getStoredCurrency,
   storeCurrency,
 } from '../lib/currency'
-import { API_BASE } from '../lib/api'
+import { API_BASE, getAccessToken } from '../lib/api'
+import { useAuth } from './AuthContext'
 
 interface CurrencyContextValue {
   preferredCurrency: Currency
@@ -41,6 +42,29 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
   const [rates, setRates] = useState<CurrencyRates>({ ...DEFAULT_RATES })
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
   const [loading, setLoading] = useState(true)
+  const { isAuthed } = useAuth()
+
+  // ── Sync currency from backend profile ───────────────────────────────────
+  useEffect(() => {
+    if (!isAuthed) return
+    const token = getAccessToken()
+    if (!token) return
+    ;(async () => {
+      try {
+        const res = await fetch(`${API_BASE}/users/me`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        if (!res.ok) return
+        const json = await res.json()
+        const data = json.data ?? json
+        if (data?.currency && CURRENCIES.includes(data.currency as Currency)) {
+          const backendCurrency = data.currency as Currency
+          setPreferredCurrencyState(backendCurrency)
+          storeCurrency(backendCurrency)
+        }
+      } catch { /* silently ignore */ }
+    })()
+  }, [isAuthed])
 
   const refreshRates = useCallback(async () => {
     setLoading(true)
@@ -52,14 +76,24 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     refreshRates()
-    // Refresh rates every 5 minutes
     const interval = setInterval(refreshRates, 300000)
     return () => clearInterval(interval)
   }, [refreshRates])
 
-  const setPreferredCurrency = useCallback((c: Currency) => {
+  const setPreferredCurrency = useCallback(async (c: Currency) => {
     setPreferredCurrencyState(c)
     storeCurrency(c)
+    // Sync to backend if authenticated
+    const token = getAccessToken()
+    if (token) {
+      try {
+        await fetch(`${API_BASE}/users/me`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ currency: c }),
+        })
+      } catch { /* silently ignore */ }
+    }
   }, [])
 
   const fmt = useCallback(

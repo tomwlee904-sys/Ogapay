@@ -1,37 +1,65 @@
 // @ts-nocheck
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Layout from '../components/Layout'
+import { apiRequest } from '../lib/api'
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
 
 const Icon = ({ n, s = 18, c }) => (
   <i className={`ti ti-${n}`} style={{ fontSize: s, color: c || "var(--text2)", lineHeight: 1, flexShrink: 0 }} />
 )
 
-const weeklyData = [
-  { day: 'Mon', tasks: 4, earnings: 2400 },
-  { day: 'Tue', tasks: 6, earnings: 3600 },
-  { day: 'Wed', tasks: 3, earnings: 1800 },
-  { day: 'Thu', tasks: 8, earnings: 4800 },
-  { day: 'Fri', tasks: 5, earnings: 3000 },
-  { day: 'Sat', tasks: 2, earnings: 1200 },
-  { day: 'Sun', tasks: 1, earnings: 600 },
-]
-
-const monthlyData = [
-  { month: 'Jan', tasks: 45, earnings: 27000 },
-  { month: 'Feb', tasks: 52, earnings: 31200 },
-  { month: 'Mar', tasks: 38, earnings: 22800 },
-  { month: 'Apr', tasks: 61, earnings: 36600 },
-  { month: 'May', tasks: 48, earnings: 28800 },
-  { month: 'Jun', tasks: 55, earnings: 33000 },
-]
+function computeChartData(transactions: any[], days: number, labelKey: string) {
+  const now = Date.now()
+  const dayMs = 86400000
+  const buckets: { label: string; tasks: number; earnings: number }[] = []
+  for (let i = days - 1; i >= 0; i--) {
+    const d = new Date(now - i * dayMs)
+    const label = days === 7 ? d.toLocaleDateString('en', { weekday: 'short' }) : `${d.getDate()}/${d.getMonth() + 1}`
+    buckets.push({ label, tasks: 0, earnings: 0 })
+  }
+  for (const t of transactions) {
+    const d = new Date(t.createdAt || t.date).getTime()
+    const idx = Math.floor((now - d) / dayMs)
+    if (idx >= 0 && idx < days && (t.status === 'completed' || t.status === 'successful')) {
+      buckets[days - 1 - idx].earnings += Number(t.amount || 0)
+      buckets[days - 1 - idx].tasks += 1
+    }
+  }
+  return buckets
+}
 
 export default function Analytics() {
   const [period, setPeriod] = useState('weekly')
-  const data = period === 'weekly' ? weeklyData : monthlyData
-  const xKey = period === 'weekly' ? 'day' : 'month'
+  const [data, setData] = useState<{ label: string; tasks: number; earnings: number }[]>([])
+  const [loading, setLoading] = useState(true)
+  const [successRate, setSuccessRate] = useState<number | null>(null)
+  const [avgRating, setAvgRating] = useState<number | null>(null)
 
-  const totals = { tasks: data.reduce((a,b) => a + b.tasks, 0), earnings: data.reduce((a,b) => a + b.earnings, 0) }
+  useEffect(() => {
+    (async () => {
+      try {
+        const [txData, dashData] = await Promise.all([
+          apiRequest<any>('/users/transactions/history'),
+          apiRequest<any>('/dashboard/summary').catch(() => null),
+        ])
+        const txs = Array.isArray(txData) ? txData : txData?.data || txData?.transactions || []
+        const days = period === 'weekly' ? 7 : 30
+        setData(computeChartData(txs, days, period === 'weekly' ? 'day' : 'month'))
+
+        if (dashData?.metrics) {
+          const { submissions, unreadNotifications } = dashData.metrics
+          const completed = txs.filter((t: any) => t.status === 'completed' || t.status === 'successful').length
+          const total = txs.length
+          setSuccessRate(total > 0 ? Math.round((completed / total) * 100) : null)
+        }
+      } catch {}
+      if (data.length === 0) setData([])
+      setLoading(false)
+    })()
+  }, [period])
+
+  const xKey = 'label'
+  const totals = data.reduce((a, b) => ({ tasks: a.tasks + b.tasks, earnings: a.earnings + b.earnings }), { tasks: 0, earnings: 0 })
 
   return (
     <Layout>
@@ -67,10 +95,10 @@ export default function Analytics() {
 
         <div className="an-stats">
           {[
-            { icon: 'checklist', color: '#191C6B', val: totals.tasks, label: 'Tasks Completed' },
-            { icon: 'coin', color: '#16a34a', val: `NGN ${totals.earnings.toLocaleString()}`, label: 'Total Earnings' },
-            { icon: 'trending-up', color: '#8B5CF6', val: '98%', label: 'Success Rate' },
-            { icon: 'star', color: '#F59E0B', val: '4.8', label: 'Avg Rating' },
+            { icon: 'checklist', color: '#191C6B', val: loading ? '...' : totals.tasks, label: 'Tasks Completed' },
+            { icon: 'coin', color: '#16a34a', val: loading ? '...' : `NGN ${totals.earnings.toLocaleString()}`, label: 'Total Earnings' },
+            { icon: 'trending-up', color: '#8B5CF6', val: loading ? '...' : successRate != null ? `${successRate}%` : '—', label: 'Success Rate' },
+            { icon: 'star', color: '#F59E0B', val: loading ? '...' : avgRating != null ? avgRating.toFixed(1) : '—', label: 'Avg Rating' },
           ].map((s,i) => (
             <div className="an-stat" key={i}>
               <div className="s-icon" style={{background:`${s.color}18`,color:s.color}}><i className={`ti ti-${s.icon}`} /></div>
@@ -84,46 +112,60 @@ export default function Analytics() {
           <div className="an-chart">
             <h2><Icon n="checklist" s={16} /> Tasks</h2>
             <div style={{height:200}}>
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={data}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                  <XAxis dataKey={xKey} tick={{fontSize:10,fill:'var(--text3)'}} axisLine={false} tickLine={false} />
-                  <YAxis tick={{fontSize:10,fill:'var(--text3)'}} axisLine={false} tickLine={false} />
-                  <Tooltip contentStyle={{background:'var(--card)',border:'1px solid var(--border)',borderRadius:8,fontSize:12}} />
-                  <Bar dataKey="tasks" fill="#191C6B" radius={[4,4,0,0]} />
-                </BarChart>
-              </ResponsiveContainer>
+              {data.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={data}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                    <XAxis dataKey={xKey} tick={{fontSize:10,fill:'var(--text3)'}} axisLine={false} tickLine={false} />
+                    <YAxis tick={{fontSize:10,fill:'var(--text3)'}} axisLine={false} tickLine={false} allowDecimals={false} />
+                    <Tooltip contentStyle={{background:'var(--card)',border:'1px solid var(--border)',borderRadius:8,fontSize:12}} />
+                    <Bar dataKey="tasks" fill="#191C6B" radius={[4,4,0,0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div style={{height:'100%',display:'flex',alignItems:'center',justifyContent:'center',color:'var(--text2)',fontSize:13}}>
+                  {loading ? 'Loading...' : 'No data yet'}
+                </div>
+              )}
             </div>
           </div>
           <div className="an-chart">
             <h2><Icon n="coin" s={16} /> Earnings</h2>
             <div style={{height:200}}>
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={data}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                  <XAxis dataKey={xKey} tick={{fontSize:10,fill:'var(--text3)'}} axisLine={false} tickLine={false} />
-                  <YAxis tick={{fontSize:10,fill:'var(--text3)'}} axisLine={false} tickLine={false} />
-                  <Tooltip contentStyle={{background:'var(--card)',border:'1px solid var(--border)',borderRadius:8,fontSize:12}} />
-                  <Line type="monotone" dataKey="earnings" stroke="#16a34a" strokeWidth={2} dot={{r:3}} />
-                </LineChart>
-              </ResponsiveContainer>
+              {data.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={data}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                    <XAxis dataKey={xKey} tick={{fontSize:10,fill:'var(--text3)'}} axisLine={false} tickLine={false} />
+                    <YAxis tick={{fontSize:10,fill:'var(--text3)'}} axisLine={false} tickLine={false} />
+                    <Tooltip contentStyle={{background:'var(--card)',border:'1px solid var(--border)',borderRadius:8,fontSize:12}} />
+                    <Line type="monotone" dataKey="earnings" stroke="#16a34a" strokeWidth={2} dot={{r:3}} />
+                  </LineChart>
+                </ResponsiveContainer>
+              ) : (
+                <div style={{height:'100%',display:'flex',alignItems:'center',justifyContent:'center',color:'var(--text2)',fontSize:13}}>
+                  {loading ? 'Loading...' : 'No data yet'}
+                </div>
+              )}
             </div>
           </div>
         </div>
 
         <div className="an-chart">
-          <h2><Icon n="list" s={16} /> {period === 'weekly' ? 'Daily' : 'Monthly'} Breakdown</h2>
+          <h2><Icon n="list" s={16} /> {period === 'weekly' ? 'Daily' : 'Daily'} Breakdown</h2>
           <table className="an-table">
             <thead><tr><th>Period</th><th>Tasks</th><th>Earnings</th><th>Avg per Task</th></tr></thead>
             <tbody>
-              {data.map((d,i) => (
+              {data.length > 0 ? data.map((d,i) => (
                 <tr key={i}>
                   <td><strong>{d[xKey]}</strong></td>
                   <td>{d.tasks}</td>
                   <td>NGN {d.earnings.toLocaleString()}</td>
-                  <td>NGN {Math.round(d.earnings / d.tasks).toLocaleString()}</td>
+                  <td>NGN {d.tasks > 0 ? Math.round(d.earnings / d.tasks).toLocaleString() : '0'}</td>
                 </tr>
-              ))}
+              )) : (
+                <tr><td colSpan={4} style={{textAlign:'center',color:'var(--text2)',padding:24}}>No data yet</td></tr>
+              )}
             </tbody>
           </table>
         </div>

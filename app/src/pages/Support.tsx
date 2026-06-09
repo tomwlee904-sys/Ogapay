@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Layout from '../components/Layout'
+import { apiRequest } from '../lib/api'
 
 const faqCategories = [
   { icon: 'ti ti-wallet', title: 'Payments', desc: 'Withdrawals, deposits, and billing', count: 6 },
@@ -15,15 +16,21 @@ const contactOptions = [
   { icon: 'ti ti-file-text', title: 'Documentation', desc: 'Read our guides and tutorials', action: 'View Docs', href: '/faq' },
 ]
 
-const tickets = [
-  { id: 'TKT-001', subject: 'Withdrawal not processed', status: 'Open', date: '2 hours ago', priority: 'High', color: '#DC2626' },
-  { id: 'TKT-002', subject: 'Account verification issue', status: 'In Progress', date: '1 day ago', priority: 'Medium', color: '#F59E0B' },
-  { id: 'TKT-003', subject: 'Task submission rejected', status: 'Resolved', date: '3 days ago', priority: 'Low', color: '#16a34a' },
-]
-
 export default function Support() {
   const [showTicket, setShowTicket] = useState(false)
   const [search, setSearch] = useState('')
+  const [tickets, setTickets] = useState<any[]>([])
+  const [loadingTickets, setLoadingTickets] = useState(true)
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await apiRequest<any>('/support/tickets').catch(() => null)
+        if (res) setTickets(Array.isArray(res) ? res : res.data || [])
+      } catch {}
+      setLoadingTickets(false)
+    })()
+  }, [])
 
   return (
     <Layout>
@@ -123,21 +130,28 @@ export default function Support() {
       </div>
 
       <div className="sp-tickets">
-        {tickets.length === 0 ? (
+        {loadingTickets ? (
+          <div className="sp-empty">
+            <span className="spinner" /> Loading tickets...
+          </div>
+        ) : tickets.length === 0 ? (
           <div className="sp-empty">
             <i className="ti ti-ticket" />
             <h3 style={{fontFamily:'Outfit',fontWeight:800,margin:'0 0 4px',color:'var(--text)'}}>No tickets yet</h3>
             <p style={{fontSize:13,margin:0}}>Create a support ticket to get help</p>
           </div>
         ) : (
-          tickets.map(t => (
-            <div className="sp-ticket" key={t.id}>
-              <span className="sp-ticket-id">{t.id}</span>
-              <span className="sp-ticket-sub">{t.subject}</span>
-              <span className="sp-ticket-date">{t.date}</span>
-              <span className="sp-ticket-status" style={{background: `${t.color}15`, color: t.color}}>{t.status}</span>
-            </div>
-          ))
+          tickets.map(t => {
+            const statusColor = (t.status || '').toLowerCase() === 'open' ? '#DC2626' : (t.status || '').toLowerCase() === 'in progress' ? '#F59E0B' : '#16a34a'
+            return (
+              <div className="sp-ticket" key={t.id}>
+                <span className="sp-ticket-id">{t.id}</span>
+                <span className="sp-ticket-sub">{t.subject}</span>
+                <span className="sp-ticket-date">{t.createdAt ? new Date(t.createdAt).toLocaleDateString() : t.date}</span>
+                <span className="sp-ticket-status" style={{background: `${statusColor}15`, color: statusColor}}>{t.status}</span>
+              </div>
+            )
+          })
         )}
       </div>
 

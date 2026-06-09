@@ -8,17 +8,7 @@ import Drawer from "../components/Drawer"
 
 const categories = ['All', 'News', 'Businesses', 'Freelancers', 'Case Studies']
 
-const fallbackPosts = [
-  { id: '1', category: 'Freelancers', title: 'How Nigerian freelancers are earning 5x more with OgaPay tasks', excerpt: 'Discover how thousands of earners across West Africa are turning micro-tasks into meaningful income.', slug: 'how-nigerian-freelancers-earning-5x', author: { firstName: 'OgaPay', lastName: 'Team' }, date: 'June 4, 2026', readTime: '5 min read', color: '#191C6B' },
-  { id: '2', category: 'News', title: 'OgaPay launches instant wallet-to-bank withdrawals across 12 African countries', excerpt: 'Earners can now withdraw directly to their local bank accounts in seconds.', slug: 'instant-wallet-bank-withdrawals', author: { firstName: 'OgaPay', lastName: 'Team' }, date: 'June 3, 2026', readTime: '3 min read', color: '#191C6B' },
-  { id: '3', category: 'Businesses', title: "How small businesses use OgaPay's store to reach 50,000+ active buyers", excerpt: 'A deep dive into how merchants are growing revenue with the OgaPay marketplace.', slug: 'small-businesses-store-reach', author: { firstName: 'Adaeze', lastName: 'N.' }, date: 'June 1, 2026', readTime: '6 min read', color: '#3B6D11' },
-  { id: '4', category: 'Freelancers', title: 'Top 10 task categories paying the most on OgaPay this month', excerpt: "From social media tasks to crypto verification — here's where the money is.", slug: 'top-10-task-categories', author: { firstName: 'Emeka', lastName: 'J.' }, date: 'May 28, 2026', readTime: '4 min read', color: '#854F0B' },
-  { id: '5', category: 'Case Studies', title: "From zero to ₦800k/month: Chukwudi's story using the OgaPay worker portal", excerpt: "One earner's journey from side hustle to full-time income on OgaPay.", slug: 'zero-to-800k-chukwudi', author: { firstName: 'Fatima', lastName: 'B.' }, date: 'May 25, 2026', readTime: '8 min read', color: '#993556' },
-  { id: '6', category: 'News', title: "OgaPay communities hit 200,000 members — here's what's driving the growth", excerpt: "How peer-to-peer communities inside OgaPay became the platform's fastest growing feature.", slug: 'communities-200k-members', author: { firstName: 'OgaPay', lastName: 'Team' }, date: 'May 22, 2026', readTime: '3 min read', color: '#191C6B' },
-  { id: '7', category: 'Freelancers', title: 'OgaPay Vault explained: how to save and grow your earnings safely', excerpt: 'Everything you need to know about putting your OgaPay earnings to work.', slug: 'vault-save-grow-earnings', author: { firstName: 'Ngozi', lastName: 'A.' }, date: 'May 19, 2026', readTime: '5 min read', color: '#0F6E56' },
-  { id: '8', category: 'Case Studies', title: '5 businesses that scaled to 7 figures using OgaPay campaigns', excerpt: 'Real numbers, real results from brands that bet on OgaPay early.', slug: '5-businesses-7-figures', author: { firstName: 'Fatima', lastName: 'B.' }, date: 'May 15, 2026', readTime: '6 min read', color: '#993556' },
-]
-.map(p => ({ ...p, authorInitials: (p.author.firstName[0]||'')+(p.author.lastName[0]||''), isFallback: true }))
+const fallbackPosts: any[] = []
 
 const badgeColors: Record<string, { bg: string; color: string }> = {
   News: { bg: '#E6F1FB', color: '#191C6B' },
@@ -120,8 +110,8 @@ export default function Blog() {
     (async () => {
       try {
         const res = await apiRequest<any>('/blog?limit=50')
-        setApiPosts(res.posts || [])
-      } catch { setApiPosts(fallbackPosts) }
+        setApiPosts(res.posts || res.data || (Array.isArray(res) ? res : []))
+      } catch { setApiPosts([]) }
       setLoading(false)
     })()
   }, [])
