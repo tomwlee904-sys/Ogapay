@@ -396,7 +396,7 @@ export default function WorkerWorkspace() {
             {/* ── Mini Leaderboard ── */}
             {!leadersLoading && leaders && leaders.length > 0 && (
               <div className="ws-leaders">
-                <div className="ws-leaders-title"><i className="ti ti-trophy" style={{ color: ws.color }} /> Top Earners This Week</div>
+                <div className="ws-leaders-title"><i className="ti ti-trophy" style={{ color: ws.color }} /> Top Earners on OgaPay</div>
                 {leaders.slice(0, 3).map((l: any, i: number) => {
                   const name = l.username || l.name || l.firstName || 'User'
                   const initial = (name[0] || 'U').toUpperCase()
@@ -407,7 +407,7 @@ export default function WorkerWorkspace() {
                       <div className="ws-leader-rank">#{i + 1}</div>
                       <div className="ws-leader-avatar" style={{ background: avatarColors[i] }}>{initials}</div>
                       <div className="ws-leader-name">{name}</div>
-                      <div className="ws-leader-amount">{amount} SOL</div>
+                      <div className="ws-leader-amount">{formatReward(amount, l.currency)}</div>
                     </div>
                   )
                 })}
