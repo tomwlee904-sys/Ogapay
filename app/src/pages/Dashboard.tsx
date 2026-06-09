@@ -454,17 +454,21 @@ export default function OgaPayDashboard() {
               <p>Link your wallet to receive USDC payouts directly. Supports Phantom, Backpack, and Solflare.</p>
               <div className="dash-provider-grid">
                 {[
-                  { id: "phantom", label: "Phantom", color: "#AB9FF2", letter: "P" },
-                  { id: "backpack", label: "Backpack", color: "#0C8CE9", letter: "B" },
-                  { id: "solflare", label: "Solflare", color: "#E85D75", letter: "S" },
+                  {
+                    id: "phantom", label: "Phantom", color: "#AB9FF2",
+                    svg: <svg width="32" height="32" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="8" fill="#AB9FF2"/><path d="M8 24V12c0-4.4 3.6-8 8-8s8 3.6 8 8v12l-2-1.5-2 1.5-2-1.5-2 1.5-2-1.5-2 1.5-2-1.5Z" fill="#fff"/><circle cx="13" cy="12" r="1.5" fill="#AB9FF2"/><circle cx="19" cy="12" r="1.5" fill="#AB9FF2"/></svg>
+                  },
+                  {
+                    id: "backpack", label: "Backpack", color: "#0C8CE9",
+                    svg: <svg width="32" height="32" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="8" fill="#0C8CE9"/><path d="M13 10c0-1.1.9-2 2-2h2c1.1 0 2 .9 2 2v1h1c1.1 0 2 .9 2 2v8c0 1.1-.9 2-2 2h-8c-1.1 0-2-.9-2-2v-8c0-1.1.9-2 2-2h1v-1Z" fill="#fff"/><rect x="14" y="16" width="4" height="2" rx="1" fill="#0C8CE9"/><path d="M14 10v1h4v-1" fill="#0C8CE9"/></svg>
+                  },
+                  {
+                    id: "solflare", label: "Solflare", color: "#E85D75",
+                    svg: <svg width="32" height="32" viewBox="0 0 32 32" fill="none"><defs><linearGradient id="sfg" x1="0" y1="0" x2="32" y2="32"><stop stopColor="#FC5C7D"/><stop offset="1" stopColor="#6A82FB"/></linearGradient></defs><rect width="32" height="32" rx="8" fill="url(#sfg)"/><path d="M16 7c0 4-4 6.5-4 9.5S13.5 24 16 24s4-3 4-6-4-5.5-4-11Z" fill="#fff" opacity=".9"/><path d="M16 11c-1.2 2.5-2.5 4-2.5 5.5S14 20 16 20s2.5-1.5 2.5-3.5S17.2 13.5 16 11Z" fill="url(#sfg)"/></svg>
+                  },
                 ].map(p => (
                   <div key={p.id} className={`dash-provider${detectedWallets.includes(p.id) ? " selected" : ""}`} onClick={() => connectWallet(p.id)} style={{ cursor: detectedWallets.includes(p.id) || connecting ? "pointer" : "default", opacity: detectedWallets.includes(p.id) ? 1 : 0.5 }}>
-                    <div className="dash-provider-icon">
-                      <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-                        <rect width="32" height="32" rx="8" fill={p.color}/>
-                        <text x="16" y="22" textAnchor="middle" fill="white" fontSize="16" fontWeight="800" fontFamily="Outfit,sans-serif">{p.letter}</text>
-                      </svg>
-                    </div>
+                    <div className="dash-provider-icon">{p.svg}</div>
                     <span>{p.label}{detectedWallets.includes(p.id) ? " ●" : ""}</span>
                   </div>
                 ))}
