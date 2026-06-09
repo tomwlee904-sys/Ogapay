@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { apiRequest } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -18,25 +18,22 @@ const MODAL_STYLE: React.CSSProperties = {
   position: 'fixed', inset: 0, zIndex: 400, background: 'rgba(0,0,0,.5)',
   display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20,
 };
-
 const INNER_STYLE: React.CSSProperties = {
   background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 16,
   maxWidth: 480, width: '100%', padding: 28, maxHeight: '90vh', overflowY: 'auto',
 };
-
 const BTN: React.CSSProperties = {
   height: 40, padding: '0 18px', borderRadius: 10, fontWeight: 700, fontSize: 13,
   border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center',
   gap: 7, fontFamily: 'inherit', justifyContent: 'center', transition: 'opacity .14s',
 };
-
 const INPUT: React.CSSProperties = {
   width: '100%', height: 42, padding: '0 14px', border: '1.5px solid var(--border)',
   borderRadius: 10, background: 'var(--card)', color: 'var(--text)', fontSize: 14,
   outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box',
 };
 
-type Step = 'select' | 'estimate' | 'swap' | 'sign' | 'confirming' | 'done' | 'withdraw';
+type Step = 'select' | 'estimate' | 'swap' | 'sign' | 'confirming' | 'done' | 'withdraw' | 'ngnOptions';
 
 interface Props {
   onClose: () => void;
@@ -45,27 +42,37 @@ interface Props {
 }
 
 export default function FundWalletModal({ onClose, onDone, initialStep }: Props) {
-  const { user, refreshUser } = useAuth();
+  const { refreshUser } = useAuth();
   const [step, setStep] = useState<Step>(initialStep === 'withdraw' ? 'withdraw' : 'select');
-
-  // Deposit flow state
-  const [amountUsdc, setAmountUsdc] = useState('');
-  const [estimate, setEstimate] = useState<any>(null);
-  const [estimating, setEstimating] = useState(false);
-  const [signedTx, setSignedTx] = useState<string>('');
-  const [result, setResult] = useState<any>(null);
   const [error, setError] = useState('');
   const [msg, setMsg] = useState('');
 
-  // Swap state
-  const [swapTx, setSwapTx] = useState<string>('');
+  // ── Entry form state ──
+  const [walletAddr, setWalletAddr] = useState('');
+  const [ngnAccount, setNgnAccount] = useState('');
+  const [ngnBank, setNgnBank] = useState('');
+
+  // ── Crypto deposit state ──
+  const [amountUsdc, setAmountUsdc] = useState('');
+  const [estimate, setEstimate] = useState<any>(null);
+  const [estimating, setEstimating] = useState(false);
+
+  // ── Swap state ──
   const [swapSigning, setSwapSigning] = useState(false);
 
-  // Withdraw state
+  // ── Result ──
+  const [result, setResult] = useState<any>(null);
+
+  // ── Withdraw state ──
   const [wdAmount, setWdAmount] = useState('');
   const [wdCurrency, setWdCurrency] = useState<'USDC' | 'SOL'>('USDC');
   const [wdAddress, setWdAddress] = useState('');
   const [wdSubmitting, setWdSubmitting] = useState(false);
+
+  // ── NGN deposit state ──
+  const [ngnAmount, setNgnAmount] = useState('');
+  const [ngnProvider, setNgnProvider] = useState<'PAYSTACK' | 'FLUTTERWAVE' | ''>('');
+  const [ngnSubmitting, setNgnSubmitting] = useState(false);
 
   const detectedWallets: string[] = (() => {
     const found: string[] = [];
@@ -85,31 +92,23 @@ export default function FundWalletModal({ onClose, onDone, initialStep }: Props)
     return null;
   }
 
+  // ─── Wallet address entered → estimate crypto deposit ───
   async function handleEstimate() {
     const amt = parseFloat(amountUsdc);
     if (!amt || amt <= 0) { setError('Enter a valid amount'); return; }
+    if (!/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(walletAddr.trim())) {
+      setError('Invalid Solana wallet address'); return;
+    }
     setError('');
     setEstimating(true);
     try {
-      const wallet = getWallet();
-      if (!wallet) throw new Error('No wallet detected');
-      let pubKey = wallet.publicKey?.toString();
-      if (!pubKey) {
-        const resp = await wallet.connect();
-        pubKey = resp?.publicKey?.toString();
-      }
-      if (!pubKey) throw new Error('Could not get wallet address');
-
       const data = await apiRequest<any>('/wallet/fund/estimate', {
         method: 'POST',
-        body: JSON.stringify({ amount: amt, userWallet: pubKey }),
+        body: JSON.stringify({ amount: amt, userWallet: walletAddr.trim() }),
       });
       setEstimate(data);
-      if (data?.needsSwap && data?.quote) {
-        setStep('swap');
-      } else {
-        setStep('sign');
-      }
+      if (data?.needsSwap && data?.quote) setStep('swap');
+      else setStep('sign');
     } catch (e: any) {
       setError(e.message || 'Estimation failed');
     }
@@ -122,30 +121,19 @@ export default function FundWalletModal({ onClose, onDone, initialStep }: Props)
     setSwapSigning(true);
     setError('');
     try {
-      let pubKey = wallet.publicKey?.toString();
-      if (!pubKey) {
-        const resp = await wallet.connect();
-        pubKey = resp?.publicKey?.toString();
-      }
-
+      const pubKey = walletAddr.trim();
       const data = await apiRequest<{ swapTransaction: string }>('/wallet/fund/swap', {
         method: 'POST',
         body: JSON.stringify({ quoteResponse: estimate.quote, userWallet: pubKey }),
       });
-
       const swapTxBytes = Buffer.from(data.swapTransaction, 'base64');
       let tx: Transaction | VersionedTransaction;
-      try {
-        tx = VersionedTransaction.deserialize(swapTxBytes);
-      } catch {
-        tx = Transaction.from(swapTxBytes);
-      }
-
+      try { tx = VersionedTransaction.deserialize(swapTxBytes); }
+      catch { tx = Transaction.from(swapTxBytes); }
       const signed = await wallet.signTransaction(tx);
       const signedBytes = signed instanceof VersionedTransaction
         ? Buffer.from(signed.serialize())
         : Buffer.from(signed.serialize({ requireAllSignatures: false }));
-      setSwapTx(signedBytes.toString('base64'));
       setStep('sign');
     } catch (e: any) {
       setError(e.message || 'Swap signing failed');
@@ -157,29 +145,16 @@ export default function FundWalletModal({ onClose, onDone, initialStep }: Props)
     const wallet = getWallet();
     if (!wallet || !estimate) return;
     setError('');
-    setMsg('');
     try {
-      let pubKey = wallet.publicKey?.toString();
-      if (!pubKey) {
-        const resp = await wallet.connect();
-        pubKey = resp?.publicKey?.toString();
-      }
-      if (!pubKey) throw new Error('Could not get wallet address');
-
+      const pubKey = walletAddr.trim();
       const senderPubkey = new PublicKey(pubKey);
       const platformAta = new PublicKey(estimate.platformAta);
       const userAta = await getAssociatedTokenAddress(new PublicKey(USDC_MINT), senderPubkey);
       const amountLamports = Math.round(parseFloat(amountUsdc) * 1_000_000);
 
       const tx = new Transaction().add(
-        createTransferInstruction(
-          userAta,
-          platformAta,
-          senderPubkey,
-          amountLamports,
-        )
+        createTransferInstruction(userAta, platformAta, senderPubkey, amountLamports)
       );
-
       tx.feePayer = senderPubkey;
       const { blockhash } = await (await fetch(
         'https://api.mainnet-beta.solana.com',
@@ -191,7 +166,6 @@ export default function FundWalletModal({ onClose, onDone, initialStep }: Props)
 
       const signed = await wallet.signTransaction(tx);
       const bytes = Buffer.from(signed.serialize({ requireAllSignatures: false }));
-      setSignedTx(bytes.toString('base64'));
       await handleSubmit(bytes.toString('base64'));
     } catch (e: any) {
       setError(e.message || 'Signing failed');
@@ -207,7 +181,6 @@ export default function FundWalletModal({ onClose, onDone, initialStep }: Props)
         body: JSON.stringify({ signedTx: signed, expectedAmount: parseFloat(amountUsdc) }),
       });
       setResult(res);
-      setMsg('');
       setStep('done');
       refreshUser();
       onDone?.();
@@ -217,6 +190,38 @@ export default function FundWalletModal({ onClose, onDone, initialStep }: Props)
     }
   }
 
+  // ─── NGN amount entered → show Paystack/Flutterwave ───
+  async function handleNgnDeposit() {
+    const amt = parseFloat(ngnAmount);
+    if (!amt || amt <= 0) { setError('Enter a valid amount'); return; }
+    if (!ngnProvider) { setError('Select a payment provider'); return; }
+    setError('');
+    setNgnSubmitting(true);
+    try {
+      const data = await apiRequest<any>('/wallet/deposit', {
+        method: 'POST',
+        body: JSON.stringify({
+          amount: amt,
+          currency: 'NGN',
+          provider: ngnProvider,
+          callbackUrl: window.location.origin + '/wallet',
+        }),
+      });
+      if (data.paymentUrl) {
+        window.location.href = data.paymentUrl;
+      } else {
+        setResult({ reference: data.reference });
+        setStep('done');
+        refreshUser();
+        onDone?.();
+      }
+    } catch (e: any) {
+      setError(e.message || 'Deposit initiation failed');
+    }
+    setNgnSubmitting(false);
+  }
+
+  // ─── Withdraw ───
   async function handleWithdraw() {
     const amt = parseFloat(wdAmount);
     if (!amt || amt <= 0) { setError('Enter a valid amount'); return; }
@@ -238,6 +243,29 @@ export default function FundWalletModal({ onClose, onDone, initialStep }: Props)
     setWdSubmitting(false);
   }
 
+  // ─── Entry: user fills wallet OR bank, branches accordingly ───
+  function handleContinue() {
+    setError('');
+    const walletTrimmed = walletAddr.trim();
+    const hasWallet = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(walletTrimmed);
+    const hasBank = ngnAccount.length >= 10 && ngnBank.trim().length > 0;
+
+    if (hasWallet && hasBank) {
+      setError('Fill in either wallet address OR bank details, not both');
+      return;
+    }
+    if (hasWallet) {
+      setStep('estimate');
+      return;
+    }
+    if (hasBank) {
+      setStep('ngnOptions');
+      return;
+    }
+    setError('Enter a wallet address or bank account number to continue');
+  }
+
+  // ─── Render helpers ───
   function renderHeader(title: string) {
     return (
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
@@ -252,8 +280,8 @@ export default function FundWalletModal({ onClose, onDone, initialStep }: Props)
   function renderError() {
     if (!error) return null;
     return (
-      <div style={{ padding: '10px 14px', background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: 8, fontSize: 12, color: '#991b1b', marginBottom: 16, fontWeight: 600 }}>
-        <i className="ti ti-alert-triangle" style={{ marginRight: 6 }} />{error}
+      <div style={{ padding: '10px 14px', background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: 8, fontSize: 12, color: '#991b1b', marginBottom: 16, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
+        <i className="ti ti-alert-triangle" />{error}
       </div>
     );
   }
@@ -267,48 +295,55 @@ export default function FundWalletModal({ onClose, onDone, initialStep }: Props)
     );
   }
 
+  // ═══════════════════════════════════════════════════
+  //  STEP: select — entry form (wallet OR bank)
+  // ═══════════════════════════════════════════════════
   if (step === 'select') {
-    const walletLabel = detectedWallets[0] ? detectedWallets[0].charAt(0).toUpperCase() + detectedWallets[0].slice(1) : 'Wallet';
     return (
       <div style={MODAL_STYLE} onClick={onClose}>
         <div style={INNER_STYLE} onClick={e => e.stopPropagation()}>
           {renderHeader('Fund Wallet')}
-          <p style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.6, marginBottom: 20 }}>
-            Choose how you want to add funds to your OgaPay wallet.
+          {renderError()}
+          <p style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.6, marginBottom: 16 }}>
+            Enter your Solana wallet address <strong>or</strong> your Nigerian bank account to fund your OgaPay wallet.
           </p>
-          <div style={{ display: 'grid', gap: 12 }}>
-            <button style={{ ...BTN, background: 'var(--text)', color: 'var(--bg)', width: '100%' }} onClick={() => { setStep('estimate'); }}>
-              <i className="ti ti-currency-dollar" />
-              Deposit USDC (Crypto)
-            </button>
-            <button style={{ ...BTN, background: 'transparent', border: '1.5px solid var(--border)', color: 'var(--text)', width: '100%' }} onClick={() => { setStep('withdraw'); setError(''); }}>
-              <i className="ti ti-logout" />
-              Withdraw to External Wallet
-            </button>
-            <button style={{ ...BTN, background: 'transparent', border: '1.5px solid var(--border)', color: 'var(--text2)', width: '100%' }} onClick={onClose}>
-              Cancel
-            </button>
+          <div style={{ marginBottom: 16 }}>
+            <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--text3)', marginBottom: 4 }}>Solana Wallet Address</label>
+            <input style={INPUT} placeholder="5RrYLh..." value={walletAddr} onChange={e => setWalletAddr(e.target.value)} />
           </div>
+          <div style={{ textAlign: 'center', fontSize: 11, fontWeight: 700, color: 'var(--text3)', marginBottom: 12, letterSpacing: '.1em', textTransform: 'uppercase' }}>— Or —</div>
+          <div style={{ marginBottom: 12 }}>
+            <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--text3)', marginBottom: 4 }}>Account Number</label>
+            <input style={INPUT} placeholder="0123456789" maxLength={10} value={ngnAccount} onChange={e => setNgnAccount(e.target.value.replace(/\D/g, '').slice(0, 10))} />
+          </div>
+          <div style={{ marginBottom: 20 }}>
+            <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--text3)', marginBottom: 4 }}>Bank Name</label>
+            <input style={INPUT} placeholder="Access Bank" value={ngnBank} onChange={e => setNgnBank(e.target.value)} />
+          </div>
+          <button style={{ ...BTN, background: 'var(--text)', color: 'var(--bg)', width: '100%' }} onClick={handleContinue}>
+            Continue
+          </button>
         </div>
       </div>
     );
   }
 
+  // ═══════════════════════════════════════════════════
+  //  STEP: estimate — crypto deposit amount
+  // ═══════════════════════════════════════════════════
   if (step === 'estimate') {
     return (
       <div style={MODAL_STYLE} onClick={onClose}>
         <div style={INNER_STYLE} onClick={e => e.stopPropagation()}>
           {renderHeader('Deposit USDC')}
           {renderError()}
-          <p style={{ fontSize: 13, color: 'var(--text2)', marginBottom: 12 }}>Enter the amount to deposit via your connected wallet.</p>
+          <p style={{ fontSize: 13, color: 'var(--text2)', marginBottom: 12 }}>Amount to deposit from your wallet <span style={{ fontFamily: 'monospace', fontSize: 11 }}>{walletAddr.slice(0, 8)}...</span></p>
           <div style={{ marginBottom: 16 }}>
             <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--text3)', marginBottom: 4 }}>Amount (USDC)</label>
             <input style={INPUT} type="number" step="0.01" min="0" placeholder="10.00" value={amountUsdc} onChange={e => setAmountUsdc(e.target.value)} />
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
-            <button style={{ ...BTN, background: 'transparent', border: '1.5px solid var(--border)', color: 'var(--text2)', flex: 1 }} onClick={() => setStep('select')}>
-              Back
-            </button>
+            <button style={{ ...BTN, background: 'transparent', border: '1.5px solid var(--border)', color: 'var(--text2)', flex: 1 }} onClick={() => setStep('select')}>Back</button>
             <button style={{ ...BTN, background: 'var(--text)', color: 'var(--bg)', flex: 1, opacity: estimating ? 0.6 : 1 }} disabled={estimating} onClick={handleEstimate}>
               {estimating ? <><span className="spinner" style={{ width: 14, height: 14, borderWidth: 2 }} /> Checking...</> : 'Continue'}
             </button>
@@ -318,6 +353,9 @@ export default function FundWalletModal({ onClose, onDone, initialStep }: Props)
     );
   }
 
+  // ═══════════════════════════════════════════════════
+  //  STEP: swap — Jupiter SOL → USDC
+  // ═══════════════════════════════════════════════════
   if (step === 'swap') {
     return (
       <div style={MODAL_STYLE} onClick={onClose}>
@@ -325,7 +363,7 @@ export default function FundWalletModal({ onClose, onDone, initialStep }: Props)
           {renderHeader('Swap SOL → USDC')}
           {renderError()}
           <p style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.6, marginBottom: 16 }}>
-            You need <strong>{parseFloat(amountUsdc).toFixed(2)} USDC</strong> but only have <strong>{(estimate?.usdcBalance ?? 0) / 1_000_000} USDC</strong> in your wallet.
+            You need <strong>{parseFloat(amountUsdc).toFixed(2)} USDC</strong> but only have <strong>{(estimate?.usdcBalance ?? 0) / 1_000_000} USDC</strong>.
             Auto-swap some SOL to cover the difference?
           </p>
           {estimate?.quote && (
@@ -340,16 +378,12 @@ export default function FundWalletModal({ onClose, onDone, initialStep }: Props)
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span style={{ color: 'var(--text2)' }}>Price impact</span>
-                <span style={{ fontWeight: 700, color: Number(estimate.quote.priceImpactPct) > 1 ? '#DC2626' : 'inherit' }}>
-                  {Number(estimate.quote.priceImpactPct).toFixed(2)}%
-                </span>
+                <span style={{ fontWeight: 700, color: Number(estimate.quote.priceImpactPct) > 1 ? '#DC2626' : 'inherit' }}>{Number(estimate.quote.priceImpactPct).toFixed(2)}%</span>
               </div>
             </div>
           )}
           <div style={{ display: 'flex', gap: 8 }}>
-            <button style={{ ...BTN, background: 'transparent', border: '1.5px solid var(--border)', color: 'var(--text2)', flex: 1 }} onClick={() => setStep('estimate')}>
-              Back
-            </button>
+            <button style={{ ...BTN, background: 'transparent', border: '1.5px solid var(--border)', color: 'var(--text2)', flex: 1 }} onClick={() => setStep('estimate')}>Back</button>
             <button style={{ ...BTN, background: '#16a34a', color: '#fff', flex: 1, opacity: swapSigning ? 0.6 : 1 }} disabled={swapSigning} onClick={handleSwap}>
               {swapSigning ? <><span className="spinner" style={{ width: 14, height: 14, borderWidth: 2 }} /> Signing...</> : 'Sign Swap'}
             </button>
@@ -359,13 +393,15 @@ export default function FundWalletModal({ onClose, onDone, initialStep }: Props)
     );
   }
 
+  // ═══════════════════════════════════════════════════
+  //  STEP: sign — sign USDC transfer in wallet
+  // ═══════════════════════════════════════════════════
   if (step === 'sign') {
     return (
       <div style={MODAL_STYLE} onClick={onClose}>
         <div style={INNER_STYLE} onClick={e => e.stopPropagation()}>
           {renderHeader('Confirm Transfer')}
           {renderError()}
-          {renderMsg()}
           <p style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.6, marginBottom: 16 }}>
             Sign the USDC transfer in your wallet to deposit <strong>{parseFloat(amountUsdc).toFixed(2)} USDC</strong>.
           </p>
@@ -382,17 +418,60 @@ export default function FundWalletModal({ onClose, onDone, initialStep }: Props)
             )}
           </div>
           <button style={{ ...BTN, background: 'var(--text)', color: 'var(--bg)', width: '100%' }} onClick={handleSignTransfer}>
-            <i className="ti ti-wallet" />
-            Sign with {detectedWallets[0] ? detectedWallets[0].charAt(0).toUpperCase() + detectedWallets[0].slice(1) : 'Wallet'}
+            <i className="ti ti-wallet" /> Sign with {detectedWallets[0] ? detectedWallets[0].charAt(0).toUpperCase() + detectedWallets[0].slice(1) : 'Wallet'}
           </button>
-          <button style={{ ...BTN, background: 'transparent', border: '1.5px solid var(--border)', color: 'var(--text2)', width: '100%', marginTop: 8, justifyContent: 'center' }} onClick={() => setStep('estimate')}>
-            Back
-          </button>
+          <button style={{ ...BTN, background: 'transparent', border: '1.5px solid var(--border)', color: 'var(--text2)', width: '100%', marginTop: 8, justifyContent: 'center' }} onClick={() => setStep('estimate')}>Back</button>
         </div>
       </div>
     );
   }
 
+  // ═══════════════════════════════════════════════════
+  //  STEP: ngnOptions — Pick Paystack or Flutterwave
+  // ═══════════════════════════════════════════════════
+  if (step === 'ngnOptions') {
+    return (
+      <div style={MODAL_STYLE} onClick={onClose}>
+        <div style={INNER_STYLE} onClick={e => e.stopPropagation()}>
+          {renderHeader('Deposit via Bank')}
+          {renderError()}
+          <p style={{ fontSize: 13, color: 'var(--text2)', marginBottom: 12 }}>
+            Fund your NGN wallet using your preferred payment provider.
+          </p>
+          <div style={{ marginBottom: 16 }}>
+            <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--text3)', marginBottom: 4 }}>Amount (NGN)</label>
+            <input style={INPUT} type="number" step="100" min="100" placeholder="1000" value={ngnAmount} onChange={e => setNgnAmount(e.target.value)} />
+          </div>
+          <div style={{ marginBottom: 16 }}>
+            <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--text3)', marginBottom: 8 }}>Payment Provider</label>
+            <div style={{ display: 'flex', gap: 10 }}>
+              {[
+                { id: 'PAYSTACK' as const, label: 'Paystack', icon: 'ti ti-building-bank', desc: 'Bank transfer, card, USSD' },
+                { id: 'FLUTTERWAVE' as const, label: 'Flutterwave', icon: 'ti ti-wand', desc: 'Bank transfer, card, mobile money' },
+              ].map(p => (
+                <button key={p.id} onClick={() => setNgnProvider(p.id)}
+                  style={{ ...BTN, flex: 1, flexDirection: 'column', height: 'auto', padding: '14px 12px', gap: 6, background: ngnProvider === p.id ? 'var(--text)' : 'transparent', color: ngnProvider === p.id ? 'var(--bg)' : 'var(--text2)', border: ngnProvider === p.id ? 'none' : '1.5px solid var(--border)' }}>
+                  <i className={p.icon} style={{ fontSize: 22 }} />
+                  <span style={{ fontSize: 12 }}>{p.label}</span>
+                  <span style={{ fontSize: 10, opacity: 0.7 }}>{p.desc}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button style={{ ...BTN, background: 'transparent', border: '1.5px solid var(--border)', color: 'var(--text2)', flex: 1 }} onClick={() => setStep('select')}>Back</button>
+            <button style={{ ...BTN, background: '#16a34a', color: '#fff', flex: 1, opacity: ngnSubmitting ? 0.6 : 1 }} disabled={ngnSubmitting} onClick={handleNgnDeposit}>
+              {ngnSubmitting ? <><span className="spinner" style={{ width: 14, height: 14, borderWidth: 2 }} /> Processing...</> : 'Deposit'}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ═══════════════════════════════════════════════════
+  //  STEP: confirming
+  // ═══════════════════════════════════════════════════
   if (step === 'confirming') {
     return (
       <div style={MODAL_STYLE} onClick={onClose}>
@@ -407,6 +486,9 @@ export default function FundWalletModal({ onClose, onDone, initialStep }: Props)
     );
   }
 
+  // ═══════════════════════════════════════════════════
+  //  STEP: done
+  // ═══════════════════════════════════════════════════
   if (step === 'done') {
     return (
       <div style={MODAL_STYLE} onClick={onClose}>
@@ -424,21 +506,21 @@ export default function FundWalletModal({ onClose, onDone, initialStep }: Props)
                 Tx: {result.signature.slice(0, 16)}...{result.signature.slice(-8)}
               </p>
             )}
-            {result?.senderAddress && (
-              <p style={{ fontSize: 12, color: 'var(--text2)', margin: '4px 0' }}>
-                From: <span style={{ fontFamily: 'monospace' }}>{result.senderAddress.slice(0, 8)}...{result.senderAddress.slice(-4)}</span>
+            {result?.reference && !result?.signature && (
+              <p style={{ fontSize: 12, color: 'var(--text2)', margin: '12px 0' }}>
+                Reference: <span style={{ fontFamily: 'monospace', fontWeight: 700 }}>{result.reference}</span>
               </p>
             )}
           </div>
-          <button style={{ ...BTN, background: 'var(--text)', color: 'var(--bg)', width: '100%' }} onClick={onClose}>
-            Done
-          </button>
+          <button style={{ ...BTN, background: 'var(--text)', color: 'var(--bg)', width: '100%' }} onClick={onClose}>Done</button>
         </div>
       </div>
     );
   }
 
-  // Withdraw step
+  // ═══════════════════════════════════════════════════
+  //  STEP: withdraw
+  // ═══════════════════════════════════════════════════
   return (
     <div style={MODAL_STYLE} onClick={onClose}>
       <div style={INNER_STYLE} onClick={e => e.stopPropagation()}>
@@ -465,9 +547,7 @@ export default function FundWalletModal({ onClose, onDone, initialStep }: Props)
           <input style={INPUT} placeholder="Enter Solana wallet address" value={wdAddress} onChange={e => setWdAddress(e.target.value)} />
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
-          <button style={{ ...BTN, background: 'transparent', border: '1.5px solid var(--border)', color: 'var(--text2)', flex: 1 }} onClick={() => setStep('select')}>
-            Back
-          </button>
+          <button style={{ ...BTN, background: 'transparent', border: '1.5px solid var(--border)', color: 'var(--text2)', flex: 1 }} onClick={() => setStep('select')}>Back</button>
           <button style={{ ...BTN, background: '#DC2626', color: '#fff', flex: 1, opacity: wdSubmitting ? 0.6 : 1 }} disabled={wdSubmitting} onClick={handleWithdraw}>
             {wdSubmitting ? <><span className="spinner" style={{ width: 14, height: 14, borderWidth: 2 }} /> Sending...</> : 'Withdraw'}
           </button>
