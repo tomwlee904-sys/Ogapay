@@ -26,12 +26,12 @@ const categories = [
 ]
 
 const achievements = [
-  { icon: '💎', name: 'Gold Earner', desc: 'Earn over NGN 100K' },
-  { icon: '🥈', name: 'Silver Earner', desc: 'Earn over NGN 50K' },
-  { icon: '🥉', name: 'Bronze Earner', desc: 'Earn over NGN 25K' },
-  { icon: '🔥', name: 'Top Referrer', desc: 'Refer 10+ users' },
-  { icon: '⚡', name: 'Fast Worker', desc: 'Complete 50 tasks' },
-  { icon: '👑', name: 'Community Leader', desc: 'Lead a community' },
+  { icon: 'ti-diamond', name: 'Gold Earner', desc: 'Earn over NGN 100K' },
+  { icon: 'ti-medal-2', name: 'Silver Earner', desc: 'Earn over NGN 50K' },
+  { icon: 'ti-medal', name: 'Bronze Earner', desc: 'Earn over NGN 25K' },
+  { icon: 'ti-flame', name: 'Top Referrer', desc: 'Refer 10+ users' },
+  { icon: 'ti-bolt', name: 'Fast Worker', desc: 'Complete 50 tasks' },
+  { icon: 'ti-crown', name: 'Community Leader', desc: 'Lead a community' },
 ]
 
 function getInitials(name: string) {
@@ -124,7 +124,7 @@ export default function Leaderboard() {
         @media(max-width:500px){.lb-ach{grid-template-columns:repeat(2,1fr)}}
         .lb-ach-item{text-align:center;padding:14px 10px;background:var(--card);border:1px solid var(--border);border-radius:12px;transition:all .2s}
         .lb-ach-item:hover{transform:translateY(-2px)}
-        .lb-ach-item .achi{font-size:24px;margin-bottom:4px}
+        .lb-ach-item .achi{font-size:24px;margin-bottom:4px;display:block}
         .lb-ach-item .achn{font-weight:800;font-size:11px}
         .lb-ach-item .achd{font-size:9px;color:var(--text3);margin-top:2px}
       `}</style>
@@ -226,7 +226,7 @@ export default function Leaderboard() {
       <div className="lb-ach">
         {achievements.map((a, i) => (
           <div className="lb-ach-item" key={i}>
-            <div className="achi">{a.icon}</div>
+            <div className="achi"><i className={a.icon} style={{fontSize:24}} /></div>
             <div className="achn">{a.name}</div>
             <div className="achd">{a.desc}</div>
           </div>

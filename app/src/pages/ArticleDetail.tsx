@@ -14,7 +14,22 @@ function estimateReadTime(content: string) {
   return `${Math.max(1, Math.ceil(words / 200))} min read`
 }
 
-function renderContent(html: string) {
+function renderContent(text: string) {
+  if (!text) return { __html: '' }
+  let html = ''
+  for (const line of text.split('\n')) {
+    if (line.startsWith('### ')) { html += `<h3>${line.replace('### ', '')}</h3>`; continue }
+    if (line.startsWith('## '))  { html += `<h2>${line.replace('## ', '')}</h2>`; continue }
+    if (line.startsWith('# '))   { html += `<h1>${line.replace('# ', '')}</h1>`; continue }
+    if (line.startsWith('- '))   { html += `<li>${line.replace('- ', '')}</li>`; continue }
+    if (line.startsWith('> '))   { html += `<blockquote>${line.replace('> ', '')}</blockquote>`; continue }
+    if (line.trim() === '')      { html += '<br />'; continue }
+    html += `<p>${line}</p>`
+  }
+  // Inline formatting
+  html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+             .replace(/\*(.+?)\*/g, '<em>$1</em>')
+             .replace(/`(.+?)`/g, '<code>$1</code>')
   return { __html: html }
 }
 
