@@ -5,6 +5,7 @@ import { useAuth } from "../context/AuthContext";
 import { apiRequest } from "../lib/api";
 import bs58 from "bs58";
 import { SkeletonPage, injectSkeletonStyles } from "../components/SkeletonLoader";
+import FundWalletModal from "../components/FundWalletModal";
 
 const ACCENT = "#191C6B";
 
@@ -169,6 +170,7 @@ export default function OgaPayDashboard() {
   const [savingBank, setSavingBank] = useState(false);
   const [bankSaved, setBankSaved] = useState(false);
   const [twitterAuthenticating, setTwitterAuthenticating] = useState(false);
+  const [showFundModal, setShowFundModal] = useState(false);
 
   const [isNew, setIsNew] = useState(() => {
     if (!user?.createdAt) return false;
@@ -546,7 +548,12 @@ export default function OgaPayDashboard() {
                 ))}
               </div>
               {step2Done ? (
-                <div className="dash-success-msg"><Icon n="check" s={12} /> Wallet Connected</div>
+                <>
+                  <div className="dash-success-msg"><Icon n="check" s={12} /> Wallet Connected</div>
+                  <button className="dash-btn green sm" style={{ marginTop: 8 }} onClick={() => setShowFundModal(true)}>
+                    <Icon n="plus" s={14} /> Fund Wallet
+                  </button>
+                </>
               ) : (
                 <button className="dash-btn outline" onClick={() => window.location.href = "/profile"}>
                   <Icon n="wallet" s={14} /> Connect in Settings
@@ -666,13 +673,17 @@ export default function OgaPayDashboard() {
                   {availableTasks === "0" && <div style={{ fontSize: 11, fontWeight: 700, color: '#191C6B', marginTop: 2 }}>Browse tasks &rarr;</div>}
                 </div>
               </div>
-              <div className="dash-stat-card" onClick={() => navigate('/wallet')} style={{ cursor: 'pointer' }}>
-                <div className="dash-stat-icon"><Icon n="currency-naira" s={18} /></div>
-                <div className="dash-stat-info">
-                  <div className="dash-stat-label">Total Earned</div>
-                  <div className="dash-stat-value">{totalEarned}</div>
-                  {(totalEarned === "₦0.00" || totalEarned === "N/A") && <div style={{ fontSize: 11, fontWeight: 700, color: '#191C6B', marginTop: 2 }}>Start earning &rarr;</div>}
+              <div className="dash-stat-card" style={{ cursor: 'pointer' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 14, flex: 1 }}>
+                  <div className="dash-stat-icon" style={{ background: '#191C6B15', color: '#191C6B' }}><Icon n="currency-dollar" s={18} /></div>
+                  <div className="dash-stat-info">
+                    <div className="dash-stat-label">Wallet</div>
+                    <div className="dash-stat-value" style={{ fontSize: 16 }}>{totalEarned}</div>
+                  </div>
                 </div>
+                <button className="dash-btn green sm" onClick={(e) => { e.stopPropagation(); setShowFundModal(true); }} style={{ flexShrink: 0 }}>
+                  <Icon n="plus" s={14} /> Fund
+                </button>
               </div>
               <div className="dash-stat-card" onClick={() => navigate('/my-tasks')} style={{ cursor: 'pointer' }}>
                 <div className="dash-stat-icon"><Icon n="file-text" s={18} /></div>
@@ -769,6 +780,12 @@ export default function OgaPayDashboard() {
 
         </div>{/* end two-column grid */}
       </div>{/* end dash-wrap2 */}
+      {showFundModal && (
+        <FundWalletModal
+          onClose={() => setShowFundModal(false)}
+          onDone={() => refreshUser()}
+        />
+      )}
     </Layout>
   );
 }

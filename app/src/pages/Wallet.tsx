@@ -3,6 +3,7 @@ import Layout from '../components/Layout'
 import { apiRequest } from '../lib/api'
 import CurrencySelector from '../components/CurrencySelector'
 import { useCurrency } from '../context/CurrencyContext'
+import FundWalletModal from '../components/FundWalletModal'
 
 export default function Wallet() {
   const [activeTab, setActiveTab] = useState('all')
@@ -11,6 +12,8 @@ export default function Wallet() {
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState('')
   const { fmt, fmtAll, preferredCurrency } = useCurrency()
+  const [showFundModal, setShowFundModal] = useState(false)
+  const [fundStep, setFundStep] = useState<'deposit' | 'withdraw'>('deposit')
 
   useEffect(() => {
     async function load() {
@@ -135,9 +138,9 @@ export default function Wallet() {
           <div className="wlh-sub">${usdcBal.toFixed(2)} USDC &middot; {solBal.toFixed(3)} SOL</div>
         </div>
         <div className="wl-actions">
-          <a href="#" className="wla-btn primary"><i className="ti ti-plus" /> Deposit</a>
-          <a href="#" className="wla-btn outline"><i className="ti ti-logout" /> Withdraw</a>
-          <a href="#" className="wla-btn outline"><i className="ti ti-transfer" /> Transfer</a>
+          <button className="wla-btn primary" onClick={() => { setFundStep('deposit'); setShowFundModal(true); }}><i className="ti ti-plus" /> Deposit</button>
+          <button className="wla-btn outline" onClick={() => { setFundStep('withdraw'); setShowFundModal(true); }}><i className="ti ti-logout" /> Withdraw</button>
+          <button className="wla-btn outline" onClick={() => { setFundStep('deposit'); setShowFundModal(true); }}><i className="ti ti-transfer" /> Transfer</button>
         </div>
       </div>
 
@@ -157,17 +160,17 @@ export default function Wallet() {
       </div>
 
       <div className="wl-grid">
-        {[
-          { icon: 'ti ti-plus-circle', color: '#191C6B', label: 'Deposit', desc: 'Add funds to your wallet' },
-          { icon: 'ti ti-logout', color: '#191C6B', label: 'Withdraw', desc: 'Withdraw to bank or crypto' },
-          { icon: 'ti ti-transfer', color: '#16a34a', label: 'Transfer', desc: 'Send to another user' },
-        ].map((c, i) => (
-          <a className="wl-card" href="#" key={i}>
-            <i className={c.icon} style={{ color: c.color }} />
-            <div className="wlc-label">{c.label}</div>
-            <div className="wlc-desc">{c.desc}</div>
-          </a>
-        ))}
+          {[
+            { icon: 'ti ti-plus-circle', color: '#191C6B', label: 'Deposit', desc: 'Add funds to your wallet', step: 'deposit' as const },
+            { icon: 'ti ti-logout', color: '#191C6B', label: 'Withdraw', desc: 'Withdraw to bank or crypto', step: 'withdraw' as const },
+            { icon: 'ti ti-transfer', color: '#16a34a', label: 'Transfer', desc: 'Send to another user', step: 'deposit' as const },
+          ].map((c, i) => (
+            <div className="wl-card" key={i} onClick={() => { setFundStep(c.step); setShowFundModal(true); }}>
+              <i className={c.icon} style={{ color: c.color }} />
+              <div className="wlc-label">{c.label}</div>
+              <div className="wlc-desc">{c.desc}</div>
+            </div>
+          ))}
       </div>
 
       <div className="sec-title"><i className="ti ti-history" /> Transaction History</div>
@@ -201,6 +204,16 @@ export default function Wallet() {
             </tbody>
           </table>
         </div>
+      )}
+      {showFundModal && (
+        <FundWalletModal
+          onClose={() => setShowFundModal(false)}
+          onDone={() => {
+            apiRequest<any>('/wallet/balance').then(d => setBalances(d)).catch(() => {});
+            apiRequest<any>('/users/transactions/history').then(d => setTransactions(Array.isArray(d) ? d : [])).catch(() => {});
+          }}
+          initialStep={fundStep}
+        />
       )}
     </Layout>
   )
