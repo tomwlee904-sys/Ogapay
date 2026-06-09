@@ -8,8 +8,8 @@ import { SkeletonPage, injectSkeletonStyles } from "../components/SkeletonLoader
 const ACCENT = "#191C6B";
 
 /* ─── INLINE SVG ICONS ────────────────────────────────────────── */
-const Icon = ({ n, s = 18, c = "currentColor" }) => (
-  <i className={`ti ti-${n}`} style={{ fontSize: s, color: c, lineHeight: 1, flexShrink: 0 }} />
+const Icon = ({ n, s = 18, c = "currentColor", style }: { n: string; s?: number; c?: string; style?: React.CSSProperties }) => (
+  <i className={`ti ti-${n}`} style={{ fontSize: s, color: c, lineHeight: 1, flexShrink: 0, ...style }} />
 );
 
 /* ─── STYLES (injected inline to preserve exact layout) ────────── */
@@ -160,6 +160,9 @@ export default function OgaPayDashboard() {
   const [availableTasks, setAvailableTasks] = useState("0");
   const [totalEarned, setTotalEarned] = useState("₦0.00");
   const [communityJoined, setCommunityJoined] = useState(false);
+  const [detectedWallets, setDetectedWallets] = useState<string[]>([]);
+  const [connecting, setConnecting] = useState<string | null>(null);
+  const [walletAddress, setWalletAddress] = useState("");
 
   const [isNew, setIsNew] = useState(() => {
     if (!user?.createdAt) return false;
@@ -194,6 +197,23 @@ export default function OgaPayDashboard() {
           const total = earningsResponse.total ?? earningsResponse.totalEarned ?? 0;
           setTotalEarned("₦" + Number(total).toLocaleString());
         }
+
+        // Check user's joined communities via API
+        try {
+          const myComs = await apiRequest<any>("/communities/mine/list");
+          if (Array.isArray(myComs)) {
+            setCommunityJoined(myComs.length > 0);
+          }
+        } catch (_) {}
+
+        // Detect installed Solana wallets
+        const found: string[] = [];
+        if (typeof window !== "undefined") {
+          if ((window as any).phantom?.solana?.isPhantom) found.push("phantom");
+          if ((window as any).backpack?.isBackpack) found.push("backpack");
+          if ((window as any).solflare?.isSolflare) found.push("solflare");
+        }
+        setDetectedWallets(found);
       } catch (e) {
         const el = document.getElementById('appToast')
         if (el) { el.textContent = 'Could not load dashboard data'; el.classList.add('show'); setTimeout(() => el.classList.remove('show'), 3000) }
@@ -228,6 +248,27 @@ export default function OgaPayDashboard() {
   const total = 4;
   const pct = Math.round((completed / total) * 100);
   const allDone = completed === total;
+
+  async function connectWallet(id: string) {
+    if (!detectedWallets.includes(id)) return;
+    setConnecting(id);
+    try {
+      let wallet: any;
+      if (id === "phantom") wallet = (window as any).phantom?.solana;
+      else if (id === "backpack") wallet = (window as any).backpack;
+      else if (id === "solflare") wallet = (window as any).solflare;
+      if (wallet?.connect) {
+        const resp = await wallet.connect();
+        if (resp?.publicKey) {
+          const addr = resp.publicKey.toString();
+          setWalletAddress(addr);
+        }
+      }
+    } catch (e) {
+      console.error("Wallet connect failed", e);
+    }
+    setConnecting(null);
+  }
 
   if (!isAuthed) {
     return (
@@ -274,7 +315,7 @@ export default function OgaPayDashboard() {
         ) : isNew ? (
           <div className="dash-intro" onClick={() => navigate('/profile')} style={{ cursor: 'pointer' }}>
             <div className="dash-intro-icon" style={{ background: "#191C6B" }}>
-              <Icon n="hand-wave" s={20} c="#191C6B" />
+              <Icon n="hand-wave" s={20} c="#fff" />
             </div>
             <div style={{ flex: 1 }}>
               <h2>Welcome to OgaPay, {fname}!</h2>
@@ -320,7 +361,7 @@ export default function OgaPayDashboard() {
           {!allDone && (
             <span style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "5px 12px", borderRadius: 20, background: "#191C6B", color: "#fff", fontSize: 12, fontWeight: 700 }}>
               <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#fff", opacity: .85, display: "inline-block" }} />
-              {total - completed} tasks pending
+              {total - completed} steps remaining
             </span>
           )}
         </div>
@@ -386,13 +427,18 @@ export default function OgaPayDashboard() {
               <p>Link your wallet to receive USDC payouts directly. Supports Phantom, Backpack, and Solflare.</p>
               <div className="dash-provider-grid">
                 {[
-                  { id: "phantom", label: "Phantom", icon: "brand-figma" },
-                  { id: "backpack", label: "Backpack", icon: "backpack" },
-                  { id: "solflare", label: "Solflare", icon: "flare" },
+                  { id: "phantom", label: "Phantom", color: "#AB9FF2", letter: "P" },
+                  { id: "backpack", label: "Backpack", color: "#0C8CE9", letter: "B" },
+                  { id: "solflare", label: "Solflare", color: "#E85D75", letter: "S" },
                 ].map(p => (
-                  <div key={p.id} className="dash-provider">
-                    <div className="dash-provider-icon"><Icon n={p.icon} s={20} /></div>
-                    <span>{p.label}</span>
+                  <div key={p.id} className={`dash-provider${detectedWallets.includes(p.id) ? " selected" : ""}`} onClick={() => connectWallet(p.id)} style={{ cursor: detectedWallets.includes(p.id) || connecting ? "pointer" : "default", opacity: detectedWallets.includes(p.id) ? 1 : 0.5 }}>
+                    <div className="dash-provider-icon">
+                      <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                        <rect width="32" height="32" rx="8" fill={p.color}/>
+                        <text x="16" y="22" textAnchor="middle" fill="white" fontSize="16" fontWeight="800" fontFamily="Outfit,sans-serif">{p.letter}</text>
+                      </svg>
+                    </div>
+                    <span>{p.label}{detectedWallets.includes(p.id) ? " ●" : ""}</span>
                   </div>
                 ))}
               </div>
@@ -432,8 +478,8 @@ export default function OgaPayDashboard() {
               {step3Done ? (
                 <div className="dash-success-msg"><Icon n="check" s={12} /> Community Joined</div>
               ) : (
-                <button className={`dash-btn${step3Done ? " green" : ""}`} onClick={() => setCommunityJoined(true)}>
-                  <Icon n="users" s={14} /> I've Joined — Mark as Done
+                <button className={`dash-btn${step3Done ? " green" : ""}`} onClick={() => navigate('/communities')}>
+                  <Icon n="users" s={14} /> Browse Communities
                 </button>
               )}
             </div>
