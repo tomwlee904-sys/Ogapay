@@ -565,7 +565,7 @@ export default function Profile() {
       `}</style>
 
       {/* Onboarding banners */}
-      {!loading && !hasWallet && (
+      {!loading && !hasWallet && !accountNumber && (
         <div className="onboarding-banner">
           <i className="ti ti-wallet" style={{color:'var(--accent)',fontSize:20}} />
           <span className="ob-msg">Connect your wallet to unlock full features</span>
@@ -573,7 +573,7 @@ export default function Profile() {
           <button className="ob-close" onClick={e => (e.currentTarget.closest('.onboarding-banner')!.style.display='none')}><i className="ti ti-x" /></button>
         </div>
       )}
-      {!loading && !accountNumber && (
+      {!loading && !accountNumber && !hasWallet && (
         <div className="onboarding-banner">
           <i className="ti ti-building-bank" style={{color:'#f59e0b',fontSize:20}} />
           <span className="ob-msg">Add a bank account to withdraw in Naira</span>
