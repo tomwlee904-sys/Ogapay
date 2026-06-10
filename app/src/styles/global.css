@@ -100,6 +100,8 @@ button{font:inherit}
 .wallet-btn:hover{border-color:var(--text);background:var(--bg2)}
 .wallet-btn svg{width:15px;height:15px}
 .wallet-btn strong{background:var(--brand-blue);-webkit-background-clip:text;background-clip:text;color:transparent;font-size:15px}
+.balance-chip{height:36px;padding:0 14px;display:inline-flex;align-items:center;gap:6px;border:1.5px solid #16a34a;border-radius:999px;background:rgba(22,163,74,.06);color:#16a34a;font-size:12px;font-weight:800;letter-spacing:.3px;text-decoration:none;transition:border-color .2s,background .2s}
+.balance-chip:hover{border-color:#15803d;background:rgba(22,163,74,.12);color:#15803d}
 .icon-btn{
   width:36px;height:36px;
   display:grid;place-items:center;

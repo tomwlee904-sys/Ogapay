@@ -70,8 +70,8 @@ export default function Navbar({ onMenuToggle }: NavbarProps) {
             </>
           )}
           {isAuthed && (
-            <a className="wallet-btn" href="/wallet">
-              <i className="ti ti-wallet" /> &#8358;{balance}
+            <a className="balance-chip" href="/wallet">
+              BALANCE: &#8358;{balance}
             </a>
           )}
           {isAuthed && (
