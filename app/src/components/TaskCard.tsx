@@ -69,10 +69,11 @@ export default function TaskCard({ task }: TaskCardProps) {
     <div className="tc-card" onClick={() => navigate(`/tasks/${task.id}`)}>
       {/* Header — poster info */}
       <div className="tc-header">
-        <img
-          src={task.poster?.avatarUrl || '/default-avatar.png'}
-          className="tc-avatar"
-        />
+        {task.poster?.avatarUrl ? (
+          <img src={task.poster.avatarUrl} className="tc-avatar" />
+        ) : (
+          <div className="tc-avatar-initial">{posterName[0] || '?'}</div>
+        )}
         <div>
           <p className="tc-listed">Listed by</p>
           <p className="tc-poster">{posterName}</p>

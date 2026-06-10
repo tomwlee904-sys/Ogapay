@@ -34,6 +34,18 @@
   flex-shrink: 0;
   border: 2px solid var(--border);
 }
+.tc-avatar-initial {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  font-weight: 800;
+  color: #fff;
+  flex-shrink: 0;
+  background: linear-gradient(135deg, var(--accent), #6366F1);
+}
 .tc-listed {
   font-size: 10px;
   color: var(--text3);
