@@ -1,253 +1,363 @@
-/* ─── Task Card — Wurk.fun Pixel-Perfect Layout ──────────── */
+/* ─── Featured Task Card — WURK Layout, OgaPay Blue ────── */
 
-.task-card {
-  position: relative;
-  background: #111318;
-  border: 1px solid #1e2028;
-  border-radius: 12px;
+.tc-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  gap: 0;
-  min-height: 310px;
   cursor: pointer;
-  transition: transform 0.2s ease, border-color 0.2s ease;
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+  min-height: 380px;
 }
-.task-card:hover {
+.tc-card:hover {
+  box-shadow: 0 4px 20px rgba(25,28,107,0.08);
   transform: translateY(-2px);
-  border-color: #333;
+}
+[data-theme="dark"] .tc-card {
+  background: #1a1b2e;
+  border-color: #2a2d45;
+}
+[data-theme="dark"] .tc-card:hover {
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
 }
 
-/* Colored top accent line */
-.card-accent-line {
-  height: 2px;
-  width: 100%;
-  background: var(--accent, #4caf50);
-}
+/* ═══ HEADER — blue gradient bg ═══════════════════════════ */
 
-/* Header */
-.card-header {
+.tc-header {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 10px 14px 8px;
-  border-bottom: 1px solid #1e2028;
+  padding: 14px 16px;
+  background: linear-gradient(135deg, #eef2ff 0%, #fff 100%);
+  border-bottom: 1px solid #e5e7eb;
 }
-.card-avatar {
-  width: 36px;
-  height: 36px;
+[data-theme="dark"] .tc-header {
+  background: linear-gradient(135deg, #1e2040 0%, #1a1b2e 100%);
+  border-bottom-color: #2a2d45;
+}
+.tc-avatar {
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
-  border: 2px solid var(--accent, #4caf50);
   object-fit: cover;
   flex-shrink: 0;
+  border: 2px solid #fff;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
 }
-.card-avatar-init {
-  width: 36px;
-  height: 36px;
+.tc-avatar-init {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 800;
   color: #fff;
-  background: #2a2d35;
-  border-radius: 50%;
+  flex-shrink: 0;
+  background: #191C6B;
+  border: 2px solid #fff;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
 }
-.card-header-text {
+.tc-header-info {
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
 }
-.listed-by-label {
-  display: block;
-  font-size: 0.55rem;
-  color: #666;
-  letter-spacing: 0.08em;
+.tc-listed-label {
+  font-size: 11px;
+  color: #9ca3af;
   text-transform: uppercase;
+  letter-spacing: 0.1em;
   line-height: 1.2;
 }
-.listed-by-username {
-  display: block;
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: #fff;
+.tc-listed-name {
+  font-size: 14px;
+  font-weight: 900;
+  color: #111827;
   letter-spacing: 0.02em;
+  text-transform: uppercase;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  max-width: 180px;
+}
+[data-theme="dark"] .tc-listed-name {
+  color: #f3f4f6;
 }
 
-/* Progress */
-.card-progress-section {
-  padding: 8px 14px;
-  border-bottom: 1px solid #1e2028;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-.progress-header-row {
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.6rem;
-  color: #666;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-.progress-track {
-  height: 4px;
-  background: #2a2d35;
-  border-radius: 2px;
-  overflow: hidden;
-}
-.progress-fill {
-  height: 100%;
-  border-radius: 2px;
-  transition: width 0.3s ease;
-}
-.progress-pills {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-.pill {
-  font-size: 0.65rem;
-  white-space: nowrap;
-}
-.pill-green { color: #4caf50; }
-.pill-grey { color: #888; }
-
-/* Reward box */
-.reward-box {
-  margin: 10px 14px 8px;
-  border: 1px solid #2a2d35;
-  border-radius: 8px;
-  padding: 12px 12px;
-  text-align: center;
-  background: #0d0f14;
-}
-.reward-amount {
-  font-size: 1.5rem;
+.tc-new-badge {
+  margin-left: auto;
+  background: #191C6B;
+  color: #fff;
+  font-size: 11px;
   font-weight: 800;
-  color: #4caf50;
-  line-height: 1.1;
-}
-.reward-currency {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: #4caf50;
-}
-.reward-usd {
-  font-size: 0.7rem;
-  color: #888;
-  margin-top: 3px;
+  padding: 3px 10px;
+  border-radius: 999px;
   letter-spacing: 0.04em;
+  flex-shrink: 0;
 }
 
-/* Meta row */
-.meta-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 0 14px 8px;
-  font-size: 0.65rem;
-  color: #aaa;
-  flex-wrap: wrap;
-}
-.meta-divider {
-  color: #333;
-}
+/* ═══ BODY — padded content area ══════════════════════════ */
 
-/* Description box — fixed height, no flex */
-.description-box {
-  margin: 0 14px 10px;
-  border: 1px solid #2a2d35;
-  border-radius: 8px;
-  padding: 8px 12px;
-  background: #0d0f14;
-  height: 120px;
+.tc-body {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-}
-.description-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-shrink: 0;
-}
-.description-label {
-  font-size: 0.55rem;
-  color: #666;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  flex-shrink: 0;
-}
-.task-timer {
-  font-size: 0.6rem;
-  font-family: monospace;
-  color: #888;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-.description-text {
-  font-size: 0.75rem;
-  color: #ccc;
-  line-height: 1.5;
-  display: -webkit-box;
-  -webkit-line-clamp: 5;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  margin: 0;
+  gap: 14px;
+  padding: 16px;
   flex: 1;
 }
 
-/* Mobile */
+/* ═══ PROGRESS BLOCK ══════════════════════════════════════ */
+
+.tc-progress-block {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.tc-progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.tc-progress-label {
+  font-size: 11px;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 600;
+}
+.tc-progress-count {
+  font-size: 12px;
+  font-weight: 700;
+  color: #374151;
+  font-variant-numeric: tabular-nums;
+}
+[data-theme="dark"] .tc-progress-count {
+  color: #d1d5db;
+}
+
+.tc-bar-track {
+  width: 100%;
+  height: 6px;
+  background: #f3f4f6;
+  border-radius: 999px;
+  overflow: hidden;
+}
+[data-theme="dark"] .tc-bar-track {
+  background: #2a2d45;
+}
+.tc-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: #191C6B;
+  transition: width 0.4s ease;
+}
+
+/* Status row */
+.tc-status-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-top: 2px;
+}
+.tc-stat-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.tc-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.tc-dot.blue-main { background: #191C6B; }
+.tc-dot.blue-light { background: #818cf8; }
+.tc-dot.orange { background: #f97316; }
+
+@keyframes pulseDot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+.animate-pulse-dot {
+  animation: pulseDot 2s ease-in-out infinite;
+}
+
+.tc-stat-label {
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.tc-stat-label.blue-text { color: #191C6B; }
+.tc-stat-label.blue-subtle { color: #818cf8; }
+.tc-stat-label.orange-text { color: #f97316; }
+[data-theme="dark"] .tc-stat-label.blue-text { color: #818cf8; }
+
+/* ═══ REWARD BOX — light blue bg ══════════════════════════ */
+
+.tc-reward-box {
+  background: #eef2ff;
+  border: 1px solid #c7d2fe;
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+[data-theme="dark"] .tc-reward-box {
+  background: #1e2040;
+  border-color: #2a2d60;
+}
+.tc-reward-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+.tc-reward-amount {
+  font-size: 28px;
+  font-weight: 900;
+  color: #191C6B;
+  line-height: 1;
+  letter-spacing: -0.5px;
+}
+[data-theme="dark"] .tc-reward-amount {
+  color: #818cf8;
+}
+.tc-reward-cur {
+  font-size: 13px;
+  font-weight: 800;
+  color: #6366f1;
+}
+[data-theme="dark"] .tc-reward-cur {
+  color: #a5b4fc;
+}
+.tc-reward-sublabel {
+  font-size: 11px;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 600;
+}
+
+/* ═══ META ROW ══════════════════════════════════════════════ */
+
+.tc-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.tc-meta-item {
+  font-size: 12px;
+  color: #6b7280;
+  font-weight: 500;
+  white-space: nowrap;
+}
+[data-theme="dark"] .tc-meta-item {
+  color: #9ca3af;
+}
+.tc-meta-divider {
+  color: #d1d5db;
+  font-size: 11px;
+  font-weight: 300;
+}
+[data-theme="dark"] .tc-meta-divider {
+  color: #374151;
+}
+
+/* ═══ ABOUT THIS TASK ═══════════════════════════════════════ */
+
+.tc-about-block {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+.tc-about-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.tc-about-label-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.tc-about-label-row i {
+  font-size: 13px;
+  color: #9ca3af;
+}
+.tc-about-label {
+  font-size: 11px;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 600;
+}
+.tc-about-timer {
+  font-size: 11px;
+  font-family: monospace;
+  color: #9ca3af;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.tc-desc {
+  font-size: 13px;
+  color: #6b7280;
+  line-height: 1.55;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin: 0;
+}
+[data-theme="dark"] .tc-desc {
+  color: #d1d5db;
+}
+
+/* ─── Mobile (< 768px) ───────────────────────────────────── */
+
 @media (max-width: 768px) {
-  .task-card {
-    min-height: 290px;
+  .tc-card {
+    min-height: 340px;
   }
-  .card-avatar,
-  .card-avatar-init {
-    width: 30px;
-    height: 30px;
+  .tc-header {
+    padding: 10px 12px;
+  }
+  .tc-avatar,
+  .tc-avatar-init {
+    width: 32px;
+    height: 32px;
+    font-size: 13px;
+  }
+  .tc-listed-name {
     font-size: 12px;
   }
-  .listed-by-username {
-    font-size: 0.7rem;
-    max-width: 120px;
+  .tc-new-badge {
+    font-size: 9px;
+    padding: 2px 8px;
   }
-  .progress-pills {
-    gap: 6px;
+  .tc-body {
+    padding: 12px;
+    gap: 12px;
   }
-  .pill {
-    font-size: 0.58rem;
+  .tc-reward-amount {
+    font-size: 22px;
   }
-  .reward-amount {
-    font-size: 1.25rem;
+  .tc-desc {
+    font-size: 12px;
+    -webkit-line-clamp: 3;
   }
-  .reward-box {
-    padding: 10px 10px;
-    margin: 8px 10px 6px;
+  .tc-stat-label {
+    font-size: 11px;
   }
-  .meta-row {
-    font-size: 0.6rem;
-    gap: 4px;
-    padding: 0 10px 6px;
-  }
-  .description-box {
-    height: 100px;
-    margin: 0 10px 8px;
-    padding: 6px 10px;
-  }
-  .description-text {
-    font-size: 0.7rem;
-    -webkit-line-clamp: 4;
-  }
-  .card-progress-section {
-    padding: 6px 10px;
-  }
-  .card-header {
-    padding: 8px 10px 6px;
+  .tc-status-row {
+    gap: 10px;
   }
 }

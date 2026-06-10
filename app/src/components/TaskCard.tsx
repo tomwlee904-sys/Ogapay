@@ -26,18 +26,12 @@ const formatReq = (req?: string) => {
   return req
 }
 
-const getStatus = (submitted: number, total: number) => {
+const getStatus = (submitted: number, total: number, status?: string) => {
+  if (status === 'cooling_down') return { label: 'Cooling Down', color: '#f97316' }
   const remaining = total - submitted
   if (remaining <= 0) return { label: 'Completed', color: '#888' }
-  if (remaining / total <= 0.2) return { label: 'Filling', color: '#f5a623' }
-  return { label: 'Open', color: '#4caf50' }
-}
-
-const getBarColor = (submitted: number, total: number) => {
-  const pct = submitted / total
-  if (pct > 0.8) return '#e74c3c'
-  if (pct > 0.5) return '#f5a623'
-  return '#4caf50'
+  if (remaining / total <= 0.2) return { label: 'Filling', color: '#f59e0b' }
+  return { label: 'Status Open', color: '#191C6B' }
 }
 
 interface TaskData {
@@ -79,16 +73,17 @@ export default function TaskCard({ task }: TaskCardProps) {
 
   const submitted = task.currentWorkers || 0
   const total = task.maxWorkers || 1
+  const openSlots = total === 999 ? 'Unlimited slots' : `${total - submitted} open`
   const pct = Math.min((submitted / total) * 100, 100)
-  const barColor = getBarColor(submitted, total)
-  const status = getStatus(submitted, total)
+  const status = getStatus(submitted, total, task.status)
   const posterName = task.poster?.username || 'Anonymous'
   const rewardNum = Number(task.reward) || 0
   const currency = task.currency || 'NGN'
   const tier = task.tier ?? task.rank ?? 1
   const requirements = task.requirements || []
+  const isNew = task.createdAt && Date.now() - new Date(task.createdAt).getTime() < 86400000
 
-  // Countdown timer
+  // Countdown timer using expiresAt
   useEffect(() => {
     if (!task.expiresAt) return
     const tick = () => {
@@ -106,75 +101,106 @@ export default function TaskCard({ task }: TaskCardProps) {
   }, [task.expiresAt])
 
   return (
-    <div className="task-card" style={{ '--accent': barColor } as React.CSSProperties} onClick={() => navigate(`/tasks/${task.id}`)}>
+    <div className="tc-card" onClick={() => navigate(`/tasks/${task.id}`)}>
 
-      {/* Top colored accent line */}
-      <div className="card-accent-line" />
-
-      {/* LISTED BY — avatar + name */}
-      <div className="card-header">
+      {/* ═══ HEADER — avatar + listed by + new badge ═══ */}
+      <div className="tc-header">
         {task.poster?.avatarUrl ? (
-          <img className="card-avatar" src={task.poster.avatarUrl} alt={posterName} />
+          <img className="tc-avatar" src={task.poster.avatarUrl} alt={posterName} />
         ) : (
-          <div className="card-avatar card-avatar-init">{posterName[0] || '?'}</div>
+          <div className="tc-avatar-init">{posterName[0] || '?'}</div>
         )}
-        <div className="card-header-text">
-          <span className="listed-by-label">LISTED BY</span>
-          <span className="listed-by-username">{posterName}</span>
+        <div className="tc-header-info">
+          <span className="tc-listed-label">Listed by</span>
+          <span className="tc-listed-name">{posterName}</span>
         </div>
+        {isNew && <span className="tc-new-badge">NEW</span>}
       </div>
 
-      {/* PROGRESS — bar then pills */}
-      <div className="card-progress-section">
-        <div className="progress-header-row">
-          <span className="progress-label">PROGRESS</span>
-          <span className="progress-fraction">{submitted}/{total}</span>
-        </div>
-        <div className="progress-track">
-          <div className="progress-fill" style={{ width: `${pct}%`, background: barColor }} />
-        </div>
-        <div className="progress-pills">
-          <span className="pill pill-green">● Submissions {submitted}</span>
-          <span className="pill pill-grey">
-            ○ {total === 999 ? 'Unlimited slots' : `Open ${total - submitted}`}
-          </span>
-          <span className="pill" style={{ color: status.color }}>
-            ○ {status.label}
-          </span>
-        </div>
-      </div>
+      {/* ═══ CONTENT PADDED SECTION ═══ */}
+      <div className="tc-body">
 
-      {/* REWARD BOX — bordered, centered */}
-      <div className="reward-box">
-        <div className="reward-amount">
-          {currency === 'NGN' ? '₦' : currency === 'USDC' ? '$' : ''}{formatNumber(rewardNum)}
-          <span className="reward-currency"> {currency}</span>
+        {/* ═══ PROGRESS ═══ */}
+        <div className="tc-progress-block">
+          <div className="tc-progress-header">
+            <span className="tc-progress-label">Progress</span>
+            <span className="tc-progress-count">{submitted}/{total === 999 ? '∞' : total}</span>
+          </div>
+          <div className="tc-bar-track">
+            <div className="tc-bar-fill" style={{ width: `${pct}%` }} />
+          </div>
+          <div className="tc-status-row">
+            <span className="tc-stat-item">
+              <span className="tc-dot blue-main" />
+              <span className="tc-stat-label blue-text">Submissions {submitted}</span>
+            </span>
+            <span className="tc-stat-item">
+              <span className="tc-dot blue-light" />
+              <span className="tc-stat-label blue-subtle">
+                {total === 999 ? 'Unlimited slots' : `Open ${total - submitted}`}
+              </span>
+            </span>
+            <span className="tc-stat-item">
+              <span className={`tc-dot ${task.status === 'cooling_down' ? 'orange' : 'blue-main animate-pulse-dot'}`} />
+              <span className={`tc-stat-label ${task.status === 'cooling_down' ? 'orange-text' : 'blue-text'}`}>
+                {status.label}
+              </span>
+            </span>
+          </div>
         </div>
-        <div className="reward-usd">≈ ${toUSD(rewardNum, currency)} USD</div>
-      </div>
 
-      {/* META ROW — category | tier | requirement */}
-      <div className="meta-row">
-        <span>{formatCategory(task.category)}</span>
-        <span className="meta-divider">|</span>
-        <span>Tier {tier}</span>
-        {requirements.length > 0 && (
-          <>
-            <span className="meta-divider">|</span>
-            <span>Req: {formatReq(requirements[0])}</span>
-          </>
-        )}
-      </div>
-
-      {/* DESCRIPTION BOX — bordered */}
-      <div className="description-box">
-        <div className="description-header">
-          <span className="description-label">ABOUT THIS TASK</span>
-          {timeLeft && <span className="task-timer">{timeLeft}</span>}
+        {/* ═══ REWARD BOX ═══ */}
+        <div className="tc-reward-box">
+          <div className="tc-reward-row">
+            <span className="tc-reward-amount">
+              {currency === 'NGN' ? '₦' : currency === 'USDC' ? '$' : ''}{formatNumber(rewardNum)}
+            </span>
+            <span className="tc-reward-cur">{currency}</span>
+          </div>
+          <span className="tc-reward-sublabel">Reward / Slot</span>
         </div>
-        <p className="description-text">{task.description || 'No description provided.'}</p>
-      </div>
 
+        {/* ═══ CATEGORY | RANK | REQUIREMENTS ═══ */}
+        <div className="tc-meta-row">
+          <span className="tc-meta-item">{formatCategory(task.category)}</span>
+          <span className="tc-meta-divider">|</span>
+          <span className="tc-meta-item">Rank {tier}</span>
+          {task.minSorsaScore && task.minSorsaScore > 0 ? (
+            <>
+              <span className="tc-meta-divider">|</span>
+              <span className="tc-meta-item">Req: Sorsa {task.minSorsaScore}+</span>
+            </>
+          ) : task.requiresLinkedin ? (
+            <>
+              <span className="tc-meta-divider">|</span>
+              <span className="tc-meta-item">Req: LinkedIn</span>
+            </>
+          ) : task.requiresWallet ? (
+            <>
+              <span className="tc-meta-divider">|</span>
+              <span className="tc-meta-item">Req: Wallet</span>
+            </>
+          ) : requirements.length > 0 ? (
+            <>
+              <span className="tc-meta-divider">|</span>
+              <span className="tc-meta-item">Req: {formatReq(requirements[0])}</span>
+            </>
+          ) : null}
+        </div>
+
+        {/* ═══ ABOUT THIS TASK + DESCRIPTION ═══ */}
+        <div className="tc-about-block">
+          <div className="tc-about-header">
+            <div className="tc-about-label-row">
+              <i className="ti ti-message" />
+              <span className="tc-about-label">About This Task</span>
+            </div>
+            {timeLeft && <span className="tc-about-timer">{timeLeft}</span>}
+          </div>
+          <p className="tc-desc">{task.description || 'No description provided.'}</p>
+        </div>
+
+      </div>
     </div>
   )
 }
