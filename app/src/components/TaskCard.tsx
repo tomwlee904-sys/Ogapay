@@ -17,15 +17,6 @@ const toUSD = (amount: number | string, currency?: string) => {
   return n.toFixed(2)
 }
 
-const formatReq = (req?: string) => {
-  if (!req) return ''
-  if (req.startsWith('min_balance:'))
-    return `Min ₦${Number(req.split(':')[1]).toLocaleString()}`
-  if (req.startsWith('community:'))
-    return req.split(':')[1].replace(/_/g, ' ')
-  return req
-}
-
 const getStatus = (submitted: number, total: number) => {
   const remaining = total - submitted
   if (remaining <= 0) return { label: 'Completed', color: '#888' }
@@ -85,7 +76,6 @@ export default function TaskCard({ task }: TaskCardProps) {
   const posterName = task.poster?.username || 'Anonymous'
   const rewardNum = Number(task.reward) || 0
   const currency = task.currency || 'NGN'
-  const requirements = task.requirements || []
 
   // Countdown timer
   useEffect(() => {
@@ -105,77 +95,64 @@ export default function TaskCard({ task }: TaskCardProps) {
   }, [task.expiresAt])
 
   return (
-    <div className="task-card" style={{ '--accent': barColor } as React.CSSProperties} onClick={() => navigate(`/tasks/${task.id}`)}>
+    <div className="tc-card" onClick={() => navigate(`/tasks/${task.id}`)}>
 
-      {/* Top accent line */}
-      <div className="card-accent-line" />
-
-      {/* Listed by */}
-      <div className="card-header">
+      {/* Creator row — matches Top Products creatorStyle */}
+      <div className="tc-creator">
         {task.poster?.avatarUrl ? (
-          <img className="card-avatar" src={task.poster.avatarUrl} alt={posterName} />
+          <img className="tc-avatar" src={task.poster.avatarUrl} alt={posterName} />
         ) : (
-          <div className="card-avatar card-avatar-initial">{posterName[0] || '?'}</div>
+          <div className="tc-avatar-init">{posterName[0] || '?'}</div>
         )}
-        <div className="card-header-text">
-          <span className="listed-by-label">LISTED BY</span>
-          <span className="listed-by-username">{posterName}</span>
+        <div>
+          <div className="tc-creator-name">{posterName}</div>
+          <div className="tc-creator-role">Task Creator</div>
         </div>
+        {timeLeft && <span className="tc-timer">{timeLeft}</span>}
       </div>
 
-      {/* Progress section */}
-      <div className="card-progress-section">
-        <div className="progress-header-row">
-          <span className="progress-label">PROGRESS</span>
-          <span className="progress-fraction">{submitted}/{total}</span>
-        </div>
-
-        {/* Bar FIRST */}
-        <div className="progress-track">
-          <div className="progress-fill" style={{ width: `${pct}%`, background: barColor }} />
-        </div>
-
-        {/* Pills AFTER bar */}
-        <div className="progress-pills">
-          <span className="pill pill-green">● Submissions {submitted}</span>
-          <span className="pill pill-grey">
-            ○ {total === 999 ? 'Unlimited slots' : `Open ${total - submitted}`}
-          </span>
-          <span className="pill" style={{ color: status.color }}>
-            ○ {status.label}
-          </span>
-        </div>
+      {/* Title — matches titleRowStyle */}
+      <div className="tc-title-row">
+        <span className="tc-title">{task.title}</span>
+        <span className="tc-category">{formatCategory(task.category)}</span>
       </div>
 
-      {/* Reward box — bordered, centered */}
-      <div className="reward-box">
-        <div className="reward-amount">
-          {formatNumber(rewardNum)}
-          <span className="reward-currency"> {currency}</span>
+      {/* Description — matches descStyle (3-line clamp) */}
+      {task.description && <p className="tc-desc">{task.description}</p>}
+
+      {/* Progress — compact horizontal row */}
+      <div className="tc-progress-row">
+        <div className="tc-bar-track">
+          <div className="tc-bar-fill" style={{ width: `${pct}%`, background: barColor }} />
         </div>
-        <div className="reward-usd">$ {toUSD(rewardNum, currency)} USD</div>
+        <span className="tc-bar-label">{submitted}/{total}</span>
+      </div>
+      <div className="tc-stats-row">
+        <span className="tc-stat">
+          <span className="tc-dot green" />
+          {submitted} submissions
+        </span>
+        <span className="tc-stat">
+          <span className="tc-dot grey" />
+          {total === 999 ? 'Unlimited' : `${total - submitted} open`}
+        </span>
+        <span className="tc-stat" style={{ color: status.color }}>
+          <span className="tc-dot" style={{ background: status.color }} />
+          {status.label}
+        </span>
       </div>
 
-      {/* Meta row */}
-      <div className="meta-row">
-        <span>{formatCategory(task.category)}</span>
-        <span className="meta-divider">|</span>
-        <span>Tier {task.rank ?? task.tier ?? 1}</span>
-        {requirements.length > 0 && (
-          <>
-            <span className="meta-divider">|</span>
-            <span>Req: {formatReq(requirements[0])}</span>
-          </>
-        )}
+      {/* Reward — matches priceRowStyle in Top Products */}
+      <div className="tc-reward-row">
+        <span className="tc-reward-primary">
+          ₦{formatNumber(rewardNum)} <span className="tc-reward-cur">{currency}</span>
+        </span>
+        <span className="tc-reward-secondary">Reward / Slot</span>
       </div>
 
-      {/* Description box — bordered */}
-      <div className="description-box">
-        <div className="description-header">
-          <span className="description-label">💬 ABOUT THIS TASK</span>
-          {timeLeft && <span className="task-timer">{timeLeft}</span>}
-        </div>
-        <p className="description-text">{task.description}</p>
+      {/* View button — matches viewBtnStyle */}
+      <div className="tc-view-btn">
+        <i className="ti ti-eye" style={{ fontSize: 14 }} /> View Details
       </div>
 
     </div>
