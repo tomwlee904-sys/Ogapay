@@ -8,7 +8,7 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: 'autoUpdate',
+      registerType: 'prompt',
       includeAssets: ['favicon.ico', 'icon-192.png', 'icon-512.png'],
       manifest: {
         name: 'OgaPay',
@@ -24,12 +24,32 @@ export default defineConfig({
           { src: '/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
         ],
       },
-      strategies: 'injectManifest',
-      srcDir: 'src',
-      filename: 'sw.ts',
-      injectManifest: {
-        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
-      },
+      strategies: 'generateSW',
+      globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+      globIgnores: ['**/sw*', '**/workbox*'],
+      cleanupOutdatedCaches: true,
+      maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
+      navigateFallback: '/index.html',
+      navigateFallbackDenylist: [/^\/api\//],
+      runtimeCaching: [
+        {
+          urlPattern: /^https?:\/\/ogapay-production\.up\.railway\.app\/api\/.*/i,
+          handler: 'NetworkFirst',
+          options: {
+            cacheName: 'api-cache',
+            networkTimeoutSeconds: 5,
+            expiration: { maxEntries: 100, maxAgeSeconds: 60 * 60 * 24 },
+          },
+        },
+        {
+          urlPattern: /\.(?:png|jpg|jpeg|svg|gif|ico|webp)$/i,
+          handler: 'CacheFirst',
+          options: {
+            cacheName: 'images',
+            expiration: { maxEntries: 60, maxAgeSeconds: 60 * 60 * 24 * 30 },
+          },
+        },
+      ],
     }),
   ],
   base: '/',
