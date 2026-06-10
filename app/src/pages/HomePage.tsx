@@ -483,13 +483,13 @@ function HeroStatsCard() {
 
   return (
     <div style={{
-      background: '#fff', borderRadius: 24, boxShadow: '0 20px 60px rgba(0,0,0,.10)',
-      border: '1px solid #e5e5e5', padding: '20px 24px', width: '100%', maxWidth: 384,
+      background: 'var(--card)', borderRadius: 24, boxShadow: '0 20px 60px rgba(0,0,0,.10)',
+      border: '1px solid var(--border)', padding: '20px 24px', width: '100%', maxWidth: 384,
       display: 'flex', flexDirection: 'column', gap: 14, maxHeight: 320,
     }}>
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <span style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}>Platform Stats</span>
+        <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text2)' }}>Platform Stats</span>
         <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, color: '#16a34a', fontWeight: 500 }}>
           <span style={{
             width: 7, height: 7, borderRadius: '50%', background: '#16a34a',
@@ -506,32 +506,32 @@ function HeroStatsCard() {
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <div>
-            <p style={{ margin: 0, fontSize: 32, fontWeight: 800, color: '#111', lineHeight: 1, fontFamily: 'Outfit,sans-serif', letterSpacing: '-0.5px' }}>
+            <p style={{ margin: 0, fontSize: 32, fontWeight: 800, color: 'var(--text)', lineHeight: 1, fontFamily: 'Outfit,sans-serif', letterSpacing: '-0.5px' }}>
               {activeJobsCount}
             </p>
-            <p style={{ margin: '2px 0 0', fontSize: 13, color: '#9ca3af' }}>Active jobs</p>
+            <p style={{ margin: '2px 0 0', fontSize: 13, color: 'var(--text3)' }}>Active jobs</p>
           </div>
           <div>
-            <p style={{ margin: 0, fontSize: 32, fontWeight: 800, color: '#111', lineHeight: 1, fontFamily: 'Outfit,sans-serif', letterSpacing: '-0.5px' }}>
+            <p style={{ margin: 0, fontSize: 32, fontWeight: 800, color: 'var(--text)', lineHeight: 1, fontFamily: 'Outfit,sans-serif', letterSpacing: '-0.5px' }}>
               ₦{last24hPaidCount.toLocaleString()}
             </p>
-            <p style={{ margin: '2px 0 0', fontSize: 13, color: '#9ca3af' }}>Rewards distributed 24h</p>
+            <p style={{ margin: '2px 0 0', fontSize: 13, color: 'var(--text3)' }}>Rewards distributed 24h</p>
           </div>
           <div>
-            <p style={{ margin: 0, fontSize: 32, fontWeight: 800, color: '#111', lineHeight: 1, fontFamily: 'Outfit,sans-serif', letterSpacing: '-0.5px' }}>
+            <p style={{ margin: 0, fontSize: 32, fontWeight: 800, color: 'var(--text)', lineHeight: 1, fontFamily: 'Outfit,sans-serif', letterSpacing: '-0.5px' }}>
               {last24hTasksCount.toLocaleString()}
             </p>
-            <p style={{ margin: '2px 0 0', fontSize: 13, color: '#9ca3af' }}>Tasks completed 24h</p>
+            <p style={{ margin: '2px 0 0', fontSize: 13, color: 'var(--text3)' }}>Tasks completed 24h</p>
           </div>
         </div>
       )}
 
       {/* Footer */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6, paddingTop: 12, borderTop: '1px solid #eee' }}>
-        <div style={{ width: 18, height: 18, background: '#111', borderRadius: 5, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-          <span style={{ color: '#fff', fontSize: 9, fontWeight: 900 }}>O</span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, paddingTop: 12, borderTop: '1px solid var(--border)' }}>
+        <div style={{ width: 18, height: 18, background: 'var(--text)', borderRadius: 5, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <span style={{ color: 'var(--bg)', fontSize: 9, fontWeight: 900 }}>O</span>
         </div>
-        <span style={{ fontSize: 11, color: '#9ca3af' }}>Powered by OgaPay Protocol</span>
+        <span style={{ fontSize: 11, color: 'var(--text3)' }}>Powered by OgaPay Protocol</span>
       </div>
     </div>
   );
@@ -716,7 +716,6 @@ function FeaturedJobs() {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const intervalRef = useRef(null);
-  const navigate = useNavigate();
   useEffect(() => { injectSkeletonStyles(); }, []);
   const fetchFeatured = () => {
     setLoading(true);
@@ -743,190 +742,69 @@ function FeaturedJobs() {
     }, 4000);
   };
   return (
-    <section id="featured-jobs" style={{ background: '#000', padding: '56px 0', position: 'relative', overflow: 'hidden' }}>
-      <style>{`
-        .fj-container { width: min(1200px, calc(100% - 64px)); margin: 0 auto; position: relative; }
-        .fj-header-row { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 20px; }
-        .fj-kicker { font-size: 11px; font-weight: 800; color: #6b7280; text-transform: uppercase; letter-spacing: .1em; display: flex; align-items: center; gap: 7px; margin-bottom: 8px; }
-        .fj-title { font-size: clamp(28px, 3vw, 40px); font-weight: 900; font-family: "Outfit", sans-serif; color: #fff; letter-spacing: -0.04em; margin: 0; }
-        .fj-view-all { font-size: 14px; font-weight: 700; color: #a1a1aa; display: flex; align-items: center; gap: 6px; text-decoration: none; }
-        .fj-view-all:hover { color: #fff; }
-        .fj-track { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; align-items: stretch; }
-        .fj-card { width: 100%; min-height: 380px; border-radius: 16px; background: #111; border: 1px solid #1e1e1e; overflow: hidden; display: flex; flex-direction: column; padding: 0; cursor: pointer; transition: border-color .2s; }
-        .fj-card:hover { border-color: #333; }
-        .fj-card-header { padding: 18px 18px 14px; border-bottom: 1px solid #1e1e1e; display: flex; align-items: center; gap: 12px; }
-        .fj-avatar { width: 42px; height: 42px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
-        .fj-avatar-fallback { width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 800; color: #fff; flex-shrink: 0; background: linear-gradient(135deg, #2563EB, #3B82F6); }
-        .fj-listed { font-size: 10px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 3px; }
-        .fj-username { font-size: 15px; font-weight: 800; color: #fff; margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .fj-progress-wrap { padding: 14px 18px 10px; }
-        .fj-progress-head { display: flex; justify-content: space-between; align-items: center; }
-        .fj-progress-label { font-size: 10px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: .08em; margin: 0; }
-        .fj-progress-frac { font-size: 12px; font-weight: 700; color: #fff; }
-        .fj-bar-track { height: 5px; background: #2a2a2a; border-radius: 99px; margin: 8px 0 10px; overflow: hidden; }
-        .fj-bar-fill { height: 100%; border-radius: 99px; transition: width .4s ease; }
-        .fj-bar-fill.blue { background: linear-gradient(90deg, #2563EB, #3B82F6); }
-        .fj-bar-fill.green { background: linear-gradient(90deg, #22c55e, #4ade80); }
-        .fj-status-row { font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 12px; color: #a1a1aa; }
-        .fj-status-item { display: flex; align-items: center; gap: 4px; }
-        .fj-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
-        .fj-dot.blue { background: #2563eb; }
-        .fj-dot.green { background: #22c55e; }
-        .fj-dot.grey { background: #6b7280; }
-        .fj-reward-box { margin: 10px 18px; padding: 18px 16px; background: #0a0a0a; border: 1px solid #1e1e1e; border-radius: 12px; text-align: center; }
-        .fj-reward-amount { font-size: 32px; font-weight: 900; color: #fff; font-family: "Outfit", sans-serif; letter-spacing: -0.02em; }
-        .fj-reward-currency { font-size: 18px; font-weight: 800; color: #22c55e; margin-left: 8px; }
-        .fj-reward-sublabel { font-size: 10px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: .1em; margin-top: 4px; display: block; }
-        .fj-tags { padding: 6px 18px 10px; display: flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 700; color: #6b7280; flex-wrap: wrap; }
-        .fj-tag-sep { color: #333; }
-        .fj-about-wrap { padding: 10px 18px 16px; border-top: 1px solid #1e1e1e; flex: 1; display: flex; flex-direction: column; }
-        .fj-about-head { display: flex; align-items: center; justify-content: space-between; }
-        .fj-about-label { font-size: 10px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: .08em; display: flex; align-items: center; gap: 6px; }
-        .fj-countdown { font-size: 11px; font-weight: 700; color: #6b7280; font-family: monospace; }
-        .fj-desc { font-size: 13px; color: #a1a1aa; line-height: 1.55; margin-top: 8px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; flex: 1; }
-        .fj-arrow { width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.12); display: flex; align-items: center; justify-content: center; cursor: pointer; color: #fff; position: absolute; top: 50%; transform: translateY(-50%); z-index: 10; transition: background .15s; }
-        .fj-arrow:hover { background: rgba(255,255,255,.15); }
-        .fj-arrow.left { left: -20px; }
-        .fj-arrow.right { right: -20px; }
-        .fj-dots { display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 20px; }
-        .fj-dot-pill { height: 8px; border-radius: 99px; background: #2a2a2a; cursor: pointer; transition: width .3s, background .3s; }
-        .fj-dot-pill.active { width: 32px; background: #2563eb; }
-        .fj-dot-pill:not(.active) { width: 24px; }
-        .fj-skel { border-radius: 16px; background: #111; border: 1px solid #1e1e1e; overflow: hidden; display: flex; flex-direction: column; min-height: 380px; }
-        .fj-empty-icon { font-size: 36px; color: #6b7280; margin-bottom: 12px; display: block; }
-        .fj-card .sk { background: #2a2a2a; border-radius: 4px; }
-        @media (max-width: 1024px) and (min-width: 769px) { .fj-track { grid-template-columns: repeat(2, 1fr); } }
-        @media (max-width: 768px) {
-          .fj-track { grid-template-columns: 1fr; }
-          .fj-arrow { display: none; }
-          .fj-container { width: calc(100% - 32px); }
-        }
-      `}</style>
-      <div className="fj-container">
-        <div className="fj-header-row">
+    <section id="featured-jobs" style={{ padding: "44px 0 34px", background: "var(--bg)" }}>
+      <div className="container">
+        <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 24 }}>
           <div>
-            <div className="fj-kicker"><I n="flame" s={14} /> LIVE JOBS</div>
-            <h2 className="fj-title">Featured Tasks</h2>
+            <div className="section-kicker"><I n="flame" s={13} /> LIVE JOBS</div>
+            <h2 className="section-title">Featured Tasks</h2>
           </div>
-          <a href="/tasks" className="fj-view-all">View all <I n="chevron-right" s={16} /></a>
+          <a href="/tasks" style={{ color: "var(--text2)", fontSize: 14, fontWeight: 700, display: "flex", alignItems: "center", gap: 6 }}>View all <I n="chevron-right" s={16} /></a>
         </div>
 
         {loading ? (
-          <div className="fj-track">
+          <div className="jobs-track" style={{ display: "grid", gridTemplateColumns: "repeat(3,minmax(0,1fr))", gap: 24 }}>
             {Array.from({ length: 3 }, (_, i) => (
-              <div key={i} className="fj-skel">
-                <div style={{ padding: '18px 18px 14px', borderBottom: '1px solid #1e1e1e', display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <div className="sk" style={{ width: 42, height: 42, borderRadius: '50%' }} />
+              <div key={i} style={{ border: '1.5px solid var(--border)', borderRadius: 16, background: 'var(--card)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+                <div style={{ padding: '18px 18px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 13 }}>
+                  <div className="sk" style={{ width: 38, height: 38, borderRadius: '50%' }} />
                   <div style={{ flex: 1, display: 'grid', gap: 6 }}>
-                    <div className="sk" style={{ height: 10, width: '35%' }} />
-                    <div className="sk" style={{ height: 14, width: '55%' }} />
+                    <div className="sk" style={{ height: 10, width: '40%' }} />
+                    <div className="sk" style={{ height: 14, width: '60%' }} />
                   </div>
                 </div>
-                <div style={{ padding: '14px 18px 10px' }}>
+                <div style={{ padding: '18px 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
                   <div className="sk" style={{ height: 10, width: '30%' }} />
-                  <div className="sk" style={{ height: 5, marginTop: 8, width: '100%' }} />
-                  <div className="sk" style={{ height: 10, width: '60%', marginTop: 10 }} />
-                </div>
-                <div className="sk" style={{ height: 86, margin: '10px 18px', borderRadius: 12 }} />
-                <div className="sk" style={{ height: 12, width: '50%', margin: '6px 18px 10px' }} />
-                <div style={{ flex: 1, borderTop: '1px solid #1e1e1e', padding: '10px 18px 16px' }}>
-                  <div className="sk" style={{ height: 10, width: '40%' }} />
-                  <div className="sk" style={{ height: 48, marginTop: 8, width: '100%' }} />
+                  <div className="sk" style={{ height: 10, borderRadius: 99 }} />
+                  <div className="sk" style={{ height: 100, borderRadius: 10 }} />
+                  <div className="sk" style={{ height: 10, width: '50%' }} />
+                  <div className="sk" style={{ height: 40, borderRadius: 8 }} />
                 </div>
               </div>
             ))}
           </div>
         ) : jobs.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '48px 20px', color: '#6b7280' }}>
-            <i className="ti ti-briefcase-off" style={{ fontSize: 36, color: '#6b7280', marginBottom: 12, display: 'block' }} />
-            <h3 style={{ fontFamily: 'Outfit,sans-serif', fontWeight: 800, margin: '0 0 4px', color: '#fff' }}>No featured tasks right now</h3>
-            <p style={{ fontSize: 13, margin: '0 0 16px', color: '#a1a1aa' }}>Check back soon for new opportunities.</p>
-            <a href="/tasks" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 24px', background: '#2563eb', color: '#fff', borderRadius: 10, fontSize: 14, fontWeight: 700, textDecoration: 'none' }}><I n="briefcase" s={16} /> Browse All Tasks</a>
+          <div style={{ textAlign: 'center', padding: '48px 20px', color: 'var(--text2)' }}>
+            <i className="ti ti-briefcase-off" style={{ fontSize: 36, color: 'var(--text3)', marginBottom: 12, display: 'block' }} />
+            <h3 style={{ fontFamily: 'Outfit,sans-serif', fontWeight: 800, margin: '0 0 4px', color: 'var(--text)' }}>No featured tasks right now</h3>
+            <p style={{ fontSize: 13, margin: '0 0 16px' }}>Check back soon for new opportunities.</p>
+            <a href="/tasks" className="btn-primary"><I n="briefcase" s={16} /> Browse All Tasks</a>
           </div>
         ) : (
           <div style={{ position: 'relative' }} onMouseEnter={pauseSlider} onMouseLeave={resumeSlider}>
-            <button className="fj-arrow left hide-mobile" onClick={() => setActive(prev => (prev - 1 + jobs.length) % jobs.length)}><I n="chevron-left" s={18} /></button>
-            <button className="fj-arrow right hide-mobile" onClick={() => setActive(prev => (prev + 1) % jobs.length)}><I n="chevron-right" s={18} /></button>
-            <div className="fj-track">
+            <button className="hide-mobile" onClick={() => setActive(prev => (prev - 1 + jobs.length) % jobs.length)}
+              style={{ position:'absolute', left:-20, top:'50%', transform:'translateY(-50%)', width:40, height:40, borderRadius:'50%', border:'1.5px solid var(--border)', background:'var(--card)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', zIndex:10, boxShadow:'var(--shadow-soft)' }}>
+              <I n="chevron-left" s={18} />
+            </button>
+            <button className="hide-mobile" onClick={() => setActive(prev => (prev + 1) % jobs.length)}
+              style={{ position:'absolute', right:-20, top:'50%', transform:'translateY(-50%)', width:40, height:40, borderRadius:'50%', border:'1.5px solid var(--border)', background:'var(--card)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', zIndex:10, boxShadow:'var(--shadow-soft)' }}>
+              <I n="chevron-right" s={18} />
+            </button>
+            <div className="jobs-track" style={{ display: "grid", gridTemplateColumns: "repeat(3,minmax(0,1fr))", gap: 24 }}>
               {[0,1,2].map(offset => {
                 const idx = (active + offset) % jobs.length;
                 const t = jobs[idx];
                 if (!t) return null;
-                const filled = t.currentWorkers || 0;
-                const total = t.maxWorkers || 1;
-                const pct = Math.min(Math.round((filled / total) * 100), 100);
-                const subs = t.submissionsCount ?? t._count?.submissions ?? 0;
-                const open = total - filled;
-                const posterName = t.poster?.username || 'Anonymous';
-                const deadlineTarget = t.deadlineHours ? new Date(new Date(t.createdAt).getTime() + t.deadlineHours * 3600000) : null;
-                const countdownStr = deadlineTarget ? (() => {
-                  const diff = deadlineTarget.getTime() - Date.now();
-                  if (diff <= 0) return 'Expired';
-                  const d = Math.floor(diff / 86400000);
-                  const h = Math.floor((diff % 86400000) / 3600000);
-                  const m = Math.floor((diff % 3600000) / 60000);
-                  const s = Math.floor((diff % 60000) / 1000);
-                  return `${d}:${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
-                })() : '';
-                return (
-                  <div key={t.id} className="fj-card" onClick={() => navigate(`/tasks/${t.id}`)}>
-                    <div className="fj-card-header">
-                      {t.poster?.avatarUrl ? (
-                        <img src={t.poster.avatarUrl} className="fj-avatar" />
-                      ) : (
-                        <div className="fj-avatar-fallback">{posterName[0] || '?'}</div>
-                      )}
-                      <div style={{ flex: 1, overflow: 'hidden' }}>
-                        <div className="fj-listed">Listed by</div>
-                        <div className="fj-username">{posterName}</div>
-                      </div>
-                    </div>
-                    <div className="fj-progress-wrap">
-                      <div className="fj-progress-head">
-                        <span className="fj-progress-label">Progress</span>
-                        <span className="fj-progress-frac">{filled}/{total === 999 ? '\u221E' : total}</span>
-                      </div>
-                      <div className="fj-bar-track">
-                        <div className={`fj-bar-fill ${pct >= 70 ? 'green' : 'blue'}`} style={{ width: `${pct}%` }} />
-                      </div>
-                      <div className="fj-status-row">
-                        <span className="fj-status-item"><span className="fj-dot blue" /> Submissions {subs}</span>
-                        <span className="fj-status-item"><span className="fj-dot green" /> Open {open}</span>
-                        <span className="fj-status-item"><span className="fj-dot grey" /> Open</span>
-                      </div>
-                    </div>
-                    <div className="fj-reward-box">
-                      <div>
-                        <span className="fj-reward-amount">{Number(t.reward).toLocaleString()}</span>
-                        <span className="fj-reward-currency">NGN</span>
-                      </div>
-                      <span className="fj-reward-sublabel">Reward / Slot</span>
-                    </div>
-                    <div className="fj-tags">
-                      <span>{t.category}</span>
-                      {t.rank && (<><span className="fj-tag-sep">|</span><span>Rank {t.rank}</span></>)}
-                      {t.minSorsaScore && t.minSorsaScore > 0 && (<><span className="fj-tag-sep">|</span><span>Req: Sorsa {t.minSorsaScore}+</span></>)}
-                      {t.requiresLinkedin && (<><span className="fj-tag-sep">|</span><span>Req: LinkedIn</span></>)}
-                      {t.requiresWallet && (<><span className="fj-tag-sep">|</span><span>Req: Wallet</span></>)}
-                    </div>
-                    <div className="fj-about-wrap">
-                      <div className="fj-about-head">
-                        <span className="fj-about-label"><I n="message" s={14} /> About This Task</span>
-                        {countdownStr && <span className="fj-countdown">{countdownStr}</span>}
-                      </div>
-                      <p className="fj-desc">{t.description}</p>
-                    </div>
-                  </div>
-                );
+                return <TaskCard key={t.id} task={t} />;
               })}
             </div>
           </div>
         )}
 
         {jobs.length > 0 && (
-          <div className="fj-dots">
+          <div style={{ display: "flex", justifyContent: "center", gap: 10, marginTop: 28 }}>
             {jobs.map((_, i) => (
-              <span key={i} onClick={() => setActive(i)} className={`fj-dot-pill ${active === i ? 'active' : ''}`} />
+              <span key={i} onClick={() => setActive(i)} style={{ width: active === i ? 44 : 34, height: 9, borderRadius: 999, cursor: "pointer", background: active === i ? "#191C6B" : "#dfe5ee", transition: "width .34s, background .34s", animation: active === i ? "dotBreathe 2.8s ease-in-out infinite" : "none" }} />
             ))}
           </div>
         )}
@@ -966,12 +844,12 @@ function StoreSection() {
   const cardStyle = {
     borderRadius: 16,
     boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
-    border: '1px solid #e5e5e5',
+    border: '1px solid var(--border)',
     padding: 12,
     display: 'flex',
     flexDirection: 'column',
     gap: 12,
-    background: '#fff',
+    background: 'var(--card)',
     height: '100%',
   };
   const imgWrapStyle = {
@@ -979,7 +857,7 @@ function StoreSection() {
     height: 200,
     overflow: 'hidden',
     borderRadius: 12,
-    background: '#f5f5f5',
+    background: 'var(--bg2)',
     flexShrink: 0,
   };
   const titleRowStyle = {
@@ -998,7 +876,7 @@ function StoreSection() {
     margin: 0,
   };
   const dateStyle = {
-    color: '#a1a1aa',
+    color: 'var(--text3)',
     fontSize: 12,
     whiteSpace: 'nowrap',
     flexShrink: 0,
@@ -1006,7 +884,7 @@ function StoreSection() {
   };
   const descStyle = {
     fontSize: 14,
-    color: '#6b7280',
+    color: 'var(--text2)',
     display: '-webkit-box',
     WebkitLineClamp: 2,
     WebkitBoxOrient: 'vertical',
@@ -1020,17 +898,17 @@ function StoreSection() {
     alignItems: 'center',
     gap: 10,
     padding: '8px 10px',
-    background: '#f5f5f5',
+    background: 'var(--bg2)',
     borderRadius: 12,
   };
   const avatarStyle = {
     width: 36,
     height: 36,
     borderRadius: '50%',
-    background: '#232323',
+    background: 'var(--text)',
     display: 'grid',
     placeItems: 'center',
-    color: '#fff',
+    color: 'var(--bg)',
     fontSize: 11,
     fontWeight: 800,
     flexShrink: 0,
@@ -1039,7 +917,7 @@ function StoreSection() {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    border: '1px solid #e5e5e5',
+    border: '1px solid var(--border)',
     borderRadius: 12,
     padding: '8px 12px',
   };
@@ -1049,12 +927,12 @@ function StoreSection() {
     fontSize: 18,
   };
   const cryptoPriceStyle = {
-    color: '#374151',
+    color: 'var(--text2)',
     fontSize: 14,
   };
   const viewBtnStyle = {
     width: '100%',
-    border: '1px solid #e5e5e5',
+    border: '1px solid var(--border)',
     borderRadius: 12,
     paddingTop: 10,
     paddingBottom: 10,
@@ -1062,11 +940,11 @@ function StoreSection() {
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    color: '#525252',
+    color: 'var(--text2)',
     fontSize: 14,
     fontWeight: 500,
     textDecoration: 'none',
-    background: '#fff',
+    background: 'var(--card)',
     cursor: 'pointer',
   };
   const formatPrice = (price) => {
@@ -1111,7 +989,7 @@ function StoreSection() {
                       {p.image ? (
                         <img src={p.image} alt={p.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                       ) : (
-                        <div style={{ display: 'grid', placeItems: 'center', height: '100%', fontFamily: 'Outfit,sans-serif', fontSize: 26, fontWeight: 900, background: 'linear-gradient(135deg,#232323,#333)', color: '#fff' }}>
+                        <div style={{ display: 'grid', placeItems: 'center', height: '100%', fontFamily: 'Outfit,sans-serif', fontSize: 26, fontWeight: 900, background: 'var(--bg2)', color: 'var(--text3)' }}>
                           {(p.title || '???').slice(0, 3).toUpperCase()}
                         </div>
                       )}
@@ -1125,7 +1003,7 @@ function StoreSection() {
                       <div style={avatarStyle}>{sellerName.charAt(0).toUpperCase()}</div>
                       <div>
                         <div style={{ fontWeight: 700, fontSize: 13 }}>{sellerName}</div>
-                        <div style={{ fontSize: 11, color: '#a1a1aa' }}>New creator</div>
+                        <div style={{ fontSize: 11, color: 'var(--text3)' }}>New creator</div>
                       </div>
                     </div>
                     <div style={priceRowStyle}>
@@ -1144,7 +1022,7 @@ function StoreSection() {
         {products.length > 0 && (
           <div style={{ display: "flex", justifyContent: "center", gap: 10, marginTop: 28 }}>
             {products.map((_, i) => (
-              <span key={i} onClick={() => setActive(i)} style={{ width: active === i ? 44 : 34, height: 9, borderRadius: 999, cursor: "pointer", background: active === i ? "#191C6B" : "#dfe5ee", transition: "width .34s, background .34s", animation: active === i ? "dotBreathe 2.8s ease-in-out infinite" : "none" }} />
+              <span key={i} onClick={() => setActive(i)} style={{ width: active === i ? 44 : 34, height: 9, borderRadius: 999, cursor: "pointer", background: active === i ? "var(--accent)" : "var(--border2)", transition: "width .34s, background .34s" }} />
             ))}
           </div>
         )}
@@ -1244,8 +1122,8 @@ function Communities() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch(`${API_BASE}/communities`).then(r => r.json())
-        const data = Array.isArray(res) ? res : res?.data?.communities || res?.data || []
+        const res = await fetch(`${API_BASE}/communities/featured`).then(r => r.json())
+        const data = Array.isArray(res) ? res : res?.data || []
         setComms(data.slice(0, 3))
       } catch {}
       setLoading(false)
@@ -1254,26 +1132,27 @@ function Communities() {
   if (loading) return null
   const cardStyle = {
     borderRadius: 16,
-    border: '1px solid #e5e7eb',
-    background: '#fff',
+    border: '1px solid var(--border)',
+    background: 'var(--card)',
     display: 'flex',
     flexDirection: 'column',
     overflow: 'hidden',
     height: '100%',
   };
-  const coverStyle = (accent: string) => ({
+  const coverStyle = (c: any) => ({
     width: '100%',
     height: 192,
     position: 'relative' as const,
-    background: accent ? `${accent}20` : '#f5f5f5',
+    background: c.coverColor || (c.accentColor ? `${c.accentColor}20` : 'var(--bg2)'),
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     fontFamily: 'Outfit,sans-serif',
     fontSize: 42,
     fontWeight: 900,
-    color: accent || '#9ca3af',
+    color: c.coverTextColor || c.accentColor || 'var(--text3)',
     flexShrink: 0,
+    overflow: 'hidden',
   });
   const badgeStyle = {
     position: 'absolute' as const,
@@ -1296,7 +1175,7 @@ function Communities() {
   const titleStyle = {
     fontSize: 15,
     fontWeight: 700,
-    color: '#111827',
+    color: 'var(--text)',
     margin: 0,
   };
   const statRowStyle = {
@@ -1304,11 +1183,11 @@ function Communities() {
     alignItems: 'center',
     gap: 16,
     fontSize: 12,
-    color: '#9ca3af',
+    color: 'var(--text3)',
   };
   const descStyle = {
     fontSize: 14,
-    color: '#6b7280',
+    color: 'var(--text2)',
     display: '-webkit-box',
     WebkitLineClamp: 3,
     WebkitBoxOrient: 'vertical',
@@ -1327,18 +1206,18 @@ function Communities() {
   const distributedStyle = {
     fontSize: 14,
     fontWeight: 600,
-    color: '#1f2937',
+    color: 'var(--text)',
   };
   const distributedLabelStyle = {
     fontSize: 12,
-    color: '#9ca3af',
+    color: 'var(--text3)',
     fontWeight: 400,
     marginLeft: 4,
   };
   const viewBtnStyle = {
     fontSize: 14,
     fontWeight: 600,
-    color: '#1f2937',
+    color: 'var(--text)',
     display: 'flex',
     alignItems: 'center',
     gap: 4,
@@ -1360,29 +1239,31 @@ function Communities() {
         </div>
         <div className="community-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3,minmax(0,1fr))", gap: 24 }}>
           {comms.map((c, i) => {
-            const accent = c.accent || c.accentColor || '#3b82f6';
+            const initials = (c.name || '?').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
             return (
               <div key={c.id || i} style={cardStyle}>
-                <div style={coverStyle(accent)}>
-                  {(c.name || '?').slice(0, 2).toUpperCase()}
-                  {c.trending && <span style={badgeStyle}>ACTIVE</span>}
+                <div style={coverStyle(c)}>
+                  {c.coverImage ? (
+                    <img src={c.coverImage} style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0 }} />
+                  ) : (
+                    <span>{initials}</span>
+                  )}
+                  {c.isActive && <span style={badgeStyle}>ACTIVE</span>}
                 </div>
                 <div style={bodyStyle}>
                   <h3 style={titleStyle}>{c.name}</h3>
                   <div style={statRowStyle}>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><I n="users" s={12} /> {(c.members || c.memberCount || 0).toLocaleString()} members</span>
-                    {(c.tasks || c.taskCount) ? <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><I n="briefcase" s={12} /> {c.tasks || c.taskCount || 0} jobs</span> : null}
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><I n="users" s={12} /> {(c.memberCount || 0).toLocaleString()} members</span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><I n="briefcase" s={12} /> {(c.jobCount || 0)} jobs</span>
                   </div>
-                  <p style={descStyle}>{c.desc || c.description || ''}</p>
+                  <p style={descStyle}>{c.description || ''}</p>
                 </div>
                 <div style={bottomRowStyle}>
-                  {(c.rewards) ? (
-                    <span style={distributedStyle}>
-                      ₦{Number(c.rewards).toLocaleString()}
-                      <span style={distributedLabelStyle}>distributed</span>
-                    </span>
-                  ) : <span />}
-                  <a href="/communities" style={viewBtnStyle}>
+                  <span style={distributedStyle}>
+                    ₦{(c.distributed || 0).toLocaleString()}
+                    <span style={distributedLabelStyle}>distributed</span>
+                  </span>
+                  <a href={`/communities/${c.id}`} style={viewBtnStyle}>
                     View <I n="chevron-right" s={14} />
                   </a>
                 </div>
