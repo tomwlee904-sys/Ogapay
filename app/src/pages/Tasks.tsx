@@ -449,7 +449,7 @@ export default function Tasks() {
         .filter-tab{padding:.5rem 1rem;border:0;border-radius:.5rem;background:transparent;color:var(--text2);font-size:.8125rem;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap}
         .filter-tab:hover{color:var(--text);background:var(--card)}
         .filter-tab.active{background:var(--card);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.06)}
-        .filter-tab.active:after{content:'';display:block;height:2px;width:20px;background:#191C6B;border-radius:999px;margin:2px auto 0}
+        .filter-tab.active:after{content:'';display:block;height:2px;width:20px;background:#9CA3AF;border-radius:999px;margin:2px auto 0}
         .search-wrap{flex:1;min-width:180px;position:relative}
         .search-wrap input{width:100%;height:38px;padding:0 14px 0 38px;border:1.5px solid var(--border);border-radius:.625rem;background:var(--card);color:var(--text);font-size:.8125rem;outline:none;transition:border-color .2s}
         .search-wrap input:focus{border-color:#191C6B}
