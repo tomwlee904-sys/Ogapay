@@ -76,6 +76,17 @@ export default function TaskCard({ task }: TaskCardProps) {
   const posterName = task.poster?.username || 'Anonymous'
   const rewardNum = Number(task.reward) || 0
   const currency = task.currency || 'NGN'
+  const tier = task.tier ?? task.rank ?? 1
+  const requirements = task.requirements || []
+
+  // Format requirement text
+  const formatReq = (req: string) => {
+    if (req.startsWith('min_balance:'))
+      return `Min ₦${Number(req.split(':')[1]).toLocaleString()}`
+    if (req.startsWith('community:'))
+      return req.split(':')[1].replace(/_/g, ' ')
+    return req
+  }
 
   // Countdown timer
   useEffect(() => {
@@ -97,62 +108,89 @@ export default function TaskCard({ task }: TaskCardProps) {
   return (
     <div className="tc-card" onClick={() => navigate(`/tasks/${task.id}`)}>
 
-      {/* Creator row — matches Top Products creatorStyle */}
-      <div className="tc-creator">
+      {/* ═══ 1. HEADER (~15%) — Avatar + LISTED BY + Name + Timer ═══ */}
+      <div className="tc-header">
         {task.poster?.avatarUrl ? (
-          <img className="tc-avatar" src={task.poster.avatarUrl} alt={posterName} />
+          <img className="tc-header-avatar" src={task.poster.avatarUrl} alt={posterName} />
         ) : (
-          <div className="tc-avatar-init">{posterName[0] || '?'}</div>
+          <div className="tc-header-avatar-init">{posterName[0] || '?'}</div>
         )}
-        <div>
-          <div className="tc-creator-name">{posterName}</div>
-          <div className="tc-creator-role">Task Creator</div>
+        <div className="tc-header-info">
+          <span className="tc-header-label">LISTED BY</span>
+          <div className="tc-header-name-row">
+            <span className="tc-header-name">{posterName}</span>
+            <span className="tc-header-badge" title="Verified">✓</span>
+          </div>
         </div>
-        {timeLeft && <span className="tc-timer">{timeLeft}</span>}
+        {timeLeft && <span className="tc-header-timer">{timeLeft}</span>}
       </div>
 
-      {/* Title — matches titleRowStyle */}
-      <div className="tc-title-row">
-        <span className="tc-title">{task.title}</span>
-        <span className="tc-category">{formatCategory(task.category)}</span>
-      </div>
-
-      {/* Description — matches descStyle (3-line clamp) */}
-      {task.description && <p className="tc-desc">{task.description}</p>}
-
-      {/* Progress — compact horizontal row */}
-      <div className="tc-progress-row">
+      {/* ═══ 2. PROGRESS — Single compact row ═══ */}
+      <div className="tc-progress-section">
+        <div className="tc-progress-header">
+          <span className="tc-progress-label">PROGRESS</span>
+          <span className="tc-progress-fraction">{submitted}/{total}</span>
+        </div>
         <div className="tc-bar-track">
           <div className="tc-bar-fill" style={{ width: `${pct}%`, background: barColor }} />
         </div>
-        <span className="tc-bar-label">{submitted}/{total}</span>
-      </div>
-      <div className="tc-stats-row">
-        <span className="tc-stat">
-          <span className="tc-dot green" />
-          {submitted} submissions
-        </span>
-        <span className="tc-stat">
-          <span className="tc-dot grey" />
-          {total === 999 ? 'Unlimited' : `${total - submitted} open`}
-        </span>
-        <span className="tc-stat" style={{ color: status.color }}>
-          <span className="tc-dot" style={{ background: status.color }} />
-          {status.label}
-        </span>
-      </div>
-
-      {/* Reward — matches priceRowStyle in Top Products */}
-      <div className="tc-reward-row">
-        <span className="tc-reward-primary">
-          ₦{formatNumber(rewardNum)} <span className="tc-reward-cur">{currency}</span>
-        </span>
-        <span className="tc-reward-secondary">Reward / Slot</span>
+        <div className="tc-progress-pills">
+          <span className="tc-pill">
+            <span className="tc-pill-dot" style={{ background: '#4caf50' }} />
+            Submissions {submitted}
+          </span>
+          <span className="tc-pill">
+            <span className="tc-pill-dot" style={{ background: '#888' }} />
+            Open {total === 999 ? '∞' : total - submitted}
+          </span>
+          <span className="tc-pill" style={{ color: status.color }}>
+            <span className="tc-pill-dot" style={{ background: status.color }} />
+            {status.label}
+          </span>
+        </div>
       </div>
 
-      {/* View button — matches viewBtnStyle */}
-      <div className="tc-view-btn">
-        <i className="ti ti-eye" style={{ fontSize: 14 }} /> View Details
+      {/* ═══ 3. REWARD BOX — Highlighted container ═══ */}
+      <div className="tc-reward-box">
+        <div className="tc-reward-amount">
+          {currency === 'NGN' ? '₦' : currency === 'USDC' ? '$' : ''}{formatNumber(rewardNum)}
+          <span className="tc-reward-cur"> {currency}</span>
+        </div>
+        <div className="tc-reward-usd">≈ ${toUSD(rewardNum, currency)} USD</div>
+        <div className="tc-reward-label">Reward / Slot</div>
+      </div>
+
+      {/* ═══ 4. METADATA ROW — Category | Tier | Requirement ═══ */}
+      <div className="tc-meta-row">
+        <span className="tc-meta-item">{formatCategory(task.category)}</span>
+        <span className="tc-meta-divider">|</span>
+        <span className="tc-meta-item">Tier {tier}</span>
+        {requirements.length > 0 && (
+          <>
+            <span className="tc-meta-divider">|</span>
+            <span className="tc-meta-item tc-meta-req">Req: {formatReq(requirements[0])}</span>
+          </>
+        )}
+      </div>
+
+      {/* ═══ 5. ABOUT THIS TASK — Bordered box, 25-35% height ═══ */}
+      <div className="tc-about-box">
+        <div className="tc-about-header">
+          <span className="tc-about-label">ABOUT THIS TASK</span>
+          {timeLeft && <span className="tc-about-timer">{timeLeft}</span>}
+        </div>
+        {task.description ? (
+          <p className="tc-about-text">{task.description}</p>
+        ) : (
+          <p className="tc-about-text tc-about-empty">No description provided.</p>
+        )}
+      </div>
+
+      {/* ═══ 6. VIEW DETAILS — Small button, bottom-right ═══ */}
+      <div className="tc-footer">
+        <span className="tc-view-btn">
+          View Details <i className="ti ti-arrow-right" />
+        </span>
       </div>
 
     </div>
