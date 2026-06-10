@@ -1127,6 +1127,7 @@ function GetStarted({ openAuth, navigate }) {
 
 /* ─── COMMUNITIES ────────────────────────────────────────────────────────────── */
 function Communities() {
+  const navigate = useNavigate()
   const [comms, setComms] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   useEffect(() => {
@@ -1251,7 +1252,7 @@ function Communities() {
           {comms.map((c, i) => {
             const initials = (c.name || '?').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
             return (
-              <div key={c.id || i} style={cardStyle}>
+              <div key={c.id || i} style={{ ...cardStyle, cursor: "pointer" }} onClick={() => navigate('/communities/' + c.id)}>
                 <div style={coverStyle(c)}>
                   {c.coverImage ? (
                     <img src={c.coverImage} style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0 }} />
