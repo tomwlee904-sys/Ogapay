@@ -1,8 +1,8 @@
-/* ─── Task Card — OgaPay Dark Color System ──────────────── */
+/* ─── Task Card — Theme-Consistent OgaPay Design System ──── */
 
 .tc-card {
-  background: #111827;
-  border: 1px solid rgba(255,255,255,0.06);
+  background: var(--card);
+  border: 1px solid var(--border);
   border-radius: 16px;
   overflow: hidden;
   display: flex;
@@ -13,18 +13,18 @@
 }
 .tc-card:hover {
   transform: translateY(-2px);
-  border-color: #191C6B;
-  box-shadow: 0 0 0 1px rgba(25,28,107,0.3), 0 8px 24px rgba(0,0,0,0.3);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px rgba(25,28,107,0.3), 0 8px 24px rgba(0,0,0,0.15);
 }
 
-/* ═══ HEADER — solid card bg with bottom border ════════════ */
+/* ═══ HEADER ════════════════════════════════════════════════ */
 
 .tc-header {
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 14px 16px;
-  border-bottom: 1px solid rgba(255,255,255,0.06);
+  border-bottom: 1px solid var(--border);
 }
 .tc-avatar {
   width: 40px;
@@ -32,7 +32,7 @@
   border-radius: 50%;
   object-fit: cover;
   flex-shrink: 0;
-  border: 2px solid rgba(255,255,255,0.1);
+  border: 2px solid var(--border2);
 }
 .tc-avatar-init {
   width: 40px;
@@ -45,8 +45,8 @@
   font-weight: 800;
   color: #fff;
   flex-shrink: 0;
-  background: #191C6B;
-  border: 2px solid rgba(255,255,255,0.1);
+  background: var(--accent);
+  border: 2px solid var(--border2);
 }
 .tc-header-info {
   flex: 1;
@@ -57,7 +57,7 @@
 }
 .tc-listed-label {
   font-size: 11px;
-  color: #9CA3AF;
+  color: var(--text3);
   text-transform: uppercase;
   letter-spacing: 0.1em;
   line-height: 1.2;
@@ -65,7 +65,7 @@
 .tc-listed-name {
   font-size: 14px;
   font-weight: 900;
-  color: #fff;
+  color: var(--text);
   letter-spacing: 0.02em;
   text-transform: uppercase;
   overflow: hidden;
@@ -74,8 +74,8 @@
 }
 .tc-new-badge {
   margin-left: auto;
-  background: #00C853;
-  color: #0B0F1F;
+  background: var(--green);
+  color: #fff;
   font-size: 11px;
   font-weight: 800;
   padding: 3px 10px;
@@ -108,7 +108,7 @@
 }
 .tc-progress-label {
   font-size: 11px;
-  color: #9CA3AF;
+  color: var(--text3);
   text-transform: uppercase;
   letter-spacing: 0.1em;
   font-weight: 600;
@@ -116,24 +116,24 @@
 .tc-progress-count {
   font-size: 12px;
   font-weight: 700;
-  color: #9CA3AF;
+  color: var(--text2);
   font-variant-numeric: tabular-nums;
 }
 .tc-bar-track {
   width: 100%;
   height: 6px;
-  background: rgba(255,255,255,0.08);
+  background: var(--bg2);
   border-radius: 999px;
   overflow: hidden;
 }
 .tc-bar-fill {
   height: 100%;
   border-radius: 999px;
-  background: #191C6B;
+  background: var(--accent);
   transition: width 0.4s ease;
 }
 .tc-bar-fill.success {
-  background: #00C853;
+  background: var(--green);
 }
 
 /* Status row */
@@ -155,10 +155,10 @@
   border-radius: 50%;
   flex-shrink: 0;
 }
-.tc-dot.main { background: #191C6B; }
-.tc-dot.subtle { background: rgba(255,255,255,0.2); }
-.tc-dot.green { background: #00C853; }
-.tc-dot.orange { background: #f59e0b; }
+.tc-dot.main { background: var(--accent); }
+.tc-dot.subtle { background: var(--text3); }
+.tc-dot.green { background: var(--green); }
+.tc-dot.orange { background: var(--gold); }
 
 @keyframes pulseDot {
   0%, 100% { opacity: 1; }
@@ -173,17 +173,16 @@
   font-weight: 500;
   white-space: nowrap;
 }
-.tc-stat-label.main { color: #191C6B; }
-.tc-stat-label.subtle { color: rgba(255,255,255,0.35); }
-.tc-stat-label.green { color: #00C853; }
-.tc-stat-label.orange { color: #f59e0b; }
-.tc-stat-label.white { color: #fff; }
+.tc-stat-label.main { color: var(--accent); }
+.tc-stat-label.subtle { color: var(--text3); }
+.tc-stat-label.green { color: var(--green); }
+.tc-stat-label.orange { color: var(--gold); }
 
-/* ═══ REWARD BOX — gradient based on #191C6B ═══════════════ */
+/* ═══ REWARD BOX ════════════════════════════════════════════ */
 
 .tc-reward-box {
-  background: linear-gradient(135deg, rgba(25,28,107,0.15) 0%, rgba(25,28,107,0.05) 100%);
-  border: 1px solid rgba(25,28,107,0.2);
+  background: var(--bg2);
+  border: 1px solid var(--border);
   border-radius: 12px;
   padding: 14px 16px;
   display: flex;
@@ -198,18 +197,18 @@
 .tc-reward-amount {
   font-size: 28px;
   font-weight: 900;
-  color: #00C853;
+  color: var(--green);
   line-height: 1;
   letter-spacing: -0.5px;
 }
 .tc-reward-cur {
   font-size: 13px;
   font-weight: 800;
-  color: #9CA3AF;
+  color: var(--text3);
 }
 .tc-reward-sublabel {
   font-size: 11px;
-  color: rgba(255,255,255,0.3);
+  color: var(--text3);
   text-transform: uppercase;
   letter-spacing: 0.1em;
   font-weight: 600;
@@ -225,12 +224,12 @@
 }
 .tc-meta-item {
   font-size: 12px;
-  color: rgba(255,255,255,0.45);
+  color: var(--text2);
   font-weight: 500;
   white-space: nowrap;
 }
 .tc-meta-divider {
-  color: rgba(255,255,255,0.1);
+  color: var(--border);
   font-size: 11px;
   font-weight: 300;
 }
@@ -255,11 +254,11 @@
 }
 .tc-about-label-row i {
   font-size: 13px;
-  color: rgba(255,255,255,0.3);
+  color: var(--text3);
 }
 .tc-about-label {
   font-size: 11px;
-  color: rgba(255,255,255,0.3);
+  color: var(--text3);
   text-transform: uppercase;
   letter-spacing: 0.1em;
   font-weight: 600;
@@ -267,13 +266,13 @@
 .tc-about-timer {
   font-size: 11px;
   font-family: monospace;
-  color: rgba(255,255,255,0.3);
+  color: var(--text3);
   font-weight: 600;
   white-space: nowrap;
 }
 .tc-desc {
   font-size: 13px;
-  color: rgba(255,255,255,0.55);
+  color: var(--text2);
   line-height: 1.55;
   display: -webkit-box;
   -webkit-line-clamp: 3;
