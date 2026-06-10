@@ -34,5 +34,5 @@ export default function Countdown({ startDate, deadlineHours }: CountdownProps) 
 
   if (!display) return null
 
-  return <span className="font-mono text-xs text-gray-400">{display}</span>
+  return <span style={{ fontFamily: 'monospace', fontSize: 10, color: 'var(--text3)' }}>{display}</span>
 }

@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import Countdown from './Countdown'
+import './TaskCard.css'
 
 interface TaskData {
   id: string
@@ -49,129 +49,115 @@ export default function TaskCard({ task }: TaskCardProps) {
   const isNew = Date.now() - new Date(task.createdAt).getTime() < 86400000
   const posterName = task.poster?.username || 'Anonymous'
 
+  const deadlineDisplay = () => {
+    const target = task.deadlineHours
+      ? new Date(new Date(task.createdAt).getTime() + task.deadlineHours * 3600000)
+      : null
+    if (!target) return ''
+    const diff = target.getTime() - Date.now()
+    if (diff <= 0) return 'Expired'
+    const d = Math.floor(diff / 86400000)
+    const h = Math.floor((diff % 86400000) / 3600000)
+    const m = Math.floor((diff % 3600000) / 60000)
+    const s = Math.floor((diff % 60000) / 1000)
+    return d > 0
+      ? `${d}d ${h}h ${m}m ${s}s`
+      : `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
+  }
+
   return (
-    <div
-      onClick={() => navigate(`/tasks/${task.id}`)}
-      className="rounded-2xl border border-gray-200 bg-white flex flex-col overflow-hidden cursor-pointer hover:shadow-md transition-shadow"
-    >
+    <div className="tc-card" onClick={() => navigate(`/tasks/${task.id}`)}>
       {/* Header — poster info */}
-      <div className="flex items-center gap-3 p-4 pb-3 bg-gradient-to-r from-blue-50 to-white">
+      <div className="tc-header">
         <img
           src={task.poster?.avatarUrl || '/default-avatar.png'}
-          className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm"
+          className="tc-avatar"
         />
         <div>
-          <p className="text-xs text-gray-400 uppercase tracking-widest leading-none">
-            Listed by
-          </p>
-          <p className="font-black text-gray-900 text-sm tracking-wide uppercase">
-            {posterName}
-          </p>
+          <p className="tc-listed">Listed by</p>
+          <p className="tc-poster">{posterName}</p>
         </div>
-        {isNew && (
-          <span className="ml-auto bg-blue-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
-            NEW
-          </span>
-        )}
+        {isNew && <span className="tc-new">NEW</span>}
       </div>
 
-      <div className="flex flex-col gap-3 p-4">
+      <div className="tc-body">
         {/* Progress */}
         <div>
-          <div className="flex justify-between text-xs text-gray-400 mb-1.5">
-            <span className="uppercase tracking-widest">Progress</span>
-            <span className="font-semibold text-gray-700">
-              {filledSlots}/{totalSlots === 999 ? '\u221E' : totalSlots}
-            </span>
+          <div className="tc-progress-label">
+            <span>Progress</span>
+            <span>{filledSlots}/{totalSlots === 999 ? '\u221E' : totalSlots}</span>
           </div>
-          <div className="w-full bg-gray-100 rounded-full h-1.5">
+          <div className="tc-progress-track">
             <div
-              className={`h-1.5 rounded-full transition-all ${isCoolingDown ? 'bg-orange-400' : 'bg-blue-500'}`}
+              className={`tc-progress-fill ${isCoolingDown ? 'cooling' : ''}`}
               style={{ width: `${progressPercent}%` }}
             />
           </div>
-          {/* Status row */}
-          <div className="flex items-center gap-3 text-xs mt-2 flex-wrap">
-            <span className="flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-              <span className="text-blue-500 font-medium">
-                Submissions {submissionsCount}
-              </span>
+          <div className="tc-status-row">
+            <span className="tc-status-item">
+              <span className="tc-dot blue" />
+              <span>Submissions {submissionsCount}</span>
             </span>
-            <span className="flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-blue-300" />
-              <span className="text-blue-400">
-                {totalSlots === 999 ? 'Unlimited slots' : `Open ${openSlots}`}
-              </span>
+            <span className="tc-status-item">
+              <span className="tc-dot light" />
+              <span>{totalSlots === 999 ? 'Unlimited slots' : `Open ${openSlots}`}</span>
             </span>
-            <span className="flex items-center gap-1">
-              <span
-                className={`w-1.5 h-1.5 rounded-full ${isCoolingDown ? 'bg-orange-400' : 'bg-blue-500 animate-pulse'}`}
-              />
-              <span className={`font-medium ${isCoolingDown ? 'text-orange-500' : 'text-blue-500'}`}>
-                {isCoolingDown ? 'Cooling Down' : 'Status Open'}
+            <span className="tc-status-item">
+              <span className={`tc-dot ${isCoolingDown ? 'orange' : 'green pulse'}`} />
+              <span className={isCoolingDown ? 'text-orange' : 'text-green'}>
+                {isCoolingDown ? 'Cooling Down' : 'Open'}
               </span>
             </span>
           </div>
         </div>
 
         {/* Reward box */}
-        <div className="bg-blue-50 rounded-xl p-4 border border-blue-100">
-          <div className="flex items-baseline gap-2">
-            <span className="text-3xl font-black text-blue-600">
+        <div className="tc-reward">
+          <div className="tc-reward-row">
+            <span className="tc-reward-amount">
               {Number(task.reward).toLocaleString()}
             </span>
-            <span className="text-sm font-bold text-blue-400">NGN</span>
+            <span className="tc-reward-currency">NGN</span>
           </div>
-          <p className="text-xs text-gray-400 uppercase tracking-widest mt-0.5">
-            Reward / Slot
-          </p>
+          <p className="tc-reward-label">Reward / Slot</p>
         </div>
 
         {/* Category + rank + requirements */}
-        <div className="flex items-center gap-2 text-xs text-gray-400 flex-wrap">
+        <div className="tc-tags">
           <span>{task.category}</span>
           {task.rank && (
             <>
-              <span className="text-gray-200">|</span>
+              <span className="tc-sep">|</span>
               <span>Rank {task.rank}</span>
             </>
           )}
           {task.minSorsaScore && task.minSorsaScore > 0 && (
             <>
-              <span className="text-gray-200">|</span>
+              <span className="tc-sep">|</span>
               <span>Req: Sorsa {task.minSorsaScore}+</span>
             </>
           )}
           {task.requiresLinkedin && (
             <>
-              <span className="text-gray-200">|</span>
+              <span className="tc-sep">|</span>
               <span>Req: LinkedIn</span>
             </>
           )}
           {task.requiresWallet && (
             <>
-              <span className="text-gray-200">|</span>
+              <span className="tc-sep">|</span>
               <span>Req: Wallet</span>
             </>
           )}
         </div>
 
-        {/* About + countdown */}
+        {/* About */}
         <div>
-          <div className="flex items-center justify-between mb-1.5">
-            <div className="flex items-center gap-1.5 text-xs text-gray-400">
-              <i className="ti ti-message-square text-gray-400" style={{ fontSize: 12 }} />
-              <span className="uppercase tracking-widest">About This Task</span>
-            </div>
-            <Countdown
-              startDate={task.createdAt}
-              deadlineHours={task.deadlineHours}
-            />
+          <div className="tc-about-head">
+            <span>About This Task</span>
+            <span className="tc-deadline">{deadlineDisplay()}</span>
           </div>
-          <p className="text-sm text-gray-600 line-clamp-3">
-            {task.description}
-          </p>
+          <p className="tc-desc">{task.description}</p>
         </div>
       </div>
     </div>
