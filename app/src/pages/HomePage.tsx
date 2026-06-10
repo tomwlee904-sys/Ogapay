@@ -483,8 +483,8 @@ function HeroStatsCard() {
 
   return (
     <div style={{
-      background: '#fff', borderRadius: 24, boxShadow: '0 24px 70px rgba(8,11,19,.22)',
-      border: '1px solid #e5e5e5', padding: 32, width: '100%', maxWidth: 320,
+      background: '#fff', borderRadius: 24, boxShadow: '0 20px 60px rgba(0,0,0,.10)',
+      border: '1px solid #e5e5e5', padding: 32, width: '100%', maxWidth: 384,
       display: 'flex', flexDirection: 'column', gap: 24,
     }}>
       {/* Header */}
@@ -719,10 +719,10 @@ function FeaturedJobs() {
   useEffect(() => { injectSkeletonStyles(); }, []);
   const fetchFeatured = () => {
     setLoading(true);
-    apiRequest<any>('/tasks/featured', { auth: false })
+    apiRequest<any>('/tasks', { auth: false })
       .then(d => {
         const list = Array.isArray(d) ? d : d?.tasks || d?.data || [];
-        setJobs(list);
+        setJobs(list.slice(0, 6));
       })
       .catch(() => setJobs([]))
       .finally(() => setLoading(false));
