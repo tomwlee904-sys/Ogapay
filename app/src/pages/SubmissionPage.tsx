@@ -416,7 +416,7 @@ const spStyles = `
 .sp-tc-rl { display: block; font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; color: var(--text3); }
 .sp-tc-rv { font-size: 14px; font-weight: 900; color: #191C6B; font-family: Outfit, sans-serif; }
 .sp-tc-info { flex: 1; min-width: 0; }
-.sp-tc-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+.sp-tc-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 2px; word-break: break-word; overflow-wrap: break-word; }
 .sp-tc-meta { font-size: 11px; color: var(--text2); }
 .sp-tc-arrow { color: var(--text3); flex-shrink: 0; }
 

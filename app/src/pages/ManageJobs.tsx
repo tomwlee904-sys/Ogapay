@@ -203,8 +203,8 @@ function JobDrawer({ job, onClose, onStatusChange }) {
                         {sub.user[0]}
                       </div>
                       <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text)" }}>{sub.user}</div>
-                        <div style={{ fontSize: 11, color: "var(--text3)" }}>{sub.handle} · {sub.time}</div>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{sub.user}</div>
+                        <div style={{ fontSize: 11, color: "var(--text3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{sub.handle} · {sub.time}</div>
                       </div>
                       <Badge label={sub.status.charAt(0).toUpperCase() + sub.status.slice(1)} color={subColor[sub.status]} bg={subBg[sub.status]} />
                     </div>
