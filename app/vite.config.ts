@@ -31,6 +31,9 @@ export default defineConfig({
       maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
       navigateFallback: '/index.html',
       navigateFallbackDenylist: [/^\/api\//],
+      workbox: {
+        clientsClaim: true,
+      },
       runtimeCaching: [
         {
           urlPattern: /^https?:\/\/ogapay-production\.up\.railway\.app\/api\/.*/i,
