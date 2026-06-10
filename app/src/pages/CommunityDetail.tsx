@@ -54,14 +54,16 @@ export default function CommunityDetail() {
     setUploadingCover(true)
     try {
       const url = await uploadImage(file, 'community-covers')
-      const res = await fetch(`${API_BASE}/communities/${community.id}/cover`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-        body: (() => { const fd = new FormData(); fd.append('cover', file); return fd })(),
-      })
-      if (res.ok) {
-        const json = await res.json()
-        setCommunity((prev: any) => ({ ...prev, coverImage: json.data?.coverImage || json.coverImage }))
+      if (url) {
+        const res = await fetch(`${API_BASE}/communities/${community.id}/cover`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+          body: JSON.stringify({ coverUrl: url }),
+        })
+        if (res.ok) {
+          const json = await res.json()
+          setCommunity((prev: any) => ({ ...prev, coverImage: json.data?.coverImage || url }))
+        }
       }
     } catch {}
     setUploadingCover(false)

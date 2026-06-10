@@ -2,6 +2,7 @@ import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import Layout from '../components/Layout'
+import { uploadImage } from '../lib/upload'
 
 const API_BASE = 'https://ogapay-production.up.railway.app/api/v1'
 
@@ -56,15 +57,22 @@ export default function CreateCommunity() {
       if (!res.ok) throw new Error(json.error || json.message || 'Failed to create community')
       const communityId = json.data?.id
       if (coverImage && communityId) {
-        const fd = new FormData()
-        fd.append('cover', coverImage)
-        await fetch(API_BASE + '/communities/' + communityId + '/cover', {
-          method: 'POST',
-          headers: { 'Authorization': 'Bearer ' + token },
-          body: fd,
-        })
+        try {
+          const coverUrl = await uploadImage(coverImage, 'community-covers')
+          if (coverUrl) {
+            await fetch(API_BASE + '/communities/' + communityId + '/cover', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+              body: JSON.stringify({ coverUrl }),
+            })
+          }
+        } catch {}
       }
-      navigate('/worker-portal')
+      if (communityId) {
+        navigate('/communities/' + communityId)
+      } else {
+        navigate('/communities')
+      }
     } catch (err: any) {
       setError(err.message)
     } finally {
