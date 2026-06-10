@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import Layout from '../components/Layout'
@@ -24,6 +24,9 @@ export default function CreateCommunity() {
   })
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [coverImage, setCoverImage] = useState<File | null>(null)
+  const [coverPreview, setCoverPreview] = useState<string | null>(null)
+  const fileRef = useRef<HTMLInputElement>(null)
 
   const update = (field: string, value: any) => setForm(prev => ({ ...prev, [field]: value }))
 
@@ -51,6 +54,16 @@ export default function CreateCommunity() {
       })
       const json = await res.json()
       if (!res.ok) throw new Error(json.error || json.message || 'Failed to create community')
+      const communityId = json.data?.id
+      if (coverImage && communityId) {
+        const fd = new FormData()
+        fd.append('cover', coverImage)
+        await fetch(API_BASE + '/communities/' + communityId + '/cover', {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + token },
+          body: fd,
+        })
+      }
       navigate('/worker-portal')
     } catch (err: any) {
       setError(err.message)
@@ -140,6 +153,46 @@ export default function CreateCommunity() {
                   <i className="ti ti-brand-discord" style={{ fontSize: 18, color: 'var(--text3)', width: 20 }} />
                   <input type="text" placeholder="https://discord.gg/yourcommunity" value={form.discord} onChange={e => update('discord', e.target.value)} />
                 </div>
+              </div>
+            </div>
+
+            <div className="cc-field">
+              <label>Cover Image (optional)</label>
+              <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={e => {
+                const file = e.target.files?.[0] || null
+                setCoverImage(file)
+                setCoverPreview(file ? URL.createObjectURL(file) : null)
+              }} />
+              <div onClick={() => fileRef.current?.click()} style={{
+                width: '100%',
+                height: 160,
+                borderRadius: 12,
+                border: '1.5px dashed var(--border)',
+                background: 'var(--bg)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                overflow: 'hidden',
+                position: 'relative',
+              }}>
+                {coverPreview ? (
+                  <img src={coverPreview} alt="Cover preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, color: 'var(--text3)', fontSize: 13 }}>
+                    <i className="ti ti-photo" style={{ fontSize: 28 }} />
+                    <span>Click to upload cover image</span>
+                  </div>
+                )}
+                {coverPreview && (
+                  <div onClick={e => { e.stopPropagation(); setCoverImage(null); setCoverPreview(null); if (fileRef.current) fileRef.current.value = '' }} style={{
+                    position: 'absolute', top: 8, right: 8, width: 28, height: 28, borderRadius: '50%',
+                    background: 'rgba(0,0,0,.5)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    cursor: 'pointer', fontSize: 16,
+                  }}>
+                    <i className="ti ti-x" />
+                  </div>
+                )}
               </div>
             </div>
 

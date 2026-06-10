@@ -196,11 +196,17 @@ const GlobalStyles = () => (
     @media(max-width:768px) {
       body { padding-bottom:92px; }
       .hide-mobile { display:none !important; }
+      .container { width:min(1200px,calc(100% - 32px)); }
+      main { padding-bottom:80px; }
       .hero-grid {
         display:block !important; padding:54px 0 30px !important;
         text-align:center !important;
       }
       .hero-grid > * { width:100% !important; max-width:100% !important; }
+      .hero-grid > div:first-child h1 { font-size:clamp(32px,11vw,44px) !important; letter-spacing:-1.2px !important; }
+      .hero-grid > div:first-child > div { flex-direction:column !important; }
+      .hero-grid > div:first-child > div a,
+      .hero-grid > div:first-child > div button { width:100% !important; justify-content:center; }
       .hero-analytics { margin:28px auto 0; border:0 !important; background:transparent !important; box-shadow:none !important; backdrop-filter:none !important; }
       .hero-analytics .analytics-head { display:none; }
       .hero-analytics .analytics-body { display:grid !important; grid-template-columns:repeat(3,1fr) !important; gap:10px; padding:16px 0 0; }
@@ -208,17 +214,17 @@ const GlobalStyles = () => (
       [data-theme="dark"] .hero-analytics .stat { background:rgba(8,11,19,.72); border-color:#232323; box-shadow:none; }
       .hero-analytics .analytics-foot { display:none; }
       .hero-analytics::before { display:none; }
-      .quick-grid { grid-template-columns:1fr 1fr !important; }
+      .quick-grid { display:flex !important; overflow-x:auto !important; -webkit-overflow-scrolling:touch !important; scrollbar-width:none !important; -ms-overflow-style:none !important; flex-wrap:nowrap !important; }
+      .quick-grid::-webkit-scrollbar { display:none !important; }
       .steps-grid { grid-template-columns:1fr !important; }
       .steps-grid::before { display:none !important; }
       .jobs-track { display:flex !important; flex-direction:column !important; }
       .store-grid,.community-grid { grid-template-columns:1fr !important; }
       .gs-accordion { grid-template-columns:1fr !important; }
-      .paths { grid-template-columns:1fr !important; }
+      .paths { grid-template-columns:1fr 1fr !important; }
       .mobile-bottom-nav { display:grid !important; }
     }
     @media(max-width:520px) {
-      .quick-grid { grid-template-columns:1fr !important; }
       .hero-analytics .analytics-body { grid-template-columns:1fr 1fr 1fr; }
     }
 
@@ -610,7 +616,7 @@ function QuickTasks() {
             const isSelected = selectedTask?.key === t.key
             return (
               <div key={t.name} onClick={() => { setSelectedTask(t); setQuickUrl('') }}
-                style={{ display: "flex", alignItems: "center", gap: 13, padding: "14px 18px", border: isSelected ? "2px solid #191C6B" : t.featured ? "1.5px solid var(--text)" : "1.5px solid var(--border)", borderRadius: 'var(--radius)', background: isSelected ? '#191C6B08' : 'var(--card)', cursor: "pointer", overflow: 'hidden', boxShadow: isSelected ? '0 0 0 1px rgba(25,28,107,.08)' : 'var(--shadow-soft)', transition: 'border-color .14s, box-shadow .14s, background .14s' }}>
+                style={{ display: "flex", alignItems: "center", gap: 13, padding: "14px 18px", flexShrink: 0, border: isSelected ? "2px solid #191C6B" : t.featured ? "1.5px solid var(--text)" : "1.5px solid var(--border)", borderRadius: 'var(--radius)', background: isSelected ? '#191C6B08' : 'var(--card)', cursor: "pointer", overflow: 'hidden', boxShadow: isSelected ? '0 0 0 1px rgba(25,28,107,.08)' : 'var(--shadow-soft)', transition: 'border-color .14s, box-shadow .14s, background .14s' }}>
                 <div style={{ width: 38, height: 38, borderRadius: 9, display: "grid", placeItems: "center", background: "var(--bg2)", flexShrink: 0 }}>
                   <I n={t.icon} s={20} />
                 </div>
@@ -1524,7 +1530,7 @@ export default function HomePage() {
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css" />
       <GlobalStyles />
       <Navbar theme={theme} toggleTheme={toggleTheme} openDrawer={() => setDrawerOpen(true)} isAuthed={isAuthed} navigate={navigate} />
-      <main>
+      <main style={{ overflowX: 'hidden' }}>
         <Hero openAuth={openAuth} navigate={navigate} isAuthed={isAuthed} />
         <TrustBar />
         <QuickTasks />
