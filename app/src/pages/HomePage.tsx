@@ -795,7 +795,7 @@ function FeaturedJobs() {
                 const idx = (active + offset) % jobs.length;
                 const t = jobs[idx];
                 if (!t) return null;
-                return <TaskCard key={t.id} task={t} />;
+                return <div key={t.id} style={{ minHeight: 380, display: 'flex', flexDirection: 'column' }}><TaskCard task={t} /></div>;
               })}
             </div>
           </div>

@@ -599,7 +599,7 @@ export default function Tasks() {
         ) : (
           <div className="jobs-grid">
             {filtered.map(job => (
-              <TaskCard key={job.id} task={job._raw} />
+              <div key={job.id} style={{ minHeight: 380, display: 'flex', flexDirection: 'column' }}><TaskCard task={job._raw} /></div>
             ))}
           </div>
         )}
