@@ -1,368 +1,233 @@
-/* ─── Featured Task Card — WURK Reference Layout ────────── */
+/* ─── Task Card — Wurk.fun Pixel-Perfect Layout ──────────── */
 
-.tc-card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 16px;
+.task-card {
+  position: relative;
+  background: #111318;
+  border: 1px solid #1e2028;
+  border-radius: 12px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  gap: 0;
+  min-height: 420px;
   cursor: pointer;
-  transition: all .25s cubic-bezier(.4,0,.2,1);
-  height: 100%;
-  min-height: 680px;
+  transition: transform 0.2s ease, border-color 0.2s ease;
 }
-.tc-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 30px rgba(0,0,0,.08), 0 0 40px rgba(31,140,255,.04);
-  border-color: rgba(31,140,255,.2);
-}
-[data-theme="dark"] .tc-card:hover {
-  border-color: rgba(167,139,250,.2);
-  box-shadow: 0 8px 30px rgba(0,0,0,.3), 0 0 40px rgba(167,139,250,.04);
+.task-card:hover {
+  transform: translateY(-2px);
+  border-color: #333;
 }
 
-/* ═══ 1. HEADER (~15%) ═══════════════════════════════════════ */
+/* Colored top accent line */
+.card-accent-line {
+  height: 2px;
+  width: 100%;
+  background: var(--accent, #4caf50);
+}
 
-.tc-header {
+/* Header */
+.card-header {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 16px 16px 0;
-  flex-shrink: 0;
+  padding: 14px 14px 10px;
+  border-bottom: 1px solid #1e2028;
 }
-.tc-header-avatar {
-  width: 36px;
-  height: 36px;
+.card-avatar {
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
+  border: 2px solid var(--accent, #4caf50);
   object-fit: cover;
   flex-shrink: 0;
-  border: 2px solid var(--border);
 }
-.tc-header-avatar-init {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  font-size: 14px;
-  font-weight: 800;
-  color: #fff;
-  flex-shrink: 0;
-  background: var(--accent);
-}
-.tc-header-info {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-}
-.tc-header-label {
-  font-size: 10px;
-  color: var(--text3);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  font-weight: 600;
-  line-height: 1.2;
-}
-.tc-header-name-row {
+.card-avatar-init {
   display: flex;
   align-items: center;
-  gap: 6px;
-}
-.tc-header-name {
-  font-size: 14px;
+  justify-content: center;
+  font-size: 16px;
   font-weight: 800;
-  color: var(--text);
+  color: #fff;
+  background: #2a2d35;
+}
+.card-header-text {
+  flex: 1;
+  min-width: 0;
+}
+.listed-by-label {
+  display: block;
+  font-size: 0.6rem;
+  color: #666;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  line-height: 1.2;
+}
+.listed-by-username {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 0.02em;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-.tc-header-badge {
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: #1d9bf0;
-  color: #fff;
-  font-size: 9px;
-  font-weight: 800;
-  display: grid;
-  place-items: center;
-  flex-shrink: 0;
-}
-.tc-header-timer {
-  margin-left: auto;
-  font-size: 11px;
-  font-family: monospace;
-  color: var(--text3);
-  white-space: nowrap;
-  font-weight: 700;
-  flex-shrink: 0;
-  letter-spacing: 0.02em;
+  max-width: 180px;
 }
 
-/* ═══ 2. PROGRESS SECTION ═══════════════════════════════════ */
-
-.tc-progress-section {
-  padding: 14px 16px 0;
-  flex-shrink: 0;
+/* Progress */
+.card-progress-section {
+  padding: 12px 14px;
+  border-bottom: 1px solid #1e2028;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
-.tc-progress-header {
+.progress-header-row {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 6px;
-}
-.tc-progress-label {
-  font-size: 10px;
-  color: var(--text3);
-  letter-spacing: 0.08em;
+  font-size: 0.62rem;
+  color: #666;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  font-weight: 700;
 }
-.tc-progress-fraction {
-  font-size: 11px;
-  color: var(--text2);
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-}
-.tc-bar-track {
-  height: 5px;
-  border-radius: 999px;
-  background: var(--bg2);
+.progress-track {
+  height: 4px;
+  background: #2a2d35;
+  border-radius: 2px;
   overflow: hidden;
-  border: 1px solid var(--border);
 }
-.tc-bar-fill {
+.progress-fill {
   height: 100%;
-  border-radius: inherit;
-  transition: width .4s ease;
+  border-radius: 2px;
+  transition: width 0.3s ease;
 }
-.tc-progress-pills {
+.progress-pills {
   display: flex;
   align-items: center;
-  gap: 14px;
-  margin-top: 6px;
-}
-.tc-pill {
-  font-size: 10px;
-  font-weight: 600;
-  color: var(--text2);
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  white-space: nowrap;
-}
-.tc-pill-dot {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
-/* ═══ 3. REWARD BOX ═════════════════════════════════════════ */
-
-.tc-reward-box {
-  margin: 14px 16px 0;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 16px 12px;
-  text-align: center;
-  background: var(--bg2);
-  flex-shrink: 0;
-}
-.tc-reward-amount {
-  font-size: 28px;
-  font-weight: 900;
-  color: var(--green);
-  line-height: 1.1;
-  letter-spacing: -0.5px;
-}
-.tc-reward-cur {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text3);
-}
-.tc-reward-usd {
-  font-size: 12px;
-  color: var(--text3);
-  margin-top: 3px;
-  font-weight: 500;
-}
-.tc-reward-label {
-  font-size: 9px;
-  color: var(--text3);
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  font-weight: 700;
-  margin-top: 6px;
-}
-
-/* ═══ 4. METADATA ROW ════════════════════════════════════════ */
-
-.tc-meta-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 12px 16px 0;
-  flex-shrink: 0;
+  gap: 12px;
   flex-wrap: wrap;
 }
-.tc-meta-item {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--text2);
+.pill {
+  font-size: 0.68rem;
   white-space: nowrap;
 }
-.tc-meta-divider {
-  color: var(--border);
-  font-size: 11px;
-  font-weight: 300;
+.pill-green { color: #4caf50; }
+.pill-grey { color: #888; }
+
+/* Reward box */
+.reward-box {
+  margin: 12px 14px;
+  border: 1px solid #2a2d35;
+  border-radius: 8px;
+  padding: 16px 12px;
+  text-align: center;
+  background: #0d0f14;
 }
-.tc-meta-req {
-  color: var(--text3);
-  font-weight: 500;
+.reward-amount {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #4caf50;
+  line-height: 1.1;
+}
+.reward-currency {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #4caf50;
+}
+.reward-usd {
+  font-size: 0.78rem;
+  color: #888;
+  margin-top: 4px;
+  letter-spacing: 0.04em;
 }
 
-/* ═══ 5. ABOUT THIS TASK — Bordered box ══════════════════════ */
+/* Meta row */
+.meta-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 14px 12px;
+  font-size: 0.7rem;
+  color: #aaa;
+  flex-wrap: wrap;
+}
+.meta-divider {
+  color: #333;
+}
 
-.tc-about-box {
-  margin: 12px 16px 0;
-  border: 1px solid var(--border);
-  border-radius: 10px;
+/* Description box */
+.description-box {
+  margin: 0 14px 14px;
+  border: 1px solid #2a2d35;
+  border-radius: 8px;
   padding: 10px 12px;
-  background: var(--bg2);
+  background: #0d0f14;
   flex: 1;
   display: flex;
   flex-direction: column;
-  min-height: 120px;
+  gap: 8px;
+  min-height: 100px;
 }
-.tc-about-header {
+.description-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 6px;
 }
-.tc-about-label {
-  font-size: 9px;
-  color: var(--text3);
-  letter-spacing: 0.1em;
+.description-label {
+  font-size: 0.6rem;
+  color: #666;
   text-transform: uppercase;
-  font-weight: 700;
+  letter-spacing: 0.08em;
 }
-.tc-about-timer {
-  font-size: 10px;
+.task-timer {
+  font-size: 0.65rem;
   font-family: monospace;
-  color: var(--text3);
-  font-weight: 600;
+  color: #888;
   white-space: nowrap;
 }
-.tc-about-text {
-  font-size: 12px;
-  color: var(--text2);
-  line-height: 1.6;
-  margin: 0;
+.description-text {
+  font-size: 0.78rem;
+  color: #ccc;
+  line-height: 1.55;
   display: -webkit-box;
-  -webkit-line-clamp: 5;
+  -webkit-line-clamp: 4;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  flex: 1;
-}
-.tc-about-empty {
-  color: var(--text3);
-  font-style: italic;
+  margin: 0;
 }
 
-/* ═══ 6. FOOTER — View Details button ════════════════════════ */
-
-.tc-footer {
-  padding: 12px 16px 16px;
-  display: flex;
-  justify-content: flex-end;
-  flex-shrink: 0;
-}
-.tc-view-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 7px 16px;
-  border-radius: 8px;
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--accent);
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  transition: all .2s;
-  cursor: pointer;
-}
-.tc-card:hover .tc-view-btn {
-  background: var(--accent);
-  color: #fff;
-  border-color: var(--accent);
-}
-.tc-view-btn i {
-  font-size: 12px;
-}
-
-
-/* ─── Mobile (< 768px) ───────────────────────────────────── */
-
+/* Mobile */
 @media (max-width: 768px) {
-  .tc-card {
-    min-height: auto;
+  .task-card {
+    min-height: 380px;
   }
-  .tc-header {
-    padding: 12px 12px 0;
+  .reward-amount {
+    font-size: 1.4rem;
   }
-  .tc-header-avatar,
-  .tc-header-avatar-init {
-    width: 30px;
-    height: 30px;
-    font-size: 12px;
+  .card-avatar,
+  .card-avatar-init {
+    width: 32px;
+    height: 32px;
   }
-  .tc-header-name {
+  .card-avatar-init {
     font-size: 13px;
   }
-  .tc-header-timer {
-    font-size: 10px;
+  .listed-by-username {
+    font-size: 0.75rem;
+    max-width: 120px;
   }
-  .tc-progress-section {
-    padding: 10px 12px 0;
+  .progress-pills {
+    gap: 6px;
   }
-  .tc-progress-pills {
-    gap: 10px;
+  .pill {
+    font-size: 0.6rem;
   }
-  .tc-pill {
-    font-size: 9px;
+  .meta-row {
+    font-size: 0.62rem;
+    gap: 5px;
   }
-  .tc-reward-box {
-    margin: 10px 12px 0;
-    padding: 12px 10px;
-  }
-  .tc-reward-amount {
-    font-size: 22px;
-  }
-  .tc-meta-row {
-    padding: 10px 12px 0;
-    gap: 4px;
-  }
-  .tc-meta-item {
-    font-size: 10px;
-  }
-  .tc-about-box {
-    margin: 10px 12px 0;
-    padding: 8px 10px;
-    min-height: 90px;
-  }
-  .tc-about-text {
-    font-size: 11px;
+  .description-text {
+    font-size: 0.72rem;
     -webkit-line-clamp: 3;
-  }
-  .tc-footer {
-    padding: 10px 12px 12px;
-  }
-  .tc-view-btn {
-    padding: 6px 14px;
-    font-size: 11px;
   }
 }
