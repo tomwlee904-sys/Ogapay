@@ -7,9 +7,10 @@ interface UploadRoute {
 }
 
 const uploadRoutes: Record<string, UploadRoute> = {
-  'avatars':     { path: '/users/avatar', field: 'avatar', responseKey: 'avatarUrl' },
-  'task-proofs': { path: '/uploads/proof', field: 'file',   responseKey: 'url' },
-  'store':       { path: '/uploads/store', field: 'file',   responseKey: 'url' },
+  'avatars':          { path: '/users/avatar', field: 'avatar', responseKey: 'avatarUrl' },
+  'task-proofs':      { path: '/uploads/proof', field: 'file',   responseKey: 'url' },
+  'store':            { path: '/uploads/store', field: 'file',   responseKey: 'url' },
+  'community-covers': { path: '/communities',   field: 'cover', responseKey: 'coverImage' },
 }
 
 export async function uploadImage(

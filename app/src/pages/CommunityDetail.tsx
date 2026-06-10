@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import Layout from '../components/Layout'
+import { uploadImage } from '../lib/upload'
 
 const API_BASE = 'https://ogapay-production.up.railway.app/api/v1'
 
@@ -34,6 +35,10 @@ export default function CommunityDetail() {
   const [cjPage, setCjPage] = useState(1)
   const [cjTotalPages, setCjTotalPages] = useState(1)
 
+  // Cover upload
+  const [uploadingCover, setUploadingCover] = useState(false)
+  const isOwner = authUser && community?.owner && authUser.id === community.owner.id
+
   // Chat
   const [messages, setMessages] = useState<any[]>([])
   const [newMessage, setNewMessage] = useState('')
@@ -42,6 +47,25 @@ export default function CommunityDetail() {
 
   const token = localStorage.getItem('ogapay_access_token')
   const authHeaders = token ? { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' } : {}
+
+  const handleCoverUpload = async (e: any) => {
+    const file = e.target.files?.[0]
+    if (!file || !community) return
+    setUploadingCover(true)
+    try {
+      const url = await uploadImage(file, 'community-covers')
+      const res = await fetch(`${API_BASE}/communities/${community.id}/cover`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: (() => { const fd = new FormData(); fd.append('cover', file); return fd })(),
+      })
+      if (res.ok) {
+        const json = await res.json()
+        setCommunity((prev: any) => ({ ...prev, coverImage: json.data?.coverImage || json.coverImage }))
+      }
+    } catch {}
+    setUploadingCover(false)
+  }
 
   useEffect(() => {
     async function fetchCommunity() {
@@ -320,6 +344,22 @@ export default function CommunityDetail() {
             <div className="cd-desc-label">About This Community</div>
             <p className="cd-card-sub">Learn more about what we do</p>
             <p className="cd-desc">{community.description || 'No description available.'}</p>
+          </div>
+        )}
+        {activeTab === 'About' && isOwner && (
+          <div className="cd-card" style={{ borderColor: 'var(--accent)' }}>
+            <div className="cd-desc-label" style={{ color: 'var(--accent)' }}>Settings</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--text2)' }}>Cover Image</label>
+              <input type="file" accept="image/*" onChange={handleCoverUpload}
+                style={{ fontSize: 13, color: 'var(--text3)' }} />
+              {uploadingCover && <span style={{ fontSize: 12, color: 'var(--text3)' }}>Uploading...</span>}
+              {community.coverImage && (
+                <div style={{ width: '100%', height: 128, borderRadius: 10, overflow: 'hidden', marginTop: 4 }}>
+                  <img src={community.coverImage} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                </div>
+              )}
+            </div>
           </div>
         )}
 
