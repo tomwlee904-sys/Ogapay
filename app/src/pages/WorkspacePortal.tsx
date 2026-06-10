@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { apiRequest } from '../lib/api'
+import TaskCard from '../components/TaskCard'
 
 const CATEGORIES = [
   { key: 'social', icon: 'ti ti-brand-twitter', label: 'Social Tasks', color: '#0ea5e9', bg: '#0ea5e915' },
@@ -96,17 +97,7 @@ export default function WorkspacePortal() {
         ) : (
           <div className="wp-task-list">
             {tasks.map((t: any) => (
-              <div key={t.id || t._id} className="wp-task-card">
-                <div className="wp-task-info">
-                  <h3>{t.title}</h3>
-                  <div className="wp-task-meta">
-                    <span><i className="ti ti-users" /> {t.maxWorkers || t.slots || 1} slots</span>
-                    <span><i className="ti ti-clock" /> {timeAgo(t.createdAt || t.date)}</span>
-                  </div>
-                </div>
-                <div className="wp-task-reward">{t.currency || 'NGN'} {Number(t.reward || 0).toLocaleString()}</div>
-                <button className="wp-task-apply" onClick={() => navigate(`/tasks/${t.id || t._id}`)}>Apply</button>
-              </div>
+              <TaskCard key={t.id || t._id} task={t} />
             ))}
           </div>
         )}

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { API_BASE } from '../lib/api'
+import TaskCard from '../components/TaskCard'
 
 const WORKSPACES: Record<string, { label: string; icon: string; desc: string; color: string }> = {
   social: { label: 'Social Workspace', icon: 'brand-x', desc: 'Social media tasks — follows, likes, shares, comments', color: '#1F8CFF' },
@@ -333,15 +334,7 @@ export default function WorkerWorkspace() {
                   <i className="ti ti-flame" style={{ color: ws.color }} /> Top Paying This Week
                 </div>
                 {featured.map(t => (
-                  <div key={t.id || t._id} className="ws-featured-card" onClick={() => navigate('/tasks/' + (t.id || t._id))}>
-                    <div>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)', marginBottom: 2 }}>{t.title}</div>
-                      <div style={{ fontSize: 12, color: 'var(--text3)' }}>{getTimeAgo(t.createdAt || t.date)}</div>
-                    </div>
-                    <div style={{ fontSize: 17, fontWeight: 900, color: ws.color, whiteSpace: 'nowrap' }}>
-                      {formatReward(t.reward, t.currency)}
-                    </div>
-                  </div>
+                  <TaskCard key={t.id || t._id} task={t} />
                 ))}
               </div>
             )}
@@ -357,28 +350,7 @@ export default function WorkerWorkspace() {
             ) : (
               <div className="ws-grid">
                 {filteredTasks.map((task: any) => (
-                  <div key={task.id || task._id} className="ws-card" onClick={() => navigate('/tasks/' + (task.id || task._id))} style={{ cursor: 'pointer' }}>
-                    <div className="ws-card-top">
-                      <div className="ws-card-title">{task.title}</div>
-                      <div className="ws-card-reward">{formatReward(task.reward, task.currency)}</div>
-                    </div>
-                    <div className="ws-card-meta">
-                      {task.category && <span><i className="ti ti-tag" style={{fontSize:11}} /> {task.category}</span>}
-                      {task.maxWorkers && <span><i className="ti ti-users" style={{fontSize:11}} /> {task.maxWorkers} slots</span>}
-                      {task.createdAt && <span><i className="ti ti-clock" style={{fontSize:11}} /> {getTimeAgo(task.createdAt)}</span>}
-                      {!task.createdAt && task.date && <span><i className="ti ti-clock" style={{fontSize:11}} /> {getTimeAgo(task.date)}</span>}
-                    </div>
-                    <div className="ws-card-actions">
-                      {task.status === 'OPEN' || task.status === 'open' || !task.status ? (
-                        <span className="ws-badge-open"><i className="ti ti-circle-filled" style={{fontSize:6}} /> OPEN</span>
-                      ) : (
-                        <span className="ws-badge-closed"><i className="ti ti-circle-filled" style={{fontSize:6}} /> {task.status}</span>
-                      )}
-                      <button className="ws-apply-btn" onClick={(e) => { e.stopPropagation(); navigate('/tasks/' + (task.id || task._id)); }}>
-                        Apply <i className="ti ti-arrow-right" style={{fontSize:11}} />
-                      </button>
-                    </div>
-                  </div>
+                  <TaskCard key={task.id || task._id} task={task} />
                 ))}
               </div>
             )}

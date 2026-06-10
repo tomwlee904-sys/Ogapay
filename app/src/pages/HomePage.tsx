@@ -3,7 +3,8 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { injectSkeletonStyles } from "../components/SkeletonLoader";
-import { API_BASE } from "../lib/api";
+import { API_BASE, apiRequest } from "../lib/api";
+import TaskCard from "../components/TaskCard";
 
 /* ─── GLOBAL STYLES ────────────────────────────────────────────────────────── */
 const GlobalStyles = () => (
@@ -56,6 +57,7 @@ const GlobalStyles = () => (
     @keyframes progressLoad { from{transform:scaleX(.18);transform-origin:left} to{transform:scaleX(1);transform-origin:left} }
     @keyframes fadeUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
     @keyframes dotBreathe { 0%,100%{box-shadow:0 7px 18px rgba(16,21,37,.14)} 50%{box-shadow:0 8px 22px rgba(16,21,37,.24)} }
+    @keyframes ping { 0%{transform:scale(1);opacity:1} 75%{transform:scale(2);opacity:0} 100%{transform:scale(1);opacity:1} }
 
     /* ── Section heading ── */
     .section-kicker {
@@ -419,24 +421,124 @@ function Navbar({ theme, toggleTheme, openDrawer, isAuthed, navigate }) {
   );
 }
 
+/* ─── COUNT-UP HOOK ──────────────────────────────────────────────────────────── */
+function useCountUp(target, duration = 2000) {
+  const [count, setCount] = useState(0);
+  useEffect(() => {
+    if (!target && target !== 0) return;
+    let start = 0;
+    const increment = target / (duration / 16);
+    const timer = setInterval(() => {
+      start += increment;
+      if (start >= target) {
+        setCount(target);
+        clearInterval(timer);
+      } else {
+        setCount(Math.floor(start));
+      }
+    }, 16);
+    return () => clearInterval(timer);
+  }, [target, duration]);
+  return count;
+}
+
+/* ─── STATS SKELETON ──────────────────────────────────────────────────────────── */
+function StatsSkeleton() {
+  return (
+    <div className="flex flex-col gap-5">
+      {[1,2,3].map(i => (
+        <div key={i}>
+          <div className="sk" style={{ height: 40, width: 128, borderRadius: 8, marginBottom: 4 }} />
+          <div className="sk" style={{ height: 12, width: 96, borderRadius: 4 }} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ─── HERO STATS CARD ──────────────────────────────────────────────────────────── */
+function HeroStatsCard() {
+  const [stats, setStats] = useState(null);
+  const [pulse, setPulse] = useState(false);
+
+  const fetchStats = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/stats/live`);
+      const data = await res.json();
+      setStats(data);
+      setPulse(true);
+      setTimeout(() => setPulse(false), 1000);
+    } catch {}
+  };
+
+  useEffect(() => {
+    fetchStats();
+    const interval = setInterval(fetchStats, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const activeJobsCount = useCountUp(stats?.activeJobs);
+  const last24hTasksCount = useCountUp(stats?.last24hTasks);
+  const last24hPaidCount = useCountUp(stats?.last24hPaid);
+
+  return (
+    <div style={{
+      background: '#fff', borderRadius: 24, boxShadow: '0 24px 70px rgba(8,11,19,.22)',
+      border: '1px solid #e5e5e5', padding: 32, width: '100%', maxWidth: 320,
+      display: 'flex', flexDirection: 'column', gap: 24,
+    }}>
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <span style={{ fontSize: 14, fontWeight: 600, color: '#374151' }}>Platform Stats</span>
+        <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#16a34a', fontWeight: 500 }}>
+          <span style={{
+            width: 8, height: 8, borderRadius: '50%', background: '#16a34a',
+            animation: pulse ? 'ping 1s ease-in-out' : 'pulse 2s ease-in-out infinite',
+            display: 'inline-block',
+          }} />
+          LIVE
+        </span>
+      </div>
+
+      {/* Stats */}
+      {!stats ? (
+        <StatsSkeleton />
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+          <div>
+            <p style={{ margin: 0, fontSize: 40, fontWeight: 900, color: '#111', lineHeight: 1, fontFamily: 'Outfit,sans-serif', letterSpacing: '-1px' }}>
+              {activeJobsCount}
+            </p>
+            <p style={{ margin: '4px 0 0', fontSize: 13, color: '#9ca3af' }}>Active jobs</p>
+          </div>
+          <div>
+            <p style={{ margin: 0, fontSize: 40, fontWeight: 900, color: '#111', lineHeight: 1, fontFamily: 'Outfit,sans-serif', letterSpacing: '-1px' }}>
+              ₦{last24hPaidCount.toLocaleString()}
+            </p>
+            <p style={{ margin: '4px 0 0', fontSize: 13, color: '#9ca3af' }}>Rewards distributed 24h</p>
+          </div>
+          <div>
+            <p style={{ margin: 0, fontSize: 40, fontWeight: 900, color: '#111', lineHeight: 1, fontFamily: 'Outfit,sans-serif', letterSpacing: '-1px' }}>
+              {last24hTasksCount.toLocaleString()}
+            </p>
+            <p style={{ margin: '4px 0 0', fontSize: 13, color: '#9ca3af' }}>Tasks completed 24h</p>
+          </div>
+        </div>
+      )}
+
+      {/* Footer */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, paddingTop: 8, borderTop: '1px solid #e5e5e5' }}>
+        <div style={{ width: 20, height: 20, background: '#111', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <span style={{ color: '#fff', fontSize: 10, fontWeight: 900 }}>O</span>
+        </div>
+        <span style={{ fontSize: 11, color: '#9ca3af' }}>Powered by OgaPay Protocol</span>
+      </div>
+    </div>
+  );
+}
+
 /* ─── HERO ─────────────────────────────────────────────────────────────────── */
 function Hero({ openAuth, navigate, isAuthed }) {
-  const [platformStats, setPlatformStats] = useState(null);
-  useEffect(() => {
-    fetch(`${API_BASE}/platform`)
-      .then(r => r.json())
-      .then(d => d?.data && setPlatformStats(d.data))
-      .catch(() => {});
-  }, []);
-  const stats = platformStats ? [
-    { val: `₦${(platformStats.totalPaid / 1000000).toFixed(1)}M+`, label: "Total Paid Out" },
-    { val: `${(platformStats.activeWorkers / 1000).toFixed(1)}K+`, label: "Active Workers" },
-    { val: `${(platformStats.tasksDone / 1000).toFixed(1)}K+`, label: "Tasks Done" },
-  ] : [
-    { val: "₦12.8M+", label: "Total Paid Out" },
-    { val: "4.2K+", label: "Active Workers" },
-    { val: "9.1K+", label: "Tasks Done" },
-  ];
   return (
     <section className="hero">
       <div className="container">
@@ -455,28 +557,8 @@ function Hero({ openAuth, navigate, isAuthed }) {
             </div>
           </div>
 
-          {/* Analytics card */}
-          <div className="analytics-card hero-analytics" style={{ position: "relative", border: "1.5px solid var(--border)", borderRadius: 14, background: "rgba(255,255,255,.9)", boxShadow: "0 24px 70px rgba(8,11,19,.22)", overflow: "hidden", backdropFilter: "blur(18px)" }}>
-            <div className="analytics-head" style={{ height: 52, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 22px", borderBottom: "1px solid var(--border)", color: "var(--text)", fontSize: 13.5, fontWeight: 700 }}>
-              <span>Live Platform Stats</span>
-              <span style={{ color: "#2563eb", fontSize: 11, fontWeight: 800, letterSpacing: ".8px", display: "flex", alignItems: "center", gap: 7 }}>
-                <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#1F8CFF", boxShadow: "0 0 14px rgba(31,140,255,.9)", display: "inline-block", animation: "livePulse 1.8s ease-in-out infinite" }} />
-                LIVE
-              </span>
-            </div>
-            <div className="analytics-body" style={{ padding: "20px 22px 24px" }}>
-              {stats.map((s, i) => (
-                <div key={i} className="stat" style={{ marginTop: i > 0 ? 18 : 0 }}>
-                  <strong className="grad-text" style={{ display: "block", fontFamily: "Outfit,sans-serif", fontSize: 30, lineHeight: 1, fontWeight: 900, letterSpacing: "-.8px" }}>{s.val}</strong>
-                  <span style={{ display: "block", marginTop: 5, color: "var(--text3)", fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".6px" }}>{s.label}</span>
-                </div>
-              ))}
-            </div>
-            <div className="analytics-foot" style={{ height: 44, display: "flex", alignItems: "center", gap: 10, padding: "0 22px", borderTop: "1px solid var(--border)", color: "var(--text3)", fontSize: 12, fontWeight: 700, background: "var(--bg2)" }}>
-              <div style={{ width: 14, height: 8, borderRadius: 999, background: "linear-gradient(90deg,#2563EB,#3B82F6,#60A5FA)", transform: "skew(-18deg)" }} />
-              Powered by OgaPay Protocol
-            </div>
-          </div>
+          {/* Stats card */}
+          <HeroStatsCard />
         </div>
       </div>
     </section>
@@ -635,16 +717,17 @@ function FeaturedJobs() {
   const [loading, setLoading] = useState(true);
   const intervalRef = useRef(null);
   useEffect(() => { injectSkeletonStyles(); }, []);
-  useEffect(() => {
-    fetch(`${API_BASE}/tasks?status=OPEN&limit=6&sortBy=reward&sortOrder=desc`)
-      .then(r => r.json())
+  const fetchFeatured = () => {
+    setLoading(true);
+    apiRequest<any>('/tasks/featured', { auth: false })
       .then(d => {
-        const list = d?.data?.tasks || d?.data || [];
+        const list = Array.isArray(d) ? d : d?.tasks || d?.data || [];
         setJobs(list);
       })
-      .catch(() => {})
+      .catch(() => setJobs([]))
       .finally(() => setLoading(false));
-  }, []);
+  };
+  useEffect(() => { fetchFeatured(); }, []);
   useEffect(() => {
     if (jobs.length === 0) return;
     intervalRef.current = setInterval(() => {
@@ -657,138 +740,6 @@ function FeaturedJobs() {
     intervalRef.current = setInterval(() => {
       setActive(prev => (prev + 1) % jobs.length);
     }, 4000);
-  };
-  const isActive = (offset) => offset === 0;
-  const cardOuter = (active_) => ({
-    borderRadius: 16,
-    border: `2px solid ${active_ ? '#3b82f6' : '#e5e7eb'}`,
-    padding: 16,
-    display: 'flex',
-    flexDirection: 'column',
-    gap: 12,
-    background: active_ ? '#fff' : '#f9fafb',
-    height: '100%',
-  });
-  const creatorRowStyle = {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 12,
-  };
-  const avatarStyle = {
-    width: 40,
-    height: 40,
-    borderRadius: '50%',
-    background: '#1f2937',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    color: '#fff',
-    fontWeight: 700,
-    fontSize: 14,
-    flexShrink: 0,
-  };
-  const recentLabelStyle = {
-    fontSize: 12,
-    color: '#9ca3af',
-    textTransform: 'uppercase',
-    letterSpacing: '0.025em',
-    margin: 0,
-  };
-  const creatorNameStyle = {
-    fontWeight: 600,
-    fontSize: 14,
-    margin: 0,
-  };
-  const progressRowStyle = {
-    display: 'flex',
-    justifyContent: 'space-between',
-    fontSize: 12,
-    color: '#9ca3af',
-    textTransform: 'uppercase',
-    marginBottom: 4,
-  };
-  const progressCountStyle = {
-    fontWeight: 600,
-    color: '#000',
-  };
-  const progressTrackStyle = {
-    width: '100%',
-    background: '#e5e7eb',
-    borderRadius: 999,
-    height: 6,
-    overflow: 'hidden',
-  };
-  const progressFillStyle = (pct) => ({
-    width: `${pct}%`,
-    background: '#3b82f6',
-    height: 6,
-    borderRadius: 999,
-  });
-  const rewardBoxStyle = {
-    background: '#eff6ff',
-    borderRadius: 12,
-    padding: 16,
-  };
-  const rewardAmountStyle = {
-    fontSize: 30,
-    fontWeight: 700,
-    color: '#3b82f6',
-    margin: 0,
-  };
-  const rewardLabelStyle = {
-    fontSize: 12,
-    color: '#9ca3af',
-    textTransform: 'uppercase',
-    letterSpacing: '0.1em',
-    marginTop: 4,
-    margin: 0,
-  };
-  const categoryStyle = {
-    fontSize: 12,
-    color: '#9ca3af',
-    textTransform: 'uppercase',
-    letterSpacing: '0.025em',
-    margin: 0,
-  };
-  const dividerStyle = {
-    border: 'none',
-    borderTop: '1px solid #e5e7eb',
-    margin: 0,
-  };
-  const aboutLabelStyle = {
-    fontSize: 12,
-    color: '#9ca3af',
-    textTransform: 'uppercase',
-    letterSpacing: '0.025em',
-    marginBottom: 4,
-    margin: 0,
-  };
-  const descStyle = {
-    fontSize: 14,
-    color: '#6b7280',
-    display: '-webkit-box',
-    WebkitLineClamp: 3,
-    WebkitBoxOrient: 'vertical',
-    overflow: 'hidden',
-    margin: 0,
-    lineHeight: 1.4,
-    minHeight: 58,
-  };
-  const applyBtnStyle = {
-    width: '100%',
-    background: '#000',
-    color: '#fff',
-    borderRadius: 12,
-    paddingTop: 12,
-    paddingBottom: 12,
-    fontSize: 14,
-    fontWeight: 600,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    border: 'none',
-    cursor: 'pointer',
-    textDecoration: 'none',
   };
   return (
     <section id="featured-jobs" style={{ padding: "44px 0 34px", background: "var(--bg)" }}>
@@ -844,46 +795,7 @@ function FeaturedJobs() {
                 const idx = (active + offset) % jobs.length;
                 const t = jobs[idx];
                 if (!t) return null;
-                const reward = t.reward || t.budget || 0;
-                const filled = t.filledSlots || 0;
-                const slots = t.maxSlots || t.slots || 1;
-                const pct = Math.min(Math.round((filled / slots) * 100), 100);
-                const poster = t.poster || {};
-                const posterName = poster.businessName || poster.firstName || "Anonymous";
-                const active_ = isActive(offset);
-                return (
-                  <div key={t.id || idx} style={cardOuter(active_)}>
-                    <div style={creatorRowStyle}>
-                      <div style={avatarStyle}>{posterName.charAt(0).toUpperCase()}</div>
-                      <div>
-                        <p style={recentLabelStyle}>Recent</p>
-                        <p style={creatorNameStyle}>{posterName}</p>
-                      </div>
-                    </div>
-                    <div>
-                      <div style={progressRowStyle}>
-                        <span>Progress</span>
-                        <span style={progressCountStyle}>{filled}/{slots} Slots</span>
-                      </div>
-                      <div style={progressTrackStyle}>
-                        <div style={progressFillStyle(pct)} />
-                      </div>
-                    </div>
-                    <div style={rewardBoxStyle}>
-                      <p style={rewardAmountStyle}>₦{Number(reward).toLocaleString()}</p>
-                      <p style={rewardLabelStyle}>Reward / Slot</p>
-                    </div>
-                    <p style={categoryStyle}>{t.category || ''}</p>
-                    <hr style={dividerStyle} />
-                    <div>
-                      <p style={aboutLabelStyle}>About</p>
-                      <p style={descStyle}>{t.description || ''}</p>
-                    </div>
-                    <a href={`/tasks/${t.id}`} style={applyBtnStyle}>
-                      Apply Now
-                    </a>
-                  </div>
-                );
+                return <TaskCard key={t.id} task={t} />;
               })}
             </div>
           </div>

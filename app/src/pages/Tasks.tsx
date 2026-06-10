@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useParams, useLocation, useSearchParams } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { apiRequest } from '../lib/api'
-import { SkeletonPage, injectSkeletonStyles } from "../components/SkeletonLoader";
+import { SkeletonPage, injectSkeletonStyles } from "../components/SkeletonLoader"
+import TaskCard from '../components/TaskCard'
 
 const API_CATEGORIES: Record<string, string> = {
   'SOCIAL_MEDIA': 'Social',
@@ -44,6 +45,7 @@ function mapApiTask(t: any) {
     rankRequired: 'None',
     color: DIFFICULTY_COLORS[diff] || '#16a34a',
     featured: false,
+    _raw: t,
   }
 }
 
@@ -597,93 +599,7 @@ export default function Tasks() {
         ) : (
           <div className="jobs-grid">
             {filtered.map(job => (
-              <div className="job-card" key={job.id} onClick={() => navigate(`/tasks/${job.id}`)} style={{cursor:'pointer'}}>
-                {/* Creator */}
-                <div className="job-creator">
-                  <div className="jc-avatar">{formatAddress(job.creator)}</div>
-                  <div className="jc-info">
-                    <div className="jc-name">{job.creator}</div>
-                    <div className="jc-label">{job.creatorLabel}</div>
-                  </div>
-                  <button
-                    className={`jc-bookmark ${bookmarked.includes(job.id) ? 'saved' : ''}`}
-                    onClick={() => toggleBookmark(job.id)}
-                    aria-label={bookmarked.includes(job.id) ? 'Remove bookmark' : 'Bookmark job'}
-                  >
-                    <i className={`ti ${bookmarked.includes(job.id) ? 'ti-bookmark-filled' : 'ti-bookmark'}`} />
-                  </button>
-                </div>
-
-                {/* Meta */}
-                <div className="job-meta">
-                  <span className="cat-pill">
-                    <i className="ti ti-tag" />
-                    {job.category}
-                  </span>
-                  <span className="platform">
-                    <i className="ti ti-device-laptop" />
-                    {job.platform}
-                  </span>
-                  <span className="platform" style={{ marginLeft: 'auto' }}>
-                    <i className="ti ti-clock" />
-                    {job.timeEstimate}
-                  </span>
-                </div>
-
-                {/* Description */}
-                <div className="job-desc-wrap">
-                  <h3>{job.title}</h3>
-                  <p className="job-desc">{job.description}</p>
-                </div>
-
-                {/* Reward */}
-                <div className="job-reward">
-                  <div className="rw-label">Reward</div>
-                  <div className="rw-primary">
-                    <span className="rw-sym">◎</span>
-                    <span className="rw-amount">{job.reward}</span>
-                    <span className="rw-usd">(${job.usdValue.toFixed(2)})</span>
-                  </div>
-                  <div className="rw-secondary">
-                    <span>{job.rewardCurrency}</span>
-                    <span>·</span>
-                    <span>{job.slots - job.filled} slots left</span>
-                  </div>
-                </div>
-
-                {/* Badges */}
-                <div className="job-badges">
-                  {job.featured && <span className="job-badge featured"><i className="ti ti-star" /> Featured</span>}
-                  {job.verificationRequired && <span className="job-badge verified"><i className="ti ti-shield-check" /> Verified</span>}
-                  <span className="job-badge" style={{ background: `${job.color}12`, color: job.color, border: `1px solid ${job.color}25` }}>
-                    <i className="ti ti-speedometer" />
-                    {job.difficulty}
-                  </span>
-                  {job.rankRequired !== 'None' && (
-                    <span className="job-badge" style={{ background: 'rgba(31,140,255,.08)', color: '#191C6B', border: '1px solid rgba(31,140,255,.15)' }}>
-                      <i className="ti ti-medal" />
-                      {job.rankRequired}
-                    </span>
-                  )}
-                </div>
-
-                {/* Progress */}
-                <div className="job-progress">
-                  <div className="pr-bar">
-                    <div className="pr-fill" style={{ width: `${(job.filled / job.slots) * 100}%` }} />
-                  </div>
-                  <div className="pr-stats">
-                    <span>{job.filled} filled</span>
-                    <span>{job.slots} total</span>
-                  </div>
-                </div>
-
-                {/* Actions */}
-                <div className="job-foot">
-                  <button className="btn"><i className="ti ti-eye" /> View</button>
-                  <button className="btn primary"><i className="ti ti-send" /> Apply Now</button>
-                </div>
-              </div>
+              <TaskCard key={job.id} task={job._raw} />
             ))}
           </div>
         )}
