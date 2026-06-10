@@ -1,3 +1,5 @@
+import TaskCard from "../components/TaskCard"
+import "../styles/taskcard.css"
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams, useLocation, useSearchParams } from 'react-router-dom'
 import Layout from '../components/Layout'
@@ -599,7 +601,7 @@ export default function Tasks() {
         ) : (
           <div className="jobs-grid">
             {filtered.map(job => (
-              <div key={job.id} style={{ minHeight: 380, display: 'flex', flexDirection: 'column' }}><TaskCard task={job._raw} /></div>
+              <TaskCard key={job.id} job={job} />
             ))}
           </div>
         )}
