@@ -1,4 +1,4 @@
-import { useState, ReactNode } from 'react'
+import { useState, useEffect, ReactNode } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import Navbar from './Navbar'
 import Drawer from './Drawer'
@@ -102,9 +102,42 @@ function FAB() {
 
 export default function Layout({ children, sidebar = false }: LayoutProps) {
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const [online, setOnline] = useState(navigator.onLine)
+
+  useEffect(() => {
+    const goOnline = () => setOnline(true)
+    const goOffline = () => setOnline(false)
+    window.addEventListener('online', goOnline)
+    window.addEventListener('offline', goOffline)
+    return () => {
+      window.removeEventListener('online', goOnline)
+      window.removeEventListener('offline', goOffline)
+    }
+  }, [])
+
+  // Save scroll position before page changes
+  useEffect(() => {
+    const saveScroll = () => sessionStorage.setItem('scrollY', String(window.scrollY))
+    window.addEventListener('beforeunload', saveScroll)
+    return () => window.removeEventListener('beforeunload', saveScroll)
+  }, [])
+
+  // Restore scroll position on mount
+  useEffect(() => {
+    const y = sessionStorage.getItem('scrollY')
+    if (y) {
+      const num = parseInt(y, 10)
+      if (!isNaN(num)) requestAnimationFrame(() => window.scrollTo(0, num))
+    }
+  }, [])
 
   return (
     <>
+      {!online && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9999, background: '#EF4444', color: '#fff', textAlign: 'center', padding: '6px 12px', fontSize: 12, fontWeight: 600 }}>
+          <i className="ti ti-wifi-off" style={{ marginRight: 6 }} /> You are offline — some features may be unavailable
+        </div>
+      )}
       <Navbar onMenuToggle={() => setDrawerOpen(true)} />
       <Drawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
       <div className="app-layout">
