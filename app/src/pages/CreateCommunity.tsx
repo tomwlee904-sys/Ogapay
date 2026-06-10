@@ -18,6 +18,9 @@ export default function CreateCommunity() {
     category: 'Technology',
     accentColor: '#7C3AED',
     isPublic: true,
+    twitter: '',
+    telegram: '',
+    discord: '',
   })
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -119,6 +122,24 @@ export default function CreateCommunity() {
                 {PRESET_COLORS.map(color => (
                   <div key={color} className={`cc-color ${form.accentColor === color ? 'active' : ''}`} style={{ background: color }} onClick={() => update('accentColor', color)} />
                 ))}
+              </div>
+            </div>
+
+            <div className="cc-field">
+              <label>Social Links (optional)</label>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <i className="ti ti-brand-x" style={{ fontSize: 18, color: 'var(--text3)', width: 20 }} />
+                  <input type="text" placeholder="https://x.com/yourcommunity" value={form.twitter} onChange={e => update('twitter', e.target.value)} />
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <i className="ti ti-send" style={{ fontSize: 18, color: 'var(--text3)', width: 20 }} />
+                  <input type="text" placeholder="https://t.me/yourcommunity" value={form.telegram} onChange={e => update('telegram', e.target.value)} />
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <i className="ti ti-brand-discord" style={{ fontSize: 18, color: 'var(--text3)', width: 20 }} />
+                  <input type="text" placeholder="https://discord.gg/yourcommunity" value={form.discord} onChange={e => update('discord', e.target.value)} />
+                </div>
               </div>
             </div>
 
