@@ -23,6 +23,7 @@ export default function WorkerPortal() {
     { icon: 'ti ti-briefcase', label: 'My Work', route: '/my-tasks' },
     { icon: 'ti ti-message', label: 'Messages', route: '/messages' },
     { icon: 'ti ti-users', label: 'Communities', route: '/communities' },
+    { icon: 'ti ti-user-plus', label: 'My Communities', route: '/communities' },
     { icon: 'ti ti-file-check', label: 'My Submissions', route: '/my-tasks' },
     { icon: 'ti ti-pencil', label: 'Reviews to Write', route: '/tasks' },
     { icon: 'ti ti-star', label: 'My Reviews', route: '/profile' },
@@ -35,6 +36,7 @@ export default function WorkerPortal() {
     { icon: 'ti ti-trophy', color: '#16a34a', count: 0, label: 'Won' },
     { icon: 'ti ti-heart', color: '#EC4899', count: 0, label: 'Compliments' },
     { icon: 'ti ti-users', color: '#191C6B', count: 0, label: 'Communities' },
+    { icon: 'ti ti-plus', color: '#7C3AED', count: 0, label: 'Created' },
     { icon: 'ti ti-gift', color: '#191C6B', count: 0, label: 'Tips Received' },
     { icon: 'ti ti-file-text', color: '#F59E0B', count: 0, label: 'Blogs' },
   ])
@@ -76,11 +78,14 @@ export default function WorkerPortal() {
         }
 
         // Parse communities
-        let communities = 0
+        let communities = 0, created = 0
         if (commRes && commRes.ok) {
           const commJson = await commRes.json()
           const comms = commJson.data || []
-          if (Array.isArray(comms)) communities = comms.length
+          if (Array.isArray(comms)) {
+            communities = comms.length
+            created = comms.filter((c: any) => c.role === 'OWNER').length
+          }
         }
 
         setStats([
@@ -89,6 +94,7 @@ export default function WorkerPortal() {
           { icon: 'ti ti-trophy', color: '#16a34a', count: approved || 0, label: 'Approved' },
           { icon: 'ti ti-heart', color: '#EC4899', count: pending || 0, label: 'Pending Review' },
           { icon: 'ti ti-users', color: '#191C6B', count: communities || 0, label: 'Communities' },
+          { icon: 'ti ti-plus', color: '#7C3AED', count: created || 0, label: 'Created' },
           { icon: 'ti ti-gift', color: '#191C6B', count: 0, label: 'Tips Received' },
           { icon: 'ti ti-file-text', color: '#F59E0B', count: 0, label: 'Blogs' },
         ])
@@ -107,7 +113,7 @@ export default function WorkerPortal() {
       <style>{`
         .wp-page{max-width:800px;margin:0 auto;padding:0 0 40px}
         .wp-nav-grid{display:grid;grid-template-columns:repeat(5,1fr);border-bottom:1px solid var(--border);margin-bottom:24px}
-        .wp-nav-grid-2{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid var(--border);margin-bottom:24px}
+        .wp-nav-grid-2{display:grid;grid-template-columns:repeat(5,1fr);border-bottom:1px solid var(--border);margin-bottom:24px}
         .wp-workspace-label{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;display:flex;align-items:center;gap:6px}
         .wp-workspace-grid{display:grid;grid-template-columns:repeat(6,1fr);margin-bottom:24px;gap:8px}
         .wp-ws-tile{
@@ -169,7 +175,7 @@ export default function WorkerPortal() {
         .wp-stat-label{font-size:14px;color:var(--text2);font-weight:500}
         @media(max-width:600px){
           .wp-nav-grid{grid-template-columns:repeat(3,1fr)}
-          .wp-nav-grid-2{grid-template-columns:repeat(3,1fr)}
+          .wp-nav-grid-2{grid-template-columns:repeat(4,1fr)}
           .wp-profile-top{flex-direction:column;align-items:center;text-align:center}
           .wp-profile-name{flex-direction:column;align-items:center}
           .wp-avatar-box{width:64px;height:64px}
@@ -188,7 +194,7 @@ export default function WorkerPortal() {
         </div>
         <div className="wp-nav-grid-2">
           {navItems.slice(5).map((t, i) => (
-            <div key={i} className="wp-nav-tile" onClick={() => navigate(t.route)} style={{ borderRight: i < 3 ? '1px solid var(--border)' : 'none' }}>
+            <div key={i} className="wp-nav-tile" onClick={() => navigate(t.route)} style={{ borderRight: i < 4 ? '1px solid var(--border)' : 'none' }}>
               <i className={t.icon} />
               <span>{t.label}</span>
             </div>

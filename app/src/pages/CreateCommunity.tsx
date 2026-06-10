@@ -51,7 +51,7 @@ export default function CreateCommunity() {
       })
       const json = await res.json()
       if (!res.ok) throw new Error(json.error || json.message || 'Failed to create community')
-      navigate('/communities/' + (json.data?.id || json.data?.slug))
+      navigate('/worker-portal')
     } catch (err: any) {
       setError(err.message)
     } finally {

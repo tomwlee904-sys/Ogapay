@@ -23,6 +23,7 @@ const MyStore = lazy(() => import('./pages/MyStore'))
 const Tasks = lazy(() => import('./pages/Tasks'))
 const JobDetail = lazy(() => import('./pages/JobDetail'))
 const Store = lazy(() => import('./pages/Store'))
+const StoreProduct = lazy(() => import('./pages/StoreProduct'))
 const SubmissionPage = lazy(() => import('./pages/SubmissionPage'))
 const CreateJob = lazy(() => import('./pages/CreateJob'))
 const WorkerPortal = lazy(() => import('./pages/WorkerPortal'))
@@ -151,7 +152,7 @@ export default function App() {
 <Route path="/tasks/:id/submit" element={<AuthGuard><SubmissionPage /></AuthGuard>} />
             <Route path="/tasks/:id/submissions" element={<AuthGuard><JobDetail /></AuthGuard>} />
             <Route path="/tasks/:id" element={<JobDetail />} />
-            <Route path="/store/:id" element={<Store />} />
+            <Route path="/store/:id" element={<StoreProduct />} />
             <Route path="/store" element={<Store />} />
             <Route path="/communities" element={<Communities />} />
             <Route path="/communities/create" element={<CreateCommunity />} />
