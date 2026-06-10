@@ -27,11 +27,11 @@ const formatReq = (req?: string) => {
 }
 
 const getStatus = (submitted: number, total: number, status?: string) => {
-  if (status === 'cooling_down') return { label: 'Cooling Down', color: '#f97316' }
+  if (status === 'cooling_down') return { label: 'Cooling Down', color: '#f59e0b', dotClass: 'orange', textClass: 'orange' }
   const remaining = total - submitted
-  if (remaining <= 0) return { label: 'Completed', color: '#888' }
-  if (remaining / total <= 0.2) return { label: 'Filling', color: '#f59e0b' }
-  return { label: 'Status Open', color: '#191C6B' }
+  if (remaining <= 0) return { label: 'Completed', color: '#00C853', dotClass: 'green', textClass: 'green' }
+  if (remaining / total <= 0.2) return { label: 'Filling', color: '#f59e0b', dotClass: 'orange', textClass: 'orange' }
+  return { label: 'Status Open', color: '#191C6B', dotClass: 'main animate-pulse-dot', textClass: 'main' }
 }
 
 interface TaskData {
@@ -82,6 +82,7 @@ export default function TaskCard({ task }: TaskCardProps) {
   const tier = task.tier ?? task.rank ?? 1
   const requirements = task.requirements || []
   const isNew = task.createdAt && Date.now() - new Date(task.createdAt).getTime() < 86400000
+  const isFull = pct >= 100
 
   // Countdown timer using expiresAt
   useEffect(() => {
@@ -127,29 +128,27 @@ export default function TaskCard({ task }: TaskCardProps) {
             <span className="tc-progress-count">{submitted}/{total === 999 ? '∞' : total}</span>
           </div>
           <div className="tc-bar-track">
-            <div className="tc-bar-fill" style={{ width: `${pct}%` }} />
+            <div className={`tc-bar-fill${isFull ? ' success' : ''}`} style={{ width: `${pct}%` }} />
           </div>
           <div className="tc-status-row">
             <span className="tc-stat-item">
-              <span className="tc-dot blue-main" />
-              <span className="tc-stat-label blue-text">Submissions {submitted}</span>
+              <span className={`tc-dot ${isFull ? 'green' : 'main'}`} />
+              <span className={`tc-stat-label ${isFull ? 'green' : 'main'}`}>Submissions {submitted}</span>
             </span>
             <span className="tc-stat-item">
-              <span className="tc-dot blue-light" />
-              <span className="tc-stat-label blue-subtle">
+              <span className="tc-dot subtle" />
+              <span className="tc-stat-label subtle">
                 {total === 999 ? 'Unlimited slots' : `Open ${total - submitted}`}
               </span>
             </span>
             <span className="tc-stat-item">
-              <span className={`tc-dot ${task.status === 'cooling_down' ? 'orange' : 'blue-main animate-pulse-dot'}`} />
-              <span className={`tc-stat-label ${task.status === 'cooling_down' ? 'orange-text' : 'blue-text'}`}>
-                {status.label}
-              </span>
+              <span className={`tc-dot ${status.dotClass}`} />
+              <span className={`tc-stat-label ${status.textClass}`}>{status.label}</span>
             </span>
           </div>
         </div>
 
-        {/* ═══ REWARD BOX ═══ */}
+        {/* ═══ REWARD BOX — gradient ═══ */}
         <div className="tc-reward-box">
           <div className="tc-reward-row">
             <span className="tc-reward-amount">
