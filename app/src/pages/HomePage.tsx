@@ -445,11 +445,11 @@ function useCountUp(target, duration = 2000) {
 /* ─── STATS SKELETON ──────────────────────────────────────────────────────────── */
 function StatsSkeleton() {
   return (
-    <div className="flex flex-col gap-5">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
       {[1,2,3].map(i => (
         <div key={i}>
-          <div className="sk" style={{ height: 40, width: 128, borderRadius: 8, marginBottom: 4 }} />
-          <div className="sk" style={{ height: 12, width: 96, borderRadius: 4 }} />
+          <div className="sk" style={{ height: 32, width: 112, borderRadius: 8, marginBottom: 2 }} />
+          <div className="sk" style={{ height: 12, width: 80, borderRadius: 4 }} />
         </div>
       ))}
     </div>
@@ -484,15 +484,15 @@ function HeroStatsCard() {
   return (
     <div style={{
       background: '#fff', borderRadius: 24, boxShadow: '0 20px 60px rgba(0,0,0,.10)',
-      border: '1px solid #e5e5e5', padding: 32, width: '100%', maxWidth: 384,
-      display: 'flex', flexDirection: 'column', gap: 24,
+      border: '1px solid #e5e5e5', padding: '20px 24px', width: '100%', maxWidth: 384,
+      display: 'flex', flexDirection: 'column', gap: 14, maxHeight: 320,
     }}>
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <span style={{ fontSize: 14, fontWeight: 600, color: '#374151' }}>Platform Stats</span>
-        <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#16a34a', fontWeight: 500 }}>
+        <span style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}>Platform Stats</span>
+        <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, color: '#16a34a', fontWeight: 500 }}>
           <span style={{
-            width: 8, height: 8, borderRadius: '50%', background: '#16a34a',
+            width: 7, height: 7, borderRadius: '50%', background: '#16a34a',
             animation: pulse ? 'ping 1s ease-in-out' : 'pulse 2s ease-in-out infinite',
             display: 'inline-block',
           }} />
@@ -504,32 +504,32 @@ function HeroStatsCard() {
       {!stats ? (
         <StatsSkeleton />
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <div>
-            <p style={{ margin: 0, fontSize: 40, fontWeight: 900, color: '#111', lineHeight: 1, fontFamily: 'Outfit,sans-serif', letterSpacing: '-1px' }}>
+            <p style={{ margin: 0, fontSize: 32, fontWeight: 800, color: '#111', lineHeight: 1, fontFamily: 'Outfit,sans-serif', letterSpacing: '-0.5px' }}>
               {activeJobsCount}
             </p>
-            <p style={{ margin: '4px 0 0', fontSize: 13, color: '#9ca3af' }}>Active jobs</p>
+            <p style={{ margin: '2px 0 0', fontSize: 13, color: '#9ca3af' }}>Active jobs</p>
           </div>
           <div>
-            <p style={{ margin: 0, fontSize: 40, fontWeight: 900, color: '#111', lineHeight: 1, fontFamily: 'Outfit,sans-serif', letterSpacing: '-1px' }}>
+            <p style={{ margin: 0, fontSize: 32, fontWeight: 800, color: '#111', lineHeight: 1, fontFamily: 'Outfit,sans-serif', letterSpacing: '-0.5px' }}>
               ₦{last24hPaidCount.toLocaleString()}
             </p>
-            <p style={{ margin: '4px 0 0', fontSize: 13, color: '#9ca3af' }}>Rewards distributed 24h</p>
+            <p style={{ margin: '2px 0 0', fontSize: 13, color: '#9ca3af' }}>Rewards distributed 24h</p>
           </div>
           <div>
-            <p style={{ margin: 0, fontSize: 40, fontWeight: 900, color: '#111', lineHeight: 1, fontFamily: 'Outfit,sans-serif', letterSpacing: '-1px' }}>
+            <p style={{ margin: 0, fontSize: 32, fontWeight: 800, color: '#111', lineHeight: 1, fontFamily: 'Outfit,sans-serif', letterSpacing: '-0.5px' }}>
               {last24hTasksCount.toLocaleString()}
             </p>
-            <p style={{ margin: '4px 0 0', fontSize: 13, color: '#9ca3af' }}>Tasks completed 24h</p>
+            <p style={{ margin: '2px 0 0', fontSize: 13, color: '#9ca3af' }}>Tasks completed 24h</p>
           </div>
         </div>
       )}
 
       {/* Footer */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, paddingTop: 8, borderTop: '1px solid #e5e5e5' }}>
-        <div style={{ width: 20, height: 20, background: '#111', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-          <span style={{ color: '#fff', fontSize: 10, fontWeight: 900 }}>O</span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, paddingTop: 12, borderTop: '1px solid #eee' }}>
+        <div style={{ width: 18, height: 18, background: '#111', borderRadius: 5, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <span style={{ color: '#fff', fontSize: 9, fontWeight: 900 }}>O</span>
         </div>
         <span style={{ fontSize: 11, color: '#9ca3af' }}>Powered by OgaPay Protocol</span>
       </div>
