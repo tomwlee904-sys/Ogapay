@@ -27,6 +27,7 @@ const SubmissionPage = lazy(() => import('./pages/SubmissionPage'))
 const CreateJob = lazy(() => import('./pages/CreateJob'))
 const WorkerPortal = lazy(() => import('./pages/WorkerPortal'))
 const Communities = lazy(() => import('./pages/Communities'))
+const CreateCommunity = lazy(() => import('./pages/CreateCommunity'))
 const CommunityDetail = lazy(() => import('./pages/CommunityDetail'))
 const FAQ = lazy(() => import('./pages/FAQ'))
 const Support = lazy(() => import('./pages/Support'))
@@ -153,6 +154,7 @@ export default function App() {
             <Route path="/store/:id" element={<Store />} />
             <Route path="/store" element={<Store />} />
             <Route path="/communities" element={<Communities />} />
+            <Route path="/communities/create" element={<CreateCommunity />} />
             <Route path="/communities/:id" element={<CommunityDetail />} />
             <Route path="/faq" element={<FAQ />} />
             <Route path="/support" element={<Support />} />

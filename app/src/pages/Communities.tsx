@@ -100,7 +100,7 @@ export default function Communities() {
         .ch-empty{text-align:center;padding:48px 24px;color:var(--text2);font-size:14px}
       `}</style>
 
-      <div className="ch-hero">
+          <div className="ch-hero">
         <h1>Communities</h1>
         <p>Discover and join vibrant communities. Connect with creators, earn rewards, and grow together.</p>
         <div className="ch-search">
@@ -109,6 +109,9 @@ export default function Communities() {
             <i className="ti ti-search" /> Search
           </button>
         </div>
+        <button onClick={() => navigate('/communities/create')} style={{ marginTop: 16, height: 42, padding: '0 24px', border: '1.5px solid #191C6B', borderRadius: 10, background: 'transparent', color: '#191C6B', fontWeight: 700, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', transition: 'all .2s' }}>
+          <i className="ti ti-plus" style={{ marginRight: 6 }} /> Create Community
+        </button>
       </div>
 
       <div className="ch-stats">

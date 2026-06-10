@@ -46,9 +46,10 @@ export default function WorkerPortal() {
         if (!token) return
         const headers = { 'Authorization': 'Bearer ' + token }
 
-        const [sumRes, subRes] = await Promise.all([
+        const [sumRes, subRes, commRes] = await Promise.all([
           fetch(API_BASE + '/dashboard/summary', { headers }).catch(() => null),
           fetch(API_BASE + '/tasks/my/submissions', { headers }).catch(() => null),
+          fetch(API_BASE + '/communities/mine/list', { headers }).catch(() => null),
         ])
 
         // Parse dashboard summary
@@ -74,12 +75,20 @@ export default function WorkerPortal() {
           }
         }
 
+        // Parse communities
+        let communities = 0
+        if (commRes && commRes.ok) {
+          const commJson = await commRes.json()
+          const comms = commJson.data || []
+          if (Array.isArray(comms)) communities = comms.length
+        }
+
         setStats([
           { icon: 'ti ti-star', color: '#191C6B', count: reviews || 0, label: 'Reviews' },
           { icon: 'ti ti-zap', color: '#F59E0B', count: submissions || 0, label: 'Tasks Done' },
           { icon: 'ti ti-trophy', color: '#16a34a', count: approved || 0, label: 'Approved' },
           { icon: 'ti ti-heart', color: '#EC4899', count: pending || 0, label: 'Pending Review' },
-          { icon: 'ti ti-users', color: '#191C6B', count: 0, label: 'Communities' },
+          { icon: 'ti ti-users', color: '#191C6B', count: communities || 0, label: 'Communities' },
           { icon: 'ti ti-gift', color: '#191C6B', count: 0, label: 'Tips Received' },
           { icon: 'ti ti-file-text', color: '#F59E0B', count: 0, label: 'Blogs' },
         ])
