@@ -1528,11 +1528,12 @@ export default function HomePage() {
         <Hero openAuth={openAuth} navigate={navigate} isAuthed={isAuthed} />
         <TrustBar />
         <QuickTasks />
-        <HowItWorks />
-        <EarnPaths />
+        <div style={{ height: 24 }} />
+        <GetStarted openAuth={openAuth} navigate={navigate} />
         <FeaturedJobs />
         <StoreSection />
-        <GetStarted openAuth={openAuth} navigate={navigate} />
+        <HowItWorks />
+        <EarnPaths />
         <Communities />
       </main>
       <Footer />
