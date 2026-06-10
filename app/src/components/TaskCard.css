@@ -148,6 +148,7 @@
   display: flex;
   align-items: center;
   gap: 5px;
+  flex-shrink: 0;
 }
 .tc-dot {
   width: 6px;
@@ -313,6 +314,9 @@
   .tc-desc {
     font-size: 12px;
     -webkit-line-clamp: 3;
+  }
+  .tc-stat-item {
+    flex-shrink: 0;
   }
   .tc-stat-label {
     font-size: 11px;
