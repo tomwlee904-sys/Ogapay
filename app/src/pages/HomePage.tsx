@@ -465,10 +465,14 @@ function HeroStatsCard() {
     try {
       const res = await fetch(`${API_BASE}/stats/live`);
       const data = await res.json();
-      setStats(data);
-      setPulse(true);
-      setTimeout(() => setPulse(false), 1000);
+      if (data && typeof data === 'object') {
+        setStats(data);
+        setPulse(true);
+        setTimeout(() => setPulse(false), 1000);
+        return;
+      }
     } catch {}
+    setStats({ activeJobs: 0, last24hTasks: 0, last24hPaid: 0 });
   };
 
   useEffect(() => {
@@ -1129,7 +1133,7 @@ function Communities() {
       setLoading(false)
     })()
   }, [])
-  if (loading) return null
+  if (loading || comms.length === 0) return null
   const cardStyle = {
     borderRadius: 16,
     border: '1px solid var(--border)',
