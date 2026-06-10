@@ -2,24 +2,42 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import './TaskCard.css'
 
-const NGN_USD_RATE = 1600
+const formatNumber = (n: number | string) =>
+  Number(n).toLocaleString('en-NG')
 
 const formatCategory = (cat: string) =>
-  (cat || '').replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, (l: string) => l.toUpperCase())
+  (cat ?? 'Custom').replace(/_/g, ' ')
+    .toLowerCase().replace(/\b\w/g, (l: string) => l.toUpperCase())
 
-const getStatus = (submitted: number, total: number, status: string) => {
-  if (status === 'COOLING_DOWN') return { label: 'Cooling Down', color: '#f59e0b', cls: 'orange' }
+const toUSD = (amount: number | string, currency?: string) => {
+  const n = Number(amount)
+  if (!n) return '0.00'
+  if (currency === 'NGN') return (n / 1600).toFixed(2)
+  if (currency === 'USDC') return n.toFixed(2)
+  return n.toFixed(2)
+}
+
+const formatReq = (req?: string) => {
+  if (!req) return ''
+  if (req.startsWith('min_balance:'))
+    return `Min ₦${Number(req.split(':')[1]).toLocaleString()}`
+  if (req.startsWith('community:'))
+    return req.split(':')[1].replace(/_/g, ' ')
+  return req
+}
+
+const getStatus = (submitted: number, total: number) => {
   const remaining = total - submitted
-  if (remaining <= 0) return { label: 'Completed', color: '#888', cls: 'grey' }
-  if (remaining / total <= 0.2) return { label: 'Filling Fast', color: '#f5a623', cls: 'yellow' }
-  return { label: 'Open', color: '#4caf50', cls: 'green' }
+  if (remaining <= 0) return { label: 'Completed', color: '#888' }
+  if (remaining / total <= 0.2) return { label: 'Filling', color: '#f5a623' }
+  return { label: 'Open', color: '#4caf50' }
 }
 
 const getBarColor = (submitted: number, total: number) => {
   const pct = submitted / total
   if (pct > 0.8) return '#e74c3c'
   if (pct > 0.5) return '#f5a623'
-  return 'linear-gradient(90deg, var(--accent), #6366F1)'
+  return '#4caf50'
 }
 
 interface TaskData {
@@ -36,24 +54,19 @@ interface TaskData {
   minSorsaScore?: number
   requiresLinkedin?: boolean
   requiresWallet?: boolean
-  deadlineHours?: number | null
+  tier?: string | number
+  rank?: string | number
   expiresAt?: string | null
   createdAt: string
-  rank?: string | number
   poster?: {
     id: string
     username?: string
     avatarUrl?: string | null
-    createdAt?: string
-    posterProfile?: {
-      avgRating?: number
-      isVerified?: boolean
-      totalPosted?: number
-    }
   }
   _count?: {
     submissions: number
   }
+  requirements?: string[]
 }
 
 interface TaskCardProps {
@@ -64,24 +77,15 @@ export default function TaskCard({ task }: TaskCardProps) {
   const navigate = useNavigate()
   const [timeLeft, setTimeLeft] = useState('')
 
-  const currency = task.currency || 'NGN'
-  const isNgn = currency === 'NGN'
-  const filledSlots = task.currentWorkers || 0
-  const totalSlots = task.maxWorkers || 1
-  const openSlots = totalSlots - filledSlots
-  const progressPercent = Math.min(Math.round((filledSlots / totalSlots) * 100), 100)
-  const submissionsCount = task.submissionsCount ?? task._count?.submissions ?? 0
-  const isNew = Date.now() - new Date(task.createdAt).getTime() < 86400000
+  const submitted = task.currentWorkers || 0
+  const total = task.maxWorkers || 1
+  const pct = Math.min((submitted / total) * 100, 100)
+  const barColor = getBarColor(submitted, total)
+  const status = getStatus(submitted, total)
   const posterName = task.poster?.username || 'Anonymous'
-  const statusInfo = getStatus(filledSlots, totalSlots, task.status)
-  const isCoolingDown = task.status === 'COOLING_DOWN'
-  const barColor = isCoolingDown
-    ? 'linear-gradient(90deg, #f59e0b, #fb923c)'
-    : getBarColor(filledSlots, totalSlots)
-
   const rewardNum = Number(task.reward) || 0
-  const usdEquivalent = isNgn ? rewardNum / NGN_USD_RATE : null
-  const ngnEquivalent = !isNgn ? rewardNum * NGN_USD_RATE : null
+  const currency = task.currency || 'NGN'
+  const requirements = task.requirements || []
 
   // Countdown timer
   useEffect(() => {
@@ -101,93 +105,79 @@ export default function TaskCard({ task }: TaskCardProps) {
   }, [task.expiresAt])
 
   return (
-    <div className="tc-card" onClick={() => navigate(`/tasks/${task.id}`)}>
-      {/* Header — poster info */}
-      <div className="tc-header">
+    <div className="task-card" style={{ '--accent': barColor } as React.CSSProperties} onClick={() => navigate(`/tasks/${task.id}`)}>
+
+      {/* Top accent line */}
+      <div className="card-accent-line" />
+
+      {/* Listed by */}
+      <div className="card-header">
         {task.poster?.avatarUrl ? (
-          <img src={task.poster.avatarUrl} className="tc-avatar" />
+          <img className="card-avatar" src={task.poster.avatarUrl} alt={posterName} />
         ) : (
-          <div className="tc-avatar-initial">{posterName[0] || '?'}</div>
+          <div className="card-avatar card-avatar-initial">{posterName[0] || '?'}</div>
         )}
-        <div>
-          <p className="tc-listed">Listed by</p>
-          <p className="tc-poster">{posterName}</p>
-        </div>
-        {isNew && <span className="tc-new">NEW</span>}
-      </div>
-
-      <div className="tc-body">
-        {/* Progress */}
-        <div>
-          <div className="tc-progress-label">
-            <span>Progress</span>
-            <span>{filledSlots}/{totalSlots === 999 ? '\u221E' : totalSlots}</span>
-          </div>
-          <div className="tc-progress-track">
-            <div
-              className={`tc-progress-fill ${filledSlots / totalSlots > 0.8 ? 'fill-urgent' : filledSlots / totalSlots > 0.5 ? 'fill-warn' : ''} ${isCoolingDown ? 'cooling' : ''}`}
-              style={{ background: barColor, width: `${progressPercent}%` }}
-            />
-          </div>
-          <div className="tc-status-row">
-            <span className="tc-status-item">
-              <span className="tc-dot green" />
-              <span>Submissions {submissionsCount}</span>
-            </span>
-            <span className="tc-status-item">
-              <span className="tc-dot light" />
-              <span>{totalSlots === 999 ? 'Unlimited' : `Open ${openSlots}`}</span>
-            </span>
-            <span className="tc-status-item">
-              <span className={`tc-dot ${statusInfo.cls}`} />
-              <span style={{ color: statusInfo.color }}>{statusInfo.label}</span>
-            </span>
-          </div>
-        </div>
-
-        {/* Reward box */}
-        <div className="tc-reward">
-          <div className="tc-reward-row">
-            <span className="tc-reward-amount">
-              {rewardNum.toLocaleString()}
-            </span>
-            <span className="tc-reward-currency">{currency}</span>
-          </div>
-          {usdEquivalent !== null && (
-            <div className="tc-reward-usd">≈ ${usdEquivalent.toFixed(2)} USD</div>
-          )}
-          {ngnEquivalent !== null && (
-            <div className="tc-reward-usd">≈ ₦{ngnEquivalent.toLocaleString()} NGN</div>
-          )}
-          <p className="tc-reward-label">Reward / Slot</p>
-        </div>
-
-        {/* Requirements pills */}
-        <div className="tc-tags">
-          <span className="tc-tag-pill">{formatCategory(task.category)}</span>
-          {task.rank && (
-            <span className="tc-tag-pill">Tier {task.rank}</span>
-          )}
-          {task.minSorsaScore && task.minSorsaScore > 0 && (
-            <span className="tc-tag-pill tc-req">Req: Sorsa {task.minSorsaScore}+</span>
-          )}
-          {task.requiresLinkedin && (
-            <span className="tc-tag-pill tc-req">Req: LinkedIn</span>
-          )}
-          {task.requiresWallet && (
-            <span className="tc-tag-pill tc-req">Req: Wallet</span>
-          )}
-        </div>
-
-        {/* About */}
-        <div>
-          <div className="tc-about-head">
-            <span>About This Task</span>
-            {timeLeft && <span className="tc-deadline">{timeLeft}</span>}
-          </div>
-          <p className="tc-desc">{task.description}</p>
+        <div className="card-header-text">
+          <span className="listed-by-label">LISTED BY</span>
+          <span className="listed-by-username">{posterName}</span>
         </div>
       </div>
+
+      {/* Progress section */}
+      <div className="card-progress-section">
+        <div className="progress-header-row">
+          <span className="progress-label">PROGRESS</span>
+          <span className="progress-fraction">{submitted}/{total}</span>
+        </div>
+
+        {/* Bar FIRST */}
+        <div className="progress-track">
+          <div className="progress-fill" style={{ width: `${pct}%`, background: barColor }} />
+        </div>
+
+        {/* Pills AFTER bar */}
+        <div className="progress-pills">
+          <span className="pill pill-green">● Submissions {submitted}</span>
+          <span className="pill pill-grey">
+            ○ {total === 999 ? 'Unlimited slots' : `Open ${total - submitted}`}
+          </span>
+          <span className="pill" style={{ color: status.color }}>
+            ○ {status.label}
+          </span>
+        </div>
+      </div>
+
+      {/* Reward box — bordered, centered */}
+      <div className="reward-box">
+        <div className="reward-amount">
+          {formatNumber(rewardNum)}
+          <span className="reward-currency"> {currency}</span>
+        </div>
+        <div className="reward-usd">$ {toUSD(rewardNum, currency)} USD</div>
+      </div>
+
+      {/* Meta row */}
+      <div className="meta-row">
+        <span>{formatCategory(task.category)}</span>
+        <span className="meta-divider">|</span>
+        <span>Tier {task.rank ?? task.tier ?? 1}</span>
+        {requirements.length > 0 && (
+          <>
+            <span className="meta-divider">|</span>
+            <span>Req: {formatReq(requirements[0])}</span>
+          </>
+        )}
+      </div>
+
+      {/* Description box — bordered */}
+      <div className="description-box">
+        <div className="description-header">
+          <span className="description-label">💬 ABOUT THIS TASK</span>
+          {timeLeft && <span className="task-timer">{timeLeft}</span>}
+        </div>
+        <p className="description-text">{task.description}</p>
+      </div>
+
     </div>
   )
 }
