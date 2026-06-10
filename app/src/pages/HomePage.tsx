@@ -814,7 +814,7 @@ function FeaturedJobs() {
         {jobs.length > 0 && (
           <div style={{ display: "flex", justifyContent: "center", gap: 10, marginTop: 28 }}>
             {jobs.map((_, i) => (
-              <span key={i} onClick={() => setActive(i)} style={{ width: active === i ? 44 : 34, height: 9, borderRadius: 999, cursor: "pointer", background: active === i ? "#191C6B" : "#dfe5ee", transition: "width .34s, background .34s", animation: active === i ? "dotBreathe 2.8s ease-in-out infinite" : "none" }} />
+              <span key={i} onClick={() => setActive(i)} style={{ width: 10, height: 10, borderRadius: "50%", cursor: "pointer", background: active === i ? "#191C6B" : "rgba(255,255,255,0.25)", transition: "background .3s, transform .3s", transform: active === i ? "scale(1.3)" : "scale(1)", animation: active === i ? "dotBreathe 2.8s ease-in-out infinite" : "none", border: active === i ? "2px solid rgba(25,28,107,0.3)" : "2px solid transparent" }} />
             ))}
           </div>
         )}
@@ -1032,7 +1032,7 @@ function StoreSection() {
         {products.length > 0 && (
           <div style={{ display: "flex", justifyContent: "center", gap: 10, marginTop: 28 }}>
             {products.map((_, i) => (
-              <span key={i} onClick={() => setActive(i)} style={{ width: active === i ? 44 : 34, height: 9, borderRadius: 999, cursor: "pointer", background: active === i ? "var(--accent)" : "var(--border2)", transition: "width .34s, background .34s" }} />
+              <span key={i} onClick={() => setActive(i)} style={{ width: 10, height: 10, borderRadius: "50%", cursor: "pointer", background: active === i ? "#191C6B" : "rgba(255,255,255,0.25)", transition: "background .3s, transform .3s", transform: active === i ? "scale(1.3)" : "scale(1)", border: active === i ? "2px solid rgba(25,28,107,0.3)" : "2px solid transparent" }} />
             ))}
           </div>
         )}
