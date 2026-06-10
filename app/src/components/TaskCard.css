@@ -9,7 +9,7 @@
   display: flex;
   flex-direction: column;
   gap: 0;
-  min-height: 420px;
+  min-height: 310px;
   cursor: pointer;
   transition: transform 0.2s ease, border-color 0.2s ease;
 }
@@ -30,25 +30,28 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 14px 14px 10px;
+  padding: 10px 14px 8px;
   border-bottom: 1px solid #1e2028;
 }
 .card-avatar {
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   border: 2px solid var(--accent, #4caf50);
   object-fit: cover;
   flex-shrink: 0;
 }
 .card-avatar-init {
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 800;
   color: #fff;
   background: #2a2d35;
+  border-radius: 50%;
 }
 .card-header-text {
   flex: 1;
@@ -56,7 +59,7 @@
 }
 .listed-by-label {
   display: block;
-  font-size: 0.6rem;
+  font-size: 0.55rem;
   color: #666;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -64,7 +67,7 @@
 }
 .listed-by-username {
   display: block;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   font-weight: 700;
   color: #fff;
   letter-spacing: 0.02em;
@@ -76,16 +79,16 @@
 
 /* Progress */
 .card-progress-section {
-  padding: 12px 14px;
+  padding: 8px 14px;
   border-bottom: 1px solid #1e2028;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 .progress-header-row {
   display: flex;
   justify-content: space-between;
-  font-size: 0.62rem;
+  font-size: 0.6rem;
   color: #666;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -104,11 +107,11 @@
 .progress-pills {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   flex-wrap: wrap;
 }
 .pill {
-  font-size: 0.68rem;
+  font-size: 0.65rem;
   white-space: nowrap;
 }
 .pill-green { color: #4caf50; }
@@ -116,28 +119,28 @@
 
 /* Reward box */
 .reward-box {
-  margin: 12px 14px;
+  margin: 10px 14px 8px;
   border: 1px solid #2a2d35;
   border-radius: 8px;
-  padding: 16px 12px;
+  padding: 12px 12px;
   text-align: center;
   background: #0d0f14;
 }
 .reward-amount {
-  font-size: 1.8rem;
+  font-size: 1.5rem;
   font-weight: 800;
   color: #4caf50;
   line-height: 1.1;
 }
 .reward-currency {
-  font-size: 1rem;
+  font-size: 0.85rem;
   font-weight: 600;
   color: #4caf50;
 }
 .reward-usd {
-  font-size: 0.78rem;
+  font-size: 0.7rem;
   color: #888;
-  margin-top: 4px;
+  margin-top: 3px;
   letter-spacing: 0.04em;
 }
 
@@ -145,9 +148,9 @@
 .meta-row {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 0 14px 12px;
-  font-size: 0.7rem;
+  gap: 6px;
+  padding: 0 14px 8px;
+  font-size: 0.65rem;
   color: #aaa;
   flex-wrap: wrap;
 }
@@ -155,79 +158,96 @@
   color: #333;
 }
 
-/* Description box */
+/* Description box — fixed height, no flex */
 .description-box {
-  margin: 0 14px 14px;
+  margin: 0 14px 10px;
   border: 1px solid #2a2d35;
   border-radius: 8px;
-  padding: 10px 12px;
+  padding: 8px 12px;
   background: #0d0f14;
-  flex: 1;
+  height: 120px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  min-height: 100px;
+  gap: 4px;
 }
 .description-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-shrink: 0;
 }
 .description-label {
-  font-size: 0.6rem;
+  font-size: 0.55rem;
   color: #666;
   text-transform: uppercase;
   letter-spacing: 0.08em;
+  flex-shrink: 0;
 }
 .task-timer {
-  font-size: 0.65rem;
+  font-size: 0.6rem;
   font-family: monospace;
   color: #888;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 .description-text {
-  font-size: 0.78rem;
+  font-size: 0.75rem;
   color: #ccc;
-  line-height: 1.55;
+  line-height: 1.5;
   display: -webkit-box;
-  -webkit-line-clamp: 4;
+  -webkit-line-clamp: 5;
   -webkit-box-orient: vertical;
   overflow: hidden;
   margin: 0;
+  flex: 1;
 }
 
 /* Mobile */
 @media (max-width: 768px) {
   .task-card {
-    min-height: 380px;
-  }
-  .reward-amount {
-    font-size: 1.4rem;
+    min-height: 290px;
   }
   .card-avatar,
   .card-avatar-init {
-    width: 32px;
-    height: 32px;
-  }
-  .card-avatar-init {
-    font-size: 13px;
+    width: 30px;
+    height: 30px;
+    font-size: 12px;
   }
   .listed-by-username {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     max-width: 120px;
   }
   .progress-pills {
     gap: 6px;
   }
   .pill {
-    font-size: 0.6rem;
+    font-size: 0.58rem;
+  }
+  .reward-amount {
+    font-size: 1.25rem;
+  }
+  .reward-box {
+    padding: 10px 10px;
+    margin: 8px 10px 6px;
   }
   .meta-row {
-    font-size: 0.62rem;
-    gap: 5px;
+    font-size: 0.6rem;
+    gap: 4px;
+    padding: 0 10px 6px;
+  }
+  .description-box {
+    height: 100px;
+    margin: 0 10px 8px;
+    padding: 6px 10px;
   }
   .description-text {
-    font-size: 0.72rem;
-    -webkit-line-clamp: 3;
+    font-size: 0.7rem;
+    -webkit-line-clamp: 4;
+  }
+  .card-progress-section {
+    padding: 6px 10px;
+  }
+  .card-header {
+    padding: 8px 10px 6px;
   }
 }
