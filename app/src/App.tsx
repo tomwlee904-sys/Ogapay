@@ -154,7 +154,6 @@ export default function App() {
             <Route path="/tasks/:id" element={<JobDetail />} />
             <Route path="/store/:id" element={<StoreProduct />} />
             <Route path="/store" element={<Store />} />
-            <Route path="/communities/mine" element={<Communities />} />
             <Route path="/communities" element={<Communities />} />
             <Route path="/communities/create" element={<CreateCommunity />} />
             <Route path="/communities/:id" element={<CommunityDetail />} />
@@ -187,6 +186,7 @@ export default function App() {
             <Route path="/edit-profile" element={<AuthGuard><EditProfile /></AuthGuard>} />
             <Route path="/task-history" element={<AuthGuard><TaskHistory /></AuthGuard>} />
             <Route path="/bookmarks" element={<AuthGuard><Bookmarks /></AuthGuard>} />
+            <Route path="/communities/mine" element={<AuthGuard><Communities /></AuthGuard>} />
             <Route path="/analytics" element={<AuthGuard><Analytics /></AuthGuard>} />
             <Route path="/worker-apply" element={<AuthGuard><WorkerApply /></AuthGuard>} />
             <Route path="/worker/:category" element={<AuthGuard><WorkerWorkspace /></AuthGuard>} />
