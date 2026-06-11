@@ -97,8 +97,8 @@ export default function Communities() {
         @media(max-width:640px){.ch-grid{grid-template-columns:1fr}}
         .ch-card{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;transition:all .3s;cursor:pointer;display:flex;flex-direction:column}
         .ch-card:hover{transform:translateY(-4px);border-color:#191C6B;box-shadow:0 8px 24px rgba(31,140,255,.1)}
-        .ch-card .ccb{height:90px;position:relative;overflow:hidden}
-        .ch-card .cca{width:48px;height:48px;border-radius:50%;border:3px solid var(--card);background:var(--bg2);display:grid;place-items:center;font-size:16px;font-weight:800;color:#191C6B;margin-top:-24px;margin-left:14px;position:relative;z-index:1}
+        .ch-card .ccb{height:140px;position:relative;overflow:hidden;background-size:cover!important;background-position:center!important}
+        .ch-card .cca{width:48px;height:48px;border-radius:50%;border:3px solid var(--card);background:var(--bg2);display:grid;place-items:center;font-size:16px;font-weight:800;color:#191C6B;margin-top:-28px;margin-left:14px;position:relative;z-index:1}
         .ch-card .cc-body{padding:6px 14px 14px;flex:1;display:flex;flex-direction:column}
         .ch-card .cc-name{font-weight:700;font-size:15px;margin-bottom:2px}
         .ch-card .cc-badge{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:700;background:rgba(31,140,255,.08);color:#191C6B;width:fit-content;margin-bottom:6px}
