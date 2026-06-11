@@ -90,7 +90,7 @@ export default function Wurkers() {
               const initials = getInitials(name)
               const skills = Array.isArray(w.skills) ? w.skills.join(', ') : w.skills || 'General'
               return (
-                <div className="wk-card" key={w.id} onClick={() => navigate('/profile')}>
+                <div className="wk-card" key={w.id} onClick={() => w.username && navigate(`/user/${w.username}`)}>
                   <div className="wk-card-top">
                     <div className="wk-avatar">
                       {w.avatarUrl ? <img src={w.avatarUrl} alt={name} /> : initials}
