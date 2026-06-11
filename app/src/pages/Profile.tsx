@@ -144,7 +144,7 @@ function MyJobsTab() {
         </div>
       ) : (
         <div style={{ display:"grid", gap:12 }}>
-          {filtered.map((j,i) => {
+          {(filtered || []).map((j,i) => {
             const task = j.task || {};
             const reward = Number(task.reward || 0);
             const currency = task.currency || 'NGN';
@@ -511,53 +511,42 @@ export default function Profile() {
     if (!detectedWallets.includes(id)) return;
     setConnecting(id);
     try {
-      console.log("[connectWallet] Step 1: detecting wallet", id);
-      let wallet: any;
+            let wallet: any;
       if (id === "phantom") wallet = (window as any).phantom?.solana;
       else if (id === "backpack") wallet = (window as any).backpack;
       else if (id === "solflare") wallet = (window as any).solflare;
       if (!wallet?.connect) { setConnecting(null); return; }
 
-      console.log("[connectWallet] Step 2: getting pubKey");
-      let pubKey = wallet.publicKey?.toString();
+            let pubKey = wallet.publicKey?.toString();
       if (!pubKey) {
-        console.log("[connectWallet] Step 2a: calling wallet.connect()");
+        ");
         const resp = await wallet.connect();
         pubKey = resp?.publicKey?.toString();
-        console.log("[connectWallet] Step 2b: connected, pubKey=", pubKey);
-      } else {
-        console.log("[connectWallet] Step 2c: already connected, pubKey=", pubKey);
-      }
+              } else {
+              }
       if (!pubKey) throw new Error("No public key");
 
-      console.log("[connectWallet] Step 3: requesting nonce");
-      const nonceRes = await apiRequest<{ nonce: string; message: string }>("/wallet/nonce", {
+            const nonceRes = await apiRequest<{ nonce: string; message: string }>("/wallet/nonce", {
         method: "POST",
         body: JSON.stringify({ wallet: pubKey }),
       });
       if (!nonceRes?.nonce) throw new Error("No nonce received");
-      console.log("[connectWallet] Step 3b: nonce received, message=", nonceRes.message);
-
-      console.log("[connectWallet] Step 4: signing message");
-      const encodedMessage = new TextEncoder().encode(nonceRes.message);
+      
+            const encodedMessage = new TextEncoder().encode(nonceRes.message);
       const signedResult = await wallet.signMessage(encodedMessage);
       const signatureBytes = signedResult?.signature ?? signedResult;
       const signature = bs58.encode(signatureBytes);
-      console.log("[connectWallet] Step 4b: signature obtained");
-
-      console.log("[connectWallet] Step 5: verifying signature");
-      await apiRequest("/wallet/verify", {
+      
+            await apiRequest("/wallet/verify", {
         method: "POST",
         body: JSON.stringify({ wallet: pubKey, signature }),
       });
-      console.log("[connectWallet] Step 5b: verified!");
-
+      
       setShowWalletOptions(false);
       setTimeout(() => window.location.reload(), 500);
     } catch (e: any) {
       const msg = e?.message || String(e) || "Wallet verification failed";
-      console.error("[connectWallet] Error:", { message: msg, stack: e?.stack, code: e?.code, name: e?.name });
-      showToast(`❌ ${msg}`);
+            showToast(`❌ ${msg}`);
     }
     setConnecting(null);
   }
@@ -688,7 +677,7 @@ export default function Profile() {
 
       {/* Tab Bar */}
       <div className="tab-bar">
-        {tabs.map(t => (
+        {(tabs || []).map(t => (
           <button key={t.id} className={`tab-btn ${tab === t.id ? 'active' : ''}`} onClick={() => t.id === 'portal' ? navigate('/worker-portal') : setTab(t.id)}>
             <i className={`ti ti-${t.icon}`} />
             {t.label}
@@ -1271,7 +1260,7 @@ export default function Profile() {
                     onDragLeave={e => { e.currentTarget.style.borderColor = 'var(--border)' }}
                     onClick={() => document.getElementById('kyc-doc-input')?.click()}>
                     {kycDocumentPreview ? (
-                      <img src={kycDocumentPreview} alt="ID preview" style={{maxHeight:160,maxWidth:'100%',borderRadius:8,objectFit:'contain',marginBottom:8}} />
+                      <img loading="lazy" src={kycDocumentPreview} alt="ID preview" style={{maxHeight:160,maxWidth:'100%',borderRadius:8,objectFit:'contain',marginBottom:8}} />
                     ) : (
                       <>
                         <i className="ti ti-upload" style={{fontSize:32,color:'var(--text3)',display:'block',marginBottom:8}} />

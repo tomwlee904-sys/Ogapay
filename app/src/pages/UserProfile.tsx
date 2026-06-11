@@ -132,7 +132,7 @@ export default function UserProfile() {
                 <p style={{ fontSize: 13, color: "var(--text3)", textAlign: "center", padding: "24px" }}>No blog posts yet.</p>
               ) : (
                 <div style={{ display: "grid", gap: 10 }}>
-                  {blogs.map((post: any) => (
+                  {(blogs || []).map((post: any) => (
                     <div key={post.id} style={{ padding: "14px 16px", background: "var(--card)", border: "1px solid var(--border)", borderRadius: 12, cursor: "pointer" }}
                       onClick={() => navigate(`/blog`)}>
                       <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text)" }}>{post.title}</div>
@@ -150,11 +150,11 @@ export default function UserProfile() {
                 <p style={{ fontSize: 13, color: 'var(--text3)', textAlign: 'center', padding: '24px' }}>No communities yet.</p>
               ) : (
                 <div style={{ display: 'grid', gap: 10 }}>
-                  {userCommunities.map((c: any) => (
+                  {(userCommunities || []).map((c: any) => (
                     <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 12, cursor: 'pointer' }}
                       onClick={() => navigate('/communities/' + c.id)}>
                       <div style={{ width: 44, height: 44, borderRadius: 10, background: c.accentColor || '#191C6B', display: 'grid', placeItems: 'center', fontSize: 14, fontWeight: 800, color: '#fff', flexShrink: 0, overflow: 'hidden' }}>
-                        {c.coverImage ? <img src={c.coverImage} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : c.initials || c.name?.slice(0, 2)?.toUpperCase()}
+                        {c.coverImage ? <img loading="lazy" src={c.coverImage} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : c.initials || c.name?.slice(0, 2)?.toUpperCase()}
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)', display: 'flex', alignItems: 'center', gap: 6 }}>

@@ -387,7 +387,7 @@ export default function CommunityDetail() {
           {/* Cover image with overlay */}
           {community.coverImage && (
             <div style={{ width: '100%', height: 140, borderRadius: 10, overflow: 'hidden', position: 'relative', marginBottom: 0 }}>
-              <img src={community.coverImage} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
+              <img loading="lazy" src={community.coverImage} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
               {isOwner && (
                 <>
                   <label htmlFor="cover-upload-input" style={{
@@ -487,7 +487,7 @@ export default function CommunityDetail() {
               {uploadingCover && <span style={{ fontSize: 12, color: 'var(--text3)' }}>Uploading...</span>}
               {community.coverImage && (
                 <div style={{ width: '100%', height: 128, borderRadius: 10, overflow: 'hidden', marginTop: 4 }}>
-                  <img src={community.coverImage} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  <img loading="lazy" src={community.coverImage} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 </div>
               )}
             </div>
@@ -506,7 +506,7 @@ export default function CommunityDetail() {
               </div>
             ) : (
               <>
-                {leaderboard.map((m: any) => (
+                {(leaderboard || []).map((m: any) => (
                   <div key={m.id} className="cd-lb-row">
                     <span className="cd-lb-rank">{m.rank}</span>
                     {m.avatarUrl ? (
@@ -548,7 +548,7 @@ export default function CommunityDetail() {
               </div>
             ) : (
               <>
-                {openJobs.map((job: any) => (
+                {(openJobs || []).map((job: any) => (
                   <div key={job.id} className="cd-job-row">
                     <div className="cd-job-left">
                       <div className="cd-job-title">{job.title}</div>
@@ -579,7 +579,7 @@ export default function CommunityDetail() {
               </div>
             ) : (
               <>
-                {completedJobs.map((job: any) => (
+                {(completedJobs || []).map((job: any) => (
                   <div key={job.id} className="cd-job-row">
                     <div className="cd-job-left">
                       <span className="cd-comp-status">COMPLETED</span>
@@ -693,7 +693,7 @@ export default function CommunityDetail() {
             <div style={{ fontSize: 12, color: '#888', marginBottom: 12, lineHeight: 1.5 }}>Complete the entry task and meet requirements to join this community.</div>
             {community.coverImage && (
               <div style={{ width: '100%', height: 120, borderRadius: 8, overflow: 'hidden', marginBottom: 12 }}>
-                <img src={community.coverImage} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
+                <img loading="lazy" src={community.coverImage} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
               </div>
             )}
             <div style={{ fontSize: 11, fontWeight: 700, color: '#888', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Requirements</div>
@@ -726,7 +726,7 @@ export default function CommunityDetail() {
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 8 }}>
               {joinAttachments.map((f, i) => (
                 <div key={i} style={{ width: 60, height: 60, borderRadius: 8, overflow: 'hidden', position: 'relative', border: '1px solid #2a2d35' }}>
-                  <img src={URL.createObjectURL(f)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
+                  <img loading="lazy" src={URL.createObjectURL(f)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
                   <div onClick={() => removeAttachment(i)} style={{ position: 'absolute', top: 2, right: 2, width: 18, height: 18, borderRadius: '50%', background: 'rgba(0,0,0,0.6)', color: '#fff', display: 'grid', placeItems: 'center', cursor: 'pointer', fontSize: 10, lineHeight: 1 }}>✕</div>
                 </div>
               ))}
@@ -789,9 +789,9 @@ export default function CommunityDetail() {
                   cursor: 'pointer', overflow: 'hidden', position: 'relative', marginBottom: 4,
                 }}>
                   {editCoverPreview ? (
-                    <img src={editCoverPreview} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <img loading="lazy" src={editCoverPreview} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   ) : community.coverImage ? (
-                    <img src={community.coverImage} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <img loading="lazy" src={community.coverImage} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, color: 'var(--text3)', fontSize: 13 }}>
                       <i className="ti ti-photo" style={{ fontSize: 28 }} />

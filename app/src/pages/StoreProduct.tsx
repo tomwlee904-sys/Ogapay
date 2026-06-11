@@ -229,7 +229,7 @@ export default function StoreProduct() {
         {/* Hero Banner */}
         <div style={{ position: 'relative', borderRadius: 14, overflow: 'hidden', marginBottom: 16, height: 220 }}>
           {p.image ? (
-            <img src={p.image} alt={p.title} style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0 }} />
+            <img loading="lazy" src={p.image} alt={p.title} style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0 }} />
           ) : (
             <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg2)', color: 'var(--text3)', fontSize: 32 }}>
               <i className="ti ti-box" />

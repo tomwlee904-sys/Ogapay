@@ -139,7 +139,7 @@ function ActiveBadge() {
 
 function Avatar({ size = 28, url }: { size?: number; url?: string | null }) {
   if (url) {
-    return <img src={url} alt="" style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, border: '1px solid var(--border)' }} />
+    return <img loading="lazy" src={url} alt="" style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, border: '1px solid var(--border)' }} />
   }
   return (
     <div style={{
@@ -322,7 +322,7 @@ function StorePage({ onViewProduct }: { onViewProduct: (product: any) => void })
 
       {!loading && !error && (
         <div style={S.grid2}>
-          {products.map(p => (
+          {(products || []).map(p => (
             <div key={p.id} style={S.card} onClick={() => onViewProduct(p)}>
               <div style={{ position: 'relative', height: 150, overflow: 'hidden' }}>
                 <SafeImage src={p.image} alt={p.title} style={{ width: '100%', height: '100%', objectFit: 'cover' as const, position: 'absolute', inset: 0 }} />
@@ -661,7 +661,7 @@ function WorkersPage({ onViewWorker }: { onViewWorker: (worker: WorkerItem) => v
 
       {!loading && (
         <div style={S.grid2}>
-          {workers.map(w => (
+          {(workers || []).map(w => (
             <div key={w.id} onClick={() => onViewWorker(w)} style={{
               background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 10,
               padding: 14, display: 'flex', flexDirection: 'column' as const, gap: 8, cursor: 'pointer',
@@ -760,7 +760,7 @@ function WorkerProfilePage({ worker, onBack }: { worker: WorkerItem; onBack: () 
           </div>
 
           <div style={{ display: 'flex', borderBottom: '1px solid var(--border)', marginBottom: 16 }}>
-            {tabs.map(t => (
+            {(tabs || []).map(t => (
               <div key={t} onClick={() => setActiveTab(t)} style={{
                 flex: 1, textAlign: 'center', padding: '11px 8px', fontSize: 13, fontWeight: 500,
                 color: activeTab === t ? 'var(--text)' : 'var(--text3)', cursor: 'pointer',
@@ -794,7 +794,7 @@ function StoreNav({ activeView, onChange }: { activeView: string; onChange: (v: 
   ]
   return (
     <div style={{ display: 'flex', gap: 4, marginBottom: 20, paddingBottom: 12, borderBottom: '1px solid var(--border)' }}>
-      {tabs.map(t => (
+      {(tabs || []).map(t => (
         <button key={t.key} onClick={() => onChange(t.key)} style={{
           background: activeView === t.key ? 'var(--card)' : 'transparent',
           color: activeView === t.key ? '#191C6B' : 'var(--text3)',

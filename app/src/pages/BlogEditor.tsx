@@ -260,7 +260,7 @@ export default function BlogEditor() {
               <label className="be-label">Cover Image <span style={{fontWeight:400,color:'var(--text3)'}}>(optional)</span></label>
               <div style={{display:'flex',alignItems:'center',gap:12,flexWrap:'wrap'}}>
                 {form.coverImage && (
-                  <img src={form.coverImage} alt="cover" style={{width:80,height:48,borderRadius:6,objectFit:'cover',border:'1px solid var(--border)'}} />
+                  <img loading="lazy" src={form.coverImage} alt="cover" style={{width:80,height:48,borderRadius:6,objectFit:'cover',border:'1px solid var(--border)'}} />
                 )}
                 <label style={{
                   display:'inline-flex',alignItems:'center',gap:6,height:36,padding:'0 16px',

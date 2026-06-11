@@ -75,8 +75,7 @@ export default function Messages() {
             }
           }
         } catch (e) {
-          console.log("Could not auto-start chat:", e)
-        }
+          }
       }
     }
     initChat()
@@ -217,7 +216,7 @@ export default function Messages() {
                 <p>No conversations yet</p>
               </div>
             )}
-            {filtered.map(c => {
+            {(filtered || []).map(c => {
               const p = c.participants[0]
               return (
                 <div key={c.id} className={"ms-item" + (activeConv === c.id ? ' active' : '')} onClick={() => openConversation(c.id)}>
@@ -259,7 +258,7 @@ export default function Messages() {
               <div className="ms-messages">
                 {msgLoading && <div style={{ textAlign: 'center', color: 'var(--text3)', fontSize: 12, padding: 20 }}>Loading messages...</div>}
                 {!msgLoading && messages.length === 0 && <div className="ms-empty-state"><p>No messages yet. Say hello!</p></div>}
-                {messages.map(m => {
+                {(messages || []).map(m => {
                   const isMine = m.senderId === (JSON.parse(localStorage.getItem('ogapay_user') || '{}') as any)?.id
                   return (
                     <div key={m.id} className={"ms-bubble " + (isMine ? 'sent' : 'received')}>

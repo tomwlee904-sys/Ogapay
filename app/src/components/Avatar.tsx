@@ -32,8 +32,7 @@ export default function Avatar({ src, name = '?', size = 36 }: Props) {
 
   if (src && !failed) {
     return (
-      <img
-        src={src}
+      <img loading="lazy" src={src}
         alt=""
         width={size}
         height={size}

@@ -89,9 +89,9 @@ export default function LoginPage() {
         body: JSON.stringify({ email: loginEmail.trim(), password: loginPassword }),
       });
       // DEBUG: dump the full response
-      console.log('[LoginPage] FULL API RESPONSE:', JSON.stringify(result, null, 2));
-      console.log('[LoginPage] Response type:', typeof result, 'isArray:', Array.isArray(result));
-      console.log('[LoginPage] Keys:', result ? Object.keys(result) : 'null');
+      );
+      );
+      : 'null');
       
       // Try ALL possible token locations
       const possibleToken = 
@@ -114,15 +114,14 @@ export default function LoginPage() {
         result?.data?.tokens?.refreshToken ||
         possibleToken; // fallback: use access token as refresh
       
-      console.log('[LoginPage] Extracted token:', possibleToken ? possibleToken.substring(0, 20) + '...' : 'null');
-      console.log('[LoginPage] Extracted refresh:', possibleRefresh ? possibleRefresh.substring(0, 20) + '...' : 'null');
+      + '...' : 'null');
+      + '...' : 'null');
       
       const loginPayload = {
         user: result.user || result,
         tokens: possibleToken ? { accessToken: possibleToken, refreshToken: possibleRefresh || possibleToken } : undefined,
       };
-      console.log('[LoginPage] Final payload - user?', !!loginPayload.user, 'tokens?', !!loginPayload.tokens);
-      login(loginPayload);
+            login(loginPayload);
       window.location.href = "/dashboard";
     } catch (err) {
       setLoginMsg(err.message);
@@ -151,14 +150,12 @@ export default function LoginPage() {
         auth: false,
         body: JSON.stringify({ firstName, lastName, email: signupEmail.trim(), password: signupPassword, username: signupEmail.split("@")[0] }),
       });
-      console.log('[SignupPage] Signup API response keys:', Object.keys(result || {}));
-      console.log('[SignupPage] Has tokens?', !!result?.tokens, 'Has session?', !!result?.session, 'Has user?', !!result?.user);
-      const authPayload = {
+      );
+            const authPayload = {
         user: result.user || result,
         tokens: result.tokens || result.session,
       };
-      console.log('[SignupPage] authPayload user?', !!authPayload.user, 'tokens?', !!authPayload.tokens);
-      login(authPayload);
+            login(authPayload);
       localStorage.setItem("ogapay_is_new_user", "true");
       window.location.href = "/dashboard";
     } catch (err) {

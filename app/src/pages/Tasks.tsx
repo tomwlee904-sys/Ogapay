@@ -598,7 +598,7 @@ export default function Tasks() {
           </div>
         ) : (
           <div className="jobs-grid">
-            {filtered.map(job => (
+            {(filtered || []).map(job => (
               <TaskCard key={job.id} task={job._raw} />
             ))}
           </div>

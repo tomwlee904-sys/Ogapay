@@ -813,7 +813,7 @@ function FeaturedJobs() {
 
         {jobs.length > 0 && (
           <div style={{ display: "flex", justifyContent: "center", gap: 10, marginTop: 28 }}>
-            {jobs.map((_, i) => (
+            {(jobs || []).map((_, i) => (
               <span key={i} onClick={() => setActive(i)} style={{ width: 10, height: 10, borderRadius: "50%", cursor: "pointer", background: active === i ? "#191C6B" : "rgba(255,255,255,0.25)", transition: "background .3s, transform .3s", transform: active === i ? "scale(1.3)" : "scale(1)", animation: active === i ? "dotBreathe 2.8s ease-in-out infinite" : "none", border: active === i ? "2px solid rgba(25,28,107,0.3)" : "2px solid transparent" }} />
             ))}
           </div>
@@ -997,7 +997,7 @@ function StoreSection() {
                   <div key={p.id || idx} style={cardStyle}>
                     <div style={imgWrapStyle}>
                       {p.image ? (
-                        <img src={p.image} alt={p.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        <img loading="lazy" src={p.image} alt={p.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                       ) : (
                         <div style={{ display: 'grid', placeItems: 'center', height: '100%', fontFamily: 'Outfit,sans-serif', fontSize: 26, fontWeight: 900, background: 'var(--bg2)', color: 'var(--text3)' }}>
                           {(p.title || '???').slice(0, 3).toUpperCase()}
@@ -1031,7 +1031,7 @@ function StoreSection() {
         )}
         {products.length > 0 && (
           <div style={{ display: "flex", justifyContent: "center", gap: 10, marginTop: 28 }}>
-            {products.map((_, i) => (
+            {(products || []).map((_, i) => (
               <span key={i} onClick={() => setActive(i)} style={{ width: 10, height: 10, borderRadius: "50%", cursor: "pointer", background: active === i ? "#191C6B" : "rgba(255,255,255,0.25)", transition: "background .3s, transform .3s", transform: active === i ? "scale(1.3)" : "scale(1)", border: active === i ? "2px solid rgba(25,28,107,0.3)" : "2px solid transparent" }} />
             ))}
           </div>
@@ -1255,7 +1255,7 @@ function Communities() {
               <div key={c.id || i} style={{ ...cardStyle, cursor: "pointer" }} onClick={() => navigate('/communities/' + c.id)}>
                 <div style={coverStyle(c)}>
                   {c.coverImage ? (
-                    <img src={c.coverImage} style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0 }} />
+                    <img loading="lazy" src={c.coverImage} style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0 }} />
                   ) : (
                     <span>{initials}</span>
                   )}

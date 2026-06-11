@@ -504,19 +504,17 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }) {
         status: "OPEN",
       };
 
-      console.log('📤 Creating task with body:', JSON.stringify(body));
+      );
       const result = await apiRequest('/tasks', {
         method: "POST",
         body: JSON.stringify(body),
       });
-      console.log('📥 Task creation response:', result);
-      if (!result || result.success === false) {
+            if (!result || result.success === false) {
         throw new Error(result?.message || result?.error || "Failed to create task");
       }
       const createdTask = result.data || result.task || result;
       const taskId = createdTask?.id || createdTask?._id || "";
-      console.log('✅ Task created with ID:', taskId);
-      
+            
       // Pass taskId to onCreate for redirect
       onCreate(taskId);
     } catch (err) {
@@ -1636,7 +1634,7 @@ function AiAssistant() {
             </button>
           </div>
           <div style={{ flex:1, overflowY:'auto', padding: 12, display:'flex', flexDirection:'column', gap: 8 }}>
-            {messages.map((m,i) => (
+            {(messages || []).map((m,i) => (
               <div key={i} style={{
                 maxWidth:'85%', padding:'8px 12px', borderRadius: 12, fontSize: 13, lineHeight: 1.5,
                 alignSelf: m.role === 'user' ? 'flex-end' : 'flex-start',

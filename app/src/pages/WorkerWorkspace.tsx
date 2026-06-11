@@ -146,7 +146,6 @@ export default function WorkerWorkspace() {
           setMyCompletions(catSubs.length)
         }
       } catch (e) {
-        console.error('[WorkerWorkspace] Failed to load tasks:', e)
         setError('Failed to load tasks. Please try again.')
       }
       setLoading(false)
@@ -178,8 +177,7 @@ export default function WorkerWorkspace() {
           }
         }
       } catch (e) {
-        console.error('[WorkerWorkspace] Leaderboard fetch failed:', e)
-      }
+        }
       setLeadersLoading(false)
     })()
   }, [category])

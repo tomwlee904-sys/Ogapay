@@ -231,7 +231,7 @@ export default function Blog() {
             <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)' }}>OgaPay</span>
           </a>
           <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-            {categories.map(cat => (
+            {(categories || []).map(cat => (
               <button key={cat} onClick={() => setActiveCategory(cat)} style={{ fontSize: 13, padding: '5px 14px', borderRadius: 20, border: '0.5px solid', borderColor: activeCategory === cat ? '#191C6B' : 'transparent', background: activeCategory === cat ? '#191C6B' : 'transparent', color: activeCategory === cat ? '#191C6B' : '#666', cursor: 'pointer', fontWeight: activeCategory === cat ? 600 : 400 }}>
                 {cat}
               </button>

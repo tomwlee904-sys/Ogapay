@@ -133,8 +133,7 @@ const response = await fetch('https://ogapay-production.up.railway.app/api/v1/ta
 const json = await response.json()
 
 if (json.success) {
-  console.log('Tasks:', json.data)
-}`}
+  }`}
             </pre>
           </div>
         </div>

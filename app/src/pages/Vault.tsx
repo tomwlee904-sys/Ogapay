@@ -139,7 +139,7 @@ export default function Vault() {
 
       {!loading && filtered.length > 0 && (
         <div style={S.list}>
-          {filtered.map(d => (
+          {(filtered || []).map(d => (
             <div style={S.item} key={d.id}>
               <div style={{ ...S.icon, background: `${d.color}15`, color: d.color }}>
                 <i className="ti ti-file-text" />

@@ -307,8 +307,7 @@ export default function OgaPayDashboard() {
       setSummaryData(prev => prev ? { ...prev, metrics: { ...prev.metrics, walletConnected: true } } : prev);
       refreshUser();
     } catch (e: any) {
-      console.error("Wallet verification failed", e);
-      const el = document.getElementById("appToast");
+            const el = document.getElementById("appToast");
       if (el) {
         el.textContent = e?.message || "Wallet verification failed";
         el.classList.add("show");

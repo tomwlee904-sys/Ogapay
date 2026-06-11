@@ -192,7 +192,7 @@ export default function Communities() {
             </div>
           ) : (
             <div className="ch-grid">
-              {myCommunities.map((m: any) => (
+              {(myCommunities || []).map((m: any) => (
                 <div className="ch-card" key={m.communityId} onClick={() => navigate('/communities/' + m.communityId)}>
                   <div className="ccb" style={{ background: `linear-gradient(135deg,${getGradient(m.category || m.accentColor?.replace('#','') || '')})` }} />
                   <div className="cca">{m.initials || m.name?.slice(0, 2)?.toUpperCase()}</div>
@@ -251,7 +251,7 @@ export default function Communities() {
                   <div className="sec-title">Trending Communities</div>
                   <div className="sec-sub">Most active communities this week</div>
                   <div className="ch-trend">
-                    {trending.map(c => (
+                    {(trending || []).map(c => (
                       <div className="ch-card" key={c.id} style={{ minWidth: 260 }} onClick={() => navigate('/communities/' + c.id)}>
                         <div className="ccb" style={{ background: `linear-gradient(135deg,${getGradient(c.category)})` }} />
                         <div className="cca">{c.initials}</div>
@@ -274,7 +274,7 @@ export default function Communities() {
                 <div className="ch-empty"><i className="ti ti-users" style={{ fontSize: 32, marginBottom: 8, display: 'block', color: 'var(--text3)' }} />No communities found.</div>
               ) : (
                 <div className="ch-grid">
-                  {communities.map(c => (
+                  {(communities || []).map(c => (
                     <div className="ch-card" key={c.id} onClick={() => navigate('/communities/' + c.id)}>
                       <div className="ccb" style={{ background: `linear-gradient(135deg,${getGradient(c.category)})` }} />
                       <div className="cca">{c.initials}</div>

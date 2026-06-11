@@ -42,8 +42,7 @@ export default function AuthCallback() {
               const result = exchangeData.data || exchangeData;
               appTokens = result.tokens;
               appUser = result.user;
-              console.log('Backend exchange succeeded — got app tokens');
-            } else {
+                          } else {
               console.warn('Backend exchange returned', exchangeRes.status, '- will try signup fallback');
             }
           } catch (exchangeErr) {
@@ -78,8 +77,7 @@ export default function AuthCallback() {
                 if (signupResult?.tokens?.accessToken) {
                   appTokens = signupResult.tokens;
                   appUser = signupResult.user;
-                  console.log('Backend signup succeeded — got app tokens for Google user');
-                  // Store the random password so user can login with email/password too
+                                    // Store the random password so user can login with email/password too
                   try { localStorage.setItem("ogapay_temp_pw", randomPw); } catch {}
                 }
               } else {
@@ -87,8 +85,7 @@ export default function AuthCallback() {
                 // We'll store Supabase tokens and use Supabase fallback auth
                 const errBody = await signupRes.json().catch(() => ({}));
                 console.warn('Backend signup failed:', errBody.message || signupRes.status);
-                console.log('User exists in backend — will use Supabase fallback auth');
-              }
+                              }
             } catch (signupErr) {
               console.warn('Backend signup network error:', signupErr.message);
             }
@@ -112,7 +109,7 @@ export default function AuthCallback() {
             }
             localStorage.setItem("ogapay-authenticated", "true");
             localStorage.setItem("ogapay_auth_provider", "supabase");
-            console.log('Stored Supabase tokens as fallback (auth_provider = supabase)');
+            ');
           }
 
           // Store user display info
@@ -170,8 +167,7 @@ export default function AuthCallback() {
                       },
                       body: JSON.stringify(updateBody),
                     });
-                    console.log('Google profile synced to backend');
-                  }
+                                      }
                 }
               }
             } catch (syncErr) {
@@ -190,8 +186,7 @@ export default function AuthCallback() {
           if (attempt < 2 && window.location.hash) {
             return handleCallback(attempt + 1);
           }
-          if (error) console.error("Auth error:", error);
-          const stored = localStorage.getItem("ogapay-authenticated");
+          if (error)           const stored = localStorage.getItem("ogapay-authenticated");
           if (stored === "true") {
             window.location.href = "/dashboard";
           } else {
@@ -199,8 +194,7 @@ export default function AuthCallback() {
           }
         }
       } catch (err) {
-        console.error("Auth callback error:", err);
-        if (!cancelled) {
+                if (!cancelled) {
           setStatus("error");
           setTimeout(() => {
             window.location.href = "/login?error=callback_error";

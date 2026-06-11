@@ -154,7 +154,19 @@ export async function apiRequest<T = unknown>(path: string, options: ApiOptions 
   }
 
   const url = path.startsWith('http') ? path : `${API_BASE}${path.startsWith('/') ? path : `/${path}`}`
-  const res = await fetch(url, { ...init, headers: requestHeaders })
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), 15000)
+  try {
+    const res = await fetch(url, { ...init, headers: requestHeaders, signal: controller.signal })
+    clearTimeout(timeoutId)
+
+  } catch (err: any) {
+    clearTimeout(timeoutId)
+    if (err.name === 'AbortError') {
+      throw new Error('Request timed out')
+    }
+    throw err
+  }
 
   if (res.status === 401 && auth && retryOnUnauthorized) {
     console.log('[apiRequest] 401 on', path, '- attempting refresh')

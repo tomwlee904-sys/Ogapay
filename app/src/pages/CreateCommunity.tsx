@@ -185,7 +185,7 @@ export default function CreateCommunity() {
                 position: 'relative',
               }}>
                 {coverPreview ? (
-                  <img src={coverPreview} alt="Cover preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  <img loading="lazy" src={coverPreview} alt="Cover preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, color: 'var(--text3)', fontSize: 13 }}>
                     <i className="ti ti-photo" style={{ fontSize: 28 }} />

@@ -266,7 +266,7 @@ export default function Earnings() {
           </div>
         </div>
         <div className="en-history">
-          {filtered.map((h, i) => (
+          {(filtered || []).map((h, i) => (
             <div className="en-h-item" key={i}>
               <span className="en-h-date">{formatDate(h.date)}</span>
               <span className="en-h-source">{h.source}</span>

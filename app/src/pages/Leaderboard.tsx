@@ -178,7 +178,7 @@ export default function Leaderboard() {
       </div>
 
       <div className="lb-cats">
-        {categories.map(c => (
+        {(categories || []).map(c => (
           <div className="lb-cat" key={c.id}>
             <div className="lb-cat-head">
               <i className={c.icon} style={{color: c.color}} />

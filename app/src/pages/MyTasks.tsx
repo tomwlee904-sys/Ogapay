@@ -114,7 +114,7 @@ export default function MyTasks() {
       </div>
 
       <div className="mt-tabs">
-        {tabs.map(t => (
+        {(tabs || []).map(t => (
           <button key={t.id} className={`mt-tab ${tab === t.id ? 'active' : ''}`} onClick={() => setTab(t.id)}>{t.label}</button>
         ))}
       </div>
@@ -133,7 +133,7 @@ export default function MyTasks() {
         </div>
       ) : (
         <div className="mt-list">
-          {filtered.map((s: any) => {
+          {(filtered || []).map((s: any) => {
             const status = STATUS_MAP[s.status] || s.status
             const color = COLOR_MAP[s.status] || '#191C6B'
             const progress = PROGRESS_MAP[s.status] || 50

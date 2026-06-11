@@ -158,7 +158,7 @@ export default function Notifications() {
         </div>
       ) : (
         <div className="nt-list">
-          {filtered.map(n => (
+          {(filtered || []).map(n => (
             <div className={`nt-item ${!n.read ? 'unread' : ''}`} key={n.id} onClick={() => { if (!n.read) markOneRead(n.id) }}>
               <div className="nt-icon" style={{background: `${n.color}15`, color: n.color}}>
                 <i className={n.icon} />

@@ -199,7 +199,7 @@ export default function Wallet() {
           <table className="wl-table">
             <thead><tr><th>Date</th><th>Type</th><th>Amount</th><th>Status</th></tr></thead>
             <tbody>
-              {filtered.map((t, i) => (
+              {(filtered || []).map((t, i) => (
                 <tr key={t.id || i}>
                   <td><strong>{formatDate(t.createdAt || t.date)}</strong></td>
                   <td>{displayType(t)}</td>

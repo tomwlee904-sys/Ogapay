@@ -85,7 +85,7 @@ export default function Wurkers() {
           <div className="wk-empty"><Icon n="users" s={32} c="var(--text3)" /><p>No workers found</p></div>
         ) : (
           <div className="wk-grid">
-            {workers.map(w => {
+            {(workers || []).map(w => {
               const name = w.username || w.name || 'Worker'
               const initials = getInitials(name)
               const skills = Array.isArray(w.skills) ? w.skills.join(', ') : w.skills || 'General'

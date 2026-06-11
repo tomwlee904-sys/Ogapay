@@ -719,7 +719,7 @@ export default function MyStore() {
             <div style={{ display: 'flex', gap: 14, alignItems: 'center', flexWrap: 'wrap' }}>
               <label className="mst-thumb-area">
                 {formThumbnailPreview ? (
-                  <img src={formThumbnailPreview} alt="Preview" />
+                  <img loading="lazy" src={formThumbnailPreview} alt="Preview" />
                 ) : (
                   <span><i className="ti ti-photo" style={{ fontSize: 24, display: 'block', marginBottom: 4 }} />No Image</span>
                 )}
@@ -852,10 +852,10 @@ export default function MyStore() {
       {/* ── Product list ── */}
       {!loading && !error && filtered.length > 0 && (
         <div className="mst-list">
-          {filtered.map(p => (
+          {(filtered || []).map(p => (
             <div className="mst-item" key={p.id} style={{ position: 'relative' }}>
               {p.thumbnail || p.imageUrl ? (
-                <img src={p.thumbnail || p.imageUrl} alt="" className="mst-thumb" />
+                <img loading="lazy" src={p.thumbnail || p.imageUrl} alt="" className="mst-thumb" />
               ) : (
                 <div className="mst-thumb">
                   <i className="ti ti-box" />
