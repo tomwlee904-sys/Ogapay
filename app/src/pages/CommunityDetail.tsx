@@ -133,14 +133,17 @@ export default function CommunityDetail() {
   useEffect(() => {
     async function fetchCommunity() {
       try {
-        const res = await apiRequest('/communities/' + id)
-        const json = await res.json()
-        if (json.success && json.data) {
-          setCommunity(json.data)
-          setIsMember(!!json.data.userRole)
-          setHasRequested(!!json.data.hasRequested)
+        const json: any = await apiRequest('/communities/' + id)
+        console.log('CommunityDetail response:', JSON.stringify(json).slice(0, 500))
+        const data = json?.data || json
+        if (data && (data.id || data.name)) {
+          setCommunity(data)
+          setIsMember(!!data.userRole || !!data.isMember || !!data.membership)
+          setHasRequested(!!data.hasRequested)
         }
-      } catch {}
+      } catch (e) {
+        console.error('CommunityDetail fetch error:', e)
+      }
       setLoading(false)
     }
     fetchCommunity()
@@ -291,9 +294,15 @@ export default function CommunityDetail() {
   if (!community) {
     return (
       <Layout>
-        <div style={{ textAlign: 'center', padding: 60, color: 'var(--text2)' }}>
-          <i className="ti ti-users" style={{ fontSize: 32, display: 'block', marginBottom: 8, color: 'var(--text3)' }} />
-          Community not found
+        <div style={{textAlign:'center', padding:'60px 24px'}}>
+          <i className="ti ti-users-off" style={{fontSize:48, color:'var(--text3)'}} />
+          <p style={{color:'var(--text2)', marginTop:16, fontSize:14}}>
+            This community could not be loaded. It may be private or no longer available.
+          </p>
+          <button onClick={() => navigate('/communities')}
+            style={{marginTop:16, padding:'10px 24px', borderRadius:10, background:'#191C6B', color:'#fff', border:'none', fontWeight:700, cursor:'pointer', fontFamily:'inherit'}}>
+            ← Back to Communities
+          </button>
         </div>
       </Layout>
     )
