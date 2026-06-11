@@ -37,6 +37,9 @@ export default function CommunityDetail() {
 
   // Cover upload
   const [uploadingCover, setUploadingCover] = useState(false)
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [editing, setEditing] = useState(false)
+  const [editForm, setEditForm] = useState({ name: '', description: '', category: '', accentColor: '' })
   const isOwner = authUser && community?.owner && authUser.id === community.owner.id
 
   // Chat
@@ -47,6 +50,40 @@ export default function CommunityDetail() {
 
   const token = localStorage.getItem('ogapay_access_token')
   const authHeaders = token ? { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' } : {}
+
+  const openEditModal = () => {
+    if (!community) return
+    setEditForm({
+      name: community.name || '',
+      description: community.description || '',
+      category: community.category || '',
+      accentColor: community.accentColor || '#7C3AED',
+    })
+    setShowEditModal(true)
+  }
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!community || !editForm.name.trim()) return
+    setEditing(true)
+    try {
+      const res = await fetch(API_BASE + '/communities/' + community.id, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify(editForm),
+      })
+      const json = await res.json()
+      if (json.success) {
+        setCommunity((prev: any) => ({ ...prev, ...editForm }))
+        setShowEditModal(false)
+      } else {
+        throw new Error(json.message || 'Failed to update')
+      }
+    } catch (err: any) {
+      alert(err.message)
+    }
+    setEditing(false)
+  }
 
   const handleCoverUpload = async (e: any) => {
     const file = e.target.files?.[0]
@@ -305,6 +342,11 @@ export default function CommunityDetail() {
                 </div>
               </div>
             </div>
+            {isOwner && (
+              <button className="cd-share" onClick={openEditModal} style={{ marginRight: 8 }}>
+                <i className="ti ti-edit" /> Edit
+              </button>
+            )}
             <button className="cd-share" onClick={() => { navigator.clipboard?.writeText(window.location.href) }}>
               <i className="ti ti-share" /> Share
             </button>
@@ -526,6 +568,64 @@ export default function CommunityDetail() {
         )}
       </div>
 
+      {showEditModal && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 1000,
+          background: 'rgba(0,0,0,0.6)', display: 'flex',
+          alignItems: 'center', justifyContent: 'center',
+          padding: 20,
+        }} onClick={() => setShowEditModal(false)}>
+          <div style={{
+            background: 'var(--card)', border: '1px solid var(--border)',
+            borderRadius: 16, padding: 28, width: '100%', maxWidth: 480,
+            maxHeight: '90vh', overflow: 'auto',
+          }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+              <h2 style={{ fontFamily: 'Outfit', fontSize: 20, fontWeight: 800, margin: 0 }}>Edit Community</h2>
+              <button onClick={() => setShowEditModal(false)} style={{ border: 'none', background: 'none', color: 'var(--text3)', cursor: 'pointer', fontSize: 20, padding: 4 }}>
+                <i className="ti ti-x" />
+              </button>
+            </div>
+            <form onSubmit={handleEditSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: 'var(--text2)', marginBottom: 6 }}>Name</label>
+                <input type="text" value={editForm.name} onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))}
+                  style={{ width: '100%', padding: '10px 14px', border: '1.5px solid var(--border)', borderRadius: 10, background: 'var(--bg)', color: 'var(--text)', fontSize: 14, outline: 'none', boxSizing: 'border-box' }} required />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: 'var(--text2)', marginBottom: 6 }}>Description</label>
+                <textarea value={editForm.description} onChange={e => setEditForm(f => ({ ...f, description: e.target.value }))}
+                  style={{ width: '100%', padding: '10px 14px', border: '1.5px solid var(--border)', borderRadius: 10, background: 'var(--bg)', color: 'var(--text)', fontSize: 14, outline: 'none', minHeight: 80, resize: 'vertical', boxSizing: 'border-box', fontFamily: 'inherit' }} />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: 'var(--text2)', marginBottom: 6 }}>Category</label>
+                <select value={editForm.category} onChange={e => setEditForm(f => ({ ...f, category: e.target.value }))}
+                  style={{ width: '100%', padding: '10px 14px', border: '1.5px solid var(--border)', borderRadius: 10, background: 'var(--bg)', color: 'var(--text)', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}>
+                  {['Crypto', 'Business', 'Content', 'Design', 'Marketing', 'Technology', 'Gaming', 'Education', 'Social', 'Other'].map(c => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: 'var(--text2)', marginBottom: 6 }}>Accent Color</label>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  {['#7C3AED', '#191C6B', '#EC4899', '#22C55E', '#F59E0B', '#EF4444', '#06B6D4', '#8B5CF6'].map(color => (
+                    <div key={color} onClick={() => setEditForm(f => ({ ...f, accentColor: color }))}
+                      style={{ width: 36, height: 36, borderRadius: '50%', background: color, cursor: 'pointer', border: editForm.accentColor === color ? '3px solid var(--text)' : '3px solid transparent', transition: 'all .15s' }} />
+                  ))}
+                </div>
+              </div>
+              <button type="submit" disabled={editing} style={{
+                width: '100%', padding: '12px', borderRadius: 12, border: 'none',
+                background: '#191C6B', color: '#fff', fontSize: 14, fontWeight: 700,
+                cursor: 'pointer', fontFamily: 'inherit', marginTop: 4,
+              }}>
+                {editing ? <>Saving...</> : <>Save Changes</>}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </Layout>
   )
