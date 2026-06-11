@@ -153,8 +153,6 @@
   align-items: center;
   gap: 5px;
   flex-shrink: 0;
-  min-width: 0;
-  overflow: hidden;
 }
 .tc-dot {
   width: 6px;
@@ -179,8 +177,6 @@
   font-size: 12px;
   font-weight: 500;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 .tc-stat-label.main { color: var(--accent); }
 .tc-stat-label.subtle { color: var(--text3); }
