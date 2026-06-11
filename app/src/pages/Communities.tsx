@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import Layout from '../components/Layout'
 
@@ -14,13 +14,18 @@ function getGradient(cat: string) {
 
 export default function Communities() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { user: authUser } = useAuth()
+  const isMineRoute = location.pathname === '/communities/mine'
+  const [tab, setTab] = useState<'mine' | 'all'>(isMineRoute ? 'mine' : 'all')
   const [filter, setFilter] = useState('all')
   const [search, setSearch] = useState('')
   const [communities, setCommunities] = useState<any[]>([])
+  const [myCommunities, setMyCommunities] = useState<any[]>([])
   const [stats, setStats] = useState<any>(null)
   const [trending, setTrending] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [mineLoading, setMineLoading] = useState(false)
 
   useEffect(() => {
     async function fetchCommunities() {
@@ -39,6 +44,26 @@ export default function Communities() {
     const onFocus = () => fetchCommunities()
     window.addEventListener('focus', onFocus)
     return () => window.removeEventListener('focus', onFocus)
+  }, [authUser])
+
+  // Fetch My Communities
+  useEffect(() => {
+    async function fetchMyCommunities() {
+      const token = localStorage.getItem('ogapay_access_token')
+      if (!token) { setMineLoading(false); return }
+      setMineLoading(true)
+      try {
+        const res = await fetch(API_BASE + '/communities/mine/list', {
+          headers: { 'Authorization': 'Bearer ' + token },
+        })
+        const json = await res.json()
+        if (json.success && json.data) {
+          setMyCommunities(json.data)
+        }
+      } catch {}
+      setMineLoading(false)
+    }
+    fetchMyCommunities()
   }, [authUser])
 
   const filtered = communities.filter(c => {
@@ -98,94 +123,179 @@ export default function Communities() {
         .sec-title{font-family:Outfit;font-size:18px;font-weight:800;margin:0 0 4px}
         .sec-sub{color:var(--text2);font-size:13px;margin:0 0 16px}
         .ch-empty{text-align:center;padding:48px 24px;color:var(--text2);font-size:14px}
+        .ch-empty i{font-size:40px;display:block;margin-bottom:12px;color:var(--text3)}
       `}</style>
 
-          <div className="ch-hero">
-        <h1>Communities</h1>
-        <p>Discover and join vibrant communities. Connect with creators, earn rewards, and grow together.</p>
-        <div className="ch-search">
-          <input type="text" placeholder="Search communities..." value={search} onChange={e => setSearch(e.target.value)} />
-          <button style={{ height: 44, padding: '0 18px', border: 0, background: '#191C6B', color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
-            <i className="ti ti-search" /> Search
-          </button>
-        </div>
-        <button onClick={() => navigate('/communities/create')} style={{ marginTop: 16, height: 42, padding: '0 24px', border: '1.5px solid #191C6B', borderRadius: 10, background: 'transparent', color: '#191C6B', fontWeight: 700, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', transition: 'all .2s' }}>
-          <i className="ti ti-plus" style={{ marginRight: 6 }} /> Create Community
+      {/* Header row */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+        <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', color: 'var(--text2)', fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, padding: 0, fontFamily: 'inherit' }}>
+          <i className="ti ti-arrow-left" style={{ fontSize: 16 }} /> Back
+        </button>
+        <h1 style={{ fontFamily: 'Outfit', fontSize: 20, fontWeight: 800, margin: 0, textAlign: 'center', flex: 1 }}>
+          <i className="ti ti-users" style={{ marginRight: 6 }} /> Communities
+        </h1>
+        <button onClick={() => navigate('/communities/create')} style={{ background: '#191C6B', color: '#fff', border: 'none', borderRadius: 10, padding: '8px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'inherit', whiteSpace: 'nowrap' }}>
+          <i className="ti ti-plus" style={{ fontSize: 14 }} /> Create Community
         </button>
       </div>
 
-      <div className="ch-stats">
-        {[
-          { icon: 'ti ti-users', num: stats?.total?.toLocaleString() || '0', label: 'Communities' },
-          { icon: 'ti ti-users-group', num: stats?.members?.toLocaleString() || '0', label: 'Active Members' },
-          { icon: 'ti ti-checklist', num: stats?.tasks?.toLocaleString() || '0', label: 'Tasks Completed' },
-          { icon: 'ti ti-coin', num: stats?.rewards ? 'NGN ' + stats.rewards.toLocaleString() : 'NGN 0', label: 'Rewards Distributed' },
-        ].map((s, i) => (
-          <div className="ch-stat" key={i}><div className="csi"><i className={s.icon} /></div><div className="csn">{s.num}</div><div className="csl">{s.label}</div></div>
-        ))}
+      {/* Tab toggle pills */}
+      <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+        <button onClick={() => setTab('mine')} style={{
+          flex: 1, padding: '10px 0', borderRadius: 999, border: 'none',
+          background: tab === 'mine' ? '#191C6B' : 'var(--card)',
+          color: tab === 'mine' ? '#fff' : 'var(--text2)',
+          fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+          border: tab === 'mine' ? 'none' : '1px solid var(--border)',
+        }}>
+          👤 My Communities {myCommunities.length > 0 && <span style={{ opacity: 0.7 }}>({myCommunities.length})</span>}
+        </button>
+        <button onClick={() => setTab('all')} style={{
+          flex: 1, padding: '10px 0', borderRadius: 999, border: 'none',
+          background: tab === 'all' ? '#191C6B' : 'var(--card)',
+          color: tab === 'all' ? '#fff' : 'var(--text2)',
+          fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+          border: tab === 'all' ? 'none' : '1px solid var(--border)',
+        }}>
+          👥 All Communities {communities.length > 0 && <span style={{ opacity: 0.7 }}>({communities.length})</span>}
+        </button>
       </div>
 
-      <div className="ch-filters">
-        {filters.map(f => (
-          <button key={f} className={`ch-pill ${filter === f.toLowerCase() ? 'active' : ''}`} onClick={() => setFilter(f.toLowerCase())}>{f}</button>
-        ))}
-      </div>
-
-      {loading ? (
-        <div style={{ textAlign: 'center', padding: 40, color: 'var(--text3)' }}>
-          <i className="ti ti-loader" style={{ animation: 'spin 1s linear infinite', fontSize: 24, display: 'block', marginBottom: 8 }} />
-          Loading communities...
-        </div>
-      ) : (
+      {tab === 'mine' && (
         <>
-          {trending.length > 0 && (
-            <>
-              <div className="sec-title">Trending Communities</div>
-              <div className="sec-sub">Most active communities this week</div>
-              <div className="ch-trend">
-                {trending.map(c => (
-                  <div className="ch-card" key={c.id} style={{ minWidth: 260 }} onClick={() => navigate('/communities/' + c.id)}>
-                    <div className="ccb" style={{ background: `linear-gradient(135deg,${getGradient(c.category)})` }} />
-                    <div className="cca">{c.initials}</div>
-                    <div className="cc-body">
-                      <div className="cc-name">{c.name}</div>
-                      <div className="cc-badge">{c.badge}</div>
-                      <div className="cc-meta"><span><i className="ti ti-users" /> {c.members?.toLocaleString()}</span></div>
-                      <button className="ch-join" style={{ marginTop: 'auto', height: 30, fontSize: 11 }} onClick={(e) => { e.stopPropagation(); navigate('/communities/' + c.id) }}>Join</button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </>
-          )}
+          {/* My Communities stat box */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 12, padding: '14px 18px', marginBottom: 20 }}>
+            <div style={{ width: 40, height: 40, borderRadius: 10, background: 'rgba(31,140,255,0.08)', display: 'grid', placeItems: 'center', flexShrink: 0 }}>
+              <i className="ti ti-users" style={{ fontSize: 20, color: '#191C6B' }} />
+            </div>
+            <div>
+              <div style={{ fontFamily: 'Outfit', fontSize: 22, fontWeight: 800, color: 'var(--text)' }}>{myCommunities.length}</div>
+              <div style={{ fontSize: 11, color: 'var(--text3)', letterSpacing: '0.04em' }}>MY COMMUNITIES</div>
+            </div>
+          </div>
 
-          <div className="sec-title">All Communities</div>
-          <div className="sec-sub">Discover and join communities that match your interests</div>
-
-          {filtered.length === 0 ? (
-            <div className="ch-empty"><i className="ti ti-users" style={{ fontSize: 32, marginBottom: 8, display: 'block', color: 'var(--text3)' }} />No communities found. Try a different filter.</div>
+          {mineLoading ? (
+            <div style={{ textAlign: 'center', padding: 40, color: 'var(--text3)' }}>
+              <i className="ti ti-loader" style={{ animation: 'spin 1s linear infinite', fontSize: 24, display: 'block', marginBottom: 8 }} />
+              Loading your communities...
+            </div>
+          ) : myCommunities.length === 0 ? (
+            <div className="ch-empty">
+              <i className="ti ti-users" />
+              <p style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)', margin: '0 0 4px' }}>Not a member of any communities</p>
+              <p style={{ fontSize: 13, color: 'var(--text3)', margin: '0 0 20px' }}>Browse all communities to find ones to join.</p>
+              <button onClick={() => setTab('all')} style={{ background: '#0d0f14', border: '1px solid #2a2d35', borderRadius: 10, padding: '12px 24px', fontSize: 13, fontWeight: 700, color: '#fff', cursor: 'pointer', fontFamily: 'inherit' }}>
+                🔍 Browse All Communities
+              </button>
+            </div>
           ) : (
             <div className="ch-grid">
-              {filtered.map(c => (
-                <div className="ch-card" key={c.id} onClick={() => navigate('/communities/' + c.id)}>
-                  <div className="ccb" style={{ background: `linear-gradient(135deg,${getGradient(c.category)})` }} />
-                  <div className="cca">{c.initials}</div>
+              {myCommunities.map((m: any) => (
+                <div className="ch-card" key={m.communityId} onClick={() => navigate('/communities/' + m.communityId)}>
+                  <div className="ccb" style={{ background: `linear-gradient(135deg,${getGradient(m.category || m.accentColor?.replace('#','') || '')})` }} />
+                  <div className="cca">{m.initials || m.name?.slice(0, 2)?.toUpperCase()}</div>
                   <div className="cc-body">
-                    <div className="cc-name">{c.name}</div>
-                    <div className="cc-badge">{c.badge}</div>
-                    <div className="cc-meta">
-                      <span><i className="ti ti-users" /> {c.members?.toLocaleString()}</span>
-                      <span><i className="ti ti-checklist" /> {c.tasks} tasks</span>
-                    </div>
-                    <div className="cc-r">Rewards: <strong>NGN {c.rewards?.toLocaleString()}</strong>/week</div>
+                    <div className="cc-name">{m.name}</div>
+                    <div className="cc-badge">{m.role === 'OWNER' ? 'Owner' : m.role === 'ADMIN' ? 'Admin' : 'Member'}</div>
+                    <div className="cc-meta"><span><i className="ti ti-users" /> {m.memberCount?.toLocaleString()}</span></div>
                     <div className="cc-actions">
-                      <button className="ch-join" onClick={(e) => { e.stopPropagation(); navigate('/communities/' + c.id) }}>Join</button>
-                      <button className="ch-preview" onClick={(e) => { e.stopPropagation(); navigate('/communities/' + c.id) }}>Preview</button>
+                      <button className="ch-join" onClick={(e) => { e.stopPropagation(); navigate('/communities/' + m.communityId) }}>View</button>
                     </div>
                   </div>
                 </div>
               ))}
             </div>
+          )}
+        </>
+      )}
+
+      {tab === 'all' && (
+        <>
+          {/* Search + Filter */}
+          <div style={{ display: 'flex', gap: 10, marginBottom: 20, alignItems: 'center' }}>
+            <div className="ch-search" style={{ flex: 1, maxWidth: 'none' }}>
+              <i className="ti ti-search" style={{ fontSize: 16, color: 'var(--text3)', marginLeft: 14 }} />
+              <input placeholder="Search communities..." value={search} onChange={e => setSearch(e.target.value)} />
+            </div>
+            <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
+              {['All', 'Active', 'New'].map(f => (
+                <button key={f} className={`ch-pill ${filter === f.toLowerCase() ? 'active' : ''}`} onClick={() => setFilter(f.toLowerCase())} style={{ padding: '0 10px', fontSize: 11 }}>{f}</button>
+              ))}
+            </div>
+          </div>
+
+          {/* Stats */}
+          <div className="ch-stats">
+            {[
+              { icon: 'ti ti-users', num: stats?.total?.toLocaleString() || '0', label: 'Communities' },
+              { icon: 'ti ti-users-group', num: stats?.members?.toLocaleString() || '0', label: 'Active Members' },
+              { icon: 'ti ti-checklist', num: stats?.tasks?.toLocaleString() || '0', label: 'Tasks Completed' },
+              { icon: 'ti ti-coin', num: stats?.rewards ? 'NGN ' + stats.rewards.toLocaleString() : 'NGN 0', label: 'Rewards Distributed' },
+            ].map((s, i) => (
+              <div className="ch-stat" key={i}><div className="csi"><i className={s.icon} /></div><div className="csn">{s.num}</div><div className="csl">{s.label}</div></div>
+            ))}
+          </div>
+
+          {/* Trending */}
+          {loading ? (
+            <div style={{ textAlign: 'center', padding: 40, color: 'var(--text3)' }}>
+              <i className="ti ti-loader" style={{ animation: 'spin 1s linear infinite', fontSize: 24, display: 'block', marginBottom: 8 }} />
+              Loading communities...
+            </div>
+          ) : (
+            <>
+              {trending.length > 0 && (
+                <>
+                  <div className="sec-title">Trending Communities</div>
+                  <div className="sec-sub">Most active communities this week</div>
+                  <div className="ch-trend">
+                    {trending.map(c => (
+                      <div className="ch-card" key={c.id} style={{ minWidth: 260 }} onClick={() => navigate('/communities/' + c.id)}>
+                        <div className="ccb" style={{ background: `linear-gradient(135deg,${getGradient(c.category)})` }} />
+                        <div className="cca">{c.initials}</div>
+                        <div className="cc-body">
+                          <div className="cc-name">{c.name}</div>
+                          <div className="cc-badge">{c.badge}</div>
+                          <div className="cc-meta"><span><i className="ti ti-users" /> {c.members?.toLocaleString()}</span></div>
+                          <button className="ch-join" style={{ marginTop: 'auto', height: 30, fontSize: 11 }} onClick={(e) => { e.stopPropagation(); navigate('/communities/' + c.id) }}>Join</button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+
+              <div className="sec-title">All Communities</div>
+              <div className="sec-sub">Discover and join communities that match your interests</div>
+
+              {communities.length === 0 ? (
+                <div className="ch-empty"><i className="ti ti-users" style={{ fontSize: 32, marginBottom: 8, display: 'block', color: 'var(--text3)' }} />No communities found.</div>
+              ) : (
+                <div className="ch-grid">
+                  {communities.map(c => (
+                    <div className="ch-card" key={c.id} onClick={() => navigate('/communities/' + c.id)}>
+                      <div className="ccb" style={{ background: `linear-gradient(135deg,${getGradient(c.category)})` }} />
+                      <div className="cca">{c.initials}</div>
+                      <div className="cc-body">
+                        <div className="cc-name">{c.name}</div>
+                        <div className="cc-badge">{c.badge}</div>
+                        <div className="cc-meta">
+                          <span><i className="ti ti-users" /> {c.members?.toLocaleString()}</span>
+                          <span><i className="ti ti-checklist" /> {c.tasks} tasks</span>
+                        </div>
+                        <div className="cc-r">Rewards: <strong>NGN {c.rewards?.toLocaleString()}</strong>/week</div>
+                        <div className="cc-actions">
+                          <button className="ch-join" onClick={(e) => { e.stopPropagation(); navigate('/communities/' + c.id) }}>Join</button>
+                          <button className="ch-preview" onClick={(e) => { e.stopPropagation(); navigate('/communities/' + c.id) }}>Preview</button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
           )}
         </>
       )}

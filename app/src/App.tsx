@@ -154,6 +154,7 @@ export default function App() {
             <Route path="/tasks/:id" element={<JobDetail />} />
             <Route path="/store/:id" element={<StoreProduct />} />
             <Route path="/store" element={<Store />} />
+            <Route path="/communities/mine" element={<Communities />} />
             <Route path="/communities" element={<Communities />} />
             <Route path="/communities/create" element={<CreateCommunity />} />
             <Route path="/communities/:id" element={<CommunityDetail />} />
