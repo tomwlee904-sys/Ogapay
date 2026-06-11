@@ -220,6 +220,7 @@ const GlobalStyles = () => (
       .steps-grid::before { display:none !important; }
       .jobs-track { display:flex !important; flex-direction:column !important; }
       .store-grid,.community-grid { grid-template-columns:1fr !important; }
+      .store-grid > div { width:calc(100vw - 48px) !important; max-width:100% !important; }
       .gs-accordion { grid-template-columns:1fr !important; }
       .paths { grid-template-columns:1fr 1fr !important; }
       .mobile-bottom-nav { display:grid !important; }
@@ -655,7 +656,7 @@ function HowItWorks() {
     { icon: "coin", title: "Complete & Get Paid", desc: "Submit your proof. Get paid instantly to your OgaPay wallet in Naira." },
   ];
   return (
-    <section style={{ padding: "56px 0", background: "var(--bg)" }}>
+    <section style={{ padding: "56px 0", background: "var(--bg)", maxWidth: "100vw", overflowX: "hidden" }}>
       <div className="container" style={{ textAlign: "center" }}>
         <h2 className="section-title">How it works</h2>
         <p className="section-sub" style={{ maxWidth: 520 }}>Three simple steps to start earning on OgaPay today.</p>
@@ -861,14 +862,20 @@ function StoreSection() {
     gap: 12,
     background: 'var(--card)',
     height: '100%',
+    width: '100%',
+    maxWidth: '100%',
+    boxSizing: 'border-box',
+    scrollSnapAlign: 'start',
+    flexShrink: 0,
   };
   const imgWrapStyle = {
     width: '100%',
-    height: 200,
+    aspectRatio: '16 / 9',
     overflow: 'hidden',
-    borderRadius: 12,
+    borderRadius: '12px 12px 0 0',
     background: 'var(--bg2)',
     flexShrink: 0,
+    display: 'block',
   };
   const titleRowStyle = {
     display: 'flex',
@@ -962,7 +969,7 @@ function StoreSection() {
     return n >= 1000 ? n.toLocaleString() : n.toFixed(2);
   };
   return (
-    <section style={{ padding: "56px 0", background: "var(--bg)" }}>
+    <section style={{ padding: "56px 0", background: "var(--bg)", maxWidth: "100vw", overflowX: "hidden" }}>
       <div className="container">
         <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 24 }}>
           <div>
@@ -986,7 +993,7 @@ function StoreSection() {
               style={{ position:'absolute', right:-20, top:'50%', transform:'translateY(-50%)', width:40, height:40, borderRadius:'50%', border:'1.5px solid var(--border)', background:'var(--card)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', zIndex:10, boxShadow:'var(--shadow-soft)' }}>
               <I n="chevron-right" s={18} />
             </button>
-            <div className="store-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3,minmax(0,1fr))", gap: 24 }}>
+            <div className="store-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3,minmax(0,1fr))", gap: 24, scrollSnapType: "x mandatory", overflowX: "auto", scrollbarWidth: "none" }}>
               {[0,1,2].map(offset => {
                 const idx = (active + offset) % products.length;
                 const p = products[idx];
@@ -997,7 +1004,7 @@ function StoreSection() {
                   <div key={p.id || idx} style={cardStyle}>
                     <div style={imgWrapStyle}>
                       {p.image ? (
-                        <img loading="lazy" src={p.image} alt={p.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        <img loading="lazy" src={p.image} alt={p.title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                       ) : (
                         <div style={{ display: 'grid', placeItems: 'center', height: '100%', fontFamily: 'Outfit,sans-serif', fontSize: 26, fontWeight: 900, background: 'var(--bg2)', color: 'var(--text3)' }}>
                           {(p.title || '???').slice(0, 3).toUpperCase()}
@@ -1239,7 +1246,7 @@ function Communities() {
     textDecoration: 'none',
   };
   return (
-    <section style={{ padding: "56px 0", background: "var(--bg)" }}>
+    <section style={{ padding: "56px 0", background: "var(--bg)", maxWidth: "100vw", overflowX: "hidden" }}>
       <div className="container">
         <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 24 }}>
           <div>
