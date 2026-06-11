@@ -70,6 +70,7 @@ const MyJobListingsPage = lazy(() => import('./pages/Jobs/MyJobListingsPage'))
 
 const UserProfile = lazy(() => import('./pages/UserProfile'))
 const Admin = lazy(() => import('./pages/Admin'))
+const AdminVault = lazy(() => import('./pages/AdminVault'))
 const WorkspacePortal = lazy(() => import('./pages/WorkspacePortal'))
 
 // ─── Loader ───
@@ -231,6 +232,7 @@ export default function App() {
             {/* ── Admin ── */}
             <Route path="/admin" element={<AuthGuard><Admin /></AuthGuard>} />
             <Route path="/admin/blog" element={<AuthGuard><AdminBlog /></AuthGuard>} />
+            <Route path="/admin/vault" element={<AuthGuard><AdminVault /></AuthGuard>} />
             <Route path="/admin/*" element={<AuthGuard><Admin /></AuthGuard>} />
 
             {/* ── Catch-all ── */}
