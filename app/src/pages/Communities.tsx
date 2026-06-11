@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import Layout from '../components/Layout'
+import { apiRequest } from '../lib/api'
 
 const API_BASE = 'https://ogapay-production.up.railway.app/api/v1'
 
@@ -30,13 +31,13 @@ export default function Communities() {
   useEffect(() => {
     async function fetchCommunities() {
       try {
-        const res = await fetch(API_BASE + '/communities')
-        const json = await res.json()
-        if (json.success && json.data) {
-          setCommunities(json.data.communities || [])
-          setStats(json.data.stats || null)
-          setTrending(json.data.trending || [])
-        }
+        const json: any = await apiRequest('/communities')
+        console.log('Communities response:', json)
+        const data = json?.data || json
+        const list = data?.communities || data?.data || (Array.isArray(json) ? json : [])
+        setCommunities(list)
+        setStats(data?.stats || null)
+        setTrending(data?.trending || [])
       } catch {}
       setLoading(false)
     }
@@ -49,17 +50,12 @@ export default function Communities() {
   // Fetch My Communities
   useEffect(() => {
     async function fetchMyCommunities() {
-      const token = localStorage.getItem('ogapay_access_token')
-      if (!token) { setMineLoading(false); return }
       setMineLoading(true)
       try {
-        const res = await fetch(API_BASE + '/communities/mine/list', {
-          headers: { 'Authorization': 'Bearer ' + token },
-        })
-        const json = await res.json()
-        if (json.success && json.data) {
-          setMyCommunities(json.data)
-        }
+        const json: any = await apiRequest('/communities/mine/list')
+        console.log('MyCommunities response:', json)
+        const data = json?.data || json
+        setMyCommunities(Array.isArray(data) ? data : data?.communities || [])
       } catch {}
       setMineLoading(false)
     }
@@ -72,7 +68,7 @@ export default function Communities() {
     if (filter !== 'all' && filter !== 'trending' && filter !== 'new' && c.category !== filter) return false
     if (search) {
       const q = search.toLowerCase()
-      return c.name.toLowerCase().includes(q) || c.desc.toLowerCase().includes(q) || c.badge.toLowerCase().includes(q)
+      return (c.name || '').toLowerCase().includes(q) || (c.desc || c.description || '').toLowerCase().includes(q) || (c.badge || c.category || '').toLowerCase().includes(q)
     }
     return true
   })
@@ -142,7 +138,7 @@ export default function Communities() {
       {/* Tab toggle pills */}
       <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
         <button onClick={() => setTab('mine')} style={{
-          flex: 1, padding: '10px 0', borderRadius: 999, border: 'none',
+          flex: 1, padding: '10px 0', borderRadius: 999,
           background: tab === 'mine' ? '#191C6B' : 'var(--card)',
           color: tab === 'mine' ? '#fff' : 'var(--text2)',
           fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
@@ -152,7 +148,7 @@ export default function Communities() {
           👤 My Communities {myCommunities.length > 0 && <span style={{ opacity: 0.7 }}>({myCommunities.length})</span>}
         </button>
         <button onClick={() => setTab('all')} style={{
-          flex: 1, padding: '10px 0', borderRadius: 999, border: 'none',
+          flex: 1, padding: '10px 0', borderRadius: 999,
           background: tab === 'all' ? '#191C6B' : 'var(--card)',
           color: tab === 'all' ? '#fff' : 'var(--text2)',
           fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
@@ -194,7 +190,7 @@ export default function Communities() {
             <div className="ch-grid">
               {(myCommunities || []).map((m: any) => (
                 <div className="ch-card" key={m.communityId} onClick={() => navigate('/communities/' + m.communityId)}>
-                  <div className="ccb" style={{ background: `linear-gradient(135deg,${getGradient(m.category || m.accentColor?.replace('#','') || '')})` }} />
+                  <div className="ccb" style={{ background: (m.coverImage || m.cover || m.coverUrl || m.image) ? undefined : `linear-gradient(135deg,${getGradient(m.category || m.accentColor?.replace('#','') || '')})`, backgroundImage: (m.coverImage || m.cover || m.coverUrl || m.image) ? `url(${m.coverImage || m.cover || m.coverUrl || m.image})` : undefined, backgroundSize: 'cover', backgroundPosition: 'center' }} />
                   <div className="cca">{m.initials || m.name?.slice(0, 2)?.toUpperCase()}</div>
                   <div className="cc-body">
                     <div className="cc-name">{m.name}</div>
@@ -253,7 +249,7 @@ export default function Communities() {
                   <div className="ch-trend">
                     {(trending || []).map(c => (
                       <div className="ch-card" key={c.id} style={{ minWidth: 260 }} onClick={() => navigate('/communities/' + c.id)}>
-                        <div className="ccb" style={{ background: `linear-gradient(135deg,${getGradient(c.category)})` }} />
+                        <div className="ccb" style={{ background: (c.coverImage || c.cover || c.coverUrl || c.image) ? undefined : `linear-gradient(135deg,${getGradient(c.category)})`, backgroundImage: (c.coverImage || c.cover || c.coverUrl || c.image) ? `url(${c.coverImage || c.cover || c.coverUrl || c.image})` : undefined, backgroundSize: 'cover', backgroundPosition: 'center' }} />
                         <div className="cca">{c.initials}</div>
                         <div className="cc-body">
                           <div className="cc-name">{c.name}</div>
@@ -276,7 +272,7 @@ export default function Communities() {
                 <div className="ch-grid">
                   {(communities || []).map(c => (
                     <div className="ch-card" key={c.id} onClick={() => navigate('/communities/' + c.id)}>
-                      <div className="ccb" style={{ background: `linear-gradient(135deg,${getGradient(c.category)})` }} />
+                      <div className="ccb" style={{ background: (c.coverImage || c.cover || c.coverUrl || c.image) ? undefined : `linear-gradient(135deg,${getGradient(c.category)})`, backgroundImage: (c.coverImage || c.cover || c.coverUrl || c.image) ? `url(${c.coverImage || c.cover || c.coverUrl || c.image})` : undefined, backgroundSize: 'cover', backgroundPosition: 'center' }} />
                       <div className="cca">{c.initials}</div>
                       <div className="cc-body">
                         <div className="cc-name">{c.name}</div>
