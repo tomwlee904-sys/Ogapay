@@ -27,6 +27,7 @@ export default function CommunityDetail() {
   const [joinError, setJoinError] = useState('')
   const [sendingRequest, setSendingRequest] = useState(false)
   const [uploadSuccess, setUploadSuccess] = useState(false)
+  const [toast, setToast] = useState('')
 
   // Leaderboard
   const [leaderboard, setLeaderboard] = useState<any[]>([])
@@ -128,6 +129,26 @@ export default function CommunityDetail() {
       }
     } catch {}
     setUploadingCover(false)
+  }
+
+  const handleAvatarUpload = async (e: any) => {
+    const file = e.target.files?.[0]
+    if (!file || !community) return
+    try {
+      const url = await uploadImage(file, 'community-avatars')
+      if (url) {
+        const res = await fetch(`${API_BASE}/communities/${community.id}/avatar`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+          body: JSON.stringify({ avatarUrl: url }),
+        })
+        if (res.ok) {
+          setCommunity((prev: any) => ({ ...prev, iconUrl: url }))
+          setToast('Profile picture updated')
+          setTimeout(() => setToast(''), 2500)
+        }
+      }
+    } catch {}
   }
 
   useEffect(() => {
@@ -392,77 +413,102 @@ export default function CommunityDetail() {
           <i className="ti ti-arrow-left" /> Communities
         </button>
 
-        {/* Header */}
-        <div className="cd-header">
-          {/* Cover image with overlay */}
-          {community.coverImage && (
-            <div style={{ width: '100%', height: 140, borderRadius: 10, overflow: 'hidden', position: 'relative', marginBottom: 0 }}>
-              <img loading="lazy" src={community.coverImage} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
+        {/* ── Cover Photo ── */}
+        <div style={{
+          position: 'relative',
+          height: 180,
+          borderRadius: '16px',
+          overflow: 'hidden',
+          marginBottom: 0,
+          background: community.coverImage ? undefined : `linear-gradient(135deg, ${community.accentColor || '#191C6B'}, #0d0f2e)`,
+          backgroundImage: community.coverImage ? `url(${community.coverImage})` : undefined,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}>
+          {isOwner && (
+            <>
+              <label htmlFor="cover-upload-input" style={{
+                position:'absolute', bottom:10, right:10,
+                background:'rgba(0,0,0,0.55)', color:'#fff',
+                borderRadius:8, padding:'6px 12px', fontSize:11,
+                fontWeight:700, cursor:'pointer', display:'flex', alignItems:'center', gap:6,
+              }}>
+                <i className="ti ti-camera" style={{fontSize:14}} /> Change Cover
+              </label>
+              <input id="cover-upload-input" type="file" accept="image/*" style={{display:'none'}} onChange={handleCoverUpload} />
+            </>
+          )}
+        </div>
+
+        {/* ── Profile Picture overlapping cover ── */}
+        <div style={{position:'relative', background:'var(--card)', borderRadius:'0 0 16px 16px', border:'1px solid var(--border)', borderTop:'none', padding:'0 20px 20px', marginBottom:12}}>
+          <div style={{display:'flex', alignItems:'flex-end', justifyContent:'space-between', marginBottom:14}}>
+            {/* Avatar — overlaps cover */}
+            <div style={{
+              width: 80, height: 80,
+              borderRadius: 16,
+              border: '4px solid var(--card)',
+              marginTop: -40,
+              overflow: 'hidden',
+              background: community.accentColor || '#191C6B',
+              display: 'grid', placeItems: 'center',
+              flexShrink: 0, position: 'relative',
+            }}>
+              {community.iconUrl || community.logoUrl
+                ? <img src={community.iconUrl || community.logoUrl} alt="" style={{width:'100%',height:'100%',objectFit:'cover'}} />
+                : <span style={{fontSize:26,fontWeight:900,color:'#fff'}}>{community.name?.slice(0,2).toUpperCase()}</span>
+              }
               {isOwner && (
                 <>
-                  <label htmlFor="cover-upload-input" style={{
-                    position: 'absolute', bottom: 8, left: 8,
-                    background: 'rgba(0,0,0,0.55)', color: '#fff', fontSize: 11,
-                    padding: '5px 10px', borderRadius: 999, cursor: 'pointer',
-                    display: 'flex', alignItems: 'center', gap: 5, fontWeight: 600,
-                    backdropFilter: 'blur(4px)', border: '1px solid rgba(255,255,255,0.1)',
-                  }}>
-                    <span>📷</span> Change Cover
+                  <label htmlFor="avatar-upload-input" style={{
+                    position:'absolute', inset:0, background:'rgba(0,0,0,0.4)',
+                    display:'flex', alignItems:'center', justifyContent:'center',
+                    cursor:'pointer', opacity:0, transition:'opacity .2s',
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.opacity='1'}
+                  onMouseLeave={e => e.currentTarget.style.opacity='0'}>
+                    <i className="ti ti-camera" style={{fontSize:18,color:'#fff'}} />
                   </label>
-                  <input id="cover-upload-input" type="file" accept="image/*" onChange={handleCoverUpload} hidden />
+                  <input id="avatar-upload-input" type="file" accept="image/*" style={{display:'none'}} onChange={handleAvatarUpload} />
                 </>
               )}
             </div>
-          )}
-          {uploadSuccess && (
-            <div style={{ background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.3)', borderRadius: 10, padding: '8px 14px', fontSize: 12, color: '#22c55e', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 0 }}>
-              <i className="ti ti-circle-check" style={{ fontSize: 14 }} /> Cover photo updated
-            </div>
-          )}
-          <div className="cd-h-top">
-            <div className="cd-h-left">
-              <div className="cd-avatar" style={{ background: community.accentColor || '#191C6B', display: 'grid', placeItems: 'center', fontSize: 22, fontWeight: 800, color: '#fff' }}>
-                {community.name?.slice(0, 2)?.toUpperCase()}
-              </div>
-              <div>
-                <h1 className="cd-h-name">{community.name}</h1>
-                <div className="cd-h-socials">
-                  {community.twitter && (
-                    <a href={community.twitter} target="_blank" rel="noopener noreferrer" title="Twitter/X"><i className="ti ti-brand-x" /></a>
-                  )}
-                  {community.telegram && (
-                    <a href={community.telegram} target="_blank" rel="noopener noreferrer" title="Telegram"><i className="ti ti-send" /></a>
-                  )}
-                  {community.discord && (
-                    <a href={community.discord} target="_blank" rel="noopener noreferrer" title="Discord"><i className="ti ti-brand-discord" /></a>
-                  )}
-                </div>
-              </div>
-            </div>
-            {isOwner && (
-              <button className="cd-share" onClick={openEditModal} style={{ marginRight: 8 }}>
-                <i className="ti ti-edit" /> Edit
+
+            {/* Share + Edit buttons */}
+            <div style={{display:'flex',gap:8,paddingTop:8}}>
+              <button onClick={() => { navigator.clipboard?.writeText(window.location.href); setToast('Link copied!'); setTimeout(() => setToast(''), 2000) }}
+                style={{height:34,padding:'0 14px',borderRadius:10,border:'1px solid var(--border)',background:'var(--card)',fontSize:12,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',gap:6,fontFamily:'inherit'}}>
+                <i className="ti ti-share" style={{fontSize:14}} /> Share
               </button>
-            )}
-            <button className="cd-share" onClick={() => { navigator.clipboard?.writeText(window.location.href) }}>
-              <i className="ti ti-share" /> Share
-            </button>
+              {isOwner && (
+                <button onClick={openEditModal}
+                  style={{height:34,padding:'0 14px',borderRadius:10,border:'1px solid var(--border)',background:'var(--card)',fontSize:12,fontWeight:700,cursor:'pointer',fontFamily:'inherit'}}>
+                  <i className="ti ti-edit" style={{fontSize:14}} /> Edit
+                </button>
+              )}
+            </div>
           </div>
 
-          <div className="cd-stats">
-            <div><div className="cd-stat-num">{community.memberCount?.toLocaleString()}</div><div className="cd-stat-label">Members</div></div>
-            <div><div className="cd-stat-num">{community.challengeCount || 0}</div><div className="cd-stat-label">Challenges</div></div>
-            <div><div className="cd-stat-num">NGN {(community.totalDistributed || 0).toLocaleString()}</div><div className="cd-stat-label">Distributed</div></div>
+          {/* Name + social links */}
+          <h1 style={{fontFamily:'Outfit,sans-serif',fontSize:22,fontWeight:900,margin:'0 0 6px'}}>{community.name}</h1>
+          <div style={{display:'flex',gap:8,marginBottom:14}}>
+            {community.twitter && <a href={community.twitter} target="_blank" rel="noopener noreferrer" style={{width:28,height:28,borderRadius:8,border:'1px solid var(--border)',display:'grid',placeItems:'center',color:'var(--text2)'}}><i className="ti ti-brand-x" style={{fontSize:14}} /></a>}
+            {community.telegram && <a href={community.telegram} target="_blank" rel="noopener noreferrer" style={{width:28,height:28,borderRadius:8,border:'1px solid var(--border)',display:'grid',placeItems:'center',color:'var(--text2)'}}><i className="ti ti-send" style={{fontSize:14}} /></a>}
+            {community.discord && <a href={community.discord} target="_blank" rel="noopener noreferrer" style={{width:28,height:28,borderRadius:8,border:'1px solid var(--border)',display:'grid',placeItems:'center',color:'var(--text2)'}}><i className="ti ti-brand-discord" style={{fontSize:14}} /></a>}
           </div>
 
-          {!isMember ? (
-            <button className="cd-join" onClick={handleRequestJoin} disabled={hasRequested}>
-              <i className="ti ti-user-plus" />
-              {hasRequested ? 'Request Sent' : community.isPublic ? 'Join Community' : 'Request to Join'}
-            </button>
-          ) : (
-            <span className="cd-member-badge"><i className="ti ti-check" /> You are a member</span>
-          )}
+          {/* Stats row */}
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',borderTop:'1px solid var(--border)',borderBottom:'1px solid var(--border)',padding:'12px 0',marginBottom:14,textAlign:'center'}}>
+            <div><div style={{fontFamily:'Outfit,sans-serif',fontSize:20,fontWeight:900}}>{community.memberCount || community._count?.members || 0}</div><div style={{fontSize:11,color:'var(--text2)'}}>Members</div></div>
+            <div style={{borderLeft:'1px solid var(--border)',borderRight:'1px solid var(--border)'}}><div style={{fontFamily:'Outfit,sans-serif',fontSize:20,fontWeight:900}}>{community.challengeCount || community._count?.tasks || 0}</div><div style={{fontSize:11,color:'var(--text2)'}}>Challenges</div></div>
+            <div><div style={{fontFamily:'Outfit,sans-serif',fontSize:20,fontWeight:900}}>NGN {(community.totalDistributed || community.totalRewards || 0).toLocaleString()}</div><div style={{fontSize:11,color:'var(--text2)'}}>Distributed</div></div>
+          </div>
+
+          {/* Join / Status */}
+          {!isMember && !hasRequested && <button onClick={handleRequestJoin} style={{height:40,padding:'0 20px',borderRadius:10,background:'#191C6B',color:'#fff',border:'none',fontWeight:700,fontSize:13,cursor:'pointer',fontFamily:'inherit',display:'inline-flex',alignItems:'center',gap:8}}><i className="ti ti-user-plus" style={{fontSize:15}} /> {community.isPublic ? 'Join Community' : 'Request to Join'}</button>}
+          {hasRequested && <span style={{fontSize:13,color:'var(--text2)',fontWeight:600}}><i className="ti ti-hourglass" style={{fontSize:14}} /> Request pending approval</span>}
+          {isMember && !isOwner && <span style={{fontSize:13,color:'#16a34a',fontWeight:700}}><i className="ti ti-check" style={{fontSize:14}} /> You are a member</span>}
+          {isOwner && <span style={{fontSize:13,color:'#191C6B',fontWeight:700}}><i className="ti ti-crown" style={{fontSize:14}} /> You own this community</span>}
         </div>
 
         {/* Tabs */}
@@ -856,6 +902,11 @@ export default function CommunityDetail() {
               </button>
             </form>
           </div>
+        </div>
+      )}
+      {toast && (
+        <div style={{position:'fixed',bottom:24,left:'50%',transform:'translateX(-50%)',background:'#191C6B',color:'#fff',padding:'10px 20px',borderRadius:10,fontSize:13,fontWeight:600,zIndex:9999,boxShadow:'0 4px 20px rgba(0,0,0,0.3)',transition:'opacity .3s'}}>
+          {toast}
         </div>
       )}
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
