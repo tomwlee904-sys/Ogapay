@@ -6,7 +6,7 @@ import { apiRequest } from '../lib/api'
 
 export default function Settings() {
   const navigate = useNavigate()
-  const { logout, isAuthed } = useAuth()
+  const { logout, isAuthed, user, refreshUser } = useAuth()
 
   // ── loading state ──────────────────────────────────────────────────────────
   const [loading, setLoading] = useState(true)
@@ -33,6 +33,10 @@ export default function Settings() {
 
   // ── 2FA ───────────────────────────────────────────────────────────────────
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false)
+
+  // ── connected accounts ────────────────────────────────────────────────────
+  const [connected, setConnected] = useState({ linkedin: false, twitter: false, github: false, google: false, telegram: false })
+  const [connecting, setConnecting] = useState<string | null>(null)
 
   // ── delete account ─────────────────────────────────────────────────────────
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
@@ -61,6 +65,9 @@ export default function Settings() {
           setTwoFactorEnabled(data.twoFactorEnabled ?? false)
           setPushNotifications(data.pushNotifications ?? false)
           setCurrency(data.currency ?? 'NGN')
+          if (data.connectedAccounts) {
+            setConnected((prev: any) => ({ ...prev, ...data.connectedAccounts }))
+          }
         }
       } catch {
         showToast('Failed to load settings', 'error')
@@ -69,6 +76,13 @@ export default function Settings() {
       }
     })()
   }, [isAuthed])
+
+  // ── sync connected accounts from auth user ─────────────────────────────────
+  useEffect(() => {
+    if (user?.connectedAccounts) {
+      setConnected((prev: any) => ({ ...prev, ...user.connectedAccounts }))
+    }
+  }, [user])
 
   // ── email notifications toggle ────────────────────────────────────────────
   const handleEmailToggle = async () => {
@@ -474,6 +488,144 @@ export default function Settings() {
           >
             <i className="ti ti-logout" style={{ fontSize: 16 }} /> Logout
           </button>
+        </div>
+
+        {/* ── Connected Accounts ────────────────────────────────────────────── */}
+        <div className="st-card">
+          <div className="st-card-title"><i className="ti ti-link" /> Connected Accounts</div>
+          <p style={{ fontSize: 12, color: 'var(--text2)', margin: '0 0 14px', lineHeight: 1.5 }}>
+            Connect your accounts to increase your OgaScore and unlock premium features.
+          </p>
+
+          {/* Platform list */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
+            {[
+              { id: 'linkedin', label: 'LinkedIn', icon: 'ti ti-brand-linkedin', color: '#0077B5', pts: 10 },
+              { id: 'twitter', label: 'Twitter/X', icon: null, color: '#000000', pts: 8 },
+              { id: 'github', label: 'GitHub', icon: 'ti ti-brand-github', color: '#333333', pts: 8 },
+              { id: 'google', label: 'Google', icon: 'ti ti-brand-google', color: '#EA4335', pts: 5 },
+              { id: 'telegram', label: 'Telegram', icon: 'ti ti-brand-telegram', color: '#229ED9', pts: 5 },
+              { id: 'kyc', label: 'KYC/BVN', icon: 'ti ti-shield-check', color: '#16a34a', pts: 20 },
+            ].map(platform => {
+              const isConnected = platform.id === 'kyc'
+                ? (user?.kycStatus === 'VERIFIED')
+                : !!(connected as any)[platform.id]
+              const isVerifying = connecting === platform.id
+
+              const oauthUrls: Record<string, string> = {
+                linkedin: 'https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=YOUR_CLIENT_ID&redirect_uri=YOUR_REDIRECT&scope=openid%20profile',
+                twitter: 'https://twitter.com/i/oauth2/authorize?response_type=code&client_id=YOUR_CLIENT_ID&redirect_uri=YOUR_REDIRECT&scope=users.read&state=state&code_challenge=challenge&code_challenge_method=plain',
+                github: 'https://github.com/login/oauth/authorize?client_id=YOUR_CLIENT_ID&scope=read:user',
+                google: 'https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id=YOUR_CLIENT_ID&redirect_uri=YOUR_REDIRECT&scope=openid%20profile',
+                telegram: 'https://oauth.telegram.org/auth?bot_id=YOUR_BOT_ID&origin=YOUR_ORIGIN&embed=1',
+              }
+
+              const handleConnect = () => {
+                if (platform.id === 'kyc') return
+                const url = oauthUrls[platform.id]
+                if (!url) return
+                const popup = window.open(url, '_blank', 'width=500,height=600')
+                if (!popup) return
+                setConnecting(platform.id)
+                const checkClosed = setInterval(async () => {
+                  if (popup.closed) {
+                    clearInterval(checkClosed)
+                    setConnecting(null)
+                    try {
+                      // Try to get the OAuth code from URL params - in production use a proper callback
+                      const json: any = await apiRequest('/auth/connect/' + platform.id, {
+                        method: 'POST',
+                        body: JSON.stringify({ code: 'placeholder' }),
+                      }).catch(() => null)
+                      if (json?.success) {
+                        setConnected((prev: any) => ({ ...prev, [platform.id]: true }))
+                        refreshUser?.()
+                        showToast(platform.label + ' connected!', 'success')
+                      } else {
+                        showToast('Failed to connect ' + platform.label, 'error')
+                      }
+                    } catch {
+                      showToast('Failed to connect ' + platform.label, 'error')
+                    }
+                  }
+                }, 1000)
+              }
+
+              return (
+                <div key={platform.id} className="st-field" style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: '1px solid var(--border)' }}>
+                  {/* Icon */}
+                  <div style={{ width: 36, height: 36, borderRadius: 8, background: platform.color + '12', display: 'grid', placeItems: 'center', flexShrink: 0 }}>
+                    {platform.icon ? (
+                      <i className={platform.icon} style={{ fontSize: 18, color: platform.color }} />
+                    ) : (
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill={platform.color}>
+                        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.739l7.727-8.833L1.255 2.25H8.08l4.253 5.622 5.911-5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                      </svg>
+                    )}
+                  </div>
+                  {/* Name */}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>{platform.label}</div>
+                    <div style={{ fontSize: 11, color: 'var(--text3)', display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 2, background: 'var(--bg2)', borderRadius: 4, padding: '1px 5px', fontSize: 10, fontWeight: 600, color: 'var(--text3)' }}>+{platform.pts} pts</span>
+                    </div>
+                  </div>
+                  {/* Connect button / status */}
+                  {platform.id === 'kyc' ? (
+                    isConnected ? (
+                      <span style={{ fontSize: 12, color: '#16a34a', fontWeight: 600, whiteSpace: 'nowrap' }}>✓ Verified</span>
+                    ) : (
+                      <span style={{ fontSize: 12, color: 'var(--text3)', whiteSpace: 'nowrap' }}>Not verified</span>
+                    )
+                  ) : isConnected ? (
+                    <span style={{ fontSize: 12, color: '#16a34a', fontWeight: 600, whiteSpace: 'nowrap' }}>✓ Connected</span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={handleConnect}
+                      disabled={isVerifying}
+                      style={{
+                        height: 30, padding: '0 12px', borderRadius: 8,
+                        border: '1px solid var(--border)', background: 'transparent',
+                        color: 'var(--text2)', fontWeight: 600, fontSize: 11,
+                        cursor: isVerifying ? 'not-allowed' : 'pointer',
+                        fontFamily: 'inherit', whiteSpace: 'nowrap',
+                        opacity: isVerifying ? 0.5 : 1,
+                      }}
+                    >
+                      {isVerifying ? 'Connecting...' : 'Connect'}
+                    </button>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+
+          {/* OgaScore bar */}
+          <div style={{ background: 'var(--bg2)', borderRadius: 10, padding: '12px 14px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+              <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>OgaScore</span>
+              <span style={{ fontSize: 13, fontWeight: 800, color: '#191C6B' }}>
+                {(() => {
+                  const score = (connected.linkedin ? 10 : 0) + (connected.twitter ? 8 : 0) + (connected.github ? 8 : 0) + (connected.google ? 5 : 0) + (connected.telegram ? 5 : 0) + (user?.kycStatus === 'VERIFIED' ? 20 : 0)
+                  return score + ' / 56'
+                })()}
+              </span>
+            </div>
+            <div style={{ width: '100%', height: 6, background: 'var(--border)', borderRadius: 999, overflow: 'hidden' }}>
+              <div style={{
+                height: '100%', borderRadius: 999, background: '#191C6B',
+                transition: 'width 0.4s ease',
+                width: `${(() => {
+                  const score = (connected.linkedin ? 10 : 0) + (connected.twitter ? 8 : 0) + (connected.github ? 8 : 0) + (connected.google ? 5 : 0) + (connected.telegram ? 5 : 0) + (user?.kycStatus === 'VERIFIED' ? 20 : 0)
+                  return (score / 56) * 100
+                })()}%`,
+              }} />
+            </div>
+            <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 6 }}>
+              Higher score unlocks premium communities and tasks
+            </div>
+          </div>
         </div>
 
         {/* ── Danger Zone ──────────────────────────────────────────────────── */}
