@@ -370,6 +370,7 @@ export default function Profile() {
   const [walletBal, setWalletBal] = useState<any>(null);
   const [transactions, setTransactions] = useState<any[]>([]);
   const [referralStats, setReferralStats] = useState<any>(null);
+  const [communityStats, setCommunityStats] = useState<any>(null);
   const [kycStatus, setKycStatus] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [connecting, setConnecting] = useState<string | null>(null);
@@ -379,12 +380,13 @@ export default function Profile() {
   // ── Fetch all data on mount & when authUser changes (e.g. wallet connected on Dashboard) ──
   const loadProfile = async () => {
     try {
-      const [userData, balData, txData, refData, kycData] = await Promise.all([
+      const [userData, balData, txData, refData, kycData, communityData] = await Promise.all([
         apiRequest('/users/me').catch(() => null),
         apiRequest('/wallet/balance').catch(() => null),
         apiRequest('/users/transactions/history').catch(() => null),
         apiRequest('/users/referrals/stats').catch(() => null),
         apiRequest('/kyc/status').catch(() => null),
+        apiRequest('/communities/mine/list').catch(() => null),
       ]);
       if (userData) {
         setProfileData(userData);
@@ -396,6 +398,11 @@ export default function Profile() {
       if (txData) setTransactions(Array.isArray(txData) ? txData : txData?.data || []);
       if (refData) setReferralStats(refData);
       if (kycData) setKycStatus(kycData);
+      if (communityData) {
+        const owned = communityData.data?.filter((c: any) => c.role === 'OWNER') || [];
+        const totalMembers = owned.reduce((s: number, c: any) => s + (c.memberCount || 0), 0);
+        setCommunityStats({ created: owned.length, totalMembers, communities: owned });
+      }
     } catch (err) {
       showToast('Failed to load profile data');
     }
