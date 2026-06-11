@@ -197,23 +197,23 @@ export default function OgaPayDashboard() {
       try {
         const [summary, tasksResponse, earningsResponse] = await Promise.all([
           apiRequest<any>("/dashboard/summary").catch(() => null),
-          apiRequest<any>("/tasks?limit=1&status=OPEN").catch(() => null),
+          apiRequest<any>("/tasks?limit=100&status=OPEN").catch(() => null),
           apiRequest<any>("/users/me/earnings").catch(() => null),
         ]);
 
         if (summary) setSummaryData(summary);
 
         if (tasksResponse) {
-          const tasks = tasksResponse.tasks ?? tasksResponse;
+          const tasks = Array.isArray(tasksResponse) ? tasksResponse : (tasksResponse.tasks || tasksResponse.data || []);
           if (Array.isArray(tasks)) {
             setAvailableTasks(String(tasks.length));
-          } else if (tasksResponse.total !== undefined) {
+          } else if (tasksResponse?.total !== undefined) {
             setAvailableTasks(String(tasksResponse.total));
           }
         }
 
         if (earningsResponse) {
-          const total = earningsResponse.total ?? earningsResponse.totalEarned ?? 0;
+          const total = earningsResponse.totalEarnings ?? earningsResponse.total ?? earningsResponse.totalEarned ?? 0;
           setTotalEarned("₦" + Number(total).toLocaleString());
         }
 

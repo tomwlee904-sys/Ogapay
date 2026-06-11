@@ -736,7 +736,7 @@ function FeaturedJobs() {
     setLoading(true);
     apiRequest<any>('/tasks', { auth: false })
       .then(d => {
-        const list = Array.isArray(d) ? d : d?.tasks || d?.data?.tasks || d?.data || d?.results || [];
+        const list = Array.isArray(d) ? d.slice(0, 6) : [];
         setJobs(list.slice(0, 6));
       })
       .catch(() => setJobs([]))
@@ -838,7 +838,7 @@ function StoreSection() {
     setLoading(true);
     apiRequest('/store?limit=6')
       .then(d => {
-        const list = Array.isArray(d) ? d : d?.products || d?.data?.products || d?.data || d?.items || [];
+        const list = Array.isArray(d) ? d : [];
         setProducts(list);
       })
       .catch(() => {})
