@@ -92,26 +92,26 @@ export default function Communities() {
         .ch-filters{display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap}
         .ch-pill{height:32px;padding:0 14px;border-radius:999px;border:1px solid var(--border);background:var(--bg);color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:4px}
         .ch-pill:hover,.ch-pill.active{background:#191C6B;color:#fff;border-color:#191C6B}
-        .ch-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:28px}
+        .ch-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-bottom:28px}
         @media(max-width:1024px){.ch-grid{grid-template-columns:repeat(2,1fr)}}
         @media(max-width:640px){.ch-grid{grid-template-columns:1fr}}
         .ch-card{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;transition:all .3s;cursor:pointer;display:flex;flex-direction:column}
         .ch-card:hover{transform:translateY(-4px);border-color:#191C6B;box-shadow:0 8px 24px rgba(31,140,255,.1)}
-        .ch-card .ccb{height:140px;position:relative;overflow:hidden;background-size:cover!important;background-position:center!important}
-        .ch-card .cca{width:48px;height:48px;border-radius:50%;border:3px solid var(--card);background:var(--bg2);display:grid;place-items:center;font-size:16px;font-weight:800;color:#191C6B;margin-top:-28px;margin-left:14px;position:relative;z-index:1}
+        .ch-card .ccb{height:180px;position:relative;overflow:hidden;background-size:cover!important;background-position:center!important}
+        .ch-card .cca{display:none}
         .ch-card .cc-body{padding:6px 14px 14px;flex:1;display:flex;flex-direction:column}
         .ch-card .cc-name{font-weight:700;font-size:15px;margin-bottom:2px}
-        .ch-card .cc-badge{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:700;background:rgba(31,140,255,.08);color:#191C6B;width:fit-content;margin-bottom:6px}
-        .ch-card .cc-meta{display:flex;gap:12px;margin-bottom:8px;flex-wrap:wrap}
-        .ch-card .cc-meta span{display:flex;align-items:center;gap:4px;color:var(--text2);font-size:12px}
-        .ch-card .cc-r{color:var(--text2);font-size:12px;margin-bottom:8px}
-        .ch-card .cc-r strong{color:var(--green)}
-        .ch-card .cc-actions{display:flex;gap:8px;margin-top:auto}
-        .ch-card .cc-actions button{flex:1;height:32px;border-radius:8px;font-size:11px;font-weight:700;transition:all .2s;cursor:pointer}
-        .ch-join{border:1px solid #191C6B;background:transparent;color:#191C6B}
-        .ch-join:hover{background:#191C6B;color:#fff}
-        .ch-preview{border:1px solid var(--border);background:transparent;color:var(--text2)}
-        .ch-preview:hover{border-color:#191C6B;color:#191C6B}
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
         .ch-trend{display:flex;gap:14px;overflow-x:auto;padding:4px 0 16px;scroll-snap-type:x mandatory}
         .ch-trend::-webkit-scrollbar{height:4px}
         .ch-trend::-webkit-scrollbar-thumb{background:var(--border2);border-radius:999px}
@@ -190,15 +190,11 @@ export default function Communities() {
             <div className="ch-grid">
               {(myCommunities || []).map((m: any) => (
                 <div className="ch-card" key={m.communityId} onClick={() => navigate('/communities/' + m.communityId)}>
-                  <div className="ccb" style={{ background: (m.coverImage || m.cover || m.coverUrl || m.image) ? undefined : `linear-gradient(135deg,${getGradient(m.category || m.accentColor?.replace('#','') || '')})`, backgroundImage: (m.coverImage || m.cover || m.coverUrl || m.image) ? `url(${m.coverImage || m.cover || m.coverUrl || m.image})` : undefined, backgroundSize: 'cover', backgroundPosition: 'center' }} />
-                  <div className="cca">{m.initials || m.name?.slice(0, 2)?.toUpperCase()}</div>
-                  <div className="cc-body">
-                    <div className="cc-name">{m.name}</div>
-                    <div className="cc-badge">{m.role === 'OWNER' ? 'Owner' : m.role === 'ADMIN' ? 'Admin' : 'Member'}</div>
-                    <div className="cc-meta"><span><i className="ti ti-users" /> {m.memberCount?.toLocaleString()}</span></div>
-                    <div className="cc-actions">
-                      <button className="ch-join" onClick={(e) => { e.stopPropagation(); navigate('/communities/' + m.communityId) }}>View</button>
-                    </div>
+                  <div className="ccb" style={{ height: 180, background: (m.coverImage || m.cover || m.coverUrl || m.image) ? undefined : `linear-gradient(135deg,${getGradient(m.category || m.accentColor?.replace('#','') || '')})`, backgroundImage: (m.coverImage || m.cover || m.coverUrl || m.image) ? `url(${m.coverImage || m.cover || m.coverUrl || m.image})` : undefined, backgroundSize: 'cover', backgroundPosition: 'center', position: 'relative' }} />
+                  <div className="cc-body" style={{ padding: '14px' }}>
+                    <div className="cc-name" style={{ fontSize: 16, fontWeight: 800, marginBottom: 4 }}>{m.name}</div>
+                    <div style={{ fontSize: 12, color: 'var(--text2)', marginBottom: 8, display: 'flex', gap: 12 }}><span><i className="ti ti-users" /> {(m.memberCount || 0).toLocaleString()} members</span></div>
+                    <div style={{ display: 'flex', justifyContent: 'flex-end' }}><span style={{ fontSize: 12, fontWeight: 700, color: '#191C6B' }}>View &rarr;</span></div>
                   </div>
                 </div>
               ))}
@@ -223,15 +219,15 @@ export default function Communities() {
           </div>
 
           {/* Stats */}
-          <div className="ch-stats">
-            {[
-              { icon: 'ti ti-users', num: stats?.total?.toLocaleString() || '0', label: 'Communities' },
-              { icon: 'ti ti-users-group', num: stats?.members?.toLocaleString() || '0', label: 'Active Members' },
-              { icon: 'ti ti-checklist', num: stats?.tasks?.toLocaleString() || '0', label: 'Tasks Completed' },
-              { icon: 'ti ti-coin', num: stats?.rewards ? 'NGN ' + stats.rewards.toLocaleString() : 'NGN 0', label: 'Rewards Distributed' },
-            ].map((s, i) => (
-              <div className="ch-stat" key={i}><div className="csi"><i className={s.icon} /></div><div className="csn">{s.num}</div><div className="csl">{s.label}</div></div>
-            ))}
+          <div className="ch-stats" style={{display:'flex',justifyContent:'space-between',alignItems:'center',gap:16,flexWrap:'wrap',marginBottom:24}}>
+            <div style={{display:'flex',alignItems:'baseline',gap:8}}>
+              <span style={{fontSize:36,fontWeight:900,color:'var(--text)',fontFamily:'Outfit,sans-serif'}}>{stats?.total?.toLocaleString() || '0'}</span>
+              <span style={{fontSize:13,fontWeight:700,color:'var(--text2)',textTransform:'uppercase',letterSpacing:'0.08em'}}>TOTAL COMMUNITIES</span>
+            </div>
+            <div style={{display:'flex',gap:20,fontSize:12,color:'var(--text2)'}}>
+              <span><i className="ti ti-users" style={{marginRight:4}} /> {stats?.members?.toLocaleString() || '0'} members</span>
+              <span><i className="ti ti-checklist" style={{marginRight:4}} /> {stats?.tasks?.toLocaleString() || '0'} tasks</span>
+            </div>
           </div>
 
           {/* Trending */}
@@ -247,18 +243,18 @@ export default function Communities() {
                   <div className="sec-title">Trending Communities</div>
                   <div className="sec-sub">Most active communities this week</div>
                   <div className="ch-trend">
-                    {(trending || []).map(c => (
+                    {(trending || []).map(c => {
+                      const cv = c.coverImage || c.cover || c.coverUrl || c.image
+                      return (
                       <div className="ch-card" key={c.id} style={{ minWidth: 260 }} onClick={() => navigate('/communities/' + c.id)}>
-                        <div className="ccb" style={{ background: (c.coverImage || c.cover || c.coverUrl || c.image) ? undefined : `linear-gradient(135deg,${getGradient(c.category)})`, backgroundImage: (c.coverImage || c.cover || c.coverUrl || c.image) ? `url(${c.coverImage || c.cover || c.coverUrl || c.image})` : undefined, backgroundSize: 'cover', backgroundPosition: 'center' }} />
-                        <div className="cca">{c.initials}</div>
-                        <div className="cc-body">
-                          <div className="cc-name">{c.name}</div>
-                          <div className="cc-badge">{c.badge}</div>
-                          <div className="cc-meta"><span><i className="ti ti-users" /> {c.members?.toLocaleString()}</span></div>
-                          <button className="ch-join" style={{ marginTop: 'auto', height: 30, fontSize: 11 }} onClick={(e) => { e.stopPropagation(); navigate('/communities/' + c.id) }}>Join</button>
+                        <div className="ccb" style={{ height: 180, background: cv ? undefined : `linear-gradient(135deg,${getGradient(c.category)})`, backgroundImage: cv ? `url(${cv})` : undefined, backgroundSize: 'cover', backgroundPosition: 'center' }} />
+                        <div className="cc-body" style={{ padding: '14px' }}>
+                          <div className="cc-name" style={{ fontSize: 16, fontWeight: 800, marginBottom: 4 }}>{c.name}</div>
+                          <div style={{ fontSize: 12, color: 'var(--text2)', marginBottom: 8, display: 'flex', gap: 12 }}><span><i className="ti ti-users" /> {(c.memberCount || c.members || 0).toLocaleString()} members</span></div>
+                          <div style={{ display: 'flex', justifyContent: 'flex-end' }}><span style={{ fontSize: 12, fontWeight: 700, color: '#191C6B' }}>View &rarr;</span></div>
                         </div>
                       </div>
-                    ))}
+                    )})}
                   </div>
                 </>
               )}
@@ -270,25 +266,26 @@ export default function Communities() {
                 <div className="ch-empty"><i className="ti ti-users" style={{ fontSize: 32, marginBottom: 8, display: 'block', color: 'var(--text3)' }} />No communities found.</div>
               ) : (
                 <div className="ch-grid">
-                  {(communities || []).map(c => (
+                  {(communities || []).map(c => {
+                    const cv = c.coverImage || c.cover || c.coverUrl || c.image
+                    const cNew = c.createdAt && (Date.now() - new Date(c.createdAt).getTime()) < 7 * 86400000
+                    return (
                     <div className="ch-card" key={c.id} onClick={() => navigate('/communities/' + c.id)}>
-                      <div className="ccb" style={{ background: (c.coverImage || c.cover || c.coverUrl || c.image) ? undefined : `linear-gradient(135deg,${getGradient(c.category)})`, backgroundImage: (c.coverImage || c.cover || c.coverUrl || c.image) ? `url(${c.coverImage || c.cover || c.coverUrl || c.image})` : undefined, backgroundSize: 'cover', backgroundPosition: 'center' }} />
-                      <div className="cca">{c.initials}</div>
-                      <div className="cc-body">
-                        <div className="cc-name">{c.name}</div>
-                        <div className="cc-badge">{c.badge}</div>
-                        <div className="cc-meta">
-                          <span><i className="ti ti-users" /> {c.members?.toLocaleString()}</span>
-                          <span><i className="ti ti-checklist" /> {c.tasks} tasks</span>
+                      <div className="ccb" style={{ height: 180, background: cv ? undefined : `linear-gradient(135deg,${getGradient(c.category)})`, backgroundImage: cv ? `url(${cv})` : undefined, backgroundSize: 'cover', backgroundPosition: 'center', position: 'relative' }}>
+                        {cNew && <span style={{ position: 'absolute', top: 10, right: 10, background: '#f59e0b', color: '#fff', fontSize: 10, fontWeight: 800, padding: '3px 8px', borderRadius: 999 }}>New</span>}
+                      </div>
+                      <div className="cc-body" style={{ padding: '14px' }}>
+                        <div className="cc-name" style={{ fontSize: 16, fontWeight: 800, marginBottom: 4 }}>{c.name}</div>
+                        <div style={{ fontSize: 12, color: 'var(--text2)', marginBottom: 8, display: 'flex', gap: 12 }}>
+                          <span><i className="ti ti-users" /> {(c.memberCount || c.members || 0).toLocaleString()} members</span>
+                          {(c.taskCount || c.tasks || 0) > 0 && <span><i className="ti ti-checklist" /> {(c.taskCount || c.tasks || 0).toLocaleString()} challenges</span>}
                         </div>
-                        <div className="cc-r">Rewards: <strong>NGN {c.rewards?.toLocaleString()}</strong>/week</div>
-                        <div className="cc-actions">
-                          <button className="ch-join" onClick={(e) => { e.stopPropagation(); navigate('/communities/' + c.id) }}>Join</button>
-                          <button className="ch-preview" onClick={(e) => { e.stopPropagation(); navigate('/communities/' + c.id) }}>Preview</button>
-                        </div>
+                        {c.description && <div style={{ fontSize: 12, color: 'var(--text2)', marginBottom: 10, lineHeight: 1.5, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{c.description}</div>}
+                        {(c.rewards || 0) > 0 && <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 8 }}>NGN {(c.rewards || 0).toLocaleString()} distributed</div>}
+                        <div style={{ display: 'flex', justifyContent: 'flex-end' }}><span style={{ fontSize: 12, fontWeight: 700, color: '#191C6B' }}>View &rarr;</span></div>
                       </div>
                     </div>
-                  ))}
+                  )})}
                 </div>
               )}
             </>
