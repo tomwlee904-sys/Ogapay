@@ -12,14 +12,7 @@ const getStatus = (submitted: number, total: number, status: string) => {
   const remaining = total - submitted
   if (remaining <= 0) return { label: 'Completed', color: '#888', cls: 'grey' }
   if (remaining / total <= 0.2) return { label: 'Filling Fast', color: '#f5a623', cls: 'yellow' }
-  return { label: 'Open', color: '#4caf50', cls: 'green' }
-}
-
-const getBarColor = (submitted: number, total: number) => {
-  const pct = submitted / total
-  if (pct > 0.8) return '#e74c3c'
-  if (pct > 0.5) return '#f5a623'
-  return 'linear-gradient(90deg, var(--accent), #6366F1)'
+  return { label: 'Open', color: '#22c55e', cls: 'green' }
 }
 
 interface TaskData {
@@ -74,14 +67,9 @@ export default function TaskCard({ task }: TaskCardProps) {
   const isNew = Date.now() - new Date(task.createdAt).getTime() < 86400000
   const posterName = task.poster?.username || 'Anonymous'
   const statusInfo = getStatus(filledSlots, totalSlots, task.status)
-  const isCoolingDown = task.status === 'COOLING_DOWN'
-  const barColor = isCoolingDown
-    ? 'linear-gradient(90deg, #f59e0b, #fb923c)'
-    : getBarColor(filledSlots, totalSlots)
 
   const rewardNum = Number(task.reward) || 0
   const usdEquivalent = isNgn ? rewardNum / NGN_USD_RATE : null
-  const ngnEquivalent = !isNgn ? rewardNum * NGN_USD_RATE : null
 
   // Countdown timer
   useEffect(() => {
@@ -102,92 +90,95 @@ export default function TaskCard({ task }: TaskCardProps) {
 
   return (
     <div className="tc-card" onClick={() => navigate(`/tasks/${task.id}`)}>
-      {/* Header — poster info */}
+
+      {/* ═══ 1. CREATOR HEADER ROW ═══ */}
       <div className="tc-header">
         {task.poster?.avatarUrl ? (
-          <img src={task.poster.avatarUrl} className="tc-avatar" />
+          <img src={task.poster.avatarUrl} className="tc-avatar" alt={posterName} />
         ) : (
-          <div className="tc-avatar-initial">{posterName[0] || '?'}</div>
+          <div className="tc-avatar-init">{posterName[0] || '?'}</div>
         )}
-        <div>
-          <p className="tc-listed">Listed by</p>
-          <p className="tc-poster">{posterName}</p>
+        <div className="tc-header-text">
+          <span className="tc-listed-label">Listed by</span>
+          <span className="tc-listed-name">{posterName}</span>
         </div>
-        {isNew && <span className="tc-new">NEW</span>}
+        {isNew && <span className="tc-new-badge">NEW</span>}
       </div>
 
-      <div className="tc-body">
-        {/* Progress */}
-        <div>
-          <div className="tc-progress-label">
-            <span>Progress</span>
-            <span>{filledSlots}/{totalSlots === 999 ? '\u221E' : totalSlots}</span>
-          </div>
-          <div className="tc-progress-track">
-            <div
-              className={`tc-progress-fill ${filledSlots / totalSlots > 0.8 ? 'fill-urgent' : filledSlots / totalSlots > 0.5 ? 'fill-warn' : ''} ${isCoolingDown ? 'cooling' : ''}`}
-              style={{ background: barColor, width: `${progressPercent}%` }}
-            />
-          </div>
-          <div className="tc-status-row">
-            <span className="tc-status-item">
-              <span className="tc-dot green" />
-              <span>Submissions {submissionsCount}</span>
-            </span>
-            <span className="tc-status-item">
-              <span className="tc-dot light" />
-              <span>{totalSlots === 999 ? 'Unlimited' : `Open ${openSlots}`}</span>
-            </span>
-            <span className="tc-status-item">
-              <span className={`tc-dot ${statusInfo.cls}`} />
-              <span style={{ color: statusInfo.color }}>{statusInfo.label}</span>
-            </span>
-          </div>
+      {/* ═══ 2. PROGRESS SECTION ═══ */}
+      <div className="tc-progress-section">
+        <div className="tc-progress-header">
+          <span>PROGRESS</span>
+          <span>{filledSlots}/{totalSlots === 999 ? '\u221E' : totalSlots}</span>
         </div>
-
-        {/* Reward box */}
-        <div className="tc-reward">
-          <div className="tc-reward-row">
-            <span className="tc-reward-amount">
-              {rewardNum.toLocaleString()}
-            </span>
-            <span className="tc-reward-currency">{currency}</span>
-          </div>
-          {usdEquivalent !== null && (
-            <div className="tc-reward-usd">≈ ${usdEquivalent.toFixed(2)} USD</div>
-          )}
-          {ngnEquivalent !== null && (
-            <div className="tc-reward-usd">≈ ₦{ngnEquivalent.toLocaleString()} NGN</div>
-          )}
-          <p className="tc-reward-label">Reward / Slot</p>
+        <div className="tc-bar-track">
+          <div className="tc-bar-fill" style={{ width: `${progressPercent}%` }} />
         </div>
-
-        {/* Requirements pills */}
-        <div className="tc-tags">
-          <span className="tc-tag-pill">{formatCategory(task.category)}</span>
-          {task.rank && (
-            <span className="tc-tag-pill">Tier {task.rank}</span>
-          )}
-          {task.minSorsaScore && task.minSorsaScore > 0 && (
-            <span className="tc-tag-pill tc-req">Req: Sorsa {task.minSorsaScore}+</span>
-          )}
-          {task.requiresLinkedin && (
-            <span className="tc-tag-pill tc-req">Req: LinkedIn</span>
-          )}
-          {task.requiresWallet && (
-            <span className="tc-tag-pill tc-req">Req: Wallet</span>
-          )}
-        </div>
-
-        {/* About */}
-        <div>
-          <div className="tc-about-head">
-            <span>About This Task</span>
-            {timeLeft && <span className="tc-deadline">{timeLeft}</span>}
-          </div>
-          <p className="tc-desc">{task.description}</p>
+        <div className="tc-progress-stats">
+          <span className="tc-stat-item tc-stat-green">
+            <span className="tc-dot tc-dot-green" /> Submissions {submissionsCount}
+          </span>
+          <span className="tc-stat-item tc-stat-muted">
+            <span className="tc-dot tc-dot-muted" /> Open {openSlots}
+          </span>
+          <span className="tc-stat-item tc-stat-muted">
+            <span className={`tc-dot ${statusInfo.cls === 'green' ? 'tc-dot-green' : statusInfo.cls === 'orange' ? 'tc-dot-orange' : 'tc-dot-grey'}`} /> {statusInfo.label}
+          </span>
         </div>
       </div>
+
+      {/* ═══ 3. REWARD BOX ═══ */}
+      <div className="tc-reward-box">
+        <div className="tc-reward-main">
+          <span className="tc-reward-amount">{rewardNum.toLocaleString()}</span>
+          <span className="tc-reward-cur">{currency}</span>
+        </div>
+        {usdEquivalent !== null && (
+          <div className="tc-reward-usd">≈ ${usdEquivalent.toFixed(2)} USD</div>
+        )}
+      </div>
+
+      {/* ═══ 4. CATEGORY | RANK ═══ */}
+      <div className="tc-meta-row">
+        <span className="tc-meta-item">{formatCategory(task.category)}</span>
+        {task.rank && (
+          <>
+            <span className="tc-meta-divider">|</span>
+            <span className="tc-meta-item">Rank {task.rank}</span>
+          </>
+        )}
+        {task.minSorsaScore && task.minSorsaScore > 0 && (
+          <>
+            <span className="tc-meta-divider">|</span>
+            <span className="tc-meta-item tc-meta-req">Req: Sorsa {task.minSorsaScore}+</span>
+          </>
+        )}
+        {task.requiresLinkedin && (
+          <>
+            <span className="tc-meta-divider">|</span>
+            <span className="tc-meta-item tc-meta-req">Req: LinkedIn</span>
+          </>
+        )}
+        {task.requiresWallet && (
+          <>
+            <span className="tc-meta-divider">|</span>
+            <span className="tc-meta-item tc-meta-req">Req: Wallet</span>
+          </>
+        )}
+      </div>
+
+      {/* ═══ 5. ABOUT THIS JOB ═══ */}
+      <div className="tc-about-section">
+        <div className="tc-about-header">
+          <span className="tc-about-label">
+            <i className="ti ti-message" style={{ fontSize: 11, marginRight: 4 }} />
+            ABOUT THIS TASK
+          </span>
+          {timeLeft && <span className="tc-about-timer">{timeLeft}</span>}
+        </div>
+        <p className="tc-about-desc">{task.description || 'No description provided.'}</p>
+      </div>
+
     </div>
   )
 }
