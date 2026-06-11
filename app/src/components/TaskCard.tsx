@@ -26,7 +26,7 @@ interface TaskData {
   maxWorkers: number
   currentWorkers: number
   submissionsCount?: number
-  minSorsaScore?: number
+  minOgaScore?: number
   requiresLinkedin?: boolean
   requiresWallet?: boolean
   deadlineHours?: number | null
@@ -147,10 +147,10 @@ export default function TaskCard({ task }: TaskCardProps) {
             <span className="tc-meta-item">Rank {task.rank}</span>
           </>
         )}
-        {task.minSorsaScore && task.minSorsaScore > 0 && (
+        {task.minOgaScore && task.minOgaScore > 0 && (
           <>
             <span className="tc-meta-divider">|</span>
-            <span className="tc-meta-item tc-meta-req">Req: Sorsa {task.minSorsaScore}+</span>
+            <span className="tc-meta-item tc-meta-req">Req: OgaScore {task.minOgaScore}+</span>
           </>
         )}
         {task.requiresLinkedin && (

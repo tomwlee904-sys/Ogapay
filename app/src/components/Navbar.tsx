@@ -59,6 +59,7 @@ export default function Navbar({ onMenuToggle }: NavbarProps) {
         <div className="nav-links">
           <a className="nav-link" href="/"><i className="ti ti-home" />Home</a>
           <a className="nav-link" href="/tasks"><i className="ti ti-checklist" />Tasks</a>
+          <a className="nav-link" href="/jobs"><i className="ti ti-briefcase" />Jobs</a>
           <a className="nav-link" href="/store"><i className="ti ti-building-store" />Store</a>
           <a className="nav-link" href="/communities"><i className="ti ti-users" />Communities</a>
           <a className="nav-link" href="/faq"><i className="ti ti-help-circle" />FAQ</a>

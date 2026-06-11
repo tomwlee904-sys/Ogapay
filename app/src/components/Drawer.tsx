@@ -35,9 +35,9 @@ export default function Drawer({ open, onClose }: DrawerProps) {
             <span className="oga-drawer-icon"><i className="ti ti-article" /></span>
             <span><strong>Blog</strong><small>Latest insights</small></span>
           </a>
-          <a className="oga-drawer-item" href="/vault" onClick={onClose}>
+          <a className="oga-drawer-item" href="/safe" onClick={onClose}>
             <span className="oga-drawer-icon"><i className="ti ti-vault" /></span>
-            <span><strong>Vault</strong><small>Secure storage</small></span>
+            <span><strong>Safe</strong><small>Secure storage</small></span>
           </a>
           <a className="oga-drawer-item" href="/faq" onClick={onClose}>
             <span className="oga-drawer-icon"><i className="ti ti-help-circle" /></span>
@@ -70,6 +70,9 @@ export default function Drawer({ open, onClose }: DrawerProps) {
           {/* Jobs accordion */}
           <DrawerGroup icon="ti ti-briefcase" label="Jobs" desc="Manage your tasks">
             <DrawerSub href="/job-monitor" label="Job Monitor" onClick={onClose} />
+            <DrawerSub href="/jobs" label="Browse Jobs" onClick={onClose} />
+            <DrawerSub href="/post-job" label="Post a Job" onClick={onClose} />
+            <DrawerSub href="/my-jobs" label="My Listings" onClick={onClose} />
           </DrawerGroup>
 
           {/* Store accordion */}
@@ -94,9 +97,9 @@ export default function Drawer({ open, onClose }: DrawerProps) {
             <span className="oga-drawer-icon"><i className="ti ti-article" /></span>
             <span><strong>Blog</strong><small>Latest insights</small></span>
           </a>
-          <a className="oga-drawer-item" href="/vault" onClick={onClose}>
+          <a className="oga-drawer-item" href="/safe" onClick={onClose}>
             <span className="oga-drawer-icon"><i className="ti ti-vault" /></span>
-            <span><strong>Vault</strong><small>Secure documents</small></span>
+            <span><strong>Safe</strong><small>Secure documents</small></span>
           </a>
           <a className="oga-drawer-item" href="/notifications" onClick={onClose}>
             <span className="oga-drawer-icon"><i className="ti ti-bell" /></span>

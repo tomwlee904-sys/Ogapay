@@ -20,12 +20,13 @@ export default function Sidebar() {
         <a className="sidebar-link" href="/campaigns"><i className="ti ti-megaphone" /> Campaigns</a>
         <a className="sidebar-link" href="/roadmap"><i className="ti ti-map-pin" /> Roadmap</a>
         <a className="sidebar-link" href="/manage-jobs"><i className="ti ti-briefcase-2" /> Manage Jobs</a>
+        <a className="sidebar-link" href="/my-jobs"><i className="ti ti-briefcase" /> My Job Listings</a>
         <a className="sidebar-link" href="/analytics"><i className="ti ti-chart-line" /> Analytics</a>
         <a className="sidebar-link" href="/support"><i className="ti ti-headset" /> Support</a>
 
         <div className="sidebar-section">Finance</div>
         <a className="sidebar-link" href="/wallet"><i className="ti ti-wallet" /> Wallet</a>
-        <a className="sidebar-link" href="/vault"><i className="ti ti-vault" /> Vault</a>
+        <a className="sidebar-link" href="/safe"><i className="ti ti-vault" /> Safe</a>
         <a className="sidebar-link" href="/referrals"><i className="ti ti-affiliate" /> Referrals</a>
         <a className="sidebar-link" href="/my-store"><i className="ti ti-building-store" /> My Store</a>
 

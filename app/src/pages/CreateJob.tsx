@@ -265,7 +265,7 @@ function ExtraRequirements({ value, onChange }) {
         <div style={{ flex: 1 }}>
           <span style={{ fontSize: 13, fontWeight: 700, color: C.text }}>Extra requirements </span>
           <span style={{ fontSize: 12, color: C.accent }}>(Requirement: Rank {value.minRank || 0})</span>
-          <div style={{ fontSize: 11, color: C.text3, marginTop: 2 }}>Seeker, verified X accounts, holdings, sorsa score, rank...</div>
+          <div style={{ fontSize: 11, color: C.text3, marginTop: 2 }}>Seeker, verified X accounts, holdings, oga score, rank...</div>
         </div>
         <span style={{ color: C.text3, transform: open ? "rotate(180deg)" : "none", transition: "transform 0.2s", display: "flex" }}>
           <IconChevronDown />
@@ -298,9 +298,9 @@ function ExtraRequirements({ value, onChange }) {
               style={{ width: "100%", border: `1px solid ${C.border}`, borderRadius: 8, padding: "8px 12px", fontSize: 13, color: C.text, outline: "none", fontFamily: "inherit", background: C.card }} />
           </div>
           <div>
-            <label style={{ fontSize: 12, fontWeight: 600, color: C.text2, display: "block", marginBottom: 5 }}>Min Sorsa Score (optional)</label>
-            <input type="number" min={0} max={100} value={value.minSorsa || ""}
-              onChange={e => onChange({ ...value, minSorsa: e.target.value })}
+            <label style={{ fontSize: 12, fontWeight: 600, color: C.text2, display: "block", marginBottom: 5 }}>Min OgaScore (optional)</label>
+            <input type="number" min={0} max={100} value={value.minOgaScore || ""}
+              onChange={e => onChange({ ...value, minOgaScore: e.target.value })}
               placeholder="e.g. 50"
               style={{ width: "100%", border: `1px solid ${C.border}`, borderRadius: 8, padding: "8px 12px", fontSize: 13, color: C.text, outline: "none", fontFamily: "inherit", background: C.card }} />
           </div>
@@ -445,7 +445,7 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }) {
   const [hideSubmissions, setHideSubmissions] = useState("No");
   const [watermarks, setWatermarks] = useState("No");
   const [screenshotProof, setScreenshotProof] = useState("No");
-  const [extraReqs, setExtraReqs] = useState({ seekerOnly: false, verifiedX: false, kycVerified: false, minRank: 0, minHoldings: "", minSorsa: "" });
+  const [extraReqs, setExtraReqs] = useState({ seekerOnly: false, verifiedX: false, kycVerified: false, minRank: 0, minHoldings: "", minOgaScore: "" });
   const [audience, setAudience] = useState("All");
   const [selectionTime, setSelectionTime] = useState("24h");
   const [category, setCategory] = useState("");

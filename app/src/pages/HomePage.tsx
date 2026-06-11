@@ -543,9 +543,7 @@ function HeroStatsCard() {
 
       {/* Footer */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, paddingTop: 12, borderTop: '1px solid var(--border)' }}>
-        <div style={{ width: 18, height: 18, background: 'var(--text)', borderRadius: 5, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-          <span style={{ color: 'var(--bg)', fontSize: 9, fontWeight: 900 }}>O</span>
-        </div>
+        <Logo size={20} />
         <span style={{ fontSize: 11, color: 'var(--text3)' }}>Powered by OgaPay Protocol</span>
       </div>
     </div>

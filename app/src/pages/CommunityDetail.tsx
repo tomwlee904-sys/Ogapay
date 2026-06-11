@@ -51,7 +51,9 @@ export default function CommunityDetail() {
   const [editForm, setEditForm] = useState({ name: '', description: '', category: '', accentColor: '' })
   const [editCoverFile, setEditCoverFile] = useState<File | null>(null)
   const [editCoverPreview, setEditCoverPreview] = useState<string | null>(null)
-  const isOwner = authUser && community?.owner && authUser.id === community.owner.id
+  const ownerId = typeof community?.owner === 'object' ? community?.owner?.id : community?.owner
+  const isOwner = !!authUser && !!ownerId && authUser.id === ownerId
+  const communityAvatar = community?.iconUrl || community?.logoUrl || community?.avatarImage || community?.avatarUrl || community?.image || null
 
   // Chat
   const [messages, setMessages] = useState<any[]>([])
@@ -69,9 +71,33 @@ export default function CommunityDetail() {
       description: community.description || '',
       category: community.category || '',
       accentColor: community.accentColor || '#7C3AED',
+      minRank: community.minRank || '',
+      minTasks: community.minTasks || '',
+      requireKyc: community.requireKyc || false,
     })
     setShowEditModal(true)
   }
+  const handleGenerateInviteCode = async () => {
+    try {
+      const res = await fetch(API_BASE + '/communities/' + community.id + '/invite-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      })
+      const json = await res.json()
+      if (json.success) {
+        setCommunity((prev: any) => ({ ...prev, inviteCode: json.data.inviteCode }))
+        setToast('Invite code generated!')
+        setTimeout(() => setToast(''), 2500)
+      }
+    } catch {}
+  }
+
+  const handleCopyInviteCode = () => {
+    navigator.clipboard?.writeText(community.inviteCode || '')
+    setToast('Invite code copied!')
+    setTimeout(() => setToast(''), 2500)
+  }
+
 
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -90,10 +116,16 @@ export default function CommunityDetail() {
           setCommunity((prev: any) => ({ ...prev, coverImage: coverUrl }))
         }
       }
+      // Build requirements from edit form
+      const editRequirements = []
+      if (editForm.minRank) editRequirements.push('Minimum rank: ' + editForm.minRank)
+      if (editForm.minTasks) editRequirements.push('Min tasks: ' + editForm.minTasks)
+      if (editForm.requireKyc) editRequirements.push('KYC verified')
+      const editPayload = { ...editForm, requirements: editRequirements }
       const res = await fetch(API_BASE + '/communities/' + community.id, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-        body: JSON.stringify(editForm),
+        body: JSON.stringify(editPayload),
       })
       const json = await res.json()
       if (json.success) {
@@ -270,6 +302,32 @@ export default function CommunityDetail() {
 
   const handleSendRequest = async () => {
     if (!token) return
+    // Validate requirements client-side
+    if (community.requirements?.length > 0) {
+      for (const req of community.requirements) {
+        if (req.startsWith('Minimum rank:')) {
+          const minRank = parseInt(req.split(':')[1].trim())
+          if ((authUser?.rank || 1) < minRank) {
+            setJoinError('You need at least Rank ' + minRank + ' to join this community. Your current rank is ' + (authUser?.rank || 1) + '.')
+            setSendingRequest(false)
+            return
+          }
+        }
+        if (req.startsWith('Min tasks:')) {
+          const minTasks = parseInt(req.split(':')[1].trim())
+          if ((authUser?.tasksCompleted || 0) < minTasks) {
+            setJoinError('You need to complete at least ' + minTasks + ' tasks to join. You have completed ' + (authUser?.tasksCompleted || 0) + '.')
+            setSendingRequest(false)
+            return
+          }
+        }
+        if (req === 'KYC verified' && authUser?.kycStatus !== 'VERIFIED') {
+          setJoinError('You need to complete KYC verification to join this community. Go to Profile \u2192 Settings \u2192 KYC.')
+          setSendingRequest(false)
+          return
+        }
+      }
+    }
     setSendingRequest(true)
     setJoinError('')
     try {
@@ -408,6 +466,7 @@ export default function CommunityDetail() {
         .cd-desc-label{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
       `}</style>
 
+      {!joinView && (
       <div className="cd-page">
         <button className="cd-back" onClick={() => navigate('/communities')}>
           <i className="ti ti-arrow-left" /> Communities
@@ -454,8 +513,8 @@ export default function CommunityDetail() {
               display: 'grid', placeItems: 'center',
               flexShrink: 0, position: 'relative',
             }}>
-              {community.iconUrl || community.logoUrl
-                ? <img src={community.iconUrl || community.logoUrl} alt="" style={{width:'100%',height:'100%',objectFit:'cover'}} />
+              {communityAvatar
+                ? <img src={communityAvatar} alt="" style={{width:'100%',height:'100%',objectFit:'cover'}} />
                 : <span style={{fontSize:26,fontWeight:900,color:'#fff'}}>{community.name?.slice(0,2).toUpperCase()}</span>
               }
               {isOwner && (
@@ -710,6 +769,7 @@ export default function CommunityDetail() {
           </div>
         )}
       </div>
+      )}
 
       {joinView && (
         <div className="cd-page">
@@ -717,7 +777,7 @@ export default function CommunityDetail() {
             <button className="cd-back" onClick={() => setJoinView(false)} style={{ marginBottom: 0 }}>
               <i className="ti ti-arrow-left" /> Back to Community
             </button>
-            <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>👤 Request to Join Community</span>
+            <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>Request to Join Community</span>
           </div>
 
           {/* Invite code box */}
@@ -754,8 +814,11 @@ export default function CommunityDetail() {
             )}
             <div style={{ fontSize: 11, fontWeight: 700, color: '#888', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Requirements</div>
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-              <span style={{ background: '#111318', border: '1px solid #2a2d35', borderRadius: 999, padding: '4px 10px', fontSize: 11, color: '#aaa' }}>Minimum rank: 1</span>
-              <span style={{ background: '#111318', border: '1px solid #2a2d35', borderRadius: 999, padding: '4px 10px', fontSize: 11, color: '#aaa' }}>Sorsa &gt; 25</span>
+              {(community.requirements || []).length > 0 ? (community.requirements || []).map((r: string, idx: number) => (
+                <span key={idx} style={{ background: '#111318', border: '1px solid #2a2d35', borderRadius: 999, padding: '4px 10px', fontSize: 11, color: '#aaa' }}>{r}</span>
+              )) : (
+                <span style={{ fontSize: 11, color: '#666' }}>No specific requirements</span>
+              )}
             </div>
             {joinError && (
               <div style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 8, padding: '8px 12px', fontSize: 12, color: '#ef4444', marginTop: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -783,7 +846,7 @@ export default function CommunityDetail() {
               {joinAttachments.map((f, i) => (
                 <div key={i} style={{ width: 60, height: 60, borderRadius: 8, overflow: 'hidden', position: 'relative', border: '1px solid #2a2d35' }}>
                   <img loading="lazy" src={URL.createObjectURL(f)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
-                  <div onClick={() => removeAttachment(i)} style={{ position: 'absolute', top: 2, right: 2, width: 18, height: 18, borderRadius: '50%', background: 'rgba(0,0,0,0.6)', color: '#fff', display: 'grid', placeItems: 'center', cursor: 'pointer', fontSize: 10, lineHeight: 1 }}>✕</div>
+                  <div onClick={() => removeAttachment(i)} style={{ position: 'absolute', top: 2, right: 2, width: 18, height: 18, borderRadius: '50%', background: 'rgba(0,0,0,0.6)', color: '#fff', display: 'grid', placeItems: 'center', cursor: 'pointer', fontSize: 10, lineHeight: 1 }}>×</div>
                 </div>
               ))}
             </div>
@@ -799,11 +862,11 @@ export default function CommunityDetail() {
           <div style={{ marginTop: 16 }}>
             <button onClick={handleSendRequest} disabled={sendingRequest}
               style={{ width: '100%', background: '#191C6B', color: '#fff', border: 'none', borderRadius: 12, padding: '14px 0', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', marginBottom: 8, opacity: sendingRequest ? 0.6 : 1 }}>
-              {sendingRequest ? <>Sending...</> : <>Send Request <span style={{ marginLeft: 4 }}>→</span></>}
+              {sendingRequest ? <>Sending...</> : <>Send Request </>}
             </button>
             <button onClick={() => setJoinView(false)}
               style={{ width: '100%', background: 'transparent', color: '#888', border: '1.5px solid #2a2d35', borderRadius: 12, padding: '12px 0', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
-              ✕ Cancel
+              × Cancel
             </button>
             <p style={{ fontSize: 11, color: '#666', lineHeight: 1.5, marginTop: 12, textAlign: 'center' }}>
               If a community has an entry task, only request to join after you complete the task and meet all requirements. <span style={{ color: '#f59e0b' }}>Spamming community requests can lead to warnings or account blocks.</span>
@@ -900,6 +963,56 @@ export default function CommunityDetail() {
               }}>
                 {editing ? <>Saving...</> : <>Save Changes</>}
               </button>
+          <div style={{marginTop:16,paddingTop:16,borderTop:'1px solid var(--border)'}}>
+            <label style={{display:'block',fontSize:12,fontWeight:700,color:'var(--text2)',marginBottom:8}}>Entry Requirements</label>
+            <div style={{display:'flex',flexDirection:'column',gap:8}}>
+              <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'10px 14px',border:'1.5px solid var(--border)',borderRadius:10,background:'var(--bg)'}}>
+                <span style={{fontSize:13}}>Minimum OgaPay Rank</span>
+                <select value={editForm.minRank || ''} onChange={e => setEditForm(f => ({...f, minRank: e.target.value}))}
+                  style={{border:'1px solid var(--border)',borderRadius:6,padding:'4px 8px',background:'var(--card)',color:'var(--text)',fontSize:12}}>
+                  <option value="">None</option>
+                  <option value="1">Rank 1+</option>
+                  <option value="2">Rank 2+</option>
+                  <option value="3">Rank 3+</option>
+                  <option value="4">Rank 4+</option>
+                  <option value="5">Rank 5+</option>
+                </select>
+              </div>
+              <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'10px 14px',border:'1.5px solid var(--border)',borderRadius:10,background:'var(--bg)'}}>
+                <span style={{fontSize:13}}>Minimum Tasks Completed</span>
+                <select value={editForm.minTasks || ''} onChange={e => setEditForm(f => ({...f, minTasks: e.target.value}))}
+                  style={{border:'1px solid var(--border)',borderRadius:6,padding:'4px 8px',background:'var(--card)',color:'var(--text)',fontSize:12}}>
+                  <option value="">None</option>
+                  <option value="5">5+ tasks</option>
+                  <option value="10">10+ tasks</option>
+                  <option value="25">25+ tasks</option>
+                  <option value="50">50+ tasks</option>
+                </select>
+              </div>
+              <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'10px 14px',border:'1.5px solid var(--border)',borderRadius:10,background:'var(--bg)'}}>
+                <span style={{fontSize:13}}>KYC Verified required</span>
+                <input type="checkbox" checked={editForm.requireKyc || false} onChange={e => setEditForm(f => ({...f, requireKyc: e.target.checked}))}
+                  style={{width:18,height:18,cursor:'pointer'}} />
+              </div>
+            </div>
+          </div>          {isOwner && (
+            <div style={{marginTop:16,paddingTop:16,borderTop:'1px solid var(--border)'}}>
+              <label style={{fontSize:12,fontWeight:700,color:'var(--text2)',display:'block',marginBottom:6}}>
+                Invite Code
+              </label>
+              <div style={{display:'flex',gap:8}}>
+                <input readOnly value={community.inviteCode || 'No code generated'}
+                  style={{flex:1,padding:'8px 12px',border:'1.5px solid var(--border)',borderRadius:9,background:'var(--bg2)',color:'var(--text)',fontSize:13,fontFamily:'monospace'}} />
+                <button onClick={handleCopyInviteCode} style={{height:38,padding:'0 14px',borderRadius:9,border:'1px solid var(--border)',background:'var(--bg)',fontSize:12,fontWeight:700,cursor:'pointer',fontFamily:'inherit'}}>
+                  Copy
+                </button>
+                <button onClick={handleGenerateInviteCode} style={{height:38,padding:'0 14px',borderRadius:9,background:'#191C6B',color:'#fff',border:'none',fontSize:12,fontWeight:700,cursor:'pointer',fontFamily:'inherit'}}>
+                  Generate
+                </button>
+              </div>
+              <p style={{fontSize:11,color:'var(--text3)',marginTop:6}}>Share this code with people you want to let in instantly without approval.</p>
+            </div>
+          )}
             </form>
           </div>
         </div>

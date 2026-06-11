@@ -33,6 +33,7 @@ const CommunityDetail = lazy(() => import('./pages/CommunityDetail'))
 const FAQ = lazy(() => import('./pages/FAQ'))
 const Support = lazy(() => import('./pages/Support'))
 const Vault = lazy(() => import('./pages/Vault'))
+const Safe = lazy(() => import('./pages/Safe'))
 const NotFound = lazy(() => import('./pages/NotFound'))
 const AuthCallback = lazy(() => import('./pages/AuthCallback'))
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword'))
@@ -59,6 +60,14 @@ const Writer = lazy(() => import('./pages/Writer'))
 const Analytics = lazy(() => import('./pages/Analytics'))
 const Bookmarks = lazy(() => import('./pages/Bookmarks'))
 const ManageJobs = lazy(() => import('./pages/ManageJobs'))
+const PostJobPage = lazy(() => import('./pages/Jobs/PostJobPage'))
+
+const JobsListingPage = lazy(() => import('./pages/Jobs/JobsListingPage'))
+
+const JobDetailPage = lazy(() => import('./pages/Jobs/JobDetailPage'))
+
+const MyJobListingsPage = lazy(() => import('./pages/Jobs/MyJobListingsPage'))
+
 const UserProfile = lazy(() => import('./pages/UserProfile'))
 const Admin = lazy(() => import('./pages/Admin'))
 const WorkspacePortal = lazy(() => import('./pages/WorkspacePortal'))
@@ -151,6 +160,10 @@ export default function App() {
             <Route path="/tasks" element={<Tasks />} />
 <Route path="/tasks/:id/submit" element={<AuthGuard><SubmissionPage /></AuthGuard>} />
             <Route path="/tasks/:id/submissions" element={<AuthGuard><JobDetail /></AuthGuard>} />
+            <Route path="/jobs/:id" element={<JobDetailPage />} />
+
+            <Route path="/jobs" element={<JobsListingPage />} />
+
             <Route path="/tasks/:id" element={<JobDetail />} />
             <Route path="/store/:id" element={<StoreProduct />} />
             <Route path="/store" element={<Store />} />
@@ -160,6 +173,7 @@ export default function App() {
             <Route path="/faq" element={<FAQ />} />
             <Route path="/support" element={<Support />} />
             <Route path="/vault" element={<Vault />} />
+            <Route path="/safe" element={<ProtectedRoute><Safe /></ProtectedRoute>} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/leaderboard" element={<Leaderboard />} />
@@ -181,6 +195,10 @@ export default function App() {
             <Route path="/my-tasks" element={<AuthGuard><MyTasks /></AuthGuard>} />
             <Route path="/my-store" element={<AuthGuard><MyStore /></AuthGuard>} />
             <Route path="/campaigns" element={<AuthGuard><Campaigns /></AuthGuard>} />
+            <Route path="/post-job" element={<AuthGuard><PostJobPage /></AuthGuard>} />
+
+            <Route path="/my-jobs" element={<AuthGuard><MyJobListingsPage /></AuthGuard>} />
+
             <Route path="/job-monitor" element={<AuthGuard><JobMonitor /></AuthGuard>} />
             <Route path="/manage-jobs" element={<AuthGuard><ManageJobs /></AuthGuard>} />
             <Route path="/edit-profile" element={<AuthGuard><EditProfile /></AuthGuard>} />

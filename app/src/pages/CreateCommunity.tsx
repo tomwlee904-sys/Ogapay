@@ -22,6 +22,9 @@ export default function CreateCommunity() {
     twitter: '',
     telegram: '',
     discord: '',
+    minRank: '',
+    minTasks: '',
+    requireKyc: false,
   })
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -45,13 +48,19 @@ export default function CreateCommunity() {
 
     setSubmitting(true)
     try {
+      // Build requirements array
+      const requirements = []
+      if (form.minRank) requirements.push('Minimum rank: ' + form.minRank)
+      if (form.minTasks) requirements.push('Min tasks: ' + form.minTasks)
+      if (form.requireKyc) requirements.push('KYC verified')
+      const body = { ...form, requirements }
       const res = await fetch(API_BASE + '/communities', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer ' + token,
         },
-        body: JSON.stringify(form),
+        body: JSON.stringify(body),
       })
       const json = await res.json()
       if (!res.ok) throw new Error(json.error || json.message || 'Failed to create community')
@@ -216,6 +225,42 @@ export default function CreateCommunity() {
               </div>
             </div>
 
+            <div className="cc-field">
+              <label>Entry Requirements (optional)</label>
+              <p style={{fontSize:12,color:'var(--text3)',marginTop:-4,marginBottom:8}}>
+                Set conditions users must meet to join this community.
+              </p>
+              <div style={{display:'flex',flexDirection:'column',gap:8}}>
+                <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'10px 14px',border:'1.5px solid var(--border)',borderRadius:10,background:'var(--bg)'}}>
+                  <span style={{fontSize:13}}>Minimum OgaPay Rank</span>
+                  <select value={form.minRank} onChange={e => update('minRank', e.target.value)}
+                    style={{border:'1px solid var(--border)',borderRadius:6,padding:'4px 8px',background:'var(--card)',color:'var(--text)',fontSize:12}}>
+                    <option value="">None</option>
+                    <option value="1">Rank 1+</option>
+                    <option value="2">Rank 2+</option>
+                    <option value="3">Rank 3+</option>
+                    <option value="4">Rank 4+</option>
+                    <option value="5">Rank 5+</option>
+                  </select>
+                </div>
+                <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'10px 14px',border:'1.5px solid var(--border)',borderRadius:10,background:'var(--bg)'}}>
+                  <span style={{fontSize:13}}>Minimum Tasks Completed</span>
+                  <select value={form.minTasks} onChange={e => update('minTasks', e.target.value)}
+                    style={{border:'1px solid var(--border)',borderRadius:6,padding:'4px 8px',background:'var(--card)',color:'var(--text)',fontSize:12}}>
+                    <option value="">None</option>
+                    <option value="5">5+ tasks</option>
+                    <option value="10">10+ tasks</option>
+                    <option value="25">25+ tasks</option>
+                    <option value="50">50+ tasks</option>
+                  </select>
+                </div>
+                <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'10px 14px',border:'1.5px solid var(--border)',borderRadius:10,background:'var(--bg)'}}>
+                  <span style={{fontSize:13}}>KYC Verified required</span>
+                  <input type="checkbox" checked={form.requireKyc} onChange={e => update('requireKyc', e.target.checked)}
+                    style={{width:18,height:18,cursor:'pointer'}} />
+                </div>
+              </div>
+            </div>
             <button type="submit" className="cc-submit" disabled={submitting}>
               {submitting ? <><i className="ti ti-loader" style={{ animation: 'spin 1s linear infinite' }} /> Creating...</> : <><i className="ti ti-users" /> Create Community</>}
             </button>

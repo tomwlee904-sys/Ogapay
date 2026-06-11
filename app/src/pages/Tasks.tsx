@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useParams, useLocation, useSearchParams } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { apiRequest } from '../lib/api'
+import { supabase } from '../lib/supabaseClient'
 import { SkeletonPage, injectSkeletonStyles } from "../components/SkeletonLoader"
 import TaskCard from '../components/TaskCard'
 
@@ -68,7 +69,7 @@ async function fetchTasks(category?: string) {
   }
 }
 
-const jobFilters = ['All', 'Trending', 'New', 'Social', 'Content', 'Testing', 'Design', 'Video', 'Data', 'Research', 'Development']
+const jobFilters = ['All', 'Trending', 'New', 'Social', 'Content', 'Testing', 'Design', 'Video', 'Data', 'Research', 'Development', 'Jobs & Hiring']
 
 const formatAddress = (name: string) => {
   const initials = name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
@@ -344,6 +345,8 @@ export default function Tasks() {
   const { id } = useParams()
   const [searchParams] = useSearchParams()
   const [jobs, setJobs] = useState<any[]>([])
+  const [jobListings, setJobListings] = useState<any[]>([])
+  const [jobListingsLoading, setJobListingsLoading] = useState(false)
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const initialCategory = searchParams.get('category') || 'All'
@@ -392,9 +395,29 @@ export default function Tasks() {
     }
   }, [id, jobs])
 
+  const fetchJobListings = async () => {
+    setJobListingsLoading(true)
+    try {
+      const { data, error } = await supabase
+        .from('job_listings')
+        .select('*')
+        .eq('status', 'active')
+        .order('created_at', { ascending: false })
+      if (!error && data) setJobListings(data)
+    } catch {}
+    setJobListingsLoading(false)
+  }
+
+  // Fetch job listings when filter is 'Jobs & Hiring'
+  useEffect(() => {
+    if (filter === 'Jobs & Hiring') {
+      fetchJobListings()
+    }
+  }, [filter])
+
   const filtered = jobs.filter(job => {
     const matchSearch = search === '' || job.title.toLowerCase().includes(search.toLowerCase()) || job.description.toLowerCase().includes(search.toLowerCase())
-    const matchFilter = filter === 'All' || filter === 'Trending' || filter === 'New' || job.category === filter
+    const matchFilter = filter === 'All' || filter === 'Trending' || filter === 'New' || filter === 'Jobs & Hiring' || job.category === filter
     return matchSearch && matchFilter
   })
 

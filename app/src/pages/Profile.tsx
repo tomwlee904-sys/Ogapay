@@ -945,7 +945,7 @@ export default function Profile() {
                 ) : (
                   <>
                     <StatRow label="Rank" val={profileData?.workerProfile?.level || 'Beginner'} />
-                    <StatRow label="Sorsa Score" val={profileData?.workerProfile?.reputationScore?.toFixed(1) || '0.0'} info />
+                    <StatRow label="OgaScore" val={profileData?.workerProfile?.reputationScore?.toFixed(1) || '0.0'} info />
                     <StatRow label="Tasks Completed" val={profileData?.workerProfile?.tasksCompleted ?? 0} />
                     <StatRow label="Success Rate" val={profileData?.workerProfile?.successRate ? profileData.workerProfile.successRate + '%' : '0%'} />
                     <StatRow label="Total Earned" val={profileData?.workerProfile?.totalEarned ? fmt(Number(profileData.workerProfile.totalEarned), "NGN") : fmt(0, "NGN")} />
