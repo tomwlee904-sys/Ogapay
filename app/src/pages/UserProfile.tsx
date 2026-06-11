@@ -14,6 +14,7 @@ export default function UserProfile() {
   const [profile, setProfile] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [blogs, setBlogs] = useState<any[]>([])
+  const [userCommunities, setUserCommunities] = useState<any[]>([])
 
   useEffect(() => {
     if (!username) return
@@ -34,6 +35,16 @@ export default function UserProfile() {
       .then(data => {
         if (data.success && data.data) {
           setBlogs(data.data)
+        }
+      })
+      .catch(() => {})
+
+    // Fetch user communities
+    fetch(`${API_BASE}/users/public/${username}/communities`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.success && Array.isArray(data.data)) {
+          setUserCommunities(data.data)
         }
       })
       .catch(() => {})
@@ -126,6 +137,36 @@ export default function UserProfile() {
                       onClick={() => navigate(`/blog`)}>
                       <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text)" }}>{post.title}</div>
                       <div style={{ fontSize: 12, color: "var(--text3)", marginTop: 4 }}>{post.date || ""}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Communities */}
+            <div style={{ marginTop: 24 }}>
+              <h2 style={{ fontSize: 16, fontWeight: 700, marginBottom: 14 }}>Communities</h2>
+              {userCommunities.length === 0 ? (
+                <p style={{ fontSize: 13, color: 'var(--text3)', textAlign: 'center', padding: '24px' }}>No communities yet.</p>
+              ) : (
+                <div style={{ display: 'grid', gap: 10 }}>
+                  {userCommunities.map((c: any) => (
+                    <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 12, cursor: 'pointer' }}
+                      onClick={() => navigate('/communities/' + c.id)}>
+                      <div style={{ width: 44, height: 44, borderRadius: 10, background: c.accentColor || '#191C6B', display: 'grid', placeItems: 'center', fontSize: 14, fontWeight: 800, color: '#fff', flexShrink: 0, overflow: 'hidden' }}>
+                        {c.coverImage ? <img src={c.coverImage} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : c.initials || c.name?.slice(0, 2)?.toUpperCase()}
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                          {c.name}
+                          {c.role === 'OWNER' && <span style={{ fontSize: 9, fontWeight: 700, color: '#fff', background: '#191C6B', padding: '2px 6px', borderRadius: 999, letterSpacing: '0.03em' }}>OWNER</span>}
+                        </div>
+                        <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 2 }}>{c.memberCount} members</div>
+                      </div>
+                      <button style={{ fontSize: 12, color: 'var(--accent)', background: 'transparent', border: '1px solid var(--border)', borderRadius: 8, padding: '6px 12px', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}
+                        onClick={e => { e.stopPropagation(); navigate('/communities/' + c.id) }}>
+                        View
+                      </button>
                     </div>
                   ))}
                 </div>

@@ -19,6 +19,13 @@ export default function CommunityDetail() {
   const [isMember, setIsMember] = useState(false)
   const [hasRequested, setHasRequested] = useState(false)
   const [joining, setJoining] = useState(false)
+  const [joinView, setJoinView] = useState(false)
+  const [inviteCode, setInviteCode] = useState('')
+  const [joinMessage, setJoinMessage] = useState('')
+  const [joinAttachments, setJoinAttachments] = useState<File[]>([])
+  const [joinError, setJoinError] = useState('')
+  const [sendingRequest, setSendingRequest] = useState(false)
+  const [uploadSuccess, setUploadSuccess] = useState(false)
 
   // Leaderboard
   const [leaderboard, setLeaderboard] = useState<any[]>([])
@@ -40,6 +47,8 @@ export default function CommunityDetail() {
   const [showEditModal, setShowEditModal] = useState(false)
   const [editing, setEditing] = useState(false)
   const [editForm, setEditForm] = useState({ name: '', description: '', category: '', accentColor: '' })
+  const [editCoverFile, setEditCoverFile] = useState<File | null>(null)
+  const [editCoverPreview, setEditCoverPreview] = useState<string | null>(null)
   const isOwner = authUser && community?.owner && authUser.id === community.owner.id
 
   // Chat
@@ -67,6 +76,18 @@ export default function CommunityDetail() {
     if (!community || !editForm.name.trim()) return
     setEditing(true)
     try {
+      // Upload cover first if changed
+      if (editCoverFile) {
+        const coverUrl = await uploadImage(editCoverFile, 'community-covers')
+        if (coverUrl) {
+          await fetch(API_BASE + '/communities/' + community.id + '/cover', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+            body: JSON.stringify({ coverUrl }),
+          })
+          setCommunity((prev: any) => ({ ...prev, coverImage: coverUrl }))
+        }
+      }
       const res = await fetch(API_BASE + '/communities/' + community.id, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
@@ -100,6 +121,8 @@ export default function CommunityDetail() {
         if (res.ok) {
           const json = await res.json()
           setCommunity((prev: any) => ({ ...prev, coverImage: json.data?.coverImage || url }))
+          setUploadSuccess(true)
+          setTimeout(() => setUploadSuccess(false), 2000)
         }
       }
     } catch {}
@@ -196,22 +219,61 @@ export default function CommunityDetail() {
 
   const handleRequestJoin = async () => {
     if (!token) { navigate('/login'); return }
+    setJoinView(true)
+  }
+
+  const handleUseInviteCode = async () => {
+    if (!inviteCode.trim() || !token) return
     setJoining(true)
+    setJoinError('')
     try {
       const res = await fetch(API_BASE + '/communities/' + id + '/join', {
-        method: 'POST', headers: authHeaders,
+        method: 'POST', headers: { ...authHeaders, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ inviteCode: inviteCode.trim() }),
       })
       const json = await res.json()
       if (json.success) {
-        if (community?.isPublic) {
-          setIsMember(true)
-          setCommunity((prev: any) => ({ ...prev, memberCount: (prev?.memberCount || 0) + 1 }))
-        } else {
-          setHasRequested(true)
-        }
+        setIsMember(true)
+        setCommunity((prev: any) => ({ ...prev, memberCount: (prev?.memberCount || 0) + 1 }))
+        setJoinView(false)
+      } else {
+        setJoinError(json.message || 'Failed to join')
       }
     } catch {}
     setJoining(false)
+  }
+
+  const handleSendRequest = async () => {
+    if (!token) return
+    setSendingRequest(true)
+    setJoinError('')
+    try {
+      const formData = new FormData()
+      formData.append('message', joinMessage)
+      joinAttachments.forEach(f => formData.append('attachments', f))
+      const res = await fetch(API_BASE + '/communities/' + id + '/request', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + token },
+        body: formData,
+      })
+      const json = await res.json()
+      if (json.success) {
+        setHasRequested(true)
+        setJoinView(false)
+      } else {
+        setJoinError(json.message || 'Failed to send join request')
+      }
+    } catch {}
+    setSendingRequest(false)
+  }
+
+  const addAttachment = (file: File) => {
+    if (joinAttachments.length >= 3) return
+    setJoinAttachments(prev => [...prev, file])
+  }
+
+  const removeAttachment = (index: number) => {
+    setJoinAttachments(prev => prev.filter((_, i) => i !== index))
   }
 
   if (loading) {
@@ -322,6 +384,31 @@ export default function CommunityDetail() {
 
         {/* Header */}
         <div className="cd-header">
+          {/* Cover image with overlay */}
+          {community.coverImage && (
+            <div style={{ width: '100%', height: 140, borderRadius: 10, overflow: 'hidden', position: 'relative', marginBottom: 0 }}>
+              <img src={community.coverImage} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
+              {isOwner && (
+                <>
+                  <label htmlFor="cover-upload-input" style={{
+                    position: 'absolute', bottom: 8, left: 8,
+                    background: 'rgba(0,0,0,0.55)', color: '#fff', fontSize: 11,
+                    padding: '5px 10px', borderRadius: 999, cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', gap: 5, fontWeight: 600,
+                    backdropFilter: 'blur(4px)', border: '1px solid rgba(255,255,255,0.1)',
+                  }}>
+                    <span>📷</span> Change Cover
+                  </label>
+                  <input id="cover-upload-input" type="file" accept="image/*" onChange={handleCoverUpload} hidden />
+                </>
+              )}
+            </div>
+          )}
+          {uploadSuccess && (
+            <div style={{ background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.3)', borderRadius: 10, padding: '8px 14px', fontSize: 12, color: '#22c55e', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 0 }}>
+              <i className="ti ti-circle-check" style={{ fontSize: 14 }} /> Cover photo updated
+            </div>
+          )}
           <div className="cd-h-top">
             <div className="cd-h-left">
               <div className="cd-avatar" style={{ background: community.accentColor || '#191C6B', display: 'grid', placeItems: 'center', fontSize: 22, fontWeight: 800, color: '#fff' }}>
@@ -359,9 +446,9 @@ export default function CommunityDetail() {
           </div>
 
           {!isMember ? (
-            <button className="cd-join" onClick={handleRequestJoin} disabled={joining || hasRequested}>
+            <button className="cd-join" onClick={handleRequestJoin} disabled={hasRequested}>
               <i className="ti ti-user-plus" />
-              {hasRequested ? 'Request Sent' : joining ? 'Joining...' : community.isPublic ? 'Join Community' : 'Request to Join'}
+              {hasRequested ? 'Request Sent' : community.isPublic ? 'Join Community' : 'Request to Join'}
             </button>
           ) : (
             <span className="cd-member-badge"><i className="ti ti-check" /> You are a member</span>
@@ -568,6 +655,107 @@ export default function CommunityDetail() {
         )}
       </div>
 
+      {joinView && (
+        <div className="cd-page">
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+            <button className="cd-back" onClick={() => setJoinView(false)} style={{ marginBottom: 0 }}>
+              <i className="ti ti-arrow-left" /> Back to Community
+            </button>
+            <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>👤 Request to Join Community</span>
+          </div>
+
+          {/* Invite code box */}
+          <div style={{ background: '#0d0f14', border: '1px solid #1e2028', borderRadius: 12, padding: 16, marginBottom: 12 }}>
+            <label style={{ fontSize: 12, fontWeight: 700, color: '#ccc', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
+              <i className="ti ti-calendar" style={{ fontSize: 14 }} /> Use an invite code
+            </label>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <input type="text" placeholder="Enter invite code" value={inviteCode} onChange={e => setInviteCode(e.target.value)}
+                style={{ flex: 1, background: '#111318', border: '1px solid #2a2d35', borderRadius: 10, color: '#fff', fontSize: 13, padding: '10px 14px', outline: 'none', fontFamily: 'inherit' }} />
+              <button onClick={handleUseInviteCode} disabled={joining || !inviteCode.trim()}
+                style={{ background: '#191C6B', color: '#fff', border: 'none', borderRadius: 10, padding: '10px 16px', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap', opacity: joining ? 0.6 : 1 }}>
+                {joining ? '...' : 'Use Code'}
+              </button>
+            </div>
+            {joinError && <div style={{ color: '#ef4444', fontSize: 12, marginTop: 8 }}>{joinError}</div>}
+          </div>
+
+          {/* OR divider */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '16px 0' }}>
+            <div style={{ flex: 1, height: 1, background: '#2a2d35' }} />
+            <span style={{ fontSize: 11, color: '#666', fontWeight: 600 }}>OR</span>
+            <div style={{ flex: 1, height: 1, background: '#2a2d35' }} />
+          </div>
+
+          {/* Entry Task card */}
+          <div style={{ background: '#0d0f14', border: '1px solid #1e2028', borderRadius: 12, padding: 16, marginBottom: 12 }}>
+            <div style={{ fontSize: 14, fontWeight: 700, color: '#fff', marginBottom: 4 }}>{community.name}</div>
+            <div style={{ fontSize: 12, color: '#888', marginBottom: 12, lineHeight: 1.5 }}>Complete the entry task and meet requirements to join this community.</div>
+            {community.coverImage && (
+              <div style={{ width: '100%', height: 120, borderRadius: 8, overflow: 'hidden', marginBottom: 12 }}>
+                <img src={community.coverImage} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
+              </div>
+            )}
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#888', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Requirements</div>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              <span style={{ background: '#111318', border: '1px solid #2a2d35', borderRadius: 999, padding: '4px 10px', fontSize: 11, color: '#aaa' }}>Minimum rank: 1</span>
+              <span style={{ background: '#111318', border: '1px solid #2a2d35', borderRadius: 999, padding: '4px 10px', fontSize: 11, color: '#aaa' }}>Sorsa &gt; 25</span>
+            </div>
+            {joinError && (
+              <div style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 8, padding: '8px 12px', fontSize: 12, color: '#ef4444', marginTop: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
+                <i className="ti ti-alert-triangle" style={{ fontSize: 14 }} /> {joinError}
+              </div>
+            )}
+          </div>
+
+          {/* Message textarea */}
+          <div style={{ background: '#0d0f14', border: '1px solid #1e2028', borderRadius: 12, padding: 16, marginBottom: 12 }}>
+            <label style={{ fontSize: 12, fontWeight: 700, color: '#ccc', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
+              <i className="ti ti-message" style={{ fontSize: 14 }} /> Message (optional)
+            </label>
+            <textarea placeholder="Tell the community why you'd like to join..." maxLength={250} value={joinMessage} onChange={e => setJoinMessage(e.target.value)}
+              style={{ width: '100%', background: '#111318', border: '1px solid #2a2d35', borderRadius: 10, color: '#fff', fontSize: 13, padding: '10px 14px', outline: 'none', minHeight: 80, resize: 'vertical', fontFamily: 'inherit', boxSizing: 'border-box' }} />
+            <div style={{ textAlign: 'right', fontSize: 11, color: '#666', marginTop: 4 }}>{joinMessage.length}/250</div>
+          </div>
+
+          {/* Attachments section */}
+          <div style={{ background: '#0d0f14', border: '1px solid #1e2028', borderRadius: 12, padding: 16, marginBottom: 12 }}>
+            <label style={{ fontSize: 12, fontWeight: 700, color: '#ccc', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
+              <i className="ti ti-paperclip" style={{ fontSize: 14 }} /> Your Attachments (max 3)
+            </label>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 8 }}>
+              {joinAttachments.map((f, i) => (
+                <div key={i} style={{ width: 60, height: 60, borderRadius: 8, overflow: 'hidden', position: 'relative', border: '1px solid #2a2d35' }}>
+                  <img src={URL.createObjectURL(f)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
+                  <div onClick={() => removeAttachment(i)} style={{ position: 'absolute', top: 2, right: 2, width: 18, height: 18, borderRadius: '50%', background: 'rgba(0,0,0,0.6)', color: '#fff', display: 'grid', placeItems: 'center', cursor: 'pointer', fontSize: 10, lineHeight: 1 }}>✕</div>
+                </div>
+              ))}
+            </div>
+            {joinAttachments.length < 3 && (
+              <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: '#111318', border: '1px solid #2a2d35', borderRadius: 8, padding: '8px 14px', fontSize: 12, color: '#aaa', cursor: 'pointer', fontFamily: 'inherit' }}>
+                <i className="ti ti-upload" /> Upload
+                <input type="file" accept="image/*" hidden onChange={e => { const f = e.target.files?.[0]; if (f) addAttachment(f); e.target.value = '' }} />
+              </label>
+            )}
+          </div>
+
+          {/* Bottom action bar */}
+          <div style={{ marginTop: 16 }}>
+            <button onClick={handleSendRequest} disabled={sendingRequest}
+              style={{ width: '100%', background: '#191C6B', color: '#fff', border: 'none', borderRadius: 12, padding: '14px 0', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', marginBottom: 8, opacity: sendingRequest ? 0.6 : 1 }}>
+              {sendingRequest ? <>Sending...</> : <>Send Request <span style={{ marginLeft: 4 }}>→</span></>}
+            </button>
+            <button onClick={() => setJoinView(false)}
+              style={{ width: '100%', background: 'transparent', color: '#888', border: '1.5px solid #2a2d35', borderRadius: 12, padding: '12px 0', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+              ✕ Cancel
+            </button>
+            <p style={{ fontSize: 11, color: '#666', lineHeight: 1.5, marginTop: 12, textAlign: 'center' }}>
+              If a community has an entry task, only request to join after you complete the task and meet all requirements. <span style={{ color: '#f59e0b' }}>Spamming community requests can lead to warnings or account blocks.</span>
+            </p>
+          </div>
+        </div>
+      )}
+
       {showEditModal && (
         <div style={{
           position: 'fixed', inset: 0, zIndex: 1000,
@@ -587,6 +775,40 @@ export default function CommunityDetail() {
               </button>
             </div>
             <form onSubmit={handleEditSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: 'var(--text2)', marginBottom: 6 }}>Cover Image</label>
+                <input type="file" accept="image/*" style={{ display: 'none' }} id="edit-cover-input" onChange={e => {
+                  const file = e.target.files?.[0] || null
+                  setEditCoverFile(file)
+                  setEditCoverPreview(file ? URL.createObjectURL(file) : null)
+                }} />
+                <div onClick={() => document.getElementById('edit-cover-input')?.click()} style={{
+                  width: '100%', height: 140, borderRadius: 10,
+                  border: '1.5px dashed var(--border)', background: 'var(--bg)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  cursor: 'pointer', overflow: 'hidden', position: 'relative', marginBottom: 4,
+                }}>
+                  {editCoverPreview ? (
+                    <img src={editCoverPreview} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  ) : community.coverImage ? (
+                    <img src={community.coverImage} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, color: 'var(--text3)', fontSize: 13 }}>
+                      <i className="ti ti-photo" style={{ fontSize: 28 }} />
+                      <span>Click to upload cover image</span>
+                    </div>
+                  )}
+                  {(editCoverPreview || community.coverImage) && (
+                    <div onClick={e => { e.stopPropagation(); setEditCoverFile(null); setEditCoverPreview(null); const inp = document.getElementById('edit-cover-input') as HTMLInputElement; if (inp) inp.value = '' }} style={{
+                      position: 'absolute', top: 8, right: 8, width: 28, height: 28, borderRadius: '50%',
+                      background: 'rgba(0,0,0,.5)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      cursor: 'pointer', fontSize: 16,
+                    }}>
+                      <i className="ti ti-x" />
+                    </div>
+                  )}
+                </div>
+              </div>
               <div>
                 <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: 'var(--text2)', marginBottom: 6 }}>Name</label>
                 <input type="text" value={editForm.name} onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))}
