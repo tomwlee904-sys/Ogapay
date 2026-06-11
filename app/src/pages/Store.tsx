@@ -433,100 +433,155 @@ function ProductDetailPage({ product, onBack, onPurchase, refreshProducts }: { p
   const p = product
 
   return (
-    <div style={S.page}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16, cursor: 'pointer', color: 'var(--text2)', fontSize: 13 }} onClick={onBack}>
+    <div style={{ ...S.page, display: 'flex', flexDirection: 'column', gap: 0, padding: 0 }}>
+
+      {/* Back link */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 0, cursor: 'pointer', color: 'var(--text2)', fontSize: 13, padding: '12px 16px' }} onClick={onBack}>
         <i className="ti ti-arrow-left" style={{ fontSize: 16 }} /> Back to Store
       </div>
 
-      <div style={{ borderRadius: 10, marginBottom: 16, height: 200, overflow: 'hidden', position: 'relative' }}>
-        <SafeImage src={p.image} alt={p.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+      {/* 1. Full-width hero image, 16:9, no border-radius on top */}
+      <div style={{ width: '100%', aspectRatio: '16 / 9', overflow: 'hidden', position: 'relative', background: 'var(--bg2)' }}>
+        {p.image ? (
+          <SafeImage src={p.image} alt={p.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        ) : (
+          <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text3)', fontSize: 32 }}>
+            <i className="ti ti-photo" />
+          </div>
+        )}
         <ActiveBadge />
       </div>
 
-      <h1 style={{ fontSize: 18, fontWeight: 800, color: 'var(--text)', marginBottom: 10 }}>{p.title}</h1>
+      {/* Content padding */}
+      <div style={{ padding: '16px 16px 24px', display: 'flex', flexDirection: 'column', gap: 16 }}>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-        <Avatar size={32} url={p.sellerAvatar} />
-        <span style={{ fontSize: 13, fontWeight: 600, color: "var(--accent)", cursor: "pointer", textDecoration: "underline" }} onClick={() => navigate("/messages?user=" + encodeURIComponent(p.seller))}>{p.seller}</span>
-        <span style={{ marginLeft: 'auto' }}><Stars score={p.rating} size={13} /></span>
-        <span style={{ fontSize: 11, color: 'var(--text3)' }}>({p.reviewsCount} reviews)</span>
-      </div>
+        {/* 2. Title */}
+        <h1 style={{ fontSize: 20, fontWeight: 800, color: 'var(--text)', margin: 0, lineHeight: 1.3 }}>{p.title}</h1>
 
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, margin: '14px 0', padding: 14, background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 8 }}>
-        <span style={{ fontSize: 22, fontWeight: 800, color: 'var(--green)' }}>{formatPrice(p)}</span>
-        <span style={{ fontSize: 12, color: 'var(--text3)' }}>{formatSol(p.price, p.currency, sol.ngn)}</span>
-      </div>
-
-      <div>
-        <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', letterSpacing: '0.06em', marginBottom: 8 }}>DESCRIPTION</div>
-        <p style={{ fontSize: 13, lineHeight: 1.7, color: 'var(--text2)' }}>{p.description}</p>
-      </div>
-
-      {purchaseError && (
-        <div style={{ ...S.errorBox, marginTop: 12, padding: 10, fontSize: 12 }}>
-          <i className="ti ti-alert-circle" style={{ marginRight: 6 }} />{purchaseError}
+        {/* 3. Pill row: Delivery time, Revisions, Category */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+          <span style={{ background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 999, padding: '4px 10px', fontSize: 11, fontWeight: 600, color: 'var(--text2)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+            <i className="ti ti-clock" style={{ fontSize: 12 }} /> 1-3 days
+          </span>
+          <span style={{ background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 999, padding: '4px 10px', fontSize: 11, fontWeight: 600, color: 'var(--text2)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+            <i className="ti ti-refresh" style={{ fontSize: 12 }} /> Unlimited revisions
+          </span>
+          <span style={{ background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 999, padding: '4px 10px', fontSize: 11, fontWeight: 600, color: 'var(--text2)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+            <i className="ti ti-tag" style={{ fontSize: 12 }} /> {p.category}
+          </span>
         </div>
-      )}
 
-      {purchased && (
-        <div style={{ background: 'rgba(34,197,94,0.10)', border: '1px solid rgba(34,197,94,0.30)', borderRadius: 10, padding: 14, textAlign: 'center', marginTop: 12, color: '#22c55e', fontSize: 13 }}>
-          <i className="ti ti-circle-check" style={{ marginRight: 6 }} />Purchase successful!
+        {/* 4. Dark "Ready to Order?" card */}
+        <div style={{ background: '#0d0f14', border: '1px solid #1e2028', borderRadius: 12, padding: '20px 16px', display: 'flex', flexDirection: 'column', gap: 14, textAlign: 'center' }}>
+          <div style={{ fontSize: 16, fontWeight: 800, color: '#fff', lineHeight: 1.2 }}>Ready to Order?</div>
+          <div style={{ fontSize: 12, color: '#888', lineHeight: 1.5 }}>Complete your purchase and start working with {p.seller}</div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#111318', border: '1px solid #2a2d35', borderRadius: 10, padding: '12px 16px' }}>
+            <div style={{ textAlign: 'left' }}>
+              <div style={{ fontSize: 18, fontWeight: 800, color: '#4caf50' }}>{formatPrice(p)}</div>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: '#888' }}>≈ {formatSol(p.price, p.currency, sol.ngn)}</div>
+            </div>
+          </div>
+          <button style={{ width: '100%', background: '#f5f5f5', color: '#0a0a0a', fontSize: 14, fontWeight: 700, padding: '13px 0', borderRadius: 10, border: 'none', cursor: 'pointer', fontFamily: 'inherit', opacity: purchasing || purchased ? 0.6 : 1, transition: 'opacity .15s' }}
+            onClick={handlePurchase} disabled={purchasing || purchased}>
+            {purchasing ? <><i className="ti ti-loader" style={{ fontSize: 16, animation: 'spin 1s linear infinite' }} /> Processing...</>
+            : purchased ? <><i className="ti ti-circle-check" style={{ fontSize: 16 }} /> Purchased</>
+            : 'Buy Now'}
+          </button>
+          <button style={{ width: '100%', background: 'transparent', color: '#aaa', fontSize: 13, fontWeight: 600, padding: '12px 0', borderRadius: 10, border: '1.5px solid #2a2d35', cursor: 'pointer', fontFamily: 'inherit', transition: 'border-color .15s' }}
+            onClick={handleMessageSeller}>
+            <i className="ti ti-message" style={{ fontSize: 14, marginRight: 6 }} /> Message Seller
+          </button>
         </div>
-      )}
 
-      <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 8, marginTop: 20 }}>
-        <button style={{ ...S.btnPrimary, justifyContent: 'center', padding: 13, fontSize: 14, opacity: purchasing || purchased ? 0.6 : 1 }}
-          onClick={handlePurchase} disabled={purchasing || purchased}>
-          {purchasing ? <><i className="ti ti-loader" style={{ fontSize: 16, animation: 'spin 1s linear infinite' }} /> Processing...</>
-          : purchased ? <><i className="ti ti-circle-check" style={{ fontSize: 16 }} /> Purchased</>
-          : <><i className="ti ti-shopping-cart" style={{ fontSize: 16 }} /> Order Now</>}
-        </button>
-        <button style={{ ...S.btnOutline, justifyContent: 'center', padding: 13, fontSize: 13 }} onClick={handleMessageSeller}>
-          <i className="ti ti-message" style={{ fontSize: 16 }} /> Message Seller
-        </button>
-      </div>
+        {/* Purchase error/success */}
+        {purchaseError && (
+          <div style={{ background: 'rgba(239,68,68,0.10)', border: '1px solid rgba(239,68,68,0.30)', borderRadius: 10, padding: 12, fontSize: 12, color: '#ef4444', display: 'flex', alignItems: 'center', gap: 6 }}>
+            <i className="ti ti-alert-circle" style={{ fontSize: 14 }} />{purchaseError}
+          </div>
+        )}
+        {purchased && (
+          <div style={{ background: 'rgba(34,197,94,0.10)', border: '1px solid rgba(34,197,94,0.30)', borderRadius: 10, padding: 12, textAlign: 'center', fontSize: 13, color: '#22c55e', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+            <i className="ti ti-circle-check" style={{ fontSize: 14 }} />Purchase successful!
+          </div>
+        )}
 
-      <div style={{ marginTop: 28 }}>
-        <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', letterSpacing: '0.06em', marginBottom: 8 }}>REVIEWS</div>
+        {/* 5. DESCRIPTION */}
+        <div>
+          <div style={{ fontSize: 10, fontWeight: 700, color: '#888', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 8 }}>Description</div>
+          <p style={{ fontSize: 13, lineHeight: 1.7, color: 'var(--text2)', margin: 0 }}>{p.description}</p>
+        </div>
 
-        {!purchased && !reviewSubmitted && (
-          <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 8, padding: 12, marginBottom: 12 }}>
-            <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text)', marginBottom: 8 }}>Write a review</div>
-            <div style={{ display: 'flex', gap: 4, marginBottom: 8 }}>
-              {[1,2,3,4,5].map(i => (
-                <span key={i} onClick={() => setReviewRating(i)} style={{ cursor: 'pointer', fontSize: 20, color: i <= reviewRating ? '#facc15' : 'var(--text3)' }}>★</span>
-              ))}
+        {/* 6. Seller card */}
+        <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 14px 0' }}>
+            <Avatar size={40} url={p.sellerAvatar} />
+            <div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>{p.seller}</div>
+              <div style={{ fontSize: 11, color: 'var(--text3)' }}>Seller</div>
             </div>
-            <textarea style={{ ...S.input, minHeight: 60, resize: 'vertical' } as any} placeholder="Share your experience..." value={reviewComment}
-              onChange={e => setReviewComment(e.target.value)} />
-            <button style={{ ...S.btnPrimary, marginTop: 8 }} onClick={handleSubmitReview} disabled={submittingReview || reviewRating < 1}>
-              {submittingReview ? 'Submitting...' : 'Submit Review'}
-            </button>
           </div>
-        )}
-
-        {reviewSubmitted && (
-          <div style={{ background: 'rgba(34,197,94,0.10)', border: '1px solid rgba(34,197,94,0.30)', borderRadius: 8, padding: 12, marginBottom: 12, color: '#22c55e', fontSize: 12 }}>
-            <i className="ti ti-circle-check" style={{ marginRight: 6 }} />Review submitted!
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, background: 'var(--border)', marginTop: 12 }}>
+            {[
+              { icon: 'ti ti-heart', num: '0', label: 'Compliments' },
+              { icon: 'ti ti-trophy', num: '0', label: 'Challenges Won' },
+              { icon: 'ti ti-star', num: p.reviewsCount || 0, label: 'Reviews' },
+              { icon: 'ti ti-award', num: p.rating > 0 ? p.rating.toFixed(1) : '0.0', label: 'Rating' },
+            ].map((s, i) => (
+              <div key={i} style={{ background: 'var(--card)', padding: '14px 8px', textAlign: 'center' }}>
+                <i className={s.icon} style={{ fontSize: 16, color: '#191C6B' }} />
+                <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--text)', marginTop: 4 }}>{s.num}</div>
+                <div style={{ fontSize: 10, color: 'var(--text3)', marginTop: 2 }}>{s.label}</div>
+              </div>
+            ))}
           </div>
-        )}
+        </div>
 
-        {reviewsLoading && <p style={{ fontSize: 12, color: 'var(--text3)' }}>Loading reviews...</p>}
+        {/* 7. REVIEWS */}
+        <div>
+          <div style={{ fontSize: 10, fontWeight: 700, color: '#888', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 10 }}>Reviews</div>
 
-        {!reviewsLoading && reviews.length === 0 && (
-          <p style={{ fontSize: 12, color: 'var(--text3)' }}>No reviews yet.</p>
-        )}
-
-        {!reviewsLoading && reviews.map(r => (
-          <div key={r.id} style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 8, padding: 12, marginBottom: 8 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <Avatar size={28} url={r.avatarUrl} />
-              <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text)' }}>{r.username}</span>
-              <span style={{ marginLeft: 'auto' }}><Stars score={r.rating} size={11} /></span>
+          {!purchased && !reviewSubmitted && (
+            <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 10, padding: 14, marginBottom: 12 }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 8 }}>Write a review</div>
+              <div style={{ display: 'flex', gap: 4, marginBottom: 8 }}>
+                {[1,2,3,4,5].map(i => (
+                  <span key={i} onClick={() => setReviewRating(i)} style={{ cursor: 'pointer', fontSize: 20, color: i <= reviewRating ? '#facc15' : 'var(--text3)' }}>★</span>
+                ))}
+              </div>
+              <textarea style={{ ...S.input, minHeight: 60, resize: 'vertical' } as any} placeholder="Share your experience..." value={reviewComment}
+                onChange={e => setReviewComment(e.target.value)} />
+              <button style={{ ...S.btnPrimary, marginTop: 8 }} onClick={handleSubmitReview} disabled={submittingReview || reviewRating < 1}>
+                {submittingReview ? 'Submitting...' : 'Submit Review'}
+              </button>
             </div>
-            {r.comment && <p style={{ fontSize: 12, color: 'var(--text2)', marginTop: 8 }}>{r.comment}</p>}
-          </div>
-        ))}
+          )}
+
+          {reviewSubmitted && (
+            <div style={{ background: 'rgba(34,197,94,0.10)', border: '1px solid rgba(34,197,94,0.30)', borderRadius: 10, padding: 12, marginBottom: 12, color: '#22c55e', fontSize: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
+              <i className="ti ti-circle-check" />Review submitted!
+            </div>
+          )}
+
+          {reviewsLoading && <p style={{ fontSize: 12, color: 'var(--text3)' }}>Loading reviews...</p>}
+
+          {!reviewsLoading && reviews.length === 0 && (
+            <p style={{ fontSize: 12, color: 'var(--text3)' }}>No reviews yet.</p>
+          )}
+
+          {!reviewsLoading && reviews.map(r => (
+            <div key={r.id} style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 10, padding: 14, marginBottom: 8 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <Avatar size={28} url={r.avatarUrl} />
+                <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>{r.username}</span>
+                <span style={{ marginLeft: 'auto' }}><Stars score={r.rating} size={11} /></span>
+              </div>
+              {r.comment && <p style={{ fontSize: 12, color: 'var(--text2)', marginTop: 8, margin: 0 }}>{r.comment}</p>}
+            </div>
+          ))}
+        </div>
+
       </div>
     </div>
   )
@@ -642,7 +697,13 @@ function WorkerProfilePage({ worker, onBack }: { worker: WorkerItem; onBack: () 
     if (!worker?.id) return
     setProfileLoading(true)
     apiRequest<any>(`/store/workers/${worker.id}`)
-      .then(data => setProfile(data))
+      .then(data => {
+        if (data && data.success === true && data.data != null) {
+          setProfile(data.data)
+        }
+        // If fetch returns empty/unexpected, keep profile as null
+        // so the component renders using worker prop directly
+      })
       .catch(() => {})
       .finally(() => setProfileLoading(false))
   }, [worker?.id])
