@@ -88,10 +88,7 @@ export default function LoginPage() {
         auth: false,
         body: JSON.stringify({ email: loginEmail.trim(), password: loginPassword }),
       });
-      // DEBUG: dump the full response
-      );
-      );
-      : 'null');
+
       
       // Try ALL possible token locations
       const possibleToken = 
@@ -114,8 +111,7 @@ export default function LoginPage() {
         result?.data?.tokens?.refreshToken ||
         possibleToken; // fallback: use access token as refresh
       
-      + '...' : 'null');
-      + '...' : 'null');
+
       
       const loginPayload = {
         user: result.user || result,
@@ -150,7 +146,6 @@ export default function LoginPage() {
         auth: false,
         body: JSON.stringify({ firstName, lastName, email: signupEmail.trim(), password: signupPassword, username: signupEmail.split("@")[0] }),
       });
-      );
             const authPayload = {
         user: result.user || result,
         tokens: result.tokens || result.session,

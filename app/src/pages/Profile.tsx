@@ -519,7 +519,6 @@ export default function Profile() {
 
             let pubKey = wallet.publicKey?.toString();
       if (!pubKey) {
-        ");
         const resp = await wallet.connect();
         pubKey = resp?.publicKey?.toString();
               } else {

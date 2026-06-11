@@ -504,7 +504,6 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }) {
         status: "OPEN",
       };
 
-      );
       const result = await apiRequest('/tasks', {
         method: "POST",
         body: JSON.stringify(body),

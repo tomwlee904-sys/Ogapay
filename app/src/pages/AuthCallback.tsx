@@ -109,7 +109,6 @@ export default function AuthCallback() {
             }
             localStorage.setItem("ogapay-authenticated", "true");
             localStorage.setItem("ogapay_auth_provider", "supabase");
-            ');
           }
 
           // Store user display info
@@ -186,7 +185,7 @@ export default function AuthCallback() {
           if (attempt < 2 && window.location.hash) {
             return handleCallback(attempt + 1);
           }
-          if (error)           const stored = localStorage.getItem("ogapay-authenticated");
+          const stored = localStorage.getItem("ogapay-authenticated");
           if (stored === "true") {
             window.location.href = "/dashboard";
           } else {
