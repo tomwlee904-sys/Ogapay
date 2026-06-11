@@ -19,7 +19,7 @@ export default function UserProfile() {
   useEffect(() => {
     if (!username) return
     setLoading(true)
-    fetch(`${API_BASE}/users/public/${username}`)
+    apiRequest(`/users/public/${username}`, { auth: false })
       .then(r => r.json())
       .then(data => {
         if (data.success || data.data) {
@@ -30,7 +30,7 @@ export default function UserProfile() {
       .catch(() => setLoading(false))
 
     // Fetch user blogs
-    fetch(`${API_BASE}/users/public/${username}/blogs`)
+    apiRequest(`/users/public/${username}/blogs`, { auth: false })
       .then(r => r.json())
       .then(data => {
         if (data.success && data.data) {
@@ -40,7 +40,7 @@ export default function UserProfile() {
       .catch(() => {})
 
     // Fetch user communities
-    fetch(`${API_BASE}/users/public/${username}/communities`)
+    apiRequest(`/users/public/${username}/communities`, { auth: false })
       .then(r => r.json())
       .then(data => {
         if (data.success && Array.isArray(data.data)) {

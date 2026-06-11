@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { apiRequest } from '../lib/api'
 import Layout from '../components/Layout'
 import { uploadImage } from '../lib/upload'
 
@@ -132,7 +133,7 @@ export default function CommunityDetail() {
   useEffect(() => {
     async function fetchCommunity() {
       try {
-        const res = await fetch(API_BASE + '/communities/' + id, { headers: authHeaders })
+        const res = await apiRequest('/communities/' + id)
         const json = await res.json()
         if (json.success && json.data) {
           setCommunity(json.data)

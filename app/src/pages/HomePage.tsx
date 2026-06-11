@@ -829,7 +829,7 @@ function StoreSection() {
   const [active, setActive] = useState(0);
   const intervalRef = useRef(null);
   useEffect(() => {
-    fetch(`${API_BASE}/store?limit=6`)
+    apiRequest('/store?limit=6')
       .then(r => r.json())
       .then(d => {
         const raw = d?.data;

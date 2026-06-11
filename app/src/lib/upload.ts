@@ -20,9 +20,24 @@ export async function uploadImage(
   const token = getAccessToken()
   if (!token) throw new Error('Not authenticated')
 
+  // Compress images before upload (skip non-image files)
+  let uploadFile = file
+  if (file.type && file.type.startsWith('image/') && purpose !== 'avatars') {
+    try {
+      const imageCompression = (await import('browser-image-compression')).default
+      uploadFile = await imageCompression(file, {
+        maxSizeMB: 0.5,
+        maxWidthOrHeight: 800,
+        useWebWorker: true,
+      })
+    } catch {
+      // Fall back to original file if compression fails
+    }
+  }
+
   const config = uploadRoutes[purpose] || uploadRoutes['avatars']
   const formData = new FormData()
-  formData.append(config.field, file)
+  formData.append(config.field, uploadFile)
 
   const res = await fetch(`${API_BASE}${config.path}`, {
     method: 'POST',
