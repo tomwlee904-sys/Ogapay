@@ -9,8 +9,6 @@ import TaskCard from "../components/TaskCard";
 /* ─── GLOBAL STYLES ────────────────────────────────────────────────────────── */
 const GlobalStyles = () => (
   <style>{`
-    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800;900&family=DM+Sans:wght@400;500;600;700;800&display=swap');
-
     :root {
       --bg:#ffffff; --bg2:#fafafa; --card:#ffffff; --card2:#f5f5f5;
       --border:#e5e5e5; --border2:#d4d4d4;
@@ -67,7 +65,7 @@ const GlobalStyles = () => (
     }
     .section-title {
       margin:0; font-family:"Outfit",sans-serif;
-      font-size:clamp(28px,3vw,40px); line-height:1.05;
+      font-size:clamp(32px,8vw,72px); line-height:1.05;
       letter-spacing:-1.2px; font-weight:900; color:var(--text);
     }
     .section-sub { margin:12px auto 0; color:var(--text2); font-size:16px; line-height:1.55; font-weight:500; }
@@ -94,7 +92,7 @@ const GlobalStyles = () => (
     }
     .btn-outline:hover { border-color:var(--border2); box-shadow:var(--shadow); }
     .btn-pill {
-      height:52px; min-width:260px; border-radius:999px;
+      height:52px; min-width:min(260px,100%); border-radius:999px;
       display:inline-flex; align-items:center; justify-content:center; gap:10px;
       background:var(--primary); color:#fff; border:1.5px solid var(--primary);
       font-size:14px; font-weight:800;
@@ -193,13 +191,17 @@ const GlobalStyles = () => (
     .nav-link:hover { color:var(--text); background:var(--bg2); }
 
     /* ── Mobile ── */
+    @media(min-width:769px) {
+      .mobile-bottom-nav { display:none !important; }
+      .store-grid { overflow-x:hidden !important; scroll-snap-type:none !important; }
+    }
     @media(max-width:768px) {
       body { padding-bottom:92px; }
       .hide-mobile { display:none !important; }
       .container { width:min(1200px,calc(100% - 32px)); }
       main { padding-bottom:80px; }
       .hero-grid {
-        display:block !important; padding:54px 0 30px !important;
+        grid-template-columns:1fr !important; padding:54px 0 30px !important;
         text-align:center !important;
       }
       .hero-grid > * { width:100% !important; max-width:100% !important; }
@@ -219,8 +221,10 @@ const GlobalStyles = () => (
       .steps-grid { grid-template-columns:1fr !important; }
       .steps-grid::before { display:none !important; }
       .jobs-track { display:flex !important; flex-direction:column !important; }
-      .store-grid,.community-grid { grid-template-columns:1fr !important; }
-      .store-grid > div { width:calc(100vw - 48px) !important; max-width:100% !important; }
+      .community-grid { grid-template-columns:1fr !important; }
+      .store-grid { display:flex !important; flex-direction:row !important; overflow-x:auto !important; scroll-snap-type:x mandatory !important; gap:16px !important; flex-wrap:nowrap !important; -webkit-overflow-scrolling:touch !important; scrollbar-width:none !important; }
+      .store-grid::-webkit-scrollbar { display:none !important; }
+      .store-grid > div { width:calc(100vw - 48px) !important; max-width:100% !important; flex-shrink:0 !important; scroll-snap-align:start !important; }
       .gs-accordion { grid-template-columns:1fr !important; }
       .paths { grid-template-columns:1fr 1fr !important; }
       .mobile-bottom-nav { display:grid !important; }
@@ -504,7 +508,7 @@ function HeroStatsCard() {
         <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, color: '#16a34a', fontWeight: 500 }}>
           <span style={{
             width: 7, height: 7, borderRadius: '50%', background: '#16a34a',
-            animation: pulse ? 'ping 1s ease-in-out' : 'pulse 2s ease-in-out infinite',
+            animation: 'livePulse 1.8s ease-in-out infinite',
             display: 'inline-block',
           }} />
           LIVE
@@ -732,7 +736,7 @@ function FeaturedJobs() {
     setLoading(true);
     apiRequest<any>('/tasks', { auth: false })
       .then(d => {
-        const list = Array.isArray(d) ? d : d?.tasks || d?.data || [];
+        const list = Array.isArray(d) ? d : d?.tasks || d?.data?.tasks || d?.data || d?.results || [];
         setJobs(list.slice(0, 6));
       })
       .catch(() => setJobs([]))
@@ -827,17 +831,18 @@ function FeaturedJobs() {
 /* ─── STORE SECTION ─────────────────────────────────────────────────────────── */
 function StoreSection() {
   const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [active, setActive] = useState(0);
   const intervalRef = useRef(null);
   useEffect(() => {
+    setLoading(true);
     apiRequest('/store?limit=6')
-      .then(r => r.json())
       .then(d => {
-        const raw = d?.data;
-        const list = Array.isArray(raw) ? raw : raw?.items ?? [];
+        const list = Array.isArray(d) ? d : d?.products || d?.data?.products || d?.data || d?.items || [];
         setProducts(list);
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, []);
   useEffect(() => {
     if (products.length === 0) return;
@@ -978,7 +983,20 @@ function StoreSection() {
           </div>
           <a href="/store" style={{ color: "var(--text2)", fontSize: 14, fontWeight: 700, display: "flex", alignItems: "center", gap: 6 }}>View all <I n="chevron-right" s={16} /></a>
         </div>
-        {products.length === 0 ? (
+        {loading ? (
+          <div className="jobs-track" style={{ display: "grid", gridTemplateColumns: "repeat(3,minmax(0,1fr))", gap: 24 }}>
+            {Array.from({ length: 3 }, (_, i) => (
+              <div key={i} style={{ border: '1.5px solid var(--border)', borderRadius: 16, background: 'var(--card)', overflow: 'hidden' }}>
+                <div className="sk" style={{ width: '100%', aspectRatio: '16/9', borderRadius: 0 }} />
+                <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  <div className="sk" style={{ height: 14, width: '60%' }} />
+                  <div className="sk" style={{ height: 10, width: '80%' }} />
+                  <div className="sk" style={{ height: 40, borderRadius: 10 }} />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : products.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '48px 20px', color: 'var(--text2)' }}>
             <i className="ti ti-building-store-off" style={{ fontSize: 36, color: 'var(--text3)', marginBottom: 12, display: 'block' }} />
             <p style={{ fontSize: 13, margin: 0 }}>No products available yet.</p>
@@ -1405,7 +1423,7 @@ function Drawer({ open, onClose, openAuth, isAuthed, navigate }) {
         {/* Links */}
         <div style={{ padding: "10px 8px", overflowY: "auto", flex: 1 }}>
           {links.map(l => (
-            <a key={l.label} href={l.href} className="drawer-item">
+            <button key={l.label} onClick={() => { navigate(l.href); onClose(); }} className="drawer-item" style={{ width: '100%', textAlign: 'left', background: 'none', border: 'none', font: 'inherit', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 14, padding: '12px 12px', borderRadius: 14, color: 'var(--text)', transition: 'background .15s', minHeight: 70 }}>
               <div className="drawer-icon" style={{ background: l.highlight ? "#f5f0ff" : "var(--bg2)", color: l.highlight ? "#315EFB" : "var(--text2)", borderColor: l.highlight ? "#e9e0ff" : "var(--border)" }}>
                 <I n={l.icon} s={20} />
               </div>
@@ -1413,7 +1431,7 @@ function Drawer({ open, onClose, openAuth, isAuthed, navigate }) {
                 <strong style={{ display: "block", fontSize: 16, fontWeight: 800 }}>{l.label}</strong>
                 <small style={{ display: "block", marginTop: 4, color: "var(--text2)", fontSize: 13 }}>{l.desc}</small>
               </div>
-            </a>
+            </button>
           ))}
         </div>
         {/* Footer */}
@@ -1448,7 +1466,7 @@ function Drawer({ open, onClose, openAuth, isAuthed, navigate }) {
 }
 
 /* ─── AUTH MODAL ─────────────────────────────────────────────────────────────── */
-function AuthModal({ open, onClose, mode, setMode }) {
+function AuthModal({ open, onClose, mode, setMode, navigate }) {
   const isLogin = mode === "login";
   return (
     <div className={`auth-modal${open ? " open" : ""}`} onClick={e => e.target === e.currentTarget && onClose()}>
@@ -1494,7 +1512,7 @@ function AuthModal({ open, onClose, mode, setMode }) {
               <a href="/forgot-password" style={{ fontSize: 12, color: "var(--accent)", fontWeight: 600 }}>Forgot password?</a>
             </div>
           )}
-          <button style={{ width: "100%", height: 46, borderRadius: 10, background: "var(--primary)", color: "#fff", border: "none", fontWeight: 800, fontSize: 15 }}>
+          <button onClick={() => navigate(isLogin ? "/login" : "/login?mode=signup")} style={{ width: "100%", height: 46, borderRadius: 10, background: "var(--primary)", color: "#fff", border: "none", fontWeight: 800, fontSize: 15 }}>
             {isLogin ? "Login to OgaPay" : "Create Account"}
           </button>
           {!isLogin && (
@@ -1507,7 +1525,7 @@ function AuthModal({ open, onClose, mode, setMode }) {
             <span style={{ color: "var(--text3)", fontSize: 12, fontWeight: 700 }}>OR</span>
             <div style={{ flex: 1, height: 1, background: "var(--border)" }} />
           </div>
-          <button style={{ width: "100%", height: 44, borderRadius: 10, background: "var(--card)", border: "1.5px solid var(--border)", color: "var(--text)", fontWeight: 700, fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
+          <button onClick={() => navigate("/login")} style={{ width: "100%", height: 44, borderRadius: 10, background: "var(--card)", border: "1.5px solid var(--border)", color: "var(--text)", fontWeight: 700, fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
             <I n="brand-google" s={18} /> Continue with Google
           </button>
         </div>
@@ -1535,6 +1553,9 @@ export default function HomePage() {
 
   return (
     <>
+      <link rel="preconnect" href="https://fonts.googleapis.com" />
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800;900&family=DM+Sans:wght@400;500;600;700;800&display=swap" />
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css" />
       <GlobalStyles />
       <Navbar theme={theme} toggleTheme={toggleTheme} openDrawer={() => setDrawerOpen(true)} isAuthed={isAuthed} navigate={navigate} />

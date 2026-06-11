@@ -156,8 +156,9 @@ export async function apiRequest<T = unknown>(path: string, options: ApiOptions 
   const url = path.startsWith('http') ? path : `${API_BASE}${path.startsWith('/') ? path : `/${path}`}`
   const controller = new AbortController()
   const timeoutId = setTimeout(() => controller.abort(), 15000)
+  let res: Response;
   try {
-    const res = await fetch(url, { ...init, headers: requestHeaders, signal: controller.signal })
+    res = await fetch(url, { ...init, headers: requestHeaders, signal: controller.signal })
     clearTimeout(timeoutId)
 
   } catch (err: any) {
