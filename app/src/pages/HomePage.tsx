@@ -377,7 +377,7 @@ function Navbar({ theme, toggleTheme, openDrawer, isAuthed, navigate }) {
   const links = [
     { icon: "briefcase", label: "Jobs", href: "/tasks" },
     { icon: "building-store", label: "Store", href: "/store" },
-    { icon: "users-group", label: "Communities", href: "/communities" },
+    
     { icon: "lock", label: "Vault", href: "/vault" },
     { icon: "help-circle", label: "FAQ", href: "/faq" },
   ];
@@ -1316,7 +1316,7 @@ function Communities() {
 function Footer() {
   const cols = [
     { title: "Earn", links: ["Browse Jobs", "Task Categories", "Leaderboard", "Worker Portal"] },
-    { title: "Post", links: ["Create Task", "Communities", "Vault"] },
+    { title: "Post", links: ["Create Task", "Vault"] },
     { title: "Company", links: ["About", "Blog", "FAQ", "Support", "Terms", "Privacy"] },
   ];
   const socialLinks = {
@@ -1328,7 +1328,7 @@ function Footer() {
   };
   const linkHrefs = {
     "Browse Jobs": "/tasks", "Task Categories": "/tasks", "Leaderboard": "/leaderboard",
-    "Worker Portal": "/worker-portal", "Create Task": "/create", "Communities": "/communities",
+    "Worker Portal": "/worker-portal", "Create Task": "/create",
     "Vault": "/vault", "About": "/about", "Blog": "/blog",
     "FAQ": "/faq", "Support": "/support", "Terms": "/terms",
     "Privacy": "/privacy", "Cookies": "/cookies", "Security": "/security"
@@ -1402,7 +1402,7 @@ function Drawer({ open, onClose, openAuth, isAuthed, navigate }) {
   const links = [
     { icon: "briefcase", label: "Jobs", desc: "Browse & earn from tasks", href: "/tasks" },
     { icon: "building-store", label: "Store", desc: "Products & services", href: "/store" },
-    { icon: "users-group", label: "Communities", desc: "Join earner groups", href: "/communities" },
+    
     { icon: "lock", label: "Vault", desc: "Track the vault and revenue distribution", href: "/vault" },
     { icon: "wallet", label: "Wallet", desc: "Manage your balance", href: "/wallet" },
     { icon: "circle-plus", label: "Post a Task", desc: "Hire OgaPay workers", href: "/create", highlight: true },
