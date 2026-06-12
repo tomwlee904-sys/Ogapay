@@ -70,7 +70,7 @@ export default function AdminVault() {
       const res = await apiRequest<any>('/vault/admin/distribute', { method: 'POST' })
       const d = res?.data || res
       if (d?.distributed) {
-        showToast(`✅ Distributed ₦${(d.totalNgp || 0).toLocaleString()} to ${d.recipients} holders`)
+        showToast(`✅ Distributed $${(d.totalNgp || 0).toLocaleString()} to ${d.recipients} holders`)
       } else {
         showToast(`⏸ ${d?.reason || 'Skipped'}`)
       }
@@ -88,7 +88,7 @@ export default function AdminVault() {
         body: JSON.stringify({ amountNgp: parseFloat(revAmount), source: revSource, description: revDesc }),
       })
       if (res?.success) {
-        showToast(`✅ ₦${revAmount} added to pool`)
+        showToast(`✅ $${revAmount} added to pool`)
         setRevAmount(''); setRevDesc('')
         fetchPool()
       }
@@ -146,8 +146,8 @@ export default function AdminVault() {
         {/* ── Pool Stats ── */}
         <div style={S.statGrid}>
           <div style={S.statCard}>
-            <div style={{ ...S.statNum, color: OGAPAY_BLUE }}>₦{pool?.totalNgp?.toLocaleString() || '0'}</div>
-            <div style={S.statLabel}>Pool Balance</div>
+            <div style={{ ...S.statNum, color: OGAPAY_BLUE }}>${pool?.totalNgp?.toLocaleString() || '0'}</div>
+            <div style={S.statLabel}>Pool Balance (USD)</div>
           </div>
           <div style={S.statCard}>
             <div style={{ ...S.statNum, color: '#16a34a' }}>{pool?.nextDistributionAt ? new Date(pool.nextDistributionAt).toLocaleDateString() : 'N/A'}</div>
@@ -164,7 +164,7 @@ export default function AdminVault() {
           <div style={S.cardTitle}><i className="ti ti-coin" style={{ color: OGAPAY_BLUE }} /> Pool Overview</div>
           <div style={S.row}>
             <span style={S.label}>Total in Pool</span>
-            <span style={S.value}>₦{(pool?.totalNgp || 0).toLocaleString()}</span>
+            <span style={S.value}>${(pool?.totalNgp || 0).toLocaleString()}</span>
           </div>
           <div style={S.row}>
             <span style={S.label}>Last Distribution</span>
@@ -202,7 +202,7 @@ export default function AdminVault() {
             <div style={S.cardTitle}><i className="ti ti-upload" style={{ color: '#16a34a' }} /> Add Revenue to Pool</div>
             <div style={S.flexRow}>
               <div style={S.formGroup}>
-                <label style={S.formLabel}>Amount (NGN)</label>
+                <label style={S.formLabel}>Amount (USD)</label>
                 <input style={S.input} type="number" value={revAmount} onChange={e => setRevAmount(e.target.value)} placeholder="50000" />
               </div>
               <div style={S.formGroup}>
@@ -285,7 +285,7 @@ export default function AdminVault() {
                       <tr key={i} style={{ borderBottom: '1px solid var(--border)' }}>
                         <td style={{ padding: '8px 6px' }}><span style={{ background: 'rgba(25,28,107,0.1)', padding: '2px 6px', borderRadius: 4, fontWeight: 600, fontSize: 10 }}>{r.source}</span></td>
                         <td style={{ padding: '8px 6px', color: 'var(--text2)' }}>{r.description || '—'}</td>
-                        <td style={{ padding: '8px 6px', textAlign: 'right', fontWeight: 700 }}>₦{(r.amountNgp || 0).toLocaleString()}</td>
+                        <td style={{ padding: '8px 6px', textAlign: 'right', fontWeight: 700 }}>${(r.amountNgp || 0).toLocaleString()}</td>
                         <td style={{ padding: '8px 6px', textAlign: 'right', color: 'var(--text2)' }}>{new Date(r.recordedAt).toLocaleDateString()}</td>
                       </tr>
                     ))}

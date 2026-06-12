@@ -83,10 +83,10 @@ function CountdownTo({ target }: { target: string | null }) {
   return <>{display}</>
 }
 
-function formatNGN(n: number) {
-  if (n >= 1_000_000) return `₦${(n / 1_000_000).toFixed(2)}M`
-  if (n >= 1_000) return `₦${(n / 1_000).toFixed(1)}K`
-  return `₦${n.toLocaleString()}`
+function formatUSD(n: number) {
+  if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(2)}M`
+  if (n >= 1_000) return `$${(n / 1_000).toFixed(1)}K`
+  return `$${n.toLocaleString()}`
 }
 
 export default function Vault() {
@@ -97,6 +97,10 @@ export default function Vault() {
   const [historyRange, setHistoryRange] = useState('30d')
   const [pendingPayouts, setPendingPayouts] = useState<any[]>([])
   const [claiming, setClaiming] = useState(false)
+  const [lookupUser, setLookupUser] = useState('')
+  const [lookupResult, setLookupResult] = useState<any>(null)
+  const [lookupError, setLookupError] = useState('')
+  const [lookingUp, setLookingUp] = useState(false)
   const [loading, setLoading] = useState(true)
 
   const fetchAll = async () => {
@@ -120,6 +124,24 @@ export default function Vault() {
     } finally { setLoading(false) }
   }
   
+  const handleLookup = async () => {
+    if (!lookupUser.trim()) return
+    setLookingUp(true)
+    setLookupError('')
+    setLookupResult(null)
+    try {
+      const res = await apiRequest<any>(`/vault/lookup?username=${encodeURIComponent(lookupUser.trim())}`)
+      const data = res?.data || res
+      if (data?.user) {
+        setLookupResult(data)
+      } else {
+        setLookupError('User not found')
+      }
+    } catch {
+      setLookupError('Failed to look up user. Check the username.')
+    } finally { setLookingUp(false) }
+  }
+
   const handleClaimAll = async () => {
     setClaiming(true)
     try {
@@ -130,7 +152,7 @@ export default function Vault() {
         setUserStats((prev: any) => prev ? { ...prev, totalEarnedNgp: (prev.totalEarnedNgp || 0) + data.totalNgp } : prev)
         // Show toast
         const el = document.getElementById('appToast')
-        if (el) { el.textContent = `₦${(data.totalNgp || 0).toLocaleString()} claimed!`; el.classList.add('show'); setTimeout(() => el.classList.remove('show'), 3000) }
+        if (el) { el.textContent = `$${(data.totalNgp || 0).toLocaleString()} claimed!`; el.classList.add('show'); setTimeout(() => el.classList.remove('show'), 3000) }
         // Refresh stats
         fetchAll()
       } else {
@@ -162,7 +184,7 @@ export default function Vault() {
       return (
         <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 8, padding: '10px 14px', fontSize: 12 }}>
           <div style={{ fontWeight: 700, marginBottom: 4 }}>{label}</div>
-          <div style={{ color: OGAPAY_BLUE, fontWeight: 600 }}>{formatNGN(payload[0].value)} distributed</div>
+          <div style={{ color: OGAPAY_BLUE, fontWeight: 600 }}>{formatUSD(payload[0].value)} distributed</div>
         </div>
       )
     }
@@ -204,13 +226,13 @@ export default function Vault() {
             <div style={S.statsGrid}>
               <div style={S.statCard}>
                 <i className="ti ti-coin" style={{ ...S.statIcon, color: OGAPAY_BLUE }} />
-                <div style={{ ...S.statNum, color: OGAPAY_BLUE }}>{formatNGN(pool?.totalNgp || 0)}</div>
-                <div style={S.statLabel}>Pool Balance</div>
+                <div style={{ ...S.statNum, color: OGAPAY_BLUE }}>{formatUSD(pool?.totalNgp || 0)}</div>
+                <div style={S.statLabel}>Pool Balance (USD)</div>
               </div>
               <div style={S.statCard}>
                 <i className="ti ti-currency-dollar" style={{ ...S.statIcon, color: '#16a34a' }} />
-                <div style={{ ...S.statNum, color: '#16a34a' }}>{formatNGN(vaultData?.totalDistributedNgp || 0)}</div>
-                <div style={S.statLabel}>Total Distributed</div>
+                <div style={{ ...S.statNum, color: '#16a34a' }}>{formatUSD(vaultData?.totalDistributedNgp || 0)}</div>
+                <div style={S.statLabel}>Total Distributed (USD)</div>
               </div>
               <div style={S.statCard}>
                 <i className="ti ti-users" style={{ ...S.statIcon, color: '#f59e0b' }} />
@@ -219,6 +241,51 @@ export default function Vault() {
               </div>
             </div>
 
+            {/* ── Vault Lookup — Check any user's eligibility ── */}
+            <div style={S.card}>
+              <div style={S.cardTitle}>
+                <i className="ti ti-search" style={{ color: OGAPAY_BLUE }} /> Check User Eligibility
+              </div>
+              <p style={{ fontSize: 12, color: 'var(--text2)', margin: '0 0 12px' }}>
+                Enter a username to see their vault status and earnings.
+              </p>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <input value={lookupUser} onChange={e => setLookupUser(e.target.value)}
+                  placeholder="Enter username..."
+                  onKeyDown={e => e.key === 'Enter' && handleLookup()}
+                  style={{ flex: 1, height: 40, padding: '0 12px', border: '1.5px solid var(--border)', borderRadius: 9, background: 'var(--bg)', color: 'var(--text)', fontSize: 13, outline: 'none', fontFamily: 'inherit' }} />
+                <button onClick={handleLookup} disabled={lookingUp || !lookupUser.trim()}
+                  style={{ height: 40, padding: '0 18px', borderRadius: 9, background: OGAPAY_BLUE, color: '#fff', border: 'none', fontWeight: 700, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <i className="ti ti-search" /> {lookingUp ? 'Searching...' : 'Look Up'}
+                </button>
+              </div>
+
+              {lookupResult && (
+                <div style={{ marginTop: 14, padding: 14, background: 'var(--bg)', borderRadius: 10, border: '1px solid var(--border)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+                    <div style={{ width: 36, height: 36, borderRadius: '50%', background: OGAPAY_BLUE, display: 'grid', placeItems: 'center', color: '#fff', fontWeight: 800, fontSize: 13, overflow: 'hidden', flexShrink: 0 }}>
+                      {lookupResult.user.avatarUrl ? <img src={lookupResult.user.avatarUrl} style={{width:'100%',height:'100%',objectFit:'cover'}} /> : lookupResult.user.name?.split(' ').map((w: string) => w[0]).join('').slice(0,2)}
+                    </div>
+                    <div>
+                      <div style={{ fontWeight: 700, fontSize: 14 }}>{lookupResult.user.name}</div>
+                      <div style={{ fontSize: 12, color: 'var(--text2)' }}>@{lookupResult.user.username}</div>
+                    </div>
+                    <div style={{ marginLeft: 'auto', fontSize: 12, fontWeight: 700, padding: '4px 10px', borderRadius: 999, background: lookupResult.vault.isEligible ? 'rgba(22,163,74,0.12)' : 'rgba(100,100,100,0.1)', color: lookupResult.vault.isEligible ? '#16a34a' : 'var(--text3)' }}>
+                      {lookupResult.vault.isEligible ? '✓ Eligible' : '✕ Not Eligible'}
+                    </div>
+                  </div>
+                  <div style={S.row}><span style={S.label}>$PAY Balance</span><span style={S.value}>{(lookupResult.vault.payBalance || 0).toLocaleString()} $PAY</span></div>
+                  <div style={S.row}><span style={S.label}>Total Earned</span><span style={S.value}>{formatUSD(lookupResult.vault.totalEarned || 0)}</span></div>
+                  <div style={S.rowLast}><span style={S.label}>Distributions Received</span><span style={S.value}>{lookupResult.vault.distributionsReceived || 0}</span></div>
+                </div>
+              )}
+
+              {lookupError && (
+                <div style={{ marginTop: 10, fontSize: 12, color: '#dc2626', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <i className="ti ti-alert-circle" /> {lookupError}
+                </div>
+              )}
+            </div>
             {/* ── User Stats Card (only if logged in) ── */}
             {authUser && userStats && (
               <div style={S.card}>
@@ -231,11 +298,11 @@ export default function Vault() {
                 </div>
                 <div style={S.row}>
                   <span style={S.label}>Estimated Next Payout</span>
-                  <span style={{ ...S.value, color: '#16a34a' }}>{formatNGN(userStats.estimatedNextNgp)}</span>
+                  <span style={{ ...S.value, color: '#16a34a' }}>{formatUSD(userStats.estimatedNextNgp)}</span>
                 </div>
                 <div style={S.row}>
                   <span style={S.label}>Total Earned</span>
-                  <span style={S.value}>{formatNGN(userStats.totalEarnedNgp)}</span>
+                  <span style={S.value}>{formatUSD(userStats.totalEarnedNgp)}</span>
                 </div>
                 <div style={S.row}>
                   <span style={S.label}>Distributions Received</span>
@@ -257,12 +324,12 @@ export default function Vault() {
                     {pendingPayouts.slice(0, 3).map((p: any) => (
                       <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, padding: '4px 0', color: 'var(--text2)' }}>
                         <span>{new Date(p.distributedAt).toLocaleDateString()}</span>
-                        <span style={{ fontWeight: 600, color: '#16a34a' }}>+{formatNGN(p.shareNgp)}</span>
+                        <span style={{ fontWeight: 600, color: '#16a34a' }}>+{formatUSD(p.shareNgp)}</span>
                       </div>
                     ))}
                     <button onClick={handleClaimAll} disabled={claiming}
                       style={{ width: '100%', height: 38, marginTop: 10, borderRadius: 9, background: '#16a34a', color: '#fff', border: 'none', fontWeight: 700, fontSize: 13, cursor: claiming ? 'not-allowed' : 'pointer', fontFamily: 'inherit' }}>
-                      {claiming ? 'Claiming...' : `Claim All (${formatNGN(pendingPayouts.reduce((s: number, p: any) => s + p.shareNgp, 0))})`}
+                      {claiming ? 'Claiming...' : `Claim All (${formatUSD(pendingPayouts.reduce((s: number, p: any) => s + p.shareNgp, 0))})`}
                     </button>
                   </div>
                 )}
@@ -304,7 +371,7 @@ export default function Vault() {
                   <ResponsiveContainer>
                     <BarChart data={chartData} margin={{ top: 4, right: 4, left: -16, bottom: 0 }}>
                       <XAxis dataKey="label" tick={{ fontSize: 10, fill: 'var(--text3)' }} axisLine={false} tickLine={false} />
-                      <YAxis tick={{ fontSize: 10, fill: 'var(--text3)' }} axisLine={false} tickLine={false} tickFormatter={(v) => `₦${v >= 1000 ? `${(v/1000).toFixed(0)}k` : v}`} />
+                      <YAxis tick={{ fontSize: 10, fill: 'var(--text3)' }} axisLine={false} tickLine={false} tickFormatter={(v: number) => `$${v >= 1000 ? `${(v/1000).toFixed(0)}k` : v}`} />
                       <Tooltip content={<CustomTooltip />} />
                       <Bar dataKey="amount" fill={OGAPAY_BLUE} radius={[4, 4, 0, 0]} maxBarSize={32} />
                     </BarChart>
@@ -342,8 +409,8 @@ export default function Vault() {
               <div style={S.howStepLast}>
                 <div style={S.stepNum}>4</div>
                 <div style={S.stepContent}>
-                  <div style={S.stepTitle}>Earn NGN Rewards</div>
-                  Your share is credited directly to your OgaPay wallet in NGN. Use it to withdraw, spend in the store, or post more tasks.
+                  <div style={S.stepTitle}>Earn USD Rewards</div>
+                  Your share is credited directly to your OgaPay wallet in USD. Use it to withdraw, spend in the store, or post more tasks.
                 </div>
               </div>
             </div>
