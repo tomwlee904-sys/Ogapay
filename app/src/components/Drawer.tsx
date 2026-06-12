@@ -35,10 +35,6 @@ export default function Drawer({ open, onClose }: DrawerProps) {
             <span className="oga-drawer-icon"><i className="ti ti-article" /></span>
             <span><strong>Blog</strong><small>Latest insights</small></span>
           </a>
-          <a className="oga-drawer-item" href="/safe" onClick={onClose}>
-            <span className="oga-drawer-icon"><i className="ti ti-vault" /></span>
-            <span><strong>Safe</strong><small>Secure storage</small></span>
-          </a>
           <a className="oga-drawer-item" href="/faq" onClick={onClose}>
             <span className="oga-drawer-icon"><i className="ti ti-help-circle" /></span>
             <span><strong>FAQ</strong><small>Frequently asked questions</small></span>
@@ -97,9 +93,13 @@ export default function Drawer({ open, onClose }: DrawerProps) {
             <span className="oga-drawer-icon"><i className="ti ti-article" /></span>
             <span><strong>Blog</strong><small>Latest insights</small></span>
           </a>
+          <a className="oga-drawer-item" href="/vault" onClick={onClose}>
+            <span className="oga-drawer-icon"><i className="ti ti-lock" /></span>
+            <span><strong>Vault</strong><small>Revenue distribution &amp; earnings</small></span>
+          </a>
           <a className="oga-drawer-item" href="/safe" onClick={onClose}>
             <span className="oga-drawer-icon"><i className="ti ti-vault" /></span>
-            <span><strong>Safe</strong><small>Secure documents</small></span>
+            <span><strong>Safe</strong><small>Secure document storage</small></span>
           </a>
           <a className="oga-drawer-item" href="/notifications" onClick={onClose}>
             <span className="oga-drawer-icon"><i className="ti ti-bell" /></span>
