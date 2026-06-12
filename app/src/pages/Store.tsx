@@ -82,7 +82,7 @@ interface ReviewItem {
 }
 
 const S = {
-  card: { background: 'var(--glass-bg)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', border: '1px solid var(--glass-border)', borderRadius: 16, overflow: 'hidden', boxShadow: '0 8px 32px rgba(0,0,0,0.06)' },
+  card: { background: 'var(--glass-bg)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', border: '1.5px solid var(--glass-border)', borderRadius: 16, overflow: 'hidden', boxShadow: '0 4px 24px rgba(0,0,0,0.10)' },
   grid: { display: 'grid', gap: 16 } as React.CSSProperties,
   grid2: { display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 16 } as React.CSSProperties,
   btnPrimary: { height: 38, padding: '0 18px', borderRadius: 9, background: OGAPAY_BLUE, color: '#fff', border: 'none', fontWeight: 700, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', gap: 6 },
@@ -488,21 +488,45 @@ function StorePage({ onViewProduct }: { onViewProduct: (p: StoreItem) => void })
                 )}
               </div>
               <div style={{ padding: 14 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-                  <div style={{ width: 20, height: 20, borderRadius: 6, background: OGAPAY_BLUE, color: '#fff', display: 'grid', placeItems: 'center', fontSize: 8, fontWeight: 800, overflow: 'hidden', flexShrink: 0 }}>
-                    {p.sellerAvatar ? <img src={p.sellerAvatar} style={{width:'100%',height:'100%',objectFit:'cover'}} /> : p.seller?.slice(0,2).toUpperCase()}
-                  </div>
-                  <span style={{ fontSize: 11, color: 'var(--text3)' }}>{p.seller}</span>
-                  <span style={{ marginLeft: 'auto', fontSize: 11, color: '#f59e0b' }}>{p.rating > 0 ? '★' + p.rating.toFixed(1) : ''}</span>
+                {/* Title + stacked date */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
+                  <div style={{ fontWeight: 700, fontSize: 14, flex: 1 }}>{p.title}</div>
+                  {(() => {
+                    const d = new Date(p.createdAt)
+                    const month = d.toLocaleString('default', { month: 'short' })
+                    const day = d.getDate()
+                    return (
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', lineHeight: 1.1, flexShrink: 0, marginLeft: 8 }}>
+                        <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--text3)' }}>{month}</span>
+                        <span style={{ fontSize: 13, fontWeight: 900, color: 'var(--text2)' }}>{day}</span>
+                      </div>
+                    )
+                  })()}
                 </div>
-                <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4 }}>{p.title}</div>
+                {/* Description */}
                 <div style={{ fontSize: 12, color: 'var(--text2)', marginBottom: 8, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as any, overflow: 'hidden', lineHeight: 1.4 }}>
                   {p.description}
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 8, borderTop: '1px solid var(--border)' }}>
-                  <span style={{ fontSize: 15, fontWeight: 900, color: '#16a34a' }}>{p.currency || 'NGN'} {formatPay(p.price)}</span>
-                  <span style={{ fontSize: 12, color: 'var(--text3)', cursor: 'pointer', fontWeight: 600 }}>View →</span>
+                {/* Creator boxed row */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--bg)', marginBottom: 8 }}>
+                  <div style={{ width: 32, height: 32, borderRadius: '50%', background: OGAPAY_BLUE, color: '#fff', display: 'grid', placeItems: 'center', fontSize: 11, fontWeight: 800, overflow: 'hidden', flexShrink: 0 }}>
+                    {p.sellerAvatar ? <img src={p.sellerAvatar} style={{width:'100%',height:'100%',objectFit:'cover',borderRadius:'50%'}} /> : p.seller?.slice(0,2).toUpperCase()}
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 12, fontWeight: 700 }}>{p.seller}</div>
+                    <div style={{ fontSize: 10, color: 'var(--text3)' }}>New creator</div>
+                  </div>
+                  {p.rating > 0 && <span style={{ fontSize: 12, color: '#f59e0b', fontWeight: 700 }}>★ {p.rating.toFixed(1)}</span>}
                 </div>
+                {/* Price box with green left border */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', border: '1px solid rgba(22,163,74,0.3)', borderLeft: '3px solid #16a34a', borderRadius: 8, padding: '8px 12px', marginTop: 8, background: 'rgba(22,163,74,0.04)' }}>
+                  <span style={{ fontSize: 16, fontWeight: 900, color: '#16a34a' }}>{p.currency || 'NGN'} {formatPay(p.price)}</span>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 6, padding: '2px 8px' }}>{p.currency || 'NGN'}</span>
+                </div>
+                {/* View more button */}
+                <button style={{ width: '100%', height: 36, borderRadius: 9, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text2)', fontWeight: 700, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 10 }}>
+                  <i className="ti ti-eye" style={{fontSize:14}} /> View more
+                </button>
               </div>
             </div>
           ))}
