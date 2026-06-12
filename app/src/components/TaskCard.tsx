@@ -1,184 +1,138 @@
-import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import './TaskCard.css'
 
-const NGN_USD_RATE = 1600
+const OGAPAY_BLUE = '#191C6D'
 
-const formatCategory = (cat: string) =>
-  (cat || '').replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, (l: string) => l.toUpperCase())
-
-const getStatus = (submitted: number, total: number, status: string) => {
-  if (status === 'COOLING_DOWN') return { label: 'Cooling Down', color: '#f59e0b', cls: 'orange' }
-  const remaining = total - submitted
-  if (remaining <= 0) return { label: 'Completed', color: '#888', cls: 'grey' }
-  if (remaining / total <= 0.2) return { label: 'Filling Fast', color: '#f5a623', cls: 'yellow' }
-  return { label: 'Open', color: '#22c55e', cls: 'green' }
+function formatAddress(addr: string) {
+  if (!addr) return ''
+  return addr.slice(0, 2).toUpperCase()
 }
 
-interface TaskData {
-  id: string
-  title: string
-  description: string
-  reward: number | string
-  currency?: string
-  category: string
-  status: string
-  maxWorkers: number
-  currentWorkers: number
-  submissionsCount?: number
-  minOgaScore?: number
-  requiresLinkedin?: boolean
-  requiresWallet?: boolean
-  deadlineHours?: number | null
-  expiresAt?: string | null
-  createdAt: string
-  rank?: string | number
-  poster?: {
-    id: string
-    username?: string
-    avatarUrl?: string | null
-    createdAt?: string
-    posterProfile?: {
-      avgRating?: number
-      isVerified?: boolean
-      totalPosted?: number
-    }
-  }
-  _count?: {
-    submissions: number
-  }
+function getDifficultyColor(difficulty?: string) {
+  if (!difficulty) return '#6366f1'
+  const d = difficulty.toLowerCase()
+  if (d === 'easy') return '#16a34a'
+  if (d === 'medium') return '#f59e0b'
+  if (d === 'hard') return '#dc2626'
+  return '#6366f1'
 }
 
-interface TaskCardProps {
-  task: TaskData
-}
-
-export default function TaskCard({ task }: TaskCardProps) {
+export default function TaskCard({ task }: { task: any }) {
   const navigate = useNavigate()
-  const [timeLeft, setTimeLeft] = useState('')
 
-  const currency = task.currency || 'NGN'
-  const isNgn = currency === 'NGN'
-  const filledSlots = task.currentWorkers || 0
-  const totalSlots = task.maxWorkers || 1
-  const openSlots = totalSlots - filledSlots
-  const progressPercent = Math.min(Math.round((filledSlots / totalSlots) * 100), 100)
-  const submissionsCount = task.submissionsCount ?? task._count?.submissions ?? 0
-  const isNew = Date.now() - new Date(task.createdAt).getTime() < 86400000
-  const posterName = task.poster?.username || 'Anonymous'
-  const statusInfo = getStatus(filledSlots, totalSlots, task.status)
-
-  const rewardNum = Number(task.reward) || 0
-  const usdEquivalent = isNgn ? rewardNum / NGN_USD_RATE : null
-
-  // Countdown timer
-  useEffect(() => {
-    if (!task.expiresAt) return
-    const tick = () => {
-      const diff = new Date(task.expiresAt!).getTime() - Date.now()
-      if (diff <= 0) { setTimeLeft('Expired'); return }
-      const d = Math.floor(diff / 86400000)
-      const h = Math.floor((diff % 86400000) / 3600000)
-      const m = Math.floor((diff % 3600000) / 60000)
-      const s = Math.floor((diff % 60000) / 1000)
-      setTimeLeft(`${d}:${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`)
-    }
-    tick()
-    const interval = setInterval(tick, 1000)
-    return () => clearInterval(interval)
-  }, [task.expiresAt])
+  const id = task.id
+  const title = task.title || 'Untitled Task'
+  const description = task.description || ''
+  const category = task.category || task.taskCategory || 'Task'
+  const reward = task.reward || task.amount || 0
+  const currency = task.currency || task.rewardCurrency || 'NGN'
+  const difficulty = task.difficulty || ''
+  const timeEstimate = task.timeEstimate || task.deadlineHours ? `${task.deadlineHours}h` : ''
+  const status = task.status || 'OPEN'
+  const creatorName = task.creatorName || task.poster?.username || task.creator?.username || task.creator || 'Anonymous'
+  const creatorAvatar = task.creatorAvatar || task.poster?.avatarUrl || task.creator?.avatarUrl || null
+  const creatorLabel = task.creatorLabel || 'Poster'
+  const featured = task.featured || false
+  const verificationRequired = task.verificationRequired || task.requiresLinkedin || task.requiresWallet || false
+  const rankRequired = task.rankRequired || task.rank || task.minOgaScore || null
+  const slotsTotal = task.slots || task.maxWorkers || task.maxSlots || 100
+  const slotsFilled = task.filled || task.currentWorkers || task.slotsFilled || 0
+  const progress = slotsTotal > 0 ? (slotsFilled / slotsTotal) * 100 : 0
+  const platform = task.platform || ''
+  const isNew = Date.now() - new Date(task.createdAt || Date.now()).getTime() < 86400000
 
   return (
-    <div className="tc-card" onClick={() => navigate(`/tasks/${task.id}`)}>
-
-      {/* ═══ 1. CREATOR HEADER ROW ═══ */}
-      <div className="tc-header">
-        {task.poster?.avatarUrl ? (
-          <img src={task.poster.avatarUrl} className="tc-avatar" alt={posterName} />
-        ) : (
-          <div className="tc-avatar-init">{posterName[0] || '?'}</div>
-        )}
-        <div className="tc-header-text">
-          <span className="tc-listed-label">Listed by</span>
-          <span className="tc-listed-name">{posterName}</span>
+    <div style={{
+      background: 'var(--glass-bg)', backdropFilter: 'blur(16px)',
+      border: '1px solid var(--glass-border)', borderRadius: 16, overflow: 'hidden',
+      boxShadow: '0 8px 32px rgba(0,0,0,0.06)', cursor: 'pointer', height: '100%',
+      display: 'flex', flexDirection: 'column',
+    }} onClick={() => navigate(`/tasks/${id}`)}>
+      {/* Creator row */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 14px 0' }}>
+        <div style={{ width: 36, height: 36, borderRadius: 10, background: OGAPAY_BLUE, color: '#fff', display: 'grid', placeItems: 'center', fontSize: 12, fontWeight: 900, flexShrink: 0, overflow: 'hidden' }}>
+          {creatorAvatar ? <img src={creatorAvatar} style={{width:'100%',height:'100%',objectFit:'cover'}} /> : formatAddress(creatorName)}
         </div>
-        {isNew && <span className="tc-new-badge">NEW</span>}
+        <div style={{ flex: 1 }}>
+          <div style={{ fontWeight: 700, fontSize: 13, lineHeight: 1.2 }}>{creatorName}</div>
+          <div style={{ fontSize: 11, color: 'var(--text2)' }}>{creatorLabel}</div>
+        </div>
+        {isNew && <span style={{ padding: '3px 8px', borderRadius: 5, background: 'rgba(245,158,11,0.12)', color: '#f59e0b', fontSize: 10, fontWeight: 800 }}>NEW</span>}
       </div>
 
-      {/* ═══ 2. PROGRESS SECTION ═══ */}
-      <div className="tc-progress-section">
-        <div className="tc-progress-header">
-          <span>PROGRESS</span>
-          <span>{filledSlots}/{totalSlots === 999 ? '\u221E' : totalSlots}</span>
-        </div>
-        <div className="tc-bar-track">
-          <div className="tc-bar-fill" style={{ width: `${progressPercent}%` }} />
-        </div>
-        <div className="tc-progress-stats">
-          <span className="tc-stat-item tc-stat-green">
-            <span className="tc-dot tc-dot-green" /> Submissions {submissionsCount}
+      {/* Meta pills */}
+      <div style={{ display: 'flex', gap: 6, padding: '8px 14px 0', flexWrap: 'wrap' }}>
+        <span style={{ padding: '2px 7px', borderRadius: 5, background: 'rgba(25,28,107,0.08)', color: OGAPAY_BLUE, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 3 }}>
+          <i className="ti ti-tag" style={{fontSize:10}} /> {category}
+        </span>
+        {platform && (
+          <span style={{ padding: '2px 7px', borderRadius: 5, background: 'var(--bg)', border: '1px solid var(--border)', fontSize: 10, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 3 }}>
+            <i className="ti ti-device-laptop" style={{fontSize:10}} /> {platform}
           </span>
-          <span className="tc-stat-item tc-stat-muted">
-            <span className="tc-dot tc-dot-muted" /> Open {openSlots}
+        )}
+        {timeEstimate && (
+          <span style={{ padding: '2px 7px', borderRadius: 5, background: 'var(--bg)', border: '1px solid var(--border)', fontSize: 10, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 3, marginLeft: 'auto' }}>
+            <i className="ti ti-clock" style={{fontSize:10}} /> {timeEstimate}
           </span>
-          <span className="tc-stat-item tc-stat-muted">
-            <span className={`tc-dot ${statusInfo.cls === 'green' ? 'tc-dot-green' : statusInfo.cls === 'orange' ? 'tc-dot-orange' : 'tc-dot-grey'}`} /> {statusInfo.label}
-          </span>
+        )}
+      </div>
+
+      {/* Title + Description */}
+      <div style={{ padding: '10px 14px', flex: 1 }}>
+        <h3 style={{ fontFamily: 'Outfit', fontSize: 15, fontWeight: 800, margin: '0 0 4px', color: 'var(--text)' }}>{title}</h3>
+        <p style={{ fontSize: 12, color: 'var(--text2)', margin: 0, lineHeight: 1.4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as any, overflow: 'hidden' }}>
+          {description}
+        </p>
+      </div>
+
+      {/* Reward */}
+      <div style={{ padding: '0 14px 10px' }}>
+        <div style={{ background: 'var(--bg)', borderRadius: 8, padding: 10, border: '1px solid var(--border)' }}>
+          <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 4 }}>Reward</div>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+            <span style={{ fontSize: 18, fontWeight: 900, color: '#16a34a' }}>{typeof reward === 'number' ? reward.toLocaleString() : reward}</span>
+            <span style={{ fontSize: 11, color: 'var(--text3)' }}>{currency}</span>
+          </div>
         </div>
       </div>
 
-      {/* ═══ 3. REWARD BOX ═══ */}
-      <div className="tc-reward-box">
-        <div className="tc-reward-main">
-          <span className="tc-reward-amount">{rewardNum.toLocaleString()}</span>
-          <span className="tc-reward-cur">{currency}</span>
-        </div>
-        {usdEquivalent !== null && (
-          <div className="tc-reward-usd">≈ ${usdEquivalent.toFixed(2)} USD</div>
-        )}
-      </div>
-
-      {/* ═══ 4. CATEGORY | RANK ═══ */}
-      <div className="tc-meta-row">
-        <span className="tc-meta-item">{formatCategory(task.category)}</span>
-        {task.rank && (
-          <>
-            <span className="tc-meta-divider">|</span>
-            <span className="tc-meta-item">Rank {task.rank}</span>
-          </>
-        )}
-        {task.minOgaScore && task.minOgaScore > 0 && (
-          <>
-            <span className="tc-meta-divider">|</span>
-            <span className="tc-meta-item tc-meta-req">Req: OgaScore {task.minOgaScore}+</span>
-          </>
-        )}
-        {task.requiresLinkedin && (
-          <>
-            <span className="tc-meta-divider">|</span>
-            <span className="tc-meta-item tc-meta-req">Req: LinkedIn</span>
-          </>
-        )}
-        {task.requiresWallet && (
-          <>
-            <span className="tc-meta-divider">|</span>
-            <span className="tc-meta-item tc-meta-req">Req: Wallet</span>
-          </>
-        )}
-      </div>
-
-      {/* ═══ 5. ABOUT THIS JOB ═══ */}
-      <div className="tc-about-section">
-        <div className="tc-about-header">
-          <span className="tc-about-label">
-            <i className="ti ti-message" style={{ fontSize: 11, marginRight: 4 }} />
-            ABOUT THIS TASK
+      {/* Badges */}
+      <div style={{ display: 'flex', gap: 6, padding: '0 14px 10px', flexWrap: 'wrap' }}>
+        {featured && <span style={{ padding: '3px 8px', borderRadius: 5, background: 'rgba(245,158,11,0.12)', color: '#f59e0b', fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 3 }}><i className="ti ti-star" /> Featured</span>}
+        {verificationRequired && <span style={{ padding: '3px 8px', borderRadius: 5, background: 'rgba(22,163,74,0.12)', color: '#16a34a', fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 3 }}><i className="ti ti-shield-check" /> Verified</span>}
+        {difficulty && (
+          <span style={{ padding: '3px 8px', borderRadius: 5, background: `${getDifficultyColor(difficulty)}12`, color: getDifficultyColor(difficulty), fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 3 }}>
+            <i className="ti ti-speedometer" /> {difficulty}
           </span>
-          {timeLeft && <span className="tc-about-timer">{timeLeft}</span>}
-        </div>
-        <p className="tc-about-desc">{task.description || 'No description provided.'}</p>
+        )}
+        {rankRequired && (
+          <span style={{ padding: '3px 8px', borderRadius: 5, background: 'rgba(31,140,255,0.08)', color: '#1F8CFF', fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 3 }}>
+            <i className="ti ti-medal" /> {typeof rankRequired === 'number' ? `Rank ${rankRequired}` : rankRequired}
+          </span>
+        )}
       </div>
 
+      {/* Progress bar */}
+      <div style={{ padding: '0 14px 12px' }}>
+        <div style={{ height: 4, borderRadius: 2, background: 'var(--border)', overflow: 'hidden' }}>
+          <div style={{ height: '100%', borderRadius: 2, background: OGAPAY_BLUE, width: `${Math.min(progress, 100)}%`, transition: 'width .3s' }} />
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'var(--text3)', marginTop: 4 }}>
+          <span>{slotsFilled} filled</span>
+          <span>{slotsTotal} total</span>
+        </div>
+      </div>
+
+      {/* Actions */}
+      <div style={{ display: 'flex', gap: 8, padding: '0 14px 14px' }}>
+        <button onClick={e => { e.stopPropagation(); navigate(`/tasks/${id}`); }}
+          style={{ flex: 1, height: 34, borderRadius: 8, background: 'transparent', border: '1px solid var(--border)', color: 'var(--text2)', fontWeight: 700, fontSize: 11, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
+          <i className="ti ti-eye" style={{fontSize:13}} /> View
+        </button>
+        <button onClick={e => { e.stopPropagation(); navigate(`/tasks/${id}`); }}
+          style={{ flex: 1, height: 34, borderRadius: 8, background: OGAPAY_BLUE, color: '#fff', border: 'none', fontWeight: 700, fontSize: 11, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
+          <i className="ti ti-send" style={{fontSize:13}} /> Apply Now
+        </button>
+      </div>
     </div>
   )
 }
