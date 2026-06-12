@@ -12,3 +12,15 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     </BrowserRouter>
   </React.StrictMode>,
 )
+
+// Unregister any old service worker and clear caches
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', async () => {
+    // Clear all old caches
+    const cacheKeys = await caches.keys()
+    await Promise.all(cacheKeys.map(key => caches.delete(key)))
+    // Unregister all SWs
+    const registrations = await navigator.serviceWorker.getRegistrations()
+    await Promise.all(registrations.map(r => r.unregister()))
+  })
+}

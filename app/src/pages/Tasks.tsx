@@ -8,7 +8,7 @@ import { SkeletonPage, injectSkeletonStyles } from "../components/SkeletonLoader
 const OGAPAY_BLUE = '#191C6D'
 
 const CATEGORY_MAP: Record<string, string> = {
-  'ALL': 'All', 'ALL': 'All', 'OPEN': 'Open', 'TRENDING': 'Trending',
+  'ALL': 'All', 'OPEN': 'Open', 'TRENDING': 'Trending',
   'SOCIAL': 'Social', 'CONTENT': 'Content', 'DESIGN': 'Design',
   'VIDEO': 'Video', 'TESTING': 'Testing', 'DATA': 'Data',
   'DEVELOPMENT': 'Development', 'RESEARCH': 'Research',
