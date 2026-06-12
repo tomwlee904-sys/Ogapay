@@ -62,7 +62,7 @@ function JobDetailModal({ job, onClose, onApply }: { job: any; onClose: () => vo
   const handleApply = async () => {
     setSubmitted(false)
     try {
-      await apiRequest('/tasks/' + job.id + '/apply', { method: 'POST', body: {} })
+      await apiRequest('/tasks/' + job.id + '/apply', { method: 'POST' })
       setSubmitted(true)
       setShowApplyModal(false)
       onApply(job.id)
@@ -73,7 +73,7 @@ function JobDetailModal({ job, onClose, onApply }: { job: any; onClose: () => vo
     try {
       await apiRequest('/tasks/' + job.id + '/submit', {
         method: 'POST',
-        body: { message: applyMsg, link: applyLink, notes },
+        body: { workerNotes: applyMsg, proof: applyLink, workerNotesExtra: notes },
       })
       setSubmitted(true)
       setShowApplyModal(false)

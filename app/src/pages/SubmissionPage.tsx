@@ -113,8 +113,9 @@ export default function SubmissionPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
       })
-      const applyJson = await applyRes.json()
-      if (!applyRes.ok) throw new Error(applyJson.message || 'Failed to apply')
+      let applyJson: any = {}
+      try { applyJson = await applyRes.json() } catch { /* ignore parse failure */ }
+      if (!applyRes.ok) throw new Error(applyJson?.message || applyJson?.error || 'Failed to apply')
 
       // 2. Upload files to ImageKit first, then submit URLs
       const uploadedUrls: string[] = []
@@ -141,8 +142,9 @@ export default function SubmissionPage() {
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
         body: JSON.stringify(submitBody),
       })
-      const submitJson = await submitRes.json()
-      if (!submitRes.ok) throw new Error(submitJson.message || 'Failed to submit')
+      let submitJson: any = {}
+      try { submitJson = await submitRes.json() } catch { /* ignore parse failure */ }
+      if (!submitRes.ok) throw new Error(submitJson?.message || submitJson?.error || 'Failed to submit')
 
       setSuccess(true)
     } catch (err: any) {

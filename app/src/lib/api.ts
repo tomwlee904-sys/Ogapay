@@ -144,8 +144,13 @@ export async function apiRequest<T = unknown>(path: string, options: ApiOptions 
   const { auth = true, retryOnUnauthorized = true, headers, ...init } = options
   const requestHeaders = new Headers(headers)
 
-  if (!requestHeaders.has('Content-Type') && init.body && !(init.body instanceof FormData)) {
-    requestHeaders.set('Content-Type', 'application/json')
+  if (init.body && !(init.body instanceof FormData)) {
+    if (typeof init.body === 'object' && !(init.body instanceof URLSearchParams)) {
+      requestHeaders.set('Content-Type', 'application/json')
+      init.body = JSON.stringify(init.body)
+    }
+  } else if (!requestHeaders.has('Content-Type') && !init.body) {
+    // no body, no Content-Type needed
   }
 
   if (auth) {
