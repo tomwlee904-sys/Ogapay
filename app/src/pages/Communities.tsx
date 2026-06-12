@@ -145,7 +145,7 @@ export default function Communities() {
           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
           border: tab === 'mine' ? 'none' : '1px solid var(--border)',
         }}>
-          👤 My Communities {myCommunities.length > 0 && <span style={{ opacity: 0.7 }}>({myCommunities.length})</span>}
+          <i className="ti ti-user" style={{fontSize:15}} /> My Communities {myCommunities.length > 0 && <span style={{ opacity: 0.7 }}>({myCommunities.length})</span>}
         </button>
         <button onClick={() => setTab('all')} style={{
           flex: 1, padding: '10px 0', borderRadius: 999,
@@ -155,7 +155,7 @@ export default function Communities() {
           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
           border: tab === 'all' ? 'none' : '1px solid var(--border)',
         }}>
-          👥 All Communities {communities.length > 0 && <span style={{ opacity: 0.7 }}>({communities.length})</span>}
+          <i className="ti ti-users" style={{fontSize:15}} /> All Communities {communities.length > 0 && <span style={{ opacity: 0.7 }}>({communities.length})</span>}
         </button>
       </div>
 
