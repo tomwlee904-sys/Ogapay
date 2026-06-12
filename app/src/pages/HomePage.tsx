@@ -18,6 +18,7 @@ const GlobalStyles = () => (
       --gold:#f5b301;
       --shadow:0 4px 16px rgba(0,0,0,.06),0 1px 4px rgba(0,0,0,.03);
       --shadow-soft:0 2px 8px rgba(0,0,0,.04);
+      --glass-bg:rgba(255,255,255,0.55); --glass-border:rgba(255,255,255,0.3);
       --radius:14px; --nav-h:60px;
     }
     [data-theme="dark"] {
@@ -26,6 +27,7 @@ const GlobalStyles = () => (
       --text:#ffffff; --text2:#a1a1aa; --text3:#667186;
       --primary:#ffffff; --accent:#1F8CFF; --accent2:#60A5FA;
       --shadow:0 4px 16px rgba(0,0,0,.5); --shadow-soft:0 2px 8px rgba(0,0,0,.4);
+      --glass-bg:rgba(20,20,35,0.45); --glass-border:rgba(255,255,255,0.08);
     }
     *, *::before, *::after { box-sizing: border-box; }
     html { scroll-behavior: smooth; }

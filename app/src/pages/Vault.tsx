@@ -10,12 +10,12 @@ const GREEN = '#16a34a'
 const RED = '#dc2626'
 
 const S: Record<string, React.CSSProperties> = {
-  page: { maxWidth: 900, margin: '0 auto', padding: '0 0 40px' },
+  page: { maxWidth: 900, margin: '0 auto', padding: '0 0 40px', position: 'relative' as const, zIndex: 1 },
   hero: { marginBottom: 20, textAlign: 'center' as const },
   badge: { display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 10px', borderRadius: 999, background: 'rgba(25,28,107,0.12)', color: OGAPAY_BLUE, fontSize: 11, fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase' },
   title: { fontFamily: 'Outfit', fontSize: 28, fontWeight: 900, margin: '8px 0 4px' },
   sub: { color: 'var(--text2)', fontSize: 14, margin: '0 0 16px' },
-  card: { background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 12, padding: 20, marginBottom: 16 },
+  card: { background: 'var(--glass-bg)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', border: '1px solid var(--glass-border)', borderRadius: 16, padding: 20, marginBottom: 16, boxShadow: '0 8px 32px rgba(0,0,0,0.06)' },
   cardTitle: { fontSize: 13, fontWeight: 700, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 },
   row: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid var(--border)' },
   rowLast: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0' },
@@ -306,6 +306,10 @@ export default function Vault() {
 
   return (
     <Layout>
+      <div style={{
+        position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none',
+        background: 'radial-gradient(circle at 20% 10%, rgba(25,28,107,0.10), transparent 50%),radial-gradient(circle at 80% 30%, rgba(20,184,166,0.08), transparent 50%),radial-gradient(circle at 50% 90%, rgba(153,69,255,0.06), transparent 50%)',
+      }} />
       <div style={S.page}>
         {loading && <SkeletonPage />}
 
@@ -325,7 +329,7 @@ export default function Vault() {
             </div>
 
             {/* ── $PAY Token Contract Address ── */}
-            <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 12, padding: 14, marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ background: 'var(--glass-bg)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', border: '1px solid var(--glass-border)', borderRadius: 16, padding: 14, marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxShadow: '0 8px 32px rgba(0,0,0,0.06)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <i className="ti ti-currency-solana" style={{ color: '#9945FF', fontSize: 18 }} />
                 <div>
@@ -342,7 +346,7 @@ export default function Vault() {
             {/* ════════════════════════════════════════
                 2. VAULT BALANCE CARD
                ════════════════════════════════════════ */}
-            <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 12, padding: 28, marginBottom: 16, textAlign: 'center' as const }}>
+            <div style={{ background: 'var(--glass-bg)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', border: '1px solid var(--glass-border)', borderRadius: 16, padding: 28, marginBottom: 16, textAlign: 'center' as const, boxShadow: '0 8px 32px rgba(0,0,0,0.06)' }}>
               <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text3)', marginBottom: 6 }}>Vault Balance</div>
               <div style={{ fontFamily: 'Outfit', fontSize: 40, fontWeight: 900, color: OGAPAY_BLUE, lineHeight: 1.1, marginBottom: 4 }}>
                 {(pool?.totalPay || 0).toLocaleString()} <span style={{ fontSize: 20, fontWeight: 700 }}>$PAY</span>
@@ -353,7 +357,7 @@ export default function Vault() {
             {/* ════════════════════════════════════════
                 3. NEXT DISTRIBUTION CARD
                ════════════════════════════════════════ */}
-            <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 12, padding: 24, marginBottom: 16, textAlign: 'center' as const }}>
+            <div style={{ background: 'var(--glass-bg)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', border: '1px solid var(--glass-border)', borderRadius: 16, padding: 24, marginBottom: 16, textAlign: 'center' as const, boxShadow: '0 8px 32px rgba(0,0,0,0.06)' }}>
               <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text3)', marginBottom: 8 }}>Next Distribution</div>
               <div style={{ fontFamily: 'Outfit', fontSize: 40, fontWeight: 900, color: OGAPAY_BLUE, letterSpacing: '0.02em', marginBottom: 6 }}>
                 <CountdownTo target={nextDistAt} />
@@ -447,19 +451,19 @@ export default function Vault() {
                 4. THREE STAT CARDS
                ════════════════════════════════════════ */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12, marginBottom: 20 }}>
-              <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 12, padding: 16, textAlign: 'center' as const }}>
+              <div style={{ background: 'var(--glass-bg)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', border: '1px solid var(--glass-border)', borderRadius: 16, padding: 16, textAlign: 'center' as const, boxShadow: '0 8px 32px rgba(0,0,0,0.06)' }}>
                 <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text3)', marginBottom: 4 }}>Total Supply</div>
                 <div style={{ fontFamily: 'Outfit', fontSize: 22, fontWeight: 900, color: OGAPAY_BLUE }}>
                   {vaultData?.totalSupplyPay !== undefined ? `${formatPay(vaultData.totalSupplyPay)} $PAY` : '—'}
                 </div>
               </div>
-              <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 12, padding: 16, textAlign: 'center' as const }}>
+              <div style={{ background: 'var(--glass-bg)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', border: '1px solid var(--glass-border)', borderRadius: 16, padding: 16, textAlign: 'center' as const, boxShadow: '0 8px 32px rgba(0,0,0,0.06)' }}>
                 <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text3)', marginBottom: 4 }}>Eligible Supply</div>
                 <div style={{ fontFamily: 'Outfit', fontSize: 22, fontWeight: 900, color: '#16a34a' }}>
                   {vaultData?.eligibleSupplyPay !== undefined ? `${formatPay(vaultData.eligibleSupplyPay)} $PAY` : '—'}
                 </div>
               </div>
-              <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 12, padding: 16, textAlign: 'center' as const }}>
+              <div style={{ background: 'var(--glass-bg)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', border: '1px solid var(--glass-border)', borderRadius: 16, padding: 16, textAlign: 'center' as const, boxShadow: '0 8px 32px rgba(0,0,0,0.06)' }}>
                 <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text3)', marginBottom: 4 }}>Eligible Wallets</div>
                 <div style={{ fontFamily: 'Outfit', fontSize: 22, fontWeight: 900, color: '#f59e0b' }}>{vaultData?.eligibleCount || 0}</div>
               </div>
@@ -583,15 +587,15 @@ export default function Vault() {
 
               {/* Small stat blocks above chart */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 10, marginBottom: 16 }}>
-                <div style={{ background: 'var(--bg)', borderRadius: 8, padding: 10, textAlign: 'center' as const, border: '1px solid var(--border)' }}>
+                <div style={{ background: 'var(--glass-bg)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', borderRadius: 12, padding: 10, textAlign: 'center' as const, border: '1px solid var(--glass-border)', boxShadow: '0 8px 32px rgba(0,0,0,0.06)' }}>
                   <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text3)', marginBottom: 2 }}>Avg Daily Return (30D)</div>
                   <div style={{ fontFamily: 'Outfit', fontSize: 16, fontWeight: 800, color: GREEN }}>{formatPct(vaultData?.avgDailyReturnPct)}</div>
                 </div>
-                <div style={{ background: 'var(--bg)', borderRadius: 8, padding: 10, textAlign: 'center' as const, border: '1px solid var(--border)' }}>
+                <div style={{ background: 'var(--glass-bg)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', borderRadius: 12, padding: 10, textAlign: 'center' as const, border: '1px solid var(--glass-border)', boxShadow: '0 8px 32px rgba(0,0,0,0.06)' }}>
                   <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text3)', marginBottom: 2 }}>7D Cumulative Return</div>
                   <div style={{ fontFamily: 'Outfit', fontSize: 16, fontWeight: 800, color: GREEN }}>{formatPct(vaultData?.sevenDayReturnPct)}</div>
                 </div>
-                <div style={{ background: 'var(--bg)', borderRadius: 8, padding: 10, textAlign: 'center' as const, border: '1px solid var(--border)' }}>
+                <div style={{ background: 'var(--glass-bg)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', borderRadius: 12, padding: 10, textAlign: 'center' as const, border: '1px solid var(--glass-border)', boxShadow: '0 8px 32px rgba(0,0,0,0.06)' }}>
                   <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text3)', marginBottom: 2 }}>30D Cumulative Return</div>
                   <div style={{ fontFamily: 'Outfit', fontSize: 16, fontWeight: 800, color: GREEN }}>{formatPct(vaultData?.thirtyDayReturnPct)}</div>
                 </div>
