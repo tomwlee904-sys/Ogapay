@@ -859,13 +859,12 @@ function StoreSection() {
   };
   const cardStyle = {
     borderRadius: 16,
-    boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
-    border: '1px solid var(--border)',
-    padding: 12,
+    boxShadow: '0 4px 24px rgba(0,0,0,0.10)',
+    border: '1.5px solid var(--glass-border)',
+    overflow: 'hidden',
     display: 'flex',
     flexDirection: 'column',
-    gap: 12,
-    background: 'var(--card)',
+    background: 'var(--glass-bg)',
     height: '100%',
     width: '100%',
     maxWidth: '100%',
@@ -939,18 +938,26 @@ function StoreSection() {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    border: '1px solid var(--border)',
-    borderRadius: 12,
+    border: '1px solid rgba(22,163,74,0.3)',
+    borderLeft: '3px solid #16a34a',
+    borderRadius: 8,
     padding: '8px 12px',
+    background: 'rgba(22,163,74,0.04)',
+    marginTop: 8,
   };
   const primaryPriceStyle = {
-    color: '#22c55e',
-    fontWeight: 700,
-    fontSize: 18,
+    color: '#16a34a',
+    fontWeight: 900,
+    fontSize: 16,
   };
   const cryptoPriceStyle = {
-    color: 'var(--text2)',
-    fontSize: 14,
+    color: 'var(--text3)',
+    fontSize: 11,
+    fontWeight: 700,
+    background: 'var(--bg)',
+    border: '1px solid var(--border)',
+    borderRadius: 6,
+    padding: '2px 8px',
   };
   const viewBtnStyle = {
     width: '100%',
@@ -1019,8 +1026,8 @@ function StoreSection() {
                 const sellerName = p.seller || 'Anonymous';
                 const currency = p.currency || 'NGN';
                 return (
-                  <div key={p.id || idx} style={cardStyle}>
-                    <div style={imgWrapStyle}>
+                <div key={p.id || idx} style={cardStyle}>
+                    <div style={{ position: 'relative', height: 160, background: 'var(--bg2)', flexShrink: 0 }}>
                       {p.image ? (
                         <img loading="lazy" src={p.image} alt={p.title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                       ) : (
@@ -1029,25 +1036,42 @@ function StoreSection() {
                         </div>
                       )}
                     </div>
-                    <div style={titleRowStyle}>
-                      <span style={titleStyle}>{p.title || p.name}</span>
-                      <time style={dateStyle}>{p.createdAt ? new Date(p.createdAt).toLocaleDateString() : ''}</time>
-                    </div>
-                    {p.description && <p style={descStyle}>{p.description}</p>}
-                    <div style={creatorStyle}>
-                      <div style={avatarStyle}>{sellerName.charAt(0).toUpperCase()}</div>
-                      <div>
-                        <div style={{ fontWeight: 700, fontSize: 13 }}>{sellerName}</div>
-                        <div style={{ fontSize: 11, color: 'var(--text3)' }}>New creator</div>
+                    <div style={{ padding: 14, display: 'flex', flexDirection: 'column', gap: 0, flex: 1 }}>
+                      {/* Title + stacked date */}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
+                        <span style={titleStyle}>{p.title || p.name}</span>
+                        {p.createdAt ? (() => {
+                          const d = new Date(p.createdAt)
+                          const month = d.toLocaleString('default', { month: 'short' })
+                          const day = d.getDate()
+                          return (
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', lineHeight: 1.1, flexShrink: 0, marginLeft: 8 }}>
+                              <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--text3)' }}>{month}</span>
+                              <span style={{ fontSize: 13, fontWeight: 900, color: 'var(--text2)' }}>{day}</span>
+                            </div>
+                          )
+                        })() : null}
                       </div>
+                      {/* Description */}
+                      {p.description && <p style={descStyle}>{p.description}</p>}
+                      {/* Creator boxed row */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--bg)', marginTop: 8 }}>
+                        <div style={avatarStyle}>{sellerName.charAt(0).toUpperCase()}</div>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontWeight: 700, fontSize: 12 }}>{sellerName}</div>
+                          <div style={{ fontSize: 10, color: 'var(--text3)' }}>New creator</div>
+                        </div>
+                      </div>
+                      {/* Price box with green left border */}
+                      <div style={priceRowStyle}>
+                        <span style={primaryPriceStyle}>{formatPrice(p.price)} {currency}</span>
+                        <span style={cryptoPriceStyle}>{currency}</span>
+                      </div>
+                      {/* View more button */}
+                      <a href={`/store/${p.id}`} style={viewBtnStyle}>
+                        <I n="eye" s={16} /> View more
+                      </a>
                     </div>
-                    <div style={priceRowStyle}>
-                      <span style={primaryPriceStyle}>{formatPrice(p.price)} {currency}</span>
-                      <span style={cryptoPriceStyle}>{formatPrice(p.price)} {currency}</span>
-                    </div>
-                    <a href={`/store/${p.id}`} style={viewBtnStyle}>
-                      <I n="eye" s={16} /> View more
-                    </a>
                   </div>
                 );
               })}
