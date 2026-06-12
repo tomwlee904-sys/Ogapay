@@ -215,31 +215,34 @@ function TaskCard({ job, onView, onToggleBookmark, bookmarked }: {
   const slotsFilled = job.slotsFilled || job.filled || 0
   const progress = slotsTotal > 0 ? (slotsFilled / slotsTotal) * 100 : 0
   const creatorName = job.creatorName || job.creator?.username || job.creator || 'Anonymous'
-  const difficultyColor = job.difficulty === 'Easy' ? '#16a34a' : job.difficulty === 'Medium' ? '#f59e0b' : '#dc2626'
+  const openSlots = slotsTotal - slotsFilled
 
   return (
     <div style={{
-      background: 'var(--glass-bg)', backdropFilter: 'blur(16px)',
+      background: 'linear-gradient(135deg, rgba(220,252,231,0.3), rgba(255,255,255,0.7))',
       border: '1px solid var(--glass-border)', borderRadius: 16, overflow: 'hidden',
       boxShadow: '0 8px 32px rgba(0,0,0,0.06)', cursor: 'pointer',
     }} onClick={() => onView(job)}>
-      {/* Creator row */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 14px 0' }}>
-        <div style={{ width: 36, height: 36, borderRadius: 10, background: OGAPAY_BLUE, color: '#fff', display: 'grid', placeItems: 'center', fontSize: 12, fontWeight: 900, flexShrink: 0, overflow: 'hidden' }}>
-          {job.creatorAvatar ? <img src={job.creatorAvatar} style={{width:'100%',height:'100%',objectFit:'cover'}} /> : formatAddress(creatorName)}
+      {/* ── LISTED BY — Boxed Header ── */}
+      <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--glass-border)', background: 'rgba(25,28,107,0.04)' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--text3)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 6 }}>Listed By</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ width: 36, height: 36, borderRadius: 10, background: OGAPAY_BLUE, color: '#fff', display: 'grid', placeItems: 'center', fontSize: 12, fontWeight: 900, flexShrink: 0, overflow: 'hidden' }}>
+            {job.creatorAvatar ? <img src={job.creatorAvatar} style={{width:'100%',height:'100%',objectFit:'cover'}} /> : formatAddress(creatorName)}
+          </div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontWeight: 700, fontSize: 13, lineHeight: 1.2 }}>{creatorName}</div>
+            <div style={{ fontSize: 11, color: 'var(--text2)' }}>{job.creatorLabel || 'Poster'}</div>
+          </div>
+          <button onClick={e => { e.stopPropagation(); onToggleBookmark(job.id); }}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: bookmarked ? OGAPAY_BLUE : 'var(--text3)', fontSize: 16, padding: 4 }}>
+            <i className={`ti ${bookmarked ? 'ti-bookmark-filled' : 'ti-bookmark'}`} />
+          </button>
         </div>
-        <div style={{ flex: 1 }}>
-          <div style={{ fontWeight: 700, fontSize: 13, lineHeight: 1.2 }}>{creatorName}</div>
-          <div style={{ fontSize: 11, color: 'var(--text2)' }}>{job.creatorLabel || 'Poster'}</div>
-        </div>
-        <button onClick={e => { e.stopPropagation(); onToggleBookmark(job.id); }}
-          style={{ background: 'none', border: 'none', cursor: 'pointer', color: bookmarked ? OGAPAY_BLUE : 'var(--text3)', fontSize: 16, padding: 4 }}>
-          <i className={`ti ${bookmarked ? 'ti-bookmark-filled' : 'ti-bookmark'}`} />
-        </button>
       </div>
 
       {/* Meta pills */}
-      <div style={{ display: 'flex', gap: 6, padding: '8px 14px 0', flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: 6, padding: '10px 14px 0', flexWrap: 'wrap' }}>
         {job.category && (
           <span style={{ padding: '2px 7px', borderRadius: 5, background: 'rgba(25,28,107,0.08)', color: OGAPAY_BLUE, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 3 }}>
             <i className="ti ti-tag" style={{fontSize:10}} /> {job.category}
@@ -281,7 +284,7 @@ function TaskCard({ job, onView, onToggleBookmark, bookmarked }: {
         {job.featured && <span style={{ padding: '3px 8px', borderRadius: 5, background: 'rgba(245,158,11,0.12)', color: '#f59e0b', fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 3 }}><i className="ti ti-star" /> Featured</span>}
         {job.verificationRequired && <span style={{ padding: '3px 8px', borderRadius: 5, background: 'rgba(22,163,74,0.12)', color: '#16a34a', fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 3 }}><i className="ti ti-shield-check" /> Verified</span>}
         {job.difficulty && (
-          <span style={{ padding: '3px 8px', borderRadius: 5, background: `${difficultyColor}12`, color: difficultyColor, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 3 }}>
+          <span style={{ padding: '3px 8px', borderRadius: 5, background: '#dc2626', color: '#fff', fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 3 }}>
             <i className="ti ti-speedometer" /> {job.difficulty}
           </span>
         )}
@@ -292,14 +295,23 @@ function TaskCard({ job, onView, onToggleBookmark, bookmarked }: {
         )}
       </div>
 
-      {/* Progress bar */}
-      <div style={{ padding: '0 14px 12px' }}>
+      {/* ── PROGRESS SECTION ── */}
+      <div style={{ padding: '0 14px 10px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, fontWeight: 700, color: 'var(--text3)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          <span>Progress</span>
+          <span>{slotsFilled}/{slotsTotal}</span>
+        </div>
         <div style={{ height: 4, borderRadius: 2, background: 'var(--border)', overflow: 'hidden' }}>
           <div style={{ height: '100%', borderRadius: 2, background: OGAPAY_BLUE, width: `${Math.min(progress, 100)}%`, transition: 'width .3s' }} />
         </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'var(--text3)', marginTop: 4 }}>
-          <span>{slotsFilled} filled</span>
-          <span>{slotsTotal} total</span>
+      </div>
+
+      {/* ── STATUS ROW — Single inline line ── */}
+      <div style={{ padding: '0 14px 12px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'nowrap', fontSize: 11 }}>
+          <span style={{ color: '#16a34a', fontWeight: 600 }}>● Submissions {slotsFilled}</span>
+          <span style={{ color: '#6366f1', fontWeight: 600 }}>● Open {openSlots}</span>
+          <span style={{ color: '#16a34a', fontWeight: 600 }}>● Status Open</span>
         </div>
       </div>
 
@@ -318,7 +330,6 @@ function TaskCard({ job, onView, onToggleBookmark, bookmarked }: {
   )
 }
 
-// ═══════════════════════════════════════════════
 // MAIN TASKS PAGE
 // ═══════════════════════════════════════════════
 export default function Tasks() {
