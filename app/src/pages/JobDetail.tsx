@@ -175,7 +175,7 @@ export default function JobDetail() {
   const [bookmarked, setBookmarked] = useState(false)
   const [error, setError] = useState('')
 
-  const { user: authUser } = useAuth()
+  const { user: authUser, refreshUser } = useAuth()
   const [submissions, setSubmissions] = useState<any[]>([])
   const [subsLoading, setSubsLoading] = useState(false)
   useEffect(() => {
@@ -242,6 +242,7 @@ export default function JobDetail() {
       const json = await res.json();
       if (json.success) {
         setSubmissions(prev => prev.map(s => s.id === subId ? { ...s, status: 'APPROVED' } : s));
+        refreshUser();
       }
     } catch {}
     setApproving(null);
@@ -260,6 +261,7 @@ export default function JobDetail() {
       const json = await res.json();
       if (json.success) {
         setSubmissions(prev => prev.map(s => s.id === subId ? { ...s, status: 'REJECTED' } : s));
+        refreshUser();
       }
     } catch {}
     setRejecting(null);

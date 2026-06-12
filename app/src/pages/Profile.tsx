@@ -336,7 +336,7 @@ function AlertsTab() {
 export default function Profile() {
   const { fmt, preferredCurrency } = useCurrency()
   const navigate = useNavigate();
-  const { user: authUser } = useAuth();
+  const { user: authUser, refreshUser } = useAuth();
   const [tab, setTab] = useState("profile");
   const [showBal, setShowBal] = useState(false);
   const [swBal, setSwBal] = useState(false);
@@ -500,6 +500,7 @@ export default function Profile() {
       localStorage.setItem('ogapay_account_name', accountName);
       setEditingBank(false);
       setSavingBank(false);
+      refreshUser();
       showToast('Bank account saved');
     } catch (err) {
       setBankMsg('Failed to save bank details. Please try again.');
@@ -1197,6 +1198,7 @@ export default function Profile() {
 
                     setShowEdit(false);
                     showToast('Profile updated successfully');
+                    refreshUser();
                   } catch (err: any) {
                     setEditErrors({general: err.message || 'Failed to save'});
                   }

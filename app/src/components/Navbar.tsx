@@ -10,27 +10,11 @@ interface NavbarProps {
 }
 
 export default function Navbar({ onMenuToggle }: NavbarProps) {
-  const { isAuthed } = useAuth()
+  const { isAuthed, user } = useAuth()
   const { theme, toggle } = useTheme()
-  const [balance, setBalance] = useState("0.00")
+  const balance = user?.wallet?.NGN?.balance ?? 0
+  const formattedBalance = balance.toLocaleString()
   const [unreadNotifs, setUnreadNotifs] = useState(0)
-
-  useEffect(() => {
-    if (!isAuthed) return
-    let cancelled = false
-    async function fetchBal() {
-      try {
-        const token = localStorage.getItem('ogapay_access_token')
-        if (!token) return
-        const json: any = await apiRequest('/wallet/balance')
-        if (!cancelled && json?.NGN) {
-          setBalance(Number(json.NGN.available || json.NGN.balance || 0).toLocaleString())
-        }
-      } catch {}
-    }
-    fetchBal()
-    return () => { cancelled = true }
-  }, [isAuthed])
 
   useEffect(() => {
     if (!isAuthed) return
@@ -72,7 +56,7 @@ export default function Navbar({ onMenuToggle }: NavbarProps) {
           )}
           {isAuthed && (
             <a className="balance-chip" href="/wallet">
-              BALANCE: &#8358;{balance}
+              BALANCE: &#8358;{formattedBalance}
             </a>
           )}
           {isAuthed && (

@@ -6,6 +6,7 @@ import { apiRequest } from "../lib/api";
 import bs58 from "bs58";
 import { SkeletonPage, injectSkeletonStyles } from "../components/SkeletonLoader";
 import FundWalletModal from "../components/FundWalletModal";
+import { OnboardingChecklist } from "../components/OnboardingChecklist";
 
 const ACCENT = "#191C6B";
 
@@ -779,6 +780,47 @@ export default function OgaPayDashboard() {
           </div>
 
         </div>{/* end two-column grid */}
+
+          {/* --- Onboarding Checklist --- */}
+          <div style={{ marginBottom: 20 }}>
+            <OnboardingChecklist />
+          </div>
+
+          {/* --- Active / Completed tasks from submissions --- */}
+          {(() => { try {
+            const subs = JSON.parse(localStorage.getItem('ogapay_submissions') || '[]');
+            const pending = subs.filter((s: any) => s.status === 'PENDING');
+            const approved = subs.filter((s: any) => s.status === 'APPROVED');
+            return (
+              <>
+                {pending.length > 0 && (
+                  <div style={{ marginTop: 20 }}>
+                    <h3 className="dash-section-title"><i className="ti ti-refresh" /> Active Tasks</h3>
+                    {pending.map((s: any) => (
+                      <div key={s.id} style={{ padding: 14, borderRadius: 10, border: '1px solid var(--border)', background: 'var(--card)', marginBottom: 8, fontSize: 13, fontWeight: 700 }}>
+                        {s.task?.title || 'Task'}
+                        <div style={{ fontSize: 11, color: 'var(--text3)', fontWeight: 400, marginTop: 4 }}>
+                          Reward: {s.task?.reward} {s.task?.currency}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {approved.length > 0 && (
+                  <div style={{ marginTop: 20 }}>
+                    <h3 className="dash-section-title" style={{ color: '#16a34a' }}><i className="ti ti-circle-check" /> Completed</h3>
+                    {approved.map((s: any) => (
+                      <div key={s.id} style={{ padding: 14, borderRadius: 10, border: '1px solid rgba(22,163,74,0.2)', background: 'rgba(22,163,74,0.03)', marginBottom: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: 13, fontWeight: 700 }}>{s.task?.title || 'Task'}</span>
+                        <span style={{ fontSize: 11, fontWeight: 700, color: '#16a34a' }}>+{s.task?.reward} {s.task?.currency}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
+            );
+          } catch(e) { return null; }})()}
+
       </div>{/* end dash-wrap2 */}
       {showFundModal && (
         <FundWalletModal
