@@ -145,9 +145,14 @@ export async function apiRequest<T = unknown>(path: string, options: ApiOptions 
   const requestHeaders = new Headers(headers)
 
   if (init.body && !(init.body instanceof FormData)) {
+    // Auto-stringify plain objects (not FormData, URLSearchParams, or already-string)
     if (typeof init.body === 'object' && !(init.body instanceof URLSearchParams)) {
       requestHeaders.set('Content-Type', 'application/json')
       init.body = JSON.stringify(init.body)
+    }
+    // Pre-serialized JSON strings also need Content-Type set
+    if (typeof init.body === 'string' && !requestHeaders.has('Content-Type')) {
+      requestHeaders.set('Content-Type', 'application/json')
     }
   } else if (!requestHeaders.has('Content-Type') && !init.body) {
     // no body, no Content-Type needed
