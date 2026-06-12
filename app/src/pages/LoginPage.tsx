@@ -86,7 +86,7 @@ export default function LoginPage() {
       const result = await apiRequest("/auth/login", {
         method: "POST",
         auth: false,
-        body: JSON.stringify({ email: loginEmail.trim(), password: loginPassword }),
+        body: { email: loginEmail.trim(), password: loginPassword },
       });
 
       
@@ -144,7 +144,7 @@ export default function LoginPage() {
       const result = await apiRequest("/auth/signup", {
         method: "POST",
         auth: false,
-        body: JSON.stringify({ firstName, lastName, email: signupEmail.trim(), password: signupPassword, username: signupEmail.split("@")[0] }),
+        body: { firstName, lastName, email: signupEmail.trim(), password: signupPassword, username: signupEmail.split("@")[0] },
       });
             const authPayload = {
         user: result.user || result,
@@ -499,7 +499,7 @@ export default function LoginPage() {
                 <p className="sub">Join OgaPay to start earning or promoting.</p>
                 <input type="text" value={signupName} onChange={e => setSignupName(e.target.value)} placeholder="Full name" style={{width:'100%',height:'56px',padding:'0 16px',border:'1.5px solid #e3e9f2',borderRadius:'12px',fontSize:'14px',marginBottom:'12px',fontFamily:'inherit'}} />
                 <input type="email" value={signupEmail} onChange={e => setSignupEmail(e.target.value)} placeholder="Email address" style={{width:'100%',height:'56px',padding:'0 16px',border:'1.5px solid #e3e9f2',borderRadius:'12px',fontSize:'14px',marginBottom:'12px',fontFamily:'inherit'}} />
-                <input type="password" value={signupPassword} onChange={e => setSignupPassword(e.target.value)} placeholder="Password (min 8 characters)" style={{width:'100%',height:'56px',padding:'0 16px',border:'1.5px solid #e3e9f2',borderRadius:'12px',fontSize:'14px',marginBottom:'16px',fontFamily:'inherit'}} />
+                <input type="password" value={signupPassword} onChange={e => setSignupPassword(e.target.value)} placeholder="Password (min 8 chars, uppercase + number)" style={{width:'100%',height:'56px',padding:'0 16px',border:'1.5px solid #e3e9f2',borderRadius:'12px',fontSize:'14px',marginBottom:'16px',fontFamily:'inherit'}} />
                 <button type="submit" disabled={loading === "signup"} style={{width:'100%',height:'56px',border:'none',borderRadius:'14px',background:'#4D5DFF',color:'#fff',fontSize:'16px',fontWeight:'700',cursor:'pointer'}}>{loading === "signup" ? <><i class="ti ti-loader" style={{animation:'spin 1s linear infinite',display:'inline-block'}} /> Creating...</> : 'Create Account'}</button>
                 {signupMsg && <p style={{fontSize:'13px',color:'#dc2626',margin:'10px 0 0',textAlign:'center'}}>{signupMsg}</p>}
                 <p style={{textAlign:'center',margin:'14px 0 0'}}><a href="#" onClick={(e) => { e.preventDefault(); show("default"); }} style={{color:'#4D5DFF',fontSize:'13px',fontWeight:'600',textDecoration:'none'}}>Back to options</a></p>
