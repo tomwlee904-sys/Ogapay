@@ -22,12 +22,12 @@ const GlobalStyles = () => (
       --radius:14px; --nav-h:60px;
     }
     [data-theme="dark"] {
-      --bg:#000000; --bg2:#050505; --card:#111111; --card2:#151515;
-      --border:#232323; --border2:#333333;
-      --text:#ffffff; --text2:#a1a1aa; --text3:#667186;
+      --bg:#141518; --bg2:#1e1f25; --card:#1e1f25; --card2:#25262d;
+      --border:rgba(255,255,255,0.10); --border2:rgba(255,255,255,0.15);
+      --text:#ffffff; --text2:rgba(255,255,255,0.55); --text3:rgba(255,255,255,0.35);
       --primary:#ffffff; --accent:#1F8CFF; --accent2:#60A5FA;
       --shadow:0 4px 16px rgba(0,0,0,.5); --shadow-soft:0 2px 8px rgba(0,0,0,.4);
-      --glass-bg:rgba(20,20,35,0.45); --glass-border:rgba(255,255,255,0.08);
+      --glass-bg:#1e1f25; --glass-border:rgba(255,255,255,0.08);
     }
     *, *::before, *::after { box-sizing: border-box; }
     html { scroll-behavior: smooth; }

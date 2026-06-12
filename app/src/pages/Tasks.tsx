@@ -219,12 +219,12 @@ function TaskCard({ job, onView, onToggleBookmark, bookmarked }: {
 
   return (
     <div style={{
-      background: 'linear-gradient(135deg, rgba(220,252,231,0.3), rgba(255,255,255,0.7))',
-      border: '1px solid var(--glass-border)', borderRadius: 16, overflow: 'hidden',
+      background: 'var(--card, #1e1f25)',
+      border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, overflow: 'hidden',
       boxShadow: '0 8px 32px rgba(0,0,0,0.06)', cursor: 'pointer',
     }} onClick={() => onView(job)}>
       {/* ── LISTED BY — Boxed Header ── */}
-      <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--glass-border)', background: 'rgba(25,28,107,0.04)' }}>
+      <div style={{ padding: '12px 14px', borderBottom: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.04)' }}>
         <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--text3)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 6 }}>Listed By</div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{ width: 36, height: 36, borderRadius: 10, background: OGAPAY_BLUE, color: '#fff', display: 'grid', placeItems: 'center', fontSize: 12, fontWeight: 900, flexShrink: 0, overflow: 'hidden' }}>
@@ -270,7 +270,7 @@ function TaskCard({ job, onView, onToggleBookmark, bookmarked }: {
 
       {/* Reward */}
       <div style={{ padding: '0 14px 10px' }}>
-        <div style={{ background: 'var(--bg)', borderRadius: 8, padding: 10, border: '1px solid var(--border)' }}>
+        <div style={{ background: 'var(--bg, #141518)', borderRadius: 8, padding: 10, border: '1px solid rgba(255,255,255,0.08)' }}>
           <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 4 }}>Reward</div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
             <span style={{ fontSize: 18, fontWeight: 900, color: '#16a34a' }}>{job.reward || job.amount || 0}</span>
