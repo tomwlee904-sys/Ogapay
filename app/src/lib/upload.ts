@@ -11,6 +11,8 @@ const uploadRoutes: Record<string, UploadRoute> = {
   'task-proofs':      { path: '/uploads/proof', field: 'file',   responseKey: 'url' },
   'store':            { path: '/uploads/store', field: 'file',   responseKey: 'url' },
   'community-covers': { path: '/uploads/community', field: 'cover', responseKey: 'url' },
+  'kyc-docs':         { path: '/uploads/kyc', field: 'file', responseKey: 'url' },
+  'task-attachments': { path: '/uploads/proof', field: 'file', responseKey: 'url' },
 }
 
 export async function uploadImage(
@@ -20,9 +22,15 @@ export async function uploadImage(
   const token = getAccessToken()
   if (!token) throw new Error('Not authenticated')
 
-  // Compress images before upload (skip non-image files)
+  // Client-side pre-check for common issues
+  const allowedImageTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
+  const allowedDocs = ['application/pdf']
+  const isImage = allowedImageTypes.includes(file.type)
+  const isDoc = allowedDocs.includes(file.type)
+
+  // Compress images before upload
   let uploadFile = file
-  if (file.type && file.type.startsWith('image/') && purpose !== 'avatars') {
+  if (isImage && purpose !== 'avatars') {
     try {
       const imageCompression = (await import('browser-image-compression')).default
       uploadFile = await imageCompression(file, {
