@@ -38,7 +38,6 @@ export default function Sidebar() {
 
         <div className="sidebar-section">Social</div>
         <a className="sidebar-link" href="/messages"><i className="ti ti-message" /> Messages</a>
-        <a className="sidebar-link" href="/communities"><i className="ti ti-users" /> Communities</a>
 
         <div className="sidebar-section">Account</div>
         <a className="sidebar-link" href="/profile"><i className="ti ti-user" /> Profile</a>

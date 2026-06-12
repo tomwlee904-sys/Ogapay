@@ -53,7 +53,7 @@ export default function CommunityDetail() {
   const [editCoverPreview, setEditCoverPreview] = useState<string | null>(null)
   const ownerId = typeof community?.owner === 'object' ? community?.owner?.id : community?.owner
   const isOwner = !!authUser && !!ownerId && authUser.id === ownerId
-  const communityAvatar = community?.iconUrl || community?.logoUrl || community?.avatarImage || community?.avatarUrl || community?.image || null
+  const communityAvatar = community?.iconUrl || community?.icon_url || community?.logoUrl || community?.logo_url || community?.avatarImage || community?.avatar_image || community?.avatarUrl || community?.avatar_url || community?.image || null
 
   // Chat
   const [messages, setMessages] = useState<any[]>([])

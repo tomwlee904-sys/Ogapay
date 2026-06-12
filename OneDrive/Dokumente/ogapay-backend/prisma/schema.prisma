@@ -8,6 +8,7 @@ generator client {
 }
 
 datasource db {
+  schemas   = ["public", "auth"]
   provider  = "postgresql"
   url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
@@ -95,6 +96,7 @@ enum WorkerLevel {
 }
 
 enum PaymentProvider {
+  @@schema("public")
   PAYSTACK
   FLUTTERWAVE
   CRYPTO
@@ -533,4 +535,27 @@ model RefreshToken {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("refresh_tokens")
+}
+
+model JobListing {
+  id                 String   @id @default(uuid()) @map("id")
+  employerId         String   @map("employer_id")
+  jobTitle           String   @map("job_title")
+  companyName        String   @map("company_name")
+  companyLogoUrl     String?  @map("company_logo_url")
+  jobType            String   @map("job_type") // Full-Time, Part-Time, Contract, Internship, Remote
+  location           String?
+  salaryRange        String?  @map("salary_range")
+  jobDescription     String   @map("job_description")
+  requirements       String?
+  applicationLink    String?  @map("application_link")
+  applicationDeadline DateTime? @map("application_deadline")
+  status             String   @default("active") @map("status") // active, closed, draft
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  employer auth.User @relation(fields: [employerId], references: [id], onDelete: Cascade)
+
+  @@schema("public")
+  @@map("job_listings")
 }

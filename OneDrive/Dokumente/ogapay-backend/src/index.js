@@ -37,6 +37,7 @@ const vaultRoutes = require('./routes/vault.routes');
 const analyticsRoutes = require('./routes/analytics.routes');
 const platformRoutes = require('./routes/platform.routes');
 const imagekitRoutes = require('./routes/imagekit.routes');
+const jobsRoutes = require('./routes/jobs.routes');
 
 const app = express();
 const API = `/api/${process.env.API_VERSION || 'v1'}`;
@@ -125,6 +126,7 @@ function mountRoutes(base) {
   app.use(`${base}/vault`, vaultRoutes);
   app.use(`${base}/analytics`, analyticsRoutes);
   app.use(`${base}/platform`, platformRoutes);
+  app.use(`${base}/jobs`, jobsRoutes);
   app.use(`${base}/imagekit`, imagekitRoutes);
 }
 

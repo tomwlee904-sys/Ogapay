@@ -83,10 +83,6 @@ export default function Drawer({ open, onClose }: DrawerProps) {
             <span className="oga-drawer-icon"><i className="ti ti-megaphone" /></span>
             <span><strong>Campaigns</strong><small>Marketing campaigns</small></span>
           </a>
-          <a className="oga-drawer-item" href="/communities" onClick={onClose}>
-            <span className="oga-drawer-icon"><i className="ti ti-users" /></span>
-            <span><strong>Communities</strong><small>Connect with others</small></span>
-          </a>
 
 
           <a className="oga-drawer-item" href="/blog" onClick={onClose}>
