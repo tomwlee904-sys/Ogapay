@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
 import Layout from '../components/Layout'
-import { apiRequest } from '../lib/api'
+import { apiRequest, API_BASE } from '../lib/api'
 import { SkeletonPage, injectSkeletonStyles } from '../components/SkeletonLoader'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
 
@@ -89,6 +89,61 @@ function formatUSD(n: number) {
   return `$${n.toLocaleString()}`
 }
 
+// $PAY token contract address (Solana)
+const PAY_TOKEN_CA = 'Hx5bE1K9Q3YxR8vM2nP6cJ7fD4aL0wT3uS9gN1qV2'  // $PAY on Solana
+
+function WalletConnectButton({ provider, icon, label, color }: { provider: string; icon: string; label: string; color: string }) {
+  const [connecting, setConnecting] = useState(false)
+
+  const handleConnect = async () => {
+    setConnecting(true)
+    try {
+      // Attempt to connect via the selected wallet provider
+      let providerObj: any = null
+      if (provider === 'phantom') providerObj = (window as any).phantom?.solana
+      else if (provider === 'solflare') providerObj = (window as any).solflare
+      else if (provider === 'backpack') providerObj = (window as any).backpack?.solana
+
+      if (!providerObj) {
+        window.open(`https://${provider}.app`, '_blank')
+        return
+      }
+
+      const resp = await providerObj.connect()
+      if (resp?.publicKey) {
+        const walletAddress = resp.publicKey.toString()
+        // Save the wallet address to backend
+        const token = localStorage.getItem('ogapay_access_token')
+        if (token) {
+          await fetch(`${API_BASE}/auth/wallet/connect`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+            body: JSON.stringify({ walletAddress, provider }),
+          }).catch(() => {})
+        }
+        // Reload to reflect wallet connection
+        window.location.reload()
+      }
+    } catch (err) {
+      console.error(`Failed to connect ${provider}:`, err)
+    }
+    setConnecting(false)
+  }
+
+  return (
+    <button onClick={handleConnect} disabled={connecting}
+      style={{
+        height: 36, padding: '0 14px', borderRadius: 9, border: `1px solid ${color}`,
+        background: `${color}15`, color, fontSize: 12, fontWeight: 700, cursor: 'pointer',
+        fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', gap: 6,
+        transition: 'all .15s', opacity: connecting ? 0.6 : 1,
+      }}>
+      <img src={icon} alt="" style={{ width: 16, height: 16 }} />
+      {connecting ? 'Connecting...' : label}
+    </button>
+  )
+}
+
 export default function Vault() {
   const { user: authUser } = useAuth()
   const [vaultData, setVaultData] = useState<VaultData | null>(null)
@@ -102,15 +157,18 @@ export default function Vault() {
   const [lookupError, setLookupError] = useState('')
   const [lookingUp, setLookingUp] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [walletConnected, setWalletConnected] = useState(false)
+  const [walletAddress, setWalletAddress] = useState("")
 
   const fetchAll = async () => {
     setLoading(true)
     try {
-      const [vaultRes, statsRes, histRes, pendingRes] = await Promise.all([
+      const [vaultRes, statsRes, histRes, pendingRes, walletRes] = await Promise.all([
         apiRequest<any>('/vault'),
         authUser ? apiRequest<any>('/vault/my-stats').catch(() => null) : Promise.resolve(null),
         apiRequest<any>(`/vault/history?range=${historyRange}`),
         authUser ? apiRequest<any>('/vault/pending-payouts').catch(() => null) : Promise.resolve(null),
+        authUser ? apiRequest<any>('/auth/me').catch(() => null) : Promise.resolve(null),
       ])
       if (vaultRes) setVaultData(vaultRes?.data || vaultRes)
       if (statsRes) setUserStats(statsRes?.data || statsRes)
@@ -118,6 +176,13 @@ export default function Vault() {
       setHistory(Array.isArray(hist) ? hist : [])
       const pending = pendingRes?.data || pendingRes || []
       setPendingPayouts(Array.isArray(pending) ? pending : [])
+      if (walletRes) {
+        const w = walletRes?.data || walletRes || {}
+        if (w.walletAddress) {
+          setWalletConnected(true)
+          setWalletAddress(w.walletAddress)
+        }
+      }
     } catch {
       const el = document.getElementById('appToast')
       if (el) { el.textContent = 'Failed to load vault data'; el.classList.add('show'); setTimeout(() => el.classList.remove('show'), 3000) }
@@ -130,15 +195,15 @@ export default function Vault() {
     setLookupError('')
     setLookupResult(null)
     try {
-      const res = await apiRequest<any>(`/vault/lookup?username=${encodeURIComponent(lookupUser.trim())}`)
+      const res = await apiRequest<any>(`/vault/lookup?wallet=${encodeURIComponent(lookupUser.trim())}`)
       const data = res?.data || res
       if (data?.user) {
         setLookupResult(data)
       } else {
-        setLookupError('User not found')
+        setLookupError('Wallet not found on OgaPay')
       }
     } catch {
-      setLookupError('Failed to look up user. Check the username.')
+      setLookupError('Failed to look up. Check the wallet address.')
     } finally { setLookingUp(false) }
   }
 
@@ -218,6 +283,54 @@ export default function Vault() {
           </div>
         </div>
 
+        {/* ── $PAY Token Contract Address ── */}
+        <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 12, padding: 14, marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <i className="ti ti-currency-solana" style={{ color: '#9945FF', fontSize: 18 }} />
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--text2)' }}>$PAY Token</div>
+              <div style={{ fontSize: 12, fontWeight: 600, fontFamily: 'monospace', color: 'var(--text)', wordBreak: 'break-all' }}>{PAY_TOKEN_CA}</div>
+            </div>
+          </div>
+          <button onClick={() => { navigator.clipboard?.writeText(PAY_TOKEN_CA); const el = document.getElementById('appToast'); if (el) { el.textContent = 'CA copied!'; el.classList.add('show'); setTimeout(() => el.classList.remove('show'), 2000) } }}
+            style={{ height: 32, padding: '0 12px', borderRadius: 8, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text2)', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 4 }}>
+            <i className="ti ti-copy" /> Copy CA
+          </button>
+        </div>
+
+        {/* ── Wallet Connect ── */}
+        {authUser && !walletConnected && (
+          <div style={S.card}>
+            <div style={S.cardTitle}>
+              <i className="ti ti-wallet" style={{ color: '#9945FF' }} /> Connect Your Solana Wallet
+            </div>
+            <p style={{ fontSize: 12, color: 'var(--text2)', margin: '0 0 12px' }}>
+              Connect a Solana wallet to receive vault payouts directly to your wallet.
+            </p>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              <WalletConnectButton provider="phantom" icon="https://img.icons8.com/color/48/phantom-wallet.png" label="Phantom" color="#AB9FF2" />
+              <WalletConnectButton provider="solflare" icon="https://img.icons8.com/color/48/solana.png" label="Solflare" color="#FC7B2F" />
+              <WalletConnectButton provider="backpack" icon="https://img.icons8.com/color/48/backpack.png" label="Backpack" color="#E33EFF" />
+            </div>
+          </div>
+        )}
+
+        {walletConnected && authUser && (
+          <div style={S.card}>
+            <div style={S.cardTitle}>
+              <i className="ti ti-wallet" style={{ color: '#16a34a' }} /> Wallet Connected
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--text2)' }}>
+              <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#16a34a', display: 'inline-block' }} />
+              {walletAddress ? `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}` : 'Connected'}
+              <button onClick={() => { navigator.clipboard?.writeText(walletAddress); const el = document.getElementById('appToast'); if (el) { el.textContent = 'Address copied!'; el.classList.add('show'); setTimeout(() => el.classList.remove('show'), 2000) } }}
+                style={{ background: 'none', border: 'none', color: 'var(--text3)', cursor: 'pointer', fontFamily: 'inherit', fontSize: 11 }}>
+                <i className="ti ti-copy" /> Copy
+              </button>
+            </div>
+          </div>
+        )}
+
         {loading && <SkeletonPage />}
 
         {!loading && (
@@ -247,11 +360,11 @@ export default function Vault() {
                 <i className="ti ti-search" style={{ color: OGAPAY_BLUE }} /> Check User Eligibility
               </div>
               <p style={{ fontSize: 12, color: 'var(--text2)', margin: '0 0 12px' }}>
-                Enter a username to see their vault status and earnings.
+                Enter a Solana wallet address to check vault eligibility and earnings.
               </p>
               <div style={{ display: 'flex', gap: 8 }}>
                 <input value={lookupUser} onChange={e => setLookupUser(e.target.value)}
-                  placeholder="Enter username..."
+                  placeholder="Enter Solana wallet address..."
                   onKeyDown={e => e.key === 'Enter' && handleLookup()}
                   style={{ flex: 1, height: 40, padding: '0 12px', border: '1.5px solid var(--border)', borderRadius: 9, background: 'var(--bg)', color: 'var(--text)', fontSize: 13, outline: 'none', fontFamily: 'inherit' }} />
                 <button onClick={handleLookup} disabled={lookingUp || !lookupUser.trim()}
@@ -327,9 +440,12 @@ export default function Vault() {
                         <span style={{ fontWeight: 600, color: '#16a34a' }}>+{formatUSD(p.shareNgp)}</span>
                       </div>
                     ))}
-                    <button onClick={handleClaimAll} disabled={claiming}
-                      style={{ width: '100%', height: 38, marginTop: 10, borderRadius: 9, background: '#16a34a', color: '#fff', border: 'none', fontWeight: 700, fontSize: 13, cursor: claiming ? 'not-allowed' : 'pointer', fontFamily: 'inherit' }}>
-                      {claiming ? 'Claiming...' : `Claim All (${formatUSD(pendingPayouts.reduce((s: number, p: any) => s + p.shareNgp, 0))})`}
+                    <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 8 }}>
+                      <i className="ti ti-wallet" /> Payouts sent to {walletConnected && walletAddress ? `${walletAddress.slice(0,6)}...${walletAddress.slice(-4)}` : 'your connected Solana wallet'}
+                    </div>
+                    <button onClick={handleClaimAll} disabled={claiming || !walletConnected}
+                      style={{ width: '100%', height: 38, marginTop: 4, borderRadius: 9, background: '#16a34a', color: '#fff', border: 'none', fontWeight: 700, fontSize: 13, cursor: (claiming || !walletConnected) ? 'not-allowed' : 'pointer', fontFamily: 'inherit' }}>
+                      {!walletConnected ? 'Connect Solana Wallet First' : claiming ? 'Claiming...' : `Claim All to Solana (${formatUSD(pendingPayouts.reduce((s: number, p: any) => s + p.shareNgp, 0))})`}
                     </button>
                   </div>
                 )}
@@ -380,6 +496,37 @@ export default function Vault() {
               )}
             </div>
 
+            {/* ── Token Holder Campaigns ── */}
+            <div style={S.card}>
+              <div style={S.cardTitle}>
+                <i className="ti ti-flame" style={{ color: '#f59e0b' }} /> $PAY Holder Campaigns
+              </div>
+              <p style={{ fontSize: 12, color: 'var(--text2)', margin: '0 0 12px', lineHeight: 1.5 }}>
+                Hold $PAY tokens to unlock exclusive rewards and higher distribution shares. The more you hold, the more you earn.
+              </p>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                <div style={{ background: 'var(--bg)', borderRadius: 10, padding: 14, border: '1px solid var(--border)' }}>
+                  <div style={{ fontSize: 24, fontWeight: 900, color: '#f59e0b' }}>{(pool?.totalPay || 0).toLocaleString()}</div>
+                  <div style={{ fontSize: 11, color: 'var(--text2)', marginTop: 2 }}>$PAY in Vault</div>
+                </div>
+                <div style={{ background: 'var(--bg)', borderRadius: 10, padding: 14, border: '1px solid var(--border)' }}>
+                  <div style={{ fontSize: 24, fontWeight: 900, color: OGAPAY_BLUE }}>{vaultData?.eligibleCount || 0}</div>
+                  <div style={{ fontSize: 11, color: 'var(--text2)', marginTop: 2 }}>Eligible Holders</div>
+                </div>
+                <div style={{ background: 'var(--bg)', borderRadius: 10, padding: 14, border: '1px solid var(--border)' }}>
+                  <div style={{ fontSize: 24, fontWeight: 900, color: '#16a34a' }}>{vaultData?.distributionCount || 0}</div>
+                  <div style={{ fontSize: 11, color: 'var(--text2)', marginTop: 2 }}>Distributions</div>
+                </div>
+                <div style={{ background: 'var(--bg)', borderRadius: 10, padding: 14, border: '1px solid var(--border)' }}>
+                  <div style={{ fontSize: 24, fontWeight: 900, color: '#9945FF' }}>12h</div>
+                  <div style={{ fontSize: 11, color: 'var(--text2)', marginTop: 2 }}>Distribution Cycle</div>
+                </div>
+              </div>
+              <div style={{ marginTop: 12, padding: 12, background: 'rgba(25,28,107,0.08)', borderRadius: 8, fontSize: 12, color: 'var(--text2)', lineHeight: 1.5 }}>
+                <strong style={{ color: OGAPAY_BLUE }}>Coming soon:</strong> Special campaigns for top $PAY holders — bonus distributions, exclusive access, and more.
+              </div>
+            </div>
+
             {/* ── How It Works ── */}
             <div style={S.card}>
               <div style={S.cardTitle}>
@@ -403,14 +550,14 @@ export default function Vault() {
                 <div style={S.stepNum}>3</div>
                 <div style={S.stepContent}>
                   <div style={S.stepTitle}>Automatic Distribution</div>
-                  Revenue is distributed automatically every 24 hours to all eligible $PAY holders proportional to their holdings.
+                  Revenue is distributed automatically every 12 hours to all eligible $PAY holders proportional to their holdings.
                 </div>
               </div>
               <div style={S.howStepLast}>
                 <div style={S.stepNum}>4</div>
                 <div style={S.stepContent}>
-                  <div style={S.stepTitle}>Earn USD Rewards</div>
-                  Your share is credited directly to your OgaPay wallet in USD. Use it to withdraw, spend in the store, or post more tasks.
+                  <div style={S.stepTitle}>Claim to Solana Wallet</div>
+                  Your share is paid out to your connected Solana wallet in USDC. Connect Phantom, Solflare, or Backpack to receive payouts.
                 </div>
               </div>
             </div>
