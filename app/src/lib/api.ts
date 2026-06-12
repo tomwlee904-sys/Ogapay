@@ -80,12 +80,7 @@ async function parseResponse(res: Response) {
   const text = await res.text()
   const json = text ? JSON.parse(text) : null
   if (!res.ok) {
-    let message = json?.message || json?.error || 'Request failed'
-    // Append field-level validation errors for better UX
-    if (json?.errors && Array.isArray(json.errors) && json.errors.length > 0) {
-      const fieldMsgs = json.errors.map((e: any) => e.field ? `${e.field}: ${e.message}` : e.message).join('; ')
-      message = `${message}: ${fieldMsgs}`
-    }
+    const message = json?.message || json?.error || 'Request failed'
     throw new Error(message)
   }
   return json?.data ?? json
