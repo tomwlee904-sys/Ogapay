@@ -1,9 +1,11 @@
 import { useState, useEffect, useRef } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import Layout from '../components/Layout'
 import CurrencySelector from '../components/CurrencySelector'
 import { useCurrency } from '../context/CurrencyContext'
 import { SkeletonPage, injectSkeletonStyles } from '../components/SkeletonLoader'
+import { useAuth } from '../context/AuthContext'
+
 
 const API_BASE = 'https://ogapay-production.up.railway.app/api/v1'
 const BRAND = '#191C6B'
@@ -42,6 +44,7 @@ interface JobData {
   id: string
   title: string
   description: string
+  creatorId: string
   brand: string
   brandHandle: string
   brandAvatar: string
@@ -165,12 +168,16 @@ export default function JobDetail() {
   const navigate = useNavigate()
   const [job, setJob] = useState<JobData | null>(null)
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState('details')
+  const [searchParams] = useSearchParams()
+  const [activeTab, setActiveTab] = useState(() => searchParams.get('tab') || 'details')
   const [showApply, setShowApply] = useState(false)
   const [showShare, setShowShare] = useState(false)
   const [bookmarked, setBookmarked] = useState(false)
   const [error, setError] = useState('')
 
+  const { user: authUser } = useAuth()
+  const [submissions, setSubmissions] = useState<any[]>([])
+  const [subsLoading, setSubsLoading] = useState(false)
   useEffect(() => {
     if (!id) return
     setLoading(true)
@@ -201,6 +208,74 @@ export default function JobDetail() {
 
   useEffect(() => { injectSkeletonStyles(); }, [])
 
+  // Fetch submissions when tab changes to submissions and user is owner
+  useEffect(() => {
+    if (activeTab !== 'submissions' || !job?.id || !authUser) return;
+    const token = localStorage.getItem('ogapay_access_token');
+    if (!token) return;
+    setSubsLoading(true);
+    fetch(API_BASE + '/tasks/' + job.id + '/submissions', {
+      headers: { 'Authorization': 'Bearer ' + token }
+    })
+      .then(r => r.json())
+      .then(json => {
+        const data = json?.data || json?.submissions || [];
+        setSubmissions(Array.isArray(data) ? data : []);
+      })
+      .catch(() => setSubmissions([]))
+      .finally(() => setSubsLoading(false));
+  }, [activeTab, job?.id, authUser]);
+
+  const [approving, setApproving] = useState<string | null>(null);
+  const [rejecting, setRejecting] = useState<string | null>(null);
+
+  const handleApprove = async (subId: string) => {
+    setApproving(subId);
+    try {
+      const token = localStorage.getItem('ogapay_access_token');
+      if (!token) return;
+      const res = await fetch(API_BASE + '/tasks/submissions/' + subId + '/review', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({ status: 'APPROVED' }),
+      });
+      const json = await res.json();
+      if (json.success) {
+        setSubmissions(prev => prev.map(s => s.id === subId ? { ...s, status: 'APPROVED' } : s));
+      }
+    } catch {}
+    setApproving(null);
+  };
+
+  const handleReject = async (subId: string) => {
+    setRejecting(subId);
+    try {
+      const token = localStorage.getItem('ogapay_access_token');
+      if (!token) return;
+      const res = await fetch(API_BASE + '/tasks/submissions/' + subId + '/reject', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({ posterNotes: '' }),
+      });
+      const json = await res.json();
+      if (json.success) {
+        setSubmissions(prev => prev.map(s => s.id === subId ? { ...s, status: 'REJECTED' } : s));
+      }
+    } catch {}
+    setRejecting(null);
+  };
+
+  function timeAgo(dateStr: string | Date) {
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return 'just now';
+    if (mins < 60) return mins + 'm ago';
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return hrs + 'h ago';
+    const days = Math.floor(hrs / 24);
+    return days + 'd ago';
+  }
+
   function formatTask(t: any): JobData {
     const now = Date.now()
     const parsedDeadline = t.deadline
@@ -214,6 +289,7 @@ export default function JobDetail() {
     }
     return {
       id: t.id || t._id || '',
+      creatorId: t.posterId || t.creatorId || t.creator?.id || t.creator_id || '',
       title: t.title || 'Untitled Task',
       description: t.description || t.instructions || '',
       brand: t.creatorName || t.brand || t.creator?.name || '',
@@ -710,34 +786,87 @@ export default function JobDetail() {
           {activeTab === 'submissions' && (
             <div style={{
               background: 'var(--card)', border: '1px solid var(--border)',
-              borderRadius: 16, padding: '18px', marginBottom: 16, textAlign: 'center',
+              borderRadius: 16, padding: '18px', marginBottom: 16,
             }}>
-              <div style={{
-                width: 56, height: 56, borderRadius: '50%',
-                background: BRAND_LIGHT, display: 'flex', alignItems: 'center',
-                justifyContent: 'center', margin: '0 auto 14px', color: BRAND,
-              }}>
-                <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
-                </svg>
-              </div>
-              <h3 style={{ margin: '0 0 6px', fontSize: 16, fontWeight: 800, color: 'var(--text)' }}>
+              <h3 style={{ margin: '0 0 12px', fontSize: 15, fontWeight: 800, color: 'var(--text)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                <i className="ti ti-file-text" style={{color: BRAND, fontSize: 16}} />
                 Submissions & Activity
               </h3>
-              <p style={{ margin: '0 auto 16px', fontSize: 13, color: 'var(--text2)', maxWidth: 320, lineHeight: 1.5 }}>
-                View all submissions for this task, approve or reject work, and manage payouts.
-              </p>
-              <button onClick={() => navigate(`/tasks/${job.id}/submissions`)} style={{
-                padding: '12px 24px', borderRadius: 10, border: 'none',
-                background: BRAND, color: '#fff', fontSize: 14, fontWeight: 700,
-                cursor: 'pointer', fontFamily: 'inherit',
-                display: 'inline-flex', alignItems: 'center', gap: 8,
-              }}>
-                View Submissions
-                <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <polyline points="9 18 15 12 9 6"/>
-                </svg>
-              </button>
+              {authUser && job.creatorId === authUser.id ? (
+                <>
+                  {subsLoading ? (
+                    <div style={{textAlign:'center',padding:'20px 0',color:'var(--text2)',fontSize:13}}>
+                      <i className="ti ti-loader" style={{animation:'spin 1s linear infinite',display:'inline-block'}} /> Loading submissions...
+                    </div>
+                  ) : submissions.length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '24px 0', color: 'var(--text2)' }}>
+                      <i className="ti ti-inbox" style={{fontSize:28,color:'var(--text3)',display:'block',marginBottom:8}} />
+                      <p style={{margin:0,fontSize:13,color:'var(--text3)'}}>No submissions yet. They will appear here once workers submit their work.</p>
+                    </div>
+                  ) : (
+                    <div style={{display:'flex',flexDirection:'column',gap:10}}>
+                      {submissions.map(sub => (
+                        <div key={sub.id} style={{
+                          background:'var(--bg2)', border:'1px solid var(--border)', borderRadius:12, padding:'14px 16px',
+                          display:'flex', alignItems:'flex-start', gap:12,
+                        }}>
+                          <div style={{
+                            width:36, height:36, borderRadius:'50%', background:BRAND, color:'#fff', display:'grid',
+                            placeItems:'center', fontSize:12, fontWeight:800, flexShrink:0, overflow:'hidden',
+                          }}>
+                            {sub.user?.avatarUrl ? <img src={sub.user.avatarUrl} style={{width:'100%',height:'100%',objectFit:'cover'}} /> : (sub.user?.username || 'U')[0].toUpperCase()}
+                          </div>
+                          <div style={{flex:1, minWidth:0}}>
+                            <div style={{fontWeight:700, fontSize:13, marginBottom:2}}>
+                              {sub.user?.username || sub.user?.firstName || 'Anonymous'}
+                            </div>
+                            <div style={{fontSize:12, color:'var(--text2)', marginBottom:6, lineHeight:1.4}}>
+                              {sub.notes || sub.message || 'No message'}
+                            </div>
+                            {sub.proof && (
+                              <div style={{fontSize:11, color:BRAND, marginBottom:6, wordBreak:'break-all'}}>
+                                <i className="ti ti-link" style={{fontSize:11}} /> {sub.proof}
+                              </div>
+                            )}
+                            <div style={{display:'flex', gap:6, marginTop:8}}>
+                              {sub.status === 'PENDING' && (
+                                <>
+                                  <button onClick={() => handleApprove(sub.id)} disabled={approving === sub.id}
+                                    style={{height:30, padding:'0 14px', borderRadius:7, border:'none', background:'#16a34a', color:'#fff', fontWeight:700, fontSize:11, cursor:'pointer', fontFamily:'inherit', display:'flex', alignItems:'center', gap:4, opacity: approving === sub.id ? 0.6 : 1}}>
+                                    {approving === sub.id ? <i className="ti ti-loader" style={{animation:'spin 1s linear infinite'}} /> : <i className="ti ti-check" />} Approve
+                                  </button>
+                                  <button onClick={() => handleReject(sub.id)} disabled={rejecting === sub.id}
+                                    style={{height:30, padding:'0 14px', borderRadius:7, border:'1px solid var(--border)', background:'transparent', color:'#dc2626', fontWeight:700, fontSize:11, cursor:'pointer', fontFamily:'inherit', display:'flex', alignItems:'center', gap:4, opacity: rejecting === sub.id ? 0.6 : 1}}>
+                                    {rejecting === sub.id ? <i className="ti ti-loader" style={{animation:'spin 1s linear infinite'}} /> : <i className="ti ti-x" />} Reject
+                                  </button>
+                                </>
+                              )}
+                              {sub.status === 'APPROVED' && (
+                                <span style={{padding:'3px 8px', borderRadius:5, background:'rgba(22,163,74,0.12)', color:'#16a34a', fontSize:10, fontWeight:700}}>
+                                  <i className="ti ti-check-circle" /> Approved
+                                </span>
+                              )}
+                              {sub.status === 'REJECTED' && (
+                                <span style={{padding:'3px 8px', borderRadius:5, background:'rgba(220,38,38,0.12)', color:'#dc2626', fontSize:10, fontWeight:700}}>
+                                  <i className="ti ti-x-circle" /> Rejected
+                                </span>
+                              )}
+                              <span style={{fontSize:10, color:'var(--text3)', marginLeft:'auto', alignSelf:'center'}}>
+                                {timeAgo(sub.createdAt)}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div style={{ textAlign: 'center', padding: '24px 0', color: 'var(--text2)' }}>
+                  <i className="ti ti-lock" style={{fontSize:28,color:'var(--text3)',display:'block',marginBottom:8}} />
+                  <p style={{margin:0,fontSize:13}}>Only the task creator can view submissions.</p>
+                </div>
+              )}
             </div>
           )}
 
@@ -894,17 +1023,45 @@ function ApplyModal({ open, onClose, jobId, jobTitle, reward, currency }: {
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       })
       const applyJson = await applyRes.json()
-      if (!applyRes.ok) throw new Error(applyJson.message || 'Failed to apply')
+      if (!applyRes.ok) {
+        const msg = applyJson.message || applyJson.error || ''
+        // "Already applied" is not a real error — proceed to submit proof
+        if (msg.toLowerCase().includes('already')) {
+          /* continue to submit */
+        } else {
+          throw new Error(msg || 'Failed to apply')
+        }
+      }
 
-      const formData = new FormData()
-      if (applyLink.trim()) formData.append('proof', applyLink.trim())
-      if (notes.trim()) formData.append('workerNotes', notes.trim())
-      files.forEach(f => formData.append('attachments', f))
+      // Upload files first (if any) to get URLs, then submit as JSON
+      const uploadedUrls: string[] = []
+      if (files.length > 0) {
+        for (const f of files) {
+          try {
+            const fd = new FormData()
+            fd.append('file', f)
+            const upRes = await fetch(`${API_BASE}/uploads/proof`, {
+              method: 'POST',
+              headers: { Authorization: `Bearer ${token}` },
+              body: fd,
+            })
+            if (upRes.ok) {
+              const upJson = await upRes.json()
+              if (upJson.data?.url) uploadedUrls.push(upJson.data.url)
+            }
+          } catch {}
+        }
+      }
+
+      const submitBody: Record<string, any> = {}
+      if (applyLink.trim()) submitBody.proof = applyLink.trim()
+      if (notes.trim()) submitBody.workerNotes = notes.trim()
+      if (uploadedUrls.length > 0) submitBody.attachments = uploadedUrls
 
       const submitRes = await fetch(`${API_BASE}/tasks/${jobId}/submit`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData,
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify(submitBody),
       })
       const submitJson = await submitRes.json()
       if (!submitRes.ok) throw new Error(submitJson.message || 'Failed to submit')
