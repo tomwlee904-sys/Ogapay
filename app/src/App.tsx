@@ -34,6 +34,7 @@ const FAQ = lazy(() => import('./pages/FAQ'))
 const Support = lazy(() => import('./pages/Support'))
 const Vault = lazy(() => import('./pages/Vault'))
 const Safe = lazy(() => import('./pages/Safe'))
+const VaultHistory = lazy(() => import('./pages/VaultHistory'))
 const NotFound = lazy(() => import('./pages/NotFound'))
 const AuthCallback = lazy(() => import('./pages/AuthCallback'))
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword'))
@@ -174,6 +175,7 @@ export default function App() {
             <Route path="/faq" element={<FAQ />} />
             <Route path="/support" element={<Support />} />
             <Route path="/vault" element={<Vault />} />
+            <Route path="/vault/history" element={<VaultHistory />} />
             <Route path="/safe" element={<ProtectedRoute><Safe /></ProtectedRoute>} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/terms" element={<Terms />} />

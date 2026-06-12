@@ -28,6 +28,7 @@ export default function Sidebar() {
         <a className="sidebar-link" href="/wallet"><i className="ti ti-wallet" /> Wallet</a>
         <a className="sidebar-link" href="/safe"><i className="ti ti-vault" /> Safe</a>
         <a className="sidebar-link" href="/vault"><i className="ti ti-coin" /> Revenue Vault</a>
+        <a className="sidebar-link" href="/vault/history"><i className="ti ti-clock" /> Distribution History</a>
         <a className="sidebar-link" href="/referrals"><i className="ti ti-affiliate" /> Referrals</a>
         <a className="sidebar-link" href="/my-store"><i className="ti ti-building-store" /> My Store</a>
 

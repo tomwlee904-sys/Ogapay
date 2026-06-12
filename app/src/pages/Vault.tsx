@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext'
 import Layout from '../components/Layout'
 import { apiRequest, API_BASE } from '../lib/api'
 import { SkeletonPage, injectSkeletonStyles } from '../components/SkeletonLoader'
+import WalletPreviewCard from '../components/WalletPreviewCard'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
 
 const OGAPAY_BLUE = '#191C6B'
@@ -491,25 +492,7 @@ export default function Vault() {
               </div>
               {refreshedText && <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 6 }}>{refreshedText}</div>}
 
-              {lookupResult && (
-                <div style={{ marginTop: 14, padding: 14, background: 'var(--bg)', borderRadius: 10, border: '1px solid var(--border)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-                    <div style={{ width: 36, height: 36, borderRadius: '50%', background: OGAPAY_BLUE, display: 'grid', placeItems: 'center', color: '#fff', fontWeight: 800, fontSize: 13, overflow: 'hidden', flexShrink: 0 }}>
-                      {lookupResult.user.avatarUrl ? <img src={lookupResult.user.avatarUrl} style={{width:'100%',height:'100%',objectFit:'cover'}} /> : lookupResult.user.name?.split(' ').map((w: string) => w[0]).join('').slice(0,2)}
-                    </div>
-                    <div>
-                      <div style={{ fontWeight: 700, fontSize: 14 }}>{lookupResult.user.name}</div>
-                      <div style={{ fontSize: 12, color: 'var(--text2)' }}>@{lookupResult.user.username}</div>
-                    </div>
-                    <div style={{ marginLeft: 'auto', fontSize: 12, fontWeight: 700, padding: '4px 10px', borderRadius: 999, background: lookupResult.vault.isEligible ? 'rgba(22,163,74,0.12)' : 'rgba(100,100,100,0.1)', color: lookupResult.vault.isEligible ? '#16a34a' : 'var(--text3)' }}>
-                      {lookupResult.vault.isEligible ? '✓ Eligible' : '✕ Not Eligible'}
-                    </div>
-                  </div>
-                  <div style={S.row}><span style={S.label}>$PAY Balance</span><span style={S.value}>{(lookupResult.vault.payBalance || 0).toLocaleString()} $PAY</span></div>
-                  <div style={S.row}><span style={S.label}>Total Earned</span><span style={S.value}>{formatUSD(lookupResult.vault.totalEarned || 0)}</span></div>
-                  <div style={S.rowLast}><span style={S.label}>Distributions Received</span><span style={S.value}>{lookupResult.vault.distributionsReceived || 0}</span></div>
-                </div>
-              )}
+              {lookupResult && <WalletPreviewCard data={lookupResult} />}
 
               {lookupError && (
                 <div style={{ marginTop: 10, fontSize: 12, color: RED, display: 'flex', alignItems: 'center', gap: 6 }}>
