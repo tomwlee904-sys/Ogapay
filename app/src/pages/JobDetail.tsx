@@ -816,14 +816,14 @@ export default function JobDetail() {
                             width:36, height:36, borderRadius:'50%', background:BRAND, color:'#fff', display:'grid',
                             placeItems:'center', fontSize:12, fontWeight:800, flexShrink:0, overflow:'hidden',
                           }}>
-                            {sub.worker?.avatarUrl ? <img src={sub.user.avatarUrl} style={{width:'100%',height:'100%',objectFit:'cover'}} /> : (sub.user?.username || 'U')[0].toUpperCase()}
+                            {sub.worker?.avatarUrl ? <img src={sub.worker?.avatarUrl} style={{width:'100%',height:'100%',objectFit:'cover'}} /> : (sub.worker?.username || 'U')[0].toUpperCase()}
                           </div>
                           <div style={{flex:1, minWidth:0}}>
                             <div style={{fontWeight:700, fontSize:13, marginBottom:2}}>
                               {sub.worker?.username || sub.worker?.firstName || 'Anonymous'}
                             </div>
                             <div style={{fontSize:12, color:'var(--text2)', marginBottom:6, lineHeight:1.4}}>
-                              {sub.workerNotes || sub.workerNotes || 'No message'}
+                              {sub.workerNotes || 'No message'}
                             </div>
                             {sub.proof && (
                               <div style={{fontSize:11, color:BRAND, marginBottom:6, wordBreak:'break-all'}}>
