@@ -75,15 +75,12 @@ export default function SubmissionPage() {
   }, [id])
 
   const missingChecks: { label: string; action: string; key: keyof OnboardingStatus }[] = []
-  if (onboarding) {
-    if (!onboarding.walletConnected) missingChecks.push({ label: 'Connect a Solana wallet', action: 'Connect Wallet', key: 'walletConnected' })
-    if (!onboarding.xConnected) missingChecks.push({ label: 'Connect your X/Twitter account', action: 'Connect X', key: 'xConnected' })
-    if (!onboarding.telegramConnected) missingChecks.push({ label: 'Connect your Telegram', action: 'Connect Telegram', key: 'telegramConnected' })
-    if (!onboarding.emailVerified) missingChecks.push({ label: 'Verify your email address', action: 'Verify Email', key: 'emailVerified' })
-    if (!onboarding.kycVerified) missingChecks.push({ label: 'Complete KYC verification', action: 'Verify KYC', key: 'kycVerified' })
+  // Only email verification is required for submission — everything else is optional
+  if (onboarding && !onboarding.emailVerified) {
+    missingChecks.push({ label: 'Verify your email address', action: 'Verify Email', key: 'emailVerified' })
   }
 
-  const isReady = onboarding && missingChecks.length === 0
+  const isReady = onboarding && onboarding.emailVerified
 
   const handleFileAdd = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) setFiles(prev => [...prev, ...Array.from(e.target.files!)])
@@ -108,14 +105,22 @@ export default function SubmissionPage() {
       const token = getAccessToken()
       if (!token) { navigate('/login'); return }
 
-      // 1. Apply to the task
+      // 1. Apply to the task (gracefully handle "Already applied")
       const applyRes = await fetch(API_BASE + '/tasks/' + id + '/apply', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
       })
       let applyJson: any = {}
       try { applyJson = await applyRes.json() } catch { /* ignore parse failure */ }
-      if (!applyRes.ok) throw new Error(applyJson?.message || applyJson?.error || 'Failed to apply')
+      if (!applyRes.ok) {
+        const msg = applyJson?.message || applyJson?.error || ''
+        // "Already applied" is not a real error — just proceed to submit proof
+        if (msg.toLowerCase().includes('already')) {
+          // Already applied, continue to submit
+        } else {
+          throw new Error(msg || 'Failed to apply')
+        }
+      }
 
       // 2. Upload files to ImageKit first, then submit URLs
       const uploadedUrls: string[] = []

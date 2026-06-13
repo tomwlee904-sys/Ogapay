@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import Layout from "../components/Layout";
+import Layout from "../components/Layout"
+import { apiRequest } from "../lib/api";
 import { apiRequest } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { SkeletonPage, injectSkeletonStyles } from "../components/SkeletonLoader";
@@ -123,8 +124,8 @@ function JobDrawer({ job, onClose, onStatusChange }) {
               {/* Stats */}
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
                 <StatBox label="Winners" value={job.winners} color={"var(--green)"} />
-                <StatBox label="Pending" value={job.pending} color={"#f59e0b"} />
-                <StatBox label="Rejected" value={job.rejected} color={"var(--red)"} />
+                <StatBox label="Pending" value={pending} color={"#f59e0b"} />
+                <StatBox label="Rejected" value={rejected} color={"var(--red)"} />
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
                 <StatBox label="Approval Rate" value={`${job.approvalRate}%`} color={"var(--green)"} />
@@ -200,11 +201,11 @@ function JobDrawer({ job, onClose, onStatusChange }) {
                   <div key={sub.id} style={{ background: "var(--bg2)", border: `1px solid ${"var(--border)"}`, borderRadius: 14, padding: 14, marginBottom: 10 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
                       <div style={{ width: 34, height: 34, borderRadius: 10, background: `hsl(${sub.id.charCodeAt(4) * 30},60%,45%)`, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 12, fontWeight: 900, flexShrink: 0 }}>
-                        {sub.user[0]}
+                        {(sub.worker?.username || sub.worker?.firstName || '?')[0].toUpperCase()}
                       </div>
                       <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{sub.user}</div>
-                        <div style={{ fontSize: 11, color: "var(--text3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{sub.handle} · {sub.time}</div>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{sub.worker?.username || sub.worker?.firstName || 'Unknown'}</div>
+                        <div style={{ fontSize: 11, color: "var(--text3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{sub.worker?.email || ''} · {new Date(sub.createdAt).toLocaleDateString()}</div>
                       </div>
                       <Badge label={sub.status.charAt(0).toUpperCase() + sub.status.slice(1)} color={subColor[sub.status]} bg={subBg[sub.status]} />
                     </div>
@@ -225,8 +226,18 @@ function JobDrawer({ job, onClose, onStatusChange }) {
                       </button>
                       {sub.status === "pending" && (
                         <>
-                          <button style={{ flex: 1, background: "rgba(16,185,129,0.12)", border: "1px solid rgba(16,185,129,0.3)", borderRadius: 10, padding: "8px 0", fontSize: 11, fontWeight: 700, color: "var(--green)", cursor: "pointer", fontFamily: "inherit" }}>✓ Approve</button>
-                          <button style={{ flex: 1, background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.25)", borderRadius: 10, padding: "8px 0", fontSize: 11, fontWeight: 700, color: "var(--red)", cursor: "pointer", fontFamily: "inherit" }}>✕ Reject</button>
+                          <button
+                            onClick={() => handleApprove(sub.id)}
+                            disabled={actioning === sub.id}
+                            style={{ flex: 1, background: "rgba(16,185,129,0.12)", border: "1px solid rgba(16,185,129,0.3)", borderRadius: 10, padding: "8px 0", fontSize: 11, fontWeight: 700, color: "var(--green)", cursor: "pointer", fontFamily: "inherit", opacity: actioning === sub.id ? 0.6 : 1 }}>
+                            {actioning === sub.id ? '...' : '✓ Approve'}
+                          </button>
+                          <button
+                            onClick={() => handleReject(sub.id)}
+                            disabled={actioning === sub.id}
+                            style={{ flex: 1, background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.25)", borderRadius: 10, padding: "8px 0", fontSize: 11, fontWeight: 700, color: "var(--red)", cursor: "pointer", fontFamily: "inherit", opacity: actioning === sub.id ? 0.6 : 1 }}>
+                            {actioning === sub.id ? '...' : '✕ Reject'}
+                          </button>
                         </>
                       )}
                       {job.selectionType === "creator" && sub.status === "approved" && (
