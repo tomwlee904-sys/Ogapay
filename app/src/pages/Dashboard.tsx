@@ -21,7 +21,7 @@ const CSS = `
   .app-layout .page { max-width: 100% !important; margin: 0 !important; padding: 0 !important; width: 100% !important; }
   .dash-wrap2 { padding: 28px 20px 60px; width: 100%; }
   .dash-intro { display:flex; align-items:center; gap:14px; padding:16px 20px; background:var(--card); border:1px solid var(--border); border-radius:12px; margin-bottom:24px; }
-  .dash-intro-icon { width:40px; height:40px; border-radius:10px; display:grid; place-items:center; flex-shrink:0; }
+  .dash-intro-icon { width:40px; height:40px; border-radius:10px; display:grid; place-items:center; flex-shrink:0; background: transparent !important; }
   .dash-intro h2 { font-family:"Outfit",sans-serif; font-size:17px; font-weight:800; margin:0 0 2px; }
   .dash-intro p { font-size:13px; color:var(--text2); margin:0; line-height:1.5; }
   .dash-intro.complete { background:#052e16; border-color:#166534; }
@@ -279,6 +279,7 @@ export default function OgaPayDashboard() {
   const email = user?.email || "";
   const isEmailVerified = user?.isEmailVerified || false;
   const initials = `${(fname[0] || "").toUpperCase()}${(lname[0] || "").toUpperCase()}`;
+  const avatarUrl = user?.avatar || (user as any)?.avatarUrl || null;
 
   const metrics = summaryData?.metrics || {};
   const postedTasks = metrics.postedTasks ?? 0;
@@ -440,8 +441,8 @@ export default function OgaPayDashboard() {
         {/* ── INTRO / WELCOME BANNER ── */}
         {allDone ? (
           <div className="dash-intro complete" onClick={() => navigate('/profile')} style={{ cursor: 'pointer' }}>
-            <div className="dash-intro-icon" style={{ background: "#16a34a" }}>
-              <Icon n="check" s={20} c="#fff" />
+            <div style={{width:44,height:44,borderRadius:'50%',flexShrink:0,overflow:'hidden',background:'#191C6B',color:'#fff',display:'grid',placeItems:'center',fontSize:15,fontWeight:800,border:'2px solid rgba(255,255,255,0.2)'}}>
+              {avatarUrl ? <img src={avatarUrl} alt={fname} style={{width:'100%',height:'100%',objectFit:'cover',borderRadius:'50%'}} onError={e=>{(e.target as HTMLImageElement).style.display='none'}} /> : initials || '?'}
             </div>
             <div style={{ flex: 1 }}>
               <h2>You're all set, {fname}!</h2>
@@ -453,8 +454,8 @@ export default function OgaPayDashboard() {
           </div>
         ) : isNew ? (
           <div className="dash-intro" onClick={() => navigate('/profile')} style={{ cursor: 'pointer' }}>
-            <div className="dash-intro-icon" style={{ background: "#191C6B" }}>
-              <Icon n="hand-wave" s={20} c="#fff" />
+            <div style={{width:44,height:44,borderRadius:'50%',flexShrink:0,overflow:'hidden',background:'#191C6B',color:'#fff',display:'grid',placeItems:'center',fontSize:15,fontWeight:800,border:'2px solid rgba(255,255,255,0.2)'}}>
+              {avatarUrl ? <img src={avatarUrl} alt={fname} style={{width:'100%',height:'100%',objectFit:'cover',borderRadius:'50%'}} onError={e=>{(e.target as HTMLImageElement).style.display='none'}} /> : initials || '?'}
             </div>
             <div style={{ flex: 1 }}>
               <h2>Welcome to OgaPay, {fname}!</h2>
@@ -463,8 +464,8 @@ export default function OgaPayDashboard() {
           </div>
         ) : (
           <div className="dash-intro" onClick={() => navigate('/profile')} style={{ cursor: 'pointer' }}>
-            <div className="dash-intro-icon" style={{ background: "#dcfce7" }}>
-              <Icon n="check-circle" s={20} c="#16a34a" />
+            <div style={{width:44,height:44,borderRadius:'50%',flexShrink:0,overflow:'hidden',background:'#191C6B',color:'#fff',display:'grid',placeItems:'center',fontSize:15,fontWeight:800,border:'2px solid rgba(255,255,255,0.2)'}}>
+              {avatarUrl ? <img src={avatarUrl} alt={fname} style={{width:'100%',height:'100%',objectFit:'cover',borderRadius:'50%'}} onError={e=>{(e.target as HTMLImageElement).style.display='none'}} /> : initials || '?'}
             </div>
             <div style={{ flex: 1 }}>
               <h2>{getGreeting()}, {fname}</h2>
