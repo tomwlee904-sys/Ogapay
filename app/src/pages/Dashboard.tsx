@@ -715,8 +715,18 @@ export default function OgaPayDashboard() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 14, flex: 1 }}>
                   <div className="dash-stat-icon" style={{ background: '#191C6B15', color: '#191C6B' }}><Icon n="currency-dollar" s={18} /></div>
                   <div className="dash-stat-info">
-                    <div className="dash-stat-label">Wallet</div>
-                    <div className="dash-stat-value" style={{ fontSize: 16 }}>{totalEarned}</div>
+                    <div className="dash-stat-label">Balance</div>
+                    <div className="dash-stat-value" style={{ fontSize: 16 }}>
+                      {(() => {
+                        const walletEntries = user?.wallet ? Object.values(user.wallet as any) : [];
+                        const ngnWallet = walletEntries.find((w: any) => w.currency === 'NGN' || w.balance !== undefined) as any;
+                        const ctxBalance = ngnWallet?.balance ?? ngnWallet?.available ?? null;
+                        if (ctxBalance !== null && ctxBalance > 0) {
+                          return '₦' + Number(ctxBalance).toLocaleString();
+                        }
+                        return totalEarned || '₦0';
+                      })()}
+                    </div>
                   </div>
                 </div>
                 <button className="dash-btn green sm" onClick={(e) => { e.stopPropagation(); setShowFundModal(true); }} style={{ flexShrink: 0 }}>
