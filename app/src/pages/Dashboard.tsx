@@ -172,6 +172,7 @@ export default function OgaPayDashboard() {
   const [bankSaved, setBankSaved] = useState(false);
   const [twitterAuthenticating, setTwitterAuthenticating] = useState(false);
   const [showFundModal, setShowFundModal] = useState(false);
+  const [mySubmissions, setMySubmissions] = useState<any[]>([]);
 
   const [isNew, setIsNew] = useState(() => {
     if (!user?.createdAt) return false;
@@ -233,6 +234,15 @@ export default function OgaPayDashboard() {
           if (me?.bankName) setBankName(me.bankName);
           if (me?.bankAccount && me?.bankName) setBankSaved(true);
         } catch (_) {}
+        
+        // Fetch my submissions from API instead of localStorage
+        try {
+          const subsData = await apiRequest('/tasks/my/submissions').catch(() => null);
+          if (subsData) {
+            const list = Array.isArray(subsData) ? subsData : subsData?.data || [];
+            setMySubmissions(list);
+          }
+        } catch {}
 
       } catch (e) {
         const el = document.getElementById('appToast')
@@ -794,21 +804,21 @@ export default function OgaPayDashboard() {
             <OnboardingChecklist />
           </div>
 
-          {/* --- Active / Completed tasks from submissions --- */}
-          {(() => { try {
-            const subs = JSON.parse(localStorage.getItem('ogapay_submissions') || '[]');
-            const pending = subs.filter((s: any) => s.status === 'PENDING');
-            const approved = subs.filter((s: any) => s.status === 'APPROVED');
+          {/* --- Active / Completed tasks from submissions (from API) --- */}
+          {(() => {
+            const pending = mySubmissions.filter((s: any) => s.status === 'PENDING' || s.status === 'APPLIED');
+            const approved = mySubmissions.filter((s: any) => s.status === 'APPROVED');
+            const rejected = mySubmissions.filter((s: any) => s.status === 'REJECTED');
             return (
               <>
                 {pending.length > 0 && (
                   <div style={{ marginTop: 20 }}>
-                    <h3 className="dash-section-title"><i className="ti ti-refresh" /> Active Tasks</h3>
+                    <h3 className="dash-section-title"><i className="ti ti-refresh" /> Active Tasks ({pending.length})</h3>
                     {pending.map((s: any) => (
                       <div key={s.id} style={{ padding: 14, borderRadius: 10, border: '1px solid var(--border)', background: 'var(--card)', marginBottom: 8, fontSize: 13, fontWeight: 700 }}>
                         {s.task?.title || 'Task'}
                         <div style={{ fontSize: 11, color: 'var(--text3)', fontWeight: 400, marginTop: 4 }}>
-                          Reward: {s.task?.reward} {s.task?.currency}
+                          Reward: {s.task?.reward} {s.task?.currency} · {new Date(s.createdAt).toLocaleDateString()}
                         </div>
                       </div>
                     ))}
@@ -816,18 +826,34 @@ export default function OgaPayDashboard() {
                 )}
                 {approved.length > 0 && (
                   <div style={{ marginTop: 20 }}>
-                    <h3 className="dash-section-title" style={{ color: '#16a34a' }}><i className="ti ti-circle-check" /> Completed</h3>
+                    <h3 className="dash-section-title" style={{ color: '#16a34a' }}><i className="ti ti-circle-check" /> Completed ({approved.length})</h3>
                     {approved.map((s: any) => (
                       <div key={s.id} style={{ padding: 14, borderRadius: 10, border: '1px solid rgba(22,163,74,0.2)', background: 'rgba(22,163,74,0.03)', marginBottom: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <span style={{ fontSize: 13, fontWeight: 700 }}>{s.task?.title || 'Task'}</span>
-                        <span style={{ fontSize: 11, fontWeight: 700, color: '#16a34a' }}>+{s.task?.reward} {s.task?.currency}</span>
+                        <span style={{ fontSize: 12, fontWeight: 700, color: '#16a34a' }}>+{s.task?.reward} {s.task?.currency}</span>
                       </div>
                     ))}
                   </div>
                 )}
+                {rejected.length > 0 && (
+                  <div style={{ marginTop: 20 }}>
+                    <h3 className="dash-section-title" style={{ color: '#ef4444' }}><i className="ti ti-x" /> Not Approved ({rejected.length})</h3>
+                    {rejected.map((s: any) => (
+                      <div key={s.id} style={{ padding: 14, borderRadius: 10, border: '1px solid rgba(239,68,68,0.2)', background: 'rgba(239,68,68,0.03)', marginBottom: 8, fontSize: 13, fontWeight: 700 }}>
+                        {s.task?.title || 'Task'}
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {mySubmissions.length === 0 && !dashLoading && (
+                  <div style={{ padding: '32px 20px', textAlign: 'center', color: 'var(--text3)', fontSize: 13, border: '1px dashed var(--border)', borderRadius: 12, marginTop: 20 }}>
+                    <i className="ti ti-briefcase-off" style={{ fontSize: 28, display: 'block', marginBottom: 8 }} />
+                    No tasks yet. <a href="/tasks" style={{ color: 'var(--accent)', fontWeight: 700 }}>Browse available tasks</a>
+                  </div>
+                )}
               </>
             );
-          } catch(e) { return null; }})()}
+          })()}
 
       </div>{/* end dash-wrap2 */}
       {showFundModal && (

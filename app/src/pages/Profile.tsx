@@ -449,12 +449,10 @@ export default function Profile() {
 
   const user = parseUser(profileData);
 
-  // Computed wallet info
-  const wallets = user?.wallets || [];
-  const cryptoWallet = wallets.find((w: any) => w.currency !== 'NGN');
-  const walletAddress = cryptoWallet?.walletAddress || '';
-  const shortAddr = walletAddress ? walletAddress.slice(0, 6) + '...' + walletAddress.slice(-4) : '';
+  // Computed wallet info — read from authUser (auth context) not local profileData
+  const walletAddress = authUser?.walletAddress || profileData?.walletAddress || '';
   const hasWallet = !!walletAddress;
+  const shortAddr = walletAddress ? walletAddress.slice(0, 6) + '...' + walletAddress.slice(-4) : '';
 
   const ngnBal = walletBal?.NGN?.balance ?? 0;
   const usdcBal = walletBal?.USDC?.balance ?? 0;
@@ -550,8 +548,10 @@ export default function Profile() {
         body: JSON.stringify({ wallet: pubKey, signature }),
       });
       
-      setShowWalletOptions(false);
-      setTimeout(() => window.location.reload(), 500);
+      await refreshUser()
+      await loadProfile()
+      setShowWalletOptions(false)
+      showToast('✅ Wallet connected!')
     } catch (e: any) {
       const msg = e?.message || String(e) || "Wallet verification failed";
             showToast(`❌ ${msg}`);
@@ -651,7 +651,7 @@ export default function Profile() {
       `}</style>
 
       {/* Onboarding banners */}
-      {!loading && !hasWallet && !accountNumber && (
+      {!loading && !authUser?.walletAddress && (
         <div className="onboarding-banner">
           <i className="ti ti-wallet" style={{color:'var(--accent)',fontSize:20}} />
           <span className="ob-msg">Connect your wallet to unlock full features</span>
@@ -659,7 +659,7 @@ export default function Profile() {
           <button className="ob-close" onClick={e => (e.currentTarget.closest('.onboarding-banner')!.style.display='none')}><i className="ti ti-x" /></button>
         </div>
       )}
-      {!loading && !accountNumber && !hasWallet && (
+      {!loading && !authUser?.bankAccount && (
         <div className="onboarding-banner">
           <i className="ti ti-building-bank" style={{color:'#f59e0b',fontSize:20}} />
           <span className="ob-msg">Add a bank account to withdraw in Naira</span>
