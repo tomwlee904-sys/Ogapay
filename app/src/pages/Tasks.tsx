@@ -371,12 +371,27 @@ export default function Tasks() {
     }
   }, [searchParams, jobs])
 
-  const toggleBookmark = (id: string) => {
-    setBookmarked(prev => {
-      const next = prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
-      localStorage.setItem('ogapay_bookmarked', JSON.stringify(next))
-      return next
-    })
+  const toggleBookmark = async (id: string) => {
+    const isBookmarked = bookmarked.includes(id)
+    try {
+      if (isBookmarked) {
+        await apiRequest(`/users/bookmarks/${id}`, { method: 'DELETE' })
+      } else {
+        await apiRequest(`/users/bookmarks/${id}`, { method: 'POST' })
+      }
+      setBookmarked(prev => {
+        const next = isBookmarked ? prev.filter(x => x !== id) : [...prev, id]
+        localStorage.setItem('ogapay_bookmarked', JSON.stringify(next))
+        return next
+      })
+    } catch {
+      // Fallback to localStorage-only if API fails
+      setBookmarked(prev => {
+        const next = isBookmarked ? prev.filter(x => x !== id) : [...prev, id]
+        localStorage.setItem('ogapay_bookmarked', JSON.stringify(next))
+        return next
+      })
+    }
   }
 
   const filtered = jobs.filter(j => {
