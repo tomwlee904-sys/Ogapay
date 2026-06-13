@@ -143,9 +143,27 @@ const CSS = `
   @media(min-width: 769px) { .dash-grid { display: grid; grid-template-columns: 1fr 280px; } }
 
   /* Locked step styling */
-  .dash-step-locked { opacity: 0.35; pointer-events: none; filter: grayscale(0.8); }
+  @keyframes stepPulse {
+    0% { box-shadow: 0 0 0 0 rgba(25,28,107,0.15); }
+    70% { box-shadow: 0 0 0 8px rgba(25,28,107,0); }
+    100% { box-shadow: 0 0 0 0 rgba(25,28,107,0); }
+  }
+  .dash-step-card.pulse {
+    animation: stepPulse 2s ease-in-out infinite;
+    border-color: rgba(25,28,107,0.3) !important;
+  }
+  .dash-step-card.complete {
+    border-color: rgba(22,163,74,0.3) !important;
+    background: rgba(22,163,74,0.03) !important;
+  }
+  .dash-step-locked {
+    opacity: 0.4;
+    pointer-events: none;
+    filter: grayscale(0.6);
+  }
   .dash-step-locked .dash-btn { pointer-events: none; }
   .dash-step-locked .dash-provider { pointer-events: none; }
+  .dash-step-card.complete { opacity: 1 !important; pointer-events: auto !important; filter: none !important; }
 `;
 
 function getGreeting() {
@@ -509,7 +527,7 @@ export default function OgaPayDashboard() {
               <Icon n="circle-filled" s={8} /> STEP 1: COMPLETE YOUR PROFILE
             </div>
             <div className="dash-step-grid">
-              <div className="dash-step-card">
+              <div className={`dash-step-card ${step1Done ? 'complete' : 'pulse'}`}>
                 <div className="dash-step-badge">1A</div>
                 <h4>Add Profile Photo &amp; Display Name</h4>
                 <p>Set up your OgaPay identity so task creators can find and trust you.</p>
@@ -537,7 +555,7 @@ export default function OgaPayDashboard() {
             </div>
 
             {/* ── STEP 2: WALLET ── */}
-            <div className={`${!step1Done || step2Done ? "dash-step-locked" : ""}`}>
+            <div className={`${!step1Done && !step2Done ? "dash-step-locked" : ""}`}>
             <div className="dash-section-title">
               <Icon n="circle-filled" s={8} /> STEP 2: CONNECT YOUR WALLET
             </div>
@@ -596,7 +614,7 @@ export default function OgaPayDashboard() {
             </div>
 
             {/* ── STEP 3: COMMUNITY ── */}
-            <div className={`${!step2Done || step3Done ? "dash-step-locked" : ""}`}>
+            <div className={`${!step2Done && !step3Done ? "dash-step-locked" : ""}`}>
             <div className="dash-section-title">
               <Icon n="circle-filled" s={8} /> STEP 3: JOIN THE COMMUNITY
             </div>
@@ -809,49 +827,46 @@ export default function OgaPayDashboard() {
             const pending = mySubmissions.filter((s: any) => s.status === 'PENDING' || s.status === 'APPLIED');
             const approved = mySubmissions.filter((s: any) => s.status === 'APPROVED');
             const rejected = mySubmissions.filter((s: any) => s.status === 'REJECTED');
+
+            if (mySubmissions.length === 0) return null;
+
             return (
-              <>
+              <div style={{ marginTop: 24 }}>
                 {pending.length > 0 && (
-                  <div style={{ marginTop: 20 }}>
+                  <div style={{ marginBottom: 20 }}>
                     <h3 className="dash-section-title"><i className="ti ti-refresh" /> Active Tasks ({pending.length})</h3>
                     {pending.map((s: any) => (
                       <div key={s.id} style={{ padding: 14, borderRadius: 10, border: '1px solid var(--border)', background: 'var(--card)', marginBottom: 8, fontSize: 13, fontWeight: 700 }}>
                         {s.task?.title || 'Task'}
                         <div style={{ fontSize: 11, color: 'var(--text3)', fontWeight: 400, marginTop: 4 }}>
-                          Reward: {s.task?.reward} {s.task?.currency} · {new Date(s.createdAt).toLocaleDateString()}
+                          Submitted {new Date(s.createdAt).toLocaleDateString()} · Reward: {s.task?.reward} {s.task?.currency}
                         </div>
                       </div>
                     ))}
                   </div>
                 )}
                 {approved.length > 0 && (
-                  <div style={{ marginTop: 20 }}>
-                    <h3 className="dash-section-title" style={{ color: '#16a34a' }}><i className="ti ti-circle-check" /> Completed ({approved.length})</h3>
+                  <div style={{ marginBottom: 20 }}>
+                    <h3 className="dash-section-title" style={{ color: '#16a34a' }}><i className="ti ti-circle-check" /> Completed ✅ ({approved.length})</h3>
                     {approved.map((s: any) => (
                       <div key={s.id} style={{ padding: 14, borderRadius: 10, border: '1px solid rgba(22,163,74,0.2)', background: 'rgba(22,163,74,0.03)', marginBottom: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <span style={{ fontSize: 13, fontWeight: 700 }}>{s.task?.title || 'Task'}</span>
-                        <span style={{ fontSize: 12, fontWeight: 700, color: '#16a34a' }}>+{s.task?.reward} {s.task?.currency}</span>
+                        <span style={{ fontSize: 12, fontWeight: 800, color: '#16a34a' }}>+{s.task?.reward} {s.task?.currency}</span>
                       </div>
                     ))}
                   </div>
                 )}
                 {rejected.length > 0 && (
-                  <div style={{ marginTop: 20 }}>
+                  <div style={{ marginBottom: 20 }}>
                     <h3 className="dash-section-title" style={{ color: '#ef4444' }}><i className="ti ti-x" /> Not Approved ({rejected.length})</h3>
                     {rejected.map((s: any) => (
-                      <div key={s.id} style={{ padding: 14, borderRadius: 10, border: '1px solid rgba(239,68,68,0.2)', background: 'rgba(239,68,68,0.03)', marginBottom: 8, fontSize: 13, fontWeight: 700 }}>
+                      <div key={s.id} style={{ padding: 14, borderRadius: 10, border: '1px solid rgba(239,68,68,0.15)', background: 'rgba(239,68,68,0.03)', marginBottom: 8, fontSize: 13, fontWeight: 700 }}>
                         {s.task?.title || 'Task'}
                       </div>
                     ))}
                   </div>
                 )}
-                {mySubmissions.length === 0 && !dashLoading && (
-                  <div style={{ padding: '32px 20px', textAlign: 'center', color: 'var(--text3)', fontSize: 13, border: '1px dashed var(--border)', borderRadius: 12, marginTop: 20 }}>
-                    <i className="ti ti-briefcase-off" style={{ fontSize: 28, display: 'block', marginBottom: 8 }} />
-                    No tasks yet. <a href="/tasks" style={{ color: 'var(--accent)', fontWeight: 700 }}>Browse available tasks</a>
-                  </div>
-                )}
-              </>
+              </div>
             );
           })()}
 
