@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "../components/Layout"
-import { apiRequest, getAccessToken } from "../lib/api";
+import { apiRequest, getAccessToken, API_BASE } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { SkeletonPage, injectSkeletonStyles } from "../components/SkeletonLoader";
 import { useToast } from "../components/Toast";
@@ -74,15 +74,22 @@ function JobDrawer({ job, onClose, onStatusChange }) {
     if (!job?.id) return;
     setSubsLoading(true);
     const token = getAccessToken()
-    console.log('DEBUG submissions token:', token ? 'EXISTS length=' + token.length : 'NULL')
-    apiRequest('/tasks/' + job.id + '/submissions')
+    fetch(API_BASE + '/tasks/' + job.id + '/submissions', {
+      headers: {
+        'Authorization': 'Bearer ' + token,
+        'Content-Type': 'application/json'
+      }
+    })
+      .then(r => r.json())
       .then(data => {
-        const list = Array.isArray(data) ? data : data?.submissions || data?.data || [];
-        setSubmissions(list);
-        setPending(list.filter(s => s.status === 'PENDING').length);
-        setRejected(list.filter(s => s.status === 'REJECTED').length);
+        const list = Array.isArray(data)
+          ? data
+          : data?.data || data?.submissions || []
+        setSubmissions(list)
+        setPending(list.filter(s => s.status === 'PENDING').length)
+        setRejected(list.filter(s => s.status === 'REJECTED').length)
       })
-      .catch((err) => { console.error('Failed to load submissions:', err); })
+      .catch(err => console.error('submissions fetch error:', err))
       .finally(() => setSubsLoading(false));
   }, [job?.id]);
 
