@@ -38,6 +38,11 @@ function GoogleIcon() {
 export default function LoginPage() {
   const { login, isAuthed } = useAuth();
   
+  // Redirect to dashboard if already authenticated
+  if (isAuthed) {
+    return <Navigate to="/dashboard" replace />;
+  }
+  
   // FIX 1: Better theme initialization
   const [theme, setTheme] = useState(() => {
     if (typeof window !== "undefined") {
