@@ -517,7 +517,14 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }) {
       // Pass taskId to onCreate for redirect
       onCreate(taskId);
     } catch (err) {
-      setSubmitError(err.message || "Failed to create task. Please try again.");
+      // Show detailed errors if available
+      let msg = err.message || "Failed to create task. Please try again.";
+      if (err.errors && Array.isArray(err.errors)) {
+        msg = err.errors.map((e: any) => e.field + ': ' + e.message).join('; ');
+      } else if (err.data?.errors) {
+        msg = err.data.errors.map((e: any) => e.field + ': ' + e.message).join('; ');
+      }
+      setSubmitError(msg);
     } finally {
       setSubmitting(false);
     }
