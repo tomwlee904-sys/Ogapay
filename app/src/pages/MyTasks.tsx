@@ -50,18 +50,28 @@ export default function MyTasks() {
   const { user: authUser } = useAuth()
   const [tab, setTab] = useState('all')
   const [submissions, setSubmissions] = useState<any[]>([])
+  const [createdTasks, setCreatedTasks] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
   const fetchData = async () => {
     try {
       const token = localStorage.getItem('ogapay_access_token')
       if (!token) { setLoading(false); return }
-      const res = await fetch(API_BASE + '/tasks/my/submissions', {
-        headers: { 'Authorization': 'Bearer ' + token },
-      })
-      const json = await res.json()
-      if (json.success && json.data) {
-        setSubmissions(json.data)
+      const [subRes, createdRes] = await Promise.all([
+        fetch(API_BASE + '/tasks/my/submissions', {
+          headers: { 'Authorization': 'Bearer ' + token },
+        }),
+        fetch(API_BASE + '/tasks/my/created', {
+          headers: { 'Authorization': 'Bearer ' + token },
+        }),
+      ])
+      const subJson = await subRes.json()
+      const createdJson = await createdRes.json()
+      if (subJson.success && subJson.data) {
+        setSubmissions(subJson.data)
+      }
+      if (createdJson.success && createdJson.data) {
+        setCreatedTasks(createdJson.data)
       }
     } catch {
       const el = document.getElementById('appToast')
@@ -118,6 +128,45 @@ export default function MyTasks() {
           <button key={t.id} className={`mt-tab ${tab === t.id ? 'active' : ''}`} onClick={() => setTab(t.id)}>{t.label}</button>
         ))}
       </div>
+      
+      {createdTasks.length > 0 && (
+        <div style={{ marginBottom: 24 }}>
+          <h3 style={{ fontFamily: 'Outfit,sans-serif', fontSize: 16, fontWeight: 800, margin: '0 0 10px' }}>
+            <i className="ti ti-briefcase" style={{marginRight:6}} /> My Created Tasks
+          </h3>
+          <div style={{ display: 'grid', gap: 8 }}>
+            {createdTasks.map(t => (
+              <div key={t.id} onClick={() => navigate('/tasks/' + t.id)} style={{
+                display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px',
+                background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 10,
+                cursor: 'pointer', transition: 'all .2s',
+              }}>
+                <div style={{ width: 36, height: 36, borderRadius: 8, background: '#191C6B', display: 'grid', placeItems: 'center', flexShrink: 0 }}>
+                  <i className="ti ti-checklist" style={{color:'#fff',fontSize:16}} />
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontWeight: 700, fontSize: 13 }}>{t.title}</div>
+                  <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 2 }}>
+                    {t._count?.submissions || 0} submissions · {t.status} · {t.currency === 'NGN' ? '₦' : '$'}{Number(t.reward).toLocaleString()}
+                  </div>
+                </div>
+                <span style={{
+                  padding: '3px 8px', borderRadius: 5, fontSize: 10, fontWeight: 700,
+                  background: t.status === 'OPEN' ? 'rgba(22,163,74,0.12)' : 'rgba(245,158,11,0.12)',
+                  color: t.status === 'OPEN' ? '#16a34a' : '#f59e0b',
+                }}>
+                  {t.status === 'OPEN' ? 'Open' : t.status === 'CLOSED' ? 'Closed' : t.status}
+                </span>
+                <i className="ti ti-chevron-right" style={{color:'var(--text3)',fontSize:14}} />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+      
+      <h3 style={{ fontFamily: 'Outfit,sans-serif', fontSize: 16, fontWeight: 800, margin: '0 0 10px' }}>
+        <i className="ti ti-send" style={{marginRight:6}} /> My Submissions
+      </h3>
 
       {loading ? (
         <div className="mt-empty">
