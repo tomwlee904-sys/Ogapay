@@ -816,14 +816,14 @@ export default function JobDetail() {
                             width:36, height:36, borderRadius:'50%', background:BRAND, color:'#fff', display:'grid',
                             placeItems:'center', fontSize:12, fontWeight:800, flexShrink:0, overflow:'hidden',
                           }}>
-                            {sub.user?.avatarUrl ? <img src={sub.user.avatarUrl} style={{width:'100%',height:'100%',objectFit:'cover'}} /> : (sub.user?.username || 'U')[0].toUpperCase()}
+                            {sub.worker?.avatarUrl ? <img src={sub.user.avatarUrl} style={{width:'100%',height:'100%',objectFit:'cover'}} /> : (sub.user?.username || 'U')[0].toUpperCase()}
                           </div>
                           <div style={{flex:1, minWidth:0}}>
                             <div style={{fontWeight:700, fontSize:13, marginBottom:2}}>
-                              {sub.user?.username || sub.user?.firstName || 'Anonymous'}
+                              {sub.worker?.username || sub.worker?.firstName || 'Anonymous'}
                             </div>
                             <div style={{fontSize:12, color:'var(--text2)', marginBottom:6, lineHeight:1.4}}>
-                              {sub.notes || sub.message || 'No message'}
+                              {sub.workerNotes || sub.workerNotes || 'No message'}
                             </div>
                             {sub.proof && (
                               <div style={{fontSize:11, color:BRAND, marginBottom:6, wordBreak:'break-all'}}>
@@ -831,7 +831,7 @@ export default function JobDetail() {
                               </div>
                             )}
                             <div style={{display:'flex', gap:6, marginTop:8}}>
-                              {sub.status === 'PENDING' && (
+                              {sub.status === 'SUBMITTED' && (
                                 <>
                                   <button onClick={() => handleApprove(sub.id)} disabled={approving === sub.id}
                                     style={{height:30, padding:'0 14px', borderRadius:7, border:'none', background:'#16a34a', color:'#fff', fontWeight:700, fontSize:11, cursor:'pointer', fontFamily:'inherit', display:'flex', alignItems:'center', gap:4, opacity: approving === sub.id ? 0.6 : 1}}>

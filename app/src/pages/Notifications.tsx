@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { apiRequest } from '../lib/api'
 import Layout from '../components/Layout'
 import { SkeletonPage, injectSkeletonStyles } from '../components/SkeletonLoader'
@@ -40,6 +41,7 @@ function guessMeta(title = '') {
 
 export default function Notifications() {
   const { user: authUser } = useAuth()
+  const navigate = useNavigate()
   const [notifs, setNotifs] = useState<any[]>([])
   const [filter, setFilter] = useState('all')
   const [loading, setLoading] = useState(true)
@@ -74,6 +76,7 @@ export default function Notifications() {
     desc: n.body || n.description || '',
     time: n.createdAt ? timeAgo(n.createdAt) : '',
     read: n.read ?? n.isRead ?? false,
+    link: n.link || (n.data?.taskId ? `/tasks/${n.data.taskId}${n.data.submissionId ? `?tab=submissions` : ''}` : null),
   })
 
   const mapped = notifs.map(mapNotif)
@@ -159,7 +162,10 @@ export default function Notifications() {
       ) : (
         <div className="nt-list">
           {(filtered || []).map(n => (
-            <div className={`nt-item ${!n.read ? 'unread' : ''}`} key={n.id} onClick={() => { if (!n.read) markOneRead(n.id) }}>
+            <div className={`nt-item ${!n.read ? 'unread' : ''}`} key={n.id} onClick={() => {
+              markOneRead(n.id)
+              if (n.link) navigate(n.link)
+            }}>
               <div className="nt-icon" style={{background: `${n.color}15`, color: n.color}}>
                 <i className={n.icon} />
               </div>
