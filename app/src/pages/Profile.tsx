@@ -526,6 +526,14 @@ export default function Profile() {
               }
       if (!pubKey) throw new Error("No public key");
 
+      // Immediately save wallet address to backend
+      try {
+        await apiRequest("/users/wallet", {
+          method: "POST",
+          body: JSON.stringify({ walletAddress: pubKey, provider: id }),
+        });
+      } catch {}
+
             const nonceRes = await apiRequest<{ nonce: string; message: string }>("/wallet/nonce", {
         method: "POST",
         body: JSON.stringify({ wallet: pubKey }),

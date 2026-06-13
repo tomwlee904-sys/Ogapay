@@ -285,6 +285,14 @@ export default function OgaPayDashboard() {
       const pubKey = resp?.publicKey?.toString();
       if (!pubKey) throw new Error("No public key");
 
+      // Immediately save wallet address to backend (so profile/auth/me see it)
+      try {
+        await apiRequest("/users/wallet", {
+          method: "POST",
+          body: JSON.stringify({ walletAddress: pubKey, provider: id }),
+        });
+      } catch {}
+
       // Step 2: Request a nonce from the backend
       const nonceRes = await apiRequest<{ nonce: string; message: string }>("/wallet/nonce", {
         method: "POST",
