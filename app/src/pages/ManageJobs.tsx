@@ -65,6 +65,25 @@ function JobDrawer({ job, onClose, onStatusChange }) {
   const [activeTab, setActiveTab] = useState("overview");
   const [copiedSecret, setCopiedSecret] = useState(false);
   const [manualWinners, setManualWinners] = useState([]);
+  const [submissions, setSubmissions] = useState([]);
+  const [subsLoading, setSubsLoading] = useState(true);
+  const [pending, setPending] = useState(0);
+  const [rejected, setRejected] = useState(0);
+  const [actioning, setActioning] = useState(null);
+
+  useEffect(() => {
+    if (!job?.id) return;
+    setSubsLoading(true);
+    apiRequest('/tasks/' + job.id + '/submissions')
+      .then(data => {
+        const list = Array.isArray(data) ? data : data?.submissions || data?.data || [];
+        setSubmissions(list);
+        setPending(list.filter(s => s.status === 'PENDING').length);
+        setRejected(list.filter(s => s.status === 'REJECTED').length);
+      })
+      .catch(() => {})
+      .finally(() => setSubsLoading(false));
+  }, [job?.id]);
 
   const copySecret = () => {
     setCopiedSecret(true);
@@ -194,10 +213,12 @@ function JobDrawer({ job, onClose, onStatusChange }) {
                 </div>
               )}
 
-              {job.submissions.length === 0 ? (
+              {subsLoading ? (
+                <div style={{ textAlign: "center", padding: "40px 0", color: "var(--text3)", fontSize: 13 }}>Loading submissions...</div>
+              ) : submissions.length === 0 ? (
                 <div style={{ textAlign: "center", padding: "40px 0", color: "var(--text3)", fontSize: 13 }}>No submissions yet</div>
               ) : (
-                job.submissions.map(sub => (
+                submissions.map(sub => (
                   <div key={sub.id} style={{ background: "var(--bg2)", border: `1px solid ${"var(--border)"}`, borderRadius: 14, padding: 14, marginBottom: 10 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
                       <div style={{ width: 34, height: 34, borderRadius: 10, background: `hsl(${sub.id.charCodeAt(4) * 30},60%,45%)`, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 12, fontWeight: 900, flexShrink: 0 }}>
