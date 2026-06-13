@@ -47,6 +47,7 @@ interface AuthContextType {
   user: User | null
   isAuthed: boolean
   isLoading: boolean
+  login: (payload: { user?: any; tokens?: { accessToken?: string; refreshToken?: string } }) => void
   refreshUser: () => Promise<void>
   updateUser: (partial: Partial<User>) => void
   logout: () => Promise<void>
@@ -58,6 +59,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const isAuthed = !!user
+
+  const login = useCallback((payload: { user?: any; tokens?: { accessToken?: string; refreshToken?: string } }) => {
+    const { user: userData, tokens } = payload
+    persistAuthSession({
+      user: userData || undefined,
+      tokens: tokens || undefined,
+    })
+    if (userData) {
+      const mapped: User = {
+        id: userData.id,
+        username: userData.username || '',
+        email: userData.email || '',
+        firstName: userData.firstName || '',
+        lastName: userData.lastName || '',
+        displayName: userData.displayName || userData.firstName || '',
+        avatar: userData.avatarUrl || userData.avatar || null,
+        bio: userData.bio || null,
+        role: userData.role || 'WORKER',
+        walletAddress: userData.walletAddress || null,
+        walletProvider: userData.walletProvider || null,
+        walletConnectedAt: userData.walletConnectedAt || null,
+        referralCode: userData.referralCode || '',
+        isEmailVerified: userData.isEmailVerified || false,
+        kycStatus: userData.kycStatus || null,
+        onboardingComplete: userData.onboardingComplete || false,
+        wallet: userData.wallet || {},
+        bankAccount: userData.bankAccount || null,
+        onboarding: userData.onboarding || { profileComplete: false, emailVerified: false, walletConnected: false, bankAdded: false, allComplete: false },
+        _count: userData._count || { taskSubmissions: 0, tasksCreated: 0, referrals: 0 },
+        createdAt: userData.createdAt || new Date().toISOString(),
+      }
+      setUser(mapped)
+    }
+  }, [])
 
   const refreshUser = useCallback(async () => {
     try {
@@ -108,6 +143,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       user,
       isAuthed,
       isLoading,
+      login,
       refreshUser,
       updateUser,
       logout
