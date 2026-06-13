@@ -2,6 +2,8 @@
 
 require('express-async-errors');
 require('dotenv').config();
+const { validateEnv } = require('./utils/validateEnv');
+validateEnv();
 
 const express = require('express');
 const cors = require('cors');
@@ -34,6 +36,7 @@ const messagesRoutes = require('./routes/messages.routes');
 const blogRoutes = require('./routes/blog.routes');
 const campaignRoutes = require('./routes/campaign.routes');
 const vaultRoutes = require('./routes/vault.routes');
+const adminRoutes = require('./routes/admin.routes');
 const analyticsRoutes = require('./routes/analytics.routes');
 const platformRoutes = require('./routes/platform.routes');
 const imagekitRoutes = require('./routes/imagekit.routes');
@@ -80,10 +83,10 @@ app.use(globalLimiter);
 
 // ── Body Parsing ──────────────────────────────
 // Raw body for webhooks MUST come before json()
-app.use(`${API}/webhooks`, express.raw({ type: 'application/json' }));
+// Webhooks need raw body — mount BEFORE json parser
+app.use('/api/v1/webhooks', express.raw({ type: 'application/json' }), webhookRoutes);
+app.use('/v1/webhooks', express.raw({ type: 'application/json' }), webhookRoutes);
 app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-
 // ── Logging ───────────────────────────────────
 if (process.env.NODE_ENV !== 'test') {
   app.use(morgan('combined', {
@@ -116,7 +119,6 @@ function mountRoutes(base) {
   app.use(`${base}/dashboard`, dashboardRoutes);
   app.use(`${base}/uploads`, uploadRoutes);
   app.use(`${base}/ai`, aiRoutes);
-  app.use(`${base}/webhooks`, webhookRoutes);
   app.use(`${base}/notifications`, notificationRoutes);
   app.use(`${base}/escrow`, escrowRoutes);
   app.use(`${base}/payments`, paymentRoutes);
@@ -128,6 +130,7 @@ function mountRoutes(base) {
   app.use(`${base}/platform`, platformRoutes);
   app.use(`${base}/jobs`, jobsRoutes);
   app.use(`${base}/imagekit`, imagekitRoutes);
+  app.use(`${base}/admin`, adminRoutes);
 }
 
 mountRoutes(API);

@@ -59,25 +59,30 @@ function JobDetailModal({ job, onClose, onApply }: { job: any; onClose: () => vo
     }
   }, [job.deadline])
 
-  const handleApply = async () => {
-    setSubmitted(false)
-    try {
-      await apiRequest('/tasks/' + job.id + '/apply', { method: 'POST' })
-      setSubmitted(true)
-      setShowApplyModal(false)
-      onApply(job.id)
-    } catch { alert('Failed to apply') }
-  }
-
   const handleSubmitProof = async () => {
     try {
+      // Step 1 — apply (ignore "already applied")
+      await apiRequest('/tasks/' + job.id + '/apply', {
+        method: 'POST',
+      }).catch((err: any) => {
+        if (err?.message?.toLowerCase().includes('already')) return null
+        throw err
+      })
+
+      // Step 2 — submit proof
       await apiRequest('/tasks/' + job.id + '/submit', {
         method: 'POST',
-        body: { workerNotes: applyMsg, proof: applyLink, workerNotesExtra: notes },
+        body: JSON.stringify({
+          workerNotes: applyMsg,
+          proof: applyLink,
+          workerNotesExtra: notes,
+        }),
       })
       setSubmitted(true)
       setShowApplyModal(false)
-    } catch { alert('Failed to submit') }
+    } catch (err: any) {
+      alert(err?.message || 'Failed to submit')
+    }
   }
 
   if (!job) return null
@@ -182,22 +187,32 @@ function JobDetailModal({ job, onClose, onApply }: { job: any; onClose: () => vo
 }
 
 // ─── Bootstrap fetchTasks from cache ──────────────────────────────
-let tasksCache: { data: any[]; timestamp: number } | null = null
-const CACHE_TTL = 30000
+const tasksCacheMap = new Map<string, { data: any[]; timestamp: number }>()
+const CACHE_TTL = 30_000
+const FOCUS_STALE_AGE = 5_000
+
+// Export so other pages can invalidate after mutations
+export function invalidateTasksCache() {
+  tasksCacheMap.clear()
+}
 
 async function fetchTasks(category?: string) {
-  const cacheKey = category || 'all'
+  const cacheKey = (category || 'all').toLowerCase()
   const now = Date.now()
-  if (tasksCache && tasksCache.timestamp + CACHE_TTL > now) {
-    return tasksCache.data
+  const cached = tasksCacheMap.get(cacheKey)
+  if (cached && cached.timestamp + CACHE_TTL > now) {
+    return cached.data
   }
-  const url = category && category !== 'All' && category !== 'Trending' && category !== 'New'
-    ? '/tasks?category=' + encodeURIComponent(category.toUpperCase())
-    : '/tasks'
+  const url =
+    category && !['all', 'trending', 'new'].includes(category.toLowerCase())
+      ? '/tasks?category=' + encodeURIComponent(category.toUpperCase())
+      : '/tasks'
   try {
     const data = await apiRequest<any>(url).catch(() => null)
-    const fallback = Array.isArray(data) ? data : data?.data || data?.tasks || data?.jobs || []
-    tasksCache = { data: fallback, timestamp: now }
+    const fallback = Array.isArray(data)
+      ? data
+      : data?.data || data?.tasks || data?.jobs || []
+    tasksCacheMap.set(cacheKey, { data: fallback, timestamp: now })
     return fallback
   } catch {
     return []
@@ -357,6 +372,19 @@ export default function Tasks() {
     })
   }, [filter])
 
+  // Invalidate stale cache entries on window focus
+  useEffect(() => {
+    const onFocus = () => {
+      const now = Date.now()
+      tasksCacheMap.forEach((v, k) => {
+        if (now - v.timestamp > FOCUS_STALE_AGE) tasksCacheMap.delete(k)
+      })
+      fetchTasks(filter).then(data => setJobs(data || []))
+    }
+    window.addEventListener('focus', onFocus)
+    return () => window.removeEventListener('focus', onFocus)
+  }, [filter])
+
   useEffect(() => {
     // Check URL params for selected job
     const id = searchParams.get('job')
@@ -514,7 +542,7 @@ export default function Tasks() {
             onClose={() => setSelectedJob(null)}
             onApply={(jid) => {
               setSelectedJob(null)
-              navigate('/jobs/' + jid)
+              navigate('/tasks/' + jid)
             }}
           />
         )}

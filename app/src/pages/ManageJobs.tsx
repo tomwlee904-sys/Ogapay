@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "../components/Layout"
 import { apiRequest } from "../lib/api";
-import { apiRequest } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { SkeletonPage, injectSkeletonStyles } from "../components/SkeletonLoader";
 import { useToast } from "../components/Toast";
@@ -25,10 +24,10 @@ const statusBg = {
   cancelled: "rgba(239,68,68,0.12)",
   expired: "rgba(255,255,255,0.05)",
 };
-const subColor = { approved: "var(--green)", pending: "#f59e0b", rejected: "var(--red)" };
+const subColor = { APPROVED: "var(--green)", PENDING: "#f59e0b", REJECTED: "var(--red)" };
 const subBg = {
-  approved: "rgba(16,185,129,0.12)", pending: "rgba(245,158,11,0.12)",
-  rejected: "rgba(239,68,68,0.12)",
+  APPROVED: "rgba(16,185,129,0.12)", PENDING: "rgba(245,158,11,0.12)",
+  REJECTED: "rgba(239,68,68,0.12)",
 };
 
 function pct(a, b) { return b ? Math.round((a / b) * 100) : 0; }
@@ -81,11 +80,46 @@ function JobDrawer({ job, onClose, onStatusChange }) {
         setPending(list.filter(s => s.status === 'PENDING').length);
         setRejected(list.filter(s => s.status === 'REJECTED').length);
       })
-      .catch(() => {})
+      .catch((err) => { console.error('Failed to load submissions:', err); })
       .finally(() => setSubsLoading(false));
   }, [job?.id]);
 
-  const copySecret = () => {
+  const handleApprove = async (submissionId) => {
+    setActioning(submissionId);
+    try {
+      await apiRequest('/tasks/submissions/' + submissionId + '/review', {
+        method: 'PATCH',
+        body: JSON.stringify({ status: 'APPROVED' }),
+      });
+      setSubmissions(prev =>
+        prev.map(s => s.id === submissionId ? { ...s, status: 'APPROVED' } : s)
+      );
+      setPending(p => Math.max(0, p - 1));
+    } catch (e) {
+      console.error('Approve failed', e);
+    }
+    setActioning(null);
+  };
+
+  const handleReject = async (submissionId) => {
+    setActioning(submissionId);
+    try {
+      await apiRequest('/tasks/submissions/' + submissionId + '/review', {
+        method: 'PATCH',
+        body: JSON.stringify({ status: 'REJECTED' }),
+      });
+      setSubmissions(prev =>
+        prev.map(s => s.id === submissionId ? { ...s, status: 'REJECTED' } : s)
+      );
+      setPending(p => Math.max(0, p - 1));
+      setRejected(r => r + 1);
+    } catch (e) {
+      console.error('Reject failed', e);
+    }
+    setActioning(null);
+  };
+
+    const copySecret = () => {
     setCopiedSecret(true);
     setTimeout(() => setCopiedSecret(false), 2000);
   };
@@ -228,7 +262,7 @@ function JobDrawer({ job, onClose, onStatusChange }) {
                         <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{sub.worker?.username || sub.worker?.firstName || 'Unknown'}</div>
                         <div style={{ fontSize: 11, color: "var(--text3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{sub.worker?.email || ''} · {new Date(sub.createdAt).toLocaleDateString()}</div>
                       </div>
-                      <Badge label={sub.status.charAt(0).toUpperCase() + sub.status.slice(1)} color={subColor[sub.status]} bg={subBg[sub.status]} />
+                      <Badge label={(sub.status.charAt(0) + sub.status.slice(1).toLowerCase())} color={subColor[sub.status]} bg={subBg[sub.status]} />
                     </div>
 
                     {/* Score bar */}
@@ -245,7 +279,7 @@ function JobDrawer({ job, onClose, onStatusChange }) {
                       <button style={{ flex: 1, background: "var(--bg2)", border: `1px solid ${"var(--border)"}`, borderRadius: 10, padding: "8px 0", fontSize: 11, fontWeight: 700, color: "var(--text2)", cursor: "pointer", fontFamily: "inherit" }}>
                         📎 View Proof
                       </button>
-                      {sub.status === "pending" && (
+                      {sub.status === 'PENDING' && (
                         <>
                           <button
                             onClick={() => handleApprove(sub.id)}
@@ -857,8 +891,8 @@ export default function MyJobs() {
       remaining: Number(t.reward) * (t.maxWorkers || 1) - Number(t.currentWorkers || 0) * Number(t.reward || 0),
       slots: t.maxWorkers || 1,
       winners: t.currentWorkers || 0,
-      pending: 0,
-      rejected: 0,
+      pending: t.pendingSubmissions ?? t._count?.submissions ?? 0,
+      rejected: t.rejectedSubmissions ?? 0,
       approvalRate: t.maxWorkers > 0 ? Math.round((t.currentWorkers || 0) / t.maxWorkers * 100) : 0,
       avgFillTime: "N/A",
       deadline: t.deadline ? new Date(t.deadline).toLocaleDateString() : "N/A",

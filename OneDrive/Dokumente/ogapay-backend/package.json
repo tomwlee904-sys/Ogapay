@@ -1,7 +1,7 @@
 {
     "name": "ogapay-backend",
     "version": "1.0.0",
-    "description": "OgaPay — Gig platform backend with NGN + crypto wallets, KYC, tasks, leaderboard",
+    "description": "OgaPay \u2014 Gig platform backend with NGN + crypto wallets, KYC, tasks, leaderboard",
     "main": "src/index.js",
     "type": "commonjs",
     "scripts": {
@@ -37,7 +37,9 @@
         "uuid": "^10.0.0",
         "winston": "^3.13.0",
         "ws": "^8.21.0",
-        "zod": "^3.23.8"
+        "zod": "^3.23.8",
+        "openai": "^4.0.0",
+        "nodemailer": "^6.9.0"
     },
     "devDependencies": {
         "eslint": "^9.6.0",

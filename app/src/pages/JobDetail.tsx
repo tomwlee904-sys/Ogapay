@@ -912,6 +912,18 @@ export default function JobDetail() {
             background: 'var(--bg)', padding: '12px 0',
             borderTop: '1px solid var(--border)',
           }}>
+            {authUser && job?.creatorId === authUser.id ? (
+              <button onClick={() => navigate('/manage-jobs')} style={{
+                width: '100%', padding: '16px', borderRadius: 14, border: 'none',
+                background: BRAND, color: '#fff',
+                fontSize: 16, fontWeight: 800, cursor: 'pointer',
+                fontFamily: 'inherit',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                minHeight: 56,
+              }}>
+                Manage Submissions →
+              </button>
+            ) : (
             <button onClick={() => setShowApply(true)} disabled={!isOpen} style={{
               width: '100%', padding: '16px', borderRadius: 14, border: 'none',
               background: isOpen ? BRAND : 'var(--border)',
@@ -927,6 +939,7 @@ export default function JobDetail() {
                 </svg></>
               ) : 'This Job is Closed'}
             </button>
+            )}
           </div>
 
         </div>

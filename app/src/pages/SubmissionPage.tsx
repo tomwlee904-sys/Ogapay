@@ -92,6 +92,13 @@ export default function SubmissionPage() {
 
   const handleSubmit = async () => {
     if (!id) return
+    // If user is the task poster, redirect to manage jobs
+    const usr = getStoredUser()
+    const ownerCheck = !!usr && !!task && (usr.id === task.posterId || usr.id === task.poster?.id)
+    if (ownerCheck) {
+      navigate('/manage-jobs')
+      return
+    }
 
     if (!isReady) {
       setShowOnboarding(true)
@@ -214,7 +221,11 @@ export default function SubmissionPage() {
     )
   }
 
-  const user = getStoredUser()
+  const currentUser = getStoredUser()
+  const isOwner = !!currentUser && !!task && (
+    currentUser.id === task.posterId ||
+    currentUser.id === task.poster?.id
+  )
 
   return (
     <Layout>
@@ -242,6 +253,17 @@ export default function SubmissionPage() {
               </div>
 
               <div className="sp-card-body">
+                {isOwner ? (
+                  <div className="sp-error" style={{textAlign:'center',padding:'20px',marginBottom:16}}>
+                    <i className="ti ti-shield-lock" style={{fontSize:24,display:'block',marginBottom:8}} />
+                    <p style={{fontSize:14,fontWeight:700,margin:'0 0 8px'}}>You created this task</p>
+                    <p style={{fontSize:12,margin:'0 0 12px'}}>Go to Manage Jobs to review submissions.</p>
+                    <button className="sp-btn sp-btn-primary" onClick={() => navigate('/manage-jobs')}>
+                      <i className="ti ti-briefcase" /> Manage Submissions →
+                    </button>
+                  </div>
+                ) : (
+                <>
                 {/* Task Context */}
                 {task && (
                   <div className="sp-task-context" onClick={() => navigate('/tasks/' + id)}>
@@ -349,6 +371,7 @@ export default function SubmissionPage() {
                   )}
                 </button>
                 <p className="sp-note">You need to provide at least a comment, link, or file attachment.</p>
+                </>)}
               </div>
             </div>
           </div>
