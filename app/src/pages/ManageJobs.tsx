@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "../components/Layout"
-import { apiRequest } from "../lib/api";
+import { apiRequest, getAccessToken } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { SkeletonPage, injectSkeletonStyles } from "../components/SkeletonLoader";
 import { useToast } from "../components/Toast";
@@ -73,6 +73,8 @@ function JobDrawer({ job, onClose, onStatusChange }) {
   useEffect(() => {
     if (!job?.id) return;
     setSubsLoading(true);
+    const token = getAccessToken()
+    console.log('DEBUG submissions token:', token ? 'EXISTS length=' + token.length : 'NULL')
     apiRequest('/tasks/' + job.id + '/submissions')
       .then(data => {
         const list = Array.isArray(data) ? data : data?.submissions || data?.data || [];
