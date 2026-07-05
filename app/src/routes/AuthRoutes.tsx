@@ -1,8 +1,8 @@
-import { lazy } from 'react'
-import { Route, Navigate } from 'react-router-dom'
+import { lazy, ReactNode } from 'react'
+import { Navigate } from 'react-router-dom'
 import ProtectedRoute from '../components/ProtectedRoute'
+import type { RouteConfig } from './PublicRoutes'
 
-// ─── Auth lazy imports ───
 const Dashboard = lazy(() => import('../pages/Dashboard'))
 const Profile = lazy(() => import('../pages/Profile'))
 const Wallet = lazy(() => import('../pages/Wallet'))
@@ -25,39 +25,35 @@ const CreateJob = lazy(() => import('../pages/CreateJob'))
 const BlogEditor = lazy(() => import('../pages/BlogEditor'))
 const Developer = lazy(() => import('../pages/Developer'))
 
-function AuthGuard({ children }: { children: React.ReactNode }) {
+function AG({ children }: { children: ReactNode }) {
   return <ProtectedRoute>{children}</ProtectedRoute>
 }
 
-export function AuthRoutes() {
-  return (
-    <>
-      <Route path="/dashboard" element={<AuthGuard><Dashboard /></AuthGuard>} />
-      <Route path="/profile" element={<AuthGuard><Profile /></AuthGuard>} />
-      <Route path="/wallet" element={<AuthGuard><Wallet /></AuthGuard>} />
-      <Route path="/earnings" element={<AuthGuard><Earnings /></AuthGuard>} />
-      <Route path="/referrals" element={<AuthGuard><Referrals /></AuthGuard>} />
-      <Route path="/worker-portal" element={<AuthGuard><WorkerPortal /></AuthGuard>} />
-      <Route path="/settings" element={<AuthGuard><Settings /></AuthGuard>} />
-      <Route path="/notifications" element={<AuthGuard><Notifications /></AuthGuard>} />
-      <Route path="/messages" element={<AuthGuard><Messages /></AuthGuard>} />
-      <Route path="/my-tasks" element={<AuthGuard><MyTasks /></AuthGuard>} />
-      <Route path="/my-store" element={<AuthGuard><MyStore /></AuthGuard>} />
-      <Route path="/campaigns" element={<AuthGuard><Campaigns /></AuthGuard>} />
-      <Route path="/job-monitor" element={<AuthGuard><JobMonitor /></AuthGuard>} />
-      <Route path="/edit-profile" element={<AuthGuard><EditProfile /></AuthGuard>} />
-      <Route path="/task-history" element={<AuthGuard><TaskHistory /></AuthGuard>} />
-      <Route path="/bookmarks" element={<AuthGuard><Bookmarks /></AuthGuard>} />
-      <Route path="/analytics" element={<AuthGuard><Analytics /></AuthGuard>} />
-      <Route path="/worker-apply" element={<AuthGuard><WorkerApply /></AuthGuard>} />
-      <Route path="/create" element={<AuthGuard><CreateJob /></AuthGuard>} />
-      <Route path="/createcustom" element={<Navigate to="/create?type=custom" replace />} />
-      <Route path="/createsocial" element={<Navigate to="/create?type=social" replace />} />
-      <Route path="/tasks/new" element={<Navigate to="/create" replace />} />
-      <Route path="/blog/write" element={<AuthGuard><BlogEditor /></AuthGuard>} />
-      <Route path="/blog/edit/:id" element={<AuthGuard><BlogEditor /></AuthGuard>} />
-      <Route path="/my-jobs" element={<Navigate to="/manage-jobs" replace />} />
-      <Route path="/developer" element={<AuthGuard><Developer /></AuthGuard>} />
-    </>
-  )
-}
+export const authRoutes: RouteConfig[] = [
+  { path: '/dashboard', element: <AG><Dashboard /></AG> },
+  { path: '/profile', element: <AG><Profile /></AG> },
+  { path: '/wallet', element: <AG><Wallet /></AG> },
+  { path: '/earnings', element: <AG><Earnings /></AG> },
+  { path: '/referrals', element: <AG><Referrals /></AG> },
+  { path: '/worker-portal', element: <AG><WorkerPortal /></AG> },
+  { path: '/settings', element: <AG><Settings /></AG> },
+  { path: '/notifications', element: <AG><Notifications /></AG> },
+  { path: '/messages', element: <AG><Messages /></AG> },
+  { path: '/my-tasks', element: <AG><MyTasks /></AG> },
+  { path: '/my-store', element: <AG><MyStore /></AG> },
+  { path: '/campaigns', element: <AG><Campaigns /></AG> },
+  { path: '/job-monitor', element: <AG><JobMonitor /></AG> },
+  { path: '/edit-profile', element: <AG><EditProfile /></AG> },
+  { path: '/task-history', element: <AG><TaskHistory /></AG> },
+  { path: '/bookmarks', element: <AG><Bookmarks /></AG> },
+  { path: '/analytics', element: <AG><Analytics /></AG> },
+  { path: '/worker-apply', element: <AG><WorkerApply /></AG> },
+  { path: '/create', element: <AG><CreateJob /></AG> },
+  { path: '/createcustom', element: <Navigate to="/create?type=custom" replace /> },
+  { path: '/createsocial', element: <Navigate to="/create?type=social" replace /> },
+  { path: '/tasks/new', element: <Navigate to="/create" replace /> },
+  { path: '/blog/write', element: <AG><BlogEditor /></AG> },
+  { path: '/blog/edit/:id', element: <AG><BlogEditor /></AG> },
+  { path: '/my-jobs', element: <Navigate to="/manage-jobs" replace /> },
+  { path: '/developer', element: <AG><Developer /></AG> },
+]

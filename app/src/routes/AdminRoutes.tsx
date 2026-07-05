@@ -1,18 +1,14 @@
-import { lazy } from 'react'
-import { Route } from 'react-router-dom'
+import { lazy, ReactNode } from 'react'
 import ProtectedRoute from '../components/ProtectedRoute'
+import type { RouteConfig } from './PublicRoutes'
 
 const Admin = lazy(() => import('../pages/Admin'))
 
-function AuthGuard({ children }: { children: React.ReactNode }) {
+function AG({ children }: { children: ReactNode }) {
   return <ProtectedRoute>{children}</ProtectedRoute>
 }
 
-export function AdminRoutes() {
-  return (
-    <>
-      <Route path="/admin" element={<AuthGuard><Admin /></AuthGuard>} />
-      <Route path="/admin/*" element={<AuthGuard><Admin /></AuthGuard>} />
-    </>
-  )
-}
+export const adminRoutes: RouteConfig[] = [
+  { path: '/admin', element: <AG><Admin /></AG> },
+  { path: '/admin/*', element: <AG><Admin /></AG> },
+]

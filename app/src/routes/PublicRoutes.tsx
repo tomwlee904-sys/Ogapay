@@ -1,8 +1,7 @@
-import { lazy } from 'react'
-import { Route, Navigate } from 'react-router-dom'
+import { lazy, ReactNode } from 'react'
+import { Navigate } from 'react-router-dom'
 import ProtectedRoute from '../components/ProtectedRoute'
 
-// ─── Public lazy imports ───
 const HomePage = lazy(() => import('../pages/HomePage'))
 const LoginPage = lazy(() => import('../pages/LoginPage'))
 const ForgotPassword = lazy(() => import('../pages/ForgotPassword'))
@@ -27,39 +26,40 @@ const Workers = lazy(() => import('../pages/Workers'))
 const Roadmap = lazy(() => import('../pages/Roadmap'))
 const NotFound = lazy(() => import('../pages/NotFound'))
 
-function AuthGuard({ children }: { children: React.ReactNode }) {
+function AG({ children }: { children: ReactNode }) {
   return <ProtectedRoute>{children}</ProtectedRoute>
 }
 
-export function PublicRoutes() {
-  return (
-    <>
-      <Route path="/" element={<HomePage />} />
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/register" element={<Navigate to="/login" replace />} />
-      <Route path="/forgot-password" element={<ForgotPassword />} />
-      <Route path="/auth/callback" element={<AuthCallback />} />
-      <Route path="/blog" element={<Blog />} />
-      <Route path="/tasks" element={<Tasks />} />
-      <Route path="/tasks/:id/submit" element={<AuthGuard><SubmissionPage /></AuthGuard>} />
-      <Route path="/tasks/:id/submissions" element={<AuthGuard><SubmissionPage /></AuthGuard>} />
-      <Route path="/tasks/:id" element={<JobDetail />} />
-      <Route path="/store" element={<Store />} />
-      <Route path="/communities" element={<Communities />} />
-      <Route path="/communities/:id" element={<CommunityDetail />} />
-      <Route path="/faq" element={<FAQ />} />
-      <Route path="/support" element={<Support />} />
-      <Route path="/vault" element={<Vault />} />
-      <Route path="/privacy" element={<Privacy />} />
-      <Route path="/terms" element={<Terms />} />
-      <Route path="/leaderboard" element={<Leaderboard />} />
-      <Route path="/wurkers" element={<Wurkers />} />
-      <Route path="/writer" element={<Writer />} />
-      <Route path="/user/:username" element={<UserProfile />} />
-      <Route path="/workers" element={<Workers />} />
-      <Route path="/wurker-apply" element={<Navigate to="/worker-apply" replace />} />
-      <Route path="/roadmap" element={<Roadmap />} />
-      <Route path="*" element={<NotFound />} />
-    </>
-  )
+export interface RouteConfig {
+  path: string
+  element: ReactNode
 }
+
+export const publicRoutes: RouteConfig[] = [
+  { path: '/', element: <HomePage /> },
+  { path: '/login', element: <LoginPage /> },
+  { path: '/register', element: <Navigate to="/login" replace /> },
+  { path: '/forgot-password', element: <ForgotPassword /> },
+  { path: '/auth/callback', element: <AuthCallback /> },
+  { path: '/blog', element: <Blog /> },
+  { path: '/tasks', element: <Tasks /> },
+  { path: '/tasks/:id/submit', element: <AG><SubmissionPage /></AG> },
+  { path: '/tasks/:id/submissions', element: <AG><SubmissionPage /></AG> },
+  { path: '/tasks/:id', element: <JobDetail /> },
+  { path: '/store', element: <Store /> },
+  { path: '/communities', element: <Communities /> },
+  { path: '/communities/:id', element: <CommunityDetail /> },
+  { path: '/faq', element: <FAQ /> },
+  { path: '/support', element: <Support /> },
+  { path: '/vault', element: <Vault /> },
+  { path: '/privacy', element: <Privacy /> },
+  { path: '/terms', element: <Terms /> },
+  { path: '/leaderboard', element: <Leaderboard /> },
+  { path: '/wurkers', element: <Wurkers /> },
+  { path: '/writer', element: <Writer /> },
+  { path: '/user/:username', element: <UserProfile /> },
+  { path: '/workers', element: <Workers /> },
+  { path: '/wurker-apply', element: <Navigate to="/worker-apply" replace /> },
+  { path: '/roadmap', element: <Roadmap /> },
+  { path: '*', element: <NotFound /> },
+]

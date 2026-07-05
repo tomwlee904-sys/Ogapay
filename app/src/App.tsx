@@ -1,12 +1,12 @@
 import { Suspense } from 'react'
-import { Routes } from 'react-router-dom'
+import { Routes, Route } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
 import { ThemeProvider } from './context/ThemeContext'
 import { ToastProvider } from './context/ToastContext'
 import { ErrorBoundary } from './components/ErrorBoundary'
-import { PublicRoutes } from './routes/PublicRoutes'
-import { AuthRoutes } from './routes/AuthRoutes'
-import { AdminRoutes } from './routes/AdminRoutes'
+import { publicRoutes } from './routes/PublicRoutes'
+import { authRoutes } from './routes/AuthRoutes'
+import { adminRoutes } from './routes/AdminRoutes'
 
 // ─── Loader ───
 function PageLoader() {
@@ -39,9 +39,9 @@ export default function App() {
           <ErrorBoundary>
             <Suspense fallback={<PageLoader />}>
               <Routes>
-                {PublicRoutes()}
-                {AuthRoutes()}
-                {AdminRoutes()}
+                {publicRoutes.map(r => <Route key={r.path} path={r.path} element={r.element} />)}
+                {authRoutes.map(r => <Route key={r.path} path={r.path} element={r.element} />)}
+                {adminRoutes.map(r => <Route key={r.path} path={r.path} element={r.element} />)}
               </Routes>
             </Suspense>
           </ErrorBoundary>
