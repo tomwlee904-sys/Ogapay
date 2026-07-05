@@ -1,23 +1,10 @@
+import type { AuthTokens, AuthUser } from './types'
+
 export const API_BASE =
   (import.meta.env.VITE_API_BASE_URL || 'https://ogapay-production.up.railway.app/api/v1').replace(/\/$/, '')
 
-export type AuthTokens = {
-  accessToken: string
-  refreshToken: string
-}
-
-export type AuthUser = {
-  id: string
-  email: string
-  firstName?: string
-  lastName?: string
-  username?: string
-  avatarUrl?: string | null
-  role?: 'WORKER' | 'POSTER' | 'ADMIN'
-  referralCode?: string
-  isEmailVerified?: boolean
-  createdAt?: string
-}
+// Re-export for backward compat
+export type { AuthTokens, AuthUser }
 
 type ApiOptions = RequestInit & {
   auth?: boolean

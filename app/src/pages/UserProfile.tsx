@@ -1,3 +1,4 @@
+import { useToast } from "../context/ToastContext"
 import { useState, useEffect } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { useTheme } from "../context/ThemeContext"
@@ -14,6 +15,7 @@ export default function UserProfile() {
   const [profile, setProfile] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [blogs, setBlogs] = useState<any[]>([])
+  const { toast } = useToast()
 
   useEffect(() => {
     if (!username) return
@@ -26,7 +28,7 @@ export default function UserProfile() {
         }
         setLoading(false)
       })
-      .catch(() => setLoading(false))
+      .catch(() => { setLoading(false); toast("Failed to load profile", "error") })
 
     // Fetch user blogs
     fetch(`${API_BASE}/users/public/${username}/blogs`)
@@ -36,7 +38,7 @@ export default function UserProfile() {
           setBlogs(data.data)
         }
       })
-      .catch(() => {})
+      .catch(() => toast("Failed to load blogs", "error"))
   }, [username])
 
   const initials = profile?.firstName && profile?.lastName

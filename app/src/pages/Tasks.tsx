@@ -1,6 +1,13 @@
-import { useState, useEffect } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
-import Layout from '../components/Layout'
+import { useState, useEffect } from "react"
+import { useNavigate, useParams } from "react-router-dom"
+import Layout from "../components/Layout"
+import { useApiList } from "../lib/useApi"
+import { useToast } from "../context/ToastContext"
+import type { Task } from "../lib/types"
+import { SkeletonGrid } from "../components/LoadingState"
+import { EmptyState } from "../components/EmptyState"
+import { usePagination } from "../hooks/usePagination"
+import { Pagination } from "../components/Pagination"
 
 const API_BASE = 'https://ogapay-production.up.railway.app/api/v1'
 
@@ -49,18 +56,6 @@ function mapApiTask(t: any) {
   }
 }
 
-async function fetchTasks() {
-  try {
-    const res = await fetch(API_BASE + '/tasks')
-    const json = await res.json()
-    if (json.success && json.data) {
-      return json.data.map(mapApiTask)
-    }
-    return []
-  } catch {
-    return []
-  }
-}
 
 const jobFilters = ['All', 'Trending', 'New', 'Social', 'Content', 'Testing', 'Design', 'Video', 'Data', 'Research']
 
@@ -130,7 +125,7 @@ function JobDetailView({ job, onBack }: { job: any; onBack: () => void }) {
       setSubmitted(true)
       setTimeout(() => { setShowApplyModal(false); setSubmitted(false); setApplyLink(''); setApplyMsg('') }, 2000)
     } catch (err) {
-      setApplyMsg(err.message)
+      setApplyMsg(err instanceof Error ? err.message : String(err))
     }
   }
 
@@ -358,21 +353,18 @@ function JobDetailView({ job, onBack }: { job: any; onBack: () => void }) {
 export default function Tasks() {
   const navigate = useNavigate()
   const { id } = useParams()
-  const [jobs, setJobs] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState('All')
+  const { data: apiJobs, error, isLoading } = useApiList<any>("/tasks")
+  const [jobs, setJobs] = useState<any[]>([])
+
+  // Sync SWR data to local state
+  useEffect(() => {
+    if (apiJobs) setJobs(apiJobs)
+  }, [apiJobs])
   const [bookmarked, setBookmarked] = useState<string[]>([])
   const [selectedJob, setSelectedJob] = useState<any>(null)
-
-  // Fetch tasks from API
-  useEffect(() => {
-    setLoading(true)
-    fetchTasks().then(data => {
-      setJobs(data)
-      setLoading(false)
-    })
-  }, [])
+  const { toast } = useToast()
 
   // Load single job if id param present
   useEffect(() => {
@@ -392,7 +384,7 @@ export default function Tasks() {
               setSelectedJob(null)
             }
           })
-          .catch(() => setSelectedJob(null))
+          .catch(() => { setSelectedJob(null); toast("Failed to load task details", "error") })
       }
     } else {
       setSelectedJob(null)
@@ -404,6 +396,11 @@ export default function Tasks() {
     const matchFilter = filter === 'All' || filter === 'Trending' || filter === 'New' || job.category === filter
     return matchSearch && matchFilter
   })
+  const { page, totalPages, startIndex, endIndex, firstItem, lastItem, setPage } = usePagination({
+    totalItems: filtered.length,
+    perPage: 20,
+  })
+  const paginatedJobs = filtered.slice(startIndex, endIndex)
 
   const toggleBookmark = (id: string) => {
     setBookmarked(prev => prev.includes(id) ? prev.filter(b => b !== id) : [...prev, id])
@@ -589,15 +586,15 @@ export default function Tasks() {
         </div>
 
         {/* Jobs Grid */}
-        {filtered.length === 0 ? (
-          <div className="empty-state">
-            <i className="ti ti-search-off" />
-            <h3>No jobs found</h3>
-            <p>Try adjusting your search or filter to find what you're looking for.</p>
-          </div>
+        {isLoading ? (
+          <SkeletonGrid count={6} />
+        ) : error ? (
+          <EmptyState icon="alert-circle" title="Failed to load tasks" description={error?.message || "Something went wrong"} />
+        ) : filtered.length === 0 ? (
+          <EmptyState icon="search-off" title="No jobs found" description="Try adjusting your search or filter to find what you are looking for." />
         ) : (
           <div className="jobs-grid">
-            {filtered.map(job => (
+            {paginatedJobs.map(job => (
               <div className="job-card" key={job.id} onClick={() => navigate(`/tasks/${job.id}`)} style={{cursor:'pointer'}}>
                 {/* Creator */}
                 <div className="job-creator">
@@ -686,6 +683,7 @@ export default function Tasks() {
                 </div>
               </div>
             ))}
+          <Pagination page={page} totalPages={totalPages} firstItem={firstItem} lastItem={lastItem} totalItems={filtered.length} onPageChange={setPage} />
           </div>
         )}
       </div>
