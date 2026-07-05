@@ -39,9 +39,9 @@ export default function App() {
           <ErrorBoundary>
             <Suspense fallback={<PageLoader />}>
               <Routes>
-                <PublicRoutes />
-                <AuthRoutes />
-                <AdminRoutes />
+                {PublicRoutes()}
+                {AuthRoutes()}
+                {AdminRoutes()}
               </Routes>
             </Suspense>
           </ErrorBoundary>
