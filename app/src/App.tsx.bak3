@@ -2,6 +2,7 @@ import { Suspense, lazy } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
 import { ThemeProvider } from './context/ThemeContext'
+import { ToastProvider } from './context/ToastContext'
 import ProtectedRoute from './components/ProtectedRoute'
 
 // ─── Lazy-loaded pages (inline, like original) ───
@@ -81,7 +82,7 @@ function PageLoader() {
 export default function App() {
   return (
     <ThemeProvider>
-      
+      <ToastProvider>
         <AuthProvider>
           <Suspense fallback={<PageLoader />}>
             <Routes>
@@ -149,7 +150,7 @@ export default function App() {
             </Routes>
           </Suspense>
         </AuthProvider>
-      
+      </ToastProvider>
     </ThemeProvider>
   )
 }
