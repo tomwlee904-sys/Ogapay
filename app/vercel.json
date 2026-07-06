@@ -1,11 +1,12 @@
 {
   "version": 2,
-  "outputDirectory": "app/dist",
-  "buildCommand": "cd app && npm install && npm run build",
-  "installCommand": "cd app && npm install",
+  "outputDirectory": "dist",
+  "buildCommand": "npm install && npm run build",
+  "installCommand": "npm install",
   "rewrites": [
     { "source": "/assets/(.*)", "destination": "/assets/$1" },
     { "source": "/(.*)\\.html", "destination": "/$1.html" },
+    { "source": "/api/(.*)", "destination": "https://ogapay-production.up.railway.app/api/$1" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [
