@@ -1,154 +1,86 @@
-// ─── API Response ───
-export interface ApiResponse<T> {
-  success?: boolean
-  data?: T
-  message?: string
-  error?: string
-  pagination?: {
-    page: number
-    limit: number
-    total: number
-    totalPages: number
-  }
+export interface Poster {
+  id?: string;
+  username: string;
+  avatarUrl: string | null;
+  displayName?: string;
 }
 
-// ─── Task / Job ───
 export interface Task {
-  id: string
-  title: string
-  description: string
-  reward: number
-  currency?: string
-  maxWorkers?: number
-  currentWorkers?: number
-  estimatedTime?: number
-  proofRequired?: boolean
-  status?: 'OPEN' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED'
-  category?: string
-  tags?: string[]
-  platform?: string
-  difficulty?: string
-  poster?: {
-    id: string
-    username?: string
-    avatarUrl?: string | null
-    posterProfile?: {
-      isVerified?: boolean
-      rating?: number
-    }
-  }
-  featured?: boolean
-  createdAt?: string
-  updatedAt?: string
-  submissionCount?: number
-  completionTime?: string
-  rankRequired?: string
-  usdValue?: number
-  slots?: number
-  filled?: number
-  timeEstimate?: string
-  verificationRequired?: boolean
-  color?: string
+  id: string;
+  title: string;
+  description?: string;
+  reward: number;
+  currency?: string;
+  category: string;
+  status: string;
+  posterId: string;
+  poster?: Poster;
+  maxWorkers: number;
+  workerCount: number;
+  createdAt: string;
+  updatedAt?: string;
+  instructions?: string;
+  proofRequired?: string;
+  estimatedTime?: string;
+  tags?: string[];
+  minRank?: number;
+  minSorsaScore?: number;
+  workerRequirement?: string;
+  requiresLinkedin?: boolean;
+  requiresWallet?: boolean;
+  escrowed?: boolean;
+  platformFee?: number;
+  expiresAt?: string | null;
+  featured?: boolean;
 }
 
-// ─── Auth ───
-export interface AuthTokens {
-  accessToken: string
-  refreshToken: string
+export interface ApiResponse<T> {
+  success: boolean;
+  message: string;
+  data: T;
+  pagination?: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
 }
 
-export interface AuthUser {
-  id: string
-  email: string
-  firstName?: string
-  lastName?: string
-  username?: string
-  avatarUrl?: string | null
-  role?: 'WORKER' | 'POSTER' | 'ADMIN'
-  referralCode?: string
-  isEmailVerified?: boolean
-  createdAt?: string
-  phone?: string
-  isPhoneVerified?: boolean
-  posterProfile?: {
-    isVerified?: boolean
-    rating?: number
-    completedJobs?: number
-  }
-}
-
-// ─── Wallet ───
 export interface WalletBalance {
-  balance: number
-  currency: string
-  locked: number
-  pending: number
-  available: number
-  preferredCurrency?: 'NGN' | 'USD' | 'BOTH'
+  balance: number;
+  pendingWithdrawals: number;
+  lockedBalance?: number;
 }
 
-// ─── Campaign ───
-export interface CampaignDraft {
-  title: string
-  description: string
-  instructions: string
-  platform?: string
-  category: string
-  reward: number
-  maxWorkers: number
-  estimatedTime: number
-  proofRequired: boolean
-  verificationRequired?: boolean
-  tags?: string[]
-  budget?: number
-  difficulty?: string
-  completionTime?: string
-}
-
-// ─── Qualification ───
 export interface QualificationCheck {
-  kycVerified: boolean
-  emailVerified: boolean
-  walletConnected: boolean
-  accountAgeDays: number
-  phoneVerified: boolean
-  passed: boolean
+  checks: {
+    kycVerified: boolean;
+    emailConfirmed: boolean;
+    walletConnected: boolean;
+    accountAgeMet: boolean;
+    phoneVerified: boolean;
+  };
+  allPassed: boolean;
+  details: Record<string, {
+    passed: boolean;
+    status?: string;
+    verified?: boolean;
+    connected?: boolean;
+    days?: number;
+    actionUrl: string | null;
+  }>;
 }
 
-// ─── Community ───
-export interface Community {
-  id: string
-  name: string
-  description?: string
-  imageUrl?: string
-  memberCount?: number
-  category?: string
-  createdAt?: string
-}
-
-// ─── Store Product ───
-export interface StoreProduct {
-  id: string
-  title: string
-  description?: string
-  price: number
-  currency?: string
-  imageUrl?: string
-  category?: string
-  seller?: {
-    id: string
-    username?: string
-  }
-  createdAt?: string
-}
-
-// ─── Notification ───
-export interface AppNotification {
-  id: string
-  type: 'INFO' | 'SUCCESS' | 'WARNING' | 'ERROR'
-  title: string
-  message?: string
-  read: boolean
-  createdAt: string
-  link?: string
+export interface CampaignDraft {
+  title?: string;
+  platform?: string;
+  category?: string;
+  workerCount?: number;
+  reward?: number;
+  instructions?: string;
+  proofRequired?: string;
+  estimatedTime?: string;
+  budget?: number;
+  qualityScore?: number;
+  difficulty?: string;
 }

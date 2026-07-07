@@ -1,62 +1,124 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { useToast } from '../components/Toast'
 import { useTheme } from '../context/ThemeContext'
+import { useCurrency } from '../context/CurrencyContext'
+import { apiRequest } from '../lib/api'
+import { useWalletBalance } from '../context/WalletBalanceContext'
+import { Logo } from './Logo'
 
-const OGA_LOGO = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 34 34" fill="none"><rect width="34" height="34" rx="6" fill="white"/><rect x="6.5" y="6.5" width="7.1" height="7.1" rx="1.3" fill="black"/><path d="M15 6.5H20.7C21.5 6.5 22.2 7.2 22.2 8V13.6H15V6.5Z" fill="black"/><path d="M23.4 6.5H26C29.2 6.5 31.2 8.5 31.2 11.7V13.6H23.4V6.5Z" fill="black"/><rect x="6.5" y="15" width="7.1" height="7.1" fill="black"/><rect x="15" y="15" width="7.1" height="7.1" fill="black"/><path d="M23.4 15H31.2V16.9C31.2 20.1 29.2 22.1 26 22.1H23.4V15Z" fill="black"/><rect x="6.5" y="23.4" width="7.1" height="7.1" rx="1.3" fill="black"/><path d="M15 23.4H20.7C21.5 23.4 22.2 24.1 22.2 24.9V29.2C22.2 30 21.5 30.7 20.7 30.7H15V23.4Z" fill="black"/></svg>`
+const WALLET_CURRENCIES = ['SOL', 'USDC', 'USDT', 'NGN'] as const
+
+function OgaLogo() {
+  const { theme } = useTheme()
+  return (
+    <span className="flex" style={{ color: theme === 'dark' ? '#fff' : '#000' }}>
+      <Logo size={28} />
+    </span>
+  )
+}
 
 interface NavbarProps {
   onMenuToggle: () => void
 }
 
 export default function Navbar({ onMenuToggle }: NavbarProps) {
-  const { isAuthed } = useAuth()
+  const navigate = useNavigate()
+  const { isAuthed, isLoading, user } = useAuth()
   const { theme, toggle } = useTheme()
-  const [balance, setBalance] = useState("0.00")
+  const { convert } = useCurrency()
+  const [unreadNotifs, setUnreadNotifs] = useState(0)
+  const [scrolled, setScrolled] = useState(false)
+  const navRef = useRef<HTMLElement>(null)
+
+  const { balances: walletBalances } = useWalletBalance()
+  const portfolioUsd = walletBalances
+    ? Object.entries(walletBalances).reduce((sum, [currency, entry]) => {
+        if (WALLET_CURRENCIES.includes(currency as any) && entry) {
+          return sum + convert(entry.balance, currency as any, 'USDC')
+        }
+        return sum
+      }, 0)
+    : 0
 
   useEffect(() => {
     if (!isAuthed) return
     let cancelled = false
-    async function fetchBal() {
+    async function fetchUnread() {
       try {
-        const token = localStorage.getItem('ogapay_access_token')
-        if (!token) return
-        const res = await fetch('https://ogapay-production.up.railway.app/api/v1/wallet/balance', {
-          headers: { 'Authorization': 'Bearer ' + token },
-        })
-        const json = await res.json()
-        if (!cancelled && json.success && json.data?.NGN) {
-          setBalance(Number(json.data.NGN.available || json.data.NGN.balance || 0).toLocaleString())
-        }
-      } catch {}
+        const data = await apiRequest<any>('/notifications?limit=10')
+        const items = Array.isArray(data) ? data : data?.notifications ?? []
+        if (!cancelled) setUnreadNotifs(items.filter((n: any) => !(n.read ?? n.isRead ?? false)).length)
+      } catch { toast('Failed to load notifications', 'error'); }
     }
-    fetchBal()
-    return () => { cancelled = true }
+    fetchUnread()
+    const onFocus = () => fetchUnread()
+    window.addEventListener('focus', onFocus)
+    const interval = setInterval(fetchUnread, 30000)
+    return () => { cancelled = true; window.removeEventListener('focus', onFocus); clearInterval(interval) }
   }, [isAuthed])
 
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 10)
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
   return (
-    <header className="nav">
-      <div className="nav-inner">
-        <a className="brand" href="/">
-          <span className="logo-mark" dangerouslySetInnerHTML={{ __html: OGA_LOGO }} />
+    <header className={`nav${scrolled ? ' scrolled' : ''}`} ref={navRef}>
+      <style>{`
+        @media(max-width:768px) {
+          .nav-desktop { display: none !important; }
+          .nav-mobile { display: flex !important; }
+        }
+        @media(min-width:769px) {
+          .nav-mobile { display: none !important; }
+        }
+      `}</style>
+
+      {/* ── Desktop ── */}
+      <div className="nav-inner nav-desktop">
+        <Link className="brand" to="/">
+          <span className="logo-mark"><OgaLogo /></span>
           OgaPay
-        </a>
+        </Link>
         <div className="nav-links">
-          <a className="nav-link" href="/"><i className="ti ti-home" />Home</a>
-          <a className="nav-link" href="/tasks"><i className="ti ti-checklist" />Tasks</a>
-          <a className="nav-link" href="/store"><i className="ti ti-building-store" />Store</a>
-          <a className="nav-link" href="/communities"><i className="ti ti-users" />Communities</a>
-          <a className="nav-link" href="/faq"><i className="ti ti-help-circle" />FAQ</a>
+          <Link className="nav-link" to="/tasks"><i className="ti ti-briefcase" />Earn</Link>
+          <Link className="nav-link" to="/create"><i className="ti ti-plus-circle" />Create</Link>
+          <Link className="nav-link" to="/store"><i className="ti ti-building-store" />Store</Link>
+          {isAuthed && <Link className="nav-link" to="/vault"><i className="ti ti-shield-lock" />Vault</Link>}
+          <Link className="nav-link" to="/faq"><i className="ti ti-help-circle" />FAQ</Link>
         </div>
         <div className="nav-actions">
-          {!isAuthed && (
+          {isLoading && (
+            <div className="w-9 h-9 grid place-items-center">
+              <i className="ti ti-loader" style={{ fontSize: 18, animation: 'spin 1s linear infinite', color: 'var(--text3)' }} />
+            </div>
+          )}
+          {!isLoading && isAuthed && (
             <>
-              <a className="wallet-btn" href="/login"><i className="ti ti-login" /> Login</a>
+              <button className="balance-display" onClick={() => navigate('/wallet')}>
+                ${portfolioUsd < 0.01 ? '0.00' : portfolioUsd.toFixed(2)}
+              </button>
+              <button className="profile-btn" onClick={() => navigate('/profile')} aria-label="Profile">
+                {user?.avatar ? (
+                  <img src={user.avatar} alt={user.displayName || user.username} />
+                ) : (
+                  <span className="grid place-items-center w-full h-full text-xs font-extrabold bg-[--bg2] text-[--text2]">
+                    {(user?.displayName || user?.username || '?').charAt(0).toUpperCase()}
+                  </span>
+                )}
+                {unreadNotifs > 0 && <span className="notif-dot" />}
+              </button>
             </>
           )}
-          {isAuthed && (
-            <a className="wallet-btn" href="/wallet">
-              <i className="ti ti-wallet" /> &#8358;{balance}
-            </a>
+          {!isLoading && !isAuthed && (
+            <button className="connect-btn" onClick={() => navigate('/login')}>
+              <i className="ti ti-wallet" />
+              Connect Wallet
+            </button>
           )}
           <button className="icon-btn" id="themeToggle" onClick={toggle} aria-label="Toggle theme">
             <i className={`ti ${theme === 'dark' ? 'ti-sun' : 'ti-moon'}`} />
@@ -66,6 +128,25 @@ export default function Navbar({ onMenuToggle }: NavbarProps) {
           </button>
         </div>
       </div>
+      {/* ── Mobile ── */}
+      <div className="nav-mobile flex justify-between items-center w-full px-4 h-full">
+        <Link to="/" className="flex items-center no-underline gap-1.5" style={{textDecoration:'none',color:'inherit',fontWeight:800,fontSize:16}}>
+          <Logo size={28} />
+          <span>OgaPay</span>
+        </Link>
+        <div className="flex gap-[10px] items-center">
+          <button className="icon-btn" onClick={() => navigate(isAuthed ? '/wallet' : '/login')} aria-label="Wallet" style={{ width: 34, height: 34 }}>
+            <i className="ti ti-wallet" />
+          </button>
+          <button className="icon-btn w-[34px] h-[34px]" onClick={toggle} aria-label="Toggle theme">
+            <i className={`ti ${theme === 'dark' ? 'ti-sun' : 'ti-moon'}`} />
+          </button>
+          <button className="icon-btn w-[34px] h-[34px]" onClick={onMenuToggle} aria-label="Open menu">
+            <i className="ti ti-menu-2" />
+          </button>
+        </div>
+      </div>
+
     </header>
   )
 }

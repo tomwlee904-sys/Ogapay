@@ -9,18 +9,34 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.107.0",
+    "@jup-ag/api": "^6.0.48",
+    "@solana/spl-token": "^0.4.14",
+    "@solana/web3.js": "^1.98.4",
+    "@supabase/supabase-js": "^2.110.0",
+    "@tabler/icons-react": "^3.44.0",
+    "@tailwindcss/vite": "^4.3.2",
+    "browser-image-compression": "^2.0.2",
+    "bs58": "^6.0.0",
+    "date-fns": "^4.4.0",
+    "flutterwave-react-v3": "^1.3.3",
+    "framer-motion": "^12.42.2",
+    "lucide-react": "^1.23.0",
+    "puppeteer": "^25.3.0",
+    "qrcode.react": "^4.2.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-router-dom": "^6.28.0",
-    "recharts": "^3.8.1",
-    "swr": "^2.4.2"
+    "react-router-dom": "^6.30.4",
+    "recharts": "^2.15.4",
+    "simple-icons": "^16.25.0",
+    "swr": "^2.4.2",
+    "tailwindcss": "^4.3.2",
+    "vite-plugin-pwa": "^1.3.0"
   },
   "devDependencies": {
-    "@types/react": "^18.3.12",
-    "@types/react-dom": "^18.3.1",
-    "@vitejs/plugin-react": "^4.3.4",
+    "@types/react": "^18.3.31",
+    "@types/react-dom": "^18.3.7",
+    "@vitejs/plugin-react": "^4.7.0",
     "typescript": "~5.6.2",
-    "vite": "^5.4.11"
+    "vite": "^5.4.21"
   }
 }

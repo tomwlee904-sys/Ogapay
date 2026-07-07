@@ -1,61 +1,53 @@
-import useSWR, { SWRConfiguration } from 'swr'
+import useSWR from 'swr'
+import useSWRInfinite from 'swr/infinite'
 import { apiRequest } from './api'
 import type { ApiResponse } from './types'
 
-type FetcherOptions = {
-  method?: string
-  body?: unknown
-  auth?: boolean
+const BASE_FETCHER = async (url: string) => {
+  const res = await apiRequest(url, { auth: false })
+  return res
 }
 
-const defaultConfig: SWRConfiguration = {
-  revalidateOnFocus: false,
-  revalidateOnReconnect: true,
-  errorRetryCount: 2,
-  dedupingInterval: 2000,
+const AUTH_FETCHER = async (url: string) => {
+  const res = await apiRequest(url, { auth: true })
+  return res
 }
 
-/**
- * Generic SWR hook for a single resource.
- * key: URL path (e.g. '/tasks/featured')
- * Returns { data, error, isLoading, isValidating, mutate }
- */
-export function useApi<T>(
-  key: string | null,
-  options: FetcherOptions = {},
-  config?: SWRConfiguration
+export function useApi<T = any>(
+  url: string | null,
+  options?: { auth?: boolean; revalidateOnFocus?: boolean; refreshInterval?: number }
 ) {
-  const { method = 'GET', body, auth = true } = options
+  const fetcher = options?.auth !== false ? AUTH_FETCHER : BASE_FETCHER
+  return useSWR<ApiResponse<T> | T>(url, fetcher, {
+    revalidateOnFocus: options?.revalidateOnFocus ?? false,
+    refreshInterval: options?.refreshInterval,
+    errorRetryCount: 2,
+    dedupingInterval: 5000,
+  })
+}
 
-  const fetcher = async (url: string): Promise<T> => {
-    const init: RequestInit = { method }
-    if (body) init.body = JSON.stringify(body)
-    return apiRequest<T>(url, { method, body: init.body, auth })
+export function useApiList<T = any>(
+  url: string | null,
+  options?: { auth?: boolean; limit?: number }
+) {
+  const fetcher = options?.auth !== false ? AUTH_FETCHER : BASE_FETCHER
+  const limit = options?.limit ?? 50
+
+  const getKey = (pageIndex: number, previousPageData: any) => {
+    if (previousPageData && !previousPageData?.data?.length && !Array.isArray(previousPageData)) return null
+    if (!url) return null
+    const separator = url.includes('?') ? '&' : '?'
+    return `${url}${separator}page=${pageIndex + 1}&limit=${limit}`
   }
 
-  return useSWR<T>(key, fetcher, { ...defaultConfig, ...config })
+  return useSWRInfinite(getKey, fetcher, {
+    revalidateOnFocus: false,
+    errorRetryCount: 2,
+    dedupingInterval: 5000,
+  })
 }
 
-/**
- * SWR hook for list endpoints that return { data: T[] } or { success, data: T[] }.
- * Automatically unwraps the data array.
- */
-export function useApiList<T>(
-  key: string | null,
-  options: FetcherOptions = {},
-  config?: SWRConfiguration
-) {
-  const { method = 'GET', auth = true } = options
-
-  const fetcher = async (url: string): Promise<T[]> => {
-    const result = await apiRequest<ApiResponse<T[]> | T[]>(url, { method, auth })
-    // Handle both { data: [...] } and plain [...] responses
-    if (Array.isArray(result)) return result
-    if (result && typeof result === 'object' && 'data' in result && Array.isArray((result as ApiResponse<T[]>).data)) {
-      return (result as ApiResponse<T[]>).data!
-    }
-    return []
-  }
-
-  return useSWR<T[]>(key, fetcher, { ...defaultConfig, ...config })
+export function prefetchApi(url: string, options?: { auth?: boolean }) {
+  const fetcher = options?.auth !== false ? AUTH_FETCHER : BASE_FETCHER
+  return fetcher(url)
 }

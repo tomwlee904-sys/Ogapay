@@ -1,74 +1,52 @@
-import { Component, ReactNode, ErrorInfo } from 'react'
+﻿import React from 'react'
+import { Link } from 'react-router-dom'
 
-interface Props {
-  children: ReactNode
-  fallback?: ReactNode
-}
+interface Props { children: React.ReactNode }
+interface State { hasError: boolean }
 
-interface State {
-  hasError: boolean
-  error: Error | null
-}
+export default class ErrorBoundary extends React.Component<Props, State> {
+  state: State = { hasError: false }
 
-export class ErrorBoundary extends Component<Props, State> {
-  state: State = { hasError: false, error: null }
-
-  static getDerivedStateFromError(error: Error): State {
-    return { hasError: true, error }
-  }
-
-  componentDidCatch(error: Error, info: ErrorInfo) {
-    console.error('[ErrorBoundary]', error, info.componentStack)
-  }
-
-  handleRetry = () => {
-    this.setState({ hasError: false, error: null })
-  }
+  static getDerivedStateFromError() { return { hasError: true } }
+  componentDidCatch(error: Error, info: React.ErrorInfo) { console.error('[ErrorBoundary]', error, info.componentStack) }
 
   render() {
     if (this.state.hasError) {
-      if (this.props.fallback) return this.props.fallback
-
       return (
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            minHeight: '40vh',
-            padding: 40,
-            textAlign: 'center',
-          }}
-        >
-          <i className="ti ti-alert-triangle" style={{ fontSize: 48, color: '#DC2626', marginBottom: 16, display: 'block' }} />
-          <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: 'var(--text)' }}>
-            Something went wrong
-          </h3>
-          <p style={{ margin: '8px 0 0', fontSize: 14, color: 'var(--text2)', maxWidth: 400 }}>
-            {this.state.error?.message || 'An unexpected error occurred.'}
+        <div style={{
+          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+          minHeight: '100vh', padding: 40, textAlign: 'center', background: 'var(--bg)', color: 'var(--text)',
+        }}>
+          <div style={{
+            width: 64, height: 64, borderRadius: '50%', background: 'rgba(220,38,38,0.12)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20, color: '#dc2626',
+          }}>
+            <svg width="28" height="28" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="10"/><path d="M15 9l-6 6M9 9l6 6"/>
+            </svg>
+          </div>
+          <h2 style={{ margin: '0 0 8px', fontSize: 20, fontWeight: 800 }}>Something went wrong</h2>
+          <p style={{ margin: '0 0 24px', fontSize: 14, color: 'var(--text2)', lineHeight: 1.5 }}>
+            An unexpected error occurred. Please try refreshing the page.
           </p>
-          <button
-            onClick={this.handleRetry}
-            style={{
-              marginTop: 20,
-              height: 42,
-              padding: '0 24px',
-              borderRadius: 10,
-              border: 'none',
-              background: 'var(--accent)',
-              color: '#fff',
-              fontSize: 14,
-              fontWeight: 700,
-              cursor: 'pointer',
-            }}
-          >
-            Try again
-          </button>
+          <div style={{ display: 'flex', gap: 10 }}>
+            <button onClick={() => window.location.reload()} style={{
+              padding: '12px 24px', borderRadius: 10, border: 'none', background: 'var(--accent)',
+              color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+            }}>
+              Refresh Page
+            </button>
+            <Link to="/" style={{
+              padding: '12px 24px', borderRadius: 10, border: '1.5px solid var(--border)',
+              background: 'var(--card)', color: 'var(--text)', fontSize: 13, fontWeight: 700,
+              textDecoration: 'none', fontFamily: 'inherit',
+            }}>
+              Go Home
+            </Link>
+          </div>
         </div>
       )
     }
-
     return this.props.children
   }
 }

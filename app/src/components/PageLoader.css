@@ -1,0 +1,76 @@
+.oga-page-loader {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  background: var(--bg, #fff);
+  z-index: 9999;
+}
+
+.oga-spinner-wrap {
+  position: relative;
+  width: 56px;
+  height: 56px;
+  display: grid;
+  place-items: center;
+}
+
+.oga-spinner-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 3px solid var(--border, #e5e7eb);
+  border-top-color: var(--accent);
+  animation: oga-spin 0.9s linear infinite;
+}
+
+.oga-spinner-logo {
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  background: #0f0f12;
+  display: grid;
+  place-items: center;
+  animation: oga-logo-pulse 1.4s ease-in-out infinite;
+}
+
+.oga-spinner-logo svg {
+  width: 15px;
+  height: 15px;
+}
+
+.oga-loader-text {
+  font-family: Inter, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text2, #64748b);
+  letter-spacing: 0.01em;
+}
+
+.oga-auth-title {
+  font-family: Inter, sans-serif;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text, #0f172a);
+  margin-top: 4px;
+}
+
+@keyframes oga-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes oga-logo-pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(0.88);
+    opacity: 0.75;
+  }
+}

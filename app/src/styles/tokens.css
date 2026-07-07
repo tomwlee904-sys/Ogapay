@@ -1,0 +1,641 @@
+/* ═══════════════════════════════════════════
+   OgaPay Design Tokens + Tailwind v4
+   Single source of truth. Loaded FIRST in main.tsx.
+   ═══════════════════════════════════════════ */
+
+@import "tailwindcss";
+
+/* ─── Override Tailwind's built-in container to be truly full-width ─── */
+@utility container {
+  max-width: none;
+  margin-inline: auto;
+}
+
+/* ─── Dark mode via data-theme (existing OgaPay pattern) ─── */
+@variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/* ─── Tailwind Theme ─── */
+@theme {
+  /* Surfaces */
+  --color-surface: #ffffff;
+  --color-surface-2: #fafafa;
+  --color-surface-dark: #000000;
+  --color-surface-dark-2: #0a0a0c;
+
+  /* Cards */
+  --color-card: #ffffff;
+  --color-card-2: #f5f5f5;
+  --color-card-dark: #0D0D11;
+  --color-card-dark-2: #111114;
+
+  /* Borders */
+  --color-border: #e5e5e5;
+  --color-border-2: #d4d4d4;
+  --color-border-dark: rgba(255,255,255,0.08);
+  --color-border-dark-2: rgba(255,255,255,0.12);
+
+  /* Text */
+  --color-text: #111111;
+  --color-text-2: #525252;
+  --color-text-3: #a1a1aa;
+  --color-text-dark: #ffffff;
+  --color-text-dark-2: #A5A5B0;
+  --color-text-dark-3: #777782;
+
+  /* Brand */
+  --color-primary: #191C6B;
+  --color-accent: #191C6B;
+  --color-accent-2: #2D5BFF;
+  --color-gold: #f5b301;
+
+  /* Semantic */
+  --color-green: #16a34a;
+  --color-red: #dc2626;
+
+  /* Spacing */
+  --radius: 16px;
+  --radius-lg: 20px;
+  --radius-sm: 12px;
+}
+
+/* ─── CSS Variable Tokens (kept for existing component compatibility) ─── */
+:root {
+  --bg: #FFFFFF;
+  --bg2: #FFFFFF;
+  --card: #ffffff;
+  --card2: #F8FAFC;
+  --border: #E5E7EB;
+  --border2: #D1D5DB;
+  --text: #1E293B;
+  --text2: #64748B;
+  --text3: #94A3B8;
+  --primary: #2563EB;
+  --accent: #2563EB;
+  --accent2: #1D4ED8;
+  --accent-rgb: 37, 99, 235;
+  --accent-bright: #60A5FA;
+  --gold: #f5b301;
+  --green: #10B981;
+  --green-rgb: 16, 185, 129;
+  --red: #dc2626;
+  --red-rgb: 220, 38, 38;
+  --brand-blue: linear-gradient(90deg, #2563EB, #1D4ED8, rgba(var(--accent-rgb), 0.5), rgba(var(--accent-rgb), 0.12));
+  --earn-gradient: linear-gradient(90deg, #2563EB, #1D4ED8, #3B82F6, #60A5FA, #2563EB);
+  --shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.06), 0 2px 4px -2px rgba(15, 23, 42, 0.03);
+  --shadow-soft: 0 1px 3px rgba(15, 23, 42, 0.04);
+  --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.08), 0 2px 4px -2px rgba(15, 23, 42, 0.04);
+  --glass-bg: rgba(255, 255, 255, 0.80);
+  --glass-border: rgba(229, 231, 235, 0.60);
+  --glass-blur: 20px;
+  --radius: 16px;
+  --radius-lg: 20px;
+  --radius-sm: 12px;
+  --nav-h: 64px;
+  --bottom-nav-h: 0px;
+  --vh: 1vh;
+  --100vh: 100vh;
+}
+
+[data-theme="dark"] {
+  --bg: #000000;
+  --bg2: #000000;
+  --card: #141414;
+  --card2: #141416;
+  --border: #2a2a2a;
+  --border2: #333333;
+  --text: #F5F5F5;
+  --text2: #A1A1AA;
+  --text3: #71717A;
+  --primary: #60A5FA;
+  --accent: #60A5FA;
+  --accent2: #3B82F6;
+  --accent-rgb: 96, 165, 250;
+  --accent-bright: #93C5FD;
+  --gold: #f5b301;
+  --green: #10B981;
+  --green-rgb: 16, 185, 129;
+  --red: #ef4444;
+  --red-rgb: 239, 68, 68;
+  --shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+  --shadow-soft: 0 2px 8px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.3);
+  --glass-bg: rgba(15, 15, 18, 0.80);
+  --glass-border: rgba(255, 255, 255, 0.06);
+  --glass-blur: 20px;
+  --radius: 16px;
+  --radius-lg: 20px;
+  --radius-sm: 12px;
+  --nav-h: 64px;
+  --bottom-nav-h: 0px;
+}
+
+body { --100vh: calc(var(--vh) * 100); }
+
+/* ─── Respect reduced motion preferences ─── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+/* ═══════════════════════════════════════════
+   OgaPay Tailwind Component Classes
+   All classes here use @apply — must be imported AFTER @import "tailwindcss"
+   ═══════════════════════════════════════════ */
+
+/* ─── Navigation ─── */
+.nav {
+  @apply fixed top-0 left-0 right-0 z-[200] border-b border-[var(--border)];
+  height: var(--nav-h);
+  background: rgba(255,255,255,0.72);
+  -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  backdrop-filter: blur(18px) saturate(1.4);
+}
+.dark .nav { background: rgba(0,0,0,0.72); }
+.nav-inner {
+  @apply grid items-center mx-auto h-full;
+  grid-template-columns: auto 1fr auto;
+  gap: 28px;
+  width: min(1200px, calc(100% - 48px));
+}
+.brand { @apply flex items-center gap-[10px] font-['Outfit',sans-serif] text-[19px] font-black -tracking-[.4px]; }
+.nav-links { @apply flex items-center justify-center gap-1; }
+.nav-link {
+  @apply inline-flex items-center gap-[7px] px-[10px] py-[6px] rounded-lg text-[var(--text2)] text-sm font-semibold transition-all duration-150;
+}
+.nav-link:hover, .nav-link.active { @apply text-[var(--text)] bg-[var(--bg2)]; }
+.nav-actions { @apply flex items-center gap-2; }
+.icon-btn {
+  @apply w-9 h-9 grid place-items-center rounded-lg bg-[var(--card)] text-[var(--text2)] transition-all duration-200;
+  border: 1.5px solid var(--border);
+}
+.icon-btn:hover { @apply text-[var(--text)]; border-color: var(--border2); }
+
+/* ─── Buttons ─── */
+.btn {
+  @apply inline-flex items-center justify-center gap-[9px] rounded-lg bg-[var(--card)] text-[var(--text)] text-sm font-bold shadow-[var(--shadow-soft)] transition-all duration-150;
+  height: 44px;
+  padding: 0 22px;
+  border: 1.5px solid var(--border);
+}
+.btn:hover { @apply border-[var(--border2)] shadow-[var(--shadow)]; }
+.btn-primary {
+  @apply bg-[var(--primary)] text-white;
+  border-color: var(--primary);
+  box-shadow: 0 4px 14px rgba(16,21,37,.18);
+}
+.btn-primary:hover { @apply bg-[var(--border2)]; box-shadow: 0 6px 18px rgba(0,0,0,.12); }
+.dark .btn-primary { @apply bg-[var(--primary)] text-[var(--bg)]; border-color: var(--primary); }
+.dark .btn-primary:hover { @apply bg-[var(--border2)]; }
+
+/* ─── Section Headings ─── */
+.section-title { @apply font-['Outfit',sans-serif] font-black leading-none -tracking-[1.8px] m-0 mb-[14px]; font-size: clamp(36px,3.6vw,48px); }
+.section-sub { @apply m-0 text-[var(--text2)] text-[15px] leading-relaxed font-medium; }
+.grad-text {
+  --brand-blue: linear-gradient(90deg, #2563EB, #1D4ED8, rgba(var(--accent-rgb), 0.5), rgba(var(--accent-rgb), 0.12));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  background-size: 200% 100%;
+  animation: gradientShift 5s ease-in-out infinite;
+}
+
+/* ─── Container ─── */
+.container { @apply mx-auto w-full; padding: 0 32px; }
+
+/* ─── Layout ─── */
+.app-layout {
+  @apply flex;
+  width: 100%;
+  margin: 0 auto;
+  padding: 20px 0 calc(var(--bottom-nav-h) + 12px);
+  min-height: var(--100vh);
+  animation: pageIn .2s ease;
+}
+.app-layout .sidebar { @apply w-[320px] shrink-0 sticky top-5 h-fit p-3; }
+.app-layout .main { @apply flex-1 min-w-0; }
+.app-layout .page { @apply mx-auto w-full; padding-top: var(--nav-h); }
+
+/* ─── Footer ─── */
+footer { @apply border-t border-[var(--border)] py-10 px-6 text-center bg-[var(--bg2)]; }
+.dark footer { @apply bg-[#000000]; border-top-color: #232323; }
+.footer-logo { @apply flex justify-center items-center gap-[10px] font-['Outfit',sans-serif] text-lg font-extrabold text-[var(--text)]; }
+.footer-content { @apply relative z-[1]; }
+.footer-content p { @apply text-[var(--text2)] text-sm my-3 leading-relaxed; }
+.footer-links { @apply flex justify-center flex-wrap gap-x-6 gap-y-1.5 text-[var(--text2)] text-sm font-semibold; }
+.footer-links a:hover { @apply text-[var(--text)]; }
+.social-icons { @apply flex justify-center gap-[18px] mt-[18px]; }
+.social-icons a { @apply w-8 h-8 grid place-items-center rounded-full text-[var(--text3)] text-sm transition-all duration-[.18s]; border: 1px solid var(--border) !important; }
+.social-icons a:hover { @apply border-[var(--text2)] text-[var(--text)] bg-[var(--bg2)] -translate-y-0.5; }
+
+/* ─── Quick Cards ─── */
+.quick-grid { @apply grid gap-3; grid-template-columns: repeat(4,1fr); }
+.quick-card {
+  @apply flex items-center gap-3 px-[18px] py-[14px] rounded-xl bg-[var(--card)] shadow-[var(--shadow-soft)] transition-all duration-150;
+  border: 1.5px solid var(--border);
+}
+.quick-card:hover { @apply border-[var(--border2)] shadow-[var(--shadow)]; }
+.quick-icon { @apply w-[38px] h-[38px] rounded-[9px] grid place-items-center bg-[var(--bg2)] text-[15px] font-black shrink-0; }
+.quick-name { @apply text-sm font-extrabold; }
+.quick-price { @apply mt-0.5 text-[var(--text3)] text-xs font-bold; }
+
+/* ─── Step Cards ─── */
+.step-card {
+  @apply relative min-h-[200px] p-5 rounded-2xl bg-[var(--card)] overflow-hidden transition-all duration-[.18s];
+  border: 1.5px solid var(--border);
+}
+.step-card:hover { @apply -translate-y-1; }
+
+/* ─── Stats ─── */
+.stat + .stat { @apply mt-[18px]; }
+
+/* ─── Drawer / Mobile Menu ─── */
+.mobile-menu { @apply fixed inset-0 z-[300] hidden invisible pointer-events-none; }
+.mobile-menu.open { @apply block visible pointer-events-auto; }
+.mobile-overlay { @apply absolute inset-0; background: rgba(0,0,0,.3); backdrop-filter: blur(4px); }
+.oga-drawer {
+  @apply absolute right-0 top-0 bottom-0 flex flex-col;
+  width: min(340px, 90vw);
+  background: var(--bg2);
+  border-left: 1px solid var(--border);
+  box-shadow: -16px 0 42px rgba(16,21,37,.12);
+  transform: translateX(100%);
+  transition: transform .25s ease;
+}
+.dark .oga-drawer { background: #000; border-left-color: var(--border); }
+.mobile-menu.open .oga-drawer { transform: translateX(0); }
+.oga-drawer-head { @apply h-16 flex items-center justify-between px-4 py-3 border-b border-[var(--border)]; }
+.oga-drawer-close { @apply w-9 h-9 grid place-items-center rounded-lg bg-[var(--card)] text-[var(--text2)] text-xl cursor-pointer; border: 1px solid var(--border) !important; }
+.oga-drawer-nav { @apply p-[10px_8px] overflow-y-auto flex-1; -webkit-overflow-scrolling: touch; }
+.oga-drawer-item { @apply w-full min-h-[52px] flex items-center gap-3 px-[10px] py-2 rounded-lg bg-transparent text-[inherit] no-underline cursor-pointer font-[inherit]; border: 0; }
+.oga-drawer-item:hover { @apply bg-[var(--card)]; }
+.oga-drawer-icon { @apply w-9 h-9 grid place-items-center rounded-[9px] bg-[var(--card)] text-[var(--text2)] text-lg shrink-0; border: 1px solid var(--border) !important; }
+.oga-drawer-item strong { @apply block text-[15px] font-extrabold; }
+.oga-drawer-item small { @apply block mt-0.5 text-[var(--text3)] text-xs; }
+.oga-drawer-chevron { @apply w-3.5 h-3.5 ml-auto text-[var(--text3)] inline-block transition-transform duration-[.16s]; }
+.oga-drawer-group.open .oga-drawer-chevron { transform: rotate(180deg); }
+.oga-drawer-subnav { @apply hidden ml-[18px] mb-[10px] mt-1 pl-[22px] gap-1; border-left: 2px solid var(--border); }
+.oga-drawer-group.open .oga-drawer-subnav { @apply grid; }
+.oga-drawer-subnav a { @apply flex items-center gap-[10px] px-2 py-[6px] rounded-lg text-sm font-semibold text-[var(--text2)]; }
+.oga-drawer-subnav a:hover { @apply bg-[var(--card)] text-[var(--text)]; }
+.oga-drawer-foot { @apply px-2 pt-2; border-top: 1px solid var(--border); }
+
+/* ─── Sidebar ─── */
+.sidebar-nav { @apply grid gap-0.5; }
+.sidebar-link { @apply flex items-center gap-3 min-h-[56px] px-[14px] py-[10px] rounded-lg text-[var(--text2)] text-sm font-semibold no-underline transition-all duration-150; }
+.sidebar-link:hover { @apply bg-[var(--bg2)] text-[var(--text)]; }
+.sidebar-link.active { @apply text-[var(--accent)]; background: rgba(var(--accent-rgb),.08); }
+.sidebar-link i { @apply text-xl w-[22px] text-center shrink-0; }
+.sidebar-link strong { @apply text-[15px] font-extrabold text-[var(--text)]; }
+.sidebar-link small { @apply text-xs font-medium text-[var(--text3)] mt-px; }
+.sidebar-section { @apply text-[11px] font-extrabold text-[var(--text3)] tracking-widest uppercase px-[14px] pt-[18px] pb-[6px]; }
+.sidebar-subnav { @apply ml-4 mb-1 mt-0.5 pl-5 gap-px; border-left: 2px solid var(--border); }
+.sidebar-group.open .sidebar-subnav { @apply grid; }
+
+/* ─── Toast ─── */
+.toast {
+  @apply fixed bottom-6 left-1/2 px-6 py-3 rounded-xl bg-[var(--card)] text-[var(--text)] text-sm font-semibold z-[999] pointer-events-none;
+  transform: translateX(-50%) translateY(100px);
+  border: 1px solid var(--border) !important;
+  box-shadow: var(--shadow-md);
+  opacity: 0;
+  transition: all .3s ease;
+}
+.toast.show { @apply opacity-100; transform: translateX(-50%) translateY(0); }
+
+/* ─── Loading ─── */
+.loading { @apply flex items-center justify-center py-[60px] px-5 text-[var(--text3)] text-sm gap-2; }
+.spinner { @apply w-5 h-5 rounded-full; border: 2px solid var(--border); border-top-color: var(--accent); animation: spin .6s linear infinite; }
+
+/* ═══════════════════════════════════════════
+   Store & Community Card Component Classes
+   Pixel-perfect match to baseline measurements
+   ═══════════════════════════════════════════ */
+
+/* ─── Store Card Container ─── */
+.store-card {
+  @apply flex flex-col overflow-hidden w-full box-border shrink-0 cursor-pointer;
+  border-radius: 18px;
+  border: 1.5px solid var(--glass-border);
+  background: var(--glass-bg);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.10);
+  min-height: 460px;
+  height: 100%;
+  scroll-snap-align: start;
+  transition: box-shadow .22s ease, transform .22s ease, border-color .22s ease;
+}
+.store-card:hover {
+  box-shadow: 0 0 0 1px rgba(var(--accent-rgb),0.5), 0 0 36px 6px rgba(var(--accent-rgb),0.20), 0 14px 28px -8px rgba(var(--accent-rgb),0.28);
+  transform: translateY(-4px);
+  border-color: rgba(var(--accent-rgb),0.5);
+}
+
+/* ─── Store Card Image Section ─── */
+.store-image-wrap {
+  @apply relative shrink-0 overflow-hidden;
+  height: 160px;
+  background: var(--bg2);
+}
+.store-card-img {
+  @apply w-full h-full object-cover block;
+  transition: transform .3s;
+}
+.store-card-img-placeholder {
+  @apply grid place-items-center w-full h-full;
+  font-family: 'Outfit', sans-serif;
+  font-size: 26px;
+  font-weight: 900;
+  color: var(--text3);
+}
+
+/* ─── Store Category Badge ─── */
+.store-badge {
+  @apply absolute top-[8px] left-[8px] px-[8px] py-[2px] rounded-[6px] text-white text-[10px] font-bold;
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(4px);
+}
+
+/* ─── Store Card Body ─── */
+.store-body {
+  @apply flex flex-col flex-1 p-[16px];
+  gap: 10px;
+  min-height: 220px;
+}
+
+/* ─── Store Title Row ─── */
+.store-title-row {
+  @apply flex justify-between items-start;
+  gap: 8px;
+}
+.store-title {
+  @apply font-bold leading-[1.3];
+  font-size: 15px;
+}
+.store-date {
+  @apply text-[var(--text3)] text-[11px] whitespace-nowrap shrink-0;
+  padding-top: 2px;
+}
+
+/* ─── Store Description ─── */
+.store-description {
+  @apply text-[var(--text2)];
+  font-size: 12px;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 34px;
+}
+
+/* ─── Store Seller Section ─── */
+.store-seller {
+  @apply flex items-center justify-between;
+  gap: 8px;
+  background: rgba(var(--accent-rgb), 0.05);
+  border: 1px solid rgba(var(--accent-rgb), 0.12);
+  border-radius: 12px;
+  padding: 9px 12px;
+}
+.store-seller-left {
+  @apply flex items-center min-w-0;
+  gap: 8px;
+}
+.store-avatar {
+  @apply shrink-0 grid place-items-center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid var(--accent);
+  background: var(--accent);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+}
+.store-avatar img {
+  @apply w-full h-full object-cover;
+}
+.store-seller-name {
+  @apply font-bold leading-[1.2] truncate;
+  font-size: 12.5px;
+}
+.store-seller-meta {
+  @apply text-[var(--text3)];
+  font-size: 10.5px;
+}
+.store-rating {
+  @apply flex items-center shrink-0 bg-[var(--card)] border border-[var(--border)] rounded-[999px];
+  padding: 4px 9px;
+  gap: 3px;
+}
+.store-rating-text {
+  @apply font-bold text-[var(--text2)];
+  font-size: 10.5px;
+}
+
+/* ─── Store Price Section ─── */
+.store-price {
+  @apply flex items-center justify-between;
+  gap: 8px;
+  background: rgba(var(--accent-rgb), 0.06);
+  border: 1.5px solid rgba(var(--accent-rgb), 0.28);
+  border-radius: 12px;
+  padding: 10px 14px;
+}
+.store-price-amount {
+  @apply font-extrabold leading-[1.2];
+  font-size: 17px;
+  color: var(--accent);
+}
+.store-price-pill {
+  @apply bg-[var(--card)] border border-[var(--border)] rounded-[10px] text-[var(--text)] font-bold;
+  padding: 6px 11px;
+  font-size: 11.5px;
+}
+
+/* ─── Store View More Button ─── */
+.store-button {
+  @apply flex items-center justify-center w-full bg-[var(--card)] text-[var(--text2)] font-bold no-underline;
+  height: 38px;
+  gap: 6px;
+  border-radius: 999px;
+  border: 1.5px solid var(--border);
+  font-size: 12px;
+  transition: border-color .2s, color .2s;
+}
+.store-button:hover {
+  border-color: rgba(var(--accent-rgb), 0.4);
+  color: var(--accent);
+}
+
+/* ─── Store Desktop Grid ─── */
+.store-grid-desktop {
+  @apply grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+  scroll-snap-type: x mandatory;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+/* ─── Store Mobile Carousel (≤640px) ─── */
+@media (max-width: 640px) {
+  .store-grid-desktop {
+    @apply flex flex-row overflow-x-auto;
+    gap: 14px !important;
+    flex-wrap: nowrap !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+    padding-bottom: 6px !important;
+    scroll-snap-type: x mandatory !important;
+  }
+  .store-grid-desktop::-webkit-scrollbar { display: none !important; }
+  .store-grid-desktop > * {
+    width: calc(100vw - 52px) !important;
+    flex-shrink: 0 !important;
+    scroll-snap-align: start !important;
+  }
+}
+
+/* ─── Store Grid Dark Mode ─── */
+.dark .store-card {
+  background: #111111 !important;
+  border-color: #222222 !important;
+}
+.dark .store-card-img {
+  filter: brightness(.9) contrast(1.05);
+}
+.dark .store-price {
+  background: #13131A !important;
+  border-color: rgba(72,85,255,0.18) !important;
+}
+
+/* ═══════════════════════════════════════════
+   Community Card Component Classes
+   ═══════════════════════════════════════════ */
+
+/* ─── Community Card Container ─── */
+.community-card {
+  @apply flex flex-col overflow-hidden;
+  border-radius: 16px !important;
+  border: 1px solid var(--border) !important;
+  background: var(--card);
+  height: 100%;
+  cursor: pointer;
+  min-height: auto !important;
+  box-shadow: none !important;
+  text-align: initial !important;
+  transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease;
+}
+
+.community-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.10), 0 8px 24px rgba(0,0,0,0.06);
+  border-color: var(--accent);
+}
+
+/* ─── Community Cover Image ─── */
+.community-cover {
+  @apply relative w-full shrink-0 overflow-hidden flex items-center justify-center;
+  height: 192px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 42px;
+  font-weight: 900;
+}
+.community-cover img, .community-cover-img {
+  @apply w-full h-full object-cover absolute inset-0;
+}
+
+/* ─── Community ACTIVE Badge ─── */
+.community-badge {
+  @apply absolute top-[12px] left-[12px] text-white rounded-[999px];
+  background: var(--accent);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 12px;
+}
+
+/* ─── Community Body ─── */
+.community-body {
+  @apply flex flex-col flex-1 p-[16px];
+  gap: 8px;
+}
+
+/* ─── Community Title ─── */
+.community-title {
+  @apply font-bold m-0;
+  font-size: 15px;
+  color: var(--text);
+}
+
+/* ─── Community Stats Row ─── */
+.community-stats {
+  @apply flex items-center;
+  gap: 16px;
+  font-size: 12px;
+  color: var(--text3);
+}
+.community-stat {
+  @apply flex items-center;
+  gap: 4px;
+}
+
+/* ─── Community Description ─── */
+.community-description {
+  @apply m-0 overflow-hidden;
+  font-size: 14px;
+  color: var(--text2);
+  line-height: 1.4;
+  min-height: 58px;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+
+/* ─── Community Footer ─── */
+.community-footer {
+  @apply flex items-center justify-between;
+  margin-top: auto;
+  padding: 0 16px 16px;
+}
+.community-distributed {
+  @apply font-semibold;
+  font-size: 14px;
+  color: var(--text);
+}
+.community-distributed-label {
+  @apply text-[var(--text3)] font-normal;
+  font-size: 12px;
+  margin-left: 4px;
+}
+.community-view-btn {
+  @apply flex items-center font-semibold text-[var(--text)] no-underline border-none bg-transparent cursor-pointer;
+  font-size: 14px;
+  gap: 4px;
+  margin-left: auto;
+}
+
+/* ─── Community Desktop Grid ─── */
+.community-grid-desktop {
+  @apply grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+}
+
+/* ─── Community Mobile Grid (≤640px) ─── */
+@media (max-width: 640px) {
+  .community-grid-desktop {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+  .community-card {
+    width: calc(100vw - 40px) !important;
+  }
+}
+
+/* ─── Community Dark Mode ─── */
+.dark .community-card {
+  background: var(--card);
+  border-color: var(--border);
+}

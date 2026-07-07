@@ -1,690 +1,1057 @@
-import { useState, useEffect } from "react"
-import { useNavigate, useParams } from "react-router-dom"
-import Layout from "../components/Layout"
-import { useApiList } from "../lib/useApi"
-import { useToast } from "../context/ToastContext"
-import type { Task } from "../lib/types"
-import { SkeletonGrid } from "../components/LoadingState"
-import { EmptyState } from "../components/EmptyState"
-import { usePagination } from "../hooks/usePagination"
-import { Pagination } from "../components/Pagination"
+﻿import { useState, useEffect, useRef } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
+import Modal from '../components/Modal'
+import Layout from '../components/Layout'
+import { apiRequest } from '../lib/api'
+import { useAuth } from '../context/AuthContext'
+import { useToast } from '../components/Toast'
+import { useApi } from '../lib/useApi'
+import { useTheme } from '../context/ThemeContext'
+import { useCurrency } from '../context/CurrencyContext'
+import { SkeletonPage, injectSkeletonStyles } from "../components/SkeletonLoader"
+import ApplyModal from '../components/ApplyModal'
 
-const API_BASE = 'https://ogapay-production.up.railway.app/api/v1'
+const OGAPAY_BLUE = 'var(--accent)'
 
-// ─── Sample Job Data ───
-const sampleJobs: any[] = []
+const FIXED_CATEGORIES = ['All', 'Trending', 'New', 'Jobs & Hiring']
 
-const API_CATEGORIES: Record<string, string> = {
-  'SOCIAL_MEDIA': 'Social',
-  'SURVEY': 'Research',
-  'CONTENT': 'Content',
-  'DESIGN': 'Design',
-  'TESTING': 'Testing',
-  'DATA': 'Data',
-  'VIDEO': 'Video',
-  'OTHER': 'Other',
+const SORT_LABELS: Record<string, string> = {
+  'newest': 'Newest', 'highest-reward': 'Highest Reward',
+  'lowest-reward': 'Lowest Reward', 'oldest': 'Oldest',
 }
 
-const DIFFICULTY_COLORS: Record<string, string> = {
-  'Easy': '#16a34a',
-  'Medium': '#F59E0B',
-  'Hard': '#DC2626',
+const CATEGORY_ICONS: Record<string, string> = {
+  'All': 'ti ti-layout-grid',
+  'Trending': 'ti ti-trending-up', 'New': 'ti ti-sparkles',
+  'Social': 'ti ti-share', 'Content': 'ti ti-edit',
+  'Design': 'ti ti-palette', 'Video': 'ti ti-video',
+  'Testing': 'ti ti-checklist', 'Data': 'ti ti-database',
+  'Research': 'ti ti-search', 'Development': 'ti ti-code',
+  'Jobs & Hiring': 'ti ti-briefcase',
 }
 
-function mapApiTask(t: any) {
-  const cat = API_CATEGORIES[t.category] || 'Other'
-  const diff = t.estimatedTime ? (t.estimatedTime <= 10 ? 'Easy' : t.estimatedTime <= 30 ? 'Medium' : 'Hard') : 'Easy'
-  return {
-    id: t.id,
-    title: t.title,
-    description: t.description,
-    creator: t.poster?.username || 'OgaPay',
-    creatorLabel: t.poster?.posterProfile?.isVerified ? 'Verified' : 'User',
-    platform: t.tags?.[0] || 'Web',
-    category: cat,
-    difficulty: diff,
-    reward: Number(t.reward),
-    rewardCurrency: t.currency,
-    usdValue: 0,
-    slots: t.maxWorkers || 1,
-    filled: t.currentWorkers || 0,
-    timeEstimate: t.estimatedTime ? t.estimatedTime + ' min' : '—',
-    verificationRequired: !!t.proofRequired,
-    rankRequired: 'None',
-    color: DIFFICULTY_COLORS[diff] || '#16a34a',
-    featured: false,
-  }
+function formatAddress(addr: string) {
+  if (!addr) return ''
+  return addr.slice(0, 2).toUpperCase()
+}
+
+function formatTime(sec: number) {
+  if (!sec) return '—'
+  const h = Math.floor(sec / 3600)
+  const m = Math.floor((sec % 3600) / 60)
+  if (h > 0) return `${h}h ${m}m`
+  return `${m}m`
 }
 
 
-const jobFilters = ['All', 'Trending', 'New', 'Social', 'Content', 'Testing', 'Design', 'Video', 'Data', 'Research']
-
-const formatAddress = (name: string) => {
-  const initials = name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
-  return initials
+// ── Info tooltip ─────────────────────────────────────────────────────
+function InfoBtn({ text }: { text: string }) {
+  const [show, setShow] = useState(false);
+  const ref = useRef<HTMLSpanElement>(null);
+  return (
+    <span ref={ref} style={{ position: "relative", display: "inline-flex", marginLeft: 4, verticalAlign: "middle" }}
+      onMouseEnter={() => setShow(true)}
+      onMouseLeave={() => setShow(false)}
+      onClick={(e) => { e.stopPropagation(); setShow(s => !s) }}>
+      <i className="ti ti-info-circle" style={{ fontSize: 12, color: "var(--text3)", cursor: "pointer" }} />
+      {show && (
+        <div style={{
+          position: "absolute", bottom: "calc(100% + 6px)", left: "50%",
+          transform: "translateX(-50%)", background: "var(--text)", color: "var(--card)",
+          fontSize: 11, lineHeight: 1.5, padding: "6px 10px", borderRadius: 8,
+          whiteSpace: "normal", width: 220, zIndex: 99, pointerEvents: "none",
+          boxShadow: "0 4px 12px rgba(0,0,0,0.2)"
+        }}>
+          {text}
+        </div>
+      )}
+    </span>
+  );
 }
 
-/* ─── Job Detail View ─── */
-function JobDetailView({ job, onBack }: { job: any; onBack: () => void }) {
-  const navigate = useNavigate()
+// ─── Job Detail Modal ────────────────────────────────────────────────
+function JobDetailModal({ job, onClose, onApply }: { job: any; onClose: () => void; onApply: (jid: string) => void }) {
+  const { user } = useAuth()
+  const { toast: showToast } = useToast()
+  const { rates } = useCurrency()
   const [showApplyModal, setShowApplyModal] = useState(false)
-  const [applyMsg, setApplyMsg] = useState('')
-  const [applyLink, setApplyLink] = useState('')
+  const [applySubmitting, setApplySubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
+  const [notes, setNotes] = useState('')
   const [timeLeft, setTimeLeft] = useState('')
+  const [showReportModal, setShowReportModal] = useState(false)
+  const [reportCategory, setReportCategory] = useState('')
+  const [reportDesc, setReportDesc] = useState('')
+  const [reportMsg, setReportMsg] = useState('')
+  const [reportSubmitting, setReportSubmitting] = useState(false)
+  const [showSubmissions, setShowSubmissions] = useState(false)
+  const [submissions, setSubmissions] = useState<any[]>([])
+  const [submissionsLoading, setSubmissionsLoading] = useState(false)
 
-  // Countdown timer
+  const isMyTask = user?.id && (job._raw?.poster?.id || job.poster?.id) === user.id
+
   useEffect(() => {
-    const deadline = new Date(Date.now() + 86400000)
-    const tick = () => {
-      const diff = deadline.getTime() - Date.now()
-      if (diff <= 0) { setTimeLeft('Ended'); return }
-      const h = Math.floor(diff / 3600000)
-      const m = Math.floor((diff % 3600000) / 60000)
-      const s = Math.floor((diff % 60000) / 1000)
-      setTimeLeft(h + 'h ' + m + 'm ' + s + 's')
+    if (job.deadline) {
+      const calc = () => {
+        const diff = new Date(job.deadline).getTime() - Date.now()
+        if (diff <= 0) { setTimeLeft('Expired'); return }
+        const d = Math.floor(diff / 86400000)
+        const h = Math.floor((diff % 86400000) / 3600000)
+        setTimeLeft(`${d}d ${h}h`)
+      }
+      calc(); const int = setInterval(calc, 60000)
+      return () => clearInterval(int)
     }
-    tick()
-    const iv = setInterval(tick, 1000)
-    return () => clearInterval(iv)
-  }, [])
+  }, [job.deadline])
 
-  const handleApply = async () => {
-    if (!applyLink.trim()) { setApplyMsg('Please provide a submission link'); return }
-    setApplyMsg('')
+  // Reset all form state when switching to a different job
+  useEffect(() => {
+    setShowApplyModal(false)
+    setSubmitted(false)
+    setNotes('')
+    setShowReportModal(false)
+    setReportCategory('')
+    setReportDesc('')
+    setReportMsg('')
+    setReportSubmitting(false)
+    setShowSubmissions(false)
+    setSubmissions([])
+    setSubmissionsLoading(false)
+  }, [job.id])
+
+  const handleSubmitReport = async () => {
+    if (!reportCategory) { setReportMsg('Please select a category'); return }
+    if (!reportDesc.trim()) { setReportMsg('Please describe the issue'); return }
+    if (!job?.id) { setReportMsg('Invalid task'); return }
+    setReportMsg('')
+    setReportSubmitting(true)
     try {
-      const token = localStorage.getItem('ogapay_access_token')
-      if (!token) { setApplyMsg('Please log in first'); return }
-      
-      // First apply to the task
-      const applyRes = await fetch(API_BASE + '/tasks/' + job.id + '/apply', {
+      await apiRequest('/reports', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + token,
-        },
+        body: JSON.stringify({ category: reportCategory, description: reportDesc, targetType: 'task', targetId: job.id }),
       })
-      const applyJson = await applyRes.json()
-      if (!applyRes.ok) throw new Error(applyJson.message || 'Failed to apply')
-      
-      // Then submit proof with the link
-      const submitRes = await fetch(API_BASE + '/tasks/' + job.id + '/submit', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + token,
-        },
-        body: JSON.stringify({
-          proof: applyLink.trim(),
-          workerNotes: applyMsg || '',
-        }),
-      })
-      const submitJson = await submitRes.json()
-      if (!submitRes.ok) throw new Error(submitJson.message || 'Failed to submit')
-      
-      setSubmitted(true)
-      setTimeout(() => { setShowApplyModal(false); setSubmitted(false); setApplyLink(''); setApplyMsg('') }, 2000)
-    } catch (err) {
-      setApplyMsg(err instanceof Error ? err.message : String(err))
+      setReportMsg('Report submitted. Our team will review it within 24 hours.')
+      setReportCategory('')
+      setReportDesc('')
+      setReportSubmitting(false)
+      setTimeout(() => { setShowReportModal(false); setReportMsg('') }, 2500)
+    } catch (err: any) {
+      setReportMsg(err?.message || 'Failed to submit report')
+      setReportSubmitting(false)
     }
   }
+
+  const handleViewSubmissions = async () => {
+    if (showSubmissions) { setShowSubmissions(false); return }
+    setShowSubmissions(true)
+    if (!job?.id) return
+    setSubmissionsLoading(true)
+    try {
+      const res = await apiRequest<any>('/tasks/' + job.id + '/submissions')
+      const list = Array.isArray(res) ? res : res?.data || res?.submissions || []
+      setSubmissions(list)
+    } catch {
+      setSubmissions([])
+    } finally {
+      setSubmissionsLoading(false)
+    }
+  }
+
+  if (!job) return null
 
   return (
-    <Layout>
-      <style>{/*css*/`
-        .cd-page{max-width:860px;margin:0 auto;padding:0 0 50px}
-        .cd-creator{display:flex;align-items:center;gap:14px;padding:18px 22px;background:var(--card);border:1px solid var(--border);border-radius:14px;margin-bottom:16px}
-        .cd-creator-avatar{width:48px;height:48px;border-radius:50%;overflow:hidden;flex-shrink:0;background:var(--bg2);display:grid;place-items:center;border:2px solid var(--border)}
-        .cd-creator-avatar i{font-size:22px;color:var(--text3)}
-        .cd-creator-info{flex:1;min-width:0}
-        .cd-creator-name{font-size:16px;font-weight:800;color:var(--text);display:flex;align-items:center;gap:8px}
-        .cd-creator-handle{font-size:13px;color:var(--text2);font-weight:500}
-        .cd-creator-wallet{font-family:monospace;font-size:11px;color:var(--text3);background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:3px 8px;display:inline-flex;align-items:center;gap:5px;cursor:pointer;margin-top:4px}
-        .cd-creator-wallet:hover{color:var(--text)}
-        .cd-card{background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:16px}
-        .cd-card-head{padding:20px 24px;border-bottom:1px solid var(--border)}
-        .cd-title{font-size:22px;font-weight:800;margin:0 0 8px;color:var(--text);line-height:1.3}
-        .cd-badge-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px}
-        .cd-badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;padding:4px 10px;border-radius:99px}
-        .cd-badge.open{background:#052e16;color:#4ade80}
-        .cd-badge.challenge{background:#1e1035;color:#c4b5fd}
-        .cd-bounty{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:20px 24px;border-bottom:1px solid var(--border)}
-        @media(max-width:600px){.cd-bounty{grid-template-columns:1fr}}
-        .cd-bounty-item{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px 18px}
-        .cd-bounty-label{font-size:11px;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
-        .cd-bounty-sol{font-family:"Outfit",sans-serif;font-size:24px;font-weight:900;color:var(--text)}
-        .cd-bounty-sol span{color:var(--accent);font-size:16px}
-        .cd-bounty-usd{font-size:12px;color:var(--text2);margin-top:2px}
-        .cd-bounty-tag{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;background:#1e1035;color:#c4b5fd;margin-left:6px}
-        .cd-deadline{display:flex;align-items:center;gap:12px;padding:14px 24px;border-bottom:1px solid var(--border);background:var(--bg2)}
-        .cd-deadline-icon{width:36px;height:36px;border-radius:50%;background:var(--card);border:1px solid var(--border);display:grid;place-items:center;flex-shrink:0}
-        .cd-deadline-icon i{font-size:16px}
-        .cd-deadline-info{flex:1}
-        .cd-deadline-label{font-size:11px;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.06em}
-        .cd-deadline-time{font-size:18px;font-weight:800;color:var(--text);font-family:"Outfit",sans-serif}
-        .cd-deadline-time.urgent{color:#fb923c}
-        .cd-detail-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:20px 24px;border-bottom:1px solid var(--border)}
-        @media(max-width:600px){.cd-detail-grid{grid-template-columns:repeat(2,1fr)}}
-        .cd-detail-label{font-size:11px;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px}
-        .cd-detail-value{font-size:14px;font-weight:700;color:var(--text)}
-        .cd-req-section{padding:20px 24px;border-bottom:1px solid var(--border)}
-        .cd-req-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px;display:flex;align-items:center;gap:6px}
-        .cd-req-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-        .cd-req-item{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2);padding:6px 10px;background:var(--bg2);border:1px solid var(--border);border-radius:8px}
-        .cd-req-item i{font-size:14px}
-        .cd-desc{padding:20px 24px;border-bottom:1px solid var(--border)}
-        .cd-desc-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px}
-        .cd-desc-text{font-size:13px;color:var(--text2);line-height:1.7;white-space:pre-wrap}
-        .cd-actions{padding:18px 24px;display:flex;gap:10px;flex-wrap:wrap}
-        .cd-btn-primary{height:46px;padding:0 30px;border-radius:99px;border:none;background:linear-gradient(135deg,#a78bfa,#7c3aed);color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:opacity .15s,transform .15s}
-        .cd-btn-primary:hover{opacity:.9;transform:translateY(-1px)}
-        .cd-btn-secondary{height:46px;padding:0 24px;border-radius:99px;border:1.5px solid var(--border);background:transparent;color:var(--text);font-size:13px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:border-color .13s}
-        .cd-btn-secondary:hover{border-color:var(--text)}
-        .cd-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px}
-        .cd-modal{background:var(--card);border:1px solid var(--border);border-radius:16px;max-width:480px;width:100%;max-height:90vh;overflow-y:auto}
-        .cd-modal-head{padding:18px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
-        .cd-modal-title{font-size:16px;font-weight:800;color:var(--text)}
-        .cd-modal-close{width:32px;height:32px;border-radius:50%;border:1px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;display:grid;place-items:center}
-        .cd-modal-body{padding:18px 20px}
-        .cd-modal-label{font-size:12px;font-weight:700;color:var(--text2);margin-bottom:6px;display:block}
-        .cd-modal-input{width:100%;height:42px;padding:0 14px;border:1.5px solid var(--border);border-radius:10px;background:var(--bg2);color:var(--text);font-size:13px;outline:none;box-sizing:border-box;font-family:inherit}
-        .cd-modal-input:focus{border-color:#a78bfa}
-        .cd-modal-textarea{width:100%;min-height:100px;padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;background:var(--bg2);color:var(--text);font-size:13px;outline:none;resize:vertical;box-sizing:border-box;font-family:inherit;line-height:1.5}
-        .cd-modal-textarea:focus{border-color:#a78bfa}
-        .cd-modal-actions{display:flex;gap:10px;margin-top:16px}
-        .cd-submit-btn{height:42px;padding:0 24px;border-radius:99px;border:none;background:linear-gradient(135deg,#a78bfa,#7c3aed);color:#fff;font-size:13px;font-weight:700;cursor:pointer;flex:1}
-        .cd-submit-btn:disabled{opacity:.5;cursor:not-allowed}
-        .cd-success{text-align:center;padding:32px 20px}
-        .cd-success i{font-size:40px;color:#4ade80}
-        .cd-success h3{font-size:18px;font-weight:800;color:var(--text);margin:12px 0 4px}
-        .cd-success p{font-size:13px;color:var(--text2)}
-        .cd-back{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:var(--text2);cursor:pointer;border:none;background:none;padding:8px 0;margin-bottom:16px;transition:color .13s}
-        .cd-back:hover{color:var(--text)}
-      `}</style>
-      <div className="cd-page">
-        <button className="cd-back" onClick={onBack}><i className="ti ti-arrow-left" /> Back to Jobs</button>
-
-        <div className="cd-creator">
-          <div className="cd-creator-avatar"><i className="ti ti-user" /></div>
-          <div className="cd-creator-info">
-            <div className="cd-creator-name">
-              {job.creator}
-              <span style={{fontSize:11,fontWeight:600,color:'#a78bfa',background:'#1e1035',padding:'2px 8px',borderRadius:99}}>{job.creatorLabel}</span>
+    <div style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'grid', placeItems: 'center', padding: 16, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }} onClick={onClose}>
+      <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 16, padding: 24, maxWidth: 500, width: '100%', maxHeight: '90vh', overflow: 'auto' }} onClick={e => e.stopPropagation()}>
+        {/* Header */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+              <span style={{ padding: '3px 8px', borderRadius: 5, background: 'rgba(var(--accent-rgb),0.08)', color: OGAPAY_BLUE, fontSize: 10, fontWeight: 700 }}>{job.category || job.taskCategory || 'Task'}</span>
+              {job.featured && <span style={{ padding: '3px 8px', borderRadius: 5, background: 'rgba(245,158,11,0.12)', color: 'var(--gold)', fontSize: 10, fontWeight: 700 }}>Featured</span>}
             </div>
-            <div className="cd-creator-handle">@{job.creator.toLowerCase().replace(/\s+/g,'')}</div>
-            <div className="cd-creator-wallet" onClick={() => {navigator.clipboard?.writeText('F48NUF...jemX')}}>
-              F48NUF...jemX <i className="ti ti-copy" style={{fontSize:10}} />
-            </div>
+            <h2 style={{ fontFamily: 'Outfit', fontSize: 18, fontWeight: 900, margin: 0 }}>{job.title}</h2>
           </div>
-          <button className="cd-btn-secondary" style={{height:34,padding:'0 14px',fontSize:11,flexShrink:0}}>
-            <i className="ti ti-share" style={{fontSize:12}} /> Share
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text3)', fontSize: 20, cursor: 'pointer', padding: 4 }}>
+            <i className="ti ti-x" />
           </button>
         </div>
 
-        <div className="cd-card">
-          <div className="cd-card-head">
-            <div className="cd-badge-row">
-              <span className="cd-badge open"><span style={{width:6,height:6,borderRadius:'50%',background:'#4ade80',display:'inline-block'}} /> Open</span>
-              <span className="cd-badge challenge"><i className="ti ti-award" style={{fontSize:10}} /> Challenge</span>
+  
+        {/* ── DARK MODE OVERRIDES ── */}
+        <style>{`
+          [data-theme="dark"] .ngn-shimmer {
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
+            background: none !important;
+            animation: none !important;
+          }
+          [data-theme="dark"] .task-reward-box {
+            background: #1e1e1e !important;
+            border: 1.5px solid rgba(255,255,255,0.08) !important;
+            box-shadow: none !important;
+          }
+          [data-theme="dark"] .task-card-hover {
+            background: #141414 !important;
+            border-color: var(--border, #2a2a2a) !important;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.25) !important;
+          }
+        `}</style>
+
+      {/* ── LISTED BY ── */}
+        <div className='listed-by-header' style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', padding: '10px 14px', marginBottom: 12, background: 'linear-gradient(135deg, rgba(59,91,219,0.24) 0%, rgba(255,255,255,0.45) 50%, rgba(16,185,129,0.24) 100%)', borderRadius: 12, border: '1px solid var(--border)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ width: 36, height: 36, borderRadius: '50%', background: OGAPAY_BLUE, color: '#fff', display: 'grid', placeItems: 'center', fontSize: 12, fontWeight: 900, overflow: 'hidden', flexShrink: 0, border: '2px solid white' }}>
+              {(job.poster?.avatarUrl || job.poster?.avatar || job.creatorAvatar) ? <img src={job.poster?.avatarUrl || job.poster?.avatar || job.creatorAvatar} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : formatAddress(job.creatorName || job.creator?.username || job.creator || '')}
             </div>
-            <h1 className="cd-title">{job.title}</h1>
-            <div style={{display:'flex',gap:10,fontSize:12,color:'var(--text2)',flexWrap:'wrap'}}>
-              <span style={{display:'inline-flex',alignItems:'center',gap:4}}><i className="ti ti-tag" /> {job.category}</span>
-              <span style={{display:'inline-flex',alignItems:'center',gap:4}}><i className="ti ti-device-laptop" /> {job.platform}</span>
-              <span style={{display:'inline-flex',alignItems:'center',gap:4}}><i className="ti ti-clock" /> {job.timeEstimate}</span>
-              <span style={{display:'inline-flex',alignItems:'center',gap:4}}><i className="ti ti-shield" /> {job.difficulty}</span>
+            <div>
+              <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 2 }}>Listed by</div>
+              <div style={{ fontWeight: 800, fontSize: 14 }}>{job.creatorName || job.creator?.username || job.creator || 'Anonymous'}</div>
             </div>
           </div>
-
-          <div className="cd-bounty">
-            <div className="cd-bounty-item">
-              <div className="cd-bounty-label">Reward per worker</div>
-              <div className="cd-bounty-sol">{job.reward} <span>SOL</span></div>
-              <div className="cd-bounty-usd">~ ${job.usdValue} USD</div>
-            </div>
-            <div className="cd-bounty-item">
-              <div className="cd-bounty-label">Total bounty</div>
-              <div className="cd-bounty-sol">{(job.reward * (job.slots || 1)).toFixed(3)} <span>SOL</span></div>
-              <div className="cd-bounty-usd">
-                ~ ${(job.usdValue * (job.slots || 1)).toFixed(2)} USD
-                <span className="cd-bounty-tag"><i className="ti ti-coin" style={{fontSize:9}} /> OGA</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="cd-deadline">
-            <div className="cd-deadline-icon"><i className="ti ti-clock-hour-4" style={{color:'#fb923c'}} /></div>
-            <div className="cd-deadline-info">
-              <div className="cd-deadline-label">Selection deadline</div>
-              <div className={timeLeft.includes('Ended') ? 'cd-deadline-time urgent' : 'cd-deadline-time'}>{timeLeft || 'Calculating...'}</div>
-            </div>
-            <div style={{textAlign:'right'}}>
-              <div className="cd-bounty-label">Applicants</div>
-              <div style={{fontSize:16,fontWeight:800,color:'var(--text)'}}>{job.filled}</div>
-            </div>
-          </div>
-
-          <div className="cd-detail-grid">
-            <div className="cd-detail-item">
-              <div className="cd-detail-label">Slots</div>
-              <div className="cd-detail-value">{job.filled}/{job.slots} filled</div>
-            </div>
-            <div className="cd-detail-item">
-              <div className="cd-detail-label">Selection mode</div>
-              <div className="cd-detail-value">Creator picks</div>
-            </div>
-            <div className="cd-detail-item">
-              <div className="cd-detail-label">Difficulty</div>
-              <div className="cd-detail-value">{job.difficulty}</div>
-            </div>
-            <div className="cd-detail-item">
-              <div className="cd-detail-label">Category</div>
-              <div className="cd-detail-value">{job.category}</div>
-            </div>
-            <div className="cd-detail-item">
-              <div className="cd-detail-label">Max entries</div>
-              <div className="cd-detail-value">Unlimited</div>
-            </div>
-            <div className="cd-detail-item">
-              <div className="cd-detail-label">Rank required</div>
-              <div className="cd-detail-value">{job.rankRequired || 'None'}</div>
-            </div>
-          </div>
-
-          <div className="cd-req-section">
-            <div className="cd-req-title"><i className="ti ti-shield-check" style={{color:'#a78bfa'}} /> Requirements</div>
-            <div className="cd-req-grid">
-              <div className="cd-req-item"><i className="ti ti-circle-check" style={{color:job.verificationRequired?'#4ade80':'var(--text3)'}} /> Screenshot proof {job.verificationRequired ? 'required' : 'optional'}</div>
-              <div className="cd-req-item"><i className="ti ti-user-check" style={{color:'var(--text3)'}} /> KYC verification optional</div>
-              <div className="cd-req-item"><i className="ti ti-id" style={{color:'var(--text3)'}} /> Rank: {job.rankRequired || 'None'}</div>
-              <div className="cd-req-item"><i className="ti ti-eye" style={{color:'var(--text3)'}} /> Submissions: visible to creator</div>
-            </div>
-          </div>
-
-          <div className="cd-desc">
-            <div className="cd-desc-title"><i className="ti ti-file-text" style={{color:'var(--text3)'}} /> Description</div>
-            <div className="cd-desc-text">{job.description}</div>
-          </div>
-
-          <div className="cd-actions">
-            <button className="cd-btn-primary" onClick={() => setShowApplyModal(true)}><i className="ti ti-send" /> Apply Now</button>
-            <button className="cd-btn-secondary"><i className="ti ti-bookmark" /> Save</button>
-            <button className="cd-btn-secondary"><i className="ti ti-flag" /> Report</button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+            <button onClick={() => setShowReportModal(true)} style={{ background: 'none', border: 'none', color: 'var(--text3)', fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontFamily: 'inherit' }}>
+              <i className="ti ti-flag" style={{ fontSize: 14 }} /> Report
+            </button>
+            <span style={{ width: 1, height: 16, background: 'var(--border)' }} />
+            <button title={`Task ID: ${job.id || ''}`} style={{ background: 'none', border: 'none', color: 'var(--text3)', fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontFamily: 'inherit' }}>
+              <i className="ti ti-info-circle" style={{ fontSize: 14 }} /> Info
+            </button>
+            <span style={{ width: 1, height: 16, background: 'var(--border)' }} />
+            <button style={{ background: 'none', border: 'none', color: 'var(--text3)', fontSize: 15, cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+              <i className="ti ti-bookmark" />
+            </button>
           </div>
         </div>
+
+        {/* ── CONFIGURATION + PARTICIPATION ── */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
+          {/* Configuration */}
+          <div style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 12, padding: '14px 16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 10, fontWeight: 800, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>
+              <i className="ti ti-adjustments" style={{ fontSize: 14 }} /> Configuration
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', marginBottom: 2 }}>Status</div>
+                <div style={{ fontSize: 13, fontWeight: 800, display: 'flex', alignItems: 'center', gap: 6, color: job.status === 'OPEN' ? 'var(--accent)' : 'var(--text)' }}>
+                  <span style={{ width: 7, height: 7, borderRadius: '50%', background: job.status === 'OPEN' ? 'var(--accent)' : 'var(--text3)', display: 'inline-block' }} />
+                  {job.status === 'OPEN' ? 'Open' : (job.status || 'Closed')}
+                </div>
+              </div>
+              <div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', marginBottom: 2 }}>Type</div>
+                <div style={{ fontSize: 13, fontWeight: 700 }}>{job.category || job.taskCategory || 'General'}</div>
+              </div>
+              {job.difficulty && (
+                <div>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', marginBottom: 2 }}>Difficulty</div>
+                  <div style={{ fontSize: 13, fontWeight: 700 }}>{job.difficulty}</div>
+                </div>
+              )}
+              <div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', marginBottom: 2 }}>Closes In</div>
+                <div style={{ fontSize: 13, fontWeight: 800, color: timeLeft === 'Expired' ? 'var(--red)' : 'var(--gold)' }}>{timeLeft || '—'}</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Participation */}
+          <div style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 12, padding: '14px 16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 10, fontWeight: 800, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>
+              <i className="ti ti-users" style={{ fontSize: 14 }} /> Participation
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', marginBottom: 2 }}>Community</div>
+                <div style={{ fontSize: 13, fontWeight: 700 }}>{job.community || 'All'}</div>
+              </div>
+              <div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', marginBottom: 2 }}>Max Slots</div>
+                <div style={{ fontSize: 13, fontWeight: 800 }}>{job.slots || 'Unlimited'}</div>
+              </div>
+              <div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', marginBottom: 2 }}>Capacity</div>
+                <div style={{ fontSize: 13, fontWeight: 800 }}>
+                  {job.slots ? `${job.slots - (job.slotsRemaining ?? 0)} / ${job.slots}` : 'Unlimited'}
+                </div>
+              </div>
+              <div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', marginBottom: 2 }}>Open Slots</div>
+                <div style={{ fontSize: 13, fontWeight: 800, color: OGAPAY_BLUE }}>{job.slotsRemaining ?? job.slots ?? 'Unlimited'}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ── REWARD ── */}
+        <div style={{ position: 'relative', background: 'linear-gradient(135deg, rgba(var(--accent-rgb),0.07) 0%, rgba(var(--accent-rgb),0.02) 100%)', border: '1px solid rgba(var(--accent-rgb),0.15)', borderRadius: 14, padding: '22px 20px', textAlign: 'center', marginBottom: 16 }}>
+          <div style={{ position: 'absolute', left: 18, top: '50%', transform: 'translateY(-50%)', width: 46, height: 46, borderRadius: 12, background: 'rgba(var(--accent-rgb),0.1)', display: 'grid', placeItems: 'center' }}>
+            <i className="ti ti-currency-naira" style={{ fontSize: 22, color: OGAPAY_BLUE }} />
+          </div>
+          <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>Reward Per Task</div>
+          <div style={{ fontSize: 30, fontWeight: 900, fontFamily: 'Outfit', color: OGAPAY_BLUE, lineHeight: 1 }}>
+            ₦{Number(job.reward || job.amount || 0).toLocaleString()}
+          </div>
+          <div style={{ fontSize: 12, color: 'var(--text3)', fontWeight: 600, marginTop: 6 }}>
+            ${(Number(job.reward || job.amount || 0) * rates.NGN).toFixed(2)} USD <InfoBtn text="Approximate value in USD based on current exchange rates. Actual rates may vary." />
+          </div>
+        </div>
+
+        {/* ── DESCRIPTION ── */}
+        <div style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 12, padding: '14px 16px', marginBottom: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 10, fontWeight: 800, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10, paddingBottom: 10, borderBottom: '1px solid var(--border)' }}>
+            <i className="ti ti-file-text" style={{ fontSize: 14 }} /> Description
+          </div>
+          <p style={{ fontSize: 13, color: 'var(--text)', lineHeight: 1.7, margin: 0 }}>{job.description}</p>
+        </div>
+
+        {/* ── REQUIREMENTS ── */}
+        {job.requirements && (
+          <div style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 12, padding: '14px 16px', marginBottom: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 10, fontWeight: 800, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10, paddingBottom: 10, borderBottom: '1px solid var(--border)' }}>
+              <i className="ti ti-checklist" style={{ fontSize: 14 }} /> Requirements
+            </div>
+            <div style={{ fontSize: 13, color: 'var(--text)', lineHeight: 1.7 }}>{job.requirements}</div>
+          </div>
+        )}
+
+        {/* ── ACTIONS ── */}
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+          {!isMyTask && (
+            <button onClick={() => { setShowApplyModal(true); setSubmitted(false) }} style={{ flex: '1 1 140px', height: 46, borderRadius: 12, background: OGAPAY_BLUE, color: '#fff', border: 'none', fontWeight: 800, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+              <i className="ti ti-edit" /> Apply
+            </button>
+          )}
+          <button onClick={handleViewSubmissions} style={{ flex: '1 1 140px', height: 46, borderRadius: 12, background: OGAPAY_BLUE, color: '#fff', border: 'none', fontWeight: 800, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+            <i className="ti ti-eye" /> View Submissions
+          </button>
+        </div>
+
+        {/* ── SUBMISSIONS PANEL ── */}
+        {showSubmissions && (
+          <div style={{ marginTop: 12, padding: '14px 16px', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 12 }}>
+            <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10 }}>Submissions</div>
+            {submissionsLoading ? (
+              <div style={{ fontSize: 12, color: 'var(--text3)' }}>Loading...</div>
+            ) : submissions.length === 0 ? (
+              <div style={{ fontSize: 12, color: 'var(--text3)' }}>No submissions yet.</div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {submissions.map((s: any) => (
+                  <div key={s.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 12, padding: '8px 10px', background: 'var(--card)', borderRadius: 8, border: '1px solid var(--border)' }}>
+                    <span style={{ fontWeight: 700 }}>{s.worker?.username || formatAddress(s.workerAddress || s.userId || '')}</span>
+                    <span style={{ color: 'var(--text3)', fontWeight: 600 }}>{s.status || 'Pending'}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
-      {showApplyModal && (
-        <div className="cd-modal-overlay" onClick={() => {if(!submitted)setShowApplyModal(false)}}>
-          <div className="cd-modal" onClick={e => e.stopPropagation()}>
-            {submitted ? (
-              <div className="cd-success">
-                <i className="ti ti-circle-check" />
-                <h3>Application Submitted!</h3>
-                <p>Your submission has been sent to the creator. You'll be notified when a decision is made.</p>
-                <button className="cd-btn-primary" onClick={() => {setShowApplyModal(false);setSubmitted(false);setApplyLink('')}} style={{marginTop:16}}>Done</button>
+      {/* Apply Modal */}
+      <ApplyModal
+        open={showApplyModal}
+        onClose={() => { setShowApplyModal(false); setSubmitted(false) }}
+        jobId={job.id}
+        jobTitle={job.title}
+        reward={job.reward}
+        currency={job.currency || 'NGN'}
+        onApplied={(jid) => { if (jid) setSubmissions(prev => [...prev, jid]) }}
+      />
+
+      {/* Report Modal */}
+      {showReportModal && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 1200, display: 'grid', placeItems: 'center', padding: 16, background: 'rgba(0,0,0,0.5)' }} onClick={() => { if(!reportSubmitting) setShowReportModal(false) }}>
+          <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 16, padding: 24, maxWidth: 440, width: '100%' }} onClick={e => e.stopPropagation()}>
+            <h3 style={{ fontFamily: 'Outfit', fontSize: 16, fontWeight: 900, margin: '0 0 12px' }}>Report Task</h3>
+            {reportMsg && (
+              <div style={{ padding: '8px 12px', borderRadius: 8, marginBottom: 12, fontSize: 12, fontWeight: 600,
+                background: reportMsg.includes('submitted') ? 'rgba(var(--accent-rgb),0.08)' : 'rgba(var(--red-rgb),0.1)',
+                color: reportMsg.includes('submitted') ? 'var(--accent)' : 'var(--red)' }}>
+                {reportMsg}
               </div>
-            ) : (
-              <>
-                <div className="cd-modal-head">
-                  <span className="cd-modal-title">Apply for this task</span>
-                  <button className="cd-modal-close" onClick={() => setShowApplyModal(false)}><i className="ti ti-x" /></button>
-                </div>
-                <div className="cd-modal-body">
-                  <label className="cd-modal-label">Submission link *</label>
-                  <input className="cd-modal-input" value={applyLink} onChange={e => setApplyLink(e.target.value)} placeholder="https://" style={{marginBottom:14}} />
-                  <label className="cd-modal-label">Message (optional)</label>
-                  <textarea className="cd-modal-textarea" value={applyMsg} onChange={e => setApplyMsg(e.target.value)} placeholder="Add a note to the creator..." />
-                  {applyMsg && <div style={{fontSize:12,color:'#fb923c',marginTop:8}}><i className="ti ti-info-circle" /> Make sure your submission link is correct.</div>}
-                  <div className="cd-modal-actions">
-                    <button className="cd-btn-secondary" onClick={() => setShowApplyModal(false)} style={{flex:1}}>Cancel</button>
-                    <button className="cd-submit-btn" onClick={handleApply} disabled={!applyLink.trim()}>Submit Application</button>
-                  </div>
-                </div>
-              </>
             )}
+            <select value={reportCategory} onChange={e => setReportCategory(e.target.value)} style={{ width: '100%', height: 38, padding: '0 10px', border: '1.5px solid var(--border)', borderRadius: 9, background: 'var(--bg)', color: 'var(--text)', fontSize: 12, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box', marginBottom: 8 }}>
+              <option value="">Select a category</option>
+              <option value="spam">Spam</option>
+              <option value="scam">Scam / Fraud</option>
+              <option value="inappropriate">Inappropriate Content</option>
+              <option value="misleading">Misleading Information</option>
+              <option value="other">Other</option>
+            </select>
+            <textarea value={reportDesc} onChange={e => setReportDesc(e.target.value)} placeholder="Describe the issue in detail..." rows={4} style={{ width: '100%', minHeight: 80, padding: 10, border: '1.5px solid var(--border)', borderRadius: 9, background: 'var(--bg)', color: 'var(--text)', fontSize: 12, fontFamily: 'inherit', resize: 'vertical', outline: 'none', boxSizing: 'border-box', marginBottom: 12 }} />
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button onClick={() => { setShowReportModal(false); setReportMsg('') }} style={{ flex: 1, height: 40, borderRadius: 9, border: '1.5px solid var(--border)', background: 'transparent', color: 'var(--text2)', fontWeight: 600, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>
+                Cancel
+              </button>
+              <button onClick={handleSubmitReport} disabled={!reportCategory || !reportDesc.trim() || reportSubmitting} style={{ flex: 1, height: 40, borderRadius: 9, border: 'none', background: !reportCategory || !reportDesc.trim() || reportSubmitting ? 'var(--border)' : 'var(--red)', color: '#fff', fontWeight: 700, fontSize: 12, cursor: !reportCategory || !reportDesc.trim() || reportSubmitting ? 'not-allowed' : 'pointer', fontFamily: 'inherit' }}>
+                {reportSubmitting ? 'Submitting...' : 'Submit Report'}
+              </button>
+            </div>
           </div>
         </div>
       )}
-    </Layout>
+    </div>
   )
 }
 
+// ─── Tasks data with SWR ────────────────────────────────────────
+function useTasksData(category?: string) {
+  const url = category && !['all', 'trending', 'new'].includes((category || '').toLowerCase())
+    ? '/tasks?category=' + encodeURIComponent(category.toUpperCase())
+    : '/tasks'
+  return useApi<any[]>(url, { auth: false })
+}
+
+// ─── Countdown hook ──────────────────────────
+function useCountdown(expiresAt?: string) {
+  const [display, setDisplay] = useState('')
+  useEffect(() => {
+    if (!expiresAt) return
+    const tick = () => {
+      const diff = new Date(expiresAt).getTime() - Date.now()
+      if (diff <= 0) { setDisplay('Expired'); return }
+      const h = Math.floor(diff / 3600000)
+      const m = Math.floor((diff % 3600000) / 60000)
+      const s = Math.floor((diff % 60000) / 1000)
+      if (h > 0) setDisplay(`${h}h ${String(m).padStart(2,'0')}m ${String(s).padStart(2,'0')}s`)
+      else setDisplay(`${String(m).padStart(2,'0')}m ${String(s).padStart(2,'0')}s`)
+    }
+    tick(); const id = setInterval(tick, 1000)
+    return () => clearInterval(id)
+  }, [expiresAt])
+  return display
+}
+
+function useElapsed(createdAt?: string) {
+  const [display, setDisplay] = useState('')
+  useEffect(() => {
+    if (!createdAt) return
+    const tick = () => {
+      const diff = Date.now() - new Date(createdAt).getTime()
+      const m = Math.floor(diff / 60000)
+      if (m < 1) { setDisplay('Posted just now'); return }
+      if (m < 60) { setDisplay(`Posted ${m}m ago`); return }
+      const h = Math.floor(m / 60)
+      if (h < 24) { setDisplay(`Posted ${h}h ago`); return }
+      const days = Math.floor(h / 24)
+      setDisplay(`Posted ${days} day${days !== 1 ? 's' : ''} ago`)
+    }
+    tick(); const id = setInterval(tick, 60000)
+    return () => clearInterval(id)
+  }, [createdAt])
+  return display
+}
+
+// ─── TaskCard component ───────────────────────
+function TaskCard({ job, onToggleBookmark, bookmarked, applied }: {
+  job: any
+  onToggleBookmark: (id: string) => void
+  bookmarked: boolean
+  applied?: boolean
+}) {
+  const navigate = useNavigate()
+  const { rates } = useCurrency()
+  const slotsTotal = job.slots || job.maxSlots || 100
+  const slotsFilled = job.slotsFilled || job.filled || 0
+  const submissionsCount = job.submissionsCount ?? job._count?.submissions ?? slotsFilled ?? 0
+  const { theme } = useTheme()
+  const isDark = theme === 'dark'
+  const progress = slotsTotal > 0 ? (slotsFilled / slotsTotal) * 100 : 0
+  const posterName = job.poster ? (job.poster.firstName ? job.poster.firstName + (job.poster.lastName ? ' ' + job.poster.lastName : '') : job.poster.username || '') : ''
+  const creatorName = posterName || job.creatorName || job.creator?.username || job.creator || 'Anonymous'
+  const openSlots = slotsTotal - slotsFilled
+  const reward = Number(job.reward || job.amount || 0)
+  const unlimited = slotsTotal >= 999
+  const status = job.status || 'OPEN'
+  const isExpired = status !== 'OPEN'
+
+  // Countdown
+  const expiresAt = job.expiresAt || job.closesAt || job.deadline || job.endsAt || ''
+  const countdown = useCountdown(expiresAt)
+  const elapsed = useElapsed(job.createdAt || '')
+  const timerDisplay = countdown || elapsed
+
+  // Progress bar color based on status
+  const progressColor = status === 'OPEN'
+    ? 'linear-gradient(90deg,#059669,#34D399)'
+    : status === 'CLOSED'
+    ? 'linear-gradient(90deg,#6B7280,#9CA3AF)'
+    : 'linear-gradient(90deg,#D97706,#FBBF24)'
+
+  // Reward box tint matching progress
+  const rewardBg = status === 'OPEN'
+    ? 'rgba(var(--green-rgb),0.07)'
+    : status === 'CLOSED'
+    ? 'rgba(107,114,128,0.06)'
+    : 'rgba(217,119,6,0.07)'
+  const rewardBorder = status === 'OPEN'
+    ? 'rgba(var(--green-rgb),0.18)'
+    : status === 'CLOSED'
+    ? 'rgba(107,114,128,0.15)'
+    : 'rgba(217,119,6,0.18)'
+
+  const eligibility: any = job.eligibility
+  const isEligible = !eligibility || eligibility.isEligible
+  const reasons: string[] = eligibility?.reasons || []
+
+  // Description expand
+  const [expanded, setExpanded] = useState(false)
+  const descRef = useRef<HTMLParagraphElement>(null)
+  const [isLong, setIsLong] = useState(false)
+  useEffect(() => {
+    if (descRef.current) {
+      setIsLong(descRef.current.scrollHeight > descRef.current.clientHeight)
+    }
+  }, [])
+
+  return (
+    <div className="task-card-hover" onClick={() => navigate(`/tasks/${job.id}`)} style={{
+      background: isDark ? '#141414' : 'var(--card)',
+      border: isDark ? `1.5px solid ${!isEligible ? 'var(--red)' : 'var(--border, #2a2a2a)'}` : `1.5px solid ${!isEligible ? 'var(--red)' : 'var(--border)'}`,
+      borderRadius: 16,
+      boxShadow: isDark ? (!isEligible ? '0 2px 16px rgba(var(--red-rgb),0.10)' : '0 4px 24px rgba(0,0,0,0.25)') : (!isEligible ? '0 2px 16px rgba(var(--red-rgb),0.10)' : '0 2px 16px rgba(0,0,0,0.06)'),
+      cursor: 'pointer',
+      display: 'flex',
+      flexDirection: 'column',
+      opacity: !isEligible ? 0.75 : 1,
+      height: 'auto',
+      position: 'relative',
+    }}>
+
+      {/* ── STATUS BADGE ── */}
+      {applied && (
+        <div style={{
+          position: 'absolute', top: 12, right: 12, zIndex: 2,
+          background: 'var(--green)',
+          color: '#fff', fontSize: 10, fontWeight: 800,
+          padding: '3px 10px', borderRadius: 99,
+          display: 'flex', alignItems: 'center', gap: 4,
+          boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+        }}>
+          <i className="ti ti-circle-check" style={{fontSize:11}} /> Applied
+        </div>
+      )}
+      {!applied && job.featured && (
+        <div style={{
+          position: 'absolute', top: 12, right: 12, zIndex: 2,
+          background: 'linear-gradient(135deg,#F59E0B,#D97706)',
+          color: '#fff', fontSize: 10, fontWeight: 800,
+          padding: '3px 10px', borderRadius: 99,
+          boxShadow: '0 2px 8px rgba(245,158,11,0.4)',
+          letterSpacing: '0.04em',
+          textTransform: 'uppercase',
+        }}>
+          Highlighted
+        </div>
+      )}
+
+      {/* ── ELIGIBILITY BANNER ── */}
+      {!isEligible && (
+        <div style={{ padding: '8px 12px', background: 'var(--red)', display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, fontWeight: 700, color: '#fff', flexWrap: 'wrap' }}>
+          <i className="ti ti-shield-off" style={{fontSize:14}} />
+          {reasons.map((r, i) => (
+            <span key={i} style={{ background: 'rgba(255,255,255,0.15)', padding: '2px 8px', borderRadius: 4 }}>
+              {r}
+            </span>
+          ))}
+        </div>
+      )}
+
+
+
+        {/* ── DARK MODE OVERRIDES ── */}
+        <style>{`
+          [data-theme="dark"] .ngn-shimmer {
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
+            background: none !important;
+            animation: none !important;
+          }
+          [data-theme="dark"] .task-reward-box {
+            background: #1e1e1e !important;
+            border: 1.5px solid rgba(255,255,255,0.08) !important;
+            box-shadow: none !important;
+          }
+          [data-theme="dark"] .task-card-hover {
+            background: #141414 !important;
+            border-color: var(--border, #2a2a2a) !important;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.25) !important;
+          }
+        `}</style>
+
+      {/* ── LISTED BY ── */}
+      <div className='listed-by-header' style={{ padding: '8px 14px', borderBottom: isDark ? '1px solid var(--border, #2a2a2a)' : '1px solid var(--border)', background: isDark ? 'transparent' : 'linear-gradient(135deg, rgba(59,91,219,0.24) 0%, rgba(255,255,255,0.45) 50%, rgba(16,185,129,0.24) 100%)' }}>
+        <div style={{ fontSize: 9, fontWeight: 800, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 2 }}>Listed by</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ width: 36, height: 36, borderRadius: '50%', background: `linear-gradient(180deg,${OGAPAY_BLUE} 0%,var(--accent) 100%)`, color: '#fff', display: 'grid', placeItems: 'center', fontSize: 11, fontWeight: 900, flexShrink: 0, overflow: 'hidden', border: '2px solid white', boxShadow: '0 2px 8px rgba(var(--accent-rgb),0.25)' }}>
+            {(job.poster?.avatarUrl || job.poster?.avatar || job.creatorAvatar) ? <img src={job.poster?.avatarUrl || job.poster?.avatar || job.creatorAvatar} style={{width:'100%',height:'100%',objectFit:'cover',borderRadius:'50%'}} /> : formatAddress(creatorName)}
+          </div>
+          <span style={{ fontWeight: 800, fontSize: 15, flex: 1, color: isDark ? '#ffffff' : 'var(--text, #0a0a0a)' }}>{creatorName}</span>
+          <button onClick={e => { e.stopPropagation(); onToggleBookmark(job.id) }}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: bookmarked ? OGAPAY_BLUE : 'var(--text3)', fontSize: 18, padding: 4 }}>
+            <i className={`ti ${bookmarked ? 'ti-bookmark-filled' : 'ti-bookmark'}`} />
+          </button>
+        </div>
+      </div>
+
+      {/* ── PROGRESS ── */}
+      <div style={{ padding: '18px 20px 4px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+          <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Progress</span>
+          <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text2)' }}>
+            {unlimited ? 'Unlimited' : `${slotsFilled}/${slotsTotal}`}
+          </span>
+        </div>
+        <div style={{ height: 7, borderRadius: 99, background: 'rgba(var(--accent-rgb),0.08)', overflow: 'hidden' }}>
+          <div style={{ height: '100%', borderRadius: 99, background: progressColor, width: `${Math.min(progress, 100)}%`, transition: 'width .3s', boxShadow: '0 0 6px rgba(0,0,0,0.12)' }} />
+        </div>
+      </div>
+
+      {/* ── STATUS ROW ── */}
+      <div style={{ padding: '12px 18px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 11 }}>
+        <span style={{ color: isDark ? '#34D399' : 'var(--green)', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 4, whiteSpace: 'nowrap' }}>
+          <span style={{ width: 6, height: 6, borderRadius: '50%', background: isDark ? '#34D399' : 'var(--green)', display: 'inline-block', flexShrink: 0 }} />
+          Submissions {submissionsCount}
+        </span>
+        <span style={{ color: 'var(--accent)', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 4, whiteSpace: 'nowrap' }}>
+          <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--accent)', display: 'inline-block', flexShrink: 0 }} />
+          {unlimited ? 'Unlimited slots' : `Open ${Math.max(0, openSlots)}`}
+        </span>
+        <span style={{ color: status === 'OPEN' ? (isDark ? '#34D399' : 'var(--green)') : '#6B7280', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 4, whiteSpace: 'nowrap' }}>
+          <span style={{ width: 6, height: 6, borderRadius: '50%', background: status === 'OPEN' ? (isDark ? '#34D399' : 'var(--green)') : '#9CA3AF', display: 'inline-block', flexShrink: 0 }} />
+          Status {status === 'CLOSED' ? 'Closed' : 'Filling'}
+        </span>
+      </div>
+
+      {/* ── REWARD BOX ── */}
+      <div className="task-reward-box" style={{ margin: '0 18px 14px', background: isDark ? '#1e1e1e' : rewardBg, border: isDark ? `1.5px solid rgba(255,255,255,0.08)` : `1px solid ${rewardBorder}`, borderRadius: 14, padding: '18px 16px', textAlign: 'center' }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 8, marginBottom: 6 }}>
+          <span className="ngn-shimmer" style={{ fontSize: 42, fontWeight: 900, fontFamily: 'Outfit', lineHeight: 1, color: isDark ? '#ffffff' : undefined }}>
+            {reward.toLocaleString()}
+          </span>
+          <span className="ngn-shimmer" style={{ fontSize: 16, fontWeight: 800, fontFamily: 'Outfit', color: isDark ? '#ffffff' : undefined }}>NGN</span>
+        </div>
+        <div style={{ fontSize: 13, color: 'var(--text3)', fontWeight: 600 }}>
+          $ {(reward * rates.NGN).toFixed(2)} USD <InfoBtn text="Approximate value in USD based on current exchange rates. Actual rates may vary." />
+        </div>
+      </div>
+
+      {/* ── META TAGS ── */}
+      <div style={{ padding: '0 18px 12px', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: 'var(--text2)', fontWeight: 600, flexWrap: 'wrap' }}>
+
+        {job.difficulty && (
+          <>
+            <span style={{ color: 'var(--border2)' }}>|</span>
+            <span>Difficulty: {job.difficulty}</span>
+          </>
+        )}
+      </div>
+
+      {/* ── CATEGORY | RANK ── */}
+      <div style={{ padding: '0 18px 16px', display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: isDark ? 'rgba(255,255,255,0.6)' : 'var(--text2)', fontWeight: 600 }}>
+        <span>{(job.category || 'Custom').replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, (l: string) => l.toUpperCase())}</span>
+        {(job.minRank > 0 || job.rankRequired > 0) && (job.minRank || job.rankRequired) !== 'None' && <><span style={{ color: 'var(--border2)' }}>|</span><span>Rank {job.minRank || job.rankRequired}</span></>}
+      </div>
+
+      {/* ── ABOUT THIS JOB + TIMER ── */}
+      <div style={{ padding: '0 18px 10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <span style={{ fontSize: 11, fontWeight: 800, color: isDark ? 'rgba(255,255,255,0.5)' : 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'flex', alignItems: 'center', gap: 6 }}>
+          <i className="ti ti-message" style={{fontSize:13}} /> About This Job
+        </span>
+        {timerDisplay && (
+          <span style={{
+            fontSize: 11, fontWeight: 700,
+            color: isExpired ? 'var(--red)' : countdown ? (isDark ? '#ffffff' : 'var(--green)') : (isDark ? 'rgba(255,255,255,0.5)' : 'var(--text3)'),
+            display: 'flex', alignItems: 'center', gap: 4,
+            background: countdown && !isExpired ? (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(var(--green-rgb),0.07)') : 'transparent',
+            padding: countdown ? '2px 7px' : '0',
+            borderRadius: 99,
+          }}>
+            <i className="ti ti-clock" style={{fontSize:12}} /> {timerDisplay}
+          </span>
+        )}
+      </div>
+
+      {/* ── DESCRIPTION ── */}
+      <div style={{
+        margin: '0 18px 22px',
+        padding: '14px 16px',
+        border: isDark ? '1.5px solid var(--border, #2a2a2a)' : '1.5px solid var(--border)',
+        borderRadius: '10px',
+        background: isDark ? '#111113' : 'var(--bg)',
+        overflowWrap: 'break-word',
+        wordBreak: 'break-word',
+      }}
+        className="task-desc-box"
+      >
+        <p ref={descRef}
+          style={{
+            fontSize: 14, color: isDark ? 'rgba(255,255,255,0.6)' : 'var(--text2)', margin: 0, lineHeight: 1.65,
+            display: '-webkit-box',
+            WebkitBoxOrient: 'vertical' as any,
+            WebkitLineClamp: !expanded ? 1 : 'unset' as any,
+            overflow: 'hidden',
+          }}>
+          {job.description}
+        </p>
+        {isLong && (
+          <button onClick={e => { e.stopPropagation(); setExpanded(!expanded) }}
+            style={{ background: 'none', border: 'none', color: 'var(--green)', cursor: 'pointer', fontSize: 12, fontWeight: 700, padding: '4px 0 0', fontFamily: 'inherit' }}>
+            {expanded ? 'Show less' : '...more'}
+          </button>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// MAIN TASKS PAGE
+// ═══════════════════════════════════════════════
 export default function Tasks() {
   const navigate = useNavigate()
-  const { id } = useParams()
-  const [search, setSearch] = useState('')
-  const [filter, setFilter] = useState('All')
-  const { data: apiJobs, error, isLoading } = useApiList<any>("/tasks")
+  const { user } = useAuth()
+  const { toast: showToast } = useToast()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [jobs, setJobs] = useState<any[]>([])
-
-  // Sync SWR data to local state
-  useEffect(() => {
-    if (apiJobs) setJobs(apiJobs)
-  }, [apiJobs])
-  const [bookmarked, setBookmarked] = useState<string[]>([])
+  const [, setJobListings] = useState<any[]>([])
+  const [jobListingsLoading, setJobListingsLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [search, setSearch] = useState(searchParams.get('search') || '')
+  const [tasksPage, setTasksPage] = useState(1)
+  const perPage = 9
+  const [filter, setFilter] = useState(searchParams.get('category') || 'All')
+  const [allCategories, setAllCategories] = useState<string[]>(FIXED_CATEGORIES)
+  const [bookmarked, setBookmarked] = useState<string[]>(() => {
+    try { return JSON.parse(localStorage.getItem('ogapay_bookmarked') || '[]') } catch { return [] }
+  })
   const [selectedJob, setSelectedJob] = useState<any>(null)
-  const { toast } = useToast()
+  const [mySubmissions, setSubmissions] = useState<string[]>([])
+  const [sortBy, setSortBy] = useState(searchParams.get('sort') || 'newest')
+  const [showAvailableOnly, setShowAvailableOnly] = useState(false)
+  const [showEligibleOnly, setShowEligibleOnly] = useState(false)
 
-  // Load single job if id param present
+  useEffect(() => { injectSkeletonStyles() }, [])
+
   useEffect(() => {
-    if (id) {
-      // Try to find in loaded jobs first, then fetch directly
-      const found = jobs.find(j => String(j.id) === String(id))
-      if (found) {
-        setSelectedJob(found)
-      } else {
-        // Fetch single task directly
-        fetch(API_BASE + '/tasks/' + id)
-          .then(r => r.json())
-          .then(json => {
-            if (json.success && json.data) {
-              setSelectedJob(mapApiTask(json.data))
-            } else {
-              setSelectedJob(null)
-            }
-          })
-          .catch(() => { setSelectedJob(null); toast("Failed to load task details", "error") })
+    setLoading(true)
+    fetchTasks(filter).then(data => {
+      setJobs(data || [])
+      setLoading(false)
+      // Extract dynamic categories from response
+      const cats = [...new Set((data || []).map((j: any) => j.category).filter(Boolean))] as string[]
+      if (cats.length > 0) {
+        setAllCategories([...FIXED_CATEGORIES, ...cats.filter((c: string) => !FIXED_CATEGORIES.includes(c))])
       }
-    } else {
-      setSelectedJob(null)
+    })
+    if (user) {
+      apiRequest('/tasks/my/submissions').catch((e) => { console.error(e); return null; }).then((res: any) => {
+        if (res) {
+          const list = Array.isArray(res) ? res : res?.data || [];
+          setSubmissions(list.map((s: any) => s.taskId || s.task?.id));
+        }
+      });
     }
-  }, [id, jobs])
+  }, [filter, user?.id])
 
-  const filtered = jobs.filter(job => {
-    const matchSearch = search === '' || job.title.toLowerCase().includes(search.toLowerCase()) || job.description.toLowerCase().includes(search.toLowerCase())
-    const matchFilter = filter === 'All' || filter === 'Trending' || filter === 'New' || job.category === filter
-    return matchSearch && matchFilter
-  })
-  const { page, totalPages, startIndex, endIndex, firstItem, lastItem, setPage } = usePagination({
-    totalItems: filtered.length,
-    perPage: 20,
-  })
-  const paginatedJobs = filtered.slice(startIndex, endIndex)
-
-  const toggleBookmark = (id: string) => {
-    setBookmarked(prev => prev.includes(id) ? prev.filter(b => b !== id) : [...prev, id])
-  }
-
-  const totalRewards = jobs.reduce((sum, j) => sum + (j.reward || 0), 0)
-  const totalSlots = jobs.reduce((sum, j) => sum + j.slots, 0)
-  const totalFilled = jobs.reduce((sum, j) => sum + j.filled, 0)
-
-  const [showDetail, setShowDetail] = useState(false)
-  
+  // Invalidate stale cache entries on window focus
   useEffect(() => {
-    if (selectedJob) setShowDetail(true)
-  }, [selectedJob])
+    const onFocus = () => {
+      const now = Date.now()
+      tasksCacheMap.forEach((v, k) => {
+        if (now - v.timestamp > FOCUS_STALE_AGE) tasksCacheMap.delete(k)
+      })
+      fetchTasks(filter).then(data => setJobs(data || []))
+    }
+    window.addEventListener('focus', onFocus)
+    return () => window.removeEventListener('focus', onFocus)
+  }, [filter])
 
-  if (showDetail && selectedJob) {
-    return <JobDetailView job={selectedJob} onBack={() => { setShowDetail(false); navigate('/tasks') }} />
+  useEffect(() => {
+    // Check URL params for selected job
+    const id = searchParams.get('job')
+    if (id) {
+      const found = jobs.find(j => j.id === id)
+      if (found) { setSelectedJob(found); return }
+      // Fetch directly if not in loaded jobs
+      apiRequest<any>('/tasks/' + id).then(res => {
+        const j = res?.data || res
+        if (j?.id) setSelectedJob(j)
+      }).catch(e => { console.error(e); toast('Failed to check bookmark status', 'error'); })
+    }
+  }, [searchParams, jobs])
+
+  const toggleBookmark = async (id: string) => {
+    const isBookmarked = bookmarked.includes(id)
+    try {
+      if (isBookmarked) {
+        await apiRequest(`/users/ns/${id}`, { method: 'DELETE' })
+      } else {
+        await apiRequest(`/users/ns/${id}`, { method: 'POST' })
+      }
+      setBookmarked(prev => {
+        const next = isBookmarked ? prev.filter(x => x !== id) : [...prev, id]
+        localStorage.setItem('ogapay_bookmarked', JSON.stringify(next))
+        return next
+      })
+    } catch {
+      showToast('Failed to update bookmark', 'error')
+      setBookmarked(prev => {
+        const next = isBookmarked ? prev.filter(x => x !== id) : [...prev, id]
+        localStorage.setItem('ogapay_bookmarked', JSON.stringify(next))
+        return next
+      })
+    }
   }
+
+  const filtered = jobs
+    .filter(j => {
+      const q = search.toLowerCase()
+      if (q && !(j.title || '').toLowerCase().includes(q)
+        && !(j.description || '').toLowerCase().includes(q)
+        && !(j.creatorName || j.creator?.username || j.creator || '').toLowerCase().includes(q)) return false
+      if (showAvailableOnly && ((j.slots || 0) - (j.filled || 0) <= 0)) return false
+      if (showEligibleOnly && j.eligibility && !j.eligibility.isEligible) return false
+      return true
+    })
+    .sort((a: any, b: any) => {
+      if (sortBy === 'highest-reward') return (b.reward || 0) - (a.reward || 0)
+      if (sortBy === 'lowest-reward') return (a.reward || 0) - (b.reward || 0)
+      if (sortBy === 'newest') return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      if (sortBy === 'oldest') return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+      return 0
+    })
+
+  const totalPages = Math.ceil(filtered.length / perPage)
+  const paginated = filtered.slice((tasksPage - 1) * perPage, tasksPage * perPage)
+
+  useEffect(() => { setTasksPage(1) }, [search, sortBy, showAvailableOnly, showEligibleOnly])
+
+  // Sync filter state to URL
+  useEffect(() => {
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev)
+      if (filter !== 'All') next.set('category', filter); else next.delete('category')
+      if (search) next.set('search', search); else next.delete('search')
+      if (sortBy !== 'newest') next.set('sort', sortBy); else next.delete('sort')
+      return next
+    }, { replace: true })
+  }, [filter, search, sortBy, setSearchParams])
+
+  const fetchJobListings = async () => {
+    setJobListingsLoading(true)
+    try {
+      const res = await apiRequest<any>('/tasks?status=OPEN')
+      const d = Array.isArray(res) ? res : res?.data || res?.tasks || []
+      setJobListings(d)
+    } catch { showToast('Failed to load job listings', 'error') } finally { setJobListingsLoading(false) }
+  }
+
+  useEffect(() => {
+    if (filter === 'Jobs & Hiring') fetchJobListings()
+  }, [filter])
 
   return (
     <Layout>
       <style>{`
-        .page{max-width:100%!important;padding:0}
-        .jobs-section{width:100%;max-width:1280px;margin:0 auto}
-        .jobs-section .page-head{margin-bottom:1.25rem}
-        .jobs-section .page-head h1{font-family:Outfit;font-size:1.75rem;font-weight:900;margin:0;letter-spacing:-.02em}
-        .jobs-section .page-head p{color:var(--text2);font-size:.875rem;margin:.25rem 0 0;line-height:1.5}
-
-        /* ── Stats Row ── */
-        .jobs-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:.75rem;margin-bottom:1.5rem}
-        .jobs-stat{background:var(--card);border:1px solid var(--border);border-radius:.75rem;padding:1rem 1.125rem;text-align:center;transition:all .2s}
-        .jobs-stat:hover{box-shadow:var(--shadow-md);transform:translateY(-1px)}
-        .jobs-stat .stat-val{font-family:Outfit;font-size:1.35rem;font-weight:900;letter-spacing:-.02em;line-height:1.2}
-        .jobs-stat .stat-val.green{color:var(--green)}
-        .jobs-stat .stat-val.accent{color:#1F8CFF}
-        .jobs-stat .stat-val.gold{color:var(--gold)}
-        .jobs-stat .stat-lbl{font-size:.68rem;color:var(--text2);margin-top:.15rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
-
-        /* ── Filter Controls ── */
-        .filter-controls{display:flex;align-items:center;gap:.75rem;margin-bottom:1.75rem;flex-wrap:wrap}
-        .filter-toggle{display:flex;background:var(--bg2);border-radius:.625rem;padding:3px;border:1px solid var(--border);overflow-x:auto;flex-shrink:0}
-        .filter-tab{padding:.5rem 1rem;border:0;border-radius:.5rem;background:transparent;color:var(--text2);font-size:.8125rem;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap}
-        .filter-tab:hover{color:var(--text);background:var(--card)}
-        .filter-tab.active{background:var(--card);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.06)}
-        .filter-tab.active:after{content:'';display:block;height:2px;width:20px;background:#1F8CFF;border-radius:999px;margin:2px auto 0}
-        .search-wrap{flex:1;min-width:180px;position:relative}
-        .search-wrap input{width:100%;height:38px;padding:0 14px 0 38px;border:1.5px solid var(--border);border-radius:.625rem;background:var(--card);color:var(--text);font-size:.8125rem;outline:none;transition:border-color .2s}
-        .search-wrap input:focus{border-color:#1F8CFF}
-        .search-wrap input::placeholder{color:var(--text3)}
-        .search-wrap .search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:16px;pointer-events:none}
-
-        .btn-create{display:inline-flex;align-items:center;gap:.5rem;padding:.625rem 1.125rem;background:linear-gradient(135deg,#1F8CFF,#1F8CFF);color:#fff;border:0;border-radius:.625rem;font-size:.8125rem;font-weight:700;cursor:pointer;transition:all .2s;white-space:nowrap;box-shadow:0 4px 14px rgba(31,140,255,.25)}
-        .btn-create:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(31,140,255,.3)}
-
-        /* ── Jobs Grid ── */
-        .jobs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:1.25rem}
-
-        .job-card{background:var(--card);border:1px solid var(--border);border-radius:.875rem;overflow:hidden;transition:all .25s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;position:relative}
-        .job-card:hover{transform:translateY(-3px);box-shadow:0 8px 30px rgba(0,0,0,.08),0 0 40px rgba(31,140,255,.04);border-color:rgba(31,140,255,.2)}
-        [data-theme="dark"] .job-card:hover{border-color:rgba(167,139,250,.2);box-shadow:0 8px 30px rgba(0,0,0,.3),0 0 40px rgba(167,139,250,.04)}
-
-        /* Creator row */
-        .job-creator{display:flex;align-items:center;gap:.75rem;padding:.875rem 1rem .75rem;background:linear-gradient(135deg,var(--bg2),var(--card));border-bottom:1px solid var(--border);position:relative}
-        .job-creator:after{content:'';position:absolute;bottom:-1px;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#1F8CFF,transparent);opacity:.4}
-        .jc-avatar{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-size:.65rem;font-weight:800;color:#fff;flex-shrink:0;background:linear-gradient(135deg,#1F8CFF,#1F8CFF)}
-        .jc-info{flex:1;min-width:0}
-        .jc-name{font-size:.8125rem;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-        .jc-label{font-size:.625rem;color:var(--text3);text-transform:uppercase;letter-spacing:.04em}
-        .jc-bookmark{width:30px;height:30px;border-radius:.5rem;border:1px solid var(--border);background:var(--card);display:grid;place-items:center;color:var(--text3);cursor:pointer;transition:all .2s;flex-shrink:0;font-size:16px}
-        .jc-bookmark:hover{border-color:#1F8CFF;color:#1F8CFF}
-        .jc-bookmark.saved{background:#1F8CFF;color:#fff;border-color:#1F8CFF}
-
-        /* Meta row */
-        .job-meta{display:flex;align-items:center;gap:.5rem;padding:.5rem 1rem;border-bottom:1px solid var(--border);background:var(--bg2);font-size:.75rem;font-weight:600;color:var(--text2)}
-        .job-meta .cat-pill{display:inline-flex;align-items:center;gap:.25rem;padding:2px 8px;border-radius:999px;font-size:.625rem;font-weight:800;background:rgba(31,140,255,.08);color:#1F8CFF}
-        .job-meta .platform{display:flex;align-items:center;gap:.25rem;color:var(--text2)}
-
-        /* Description */
-        .job-desc-wrap{padding:.75rem 1rem;flex:1;display:flex;flex-direction:column}
-        .job-desc-wrap h3{margin:0 0 .35rem;font-family:Outfit;font-size:.9375rem;font-weight:800;line-height:1.3}
-        .job-desc{font-size:.8125rem;color:var(--text2);line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin:0}
-
-        /* Reward section */
-        .job-reward{position:relative;margin:.5rem 1rem .75rem;padding:.875rem;border-radius:.75rem;background:linear-gradient(135deg,rgba(22,163,74,.06),rgba(22,163,74,.03));border:1px solid rgba(22,163,74,.12);text-align:center;overflow:hidden;transition:all .2s}
-        .job-reward:before{content:'';position:absolute;top:0;left:-100%;right:0;height:2px;background:linear-gradient(90deg,transparent,rgba(22,163,74,.3),transparent);animation:rewardShimmer 4s ease-in-out infinite}
-        [data-theme="dark"] .job-reward{background:linear-gradient(135deg,rgba(74,222,128,.08),rgba(74,222,128,.04));border-color:rgba(74,222,128,.12)}
-        .job-reward .rw-primary{display:flex;align-items:baseline;justify-content:center;gap:.35rem}
-        .job-reward .rw-amount{font-family:Outfit;font-size:1.25rem;font-weight:900;color:var(--text);letter-spacing:-.02em}
-        .job-reward .rw-sym{font-size:.875rem;font-weight:700;color:var(--green)}
-        .job-reward .rw-usd{font-size:.8125rem;color:var(--text2);font-weight:600}
-        .job-reward .rw-secondary{display:flex;align-items:center;justify-content:center;gap:.35rem;margin-top:.1rem;font-size:.75rem;color:var(--text2);font-weight:600}
-        .job-reward .rw-label{font-size:.625rem;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;font-weight:700;margin-bottom:.15rem}
-
-        /* Badges */
-        .job-badges{display:flex;align-items:center;gap:.35rem;margin:0 1rem .625rem;flex-wrap:wrap}
-        .job-badge{display:inline-flex;align-items:center;gap:.15rem;padding:2px 8px;border-radius:999px;font-size:.5625rem;font-weight:800;text-transform:uppercase;letter-spacing:.03em}
-        .job-badge.featured{background:rgba(245,179,1,.1);color:var(--gold);border:1px solid rgba(245,179,1,.18)}
-        .job-badge.verified{background:rgba(22,163,74,.08);color:var(--green);border:1px solid rgba(22,163,74,.15)}
-        [data-theme="dark"] .job-badge.featured{background:rgba(251,191,36,.08);color:#fbbf24;border-color:rgba(251,191,36,.18)}
-        [data-theme="dark"] .job-badge.verified{background:rgba(52,211,153,.08);color:#34d399;border-color:rgba(52,211,153,.15)}
-
-        /* Progress */
-        .job-progress{margin:0 1rem .625rem}
-        .job-progress .pr-bar{height:5px;border-radius:999px;background:var(--bg2);overflow:hidden;border:1px solid var(--border)}
-        .job-progress .pr-fill{height:100%;border-radius:inherit;background:linear-gradient(90deg,#1F8CFF,#1F8CFF);transition:width .5s}
-        .job-progress .pr-stats{display:flex;justify-content:space-between;font-size:.625rem;color:var(--text3);margin-top:2px;font-weight:600}
-
-        /* Footer actions */
-        .job-foot{margin-top:auto;display:flex;align-items:center;gap:.5rem;padding:.75rem 1rem;border-top:1px solid var(--border);background:var(--bg2)}
-        .job-foot .btn{height:34px;font-size:.75rem;flex:1;border:1.5px solid var(--border);background:var(--card);color:var(--text);border-radius:.5rem;padding:0 .75rem;display:inline-flex;align-items:center;justify-content:center;gap:.35rem;font-weight:700;transition:all .15s;cursor:pointer}
-        .job-foot .btn:hover{background:var(--bg2);border-color:var(--text2)}
-        .job-foot .btn.primary{background:#1F8CFF;color:#fff;border-color:#1F8CFF}
-        .job-foot .btn.primary:hover{opacity:.9}
-
-        /* Empty state */
-        .empty-state{text-align:center;padding:4rem 1rem;color:var(--text3)}
-        .empty-state i{font-size:2.25rem;display:block;margin-bottom:.75rem}
-        .empty-state h3{font-family:Outfit;font-weight:800;margin:0 0 .25rem;color:var(--text);font-size:1.125rem}
-        .empty-state p{font-size:.875rem;margin:0;color:var(--text2);line-height:1.5}
-
-        @keyframes rewardShimmer{0%{left:-100%}50%{left:100%}100%{left:100%}}
-
-        @media(max-width:1024px){.jobs-grid{grid-template-columns:repeat(2,1fr)}}
-        @media(max-width:768px){
-          .jobs-grid{grid-template-columns:1fr}
-          .jobs-stats{grid-template-columns:repeat(2,1fr)}
-          .filter-controls{flex-direction:column;align-items:stretch}
-          .filter-toggle{overflow-x:auto;-webkit-overflow-scrolling:touch}
-          .search-wrap{min-width:0}
-          .btn-create{width:100%;justify-content:center}
-          .jobs-section .page-head h1{font-size:1.375rem}
-          .jobs-stat .stat-val{font-size:1.125rem}
-          .job-reward .rw-amount{font-size:1.125rem}
-        }
-      `}</style>
-
-      <div className="jobs-section">
-        {/* Page Header */}
-        <div className="page-head">
-          <div>
-            <h1>Jobs</h1>
-            <p>Browse available microtasks and earn crypto rewards. Complete tasks and get paid instantly.</p>
-          </div>
-          <button className="btn-create" onClick={() => navigate('/create')}>
-            <i className="ti ti-plus" />
-            Create Job
-          </button>
+.task-card-hover{transition:box-shadow .25s ease,transform .25s ease,border-color .25s ease;display:flex;flex-direction:column;height:auto}
+.task-card-hover:hover{box-shadow:0 0 0 1px rgba(var(--accent-rgb),0.5),0 0 36px 6px rgba(var(--accent-rgb),0.18),0 14px 28px -8px rgba(var(--accent-rgb),0.26);transform:translateY(-4px);border-color:rgba(var(--accent-rgb),0.5)!important}
+[data-theme="dark"] .task-card-hover:hover{box-shadow:0 0 0 1px rgba(255,255,255,0.1),0 6px 28px rgba(0,0,0,0.35)!important;border-color:rgba(255,255,255,0.15)!important}
+.task-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:20px;align-items:stretch}
+@media(max-width:767px){.task-grid{grid-template-columns:1fr}}
+.mbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;gap:6px;padding:0}
+.mbar-l{display:flex;align-items:center;gap:6px;overflow:hidden;min-width:0}
+.mbar-r{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.mbar-lbl{font-size:12px;color:var(--text3);font-weight:600;white-space:nowrap}
+.mbar-sel{font-size:13px;font-weight:700;color:var(--text);border:none;background:transparent;font-family:inherit;cursor:pointer;outline:none;padding:0;max-width:110px;overflow:hidden;text-overflow:ellipsis;-webkit-appearance:none;appearance:none}
+.mbar-sel::-ms-expand{display:none}
+.mbar-chev{color:var(--text3);font-size:10px;margin-left:-2px}
+@media(max-width:640px){.dsort{display:none!important}.mbar{display:flex!important}}
+@media(min-width:641px){.mbar{display:none!important}}
+@keyframes ngn-sweep{0%{background-position:-200% center}to{background-position:200% center}}
+.ngn-shimmer{background:linear-gradient(90deg,var(--accent) 0%,var(--accent) 35%,var(--accent) 50%,var(--accent) 65%,var(--accent) 100%);background-size:200% auto;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:ngn-sweep 2.2s linear infinite}
+[data-theme="dark"] .task-card-hover{background:#141414!important;border-color:var(--border, #2a2a2a)!important}
+[data-theme="dark"] .task-card-hover div[style*="background: var(--bg)"]{background:#141416!important;border-color:rgba(255,255,255,0.05)!important}
+[data-theme="dark"] .task-card-hover p[style*="color: var(--text2)"]{color:rgba(255,255,255,0.7)!important}
+[data-theme="dark"] .ngn-shimmer{color:#ffffff!important;-webkit-text-fill-color:#ffffff!important;background:none!important;animation:none!important}
+[data-theme="dark"] .listed-by-header{background:transparent!important}
+[data-theme="dark"] .task-desc-box{background:transparent!important;border:none!important;border-top:1px solid rgba(255,255,255,0.06)!important;border-radius:0!important;padding:12px 16px!important}
+[data-theme="dark"] .task-reward-box{background:#1e1e1e!important;border-color:rgba(255,255,255,0.08)!important}
+[data-theme="dark"] .tasks-bg-overlay{background:transparent!important}
+`}</style>
+      <div className="tasks-bg-overlay" style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none',
+        background: 'radial-gradient(circle at 20% 10%, rgba(var(--accent-rgb),0.10), transparent 50%),radial-gradient(circle at 80% 30%, rgba(var(--accent-rgb),0.07), transparent 50%),radial-gradient(circle at 50% 90%, rgba(74,110,245,0.06), transparent 50%)',
+      }} />
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 0 40px', position: 'relative' as const, zIndex: 1 }}>
+        {/* Header */}
+        <div style={{ marginBottom: 28 }}>
+          <h1 style={{ fontFamily: 'Outfit', fontSize: 32, fontWeight: 900, margin: '0 0 4px', color: 'var(--text)' }}>All Jobs</h1>
+          <p style={{ color: 'var(--text2)', fontSize: 14, margin: 0 }}>Social and custom jobs in one feed.</p>
         </div>
 
-        {/* Stats Row */}
-        <div className="jobs-stats">
-          <div className="jobs-stat">
-            <div className="stat-val green">${totalRewards.toFixed(0)}+</div>
-            <div className="stat-lbl">Total Rewards</div>
-          </div>
-          <div className="jobs-stat">
-            <div className="stat-val accent">{sampleJobs.length}</div>
-            <div className="stat-lbl">Active Jobs</div>
-          </div>
-          <div className="jobs-stat">
-            <div className="stat-val gold">{totalSlots}</div>
-            <div className="stat-lbl">Total Slots</div>
-          </div>
-          <div className="jobs-stat">
-            <div className="stat-val" style={{ color: 'var(--green)' }}>{totalFilled}</div>
-            <div className="stat-lbl">Filled</div>
+        {/* Sort + Available toggle */}
+        {/* Search bar */}
+        <div style={{ marginBottom: 20 }}>
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 8,
+            background: 'var(--bg)', border: '1px solid var(--border)',
+            borderRadius: 12, padding: '0 14px',
+          }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" strokeWidth="2" style={{ flexShrink: 0 }}>
+              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input type="text" placeholder="Search tasks by title, description or creator..."
+              value={search} onChange={e => { setSearch(e.target.value); setTasksPage(1); }}
+              style={{
+                flex: 1, height: 44, border: 'none', background: 'transparent',
+                fontSize: 13, color: 'var(--text)', outline: 'none',
+                fontFamily: 'inherit', width: '100%',
+              }}
+            />
+            {search && (
+              <button onClick={() => { setSearch(''); setTasksPage(1); }}
+                style={{ background: 'none', border: 'none', color: 'var(--text3)', cursor: 'pointer', padding: 4, flexShrink: 0 }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </button>
+            )}
           </div>
         </div>
 
-        {/* Filter Controls */}
-        <div className="filter-controls">
-          <div className="filter-toggle">
-            {jobFilters.map(f => (
-              <button key={f} className={`filter-tab ${filter === f ? 'active' : ''}`} onClick={() => setFilter(f)}>
-                {f}
+        <div className="dsort" style={{ display: 'flex', alignItems: 'center', gap: 20, marginBottom: 28, flexWrap: 'wrap', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Sort</span>
+            {[['Highest Reward', 'highest-reward'], ['Newest', 'newest']].map(([label, val]) => (
+              <button key={val} onClick={() => setSortBy(val)}
+                style={{ padding: '8px 18px', borderRadius: 8, border: sortBy === val ? 'none' : '1px solid var(--border)', background: sortBy === val ? OGAPAY_BLUE : 'transparent', color: sortBy === val ? '#fff' : 'var(--text)', fontWeight: 700, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', transition: 'all .15s' }}>
+                {label}
               </button>
             ))}
           </div>
-          <div className="search-wrap">
-            <i className="ti ti-search search-icon" />
-            <input type="text" placeholder="Search jobs..." value={search} onChange={e => setSearch(e.target.value)} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Show</span>
+            <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>Available for me</span>
+            {/* Toggle switch */}
+            <div onClick={() => setShowAvailableOnly(v => !v)}
+              style={{ width: 44, height: 24, borderRadius: 999, background: showAvailableOnly ? OGAPAY_BLUE : 'var(--border2)', cursor: 'pointer', position: 'relative', transition: 'background .2s', flexShrink: 0 }}>
+              <div style={{ position: 'absolute', top: 3, left: showAvailableOnly ? 23 : 3, width: 18, height: 18, borderRadius: '50%', background: '#fff', transition: 'left .2s', boxShadow: '0 1px 4px rgba(0,0,0,0.18)' }} />
+            </div>
           </div>
         </div>
 
-        {/* Jobs Grid */}
-        {isLoading ? (
-          <SkeletonGrid count={6} />
-        ) : error ? (
-          <EmptyState icon="alert-circle" title="Failed to load tasks" description={error?.message || "Something went wrong"} />
-        ) : filtered.length === 0 ? (
-          <EmptyState icon="search-off" title="No jobs found" description="Try adjusting your search or filter to find what you are looking for." />
-        ) : (
-          <div className="jobs-grid">
-            {paginatedJobs.map(job => (
-              <div className="job-card" key={job.id} onClick={() => navigate(`/tasks/${job.id}`)} style={{cursor:'pointer'}}>
-                {/* Creator */}
-                <div className="job-creator">
-                  <div className="jc-avatar">{formatAddress(job.creator)}</div>
-                  <div className="jc-info">
-                    <div className="jc-name">{job.creator}</div>
-                    <div className="jc-label">{job.creatorLabel}</div>
-                  </div>
+        {/* Mobile sort/filter bar - compact single row */}
+        <div className="mbar">
+          <div className="mbar-l">
+            <span className="mbar-lbl">Sort:</span>
+            <select className="mbar-sel" value={sortBy} onChange={e => setSortBy(e.target.value)}>
+              <option value="newest">Newest</option>
+              <option value="highest-reward">Highest Reward</option>
+              <option value="lowest-reward">Lowest Reward</option>
+              <option value="oldest">Oldest</option>
+            </select>
+            <span className="mbar-lbl">Filter:</span>
+            <select className="mbar-sel" value={filter} onChange={e => setFilter(e.target.value)}>
+              {allCategories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+            </select>
+          </div>
+          <div className="mbar-r">
+            <span className="mbar-lbl">Available</span>
+            <div onClick={() => setShowAvailableOnly(v => !v)}
+              style={{ width: 36, height: 20, borderRadius: 999, background: showAvailableOnly ? OGAPAY_BLUE : 'var(--border2)', cursor: 'pointer', position: 'relative', transition: 'background .2s', flexShrink: 0 }}>
+              <div style={{ position: 'absolute', top: 2, left: showAvailableOnly ? 18 : 2, width: 16, height: 16, borderRadius: '50%', background: '#fff', transition: 'left .2s', boxShadow: '0 1px 3px rgba(0,0,0,0.18)' }} />
+            </div>
+          </div>
+        </div>
+
+        {/* Regular task grid */}
+        {filter !== 'Jobs & Hiring' && (
+          loading ? (
+            <SkeletonPage />
+          ) : filtered.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--text2)' }}>
+              <i className="ti ti-search-off" style={{ fontSize: 36, color: 'var(--text3)', marginBottom: 12, display: 'block' }} />
+              <h3 style={{ fontFamily: 'Outfit', fontWeight: 800, margin: '0 0 4px' }}>No tasks found</h3>
+              <p style={{ fontSize: 13, margin: 0 }}>Try adjusting your search or filter</p>
+            </div>
+          ) : (
+            <>
+              <div className="task-grid">
+                {paginated.map(job => (
+                  <TaskCard
+                    key={job.id}
+                    job={job}
+                    onToggleBookmark={toggleBookmark}
+                    bookmarked={bookmarked.includes(job.id)}
+                    applied={mySubmissions.includes(job.id)}
+                  />
+                ))}
+              </div>
+
+              {/* Pagination bar */}
+              {totalPages > 1 && (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginTop: 36 }}>
+                  {/* Prev */}
                   <button
-                    className={`jc-bookmark ${bookmarked.includes(job.id) ? 'saved' : ''}`}
-                    onClick={() => toggleBookmark(job.id)}
-                    aria-label={bookmarked.includes(job.id) ? 'Remove bookmark' : 'Bookmark job'}
-                  >
-                    <i className={`ti ${bookmarked.includes(job.id) ? 'ti-bookmark-filled' : 'ti-bookmark'}`} />
+                    onClick={() => { setTasksPage(p => Math.max(1, p - 1)); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
+                    disabled={tasksPage === 1}
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 6, height: 40, padding: '0 18px', borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--card)', color: tasksPage === 1 ? 'var(--text3)' : 'var(--text)', fontWeight: 700, fontSize: 13, cursor: tasksPage === 1 ? 'not-allowed' : 'pointer', opacity: tasksPage === 1 ? 0.45 : 1, transition: 'all .15s', fontFamily: 'inherit' }}>
+                    <i className="ti ti-chevron-left" style={{ fontSize: 15 }} /> Previous
+                  </button>
+
+                  {/* Page numbers */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                    {Array.from({ length: totalPages }, (_, i) => i + 1)
+                      .filter(p => p === 1 || p === totalPages || Math.abs(p - tasksPage) <= 1)
+                      .reduce<(number | '…')[]>((acc, p, idx, arr) => {
+                        if (idx > 0 && (p as number) - (arr[idx - 1] as number) > 1) acc.push('…')
+                        acc.push(p)
+                        return acc
+                      }, [])
+                      .map((p, idx) =>
+                        p === '…' ? (
+                          <span key={`ellipsis-${idx}`} style={{ width: 36, textAlign: 'center', color: 'var(--text3)', fontSize: 13 }}>…</span>
+                        ) : (
+                          <button key={p}
+                            onClick={() => { setTasksPage(p as number); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
+                            style={{ width: 36, height: 36, borderRadius: 8, border: tasksPage === p ? 'none' : '1.5px solid var(--border)', background: tasksPage === p ? OGAPAY_BLUE : 'var(--card)', color: tasksPage === p ? '#fff' : 'var(--text)', fontWeight: 700, fontSize: 13, cursor: 'pointer', transition: 'all .15s', fontFamily: 'inherit' }}>
+                            {p}
+                          </button>
+                        )
+                      )}
+                  </div>
+
+                  {/* Next */}
+                  <button
+                    onClick={() => { setTasksPage(p => Math.min(totalPages, p + 1)); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
+                    disabled={tasksPage === totalPages}
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 6, height: 40, padding: '0 18px', borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--card)', color: tasksPage === totalPages ? 'var(--text3)' : 'var(--text)', fontWeight: 700, fontSize: 13, cursor: tasksPage === totalPages ? 'not-allowed' : 'pointer', opacity: tasksPage === totalPages ? 0.45 : 1, transition: 'all .15s', fontFamily: 'inherit' }}>
+                    Next <i className="ti ti-chevron-right" style={{ fontSize: 15 }} />
                   </button>
                 </div>
+              )}
 
-                {/* Meta */}
-                <div className="job-meta">
-                  <span className="cat-pill">
-                    <i className="ti ti-tag" />
-                    {job.category}
-                  </span>
-                  <span className="platform">
-                    <i className="ti ti-device-laptop" />
-                    {job.platform}
-                  </span>
-                  <span className="platform" style={{ marginLeft: 'auto' }}>
-                    <i className="ti ti-clock" />
-                    {job.timeEstimate}
-                  </span>
-                </div>
+              {/* Page info */}
+              {totalPages > 1 && (
+                <p style={{ textAlign: 'center', marginTop: 12, fontSize: 12, color: 'var(--text3)', fontWeight: 600 }}>
+                  Showing {(tasksPage - 1) * perPage + 1}–{Math.min(tasksPage * perPage, filtered.length)} of {filtered.length} tasks
+                </p>
+              )}
+            </>
+          )
+        )}
 
-                {/* Description */}
-                <div className="job-desc-wrap">
-                  <h3>{job.title}</h3>
-                  <p className="job-desc">{job.description}</p>
-                </div>
-
-                {/* Reward */}
-                <div className="job-reward">
-                  <div className="rw-label">Reward</div>
-                  <div className="rw-primary">
-                    <span className="rw-sym">◎</span>
-                    <span className="rw-amount">{job.reward}</span>
-                    <span className="rw-usd">(${job.usdValue.toFixed(2)})</span>
-                  </div>
-                  <div className="rw-secondary">
-                    <span>{job.rewardCurrency}</span>
-                    <span>·</span>
-                    <span>{job.slots - job.filled} slots left</span>
-                  </div>
-                </div>
-
-                {/* Badges */}
-                <div className="job-badges">
-                  {job.featured && <span className="job-badge featured"><i className="ti ti-star" /> Featured</span>}
-                  {job.verificationRequired && <span className="job-badge verified"><i className="ti ti-shield-check" /> Verified</span>}
-                  <span className="job-badge" style={{ background: `${job.color}12`, color: job.color, border: `1px solid ${job.color}25` }}>
-                    <i className="ti ti-speedometer" />
-                    {job.difficulty}
-                  </span>
-                  {job.rankRequired !== 'None' && (
-                    <span className="job-badge" style={{ background: 'rgba(31,140,255,.08)', color: '#1F8CFF', border: '1px solid rgba(31,140,255,.15)' }}>
-                      <i className="ti ti-medal" />
-                      {job.rankRequired}
-                    </span>
-                  )}
-                </div>
-
-                {/* Progress */}
-                <div className="job-progress">
-                  <div className="pr-bar">
-                    <div className="pr-fill" style={{ width: `${(job.filled / job.slots) * 100}%` }} />
-                  </div>
-                  <div className="pr-stats">
-                    <span>{job.filled} filled</span>
-                    <span>{job.slots} total</span>
-                  </div>
-                </div>
-
-                {/* Actions */}
-                <div className="job-foot">
-                  <button className="btn"><i className="ti ti-eye" /> View</button>
-                  <button className="btn primary"><i className="ti ti-send" /> Apply Now</button>
-                </div>
-              </div>
-            ))}
-          <Pagination page={page} totalPages={totalPages} firstItem={firstItem} lastItem={lastItem} totalItems={filtered.length} onPageChange={setPage} />
-          </div>
+        {/* Job detail modal */}
+        {selectedJob && (
+          <JobDetailModal
+            job={selectedJob}
+            onClose={() => setSelectedJob(null)}
+            onApply={(jid) => {
+              setSelectedJob(null)
+              navigate('/tasks/' + jid)
+            }}
+          />
         )}
       </div>
     </Layout>
