@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "outputDirectory": "dist",
-  "buildCommand": "npm install && npm run build",
-  "installCommand": "npm install",
+  "outputDirectory": "app/dist",
+  "buildCommand": "cd app && npm install && npm run build",
+  "installCommand": "cd app && npm install",
   "rewrites": [
     { "source": "/assets/(.*)", "destination": "/assets/$1" },
     { "source": "/(.*)\\.html", "destination": "/$1.html" },
