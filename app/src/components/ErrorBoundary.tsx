@@ -1,13 +1,13 @@
-﻿import React from 'react'
+import React from 'react'
 import { Link } from 'react-router-dom'
 
 interface Props { children: React.ReactNode }
-interface State { hasError: boolean }
+interface State { hasError: boolean; error: Error | null }
 
 export default class ErrorBoundary extends React.Component<Props, State> {
-  state: State = { hasError: false }
+  state: State = { hasError: false, error: null }
 
-  static getDerivedStateFromError() { return { hasError: true } }
+  static getDerivedStateFromError(error: Error) { return { hasError: true, error } }
   componentDidCatch(error: Error, info: React.ErrorInfo) { console.error('[ErrorBoundary]', error, info.componentStack) }
 
   render() {
@@ -26,9 +26,12 @@ export default class ErrorBoundary extends React.Component<Props, State> {
             </svg>
           </div>
           <h2 style={{ margin: '0 0 8px', fontSize: 20, fontWeight: 800 }}>Something went wrong</h2>
-          <p style={{ margin: '0 0 24px', fontSize: 14, color: 'var(--text2)', lineHeight: 1.5 }}>
+          <p style={{ margin: '0 0 8px', fontSize: 14, color: 'var(--text2)', lineHeight: 1.5 }}>
             An unexpected error occurred. Please try refreshing the page.
           </p>
+          <pre style={{ fontSize: 11, color: '#dc2626', maxWidth: '80%', overflow: 'auto', padding: 12, background: 'rgba(220,38,38,0.06)', borderRadius: 8, margin: '0 0 24px' }}>
+            {this.state.error?.message || 'Unknown error'}
+          </pre>
           <div style={{ display: 'flex', gap: 10 }}>
             <button onClick={() => window.location.reload()} style={{
               padding: '12px 24px', borderRadius: 10, border: 'none', background: 'var(--accent)',
