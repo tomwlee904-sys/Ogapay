@@ -6,6 +6,7 @@ import { API_BASE, apiRequest } from "../lib/api";
 import { formatTaskReward, DEFAULT_RATES } from "../lib/currency";
 import { useCurrency } from "../context/CurrencyContext";
 import { useToast } from "../components/Toast";
+import { useApi } from "../lib/useApi";
 import TaskCard from "../components/TaskCard";
 import Navbar from "../components/Navbar";
 import Drawer from "../components/Drawer";
@@ -98,6 +99,7 @@ function StatsSkeleton() {
 
 /* ─── HERO STATS CARD ──────────────────────────────────────────────────────────── */
 function HeroStatsCard({ isMobile = false }: { isMobile?: boolean }) {
+  const { toast } = useToast();
   const [stats, setStats] = useState<any>(null);
   const [pulse, setPulse] = useState(false);
 
@@ -313,6 +315,7 @@ function Hero({ openAuth, navigate, isAuthed }: { openAuth: (mode?: string) => v
 
 /* ─── FEATURED JOBS ─────────────────────────────────────────────────────────── */
 function FeaturedJobs() {
+    const { toast } = useToast();
     const [active, setActive] = useState(0);
     const [jobs, setJobs] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -424,6 +427,7 @@ function FeaturedJobs() {
 
 /* ─── STORE SECTION ─────────────────────────────────────────────────────────── */
 function StoreSection() {
+  const { toast } = useToast();
   const isMobile = useIsMobile();
   const { rates } = useCurrency();
   const [products, setProducts] = useState<any[]>([]);
