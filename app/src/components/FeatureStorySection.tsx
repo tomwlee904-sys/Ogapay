@@ -1,52 +1,54 @@
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 
+const storyImg = (file: string) => `/assets/story/${file}?v=20260719-real-story-assets`;
+
 const features = [
   {
     title: "One Platform",
     subtitle: "OgaPay brings together workers, task owners, creators, and communities in one marketplace. From simple social tasks to full hiring campaigns, everyone gets access to the same earning and growth opportunities.",
     textFirst: true,
-    img: "/assets/story/005_1000488517.png",
+    img: storyImg("005_1000488517.png"),
   },
   {
     title: "Freedom & Flexibility",
     subtitle: "Pick tasks that fit your time, skill, and goals. Complete work, submit proof, and get paid into your OgaPay wallet without fixed hours, gatekeepers, or complicated setup.",
     textFirst: false,
-    img: "/assets/story/000_1000488580.png",
+    img: storyImg("000_1000488580.png"),
   },
   {
     title: "Hire Workers",
     subtitle: "Post tasks, set your budget, and get results from real people fast. Whether it's social engagement, poster jobs, research, community growth, or testing, OgaPay helps you hire and pay only for approved work.",
     textFirst: true,
-    img: "/assets/story/002_1000488538.png",
+    img: storyImg("002_1000488538.png"),
   },
   {
     title: "Communities",
     subtitle: "Create trusted groups, route paid tasks to selected members, onboard ambassadors, and reward participation at scale. OgaPay communities help you grow, organize, and earn together.",
     textFirst: false,
-    img: "/assets/story/001_1000488545.png",
+    img: storyImg("001_1000488545.png"),
   },
   {
     title: "AI-Powered",
     subtitle: "OgaPay includes built-in AI assistance for task creation, task completion, guidance, summaries, and workflow support. It helps task owners move faster and helps workers complete jobs with better accuracy.",
     textFirst: true,
-    img: "/assets/story/003_1000488531.svg",
+    img: storyImg("003_1000488531.svg"),
   },
   {
     title: "Secure Escrow",
     subtitle: "Funds can be secured before work starts and released after approved delivery, helping protect both task owners and workers. OgaPay's escrow flow makes payments clearer, safer, and easier to trust.",
     textFirst: false,
-    img: "/assets/story/004_1000488525.png",
+    img: storyImg("004_1000488525.png"),
   },
 ];
 
 const darkImgs: Record<string, string> = {
-  "One Platform": "/assets/story/005_1000488517_dark.png",
-  "Freedom & Flexibility": "/assets/story/000_1000488580_dark.png",
-  "Hire Workers": "/assets/story/002_1000488538_dark.png",
-  "AI-Powered": "/assets/story/003_1000488531_dark.png",
-  "Communities": "/assets/story/001_1000488545_dark.png",
-  "Secure Escrow": "/assets/story/004_1000488525_dark.png",
+  "One Platform": storyImg("005_1000488517_dark.png"),
+  "Freedom & Flexibility": storyImg("000_1000488580_dark.png"),
+  "Hire Workers": storyImg("002_1000488538_dark.png"),
+  "AI-Powered": storyImg("003_1000488531_dark.png"),
+  "Communities": storyImg("001_1000488545_dark.png"),
+  "Secure Escrow": storyImg("004_1000488525_dark.png"),
 };
 
 function StoryCard({ feature, index }: { feature: typeof features[0]; index: number }) {
