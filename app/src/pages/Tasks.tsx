@@ -396,6 +396,38 @@ function JobDetailModal({ job, onClose, onApply }: { job: any; onClose: () => vo
   )
 }
 
+// ─── Bootstrap fetchTasks from cache ──────────────────────────────
+const tasksCacheMap = new Map<string, { data: any[]; timestamp: number }>()
+const CACHE_TTL = 30_000
+const FOCUS_STALE_AGE = 5_000
+
+export function invalidateTasksCache() {
+  tasksCacheMap.clear()
+}
+
+async function fetchTasks(category?: string) {
+  const cacheKey = (category || 'all').toLowerCase()
+  const now = Date.now()
+  const cached = tasksCacheMap.get(cacheKey)
+  if (cached && cached.timestamp + CACHE_TTL > now) return cached.data
+
+  const url =
+    category && !['all', 'trending', 'new'].includes(category.toLowerCase())
+      ? '/tasks?category=' + encodeURIComponent(category.toUpperCase())
+      : '/tasks'
+
+  try {
+    const data = await apiRequest<any>(url, { auth: false })
+    const list = Array.isArray(data)
+      ? data
+      : data?.data || data?.tasks || data?.jobs || []
+    tasksCacheMap.set(cacheKey, { data: list, timestamp: now })
+    return list
+  } catch {
+    return []
+  }
+}
+
 // ─── Tasks data with SWR ────────────────────────────────────────
 function useTasksData(category?: string) {
   const url = category && !['all', 'trending', 'new'].includes((category || '').toLowerCase())
@@ -778,7 +810,7 @@ export default function Tasks() {
       apiRequest<any>('/tasks/' + id).then(res => {
         const j = res?.data || res
         if (j?.id) setSelectedJob(j)
-      }).catch(e => { console.error(e); toast('Failed to check bookmark status', 'error'); })
+      }).catch(e => { console.error(e); showToast('Failed to load task details', 'error'); })
     }
   }, [searchParams, jobs])
 
