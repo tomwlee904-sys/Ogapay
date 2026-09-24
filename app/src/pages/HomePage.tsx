@@ -1,1134 +1,498 @@
-﻿import { useState, useEffect, useRef } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { injectSkeletonStyles } from "../components/SkeletonLoader";
-import { API_BASE, apiRequest } from "../lib/api";
-import { formatTaskReward, DEFAULT_RATES } from "../lib/currency";
-import { useCurrency } from "../context/CurrencyContext";
-import { useToast } from "../components/Toast";
+import { API_BASE } from "../lib/api";
 import { useApi } from "../lib/useApi";
 import TaskCard from "../components/TaskCard";
 import Navbar from "../components/Navbar";
 import Drawer from "../components/Drawer";
 import Footer from "../components/Footer";
-import FeatureStorySection from "../components/FeatureStorySection";
-
-import WaveBackground from "../components/WaveBackground";
 import BottomNav from "../components/BottomNav";
+import { Logo } from "../components/Logo";
+import EcosystemStory from "../components/home/EcosystemStory";
 
 import "../styles/homepage.css";
+import "../styles/home-v2.css";
 
-/* ─── TABLER ICON ──────────────────────────────────────────────────────────── */
-const I = ({ n, s = 16, c = "currentColor", style }: { n: any; s?: number; c?: string; style?: any }) => (
-  <i className={`ti ti-${n}`} style={{ fontSize: s, color: c, lineHeight: 1, flexShrink: 0 }} />
-);
+/* ─── helpers ──────────────────────────────────────────────────────────────── */
 
-/* ─── LOGO MARK ────────────────────────────────────────────────────────────── */
-const Logo = ({ size = 34, color }: { size?: number; color?: string }) => (
-  <div style={{ width: size, height: size, borderRadius: 9, overflow: "hidden", flexShrink: 0, color: color || 'var(--text)' }}>
-    <svg width={size} height={size} viewBox="0 0 1440 1440" fill="none" style={{ display: "block" }}>
-      <rect x="170" y="270" width="320" height="250" rx="48" fill="currentColor"/>
-      <rect x="585" y="270" width="320" height="250" rx="48" fill="currentColor"/>
-      <path d="M1000 270 H1190 C1255 270 1300 320 1300 390 C1300 460 1255 520 1190 520 H1000 V270 Z" fill="currentColor"/>
-      <rect x="170" y="585" width="320" height="250" fill="currentColor"/>
-      <rect x="585" y="585" width="320" height="250" fill="currentColor"/>
-      <path d="M1000 585 H1190 C1255 585 1300 635 1300 705 C1300 775 1255 835 1190 835 H1000 V585 Z" fill="currentColor"/>
-      <rect x="170" y="900" width="320" height="250" rx="48" fill="currentColor"/>
-      <rect x="585" y="900" width="320" height="250" rx="48" fill="currentColor"/>
-    </svg>
-  </div>
-);
+// Public milestones only show once they are big enough to be worth showing.
+const MIN_PUBLIC_MILESTONE = 100;
 
-/* ─── THEME HOOK ───────────────────────────────────────────────────────────── */
-function useTheme() {
-  const [theme, setTheme] = useState(() => {
-    try { return localStorage.getItem("ogapay-theme") || "light"; } catch { return "light"; }
-  });
+const naira = (n: number) => {
+  if (n >= 1e9) return `₦${(n / 1e9).toFixed(1).replace(/\.0$/, "")}B`;
+  if (n >= 1e6) return `₦${(n / 1e6).toFixed(1).replace(/\.0$/, "")}M`;
+  if (n >= 1e4) return `₦${Math.round(n / 1e3)}K`;
+  return `₦${Math.round(n).toLocaleString("en-NG")}`;
+};
+const compact = (n: number) => {
+  if (n >= 1e6) return `${(n / 1e6).toFixed(1).replace(/\.0$/, "")}M+`;
+  if (n >= 1e3) return `${Math.floor(n / 1e3)}K+`;
+  return n.toLocaleString("en-US");
+};
+const reward = (amount: number, currency?: string) =>
+  currency && currency !== "NGN" ? `${currency === "SOL" ? "" : "$"}${amount.toLocaleString("en-US")}${currency === "SOL" ? " SOL" : ""}` : `₦${Math.round(amount).toLocaleString("en-NG")}`;
+const ago = (d?: string) => {
+  if (!d) return "";
+  const s = Math.max(1, Math.floor((Date.now() - new Date(d).getTime()) / 1000));
+  if (s < 3600) return `${Math.max(1, Math.floor(s / 60))}m ago`;
+  if (s < 86400) return `${Math.floor(s / 3600)}h ago`;
+  return `${Math.floor(s / 86400)}d ago`;
+};
+const listOf = (res: any): any[] => (Array.isArray(res) ? res : res?.data?.tasks || res?.data || res?.tasks || []);
+
+function useCountUp(target: number | null, ms = 1400) {
+  const [v, setV] = useState(0);
   useEffect(() => {
-    document.documentElement.setAttribute("data-theme", theme);
-    try { localStorage.setItem("ogapay-theme", theme); } catch (e: any) { console.error(e) }
-  }, [theme]);
-  return [theme, () => setTheme(t => t === "light" ? "dark" : "light")] as const;
-}
-
-/* ─── COUNT-UP HOOK ──────────────────────────────────────────────────────────── */
-function useCountUp(target: number, duration = 2000) {
-  const [count, setCount] = useState(0);
-  useEffect(() => {
-    if (!target && target !== 0) return;
-    let start = 0;
-    const increment = target / (duration / 16);
-    const timer = setInterval(() => {
-      start += increment;
-      if (start >= target) {
-        setCount(target);
-        clearInterval(timer);
-      } else {
-        setCount(Math.floor(start));
-      }
-    }, 16);
-    return () => clearInterval(timer);
-  }, [target, duration]);
-  return count;
-}
-
-/* ─── IS MOBILE HOOK ──────────────────────────────────────────────────────────── */
-function useIsMobile(breakpoint = 768) {
-  const [isMobile, setIsMobile] = useState(() => typeof window !== "undefined" ? window.innerWidth <= breakpoint : false);
-  useEffect(() => {
-    const onResize = () => setIsMobile(window.innerWidth <= breakpoint);
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
-  }, [breakpoint]);
-  return isMobile;
-}
-
-/* ─── STATS SKELETON ──────────────────────────────────────────────────────────── */
-function StatsSkeleton() {
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-      {[1,2,3].map(i => (
-        <div key={i}>
-          <div className="sk" style={{ height: 32, width: 112, borderRadius: 8, marginBottom: 2 }} />
-          <div className="sk" style={{ height: 12, width: 80, borderRadius: 4 }} />
-        </div>
-      ))}
-    </div>
-  );
-}
-
-/* ─── HERO STATS CARD ──────────────────────────────────────────────────────────── */
-function HeroStatsCard({ isMobile = false }: { isMobile?: boolean }) {
-  const { toast } = useToast();
-  const [stats, setStats] = useState<any>(null);
-  const [pulse, setPulse] = useState(false);
-
-  const fetchStats = async () => {
-    try {
-      const res = await fetch(`${API_BASE}/stats/live`);
-      const data = await res.json();
-      if (data && typeof data === 'object') {
-        setStats(data);
-        setPulse(true);
-        setTimeout(() => setPulse(false), 1000);
-        return;
-      }
-    } catch (e: any) { console.error(e); toast('Failed to load stats', 'error'); }
-    setStats({ activeJobs: 0, rewardsDistributed24h: 0, tasksCompleted24h: 0, totalUsers: 0, totalPaid: 0 });
-  };
-
-  useEffect(() => {
-    fetchStats();
-    const interval = setInterval(fetchStats, 30000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const raw = {
-    activeJobs: Math.max(stats?.activeJobs || 0, 47),
-    rewardsDistributed: Math.max(stats?.rewardsDistributed24h || 0, 125000),
-    tasksCompleted: Math.max(stats?.tasksCompleted24h || 0, 38),
-    totalUsers: Math.max(stats?.totalUsers || 0, 1200),
-    totalPaid: Math.max(stats?.totalPaid || 0, 2500000),
-    payChange: -6.04,
-  };
-  const displayStats = {
-    activeJobs: useCountUp(raw.activeJobs),
-    rewardsDistributed: useCountUp(raw.rewardsDistributed),
-    tasksCompleted: useCountUp(raw.tasksCompleted),
-    totalUsers: useCountUp(raw.totalUsers),
-    totalPaid: useCountUp(raw.totalPaid),
-    payChange: raw.payChange,
-  };
-
-  const pulseLive = (
-    <span style={{ display: 'flex', alignItems: 'center', gap: 4, marginRight: 2 }}>
-      <span style={{
-        width: 5, height: 5, borderRadius: '50%', background: 'var(--green)',
-        animation: 'pulse-live 1.8s ease-in-out infinite',
-        display: 'inline-block',
-      }} />
-      <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--green)' }}>LIVE</span>
-    </span>
-  );
-
-  const solanaLogo = (
-    <svg width="18" height="14" viewBox="0 0 397.7 311.7" xmlns="http://www.w3.org/2000/svg">
-      <path d="M64.6 237.9c2.4-2.4 5.7-3.8 9.2-3.8h317.4c5.8 0 8.7 7 4.6 11.1l-62.7 62.7c-2.4 2.4-5.7 3.8-9.2 3.8H6.5c-5.8 0-8.7-7-4.6-11.1l62.7-62.7z" fill="url(#s1)"/>
-      <path d="M64.6 3.8C67.1 1.4 70.4 0 73.8 0h317.4c5.8 0 8.7 7 4.6 11.1L333.1 73.8c-2.4 2.4-5.7 3.8-9.2 3.8H6.5c-5.8 0-8.7-7-4.6-11.1L64.6 3.8z" fill="url(#s2)"/>
-      <path d="M333.1 120.1c-2.4-2.4-5.7-3.8-9.2-3.8H6.5c-5.8 0-8.7 7-4.6 11.1l62.7 62.7c2.4 2.4 5.7 3.8 9.2 3.8h317.4c5.8 0 8.7-7 4.6-11.1l-62.7-62.7z" fill="url(#s3)"/>
-      <defs>
-        <linearGradient id="s1" x1="0%" y1="0%" x2="100%" y2="0%">
-          <stop offset="0%" stopColor="#9945FF"/>
-          <stop offset="100%" stopColor="#14F195"/>
-        </linearGradient>
-        <linearGradient id="s2" x1="0%" y1="0%" x2="100%" y2="0%">
-          <stop offset="0%" stopColor="#9945FF"/>
-          <stop offset="100%" stopColor="#14F195"/>
-        </linearGradient>
-        <linearGradient id="s3" x1="0%" y1="0%" x2="100%" y2="0%">
-          <stop offset="0%" stopColor="#9945FF"/>
-          <stop offset="100%" stopColor="#14F195"/>
-        </linearGradient>
-      </defs>
-    </svg>
-  );
-
-  if (isMobile) {
-    return (
-      <div style={{ width: '100%', position: 'relative', zIndex: 1 }}>
-        <style>{`
-          .stat-glass {
-            background: rgba(255,255,255,0.35);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(255,255,255,0.5);
-            box-shadow: 0 4px 24px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.6);
-            transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
-          }
-          [data-theme="dark"] .stat-glass {
-            background: rgba(255,255,255,0.06) !important;
-            border-color: rgba(255,255,255,0.12) !important;
-            box-shadow: 0 4px 24px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08) !important;
-          }
-        `}</style>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, marginBottom: 18 }}>
-          <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--green)', display: 'inline-block' }} />
-          <span style={{ fontSize: 12.5, fontWeight: 600, letterSpacing: '.6px', color: 'var(--green)' }}>LIVE</span>
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-          <div className="stat-glass" style={{ background: 'rgba(255,255,255,0.35)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.5)', borderRadius: 16, padding: '14px 12px', textAlign: 'center', display: 'flex', flexDirection: 'column', gap: 4, boxShadow: '0 4px 24px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.6)' }}>
-            <span style={{ fontSize: 24, fontWeight: 700, fontFamily: '"Outfit",sans-serif', color: 'var(--text)', letterSpacing: '-.5px' }}>{displayStats.activeJobs}</span>
-            <span style={{ fontSize: 13, color: 'var(--text2)', fontWeight: 500 }}>Active Jobs</span>
-          </div>
-          <div className="stat-glass" style={{ background: 'rgba(255,255,255,0.35)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.5)', borderRadius: 16, padding: '14px 12px', textAlign: 'center', display: 'flex', flexDirection: 'column', gap: 4, boxShadow: '0 4px 24px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.6)' }}>
-            <span style={{ fontSize: 24, fontWeight: 700, fontFamily: '"Outfit",sans-serif', color: 'var(--text)', letterSpacing: '-.5px' }}>&#8358;{displayStats.rewardsDistributed.toLocaleString('en-NG')}</span>
-            <span style={{ fontSize: 13, color: 'var(--text2)', fontWeight: 500 }}>Rewards distributed 24h</span>
-          </div>
-          <div className="stat-glass" style={{ background: 'rgba(255,255,255,0.35)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.5)', borderRadius: 16, padding: '14px 12px', textAlign: 'center', display: 'flex', flexDirection: 'column', gap: 4, boxShadow: '0 4px 24px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.6)' }}>
-            <span style={{ fontSize: 24, fontWeight: 700, fontFamily: '"Outfit",sans-serif', color: 'var(--text)', letterSpacing: '-.5px' }}>{displayStats.tasksCompleted.toLocaleString()}</span>
-            <span style={{ fontSize: 13, color: 'var(--text2)', fontWeight: 500 }}>Micro-jobs completed 24h</span>
-          </div>
-          <div className="stat-glass" style={{ background: 'rgba(255,255,255,0.35)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.5)', borderRadius: 16, padding: '14px 12px', textAlign: 'center', display: 'flex', flexDirection: 'column', gap: 4, boxShadow: '0 4px 24px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.6)' }}>
-            <span style={{ fontSize: 24, fontWeight: 700, fontFamily: '"Outfit",sans-serif', color: 'var(--text)', letterSpacing: '-.5px' }}>{displayStats.totalUsers.toLocaleString()}+</span>
-            <span style={{ fontSize: 13, color: 'var(--text2)', fontWeight: 500 }}>Registered users</span>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="stat-glass" style={{
-      background: 'rgba(255,255,255,0.35)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
-      borderRadius: 16, border: '1px solid rgba(255,255,255,0.5)',
-      boxShadow: '0 4px 24px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.6)', padding: 26,
-      width: '100%', maxWidth: 360, minWidth: 280, marginTop: -40,
-    }}>
-      {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 22 }}>
-        <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--text3)' }}>Platform Stats</span>
-        {pulseLive}
-      </div>
-
-      {/* Stats — vertical blocks */}
-      <div style={{ marginBottom: 18 }}>
-        <div style={{ fontSize: 32, fontWeight: 700, color: 'var(--text)', lineHeight: 1 }}>{displayStats.activeJobs}</div>
-        <div style={{ fontSize: 12, fontWeight: 400, color: 'var(--text3)', marginTop: 6 }}>Active Jobs</div>
-      </div>
-      <div style={{ marginBottom: 18 }}>
-        <div style={{ fontSize: 32, fontWeight: 700, color: 'var(--text)', lineHeight: 1 }}>&#8358;{displayStats.rewardsDistributed.toLocaleString('en-NG')}</div>
-        <div style={{ fontSize: 12, fontWeight: 400, color: 'var(--text3)', marginTop: 6 }}>Rewards distributed 24h</div>
-      </div>
-      <div style={{ marginBottom: 18 }}>
-        <div style={{ fontSize: 32, fontWeight: 700, color: 'var(--text)', lineHeight: 1 }}>{displayStats.tasksCompleted.toLocaleString()}</div>
-        <div style={{ fontSize: 12, fontWeight: 400, color: 'var(--text3)', marginTop: 6 }}>Micro-jobs completed 24h</div>
-      </div>
-      <div style={{ marginBottom: 18 }}>
-        <div style={{ fontSize: 32, fontWeight: 700, color: 'var(--text)', lineHeight: 1 }}>{displayStats.totalUsers.toLocaleString()}+</div>
-        <div style={{ fontSize: 12, fontWeight: 400, color: 'var(--text3)', marginTop: 6 }}>Registered users</div>
-      </div>
-      <div style={{ marginBottom: 0 }}>
-        <div style={{ fontSize: 32, fontWeight: 700, color: 'var(--text)', lineHeight: 1 }}>{displayStats.payChange.toFixed(2)}%</div>
-        <div style={{ fontSize: 12, fontWeight: 400, color: 'var(--text3)', marginTop: 6 }}>$PAY 24h change</div>
-      </div>
-
-      {/* Powered by Solana */}
-      <div style={{ borderTop: '1px solid var(--border)', paddingTop: 16, marginTop: 18, display: 'flex', alignItems: 'center', gap: 8 }}>
-        {solanaLogo}
-        <span style={{ fontSize: 12, color: 'var(--text3)' }}>Powered by Solana</span>
-      </div>
-    </div>
-  );
-}
-
-/* ─── HERO ─────────────────────────────────────────────────────────────────── */
-function Hero({ openAuth, navigate, isAuthed }: { openAuth: (mode?: string) => void; navigate: (path: string) => void; isAuthed: boolean }) {
-  const isMobile = useIsMobile();
-  if (isMobile) {
-    return (
-      <section className="hero" style={{ position: "relative", overflow: "hidden" }}>
-        <WaveBackground />
-        <div className="container" style={{ textAlign: "center" }}>
-          <h1 style={{ margin: "0 auto 14px", fontFamily: "Outfit,sans-serif", fontSize: "clamp(30px,9vw,40px)", lineHeight: 1.08, letterSpacing: "-1.5px", fontWeight: 700, color: "var(--text)", maxWidth: 360 }}>
-            Work, <span className="grad-text">Earn</span> → Grow
-          </h1>
-          <p style={{ margin: "0 auto 24px", maxWidth: 340, color: "var(--text2)", fontSize: 15, lineHeight: 1.6, fontWeight: 500 }}>
-            Nigeria's #1 microtask marketplace. <strong>Earn</strong> by completing tasks, <strong>hire</strong> workers for any job, or <strong>integrate</strong> via API.
-          </p>
-          <div style={{ display: "flex", gap: 10, marginBottom: 32 }}>
-            <Link to="/tasks" className="btn-primary" style={{ flex: 1, justifyContent: "center" }}><I n="briefcase" s={14} /> Start earning</Link>
-            <button onClick={() => isAuthed ? navigate('/create') : openAuth('signup')} className="btn-outline" style={{ flex: 1, justifyContent: "center", textDecoration: "none", border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}><I n="plus" s={14} /> Create a job</button>
-          </div>
-          <HeroStatsCard isMobile />
-        </div>
-      </section>
-    );
-  }
-  return (
-    <section className="hero" style={{ position: "relative", overflow: "hidden" }}>
-      <WaveBackground />
-      <div className="container">
-        <div className="hero-grid">
-          {/* Copy */}
-          <div style={{ maxWidth: 560 }}>
-            <h1 style={{ margin: "0 0 20px", fontFamily: "Outfit,sans-serif", fontSize: "clamp(44px,4.8vw,64px)", lineHeight: 1, letterSpacing: "-2.5px", fontWeight: 900, color: "var(--text)" }}>
-              Work, <span className="grad-text">Earn</span> → Grow
-            </h1>
-            <p style={{ margin: "0 0 32px", maxWidth: 480, color: "var(--text2)", fontSize: 17, lineHeight: 1.65, fontWeight: 500 }}>
-               Nigeria's #1 microtask marketplace. <strong>Earn</strong> by completing tasks, <strong>hire</strong> workers for any job, or <strong>integrate</strong> via API — all on one platform.
-            </p>
-            <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-              <Link to="/tasks" className="btn-primary"><I n="briefcase" s={14} /> Start earning</Link>
-              <button onClick={() => isAuthed ? navigate('/create') : openAuth('signup')} className="btn-outline" style={{ textDecoration: "none", border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}><I n="plus" s={14} /> Create a job</button>
-            </div>
-          </div>
-
-          {/* Stats card */}
-          <HeroStatsCard />
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* ─── TRUST BAR ─────────────────────────────────────────────────────────────── */
-
-/* ─── FEATURED JOBS ─────────────────────────────────────────────────────────── */
-function FeaturedJobs() {
-    const { toast } = useToast();
-    const [active, setActive] = useState(0);
-    const [jobs, setJobs] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
-    const intervalRef = useRef<number | null>(null);
-    useEffect(() => { injectSkeletonStyles(); }, []);
-    const { data: featuredData, error: featuredError } = useApi('/tasks?status=OPEN', { auth: false });
-    useEffect(() => {
-      if (featuredData) {
-        const items = Array.isArray(featuredData) ? featuredData : (featuredData as any)?.data || [];
-        setJobs(items.slice(0, 6));
-        setLoading(false);
-      }
-      if (featuredError) {
-        console.error(featuredError);
-        toast('Failed to load featured jobs', 'error');
-        setJobs([]);
-        setLoading(false);
-      }
-    }, [featuredData, featuredError]);
-
-    useEffect(() => {
-      if (jobs.length > 0) {
-        intervalRef.current = window.setInterval(() => {
-          setActive(prev => (prev + 1) % jobs.length);
-        }, 4000);
-        return () => { if (intervalRef.current !== null) window.clearInterval(intervalRef.current); };
-      }
-    }, [jobs.length]);
-    const pauseSlider = () => { if (intervalRef.current !== null) window.clearInterval(intervalRef.current); };
-    const resumeSlider = () => {
-      intervalRef.current = window.setInterval(() => {
-        setActive(prev => (prev + 1) % jobs.length);
-      }, 4000);
+    if (target == null) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) { setV(target); return; }
+    let raf = 0;
+    const start = performance.now();
+    const from = 0;
+    const tick = (now: number) => {
+      const k = Math.min(1, (now - start) / ms);
+      const e = 1 - Math.pow(1 - k, 3);
+      setV(from + (target - from) * e);
+      if (k < 1) raf = requestAnimationFrame(tick);
     };
-    return (
-      <section id="featured-jobs" style={{ padding: "56px 0 48px", background: "var(--bg)" }}>
-        
-      <div className="container">
-          <div style={{ textAlign: "center", marginBottom: 64 }}>
-            <h2 className="section-title">Highlighted Jobs</h2>
-            <p style={{ margin: "8px 0 0", color: "var(--text2)", fontSize: 14, fontFamily: "Inter" }}>Featured jobs</p>
-          </div>
-          
-          {loading ? (
-            <div className="jobs-track" style={{ display: "grid", gridTemplateColumns: "repeat(3,minmax(0,1fr))", gap: 24 }}>
-              {Array.from({ length: 3 }, (_, i) => (
-                <div key={i} className={i > 0 ? "hide-mobile" : ""} style={{ border: '1.5px solid var(--border)', borderRadius: 16, background: 'var(--card)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-                  <div style={{ padding: '18px 18px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 13 }}>
-                    <div className="sk" style={{ width: 38, height: 38, borderRadius: '50%' }} />
-                    <div style={{ flex: 1, display: 'grid', gap: 6 }}>
-                      <div className="sk" style={{ height: 10, width: '40%' }} />
-                      <div className="sk" style={{ height: 14, width: '60%' }} />
-                    </div>
-                  </div>
-                  <div style={{ padding: '18px 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-                    <div className="sk" style={{ height: 10, width: '30%' }} />
-                    <div className="sk" style={{ height: 10, borderRadius: 99 }} />
-                    <div className="sk" style={{ height: 100, borderRadius: 10 }} />
-                    <div className="sk" style={{ height: 10, width: '50%' }} />
-                    <div className="sk" style={{ height: 40, borderRadius: 8 }} />
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : jobs.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '48px 20px', color: 'var(--text2)' }}>
-              <i className="ti ti-briefcase-off" style={{ fontSize: 36, color: 'var(--text3)', marginBottom: 12, display: 'block' }} />
-              <h3 style={{ fontFamily: 'Outfit,sans-serif', fontWeight: 800, margin: '0 0 4px', color: 'var(--text)' }}>No featured tasks right now</h3>
-              <p style={{ fontSize: 13, margin: '0 0 16px' }}>Check back soon for new opportunities.</p>
-              <Link to="/tasks" className="btn-primary"><I n="briefcase" s={16} /> Browse All Tasks</Link>
-            </div>
-          ) : (
-            <div style={{ position: 'relative' }} onMouseEnter={pauseSlider} onMouseLeave={resumeSlider}>
-              <button className="hide-mobile" onClick={() => setActive(prev => (prev - 1 + jobs.length) % jobs.length)}
-                style={{ position:'absolute', left:-20, top:'50%', transform:'translateY(-50%)', width:40, height:40, borderRadius:'50%', border:'1.5px solid var(--border)', background:'var(--card)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', zIndex:10, boxShadow:'var(--shadow-soft)' }}>
-                <I n="chevron-left" s={18} />
-              </button>
-              <button className="hide-mobile" onClick={() => setActive(prev => (prev + 1) % jobs.length)}
-                style={{ position:'absolute', right:-20, top:'50%', transform:'translateY(-50%)', width:40, height:40, borderRadius:'50%', border:'1.5px solid var(--border)', background:'var(--card)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', zIndex:10, boxShadow:'var(--shadow-soft)' }}>
-                <I n="chevron-right" s={18} />
-              </button>
-              <div className="jobs-track" style={{ display: "grid", gridTemplateColumns: "repeat(3,minmax(0,1fr))", gap: 24 }}>
-                {[0,1,2].map(offset => {
-                  const idx = (active + offset) % jobs.length;
-                  const t = jobs[idx];
-                  if (!t) return null;
-                  return <div key={t.id} style={{ minHeight: 420, display: 'flex', flexDirection: 'column' }}><TaskCard task={t} hideApply /></div>;
-                })}
-              </div>
-            </div>
-          )}
-  
-          {jobs.length > 0 && (
-            <div style={{ display: "flex", justifyContent: "center", gap: 10, marginTop: 48 }}>
-              {(jobs || []).map((_, i) => (
-                <span key={i} onClick={() => setActive(i)} style={{ width: 10, height: 10, borderRadius: "50%", cursor: "pointer", background: active === i ? "var(--accent)" : "var(--border2)", transition: "background .3s, transform .3s", transform: active === i ? "scale(1.3)" : "scale(1)", animation: active === i ? "dotBreathe 2.8s ease-in-out infinite" : "none", border: active === i ? "2px solid rgba(var(--accent-rgb),0.3)" : "2px solid transparent" }} />
-              ))}
-            </div>
-          )}
-          {jobs.length > 0 && (
-            <div style={{ display: "flex", justifyContent: "center", marginTop: 28 }}>
-              <Link to="/tasks" className="btn-pill"><I n="briefcase" s={16} /> More jobs <I n="chevron-right" s={14} /></Link>
-            </div>
-          )}
-        </div>
-      </section>
-    );
-  }
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [target, ms]);
+  return v;
+}
 
-/* ─── STORE SECTION ─────────────────────────────────────────────────────────── */
-function StoreSection() {
-  const { toast } = useToast();
-  const isMobile = useIsMobile();
-  const { rates } = useCurrency();
-  const [products, setProducts] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [active, setActive] = useState(0);
-  const intervalRef = useRef<number | null>(null);
+// Adds .in to every .hv-reveal inside the page as it scrolls into view.
+function useReveal(root: React.RefObject<HTMLElement>) {
   useEffect(() => {
-    setLoading(true);
-    apiRequest('/store?limit=6')
-      .then(d => {
-        const items = d?.data || d;
-        const list = Array.isArray(items) ? items.slice(0, 6) : [];
-        setProducts(list);
-      })
-      .catch(e => { console.error(e); toast('Failed to load store items', 'error'); })
-      .finally(() => setLoading(false));
+    const el = root.current;
+    if (!el) return;
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((e) => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } });
+    }, { threshold: 0.12 });
+    const watch = () => el.querySelectorAll(".hv-reveal:not(.in)").forEach((n) => io.observe(n));
+    watch();
+    const mo = new MutationObserver(watch);
+    mo.observe(el, { childList: true, subtree: true });
+    return () => { io.disconnect(); mo.disconnect(); };
+  }, [root]);
+}
+
+function useJson<T = any>(path: string, pollMs = 0) {
+  const [data, setData] = useState<T | null>(null);
+  useEffect(() => {
+    let alive = true;
+    const load = () => fetch(`${API_BASE}${path}`).then((r) => r.json()).then((d) => { if (alive) setData(d); }).catch(() => {});
+    load();
+    const id = pollMs ? window.setInterval(load, pollMs) : 0;
+    return () => { alive = false; if (id) window.clearInterval(id); };
+  }, [path, pollMs]);
+  return data;
+}
+
+/* ─── hero network graphic ─────────────────────────────────────────────────── */
+
+function NetworkGraphic() {
+  const paths = useMemo(() => {
+    const W = 600, H = 188, cx = W / 2, cy = H / 2, n = 26, out: { d: string; flow: boolean; delay: number }[] = [];
+    for (const side of [-1, 1]) {
+      for (let i = 0; i < n; i++) {
+        const k = i / (n - 1) - 0.5;
+        const x0 = side < 0 ? 0 : W;
+        const y0 = cy + k * (H - 16) + Math.sin(i * 1.7) * 4;
+        const xe = cx + side * 42;
+        const ye = cy + k * 10;
+        const c1x = side < 0 ? 150 : W - 150, c2x = side < 0 ? 215 : W - 215;
+        out.push({
+          d: `M${x0},${y0.toFixed(1)} C${c1x},${(y0 * 0.85 + cy * 0.15).toFixed(1)} ${c2x},${(cy + k * 40).toFixed(1)} ${xe},${ye.toFixed(1)}`,
+          flow: i % 4 === side + 1,
+          delay: (i * 0.37) % 5,
+        });
+      }
+    }
+    return out;
   }, []);
-  useEffect(() => {
-    if (products.length === 0) return;
-    intervalRef.current = window.setInterval(() => {
-      setActive(prev => (prev + 1) % products.length);
-    }, 5000);
-    return () => { if (intervalRef.current !== null) window.clearInterval(intervalRef.current); };
-  }, [products.length]);
-  const pauseSlider = () => { if (intervalRef.current !== null) window.clearInterval(intervalRef.current); };
-  const resumeSlider = () => {
-    intervalRef.current = window.setInterval(() => {
-      setActive(prev => (prev + 1) % products.length);
-    }, 5000);
-  };
-  const BLUE = 'var(--accent)';
-  const timeAgo = (dateStr?: string) => {
-    if (!dateStr) return '';
-    const date = new Date(dateStr);
-    if (isNaN(date.getTime())) return '';
-    const diffDay = Math.floor((Date.now() - date.getTime()) / 86400000);
-    if (diffDay >= 30) return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    if (diffDay >= 7) { const w = Math.floor(diffDay / 7); return `${w} week${w !== 1 ? 's' : ''} ago`; }
-    if (diffDay >= 1) return `${diffDay} day${diffDay !== 1 ? 's' : ''} ago`;
-    return 'Today';
-  };
-  const formatPrice = (price: any) => {
-    const n = Number(price || 0);
-    return n >= 1000 ? n.toLocaleString() : n.toFixed(2);
-  };
   return (
-    <section className="hp-store-section" style={{ padding: "56px 0", background: "var(--bg)", maxWidth: "100vw", overflowX: "hidden" }}>
-      
-      <div className="container">
-        <div style={{ textAlign: "center", marginBottom: 64 }}>
-          <h2 className="section-title">Worker Store</h2>
-          <p style={{ margin: "8px 0 0", color: "var(--text2)", fontSize: 14, fontFamily: "Inter" }}>Featured products from workers</p>
+    <div className="hv-network" aria-hidden="true">
+      <span className="hv-network-stem" style={{ top: 0 }} />
+      <svg viewBox="0 0 600 188" preserveAspectRatio="none">
+        {paths.map((p, i) => (
+          <path key={i} d={p.d} className={p.flow ? "hv-flow" : undefined} style={p.flow ? { animationDelay: `-${p.delay}s` } : undefined} />
+        ))}
+      </svg>
+      <div className="hv-network-hub"><Logo size={34} /></div>
+      <span className="hv-network-stem" style={{ bottom: 0 }} />
+    </div>
+  );
+}
+
+/* ─── hero ─────────────────────────────────────────────────────────────────── */
+
+function StatCard({ icon, label, value, sub, format, positive }: { icon: string; label: string; value: number | null; sub: string; format: (n: number) => string; positive?: boolean }) {
+  const v = useCountUp(value);
+  return (
+    <div className="hv-stat">
+      <div className="hv-stat-head"><span className="hv-stat-icon"><i className={`ti ti-${icon}`} /></span>{label}</div>
+      <div className={`hv-stat-val${positive ? " pos" : ""}`}>{value == null ? <span className="hv-sk" /> : format(v)}</div>
+      <div className="hv-stat-sub">{sub}</div>
+    </div>
+  );
+}
+
+function Hero({ live, onCreate }: { live: any; onCreate: () => void }) {
+  const n = (k: string) => (live && typeof live[k] === "number" ? live[k] : live ? 0 : null);
+  // On a quiet day the 24h figures are zero; show the all-time figure instead and say so.
+  const recentOrTotal = (recent: string, total: string) => {
+    const r = n(recent);
+    return r === null || r > 0 ? { value: r, sub: "Over the last 24 hours" } : { value: n(total), sub: "All time" };
+  };
+  const rewards = recentOrTotal("last24hPaid", "totalPaidOut");
+  const approved = recentOrTotal("last24hTasks", "tasksDone");
+  const scrollOn = () => document.getElementById("hv-ticker")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  return (
+    <section className="hv-hero">
+      <div className="hv-inner">
+        <div className="hv-hero-grid">
+          <div className="hv-hero-copy">
+            <div className="hv-tag">
+              <span className="hv-tag-icon"><i className="ti ti-arrow-up-right" /></span>
+              <span className="hv-mono">The task network for Africa, on Solana.</span>
+            </div>
+            <h1 className="hv-h1">Work, earn, grow.</h1>
+            <p className="hv-h1-sub">Paid in Naira or USDC.</p>
+            <p className="hv-lead">
+              Post a paid task, hire someone for a project, or earn with the skills you already have.
+              OgaPay connects people who need work done with people ready to do it, and AI agents can hire them too.
+            </p>
+            <div className="hv-btns">
+              <button className="hv-btn hv-btn-dark" onClick={onCreate}>Create a job <i className="ti ti-plus" /></button>
+              <Link to="/tasks" className="hv-btn hv-btn-ghost">Start earning <i className="ti ti-arrow-right" /></Link>
+            </div>
+            <div className="hv-note">Fund jobs with Naira or crypto. Withdraw to your bank or wallet.</div>
+          </div>
+
+          <div>
+            <div className="hv-labels">
+              <span className="hv-mono hv-eyebrow"><span className="hv-dot" /> People + agents</span>
+              <span className="hv-mono">Escrow protected</span>
+            </div>
+            <NetworkGraphic />
+            <div className="hv-caption">Real people. Real work. One network.</div>
+            <div className="hv-mono hv-eyebrow" style={{ marginTop: 26 }}><span className="hv-dot" /> Platform activity</div>
+            <div className="hv-stats">
+              <StatCard icon="briefcase" label="Active jobs" value={n("activeJobs")} sub="Open to apply now" format={(x) => Math.round(x).toLocaleString()} />
+              <StatCard icon="coins" label="Rewards funded" value={rewards.value} sub={rewards.sub} format={naira} />
+              <StatCard icon="circle-check" label="Tasks approved" value={approved.value} sub={approved.sub} format={(x) => Math.round(x).toLocaleString()} />
+              <StatCard icon="users" label="Active workers" value={n("activeWorkers")} sub="Have earned on OgaPay" format={(x) => Math.round(x).toLocaleString()} positive />
+            </div>
+          </div>
         </div>
-        {loading ? (
-          <div className="jobs-track" style={{ display: "grid", gridTemplateColumns: "repeat(3,minmax(0,1fr))", gap: 24 }}>
-            {Array.from({ length: 3 }, (_, i) => (
-              <div key={i} style={{ border: '1.5px solid var(--border)', borderRadius: 16, background: 'var(--card)', overflow: 'hidden' }}>
-                <div className="sk" style={{ width: '100%', aspectRatio: '16/9', borderRadius: 0 }} />
-                <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  <div className="sk" style={{ height: 14, width: '60%' }} />
-                  <div className="sk" style={{ height: 10, width: '80%' }} />
-                  <div className="sk" style={{ height: 40, borderRadius: 10 }} />
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : products.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '48px 20px', color: 'var(--text2)' }}>
-            <i className="ti ti-building-store-off" style={{ fontSize: 36, color: 'var(--text3)', marginBottom: 12, display: 'block' }} />
-            <p style={{ fontSize: 13, margin: 0 }}>No products available yet.</p>
-          </div>
-        ) : (
-          <div style={{ position: 'relative' }} onMouseEnter={pauseSlider} onMouseLeave={resumeSlider}>
-            <button className="hide-mobile" onClick={() => setActive(prev => (prev - 1 + products.length) % products.length)}
-              style={{ position:'absolute', left:-20, top:'50%', transform:'translateY(-50%)', width:40, height:40, borderRadius:'50%', border:'1.5px solid var(--border)', background:'var(--card)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', zIndex:10, boxShadow:'var(--shadow-soft)' }}>
-              <I n="chevron-left" s={18} />
-            </button>
-            <button className="hide-mobile" onClick={() => setActive(prev => (prev + 1) % products.length)}
-              style={{ position:'absolute', right:-20, top:'50%', transform:'translateY(-50%)', width:40, height:40, borderRadius:'50%', border:'1.5px solid var(--border)', background:'var(--card)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', zIndex:10, boxShadow:'var(--shadow-soft)' }}>
-              <I n="chevron-right" s={18} />
-            </button>
-                        <div className="hide-mobile" style={{ display: "grid", gridTemplateColumns: "repeat(3,minmax(0,1fr))", gap: 24 }}>
-              {[0,1,2].map(offset => {
-                const idx = (active + offset) % products.length;
-                const p = products[idx];
-                if (!p) return null;
-                const sellerName = p.seller || 'Anonymous';
-                const currency = p.currency || 'NGN';
-                return (
-                <div key={p.id || idx} className="store-card">
-                  <div className="store-image-wrap">
-                    {p.image ? (
-                      <img loading="lazy" src={p.image} alt={p.title} className="store-card-img" />
-                    ) : (
-                      <div className="store-card-img-placeholder">
-                        {(p.title || '???').slice(0, 3).toUpperCase()}
-                      </div>
-                    )}
-                    {p.category && (
-                      <span className="store-badge">
-                        {p.category}
-                      </span>
-                    )}
-                  </div>
-                  <div className="store-body">
-                    <div className="store-title-row">
-                      <div className="store-title">{p.title || p.name}</div>
-                      {p.createdAt && <span className="store-date">{timeAgo(p.createdAt)}</span>}
-                    </div>
-                    {p.description && (
-                      <div className="store-description">
-                        {p.description}
-                      </div>
-                    )}
-                    <div style={{ flex: 1 }} />
-                    <div className="store-seller">
-                      <div className="store-seller-left">
-                        <div className="store-avatar">
-                          {p.sellerAvatar ? <img src={p.sellerAvatar} className="w-full h-full object-cover" /> : sellerName.slice(0, 2).toUpperCase()}
-                        </div>
-                        <div style={{ minWidth: 0 }}>
-                          <div className="store-seller-name">{sellerName}</div>
-                          <div className="store-seller-meta">{p.reviewsCount >= 10 ? 'Top creator' : p.reviewsCount >= 1 ? 'Creator' : 'New creator'}</div>
-                        </div>
-                      </div>
-                      {p.rating > 0 && (
-                        <div className="store-rating">
-                          <svg width={11} height={11} viewBox="0 0 24 24" fill="#f59e0b"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" /></svg>
-                          <span className="store-rating-text">{Number(p.rating).toFixed(1)}</span>
-                        </div>
-                      )}
-                    </div>
-                    <div className="store-price">
-                      <div className="store-price-amount">{currency} {formatPrice(p.price)}</div>
-                      <div className="store-price-pill">
-                        ~$ {(currency === 'NGN' ? Number(p.price) * rates.NGN : Number(p.price)).toFixed(2)}
-                      </div>
-                    </div>
-                    <Link to={"/store/" + p.id} className="store-button">
-                      <I n="eye" s={13} /> View more
-                    </Link>
-                  </div>
-                </div>
-                );
-              })}
-            </div>
-            {/* Mobile single-card carousel */}
-            <div className="show-mobile" style={{ overflow: "hidden", position: "relative" }}>
-              <div style={{ display: "flex", transition: "transform 0.35s cubic-bezier(0.25,0.46,0.45,0.94)", transform: "translateX(-" + (active * 100) + "%)" }}>
-                {products.map((p) => {
-                  const sellerName = p.seller || 'Anonymous';
-                  const currency = p.currency || 'NGN';
-                  return (
-                    <div key={p.id} style={{ flex: "0 0 100%", padding: "0 16px", boxSizing: "border-box" as any }}>
-                      <div className="store-card">
-                        <div className="store-image-wrap">
-                          {p.image ? (
-                            <img loading="lazy" src={p.image} alt={p.title} className="store-card-img" />
-                          ) : (
-                            <div className="store-card-img-placeholder">
-                              {(p.title || '???').slice(0, 3).toUpperCase()}
-                            </div>
-                          )}
-                          {p.category && (
-                            <span className="store-badge">
-                              {p.category}
-                            </span>
-                          )}
-                        </div>
-                        <div className="store-body">
-                          <div className="store-title-row">
-                            <div className="store-title">{p.title || p.name}</div>
-                            {p.createdAt && <span className="store-date">{timeAgo(p.createdAt)}</span>}
-                          </div>
-                          {p.description && (
-                            <div className="store-description">
-                              {p.description}
-                            </div>
-                          )}
-                          <div style={{ flex: 1 }} />
-                          <div className="store-seller">
-                            <div className="store-seller-left">
-                              <div className="store-avatar">
-                                {p.sellerAvatar ? <img src={p.sellerAvatar} className="w-full h-full object-cover" /> : sellerName.slice(0, 2).toUpperCase()}
-                              </div>
-                              <div style={{ minWidth: 0 }}>
-                                <div className="store-seller-name">{sellerName}</div>
-                                <div className="store-seller-meta">{p.reviewsCount >= 10 ? 'Top creator' : p.reviewsCount >= 1 ? 'Creator' : 'New creator'}</div>
-                              </div>
-                            </div>
-                            {p.rating > 0 && (
-                              <div className="store-rating">
-                                <svg width={11} height={11} viewBox="0 0 24 24" fill="#f59e0b"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" /></svg>
-                                <span className="store-rating-text">{Number(p.rating).toFixed(1)}</span>
-                              </div>
-                            )}
-                          </div>
-                          <div className="store-price">
-                            <div className="store-price-amount">{currency} {formatPrice(p.price)}</div>
-                            <div className="store-price-pill">
-                              ~$ {(currency === 'NGN' ? Number(p.price) * rates.NGN : Number(p.price)).toFixed(2)}
-                            </div>
-                          </div>
-                          <Link to={"/store/" + p.id} className="store-button">
-                            <I n="eye" s={13} /> View more
-                          </Link>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-              {/* Mobile arrows */}
-              <button onClick={(e) => { e.stopPropagation(); setActive((prev: number) => (prev - 1 + products.length) % products.length); }}
-                style={{ position: "absolute", left: 4, top: "50%", transform: "translateY(-50%)", width: 32, height: 32, borderRadius: "50%", border: "1.5px solid var(--border)", background: "var(--card)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 2, boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
-                <I n="chevron-left" s={16} />
-              </button>
-              <button onClick={(e) => { e.stopPropagation(); setActive((prev: number) => (prev + 1) % products.length); }}
-                style={{ position: "absolute", right: 4, top: "50%", transform: "translateY(-50%)", width: 32, height: 32, borderRadius: "50%", border: "1.5px solid var(--border)", background: "var(--card)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 2, boxShadow: "0 2px 8px rgba(0,0,0,0.08)" }}>
-                <I n="chevron-right" s={16} />
-              </button>
-            </div>
-          </div>
-        )}
-        {products.length > 0 && (
-          <div style={{ display: "flex", justifyContent: "center", gap: 10, marginTop: 48 }}>
-            {(products || []).map((_, i) => (
-              <span key={i} onClick={() => setActive(i)} style={{ width: 10, height: 10, borderRadius: "50%", cursor: "pointer", background: active === i ? "var(--accent)" : "var(--border2)", transition: "background .3s, transform .3s", transform: active === i ? "scale(1.3)" : "scale(1)", border: active === i ? "2px solid rgba(var(--accent-rgb),0.3)" : "2px solid transparent" }} />
-            ))}
-          </div>
-        )}
-        <div style={{ display: "flex", justifyContent: "center", marginTop: 28 }}>
-          <Link to="/store" className="btn-pill"><I n="building-store" s={16} /> Explore All Products</Link>
+
+        <div className="hv-hero-foot">
+          <span className="hv-powered"><i className="ti ti-shield-check" /> Powered by Solana</span>
+          <button className="hv-scrollhint" onClick={scrollOn}>Your next task starts here <i className="ti ti-arrow-down" /></button>
+          <span className="hv-mono">NGN + USDC <span style={{ margin: "0 8px" }}>/</span> Escrow on every job</span>
         </div>
       </div>
     </section>
   );
 }
-/* ─── GET STARTED ── TWO-CARD GRID STYLE ────────────────────── */
-function GetStarted({ openAuth, navigate }: { openAuth: (mode?: string) => void; navigate: (path: string) => void }) {
-  const [active, setActive] = useState<string | null>(null);
-  const roles: { id: string; icon: string; label: string; title: string; desc: string; steps: { title: string; detail: string }[]; primaryLabel: string; primaryHref: string; secondaryLabel: string; secondaryHref?: string }[] = [
-    {
-      id: "earn", icon: "user-check", label: "I want to Earn",
-      title: "Complete Tasks & Get Paid",
-      desc: "Browse available tasks — social, creative, research, and more. Complete them and earn instant rewards.",
-      steps: [
-        { title: "Create your account", detail: "Sign up free in under 60 seconds." },
-        { title: "Browse open tasks", detail: "Filter by category, pay, or platform." },
-        { title: "Submit your proof", detail: "Screenshot, link, or text — depends on the task." },
-        { title: "Get paid instantly", detail: "Naira credited to your OgaPay wallet immediately." },
-      ],
-      primaryLabel: "Browse Jobs", primaryHref: "/tasks",
-      secondaryLabel: "Create Account",
-    },
-    {
-      id: "hire", icon: "building-store", label: "I want to Hire",
-      title: "Hire Workers for Any Task",
-      desc: "Create tasks, set your budget, and get results from thousands of verified workers within hours.",
-      steps: [
-        { title: "Create a task", detail: "Social, creative, research, or custom jobs." },
-        { title: "Fund your budget", detail: "Deposit Naira to your OgaPay wallet." },
-        { title: "Workers apply", detail: "Review submissions and approve what you like." },
-        { title: "Release payment", detail: "Pay only for approved work." },
-      ],
-      primaryLabel: "Post a Task", primaryHref: "/create",
-      secondaryLabel: "View Pricing", secondaryHref: "/pricing",
-    },
-  ];
-  const selected = active ? roles.find(r => r.id === active)! : null;
-  const toggle = (id: string) => setActive(active === id ? null : id);
 
+/* ─── live ticker ──────────────────────────────────────────────────────────── */
+
+function Ticker({ jobs }: { jobs: any[] }) {
+  if (jobs.length === 0) return <div id="hv-ticker" />;
+  const items = jobs.slice(0, 14);
+  const row = [...items, ...items];
   return (
-    <section id="get-started" style={{ padding: "72px 0 80px", background: "var(--bg)" }}>
-      <div className="container">
-        <div style={{ textAlign: "center", marginBottom: 36 }}>
-          <h2 className="section-title" style={{ fontSize: 26, fontWeight: 700, color: "var(--text)", margin: "0 0 8px" }}>Get started today</h2>
-          <p className="section-sub" style={{ fontSize: 15, color: "var(--text2)", margin: 0 }}>Choose your path and start in under 5 minutes.</p>
-        </div>
-
-        {!selected && (
-          <div className="gs-grid" style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr",
-            gap: 16,
-            maxWidth: 860,
-            margin: "0 auto",
-          }}>
-            {roles.map(r => (
-              <div key={r.id} onClick={() => toggle(r.id)}
-                style={{
-                  background: "var(--card, #ffffff)",
-                  border: "1px solid var(--border, #e5e7eb)",
-                  borderRadius: 16,
-                  padding: "20px 24px",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 16,
-                  cursor: "pointer",
-                  transition: "border-color 0.15s, box-shadow 0.15s",
-                }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = "var(--accent)"; e.currentTarget.style.boxShadow = "0 4px 20px rgba(var(--accent-rgb), 0.1)"; }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--border, #e5e7eb)"; e.currentTarget.style.boxShadow = "none"; }}>
-                <div style={{
-                  width: 44, height: 44, borderRadius: 12,
-                  background: "rgba(var(--accent-rgb), 0.07)",
-                  display: "grid", placeItems: "center",
-                  flexShrink: 0, color: "var(--accent)",
-                }}>
-                  <I n={r.icon} s={20} />
-                </div>
-                <span style={{ flex: 1, fontSize: 16, fontWeight: 700, color: "var(--text)" }}>{r.label}</span>
-                <I n="chevron-right" s={16} c="var(--text3)" style={{ flexShrink: 0 }} />
-              </div>
-            ))}
-          </div>
-        )}
-
-        {selected && (
-          <div style={{
-            maxWidth: 860, margin: "0 auto",
-            background: "var(--card, #ffffff)",
-            border: "1px solid var(--border, #e5e7eb)",
-            borderRadius: 18, padding: "36px 32px",
-            boxShadow: "0 4px 24px rgba(0,0,0,0.04)",
-          }}>
-            <button onClick={() => setActive(null)}
-              style={{
-                display: "flex", alignItems: "center", gap: 6,
-                fontSize: 13, color: "var(--text2, #6b7280)",
-                background: "none", border: "none", cursor: "pointer",
-                padding: 0, marginBottom: 16, fontFamily: "inherit",
-              }}>
-              <I n="arrow-left" s={14} /> All options
-            </button>
-
-            <div style={{ marginBottom: 28 }}>
-              <h3 style={{ margin: "0 0 8px", fontSize: 22, fontWeight: 800, color: "var(--text)", lineHeight: 1.2 }}>{selected.title}</h3>
-              <p style={{ margin: 0, fontSize: 14, color: "var(--text2, #6b7280)", lineHeight: 1.6 }}>{selected.desc}</p>
-            </div>
-
-            <div style={{ position: "relative" }}>
-              {selected.steps.map((s, si) => (
-                <div key={si} style={{ display: "flex", alignItems: "flex-start", gap: 16, position: "relative" }}>
-                  {si < selected.steps.length - 1 && (
-                    <div style={{ position: "absolute", left: 15, top: 32, bottom: 0, width: 1, background: "var(--border, #e5e7eb)" }} />
-                  )}
-                  <div style={{
-                    width: 32, height: 32, minWidth: 32, borderRadius: "50%",
-                    border: "1.5px solid var(--border, #e5e7eb)",
-                    background: "var(--card, #ffffff)", color: "var(--accent)",
-                    display: "grid", placeItems: "center", fontSize: 13, fontWeight: 700,
-                    flexShrink: 0, position: "relative", zIndex: 1,
-                  }}>{si + 1}</div>
-                  <div style={{ flex: 1, paddingBottom: si < selected.steps.length - 1 ? 24 : 0 }}>
-                    <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text)", marginBottom: 4 }}>{s.title}</div>
-                    <div style={{ fontSize: 13, color: "var(--text2, #6b7280)", lineHeight: 1.55 }}>{s.detail}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div style={{ marginTop: 28 }}>
-              <Link to={selected.primaryHref} style={{
-                display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-                width: "100%", height: 48, borderRadius: 12, background: "var(--accent)",
-                color: "#ffffff", fontSize: 15, fontWeight: 700, textDecoration: "none",
-                border: "none", cursor: "pointer", fontFamily: "inherit",
-              }}>
-                <I n="arrow-right" s={16} c="#fff" /> {selected.primaryLabel}
-              </Link>
-              <button onClick={() => openAuth()} style={{
-                display: "flex", alignItems: "center", justifyContent: "center",
-                width: "100%", height: 44, marginTop: 10, borderRadius: 12,
-                background: "transparent", border: "1px solid var(--border, #e5e7eb)",
-                color: "var(--text, #111)", fontSize: 14, fontWeight: 600,
-                cursor: "pointer", fontFamily: "inherit",
-              }}>
-                {selected.secondaryLabel}
-              </button>
-            </div>
-          </div>
-        )}
+    <div id="hv-ticker" className="hv-ticker" aria-label="Latest jobs">
+      <div className="hv-ticker-track">
+        {row.map((t, i) => {
+          const p = t.poster || t.creator || {};
+          const name = p.username || p.firstName || t.creatorName || "OgaPay";
+          return (
+            <Link key={`${t.id}-${i}`} to={`/tasks/${t.id}`} className="hv-tick" aria-hidden={i >= items.length}>
+              <span className="hv-tick-av">{p.avatarUrl ? <img src={p.avatarUrl} alt="" loading="lazy" /> : name.charAt(0).toUpperCase()}</span>
+              <b>{name}</b>
+              <span className="amt">+{reward(Number(t.reward ?? t.amount ?? 0), t.currency)}</span>
+              <span style={{ color: "var(--text2)" }}>{t.title}</span>
+              <span className="ago">{ago(t.createdAt)}</span>
+            </Link>
+          );
+        })}
       </div>
-
-      <style>{`
-        @media (max-width: 640px) {
-          #get-started .gs-grid { grid-template-columns: 1fr !important; }
-        }
-      `}</style>
-    </section>
+    </div>
   );
 }
 
-/* ─── COMMUNITIES ────────────────────────────────────────────────────────────── */
-function Communities() {
-  const navigate = useNavigate()
-  const [comms, setComms] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
-  useEffect(() => {
-    (async () => {
-      try {
-        const res = await fetch(`${API_BASE}/communities/featured`).then(r => r.json())
-        const data = Array.isArray(res) ? res : res?.data || []
-        setComms(data.slice(0, 3))
-      } catch (e: any) { console.error(e) }
-      setLoading(false)
-    })()
-  }, [])
-  if (loading || comms.length === 0) return null
+/* ─── choose your path ─────────────────────────────────────────────────────── */
 
+const PATHS = [
+  {
+    id: "worker", icon: "user", title: "I'm a Worker", desc: "Earn rewards. Hire help when you need it.", tags: "Earn / Create",
+    steps: [["Create your account", "free, in under a minute"], ["Pick a paid task", "social, testing, research, design and more"], ["Submit your proof", "get paid from escrow once it's approved"]],
+    primary: { label: "Start earning", to: "/tasks" }, secondary: { label: "Create a job", to: "/create" },
+  },
+  {
+    id: "builder", icon: "robot", title: "I'm a Builder", desc: "Plug your app or AI agent into real people.", tags: "API / Webhooks / Agents",
+    steps: [["Turn on Developer Mode", "in Settings, then create an API key"], ["Post tasks from code", "set rewards, requirements and proof"], ["Collect results", "approve work and pay automatically"]],
+    primary: { label: "Build with OgaPay", to: "/developer" }, secondary: { label: "Read the docs", to: "/docs" },
+  },
+];
+
+function ChoosePath() {
+  const [open, setOpen] = useState<string | null>(null);
   return (
-    <section className="hp-community-section" style={{ padding: "56px 0", background: "var(--bg)", maxWidth: "100vw", overflowX: "hidden" }}>
-
-      <div className="container">
-        <div style={{ textAlign: "center", marginBottom: 28 }}>
-          <h2 className="section-title">Communities</h2>
-          <p style={{ margin: "8px 0 0", color: "var(--text2)", fontSize: 14, fontFamily: "Inter" }}>Discover active OgaPay communities</p>
+    <section className="hv-section">
+      <div className="hv-inner">
+        <div className="hv-center hv-reveal">
+          <span className="hv-mono">Choose your path</span>
+          <h2 className="hv-h2">Start with OgaPay</h2>
+          <p className="hv-lead" style={{ marginTop: 16 }}>Whether you're here to earn or to build, pick your path below.</p>
         </div>
-        <div className="community-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3,minmax(0,1fr))", gap: 24 }}>
-          {comms.filter(Boolean).map((c, i) => {
-            const initials = (c.name || '?').split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase();
+        <div className="hv-paths">
+          {PATHS.map((p) => {
+            const isOpen = open === p.id;
             return (
-              <div key={c.id || i} className="community-card" onClick={() => navigate('/communities/' + c.id)}>
-                <div className="community-cover" style={{ background: c.coverColor || (c.accentColor ? `${c.accentColor}20` : 'var(--bg2)'), color: c.coverTextColor || c.accentColor || 'var(--text3)' }}>
-                  {c.coverImage ? (
-                    <img loading="lazy" src={c.coverImage} className="community-cover-img" />
-                  ) : (
-                    <span>{initials}</span>
-                  )}
-                  {c.isActive && <span className="community-badge">ACTIVE</span>}
-                </div>
-                <div className="community-body">
-                  <h3 className="community-title">{c.name}</h3>
-                  <div className="community-stats">
-                    <span className="community-stat"><I n="users" s={12} /> {(c.memberCount || 0).toLocaleString()} members</span>
-                    <span className="community-stat"><I n="briefcase" s={12} /> {(c.jobCount || 0)} jobs</span>
-                  </div>
-                  <p className="community-description">{c.description || ''}</p>
-                </div>
-                <div className="community-footer">
-                  <span className="community-distributed">
-                    ₦{(c.distributed || 0).toLocaleString()}
-                    <span className="community-distributed-label">distributed</span>
+              <div key={p.id} className={`hv-path hv-reveal${isOpen ? " open" : ""}`}>
+                <button className="hv-path-head" onClick={() => setOpen(isOpen ? null : p.id)} aria-expanded={isOpen}>
+                  <span className="hv-path-icon"><i className={`ti ti-${p.icon}`} /></span>
+                  <span>
+                    <span className="hv-path-title" style={{ display: "block" }}>{p.title}</span>
+                    <span className="hv-path-desc" style={{ display: "block" }}>{p.desc}</span>
+                    <span className="hv-mono hv-path-tags" style={{ display: "block" }}>{p.tags}</span>
                   </span>
-                  <Link to={`/communities/${c.id}`} className="community-view-btn">
-                    View <I n="chevron-right" s={14} />
-                  </Link>
+                  <span className="hv-chev"><i className="ti ti-chevron-down" /></span>
+                </button>
+                <div className="hv-path-body">
+                  <div>
+                    <ol className="hv-steps">
+                      {p.steps.map(([a, b]) => <li key={a}><b>{a}</b>, {b}</li>)}
+                    </ol>
+                    <div className="hv-path-cta">
+                      <Link to={p.primary.to} className="hv-btn hv-btn-dark">{p.primary.label} <i className="ti ti-arrow-right" /></Link>
+                      <Link to={p.secondary.to} className="hv-btn hv-btn-ghost">{p.secondary.label}</Link>
+                    </div>
+                  </div>
                 </div>
               </div>
             );
           })}
         </div>
-        <div style={{ display: "flex", justifyContent: "center", marginTop: 28 }}>
-          <Link to="/communities" className="btn-pill"><I n="users-group" s={16} /> View all communities <I n="chevron-right" s={14} /></Link>
+      </div>
+    </section>
+  );
+}
+
+/* ─── numbers + possibilities ──────────────────────────────────────────────── */
+
+function Milestone({ value, label, format }: { value: number; label: string; format: (n: number) => string }) {
+  const v = useCountUp(value, 1800);
+  return (
+    <div className="hv-num hv-reveal">
+      <div className="hv-num-val">{format(v)}</div>
+      <div className="hv-num-lbl">{label}</div>
+    </div>
+  );
+}
+
+function Numbers({ live, all }: { live: any; all: any }) {
+  const users = Number(all?.data?.totalUsers ?? all?.totalUsers ?? 0);
+  const approved = Number(live?.tasksDone ?? 0);
+  const funded = Number(live?.totalPaidOut ?? 0);
+  const items = [
+    { value: approved, label: "Tasks approved", format: (x: number) => compact(Math.round(x)), show: approved >= MIN_PUBLIC_MILESTONE },
+    { value: funded, label: "Funded in rewards", format: naira, show: funded >= MIN_PUBLIC_MILESTONE * 1000 },
+    { value: users, label: "Users registered", format: (x: number) => compact(Math.round(x)), show: users >= MIN_PUBLIC_MILESTONE },
+  ].filter((m) => m.show);
+  // One lonely number reads worse than none; wait until at least two qualify.
+  if (items.length < 2) return null;
+  return (
+    <section className="hv-section">
+      <div className="hv-inner">
+        <div className="hv-reveal">
+          <span className="hv-mono">OgaPay, in numbers</span>
+          <h2 className="hv-h2">All-time milestones</h2>
+        </div>
+        <div className="hv-numbers" style={{ gridTemplateColumns: `repeat(${items.length}, 1fr)` }}>
+          {items.map((m) => <Milestone key={m.label} value={m.value} label={m.label} format={m.format} />)}
         </div>
       </div>
     </section>
   );
 }
 
-/* ─── MOBILE DRAWER ──────────────────────────────────────────────────────────── */
-
-/* ─── AUTH MODAL ─────────────────────────────────────────────────────────────── */
-function AuthModal({ open, onClose, mode, setMode, navigate }: { open: boolean; onClose: () => void; mode: string; setMode: (m: string) => void; navigate: (path: string) => void }) {
-  const isLogin = mode === "login";
-  const [authEmail, setAuthEmail] = useState('');
-  const [authName, setAuthName] = useState('');
-  const [authPassword, setAuthPassword] = useState('');
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const params = new URLSearchParams();
-    if (authEmail) params.set('email', authEmail);
-    if (!isLogin && authName) params.set('name', authName);
-    const qs = params.toString();
-    navigate(isLogin ? `/login${qs ? '?' + qs : ''}` : `/login?mode=signup${qs ? '&' + qs : ''}`);
-  };
+function Possibilities() {
   return (
-    <div className={`auth-modal${open ? " open" : ""}`} onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className="auth-panel">
-        {/* Head */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "20px 24px 0" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <Logo size={28} />
-            <span style={{ fontFamily: "Outfit,sans-serif", fontSize: 18, fontWeight: 800 }}>OgaPay</span>
-          </div>
-          <button onClick={onClose} style={{ width: 32, height: 32, border: "1px solid var(--border)", borderRadius: 8, background: "var(--card)", color: "var(--text2)" }}>
-            <I n="x" s={16} />
-          </button>
+    <section className="hv-section">
+      <div className="hv-inner">
+        <div className="hv-center hv-reveal">
+          <span className="hv-mono">What you can do</span>
+          <h2 className="hv-h2">Everything work needs,<br />in one place.</h2>
+          <p className="hv-lead" style={{ marginTop: 18 }}>See how OgaPay brings together human skill, verification and on-demand payment.</p>
         </div>
-
-        {/* Tab toggle */}
-        <div style={{ display: "flex", margin: "20px 24px 0", border: "1.5px solid var(--border)", borderRadius: 10, overflow: "hidden" }}>
-          {["login", "signup"].map(m => (
-            <button key={m} onClick={() => setMode(m)} style={{ flex: 1, height: 40, border: "none", background: mode === m ? "var(--primary)" : "transparent", color: mode === m ? "#fff" : "var(--text2)", fontWeight: 700, fontSize: 14, transition: "background .14s, color .14s" }}>
-              {m === "login" ? "Login" : "Sign Up"}
-            </button>
-          ))}
-        </div>
-
-        {/* Form */}
-        <form onSubmit={handleSubmit} style={{ padding: "24px 24px 28px" }}>
-          <div style={{ marginBottom: 14 }}>
-            <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: "var(--text2)", marginBottom: 6 }}>Email address</label>
-            <input className="auth-input" type="email" placeholder="you@example.com" value={authEmail} onChange={e => setAuthEmail(e.target.value)} required />
+        <div className="hv-connected">
+          <div className="hv-reveal">
+            <span className="hv-mono">Built to connect</span>
+            <h3 className="hv-h3" style={{ fontSize: "clamp(28px,3.2vw,40px)" }}>The new work economy for Africa</h3>
           </div>
-          {!isLogin && (
-            <div style={{ marginBottom: 14 }}>
-              <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: "var(--text2)", marginBottom: 6 }}>Full name</label>
-              <input className="auth-input" type="text" placeholder="Your full name" value={authName} onChange={e => setAuthName(e.target.value)} required />
-            </div>
-          )}
-          <div style={{ marginBottom: 20 }}>
-            <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: "var(--text2)", marginBottom: 6 }}>Password</label>
-            <input className="auth-input" type="password" placeholder="••••••••" value={authPassword} onChange={e => setAuthPassword(e.target.value)} required />
-          </div>
-          {isLogin && (
-            <div style={{ textAlign: "right", marginTop: -12, marginBottom: 16 }}>
-              <Link to="/forgot-password" style={{ fontSize: 12, color: "var(--accent)", fontWeight: 600 }}>Forgot password?</Link>
-            </div>
-          )}
-          <button type="submit" style={{ width: "100%", height: 46, borderRadius: 10, background: "var(--primary)", color: "#fff", border: "none", fontWeight: 800, fontSize: 15 }}>
-            {isLogin ? "Login to OgaPay" : "Create Account"}
-          </button>
-          {!isLogin && (
-            <p style={{ fontSize: 11, color: "var(--text3)", textAlign: "center", marginTop: 14, lineHeight: 1.5 }}>
-              By signing up you agree to our <Link to="/terms" style={{ color: "var(--accent)" }}>Terms of Service</Link> and <Link to="/privacy" style={{ color: "var(--accent)" }}>Privacy Policy</Link>.
+          <div className="hv-reveal">
+            <p className="hv-lead">
+              From quick social tasks and app feedback to launch campaigns and ongoing projects, OgaPay connects people,
+              teams and AI agents with people who can help. Start with one task and build from there.
             </p>
-          )}
-          <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "20px 0 16px" }}>
-            <div style={{ flex: 1, height: 1, background: "var(--border)" }} />
-            <span style={{ color: "var(--text3)", fontSize: 12, fontWeight: 700 }}>OR</span>
-            <div style={{ flex: 1, height: 1, background: "var(--border)" }} />
+            <Link to="/tasks" className="hv-btn hv-btn-ghost" style={{ marginTop: 22 }}>Explore OgaPay <i className="ti ti-arrow-right" /></Link>
           </div>
-          <button type="button" onClick={() => navigate("/login")} style={{ width: "100%", height: 44, borderRadius: 10, background: "var(--card)", border: "1.5px solid var(--border)", color: "var(--text)", fontWeight: 700, fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
-            <I n="brand-google" s={18} /> Continue with Google
-          </button>
-        </form>
+        </div>
       </div>
-    </div>
+    </section>
   );
 }
-/* ─── MAIN APP ───────────────────────────────────────────────────────────────── */
+
+/* ─── highlighted jobs ─────────────────────────────────────────────────────── */
+
+function HighlightedJobs({ jobs, loading }: { jobs: any[]; loading: boolean }) {
+  const [tab, setTab] = useState<"featured" | "newest">("featured");
+  const shown = useMemo(() => {
+    const list = [...jobs];
+    if (tab === "newest") list.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+    else list.sort((a, b) => Number(!!b.featured) - Number(!!a.featured));
+    return list.slice(0, 6);
+  }, [jobs, tab]);
+  return (
+    <section className="hv-section" id="featured-jobs">
+      <div className="hv-inner">
+        <div className="hv-headrow hv-reveal">
+          <div>
+            <span className="hv-mono">Find your next task</span>
+            <h2 className="hv-h2">Highlighted jobs</h2>
+          </div>
+          <div className="hv-seg" role="tablist">
+            <button className={tab === "featured" ? "on" : ""} onClick={() => setTab("featured")}>Featured jobs</button>
+            <button className={tab === "newest" ? "on" : ""} onClick={() => setTab("newest")}>Newest jobs</button>
+          </div>
+        </div>
+        <div className="hv-jobs">
+          {loading && [0, 1, 2].map((i) => <div key={i} className="hv-stat" style={{ height: 280 }}><span className="hv-sk" /></div>)}
+          {!loading && shown.length === 0 && <div className="hv-empty">No open jobs right now. <Link to="/create" style={{ fontWeight: 600 }}>Post the first one</Link>.</div>}
+          {!loading && shown.map((t) => <div key={t.id} className="hv-reveal"><TaskCard task={t} /></div>)}
+        </div>
+        <div style={{ marginTop: 28, textAlign: "center" }}>
+          <Link to="/tasks" className="hv-btn hv-btn-ghost">More jobs <i className="ti ti-arrow-right" /></Link>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ─── journal ──────────────────────────────────────────────────────────────── */
+
+function Journal() {
+  const res = useJson<any>("/blog?limit=9");
+  const posts: any[] = res?.data?.posts || [];
+  const track = useRef<HTMLDivElement>(null);
+  const [page, setPage] = useState(0);
+  const perPage = typeof window !== "undefined" && window.innerWidth <= 768 ? 1 : window.innerWidth <= 1024 ? 2 : 3;
+  const pages = Math.max(1, Math.ceil(posts.length / perPage));
+  const go = (p: number) => {
+    const el = track.current;
+    if (!el) return;
+    const next = Math.max(0, Math.min(pages - 1, p));
+    el.scrollTo({ left: next * el.clientWidth, behavior: "smooth" });
+    setPage(next);
+  };
+  if (posts.length === 0) return null;
+  const date = (d?: string) => (d ? new Date(d).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) : "");
+  return (
+    <section className="hv-section">
+      <div className="hv-inner">
+        <div className="hv-headrow hv-reveal">
+          <div>
+            <span className="hv-mono">From the journal</span>
+            <h2 className="hv-h2">Featured stories</h2>
+            <p className="hv-lead" style={{ marginTop: 12 }}>Guides, product news and earning tips from the OgaPay team.</p>
+          </div>
+          <Link to="/blog" className="hv-btn hv-btn-ghost">View all stories <i className="ti ti-arrow-right" /></Link>
+        </div>
+        <div className="hv-journal" ref={track} onScroll={(e) => setPage(Math.round(e.currentTarget.scrollLeft / e.currentTarget.clientWidth))}>
+          {posts.map((p) => (
+            <Link key={p.id} to={`/blog/${p.slug || p.id}`} className="hv-post">
+              <div className="hv-post-img">{p.coverImage && <img src={p.coverImage} alt="" loading="lazy" />}</div>
+              <div className="hv-post-body">
+                <span className="hv-mono">{date(p.publishedAt || p.createdAt)}</span>
+                <div className="hv-post-title">{p.title}</div>
+                <p className="hv-post-ex">{p.excerpt}</p>
+                <div className="hv-post-foot">
+                  <span>{p.author?.username ? `@${p.author.username}` : ""}</span>
+                  <span>Read story <i className="ti ti-arrow-right" /></span>
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
+        {pages > 1 && (
+          <div className="hv-pager">
+            <button onClick={() => go(page - 1)} disabled={page === 0} aria-label="Previous stories"><i className="ti ti-arrow-left" /></button>
+            <span className="hv-mono">{String(page + 1).padStart(2, "0")} / {String(pages).padStart(2, "0")}</span>
+            <button onClick={() => go(page + 1)} disabled={page >= pages - 1} aria-label="Next stories"><i className="ti ti-arrow-right" /></button>
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+/* ─── page ─────────────────────────────────────────────────────────────────── */
+
 export default function HomePage() {
   const navigate = useNavigate();
   const { isAuthed } = useAuth();
-  const { rates } = useCurrency();
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const isMobile = useIsMobile();
+  const rootRef = useRef<HTMLElement>(null);
+  useReveal(rootRef);
 
-  // lock body scroll when drawer open
+  const live = useJson<any>("/stats/live", 60000);
+  const all = useJson<any>("/stats");
+  const { data: jobsRes, error: jobsErr } = useApi("/tasks?status=OPEN", { auth: false });
+  const jobs = useMemo(() => listOf(jobsRes), [jobsRes]);
+  const jobsLoading = !jobsRes && !jobsErr;
+
   useEffect(() => {
     document.body.style.overflow = drawerOpen ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
   }, [drawerOpen]);
 
-  const openAuth = (mode = "signup") => {
-    navigate(mode === "signup" ? '/login?mode=signup' : '/login');
-  };
+  const onCreate = () => navigate(isAuthed ? "/create" : "/login?mode=signup");
 
   return (
     <>
       <Navbar onMenuToggle={() => setDrawerOpen(true)} />
-      <main style={{ overflowX: 'hidden', paddingTop: 'var(--nav-h)' }}>
-        <Hero openAuth={openAuth} navigate={navigate} isAuthed={isAuthed} />
-        <GetStarted openAuth={openAuth} navigate={navigate} />
-        <section style={{ padding: "12px 0 0", background: "var(--bg)" }}>
-          <div className="container">
-          </div>
-        </section>
-        <FeatureStorySection />
-        <FeaturedJobs />
-        <StoreSection />
-        <FeaturedBlogs />
-        <Communities />
+      <main ref={rootRef} className="hv" style={{ paddingTop: "var(--nav-h)", overflowX: "clip" }}>
+        <div className="hv-frame">
+          <Hero live={live} onCreate={onCreate} />
+          <Ticker jobs={jobs} />
+          <ChoosePath />
+          <Numbers live={live} all={all} />
+          <Possibilities />
+        </div>
+        <EcosystemStory />
+        <div className="hv-frame">
+          <HighlightedJobs jobs={jobs} loading={jobsLoading} />
+          <Journal />
+          <section className="hv-section hv-final">
+            <div className="hv-inner hv-reveal">
+              <span className="hv-mono">Get started</span>
+              <h2 className="hv-h2">Your next task starts here.</h2>
+              <div className="hv-btns">
+                <Link to="/tasks" className="hv-btn hv-btn-dark">Start earning <i className="ti ti-arrow-right" /></Link>
+                <button className="hv-btn hv-btn-ghost" onClick={onCreate}>Create a job <i className="ti ti-plus" /></button>
+              </div>
+            </div>
+          </section>
+        </div>
       </main>
       <Footer />
       <Drawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
       <BottomNav />
     </>
   );
-}
-
-/* ─── FEATURED BLOGS ──────────────────────────────────── */
-function FeaturedBlogs() {
-  const [blogs, setBlogs] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    (async () => {
-      try {
-        const res = await fetch(`${API_BASE}/blogs/featured`).then(r => r.json())
-        const data = Array.isArray(res) ? res : res?.data || []
-        setBlogs(data.slice(0, 6))
-      } catch (e: any) { console.error(e) }
-      setLoading(false)
-    })()
-  }, [])
-
-  if (loading || blogs.length === 0) return null
-
-  const formatDate = (d: string) => {
-    if (!d) return ''
-    const date = new Date(d)
-    if (isNaN(date.getTime())) return ''
-    return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
-  }
-
-  return (
-    <section className="hp-blog-section" style={{ padding: "56px 0", background: "var(--bg)", maxWidth: "100vw", overflowX: "hidden" }}>
-      <div className="container">
-        <div style={{ textAlign: "center", marginBottom: 36 }}>
-          <h2 className="section-title" style={{ fontSize: 26, fontWeight: 700, color: "var(--text)", margin: "0 0 8px" }}>Featured Blogs</h2>
-          <p className="section-sub" style={{ fontSize: 15, color: "var(--text2)", margin: 0 }}>Learn more about OgaPay</p>
-        </div>
-        <div className="blog-grid" style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(2, 1fr)",
-          gap: 20,
-        }}>
-          {blogs.map((blog: any) => (
-            <a key={blog.slug || blog.id} href={`/blog/${blog.slug || blog.id}`}
-              className="blog-card"
-              style={{
-                display: 'flex', flexDirection: 'column',
-                background: 'var(--card)',
-                border: '1px solid var(--border)',
-                borderRadius: 12,
-                overflow: 'hidden',
-                textDecoration: 'none',
-                cursor: 'pointer',
-                transition: 'transform 0.2s, box-shadow 0.2s',
-              }}
-              onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.08)' }}
-              onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none' }}
-            >
-              {blog.cover_image && (
-                <img
-                  src={blog.cover_image}
-                  alt={blog.title}
-                  className="blog-card-image"
-                  style={{
-                    width: '100%', height: 280, objectFit: 'cover',
-                    borderTopLeftRadius: 12, borderTopRightRadius: 12,
-                  }}
-                />
-              )}
-              <div className="blog-card-content" style={{ padding: 20, flex: 1, display: 'flex', flexDirection: 'column' }}>
-                <h3 className="blog-card-title" style={{
-                  fontWeight: 700, fontSize: 20, margin: '0 0 8px',
-                  color: 'var(--text)', lineHeight: 1.3,
-                }}>
-                  {blog.title}
-                </h3>
-                <p className="blog-card-excerpt" style={{
-                  color: 'var(--text2)', fontSize: 15, lineHeight: 1.5,
-                  margin: '0 0 16px', flex: 1,
-                  display: '-webkit-box',
-                  WebkitLineClamp: 3,
-                  WebkitBoxOrient: 'vertical' as const,
-                  overflow: 'hidden',
-                }}>
-                  {blog.excerpt || blog.description || ''}
-                </p>
-                <div className="blog-card-byline" style={{
-                  fontSize: 13, color: 'var(--text3)',
-                  display: 'flex', gap: 8, alignItems: 'center',
-                }}>
-                  {blog.author_handle && <span>@{blog.author_handle}</span>}
-                  {blog.author_handle && blog.published_date && <span>|</span>}
-                  {blog.published_date && <span>{formatDate(blog.published_date)}</span>}
-                </div>
-              </div>
-            </a>
-          ))}
-        </div>
-        {blogs.length >= 4 && (
-          <div style={{ textAlign: 'center', marginTop: 32 }}>
-            <a href="/blog"
-              style={{
-                display: 'inline-flex', alignItems: 'center', gap: 8,
-                fontSize: 14, fontWeight: 700, color: 'var(--accent)',
-                textDecoration: 'none',
-              }}
-            >
-              View all articles <i className="ti ti-arrow-right" style={{ fontSize: 14 }} />
-            </a>
-          </div>
-        )}
-      </div>
-
-      <style>{`
-        @media (max-width: 768px) {
-          .hp-blog-section .blog-grid {
-            grid-template-columns: 1fr !important;
-          }
-          .hp-blog-section .blog-card-image {
-            height: 200px !important;
-          }
-        }
-      `}</style>
-    </section>
-  )
 }
