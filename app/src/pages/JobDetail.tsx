@@ -727,6 +727,59 @@ function WurkJobDetailView(props: any) {
           padding: 0 !important;
           margin: 0 !important;
         }
+
+        /* ── wurk-style refresh (overrides the older rules above) ── */
+        .wjd{font-family:'Geist',system-ui,sans-serif;background:var(--bg)}
+        .wjd-wrap{width:min(100% - 32px,1000px)}
+        .wjd-panel{border:1px solid var(--border)!important;border-radius:20px;background:var(--card)}
+        .wjd-back{border:1px solid var(--border);font-weight:600;border-radius:10px}
+        .wjd-agent{align-items:center;padding:18px 20px}
+        .wjd-avatar{width:44px;height:44px;border-radius:12px;border:1px solid var(--border)!important;background:var(--card2);font-size:15px}
+        .wjd-avatar img{border-radius:12px}
+        .wjd-kicker{font-family:var(--font-mono);font-weight:400;font-size:9px;letter-spacing:.1em;color:var(--text2)}
+        .wjd-name{font-size:17px;font-weight:600;letter-spacing:-.02em}
+        .wjd-handle{font-size:12px;display:inline-flex;align-items:center;gap:6px}
+        .wjd-badge{display:none}
+        .wjd-sep{display:none}
+        .wjd-link{font-weight:500;font-size:12px;color:var(--text2)}
+        .wjd-icon-btn{border:1px solid var(--border)!important;border-radius:10px;width:34px;height:34px}
+        .wjd-grid{gap:14px;margin-bottom:14px}
+        .wjd-meta{padding:18px 20px 20px!important;border:1px solid var(--border)!important}
+        .wjd-title{font-family:var(--font-mono);font-weight:400;font-size:10px;letter-spacing:.1em;color:var(--text2);margin-bottom:18px}
+        .wjd-rows{display:grid;grid-template-columns:1fr 1fr;gap:16px 18px}
+        .wjd-row{display:block!important;padding:0!important;border:0!important}
+        .wjd-row.wide{grid-column:1 / -1}
+        .wjd-label{font-family:var(--font-mono);font-weight:400!important;font-size:9px!important;letter-spacing:.1em;color:var(--text2)!important;padding:0;margin-bottom:5px}
+        .wjd-value{font-size:13px!important;font-weight:500!important;color:var(--text)!important}
+        .wjd-open-val{color:var(--green)!important}
+        .wjd-dot{width:6px;height:6px}
+        .wjd-reward{position:relative;display:block;text-align:left!important;padding:22px 24px!important;margin-bottom:14px;border:1px solid rgba(200,211,218,.55)!important;border-radius:20px;
+          background:linear-gradient(125deg,rgba(255,255,255,.96),rgba(243,247,249,.82) 70%,rgba(234,241,244,.72))!important;overflow:hidden}
+        [data-theme="dark"] .wjd-reward{background:linear-gradient(125deg,#151517,#111113 70%,#0e0f10)!important;border-color:rgba(255,255,255,.08)!important}
+        .wjd-reward-title{font-family:var(--font-mono);font-weight:400;font-size:9px;letter-spacing:.1em;color:var(--text2)!important;margin-bottom:8px}
+        .wjd-amount{font-size:clamp(32px,4.4vw,44px)!important;font-weight:600!important;letter-spacing:-.055em;color:#17805c!important;-webkit-text-fill-color:#17805c!important}
+        [data-theme="dark"] .wjd-amount{color:#34d399!important;-webkit-text-fill-color:#34d399!important}
+        .wjd-token{font-size:12px!important;font-weight:500!important;color:var(--text2)!important;-webkit-text-fill-color:var(--text2)!important;margin-left:6px}
+        .wjd-usd{font-family:var(--font-mono);font-size:11px!important;font-weight:400!important;letter-spacing:0;color:var(--text2)!important;margin-top:6px}
+        .wjd-reward-mark{position:absolute;right:18px;top:18px;width:34px;height:34px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--green);display:grid;place-items:center;font-size:16px}
+        .wjd-desc{padding:20px 22px 22px!important}
+        .wjd-desc-title{font-family:var(--font-mono);font-weight:400;font-size:10px;letter-spacing:.1em;color:var(--text2);border-bottom:0;padding-bottom:0;margin-bottom:14px}
+        .wjd-body{font-size:14px;color:var(--text);line-height:1.7}
+        .wjd-sub-title{font-size:14px;font-weight:600}
+        .wjd-translate-row{justify-content:flex-start}
+        .wjd-translate-btn{font-weight:500;color:var(--text2);text-decoration:underline;text-underline-offset:3px}
+        .wjd-action-bar{border-top:1px solid var(--border);padding-top:16px;margin-top:20px}
+        .wjd-primary,.wjd-secondary{text-transform:none!important;letter-spacing:0!important;font-weight:600;font-size:14px;border-radius:12px;min-height:46px}
+        .wjd-primary{background:var(--accent)!important;color:var(--on-accent)!important}
+        .wjd-primary:disabled{background:var(--card2)!important;color:var(--text3)!important}
+        .wjd-secondary{background:var(--card)!important;color:var(--text)!important;border:1px solid var(--border)!important}
+        .wjd-sub-item{border:1px solid var(--border);background:var(--card2)}
+        .wjd-sub-avatar{border-radius:10px}
+        .wjd-sub-avatar img{border-radius:10px}
+        @media(max-width:640px){
+          .wjd-agent{flex-direction:row;flex-wrap:wrap}
+          .wjd-rows{grid-template-columns:1fr 1fr}
+        }
       `}
 </style>
 
@@ -790,7 +843,9 @@ function WurkJobDetailView(props: any) {
                 <div className="wjd-row"><div className="wjd-label">Mode</div><div className="wjd-value">{job.type || 'challenge'}</div></div>
                 <div className="wjd-row"><div className="wjd-label">Selection type</div><div className="wjd-value">{job.selectionType || 'Random'}</div></div>
                 <div className="wjd-row"><div className="wjd-label">Closes in</div><div className="wjd-value" style={{ fontVariantNumeric: 'tabular-nums' }}>{countdownStr}</div></div>
-                <div className="wjd-row"><div className="wjd-label">Category</div><div className="wjd-value">{job.category}</div></div>
+                <div className="wjd-row"><div className="wjd-label">Minimum rank</div><div className="wjd-value">{job.rankRequired || job.minRank ? `Rank ${job.rankRequired || job.minRank}` : 'None'}</div></div>
+                <div className="wjd-row"><div className="wjd-label">Requirements</div><div className="wjd-value">{job.workerRequirement || (Number(job.minOgaScore || job.minSorsaScore || 0) > 0 ? `OgaScore ≥ ${job.minOgaScore || job.minSorsaScore}` : 'No extra requirements')}</div></div>
+                <div className="wjd-row wide"><div className="wjd-label">Category</div><div className="wjd-value">{String(job.category || 'Custom').replace(/_/g, ' ').toLowerCase().replace(/^\w/, (l: string) => l.toUpperCase())}</div></div>
               </div>
             </div>
             <div className="wjd-panel wjd-meta">
@@ -810,6 +865,7 @@ function WurkJobDetailView(props: any) {
 
           {/* ── Reward ── */}
           <section className="wjd-panel wjd-reward">
+              <span className="wjd-reward-mark" aria-hidden="true"><i className="ti ti-currency-dollar" /></span>
               <div className="wjd-reward-title">Reward per winner</div>
               <div>
                 <span className="wjd-amount">{rewardAmount}</span>
@@ -817,13 +873,6 @@ function WurkJobDetailView(props: any) {
               </div>
               {rewardUsdLine && <div className="wjd-usd">{rewardUsdLine}</div>}
           </section>
-
-          {/* ── CATEGORY | RANK | REQ ── */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, color: 'var(--text2, #6b7280)', fontWeight: 600, padding: '4px 0', marginTop: -8, marginBottom: 8, flexWrap: 'wrap' }}>
-            <span>{(job.category || job.jobType || job.job_type || 'Custom').replace(/_/g, ' ').toLowerCase().replace(/\w/g, (l: string) => l.toUpperCase())}</span>
-            {(job.rankRequired || job.minRank) && <><span style={{ color: 'var(--border2, #d1d5db)' }}>|</span><span>Rank {job.rankRequired || job.minRank}</span></>}
-            {job.workerRequirement && <><span style={{ color: 'var(--border2, #d1d5db)' }}>|</span><span>Req: {job.workerRequirement}</span></>}
-          </div>
 
           {/* ── Description ── */}
           <section className="wjd-panel wjd-desc">

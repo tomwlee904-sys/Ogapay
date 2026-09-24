@@ -35,7 +35,7 @@ function Avatar({ src, name, size = 32 }: { src?: string | null; name: string; s
   );
 }
 
-export function HomeJobCard({ task, convert }: { task: any; convert: Convert }) {
+export function HomeJobCard({ task, convert, applied }: { task: any; convert: Convert; applied?: boolean }) {
   const poster = task.poster || task.creator || {};
   const name = poster.username || poster.firstName || task.creatorName || "OgaPay";
   const amount = Number(task.reward ?? task.amount ?? 0);
@@ -89,12 +89,18 @@ export function HomeJobCard({ task, convert }: { task: any; convert: Convert }) 
       <div className="hc-subs">
         <div className="hc-row"><span>Submissions</span><strong>{done} / {max || "∞"}</strong></div>
         <div className="hc-bar"><span style={{ width: `${pct}%` }} /></div>
-        <div className="hc-row"><span>{done} submitted</span><span>{max ? (open > 0 ? `${open} open` : "Full") : "Unlimited"}</span></div>
+        <ul className="hc-dots">
+          <li>{done} submitted</li>
+          <li>{max ? (open > 0 ? `${open} open` : "Target reached") : "Unlimited entries"}</li>
+          {task.featured && <li>Featured</li>}
+        </ul>
       </div>
 
       <div className="hc-foot">
         <time><i className="ti ti-clock" />{timeLeft(task.expiresAt || task.deadline)}</time>
-        <span className="hc-go">View job<span className="hc-arrow"><i className="ti ti-arrow-up-right" /></span></span>
+        {applied
+          ? <span className="hc-go hc-done"><i className="ti ti-circle-check" />Submitted</span>
+          : <span className="hc-go">View job<span className="hc-arrow"><i className="ti ti-arrow-up-right" /></span></span>}
       </div>
     </Link>
   );

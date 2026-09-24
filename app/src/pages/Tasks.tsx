@@ -10,6 +10,7 @@ import { useTheme } from '../context/ThemeContext'
 import { useCurrency } from '../context/CurrencyContext'
 import { SkeletonPage, injectSkeletonStyles } from "../components/SkeletonLoader"
 import ApplyModal from '../components/ApplyModal'
+import { HomeJobCard } from '../components/home/HomeCards'
 
 const OGAPAY_BLUE = 'var(--accent)'
 
@@ -436,653 +437,238 @@ function useTasksData(category?: string) {
   return useApi<any[]>(url, { auth: false })
 }
 
-// ─── Countdown hook ──────────────────────────
-function useCountdown(expiresAt?: string) {
-  const [display, setDisplay] = useState('')
-  useEffect(() => {
-    if (!expiresAt) return
-    const tick = () => {
-      const diff = new Date(expiresAt).getTime() - Date.now()
-      if (diff <= 0) { setDisplay('Expired'); return }
-      const h = Math.floor(diff / 3600000)
-      const m = Math.floor((diff % 3600000) / 60000)
-      const s = Math.floor((diff % 60000) / 1000)
-      if (h > 0) setDisplay(`${h}h ${String(m).padStart(2,'0')}m ${String(s).padStart(2,'0')}s`)
-      else setDisplay(`${String(m).padStart(2,'0')}m ${String(s).padStart(2,'0')}s`)
-    }
-    tick(); const id = setInterval(tick, 1000)
-    return () => clearInterval(id)
-  }, [expiresAt])
-  return display
-}
+// ─── Sort / filter menu ─────────────────────────────────────────
+const SORTS: [string, string][] = [['default', 'Default'], ['reward', 'Reward'], ['newest', 'Newest'], ['closing', 'Closing time']]
+const REQS: [string, string][] = [['all', 'All'], ['open', 'Open to everyone'], ['ogascore', 'OgaScore required'], ['wallet', 'Wallet required'], ['rank', 'Rank required']]
 
-function useElapsed(createdAt?: string) {
-  const [display, setDisplay] = useState('')
-  useEffect(() => {
-    if (!createdAt) return
-    const tick = () => {
-      const diff = Date.now() - new Date(createdAt).getTime()
-      const m = Math.floor(diff / 60000)
-      if (m < 1) { setDisplay('Posted just now'); return }
-      if (m < 60) { setDisplay(`Posted ${m}m ago`); return }
-      const h = Math.floor(m / 60)
-      if (h < 24) { setDisplay(`Posted ${h}h ago`); return }
-      const days = Math.floor(h / 24)
-      setDisplay(`Posted ${days} day${days !== 1 ? 's' : ''} ago`)
-    }
-    tick(); const id = setInterval(tick, 60000)
-    return () => clearInterval(id)
-  }, [createdAt])
-  return display
-}
-
-// ─── TaskCard component ───────────────────────
-function TaskCard({ job, onToggleBookmark, bookmarked, applied }: {
-  job: any
-  onToggleBookmark: (id: string) => void
-  bookmarked: boolean
-  applied?: boolean
+function SortFilterMenu({ sort, req, category, categories, onSort, onReq, onCategory }: {
+  sort: string; req: string; category: string; categories: string[]
+  onSort: (v: string) => void; onReq: (v: string) => void; onCategory: (v: string) => void
 }) {
-  const navigate = useNavigate()
-  const { rates } = useCurrency()
-  const slotsTotal = job.slots || job.maxSlots || 100
-  const slotsFilled = job.slotsFilled || job.filled || 0
-  const submissionsCount = job.submissionsCount ?? job._count?.submissions ?? slotsFilled ?? 0
-  const { theme } = useTheme()
-  const isDark = theme === 'dark'
-  const progress = slotsTotal > 0 ? (slotsFilled / slotsTotal) * 100 : 0
-  const posterName = job.poster ? (job.poster.firstName ? job.poster.firstName + (job.poster.lastName ? ' ' + job.poster.lastName : '') : job.poster.username || '') : ''
-  const creatorName = posterName || job.creatorName || job.creator?.username || job.creator || 'Anonymous'
-  const openSlots = slotsTotal - slotsFilled
-  const reward = Number(job.reward || job.amount || 0)
-  const unlimited = slotsTotal >= 999
-  const status = job.status || 'OPEN'
-  const isExpired = status !== 'OPEN'
-
-  // Countdown
-  const expiresAt = job.expiresAt || job.closesAt || job.deadline || job.endsAt || ''
-  const countdown = useCountdown(expiresAt)
-  const elapsed = useElapsed(job.createdAt || '')
-  const timerDisplay = countdown || elapsed
-
-  // Progress bar color based on status
-  const progressColor = status === 'OPEN'
-    ? 'linear-gradient(90deg,#059669,#34D399)'
-    : status === 'CLOSED'
-    ? 'linear-gradient(90deg,#6B7280,#9CA3AF)'
-    : 'linear-gradient(90deg,#D97706,#FBBF24)'
-
-  // Reward box tint matching progress
-  const rewardBg = status === 'OPEN'
-    ? 'rgba(var(--green-rgb),0.07)'
-    : status === 'CLOSED'
-    ? 'rgba(107,114,128,0.06)'
-    : 'rgba(217,119,6,0.07)'
-  const rewardBorder = status === 'OPEN'
-    ? 'rgba(var(--green-rgb),0.18)'
-    : status === 'CLOSED'
-    ? 'rgba(107,114,128,0.15)'
-    : 'rgba(217,119,6,0.18)'
-
-  const eligibility: any = job.eligibility
-  const isEligible = !eligibility || eligibility.isEligible
-  const reasons: string[] = eligibility?.reasons || []
-
-  // Description expand
-  const [expanded, setExpanded] = useState(false)
-  const descRef = useRef<HTMLParagraphElement>(null)
-  const [isLong, setIsLong] = useState(false)
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
   useEffect(() => {
-    if (descRef.current) {
-      setIsLong(descRef.current.scrollHeight > descRef.current.clientHeight)
-    }
-  }, [])
-
+    if (!open) return
+    const close = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false) }
+    const esc = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false) }
+    document.addEventListener('mousedown', close)
+    document.addEventListener('keydown', esc)
+    return () => { document.removeEventListener('mousedown', close); document.removeEventListener('keydown', esc) }
+  }, [open])
+  const sortLabel = SORTS.find(([v]) => v === sort)?.[1] || 'Default'
+  const filterLabel = category !== 'All' ? category : REQS.find(([v]) => v === req)?.[1] || 'All'
+  const item = (on: boolean, label: string, pick: () => void) => (
+    <button key={label} type="button" className={`ui-menu-item${on ? ' on' : ''}`} onClick={pick}>{label}</button>
+  )
   return (
-    <div className="task-card-hover" onClick={() => navigate(`/tasks/${job.id}`)} style={{
-      background: isDark ? '#141414' : 'var(--card)',
-      border: isDark ? `1.5px solid ${!isEligible ? 'var(--red)' : 'var(--border, #2a2a2a)'}` : `1.5px solid ${!isEligible ? 'var(--red)' : 'var(--border)'}`,
-      borderRadius: 16,
-      boxShadow: isDark ? (!isEligible ? '0 2px 16px rgba(var(--red-rgb),0.10)' : '0 4px 24px rgba(0,0,0,0.25)') : (!isEligible ? '0 2px 16px rgba(var(--red-rgb),0.10)' : '0 2px 16px rgba(0,0,0,0.06)'),
-      cursor: 'pointer',
-      display: 'flex',
-      flexDirection: 'column',
-      opacity: !isEligible ? 0.75 : 1,
-      height: 'auto',
-      position: 'relative',
-    }}>
-
-      {/* ── STATUS BADGE ── */}
-      {applied && (
-        <div style={{
-          position: 'absolute', top: 12, right: 12, zIndex: 2,
-          background: 'var(--green)',
-          color: '#fff', fontSize: 10, fontWeight: 800,
-          padding: '3px 10px', borderRadius: 99,
-          display: 'flex', alignItems: 'center', gap: 4,
-          boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-        }}>
-          <i className="ti ti-circle-check" style={{fontSize:11}} /> Applied
+    <div className="ui-menu-wrap" ref={ref}>
+      <button type="button" className="ui-menu-btn" aria-expanded={open} aria-haspopup="true" onClick={() => setOpen(o => !o)}>
+        <span>Sort: <b>{sortLabel}</b></span>
+        <span>Filter: <b>{filterLabel}</b></span>
+        <i className="ti ti-chevron-down" />
+      </button>
+      {open && (
+        <div className="ui-menu" role="menu">
+          <div className="ui-menu-label">Sort</div>
+          {SORTS.map(([v, l]) => item(sort === v, l, () => onSort(v)))}
+          <div className="ui-menu-label" style={{ marginTop: 8 }}>Requirements</div>
+          {REQS.map(([v, l]) => item(req === v, l, () => onReq(v)))}
+          {categories.length > 1 && (
+            <>
+              <div className="ui-menu-label" style={{ marginTop: 8 }}>Category</div>
+              <div className="tl-cats">
+                {categories.map(c => item(category === c, c === 'All' ? 'All categories' : c, () => onCategory(c)))}
+              </div>
+            </>
+          )}
         </div>
       )}
-      {!applied && job.featured && (
-        <div style={{
-          position: 'absolute', top: 12, right: 12, zIndex: 2,
-          background: 'linear-gradient(135deg,#F59E0B,#D97706)',
-          color: '#fff', fontSize: 10, fontWeight: 800,
-          padding: '3px 10px', borderRadius: 99,
-          boxShadow: '0 2px 8px rgba(245,158,11,0.4)',
-          letterSpacing: '0.04em',
-          textTransform: 'uppercase',
-        }}>
-          Highlighted
-        </div>
-      )}
-
-      {/* ── ELIGIBILITY BANNER ── */}
-      {!isEligible && (
-        <div style={{ padding: '8px 12px', background: 'var(--red)', display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, fontWeight: 700, color: '#fff', flexWrap: 'wrap' }}>
-          <i className="ti ti-shield-off" style={{fontSize:14}} />
-          {reasons.map((r, i) => (
-            <span key={i} style={{ background: 'rgba(255,255,255,0.15)', padding: '2px 8px', borderRadius: 4 }}>
-              {r}
-            </span>
-          ))}
-        </div>
-      )}
-
-
-
-        {/* ── DARK MODE OVERRIDES ── */}
-        <style>{`
-          [data-theme="dark"] .ngn-shimmer {
-            color: #ffffff !important;
-            -webkit-text-fill-color: #ffffff !important;
-            background: none !important;
-            animation: none !important;
-          }
-          [data-theme="dark"] .task-reward-box {
-            background: #1e1e1e !important;
-            border: 1.5px solid rgba(255,255,255,0.08) !important;
-            box-shadow: none !important;
-          }
-          [data-theme="dark"] .task-card-hover {
-            background: #141414 !important;
-            border-color: var(--border, #2a2a2a) !important;
-            box-shadow: 0 4px 24px rgba(0,0,0,0.25) !important;
-          }
-        `}</style>
-
-      {/* ── LISTED BY ── */}
-      <div className='listed-by-header' style={{ padding: '8px 14px', borderBottom: isDark ? '1px solid var(--border, #2a2a2a)' : '1px solid var(--border)', background: isDark ? 'transparent' : 'linear-gradient(135deg, rgba(59,91,219,0.24) 0%, rgba(255,255,255,0.45) 50%, rgba(16,185,129,0.24) 100%)' }}>
-        <div style={{ fontSize: 9, fontWeight: 800, color: 'var(--text3)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 2 }}>Listed by</div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div style={{ width: 36, height: 36, borderRadius: '50%', background: `linear-gradient(180deg,${OGAPAY_BLUE} 0%,var(--accent) 100%)`, color: '#fff', display: 'grid', placeItems: 'center', fontSize: 11, fontWeight: 900, flexShrink: 0, overflow: 'hidden', border: '2px solid white', boxShadow: '0 2px 8px rgba(var(--accent-rgb),0.25)' }}>
-            {(job.poster?.avatarUrl || job.poster?.avatar || job.creatorAvatar) ? <img src={job.poster?.avatarUrl || job.poster?.avatar || job.creatorAvatar} style={{width:'100%',height:'100%',objectFit:'cover',borderRadius:'50%'}} /> : formatAddress(creatorName)}
-          </div>
-          <span style={{ fontWeight: 800, fontSize: 15, flex: 1, color: isDark ? '#ffffff' : 'var(--text, #0a0a0a)' }}>{creatorName}</span>
-          <button onClick={e => { e.stopPropagation(); onToggleBookmark(job.id) }}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', color: bookmarked ? OGAPAY_BLUE : 'var(--text3)', fontSize: 18, padding: 4 }}>
-            <i className={`ti ${bookmarked ? 'ti-bookmark-filled' : 'ti-bookmark'}`} />
-          </button>
-        </div>
-      </div>
-
-      {/* ── PROGRESS ── */}
-      <div style={{ padding: '18px 20px 4px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-          <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Progress</span>
-          <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text2)' }}>
-            {unlimited ? 'Unlimited' : `${slotsFilled}/${slotsTotal}`}
-          </span>
-        </div>
-        <div style={{ height: 7, borderRadius: 99, background: 'rgba(var(--accent-rgb),0.08)', overflow: 'hidden' }}>
-          <div style={{ height: '100%', borderRadius: 99, background: progressColor, width: `${Math.min(progress, 100)}%`, transition: 'width .3s', boxShadow: '0 0 6px rgba(0,0,0,0.12)' }} />
-        </div>
-      </div>
-
-      {/* ── STATUS ROW ── */}
-      <div style={{ padding: '12px 18px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 11 }}>
-        <span style={{ color: isDark ? '#34D399' : 'var(--green)', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 4, whiteSpace: 'nowrap' }}>
-          <span style={{ width: 6, height: 6, borderRadius: '50%', background: isDark ? '#34D399' : 'var(--green)', display: 'inline-block', flexShrink: 0 }} />
-          Submissions {submissionsCount}
-        </span>
-        <span style={{ color: 'var(--accent)', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 4, whiteSpace: 'nowrap' }}>
-          <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--accent)', display: 'inline-block', flexShrink: 0 }} />
-          {unlimited ? 'Unlimited slots' : `Open ${Math.max(0, openSlots)}`}
-        </span>
-        <span style={{ color: status === 'OPEN' ? (isDark ? '#34D399' : 'var(--green)') : '#6B7280', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 4, whiteSpace: 'nowrap' }}>
-          <span style={{ width: 6, height: 6, borderRadius: '50%', background: status === 'OPEN' ? (isDark ? '#34D399' : 'var(--green)') : '#9CA3AF', display: 'inline-block', flexShrink: 0 }} />
-          Status {status === 'CLOSED' ? 'Closed' : 'Filling'}
-        </span>
-      </div>
-
-      {/* ── REWARD BOX ── */}
-      <div className="task-reward-box" style={{ margin: '0 18px 14px', background: isDark ? '#1e1e1e' : rewardBg, border: isDark ? `1.5px solid rgba(255,255,255,0.08)` : `1px solid ${rewardBorder}`, borderRadius: 14, padding: '18px 16px', textAlign: 'center' }}>
-        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 8, marginBottom: 6 }}>
-          <span className="ngn-shimmer" style={{ fontSize: 42, fontWeight: 900, fontFamily: 'Geist', lineHeight: 1, color: isDark ? '#ffffff' : undefined }}>
-            {reward.toLocaleString()}
-          </span>
-          <span className="ngn-shimmer" style={{ fontSize: 16, fontWeight: 800, fontFamily: 'Geist', color: isDark ? '#ffffff' : undefined }}>NGN</span>
-        </div>
-        <div style={{ fontSize: 13, color: 'var(--text3)', fontWeight: 600 }}>
-          $ {(reward * rates.NGN).toFixed(2)} USD <InfoBtn text="Approximate value in USD based on current exchange rates. Actual rates may vary." />
-        </div>
-      </div>
-
-      {/* ── META TAGS ── */}
-      <div style={{ padding: '0 18px 12px', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: 'var(--text2)', fontWeight: 600, flexWrap: 'wrap' }}>
-
-        {job.difficulty && (
-          <>
-            <span style={{ color: 'var(--border2)' }}>|</span>
-            <span>Difficulty: {job.difficulty}</span>
-          </>
-        )}
-      </div>
-
-      {/* ── CATEGORY | RANK ── */}
-      <div style={{ padding: '0 18px 16px', display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: isDark ? 'rgba(255,255,255,0.6)' : 'var(--text2)', fontWeight: 600 }}>
-        <span>{(job.category || 'Custom').replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, (l: string) => l.toUpperCase())}</span>
-        {(job.minRank > 0 || job.rankRequired > 0) && (job.minRank || job.rankRequired) !== 'None' && <><span style={{ color: 'var(--border2)' }}>|</span><span>Rank {job.minRank || job.rankRequired}</span></>}
-      </div>
-
-      {/* ── ABOUT THIS JOB + TIMER ── */}
-      <div style={{ padding: '0 18px 10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <span style={{ fontSize: 11, fontWeight: 800, color: isDark ? 'rgba(255,255,255,0.5)' : 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'flex', alignItems: 'center', gap: 6 }}>
-          <i className="ti ti-message" style={{fontSize:13}} /> About This Job
-        </span>
-        {timerDisplay && (
-          <span style={{
-            fontSize: 11, fontWeight: 700,
-            color: isExpired ? 'var(--red)' : countdown ? (isDark ? '#ffffff' : 'var(--green)') : (isDark ? 'rgba(255,255,255,0.5)' : 'var(--text3)'),
-            display: 'flex', alignItems: 'center', gap: 4,
-            background: countdown && !isExpired ? (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(var(--green-rgb),0.07)') : 'transparent',
-            padding: countdown ? '2px 7px' : '0',
-            borderRadius: 99,
-          }}>
-            <i className="ti ti-clock" style={{fontSize:12}} /> {timerDisplay}
-          </span>
-        )}
-      </div>
-
-      {/* ── DESCRIPTION ── */}
-      <div style={{
-        margin: '0 18px 22px',
-        padding: '14px 16px',
-        border: isDark ? '1.5px solid var(--border, #2a2a2a)' : '1.5px solid var(--border)',
-        borderRadius: '10px',
-        background: isDark ? '#111113' : 'var(--bg)',
-        overflowWrap: 'break-word',
-        wordBreak: 'break-word',
-      }}
-        className="task-desc-box"
-      >
-        <p ref={descRef}
-          style={{
-            fontSize: 14, color: isDark ? 'rgba(255,255,255,0.6)' : 'var(--text2)', margin: 0, lineHeight: 1.65,
-            display: '-webkit-box',
-            WebkitBoxOrient: 'vertical' as any,
-            WebkitLineClamp: !expanded ? 1 : 'unset' as any,
-            overflow: 'hidden',
-          }}>
-          {job.description}
-        </p>
-        {isLong && (
-          <button onClick={e => { e.stopPropagation(); setExpanded(!expanded) }}
-            style={{ background: 'none', border: 'none', color: 'var(--green)', cursor: 'pointer', fontSize: 12, fontWeight: 700, padding: '4px 0 0', fontFamily: 'inherit' }}>
-            {expanded ? 'Show less' : '...more'}
-          </button>
-        )}
-      </div>
     </div>
   )
 }
 
-// MAIN TASKS PAGE
-// ═══════════════════════════════════════════════
+const CATEGORY_LABEL: Record<string, string> = {
+  SOCIAL_MEDIA: 'Social media', DATA_ENTRY: 'Data entry', CONTENT_WRITING: 'Content writing', APP_TESTING: 'App testing',
+  SURVEY: 'Survey', DESIGN: 'Design', TRANSLATION: 'Translation', WEB_RESEARCH: 'Web research', VIDEO_REVIEW: 'Video review', OTHER: 'Other',
+}
+const endOf = (j: any) => j.expiresAt || j.deadline || j.closesAt || j.endsAt
+const openSlots = (j: any) => {
+  const max = Number(j.maxWorkers ?? j.slots ?? 0)
+  if (!max) return Infinity
+  const done = Number(j.submissionsCount ?? j._count?.submissions ?? j.currentWorkers ?? j.filled ?? 0)
+  return max - done
+}
+const isClosed = (j: any) => { const e = endOf(j); return !!e && new Date(e).getTime() <= Date.now() }
+
 export default function Tasks() {
-  const navigate = useNavigate()
   const { user } = useAuth()
   const { toast: showToast } = useToast()
+  const { convert } = useCurrency()
+  const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const [jobs, setJobs] = useState<any[]>([])
-  const [, setJobListings] = useState<any[]>([])
-  const [jobListingsLoading, setJobListingsLoading] = useState(false)
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState(searchParams.get('search') || '')
-  const [tasksPage, setTasksPage] = useState(1)
-  const perPage = 9
-  const [filter, setFilter] = useState(searchParams.get('category') || 'All')
-  const [allCategories, setAllCategories] = useState<string[]>(FIXED_CATEGORIES)
-  const [bookmarked, setBookmarked] = useState<string[]>(() => {
-    try { return JSON.parse(localStorage.getItem('ogapay_bookmarked') || '[]') } catch { return [] }
-  })
+  const [page, setPage] = useState(1)
+  const perPage = 12
+  const [category, setCategory] = useState(searchParams.get('category') || 'All')
+  const [sort, setSort] = useState(searchParams.get('sort') || 'default')
+  const [req, setReq] = useState(searchParams.get('req') || 'all')
+  const [availableOnly, setAvailableOnly] = useState(searchParams.get('available') === '1')
+  const [mySubmissions, setMySubmissions] = useState<string[]>([])
   const [selectedJob, setSelectedJob] = useState<any>(null)
-  const [mySubmissions, setSubmissions] = useState<string[]>([])
-  const [sortBy, setSortBy] = useState(searchParams.get('sort') || 'newest')
-  const [showAvailableOnly, setShowAvailableOnly] = useState(false)
-  const [showEligibleOnly, setShowEligibleOnly] = useState(false)
-
-  useEffect(() => { injectSkeletonStyles() }, [])
 
   useEffect(() => {
+    let alive = true
     setLoading(true)
-    fetchTasks(filter).then(data => {
-      setJobs(data || [])
-      setLoading(false)
-      // Extract dynamic categories from response
-      const cats = [...new Set((data || []).map((j: any) => j.category).filter(Boolean))] as string[]
-      if (cats.length > 0) {
-        setAllCategories([...FIXED_CATEGORIES, ...cats.filter((c: string) => !FIXED_CATEGORIES.includes(c))])
-      }
-    })
+    fetchTasks('all').then(data => { if (alive) { setJobs(data || []); setLoading(false) } })
     if (user) {
-      apiRequest('/tasks/my/submissions').catch((e) => { console.error(e); return null; }).then((res: any) => {
-        if (res) {
-          const list = Array.isArray(res) ? res : res?.data || [];
-          setSubmissions(list.map((s: any) => s.taskId || s.task?.id));
-        }
-      });
+      apiRequest('/tasks/my/submissions').catch(() => null).then((res: any) => {
+        if (!alive || !res) return
+        const list = Array.isArray(res) ? res : res?.data || []
+        setMySubmissions(list.map((s: any) => s.taskId || s.task?.id).filter(Boolean))
+      })
     }
-  }, [filter, user?.id])
+    return () => { alive = false }
+  }, [user?.id])
 
-  // Invalidate stale cache entries on window focus
+  // Refresh when the tab regains focus (cache entries older than a few seconds)
   useEffect(() => {
     const onFocus = () => {
       const now = Date.now()
-      tasksCacheMap.forEach((v, k) => {
-        if (now - v.timestamp > FOCUS_STALE_AGE) tasksCacheMap.delete(k)
-      })
-      fetchTasks(filter).then(data => setJobs(data || []))
+      tasksCacheMap.forEach((v, k) => { if (now - v.timestamp > FOCUS_STALE_AGE) tasksCacheMap.delete(k) })
+      fetchTasks('all').then(data => setJobs(data || []))
     }
     window.addEventListener('focus', onFocus)
     return () => window.removeEventListener('focus', onFocus)
-  }, [filter])
+  }, [])
 
+  // ?job=<id> opens the quick-view modal (links from notifications use this)
   useEffect(() => {
-    // Check URL params for selected job
     const id = searchParams.get('job')
-    if (id) {
-      const found = jobs.find(j => j.id === id)
-      if (found) { setSelectedJob(found); return }
-      // Fetch directly if not in loaded jobs
-      apiRequest<any>('/tasks/' + id).then(res => {
-        const j = res?.data || res
-        if (j?.id) setSelectedJob(j)
-      }).catch(e => { console.error(e); showToast('Failed to load task details', 'error'); })
-    }
+    if (!id) return
+    const found = jobs.find(j => j.id === id)
+    if (found) { setSelectedJob(found); return }
+    apiRequest<any>('/tasks/' + id).then(res => {
+      const j = res?.data || res
+      if (j?.id) setSelectedJob(j)
+    }).catch(() => showToast('Failed to load task details', 'error'))
   }, [searchParams, jobs])
 
-  const toggleBookmark = async (id: string) => {
-    const isBookmarked = bookmarked.includes(id)
-    try {
-      if (isBookmarked) {
-        await apiRequest(`/users/ns/${id}`, { method: 'DELETE' })
-      } else {
-        await apiRequest(`/users/ns/${id}`, { method: 'POST' })
-      }
-      setBookmarked(prev => {
-        const next = isBookmarked ? prev.filter(x => x !== id) : [...prev, id]
-        localStorage.setItem('ogapay_bookmarked', JSON.stringify(next))
-        return next
-      })
-    } catch {
-      showToast('Failed to update bookmark', 'error')
-      setBookmarked(prev => {
-        const next = isBookmarked ? prev.filter(x => x !== id) : [...prev, id]
-        localStorage.setItem('ogapay_bookmarked', JSON.stringify(next))
-        return next
-      })
-    }
-  }
+  const categories = ['All', ...Array.from(new Set(jobs.map(j => j.category).filter(Boolean))).map((c: any) => CATEGORY_LABEL[c] || c)]
+  const categoryKey = (label: string) => Object.keys(CATEGORY_LABEL).find(k => CATEGORY_LABEL[k] === label) || label
 
   const filtered = jobs
     .filter(j => {
-      const q = search.toLowerCase()
-      if (q && !(j.title || '').toLowerCase().includes(q)
-        && !(j.description || '').toLowerCase().includes(q)
-        && !(j.creatorName || j.creator?.username || j.creator || '').toLowerCase().includes(q)) return false
-      if (showAvailableOnly && ((j.slots || 0) - (j.filled || 0) <= 0)) return false
-      if (showEligibleOnly && j.eligibility && !j.eligibility.isEligible) return false
+      const q = search.trim().toLowerCase()
+      if (q) {
+        const who = (j.poster?.username || j.creator?.username || j.creatorName || '').toLowerCase()
+        if (!(j.title || '').toLowerCase().includes(q) && !(j.description || '').toLowerCase().includes(q) && !who.includes(q)) return false
+      }
+      if (category !== 'All' && j.category !== categoryKey(category)) return false
+      const score = Number(j.minOgaScore ?? j.minSorsaScore ?? 0), rank = Number(j.minRank ?? 0)
+      if (req === 'open' && (score > 0 || rank > 0 || j.requiresWallet || j.requiresLinkedin || j.workerRequirement)) return false
+      if (req === 'ogascore' && score <= 0) return false
+      if (req === 'wallet' && !j.requiresWallet) return false
+      if (req === 'rank' && rank <= 0) return false
+      if (availableOnly) {
+        if (openSlots(j) <= 0 || isClosed(j) || mySubmissions.includes(j.id)) return false
+        if (j.eligibility && j.eligibility.isEligible === false) return false
+      }
       return true
     })
-    .sort((a: any, b: any) => {
-      if (sortBy === 'highest-reward') return (b.reward || 0) - (a.reward || 0)
-      if (sortBy === 'lowest-reward') return (a.reward || 0) - (b.reward || 0)
-      if (sortBy === 'newest') return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      if (sortBy === 'oldest') return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-      return 0
+    .sort((a, b) => {
+      const time = (x: any) => new Date(x.createdAt || 0).getTime()
+      if (sort === 'reward') return Number(b.reward ?? 0) - Number(a.reward ?? 0)
+      if (sort === 'newest') return time(b) - time(a)
+      if (sort === 'closing') {
+        const ea = endOf(a) ? new Date(endOf(a)).getTime() : Infinity
+        const eb = endOf(b) ? new Date(endOf(b)).getTime() : Infinity
+        return ea - eb
+      }
+      // default: featured first, then still-open, then newest
+      return Number(!!b.featured) - Number(!!a.featured) || Number(isClosed(a)) - Number(isClosed(b)) || time(b) - time(a)
     })
 
-  const totalPages = Math.ceil(filtered.length / perPage)
-  const paginated = filtered.slice((tasksPage - 1) * perPage, tasksPage * perPage)
+  const totalPages = Math.max(1, Math.ceil(filtered.length / perPage))
+  const paginated = filtered.slice((page - 1) * perPage, page * perPage)
+  useEffect(() => { setPage(1) }, [search, sort, req, category, availableOnly])
 
-  useEffect(() => { setTasksPage(1) }, [search, sortBy, showAvailableOnly, showEligibleOnly])
-
-  // Sync filter state to URL
   useEffect(() => {
     setSearchParams(prev => {
       const next = new URLSearchParams(prev)
-      if (filter !== 'All') next.set('category', filter); else next.delete('category')
-      if (search) next.set('search', search); else next.delete('search')
-      if (sortBy !== 'newest') next.set('sort', sortBy); else next.delete('sort')
+      const set = (k: string, v: string, def: string) => { if (v && v !== def) next.set(k, v); else next.delete(k) }
+      set('category', category, 'All'); set('search', search, ''); set('sort', sort, 'default'); set('req', req, 'all')
+      set('available', availableOnly ? '1' : '', '')
       return next
     }, { replace: true })
-  }, [filter, search, sortBy, setSearchParams])
+  }, [category, search, sort, req, availableOnly, setSearchParams])
 
-  const fetchJobListings = async () => {
-    setJobListingsLoading(true)
-    try {
-      const res = await apiRequest<any>('/tasks?status=OPEN')
-      const d = Array.isArray(res) ? res : res?.data || res?.tasks || []
-      setJobListings(d)
-    } catch { showToast('Failed to load job listings', 'error') } finally { setJobListingsLoading(false) }
-  }
-
-  useEffect(() => {
-    if (filter === 'Jobs & Hiring') fetchJobListings()
-  }, [filter])
+  const goPage = (p: number) => { setPage(p); window.scrollTo({ top: 0, behavior: 'smooth' }) }
+  const clearAll = () => { setSearch(''); setReq('all'); setCategory('All'); setAvailableOnly(false) }
 
   return (
     <Layout>
       <style>{`
-.task-card-hover{transition:box-shadow .25s ease,transform .25s ease,border-color .25s ease;display:flex;flex-direction:column;height:auto}
-.task-card-hover:hover{box-shadow:0 0 0 1px rgba(var(--accent-rgb),0.5),0 0 36px 6px rgba(var(--accent-rgb),0.18),0 14px 28px -8px rgba(var(--accent-rgb),0.26);transform:translateY(-4px);border-color:rgba(var(--accent-rgb),0.5)!important}
-[data-theme="dark"] .task-card-hover:hover{box-shadow:0 0 0 1px rgba(255,255,255,0.1),0 6px 28px rgba(0,0,0,0.35)!important;border-color:rgba(255,255,255,0.15)!important}
-.task-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:20px;align-items:stretch}
-@media(max-width:767px){.task-grid{grid-template-columns:1fr}}
-.mbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;gap:6px;padding:0}
-.mbar-l{display:flex;align-items:center;gap:6px;overflow:hidden;min-width:0}
-.mbar-r{display:flex;align-items:center;gap:6px;flex-shrink:0}
-.mbar-lbl{font-size:12px;color:var(--text3);font-weight:600;white-space:nowrap}
-.mbar-sel{font-size:13px;font-weight:700;color:var(--text);border:none;background:transparent;font-family:inherit;cursor:pointer;outline:none;padding:0;max-width:110px;overflow:hidden;text-overflow:ellipsis;-webkit-appearance:none;appearance:none}
-.mbar-sel::-ms-expand{display:none}
-.mbar-chev{color:var(--text3);font-size:10px;margin-left:-2px}
-@media(max-width:640px){.dsort{display:none!important}.mbar{display:flex!important}}
-@media(min-width:641px){.mbar{display:none!important}}
-@keyframes ngn-sweep{0%{background-position:-200% center}to{background-position:200% center}}
-.ngn-shimmer{background:linear-gradient(90deg,var(--accent) 0%,var(--accent) 35%,var(--accent) 50%,var(--accent) 65%,var(--accent) 100%);background-size:200% auto;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:ngn-sweep 2.2s linear infinite}
-[data-theme="dark"] .task-card-hover{background:#141414!important;border-color:var(--border, #2a2a2a)!important}
-[data-theme="dark"] .task-card-hover div[style*="background: var(--bg)"]{background:#141416!important;border-color:rgba(255,255,255,0.05)!important}
-[data-theme="dark"] .task-card-hover p[style*="color: var(--text2)"]{color:rgba(255,255,255,0.7)!important}
-[data-theme="dark"] .ngn-shimmer{color:#ffffff!important;-webkit-text-fill-color:#ffffff!important;background:none!important;animation:none!important}
-[data-theme="dark"] .listed-by-header{background:transparent!important}
-[data-theme="dark"] .task-desc-box{background:transparent!important;border:none!important;border-top:1px solid rgba(255,255,255,0.06)!important;border-radius:0!important;padding:12px 16px!important}
-[data-theme="dark"] .task-reward-box{background:#1e1e1e!important;border-color:rgba(255,255,255,0.08)!important}
-[data-theme="dark"] .tasks-bg-overlay{background:transparent!important}
-`}</style>
-      <div className="tasks-bg-overlay" style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none',
-        background: 'radial-gradient(circle at 20% 10%, rgba(var(--accent-rgb),0.10), transparent 50%),radial-gradient(circle at 80% 30%, rgba(var(--accent-rgb),0.07), transparent 50%),radial-gradient(circle at 50% 90%, rgba(74,110,245,0.06), transparent 50%)',
-      }} />
-      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 0 40px', position: 'relative' as const, zIndex: 1 }}>
-        {/* Header */}
-        <div style={{ marginBottom: 28 }}>
-          <h1 style={{ fontFamily: 'Geist', fontSize: 32, fontWeight: 900, margin: '0 0 4px', color: 'var(--text)' }}>All Jobs</h1>
-          <p style={{ color: 'var(--text2)', fontSize: 14, margin: 0 }}>Social and custom jobs in one feed.</p>
+        .tl-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:22px}
+        .tl-search{flex:1;max-width:320px;min-width:180px}
+        .tl-bar .ui-switch{margin-left:auto}
+        .tl-search .ui-input{height:38px}
+        .tl-cats{max-height:210px;overflow:auto;padding-right:2px}
+        .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+        @media(max-width:640px){.tl-search{max-width:none;order:3;flex-basis:100%}}
+      `}</style>
+      <div className="ui-page" style={{ paddingTop: 20 }}>
+        <h1 className="sr-only">Jobs timeline</h1>
+
+        <div className="tl-bar">
+          <SortFilterMenu
+            sort={sort} req={req} category={category} categories={categories}
+            onSort={setSort} onReq={setReq} onCategory={setCategory}
+          />
+          <div className="ui-search tl-search">
+            <i className="ti ti-search" />
+            <input className="ui-input" type="search" placeholder="Search jobs or creators" aria-label="Search jobs"
+              value={search} onChange={e => setSearch(e.target.value)} />
+          </div>
+          <label className="ui-switch">
+            Available for me
+            <input type="checkbox" checked={availableOnly} onChange={e => setAvailableOnly(e.target.checked)} />
+            <span className="ui-switch-track" aria-hidden="true" />
+          </label>
         </div>
 
-        {/* Sort + Available toggle */}
-        {/* Search bar */}
-        <div style={{ marginBottom: 20 }}>
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 8,
-            background: 'var(--bg)', border: '1px solid var(--border)',
-            borderRadius: 12, padding: '0 14px',
-          }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" strokeWidth="2" style={{ flexShrink: 0 }}>
-              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-            </svg>
-            <input type="text" placeholder="Search tasks by title, description or creator..."
-              value={search} onChange={e => { setSearch(e.target.value); setTasksPage(1); }}
-              style={{
-                flex: 1, height: 44, border: 'none', background: 'transparent',
-                fontSize: 13, color: 'var(--text)', outline: 'none',
-                fontFamily: 'inherit', width: '100%',
-              }}
-            />
-            {search && (
-              <button onClick={() => { setSearch(''); setTasksPage(1); }}
-                style={{ background: 'none', border: 'none', color: 'var(--text3)', cursor: 'pointer', padding: 4, flexShrink: 0 }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-                </svg>
-              </button>
+        {loading ? (
+          <div className="ui-grid-3">{[0, 1, 2, 3, 4, 5].map(i => <div key={i} className="ui-sk" style={{ height: 480 }} />)}</div>
+        ) : filtered.length === 0 ? (
+          <div className="ui-empty">
+            <i className="ti ti-search-off" style={{ fontSize: 28, display: 'block', marginBottom: 10, color: 'var(--text3)' }} />
+            <b style={{ color: 'var(--text)' }}>No jobs match</b>
+            <p style={{ margin: '6px 0 16px' }}>{availableOnly ? 'Turn off "Available for me" or change the filters.' : 'Try a different search or filter.'}</p>
+            <button className="ui-btn ui-btn-ghost" onClick={clearAll}>Clear filters</button>
+          </div>
+        ) : (
+          <>
+            <div className="ui-grid-3">
+              {paginated.map(job => (
+                <HomeJobCard key={job.id} task={job} convert={convert} applied={mySubmissions.includes(job.id)} />
+              ))}
+            </div>
+            {totalPages > 1 && (
+              <nav className="ui-pager" aria-label="Pages">
+                <button className="ui-btn ui-btn-ghost" disabled={page === 1} onClick={() => goPage(page - 1)}><i className="ti ti-arrow-left" />Previous</button>
+                <span>Page {page} of {totalPages}</span>
+                <button className="ui-btn ui-btn-ghost" disabled={page === totalPages} onClick={() => goPage(page + 1)}>Next<i className="ti ti-arrow-right" /></button>
+              </nav>
             )}
-          </div>
-        </div>
-
-        <div className="dsort" style={{ display: 'flex', alignItems: 'center', gap: 20, marginBottom: 28, flexWrap: 'wrap', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Sort</span>
-            {[['Highest Reward', 'highest-reward'], ['Newest', 'newest']].map(([label, val]) => (
-              <button key={val} onClick={() => setSortBy(val)}
-                style={{ padding: '8px 18px', borderRadius: 8, border: sortBy === val ? 'none' : '1px solid var(--border)', background: sortBy === val ? OGAPAY_BLUE : 'transparent', color: sortBy === val ? '#fff' : 'var(--text)', fontWeight: 700, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', transition: 'all .15s' }}>
-                {label}
-              </button>
-            ))}
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Show</span>
-            <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>Available for me</span>
-            {/* Toggle switch */}
-            <div onClick={() => setShowAvailableOnly(v => !v)}
-              style={{ width: 44, height: 24, borderRadius: 999, background: showAvailableOnly ? OGAPAY_BLUE : 'var(--border2)', cursor: 'pointer', position: 'relative', transition: 'background .2s', flexShrink: 0 }}>
-              <div style={{ position: 'absolute', top: 3, left: showAvailableOnly ? 23 : 3, width: 18, height: 18, borderRadius: '50%', background: '#fff', transition: 'left .2s', boxShadow: '0 1px 4px rgba(0,0,0,0.18)' }} />
-            </div>
-          </div>
-        </div>
-
-        {/* Mobile sort/filter bar - compact single row */}
-        <div className="mbar">
-          <div className="mbar-l">
-            <span className="mbar-lbl">Sort:</span>
-            <select className="mbar-sel" value={sortBy} onChange={e => setSortBy(e.target.value)}>
-              <option value="newest">Newest</option>
-              <option value="highest-reward">Highest Reward</option>
-              <option value="lowest-reward">Lowest Reward</option>
-              <option value="oldest">Oldest</option>
-            </select>
-            <span className="mbar-lbl">Filter:</span>
-            <select className="mbar-sel" value={filter} onChange={e => setFilter(e.target.value)}>
-              {allCategories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-            </select>
-          </div>
-          <div className="mbar-r">
-            <span className="mbar-lbl">Available</span>
-            <div onClick={() => setShowAvailableOnly(v => !v)}
-              style={{ width: 36, height: 20, borderRadius: 999, background: showAvailableOnly ? OGAPAY_BLUE : 'var(--border2)', cursor: 'pointer', position: 'relative', transition: 'background .2s', flexShrink: 0 }}>
-              <div style={{ position: 'absolute', top: 2, left: showAvailableOnly ? 18 : 2, width: 16, height: 16, borderRadius: '50%', background: '#fff', transition: 'left .2s', boxShadow: '0 1px 3px rgba(0,0,0,0.18)' }} />
-            </div>
-          </div>
-        </div>
-
-        {/* Regular task grid */}
-        {filter !== 'Jobs & Hiring' && (
-          loading ? (
-            <SkeletonPage />
-          ) : filtered.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--text2)' }}>
-              <i className="ti ti-search-off" style={{ fontSize: 36, color: 'var(--text3)', marginBottom: 12, display: 'block' }} />
-              <h3 style={{ fontFamily: 'Geist', fontWeight: 800, margin: '0 0 4px' }}>No tasks found</h3>
-              <p style={{ fontSize: 13, margin: 0 }}>Try adjusting your search or filter</p>
-            </div>
-          ) : (
-            <>
-              <div className="task-grid">
-                {paginated.map(job => (
-                  <TaskCard
-                    key={job.id}
-                    job={job}
-                    onToggleBookmark={toggleBookmark}
-                    bookmarked={bookmarked.includes(job.id)}
-                    applied={mySubmissions.includes(job.id)}
-                  />
-                ))}
-              </div>
-
-              {/* Pagination bar */}
-              {totalPages > 1 && (
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginTop: 36 }}>
-                  {/* Prev */}
-                  <button
-                    onClick={() => { setTasksPage(p => Math.max(1, p - 1)); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
-                    disabled={tasksPage === 1}
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: 6, height: 40, padding: '0 18px', borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--card)', color: tasksPage === 1 ? 'var(--text3)' : 'var(--text)', fontWeight: 700, fontSize: 13, cursor: tasksPage === 1 ? 'not-allowed' : 'pointer', opacity: tasksPage === 1 ? 0.45 : 1, transition: 'all .15s', fontFamily: 'inherit' }}>
-                    <i className="ti ti-chevron-left" style={{ fontSize: 15 }} /> Previous
-                  </button>
-
-                  {/* Page numbers */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                    {Array.from({ length: totalPages }, (_, i) => i + 1)
-                      .filter(p => p === 1 || p === totalPages || Math.abs(p - tasksPage) <= 1)
-                      .reduce<(number | '…')[]>((acc, p, idx, arr) => {
-                        if (idx > 0 && (p as number) - (arr[idx - 1] as number) > 1) acc.push('…')
-                        acc.push(p)
-                        return acc
-                      }, [])
-                      .map((p, idx) =>
-                        p === '…' ? (
-                          <span key={`ellipsis-${idx}`} style={{ width: 36, textAlign: 'center', color: 'var(--text3)', fontSize: 13 }}>…</span>
-                        ) : (
-                          <button key={p}
-                            onClick={() => { setTasksPage(p as number); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
-                            style={{ width: 36, height: 36, borderRadius: 8, border: tasksPage === p ? 'none' : '1.5px solid var(--border)', background: tasksPage === p ? OGAPAY_BLUE : 'var(--card)', color: tasksPage === p ? '#fff' : 'var(--text)', fontWeight: 700, fontSize: 13, cursor: 'pointer', transition: 'all .15s', fontFamily: 'inherit' }}>
-                            {p}
-                          </button>
-                        )
-                      )}
-                  </div>
-
-                  {/* Next */}
-                  <button
-                    onClick={() => { setTasksPage(p => Math.min(totalPages, p + 1)); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
-                    disabled={tasksPage === totalPages}
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: 6, height: 40, padding: '0 18px', borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--card)', color: tasksPage === totalPages ? 'var(--text3)' : 'var(--text)', fontWeight: 700, fontSize: 13, cursor: tasksPage === totalPages ? 'not-allowed' : 'pointer', opacity: tasksPage === totalPages ? 0.45 : 1, transition: 'all .15s', fontFamily: 'inherit' }}>
-                    Next <i className="ti ti-chevron-right" style={{ fontSize: 15 }} />
-                  </button>
-                </div>
-              )}
-
-              {/* Page info */}
-              {totalPages > 1 && (
-                <p style={{ textAlign: 'center', marginTop: 12, fontSize: 12, color: 'var(--text3)', fontWeight: 600 }}>
-                  Showing {(tasksPage - 1) * perPage + 1}–{Math.min(tasksPage * perPage, filtered.length)} of {filtered.length} tasks
-                </p>
-              )}
-            </>
-          )
+          </>
         )}
 
-        {/* Job detail modal */}
         {selectedJob && (
           <JobDetailModal
             job={selectedJob}
             onClose={() => setSelectedJob(null)}
-            onApply={(jid) => {
-              setSelectedJob(null)
-              navigate('/tasks/' + jid)
-            }}
+            onApply={(jid) => { setSelectedJob(null); navigate('/tasks/' + jid) }}
           />
         )}
       </div>
