@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import Layout from '../components/Layout'
 import { apiRequest } from '../lib/api'
 import { useLivePrice } from '../hooks/useLivePrice'
+import { useCurrency } from '../context/CurrencyContext'
 import { CURRENCY_SYMBOLS, Currency } from '../lib/currency'
 import Avatar from '../components/Avatar'
 import StarRating from '../components/StarRating'
@@ -86,6 +87,7 @@ export default function StoreProduct() {
   const navigate = useNavigate()
   const { user } = useAuth()
   const { sol } = useLivePrice()
+  const { convert } = useCurrency()
 
   const [product, setProduct] = useState<StoreProductData | null>(null)
   const [seller, setSeller] = useState<SellerProfile | null>(null)
@@ -100,29 +102,6 @@ export default function StoreProduct() {
 
   const isOwner = user && product && user.id === product.sellerId
   const isSoldOut = product && product.stock !== null && product.stock <= 0
-
-  function PricingCard() {
-    if (!product) return null
-    return (
-      <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 14, padding: 22 }}>
-        <div style={{ fontFamily: 'Geist,sans-serif', fontSize: 24, fontWeight: 800, color: 'var(--accent)' }}>{formatPrice(product.price, product.currency)}</div>
-        <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 2 }}>{formatAlt(product.price, product.currency, sol.ngn)}</div>
-        {purchaseError && <div style={{ background: 'rgba(239,68,68,0.10)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 8, padding: 10, marginTop: 12, color: '#ef4444', fontSize: 12 }}><i className="ti ti-alert-circle" style={{ marginRight: 4 }} />{purchaseError}</div>}
-        {purchased && <div style={{ background: 'rgba(var(--green-rgb),0.10)', border: '1px solid rgba(34,197,94,0.3)', borderRadius: 8, padding: 10, marginTop: 12, color: 'var(--green)', fontSize: 12, textAlign: 'center' }}><i className="ti ti-circle-check" style={{ marginRight: 4 }} />Purchase successful!</div>}
-        <button onClick={isOwner ? () => navigate('/my-store') : () => navigate('/store/pay/' + product.id)} disabled={purchasing || !!purchased || !!isSoldOut}
-          style={{ width: '100%', height: 46, border: 'none', borderRadius: 12, background: isOwner ? 'var(--bg2)' : 'var(--accent)', color: isOwner ? 'var(--text)' : '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', marginTop: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, opacity: (purchasing || purchased || !!isSoldOut) ? 0.6 : 1 }}>
-          {purchasing ? <><i className="ti ti-loader" style={{ fontSize: 16, animation: 'sp-spin 1s linear infinite' }} /> Processing...</>
-          : purchased ? <><i className="ti ti-circle-check" style={{ fontSize: 16 }} /> Purchased</>
-          : isOwner ? <><i className="ti ti-edit" style={{ fontSize: 16 }} /> Edit Listing</>
-          : isSoldOut ? <><i className="ti ti-x-circle" style={{ fontSize: 16 }} /> Sold Out</>
-          : <><i className="ti ti-shopping-cart" style={{ fontSize: 16 }} /> Order Now</>}
-        </button>
-        <button onClick={() => navigate('/messages?user=' + product.seller)} style={{ width: '100%', height: 44, border: '1px solid var(--border)', borderRadius: 12, background: 'transparent', color: 'var(--text2)', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', marginTop: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-          <i className="ti ti-message" style={{ fontSize: 15 }} /> Message Seller
-        </button>
-      </div>
-    )
-  }
 
   const fetchProduct = useCallback(async () => {
     if (!id) return
@@ -224,146 +203,186 @@ export default function StoreProduct() {
   }
 
   const p = product
+  const cur = (p.currency || 'NGN') as string
+  const money = (n: number) => Math.round(n).toLocaleString('en-US')
+  const priceMain = cur === 'NGN' ? `₦${money(p.price)}` : cur === 'SOL' ? `${p.price} SOL` : `$${Number(p.price).toFixed(2)}`
+  const priceAlt = cur === 'NGN'
+    ? `≈ $${convert(p.price, 'NGN', 'USDC').toFixed(2)} USD`
+    : `≈ ₦${money(convert(p.price, cur as any, 'NGN'))}`
+  const delivery = p.metadata?.delivery || '3 days'
+  const revisions = p.metadata?.revisions ?? 3
+  const crumb = [p.category, p.metadata?.subcategory].filter(Boolean).join(' / ') || 'Store'
+
+  const buyLabel = purchasing ? 'Processing…' : purchased ? 'Purchased' : isOwner ? 'Edit listing' : isSoldOut ? 'Sold out' : 'Buy now'
+  const onBuy = () => {
+    if (isOwner) return navigate('/my-store')
+    if (!user) return navigate('/login?redirect=/store/' + p.id)
+    navigate('/store/pay/' + p.id)
+  }
+
+  const PriceCard = (
+    <div className="ui-card sp-price">
+      <div className="sp-price-head">
+        <span>Your next project</span>
+        {isSoldOut ? <span className="sp-pill sp-pill-off">Sold out</span> : <span className="sp-pill"><span />Active</span>}
+      </div>
+      <div className="hc-reward sp-total">
+        <span className="ui-label" style={{ margin: 0 }}>Total price</span>
+        <div className="hc-amt"><strong>{priceMain}</strong><span>{cur}</span></div>
+        <span className="hc-alt">{priceAlt} <span style={{ fontFamily: 'inherit' }}>estimated</span></span>
+      </div>
+      <div className="sp-facts">
+        <div><span><i className="ti ti-clock" />Delivery</span><b>{delivery}</b></div>
+        <div><span><i className="ti ti-refresh" />Revisions</span><b>{revisions}</b></div>
+      </div>
+      {purchaseError && <div className="sp-note sp-note-err"><i className="ti ti-alert-circle" />{purchaseError}</div>}
+      {purchased && <div className="sp-note sp-note-ok"><i className="ti ti-circle-check" />Purchase successful</div>}
+      <button className="ui-btn ui-btn-dark ui-btn-lg" style={{ width: '100%' }} onClick={onBuy} disabled={purchasing || purchased || (!!isSoldOut && !isOwner)}>
+        {buyLabel} {!purchased && !isSoldOut && <i className={isOwner ? 'ti ti-edit' : 'ti ti-arrow-right'} />}
+      </button>
+      {!isOwner && (
+        <button className="ui-btn ui-btn-ghost ui-btn-lg" style={{ width: '100%', marginTop: 8 }} onClick={() => navigate('/messages?user=' + p.seller)}>
+          <i className="ti ti-message" /> Contact seller
+        </button>
+      )}
+    </div>
+  )
+
+  const CreatorCard = (
+    <div className="ui-card sp-creator">
+      <span className="ui-label">Meet the creator</span>
+      <button className="sp-creator-row" onClick={() => navigate('/user/' + p.seller)}>
+        <Avatar src={p.sellerAvatar} name={p.seller} size={40} />
+        <span style={{ minWidth: 0 }}>
+          <b>{p.seller} <i className="ti ti-arrow-up-right" /></b>
+          <span className="sp-rating">
+            {p.reviewsCount > 0
+              ? <><i className="ti ti-star-filled" style={{ color: '#bd8517' }} /> {Number(p.rating).toFixed(1)} <span>/ 5 · {p.reviewsCount} reviews</span></>
+              : <span>New creator</span>}
+          </span>
+        </span>
+      </button>
+      {seller?.bio && <p className="sp-bio">{seller.bio}</p>}
+      {seller && (
+        <div className="sp-stats">
+          <div><span>Tasks completed</span><b>{seller.tasksCompleted ?? 0}</b></div>
+          <div><span>Success rate</span><b>{seller.successRate != null ? `${Math.round(seller.successRate)}%` : '—'}</b></div>
+        </div>
+      )}
+    </div>
+  )
 
   return (
-    <div className="page-fade-in">
     <Layout>
-      <style>{'@keyframes sp-spin{to{transform:rotate(360deg)}}@media(min-width:768px){.sp-layout{display:grid;grid-template-columns:1fr 340px;gap:28px;align-items:start}}.sp-sticky{position:sticky;top:calc(var(--nav-h,64px) + 20px)}.sp-pricing-mobile{display:block}@media(min-width:768px){.sp-pricing-mobile{display:none}}.sp-desktop-pricing{display:none}@media(min-width:768px){.sp-desktop-pricing{display:block}}'}</style>
-      <div style={{ maxWidth: 960, margin: '0 auto', padding: '20px 16px 40px' }}>
-        {/* Breadcrumb */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: 'var(--text3)', marginBottom: 16, flexWrap: 'wrap' }}>
-          <span onClick={() => navigate('/store')} style={{ cursor: 'pointer', color: 'var(--text2)' }}>Store</span>
-          <i className="ti ti-chevron-right" style={{ fontSize: 10 }} />
-          <span onClick={() => navigate('/store?category=' + p.category)} style={{ cursor: 'pointer', color: 'var(--text2)' }}>{p.category || 'Uncategorized'}</span>
-          <i className="ti ti-chevron-right" style={{ fontSize: 10 }} />
-          <span style={{ color: 'var(--text)', fontWeight: 600 }}>{p.title}</span>
+      <style>{`
+        .sp-page{padding-top:24px}
+        .sp-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+        .sp-top button{display:inline-flex;align-items:center;gap:6px;background:none;border:0;cursor:pointer;font:500 12px 'Geist',system-ui,sans-serif;color:var(--text2);padding:4px 0}
+        .sp-top button:hover{color:var(--text)}
+        .sp-layout{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:20px;align-items:start;margin-top:18px}
+        .sp-side{position:sticky;top:calc(var(--nav-h,64px) + 18px);display:flex;flex-direction:column;gap:14px}
+        .sp-media{aspect-ratio:16/10;border-radius:20px;border:1px solid var(--border);background:var(--card2);overflow:hidden;display:grid;place-items:center;color:var(--text3);font-size:40px}
+        .sp-media img{width:100%;height:100%;object-fit:cover;display:block}
+        .sp-about{padding:22px;margin-top:14px}
+        .sp-about h2{font-size:15px;font-weight:600;margin:0 0 12px;letter-spacing:-.01em}
+        .sp-price{padding:16px}
+        .sp-price-head{display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:500;margin-bottom:12px}
+        .sp-pill{display:inline-flex;align-items:center;gap:5px;padding:4px 8px;border-radius:6px;background:#edf8f0;border:1px solid #c1dfcb;color:#17805c;font-size:10px;font-weight:500}
+        .sp-pill span{width:5px;height:5px;border-radius:50%;background:#17805c}
+        .sp-pill-off{background:rgba(220,38,38,.08);border-color:rgba(220,38,38,.25);color:#dc2626}
+        .sp-total{padding:16px}
+        .sp-total .hc-amt strong{font-size:34px}
+        .sp-facts{display:flex;flex-direction:column;gap:12px;padding:16px 4px;margin-bottom:14px;border-bottom:1px solid var(--border)}
+        .sp-facts div{display:flex;justify-content:space-between;align-items:center;font-size:12px}
+        .sp-facts span{display:inline-flex;align-items:center;gap:8px;color:var(--text2)}
+        .sp-facts b{font-weight:600}
+        .sp-note{display:flex;align-items:center;gap:6px;font-size:12px;padding:10px 12px;border-radius:10px;margin-bottom:10px}
+        .sp-note-err{background:rgba(220,38,38,.08);color:#dc2626}
+        .sp-note-ok{background:rgba(var(--green-rgb),.1);color:var(--green)}
+        .sp-creator{padding:16px}
+        .sp-creator-row{display:flex;align-items:center;gap:12px;width:100%;background:none;border:0;padding:6px 0;cursor:pointer;text-align:left;font-family:inherit;color:var(--text)}
+        .sp-creator-row b{display:inline-flex;align-items:center;gap:6px;font-size:14px;font-weight:600}
+        .sp-creator-row b i{font-size:13px;color:var(--text3)}
+        .sp-rating{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text)}
+        .sp-rating span{color:var(--text2)}
+        .sp-bio{font-size:12.5px;line-height:1.6;color:var(--text2);margin:10px 0 0}
+        .sp-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+        .sp-stats div{border:1px solid var(--border);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:4px}
+        .sp-stats span{font:400 9px var(--font-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--text2)}
+        .sp-stats b{font-size:16px;font-weight:600}
+        .sp-reviews{padding:22px;margin-top:14px}
+        .sp-review{border-top:1px solid var(--border);padding:14px 0}
+        .sp-review:first-of-type{border-top:0}
+        .sp-mobile-only{display:none}
+        @media(max-width:900px){
+          .sp-layout{grid-template-columns:1fr}
+          .sp-side{position:static}
+          .sp-desktop-only{display:none}
+          .sp-mobile-only{display:flex;flex-direction:column;gap:14px;margin-top:14px}
+        }
+      `}</style>
+      <div className="ui-page sp-page">
+        <div className="sp-top">
+          <button onClick={() => navigate(-1)}><i className="ti ti-arrow-left" />Back</button>
+          <button onClick={() => navigate('/store')}>All products <i className="ti ti-arrow-up-right" /></button>
         </div>
+        <span className="ui-eyebrow">{crumb}</span>
+        <h1 className="ui-title">{p.title}</h1>
 
-        {/* Hero Banner */}
-        <div style={{ position: 'relative', borderRadius: 14, overflow: 'hidden', marginBottom: 16, height: 220 }}>
-          {p.image ? (
-            <img loading="lazy" src={p.image} alt={p.title} style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0 }} />
-          ) : (
-            <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg2)', color: 'var(--text3)', fontSize: 32 }}>
-              <i className="ti ti-box" />
-            </div>
-          )}
-          <div style={{ position: 'absolute', top: 12, right: 12, display: 'flex', gap: 6 }}>
-            {isSoldOut ? (
-              <span style={{ background: '#450a0a', color: '#ef4444', fontSize: 10, fontWeight: 700, padding: '4px 10px', borderRadius: 20 }}>SOLD OUT</span>
-            ) : (
-              <span style={{ background: 'rgba(0,0,0,0.85)', color: 'var(--green)', fontSize: 10, fontWeight: 700, padding: '4px 10px', borderRadius: 20, display: 'flex', alignItems: 'center', gap: 4 }}>
-                <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--green)', display: 'inline-block' }} /> ACTIVE
-              </span>
-            )}
-          </div>
-        </div>
-
-        {/* Two-column layout */}
         <div className="sp-layout">
-          {/* Left Column */}
           <div>
-            {/* Title */}
-            <h1 style={{ fontFamily: 'Geist,sans-serif', fontSize: 22, fontWeight: 800, color: 'var(--text)', margin: '0 0 10px' }}>{p.title}</h1>
-
-            {/* Badge row */}
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 14 }}>
-              <span style={{ fontSize: 12, padding: '5px 10px', borderRadius: 20, border: '1px solid var(--border)', background: 'var(--bg2)', color: 'var(--text2)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                <i className="ti ti-clock" style={{ fontSize: 12 }} /> Delivery: {p.metadata?.delivery || '3 days'}
-              </span>
-              <span style={{ fontSize: 12, padding: '5px 10px', borderRadius: 20, border: '1px solid var(--border)', background: 'var(--bg2)', color: 'var(--text2)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                <i className="ti ti-refresh" style={{ fontSize: 12 }} /> {p.metadata?.revisions || 3} Revisions
-              </span>
-              <span style={{ fontSize: 12, padding: '5px 10px', borderRadius: 20, border: '1px solid var(--border)', background: 'var(--bg2)', color: 'var(--text2)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                <i className="ti ti-folder" style={{ fontSize: 12 }} /> {p.category}{p.metadata?.subcategory ? ' / ' + p.metadata.subcategory : ''}
-              </span>
+            <div className="sp-media">
+              {p.image ? <img src={p.image} alt={p.title} /> : <i className="ti ti-photo" />}
             </div>
 
-            {/* Seller row */}
-            <div onClick={() => navigate('/user/' + p.seller)} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', borderRadius: 10, cursor: 'pointer', marginBottom: 20, border: '1px solid transparent', transition: 'all .15s' }}
-              onMouseEnter={e => { e.currentTarget.style.background = 'var(--bg2)'; e.currentTarget.style.borderColor = 'var(--border)' }}
-              onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = 'transparent' }}>
-              <Avatar src={p.sellerAvatar} name={p.seller} size={36} />
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>{p.seller}</div>
-                <div style={{ fontSize: 12, color: 'var(--text3)' }}>{seller?.bio || 'Store Seller'}</div>
-              </div>
-              <StarRating rating={p.rating} size={12} />
-              <span style={{ fontSize: 11, color: 'var(--text3)', whiteSpace: 'nowrap' }}>({p.reviewsCount})</span>
-              <i className="ti ti-chevron-right" style={{ fontSize: 14, color: 'var(--text3)' }} />
-            </div>
+            <div className="sp-mobile-only">{PriceCard}{CreatorCard}</div>
 
-            {/* Pricing card - mobile */}
-            <div className="sp-pricing-mobile" style={{ marginBottom: 20 }}>
-              <PricingCard />
-            </div>
-
-            {/* Description */}
-            <div style={{ marginBottom: 28 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', letterSpacing: '0.06em', marginBottom: 10 }}>DESCRIPTION</div>
+            <section className="ui-card sp-about">
+              <h2>About this product</h2>
               <DescriptionRenderer text={p.description} />
-            </div>
+            </section>
 
-            {/* Seller Profile Card */}
-            {seller && (
-              <div style={{ marginBottom: 28 }}>
-                <SellerCard seller={seller} />
-              </div>
-            )}
-
-            {/* Reviews */}
-            <div style={{ marginBottom: 28 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', letterSpacing: '0.06em', marginBottom: 14 }}>REVIEWS</div>
-
+            <section className="ui-card sp-reviews">
+              <h2 style={{ fontSize: 15, fontWeight: 600, margin: '0 0 6px' }}>Reviews {p.reviewsCount > 0 && <span style={{ color: 'var(--text2)', fontWeight: 400 }}>· {p.reviewsCount}</span>}</h2>
               {p.reviews.length === 0 ? (
-                <p style={{ fontSize: 13, color: 'var(--text3)', textAlign: 'center', padding: 20 }}>
-                  No reviews yet. Be the first to order.
-                </p>
-              ) : (
-                p.reviews.map(r => (
-                  <div key={r.id} style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 10, padding: 14, marginBottom: 10 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <Avatar src={r.avatarUrl} name={r.username} size={32} />
-                      <span onClick={() => navigate('/user/' + r.username)} style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', cursor: 'pointer' }}>{r.username}</span>
-                      <span style={{ marginLeft: 'auto' }}><StarRating rating={r.rating} size={11} /></span>
-                      <span style={{ fontSize: 10, color: 'var(--text3)' }}>{timeAgo(r.createdAt)}</span>
-                    </div>
-                    {r.comment && <p style={{ fontSize: 13, color: 'var(--text2)', marginTop: 10 }}>{r.comment}</p>}
+                <p style={{ fontSize: 13, color: 'var(--text2)', margin: '8px 0 0' }}>No reviews yet. Be the first to order.</p>
+              ) : p.reviews.map(r => (
+                <div key={r.id} className="sp-review">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <Avatar src={r.avatarUrl} name={r.username} size={28} />
+                    <button onClick={() => navigate('/user/' + r.username)} style={{ background: 'none', border: 0, padding: 0, cursor: 'pointer', fontWeight: 600, fontSize: 13, color: 'var(--text)', fontFamily: 'inherit' }}>{r.username}</button>
+                    <span style={{ marginLeft: 'auto' }}><StarRating rating={r.rating} size={11} /></span>
+                    <span style={{ fontSize: 11, color: 'var(--text3)' }}>{timeAgo(r.createdAt)}</span>
                   </div>
-                ))
-              )}
-
-              {/* Review form */}
-              {!user ? (
-                <div style={{ textAlign: 'center', padding: 16, fontSize: 13, color: 'var(--text3)' }}>
-                  <span onClick={() => navigate('/login?redirect=/store/' + id)} style={{ color: 'var(--accent)', fontWeight: 600, cursor: 'pointer' }}>Login</span> to leave a review.
+                  {r.comment && <p style={{ fontSize: 13, color: 'var(--text2)', margin: '8px 0 0', lineHeight: 1.6 }}>{r.comment}</p>}
                 </div>
-              ) : purchased ? (
-                <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 10, padding: 16, marginTop: 14 }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', marginBottom: 10 }}>Write a Review</div>
-                  <StarRating rating={reviewRating} size={24} interactive onChange={setReviewRating} />
-                  <textarea value={reviewComment} onChange={e => setReviewComment(e.target.value)} placeholder="Share your experience\u2026" style={{ width: '100%', minHeight: 64, padding: '10px 12px', border: '1.5px solid var(--border)', borderRadius: 8, background: 'var(--bg)', color: 'var(--text)', fontSize: 13, fontFamily: 'inherit', resize: 'vertical', marginTop: 10, outline: 'none', boxSizing: 'border-box' }} />
-                  <button onClick={handleSubmitReview} disabled={submittingReview || reviewRating < 1} style={{ marginTop: 10, background: 'var(--accent)', color: 'var(--on-accent)', border: 'none', borderRadius: 8, padding: '10px 20px', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', opacity: (submittingReview || reviewRating < 1) ? 0.5 : 1 }}>
-                    {submittingReview ? 'Submitting\u2026' : 'Submit Review'}
+              ))}
+
+              {user && purchased && (
+                <div style={{ borderTop: '1px solid var(--border)', paddingTop: 14, marginTop: 6 }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 8 }}>Write a review</div>
+                  <StarRating rating={reviewRating} size={22} interactive onChange={setReviewRating} />
+                  <textarea className="ui-input" value={reviewComment} onChange={e => setReviewComment(e.target.value)} placeholder="Share your experience…"
+                    style={{ height: 80, padding: '10px 12px', marginTop: 10, resize: 'vertical' }} />
+                  <button className="ui-btn ui-btn-dark" style={{ marginTop: 10 }} onClick={handleSubmitReview} disabled={submittingReview || reviewRating < 1}>
+                    {submittingReview ? 'Submitting…' : 'Submit review'}
                   </button>
                 </div>
-              ) : (
-                <div style={{ textAlign: 'center', padding: 16, fontSize: 13, color: 'var(--text3)' }}>
-                  Purchase this service to leave a review.
-                </div>
               )}
-            </div>
+              {!user && (
+                <p style={{ fontSize: 12, color: 'var(--text2)', margin: '12px 0 0' }}>
+                  <button onClick={() => navigate('/login?redirect=/store/' + id)} style={{ background: 'none', border: 0, padding: 0, color: 'var(--text)', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', textDecoration: 'underline' }}>Log in</button> to leave a review.
+                </p>
+              )}
+            </section>
           </div>
 
-          {/* Right Column - Pricing card (desktop sticky) */}
-          <div className="sp-desktop-pricing">
-            <div className="sp-sticky">
-              <PricingCard />
-            </div>
-          </div>
+          <aside className="sp-side sp-desktop-only">
+            {PriceCard}
+            {CreatorCard}
+          </aside>
         </div>
       </div>
     </Layout>
-      </div>
   )
 }

@@ -1,7 +1,9 @@
 ﻿import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import Layout from '../components/Layout'
-import { apiRequest } from '../lib/api'
+import { apiRequest, API_BASE } from '../lib/api'
+import { useCurrency } from '../context/CurrencyContext'
+import { HomeProductCard } from '../components/home/HomeCards'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../components/Toast'
 import { useApi } from '../lib/useApi'
@@ -138,6 +140,9 @@ function ProductStars({ rating, compact }: { rating: number; compact?: boolean }
 // ═══════════════════════════════════════════════
 // STORE PAGE (product grid with categories)
 // ═══════════════════════════════════════════════
+// Sort options the API understands (GET /store?sort=): default order is newest-first
+const STORE_SORTS: [string, string][] = [['', 'Quality'], ['newest', 'Newest'], ['stars_desc', 'Highest rated'], ['random', 'Random']]
+
 function StorePage({
   onViewProduct,
   onBuyProduct,
@@ -149,37 +154,29 @@ function StorePage({
   setActiveView: (v: string) => void
   navigate: (path: string) => void
 }) {
+  const { user } = useAuth()
+  const { convert } = useCurrency()
   const [searchParams, setSearchParams] = useSearchParams()
   const [searchInput, setSearchInput] = useState(searchParams.get('search') || '')
-  const [search, setSearch] = useState(searchParams.get('search') || '')
   const [products, setProducts] = useState<StoreItem[]>([])
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [allCategories, setAllCategories] = useState<string[]>(['All'])
+  const [allCategories, setAllCategories] = useState<string[]>([])
   const limit = 12
 
   const category = searchParams.get('category') || ''
-  const sort = searchParams.get('sort') || 'newest'
+  const search = searchParams.get('search') || ''
+  const sort = searchParams.get('sort') || ''
   const page = Number(searchParams.get('page')) || 1
 
   const updateURL = (updates: Record<string, string | undefined>) => {
     setSearchParams(prev => {
       const next = new URLSearchParams(prev)
-      Object.entries(updates).forEach(([k, v]) => {
-        if (v) next.set(k, v); else next.delete(k)
-      })
+      Object.entries(updates).forEach(([k, v]) => { if (v) next.set(k, v); else next.delete(k) })
       return next
     }, { replace: false })
   }
-
-  useEffect(() => {
-    const t = setTimeout(() => {
-      setSearch(searchInput)
-      updateURL({ search: searchInput || undefined })
-    }, 300)
-    return () => clearTimeout(t)
-  }, [searchInput])
 
   const fetchProducts = useCallback(async () => {
     setLoading(true); setError(null)
@@ -190,294 +187,102 @@ function StorePage({
       if (sort) params.set('sort', sort)
       params.set('page', String(page))
       params.set('limit', String(limit))
-      const res = await apiRequest<any>('/store?' + params.toString())
-      const data = res?.data || res
-      const items = data?.products || data?.items || data?.data || data || []
+      // Raw fetch: apiRequest unwraps `data` and drops `pagination`, which paging needs
+      const res = await fetch(`${API_BASE}/store?${params.toString()}`)
+      const json = await res.json().catch(() => null)
+      if (!res.ok) throw new Error(json?.message || 'Failed to load products')
+      const items: StoreItem[] = Array.isArray(json?.data) ? json.data : []
       setProducts(items)
-      setTotal(data?.total || data?.count || (Array.isArray(data) ? data.length : 0))
-      // Derive categories from API response
-      if (data?.categories || items.length > 0) {
-        const cats = data?.categories || [...new Set(items.map((p: any) => p.category).filter(Boolean))] as string[]
-        if (cats.length > 0) setAllCategories(['All', ...cats])
-      }
+      setTotal(Number(json?.pagination?.total ?? items.length))
+      setAllCategories(prev => Array.from(new Set([...prev, ...items.map(p => p.category).filter(Boolean)])).sort())
     } catch (e) {
       setError((e as any)?.message || 'Failed to load products')
     } finally { setLoading(false) }
   }, [category, search, sort, page])
   useEffect(() => { fetchProducts() }, [fetchProducts])
 
-  const totalPages = Math.ceil(total / limit)
+  const totalPages = Math.max(1, Math.ceil(total / limit))
+  const submitSearch = (e?: React.FormEvent) => { e?.preventDefault(); updateURL({ search: searchInput.trim() || undefined, page: undefined }) }
 
   return (
-    <div>
+    <div className="ui-page" style={{ paddingTop: 28 }}>
       <style>{`
-.store-card{background:var(--glass-bg);backdrop-filter:blur(var(--glass-blur));-webkit-backdrop-filter:blur(var(--glass-blur));border:1.5px solid var(--glass-border);border-radius:18px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.10);cursor:pointer;transition:box-shadow .25s ease,transform .25s ease,border-color .25s ease;display:flex;flex-direction:column;min-height:460px}
-.store-card:hover{box-shadow:0 0 0 1px rgba(var(--accent-rgb),0.5),0 0 36px 6px rgba(var(--accent-rgb),0.20),0 14px 28px -8px rgba(var(--accent-rgb),0.28);transform:translateY(-4px);border-color:rgba(var(--accent-rgb),0.5)}
-.store-card:hover img{transform:scale(1.05)}
-.store-card .card-body{flex:1;display:flex;flex-direction:column;padding:16px;gap:10px}
-.store-card .card-desc{flex-shrink:0}
-.store-card .seller-box{display:flex;align-items:center;justify-content:space-between;gap:8px;background:rgba(var(--accent-rgb),0.05);border:1px solid rgba(var(--accent-rgb),0.12);border-radius:12px;padding:9px 12px}
-.store-card .price-box{display:flex;align-items:center;justify-content:space-between;gap:8px;background:rgba(var(--accent-rgb),0.06);border:1.5px solid rgba(var(--accent-rgb),0.28);border-radius:12px;padding:10px 14px}
-.store-card .view-more-btn{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;height:38px;border-radius:999px;border:1.5px solid var(--border);background:var(--card);color:var(--text2);font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;transition:background .2s,border-color .2s,color .2s}
-.store-card:hover .view-more-btn{border-color:rgba(var(--accent-rgb),0.4);color:var(--accent)}
-@keyframes price-shimmer{0%{opacity:.6}50%{opacity:1}100%{opacity:.6}}
-.price-shimmer{animation:price-shimmer 2s ease-in-out infinite}
-.store-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
-@media(max-width:767px){.store-grid{grid-template-columns:1fr!important}.store-filter-bar{grid-template-columns:1fr!important}.store-action-btns{flex-direction:column}}@media(min-width:768px) and (max-width:1279px){.store-grid{grid-template-columns:repeat(2,1fr)!important}.store-filter-bar{grid-template-columns:1fr!important}.store-action-btns{flex-direction:column}}
-`}</style>
-      {/* ── PAGE HEADER ── */}
-      <div style={{ marginBottom: 24 }}>
-        <h1 style={{
-          fontSize: 28, fontWeight: 800,
-          color: 'var(--text)', marginBottom: 4
-        }}>
-          Discover Products
-        </h1>
-        <p style={{ fontSize: 13, color: 'var(--text3)', marginBottom: 20 }}>
-          Browse amazing products and services from workers
-        </p>
+        .st-filter{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr) minmax(0,1fr);gap:14px;padding:16px;margin-top:24px}
+        .st-row{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:22px 0 14px}
+        .st-row a,.st-row button.link{display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:500;color:var(--text);text-decoration:none;background:none;border:0;cursor:pointer;font-family:inherit;padding:6px 2px}
+        @media(max-width:860px){.st-filter{grid-template-columns:1fr 1fr}.st-filter>:first-child{grid-column:1 / -1}}
+        @media(max-width:520px){.st-filter{grid-template-columns:1fr}}
+      `}</style>
 
-        {/* Action buttons */}
-        <div className="store-action-btns" style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 24 }}>
-          <button
-            onClick={() => navigate('/create')}
-            style={{
-              height: 40, padding: '0 18px', borderRadius: 10,
-              background: OGAPAY_BLUE, color: 'var(--on-accent)', border: 'none',
-              fontWeight: 700, fontSize: 13, cursor: 'pointer',
-              fontFamily: 'inherit', display: 'inline-flex',
-              alignItems: 'center', gap: 7
-            }}>
-            <i className="ti ti-plus-circle" style={{ fontSize: 15 }} />
-            Create a job
-          </button>
-          <button
-            onClick={() => navigate('/workers')}
-            style={{
-              height: 40, padding: '0 18px', borderRadius: 10,
-              background: OGAPAY_BLUE, color: 'var(--on-accent)',
-              border: 'none', fontWeight: 700, fontSize: 13,
-              cursor: 'pointer', fontFamily: 'inherit',
-              display: 'inline-flex', alignItems: 'center', gap: 7
-            }}>
-            <i className="ti ti-search" style={{ fontSize: 15 }} />
-            Browse creators
-          </button>
-          <button
-            onClick={() => navigate('/worker-portal')}
-            style={{
-              height: 40, padding: '0 18px', borderRadius: 10,
-              background: OGAPAY_BLUE, color: 'var(--on-accent)',
-              border: 'none', fontWeight: 700, fontSize: 13,
-              cursor: 'pointer', fontFamily: 'inherit',
-              display: 'inline-flex', alignItems: 'center', gap: 7
-            }}>
-            <i className="ti ti-building-store" style={{ fontSize: 15 }} />
-            Open your store
-          </button>
+      <header className="ui-head">
+        <div>
+          <h1 className="ui-title" style={{ marginTop: 0 }}>Products</h1>
+          <p className="ui-sub">Services and digital products from OgaPay creators.</p>
         </div>
-
-        {/* Filter bar */}
-        <div className="store-filter-bar" style={{
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr 1fr auto',
-          gap: 12, alignItems: 'end',
-          padding: '18px 20px',
-          border: '1px solid var(--border)',
-          borderRadius: 14,
-          background: 'var(--card)',
-          marginBottom: 16
-        }}>
-          {/* Category */}
-          <div>
-            <div style={{
-              fontSize: 10, fontWeight: 700, color: 'var(--text3)',
-              textTransform: 'uppercase', letterSpacing: '0.08em',
-              marginBottom: 6, display: 'flex', alignItems: 'center', gap: 5
-            }}>
-              <i className="ti ti-layout-list" style={{ fontSize: 12 }} /> Category
-            </div>
-            <select
-              value={category || ''}
-              onChange={e => updateURL({ category: e.target.value || undefined, page: undefined })}
-              style={{
-                width: '100%', height: 42, padding: '0 12px',
-                border: '1px solid var(--border)', borderRadius: 9,
-                background: 'var(--bg)', color: 'var(--text)',
-                fontSize: 13, fontFamily: 'inherit', outline: 'none'
-              }}>
-              <option value="">All</option>
-              {['Design','Social','Marketing','Development','Communities','Content','Crypto','AI','Templates'].map(c => (
-                <option key={c} value={c.toLowerCase()}>{c}</option>
-              ))}
-            </select>
-          </div>
-
-          {/* Sort by */}
-          <div>
-            <div style={{
-              fontSize: 10, fontWeight: 700, color: 'var(--text3)',
-              textTransform: 'uppercase', letterSpacing: '0.08em',
-              marginBottom: 6, display: 'flex', alignItems: 'center', gap: 5
-            }}>
-              <i className="ti ti-home" style={{ fontSize: 12 }} /> Sort By
-            </div>
-            <select
-              value={sort}
-              onChange={e => updateURL({ sort: e.target.value === 'newest' ? undefined : e.target.value })}
-              style={{
-                width: '100%', height: 42, padding: '0 12px',
-                border: '1px solid var(--border)', borderRadius: 9,
-                background: 'var(--bg)', color: 'var(--text)',
-                fontSize: 13, fontFamily: 'inherit', outline: 'none'
-              }}>
-              <option value="newest">Newest</option>
-              <option value="rating">Quality (High to Low)</option>
-              <option value="price_asc">Price: Low to High</option>
-              <option value="price_desc">Price: High to Low</option>
-              <option value="popular">Most Popular</option>
-            </select>
-          </div>
-
-          {/* Search */}
-          <div>
-            <div style={{
-              fontSize: 10, fontWeight: 700, color: 'var(--text3)',
-              textTransform: 'uppercase', letterSpacing: '0.08em',
-              marginBottom: 6, display: 'flex', alignItems: 'center', gap: 5
-            }}>
-              <i className="ti ti-search" style={{ fontSize: 12 }} /> Search Products
-            </div>
-            <input
-              value={searchInput}
-              onChange={e => { setSearchInput(e.target.value); updateURL({ page: undefined }) }}
-              placeholder="Try: Logo Design, Writing, Developm..."
-              style={{
-                width: '100%', height: 42, padding: '0 12px',
-                border: '1px solid var(--border)', borderRadius: 9,
-                background: 'var(--bg)', color: 'var(--text)',
-                fontSize: 13, fontFamily: 'inherit', outline: 'none',
-                boxSizing: 'border-box'
-              }}
-            />
-          </div>
-
-          {/* Search button */}
-          <button
-            onClick={() => { setSearch(searchInput); updateURL({ search: searchInput || undefined, page: undefined }) }}
-            style={{
-              height: 42, padding: '0 20px', borderRadius: 9,
-              background: OGAPAY_BLUE, color: 'var(--on-accent)', border: 'none',
-              fontWeight: 700, fontSize: 13, cursor: 'pointer',
-              fontFamily: 'inherit', display: 'inline-flex',
-              alignItems: 'center', gap: 6, whiteSpace: 'nowrap'
-            }}>
-            <i className="ti ti-search" style={{ fontSize: 14 }} /> Search
-          </button>
+        <div className="ui-actions">
+          <button className="ui-btn ui-btn-ghost" onClick={() => navigate('/workers')}>Browse creators <i className="ti ti-arrow-up-right" /></button>
+          <button className="ui-btn ui-btn-dark" onClick={() => navigate(user ? '/my-store' : '/login?redirect=/my-store')}>My store <i className="ti ti-user" /></button>
         </div>
+      </header>
 
-        {/* Results count */}
-        {!loading && total > 0 && (
-          <div style={{
-            display: 'inline-flex', alignItems: 'center', gap: 8,
-            padding: '8px 14px', borderRadius: 10,
-            border: '1px solid var(--border)',
-            background: 'var(--card)', fontSize: 13,
-            color: 'var(--text2)', marginBottom: 16
-          }}>
-            <i className="ti ti-briefcase" style={{ fontSize: 14, color: 'var(--text3)' }} />
-            Showing <strong>{products.length}</strong> of <strong>{total}</strong> products
+      <form className="ui-card st-filter" onSubmit={submitSearch} role="search">
+        <div>
+          <label className="ui-label" htmlFor="st-search">Search products</label>
+          <div className="ui-search">
+            <input id="st-search" className="ui-input" style={{ paddingLeft: 14 }} placeholder="Design, writing, development..."
+              value={searchInput} onChange={e => setSearchInput(e.target.value)} />
+            <button type="submit" className="ui-search-btn" aria-label="Search"><i className="ti ti-search" /></button>
           </div>
-        )}
+        </div>
+        <div>
+          <label className="ui-label" htmlFor="st-cat">Category</label>
+          <select id="st-cat" className="ui-select" value={category} onChange={e => updateURL({ category: e.target.value || undefined, page: undefined })}>
+            <option value="">All</option>
+            {allCategories.map(c => <option key={c} value={c}>{c}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="ui-label" htmlFor="st-sort">Sort by</label>
+          <select id="st-sort" className="ui-select" value={sort} onChange={e => updateURL({ sort: e.target.value || undefined, page: undefined })}>
+            {STORE_SORTS.map(([v, l]) => <option key={v || 'quality'} value={v}>{l}</option>)}
+          </select>
+        </div>
+      </form>
+
+      <div className="st-row">
+        <span className="ui-count"><b>{products.length ? (page - 1) * limit + products.length : 0}</b> of {total} products</span>
+        <button className="link" type="button" onClick={() => navigate('/create')}>Create a job <i className="ti ti-plus" /></button>
       </div>
 
-      {/* Error state */}
       {error && (
-        <div style={{ background: 'rgba(var(--red-rgb),0.08)', border: '1px solid rgba(var(--red-rgb),0.2)', borderRadius: 10, padding: '12px 16px', marginBottom: 16, color: 'var(--red)', fontSize: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
-          <i className="ti ti-alert-circle" /> {error}
-          <button onClick={fetchProducts} style={{ marginLeft: 'auto', background: 'none', border: 'none', color: 'var(--red)', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', fontSize: 12, textDecoration: 'underline' }}>Retry</button>
+        <div className="ui-empty" style={{ marginBottom: 16 }}>
+          <b style={{ color: 'var(--text)' }}>Couldn't load products</b>
+          <p style={{ margin: '6px 0 14px' }}>{error}</p>
+          <button className="ui-btn ui-btn-ghost" onClick={fetchProducts}>Try again</button>
         </div>
       )}
 
-      {/* Products grid */}
       {loading ? (
-        <SkeletonPage />
-      ) : products.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--text2)' }}>
-          <i className="ti ti-building-store-off" style={{ fontSize: 36, color: 'var(--text3)', marginBottom: 12, display: 'block' }} />
-          <p style={{ fontSize: 14, fontWeight: 700, margin: '0 0 4px' }}>No products found</p>
-          <p style={{ fontSize: 12, margin: 0 }}>Try adjusting your search or filters</p>
+        <div className="ui-grid-3">{[0, 1, 2, 3, 4, 5].map(i => <div key={i} className="ui-sk" style={{ height: 460 }} />)}</div>
+      ) : !error && products.length === 0 ? (
+        <div className="ui-empty">
+          <i className="ti ti-building-store" style={{ fontSize: 28, display: 'block', marginBottom: 10, color: 'var(--text3)' }} />
+          <b style={{ color: 'var(--text)' }}>No products found</b>
+          <p style={{ margin: '6px 0 16px' }}>Try a different search or category.</p>
+          <button className="ui-btn ui-btn-ghost" onClick={() => { setSearchInput(''); updateURL({ search: undefined, category: undefined, page: undefined }) }}>Clear filters</button>
         </div>
       ) : (
-        <div className="store-grid" style={{ display: 'grid', gap: 16 }}>
-          {products.map(p => (
-            <div key={p.id} className="store-card" onClick={() => onViewProduct(p)}>
-              <div style={{ position: 'relative', height: 200, background: 'var(--bg2)', overflow: 'hidden', flexShrink: 0 }}>
-                <SafeImage src={p.image} alt={p.title} style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform .3s' }} />
-                {p.category && (
-                  <span style={{ position: 'absolute', top: 8, left: 8, padding: '2px 8px', borderRadius: 6, background: 'rgba(0,0,0,0.55)', color: '#fff', fontSize: 10, fontWeight: 700, backdropFilter: 'blur(4px)' }}>
-                    {p.category}
-                  </span>
-                )}
-              </div>
-              <div className="card-body">
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
-                  <div style={{ fontWeight: 700, fontSize: 15, lineHeight: 1.3 }}>{p.title}</div>
-                  {p.createdAt && <span style={{ fontSize: 11, color: 'var(--text3)', whiteSpace: 'nowrap', flexShrink: 0, paddingTop: 2 }}>{timeAgo(p.createdAt)}</span>}
-                </div>
-                <div className="card-desc" style={{ fontSize: 12, color: 'var(--text2)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as any, overflow: 'hidden', lineHeight: 1.4 }}>
-                  {p.description}
-                </div>
-                <div className="seller-box">
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
-                    <div style={{ width: 34, height: 34, borderRadius: '50%', overflow: 'hidden', flexShrink: 0, border: p.reviewsCount > 0 ? `2px solid ${OGAPAY_BLUE}` : '1.5px solid var(--border)', display: 'grid', placeItems: 'center', background: OGAPAY_BLUE, color: 'var(--on-accent)', fontSize: 11, fontWeight: 800 }}>
-                      {p.sellerAvatar ? <img src={p.sellerAvatar} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : p.seller?.slice(0, 2).toUpperCase()}
-                    </div>
-                    <div style={{ minWidth: 0 }}>
-                      <div style={{ fontSize: 12.5, fontWeight: 700, lineHeight: 1.2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.seller}</div>
-                      <div style={{ fontSize: 10.5, color: 'var(--text3)' }}>
-                        {p.reviewsCount >= 10 ? 'Top creator' : p.reviewsCount >= 1 ? 'Creator' : 'New creator'}
-                      </div>
-                    </div>
-                  </div>
-                  {p.rating > 0 && (
-                    <div style={{ display: 'flex', alignItems: 'center', flexShrink: 0, background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 999, padding: '4px 9px' }}>
-                      <ProductStars rating={p.rating} compact />
-                    </div>
-                  )}
-                </div>
-                <div className="price-box">
-                  <div className="price-shimmer" style={{ fontSize: 20, fontWeight: 900, color: 'var(--text)', lineHeight: 1.2 }}>
-                    ${(['USDC', 'USDT'].includes(p.currency) ? p.price : p.currency === 'NGN' ? p.price * 0.0008 : p.price * 190).toFixed(2)}
-                  </div>
-                  <div style={{ fontSize: 12, color: 'var(--text3)', fontWeight: 600, marginTop: 2 }}>
-                    {p.currency || 'NGN'} {formatCompact(p.price)}
-                  </div>
-                </div>
-                <button
-                    onClick={(e) => { e.stopPropagation(); onViewProduct(p); }}
-                    className="view-more-btn"
-                    style={{ width: '100%' }}
-                  ><i className="ti ti-eye" style={{ fontSize: 13 }} /> View more</button>
-              </div>
-            </div>
-          ))}
+        <div className="ui-grid-3">
+          {products.map(p => <HomeProductCard key={p.id} item={p} convert={convert} />)}
         </div>
       )}
 
-      {/* Pagination */}
       {totalPages > 1 && (
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 6, marginTop: 20 }}>
-          <button onClick={() => updateURL({ page: String(page - 1) })} disabled={page <= 1}
-            style={{ height: 34, padding: '0 12px', borderRadius: 8, border: '1px solid var(--border)', background: 'transparent', color: page <= 1 ? 'var(--text3)' : 'var(--text2)', fontSize: 11, fontWeight: 700, cursor: page <= 1 ? 'default' : 'pointer', fontFamily: 'inherit' }}>
-            Prev
-          </button>
-          <span style={{ display: 'flex', alignItems: 'center', fontSize: 12, color: 'var(--text2)', padding: '0 8px' }}>Page {page} of {totalPages}</span>
-          <button onClick={() => updateURL({ page: String(page + 1) })} disabled={page >= totalPages}
-            style={{ height: 34, padding: '0 12px', borderRadius: 8, border: '1px solid var(--border)', background: 'transparent', color: page >= totalPages ? 'var(--text3)' : 'var(--text2)', fontSize: 11, fontWeight: 700, cursor: page >= totalPages ? 'default' : 'pointer', fontFamily: 'inherit' }}>
-            Next
-          </button>
-        </div>
+        <nav className="ui-pager" aria-label="Pages">
+          <button className="ui-btn ui-btn-ghost" disabled={page <= 1} onClick={() => { updateURL({ page: page - 1 > 1 ? String(page - 1) : undefined }); window.scrollTo({ top: 0, behavior: 'smooth' }) }}><i className="ti ti-arrow-left" />Previous</button>
+          <span>Page {page} of {totalPages}</span>
+          <button className="ui-btn ui-btn-ghost" disabled={page >= totalPages} onClick={() => { updateURL({ page: String(page + 1) }); window.scrollTo({ top: 0, behavior: 'smooth' }) }}>Next<i className="ti ti-arrow-right" /></button>
+        </nav>
       )}
     </div>
   )
@@ -597,12 +402,7 @@ export default function Store() {
 
   return (
     <Layout>
-      <div style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none',
-        background: 'radial-gradient(circle at 20% 10%, rgba(var(--accent-rgb),0.10), transparent 50%),radial-gradient(circle at 80% 30%, rgba(20,184,166,0.08), transparent 50%),radial-gradient(circle at 50% 90%, rgba(153,69,255,0.06), transparent 50%)',
-      }} />
-      <div style={{ maxWidth: 900, margin: '0 auto', padding: '0 0 40px', position: 'relative' as const, zIndex: 1 }}>
-        {showNav && <StoreNav activeView={activeView} onChange={(v) => { setActiveView(v); if (v === 'worker-portal') navigate('/worker-portal') }} />}
-
+      <div>
         {activeView === 'store' && (
           <StorePage
             onViewProduct={handleViewProduct}
