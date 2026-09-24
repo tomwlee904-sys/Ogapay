@@ -23,7 +23,7 @@ const C = {
   bg2: "var(--bg2)",
   red: "var(--red)",
   green: "var(--green)",
-  accentRgb: "31,140,255",
+  accentRgb: "var(--accent-rgb)",
 };
 
 // -- CONSTANTS --------------------------------------------------------------
@@ -566,6 +566,8 @@ const [showFetchPost, setShowFetchPost] = useState(false);
   const [screenshotProof, setScreenshotProof] = useState("No");
   const [extraReqs, setExtraReqs] = useState({ verifiedX: false, kycVerified: false, minRank: 0, minHoldings: "", minOgaScore: "", workerRequirement: "" });
   const [audience, setAudience] = useState("All");
+  // Requirement picked on the Payment step (was referenced but never declared, which crashed step 3)
+  const [actionReq, setActionReq] = useState<any>({ mode: "rank", minRank: 0, minOgaScore: "", humanVerified: false });
   const [selectionTime, setSelectionTime] = useState("24h");
   const [category, setCategory] = useState("");
   const [subcategory, setSubcategory] = useState("");
@@ -577,7 +579,7 @@ const [showFetchPost, setShowFetchPost] = useState(false);
   const [attachments, setAttachments] = useState<any[]>([]);
   const [title, setTitle] = useState(initialTemplate?.title || "");
   const [bounty, setBounty] = useState(initialTemplate?.bounty?.toString() || "");
-  const [currency, setCurrency] = useState("SOL");
+  const [currency, setCurrency] = useState("NGN");
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
@@ -665,10 +667,10 @@ const [showFetchPost, setShowFetchPost] = useState(false);
         trackingCode: trackingCode || undefined,
         cooldownPeriod: cooldownPeriod === "None" ? undefined : cooldownPeriod,
         humanVerification: humanVerification === "Yes",
-        minSorsaScore: extraReqs.minOgaScore ? parseInt(extraReqs.minOgaScore) : undefined,
-        minRank: extraReqs.minRank || undefined,
-        requiresLinkedin: extraReqs.verifiedX || undefined,
-        workerRequirement: extraReqs.workerRequirement || undefined,
+        minSorsaScore: (extraReqs.minOgaScore ? parseInt(extraReqs.minOgaScore) : 0) || (actionReq.mode === "oga_score" ? parseInt(actionReq.minOgaScore) || 0 : 0) || undefined,
+        minRank: extraReqs.minRank || (actionReq.mode === "rank" ? actionReq.minRank || 0 : 0) || undefined,
+        requiresLinkedin: extraReqs.verifiedX || actionReq.mode === "verified_x" || undefined,
+        workerRequirement: extraReqs.workerRequirement || (actionReq.mode === "kyc" ? "KYC" : actionReq.humanVerified ? "HUMAN" : undefined),
         currency,
         status: "OPEN",
       };
@@ -711,51 +713,73 @@ const [showFetchPost, setShowFetchPost] = useState(false);
 
   const stepLabel = ["Choose Type", "Job Details", "Payment"];
 
+  const checklist = [
+    { ok: !!title.trim(), label: "Give the job a title." },
+    { ok: description.trim().length >= 20, label: "Describe the task and what people should submit." },
+    { ok: rewardPool > 0, label: "Set a total budget." },
+    { ok: slots > 0, label: "Choose how many people you will pay." },
+  ];
+  const fmtAmt = (n: number) => n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const primaryAction = () => {
+    if (!isAuthed) { navigate("/login?redirect=/create"); return; }
+    if (wizardStep < 3) setWizardStep(s => s + 1); else handleCreateCustomTask();
+  };
+  const primaryLabel = !isAuthed ? "Sign in to continue" : wizardStep < 3 ? "Continue" : submitting ? "Creating…" : "Pay and publish";
+
   return (
-    <div style={{ minHeight: "100vh", background: C.bg2, fontFamily: "'Geist', system-ui, sans-serif", color: C.text }}>
-      <div style={{ textAlign: "center", padding: "28px 16px 8px" }}>
-        <h1 style={{ fontSize: 22, fontWeight: 900, color: C.text, marginBottom: 6 }}>Create a Job</h1>
-        <p style={{ fontSize: 13, color: C.text2 }}>Create social or custom jobs to boost your community's growth and engagement</p>
-      </div>
-
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0, padding: "16px 20px 0", maxWidth: 520, margin: "0 auto" }}>
-        {[1, 2, 3].map((s, i) => (
-          <div key={s} style={{ display: "flex", alignItems: "center", flex: s < 3 ? 1 : "none" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
-              <div style={{
-                width: 28, height: 28, borderRadius: "50%",
-                background: wizardStep >= s ? C.accent : C.border,
-                color: wizardStep >= s ? C.card : C.text2,
-                display: "flex", alignItems: "center", justifyContent: "center",
-                fontSize: 13, fontWeight: 800, transition: "background 0.2s"
-              }}>{s}</div>
-              <span style={{
-                fontSize: 12, fontWeight: wizardStep === s ? 700 : 500,
-                color: wizardStep === s ? C.text : C.text3
-              }}>{stepLabel[i]}</span>
-            </div>
-            {s < 3 && <div style={{
-              flex: 1, height: 2, background: wizardStep > s ? C.accent : C.border,
-              margin: "0 8px", transition: "background 0.2s"
-            }} />}
+    <Layout>
+      <style>{`
+        .cw-steps{display:flex;align-items:center;gap:10px;margin:22px 0 18px;padding:0;list-style:none;flex-wrap:wrap}
+        .cw-steps li{display:inline-flex;align-items:center;gap:8px;font-size:12px;color:var(--text2)}
+        .cw-steps li + li::before{content:'';width:18px;height:1px;background:var(--border);margin-right:2px}
+        .cw-steps li span{width:22px;height:22px;border-radius:7px;border:1px solid var(--border);display:grid;place-items:center;font:400 10px var(--font-mono)}
+        .cw-steps li.on{color:var(--text);font-weight:500}
+        .cw-steps li.on span{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+        .cw-steps li.done span{border-color:rgba(var(--green-rgb),.4);color:var(--green)}
+        .cw-layout{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:18px;align-items:start}
+        .cw-main > div:first-child{border-radius:20px!important}
+        .cw-side{position:sticky;top:calc(var(--nav-h,64px) + 18px);display:flex;flex-direction:column;gap:12px}
+        .cw-ov{padding:16px}
+        .cw-ov-head{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;margin-bottom:12px}
+        .cw-ov-row{display:flex;justify-content:space-between;align-items:flex-start;padding:10px 0;border-top:1px solid var(--border);font-size:12px;color:var(--text2)}
+        .cw-ov-row b{font-weight:600;color:var(--green);font-variant-numeric:tabular-nums;text-align:right}
+        .cw-ov-row small{display:block;font:400 10px var(--font-mono);color:var(--text3);margin-top:2px}
+        .cw-ov-total{margin:6px -16px -16px;padding:14px 16px;background:var(--card2);border-top:1px solid var(--border);border-radius:0 0 20px 20px;display:flex;justify-content:space-between;align-items:center}
+        .cw-ov-total span{font-size:13px;font-weight:600}
+        .cw-ov-total b{font-size:18px;font-weight:600;letter-spacing:-.02em}
+        .cw-check{padding:16px}
+        .cw-check ul{margin:0 0 14px;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px}
+        .cw-check li{display:flex;gap:8px;font-size:12px;color:var(--text2);line-height:1.5}
+        .cw-check li i{font-size:14px;color:var(--text3);margin-top:1px}
+        .cw-check li.ok{color:var(--text3);text-decoration:line-through}
+        .cw-check li.ok i{color:var(--green)}
+        .cw-terms{margin:10px 0 0;text-align:center;font-size:11px;color:var(--text2)}
+        .cw-terms a{color:var(--text);text-decoration:underline}
+        @media(max-width:900px){.cw-layout{grid-template-columns:1fr}.cw-side{position:static}}
+      `}</style>
+      <div className="ui-page" style={{ paddingTop: 28 }}>
+        <header className="ui-head">
+          <div>
+            <span className="ui-eyebrow"><i className="ti ti-sparkles" /> Made for your next idea</span>
+            <h1 className="ui-title">Create a custom job</h1>
+            <p className="ui-sub">Describe the work, choose how people are rewarded and review your budget.</p>
           </div>
-        ))}
-      </div>
+          <button className="ui-btn ui-btn-ghost" onClick={onClose}><i className="ti ti-arrow-left" /> Change job type</button>
+        </header>
 
-      {/* -- Back button -- */}
-      <div style={{ maxWidth: 560, margin: "12px auto 0", padding: "0 14px" }}>
-        <button onClick={() => { if (wizardStep > 1) setWizardStep(s => s - 1); else onClose(); }}
-          style={{
-            background: "none", border: "none", cursor: "pointer",
-            fontSize: 13, color: C.accent, fontWeight: 600,
-            display: "flex", alignItems: "center", gap: 4, fontFamily: "inherit"
-          }}>
-          <IconChevronDown style={{ transform: "rotate(90deg)" }} />
-          {wizardStep > 1 ? "Back" : "Cancel"}
-        </button>
-      </div>
+        <ol className="cw-steps" aria-label="Progress">
+          <li className="done"><span><i className="ti ti-check" /></span>Choose type</li>
+          <li className={wizardStep <= 2 ? "on" : "done"}><span>{wizardStep <= 2 ? "2" : <i className="ti ti-check" />}</span>Job details</li>
+          <li className={wizardStep === 3 ? "on" : ""}><span>3</span>Payment</li>
+        </ol>
 
-      <div style={{ maxWidth: 560, margin: "0 auto", padding: "16px 14px 100px" }}>
+        <div className="cw-layout">
+      <div className="cw-main">
+        {wizardStep > 1 && (
+          <button onClick={() => setWizardStep(s => s - 1)} className="ui-btn ui-btn-ghost" style={{ marginBottom: 12 }}>
+            <i className="ti ti-arrow-left" /> Back
+          </button>
+        )}
         {wizardStep <= 2 && (
           <div style={{ border: `1px solid ${C.border}`, borderRadius: 16, background: C.card, overflow: "hidden" }}>
             <div style={{
@@ -1176,18 +1200,27 @@ const [showFetchPost, setShowFetchPost] = useState(false);
           </div>
         )}
 
-        {/* Step navigation */}
-        <div style={{ display: "flex", gap: 10, marginTop: 16 }}>
-          {wizardStep < 3 && (
-            <button onClick={() => setWizardStep(s => s + 1)}
-              style={{
-                flex: 1, padding: "12px", borderRadius: 12, border: "none",
-                background: C.accent, color: C.card, fontSize: 14, fontWeight: 700,
-                cursor: "pointer", fontFamily: "inherit"
-              }}>
-              Continue
-            </button>
-          )}
+      </div>
+
+      <aside className="cw-side">
+        <div className="ui-card cw-ov">
+          <div className="cw-ov-head"><i className="ti ti-receipt" /> Overview</div>
+          <div className="cw-ov-row"><span>Platform fee (10%)</span><b>{fmtAmt(platformFee)}<small>{currency}</small></b></div>
+          {moderationFee > 0 && <div className="cw-ov-row"><span>Moderation (5%)</span><b>{fmtAmt(moderationFee)}<small>{currency}</small></b></div>}
+          <div className="cw-ov-row"><span>{mode === "Challenge" ? "Winners" : "Places"}</span><b>{slots || 0}</b></div>
+          <div className="cw-ov-row"><span>Reward per winner</span><b>{fmtAmt(perWinner)}<small>{currency}</small></b></div>
+          <div className="cw-ov-total"><span>You pay</span><b>{fmtAmt(totalToPay)} <span style={{ fontSize: 11, fontWeight: 500, color: "var(--text2)" }}>{currency}</span></b></div>
+        </div>
+        <div className="ui-card cw-check">
+          <ul>
+            {checklist.map(c => <li key={c.label} className={c.ok ? "ok" : ""}><i className={`ti ti-${c.ok ? "circle-check" : "circle"}`} />{c.label}</li>)}
+          </ul>
+          <button className="ui-btn ui-btn-dark ui-btn-lg" style={{ width: "100%" }} onClick={primaryAction} disabled={submitting}>
+            {primaryLabel} <i className="ti ti-arrow-right" />
+          </button>
+          <p className="cw-terms">By continuing with payment, you agree to our <a href="/terms">terms</a>.</p>
+        </div>
+      </aside>
         </div>
       </div>
 
@@ -1252,7 +1285,7 @@ const [showFetchPost, setShowFetchPost] = useState(false);
           }}
         />
       )}
-    </div>
+    </Layout>
   );
 }
 
@@ -1303,61 +1336,57 @@ function CreateTask() {
   const { fmt } = useCurrency();
   const [showCustom, setShowCustom] = useState(false);
   
-  // Check for edit task data from ManageJobs
+  const [customTemplate, setCustomTemplate] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState("socials");
+  const [success, setSuccess] = useState<any>(false);
+  const [selectedPlatform, setSelectedPlatform] = useState<any>(null);
+  const [selectedService, setSelectedService] = useState<any>(null);
+  const [showMainTemplates, setShowMainTemplates] = useState(false);
+  const [showServiceForm, setShowServiceForm] = useState(false);
+  const [openPanel, setOpenPanel] = useState<null | "x" | "quick">(null);
+  const quickRef = useRef<HTMLDivElement>(null);
+
+  // Edit data handed over from Manage jobs
   useEffect(() => {
     try {
       const editData = sessionStorage.getItem('ogapay_edit_task');
       if (editData) {
         const task = JSON.parse(editData);
-        // If we have edit data and are on the custom tab, pre-fill the wizard
-        if (task.title && task.platform) {
-          // Store for the CustomJobWizard to pick up
-          (window as any).__ogapay_edit_task = task;
-        }
+        if (task.title && task.platform) (window as any).__ogapay_edit_task = task;
         sessionStorage.removeItem('ogapay_edit_task');
+      }
+    } catch { /* ignore malformed edit data */ }
+  }, []);
 
-  // Detect return from Flutterwave redirect with fund_retry
+  // Back from a Flutterwave top-up started on this page
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    if (params.get("fund_retry") === "1") {
-      window.history.replaceState({}, "", window.location.pathname);
-      const pending = sessionStorage.getItem("ogapay_fund_and_retry");
-      if (pending) {
-        sessionStorage.removeItem("ogapay_fund_and_retry");
-        const msg = document.createElement("div");
-        msg.style.cssText = "position:fixed;top:60px;left:50%;transform:translateX(-50%);z-index:500;background:#22c55e;color:#fff;padding:14px 24px;border-radius:12px;font-size:14px;font-weight:700;box-shadow:0 4px 24px rgba(0,0,0,0.2)";
-        msg.textContent = "? Payment successful! Your wallet has been funded. You can now post your job.";
-        document.body.appendChild(msg);
-        setTimeout(() => msg.remove(), 5000);
-      }
-    }
-  }, []);
-  // Check for campaign data from Campaign Builder
-  useEffect(() => {
-    const campaign = (window).__ogapay_campaign;
-    if (campaign) {
-      (window).__ogapay_campaign = null; // consume it once
-      setCustomTemplate({
-        title: campaign.title || '',
-        desc: campaign.description || campaign.instructions || '',
-        bounty: campaign.budget?.toString() || campaign.reward?.toString() || '',
-        mode: 'Challenge',
-        winners: campaign.workerCount || 10,
-      });
-      setShowCustom(true);
-    }
+    if (params.get("fund_retry") !== "1") return;
+    window.history.replaceState({}, "", window.location.pathname);
+    const pending = sessionStorage.getItem("ogapay_fund_and_retry");
+    if (!pending) return;
+    sessionStorage.removeItem("ogapay_fund_and_retry");
+    const msg = document.createElement("div");
+    msg.style.cssText = "position:fixed;top:72px;left:50%;transform:translateX(-50%);z-index:500;background:#17805c;color:#fff;padding:12px 20px;border-radius:12px;font-size:13px;font-weight:600;box-shadow:0 12px 32px rgba(0,0,0,0.2)";
+    msg.textContent = "Payment received. Your wallet is funded and you can post your job.";
+    document.body.appendChild(msg);
+    setTimeout(() => msg.remove(), 5000);
   }, []);
 
-      }
-    } catch(e: any) {}
+  // Campaign handed over from the Campaign Builder
+  useEffect(() => {
+    const campaign = (window as any).__ogapay_campaign;
+    if (!campaign) return;
+    (window as any).__ogapay_campaign = null;
+    setCustomTemplate({
+      title: campaign.title || '',
+      desc: campaign.description || campaign.instructions || '',
+      bounty: campaign.budget?.toString() || campaign.reward?.toString() || '',
+      mode: 'Challenge',
+      winners: campaign.workerCount || 10,
+    });
+    setShowCustom(true);
   }, []);
-  const [customTemplate, setCustomTemplate] = useState<any>(null);
-  const [activeTab, setActiveTab] = useState("socials");
-  const [success, setSuccess] = useState(false);
-  const [selectedPlatform, setSelectedPlatform] = useState<any>(null);
-  const [selectedService, setSelectedService] = useState<any>(null);
-  const [showMainTemplates, setShowMainTemplates] = useState(false);
-  const [showServiceForm, setShowServiceForm] = useState(false);
 
   const tabStyle = (id: any) => ({
     padding: "10px 16px", fontSize: 13, fontWeight: 600, cursor: "pointer",
@@ -1414,7 +1443,7 @@ function CreateTask() {
           <button onClick={handleUpgrade} disabled={upgrading}
             style={{
               padding: '12px 32px', borderRadius: 10, border: 'none',
-              background: upgrading ? 'var(--border)' : 'var(--accent)', color: '#fff',
+              background: upgrading ? 'var(--border)' : 'var(--accent)', color: upgrading ? 'var(--text2)' : 'var(--on-accent)',
               fontSize: 14, fontWeight: 700, cursor: upgrading ? 'not-allowed' : 'pointer',
               fontFamily: 'inherit'
             }}>
@@ -1436,182 +1465,147 @@ function CreateTask() {
     />;
   }
 
+  const pickPlatform = (p: any) => {
+    setSelectedPlatform(p);
+    setOpenPanel("quick");
+    setTimeout(() => quickRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
+  };
+  const QUICK_ICONS = ["x", "youtube", "telegram", "instagram", "tiktok"];
+
   return (
     <Layout>
-      <div style={{
-        maxWidth: 900, margin: "0 auto", padding: "24px 16px",
-        fontFamily: "'Geist', system-ui, sans-serif", color: C.text
-      }}>
-        {/* Header */}
-        <div style={{ marginBottom: 24 }}>
-          <h1 style={{ fontSize: 26, fontWeight: 800, margin: "0 0 4px", color: C.text, letterSpacing: "-0.03em" }}>
-            Create Task
-          </h1>
-          <p style={{ fontSize: 14, color: C.text2, margin: 0, lineHeight: 1.5 }}>
-            Post social, custom, or service tasks for the OgaPay community to complete.
-          </p>
+      <style>{`
+        .cj-intro{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin:34px 0 14px;flex-wrap:wrap}
+        .cj-intro b{font-size:14px;font-weight:600}
+        .cj-intro span{font-size:12px;color:var(--text2)}
+        .cj-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+        .cj-card{display:flex;flex-direction:column;padding:18px;min-height:300px}
+        .cj-card.on{border-color:var(--text3);box-shadow:0 20px 40px -32px rgba(0,0,0,.45)}
+        .cj-icon{width:40px;height:40px;border-radius:12px;border:1px solid var(--border);background:var(--card2);display:grid;place-items:center;font-size:18px;color:var(--text)}
+        .cj-card h3{margin:22px 0 6px;font-size:17px;font-weight:600;letter-spacing:-.02em}
+        .cj-card p{margin:0;font-size:12.5px;line-height:1.6;color:var(--text2)}
+        .cj-card ul{margin:18px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px;font-size:11.5px;color:var(--text2)}
+        .cj-card li{display:flex;align-items:center;gap:8px}
+        .cj-card li::before{content:'';width:4px;height:4px;border-radius:50%;background:var(--text3)}
+        .cj-plats{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:18px}
+        .cj-plats button{height:40px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);display:grid;place-items:center;cursor:pointer}
+        .cj-plats button:hover,.cj-plats button.on{border-color:var(--text)}
+        .cj-go{margin-top:auto;padding-top:18px}
+        .cj-go .ui-btn{width:100%;justify-content:space-between;height:44px}
+        .cj-panel{margin-top:14px;overflow:hidden;scroll-margin-top:90px}
+        .cj-panel-head{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid var(--border)}
+        .cj-panel-head b{font-size:14px;font-weight:600}
+        .cj-menu{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;padding:16px}
+        .cj-steps{display:flex;justify-content:center;align-items:center;gap:12px;flex-wrap:wrap;margin:26px 0 0;font-size:11.5px;color:var(--text2)}
+        .cj-steps span.n{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:6px;border:1px solid var(--border);font:400 10px var(--font-mono);margin-right:6px}
+        .cj-steps i{font-size:12px;color:var(--text3)}
+        .cj-foot{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:24px;padding-top:18px;border-top:1px solid var(--border);font-size:12px;color:var(--text2)}
+        .cj-foot a{display:inline-flex;align-items:center;gap:6px;color:var(--text);font-weight:500;text-decoration:none}
+        @media(max-width:900px){.cj-cards{grid-template-columns:1fr}.cj-card{min-height:0}}
+      `}</style>
+      <div className="ui-page" style={{ paddingTop: 28 }}>
+        <header className="ui-head">
+          <div>
+            <span className="ui-eyebrow"><i className="ti ti-sparkles" /> Made for your next idea</span>
+            <h1 className="ui-title">Create a job</h1>
+            <p className="ui-sub">Choose a task, set your budget and put people to work.</p>
+          </div>
+          <button className="ui-btn ui-btn-ghost" onClick={() => setShowMainTemplates(true)}><i className="ti ti-template" /> Start from a template</button>
+        </header>
+
+        <div className="cj-intro">
+          <b>What would you like to create?</b>
+          <span>Choose the option that fits your goal.</span>
         </div>
 
-        {/* Main card container */}
-        <div style={{
-          border: "1px solid var(--border)", borderRadius: 16,
-          background: "var(--card)", overflow: "hidden",
-        }}>
-          
-          {/* ─── Step 1: Custom Job ─── */}
-          <div style={{ padding: "24px" }}>
-            <div style={{ display: "flex", alignItems: "flex-start", gap: 16 }}>
-              <div style={{
-                width: 32, height: 32, borderRadius: "50%",
-                background: "var(--accent)", color: "var(--on-accent)",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                fontSize: 14, fontWeight: 800, flexShrink: 0,
-              }}>1</div>
-              <div style={{ flex: 1 }}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16 }}>
-                  <div>
-                    <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: C.text }}>
-                      Contests & Custom Jobs
-                    </h3>
-                    <p style={{ margin: "4px 0 0", fontSize: 13, color: C.text2, lineHeight: 1.5 }}>
-                      Create a completely custom contest, challenge, or job with your own rules and requirements.
-                    </p>
-                  </div>
-                  <button onClick={() => setShowCustom(true)}
-                    style={{
-                      flexShrink: 0, padding: "10px 20px", borderRadius: 10, border: "none",
-                      background: C.text, color: C.card, fontSize: 13, fontWeight: 700,
-                      cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap",
-                    }}>
-                    Create Custom Job
-                  </button>
-                </div>
-              </div>
+        <div className="cj-cards">
+          <div className="ui-card cj-card">
+            <span className="cj-icon"><i className="ti ti-clipboard-text" /></span>
+            <h3>Custom job</h3>
+            <p>Get creative work, feedback or research from people.</p>
+            <ul>
+              <li>Write your brief and set the reward</li>
+              <li>Pay every approved entry, or choose one person</li>
+            </ul>
+            <div className="cj-go">
+              <button className="ui-btn ui-btn-dark" onClick={() => setShowCustom(true)}>Create custom job <i className="ti ti-arrow-right" /></button>
             </div>
           </div>
 
-          {/* OR Divider */}
-          <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "0 24px" }}>
-            <div style={{ flex: 1, height: 1, background: "var(--border)" }} />
-            <div style={{
-              padding: "2px 12px", borderRadius: 999, fontSize: 11, fontWeight: 700,
-              color: C.text2, border: "1px solid var(--border)", background: C.card,
-              textTransform: "uppercase", letterSpacing: "0.05em",
-            }}>
-              OR
-            </div>
-            <div style={{ flex: 1, height: 1, background: "var(--border)" }} />
-          </div>
-
-          {/* ─── Step 2: Platform Raid ─── */}
-          <div style={{ padding: "24px" }}>
-            <div style={{ display: "flex", alignItems: "flex-start", gap: 16 }}>
-              <div style={{
-                width: 32, height: 32, borderRadius: "50%",
-                background: "var(--accent)", color: "var(--on-accent)",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                fontSize: 14, fontWeight: 800, flexShrink: 0,
-              }}>2</div>
-              <div style={{ flex: 1 }}>
-                <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: C.text }}>
-                  Platform Raid
-                </h3>
-                <p style={{ margin: "4px 0 12px", fontSize: 13, color: C.text2, lineHeight: 1.5 }}>
-                  Run a social media raid on any post. Enter a URL, set rewards, and let workers engage.
-                </p>
-                <FetchPost onPostFetched={(data) => {
-                  if (data.text) {
-                    (window).__ogapay_raid_post = data;
-                  }
-                }} />
-              </div>
+          <div className={`ui-card cj-card${openPanel === "x" ? " on" : ""}`}>
+            <span className="cj-icon">{PLATFORMS[0].icon}</span>
+            <h3>X campaign</h3>
+            <p>Grow an X post with a campaign you configure yourself.</p>
+            <ul>
+              <li>Combine reposts, comments, likes and more</li>
+              <li>Set the actions, audience and budget</li>
+            </ul>
+            <div className="cj-go">
+              <button className="ui-btn ui-btn-dark" aria-expanded={openPanel === "x"} onClick={() => setOpenPanel(openPanel === "x" ? null : "x")}>
+                Set up X campaign <i className={`ti ti-chevron-${openPanel === "x" ? "up" : "down"}`} />
+              </button>
             </div>
           </div>
 
-          {/* OR Divider */}
-          <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "0 24px" }}>
-            <div style={{ flex: 1, height: 1, background: "var(--border)" }} />
-            <div style={{
-              padding: "2px 12px", borderRadius: 999, fontSize: 11, fontWeight: 700,
-              color: C.text2, border: "1px solid var(--border)", background: C.card,
-              textTransform: "uppercase", letterSpacing: "0.05em",
-            }}>
-              OR
+          <div className={`ui-card cj-card${openPanel === "quick" ? " on" : ""}`}>
+            <span className="cj-icon"><i className="ti ti-bolt" /></span>
+            <h3>Quick task</h3>
+            <p>Pick a ready-made social task. Just add a link and quantity.</p>
+            <ul>
+              <li>Likes, followers, subscribers and members</li>
+              <li>Preset pricing across popular platforms</li>
+            </ul>
+            <div className="cj-plats">
+              {PLATFORMS.filter(p => QUICK_ICONS.includes(p.id)).map(p => (
+                <button key={p.id} className={selectedPlatform?.id === p.id ? "on" : ""} aria-label={p.name} title={p.name} onClick={() => pickPlatform(p)}>{p.icon}</button>
+              ))}
             </div>
-            <div style={{ flex: 1, height: 1, background: "var(--border)" }} />
+            <div className="cj-go">
+              <button className="ui-btn ui-btn-dark" aria-expanded={openPanel === "quick"} onClick={() => { setSelectedPlatform(null); setOpenPanel(openPanel === "quick" ? null : "quick") }}>
+                Choose a quick task <i className={`ti ti-chevron-${openPanel === "quick" ? "up" : "down"}`} />
+              </button>
+            </div>
           </div>
+        </div>
 
-          {/* ─── Step 3: Social Engagement ─── */}
-          {!selectedPlatform ? (
-          <div style={{ padding: "24px" }}>
-            <div style={{ display: "flex", alignItems: "flex-start", gap: 16 }}>
-              <div style={{
-                width: 32, height: 32, borderRadius: "50%",
-                background: "var(--accent)", color: "var(--on-accent)",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                fontSize: 14, fontWeight: 800, flexShrink: 0,
-              }}>3</div>
-              <div style={{ flex: 1 }}>
-                <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: C.text }}>
-                  Social Engagement
-                </h3>
-                <p style={{ margin: "4px 0 12px", fontSize: 13, color: C.text2, lineHeight: 1.5 }}>
-                  Boost engagement on any platform. Select a platform below to get started.
-                </p>
-                
-                <div style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(3, 1fr)",
-                  gap: 8,
-                }}>
+        {openPanel === "x" && (
+          <section className="ui-card cj-panel">
+            <div className="cj-panel-head"><b>X campaign</b><button className="ui-btn ui-btn-ghost" onClick={() => setOpenPanel(null)}>Close</button></div>
+            <div style={{ padding: 18 }}>
+              <p className="ui-sub" style={{ margin: "0 0 12px" }}>Paste the X post you want to grow, then choose the actions and budget.</p>
+              <FetchPost onPostFetched={(data) => { if (data.text) (window as any).__ogapay_raid_post = data; }} />
+            </div>
+          </section>
+        )}
+
+        {openPanel === "quick" && (
+          <section className="ui-card cj-panel" ref={quickRef}>
+            {!selectedPlatform ? (
+              <>
+                <div className="cj-panel-head"><b>Choose a platform</b><button className="ui-btn ui-btn-ghost" onClick={() => setOpenPanel(null)}>Close</button></div>
+                <div className="cj-menu">
                   {PLATFORMS.map(p => (
-                    <PlatformActionButton
-                      key={p.id}
-                      icon={p.icon}
-                      label={p.name}
-                      actionCount={p.actions.length}
-                      hasDropdown={true}
-                      onClick={() => setSelectedPlatform(p)}
-                    />
+                    <PlatformActionButton key={p.id} icon={p.icon} label={p.name} actionCount={p.actions.length} hasDropdown={true} onClick={() => pickPlatform(p)} />
                   ))}
                 </div>
-              </div>
-            </div>
-          </div>
-          ) : (
-            <PlatformDetail
-              platform={selectedPlatform}
-              onBack={() => setSelectedPlatform(null)}
-              onCreated={(taskId) => setSuccess(taskId || "true")}
-            />
-          )}
+              </>
+            ) : (
+              <PlatformDetail platform={selectedPlatform} onBack={() => setSelectedPlatform(null)} onCreated={(taskId: any) => setSuccess(taskId || "true")} />
+            )}
+          </section>
+        )}
 
-          {/* Help banner */}
-          <div style={{
-            display: "flex", alignItems: "center", justifyContent: "space-between",
-            padding: "16px 24px", borderTop: "1px solid var(--border)",
-            background: "var(--bg2)", gap: 12,
-          }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" style={{ color: C.text2 }}>
-                <circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>
-              </svg>
-              <span style={{ fontSize: 13, color: C.text2, fontWeight: 500 }}>Need help or have suggestions?</span>
-            </div>
-            <button onClick={() => window.open("https://t.me/OgaPayCommunity", "_blank")}
-              style={{
-                flexShrink: 0, padding: "8px 16px", borderRadius: 10, border: "none",
-                background: C.accent, color: C.card, fontSize: 12, fontWeight: 700,
-                cursor: "pointer", fontFamily: "inherit",
-                display: "flex", alignItems: "center", gap: 6, whiteSpace: "nowrap",
-              }}>
-              <IconExternalLink />
-              Join OgaPay Community
-            </button>
-          </div>
+        <div className="cj-steps" aria-label="How it works">
+          <span><span className="n">1</span>Choose your task</span><i className="ti ti-arrow-right" />
+          <span><span className="n">2</span>Set details and budget</span><i className="ti ti-arrow-right" />
+          <span><span className="n">3</span>Review and pay</span>
+        </div>
+
+        <div className="cj-foot">
+          <span>You'll review the payment before your job goes live.</span>
+          <a href="https://t.me/OgaPayCommunity" target="_blank" rel="noopener noreferrer"><i className="ti ti-brand-telegram" /> Get help on Telegram <i className="ti ti-arrow-up-right" /></a>
         </div>
       </div>
-
 
       <CampaignWizard />
       {showMainTemplates && <TemplatesModal onClose={() => setShowMainTemplates(false)} onUse={(tpl: any) => { setCustomTemplate(tpl); setShowCustom(true); }} />}
@@ -1935,3 +1929,4 @@ function ServiceForm({ service, onBack, onCreated }: any) {
   );
 }
 
+export default CreateTask;

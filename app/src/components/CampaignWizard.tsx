@@ -61,6 +61,10 @@ export default function CampaignWizard() {
   const [walletBalance, setWalletBalance] = useState(0);
   const [messages, setMessages] = useState<any[]>([]);
   const [streamPhase, setStreamPhase] = useState(0);
+  // Index into the current question set (used below but was never declared, so
+  // the wizard threw on every render and took the Create page down with it)
+  const [qaIndex, setQaIndex] = useState(0);
+  useEffect(() => { setQaIndex(0); }, [campaignType]);
   const endRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
