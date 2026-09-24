@@ -13,6 +13,7 @@ export default function Carousel<T>({ items, render, label, autoMs = 6500 }: {
   const [perView, setPerView] = useState(3);
   const [page, setPage] = useState(0);
   const [paused, setPaused] = useState(false);
+  const [stopped, setStopped] = useState(false); // user pressed pause
   const touchX = useRef<number | null>(null);
 
   useEffect(() => {
@@ -30,10 +31,10 @@ export default function Carousel<T>({ items, render, label, autoMs = 6500 }: {
   useEffect(() => { if (page > pages - 1) setPage(pages - 1); }, [pages, page]);
 
   useEffect(() => {
-    if (paused || pages < 2 || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (paused || stopped || pages < 2 || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const id = window.setInterval(() => setPage((p) => (p + 1) % pages), autoMs);
     return () => window.clearInterval(id);
-  }, [paused, pages, autoMs]);
+  }, [paused, stopped, pages, autoMs]);
 
   const go = (p: number) => setPage(((p % pages) + pages) % pages);
   const pad = (n: number) => String(n).padStart(2, "0");
@@ -74,6 +75,9 @@ export default function Carousel<T>({ items, render, label, autoMs = 6500 }: {
           <span className="hv-mono" aria-live="polite">{pad(page + 1)} / {pad(pages)}</span>
           <div className="hv-car-btns">
             <button onClick={() => go(page - 1)} aria-label="Previous slide"><i className="ti ti-arrow-left" /></button>
+            <button onClick={() => setStopped(s => !s)} aria-label={stopped ? "Play slides" : "Pause slides"} aria-pressed={stopped}>
+              <i className={`ti ti-player-${stopped ? "play" : "pause"}`} />
+            </button>
             <button onClick={() => go(page + 1)} aria-label="Next slide"><i className="ti ti-arrow-right" /></button>
           </div>
         </div>

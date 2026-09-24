@@ -1,0 +1,88 @@
+/* ─── Dark mode, wurk-style ────────────────────────────────────────────────────
+   Near-black surfaces, hairline white borders, glossy gradient cards and a
+   soft mint for money. Loaded after the page styles so it wins ties. */
+
+html[data-theme="dark"] {
+  --mint: #72dfb0;
+  --mint-rgb: 114, 223, 176;
+}
+
+/* Page glow behind the homepage */
+html[data-theme="dark"] .hv {
+  --hv-faint: #8b8b92;
+  --hv-line: rgba(255, 255, 255, 0.1);
+  --hv-pos: var(--mint);
+  background:
+    radial-gradient(60% 35% at 85% 0%, rgba(255, 255, 255, 0.05), transparent 70%),
+    radial-gradient(40% 30% at 0% 45%, rgba(255, 255, 255, 0.03), transparent 70%),
+    #000;
+}
+
+/* Network graphic */
+html[data-theme="dark"] .hv-network path { opacity: .22; }
+html[data-theme="dark"] .hv-network path.hv-flow { stroke: var(--mint); opacity: .75; }
+html[data-theme="dark"] .hv-network-hub {
+  background: linear-gradient(160deg, #1a1b1d, #0c0d0f);
+  border-color: rgba(255, 255, 255, 0.16);
+  box-shadow: 0 0 0 8px rgba(255, 255, 255, 0.03), 0 20px 50px -20px rgba(0, 0, 0, .9);
+}
+
+/* Glossy stat cards */
+html[data-theme="dark"] .hv-stat {
+  background:
+    radial-gradient(120% 90% at 0% 0%, rgba(255, 255, 255, 0.09), transparent 45%),
+    linear-gradient(160deg, #18191b 0%, #0d0e10 70%);
+  border-color: rgba(255, 255, 255, 0.14);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 24px 50px -30px rgba(0, 0, 0, .9);
+}
+html[data-theme="dark"] .hv-stat::after { display: none; }
+html[data-theme="dark"] .hv-stat-icon { background: #111214; border-color: rgba(255, 255, 255, 0.14); }
+
+/* Rounded section panels (jobs, store) */
+html[data-theme="dark"] .hv-panel {
+  background:
+    radial-gradient(50% 60% at 70% 10%, rgba(255, 255, 255, 0.035), transparent 70%),
+    linear-gradient(180deg, #111112 0%, #0a0a0b 100%);
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+/* Cards */
+html[data-theme="dark"] .hc-card { background: #060606; border-color: rgba(255, 255, 255, 0.12); }
+html[data-theme="dark"] .hc-card:hover { border-color: rgba(255, 255, 255, 0.24); box-shadow: 0 24px 50px -30px rgba(0, 0, 0, .95); }
+html[data-theme="dark"] .hc-reward {
+  background:
+    radial-gradient(90% 80% at 0% 0%, rgba(255, 255, 255, 0.05), transparent 55%),
+    linear-gradient(160deg, #17191b 0%, #0e1012 100%);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+html[data-theme="dark"] .hc-amt strong { color: var(--mint); }
+html[data-theme="dark"] .hc-pill { background: #0e0e0f; border-color: rgba(255, 255, 255, 0.16); color: #e7e7ea; }
+html[data-theme="dark"] .hc-bar { background: rgba(255, 255, 255, 0.1); }
+html[data-theme="dark"] .hc-bar span { background: #5fbf97; }
+html[data-theme="dark"] .hc-dots li::before { background: var(--mint); }
+html[data-theme="dark"] .hc-arrow { background: #111214; border-color: rgba(255, 255, 255, 0.14); }
+html[data-theme="dark"] .hc-av { background: #151517; border-color: rgba(255, 255, 255, 0.12); }
+html[data-theme="dark"] .hc-media { background: #121214; border-color: rgba(255, 255, 255, 0.1); }
+html[data-theme="dark"] .hc-active,
+html[data-theme="dark"] .sp-pill { background: rgba(var(--mint-rgb), 0.1); border-color: rgba(var(--mint-rgb), 0.3); color: var(--mint); }
+html[data-theme="dark"] .hc-active span,
+html[data-theme="dark"] .sp-pill span { background: var(--mint); }
+
+/* Carousel controls */
+html[data-theme="dark"] .hv-car-btns button { background: #0a0a0b; border-color: rgba(255, 255, 255, 0.14); }
+html[data-theme="dark"] .hv-car-btns button:hover { border-color: rgba(255, 255, 255, 0.3); }
+
+/* Job detail reward + store price: mint money */
+html[data-theme="dark"] .wjd-amount { color: var(--mint) !important; -webkit-text-fill-color: var(--mint) !important; }
+
+/* Navbar: outlined Connect Wallet, like wurk */
+html[data-theme="dark"] .connect-btn { background: transparent !important; color: #f5f5f5 !important; border: 1.5px solid #f5f5f5 !important; }
+html[data-theme="dark"] .connect-btn:hover { background: rgba(255, 255, 255, 0.08) !important; opacity: 1; }
+
+/* Shared UI */
+html[data-theme="dark"] .ui-card { border-color: rgba(255, 255, 255, 0.1); }
+html[data-theme="dark"] .ui-input, html[data-theme="dark"] .ui-select { background: #0e0e10; border-color: rgba(255, 255, 255, 0.12); }
+html[data-theme="dark"] .ui-menu { background: #0c0c0d; border-color: rgba(255, 255, 255, 0.12); box-shadow: 0 30px 60px -20px rgba(0, 0, 0, .9); }
+html[data-theme="dark"] .ui-menu-item { background: #111113; border-color: rgba(255, 255, 255, 0.1); }
+html[data-theme="dark"] .ui-menu-item.on { background: #f5f5f5; color: #0a0a0a; border-color: #f5f5f5; }

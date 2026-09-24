@@ -375,12 +375,14 @@ function HighlightedJobs({ jobs, loading }: { jobs: any[]; loading: boolean }) {
   return (
     <section className="hv-section" id="featured-jobs">
       <div className="hv-inner">
+        <div className="hv-panel">
         <SectionHead eyebrow="Find your next opportunity" title="Highlighted jobs" sub="Featured jobs" more="More jobs" to="/tasks" />
         {loading && <div className="hv-car"><div className="hv-car-view"><div className="hv-car-track" style={{ ["--hv-per" as any]: 3 }}>{[0, 1, 2].map((i) => <div key={i} className="hv-car-slide"><div className="hc-card" style={{ height: 480 }}><span className="hv-sk" /></div></div>)}</div></div></div>}
         {!loading && shown.length === 0 && <div className="hv-empty" style={{ marginTop: 28 }}>No open jobs right now. <Link to="/create" style={{ fontWeight: 600 }}>Post the first one</Link>.</div>}
         {!loading && shown.length > 0 && (
           <Carousel label="Highlighted jobs carousel" items={shown} render={(t) => <HomeJobCard task={t} convert={convert} />} />
         )}
+        </div>
       </div>
     </section>
   );

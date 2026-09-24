@@ -8,6 +8,7 @@ import './styles/global.css'
 import './styles/homepage.css'
 import './styles/ui.css'
 import './styles/home-cards.css'
+import './styles/dark.css'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
