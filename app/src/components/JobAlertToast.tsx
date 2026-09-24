@@ -33,7 +33,7 @@ export default function JobAlertToast() {
     }}>
       <div style={{ padding: '14px 16px', display: 'flex', alignItems: 'flex-start', gap: 12 }}>
         <div style={{
-          width: 36, height: 36, borderRadius: 10, background: 'var(--accent)18',
+          width: 36, height: 36, borderRadius: 10, background: 'color-mix(in srgb, var(--accent) 9%, transparent)',
           color: 'var(--accent)', display: 'grid', placeItems: 'center', fontSize: 16, flexShrink: 0,
         }}>
           <i className="ti ti-bell-ringing" />

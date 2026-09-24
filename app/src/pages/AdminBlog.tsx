@@ -142,7 +142,7 @@ export default function AdminBlog() {
 
           <div style={{ display: 'flex', gap: 10, marginTop: 20, flexWrap: 'wrap', alignItems: 'center' }}>
             <button onClick={() => { setForm(f => ({ ...f, status: 'PUBLISHED' })); setTimeout(save, 0) }}
-              style={{ height: 42, padding: '0 24px', borderRadius: 99, border: 'none', background: 'var(--accent)', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+              style={{ height: 42, padding: '0 24px', borderRadius: 99, border: 'none', background: 'var(--accent)', color: 'var(--on-accent)', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
               {saving ? 'Saving...' : 'Publish'}
             </button>
             <button onClick={() => { setForm(f => ({ ...f, status: 'DRAFT' })); setTimeout(save, 0) }}
@@ -176,7 +176,7 @@ export default function AdminBlog() {
       <div className="ab-wrap">
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
           <h1>Blog Manager</h1>
-          <button onClick={openCreate} style={{ height: 38, padding: '0 18px', borderRadius: 99, border: 'none', background: 'var(--accent)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 6 }}>
+          <button onClick={openCreate} style={{ height: 38, padding: '0 18px', borderRadius: 99, border: 'none', background: 'var(--accent)', color: 'var(--on-accent)', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 6 }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
             New Post
           </button>

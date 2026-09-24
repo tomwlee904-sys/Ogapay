@@ -104,7 +104,7 @@ export default function LinkWallet() {
         </div>
 
         {/* Title */}
-        <h1 style={{ fontFamily: 'Outfit', fontSize: 28, fontWeight: 900, margin: '0 0 6px', color: 'var(--text)' }}>Link wallet</h1>
+        <h1 style={{ fontFamily: 'Geist', fontSize: 28, fontWeight: 900, margin: '0 0 6px', color: 'var(--text)' }}>Link wallet</h1>
         <p style={{ fontSize: 14, color: 'var(--text2)', margin: '0 0 28px' }}>Add one secondary wallet for profile and payout checks. It stays fixed to this account after linking.</p>
 
         {/* Wallet Status Card */}
@@ -215,7 +215,7 @@ export default function LinkWallet() {
                   <button onClick={handleLinkConnect} disabled={linking}
                     style={{
                       padding: '12px 32px', borderRadius: 100, border: 'none', cursor: linking ? 'not-allowed' : 'pointer',
-                      background: OGAPAY_BLUE, color: '#fff', fontWeight: 700, fontSize: 14, fontFamily: 'inherit',
+                      background: OGAPAY_BLUE, color: 'var(--on-accent)', fontWeight: 700, fontSize: 14, fontFamily: 'inherit',
                       display: 'flex', alignItems: 'center', gap: 8, opacity: linking ? 0.7 : 1,
                     }}>
                     <i className="ti ti-wallet" /> {linking ? 'Linking...' : 'Link with wallet connect'}
@@ -231,7 +231,7 @@ export default function LinkWallet() {
                       <button onClick={handleMicroStart}
                         style={{
                           padding: '12px 32px', borderRadius: 100, border: 'none', cursor: 'pointer',
-                          background: OGAPAY_BLUE, color: '#fff', fontWeight: 700, fontSize: 14, fontFamily: 'inherit',
+                          background: OGAPAY_BLUE, color: 'var(--on-accent)', fontWeight: 700, fontSize: 14, fontFamily: 'inherit',
                           display: 'flex', alignItems: 'center', gap: 8,
                         }}>
                         <i className="ti ti-send" /> Start micro transaction

@@ -253,7 +253,7 @@ function JobDrawer({ job, onClose, onStatusChange }: { job: any; onClose: any; o
               {job.selectionType === "creator" && manualWinners.length > 0 && (
                 <div style={{ background: "var(--bg2)", border: "1px solid rgba(139,92,246,0.3)", borderRadius: 12, padding: 12, marginBottom: 14, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                   <span style={{ fontSize: 12, color: "var(--accent)", fontWeight: 600 }}>{manualWinners.length} winner(s) selected</span>
-                  <button style={{ background: "var(--accent)", border: "none", borderRadius: 8, padding: "6px 14px", fontSize: 12, fontWeight: 700, color: "#fff", cursor: "pointer", fontFamily: "inherit" }}>
+                  <button style={{ background: "var(--accent)", border: "none", borderRadius: 8, padding: "6px 14px", fontSize: 12, fontWeight: 700, color: "var(--on-accent)", cursor: "pointer", fontFamily: "inherit" }}>
                     Confirm Winners →
                   </button>
                 </div>
@@ -608,7 +608,7 @@ function BlacklistPage() {
           </div>
         ) : blocked.map((b, i) => (
           <div key={b.id} style={{ padding: "14px 16px", borderBottom: i < blocked.length - 1 ? `1px solid ${"var(--border)"}` : "none", display: "flex", alignItems: "center", gap: 12 }}>
-            <div style={{ width: 36, height: 36, borderRadius: 10, background: b.color || "var(--red)", opacity: 0.8, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 900, fontSize: 14, flexShrink: 0 }}>
+            <div style={{ width: 36, height: 36, borderRadius: 10, background: b.color || "var(--red)", opacity: 0.8, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--on-accent)", fontWeight: 900, fontSize: 14, flexShrink: 0 }}>
               {b.user[0].toUpperCase()}
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
@@ -738,7 +738,7 @@ function TemplatesPage({ onUseTemplate }: { onUseTemplate: any }) {
                   </div>
                 </div>
                 <button onClick={saveTemplate}
-                  style={{ width: "100%", background: "var(--accent)", border: "none", borderRadius: 10, padding: "12px", fontSize: 13, fontWeight: 800, color: "#fff", cursor: "pointer", fontFamily: "inherit" }}>
+                  style={{ width: "100%", background: "var(--accent)", border: "none", borderRadius: 10, padding: "12px", fontSize: 13, fontWeight: 800, color: "var(--on-accent)", cursor: "pointer", fontFamily: "inherit" }}>
                   Save Template
                 </button>
               </div>
@@ -784,7 +784,7 @@ function TemplatesPage({ onUseTemplate }: { onUseTemplate: any }) {
                 )}
                 <div style={{ display: "flex", gap: 8 }}>
                   <button onClick={() => { onUseTemplate(tpl); toast("Template loaded into Create Job!"); }}
-                    style={{ flex: 2, background: "var(--accent)", border: "none", borderRadius: 10, padding: "10px 0", fontSize: 12, fontWeight: 800, color: "#fff", cursor: "pointer", fontFamily: "inherit" }}>
+                    style={{ flex: 2, background: "var(--accent)", border: "none", borderRadius: 10, padding: "10px 0", fontSize: 12, fontWeight: 800, color: "var(--on-accent)", cursor: "pointer", fontFamily: "inherit" }}>
                     Use Template →
                   </button>
                   <button onClick={() => forkTemplate(tpl)}

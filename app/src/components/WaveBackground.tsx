@@ -32,11 +32,11 @@ export default function WaveBackground({ originX = 0.85, originY = 0.15 }: Props
 
   // ── Pick color by current theme ─────────────
   const getStrokeColor = useCallback(() => {
-    if (typeof document === 'undefined') return 'rgba(25, 28, 107, 0.12)'
+    if (typeof document === 'undefined') return 'rgba(10,10,10, 0.12)'
     const isDark = document.documentElement.getAttribute('data-theme') === 'dark'
     return isDark
       ? 'rgba(147, 197, 253, 0.20)'
-      : 'rgba(25, 28, 107, 0.12)'
+      : 'rgba(10,10,10, 0.12)'
   }, [])
 
   // ── Draw frame ───────────────────────────────

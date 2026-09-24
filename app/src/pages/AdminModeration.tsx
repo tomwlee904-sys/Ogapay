@@ -58,7 +58,7 @@ export default function AdminModeration() {
     <Layout sidebar>
       <style>{`
         .mod-wrap{max-width:1100px;margin:0 auto;padding:28px 24px 60px}
-        .mod-wrap h1{font-family:Outfit,sans-serif;font-size:28px;font-weight:900;margin:0 0 4px}
+        .mod-wrap h1{font-family:Geist,sans-serif;font-size:28px;font-weight:900;margin:0 0 4px}
         .mod-wrap .sub{color:var(--text2);font-size:14px;margin:0 0 20px}
         .mod-queue{display:flex;flex-direction:column;gap:12px}
         .mod-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;gap:16px}
@@ -71,7 +71,7 @@ export default function AdminModeration() {
         .mod-actions button:disabled{opacity:.5;cursor:not-allowed}
         .btn-approve{background:#059669;color:#fff}
         .btn-reject{background:#dc2626;color:#fff}
-        .btn-flag{background:var(--accent);color:#fff;padding:10px 20px;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:16px}
+        .btn-flag{background:var(--accent);color:var(--on-accent);padding:10px 20px;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:16px}
         .mod-empty{padding:40px;text-align:center;color:var(--text2);font-size:14px}
         .mod-msg{padding:10px 14px;border-radius:10px;font-size:13px;margin-bottom:16px;background:#d1fae5;color:#065f46}
         .mod-msg.error{background:#fee2e2;color:#991b1b}

@@ -10,7 +10,7 @@ export default function Admin() {
     <Layout sidebar>
       <style>{`
         .admin-wrap{max-width:1100px;margin:0 auto;padding:28px 24px 60px}
-        .admin-wrap h1{font-family:Outfit,sans-serif;font-size:28px;font-weight:900;margin:0 0 4px}
+        .admin-wrap h1{font-family:Geist,sans-serif;font-size:28px;font-weight:900;margin:0 0 4px}
         .admin-wrap p{color:var(--text2);font-size:14px;margin:0 0 24px}
         .admin-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px}
         .admin-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;cursor:pointer;transition:border-color .13s}

@@ -37,7 +37,7 @@ function JobToast({ job, alerts, onView, onDismiss }: { job: any; alerts: boolea
   return (
     <div style={{ position: 'fixed', bottom: 24, right: 24, zIndex: 9999, maxWidth: 380, width: '100%', background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 14, boxShadow: '0 12px 40px rgba(0,0,0,0.12)', overflow: 'hidden' }}>
       <div style={{ padding: '14px 16px', display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-        <div style={{ width: 36, height: 36, borderRadius: 10, background: '#1F8CFF18', color: '#1F8CFF', display: 'grid', placeItems: 'center', fontSize: 16, flexShrink: 0 }}>
+        <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(var(--accent-rgb),0.09)', color: 'var(--accent)', display: 'grid', placeItems: 'center', fontSize: 16, flexShrink: 0 }}>
           <i className="ti ti-bell-ringing" />
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
@@ -50,7 +50,7 @@ function JobToast({ job, alerts, onView, onDismiss }: { job: any; alerts: boolea
         </button>
       </div>
       <div style={{ display: 'flex', borderTop: '1px solid var(--border)' }}>
-        <button onClick={onView} style={{ flex: 1, padding: '9px 0', background: 'none', border: 'none', color: '#1F8CFF', fontSize: 12, fontWeight: 700, cursor: 'pointer', borderRight: '1px solid var(--border)' }}>View Job</button>
+        <button onClick={onView} style={{ flex: 1, padding: '9px 0', background: 'none', border: 'none', color: 'var(--accent)', fontSize: 12, fontWeight: 700, cursor: 'pointer', borderRight: '1px solid var(--border)' }}>View Job</button>
         <button onClick={onDismiss} style={{ flex: 1, padding: '9px 0', background: 'none', border: 'none', color: 'var(--text3)', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Dismiss</button>
       </div>
     </div>
@@ -190,9 +190,9 @@ export default function JobMonitor() {
         .jm-prefs{display:flex;gap:10px;flex-shrink:0}
         .jm-pref-btn{display:flex;align-items:center;gap:8px;padding:8px 14px;background:var(--card);border:1px solid var(--border);border-radius:10px;cursor:pointer;font-size:12px;font-weight:600;color:var(--text2);transition:all .15s;font-family:inherit}
         .jm-pref-btn:hover{border-color:var(--text3)}
-        .jm-pref-btn.active{color:var(--text);border-color:#1F8CFF;background:#1F8CFF0a}
+        .jm-pref-btn.active{color:var(--text);border-color:var(--accent);background:rgba(var(--accent-rgb),0.04)}
         .jm-pref-btn .toggle-dot{width:18px;height:18px;border-radius:50%;border:2px solid var(--border3);display:grid;place-items:center;transition:all .2s}
-        .jm-pref-btn.active .toggle-dot{border-color:#1F8CFF;background:#1F8CFF}
+        .jm-pref-btn.active .toggle-dot{border-color:var(--accent);background:var(--accent)}
         .jm-pref-btn.active .toggle-dot:after{content:'';width:8px;height:8px;border-radius:50%;background:#fff}
         .jm-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
         .jm-stat{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px 18px}
@@ -201,7 +201,7 @@ export default function JobMonitor() {
         .jm-stat-count{font-size:22px;font-weight:900;color:var(--text)}
         .jm-stat-label{font-size:11px;color:var(--text2);font-weight:600;text-transform:uppercase;letter-spacing:.04em}
         .jm-latest{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:24px;cursor:pointer;transition:all .2s}
-        .jm-latest:hover{border-color:#1F8CFF40;transform:translateY(-1px);box-shadow:0 4px 20px rgba(0,0,0,0.04)}
+        .jm-latest:hover{border-color:rgba(var(--accent-rgb),0.25);transform:translateY(-1px);box-shadow:0 4px 20px rgba(0,0,0,0.04)}
         .jm-latest-head{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--border);font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.04em}
         .jm-latest-body{display:flex;gap:16px;padding:16px 18px;flex-wrap:wrap}
         .jm-latest-info{flex:1;min-width:200px}
@@ -223,7 +223,7 @@ export default function JobMonitor() {
         .jm-card-actions button{background:none;border:1px solid var(--border);border-radius:8px;padding:5px 8px;cursor:pointer;color:var(--text3);font-size:12px;transition:all .15s;display:flex;align-items:center;gap:4px}
         .jm-card-actions button:hover{color:var(--text);border-color:var(--text3)}
         .jm-card-actions button.applied{color:#16a34a;border-color:#16a34a40;background:#16a34a0a}
-        .jm-card-actions button.saved{color:#1F8CFF;border-color:#1F8CFF40;background:#1F8CFF0a}
+        .jm-card-actions button.saved{color:var(--accent);border-color:rgba(var(--accent-rgb),0.25);background:rgba(var(--accent-rgb),0.04)}
         .jm-empty{text-align:center;padding:40px 20px;color:var(--text3)}
         .jm-empty i{font-size:36px;opacity:.3;margin-bottom:10px;display:block}
         .jm-empty p{font-size:13px;margin:0}
@@ -257,7 +257,7 @@ export default function JobMonitor() {
         <div className="jm-stats">
           <div className="jm-stat">
             <div className="jm-stat-top">
-              <div className="jm-stat-icon" style={{ background: '#1F8CFF12', color: '#1F8CFF' }}><i className="ti ti-briefcase" /></div>
+              <div className="jm-stat-icon" style={{ background: 'rgba(var(--accent-rgb),0.07)', color: 'var(--accent)' }}><i className="ti ti-briefcase" /></div>
             </div>
             <div className="jm-stat-count">{allJobs.length}</div>
             <div className="jm-stat-label">Total Jobs</div>
@@ -289,7 +289,7 @@ export default function JobMonitor() {
         {latestJob && (
           <div className="jm-latest" onClick={() => navigate('/tasks/' + latestJob.id)}>
             <div className="jm-latest-head">
-              <i className="ti ti-sparkles" style={{ color: '#1F8CFF' }} /> Latest Task
+              <i className="ti ti-sparkles" style={{ color: 'var(--accent)' }} /> Latest Task
             </div>
             <div className="jm-latest-body">
               <div className="jm-latest-info">
@@ -384,7 +384,7 @@ export default function JobMonitor() {
                 <div key={job.id} className="jm-card" onClick={() => navigate('/tasks/' + job.id)}>
                   <div className="jm-card-top">
                     <div className="jm-card-title">{job.title}</div>
-                    <button onClick={e => { e.stopPropagation(); toggleBookmark(job.id) }} style={{ background: 'none', border: 'none', color: '#1F8CFF', cursor: 'pointer', fontSize: 14 }}>
+                    <button onClick={e => { e.stopPropagation(); toggleBookmark(job.id) }} style={{ background: 'none', border: 'none', color: 'var(--accent)', cursor: 'pointer', fontSize: 14 }}>
                       <i className="ti ti-bookmark-filled" />
                     </button>
                   </div>

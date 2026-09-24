@@ -169,7 +169,7 @@ function JobDetailModal({ job, onClose, onApply }: { job: any; onClose: () => vo
               <span style={{ padding: '3px 8px', borderRadius: 5, background: 'rgba(var(--accent-rgb),0.08)', color: OGAPAY_BLUE, fontSize: 10, fontWeight: 700 }}>{job.category || job.taskCategory || 'Task'}</span>
               {job.featured && <span style={{ padding: '3px 8px', borderRadius: 5, background: 'rgba(245,158,11,0.12)', color: 'var(--gold)', fontSize: 10, fontWeight: 700 }}>Featured</span>}
             </div>
-            <h2 style={{ fontFamily: 'Outfit', fontSize: 18, fontWeight: 900, margin: 0 }}>{job.title}</h2>
+            <h2 style={{ fontFamily: 'Geist', fontSize: 18, fontWeight: 900, margin: 0 }}>{job.title}</h2>
           </div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text3)', fontSize: 20, cursor: 'pointer', padding: 4 }}>
             <i className="ti ti-x" />
@@ -200,7 +200,7 @@ function JobDetailModal({ job, onClose, onApply }: { job: any; onClose: () => vo
       {/* ── LISTED BY ── */}
         <div className='listed-by-header' style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', padding: '10px 14px', marginBottom: 12, background: 'linear-gradient(135deg, rgba(59,91,219,0.24) 0%, rgba(255,255,255,0.45) 50%, rgba(16,185,129,0.24) 100%)', borderRadius: 12, border: '1px solid var(--border)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={{ width: 36, height: 36, borderRadius: '50%', background: OGAPAY_BLUE, color: '#fff', display: 'grid', placeItems: 'center', fontSize: 12, fontWeight: 900, overflow: 'hidden', flexShrink: 0, border: '2px solid white' }}>
+            <div style={{ width: 36, height: 36, borderRadius: '50%', background: OGAPAY_BLUE, color: 'var(--on-accent)', display: 'grid', placeItems: 'center', fontSize: 12, fontWeight: 900, overflow: 'hidden', flexShrink: 0, border: '2px solid white' }}>
               {(job.poster?.avatarUrl || job.poster?.avatar || job.creatorAvatar) ? <img src={job.poster?.avatarUrl || job.poster?.avatar || job.creatorAvatar} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : formatAddress(job.creatorName || job.creator?.username || job.creator || '')}
             </div>
             <div>
@@ -289,7 +289,7 @@ function JobDetailModal({ job, onClose, onApply }: { job: any; onClose: () => vo
             <i className="ti ti-currency-naira" style={{ fontSize: 22, color: OGAPAY_BLUE }} />
           </div>
           <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>Reward Per Task</div>
-          <div style={{ fontSize: 30, fontWeight: 900, fontFamily: 'Outfit', color: OGAPAY_BLUE, lineHeight: 1 }}>
+          <div style={{ fontSize: 30, fontWeight: 900, fontFamily: 'Geist', color: OGAPAY_BLUE, lineHeight: 1 }}>
             ₦{Number(job.reward || job.amount || 0).toLocaleString()}
           </div>
           <div style={{ fontSize: 12, color: 'var(--text3)', fontWeight: 600, marginTop: 6 }}>
@@ -318,11 +318,11 @@ function JobDetailModal({ job, onClose, onApply }: { job: any; onClose: () => vo
         {/* ── ACTIONS ── */}
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
           {!isMyTask && (
-            <button onClick={() => { setShowApplyModal(true); setSubmitted(false) }} style={{ flex: '1 1 140px', height: 46, borderRadius: 12, background: OGAPAY_BLUE, color: '#fff', border: 'none', fontWeight: 800, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+            <button onClick={() => { setShowApplyModal(true); setSubmitted(false) }} style={{ flex: '1 1 140px', height: 46, borderRadius: 12, background: OGAPAY_BLUE, color: 'var(--on-accent)', border: 'none', fontWeight: 800, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
               <i className="ti ti-edit" /> Apply
             </button>
           )}
-          <button onClick={handleViewSubmissions} style={{ flex: '1 1 140px', height: 46, borderRadius: 12, background: OGAPAY_BLUE, color: '#fff', border: 'none', fontWeight: 800, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+          <button onClick={handleViewSubmissions} style={{ flex: '1 1 140px', height: 46, borderRadius: 12, background: OGAPAY_BLUE, color: 'var(--on-accent)', border: 'none', fontWeight: 800, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
             <i className="ti ti-eye" /> View Submissions
           </button>
         </div>
@@ -364,7 +364,7 @@ function JobDetailModal({ job, onClose, onApply }: { job: any; onClose: () => vo
       {showReportModal && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 1200, display: 'grid', placeItems: 'center', padding: 16, background: 'rgba(0,0,0,0.5)' }} onClick={() => { if(!reportSubmitting) setShowReportModal(false) }}>
           <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 16, padding: 24, maxWidth: 440, width: '100%' }} onClick={e => e.stopPropagation()}>
-            <h3 style={{ fontFamily: 'Outfit', fontSize: 16, fontWeight: 900, margin: '0 0 12px' }}>Report Task</h3>
+            <h3 style={{ fontFamily: 'Geist', fontSize: 16, fontWeight: 900, margin: '0 0 12px' }}>Report Task</h3>
             {reportMsg && (
               <div style={{ padding: '8px 12px', borderRadius: 8, marginBottom: 12, fontSize: 12, fontWeight: 600,
                 background: reportMsg.includes('submitted') ? 'rgba(var(--accent-rgb),0.08)' : 'rgba(var(--red-rgb),0.1)',
@@ -660,10 +660,10 @@ function TaskCard({ job, onToggleBookmark, bookmarked, applied }: {
       {/* ── REWARD BOX ── */}
       <div className="task-reward-box" style={{ margin: '0 18px 14px', background: isDark ? '#1e1e1e' : rewardBg, border: isDark ? `1.5px solid rgba(255,255,255,0.08)` : `1px solid ${rewardBorder}`, borderRadius: 14, padding: '18px 16px', textAlign: 'center' }}>
         <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 8, marginBottom: 6 }}>
-          <span className="ngn-shimmer" style={{ fontSize: 42, fontWeight: 900, fontFamily: 'Outfit', lineHeight: 1, color: isDark ? '#ffffff' : undefined }}>
+          <span className="ngn-shimmer" style={{ fontSize: 42, fontWeight: 900, fontFamily: 'Geist', lineHeight: 1, color: isDark ? '#ffffff' : undefined }}>
             {reward.toLocaleString()}
           </span>
-          <span className="ngn-shimmer" style={{ fontSize: 16, fontWeight: 800, fontFamily: 'Outfit', color: isDark ? '#ffffff' : undefined }}>NGN</span>
+          <span className="ngn-shimmer" style={{ fontSize: 16, fontWeight: 800, fontFamily: 'Geist', color: isDark ? '#ffffff' : undefined }}>NGN</span>
         </div>
         <div style={{ fontSize: 13, color: 'var(--text3)', fontWeight: 600 }}>
           $ {(reward * rates.NGN).toFixed(2)} USD <InfoBtn text="Approximate value in USD based on current exchange rates. Actual rates may vary." />
@@ -918,7 +918,7 @@ export default function Tasks() {
       <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 0 40px', position: 'relative' as const, zIndex: 1 }}>
         {/* Header */}
         <div style={{ marginBottom: 28 }}>
-          <h1 style={{ fontFamily: 'Outfit', fontSize: 32, fontWeight: 900, margin: '0 0 4px', color: 'var(--text)' }}>All Jobs</h1>
+          <h1 style={{ fontFamily: 'Geist', fontSize: 32, fontWeight: 900, margin: '0 0 4px', color: 'var(--text)' }}>All Jobs</h1>
           <p style={{ color: 'var(--text2)', fontSize: 14, margin: 0 }}>Social and custom jobs in one feed.</p>
         </div>
 
@@ -1004,7 +1004,7 @@ export default function Tasks() {
           ) : filtered.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--text2)' }}>
               <i className="ti ti-search-off" style={{ fontSize: 36, color: 'var(--text3)', marginBottom: 12, display: 'block' }} />
-              <h3 style={{ fontFamily: 'Outfit', fontWeight: 800, margin: '0 0 4px' }}>No tasks found</h3>
+              <h3 style={{ fontFamily: 'Geist', fontWeight: 800, margin: '0 0 4px' }}>No tasks found</h3>
               <p style={{ fontSize: 13, margin: 0 }}>Try adjusting your search or filter</p>
             </div>
           ) : (

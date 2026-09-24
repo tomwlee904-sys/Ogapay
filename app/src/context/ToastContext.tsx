@@ -68,7 +68,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               background: t.type === 'error' ? '#DC2626'
                 : t.type === 'success' ? '#16A34A'
                 : t.type === 'warning' ? '#F59E0B'
-                : '#1F8CFF',
+                : 'var(--accent)',
               boxShadow: '0 4px 16px rgba(0,0,0,.25)',
               pointerEvents: 'auto',
               cursor: 'pointer',

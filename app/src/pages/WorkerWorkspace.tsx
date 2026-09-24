@@ -6,7 +6,7 @@ import TaskCard from '../components/TaskCard'
 import { formatCurrency } from '../lib/currency'
 
 const WORKSPACES: Record<string, { label: string; icon: string; desc: string; color: string }> = {
-  social: { label: 'Social Workspace', icon: 'brand-x', desc: 'Social media tasks — follows, likes, shares, comments', color: '#1F8CFF' },
+  social: { label: 'Social Workspace', icon: 'brand-x', desc: 'Social media tasks — follows, likes, shares, comments', color: '#52525b' },
   writing: { label: 'Writing Workspace', icon: 'pencil', desc: 'Content writing, copywriting, translations, articles', color: '#7c3aed' },
   design: { label: 'Design Workspace', icon: 'photo', desc: 'Graphic design, UI/UX, video editing, animations', color: '#EC4899' },
   testing: { label: 'App Testing Workspace', icon: 'device-mobile', desc: 'App testing, QA, beta testing, bug reporting', color: '#059669' },
@@ -198,7 +198,7 @@ export default function WorkerWorkspace() {
   // Related categories (3 others)
   const otherSlugs = Object.keys(WORKSPACES).filter(s => s !== category).slice(0, 3)
 
-  const avatarColors = ['#1F8CFF', '#EC4899', 'var(--green)', '#F59E0B', '#7c3aed', '#dc2626']
+  const avatarColors = ['var(--accent)', '#EC4899', 'var(--green)', '#F59E0B', '#7c3aed', '#dc2626']
 
   if (!ws) {
     return (
@@ -206,7 +206,7 @@ export default function WorkerWorkspace() {
         <div style={{ padding: '60px 24px', textAlign: 'center' }}>
           <h2 style={{ fontSize: 22, fontWeight: 800, color: 'var(--text)', margin: '0 0 8px' }}>Workspace not found</h2>
           <p style={{ fontSize: 14, color: 'var(--text3)', margin: '0 0 20px' }}>Available: Social, Writing, Design, App Testing, Research, Dev</p>
-          <button onClick={() => navigate('/worker-portal')} style={{ padding: '10px 24px', borderRadius: 10, border: 'none', background: 'var(--accent)', color: '#fff', fontWeight: 600, cursor: 'pointer' }}>Back to Worker Portal</button>
+          <button onClick={() => navigate('/worker-portal')} style={{ padding: '10px 24px', borderRadius: 10, border: 'none', background: 'var(--accent)', color: 'var(--on-accent)', fontWeight: 600, cursor: 'pointer' }}>Back to Worker Portal</button>
         </div>
       </Layout>
     )
@@ -215,7 +215,7 @@ export default function WorkerWorkspace() {
   return (
     <Layout>
       <style>{`
-        .ws-header{background:${ws.color};padding:36px 32px;border-radius:16px;margin-bottom:24px;color:#fff}
+        .ws-header{background:${ws.color};padding:36px 32px;border-radius:16px;margin-bottom:24px;color:var(--on-accent)}
         .ws-header h1{font-size:28px;font-weight:900;margin:0 0 6px;word-break:break-word}
         .ws-header p{font-size:14px;opacity:.85;margin:0;word-break:break-word}
         .ws-stat-bar{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px}
@@ -225,7 +225,7 @@ export default function WorkerWorkspace() {
         .ws-pills{display:flex;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:8px;margin-bottom:20px;scrollbar-width:none}
         .ws-pills::-webkit-scrollbar{display:none}
         .ws-pill{padding:7px 14px;border-radius:20px;border:1px solid var(--border);background:var(--card);color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all .2s;flex-shrink:0;font-family:inherit}
-        .ws-pill.active{background:${ws.color};color:#fff;border-color:${ws.color}}
+        .ws-pill.active{background:${ws.color};color:var(--on-accent);border-color:${ws.color}}
         .ws-pill:hover:not(.active){border-color:${ws.color};color:${ws.color}}
         .ws-featured{margin-bottom:24px}
         .ws-featured-title{font-size:14px;font-weight:800;color:var(--text);margin-bottom:12px;display:flex;align-items:center;gap:8px}
@@ -242,7 +242,7 @@ export default function WorkerWorkspace() {
         .ws-card-actions{display:flex;align-items:center;justify-content:space-between;margin-top:4px}
         .ws-badge-open{font-size:11px;font-weight:700;color:var(--green);background:rgba(22,163,74,.1);padding:2px 10px;border-radius:20px}
         .ws-badge-closed{font-size:11px;font-weight:700;color:var(--text3);background:var(--bg2);padding:2px 10px;border-radius:20px}
-        .ws-apply-btn{height:32px;padding:0 14px;border-radius:8px;border:none;background:${ws.color};color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .2s;display:inline-flex;align-items:center;gap:4px}
+        .ws-apply-btn{height:32px;padding:0 14px;border-radius:8px;border:none;background:${ws.color};color:var(--on-accent);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .2s;display:inline-flex;align-items:center;gap:4px}
         .ws-apply-btn:hover{box-shadow:0 2px 12px ${ws.color}40;transform:translateY(-1px)}
         .ws-tips{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px;margin-top:24px}
         .ws-tips-title{font-size:14px;font-weight:800;color:var(--text);margin-bottom:12px;display:flex;align-items:center;gap:8px}
@@ -337,7 +337,7 @@ export default function WorkerWorkspace() {
                 <i className="ti ti-briefcase-off" style={{ fontSize: 40, display: 'block', marginBottom: 12, color: 'var(--text3)' }} />
                 <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text2)', margin: '0 0 4px' }}>No {ws.label} tasks yet</h3>
                 <p style={{ fontSize: 13, margin: '0 0 16px' }}>Check back later or browse other categories.</p>
-                <button onClick={() => navigate('/tasks?category=' + apiCategory)} style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: ws.color, color: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: 13 }}>Browse All Tasks</button>
+                <button onClick={() => navigate('/tasks?category=' + apiCategory)} style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: ws.color, color: 'var(--on-accent)', fontWeight: 600, cursor: 'pointer', fontSize: 13 }}>Browse All Tasks</button>
               </div>
             ) : (
               <div className="ws-grid">

@@ -162,7 +162,7 @@ export default function WithdrawModal({ onClose, onSuccess }: Props) {
               <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
                 {quickAmounts.map(v => (
                   <button key={v} onClick={() => setAmount(String(v))}
-                    style={{ flex: 1, height: 32, borderRadius: 8, fontSize: 11, fontWeight: 700, border: '1px solid var(--border)', background: amount === String(v) ? '#191C6B' : 'var(--bg)', color: amount === String(v) ? '#fff' : 'var(--text2)', cursor: 'pointer', fontFamily: 'inherit' }}>
+                    style={{ flex: 1, height: 32, borderRadius: 8, fontSize: 11, fontWeight: 700, border: '1px solid var(--border)', background: amount === String(v) ? '#0a0a0a' : 'var(--bg)', color: amount === String(v) ? '#fff' : 'var(--text2)', cursor: 'pointer', fontFamily: 'inherit' }}>
                     ₦{(v/1000).toFixed(0)}k
                   </button>
                 ))}
@@ -206,7 +206,7 @@ export default function WithdrawModal({ onClose, onSuccess }: Props) {
             {error && <div style={{ padding: '10px 14px', background: 'rgba(220,38,38,0.08)', border: '1px solid rgba(220,38,38,0.2)', borderRadius: 10, fontSize: 13, color: '#DC2626', display: 'flex', alignItems: 'center', gap: 8 }}><i className="ti ti-alert-triangle" style={{ fontSize: 16 }} />{error}</div>}
 
             <button onClick={handleSubmit} disabled={!accountName || !amount || Number(amount) < 5000}
-              style={{ width: '100%', height: 52, borderRadius: 14, fontWeight: 800, fontSize: 15, background: '#191C6B', color: '#fff', border: 'none', cursor: 'pointer', fontFamily: 'inherit', marginTop: 4, opacity: (!accountName || !amount || Number(amount) < 5000) ? 0.5 : 1 }}>
+              style={{ width: '100%', height: 52, borderRadius: 14, fontWeight: 800, fontSize: 15, background: '#0a0a0a', color: '#fff', border: 'none', cursor: 'pointer', fontFamily: 'inherit', marginTop: 4, opacity: (!accountName || !amount || Number(amount) < 5000) ? 0.5 : 1 }}>
               Continue to Confirm
             </button>
           </div>
@@ -238,7 +238,7 @@ export default function WithdrawModal({ onClose, onSuccess }: Props) {
 
             <div style={{ display: 'flex', gap: 10 }}>
               <button onClick={() => setStep('form')} style={{ flex: 1, height: 52, borderRadius: 14, fontWeight: 700, fontSize: 14, background: 'none', border: '1.5px solid var(--border)', color: 'var(--text)', cursor: 'pointer', fontFamily: 'inherit' }}>Go Back</button>
-              <button onClick={confirmWithdraw} disabled={submitting} style={{ flex: 2, height: 52, borderRadius: 14, fontWeight: 800, fontSize: 15, background: '#191C6B', color: '#fff', border: 'none', cursor: 'pointer', fontFamily: 'inherit', opacity: submitting ? 0.7 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+              <button onClick={confirmWithdraw} disabled={submitting} style={{ flex: 2, height: 52, borderRadius: 14, fontWeight: 800, fontSize: 15, background: '#0a0a0a', color: '#fff', border: 'none', cursor: 'pointer', fontFamily: 'inherit', opacity: submitting ? 0.7 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
                 {submitting ? <><span className="spinner" style={{ width: 16, height: 16, borderWidth: 2, borderColor: '#fff', borderTopColor: 'transparent' }} /> Processing...</> : <><i className="ti ti-send" /> Confirm Withdrawal</>}
               </button>
             </div>
@@ -257,7 +257,7 @@ export default function WithdrawModal({ onClose, onSuccess }: Props) {
             <div style={{ padding: '12px 16px', background: 'var(--bg)', borderRadius: 10, fontSize: 12, color: 'var(--text3)', marginBottom: 24 }}>
               Reference: <span style={{ fontFamily: 'monospace', fontWeight: 700, color: 'var(--text)' }}>{reference}</span>
             </div>
-            <button onClick={onClose} style={{ width: '100%', height: 52, borderRadius: 14, fontWeight: 800, fontSize: 15, background: '#191C6B', color: '#fff', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>Done</button>
+            <button onClick={onClose} style={{ width: '100%', height: 52, borderRadius: 14, fontWeight: 800, fontSize: 15, background: '#0a0a0a', color: '#fff', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>Done</button>
           </div>
         )}
       </div>

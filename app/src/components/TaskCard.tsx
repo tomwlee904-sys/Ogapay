@@ -458,13 +458,13 @@ export default function TaskCard({ task, hideApply }: { task: Task; hideApply?: 
         }}>
           <span className="oga-shimmer tc-reward-amount" style={{ color: isDark ? '#ffffff' : undefined, textShadow: isDark ? 'none' : undefined,
             fontSize: 34, fontWeight: 900,
-            fontFamily: 'Outfit, sans-serif', lineHeight: 1,
+            fontFamily: 'Geist, sans-serif', lineHeight: 1,
           }}>
             {reward.toLocaleString()}
           </span>
           <span className="oga-token-shimmer" style={{ color: isDark ? '#ffffff' : undefined,
             fontSize: 13, fontWeight: 800,
-            fontFamily: 'Outfit, sans-serif',
+            fontFamily: 'Geist, sans-serif',
           }}>
             NGN
           </span>

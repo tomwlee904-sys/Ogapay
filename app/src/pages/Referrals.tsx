@@ -23,14 +23,14 @@ export default function Referrals() {
       <style>{`
         .rf-hero{margin-bottom:20px}
         .rf-hero .rf-greeting{color:var(--text2);font-size:13px;font-weight:600;margin-bottom:2px}
-        .rf-hero h1{font-family:Outfit;font-size:28px;font-weight:900;margin:0 0 4px}
+        .rf-hero h1{font-family:Geist;font-size:28px;font-weight:900;margin:0 0 4px}
         .rf-hero p{color:var(--text2);font-size:14px;margin:0}
         .rf-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
         @media(max-width:500px){.rf-stats{grid-template-columns:1fr}}
         .rf-stat{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center;transition:all .25s}
         .rf-stat:hover{transform:translateY(-2px);border-color:var(--accent)}
         .rf-stat i{font-size:24px;margin-bottom:6px;display:block}
-        .rf-stat .rf-num{font-family:Outfit;font-size:24px;font-weight:900}
+        .rf-stat .rf-num{font-family:Geist;font-size:24px;font-weight:900}
         .rf-stat .rf-label{font-size:12px;color:var(--text2);margin-top:2px}
         .rf-ref-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px 24px;margin-bottom:20px;transition:all .25s}
         .rf-ref-card:hover{border-color:var(--border2)}
@@ -39,8 +39,8 @@ export default function Referrals() {
         .rf-ref-row{display:flex;gap:8px}
         .rf-ref-row input{flex:1;height:38px;padding:0 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg2);color:var(--text);font-size:13px;outline:0}
         .rf-ref-row input:focus{border-color:var(--accent)}
-        .rf-ref-row button{height:38px;padding:0 16px;border-radius:8px;font-weight:700;font-size:12px;display:inline-flex;align-items:center;gap:5px;cursor:pointer;border:0;background:var(--accent);color:#fff;transition:all .2s}
-        .rf-ref-row button:hover{box-shadow:0 4px 16px rgba(31,140,255,.25)}
+        .rf-ref-row button{height:38px;padding:0 16px;border-radius:8px;font-weight:700;font-size:12px;display:inline-flex;align-items:center;gap:5px;cursor:pointer;border:0;background:var(--accent);color:var(--on-accent);transition:all .2s}
+        .rf-ref-row button:hover{box-shadow:0 4px 16px rgba(var(--accent-rgb),.25)}
         .rf-list{display:grid;gap:6px}
         .rf-item{display:flex;align-items:center;gap:14px;padding:12px 16px;background:var(--card);border:1px solid var(--border);border-radius:10px;transition:all .2s}
         .rf-item:hover{border-color:var(--border2)}
@@ -61,9 +61,9 @@ export default function Referrals() {
 
       <div className="rf-stats">
         {[
-          { icon: 'ti ti-users', color: '#1F8CFF', count: '3', label: 'Total Referrals' },
+          { icon: 'ti ti-users', color: '#52525b', count: '3', label: 'Total Referrals' },
           { icon: 'ti ti-coin', color: '#16a34a', count: 'NGN 1,000', label: 'Total Earned' },
-          { icon: 'ti ti-trending-up', color: '#2563EB', count: 'NGN 500', label: 'This Month' },
+          { icon: 'ti ti-trending-up', color: '#52525b', count: 'NGN 500', label: 'This Month' },
         ].map((s, i) => (
           <div className="rf-stat" key={i}>
             <i className={s.icon} style={{color: s.color}} />
@@ -82,14 +82,14 @@ export default function Referrals() {
         </div>
       </div>
 
-      <div style={{fontFamily:'Outfit',fontSize:15,fontWeight:800,marginBottom:12}}>
+      <div style={{fontFamily:'Geist',fontSize:15,fontWeight:800,marginBottom:12}}>
         <i className="ti ti-list" style={{color:'var(--accent)',marginRight:6}} />Referral History
       </div>
 
       {referrals.length === 0 ? (
         <div className="rf-empty">
           <i className="ti ti-users" />
-          <h3 style={{fontFamily:'Outfit',fontWeight:800,margin:'0 0 4px',color:'var(--text)'}}>No referrals yet</h3>
+          <h3 style={{fontFamily:'Geist',fontWeight:800,margin:'0 0 4px',color:'var(--text)'}}>No referrals yet</h3>
           <p style={{fontSize:13,margin:0}}>Share your link to start earning</p>
         </div>
       ) : (

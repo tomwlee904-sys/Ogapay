@@ -409,7 +409,7 @@ function ErrorState({ message, onBack }: { message: string; onBack: () => void }
           </div>
           <h2 style={{ fontSize: 20, fontWeight: 800, color: 'var(--text)', margin: '0 0 8px' }}>{message || 'Task not found'}</h2>
           <p style={{ fontSize: 14, color: 'var(--text2)', margin: '0 0 20px', lineHeight: 1.5 }}>The task you're looking for doesn't exist or has been removed.</p>
-          <button onClick={onBack} style={{ padding: '12px 28px', borderRadius: 10, border: 'none', background: BRAND, color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>Go Back</button>
+          <button onClick={onBack} style={{ padding: '12px 28px', borderRadius: 10, border: 'none', background: BRAND, color: 'var(--on-accent)', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>Go Back</button>
         </div>
       </div>
     </Layout>
@@ -485,7 +485,7 @@ function WurkJobDetailView(props: any) {
     <Layout>
       <style>{`
         @keyframes oga-sweep{0%{background-position:-200% center}to{background-position:200% center}}
-        .wjd{background:var(--bg,#f9fafb);color:var(--text,#1f2937);font-family:Inter,'DM Sans',system-ui,sans-serif;padding:20px 0 60px;min-height:100vh}
+        .wjd{background:var(--bg,#f9fafb);color:var(--text,#1f2937);font-family:Inter,'Geist',system-ui,sans-serif;padding:20px 0 60px;min-height:100vh}
         .wjd-wrap{width:min(100% - 32px,900px);margin:0 auto}
         .wjd-panel{background:var(--card,#fff);border:0.5px solid var(--border,#e5e7eb);border-radius:18px}
         .wjd-back{display:inline-flex;align-items:center;gap:8px;height:38px;border:0.5px solid var(--border,#e5e7eb);border-radius:10px;background:var(--card,#fff);color:var(--text2,#475569);padding:0 14px;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:16px;font-family:inherit}
@@ -496,7 +496,7 @@ function WurkJobDetailView(props: any) {
         .wjd-kicker{color:var(--text3,#9ca3af);letter-spacing:.1em;text-transform:uppercase;font-weight:700;font-size:10px;margin-bottom:4px}
         .wjd-name{display:flex;align-items:center;gap:8px;color:var(--text,#0f172a);font-size:18px;font-weight:900;line-height:1.2;margin-bottom:3px}
         .wjd-handle{color:var(--text2,#6b7280);font-size:13px;font-weight:500}
-        .wjd-mark{display:grid;place-items:center;width:20px;height:20px;border-radius:5px;background:var(--accent);color:#fff;font-size:10px;font-weight:900}
+        .wjd-mark{display:grid;place-items:center;width:20px;height:20px;border-radius:5px;background:var(--accent);color:var(--on-accent);font-size:10px;font-weight:900}
         .wjd-actions-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex-shrink:0}
         .wjd-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:100px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
         .wjd-badge-open{background:rgba(var(--green-rgb),0.12);border:1px solid rgba(var(--green-rgb),0.3);color:var(--green)}
@@ -537,7 +537,7 @@ function WurkJobDetailView(props: any) {
         .wjd-subs-panel{padding:20px 24px;margin-bottom:12px}
         .wjd-sub-list{display:grid;gap:10px}
         .wjd-sub-item{display:flex;gap:12px;padding:14px 16px;border:0.5px solid var(--border,#e5e7eb);border-radius:12px;background:var(--bg,#f8fafc);cursor:pointer}
-        .wjd-sub-avatar{width:36px;height:36px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center;font-size:13px;font-weight:900;flex-shrink:0}
+        .wjd-sub-avatar{width:36px;height:36px;border-radius:50%;background:var(--accent);color:var(--on-accent);display:grid;place-items:center;font-size:13px;font-weight:900;flex-shrink:0}
         .wjd-sub-avatar img{width:100%;height:100%;border-radius:50%;object-fit:cover}
         .wjd-sub-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
         .wjd-ok{height:30px;border-radius:8px;padding:0 14px;font-size:12px;font-weight:700;cursor:pointer;border:0;background:var(--green);color:#fff;font-family:inherit}
@@ -545,7 +545,7 @@ function WurkJobDetailView(props: any) {
         .wjd-empty{text-align:center;padding:28px 0;color:var(--text2,#64748b);font-size:14px}
 
         .wjd-action-bar{display:flex;gap:12px;padding:12px 0 0;border-top:0.5px solid var(--border,#e5e7eb);margin-top:18px}
-        .wjd-primary,.wjd-secondary{min-height:44px;border:0;border-radius:12px;background:var(--accent);color:#fff;padding:0 28px;display:inline-flex;align-items:center;justify-content:center;gap:9px;font-size:13px;font-weight:700;cursor:pointer;text-transform:uppercase;letter-spacing:.04em;font-family:inherit}
+        .wjd-primary,.wjd-secondary{min-height:44px;border:0;border-radius:12px;background:var(--accent);color:var(--on-accent);padding:0 28px;display:inline-flex;align-items:center;justify-content:center;gap:9px;font-size:13px;font-weight:700;cursor:pointer;text-transform:uppercase;letter-spacing:.04em;font-family:inherit}
         .wjd-primary:disabled{background:var(--border,#cbd5e1);color:var(--text3,#64748b);cursor:not-allowed}
         .wjd-secondary{min-width:200px}
         .wjd-signin-card{background:var(--card,#fff);border:0.5px solid var(--border,#e5e7eb);border-radius:18px;padding:28px 24px;text-align:center;margin-top:18px}
@@ -592,7 +592,7 @@ function WurkJobDetailView(props: any) {
         .wjd-before-copy{font-size:14px;margin-bottom:12px;color:var(--text2,#374151);line-height:1.5}
         .wjd-before-list{margin:0 0 22px;padding-left:22px;color:var(--text,#1f2937);font-size:13px;line-height:1.6;display:grid;gap:5px}
         .wjd-before-actions{display:flex;justify-content:flex-end}
-        .wjd-understand{min-width:200px;min-height:44px;border-radius:12px;border:0;background:var(--accent);color:#fff;font-size:13px;font-weight:700;text-transform:uppercase;cursor:pointer;font-family:inherit}
+        .wjd-understand{min-width:200px;min-height:44px;border-radius:12px;border:0;background:var(--accent);color:var(--on-accent);font-size:13px;font-weight:700;text-transform:uppercase;cursor:pointer;font-family:inherit}
         .wjd-report-head{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:0.5px solid var(--border,#e5e7eb)}
         .wjd-report-body{padding:18px 20px 22px}
         .wjd-report-label{display:block;color:var(--text,#0f172a);font-size:13px;font-weight:700;margin-bottom:6px}
@@ -1219,7 +1219,7 @@ function SharePanel({ job, onClose }: { job: JobData; onClose: () => void }) {
           <p style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3,#9ca3af)', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 8px' }}>Or copy link</p>
           <div style={{ display: 'flex', gap: 8 }}>
             <input readOnly value={url} style={{ flex: 1, padding: '10px 12px', borderRadius: 10, border: '0.5px solid var(--border,#e5e7eb)', background: 'var(--bg,#f8fafc)', color: 'var(--text,#0f172a)', fontSize: 12, fontFamily: 'monospace', outline: 'none' }} />
-            <button onClick={copy} style={{ padding: '10px 18px', borderRadius: 10, border: 'none', background: BRAND, color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>
+            <button onClick={copy} style={{ padding: '10px 18px', borderRadius: 10, border: 'none', background: BRAND, color: 'var(--on-accent)', fontWeight: 700, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>
               {copied ? 'Copied!' : 'Copy'}
             </button>
           </div>

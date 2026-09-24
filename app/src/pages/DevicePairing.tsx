@@ -121,7 +121,7 @@ export default function DevicePairing() {
       <div style={{ maxWidth: 640, margin: '0 auto', padding: '40px 20px' }}>
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <h1 style={{ fontFamily: 'Outfit', fontSize: 28, fontWeight: 900, margin: '0 0 6px', color: 'var(--text)' }}>Device Pairing</h1>
+          <h1 style={{ fontFamily: 'Geist', fontSize: 28, fontWeight: 900, margin: '0 0 6px', color: 'var(--text)' }}>Device Pairing</h1>
           <p style={{ fontSize: 14, color: 'var(--text2)', margin: 0 }}>Securely link your devices to your OgaPay account</p>
         </div>
 
@@ -129,7 +129,7 @@ export default function DevicePairing() {
         <div style={{ border: '1.5px solid var(--border)', borderRadius: 16, background: 'var(--card)', marginBottom: 20, overflow: 'hidden' }}>
           {/* Banner */}
           {banner && (
-            <div style={{ padding: '10px 16px', background: OGAPAY_BLUE, display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, fontWeight: 700, color: '#fff' }}>
+            <div style={{ padding: '10px 16px', background: OGAPAY_BLUE, display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, fontWeight: 700, color: 'var(--on-accent)' }}>
               <i className="ti ti-circle-check" style={{ fontSize: 16 }} />
               <span style={{ flex: 1 }}>{banner}</span>
               <i className="ti ti-x" style={{ cursor: 'pointer', fontSize: 14, opacity: 0.8 }} onClick={() => setBanner('')} />
@@ -178,7 +178,7 @@ export default function DevicePairing() {
               <button onClick={handleGenerate} disabled={loading}
                 style={{
                   width: '100%', height: 46, borderRadius: 100, border: 'none',
-                  background: 'var(--accent)', color: '#fff', fontWeight: 700, fontSize: 14,
+                  background: 'var(--accent)', color: 'var(--on-accent)', fontWeight: 700, fontSize: 14,
                   cursor: loading ? 'not-allowed' : 'pointer', fontFamily: 'inherit', marginTop: 16,
                   opacity: loading ? 0.6 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                 }}>
@@ -203,7 +203,7 @@ export default function DevicePairing() {
 
           {/* Option A */}
           <div style={{ display: 'flex', gap: 14, marginBottom: 20 }}>
-            <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--accent)', color: '#fff', display: 'grid', placeItems: 'center', fontSize: 13, fontWeight: 900, flexShrink: 0 }}>A</div>
+            <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--accent)', color: 'var(--on-accent)', display: 'grid', placeItems: 'center', fontSize: 13, fontWeight: 900, flexShrink: 0 }}>A</div>
             <div style={{ flex: 1 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
                 <i className="ti ti-device-tablet" style={{ color: 'var(--text2)', fontSize: 14 }} />
@@ -224,7 +224,7 @@ export default function DevicePairing() {
 
           {/* Option B */}
           <div style={{ display: 'flex', gap: 14 }}>
-            <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--accent)', color: '#fff', display: 'grid', placeItems: 'center', fontSize: 13, fontWeight: 900, flexShrink: 0 }}>B</div>
+            <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--accent)', color: 'var(--on-accent)', display: 'grid', placeItems: 'center', fontSize: 13, fontWeight: 900, flexShrink: 0 }}>B</div>
             <div style={{ flex: 1 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
                 <i className="ti ti-qrcode" style={{ color: 'var(--text2)', fontSize: 14 }} />
@@ -253,7 +253,7 @@ export default function DevicePairing() {
         {paired && (
           <div style={{ textAlign: 'center', padding: 24 }}>
             <i className="ti ti-circle-check" style={{ fontSize: 40, color: OGAPAY_BLUE, display: 'block', marginBottom: 12 }} />
-            <div style={{ fontSize: 18, fontWeight: 900, fontFamily: 'Outfit', color: 'var(--text)' }}>Device paired successfully!</div>
+            <div style={{ fontSize: 18, fontWeight: 900, fontFamily: 'Geist', color: 'var(--text)' }}>Device paired successfully!</div>
             <p style={{ fontSize: 13, color: 'var(--text2)', margin: '4px 0 0' }}>Redirecting to settings...</p>
           </div>
         )}

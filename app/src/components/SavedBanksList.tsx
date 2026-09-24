@@ -114,7 +114,7 @@ export default function SavedBanksList() {
             }}>
               <div style={{
                 width: 40, height: 40, borderRadius: 10,
-                background: bank.isDefault ? 'var(--accent)15' : 'var(--bg2)',
+                background: bank.isDefault ? 'color-mix(in srgb, var(--accent) 8%, transparent)' : 'var(--bg2)',
                 display: 'grid', placeItems: 'center', flexShrink: 0,
               }}>
                 <i className="ti ti-building-bank" style={{ color: bank.isDefault ? 'var(--accent)' : 'var(--text3)', fontSize: 18 }} />
@@ -164,7 +164,7 @@ export default function SavedBanksList() {
             maxWidth: 440, width: '100%', padding: 28, maxHeight: '90vh', overflowY: 'auto',
           }} onClick={e => e.stopPropagation()}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-              <h3 style={{ fontFamily: 'Outfit', fontSize: 18, fontWeight: 800, margin: 0 }}>Add Bank Account</h3>
+              <h3 style={{ fontFamily: 'Geist', fontSize: 18, fontWeight: 800, margin: 0 }}>Add Bank Account</h3>
               <button style={{ width: 32, height: 32, border: '1px solid var(--border)', borderRadius: 8, background: 'var(--bg2)', cursor: 'pointer', display: 'grid', placeItems: 'center', color: 'var(--text3)', fontSize: 18 }} onClick={() => setShowAdd(false)}>
                 <i className="ti ti-x" />
               </button>
@@ -238,7 +238,7 @@ export default function SavedBanksList() {
               disabled={saving}
               style={{
                 height: 42, width: '100%', borderRadius: 10, fontWeight: 700, fontSize: 14,
-                background: 'var(--accent)', color: '#fff', border: 'none',
+                background: 'var(--accent)', color: 'var(--on-accent)', border: 'none',
                 cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'inherit',
                 opacity: saving ? 0.6 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
               }}

@@ -180,7 +180,7 @@ export default function StorePayment() {
           </div>
           <div style={{ width:32,height:1.5,background:'var(--border)' }} />
           <div style={{ display:'flex',alignItems:'center',gap:6 }}>
-            <div style={{ width:26,height:26,borderRadius:'50%',background:'var(--accent)',color:'#fff',fontSize:11,fontWeight:800,display:'grid',placeItems:'center' }}>3</div>
+            <div style={{ width:26,height:26,borderRadius:'50%',background:'var(--accent)',color:'var(--on-accent)',fontSize:11,fontWeight:800,display:'grid',placeItems:'center' }}>3</div>
             <span style={{ fontSize:12,fontWeight:700,color:'var(--text)' }}>Payment</span>
           </div>
         </div>
@@ -213,7 +213,7 @@ export default function StorePayment() {
             {/* Total Amount */}
             <div style={{ textAlign:'center',padding:'20px 16px',marginBottom:20,background:'var(--card)',border:'1px solid var(--border)',borderRadius:14 }}>
               <div style={{ fontSize:10,fontWeight:700,color:'var(--text3)',letterSpacing:'0.1em',textTransform:'uppercase',marginBottom:6 }}>Total Amount</div>
-              <div style={{ fontFamily:'Outfit,sans-serif',fontSize:44,fontWeight:900,color:'var(--accent)',lineHeight:1.1,letterSpacing:-2 }}>
+              <div style={{ fontFamily:'Geist,sans-serif',fontSize:44,fontWeight:900,color:'var(--accent)',lineHeight:1.1,letterSpacing:-2 }}>
                 {fmt(total, payCurr)}
               </div>
               {rates?.NGN && (

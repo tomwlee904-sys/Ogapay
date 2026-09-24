@@ -85,7 +85,7 @@ interface StoreItem {
 const S = {
   card: { background: 'var(--glass-bg)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', border: '1.5px solid var(--glass-border)', borderRadius: 16, overflow: 'hidden', boxShadow: '0 4px 24px rgba(0,0,0,0.10)' },
   grid: { display: 'grid', gap: 16 } as React.CSSProperties,
-  btnPrimary: { height: 38, padding: '0 18px', borderRadius: 9, background: OGAPAY_BLUE, color: '#fff', border: 'none', fontWeight: 700, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', gap: 6 },
+  btnPrimary: { height: 38, padding: '0 18px', borderRadius: 9, background: OGAPAY_BLUE, color: 'var(--on-accent)', border: 'none', fontWeight: 700, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', gap: 6 },
   btnOutline: { height: 38, padding: '0 18px', borderRadius: 9, border: '1.5px solid var(--border)', background: 'transparent', color: 'var(--text2)', fontWeight: 700, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', gap: 6 },
 }
 
@@ -243,7 +243,7 @@ function StorePage({
             onClick={() => navigate('/create')}
             style={{
               height: 40, padding: '0 18px', borderRadius: 10,
-              background: OGAPAY_BLUE, color: '#fff', border: 'none',
+              background: OGAPAY_BLUE, color: 'var(--on-accent)', border: 'none',
               fontWeight: 700, fontSize: 13, cursor: 'pointer',
               fontFamily: 'inherit', display: 'inline-flex',
               alignItems: 'center', gap: 7
@@ -255,7 +255,7 @@ function StorePage({
             onClick={() => navigate('/workers')}
             style={{
               height: 40, padding: '0 18px', borderRadius: 10,
-              background: OGAPAY_BLUE, color: '#fff',
+              background: OGAPAY_BLUE, color: 'var(--on-accent)',
               border: 'none', fontWeight: 700, fontSize: 13,
               cursor: 'pointer', fontFamily: 'inherit',
               display: 'inline-flex', alignItems: 'center', gap: 7
@@ -267,7 +267,7 @@ function StorePage({
             onClick={() => navigate('/worker-portal')}
             style={{
               height: 40, padding: '0 18px', borderRadius: 10,
-              background: OGAPAY_BLUE, color: '#fff',
+              background: OGAPAY_BLUE, color: 'var(--on-accent)',
               border: 'none', fontWeight: 700, fontSize: 13,
               cursor: 'pointer', fontFamily: 'inherit',
               display: 'inline-flex', alignItems: 'center', gap: 7
@@ -367,7 +367,7 @@ function StorePage({
             onClick={() => { setSearch(searchInput); updateURL({ search: searchInput || undefined, page: undefined }) }}
             style={{
               height: 42, padding: '0 20px', borderRadius: 9,
-              background: OGAPAY_BLUE, color: '#fff', border: 'none',
+              background: OGAPAY_BLUE, color: 'var(--on-accent)', border: 'none',
               fontWeight: 700, fontSize: 13, cursor: 'pointer',
               fontFamily: 'inherit', display: 'inline-flex',
               alignItems: 'center', gap: 6, whiteSpace: 'nowrap'
@@ -430,7 +430,7 @@ function StorePage({
                 </div>
                 <div className="seller-box">
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
-                    <div style={{ width: 34, height: 34, borderRadius: '50%', overflow: 'hidden', flexShrink: 0, border: p.reviewsCount > 0 ? `2px solid ${OGAPAY_BLUE}` : '1.5px solid var(--border)', display: 'grid', placeItems: 'center', background: OGAPAY_BLUE, color: '#fff', fontSize: 11, fontWeight: 800 }}>
+                    <div style={{ width: 34, height: 34, borderRadius: '50%', overflow: 'hidden', flexShrink: 0, border: p.reviewsCount > 0 ? `2px solid ${OGAPAY_BLUE}` : '1.5px solid var(--border)', display: 'grid', placeItems: 'center', background: OGAPAY_BLUE, color: 'var(--on-accent)', fontSize: 11, fontWeight: 800 }}>
                       {p.sellerAvatar ? <img src={p.sellerAvatar} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : p.seller?.slice(0, 2).toUpperCase()}
                     </div>
                     <div style={{ minWidth: 0 }}>
@@ -674,7 +674,7 @@ export default function Store() {
               }}>Cancel</button>
               <button onClick={executePurchase} style={{
                 flex: 1, height: 44, borderRadius: 12, border: 'none',
-                background: OGAPAY_BLUE, color: '#fff',
+                background: OGAPAY_BLUE, color: 'var(--on-accent)',
                 fontWeight: 700, fontSize: 14, cursor: 'pointer', fontFamily: 'inherit',
               }}>Pay Now</button>
             </div>
@@ -715,7 +715,7 @@ export default function Store() {
                 </p>
                 <button onClick={goToMessages} style={{
                   height: 44, padding: '0 24px', borderRadius: 12, border: 'none',
-                  background: OGAPAY_BLUE, color: '#fff',
+                  background: OGAPAY_BLUE, color: 'var(--on-accent)',
                   fontWeight: 700, fontSize: 14, cursor: 'pointer', fontFamily: 'inherit',
                 }}>
                   <i className="ti ti-message" style={{ marginRight: 6 }} /> Message Seller
@@ -740,7 +740,7 @@ export default function Store() {
                 </p>
                 <button onClick={closePurchaseModal} style={{
                   height: 44, padding: '0 24px', borderRadius: 12, border: 'none',
-                  background: OGAPAY_BLUE, color: '#fff',
+                  background: OGAPAY_BLUE, color: 'var(--on-accent)',
                   fontWeight: 700, fontSize: 14, cursor: 'pointer', fontFamily: 'inherit',
                 }}>Try Again</button>
               </>

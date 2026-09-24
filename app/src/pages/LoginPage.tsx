@@ -9,7 +9,7 @@ import { Logo } from "../components/Logo";
 
 function LogoMark({ inverse = false }) {
   return (
-    <span style={{ color: inverse ? '#191C6B' : '#fff', display: 'flex' }}>
+    <span style={{ color: inverse ? '#0a0a0a' : '#fff', display: 'flex' }}>
       <Logo size={32} />
     </span>
   );
@@ -35,7 +35,7 @@ export default function LoginPage() {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: '#fff', flexDirection: 'column', gap: 16 }}>
         <Logo size={48} />
-        <div className="spinner" style={{ width: 20, height: 20, borderWidth: 2, borderColor: 'rgba(25,28,107,0.2)', borderTopColor: '#191C6B' }} />
+        <div className="spinner" style={{ width: 20, height: 20, borderWidth: 2, borderColor: 'rgba(10,10,10,0.2)', borderTopColor: '#0a0a0a' }} />
       </div>
     );
   }
@@ -325,7 +325,7 @@ export default function LoginPage() {
         position: relative;
       }
       .left {
-        background: #191C6B;
+        background: #0a0a0a;
         position: relative;
         overflow: hidden;
         display: flex;
@@ -366,11 +366,11 @@ export default function LoginPage() {
       }
       @keyframes wavePulse { 0%,100%{opacity:.5} 50%{opacity:.9} }
       .left-content { position: relative; z-index: 3; display: flex; flex-direction: column; flex: 0 0 auto; }
-      .logo { display: flex; align-items: center; gap: 10px; font-family: "Outfit",sans-serif; font-size: 18px; font-weight: 800; margin-bottom: 16px; }
+      .logo { display: flex; align-items: center; gap: 10px; font-family: "Geist",sans-serif; font-size: 18px; font-weight: 800; margin-bottom: 16px; }
       .logo svg { width: 32px; height: 32px; border-radius: 8px; overflow: hidden; }
       .logo span { color: #fff; }
       .copy { flex: 0 0 auto; margin-bottom: 12px; }
-      .copy h1 { font-family: "Outfit",sans-serif; font-size: clamp(32px,3.6vw,48px); font-weight: 900; line-height: 1.05; letter-spacing: -1.2px; margin: 0 0 4px; }
+      .copy h1 { font-family: "Geist",sans-serif; font-size: clamp(32px,3.6vw,48px); font-weight: 900; line-height: 1.05; letter-spacing: -1.2px; margin: 0 0 4px; }
       .copy h1 span { display: block; }
       .glow { position: relative; display: inline-block; color: #fff; }
       .glow::after {
@@ -397,11 +397,11 @@ export default function LoginPage() {
       }
       .stats-card .chart { width: 40px; height: 40px; display: grid; place-items: center; }
       .stats-card .chart svg { width: 36px; height: 36px; }
-      .stats-card strong { display: block; font-family: "Outfit",sans-serif; font-size: 20px; font-weight: 900; line-height: 1; }
+      .stats-card strong { display: block; font-family: "Geist",sans-serif; font-size: 20px; font-weight: 900; line-height: 1; }
       .stats-card span { display: block; color: rgba(255,255,255,.65); font-size: 12px; font-weight: 600; margin-top: 4px; }
       .right { background: #fff; padding: 40px 48px; display: flex; flex-direction: column; justify-content: center; min-height: 880px; }
       .right-inner { max-width: 400px; margin: 0 auto; width: 100%; }
-      .right h2 { font-family: "Outfit",sans-serif; font-size: 32px; font-weight: 900; letter-spacing: -.8px; color: var(--text); margin: 0 0 6px; }
+      .right h2 { font-family: "Geist",sans-serif; font-size: 32px; font-weight: 900; letter-spacing: -.8px; color: var(--text); margin: 0 0 6px; }
       .right .sub { color: var(--text2); font-size: 15px; margin: 0 0 28px; line-height: 1.5; }
       .auth-btns { display: flex; flex-direction: column; gap: 12px; }
       .auth-btn {
@@ -478,7 +478,7 @@ export default function LoginPage() {
       display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 20px',
       background: 'var(--bg)',
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontFamily: '"Outfit",sans-serif', fontSize: 18, fontWeight: 800, color: 'var(--text)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontFamily: '"Geist",sans-serif', fontSize: 18, fontWeight: 800, color: 'var(--text)' }}>
         <Logo size={28} />
         <span>OgaPay</span>
       </div>
@@ -654,7 +654,7 @@ export default function LoginPage() {
                 <div style={{textAlign:'right',marginBottom: 16}}>
                   <a href="#" onClick={(e) => { e.preventDefault(); show("forgot"); }} style={{color:'var(--accent)',fontSize:'13px',fontWeight:'600',textDecoration:'none'}}>Forgot password?</a>
                 </div>
-                <button type="submit" disabled={loading === "login"} style={{width:'100%',height:'56px',border:'none',borderRadius:'14px',background:'var(--accent)',color:'#fff',fontSize:'16px',fontWeight:'700',cursor:'pointer'}}>{loading === "login" ? <><i className="ti ti-loader" style={{animation:'spin 1s linear infinite',display:'inline-block'}} /> Signing in...</> : 'Sign In'}</button>
+                <button type="submit" disabled={loading === "login"} style={{width:'100%',height:'56px',border:'none',borderRadius:'14px',background:'var(--accent)',color:'var(--on-accent)',fontSize:'16px',fontWeight:'700',cursor:'pointer'}}>{loading === "login" ? <><i className="ti ti-loader" style={{animation:'spin 1s linear infinite',display:'inline-block'}} /> Signing in...</> : 'Sign In'}</button>
                 {loginMsg && <p style={{fontSize:'13px',color:'#dc2626',margin:'10px 0 0',textAlign:'center'}}>{loginMsg}</p>}
                 <p style={{textAlign:'center',margin:'14px 0 0'}}><a href="#" onClick={(e) => { e.preventDefault(); show("default"); }} style={{color:'var(--accent)',fontSize:'13px',fontWeight:'600',textDecoration:'none'}}>Back to options</a></p>
               </form>
@@ -669,7 +669,7 @@ export default function LoginPage() {
                   <input type={signupShowPw?'text':'password'} value={signupPassword} onChange={e => setSignupPassword(e.target.value)} placeholder="Password (min 8 characters)" style={{width:'100%',height:'56px',padding:'0 48px 0 16px',border:'1.5px solid var(--border)',borderRadius:'12px',fontSize:'14px',fontFamily:'inherit',boxSizing:'border-box'}} />
                   <button type="button" onClick={() => setSignupShowPw(!signupShowPw)} tabIndex={-1} style={{position:'absolute',right:'12px',top:'50%',transform:'translateY(-50%)',background:'none',border:'none',cursor:'pointer',padding:'4px',color:'var(--text3)',fontSize:'18px',display:'flex',alignItems:'center'}}>{signupShowPw ? <i className="ti ti-eye-off" /> : <i className="ti ti-eye" />}</button>
                 </div>
-                <button type="submit" disabled={loading === "signup"} style={{width:'100%',height:'56px',border:'none',borderRadius:'14px',background:'var(--accent)',color:'#fff',fontSize:'16px',fontWeight:'700',cursor:'pointer'}}>{loading === "signup" ? <><i className="ti ti-loader" style={{animation:'spin 1s linear infinite',display:'inline-block'}} /> Creating...</> : 'Create Account'}</button>
+                <button type="submit" disabled={loading === "signup"} style={{width:'100%',height:'56px',border:'none',borderRadius:'14px',background:'var(--accent)',color:'var(--on-accent)',fontSize:'16px',fontWeight:'700',cursor:'pointer'}}>{loading === "signup" ? <><i className="ti ti-loader" style={{animation:'spin 1s linear infinite',display:'inline-block'}} /> Creating...</> : 'Create Account'}</button>
                 {signupMsg && <p style={{fontSize:'13px',color:'#dc2626',margin:'10px 0 0',textAlign:'center'}}>{signupMsg}</p>}
                 <p style={{textAlign:'center',margin:'14px 0 0'}}><a href="#" onClick={(e) => { e.preventDefault(); show("default"); }} style={{color:'var(--accent)',fontSize:'13px',fontWeight:'600',textDecoration:'none'}}>Back to options</a></p>
               </form>
@@ -700,7 +700,7 @@ export default function LoginPage() {
                 <h2>Verify with Transaction ID</h2>
                 <p className="sub">Enter a transaction reference sent to your email or phone.</p>
                 <input type="text" value={txRef} onChange={e => setTxRef(e.target.value)} placeholder="Transaction reference" style={{width:'100%',height:'56px',padding:'0 16px',border:'1.5px solid var(--border)',borderRadius:'12px',fontSize:'14px',marginBottom:'12px',fontFamily:'inherit'}} />
-                <button type="submit" disabled={loading === "tx"} style={{width:'100%',height:'56px',border:'none',borderRadius:'14px',background:'var(--accent)',color:'#fff',fontSize:'16px',fontWeight:'700',cursor:'pointer'}}>{loading === "tx" ? 'Verifying...' : 'Verify & Sign In'}</button>
+                <button type="submit" disabled={loading === "tx"} style={{width:'100%',height:'56px',border:'none',borderRadius:'14px',background:'var(--accent)',color:'var(--on-accent)',fontSize:'16px',fontWeight:'700',cursor:'pointer'}}>{loading === "tx" ? 'Verifying...' : 'Verify & Sign In'}</button>
                 {txMsg && <p style={{fontSize:'13px',color:'#dc2626',margin:'10px 0 0',textAlign:'center'}}>{txMsg}</p>}
                 <p style={{textAlign:'center',margin:'14px 0 0'}}><a href="#" onClick={(e) => { e.preventDefault(); setWalletSub("default"); }} style={{color:'var(--accent)',fontSize:'13px',fontWeight:'600',textDecoration:'none'}}>Back</a></p>
               </form>
@@ -714,7 +714,7 @@ export default function LoginPage() {
                   placeholder="Enter pairing code"
                   style={{width:'100%',padding:'10px 12px',border:'1px solid var(--border)',borderRadius:8,background:'var(--bg)',marginBottom:12,fontFamily:'inherit'}} />
 
-                <button onClick={handlePairDevice} style={{width:'100%',padding:'12px',borderRadius:8,background:'var(--accent)',color:'#fff',border:'none',fontWeight:700,cursor:'pointer',marginBottom:12}}>
+                <button onClick={handlePairDevice} style={{width:'100%',padding:'12px',borderRadius:8,background:'var(--accent)',color:'var(--on-accent)',border:'none',fontWeight:700,cursor:'pointer',marginBottom:12}}>
                   Login
                 </button>
 
@@ -739,7 +739,7 @@ export default function LoginPage() {
                 <h2>Reset Password</h2>
                 <p className="sub">Enter your email address and we'll send you a link to reset your password.</p>
                 <input type="email" value={resetEmail} onChange={e => setResetEmail(e.target.value)} placeholder="Enter your email" style={{width:'100%',height:'56px',padding:'0 16px',border:'1.5px solid var(--border)',borderRadius:'12px',fontSize:'14px',marginBottom:'16px',fontFamily:'inherit'}} />
-                <button type="submit" disabled={loading === "reset"} style={{width:'100%',height:'56px',border:'none',borderRadius:'14px',background:'var(--accent)',color:'#fff',fontSize:'16px',fontWeight:'700',cursor:'pointer'}}>{loading === "reset" ? <><i className="ti ti-loader" style={{animation:'spin 1s linear infinite',display:'inline-block'}} /> Sending...</> : 'Send Reset Link'}</button>
+                <button type="submit" disabled={loading === "reset"} style={{width:'100%',height:'56px',border:'none',borderRadius:'14px',background:'var(--accent)',color:'var(--on-accent)',fontSize:'16px',fontWeight:'700',cursor:'pointer'}}>{loading === "reset" ? <><i className="ti ti-loader" style={{animation:'spin 1s linear infinite',display:'inline-block'}} /> Sending...</> : 'Send Reset Link'}</button>
                 {resetMsg && <p style={{fontSize:'13px',color: resetMsg.includes("receive") ? 'var(--green)' : 'var(--text2)',margin:'12px 0 0',textAlign:'center'}}>{resetMsg}</p>}
                 <p style={{textAlign:'center',margin:'12px 0 0'}}><a href="#" onClick={(e) => { e.preventDefault(); show("default"); }} style={{color:'var(--accent)',fontSize:'13px',fontWeight:'600',textDecoration:'none'}}>Back to options</a></p>
               </form>

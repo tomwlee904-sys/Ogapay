@@ -56,11 +56,11 @@ export default function MyJobListingsPage() {
       <div style={{ maxWidth: 800, margin: '0 auto', padding: '24px 16px 60px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 24, flexWrap: 'wrap' }}>
           <div>
-            <h1 style={{ fontFamily: 'Outfit,sans-serif', fontSize: 26, fontWeight: 900, margin: '0 0 4px' }}>My Job Listings</h1>
+            <h1 style={{ fontFamily: 'Geist,sans-serif', fontSize: 26, fontWeight: 900, margin: '0 0 4px' }}>My Job Listings</h1>
             <p style={{ color: C.text3, fontSize: 13, margin: 0 }}>Manage your posted job listings</p>
           </div>
           <button onClick={() => navigate('/post-job')}
-            style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: C.accent, color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'inherit' }}>
+            style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: C.accent, color: 'var(--on-accent)', fontSize: 13, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'inherit' }}>
             <i className="ti ti-plus" /> Post New Job
           </button>
         </div>
@@ -94,7 +94,7 @@ export default function MyJobListingsPage() {
             <p style={{ color: C.text2, fontSize: 14, marginBottom: 4 }}>You haven't posted any jobs yet.</p>
             <p style={{ color: C.text3, fontSize: 12, marginBottom: 20 }}>Post your first job listing to get started.</p>
             <button onClick={() => navigate('/post-job')}
-              style={{ padding: '10px 24px', borderRadius: 10, background: C.accent, color: '#fff', border: 'none', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+              style={{ padding: '10px 24px', borderRadius: 10, background: C.accent, color: 'var(--on-accent)', border: 'none', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
               Post a Job
             </button>
           </div>
@@ -107,7 +107,7 @@ export default function MyJobListingsPage() {
                 {job.company_logo_url ? (
                   <img src={job.company_logo_url} alt="" style={{ width: 44, height: 44, borderRadius: 8, objectFit: 'contain', background: C.bg2, flexShrink: 0 }} />
                 ) : (
-                  <div style={{ width: 44, height: 44, borderRadius: 8, background: C.accent, display: 'grid', placeItems: 'center', fontSize: 14, fontWeight: 900, color: '#fff', flexShrink: 0 }}>
+                  <div style={{ width: 44, height: 44, borderRadius: 8, background: C.accent, display: 'grid', placeItems: 'center', fontSize: 14, fontWeight: 900, color: 'var(--on-accent)', flexShrink: 0 }}>
                     {job.company_name?.slice(0, 2).toUpperCase() || '?'}
                   </div>
                 )}
@@ -115,7 +115,7 @@ export default function MyJobListingsPage() {
                   <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 2 }}>{job.job_title}</div>
                   <div style={{ fontSize: 12, color: C.text2 }}>{job.company_name}</div>
                   <div style={{ display: 'flex', gap: 6, marginTop: 4, flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 99, background: 'var(--accent)18', color: 'var(--accent)' }}>{job.job_type}</span>
+                    <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 99, background: 'color-mix(in srgb, var(--accent) 9%, transparent)', color: 'var(--accent)' }}>{job.job_type}</span>
                     <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 99, background: job.status === 'active' ? 'rgba(22,163,74,0.12)' : C.bg2, color: job.status === 'active' ? 'var(--green)' : C.text3 }}>
                       {job.status}
                     </span>

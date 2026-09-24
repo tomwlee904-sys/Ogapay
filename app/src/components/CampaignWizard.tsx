@@ -364,7 +364,7 @@ export default function CampaignWizard() {
               borderRadius: 10,
               border: "none",
               background: "var(--accent)",
-              color: "#fff",
+              color: "var(--on-accent)",
               fontWeight: 600,
               fontSize: 14,
               cursor: "pointer",
@@ -439,7 +439,7 @@ export default function CampaignWizard() {
               borderRadius: 10,
               border: "none",
               background: "var(--accent)",
-              color: "#fff",
+              color: "var(--on-accent)",
               fontWeight: 600,
               fontSize: 14,
               cursor: "pointer",
@@ -618,7 +618,7 @@ export default function CampaignWizard() {
             borderRadius: 10,
             border: "none",
             background: "var(--accent)",
-            color: "#fff",
+            color: "var(--on-accent)",
             fontWeight: 600,
             fontSize: 14,
             cursor: "pointer",
@@ -756,7 +756,7 @@ export default function CampaignWizard() {
           borderRadius: 10,
           border: "none",
           background: "var(--accent)",
-          color: "#fff",
+          color: "var(--on-accent)",
           fontWeight: 600,
           fontSize: 14,
           cursor: "pointer",
@@ -774,7 +774,7 @@ export default function CampaignWizard() {
           <p style={{ fontSize: 14, color: "var(--text3)" }}>All questions answered!</p>
           <button onClick={() => setStep(4)} style={{
             marginTop: 12, padding: "10px 24px", borderRadius: 10,
-            border: "none", background: "var(--accent)", color: "#fff",
+            border: "none", background: "var(--accent)", color: "var(--on-accent)",
             fontWeight: 600, fontSize: 14, cursor: "pointer",
           }}>Continue →</button>
         </div>
@@ -811,7 +811,7 @@ export default function CampaignWizard() {
                   borderRadius: "12px 12px 4px 12px",
                   fontSize: 12,
                   background: "var(--accent)",
-                  color: "#fff",
+                  color: "var(--on-accent)",
                   display: "inline-block",
                 }}>{Array.isArray(h.a) ? h.a.join(", ") : h.a}</div>
               </div>
@@ -885,7 +885,7 @@ export default function CampaignWizard() {
                 }}
                   style={{
                     marginTop: 8, width: "100%", padding: "10px", borderRadius: 8,
-                    border: "none", background: "var(--accent)", color: "#fff",
+                    border: "none", background: "var(--accent)", color: "var(--on-accent)",
                     fontWeight: 600, fontSize: 13, cursor: "pointer", fontFamily: "inherit",
                   }}
                 >Continue</button>
@@ -916,7 +916,7 @@ export default function CampaignWizard() {
                 }}
                   style={{
                     marginTop: 8, width: "100%", padding: "10px", borderRadius: 8,
-                    border: "none", background: "var(--accent)", color: "#fff",
+                    border: "none", background: "var(--accent)", color: "var(--on-accent)",
                     fontWeight: 600, fontSize: 13, cursor: "pointer", fontFamily: "inherit",
                   }}
                 >Continue</button>
@@ -1238,7 +1238,7 @@ export default function CampaignWizard() {
           borderRadius: 10,
           border: "none",
           background: "var(--accent)",
-          color: "#fff",
+          color: "var(--on-accent)",
           fontWeight: 600,
           fontSize: 14,
           cursor: "pointer",
@@ -1319,7 +1319,7 @@ export default function CampaignWizard() {
             borderRadius: 8,
             border: "none",
             background: "var(--accent)",
-            color: "#fff",
+            color: "var(--on-accent)",
             fontWeight: 600,
             fontSize: 12,
             cursor: "pointer",
@@ -1337,7 +1337,7 @@ export default function CampaignWizard() {
           borderRadius: 10,
           border: "none",
           background: "var(--accent)",
-          color: "#fff",
+          color: "var(--on-accent)",
           fontWeight: 600,
           fontSize: 14,
           cursor: "pointer",
@@ -1658,7 +1658,7 @@ export default function CampaignWizard() {
             borderRadius: 10,
             border: "1px solid var(--accent)",
             background: "var(--accent)",
-            color: "#fff",
+            color: "var(--on-accent)",
             fontWeight: 600,
             fontSize: 14,
             cursor: "pointer",

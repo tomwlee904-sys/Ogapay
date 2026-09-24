@@ -149,7 +149,7 @@ export default function UserProfile() {
       borderRadius: "50%",
       border: "4px solid var(--card)",
       background: "var(--accent)",
-      color: "#fff",
+      color: "var(--on-accent)",
       display: "grid",
       placeItems: "center",
       fontSize: 26,
@@ -169,7 +169,7 @@ export default function UserProfile() {
     verifiedBadge: {
       fontSize: 10,
       fontWeight: 600,
-      color: "#fff",
+      color: "var(--on-accent)",
       background: "var(--accent)",
       padding: "2px 8px",
       borderRadius: 999,
@@ -337,7 +337,7 @@ export default function UserProfile() {
                 <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text)", display: "flex", alignItems: "center", gap: 6 }}>
                   {c.name}
                   {c.role === "OWNER" && (
-                    <span style={{ fontSize: 9, fontWeight: 700, color: "#fff", background: "var(--accent)", padding: "2px 6px", borderRadius: 999, letterSpacing: "0.03em" }}>
+                    <span style={{ fontSize: 9, fontWeight: 700, color: "var(--on-accent)", background: "var(--accent)", padding: "2px 6px", borderRadius: 999, letterSpacing: "0.03em" }}>
                       OWNER
                     </span>
                   )}

@@ -80,7 +80,7 @@ export const OnboardingChecklist = () => {
         </div>
         <button onClick={() => navigate('/tasks')} style={{
           marginTop: 14, padding: '10px 24px', borderRadius: 10,
-          background: 'var(--accent)', color: '#fff', border: 'none',
+          background: 'var(--accent)', color: 'var(--on-accent)', border: 'none',
           fontWeight: 700, fontSize: 13, cursor: 'pointer',
         }}>Browse Tasks</button>
       </div>
@@ -210,7 +210,7 @@ export const OnboardingChecklist = () => {
                 <button onClick={step.action} style={{
                   marginLeft: 36, marginTop: 10,
                   padding: '8px 18px', borderRadius: 8,
-                  background: 'var(--accent)', color: '#fff',
+                  background: 'var(--accent)', color: 'var(--on-accent)',
                   border: 'none', fontSize: 12, fontWeight: 700, cursor: 'pointer',
                 }}>
                   {step.actionLabel}

@@ -15,7 +15,7 @@ const Icon = ({ n, s = 18, c = "currentColor", style }: { n: string; s?: number;
 
 const TIERS = [
   { level: "BEGINNER", label: "Beginner", icon: "seedling", color: "#9CA3AF", tasks: 0, rating: 0, unlocks: ["Access to all open tasks", "Basic task discovery"] },
-  { level: "INTERMEDIATE", label: "Intermediate", icon: "star", color: "#3B82F6", tasks: 10, rating: 0, unlocks: ["Higher-paying task visibility", "Priority support", "Community access"] },
+  { level: "INTERMEDIATE", label: "Intermediate", icon: "star", color: "#52525b", tasks: 10, rating: 0, unlocks: ["Higher-paying task visibility", "Priority support", "Community access"] },
   { level: "ADVANCED", label: "Advanced", icon: "flame", color: "#8B5CF6", tasks: 50, rating: 4.0, unlocks: ["Exclusive advanced tasks", "Early access to new features", "Premium communities"] },
   { level: "EXPERT", label: "Expert", icon: "diamond", color: "#F59E0B", tasks: 200, rating: 4.5, unlocks: ["Expert-level task pools", "Direct creator invitations", "Higher reward multipliers"] },
   { level: "LEGEND", label: "Legend", icon: "crown", color: "#EF4444", tasks: 500, rating: 4.8, unlocks: ["Legend-only premium tasks", "Revenue share eligibility", "Platform governance rights"] },
@@ -192,7 +192,7 @@ const rankStyles = `
 .rank-wrap { max-width: 680px; margin: 0 auto; padding: 32px 20px 80px; }
 .rank-header { display: flex; align-items: center; gap: 16px; margin-bottom: 28px; }
 .rank-header-icon { width: 56px; height: 56px; display: grid; place-items: center; background: var(--bg2); border-radius: 14px; flex-shrink: 0; }
-.rank-title { font-size: 24px; font-weight: 900; margin: 0 0 4px; color: var(--text); font-family: 'Outfit', sans-serif; }
+.rank-title { font-size: 24px; font-weight: 900; margin: 0 0 4px; color: var(--text); font-family: 'Geist', sans-serif; }
 .rank-subtitle { font-size: 13px; color: var(--text2); margin: 0; line-height: 1.5; }
 .rank-loading { text-align: center; padding: 60px 0; color: var(--text2); font-size: 14px; }
 
@@ -223,15 +223,15 @@ const rankStyles = `
 .rank-tier-name { font-size: 15px; font-weight: 800; margin-bottom: 2px; }
 .rank-tier-reqs { font-size: 11px; color: var(--text3); }
 .rank-tier-right { flex-shrink: 0; }
-.rank-current-tag { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: var(--accent); padding: 3px 10px; border-radius: 20px; background: var(--accent)15; }
-.rank-unlocked-tag { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: var(--green); padding: 3px 10px; border-radius: 20px; background: var(--green)15; }
+.rank-current-tag { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: var(--accent); padding: 3px 10px; border-radius: 20px; background: color-mix(in srgb, var(--accent) 8%, transparent); }
+.rank-unlocked-tag { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: var(--green); padding: 3px 10px; border-radius: 20px; background: color-mix(in srgb, var(--green) 8%, transparent); }
 .rank-locked-tag { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text3); }
 
 .rank-tier-unlocks { width: 100%; display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; padding-top: 10px; border-top: 1px solid var(--border); }
 .rank-unlock-item { font-size: 11px; color: var(--text2); padding: 3px 10px; border-radius: 6px; background: var(--bg2); border: 1px solid var(--border); }
 
 .rank-info-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 20px; }
-.rank-info-card h3 { font-size: 15px; font-weight: 800; margin: 0 0 10px; color: var(--text); font-family: 'Outfit', sans-serif; }
+.rank-info-card h3 { font-size: 15px; font-weight: 800; margin: 0 0 10px; color: var(--text); font-family: 'Geist', sans-serif; }
 .rank-info-card p { font-size: 13px; color: var(--text2); line-height: 1.6; margin: 0 0 12px; }
 .rank-info-card ul { margin: 0 0 12px; padding-left: 18px; }
 .rank-info-card li { font-size: 13px; color: var(--text2); line-height: 1.8; }

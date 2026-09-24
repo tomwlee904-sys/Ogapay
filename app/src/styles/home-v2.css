@@ -13,7 +13,7 @@
   --hv-pos: #16a34a;
   --hv-radius: 18px;
   --hv-frame: 1320px;
-  font-family: 'Geist', 'DM Sans', system-ui, sans-serif;
+  font-family: 'Geist', 'Geist', system-ui, sans-serif;
   color: var(--hv-ink);
   background: var(--bg);
 }
@@ -33,11 +33,6 @@
 /* global.css sets overflow-x:hidden on body and #root, which turns them into
    scroll containers and breaks position:sticky. clip hides overflow without that. */
 body:has(main.hv), body:has(main.hv) #root { overflow-x: clip; }
-
-/* Homepage-only navbar accent: neutral black instead of the app blue */
-body:has(main.hv) .connect-btn { background: #0a0a0a; color: #fff; border-color: #0a0a0a; }
-[data-theme="dark"] body:has(main.hv) .connect-btn { background: #f5f5f5; color: #0a0a0a; border-color: #f5f5f5; }
-.hv a { color: inherit; }
 
 /* Page frame: thin rules down both sides, like a printed sheet */
 .hv-frame {
@@ -82,7 +77,7 @@ body:has(main.hv) .connect-btn { background: #0a0a0a; color: #fff; border-color:
 .hv-btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 10px;
   height: 48px; padding: 0 20px; border-radius: 10px;
-  font: 600 14px/1 'Geist', 'DM Sans', system-ui, sans-serif;
+  font: 600 14px/1 'Geist', 'Geist', system-ui, sans-serif;
   text-decoration: none; cursor: pointer; border: 1px solid transparent;
   transition: transform .15s ease, background .15s ease, border-color .15s ease;
 }

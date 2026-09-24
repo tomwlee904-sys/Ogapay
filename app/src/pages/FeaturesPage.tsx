@@ -13,7 +13,7 @@ export default function FeaturesPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, ease: "easeOut" }}
             style={{
-              fontFamily: "'Outfit', sans-serif",
+              fontFamily: "'Geist', sans-serif",
               fontSize: "clamp(36px, 4vw, 52px)",
               fontWeight: 900,
               color: "#1C3316",

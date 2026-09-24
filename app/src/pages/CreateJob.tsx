@@ -712,7 +712,7 @@ const [showFetchPost, setShowFetchPost] = useState(false);
   const stepLabel = ["Choose Type", "Job Details", "Payment"];
 
   return (
-    <div style={{ minHeight: "100vh", background: C.bg2, fontFamily: "'DM Sans', system-ui, sans-serif", color: C.text }}>
+    <div style={{ minHeight: "100vh", background: C.bg2, fontFamily: "'Geist', system-ui, sans-serif", color: C.text }}>
       <div style={{ textAlign: "center", padding: "28px 16px 8px" }}>
         <h1 style={{ fontSize: 22, fontWeight: 900, color: C.text, marginBottom: 6 }}>Create a Job</h1>
         <p style={{ fontSize: 13, color: C.text2 }}>Create social or custom jobs to boost your community's growth and engagement</p>
@@ -1440,7 +1440,7 @@ function CreateTask() {
     <Layout>
       <div style={{
         maxWidth: 900, margin: "0 auto", padding: "24px 16px",
-        fontFamily: "'DM Sans', system-ui, sans-serif", color: C.text
+        fontFamily: "'Geist', system-ui, sans-serif", color: C.text
       }}>
         {/* Header */}
         <div style={{ marginBottom: 24 }}>
@@ -1463,7 +1463,7 @@ function CreateTask() {
             <div style={{ display: "flex", alignItems: "flex-start", gap: 16 }}>
               <div style={{
                 width: 32, height: 32, borderRadius: "50%",
-                background: "var(--accent)", color: "#fff",
+                background: "var(--accent)", color: "var(--on-accent)",
                 display: "flex", alignItems: "center", justifyContent: "center",
                 fontSize: 14, fontWeight: 800, flexShrink: 0,
               }}>1</div>
@@ -1508,7 +1508,7 @@ function CreateTask() {
             <div style={{ display: "flex", alignItems: "flex-start", gap: 16 }}>
               <div style={{
                 width: 32, height: 32, borderRadius: "50%",
-                background: "var(--accent)", color: "#fff",
+                background: "var(--accent)", color: "var(--on-accent)",
                 display: "flex", alignItems: "center", justifyContent: "center",
                 fontSize: 14, fontWeight: 800, flexShrink: 0,
               }}>2</div>
@@ -1547,7 +1547,7 @@ function CreateTask() {
             <div style={{ display: "flex", alignItems: "flex-start", gap: 16 }}>
               <div style={{
                 width: 32, height: 32, borderRadius: "50%",
-                background: "var(--accent)", color: "#fff",
+                background: "var(--accent)", color: "var(--on-accent)",
                 display: "flex", alignItems: "center", justifyContent: "center",
                 fontSize: 14, fontWeight: 800, flexShrink: 0,
               }}>3</div>

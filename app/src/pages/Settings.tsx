@@ -411,7 +411,7 @@ export default function Settings() {
     <Layout>
       <style>{`
         .st-hero{margin-bottom:20px}
-        .st-hero h1{font-family:Outfit;font-size:28px;font-weight:900;margin:0 0 4px}
+        .st-hero h1{font-family:Geist;font-size:28px;font-weight:900;margin:0 0 4px}
         .st-hero p{color:var(--text2);font-size:14px;margin:0}
         .st-sections{display:grid;gap:14px}
         .st-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px;transition:all .25s}
@@ -495,7 +495,7 @@ export default function Settings() {
                           style={{
                             height: 30, padding: '0 10px', borderRadius: 8,
                             border: `1px solid ${prefs[item.key] === opt ? 'var(--accent)' : 'var(--border)'}`,
-                            background: prefs[item.key] === opt ? 'rgba(31,140,255,0.1)' : 'transparent',
+                            background: prefs[item.key] === opt ? 'rgba(var(--accent-rgb),0.1)' : 'transparent',
                             color: prefs[item.key] === opt ? 'var(--accent)' : 'var(--text2)',
                             fontWeight: 700, fontSize: 11, cursor: 'pointer', fontFamily: 'inherit',
                           }}
@@ -773,7 +773,7 @@ export default function Settings() {
                 disabled={changingPassword}
                 style={{
                   height: 40, padding: '0 24px', borderRadius: 10, border: 0,
-                  background: 'var(--accent)', color: '#fff', fontWeight: 700,
+                  background: 'var(--accent)', color: 'var(--on-accent)', fontWeight: 700,
                   fontSize: 13, cursor: changingPassword ? 'not-allowed' : 'pointer',
                   fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center',
                   gap: 6, justifyContent: 'center', opacity: changingPassword ? 0.6 : 1,
@@ -950,7 +950,7 @@ export default function Settings() {
               { tier: 2, label: 'Tier 2 — NIN + Selfie', done: ((user as any)?.kyc?.kycTier ?? 0) >= 2 },
               { tier: 3, label: 'Tier 3 — Address + Docs', done: ((user as any)?.kyc?.kycTier ?? 0) >= 3 },
             ].map(t => (
-              <div key={t.tier} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', borderRadius: 6, background: t.done ? 'var(--green)08' : 'var(--bg2)', border: '1px solid ' + (t.done ? 'var(--green)20' : 'var(--border)') }}>
+              <div key={t.tier} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', borderRadius: 6, background: t.done ? 'color-mix(in srgb, var(--green) 3%, transparent)' : 'var(--bg2)', border: '1px solid ' + (t.done ? 'color-mix(in srgb, var(--green) 13%, transparent)' : 'var(--border)') }}>
                 <i className={`ti ti-${t.done ? 'check-circle' : 'circle'}`} style={{ fontSize: 16, color: t.done ? 'var(--green)' : 'var(--text3)' }} />
                 <span style={{ fontSize: 12, fontWeight: 600, color: t.done ? 'var(--green)' : 'var(--text2)' }}>{t.label}</span>
                 {t.done && <i className="ti ti-shield-check" style={{ fontSize: 14, color: 'var(--green)', marginLeft: 'auto' }} />}
@@ -959,7 +959,7 @@ export default function Settings() {
           </div>
 
           {(user as any)?.kyc?.status === 'APPROVED' ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: 'var(--green)08', borderRadius: 8, border: '1px solid var(--green)30' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: 'color-mix(in srgb, var(--green) 3%, transparent)', borderRadius: 8, border: '1px solid color-mix(in srgb, var(--green) 19%, transparent)' }}>
               <i className="ti ti-shield-check" style={{ fontSize: 20, color: 'var(--green)' }} />
               <div>
                 <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--green)' }}>Tier {((user as any)?.kyc?.kycTier ?? 0)} Verified</div>
@@ -1113,7 +1113,7 @@ export default function Settings() {
               <button type="button" onClick={handleVerifyCode} disabled={linkingCode || linkCode.length < 6}
                 style={{
                   height: 36, padding: '0 16px', borderRadius: 8, border: 0,
-                  background: 'var(--accent)', color: '#fff', fontWeight: 700,
+                  background: 'var(--accent)', color: 'var(--on-accent)', fontWeight: 700,
                   fontSize: 12, cursor: linkingCode || linkCode.length < 6 ? 'not-allowed' : 'pointer',
                   fontFamily: 'inherit', opacity: linkingCode || linkCode.length < 6 ? 0.6 : 1,
                 }}>
@@ -1298,8 +1298,8 @@ function OgaScoreBar({ score, connected, kycStatus, kycTier, onInfo }: { score: 
         }} />
       </div>
       <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
-        <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 4, background: connectedCount > 0 ? 'var(--accent)18' : 'var(--border)', color: connectedCount > 0 ? 'var(--accent)' : 'var(--text3)', fontWeight: 600 }}>Social: +{connectedCount * 0 + (connected.linkedin ? 10 : 0) + (connected.twitter ? 8 : 0) + (connected.github ? 8 : 0) + (connected.google ? 5 : 0) + (connected.telegram ? 5 : 0)}</span>
-        <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 4, background: kycDone ? 'var(--green)18' : 'var(--border)', color: kycDone ? 'var(--green)' : 'var(--text3)', fontWeight: 600 }}>KYC: +{kycPts}</span>
+        <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 4, background: connectedCount > 0 ? 'color-mix(in srgb, var(--accent) 9%, transparent)' : 'var(--border)', color: connectedCount > 0 ? 'var(--accent)' : 'var(--text3)', fontWeight: 600 }}>Social: +{connectedCount * 0 + (connected.linkedin ? 10 : 0) + (connected.twitter ? 8 : 0) + (connected.github ? 8 : 0) + (connected.google ? 5 : 0) + (connected.telegram ? 5 : 0)}</span>
+        <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 4, background: kycDone ? 'color-mix(in srgb, var(--green) 9%, transparent)' : 'var(--border)', color: kycDone ? 'var(--green)' : 'var(--text3)', fontWeight: 600 }}>KYC: +{kycPts}</span>
         <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 4, background: 'var(--border)', color: 'var(--text3)', fontWeight: 600 }}>Profile / Wallet / Tasks / Referrals</span>
       </div>
       <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 6 }}>

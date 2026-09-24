@@ -112,10 +112,10 @@ export default function Campaigns() {
     <Layout>
       <style>{`
         .cmp-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px}
-        .cmp-head h1{font-family:Outfit;font-size:28px;font-weight:900;margin:0 0 4px}
+        .cmp-head h1{font-family:Geist;font-size:28px;font-weight:900;margin:0 0 4px}
         .cmp-head p{color:var(--text2);font-size:14px;margin:0}
         .cmp-create{display:flex;align-items:center;gap:16px;padding:18px 20px;background:var(--card);border:1px solid var(--border);border-radius:14px;margin-bottom:24px;flex-wrap:wrap}
-        .cmp-create h3{font-family:Outfit;font-size:15px;font-weight:800;margin:0 0 2px}
+        .cmp-create h3{font-family:Geist;font-size:15px;font-weight:800;margin:0 0 2px}
         .cmp-create p{color:var(--text2);font-size:13px;margin:0;flex:1}
         .cmp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
         .cmp-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px;transition:all .25s}
@@ -132,7 +132,7 @@ export default function Campaigns() {
         .cmp-actions{display:flex;gap:6px}
         .cmp-btn{height:30px;padding:0 10px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text2);font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:4px}
         .cmp-btn:hover{border-color:var(--accent);color:var(--accent)}
-        .cmp-btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+        .cmp-btn.primary{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
         .cmp-btn.primary:hover{box-shadow:0 4px 12px rgba(var(--accent-rgb),.2)}
         .cmp-btn.danger{background:#ef444415;color:#ef4444;border-color:#ef444455}
         .cmp-btn.danger:hover{background:#ef444430}
@@ -141,7 +141,7 @@ export default function Campaigns() {
         .cmp-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:400;display:none;align-items:center;justify-content:center;padding:20px}
         .cmp-overlay.open{display:flex}
         .cmp-modal{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;width:min(480px,100%);max-height:80vh;overflow-y:auto;-webkit-overflow-scrolling:touch}
-        .cmp-modal h2{font-family:Outfit;font-size:20px;font-weight:900;margin:0 0 16px}
+        .cmp-modal h2{font-family:Geist;font-size:20px;font-weight:900;margin:0 0 16px}
         .cmp-field{margin-bottom:12px}
         .cmp-field label{display:block;font-size:11px;font-weight:700;color:var(--text3);margin-bottom:4px;text-transform:uppercase}
         .cmp-field input,.cmp-field select{width:100%;height:38px;padding:0 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg2);color:var(--text);font-size:13px;outline:0}
@@ -178,7 +178,7 @@ export default function Campaigns() {
       {loading ? <SkeletonPage /> : campaigns.length === 0 ? (
         <div className="cmp-empty">
           <i className="ti ti-megaphone" />
-          <h3 style={{fontFamily:'Outfit',fontWeight:800,margin:'0 0 4px',color:'var(--text)'}}>No campaigns yet</h3>
+          <h3 style={{fontFamily:'Geist',fontWeight:800,margin:'0 0 4px',color:'var(--text)'}}>No campaigns yet</h3>
           <p style={{fontSize:13,margin:0}}>Create your first campaign to get started</p>
         </div>
       ) : (

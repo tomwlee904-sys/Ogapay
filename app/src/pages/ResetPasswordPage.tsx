@@ -127,7 +127,7 @@ export default function ResetPasswordPage() {
               disabled={loading}
               style={{
                 width: "100%", height: 48, borderRadius: 12,
-                background: "var(--accent)", color: "#fff", border: "none",
+                background: "var(--accent)", color: "var(--on-accent)", border: "none",
                 fontSize: 15, fontWeight: 700, cursor: "pointer",
                 fontFamily: "inherit", opacity: loading ? 0.6 : 1,
               }}

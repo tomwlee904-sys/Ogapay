@@ -5,12 +5,12 @@ import { apiRequest } from '../lib/api'
 import TaskCard from '../components/TaskCard'
 
 const CATEGORIES = [
-  { key: 'social', icon: 'ti ti-brand-twitter', label: 'Social Tasks', color: '#0ea5e9', bg: '#0ea5e915' },
-  { key: 'writing', icon: 'ti ti-pencil', label: 'Writing', color: 'var(--accent)', bg: 'var(--accent)15' },
+  { key: 'social', icon: 'ti ti-brand-twitter', label: 'Social Tasks', color: '#52525b', bg: 'rgba(var(--accent-rgb),0.08)' },
+  { key: 'writing', icon: 'ti ti-pencil', label: 'Writing', color: 'var(--accent)', bg: 'color-mix(in srgb, var(--accent) 8%, transparent)' },
   { key: 'design', icon: 'ti ti-brush', label: 'Design', color: '#7c3aed', bg: '#7c3aed15' },
   { key: 'testing', icon: 'ti ti-device-mobile', label: 'App Testing', color: '#f59e0b', bg: '#f59e0b15' },
-  { key: 'research', icon: 'ti ti-search', label: 'Research', color: 'var(--green)', bg: 'var(--green)15' },
-  { key: 'development', icon: 'ti ti-code', label: 'Dev Tasks', color: 'var(--accent)', bg: 'var(--accent)15' },
+  { key: 'research', icon: 'ti ti-search', label: 'Research', color: 'var(--green)', bg: 'color-mix(in srgb, var(--green) 8%, transparent)' },
+  { key: 'development', icon: 'ti ti-code', label: 'Dev Tasks', color: 'var(--accent)', bg: 'color-mix(in srgb, var(--accent) 8%, transparent)' },
 ]
 
 const CATEGORY_API_MAP: Record<string, string> = {
@@ -69,7 +69,7 @@ export default function WorkspacePortal() {
         .wp-task-meta{display:flex;align-items:center;gap:12px;font-size:12px;color:var(--text3)}
         .wp-task-meta i{font-size:13px}
         .wp-task-reward{font-size:15px;font-weight:800;color:${cat.color};white-space:nowrap}
-        .wp-task-apply{padding:8px 18px;border:0;border-radius:8px;background:${cat.color};color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;transition:opacity .2s}
+        .wp-task-apply{padding:8px 18px;border:0;border-radius:8px;background:${cat.color};color:var(--on-accent);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;transition:opacity .2s}
         .wp-task-apply:hover{opacity:.85}
         .wp-empty{text-align:center;padding:60px 20px;color:var(--text3);font-size:14px}
         .wp-loading{text-align:center;padding:60px 20px;color:var(--text3);display:flex;align-items:center;justify-content:center;gap:8px;font-size:14px}

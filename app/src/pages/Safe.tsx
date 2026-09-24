@@ -7,17 +7,17 @@ import { SkeletonPage, injectSkeletonStyles } from '../components/SkeletonLoader
 const S: Record<string, React.CSSProperties> = {
   hero: { marginBottom: 20 },
   greeting: { color: 'var(--text2)', fontSize: 13, fontWeight: 600, marginBottom: 2 },
-  title: { fontFamily: 'Outfit', fontSize: 28, fontWeight: 900, margin: '0 0 4px' },
+  title: { fontFamily: 'Geist', fontSize: 28, fontWeight: 900, margin: '0 0 4px' },
   sub: { color: 'var(--text2)', fontSize: 14, margin: 0 },
   stats: { display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12, marginBottom: 20 },
   stat: { background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 12, padding: 16, textAlign: 'center' as const },
   statIcon: { fontSize: 24, marginBottom: 6, display: 'block' },
-  statNum: { fontFamily: 'Outfit', fontSize: 24, fontWeight: 900 },
+  statNum: { fontFamily: 'Geist', fontSize: 24, fontWeight: 900 },
   statLabel: { fontSize: 12, color: 'var(--text2)', marginTop: 2 },
   controls: { display: 'flex', gap: 8, marginBottom: 16 },
   search: { flex: 1, display: 'flex', alignItems: 'center', gap: 8, height: 38, padding: '0 12px', border: '1px solid var(--border)', borderRadius: 10, background: 'var(--card)' },
   searchInput: { flex: 1, border: 0, background: 'transparent', outline: 'none', color: 'var(--text)', fontSize: 13, fontFamily: 'inherit' },
-  uploadBtn: { height: 38, padding: '0 14px', borderRadius: 10, border: 0, background: 'var(--accent)', color: '#fff', fontWeight: 700, fontSize: 12, display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontFamily: 'inherit' },
+  uploadBtn: { height: 38, padding: '0 14px', borderRadius: 10, border: 0, background: 'var(--accent)', color: 'var(--on-accent)', fontWeight: 700, fontSize: 12, display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontFamily: 'inherit' },
   list: { display: 'grid', gap: 6 },
   item: { display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px', background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 12 },
   icon: { width: 36, height: 36, borderRadius: 9, display: 'grid', placeItems: 'center', flexShrink: 0, fontSize: 16 },
@@ -135,7 +135,7 @@ export default function Safe() {
       {!loading && filtered.length === 0 && (
         <div style={S.empty}>
           <i className="ti ti-vault" style={{ fontSize: 36, color: 'var(--text3)', marginBottom: 12, display: 'block' }} />
-          <h3 style={{ fontFamily: 'Outfit', fontWeight: 800, margin: '0 0 4px', color: 'var(--text)' }}>No documents found</h3>
+          <h3 style={{ fontFamily: 'Geist', fontWeight: 800, margin: '0 0 4px', color: 'var(--text)' }}>No documents found</h3>
           <p style={{ fontSize: 13, margin: 0 }}>Upload your first document to get started</p>
         </div>
       )}

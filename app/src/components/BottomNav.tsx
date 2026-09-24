@@ -65,7 +65,7 @@ export default function BottomNav() {
         .btb-center-wrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;min-height:44px}
         .btb-center{width:52px;height:52px;border-radius:22px;background:var(--accent);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;position:absolute;top:-18px;z-index:10;box-shadow:0 4px 16px rgba(var(--accent-rgb),0.35);transition:transform .2s,box-shadow .2s;font-family:inherit}
         .btb-center:active{transform:scale(0.9);box-shadow:0 2px 8px rgba(var(--accent-rgb),0.25)}
-        .btb-center i{font-size:26px;color:#fff;transition:transform .2s}
+        .btb-center i{font-size:26px;color:var(--on-accent);transition:transform .2s}
         .btb-center:active i{transform:rotate(90deg)}
         .btb-center-label{font-size:10px;font-weight:700;color:rgba(0,0,0,0.35);text-align:center;white-space:nowrap;line-height:1.2;transition:color .2s;margin-top:30px}
         [data-theme="dark"] .btb-center-label{color:rgba(255,255,255,0.35)}

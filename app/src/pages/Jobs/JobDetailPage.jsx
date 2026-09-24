@@ -82,7 +82,7 @@ export default function JobDetailPage() {
           <i className="ti ti-briefcase-off" style={{ fontSize: 48, color: C.text3, display: 'block', marginBottom: 12 }} />
           <p style={{ color: C.text2, fontSize: 14 }}>{error || 'This job listing could not be found.'}</p>
           <button onClick={() => navigate('/jobs')}
-            style={{ marginTop: 16, padding: '10px 24px', borderRadius: 10, background: C.accent, color: '#fff', border: 'none', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+            style={{ marginTop: 16, padding: '10px 24px', borderRadius: 10, background: C.accent, color: 'var(--on-accent)', border: 'none', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
             Browse Jobs
           </button>
         </div>
@@ -106,13 +106,13 @@ export default function JobDetailPage() {
           {job.company_logo_url ? (
             <img src={job.company_logo_url} alt="" style={{ width: 60, height: 60, borderRadius: 12, objectFit: 'contain', background: C.bg2, border: '1px solid ' + C.border }} />
           ) : (
-            <div style={{ width: 60, height: 60, borderRadius: 12, background: C.accent, display: 'grid', placeItems: 'center', fontSize: 20, fontWeight: 900, color: '#fff' }}>
+            <div style={{ width: 60, height: 60, borderRadius: 12, background: C.accent, display: 'grid', placeItems: 'center', fontSize: 20, fontWeight: 900, color: 'var(--on-accent)' }}>
               {job.company_name?.slice(0, 2).toUpperCase() || '?'}
             </div>
           )}
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 4 }}>
-              <h1 style={{ fontFamily: 'Outfit,sans-serif', fontSize: 22, fontWeight: 900, margin: 0 }}>{job.job_title}</h1>
+              <h1 style={{ fontFamily: 'Geist,sans-serif', fontSize: 22, fontWeight: 900, margin: 0 }}>{job.job_title}</h1>
               <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 10px', borderRadius: 99, background: (JOB_TYPE_COLORS[job.job_type] || C.accent) + '18', color: JOB_TYPE_COLORS[job.job_type] || C.accent }}>{job.job_type}</span>
               {job.status !== 'active' && (
                 <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 10px', borderRadius: 99, background: 'rgba(239,68,68,0.12)', color: '#ef4444' }}>{job.status.toUpperCase()}</span>
@@ -156,7 +156,7 @@ export default function JobDetailPage() {
           <div style={{ fontSize: 11, fontWeight: 700, color: C.text3, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 12 }}>How to Apply</div>
           {job.application_link ? (
             <a href={job.application_link} target="_blank" rel="noopener noreferrer"
-              style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 24px', borderRadius: 10, background: C.accent, color: '#fff', fontSize: 14, fontWeight: 700, textDecoration: 'none', fontFamily: 'inherit' }}>
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 24px', borderRadius: 10, background: C.accent, color: 'var(--on-accent)', fontSize: 14, fontWeight: 700, textDecoration: 'none', fontFamily: 'inherit' }}>
               <i className="ti ti-external-link" /> Apply on External Site
             </a>
           ) : (

@@ -157,7 +157,7 @@ function StoryCard({ feature, index }: { feature: typeof features[0]; index: num
           <h3
             style={{
               margin: "0 0 10px",
-              fontFamily: "DM Sans,system-ui,sans-serif",
+              fontFamily: "Geist,system-ui,sans-serif",
               fontSize: 22,
               fontWeight: 800,
               color: "var(--text)",

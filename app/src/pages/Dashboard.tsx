@@ -47,7 +47,7 @@ const CSS = `
   .dash-wrap2 { padding: 28px 20px 60px; width: 100%; }
   .dash-intro { display:flex; align-items:center; gap:14px; padding:16px 20px; background:var(--card); border:1px solid var(--border); border-radius:12px; margin-bottom:24px; }
   .dash-intro-icon { width:40px; height:40px; border-radius:10px; display:grid; place-items:center; flex-shrink:0; background: transparent !important; }
-  .dash-intro h2 { font-family:"Outfit",sans-serif; font-size:17px; font-weight:800; margin:0 0 2px; }
+  .dash-intro h2 { font-family:"Geist",sans-serif; font-size:17px; font-weight:800; margin:0 0 2px; }
   .dash-intro p { font-size:13px; color:var(--text2); margin:0; line-height:1.5; }
   .dash-intro.complete { background:#052e16; border-color:#166534; }
   .dash-intro.complete h2, .dash-intro.complete p { color:#fff; }
@@ -56,19 +56,19 @@ const CSS = `
   .dash-progress-bar { height:6px; background:var(--border); border-radius:99px; overflow:hidden; }
   .dash-progress-fill { height:100%; border-radius:99px; background:var(--accent); transition:width .4s ease; }
   .dash-progress-fill.done { background:var(--green); }
-  .dash-section-title { font-family:"Outfit",sans-serif; font-size:13px; font-weight:800; letter-spacing:.04em; margin-bottom:14px; display:flex; align-items:center; gap:8px; color:var(--text2); }
+  .dash-section-title { font-family:"Geist",sans-serif; font-size:13px; font-weight:800; letter-spacing:.04em; margin-bottom:14px; display:flex; align-items:center; gap:8px; color:var(--text2); }
   .dash-stepper-header { display:flex; align-items:center; gap:12px; margin:24px 0 14px; }
-  .dash-stepper-num { width:28px; height:28px; border-radius:50%; background:#191C6B; color:#fff; display:grid; place-items:center; font-size:13px; font-weight:800; flex-shrink:0; }
+  .dash-stepper-num { width:28px; height:28px; border-radius:50%; background:#0a0a0a; color:#fff; display:grid; place-items:center; font-size:13px; font-weight:800; flex-shrink:0; }
   .dash-stepper-num.done { background:var(--green); }
-  .dash-stepper-label { font-family:"Outfit",sans-serif; font-size:15px; font-weight:800; color:var(--text); margin:0; }
+  .dash-stepper-label { font-family:"Geist",sans-serif; font-size:15px; font-weight:800; color:var(--text); margin:0; }
   .dash-stepper-sub { font-size:12px; color:var(--text2); margin:0; }
   .dash-step-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:20px; }
   .dash-step-card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:18px 20px; }
   .dash-step-card.full { grid-column:1/-1; }
   .dash-step-badge { display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; border-radius:6px; background:var(--bg2); color:var(--text2); font-size:11px; font-weight:800; margin-bottom:10px; }
-  .dash-step-card h4 { font-family:"Outfit",sans-serif; font-size:14px; font-weight:800; margin:0 0 4px; }
+  .dash-step-card h4 { font-family:"Geist",sans-serif; font-size:14px; font-weight:800; margin:0 0 4px; }
   .dash-step-card p { font-size:12px; color:var(--text2); margin:0 0 14px; line-height:1.5; }
-  .dash-btn { display:inline-flex; align-items:center; gap:7px; height:38px; padding:0 18px; border-radius:9px; font-size:13px; font-weight:700; border:none; cursor:pointer; background:var(--accent); color:#fff; transition:background .14s,opacity .14s; font-family:inherit; }
+  .dash-btn { display:inline-flex; align-items:center; gap:7px; height:38px; padding:0 18px; border-radius:9px; font-size:13px; font-weight:700; border:none; cursor:pointer; background:var(--accent); color:var(--on-accent); transition:background .14s,opacity .14s; font-family:inherit; }
   .dash-btn:hover { opacity:.85; }
   .dash-btn.green { background:var(--green); }
   .dash-btn.outline { background:transparent; border:1.5px solid var(--border); color:var(--text); }
@@ -80,7 +80,7 @@ const CSS = `
   .dash-community-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px; }
   .dash-provider { display:flex; flex-direction:column; align-items:center; gap:6px; padding:14px 8px; border:1.5px solid var(--border); border-radius:10px; cursor:pointer; transition:border-color .14s,background .14s; font-size:11px; font-weight:700; background:var(--card); }
   .dash-provider:hover { border-color:var(--text2); }
-  .dash-provider.selected { border-color:#191C6B; background:rgba(25,28,107,0.05); }
+  .dash-provider.selected { border-color:#0a0a0a; background:rgba(10,10,10,0.05); }
   .dash-provider-icon { width:32px; height:32px; display:grid; place-items:center; }
   .dash-mini-list { display:flex; flex-direction:column; gap:6px; margin-bottom:14px; }
   .dash-mini-row { display:flex; align-items:center; gap:8px; padding:6px 0; font-size:12px; color:var(--text2); }
@@ -95,14 +95,14 @@ const CSS = `
   .dash-stat-icon { width:40px; height:40px; border-radius:10px; background:var(--bg2); display:grid; place-items:center; flex-shrink:0; }
   .dash-stat-info { flex:1; }
   .dash-stat-label { font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.06em; color:var(--text2); margin-bottom:2px; }
-  .dash-stat-value { font-family:"Outfit",sans-serif; font-size:22px; font-weight:900; color:var(--text); }
+  .dash-stat-value { font-family:"Geist",sans-serif; font-size:22px; font-weight:900; color:var(--text); }
   .dash-success-msg { font-size:12px; color:var(--green); font-weight:700; margin-top:8px; display:flex; align-items:center; gap:6px; }
   .dash-wallet-addr { font-size:11px; color:var(--text2); font-weight:700; margin-top:6px; font-family:monospace; }
 
   /* Right panel */
   .dash-left { min-width:0; }
   .dash-right { display:flex; flex-direction:column; gap:14px; }
-  .dash-right h3 { font-family:"Outfit",sans-serif; font-size:16px; font-weight:800; margin:0 0 2px; }
+  .dash-right h3 { font-family:"Geist",sans-serif; font-size:16px; font-weight:800; margin:0 0 2px; }
   .dash-right-sub { font-size:12px; color:var(--text2); margin:0 0 16px; line-height:1.5; }
   .dash-res-card { display:flex; align-items:center; gap:12px; padding:13px; border:1.5px solid var(--border); border-radius:10px; cursor:pointer; transition:border-color .14s,background .14s; text-decoration:none; color:inherit; }
   .dash-res-card:hover { border-color:#a1a1aa; background:var(--bg2); }
@@ -471,7 +471,7 @@ export default function OgaPayDashboard() {
         {/* ── INTRO / WELCOME BANNER ── */}
         {allDone ? (
           <div className="dash-intro complete" onClick={() => navigate('/profile')} style={{ cursor: 'pointer' }}>
-            <div style={{width:44,height:44,borderRadius:'50%',flexShrink:0,overflow:'hidden',background:'var(--accent)',color:'#fff',display:'grid',placeItems:'center',fontSize:15,fontWeight:800,border:'2px solid rgba(255,255,255,0.2)'}}>
+            <div style={{width:44,height:44,borderRadius:'50%',flexShrink:0,overflow:'hidden',background:'var(--accent)',color:'var(--on-accent)',display:'grid',placeItems:'center',fontSize:15,fontWeight:800,border:'2px solid rgba(255,255,255,0.2)'}}>
               {avatarUrl ? <img src={avatarUrl} alt={fname} style={{width:'100%',height:'100%',objectFit:'cover',borderRadius:'50%'}} onError={e=>{(e.target as HTMLImageElement).style.display='none'}} /> : initials || '?'}
             </div>
             <div style={{ flex: 1 }}>
@@ -484,7 +484,7 @@ export default function OgaPayDashboard() {
           </div>
         ) : isNewUser ? (
           <div className="dash-intro" onClick={() => navigate('/profile')} style={{ cursor: 'pointer' }}>
-            <div style={{width:44,height:44,borderRadius:'50%',flexShrink:0,overflow:'hidden',background:'var(--accent)',color:'#fff',display:'grid',placeItems:'center',fontSize:15,fontWeight:800,border:'2px solid rgba(255,255,255,0.2)'}}>
+            <div style={{width:44,height:44,borderRadius:'50%',flexShrink:0,overflow:'hidden',background:'var(--accent)',color:'var(--on-accent)',display:'grid',placeItems:'center',fontSize:15,fontWeight:800,border:'2px solid rgba(255,255,255,0.2)'}}>
               {avatarUrl ? <img src={avatarUrl} alt={fname} style={{width:'100%',height:'100%',objectFit:'cover',borderRadius:'50%'}} onError={e=>{(e.target as HTMLImageElement).style.display='none'}} /> : initials || '?'}
             </div>
             <div style={{ flex: 1 }}>
@@ -494,7 +494,7 @@ export default function OgaPayDashboard() {
           </div>
         ) : (
           <div className="dash-intro" onClick={() => navigate('/profile')} style={{ cursor: 'pointer' }}>
-            <div style={{width:44,height:44,borderRadius:'50%',flexShrink:0,overflow:'hidden',background:'var(--accent)',color:'#fff',display:'grid',placeItems:'center',fontSize:15,fontWeight:800,border:'2px solid rgba(255,255,255,0.2)'}}>
+            <div style={{width:44,height:44,borderRadius:'50%',flexShrink:0,overflow:'hidden',background:'var(--accent)',color:'var(--on-accent)',display:'grid',placeItems:'center',fontSize:15,fontWeight:800,border:'2px solid rgba(255,255,255,0.2)'}}>
               {avatarUrl ? <img src={avatarUrl} alt={fname} style={{width:'100%',height:'100%',objectFit:'cover',borderRadius:'50%'}} onError={e=>{(e.target as HTMLImageElement).style.display='none'}} /> : initials || '?'}
             </div>
             <div style={{ flex: 1 }}>
@@ -515,9 +515,9 @@ export default function OgaPayDashboard() {
 
         {/* ── EMAIL VERIFICATION NUDGE ── */}
         {user && !isEmailVerified && (
-          <div style={{ padding: '12px 16px', background: 'rgba(25,28,107,0.07)', border: '1px solid rgba(25,28,107,0.25)', borderRadius: 10, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 10 }}>
-            <i className="ti ti-mail-exclamation" style={{ fontSize: 18, color: '#191C6B' }} />
-            <span style={{ fontSize: 13, fontWeight: 700, color: '#191C6B', flex: 1 }}>Verify your email to receive task notifications</span>
+          <div style={{ padding: '12px 16px', background: 'rgba(10,10,10,0.07)', border: '1px solid rgba(10,10,10,0.25)', borderRadius: 10, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 10 }}>
+            <i className="ti ti-mail-exclamation" style={{ fontSize: 18, color: '#0a0a0a' }} />
+            <span style={{ fontSize: 13, fontWeight: 700, color: '#0a0a0a', flex: 1 }}>Verify your email to receive task notifications</span>
             <span onClick={async (e) => {
               const el = e.currentTarget;
               const orig = el.textContent;
@@ -535,7 +535,7 @@ export default function OgaPayDashboard() {
                 el.textContent = 'Failed';
                 setTimeout(() => { el.textContent = 'Resend'; el.style.pointerEvents = 'auto'; }, 3000);
               }
-            }} style={{ fontSize: 12, fontWeight: 800, color: '#191C6B', cursor: 'pointer', whiteSpace: 'nowrap' }}>Resend</span>
+            }} style={{ fontSize: 12, fontWeight: 800, color: '#0a0a0a', cursor: 'pointer', whiteSpace: 'nowrap' }}>Resend</span>
           </div>
         )}
 
@@ -572,7 +572,7 @@ export default function OgaPayDashboard() {
             <div style={{ padding: '10px 14px', background: `${nudge.color}10`, border: `1px solid ${nudge.color}40`, borderRadius: 10, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 10 }}>
               <i className={nudge.icon} style={{ fontSize: 18, color: nudge.color }} />
               <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text)', flex: 1 }}>{nudge.msg}</span>
-              <button onClick={() => navigate(nudge.action)} style={{ height: 30, padding: '0 12px', borderRadius: 7, background: nudge.color, color: '#fff', border: 'none', fontWeight: 700, fontSize: 11, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>{nudge.cta}</button>
+              <button onClick={() => navigate(nudge.action)} style={{ height: 30, padding: '0 12px', borderRadius: 7, background: nudge.color, color: 'var(--on-accent)', border: 'none', fontWeight: 700, fontSize: 11, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>{nudge.cta}</button>
               <button onClick={() => { localStorage.setItem('ogapay_nudge_dismissed', JSON.stringify({ ts: Date.now() })); window.location.reload() }} style={{ background: 'none', border: 'none', color: 'var(--text3)', cursor: 'pointer', padding: 4, fontSize: 14 }}><i className="ti ti-x" /></button>
             </div>
           );
@@ -653,7 +653,7 @@ export default function OgaPayDashboard() {
           <>
             <div className="dash-headline" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
               <div>
-                <h1 style={{ fontFamily: "'Outfit',sans-serif", fontSize: 24, fontWeight: 900, margin: 0 }}>Getting Started</h1>
+                <h1 style={{ fontFamily: "'Geist',sans-serif", fontSize: 24, fontWeight: 900, margin: 0 }}>Getting Started</h1>
                 <p style={{ fontSize: 14, color: "var(--text2)", margin: "4px 0 0" }}>Complete your setup to start earning on OgaPay</p>
               </div>
             </div>
@@ -672,8 +672,8 @@ export default function OgaPayDashboard() {
         {recommended.length > 0 && (
           <div style={{ marginTop: 28 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-              <h2 style={{ fontFamily: "'Outfit',sans-serif", fontSize: 18, fontWeight: 900, margin: 0 }}>Available Tasks</h2>
-              <a href="/tasks" style={{ fontSize: 13, fontWeight: 700, color: '#191C6B', textDecoration: 'none' }}>See all →</a>
+              <h2 style={{ fontFamily: "'Geist',sans-serif", fontSize: 18, fontWeight: 900, margin: 0 }}>Available Tasks</h2>
+              <a href="/tasks" style={{ fontSize: 13, fontWeight: 700, color: '#0a0a0a', textDecoration: 'none' }}>See all →</a>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 12 }}>
               {recommended.slice(0, 6).map((task: any) => (
@@ -681,12 +681,12 @@ export default function OgaPayDashboard() {
                   key={task.id}
                   onClick={() => navigate(`/tasks/${task.id}`)}
                   style={{ padding: '14px 16px', border: '1px solid var(--border)', borderRadius: 12, background: 'var(--card)', cursor: 'pointer', transition: 'border-color .15s, transform .15s' }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(25,28,107,0.4)'; (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)'; }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(10,10,10,0.4)'; (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)'; }}
                   onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--border)'; (e.currentTarget as HTMLElement).style.transform = ''; }}
                 >
                   <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 6, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{task.title}</div>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 }}>
-                    <span style={{ fontSize: 15, fontWeight: 900, color: '#191C6B' }}>₦{Number(task.reward || 0).toLocaleString()}</span>
+                    <span style={{ fontSize: 15, fontWeight: 900, color: '#0a0a0a' }}>₦{Number(task.reward || 0).toLocaleString()}</span>
                     <span style={{ fontSize: 11, color: 'var(--text3)', background: 'var(--bg2)', padding: '2px 8px', borderRadius: 6, fontWeight: 700 }}>{task.category || 'General'}</span>
                   </div>
                 </div>
@@ -775,7 +775,7 @@ export default function OgaPayDashboard() {
 
             <div className="dash-divider" />
 
-            <h3 style={{ fontFamily: "'Outfit',sans-serif", fontSize: 15, fontWeight: 800, marginBottom: 4 }}>Video tutorials</h3>
+            <h3 style={{ fontFamily: "'Geist',sans-serif", fontSize: 15, fontWeight: 800, marginBottom: 4 }}>Video tutorials</h3>
             <p style={{ fontSize: 12, color: "var(--text2)", marginBottom: 12 }}>Step by step guides to get you started.</p>
 
             <a href="https://www.youtube.com/watch?v=G14bYYthL2g" target="_blank" rel="noopener noreferrer" className="dash-video" style={{textDecoration:'none',display:'flex',gap:12,alignItems:'center',padding:'10px 12px',borderRadius:10,border:'1px solid var(--border)',background:'var(--card)',transition:'all .2s',cursor:'pointer'}}>

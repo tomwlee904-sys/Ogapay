@@ -73,7 +73,7 @@ export default function VirtualAccountCard() {
       <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 14, padding: 20, marginBottom: 24 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
           <div>
-            <div style={{ fontFamily: 'Outfit', fontSize: 15, fontWeight: 800, marginBottom: 4 }}>Virtual Account</div>
+            <div style={{ fontFamily: 'Geist', fontSize: 15, fontWeight: 800, marginBottom: 4 }}>Virtual Account</div>
             <div style={{ color: 'var(--text2)', fontSize: 13 }}>Get a dedicated bank account to receive payments instantly.</div>
           </div>
           <button
@@ -81,7 +81,7 @@ export default function VirtualAccountCard() {
             disabled={creating}
             style={{
               height: 38, padding: '0 18px', borderRadius: 10, fontWeight: 700, fontSize: 13,
-              background: 'var(--accent)', color: '#fff', border: 'none', cursor: creating ? 'not-allowed' : 'pointer',
+              background: 'var(--accent)', color: 'var(--on-accent)', border: 'none', cursor: creating ? 'not-allowed' : 'pointer',
               opacity: creating ? 0.6 : 1, display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: 'inherit',
             }}
           >
@@ -103,7 +103,7 @@ export default function VirtualAccountCard() {
       <div style={{ position: 'absolute', top: -20, right: -20, width: 120, height: 120, borderRadius: '50%', background: 'rgba(255,255,255,.06)' }} />
       <div style={{ position: 'absolute', bottom: -30, left: -10, width: 80, height: 80, borderRadius: '50%', background: 'rgba(255,255,255,.04)' }} />
       <div style={{ fontSize: 11, fontWeight: 600, opacity: 0.8, marginBottom: 2, letterSpacing: 1 }}>DEDICATED VIRTUAL ACCOUNT</div>
-      <div style={{ fontFamily: 'Outfit', fontSize: 22, fontWeight: 900, letterSpacing: 2, marginBottom: 12 }}>
+      <div style={{ fontFamily: 'Geist', fontSize: 22, fontWeight: 900, letterSpacing: 2, marginBottom: 12 }}>
         {dva.accountNumber || '—'}
       </div>
 

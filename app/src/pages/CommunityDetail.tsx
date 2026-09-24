@@ -48,12 +48,12 @@ export default function CommunityDetail() {
         .cd-hero-bg{height:160px}
         .cd-hero-info{padding:0 24px 24px;display:flex;align-items:flex-end;gap:16px;margin-top:-32px}
         .cd-avatar{width:64px;height:64px;border-radius:50%;border:3px solid var(--card);display:grid;place-items:center;font-size:22px;font-weight:800;color:#fff;flex-shrink:0}
-        .cd-name{font-family:Outfit;font-size:22px;font-weight:900;margin:0}
+        .cd-name{font-family:Geist;font-size:22px;font-weight:900;margin:0}
         .cd-meta{display:flex;gap:20px;padding:16px 24px;background:var(--card);border:1px solid var(--border);border-radius:12px;margin-bottom:20px;flex-wrap:wrap}
         .cd-meta-item{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text2)}
         .cd-meta-item strong{color:var(--text);font-weight:800}
         .cd-body{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px 24px}
-        .cd-body h3{font-family:Outfit;font-size:15px;font-weight:800;margin:0 0 8px}
+        .cd-body h3{font-family:Geist;font-size:15px;font-weight:800;margin:0 0 8px}
         .cd-body p{color:var(--text2);font-size:13px;line-height:1.6;margin:0}
       `}</style>
 
@@ -74,9 +74,9 @@ export default function CommunityDetail() {
       ) : (
         <>
           <div className="cd-hero">
-            <div className="cd-hero-bg" style={{ background: `linear-gradient(135deg,${community.accentColor || '#1F8CFF'},${community.accentColor || '#1F8CFF'}88)` }} />
+            <div className="cd-hero-bg" style={{ background: `linear-gradient(135deg,${community.accentColor || 'var(--accent)'},${community.accentColor || 'var(--accent)'}88)` }} />
             <div className="cd-hero-info">
-              <div className="cd-avatar" style={{ background: community.accentColor || '#1F8CFF' }}>{community.initials || community.name?.slice(0, 2)?.toUpperCase()}</div>
+              <div className="cd-avatar" style={{ background: community.accentColor || 'var(--accent)' }}>{community.initials || community.name?.slice(0, 2)?.toUpperCase()}</div>
               <div style={{ flex: 1 }}>
                 <h1 className="cd-name">{community.name}</h1>
               </div>
@@ -92,7 +92,7 @@ export default function CommunityDetail() {
               disabled={joining || joined}
               style={{
                 marginLeft: 'auto', height: 36, padding: '0 20px', borderRadius: 8, border: joined ? '1px solid var(--border)' : 'none',
-                background: joined ? 'rgba(22,163,74,.1)' : '#1F8CFF', color: joined ? '#16a34a' : '#fff',
+                background: joined ? 'rgba(22,163,74,.1)' : 'var(--accent)', color: joined ? '#16a34a' : '#fff',
                 fontSize: 13, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
               }}
             >

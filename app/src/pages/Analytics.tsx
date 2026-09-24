@@ -38,7 +38,7 @@ export default function Analytics() {
       <style>{`
         .an-page{max-width:900px;margin:0 auto;padding:0 0 40px}
         .an-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px}
-        .an-head h1{font-family:Outfit;font-size:24px;font-weight:900;margin:0}
+        .an-head h1{font-family:Geist;font-size:24px;font-weight:900;margin:0}
         .an-period{display:flex;gap:4px;background:var(--bg2);border-radius:8px;padding:3px}
         .an-period button{padding:6px 14px;border-radius:6px;border:none;background:transparent;color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s}
         .an-period button.active{background:var(--card);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.08)}
@@ -46,10 +46,10 @@ export default function Analytics() {
         @media(max-width:700px){.an-stats{grid-template-columns:repeat(2,1fr)}}
         .an-stat{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px}
         .an-stat .s-icon{width:36px;height:36px;border-radius:8px;display:grid;place-items:center;margin-bottom:8px}
-        .an-stat .s-val{font-family:Outfit;font-size:22px;font-weight:900}
+        .an-stat .s-val{font-family:Geist;font-size:22px;font-weight:900}
         .an-stat .s-label{font-size:12px;color:var(--text2);margin-top:2px}
         .an-chart{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:24px}
-        .an-chart h2{font-family:Outfit;font-size:15px;font-weight:800;margin:0 0 16px}
+        .an-chart h2{font-family:Geist;font-size:15px;font-weight:800;margin:0 0 16px}
         .an-table{width:100%;border-collapse:collapse;font-size:13px}
         .an-table th{text-align:left;padding:10px 14px;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--border)}
         .an-table td{padding:10px 14px;border-bottom:1px solid var(--border);color:var(--text2)}
@@ -67,7 +67,7 @@ export default function Analytics() {
 
         <div className="an-stats">
           {[
-            { icon: 'checklist', color: '#1F8CFF', val: totals.tasks, label: 'Tasks Completed' },
+            { icon: 'checklist', color: '#52525b', val: totals.tasks, label: 'Tasks Completed' },
             { icon: 'coin', color: '#16a34a', val: `NGN ${totals.earnings.toLocaleString()}`, label: 'Total Earnings' },
             { icon: 'trending-up', color: '#8B5CF6', val: '98%', label: 'Success Rate' },
             { icon: 'star', color: '#F59E0B', val: '4.8', label: 'Avg Rating' },
@@ -90,7 +90,7 @@ export default function Analytics() {
                   <XAxis dataKey={xKey} tick={{fontSize:10,fill:'var(--text3)'}} axisLine={false} tickLine={false} />
                   <YAxis tick={{fontSize:10,fill:'var(--text3)'}} axisLine={false} tickLine={false} />
                   <Tooltip contentStyle={{background:'var(--card)',border:'1px solid var(--border)',borderRadius:8,fontSize:12}} />
-                  <Bar dataKey="tasks" fill="#1F8CFF" radius={[4,4,0,0]} />
+                  <Bar dataKey="tasks" fill="#52525b" radius={[4,4,0,0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>

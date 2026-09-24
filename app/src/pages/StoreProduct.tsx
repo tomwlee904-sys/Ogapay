@@ -105,7 +105,7 @@ export default function StoreProduct() {
     if (!product) return null
     return (
       <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 14, padding: 22 }}>
-        <div style={{ fontFamily: 'Outfit,sans-serif', fontSize: 24, fontWeight: 800, color: 'var(--accent)' }}>{formatPrice(product.price, product.currency)}</div>
+        <div style={{ fontFamily: 'Geist,sans-serif', fontSize: 24, fontWeight: 800, color: 'var(--accent)' }}>{formatPrice(product.price, product.currency)}</div>
         <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 2 }}>{formatAlt(product.price, product.currency, sol.ngn)}</div>
         {purchaseError && <div style={{ background: 'rgba(239,68,68,0.10)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 8, padding: 10, marginTop: 12, color: '#ef4444', fontSize: 12 }}><i className="ti ti-alert-circle" style={{ marginRight: 4 }} />{purchaseError}</div>}
         {purchased && <div style={{ background: 'rgba(var(--green-rgb),0.10)', border: '1px solid rgba(34,197,94,0.3)', borderRadius: 8, padding: 10, marginTop: 12, color: 'var(--green)', fontSize: 12, textAlign: 'center' }}><i className="ti ti-circle-check" style={{ marginRight: 4 }} />Purchase successful!</div>}
@@ -215,7 +215,7 @@ export default function StoreProduct() {
           <i className="ti ti-alert-circle" style={{ fontSize: 36, color: 'var(--text3)', display: 'block', marginBottom: 12 }} />
           <h2 style={{ fontSize: 18, fontWeight: 800, color: 'var(--text)', margin: '0 0 8px' }}>{error || 'Product not found'}</h2>
           <p style={{ fontSize: 13, color: 'var(--text2)', marginBottom: 20 }}>This listing doesn't exist or has been removed.</p>
-          <button onClick={() => navigate('/store')} style={{ background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 10, padding: '11px 22px', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+          <button onClick={() => navigate('/store')} style={{ background: 'var(--accent)', color: 'var(--on-accent)', border: 'none', borderRadius: 10, padding: '11px 22px', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
             <i className="ti ti-arrow-left" style={{ fontSize: 14 }} /> Back to Store
           </button>
         </div>
@@ -264,7 +264,7 @@ export default function StoreProduct() {
           {/* Left Column */}
           <div>
             {/* Title */}
-            <h1 style={{ fontFamily: 'Outfit,sans-serif', fontSize: 22, fontWeight: 800, color: 'var(--text)', margin: '0 0 10px' }}>{p.title}</h1>
+            <h1 style={{ fontFamily: 'Geist,sans-serif', fontSize: 22, fontWeight: 800, color: 'var(--text)', margin: '0 0 10px' }}>{p.title}</h1>
 
             {/* Badge row */}
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 14 }}>
@@ -343,7 +343,7 @@ export default function StoreProduct() {
                   <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', marginBottom: 10 }}>Write a Review</div>
                   <StarRating rating={reviewRating} size={24} interactive onChange={setReviewRating} />
                   <textarea value={reviewComment} onChange={e => setReviewComment(e.target.value)} placeholder="Share your experience\u2026" style={{ width: '100%', minHeight: 64, padding: '10px 12px', border: '1.5px solid var(--border)', borderRadius: 8, background: 'var(--bg)', color: 'var(--text)', fontSize: 13, fontFamily: 'inherit', resize: 'vertical', marginTop: 10, outline: 'none', boxSizing: 'border-box' }} />
-                  <button onClick={handleSubmitReview} disabled={submittingReview || reviewRating < 1} style={{ marginTop: 10, background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 8, padding: '10px 20px', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', opacity: (submittingReview || reviewRating < 1) ? 0.5 : 1 }}>
+                  <button onClick={handleSubmitReview} disabled={submittingReview || reviewRating < 1} style={{ marginTop: 10, background: 'var(--accent)', color: 'var(--on-accent)', border: 'none', borderRadius: 8, padding: '10px 20px', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', opacity: (submittingReview || reviewRating < 1) ? 0.5 : 1 }}>
                     {submittingReview ? 'Submitting\u2026' : 'Submit Review'}
                   </button>
                 </div>

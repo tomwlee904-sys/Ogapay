@@ -11,7 +11,7 @@ const STATUS_MAP: Record<string, string> = {
 }
 
 const COLOR_MAP: Record<string, string> = {
-  APPLIED: '#1F8CFF',
+  APPLIED: 'var(--accent)',
   PENDING: '#F59E0B',
   APPROVED: '#16a34a',
   REJECTED: '#DC2626',
@@ -77,11 +77,11 @@ export default function MyTasks() {
     <Layout>
       <style>{`
         .mt-hero{margin-bottom:20px}
-        .mt-hero h1{font-family:Outfit;font-size:28px;font-weight:900;margin:0 0 4px}
+        .mt-hero h1{font-family:Geist;font-size:28px;font-weight:900;margin:0 0 4px}
         .mt-hero p{color:var(--text2);font-size:14px;margin:0}
         .mt-tabs{display:flex;gap:4px;margin-bottom:14px;flex-wrap:wrap}
         .mt-tab{padding:6px 14px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text2);font-size:11px;font-weight:600;cursor:pointer;transition:all .2s}
-        .mt-tab:hover,.mt-tab.active{border-color:var(--accent);color:var(--accent);background:rgba(31,140,255,.08)}
+        .mt-tab:hover,.mt-tab.active{border-color:var(--accent);color:var(--accent);background:rgba(var(--accent-rgb),.08)}
         .mt-list{display:grid;gap:6px}
         .mt-item{display:flex;align-items:center;gap:14px;padding:14px 16px;background:var(--card);border:1px solid var(--border);border-radius:12px;transition:all .2s}
         .mt-item:hover{border-color:var(--border2)}
@@ -117,15 +117,15 @@ export default function MyTasks() {
       ) : filtered.length === 0 ? (
         <div className="mt-empty">
           <i className="ti ti-checklist" />
-          <h3 style={{fontFamily:'Outfit',fontWeight:800,margin:'0 0 4px',color:'var(--text)'}}>No submissions yet</h3>
+          <h3 style={{fontFamily:'Geist',fontWeight:800,margin:'0 0 4px',color:'var(--text)'}}>No submissions yet</h3>
           <p style={{fontSize:13,margin:0}}>Apply to tasks and submit your work to see them here</p>
-          <a href="/tasks" style={{display:'inline-flex',marginTop:12,height:36,padding:'0 16px',borderRadius:8,border:0,background:'var(--accent)',color:'#fff',fontWeight:700,fontSize:12,alignItems:'center',gap:6,textDecoration:'none'}}>Browse Tasks</a>
+          <a href="/tasks" style={{display:'inline-flex',marginTop:12,height:36,padding:'0 16px',borderRadius:8,border:0,background:'var(--accent)',color:'var(--on-accent)',fontWeight:700,fontSize:12,alignItems:'center',gap:6,textDecoration:'none'}}>Browse Tasks</a>
         </div>
       ) : (
         <div className="mt-list">
           {filtered.map((s: any) => {
             const status = STATUS_MAP[s.status] || s.status
-            const color = COLOR_MAP[s.status] || '#1F8CFF'
+            const color = COLOR_MAP[s.status] || 'var(--accent)'
             const progress = PROGRESS_MAP[s.status] || 50
             return (
               <div className="mt-item" key={s.id}>

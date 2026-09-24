@@ -37,16 +37,16 @@ function ConfigCardMockup() {
   return (
     <div style={{
       background: "#F8F8FA", borderRadius: 16, padding: 20,
-      border: "1px solid #D0E2CC", fontFamily: "'DM Sans', sans-serif",
+      border: "1px solid #D0E2CC", fontFamily: "'Geist', sans-serif",
     }}>
       <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
         <div>
           <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "#556351", marginBottom: 6 }}>
             <span>Daily withdrawal limit</span>
-            <span style={{ fontWeight: 700, color: "#191C6B" }}>Up to ₦20,000</span>
+            <span style={{ fontWeight: 700, color: "#0a0a0a" }}>Up to ₦20,000</span>
           </div>
           <div style={{ height: 6, background: "#D0E2CC", borderRadius: 99, overflow: "hidden" }}>
-            <div style={{ width: "100%", height: "100%", background: "#191C6B", borderRadius: 99 }} />
+            <div style={{ width: "100%", height: "100%", background: "#0a0a0a", borderRadius: 99 }} />
           </div>
         </div>
         <div style={{ paddingTop: 10, borderTop: "1px solid #D0E2CC", display: "flex", justifyContent: "space-between", fontSize: 12 }}>
@@ -55,7 +55,7 @@ function ConfigCardMockup() {
         </div>
         <div style={{ paddingTop: 10, borderTop: "1px solid #D0E2CC", display: "flex", justifyContent: "space-between", fontSize: 12 }}>
           <span style={{ color: "#556351" }}>Auto-convert USDC → NGN</span>
-          <span style={{ fontWeight: 600, color: "#191C6B", display: "flex", alignItems: "center", gap: 4 }}>
+          <span style={{ fontWeight: 600, color: "#0a0a0a", display: "flex", alignItems: "center", gap: 4 }}>
             <Icon n="circle-check-filled" s={14} c="#27C93F" /> Active
           </span>
         </div>
@@ -93,11 +93,11 @@ function PaymentMockup() {
       background: "linear-gradient(135deg, #F3F3F5, #EBEBEE)", borderRadius: 16, height: 200,
       display: "flex", alignItems: "center", justifyContent: "center",
       position: "relative", overflow: "hidden",
-      border: "1px solid rgba(25,28,107,.08)",
+      border: "1px solid rgba(10,10,10,.08)",
     }}>
       {/* Three rail tracks */}
       <div style={{ position: "absolute", inset: "0 0", display: "flex", flexDirection: "column", justifyContent: "center", gap: 24, pointerEvents: "none", opacity: 0.25 }}>
-        {[0,1,2].map(i => <div key={i} style={{ width: "100%", height: 2.5, background: "#191C6B", borderRadius: 2 }} />)}
+        {[0,1,2].map(i => <div key={i} style={{ width: "100%", height: 2.5, background: "#0a0a0a", borderRadius: 2 }} />)}
       </div>
 
       {/* Animated coins */}
@@ -123,25 +123,25 @@ function PaymentMockup() {
       {/* Central card */}
       <div style={{
         width: 140, height: 140, background: "#fff",
-        border: "1px solid rgba(25,28,107,.06)", borderRadius: 16,
+        border: "1px solid rgba(10,10,10,.06)", borderRadius: 16,
         boxShadow: "0 8px 30px rgba(0,0,0,.06)",
         display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
         position: "relative", zIndex: 20, gap: 4,
       }}>
         <div style={{ position: "absolute", top: 8, display: "flex", gap: 5 }}>
-          {[0,1,2].map(i => <span key={i} style={{ width: 5, height: 5, borderRadius: "50%", background: "rgba(25,28,107,.12)" }} />)}
+          {[0,1,2].map(i => <span key={i} style={{ width: 5, height: 5, borderRadius: "50%", background: "rgba(10,10,10,.12)" }} />)}
         </div>
         <div style={{
-          width: 48, height: 48, borderRadius: 10, background: "#191C6B",
+          width: 48, height: 48, borderRadius: 10, background: "#0a0a0a",
           display: "flex", alignItems: "center", justifyContent: "center",
-          boxShadow: "0 4px 12px rgba(25,28,107,.2)",
+          boxShadow: "0 4px 12px rgba(10,10,10,.2)",
         }}>
           <Icon n="wallet" s={20} c="#fff" />
         </div>
         <div style={{ fontSize: 12, fontWeight: 700, color: "#1C3316" }}>Instant Payout</div>
         <div style={{ display: "flex", gap: 4 }}>
           {["NGN", "USDC", "SOL"].map(c => (
-            <span key={c} style={{ padding: "1px 7px", border: "1px solid rgba(25,28,107,.1)", borderRadius: 99, fontSize: 9, fontWeight: 600, color: "#191C6B" }}>{c}</span>
+            <span key={c} style={{ padding: "1px 7px", border: "1px solid rgba(10,10,10,.1)", borderRadius: 99, fontSize: 9, fontWeight: 600, color: "#0a0a0a" }}>{c}</span>
           ))}
         </div>
       </div>
@@ -199,21 +199,21 @@ function FeatureBlock({ title, description, mockup, reverse, accent }: FeatureBl
           >
             <h3 style={{
               display: "flex", alignItems: "center", gap: 10,
-              fontFamily: "'Outfit', sans-serif",
+              fontFamily: "'Geist', sans-serif",
               fontSize: "clamp(18px, 1.6vw, 22px)",
               fontWeight: 800,
-              color: "#191C6B",
+              color: "#0a0a0a",
               letterSpacing: "-.4px",
               lineHeight: 1.2,
               margin: "0 0 10px",
             }}>
               <span style={{
                 width: 36, height: 36, borderRadius: 10,
-                background: "rgba(25,28,107,.08)",
+                background: "rgba(10,10,10,.08)",
                 display: "inline-flex", alignItems: "center", justifyContent: "center",
                 flexShrink: 0,
               }}>
-                <Icon n={accent || "box"} s={16} c="#191C6B" />
+                <Icon n={accent || "box"} s={16} c="#0a0a0a" />
               </span>
               {title}
             </h3>

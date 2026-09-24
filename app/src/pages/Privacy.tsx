@@ -5,7 +5,7 @@ export default function Privacy() {
   return (
     <Layout sidebar={false}>
       <div style={{ maxWidth: 720, margin: '40px auto', padding: '0 20px' }}>
-        <h1 style={{ fontFamily: 'Outfit', fontSize: 24, fontWeight: 800, marginBottom: 16 }}>Privacy Policy</h1>
+        <h1 style={{ fontFamily: 'Geist', fontSize: 24, fontWeight: 800, marginBottom: 16 }}>Privacy Policy</h1>
         <p style={{ color: 'var(--text2)', fontSize: 13, marginBottom: 24 }}>Last updated: June 2026</p>
         <div style={{ fontSize: 14, lineHeight: 1.7, color: 'var(--text2)' }}>
           <p>OgaPay Technologies Ltd. ("we," "our," or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our platform.</p>

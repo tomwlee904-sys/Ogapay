@@ -99,7 +99,7 @@ function EcosystemCard({ title, description, tags, icon, index }: { title: strin
         ) : (
           <div style={{
             width: 44, height: 44, borderRadius: 12,
-            background: "linear-gradient(135deg, #191C6B, #2D5BFF)",
+            background: "linear-gradient(135deg, #0a0a0a, #3f3f46)",
             display: "flex", alignItems: "center", justifyContent: "center",
             color: "#fff", fontSize: 18,
           }}>
@@ -110,7 +110,7 @@ function EcosystemCard({ title, description, tags, icon, index }: { title: strin
         <div style={{
           padding: "3px 10px", borderRadius: 99,
           background: "#EEF0F5", fontSize: 11, fontWeight: 600,
-          color: "#191C6B", textTransform: "lowercase",
+          color: "#0a0a0a", textTransform: "lowercase",
         }}>
           {categoryLabel[primaryTag] || primaryTag}
         </div>
@@ -151,7 +151,7 @@ export default function Ecosystem() {
 
           <div className="container" style={{ position: "relative", zIndex: 1, maxWidth: 720 }}>
             <h1 style={{
-              fontFamily: "'Outfit', sans-serif", fontSize: "clamp(32px, 4vw, 48px)",
+              fontFamily: "'Geist', sans-serif", fontSize: "clamp(32px, 4vw, 48px)",
               fontWeight: 800, color: "#111827", letterSpacing: "-1.2px",
               lineHeight: 1.1, margin: "0 0 18px",
             }}>
@@ -180,7 +180,7 @@ export default function Ecosystem() {
                   style={{
                     padding: "8px 18px", borderRadius: 999,
                     border: activeCategory === cat ? "none" : "1px solid #E8EDE6",
-                    background: activeCategory === cat ? "#191C6B" : "transparent",
+                    background: activeCategory === cat ? "#0a0a0a" : "transparent",
                     color: activeCategory === cat ? "#fff" : "#6B7280",
                     fontWeight: 600, fontSize: 14, cursor: "pointer",
                     transition: "all .2s",

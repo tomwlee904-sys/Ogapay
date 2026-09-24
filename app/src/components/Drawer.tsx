@@ -36,7 +36,7 @@ export default function Drawer({ open, onClose }: DrawerProps) {
         {/* ── Header ── */}
         <div className="oga-drawer-head">
           <div>
-            <div style={{ fontFamily: "'Outfit',sans-serif", fontWeight: 900, fontSize: 18, color: 'var(--text)' }}>Menu</div>
+            <div style={{ fontFamily: "'Geist',sans-serif", fontWeight: 900, fontSize: 18, color: 'var(--text)' }}>Menu</div>
             <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 1 }}>Browse OgaPay</div>
           </div>
           <button className="oga-drawer-close" onClick={onClose} aria-label="Close menu">

@@ -10,7 +10,7 @@ export default function TabWorkerPortalContent() {
   const { user: authUser } = useAuth()
 
   const workspaceItems = [
-    { icon: 'ti ti-brand-x', label: 'Social', route: '/worker/social', color: '#1F8CFF' },
+    { icon: 'ti ti-brand-x', label: 'Social', route: '/worker/social', color: '#52525b' },
     { icon: 'ti ti-pencil', label: 'Writing', route: '/worker/writing', color: '#7c3aed' },
     { icon: 'ti ti-photo', label: 'Design', route: '/worker/design', color: '#EC4899' },
     { icon: 'ti ti-device-mobile', label: 'App Testing', route: '/worker/testing', color: '#059669' },

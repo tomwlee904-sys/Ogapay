@@ -30,7 +30,7 @@ function FAB() {
     <>
       <style>{`
         .fab-wrap{position:fixed;bottom:calc(var(--bottom-nav-h) + 12px + env(safe-area-inset-bottom,0px));right:16px;z-index:99;display:flex;flex-direction:column;align-items:flex-end;gap:10px}
-        .fab-btn{width:52px;height:52px;border-radius:50%;border:none;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 20px rgba(var(--accent-rgb),.35);transition:transform .2s;font-size:22px}
+        .fab-btn{width:52px;height:52px;border-radius:50%;border:none;background:var(--accent);color:var(--on-accent);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 20px rgba(var(--accent-rgb),.35);transition:transform .2s;font-size:22px}
         .fab-btn:hover{transform:scale(1.08)}
         .fab-btn.open{transform:rotate(45deg)}
         .fab-actions{display:flex;flex-direction:column;gap:8px;align-items:flex-end}

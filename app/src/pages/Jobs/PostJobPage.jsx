@@ -80,10 +80,10 @@ export default function PostJobPage() {
           <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'rgba(22,163,74,0.12)', display: 'grid', placeItems: 'center', margin: '0 auto 20px' }}>
             <i className="ti ti-check" style={{ fontSize: 28, color: 'var(--green)' }} />
           </div>
-          <h2 style={{ fontFamily: 'Outfit,sans-serif', fontSize: 24, fontWeight: 900, margin: '0 0 8px' }}>Job Posted!</h2>
+          <h2 style={{ fontFamily: 'Geist,sans-serif', fontSize: 24, fontWeight: 900, margin: '0 0 8px' }}>Job Posted!</h2>
           <p style={{ color: C.text2, fontSize: 14, margin: '0 0 24px' }}>Your job listing is now live and visible to applicants.</p>
           <button onClick={() => navigate('/jobs')}
-            style={{ padding: '12px 32px', borderRadius: 12, border: 'none', background: C.accent, color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+            style={{ padding: '12px 32px', borderRadius: 12, border: 'none', background: C.accent, color: 'var(--on-accent)', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
             View Job Listings
           </button>
         </div>
@@ -99,7 +99,7 @@ export default function PostJobPage() {
           <i className="ti ti-arrow-left" /> Back
         </button>
 
-        <h1 style={{ fontFamily: 'Outfit,sans-serif', fontSize: 26, fontWeight: 900, margin: '0 0 4px' }}>Post a Job</h1>
+        <h1 style={{ fontFamily: 'Geist,sans-serif', fontSize: 26, fontWeight: 900, margin: '0 0 4px' }}>Post a Job</h1>
         <p style={{ color: C.text3, fontSize: 13, margin: '0 0 28px' }}>List a job opening on OgaPay — no rewards, no submissions. Just a simple job board listing.</p>
 
         {error && (
@@ -195,7 +195,7 @@ export default function PostJobPage() {
           </div>
 
           <button type="submit" disabled={submitting}
-            style={{ width: '100%', padding: '14px', borderRadius: 12, border: 'none', background: C.accent, color: '#fff', fontSize: 15, fontWeight: 700, cursor: submitting ? 'not-allowed' : 'pointer', fontFamily: 'inherit', opacity: submitting ? 0.6 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+            style={{ width: '100%', padding: '14px', borderRadius: 12, border: 'none', background: C.accent, color: 'var(--on-accent)', fontSize: 15, fontWeight: 700, cursor: submitting ? 'not-allowed' : 'pointer', fontFamily: 'inherit', opacity: submitting ? 0.6 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
             {submitting ? <><i className="ti ti-loader" style={{ animation: 'spin 1s linear infinite' }} /> Posting...</> : <><i className="ti ti-briefcase" /> Post Job</>}
           </button>
         </form>

@@ -48,7 +48,7 @@ export default function AdminLogin() {
       }}>
         <div style={{ textAlign: 'center', marginBottom: 24 }}>
           <i className="ti ti-shield" style={{ fontSize: 36, color: 'var(--accent)', marginBottom: 8, display: 'block' }} />
-          <h1 style={{ fontFamily: 'Outfit,sans-serif', fontSize: 22, fontWeight: 800, margin: 0, color: 'var(--text)' }}>Admin Login</h1>
+          <h1 style={{ fontFamily: 'Geist,sans-serif', fontSize: 22, fontWeight: 800, margin: 0, color: 'var(--text)' }}>Admin Login</h1>
           <p style={{ color: 'var(--text2)', fontSize: 13, margin: '4px 0 0' }}>OgaPay Administration Panel</p>
         </div>
 
@@ -123,7 +123,7 @@ export default function AdminLogin() {
             border: 'none',
             borderRadius: 10,
             background: 'var(--accent)',
-            color: '#fff',
+            color: 'var(--on-accent)',
             fontSize: 14,
             fontWeight: 700,
             fontFamily: 'inherit',

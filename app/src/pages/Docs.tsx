@@ -19,7 +19,7 @@ export default function Docs() {
   return (
     <Layout>
       <div style={{ maxWidth: 800, margin: '0 auto', padding: '28px 20px 60px' }}>
-        <h1 style={{ fontFamily: 'Outfit, sans-serif', fontSize: 28, fontWeight: 900, margin: '0 0 4px' }}>
+        <h1 style={{ fontFamily: 'Geist, sans-serif', fontSize: 28, fontWeight: 900, margin: '0 0 4px' }}>
           Documentation
         </h1>
         <p style={{ fontSize: 14, color: 'var(--text2)', margin: '0 0 24px' }}>

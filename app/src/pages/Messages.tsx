@@ -20,7 +20,7 @@ export default function Messages() {
     <Layout>
       <style>{`
         .ms-hero{margin-bottom:20px}
-        .ms-hero h1{font-family:Outfit;font-size:28px;font-weight:900;margin:0 0 4px}
+        .ms-hero h1{font-family:Geist;font-size:28px;font-weight:900;margin:0 0 4px}
         .ms-hero p{color:var(--text2);font-size:14px;margin:0}
         .ms-search{display:flex;align-items:center;gap:8px;height:38px;padding:0 12px;border:1px solid var(--border);border-radius:10px;background:var(--card);margin-bottom:14px;transition:border-color .2s}
         .ms-search:focus-within{border-color:var(--accent)}
@@ -37,7 +37,7 @@ export default function Messages() {
         .ms-name{font-weight:700;font-size:13px}
         .ms-time{font-size:11px;color:var(--text3)}
         .ms-preview{font-size:12px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-        .ms-badge{background:var(--accent);color:#fff;font-size:10px;font-weight:800;width:18px;height:18px;border-radius:50%;display:grid;place-items:center;flex-shrink:0}
+        .ms-badge{background:var(--accent);color:var(--on-accent);font-size:10px;font-weight:800;width:18px;height:18px;border-radius:50%;display:grid;place-items:center;flex-shrink:0}
         .ms-empty{text-align:center;padding:48px 20px;color:var(--text2)}
         .ms-empty i{font-size:36px;color:var(--text3);margin-bottom:12px;display:block}
       `}</style>
@@ -55,7 +55,7 @@ export default function Messages() {
       {filtered.length === 0 ? (
         <div className="ms-empty">
           <i className="ti ti-message-off" />
-          <h3 style={{fontFamily:'Outfit',fontWeight:800,margin:'0 0 4px',color:'var(--text)'}}>No conversations</h3>
+          <h3 style={{fontFamily:'Geist',fontWeight:800,margin:'0 0 4px',color:'var(--text)'}}>No conversations</h3>
           <p style={{fontSize:13,margin:0}}>Your messages will appear here</p>
         </div>
       ) : (

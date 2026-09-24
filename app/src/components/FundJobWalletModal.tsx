@@ -225,7 +225,7 @@ export default function FundJobWalletModal({
               </button>
               <button onClick={handlePay} disabled={!fwPublicKey} style={{
                 ...STYLES.btn,
-                background: !fwPublicKey ? 'var(--border)' : '#191C6B',
+                background: !fwPublicKey ? 'var(--border)' : '#0a0a0a',
                 color: '#fff', flex: 1, opacity: !fwPublicKey ? 0.6 : 1,
               }}>
                 {!fwPublicKey
@@ -283,7 +283,7 @@ export default function FundJobWalletModal({
               {error || 'Something went wrong. Please try again.'}
             </p>
             <button onClick={handleRetry} style={{
-              ...STYLES.btn, background: '#191C6B', color: '#fff',
+              ...STYLES.btn, background: '#0a0a0a', color: '#fff',
             }}>
               Try Again
             </button>

@@ -23,7 +23,7 @@ const Logo = ({ size = 28 }) => (
 const css = `
   @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Outfit:wght@600;700;800;900&display=swap');
 
-  .og-wrap { font-family: "DM Sans", sans-serif; background: #f4f4f5; height: 100vh; display: flex; flex-direction: column; overflow: hidden; color: #111; font-size: 14px; }
+  .og-wrap { font-family: "Geist", sans-serif; background: #f4f4f5; height: 100vh; display: flex; flex-direction: column; overflow: hidden; color: #111; font-size: 14px; }
 
   /* layout */
   .og-body { display: grid; grid-template-columns: 52px 1fr 268px; flex: 1; overflow: hidden; }
@@ -42,12 +42,12 @@ const css = `
   .og-crumb { display:flex; align-items:center; gap:6px; color:#71717a; font-size:13px; font-weight:600; }
   .og-crumb .cur { color:#111; }
   .og-topright { display:flex; align-items:center; gap:10px; }
-  .og-badge { background:#2563eb; color:#fff; font-size:11px; font-weight:700; padding:3px 9px; border-radius:20px; display:inline-flex; align-items:center; gap:5px; }
+  .og-badge { background:var(--accent); color:var(--on-accent); font-size:11px; font-weight:700; padding:3px 9px; border-radius:20px; display:inline-flex; align-items:center; gap:5px; }
   .og-avatar { width:28px; height:28px; border-radius:50%; background:#111; display:grid; place-items:center; color:#fff; font-size:11px; font-weight:800; cursor:pointer; }
 
   /* content */
   .og-content { overflow-y:auto; padding:24px 22px; background:#fafafa; }
-  .og-h1 { font-family:"Outfit",sans-serif; font-size:20px; font-weight:800; margin-bottom:2px; }
+  .og-h1 { font-family:"Geist",sans-serif; font-size:20px; font-weight:800; margin-bottom:2px; }
   .og-sub { font-size:13px; color:#71717a; margin-bottom:20px; }
 
   /* intro strip */
@@ -71,7 +71,7 @@ const css = `
   .og-pcard:hover { border-color:#a1a1aa; box-shadow:0 2px 8px rgba(0,0,0,.06); }
   .og-pcard.sel { border-color:#111; box-shadow:0 0 0 3px rgba(17,17,17,.07); }
   .og-step-num { display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; border:1.5px solid #e4e4e7; border-radius:6px; font-size:11px; font-weight:800; color:#71717a; margin-bottom:14px; }
-  .og-pcard h3 { font-family:"Outfit",sans-serif; font-size:15px; font-weight:800; line-height:1.2; margin-bottom:8px; }
+  .og-pcard h3 { font-family:"Geist",sans-serif; font-size:15px; font-weight:800; line-height:1.2; margin-bottom:8px; }
   .og-pcard p { font-size:12px; color:#71717a; line-height:1.5; margin-bottom:14px; }
 
   /* os selector */
@@ -80,15 +80,15 @@ const css = `
   .og-os select { position:absolute; opacity:0; inset:0; cursor:pointer; width:100%; }
 
   /* download btn */
-  .og-dl { height:34px; padding:0 16px; background:#2563eb; color:#fff; border:none; border-radius:7px; font-size:13px; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:7px; font-family:inherit; transition:background .14s; }
-  .og-dl:hover { background:#1d4ed8; }
+  .og-dl { height:34px; padding:0 16px; background:var(--accent); color:var(--on-accent); border:none; border-radius:7px; font-size:13px; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:7px; font-family:inherit; transition:background .14s; }
+  .og-dl:hover { background:var(--accent); }
   .og-dl.green { background:#16a34a; }
   .og-dl.green:hover { background:#15803d; }
 
   /* connect card */
   .og-connect { background:#fff; border:1.5px solid #e4e4e7; border-radius:12px; padding:18px; margin-bottom:18px; }
-  .og-connect h3 { font-family:"Outfit",sans-serif; font-size:15px; font-weight:800; margin-bottom:4px; }
-  .og-connect p { font-size:12px; color:#2563eb; margin-bottom:12px; }
+  .og-connect h3 { font-family:"Geist",sans-serif; font-size:15px; font-weight:800; margin-bottom:4px; }
+  .og-connect p { font-size:12px; color:var(--accent); margin-bottom:12px; }
 
   /* provider options */
   .og-providers { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:14px; }
@@ -108,14 +108,14 @@ const css = `
 
   /* announce */
   .og-announce { background:#0f0f0f; border-radius:10px; padding:16px 18px; color:#fff; font-size:13px; line-height:1.55; position:relative; overflow:hidden; }
-  .og-announce::before { content:""; position:absolute; inset:0; background:radial-gradient(circle at 80% 50%,rgba(37,99,235,.28),transparent 60%); pointer-events:none; }
+  .og-announce::before { content:""; position:absolute; inset:0; background:radial-gradient(circle at 80% 50%,rgba(var(--accent-rgb),.28),transparent 60%); pointer-events:none; }
   .og-announce a { color:#22c55e; font-weight:700; text-decoration:none; display:inline-flex; align-items:center; gap:4px; }
   .og-announce-sub { display:flex; align-items:center; gap:6px; margin-top:8px; color:#a1a1aa; font-size:12px; }
   .og-announce-sub a { color:#a1a1aa; font-weight:600; font-size:12px; }
 
   /* right panel */
   .og-right { background:#fff; border-left:1px solid #e4e4e7; overflow-y:auto; padding:20px 16px; }
-  .og-rh2 { font-family:"Outfit",sans-serif; font-size:16px; font-weight:800; margin-bottom:4px; }
+  .og-rh2 { font-family:"Geist",sans-serif; font-size:16px; font-weight:800; margin-bottom:4px; }
   .og-rsub { font-size:12px; color:#71717a; margin-bottom:16px; line-height:1.5; }
 
   /* resource card */
@@ -135,7 +135,7 @@ const css = `
   .og-divider { border-top:1px solid #e4e4e7; margin:14px 0; }
   .og-links-title { font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.1em; color:#a1a1aa; margin:14px 0 10px; }
   .og-rlink { display:flex; align-items:center; gap:7px; font-size:13px; font-weight:600; color:#111; text-decoration:none; margin-bottom:8px; transition:color .14s; }
-  .og-rlink:hover { color:#2563eb; }
+  .og-rlink:hover { color:var(--accent); }
 
   /* completion banner */
   .og-complete { background:linear-gradient(135deg,#052e16,#064e3b); border:1.5px solid #166534; border-radius:12px; padding:18px; color:#fff; margin-bottom:18px; display:flex; align-items:center; gap:14px; }
@@ -265,7 +265,7 @@ export default function OgaPayOnboarding() {
                   <I n="check" s={22} c="#4ade80" />
                 </div>
                 <div>
-                  <div style={{ fontFamily: "Outfit,sans-serif", fontSize: 15, fontWeight: 800, marginBottom: 3 }}>Setup complete!</div>
+                  <div style={{ fontFamily: "Geist,sans-serif", fontSize: 15, fontWeight: 800, marginBottom: 3 }}>Setup complete!</div>
                   <div style={{ fontSize: 13, color: "rgba(255,255,255,.7)" }}>You're ready to start receiving tasks and earning on OgaPay.</div>
                 </div>
               </div>
@@ -440,7 +440,7 @@ export default function OgaPayOnboarding() {
 
             <div className="og-divider" />
 
-            <h3 style={{ fontFamily: "Outfit,sans-serif", fontSize: 15, fontWeight: 800, marginBottom: 4 }}>Video tutorials</h3>
+            <h3 style={{ fontFamily: "Geist,sans-serif", fontSize: 15, fontWeight: 800, marginBottom: 4 }}>Video tutorials</h3>
             <p style={{ fontSize: 12, color: "#71717a", marginBottom: 12 }}>Step by step guides to get you started.</p>
 
             <div className="og-video">

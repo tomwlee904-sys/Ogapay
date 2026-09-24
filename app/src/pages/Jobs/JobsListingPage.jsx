@@ -54,12 +54,12 @@ export default function JobsListingPage() {
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 24, flexWrap: 'wrap' }}>
           <div>
-            <h1 style={{ fontFamily: 'Outfit,sans-serif', fontSize: 26, fontWeight: 800, margin: '0 0 4px' }}>Jobs & Hiring</h1>
+            <h1 style={{ fontFamily: 'Geist,sans-serif', fontSize: 26, fontWeight: 800, margin: '0 0 4px' }}>Jobs & Hiring</h1>
             <p style={{ color: C.text3, fontSize: 13, margin: 0 }}>Find your next opportunity</p>
           </div>
           {authUser?.id && (
             <button onClick={() => navigate('/post-job')}
-              style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: C.accent, color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'inherit' }}>
+              style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: C.accent, color: 'var(--on-accent)', fontSize: 13, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'inherit' }}>
               <i className="ti ti-plus" /> Post a Job
             </button>
           )}
@@ -107,7 +107,7 @@ export default function JobsListingPage() {
             <p style={{ color: C.text3, fontSize: 12, marginBottom: 20 }}>Be the first to post a job on OgaPay.</p>
             {authUser?.id && (
               <button onClick={() => navigate('/post-job')}
-                style={{ padding: '10px 24px', borderRadius: 10, background: C.accent, color: '#fff', border: 'none', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+                style={{ padding: '10px 24px', borderRadius: 10, background: C.accent, color: 'var(--on-accent)', border: 'none', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
                 Post a Job
               </button>
             )}
@@ -126,7 +126,7 @@ export default function JobsListingPage() {
                     {job.company_logo_url ? (
                       <img src={job.company_logo_url} alt="" style={{ width: 40, height: 40, borderRadius: 8, objectFit: 'contain', background: C.bg2 }} />
                     ) : (
-                      <div style={{ width: 40, height: 40, borderRadius: 8, background: C.accent, display: 'grid', placeItems: 'center', fontSize: 14, fontWeight: 900, color: '#fff', flexShrink: 0 }}>
+                      <div style={{ width: 40, height: 40, borderRadius: 8, background: C.accent, display: 'grid', placeItems: 'center', fontSize: 14, fontWeight: 900, color: 'var(--on-accent)', flexShrink: 0 }}>
                         {job.company_name?.slice(0, 2).toUpperCase() || '?'}
                       </div>
                     )}
@@ -137,7 +137,7 @@ export default function JobsListingPage() {
                   </div>
                   {/* Badges */}
                   <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 99, background: 'var(--accent)18', color: 'var(--accent)' }}>{job.job_type}</span>
+                    <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 99, background: 'color-mix(in srgb, var(--accent) 9%, transparent)', color: 'var(--accent)' }}>{job.job_type}</span>
                     {job.location && <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 99, background: C.bg2, color: C.text3 }}>{job.location}</span>}
                     {job.salary_range && <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 99, background: C.bg2, color: C.text3 }}>{job.salary_range}</span>}
                   </div>

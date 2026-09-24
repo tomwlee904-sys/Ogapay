@@ -16,7 +16,7 @@ export default function TaskHistory() {
   return (
     <Layout sidebar={false}>
       <div style={{ padding: '28px 20px 60px', maxWidth: 900, margin: '0 auto' }}>
-        <h1 style={{ fontFamily: 'Outfit', fontSize: 20, fontWeight: 800, marginBottom: 4 }}>Task History</h1>
+        <h1 style={{ fontFamily: 'Geist', fontSize: 20, fontWeight: 800, marginBottom: 4 }}>Task History</h1>
         <p style={{ color: 'var(--text2)', fontSize: 13, marginBottom: 24 }}>Your completed and past tasks.</p>
 
         {history.length === 0 ? (

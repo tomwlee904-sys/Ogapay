@@ -29,11 +29,11 @@ export default function Writer() {
     <Layout>
       <style>{`
         .wr-page{max-width:900px;margin:0 auto;padding:0 0 40px}
-        .wr-hero{background:linear-gradient(135deg,#121566,#1F8CFF);border-radius:16px;padding:36px 32px;margin-bottom:28px;color:#fff}
-        .wr-hero h1{font-family:Outfit;font-size:28px;font-weight:900;margin:0 0 6px}
+        .wr-hero{background:linear-gradient(135deg,#0a0a0a,#27272a);border-radius:16px;padding:36px 32px;margin-bottom:28px;color:#fff}
+        .wr-hero h1{font-family:Geist;font-size:28px;font-weight:900;margin:0 0 6px}
         .wr-hero p{font-size:14px;opacity:.85;margin:0;line-height:1.6;max-width:500px}
         .wr-section{margin-bottom:28px}
-        .wr-section h2{font-family:Outfit;font-size:18px;font-weight:800;margin:0 0 14px;display:flex;align-items:center;gap:8px}
+        .wr-section h2{font-family:Geist;font-size:18px;font-weight:800;margin:0 0 14px;display:flex;align-items:center;gap:8px}
         .wr-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px}
         .wr-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px;transition:all .2s;cursor:pointer}
         .wr-card:hover{transform:translateY(-2px);border-color:var(--accent)}
@@ -59,7 +59,7 @@ export default function Writer() {
           <div className="wr-grid">
             {templates.map(t => (
               <div className="wr-card" key={t.id} onClick={() => navigate('/create')}>
-                <div className="wr-card-icon" style={{background:`#1F8CFF18`,color:'#1F8CFF'}}><i className={`ti ti-${t.icon}`} style={{fontSize:20}} /></div>
+                <div className="wr-card-icon" style={{background:`rgba(var(--accent-rgb),0.09)`,color:'var(--accent)'}}><i className={`ti ti-${t.icon}`} style={{fontSize:20}} /></div>
                 <h3>{t.title}</h3>
                 <p>{t.tasks} tasks available</p>
                 <div className="meta"><span><i className="ti ti-coin" /> {t.reward}</span></div>

@@ -6,7 +6,7 @@ export default function ForgotPassword() {
   return (
     <Layout sidebar={false}>
       <div style={{ maxWidth: 480, margin: '40px auto', padding: '0 20px' }}>
-        <h1 style={{ fontFamily: 'Outfit', fontSize: 22, fontWeight: 800, marginBottom: 8 }}>Reset Password</h1>
+        <h1 style={{ fontFamily: 'Geist', fontSize: 22, fontWeight: 800, marginBottom: 8 }}>Reset Password</h1>
         <p style={{ color: 'var(--text2)', fontSize: 14, marginBottom: 24 }}>
           Enter the email address linked to your account and we'll send you a password reset link.
         </p>

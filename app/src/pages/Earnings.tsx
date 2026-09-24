@@ -36,7 +36,7 @@ export default function Earnings() {
     <Layout>
       <style>{`
         .en-hero{margin-bottom:20px}
-        .en-hero h1{font-family:Outfit;font-size:28px;font-weight:900;margin:0 0 4px}
+        .en-hero h1{font-family:Geist;font-size:28px;font-weight:900;margin:0 0 4px}
         .en-hero p{color:var(--text2);font-size:14px;margin:0}
         .en-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
         @media(max-width:800px){.en-grid{grid-template-columns:repeat(2,1fr)}}
@@ -44,16 +44,16 @@ export default function Earnings() {
         .en-stat{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;transition:all .25s}
         .en-stat:hover{transform:translateY(-2px);border-color:var(--accent)}
         .en-stat .esi{width:32px;height:32px;border-radius:8px;display:grid;place-items:center;margin-bottom:8px}
-        .en-stat .esn{font-family:Outfit;font-size:22px;font-weight:900}
+        .en-stat .esn{font-family:Geist;font-size:22px;font-weight:900}
         .en-stat .esl{color:var(--text2);font-size:12px;margin-top:2px}
         .en-graph-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px 24px;margin-bottom:24px}
         .en-graph-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px}
-        .en-graph-title{font-family:Outfit;font-size:15px;font-weight:800}
+        .en-graph-title{font-family:Geist;font-size:15px;font-weight:800}
         .en-tabs{display:flex;gap:4px}
         .en-tab{padding:5px 12px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text2);font-size:11px;font-weight:600;cursor:pointer;transition:all .2s}
-        .en-tab:hover,.en-tab.active{border-color:var(--accent);color:var(--accent);background:rgba(31,140,255,.08)}
+        .en-tab:hover,.en-tab.active{border-color:var(--accent);color:var(--accent);background:rgba(var(--accent-rgb),.08)}
         .en-graph{display:flex;align-items:flex-end;gap:4px;height:120px}
-        .en-bar{flex:1;border-radius:4px 4px 0 0;min-height:8px;position:relative;background:linear-gradient(to top, rgba(31,140,255,.3), var(--accent));transition:height .3s}
+        .en-bar{flex:1;border-radius:4px 4px 0 0;min-height:8px;position:relative;background:linear-gradient(to top, rgba(var(--accent-rgb),.3), var(--accent));transition:height .3s}
         .en-bar .en-val{position:absolute;top:-22px;left:50%;transform:translateX(-50%);font-size:9px;color:var(--text3);white-space:nowrap}
         .en-history{margin-top:16px}
         .en-h-item{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)}
@@ -71,10 +71,10 @@ export default function Earnings() {
       {/* Stats */}
       <div className="en-grid">
         {[
-          { icon: 'ti ti-coin', color: '#1F8CFF', num: `NGN ${earningsData.total.toLocaleString()}`, label: 'Total Earned' },
+          { icon: 'ti ti-coin', color: '#52525b', num: `NGN ${earningsData.total.toLocaleString()}`, label: 'Total Earned' },
           { icon: 'ti ti-wallet', color: '#16a34a', num: `NGN ${earningsData.available.toLocaleString()}`, label: 'Available Balance' },
           { icon: 'ti ti-clock', color: '#F59E0B', num: `NGN ${earningsData.pending.toLocaleString()}`, label: 'Pending Earnings' },
-          { icon: 'ti ti-trending-up', color: '#2563EB', num: `NGN ${earningsData.month.toLocaleString()}`, label: 'This Month' },
+          { icon: 'ti ti-trending-up', color: '#52525b', num: `NGN ${earningsData.month.toLocaleString()}`, label: 'This Month' },
         ].map((s, i) => (
           <div className="en-stat" key={i}>
             <div className="esi" style={{ background: `${s.color}15`, color: s.color }}><i className={s.icon} /></div>
@@ -108,8 +108,8 @@ export default function Earnings() {
       {/* Breakdown */}
       <div className="en-grid" style={{marginBottom:24}}>
         {[
-          { icon: 'ti ti-briefcase', color: '#1F8CFF', num: `NGN ${earningsData.total - earningsData.referrals - earningsData.tips - earningsData.vault}`, label: 'From Tasks', sub: `${earningsData.jobs} jobs completed` },
-          { icon: 'ti ti-affiliate', color: '#2563EB', num: `NGN ${earningsData.referrals.toLocaleString()}`, label: 'From Referrals', sub: '3 active referrals' },
+          { icon: 'ti ti-briefcase', color: '#52525b', num: `NGN ${earningsData.total - earningsData.referrals - earningsData.tips - earningsData.vault}`, label: 'From Tasks', sub: `${earningsData.jobs} jobs completed` },
+          { icon: 'ti ti-affiliate', color: '#52525b', num: `NGN ${earningsData.referrals.toLocaleString()}`, label: 'From Referrals', sub: '3 active referrals' },
           { icon: 'ti ti-gift', color: '#F59E0B', num: `NGN ${earningsData.tips.toLocaleString()}`, label: 'From Tips', sub: '12 tips received' },
           { icon: 'ti ti-vault', color: '#16a34a', num: `NGN ${earningsData.vault.toLocaleString()}`, label: 'From Vault', sub: 'Vault rewards' },
         ].map((s, i) => (

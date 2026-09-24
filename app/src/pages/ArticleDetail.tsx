@@ -164,7 +164,7 @@ export default function ArticleDetail() {
         <h1 style={{ fontSize: 36, fontWeight: 800, lineHeight: 1.2, margin: '0 0 16px', letterSpacing: '-0.02em' }}>{post.title}</h1>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, color: 'var(--text3)', marginBottom: 32, flexWrap: 'wrap' }}>
-          <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--accent)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700 }}>{initials}</div>
+          <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--accent)', color: 'var(--on-accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700 }}>{initials}</div>
           <span style={{ fontWeight: 600, color: 'var(--text)' }}>{authorName}</span>
           <span>·</span>
           <span>{post.publishedAt ? formatDate(post.publishedAt) : post.date}</span>
@@ -192,7 +192,7 @@ export default function ArticleDetail() {
 
         <div style={{ borderTop: '1px solid var(--border)', marginTop: 48, paddingTop: 24, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'var(--accent)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700 }}>{initials}</div>
+            <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'var(--accent)', color: 'var(--on-accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700 }}>{initials}</div>
             <div>
               <div style={{ fontSize: 14, fontWeight: 700 }}>{authorName}</div>
               <div style={{ fontSize: 12, color: 'var(--text3)' }}>OgaPay Contributor</div>

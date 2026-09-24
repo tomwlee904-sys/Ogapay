@@ -450,7 +450,7 @@ export default function Profile() {
         @keyframes pulse{0%{opacity:.6}50%{opacity:.3}100%{opacity:.6}}
         .onboarding-banner{display:flex;align-items:center;gap:12px;padding:16px 20px;background:rgba(var(--accent-rgb),.08);border:1px solid rgba(var(--accent-rgb),.15);border-radius:var(--radius);margin-bottom:12px;font-size:13px}
         .onboarding-banner .ob-msg{flex:1;color:var(--text)}
-        .onboarding-banner .ob-btn{height:32px;padding:0 14px;border-radius:8px;border:none;background:var(--accent);color:#fff;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:inherit}
+        .onboarding-banner .ob-btn{height:32px;padding:0 14px;border-radius:8px;border:none;background:var(--accent);color:var(--on-accent);font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:inherit}
         .onboarding-banner .ob-close{width:28px;height:28px;border:none;background:none;color:var(--text3);cursor:pointer;display:grid;place-items:center;font-size:16px;flex-shrink:0}
       `}</style>
 
@@ -650,7 +650,7 @@ export default function Profile() {
 
                     {!hasWallet && (
                       <button className="dash-btn" style={{width:'100%',justifyContent:'center',marginBottom:10,background:'var(--accent)'}} onClick={() => setShowWalletOptions(true)}>
-                        <Icon n="wallet" s={14} c="#fff" /> Connect Wallet
+                        <Icon n="wallet" s={14} c="var(--on-accent)" /> Connect Wallet
                       </button>
                     )}
 
@@ -962,7 +962,7 @@ export default function Profile() {
         <div style={{position:'fixed',inset:0,zIndex:400,background:'rgba(0,0,0,.5)',display:'flex',alignItems:'center',justifyContent:'center',padding:20}} onClick={() => setShowEdit(false)}>
           <div style={{background:'var(--card)',border:'1px solid var(--border)',borderRadius:16,maxWidth:520,width:'100%',padding:28,maxHeight:'90vh',overflowY:'auto'}} onClick={e => e.stopPropagation()}>
             <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:24}}>
-              <h3 style={{fontFamily:'Outfit',fontSize:20,fontWeight:800,margin:0}}><i className="ti ti-user-edit" style={{color:'var(--accent)',marginRight:8}} />Edit Profile</h3>
+              <h3 style={{fontFamily:'Geist',fontSize:20,fontWeight:800,margin:0}}><i className="ti ti-user-edit" style={{color:'var(--accent)',marginRight:8}} />Edit Profile</h3>
               <button style={{width:32,height:32,border:'1px solid var(--border)',borderRadius:8,background:'var(--bg2)',cursor:'pointer',display:'grid',placeItems:'center',color:'var(--text3)',fontSize:18}} onClick={() => setShowEdit(false)}>
                 <i className="ti ti-x" />
               </button>
@@ -1115,7 +1115,7 @@ export default function Profile() {
         <div style={{position:'fixed',inset:0,zIndex:400,background:'rgba(0,0,0,.5)',display:'flex',alignItems:'center',justifyContent:'center',padding:20}} onClick={() => setShowKyc(false)}>
           <div style={{background:'var(--card)',border:'1px solid var(--border)',borderRadius:16,maxWidth:480,width:'100%',padding:28}} onClick={e => e.stopPropagation()}>
             <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}>
-              <h3 style={{fontFamily:'Outfit',fontSize:18,fontWeight:800,margin:0}}>Identity Verification (KYC)</h3>
+              <h3 style={{fontFamily:'Geist',fontSize:18,fontWeight:800,margin:0}}>Identity Verification (KYC)</h3>
               <button style={{width:32,height:32,border:'1px solid var(--border)',borderRadius:8,background:'var(--bg2)',cursor:'pointer',display:'grid',placeItems:'center',color:'var(--text3)',fontSize:18}} onClick={() => setShowKyc(false)}>
                 <i className="ti ti-x" />
               </button>
@@ -1137,7 +1137,7 @@ export default function Profile() {
 
                   return (<>
                     {isApproved && (
-                      <div style={{background:'var(--green)10',border:'1px solid var(--green)30',borderRadius:12,padding:12,marginBottom:16,display:'flex',alignItems:'center',gap:10}}>
+                      <div style={{background:'color-mix(in srgb, var(--green) 6%, transparent)',border:'1px solid color-mix(in srgb, var(--green) 19%, transparent)',borderRadius:12,padding:12,marginBottom:16,display:'flex',alignItems:'center',gap:10}}>
                         <i className="ti ti-shield-check" style={{fontSize:20,color:'var(--green)'}} />
                         <div>
                           <div style={{fontSize:13,fontWeight:700,color:'var(--green)'}}>Level {t} Verified</div>
@@ -1150,7 +1150,7 @@ export default function Profile() {
                       </div>
                     )}
                     {isPending && (
-                      <div style={{background:'var(--warning)10',border:'1px solid #F59E0B30',borderRadius:12,padding:12,marginBottom:16,display:'flex',alignItems:'center',gap:10}}>
+                      <div style={{background:'color-mix(in srgb, var(--warning) 6%, transparent)',border:'1px solid #F59E0B30',borderRadius:12,padding:12,marginBottom:16,display:'flex',alignItems:'center',gap:10}}>
                         <i className="ti ti-clock-hourglass" style={{fontSize:20,color:'#F59E0B'}} />
                         <div>
                           <div style={{fontSize:13,fontWeight:700,color:'#F59E0B'}}>Pending Review</div>
@@ -1166,9 +1166,9 @@ export default function Profile() {
                       ].map(li => {
                         const isDone = li.action === 'nin' ? t >= 1 : t >= 2
                         return (
-                        <div key={li.level} onClick={() => { if (!isDone || li.action === 'nin' ? t < 2 : false) setKycStep(li.action); else if (li.action === 'nin' && t >= 2) setKycStep('nin'); else if (li.action === 'bvn' && !isDone) setKycStep('bvn'); }} style={{display:'flex',alignItems:'center',gap:10,padding:'10px 12px',borderRadius:8,cursor:!isDone||li.action==='nin'?'pointer':'default',background:isDone?'var(--green)08':'var(--bg2)',border:'1px solid '+(isDone?'var(--green)20':'var(--border)'),transition:'all .15s'}}
+                        <div key={li.level} onClick={() => { if (!isDone || li.action === 'nin' ? t < 2 : false) setKycStep(li.action); else if (li.action === 'nin' && t >= 2) setKycStep('nin'); else if (li.action === 'bvn' && !isDone) setKycStep('bvn'); }} style={{display:'flex',alignItems:'center',gap:10,padding:'10px 12px',borderRadius:8,cursor:!isDone||li.action==='nin'?'pointer':'default',background:isDone?'color-mix(in srgb, var(--green) 3%, transparent)':'var(--bg2)',border:'1px solid '+(isDone?'color-mix(in srgb, var(--green) 13%, transparent)':'var(--border)'),transition:'all .15s'}}
                           onMouseEnter={e => { if (!isDone || li.action === 'nin') (e.currentTarget as HTMLElement).style.borderColor = 'var(--accent)' }}
-                          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = isDone ? 'var(--green)20' : 'var(--border)' }}>
+                          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = isDone ? 'color-mix(in srgb, var(--green) 13%, transparent)' : 'var(--border)' }}>
                           <i className={'ti ti-' + li.icon} style={{fontSize:18,color:isDone?'var(--green)':!isDone||li.action==='nin'?'var(--accent)':'var(--text3)'}} />
                           <div style={{flex:1}}>
                             <div style={{fontSize:12,fontWeight:700,color:isDone?'var(--green)':'var(--text)'}}>{li.label}</div>
@@ -1185,7 +1185,7 @@ export default function Profile() {
                       </button>
                     )}
                     {isApproved && t < 2 && (
-                      <button className="dash-btn" style={{width:'100%',justifyContent:'center',background:'var(--accent)',color:'#fff',border:'none'}} onClick={() => setKycStep("bvn")}>
+                      <button className="dash-btn" style={{width:'100%',justifyContent:'center',background:'var(--accent)',color:'var(--on-accent)',border:'none'}} onClick={() => setKycStep("bvn")}>
                         Upgrade to Level 2 (BVN)
                       </button>
                     )}
@@ -1398,10 +1398,10 @@ export default function Profile() {
 
             {kycStep === "submitted" && (
               <div style={{textAlign:'center',padding:'20px 0'}}>
-                <div style={{width:64,height:64,borderRadius:'50%',background:'var(--green)18',display:'grid',placeItems:'center',margin:'0 auto 16px'}}>
+                <div style={{width:64,height:64,borderRadius:'50%',background:'color-mix(in srgb, var(--green) 9%, transparent)',display:'grid',placeItems:'center',margin:'0 auto 16px'}}>
                   <i className="ti ti-shield-check" style={{fontSize:32,color:'var(--green)'}} />
                 </div>
-                <h3 style={{fontFamily:'Outfit',fontSize:17,fontWeight:800,margin:'0 0 8px'}}>Verification Successful</h3>
+                <h3 style={{fontFamily:'Geist',fontSize:17,fontWeight:800,margin:'0 0 8px'}}>Verification Successful</h3>
                 <p style={{fontSize:13,color:'var(--text2)',lineHeight:1.6}}>
                   {kycMsg || 'Your identity has been verified!'}
                 </p>

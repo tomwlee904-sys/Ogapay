@@ -241,7 +241,7 @@ export default function OgaPayAuth() {
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Outfit:wght@600;700;800;900&display=swap');
 
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: "DM Sans", sans-serif; background: #fff; color: #111; overflow-x: hidden; margin: 0; }
+        body { font-family: "Geist", sans-serif; background: #fff; color: #111; overflow-x: hidden; margin: 0; }
 
         .auth-page {
           min-height: 100vh; display: grid;
@@ -258,27 +258,27 @@ export default function OgaPayAuth() {
         .auth-left::before {
           content: "";
           position: absolute; inset: 0;
-          background: radial-gradient(circle at 20% 20%, rgba(31,140,255,.15), transparent 40%),
-                      radial-gradient(circle at 80% 80%, rgba(31,140,255,.1), transparent 40%);
+          background: radial-gradient(circle at 20% 20%, rgba(var(--accent-rgb),.15), transparent 40%),
+                      radial-gradient(circle at 80% 80%, rgba(var(--accent-rgb),.1), transparent 40%);
           pointer-events: none;
         }
         .auth-left-inner { position: relative; z-index: 1; display: flex; flex-direction: column; height: 100%; }
         .auth-left-brand {
           display: flex; align-items: center; gap: 12px;
-          font-family: "Outfit", sans-serif; font-size: 22px; font-weight: 800;
+          font-family: "Geist", sans-serif; font-size: 22px; font-weight: 800;
           color: #fff;
         }
         .auth-left-copy { margin-top: auto; padding-bottom: 40px; }
         .auth-left-copy h2 {
-          font-family: "Outfit", sans-serif;
+          font-family: "Geist", sans-serif;
           font-size: clamp(28px, 3vw, 42px); font-weight: 900;
           line-height: 1.05; letter-spacing: -1.5px; color: #fff; margin-bottom: 16px;
         }
         .auth-left-copy p { font-size: 15px; color: rgba(255,255,255,.55); line-height: 1.6; max-width: 340px; }
         .auth-left-stats { display: flex; gap: 28px; margin-top: auto; position: relative; z-index: 1; }
         .auth-stat-val {
-          font-family: "Outfit", sans-serif; font-size: 26px; font-weight: 900;
-          background: linear-gradient(90deg,#1F8CFF,#60A5FA);
+          font-family: "Geist", sans-serif; font-size: 26px; font-weight: 900;
+          background: linear-gradient(90deg,var(--accent),var(--accent-bright));
           -webkit-background-clip: text; background-clip: text; color: transparent;
           display: block;
         }
@@ -290,7 +290,7 @@ export default function OgaPayAuth() {
         }
         .auth-form-box { width: 100%; max-width: 380px; }
         .auth-form-box h1 {
-          font-family: "Outfit", sans-serif; font-size: 30px; font-weight: 900;
+          font-family: "Geist", sans-serif; font-size: 30px; font-weight: 900;
           letter-spacing: -1px; color: #111; margin-bottom: 6px;
         }
         .auth-sub { font-size: 14px; color: #71717a; margin-bottom: 28px; }
@@ -308,17 +308,17 @@ export default function OgaPayAuth() {
         .af-group input {
           width: 100%; height: 46px; padding: 0 16px;
           border: 1.5px solid #e4e4e7; border-radius: 10px;
-          font-size: 14px; font-family: "DM Sans", sans-serif;
+          font-size: 14px; font-family: "Geist", sans-serif;
           background: #fff; color: #111;
           transition: border-color .2s;
           outline: none;
         }
-        .af-group input:focus { border-color: #1F8CFF; box-shadow: 0 0 0 3px rgba(31,140,255,.1); }
+        .af-group input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(var(--accent-rgb),.1); }
         .af-submit {
           width: 100%; height: 48px; margin-top: 8px;
           border: 0; border-radius: 10px;
-          background: #1F8CFF; color: #fff;
-          font-family: "DM Sans", sans-serif; font-size: 15px; font-weight: 700;
+          background: var(--accent); color: var(--on-accent);
+          font-family: "Geist", sans-serif; font-size: 15px; font-weight: 700;
           cursor: pointer; transition: all .2s;
           display: flex; align-items: center; justify-content: center; gap: 8px;
         }
@@ -333,7 +333,7 @@ export default function OgaPayAuth() {
         }
         @keyframes afSpin { to { transform: rotate(360deg); } }
         .auth-switch { text-align: center; margin-top: 24px; font-size: 14px; color: #71717a; }
-        .auth-switch a { color: #1F8CFF; font-weight: 700; text-decoration: none; }
+        .auth-switch a { color: var(--accent); font-weight: 700; text-decoration: none; }
         .auth-switch a:hover { text-decoration: underline; }
 
         @media (max-width: 768px) {

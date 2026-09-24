@@ -14,12 +14,12 @@ const navItems = [
 ]
 
 const stats = [
-  { icon: 'ti ti-star', color: '#1F8CFF', count: 124, label: 'Reviews' },
+  { icon: 'ti ti-star', color: '#52525b', count: 124, label: 'Reviews' },
   { icon: 'ti ti-zap', color: '#F59E0B', count: 8, label: 'Challenges Participated' },
   { icon: 'ti ti-trophy', color: '#16a34a', count: 12, label: 'Won' },
   { icon: 'ti ti-heart', color: '#EC4899', count: 34, label: 'Compliments' },
-  { icon: 'ti ti-users', color: '#2563EB', count: 15, label: 'Communities' },
-  { icon: 'ti ti-gift', color: '#1F8CFF', count: 28, label: 'Tips Received' },
+  { icon: 'ti ti-users', color: '#52525b', count: 15, label: 'Communities' },
+  { icon: 'ti ti-gift', color: '#52525b', count: 28, label: 'Tips Received' },
   { icon: 'ti ti-file-text', color: '#F59E0B', count: 6, label: 'Blogs' },
 ]
 

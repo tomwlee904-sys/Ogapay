@@ -13,15 +13,15 @@ const GREEN_BG = 'rgba(22,163,74,0.12)'
 const S: Record<string, React.CSSProperties> = {
   page: { maxWidth: 900, margin: '0 auto', padding: '0 0 40px', position: 'relative' as const, zIndex: 1 },
   hero: { marginBottom: 24 },
-  title: { fontFamily: 'Outfit', fontSize: 28, fontWeight: 900, margin: '0 0 4px' },
+  title: { fontFamily: 'Geist', fontSize: 28, fontWeight: 900, margin: '0 0 4px' },
   sub: { color: 'var(--text2)', fontSize: 14, margin: '0 0 20px' },
   card: { background: 'var(--glass-bg)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', border: '1px solid var(--glass-border)', borderRadius: 16, padding: 20, marginBottom: 16, boxShadow: '0 8px 32px rgba(0,0,0,0.06)' },
   statRow: { display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12, marginBottom: 16 },
   statCard: { background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 10, padding: 14, textAlign: 'center' as const },
-  statNum: { fontFamily: 'Outfit', fontSize: 20, fontWeight: 900 },
+  statNum: { fontFamily: 'Geist', fontSize: 20, fontWeight: 900 },
   statLabel: { fontSize: 10, color: 'var(--text2)', marginTop: 2, fontWeight: 600, textTransform: 'uppercase' as const, letterSpacing: '0.04em' },
   pill: { padding: '5px 12px', borderRadius: 999, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text2)', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' },
-  pillActive: { padding: '5px 12px', borderRadius: 999, border: `1px solid ${OGAPAY_BLUE}`, background: OGAPAY_BLUE, color: '#fff', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' },
+  pillActive: { padding: '5px 12px', borderRadius: 999, border: `1px solid ${OGAPAY_BLUE}`, background: OGAPAY_BLUE, color: 'var(--on-accent)', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' },
   empty: { textAlign: 'center' as const, padding: '48px 20px', color: 'var(--text2)' },
 }
 
@@ -213,7 +213,7 @@ export default function VaultHistory() {
                   onKeyDown={e => e.key === 'Enter' && handleLoadRewards()}
                   style={{ flex: 1, height: 40, padding: '0 12px', border: '1.5px solid var(--border)', borderRadius: 9, background: 'var(--bg)', color: 'var(--text)', fontSize: 13, outline: 'none', fontFamily: 'inherit' }} />
                 <button onClick={handleLoadRewards} disabled={walletLoading || !searchWallet.trim()}
-                  style={{ height: 40, padding: '0 16px', borderRadius: 9, background: OGAPAY_BLUE, color: '#fff', border: 'none', fontWeight: 700, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>
+                  style={{ height: 40, padding: '0 16px', borderRadius: 9, background: OGAPAY_BLUE, color: 'var(--on-accent)', border: 'none', fontWeight: 700, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>
                   {walletLoading ? 'Loading...' : 'Load Rewards'}
                 </button>
                 {searchedWallet && (

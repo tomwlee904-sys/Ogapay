@@ -70,11 +70,11 @@ export default function EditProfile() {
         }
         .ep-save-btn{
           height:42px;padding:0 28px;border-radius:10px;border:0;
-          background:var(--accent);color:#fff;font-weight:700;font-size:14px;
+          background:var(--accent);color:var(--on-accent);font-weight:700;font-size:14px;
           display:inline-flex;align-items:center;gap:8px;cursor:pointer;
           transition:all .2s;font-family:inherit;
         }
-        .ep-save-btn:hover{box-shadow:0 4px 16px rgba(31,140,255,.25);transform:translateY(-1px)}
+        .ep-save-btn:hover{box-shadow:0 4px 16px rgba(var(--accent-rgb),.25);transform:translateY(-1px)}
         .ep-toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--green);color:#fff;padding:10px 24px;border-radius:10px;font-size:13px;font-weight:700;z-index:999;opacity:0;transition:all .3s;pointer-events:none}
         .ep-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
       `}</style>

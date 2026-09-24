@@ -133,7 +133,7 @@ export default function TabMyTasksContent() {
     <>
       <style>{`
         .mt-hero{margin-bottom:20px}
-        .mt-hero h1{font-family:Outfit;font-size:28px;font-weight:900;margin:0 0 4px}
+        .mt-hero h1{font-family:Geist;font-size:28px;font-weight:900;margin:0 0 4px}
         .mt-hero p{color:var(--text2);font-size:14px;margin:0}
         .mt-tabs{display:flex;gap:4px;margin-bottom:14px;flex-wrap:wrap}
         .mt-tab{padding:6px 14px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text2);font-size:11px;font-weight:600;cursor:pointer;transition:all .2s}
@@ -167,7 +167,7 @@ export default function TabMyTasksContent() {
       
       {createdTasks.length > 0 && (
         <div style={{ marginBottom: 24 }}>
-          <h3 style={{ fontFamily: 'Outfit,sans-serif', fontSize: 16, fontWeight: 800, margin: '0 0 10px' }}>
+          <h3 style={{ fontFamily: 'Geist,sans-serif', fontSize: 16, fontWeight: 800, margin: '0 0 10px' }}>
             <i className="ti ti-briefcase" style={{marginRight:6}} /> My Created Tasks
           </h3>
           <div style={{ display: 'grid', gap: 8 }}>
@@ -178,7 +178,7 @@ export default function TabMyTasksContent() {
                 cursor: 'pointer', transition: 'all .2s',
               }}>
                 <div style={{ width: 36, height: 36, borderRadius: 8, background: 'var(--accent)', display: 'grid', placeItems: 'center', flexShrink: 0 }}>
-                  <i className="ti ti-checklist" style={{color:'#fff',fontSize:16}} />
+                  <i className="ti ti-checklist" style={{color:'var(--on-accent)',fontSize:16}} />
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontWeight: 700, fontSize: 13 }}>{t.title}</div>
@@ -200,7 +200,7 @@ export default function TabMyTasksContent() {
         </div>
       )}
       
-      <h3 style={{ fontFamily: 'Outfit,sans-serif', fontSize: 16, fontWeight: 800, margin: '0 0 10px' }}>
+      <h3 style={{ fontFamily: 'Geist,sans-serif', fontSize: 16, fontWeight: 800, margin: '0 0 10px' }}>
         <i className="ti ti-send" style={{marginRight:6}} /> My Submissions
       </h3>
 
@@ -209,9 +209,9 @@ export default function TabMyTasksContent() {
       ) : filtered.length === 0 ? (
         <div className="mt-empty">
           <i className="ti ti-checklist" />
-          <h3 style={{fontFamily:'Outfit',fontWeight:800,margin:'0 0 4px',color:'var(--text)'}}>No submissions yet</h3>
+          <h3 style={{fontFamily:'Geist',fontWeight:800,margin:'0 0 4px',color:'var(--text)'}}>No submissions yet</h3>
           <p style={{fontSize:13,margin:0}}>Apply to tasks and submit your work to see them here</p>
-          <a href="/tasks" style={{display:'inline-flex',marginTop:12,height:36,padding:'0 16px',borderRadius:8,border:0,background:'var(--accent)',color:'#fff',fontWeight:700,fontSize:12,alignItems:'center',gap:6,textDecoration:'none'}}>Browse Tasks</a>
+          <a href="/tasks" style={{display:'inline-flex',marginTop:12,height:36,padding:'0 16px',borderRadius:8,border:0,background:'var(--accent)',color:'var(--on-accent)',fontWeight:700,fontSize:12,alignItems:'center',gap:6,textDecoration:'none'}}>Browse Tasks</a>
         </div>
       ) : (
         <div className="mt-list">

@@ -14,7 +14,7 @@ body.login-page main.login-main { flex:1; display:flex; align-items:center; just
 .left{
   background:var(--accent); position:relative; overflow:hidden;
   display:flex; flex-direction:column; padding:24px 36px 0;
-  color:#fff; min-height:880px;
+  color:var(--on-accent); min-height:880px;
 }
 .left-bg{position:absolute;inset:0;pointer-events:none;overflow:hidden}
 .particles{position:absolute;inset:0}
@@ -40,11 +40,11 @@ body.login-page main.login-main { flex:1; display:flex; align-items:center; just
   opacity:.8; animation:wavePulse 6s ease-in-out infinite;
 }
 .left-content{position:relative;z-index:3;display:flex;flex-direction:column;flex:0 0 auto}
-.logo{display:flex;align-items:center;gap:10px;font-family:"Outfit",sans-serif;font-size:18px;font-weight:800;margin-bottom:16px}
+.logo{display:flex;align-items:center;gap:10px;font-family:"Geist",sans-serif;font-size:18px;font-weight:800;margin-bottom:16px}
 .logo svg{width:32px;height:32px;border-radius:8px;overflow:hidden}
 .logo span{color:#fff}
 .copy{flex:0 0 auto;margin-bottom:12px}
-.copy h1{font-family:"Outfit",sans-serif;font-size:clamp(32px,3.6vw,48px);font-weight:900;line-height:1.05;letter-spacing:-1.2px;margin:0 0 4px}
+.copy h1{font-family:"Geist",sans-serif;font-size:clamp(32px,3.6vw,48px);font-weight:900;line-height:1.05;letter-spacing:-1.2px;margin:0 0 4px}
 .copy h1 span{display:block}
 .glow{position:relative;display:inline-block;color:#fff}
 .glow::after{
@@ -70,7 +70,7 @@ body.login-page main.login-main { flex:1; display:flex; align-items:center; just
 }
 .stats-card .chart{width:40px;height:40px;display:grid;place-items:center}
 .stats-card .chart svg{width:36px;height:36px}
-.stats-card strong{display:block;font-family:"Outfit",sans-serif;font-size:20px;font-weight:900;line-height:1}
+.stats-card strong{display:block;font-family:"Geist",sans-serif;font-size:20px;font-weight:900;line-height:1}
 .stats-card span{display:block;color:rgba(255,255,255,.65);font-size:12px;font-weight:600;margin-top:4px}
 
 @keyframes float{0%,100%{transform:translateY(0) scale(1);opacity:.3}50%{transform:translateY(-18px) scale(1.2);opacity:.6}}
@@ -84,7 +84,7 @@ body.login-page main.login-main { flex:1; display:flex; align-items:center; just
 }
 [data-theme="dark"] .right{background:#000000;}
 .right-inner{max-width:400px;margin:0 auto;width:100%}
-.right h2{font-family:"Outfit",sans-serif;font-size:32px;font-weight:900;letter-spacing:-.8px;color:#0F172A;margin:0 0 6px}
+.right h2{font-family:"Geist",sans-serif;font-size:32px;font-weight:900;letter-spacing:-.8px;color:#0F172A;margin:0 0 6px}
 [data-theme="dark"] .right h2{color:#ffffff;}
 .right .sub{color:#66738a;font-size:15px;margin:0 0 28px;line-height:1.5}
 [data-theme="dark"] .right .sub{color:#a1a1aa;}
@@ -101,7 +101,7 @@ body.login-page main.login-main { flex:1; display:flex; align-items:center; just
 .form-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(var(--accent-rgb),.12)}
 .submit-btn{
   width:100%; height:56px; border:none; border-radius:14px;
-  background:var(--accent); color:#fff;
+  background:var(--accent); color:var(--on-accent);
   font-size:16px; font-weight:700; font-family:inherit;
   cursor:pointer; transition:background .2s;
 }

@@ -70,7 +70,7 @@ const phases = [
 
 const statusStyles = {
   done: { bg: "#16a34a18", color: "#16a34a", label: "Complete" },
-  active: { bg: "#1F8CFF18", color: "#1F8CFF", label: "In Progress" },
+  active: { bg: "rgba(var(--accent-rgb),0.09)", color: "#52525b", label: "In Progress" },
   upcoming: { bg: "var(--bg2)", color: "var(--text3)", label: "Upcoming" },
 }
 
@@ -80,24 +80,24 @@ export default function Roadmap() {
       <style>{`
         .rm-page{max-width:800px;margin:0 auto;padding:0 0 60px}
         .rm-hero{text-align:center;padding:40px 20px 32px}
-        .rm-hero h1{font-family:Outfit;font-size:32px;font-weight:900;margin:0 0 8px}
+        .rm-hero h1{font-family:Geist;font-size:32px;font-weight:900;margin:0 0 8px}
         .rm-hero p{color:var(--text2);font-size:14px;margin:0;max-width:500px;margin:0 auto;line-height:1.6}
         .rm-timeline{position:relative}
         .rm-timeline::before{content:'';position:absolute;left:28px;top:0;bottom:0;width:2px;background:var(--border)}
         .rm-phase{position:relative;padding-left:68px;margin-bottom:28px}
         .rm-dot{position:absolute;left:18px;top:6px;width:22px;height:22px;border-radius:50%;border:2px solid var(--border);background:var(--card);display:grid;place-items:center;z-index:1;font-size:10px}
         .rm-dot.done{border-color:#16a34a;background:#16a34a;color:#fff}
-        .rm-dot.active{border-color:#1F8CFF;background:#1F8CFF;color:#fff;animation:pulse 2s infinite}
+        .rm-dot.active{border-color:var(--accent);background:var(--accent);color:var(--on-accent);animation:pulse 2s infinite}
         .rm-dot.upcoming{background:var(--card);color:var(--text3)}
-        @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(31,140,255,.4)}50%{box-shadow:0 0 0 6px rgba(31,140,255,0)}}
+        @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(var(--accent-rgb),.4)}50%{box-shadow:0 0 0 6px rgba(var(--accent-rgb),0)}}
         .rm-phase-header{display:flex;align-items:center;gap:10px;margin-bottom:12px}
-        .rm-phase-header h2{font-family:Outfit;font-size:17px;font-weight:800;margin:0}
+        .rm-phase-header h2{font-family:Geist;font-size:17px;font-weight:800;margin:0}
         .rm-status{display:inline-flex;align-items:center;height:22px;padding:0 10px;border-radius:99px;font-size:10px;font-weight:700}
         .rm-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px 20px}
         .rm-item{display:flex;align-items:center;gap:10px;padding:7px 0;font-size:13px;color:var(--text2)}
         .rm-item.done{color:var(--text)}
         .rm-item.done i{color:#16a34a}
-        .rm-item.active i{color:#1F8CFF}
+        .rm-item.active i{color:var(--accent)}
       `}</style>
 
       <div className="rm-page">

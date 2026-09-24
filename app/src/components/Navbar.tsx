@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../components/Toast'
 import { useTheme } from '../context/ThemeContext'
@@ -85,11 +85,11 @@ export default function Navbar({ onMenuToggle }: NavbarProps) {
           OgaPay
         </Link>
         <div className="nav-links">
-          <Link className="nav-link" to="/tasks"><i className="ti ti-briefcase" />Earn</Link>
-          <Link className="nav-link" to="/create"><i className="ti ti-plus-circle" />Create</Link>
-          <Link className="nav-link" to="/store"><i className="ti ti-building-store" />Store</Link>
-          {isAuthed && <Link className="nav-link" to="/vault"><i className="ti ti-shield-lock" />Vault</Link>}
-          <Link className="nav-link" to="/faq"><i className="ti ti-help-circle" />FAQ</Link>
+          <NavLink className="nav-link" to="/tasks"><i className="ti ti-briefcase" />Earn</NavLink>
+          <NavLink className="nav-link" to="/create"><i className="ti ti-plus-circle" />Create</NavLink>
+          <NavLink className="nav-link" to="/store"><i className="ti ti-building-store" />Store</NavLink>
+          {isAuthed && <NavLink className="nav-link" to="/vault"><i className="ti ti-shield-lock" />Vault</NavLink>}
+          <NavLink className="nav-link" to="/faq"><i className="ti ti-help-circle" />FAQ</NavLink>
         </div>
         <div className="nav-actions">
           {isLoading && (

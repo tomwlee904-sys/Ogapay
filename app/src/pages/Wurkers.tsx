@@ -32,7 +32,7 @@ export default function Wurkers() {
       <style>{`
         .wk-page{max-width:900px;margin:0 auto;padding:0 0 40px}
         .wk-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px}
-        .wk-head h1{font-family:Outfit;font-size:24px;font-weight:900;margin:0}
+        .wk-head h1{font-family:Geist;font-size:24px;font-weight:900;margin:0}
         .wk-head p{color:var(--text2);font-size:13px;margin:4px 0 0}
         .wk-controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
         .wk-search{height:40px;padding:0 14px;border-radius:10px;border:1.5px solid var(--border);background:var(--card);color:var(--text);font-size:13px;outline:none;min-width:200px}
@@ -41,7 +41,7 @@ export default function Wurkers() {
         .wk-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
         .wk-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px;cursor:pointer;transition:all .2s}
         .wk-card:hover{transform:translateY(-2px);border-color:var(--accent)}
-        .wk-avatar{width:44px;height:44px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center;font-size:14px;font-weight:800;flex-shrink:0}
+        .wk-avatar{width:44px;height:44px;border-radius:50%;background:var(--accent);color:var(--on-accent);display:grid;place-items:center;font-size:14px;font-weight:800;flex-shrink:0}
         .wk-card-top{display:flex;align-items:center;gap:12px;margin-bottom:12px}
         .wk-card-name{font-weight:700;font-size:14px}
         .wk-card-handle{font-size:12px;color:var(--text2)}

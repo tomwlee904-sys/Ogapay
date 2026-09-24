@@ -166,7 +166,7 @@ export default function TabNotificationsContent() {
       <style>{`
         .nt-hero{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:8px}
         .nt-hero-left .nt-greeting{color:var(--text2);font-size:13px;font-weight:600;margin-bottom:2px}
-        .nt-hero-left h1{font-family:Outfit;font-size:28px;font-weight:900;margin:0}
+        .nt-hero-left h1{font-family:Geist;font-size:28px;font-weight:900;margin:0}
         .nt-hero-right{display:flex;gap:8px}
         .nt-tabs{display:flex;gap:4px;margin-bottom:16px}
         .nt-tab{padding:6px 14px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text2);font-size:11px;font-weight:600;cursor:pointer;transition:all .2s}
@@ -216,7 +216,7 @@ export default function TabNotificationsContent() {
       {filtered.length === 0 ? (
         <div className="nt-empty">
           <i className="ti ti-bell-off" />
-          <h3 style={{fontFamily:'Outfit',fontWeight:800,margin:'0 0 4px',color:'var(--text)'}}>All caught up!</h3>
+          <h3 style={{fontFamily:'Geist',fontWeight:800,margin:'0 0 4px',color:'var(--text)'}}>All caught up!</h3>
           <p style={{fontSize:13,margin:0}}>No notifications here</p>
         </div>
       ) : (

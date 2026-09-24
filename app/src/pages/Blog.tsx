@@ -36,7 +36,7 @@ function JoinCommunityTile({ onClick }: { onClick: () => void }) {
       style={{ position: 'relative', overflow: 'hidden', cursor: 'pointer', height: '100%', minHeight: 300 }}
     >
       <img src="/assets/join-community.jpg" alt="Join the Community" style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0 }} />
-      <div style={{ position: 'absolute', inset: 0, background: hovered ? 'rgba(18,21,102,0.18)' : 'transparent', transition: 'background 0.3s' }} />
+      <div style={{ position: 'absolute', inset: 0, background: hovered ? 'rgba(10,10,10,0.18)' : 'transparent', transition: 'background 0.3s' }} />
       <div style={{ position: 'absolute', top: 14, left: 14, opacity: hovered ? 1 : 0, transform: hovered ? 'translateY(0)' : 'translateY(-8px)', transition: 'all 0.25s ease' }}>
         <button onClick={onClick} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'var(--bg)', color: 'var(--text)', fontSize: 13, fontWeight: 600, padding: '7px 14px', borderRadius: 8, border: 'none', cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.12)' }}>
           Join The Community <span style={{ background: '#1a1a1a', color: '#fff', borderRadius: 4, padding: '2px 6px', fontSize: 12 }}>→</span>
@@ -78,12 +78,12 @@ function StartSellingTile({ onClick }: { onClick: () => void }) {
         </div>
       </div>
       {/* Front card */}
-      <div style={{ position: 'relative', zIndex: 5, background: '#121566', borderRadius: 10, width: 140, height: 175, border: '3px solid #121566', transform: hovered ? 'scale(1.06) translateY(-6px)' : 'scale(1)', transition: 'transform 0.3s cubic-bezier(0.34,1.56,0.64,1)', boxShadow: hovered ? '0 16px 40px rgba(0,0,0,0.4)' : '0 6px 20px rgba(0,0,0,0.25)' }}>
+      <div style={{ position: 'relative', zIndex: 5, background: '#0a0a0a', borderRadius: 10, width: 140, height: 175, border: '3px solid #0a0a0a', transform: hovered ? 'scale(1.06) translateY(-6px)' : 'scale(1)', transition: 'transform 0.3s cubic-bezier(0.34,1.56,0.64,1)', boxShadow: hovered ? '0 16px 40px rgba(0,0,0,0.4)' : '0 6px 20px rgba(0,0,0,0.25)' }}>
         <div style={{ padding: '0.5rem' }}>
           <div style={{ height: 90, background: '#ffffff', borderRadius: 6, marginBottom: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 32 }}>🧑🏾‍💻</div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-              <div style={{ width: 20, height: 20, borderRadius: '50%', background: '#121566', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, color: '#fff', fontWeight: 700 }}>OG</div>
+              <div style={{ width: 20, height: 20, borderRadius: '50%', background: '#0a0a0a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, color: '#fff', fontWeight: 700 }}>OG</div>
               <span style={{ fontSize: 11, fontWeight: 700, color: '#fff' }}>Chukwudi</span>
             </div>
             <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.7)', fontWeight: 700 }}>5 ★</span>
@@ -95,7 +95,7 @@ function StartSellingTile({ onClick }: { onClick: () => void }) {
   )
 }
 
-// Tile 3: Grow Your Business — spinning donut on #121566
+// Tile 3: Grow Your Business — spinning donut on #0a0a0a
 function GrowBusinessTile({ onClick }: { onClick: () => void }) {
   const [hovered, setHovered] = useState(false)
   return (
@@ -103,7 +103,7 @@ function GrowBusinessTile({ onClick }: { onClick: () => void }) {
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       onClick={onClick}
-      style={{ background: '#121566', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden', cursor: 'pointer', height: '100%', minHeight: 280 }}
+      style={{ background: '#0a0a0a', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden', cursor: 'pointer', height: '100%', minHeight: 280 }}
     >
       <div style={{ position: 'absolute', top: 14, left: 14, opacity: hovered ? 1 : 0, transform: hovered ? 'translateY(0)' : 'translateY(-8px)', transition: 'all 0.25s ease' }}>
         <button onClick={onClick} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'var(--bg)', color: 'var(--text)', fontSize: 13, fontWeight: 600, padding: '7px 14px', borderRadius: 8, border: 'none', cursor: 'pointer' }}>
@@ -142,7 +142,7 @@ function GetInspiredTile({ onClick }: { onClick: () => void }) {
       style={{ position: 'relative', overflow: 'hidden', cursor: 'pointer', background: '#FFD6D6', height: '100%', minHeight: 300 }}
     >
       <img src="/assets/get-inspired.png" alt="Get Inspired" style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0 }} />
-      <div style={{ position: 'absolute', inset: 0, background: 'rgba(18,21,102,0.1)', opacity: hovered ? 1 : 0, transition: 'opacity 0.3s' }} />
+      <div style={{ position: 'absolute', inset: 0, background: 'rgba(10,10,10,0.1)', opacity: hovered ? 1 : 0, transition: 'opacity 0.3s' }} />
       <div style={{ position: 'absolute', top: 14, left: 14, opacity: hovered ? 1 : 0, transform: hovered ? 'translateY(0)' : 'translateY(-8px)', transition: 'all 0.25s ease' }}>
         <button onClick={onClick} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'var(--bg)', color: 'var(--text)', fontSize: 13, fontWeight: 600, padding: '7px 14px', borderRadius: 8, border: 'none', cursor: 'pointer' }}>
           Get Inspired <span style={{ background: '#1a1a1a', color: '#fff', borderRadius: 4, padding: '2px 6px', fontSize: 12 }}>→</span>
@@ -198,10 +198,10 @@ export default function Blog() {
     return (
       <div data-theme={theme} style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: 'var(--bg)', color: 'var(--text)' }}>
         <style>{`
-          .blog-nav-link:hover { color: #121566 !important; }
+          .blog-nav-link:hover { color: #0a0a0a !important; }
           .blog-cat-btn:hover { background: #f0f0f0 !important; }
           .blog-hero {
-            background: #121566;
+            background: #0a0a0a;
             min-height: 500px;
             padding: 80px 40px;
             display: flex;
@@ -235,7 +235,7 @@ export default function Blog() {
               onKeyDown={e => e.key === 'Enter' && setShowArticles(true)}
             />
           </div>
-          <button onClick={() => setShowArticles(true)} style={{ background: '#121566', color: '#fff', border: 'none', borderRadius: 6, padding: '7px 18px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Search</button>
+          <button onClick={() => setShowArticles(true)} style={{ background: '#0a0a0a', color: '#fff', border: 'none', borderRadius: 6, padding: '7px 18px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Search</button>
           <button onClick={toggle} style={{ background: "none", border: "1.5px solid #ddd", borderRadius: 8, width: 36, height: 36, display: "grid", placeItems: "center", cursor: "pointer", color: "#333", flexShrink: 0 }}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               {theme === "dark" ? (
@@ -255,7 +255,7 @@ export default function Blog() {
 
         <Drawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
 
-        {/* HERO — full width, #121566 background, centered text */}
+        {/* HERO — full width, #0a0a0a background, centered text */}
         <div className="blog-hero">
           {/* Subtle background circles */}
           <div style={{ position: 'absolute', top: -80, right: -80, width: 400, height: 400, borderRadius: '50%', background: 'rgba(255,255,255,0.04)' }} />
@@ -266,7 +266,7 @@ export default function Blog() {
           </h1>
           <button
             onClick={() => setShowArticles(true)}
-            style={{ background: '#121566', color: '#fff', border: '2px solid rgba(255,255,255,0.3)', borderRadius: 8, padding: '16px 48px', fontSize: 16, fontWeight: 700, cursor: 'pointer', position: 'relative' }}
+            style={{ background: '#0a0a0a', color: '#fff', border: '2px solid rgba(255,255,255,0.3)', borderRadius: 8, padding: '16px 48px', fontSize: 16, fontWeight: 700, cursor: 'pointer', position: 'relative' }}
           >
             View All Articles
           </button>
@@ -306,14 +306,14 @@ export default function Blog() {
           </button>
           <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
             {categories.map(cat => (
-              <button key={cat} onClick={() => setActiveCategory(cat)} style={{ fontSize: 13, padding: '5px 14px', borderRadius: 20, border: '0.5px solid', borderColor: activeCategory === cat ? '#121566' : 'transparent', background: activeCategory === cat ? '#EEEDFE' : 'transparent', color: activeCategory === cat ? '#121566' : '#666', cursor: 'pointer', fontWeight: activeCategory === cat ? 600 : 400 }}>
+              <button key={cat} onClick={() => setActiveCategory(cat)} style={{ fontSize: 13, padding: '5px 14px', borderRadius: 20, border: '0.5px solid', borderColor: activeCategory === cat ? '#0a0a0a' : 'transparent', background: activeCategory === cat ? '#EEEDFE' : 'transparent', color: activeCategory === cat ? '#0a0a0a' : '#666', cursor: 'pointer', fontWeight: activeCategory === cat ? 600 : 400 }}>
                 {cat}
               </button>
             ))}
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
-            {isAuthed && <button onClick={() => navigate('/blog/write')} style={{ fontSize: 13, background: '#121566', color: '#fff', padding: '6px 16px', borderRadius: 20, border: 'none', cursor: 'pointer', fontWeight: 500 }}>+ Write Article</button>}
-            <a href="/" style={{ fontSize: 13, background: '#121566', color: '#fff', padding: '6px 16px', borderRadius: 20, textDecoration: 'none', fontWeight: 500 }}>Go to OgaPay →</a>
+            {isAuthed && <button onClick={() => navigate('/blog/write')} style={{ fontSize: 13, background: '#0a0a0a', color: '#fff', padding: '6px 16px', borderRadius: 20, border: 'none', cursor: 'pointer', fontWeight: 500 }}>+ Write Article</button>}
+            <a href="/" style={{ fontSize: 13, background: '#0a0a0a', color: '#fff', padding: '6px 16px', borderRadius: 20, textDecoration: 'none', fontWeight: 500 }}>Go to OgaPay →</a>
             <button onClick={() => setDrawerOpen(true)} style={{ background: 'none', border: '1.5px solid #ddd', borderRadius: 6, width: 34, height: 34, display: 'grid', placeItems: 'center', cursor: 'pointer', padding: 0 }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#333" strokeWidth="2"><line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="18" x2="21" y2="18" /></svg>
             </button>
@@ -327,7 +327,7 @@ export default function Blog() {
             {activeCategory === 'All' ? 'All articles' : activeCategory}
             <span style={{ fontSize: 13, color: '#666', marginLeft: 8 }}>({(filteredArticles || []).length})</span>
           </span>
-          <button onClick={() => setShowArticles(false)} style={{ fontSize: 13, color: '#121566', background: 'none', border: 'none', cursor: 'pointer' }}>← Back to home</button>
+          <button onClick={() => setShowArticles(false)} style={{ fontSize: 13, color: '#0a0a0a', background: 'none', border: 'none', cursor: 'pointer' }}>← Back to home</button>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.5rem', marginBottom: '1.5rem' }}>
@@ -346,7 +346,7 @@ export default function Blog() {
                   <p style={{ fontSize: 14, fontWeight: 500, color: '#1a1a1a', lineHeight: 1.5, marginBottom: 10 }}>{post.title}</p>
                   <p style={{ fontSize: 13, color: '#666', lineHeight: 1.6, marginBottom: 10 }}>{post.excerpt}</p>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#666', flexWrap: 'wrap' }}>
-                    <div style={{ width: 22, height: 22, borderRadius: '50%', background: '#121566', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 600 }}>{post.authorInitials}</div>
+                    <div style={{ width: 22, height: 22, borderRadius: '50%', background: '#0a0a0a', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 600 }}>{post.authorInitials}</div>
                     <span>{post.author}</span>
                     <span>·</span>
                     <span>{post.date}</span>
@@ -360,7 +360,7 @@ export default function Blog() {
         </div>
 
         {/* Newsletter */}
-        <div style={{ background: '#121566', borderRadius: 16, padding: '2rem', textAlign: 'center', marginBottom: 0 }}>
+        <div style={{ background: '#0a0a0a', borderRadius: 16, padding: '2rem', textAlign: 'center', marginBottom: 0 }}>
           <h2 style={{ fontSize: 20, fontWeight: 500, color: '#fff', marginBottom: 8 }}>Stay in the loop</h2>
           <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.75)', marginBottom: '1.25rem' }}>Get the latest OgaPay tips, earnings stories, and platform updates.</p>
           {subscribed ? (

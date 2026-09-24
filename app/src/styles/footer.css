@@ -10,7 +10,7 @@
   --of-card: #ffffff;
   background: var(--bg);
   color: var(--of-ink);
-  font-family: 'Geist', 'DM Sans', system-ui, sans-serif;
+  font-family: 'Geist', 'Geist', system-ui, sans-serif;
   border-top: 1px solid var(--of-line);
   /* tokens.css styles every <footer> (padding, centred text, grey fill); reset it */
   padding: 0;

@@ -387,7 +387,7 @@ export default function FundWalletModal({ onClose, onDone, initialStep }: Props)
   function renderHeader(title: string) {
     return (
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-        <h3 style={{ fontFamily: 'Outfit', fontSize: 18, fontWeight: 800, margin: 0 }}>{title}</h3>
+        <h3 style={{ fontFamily: 'Geist', fontSize: 18, fontWeight: 800, margin: 0 }}>{title}</h3>
         <button style={{ width: 32, height: 32, border: '1px solid var(--border)', borderRadius: 8, background: 'var(--bg2)', cursor: 'pointer', display: 'grid', placeItems: 'center', color: 'var(--text3)', fontSize: 18 }} onClick={onClose}>
           <i className="ti ti-x" />
         </button>
@@ -407,7 +407,7 @@ export default function FundWalletModal({ onClose, onDone, initialStep }: Props)
   function renderMsg() {
     if (!msg) return null;
     return (
-      <div style={{ padding: '10px 14px', background: '#dbeafe', border: '1px solid #93c5fd', borderRadius: 8, fontSize: 12, color: 'var(--accent)', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+      <div style={{ padding: '10px 14px', background: '#dbeafe', border: '1px solid var(--accent-bright)', borderRadius: 8, fontSize: 12, color: 'var(--accent)', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
         <span className="spinner" style={{ width: 14, height: 14, borderWidth: 2, flexShrink: 0 }} />{msg}
       </div>
     );
@@ -479,7 +479,7 @@ export default function FundWalletModal({ onClose, onDone, initialStep }: Props)
                 <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--text3)', marginBottom: 4 }}>Amount (NGN)</label>
                 <input style={INPUT} type="number" step="100" min="100" placeholder="1000" value={ngnAmount} onChange={e => { setNgnAmount(e.target.value); setError(''); }} />
               </div>
-              <button style={{ ...BTN, background: 'var(--accent)', color: '#fff', width: '100%', justifyContent: 'center' }}
+              <button style={{ ...BTN, background: 'var(--accent)', color: 'var(--on-accent)', width: '100%', justifyContent: 'center' }}
                 onClick={() => {
                   if (!parseFloat(ngnAmount) || parseFloat(ngnAmount) < 100) { setError('Minimum deposit is ₦100'); return; }
                   setStep('ngnOptions');
@@ -635,10 +635,10 @@ export default function FundWalletModal({ onClose, onDone, initialStep }: Props)
         <div style={INNER_STYLE} onClick={e => e.stopPropagation()}>
           {renderHeader('Success')}
           <div style={{ textAlign: 'center', padding: '20px 0' }}>
-            <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'var(--green)18', display: 'grid', placeItems: 'center', margin: '0 auto 16px' }}>
+            <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'color-mix(in srgb, var(--green) 9%, transparent)', display: 'grid', placeItems: 'center', margin: '0 auto 16px' }}>
               <i className="ti ti-circle-check" style={{ fontSize: 32, color: 'var(--green)' }} />
             </div>
-            <h3 style={{ fontFamily: 'Outfit', fontSize: 17, fontWeight: 800, margin: '0 0 8px' }}>
+            <h3 style={{ fontFamily: 'Geist', fontSize: 17, fontWeight: 800, margin: '0 0 8px' }}>
               {result?.signature ? 'Deposit Complete' : 'Request Submitted'}
             </h3>
             {result?.signature && (

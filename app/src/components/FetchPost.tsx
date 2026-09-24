@@ -77,7 +77,7 @@ export default function FetchPost({ onPostFetched }: { onPostFetched?: (data: Po
       }}>
         <h3 style={{
           fontSize: 16, fontWeight: 800, margin: 0, color: C.text,
-          fontFamily: 'Outfit,sans-serif',
+          fontFamily: 'Geist,sans-serif',
         }}>
           Custom Twitter Raid
         </h3>
@@ -194,7 +194,7 @@ export default function FetchPost({ onPostFetched }: { onPostFetched?: (data: Po
               <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                 <span style={{ fontSize: 13, fontWeight: 700, color: C.text }}>{post.authorName}</span>
                 {post.verified && (
-                  <svg width="12" height="12" fill="#3b82f6" viewBox="0 0 24 24">
+                  <svg width="12" height="12" fill="#52525b" viewBox="0 0 24 24">
                     <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                   </svg>
                 )}

@@ -28,8 +28,8 @@ export default function Support() {
   return (
     <Layout>
       <style>{`
-        .sp-hero{text-align:center;padding:36px 20px 28px;margin-bottom:24px;background:linear-gradient(135deg,rgba(31,140,255,.08),rgba(37,99,235,.06),var(--card));border-radius:16px;border:1px solid var(--border)}
-        .sp-hero h1{font-family:Outfit;font-size:32px;font-weight:900;margin:0 0 6px}
+        .sp-hero{text-align:center;padding:36px 20px 28px;margin-bottom:24px;background:linear-gradient(135deg,rgba(var(--accent-rgb),.08),rgba(var(--accent-rgb),.06),var(--card));border-radius:16px;border:1px solid var(--border)}
+        .sp-hero h1{font-family:Geist;font-size:32px;font-weight:900;margin:0 0 6px}
         .sp-hero p{color:var(--text2);font-size:14px;margin:0 0 20px;max-width:480px;margin-left:auto;margin-right:auto}
         .sp-search{max-width:480px;margin:0 auto;display:flex;align-items:center;gap:8px;height:44px;padding:0 16px;border:1px solid var(--border);border-radius:12px;background:var(--card);transition:border-color .2s}
         .sp-search:focus-within{border-color:var(--accent)}
@@ -41,7 +41,7 @@ export default function Support() {
         .sp-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;cursor:pointer;transition:all .2s}
         .sp-card:hover{transform:translateY(-2px);border-color:var(--accent)}
         .sp-card i{font-size:22px;color:var(--accent);margin-bottom:6px;display:block}
-        .sp-card h3{font-family:Outfit;font-size:14px;font-weight:800;margin:0 0 2px}
+        .sp-card h3{font-family:Geist;font-size:14px;font-weight:800;margin:0 0 2px}
         .sp-card p{color:var(--text2);font-size:12px;margin:0}
         .sp-contact{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:24px}
         @media(max-width:500px){.sp-contact{grid-template-columns:1fr}}
@@ -52,7 +52,7 @@ export default function Support() {
         .sp-cc-info strong{display:block;font-size:13px;margin-bottom:2px}
         .sp-cc-info span{font-size:11px;color:var(--text2)}
         .sp-cc-action{font-size:11px;font-weight:700;color:var(--accent);white-space:nowrap}
-        .sp-section-title{font-family:Outfit;font-size:15px;font-weight:800;margin:0 0 12px;display:flex;align-items:center;gap:6px}
+        .sp-section-title{font-family:Geist;font-size:15px;font-weight:800;margin:0 0 12px;display:flex;align-items:center;gap:6px}
         .sp-tickets{display:grid;gap:6px;margin-bottom:24px}
         .sp-ticket{display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--card);border:1px solid var(--border);border-radius:10px;transition:all .2s;cursor:pointer}
         .sp-ticket:hover{border-color:var(--border2)}
@@ -66,7 +66,7 @@ export default function Support() {
         .sp-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:400;display:none;align-items:center;justify-content:center;padding:20px}
         .sp-overlay.open{display:flex}
         .sp-modal{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;width:min(480px,100%)}
-        .sp-modal h2{font-family:Outfit;font-size:20px;font-weight:900;margin:0 0 16px}
+        .sp-modal h2{font-family:Geist;font-size:20px;font-weight:900;margin:0 0 16px}
         .sp-field{margin-bottom:12px}
         .sp-field label{display:block;font-size:11px;font-weight:700;color:var(--text3);margin-bottom:4px;text-transform:uppercase}
         .sp-field input,.sp-field select,.sp-field textarea{width:100%;padding:0 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg2);color:var(--text);font-size:13px;outline:0;font-family:inherit}
@@ -126,7 +126,7 @@ export default function Support() {
         {tickets.length === 0 ? (
           <div className="sp-empty">
             <i className="ti ti-ticket" />
-            <h3 style={{fontFamily:'Outfit',fontWeight:800,margin:'0 0 4px',color:'var(--text)'}}>No tickets yet</h3>
+            <h3 style={{fontFamily:'Geist',fontWeight:800,margin:'0 0 4px',color:'var(--text)'}}>No tickets yet</h3>
             <p style={{fontSize:13,margin:0}}>Create a support ticket to get help</p>
           </div>
         ) : (
@@ -174,7 +174,7 @@ export default function Support() {
           </div>
           <div className="sp-modal-actions">
             <button className="cmp-btn" onClick={() => setShowTicket(false)}>Cancel</button>
-            <button className="cmp-btn primary" style={{background:'var(--accent)',color:'#fff',border:'0'}} onClick={() => setShowTicket(false)}>Submit Ticket</button>
+            <button className="cmp-btn primary" style={{background:'var(--accent)',color:'var(--on-accent)',border:'0'}} onClick={() => setShowTicket(false)}>Submit Ticket</button>
           </div>
         </div>
       </div>
