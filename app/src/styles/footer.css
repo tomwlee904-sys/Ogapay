@@ -1,0 +1,72 @@
+/* ─── Site footer ──────────────────────────────────────────────────────────────
+   Editorial footer shared by every page: brand + two-line headline on the left,
+   dotted globe and link columns on the right, socials and a bottom bar. */
+
+.of {
+  --of-ink: #151517;
+  --of-muted: #68686f;
+  --of-faint: #9d9da4;
+  --of-line: #e7e7e9;
+  --of-card: #ffffff;
+  background: var(--bg);
+  color: var(--of-ink);
+  font-family: 'Geist', 'DM Sans', system-ui, sans-serif;
+  border-top: 1px solid var(--of-line);
+  /* tokens.css styles every <footer> (padding, centred text, grey fill); reset it */
+  padding: 0;
+  text-align: left;
+  width: 100%;
+  max-width: 100vw;
+  overflow: hidden;
+}
+.dark .of, [data-theme="dark"] footer.of { background: var(--bg); }
+[data-theme="dark"] .of {
+  --of-ink: #f5f5f5;
+  --of-muted: #a3a3aa;
+  --of-faint: #6e6e76;
+  --of-line: rgba(255,255,255,.1);
+  --of-card: #0f0f11;
+}
+.of *, .of *::before, .of *::after { box-sizing: border-box; }
+
+.of-inner { max-width: 1184px; margin: 0 auto; padding: 56px 32px 20px; }
+.of-top { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 64px; align-items: start; }
+
+.of-brand { display: inline-flex; align-items: center; gap: 10px; font-size: 19px; font-weight: 800; letter-spacing: -.02em; color: var(--of-ink); text-decoration: none; }
+.of-mark { width: 36px; height: 36px; border-radius: 10px; background: var(--of-ink); color: var(--bg); display: grid; place-items: center; }
+.of-title { margin: 30px 0 0; font-size: clamp(34px, 4vw, 48px); line-height: 1.08; letter-spacing: -.06em; font-weight: 600; color: var(--of-ink); }
+.of-title span { color: #818188; }
+[data-theme="dark"] .of-title span { color: #75757c; }
+.of-lead { margin: 16px 0 0; max-width: 320px; font-size: 13px; line-height: 1.7; color: var(--of-muted); }
+
+.of-right { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.of-globe { display: block; width: 100%; max-width: 100%; min-width: 0; height: 220px; }
+.of-nav { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 40px; padding: 0 18px; }
+.of-col { display: flex; flex-direction: column; }
+.of-label { margin: 0 0 10px; font: 400 9px/1.3 'Geist Mono', ui-monospace, monospace; letter-spacing: .1em; text-transform: uppercase; color: var(--of-muted); }
+.of-link { display: flex; align-items: center; justify-content: space-between; gap: 24px; min-height: 40px; font-size: 13px; color: var(--of-ink); text-decoration: none; }
+.of-link i { font-size: 13px; color: var(--of-faint); transition: transform .2s ease, color .2s ease; }
+.of-link:hover i { color: var(--of-ink); transform: translate(2px, -2px); }
+.of-link:focus-visible { outline: 2px solid var(--of-ink); outline-offset: 2px; border-radius: 4px; }
+
+.of-mid { display: flex; justify-content: space-between; align-items: center; gap: 24px; margin-top: 28px; flex-wrap: wrap; }
+.of-socials { display: flex; gap: 8px; }
+.of-social { width: 44px; height: 44px; border-radius: 10px; border: 1px solid var(--of-line); background: var(--of-card); color: var(--of-muted); display: grid; place-items: center; font-size: 17px; text-decoration: none; transition: color .15s ease, border-color .15s ease; }
+.of-social:hover { color: var(--of-ink); border-color: var(--of-faint); }
+.of-tag { display: inline-flex; align-items: center; gap: 10px; font: 400 10px 'Geist Mono', ui-monospace, monospace; letter-spacing: .02em; color: var(--of-muted); }
+.of-tag span { width: 20px; height: 1px; background: var(--of-line); }
+
+.of-bottom { display: flex; justify-content: space-between; align-items: center; gap: 12px 24px; flex-wrap: wrap; margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--of-line); font-size: 11px; color: var(--of-muted); }
+.of-built { display: inline-flex; align-items: center; gap: 7px; }
+
+@media (max-width: 900px) {
+  .of-top { grid-template-columns: minmax(0, 1fr); gap: 32px; }
+  .of-nav { padding: 0; }
+}
+@media (max-width: 768px) {
+  .of-inner { padding: 44px 16px calc(96px + env(safe-area-inset-bottom, 0px)); }
+  .of-title { font-size: 30px; }
+  .of-globe { height: 180px; }
+  .of-nav { gap: 20px; }
+  .of-mid { flex-direction: column; align-items: flex-start; }
+}

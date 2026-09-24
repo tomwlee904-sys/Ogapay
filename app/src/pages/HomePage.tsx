@@ -3,16 +3,19 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { API_BASE } from "../lib/api";
 import { useApi } from "../lib/useApi";
-import TaskCard from "../components/TaskCard";
 import Navbar from "../components/Navbar";
 import Drawer from "../components/Drawer";
 import Footer from "../components/Footer";
 import BottomNav from "../components/BottomNav";
 import { Logo } from "../components/Logo";
 import EcosystemStory from "../components/home/EcosystemStory";
+import Carousel from "../components/home/Carousel";
+import { HomeJobCard, HomeProductCard } from "../components/home/HomeCards";
+import { useCurrency } from "../context/CurrencyContext";
 
 import "../styles/homepage.css";
 import "../styles/home-v2.css";
+import "../styles/home-cards.css";
 
 /* ─── helpers ──────────────────────────────────────────────────────────────── */
 
@@ -350,34 +353,52 @@ function Possibilities() {
 
 /* ─── highlighted jobs ─────────────────────────────────────────────────────── */
 
+function SectionHead({ eyebrow, title, sub, more, to }: { eyebrow: string; title: string; sub: string; more: string; to: string }) {
+  return (
+    <header className="hv-shead hv-reveal">
+      <div>
+        <span className="hv-mono">{eyebrow}</span>
+        <h2 className="hv-h2">{title}</h2>
+        <p className="hv-sub">{sub}</p>
+      </div>
+      <Link to={to} className="hv-more">{more} <i className="ti ti-arrow-up-right" /></Link>
+    </header>
+  );
+}
+
 function HighlightedJobs({ jobs, loading }: { jobs: any[]; loading: boolean }) {
-  const [tab, setTab] = useState<"featured" | "newest">("featured");
-  const shown = useMemo(() => {
-    const list = [...jobs];
-    if (tab === "newest") list.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
-    else list.sort((a, b) => Number(!!b.featured) - Number(!!a.featured));
-    return list.slice(0, 6);
-  }, [jobs, tab]);
+  const { convert } = useCurrency();
+  // Featured first, then the biggest rewards, like a highlighted board should read.
+  const shown = useMemo(() => [...jobs]
+    .sort((a, b) => Number(!!b.featured) - Number(!!a.featured) || Number(b.reward ?? 0) - Number(a.reward ?? 0))
+    .slice(0, 12), [jobs]);
   return (
     <section className="hv-section" id="featured-jobs">
       <div className="hv-inner">
-        <div className="hv-headrow hv-reveal">
-          <div>
-            <span className="hv-mono">Find your next task</span>
-            <h2 className="hv-h2">Highlighted jobs</h2>
-          </div>
-          <div className="hv-seg" role="tablist">
-            <button className={tab === "featured" ? "on" : ""} onClick={() => setTab("featured")}>Featured jobs</button>
-            <button className={tab === "newest" ? "on" : ""} onClick={() => setTab("newest")}>Newest jobs</button>
-          </div>
-        </div>
-        <div className="hv-jobs">
-          {loading && [0, 1, 2].map((i) => <div key={i} className="hv-stat" style={{ height: 280 }}><span className="hv-sk" /></div>)}
-          {!loading && shown.length === 0 && <div className="hv-empty">No open jobs right now. <Link to="/create" style={{ fontWeight: 600 }}>Post the first one</Link>.</div>}
-          {!loading && shown.map((t) => <div key={t.id} className="hv-reveal"><TaskCard task={t} /></div>)}
-        </div>
-        <div style={{ marginTop: 28, textAlign: "center" }}>
-          <Link to="/tasks" className="hv-btn hv-btn-ghost">More jobs <i className="ti ti-arrow-right" /></Link>
+        <SectionHead eyebrow="Find your next opportunity" title="Highlighted jobs" sub="Featured jobs" more="More jobs" to="/tasks" />
+        {loading && <div className="hv-car"><div className="hv-car-view"><div className="hv-car-track" style={{ ["--hv-per" as any]: 3 }}>{[0, 1, 2].map((i) => <div key={i} className="hv-car-slide"><div className="hc-card" style={{ height: 480 }}><span className="hv-sk" /></div></div>)}</div></div></div>}
+        {!loading && shown.length === 0 && <div className="hv-empty" style={{ marginTop: 28 }}>No open jobs right now. <Link to="/create" style={{ fontWeight: 600 }}>Post the first one</Link>.</div>}
+        {!loading && shown.length > 0 && (
+          <Carousel label="Highlighted jobs carousel" items={shown} render={(t) => <HomeJobCard task={t} convert={convert} />} />
+        )}
+      </div>
+    </section>
+  );
+}
+
+/* ─── creator store ────────────────────────────────────────────────────────── */
+
+function CreatorStore() {
+  const { convert } = useCurrency();
+  const res = useJson<any>("/store?limit=9&sort=newest");
+  const items: any[] = Array.isArray(res?.data) ? res.data : [];
+  if (items.length === 0) return null;
+  return (
+    <section className="hv-section">
+      <div className="hv-inner">
+        <div className="hv-panel hv-reveal">
+          <SectionHead eyebrow="Made by creators" title="Creator Store" sub="Featured products and services from OgaPay sellers" more="Browse all products" to="/store" />
+          <Carousel label="Creator store carousel" items={items} render={(it) => <HomeProductCard item={it} convert={convert} />} />
         </div>
       </div>
     </section>
@@ -389,53 +410,26 @@ function HighlightedJobs({ jobs, loading }: { jobs: any[]; loading: boolean }) {
 function Journal() {
   const res = useJson<any>("/blog?limit=9");
   const posts: any[] = res?.data?.posts || [];
-  const track = useRef<HTMLDivElement>(null);
-  const [page, setPage] = useState(0);
-  const perPage = typeof window !== "undefined" && window.innerWidth <= 768 ? 1 : window.innerWidth <= 1024 ? 2 : 3;
-  const pages = Math.max(1, Math.ceil(posts.length / perPage));
-  const go = (p: number) => {
-    const el = track.current;
-    if (!el) return;
-    const next = Math.max(0, Math.min(pages - 1, p));
-    el.scrollTo({ left: next * el.clientWidth, behavior: "smooth" });
-    setPage(next);
-  };
   if (posts.length === 0) return null;
   const date = (d?: string) => (d ? new Date(d).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) : "");
   return (
     <section className="hv-section">
       <div className="hv-inner">
-        <div className="hv-headrow hv-reveal">
-          <div>
-            <span className="hv-mono">From the journal</span>
-            <h2 className="hv-h2">Featured stories</h2>
-            <p className="hv-lead" style={{ marginTop: 12 }}>Guides, product news and earning tips from the OgaPay team.</p>
-          </div>
-          <Link to="/blog" className="hv-btn hv-btn-ghost">View all stories <i className="ti ti-arrow-right" /></Link>
-        </div>
-        <div className="hv-journal" ref={track} onScroll={(e) => setPage(Math.round(e.currentTarget.scrollLeft / e.currentTarget.clientWidth))}>
-          {posts.map((p) => (
-            <Link key={p.id} to={`/blog/${p.slug || p.id}`} className="hv-post">
-              <div className="hv-post-img">{p.coverImage && <img src={p.coverImage} alt="" loading="lazy" />}</div>
-              <div className="hv-post-body">
-                <span className="hv-mono">{date(p.publishedAt || p.createdAt)}</span>
-                <div className="hv-post-title">{p.title}</div>
-                <p className="hv-post-ex">{p.excerpt}</p>
-                <div className="hv-post-foot">
-                  <span>{p.author?.username ? `@${p.author.username}` : ""}</span>
-                  <span>Read story <i className="ti ti-arrow-right" /></span>
-                </div>
+        <SectionHead eyebrow="From the journal" title="Featured stories" sub="Learn more about OgaPay" more="View all stories" to="/blog" />
+        <Carousel label="Featured stories carousel" items={posts} render={(p) => (
+          <Link to={`/blog/${p.slug || p.id}`} className="hc-card hc-product hc-story">
+            <div className="hc-media">{p.coverImage ? <img src={p.coverImage} alt="" loading="lazy" /> : <span className="hc-media-ph">OP</span>}</div>
+            <div className="hc-pbody">
+              <span className="hc-type">{date(p.publishedAt || p.createdAt)}</span>
+              <h3>{p.title}</h3>
+              <p className="hc-pdesc">{p.excerpt}</p>
+              <div className="hc-story-foot">
+                <span>{p.author?.username ? `@${p.author.username}` : "OgaPay team"}</span>
+                <span className="hc-go">Read story<span className="hc-arrow"><i className="ti ti-arrow-up-right" /></span></span>
               </div>
-            </Link>
-          ))}
-        </div>
-        {pages > 1 && (
-          <div className="hv-pager">
-            <button onClick={() => go(page - 1)} disabled={page === 0} aria-label="Previous stories"><i className="ti ti-arrow-left" /></button>
-            <span className="hv-mono">{String(page + 1).padStart(2, "0")} / {String(pages).padStart(2, "0")}</span>
-            <button onClick={() => go(page + 1)} disabled={page >= pages - 1} aria-label="Next stories"><i className="ti ti-arrow-right" /></button>
-          </div>
-        )}
+            </div>
+          </Link>
+        )} />
       </div>
     </section>
   );
@@ -477,6 +471,7 @@ export default function HomePage() {
         <EcosystemStory />
         <div className="hv-frame">
           <HighlightedJobs jobs={jobs} loading={jobsLoading} />
+          <CreatorStore />
           <Journal />
           <section className="hv-section hv-final">
             <div className="hv-inner hv-reveal">
