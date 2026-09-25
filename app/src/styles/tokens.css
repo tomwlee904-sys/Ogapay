@@ -217,6 +217,8 @@ body { --100vh: calc(var(--vh) * 100); }
 .app-layout .sidebar { @apply w-[320px] shrink-0 sticky top-5 h-fit p-3; }
 .app-layout .main { @apply flex-1 min-w-0; }
 .app-layout .page { @apply mx-auto w-full; padding-top: var(--nav-h); }
+/* The sidebar repeats the menu drawer; below 1024px it squeezed the page to a sliver */
+@media (max-width: 1023px) { .app-layout .sidebar { display: none; } }
 
 /* ─── Footer ─── */
 footer { @apply border-t border-[var(--border)] py-10 px-6 text-center bg-[var(--bg2)]; }
