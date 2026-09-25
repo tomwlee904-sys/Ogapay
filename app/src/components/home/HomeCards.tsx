@@ -101,6 +101,33 @@ export function HomeJobCard({ task, convert, applied }: { task: any; convert: Co
   );
 }
 
+export function HomeCommunityCard({ community: c }: { community: any }) {
+  const members = Number(c.memberCount ?? c.members ?? 0);
+  const jobs = Number(c.taskCount ?? c.tasks ?? 0);
+  const rewards = Number(c.rewards ?? 0);
+  const initials = c.initials || String(c.name || "OP").split(/\s+/).map((w: string) => w[0]).join("").slice(0, 2).toUpperCase();
+  return (
+    <Link to={`/communities/${c.id}`} className="hc-card hc-product hc-community" aria-label={`${c.name}, ${members} members. View community`}>
+      <div className="hc-media">
+        {c.coverImage ? <img src={c.coverImage} alt="" loading="lazy" /> : <span className="hc-media-ph">{initials}</span>}
+        {(c.badge || c.category) && <span className="hc-badge">{c.badge || c.category}</span>}
+      </div>
+      <div className="hc-pbody">
+        <h3>{c.name}</h3>
+        <div className="hc-cmeta">
+          <span><i className="ti ti-users" />{members.toLocaleString()} {members === 1 ? "member" : "members"}</span>
+          <span><i className="ti ti-briefcase" />{jobs.toLocaleString()} {jobs === 1 ? "job" : "jobs"}</span>
+        </div>
+        <p className="hc-pdesc">{plain(c.description || c.desc)}</p>
+        <div className="hc-story-foot">
+          <span>{rewards > 0 ? <><b className="hc-cpaid">₦{money(rewards)}</b> paid out</> : c.isPublic === false ? "Private" : "Open to join"}</span>
+          <span className="hc-go">View community<span className="hc-arrow"><i className="ti ti-arrow-up-right" /></span></span>
+        </div>
+      </div>
+    </Link>
+  );
+}
+
 export function HomeProductCard({ item, convert }: { item: any; convert: Convert }) {
   const price = Number(item.price ?? 0);
   const cur = item.currency || "NGN";

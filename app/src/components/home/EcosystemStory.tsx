@@ -198,7 +198,7 @@ export default function EcosystemStory() {
 
   const s = STEPS[step];
   return (
-    <section ref={secRef} className="hv-eco" style={{ height: `${STEPS.length * 90 + 100}vh` }} aria-label="The OgaPay ecosystem">
+    <section ref={secRef} id="ecosystem" className="hv-eco" style={{ height: `${STEPS.length * 90 + 100}vh` }} aria-label="The OgaPay ecosystem">
       <div className="hv-eco-sticky">
         <canvas ref={canvasRef} aria-hidden="true" />
         <div className="hv-eco-top">

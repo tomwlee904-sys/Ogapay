@@ -90,7 +90,7 @@ export default function Navbar({ onMenuToggle }: NavbarProps) {
           <NavLink className="nav-link" to="/tasks"><i className="ti ti-briefcase" />Earn</NavLink>
           <NavLink className="nav-link" to="/create"><i className="ti ti-plus-circle" />Create</NavLink>
           <NavLink className="nav-link" to="/store"><i className="ti ti-building-store" />Store</NavLink>
-          {isAuthed && <NavLink className="nav-link" to="/vault"><i className="ti ti-shield-lock" />Vault</NavLink>}
+          <NavLink className="nav-link" to="/vault"><i className="ti ti-shield-lock" />Vault</NavLink>
           <NavLink className="nav-link" to="/faq"><i className="ti ti-help-circle" />FAQ</NavLink>
         </div>
         <div className="nav-actions">

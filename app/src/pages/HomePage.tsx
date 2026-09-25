@@ -10,7 +10,8 @@ import BottomNav from "../components/BottomNav";
 import { Logo } from "../components/Logo";
 import EcosystemStory from "../components/home/EcosystemStory";
 import Carousel from "../components/home/Carousel";
-import { HomeJobCard, HomeProductCard } from "../components/home/HomeCards";
+import { HomeJobCard, HomeProductCard, HomeCommunityCard } from "../components/home/HomeCards";
+import ConnectArt from "../components/home/ConnectArt";
 import { useCurrency } from "../context/CurrencyContext";
 
 import "../styles/homepage.css";
@@ -20,7 +21,6 @@ import "../styles/home-cards.css";
 /* ─── helpers ──────────────────────────────────────────────────────────────── */
 
 // Public milestones only show once they are big enough to be worth showing.
-const MIN_PUBLIC_MILESTONE = 100;
 
 const naira = (n: number) => {
   if (n >= 1e9) return `₦${(n / 1e9).toFixed(1).replace(/\.0$/, "")}B`;
@@ -292,29 +292,31 @@ function Milestone({ value, label, format }: { value: number; label: string; for
   const v = useCountUp(value, 1800);
   return (
     <div className="hv-num hv-reveal">
-      <div className="hv-num-val">{format(v)}</div>
+      <div className="hv-num-val">{format(v)}<span className="hv-num-plus">+</span></div>
       <div className="hv-num-lbl">{label}</div>
     </div>
   );
 }
+
+// A number only goes public once it's big enough to be worth showing
+const MILESTONE_MIN = { users: 1000, jobs: 100, paidNgn: 1_000_000 };
 
 function Numbers({ live, all }: { live: any; all: any }) {
   const users = Number(all?.data?.totalUsers ?? all?.totalUsers ?? 0);
   const approved = Number(live?.tasksDone ?? 0);
   const funded = Number(live?.totalPaidOut ?? 0);
   const items = [
-    { value: approved, label: "Tasks approved", format: (x: number) => compact(Math.round(x)), show: approved >= MIN_PUBLIC_MILESTONE },
-    { value: funded, label: "Funded in rewards", format: naira, show: funded >= MIN_PUBLIC_MILESTONE * 1000 },
-    { value: users, label: "Users registered", format: (x: number) => compact(Math.round(x)), show: users >= MIN_PUBLIC_MILESTONE },
+    { value: approved, label: "Jobs completed", format: (x: number) => compact(Math.round(x)), show: approved >= MILESTONE_MIN.jobs },
+    { value: funded, label: "Paid to workers", format: naira, show: funded >= MILESTONE_MIN.paidNgn },
+    { value: users, label: "Users registered", format: (x: number) => compact(Math.round(x)), show: users >= MILESTONE_MIN.users },
   ].filter((m) => m.show);
-  // One lonely number reads worse than none; wait until at least two qualify.
-  if (items.length < 2) return null;
+  if (items.length === 0) return null;
   return (
-    <section className="hv-section">
+    <section className="hv-section hv-numbers-band">
       <div className="hv-inner">
-        <div className="hv-reveal">
+        <div className="hv-numbers-head hv-reveal">
           <span className="hv-mono">OgaPay, in numbers</span>
-          <h2 className="hv-h2">All-time milestones</h2>
+          <span className="hv-numbers-note">All-time milestones</span>
         </div>
         <div className="hv-numbers" style={{ gridTemplateColumns: `repeat(${items.length}, 1fr)` }}>
           {items.map((m) => <Milestone key={m.label} value={m.value} label={m.label} format={m.format} />)}
@@ -328,23 +330,26 @@ function Possibilities() {
   return (
     <section className="hv-section">
       <div className="hv-inner">
-        <div className="hv-center hv-reveal">
-          <span className="hv-mono">What you can do</span>
-          <h2 className="hv-h2">Everything work needs,<br />in one place.</h2>
-          <p className="hv-lead" style={{ marginTop: 18 }}>See how OgaPay brings together human skill, verification and on-demand payment.</p>
+        <div className="hv-poss hv-reveal">
+          <div>
+            <span className="hv-mono hv-ruled">The possibilities</span>
+            <h2 className="hv-h2 hv-poss-title">Everything work needs,<br /><span>in one place.</span></h2>
+          </div>
+          <p className="hv-lead">See how OgaPay brings together human skill, verification and on-demand payment.</p>
         </div>
         <div className="hv-connected">
           <div className="hv-reveal">
-            <span className="hv-mono">Built to connect</span>
-            <h3 className="hv-h3" style={{ fontSize: "clamp(28px,3.2vw,40px)" }}>The new work economy for Africa</h3>
-          </div>
-          <div className="hv-reveal">
-            <p className="hv-lead">
+            <span className="hv-mono">Connected by design</span>
+            <h3 className="hv-h3 hv-connected-title">The new work<br />economy for Africa</h3>
+            <p className="hv-lead" style={{ marginTop: 18 }}>
               From quick social tasks and app feedback to launch campaigns and ongoing projects, OgaPay connects people,
               teams and AI agents with people who can help. Start with one task and build from there.
             </p>
-            <Link to="/tasks" className="hv-btn hv-btn-ghost" style={{ marginTop: 22 }}>Explore OgaPay <i className="ti ti-arrow-right" /></Link>
+            <a href="#ecosystem" className="hv-textlink" onClick={(e) => { e.preventDefault(); document.getElementById("ecosystem")?.scrollIntoView({ behavior: "smooth" }); }}>
+              Explore OgaPay <i className="ti ti-arrow-down" />
+            </a>
           </div>
+          <div className="hv-connected-art hv-reveal"><ConnectArt /></div>
         </div>
       </div>
     </section>
@@ -417,8 +422,9 @@ function Journal() {
   return (
     <section className="hv-section">
       <div className="hv-inner">
-        <SectionHead eyebrow="From the journal" title="Featured stories" sub="Learn more about OgaPay" more="View all stories" to="/blog" />
-        <Carousel label="Featured stories carousel" items={posts} render={(p) => (
+        <div className="hv-panel hv-reveal">
+        <SectionHead eyebrow="From the journal" title="Featured blogs" sub="Learn more about OgaPay" more="View all blogs" to="/blog" />
+        <Carousel label="Featured blogs carousel" items={posts} render={(p) => (
           <Link to={`/blog/${p.slug || p.id}`} className="hc-card hc-product hc-story">
             <div className="hc-media">{p.coverImage ? <img src={p.coverImage} alt="" loading="lazy" /> : <span className="hc-media-ph">OP</span>}</div>
             <div className="hc-pbody">
@@ -432,6 +438,26 @@ function Journal() {
             </div>
           </Link>
         )} />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ─── communities ──────────────────────────────────────────────────────────── */
+
+function CommunitiesRow() {
+  const res = useJson<any>("/communities?limit=12");
+  const list: any[] = res?.data?.communities || (Array.isArray(res?.data) ? res.data : []);
+  const items = list.filter((c) => c.isPublic !== false && c.isActive !== false).slice(0, 9);
+  if (items.length === 0) return null;
+  return (
+    <section className="hv-section">
+      <div className="hv-inner">
+        <div className="hv-panel hv-reveal">
+          <SectionHead eyebrow="People & projects" title="Communities" sub="Groups working and earning together on OgaPay" more="Explore communities" to="/communities" />
+          <Carousel label="Communities carousel" items={items} render={(c) => <HomeCommunityCard community={c} />} />
+        </div>
       </div>
     </section>
   );
@@ -475,16 +501,7 @@ export default function HomePage() {
           <HighlightedJobs jobs={jobs} loading={jobsLoading} />
           <CreatorStore />
           <Journal />
-          <section className="hv-section hv-final">
-            <div className="hv-inner hv-reveal">
-              <span className="hv-mono">Get started</span>
-              <h2 className="hv-h2">Your next task starts here.</h2>
-              <div className="hv-btns">
-                <Link to="/tasks" className="hv-btn hv-btn-dark">Start earning <i className="ti ti-arrow-right" /></Link>
-                <button className="hv-btn hv-btn-ghost" onClick={onCreate}>Create a job <i className="ti ti-plus" /></button>
-              </div>
-            </div>
-          </section>
+          <CommunitiesRow />
         </div>
       </main>
       <Footer />

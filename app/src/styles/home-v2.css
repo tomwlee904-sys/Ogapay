@@ -179,15 +179,41 @@ body:has(main.hv), body:has(main.hv) #root { overflow-x: clip; }
 .hv-path-cta .hv-btn { height: 40px; font-size: 13px; }
 
 /* ── Numbers ── */
-.hv-numbers { display: grid; grid-template-columns: repeat(3, 1fr); margin-top: 56px; border-top: 1px solid var(--hv-line); }
+.hv-numbers-band { padding-top: 40px; padding-bottom: 40px; }
+.hv-numbers-head { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+.hv-numbers-note { font-size: 12px; color: var(--hv-muted); }
+.hv-numbers { display: grid; grid-template-columns: repeat(3, 1fr); margin-top: 20px; border-top: 1px solid var(--hv-line); border-bottom: 1px solid var(--hv-line); }
+.hv-num-plus { font-weight: 300; color: var(--hv-faint); margin-left: 2px; }
 .hv-num { padding: 34px 28px 8px; border-left: 1px solid var(--hv-line); }
 .hv-num:first-child { border-left: 0; padding-left: 0; }
 .hv-num-val { font-size: clamp(44px, 5.4vw, 72px); font-weight: 600; letter-spacing: -.05em; line-height: 1; font-variant-numeric: tabular-nums; }
 .hv-num-lbl { font-size: 14px; color: var(--hv-muted); margin-top: 12px; }
 
-/* ── Connected by design ── */
-.hv-connected { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: end; margin-top: 88px; }
+/* ── Possibilities / connected by design ── */
+.hv-poss { display: grid; grid-template-columns: 1.4fr 1fr; gap: 48px; align-items: end; padding-bottom: 40px; border-bottom: 1px solid var(--hv-line); }
+.hv-poss .hv-lead { max-width: 340px; justify-self: end; font-size: 14.5px; }
+.hv-poss-title { font-size: clamp(40px, 5.4vw, 76px); letter-spacing: -.05em; line-height: .98; }
+.hv-poss-title span { color: var(--hv-faint); }
+.hv-ruled { display: inline-flex; align-items: center; gap: 12px; }
+.hv-ruled::before { content: ''; width: 28px; height: 1px; background: var(--hv-line); }
+.hv-connected { display: grid; grid-template-columns: 1fr 1.25fr; gap: 56px; align-items: center; margin-top: 48px; }
 .hv-connected .hv-lead { max-width: 460px; }
+.hv-connected-title { font-size: clamp(30px, 3.4vw, 46px); letter-spacing: -.04em; line-height: 1.02; }
+.hv-textlink { display: inline-flex; align-items: center; gap: 8px; margin-top: 24px; font-size: 13.5px; font-weight: 600; color: var(--hv-ink); text-decoration: none; }
+.hv-textlink:hover i { transform: translateY(2px); }
+.hv-textlink i { transition: transform .2s ease; }
+.hv-connected-art { border: 1px solid var(--hv-line); border-radius: var(--hv-radius); background: radial-gradient(120% 90% at 50% 0%, var(--hv-card), var(--hv-soft)); padding: 18px; color: var(--hv-ink); }
+.hv-art { width: 100%; height: auto; display: block; }
+.hv-art-line { fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.hv-art-thin { stroke-width: 1; opacity: .7; }
+.hv-art-faint { fill: none; stroke: currentColor; stroke-width: .7; opacity: .12; }
+.hv-art-dot { fill: currentColor; stroke: none; }
+.hv-art-fill { fill: currentColor; stroke: none; }
+.hv-art-text { fill: currentColor; font: 600 12px 'Geist', system-ui, sans-serif; }
+.hv-art-small { font-size: 12px; }
+.hv-art-inv { fill: var(--hv-card); font-size: 11px; }
+.hv-art-link { fill: none; stroke: currentColor; stroke-width: 1.3; stroke-dasharray: 3 6; stroke-linecap: round; opacity: .55; animation: hv-art-drift 2.4s linear infinite; }
+@keyframes hv-art-drift { to { stroke-dashoffset: -18; } }
 
 /* ── Ecosystem story ── */
 .hv-eco { position: relative; }
@@ -251,7 +277,7 @@ body:has(main.hv), body:has(main.hv) #root { overflow-x: clip; }
 .hv-reveal.in { opacity: 1; transform: none; }
 
 @media (prefers-reduced-motion: reduce) {
-  .hv-ticker-track, .hv-network path.hv-flow, .hv-sk { animation: none; }
+  .hv-ticker-track, .hv-network path.hv-flow, .hv-sk, .hv-art-link { animation: none; }
   .hv-reveal { opacity: 1; transform: none; transition: none; }
   .hv-fade { animation: none; }
 }
@@ -260,7 +286,9 @@ body:has(main.hv), body:has(main.hv) #root { overflow-x: clip; }
 @media (max-width: 1024px) {
   .hv-hero-grid { grid-template-columns: 1fr; gap: 40px; }
   .hv-hero-copy { padding-top: 0; }
-  .hv-connected { grid-template-columns: 1fr; gap: 24px; }
+  .hv-connected { grid-template-columns: 1fr; gap: 28px; }
+  .hv-poss { grid-template-columns: 1fr; gap: 18px; }
+  .hv-poss .hv-lead { justify-self: start; }
   .hv-jobs { grid-template-columns: 1fr 1fr; }
   .hv-journal { grid-auto-columns: calc((100% - 16px) / 2); }
 }
@@ -274,6 +302,14 @@ body:has(main.hv), body:has(main.hv) #root { overflow-x: clip; }
   .hv-h1 { white-space: normal; }
   .hv-tag { margin-bottom: 22px; }
   .hv-btns .hv-btn { flex: 1; }
+  /* Hero centred on phones, like wurk */
+  .hv-hero-copy { text-align: center; }
+  .hv-hero .hv-lead { margin-left: auto; margin-right: auto; }
+  .hv-hero .hv-btns { justify-content: center; }
+  .hv-hero .hv-btns .hv-btn { flex: 0 1 auto; }
+  .hv-hero .hv-note { justify-content: center; }
+  .hv-numbers-band { padding-top: 24px; padding-bottom: 24px; }
+  .hv-connected-art { padding: 10px; }
   .hv-network { height: 140px; }
   .hv-stats { gap: 8px; }
   .hv-stat { padding: 14px; border-radius: 14px; }

@@ -108,3 +108,12 @@
   .hv-panel { padding: 20px 16px; border-radius: 22px; }
   .hc-amt strong { font-size: 28px; }
 }
+
+/* Community card */
+.hc-badge { position: absolute; top: 10px; left: 10px; padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: 600; background: color-mix(in srgb, var(--hv-card) 88%, transparent); border: 1px solid var(--hv-line); color: var(--hv-ink); backdrop-filter: blur(6px); }
+.hc-community .hc-pbody h3 { font-size: 18px; }
+.hc-cmeta { display: flex; gap: 14px; font-size: 12px; color: var(--hv-muted); }
+.hc-cmeta span { display: inline-flex; align-items: center; gap: 5px; }
+.hc-cmeta i { font-size: 14px; }
+.hc-community .hc-pdesc { -webkit-line-clamp: 3; }
+.hc-cpaid { color: var(--hv-pos); font-weight: 700; font-size: 13px; }
