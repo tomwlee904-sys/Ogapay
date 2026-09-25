@@ -77,6 +77,7 @@ const JobDetailPage = lazy(() => import('./pages/JobDetail'))
 const MyJobListingsPage = lazy(() => import('./pages/Jobs/MyJobListingsPage'))
 
 const UserProfile = lazy(() => import('./pages/UserProfile'))
+const HirePage = lazy(() => import('./pages/HirePage'))
 const Admin = lazy(() => import('./pages/Admin'))
 const AdminVault = lazy(() => import('./pages/AdminVault'))
 const AdminModeration = lazy(() => import('./pages/AdminModeration'))
@@ -150,6 +151,7 @@ export default function App() {
             <Route path="/workers" element={<Workers />} />
             <Route path="/writer" element={<Writer />} />
             <Route path="/user/:username" element={<UserProfile />} />
+            <Route path="/user/:username/hire" element={<HirePage />} />
 
             {/* ── Authenticated routes ── */}
             <Route path="/dashboard" element={<AuthGuard><Dashboard /></AuthGuard>} />

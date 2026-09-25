@@ -1,633 +1,419 @@
-﻿import { useState, useEffect, useRef } from "react"
-import { useParams, useNavigate } from "react-router-dom"
-import { API_BASE } from "../lib/api"
+import { useEffect, useState } from "react"
+import { useParams, useNavigate, Link } from "react-router-dom"
 import Layout from "../components/Layout"
-// ── Info tooltip ─────────────────────────────────────────────────────
-function InfoBtn({ text }: { text: string }) {
-  const [show, setShow] = useState(false);
-  const ref = useRef<HTMLSpanElement>(null);
-  return (
-    <span ref={ref} style={{ position: "relative", display: "inline-flex", marginLeft: 4, verticalAlign: "middle" }}
-      onMouseEnter={() => setShow(true)}
-      onMouseLeave={() => setShow(false)}
-      onClick={(e) => { e.stopPropagation(); setShow(s => !s) }}>
-      <i className="ti ti-info-circle" style={{ fontSize: 12, color: "var(--text3)", cursor: "pointer" }} />
-      {show && (
-        <div style={{
-          position: "absolute", bottom: "calc(100% + 6px)", left: "50%",
-          transform: "translateX(-50%)", background: "var(--text)", color: "var(--card)",
-          fontSize: 11, lineHeight: 1.5, padding: "6px 10px", borderRadius: 8,
-          whiteSpace: "normal", width: 240, zIndex: 99, pointerEvents: "none",
-          boxShadow: "0 4px 12px rgba(0,0,0,0.2)"
-        }}>
-          {text}
-        </div>
-      )}
-    </span>
-  );
+import InviteToCommunity from "../components/profile/InviteToCommunity"
+import { apiRequest } from "../lib/api"
+import { useAuth } from "../context/AuthContext"
+import { openSignIn } from "../lib/signin"
+import "../styles/profile-public.css"
+
+type Tab = "store" | "portfolio" | "reviews" | "communities"
+
+type Review = {
+  id: string
+  kind: "job" | "product"
+  rating: number
+  text: string | null
+  date: string
+  subject: { id?: string; title: string }
+  reviewer: { username: string; name: string; avatarUrl: string | null } | null
+}
+type ReviewData = { average: number; total: number; distribution: Record<string, number>; reviews: Review[] }
+
+const LEVEL_NAMES: Record<string, string> = {
+  BEGINNER: "Beginner", INTERMEDIATE: "Intermediate", ADVANCED: "Advanced", EXPERT: "Expert", LEGEND: "Legend",
 }
 
+const fmtDate = (d: string, opts: Intl.DateTimeFormatOptions = { month: "short", day: "numeric", year: "numeric" }) =>
+  new Date(d).toLocaleDateString("en-US", opts)
+const money = (n: number, cur = "NGN") =>
+  cur === "NGN" ? "₦" + Number(n).toLocaleString("en-US", { maximumFractionDigits: 2 }) : `${Number(n).toLocaleString("en-US", { maximumFractionDigits: 6 })} ${cur}`
 
-
-type Tab = "profile" | "store" | "portfolio" | "challenges" | "reviews"
+// SVG stars: the icon font's filled variants aren't loaded
+const STAR = "M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"
+function Stars({ value, size = 14 }: { value: number; size?: number }) {
+  const row = (fill: string) => [0, 1, 2, 3, 4].map((i) => (
+    <svg key={i} width={size} height={size} viewBox="0 0 24 24" aria-hidden="true"><path d={STAR} fill={fill} /></svg>
+  ))
+  const pct = Math.max(0, Math.min(5, value)) / 5 * 100
+  return (
+    <span className="up-stars" role="img" aria-label={`${value.toFixed(1)} out of 5 stars`}>
+      <span className="bg">{row("var(--border2)")}</span>
+      <span className="fg" style={{ width: `${pct}%` }}>{row("#d4a017")}</span>
+    </span>
+  )
+}
 
 export default function UserProfile() {
-  const { username } = useParams<{ username: string }>()
+  const { username = "" } = useParams<{ username: string }>()
   const navigate = useNavigate()
-  // Layout provides Navbar, Drawer, Sidebar, Footer
+  const { user: me } = useAuth()
+
   const [profile, setProfile] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
+  const [state, setState] = useState<"loading" | "ok" | "private" | "missing" | "error">("loading")
+  const [reviews, setReviews] = useState<ReviewData | null>(null)
+  const [products, setProducts] = useState<any[]>([])
+  const [portfolio, setPortfolio] = useState<any[]>([])
   const [blogs, setBlogs] = useState<any[]>([])
-  const [userCommunities, setUserCommunities] = useState<any[]>([])
-  const [showOgaScoreInfo, setShowOgaScoreInfo] = useState(false)
-  const [inviteCopied, setInviteCopied] = useState(false)
-  const [activeTab, setActiveTab] = useState<Tab>("profile")
+  const [communities, setCommunities] = useState<any[]>([])
+  const [tab, setTab] = useState<Tab>("store")
+  const [inviteOpen, setInviteOpen] = useState(false)
+  const [shared, setShared] = useState(false)
 
   useEffect(() => {
-    if (!username) return
-    setLoading(true)
-    Promise.all([
-      fetch(`${API_BASE}/users/${username}`).then(r => r.json()).catch(() => ({ success: false })),
-      fetch(`${API_BASE}/users/${username}/blogs`).then(r => r.json()).catch(() => ({ success: false })),
-      fetch(`${API_BASE}/users/${username}/communities`).then(r => r.json()).catch(() => ({ success: false })),
-    ]).then(([profileData, blogsData, communitiesData]) => {
-      if (profileData.success || profileData.data) {
-        setProfile(profileData.data || profileData)
-      }
-      if (blogsData.success && blogsData.data) {
-        setBlogs(blogsData.data)
-      }
-      if (communitiesData.success && Array.isArray(communitiesData.data)) {
-        setUserCommunities(communitiesData.data)
-      }
-      setLoading(false)
-    }).catch((e) => { console.error(e); toast('Failed to load profile', 'error'); setLoading(false); })
+    let live = true
+    setState("loading")
+    setProfile(null)
+    setReviews(null); setProducts([]); setPortfolio([]); setBlogs([]); setCommunities([])
+    const get = <T,>(path: string, fallback: T) => apiRequest<T>(path, { auth: false }).catch(() => fallback)
+    const u = encodeURIComponent(username)
+
+    apiRequest<any>(`/users/${u}`, { auth: false })
+      .then((p) => {
+        if (!live) return
+        if (p?.isPublic === false) { setProfile(p); setState("private"); return }
+        setProfile(p)
+        setState("ok")
+        Promise.all([
+          get<ReviewData | null>(`/users/public/${u}/reviews?limit=50`, null),
+          get<any[]>(`/users/public/${u}/products`, []),
+          get<any[]>(`/users/public/${u}/portfolio`, []),
+          get<any[]>(`/users/public/${u}/blogs`, []),
+          get<any[]>(`/users/public/${u}/communities`, []),
+        ]).then(([r, pr, pf, bl, cm]) => {
+          if (!live) return
+          setReviews(r)
+          setProducts(Array.isArray(pr) ? pr : [])
+          setPortfolio(Array.isArray(pf) ? pf : [])
+          setBlogs(Array.isArray(bl) ? bl : [])
+          setCommunities(Array.isArray(cm) ? cm : [])
+          // Open on the first tab that has something to show
+          if (!(Array.isArray(pr) && pr.length)) {
+            if (Array.isArray(pf) && pf.length) setTab("portfolio")
+            else if (r?.total) setTab("reviews")
+          }
+        })
+      })
+      .catch((e) => { if (live) setState(/not found/i.test(e?.message || "") ? "missing" : "error") })
+    return () => { live = false }
   }, [username])
 
-  const first = profile?.firstName ?? profile?.first_name
-  const last = profile?.lastName ?? profile?.last_name
-  const initials = first && last
-    ? (first[0] + last[0]).toUpperCase()
-    : username ? username[0].toUpperCase() : "?"
+  const first = profile?.firstName || ""
+  const last = profile?.lastName || ""
+  const name = [first, last].filter(Boolean).join(" ") || profile?.username || username
+  const handle = profile?.username || username
+  const isMe = !!me?.username && me.username.toLowerCase() === handle.toLowerCase()
+  const wp = profile?.workerProfile || {}
+  const counts = profile?._count || {}
+  const avg = reviews?.total ? reviews.average : Number(wp.avgRating || 0)
+  const reviewTotal = reviews?.total ?? Number(wp.totalRatings || 0)
 
-  const displayName = [first, last].filter(Boolean).join(" ") || `@${username}`
+  useEffect(() => {
+    document.title = state === "ok" ? `${name} (@${handle}) | OgaPay` : "Profile | OgaPay"
+    return () => { document.title = "OgaPay" }
+  }, [state, name, handle])
 
-  const avgRating = profile?.averageRating ?? profile?.average_rating ?? 0
-  const reviewCount = profile?.reviews ?? 0
-
-  const renderStars = (rating: number) => {
-    return [1, 2, 3, 4, 5].map(n => (
-      <i
-        key={n}
-        className={`ti ${rating >= n ? "ti-star-filled" : rating >= n - 0.5 ? "ti-star-half-filled" : "ti-star"}`}
-        style={{ fontSize: 13, color: rating >= n - 0.5 ? "#f59e0b" : "var(--border)" }}
-      />
-    ))
+  const share = async () => {
+    const url = `${window.location.origin}/user/${handle}`
+    try {
+      if (navigator.share && window.matchMedia("(pointer: coarse)").matches) {
+        await navigator.share({ title: `${name} on OgaPay`, url })
+        return
+      }
+      await navigator.clipboard.writeText(url)
+      setShared(true)
+      setTimeout(() => setShared(false), 2000)
+    } catch { /* cancelled */ }
   }
 
-  const tabs: { key: Tab; label: string; icon: string }[] = [
-    { key: "profile", label: "Profile", icon: "ti-user" },
-    { key: "store", label: "Store", icon: "ti-building-store" },
-    { key: "portfolio", label: "Portfolio", icon: "ti-file-description" },
-    { key: "challenges", label: "Challenges", icon: "ti-star" },
-    { key: "reviews", label: "Reviews", icon: "ti-message" },
+  const invite = () => {
+    if (!me) { openSignIn({ redirect: `/user/${handle}` }); return }
+    setInviteOpen(true)
+  }
+
+  // ── States ─────────────────────────────────────────────────────────────
+  if (state !== "ok") {
+    return (
+      <Layout>
+        <div className="up-wrap">
+          <div className="up-crumb">
+            <button onClick={() => navigate(-1)}><i className="ti ti-arrow-left" /> Back</button>
+            <span>Public profile</span>
+          </div>
+          {state === "loading" ? (
+            <div className="up-card up-head" aria-busy="true">
+              <div className="up-id">
+                <div className="up-avatar up-skel" />
+                <div><div className="up-skel" style={{ height: 12, width: 110 }} /><div className="up-skel" style={{ height: 26, width: 200, marginTop: 10 }} /><div className="up-skel" style={{ height: 14, width: "80%", marginTop: 14 }} /></div>
+              </div>
+            </div>
+          ) : (
+            <div className="up-card up-state">
+              <i className={`ti ${state === "private" ? "ti-lock" : state === "missing" ? "ti-user-off" : "ti-cloud-off"}`} />
+              <h2>{state === "private" ? "This profile is private" : state === "missing" ? "User not found" : "Couldn't load this profile"}</h2>
+              <p>
+                {state === "private" ? `@${handle} has chosen to keep their profile private.`
+                  : state === "missing" ? `There's no OgaPay user called @${username}.`
+                  : "Check your connection and try again."}
+              </p>
+              {state === "error"
+                ? <button className="up-btn" onClick={() => window.location.reload()}>Try again</button>
+                : <Link className="up-btn" to="/">Go home</Link>}
+            </div>
+          )}
+        </div>
+      </Layout>
+    )
+  }
+
+  // ── Stats ──────────────────────────────────────────────────────────────
+  const stats: { icon: string; label: string; value: string; sub?: string }[] = [
+    { icon: "ti-briefcase", label: "Jobs done", value: String(wp.tasksCompleted ?? 0), sub: wp.tasksCompleted ? `${Math.round(wp.successRate || 0)}% success rate` : undefined },
+    profile?.preferences?.showRank
+      ? { icon: "ti-trophy", label: "Rank", value: LEVEL_NAMES[wp.level] || "Beginner", sub: `OgaScore ${profile?.ogaScore ?? 0}` }
+      : { icon: "ti-calendar", label: "Member since", value: fmtDate(profile.createdAt, { month: "short", year: "numeric" }) },
+    { icon: "ti-building-store", label: "Products", value: String(counts.storeItems ?? products.length) },
+    { icon: "ti-users", label: "Communities", value: String(counts.communityMemberships ?? communities.length) },
   ]
+  if (profile?.preferences?.showEarnings && wp.totalEarned != null) {
+    stats.push({ icon: "ti-coin", label: "Earned", value: money(Number(wp.totalEarned)) })
+  }
 
-  const prefs = (profile as any)?.preferences || {}
-  const showEarnings = prefs.showEarnings === true
-  const showRank = prefs.showRank === true
+  const skills: string[] = Array.isArray(wp.skills) ? wp.skills : []
+  const categories: string[] = Array.isArray(wp.categories) ? wp.categories.map((c: string) => c.replace(/_/g, " ").toLowerCase()) : []
+  const hasAbout = skills.length > 0 || categories.length > 0 || wp.isAvailable
 
-  const perfStats = [
-    { label: "Compliments", value: profile?.compliments ?? 0, icon: "ti-heart" },
-    { label: "Challenges", value: profile?.challenges_participated ?? profile?.totalTasks ?? 0, icon: "ti-bolt" },
-    { label: "Wins", value: profile?.challenges_won ?? 0, icon: "ti-trophy" },
-    { label: "Communities", value: profile?.total_communities ?? userCommunities.length ?? 0, icon: "ti-users" },
-    ...(showEarnings ? [{ label: "Earnings", value: profile?.totalEarned ? '₦' + Number(profile.totalEarned).toLocaleString() : '₦0', icon: "ti-currency-dollar" }] : []),
-    ...(showRank ? [{ label: "Rank", value: (profile as any)?.workerProfile?.level || 'Beginner', icon: "ti-trophy" }] : []),
-    ...(showRank ? [{ label: "OgaScore", value: ((profile as any)?.workerProfile?.reputationScore || 0).toFixed(1), icon: "ti-star" }] : []),
+  const tabs: { key: Tab; label: string; icon: string; count: number }[] = [
+    { key: "store", label: "Store", icon: "ti-building-store", count: products.length },
+    { key: "portfolio", label: "Portfolio", icon: "ti-photo", count: portfolio.length },
+    { key: "reviews", label: "Reviews", icon: "ti-message-star", count: reviewTotal },
+    { key: "communities", label: "Communities", icon: "ti-users", count: communities.length },
   ]
-
-  // ─── Styles ────────────────────────────────────────────────────────────────
-
-  const S = {
-    cover: {
-      height: 110,
-      background: "var(--accent)",
-      position: "relative" as const,
-      overflow: "hidden",
-    } as React.CSSProperties,
-    coverDots: {
-      position: "absolute" as const,
-      inset: 0,
-      opacity: 0.1,
-      backgroundImage: "radial-gradient(circle, #fff 1px, transparent 1px)",
-      backgroundSize: "20px 20px",
-    } as React.CSSProperties,
-    card: {
-      background: "var(--card)",
-      border: "1px solid var(--border)",
-      borderRadius: 16,
-      overflow: "hidden",
-    } as React.CSSProperties,
-    avatarWrap: {
-      display: "flex",
-      alignItems: "flex-end",
-      gap: 14,
-      marginTop: -38,
-      padding: "0 20px",
-    } as React.CSSProperties,
-    avatarImg: {
-      width: 76,
-      height: 76,
-      borderRadius: "50%",
-      border: "4px solid var(--card)",
-      objectFit: "cover" as const,
-    } as React.CSSProperties,
-    avatarInitials: {
-      width: 76,
-      height: 76,
-      borderRadius: "50%",
-      border: "4px solid var(--card)",
-      background: "var(--accent)",
-      color: "var(--on-accent)",
-      display: "grid",
-      placeItems: "center",
-      fontSize: 26,
-      fontWeight: 700,
-      flexShrink: 0,
-    } as React.CSSProperties,
-    profileBody: {
-      padding: "14px 20px 0",
-    } as React.CSSProperties,
-    nameRow: {
-      display: "flex",
-      alignItems: "center",
-      gap: 8,
-      flexWrap: "wrap" as const,
-      marginTop: 44,
-    } as React.CSSProperties,
-    verifiedBadge: {
-      fontSize: 10,
-      fontWeight: 600,
-      color: "var(--on-accent)",
-      background: "var(--accent)",
-      padding: "2px 8px",
-      borderRadius: 999,
-    } as React.CSSProperties,
-    perfGrid: {
-      display: "grid",
-      gridTemplateColumns: "repeat(4, 1fr)",
-      gap: 10,
-      marginTop: 16,
-      paddingTop: 16,
-      borderTop: "1px solid var(--border)",
-    } as React.CSSProperties,
-    statCard: {
-      background: "var(--bg)",
-      border: "1px solid var(--border)",
-      borderRadius: 12,
-      padding: "12px 10px",
-      display: "flex",
-      alignItems: "center",
-      gap: 10,
-    } as React.CSSProperties,
-    statIcon: {
-      width: 34,
-      height: 34,
-      borderRadius: 10,
-      background: "var(--card)",
-      border: "1px solid var(--border)",
-      display: "grid",
-      placeItems: "center",
-      flexShrink: 0,
-    } as React.CSSProperties,
-    tabsRow: {
-      display: "flex",
-      borderBottom: "1px solid var(--border)",
-      marginTop: 18,
-      overflowX: "auto" as const,
-    } as React.CSSProperties,
-    tabContent: {
-      padding: "20px",
-    } as React.CSSProperties,
-    sectionCard: {
-      background: "var(--card)",
-      border: "1px solid var(--border)",
-      borderRadius: 14,
-      padding: "16px 18px",
-      marginBottom: 14,
-    } as React.CSSProperties,
-    sectionHead: {
-      display: "flex",
-      alignItems: "center",
-      gap: 8,
-      fontSize: 13,
-      fontWeight: 700,
-      marginBottom: 14,
-      color: "var(--text)",
-    } as React.CSSProperties,
-    blogCard: {
-      display: "flex",
-      justifyContent: "space-between",
-      alignItems: "center",
-      padding: "12px 14px",
-      background: "var(--bg)",
-      border: "1px solid var(--border)",
-      borderRadius: 10,
-      cursor: "pointer",
-      marginBottom: 8,
-    } as React.CSSProperties,
-    communityCard: {
-      display: "flex",
-      alignItems: "center",
-      gap: 12,
-      padding: "12px 14px",
-      background: "var(--bg)",
-      border: "1px solid var(--border)",
-      borderRadius: 10,
-      cursor: "pointer",
-      marginBottom: 8,
-    } as React.CSSProperties,
-    emptyState: {
-      textAlign: "center" as const,
-      padding: "32px 20px",
-      color: "var(--text3)",
-      fontSize: 13,
-    } as React.CSSProperties,
-    viewBtn: {
-      fontSize: 12,
-      fontWeight: 600,
-      padding: "5px 12px",
-      border: "1px solid var(--border)",
-      borderRadius: 8,
-      background: "transparent",
-      color: "var(--accent)",
-      cursor: "pointer",
-      fontFamily: "inherit",
-    } as React.CSSProperties,
-  }
-
-  // ─── Tab content renderers ─────────────────────────────────────────────────
-
-  const renderProfileTab = () => (
-    <>
-      {/* About Me */}
-      {profile.bio && (
-        <div style={S.sectionCard}>
-          <div style={S.sectionHead}>
-            <i className="ti ti-pencil" style={{ fontSize: 15 }} />
-            About Me
-          </div>
-          <p style={{ fontSize: 13, color: "var(--text2)", lineHeight: 1.7, margin: 0 }}>{profile.bio}</p>
-        </div>
-      )}
-
-
-
-      {/* Blog Posts */}
-      <div style={S.sectionCard}>
-        <div style={S.sectionHead}>
-          <i className="ti ti-writing-sign" style={{ fontSize: 15 }} />
-          {username}&apos;s blogs
-        </div>
-        {blogs.length === 0 ? (
-          <div style={S.emptyState}>
-            <i className="ti ti-file-text" style={{ fontSize: 30, display: "block", marginBottom: 8 }} />
-            No published blogs yet
-          </div>
-        ) : (
-          blogs.map((post: any) => (
-            <div key={post.id} style={S.blogCard} onClick={() => navigate(`/blog`)}>
-              <div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text)" }}>{post.title}</div>
-                {post.date && <div style={{ fontSize: 11, color: "var(--text3)", marginTop: 3 }}>{post.date}</div>}
-              </div>
-              <i className="ti ti-arrow-right" style={{ fontSize: 15, color: "var(--text3)" }} />
-            </div>
-          ))
-        )}
-      </div>
-
-      {/* Communities */}
-      <div style={S.sectionCard}>
-        <div style={S.sectionHead}>
-          <i className="ti ti-users" style={{ fontSize: 15 }} />
-          Communities
-        </div>
-        {userCommunities.length === 0 ? (
-          <div style={S.emptyState}>
-            <i className="ti ti-users-group" style={{ fontSize: 30, display: "block", marginBottom: 8 }} />
-            No communities yet
-          </div>
-        ) : (
-          userCommunities.map((c: any) => (
-            <div key={c.id} style={S.communityCard} onClick={() => navigate("/communities/" + c.id)}>
-              <div style={{
-                width: 44, height: 44, borderRadius: 10,
-                background: c.accentColor || c.accent_color || "var(--accent)",
-                display: "grid", placeItems: "center",
-                fontSize: 13, fontWeight: 700, color: "#fff",
-                flexShrink: 0, overflow: "hidden",
-              }}>
-                {(c.coverImage || c.cover_image)
-                  ? <img loading="lazy" src={c.coverImage || c.cover_image} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                  : c.initials || c.name?.slice(0, 2)?.toUpperCase()}
-              </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text)", display: "flex", alignItems: "center", gap: 6 }}>
-                  {c.name}
-                  {c.role === "OWNER" && (
-                    <span style={{ fontSize: 9, fontWeight: 700, color: "var(--on-accent)", background: "var(--accent)", padding: "2px 6px", borderRadius: 999, letterSpacing: "0.03em" }}>
-                      OWNER
-                    </span>
-                  )}
-                </div>
-                <div style={{ fontSize: 11, color: "var(--text3)", marginTop: 2 }}>{c.memberCount ?? c.member_count} members</div>
-              </div>
-              <button
-                style={S.viewBtn}
-                onClick={e => { e.stopPropagation(); navigate("/communities/" + c.id) }}
-              >
-                View
-              </button>
-            </div>
-          ))
-        )}
-      </div>
-    </>
-  )
-
-  const renderStoreTab = () => (
-    <div style={S.sectionCard}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-        <div style={S.sectionHead}>
-          <i className="ti ti-building-store" style={{ fontSize: 15 }} />
-          {username}&apos;s Store
-        </div>
-        <button style={{ fontSize: 12, display: "flex", alignItems: "center", gap: 5, color: "var(--text2)", background: "none", border: "1px solid var(--border)", borderRadius: 8, padding: "5px 10px", cursor: "pointer" }}>
-          <i className="ti ti-share" style={{ fontSize: 13 }} /> Share
-        </button>
-      </div>
-      <p style={{ fontSize: 12, color: "var(--text3)", marginBottom: 14 }}>Browse unique products and services</p>
-      <div style={{ borderTop: "1px solid var(--border)", paddingTop: 14 }}>
-        <div style={S.emptyState}>
-          <i className="ti ti-package" style={{ fontSize: 30, display: "block", marginBottom: 8 }} />
-          No products available
-        </div>
-      </div>
-    </div>
-  )
-
-  const renderPortfolioTab = () => (
-    <div style={S.sectionCard}>
-      <div style={S.sectionHead}>
-        <i className="ti ti-briefcase" style={{ fontSize: 15 }} />
-        Portfolio
-      </div>
-      <div style={S.emptyState}>
-        <i className="ti ti-file-off" style={{ fontSize: 30, display: "block", marginBottom: 8 }} />
-        No portfolio items yet
-      </div>
-    </div>
-  )
-
-  const renderChallengesTab = () => (
-    <div style={S.sectionCard}>
-      <div style={S.sectionHead}>
-        <i className="ti ti-star" style={{ fontSize: 15 }} />
-        Challenge Participations
-      </div>
-      <div style={S.emptyState}>
-        <i className="ti ti-medal" style={{ fontSize: 30, display: "block", marginBottom: 8 }} />
-        No challenge participations yet
-      </div>
-    </div>
-  )
-
-  const renderReviewsTab = () => (
-    <div style={S.sectionCard}>
-      <div style={S.sectionHead}>
-        <i className="ti ti-message" style={{ fontSize: 15 }} />
-        Reviews
-      </div>
-      <div style={{ display: "flex", alignItems: "center", gap: 20, marginBottom: 18, paddingBottom: 18, borderBottom: "1px solid var(--border)" }}>
-        <div style={{ textAlign: "center", flexShrink: 0 }}>
-          <div style={{ fontSize: 40, fontWeight: 800, lineHeight: 1, color: "var(--text)" }}>{avgRating.toFixed(1)}</div>
-          <div style={{ display: "flex", gap: 2, marginTop: 4, justifyContent: "center" }}>{renderStars(avgRating)}</div>
-          <div style={{ fontSize: 11, color: "var(--text3)", marginTop: 4 }}>Based on {reviewCount} reviews</div>
-        </div>
-        <div style={{ flex: 1 }}>
-          {[5, 4, 3, 2, 1].map(n => (
-            <div key={n} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 5 }}>
-              <span style={{ fontSize: 11, color: "var(--text2)", width: 8 }}>{n}</span>
-              <div style={{ flex: 1, height: 4, borderRadius: 999, background: "var(--border)" }} />
-              <span style={{ fontSize: 11, color: "var(--text3)" }}>0</span>
-            </div>
-          ))}
-        </div>
-      </div>
-      <div style={S.emptyState}>
-        <i className="ti ti-message-off" style={{ fontSize: 30, display: "block", marginBottom: 8 }} />
-        No reviews yet
-      </div>
-    </div>
-  )
-
-  const tabRenderers: Record<Tab, () => React.ReactNode> = {
-    profile: renderProfileTab,
-    store: renderStoreTab,
-    portfolio: renderPortfolioTab,
-    challenges: renderChallengesTab,
-    reviews: renderReviewsTab,
-  }
-
-  // ─── Main render ────────────────────────────────────────────────────────────
 
   return (
     <Layout>
-      <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
+      <div className="up-wrap">
+        <div className="up-crumb">
+          <button onClick={() => navigate(-1)}><i className="ti ti-arrow-left" /> Back</button>
+          <span>Public profile</span>
+        </div>
 
-      <div style={{ maxWidth: 800, margin: "0 auto", padding: "28px 24px 60px" }}>
-        {loading ? (
-          <div style={{ textAlign: "center", padding: "60px 20px", color: "var(--text3)" }}>
-            <div style={{
-              width: 32, height: 32,
-              border: "3px solid var(--border)", borderTopColor: "var(--text)",
-              borderRadius: "50%", animation: "spin .6s linear infinite",
-              margin: "0 auto 12px",
-            }} />
-            <p style={{ fontSize: 13 }}>Loading profile...</p>
-          </div>
-        ) : profile ? (
-          <>
-            {/* ── Profile Card ── */}
-            <div style={S.card}>
-              {/* Cover */}
-              <div style={{...S.cover, background: (profile.coverUrl || profile.cover_url) ? `url(${(profile.coverUrl || profile.cover_url)}) center/cover no-repeat` : 'var(--accent)'}}>
-                {!(profile.coverUrl || profile.cover_url) && <div style={S.coverDots} />}
+        {/* ── Header ── */}
+        <section className="up-card up-head">
+          <div className="up-id">
+            {profile.avatarUrl
+              ? <img className="up-avatar" src={profile.avatarUrl} alt="" />
+              : <div className="up-avatar">{(first[0] || handle[0] || "?").toUpperCase()}{last[0]?.toUpperCase() || ""}</div>}
+            <div style={{ minWidth: 0 }}>
+              <div className="up-eyebrow">{profile.role === "POSTER" ? "Job creator" : "Creator profile"}</div>
+              <div className="up-name">
+                <h1>{name}</h1>
+                {profile.humanVerified && <span className="up-badge ok"><i className="ti ti-fingerprint" /> Human verified</span>}
+                {profile.kycVerified && <span className="up-badge ok"><i className="ti ti-shield-check" /> ID verified</span>}
               </div>
-
-              <div style={S.profileBody}>
-                {/* Avatar + name row */}
-                <div style={S.avatarWrap}>
-                  {profile.avatarUrl || profile.pfp_url || profile.avatar ? (
-                    <img src={profile.avatarUrl || profile.pfp_url || profile.avatar} alt={profile.firstName || username} loading="lazy" style={S.avatarImg} />
-                  ) : (
-                    <div style={S.avatarInitials}>{initials}</div>
-                  )}
-                </div>
-
-                <div style={{ padding: "0 0 0 2px" }}>
-                  <div style={S.nameRow}>
-                    <h1 style={{ fontSize: 19, fontWeight: 800, margin: 0, color: "var(--text)" }}>
-                      {displayName}
-                    </h1>
-                    {profile.verified_creator && (
-                      <span style={S.verifiedBadge}><i className="ti ti-circle-check" style={{marginRight:3}} /> Verified Creator</span>
-                    )}
-                    {/* Invite button far right */}
-                    <button
-                      onClick={async () => {
-                        const url = `${window.location.origin}/u/${username}`
-                        try {
-                          await navigator.clipboard.writeText(url)
-                          setInviteCopied(true)
-                          setTimeout(() => setInviteCopied(false), 2000)
-                        } catch {}
-                      }}
-                      style={{
-                        marginLeft: "auto", fontSize: 12, fontWeight: 600,
-                        padding: "6px 16px", border: "1px solid var(--border)",
-                        borderRadius: 8, background: "transparent",
-                        color: "var(--text)", cursor: "pointer", fontFamily: "inherit",
-                      }}
-                    >
-                      {inviteCopied ? 'Copied!' : 'Invite'}
-                    </button>
-                  </div>
-                  {profile.username && (
-                    <p style={{ fontSize: 13, color: "var(--text2)", margin: "2px 0 0" }}>@{profile.username}</p>
-                  )}
-
-                  {/* Star rating */}
-                  <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 10 }}>
-                    <div style={{ display: "flex", gap: 2 }}>{renderStars(avgRating)}</div>
-                    <span style={{ fontSize: 14, fontWeight: 700, color: "var(--text)" }}>{avgRating.toFixed(1)}</span>
-                    <span style={{ fontSize: 12, color: "var(--text3)" }}>Average rating · {reviewCount} reviews</span>
-                  </div>
-
-                  {/* Bio short line */}
-                  {profile.bio && (
-                    <p style={{ fontSize: 13, color: "var(--text2)", lineHeight: 1.6, marginTop: 8, marginBottom: 0 }}>
-                      {profile.bio}
-                    </p>
-                  )}
-                </div>
-
-                {/* Performance Overview */}
-                <div style={{ paddingBottom: 4 }}>
-                  <div style={{ fontSize: 10, fontWeight: 700, color: "var(--text3)", letterSpacing: "0.08em", textTransform: "uppercase", marginTop: 18, marginBottom: 10 }}>
-                    Performance Overview
-                  </div>
-                  <div style={S.perfGrid}>
-                    {perfStats.map(stat => (
-                      <div key={stat.label} style={S.statCard}>
-                        <div style={S.statIcon}>
-                          <i className={`ti ${stat.icon}`} style={{ fontSize: 15, color: "var(--text2)" }} />
-                        </div>
-                        <div>
-                          <div style={{ fontSize: 18, fontWeight: 800, color: "var(--text)", lineHeight: 1 }}>{stat.value}</div>
-                          <div style={{ fontSize: 11, color: "var(--text3)", marginTop: 3 }}>{stat.label}{stat.label === 'Compliments' && <InfoBtn text="Compliments are positive feedback given by other users. They reflect your reputation and trustworthiness on the platform." />}</div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Tabs */}
-              <div style={S.tabsRow}>
-                {tabs.map(tab => (
-                  <button
-                    key={tab.key}
-                    onClick={() => setActiveTab(tab.key)}
-                    style={{
-                      fontSize: 13,
-                      padding: "10px 16px",
-                      cursor: "pointer",
-                      border: "none",
-                      background: "transparent",
-                      color: activeTab === tab.key ? "var(--accent)" : "var(--text2)",
-                      borderBottom: activeTab === tab.key ? "2px solid var(--accent)" : "2px solid transparent",
-                      fontWeight: activeTab === tab.key ? 700 : 400,
-                      whiteSpace: "nowrap",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 5,
-                      fontFamily: "inherit",
-                    }}
-                  >
-                    <i className={`ti ${tab.icon}`} style={{ fontSize: 14 }} />
-                    {tab.label}
-                  </button>
-                ))}
-              </div>
-
-              {/* Tab content */}
-              <div style={S.tabContent}>
-                {tabRenderers[activeTab]()}
+              <div className="up-handle">@{handle} · Joined {fmtDate(profile.createdAt, { month: "long", year: "numeric" })}</div>
+              {profile.bio && <p className="up-bio">{profile.bio}</p>}
+              <div className="up-actions">
+                {isMe ? (
+                  <Link className="up-btn primary" to="/profile"><i className="ti ti-pencil" /> Edit profile</Link>
+                ) : (
+                  <Link className="up-btn primary" to={`/user/${handle}/hire`}><i className="ti ti-briefcase" /> Hire</Link>
+                )}
+                {!isMe && <button className="up-btn" onClick={invite}><i className="ti ti-user-plus" /> Invite</button>}
+                <button className="up-btn" onClick={share}><i className={`ti ${shared ? "ti-check" : "ti-share"}`} /> {shared ? "Link copied" : "Share"}</button>
               </div>
             </div>
-          </>
-        ) : (
-          <div style={{ textAlign: "center", padding: "60px 20px" }}>
-            <i className="ti ti-user-off" style={{ fontSize: 40, color: "var(--text3)", display: "block", marginBottom: 12 }} />
-            <h2 style={{ fontSize: 18, fontWeight: 700, margin: "0 0 6px" }}>User not found</h2>
-            <p style={{ fontSize: 13, color: "var(--text2)" }}>The user @{username} does not exist or their profile is private.</p>
-            <button
-              onClick={() => navigate("/")}
-              style={{ marginTop: 16, background: "var(--text)", color: "var(--bg)", border: "none", borderRadius: 8, padding: "8px 20px", fontSize: 13, fontWeight: 600, cursor: "pointer" }}
-            >
-              Go Home
-            </button>
           </div>
+
+          <div className="up-rating">
+            <div className="up-eyebrow">Average rating</div>
+            <div className="n">{avg.toFixed(1)}<small>/ 5</small></div>
+            <Stars value={avg} />
+            <div className="c">{reviewTotal} {reviewTotal === 1 ? "review" : "reviews"}</div>
+          </div>
+
+          <div className="up-stats">
+            {stats.map((s) => (
+              <div className="up-stat" key={s.label}>
+                <div className="l"><i className={`ti ${s.icon}`} /> {s.label}</div>
+                <div className="v">{s.value}</div>
+                {s.sub && <div className="s">{s.sub}</div>}
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {hasAbout && (
+          <section className="up-card up-about">
+            <h2>About</h2>
+            {wp.isAvailable && <div className="up-avail">Available for work</div>}
+            {skills.length > 0 && <div className="up-chips">{skills.map((s) => <span className="up-chip" key={s}>{s}</span>)}</div>}
+            {categories.length > 0 && (
+              <div className="up-chips" style={{ marginTop: skills.length ? 8 : 0 }}>
+                {categories.map((c) => <span className="up-chip" key={c} style={{ textTransform: "capitalize" }}>{c}</span>)}
+              </div>
+            )}
+          </section>
         )}
+
+        {/* ── Tabs ── */}
+        <div className="up-tabs-row">
+          <div className="up-tabs" role="tablist">
+            {tabs.map((t) => (
+              <button key={t.key} role="tab" aria-selected={tab === t.key} className={`up-tab ${tab === t.key ? "on" : ""}`} onClick={() => setTab(t.key)}>
+                <i className={`ti ${t.icon}`} /> {t.label} {t.count > 0 && <em>{t.count}</em>}
+              </button>
+            ))}
+          </div>
+          <button className="up-top" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}><i className="ti ti-arrow-up" /> Profile</button>
+        </div>
+
+        {tab === "store" && (
+          <section>
+            <div className="up-sec-h"><h2>Products & services</h2><p>What {first || handle} offers in the OgaPay store.</p></div>
+            {products.length === 0 ? (
+              <div className="up-empty"><i className="ti ti-building-store" />No products yet.</div>
+            ) : (
+              <div className="up-grid">
+                {products.map((p) => (
+                  <Link className="up-card up-item" to={`/store/${p.id}`} key={p.id}>
+                    <div className="img">{p.image ? <img src={p.image} alt="" loading="lazy" /> : <i className="ti ti-package" />}</div>
+                    <div className="body">
+                      <div className="meta">{String(p.category || "").replace(/_/g, " ")} · {fmtDate(p.createdAt)}</div>
+                      <h3>{p.title}</h3>
+                      {p.description && <p>{p.description}</p>}
+                      <div className="foot">
+                        <b>{money(p.price, p.currency)}</b>
+                        {p.reviewsCount > 0 ? <span><Stars value={p.rating} /> <small style={{ color: "var(--text3)" }}>({p.reviewsCount})</small></span> : <span className="link">View details <i className="ti ti-arrow-right" /></span>}
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </section>
+        )}
+
+        {tab === "portfolio" && (
+          <section>
+            <div className="up-sec-h"><h2>Portfolio</h2><p>A closer look at {first || handle}'s work.</p></div>
+            {portfolio.length === 0 ? (
+              <div className="up-empty"><i className="ti ti-photo" />No portfolio items yet.</div>
+            ) : (
+              <div className="up-grid">
+                {portfolio.map((it) => (
+                  <div className="up-card up-item" key={it.id}>
+                    {it.imageUrl && <div className="img"><img src={it.imageUrl} alt="" loading="lazy" /></div>}
+                    <div className="body">
+                      <h3>{it.title}</h3>
+                      {it.description && <p>{it.description}</p>}
+                      {it.url && (
+                        <div className="foot">
+                          <a href={it.url} target="_blank" rel="noopener noreferrer nofollow">Open link <i className="ti ti-external-link" /></a>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+        )}
+
+        {tab === "reviews" && (
+          <section>
+            <div className="up-sec-h"><h2>Reviews</h2><p>Ratings from job creators and store buyers.</p></div>
+            {!reviews || reviews.total === 0 ? (
+              <div className="up-empty"><i className="ti ti-message-star" />No reviews yet.</div>
+            ) : (
+              <>
+                <div className="up-card up-rev-sum">
+                  <div>
+                    <div className="n">{reviews.average.toFixed(1)}</div>
+                    <Stars value={reviews.average} />
+                    <div style={{ fontSize: 12, color: "var(--text3)", marginTop: 4 }}>{reviews.total} {reviews.total === 1 ? "review" : "reviews"}</div>
+                  </div>
+                  <div className="up-bars">
+                    {[5, 4, 3, 2, 1].map((n) => {
+                      const c = reviews.distribution[n] || 0
+                      return (
+                        <div className="up-bar" key={n}>
+                          <span>{n}</span>
+                          <div><span style={{ width: `${reviews.total ? (c / reviews.total) * 100 : 0}%` }} /></div>
+                          <span style={{ textAlign: "right" }}>{c}</span>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+                {reviews.reviews.map((r) => (
+                  <article className="up-card up-rev" key={r.id}>
+                    <div className="who">
+                      {r.reviewer?.avatarUrl ? <img src={r.reviewer.avatarUrl} alt="" /> : <span className="ph">{(r.reviewer?.name || "?")[0].toUpperCase()}</span>}
+                      <div style={{ minWidth: 0 }}>
+                        {r.reviewer ? <Link to={`/user/${r.reviewer.username}`}>{r.reviewer.name}</Link> : <b>OgaPay user</b>}
+                        <small>{fmtDate(r.date)}</small>
+                      </div>
+                      <span style={{ marginLeft: "auto" }}><Stars value={r.rating} /></span>
+                    </div>
+                    <div className="subj">
+                      {r.kind === "product" ? "Bought " : "Job: "}
+                      {r.kind === "product" && r.subject.id ? <Link to={`/store/${r.subject.id}`}>{r.subject.title}</Link> : r.subject.title}
+                    </div>
+                    {r.text && <p>{r.text}</p>}
+                  </article>
+                ))}
+              </>
+            )}
+          </section>
+        )}
+
+        {tab === "communities" && (
+          <section>
+            <div className="up-sec-h"><h2>Communities</h2><p>Where {first || handle} hangs out.</p></div>
+            {communities.length === 0 ? (
+              <div className="up-empty"><i className="ti ti-users" />Not in any community yet.</div>
+            ) : (
+              <div className="up-list">
+                {communities.map((c) => (
+                  <Link className="up-card up-row" to={`/communities/${c.id}`} key={c.id}>
+                    <div className="ic" style={{ background: c.accentColor || "var(--text)" }}>
+                      {c.coverImage ? <img src={c.coverImage} alt="" loading="lazy" /> : c.initials}
+                    </div>
+                    <div style={{ minWidth: 0 }}>
+                      <b>{c.name}</b>
+                      <small>{c.memberCount} {c.memberCount === 1 ? "member" : "members"}</small>
+                    </div>
+                    {c.role && c.role !== "MEMBER" && <span className="up-role">{c.role}</span>}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </section>
+        )}
+
+        {/* ── Writing ── */}
+        <section className="up-writing">
+          <div className="up-eyebrow">Published writing</div>
+          <div className="up-sec-h" style={{ marginTop: 4 }}><h2>From the creator</h2></div>
+          {blogs.length === 0 ? (
+            <div className="up-empty"><i className="ti ti-writing" />No published blogs yet.</div>
+          ) : (
+            blogs.map((b) => (
+              <Link className="up-post" to={`/blog/${b.slug || b.id}`} key={b.id}>
+                <time>{fmtDate(b.publishedAt || b.createdAt)}</time>
+                <div>
+                  <h3>{b.title}</h3>
+                  {b.excerpt && <p>{b.excerpt}</p>}
+                  <span>Read story →</span>
+                </div>
+              </Link>
+            ))
+          )}
+        </section>
       </div>
 
-      {/* Layout provides Drawer and Footer */}
-
-      {/* OgaScore Info Modal */}
-      {showOgaScoreInfo && (
-        <div
-          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000 }}
-          onClick={() => setShowOgaScoreInfo(false)}
-        >
-          <div
-            style={{ background: "var(--card)", borderRadius: 14, padding: 24, maxWidth: 460, width: "90%", position: "relative" }}
-            onClick={e => e.stopPropagation()}
-          >
-            <button
-              onClick={() => setShowOgaScoreInfo(false)}
-              style={{ position: "absolute", top: 16, right: 16, background: "none", border: "none", fontSize: 24, cursor: "pointer", color: "var(--text2)" }}
-            >
-              <i className="ti ti-x" />
-            </button>
-            <h2 style={{ fontSize: 18, fontWeight: 900, marginBottom: 16 }}>What is OgaScore?</h2>
-            <p style={{ fontSize: 13, color: "var(--text)", lineHeight: 1.6, marginBottom: 12 }}>
-              OgaScore is your reputation score on OgaPay. It reflects your trust level and activity on the platform. A higher score unlocks premium communities and higher-paying tasks.
-            </p>
-            <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text2)", marginBottom: 8 }}>How to increase your OgaScore:</div>
-            <ul style={{ fontSize: 12, color: "var(--text)", lineHeight: 1.8, paddingLeft: 18, margin: "0 0 4px" }}>
-              <li>Connect social accounts (LinkedIn +10, X +8, GitHub +8, Google +5, Telegram +5)</li>
-              <li>Complete KYC/BVN verification (+20)</li>
-              <li>Complete tasks on time</li>
-              <li>Fill in your profile (bio, avatar, skills)</li>
-              <li>Connect a Solana wallet</li>
-              <li>Refer friends to OgaPay</li>
-            </ul>
-          </div>
-        </div>
-      )}
+      {inviteOpen && <InviteToCommunity username={handle} name={first || handle} onClose={() => setInviteOpen(false)} />}
     </Layout>
   )
 }

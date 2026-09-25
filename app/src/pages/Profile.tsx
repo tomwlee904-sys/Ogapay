@@ -11,6 +11,13 @@ import { useToast } from '../components/Toast'
 import { uploadImage } from '../lib/upload'
 import bs58 from "bs58"
 import VirtualAccountCard from '../components/VirtualAccountCard'
+import SavedBanksList from '../components/SavedBanksList'
+import FundWalletModal from '../components/FundWalletModal'
+import ProfileQuickLinks from '../components/profile/ProfileQuickLinks'
+import ProfileCommunitiesCard from '../components/profile/ProfileCommunitiesCard'
+import ProfileConnectXCard from '../components/profile/ProfileConnectXCard'
+import ProfilePortfolioCard from '../components/profile/ProfilePortfolioCard'
+import '../styles/profile-own.css'
 
 /* ─── Icons ─── */
 import TabWorkerPortalContent from '../components/ProfileWorkerPortalTab'
@@ -126,9 +133,10 @@ export default function Profile() {
   const [searchParams] = useSearchParams();
   const [tab, setTab] = useState(searchParams.get("tab") || "profile");
   const [showBal, setShowBal] = useState(false);
-  const [swBal, setSwBal] = useState(false);
+  const [fundModal, setFundModal] = useState<null | 'deposit' | 'withdraw'>(null);
+  const [savingPref, setSavingPref] = useState(false);
   const [verifSending, setVerifSending] = useState(false);
-  const [verifMsg, setVerifMsg] = useState('');
+  const [verifMsg, setVerifMsg] = useState<React.ReactNode>('');
   const [accountNumber, setAccountNumber] = useState("");
   const [bankName, setBankName] = useState("");
   const [accountName, setAccountName] = useState("");
@@ -277,6 +285,29 @@ export default function Profile() {
   // KYC status
   const isKycVerified = kycStatus?.status === 'APPROVED' || profileData?.kyc?.status === 'APPROVED';
   const isHumanVerified = !!((authUser as any)?.humanVerified || profileData?.humanVerified);
+  const lockedNgn = walletBal?.NGN?.lockedBalance ?? 0;
+
+  // Saved preferences (PATCH replaces the whole object, so merge first)
+  const autoConvert = !!profileData?.preferences?.autoConvert;
+  const isPublic = profileData?.isPublic !== false;
+  const savePref = async (patch: Record<string, any>) => {
+    if (savingPref) return;
+    setSavingPref(true);
+    try {
+      if ('isPublic' in patch) {
+        await apiRequest('/users/me', { method: 'PATCH', body: JSON.stringify({ isPublic: patch.isPublic }) });
+        setProfileData((d: any) => ({ ...d, isPublic: patch.isPublic }));
+      } else {
+        const preferences = { ...(profileData?.preferences || {}), ...patch };
+        await apiRequest('/users/me/preferences', { method: 'PATCH', body: JSON.stringify({ preferences }) });
+        setProfileData((d: any) => ({ ...d, preferences }));
+      }
+    } catch (e: any) {
+      toast(e?.message || 'Could not save', 'error');
+    }
+    setSavingPref(false);
+  };
+  const flip = (current: boolean, key: string) => (u: any) => savePref({ [key]: typeof u === 'function' ? u(current) : u });
 
   // Bank account save
   const saveBank = async () => {
@@ -380,8 +411,10 @@ export default function Profile() {
     { id: "referrals", label: "Referrals", icon: "affiliate" },
     { id: "notifications", label: "Notifications", icon: "bell" },
     { id: "portal", label: "Worker Portal", icon: "briefcase" },
+    { id: "store", label: "My Store", icon: "building-store" },
   ];
   const tabNav = (id: string) => {
+    if (id === "store") { navigate("/my-store"); return; }
     setTab(id);
   };
 
@@ -402,7 +435,7 @@ export default function Profile() {
       <style>{`
         .pg{width:100%;max-width:100%;margin:0 auto;padding:0 16px 60px}
         .page{max-width:100%!important;width:100%}
-        .tab-bar{display:grid;grid-template-columns:repeat(6,1fr);gap:0;margin:0 0 20px;border:1px solid var(--border);border-radius:12px;overflow:hidden;background:var(--card)}
+        .tab-bar{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:0;margin:0 0 20px;border:1px solid var(--border);border-radius:12px;overflow:hidden;background:var(--card)}
         .tab-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;height:72px;padding:10px 10px;border:none;border-right:1px solid var(--border);background:transparent;color:var(--text2);font-size:12px;font-weight:700;cursor:pointer;transition:background .13s,color .13s;text-align:center;font-family:inherit}
         .tab-btn:last-child{border-right:none}
         .tab-btn:hover{background:var(--bg2);color:var(--text)}
@@ -616,151 +649,75 @@ export default function Profile() {
                   )}
                 </div>
 
-                {/* Show all balances toggle */}
-                <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'10px 0',borderBottom:'1px dashed var(--border)',fontSize:13}}>
-                  <span style={{color:'var(--text2)',fontWeight:600}}>
-                    Show all balances
-                    {!hasWallet && <span style={{marginLeft:6,fontSize:11,color:'var(--text3)',fontWeight:400}}>(connect wallet)</span>}
-                  </span>
-                  <Toggle on={showBal} set={setShowBal} />
+                {/* Naira balance: always visible */}
+                <div style={{display:'flex',justifyContent:'space-between',alignItems:'baseline',gap:10,padding:'14px 0 6px',flexWrap:'wrap'}}>
+                  <div>
+                    <div style={{fontSize:11,fontWeight:700,color:'var(--text3)',textTransform:'uppercase',letterSpacing:'.06em'}}>Available</div>
+                    <div style={{fontFamily:'Geist',fontSize:26,fontWeight:900,letterSpacing:'-.02em'}}>{loading ? <span className="skeleton" style={{width:120,height:24,display:'inline-block'}} /> : fmt(totalNgn, "NGN")}</div>
+                  </div>
+                  {!loading && lockedNgn > 0 && <span style={{fontSize:12,color:'var(--text2)'}}>{fmt(lockedNgn, "NGN")} held in escrow</span>}
+                </div>
+                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,margin:'10px 0 14px'}}>
+                  <button className="dash-btn" style={{width:'100%',justifyContent:'center'}} onClick={() => setFundModal('withdraw')}><Icon n="logout" s={14} c="var(--bg)" /> Withdraw</button>
+                  <button className="dash-btn" style={{width:'100%',justifyContent:'center'}} onClick={() => setFundModal('deposit')}><Icon n="plus" s={14} c="var(--bg)" /> Deposit</button>
                 </div>
 
+                {/* Other balances */}
+                <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'10px 0',borderTop:'1px dashed var(--border)',fontSize:13}}>
+                  <span style={{color:'var(--text2)',fontWeight:600}}>Show all balances</span>
+                  <Toggle on={showBal} set={setShowBal} />
+                </div>
                 {showBal && (
+                  <div style={{padding:'0 0 8px'}}>
+                    {[['USDC', usdcBal, 2], ['SOL', solBal, 4]].map(([c, v, d]: any) => (
+                      <div key={c} style={{display:'flex',justifyContent:'space-between',padding:'8px 0',fontSize:14,borderBottom:'1px dashed var(--border)'}}>
+                        <span style={{fontWeight:700}}>{c}</span>
+                        <span style={{fontFamily:'var(--font-mono, monospace)'}}>{Number(v || 0).toFixed(d)}</span>
+                      </div>
+                    ))}
+                    <a href="/wallet" style={{display:'inline-block',marginTop:8,fontSize:12,color:'var(--text)',fontWeight:700}}>Open wallet →</a>
+                  </div>
+                )}
+
+                {!hasWallet && (
+                  <button className="dash-btn" style={{width:'100%',justifyContent:'center',margin:'6px 0 10px',background:'transparent',border:'1.5px solid var(--border)',color:'var(--text)'}} onClick={() => setShowWalletOptions(true)}>
+                    <Icon n="wallet" s={14} /> Connect Solana wallet
+                  </button>
+                )}
+
+                {hasWallet && (
                   <>
-                    {/* OGA Balance */}
-                    <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'10px 0',borderBottom:'1px dashed var(--border)',fontSize:16}}>
-                      <span style={{fontWeight:800}}>
-                        {loading ? <span className="skeleton" style={{width:80,height:16}} /> : <>
-                           {Number(totalNgn).toLocaleString()} <span style={{color:'var(--accent)'}}>$PAY</span>
-                        </>}
-                      </span>
-                      {!loading && <span style={{fontSize:12,color:'var(--text2)'}}>≈ {fmt(ngnBal, "NGN")}</span>}
-                    </div>
-
-                    {/* Quick actions */}
-                    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,margin:'14px 0'}}>
-                      <button className="dash-btn" style={{width:'100%',justifyContent:'center'}} onClick={() => navigate('/wallet')}><Icon n="logout" s={14} c="var(--bg)" /> Withdraw</button>
-                      <button className="dash-btn" style={{width:'100%',justifyContent:'center'}} onClick={() => navigate('/wallet')}><Icon n="plus" s={14} c="var(--bg)" /> Deposit</button>
-                    </div>
-
-                    {hasWallet && (
-                      <button className="dash-btn" style={{width:'100%',justifyContent:'center',marginBottom:10,background:'transparent',border:'1.5px solid var(--border)',color:'var(--text)'}} onClick={() => navigate('/wallet')}>
-                        <Icon n="transfer" s={14} /> Swap
-                      </button>
+                    <button className="dash-btn" style={{width:'100%',justifyContent:'center',margin:'6px 0 10px',background:'transparent',border:'1.5px solid var(--border)',color:'var(--text)'}} onClick={handleGeneratePairCode} disabled={generatingPair}>
+                      <Icon n="device-mobile" s={14} /> {generatingPair ? 'Generating…' : 'Pair Device'}
+                    </button>
+                    {pairCode && (
+                      <div style={{textAlign:'center',padding:'12px',marginBottom:10,background:'var(--bg2)',borderRadius:10,fontSize:12}}>
+                        <div style={{fontSize:10,color:'var(--text3)',marginBottom:4,fontWeight:600}}>Pairing Code (expires in 5 min)</div>
+                        <div style={{fontSize:20,fontWeight:900,letterSpacing:3,color:'var(--text)',fontFamily:'monospace',wordBreak:'break-all'}}>{pairCode}</div>
+                        <button type="button" onClick={() => { navigator.clipboard.writeText(pairCode); toast('Code copied!') }} style={{marginTop:6,fontSize:11,color:'var(--text2)',background:'none',border:'none',cursor:'pointer',textDecoration:'underline',fontFamily:'inherit'}}>Copy code</button>
+                      </div>
                     )}
-
-                    {!hasWallet && (
-                      <button className="dash-btn" style={{width:'100%',justifyContent:'center',marginBottom:10,background:'var(--accent)'}} onClick={() => setShowWalletOptions(true)}>
-                        <Icon n="wallet" s={14} c="var(--on-accent)" /> Connect Wallet
-                      </button>
-                    )}
-
-                    {hasWallet && (
-                      <>
-                        <button className="dash-btn" style={{width:'100%',justifyContent:'center',marginBottom:10,background:'transparent',border:'1.5px solid var(--border)',color:'var(--text)'}} onClick={handleGeneratePairCode} disabled={generatingPair}>
-                          <Icon n="device-mobile" s={14} /> {generatingPair ? 'Generating…' : 'Pair Device'}
-                        </button>
-                        {pairCode && (
-                          <div style={{textAlign:'center',padding:'12px',marginBottom:10,background:'var(--bg2)',borderRadius:10,fontSize:12}}>
-                            <div style={{fontSize:10,color:'var(--text3)',marginBottom:4,fontWeight:600}}>Pairing Code (expires in 5 min)</div>
-                            <div style={{fontSize:24,fontWeight:900,letterSpacing:6,color:'var(--accent)',fontFamily:'monospace'}}>{pairCode}</div>
-                            <button type="button" onClick={() => { navigator.clipboard.writeText(pairCode); toast('Code copied!') }} style={{marginTop:6,fontSize:11,color:'var(--text2)',background:'none',border:'none',cursor:'pointer',textDecoration:'underline',fontFamily:'inherit'}}>Copy code</button>
-                          </div>
-                        )}
-                        <button className="dash-btn" style={{width:'100%',justifyContent:'center',marginBottom:10,background:'transparent',border:'1.5px solid var(--border)',color:'var(--text)'}} onClick={() => setShowWalletOptions(true)}>
-                          <Icon n="link" s={14} /> Link Extra Wallet
-                        </button>
-
-                        {/* Auto Swap */}
-                        <div style={{padding:'13px 0 8px',borderTop:'1px solid var(--border)',display:'flex',alignItems:'flex-start',justifyContent:'space-between',gap:12}}>
-                          <div>
-                            <div style={{fontSize:13,fontWeight:800}}>Auto Swap</div>
-                            <div style={{fontSize:12,color:'var(--text2)',lineHeight:1.45}}>Auto-convert earnings to preferred token</div>
-                            <div style={{display:'inline-flex',alignItems:'center',gap:5,border:'1.5px solid var(--border)',borderRadius:99,padding:'3px 10px',fontSize:12,fontWeight:700,marginTop:8}}>
-                              <span>SOL</span><span style={{color:'var(--text3)'}}>·</span><span>USDC</span><span style={{color:'var(--text3)'}}>·</span><span>NGN</span>
-                            </div>
-                          </div>
-                          <Toggle on={swBal} set={setSwBal} />
-                        </div>
-                        <div style={{fontSize:11,color:'var(--text3)',marginTop:8}}>
-                          <a href="/wallet" style={{color:'var(--accent)',textDecoration:'none'}}>View my withdrawals</a>
-                        </div>
-                      </>
-                    )}
+                    <button className="dash-btn" style={{width:'100%',justifyContent:'center',marginBottom:10,background:'transparent',border:'1.5px solid var(--border)',color:'var(--text)'}} onClick={() => setShowWalletOptions(true)}>
+                      <Icon n="link" s={14} /> Link Extra Wallet
+                    </button>
                   </>
                 )}
 
-                {/* Bank Account / Virtual Account Section */}
-                <div id="bank-section" style={{ padding: '13px 0 0', borderTop: '1px solid var(--border)', marginTop: 13 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-                    <div style={{ fontSize: 13, fontWeight: 800 }}>Bank Account (NGN)</div>
-                    {accountNumber && !editingBank && (
-                      <button className="btn-outline btn-sm" onClick={() => setEditingBank(true)}>
-                        <Icon n="edit" s={12} /> Edit
-                      </button>
-                    )}
+                {/* Auto-convert (saved: preferences.autoConvert) */}
+                <div style={{padding:'13px 0 4px',borderTop:'1px solid var(--border)',display:'flex',alignItems:'flex-start',justifyContent:'space-between',gap:12}}>
+                  <div>
+                    <div style={{fontSize:13,fontWeight:800}}>Auto-convert USDC</div>
+                    <div style={{fontSize:12,color:'var(--text2)',lineHeight:1.45}}>Turn USDC you earn into naira automatically, at the current rate.</div>
                   </div>
+                  <Toggle on={autoConvert} set={flip(autoConvert, 'autoConvert')} />
+                </div>
 
-                  {/* If user has manually saved bank account — show it locked */}
-                  {!editingBank && accountNumber ? (
-                    <div>
-                      <div className="stat-row" style={{ borderBottom: 'none', padding: '6px 0' }}>
-                        <span className="stat-label">Bank</span>
-                        <span className="stat-val">{bankName}</span>
-                      </div>
-                      <div className="stat-row" style={{ borderBottom: 'none', padding: '6px 0' }}>
-                        <span className="stat-label">Account Name</span>
-                        <span className="stat-val">{accountName}</span>
-                      </div>
-                      <div className="stat-row" style={{ borderBottom: 'none', padding: '6px 0' }}>
-                        <span className="stat-label">Account Number</span>
-                        <span className="stat-val" style={{ fontFamily: 'monospace', fontSize: 14 }}>{accountNumber}</span>
-                      </div>
-                    </div>
-
-                  ) : editingBank ? (
-                    /* Manual edit form — keep existing */
-                    <div>
-                      <div style={{ marginBottom: 10 }}>
-                        <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text2)', display: 'block', marginBottom: 4 }}>Account Number</label>
-                        <input className="dash-input" value={accountNumber} onChange={e => setAccountNumber(e.target.value.replace(/\D/g, ''))} placeholder="0123456789" />
-                      </div>
-                      <div style={{ marginBottom: 10 }}>
-                        <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text2)', display: 'block', marginBottom: 4 }}>Bank Name</label>
-                        <input className="dash-input" value={bankName} onChange={e => setBankName(e.target.value)} placeholder="Access Bank" />
-                      </div>
-                      <div style={{ marginBottom: 10 }}>
-                        <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--text2)', display: 'block', marginBottom: 4 }}>Account Name</label>
-                        <input className="dash-input" value={accountName} onChange={e => setAccountName(e.target.value)} placeholder="John Doe" />
-                      </div>
-                      {bankMsg && <div style={{ fontSize: 12, color: 'var(--red)', marginBottom: 8 }}>{bankMsg}</div>}
-                      <button className="dash-btn" onClick={saveBank} disabled={savingBank} style={{ opacity: savingBank ? 0.6 : 1 }}>
-                        {savingBank ? 'Saving...' : 'Save Bank Account'}
-                      </button>
-                    </div>
-
-                  ) : (
-                    /* No bank account — show VirtualAccountCard to auto-create one */
-                    <div>
-                      <p style={{ fontSize: 12, color: 'var(--text3)', marginBottom: 12, lineHeight: 1.5 }}>
-                        No bank account linked. Create a free virtual account instantly or add your own.
-                      </p>
-
-                      {/* Virtual account creator */}
-                      <VirtualAccountCard />
-
-                      {/* Option to add manual bank account instead */}
-                      <div style={{ textAlign: 'center', margin: '10px 0 4px', fontSize: 11, color: 'var(--text3)', fontWeight: 600 }}>
-                        — or —
-                      </div>
-                      <button
-                        onClick={() => setEditingBank(true)}
-                        style={{ width: '100%', border: 'none', background: 'none', color: 'var(--accent)', fontWeight: 700, cursor: 'pointer', fontSize: 12, fontFamily: 'inherit', padding: '8px 0' }}
-                      >
-                        + Add my own bank account manually
-                      </button>
-                    </div>
-                  )}
+                {/* Bank accounts (real: /wallet/banks) + deposit account */}
+                <div id="bank-section" style={{ padding: '13px 0 0', borderTop: '1px solid var(--border)', marginTop: 13 }}>
+                  <div style={{ fontSize: 13, fontWeight: 800, marginBottom: 10 }}>Bank accounts (NGN)</div>
+                  <SavedBanksList />
+                  <div style={{ fontSize: 13, fontWeight: 800, margin: '16px 0 10px' }}>Deposit account</div>
+                  <VirtualAccountCard />
                 </div>
               </div>
             </div>
@@ -805,6 +762,17 @@ export default function Profile() {
                   )}
                 </div>
 
+                {/* Public profile */}
+                {!loading && (
+                  <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:10,padding:'0 0 14px',marginBottom:14,borderBottom:'1px solid var(--border)'}}>
+                    <div style={{minWidth:0}}>
+                      <div style={{fontSize:13,fontWeight:800}}>Public profile {isPublic ? '' : '(private)'}</div>
+                      {user?.username && <a href={`/user/${user.username}`} style={{fontSize:12,color:'var(--text2)'}}>ogapay.app/user/{user.username} →</a>}
+                    </div>
+                    <Toggle on={isPublic} set={flip(isPublic, 'isPublic')} />
+                  </div>
+                )}
+
                 {/* Bio */}
                 {!loading && (profileData?.workerProfile?.bio || profileData?.bio) && (
                   <div style={{fontSize:13,lineHeight:1.5,marginBottom:14}}>
@@ -823,13 +791,12 @@ export default function Profile() {
                   <div><span className="skeleton" style={{width:'100%',height:14,display:'block',marginBottom:8}} /><span className="skeleton" style={{width:'80%',height:14,display:'block',marginBottom:8}} /><span className="skeleton" style={{width:'60%',height:14,display:'block'}} /></div>
                 ) : (
                   <>
-                    <StatRow label="Rank" val={profileData?.workerProfile?.level || 'Beginner'} info onInfoClick={() => setShowInfo('rank')} />
+                    <StatRow label="Rank" val={(l => l.charAt(0) + l.slice(1).toLowerCase())(String(profileData?.workerProfile?.level || 'BEGINNER'))} info onInfoClick={() => setShowInfo('rank')} />
                     <StatRow label="OgaScore" val={profileData?.workerProfile?.reputationScore?.toFixed(1) || '0.0'} info onInfoClick={() => setShowInfo('ogaScore')} />
                     <StatRow label="Tasks Completed" val={profileData?.workerProfile?.tasksCompleted ?? 0} />
                     <StatRow label="Success Rate" val={profileData?.workerProfile?.successRate ? profileData.workerProfile.successRate + '%' : '0%'} info onInfoClick={() => setShowInfo('successRate')} />
                     <StatRow label="Total Earned" val={profileData?.workerProfile?.totalEarned ? fmt(Number(profileData.workerProfile.totalEarned), "NGN") : fmt(0, "NGN")} />
                     <StatRow label="Avg Rating" val={profileData?.workerProfile?.avgRating?.toFixed(1) || '0.0'} info />
-                    <StatRow label="Nickname" val={profileData?.workerProfile?.nickname || '-'} />
                     <StatRow label="Skills" val={profileData?.workerProfile?.skills?.length ? profileData.workerProfile.skills.slice(0,3).join(', ')+(profileData.workerProfile.skills.length>3?' +' + (profileData.workerProfile.skills.length - 3):'') : '-'} />
                     <StatRow label="Categories" val={profileData?.workerProfile?.categories?.length ? profileData.workerProfile.categories.join(', ') : '-'} />
                     <StatRow label="Human Verified" val={isHumanVerified ? 'Yes' : 'No'} valClass={isHumanVerified ? 'yes' : 'no'} info onInfoClick={() => setShowInfo('humanVerified')} />
@@ -888,26 +855,14 @@ export default function Profile() {
             </div>
           </div>
 
-          {/* Quick Links */}
-          <div style={{marginTop:24,marginBottom:20}}>
-            <div style={{fontSize:15,fontWeight:800,marginBottom:12,color:'var(--text)'}}>Quick Links</div>
-            <div className="profile-quick-grid">
-              {QUICK.map((q,i) => (
-                <a className="quick-tile" key={i} onClick={() => {
-                  if (q.page === 'blog') navigate('/blog');
-                  else if (q.page === 'vault') navigate('/vault');
-                  else if (q.page === 'create') navigate('/create');
-                  else if (q.page === 'tasks') navigate('/tasks');
-                  else if (q.page === 'monitor') navigate('/job-monitor');
-                  else if (q.page === 'manage') navigate('/manage-jobs');
-                  else if (q.page === 'bookmarks') navigate('/bookmarks');
-                }}>
-                  <Icon n={q.icon} s={22} c="var(--text2)" />
-                  {q.label}
-                </a>
-              ))}
-            </div>
+          <div className="prof-grid" style={{marginBottom:20}}>
+            <ProfileCommunitiesCard />
+            <ProfileConnectXCard connected={!!profileData?.twitterOAuthConnected} handle={profileData?.twitterOAuthHandle || profileData?.twitterUsername} />
           </div>
+
+          <div style={{marginBottom:20}}><ProfilePortfolioCard /></div>
+
+          <div style={{marginBottom:20}}><ProfileQuickLinks username={user?.username} /></div>
 
           {/* Withdrawal History */}
           <div  className="profile-card prof-full" style={{marginBottom:20}}>
@@ -945,16 +900,6 @@ export default function Profile() {
             </div>
           </div>
 
-          {/* Swap History */}
-          <div className="card prof-full" style={{marginBottom:20}}>
-            <div className="card-head"><span><Icon n="transfer" s={15} /> Swap History</span></div>
-            <div style={{overflowX:'auto'}}>
-              <div style={{textAlign:'center',color:'var(--text3)',padding:'28px 16px',fontSize:13}}>
-                <Icon n="transfer" s={28} c="var(--text3)" />
-                <div style={{marginTop:8}}>No swaps yet</div>
-              </div>
-            </div>
-          </div>
         </>
       )}
 
@@ -1547,6 +1492,10 @@ export default function Profile() {
 
       {/* Tab: Worker Portal */}
       {tab === "portal" && <TabWorkerPortalContent />}
+
+      {fundModal && (
+        <FundWalletModal initialStep={fundModal} onClose={() => { setFundModal(null); refreshWallet(); }} onDone={() => { refreshWallet(); refreshUser(); }} />
+      )}
 
     </Layout>
     </div>

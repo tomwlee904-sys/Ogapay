@@ -5,7 +5,7 @@ import { useCurrency } from '../context/CurrencyContext'
 import { useAuth } from '../context/AuthContext'
 import { SkeletonPage, injectSkeletonStyles } from '../components/SkeletonLoader'
 import { useToast } from '../components/Toast'
-import { API_BASE, apiRequest } from '../lib/api'
+import { API_BASE, apiRequest, getAccessToken } from '../lib/api'
 import { jobRequirements, rankName } from '../lib/requirements'
 import ApplyModal from '../components/ApplyModal'
 
@@ -156,7 +156,9 @@ export default function JobDetail() {
     setError('')
     const fetchJob = async () => {
       try {
-        const res = await fetch(`${API_BASE}/tasks/${id}`)
+        // Signed in: send the token so private direct-hire jobs load for the poster and hired worker
+        const token = getAccessToken()
+        const res = await fetch(`${API_BASE}/tasks/${id}`, token ? { headers: { Authorization: `Bearer ${token}` } } : undefined)
         const json = await res.json()
         if (json.success && json.data) {
           const t = json.data.task || json.data

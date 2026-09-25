@@ -1,83 +1,186 @@
-import { useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import Layout from '../components/Layout'
+import { apiRequest } from '../lib/api'
+import { useAuth } from '../context/AuthContext'
+import '../styles/messages.css'
 
-const conversations = [
-  { id: 1, name: 'Task Creator', lastMsg: 'Great work! I have approved your submission.', time: '2m ago', unread: 2, online: true, avatar: 'TC' },
-  { id: 2, name: 'Community Admin', lastMsg: 'Welcome to the Solana Builders community!', time: '1h ago', unread: 0, online: false, avatar: 'CA' },
-  { id: 3, name: 'Support Team', lastMsg: 'Your withdrawal request has been processed.', time: '3h ago', unread: 1, online: true, avatar: 'ST' },
-  { id: 4, name: 'Referral Bonus', lastMsg: 'You earned NGN 300 from a referral!', time: '1d ago', unread: 0, online: false, avatar: 'RB' },
-]
+type Person = { id: string; username: string | null; name: string; avatarUrl: string | null }
+type Conv = { id: string; participants: Person[]; lastMessage: { content: string; createdAt: string; senderId: string } | null; unread: number; updatedAt: string }
+type Msg = { id: string; content: string; createdAt: string; senderId: string }
+
+const shortTime = (d: string) => {
+  const t = new Date(d)
+  const now = new Date()
+  if (t.toDateString() === now.toDateString()) return t.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+  const days = Math.floor((now.getTime() - t.getTime()) / 86400000)
+  if (days < 7) return t.toLocaleDateString('en-US', { weekday: 'short' })
+  return t.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+}
+
+// Plain text with http(s) links made clickable (React escapes the rest)
+function Linkified({ text }: { text: string }) {
+  const parts = text.split(/(https?:\/\/[^\s]+)/g)
+  return <>{parts.map((p, i) => (/^https?:\/\//.test(p) ? <a key={i} href={p} target="_blank" rel="noopener noreferrer nofollow">{p}</a> : p))}</>
+}
+
+function Avatar({ p }: { p?: Person }) {
+  return <span className="ms-av">{p?.avatarUrl ? <img src={p.avatarUrl} alt="" /> : (p?.name?.trim()?.[0] || p?.username?.[0] || '?').toUpperCase()}</span>
+}
 
 export default function Messages() {
-  const [search, setSearch] = useState('')
+  const { user } = useAuth()
+  const [params, setParams] = useSearchParams()
+  const openId = params.get('c')
+  const [convs, setConvs] = useState<Conv[] | null>(null)
+  const [msgs, setMsgs] = useState<Msg[] | null>(null)
+  const [q, setQ] = useState('')
+  const [draft, setDraft] = useState('')
+  const [sending, setSending] = useState(false)
+  const [err, setErr] = useState('')
+  const threadRef = useRef<HTMLDivElement>(null)
+  const stick = useRef(true)
 
-  const filtered = conversations.filter(c => 
-    c.name.toLowerCase().includes(search.toLowerCase()) ||
-    c.lastMsg.toLowerCase().includes(search.toLowerCase())
-  )
+  const loadConvs = useCallback(() => {
+    apiRequest<Conv[]>('/messages').then((d) => setConvs(Array.isArray(d) ? d : [])).catch(() => setConvs((c) => c || []))
+  }, [])
 
+  const loadThread = useCallback((id: string) => {
+    apiRequest<Msg[]>('/messages/' + id)
+      .then((d) => { setMsgs(Array.isArray(d) ? d : []); setConvs((cs) => cs?.map((c) => (c.id === id ? { ...c, unread: 0 } : c)) || cs) })
+      .catch(() => setMsgs([]))
+  }, [])
+
+  useEffect(() => {
+    loadConvs()
+    const t = setInterval(loadConvs, 30000)
+    return () => clearInterval(t)
+  }, [loadConvs])
+
+  useEffect(() => {
+    setMsgs(null); setErr(''); stick.current = true
+    if (!openId) return
+    loadThread(openId)
+    const t = setInterval(() => loadThread(openId), 10000)
+    return () => clearInterval(t)
+  }, [openId, loadThread])
+
+  // Keep the newest message in view unless the reader scrolled up
+  useEffect(() => {
+    const el = threadRef.current
+    if (el && stick.current) el.scrollTop = el.scrollHeight
+  }, [msgs])
+
+  const active = convs?.find((c) => c.id === openId)
+  const other = active?.participants[0]
+  const shown = useMemo(() => {
+    const s = q.trim().toLowerCase()
+    if (!convs) return []
+    return s ? convs.filter((c) => c.participants.some((p) => (p.name + ' ' + (p.username || '')).toLowerCase().includes(s))) : convs
+  }, [convs, q])
+
+  const send = async () => {
+    const content = draft.trim()
+    if (!content || !openId || sending) return
+    setSending(true); setErr('')
+    try {
+      await apiRequest('/messages', { method: 'POST', body: JSON.stringify({ conversationId: openId, content }) })
+      setDraft('')
+      stick.current = true
+      loadThread(openId)
+      loadConvs()
+    } catch (e: any) {
+      setErr(e?.message || 'Message not sent')
+    }
+    setSending(false)
+  }
+
+  const open = (id: string | null) => setParams(id ? { c: id } : {}, { replace: false })
+
+  let lastDay = ''
   return (
     <Layout>
-      <style>{`
-        .ms-hero{margin-bottom:20px}
-        .ms-hero h1{font-family:Geist;font-size:28px;font-weight:900;margin:0 0 4px}
-        .ms-hero p{color:var(--text2);font-size:14px;margin:0}
-        .ms-search{display:flex;align-items:center;gap:8px;height:38px;padding:0 12px;border:1px solid var(--border);border-radius:10px;background:var(--card);margin-bottom:14px;transition:border-color .2s}
-        .ms-search:focus-within{border-color:var(--accent)}
-        .ms-search input{flex:1;border:0;background:transparent;outline:0;color:var(--text);font-size:13px}
-        .ms-search input::placeholder{color:var(--text3)}
-        .ms-search i{color:var(--text3);font-size:16px}
-        .ms-list{display:grid;gap:6px}
-        .ms-item{display:flex;gap:14px;padding:14px 16px;background:var(--card);border:1px solid var(--border);border-radius:12px;cursor:pointer;transition:all .2s;text-decoration:none;color:inherit}
-        .ms-item:hover{border-color:var(--accent);transform:translateY(-1px)}
-        .ms-avatar{width:40px;height:40px;border-radius:50%;background:var(--bg2);display:grid;place-items:center;flex-shrink:0;font-size:12px;font-weight:800;color:var(--text);position:relative}
-        .ms-online{width:10px;height:10px;border-radius:50%;background:var(--green);position:absolute;bottom:0;right:0;border:2px solid var(--card)}
-        .ms-content{flex:1;min-width:0}
-        .ms-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
-        .ms-name{font-weight:700;font-size:13px}
-        .ms-time{font-size:11px;color:var(--text3)}
-        .ms-preview{font-size:12px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-        .ms-badge{background:var(--accent);color:var(--on-accent);font-size:10px;font-weight:800;width:18px;height:18px;border-radius:50%;display:grid;place-items:center;flex-shrink:0}
-        .ms-empty{text-align:center;padding:48px 20px;color:var(--text2)}
-        .ms-empty i{font-size:36px;color:var(--text3);margin-bottom:12px;display:block}
-      `}</style>
-
-      <div className="ms-hero">
-        <h1>Messages</h1>
-        <p>Chat with task creators, community members, and support</p>
-      </div>
-
-      <div className="ms-search">
-        <i className="ti ti-search" />
-        <input type="text" placeholder="Search conversations..." value={search} onChange={e => setSearch(e.target.value)} />
-      </div>
-
-      {filtered.length === 0 ? (
-        <div className="ms-empty">
-          <i className="ti ti-message-off" />
-          <h3 style={{fontFamily:'Geist',fontWeight:800,margin:'0 0 4px',color:'var(--text)'}}>No conversations</h3>
-          <p style={{fontSize:13,margin:0}}>Your messages will appear here</p>
-        </div>
-      ) : (
-        <div className="ms-list">
-          {filtered.map(c => (
-            <div className="ms-item" key={c.id} onClick={() => {/* open conversation */}}>
-              <div className="ms-avatar">
-                {c.avatar}
-                {c.online && <span className="ms-online" />}
-              </div>
-              <div className="ms-content">
-                <div className="ms-head">
-                  <span className="ms-name">{c.name}</span>
-                  <span className="ms-time">{c.time}</span>
-                </div>
-                <div className="ms-preview">{c.lastMsg}</div>
-              </div>
-              {c.unread > 0 && <span className="ms-badge">{c.unread}</span>}
+      <div className="ms-wrap">
+        <div className={`ms-shell ${openId ? 'open' : ''}`}>
+          <aside className="ms-side">
+            <div className="ms-side-h">
+              <h1>Messages</h1>
+              <label className="ms-search"><i className="ti ti-search" /><input placeholder="Search people" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Search conversations" /></label>
             </div>
-          ))}
+            <div className="ms-list">
+              {convs === null ? (
+                <div className="ms-empty">Loading…</div>
+              ) : shown.length === 0 ? (
+                <div className="ms-empty"><div><i className="ti ti-message-off" />{q ? 'No matches' : 'No conversations yet. Chats start when you hire someone or contact a seller.'}</div></div>
+              ) : shown.map((c) => {
+                const p = c.participants[0]
+                const mine = c.lastMessage?.senderId === user?.id
+                return (
+                  <button key={c.id} className={`ms-conv ${c.id === openId ? 'on' : ''} ${c.unread ? 'unread' : ''}`} onClick={() => open(c.id)}>
+                    <Avatar p={p} />
+                    <span className="mid">
+                      <b>{p?.name?.trim() || p?.username || 'OgaPay user'}</b>
+                      <small>{c.lastMessage ? (mine ? 'You: ' : '') + c.lastMessage.content.split('\n')[0] : 'No messages yet'}</small>
+                    </span>
+                    <span className="end">
+                      {c.lastMessage && <span>{shortTime(c.lastMessage.createdAt)}</span>}
+                      {c.unread > 0 && <span className="ms-badge">{c.unread}</span>}
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
+          </aside>
+
+          <section className="ms-main">
+            {!openId ? (
+              <div className="ms-empty"><div><i className="ti ti-messages" />Pick a conversation</div></div>
+            ) : (
+              <>
+                <div className="ms-main-h">
+                  <button className="ms-back" onClick={() => open(null)} aria-label="Back to conversations"><i className="ti ti-arrow-left" /></button>
+                  <Avatar p={other} />
+                  <div style={{ minWidth: 0 }}>
+                    {other?.username ? <Link to={`/user/${other.username}`}>{other.name?.trim() || other.username}</Link> : <b>{other?.name || 'Conversation'}</b>}
+                    {other?.username && <small>@{other.username}</small>}
+                  </div>
+                </div>
+                <div className="ms-thread" ref={threadRef} onScroll={(e) => { const el = e.currentTarget; stick.current = el.scrollHeight - el.scrollTop - el.clientHeight < 60 }}>
+                  {msgs === null ? <div className="ms-empty">Loading…</div>
+                    : msgs.length === 0 ? <div className="ms-empty">No messages yet. Say hello.</div>
+                    : msgs.map((m) => {
+                      const day = new Date(m.createdAt).toDateString()
+                      const showDay = day !== lastDay
+                      lastDay = day
+                      return (
+                        <div key={m.id} style={{ display: 'contents' }}>
+                          {showDay && <div className="ms-day">{new Date(m.createdAt).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</div>}
+                          <div className={`ms-msg ${m.senderId === user?.id ? 'me' : ''}`}>
+                            <Linkified text={m.content} />
+                            <time>{new Date(m.createdAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}</time>
+                          </div>
+                        </div>
+                      )
+                    })}
+                </div>
+                {err && <div className="ms-err" role="alert">{err}</div>}
+                <div className="ms-compose">
+                  <textarea
+                    value={draft}
+                    maxLength={5000}
+                    rows={1}
+                    placeholder="Write a message"
+                    aria-label="Message"
+                    onChange={(e) => setDraft(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } }}
+                  />
+                  <button className="ms-send" onClick={send} disabled={!draft.trim() || sending}><i className="ti ti-send" /> Send</button>
+                </div>
+              </>
+            )}
+          </section>
         </div>
-      )}
+      </div>
     </Layout>
   )
 }

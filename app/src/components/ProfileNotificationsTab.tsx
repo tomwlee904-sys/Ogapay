@@ -43,6 +43,9 @@ const TYPE_ICONS: Record<string, { icon: string; color: string }> = {
   JOIN_REQUEST_APPROVED:   { icon: 'ti ti-door', color: 'var(--green)' },
   NEW_MESSAGE:             { icon: 'ti ti-message', color: '#EC4899' },
   STORE_PURCHASE:          { icon: 'ti ti-shopping-cart', color: 'var(--green)' },
+  DIRECT_HIRE:             { icon: 'ti ti-briefcase', color: 'var(--green)' },
+  COMMUNITY_INVITE:        { icon: 'ti ti-users-plus', color: 'var(--accent)' },
+  TRANSFER_RECEIVED:       { icon: 'ti ti-arrows-exchange', color: 'var(--green)' },
   INFO:                    { icon: 'ti ti-bell', color: 'var(--accent)' },
 }
 
@@ -121,7 +124,11 @@ export default function TabNotificationsContent() {
       desc: n.body || n.description || '',
       time: n.createdAt ? timeAgo(n.createdAt) : '',
       read: n.read ?? n.isRead ?? false,
-      link: n.link || (n.data?.taskId ? `/tasks/${n.data.taskId}${n.data.submissionId ? `?tab=submissions` : ''}` : null),
+      link: n.link
+        || (n.data?.taskId ? `/tasks/${n.data.taskId}${n.data.submissionId ? `?tab=submissions` : ''}` : null)
+        || (n.data?.communityId ? `/communities/${n.data.communityId}` : null)
+        || (n.data?.conversationId ? `/messages?c=${n.data.conversationId}` : null)
+        || (n.type === 'TRANSFER_RECEIVED' ? '/wallet' : null),
     }
   }
 

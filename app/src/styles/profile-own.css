@@ -1,0 +1,69 @@
+/* Own profile (/profile) sections */
+.po-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius, 16px); overflow: hidden; }
+.po-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 18px 22px; border-bottom: 1px solid var(--border); }
+.po-head h3 { display: flex; align-items: center; gap: 8px; font: 800 14px Geist, sans-serif; margin: 0; color: var(--text); }
+.po-head h3 i { font-size: 16px; color: var(--text2); }
+.po-head a, .po-head button.lnk { font-size: 12px; font-weight: 700; color: var(--text); background: none; border: 0; cursor: pointer; font-family: inherit; text-decoration: none; }
+.po-body { padding: 18px 22px; }
+.po-empty { text-align: center; padding: 10px 6px 4px; }
+.po-empty .ic { width: 48px; height: 48px; border-radius: 12px; border: 1px solid var(--border); background: var(--bg2); display: grid; place-items: center; margin: 0 auto 12px; font-size: 20px; color: var(--text2); }
+.po-empty b { display: block; font-size: 15px; color: var(--text); margin-bottom: 4px; }
+.po-empty p { font-size: 13px; color: var(--text2); line-height: 1.55; margin: 0 0 14px; }
+.po-btn { height: 38px; padding: 0 14px; border-radius: 10px; border: 1px solid var(--border); background: var(--card); color: var(--text); font: 700 13px inherit; font-family: inherit; display: inline-flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; text-decoration: none; }
+.po-btn:hover { border-color: var(--text3); }
+.po-btn.primary { background: var(--text); color: var(--bg); border-color: var(--text); }
+.po-btn:disabled { opacity: .5; cursor: not-allowed; }
+.po-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); text-decoration: none; color: inherit; }
+.po-row:last-child { border-bottom: 0; }
+.po-row .ic { width: 38px; height: 38px; border-radius: 10px; display: grid; place-items: center; color: #fff; font-weight: 800; font-size: 12px; overflow: hidden; flex-shrink: 0; }
+.po-row .ic img { width: 100%; height: 100%; object-fit: cover; }
+.po-row .mid { flex: 1; min-width: 0; }
+.po-row b { display: block; font-size: 14px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.po-row small { font-size: 12px; color: var(--text3); }
+.po-tag { font: 400 10px var(--font-mono, ui-monospace, monospace); letter-spacing: .06em; padding: 3px 7px; border-radius: 99px; border: 1px solid var(--border); color: var(--text2); }
+.po-invite { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 10px 12px; margin-bottom: 12px; border: 1px solid var(--text); border-radius: 12px; font-size: 13px; }
+.po-invite span { flex: 1; min-width: 160px; }
+
+.po-x { display: grid; grid-template-columns: 40px 1fr; gap: 14px; align-items: start; }
+.po-x .logo { width: 40px; height: 40px; border-radius: 10px; background: var(--text); color: var(--bg); display: grid; place-items: center; }
+.po-x b { font-size: 15px; color: var(--text); }
+.po-x p { font-size: 13px; color: var(--text2); margin: 4px 0 12px; line-height: 1.5; }
+.po-ok { display: inline-flex; align-items: center; gap: 6px; color: var(--green); font-weight: 700; font-size: 13px; }
+
+.po-quick { padding: 20px 22px 8px; }
+.po-quick-h { display: flex; align-items: center; gap: 8px; font: 800 15px Geist, sans-serif; margin-bottom: 16px; color: var(--text); }
+.po-quick-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0 28px; }
+.po-quick-col h4 { font: 400 11px var(--font-mono, ui-monospace, monospace); letter-spacing: .14em; text-transform: uppercase; color: var(--text3); margin: 0 0 8px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+.po-ql { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); text-decoration: none; color: inherit; }
+.po-ql .ic { width: 36px; height: 36px; border-radius: 9px; border: 1px solid var(--border); background: var(--bg2); display: grid; place-items: center; flex-shrink: 0; }
+.po-ql .ic i { font-size: 17px; color: var(--text2); }
+.po-ql .mid { flex: 1; min-width: 0; }
+.po-ql b { display: block; font-size: 14px; color: var(--text); }
+.po-ql small { display: block; font-size: 12px; color: var(--text3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.po-ql > .ti-chevron-right { color: var(--text3); font-size: 15px; }
+.po-ql:hover b { text-decoration: underline; }
+
+.po-pf { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+.po-pf-item { border: 1px solid var(--border); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; }
+.po-pf-item .img { aspect-ratio: 16/9; background: var(--bg2); display: grid; place-items: center; color: var(--text3); font-size: 22px; }
+.po-pf-item .img img { width: 100%; height: 100%; object-fit: cover; }
+.po-pf-item .b { padding: 10px 12px; flex: 1; }
+.po-pf-item b { font-size: 14px; color: var(--text); display: block; }
+.po-pf-item p { font-size: 12px; color: var(--text2); margin: 4px 0 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.po-pf-item .acts { display: flex; gap: 6px; padding: 0 12px 12px; }
+.po-pf-item .acts button { height: 30px; padding: 0 10px; font-size: 12px; }
+.po-field { display: block; margin-bottom: 12px; }
+.po-field span { display: block; font-size: 12px; font-weight: 700; color: var(--text2); margin-bottom: 5px; }
+.po-field input, .po-field textarea { width: 100%; box-sizing: border-box; padding: 10px 12px; border: 1.5px solid var(--border); border-radius: 10px; background: var(--bg); color: var(--text); font: 14px inherit; font-family: inherit; outline: 0; }
+.po-field textarea { min-height: 80px; resize: vertical; }
+.po-field input:focus, .po-field textarea:focus { border-color: var(--text3); }
+.po-err { font-size: 12px; color: var(--red); margin: 0 0 10px; }
+
+@media (max-width: 900px) {
+  .po-quick-grid { grid-template-columns: 1fr; }
+  .po-quick-col + .po-quick-col { margin-top: 18px; }
+}
+@media (max-width: 600px) {
+  .po-head { padding: 14px 16px; }
+  .po-body, .po-quick { padding: 14px 16px; }
+}

@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
-
-const API_BASE = 'https://ogapay-production.up.railway.app/api/v1'
+import { API_BASE, apiRequest, getAccessToken } from '../lib/api'
+import { openSignIn } from '../lib/signin'
 
 export default function CommunityDetail() {
   const { id } = useParams()
@@ -11,22 +11,46 @@ export default function CommunityDetail() {
   const [loading, setLoading] = useState(true)
   const [joined, setJoined] = useState(false)
   const [joining, setJoining] = useState(false)
+  const [invite, setInvite] = useState<any>(null)
+  const [answering, setAnswering] = useState(false)
 
   useEffect(() => {
     async function fetchCommunity() {
       try {
-        const res = await fetch(API_BASE + '/communities/' + id)
-        const json = await res.json()
-        if (json.success && json.data) setCommunity(json.data)
+        // Signed in: the response includes userRole, so we know if we're a member
+        const data = await apiRequest<any>('/communities/' + id, { auth: !!getAccessToken() })
+        if (data) {
+          setCommunity(data)
+          setJoined(!!data.userRole)
+        }
       } catch {}
       setLoading(false)
     }
     fetchCommunity()
   }, [id])
 
+  // A pending invite to this community (from someone's profile)
+  useEffect(() => {
+    if (!getAccessToken()) return
+    apiRequest<any[]>('/communities/invites/mine')
+      .then((list) => setInvite((Array.isArray(list) ? list : []).find((i) => i.community?.id === id) || null))
+      .catch(() => {})
+  }, [id])
+
+  const answerInvite = async (action: 'accept' | 'decline') => {
+    if (!invite || answering) return
+    setAnswering(true)
+    try {
+      await apiRequest('/communities/invites/' + invite.id, { method: 'PATCH', body: JSON.stringify({ action }) })
+      if (action === 'accept') setJoined(true)
+      setInvite(null)
+    } catch {}
+    setAnswering(false)
+  }
+
   const handleJoin = async () => {
-    const token = localStorage.getItem('ogapay_access_token')
-    if (!token) { navigate('/login'); return }
+    const token = getAccessToken()
+    if (!token) { openSignIn({ redirect: '/communities/' + id }); return }
     setJoining(true)
     try {
       const res = await fetch(API_BASE + '/communities/' + id + '/join', {
@@ -82,6 +106,18 @@ export default function CommunityDetail() {
               </div>
             </div>
           </div>
+
+          {invite && !joined && (
+            <div role="status" style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', padding: '14px 18px', marginBottom: 16, background: 'var(--card)', border: '1px solid var(--text)', borderRadius: 12 }}>
+              <i className="ti ti-users-plus" style={{ fontSize: 20 }} />
+              <div style={{ flex: 1, minWidth: 200, fontSize: 13 }}>
+                <b>@{invite.inviter?.username || 'Someone'}</b> invited you to join <b>{community.name}</b>.
+                {invite.message && <div style={{ color: 'var(--text2)', marginTop: 2 }}>{invite.message}</div>}
+              </div>
+              <button onClick={() => answerInvite('decline')} disabled={answering} style={{ height: 34, padding: '0 14px', borderRadius: 8, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text2)', fontWeight: 700, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}>Decline</button>
+              <button onClick={() => answerInvite('accept')} disabled={answering} style={{ height: 34, padding: '0 16px', borderRadius: 8, border: 0, background: 'var(--text)', color: 'var(--bg)', fontWeight: 700, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}>{answering ? '…' : 'Accept'}</button>
+            </div>
+          )}
 
           <div className="cd-meta">
             <div className="cd-meta-item"><i className="ti ti-users" /> <strong>{community.memberCount?.toLocaleString()}</strong> members</div>
