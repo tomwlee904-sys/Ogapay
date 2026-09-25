@@ -54,7 +54,9 @@ export function HomeJobCard({ task, convert, applied }: { task: any; convert: Co
   if (score > 0) reqs.push({ icon: "shield-check", text: `OgaScore ≥ ${score}` });
   if (task.requiresWallet) reqs.push({ icon: "wallet", text: "Wallet connected" });
   if (task.requiresLinkedin) reqs.push({ icon: "brand-x", text: "Verified X" });
-  if (typeof task.workerRequirement === "string" && task.workerRequirement) reqs.push({ icon: "user-check", text: task.workerRequirement });
+  if (task.workerRequirement === "HUMAN") reqs.push({ icon: "fingerprint", text: "Human verified" });
+  else if (task.workerRequirement === "KYC") reqs.push({ icon: "id-badge-2", text: "KYC verified" });
+  else if (typeof task.workerRequirement === "string" && task.workerRequirement) reqs.push({ icon: "user-check", text: task.workerRequirement });
 
   return (
     <Link to={`/tasks/${task.id}`} className="hc-card" aria-label={`${task.title} by ${name}, ${cur === "NGN" ? "₦" : ""}${money(amount)} ${cur}. View job`}>

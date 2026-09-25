@@ -112,6 +112,13 @@ export default function Settings() {
 
   const { toast: showToast } = useToast()
 
+  // ── result of the VeryAI flow (/verify/callback sends people back here) ──
+  useEffect(() => {
+    const human = searchParams.get("human");
+    if (human === "verified") showToast("You're human verified", 'success');
+    else if (human === "error") showToast(searchParams.get("message") || 'VeryAI verification failed', 'error');
+  }, [searchParams]);
+
   // ── handle ?tab= param for scroll navigation ──────────────────────────────
   useEffect(() => {
     const tab = searchParams.get("tab");
@@ -832,7 +839,7 @@ export default function Settings() {
                 : platform.id === 'nin'
                   ? kycTier >= 2
                   : platform.id === 'veryai'
-                    ? kycStatus === 'VERIFIED' || kycStatus === 'APPROVED'
+                    ? (user as any)?.humanVerified === true
                     : !!(connected as any)[platform.id]
               const isVerifying = connecting === platform.id
 
@@ -850,15 +857,18 @@ export default function Settings() {
                 }
               }
 
-              const handleVeryVerify = () => {
-                const params = new URLSearchParams({
-                  response_type: 'code',
-                  client_id: import.meta.env.VITE_VERYAI_CLIENT_ID,
-                  redirect_uri: import.meta.env.VITE_VERYAI_REDIRECT_URI || `${window.location.origin}/verify/callback`,
-                  scope: 'openid',
-                  state: user!.id,
-                })
-                window.location.href = `https://api.very.org/oauth2/authorize?${params}`
+              const handleVeryVerify = async () => {
+                setConnecting('veryai')
+                try {
+                  const json: any = await apiRequest('/social/very/init', { method: 'POST' })
+                  if (json?.authUrl) {
+                    window.location.href = json.authUrl
+                  } else {
+                    showToast('Human verification is not available yet', 'error'); setConnecting(null)
+                  }
+                } catch (err: any) {
+                  showToast(err?.message || 'Could not start VeryAI verification', 'error'); setConnecting(null)
+                }
               }
 
               const handleSocialConnect = async (platformId: string) => {
@@ -879,7 +889,7 @@ export default function Settings() {
                 if (platform.id === 'veryai') {
                   return isConnected
                     ? <span style={{ fontSize: 12, color: 'var(--accent)', fontWeight: 600, whiteSpace: 'nowrap' }}>✓ Verified</span>
-                    : <button type="button" onClick={handleVeryVerify} style={{ height: 30, padding: '0 12px', borderRadius: 8, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text2)', fontWeight: 600, fontSize: 11, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>Verify with VeryAI</button>
+                    : <button type="button" onClick={handleVeryVerify} disabled={isVerifying} style={{ height: 30, padding: '0 12px', borderRadius: 8, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text2)', fontWeight: 600, fontSize: 11, cursor: isVerifying ? 'not-allowed' : 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap', opacity: isVerifying ? 0.5 : 1 }}>{isVerifying ? 'Opening VeryAI...' : 'Verify with VeryAI'}</button>
                 }
                 if (platform.id === 'bvn') {
                   return isConnected

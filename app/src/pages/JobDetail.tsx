@@ -844,7 +844,7 @@ function WurkJobDetailView(props: any) {
                 <div className="wjd-row"><div className="wjd-label">Selection type</div><div className="wjd-value">{job.selectionType || 'Random'}</div></div>
                 <div className="wjd-row"><div className="wjd-label">Closes in</div><div className="wjd-value" style={{ fontVariantNumeric: 'tabular-nums' }}>{countdownStr}</div></div>
                 <div className="wjd-row"><div className="wjd-label">Minimum rank</div><div className="wjd-value">{job.rankRequired || job.minRank ? `Rank ${job.rankRequired || job.minRank}` : 'None'}</div></div>
-                <div className="wjd-row"><div className="wjd-label">Requirements</div><div className="wjd-value">{job.workerRequirement || (Number(job.minOgaScore || job.minSorsaScore || 0) > 0 ? `OgaScore ≥ ${job.minOgaScore || job.minSorsaScore}` : 'No extra requirements')}</div></div>
+                <div className="wjd-row"><div className="wjd-label">Requirements</div><div className="wjd-value">{job.workerRequirement === 'HUMAN' ? 'Human verified (VeryAI)' : job.workerRequirement === 'KYC' ? 'KYC verified' : job.workerRequirement || (Number(job.minOgaScore || job.minSorsaScore || 0) > 0 ? `OgaScore ≥ ${job.minOgaScore || job.minSorsaScore}` : 'No extra requirements')}</div></div>
                 <div className="wjd-row wide"><div className="wjd-label">Category</div><div className="wjd-value">{String(job.category || 'Custom').replace(/_/g, ' ').toLowerCase().replace(/^\w/, (l: string) => l.toUpperCase())}</div></div>
               </div>
             </div>

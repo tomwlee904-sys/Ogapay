@@ -491,7 +491,7 @@ export default function TaskCard({ task, hideApply }: { task: Task; hideApply?: 
         {task.workerRequirement && (
           <>
             <span style={{ color: 'var(--border2, #d1d5db)' }}>|</span>
-            <span>Req: {task.workerRequirement}</span>
+            <span>Req: {task.workerRequirement === 'HUMAN' ? 'Human verified' : task.workerRequirement === 'KYC' ? 'KYC verified' : task.workerRequirement}</span>
           </>
         )}
       </div>

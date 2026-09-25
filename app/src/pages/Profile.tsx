@@ -276,6 +276,7 @@ export default function Profile() {
 
   // KYC status
   const isKycVerified = kycStatus?.status === 'APPROVED' || profileData?.kyc?.status === 'APPROVED';
+  const isHumanVerified = !!((authUser as any)?.humanVerified || profileData?.humanVerified);
 
   // Bank account save
   const saveBank = async () => {
@@ -831,7 +832,7 @@ export default function Profile() {
                     <StatRow label="Nickname" val={profileData?.workerProfile?.nickname || '-'} />
                     <StatRow label="Skills" val={profileData?.workerProfile?.skills?.length ? profileData.workerProfile.skills.slice(0,3).join(', ')+(profileData.workerProfile.skills.length>3?' +' + (profileData.workerProfile.skills.length - 3):'') : '-'} />
                     <StatRow label="Categories" val={profileData?.workerProfile?.categories?.length ? profileData.workerProfile.categories.join(', ') : '-'} />
-                    <StatRow label="Human Verified" val={isKycVerified ? 'Yes' : 'No'} valClass={isKycVerified ? 'yes' : 'no'} info onInfoClick={() => setShowInfo('humanVerified')} />
+                    <StatRow label="Human Verified" val={isHumanVerified ? 'Yes' : 'No'} valClass={isHumanVerified ? 'yes' : 'no'} info onInfoClick={() => setShowInfo('humanVerified')} />
                     {!isKycVerified && (
                       <button className="dash-btn" style={{width:'100%',justifyContent:'center',marginTop:8}} onClick={() => setShowKyc(true)}>
                         <Icon n="shield-check" s={14} c="var(--bg)" /> Verify Identity (KYC)
