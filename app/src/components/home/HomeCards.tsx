@@ -53,7 +53,7 @@ export function HomeJobCard({ task, convert, applied }: { task: any; convert: Co
   const score = Number(task.minOgaScore ?? task.minSorsaScore ?? 0);
   if (score > 0) reqs.push({ icon: "shield-check", text: `OgaScore ≥ ${score}` });
   if (task.requiresWallet) reqs.push({ icon: "wallet", text: "Wallet connected" });
-  if (task.requiresLinkedin) reqs.push({ icon: "brand-linkedin", text: "LinkedIn linked" });
+  if (task.requiresLinkedin) reqs.push({ icon: "brand-x", text: "Verified X" });
   if (typeof task.workerRequirement === "string" && task.workerRequirement) reqs.push({ icon: "user-check", text: task.workerRequirement });
 
   return (

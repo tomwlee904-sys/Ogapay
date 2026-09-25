@@ -177,7 +177,7 @@ export default function App() {
             <Route path="/worker/:category" element={<AuthGuard><WorkerWorkspace /></AuthGuard>} />
 
             {/* ── Create job routes (collapsed) ── */}
-            <Route path="/create" element={<AuthGuard><CreateJob /></AuthGuard>} />
+            <Route path="/create" element={<CreateJob />} />
             <Route path="/createcustom" element={<Navigate to="/create?type=custom" replace />} />
             <Route path="/createsocial" element={<Navigate to="/create?type=social" replace />} />
             <Route path="/tasks/new" element={<Navigate to="/create" replace />} />

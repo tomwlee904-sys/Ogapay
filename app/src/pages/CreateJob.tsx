@@ -12,6 +12,10 @@ import FetchPost from "../components/FetchPost";
 import { PlatformActionButton } from "../components/PlatformActionButton";
 
 import CampaignWizard from "../components/CampaignWizard";
+import XCampaignBuilder from "../components/create/XCampaignBuilder";
+import QuickTaskForm from "../components/create/QuickTaskForm";
+import { Steps, Fold, Toggle as CfToggle, OverviewCard, RequirementPicker, DURATIONS, deadlineFor, money, minReward, reqFields, reqLabel, uploadJobFile, createTask, apiErrorText } from "../components/create/shared";
+import "../styles/create.css";
 // -- COLOR TOKENS ----------------------------------------------------------
 const C = {
   text: "var(--text)",
@@ -547,216 +551,150 @@ function TemplatesModal({ onClose, onUse, myTemplates = [] }: any) {
 }
 
 // -- CUSTOM JOB WIZARD ------------------------------------------------------
+const CUSTOM_DRAFT_KEY = "ogapay_custom_job_draft";
+
 function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
   const navigate = useNavigate();
   const { isAuthed } = useAuth();
-  const { rates } = useCurrency();
-  const [wizardStep, setWizardStep] = useState(1);
-  const [showInfo, setShowInfo] = useState(false);
-  const [showTemplates, setShowTemplates] = useState(false);
-const [showFetchPost, setShowFetchPost] = useState(false);
-  const [mode, setMode] = useState(initialTemplate?.mode || "Challenge");
-  const [winnerMode, setWinnerMode] = useState("Random winner selection");
-  const [challengeWinners, setChallengeWinners] = useState(initialTemplate?.winners || 25);
-  const [challengeWinnersInput, setChallengeWinnersInput] = useState(String(initialTemplate?.winners || 25));
-  const [maxEntries, setMaxEntries] = useState("");
-  const [unlimitedEntries, setUnlimitedEntries] = useState(true);
-  const [hideSubmissions, setHideSubmissions] = useState("No");
-  const [watermarks, setWatermarks] = useState("No");
-  const [screenshotProof, setScreenshotProof] = useState("No");
-  const [extraReqs, setExtraReqs] = useState({ verifiedX: false, kycVerified: false, minRank: 0, minHoldings: "", minOgaScore: "", workerRequirement: "" });
-  const [audience, setAudience] = useState("All");
-  // Requirement picked on the Payment step (was referenced but never declared, which crashed step 3)
-  const [actionReq, setActionReq] = useState<any>({ mode: "rank", minRank: 0, minOgaScore: "", humanVerified: false });
-  const [selectionTime, setSelectionTime] = useState("24h");
-  const [category, setCategory] = useState("");
-  const [subcategory, setSubcategory] = useState("");
-  const [targetCountry, setTargetCountry] = useState("All Countries");
-  const [targetGender, setTargetGender] = useState("All");
-  const [approvalMode, setApprovalMode] = useState("self");
-  const [daysToApprove, setDaysToApprove] = useState("3 days");
-  const [description, setDescription] = useState(initialTemplate?.desc || "");
-  const [attachments, setAttachments] = useState<any[]>([]);
-  const [title, setTitle] = useState(initialTemplate?.title || "");
-  const [bounty, setBounty] = useState(initialTemplate?.bounty?.toString() || "");
-  const [currency, setCurrency] = useState("NGN");
-  const [submitting, setSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState("");
-  const fileRef = useRef<HTMLInputElement>(null);
-  const [creatives, setCreatives] = useState<any[]>([]);
-  const [trackingCode, setTrackingCode] = useState("");
-  const [cooldownPeriod, setCooldownPeriod] = useState("None");
-  const [humanVerification, setHumanVerification] = useState("No");
-  const [showFundModal, setShowFundModal] = useState(false);
+  const { convert } = useCurrency();
   const { balances: walletBalances, refresh: refreshWalletBal } = useWalletBalance();
 
-  const rewardPool = parseFloat(String(bounty).replace(/,/g, '')) || 0;
-  const slots = parseInt(challengeWinners) || 0;
-  const perWinner = slots > 0 ? rewardPool / slots : 0;
+  // Start from a template, else from the saved draft (survives sign-in)
+  const init = (() => {
+    if (initialTemplate) return { ...initialTemplate, description: initialTemplate.desc };
+    try { return JSON.parse(localStorage.getItem(CUSTOM_DRAFT_KEY) || "null") || {}; } catch { return {}; }
+  })();
 
-  // Quality ? payout binding: stricter requirements raise min reward
-  const qualityLevel = (extraReqs.verifiedX ? 1 : 0) + (extraReqs.kycVerified ? 1 : 0) + ((extraReqs.minRank || 0) > 0 ? 1 : 0) + (extraReqs.minHoldings ? 1 : 0) + (extraReqs.minOgaScore ? 1 : 0);
-  const qualityMultiplier = 1 + qualityLevel * 0.15;
-  const minPerWinner = currency === 'NGN' ? (CATEGORY_MIN_PAYOUT[category] || 50) : currency === 'SOL' ? 0.01 : 0.01;
-  const effectiveMinPerWinner = minPerWinner * qualityMultiplier;
+  const [step, setStep] = useState<2 | 3>(2);
+  const [mode, setMode] = useState<string>(init.mode || "Challenge");
+  const [title, setTitle] = useState<string>(init.title || "");
+  const [description, setDescription] = useState<string>(init.description || "");
+  const [currency, setCurrency] = useState<string>(init.currency || "NGN");
+  const [bounty, setBounty] = useState<string>(init.bounty?.toString() || "");
+  const [winnersInput, setWinnersInput] = useState<string>(String(init.winners || 10));
+  const [category, setCategory] = useState<string>(init.category || "");
+  const [subcategory, setSubcategory] = useState<string>(init.subcategory || "");
+  const [duration, setDuration] = useState<string>(init.duration || "7 days");
+  const [reqType, setReqType] = useState<string>(init.reqType || "none");
+  const [reqValue, setReqValue] = useState<string>(init.reqValue || "");
+  const [screenshot, setScreenshot] = useState<boolean>(!!init.screenshot);
+  const [trackingCode, setTrackingCode] = useState<string>(init.trackingCode || "");
+  const [files, setFiles] = useState<File[]>([]);
+  const [openReq, setOpenReq] = useState<boolean>(!!init.reqType && init.reqType !== "none");
+  const [openExtra, setOpenExtra] = useState(false);
+  const [showTemplates, setShowTemplates] = useState(false);
+  const [showFundModal, setShowFundModal] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
+  const descRef = useRef<HTMLTextAreaElement>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
 
-  // Unlimited slots only if total bounty >= threshold (0.05 SOL or NGN equivalent)
-  const unlimitedThreshold = currency === 'SOL' ? 0.05 : currency === 'NGN' ? 500 : 0.05;
-  const canHaveUnlimited = rewardPool >= unlimitedThreshold;
+  useEffect(() => {
+    const t = setTimeout(() => {
+      try {
+        localStorage.setItem(CUSTOM_DRAFT_KEY, JSON.stringify({ mode, title, description, currency, bounty, winners: winnersInput, category, subcategory, duration, reqType, reqValue, screenshot, trackingCode }));
+      } catch { /* storage full or blocked */ }
+    }, 400);
+    return () => clearTimeout(t);
+  }, [mode, title, description, currency, bounty, winnersInput, category, subcategory, duration, reqType, reqValue, screenshot, trackingCode]);
 
+  const winners = mode === "Selection" ? 1 : Math.min(1000, Math.max(0, parseInt(winnersInput) || 0));
+  const rewardPool = parseFloat(String(bounty).replace(/,/g, "")) || 0;
+  const perWinner = winners > 0 ? rewardPool / winners : 0;
   const platformFee = rewardPool * 0.10;
-  const moderationFee = approvalMode === "moderation" ? rewardPool * 0.05 : 0;
-  const totalToPay = rewardPool + platformFee + moderationFee;
+  const totalToPay = rewardPool + platformFee;
+  const floor = currency === "NGN" ? Math.max(minReward("NGN"), CATEGORY_MIN_PAYOUT[category] || 0) : minReward(currency);
+  const minTotal = floor * Math.max(winners, 1);
+  const deadline = deadlineFor(duration);
+  const alt = currency === "USDC"
+    ? `≈ ₦${Math.round(convert(totalToPay, "USDC" as any, "NGN" as any)).toLocaleString("en-US")}`
+    : `≈ $${convert(totalToPay, currency as any, "USDC" as any).toFixed(2)} USD`;
+  const balance = Number(walletBalances?.[currency]?.balance || 0);
 
-  const handleFileAdd = (e: any) => {
-    const files = Array.from(e.target.files || []);
-    const valid = files.filter((f: any) => f.size <= 50 * 1024 * 1024);
-    setAttachments(a => [...a, ...valid].slice(0, 10));
+  const checklist = [
+    { ok: title.trim().length >= 5, label: "Give the job a short title." },
+    { ok: description.trim().length >= 20, label: "Describe the task and what people should submit." },
+    { ok: !!category, label: "Pick a category." },
+    { ok: rewardPool > 0 && rewardPool >= minTotal, label: `Set a total budget of at least ${money(minTotal, currency)}.` },
+    { ok: winners >= 1, label: "Choose how many people you will pay." },
+  ];
+  const ready = checklist.every(c => c.ok);
+
+  // Markdown helpers for the toolbar
+  const wrap = (before: string, after = before, placeholder = "text") => {
+    const ta = descRef.current;
+    if (!ta) return;
+    const { selectionStart: s, selectionEnd: e, value } = ta;
+    const sel = value.slice(s, e) || placeholder;
+    const next = value.slice(0, s) + before + sel + after + value.slice(e);
+    setDescription(next.slice(0, 10000));
+    requestAnimationFrame(() => { ta.focus(); ta.setSelectionRange(s + before.length, s + before.length + sel.length); });
+  };
+  const linePrefix = (prefix: string) => {
+    const ta = descRef.current;
+    if (!ta) return;
+    const { selectionStart: s, value } = ta;
+    const lineStart = value.lastIndexOf("\n", s - 1) + 1;
+    setDescription((value.slice(0, lineStart) + prefix + value.slice(lineStart)).slice(0, 10000));
+    requestAnimationFrame(() => ta.focus());
   };
 
-  const handleCreateCustomTask = async () => {
-    if (!title.trim()) { setSubmitError("Please enter a job title"); return; }
-    if (!rewardPool || rewardPool <= 0) { setSubmitError("Please enter a valid reward amount"); return; }
-    if (!description.trim()) { setSubmitError("Please enter a job description"); return; }
+  const addFiles = (list: FileList | null) => {
+    const picked = Array.from(list || []).filter(f => f.size <= 10 * 1024 * 1024);
+    setFiles(prev => [...prev, ...picked].slice(0, 10));
+  };
 
+  const goToPayment = () => {
+    if (!isAuthed) { navigate("/login?redirect=" + encodeURIComponent("/create?type=custom")); return; }
+    if (!ready) { setSubmitError("Finish the checklist before continuing."); return; }
+    setSubmitError("");
+    setStep(3);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const publish = async () => {
+    if (!ready) { setStep(2); return; }
+    if (balance < totalToPay) { setShowFundModal(true); return; }
     setSubmitting(true);
     setSubmitError("");
-
     try {
-      if (!isAuthed) { setSubmitError("Please log in first"); setSubmitting(false); return; }
-
-      // Min payout floor per category
-      const minPayout = CATEGORY_MIN_PAYOUT[category] || 0;
-      if (currency === 'NGN' && minPayout > 0 && perWinner < minPayout) {
-        setSubmitError(`Minimum payout for "${category}" is ₦${minPayout}. Current: ₦${Math.round(perWinner)}`);
-        setSubmitting(false);
-        return;
-      }
-
-      // Validate reward minimum for NGN
-      if (currency === 'NGN' && perWinner < effectiveMinPerWinner) {
-        setSubmitError(`Minimum reward per winner is ₦${Math.round(effectiveMinPerWinner)} (₦${Math.round(minPerWinner)} base × ${qualityMultiplier.toFixed(2)}x quality factor). Please increase the reward amount.`);
-        setSubmitting(false);
-        return;
-      }
-
-      // Enforce unlimited slots threshold
-      if (unlimitedEntries && !canHaveUnlimited) {
-        setSubmitError(`Unlimited slots requires minimum ${unlimitedThreshold} ${currency}. Current total: ${rewardPool} ${currency}.`);
-        setSubmitting(false);
-        return;
-      }
-
-      const attachmentNames = attachments.map(f => f.name);
-      const creativeNames = creatives.map((f: any) => f.name);
-      const body = {
+      const uploaded: { name: string; url: string }[] = [];
+      for (const f of files) uploaded.push({ name: f.name, url: await uploadJobFile(f) });
+      // Links also go in the brief so workers see them even where attachments aren't shown
+      const brief = description.trim() + (uploaded.length ? `\n\n**Attachments**\n${uploaded.map(u => `- [${u.name}](${u.url})`).join("\n")}` : "");
+      const taskId = await createTask({
         title: title.trim(),
-        description: description.trim(),
-        reward: perWinner,
-        maxWorkers: parseInt(challengeWinners) || 1,
-        maxEntries: maxEntries ? parseInt(maxEntries) : undefined,
-        category: CATEGORY_MAP[category] || CATEGORY_MAP[category || "Other"] || CATEGORY_MAP["Other"] || "OTHER",
-        estimatedTime: selectionTime === "1h" ? 60 : selectionTime === "6h" ? 360 : selectionTime === "12h" ? 720 : selectionTime === "24h" ? 1440 : selectionTime === "48h" ? 2880 : selectionTime === "72h" ? 4320 : 10080,
-        instructions: description.trim(),
-        tags: [category || "general", ...attachmentNames, ...creativeNames].filter(Boolean),
-        proofRequired: screenshotProof === "Yes" ? "Screenshot proof required" : undefined,
-        targetCountry: targetCountry === "All Countries" ? undefined : targetCountry,
-        targetGender: targetGender === "All" ? undefined : targetGender,
-        approvalMode,
-        daysToApprove: approvalMode === "self" ? parseInt(daysToApprove) : undefined,
-        trackingCode: trackingCode || undefined,
-        cooldownPeriod: cooldownPeriod === "None" ? undefined : cooldownPeriod,
-        humanVerification: humanVerification === "Yes",
-        minSorsaScore: (extraReqs.minOgaScore ? parseInt(extraReqs.minOgaScore) : 0) || (actionReq.mode === "oga_score" ? parseInt(actionReq.minOgaScore) || 0 : 0) || undefined,
-        minRank: extraReqs.minRank || (actionReq.mode === "rank" ? actionReq.minRank || 0 : 0) || undefined,
-        requiresLinkedin: extraReqs.verifiedX || actionReq.mode === "verified_x" || undefined,
-        workerRequirement: extraReqs.workerRequirement || (actionReq.mode === "kyc" ? "KYC" : actionReq.humanVerified ? "HUMAN" : undefined),
+        description: brief,
+        instructions: brief,
+        category: CATEGORY_MAP[category] || "OTHER",
+        reward: Number(perWinner.toFixed(currency === "NGN" ? 2 : 6)),
         currency,
-        status: "OPEN",
-      };
-
-      // -- Check wallet balance before submitting --
-      const walletEntry = walletBalances?.[currency];
-      const currentBalance = walletEntry ? (Number(walletEntry.balance) || 0) : 0;
-      if (currentBalance < totalToPay) {
-        setSubmitError("");
-        setShowFundModal(true);
-        setSubmitting(false);
-        return;
-      }
-
-      const result = await apiRequest<any>('/tasks', {
-        method: "POST",
-        body: JSON.stringify(body),
+        maxWorkers: winners,
+        tags: [category, subcategory].filter(Boolean).slice(0, 5),
+        ...(deadline && { deadline: deadline.toISOString() }),
+        ...(screenshot && { proofRequired: "Screenshot required" }),
+        ...reqFields(reqType, reqValue),
+        ...(trackingCode.trim() && { trackingCode: trackingCode.trim() }),
+        ...(uploaded.length && { attachments: uploaded.map(u => u.url) }),
       });
-            if (!result || result.success === false) {
-        throw new Error(result?.message || result?.error || "Failed to create task");
-      }
-      const createdTask = result.data || result.task || result;
-      const taskId = createdTask?.id || createdTask?._id || "";
-            
-      // Pass taskId to onCreate for redirect
+      try { localStorage.removeItem(CUSTOM_DRAFT_KEY); } catch { /* ignore */ }
+      refreshWalletBal();
       onCreate(taskId);
     } catch (err: any) {
-      // Show detailed errors if available
-      let msg = err.message || "Failed to create task. Please try again.";
-      if (err.errors && Array.isArray(err.errors)) {
-        msg = err.errors.map((e: any) => e.field + ': ' + e.message).join('; ');
-      } else if (err.data?.errors) {
-        msg = err.data.errors.map((e: any) => e.field + ': ' + e.message).join('; ');
-      }
-      setSubmitError(msg);
+      setSubmitError(apiErrorText(err));
     } finally {
       setSubmitting(false);
     }
   };
 
-  const stepLabel = ["Choose Type", "Job Details", "Payment"];
-
-  const checklist = [
-    { ok: !!title.trim(), label: "Give the job a title." },
-    { ok: description.trim().length >= 20, label: "Describe the task and what people should submit." },
-    { ok: rewardPool > 0, label: "Set a total budget." },
-    { ok: slots > 0, label: "Choose how many people you will pay." },
+  const rows: [string, string, string?][] = [
+    ["Platform fee (10%)", money(platformFee, currency)],
+    [mode === "Selection" ? "Person hired" : "Winners", String(winners || 0)],
+    [mode === "Selection" ? "Paid to them" : "Reward per winner", money(perWinner, currency)],
   ];
-  const fmtAmt = (n: number) => n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  const primaryAction = () => {
-    if (!isAuthed) { navigate("/login?redirect=/create"); return; }
-    if (wizardStep < 3) setWizardStep(s => s + 1); else handleCreateCustomTask();
-  };
-  const primaryLabel = !isAuthed ? "Sign in to continue" : wizardStep < 3 ? "Continue" : submitting ? "Creating…" : "Pay and publish";
 
   return (
     <Layout>
-      <style>{`
-        .cw-steps{display:flex;align-items:center;gap:10px;margin:22px 0 18px;padding:0;list-style:none;flex-wrap:wrap}
-        .cw-steps li{display:inline-flex;align-items:center;gap:8px;font-size:12px;color:var(--text2)}
-        .cw-steps li + li::before{content:'';width:18px;height:1px;background:var(--border);margin-right:2px}
-        .cw-steps li span{width:22px;height:22px;border-radius:7px;border:1px solid var(--border);display:grid;place-items:center;font:400 10px var(--font-mono)}
-        .cw-steps li.on{color:var(--text);font-weight:500}
-        .cw-steps li.on span{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
-        .cw-steps li.done span{border-color:rgba(var(--green-rgb),.4);color:var(--green)}
-        .cw-layout{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:18px;align-items:start}
-        .cw-main > div:first-child{border-radius:20px!important}
-        .cw-side{position:sticky;top:calc(var(--nav-h,64px) + 18px);display:flex;flex-direction:column;gap:12px}
-        .cw-ov{padding:16px}
-        .cw-ov-head{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;margin-bottom:12px}
-        .cw-ov-row{display:flex;justify-content:space-between;align-items:flex-start;padding:10px 0;border-top:1px solid var(--border);font-size:12px;color:var(--text2)}
-        .cw-ov-row b{font-weight:600;color:var(--green);font-variant-numeric:tabular-nums;text-align:right}
-        .cw-ov-row small{display:block;font:400 10px var(--font-mono);color:var(--text3);margin-top:2px}
-        .cw-ov-total{margin:6px -16px -16px;padding:14px 16px;background:var(--card2);border-top:1px solid var(--border);border-radius:0 0 20px 20px;display:flex;justify-content:space-between;align-items:center}
-        .cw-ov-total span{font-size:13px;font-weight:600}
-        .cw-ov-total b{font-size:18px;font-weight:600;letter-spacing:-.02em}
-        .cw-check{padding:16px}
-        .cw-check ul{margin:0 0 14px;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px}
-        .cw-check li{display:flex;gap:8px;font-size:12px;color:var(--text2);line-height:1.5}
-        .cw-check li i{font-size:14px;color:var(--text3);margin-top:1px}
-        .cw-check li.ok{color:var(--text3);text-decoration:line-through}
-        .cw-check li.ok i{color:var(--green)}
-        .cw-terms{margin:10px 0 0;text-align:center;font-size:11px;color:var(--text2)}
-        .cw-terms a{color:var(--text);text-decoration:underline}
-        @media(max-width:900px){.cw-layout{grid-template-columns:1fr}.cw-side{position:static}}
-      `}</style>
       <div className="ui-page" style={{ paddingTop: 28 }}>
         <header className="ui-head">
           <div>
@@ -767,522 +705,192 @@ const [showFetchPost, setShowFetchPost] = useState(false);
           <button className="ui-btn ui-btn-ghost" onClick={onClose}><i className="ti ti-arrow-left" /> Change job type</button>
         </header>
 
-        <ol className="cw-steps" aria-label="Progress">
-          <li className="done"><span><i className="ti ti-check" /></span>Choose type</li>
-          <li className={wizardStep <= 2 ? "on" : "done"}><span>{wizardStep <= 2 ? "2" : <i className="ti ti-check" />}</span>Job details</li>
-          <li className={wizardStep === 3 ? "on" : ""}><span>3</span>Payment</li>
-        </ol>
+        <Steps labels={["Choose type", "Job details", "Payment"]} current={step} />
 
         <div className="cw-layout">
-      <div className="cw-main">
-        {wizardStep > 1 && (
-          <button onClick={() => setWizardStep(s => s - 1)} className="ui-btn ui-btn-ghost" style={{ marginBottom: 12 }}>
-            <i className="ti ti-arrow-left" /> Back
-          </button>
-        )}
-        {wizardStep <= 2 && (
-          <div style={{ border: `1px solid ${C.border}`, borderRadius: 16, background: C.card, overflow: "hidden" }}>
-            <div style={{
-              display: "flex", alignItems: "center", justifyContent: "space-between",
-              padding: "14px 16px", borderBottom: `1px solid ${C.border}`, background: C.bg2
-            }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <IconSettings />
-                <span style={{ fontSize: 14, fontWeight: 800, color: C.text }}>Job Configuration</span>
+          <div>
+            {!isAuthed && (
+              <div className="cw-banner">
+                <span>Prepare your brief now. Sign in when you're ready to continue; your draft is saved.</span>
+                <button className="ui-btn ui-btn-dark" onClick={() => navigate("/login?redirect=" + encodeURIComponent("/create?type=custom"))}>Sign in</button>
               </div>
-              <button onClick={() => setShowInfo(true)}
-                style={{
-                  display: "flex", alignItems: "center", gap: 5, background: C.card,
-                  border: `1px solid ${C.border}`, borderRadius: 8, padding: "6px 12px",
-                  fontSize: 12, fontWeight: 600, color: C.text2, cursor: "pointer", fontFamily: "inherit"
-                }}>
-                <IconInfo /> Help
-              </button>
-            </div>
+            )}
 
-            <div style={{ padding: 16, display: "flex", flexDirection: "column", gap: 14 }}>
-              {/* Title */}
-              <div>
-                <label style={{ fontSize: 13, fontWeight: 600, color: C.text, display: "block", marginBottom: 6 }}>Job Title *</label>
-                <input type="text" value={title} onChange={e => setTitle(e.target.value)}
-                  placeholder="e.g. Follow our X account and repost"
-                  style={{
-                    width: "100%", border: `1px solid ${C.border}`, borderRadius: 8,
-                    padding: "10px 12px", fontSize: 13, color: C.text, outline: "none",
-                    fontFamily: "inherit", background: C.card, boxSizing: "border-box"
-                  }} />
-              </div>
-
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                <SelectField label="Mode" value={mode} onChange={setMode} options={["Challenge", "Selection"]} />
-                <SelectField label="Winner selection" value={winnerMode} onChange={setWinnerMode}
-                  options={["Random winner selection", "Creator picks"]} />
-              </div>
-
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                <SelectField label="Target country" value={targetCountry} onChange={setTargetCountry} options={COUNTRIES} />
-                <SelectField label="Target gender" value={targetGender} onChange={setTargetGender} options={["All", "Male", "Female"]} />
-              </div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                <SelectField label="Approval mode" value={approvalMode} onChange={setApprovalMode}
-                  options={[{ value: "self", label: "Self-approve" }, { value: "moderation", label: "OgaPay moderation (+5%)" }]} />
-                {approvalMode === "self" && (
-                  <SelectField label="Auto-approve after" value={daysToApprove} onChange={setDaysToApprove} options={APPROVAL_DAYS} />
-                )}
-              </div>
-
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                <div>
-                  <label style={{ fontSize: 12, fontWeight: 600, color: C.text2, display: "block", marginBottom: 6 }}>
-                    {mode === "Challenge" ? "Number of winners" : "Slots available"}
-                  </label>
-                  <input type="number" min={1} value={challengeWinnersInput}
-                    onChange={e => {
-                    setChallengeWinnersInput(e.target.value);
-                    const parsed = parseInt(e.target.value);
-                    if (!isNaN(parsed)) setChallengeWinners(Math.max(1, parsed));
-                  }}
-                  onBlur={() => {
-                    const parsed = parseInt(challengeWinnersInput);
-                    const clamped = isNaN(parsed) || parsed < 1 ? 1 : parsed;
-                    setChallengeWinnersInput(String(clamped));
-                    setChallengeWinners(clamped);
-                  }}
-                    style={{
-                      width: "100%", border: `1px solid ${C.border}`, borderRadius: 8,
-                      padding: "10px 12px", fontSize: 13, color: C.text, outline: "none",
-                      fontFamily: "inherit", background: C.card, boxSizing: "border-box"
-                    }} />
+            {step === 2 ? (
+              <section className="ui-card cf-card">
+                <div className="cf-head">
+                  <b><i className="ti ti-settings" /> Job configuration</b>
+                  <button className="ui-btn ui-btn-ghost" onClick={() => setShowTemplates(true)}><i className="ti ti-template" /> Templates</button>
                 </div>
-                <div>
-                  <label style={{ fontSize: 12, fontWeight: 600, color: C.text2, display: "block", marginBottom: 6 }}>Max entries</label>
-                  <input type="number" min={1} value={maxEntries}
-                    onChange={e => { setMaxEntries(e.target.value); setUnlimitedEntries(false); }}
-                    disabled={unlimitedEntries}
-                    style={{
-                      width: "100%", border: `1px solid ${C.border}`, borderRadius: 8,
-                      padding: "10px 12px", fontSize: 13, color: C.text, outline: "none",
-                      fontFamily: "inherit", background: unlimitedEntries ? C.bg2 : C.card,
-                      boxSizing: "border-box"
-                    }} />
-                  <label style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 4, cursor: "pointer" }}>
-                    <input type="checkbox" checked={unlimitedEntries} onChange={e => setUnlimitedEntries(e.target.checked)}
-                      style={{ accentColor: C.accent }} />
-                    <span style={{ fontSize: 11, color: C.text3 }}>Unlimited</span>
-                  </label>
-                </div>
-              </div>
-
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                <div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
-                    <label style={{ fontSize: 12, fontWeight: 600, color: C.text2 }}>Hide submissions</label>
-                    <InfoTip text="Keep entries private until job closes" />
-                  </div>
-                  <SelectField value={hideSubmissions} onChange={setHideSubmissions} options={["No", "Yes"]} />
-                </div>
-                <div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
-                    <label style={{ fontSize: 12, fontWeight: 600, color: C.text2 }}>Screenshot proof</label>
-                    <InfoTip text="Require at least one attachment/screenshot" />
-                  </div>
-                  <SelectField value={screenshotProof} onChange={setScreenshotProof} options={["No", "Yes"]} />
-                </div>
-              </div>
-
-              <ExtraRequirements value={extraReqs} onChange={setExtraReqs} />
-
-              {/* Quality binding info */}
-              {qualityLevel > 0 && (
-                <div style={{ padding: "10px 14px", borderRadius: 8, background: "rgba(139,92,246,0.08)", border: "1px solid rgba(139,92,246,0.2)", fontSize: 12, color: C.text2, lineHeight: 1.5 }}>
-                  <strong style={{ color: C.accent }}>Quality requirements active:</strong> Min reward adjusted to <strong style={{ color: C.text }}>{currency === 'NGN' ? '₦' : ''}{effectiveMinPerWinner.toFixed(2)} {currency}</strong> per winner (×{qualityMultiplier.toFixed(2)} multiplier).
-                </div>
-              )}
-
-              {/* Unlimited threshold warning */}
-              {unlimitedEntries && !canHaveUnlimited && rewardPool > 0 && (
-                <div style={{ padding: "10px 14px", borderRadius: 8, background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.2)", fontSize: 12, color: "#f59e0b", lineHeight: 1.5 }}>
-                  Unlimited slots requires at least {unlimitedThreshold} {currency} total. Current: {rewardPool} {currency}.
-                </div>
-              )}
-
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                <SelectField label="Cooldown period" value={cooldownPeriod} onChange={setCooldownPeriod} options={COOLDOWN_OPTIONS} />
-                <SelectField label="Human verification" value={humanVerification} onChange={setHumanVerification} options={["No", "Yes"]} />
-              </div>
-
-              <div>
-                <label style={{ fontSize: 13, fontWeight: 600, color: C.text, display: "block", marginBottom: 8 }}>Audience</label>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 0, border: `1px solid ${C.border}`, borderRadius: 10, overflow: "hidden" }}>
-                  {["All", "Community"].map(a => (
-                    <button key={a} onClick={() => setAudience(a)}
-                      style={{
-                        padding: "12px", fontSize: 13, fontWeight: 600, cursor: "pointer",
-                        border: "none", fontFamily: "inherit",
-                        background: audience === a ? C.bg2 : C.card,
-                        color: audience === a ? C.accent : C.text2,
-                        borderRight: a === "All" ? `1px solid ${C.border}` : "none",
-                        display: "flex", alignItems: "center", justifyContent: "center", gap: 6
-                      }}>
-                      {audience === a && <span style={{ color: C.accent }}>--</span>}{a}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <ExcludeUsers value={{}} onChange={() => {}} />
-
-              <div>
-                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
-                  <label style={{ fontSize: 13, fontWeight: 600, color: C.text }}>Selection time</label>
-                  <InfoTip text="How long applications stay open before you must choose winners." />
-                </div>
-                <SelectField value={selectionTime} onChange={setSelectionTime} options={SELECTION_TIMES} />
-              </div>
-
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                <div>
-                  <label style={{ fontSize: 12, fontWeight: 600, color: C.text2, display: "block", marginBottom: 6 }}>Category</label>
-                  <SelectField value={category}         onChange={(v: any) => { setCategory(v); setSubcategory(""); }}
-                    options={[{ value: "", label: "Select a category" }, ...Object.keys(CATEGORIES).map(c => ({ value: c, label: c }))]} />
-                </div>
-                <div>
-                  <label style={{ fontSize: 12, fontWeight: 600, color: C.text2, display: "block", marginBottom: 6 }}>Subcategory</label>
-                  <SelectField value={subcategory} onChange={setSubcategory}
-                    options={[{ value: "", label: "Select..." }, ...(CATEGORIES[category as keyof typeof CATEGORIES] || []).map((s: any) => ({ value: s, label: s }))]} />
-                </div>
-              </div>
-
-              <div>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
-
-              {/* Fetch X/Twitter Post */}
-              <div style={{ marginBottom: 16 }}>
-                <button onClick={() => setShowFetchPost(s => !s)}
-                  style={{ display: "flex", alignItems: "center", gap: 8, width: "100%",
-                    padding: "12px 16px", borderRadius: 12, border: `2px dashed ${showFetchPost ? "#9333ea" : C.border}`,
-                    background: showFetchPost ? "rgba(147,51,234,0.03)" : "transparent",
-                    color: C.text, fontSize: 13, fontWeight: 600, cursor: "pointer",
-                    fontFamily: "inherit", transition: "all 0.15s",
-                  }}>
-                  <svg width="16" height="16" fill="none" stroke="#9333ea" strokeWidth="2" viewBox="0 0 24 24">
-                    <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>
-                  </svg>
-                  <span style={{ flex: 1, textAlign: "left" }}>Fetch X/Twitter Post</span>
-                  <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"
-                    style={{ transform: showFetchPost ? "rotate(180deg)" : "none", transition: "transform 0.2s" }}>
-                    <polyline points="6 9 12 15 18 9"/>
-                  </svg>
-                </button>
-              </div>
-
-              {showFetchPost && (
-                <div style={{ marginBottom: 20 }}>
-                  <FetchPost onPostFetched={(data) => {
-                    if (data.text) {
-                      setDescription((prev: string) => prev + (prev ? "\n\n" : "") + data.text);
-                    }
-                  }} />
-                </div>
-              )}
-
-                  <label style={{ fontSize: 13, fontWeight: 600, color: C.text }}>Description *</label>
-                  <div style={{ display: "flex", gap: 8 }}>
-                    <button onClick={() => fileRef.current?.click()}
-                      style={{ background: "none", border: "none", cursor: "pointer", color: C.text2, display: "flex" }}>
-                      <IconFile />
-                    </button>
-                    <button onClick={() => setShowTemplates(true)}
-                      style={{ background: "none", border: "none", cursor: "pointer", color: C.text2, display: "flex" }}>
-                      <IconTemplate />
-                    </button>
-                  </div>
-                </div>
-                <textarea value={description} onChange={e => setDescription(e.target.value)}
-                  placeholder="Describe your job in detail. Include requirements, instructions, and any links needed."
-                  rows={6}
-                  style={{
-                    width: "100%", border: `1px solid ${C.border}`, borderRadius: 8,
-                    padding: "10px 12px", fontSize: 13, color: C.text, outline: "none",
-                    fontFamily: "inherit", background: C.card, resize: "vertical",
-                    boxSizing: "border-box", lineHeight: 1.6
-                  }} />
-                <div style={{ fontSize: 11, color: C.text3, marginTop: 4, display: "flex", justifyContent: "space-between" }}>
-                  <span>{description.length} / 5000 characters</span>
-                  {attachments.length > 0 && <span>{attachments.length} file(s) attached</span>}
-                </div>
-                <input ref={fileRef} type="file" multiple accept="image/*,.pdf,.doc,.docx"
-                  onChange={handleFileAdd} style={{ display: "none" }} />
-              </div>
-
-              {/* Creatives upload */}
-              <div style={{ border: `1px solid ${C.border}`, borderRadius: 10, padding: 14 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-                  <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: C.text }}>Creatives (images/videos for workers)</span>
-                </div>
-                <div style={{ fontSize: 11, color: C.text3, marginBottom: 8, lineHeight: 1.4 }}>
-                  Upload ad images, videos, or story formats that workers can share. Workers will use these creatives to promote your campaign.
-                </div>
-                <label style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 12px", borderRadius: 8, border: `1px solid ${C.border}`, background: C.bg2, cursor: "pointer", fontSize: 12, fontWeight: 600, color: C.text2, fontFamily: "inherit" }}>
-                  <IconPlus /> Add Creatives
-                  <input type="file" multiple accept="image/*,.mp4,.mov" onChange={(e: any) => {
-                    const files = Array.from(e.target.files || []);
-                    setCreatives(c => [...c, ...files].slice(0, 5));
-                  }} style={{ display: "none" }} />
-                </label>
-                {creatives.length > 0 && (
-                  <div style={{ marginTop: 8, display: "flex", flexWrap: "wrap", gap: 6 }}>
-                    {creatives.map((f: any, i: number) => (
-                      <span key={i} style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "4px 10px", borderRadius: 6, background: C.bg2, border: `1px solid ${C.border}`, fontSize: 11, fontWeight: 600 }}>
-                        {f.name}
-                        <button onClick={() => setCreatives(c => c.filter((_: any, j: number) => j !== i))} style={{ background: "none", border: "none", color: C.red, cursor: "pointer", padding: 0, fontSize: 14, lineHeight: 1 }}>&times;</button>
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Tracking code */}
-              <div>
-                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
-                  <label style={{ fontSize: 12, fontWeight: 600, color: C.text2 }}>Tracking code (for content campaigns)</label>
-                  <InfoTip text="Generate a unique code that workers include in their content so you can track submissions." />
-                </div>
-                <div style={{ display: "flex", gap: 8 }}>
-                  <input type="text" value={trackingCode} onChange={e => setTrackingCode(e.target.value)}
-                    placeholder="e.g. OGAPAY2024"
-                    style={{
-                      flex: 1, border: `1px solid ${C.border}`, borderRadius: 8,
-                      padding: "10px 12px", fontSize: 13, color: C.text, outline: "none",
-                      fontFamily: "inherit", background: C.card, boxSizing: "border-box"
-                    }} />
-                  <button onClick={() => setTrackingCode('OGA-' + Math.random().toString(36).substring(2, 8).toUpperCase())}
-                    style={{ flexShrink: 0, padding: "10px 14px", borderRadius: 8, border: `1px solid ${C.border}`, background: C.bg2, color: C.text2, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
-                    Generate
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* -- STEP 3: Payment -- */}
-        {wizardStep === 3 && (
-          <div style={{ border: `1px solid ${C.border}`, borderRadius: 16, background: C.card, overflow: "hidden" }}>
-            <div style={{
-              display: "flex", alignItems: "center", justifyContent: "space-between",
-              padding: "14px 16px", borderBottom: `1px solid ${C.border}`, background: C.bg2
-            }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <IconWallet />
-                <span style={{ fontSize: 14, fontWeight: 800, color: C.text }}>Payment & Review</span>
-              </div>
-            </div>
-
-            <div style={{ padding: 16, display: "flex", flexDirection: "column", gap: 14 }}>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                <SelectField label="Currency" value={currency} onChange={setCurrency} options={["SOL", "USDC", "NGN"]} />
-
-              {/* Per-action requirement */}
-              <ActionRequirement value={actionReq} onChange={setActionReq} compact />
-                <div>
-                  <label style={{ fontSize: 12, fontWeight: 600, color: C.text2, display: "block", marginBottom: 6 }}>
-                    Total Reward ({currency})
-                  </label>
-                  <input type="number" min={0.01} step={0.01} value={bounty}
-                    onChange={e => setBounty(e.target.value)}
-                    style={{
-                      width: "100%", border: `1px solid ${C.border}`, borderRadius: 8,
-                      padding: "10px 12px", fontSize: 13, color: C.text, outline: "none",
-                      fontFamily: "inherit", background: C.card, boxSizing: "border-box"
-                    }} />
-                </div>
-              </div>
-
-              {/* Order preview */}
-              {rewardPool > 0 && slots > 0 && (
-                <div style={{ border: `1px solid ${C.border}`, borderRadius: 12, overflow: "hidden", background: C.bg2 }}>
-                  <div style={{ padding: "10px 14px", borderBottom: `1px solid ${C.border}`, display: "flex", alignItems: "center", gap: 8 }}>
-                    <IconSettings />
-                    <span style={{ fontSize: 13, fontWeight: 700, color: C.text }}>Order Preview</span>
-                  </div>
-                  <div style={{ padding: 14, display: "flex", flexDirection: "column", gap: 8, fontSize: 12, color: C.text2 }}>
-                    <div style={{ display: "flex", justifyContent: "space-between" }}><span>Title</span><span style={{ fontWeight: 600, color: C.text }}>{title || "—"}</span></div>
-                    <div style={{ display: "flex", justifyContent: "space-between" }}><span>Category</span><span style={{ fontWeight: 600, color: C.text }}>{category || "—"}{subcategory ? ` / ${subcategory}` : ""}</span></div>
-                    <div style={{ display: "flex", justifyContent: "space-between" }}><span>Mode</span><span style={{ fontWeight: 600, color: C.text }}>{mode} • {winnerMode}</span></div>
-                    <div style={{ display: "flex", justifyContent: "space-between" }}><span>Winners / Slots</span><span style={{ fontWeight: 600, color: C.text }}>{challengeWinners}{unlimitedEntries ? " (unlimited entries)" : maxEntries ? ` (max ${maxEntries}/user)` : ""}</span></div>
-                    <div style={{ display: "flex", justifyContent: "space-between" }}><span>Target</span><span style={{ fontWeight: 600, color: C.text }}>{targetCountry}{targetGender !== "All" ? ` • ${targetGender}` : ""}</span></div>
-                    <div style={{ display: "flex", justifyContent: "space-between" }}><span>Approval</span><span style={{ fontWeight: 600, color: C.text }}>{approvalMode === "self" ? `Self (auto after ${daysToApprove})` : "OgaPay moderation"}</span></div>
-                    <div style={{ display: "flex", justifyContent: "space-between" }}><span>Cooldown</span><span style={{ fontWeight: 600, color: C.text }}>{cooldownPeriod}</span></div>
-                    {humanVerification === "Yes" && <div style={{ display: "flex", justifyContent: "space-between" }}><span>Human verification</span><span style={{ fontWeight: 600, color: C.green }}>Yes</span></div>}
-                    {trackingCode && <div style={{ display: "flex", justifyContent: "space-between" }}><span>Tracking code</span><span style={{ fontWeight: 600, color: C.text, fontFamily: "monospace" }}>{trackingCode}</span></div>}
-                    {qualityLevel > 0 && <div style={{ display: "flex", justifyContent: "space-between" }}><span>Quality requirements</span><span style={{ fontWeight: 600, color: C.accent }}>{qualityLevel} active (×{qualityMultiplier.toFixed(2)})</span></div>}
-                  </div>
-                </div>
-              )}
-
-              {rewardPool > 0 && slots > 0 && (
-                <div style={{
-                  border: `1px solid ${C.border}`, borderRadius: 12, overflow: "hidden", background: C.bg2
-                }}>
-                  <div style={{ padding: "10px 14px", borderBottom: `1px solid ${C.border}`, display: "flex", alignItems: "center", gap: 8 }}>
-                    <IconWallet />
-                    <span style={{ fontSize: 13, fontWeight: 700, color: C.text }}>Cost Summary</span>
-                  </div>
-                  <div style={{ padding: 14, display: "flex", flexDirection: "column", gap: 8 }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, color: C.text2 }}>
-                      <span>Total Reward ({currency})</span>
-                      <span style={{ fontWeight: 600, color: C.text }}>{rewardPool.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} {currency}</span>
+                <div className="cf-body">
+                  <div className="cf-field">
+                    <span className="cf-lbl">Mode</span>
+                    <div className="cf-modes" role="radiogroup" aria-label="Mode">
+                      {[
+                        ["Challenge", "ti-trophy", "Pay every approved entry, up to your number of winners."],
+                        ["Selection", "ti-user-check", "People apply and you choose one person for the work."],
+                      ].map(([m, icon, d]) => (
+                        <button key={m} type="button" role="radio" aria-checked={mode === m} className={`cf-mode${mode === m ? " on" : ""}`} onClick={() => setMode(m)}>
+                          <i className={`ti ${icon}`} /><span style={{ margin: 0 }}><b>{m}</b><span>{d}</span></span>
+                        </button>
+                      ))}
                     </div>
-                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, color: C.text2 }}>
-                      <span>Winners</span>
-                      <span style={{ fontWeight: 600, color: C.text }}>{slots}</span>
+                  </div>
+
+                  <div className="cf-field">
+                    <label htmlFor="cj-title">Title</label>
+                    <input id="cj-title" className="ui-input" maxLength={200} value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Write a thread explaining how OgaPay works" />
+                  </div>
+
+                  <div className="cf-field">
+                    <label htmlFor="cj-desc">Description</label>
+                    <div className="cf-editor">
+                      <div className="cf-tools" role="toolbar" aria-label="Formatting">
+                        <button type="button" title="Bold" aria-label="Bold" onClick={() => wrap("**")}><i className="ti ti-bold" /></button>
+                        <button type="button" title="Italic" aria-label="Italic" onClick={() => wrap("_")}><i className="ti ti-italic" /></button>
+                        <button type="button" title="List" aria-label="Bulleted list" onClick={() => linePrefix("- ")}><i className="ti ti-list" /></button>
+                        <button type="button" title="Heading" aria-label="Heading" onClick={() => linePrefix("## ")}><i className="ti ti-heading" /></button>
+                        <button type="button" title="Link" aria-label="Link" onClick={() => wrap("[", "](https://)", "link text")}><i className="ti ti-link" /></button>
+                        <span className="sep" />
+                        <button type="button" title="Attach files" aria-label="Attach files" onClick={() => fileRef.current?.click()}><i className="ti ti-paperclip" /></button>
+                      </div>
+                      <textarea id="cj-desc" ref={descRef} value={description} maxLength={10000} onChange={e => setDescription(e.target.value)}
+                        placeholder="What should people do? Describe the result, what to submit and how you'll choose winners." />
                     </div>
-                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, color: C.text2 }}>
-                      <span>Per winner</span>
-                      <span style={{ fontWeight: 600, color: C.text }}>{perWinner.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} {currency}</span>
+                    <div className="cf-count"><span>Include the task, expected result and what to submit. Markdown supported.</span><span>{description.length.toLocaleString()} / 10,000</span></div>
+                  </div>
+
+                  <div className="cf-row-3">
+                    <div className="cf-field">
+                      <label htmlFor="cj-cur">Currency</label>
+                      <select id="cj-cur" className="ui-select" value={currency} onChange={e => setCurrency(e.target.value)}>
+                        <option value="NGN">NGN</option><option value="USDC">USDC</option><option value="SOL">SOL</option>
+                      </select>
                     </div>
-                    {qualityLevel > 0 && (
-                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: C.accent }}>
-                        <span>Quality-adjusted min</span>
-                        <span>{effectiveMinPerWinner.toFixed(2)} {currency}</span>
+                    <div className="cf-field">
+                      <label htmlFor="cj-budget">Total budget</label>
+                      <div className="cf-prefix">
+                        <span>{currency === "NGN" ? "₦" : currency === "USDC" ? "$" : "◎"}</span>
+                        <input id="cj-budget" className="ui-input" inputMode="decimal" value={bounty} onChange={e => setBounty(e.target.value.replace(/[^0-9.,]/g, ""))} placeholder="0" />
+                      </div>
+                      <p className="cf-hint">Minimum: {money(minTotal, currency)}</p>
+                    </div>
+                    <div className="cf-field">
+                      <label htmlFor="cj-win">{mode === "Selection" ? "People hired" : "Challenge winners"}</label>
+                      <input id="cj-win" className="ui-input" type="number" min={1} max={1000} disabled={mode === "Selection"}
+                        value={mode === "Selection" ? "1" : winnersInput} onChange={e => setWinnersInput(e.target.value)} />
+                      <p className="cf-hint">{money(perWinner, currency)} per {mode === "Selection" ? "person" : "winner"} · 1 to 1,000</p>
+                    </div>
+                  </div>
+
+                  <div className="cf-row">
+                    <div className="cf-field">
+                      <label htmlFor="cj-cat">Category</label>
+                      <select id="cj-cat" className="ui-select" value={category} onChange={e => { setCategory(e.target.value); setSubcategory(""); }}>
+                        <option value="">Select a category</option>
+                        {Object.keys(CATEGORIES).map(c => <option key={c} value={c}>{c}</option>)}
+                      </select>
+                    </div>
+                    <div className="cf-field">
+                      <label htmlFor="cj-sub">Subcategory</label>
+                      <select id="cj-sub" className="ui-select" value={subcategory} disabled={!category} onChange={e => setSubcategory(e.target.value)}>
+                        <option value="">{category ? "Optional" : "Choose a category first"}</option>
+                        {(CATEGORIES[category as keyof typeof CATEGORIES] || []).map((s: string) => <option key={s} value={s}>{s}</option>)}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="cf-field">
+                    <label htmlFor="cj-dur">Job closes after</label>
+                    <select id="cj-dur" className="ui-select" value={duration} onChange={e => setDuration(e.target.value)}>
+                      {DURATIONS.map(([l]) => <option key={l} value={l}>{l}</option>)}
+                    </select>
+                    <p className="cf-hint">{deadline ? `Closes ${deadline.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}. Unused budget returns to your wallet.` : "Stays open until all places are filled or you cancel it."}</p>
+                  </div>
+
+                  <Fold title="Audience and requirements" sub="Choose who can take part" open={openReq} onToggle={() => setOpenReq(o => !o)}>
+                    <RequirementPicker type={reqType} value={reqValue} onChange={(t, v) => { setReqType(t); setReqValue(v); }} />
+                  </Fold>
+
+                  <div className="cf-field">
+                    <span className="cf-lbl">Attachments (up to 10 files, 10 MB each)</span>
+                    <button type="button" className="cf-drop" onClick={() => fileRef.current?.click()}><i className="ti ti-upload" /> Add briefs, examples or creatives for workers</button>
+                    <input ref={fileRef} type="file" multiple hidden accept="image/*,video/*,.pdf,.doc,.docx,.txt" onChange={e => { addFiles(e.target.files); e.target.value = ""; }} />
+                    {files.length > 0 && (
+                      <div className="cf-files">
+                        {files.map((f, i) => <span key={f.name + i}>{f.name}<button type="button" aria-label={`Remove ${f.name}`} onClick={() => setFiles(fs => fs.filter((_, j) => j !== i))}>×</button></span>)}
                       </div>
                     )}
-                    <div style={{ height: 1, background: C.border, margin: "4px 0" }} />
-                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13 }}>
-                      <span>Platform fee (10%)</span>
-                      <span style={{ fontWeight: 600, color: C.text }}>{platformFee.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} {currency}</span>
-                    </div>
-                    {moderationFee > 0 && (
-                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13 }}>
-                        <span>Moderation fee (5%)</span>
-                        <span style={{ fontWeight: 600, color: C.text }}>{moderationFee.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} {currency}</span>
-                      </div>
-                    )}
-                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 15, fontWeight: 800, color: C.text }}>
-                      <span>Total to pay</span>
-                      <span>{totalToPay.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})} {currency}</span>
-                    </div>
                   </div>
+
+                  <Fold title="Extra submission options" sub="Proof and tracking" open={openExtra} onToggle={() => setOpenExtra(o => !o)}>
+                    <CfToggle on={screenshot} onChange={setScreenshot} label="Screenshot required" desc="People must attach at least one screenshot with their submission." />
+                    <div className="cf-field">
+                      <label htmlFor="cj-track">Tracking code (optional)</label>
+                      <input id="cj-track" className="ui-input" maxLength={64} value={trackingCode} onChange={e => setTrackingCode(e.target.value)} placeholder="e.g. OGA-LAUNCH-24" />
+                      <p className="cf-hint">Ask people to include this code in their post so you can find their content.</p>
+                    </div>
+                  </Fold>
+
+                  {submitError && <div className="cf-error">{submitError}</div>}
                 </div>
-              )}
-
-              <div style={{
-                marginTop: 8, background: C.bg2, border: `1px solid ${C.border}`,
-                borderRadius: 10, padding: 12, fontSize: 12, color: C.text2
-              }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
-                  <IconAlert />
-                  <span style={{ fontWeight: 600, color: C.text }}>Make sure your wallet has sufficient {currency} balance before proceeding.</span>
+              </section>
+            ) : (
+              <section className="ui-card cf-card">
+                <div className="cf-head">
+                  <b><i className="ti ti-wallet" /> Review and pay</b>
+                  <button className="ui-btn ui-btn-ghost" onClick={() => setStep(2)}><i className="ti ti-arrow-left" /> Edit details</button>
                 </div>
-              </div>
-
-              {submitError && (
-                <div style={{
-                  padding: "10px 14px", borderRadius: 8, background: "#fef2f2",
-                  border: "1px solid #fee2e2", fontSize: 13, color: "#991b1b"
-                }}>{submitError}</div>
-              )}
-
-              <button onClick={handleCreateCustomTask} disabled={submitting}
-                style={{
-                  width: "100%", padding: "14px", borderRadius: 12, border: "none",
-                  background: C.accent, color: C.card, fontSize: 15, fontWeight: 700,
-                  cursor: submitting ? "wait" : "pointer", fontFamily: "inherit",
-                  opacity: submitting ? 0.7 : 1,
-                  display: "flex", alignItems: "center", justifyContent: "center", gap: 8
-                }}>
-                {submitting ? "Creating..." : "Create Job"}
-                <IconExternalLink />
-              </button>
-            </div>
+                <div className="cf-body">
+                  <div className="cf-review">
+                    <div><span>Title</span><b>{title}</b></div>
+                    <div><span>Category</span><b>{category}{subcategory ? ` / ${subcategory}` : ""}</b></div>
+                    <div><span>Mode</span><b>{mode}</b></div>
+                    <div><span>{mode === "Selection" ? "People hired" : "Winners"}</span><b>{winners}</b></div>
+                    <div><span>Reward per {mode === "Selection" ? "person" : "winner"}</span><b>{money(perWinner, currency)}</b></div>
+                    <div><span>Who can take part</span><b>{reqLabel(reqType, reqValue)}</b></div>
+                    <div><span>Closes</span><b>{deadline ? deadline.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "No deadline"}</b></div>
+                    {screenshot && <div><span>Proof</span><b>Screenshot required</b></div>}
+                    {files.length > 0 && <div><span>Attachments</span><b>{files.length} file{files.length > 1 ? "s" : ""}</b></div>}
+                    <div><span>Your {currency} balance</span><b style={{ color: balance >= totalToPay ? "var(--green)" : "var(--red)" }}>{money(balance, currency)}</b></div>
+                  </div>
+                  {balance < totalToPay && (
+                    <div className="cw-banner" style={{ margin: 0 }}>
+                      <span>You need {money(totalToPay - balance, currency)} more to publish this job.</span>
+                      <button className="ui-btn ui-btn-dark" onClick={() => setShowFundModal(true)}>Top up wallet</button>
+                    </div>
+                  )}
+                  {submitError && <div className="cf-error">{submitError}</div>}
+                </div>
+              </section>
+            )}
           </div>
-        )}
 
-      </div>
-
-      <aside className="cw-side">
-        <div className="ui-card cw-ov">
-          <div className="cw-ov-head"><i className="ti ti-receipt" /> Overview</div>
-          <div className="cw-ov-row"><span>Platform fee (10%)</span><b>{fmtAmt(platformFee)}<small>{currency}</small></b></div>
-          {moderationFee > 0 && <div className="cw-ov-row"><span>Moderation (5%)</span><b>{fmtAmt(moderationFee)}<small>{currency}</small></b></div>}
-          <div className="cw-ov-row"><span>{mode === "Challenge" ? "Winners" : "Places"}</span><b>{slots || 0}</b></div>
-          <div className="cw-ov-row"><span>Reward per winner</span><b>{fmtAmt(perWinner)}<small>{currency}</small></b></div>
-          <div className="cw-ov-total"><span>You pay</span><b>{fmtAmt(totalToPay)} <span style={{ fontSize: 11, fontWeight: 500, color: "var(--text2)" }}>{currency}</span></b></div>
-        </div>
-        <div className="ui-card cw-check">
-          <ul>
-            {checklist.map(c => <li key={c.label} className={c.ok ? "ok" : ""}><i className={`ti ti-${c.ok ? "circle-check" : "circle"}`} />{c.label}</li>)}
-          </ul>
-          <button className="ui-btn ui-btn-dark ui-btn-lg" style={{ width: "100%" }} onClick={primaryAction} disabled={submitting}>
-            {primaryLabel} <i className="ti ti-arrow-right" />
-          </button>
-          <p className="cw-terms">By continuing with payment, you agree to our <a href="/terms">terms</a>.</p>
-        </div>
-      </aside>
+          <OverviewCard
+            rows={rows}
+            total={totalToPay}
+            currency={currency}
+            alt={alt}
+            checklist={step === 2 ? checklist : []}
+            primaryLabel={!isAuthed ? "Sign in to continue" : step === 2 ? "Continue to payment" : submitting ? "Publishing…" : `Pay ${money(totalToPay, currency)} and publish`}
+            onPrimary={step === 2 ? goToPayment : publish}
+            busy={submitting}
+          />
         </div>
       </div>
 
-      {showInfo && (
-        <div style={{ position: "fixed", inset: 0, zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.5)" }} onClick={() => setShowInfo(false)} />
-          <div style={{ position: "relative", background: C.card, borderRadius: 20, maxWidth: 500, width: "90%", padding: 24, maxHeight: "80vh", overflow: "auto" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-              <h2 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: C.text }}>Understanding Job Modes</h2>
-              <button onClick={() => setShowInfo(false)}
-                style={{ background: "none", border: "none", cursor: "pointer", color: C.text2, display: "flex" }}>
-                <IconClose />
-              </button>
-            </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
-              <div style={{ borderRadius: 12, border: `1px solid ${C.accent}`, padding: 14, background: C.bg2 }}>
-                <h3 style={{ margin: "0 0 8px", fontSize: 14, fontWeight: 700, color: C.accent }}>Challenge Mode</h3>
-                <ul style={{ padding: "0 0 0 16px", margin: 0, fontSize: 12, color: C.text2, lineHeight: 1.8 }}>
-                  <li>Multiple winners (1-1000)</li>
-                  <li>You review all submissions</li>
-                  <li>Select the best entries</li>
-                  <li>Reward split among winners</li>
-                </ul>
-              </div>
-              <div style={{ borderRadius: 12, border: `1px solid ${C.border}`, padding: 14, background: C.bg2 }}>
-                <h3 style={{ margin: "0 0 8px", fontSize: 14, fontWeight: 700, color: C.text }}>Selection Mode</h3>
-                <ul style={{ padding: "0 0 0 16px", margin: 0, fontSize: 12, color: C.text2, lineHeight: 1.8 }}>
-                  <li>One winner selected</li>
-                  <li>Applicants explain qualifications</li>
-                  <li>Full reward to one person</li>
-                </ul>
-              </div>
-            </div>
-            <button onClick={() => setShowInfo(false)}
-              style={{
-                width: "100%", padding: "12px", borderRadius: 8, border: "none",
-                background: C.accent, color: C.card, fontSize: 14, fontWeight: 700,
-                cursor: "pointer", fontFamily: "inherit"
-              }}>Got it</button>
-          </div>
-        </div>
-      )}
-
-      {showTemplates && <TemplatesModal onClose={() => setShowTemplates(false)}       onUse={(tpl: any) => {
-        setTitle(tpl.title);
-        setBounty(tpl.bounty?.toString() || "");
-        setChallengeWinners(tpl.winners || 25);
-        setDescription(tpl.desc || "");
+      {showTemplates && <TemplatesModal onClose={() => setShowTemplates(false)} onUse={(tpl: any) => {
+        setTitle(tpl.title || ""); setBounty(tpl.bounty?.toString() || ""); setWinnersInput(String(tpl.winners || 10)); setDescription(tpl.desc || "");
+        setShowTemplates(false);
       }} />}
       {showFundModal && (
         <FundJobWalletModal
           currency={currency}
-          shortfall={Math.max(0, totalToPay - (walletBalances?.[currency] ? (Number(walletBalances[currency].balance) || 0) : 0))}
+          shortfall={Math.max(0, totalToPay - balance)}
           totalToPay={totalToPay}
-          balance={walletBalances?.[currency] ? (Number(walletBalances[currency].balance) || 0) : 0}
+          balance={balance}
           onClose={() => setShowFundModal(false)}
-          onFunded={() => {
-            setShowFundModal(false);
-            refreshWalletBal();
-            setSubmitting(false);
-            setTimeout(() => handleCreateCustomTask(), 500);
-          }}
+          onFunded={() => { setShowFundModal(false); refreshWalletBal(); }}
         />
       )}
     </Layout>
@@ -1345,6 +953,15 @@ function CreateTask() {
   const [showServiceForm, setShowServiceForm] = useState(false);
   const [openPanel, setOpenPanel] = useState<null | "x" | "quick">(null);
   const quickRef = useRef<HTMLDivElement>(null);
+  const [showX, setShowX] = useState(false);
+  const [xUrl, setXUrl] = useState("");
+
+  // /create?type=custom (back from sign-in with a saved draft) or ?type=x
+  useEffect(() => {
+    const t = new URLSearchParams(window.location.search).get("type");
+    if (t === "custom") setShowCustom(true);
+    if (t === "x") setShowX(true);
+  }, []);
 
   // Edit data handed over from Manage jobs
   useEffect(() => {
@@ -1406,7 +1023,7 @@ function CreateTask() {
   const [upgradeMsg, setUpgradeMsg] = useState('');
   const [upgraded, setUpgraded] = useState(false);
 
-  if (!upgraded && effectiveRole !== "POSTER" && effectiveRole !== "ADMIN") {
+  if (isAuthed && !upgraded && effectiveRole !== "POSTER" && effectiveRole !== "ADMIN") {
     const handleUpgrade = async () => {
       setUpgrading(true);
       setUpgradeMsg('');
@@ -1457,6 +1074,12 @@ function CreateTask() {
     );
   }
 
+  if (showX) {
+    return <XCampaignBuilder initialUrl={xUrl}
+      onClose={() => { setShowX(false); setXUrl(""); }}
+      onCreated={(taskId: any) => { setShowX(false); setXUrl(""); setSuccess(taskId || true); }} />;
+  }
+
   if (showCustom) {
     return <CustomJobWizard
       initialTemplate={customTemplate}
@@ -1501,6 +1124,11 @@ function CreateTask() {
         .cj-steps i{font-size:12px;color:var(--text3)}
         .cj-foot{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:24px;padding-top:18px;border-top:1px solid var(--border);font-size:12px;color:var(--text2)}
         .cj-foot a{display:inline-flex;align-items:center;gap:6px;color:var(--text);font-weight:500;text-decoration:none}
+        .cj-xstart{display:flex;flex-direction:column;gap:8px;margin-top:14px;padding-top:14px;border-top:1px solid var(--border)}
+        .cj-xstart b{font-size:13px;font-weight:600}
+        .cj-xstart span{font-size:11.5px;color:var(--text2);margin-top:-4px}
+        .cj-xstart label{font-size:11.5px;font-weight:500;margin-top:4px}
+        .cj-xstart .ui-btn{width:100%}
         @media(max-width:900px){.cj-cards{grid-template-columns:1fr}.cj-card{min-height:0}}
       `}</style>
       <div className="ui-page" style={{ paddingTop: 28 }}>
@@ -1542,9 +1170,18 @@ function CreateTask() {
             </ul>
             <div className="cj-go">
               <button className="ui-btn ui-btn-dark" aria-expanded={openPanel === "x"} onClick={() => setOpenPanel(openPanel === "x" ? null : "x")}>
-                Set up X campaign <i className={`ti ti-chevron-${openPanel === "x" ? "up" : "down"}`} />
+                {openPanel === "x" ? "Close X campaign setup" : "Set up X campaign"} <i className={`ti ti-chevron-${openPanel === "x" ? "up" : "down"}`} />
               </button>
             </div>
+            {openPanel === "x" && (
+              <form className="cj-xstart" onSubmit={e => { e.preventDefault(); setShowX(true); }}>
+                <b>Start with your X post</b>
+                <span>Find your post, then choose its actions and budget.</span>
+                <label htmlFor="cj-xurl">X post URL</label>
+                <input id="cj-xurl" className="ui-input" type="url" value={xUrl} onChange={e => setXUrl(e.target.value)} placeholder="https://x.com/username/status/…" />
+                <button type="submit" className="ui-btn ui-btn-dark" disabled={!xUrl.trim()}><i className="ti ti-search" /> Find post</button>
+              </form>
+            )}
           </div>
 
           <div className={`ui-card cj-card${openPanel === "quick" ? " on" : ""}`}>
@@ -1568,16 +1205,6 @@ function CreateTask() {
           </div>
         </div>
 
-        {openPanel === "x" && (
-          <section className="ui-card cj-panel">
-            <div className="cj-panel-head"><b>X campaign</b><button className="ui-btn ui-btn-ghost" onClick={() => setOpenPanel(null)}>Close</button></div>
-            <div style={{ padding: 18 }}>
-              <p className="ui-sub" style={{ margin: "0 0 12px" }}>Paste the X post you want to grow, then choose the actions and budget.</p>
-              <FetchPost onPostFetched={(data) => { if (data.text) (window as any).__ogapay_raid_post = data; }} />
-            </div>
-          </section>
-        )}
-
         {openPanel === "quick" && (
           <section className="ui-card cj-panel" ref={quickRef}>
             {!selectedPlatform ? (
@@ -1590,7 +1217,7 @@ function CreateTask() {
                 </div>
               </>
             ) : (
-              <PlatformDetail platform={selectedPlatform} onBack={() => setSelectedPlatform(null)} onCreated={(taskId: any) => setSuccess(taskId || "true")} />
+              <QuickTaskForm platform={selectedPlatform} onBack={() => setSelectedPlatform(null)} onCreated={(taskId: any) => setSuccess(taskId || "true")} />
             )}
           </section>
         )}
