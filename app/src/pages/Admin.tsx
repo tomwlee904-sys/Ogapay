@@ -23,6 +23,16 @@ export default function Admin() {
         <h1>Admin</h1>
         <p>Manage platform settings, users, tasks, and disputes.</p>
         <div className="admin-grid">
+          <a className="admin-card" href="/admin/withdrawals">
+            <i className="ti ti-cash" />
+            <h3>Withdrawals</h3>
+            <p>Pay out and settle pending withdrawals</p>
+          </a>
+          <a className="admin-card" href="/admin/moderation">
+            <i className="ti ti-flag" />
+            <h3>Moderation</h3>
+            <p>Submissions waiting over 24h</p>
+          </a>
           <a className="admin-card" href="/admin/users">
             <i className="ti ti-users" />
             <h3>Users</h3>
