@@ -48,16 +48,17 @@ const friendly = (msg = '') => {
 
 const isMobile = () => /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
 
-interface WalletDef { id: string; name: string; color: string; letter: string; detect: () => any; install: string; openIn?: (url: string) => string }
+// Official icons, from each wallet's @solana/wallet-adapter package (Trust cropped to its shield)
+interface WalletDef { id: string; name: string; icon: string; detect: () => any; install: string; openIn?: (url: string) => string }
 const win = () => window as any
 const WALLETS: WalletDef[] = [
-  { id: 'phantom', name: 'Phantom', color: '#AB9FF2', letter: 'P', detect: () => (win().phantom?.solana?.isPhantom ? win().phantom.solana : null), install: 'https://phantom.app/download',
+  { id: 'phantom', name: 'Phantom', icon: '/wallets/phantom.svg', detect: () => (win().phantom?.solana?.isPhantom ? win().phantom.solana : null), install: 'https://phantom.app/download',
     openIn: (url) => `https://phantom.app/ul/browse/${encodeURIComponent(url)}?ref=${encodeURIComponent(location.origin)}` },
-  { id: 'solflare', name: 'Solflare', color: '#FC7227', letter: 'S', detect: () => (win().solflare?.isSolflare ? win().solflare : null), install: 'https://solflare.com/download',
+  { id: 'solflare', name: 'Solflare', icon: '/wallets/solflare.svg', detect: () => (win().solflare?.isSolflare ? win().solflare : null), install: 'https://solflare.com/download',
     openIn: (url) => `https://solflare.com/ul/v1/browse/${encodeURIComponent(url)}?ref=${encodeURIComponent(location.origin)}` },
-  { id: 'backpack', name: 'Backpack', color: '#E33E3F', letter: 'B', detect: () => win().backpack?.solana || (win().backpack?.isBackpack ? win().backpack : null), install: 'https://backpack.app/downloads' },
-  { id: 'trust', name: 'Trust Wallet', color: '#0500FF', letter: 'T', detect: () => win().trustwallet?.solana || null, install: 'https://trustwallet.com/download' },
-  { id: 'bitget', name: 'Bitget Wallet', color: '#1C1C1C', letter: 'B', detect: () => win().bitkeep?.solana || null, install: 'https://web3.bitget.com/en/wallet-download' },
+  { id: 'backpack', name: 'Backpack', icon: '/wallets/backpack.png', detect: () => win().backpack?.solana || (win().backpack?.isBackpack ? win().backpack : null), install: 'https://backpack.app/downloads' },
+  { id: 'trust', name: 'Trust Wallet', icon: '/wallets/trust.svg', detect: () => win().trustwallet?.solana || null, install: 'https://trustwallet.com/download' },
+  { id: 'bitget', name: 'Bitget Wallet', icon: '/wallets/bitget.svg', detect: () => win().bitkeep?.solana || null, install: 'https://web3.bitget.com/en/wallet-download' },
 ]
 
 function GoogleIcon() {
@@ -247,7 +248,7 @@ export default function SignInModal({ initialView = 'options', initialCode = '',
         {noticeLine}{errorLine}
         <div className="si-options">
           <Option name="Continue with wallet" desc="Phantom, Solflare, Backpack and more" onClick={() => go('wallets')}
-            icon={<span className="si-wgrid" aria-hidden="true">{WALLETS.slice(0, 4).map(w => <span key={w.id} style={{ background: w.color }}>{w.letter}</span>)}</span>} />
+            icon={<span className="si-wgrid" aria-hidden="true">{WALLETS.slice(0, 4).map(w => <img key={w.id} src={w.icon} alt="" />)}</span>} />
           <Option name="Continue with Google" desc="Sign in or create an account with your Google account" onClick={google} disabled={busy === 'google'}
             icon={busy === 'google' ? <Spinner /> : <GoogleIcon />} />
           <Option name="Email" desc="Sign in or create an account with your email" onClick={() => go('email')}
@@ -271,7 +272,7 @@ export default function SignInModal({ initialView = 'options', initialCode = '',
               <Option key={w.id} name={w.name} disabled={!!busy}
                 desc={running ? 'Waiting for your wallet…' : found ? 'Detected in this browser' : isMobile() && w.openIn ? `Open OgaPay in the ${w.name} app` : 'Not detected in this browser. Get it'}
                 tag={found && !running ? 'Detected' : undefined}
-                icon={running ? <Spinner /> : <span className="si-wlogo" style={{ background: w.color }} aria-hidden="true">{w.letter}</span>}
+                icon={running ? <Spinner /> : <img className="si-wlogo" src={w.icon} alt="" aria-hidden="true" />}
                 onClick={() => pickWallet(w)} />
             )
           })}
