@@ -114,7 +114,8 @@ export default function DevicePairing() {
   }, [code, navigate])
 
   const hasActiveCode = code && timeLeft > 0
-  const pairingUrl = code ? `ogapay.app/pair?code=${code}` : ''
+  const pairingUrl = code ? `${window.location.origin}/pair?code=${code}` : ''
+  const shownCode = code ? (code.match(/.{1,5}/g) || [code]).join(' ') : ''
 
   return (
     <Layout>
@@ -143,11 +144,11 @@ export default function DevicePairing() {
             <div style={{
               display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px',
               background: 'var(--bg)', borderRadius: 10, border: '1px solid var(--border)',
-              fontFamily: 'monospace', fontSize: hasActiveCode ? 28 : 16,
-              fontWeight: 900, color: hasActiveCode ? OGAPAY_BLUE : 'var(--text3)',
-              letterSpacing: hasActiveCode ? 6 : 0,
+              fontFamily: 'monospace', fontSize: hasActiveCode ? 18 : 16,
+              fontWeight: 800, color: hasActiveCode ? OGAPAY_BLUE : 'var(--text3)',
+              letterSpacing: hasActiveCode ? 2 : 0,
             }}>
-              <span style={{ flex: 1 }}>{hasActiveCode ? code : 'No active code'}</span>
+              <span style={{ flex: 1, minWidth: 0, overflowWrap: 'anywhere' }}>{hasActiveCode ? shownCode : 'No active code'}</span>
               {hasActiveCode && (
                 <button onClick={() => { navigator.clipboard.writeText(code); toast('Copied!', 'success') }}
                   style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text2)', fontSize: 18, padding: 4 }}>

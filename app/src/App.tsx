@@ -6,6 +6,7 @@ import { CurrencyProvider } from './context/CurrencyContext'
 import ProtectedRoute from './components/ProtectedRoute'
 import ErrorBoundary from './components/ErrorBoundary'
 import { ToastProvider } from './components/Toast'
+import SignInHost from './components/auth/SignInHost'
 import PageLoader from './components/PageLoader'
 import { JobAlertProvider } from './contexts/JobAlertContext'
 import { WalletBalanceProvider } from './context/WalletBalanceContext'
@@ -105,10 +106,12 @@ export default function App() {
         <ErrorBoundary>
         <Suspense fallback={<PageLoader />}>
           <JobAlertProvider>
+          <SignInHost />
           <Routes>
             {/* ── Public routes ── */}
             <Route path="/" element={<HomePage />} />
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/pair" element={<LoginPage />} />
             <Route path="/register" element={<Navigate to="/login" replace />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/verify-email" element={<VerifyEmailPage />} />

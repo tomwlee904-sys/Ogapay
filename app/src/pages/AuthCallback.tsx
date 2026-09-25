@@ -4,6 +4,13 @@ import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { persistAuthSession } from "../lib/api";
 
+// Page the user was heading to before Google (set by the sign-in dialog)
+function afterLogin() {
+  const to = sessionStorage.getItem("ogapay_after_login");
+  sessionStorage.removeItem("ogapay_after_login");
+  return to && to.startsWith("/") && !to.startsWith("//") ? to : "/dashboard";
+}
+
 export default function AuthCallback() {
   const [status, setStatus] = useState("processing");
 
@@ -130,7 +137,7 @@ export default function AuthCallback() {
           }
 
           setStatus("redirecting");
-          window.location.href = "/dashboard";
+          window.location.href = afterLogin();
         } else {
           // Retry once if hash is present
           if (attempt < 2 && window.location.hash) {
@@ -139,7 +146,7 @@ export default function AuthCallback() {
           if (error) console.error("Auth error:", error);
           const stored = localStorage.getItem("ogapay-authenticated");
           if (stored === "true") {
-            window.location.href = "/dashboard";
+            window.location.href = afterLogin();
           } else {
             window.location.href = "/login?error=no_session";
           }

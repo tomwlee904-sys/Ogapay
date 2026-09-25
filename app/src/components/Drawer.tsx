@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { openSignIn } from '../lib/signin'
 
 interface DrawerProps {
   open: boolean
@@ -84,12 +85,12 @@ export default function Drawer({ open, onClose }: DrawerProps) {
 
             {/* ── Bottom CTA ── */}
             <div className="oga-drawer-guest-cta" style={{ marginTop: 32 }}>
-              <Link className="oga-drawer-guest-signin" to="/login" onClick={onClose}>
+              <button type="button" className="oga-drawer-guest-signin" onClick={() => { onClose(); openSignIn() }}>
                 Sign In
-              </Link>
-              <Link className="oga-drawer-guest-signup" to="/register" onClick={onClose}>
+              </button>
+              <button type="button" className="oga-drawer-guest-signup" onClick={() => { onClose(); openSignIn({ view: 'signup' }) }}>
                 Create free account
-              </Link>
+              </button>
             </div>
           </nav>
         ) : (

@@ -1,6 +1,7 @@
 ﻿import { useState, useEffect, useRef, ReactNode } from 'react'
 import { useNavigate, useLocation, useNavigationType } from 'react-router-dom'
 import Navbar from './Navbar'
+import { openSignIn } from '../lib/signin'
 import Drawer from './Drawer'
 import Sidebar from './Sidebar'
 import Footer from './Footer'
@@ -50,7 +51,7 @@ function FAB() {
             ))}
           </div>
         )}
-        <button className={`fab-btn${open ? ' open' : ''}`} onClick={() => { if (!isAuthed) { navigate('/login'); } else { setOpen(o => !o); }}}>
+        <button className={`fab-btn${open ? ' open' : ''}`} onClick={() => { if (!isAuthed) { openSignIn({ redirect: '/create' }); } else { setOpen(o => !o); }}}>
           <i className="ti ti-plus" />
         </button>
       </div>

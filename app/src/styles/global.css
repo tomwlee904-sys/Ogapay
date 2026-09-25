@@ -878,7 +878,7 @@ body.auth-open{overflow:hidden}
 .oga-drawer-guest-signin{width:100%;height:50px;display:flex;align-items:center;justify-content:center;background:var(--accent);color:var(--on-accent);border-radius:14px;font-size:15px;font-weight:800;font-family:inherit;text-decoration:none;cursor:pointer;transition:transform .15s,box-shadow .15s;border:none}
 .oga-drawer-guest-signin:active{transform:scale(0.97)}
 [data-theme="dark"] .oga-drawer-guest-signin{color:var(--on-accent)}
-.oga-drawer-guest-signup{font-size:13px;font-weight:600;color:var(--text3);text-decoration:none;cursor:pointer;transition:color .15s;padding:4px 0}
+.oga-drawer-guest-signup{font-size:13px;font-weight:600;color:var(--text3);text-decoration:none;cursor:pointer;transition:color .15s;padding:4px 0;background:none;border:0;font-family:inherit}
 .oga-drawer-guest-signup:hover{color:var(--accent)}
 
 .oga-drawer-subnav a{display:flex;align-items:center;gap:14px;padding:8px 10px;border-radius:12px;color:inherit;text-decoration:none}

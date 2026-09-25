@@ -7,6 +7,7 @@ import { useCurrency } from '../context/CurrencyContext'
 import { apiRequest } from '../lib/api'
 import { useWalletBalance } from '../context/WalletBalanceContext'
 import { Logo } from './Logo'
+import { openSignIn } from '../lib/signin'
 
 const WALLET_CURRENCIES = ['SOL', 'USDC', 'USDT', 'NGN'] as const
 
@@ -25,6 +26,7 @@ interface NavbarProps {
 
 export default function Navbar({ onMenuToggle }: NavbarProps) {
   const navigate = useNavigate()
+  const { toast } = useToast()
   const { isAuthed, isLoading, user } = useAuth()
   const { theme, toggle } = useTheme()
   const { convert } = useCurrency()
@@ -115,9 +117,9 @@ export default function Navbar({ onMenuToggle }: NavbarProps) {
             </>
           )}
           {!isLoading && !isAuthed && (
-            <button className="connect-btn" onClick={() => navigate('/login')}>
+            <button className="connect-btn" onClick={() => openSignIn()}>
               <i className="ti ti-wallet" />
-              Connect Wallet
+              Sign in
             </button>
           )}
           <button className="icon-btn" id="themeToggle" onClick={toggle} aria-label="Toggle theme">
@@ -135,7 +137,7 @@ export default function Navbar({ onMenuToggle }: NavbarProps) {
           <span>OgaPay</span>
         </Link>
         <div className="flex gap-[10px] items-center">
-          <button className="icon-btn" onClick={() => navigate(isAuthed ? '/wallet' : '/login')} aria-label="Wallet" style={{ width: 34, height: 34 }}>
+          <button className="icon-btn" onClick={() => (isAuthed ? navigate('/wallet') : openSignIn({ redirect: '/wallet' }))} aria-label="Wallet" style={{ width: 34, height: 34 }}>
             <i className="ti ti-wallet" />
           </button>
           <button className="icon-btn w-[34px] h-[34px]" onClick={toggle} aria-label="Toggle theme">

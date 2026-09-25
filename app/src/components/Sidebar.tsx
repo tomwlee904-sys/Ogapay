@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { openSignIn } from '../lib/signin'
 
 function SidebarGroup({ label, icon, subtitle, defaultOpen = false, children }: { label: string; icon: string; subtitle?: string; defaultOpen?: boolean; children: React.ReactNode }) {
   const [open, setOpen] = useState(defaultOpen)
@@ -42,9 +43,9 @@ export default function Sidebar() {
           <Link className="sidebar-link" to="/faq"><i className="ti ti-help-circle" /> <span><strong>FAQ</strong><small>Answers and guides</small></span></Link>
           <Link className="sidebar-link" to="/support"><i className="ti ti-headset" /> <span><strong>Support</strong><small>Get help</small></span></Link>
           <div style={{ padding: '12px 10px', marginTop: 8 }}>
-            <Link className="wallet-btn" to="/login" style={{ width: '100%', justifyContent: 'center' }}>
-              <i className="ti ti-login" /> Login
-            </Link>
+            <button type="button" className="wallet-btn" onClick={() => openSignIn()} style={{ width: '100%', justifyContent: 'center' }}>
+              <i className="ti ti-login" /> Sign in
+            </button>
           </div>
         </div>
       </aside>
