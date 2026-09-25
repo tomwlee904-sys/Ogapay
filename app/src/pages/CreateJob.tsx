@@ -1293,8 +1293,8 @@ function PlatformDetail({ platform, onBack, onCreated }: any) {
         status: "OPEN",
         minRank: actionReq.mode === "rank" ? (actionReq.minRank || 0) : undefined,
         workerRequirement: actionReq.mode === "kyc" ? "KYC" : actionReq.humanVerified ? "HUMAN" : undefined,
-        requiresLinkedin: actionReq.mode === "verified_x" || undefined,
-        minOgaScore: actionReq.mode === "oga_score" ? (parseInt(actionReq.minOgaScore) || undefined) : undefined,
+        requiresX: actionReq.mode === "verified_x" || undefined,
+        minSorsaScore: actionReq.mode === "oga_score" ? (Math.min(100, parseInt(actionReq.minOgaScore)) || undefined) : undefined,
       };
       // -- Check wallet balance before submitting --
       const walletEntry = walletBalances?.[currency];

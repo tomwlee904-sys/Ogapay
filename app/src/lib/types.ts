@@ -27,6 +27,7 @@ export interface Task {
   minSorsaScore?: number;
   workerRequirement?: string;
   requiresLinkedin?: boolean;
+  requiresX?: boolean;
   requiresWallet?: boolean;
   escrowed?: boolean;
   platformFee?: number;

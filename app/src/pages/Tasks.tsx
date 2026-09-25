@@ -567,10 +567,10 @@ export default function Tasks() {
       }
       if (category !== 'All' && j.category !== categoryKey(category)) return false
       const score = Number(j.minOgaScore ?? j.minSorsaScore ?? 0), rank = Number(j.minRank ?? 0)
-      if (req === 'open' && (score > 0 || rank > 0 || j.requiresWallet || j.requiresLinkedin || j.workerRequirement)) return false
+      if (req === 'open' && (score > 0 || rank > 1 || j.requiresWallet || j.requiresX || j.requiresLinkedin || j.workerRequirement)) return false
       if (req === 'ogascore' && score <= 0) return false
       if (req === 'wallet' && !j.requiresWallet) return false
-      if (req === 'rank' && rank <= 0) return false
+      if (req === 'rank' && rank <= 1) return false
       if (availableOnly) {
         if (openSlots(j) <= 0 || isClosed(j) || mySubmissions.includes(j.id)) return false
         if (j.eligibility && j.eligibility.isEligible === false) return false

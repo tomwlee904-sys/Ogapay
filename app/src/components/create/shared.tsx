@@ -1,4 +1,5 @@
 import { ReactNode } from "react";
+import { rankName } from "../../lib/requirements";
 import { API_BASE, apiRequest, getAccessToken } from "../../lib/api";
 
 /* Shared building blocks for the Create flows (custom job, X campaign,
@@ -22,16 +23,16 @@ export function reqFields(type: string, value: string): Record<string, any> {
   switch (type) {
     case "kyc": return { workerRequirement: "KYC" };
     case "human": return { workerRequirement: "HUMAN" };
-    case "x": return { requiresLinkedin: true }; // existing field used for "verified X"
+    case "x": return { requiresX: true };
     case "wallet": return { requiresWallet: true };
-    case "rank": return { minRank: Math.min(100, n) };
+    case "rank": return { minRank: Math.min(5, Math.max(2, n)) }; // 2 Intermediate … 5 Legend
     case "ogascore": return { minSorsaScore: Math.min(100, n) };
     default: return {};
   }
 }
 
 export function reqLabel(type: string, value: string) {
-  if (type === "rank") return `Rank ${Math.max(1, parseInt(value) || 1)}+`;
+  if (type === "rank") return `${rankName(Math.max(2, parseInt(value) || 2))} rank or higher`;
   if (type === "ogascore") return `OgaScore ≥ ${Math.max(1, parseInt(value) || 1)}`;
   return REQ_OPTIONS.find(([v]) => v === type)?.[1] || "Anyone can take part";
 }
@@ -46,10 +47,18 @@ export function RequirementPicker({ type, value, onChange }: { type: string; val
           {REQ_OPTIONS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
         </select>
       </div>
-      {needsValue && (
+      {type === "rank" && (
         <div className="cf-field">
-          <label>{type === "rank" ? "Minimum rank" : "Minimum OgaScore"}</label>
-          <input className="ui-input" type="number" min={1} max={100} value={value} placeholder={type === "rank" ? "e.g. 2" : "e.g. 40"}
+          <label htmlFor="cf-rank">Minimum rank</label>
+          <select id="cf-rank" className="ui-select" value={String(Math.min(5, Math.max(2, parseInt(value) || 2)))} onChange={e => onChange(type, e.target.value)}>
+            {[2, 3, 4, 5].map(n => <option key={n} value={n}>{rankName(n)} or higher</option>)}
+          </select>
+        </div>
+      )}
+      {type === "ogascore" && (
+        <div className="cf-field">
+          <label htmlFor="cf-score">Minimum OgaScore</label>
+          <input id="cf-score" className="ui-input" type="number" min={1} max={100} value={value} placeholder="e.g. 40"
             onChange={e => onChange(type, e.target.value)} />
         </div>
       )}

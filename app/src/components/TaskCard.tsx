@@ -1,4 +1,5 @@
 ﻿import { useNavigate } from 'react-router-dom'
+import { rankName } from '../lib/requirements'
 import { useState, useEffect, useRef } from 'react'
 import { apiRequest } from '../lib/api'
 import { useCurrency } from '../context/CurrencyContext'
@@ -485,7 +486,7 @@ export default function TaskCard({ task, hideApply }: { task: Task; hideApply?: 
         {rankRequired && (
           <>
             <span style={{ color: 'var(--border2, #d1d5db)' }}>|</span>
-            <span>Rank {rankRequired}</span>
+            <span>{rankName(Number(rankRequired))}+</span>
           </>
         )}
         {task.workerRequirement && (

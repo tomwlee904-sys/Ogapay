@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { jobRequirements } from "../../lib/requirements";
 
 /* Homepage cards for highlighted jobs and creator-store products. Kept separate
    from TaskCard so the rest of the app keeps its existing card design. */
@@ -48,15 +49,7 @@ export function HomeJobCard({ task, convert, applied }: { task: any; convert: Co
   const category = CATEGORY[task.category] || "General";
   const tag = Array.isArray(task.tags) && task.tags[0] && task.tags[0] !== category ? ` / ${task.tags[0]}` : "";
 
-  const reqs: { icon: string; text: string }[] = [];
-  if (Number(task.minRank) > 0) reqs.push({ icon: "award", text: `Rank ${task.minRank}+` });
-  const score = Number(task.minOgaScore ?? task.minSorsaScore ?? 0);
-  if (score > 0) reqs.push({ icon: "shield-check", text: `OgaScore ≥ ${score}` });
-  if (task.requiresWallet) reqs.push({ icon: "wallet", text: "Wallet connected" });
-  if (task.requiresLinkedin) reqs.push({ icon: "brand-x", text: "Verified X" });
-  if (task.workerRequirement === "HUMAN") reqs.push({ icon: "fingerprint", text: "Human verified" });
-  else if (task.workerRequirement === "KYC") reqs.push({ icon: "id-badge-2", text: "KYC verified" });
-  else if (typeof task.workerRequirement === "string" && task.workerRequirement) reqs.push({ icon: "user-check", text: task.workerRequirement });
+  const reqs = jobRequirements(task);
 
   return (
     <Link to={`/tasks/${task.id}`} className="hc-card" aria-label={`${task.title} by ${name}, ${cur === "NGN" ? "₦" : ""}${money(amount)} ${cur}. View job`}>
