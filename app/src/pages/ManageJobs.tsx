@@ -24,10 +24,10 @@ const statusBg = {
   cancelled: "rgba(239,68,68,0.12)",
   expired: "rgba(255,255,255,0.05)",
 };
-const subColor = { APPROVED: "var(--green)", PENDING: "#f59e0b", REJECTED: "var(--red)" };
+const subColor = { APPROVED: "var(--green)", PENDING: "#f59e0b", REJECTED: "var(--red)", EXPIRED: "var(--text3)" };
 const subBg = {
   APPROVED: "rgba(16,185,129,0.12)", PENDING: "rgba(245,158,11,0.12)",
-  REJECTED: "rgba(239,68,68,0.12)",
+  REJECTED: "rgba(239,68,68,0.12)", EXPIRED: "rgba(148,163,184,0.12)",
 };
 
 function pct(a: any, b: any) { return b ? Math.round((a / b) * 100) : 0; }

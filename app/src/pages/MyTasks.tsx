@@ -8,6 +8,7 @@ const STATUS_MAP: Record<string, string> = {
   PENDING: 'Under Review',
   APPROVED: 'Approved',
   REJECTED: 'Rejected',
+  EXPIRED: 'Slot released',
 }
 
 const COLOR_MAP: Record<string, string> = {
@@ -15,6 +16,7 @@ const COLOR_MAP: Record<string, string> = {
   PENDING: '#F59E0B',
   APPROVED: '#16a34a',
   REJECTED: '#DC2626',
+  EXPIRED: 'var(--text3)',
 }
 
 const PROGRESS_MAP: Record<string, number> = {
@@ -22,6 +24,7 @@ const PROGRESS_MAP: Record<string, number> = {
   PENDING: 70,
   APPROVED: 100,
   REJECTED: 100,
+  EXPIRED: 0,
 }
 
 const tabs = [
