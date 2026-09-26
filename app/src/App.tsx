@@ -82,6 +82,7 @@ const Admin = lazy(() => import('./pages/Admin'))
 const AdminVault = lazy(() => import('./pages/AdminVault'))
 const AdminModeration = lazy(() => import('./pages/AdminModeration'))
 const AdminWithdrawals = lazy(() => import('./pages/AdminWithdrawals'))
+const AdminKyc = lazy(() => import('./pages/AdminKyc'))
 const AdminLogin = lazy(() => import('./pages/AdminLogin'))
 const WorkspacePortal = lazy(() => import('./pages/WorkspacePortal'))
 const Docs = lazy(() => import('./pages/Docs'))
@@ -209,6 +210,7 @@ export default function App() {
             <Route path="/admin/vault" element={<AuthGuard><AdminVault /></AuthGuard>} />
             <Route path="/admin/moderation" element={<AuthGuard><AdminModeration /></AuthGuard>} />
             <Route path="/admin/withdrawals" element={<AuthGuard><AdminWithdrawals /></AuthGuard>} />
+            <Route path="/admin/kyc" element={<AuthGuard><AdminKyc /></AuthGuard>} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin/*" element={<AuthGuard><Admin /></AuthGuard>} />
 

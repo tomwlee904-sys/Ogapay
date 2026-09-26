@@ -1,5 +1,16 @@
+import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import Layout from '../components/Layout'
+
+// Only pages that exist (Users, Tasks, Disputes and Analytics had no page and
+// just came back here)
+const CARDS = [
+  { to: '/admin/withdrawals', icon: 'ti-cash', title: 'Withdrawals', desc: 'Pay out and settle pending withdrawals' },
+  { to: '/admin/kyc', icon: 'ti-id', title: 'Identity checks', desc: 'KYC waiting for review, and past approvals' },
+  { to: '/admin/moderation', icon: 'ti-flag', title: 'Moderation', desc: 'Submissions waiting over 24h' },
+  { to: '/admin/blog', icon: 'ti-news', title: 'Blog', desc: 'Articles waiting for review, and publishing' },
+  { to: '/admin/vault', icon: 'ti-building-bank', title: 'Vault', desc: 'Revenue pool, distributions and $PAY' },
+]
 
 export default function Admin() {
   const { isAuthed } = useAuth()
@@ -13,7 +24,7 @@ export default function Admin() {
         .admin-wrap h1{font-family:Geist,sans-serif;font-size:28px;font-weight:900;margin:0 0 4px}
         .admin-wrap p{color:var(--text2);font-size:14px;margin:0 0 24px}
         .admin-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px}
-        .admin-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;cursor:pointer;transition:border-color .13s}
+        .admin-card{display:block;color:inherit;text-decoration:none;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;cursor:pointer;transition:border-color .13s}
         .admin-card:hover{border-color:var(--text2)}
         .admin-card i{font-size:24px;color:var(--accent);display:block;margin-bottom:10px}
         .admin-card h3{font-size:15px;font-weight:800;margin:0 0 4px}
@@ -21,38 +32,15 @@ export default function Admin() {
       `}</style>
       <div className="admin-wrap">
         <h1>Admin</h1>
-        <p>Manage platform settings, users, tasks, and disputes.</p>
+        <p>Money out, identity checks, moderation and content.</p>
         <div className="admin-grid">
-          <a className="admin-card" href="/admin/withdrawals">
-            <i className="ti ti-cash" />
-            <h3>Withdrawals</h3>
-            <p>Pay out and settle pending withdrawals</p>
-          </a>
-          <a className="admin-card" href="/admin/moderation">
-            <i className="ti ti-flag" />
-            <h3>Moderation</h3>
-            <p>Submissions waiting over 24h</p>
-          </a>
-          <a className="admin-card" href="/admin/users">
-            <i className="ti ti-users" />
-            <h3>Users</h3>
-            <p>Manage user accounts & roles</p>
-          </a>
-          <a className="admin-card" href="/admin/tasks">
-            <i className="ti ti-checklist" />
-            <h3>Tasks</h3>
-            <p>Review & moderate tasks</p>
-          </a>
-          <a className="admin-card" href="/admin/disputes">
-            <i className="ti ti-shield-off" />
-            <h3>Disputes</h3>
-            <p>Resolve open disputes</p>
-          </a>
-          <a className="admin-card" href="/admin/analytics">
-            <i className="ti ti-chart-bar" />
-            <h3>Analytics</h3>
-            <p>Platform metrics & reports</p>
-          </a>
+          {CARDS.map((c) => (
+            <Link key={c.to} className="admin-card" to={c.to}>
+              <i className={`ti ${c.icon}`} />
+              <h3>{c.title}</h3>
+              <p>{c.desc}</p>
+            </Link>
+          ))}
         </div>
       </div>
     </Layout>
