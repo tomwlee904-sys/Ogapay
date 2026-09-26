@@ -231,7 +231,7 @@ body:has(main.hv), body:has(main.hv) #root { overflow-x: clip; }
 @keyframes hv-art-drift { to { stroke-dashoffset: -18; } }
 
 /* ── Ecosystem story ── */
-.hv-eco { position: relative; }
+.hv-eco { position: relative; height: calc(var(--eco-steps, 6) * 90vh + 100vh); }
 .hv-eco-sticky { position: sticky; top: var(--nav-h, 72px); height: calc(100vh - var(--nav-h, 72px)); overflow: hidden; display: flex; flex-direction: column; }
 .hv-eco-top { display: flex; flex-direction: column; align-items: center; gap: 14px; padding-top: 36px; position: relative; z-index: 2; }
 .hv-eco-skip { position: absolute; right: 40px; top: 36px; display: inline-flex; align-items: center; gap: 6px; background: none; border: 0; cursor: pointer; }
@@ -239,6 +239,7 @@ body:has(main.hv), body:has(main.hv) #root { overflow-x: clip; }
 .hv-tab { display: inline-flex; gap: 8px; align-items: center; height: 34px; padding: 0 14px; border-radius: 999px; border: 0; background: none; cursor: pointer; font: 500 13px 'Geist', system-ui, sans-serif; color: var(--hv-muted); transition: background .2s ease, color .2s ease; }
 .hv-tab .n { font: 500 11px 'Geist Mono', monospace; color: var(--hv-faint); }
 .hv-tab.on { background: var(--hv-soft); color: var(--hv-ink); }
+.hv-eco-art { position: absolute; inset: 0; }
 .hv-eco canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; }
 .hv-eco-card {
   position: absolute; z-index: 2; left: 40px; bottom: 56px; width: min(420px, calc(100% - 80px));
@@ -257,6 +258,29 @@ body:has(main.hv), body:has(main.hv) #root { overflow-x: clip; }
 @keyframes hv-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
 
 .hv-eco-list { display: none; }
+.hv-eco-item { border: 1px solid var(--hv-line); border-radius: var(--hv-radius); padding: 22px; background: var(--hv-card); }
+.hv-eco-item p { font-size: 14px; line-height: 1.6; color: var(--hv-muted); margin: 10px 0 16px; }
+
+/* Portrait tablets (and phones in desktop-site mode): the landscape layout left
+   most of a tall screen empty and stretched the art thin. Stack tabs, art and
+   card, centred, and scroll about half as far per chapter. */
+@media (min-width: 769px) and (orientation: portrait) {
+  .hv-eco { height: calc(var(--eco-steps, 6) * 45vh + 100vh); }
+  .hv-eco-sticky { justify-content: center; gap: 8px; padding-bottom: 28px; }
+  .hv-eco-top { padding-top: 24px; }
+  .hv-eco-skip { top: 24px; right: 24px; }
+  .hv-eco-art { position: relative; inset: auto; flex: 1 1 auto; min-height: 0; max-height: 88vw; }
+  .hv-eco-card { position: relative; left: auto; bottom: auto; margin: 0 auto; width: min(560px, calc(100% - 48px)); flex: none; }
+  .hv-eco-big { display: none; }
+}
+/* Very tall screens (a phone with "Desktop site" on): even stacked, most of the
+   screen stays empty, so show the chapters as a list, like phones get */
+@media (min-width: 769px) and (max-aspect-ratio: 5/8) {
+  .hv-eco-sticky { display: none; }
+  .hv-eco { height: auto !important; }
+  .hv-eco-list { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 32px; }
+  .hv-eco-list > .hv-center { grid-column: 1 / -1; }
+}
 
 /* ── Jobs ── */
 .hv-headrow { display: flex; justify-content: space-between; align-items: end; gap: 24px; flex-wrap: wrap; }
@@ -340,8 +364,6 @@ body:has(main.hv), body:has(main.hv) #root { overflow-x: clip; }
   .hv-eco-sticky { display: none; }
   .hv-eco { height: auto !important; }
   .hv-eco-list { display: grid; gap: 12px; margin-top: 32px; }
-  .hv-eco-item { border: 1px solid var(--hv-line); border-radius: var(--hv-radius); padding: 22px; background: var(--hv-card); }
-  .hv-eco-item p { font-size: 14px; line-height: 1.6; color: var(--hv-muted); margin: 10px 0 16px; }
   .hv-jobs { grid-template-columns: 1fr; }
   .hv-journal { grid-auto-columns: 86%; }
   .hv-final { padding: 80px 0 120px; }

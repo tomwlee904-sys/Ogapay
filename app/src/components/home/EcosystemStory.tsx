@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { Link } from "react-router-dom";
 
 /* Six chapters, scrolled through while the canvas stays pinned. On phones the
@@ -73,6 +73,17 @@ const SHAPES: Shape[] = [
   { square: false, curves: [circle(0.25, 0.5, 0.16, 1), circle(0.55, 0.38, 0.2, 1), circle(0.82, 0.6, 0.14, 1)] },
 ];
 
+// Where each shape's curves actually reach, so portrait layouts can fit the
+// drawing to its box instead of leaving the unused part of the unit box empty
+const BOXES = new Map(SHAPES.map((sh) => {
+  let x0 = 1, x1 = 0, y0 = 1, y1 = 0;
+  for (const f of sh.curves) for (let i = 0; i <= 96; i++) {
+    const [x, y] = f(i / 96);
+    x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y);
+  }
+  return [sh, { x0, y0, bw: Math.max(0.01, x1 - x0), bh: Math.max(0.01, y1 - y0) }];
+}));
+
 const CHIP_POS = [
   { right: "12%", top: "30%" }, { right: "18%", top: "58%" }, { right: "9%", top: "24%" },
   { right: "14%", top: "40%" }, { right: "22%", top: "28%" }, { right: "8%", top: "52%" },
@@ -125,11 +136,17 @@ export default function EcosystemStory() {
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     };
     const map = (shape: Shape, pt: Pt): Pt => {
+      // Landscape: the art fills the panel and leans right of the card.
+      // Portrait tablets: the art has its own box above the card, so centre it.
+      const wide = w > h * 1.35;
       if (shape.square) {
-        const S = Math.min(w * 0.55, h * 0.78);
-        return [w * 0.6 + (pt[0] - 0.5) * S, h * 0.56 + (pt[1] - 0.5) * S];
+        const S = wide ? Math.min(w * 0.55, h * 0.78) : Math.min(w * 0.82, h * 0.86);
+        return [w * (wide ? 0.6 : 0.5) + (pt[0] - 0.5) * S, h * (wide ? 0.56 : 0.5) + (pt[1] - 0.5) * S];
       }
-      return [w * (0.12 + 0.82 * pt[0]), h * (0.22 + 0.66 * pt[1])];
+      if (wide) return [w * (0.12 + 0.82 * pt[0]), h * (0.22 + 0.66 * pt[1])];
+      const b = BOXES.get(shape)!;
+      const bw = w * 0.86, bh = Math.min(h * 0.78, w * 0.7);
+      return [w * 0.07 + ((pt[0] - b.x0) / b.bw) * bw, (h - bh) / 2 + ((pt[1] - b.y0) / b.bh) * bh];
     };
 
     const ps: P[] = Array.from({ length: N }, () => ({
@@ -153,6 +170,8 @@ export default function EcosystemStory() {
     };
 
     const frame = () => {
+      // Hidden (phones and very tall screens show the list instead): don't animate
+      if (!w || !h) { raf = 0; return; }
       const shape = SHAPES[stepRef.current];
       ctx.clearRect(0, 0, w, h);
       ctx.fillStyle = ink;
@@ -198,9 +217,8 @@ export default function EcosystemStory() {
 
   const s = STEPS[step];
   return (
-    <section ref={secRef} id="ecosystem" className="hv-eco" style={{ height: `${STEPS.length * 90 + 100}vh` }} aria-label="The OgaPay ecosystem">
+    <section ref={secRef} id="ecosystem" className="hv-eco" style={{ "--eco-steps": STEPS.length } as CSSProperties} aria-label="The OgaPay ecosystem">
       <div className="hv-eco-sticky">
-        <canvas ref={canvasRef} aria-hidden="true" />
         <div className="hv-eco-top">
           <span className="hv-mono">The OgaPay ecosystem</span>
           <div className="hv-tabs" role="tablist">
@@ -216,8 +234,11 @@ export default function EcosystemStory() {
           <button className="hv-eco-skip hv-mono" onClick={skip}>Skip exploration <i className="ti ti-arrow-bar-to-down" /></button>
         </div>
 
-        <div className="hv-eco-chip hv-fade" key={`chip-${step}`} style={CHIP_POS[step]}>
-          <i className="ti ti-circle-check" style={{ color: "var(--green)" }} /> {s.chip}
+        <div className="hv-eco-art">
+          <canvas ref={canvasRef} aria-hidden="true" />
+          <div className="hv-eco-chip hv-fade" key={`chip-${step}`} style={CHIP_POS[step]}>
+            <i className="ti ti-circle-check" style={{ color: "var(--green)" }} /> {s.chip}
+          </div>
         </div>
 
         <div className="hv-eco-big" aria-hidden="true">0{step + 1}</div>
