@@ -45,6 +45,25 @@
 
 .nav .nav-actions { gap: 10px; }
 
+/* Desktop: the bar spans the full width (logo at the left edge, controls at the
+   right) with the links spaced out, instead of a centred 1200px box with the
+   links bunched together */
+@media (min-width: 769px) {
+  :root { --nav-h: 72px; }
+  .nav .nav-inner { width: 100%; max-width: none; margin: 0; padding: 0 clamp(20px, 2.6vw, 44px); gap: clamp(16px, 2vw, 32px); }
+  .nav .nav-links { gap: clamp(4px, 2.4vw, 44px); }
+  .nav .nav-link { font-size: 15px; padding: 8px 10px; }
+  .nav .nav-link i { font-size: 17px; }
+  .nav .nav-actions { gap: 14px; }
+}
+/* Tablet widths: drop the link icons and spread the links evenly over the free
+   space, so they stay roomy at 1024px and still fit at 769px */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .nav .nav-links { gap: 4px; justify-content: space-evenly; width: 100%; max-width: 560px; justify-self: center; }
+  .nav .nav-link i { display: none; }
+  .nav .nav-actions { gap: 8px; }
+}
+
 @media (max-width: 768px) {
   .nav .nav-mobile-actions { gap: 4px; }
   .nav .icon-btn { width: 38px; height: 38px; font-size: 23px; }
