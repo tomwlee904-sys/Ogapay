@@ -1,10 +1,16 @@
 import { useState, useEffect } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import Layout from '../components/Layout'
-import { useAuth } from '../context/AuthContext'
+import { apiRequest } from '../lib/api'
+import { uploadImage } from '../lib/upload'
+
+// Articles used to be saved only in this browser's localStorage, so nobody else
+// ever saw them. They now go to the API; posts by members wait for an admin to
+// approve them before they appear on the public blog.
 
 const CATEGORIES = ['News', 'Businesses', 'Freelancers', 'Case Studies']
-const COVER_COLORS = ['#534AB7', '#185FA5', '#3B6D11', '#854F0B', '#993556', '#0F6E56', '#0a0a0a', '#0a0a0a']
+type Mine = { id: string; title: string; slug: string; status: 'DRAFT' | 'PENDING' | 'PUBLISHED'; createdAt: string; viewCount: number }
+const STATUS_LABEL = { DRAFT: 'Draft', PENDING: 'In review', PUBLISHED: 'Published' } as const
 
 const badgeColors: Record<string, { bg: string; color: string }> = {
   News: { bg: '#E6F1FB', color: '#185FA5' },
@@ -13,72 +19,48 @@ const badgeColors: Record<string, { bg: string; color: string }> = {
   'Case Studies': { bg: '#FBEAF0', color: '#993556' },
 }
 
-interface PostData {
-  id: number
-  title: string
-  category: string
-  body: string
-  coverColor: string
-  authorName: string
-  authorInitials: string
-  date: string
-  tags: string
-  status: 'draft' | 'published'
-}
-
-function generateId(): number {
-  return Date.now() + Math.floor(Math.random() * 1000)
-}
-
-function formatDate(): string {
-  const d = new Date()
-  const months = ['January','February','March','April','May','June','July','August','September','October','November','December']
-  return `${months[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`
-}
-
 export default function BlogEditor() {
   const navigate = useNavigate()
   const { id } = useParams()
-  const { isAuthed } = useAuth()
   const [preview, setPreview] = useState(false)
-  const [saved, setSaved] = useState(false)
+  const [saved, setSaved] = useState('')
+  const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const [uploading, setUploading] = useState(false)
+  const [status, setStatus] = useState<Mine['status'] | null>(null)
+  const [mine, setMine] = useState<Mine[] | null>(null)
 
   const [form, setForm] = useState({
     title: '',
     category: 'News',
     body: '',
-    coverColor: '#534AB7',
+    excerpt: '',
+    coverImage: '',
     tags: '',
-    status: 'published' as 'draft' | 'published',
   })
 
   const s = (k: string) => (e: any) => setForm(f => ({ ...f, [k]: e.target.value }))
 
-  // Auth guard
-  useEffect(() => {
-    if (!isAuthed) navigate('/login')
-  }, [isAuthed, navigate])
+  // The route is behind AuthGuard, so we're signed in here
+  const loadMine = () => apiRequest<any>('/blog/user/mine').then((d) => setMine(d?.posts || [])).catch(() => setMine([]))
+  useEffect(() => { loadMine() }, [])
 
-  // Load existing post for editing
+  // Load an existing post for editing (its full text; the list omits it)
   useEffect(() => {
     if (!id) return
-    try {
-      const stored = JSON.parse(localStorage.getItem('ogapay_user_posts') || '[]') as PostData[]
-      const post = stored.find(p => p.id === parseInt(id))
-      if (post) {
+    apiRequest<any>(`/blog/user/${id}`)
+      .then((post) => {
         setForm({
-          title: post.title,
-          category: post.category,
-          body: post.body,
-          coverColor: post.coverColor,
-          tags: post.tags,
-          status: post.status,
+          title: post.title || '',
+          category: post.category || 'News',
+          body: post.content || '',
+          excerpt: post.excerpt || '',
+          coverImage: post.coverImage || '',
+          tags: Array.isArray(post.tags) ? post.tags.join(', ') : '',
         })
-      } else {
-        setError('Post not found')
-      }
-    } catch {}
+        setStatus(post.status)
+      })
+      .catch(() => setError('Post not found'))
   }, [id])
 
   // Formatting helpers
@@ -105,55 +87,50 @@ export default function BlogEditor() {
     setForm(f => ({ ...f, body: newText }))
   }
 
-  const save = (status: 'draft' | 'published') => {
-    if (!form.title.trim()) {
-      setError('Please enter a title')
-      return
-    }
-    setError('')
+  const bodyLines = form.body.split('\n')
+  const autoExcerpt = (bodyLines.find(l => l.trim() && !l.startsWith('-') && !l.startsWith('#')) || form.body).replace(/[*`]/g, '').trim().slice(0, 200)
 
-    const user = (() => {
-      try { return JSON.parse(localStorage.getItem('ogapay_user') || '{}') } catch { return {} }
-    })()
-    const firstName = user.firstName || 'User'
-    const lastName = user.lastName || ''
-    const authorName = `${firstName} ${lastName}`.trim() || 'OgaPay Member'
-    const initials = (firstName[0] || 'U') + (lastName[0] || 'M')
-
-    const post: PostData = {
-      id: id ? parseInt(id) : generateId(),
-      title: form.title,
+  const save = async (want: 'draft' | 'published') => {
+    if (saving) return
+    if (form.title.trim().length < 5) { setError('Give your article a title (at least 5 characters)'); return }
+    if (form.body.trim().length < 50) { setError('Write a little more: at least 50 characters'); return }
+    setError(''); setSaving(true)
+    const payload = {
+      title: form.title.trim(),
       category: form.category,
-      body: form.body,
-      coverColor: form.coverColor,
-      authorName,
-      authorInitials: initials,
-      date: formatDate(),
+      content: form.body,
+      excerpt: form.excerpt.trim() || autoExcerpt,
+      coverImage: form.coverImage || null,
       tags: form.tags,
-      status,
+      status: want,
     }
-
     try {
-      const stored = JSON.parse(localStorage.getItem('ogapay_user_posts') || '[]') as PostData[]
-      let updated: PostData[]
-      if (id) {
-        updated = stored.map(p => p.id === parseInt(id) ? post : p)
-      } else {
-        updated = [...stored, post]
-      }
-      localStorage.setItem('ogapay_user_posts', JSON.stringify(updated))
-      setSaved(true)
-      setTimeout(() => {
-        if (status === 'published') navigate('/blog')
-        else navigate('/profile')
-      }, 600)
-    } catch {
-      setError('Failed to save. Try again.')
+      const post = id
+        ? await apiRequest<any>(`/blog/user/${id}`, { method: 'PUT', body: JSON.stringify(payload) })
+        : await apiRequest<any>('/blog/user', { method: 'POST', body: JSON.stringify(payload) })
+      setStatus(post?.status || null)
+      setSaved(post?.status === 'PUBLISHED' ? 'Published.' : post?.status === 'PENDING' ? "Sent for review. We'll publish it once an admin has approved it." : 'Draft saved.')
+      loadMine()
+      if (!id && post?.id) navigate(`/blog/edit/${post.id}`, { replace: true })
+    } catch (e: any) {
+      setError(e?.message || 'Failed to save. Try again.')
     }
+    setSaving(false)
   }
 
-  const bodyLines = form.body.split('\n')
-  const excerpt = bodyLines.find(l => l.trim() && !l.startsWith('-') && !l.startsWith('#')) || form.body.substring(0, 120)
+  const pickCover = async (file?: File) => {
+    if (!file) return
+    if (file.size > 5 * 1024 * 1024) { setError('Image must be under 5MB'); return }
+    setUploading(true)
+    try {
+      const url = await uploadImage(file, 'blog-covers')
+      setForm(f => ({ ...f, coverImage: url }))
+      setError('')
+    } catch (e: any) {
+      setError(e?.message || 'Failed to upload the cover image')
+    }
+    setUploading(false)
+  }
 
   return (
     <Layout>
@@ -182,6 +159,26 @@ export default function BlogEditor() {
         .be-btn-secondary:hover{border-color:var(--text)}
         .be-btn-danger{height:42px;padding:0 24px;border-radius:99px;border:1.5px solid #fca5a5;background:transparent;color:#dc2626;font-size:14px;font-weight:700;cursor:pointer}
         .color-grid{display:flex;gap:8px;flex-wrap:wrap}
+        .be-cover{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+        .be-cover img{width:84px;height:48px;border-radius:8px;object-fit:cover;border:1px solid var(--border)}
+        .be-cover-btn{display:inline-flex;align-items:center;cursor:pointer}
+        .be-hint{font-size:12px;color:var(--text3);margin:6px 0 0}
+        .be-status{font-size:13px;color:var(--text2);margin-bottom:14px}
+        .be-status b{color:var(--text)}
+        .be-mine{margin-top:32px;border-top:1px solid var(--border);padding-top:20px}
+        .be-mine-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+        .be-mine-h h2{font-size:16px;font-weight:800;margin:0}
+        .be-mine-h a,.be-mine-row a{font-size:13px;font-weight:700;color:var(--text)}
+        .be-mine-list{border:1px solid var(--border);border-radius:12px;background:var(--card)}
+        .be-mine-row{display:flex;align-items:center;gap:12px;padding:10px 14px;border-bottom:1px solid var(--border)}
+        .be-mine-row:last-child{border-bottom:0}
+        .be-mine-row.on{background:var(--bg2)}
+        .be-mine-t{flex:1;min-width:0}
+        .be-mine-t strong{display:block;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+        .be-mine-t span{font-size:12px;color:var(--text3)}
+        .be-pill{font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;border:1px solid var(--border);white-space:nowrap;color:var(--text2)}
+        .be-pill.pending{color:#b45309}
+        .be-pill.published{color:var(--green)}
         .color-swatch{width:34px;height:34px;border-radius:8px;cursor:pointer;border:2px solid transparent;transition:border-color .13s}
         .color-swatch.selected{border-color:var(--text)}
         .color-swatch:hover{border-color:var(--text)}
@@ -198,8 +195,9 @@ export default function BlogEditor() {
         <h1 className="be-title">{id ? 'Edit Article' : 'Write Article'}</h1>
         <p className="be-sub">Share your knowledge with the OgaPay community.</p>
 
+        {status && <div className="be-status">Status: <b>{STATUS_LABEL[status]}</b>{status === 'PUBLISHED' && ' · editing it sends it back for review'}</div>}
         {error && <div className="be-error">{error}</div>}
-        {saved && <div className="be-saved">{id ? 'Changes saved!' : 'Article saved!'}</div>}
+        {saved && <div className="be-saved">{saved}</div>}
 
         {/* Preview Toggle */}
         <div style={{display:'flex',gap:10,marginBottom:20}}>
@@ -210,8 +208,10 @@ export default function BlogEditor() {
         {preview ? (
           <div>
             <div className="preview-card">
-              <div className="preview-cover" style={{background:form.coverColor}}>
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="1.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+              <div className="preview-cover" style={{background:'var(--bg2)'}}>
+                {form.coverImage
+                  ? <img src={form.coverImage} alt="" style={{width:'100%',height:'100%',objectFit:'cover'}} />
+                  : <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" strokeWidth="1.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>}
               </div>
               <div className="preview-body">
                 <span style={{display:'inline-block',fontSize:11,fontWeight:500,background:badgeColors[form.category]?.bg||'#EEEDFE',color:badgeColors[form.category]?.color||'#534AB7',padding:'3px 10px',borderRadius:20,marginBottom:8}}>{form.category}</span>
@@ -242,17 +242,24 @@ export default function BlogEditor() {
                 </select>
               </div>
               <div>
-                <label className="be-label">Cover Color</label>
-                <div className="color-grid">
-                  {COVER_COLORS.map(c => (
-                    <div key={c} className={`color-swatch ${form.coverColor===c?'selected':''}`} style={{background:c}} onClick={() => setForm(f => ({...f, coverColor: c}))} />
-                  ))}
+                <label className="be-label">Cover image (optional)</label>
+                <div className="be-cover">
+                  {form.coverImage && <img src={form.coverImage} alt="Cover" />}
+                  <label className="be-btn-secondary be-cover-btn">
+                    <i className="ti ti-photo" style={{fontSize:14,marginRight:6}} />{uploading ? 'Uploading…' : form.coverImage ? 'Change' : 'Upload'}
+                    <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" hidden disabled={uploading} onChange={(e) => pickCover(e.target.files?.[0])} />
+                  </label>
+                  {form.coverImage && <button type="button" className="be-btn-danger" onClick={() => setForm(f => ({ ...f, coverImage: '' }))}>Remove</button>}
                 </div>
               </div>
             </div>
 
+            {/* Summary */}
+            <label className="be-label">Summary (optional, shown on the blog list)</label>
+            <input className="be-input" value={form.excerpt} onChange={s('excerpt')} maxLength={300} placeholder={autoExcerpt || 'One or two sentences about the article'} style={{marginBottom:16}} />
+
             {/* Tags */}
-            <label className="be-label">Tags (optional, comma-separated)</label>
+            <label className="be-label">Tags (optional, comma-separated, up to 10)</label>
             <input className="be-input" value={form.tags} onChange={s('tags')} placeholder="e.g. freelancing, tips, crypto" style={{marginBottom:16}} />
 
             {/* Body */}
@@ -264,15 +271,16 @@ export default function BlogEditor() {
               <button className="be-tb-btn" onClick={() => wrapSelection('## ','')}><i className="ti ti-heading" /> Heading</button>
               <button className="be-tb-btn" onClick={insertList}><i className="ti ti-list-check" /> List</button>
             </div>
-            <textarea id="blog-body" className="be-textarea" value={form.body} onChange={s('body')} placeholder="Write your article here..." />
+            <textarea id="blog-body" className="be-textarea" value={form.body} onChange={s('body')} maxLength={50000} placeholder="Write your article here..." />
+            <p className="be-hint">Use ## for headings, - for bullet points, **bold** and *italic*. Links and HTML aren't supported.</p>
 
             {/* Actions */}
             <div className="be-actions">
-              <button className="be-btn-primary" onClick={() => save('published')}>
-                <i className="ti ti-send" style={{fontSize:14,marginRight:6}} /> Publish
+              <button className="be-btn-primary" onClick={() => save('published')} disabled={saving || uploading}>
+                <i className="ti ti-send" style={{fontSize:14,marginRight:6}} /> {saving ? 'Saving…' : 'Submit for review'}
               </button>
-              <button className="be-btn-secondary" onClick={() => save('draft')}>
-                <i className="ti ti-file-text" style={{fontSize:14,marginRight:6}} /> Save Draft
+              <button className="be-btn-secondary" onClick={() => save('draft')} disabled={saving || uploading}>
+                <i className="ti ti-file-text" style={{fontSize:14,marginRight:6}} /> Save draft
               </button>
               <button className="be-btn-danger" onClick={() => navigate('/blog')}>
                 Cancel
@@ -280,6 +288,28 @@ export default function BlogEditor() {
             </div>
           </div>
         )}
+
+        <div className="be-mine">
+          <div className="be-mine-h">
+            <h2>My articles</h2>
+            {id && <Link to="/blog/write">+ New article</Link>}
+          </div>
+          {mine === null ? <p className="be-hint">Loading…</p> : mine.length === 0 ? <p className="be-hint">Nothing yet. Your drafts and submitted articles will show here.</p> : (
+            <div className="be-mine-list">
+              {mine.map((p) => (
+                <div key={p.id} className={`be-mine-row${p.id === id ? ' on' : ''}`}>
+                  <div className="be-mine-t">
+                    <strong>{p.title}</strong>
+                    <span>{new Date(p.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}{p.status === 'PUBLISHED' ? ` · ${p.viewCount} views` : ''}</span>
+                  </div>
+                  <span className={`be-pill ${p.status.toLowerCase()}`}>{STATUS_LABEL[p.status]}</span>
+                  {p.status === 'PUBLISHED' && <Link to={`/blog/${p.slug}`}>View</Link>}
+                  {p.id !== id && <Link to={`/blog/edit/${p.id}`}>Edit</Link>}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </Layout>
   )

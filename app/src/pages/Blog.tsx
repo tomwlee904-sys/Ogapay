@@ -4,19 +4,9 @@ import { useAuth } from "../context/AuthContext"
 import { useTheme } from "../context/ThemeContext"
 import Footer from "../components/Footer"
 import Drawer from "../components/Drawer"
+import { apiRequest } from "../lib/api"
 
 const categories = ['All', 'News', 'Businesses', 'Freelancers', 'Case Studies']
-
-const posts = [
-  { id: 1, category: 'Freelancers', title: 'How Nigerian freelancers are earning 5x more with OgaPay tasks', excerpt: 'Discover how thousands of earners across West Africa are turning micro-tasks into meaningful income.', author: 'OgaPay Team', authorInitials: 'OG', date: 'June 4, 2026', readTime: '5 min read', color: '#534AB7' },
-  { id: 2, category: 'News', title: 'OgaPay launches instant wallet-to-bank withdrawals across 12 African countries', excerpt: 'Earners can now withdraw directly to their local bank accounts in seconds.', author: 'OgaPay Team', authorInitials: 'OG', date: 'June 3, 2026', readTime: '3 min read', color: '#185FA5' },
-  { id: 3, category: 'Businesses', title: "How small businesses use OgaPay's store to reach 50,000+ active buyers", excerpt: 'A deep dive into how merchants are growing revenue with the OgaPay marketplace.', author: 'Adaeze N.', authorInitials: 'AN', date: 'June 1, 2026', readTime: '6 min read', color: '#3B6D11' },
-  { id: 4, category: 'Freelancers', title: 'Top 10 task categories paying the most on OgaPay this month', excerpt: "From social media tasks to crypto verification — here's where the money is.", author: 'Emeka J.', authorInitials: 'EJ', date: 'May 28, 2026', readTime: '4 min read', color: '#854F0B' },
-  { id: 5, category: 'Case Studies', title: "From zero to ₦800k/month: Chukwudi's story using the OgaPay worker portal", excerpt: "One earner's journey from side hustle to full-time income on OgaPay.", author: 'Fatima B.', authorInitials: 'FB', date: 'May 25, 2026', readTime: '8 min read', color: '#993556' },
-  { id: 6, category: 'News', title: "OgaPay communities hit 200,000 members — here's what's driving the growth", excerpt: "How peer-to-peer communities inside OgaPay became the platform's fastest growing feature.", author: 'OgaPay Team', authorInitials: 'OG', date: 'May 22, 2026', readTime: '3 min read', color: '#534AB7' },
-  { id: 7, category: 'Freelancers', title: 'OgaPay Vault explained: how to save and grow your earnings safely', excerpt: 'Everything you need to know about putting your OgaPay earnings to work.', author: 'Ngozi A.', authorInitials: 'NA', date: 'May 19, 2026', readTime: '5 min read', color: '#0F6E56' },
-  { id: 8, category: 'Case Studies', title: '5 businesses that scaled to 7 figures using OgaPay campaigns', excerpt: 'Real numbers, real results from brands that bet on OgaPay early.', author: 'Fatima B.', authorInitials: 'FB', date: 'May 15, 2026', readTime: '6 min read', color: '#993556' },
-]
 
 const badgeColors: Record<string, { bg: string; color: string }> = {
   News: { bg: '#E6F1FB', color: '#185FA5' },
@@ -158,41 +148,43 @@ export default function Blog() {
   const [email, setEmail] = useState('')
   const [subscribed, setSubscribed] = useState(false)
   const [search, setSearch] = useState('')
-  const [allPosts, setAllPosts] = useState<any[]>([])
+  const [subscribing, setSubscribing] = useState(false)
+  const [subError, setSubError] = useState('')
+  const [allPosts, setAllPosts] = useState<any[] | null>(null)
   const navigate = useNavigate()
   const { isAuthed } = useAuth()
   const { theme, toggle } = useTheme()
   const [drawerOpen, setDrawerOpen] = useState(false)
 
-  const filteredPosts = posts.filter(p =>
-    (activeCategory === 'All' || p.category === activeCategory) &&
-    (search === '' || p.title.toLowerCase().includes(search.toLowerCase()))
-  )
-
+  // Published posts from the API (this page used to show eight made-up posts
+  // plus drafts kept in the browser's localStorage)
   useEffect(() => {
-    const userPosts = (() => {
-      try {
-        const stored = JSON.parse(localStorage.getItem('ogapay_user_posts') || '[]')
-        return stored
-          .filter((p: any) => p.status === 'published')
-          .map((p: any) => ({
-            id: `u${p.id}`,
-            category: p.category,
-            title: p.title,
-            excerpt: p.body.split('\n').find((l: string) => l.trim() && !l.startsWith('-') && !l.startsWith('#')) || p.body.substring(0, 120),
-            author: p.authorName,
-            authorInitials: p.authorInitials,
-            date: p.date,
-            readTime: p.body.length > 500 ? `${Math.ceil(p.body.length / 500)} min read` : '1 min read',
-            color: p.coverColor,
-            isUserPost: true,
-          }))
-      } catch { return [] }
-    })()
-    setAllPosts([...posts, ...userPosts])
+    let live = true
+    apiRequest<any>('/blog?limit=100', { auth: false })
+      .then((res) => { if (live) setAllPosts(res?.posts || []) })
+      .catch(() => { if (live) setAllPosts([]) })
+    return () => { live = false }
   }, [])
 
-  const filteredArticles = showArticles && (activeCategory === 'All' ? allPosts : allPosts.filter(p => p.category === activeCategory))
+  const q = search.trim().toLowerCase()
+  const filteredArticles = (allPosts || [])
+    .filter((p: any) => activeCategory === 'All' || p.category === activeCategory)
+    .filter((p: any) => !q || `${p.title} ${p.excerpt || ''} ${(p.tags || []).join(' ')}`.toLowerCase().includes(q))
+  const popular = !q && activeCategory === 'All' && (allPosts || []).length >= 6
+    ? [...(allPosts || [])].sort((a: any, b: any) => (b.viewCount || 0) - (a.viewCount || 0)).slice(0, 3)
+    : []
+
+  const subscribe = async () => {
+    if (!email.trim() || subscribing) return
+    setSubscribing(true); setSubError('')
+    try {
+      await apiRequest('/blog/newsletter/subscribe', { method: 'POST', auth: false, body: JSON.stringify({ email: email.trim() }) })
+      setSubscribed(true)
+    } catch (e: any) {
+      setSubError(e?.message || "Couldn't subscribe. Try again.")
+    }
+    setSubscribing(false)
+  }
 
   if (!showArticles) {
     return (
@@ -302,8 +294,12 @@ export default function Blog() {
         <nav style={{ background: 'var(--card)', borderBottom: '0.5px solid var(--border)', position: 'sticky', top: 0, zIndex: 100 }}>
         <div style={{ maxWidth: 1400, margin: '0 auto', padding: '0.875rem 2rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
           <button onClick={() => setShowArticles(false)} style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', cursor: 'pointer' }}>
-            <span style={{ fontSize: 16, fontWeight: 700, color: '#1a1a1a' }}>blog.</span>
+            <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--text)' }}>blog.</span>
           </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, border: '1px solid var(--border)', borderRadius: 6, padding: '6px 12px', background: 'var(--bg2)', minWidth: 0, flex: '1 1 200px', maxWidth: 320 }}>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" strokeWidth="2" style={{ flexShrink: 0 }}><circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" /></svg>
+            <input placeholder="Search articles" aria-label="Search articles" value={search} onChange={e => setSearch(e.target.value)} style={{ border: 'none', background: 'none', outline: 'none', fontSize: 13, color: 'var(--text)', width: '100%', minWidth: 0 }} />
+          </div>
           <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
             {categories.map(cat => (
               <button key={cat} onClick={() => setActiveCategory(cat)} style={{ fontSize: 13, padding: '5px 14px', borderRadius: 20, border: '0.5px solid', borderColor: activeCategory === cat ? '#0a0a0a' : 'transparent', background: activeCategory === cat ? '#EEEDFE' : 'transparent', color: activeCategory === cat ? '#0a0a0a' : '#666', cursor: 'pointer', fontWeight: activeCategory === cat ? 600 : 400 }}>
@@ -323,41 +319,68 @@ export default function Blog() {
 
       <div style={{ maxWidth: 1400, margin: '0 auto', padding: '2rem 2rem 0' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
-          <span style={{ fontSize: 16, fontWeight: 500, color: '#1a1a1a' }}>
+          <span style={{ fontSize: 16, fontWeight: 500, color: 'var(--text)' }}>
             {activeCategory === 'All' ? 'All articles' : activeCategory}
-            <span style={{ fontSize: 13, color: '#666', marginLeft: 8 }}>({(filteredArticles || []).length})</span>
+            <span style={{ fontSize: 13, color: 'var(--text3)', marginLeft: 8 }}>({filteredArticles.length})</span>
           </span>
-          <button onClick={() => setShowArticles(false)} style={{ fontSize: 13, color: '#0a0a0a', background: 'none', border: 'none', cursor: 'pointer' }}>← Back to home</button>
+          <button onClick={() => setShowArticles(false)} style={{ fontSize: 13, color: 'var(--text)', background: 'none', border: 'none', cursor: 'pointer' }}>← Back to home</button>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.5rem', marginBottom: '1.5rem' }}>
-          {(filteredArticles || []).map((post: any) => {
-            const badge = badgeColors[post.category] || { bg: '#EEEDFE', color: '#534AB7' }
-            return (
-              <div key={post.id} style={{ background: 'var(--card)', border: '0.5px solid var(--border)', borderRadius: 16, overflow: 'hidden', cursor: 'pointer' }}>
-                <div style={{ height: 200, background: post.color, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="1.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" /></svg>
-                </div>
-                <div style={{ padding: '1.25rem' }}>
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 500, background: badge.bg, color: badge.color, padding: '3px 10px', borderRadius: 20, marginBottom: 8 }}>
-                    {post.category}
-                    {post.isUserPost && <span style={{ fontSize: 9, background: badge.color, color: badge.bg, borderRadius: 99, padding: '1px 5px' }}>Member</span>}
-                  </span>
-                  <p style={{ fontSize: 14, fontWeight: 500, color: '#1a1a1a', lineHeight: 1.5, marginBottom: 10 }}>{post.title}</p>
-                  <p style={{ fontSize: 13, color: '#666', lineHeight: 1.6, marginBottom: 10 }}>{post.excerpt}</p>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#666', flexWrap: 'wrap' }}>
-                    <div style={{ width: 22, height: 22, borderRadius: '50%', background: '#0a0a0a', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 600 }}>{post.authorInitials}</div>
-                    <span>{post.author}</span>
-                    <span>·</span>
-                    <span>{post.date}</span>
-                    <span>·</span>
-                    <span>{post.readTime}</span>
-                  </div>
+        {allPosts === null ? (
+          <div style={{ padding: '3rem 0', textAlign: 'center', color: 'var(--text3)', fontSize: 14 }}>Loading articles…</div>
+        ) : filteredArticles.length === 0 ? (
+          <div style={{ padding: '3rem 1rem', textAlign: 'center', color: 'var(--text2)', fontSize: 14, border: '1px dashed var(--border)', borderRadius: 16, marginBottom: '1.5rem' }}>
+            {q ? `No articles match "${search.trim()}".` : allPosts.length === 0 ? 'No articles yet. Check back soon.' : `No ${activeCategory} articles yet.`}
+            {isAuthed && <div style={{ marginTop: 12 }}><button onClick={() => navigate('/blog/write')} style={{ fontSize: 13, background: 'var(--text)', color: 'var(--bg)', padding: '8px 16px', borderRadius: 20, border: 'none', cursor: 'pointer', fontWeight: 600 }}>Write the first one</button></div>}
+          </div>
+        ) : (
+          <>
+            {popular.length > 0 && (
+              <div style={{ marginBottom: '2rem' }}>
+                <h2 style={{ fontSize: 17, fontWeight: 600, color: 'var(--text)', margin: '0 0 1rem' }}>Most read</h2>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '1rem' }}>
+                  {popular.map((post: any, i: number) => (
+                    <button key={post.id} onClick={() => navigate(`/blog/${post.slug}`)} style={{ display: 'flex', gap: 12, alignItems: 'flex-start', textAlign: 'left', background: 'var(--card)', border: '0.5px solid var(--border)', borderRadius: 14, padding: '14px 16px', cursor: 'pointer', color: 'inherit', font: 'inherit' }}>
+                      <span style={{ fontSize: 22, fontWeight: 800, color: 'var(--text3)', lineHeight: 1 }}>{i + 1}</span>
+                      <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)', lineHeight: 1.45 }}>{post.title}</span>
+                    </button>
+                  ))}
                 </div>
               </div>
-            )
-          })}
-        </div>
+            )}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(320px, 100%), 1fr))', gap: '1.5rem', marginBottom: '1.5rem' }}>
+              {filteredArticles.map((post: any) => {
+                const badge = badgeColors[post.category] || { bg: '#EEEDFE', color: '#534AB7' }
+                const author = post.author ? `${post.author.firstName || ''} ${post.author.lastName || ''}`.trim() || post.author.username : 'OgaPay'
+                const initials = author.split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase() || 'OG'
+                const date = new Date(post.publishedAt || post.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+                return (
+                  <a key={post.id} href={`/blog/${post.slug}`} onClick={(e) => { e.preventDefault(); navigate(`/blog/${post.slug}`) }} style={{ background: 'var(--card)', border: '0.5px solid var(--border)', borderRadius: 16, overflow: 'hidden', cursor: 'pointer', textDecoration: 'none', color: 'inherit', display: 'flex', flexDirection: 'column' }}>
+                    <div style={{ height: 200, background: 'var(--bg2)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                      {post.coverImage
+                        ? <img src={post.coverImage} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        : <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" strokeWidth="1.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" /></svg>}
+                    </div>
+                    <div style={{ padding: '1.25rem' }}>
+                      {post.category && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 500, background: badge.bg, color: badge.color, padding: '3px 10px', borderRadius: 20, marginBottom: 8 }}>{post.category}</span>}
+                      <p style={{ fontSize: 15, fontWeight: 600, color: 'var(--text)', lineHeight: 1.45, margin: '0 0 8px' }}>{post.title}</p>
+                      {post.excerpt && <p style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.6, margin: '0 0 10px' }}>{post.excerpt}</p>}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--text2)', flexWrap: 'wrap' }}>
+                        {post.author?.avatarUrl
+                          ? <img src={post.author.avatarUrl} alt="" style={{ width: 22, height: 22, borderRadius: '50%', objectFit: 'cover' }} />
+                          : <div style={{ width: 22, height: 22, borderRadius: '50%', background: 'var(--text)', color: 'var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 600 }}>{initials}</div>}
+                        <span>{author}</span>
+                        <span>·</span>
+                        <span>{date}</span>
+                        {post.viewCount > 0 && <><span>·</span><span>{post.viewCount.toLocaleString()} views</span></>}
+                      </div>
+                    </div>
+                  </a>
+                )
+              })}
+            </div>
+          </>
+        )}
 
         {/* Newsletter */}
         <div style={{ background: '#0a0a0a', borderRadius: 16, padding: '2rem', textAlign: 'center', marginBottom: 0 }}>
@@ -367,11 +390,12 @@ export default function Blog() {
             <p style={{ color: '#ADDD5A', fontWeight: 600, fontSize: 14 }}>✓ You're subscribed!</p>
           ) : (
             <div style={{ display: 'flex', gap: 8, maxWidth: 420, margin: '0 auto', flexWrap: 'wrap', justifyContent: 'center' }}>
-              <input type="email" placeholder="Enter your email address" value={email} onChange={e => setEmail(e.target.value)} onKeyDown={e => e.key === 'Enter' && email.trim() && setSubscribed(true)}
+              <input type="email" placeholder="Enter your email address" value={email} onChange={e => setEmail(e.target.value)} onKeyDown={e => e.key === 'Enter' && subscribe()} aria-label="Email address"
                 style={{ flex: 1, minWidth: 200, padding: '8px 14px', borderRadius: 20, border: 'none', fontSize: 13, background: 'rgba(255,255,255,0.15)', color: '#fff', outline: 'none' }} />
-              <button onClick={() => email.trim() && setSubscribed(true)} style={{ background: '#ADDD5A', color: '#1a2a00', border: 'none', padding: '8px 18px', borderRadius: 20, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Subscribe</button>
+              <button onClick={subscribe} disabled={subscribing} style={{ background: '#ADDD5A', color: '#1a2a00', border: 'none', padding: '8px 18px', borderRadius: 20, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>{subscribing ? 'Subscribing…' : 'Subscribe'}</button>
             </div>
           )}
+          {subError && <p style={{ color: '#fca5a5', fontSize: 13, margin: '10px 0 0' }}>{subError}</p>}
         </div>
         </div>
 
