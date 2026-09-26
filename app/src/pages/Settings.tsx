@@ -1,9 +1,16 @@
-﻿import { useState, useEffect } from 'react'
+﻿import { useState, useEffect, type FormEvent } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { useAuth } from '../context/AuthContext'
 import { apiRequest } from '../lib/api'
 import { useToast } from '../components/Toast'
+
+// GET /users/me/delete-check
+type DeleteCheck = {
+  canDelete: boolean
+  blockers: { code: string; message: string }[]
+  confirmWith: 'password' | 'text'
+}
 
 export default function Settings() {
   const navigate = useNavigate()
@@ -109,6 +116,11 @@ export default function Settings() {
   // ── delete account ─────────────────────────────────────────────────────────
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [deleteCheck, setDeleteCheck] = useState<DeleteCheck | null>(null)
+  const [deleteCheckLoading, setDeleteCheckLoading] = useState(false)
+  const [deletePassword, setDeletePassword] = useState('')
+  const [deleteConfirmText, setDeleteConfirmText] = useState('')
+  const [deleteError, setDeleteError] = useState('')
 
   const { toast: showToast } = useToast()
 
@@ -360,17 +372,62 @@ export default function Settings() {
   }
 
   // ── delete account ─────────────────────────────────────────────────────────
-  const handleDeleteAccount = async () => {
-    setDeleting(true)
+  // The server refuses while the account holds money or has open jobs, orders,
+  // disputes, etc., so ask it first and show what has to happen.
+  const loadDeleteCheck = async (): Promise<DeleteCheck | null> => {
+    setDeleteCheckLoading(true)
     try {
-      const res = await apiRequest('/users/me', { method: 'DELETE' })
+      const check = await apiRequest<DeleteCheck>('/users/me/delete-check')
+      setDeleteCheck(check)
+      return check
+    } catch (err: any) {
+      setDeleteCheck(null)
+      setDeleteError(err.message || "Couldn't check your account. Try again.")
+      return null
+    } finally {
+      setDeleteCheckLoading(false)
+    }
+  }
+
+  const openDeleteDialog = () => {
+    setDeleteCheck(null)
+    setDeletePassword('')
+    setDeleteConfirmText('')
+    setDeleteError('')
+    setShowDeleteConfirm(true)
+    loadDeleteCheck()
+  }
+
+  const closeDeleteDialog = () => {
+    if (!deleting) setShowDeleteConfirm(false)
+  }
+
+  const deleteConfirmed = deleteCheck?.confirmWith === 'password'
+    ? deletePassword.length > 0
+    : deleteConfirmText.trim() === 'DELETE'
+
+  const handleDeleteAccount = async (e?: FormEvent) => {
+    e?.preventDefault()
+    if (!deleteCheck?.canDelete || !deleteConfirmed || deleting) return
+    setDeleting(true)
+    setDeleteError('')
+    try {
+      await apiRequest('/users/me', {
+        method: 'DELETE',
+        body: JSON.stringify(deleteCheck.confirmWith === 'password'
+          ? { password: deletePassword }
+          : { confirm: deleteConfirmText.trim() }),
+      })
+      setShowDeleteConfirm(false)
       await logout()
       navigate('/')
     } catch (err: any) {
-      showToast(err.message || 'Failed to delete account', 'error')
+      // If something changed since the check (money arrived, a new order), the
+      // refreshed list says what to do; otherwise show the error (e.g. wrong password)
+      const fresh = await loadDeleteCheck()
+      setDeleteError(fresh && !fresh.canDelete ? '' : (err.message || 'Failed to delete account'))
     } finally {
       setDeleting(false)
-      setShowDeleteConfirm(false)
     }
   }
 
@@ -1151,11 +1208,12 @@ export default function Settings() {
             <i className="ti ti-alert-triangle" style={{ color: 'var(--red)' }} /> Danger Zone
           </div>
           <p style={{ fontSize: 13, color: 'var(--text2)', margin: '0 0 14px', lineHeight: 1.5 }}>
-            Once you delete your account, there is no going back. Please be certain.
+            Once you delete your account, there is no going back. Withdraw your balance and finish or cancel
+            your open jobs, orders and disputes first, because a deleted account can't sign in to get them back.
           </p>
           <button
             type="button"
-            onClick={() => setShowDeleteConfirm(true)}
+            onClick={openDeleteDialog}
             style={{
               height: 40, padding: '0 20px', borderRadius: 10,
               border: '1px solid var(--red)', background: 'transparent',
@@ -1177,23 +1235,99 @@ export default function Settings() {
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             zIndex: 1000,
           }}
-          onClick={() => setShowDeleteConfirm(false)}
+          onClick={closeDeleteDialog}
         >
-          <div
+          <form
+            onSubmit={handleDeleteAccount}
             onClick={e => e.stopPropagation()}
             style={{
               background: 'var(--card)', border: '1px solid var(--border)',
-              borderRadius: 16, padding: 24, maxWidth: 400, width: '90%',
+              borderRadius: 16, padding: 24, maxWidth: 440, width: '90%',
+              maxHeight: '90vh', overflowY: 'auto', boxSizing: 'border-box',
             }}
           >
             <h3 style={{ margin: '0 0 8px', fontSize: 16, fontWeight: 800 }}>Delete Account</h3>
-            <p style={{ color: 'var(--text2)', fontSize: 13, margin: '0 0 16px', lineHeight: 1.5 }}>
-              Are you sure? This cannot be undone. All your data, tasks, earnings, and profile will be permanently removed.
+            <p style={{ color: 'var(--text2)', fontSize: 13, margin: '0 0 12px', lineHeight: 1.5 }}>
+              This cannot be undone. You won't be able to sign in again, and your profile will be taken down.
             </p>
-            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+            <p style={{ color: 'var(--text2)', fontSize: 12, margin: '0 0 16px', lineHeight: 1.5 }}>
+              To protect your money, an account can only be deleted when nothing is left on it: no wallet balance or
+              funds on hold, no open jobs you posted, no withdrawals still processing, no unclaimed vault payouts, no
+              undelivered store orders, no open disputes and no submitted work waiting for review.
+            </p>
+
+            {deleteCheckLoading && !deleteCheck && (
+              <div style={{ fontSize: 13, color: 'var(--text2)', margin: '0 0 16px', display: 'flex', alignItems: 'center', gap: 8 }}>
+                <i className="ti ti-loader-2" /> Checking your account…
+              </div>
+            )}
+
+            {deleteCheck && !deleteCheck.canDelete && (
+              <div
+                role="alert"
+                style={{
+                  margin: '0 0 16px', padding: '12px 14px', borderRadius: 10,
+                  background: 'color-mix(in srgb, var(--red) 6%, transparent)',
+                  border: '1px solid color-mix(in srgb, var(--red) 25%, transparent)',
+                }}
+              >
+                <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--red)', marginBottom: 6 }}>
+                  You can't delete your account yet
+                </div>
+                <ul style={{ margin: 0, paddingLeft: 18, fontSize: 12, color: 'var(--text)', lineHeight: 1.6 }}>
+                  {deleteCheck.blockers.map((b, i) => <li key={`${b.code}-${i}`}>{b.message}</li>)}
+                </ul>
+              </div>
+            )}
+
+            {deleteCheck?.canDelete && (
+              <div style={{ margin: '0 0 16px' }}>
+                <div style={{ fontSize: 12, color: 'var(--green)', fontWeight: 600, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <i className="ti ti-check" /> Nothing is left on your account.
+                </div>
+                <label
+                  htmlFor="delete-account-confirm"
+                  style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--text3)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.04em' }}
+                >
+                  {deleteCheck.confirmWith === 'password' ? 'Enter your password to confirm' : 'Type DELETE to confirm'}
+                </label>
+                <input
+                  id="delete-account-confirm"
+                  type={deleteCheck.confirmWith === 'password' ? 'password' : 'text'}
+                  autoComplete={deleteCheck.confirmWith === 'password' ? 'current-password' : 'off'}
+                  value={deleteCheck.confirmWith === 'password' ? deletePassword : deleteConfirmText}
+                  onChange={e => (deleteCheck.confirmWith === 'password' ? setDeletePassword : setDeleteConfirmText)(e.target.value)}
+                  placeholder={deleteCheck.confirmWith === 'password' ? '' : 'DELETE'}
+                  autoFocus
+                  style={{
+                    width: '100%', padding: '0 12px', height: 38, border: '1px solid var(--border)',
+                    borderRadius: 8, background: 'var(--card)', color: 'var(--text)',
+                    fontSize: 13, outline: 'none', boxSizing: 'border-box',
+                  }}
+                />
+              </div>
+            )}
+
+            {deleteError && <p className="st-text-red" role="alert" style={{ margin: '0 0 12px' }}>{deleteError}</p>}
+
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+              {!deleteCheckLoading && !deleteCheck && (
+                <button
+                  type="button"
+                  onClick={() => { setDeleteError(''); loadDeleteCheck() }}
+                  style={{
+                    height: 38, padding: '0 18px', borderRadius: 10,
+                    border: '1px solid var(--border)', background: 'transparent',
+                    color: 'var(--text)', fontWeight: 600, fontSize: 13,
+                    cursor: 'pointer', fontFamily: 'inherit',
+                  }}
+                >
+                  Try again
+                </button>
+              )}
               <button
                 type="button"
-                onClick={() => setShowDeleteConfirm(false)}
+                onClick={closeDeleteDialog}
                 style={{
                   height: 38, padding: '0 18px', borderRadius: 10,
                   border: '1px solid var(--border)', background: 'transparent',
@@ -1204,21 +1338,20 @@ export default function Settings() {
                 Cancel
               </button>
               <button
-                type="button"
-                onClick={handleDeleteAccount}
-                disabled={deleting}
+                type="submit"
+                disabled={deleting || !deleteCheck?.canDelete || !deleteConfirmed}
                 style={{
                   height: 38, padding: '0 18px', borderRadius: 10,
                   border: '1px solid var(--red)', background: 'var(--red)',
                   color: '#fff', fontWeight: 700, fontSize: 13,
-                  cursor: deleting ? 'not-allowed' : 'pointer',
-                  fontFamily: 'inherit', opacity: deleting ? 0.6 : 1,
+                  cursor: deleting || !deleteCheck?.canDelete || !deleteConfirmed ? 'not-allowed' : 'pointer',
+                  fontFamily: 'inherit', opacity: deleting || !deleteCheck?.canDelete || !deleteConfirmed ? 0.5 : 1,
                 }}
               >
                 {deleting ? 'Deleting…' : 'Delete Forever'}
               </button>
             </div>
-          </div>
+          </form>
         </div>
       )}
 
