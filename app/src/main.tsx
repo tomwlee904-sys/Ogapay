@@ -9,6 +9,7 @@ import './styles/homepage.css'
 import './styles/ui.css'
 import './styles/home-cards.css'
 import './styles/dark.css'
+import './styles/nav.css'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

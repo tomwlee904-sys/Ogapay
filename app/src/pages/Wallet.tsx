@@ -204,7 +204,7 @@ export default function Wallet() {
 
       <div className="wl-grid">
         {[
-          { icon: 'ti ti-plus-circle', color: '#52525b', label: 'Deposit', desc: 'Add funds to your wallet', to: 'deposit' as const },
+          { icon: 'ti ti-circle-plus', color: '#52525b', label: 'Deposit', desc: 'Add funds to your wallet', to: 'deposit' as const },
           { icon: 'ti ti-logout', color: '#52525b', label: 'Withdraw', desc: 'Withdraw to bank or crypto', to: 'withdraw' as const },
           { icon: 'ti ti-transfer', color: '#16a34a', label: 'Transfer', desc: 'Send to another user', to: 'transfer' as const },
         ].map((c, i) => (

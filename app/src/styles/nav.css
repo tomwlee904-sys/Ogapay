@@ -1,0 +1,52 @@
+/* Top bar: a flat bar with plain icon buttons, the balance as green text (a dark
+   pill in dark mode) and a silhouette avatar. Loaded after the other sheets:
+   global.css, homepage.css and dark.css all style these classes, and the
+   homepage.css .icon-btn border used to win over the mobile "plain" rule. */
+
+[data-theme="light"] .nav { background: rgba(255,255,255,.9); border-bottom: 1px solid rgba(0,0,0,.06); box-shadow: none; }
+[data-theme="light"] .nav.scrolled { box-shadow: 0 8px 24px -16px rgba(0,0,0,.18); }
+[data-theme="dark"] .nav { background: rgba(0,0,0,.88); border-bottom: 1px solid rgba(255,255,255,.08); box-shadow: none; }
+[data-theme="dark"] .nav.scrolled { box-shadow: none; }
+
+.nav .icon-btn {
+  width: 40px; height: 40px; padding: 0;
+  border: 0; border-radius: 10px; background: transparent;
+  color: var(--text); font-size: 22px;
+  display: grid; place-items: center; cursor: pointer;
+  transition: background .14s;
+}
+.nav .icon-btn:hover { background: rgba(0,0,0,.05); color: var(--text); }
+[data-theme="dark"] .nav .icon-btn { background: transparent; color: #fafafa; }
+[data-theme="dark"] .nav .icon-btn:hover { background: rgba(255,255,255,.08); }
+
+.nav .balance-display {
+  height: 36px; padding: 0 12px;
+  border: 0; border-radius: 10px; background: transparent;
+  color: #15803d; font-size: 15px; font-weight: 800; letter-spacing: -.01em;
+  font-variant-numeric: tabular-nums; white-space: nowrap;
+  transition: background .14s;
+}
+.nav .balance-display:hover { background: rgba(0,0,0,.05); border-color: transparent; }
+[data-theme="dark"] .nav .balance-display { background: #111214; color: #34d399; border: 0; }
+[data-theme="dark"] .nav .balance-display:hover { background: #1a1b1f; }
+
+.nav .profile-btn {
+  width: 36px; height: 36px; border: 0; background: #e4e4e7;
+  box-shadow: 0 0 0 1px rgba(0,0,0,.04);
+  transition: box-shadow .14s;
+}
+.nav .profile-btn:hover { box-shadow: 0 0 0 2px var(--border2); }
+[data-theme="dark"] .nav .profile-btn { background: #f4f4f5; border: 0; box-shadow: none; }
+[data-theme="dark"] .nav .profile-btn:hover { box-shadow: 0 0 0 2px rgba(255,255,255,.3); }
+.nav .profile-btn .nav-silhouette { display: block; width: 100%; height: 100%; color: #fff; }
+[data-theme="dark"] .nav .profile-btn .nav-silhouette { color: #c7c7cc; }
+.nav .notif-dot { border-color: var(--bg); }
+[data-theme="dark"] .nav .notif-dot { border-color: #000; }
+
+.nav .nav-actions { gap: 10px; }
+
+@media (max-width: 768px) {
+  .nav .nav-mobile-actions { gap: 4px; }
+  .nav .icon-btn { width: 38px; height: 38px; font-size: 23px; }
+  .nav .balance-display { height: 34px; padding: 0 10px; font-size: 14.5px; }
+}

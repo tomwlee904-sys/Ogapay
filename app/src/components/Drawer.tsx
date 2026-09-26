@@ -120,7 +120,7 @@ export default function Drawer({ open, onClose }: DrawerProps) {
 
               {/* ── Create Job ── */}
               <Link className="oga-drawer-item" to="/create" onClick={onClose}>
-                <span className="oga-drawer-icon"><i className="ti ti-plus-circle" /></span>
+                <span className="oga-drawer-icon"><i className="ti ti-circle-plus" /></span>
                 <span><strong>Create Job</strong><small>Post a new task</small></span>
               </Link>
 
