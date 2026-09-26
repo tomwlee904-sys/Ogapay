@@ -1,26 +1,43 @@
-import { useParams, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useParams } from 'react-router-dom'
 import Layout from '../components/Layout'
+import { CURRENCY_SYMBOLS, type Currency } from '../lib/currency'
+import '../styles/checkout.css'
+
+// Shown after a store purchase. Checkout passes the item and the chat the purchase
+// opened with the seller; after a reload that state is gone, so fall back to the inbox.
+type Done = { title?: string; seller?: string; total?: number; currency?: Currency; conversationId?: string }
 
 export default function OrderConfirmation() {
   const { id } = useParams<{ id: string }>()
-  const navigate = useNavigate()
+  const s = (useLocation().state || {}) as Done
+  const chat = s.conversationId ? `/messages?c=${s.conversationId}` : '/messages'
+  const total = s.total != null && s.currency
+    ? `${CURRENCY_SYMBOLS[s.currency] || ''}${s.total.toLocaleString('en-US', { maximumFractionDigits: s.currency === 'SOL' ? 4 : 2 })}${s.currency === 'NGN' ? '' : ' ' + s.currency}`
+    : null
 
   return (
     <Layout>
-      <div style={{ maxWidth: 520, margin: '0 auto', padding: '60px 20px', textAlign: 'center' }}>
-        <div style={{ width: 72, height: 72, borderRadius: '50%', background: 'rgba(22,163,74,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', color: 'var(--green)' }}>
-          <i className="ti ti-circle-check" style={{fontSize:36}} />
-        </div>
-        <h1 style={{ fontFamily: 'Geist,sans-serif', fontSize: 24, fontWeight: 900, margin: '0 0 8px', color: 'var(--text)' }}>Order Confirmed!</h1>
-        <p style={{ fontSize: 14, color: 'var(--text2)', margin: '0 0 6px' }}>Your order <strong style={{color:'var(--text)'}}>#{id}</strong> has been placed successfully.</p>
-        <p style={{ fontSize: 13, color: 'var(--text3)', margin: '0 0 32px' }}>The seller will start working on it shortly. You'll get a notification when it's ready.</p>
-        <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
-          <button onClick={() => navigate('/my-tasks')} style={{ height: 46, padding: '0 28px', borderRadius: 10, border: 'none', background: 'var(--accent)', color: 'var(--on-accent)', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
-            <i className="ti ti-briefcase" style={{marginRight:6}} /> My Tasks
-          </button>
-          <button onClick={() => navigate('/store')} style={{ height: 46, padding: '0 28px', borderRadius: 10, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text2)', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
-            <i className="ti ti-building-store" style={{marginRight:6}} /> Continue Shopping
-          </button>
+      <div className="ui-page">
+        <div className="sc-done">
+          <div className="sc-done-ic"><i className="ti ti-check" /></div>
+          <h1 className="ui-title">Payment complete</h1>
+          <p className="ui-sub">
+            {s.seller ? <>@{s.seller} has been paid and told about your order.</> : <>The seller has been paid and told about your order.</>}
+            {' '}Use the chat to share any details they need and arrange delivery.
+          </p>
+
+          {s.title && (
+            <div className="ui-card ui-card-pad">
+              <div className="sc-line"><span>{s.title}</span><span>{total}</span></div>
+              {s.seller && <div className="sc-line" style={{ borderBottom: 0 }}><span>Seller</span><span>@{s.seller}</span></div>}
+            </div>
+          )}
+
+          <div className="ui-actions">
+            <Link className="ui-btn ui-btn-dark ui-btn-lg" to={chat}><i className="ti ti-message-circle" /> {s.seller ? `Message @${s.seller}` : 'Open messages'}</Link>
+            <Link className="ui-btn ui-btn-ghost ui-btn-lg" to="/store">Back to the store</Link>
+          </div>
+          {id && <p className="sc-ref">Order reference {id.slice(0, 8).toUpperCase()}</p>}
         </div>
       </div>
     </Layout>

@@ -1,0 +1,57 @@
+/* Store checkout (/store/pay/:id) and order confirmation (/orders/:id) */
+.sc-wrap { max-width: 960px; }
+.sc-back { display: flex; width: fit-content; align-items: center; gap: 6px; margin-bottom: 18px; font-size: 13px; color: var(--text2); text-decoration: none; }
+.sc-back:hover { color: var(--text); }
+.sc-grid { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 16px; align-items: start; margin-top: 24px; }
+.sc-main { display: grid; gap: 16px; }
+
+.sc-product { display: flex; gap: 16px; padding: 16px; }
+.sc-thumb { width: 96px; height: 96px; flex-shrink: 0; border-radius: 14px; background: var(--card2); border: 1px solid var(--border); display: grid; place-items: center; overflow: hidden; color: var(--text3); font-size: 28px; }
+.sc-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.sc-product-t { min-width: 0; }
+.sc-product-t h2 { margin: 2px 0 0; font-size: 17px; font-weight: 600; letter-spacing: -.02em; color: var(--text); }
+.sc-by { margin: 4px 0 0; font-size: 12px; color: var(--text2); }
+.sc-by a { color: var(--text); font-weight: 600; text-decoration: none; }
+.sc-desc { margin: 10px 0 0; font-size: 13px; line-height: 1.6; color: var(--text2); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+
+.sc-method { display: flex; align-items: center; gap: 12px; margin-top: 4px; padding: 12px; border: 1px solid var(--text); border-radius: 14px; }
+.sc-method-ic { width: 40px; height: 40px; border-radius: 10px; background: var(--card2); display: grid; place-items: center; font-size: 19px; color: var(--text); flex-shrink: 0; }
+.sc-method-t { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.sc-method-t strong { font-size: 14px; font-weight: 600; color: var(--text); }
+.sc-method-t span { font-size: 12px; color: var(--text2); }
+.sc-state { font: 500 10px var(--font-mono); letter-spacing: .06em; text-transform: uppercase; padding: 4px 8px; border-radius: 999px; background: color-mix(in srgb, var(--green) 14%, transparent); color: var(--green); }
+.sc-state.warn { background: color-mix(in srgb, #d97706 14%, transparent); color: #b45309; }
+[data-theme="dark"] .sc-state.warn { color: #fbbf24; }
+.sc-short { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-top: 12px; padding: 12px; border-radius: 12px; background: var(--card2); }
+.sc-short p { margin: 0; flex: 1 1 220px; font-size: 13px; line-height: 1.55; color: var(--text2); }
+.sc-short b { color: var(--text); }
+
+.sc-summary { position: sticky; top: calc(var(--nav-h, 72px) + 16px); }
+.sc-line { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; font-size: 13px; color: var(--text2); border-bottom: 1px solid var(--border); }
+.sc-line span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sc-line span:last-child { color: var(--text); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.sc-line.total { border-bottom: 0; padding-top: 14px; font-size: 15px; font-weight: 600; color: var(--text); }
+.sc-pay { width: 100%; margin-top: 8px; }
+.sc-spin { animation: spin 1s linear infinite; }
+.sc-error { margin: 10px 0 0; font-size: 13px; color: #dc2626; }
+.sc-note { display: flex; gap: 8px; margin: 14px 0 0; font-size: 12px; line-height: 1.55; color: var(--text2); }
+.sc-note i { font-size: 15px; margin-top: 1px; flex-shrink: 0; }
+.sc-note.warn { color: #b45309; }
+[data-theme="dark"] .sc-note.warn { color: #fbbf24; }
+.sc-fine { margin: 10px 0 0; font-size: 11px; color: var(--text3); }
+.sc-fine a { color: var(--text2); }
+
+/* Order confirmation */
+.sc-done { max-width: 520px; margin: 0 auto; text-align: center; }
+.sc-done-ic { width: 64px; height: 64px; margin: 0 auto 18px; border-radius: 50%; display: grid; place-items: center; font-size: 30px; background: color-mix(in srgb, var(--green) 14%, transparent); color: var(--green); }
+.sc-done .ui-sub { margin-top: 10px; }
+.sc-done .ui-card { margin-top: 24px; text-align: left; }
+.sc-done .ui-actions { justify-content: center; margin-top: 24px; }
+.sc-ref { margin-top: 18px; font: 400 11px var(--font-mono); color: var(--text3); }
+
+@media (max-width: 768px) {
+  .sc-grid { grid-template-columns: 1fr; }
+  .sc-summary { position: static; }
+  .sc-product { flex-direction: column; }
+  .sc-thumb { width: 100%; height: 160px; }
+}

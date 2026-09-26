@@ -334,7 +334,6 @@ button { font: inherit; cursor: pointer; }
   .hp-community-section .community-grid > *:not(:first-child) { display: none !important; }
 
   /* General */
-  section { padding-left:0 !important; padding-right:0 !important; }
   .section-title { line-height:1.1 }
   .section-sub { font-size:13px !important; }
 

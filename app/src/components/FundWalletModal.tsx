@@ -44,9 +44,11 @@ interface Props {
   onClose: () => void;
   onDone?: () => void;
   initialStep?: 'deposit' | 'withdraw';
+  // Which deposit tab opens first (e.g. naira when paying for a naira item)
+  initialTab?: 'crypto' | 'bank';
 }
 
-export default function FundWalletModal({ onClose, onDone, initialStep }: Props) {
+export default function FundWalletModal({ onClose, onDone, initialStep, initialTab }: Props) {
   const { refreshUser, user } = useAuth();
   const [step, setStep] = useState<Step>(initialStep === 'withdraw' ? 'withdraw' : 'select');
   const [error, setError] = useState('');
@@ -426,7 +428,7 @@ export default function FundWalletModal({ onClose, onDone, initialStep }: Props)
   // ═══════════════════════════════════════════════════
   //  STEP: select — tabbed entry (Crypto OR Bank)
   // ═══════════════════════════════════════════════════
-  const [entryTab, setEntryTab] = useState<'crypto' | 'bank'>('crypto');
+  const [entryTab, setEntryTab] = useState<'crypto' | 'bank'>(initialTab ?? 'crypto');
   if (step === 'select') {
     const tabStyle = (active: boolean): React.CSSProperties => ({
       ...BTN, flex: 1, justifyContent: 'center', borderRadius: 9,
