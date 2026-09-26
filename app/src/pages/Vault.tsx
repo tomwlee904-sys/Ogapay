@@ -32,6 +32,43 @@ const ago = (d: string) => {
   return h < 24 ? `${h}h ago` : `${Math.floor(h / 24)}d ago`
 }
 
+// Check any Solana wallet linked to an OgaPay account (the answer never says whose it is)
+function WalletCheck() {
+  const [addr, setAddr] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [res, setRes] = useState<{ ok: true; v: { payBalance: number; totalEarned: number; distributionsReceived: number; isEligible: boolean } } | { ok: false; msg: string } | null>(null)
+  const check = async () => {
+    const a = addr.trim()
+    if (!/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(a)) { setRes({ ok: false, msg: "That doesn't look like a Solana address." }); return }
+    setBusy(true); setRes(null)
+    try {
+      const d = await apiRequest<any>(`/vault/lookup?wallet=${encodeURIComponent(a)}`, { auth: false })
+      setRes(d?.vault ? { ok: true, v: d.vault } : { ok: false, msg: 'No OgaPay account uses this wallet.' })
+    } catch (e: any) {
+      setRes({ ok: false, msg: /not found/i.test(e?.message || '') ? 'No OgaPay account uses this wallet.' : "Couldn't check right now. Try again." })
+    }
+    setBusy(false)
+  }
+  return (
+    <section className="up-card vt2-sec">
+      <h2>Check a wallet</h2>
+      <p>Paste a Solana address linked to an OgaPay account to see its $PAY and vault earnings.</p>
+      <form className="vt2-check" onSubmit={(e) => { e.preventDefault(); check() }}>
+        <input value={addr} onChange={(e) => setAddr(e.target.value)} placeholder="Solana wallet address" aria-label="Solana wallet address" spellCheck={false} autoComplete="off" />
+        <button className="up-btn primary" disabled={busy || !addr.trim()}>{busy ? 'Checking…' : 'Check'}</button>
+      </form>
+      {res && (res.ok ? (
+        <div className="vt2-mine" style={{ marginTop: 12 }}>
+          <div><span>$PAY held</span><b>{num(res.v.payBalance)}</b></div>
+          <div><span>Earned from the vault</span><b>{naira(res.v.totalEarned)}</b></div>
+          <div><span>Distributions received</span><b>{num(res.v.distributionsReceived)}</b></div>
+          <div><span>Eligible next run</span><b>{res.v.isEligible ? 'Yes' : 'No'}</b></div>
+        </div>
+      ) : <p className="vt2-sub" style={{ marginTop: 10 }}>{res.msg}</p>)}
+    </section>
+  )
+}
+
 function useCountdown(to?: string) {
   const [now, setNow] = useState(Date.now())
   useEffect(() => { const t = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(t) }, [])
@@ -177,6 +214,8 @@ export default function Vault() {
             </>
           )}
         </section>
+
+        <WalletCheck />
 
         <section className="up-card vt2-sec">
           <details className="vt2-how">

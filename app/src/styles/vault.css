@@ -21,6 +21,9 @@
 .vt2-mine b { font: 700 18px Geist, sans-serif; color: var(--text); display: block; margin-top: 4px; overflow-wrap: anywhere; }
 .vt2-claim { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 12px; padding: 12px 14px; border: 1px solid var(--text); border-radius: 12px; }
 .vt2-claim span { flex: 1; min-width: 180px; font-size: 13px; color: var(--text2); }
+.vt2-check { display: flex; gap: 8px; }
+.vt2-check input { flex: 1; min-width: 0; height: 42px; padding: 0 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg2); color: var(--text); font: 13px var(--font-mono, ui-monospace, monospace); outline: 0; }
+.vt2-check input:focus { border-color: var(--text3); }
 .vt2-how summary { cursor: pointer; list-style: none; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .vt2-how summary::-webkit-details-marker { display: none; }
 .vt2-how summary i { transition: transform .15s; color: var(--text3); }
