@@ -76,7 +76,7 @@ export default function WalletPreviewCard({ data }: WalletPreviewCardProps) {
         <div style={{ fontFamily: 'monospace', fontSize: 13, fontWeight: 600, color: 'var(--text)', wordBreak: 'break-all' }}>
           {data?.user?.name ? (
             <span>
-              {data.user.name} · <span style={{ color: 'var(--text2)', fontSize: 12 }}>@{data.user.username}</span>
+              {data.user ? <>{data.user.name} · <span style={{ color: 'var(--text2)', fontSize: 12 }}>@{data.user.username}</span></> : 'OgaPay account'}
               <br /><span style={{ fontSize: 11, color: 'var(--text3)', fontWeight: 400 }}>{data.wallet}</span>
             </span>
           ) : truncateWallet(data.wallet)}
