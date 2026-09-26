@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
+import { savedJobIds, setSaved, onSavedJobsChange } from '../lib/bookmarks'
 
 const API_BASE = 'https://ogapay-production.up.railway.app/api/v1'
 
@@ -78,9 +79,14 @@ export default function JobMonitor() {
   const [appliedJobs, setAppliedJobs] = useState<string[]>(() => {
     try { return JSON.parse(localStorage.getItem('ogapay_applied_jobs') || '[]') } catch { return [] }
   })
-  const [bookmarked, setBookmarked] = useState<string[]>(() => {
-    try { return JSON.parse(localStorage.getItem('ogapay_bookmarked_jobs') || '[]') } catch { return [] }
-  })
+  // Saved jobs are server-side (same list as the job page and /bookmarks)
+  const [bookmarked, setBookmarked] = useState<string[]>([])
+  useEffect(() => {
+    let live = true
+    savedJobIds().then((ids) => { if (live) setBookmarked([...ids]) })
+    const off = onSavedJobsChange((ids) => setBookmarked([...ids]))
+    return () => { live = false; off() }
+  }, [])
 
   const pollingRef = useRef<any>(null)
   const lastIdRef = useRef<string>('')
@@ -149,11 +155,9 @@ export default function JobMonitor() {
   }, [showToast])
 
   const toggleBookmark = (jobId: string) => {
-    const updated = bookmarked.includes(jobId)
-      ? bookmarked.filter(id => id !== jobId)
-      : [...bookmarked, jobId]
-    setBookmarked(updated)
-    localStorage.setItem('ogapay_bookmarked_jobs', JSON.stringify(updated))
+    const save = !bookmarked.includes(jobId)
+    setBookmarked(save ? [...bookmarked, jobId] : bookmarked.filter(id => id !== jobId))
+    setSaved(jobId, save).catch(() => setBookmarked((b) => (save ? b.filter(id => id !== jobId) : [...b, jobId])))
   }
 
   const applyJob = async (job: any) => {

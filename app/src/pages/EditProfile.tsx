@@ -1,246 +1,202 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useEffect, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import Layout from '../components/Layout'
+import { apiRequest } from '../lib/api'
+import { uploadImage } from '../lib/upload'
+import { useAuth } from '../context/AuthContext'
+import '../styles/profile-public.css'
+import '../styles/hire.css'
+import '../styles/edit-profile.css'
 
+const CATEGORIES: [string, string][] = [
+  ['SOCIAL_MEDIA', 'Social media'], ['CONTENT_WRITING', 'Writing'], ['DESIGN', 'Design'], ['DATA_ENTRY', 'Data entry'],
+  ['APP_TESTING', 'App testing'], ['SURVEY', 'Surveys'], ['TRANSLATION', 'Translation'], ['WEB_RESEARCH', 'Web research'],
+  ['VIDEO_REVIEW', 'Video'], ['OTHER', 'Other'],
+]
+const USERNAME_RE = /^[A-Za-z0-9_]{3,30}$/
+
+type Form = {
+  firstName: string; lastName: string; username: string; bio: string; skills: string
+  categories: string[]; isAvailable: boolean; isPublic: boolean; showEarnings: boolean; showRank: boolean
+  twitter: string; telegram: string; discord: string; website: string
+}
+
+function Switch({ on, onChange, label }: { on: boolean; onChange: (v: boolean) => void; label: string }) {
+  return (
+    <button type="button" role="switch" aria-checked={on} aria-label={label} className={`ep-switch ${on ? 'on' : ''}`} onClick={() => onChange(!on)}>
+      <span />
+    </button>
+  )
+}
+
+// Real profile editor: loads /users/me, saves only what changed to PATCH /users/me
 export default function EditProfile() {
-  const navigate = useNavigate()
-  const [saved, setSaved] = useState(false)
-  const [avatarHover, setAvatarHover] = useState(false)
+  const { refreshUser } = useAuth()
+  const [me, setMe] = useState<any>(null)
+  const [form, setForm] = useState<Form | null>(null)
+  const [avatar, setAvatar] = useState<string | null>(null)
+  const [uploading, setUploading] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null)
+  const [errors, setErrors] = useState<Record<string, string>>({})
+  const fileRef = useRef<HTMLInputElement>(null)
 
-  const handleSave = (e: React.FormEvent) => {
-    e.preventDefault()
-    setSaved(true)
-    setTimeout(() => setSaved(false), 2000)
+  const fromUser = (u: any): Form => ({
+    firstName: u.firstName || '', lastName: u.lastName || '', username: u.username || '',
+    bio: u.workerProfile?.bio || u.workerProfileBio || '',
+    skills: (u.workerProfile?.skills || []).join(', '),
+    categories: u.workerProfile?.categories || [],
+    isAvailable: u.workerProfile?.isAvailable !== false,
+    isPublic: u.isPublic !== false,
+    showEarnings: u.preferences?.showEarnings === true,
+    showRank: u.preferences?.showRank === true,
+    twitter: u.twitter || '', telegram: u.telegram || '', discord: u.discord || '', website: u.website || '',
+  })
+
+  useEffect(() => {
+    apiRequest<any>('/users/me')
+      .then((u) => { setMe(u); setForm(fromUser(u)); setAvatar(u.avatarUrl || null) })
+      .catch(() => setMsg({ ok: false, text: "Couldn't load your profile. Refresh to try again." }))
+  }, [])
+
+  const set = <K extends keyof Form>(k: K, v: Form[K]) => { setForm((f) => (f ? { ...f, [k]: v } : f)); setMsg(null); setErrors((e) => ({ ...e, [k]: '' })) }
+
+  const pickAvatar = async (file?: File) => {
+    if (!file) return
+    setUploading(true); setMsg(null)
+    try {
+      const url = await uploadImage(file, 'avatars') // saves it on the account too
+      setAvatar(url)
+      refreshUser()
+    } catch (e: any) { setMsg({ ok: false, text: e?.message || 'Photo upload failed' }) }
+    setUploading(false)
+    if (fileRef.current) fileRef.current.value = ''
   }
+
+  const save = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!form || !me) return
+    const errs: Record<string, string> = {}
+    if (!form.firstName.trim()) errs.firstName = 'First name is required'
+    if (!USERNAME_RE.test(form.username.trim())) errs.username = '3-30 letters, numbers or _'
+    if (form.website.trim() && !/^https?:\/\//i.test(form.website.trim())) errs.website = 'Start with https://'
+    if (Object.keys(errs).length) { setErrors(errs); return }
+
+    const base = fromUser(me)
+    const body: Record<string, any> = {}
+    for (const k of ['firstName', 'lastName', 'username', 'twitter', 'telegram', 'discord', 'website'] as const) {
+      if (form[k].trim() !== base[k]) body[k] = form[k].trim()
+    }
+    if (form.bio.trim() !== base.bio) body.bio = form.bio.trim()
+    const skills = form.skills.split(',').map((s) => s.trim()).filter(Boolean).slice(0, 15)
+    if (skills.join('|') !== base.skills.split(',').map((s) => s.trim()).filter(Boolean).join('|')) body.skills = skills
+    if (form.categories.join('|') !== base.categories.join('|')) body.categories = form.categories
+    if (form.isAvailable !== base.isAvailable) body.isAvailable = form.isAvailable
+    if (form.isPublic !== base.isPublic) body.isPublic = form.isPublic
+    if (form.showEarnings !== base.showEarnings || form.showRank !== base.showRank) {
+      body.preferences = { ...(me.preferences || {}), showEarnings: form.showEarnings, showRank: form.showRank }
+    }
+    if (!Object.keys(body).length) { setMsg({ ok: true, text: 'No changes to save.' }); return }
+
+    setSaving(true); setMsg(null)
+    try {
+      await apiRequest('/users/me', { method: 'PATCH', body: JSON.stringify(body) })
+      const fresh = await apiRequest<any>('/users/me')
+      setMe(fresh); setForm(fromUser(fresh))
+      refreshUser()
+      setMsg({ ok: true, text: 'Profile saved.' })
+    } catch (err: any) {
+      const m = err?.message || ''
+      setMsg({ ok: false, text: /unique|already|exists/i.test(m) ? 'That username is taken.' : m === 'Validation failed' ? 'Check the highlighted fields.' : m || 'Could not save.' })
+    }
+    setSaving(false)
+  }
+
+  const field = (k: keyof Form, label: string, props: React.InputHTMLAttributes<HTMLInputElement> = {}) => (
+    <label className="ep-field">
+      <span>{label}</span>
+      <input className="hr-input" value={String(form?.[k] ?? '')} onChange={(e) => set(k, e.target.value as any)} aria-invalid={!!errors[k]} {...props} />
+      {errors[k] && <em>{errors[k]}</em>}
+    </label>
+  )
 
   return (
     <Layout>
-      <style>{`
-        .ep-page{max-width:800px;margin:0 auto;padding:0 0 40px}
-        .ep-bread{font-size:12px;color:var(--text3);margin-bottom:16px;display:flex;align-items:center;gap:6px}
-        .ep-bread span{cursor:pointer;color:var(--text2)}
-        .ep-bread span:hover{color:var(--accent)}
-        .ep-bread .current{color:var(--text2);font-weight:600}
-
-        .ep-header{display:flex;gap:2rem;margin-bottom:2rem}
-        .ep-avatar-wrap{width:120px;height:120px;border-radius:16px;overflow:hidden;flex-shrink:0;position:relative;border:3px solid var(--card);box-shadow:0 4px 12px rgba(0,0,0,0.08);transition:all .3s ease;cursor:pointer}
-        .ep-avatar-wrap:hover{transform:scale(1.03);box-shadow:0 8px 20px rgba(0,0,0,0.12)}
-        .ep-avatar-wrap img{width:100%;height:100%;object-fit:cover;transition:transform .3s ease}
-        .ep-avatar-wrap:hover img{transform:scale(1.1)}
-        .ep-avatar-empty{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--bg2),var(--border))}
-        .ep-avatar-empty i{font-size:40px;color:var(--text3)}
-        .ep-avatar-overlay{
-          position:absolute;inset:0;background:rgba(0,0,0,0.5);
-          display:flex;align-items:center;justify-content:center;
-          opacity:0;transition:opacity .3s;border-radius:13px;
-        }
-        .ep-avatar-wrap:hover .ep-avatar-overlay{opacity:1}
-        .ep-avatar-overlay i{color:#fff;font-size:24px}
-        .ep-info{flex:1;display:flex;flex-direction:column;gap:.75rem;justify-content:center}
-        .ep-name-row{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem}
-        .ep-name{display:flex;align-items:center;gap:.75rem}
-        .ep-name h2{font-size:1.75rem;font-weight:800;color:var(--text);margin:0;letter-spacing:-.02em}
-        .ep-badge{font-size:11px;font-weight:600;color:#22c55e;background:#052e16;padding:3px 10px;border-radius:20px;display:inline-flex;align-items:center;gap:4px}
-        .ep-badge i{font-size:10px}
-
-        .ep-bio-section{background:var(--bg2);border-radius:12px;padding:1.25rem;margin-top:.5rem;border:1px solid var(--border)}
-        .ep-bio-label{font-size:.75rem;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.75rem}
-        .ep-bio-text{white-space:pre-wrap;color:var(--text2);line-height:1.7;font-size:.9rem}
-
-        /* Form */
-        .ep-section{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px;margin-bottom:16px}
-        .ep-section-title{font-weight:800;font-size:14px;margin-bottom:16px;display:flex;align-items:center;gap:8px;color:var(--text)}
-        .ep-section-title i{color:var(--accent)}
-        .ep-field{margin-bottom:14px}
-        .ep-field:last-child{margin-bottom:0}
-        .ep-field label{display:block;font-size:11px;font-weight:700;color:var(--text3);margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em}
-        .ep-field input,.ep-field textarea,.ep-field select{
-          width:100%;padding:0 12px;border:1px solid var(--border);border-radius:8px;
-          background:var(--bg2);color:var(--text);font-size:13px;
-          outline:0;transition:border-color .2s;height:38px;box-sizing:border-box;
-        }
-        .ep-field textarea{height:80px;padding:10px 12px;resize:vertical;font-family:inherit}
-        .ep-field input:focus,.ep-field textarea:focus,.ep-field select:focus{border-color:var(--accent)}
-        .ep-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-        @media(max-width:600px){
-          .ep-header{flex-direction:column;align-items:center;text-align:center;gap:1rem}
-          .ep-avatar-wrap{width:90px;height:90px}
-          .ep-name-row{flex-direction:column;align-items:center}
-          .ep-row{grid-template-columns:1fr}
-        }
-        .ep-save-btn{
-          height:42px;padding:0 28px;border-radius:10px;border:0;
-          background:var(--accent);color:var(--on-accent);font-weight:700;font-size:14px;
-          display:inline-flex;align-items:center;gap:8px;cursor:pointer;
-          transition:all .2s;font-family:inherit;
-        }
-        .ep-save-btn:hover{box-shadow:0 4px 16px rgba(var(--accent-rgb),.25);transform:translateY(-1px)}
-        .ep-toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--green);color:#fff;padding:10px 24px;border-radius:10px;font-size:13px;font-weight:700;z-index:999;opacity:0;transition:all .3s;pointer-events:none}
-        .ep-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-      `}</style>
-
-      <div className="ep-page">
-        {/* Breadcrumb */}
-        <div className="ep-bread">
-          <span onClick={() => navigate('/worker-portal')}>Worker Portal</span>
-          <i className="ti ti-chevron-right" style={{ fontSize: 10, color: 'var(--border2)' }} />
-          <span className="current">Edit Profile</span>
+      <div className="up-wrap" style={{ maxWidth: 760 }}>
+        <div className="up-crumb">
+          <Link to="/profile" style={{ color: 'var(--text2)', textDecoration: 'none' }}><i className="ti ti-arrow-left" /> Profile</Link>
+          <span>Edit profile</span>
         </div>
 
-        {/* Profile Header */}
-        <div className="ep-header">
-          <div className="ep-avatar-wrap" onMouseEnter={() => setAvatarHover(true)} onMouseLeave={() => setAvatarHover(false)}>
-            <div className="ep-avatar-empty">
-              <i className="ti ti-user" />
-            </div>
-            <div className="ep-avatar-overlay">
-              <i className="ti ti-camera" />
-            </div>
-          </div>
-          <div className="ep-info">
-            <div className="ep-name-row">
-              <div className="ep-name">
-                <h2>User Name</h2>
-                <span className="ep-badge"><i className="ti ti-circle-check-filled" /> Verified</span>
+        {!form ? (
+          msg ? <div className="up-empty"><i className="ti ti-cloud-off" />{msg.text}</div> : <div className="up-skel" style={{ height: 320 }} />
+        ) : (
+          <form onSubmit={save} noValidate>
+            <section className="up-card hr-sec">
+              <div className="hr-sec-h"><h2>Basics</h2>{me?.username && <Link to={`/user/${me.username}`}>View public profile</Link>}</div>
+              <div className="ep-avatar">
+                {avatar ? <img className="up-avatar" src={avatar} alt="" /> : <div className="up-avatar">{(form.firstName[0] || '?').toUpperCase()}</div>}
+                <div>
+                  <button type="button" className="up-btn" disabled={uploading} onClick={() => fileRef.current?.click()}>{uploading ? 'Uploading…' : avatar ? 'Change photo' : 'Add photo'}</button>
+                  <p>JPG or PNG, square works best.</p>
+                </div>
+                <input ref={fileRef} type="file" accept="image/*" hidden onChange={(e) => pickAvatar(e.target.files?.[0])} />
               </div>
-            </div>
-            <div className="ep-bio-section">
-              <div className="ep-bio-label">Bio</div>
-              <div className="ep-bio-text">Task worker & community member on OgaPay</div>
-            </div>
-          </div>
-        </div>
+              <div className="hr-row">
+                {field('firstName', 'First name', { maxLength: 50, autoComplete: 'given-name' })}
+                {field('lastName', 'Last name', { maxLength: 50, autoComplete: 'family-name' })}
+              </div>
+              {field('username', 'Username', { maxLength: 30, autoCapitalize: 'off', spellCheck: false })}
+              <label className="ep-field"><span>Email</span><input className="hr-input" value={me?.email || ''} disabled /><small>Contact support to change your email.</small></label>
+              <label className="ep-field">
+                <span>Bio</span>
+                <textarea className="hr-input hr-area" style={{ minHeight: 110 }} maxLength={1000} value={form.bio} onChange={(e) => set('bio', e.target.value)} placeholder="What you do and what clients can hire you for." />
+                <small>{form.bio.length} / 1,000</small>
+              </label>
+            </section>
 
-        {/* Edit Form */}
-        <form onSubmit={handleSave}>
-          {/* Basic Information */}
-          <div className="ep-section">
-            <div className="ep-section-title"><i className="ti ti-user" /> Basic Information</div>
-            <div className="ep-row">
+            <section className="up-card hr-sec">
+              <div className="hr-sec-h"><h2>Work</h2></div>
+              {field('skills', 'Skills (comma separated)', { placeholder: 'e.g. Logo design, Figma, Copywriting', maxLength: 600 })}
               <div className="ep-field">
-                <label>Display Name</label>
-                <input type="text" defaultValue="User Name" placeholder="Your full name" />
+                <span>Categories</span>
+                <div className="ep-chips">
+                  {CATEGORIES.map(([v, l]) => {
+                    const on = form.categories.includes(v)
+                    return <button type="button" key={v} className={`ep-chip ${on ? 'on' : ''}`} aria-pressed={on} onClick={() => set('categories', on ? form.categories.filter((c) => c !== v) : [...form.categories, v].slice(0, 10))}>{l}</button>
+                  })}
+                </div>
+                <small>You'll be notified about new jobs in these categories.</small>
               </div>
-              <div className="ep-field">
-                <label>Username</label>
-                <input type="text" defaultValue="@username" placeholder="Choose a username" />
-              </div>
-            </div>
-            <div className="ep-row">
-              <div className="ep-field">
-                <label>Email</label>
-                <input type="email" defaultValue="user@ogapay.com" placeholder="your@email.com" />
-              </div>
-              <div className="ep-field">
-                <label>Phone</label>
-                <input type="tel" defaultValue="+234 800 000 0000" placeholder="+234 ..." />
-              </div>
-            </div>
-            <div className="ep-field">
-              <label>Location</label>
-              <input type="text" defaultValue="Lagos, Nigeria" placeholder="City, Country" />
-            </div>
-            <div className="ep-field">
-              <label>Bio</label>
-              <textarea placeholder="Tell task posters what makes you the best choice..." defaultValue="Task worker & community member on OgaPay" />
-            </div>
-          </div>
+              <div className="ep-toggle"><div><b>Available for work</b><small>Shown on your public profile.</small></div><Switch on={form.isAvailable} onChange={(v) => set('isAvailable', v)} label="Available for work" /></div>
+            </section>
 
-          {/* Profile Settings */}
-          <div className="ep-section">
-            <div className="ep-section-title"><i className="ti ti-settings" /> Profile Settings</div>
-            <div className="ep-row">
-              <div className="ep-field">
-                <label>Public Profile</label>
-                <select defaultValue="yes">
-                  <option value="yes">Visible to everyone</option>
-                  <option value="no">Hidden</option>
-                </select>
-              </div>
-              <div className="ep-field">
-                <label>Show Earnings</label>
-                <select defaultValue="yes">
-                  <option value="yes">Visible on profile</option>
-                  <option value="no">Hidden</option>
-                </select>
-              </div>
-            </div>
-          </div>
+            <section className="up-card hr-sec">
+              <div className="hr-sec-h"><h2>Privacy</h2></div>
+              <div className="ep-toggle"><div><b>Public profile</b><small>Off: only your username is shown to others.</small></div><Switch on={form.isPublic} onChange={(v) => set('isPublic', v)} label="Public profile" /></div>
+              <div className="ep-toggle"><div><b>Show rank</b><small>Your worker rank and OgaScore on your profile.</small></div><Switch on={form.showRank} onChange={(v) => set('showRank', v)} label="Show rank" /></div>
+              <div className="ep-toggle"><div><b>Show earnings</b><small>Your total earned on your profile.</small></div><Switch on={form.showEarnings} onChange={(v) => set('showEarnings', v)} label="Show earnings" /></div>
+            </section>
 
-          {/* Social Links */}
-          <div className="ep-section">
-            <div className="ep-section-title"><i className="ti ti-link" /> Social Links</div>
-            <div className="ep-row">
-              <div className="ep-field">
-                <label><i className="ti ti-brand-x" style={{fontSize:12}} /> X / Twitter</label>
-                <input type="text" defaultValue="@username" placeholder="https://x.com/..." />
+            <section className="up-card hr-sec">
+              <div className="hr-sec-h"><h2>Links</h2></div>
+              <div className="hr-row">
+                {field('twitter', 'X / Twitter', { placeholder: '@handle', maxLength: 100 })}
+                {field('telegram', 'Telegram', { placeholder: '@handle', maxLength: 100 })}
               </div>
-              <div className="ep-field">
-                <label><i className="ti ti-brand-telegram" style={{fontSize:12}} /> Telegram</label>
-                <input type="text" placeholder="https://t.me/..." />
+              <div className="hr-row">
+                {field('discord', 'Discord', { placeholder: 'username', maxLength: 100 })}
+                {field('website', 'Website', { placeholder: 'https://', maxLength: 200, inputMode: 'url' })}
               </div>
-            </div>
-            <div className="ep-row">
-              <div className="ep-field">
-                <label><i className="ti ti-brand-discord" style={{fontSize:12}} /> Discord</label>
-                <input type="text" placeholder="username#0000" />
-              </div>
-              <div className="ep-field">
-                <label><i className="ti ti-world" style={{fontSize:12}} /> Website</label>
-                <input type="text" placeholder="https://..." />
-              </div>
-            </div>
-          </div>
+            </section>
 
-          {/* Skills & Expertise */}
-          <div className="ep-section">
-            <div className="ep-section-title"><i className="ti ti-star" /> Skills & Expertise</div>
-            <div className="ep-row">
-              <div className="ep-field">
-                <label>Category</label>
-                <select defaultValue="">
-                  <option value="">Select expertise</option>
-                  <option value="design">Design</option>
-                  <option value="writing">Writing</option>
-                  <option value="social">Social Media</option>
-                  <option value="dev">Development</option>
-                  <option value="marketing">Marketing</option>
-                  <option value="community">Community</option>
-                </select>
-              </div>
-              <div className="ep-field">
-                <label>Experience</label>
-                <select defaultValue="">
-                  <option value="">Select level</option>
-                  <option value="beginner">Beginner</option>
-                  <option value="intermediate">Intermediate</option>
-                  <option value="expert">Expert</option>
-                </select>
-              </div>
+            <div className="ep-bar">
+              {msg && <div className={`up-note ${msg.ok ? 'ok' : 'err'}`} role="status" style={{ margin: 0, flex: 1 }}>{msg.text}</div>}
+              <button type="submit" className="up-btn primary" disabled={saving || uploading} style={{ minWidth: 140, height: 44, marginLeft: 'auto' }}>{saving ? 'Saving…' : 'Save changes'}</button>
             </div>
-            <div className="ep-field">
-              <label>Skill Tags</label>
-              <input type="text" defaultValue="UI Design, Social Media, Content Writing" placeholder="e.g. Design, Writing, Marketing" />
-              <span style={{fontSize:10,color:'var(--text3)',marginTop:4,display:'block'}}>Separate with commas</span>
-            </div>
-          </div>
-
-          <div style={{display:'flex',gap:12,alignItems:'center',marginTop:8}}>
-            <button type="submit" className="ep-save-btn">
-              <i className="ti ti-check" style={{fontSize:16}} /> {saved ? 'Saved!' : 'Save Changes'}
-            </button>
-            <button type="button" onClick={() => navigate('/worker-portal')} style={{
-              height:42,padding:'0 20px',borderRadius:10,border:'1px solid var(--border)',
-              background:'transparent',color:'var(--text2)',fontWeight:600,fontSize:13,
-              cursor:'pointer',fontFamily:'inherit',display:'inline-flex',alignItems:'center',gap:6,
-            }}>
-              Cancel
-            </button>
-          </div>
-        </form>
+          </form>
+        )}
       </div>
-
-      <div className={`ep-toast ${saved ? 'show' : ''}`}>Profile updated successfully</div>
     </Layout>
   )
 }

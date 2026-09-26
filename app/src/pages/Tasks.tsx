@@ -2,7 +2,9 @@
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import Modal from '../components/Modal'
 import Layout from '../components/Layout'
-import { apiRequest } from '../lib/api'
+import { apiRequest, getAccessToken } from '../lib/api'
+import { useBookmark } from '../hooks/useBookmark'
+import { openSignIn } from '../lib/signin'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../components/Toast'
 import { useApi } from '../lib/useApi'
@@ -71,6 +73,18 @@ function InfoBtn({ text }: { text: string }) {
 }
 
 // ─── Job Detail Modal ────────────────────────────────────────────────
+// Save / unsave a job (server-side; shows in /bookmarks)
+function SaveJobButton({ taskId }: { taskId: string }) {
+  const { bookmarked, toggle, loading } = useBookmark(taskId)
+  return (
+    <button type="button" onClick={() => (getAccessToken() ? toggle() : openSignIn({ redirect: '/tasks' }))} disabled={loading}
+      aria-label={bookmarked ? 'Remove from saved jobs' : 'Save job'} aria-pressed={bookmarked}
+      style={{ background: 'none', border: 'none', color: bookmarked ? 'var(--text)' : 'var(--text3)', fontSize: 15, cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+      <svg width="15" height="15" viewBox="0 0 24 24" fill={bookmarked ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinejoin="round" aria-hidden="true"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1z" /></svg>
+    </button>
+  )
+}
+
 function JobDetailModal({ job, onClose, onApply }: { job: any; onClose: () => void; onApply: (jid: string) => void }) {
   const { user } = useAuth()
   const { toast: showToast } = useToast()
@@ -218,9 +232,7 @@ function JobDetailModal({ job, onClose, onApply }: { job: any; onClose: () => vo
               <i className="ti ti-info-circle" style={{ fontSize: 14 }} /> Info
             </button>
             <span style={{ width: 1, height: 16, background: 'var(--border)' }} />
-            <button style={{ background: 'none', border: 'none', color: 'var(--text3)', fontSize: 15, cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
-              <i className="ti ti-bookmark" />
-            </button>
+            <SaveJobButton taskId={job.id} />
           </div>
         </div>
 

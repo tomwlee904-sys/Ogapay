@@ -4,6 +4,7 @@ import '../../styles/profile-own.css'
 type QL = { icon: string; label: string; desc: string; to: string }
 
 // Grouped like wurk.fun's profile: what you do to earn, to hire, and about you
+// (Only pages backed by real data. My Store, Find Workers and Write a Blog come back when those pages are rebuilt.)
 export default function ProfileQuickLinks({ username }: { username?: string }) {
   const groups: { title: string; links: QL[] }[] = [
     {
@@ -12,9 +13,8 @@ export default function ProfileQuickLinks({ username }: { username?: string }) {
         { icon: 'briefcase', label: 'Available Jobs', desc: 'Browse jobs you can do', to: '/jobs' },
         { icon: 'clipboard-list', label: 'My Work', desc: 'Jobs you applied to and submitted', to: '/my-tasks' },
         { icon: 'activity', label: 'Job Monitor', desc: 'Follow new and eligible jobs', to: '/job-monitor' },
-        { icon: 'building-store', label: 'My Store', desc: 'Manage your products', to: '/my-store' },
         { icon: 'coin', label: 'Earnings', desc: 'What you have earned', to: '/earnings' },
-        { icon: 'lock', label: 'Vault', desc: 'Your holdings and rewards', to: '/vault' },
+        { icon: 'lock', label: 'Vault', desc: 'Rewards and payout history', to: '/vault/history' },
       ],
     },
     {
@@ -22,7 +22,6 @@ export default function ProfileQuickLinks({ username }: { username?: string }) {
       links: [
         { icon: 'circle-plus', label: 'Create Job', desc: 'Publish a new job', to: '/create' },
         { icon: 'list-details', label: 'My Jobs', desc: 'Manage the jobs you created', to: '/manage-jobs' },
-        { icon: 'users-group', label: 'Find Workers', desc: 'Browse people to hire', to: '/workers' },
         { icon: 'shopping-bag', label: 'OgaPay Store', desc: 'Products and services', to: '/store' },
         { icon: 'speakerphone', label: 'Campaigns', desc: 'Run social campaigns', to: '/campaigns' },
       ],
@@ -33,7 +32,6 @@ export default function ProfileQuickLinks({ username }: { username?: string }) {
         { icon: 'message', label: 'Messages', desc: 'Your conversations', to: '/messages' },
         ...(username ? [{ icon: 'user-circle', label: 'Public Profile', desc: 'See what others see', to: `/user/${username}` }] : []),
         { icon: 'bookmark', label: 'Bookmarks', desc: 'Your saved jobs', to: '/bookmarks' },
-        { icon: 'writing', label: 'Write a Blog', desc: 'Publish to your profile', to: '/blog/write' },
         { icon: 'affiliate', label: 'Referrals', desc: 'Invite friends and earn', to: '/referrals' },
         { icon: 'settings', label: 'Account Settings', desc: 'Security and preferences', to: '/settings' },
       ],

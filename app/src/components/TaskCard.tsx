@@ -1,7 +1,8 @@
 ﻿import { useNavigate } from 'react-router-dom'
 import { rankName } from '../lib/requirements'
 import { useState, useEffect, useRef } from 'react'
-import { apiRequest } from '../lib/api'
+import { apiRequest, getAccessToken } from '../lib/api'
+import { savedJobIds, setSaved, onSavedJobsChange } from '../lib/bookmarks'
 import { useCurrency } from '../context/CurrencyContext'
 import { useTheme } from '../context/ThemeContext'
 
@@ -133,46 +134,24 @@ export default function TaskCard({ task, hideApply }: { task: Task; hideApply?: 
 
   const isExpired = countdown === 'Expired'
 
-  // Bookmark state
-  const [bookmarked, setBookmarked] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('ogapay_bookmarked') || '[]').includes(id) } catch { return false }
-  })
+  // Bookmark state (server-backed, shared with the job page and /bookmarks)
+  const [bookmarked, setBookmarked] = useState(false)
   const [bookmarkLoading, setBookmarkLoading] = useState(false)
-  const [bookmarkMeta, setBookmarkMeta] = useState<string | null>(() => {
-    try { return JSON.parse(localStorage.getItem('ogapay_bookmark_meta') || '{}')[id] || null } catch { return null }
-  })
+  useEffect(() => {
+    let live = true
+    savedJobIds().then((ids) => { if (live) setBookmarked(ids.has(id)) })
+    const off = onSavedJobsChange((ids) => setBookmarked(ids.has(id)))
+    return () => { live = false; off() }
+  }, [id])
 
   const toggleBookmark = async (e: React.MouseEvent) => {
     e.stopPropagation()
     if (bookmarkLoading) return
-    setBookmarkLoading(true)
+    if (!getAccessToken()) { navigate('/login?redirect=' + encodeURIComponent('/tasks/' + id)); return }
     const newState = !bookmarked
     setBookmarked(newState)
-    try {
-      if (newState) {
-        const result = await apiRequest<any>('/bookmarks', { method: 'POST', body: JSON.stringify({ type: "task", targetId: id }) })
-        const bmId = result?.id || result?.data?.id || ''
-        const meta = JSON.parse(localStorage.getItem('ogapay_bookmark_meta') || '{}')
-        meta[id] = bmId
-        localStorage.setItem('ogapay_bookmark_meta', JSON.stringify(meta))
-      } else {
-        const meta = JSON.parse(localStorage.getItem('ogapay_bookmark_meta') || '{}')
-        const bmId = meta[id]
-        if (bmId) {
-          await apiRequest('/bookmarks/' + bmId, { method: 'DELETE' })
-        }
-        delete meta[id]
-        localStorage.setItem('ogapay_bookmark_meta', JSON.stringify(meta))
-      }
-      const stored = JSON.parse(localStorage.getItem('ogapay_bookmarked') || '[]')
-      if (newState) {
-        if (!stored.includes(id)) stored.push(id)
-      } else {
-        const idx = stored.indexOf(id)
-        if (idx >= 0) stored.splice(idx, 1)
-      }
-      localStorage.setItem('ogapay_bookmarked', JSON.stringify(stored))
-    } catch {}
+    setBookmarkLoading(true)
+    try { await setSaved(id, newState) } catch { setBookmarked(!newState) }
     setBookmarkLoading(false)
   }
 

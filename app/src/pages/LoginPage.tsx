@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { Navigate, useLocation, useSearchParams } from 'react-router-dom'
+import { Navigate, useLocation, useParams, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { openSignIn, safeRedirect } from '../lib/signin'
 import HomePage from './HomePage'
@@ -12,22 +12,25 @@ const ERRORS: Record<string, string> = {
 }
 
 /* /login and /pair open the sign-in dialog over the homepage, like wurk.fun.
+   Referral links (/ref/CODE, /join?ref=CODE) open sign-up with the code saved.
    Closing it leaves you on the homepage. */
 export default function LoginPage() {
   const { isAuthed, isLoading } = useAuth()
   const [params] = useSearchParams()
   const { pathname } = useLocation()
   const redirect = safeRedirect(params.get('redirect'))
+  const { code: refCode } = useParams<{ code?: string }>()
+  const isReferral = pathname === '/join' || pathname.startsWith('/ref/')
 
   useEffect(() => {
-    const ref = params.get('ref')
+    const ref = (refCode || params.get('ref') || '').replace(/[^A-Za-z0-9_-]/g, '').slice(0, 40)
     if (ref) localStorage.setItem('ogapay_referral', ref)
-  }, [])
+  }, [refCode, params])
 
   useEffect(() => {
     if (isLoading || isAuthed) return
     openSignIn({
-      view: pathname === '/pair' ? 'pair' : params.get('mode') === 'signup' ? 'signup' : 'options',
+      view: pathname === '/pair' ? 'pair' : params.get('mode') === 'signup' || isReferral ? 'signup' : 'options',
       code: params.get('code') || '',
       notice: ERRORS[params.get('error') || ''] || '',
       redirect,

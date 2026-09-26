@@ -19,15 +19,13 @@ export default function TabWorkerPortalContent() {
   ]
 
   const navItems = [
-    { icon: 'ti ti-building-store', label: 'My Store', route: '/my-store' },
-    { icon: 'ti ti-article', label: 'My Blogs', route: '/blog' },
     { icon: 'ti ti-briefcase', label: 'My Work', route: '/my-tasks' },
     { icon: 'ti ti-message', label: 'Messages', route: '/messages' },
     { icon: 'ti ti-users', label: 'Communities', route: '/communities' },
     { icon: 'ti ti-file-check', label: 'My Submissions', route: '/my-tasks' },
     { icon: 'ti ti-pencil', label: 'Browse Tasks', route: '/tasks' },
-    { icon: 'ti ti-star', label: 'My Reviews', route: '/profile' },
-    { icon: 'ti ti-eye', label: 'View My Profile', route: '/profile' },
+    { icon: 'ti ti-star', label: 'My Reviews', route: authUser?.username ? `/user/${authUser.username}` : '/profile' },
+    { icon: 'ti ti-eye', label: 'View My Profile', route: authUser?.username ? `/user/${authUser.username}` : '/profile' },
     { icon: 'ti ti-wallet', label: 'Wallet', route: '/wallet' },
   ]
 

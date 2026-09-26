@@ -58,7 +58,7 @@ export function injectHead(html, head) {
 export default async function handler(req, res) {
   const username = String(req.query?.u || '').replace(/[^A-Za-z0-9_.-]/g, '').slice(0, 64)
   const host = req.headers['x-forwarded-host'] || req.headers.host
-  const shellUrl = `https://${host}/index.html`
+  const shellUrl = `https://${host}/` // the app shell (index.html; /index.html itself now redirects)
 
   let shell = ''
   try {

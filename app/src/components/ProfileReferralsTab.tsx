@@ -163,11 +163,11 @@ export default function TabReferralsContent() {
                 background: tc?.bg || "var(--bg2)",
                 display: "grid", placeItems: "center", fontSize: 20, flexShrink: 0,
               }}>
-                {tc?.icon || "ti ti-clipboard-list"}
+                <i className={tc?.icon || "ti ti-clipboard-list"} style={{ color: tc?.color || "var(--text2)" }} />
               </div>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text)" }}>
-                  {tc ? tc.icon + " " + tc.label + " Referrer" : "Referral Tier"}<InfoBtn text="Your referral tier is based on how many of your referred users have completed their first task. Bronze: 5+ paid referrals, Silver: 10+, Gold: 20 (max)." />
+                  {tc ? tc.label + " Referrer" : "Referral Tier"}<InfoBtn text="Your referral tier is based on how many of your referred users have completed their first task. Bronze: 5+ paid referrals, Silver: 10+, Gold: 20 (max)." />
                 </div>
                 <div style={{ fontSize: 12, color: "var(--text2)", marginTop: 2 }}>
                   {nextLabel || "Earn paid referrals to unlock tiers"}

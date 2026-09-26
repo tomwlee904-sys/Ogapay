@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext'
 import { SkeletonPage, injectSkeletonStyles } from '../components/SkeletonLoader'
 import { useToast } from '../components/Toast'
 import { API_BASE, apiRequest, getAccessToken } from '../lib/api'
+import { savedJobIds, setSaved } from '../lib/bookmarks'
 import { jobRequirements, rankName } from '../lib/requirements'
 import ApplyModal from '../components/ApplyModal'
 
@@ -98,6 +99,7 @@ interface JobData {
   usdEquiv: string
   slots: number
   slotsLeft: number
+  currentWorkers?: number
   completions: number
   deadline: number
   posted: string
@@ -135,9 +137,14 @@ export default function JobDetail() {
   const [showApplyWarning, setShowApplyWarning] = useState(false)
   const [showShare, setShowShare] = useState(false)
   const [showInfo, setShowInfo] = useState(false)
-  const [bookmarked, setBookmarked] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('ogapay_bookmarked') || '[]').includes(id) } catch { return false }
-  })
+  const [bookmarked, setBookmarked] = useState(false)
+  useEffect(() => {
+    if (!id) return
+    let live = true
+    savedJobIds().then((ids) => { if (live) setBookmarked(ids.has(id)) })
+    return () => { live = false }
+  }, [id])
+  const [cancelling, setCancelling] = useState(false)
   const [error, setError] = useState('')
   const [showReportModal, setShowReportModal] = useState(false)
   const [reportCategory, setReportCategory] = useState('')
@@ -298,6 +305,7 @@ export default function JobDetail() {
       similarJobs: Array.isArray(t.similarJobs) ? t.similarJobs.slice(0, 4) : [],
       instructions: t.instructions || t.description || '',
       posterId: t.poster?.id || '',
+      currentWorkers: Number(t.currentWorkers ?? 0),
       selectionType: t.selectionType || t.selection || 'Random',
       capacity: `${filled} / ${slots}`,
       potentialWinners: slots,
@@ -308,23 +316,26 @@ export default function JobDetail() {
   }
 
   const handleBookmark = async () => {
+    if (!authUser) { navigate('/login?redirect=' + encodeURIComponent('/tasks/' + id)); return }
     const newState = !bookmarked
     setBookmarked(newState)
+    try { await setSaved(job!.id, newState) } catch { setBookmarked(!newState) }
+  }
+
+  // Poster cancels an open job nobody has joined: the escrow goes back to their wallet
+  const handleCancelJob = async () => {
+    if (!job || cancelling) return
+    if (!window.confirm('Cancel this job? The money held for it goes back to your wallet. This can\'t be undone.')) return
+    setCancelling(true)
     try {
-      if (newState) {
-        await apiRequest(`/users/bookmarks/${job!.id}`, { method: 'POST' })
-      } else {
-        await apiRequest(`/users/bookmarks/${job!.id}`, { method: 'DELETE' })
-      }
-      const stored = JSON.parse(localStorage.getItem('ogapay_bookmarked') || '[]')
-      if (newState) {
-        if (!stored.includes(job!.id)) stored.push(job!.id)
-      } else {
-        const idx = stored.indexOf(job!.id)
-        if (idx >= 0) stored.splice(idx, 1)
-      }
-      localStorage.setItem('ogapay_bookmarked', JSON.stringify(stored))
-    } catch { }
+      await apiRequest(`/escrow/refund/${job.id}`, { method: 'POST' })
+      setJob({ ...job, status: 'cancelled' })
+      refreshUser?.()
+      window.alert('Job cancelled. The money is back in your wallet.')
+    } catch (e: any) {
+      window.alert(e?.message || 'Could not cancel this job.')
+    }
+    setCancelling(false)
   }
 
   const isMyTask = user?.id && job?.posterId === user.id
@@ -369,6 +380,8 @@ export default function JobDetail() {
       canManage={canManage}
       bookmarked={bookmarked}
       handleBookmark={handleBookmark}
+      handleCancelJob={handleCancelJob}
+      cancelling={cancelling}
       showApply={showApply}
       setShowApply={setShowApply}
       showApplyWarning={showApplyWarning}
@@ -423,7 +436,7 @@ function ErrorState({ message, onBack }: { message: string; onBack: () => void }
 function WurkJobDetailView(props: any) {
   const {
     job, fmt, convert, navigate, countdown, showSubs, setShowSubs, isOpen, canManage,
-    bookmarked, handleBookmark, showApply, setShowApply, showApplyWarning, setShowApplyWarning,
+    bookmarked, handleBookmark, handleCancelJob, cancelling, showApply, setShowApply, showApplyWarning, setShowApplyWarning,
     showShare, setShowShare, showInfo, setShowInfo,
     showReportModal, setShowReportModal, reportCategory, setReportCategory,
     reportDesc, setReportDesc, reportMsg, setReportMsg, reportSubmitting, handleSubmitReport,
@@ -947,6 +960,11 @@ function WurkJobDetailView(props: any) {
                   <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
                   {showSubs ? 'Hide Submissions' : 'View Submissions'}
                 </button>
+                {canManage && isOpen && !job.currentWorkers && (
+                  <button className="wjd-secondary" type="button" onClick={handleCancelJob} disabled={cancelling} style={{ color: 'var(--red)' }}>
+                    {cancelling ? 'Cancelling…' : 'Cancel job'}
+                  </button>
+                )}
               </div>
             )}
           </section>

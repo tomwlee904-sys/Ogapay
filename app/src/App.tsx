@@ -113,6 +113,8 @@ export default function App() {
             <Route path="/" element={<HomePage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/pair" element={<LoginPage />} />
+            <Route path="/join" element={<LoginPage />} />
+            <Route path="/ref/:code" element={<LoginPage />} />
             <Route path="/register" element={<Navigate to="/login" replace />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/verify-email" element={<VerifyEmailPage />} />
@@ -176,7 +178,7 @@ export default function App() {
             <Route path="/job-monitor" element={<AuthGuard><JobMonitor /></AuthGuard>} />
             <Route path="/manage-jobs" element={<AuthGuard><ManageJobs /></AuthGuard>} />
             <Route path="/edit-profile" element={<AuthGuard><EditProfile /></AuthGuard>} />
-            <Route path="/task-history" element={<AuthGuard><TaskHistory /></AuthGuard>} />
+            <Route path="/task-history" element={<Navigate to="/my-tasks" replace />} />
             <Route path="/bookmarks" element={<AuthGuard><Bookmarks /></AuthGuard>} />
             <Route path="/communities/mine" element={<AuthGuard><Communities /></AuthGuard>} />
             <Route path="/analytics" element={<AuthGuard><Analytics /></AuthGuard>} />

@@ -831,7 +831,7 @@ export default function Profile() {
                     padding: '4px 10px', borderRadius: 20, marginBottom: 12,
                     background: tc.bg, color: tc.color, border: `1px solid ${tc.border}`,
                   }}>
-                    {tc.icon} {tc.label} Referrer<InfoBtn text="Your referral tier is based on how many of your referred users have completed their first task. Bronze: 5+ paid referrals, Silver: 10+, Gold: 20 (max)." />
+                    <i className={tc.icon} /> {tc.label} Referrer<InfoBtn text="Your referral tier is based on how many of your referred users have completed their first task. Bronze: 5+ paid referrals, Silver: 10+, Gold: 20 (max)." />
                   </div>
                 );
               })()}

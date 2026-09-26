@@ -1,73 +1,67 @@
-import { useState } from "react"
-import { useNavigate } from "react-router-dom"
-import { useAuth } from "../context/AuthContext"
-import { useTheme } from "../context/ThemeContext"
-import Footer from "../components/Footer"
-import Drawer from "../components/Drawer"
+import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
+import Layout from '../components/Layout'
+import { listSavedJobs, setSaved, type SavedJob } from '../lib/bookmarks'
+import '../styles/profile-public.css'
 
+const money = (n: number | string, cur = 'NGN') =>
+  cur === 'NGN' ? '₦' + Number(n).toLocaleString('en-US', { maximumFractionDigits: 2 }) : `${Number(n).toLocaleString('en-US', { maximumFractionDigits: 6 })} ${cur}`
+
+// Saved jobs (server-side, the same list the bookmark icons use)
 export default function Bookmarks() {
-  const navigate = useNavigate()
-  const { isAuthed } = useAuth()
-  const { theme, toggle } = useTheme()
-  const [drawerOpen, setDrawerOpen] = useState(false)
-  const [bookmarks, setBookmarks] = useState<any[]>(() => {
-    try {
-      return JSON.parse(localStorage.getItem("ogapay_bookmarks") || "[]")
-    } catch { return [] }
-  })
+  const [list, setList] = useState<SavedJob[] | null>(null)
+  const [error, setError] = useState(false)
 
-  const removeBookmark = (id: string) => {
-    const updated = bookmarks.filter((b: any) => b.id !== id)
-    setBookmarks(updated)
-    localStorage.setItem("ogapay_bookmarks", JSON.stringify(updated))
+  useEffect(() => {
+    listSavedJobs().then(setList).catch(() => { setError(true); setList([]) })
+  }, [])
+
+  const remove = async (taskId: string) => {
+    const before = list
+    setList((l) => l?.filter((b) => b.taskId !== taskId) || l)
+    try { await setSaved(taskId, false) } catch { setList(before) }
   }
 
   return (
-    <div data-theme={theme} style={{ minHeight: "100vh", background: "var(--bg)", color: "var(--text)" }}>
-      <style>{`
-        .page-container { max-width: 1100px; margin: 0 auto; padding: 28px 24px 60px; }
-        @media (max-width: 768px) { .page-container { padding: 20px 16px 40px; } }
-      `}</style>
-
-      <header className="nav">
-        <div className="nav-inner">
-          <a className="brand" href="/" style={{ color: "var(--text)" }}>OgaPay</a>
-          <div className="nav-actions" style={{ marginLeft: "auto", display: "flex", gap: 10 }}>
-            <button className="icon-btn" onClick={toggle}><i className={`ti ${theme === "dark" ? "ti-sun" : "ti-moon"}`} /></button>
-            <button className="icon-btn" onClick={() => setDrawerOpen(true)}><i className="ti ti-menu-2" /></button>
-          </div>
+    <Layout>
+      <div className="up-wrap" style={{ maxWidth: 860 }}>
+        <div className="up-sec-h" style={{ marginBottom: 18 }}>
+          <h2 style={{ fontSize: 24 }}>Saved jobs</h2>
+          <p>Jobs you bookmarked. Tap the bookmark on any job to add it here.</p>
         </div>
-      </header>
 
-      <div className="page-container">
-        <h1 style={{ fontSize: 22, fontWeight: 800, marginBottom: 4 }}>Bookmarks</h1>
-        <p style={{ fontSize: 13, color: "var(--text2)", marginBottom: 24 }}>Your saved tasks and jobs.</p>
-
-        {bookmarks.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "60px 20px", color: "var(--text3)" }}>
-            <i className="ti ti-bookmark-off" style={{ fontSize: 40, marginBottom: 12, display: "block", opacity: 0.4 }} />
-            <p style={{ fontSize: 14, fontWeight: 600 }}>No bookmarks yet</p>
-            <p style={{ fontSize: 12, marginTop: 4 }}>Save tasks you're interested in and they'll appear here.</p>
+        {list === null ? (
+          <div className="up-skel" style={{ height: 120 }} />
+        ) : error ? (
+          <div className="up-empty"><i className="ti ti-cloud-off" />Couldn't load your saved jobs. Refresh to try again.</div>
+        ) : list.length === 0 ? (
+          <div className="up-empty">
+            <i className="ti ti-bookmark" />
+            No saved jobs yet.
+            <div style={{ marginTop: 14 }}><Link className="up-btn" to="/tasks">Browse jobs</Link></div>
           </div>
         ) : (
-          <div style={{ display: "grid", gap: 10 }}>
-            {bookmarks.map((b: any) => (
-              <div key={b.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", background: "var(--card)", border: "1px solid var(--border)", borderRadius: 12 }}>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text)", cursor: "pointer" }} onClick={() => navigate(b.url || `/tasks/${b.id}`)}>{b.title}</div>
-                  <div style={{ fontSize: 12, color: "var(--text2)", marginTop: 4 }}>{b.description || ""}</div>
+          <div className="up-list">
+            {list.map((b) => {
+              const t = b.task
+              const open = ['OPEN', 'COOLING_DOWN'].includes(String(t?.status || ''))
+              return (
+                <div className="up-card up-row" key={b.id}>
+                  <Link to={`/tasks/${b.taskId}`} style={{ flex: 1, minWidth: 0, textDecoration: 'none', color: 'inherit' }}>
+                    <b style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t?.title || 'Job no longer available'}</b>
+                    <small>
+                      {t ? <>{money(t.reward, t.currency)} · {String(t.category).replace(/_/g, ' ').toLowerCase()} · {open ? 'Open' : String(t.status).replace(/_/g, ' ').toLowerCase()}</> : 'Removed by the creator'}
+                    </small>
+                  </Link>
+                  <button className="up-btn" style={{ height: 34, padding: '0 12px' }} onClick={() => remove(b.taskId)} aria-label={`Remove ${t?.title || 'job'} from saved`}>
+                    <i className="ti ti-bookmark-off" /> Remove
+                  </button>
                 </div>
-                <button onClick={() => removeBookmark(b.id)} style={{ background: "none", border: "1px solid var(--border)", borderRadius: 8, padding: "6px 10px", fontSize: 12, color: "var(--text3)", cursor: "pointer" }}>
-                  <i className="ti ti-trash" />
-                </button>
-              </div>
-            ))}
+              )
+            })}
           </div>
         )}
       </div>
-
-      <Drawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
-      <Footer />
-    </div>
+    </Layout>
   )
 }
