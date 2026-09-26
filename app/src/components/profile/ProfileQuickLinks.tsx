@@ -4,7 +4,7 @@ import '../../styles/profile-own.css'
 type QL = { icon: string; label: string; desc: string; to: string }
 
 // Grouped like wurk.fun's profile: what you do to earn, to hire, and about you
-// (Only pages backed by real data. My Store, Find Workers and Write a Blog come back when those pages are rebuilt.)
+// (Only pages backed by real data. Find Workers and Write a Blog come back when those pages are rebuilt.)
 export default function ProfileQuickLinks({ username }: { username?: string }) {
   const groups: { title: string; links: QL[] }[] = [
     {
@@ -13,6 +13,7 @@ export default function ProfileQuickLinks({ username }: { username?: string }) {
         { icon: 'briefcase', label: 'Available Jobs', desc: 'Browse jobs you can do', to: '/jobs' },
         { icon: 'clipboard-list', label: 'My Work', desc: 'Jobs you applied to and submitted', to: '/my-tasks' },
         { icon: 'activity', label: 'Job Monitor', desc: 'Follow new and eligible jobs', to: '/job-monitor' },
+        { icon: 'building-store', label: 'My Store', desc: 'Your products and orders', to: '/my-store' },
         { icon: 'coin', label: 'Earnings', desc: 'What you have earned', to: '/earnings' },
         { icon: 'lock', label: 'Vault', desc: 'Rewards and payout history', to: '/vault/history' },
       ],

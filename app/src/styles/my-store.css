@@ -1,0 +1,46 @@
+/* My Store (/my-store) */
+.ms2-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
+.ms2-head h1 { font: 800 28px/1.15 Geist, sans-serif; letter-spacing: -.02em; margin: 0 0 4px; color: var(--text); }
+.ms2-head p { margin: 0; font-size: 14px; color: var(--text2); }
+.ms2-head .acts { display: flex; gap: 8px; flex-wrap: wrap; }
+.ms2-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 18px; }
+.ms2-stat { padding: 14px 16px; }
+.ms2-stat span { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text2); }
+.ms2-stat b { display: block; font: 700 22px/1.2 Geist, sans-serif; color: var(--text); margin-top: 6px; letter-spacing: -.02em; overflow-wrap: anywhere; }
+.ms2-stat small { font-size: 11px; color: var(--text3); }
+.ms2-prod { display: grid; grid-template-columns: 72px 1fr auto; gap: 14px; align-items: center; padding: 12px 14px; }
+.ms2-prod + .ms2-prod { margin-top: 8px; }
+.ms2-thumb { width: 72px; height: 54px; border-radius: 10px; background: var(--bg2); border: 1px solid var(--border); display: grid; place-items: center; color: var(--text3); overflow: hidden; font-size: 20px; }
+.ms2-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.ms2-prod h3 { font: 700 15px/1.3 Geist, sans-serif; margin: 0; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ms2-prod .meta { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 4px; font-size: 12px; color: var(--text3); }
+.ms2-prod .meta b { color: var(--text); font-weight: 700; }
+.ms2-badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 99px; font-size: 11px; font-weight: 700; border: 1px solid var(--border); color: var(--text2); }
+.ms2-badge.live { color: var(--green); border-color: color-mix(in srgb, var(--green) 35%, transparent); background: color-mix(in srgb, var(--green) 8%, transparent); }
+.ms2-badge.done { color: var(--green); }
+.ms2-badge.work { color: #b7791f; border-color: color-mix(in srgb, #d69e2e 40%, transparent); }
+.ms2-row-acts { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.ms2-row-acts .up-btn { height: 34px; padding: 0 12px; font-size: 12px; }
+.ms2-order { display: grid; grid-template-columns: 1fr auto; gap: 10px 16px; padding: 14px 16px; }
+.ms2-order + .ms2-order { margin-top: 8px; }
+.ms2-order .who { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.ms2-order .who .av { width: 34px; height: 34px; border-radius: 50%; background: var(--bg2); border: 1px solid var(--border); display: grid; place-items: center; font-weight: 800; font-size: 12px; color: var(--text2); overflow: hidden; flex-shrink: 0; }
+.ms2-order .who .av img { width: 100%; height: 100%; object-fit: cover; }
+.ms2-order .who b { display: block; font-size: 14px; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ms2-order .who small { font-size: 12px; color: var(--text3); }
+.ms2-order .amt { text-align: right; font-weight: 800; color: var(--text); }
+.ms2-order .amt small { display: block; font-weight: 500; font-size: 11px; color: var(--text3); }
+.ms2-order .row-acts { grid-column: 1 / -1; display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.ms2-order .row-acts .up-btn { height: 32px; padding: 0 12px; font-size: 12px; }
+.ms2-form .hr-row { gap: 12px; }
+.ms2-form .ep-field select { width: 100%; height: 44px; padding: 0 10px; border: 1.5px solid var(--border); border-radius: 10px; background: var(--bg); color: var(--text); font: 14px inherit; font-family: inherit; }
+.ms2-img { display: flex; align-items: center; gap: 12px; }
+.ms2-img .ms2-thumb { width: 96px; height: 72px; }
+.ms2-modal > div { max-width: 620px; }
+@media (max-width: 760px) {
+  .ms2-stats { grid-template-columns: 1fr 1fr; }
+  .ms2-prod { grid-template-columns: 56px 1fr; }
+  .ms2-thumb { width: 56px; height: 44px; }
+  .ms2-row-acts { grid-column: 1 / -1; justify-content: flex-start; }
+  .ms2-head h1 { font-size: 24px; }
+}

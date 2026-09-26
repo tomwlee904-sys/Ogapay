@@ -19,6 +19,7 @@ export default function TabWorkerPortalContent() {
   ]
 
   const navItems = [
+    { icon: 'ti ti-building-store', label: 'My Store', route: '/my-store' },
     { icon: 'ti ti-briefcase', label: 'My Work', route: '/my-tasks' },
     { icon: 'ti ti-message', label: 'Messages', route: '/messages' },
     { icon: 'ti ti-users', label: 'Communities', route: '/communities' },

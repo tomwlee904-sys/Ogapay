@@ -282,6 +282,11 @@ export default function UserProfile() {
                       <div className="meta">{String(p.category || "").replace(/_/g, " ")} · {fmtDate(p.createdAt)}</div>
                       <h3>{p.title}</h3>
                       {p.description && <p>{p.description}</p>}
+                      {(p.delivery || p.revisions != null) && (
+                        <div className="meta" style={{ textTransform: 'none', letterSpacing: 0, fontSize: 11 }}>
+                          {[p.delivery, p.revisions != null ? `${p.revisions} ${p.revisions === 1 ? 'revision' : 'revisions'}` : null].filter(Boolean).join(' · ')}
+                        </div>
+                      )}
                       <div className="foot">
                         <b>{money(p.price, p.currency)}</b>
                         {p.reviewsCount > 0 ? <span><Stars value={p.rating} /> <small style={{ color: "var(--text3)" }}>({p.reviewsCount})</small></span> : <span className="link">View details <i className="ti ti-arrow-right" /></span>}
