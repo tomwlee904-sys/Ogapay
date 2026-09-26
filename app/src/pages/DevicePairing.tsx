@@ -106,7 +106,7 @@ export default function DevicePairing() {
         if (devices.length > 0) {
           setPaired(true)
           if (pairCheckRef.current) clearInterval(pairCheckRef.current)
-          setTimeout(() => navigate('/settings'), 2000)
+          setTimeout(() => navigate('/settings/devices'), 2000)
         }
       } catch {}
     }, 10000)

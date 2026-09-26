@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { apiRequest } from '../lib/api'
 import { useAuth } from '../context/AuthContext'
+import TwoFactorField, { is2FAError } from './TwoFactorField'
 
 // Send NGN to another OgaPay user (POST /wallet/send — internal ledger, instant).
 interface Recipient {
@@ -79,6 +80,9 @@ export default function TransferModal({ onClose, onSuccess }: Props) {
   const [available, setAvailable] = useState<number | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
+  // With 2FA on, sending money needs a code from the authenticator app
+  const [otp, setOtp] = useState('')
+  const [otpAsked, setOtpAsked] = useState(false)
   const [reference, setReference] = useState('')
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -121,8 +125,10 @@ export default function TransferModal({ onClose, onSuccess }: Props) {
     setStep('confirm')
   }
 
+  const needOtp = !!(user as any)?.isTwoFactorEnabled || otpAsked
   const send = async () => {
     if (!recipient || submitting) return
+    if (needOtp && otp.length !== 6) { setError('Enter the 6-digit code from your authenticator app'); return }
     setSubmitting(true); setError('')
     try {
       const res = await apiRequest<any>('/wallet/send', {
@@ -132,6 +138,7 @@ export default function TransferModal({ onClose, onSuccess }: Props) {
           amount: amt,
           currency: 'NGN',
           note: note.trim() || undefined,
+          ...(otp && { otp }),
         }),
       })
       setReference(res?.reference || '')
@@ -139,7 +146,9 @@ export default function TransferModal({ onClose, onSuccess }: Props) {
       onSuccess?.()
     } catch (e: any) {
       setError(e?.message || 'Transfer failed. Please try again.')
-      setStep('form')
+      // A missing or wrong 2FA code: stay here so the code can be entered
+      if (is2FAError(e?.message)) { setOtpAsked(true); setOtp('') }
+      else setStep('form')
     }
     setSubmitting(false)
   }
@@ -243,6 +252,7 @@ export default function TransferModal({ onClose, onSuccess }: Props) {
             <div style={{ fontSize: 12, color: 'var(--text3)', lineHeight: 1.5, marginBottom: 18 }}>
               Arrives instantly and can't be reversed. Check the recipient before you send.
             </div>
+            {needOtp && <TwoFactorField value={otp} onChange={setOtp} />}
             {errorBox}
             <button style={{ ...BTN, opacity: submitting ? 0.6 : 1 }} disabled={submitting} onClick={send}>
               {submitting ? <><span className="spinner" style={{ width: 16, height: 16, borderWidth: 2 }} /> Sending…</> : <><i className="ti ti-send" /> Send {naira(amt)}</>}

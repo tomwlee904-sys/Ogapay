@@ -89,7 +89,7 @@ export default function Privacy() {
             <section id="public">
               <h2><span>03</span>What other people can see</h2>
               <p>Your public profile shows your name, username, photo, bio, skills, portfolio, reviews, job and store history, and your place on the leaderboard. Your earnings are shown only if you turn on "Show earnings" in Settings. Your email, phone number, bank details and KYC documents are never shown.</p>
-              <p>You can make your profile private in <Link to="/settings">Settings</Link>. A private profile is hidden from search, the worker directory and the public leaderboard. People you work with can still see your username on the jobs you share, and anyone who knows your exact username can still send you money.</p>
+              <p>You can make your profile private in <Link to="/settings/privacy">Settings → Privacy</Link>. A private profile is hidden from search, the worker directory and the public leaderboard. People you work with can still see your username on the jobs you share, and anyone who knows your exact username can still send you money.</p>
               <p>Community chat messages can be read by every member of that community. Direct messages can be read by you and the other person, and by our team when we investigate a report or dispute.</p>
             </section>
 
@@ -128,7 +128,7 @@ export default function Privacy() {
               <p>Under the Nigeria Data Protection Act 2023 you can ask us to:</p>
               <ul>
                 <li>give you a copy of the personal data we hold about you;</li>
-                <li>correct data that is wrong or incomplete (most of it you can edit yourself in <Link to="/settings">Settings</Link>);</li>
+                <li>correct data that is wrong or incomplete (most of it you can edit yourself in <Link to="/edit-profile">Edit profile</Link> and <Link to="/settings">Settings</Link>);</li>
                 <li>delete your account and data, apart from records we must keep by law;</li>
                 <li>send your data to you in a machine-readable format;</li>
                 <li>stop or restrict some processing, or withdraw consent you gave.</li>

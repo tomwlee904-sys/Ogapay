@@ -166,6 +166,7 @@ export default function App() {
             <Route path="/worker-portal" element={<AuthGuard><WorkerPortal /></AuthGuard>} />
             <Route path="/worker-portal/:category" element={<AuthGuard><WorkspacePortal /></AuthGuard>} />
             <Route path="/settings" element={<AuthGuard><Settings /></AuthGuard>} />
+            <Route path="/settings/:section" element={<AuthGuard><Settings /></AuthGuard>} />
             <Route path="/notifications" element={<AuthGuard><Notifications /></AuthGuard>} />
             <Route path="/messages" element={<AuthGuard><Messages /></AuthGuard>} />
             <Route path="/my-tasks" element={<AuthGuard><MyTasks /></AuthGuard>} />

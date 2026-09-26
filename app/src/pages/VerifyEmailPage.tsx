@@ -159,7 +159,7 @@ export default function VerifyEmailPage() {
 
         {(step === "form" || step === "expired" || step === "error") && (
           <div style={{ textAlign: "center", fontSize: 12, color: "var(--text3)" }}>
-            <a href="/settings" style={{ color: "var(--text)", fontWeight: 700 }}>Settings</a>
+            <a href="/settings/account" style={{ color: "var(--text)", fontWeight: 700 }}>Settings</a>
             <span style={{ margin: "0 8px", opacity: 0.3 }}>|</span>
             <a href="/login" style={{ color: "var(--text)", fontWeight: 700 }}>Sign In</a>
           </div>

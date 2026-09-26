@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { openSignIn } from '../lib/signin'
@@ -20,7 +20,17 @@ function SidebarGroup({ label, icon, subtitle, defaultOpen = false, children }: 
   )
 }
 
+const devModeOn = () => { try { return localStorage.getItem('ogapay_developer_mode') === 'true' } catch { return false } }
+
 export default function Sidebar() {
+  // Settings → Developer flips this; follow it without a reload
+  const [devMode, setDevMode] = useState(devModeOn)
+  useEffect(() => {
+    const sync = () => setDevMode(devModeOn())
+    window.addEventListener('ogapay:devmode', sync)
+    window.addEventListener('storage', sync)
+    return () => { window.removeEventListener('ogapay:devmode', sync); window.removeEventListener('storage', sync) }
+  }, [])
   const { isAuthed, user, logout } = useAuth()
   const navigate = useNavigate()
 
@@ -96,7 +106,7 @@ export default function Sidebar() {
           <Link className="sidebar-link" to="/wallet"><i className="ti ti-wallet" /> <span><strong>Wallet</strong><small>Balance &amp; transactions</small></span></Link>
           <Link className="sidebar-link" to="/profile"><i className="ti ti-user" /> <span><strong>My Profile</strong><small>View your profile</small></span></Link>
           <Link className="sidebar-link" to="/settings"><i className="ti ti-settings" /> <span><strong>Settings</strong><small>KYC, security, preferences</small></span></Link>
-          {(localStorage.getItem('ogapay_developer_mode') === 'true') && (
+          {devMode && (
             <Link className="sidebar-link" to="/developer">
               <i className="ti ti-code" /> <span><strong>Developer API</strong><small>API keys &amp; docs</small></span>
             </Link>

@@ -3,6 +3,8 @@ import { apiRequest } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 import { MIN_NGN_WITHDRAWAL, NGN_WITHDRAW_LIMITS } from '../lib/currency';
 import VirtualAccountCard from './VirtualAccountCard';
+import TwoFactorField, { is2FAError } from './TwoFactorField';
+import { Link } from 'react-router-dom';
 import { useFlutterwave, closePaymentModal } from 'flutterwave-react-v3';
 import {
   PublicKey,
@@ -70,6 +72,10 @@ export default function FundWalletModal({ onClose, onDone, initialStep }: Props)
   const [wdAmount, setWdAmount] = useState('');
   const [wdCurrency, setWdCurrency] = useState<'USDC' | 'SOL'>('USDC');
   const [wdAddress, setWdAddress] = useState('');
+  // With 2FA on, withdrawals need a code from the authenticator app
+  const [otp, setOtp] = useState('');
+  const [otpAsked, setOtpAsked] = useState(false);
+  const needOtp = !!(user as any)?.isTwoFactorEnabled || otpAsked;
   const [wdSubmitting, setWdSubmitting] = useState(false);
   const [wdTab, setWdTab] = useState<'crypto' | 'bank'>('crypto');
   const [wdBankAccount, setWdBankAccount] = useState('');
@@ -326,6 +332,7 @@ export default function FundWalletModal({ onClose, onDone, initialStep }: Props)
     const amt = parseFloat(wdAmount);
     if (!amt || amt <= 0) { setError('Enter a valid amount'); return; }
     if (!wdAddress) { setError('Enter a destination wallet address'); return; }
+    if (needOtp && otp.length !== 6) { setError('Enter the 6-digit code from your authenticator app'); return; }
     setError('');
     setWdSubmitting(true);
     try {
@@ -333,13 +340,14 @@ export default function FundWalletModal({ onClose, onDone, initialStep }: Props)
       const res = await apiRequest('/wallet/withdraw/crypto', {
         method: 'POST',
         headers: { 'Idempotency-Key': withdrawKey },
-        body: JSON.stringify({ amount: amt, currency: wdCurrency, toAddress: wdAddress }),
+        body: JSON.stringify({ amount: amt, currency: wdCurrency, toAddress: wdAddress, ...(otp && { otp }) }),
       });
       setResult(res);
       setStep('done');
       refreshUser();
       onDone?.();
     } catch (e: any) {
+      if (is2FAError(e?.message)) { setOtpAsked(true); setOtp(''); }
       setError(e.message || 'Withdrawal failed');
     }
     setWdSubmitting(false);
@@ -353,6 +361,7 @@ export default function FundWalletModal({ onClose, onDone, initialStep }: Props)
     if (!wdBankAccount || wdBankAccount.length < 10) { setError('Enter a valid 10-digit account number'); return; }
     if (!wdBankName.trim()) { setError('Enter your bank name'); return; }
     if (!wdAccountName.trim()) { setError('Enter the account name'); return; }
+    if (needOtp && otp.length !== 6) { setError('Enter the 6-digit code from your authenticator app'); return; }
     const kycTier = (user as any)?.kyc?.kycTier ?? 0
     const maxLimit = kycTier >= 3 ? NGN_WITHDRAW_LIMITS.TIER_3 : kycTier >= 2 ? NGN_WITHDRAW_LIMITS.TIER_2 : kycTier >= 1 ? NGN_WITHDRAW_LIMITS.TIER_1 : NGN_WITHDRAW_LIMITS.TIER_0
     if (amt > maxLimit) {
@@ -367,7 +376,7 @@ export default function FundWalletModal({ onClose, onDone, initialStep }: Props)
       const res = await apiRequest('/wallet/withdraw', {
         method: 'POST',
         headers: { 'Idempotency-Key': withdrawKey },
-        body: JSON.stringify({ amount: amt, currency: 'NGN', accountNumber: wdBankAccount, bankName: wdBankName, accountName: wdAccountName }),
+        body: JSON.stringify({ amount: amt, currency: 'NGN', accountNumber: wdBankAccount, bankName: wdBankName, accountName: wdAccountName, ...(otp && { otp }) }),
       });
       setResult(res);
       setStep('done');
@@ -375,7 +384,8 @@ export default function FundWalletModal({ onClose, onDone, initialStep }: Props)
       onDone?.();
     } catch (e: any) {
       const msg = e?.message || ''
-      if (msg.includes('insufficient')) setError('Insufficient NGN balance. Deposit more funds and try again.')
+      if (is2FAError(msg)) { setOtpAsked(true); setOtp(''); setError(msg) }
+      else if (msg.includes('insufficient')) setError('Insufficient NGN balance. Deposit more funds and try again.')
       else if (msg.includes('limit') || msg.includes('tier')) setError('Withdrawal exceeds your KYC limit. Complete higher KYC tier to increase your limit.')
       else if (msg.includes('bank') || msg.includes('account')) setError('Bank details rejected. Verify your account number, bank name, and account name.')
       else setError(msg || 'Withdrawal failed. Please try again or contact support.')
@@ -702,6 +712,7 @@ export default function FundWalletModal({ onClose, onDone, initialStep }: Props)
               <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--text3)', marginBottom: 4 }}>Destination Wallet Address</label>
               <input style={INPUT} placeholder="Enter Solana wallet address" value={wdAddress} onChange={e => setWdAddress(e.target.value)} />
             </div>
+            {needOtp && <TwoFactorField value={otp} onChange={setOtp} />}
             <div style={{ display: 'flex', gap: 8 }}>
               <button style={{ ...BTN, background: 'transparent', border: '1.5px solid var(--border)', color: 'var(--text2)', flex: 1 }} onClick={() => setStep('select')}>Back</button>
               <button style={{ ...BTN, background: '#DC2626', color: '#fff', flex: 1, opacity: wdSubmitting ? 0.6 : 1 }} disabled={wdSubmitting} onClick={handleWithdraw}>
@@ -729,6 +740,7 @@ export default function FundWalletModal({ onClose, onDone, initialStep }: Props)
               <input style={INPUT} type="number" step="100" min={MIN_NGN_WITHDRAWAL} placeholder={String(MIN_NGN_WITHDRAWAL)} value={wdAmount} onChange={e => { setWdAmount(e.target.value); setError(''); }} />
             </div>
             <KycLimitNotice user={user} />
+            {needOtp && <TwoFactorField value={otp} onChange={setOtp} />}
             <div style={{ display: 'flex', gap: 8 }}>
               <button style={{ ...BTN, background: 'transparent', border: '1.5px solid var(--border)', color: 'var(--text2)', flex: 1 }} onClick={() => setStep('select')}>Back</button>
               <button style={{ ...BTN, background: '#DC2626', color: '#fff', flex: 1, opacity: wdSubmitting ? 0.6 : 1 }} disabled={wdSubmitting} onClick={handleNgnWithdraw}>
@@ -759,7 +771,7 @@ function KycLimitNotice({ user }: { user: any }) {
       <span style={{ fontWeight: 700 }}>{tierLabel}</span> &mdash; {desc}
       {kycTier < 3 && (
         <span style={{ display: 'block', marginTop: 6 }}>
-          <a href="/settings" style={{ color: 'var(--accent)', fontWeight: 700, textDecoration: 'none' }}>Increase limit → complete KYC</a>
+          <Link to="/settings/verification" style={{ color: 'var(--accent)', fontWeight: 700, textDecoration: 'none' }}>Increase limit → complete KYC</Link>
         </span>
       )}
     </div>

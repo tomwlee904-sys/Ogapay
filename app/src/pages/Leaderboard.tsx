@@ -114,9 +114,9 @@ export default function Leaderboard() {
             </div>
             <div className="lb2-me-note">
               {!me.isPublic
-                ? <><i className="ti ti-eye-off" /> Your profile is private, so you don't appear on the public board. <Link to="/settings">Settings</Link></>
+                ? <><i className="ti ti-eye-off" /> Your profile is private, so you don't appear on the public board. <Link to="/settings/privacy">Privacy settings</Link></>
                 : !me.showEarnings && board !== 'referrers'
-                  ? <><i className="ti ti-lock" /> Others see your rank but not your amount. <Link to="/settings">Show earnings</Link></>
+                  ? <><i className="ti ti-lock" /> Others see your rank but not your amount. <Link to="/settings/privacy">Show earnings</Link></>
                   : <><i className="ti ti-users" /> {me.ranked.toLocaleString()} on this board</>}
             </div>
           </section>

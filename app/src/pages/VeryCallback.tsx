@@ -12,7 +12,7 @@ const VeryCallback = () => {
   useEffect(() => {
     if (done.current) return
     done.current = true
-    const fail = (message: string) => navigate('/settings?human=error&message=' + encodeURIComponent(message), { replace: true })
+    const fail = (message: string) => navigate('/settings/verification?human=error&message=' + encodeURIComponent(message), { replace: true })
 
     const code = searchParams.get('code')
     const state = searchParams.get('state')
@@ -24,7 +24,7 @@ const VeryCallback = () => {
       body: JSON.stringify({ code, state }),
     }).then(async () => {
       await refreshUser()
-      navigate('/settings?human=verified', { replace: true })
+      navigate('/settings/verification?human=verified', { replace: true })
     }).catch((err: any) => fail(err?.message || 'Verification failed'))
   }, [])
 

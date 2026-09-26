@@ -506,7 +506,7 @@ export default function OgaPayDashboard() {
 
         {/* ── KYC NUDGE ── */}
         {user && !['APPROVED', 'VERIFIED'].includes(user?.kycStatus || '') && (
-          <div onClick={() => navigate('/settings#kyc')} style={{ padding: '12px 16px', background: 'rgba(245,158,11,0.10)', border: '1px solid rgba(245,158,11,0.35)', borderRadius: 10, marginBottom: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div onClick={() => navigate('/settings/verification')} style={{ padding: '12px 16px', background: 'rgba(245,158,11,0.10)', border: '1px solid rgba(245,158,11,0.35)', borderRadius: 10, marginBottom: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10 }}>
             <i className="ti ti-shield-off" style={{ fontSize: 18, color: '#b45309' }} />
             <span style={{ fontSize: 13, fontWeight: 700, color: '#b45309', flex: 1 }}>Complete your KYC verification to unlock withdrawals</span>
             <i className="ti ti-arrow-right" style={{ fontSize: 16, color: '#b45309' }} />
@@ -559,7 +559,7 @@ export default function OgaPayDashboard() {
             return ngnWallet?.balance ?? ngnWallet?.available ?? 0;
           })();
           const nudge = !['APPROVED', 'VERIFIED'].includes(user?.kycStatus || '') && tasksCompleted >= 3
-            ? { icon: 'ti-shield', color: '#f59e0b', msg: 'Verify your identity to unlock tasks worth ₦500+', cta: 'Verify Now', action: '/settings#kyc' }
+            ? { icon: 'ti-shield', color: '#f59e0b', msg: 'Verify your identity to unlock tasks worth ₦500+', cta: 'Verify Now', action: '/settings/verification' }
             : daysSinceTask > 3 && lastTaskAt
             ? { icon: 'ti-bolt', color: 'var(--accent)', msg: `You haven't earned in ${daysSinceTask} days — new tasks are waiting`, cta: 'Browse Tasks', action: '/tasks' }
             : balanceVal >= 1000
