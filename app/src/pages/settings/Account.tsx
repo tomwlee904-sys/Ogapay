@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { apiRequest } from '../../lib/api'
 import { useAuth } from '../../context/AuthContext'
@@ -66,44 +66,121 @@ export default function Account({ me }: SectionProps) {
   )
 }
 
-// Delete account (the flow is being reworked separately to check for money
-// still held on the account first)
+// GET /users/me/delete-check
+type DeleteCheck = {
+  canDelete: boolean
+  blockers: { code: string; message: string }[]
+  confirmWith: 'password' | 'text'
+}
+
+// Delete account. The server refuses while the account still holds money or has
+// open jobs, orders, disputes, etc., so ask it first and show what has to happen.
 function DangerZone() {
   const { logout } = useAuth()
   const navigate = useNavigate()
-  const { toast } = useToast()
   const [open, setOpen] = useState(false)
+  const [check, setCheck] = useState<DeleteCheck | null>(null)
+  const [checking, setChecking] = useState(false)
+  const [secret, setSecret] = useState('') // the password, or the typed DELETE
+  const [err, setErr] = useState('')
   const [deleting, setDeleting] = useState(false)
 
-  const handleDeleteAccount = async () => {
-    setDeleting(true)
+  const load = async (): Promise<DeleteCheck | null> => {
+    setChecking(true)
     try {
-      await apiRequest('/users/me', { method: 'DELETE' })
+      const c = await apiRequest<DeleteCheck>('/users/me/delete-check')
+      setCheck(c)
+      return c
+    } catch (e: any) {
+      setCheck(null)
+      setErr(e?.message || "Couldn't check your account. Try again.")
+      return null
+    } finally {
+      setChecking(false)
+    }
+  }
+
+  const start = () => {
+    setCheck(null)
+    setSecret('')
+    setErr('')
+    setOpen(true)
+    load()
+  }
+  const close = () => { if (!deleting) setOpen(false) }
+
+  const byPassword = check?.confirmWith === 'password'
+  const confirmed = byPassword ? secret.length > 0 : secret.trim() === 'DELETE'
+
+  const submit = async (e: FormEvent) => {
+    e.preventDefault()
+    if (!check?.canDelete || !confirmed || deleting) return
+    setDeleting(true)
+    setErr('')
+    try {
+      await apiRequest('/users/me', {
+        method: 'DELETE',
+        body: JSON.stringify(byPassword ? { password: secret } : { confirm: secret.trim() }),
+      })
+      setOpen(false)
       await logout()
       navigate('/')
-    } catch (err: any) {
-      toast(err.message || 'Failed to delete account', 'error')
+    } catch (e: any) {
+      // If something changed since the check (money arrived, a new order), the
+      // refreshed list says what to do; otherwise show the error (e.g. wrong password)
+      const fresh = await load()
+      setErr(fresh && !fresh.canDelete ? '' : (e?.message || 'Failed to delete account'))
     } finally {
       setDeleting(false)
-      setOpen(false)
     }
   }
 
   return (
     <>
-      <Card title="Delete account" danger sub="Closes your account and signs you out everywhere. Withdraw your balance first.">
-        <button className="up-btn st2-danger-btn" onClick={() => setOpen(true)}><i className="ti ti-trash" /> Delete account</button>
+      <Card title="Delete account" danger sub="Closes your account and signs you out everywhere. Withdraw your balance and finish your open jobs, orders and disputes first.">
+        <button className="up-btn st2-danger-btn" onClick={start}><i className="ti ti-trash" /> Delete account</button>
       </Card>
       {open && (
-        <div className="st2-overlay" onClick={() => setOpen(false)}>
-          <div className="up-card st2-modal" role="dialog" aria-modal="true" aria-labelledby="st2-del" onClick={(e) => e.stopPropagation()}>
+        <div className="st2-overlay" onClick={close}>
+          <form className="up-card st2-modal" role="dialog" aria-modal="true" aria-labelledby="st2-del" onClick={(e) => e.stopPropagation()} onSubmit={submit}>
             <h3 id="st2-del">Delete your account?</h3>
             <p>Your profile is taken down and you can't sign in again. Payment and KYC records are kept for as long as the law requires.</p>
+            <p>To protect your money, an account can only be deleted when nothing is left on it: no wallet balance or funds on hold, no open jobs you posted, no withdrawals still processing, no unclaimed vault payouts, no undelivered store orders, no open disputes and no submitted work waiting for review.</p>
+
+            {checking && !check && <p><i className="ti ti-loader-2" /> Checking your account…</p>}
+
+            {check && !check.canDelete && (
+              <div className="st2-blockers" role="alert">
+                <strong>You can't delete your account yet</strong>
+                <ul>{check.blockers.map((b, i) => <li key={`${b.code}-${i}`}>{b.message}</li>)}</ul>
+              </div>
+            )}
+
+            {check?.canDelete && (
+              <div className="st2-form st2-del-confirm">
+                <span className="st2-ok"><i className="ti ti-circle-check" /> Nothing is left on your account.</span>
+                <label className="st2-f">
+                  <span>{byPassword ? 'Enter your password to confirm' : 'Type DELETE to confirm'}</span>
+                  <input
+                    type={byPassword ? 'password' : 'text'}
+                    autoComplete={byPassword ? 'current-password' : 'off'}
+                    placeholder={byPassword ? undefined : 'DELETE'}
+                    value={secret}
+                    onChange={(e) => setSecret(e.target.value)}
+                    autoFocus
+                  />
+                </label>
+              </div>
+            )}
+
+            {err && <div className="st2-err st2-del-err" role="alert">{err}</div>}
+
             <div className="st2-modal-actions">
-              <button className="up-btn" onClick={() => setOpen(false)}>Cancel</button>
-              <button className="up-btn st2-danger-fill" onClick={handleDeleteAccount} disabled={deleting}>{deleting ? 'Deleting…' : 'Delete account'}</button>
+              {!checking && !check && <button type="button" className="up-btn" onClick={() => { setErr(''); load() }}>Try again</button>}
+              <button type="button" className="up-btn" onClick={close}>Cancel</button>
+              <button type="submit" className="up-btn st2-danger-fill" disabled={deleting || !check?.canDelete || !confirmed}>{deleting ? 'Deleting…' : 'Delete account'}</button>
             </div>
-          </div>
+          </form>
         </div>
       )}
     </>
