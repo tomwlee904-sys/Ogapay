@@ -381,7 +381,7 @@ function JobDrawer({ job, onClose, onStatusChange }: { job: any; onClose: any; o
                   <button onClick={() => { try { sessionStorage.setItem('ogapay_edit_task', JSON.stringify({ id: job.id, title: job.title, reward: job.reward, currency: job.currency, slots: job.slots, status: job.status })); } catch(e) { console.error(e) } navigate('/create?edit=' + job.id); }} style={{ width: "100%", background: "var(--bg2)", border: "1px solid var(--border)", borderRadius: 14, padding: 14, fontSize: 13, fontWeight: 700, color: "var(--text2)", cursor: "pointer", fontFamily: "inherit" }}>
                     <i className="ti ti-edit" /> Edit Job Details
                   </button>
-                  <button onClick={async () => { if (!confirm('Close this job and refund remaining budget?')) return; try { await apiRequest('/tasks/' + job.id, { method: 'PATCH', body: JSON.stringify({ status: 'CANCELLED' }) }); onStatusChange(job.id, 'cancelled'); onClose(); } catch(e) { console.error('Close failed', e); } }} style={{ width: "100%", background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 14, padding: 14, fontSize: 13, fontWeight: 700, color: "var(--red)", cursor: "pointer", fontFamily: "inherit" }}>
+                  <button onClick={async () => { if (!confirm('Cancel this job? The money held for it, including the fee, goes back to your wallet.')) return; try { await apiRequest('/escrow/refund/' + job.id, { method: 'POST' }); onStatusChange(job.id, 'cancelled', { local: true }); toast('Job cancelled. The money is back in your wallet.'); onClose(); } catch(e: any) { toast(e?.message || 'Could not cancel this job.', 'error'); } }} style={{ width: "100%", background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 14, padding: 14, fontSize: 13, fontWeight: 700, color: "var(--red)", cursor: "pointer", fontFamily: "inherit" }}>
                     <i className="ti ti-trash" /> Close & Refund Remaining
                   </button>
                 </>
@@ -822,8 +822,10 @@ function JobsListPage({ jobs, setJobs }: { jobs: any; setJobs: any }) {
   const [filter, setFilter] = useState("all");
   const [selectedJob, setSelectedJob] = useState(null);
 
-  const handleStatusChange = (id: any, status: any) => {
+  // opts.local: the server already changed it (e.g. cancel via the refund endpoint)
+  const handleStatusChange = (id: any, status: any, opts: { local?: boolean } = {}) => {
     setJobs((j: any) => j.map((job: any) => job.id === id ? { ...job, status } : job));
+    if (opts.local) return;
     try {
       const stored = JSON.parse(localStorage.getItem('ogapay_job_statuses') || '{}');
       stored[id] = status;
@@ -831,7 +833,7 @@ function JobsListPage({ jobs, setJobs }: { jobs: any; setJobs: any }) {
       apiRequest('/tasks/' + id, {
         method: 'PATCH',
         body: JSON.stringify({ status: status.toUpperCase() }),
-      }).catch(e => console.error(e));
+      }).catch((e: any) => { toast(e?.message || 'Could not update the job', 'error'); setJobs((j: any) => j.map((job: any) => job.id === id ? { ...job, status: status === 'open' ? 'draft' : 'open' } : job)) });
     } catch(e) { console.error(e) }
     toast(status === 'open' ? 'Job resumed' : status === 'draft' ? 'Job paused' : 'Status updated');
   };
@@ -1015,6 +1017,9 @@ export default function MyJobs() {
   }, [isAuthed]);
 
   useEffect(() => {
+    // Re-arm on every run: the cleanup below clears it, and this effect re-runs
+    // when the signed-in user loads (it used to drop that fetch and show no jobs)
+    mounted.current = true
     fetchJobs()
     const onFocus = () => fetchJobs()
     window.addEventListener('focus', onFocus)

@@ -1014,65 +1014,7 @@ function CreateTask() {
     transition: "color 0.2s, border-color 0.2s",
   });
 
-  const userRole = (user as any)?.role || '';
-  const liveRole = (() => { try { return localStorage.getItem('ogapay_role_override') || JSON.parse(localStorage.getItem('ogapay_user') || '{}').role || ''; } catch { return ''; } })();
-  const effectiveRole = userRole || liveRole;
-  // Block if role is explicitly set and not poster/admin
-  // State for upgrade flow
-  const [upgrading, setUpgrading] = useState(false);
-  const [upgradeMsg, setUpgradeMsg] = useState('');
-  const [upgraded, setUpgraded] = useState(false);
-
-  if (isAuthed && !upgraded && effectiveRole !== "POSTER" && effectiveRole !== "ADMIN") {
-    const handleUpgrade = async () => {
-      setUpgrading(true);
-      setUpgradeMsg('');
-      try {
-        if (!isAuthed) { setUpgradeMsg('Please log in first'); setUpgrading(false); return; }
-        await apiRequest<any>('/users/me', {
-          method: 'PATCH',
-          body: JSON.stringify({ role: 'POSTER' }),
-        });
-        // Write POSTER role to localStorage — set a flag so refreshUser can't overwrite it
-        try {
-          const stored = JSON.parse(localStorage.getItem('ogapay_user') || '{}');
-          stored.role = 'POSTER';
-          localStorage.setItem('ogapay_user', JSON.stringify(stored));
-          localStorage.setItem('ogapay_role_override', 'POSTER');
-        } catch(e: any) {}
-        setUpgradeMsg('Account upgraded! You can now create jobs.');
-        setTimeout(() => setUpgraded(true), 800);
-      } catch (e: any) {
-        setUpgradeMsg(e.message || 'Failed to upgrade. Contact support.');
-      } finally {
-        setUpgrading(false);
-      }
-    };
-
-    return (
-      <Layout>
-        <div style={{ maxWidth: 500, margin: '60px auto', padding: '0 20px', textAlign: 'center' }}>
-          <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'rgba(245,158,11,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
-            <svg width="28" height="28" fill="none" stroke="#F59E0B" strokeWidth="2" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-          </div>
-          <h2 style={{ fontSize: 20, fontWeight: 800, color: 'var(--text)', margin: '0 0 8px' }}>Poster Account Required</h2>
-          <p style={{ fontSize: 14, color: 'var(--text2)', lineHeight: 1.6, margin: '0 0 20px' }}>You need a Poster account to create jobs. Your current role does not have permission to post tasks.</p>
-          <button onClick={handleUpgrade} disabled={upgrading}
-            style={{
-              padding: '12px 32px', borderRadius: 10, border: 'none',
-              background: upgrading ? 'var(--border)' : 'var(--accent)', color: upgrading ? 'var(--text2)' : 'var(--on-accent)',
-              fontSize: 14, fontWeight: 700, cursor: upgrading ? 'not-allowed' : 'pointer',
-              fontFamily: 'inherit'
-            }}>
-            {upgrading ? 'Upgrading...' : 'Upgrade to Poster Account'}
-          </button>
-          {upgradeMsg && (
-            <p style={{ marginTop: 12, fontSize: 13, fontWeight: 600, color: upgradeMsg.includes('upgraded') ? 'var(--green)' : '#DC2626' }}>{upgradeMsg}</p>
-          )}
-        </div>
-      </Layout>
-    );
-  }
+  // Everyone can post jobs (no poster-only gate).
 
   if (showX) {
     return <XCampaignBuilder initialUrl={xUrl}

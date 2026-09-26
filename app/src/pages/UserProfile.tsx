@@ -205,7 +205,7 @@ export default function UserProfile() {
               ? <img className="up-avatar" src={profile.avatarUrl} alt="" />
               : <div className="up-avatar">{(first[0] || handle[0] || "?").toUpperCase()}{last[0]?.toUpperCase() || ""}</div>}
             <div style={{ minWidth: 0 }}>
-              <div className="up-eyebrow">{profile.role === "POSTER" ? "Job creator" : "Creator profile"}</div>
+              <div className="up-eyebrow">Creator profile</div>
               <div className="up-name">
                 <h1>{name}</h1>
                 {profile.humanVerified && <span className="up-badge ok"><i className="ti ti-fingerprint" /> Human verified</span>}

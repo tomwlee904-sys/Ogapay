@@ -52,7 +52,7 @@ export default function HirePage() {
   const total = amt + fee
   const name = worker ? ([worker.firstName, worker.lastName].filter(Boolean).join(" ") || worker.username) : username
   const isSelf = !!user?.username && user.username.toLowerCase() === username.toLowerCase()
-  const canHire = user && ["POSTER", "ADMIN"].includes(user.role)
+  const canHire = !!user // everyone can hire
   const short = available !== null && total > available
   const briefOk = brief.trim().length >= 20
   const ready = !!worker && canHire && !isSelf && briefOk && amt >= MIN_BUDGET && !short && !uploading && !submitting
@@ -221,8 +221,6 @@ export default function HirePage() {
               <button className="up-btn primary hr-cta" onClick={() => openSignIn({ redirect: `/user/${username}/hire` })}>Sign in to hire</button>
             ) : isSelf ? (
               <div className="up-note err">You can't hire yourself.</div>
-            ) : !canHire ? (
-              <div className="up-note err">Hiring is for job-creator accounts. Your account is set up for earning.</div>
             ) : (
               <button className="up-btn primary hr-cta" disabled={!ready} onClick={submit}>
                 {submitting ? "Hiring…" : amt >= MIN_BUDGET ? `Pay ${naira(total)} & hire` : "Pay & hire"}

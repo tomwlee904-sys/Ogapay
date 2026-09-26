@@ -325,7 +325,7 @@ export default function JobDetail() {
   // Poster cancels an open job nobody has joined: the escrow goes back to their wallet
   const handleCancelJob = async () => {
     if (!job || cancelling) return
-    if (!window.confirm('Cancel this job? The money held for it goes back to your wallet. This can\'t be undone.')) return
+    if (!window.confirm('Cancel this job? The money held for it, including the fee, goes back to your wallet. This can\'t be undone.')) return
     setCancelling(true)
     try {
       await apiRequest(`/escrow/refund/${job.id}`, { method: 'POST' })

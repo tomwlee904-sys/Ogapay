@@ -283,7 +283,8 @@ export default function Profile() {
   const refUrl = refCode ? `${window.location.origin}/ref/${refCode}` : '';
 
   // KYC status
-  const isKycVerified = kycStatus?.status === 'APPROVED' || profileData?.kyc?.status === 'APPROVED';
+  // Verified = approved with a real tier (some old accounts were auto-approved at tier 0 and still need KYC)
+  const isKycVerified = kycStatus?.status === 'APPROVED' && Number(kycStatus?.kycTier ?? 0) >= 1;
   const isHumanVerified = !!((authUser as any)?.humanVerified || profileData?.humanVerified);
   const lockedNgn = walletBal?.NGN?.lockedBalance ?? 0;
 
