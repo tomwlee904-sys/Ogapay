@@ -24,9 +24,10 @@ const statusBg = {
   cancelled: "rgba(239,68,68,0.12)",
   expired: "rgba(255,255,255,0.05)",
 };
-const subColor = { APPROVED: "var(--green)", PENDING: "#f59e0b", REJECTED: "var(--red)", EXPIRED: "var(--text3)" };
+// PENDING = taken, work not sent yet; SUBMITTED = waiting for your review
+const subColor = { APPROVED: "var(--green)", PENDING: "var(--text3)", SUBMITTED: "#f59e0b", DISPUTED: "#f59e0b", REJECTED: "var(--red)", EXPIRED: "var(--text3)" };
 const subBg = {
-  APPROVED: "rgba(16,185,129,0.12)", PENDING: "rgba(245,158,11,0.12)",
+  APPROVED: "rgba(16,185,129,0.12)", PENDING: "rgba(148,163,184,0.12)", SUBMITTED: "rgba(245,158,11,0.12)", DISPUTED: "rgba(245,158,11,0.12)",
   REJECTED: "rgba(239,68,68,0.12)", EXPIRED: "rgba(148,163,184,0.12)",
 };
 
@@ -84,7 +85,7 @@ function JobDrawer({ job, onClose, onStatusChange }: { job: any; onClose: any; o
       const data = await apiRequest('/tasks/' + job.id + '/submissions');
       const list = Array.isArray(data) ? data : []
       setSubmissions(list)
-      setPending(list.filter(s => s.status === 'PENDING').length)
+      setPending(list.filter(s => s.status === 'SUBMITTED').length)
       setRejected(list.filter(s => s.status === 'REJECTED').length)
     } catch (err) {
       console.error('submissions fetch error:', err)
@@ -277,6 +278,12 @@ function JobDrawer({ job, onClose, onStatusChange }: { job: any; onClose: any; o
                       <Badge label={(sub.status.charAt(0) + sub.status.slice(1).toLowerCase())} color={(subColor as any)[sub.status]} bg={(subBg as any)[sub.status]} />
                     </div>
 
+                    {sub.status === 'SUBMITTED' && sub.autoApproveAt && (
+                      <div style={{ fontSize: 11, color: "var(--text3)", marginBottom: 10 }}>
+                        <i className="ti ti-clock-check" /> If you don't review it, it's approved and paid automatically on {new Date(sub.autoApproveAt).toLocaleString(undefined, { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}.
+                      </div>
+                    )}
+
                     {/* Score bar */}
                     <div style={{ marginBottom: 10 }}>
                       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
@@ -294,7 +301,7 @@ function JobDrawer({ job, onClose, onStatusChange }: { job: any; onClose: any; o
                           <Icon n="file-text" s={13} /> View Proof
                         </button>
                       )}
-                      {sub.status === 'PENDING' && (
+                      {sub.status === 'SUBMITTED' && (
                         <>
                           <button
                             onClick={() => handleApprove(sub.id)}
@@ -486,7 +493,7 @@ function JobDrawer({ job, onClose, onStatusChange }: { job: any; onClose: any; o
               </div>
 
               {/* Actions */}
-              {proofSubmission.status === 'PENDING' && (
+              {proofSubmission.status === 'SUBMITTED' && (
                 <div style={{ display: "flex", gap: 8 }}>
                   <button onClick={() => { handleApprove(proofSubmission.id); setProofSubmission(null); }}
                     disabled={actioning === proofSubmission.id}

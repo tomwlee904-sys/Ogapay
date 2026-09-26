@@ -1,31 +1,36 @@
 import { useState, useEffect } from 'react'
 import Layout from '../components/Layout'
+import { apiRequest } from '../lib/api'
 
-const API_BASE = 'https://ogapay-production.up.railway.app/api/v1'
-
+// Submission statuses: PENDING = taken, work not sent yet; SUBMITTED = waiting for review
 const STATUS_MAP: Record<string, string> = {
-  APPLIED: 'In Progress',
-  PENDING: 'Under Review',
+  PENDING: 'In Progress',
+  SUBMITTED: 'Under Review',
+  DISPUTED: 'Disputed',
   APPROVED: 'Approved',
   REJECTED: 'Rejected',
   EXPIRED: 'Slot released',
 }
 
 const COLOR_MAP: Record<string, string> = {
-  APPLIED: 'var(--accent)',
-  PENDING: '#F59E0B',
+  PENDING: 'var(--accent)',
+  SUBMITTED: '#F59E0B',
+  DISPUTED: '#F59E0B',
   APPROVED: '#16a34a',
   REJECTED: '#DC2626',
   EXPIRED: 'var(--text3)',
 }
 
 const PROGRESS_MAP: Record<string, number> = {
-  APPLIED: 40,
-  PENDING: 70,
+  PENDING: 40,
+  SUBMITTED: 70,
+  DISPUTED: 70,
   APPROVED: 100,
   REJECTED: 100,
   EXPIRED: 0,
 }
+
+const shortDate = (d: string) => new Date(d).toLocaleString(undefined, { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
 
 const tabs = [
   { id: 'all', label: 'All' },
@@ -54,15 +59,9 @@ export default function MyTasks() {
   useEffect(() => {
     async function fetchSubmissions() {
       try {
-        const token = localStorage.getItem('ogapay_access_token')
-        if (!token) { setLoading(false); return }
-        const res = await fetch(API_BASE + '/tasks/my/submissions', {
-          headers: { 'Authorization': 'Bearer ' + token },
-        })
-        const json = await res.json()
-        if (json.success && json.data) {
-          setSubmissions(json.data)
-        }
+        // { submissions, buckets, stats }
+        const data = await apiRequest<any>('/tasks/my/submissions')
+        setSubmissions(Array.isArray(data) ? data : data?.submissions || [])
       } catch {}
       setLoading(false)
     }
@@ -144,6 +143,11 @@ export default function MyTasks() {
                     <span>{timeAgo(s.createdAt)}</span>
                     <span>{progress}% complete</span>
                   </div>
+                  {s.status === 'SUBMITTED' && s.autoApproveAt && (
+                    <div className="mt-meta" style={{ marginTop: 4 }}>
+                      <span><i className="ti ti-clock-check" /> Paid automatically on {shortDate(s.autoApproveAt)} if it isn't reviewed by then</span>
+                    </div>
+                  )}
                 </div>
                 <div className="mt-right">
                   <div className="mt-reward">{s.task?.currency || 'NGN'} {Number(s.task?.reward || 0).toLocaleString()}</div>

@@ -1008,6 +1008,12 @@ function WurkJobDetailView(props: any) {
                                 {sub.status === 'EXPIRED' && <span style={{ color: 'var(--text3)', fontSize: 12, fontWeight: 700 }}><i className="ti ti-clock-x" /> Slot released</span>}
                                 <span style={{ color: 'var(--text3,#94a3b8)', fontSize: 12, marginLeft: 'auto' }}>{timeAgo(sub.createdAt)}</span>
                               </div>
+                              {sub.status === 'SUBMITTED' && sub.autoApproveAt && (
+                                <div style={{ color: 'var(--text3,#94a3b8)', fontSize: 12, marginTop: 6 }}>
+                                  <i className="ti ti-clock-check" /> If you don't review it, it's approved and paid automatically on{' '}
+                                  {new Date(sub.autoApproveAt).toLocaleString(undefined, { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}.
+                                </div>
+                              )}
                             </div>
                           </div>
                         ))}
