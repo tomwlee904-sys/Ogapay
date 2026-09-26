@@ -12,6 +12,7 @@ import EcosystemStory from "../components/home/EcosystemStory";
 import Carousel from "../components/home/Carousel";
 import { HomeJobCard, HomeProductCard, HomeCommunityCard } from "../components/home/HomeCards";
 import ConnectArt from "../components/home/ConnectArt";
+import StrandsArt from "../components/home/StrandsArt";
 import { useCurrency } from "../context/CurrencyContext";
 
 import "../styles/homepage.css";
@@ -95,35 +96,13 @@ function useJson<T = any>(path: string, pollMs = 0) {
 /* ─── hero network graphic ─────────────────────────────────────────────────── */
 
 function NetworkGraphic() {
-  const paths = useMemo(() => {
-    const W = 600, H = 188, cx = W / 2, cy = H / 2, n = 26, out: { d: string; flow: boolean; delay: number }[] = [];
-    for (const side of [-1, 1]) {
-      for (let i = 0; i < n; i++) {
-        const k = i / (n - 1) - 0.5;
-        const x0 = side < 0 ? 0 : W;
-        const y0 = cy + k * (H - 16) + Math.sin(i * 1.7) * 4;
-        const xe = cx + side * 42;
-        const ye = cy + k * 10;
-        const c1x = side < 0 ? 150 : W - 150, c2x = side < 0 ? 215 : W - 215;
-        out.push({
-          d: `M${x0},${y0.toFixed(1)} C${c1x},${(y0 * 0.85 + cy * 0.15).toFixed(1)} ${c2x},${(cy + k * 40).toFixed(1)} ${xe},${ye.toFixed(1)}`,
-          flow: i % 4 === side + 1,
-          delay: (i * 0.37) % 5,
-        });
-      }
-    }
-    return out;
-  }, []);
+  // Strands drawn on a canvas (see StrandsArt); the logo tile sits on top
   return (
     <div className="hv-network" aria-hidden="true">
-      <span className="hv-network-stem" style={{ top: 0 }} />
-      <svg viewBox="0 0 600 188" preserveAspectRatio="none">
-        {paths.map((p, i) => (
-          <path key={i} d={p.d} className={p.flow ? "hv-flow" : undefined} style={p.flow ? { animationDelay: `-${p.delay}s` } : undefined} />
-        ))}
-      </svg>
+      <span className="hv-network-stem top" />
+      <StrandsArt />
       <div className="hv-network-hub"><Logo size={34} /></div>
-      <span className="hv-network-stem" style={{ bottom: 0 }} />
+      <span className="hv-network-stem bottom" />
     </div>
   );
 }

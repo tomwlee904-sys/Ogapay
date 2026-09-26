@@ -20,6 +20,16 @@ function OgaLogo() {
   )
 }
 
+// Default avatar for people without a photo
+function Silhouette() {
+  return (
+    <svg className="nav-silhouette" viewBox="0 0 36 36" aria-hidden="true">
+      <circle cx="18" cy="14" r="6.5" fill="currentColor" />
+      <path d="M5 36c0-7.4 5.8-12 13-12s13 4.6 13 12z" fill="currentColor" />
+    </svg>
+  )
+}
+
 interface NavbarProps {
   onMenuToggle: () => void
 }
@@ -43,6 +53,7 @@ export default function Navbar({ onMenuToggle }: NavbarProps) {
         return sum
       }, 0)
     : 0
+  const balanceText = `$${(portfolioUsd < 0.01 ? 0 : portfolioUsd).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 
   useEffect(() => {
     if (!isAuthed) return
@@ -88,7 +99,7 @@ export default function Navbar({ onMenuToggle }: NavbarProps) {
         </Link>
         <div className="nav-links">
           <NavLink className="nav-link" to="/tasks"><i className="ti ti-briefcase" />Earn</NavLink>
-          <NavLink className="nav-link" to="/create"><i className="ti ti-plus-circle" />Create</NavLink>
+          <NavLink className="nav-link" to="/create"><i className="ti ti-square-plus" />Create</NavLink>
           <NavLink className="nav-link" to="/store"><i className="ti ti-building-store" />Store</NavLink>
           <NavLink className="nav-link" to="/vault"><i className="ti ti-shield-lock" />Vault</NavLink>
           <NavLink className="nav-link" to="/faq"><i className="ti ti-help-circle" />FAQ</NavLink>
@@ -101,16 +112,14 @@ export default function Navbar({ onMenuToggle }: NavbarProps) {
           )}
           {!isLoading && isAuthed && (
             <>
-              <button className="balance-display" onClick={() => navigate('/wallet')}>
-                ${portfolioUsd < 0.01 ? '0.00' : portfolioUsd.toFixed(2)}
+              <button className="balance-display" onClick={() => navigate('/wallet')} aria-label={`Wallet, ${balanceText}`}>
+                {balanceText}
               </button>
               <button className="profile-btn" onClick={() => navigate('/profile')} aria-label="Profile">
                 {user?.avatar ? (
                   <img src={user.avatar} alt={user.displayName || user.username} />
                 ) : (
-                  <span className="grid place-items-center w-full h-full text-xs font-extrabold bg-[--bg2] text-[--text2]">
-                    {(user?.displayName || user?.username || '?').charAt(0).toUpperCase()}
-                  </span>
+                  <Silhouette />
                 )}
                 {unreadNotifs > 0 && <span className="notif-dot" />}
               </button>
@@ -136,14 +145,20 @@ export default function Navbar({ onMenuToggle }: NavbarProps) {
           <Logo size={28} />
           <span>OgaPay</span>
         </Link>
-        <div className="flex gap-[10px] items-center">
-          <button className="icon-btn" onClick={() => (isAuthed ? navigate('/wallet') : openSignIn({ redirect: '/wallet' }))} aria-label="Wallet" style={{ width: 34, height: 34 }}>
-            <i className="ti ti-wallet" />
-          </button>
-          <button className="icon-btn w-[34px] h-[34px]" onClick={toggle} aria-label="Toggle theme">
+        <div className="nav-mobile-actions flex items-center">
+          {!isLoading && isAuthed ? (
+            <button className="balance-display" onClick={() => navigate('/wallet')} aria-label={`Wallet, ${balanceText}`}>
+              {balanceText}
+            </button>
+          ) : (
+            <button className="icon-btn" onClick={() => openSignIn({ redirect: '/wallet' })} aria-label="Wallet">
+              <i className="ti ti-wallet" />
+            </button>
+          )}
+          <button className="icon-btn" onClick={toggle} aria-label="Toggle theme">
             <i className={`ti ${theme === 'dark' ? 'ti-sun' : 'ti-moon'}`} />
           </button>
-          <button className="icon-btn w-[34px] h-[34px]" onClick={onMenuToggle} aria-label="Open menu">
+          <button className="icon-btn" onClick={onMenuToggle} aria-label="Open menu">
             <i className="ti ti-menu-2" />
           </button>
         </div>
