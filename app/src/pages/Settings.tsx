@@ -86,7 +86,9 @@ export default function Settings() {
       setParams({}, { replace: true })
       reload()
     }
-  }, [params])
+    // section too: after an old /settings?... link redirects, the same page
+    // instance is reused with the same query, so params alone doesn't change
+  }, [params, section])
 
   if (!section) {
     const t = legacyTarget(location.hash, params)
