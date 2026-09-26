@@ -1,189 +1,173 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import Layout from '../components/Layout'
+import { apiRequest, getAccessToken } from '../lib/api'
+import { openSignIn } from '../lib/signin'
+import '../styles/profile-public.css'
+import '../styles/leaderboard.css'
 
-const users = [
-  { rank: 1, name: 'CryptoKing', earnings: 'NGN 125,400', tasks: 342, badge: '🥇', color: '#52525b', avatar: 'CK' },
-  { rank: 2, name: 'TaskMaster', earnings: 'NGN 98,200', tasks: 287, badge: '🥈', color: '#52525b', avatar: 'TM' },
-  { rank: 3, name: 'EarnQueen', earnings: 'NGN 82,500', tasks: 254, badge: '🥉', color: '#16a34a', avatar: 'EQ' },
-  { rank: 4, name: 'BizWizard', earnings: 'NGN 67,800', tasks: 198, color: '#F59E0B', avatar: 'BW' },
-  { rank: 5, name: 'SolaPro', earnings: 'NGN 54,200', tasks: 167, color: '#EC4899', avatar: 'SP' },
-  { rank: 6, name: 'Web3Ninja', earnings: 'NGN 42,100', tasks: 143, color: '#6366F1', avatar: 'WN' },
-  { rank: 7, name: 'GigHunter', earnings: 'NGN 35,600', tasks: 121, color: '#14B8A6', avatar: 'GH' },
-  { rank: 8, name: 'ChainWurk', earnings: 'NGN 28,400', tasks: 98, color: '#F97316', avatar: 'CW' },
+// Ported from the June leaderboard. Its Weekly/Monthly tabs did nothing, all four
+// boards showed the same list and it exposed everyone's earnings; the backend
+// now ranks each board for real and hides amounts unless people opt in.
+
+type Board = 'earners' | 'posters' | 'referrers'
+type Period = 'week' | 'month' | 'all'
+type Entry = { rank: number; id: string; name: string; username: string | null; avatarUrl: string | null; level: string | null; amount: number | null; count: number }
+type Totals = { paidNgn: number; jobsPaid: number; earners: number }
+type Me = { rank: number | null; amount: number; count: number; listed: boolean; isPublic: boolean; showEarnings: boolean; ranked: number }
+
+const BOARDS: { id: Board; label: string; icon: string; unit: (n: number) => string; blurb: string }[] = [
+  { id: 'earners', label: 'Top earners', icon: 'ti-coin', unit: (n) => `${n} paid job${n === 1 ? '' : 's'}`, blurb: 'Naira earned from paid jobs' },
+  { id: 'posters', label: 'Top posters', icon: 'ti-briefcase', unit: (n) => `${n} worker${n === 1 ? '' : 's'} paid`, blurb: 'Naira paid out to workers' },
+  { id: 'referrers', label: 'Top referrers', icon: 'ti-affiliate', unit: (n) => `${n} referral${n === 1 ? '' : 's'}`, blurb: 'Invited people who went on to complete a job' },
+]
+const PERIODS: { id: Period; label: string }[] = [
+  { id: 'week', label: 'This week' },
+  { id: 'month', label: 'This month' },
+  { id: 'all', label: 'All time' },
 ]
 
-const categories = [
-  { id: 'earners', icon: 'ti ti-coin', label: 'Top Earners', color: '#52525b', users: users.slice(0, 5) },
-  { id: 'posters', icon: 'ti ti-briefcase', label: 'Top Task Posters', color: '#52525b', users: users.slice(0, 5) },
-  { id: 'referrers', icon: 'ti ti-affiliate', label: 'Top Referrers', color: '#16a34a', users: users.slice(0, 5) },
-  { id: 'leaders', icon: 'ti ti-users', label: 'Community Leaders', color: '#F59E0B', users: users.slice(0, 5) },
-]
+const naira = (n: number) => '₦' + Math.round(n).toLocaleString('en-US')
+const compact = (n: number) => (n >= 1e6 ? `₦${(n / 1e6).toFixed(1)}M` : n >= 1e4 ? `₦${(n / 1e3).toFixed(1)}K` : naira(n))
+const initials = (name: string) => name.split(' ').map((w) => w[0]).join('').toUpperCase().slice(0, 2) || '?'
+const level = (l: string | null) => (l ? l.charAt(0) + l.slice(1).toLowerCase() : '')
 
-const achievements = [
-  { icon: '💎', name: 'Gold Earner', desc: 'Earn over NGN 100K' },
-  { icon: '🥈', name: 'Silver Earner', desc: 'Earn over NGN 50K' },
-  { icon: '🥉', name: 'Bronze Earner', desc: 'Earn over NGN 25K' },
-  { icon: '🔥', name: 'Top Referrer', desc: 'Refer 10+ users' },
-  { icon: '⚡', name: 'Fast Worker', desc: 'Complete 50 tasks' },
-  { icon: '👑', name: 'Community Leader', desc: 'Lead a community' },
-]
+function Avatar({ e, size }: { e: Entry; size: number }) {
+  return (
+    <span className="lb2-av" style={{ width: size, height: size, fontSize: size * 0.36 }}>
+      {e.avatarUrl ? <img src={e.avatarUrl} alt="" loading="lazy" /> : initials(e.name)}
+    </span>
+  )
+}
 
-const periodTabs = ['Weekly', 'Monthly', 'All Time']
+function Who({ e, children }: { e: Entry; children: React.ReactNode }) {
+  return e.username ? <Link to={`/user/${e.username}`} className="lb2-who">{children}</Link> : <span className="lb2-who">{children}</span>
+}
 
 export default function Leaderboard() {
-  const [period, setPeriod] = useState('Monthly')
-  const [catTab, setCatTab] = useState('earners')
-  const currentCat = categories.find(c => c.id === catTab) || categories[0]
+  const [board, setBoard] = useState<Board>('earners')
+  const [period, setPeriod] = useState<Period>('month')
+  const [entries, setEntries] = useState<Entry[] | null>(null)
+  const [totals, setTotals] = useState<Totals | null>(null)
+  const [me, setMe] = useState<Me | null>(null)
+  const [err, setErr] = useState(false)
+  const signedIn = !!getAccessToken()
+  const cfg = BOARDS.find((b) => b.id === board)!
+
+  useEffect(() => {
+    let live = true
+    setEntries(null); setErr(false)
+    const q = `board=${board}&period=${period}`
+    apiRequest<{ entries: Entry[]; totals: Totals }>(`/leaderboard?${q}&limit=50`, { auth: false })
+      .then((d) => { if (live) { setEntries(d.entries || []); setTotals(d.totals) } })
+      .catch(() => { if (live) { setEntries([]); setErr(true) } })
+    if (signedIn) apiRequest<Me>(`/leaderboard/me?${q}`).then((d) => live && setMe(d)).catch(() => live && setMe(null))
+    return () => { live = false }
+  }, [board, period, signedIn])
+
+  const value = (e: Entry) => (board === 'referrers' ? `${e.count}` : e.amount != null ? naira(e.amount) : '—')
+  const top = entries?.slice(0, 3) || []
+  const podium = top.length === 3 ? [top[1], top[0], top[2]] : top
+  const rest = entries?.slice(3) || []
+  const periodLabel = PERIODS.find((p) => p.id === period)!.label.toLowerCase()
 
   return (
     <Layout>
-      <style>{`
-        .lb-hero{text-align:center;padding:36px 20px 28px;margin-bottom:24px;background:linear-gradient(135deg,rgba(var(--accent-rgb),.08),rgba(var(--accent-rgb),.06),var(--card));border-radius:16px;border:1px solid var(--border);position:relative;overflow:hidden}
-        .lb-hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 30% 40%,rgba(var(--accent-rgb),.12),transparent 60%),radial-gradient(ellipse at 70% 60%,rgba(var(--accent-rgb),.08),transparent 50%);pointer-events:none}
-        .lb-hero-inner{position:relative;z-index:1}
-        .lb-hero h1{font-family:Geist;font-size:32px;font-weight:900;margin:0 0 6px}
-        .lb-hero p{color:var(--text2);font-size:14px;margin:0 auto;max-width:480px}
-        .lb-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:24px}
-        @media(max-width:600px){.lb-stats{grid-template-columns:repeat(2,1fr)}}
-        .lb-stat{text-align:center;padding:14px;background:var(--card);border:1px solid var(--border);border-radius:12px}
-        .lb-stat .lb-num{font-family:Geist;font-size:22px;font-weight:900;color:var(--accent)}
-        .lb-stat .lb-lbl{font-size:11px;color:var(--text2);margin-top:2px;font-weight:600}
-        .lb-period{display:flex;gap:4px;background:var(--bg2);border-radius:10px;padding:4px;width:fit-content;margin:0 auto 20px}
-        .lb-period button{padding:7px 16px;border:0;border-radius:8px;background:transparent;color:var(--text2);font-size:12px;font-weight:700;cursor:pointer;transition:all .15s}
-        .lb-period button.active{background:var(--card);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,.06)}
-        .lb-podium{display:grid;grid-template-columns:1fr 1.2fr 1fr;align-items:end;gap:10px;margin-bottom:24px}
-        @media(max-width:600px){.lb-podium{grid-template-columns:1fr;gap:8px}.lb-podium .first{order:-1}}
-        .lb-pcard{text-align:center;padding:18px 12px;border-radius:14px;background:var(--card);border:1px solid var(--border);transition:all .3s}
-        .lb-pcard:hover{transform:translateY(-3px)}
-        .lb-pcard.first{background:linear-gradient(180deg,rgba(245,179,1,.08),transparent);border-color:rgba(245,179,1,.25);padding:24px 14px}
-        .lb-pcard.first .lb-av{width:52px;height:52px;font-size:20px}
-        .lb-pcard .lb-av{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 8px;font-weight:900;color:#fff;font-family:Geist;font-size:18px}
-        .lb-pcard .lb-pname{font-weight:800;font-size:13px}
-        .lb-pcard .lb-pearn{font-size:15px;font-weight:900;color:var(--accent);margin-top:2px}
-        .lb-pcard .lb-prank{font-size:11px;color:var(--text3);margin-bottom:4px}
-        .lb-pcard.first .lb-prank{color:var(--gold);font-weight:700}
-        .lb-cats{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:24px}
-        @media(max-width:600px){.lb-cats{grid-template-columns:1fr}}
-        .lb-cat{border:1px solid var(--border);border-radius:14px;background:var(--card);overflow:hidden}
-        .lb-cat-head{display:flex;align-items:center;gap:8px;padding:12px 14px 8px}
-        .lb-cat-head i{font-size:18px}
-        .lb-cat-head h3{font-family:Geist;font-size:13px;font-weight:800;margin:0}
-        .lb-cat-list{padding:0 14px 12px}
-        .lb-cat-row{display:flex;align-items:center;gap:8px;padding:6px 0;font-size:12px}
-        .lb-cat-rr{width:20px;font-weight:800;color:var(--text3);text-align:center}
-        .lb-cat-av{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#fff;flex-shrink:0}
-        .lb-cat-name{flex:1;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-        .lb-cat-sc{font-weight:800;color:var(--accent)}
-        .lb-user-card{background:linear-gradient(135deg,var(--card),var(--bg2));border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:24px}
-        .lb-user-card h3{font-family:Geist;font-size:15px;font-weight:900;margin:0 0 12px;display:flex;align-items:center;gap:8px}
-        .lb-ur-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:10px}
-        @media(max-width:500px){.lb-ur-grid{grid-template-columns:repeat(2,1fr)}}
-        .lb-ur-item{text-align:center}
-        .lb-ur-item .urv{font-family:Geist;font-size:18px;font-weight:900}
-        .lb-ur-item .url{font-size:10px;color:var(--text2);margin-top:2px;font-weight:600}
-        .lb-progress{height:6px;border-radius:99px;background:var(--bg2);overflow:hidden}
-        .lb-progress .lb-bar{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .6s;width:65%}
-        .lb-next{font-size:11px;color:var(--text2);margin-top:4px;text-align:right}
-        .lb-ach{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:24px}
-        @media(max-width:500px){.lb-ach{grid-template-columns:repeat(2,1fr)}}
-        .lb-ach-item{text-align:center;padding:14px 10px;background:var(--card);border:1px solid var(--border);border-radius:12px;transition:all .2s}
-        .lb-ach-item:hover{transform:translateY(-2px)}
-        .lb-ach-item .achi{font-size:24px;margin-bottom:4px}
-        .lb-ach-item .achn{font-weight:800;font-size:11px}
-        .lb-ach-item .achd{font-size:9px;color:var(--text3);margin-top:2px}
-      `}</style>
-
-      <div className="lb-hero">
-        <div className="lb-hero-inner">
-          <h1>Leaderboard</h1>
-          <p>Discover the top earners, task creators, referrers, and community leaders on OgaPay</p>
+      <div className="up-wrap">
+        <div className="lb2-head">
+          <div>
+            <h1>Leaderboard</h1>
+            <p>The people earning, hiring and inviting the most on OgaPay.</p>
+          </div>
+          <div className="up-tabs" role="tablist" aria-label="Period">
+            {PERIODS.map((p) => (
+              <button key={p.id} role="tab" aria-selected={period === p.id} className={`up-tab${period === p.id ? ' on' : ''}`} onClick={() => setPeriod(p.id)}>{p.label}</button>
+            ))}
+          </div>
         </div>
-      </div>
 
-      <div className="lb-stats">
-        {[
-          { num: 'NGN 2.4M', label: 'Total Rewards Paid' },
-          { num: '12,847', label: 'Tasks Completed' },
-          { num: '3,240', label: 'Active Workers' },
-          { num: '186', label: 'Communities' },
-        ].map((s, i) => (
-          <div className="lb-stat" key={i}>
-            <div className="lb-num">{s.num}</div>
-            <div className="lb-lbl">{s.label}</div>
-          </div>
-        ))}
-      </div>
+        <div className="lb2-stats">
+          <section className="up-card lb2-stat"><div className="up-eyebrow">Paid to workers</div><b>{totals ? compact(totals.paidNgn) : '…'}</b><span>{periodLabel}</span></section>
+          <section className="up-card lb2-stat"><div className="up-eyebrow">Jobs paid</div><b>{totals ? totals.jobsPaid.toLocaleString() : '…'}</b><span>{periodLabel}</span></section>
+          <section className="up-card lb2-stat"><div className="up-eyebrow">People earning</div><b>{totals ? totals.earners.toLocaleString() : '…'}</b><span>{periodLabel}</span></section>
+        </div>
 
-      {/* Period tabs */}
-      <div className="lb-period">
-        {periodTabs.map(p => (
-          <button key={p} className={period === p ? 'active' : ''} onClick={() => setPeriod(p)}>{p}</button>
-        ))}
-      </div>
-
-      {/* Podium */}
-      <div className="lb-podium">
-        {[users[1], users[0], users[2]].map((u, i) => (
-          <div key={i} className={`lb-pcard ${i === 1 ? 'first' : i === 0 ? 'second' : 'third'}`}>
-            <div className="lb-prank">#{u.rank}</div>
-            <div className="lb-av" style={{background: u.color}}>{u.avatar}</div>
-            <div className="lb-pname">{u.name}</div>
-            <div className="lb-pearn">{u.earnings}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* Categories */}
-      <div className="lb-cats">
-        {categories.map(c => (
-          <div className="lb-cat" key={c.id}>
-            <div className="lb-cat-head">
-              <i className={c.icon} style={{color: c.color}} />
-              <h3>{c.label}</h3>
-            </div>
-            <div className="lb-cat-list">
-              {c.users.map((u, i) => (
-                <div className="lb-cat-row" key={i}>
-                  <span className="lb-cat-rr">#{i + 1}</span>
-                  <div className="lb-cat-av" style={{background: u.color}}>{u.avatar}</div>
-                  <span className="lb-cat-name">{u.name}</span>
-                  <span className="lb-cat-sc">{u.earnings}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* User ranking */}
-      <div className="lb-user-card">
-        <h3><i className="ti ti-trophy" style={{color:'var(--accent)'}} /> My Ranking</h3>
-        <div className="lb-ur-grid">
-          {[
-            { val: '#--', label: 'Position' },
-            { val: 'NGN 0', label: 'Earnings' },
-            { val: '0', label: 'Tasks Done' },
-            { val: '0', label: 'Referrals' },
-          ].map((r, i) => (
-            <div className="lb-ur-item" key={i}>
-              <div className="urv">{r.val}</div>
-              <div className="url">{r.label}</div>
-            </div>
+        <div className="up-tabs lb2-boards" role="tablist" aria-label="Board">
+          {BOARDS.map((b) => (
+            <button key={b.id} role="tab" aria-selected={board === b.id} className={`up-tab${board === b.id ? ' on' : ''}`} onClick={() => setBoard(b.id)}>
+              <i className={`ti ${b.icon}`} /> {b.label}
+            </button>
           ))}
         </div>
-        <div className="lb-progress"><div className="lb-bar" /></div>
-        <div className="lb-next">Complete 5 more tasks to reach Silver Tier</div>
-      </div>
+        <p className="lb2-blurb">{cfg.blurb}, {periodLabel}. Amounts show only for people who choose to share them.</p>
 
-      {/* Achievements */}
-      <div className="lb-ach">
-        {achievements.map((a, i) => (
-          <div className="lb-ach-item" key={i}>
-            <div className="achi">{a.icon}</div>
-            <div className="achn">{a.name}</div>
-            <div className="achd">{a.desc}</div>
-          </div>
-        ))}
+        {signedIn && me && (
+          <section className="up-card lb2-me">
+            <div>
+              <div className="up-eyebrow">Your position</div>
+              <div className="lb2-me-rank">{me.rank ? `#${me.rank}` : 'Not ranked yet'}</div>
+              <div className="lb2-me-sub">
+                {me.rank
+                  ? <>{board === 'referrers' ? cfg.unit(me.count) : <>{naira(me.amount)} · {cfg.unit(me.count)}</>} {periodLabel}</>
+                  : board === 'earners' ? 'Complete a paid job to get on the board.' : board === 'posters' ? 'Pay a worker for a job to get on the board.' : 'Invite someone who completes a job.'}
+              </div>
+            </div>
+            <div className="lb2-me-note">
+              {!me.isPublic
+                ? <><i className="ti ti-eye-off" /> Your profile is private, so you don't appear on the public board. <Link to="/settings">Settings</Link></>
+                : !me.showEarnings && board !== 'referrers'
+                  ? <><i className="ti ti-lock" /> Others see your rank but not your amount. <Link to="/settings">Show earnings</Link></>
+                  : <><i className="ti ti-users" /> {me.ranked.toLocaleString()} on this board</>}
+            </div>
+          </section>
+        )}
+        {!signedIn && (
+          <section className="up-card lb2-me">
+            <div><div className="up-eyebrow">Your position</div><div className="lb2-me-sub">Sign in to see where you stand.</div></div>
+            <button className="up-btn primary" onClick={() => openSignIn()}>Sign in</button>
+          </section>
+        )}
+
+        {entries === null ? (
+          <div className="up-empty"><i className="ti ti-loader-2" />Loading…</div>
+        ) : err ? (
+          <div className="up-empty"><i className="ti ti-cloud-off" />Couldn't load the leaderboard. Refresh to try again.</div>
+        ) : entries.length === 0 ? (
+          <div className="up-empty"><i className="ti ti-trophy" />Nobody on this board {periodLabel} yet.</div>
+        ) : (
+          <>
+            <div className={`lb2-podium n${podium.length}`}>
+              {podium.map((e) => (
+                <section key={e.id} className={`up-card lb2-p r${e.rank}`}>
+                  <div className="lb2-p-rank">#{e.rank}</div>
+                  <Who e={e}>
+                    <Avatar e={e} size={e.rank === 1 ? 64 : 52} />
+                    <strong>{e.name}</strong>
+                    {e.username && <small>@{e.username}</small>}
+                  </Who>
+                  <div className="lb2-p-val">{value(e)}</div>
+                  <div className="lb2-p-sub">{board === 'referrers' ? 'referrals' : cfg.unit(e.count)}</div>
+                </section>
+              ))}
+            </div>
+
+            {rest.length > 0 && (
+              <section className="up-card lb2-list">
+                {rest.map((e) => (
+                  <div key={e.id} className="lb2-row">
+                    <span className="lb2-rank">{e.rank}</span>
+                    <Who e={e}>
+                      <Avatar e={e} size={34} />
+                      <span className="lb2-name"><strong>{e.name}</strong><small>{e.username ? `@${e.username}` : ''}{e.level ? ` · ${level(e.level)}` : ''}</small></span>
+                    </Who>
+                    <span className="lb2-count">{board === 'referrers' ? '' : cfg.unit(e.count)}</span>
+                    <span className="lb2-val">{board === 'referrers' ? cfg.unit(e.count) : value(e)}</span>
+                  </div>
+                ))}
+              </section>
+            )}
+          </>
+        )}
       </div>
     </Layout>
   )

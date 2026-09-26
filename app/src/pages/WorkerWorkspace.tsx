@@ -365,13 +365,14 @@ export default function WorkerWorkspace() {
                   const name = l.username || l.name || l.firstName || 'User'
                   const initial = (name[0] || 'U').toUpperCase()
                   const initials = l.firstName && l.lastName ? (l.firstName[0] + l.lastName[0]).toUpperCase() : initial
-                  const amount = l.earnings || l.totalEarned || l.reward || 0
+                  // Amounts are hidden unless the person shares them; show their job count then
+                  const amount = l.earnings ?? l.totalEarned ?? l.reward ?? null
                   return (
                     <div key={l.id || i} className="ws-leader-row">
                       <div className="ws-leader-rank">#{i + 1}</div>
                       <div className="ws-leader-avatar" style={{ background: avatarColors[i] }}>{initials}</div>
                       <div className="ws-leader-name">{name}</div>
-                      <div className="ws-leader-amount">{formatReward(amount, l.currency)}</div>
+                      <div className="ws-leader-amount">{amount != null ? formatReward(amount, l.currency) : `${l.tasks || 0} job${l.tasks === 1 ? '' : 's'}`}</div>
                     </div>
                   )
                 })}
