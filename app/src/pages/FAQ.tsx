@@ -7,9 +7,10 @@ import Layout from '../components/Layout'
    those rules change. */
 
 type QA = { q: string; a: string }
-type Topic = { id: string; title: string; items: QA[] }
+export type Topic = { id: string; title: string; items: QA[] }
 
-const TOPICS: Topic[] = [
+// Also searched from the Support page
+export const TOPICS: Topic[] = [
   {
     id: 'basics', title: 'Platform basics', items: [
       { q: 'What is OgaPay?', a: 'OgaPay is a task marketplace. People and businesses post paid tasks and jobs; workers complete them, submit proof and get paid from escrow once the work is approved. You can hold your balance in Naira or USDC and withdraw to a Nigerian bank account or a Solana wallet.' },

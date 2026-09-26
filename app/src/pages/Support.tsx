@@ -1,183 +1,188 @@
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import Layout from '../components/Layout'
+import { apiRequest, getAccessToken } from '../lib/api'
+import { openSignIn } from '../lib/signin'
+import { useToast } from '../components/Toast'
+import { TOPICS } from './FAQ'
+import '../styles/profile-public.css'
+import '../styles/support.css'
 
-const faqCategories = [
-  { icon: 'ti ti-wallet', title: 'Payments', desc: 'Withdrawals, deposits, and billing', count: 6 },
-  { icon: 'ti ti-shield-check', title: 'Account', desc: 'Verification, security, and settings', count: 4 },
-  { icon: 'ti ti-clipboard-check', title: 'Tasks', desc: 'Completing and submitting tasks', count: 5 },
-  { icon: 'ti ti-users', title: 'Community', desc: 'Communities and social features', count: 3 },
-]
+// Ported from the June support page. Its tickets went to /support/tickets, which
+// the API never had, the search box did nothing and "Live chat" linked nowhere.
+// Tickets now go to POST /reports/support and the search looks through the FAQ.
 
-const contactOptions = [
-  { icon: 'ti ti-mail', title: 'Email Support', desc: 'Get a response within 24 hours', action: 'support@ogapay.app', href: 'mailto:support@ogapay.app' },
-  { icon: 'ti ti-message', title: 'Live Chat', desc: 'Chat with our support team', action: 'Start Chat', href: '#' },
-  { icon: 'ti ti-send', title: 'Telegram', desc: 'Join our community group', action: 'Join Group', href: 'https://t.me/ogapay' },
-  { icon: 'ti ti-file-text', title: 'Documentation', desc: 'Read our guides and tutorials', action: 'View Docs', href: '/faq' },
-]
+type Ticket = { id: string; subject: string | null; category: string; description: string; targetType: string | null; status: string; createdAt: string; resolvedAt: string | null }
 
-const tickets = [
-  { id: 'TKT-001', subject: 'Withdrawal not processed', status: 'Open', date: '2 hours ago', priority: 'High', color: '#DC2626' },
-  { id: 'TKT-002', subject: 'Account verification issue', status: 'In Progress', date: '1 day ago', priority: 'Medium', color: '#F59E0B' },
-  { id: 'TKT-003', subject: 'Task submission rejected', status: 'Resolved', date: '3 days ago', priority: 'Low', color: '#16a34a' },
+const HELP = [
+  { id: 'withdrawals', icon: 'ti-building-bank', title: 'Withdrawals', desc: 'Bank and wallet payouts, limits, delays' },
+  { id: 'wallet', icon: 'ti-wallet', title: 'Deposits and wallet', desc: 'Funding, balances, transfers' },
+  { id: 'earning', icon: 'ti-clipboard-check', title: 'Earning and tasks', desc: 'Applying, proof, approvals' },
+  { id: 'posting', icon: 'ti-briefcase', title: 'Posting jobs', desc: 'Escrow, reviewing work, refunds' },
+  { id: 'kyc', icon: 'ti-shield-check', title: 'KYC and trust', desc: 'Verification tiers, OgaScore' },
+  { id: 'referrals', icon: 'ti-affiliate', title: 'Referrals', desc: 'Invite links and bonuses' },
 ]
+const CATEGORIES = ['Payments and withdrawals', 'Account and login', 'Tasks and submissions', 'Posting jobs', 'KYC and verification', 'Referrals', 'Store', 'Something else']
+const STATUS: Record<string, { label: string; cls: string }> = {
+  open: { label: 'Open', cls: 'open' },
+  reviewing: { label: 'In progress', cls: 'prog' },
+  in_progress: { label: 'In progress', cls: 'prog' },
+  resolved: { label: 'Resolved', cls: 'done' },
+  dismissed: { label: 'Closed', cls: 'done' },
+}
+const blank = { subject: '', category: CATEGORIES[0], description: '', email: '' }
 
 export default function Support() {
-  const [showTicket, setShowTicket] = useState(false)
+  const { toast } = useToast()
+  const signedIn = !!getAccessToken()
   const [search, setSearch] = useState('')
+  const [tickets, setTickets] = useState<Ticket[] | null>(null)
+  const [open, setOpen] = useState(false)
+  const [form, setForm] = useState(blank)
+  const [sending, setSending] = useState(false)
+
+  const load = () => apiRequest<Ticket[]>('/reports/mine').then((d) => setTickets(Array.isArray(d) ? d : [])).catch(() => setTickets([]))
+  useEffect(() => { if (signedIn) load() }, [signedIn])
+
+  // Search the help centre answers as you type
+  const results = useMemo(() => {
+    const q = search.trim().toLowerCase()
+    if (q.length < 2) return []
+    const words = q.split(/\s+/)
+    return TOPICS.flatMap((t) => t.items.map((it) => ({ topic: t, ...it })))
+      .filter((it) => words.every((w) => `${it.q} ${it.a}`.toLowerCase().includes(w)))
+      // Questions that mention the words first, then answers that do
+      .sort((a, b) => Number(words.every((w) => b.q.toLowerCase().includes(w))) - Number(words.every((w) => a.q.toLowerCase().includes(w))))
+      .slice(0, 6)
+  }, [search])
+
+  const startTicket = () => {
+    if (!signedIn) { openSignIn(); return }
+    setOpen(true)
+  }
+
+  const send = async () => {
+    if (form.subject.trim().length < 3) return toast('Add a short subject (3+ characters)', 'error')
+    if (form.description.trim().length < 10) return toast('Tell us a bit more (10+ characters)', 'error')
+    setSending(true)
+    try {
+      await apiRequest('/reports/support', { method: 'POST', body: JSON.stringify({ ...form, email: form.email.trim() || undefined }) })
+      toast("Ticket sent. We'll reply by email within 24 hours.", 'success')
+      setOpen(false)
+      setForm(blank)
+      load()
+    } catch (e: any) {
+      toast(e?.message || "Couldn't send your ticket", 'error')
+    }
+    setSending(false)
+  }
+
+  useEffect(() => {
+    if (!open) return
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false) }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [open])
 
   return (
     <Layout>
-      <style>{`
-        .sp-hero{text-align:center;padding:36px 20px 28px;margin-bottom:24px;background:linear-gradient(135deg,rgba(var(--accent-rgb),.08),rgba(var(--accent-rgb),.06),var(--card));border-radius:16px;border:1px solid var(--border)}
-        .sp-hero h1{font-family:Geist;font-size:32px;font-weight:900;margin:0 0 6px}
-        .sp-hero p{color:var(--text2);font-size:14px;margin:0 0 20px;max-width:480px;margin-left:auto;margin-right:auto}
-        .sp-search{max-width:480px;margin:0 auto;display:flex;align-items:center;gap:8px;height:44px;padding:0 16px;border:1px solid var(--border);border-radius:12px;background:var(--card);transition:border-color .2s}
-        .sp-search:focus-within{border-color:var(--accent)}
-        .sp-search input{flex:1;border:0;background:transparent;outline:0;color:var(--text);font-size:14px}
-        .sp-search input::placeholder{color:var(--text3)}
-        .sp-search i{color:var(--text3);font-size:18px}
-        .sp-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:24px}
-        @media(max-width:600px){.sp-grid{grid-template-columns:1fr}}
-        .sp-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;cursor:pointer;transition:all .2s}
-        .sp-card:hover{transform:translateY(-2px);border-color:var(--accent)}
-        .sp-card i{font-size:22px;color:var(--accent);margin-bottom:6px;display:block}
-        .sp-card h3{font-family:Geist;font-size:14px;font-weight:800;margin:0 0 2px}
-        .sp-card p{color:var(--text2);font-size:12px;margin:0}
-        .sp-contact{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:24px}
-        @media(max-width:500px){.sp-contact{grid-template-columns:1fr}}
-        .sp-contact-card{padding:16px;border:1px solid var(--border);border-radius:12px;background:var(--card);display:flex;align-items:center;gap:14px;transition:all .2s;text-decoration:none;color:inherit}
-        .sp-contact-card:hover{border-color:var(--accent)}
-        .sp-contact-card i{font-size:22px;color:var(--accent);flex-shrink:0}
-        .sp-cc-info{flex:1}
-        .sp-cc-info strong{display:block;font-size:13px;margin-bottom:2px}
-        .sp-cc-info span{font-size:11px;color:var(--text2)}
-        .sp-cc-action{font-size:11px;font-weight:700;color:var(--accent);white-space:nowrap}
-        .sp-section-title{font-family:Geist;font-size:15px;font-weight:800;margin:0 0 12px;display:flex;align-items:center;gap:6px}
-        .sp-tickets{display:grid;gap:6px;margin-bottom:24px}
-        .sp-ticket{display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--card);border:1px solid var(--border);border-radius:10px;transition:all .2s;cursor:pointer}
-        .sp-ticket:hover{border-color:var(--border2)}
-        .sp-ticket-id{font-size:11px;font-weight:700;color:var(--text3);min-width:65px}
-        .sp-ticket-sub{flex:1;font-weight:700;font-size:13px}
-        .sp-ticket-date{font-size:11px;color:var(--text3)}
-        .sp-ticket-status{padding:3px 8px;border-radius:5px;font-size:10px;font-weight:700}
-        .sp-empty{text-align:center;padding:32px;color:var(--text2)}
-        .sp-empty i{font-size:32px;color:var(--text3);margin-bottom:8px;display:block}
-        /* Modal */
-        .sp-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:400;display:none;align-items:center;justify-content:center;padding:20px}
-        .sp-overlay.open{display:flex}
-        .sp-modal{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;width:min(480px,100%)}
-        .sp-modal h2{font-family:Geist;font-size:20px;font-weight:900;margin:0 0 16px}
-        .sp-field{margin-bottom:12px}
-        .sp-field label{display:block;font-size:11px;font-weight:700;color:var(--text3);margin-bottom:4px;text-transform:uppercase}
-        .sp-field input,.sp-field select,.sp-field textarea{width:100%;padding:0 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg2);color:var(--text);font-size:13px;outline:0;font-family:inherit}
-        .sp-field input,.sp-field select{height:38px}
-        .sp-field textarea{height:80px;padding:10px 12px;resize:vertical}
-        .sp-field input:focus,.sp-field select:focus,.sp-field textarea:focus{border-color:var(--accent)}
-        .sp-modal-actions{display:flex;gap:8px;margin-top:16px;justify-content:flex-end}
-      `}</style>
-
-      <div className="sp-hero">
-        <h1>Support</h1>
-        <p>Get help with your account, tasks, payments, and more</p>
-        <div className="sp-search">
-          <i className="ti ti-search" />
-          <input type="text" placeholder="Search for help..." value={search} onChange={e => setSearch(e.target.value)} />
-        </div>
-      </div>
-
-      {/* FAQ Categories */}
-      <div className="sp-section-title"><i className="ti ti-help-circle" style={{color:'var(--accent)'}} /> Help Topics</div>
-      <div className="sp-grid">
-        {faqCategories.map((c, i) => (
-          <a className="sp-card" href="/faq" key={i}>
-            <i className={c.icon} />
-            <h3>{c.title}</h3>
-            <p>{c.desc}</p>
-          </a>
-        ))}
-      </div>
-
-      {/* Contact */}
-      <div className="sp-section-title"><i className="ti ti-headset" style={{color:'var(--accent)'}} /> Contact Us</div>
-      <div className="sp-contact">
-        {contactOptions.map((c, i) => (
-          <a className="sp-contact-card" href={c.href} key={i}>
-            <i className={c.icon} />
-            <div className="sp-cc-info">
-              <strong>{c.title}</strong>
-              <span>{c.desc}</span>
+      <div className="up-wrap">
+        <div className="sp2-hero up-card">
+          <h1>How can we help?</h1>
+          <p>Search the help centre, or send us a ticket and we'll reply by email.</p>
+          <label className="sp2-search">
+            <i className="ti ti-search" />
+            <input type="search" placeholder="e.g. withdrawal pending, refund, KYC" value={search} onChange={(e) => setSearch(e.target.value)} aria-label="Search help" />
+          </label>
+          {search.trim().length >= 2 && (
+            <div className="sp2-results">
+              {results.length === 0 ? (
+                <div className="sp2-none">No answers match. <button onClick={startTicket}>Ask us instead</button></div>
+              ) : results.map((r, i) => (
+                <details key={i} className="sp2-res">
+                  <summary><span>{r.q}</span><em>{r.topic.title}</em></summary>
+                  <p>{r.a}</p>
+                </details>
+              ))}
             </div>
-            <span className="sp-cc-action">{c.action}</span>
-          </a>
-        ))}
-      </div>
-
-      {/* Tickets */}
-      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:12}}>
-        <div className="sp-section-title" style={{margin:0}}>
-          <i className="ti ti-ticket" style={{color:'var(--accent)'}} /> My Tickets
+          )}
         </div>
-        <button className="cmp-btn" style={{height:32,padding:'0 12px',border:'1px solid var(--border)',borderRadius:8,background:'transparent',color:'var(--text2)',fontSize:11,fontWeight:600,cursor:'pointer'}} onClick={() => setShowTicket(true)}>
-          <i className="ti ti-plus" /> New Ticket
-        </button>
-      </div>
 
-      <div className="sp-tickets">
-        {tickets.length === 0 ? (
-          <div className="sp-empty">
-            <i className="ti ti-ticket" />
-            <h3 style={{fontFamily:'Geist',fontWeight:800,margin:'0 0 4px',color:'var(--text)'}}>No tickets yet</h3>
-            <p style={{fontSize:13,margin:0}}>Create a support ticket to get help</p>
-          </div>
+        <div className="up-sec-h sp2-h"><h2>Help topics</h2></div>
+        <div className="sp2-grid">
+          {HELP.map((h) => (
+            <Link key={h.id} to={`/faq#${h.id}`} className="up-card sp2-topic">
+              <i className={`ti ${h.icon}`} />
+              <div><strong>{h.title}</strong><span>{h.desc}</span></div>
+            </Link>
+          ))}
+        </div>
+
+        <div className="up-sec-h sp2-h"><h2>Contact us</h2></div>
+        <div className="sp2-contact">
+          <a className="up-card sp2-c" href="mailto:support@ogapay.app"><i className="ti ti-mail" /><div><strong>Email</strong><span>support@ogapay.app · replies within 24 hours</span></div></a>
+          <a className="up-card sp2-c" href="https://t.me/ogapay" target="_blank" rel="noopener noreferrer"><i className="ti ti-brand-telegram" /><div><strong>Telegram</strong><span>Community group and announcements</span></div></a>
+          <a className="up-card sp2-c" href="https://x.com/Ogapayhq" target="_blank" rel="noopener noreferrer"><i className="ti ti-brand-x" /><div><strong>X (Twitter)</strong><span>@Ogapayhq · status updates</span></div></a>
+        </div>
+        <p className="sp2-warn"><i className="ti ti-shield-lock" /> OgaPay staff will never ask for your password, PIN or one-time codes, or ask you to send money to "unlock" a payout.</p>
+
+        <div className="sp2-tickets-h">
+          <h2>My tickets</h2>
+          <button className="up-btn primary" onClick={startTicket}><i className="ti ti-plus" /> New ticket</button>
+        </div>
+        {!signedIn ? (
+          <div className="up-empty"><i className="ti ti-lock" />Sign in to send a ticket and see your replies.</div>
+        ) : tickets === null ? (
+          <div className="up-empty"><i className="ti ti-loader-2" />Loading…</div>
+        ) : tickets.length === 0 ? (
+          <div className="up-empty"><i className="ti ti-ticket" />No tickets yet.</div>
         ) : (
-          tickets.map(t => (
-            <div className="sp-ticket" key={t.id}>
-              <span className="sp-ticket-id">{t.id}</span>
-              <span className="sp-ticket-sub">{t.subject}</span>
-              <span className="sp-ticket-date">{t.date}</span>
-              <span className="sp-ticket-status" style={{background: `${t.color}15`, color: t.color}}>{t.status}</span>
-            </div>
-          ))
+          <section className="up-card sp2-list">
+            {tickets.map((t) => {
+              const st = STATUS[t.status] || { label: t.status, cls: 'open' }
+              return (
+                <div key={t.id} className="sp2-t">
+                  <div className="sp2-t-main">
+                    <strong>{t.subject || (t.targetType && t.targetType !== 'support' ? `Report: ${t.category}` : t.category)}</strong>
+                    <span>{t.category} · #{t.id.slice(0, 8).toUpperCase()} · {new Date(t.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span>
+                  </div>
+                  <span className={`sp2-st ${st.cls}`}>{st.label}</span>
+                </div>
+              )
+            })}
+          </section>
         )}
       </div>
 
-      {/* New Ticket Modal */}
-      <div className={`sp-overlay ${showTicket ? 'open' : ''}`} onClick={() => setShowTicket(false)}>
-        <div className="sp-modal" onClick={e => e.stopPropagation()}>
-          <h2>New Support Ticket</h2>
-          <div className="sp-field">
-            <label>Subject</label>
-            <input type="text" placeholder="Brief description of your issue" />
-          </div>
-          <div className="sp-field">
-            <label>Category</label>
-            <select>
-              <option>Payments & Withdrawals</option>
-              <option>Account & Login</option>
-              <option>Tasks & Submissions</option>
-              <option>Referrals</option>
-              <option>Technical Issue</option>
-              <option>Other</option>
-            </select>
-          </div>
-          <div className="sp-field">
-            <label>Priority</label>
-            <select>
-              <option>Low</option>
-              <option>Medium</option>
-              <option>High</option>
-            </select>
-          </div>
-          <div className="sp-field">
-            <label>Description</label>
-            <textarea placeholder="Describe your issue in detail..." />
-          </div>
-          <div className="sp-modal-actions">
-            <button className="cmp-btn" onClick={() => setShowTicket(false)}>Cancel</button>
-            <button className="cmp-btn primary" style={{background:'var(--accent)',color:'var(--on-accent)',border:'0'}} onClick={() => setShowTicket(false)}>Submit Ticket</button>
+      {open && (
+        <div className="sp2-overlay" onClick={() => setOpen(false)}>
+          <div className="up-card sp2-modal" role="dialog" aria-modal="true" aria-labelledby="sp2-title" onClick={(e) => e.stopPropagation()}>
+            <div className="sp2-modal-h">
+              <h2 id="sp2-title">New support ticket</h2>
+              <button className="sp2-x" onClick={() => setOpen(false)} aria-label="Close"><i className="ti ti-x" /></button>
+            </div>
+            <label className="sp2-f"><span>Subject</span>
+              <input value={form.subject} maxLength={120} onChange={(e) => setForm((f) => ({ ...f, subject: e.target.value }))} placeholder="e.g. Withdrawal pending for 2 days" autoFocus />
+            </label>
+            <label className="sp2-f"><span>Topic</span>
+              <select value={form.category} onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}>
+                {CATEGORIES.map((c) => <option key={c}>{c}</option>)}
+              </select>
+            </label>
+            <label className="sp2-f"><span>What happened?</span>
+              <textarea value={form.description} maxLength={5000} rows={6} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} placeholder="Include the job, amount or reference if it's about money. Never share your password or PIN." />
+              <small>{form.description.length}/5000</small>
+            </label>
+            <label className="sp2-f"><span>Reply to a different email (optional)</span>
+              <input type="email" value={form.email} maxLength={200} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} placeholder="We use your account email otherwise" />
+            </label>
+            <div className="sp2-actions">
+              <button className="up-btn" onClick={() => setOpen(false)}>Cancel</button>
+              <button className="up-btn primary" onClick={send} disabled={sending}>{sending ? 'Sending…' : 'Send ticket'}</button>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </Layout>
   )
 }
