@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
-
-const API_BASE = 'https://ogapay-production.up.railway.app/api/v1'
+import { apiRequest, getAccessToken } from '../lib/api'
+import { openSignIn } from '../lib/signin'
 
 const filters = ['All', 'Trending', 'New', 'Crypto', 'Business', 'Content', 'Design', 'Marketing']
 
@@ -19,30 +19,40 @@ export default function Communities() {
   const [stats, setStats] = useState<any>(null)
   const [trending, setTrending] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  // "My communities" (from the June page); /communities/mine opens it
+  const location = useLocation()
+  const signedIn = !!getAccessToken()
+  const [tab, setTab] = useState<'all' | 'mine'>(location.pathname === '/communities/mine' ? 'mine' : 'all')
+  const [mine, setMine] = useState<any[] | null>(null)
 
   useEffect(() => {
     async function fetchCommunities() {
       try {
-        const res = await fetch(API_BASE + '/communities')
-        const json = await res.json()
-        if (json.success && json.data) {
-          setCommunities(json.data.communities || [])
-          setStats(json.data.stats || null)
-          setTrending(json.data.trending || [])
-        }
+        // (this used to call the production API directly, even from test builds)
+        const data = await apiRequest<any>('/communities', { auth: false })
+        setCommunities(data?.communities || [])
+        setStats(data?.stats || null)
+        setTrending(data?.trending || [])
       } catch {}
       setLoading(false)
     }
     fetchCommunities()
   }, [])
 
+  useEffect(() => {
+    if (tab !== 'mine' || !signedIn || mine) return
+    apiRequest<any[]>('/communities/mine/list').then((d) => setMine(Array.isArray(d) ? d : [])).catch(() => setMine([]))
+  }, [tab, signedIn, mine])
+
+  const monthAgo = Date.now() - 30 * 86400000
+
   const filtered = communities.filter(c => {
     if (filter === 'trending' && !c.trending) return false
-    if (filter === 'new' && !c.trending) return false
+    if (filter === 'new' && new Date(c.createdAt).getTime() < monthAgo) return false
     if (filter !== 'all' && filter !== 'trending' && filter !== 'new' && c.category !== filter) return false
     if (search) {
       const q = search.toLowerCase()
-      return c.name.toLowerCase().includes(q) || c.desc.toLowerCase().includes(q) || c.badge.toLowerCase().includes(q)
+      return `${c.name} ${c.desc || ''} ${c.badge || ''}`.toLowerCase().includes(q)
     }
     return true
   })
@@ -57,8 +67,21 @@ export default function Communities() {
         .ch-search:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px rgba(var(--accent-rgb),.1)}
         .ch-search input{flex:1;border:0;background:transparent;color:var(--text);font-size:14px;padding:12px 16px;outline:none}
         .ch-search input::placeholder{color:var(--text3)}
-        .ch-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:28px}
-        @media(max-width:768px){.ch-stats{grid-template-columns:repeat(2,1fr)}}
+        .ch-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-bottom:20px}
+        .ch-tabs{display:flex;align-items:center;gap:8px;margin-bottom:18px;flex-wrap:wrap}
+        .ch-tab{height:36px;padding:0 14px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text2);font:600 13px inherit;font-family:inherit;cursor:pointer}
+        .ch-tab.on{background:var(--text);color:var(--bg);border-color:var(--text)}
+        .ch-create{margin-left:auto;height:36px;padding:0 14px;border-radius:10px;border:0;background:var(--text);color:var(--bg);font:700 13px inherit;font-family:inherit;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+        .ch-mine{display:grid;gap:8px}
+        .ch-mine-row{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--card);border:1px solid var(--border);border-radius:12px;cursor:pointer;text-align:left;font:inherit;color:inherit;width:100%}
+        .ch-mine-row:hover{border-color:var(--text3)}
+        .ch-mine-av{width:40px;height:40px;border-radius:10px;display:grid;place-items:center;color:#fff;font-weight:800;overflow:hidden;flex-shrink:0}
+        .ch-mine-av img{width:100%;height:100%;object-fit:cover}
+        .ch-mine-t{flex:1;min-width:0}
+        .ch-mine-t strong{display:block;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+        .ch-mine-t span{font-size:12px;color:var(--text3)}
+        .ch-role{font-size:11px;font-weight:700;padding:3px 8px;border-radius:999px;border:1px solid var(--border);color:var(--text2)}
+        .cc-desc{font-size:12px;color:var(--text2);line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin:2px 0 8px}
         .ch-stat{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;text-align:center}
         .ch-stat .csi{width:34px;height:34px;border-radius:8px;background:rgba(var(--accent-rgb),.08);color:var(--accent);display:grid;place-items:center;margin:0 auto 6px;font-size:18px}
         .ch-stat .csn{font-family:Geist;font-size:22px;font-weight:800}
@@ -110,13 +133,34 @@ export default function Communities() {
         {[
           { icon: 'ti ti-users', num: stats?.total?.toLocaleString() || '0', label: 'Communities' },
           { icon: 'ti ti-users-group', num: stats?.members?.toLocaleString() || '0', label: 'Active Members' },
-          { icon: 'ti ti-checklist', num: stats?.tasks?.toLocaleString() || '0', label: 'Tasks Completed' },
-          { icon: 'ti ti-coin', num: stats?.rewards ? 'NGN ' + stats.rewards.toLocaleString() : 'NGN 0', label: 'Rewards Distributed' },
         ].map((s, i) => (
           <div className="ch-stat" key={i}><div className="csi"><i className={s.icon} /></div><div className="csn">{s.num}</div><div className="csl">{s.label}</div></div>
         ))}
       </div>
 
+      <div className="ch-tabs">
+        <button className={`ch-tab${tab === 'all' ? ' on' : ''}`} onClick={() => setTab('all')}>All communities</button>
+        <button className={`ch-tab${tab === 'mine' ? ' on' : ''}`} onClick={() => (signedIn ? setTab('mine') : openSignIn({ redirect: '/communities/mine' }))}>My communities</button>
+        <button className="ch-create" onClick={() => (signedIn ? navigate('/communities/create') : openSignIn({ redirect: '/communities/create' }))}><i className="ti ti-plus" /> Create</button>
+      </div>
+
+      {tab === 'mine' ? (
+        mine === null ? (
+          <div style={{ textAlign: 'center', padding: 40, color: 'var(--text3)' }}>Loading your communities…</div>
+        ) : mine.length === 0 ? (
+          <div className="ch-empty"><i className="ti ti-users" style={{ fontSize: 32, marginBottom: 8, display: 'block', color: 'var(--text3)' }} />You haven't joined any communities yet. <button className="ch-tab" style={{ marginTop: 12 }} onClick={() => setTab('all')}>Browse communities</button></div>
+        ) : (
+          <div className="ch-mine">
+            {mine.map((m) => (
+              <button key={m.communityId} className="ch-mine-row" onClick={() => navigate('/communities/' + (m.slug || m.communityId))}>
+                <span className="ch-mine-av" style={{ background: m.accentColor || 'var(--text)' }}>{m.iconUrl ? <img src={m.iconUrl} alt="" /> : (m.name || '?').slice(0, 2).toUpperCase()}</span>
+                <span className="ch-mine-t"><strong>{m.name}</strong><span>{(m.memberCount || 0).toLocaleString()} member{m.memberCount === 1 ? '' : 's'}{m.isPublic ? '' : ' · private'}</span></span>
+                <span className="ch-role">{m.role === 'OWNER' ? 'Owner' : m.role === 'ADMIN' ? 'Admin' : m.role === 'MODERATOR' ? 'Moderator' : 'Member'}</span>
+              </button>
+            ))}
+          </div>
+        )
+      ) : <>
       <div className="ch-filters">
         {filters.map(f => (
           <button key={f} className={`ch-pill ${filter === f.toLowerCase() ? 'active' : ''}`} onClick={() => setFilter(f.toLowerCase())}>{f}</button>
@@ -143,7 +187,7 @@ export default function Communities() {
                       <div className="cc-name">{c.name}</div>
                       <div className="cc-badge">{c.badge}</div>
                       <div className="cc-meta"><span><i className="ti ti-users" /> {c.members?.toLocaleString()}</span></div>
-                      <button className="ch-join" style={{ marginTop: 'auto', height: 30, fontSize: 11 }} onClick={(e) => { e.stopPropagation(); navigate('/communities/' + c.id) }}>Join</button>
+                      <button className="ch-join" style={{ marginTop: 'auto', height: 30, fontSize: 11 }} onClick={(e) => { e.stopPropagation(); navigate('/communities/' + c.id) }}>View</button>
                     </div>
                   </div>
                 ))}
@@ -165,14 +209,12 @@ export default function Communities() {
                   <div className="cc-body">
                     <div className="cc-name">{c.name}</div>
                     <div className="cc-badge">{c.badge}</div>
+                    {c.desc && <div className="cc-desc">{c.desc}</div>}
                     <div className="cc-meta">
-                      <span><i className="ti ti-users" /> {c.members?.toLocaleString()}</span>
-                      <span><i className="ti ti-checklist" /> {c.tasks} tasks</span>
+                      <span><i className="ti ti-users" /> {c.members?.toLocaleString()} member{c.members === 1 ? '' : 's'}</span>
                     </div>
-                    <div className="cc-r">Rewards: <strong>NGN {c.rewards?.toLocaleString()}</strong>/week</div>
                     <div className="cc-actions">
-                      <button className="ch-join" onClick={(e) => { e.stopPropagation(); navigate('/communities/' + c.id) }}>Join</button>
-                      <button className="ch-preview" onClick={(e) => { e.stopPropagation(); navigate('/communities/' + c.id) }}>Preview</button>
+                      <button className="ch-join" onClick={(e) => { e.stopPropagation(); navigate('/communities/' + c.id) }}>View</button>
                     </div>
                   </div>
                 </div>
@@ -181,6 +223,8 @@ export default function Communities() {
           )}
         </>
       )}
+
+      </>}
 
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </Layout>
