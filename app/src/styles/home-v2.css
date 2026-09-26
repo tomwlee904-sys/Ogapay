@@ -263,23 +263,21 @@ body:has(main.hv), body:has(main.hv) #root { overflow-x: clip; }
 
 /* Portrait tablets (and phones in desktop-site mode): the landscape layout left
    most of a tall screen empty and stretched the art thin. Stack tabs, art and
-   card, centred, and scroll about half as far per chapter. */
+   card, let the art fill the space between them, and scroll about half as far
+   per chapter. */
 @media (min-width: 769px) and (orientation: portrait) {
   .hv-eco { height: calc(var(--eco-steps, 6) * 45vh + 100vh); }
   .hv-eco-sticky { justify-content: center; gap: 8px; padding-bottom: 28px; }
   .hv-eco-top { padding-top: 24px; }
   .hv-eco-skip { top: 24px; right: 24px; }
-  .hv-eco-art { position: relative; inset: auto; flex: 1 1 auto; min-height: 0; max-height: 88vw; }
+  .hv-eco-art { position: relative; inset: auto; flex: 1 1 auto; min-height: 0; }
   .hv-eco-card { position: relative; left: auto; bottom: auto; margin: 0 auto; width: min(560px, calc(100% - 48px)); flex: none; }
   .hv-eco-big { display: none; }
 }
-/* Very tall screens (a phone with "Desktop site" on): even stacked, most of the
-   screen stays empty, so show the chapters as a list, like phones get */
+/* Very tall screens (a phone with "Desktop site" on): same animated layout,
+   with a bit less scrolling per chapter */
 @media (min-width: 769px) and (max-aspect-ratio: 5/8) {
-  .hv-eco-sticky { display: none; }
-  .hv-eco { height: auto !important; }
-  .hv-eco-list { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 32px; }
-  .hv-eco-list > .hv-center { grid-column: 1 / -1; }
+  .hv-eco { height: calc(var(--eco-steps, 6) * 35vh + 100vh); }
 }
 
 /* ── Jobs ── */

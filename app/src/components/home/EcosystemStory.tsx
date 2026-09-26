@@ -124,28 +124,36 @@ export default function EcosystemStory() {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const N = window.innerWidth < 1100 ? 1100 : 1700;
-    let w = 0, h = 0, dpr = 1, raf = 0, visible = false;
+    // Tall screens get a big art area, so more (and slightly larger) dots
+    const N = window.innerWidth < 1100 && window.innerHeight < 1400 ? 1100 : 1700;
+    let w = 0, h = 0, dpr = 1, raf = 0, visible = false, dot = 1;
     let ink = "#111";
 
     const readInk = () => { ink = getComputedStyle(sec).getPropertyValue("--hv-ink").trim() || "#111"; };
     const size = () => {
       dpr = Math.min(window.devicePixelRatio || 1, 2);
       w = canvas.clientWidth; h = canvas.clientHeight;
+      dot = h > 1100 ? 1.4 : 1;
       canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     };
     const map = (shape: Shape, pt: Pt): Pt => {
       // Landscape: the art fills the panel and leans right of the card.
-      // Portrait tablets: the art has its own box above the card, so centre it.
+      // Portrait: the art has its own box between the tabs and the card; centre
+      // it and let it grow taller on tall screens so the box isn't half empty.
       const wide = w > h * 1.35;
       if (shape.square) {
-        const S = wide ? Math.min(w * 0.55, h * 0.78) : Math.min(w * 0.82, h * 0.86);
-        return [w * (wide ? 0.6 : 0.5) + (pt[0] - 0.5) * S, h * (wide ? 0.56 : 0.5) + (pt[1] - 0.5) * S];
+        if (wide) {
+          const S = Math.min(w * 0.55, h * 0.78);
+          return [w * 0.6 + (pt[0] - 0.5) * S, h * 0.56 + (pt[1] - 0.5) * S];
+        }
+        const sx = Math.min(w * 0.82, h * 0.86);
+        const sy = Math.max(sx, Math.min(h * 0.8, sx * 1.3));
+        return [w * 0.5 + (pt[0] - 0.5) * sx, h * 0.5 + (pt[1] - 0.5) * sy];
       }
       if (wide) return [w * (0.12 + 0.82 * pt[0]), h * (0.22 + 0.66 * pt[1])];
       const b = BOXES.get(shape)!;
-      const bw = w * 0.86, bh = Math.min(h * 0.78, w * 0.7);
+      const bw = w * 0.86, bh = Math.min(h * 0.8, w * 1.25);
       return [w * 0.07 + ((pt[0] - b.x0) / b.bw) * bw, (h - bh) / 2 + ((pt[1] - b.y0) / b.bh) * bh];
     };
 
@@ -170,7 +178,7 @@ export default function EcosystemStory() {
     };
 
     const frame = () => {
-      // Hidden (phones and very tall screens show the list instead): don't animate
+      // Hidden (phones show the list instead): don't animate
       if (!w || !h) { raf = 0; return; }
       const shape = SHAPES[stepRef.current];
       ctx.clearRect(0, 0, w, h);
@@ -180,7 +188,7 @@ export default function EcosystemStory() {
         const [tx, ty] = target(p, shape);
         p.x += (tx - p.x) * 0.055; p.y += (ty - p.y) * 0.055;
         ctx.globalAlpha = p.a * (0.35 + 0.65 * Math.sin(p.t * Math.PI));
-        ctx.fillRect(p.x, p.y, p.r, p.r);
+        ctx.fillRect(p.x, p.y, p.r * dot, p.r * dot);
       }
       ctx.globalAlpha = 1;
       if (visible && !reduce) raf = requestAnimationFrame(frame);
