@@ -1,143 +1,155 @@
-// @ts-nocheck
+import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import Layout from '../components/Layout'
+import { API_BASE, apiRequest, getAccessToken } from '../lib/api'
+import { openSignIn } from '../lib/signin'
+import { useToast } from '../components/Toast'
+import '../styles/profile-public.css'
+import '../styles/developer.css'
 
-const Icon = ({ n, s = 18, c }) => (
-  <i className={`ti ti-${n}`} style={{ fontSize: s, color: c || "var(--text2)", lineHeight: 1, flexShrink: 0 }} />
-)
+// Developer API: read-only keys and their docs. The old page listed endpoints
+// that keys never worked with, and creating a key always failed.
 
-const endpoints = [
-  { method: 'GET', path: '/api/v1/tasks', desc: 'List all available tasks', auth: false },
-  { method: 'GET', path: '/api/v1/tasks/:id', desc: 'Get task details', auth: false },
-  { method: 'POST', path: '/api/v1/tasks', desc: 'Create a new task', auth: true },
-  { method: 'POST', path: '/api/v1/tasks/:id/apply', desc: 'Apply to a task', auth: true },
-  { method: 'POST', path: '/api/v1/tasks/:id/submit', desc: 'Submit proof for a task', auth: true },
-  { method: 'PATCH', path: '/api/v1/tasks/submissions/:id/review', desc: 'Review a submission', auth: true },
-  { method: 'GET', path: '/api/v1/auth/me', desc: 'Get current user profile', auth: true },
-  { method: 'POST', path: '/api/v1/auth/login', desc: 'Login with email/password', auth: false },
-  { method: 'POST', path: '/api/v1/auth/register', desc: 'Create account', auth: false },
-  { method: 'GET', path: '/api/v1/communities', desc: 'List communities', auth: false },
-  { method: 'GET', path: '/api/v1/wallet/balance', desc: 'Get wallet balance', auth: true },
+type Key = { id: string; name: string; prefix: string; usageCount: number; lastUsedAt: string | null; revokedAt: string | null; createdAt: string }
+
+const BASE = `${API_BASE}/dev`
+const ENDPOINTS: { path: string; desc: string; params?: string }[] = [
+  { path: '/me', desc: 'Your account: username, name, OgaScore, KYC level.' },
+  { path: '/jobs', desc: 'Open public jobs, newest first.', params: 'category, search, page, limit' },
+  { path: '/jobs/:id', desc: 'One public job.' },
+  { path: '/my/jobs', desc: 'Jobs you posted, any status.', params: 'page, limit' },
+  { path: '/my/submissions', desc: 'Work you submitted, with its status and payment.', params: 'page, limit' },
+  { path: '/my/balance', desc: 'Your wallets: balance, locked and available.' },
+  { path: '/my/transactions', desc: 'Your wallet history.', params: 'page, limit' },
 ]
+const day = (d: string) => new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
 
-export default function Developer() {
+function Code({ children }: { children: string }) {
+  const { toast } = useToast()
   return (
-    <Layout>
-      <style>{`
-        .dev-page{max-width:900px;margin:0 auto;padding:0 0 60px}
-        .dev-hero{background:linear-gradient(135deg,#0a0a0a,#27272a);border-radius:16px;padding:40px 36px;margin-bottom:32px;color:#fff}
-        .dev-hero h1{font-family:Geist;font-size:32px;font-weight:900;margin:0 0 8px}
-        .dev-hero p{font-size:14px;opacity:.85;line-height:1.6;margin:0;max-width:600px}
-        .dev-section{margin-bottom:32px}
-        .dev-section h2{font-family:Geist;font-size:20px;font-weight:800;margin:0 0 4px}
-        .dev-section .sub{color:var(--text2);font-size:13px;margin:0 0 16px}
-        .dev-card{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden}
-        .dev-card-head{padding:16px 20px;border-bottom:1px solid var(--border);font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px}
-        .endpoint-row{display:flex;align-items:center;gap:12px;padding:12px 20px;border-bottom:1px solid var(--border);font-size:13px}
-        .endpoint-row:last-child{border-bottom:none}
-        .method{display:inline-flex;align-items:center;justify-content:center;min-width:52px;height:24px;border-radius:5px;font-size:10px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;flex-shrink:0}
-        .method.get{background:#16a34a18;color:#16a34a}
-        .method.post{background:rgba(var(--accent-rgb),0.09);color:var(--accent)}
-        .method.patch{background:#F59E0B18;color:#F59E0B}
-        .endpoint-path{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text);font-weight:600;flex-shrink:0}
-        .endpoint-desc{color:var(--text2);flex:1}
-        .endpoint-auth{font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;flex-shrink:0}
-        .endpoint-auth.public{background:var(--bg2);color:var(--text3)}
-        .endpoint-auth.private{background:#F59E0B18;color:#F59E0B}
-        .code-block{background:#0a0a0a;border-radius:8px;padding:16px 18px;font-family:'JetBrains Mono',monospace;font-size:12px;color:#e5e5e5;overflow-x:auto;line-height:1.6;margin:12px 0}
-        .code-block .comment{color:#6b7280}
-        .code-block .keyword{color:var(--accent-bright)}
-        .code-block .string{color:#86efac}
-        .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:24px}
-        @media(max-width:600px){.grid-2{grid-template-columns:1fr}}
-        .quick-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;transition:all .2s}
-        .quick-card:hover{border-color:var(--accent)}
-        .quick-card .qc-icon{width:40px;height:40px;border-radius:10px;display:grid;place-items:center;margin-bottom:12px}
-        .quick-card h3{font-family:Geist;font-size:15px;font-weight:800;margin:0 0 4px}
-        .quick-card p{font-size:12px;color:var(--text2);margin:0 0 14px;line-height:1.5}
-        .quick-card a{font-size:13px;font-weight:700;color:var(--accent);text-decoration:none;display:inline-flex;align-items:center;gap:6px}
-      `}</style>
+    <div className="dv-code">
+      <pre><code>{children}</code></pre>
+      <button className="dv-copy" aria-label="Copy" onClick={() => navigator.clipboard?.writeText(children).then(() => toast('Copied', 'success')).catch(() => {})}><i className="ti ti-copy" /></button>
+    </div>
+  )
+}
 
-      <div className="dev-page">
-        {/* Hero */}
-        <div className="dev-hero">
-          <h1><Icon n="code" s={28} c="#fff" /> Developer API</h1>
-          <p>Integrate OgaPay into your AI agents, applications, and workflows. Our REST API allows you to create tasks, manage submissions, and interact with the platform programmatically.</p>
+function Keys() {
+  const { toast } = useToast()
+  const [keys, setKeys] = useState<Key[] | null>(null)
+  const [name, setName] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [fresh, setFresh] = useState<string | null>(null)
+  const [err, setErr] = useState('')
+
+  const load = () => apiRequest<Key[]>('/apikeys').then((d) => setKeys(Array.isArray(d) ? d : [])).catch(() => setKeys([]))
+  useEffect(() => { load() }, [])
+
+  const create = async () => {
+    setBusy(true); setErr('')
+    try {
+      const r = await apiRequest<Key & { key: string }>('/apikeys', { method: 'POST', body: JSON.stringify({ name: name.trim() }) })
+      setFresh(r.key); setName('')
+      load()
+    } catch (e: any) { setErr(e?.message || "Couldn't create the key") }
+    setBusy(false)
+  }
+
+  const revoke = async (k: Key) => {
+    if (!window.confirm(`Revoke "${k.name}"? Anything using it stops working straight away.`)) return
+    try {
+      await apiRequest(`/apikeys/${k.id}`, { method: 'DELETE' })
+      toast('Key revoked', 'success')
+      load()
+    } catch (e: any) { toast(e?.message || "Couldn't revoke the key", 'error') }
+  }
+
+  const active = (keys || []).filter((k) => !k.revokedAt)
+  const revoked = (keys || []).filter((k) => k.revokedAt)
+
+  return (
+    <section className="up-card dv-card">
+      <h2>Your API keys</h2>
+      <p className="dv-sub">Up to 5 active keys. Treat them like passwords: anyone with a key can read your balance and history.</p>
+
+      {fresh && (
+        <div className="dv-fresh" role="status">
+          <strong>Copy your new key now. It won't be shown again.</strong>
+          <Code>{fresh}</Code>
+          <button className="up-btn" onClick={() => setFresh(null)}>I've saved it</button>
         </div>
+      )}
 
-        {/* Quick Start */}
-        <div className="grid-2">
-          {[
-            { icon: "key", color: "#52525b", title: "API Key", desc: "Get your API key from your profile settings to authenticate requests.", link: "/settings", label: "Go to Settings" },
-            { icon: "book", color: "#16a34a", title: "Documentation", desc: "Read the full API reference with examples and response schemas.", link: "#", label: "View Docs" },
-            { icon: "terminal", color: "#8B5CF6", title: "Quick Start", desc: "Learn the basics of creating tasks, applying, and submitting proofs.", link: "#", label: "Get Started" },
-            { icon: "message", color: "#F59E0B", title: "Support", desc: "Join our Telegram group for developer support and updates.", link: "https://t.me/ogapay", label: "Join Telegram" },
-          ].map(c => (
-            <div className="quick-card" key={c.title}>
-              <div className="qc-icon" style={{background:`${c.color}18`,color:c.color}}><Icon n={c.icon} s={20} c={c.color} /></div>
-              <h3>{c.title}</h3>
-              <p>{c.desc}</p>
-              <a href={c.link}><span>{c.label}</span> <i className="ti ti-arrow-right" style={{fontSize:12}} /></a>
+      <form className="dv-create" onSubmit={(e) => { e.preventDefault(); if (name.trim()) create() }}>
+        <input className="dv-input" value={name} maxLength={60} onChange={(e) => setName(e.target.value)} placeholder="Key name, e.g. My dashboard" aria-label="Key name" />
+        <button className="up-btn primary" disabled={busy || !name.trim() || active.length >= 5}>{busy ? 'Creating…' : 'Create key'}</button>
+      </form>
+      {err && <p className="dv-err">{err}</p>}
+
+      {keys === null ? <p className="dv-sub">Loading…</p> : active.length === 0 ? <p className="dv-sub">No active keys yet.</p> : (
+        <div className="dv-keys">
+          {active.map((k) => (
+            <div key={k.id} className="dv-key">
+              <div className="dv-key-t">
+                <strong>{k.name}</strong>
+                <span><code>{k.prefix}…</code> · created {day(k.createdAt)} · {k.lastUsedAt ? `last used ${day(k.lastUsedAt)}` : 'never used'}</span>
+              </div>
+              <button className="up-btn" onClick={() => revoke(k)}>Revoke</button>
             </div>
           ))}
         </div>
+      )}
+      {revoked.length > 0 && <p className="dv-sub dv-revoked">{revoked.length === 1 ? '1 revoked key no longer works.' : `${revoked.length} revoked keys no longer work.`}</p>}
+    </section>
+  )
+}
 
-        {/* Base URL */}
-        <div className="dev-section">
-          <h2>Base URL</h2>
-          <p className="sub">All API requests should be made to this base endpoint.</p>
-          <pre className="code-block" style={{whiteSpace:'pre-wrap',wordBreak:'break-all'}}>
-{`// Base URL for all API requests
-const API_BASE = 'https://ogapay-production.up.railway.app/api/v1'`}
-          </pre>
+export default function Developer() {
+  const signedIn = !!getAccessToken()
+  return (
+    <Layout>
+      <div className="up-wrap dv-wrap">
+        <div className="dv-head">
+          <h1>Developer API</h1>
+          <p>Read your OgaPay data and public jobs from your own apps. Keys are read-only: they can't move money, post jobs or change anything.</p>
         </div>
 
-        {/* Authentication */}
-        <div className="dev-section">
+        {signedIn ? <Keys /> : (
+          <section className="up-card dv-card">
+            <h2>Your API keys</h2>
+            <p className="dv-sub">Sign in to create a key.</p>
+            <button className="up-btn primary" onClick={() => openSignIn({ redirect: '/developer' })}>Sign in</button>
+          </section>
+        )}
+
+        <section className="up-card dv-card">
           <h2>Authentication</h2>
-          <p className="sub">Protected endpoints require a Bearer token in the Authorization header.</p>
-          <div className="dev-card">
-            <div className="dev-card-head"><Icon n="lock" s={16} /> Authentication Header</div>
-            <pre className="code-block" style={{margin:0,borderRadius:0,whiteSpace:'pre-wrap',wordBreak:'break-all'}}>
-{`// Include this header for authenticated requests
-'Authorization': 'Bearer <your_access_token>'`}
-          </pre>
-          </div>
-        </div>
+          <p className="dv-sub">Send your key in the <code>Authorization</code> header (or <code>X-API-Key</code>). Base URL:</p>
+          <Code>{BASE}</Code>
+          <Code>{`curl ${BASE}/me \\\n  -H "Authorization: Bearer oga_live_YOUR_KEY"`}</Code>
+          <p className="dv-sub">Responses look like <code>{'{ "success": true, "data": … }'}</code>; lists add <code>pagination</code>. Limit: 60 requests a minute per key. Errors: <code>401</code> missing, wrong or revoked key; <code>429</code> too many requests.</p>
+        </section>
 
-        {/* Endpoints */}
-        <div className="dev-section">
-          <h2>API Endpoints</h2>
-          <p className="sub">Available endpoints across the OgaPay platform.</p>
-          <div className="dev-card">
-            <div className="dev-card-head"><Icon n="list" s={16} /> All Endpoints</div>
-            {endpoints.map((ep, i) => (
-              <div className="endpoint-row" key={i}>
-                <span className={`method ${ep.method.toLowerCase()}`}>{ep.method}</span>
-                <span className="endpoint-path">{ep.path}</span>
-                <span className="endpoint-desc">{ep.desc}</span>
-                <span className={`endpoint-auth ${ep.auth ? 'private' : 'public'}`}>{ep.auth ? 'Auth' : 'Public'}</span>
+        <section className="up-card dv-card">
+          <h2>Endpoints</h2>
+          <p className="dv-sub">All are <code>GET</code>. Page size is up to 50 (default 20).</p>
+          <div className="dv-eps">
+            {ENDPOINTS.map((e) => (
+              <div key={e.path} className="dv-ep">
+                <span className="dv-method">GET</span>
+                <div>
+                  <code className="dv-path">/dev{e.path}</code>
+                  <p>{e.desc}{e.params && <> Query: <code>{e.params}</code></>}</p>
+                </div>
               </div>
             ))}
           </div>
-        </div>
+          <p className="dv-sub" style={{ marginTop: 14 }}>Example: open design jobs</p>
+          <Code>{`curl "${BASE}/jobs?category=DESIGN&limit=5" \\\n  -H "Authorization: Bearer oga_live_YOUR_KEY"`}</Code>
+          <p className="dv-sub">Categories: SOCIAL_MEDIA, DATA_ENTRY, CONTENT_WRITING, APP_TESTING, SURVEY, DESIGN, TRANSLATION, WEB_RESEARCH, VIDEO_REVIEW, OTHER.</p>
+        </section>
 
-        {/* Example */}
-        <div className="dev-section">
-          <h2>Example: Fetch Tasks</h2>
-          <p className="sub">A simple example showing how to fetch available tasks.</p>
-          <div className="dev-card">
-            <div className="dev-card-head"><Icon n="code" s={16} /> JavaScript Example</div>
-            <pre className="code-block" style={{margin:0,borderRadius:0,whiteSpace:'pre-wrap',wordBreak:'break-all',lineHeight:1.8}}>
-{`// Fetch available tasks from OgaPay
-const response = await fetch('https://ogapay-production.up.railway.app/api/v1/tasks')
-const json = await response.json()
-
-if (json.success) {
-  console.log('Tasks:', json.data)
-}`}
-            </pre>
-          </div>
-        </div>
+        <p className="dv-foot">Need to post jobs or pay people from code? <Link to="/support">Tell us</Link> what you're building.</p>
       </div>
     </Layout>
   )
