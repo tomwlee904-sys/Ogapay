@@ -1,109 +1,109 @@
-// @ts-nocheck
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import Layout from '../components/Layout'
+import { apiRequest, getAccessToken } from '../lib/api'
+import '../styles/profile-public.css'
+import '../styles/writer.css'
 
-const Icon = ({ n, s = 18, c }) => (
-  <i className={`ti ti-${n}`} style={{ fontSize: s, color: c || "var(--text2)", lineHeight: 1, flexShrink: 0 }} />
-)
+// Ported from the June writer workspace, which listed the ten newest jobs of any
+// kind and pointed every "resource" at the FAQ. It now shows open writing and
+// translation jobs and links to the blog editor.
 
-const templates = [
-  { id: 1, title: 'Product Description', icon: 'shopping-cart', tasks: 12, reward: 'NGN 500-2,000' },
-  { id: 2, title: 'Blog Post Writing', icon: 'article', tasks: 8, reward: 'NGN 1,000-5,000' },
-  { id: 3, title: 'Social Media Copy', icon: 'messages', tasks: 15, reward: 'NGN 300-1,500' },
-  { id: 4, title: 'Proofreading & Editing', icon: 'spellcheck', tasks: 6, reward: 'NGN 400-2,000' },
-  { id: 5, title: 'SEO Content', icon: 'trending-up', tasks: 4, reward: 'NGN 2,000-8,000' },
-  { id: 6, title: 'Script Writing', icon: 'video', tasks: 3, reward: 'NGN 3,000-10,000' },
-]
+type Job = { id: string; title: string; reward: number | string; currency: string; category: string; maxWorkers: number; currentWorkers: number; createdAt: string; deadline: string | null }
 
-const recentJobs = [
-  { id: 1, title: 'Write 5 product descriptions for fashion items', budget: 'NGN 2,500', slots: 3, time: '2h ago' },
-  { id: 2, title: 'Proofread 500-word DeFi article', budget: 'NGN 800', slots: 5, time: '5h ago' },
-  { id: 3, title: 'Create Twitter thread about Solana ecosystem', budget: 'NGN 1,200', slots: 2, time: '1d ago' },
-]
+const KINDS = [
+  { id: 'CONTENT_WRITING', label: 'Writing', icon: 'ti-writing', tasksLabel: 'Content writing' },
+  { id: 'TRANSLATION', label: 'Translation', icon: 'ti-language', tasksLabel: 'Translation' },
+] as const
+
+const money = (n: number | string, c: string) => (c === 'NGN' ? '₦' + Number(n).toLocaleString('en-US') : `${Number(n).toLocaleString('en-US')} ${c}`)
+const ago = (d: string) => {
+  const h = Math.floor((Date.now() - new Date(d).getTime()) / 3600000)
+  return h < 1 ? 'just now' : h < 24 ? `${h}h ago` : `${Math.floor(h / 24)}d ago`
+}
 
 export default function Writer() {
-  const navigate = useNavigate()
+  const [kind, setKind] = useState<(typeof KINDS)[number]['id']>('CONTENT_WRITING')
+  const [jobs, setJobs] = useState<Job[] | null>(null)
+  const [counts, setCounts] = useState<Record<string, number>>({})
+  const signedIn = !!getAccessToken()
+
+  useEffect(() => {
+    let live = true
+    setJobs(null)
+    apiRequest<any>(`/tasks?category=${kind}&status=OPEN&limit=20`, { auth: false })
+      .then((d) => { if (live) setJobs(Array.isArray(d) ? d : d?.data || d?.tasks || []) })
+      .catch(() => { if (live) setJobs([]) })
+    return () => { live = false }
+  }, [kind])
+
+  // Open job counts for the tabs
+  useEffect(() => {
+    KINDS.forEach((k) => {
+      apiRequest<any>(`/tasks?category=${k.id}&status=OPEN&limit=100`, { auth: false })
+        .then((d) => setCounts((c) => ({ ...c, [k.id]: (Array.isArray(d) ? d : d?.data || []).length })))
+        .catch(() => {})
+    })
+  }, [])
 
   return (
     <Layout>
-      <style>{`
-        .wr-page{max-width:900px;margin:0 auto;padding:0 0 40px}
-        .wr-hero{background:linear-gradient(135deg,#0a0a0a,#27272a);border-radius:16px;padding:36px 32px;margin-bottom:28px;color:#fff}
-        .wr-hero h1{font-family:Geist;font-size:28px;font-weight:900;margin:0 0 6px}
-        .wr-hero p{font-size:14px;opacity:.85;margin:0;line-height:1.6;max-width:500px}
-        .wr-section{margin-bottom:28px}
-        .wr-section h2{font-family:Geist;font-size:18px;font-weight:800;margin:0 0 14px;display:flex;align-items:center;gap:8px}
-        .wr-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px}
-        .wr-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px;transition:all .2s;cursor:pointer}
-        .wr-card:hover{transform:translateY(-2px);border-color:var(--accent)}
-        .wr-card-icon{width:40px;height:40px;border-radius:10px;display:grid;place-items:center;margin-bottom:10px}
-        .wr-card h3{font-size:14px;font-weight:800;margin:0 0 4px}
-        .wr-card p{font-size:12px;color:var(--text2);margin:0 0 8px}
-        .wr-card .meta{font-size:11px;color:var(--text3);display:flex;gap:12px}
-        .wr-list{display:grid;gap:10px}
-        .wr-list-item{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;transition:all .2s}
-        .wr-list-item:hover{border-color:var(--accent)}
-        .wr-list-item .l-title{font-size:13px;font-weight:700;margin-bottom:4px}
-        .wr-list-item .l-meta{font-size:11px;color:var(--text3);display:flex;gap:10px}
-      `}</style>
-
-      <div className="wr-page">
-        <div className="wr-hero">
-          <h1><Icon n="edit" s={24} c="#fff" /> Writer Workspace</h1>
-          <p>Find writing tasks, manage your content projects, and earn from your words. Browse available writing jobs or create your own.</p>
+      <div className="up-wrap">
+        <div className="wr2-head">
+          <div>
+            <h1>Writer workspace</h1>
+            <p>Paid writing and translation jobs, and a place to publish your own articles.</p>
+          </div>
+          <Link className="up-btn" to="/create"><i className="ti ti-plus" /> Hire a writer</Link>
         </div>
 
-        <div className="wr-section">
-          <h2><Icon n="template" s={18} /> Writing Templates</h2>
-          <div className="wr-grid">
-            {templates.map(t => (
-              <div className="wr-card" key={t.id} onClick={() => navigate('/create')}>
-                <div className="wr-card-icon" style={{background:`rgba(var(--accent-rgb),0.09)`,color:'var(--accent)'}}><i className={`ti ti-${t.icon}`} style={{fontSize:20}} /></div>
-                <h3>{t.title}</h3>
-                <p>{t.tasks} tasks available</p>
-                <div className="meta"><span><i className="ti ti-coin" /> {t.reward}</span></div>
-              </div>
+        <div className="wr2-cards">
+          <Link to={signedIn ? '/blog/write' : '/blog'} className="up-card wr2-card">
+            <i className="ti ti-pencil" />
+            <div><strong>Write for the OgaPay blog</strong><span>Share tips and stories. Articles are reviewed before they go live.</span></div>
+          </Link>
+          <Link to="/faq#earning" className="up-card wr2-card">
+            <i className="ti ti-help-circle" />
+            <div><strong>How paid jobs work</strong><span>Applying, submitting proof and getting paid from escrow.</span></div>
+          </Link>
+          <Link to="/workers?category=writing" className="up-card wr2-card">
+            <i className="ti ti-users" />
+            <div><strong>Find writers</strong><span>Browse people who list writing as a skill.</span></div>
+          </Link>
+        </div>
+
+        <div className="up-tabs-row">
+          <div className="up-tabs" role="tablist" aria-label="Job type">
+            {KINDS.map((k) => (
+              <button key={k.id} role="tab" aria-selected={kind === k.id} className={`up-tab${kind === k.id ? ' on' : ''}`} onClick={() => setKind(k.id)}>
+                <i className={`ti ${k.icon}`} /> {k.label}{counts[k.id] != null && <em>{counts[k.id] >= 100 ? '100+' : counts[k.id]}</em>}
+              </button>
             ))}
           </div>
+          <Link to={`/tasks?category=${encodeURIComponent(KINDS.find((k) => k.id === kind)!.tasksLabel)}`} className="wr2-all">All jobs <i className="ti ti-arrow-right" /></Link>
         </div>
 
-        <div className="wr-section">
-          <h2><Icon n="clock" s={18} /> Recent Writing Jobs</h2>
-          <div className="wr-list">
-            {recentJobs.map(j => (
-              <div className="wr-list-item" key={j.id} onClick={() => navigate('/tasks')}>
-                <div>
-                  <div className="l-title">{j.title}</div>
-                  <div className="l-meta">
-                    <span><i className="ti ti-coin" /> {j.budget}</span>
-                    <span><i className="ti ti-users" /> {j.slots} slots</span>
-                    <span>{j.time}</span>
+        {jobs === null ? (
+          <div className="up-empty"><i className="ti ti-loader-2" />Loading…</div>
+        ) : jobs.length === 0 ? (
+          <div className="up-empty"><i className="ti ti-briefcase-off" />No open {kind === 'TRANSLATION' ? 'translation' : 'writing'} jobs right now. Check back soon.</div>
+        ) : (
+          <section className="up-card wr2-list">
+            {jobs.map((j) => {
+              const left = Math.max(0, (j.maxWorkers || 1) - (j.currentWorkers || 0))
+              return (
+                <Link key={j.id} to={`/tasks/${j.id}`} className="wr2-job">
+                  <div className="wr2-job-main">
+                    <strong>{j.title}</strong>
+                    <span>{left} of {j.maxWorkers || 1} slot{(j.maxWorkers || 1) === 1 ? '' : 's'} left · posted {ago(j.createdAt)}{j.deadline ? ` · due ${new Date(j.deadline).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}` : ''}</span>
                   </div>
-                </div>
-                <i className="ti ti-arrow-right" style={{color:'var(--text3)',fontSize:16}} />
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="wr-section">
-          <h2><Icon n="book" s={18} /> Writing Resources</h2>
-          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
-            {[
-              { icon: 'file-text', title: 'Style Guide', desc: 'OgaPay writing standards' },
-              { icon: 'bookmark', title: 'Tips & Tricks', desc: 'Write better, earn more' },
-              { icon: 'messages', title: 'Writer Community', desc: 'Join other writers' },
-              { icon: 'help-circle', title: 'FAQ', desc: 'Common writing questions' },
-            ].map(r => (
-              <div className="wr-card" key={r.title} onClick={() => navigate('/faq')}>
-                <div className="wr-card-icon" style={{background:'var(--bg2)',color:'var(--text2)'}}><i className={`ti ti-${r.icon}`} style={{fontSize:18}} /></div>
-                <h3>{r.title}</h3>
-                <p>{r.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
+                  <span className="wr2-pay">{money(j.reward, j.currency)}</span>
+                  <i className="ti ti-chevron-right wr2-go" />
+                </Link>
+              )
+            })}
+          </section>
+        )}
       </div>
     </Layout>
   )
