@@ -25,8 +25,9 @@ export default function ResetPasswordPage() {
     setError("");
     setMessage("");
 
-    if (!password || password.length < 8) {
-      setError("Password must be at least 8 characters");
+    // Same rules as sign-up (the server checks them too)
+    if (!password || password.length < 8 || !/[A-Z]/.test(password) || !/[0-9]/.test(password)) {
+      setError("Use at least 8 characters, with an uppercase letter and a number");
       return;
     }
     if (password !== confirmPassword) {
