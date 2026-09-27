@@ -97,7 +97,7 @@ export default function Dashboard() {
           <Link to="/wallet" className="db-stat"><span>Balance</span><b>{money(ngn)}</b><small>available to use</small></Link>
           <Link to="/earnings" className="db-stat"><span>Earned from jobs</span><b>{earned === null ? '…' : money(earned)}</b><small>all time</small></Link>
           <Link to="/my-tasks" className="db-stat"><span>In progress</span><b>{subs === null ? '…' : active.length}</b><small>{waiting.length ? `${waiting.length} waiting for review` : 'jobs you\'ve taken'}</small></Link>
-          <Link to="/profile" className="db-stat"><span>OgaScore</span><b>{me?.ogaScore ?? '…'}</b><small>{levelName} · {me?.workerProfile?.tasksCompleted ?? 0} jobs done</small></Link>
+          <Link to="/rank" className="db-stat"><span>OgaScore</span><b>{me?.ogaScore ?? '…'}</b><small>{levelName} · {me?.workerProfile?.tasksCompleted ?? 0} jobs done</small></Link>
         </div>
 
         <div className="db-grid">

@@ -32,6 +32,9 @@ export default function Messages() {
   const { user } = useAuth()
   const [params, setParams] = useSearchParams()
   const openId = params.get('c')
+  // /messages?user=<username> (e.g. "Contact seller"): open your chat with them, or start one
+  const toUser = params.get('user')
+  const [newTo, setNewTo] = useState<Person | null>(null)
   const [convs, setConvs] = useState<Conv[] | null>(null)
   const [msgs, setMsgs] = useState<Msg[] | null>(null)
   const [q, setQ] = useState('')
@@ -71,8 +74,20 @@ export default function Messages() {
     if (el && stick.current) el.scrollTop = el.scrollHeight
   }, [msgs])
 
+  useEffect(() => {
+    if (!toUser || convs === null) return
+    const name = toUser.replace(/^@/, '').toLowerCase()
+    const hit = convs.find((c) => c.participants.some((p) => p.username?.toLowerCase() === name))
+    if (hit) { setParams({ c: hit.id }, { replace: true }); return }
+    if (name === user?.username?.toLowerCase()) { setParams({}, { replace: true }); return }
+    apiRequest<any>('/users/' + encodeURIComponent(name))
+      .then((u) => { setNewTo({ id: u.id, username: u.username, name: [u.firstName, u.lastName].filter(Boolean).join(' '), avatarUrl: u.avatarUrl || null }); setMsgs([]) })
+      .catch(() => { setErr(`No one on OgaPay is called @${name}`); setParams({}, { replace: true }) })
+  }, [toUser, convs, user?.username])
+
   const active = convs?.find((c) => c.id === openId)
-  const other = active?.participants[0]
+  const other = active?.participants[0] || (!openId ? newTo || undefined : undefined)
+  const composing = !!openId || !!newTo
   const shown = useMemo(() => {
     const s = q.trim().toLowerCase()
     if (!convs) return []
@@ -81,13 +96,14 @@ export default function Messages() {
 
   const send = async () => {
     const content = draft.trim()
-    if (!content || !openId || sending) return
+    if (!content || (!openId && !newTo) || sending) return
     setSending(true); setErr('')
     try {
-      await apiRequest('/messages', { method: 'POST', body: JSON.stringify({ conversationId: openId, content }) })
+      const sent = await apiRequest<{ conversationId?: string }>('/messages', { method: 'POST', body: JSON.stringify(openId ? { conversationId: openId, content } : { recipientId: newTo!.id, content }) })
       setDraft('')
       stick.current = true
-      loadThread(openId)
+      if (!openId && sent?.conversationId) { setNewTo(null); setParams({ c: sent.conversationId }, { replace: true }) }
+      else if (openId) loadThread(openId)
       loadConvs()
     } catch (e: any) {
       setErr(e?.message || 'Message not sent')
@@ -95,13 +111,13 @@ export default function Messages() {
     setSending(false)
   }
 
-  const open = (id: string | null) => setParams(id ? { c: id } : {}, { replace: false })
+  const open = (id: string | null) => { setNewTo(null); setParams(id ? { c: id } : {}, { replace: false }) }
 
   let lastDay = ''
   return (
     <Layout>
       <div className="ms-wrap">
-        <div className={`ms-shell ${openId ? 'open' : ''}`}>
+        <div className={`ms-shell ${composing ? 'open' : ''}`}>
           <aside className="ms-side">
             <div className="ms-side-h">
               <h1>Messages</h1>
@@ -133,8 +149,8 @@ export default function Messages() {
           </aside>
 
           <section className="ms-main">
-            {!openId ? (
-              <div className="ms-empty"><div><i className="ti ti-messages" />Pick a conversation</div></div>
+            {!composing ? (
+              <div className="ms-empty"><div><i className="ti ti-messages" />{err || 'Pick a conversation'}</div></div>
             ) : (
               <>
                 <div className="ms-main-h">
@@ -147,7 +163,7 @@ export default function Messages() {
                 </div>
                 <div className="ms-thread" ref={threadRef} onScroll={(e) => { const el = e.currentTarget; stick.current = el.scrollHeight - el.scrollTop - el.clientHeight < 60 }}>
                   {msgs === null ? <div className="ms-empty">Loading…</div>
-                    : msgs.length === 0 ? <div className="ms-empty">No messages yet. Say hello.</div>
+                    : msgs.length === 0 ? <div className="ms-empty">{newTo ? `Start a conversation with @${newTo.username}.` : 'No messages yet. Say hello.'}</div>
                     : msgs.map((m) => {
                       const day = new Date(m.createdAt).toDateString()
                       const showDay = day !== lastDay

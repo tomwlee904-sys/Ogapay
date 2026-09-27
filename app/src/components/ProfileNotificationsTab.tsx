@@ -112,6 +112,23 @@ export default function TabNotificationsContent() {
 
   useEffect(() => { injectSkeletonStyles() }, [])
 
+  // Where a notification opens. Job ones differ by who received them: posters
+  // review in Manage jobs, workers see their status on the submit page.
+  const POSTER_JOB = new Set(['TASK_APPLICATION', 'TASK_SUBMISSION', 'SUBMISSION_REVIEWED', 'REVIEW_REMINDER', 'DISPUTE_OPENED', 'COOLDOWN'])
+  const WORKER_JOB = new Set(['SUBMISSION_APPROVED', 'SUBMISSION_REJECTED', 'SLOT_EXPIRED', 'DIRECT_HIRE'])
+  const MONEY = new Set(['TRANSFER_RECEIVED', 'ESCROW_REFUNDED', 'CLOSED_ACCOUNT_DEPOSIT', 'WITHDRAWAL', 'WITHDRAWAL_SUCCESS', 'WITHDRAWAL_FAILED', 'DEPOSIT', 'DEPOSIT_SUCCESS', 'DEPOSIT_RECEIVED', 'TASK_PAYMENT', 'TASK_PAYMENT_RECEIVED', 'TASK_REFUND', 'TASK_REWARD', 'REFERRAL_BONUS', 'SIGNUP_BONUS'])
+  const linkFor = (n: any): string | null => {
+    const d = n.data || {}
+    if (n.link) return n.link
+    if (d.taskId && POSTER_JOB.has(n.type)) return `/manage-jobs?job=${d.taskId}`
+    if (d.taskId && WORKER_JOB.has(n.type)) return `/tasks/${d.taskId}/submit`
+    if (MONEY.has(n.type)) return '/wallet'
+    if (d.conversationId) return `/messages?c=${d.conversationId}`
+    if (d.taskId) return `/tasks/${d.taskId}`
+    if (d.communityId) return `/communities/${d.communityId}`
+    return null
+  }
+
   const mapNotif = (n: any) => {
     const iconInfo = resolveIcon(n.type, n.title)
     return {
@@ -124,11 +141,7 @@ export default function TabNotificationsContent() {
       desc: n.body || n.description || '',
       time: n.createdAt ? timeAgo(n.createdAt) : '',
       read: n.read ?? n.isRead ?? false,
-      link: n.link
-        || (n.data?.taskId ? `/tasks/${n.data.taskId}${n.data.submissionId ? `?tab=submissions` : ''}` : null)
-        || (n.data?.communityId ? `/communities/${n.data.communityId}` : null)
-        || (n.data?.conversationId ? `/messages?c=${n.data.conversationId}` : null)
-        || (n.type === 'TRANSFER_RECEIVED' ? '/wallet' : null),
+      link: linkFor(n),
     }
   }
 

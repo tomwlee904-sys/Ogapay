@@ -45,7 +45,7 @@ export default function ResetPasswordPage() {
       if (res.ok) {
         setSubmitted(true);
         setMessage("Password reset successful! Redirecting to login...");
-        setTimeout(() => navigate("/?login=1"), 3000);
+        setTimeout(() => navigate("/login"), 3000);
       } else {
         setError(data.message || "Something went wrong");
       }
@@ -147,7 +147,7 @@ export default function ResetPasswordPage() {
         )}
 
         <div style={{ textAlign: "center", marginTop: 20 }}>
-          <a href="/?login=1" style={{ fontSize: 12, color: "var(--text3)", textDecoration: "underline" }}>
+          <a href="/login" style={{ fontSize: 12, color: "var(--text3)", textDecoration: "underline" }}>
             Back to Sign In
           </a>
         </div>

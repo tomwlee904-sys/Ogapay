@@ -859,18 +859,6 @@ function CreateTask() {
     }).catch(() => { /* signed out or gone: show the normal page */ });
   }, []);
 
-  // Edit data handed over from Manage jobs
-  useEffect(() => {
-    try {
-      const editData = sessionStorage.getItem('ogapay_edit_task');
-      if (editData) {
-        const task = JSON.parse(editData);
-        if (task.title && task.platform) (window as any).__ogapay_edit_task = task;
-        sessionStorage.removeItem('ogapay_edit_task');
-      }
-    } catch { /* ignore malformed edit data */ }
-  }, []);
-
   // Back from a Flutterwave top-up started on this page
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);

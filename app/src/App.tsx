@@ -40,7 +40,6 @@ const CommunityDetail = lazy(() => import('./pages/CommunityDetail'))
 const FAQ = lazy(() => import('./pages/FAQ'))
 const Support = lazy(() => import('./pages/Support'))
 const Vault = lazy(() => import('./pages/Vault'))
-const Safe = lazy(() => import('./pages/Safe'))
 const VaultHistory = lazy(() => import('./pages/VaultHistory'))
 const NotFound = lazy(() => import('./pages/NotFound'))
 const AuthCallback = lazy(() => import('./pages/AuthCallback'))
@@ -148,7 +147,7 @@ export default function App() {
             <Route path="/vault" element={<Vault />} />
             <Route path="/vault/history" element={<VaultHistory />} />
             <Route path="/developer" element={<Developer />} />
-            <Route path="/safe" element={<ProtectedRoute><Safe /></ProtectedRoute>} />
+            <Route path="/safe" element={<Navigate to="/vault" replace />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/leaderboard" element={<Leaderboard />} />
@@ -190,7 +189,7 @@ export default function App() {
             {/* ── Create job routes (collapsed) ── */}
             <Route path="/create" element={<CreateJob />} />
             <Route path="/createcustom" element={<Navigate to="/create?type=custom" replace />} />
-            <Route path="/createsocial" element={<Navigate to="/create?type=social" replace />} />
+            <Route path="/createsocial" element={<Navigate to="/create?type=x" replace />} />
             <Route path="/tasks/new" element={<Navigate to="/create" replace />} />
 
             {/* ── Blog editor (auth-guarded) ── */}

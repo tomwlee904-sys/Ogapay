@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { openSignIn } from '../lib/signin'
@@ -23,6 +23,14 @@ function DrawerGroup({ label, icon, subtitle, children, defaultOpen }: { label: 
 }
 
 export default function Drawer({ open, onClose }: DrawerProps) {
+  // Settings > Developer: "Show Developer API in the menu"
+  const readDev = () => { try { return localStorage.getItem('ogapay_developer_mode') === 'true' } catch { return false } }
+  const [devMode, setDevMode] = useState(readDev)
+  useEffect(() => {
+    const sync = () => setDevMode(readDev())
+    window.addEventListener('ogapay:devmode', sync); window.addEventListener('storage', sync)
+    return () => { window.removeEventListener('ogapay:devmode', sync); window.removeEventListener('storage', sync) }
+  }, [])
   const { isAuthed, logout, user } = useAuth()
   const navigate = useNavigate()
 
@@ -125,18 +133,26 @@ export default function Drawer({ open, onClose }: DrawerProps) {
               </Link>
 
               {/* ── Jobs (expandable) ── */}
-              <DrawerGroup label="Jobs" icon="briefcase" subtitle="Browse and manage jobs">
+              <DrawerGroup label="Jobs" icon="briefcase" subtitle="Find work and manage your jobs">
                 <Link className="oga-drawer-item" to="/tasks" onClick={onClose}>
                   <span className="oga-drawer-icon oga-drawer-icon--sub"><i className="ti ti-checklist" /></span>
-                  <span><strong>Browse Tasks</strong><small>Find work to do</small></span>
+                  <span><strong>Browse jobs</strong><small>Find work to do</small></span>
                 </Link>
-                <Link className="oga-drawer-item" to="/my-jobs" onClick={onClose}>
-                  <span className="oga-drawer-icon oga-drawer-icon--sub"><i className="ti ti-briefcase" /></span>
-                  <span><strong>My Jobs</strong><small>Manage your listings</small></span>
+                <Link className="oga-drawer-item" to="/bookmarks" onClick={onClose}>
+                  <span className="oga-drawer-icon oga-drawer-icon--sub"><i className="ti ti-bookmark" /></span>
+                  <span><strong>Saved jobs</strong><small>Jobs you saved for later</small></span>
+                </Link>
+                <Link className="oga-drawer-item" to="/my-tasks" onClick={onClose}>
+                  <span className="oga-drawer-icon oga-drawer-icon--sub"><i className="ti ti-list-check" /></span>
+                  <span><strong>My tasks</strong><small>Jobs you've taken</small></span>
+                </Link>
+                <Link className="oga-drawer-item" to="/job-monitor" onClick={onClose}>
+                  <span className="oga-drawer-icon oga-drawer-icon--sub"><i className="ti ti-activity" /></span>
+                  <span><strong>Job monitor</strong><small>New jobs as they're posted</small></span>
                 </Link>
                 <Link className="oga-drawer-item" to="/manage-jobs" onClick={onClose}>
-                  <span className="oga-drawer-icon oga-drawer-icon--sub"><i className="ti ti-monitor" /></span>
-                  <span><strong>Job Monitor</strong><small>Track submissions</small></span>
+                  <span className="oga-drawer-icon oga-drawer-icon--sub"><i className="ti ti-briefcase" /></span>
+                  <span><strong>My jobs</strong><small>Review work on jobs you posted</small></span>
                 </Link>
               </DrawerGroup>
 
@@ -149,6 +165,26 @@ export default function Drawer({ open, onClose }: DrawerProps) {
                 <Link className="oga-drawer-item" to="/my-store" onClick={onClose}>
                   <span className="oga-drawer-icon oga-drawer-icon--sub"><i className="ti ti-store" /></span>
                   <span><strong>My Store</strong><small>Manage your shop</small></span>
+                </Link>
+              </DrawerGroup>
+
+              {/* ── Discover ── */}
+              <DrawerGroup label="Discover" icon="compass" subtitle="People, rankings and what's next">
+                <Link className="oga-drawer-item" to="/workers" onClick={onClose}>
+                  <span className="oga-drawer-icon oga-drawer-icon--sub"><i className="ti ti-user-search" /></span>
+                  <span><strong>Find workers</strong><small>Hire people for your work</small></span>
+                </Link>
+                <Link className="oga-drawer-item" to="/leaderboard" onClick={onClose}>
+                  <span className="oga-drawer-icon oga-drawer-icon--sub"><i className="ti ti-trophy" /></span>
+                  <span><strong>Leaderboard</strong><small>Top earners and posters</small></span>
+                </Link>
+                <Link className="oga-drawer-item" to="/writer" onClick={onClose}>
+                  <span className="oga-drawer-icon oga-drawer-icon--sub"><i className="ti ti-pencil" /></span>
+                  <span><strong>Writer workspace</strong><small>Writing jobs and tips</small></span>
+                </Link>
+                <Link className="oga-drawer-item" to="/roadmap" onClick={onClose}>
+                  <span className="oga-drawer-icon oga-drawer-icon--sub"><i className="ti ti-map-2" /></span>
+                  <span><strong>Roadmap</strong><small>What we're building next</small></span>
                 </Link>
               </DrawerGroup>
 
@@ -200,6 +236,20 @@ export default function Drawer({ open, onClose }: DrawerProps) {
                   <span className="oga-drawer-icon oga-drawer-icon--sub"><i className="ti ti-layout-dashboard" /></span>
                   <span><strong>Dashboard</strong><small>Your activity overview</small></span>
                 </Link>
+                <Link className="oga-drawer-item" to="/wallet" onClick={onClose}>
+                  <span className="oga-drawer-icon oga-drawer-icon--sub"><i className="ti ti-wallet" /></span>
+                  <span><strong>Wallet</strong><small>Balance, deposits and withdrawals</small></span>
+                </Link>
+                <Link className="oga-drawer-item" to="/analytics" onClick={onClose}>
+                  <span className="oga-drawer-icon oga-drawer-icon--sub"><i className="ti ti-chart-bar" /></span>
+                  <span><strong>Analytics</strong><small>Your earnings and activity</small></span>
+                </Link>
+                {devMode && (
+                <Link className="oga-drawer-item" to="/developer" onClick={onClose}>
+                  <span className="oga-drawer-icon oga-drawer-icon--sub"><i className="ti ti-code" /></span>
+                  <span><strong>Developer API</strong><small>Keys and docs</small></span>
+                </Link>
+                )}
                 <Link className="oga-drawer-item" to="/settings" onClick={onClose}>
                   <span className="oga-drawer-icon oga-drawer-icon--sub"><i className="ti ti-settings" /></span>
                   <span><strong>Settings</strong><small>Account preferences</small></span>

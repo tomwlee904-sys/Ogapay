@@ -22,6 +22,7 @@ type Sub = {
 type Task = {
   id: string; title: string; status: string; category?: string; reward: number | string; currency?: string
   maxWorkers?: number; deadline?: string | null; createdAt?: string; submissions?: Sub[]
+  description?: string | null
 }
 
 function Icon({ n, s = 16, c, style }: { n: any; s?: number; c?: any; style?: any }) {
@@ -161,9 +162,28 @@ function JobDrawer({ task, onClose, onChanged }: { task: Task; onClose: () => vo
       onChanged(); onClose();
     } catch (e: any) { toast(e?.message || "Couldn't cancel this job", "error"); }
   };
-  const edit = () => {
-    try { sessionStorage.setItem("ogapay_edit_task", JSON.stringify({ id: task.id, title: task.title, reward, currency: cur, slots: task.maxWorkers, status: task.status.toLowerCase() })); } catch { /* storage off */ }
-    navigate(`/create?edit=${task.id}`);
+  const [editing, setEditing] = useState(false);
+  const [ed, setEd] = useState({ title: task.title, brief: "", deadline: "" });
+  const [edBusy, setEdBusy] = useState(false);
+  const [edErr, setEdErr] = useState("");
+  const startEdit = () => {
+    setEd({ title: task.title, brief: (task.description || "").split("\n\n**Attachments**")[0], deadline: task.deadline ? new Date(task.deadline).toISOString().slice(0, 10) : "" });
+    setEdErr(""); setEditing(true);
+  };
+  const saveEdit = async () => {
+    const title = ed.title.trim(), brief = ed.brief.trim();
+    if (title.length < 5) { setEdErr("Give the job a title of at least 5 characters."); return; }
+    if (brief.length < 20) { setEdErr("Describe the job in at least 20 characters."); return; }
+    const attachments = (task.description || "").includes("\n\n**Attachments**") ? (task.description || "").slice((task.description || "").indexOf("\n\n**Attachments**")) : "";
+    const body: Record<string, any> = { title, description: brief + attachments, instructions: brief + attachments };
+    if (ed.deadline) body.deadline = new Date(ed.deadline + "T23:59:00").toISOString();
+    setEdBusy(true); setEdErr("");
+    try {
+      await apiRequest(`/tasks/${task.id}`, { method: "PATCH", body: JSON.stringify(body) });
+      toast("Job updated", "success");
+      setEditing(false); onChanged();
+    } catch (e: any) { setEdErr(e?.message || "Couldn't save the changes"); }
+    setEdBusy(false);
   };
 
   const list = subs || [];
@@ -185,6 +205,23 @@ function JobDrawer({ task, onClose, onChanged }: { task: Task; onClose: () => vo
         </div>
 
         <div className="mj-db">
+          {editing && (
+            <section className="mj-sec mj-edit">
+              <h4>Edit job</h4>
+              <label className="ui-label" htmlFor="mj-ed-title">Title</label>
+              <input id="mj-ed-title" className="ui-input" maxLength={200} value={ed.title} onChange={(e) => setEd({ ...ed, title: e.target.value })} />
+              <label className="ui-label" htmlFor="mj-ed-brief">Brief</label>
+              <textarea id="mj-ed-brief" className="ui-input mj-edit-brief" maxLength={10000} value={ed.brief} onChange={(e) => setEd({ ...ed, brief: e.target.value })} />
+              <label className="ui-label" htmlFor="mj-ed-deadline">Closes on (optional)</label>
+              <input id="mj-ed-deadline" className="ui-input" type="date" min={new Date(Date.now() + 86400e3).toISOString().slice(0, 10)} value={ed.deadline} onChange={(e) => setEd({ ...ed, deadline: e.target.value })} />
+              <p className="mj-edit-note">The reward and number of people can't change once the job is funded. To change them, cancel the job and post a new one.</p>
+              {edErr && <p className="mj-tool-err" role="alert">{edErr}</p>}
+              <div className="mj-acts">
+                <button className="ui-btn ui-btn-ghost" onClick={() => setEditing(false)}>Cancel</button>
+                <button className="ui-btn ui-btn-dark" disabled={edBusy} onClick={saveEdit}>{edBusy ? "Saving…" : "Save changes"}</button>
+              </div>
+            </section>
+          )}
           <div className="mj-dgrid">
             <div><b>{counts.approved}/{counts.slots}</b><span>approved</span></div>
             <div><b>{counts.review}</b><span>to review</span></div>
@@ -259,7 +296,7 @@ function JobDrawer({ task, onClose, onChanged }: { task: Task; onClose: () => vo
         <div className="mj-df">
           <Link className="ui-btn ui-btn-ghost" to={`/tasks/${task.id}`}><Icon n="eye" s={15} /> Public page</Link>
           <button className="ui-btn ui-btn-ghost" disabled={tpl !== ""} onClick={saveAsTemplate}><Icon n={tpl === "saved" ? "check" : "device-floppy"} s={15} /> {tpl === "saving" ? "Saving…" : tpl === "saved" ? "Saved" : "Save as template"}</button>
-          {live && <button className="ui-btn ui-btn-ghost" onClick={edit}><Icon n="edit" s={15} /> Edit</button>}
+          {live && !editing && <button className="ui-btn ui-btn-ghost" onClick={startEdit}><Icon n="edit" s={15} /> Edit</button>}
           {(task.status === "OPEN" || task.status === "DRAFT") && (
             <button className="ui-btn ui-btn-ghost" onClick={() => setPaused(task.status === "OPEN")}>
               <Icon n={task.status === "OPEN" ? "player-pause" : "player-play"} s={15} /> {task.status === "OPEN" ? "Pause" : "Resume"}

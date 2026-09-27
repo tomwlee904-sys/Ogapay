@@ -109,3 +109,9 @@ button.mj-sum:hover { border-color: var(--text3); }
   .mj-tpl-acts { width: 100%; }
   .mj-tpl-acts .ui-btn:first-child { flex: 1; }
 }
+
+/* Edit job (review drawer) */
+.mj-edit { display: grid; gap: 6px; padding: 14px; border: 1px solid var(--border); border-radius: 14px; }
+.mj-edit .ui-label { margin-top: 8px; }
+.mj-edit-brief { height: auto; min-height: 140px; padding: 10px 14px; line-height: 1.55; resize: vertical; }
+.mj-edit-note { margin: 8px 0 0; font-size: 12px; line-height: 1.5; color: var(--text2); }
