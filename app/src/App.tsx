@@ -31,6 +31,7 @@ const StoreProduct = lazy(() => import('./pages/StoreProduct'))
 const StorePayment = lazy(() => import('./pages/StorePayment'))
 const OrderConfirmation = lazy(() => import('./pages/OrderConfirmation'))
 const SubmissionPage = lazy(() => import('./pages/SubmissionPage'))
+const SubmissionsRedirect = lazy(() => import('./pages/SubmissionPage').then((m) => ({ default: m.SubmissionsRedirect })))
 const CreateJob = lazy(() => import('./pages/CreateJob'))
 const WorkerPortal = lazy(() => import('./pages/WorkerPortal'))
 const Communities = lazy(() => import('./pages/Communities'))
@@ -130,7 +131,7 @@ export default function App() {
             <Route path="/blog/:slug" element={<ArticleDetail />} />
             <Route path="/tasks" element={<Tasks />} />
 <Route path="/tasks/:id/submit" element={<AuthGuard><SubmissionPage /></AuthGuard>} />
-            <Route path="/tasks/:id/submissions" element={<AuthGuard><SubmissionPage /></AuthGuard>} />
+            <Route path="/tasks/:id/submissions" element={<AuthGuard><SubmissionsRedirect /></AuthGuard>} />
             <Route path="/jobs" element={<Navigate to="/tasks" replace />} />
 
             <Route path="/tasks/:id" element={<JobDetail />} />

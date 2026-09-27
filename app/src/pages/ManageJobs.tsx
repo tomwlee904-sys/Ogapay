@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import Layout from "../components/Layout"
 import { apiRequest } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
@@ -560,7 +560,10 @@ const FILTERS: { id: string; label: string; test: (t: Task) => boolean }[] = [
 
 function JobsListPage({ tasks, reload }: { tasks: Task[]; reload: () => void }) {
   const [filter, setFilter] = useState("all");
-  const [openId, setOpenId] = useState<string | null>(null);
+  // ?job=<id> opens that job's drawer (links from Profile and /tasks/:id/submissions)
+  const [params, setParams] = useSearchParams();
+  const [openId, setOpenIdState] = useState<string | null>(params.get("job"));
+  const setOpenId = (v: string | null) => { setOpenIdState(v); if (!v && params.get("job")) { params.delete("job"); setParams(params, { replace: true }); } };
   const open = tasks.find((t) => t.id === openId) || null;
 
   const totals = useMemo(() => {
