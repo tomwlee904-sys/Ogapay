@@ -1,0 +1,84 @@
+/* Ecosystem helix (HelixStory): lead, a tall scene with a pinned stage (canvas +
+   layers positioned from the scroll position). Sizes of the stage and scene are
+   set in JS (at most 800px tall, below the header and above the bottom bar). */
+
+.hx { position: relative; padding: 40px 0 0; }
+.hx-lead { position: relative; max-width: var(--hv-frame, 1320px); margin: 0 auto; padding: 0 40px 12px; display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; }
+.hx-sign { margin: 0; }
+.hx-nav { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; }
+.hx-tab { display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 14px; border: 0; border-radius: 999px; background: none; cursor: pointer; font: 500 13px 'Geist', system-ui, sans-serif; color: var(--hv-muted); transition: background .2s ease, color .2s ease; }
+.hx-tab .n { font: 500 11px 'Geist Mono', monospace; color: var(--hv-faint); }
+.hx-tab.on { background: var(--hv-soft); color: var(--hv-ink); }
+.hx-tab:focus-visible { outline: 2px solid var(--hv-ink); outline-offset: 2px; }
+.hx-cue { margin: 0; display: inline-flex; align-items: center; gap: 6px; }
+.hx-skip { position: absolute; right: 40px; top: -6px; display: inline-flex; align-items: center; gap: 6px; height: 40px; border: 0; background: none; cursor: pointer; }
+
+.hx-scene { position: relative; max-width: var(--hv-frame, 1320px); margin: 0 auto; padding: 0 40px; }
+.hx-stage { position: sticky; top: 84px; height: 800px; }
+.hx-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.hx-layer { position: absolute; inset: 0; pointer-events: none; }
+.hx-layer > * { position: absolute; left: 0; top: 0; visibility: hidden; opacity: 0; will-change: transform, opacity; }
+
+/* Story card */
+.hx-story {
+  width: min(400px, calc(100% - 24px)); pointer-events: auto; padding: 22px 22px 22px;
+  background: color-mix(in srgb, var(--hv-card) 92%, transparent);
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--hv-line); border-radius: 22px;
+  box-shadow: 0 40px 70px -45px rgba(0,0,0,.45), 0 1px 0 rgba(255,255,255,.6) inset;
+}
+.hx-story-top { display: flex; align-items: flex-start; gap: 12px; }
+.hx-story-top .hv-mono { line-height: 1.6; }
+.hx-ic { width: 32px; height: 32px; flex-shrink: 0; border-radius: 10px; display: grid; place-items: center; background: var(--hv-soft); color: var(--hv-ink); font-size: 16px; }
+.hx-brand { margin-left: auto; }
+.hx-story h3 { margin: 18px 0 0; font: 600 clamp(22px, 2.2vw, 26px)/1.15 'Geist', system-ui, sans-serif; letter-spacing: -.035em; color: var(--hv-ink); }
+.hx-story p { margin: 10px 0 18px; font-size: 13.5px; line-height: 1.6; color: var(--hv-muted); }
+.hx-story .hv-btn { height: 38px; font-size: 12.5px; padding: 0 16px; }
+
+/* Neighbouring stories, collapsed */
+.hx-mini { display: inline-flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 14px; border: 1px solid var(--hv-line); background: color-mix(in srgb, var(--hv-card) 85%, transparent); color: var(--hv-muted); font-size: 12px; box-shadow: 0 16px 30px -24px rgba(0,0,0,.4); white-space: nowrap; }
+.hx-mini i { font-size: 15px; color: var(--hv-faint); }
+.hx-mini small { display: block; font: 500 9.5px 'Geist Mono', monospace; color: var(--hv-faint); }
+
+/* Live activity */
+.hx-chip { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px 6px 6px; border-radius: 999px; border: 1px solid var(--hv-line); background: var(--hv-card); box-shadow: 0 14px 28px -20px rgba(0,0,0,.45); font-size: 11.5px; white-space: nowrap; }
+.hx-chip b { display: block; font-weight: 600; color: var(--hv-ink); }
+.hx-chip small { display: block; font: 400 9.5px 'Geist Mono', monospace; color: var(--hv-faint); }
+.hx-av { width: 26px; height: 26px; border-radius: 50%; overflow: hidden; display: grid; place-items: center; background: var(--hv-soft); color: var(--hv-ink); font: 600 11px 'Geist', sans-serif; flex-shrink: 0; }
+.hx-av img { width: 100%; height: 100%; object-fit: cover; }
+
+/* Discovery panels (the homepage's jobs, store, blogs, communities) */
+.hx-panel { width: min(1080px, 100%); pointer-events: auto; transform-origin: 50% 50%; }
+.hx-panel .hv-section { padding: 0; }
+.hx-panel .hv-inner { max-width: none; padding: 0; }
+.hx-panel .hv-panel { background: color-mix(in srgb, var(--hv-card) 94%, transparent); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); box-shadow: 0 50px 90px -60px rgba(0,0,0,.5); }
+.hx-panel .hv-reveal { opacity: 1 !important; transform: none !important; }
+
+/* Closing buttons */
+.hx-finale { position: absolute; left: 50%; bottom: 12%; display: flex; gap: 10px; opacity: 0; visibility: hidden; z-index: 2; }
+.hx-orbit { display: inline-flex; align-items: center; gap: 8px; height: 46px; padding: 0 20px; border-radius: 999px; border: 1px solid var(--hv-line); background: var(--hv-card); color: var(--hv-ink); font: 600 13.5px 'Geist', system-ui, sans-serif; text-decoration: none; box-shadow: 0 20px 40px -26px rgba(0,0,0,.5); white-space: nowrap; }
+.hx-orbit.dark { background: var(--hv-ink); color: var(--bg); border-color: var(--hv-ink); }
+.hx-orbit:focus-visible { outline: 2px solid var(--hv-ink); outline-offset: 3px; }
+.hx-shadow { position: absolute; left: 50%; bottom: 2%; width: 40%; height: 40px; transform: translateX(-50%); border-radius: 50%; background: radial-gradient(closest-side, rgba(0,0,0,.08), transparent); pointer-events: none; }
+
+@media (max-width: 1024px) {
+  .hx-scene { padding: 0 24px; }
+  .hx-lead { padding: 0 24px 10px; }
+  .hx-skip { right: 24px; }
+}
+@media (max-width: 768px) {
+  .hx { padding-top: 28px; }
+  .hx-scene { padding: 0 12px; }
+  .hx-lead { padding: 0 12px 8px; gap: 10px; }
+  .hx-skip { position: static; height: 32px; order: -1; align-self: flex-end; }
+  .hx-tab { padding: 0 10px; height: 36px; }
+  .hx-tab .t { display: none; }
+  .hx-tab.on .t { display: inline; }
+  .hx-story { padding: 18px; border-radius: 20px; }
+  .hx-story h3 { margin-top: 14px; }
+  .hx-mini { display: none; }
+  .hx-orbit { height: 42px; padding: 0 16px; font-size: 13px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hx-layer > * { transition: none; }
+}

@@ -8,7 +8,7 @@ import Drawer from "../components/Drawer";
 import Footer from "../components/Footer";
 import BottomNav from "../components/BottomNav";
 import { Logo } from "../components/Logo";
-import EcosystemStory from "../components/home/EcosystemStory";
+import HelixStory, { type HelixPanel } from "../components/home/HelixStory";
 import Carousel from "../components/home/Carousel";
 import { HomeJobCard, HomeProductCard, HomeCommunityCard } from "../components/home/HomeCards";
 import ConnectArt from "../components/home/ConnectArt";
@@ -374,10 +374,8 @@ function HighlightedJobs({ jobs, loading }: { jobs: any[]; loading: boolean }) {
 
 /* ─── creator store ────────────────────────────────────────────────────────── */
 
-function CreatorStore() {
+function CreatorStore({ items }: { items: any[] }) {
   const { convert } = useCurrency();
-  const res = useJson<any>("/store?limit=9&sort=newest");
-  const items: any[] = Array.isArray(res?.data) ? res.data : [];
   if (items.length === 0) return null;
   return (
     <section className="hv-section">
@@ -393,9 +391,7 @@ function CreatorStore() {
 
 /* ─── journal ──────────────────────────────────────────────────────────────── */
 
-function Journal() {
-  const res = useJson<any>("/blog?limit=9");
-  const posts: any[] = res?.data?.posts || [];
+function Journal({ posts }: { posts: any[] }) {
   if (posts.length === 0) return null;
   const date = (d?: string) => (d ? new Date(d).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) : "");
   return (
@@ -425,10 +421,7 @@ function Journal() {
 
 /* ─── communities ──────────────────────────────────────────────────────────── */
 
-function CommunitiesRow() {
-  const res = useJson<any>("/communities?limit=12");
-  const list: any[] = res?.data?.communities || (Array.isArray(res?.data) ? res.data : []);
-  const items = list.filter((c) => c.isPublic !== false && c.isActive !== false).slice(0, 9);
+function CommunitiesRow({ items }: { items: any[] }) {
   if (items.length === 0) return null;
   return (
     <section className="hv-section">
@@ -456,6 +449,21 @@ export default function HomePage() {
   const { data: jobsRes, error: jobsErr } = useApi("/tasks?status=OPEN", { auth: false });
   const jobs = useMemo(() => listOf(jobsRes), [jobsRes]);
   const jobsLoading = !jobsRes && !jobsErr;
+  // The discovery panels that pass over the ecosystem helix (only those with content)
+  const storeRes = useJson<any>("/store?limit=9&sort=newest");
+  const blogRes = useJson<any>("/blog?limit=9");
+  const commRes = useJson<any>("/communities?limit=12");
+  const panels = useMemo<HelixPanel[]>(() => {
+    const storeItems: any[] = Array.isArray(storeRes?.data) ? storeRes.data : [];
+    const posts: any[] = blogRes?.data?.posts || [];
+    const commList: any[] = commRes?.data?.communities || (Array.isArray(commRes?.data) ? commRes.data : []);
+    const comms = commList.filter((c) => c.isPublic !== false && c.isActive !== false).slice(0, 9);
+    const out: HelixPanel[] = [{ key: "jobs", node: <HighlightedJobs jobs={jobs} loading={jobsLoading} /> }];
+    if (storeItems.length) out.push({ key: "store", node: <CreatorStore items={storeItems} /> });
+    if (posts.length) out.push({ key: "blogs", node: <Journal posts={posts} /> });
+    if (comms.length) out.push({ key: "communities", node: <CommunitiesRow items={comms} /> });
+    return out;
+  }, [jobs, jobsLoading, storeRes, blogRes, commRes]);
 
   useEffect(() => {
     document.body.style.overflow = drawerOpen ? "hidden" : "";
@@ -474,13 +482,7 @@ export default function HomePage() {
           <ChoosePath />
           <Numbers live={live} all={all} />
           <Possibilities />
-        </div>
-        <EcosystemStory />
-        <div className="hv-frame">
-          <HighlightedJobs jobs={jobs} loading={jobsLoading} />
-          <CreatorStore />
-          <Journal />
-          <CommunitiesRow />
+          <HelixStory panels={panels} jobs={jobs} />
         </div>
       </main>
       <Footer />
