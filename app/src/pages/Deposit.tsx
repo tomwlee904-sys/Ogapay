@@ -272,8 +272,8 @@ export default function Deposit() {
                 <h2>USDC on Solana</h2>
                 <p>Send USDC from a Solana wallet in this browser (Phantom, Backpack or Solflare). It's added to your USDC balance once the network confirms it.</p>
                 <ol className="dp-steps" style={{ margin: '0 0 18px' }}>
-                  <li>Enter your wallet address and the amount.</li>
-                  <li>Approve the transfer in your wallet.</li>
+                  <li>Connect your wallet and enter the amount.</li>
+                  <li>Approve the transfer in your wallet. Short of USDC? You can swap some SOL first.</li>
                   <li>It shows in your wallet after confirmation, usually within a minute.</li>
                 </ol>
                 <button type="button" className="ui-btn ui-btn-dark ui-btn-lg wl-full" onClick={() => setUsdcOpen(true)}>Deposit USDC</button>

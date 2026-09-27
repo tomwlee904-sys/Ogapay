@@ -7,16 +7,40 @@ import WithdrawModal from './wallet/WithdrawModal';
 import {
   PublicKey,
   Transaction,
+  TransactionInstruction,
   VersionedTransaction,
 } from '@solana/web3.js';
-import {
-  getAssociatedTokenAddress,
-  createTransferInstruction,
-  TOKEN_PROGRAM_ID,
-} from '@solana/spl-token';
-import bs58 from 'bs58';
 
 const USDC_MINT = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
+const TOKEN_PROGRAM = new PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA');
+const ATA_PROGRAM = new PublicKey('ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL');
+// Built here rather than with @solana/spl-token, whose helpers need Node's
+// global Buffer: the browser build has none, so every USDC deposit failed with
+// "Buffer is not defined" at the transfer step.
+const usdcAccountOf = (owner: PublicKey) =>
+  PublicKey.findProgramAddressSync([owner.toBytes(), TOKEN_PROGRAM.toBytes(), new PublicKey(USDC_MINT).toBytes()], ATA_PROGRAM)[0];
+const tokenTransfer = (from: PublicKey, to: PublicKey, owner: PublicKey, amount: number) => {
+  const data = new Uint8Array(9); // Transfer: [3, amount as u64 little-endian]
+  data[0] = 3;
+  new DataView(data.buffer).setBigUint64(1, BigInt(amount), true);
+  return new TransactionInstruction({
+    programId: TOKEN_PROGRAM,
+    keys: [
+      { pubkey: from, isSigner: false, isWritable: true },
+      { pubkey: to, isSigner: false, isWritable: true },
+      { pubkey: owner, isSigner: true, isWritable: false },
+    ],
+    data: data as any,
+  });
+};
+// Base64 without Node's Buffer, which doesn't exist in the browser build
+const fromB64 = (b64: string) => Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+const toB64 = (bytes: Uint8Array) => {
+  let bin = '';
+  for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  return btoa(bin);
+};
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const MODAL_STYLE: React.CSSProperties = {
   position: 'fixed', inset: 0, zIndex: 400, background: 'rgba(0,0,0,.5)',
   display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20,
@@ -70,8 +94,9 @@ function DepositModal({ onClose, onDone, initialTab }: Props) {
   const [estimate, setEstimate] = useState<any>(null);
   const [estimating, setEstimating] = useState(false);
 
-  // ── Swap state ──
-  const [swapSigning, setSwapSigning] = useState(false);
+  // ── Wallet + swap state ──
+  const [connecting, setConnecting] = useState(false);
+  const [swapPhase, setSwapPhase] = useState<'' | 'signing' | 'sending' | 'waiting'>('');
 
   // ── Result ──
   const [result, setResult] = useState<any>(null);
@@ -103,31 +128,62 @@ function DepositModal({ onClose, onDone, initialTab }: Props) {
     if (id === 'solflare') return (window as any).solflare;
     return null;
   }
+  const walletName = detectedWallets[0] ? detectedWallets[0].charAt(0).toUpperCase() + detectedWallets[0].slice(1) : '';
 
+  // The swap and the transfer are signed in the wallet, so the address comes
+  // from the wallet (a typed address that isn't the wallet's own can't sign)
+  async function connectWallet() {
+    const wallet = getWallet();
+    if (!wallet) { setError("No Solana wallet found in this browser. Install Phantom, Solflare or Backpack, or open OgaPay in your wallet app's browser."); return; }
+    setConnecting(true);
+    setError('');
+    try {
+      const r = await wallet.connect();
+      const pk = (r?.publicKey || wallet.publicKey)?.toString();
+      if (!pk) throw new Error("The wallet didn't share its address. Try again.");
+      setWalletAddr(pk);
+    } catch (e: any) {
+      setError(e?.message || 'The wallet connection was cancelled.');
+    }
+    setConnecting(false);
+  }
+
+  const estimateFor = () => apiRequest<any>('/wallet/fund/estimate', {
+    method: 'POST', body: JSON.stringify({ amount: parseFloat(amountUsdc), userWallet: walletAddr }),
+  });
+
+  // SOL -> USDC for what's missing. It used to be signed and then dropped, so
+  // the swap never happened and the deposit that followed had no USDC to send.
   async function handleSwap() {
     const wallet = getWallet();
     if (!wallet || !estimate?.quote) return;
-    setSwapSigning(true);
     setError('');
     try {
-      const pubKey = walletAddr.trim();
-      const data = await apiRequest<{ swapTransaction: string }>('/wallet/fund/swap', {
+      setSwapPhase('signing');
+      const data = await apiRequest<{ swapTransaction: string; lastValidBlockHeight?: number }>('/wallet/fund/swap', {
         method: 'POST',
-        body: JSON.stringify({ quoteResponse: estimate.quote, userWallet: pubKey }),
+        body: JSON.stringify({ quoteResponse: estimate.quote, userWallet: walletAddr }),
       });
-      const swapTxBytes = Buffer.from(data.swapTransaction, 'base64');
-      let tx: Transaction | VersionedTransaction;
-      try { tx = VersionedTransaction.deserialize(swapTxBytes); }
-      catch { tx = Transaction.from(swapTxBytes); }
-      const signed = await wallet.signTransaction(tx);
-      const signedBytes = signed instanceof VersionedTransaction
-        ? Buffer.from(signed.serialize())
-        : Buffer.from(signed.serialize({ requireAllSignatures: false }));
-      setStep('sign');
+      const signed = await wallet.signTransaction(VersionedTransaction.deserialize(fromB64(data.swapTransaction)));
+      setSwapPhase('sending');
+      const sent = await apiRequest<{ status: string; signature: string }>('/wallet/fund/swap/send', {
+        method: 'POST',
+        body: JSON.stringify({ signedTx: toB64(signed.serialize()), lastValidBlockHeight: data.lastValidBlockHeight }),
+      });
+      // On to the deposit once the USDC is in the wallet
+      setSwapPhase('waiting');
+      for (let i = 0; i < 12; i++) {
+        const fresh = await estimateFor().catch(() => null);
+        if (fresh && !fresh.needsSwap) { setEstimate(fresh); setSwapPhase(''); setStep('sign'); return; }
+        await sleep(2500);
+      }
+      throw new Error(sent?.status === 'CONFIRMED'
+        ? "The swap went through, but the USDC isn't showing in your wallet yet. Wait a minute, then start the deposit again."
+        : "The swap was sent but hasn't confirmed yet. Check your wallet in a minute, then start the deposit again.");
     } catch (e: any) {
-      setError(e.message || 'Swap signing failed');
+      setError(e?.message || 'The swap failed. Nothing was swapped.');
     }
-    setSwapSigning(false);
+    setSwapPhase('');
   }
 
   async function handleSignTransfer() {
@@ -135,27 +191,20 @@ function DepositModal({ onClose, onDone, initialTab }: Props) {
     if (!wallet || !estimate) return;
     setError('');
     try {
-      const pubKey = walletAddr.trim();
-      const senderPubkey = new PublicKey(pubKey);
+      const senderPubkey = new PublicKey(walletAddr);
       const platformAta = new PublicKey(estimate.platformAta);
-      const userAta = await getAssociatedTokenAddress(new PublicKey(USDC_MINT), senderPubkey);
+      const userAta = usdcAccountOf(senderPubkey);
       const amountLamports = Math.round(parseFloat(amountUsdc) * 1_000_000);
 
       const tx = new Transaction().add(
-        createTransferInstruction(userAta, platformAta, senderPubkey, amountLamports)
+        tokenTransfer(userAta, platformAta, senderPubkey, amountLamports)
       );
       tx.feePayer = senderPubkey;
-      const { blockhash } = await (await fetch(
-        'https://api.mainnet-beta.solana.com',
-        { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
-          jsonrpc: '2.0', id: 1, method: 'getLatestBlockhash',
-        })}
-      )).json();
+      const { blockhash } = await apiRequest<{ blockhash: string }>('/wallet/fund/blockhash');
       tx.recentBlockhash = blockhash;
 
       const signed = await wallet.signTransaction(tx);
-      const bytes = Buffer.from(signed.serialize({ requireAllSignatures: false }));
-      await handleSubmit(bytes.toString('base64'));
+      await handleSubmit(toB64(signed.serialize({ requireAllSignatures: false })));
     } catch (e: any) {
       setError(e.message || 'Signing failed');
     }
@@ -248,11 +297,20 @@ function DepositModal({ onClose, onDone, initialTab }: Props) {
           {entryTab === 'crypto' ? (
             <>
               <p style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.6, marginBottom: 16 }}>
-                Deposit USDC from your Solana wallet. Enter your wallet address and the amount.
+                Deposit USDC from a Solana wallet in this browser (Phantom, Solflare or Backpack). If the wallet is short of USDC, you can swap some SOL first.
               </p>
               <div style={{ marginBottom: 16 }}>
-                <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--text3)', marginBottom: 4 }}>Solana Wallet Address</label>
-                <input style={INPUT} placeholder="5RrYLh..." value={walletAddr} onChange={e => { setWalletAddr(e.target.value); setError(''); }} />
+                <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--text3)', marginBottom: 4 }}>Wallet</label>
+                {walletAddr ? (
+                  <div style={{ ...INPUT, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+                    <span style={{ fontFamily: 'var(--font-mono, monospace)', fontSize: 13 }}>{walletAddr.slice(0, 4)}…{walletAddr.slice(-4)}</span>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--green)', display: 'inline-flex', alignItems: 'center', gap: 4 }}><i className="ti ti-circle-check" /> {walletName || 'Wallet'} connected</span>
+                  </div>
+                ) : (
+                  <button type="button" style={{ ...BTN, width: '100%', height: 42, background: 'transparent', border: '1.5px solid var(--border)', color: 'var(--text)', opacity: connecting ? 0.6 : 1 }} disabled={connecting} onClick={connectWallet}>
+                    <i className="ti ti-wallet" /> {connecting ? 'Connecting…' : walletName ? `Connect ${walletName}` : 'Connect a Solana wallet'}
+                  </button>
+                )}
               </div>
               <div style={{ marginBottom: 20 }}>
                 <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--text3)', marginBottom: 4 }}>Amount (USDC)</label>
@@ -260,15 +318,17 @@ function DepositModal({ onClose, onDone, initialTab }: Props) {
               </div>
               <button style={{ ...BTN, background: 'var(--text)', color: 'var(--bg)', width: '100%', justifyContent: 'center', opacity: estimating ? 0.6 : 1 }} disabled={estimating}
                 onClick={async () => {
-                  if (!/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(walletAddr.trim())) { setError('Invalid Solana wallet address'); return; }
+                  if (!walletAddr) { setError('Connect your wallet first.'); return; }
                   if (!parseFloat(amountUsdc) || parseFloat(amountUsdc) <= 0) { setError('Enter a valid amount'); return; }
                   setError(''); setEstimating(true);
                   try {
-                    const data = await apiRequest<any>('/wallet/fund/estimate', {
-                      method: 'POST', body: JSON.stringify({ amount: parseFloat(amountUsdc), userWallet: walletAddr.trim() }),
-                    });
+                    const data = await estimateFor();
                     setEstimate(data);
-                    if (data?.needsSwap && data?.quote) setStep('swap'); else setStep('sign');
+                    if (!data?.needsSwap) setStep('sign');
+                    else if (data?.quote) setStep('swap');
+                    // Short of USDC and no swap possible: say why (it used to go on
+                    // to a transfer the wallet couldn't cover)
+                    else setError(data?.swapError || `This wallet has ${(data?.usdcBalance ?? 0) / 1e6} USDC. Add USDC to it or enter a smaller amount.`);
                   } catch (e: any) { setError(e.message || 'Estimation failed'); }
                   setEstimating(false);
                 }}>
@@ -318,6 +378,12 @@ function DepositModal({ onClose, onDone, initialTab }: Props) {
                 <span style={{ color: 'var(--text2)' }}>Receive</span>
                 <span style={{ fontWeight: 700 }}>{(Number(estimate.quote.outAmount) / 1e6).toFixed(2)} USDC</span>
               </div>
+              {Number(estimate.quote.otherAmountThreshold) > Number(estimate.quote.inAmount) && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                  <span style={{ color: 'var(--text2)' }}>At most, if the price moves</span>
+                  <span style={{ fontWeight: 700 }}>{(Number(estimate.quote.otherAmountThreshold) / 1e9).toFixed(4)} SOL</span>
+                </div>
+              )}
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span style={{ color: 'var(--text2)' }}>Price impact</span>
                 <span style={{ fontWeight: 700, color: Number(estimate.quote.priceImpactPct) > 1 ? '#DC2626' : 'inherit' }}>{Number(estimate.quote.priceImpactPct).toFixed(2)}%</span>
@@ -325,9 +391,9 @@ function DepositModal({ onClose, onDone, initialTab }: Props) {
             </div>
           )}
           <div style={{ display: 'flex', gap: 8 }}>
-            <button style={{ ...BTN, background: 'transparent', border: '1.5px solid var(--border)', color: 'var(--text2)', flex: 1 }} onClick={() => { setStep('select'); setEntryTab('crypto'); }}>Back</button>
-            <button style={{ ...BTN, background: 'var(--green)', color: '#fff', flex: 1, opacity: swapSigning ? 0.6 : 1 }} disabled={swapSigning} onClick={handleSwap}>
-              {swapSigning ? <><span className="spinner" style={{ width: 14, height: 14, borderWidth: 2 }} /> Signing...</> : 'Sign Swap'}
+            <button style={{ ...BTN, background: 'transparent', border: '1.5px solid var(--border)', color: 'var(--text2)', flex: 1, opacity: swapPhase ? 0.5 : 1 }} disabled={!!swapPhase} onClick={() => { setStep('select'); setEntryTab('crypto'); }}>Back</button>
+            <button style={{ ...BTN, background: 'var(--green)', color: '#fff', flex: 1, opacity: swapPhase ? 0.6 : 1 }} disabled={!!swapPhase} onClick={handleSwap}>
+              {swapPhase ? <><span className="spinner" style={{ width: 14, height: 14, borderWidth: 2 }} /> {swapPhase === 'signing' ? 'Approve in your wallet…' : swapPhase === 'sending' ? 'Swapping…' : 'Waiting for USDC…'}</> : 'Swap and continue'}
             </button>
           </div>
         </div>
