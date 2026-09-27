@@ -80,6 +80,7 @@ export default function Dashboard() {
             <h1 className="ui-title">{greeting()}, {user.firstName || user.username || 'there'}</h1>
           </div>
           <div className="ui-actions">
+            {user.role === 'ADMIN' && <Link className="ui-btn ui-btn-ghost" to="/admin"><i className="ti ti-shield-cog" /> Admin panel</Link>}
             <Link className="ui-btn ui-btn-ghost" to="/tasks"><i className="ti ti-search" /> Find work</Link>
             <Link className="ui-btn ui-btn-dark" to="/create"><i className="ti ti-plus" /> Post a job</Link>
           </div>

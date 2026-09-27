@@ -8,6 +8,7 @@ import ErrorBoundary from './components/ErrorBoundary'
 import { ToastProvider } from './components/Toast'
 import SignInHost from './components/auth/SignInHost'
 import PageLoader from './components/PageLoader'
+import AdminGuard from './components/AdminGuard'
 import { JobAlertProvider } from './contexts/JobAlertContext'
 import { WalletBalanceProvider } from './context/WalletBalanceContext'
 
@@ -83,7 +84,6 @@ const AdminVault = lazy(() => import('./pages/AdminVault'))
 const AdminModeration = lazy(() => import('./pages/AdminModeration'))
 const AdminWithdrawals = lazy(() => import('./pages/AdminWithdrawals'))
 const AdminKyc = lazy(() => import('./pages/AdminKyc'))
-const AdminLogin = lazy(() => import('./pages/AdminLogin'))
 const WorkspacePortal = lazy(() => import('./pages/WorkspacePortal'))
 const Docs = lazy(() => import('./pages/Docs'))
 const LinkWallet = lazy(() => import('./pages/LinkWallet'))
@@ -205,14 +205,14 @@ export default function App() {
             <Route path="/about" element={<About />} />
 
             {/* ── Admin ── */}
-            <Route path="/admin" element={<AuthGuard><Admin /></AuthGuard>} />
-            <Route path="/admin/blog" element={<AuthGuard><AdminBlog /></AuthGuard>} />
-            <Route path="/admin/vault" element={<AuthGuard><AdminVault /></AuthGuard>} />
-            <Route path="/admin/moderation" element={<AuthGuard><AdminModeration /></AuthGuard>} />
-            <Route path="/admin/withdrawals" element={<AuthGuard><AdminWithdrawals /></AuthGuard>} />
-            <Route path="/admin/kyc" element={<AuthGuard><AdminKyc /></AuthGuard>} />
-            <Route path="/admin/login" element={<AdminLogin />} />
-            <Route path="/admin/*" element={<AuthGuard><Admin /></AuthGuard>} />
+            <Route path="/admin" element={<AdminGuard><Admin /></AdminGuard>} />
+            <Route path="/admin/blog" element={<AdminGuard><AdminBlog /></AdminGuard>} />
+            <Route path="/admin/vault" element={<AdminGuard><AdminVault /></AdminGuard>} />
+            <Route path="/admin/moderation" element={<AdminGuard><AdminModeration /></AdminGuard>} />
+            <Route path="/admin/withdrawals" element={<AdminGuard><AdminWithdrawals /></AdminGuard>} />
+            <Route path="/admin/kyc" element={<AdminGuard><AdminKyc /></AdminGuard>} />
+            <Route path="/admin/login" element={<Navigate to="/login?redirect=/admin" replace />} />
+            <Route path="/admin/*" element={<AdminGuard><Admin /></AdminGuard>} />
 
             {/* ── Catch-all ── */}
             <Route path="*" element={<NotFound />} />

@@ -111,7 +111,7 @@ export default function Sidebar() {
               <i className="ti ti-code" /> <span><strong>Developer API</strong><small>API keys &amp; docs</small></span>
             </Link>
           )}
-          {(user?.role === 'ADMIN' || localStorage.getItem('ogapay_admin_session') === 'true') && (
+          {user?.role === 'ADMIN' && (
             <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px solid var(--border)' }}>
               <div className="sidebar-section" style={{ fontSize: 10, marginBottom: 4 }}>ADMIN</div>
               <Link className="sidebar-link" to="/admin">

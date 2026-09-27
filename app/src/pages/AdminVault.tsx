@@ -96,7 +96,7 @@ export default function AdminVault() {
     setAddingRevenue(false)
   }
 
-  const isAdmin = authUser?.role === 'ADMIN' || localStorage.getItem('ogapay_admin_session') === 'true'
+  const isAdmin = authUser?.role === 'ADMIN'
 
   if (!isAdmin) {
     return (

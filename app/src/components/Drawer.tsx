@@ -227,6 +227,14 @@ export default function Drawer({ open, onClose }: DrawerProps) {
               <div className="oga-drawer-divider" />
 
               {/* ── Account ── */}
+              {/* ── Admin (admins only) ── */}
+              {user?.role === 'ADMIN' && (
+                <Link className="oga-drawer-item" to="/admin" onClick={onClose}>
+                  <span className="oga-drawer-icon"><i className="ti ti-shield-cog" /></span>
+                  <span><strong>Admin panel</strong><small>Withdrawals, identity checks, moderation</small></span>
+                </Link>
+              )}
+
               <DrawerGroup label="Account" icon="user-circle" subtitle="Profile, dashboard, settings">
                 <Link className="oga-drawer-item" to="/profile" onClick={onClose}>
                   <span className="oga-drawer-icon oga-drawer-icon--sub"><i className="ti ti-user" /></span>
