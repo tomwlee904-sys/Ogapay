@@ -604,7 +604,7 @@ function JobsListPage({ tasks, reload }: { tasks: Task[]; reload: () => void }) 
         {FILTERS.map((f) => {
           const n = tasks.filter(f.test).length;
           if (f.id !== "all" && n === 0) return null;
-          return <button key={f.id} role="tab" aria-selected={filter === f.id} className={`mj-chip${filter === f.id ? " on" : ""}`} onClick={() => setFilter(f.id)}>{f.label}<em>{n}</em></button>;
+          return <button key={f.id} role="tab" aria-selected={filter === f.id} className={`ui-chip${filter === f.id ? " on" : ""}`} onClick={() => setFilter(f.id)}>{f.label}<em>{n}</em></button>;
         })}
       </div>
 

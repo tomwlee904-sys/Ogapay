@@ -101,3 +101,8 @@
   .ui-head { align-items: flex-start; }
 }
 @media (prefers-reduced-motion: reduce) { .ui-sk { animation: none; } }
+
+/* Filter chips (Manage jobs, My tasks) */
+.ui-chip { flex-shrink: 0; height: 32px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--border); background: var(--card); color: var(--text2); font: 500 12px 'Geist', system-ui, sans-serif; cursor: pointer; }
+.ui-chip.on { background: var(--text); color: var(--bg); border-color: var(--text); }
+.ui-chip em { font-style: normal; opacity: .6; margin-left: 5px; }

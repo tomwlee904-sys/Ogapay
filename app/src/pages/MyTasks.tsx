@@ -1,165 +1,122 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { apiRequest } from '../lib/api'
+import { categoryLabel } from '../lib/categories'
+import '../styles/my-tasks.css'
 
-// Submission statuses: PENDING = taken, work not sent yet; SUBMITTED = waiting for review
-const STATUS_MAP: Record<string, string> = {
-  PENDING: 'In Progress',
-  SUBMITTED: 'Under Review',
-  DISPUTED: 'Disputed',
-  APPROVED: 'Approved',
-  REJECTED: 'Rejected',
-  EXPIRED: 'Slot released',
+// Jobs you've taken as a worker and where each one stands. Rows open the submit
+// page, which shows the next step (send work, wait for review, result). The old
+// page had made-up "% complete" bars, no links and no page margins.
+
+type Sub = {
+  id: string; status: string; taskId: string; createdAt: string; submittedAt?: string | null; reviewedAt?: string | null
+  autoApproveAt?: string | null; posterNotes?: string | null
+  task?: { id: string; title: string; reward: number | string; currency?: string; category?: string; poster?: { username?: string | null } }
 }
 
-const COLOR_MAP: Record<string, string> = {
-  PENDING: 'var(--accent)',
-  SUBMITTED: '#F59E0B',
-  DISPUTED: '#F59E0B',
-  APPROVED: '#16a34a',
-  REJECTED: '#DC2626',
-  EXPIRED: 'var(--text3)',
+const STATUS: Record<string, { label: string; cls: string }> = {
+  PENDING: { label: 'To do', cls: 'todo' }, SUBMITTED: { label: 'In review', cls: 'wait' },
+  APPROVED: { label: 'Paid', cls: 'ok' }, REJECTED: { label: 'Not approved', cls: 'bad' },
+  DISPUTED: { label: 'In dispute', cls: 'wait' }, EXPIRED: { label: 'Slot released', cls: '' },
 }
-
-const PROGRESS_MAP: Record<string, number> = {
-  PENDING: 40,
-  SUBMITTED: 70,
-  DISPUTED: 70,
-  APPROVED: 100,
-  REJECTED: 100,
-  EXPIRED: 0,
-}
-
-const shortDate = (d: string) => new Date(d).toLocaleString(undefined, { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
-
-const tabs = [
-  { id: 'all', label: 'All' },
-  { id: 'in progress', label: 'In Progress' },
-  { id: 'under review', label: 'Under Review' },
-  { id: 'approved', label: 'Approved' },
-  { id: 'rejected', label: 'Rejected' },
+const TABS = [
+  { id: 'all', label: 'All', test: () => true },
+  { id: 'todo', label: 'To do', test: (s: Sub) => s.status === 'PENDING' },
+  { id: 'review', label: 'In review', test: (s: Sub) => s.status === 'SUBMITTED' || s.status === 'DISPUTED' },
+  { id: 'paid', label: 'Paid', test: (s: Sub) => s.status === 'APPROVED' },
+  { id: 'closed', label: 'Not approved', test: (s: Sub) => s.status === 'REJECTED' || s.status === 'EXPIRED' },
 ]
 
-function timeAgo(dateStr: string) {
-  const diff = Date.now() - new Date(dateStr).getTime()
-  const mins = Math.floor(diff / 60000)
-  if (mins < 1) return 'Just now'
-  if (mins < 60) return mins + 'm ago'
-  const hrs = Math.floor(mins / 60)
-  if (hrs < 24) return hrs + 'h ago'
-  const days = Math.floor(hrs / 24)
-  return days + 'd ago'
+const money = (n: number, cur = 'NGN') => cur === 'NGN' ? `₦${Math.round(n).toLocaleString('en-US')}` : `$${n.toFixed(2)}`
+const day = (d?: string | null) => d ? new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : ''
+const when = (d?: string | null) => d ? new Date(d).toLocaleString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : ''
+
+function detail(s: Sub) {
+  switch (s.status) {
+    case 'PENDING': return 'Send your work when it\'s done'
+    case 'SUBMITTED': return s.autoApproveAt ? `Sent ${day(s.submittedAt || s.createdAt)} · paid automatically ${when(s.autoApproveAt)} if not reviewed` : `Sent ${day(s.submittedAt || s.createdAt)}`
+    case 'APPROVED': return `Approved${s.reviewedAt ? ` ${day(s.reviewedAt)}` : ''}`
+    case 'REJECTED': return `Not approved${s.reviewedAt ? ` ${day(s.reviewedAt)}` : ''}`
+    case 'EXPIRED': return 'No work was sent in time, so the slot was released'
+    case 'DISPUTED': return 'Our team is reviewing this'
+    default: return ''
+  }
 }
 
 export default function MyTasks() {
+  const [subs, setSubs] = useState<Sub[] | null>(null)
+  const [earned, setEarned] = useState(0)
   const [tab, setTab] = useState('all')
-  const [submissions, setSubmissions] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    async function fetchSubmissions() {
-      try {
-        // { submissions, buckets, stats }
-        const data = await apiRequest<any>('/tasks/my/submissions')
-        setSubmissions(Array.isArray(data) ? data : data?.submissions || [])
-      } catch {}
-      setLoading(false)
-    }
-    fetchSubmissions()
+    apiRequest<{ submissions: Sub[]; stats?: { totalEarned?: number } }>('/tasks/my/submissions')
+      .then((d) => { setSubs(d?.submissions || []); setEarned(Number(d?.stats?.totalEarned || 0)) })
+      .catch(() => setSubs([]))
   }, [])
 
-  const filtered = tab === 'all'
-    ? submissions
-    : submissions.filter(s => {
-        const display = STATUS_MAP[s.status] || s.status
-        return display.toLowerCase() === tab
-      })
+  const list = subs || []
+  const shown = list.filter((TABS.find((t) => t.id === tab) || TABS[0]).test)
+  const count = (id: string) => list.filter(TABS.find((t) => t.id === id)!.test).length
 
   return (
     <Layout>
-      <style>{`
-        .mt-hero{margin-bottom:20px}
-        .mt-hero h1{font-family:Geist;font-size:28px;font-weight:900;margin:0 0 4px}
-        .mt-hero p{color:var(--text2);font-size:14px;margin:0}
-        .mt-tabs{display:flex;gap:4px;margin-bottom:14px;flex-wrap:wrap}
-        .mt-tab{padding:6px 14px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text2);font-size:11px;font-weight:600;cursor:pointer;transition:all .2s}
-        .mt-tab:hover,.mt-tab.active{border-color:var(--accent);color:var(--accent);background:rgba(var(--accent-rgb),.08)}
-        .mt-list{display:grid;gap:6px}
-        .mt-item{display:flex;align-items:center;gap:14px;padding:14px 16px;background:var(--card);border:1px solid var(--border);border-radius:12px;transition:all .2s}
-        .mt-item:hover{border-color:var(--border2)}
-        .mt-icon{width:36px;height:36px;border-radius:9px;display:grid;place-items:center;flex-shrink:0;font-size:16px}
-        .mt-info{flex:1;min-width:0}
-        .mt-title{font-weight:700;font-size:13px;margin-bottom:4px}
-        .mt-progress{height:4px;border-radius:2px;background:var(--bg2);overflow:hidden;margin-bottom:4px;max-width:200px}
-        .mt-progress .mt-pf{height:100%;border-radius:2px;transition:width .3s}
-        .mt-meta{font-size:11px;color:var(--text3);display:flex;gap:10px}
-        .mt-right{text-align:right;flex-shrink:0}
-        .mt-reward{font-weight:700;font-size:14px;margin-bottom:4px}
-        .mt-status{padding:3px 8px;border-radius:5px;font-size:10px;font-weight:700;display:inline-block}
-        .mt-empty{text-align:center;padding:48px 20px;color:var(--text2)}
-        .mt-empty i{font-size:36px;color:var(--text3);margin-bottom:12px;display:block}
-      `}</style>
+      <div className="ui-page mt2-page">
+        <div className="ui-head">
+          <div>
+            <span className="ui-eyebrow">Working</span>
+            <h1 className="ui-title">My tasks</h1>
+            <p className="ui-sub">Jobs you've taken and where each one stands.</p>
+          </div>
+          <Link className="ui-btn ui-btn-dark" to="/tasks"><i className="ti ti-search" /> Find work</Link>
+        </div>
 
-      <div className="mt-hero">
-        <h1>My Tasks</h1>
-        <p>Track your submitted tasks and their status</p>
+        {subs === null ? <div className="ui-sk" style={{ height: 240, marginTop: 24 }} /> : list.length === 0 ? (
+          <div className="ui-empty" style={{ marginTop: 24 }}>
+            <p style={{ margin: '0 0 14px' }}>You haven't taken any jobs yet.</p>
+            <Link className="ui-btn ui-btn-dark" to="/tasks">Browse jobs</Link>
+          </div>
+        ) : (
+          <>
+            <div className="mt2-sum">
+              <div><b>{count('todo')}</b><span>to do</span></div>
+              <div><b>{count('review')}</b><span>in review</span></div>
+              <div><b>{count('paid')}</b><span>paid</span></div>
+              <div><b>{money(earned)}</b><span>earned</span></div>
+            </div>
+
+            <div className="mt2-tabs" role="tablist" aria-label="Filter">
+              {TABS.map((t) => {
+                const n = count(t.id)
+                if (t.id !== 'all' && n === 0) return null
+                return <button key={t.id} role="tab" aria-selected={tab === t.id} className={`ui-chip${tab === t.id ? ' on' : ''}`} onClick={() => setTab(t.id)}>{t.label}<em>{n}</em></button>
+              })}
+            </div>
+
+            <ul className="ui-card mt2-list">
+              {shown.map((s) => {
+                const st = STATUS[s.status] || { label: s.status.toLowerCase(), cls: '' }
+                return (
+                  <li key={s.id}>
+                    <Link to={`/tasks/${s.taskId}/submit`}>
+                      <div className="mt2-t">
+                        <strong>{s.task?.title || 'Job'}</strong>
+                        <span className="mt2-meta">{categoryLabel(s.task?.category)}{s.task?.poster?.username ? ` · @${s.task.poster.username}` : ''}</span>
+                        <span className="mt2-detail">{detail(s)}</span>
+                        {s.status === 'REJECTED' && s.posterNotes && <span className="mt2-note">“{s.posterNotes}”</span>}
+                      </div>
+                      <div className="mt2-r">
+                        <b className={s.status === 'APPROVED' ? 'paid' : ''}>{money(Number(s.task?.reward || 0), s.task?.currency)}</b>
+                        <em className={st.cls}>{st.label}</em>
+                      </div>
+                    </Link>
+                  </li>
+                )
+              })}
+            </ul>
+          </>
+        )}
       </div>
-
-      <div className="mt-tabs">
-        {tabs.map(t => (
-          <button key={t.id} className={`mt-tab ${tab === t.id ? 'active' : ''}`} onClick={() => setTab(t.id)}>{t.label}</button>
-        ))}
-      </div>
-
-      {loading ? (
-        <div className="mt-empty">
-          <i className="ti ti-loader" style={{animation:'spin 1s linear infinite'}} />
-          <p style={{fontSize:13,margin:0}}>Loading your submissions...</p>
-        </div>
-      ) : filtered.length === 0 ? (
-        <div className="mt-empty">
-          <i className="ti ti-checklist" />
-          <h3 style={{fontFamily:'Geist',fontWeight:800,margin:'0 0 4px',color:'var(--text)'}}>No submissions yet</h3>
-          <p style={{fontSize:13,margin:0}}>Apply to tasks and submit your work to see them here</p>
-          <a href="/tasks" style={{display:'inline-flex',marginTop:12,height:36,padding:'0 16px',borderRadius:8,border:0,background:'var(--accent)',color:'var(--on-accent)',fontWeight:700,fontSize:12,alignItems:'center',gap:6,textDecoration:'none'}}>Browse Tasks</a>
-        </div>
-      ) : (
-        <div className="mt-list">
-          {filtered.map((s: any) => {
-            const status = STATUS_MAP[s.status] || s.status
-            const color = COLOR_MAP[s.status] || 'var(--accent)'
-            const progress = PROGRESS_MAP[s.status] || 50
-            return (
-              <div className="mt-item" key={s.id}>
-                <div className="mt-icon" style={{background: `${color}15`, color}}>
-                  <i className="ti ti-file-text" />
-                </div>
-                <div className="mt-info">
-                  <div className="mt-title">{s.task?.title || 'Task'}</div>
-                  <div className="mt-progress">
-                    <div className="mt-pf" style={{width: progress + '%', background: color}} />
-                  </div>
-                  <div className="mt-meta">
-                    <span>{timeAgo(s.createdAt)}</span>
-                    <span>{progress}% complete</span>
-                  </div>
-                  {s.status === 'SUBMITTED' && s.autoApproveAt && (
-                    <div className="mt-meta" style={{ marginTop: 4 }}>
-                      <span><i className="ti ti-clock-check" /> Paid automatically on {shortDate(s.autoApproveAt)} if it isn't reviewed by then</span>
-                    </div>
-                  )}
-                </div>
-                <div className="mt-right">
-                  <div className="mt-reward">{s.task?.currency || 'NGN'} {Number(s.task?.reward || 0).toLocaleString()}</div>
-                  <span className="mt-status" style={{background: `${color}15`, color}}>{status}</span>
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      )}
-
-      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </Layout>
   )
 }

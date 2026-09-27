@@ -15,9 +15,6 @@ button.mj-sum:hover { border-color: var(--text3); }
 
 .mj-filters { display: flex; gap: 6px; margin: 20px 0 12px; overflow-x: auto; scrollbar-width: none; }
 .mj-filters::-webkit-scrollbar { display: none; }
-.mj-chip { flex-shrink: 0; height: 32px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--border); background: var(--card); color: var(--text2); font: 500 12px 'Geist', system-ui, sans-serif; cursor: pointer; }
-.mj-chip.on { background: var(--text); color: var(--bg); border-color: var(--text); }
-.mj-chip em { font-style: normal; opacity: .6; margin-left: 5px; }
 
 .mj-list { display: grid; gap: 10px; }
 .mj-job { padding: 18px 20px; cursor: pointer; transition: border-color .15s; }
