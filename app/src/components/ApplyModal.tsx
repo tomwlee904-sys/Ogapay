@@ -3,7 +3,8 @@ import Modal from './Modal'
 import { useCurrency } from '../context/CurrencyContext'
 import { useToast } from './Toast'
 
-const API_BASE = import.meta.env.VITE_API_BASE || 'https://ogapay-app-66b6c47c60e5.herokuapp.com/api'
+// The app's API (this used to read a misnamed env var and fall back to an old Heroku server)
+import { API_BASE } from '../lib/api'
 const BRAND = '#2E4E24'
 
 interface ApplyModalProps {
