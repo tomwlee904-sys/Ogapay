@@ -1,6 +1,7 @@
 import { ReactNode } from "react";
 import { rankName } from "../../lib/requirements";
 import { API_BASE, apiRequest, getAccessToken } from "../../lib/api";
+import { useProviders } from "../../lib/providers";
 
 /* Shared building blocks for the Create flows (custom job, X campaign,
    quick task). Everything here maps to fields the task API actually stores. */
@@ -39,12 +40,15 @@ export function reqLabel(type: string, value: string) {
 
 export function RequirementPicker({ type, value, onChange }: { type: string; value: string; onChange: (t: string, v: string) => void }) {
   const needsValue = type === "rank" || type === "ogascore";
+  // "Human verified" only while VeryAI is set up (nobody could take the job otherwise)
+  const providers = useProviders();
+  const options = REQ_OPTIONS.filter(([v]) => v !== "human" || providers?.very || type === "human");
   return (
     <div className={needsValue ? "cf-row" : undefined}>
       <div className="cf-field">
         <label>Who can take part</label>
         <select className="ui-select" value={type} onChange={e => onChange(e.target.value, value)}>
-          {REQ_OPTIONS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+          {options.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
         </select>
       </div>
       {type === "rank" && (

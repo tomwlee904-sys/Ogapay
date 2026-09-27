@@ -341,6 +341,8 @@ export default function Store() {
       navigate('/login?redirect=/store')
       return
     }
+    // OgaPay's own items go through checkout (Task Boost needs a job picked there)
+    if ((product as any).official) { navigate('/store/pay/' + product.id); return }
     setBuyingProduct(product)
     setPurchaseStep('confirm')
     setPurchaseError('')

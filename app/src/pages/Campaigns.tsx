@@ -1,340 +1,188 @@
-﻿import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import Layout from '../components/Layout'
-import { SkeletonPage, injectSkeletonStyles } from "../components/SkeletonLoader";
-import { apiRequest, getAccessToken, API_BASE } from '../lib/api'
-import { useAuth } from '../context/AuthContext'
+import Sheet from '../components/wallet/Sheet'
+import { apiRequest } from '../lib/api'
+import '../styles/wallet.css'
 
-// ── Inject skeleton styles on mount ──
+// Campaigns: a named group of your jobs with a budget. Stats come from the jobs
+// in it (spent, remaining, submissions, approvals). The old page showed ad-style
+// impressions and clicks from API routes that didn't exist.
+
+type Stats = { jobs: number; openJobs: number; spent: number; remaining: number; submissions: number; approved: number; approvalRate: number }
+type Campaign = { id: string; name: string; description?: string | null; platforms: string[]; budget: number; currency: 'NGN' | 'USDC'; status: 'ACTIVE' | 'PAUSED' | 'ENDED'; createdAt: string; stats: Stats }
+type JobRow = { id: string; title: string; status: string; reward: number; maxWorkers: number; currency: string; submissions: number; approved: number }
+
+const PLATFORMS = ['X/Twitter', 'Instagram', 'TikTok', 'Facebook', 'YouTube', 'WhatsApp', 'Other']
+const STATUS_LABEL = { ACTIVE: 'Active', PAUSED: 'Paused', ENDED: 'Ended' } as const
+const money = (n: number, c: string) => (c === 'NGN' ? `₦${Math.round(n).toLocaleString('en-US')}` : `${n.toLocaleString('en-US', { maximumFractionDigits: 2 })} ${c}`)
+const blank = { name: '', description: '', platforms: [] as string[], budget: '', currency: 'NGN' as 'NGN' | 'USDC', status: 'ACTIVE' as Campaign['status'] }
+
 export default function Campaigns() {
-  useEffect(() => { injectSkeletonStyles(); }, []);
-  const { user: authUser } = useAuth()
-  const [showModal, setShowModal] = useState(false)
-  const [showEditModal, setShowEditModal] = useState(false)
-  const [showStatsModal, setShowStatsModal] = useState(false)
-  const [campaigns, setCampaigns] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
+  const [list, setList] = useState<Campaign[] | null>(null)
+  const [err, setErr] = useState('')
+  const [editing, setEditing] = useState<Campaign | 'new' | null>(null)
+  const [form, setForm] = useState(blank)
   const [saving, setSaving] = useState(false)
-  const [stats, setStats] = useState<any>(null)
-  const [form, setForm] = useState({ name: '', platform: 'X/Twitter', budget: '', description: '' })
-  const [editForm, setEditForm] = useState({ id: '', name: '', description: '', status: 'ACTIVE', budget: '', platform: '' })
+  const [formErr, setFormErr] = useState('')
+  const [viewing, setViewing] = useState<Campaign | null>(null)
+  const [jobs, setJobs] = useState<JobRow[] | null>(null)
 
-  const fetchData = async () => {
-    try {
-      const res = await apiRequest<any>('/campaigns')
-      const items = Array.isArray(res) ? res : res?.data || []
-      setCampaigns(items)
-    } catch (e: any) { console.error(e) }
-    setLoading(false)
+  const load = () => apiRequest<Campaign[]>('/campaigns').then((l) => setList(Array.isArray(l) ? l : [])).catch((e) => { setErr(e?.message || "Couldn't load your campaigns"); setList([]) })
+  useEffect(() => { load() }, [])
+
+  const openForm = (c: Campaign | 'new') => {
+    setEditing(c); setFormErr('')
+    setForm(c === 'new' ? blank : { name: c.name, description: c.description || '', platforms: c.platforms || [], budget: String(c.budget), currency: c.currency, status: c.status })
   }
-
-  useEffect(() => {
-    fetchData()
-    const onFocus = () => fetchData()
-    window.addEventListener('focus', onFocus)
-    return () => window.removeEventListener('focus', onFocus)
-  }, [authUser?.id])
-
-  const handleCreate = async () => {
-    if (!form.name || !form.budget) return
-    setSaving(true)
+  const save = async () => {
+    setSaving(true); setFormErr('')
     try {
-      const token = getAccessToken()
-      const res = await fetch(`${API_BASE}/campaigns`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({
-          name: form.name,
-          platforms: [form.platform],
-          budget: parseFloat(form.budget),
-          currency: 'NGN',
-          description: form.description,
-        }),
-      })
-      const json = await res.json()
-      if (json.data) {
-        setCampaigns(prev => [json.data, ...prev])
-        setShowModal(false)
-        setForm({ name: '', platform: 'X/Twitter', budget: '', description: '' })
-      }
-    } catch (e: any) { console.error(e) }
+      const body: any = { name: form.name.trim(), description: form.description.trim(), platforms: form.platforms, budget: Number(form.budget || 0) }
+      if (editing === 'new') await apiRequest('/campaigns', { method: 'POST', body: JSON.stringify({ ...body, currency: form.currency }) })
+      else if (editing) await apiRequest(`/campaigns/${editing.id}`, { method: 'PATCH', body: JSON.stringify({ ...body, status: form.status }) })
+      setEditing(null); load()
+    } catch (e: any) { setFormErr(e?.message || "Couldn't save the campaign") }
     setSaving(false)
   }
-
-  const handleEdit = async () => {
-    if (!editForm.name) return
-    setSaving(true)
-    try {
-      const token = getAccessToken()
-      const res = await fetch(`${API_BASE}/campaigns/${editForm.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({
-          name: editForm.name,
-          description: editForm.description,
-          status: editForm.status,
-          budget: editForm.budget ? parseFloat(editForm.budget) : undefined,
-        }),
-      })
-      const json = await res.json()
-      if (json.data) {
-        setCampaigns(prev => prev.map(c => c.id === editForm.id ? json.data : c))
-        setShowEditModal(false)
-      }
-    } catch (e: any) { console.error(e) }
-    setSaving(false)
+  const remove = async (c: Campaign) => {
+    if (!window.confirm(`Delete "${c.name}"? Its jobs stay as they are.`)) return
+    try { await apiRequest(`/campaigns/${c.id}`, { method: 'DELETE' }); load() } catch (e: any) { setErr(e?.message || "Couldn't delete it") }
   }
-
-  const handleViewStats = async (campaign: any) => {
-    try {
-      const token = getAccessToken()
-      const res = await fetch(`${API_BASE}/campaigns/${campaign.id}/stats`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      const json = await res.json()
-      setStats(json.data || json)
-      setShowStatsModal(true)
-    } catch (e: any) { console.error(e) }
-  }
-
-  const openEditModal = (campaign: any) => {
-    setEditForm({
-      id: campaign.id,
-      name: campaign.name,
-      description: campaign.description || '',
-      status: campaign.status || 'ACTIVE',
-      budget: String(Number(campaign.budget)),
-      platform: Array.isArray(campaign.platforms) ? campaign.platforms[0] : 'X/Twitter',
-    })
-    setShowEditModal(true)
+  const view = (c: Campaign) => {
+    setViewing(c); setJobs(null)
+    apiRequest<{ jobsList: JobRow[] }>(`/campaigns/${c.id}/stats`).then((d) => setJobs(d?.jobsList || [])).catch(() => setJobs([]))
   }
 
   return (
     <Layout>
-      <style>{`
-        .cmp-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px}
-        .cmp-head h1{font-family:Geist;font-size:28px;font-weight:900;margin:0 0 4px}
-        .cmp-head p{color:var(--text2);font-size:14px;margin:0}
-        .cmp-create{display:flex;align-items:center;gap:16px;padding:18px 20px;background:var(--card);border:1px solid var(--border);border-radius:14px;margin-bottom:24px;flex-wrap:wrap}
-        .cmp-create h3{font-family:Geist;font-size:15px;font-weight:800;margin:0 0 2px}
-        .cmp-create p{color:var(--text2);font-size:13px;margin:0;flex:1}
-        .cmp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
-        .cmp-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px;transition:all .25s}
-        .cmp-card:hover{transform:translateY(-2px);border-color:var(--accent);box-shadow:0 0 20px rgba(var(--accent-rgb),.06)}
-        .cmp-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
-        .cmp-name{font-weight:800;font-size:14px}
-        .cmp-status{padding:3px 8px;border-radius:5px;font-size:10px;font-weight:700}
-        .cmp-meta{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
-        .cmp-m-item{font-size:12px}
-        .cmp-m-item .cmm-label{color:var(--text3);font-size:10px;font-weight:600;text-transform:uppercase}
-        .cmp-m-item .cmm-val{font-weight:700;margin-top:1px}
-        .cmp-bar{height:4px;border-radius:2px;background:var(--bg2);overflow:hidden;margin-bottom:10px}
-        .cmp-bar .cmp-fill{height:100%;border-radius:2px}
-        .cmp-actions{display:flex;gap:6px}
-        .cmp-btn{height:30px;padding:0 10px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text2);font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:4px}
-        .cmp-btn:hover{border-color:var(--accent);color:var(--accent)}
-        .cmp-btn.primary{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
-        .cmp-btn.primary:hover{box-shadow:0 4px 12px rgba(var(--accent-rgb),.2)}
-        .cmp-btn.danger{background:#ef444415;color:#ef4444;border-color:#ef444455}
-        .cmp-btn.danger:hover{background:#ef444430}
-        .cmp-empty{text-align:center;padding:48px;color:var(--text2)}
-        .cmp-empty i{font-size:36px;color:var(--text3);margin-bottom:10px;display:block}
-        .cmp-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:400;display:none;align-items:center;justify-content:center;padding:20px}
-        .cmp-overlay.open{display:flex}
-        .cmp-modal{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;width:min(480px,100%);max-height:80vh;overflow-y:auto;-webkit-overflow-scrolling:touch}
-        .cmp-modal h2{font-family:Geist;font-size:20px;font-weight:900;margin:0 0 16px}
-        .cmp-field{margin-bottom:12px}
-        .cmp-field label{display:block;font-size:11px;font-weight:700;color:var(--text3);margin-bottom:4px;text-transform:uppercase}
-        .cmp-field input,.cmp-field select{width:100%;height:38px;padding:0 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg2);color:var(--text);font-size:13px;outline:0}
-        .cmp-field input:focus,.cmp-field select:focus{border-color:var(--accent)}
-        .cmp-modal-actions{display:flex;gap:8px;margin-top:16px;justify-content:flex-end}
-        .cmp-loading{text-align:center;padding:48px;color:var(--text2);display:flex;align-items:center;justify-content:center;gap:8px}
-        .cmp-stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
-        .cmp-stat-box{padding:14px;border-radius:10px;border:1px solid var(--border);background:var(--bg2);text-align:center}
-        .cmp-stat-box .cmp-stat-val{font-size:22px;font-weight:900;color:var(--text)}
-        .cmp-stat-box .cmp-stat-label{font-size:10px;color:var(--text3);text-transform:uppercase;font-weight:600;margin-top:2px}
-      `}</style>
-
-      <div className="cmp-head">
-        <div>
-          <h1>Campaigns</h1>
-          <p>Multi-platform marketing campaigns — set a budget, choose platforms, and track results</p>
+      <div className="ui-page">
+        <div className="ui-head">
+          <div>
+            <span className="ui-eyebrow"><i className="ti ti-speakerphone" /> Campaigns</span>
+            <h1 className="ui-title">Campaigns</h1>
+            <p className="ui-sub">Group related jobs, give them a budget, and see their spend and results together.</p>
+          </div>
+          <div className="ui-actions"><button type="button" className="ui-btn ui-btn-dark" onClick={() => openForm('new')}><i className="ti ti-plus" /> New campaign</button></div>
         </div>
-        <button className="cmp-btn primary" style={{height:36,padding:'0 16px'}} onClick={() => setShowModal(true)}>
-          <i className="ti ti-plus" /> New Campaign
-        </button>
+        {err && <p role="alert" style={{ color: 'var(--red)', fontSize: 13 }}>{err}</p>}
+
+        {list === null ? (
+          <div className="ui-grid-3" style={{ marginTop: 24 }}>{[0, 1, 2].map((i) => <div key={i} className="ui-sk" style={{ height: 200 }} />)}</div>
+        ) : list.length === 0 ? (
+          <div className="ui-empty" style={{ marginTop: 24 }}>
+            <b style={{ display: 'block', color: 'var(--text)', marginBottom: 6 }}>No campaigns yet</b>
+            Make one for a launch or a promotion, then add jobs to it when you post them.
+          </div>
+        ) : (
+          <div className="ui-grid-3" style={{ marginTop: 24 }}>
+            {list.map((c) => {
+              const s = c.stats
+              const pct = c.budget > 0 ? Math.min(100, (s.spent / c.budget) * 100) : 0
+              return (
+                <section key={c.id} className="ui-card ui-card-pad" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, alignItems: 'flex-start' }}>
+                    <h2 style={{ margin: 0, fontSize: 16, fontWeight: 600, letterSpacing: '-.01em', minWidth: 0, overflowWrap: 'anywhere' }}>{c.name}</h2>
+                    <span className={`wl-pill ${c.status === 'ACTIVE' ? 'hold' : c.status === 'PAUSED' ? 'wait' : 'bad'}`} style={{ marginTop: 2 }}>{STATUS_LABEL[c.status]}</span>
+                  </div>
+                  {c.platforms?.length > 0 && <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>{c.platforms.map((p) => <span key={p} className="wl-coin" style={{ height: 24, fontSize: 11 }}>{p}</span>)}</div>}
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5, color: 'var(--text2)', marginBottom: 6 }}>
+                      <span>Spent <b style={{ color: 'var(--text)' }}>{money(s.spent, c.currency)}</b></span>
+                      <span>of {money(c.budget, c.currency)}</span>
+                    </div>
+                    <div style={{ height: 6, borderRadius: 999, background: 'var(--card2)', overflow: 'hidden' }}><div style={{ width: `${pct}%`, height: '100%', background: s.remaining < 0 ? 'var(--red)' : 'var(--green)' }} /></div>
+                    <div style={{ fontSize: 12, color: s.remaining < 0 ? 'var(--red)' : 'var(--text2)', marginTop: 6 }}>{s.remaining < 0 ? `${money(-s.remaining, c.currency)} over budget` : `${money(s.remaining, c.currency)} left`}</div>
+                  </div>
+                  <div className="wl-stats" style={{ gridTemplateColumns: 'repeat(3, minmax(0, 1fr))' }}>
+                    <div className="wl-stat" style={{ padding: 10 }}><span>Jobs</span><b style={{ fontSize: 16 }}>{s.jobs}</b></div>
+                    <div className="wl-stat" style={{ padding: 10 }}><span>Entries</span><b style={{ fontSize: 16 }}>{s.submissions}</b></div>
+                    <div className="wl-stat" style={{ padding: 10 }}><span>Approved</span><b style={{ fontSize: 16 }}>{s.approved}</b></div>
+                  </div>
+                  <div className="ui-actions" style={{ marginTop: 'auto' }}>
+                    {c.status !== 'ENDED' && <Link className="ui-btn ui-btn-dark" to={`/create?type=custom&campaign=${c.id}`}><i className="ti ti-plus" /> Add a job</Link>}
+                    <button type="button" className="ui-btn ui-btn-ghost" onClick={() => view(c)}>View</button>
+                    <button type="button" className="ui-btn ui-btn-ghost" onClick={() => openForm(c)}>Edit</button>
+                    <button type="button" className="ui-btn ui-btn-ghost ui-btn-icon" aria-label={`Delete ${c.name}`} onClick={() => remove(c)}><i className="ti ti-trash" /></button>
+                  </div>
+                </section>
+              )
+            })}
+          </div>
+        )}
       </div>
 
-      <div className="cmp-create">
-        <div style={{flex:1}}>
-          <h3>Ready to launch?</h3>
-          <p>Create a campaign and reach thousands of workers across X, Telegram, Instagram, and more.</p>
-        </div>
-        <button className="cmp-btn primary" style={{height:36,padding:'0 14px'}} onClick={() => setShowModal(true)}>
-          <i className="ti ti-megaphone" /> Create Campaign
-        </button>
-      </div>
-
-      <div className={loading ? '' : 'page-fade-in'}>
-      {loading ? <SkeletonPage /> : campaigns.length === 0 ? (
-        <div className="cmp-empty">
-          <i className="ti ti-megaphone" />
-          <h3 style={{fontFamily:'Geist',fontWeight:800,margin:'0 0 4px',color:'var(--text)'}}>No campaigns yet</h3>
-          <p style={{fontSize:13,margin:0}}>Create your first campaign to get started</p>
-        </div>
-      ) : (
-        <div className="cmp-grid">
-          {campaigns.map(c => {
-            const platform = Array.isArray(c.platforms) ? c.platforms.join(', ') : c.platform || '—'
-            const budget = c.currency === 'NGN' ? `NGN ${Number(c.budget).toLocaleString()}` : `${c.currency} ${Number(c.budget).toLocaleString()}`
-            const spent = Number(c.spend || 0)
-            const budgetNum = Number(c.budget || 1)
-            const pct = Math.min(100, (spent / budgetNum) * 100)
-            const status = (c.status || 'draft').replace(/_/g, ' ')
-            const statusColor = status.toLowerCase() === 'active' ? 'var(--green)' : status.toLowerCase() === 'paused' ? '#F59E0B' : 'var(--accent)'
-            return (
-              <div className="cmp-card" key={c.id}>
-                <div className="cmp-top">
-                  <span className="cmp-name">{c.name}</span>
-                  <span className="cmp-status" style={{background: `${statusColor}15`, color: statusColor}}>
-                    {status.replace(/\b\w/g, (l: any) => l.toUpperCase())}
-                  </span>
-                </div>
-                <div className="cmp-meta">
-                  <div className="cmp-m-item">
-                    <div className="cmm-label">Platform</div>
-                    <div className="cmm-val">{platform}</div>
-                  </div>
-                  <div className="cmp-m-item">
-                    <div className="cmm-label">Budget</div>
-                    <div className="cmm-val">{budget}</div>
-                  </div>
-                  <div className="cmp-m-item">
-                    <div className="cmm-label">Spent</div>
-                    <div className="cmm-val">{c.currency === 'NGN' ? `NGN ${spent.toLocaleString()}` : spent}</div>
-                  </div>
-                  <div className="cmp-m-item">
-                    <div className="cmm-label">Engagements</div>
-                    <div className="cmm-val">{c.impressions || 0}</div>
-                  </div>
-                </div>
-                <div className="cmp-bar">
-                  <div className="cmp-fill" style={{width:`${pct}%`,background:'var(--accent)'}} />
-                </div>
-                <div className="cmp-actions">
-                  <button className="cmp-btn" onClick={() => openEditModal(c)}><i className="ti ti-edit" /> Edit</button>
-                  <button className="cmp-btn" onClick={() => handleViewStats(c)}><i className="ti ti-chart-bar" /> Stats</button>
-                </div>
+      {editing && (
+        <Sheet title={editing === 'new' ? 'New campaign' : 'Edit campaign'} onClose={() => setEditing(null)}>
+          <div className="wl-field">
+            <label className="ui-label" htmlFor="cp-name">Name</label>
+            <input id="cp-name" className="ui-input" maxLength={80} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="e.g. September launch" />
+          </div>
+          <div className="wl-field">
+            <span className="ui-label">Platforms</span>
+            <div className="wl-quick" style={{ marginTop: 0 }}>
+              {PLATFORMS.map((p) => {
+                const on = form.platforms.includes(p)
+                return <button key={p} type="button" className={`ui-chip${on ? ' on' : ''}`} aria-pressed={on} onClick={() => setForm({ ...form, platforms: on ? form.platforms.filter((x) => x !== p) : [...form.platforms, p] })}>{p}</button>
+              })}
+            </div>
+          </div>
+          <div className="wl-field" style={{ display: 'grid', gridTemplateColumns: editing === 'new' ? 'minmax(0,1fr) 110px' : 'minmax(0,1fr)', gap: 8 }}>
+            <div>
+              <label className="ui-label" htmlFor="cp-budget">Budget</label>
+              <input id="cp-budget" className="ui-input" inputMode="decimal" value={form.budget} onChange={(e) => setForm({ ...form, budget: e.target.value.replace(/[^\d.]/g, '') })} placeholder="0" />
+            </div>
+            {editing === 'new' && (
+              <div>
+                <label className="ui-label" htmlFor="cp-cur">Currency</label>
+                <select id="cp-cur" className="ui-select" value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value as 'NGN' | 'USDC' })}><option value="NGN">NGN</option><option value="USDC">USDC</option></select>
               </div>
-            )
-          })}
-        </div>
-      )}
-
-      {/* New Campaign Modal */}
-      <div className={`cmp-overlay ${showModal ? 'open' : ''}`} onClick={() => setShowModal(false)}>
-        <div className="cmp-modal" onClick={e => e.stopPropagation()}>
-          <h2>New Campaign</h2>
-          <div className="cmp-field">
-            <label>Campaign Name</label>
-            <input type="text" placeholder="e.g. Brand Awareness Q3" value={form.name} onChange={e => setForm(f => ({...f, name: e.target.value}))} />
+            )}
           </div>
-          <div className="cmp-field">
-            <label>Platform</label>
-            <select value={form.platform} onChange={e => setForm(f => ({...f, platform: e.target.value}))}>
-              <option>X/Twitter</option>
-              <option>Telegram</option>
-              <option>Instagram</option>
-              <option>Multi-platform</option>
-            </select>
-          </div>
-          <div className="cmp-field">
-            <label>Budget (NGN)</label>
-            <input type="number" placeholder="e.g. 50000" value={form.budget} onChange={e => setForm(f => ({...f, budget: e.target.value}))} />
-          </div>
-          <div className="cmp-field">
-            <label>Description</label>
-            <input type="text" placeholder="Campaign description" value={form.description} onChange={e => setForm(f => ({...f, description: e.target.value}))} />
-          </div>
-          <div className="cmp-modal-actions">
-            <button className="cmp-btn" onClick={() => setShowModal(false)}>Cancel</button>
-            <button className="cmp-btn primary" disabled={saving} onClick={handleCreate}>{saving ? 'Creating...' : 'Launch Campaign'}</button>
-          </div>
-        </div>
-      </div>
-
-      {/* Edit Campaign Modal */}
-      <div className={`cmp-overlay ${showEditModal ? 'open' : ''}`} onClick={() => setShowEditModal(false)}>
-        <div className="cmp-modal" onClick={e => e.stopPropagation()}>
-          <h2>Edit Campaign</h2>
-          <div className="cmp-field">
-            <label>Campaign Name</label>
-            <input type="text" value={editForm.name} onChange={e => setEditForm(f => ({...f, name: e.target.value}))} />
-          </div>
-          <div className="cmp-field">
-            <label>Description</label>
-            <input type="text" value={editForm.description} onChange={e => setEditForm(f => ({...f, description: e.target.value}))} />
-          </div>
-          <div className="cmp-field">
-            <label>Budget (NGN)</label>
-            <input type="number" value={editForm.budget} onChange={e => setEditForm(f => ({...f, budget: e.target.value}))} />
-          </div>
-          <div className="cmp-field">
-            <label>Status</label>
-            <select value={editForm.status} onChange={e => setEditForm(f => ({...f, status: e.target.value}))}>
-              <option value="ACTIVE">Active</option>
-              <option value="PAUSED">Paused</option>
-              <option value="COMPLETED">Completed</option>
-            </select>
-          </div>
-          <div className="cmp-modal-actions">
-            <button className="cmp-btn" onClick={() => setShowEditModal(false)}>Cancel</button>
-            <button className="cmp-btn primary" disabled={saving} onClick={handleEdit}>{saving ? 'Saving...' : 'Save Changes'}</button>
-          </div>
-        </div>
-      </div>
-
-      {/* Stats Modal */}
-      <div className={`cmp-overlay ${showStatsModal ? 'open' : ''}`} onClick={() => setShowStatsModal(false)}>
-        <div className="cmp-modal" onClick={e => e.stopPropagation()}>
-          <h2>Campaign Stats</h2>
-          {stats && (
-            <div className="cmp-stats-grid">
-              <div className="cmp-stat-box">
-                <div className="cmp-stat-val">{stats.impressions?.toLocaleString() || 0}</div>
-                <div className="cmp-stat-label">Impressions</div>
-              </div>
-              <div className="cmp-stat-box">
-                <div className="cmp-stat-val">{stats.clicks?.toLocaleString() || 0}</div>
-                <div className="cmp-stat-label">Clicks</div>
-              </div>
-              <div className="cmp-stat-box">
-                <div className="cmp-stat-val">{stats.conversions?.toLocaleString() || 0}</div>
-                <div className="cmp-stat-label">Conversions</div>
-              </div>
-              <div className="cmp-stat-box">
-                <div className="cmp-stat-val">{stats.ctr || '0.00'}%</div>
-                <div className="cmp-stat-label">CTR</div>
-              </div>
-              <div className="cmp-stat-box">
-                <div className="cmp-stat-val">{stats.conversionRate || '0.00'}%</div>
-                <div className="cmp-stat-label">Conversion Rate</div>
-              </div>
-              <div className="cmp-stat-box">
-                <div className="cmp-stat-val">{stats.spend?.toLocaleString() || 0}</div>
-                <div className="cmp-stat-label">Total Spent</div>
-              </div>
-              <div className="cmp-stat-box">
-                <div className="cmp-stat-val">{stats.remaining?.toLocaleString() || 0}</div>
-                <div className="cmp-stat-label">Remaining Budget</div>
+          {editing !== 'new' && (
+            <div className="wl-field">
+              <span className="ui-label">Status</span>
+              <div className="wl-seg" style={{ gridTemplateColumns: 'repeat(3, 1fr)', marginBottom: 0 }}>
+                {(['ACTIVE', 'PAUSED', 'ENDED'] as const).map((st) => <button key={st} type="button" aria-pressed={form.status === st} onClick={() => setForm({ ...form, status: st })}>{STATUS_LABEL[st]}</button>)}
               </div>
             </div>
           )}
-          <div className="cmp-modal-actions">
-            <button className="cmp-btn" onClick={() => setShowStatsModal(false)}>Close</button>
+          <div className="wl-field">
+            <label className="ui-label" htmlFor="cp-desc">Notes (optional)</label>
+            <textarea id="cp-desc" className="ui-input" style={{ height: 72, padding: 10, resize: 'vertical' }} maxLength={500} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
           </div>
-        </div>
-      </div>
-      </div>
+          <p className="wl-note" style={{ margin: '0 0 14px' }}>The budget is for tracking: jobs are still paid from your wallet when you post them. Only jobs in {editing === 'new' ? form.currency : (editing as Campaign).currency} can join this campaign.</p>
+          {formErr && <div className="wl-err" role="alert"><i className="ti ti-alert-circle" /><span>{formErr}</span></div>}
+          <button type="button" className="ui-btn ui-btn-dark ui-btn-lg wl-full" disabled={saving || form.name.trim().length < 2} onClick={save}>{saving ? 'Saving…' : editing === 'new' ? 'Create campaign' : 'Save changes'}</button>
+        </Sheet>
+      )}
+
+      {viewing && (
+        <Sheet title={viewing.name} onClose={() => setViewing(null)}>
+          <div className="wl-sum" style={{ marginTop: 0 }}>
+            <div><span>Budget</span><b>{money(viewing.budget, viewing.currency)}</b></div>
+            <div><span>Spent on jobs (rewards and fees)</span><b>{money(viewing.stats.spent, viewing.currency)}</b></div>
+            <div><span>Approval rate</span><b>{viewing.stats.approvalRate}%</b></div>
+            <div className="total"><span>{viewing.stats.remaining < 0 ? 'Over budget' : 'Left'}</span><b>{money(Math.abs(viewing.stats.remaining), viewing.currency)}</b></div>
+          </div>
+          <span className="ui-label">Jobs</span>
+          {jobs === null ? <div className="ui-sk" style={{ height: 60, borderRadius: 12 }} /> : jobs.length === 0 ? (
+            <p className="wl-note">No jobs yet. {viewing.status !== 'ENDED' && <Link to={`/create?type=custom&campaign=${viewing.id}`}>Post one in this campaign</Link>}</p>
+          ) : (
+            <ul className="wl-banks">
+              {jobs.map((j) => (
+                <li key={j.id} className="wl-bank">
+                  <span className="wl-bank-main">
+                    <strong><Link to={`/tasks/${j.id}`} style={{ color: 'inherit', textDecoration: 'none' }}>{j.title}</Link></strong>
+                    <span>{money(j.reward, j.currency)} × {j.maxWorkers} · {j.submissions} entries · {j.approved} approved</span>
+                  </span>
+                  <span className="wl-tag">{j.status.replace('_', ' ').toLowerCase()}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Sheet>
+      )}
     </Layout>
   )
 }

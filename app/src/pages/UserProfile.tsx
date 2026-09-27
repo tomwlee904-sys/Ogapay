@@ -6,6 +6,7 @@ import { apiRequest } from "../lib/api"
 import { useAuth } from "../context/AuthContext"
 import { openSignIn } from "../lib/signin"
 import "../styles/profile-public.css"
+import { PremiumMark } from "../components/Perks";
 
 type Tab = "store" | "portfolio" | "reviews" | "communities"
 
@@ -202,14 +203,15 @@ export default function UserProfile() {
         <section className="up-card up-head">
           <div className="up-id">
             {profile.avatarUrl
-              ? <img className="up-avatar" src={profile.avatarUrl} alt="" />
-              : <div className="up-avatar">{(first[0] || handle[0] || "?").toUpperCase()}{last[0]?.toUpperCase() || ""}</div>}
+              ? <img className={`up-avatar${profile.frame ? ' oga-frame' : ''}`} src={profile.avatarUrl} alt="" />
+              : <div className={`up-avatar${profile.frame ? ' oga-frame' : ''}`}>{(first[0] || handle[0] || "?").toUpperCase()}{last[0]?.toUpperCase() || ""}</div>}
             <div style={{ minWidth: 0 }}>
               <div className="up-eyebrow">Creator profile</div>
               <div className="up-name">
                 <h1>{name}</h1>
                 {profile.humanVerified && <span className="up-badge ok"><i className="ti ti-fingerprint" /> Human verified</span>}
                 {profile.kycVerified && <span className="up-badge ok"><i className="ti ti-shield-check" /> ID verified</span>}
+                {profile.premium && <PremiumMark label />}
               </div>
               <div className="up-handle">@{handle} · Joined {fmtDate(profile.createdAt, { month: "long", year: "numeric" })}</div>
               {profile.bio && <p className="up-bio">{profile.bio}</p>}

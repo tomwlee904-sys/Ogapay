@@ -62,7 +62,6 @@ const EditProfile = lazy(() => import('./pages/EditProfile'))
 const TaskHistory = lazy(() => import('./pages/TaskHistory'))
 const Developer = lazy(() => import('./pages/Developer'))
 const Roadmap = lazy(() => import('./pages/Roadmap'))
-const UseCasePage = lazy(() => import('./pages/usecase'))
 const About = lazy(() => import('./pages/About'))
 const Workers = lazy(() => import('./pages/Workers'))
 const WorkerWorkspace = lazy(() => import('./pages/WorkerWorkspace'))
@@ -85,13 +84,10 @@ const AdminVault = lazy(() => import('./pages/AdminVault'))
 const AdminModeration = lazy(() => import('./pages/AdminModeration'))
 const AdminWithdrawals = lazy(() => import('./pages/AdminWithdrawals'))
 const AdminKyc = lazy(() => import('./pages/AdminKyc'))
+const AdminSupport = lazy(() => import('./pages/AdminSupport'))
 const WorkspacePortal = lazy(() => import('./pages/WorkspacePortal'))
 const Docs = lazy(() => import('./pages/Docs'))
-const LinkWallet = lazy(() => import('./pages/LinkWallet'))
 const DevicePairing = lazy(() => import('./pages/DevicePairing'))
-const FeaturesPage = lazy(() => import('./pages/FeaturesPage'))
-const FeatureGridPage = lazy(() => import('./pages/FeatureGridPage'))
-const Ecosystem = lazy(() => import('./pages/Ecosystem'))
 const RankUpgrade = lazy(() => import("./pages/RankUpgrade"))
 
 // ─── Auth Guard ───
@@ -124,9 +120,10 @@ export default function App() {
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/verify/callback" element={<VeryCallback />} />
             <Route path="/blog" element={<Blog />} />
-            <Route path="/features" element={<FeaturesPage />} />
-<Route path="/feature-grid" element={<FeatureGridPage />} />
-            <Route path="/ecosystem" element={<Ecosystem />} />
+            {/* Old demo pages (sample content, not linked from the app) */}
+            <Route path="/features" element={<Navigate to="/about" replace />} />
+            <Route path="/feature-grid" element={<Navigate to="/about" replace />} />
+            <Route path="/ecosystem" element={<Navigate to="/" replace />} />
             <Route path="/rank" element={<RankUpgrade />} />
             <Route path="/blog/:slug" element={<ArticleDetail />} />
             <Route path="/tasks" element={<Tasks />} />
@@ -162,7 +159,8 @@ export default function App() {
             <Route path="/profile" element={<AuthGuard><Profile /></AuthGuard>} />
             <Route path="/wallet" element={<AuthGuard><Wallet /></AuthGuard>} />
             <Route path="/deposit" element={<AuthGuard><Deposit /></AuthGuard>} />
-            <Route path="/link-wallet" element={<AuthGuard><LinkWallet /></AuthGuard>} />
+            {/* Wallets are linked on the profile page (this page called endpoints that don't exist) */}
+            <Route path="/link-wallet" element={<Navigate to="/profile" replace />} />
             <Route path="/pair-device" element={<AuthGuard><DevicePairing /></AuthGuard>} />
             <Route path="/earnings" element={<AuthGuard><Earnings /></AuthGuard>} />
             <Route path="/referrals" element={<AuthGuard><Referrals /></AuthGuard>} />
@@ -203,7 +201,7 @@ export default function App() {
 
             {/* ── Developer & Roadmap ── */}
             <Route path="/roadmap" element={<Roadmap />} />
-            <Route path="/use-cases" element={<UseCasePage />} />
+            <Route path="/use-cases" element={<Navigate to="/about" replace />} />
             <Route path="/about" element={<About />} />
 
             {/* ── Admin ── */}
@@ -213,6 +211,7 @@ export default function App() {
             <Route path="/admin/moderation" element={<AdminGuard><AdminModeration /></AdminGuard>} />
             <Route path="/admin/withdrawals" element={<AdminGuard><AdminWithdrawals /></AdminGuard>} />
             <Route path="/admin/kyc" element={<AdminGuard><AdminKyc /></AdminGuard>} />
+            <Route path="/admin/support" element={<AdminGuard><AdminSupport /></AdminGuard>} />
             <Route path="/admin/login" element={<Navigate to="/login?redirect=/admin" replace />} />
             <Route path="/admin/*" element={<AdminGuard><Admin /></AdminGuard>} />
 

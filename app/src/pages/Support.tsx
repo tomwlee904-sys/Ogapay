@@ -40,6 +40,14 @@ export default function Support() {
   const [open, setOpen] = useState(false)
   const [form, setForm] = useState(blank)
   const [sending, setSending] = useState(false)
+  // Priority Support (bought in the store): tickets go to the top of the queue
+  const [priorityUntil, setPriorityUntil] = useState<string | null>(null)
+  useEffect(() => {
+    if (!signedIn) return
+    apiRequest<{ kind: string; expiresAt: string | null }[]>('/store/my-perks')
+      .then((l) => { const p = (l || []).filter((x) => x.kind === 'PRIORITY_SUPPORT').sort((x, y) => String(y.expiresAt).localeCompare(String(x.expiresAt)))[0]; setPriorityUntil(p?.expiresAt || null) })
+      .catch(() => {})
+  }, [signedIn])
 
   const load = () => apiRequest<Ticket[]>('/reports/mine').then((d) => setTickets(Array.isArray(d) ? d : [])).catch(() => setTickets([]))
   useEffect(() => { if (signedIn) load() }, [signedIn])
@@ -66,8 +74,8 @@ export default function Support() {
     if (form.description.trim().length < 10) return toast('Tell us a bit more (10+ characters)', 'error')
     setSending(true)
     try {
-      await apiRequest('/reports/support', { method: 'POST', body: JSON.stringify({ ...form, email: form.email.trim() || undefined }) })
-      toast("Ticket sent. We'll reply by email within 24 hours.", 'success')
+      const t = await apiRequest<{ priority?: boolean }>('/reports/support', { method: 'POST', body: JSON.stringify({ ...form, email: form.email.trim() || undefined }) })
+      toast(t?.priority ? "Ticket sent. You have Priority Support, so it's at the top of our queue." : "Ticket sent. We'll reply by email within 24 hours.", 'success')
       setOpen(false)
       setForm(blank)
       load()
@@ -89,6 +97,7 @@ export default function Support() {
       <div className="up-wrap">
         <div className="sp2-hero up-card">
           <h1>How can we help?</h1>
+          {priorityUntil && <p style={{ margin: '6px 0 0', textAlign: 'center' }}><span className="oga-prem" style={{ marginLeft: 0 }}><i className="ti ti-bolt" />Priority Support</span> <span style={{ fontSize: 13, color: 'var(--text2)' }}>until {new Date(priorityUntil).toLocaleDateString('en-GB', { day: 'numeric', month: 'long' })}: your tickets go to the top of our queue.</span></p>}
           <p>Search the help centre, or send us a ticket and we'll reply by email.</p>
           <label className="sp2-search">
             <i className="ti ti-search" />

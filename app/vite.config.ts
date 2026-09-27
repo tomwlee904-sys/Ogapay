@@ -23,6 +23,7 @@ export default defineConfig({
         display: 'standalone',
         orientation: 'portrait-primary',
         start_url: '/',
+        icons: [{ src: '/logo-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' }],
       },
       selfDestroying: true,
     }),

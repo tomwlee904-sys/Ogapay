@@ -9,6 +9,7 @@ import { API_BASE, apiRequest, getAccessToken } from '../lib/api'
 import { savedJobIds, setSaved } from '../lib/bookmarks'
 import { jobRequirements, rankName } from '../lib/requirements'
 import ApplyModal from '../components/ApplyModal'
+import { BoostedTag, PremiumMark } from '../components/Perks'
 
 const BRAND = 'var(--accent)'
 const BRAND_LIGHT = 'rgba(var(--accent-rgb),0.10)'
@@ -91,6 +92,8 @@ interface JobData {
   brandHandle: string
   brandAvatar: string
   brandVerified: boolean
+  brandPremium?: boolean
+  boosted?: boolean
   category: string
   type: string
   platform: string
@@ -281,6 +284,8 @@ export default function JobDetail() {
       brandHandle: t.poster?.username || t.creatorHandle || t.brandHandle || '',
       brandAvatar: t.poster?.avatarUrl || t.creatorAvatar || t.brandAvatar || '',
       brandVerified: t.poster?.posterProfile?.isVerified || t.creatorVerified || false,
+      brandPremium: !!t.poster?.premium,
+      boosted: !!t.isBoosted,
       category: t.category || 'Others / General',
       type: t.type || t.mode || 'challenge',
       platform: t.platform || 'OgaPay',
@@ -816,7 +821,8 @@ function WurkJobDetailView(props: any) {
                 <div className="wjd-kicker">Listed by</div>
                 <div className="wjd-name">
                   {agentName}
-                  
+                  {job.brandPremium && <PremiumMark />}
+                  {job.boosted && <span style={{ marginLeft: 8 }}><BoostedTag /></span>}
                 </div>
                 <div className="wjd-handle">{handleText}</div>
               </div>

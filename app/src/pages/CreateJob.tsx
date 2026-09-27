@@ -16,6 +16,7 @@ import XCampaignBuilder from "../components/create/XCampaignBuilder";
 import QuickTaskForm from "../components/create/QuickTaskForm";
 import { Steps, Fold, Toggle as CfToggle, OverviewCard, RequirementPicker, DURATIONS, deadlineFor, money, minReward, reqFields, reqLabel, uploadJobFile, createTask, apiErrorText, CATEGORIES, CATEGORY_MAP, listTemplates, saveTemplate, type TemplateData } from "../components/create/shared";
 import TemplatesModal from "../components/create/TemplatesModal";
+import { useProviders } from "../lib/providers";
 import "../styles/create.css";
 // -- COLOR TOKENS ----------------------------------------------------------
 const C = {
@@ -259,6 +260,9 @@ function ActionRequirement({ value, onChange, compact }: { value: any; onChange:
   const minRank = value?.minRank || 0;
   const minOgaScore = value?.minOgaScore || "";
   const humanVerified = value?.humanVerified || false;
+  // Only while VeryAI is set up: nobody could take a "human verified" job otherwise
+  const providers = useProviders();
+  const humanOk = !!providers?.very || humanVerified;
 
   const set = (partial: any) => onChange({ ...value, ...partial });
 
@@ -282,11 +286,13 @@ function ActionRequirement({ value, onChange, compact }: { value: any; onChange:
             placeholder="Score"
             style={{ width: 70, border: `1px solid ${C.border}`, borderRadius: 6, padding: "4px 8px", fontSize: 11, color: C.text, outline: "none", fontFamily: "inherit", background: C.card }} />
         )}
+        {humanOk && (
         <label style={{ display: "flex", alignItems: "center", gap: 4, cursor: "pointer", fontSize: 11, color: C.text3, whiteSpace: "nowrap" }}>
           <input type="checkbox" checked={humanVerified} onChange={e => set({ humanVerified: e.target.checked })}
             style={{ accentColor: C.accent, cursor: "pointer" }} />
           Human
         </label>
+        )}
       </div>
     );
   }
@@ -316,11 +322,13 @@ function ActionRequirement({ value, onChange, compact }: { value: any; onChange:
               style={{ width: "100%", border: `1px solid ${C.border}`, borderRadius: 8, padding: "8px 12px", fontSize: 13, color: C.text, outline: "none", fontFamily: "inherit", background: C.card }} />
           </div>
         )}
+        {humanOk && (
         <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", marginTop: 4 }}>
           <input type="checkbox" checked={humanVerified} onChange={e => set({ humanVerified: e.target.checked })}
             style={{ width: 16, height: 16, accentColor: C.accent, cursor: "pointer" }} />
           <span style={{ fontSize: 13, color: C.text }}>Require Human Verified (VeryAI)</span>
         </label>
+        )}
       </div>
     </div>
   );
@@ -443,6 +451,14 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
   const [reqValue, setReqValue] = useState<string>(init.reqValue || "");
   const [screenshot, setScreenshot] = useState<boolean>(!!init.screenshot);
   const [trackingCode, setTrackingCode] = useState<string>(init.trackingCode || "");
+  // Optional campaign (/create?campaign=… from the Campaigns page)
+  const [campaignId, setCampaignId] = useState<string>(() => new URLSearchParams(window.location.search).get("campaign") || "");
+  const [campaigns, setCampaigns] = useState<{ id: string; name: string; currency: string; status: string }[]>([]);
+  useEffect(() => {
+    if (!isAuthed) return;
+    apiRequest<any[]>("/campaigns").then((l) => setCampaigns(Array.isArray(l) ? l : [])).catch(() => {});
+  }, [isAuthed]);
+  const campaignChoices = campaigns.filter((c) => c.currency === currency && c.status !== "ENDED");
   const [files, setFiles] = useState<File[]>([]);
   const [openReq, setOpenReq] = useState<boolean>(!!init.reqType && init.reqType !== "none");
   const [openExtra, setOpenExtra] = useState(false);
@@ -551,6 +567,7 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
         ...reqFields(reqType, reqValue),
         ...(trackingCode.trim() && { trackingCode: trackingCode.trim() }),
         ...(uploaded.length && { attachments: uploaded.map(u => u.url) }),
+        ...(campaignId && campaignChoices.some((c) => c.id === campaignId) && { campaignId }),
       });
       try { localStorage.removeItem(CUSTOM_DRAFT_KEY); } catch { /* ignore */ }
       refreshWalletBal();
@@ -691,6 +708,17 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
                   <Fold title="Audience and requirements" sub="Choose who can take part" open={openReq} onToggle={() => setOpenReq(o => !o)}>
                     <RequirementPicker type={reqType} value={reqValue} onChange={(t, v) => { setReqType(t); setReqValue(v); }} />
                   </Fold>
+
+                  {campaignChoices.length > 0 && (
+                    <div className="cf-field">
+                      <label htmlFor="cj-campaign">Campaign (optional)</label>
+                      <select id="cj-campaign" className="ui-select" value={campaignChoices.some((c) => c.id === campaignId) ? campaignId : ""} onChange={e => setCampaignId(e.target.value)}>
+                        <option value="">None</option>
+                        {campaignChoices.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                      </select>
+                      <p className="cf-hint">Group this job with others to see their spend and results together.</p>
+                    </div>
+                  )}
 
                   <div className="cf-field">
                     <span className="cf-lbl">Attachments (up to 10 files, 10 MB each)</span>

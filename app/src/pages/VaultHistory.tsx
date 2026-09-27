@@ -11,7 +11,7 @@ const GREEN = 'var(--green)'
 const GREEN_BG = 'rgba(22,163,74,0.12)'
 
 const S: Record<string, React.CSSProperties> = {
-  page: { maxWidth: 900, margin: '0 auto', padding: '0 0 40px', position: 'relative' as const, zIndex: 1 },
+  page: { maxWidth: 900, margin: '0 auto', padding: '28px 16px 60px', position: 'relative' as const, zIndex: 1 },
   hero: { marginBottom: 24 },
   title: { fontFamily: 'Geist', fontSize: 28, fontWeight: 900, margin: '0 0 4px' },
   sub: { color: 'var(--text2)', fontSize: 14, margin: '0 0 20px' },
@@ -326,7 +326,7 @@ export default function VaultHistory() {
               {/* Pagination header */}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
                 <span style={{ fontSize: 11, color: 'var(--text2)' }}>
-                  Page {batchPage} of {batchTotalPages} â€¢ {batchTotalBatches} batches
+                  Page {batchPage} of {batchTotalPages} · {batchTotalBatches} batches
                 </span>
                 <div style={{ display: 'flex', gap: 6 }}>
                   <button onClick={() => { setBatchPage(1); fetchBatches(1) }} disabled={batchPage <= 1}
@@ -401,7 +401,7 @@ export default function VaultHistory() {
                               </div>
                               {batchDetail.map((w: any, i: number) => (
                                 <div key={i} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: 8, padding: '8px 0', borderBottom: i < batchDetail.length - 1 ? '1px solid var(--border)' : 'none', fontSize: 12, alignItems: 'center' }}>
-                                  <span style={{ fontFamily: 'monospace', fontSize: 11, color: OGAPAY_BLUE }}>{truncateWallet(w.wallet || w.address || '')}</span>
+                                  <span style={{ fontFamily: 'monospace', fontSize: 11, color: OGAPAY_BLUE }}>{truncateWallet(w.wallet || w.address || '')}{w.you && <b style={{ marginLeft: 6, fontFamily: 'inherit', fontSize: 10, color: 'var(--text)', background: 'var(--card2)', borderRadius: 999, padding: '1px 7px' }}>You</b>}</span>
                                   <span style={{ textAlign: 'right' as const, fontWeight: 600 }}>{(w.amount || w.shareNgp || 0).toLocaleString()}</span>
                                   <span style={{ textAlign: 'right' as const, color: 'var(--text2)', fontSize: 11 }}>{(w.vaultSharePct || 0).toFixed(4)}%</span>
                                 </div>

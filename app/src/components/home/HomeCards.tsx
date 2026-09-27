@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { jobRequirements } from "../../lib/requirements";
 import { CATEGORY_LABELS as CATEGORY } from "../../lib/categories";
+import { BoostedTag, PremiumMark } from "../Perks";
 
 /* Homepage cards for highlighted jobs and creator-store products. Kept separate
    from TaskCard so the rest of the app keeps its existing card design. */
@@ -51,12 +52,12 @@ export function HomeJobCard({ task, convert, applied }: { task: any; convert: Co
     <Link to={`/tasks/${task.id}`} className="hc-card" aria-label={`${task.title} by ${name}, ${cur === "NGN" ? "₦" : ""}${money(amount)} ${cur}. View job`}>
       <div className="hc-top">
         <span className="hc-type"><i className="ti ti-briefcase" />{task.category === "SOCIAL_MEDIA" ? "Social task" : "Custom job"}</span>
-        {task.featured && <span className="hc-pill"><i className="ti ti-star-filled" style={{ color: "#bd8517" }} />Highlighted</span>}
+        {task.isBoosted ? <BoostedTag /> : task.featured && <span className="hc-pill"><i className="ti ti-star-filled" style={{ color: "#bd8517" }} />Highlighted</span>}
       </div>
 
       <div className="hc-by">
         <Avatar src={poster.avatarUrl} name={name} />
-        <span className="hc-by-txt"><span>Listed by</span><b>{name}</b></span>
+        <span className="hc-by-txt"><span>Listed by</span><b>{name}{poster.premium && <PremiumMark />}</b></span>
       </div>
 
       <div className="hc-reward">

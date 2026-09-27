@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /settings
+Disallow: /wallet
+Disallow: /deposit
+Disallow: /dashboard
+Disallow: /messages
+
+Sitemap: https://ogapay.app/sitemap.xml

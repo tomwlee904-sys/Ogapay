@@ -4,6 +4,7 @@ import Layout from '../components/Layout'
 import { apiRequest } from '../lib/api'
 import '../styles/profile-public.css'
 import '../styles/workers.css'
+import { PremiumMark } from '../components/Perks'
 
 // Find workers. Ported from the June page (the live one showed six made-up people).
 // Fixed on the way: its page count never worked because the API helper drops
@@ -12,6 +13,7 @@ import '../styles/workers.css'
 type Worker = {
   id: string; username: string; name?: string; avatarUrl?: string | null; bio: string
   rating: number; reviews: number; level: string; skills: string[]; tasksCompleted: number; successRate: number; isAvailable: boolean
+  premium?: boolean; frame?: boolean
 }
 
 const SKILLS = ['Writing', 'Design', 'Social media', 'Marketing', 'Video', 'Translation', 'Data entry', 'Development', 'Research']
@@ -117,9 +119,9 @@ export default function Workers() {
                 return (
                   <section key={w.id} className="up-card wk2-card">
                     <Link to={`/user/${w.username}`} className="wk2-top">
-                      <span className="wk2-av">{w.avatarUrl ? <img src={w.avatarUrl} alt="" loading="lazy" /> : initials(name)}</span>
+                      <span className={`wk2-av${w.frame ? ' oga-frame' : ''}`}>{w.avatarUrl ? <img src={w.avatarUrl} alt="" loading="lazy" /> : initials(name)}</span>
                       <span className="wk2-id">
-                        <strong>{name}</strong>
+                        <strong>{name}{w.premium && <PremiumMark />}</strong>
                         <small>@{w.username}{w.level ? ` · ${level(w.level)}` : ''}</small>
                       </span>
                       {w.isAvailable && <span className="wk2-dot" title="Available for work" />}

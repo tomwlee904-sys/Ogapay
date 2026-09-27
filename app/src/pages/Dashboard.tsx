@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { useAuth } from '../context/AuthContext'
 import { useWalletBalance } from '../context/WalletBalanceContext'
-import { API_BASE, apiRequest } from '../lib/api'
+import { apiRequest } from '../lib/api'
 import { categoryLabel } from '../lib/categories'
 import { rankName } from '../lib/requirements'
 import '../styles/dashboard.css'
@@ -66,8 +66,9 @@ export default function Dashboard() {
   const resend = async () => {
     setMail('sending')
     try {
-      const r = await fetch(`${API_BASE}/auth/send-verification`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: user.email }) })
-      setMail(r.ok ? 'sent' : 'failed')
+      // /auth/send-verification doesn't exist, so this always said "failed"
+      await apiRequest('/auth/resend-verification', { method: 'POST' })
+      setMail('sent')
     } catch { setMail('failed') }
   }
 

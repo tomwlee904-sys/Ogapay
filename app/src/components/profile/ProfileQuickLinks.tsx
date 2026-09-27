@@ -24,7 +24,7 @@ export default function ProfileQuickLinks({ username }: { username?: string }) {
         { icon: 'circle-plus', label: 'Create Job', desc: 'Publish a new job', to: '/create' },
         { icon: 'list-details', label: 'My Jobs', desc: 'Manage the jobs you created', to: '/manage-jobs' },
         { icon: 'shopping-bag', label: 'OgaPay Store', desc: 'Products and services', to: '/store' },
-        { icon: 'speakerphone', label: 'Campaigns', desc: 'Run social campaigns', to: '/campaigns' },
+        { icon: 'speakerphone', label: 'Campaigns', desc: 'Group jobs and track their spend', to: '/campaigns' },
       ],
     },
     {
