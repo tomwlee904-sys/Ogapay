@@ -2,7 +2,7 @@
 // Fix: client-side PKCE flow — get Supabase session, exchange with backend for app tokens, redirect to dashboard
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
-import { persistAuthSession } from "../lib/api";
+import { API_BASE, persistAuthSession } from "../lib/api";
 
 // Page the user was heading to before Google (set by the sign-in dialog)
 function afterLogin() {
@@ -33,7 +33,7 @@ export default function AuthCallback() {
 
           try {
             const exchangeRes = await fetch(
-              'https://ogapay-production.up.railway.app/api/v1/auth/google/exchange',
+              API_BASE + '/auth/google/exchange',
               {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -99,7 +99,7 @@ export default function AuthCallback() {
               if (firstName || avatarUrl) {
                 // Check current profile first
                 const profileRes = await fetch(
-                  'https://ogapay-production.up.railway.app/api/v1/users/me',
+                  API_BASE + '/users/me',
                   { headers: { 'Authorization': 'Bearer ' + appTokens.accessToken } }
                 );
                 if (profileRes.ok) {
@@ -114,7 +114,7 @@ export default function AuthCallback() {
 
                   if (Object.keys(updateBody).length > 0) {
                     await fetch(
-                      'https://ogapay-production.up.railway.app/api/v1/users/me',
+                      API_BASE + '/users/me',
                       {
                         method: 'PATCH',
                         headers: {
