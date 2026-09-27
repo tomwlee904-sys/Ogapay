@@ -14,7 +14,8 @@ import { PlatformActionButton } from "../components/PlatformActionButton";
 import CampaignWizard from "../components/CampaignWizard";
 import XCampaignBuilder from "../components/create/XCampaignBuilder";
 import QuickTaskForm from "../components/create/QuickTaskForm";
-import { Steps, Fold, Toggle as CfToggle, OverviewCard, RequirementPicker, DURATIONS, deadlineFor, money, minReward, reqFields, reqLabel, uploadJobFile, createTask, apiErrorText } from "../components/create/shared";
+import { Steps, Fold, Toggle as CfToggle, OverviewCard, RequirementPicker, DURATIONS, deadlineFor, money, minReward, reqFields, reqLabel, uploadJobFile, createTask, apiErrorText, CATEGORIES, CATEGORY_MAP, listTemplates, saveTemplate, type TemplateData } from "../components/create/shared";
+import TemplatesModal from "../components/create/TemplatesModal";
 import "../styles/create.css";
 // -- COLOR TOKENS ----------------------------------------------------------
 const C = {
@@ -178,56 +179,8 @@ const SERVICES = [
   { id: "content_rewards", name: "Content Rewards", icon: <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>, color: "#dc2626", fields: ["platform", "tracking_code", "instructions", "count"], pricePerAction: 50, urlPlaceholder: "TikTok / YouTube link" },
 ];
 
-const CATEGORIES = {
-  "Social Media": ["X / Twitter", "Instagram", "TikTok", "YouTube", "Facebook"],
-  "Content Creation": ["Writing", "Video", "Design", "Photography"],
-  "Development": ["Frontend", "Backend", "Smart Contract", "Mobile"],
-  "Marketing": ["SEO", "Email", "Ads", "Growth"],
-  "Community": ["Moderation", "Support", "Events", "Outreach"],
-  "Music Promotion": ["Streaming", "Download", "Content Creation", "Sharing"],
-  "Article / Blog Writing": ["Blog Posts", "Articles", "Copywriting", "Guest Posts"],
-  "App / Website Review": ["App Reviews", "Website Reviews", "Video Reviews"],
-  "Surveys": ["Market Research", "Product Feedback", "Opinion Polls"],
-  "Lead Generation": ["Email Signups", "Form Submissions", "Referrals"],
-  "App Testing & Install": ["App Download", "Beta Testing", "Install & Review"],
-  "Other": ["Miscellaneous"],
-};
 
-// -- CATEGORY MAP (frontend -> backend) -------------------------------------
-const CATEGORY_MAP: Record<string, string> = {
-  'Social Media': 'SOCIAL_MEDIA',
-  'Content Creation': 'CONTENT_WRITING',
-  'Development': 'OTHER',
-  'Marketing': 'OTHER',
-  'Community': 'OTHER',
-  'Music Promotion': 'OTHER',
-  'Article / Blog Writing': 'CONTENT_WRITING',
-  'App / Website Review': 'CONTENT_WRITING',
-  'Surveys': 'SURVEY',
-  'Lead Generation': 'OTHER',
-  'App Testing & Install': 'APP_TESTING',
-  'Other': 'OTHER',
-  'Design': 'DESIGN',
-  'Survey': 'SURVEY',
-  'Data': 'DATA_ENTRY',
-  'Testing': 'APP_TESTING',
-  'Video': 'VIDEO_REVIEW',
-  'Research': 'SURVEY',
-  'Services': 'OTHER',
-  'SOCIAL_MEDIA': 'SOCIAL_MEDIA',
-};
 
-// -- PUBLIC TEMPLATES -------------------------------------------------------
-const PUBLIC_TEMPLATES = [
-  { title: "Follow & Repost on X", platform: "X / Twitter", bounty: 0.5, winners: 50, category: "Social Media", desc: "Follow our account and repost the pinned post for a reward." },
-  { title: "Join Telegram Community", platform: "Telegram", bounty: 0.3, winners: 200, category: "Community", desc: "Join our official Telegram channel and stay active." },
-  { title: "Like & Comment Instagram Post", platform: "Instagram", bounty: 0.25, winners: 100, category: "Social Media", desc: "Like and leave a genuine comment on our latest post." },
-  { title: "YouTube Subscribe & Like", platform: "YouTube", bounty: 0.4, winners: 150, category: "Content Creation", desc: "Subscribe to our channel and like the latest video." },
-  { title: "Discord Server Join", platform: "Discord", bounty: 0.2, winners: 300, category: "Community", desc: "Join our Discord server and introduce yourself." },
-  { title: "Write a Product Review", platform: "Other", bounty: 1.0, winners: 25, category: "Content Creation", desc: "Write a genuine 100+ word review of our product." },
-  { title: "Website Visit Campaign", platform: "Web", bounty: 0.5, winners: 100, category: "Marketing", desc: "Visit our website and spend at least 30 seconds browsing." },
-  { title: "Beta Test Our App", platform: "Mobile", bounty: 2.0, winners: 20, category: "Development", desc: "Test our new app and provide feedback on bugs and UX." },
-];
 
 // -- TOGGLE ----------------------------------------------------------------
 function Toggle({ on, onToggle }: any) {
@@ -460,95 +413,6 @@ function ExcludeUsers({ value, onChange }: any) {
   );
 }
 
-// -- TEMPLATES MODAL -------------------------------------------------------
-function TemplatesModal({ onClose, onUse, myTemplates = [] }: any) {
-  const [tab, setTab] = useState("public");
-  const templates = tab === "public" ? PUBLIC_TEMPLATES : myTemplates;
-
-  return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 200, display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
-      <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.5)" }} onClick={onClose} />
-      <div style={{ position: "relative", width: "100%", maxWidth: 560, background: C.card, borderRadius: "20px 20px 0 0", maxHeight: "90vh", overflowY: "auto" }}>
-        <div style={{ display: "flex", justifyContent: "center", padding: "12px 0 4px" }}>
-          <div style={{ width: 40, height: 4, borderRadius: 2, background: C.border }} />
-        </div>
-        <div style={{ position: "sticky", top: 0, background: C.card, zIndex: 10 }}>
-          <div style={{
-            padding: "12px 20px", display: "flex", justifyContent: "space-between",
-            alignItems: "center", borderBottom: `1px solid ${C.border}`
-          }}>
-            <span style={{ fontSize: 15, fontWeight: 800, color: C.text }}>Job Templates</span>
-            <button onClick={onClose} style={{
-              width: 28, height: 28, borderRadius: 8, border: `1px solid ${C.border}`,
-              background: C.bg2, cursor: "pointer", display: "flex", alignItems: "center",
-              justifyContent: "center", color: C.text2
-            }}><IconClose /></button>
-          </div>
-          <div style={{ display: "flex", borderBottom: `1px solid ${C.border}` }}>
-            {["public", "mine"].map(t => (
-              <button key={t} onClick={() => setTab(t)}
-                style={{
-                  flex: 1, padding: "10px", fontSize: 13, fontWeight: 600, cursor: "pointer",
-                  border: "none", background: "transparent", fontFamily: "inherit",
-                  color: tab === t ? C.accent : C.text2,
-                  borderBottom: tab === t ? `2px solid ${C.accent}` : "2px solid transparent",
-                  display: "flex", alignItems: "center", justifyContent: "center", gap: 6
-                }}>
-                {t === "public" ? <><IconTemplate /> Public Templates</> : <><IconStar /> My Templates</>}
-              </button>
-            ))}
-          </div>
-        </div>
-        <div style={{ padding: 16, display: "flex", flexDirection: "column", gap: 10 }}>
-          {templates.length === 0 ? (
-            <div style={{ textAlign: "center", padding: "40px 0", color: C.text2 }}>
-              <div style={{ fontSize: 32, marginBottom: 10, opacity: 0.3 }}><IconFile /></div>
-              <div style={{ fontSize: 13 }}>No saved templates yet.</div>
-              <div style={{ fontSize: 12, marginTop: 4 }}>Jobs you save as templates will appear here.</div>
-            </div>
-          ) : templates.map((tpl: any, i: any) => (
-            <div key={i} style={{
-              border: `1px solid ${C.border}`, borderRadius: 12, padding: 14, background: C.card
-            }}>
-              <div style={{ display: "flex", alignItems: "flex-start", gap: 12, marginBottom: 8 }}>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{tpl.title}</div>
-                  <div style={{ fontSize: 11, color: C.text2, marginTop: 2 }}>{tpl.platform} • {tpl.winners} winners • {tpl.bounty} SOL</div>
-                </div>
-                <span style={{
-                  background: C.bg2, color: C.accent, fontSize: 10, fontWeight: 700,
-                  padding: "2px 8px", borderRadius: 99, border: `1px solid ${C.border}`,
-                  flexShrink: 0, marginLeft: 8
-                }}>{tpl.category}</span>
-              </div>
-              <div style={{ fontSize: 12, color: C.text2, marginBottom: 10, lineHeight: 1.5 }}>{tpl.desc}</div>
-              <div style={{ display: "flex", gap: 8 }}>
-                <button style={{
-                  flex: 1, padding: "7px", fontSize: 12, fontWeight: 600,
-                  border: `1px solid ${C.border}`, borderRadius: 8, background: C.card,
-                  color: C.text, cursor: "pointer", fontFamily: "inherit"
-                }}>Details</button>
-                <button onClick={() => { onUse(tpl); onClose(); }}
-                  style={{
-                    flex: 1, padding: "7px", fontSize: 12, fontWeight: 700,
-                    border: "none", borderRadius: 8, background: C.accent,
-                    color: C.card, cursor: "pointer", fontFamily: "inherit"
-                  }}>Use Template</button>
-                {tab === "mine" && (
-                  <button style={{
-                    flex: 1, padding: "7px", fontSize: 12, fontWeight: 600,
-                    border: `1px solid ${C.border}`, borderRadius: 8, background: C.card,
-                    color: C.text2, cursor: "pointer", fontFamily: "inherit"
-                  }}>Settings</button>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
 
 // -- CUSTOM JOB WIZARD ------------------------------------------------------
 const CUSTOM_DRAFT_KEY = "ogapay_custom_job_draft";
@@ -583,6 +447,7 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
   const [openReq, setOpenReq] = useState<boolean>(!!init.reqType && init.reqType !== "none");
   const [openExtra, setOpenExtra] = useState(false);
   const [showTemplates, setShowTemplates] = useState(false);
+  const [tplSaved, setTplSaved] = useState<"" | "saving" | "saved" | "error">("");
   const [showFundModal, setShowFundModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
@@ -642,6 +507,16 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
   const addFiles = (list: FileList | null) => {
     const picked = Array.from(list || []).filter(f => f.size <= 10 * 1024 * 1024);
     setFiles(prev => [...prev, ...picked].slice(0, 10));
+  };
+
+  // Keep this form as a reusable template (Manage jobs > Templates)
+  const saveAsTemplate = async () => {
+    if (!isAuthed) { navigate("/login?redirect=" + encodeURIComponent("/create?type=custom")); return; }
+    setTplSaved("saving");
+    try {
+      await saveTemplate({ mode, title: title.trim(), description, currency, bounty, winners: winnersInput, category, subcategory, duration, reqType, reqValue, screenshot, trackingCode });
+      setTplSaved("saved");
+    } catch { setTplSaved("error"); }
   };
 
   const goToPayment = () => {
@@ -720,7 +595,12 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
               <section className="ui-card cf-card">
                 <div className="cf-head">
                   <b><i className="ti ti-settings" /> Job configuration</b>
-                  <button className="ui-btn ui-btn-ghost" onClick={() => setShowTemplates(true)}><i className="ti ti-template" /> Templates</button>
+                  <div className="ui-actions">
+                    <button className="ui-btn ui-btn-ghost" onClick={() => setShowTemplates(true)}><i className="ti ti-template" /> Templates</button>
+                    <button className="ui-btn ui-btn-ghost" disabled={tplSaved === "saving" || (!title.trim() && !description.trim())} onClick={saveAsTemplate}>
+                      <i className={`ti ${tplSaved === "saved" ? "ti-check" : "ti-device-floppy"}`} /> {tplSaved === "saving" ? "Saving…" : tplSaved === "saved" ? "Saved as template" : tplSaved === "error" ? "Couldn't save. Retry" : "Save as template"}
+                    </button>
+                  </div>
                 </div>
                 <div className="cf-body">
                   <div className="cf-field">
@@ -879,9 +759,14 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
         </div>
       </div>
 
-      {showTemplates && <TemplatesModal onClose={() => setShowTemplates(false)} onUse={(tpl: any) => {
-        setTitle(tpl.title || ""); setBounty(tpl.bounty?.toString() || ""); setWinnersInput(String(tpl.winners || 10)); setDescription(tpl.desc || "");
-        setShowTemplates(false);
+      {showTemplates && <TemplatesModal onClose={() => setShowTemplates(false)} onUse={(d: TemplateData, example: boolean) => {
+        setTitle(d.title || ""); setDescription(d.description || "");
+        if (!example) { setBounty(d.bounty || ""); if (d.currency) setCurrency(d.currency); if (d.duration) setDuration(d.duration); setTrackingCode(d.trackingCode || ""); setScreenshot(!!d.screenshot); }
+        if (d.mode) setMode(d.mode);
+        setWinnersInput(String(d.winners || 10));
+        if (d.category && CATEGORIES[d.category]) { setCategory(d.category); setSubcategory(d.subcategory && CATEGORIES[d.category].includes(d.subcategory) ? d.subcategory : ""); }
+        setReqType(d.reqType || "none"); setReqValue(d.reqValue || ""); setOpenReq(!!d.reqType && d.reqType !== "none");
+        setTplSaved("");
       }} />}
       {showFundModal && (
         <FundJobWalletModal
@@ -961,6 +846,17 @@ function CreateTask() {
     const t = new URLSearchParams(window.location.search).get("type");
     if (t === "custom") setShowCustom(true);
     if (t === "x") setShowX(true);
+  }, []);
+
+  // /create?template=<id>: "Use" from Manage jobs > Templates
+  useEffect(() => {
+    const id = new URLSearchParams(window.location.search).get("template");
+    if (!id) return;
+    window.history.replaceState({}, "", window.location.pathname);
+    listTemplates().then((list) => {
+      const t = (list || []).find((x) => x.id === id);
+      if (t) { setCustomTemplate({ ...t.data, desc: t.data.description }); setShowCustom(true); }
+    }).catch(() => { /* signed out or gone: show the normal page */ });
   }, []);
 
   // Edit data handed over from Manage jobs
@@ -1177,7 +1073,7 @@ function CreateTask() {
       </div>
 
       <CampaignWizard />
-      {showMainTemplates && <TemplatesModal onClose={() => setShowMainTemplates(false)} onUse={(tpl: any) => { setCustomTemplate(tpl); setShowCustom(true); }} />}
+      {showMainTemplates && <TemplatesModal onClose={() => setShowMainTemplates(false)} onUse={(d: TemplateData, example: boolean) => { setCustomTemplate({ ...(example ? { ...d, bounty: "" } : d), desc: d.description }); setShowCustom(true); }} />}
       {success && <SuccessModal taskId={typeof success === 'string' && success !== 'true' ? success : undefined} onClose={() => setSuccess(false)} />}
     </Layout>
   );

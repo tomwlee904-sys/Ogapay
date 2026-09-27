@@ -5,6 +5,7 @@ import { apiRequest } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../components/Toast";
 import { categoryLabel } from "../lib/categories";
+import { listTemplates, saveTemplate, taskToTemplateData, type JobTemplate, type TemplateData } from "../components/create/shared";
 import "../styles/manage-jobs.css";
 
 // Manage jobs: the poster's jobs, their review queue and job actions.
@@ -91,6 +92,8 @@ function JobDrawer({ task, onClose, onChanged }: { task: Task; onClose: () => vo
   const [busy, setBusy] = useState<string | null>(null);
   const [rejecting, setRejecting] = useState<string | null>(null);
   const [reason, setReason] = useState("");
+  const [blocked, setBlocked] = useState<Set<string>>(new Set());
+  const [tpl, setTpl] = useState<"" | "saving" | "saved">("");
   const cur = task.currency || "NGN";
   const reward = Number(task.reward || 0);
 
@@ -101,6 +104,10 @@ function JobDrawer({ task, onClose, onChanged }: { task: Task; onClose: () => vo
     } catch (e: any) { setSubs([]); toast(e?.message || "Couldn't load the submissions", "error"); }
   }, [task.id]);
   useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    apiRequest<{ worker: { id: string } }[]>("/poster/blocked")
+      .then((d) => setBlocked(new Set((Array.isArray(d) ? d : []).map((b) => b.worker.id)))).catch(() => {});
+  }, []);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
     window.addEventListener("keydown", onKey);
@@ -116,6 +123,27 @@ function JobDrawer({ task, onClose, onChanged }: { task: Task; onClose: () => vo
       await load(); onChanged();
     } catch (e: any) { toast(e?.message || "That didn't work. Try again.", "error"); }
     setBusy(null);
+  };
+
+  const toggleBlock = async (w?: Sub["worker"]) => {
+    if (!w?.id) return;
+    const on = !blocked.has(w.id);
+    if (on && !window.confirm(`Block @${who(w)}? They won't be able to take any of your jobs. Work they've already sent isn't affected.`)) return;
+    try {
+      if (on) await apiRequest("/poster/blocked", { method: "POST", body: JSON.stringify({ workerId: w.id }) });
+      else await apiRequest(`/poster/blocked/${w.id}`, { method: "DELETE" });
+      setBlocked((b) => { const n = new Set(b); on ? n.add(w.id) : n.delete(w.id); return n; });
+      toast(on ? `@${who(w)} is blocked` : `@${who(w)} is unblocked`, "success");
+    } catch (e: any) { toast(e?.message || "That didn't work", "error"); }
+  };
+  const BlockBtn = ({ w }: { w?: Sub["worker"] }) => w?.id ? (
+    <button className="mj-block" onClick={() => toggleBlock(w)}>{blocked.has(w.id) ? "Unblock" : "Block"}</button>
+  ) : null;
+
+  const saveAsTemplate = async () => {
+    setTpl("saving");
+    try { await saveTemplate(taskToTemplateData(task), task.title); setTpl("saved"); toast("Saved to Templates", "success"); }
+    catch (e: any) { setTpl(""); toast(e?.message || "Couldn't save the template", "error"); }
   };
 
   const setPaused = async (paused: boolean) => {
@@ -169,7 +197,7 @@ function JobDrawer({ task, onClose, onChanged }: { task: Task; onClose: () => vo
                 <h4>Waiting for your review ({toReview.length})</h4>
                 {toReview.length === 0 ? <div className="mj-empty">Nothing to review right now.</div> : toReview.map((s) => (
                   <div key={s.id} className="mj-sub">
-                    <div className="mj-who"><Avatar w={s.worker} /><div><WorkerLink w={s.worker} /><small>Sent {ago(s.submittedAt || s.createdAt)}</small></div></div>
+                    <div className="mj-who"><Avatar w={s.worker} /><div><WorkerLink w={s.worker} /><small>Sent {ago(s.submittedAt || s.createdAt)}</small></div><BlockBtn w={s.worker} /></div>
                     {s.workerNotes && <p className="mj-note">{s.workerNotes}</p>}
                     <Proof s={s} />
                     {s.autoApproveAt && <p className="mj-auto"><Icon n="clock-check" s={14} /> If you don't review it, it's approved and paid automatically on {new Date(s.autoApproveAt).toLocaleString("en-GB", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}.</p>}
@@ -195,7 +223,7 @@ function JobDrawer({ task, onClose, onChanged }: { task: Task; onClose: () => vo
                 <section className="mj-sec">
                   <h4>Working on it ({working.length})</h4>
                   <div className="mj-rows">{working.map((s) => (
-                    <div key={s.id} className="mj-row"><div className="mj-who"><Avatar w={s.worker} /><div><WorkerLink w={s.worker} /><small>Took a slot {ago(s.createdAt)}</small></div></div></div>
+                    <div key={s.id} className="mj-row"><div className="mj-who"><Avatar w={s.worker} /><div><WorkerLink w={s.worker} /><small>Took a slot {ago(s.createdAt)}</small></div></div><BlockBtn w={s.worker} /></div>
                   ))}</div>
                 </section>
               )}
@@ -219,7 +247,7 @@ function JobDrawer({ task, onClose, onChanged }: { task: Task; onClose: () => vo
                 <section className="mj-sec">
                   <h4>Rejected ({rejected.length})</h4>
                   <div className="mj-rows">{rejected.map((s) => (
-                    <div key={s.id} className="mj-row"><div className="mj-who"><Avatar w={s.worker} /><div><WorkerLink w={s.worker} /><small>{s.reviewedAt ? day(s.reviewedAt) : "Rejected"}</small>{s.posterNotes && <p>“{s.posterNotes}”</p>}</div></div></div>
+                    <div key={s.id} className="mj-row"><div className="mj-who"><Avatar w={s.worker} /><div><WorkerLink w={s.worker} /><small>{s.reviewedAt ? day(s.reviewedAt) : "Rejected"}</small>{s.posterNotes && <p>“{s.posterNotes}”</p>}</div></div><BlockBtn w={s.worker} /></div>
                   ))}</div>
                 </section>
               )}
@@ -230,6 +258,7 @@ function JobDrawer({ task, onClose, onChanged }: { task: Task; onClose: () => vo
 
         <div className="mj-df">
           <Link className="ui-btn ui-btn-ghost" to={`/tasks/${task.id}`}><Icon n="eye" s={15} /> Public page</Link>
+          <button className="ui-btn ui-btn-ghost" disabled={tpl !== ""} onClick={saveAsTemplate}><Icon n={tpl === "saved" ? "check" : "device-floppy"} s={15} /> {tpl === "saving" ? "Saving…" : tpl === "saved" ? "Saved" : "Save as template"}</button>
           {live && <button className="ui-btn ui-btn-ghost" onClick={edit}><Icon n="edit" s={15} /> Edit</button>}
           {(task.status === "OPEN" || task.status === "DRAFT") && (
             <button className="ui-btn ui-btn-ghost" onClick={() => setPaused(task.status === "OPEN")}>
@@ -243,306 +272,138 @@ function JobDrawer({ task, onClose, onChanged }: { task: Task; onClose: () => vo
   );
 }
 
-// ── BLACKLIST PAGE ─────────────────────────────────────────────────────────
+// ── BLACKLIST ───────────────────────────────────────────────────────────────
+// People you've blocked can't take your jobs (checked by the server when they
+// apply) and you can't hire them directly. Work they already sent isn't affected.
+type Blocked = { id: string; reason?: string | null; createdAt: string; worker: NonNullable<Sub["worker"]> };
+
 function BlacklistPage() {
   const { toast } = useToast();
-  const [blocked, setBlocked] = useState<any[]>([]);
-  const [search, setSearch] = useState("");
-  const [searchResult, setSearchResult] = useState<any>(null);
-  const [searched, setSearched] = useState(false);
+  const [rows, setRows] = useState<Blocked[] | null>(null);
+  const [name, setName] = useState("");
+  const [reason, setReason] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleSearch = () => {
-    setSearched(true);
-    if (!search.trim()) { setSearchResult(null); return; }
-    // Simulate finding a user
-    if (search.toLowerCase().includes("scam") || blocked.find(b => b.handle.includes(search))) {
-      setSearchResult({ user: search.replace("@",""), handle: search.startsWith("@") ? search : `@${search}`, alreadyBlocked: !!blocked.find(b => b.handle === (search.startsWith("@") ? search : `@${search}`)) });
-    } else {
-      setSearchResult({ user: search.replace("@",""), handle: search.startsWith("@") ? search : `@${search}`, alreadyBlocked: false });
-    }
+  const load = useCallback(() => apiRequest<Blocked[]>("/poster/blocked").then((d) => setRows(Array.isArray(d) ? d : [])).catch(() => setRows([])), []);
+  useEffect(() => { load(); }, [load]);
+
+  const block = async () => {
+    const username = name.trim().replace(/^@/, "");
+    if (!username) return;
+    setBusy(true); setError("");
+    try {
+      await apiRequest("/poster/blocked", { method: "POST", body: JSON.stringify({ username, ...(reason.trim() && { reason: reason.trim() }) }) });
+      toast(`@${username} can no longer take your jobs`, "success");
+      setName(""); setReason(""); load();
+    } catch (e: any) { setError(e?.message || "Couldn't block them"); }
+    setBusy(false);
   };
-
-  const blockUser = () => {
-    if (!searchResult || searchResult.alreadyBlocked) return;
-    const newEntry = { id: `BL-${Date.now()}`, user: searchResult.user, handle: searchResult.handle, reason: "Manually blocked by creator", blockedAt: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }), color: "#8b5cf6" };
-    setBlocked(b => [newEntry, ...b]);
-    setSearch(""); setSearchResult(null); setSearched(false);
-    toast("User blocked successfully");
-  };
-
-  const unblock = (id: any) => {
-    setBlocked(b => b.filter(x => x.id !== id));
-    toast("User unblocked");
+  const unblock = async (b: Blocked) => {
+    try {
+      await apiRequest(`/poster/blocked/${b.worker.id}`, { method: "DELETE" });
+      toast(`@${who(b.worker)} is unblocked`, "success");
+      setRows((r) => (r || []).filter((x) => x.id !== b.id));
+    } catch (e: any) { toast(e?.message || "Couldn't unblock", "error"); }
   };
 
   return (
-    <div style={{ width: "100%" }}>
-      {/* Header */}
-      <div style={{ marginBottom: 20 }}>
-        <h2 style={{ fontSize: 22, fontWeight: 900, color: "var(--text)", marginBottom: 6 }}>Creator Blacklist</h2>
-        <p style={{ fontSize: 13, color: "var(--text3)", lineHeight: 1.5 }}>Blocked users cannot participate in your future jobs.</p>
-        <div style={{ marginTop: 10 }}>
-          <span style={{ fontSize: 12, fontWeight: 700, padding: "4px 12px", borderRadius: 99, background: "var(--bg2)", border: "1px solid var(--border)", color: "var(--text2)" }}>
-            {blocked.length} blocked
-          </span>
-        </div>
-      </div>
+    <div className="mj-tool">
+      <section className="ui-card ui-card-pad">
+        <h3 className="mj-tool-h">Block someone</h3>
+        <p className="mj-tool-p">They won't be able to take any of your jobs, and you won't be able to hire them until you unblock them. Work they've already sent isn't affected. They aren't told.</p>
+        <form className="mj-tool-form" onSubmit={(e) => { e.preventDefault(); block(); }}>
+          <input className="ui-input" value={name} onChange={(e) => setName(e.target.value)} placeholder="@username" aria-label="Username" autoComplete="off" />
+          <input className="ui-input" value={reason} maxLength={300} onChange={(e) => setReason(e.target.value)} placeholder="Why (optional, only you see this)" aria-label="Reason" />
+          <button className="ui-btn ui-btn-dark" disabled={busy || !name.trim()}>{busy ? "Blocking…" : "Block"}</button>
+        </form>
+        {error && <p className="mj-tool-err" role="alert">{error}</p>}
+      </section>
 
-      {/* Search box */}
-      <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 16, padding: 16, marginBottom: 16 }}>
-        <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text)", marginBottom: 12 }}>Search by OgaPay username or X handle</div>
-        <input
-          value={search}
-          onChange={e => { setSearch(e.target.value); setSearched(false); setSearchResult(null); }}
-          onKeyDown={e => e.key === "Enter" && handleSearch()}
-          placeholder="nickname or @xhandle"
-          style={{ width: "100%", background: "var(--bg2)", border: "1px solid var(--border)", borderRadius: 10, padding: "11px 14px", fontSize: 13, color: "var(--text)", outline: "none", marginBottom: 10, boxSizing: "border-box", fontFamily: "inherit" }}
-        />
-        <button onClick={handleSearch}
-          style={{ width: "100%", background: "var(--bg2)", border: "1px solid rgba(139,92,246,0.3)", borderRadius: 10, padding: "11px", fontSize: 13, fontWeight: 700, color: "var(--accent)", cursor: "pointer", fontFamily: "inherit" }}>
-          Search
-        </button>
-
-        {/* Search result */}
-        {searched && searchResult && (
-          <div style={{ marginTop: 12, background: "var(--bg2)", border: "1px solid var(--border)", borderRadius: 12, padding: 14, display: "flex", alignItems: "center", gap: 12 }}>
-            <div style={{ width: 36, height: 36, borderRadius: 10, background: "var(--bg2)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--accent)", fontWeight: 900, fontSize: 14, flexShrink: 0 }}>
-              {searchResult.user[0]?.toUpperCase()}
-            </div>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text)" }}>{searchResult.user}</div>
-              <div style={{ fontSize: 11, color: "var(--text3)" }}>{searchResult.handle}</div>
-            </div>
-            {searchResult.alreadyBlocked ? (
-              <span style={{ fontSize: 11, fontWeight: 700, color: "var(--red)", background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 8, padding: "4px 10px" }}>Already blocked</span>
-            ) : (
-              <button onClick={blockUser}
-                style={{ background: "rgba(239,68,68,0.12)", border: "1px solid rgba(239,68,68,0.3)", borderRadius: 10, padding: "7px 14px", fontSize: 12, fontWeight: 700, color: "var(--red)", cursor: "pointer", fontFamily: "inherit" }}>
-                Block
-              </button>
-            )}
+      <section className="mj-sec">
+        <h4>Blocked ({rows?.length ?? 0})</h4>
+        {rows === null ? <div className="ui-sk" style={{ height: 80 }} /> : rows.length === 0 ? (
+          <div className="mj-empty">You haven't blocked anyone. You can also block someone from the review panel of any job.</div>
+        ) : (
+          <div className="mj-rows">
+            {rows.map((b) => (
+              <div key={b.id} className="mj-row">
+                <div className="mj-who"><Avatar w={b.worker} /><div><WorkerLink w={b.worker} /><small>Blocked {day(b.createdAt)}</small>{b.reason && <p>“{b.reason}”</p>}</div></div>
+                <button className="ui-btn ui-btn-ghost" onClick={() => unblock(b)}>Unblock</button>
+              </div>
+            ))}
           </div>
         )}
-        {searched && !searchResult && (
-          <div style={{ marginTop: 12, fontSize: 12, color: "var(--text3)", textAlign: "center", padding: "12px 0" }}>No user found for "{search}"</div>
-        )}
-      </div>
-
-      {/* Blocked list */}
-      <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 16, overflow: "hidden" }}>
-        <div style={{ padding: "14px 16px", borderBottom: `1px solid ${"var(--border)"}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <span style={{ fontSize: 14, fontWeight: 800, color: "var(--text)" }}>Blocked users</span>
-          <span style={{ fontSize: 12, color: "var(--text3)" }}>Page 1 of 1</span>
-        </div>
-
-        {blocked.length === 0 ? (
-          <div style={{ padding: "32px 16px", textAlign: "center" }}>
-            <div style={{ fontSize: 28, marginBottom: 10 }}><Icon n="shield-off" s={28} c="var(--text3)" /></div>
-            <div style={{ fontSize: 13, color: "var(--text3)" }}>You have not blocked anyone yet.</div>
-          </div>
-        ) : blocked.map((b, i) => (
-          <div key={b.id} style={{ padding: "14px 16px", borderBottom: i < blocked.length - 1 ? `1px solid ${"var(--border)"}` : "none", display: "flex", alignItems: "center", gap: 12 }}>
-            <div style={{ width: 36, height: 36, borderRadius: 10, background: b.color || "var(--red)", opacity: 0.8, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--on-accent)", fontWeight: 900, fontSize: 14, flexShrink: 0 }}>
-              {b.user[0].toUpperCase()}
-            </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text)" }}>{b.user}</div>
-              <div style={{ fontSize: 11, color: "var(--text3)", marginTop: 2 }}>{b.handle}</div>
-              <div style={{ fontSize: 11, color: "var(--red)", marginTop: 3, opacity: 0.8 }}>{b.reason}</div>
-            </div>
-            <div style={{ textAlign: "right", flexShrink: 0 }}>
-              <div style={{ fontSize: 10, color: "var(--text3)", marginBottom: 6 }}>{b.blockedAt}</div>
-              <button onClick={() => unblock(b.id)}
-                style={{ background: "var(--bg2)", border: "1px solid var(--border)", borderRadius: 8, padding: "5px 12px", fontSize: 11, fontWeight: 700, color: "var(--text2)", cursor: "pointer", fontFamily: "inherit" }}>
-                Unblock
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {blocked.length > 0 && (
-        <div style={{ marginTop: 12, padding: "12px 14px", background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.15)", borderRadius: 12 }}>
-          <div style={{ fontSize: 12, color: "var(--text3)", lineHeight: 1.6, display: "flex", alignItems: "flex-start", gap: 6 }}>
-            <Icon n="alert-triangle" s={14} c="#f59e0b" style={{ marginTop: 1 }} /> Blocked users are automatically excluded from all your current and future job listings on OgaPay.
-          </div>
-        </div>
-      )}
+      </section>
     </div>
   );
 }
 
-// ── TEMPLATES PAGE ─────────────────────────────────────────────────────────
-function TemplatesPage({ onUseTemplate }: { onUseTemplate: any }) {
+// ── TEMPLATES ───────────────────────────────────────────────────────────────
+// Saved job forms. "Use" opens Create with the form filled in.
+function TemplatesPage() {
+  const navigate = useNavigate();
   const { toast } = useToast();
-  const [tab, setTab] = useState("mine");
-  const [templates, setTemplates] = useState<{ mine: any[]; public: any[] }>({ mine: [], public: [] });
-  const [showCreate, setShowCreate] = useState(false);
-  const [newTpl, setNewTpl] = useState({ title: "", category: "", description: "", platform: "X (Twitter)", reward: "", slots: "", visibility: "private" });
-  const [expandedId, setExpandedId] = useState(null);
+  const [rows, setRows] = useState<JobTemplate[] | null>(null);
+  const [editing, setEditing] = useState<string | null>(null);
+  const [draftName, setDraftName] = useState("");
 
-  const saveTemplate = () => {
-    if (!newTpl.title.trim()) return;
-    const t = { id: `TPL-${Date.now()}`, ...newTpl, updatedAt: new Date().toLocaleString(), visibility: newTpl.visibility };
-    setTemplates(prev => ({ ...prev, mine: [t, ...prev.mine] }));
-    setNewTpl({ title: "", category: "", description: "", platform: "X (Twitter)", reward: "", slots: "", visibility: "private" });
-    setShowCreate(false);
-    toast("Template saved!");
+  const load = useCallback(() => listTemplates().then((d) => setRows(Array.isArray(d) ? d : [])).catch(() => setRows([])), []);
+  useEffect(() => { load(); }, [load]);
+
+  const rename = async (t: JobTemplate) => {
+    const name = draftName.trim();
+    if (!name || name === t.name) { setEditing(null); return; }
+    try {
+      await apiRequest(`/poster/templates/${t.id}`, { method: "PATCH", body: JSON.stringify({ name }) });
+      setRows((r) => (r || []).map((x) => x.id === t.id ? { ...x, name } : x));
+      setEditing(null);
+    } catch (e: any) { toast(e?.message || "Couldn't rename it", "error"); }
   };
-
-  const deleteTemplate = (id: any) => {
-    setTemplates(prev => ({ ...prev, mine: prev.mine.filter(t => t.id !== id) }));
-    toast("Template deleted");
+  const remove = async (t: JobTemplate) => {
+    if (!window.confirm(`Delete the template "${t.name}"?`)) return;
+    try {
+      await apiRequest(`/poster/templates/${t.id}`, { method: "DELETE" });
+      setRows((r) => (r || []).filter((x) => x.id !== t.id));
+      toast("Template deleted", "success");
+    } catch (e: any) { toast(e?.message || "Couldn't delete it", "error"); }
   };
-
-  const forkTemplate = (tpl: any) => {
-    const forked = { ...tpl, id: `TPL-${Date.now()}`, title: `${tpl.title} (copy)`, visibility: "private", updatedAt: new Date().toLocaleString() };
-    setTemplates(prev => ({ ...prev, mine: [forked, ...prev.mine] }));
-    setTab("mine");
-    toast("Template forked to My Templates!");
-  };
-
-  const list = tab === "mine" ? templates.mine : templates.public;
+  const summary = (d: TemplateData) => [
+    d.bounty && Number(d.bounty) > 0 ? `Budget ${money(Number(d.bounty), d.currency || "NGN")}` : null,
+    d.winners ? `${d.winners} ${d.winners === "1" ? "person" : "people"}` : null,
+    d.category || null,
+  ].filter(Boolean).join(" · ");
 
   return (
-    <div style={{ width: "100%" }}>
-
-      {/* Header */}
-      <div style={{ marginBottom: 20 }}>
-        <h2 style={{ fontSize: 22, fontWeight: 900, color: "var(--text)", marginBottom: 6 }}>Custom Job Templates</h2>
-        <p style={{ fontSize: 13, color: "var(--text3)" }}>Review, update, delete, and fork templates in one place.</p>
-      </div>
-
-      {/* Tab toggle */}
-      <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 14, overflow: "hidden", marginBottom: 16 }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr" }}>
-          {[
-            { id: "mine", label: `My templates (${templates.mine.length})` },
-            { id: "public", label: `Public templates (${templates.public.length})` },
-          ].map(t => (
-            <button key={t.id} onClick={() => setTab(t.id)}
-              style={{ padding: "13px 0", fontSize: 13, fontWeight: 700, cursor: "pointer", border: "none", fontFamily: "inherit", background: tab === t.id ? "var(--text)" : "transparent", color: tab === t.id ? "var(--bg)" : "var(--text3)", borderBottom: tab !== t.id ? `1px solid ${"var(--border)"}` : "none", transition: "all 0.15s" }}>
-              {t.label}
-            </button>
+    <div className="mj-tool">
+      <p className="mj-tool-p" style={{ margin: 0 }}>Post similar jobs faster. Save a template from the Create page (<b>Save as template</b>) or from any job's details here, then use it to start a new job with everything filled in.</p>
+      {rows === null ? <div className="ui-sk" style={{ height: 120 }} /> : rows.length === 0 ? (
+        <div className="ui-empty">
+          <p style={{ margin: "0 0 14px" }}>No templates yet.</p>
+          <Link className="ui-btn ui-btn-dark" to="/create?type=custom"><Icon n="plus" s={15} /> Create a job</Link>
+        </div>
+      ) : (
+        <div className="mj-list">
+          {rows.map((t) => (
+            <article key={t.id} className="ui-card mj-tpl">
+              <div className="mj-tpl-t">
+                {editing === t.id ? (
+                  <form onSubmit={(e) => { e.preventDefault(); rename(t); }} className="mj-tpl-rename">
+                    <input className="ui-input" value={draftName} maxLength={80} autoFocus onChange={(e) => setDraftName(e.target.value)} aria-label="Template name" />
+                    <button className="ui-btn ui-btn-dark">Save</button>
+                    <button type="button" className="ui-btn ui-btn-ghost" onClick={() => setEditing(null)}>Cancel</button>
+                  </form>
+                ) : <h3>{t.name}</h3>}
+                <span className="mj-tpl-meta">{summary(t.data) || "Saved job"} · updated {day(t.updatedAt)}</span>
+                {t.data.description && <p>{t.data.description}</p>}
+              </div>
+              <div className="mj-tpl-acts">
+                <button className="ui-btn ui-btn-dark" onClick={() => navigate(`/create?template=${t.id}`)}>Use</button>
+                <button className="ui-btn ui-btn-ghost" onClick={() => { setEditing(t.id); setDraftName(t.name); }}>Rename</button>
+                <button className="ui-btn ui-btn-ghost mj-danger" onClick={() => remove(t)} aria-label={`Delete ${t.name}`}><Icon n="trash" s={15} /></button>
+              </div>
+            </article>
           ))}
-        </div>
-
-        {/* Create button — only on mine tab */}
-        {tab === "mine" && (
-          <div style={{ padding: "12px 14px", borderTop: `1px solid ${"var(--border)"}` }}>
-            <button onClick={() => setShowCreate(!showCreate)}
-              style={{ width: "100%", background: showCreate ? "rgba(255,255,255,0.05)" : "var(--text)", border: "none", borderRadius: 10, padding: "12px", fontSize: 13, fontWeight: 800, color: showCreate ? "var(--text2)" : "var(--bg)", cursor: "pointer", fontFamily: "inherit", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
-              {showCreate ? <><i className="ti ti-x" /> Cancel</> : "+ Create template"}
-            </button>
-
-            {/* Inline create form */}
-            {showCreate && (
-              <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 10 }}>
-                {[
-                  { label: "Template Title *", key: "title", placeholder: "e.g. Follow & Repost on X" },
-                  { label: "Category", key: "category", placeholder: "e.g. Social Media" },
-                  { label: "Description", key: "description", placeholder: "What should workers do?", multi: true },
-                ].map(f => (
-                  <div key={f.key}>
-                    <label style={{ fontSize: 11, color: "var(--text3)", fontWeight: 600, display: "block", marginBottom: 4 }}>{f.label}</label>
-                    {f.multi ? (
-                      <textarea value={newTpl[f.key as keyof typeof newTpl]} onChange={e => setNewTpl(p => ({ ...p, [f.key]: e.target.value }))} placeholder={f.placeholder} rows={3}
-                        style={{ width: "100%", background: "var(--bg2)", border: "1px solid var(--border)", borderRadius: 10, padding: "10px 12px", fontSize: 13, color: "var(--text)", outline: "none", resize: "none", boxSizing: "border-box", fontFamily: "inherit" }} />
-                    ) : (
-                      <input value={newTpl[f.key as keyof typeof newTpl]} onChange={e => setNewTpl(p => ({ ...p, [f.key]: e.target.value }))} placeholder={f.placeholder}
-                        style={{ width: "100%", background: "var(--bg2)", border: "1px solid var(--border)", borderRadius: 10, padding: "10px 12px", fontSize: 13, color: "var(--text)", outline: "none", boxSizing: "border-box", fontFamily: "inherit" }} />
-                    )}
-                  </div>
-                ))}
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-                  <div>
-                    <label style={{ fontSize: 11, color: "var(--text3)", fontWeight: 600, display: "block", marginBottom: 4 }}>Platform</label>
-                    <select value={newTpl.platform} onChange={e => setNewTpl(p => ({ ...p, platform: e.target.value }))}
-                      style={{ width: "100%", background: "var(--bg2)", border: "1px solid var(--border)", borderRadius: 10, padding: "10px 12px", fontSize: 13, color: "var(--text)", outline: "none", fontFamily: "inherit" }}>
-                      {["X (Twitter)", "Instagram", "Telegram", "Discord", "YouTube", "On-chain", "Other"].map(p => <option key={p} value={p}>{p}</option>)}
-                    </select>
-                  </div>
-                  <div>
-                    <label style={{ fontSize: 11, color: "var(--text3)", fontWeight: 600, display: "block", marginBottom: 4 }}>Visibility</label>
-                    <select value={newTpl.visibility} onChange={e => setNewTpl(p => ({ ...p, visibility: e.target.value }))}
-                      style={{ width: "100%", background: "var(--bg2)", border: "1px solid var(--border)", borderRadius: 10, padding: "10px 12px", fontSize: 13, color: "var(--text)", outline: "none", fontFamily: "inherit" }}>
-                      <option value="private"><i className="ti ti-lock" /> Private</option>
-                      <option value="community"><i className="ti ti-world" /> Community</option>
-                    </select>
-                  </div>
-                </div>
-                <button onClick={saveTemplate}
-                  style={{ width: "100%", background: "var(--accent)", border: "none", borderRadius: 10, padding: "12px", fontSize: 13, fontWeight: 800, color: "var(--on-accent)", cursor: "pointer", fontFamily: "inherit" }}>
-                  Save Template
-                </button>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* Template list */}
-      <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 16, overflow: "hidden" }}>
-        <div style={{ padding: "14px 16px", borderBottom: `1px solid ${"var(--border)"}` }}>
-          <span style={{ fontSize: 14, fontWeight: 800, color: "var(--text)" }}>
-            {tab === "mine" ? "My templates" : "Public templates"}
-          </span>
-        </div>
-
-        {list.length === 0 ? (
-          <div style={{ padding: "40px 16px", textAlign: "center" }}>
-            <div style={{ fontSize: 28, marginBottom: 10 }}><i className="ti ti-clipboard" /></div>
-            <div style={{ fontSize: 13, color: "var(--text3)" }}>No templates yet. Create one above!</div>
-          </div>
-        ) : list.map((tpl, i) => (
-          <div key={tpl.id} style={{ borderBottom: i < list.length - 1 ? `1px solid ${"var(--border)"}` : "none" }}>
-            {/* Template row */}
-            <div onClick={() => setExpandedId(expandedId === tpl.id ? null : tpl.id)}
-              style={{ padding: "14px 16px", cursor: "pointer", transition: "background 0.15s" }}
-              onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.02)"}
-              onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text)", marginBottom: 4, lineHeight: 1.3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{tpl.title}</div>
-              <div style={{ fontSize: 11, color: "var(--accent)", marginBottom: 2 }}>{tpl.category || "No category"}</div>
-              <div style={{ fontSize: 11, color: "var(--text3)" }}>
-                {tpl.visibility === "private" ? <><i className="ti ti-lock" /> Private</> : <><i className="ti ti-world" /> Community</>} · {tpl.updatedAt}
-              </div>
-            </div>
-
-            {/* Expanded actions */}
-            {expandedId === tpl.id && (
-              <div style={{ padding: "0 16px 14px", display: "flex", flexDirection: "column", gap: 10 }}>
-                {tpl.description && (
-                  <div style={{ background: "var(--bg2)", border: "1px solid var(--border)", borderRadius: 10, padding: "10px 12px", fontSize: 12, color: "var(--text2)", lineHeight: 1.6 }}>
-                    {tpl.description}
-                  </div>
-                )}
-                <div style={{ display: "flex", gap: 8 }}>
-                  <button onClick={() => { onUseTemplate(tpl); toast("Template loaded into Create Job!"); }}
-                    style={{ flex: 2, background: "var(--accent)", border: "none", borderRadius: 10, padding: "10px 0", fontSize: 12, fontWeight: 800, color: "var(--on-accent)", cursor: "pointer", fontFamily: "inherit" }}>
-                    Use Template →
-                  </button>
-                  <button onClick={() => forkTemplate(tpl)}
-                    style={{ flex: 1, background: "var(--bg2)", border: "1px solid var(--border)", borderRadius: 10, padding: "10px 0", fontSize: 12, fontWeight: 700, color: "var(--text2)", cursor: "pointer", fontFamily: "inherit" }}>
-                    Fork
-                  </button>
-                  {tab === "mine" && (
-                    <button onClick={() => deleteTemplate(tpl.id)}
-                      style={{ flex: 1, background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 10, padding: "10px 0", fontSize: 12, fontWeight: 700, color: "var(--red)", cursor: "pointer", fontFamily: "inherit" }}>
-                      Delete
-                    </button>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
-
-      {tab === "public" && (
-        <div style={{ marginTop: 12, padding: "12px 14px", background: "rgba(139,92,246,0.06)", border: "1px solid var(--bg2)", borderRadius: 12 }}>
-          <div style={{ fontSize: 12, color: "var(--text3)", lineHeight: 1.6 }}>
-            <i className="ti ti-world" /> Community templates are created and shared by other OgaPay job creators. Fork any template to customise it for your own jobs.
-          </div>
         </div>
       )}
     </div>
@@ -703,7 +564,7 @@ export default function MyJobs() {
           ? <div style={{ display: "grid", gap: 10, marginTop: 20 }}>{[0, 1, 2].map((i) => <div key={i} className="ui-sk" style={{ height: 120 }} />)}</div>
           : <JobsListPage tasks={tasks} reload={load} />)}
         {page === "blacklist" && <div style={{ marginTop: 20 }}><BlacklistPage /></div>}
-        {page === "templates" && <div style={{ marginTop: 20 }}><TemplatesPage onUseTemplate={() => { setPage("jobs"); toast("Template loaded"); }} /></div>}
+        {page === "templates" && <div style={{ marginTop: 20 }}><TemplatesPage /></div>}
       </div>
     </Layout>
   );

@@ -183,3 +183,92 @@ export function OverviewCard({ rows, total, currency, alt, checklist, primaryLab
     </aside>
   );
 }
+
+export const CATEGORIES: Record<string, string[]> = {
+  "Social Media": ["X / Twitter", "Instagram", "TikTok", "YouTube", "Facebook"],
+  "Content Creation": ["Writing", "Video", "Design", "Photography"],
+  "Development": ["Frontend", "Backend", "Smart Contract", "Mobile"],
+  "Marketing": ["SEO", "Email", "Ads", "Growth"],
+  "Community": ["Moderation", "Support", "Events", "Outreach"],
+  "Music Promotion": ["Streaming", "Download", "Content Creation", "Sharing"],
+  "Article / Blog Writing": ["Blog Posts", "Articles", "Copywriting", "Guest Posts"],
+  "App / Website Review": ["App Reviews", "Website Reviews", "Video Reviews"],
+  "Surveys": ["Market Research", "Product Feedback", "Opinion Polls"],
+  "Lead Generation": ["Email Signups", "Form Submissions", "Referrals"],
+  "App Testing & Install": ["App Download", "Beta Testing", "Install & Review"],
+  "Other": ["Miscellaneous"],
+};
+
+// Category picker label -> API category code -------------------------------------
+export const CATEGORY_MAP: Record<string, string> = {
+  'Social Media': 'SOCIAL_MEDIA',
+  'Content Creation': 'CONTENT_WRITING',
+  'Development': 'OTHER',
+  'Marketing': 'OTHER',
+  'Community': 'OTHER',
+  'Music Promotion': 'OTHER',
+  'Article / Blog Writing': 'CONTENT_WRITING',
+  'App / Website Review': 'CONTENT_WRITING',
+  'Surveys': 'SURVEY',
+  'Lead Generation': 'OTHER',
+  'App Testing & Install': 'APP_TESTING',
+  'Other': 'OTHER',
+  'Design': 'DESIGN',
+  'Survey': 'SURVEY',
+  'Data': 'DATA_ENTRY',
+  'Testing': 'APP_TESTING',
+  'Video': 'VIDEO_REVIEW',
+  'Research': 'SURVEY',
+  'Services': 'OTHER',
+  'SOCIAL_MEDIA': 'SOCIAL_MEDIA',
+};
+
+// ── Job templates ────────────────────────────────────────────────────────────
+// A template is the custom-job form's fields (saved via /poster/templates).
+export type TemplateData = {
+  mode?: string; title?: string; description?: string; currency?: string; bounty?: string; winners?: string
+  category?: string; subcategory?: string; duration?: string; reqType?: string; reqValue?: string
+  screenshot?: boolean; trackingCode?: string
+}
+export type JobTemplate = { id: string; name: string; data: TemplateData; createdAt: string; updatedAt: string }
+
+// API code -> [picker category, subcategory] for jobs whose tags don't say
+const CODE_TO_PICK: Record<string, [string, string?]> = {
+  SOCIAL_MEDIA: ["Social Media"], CONTENT_WRITING: ["Article / Blog Writing"], SURVEY: ["Surveys"],
+  APP_TESTING: ["App Testing & Install"], DESIGN: ["Content Creation", "Design"], VIDEO_REVIEW: ["App / Website Review", "Video Reviews"],
+  WEB_RESEARCH: ["Surveys", "Market Research"], DATA_ENTRY: ["Other"], TRANSLATION: ["Other"], OTHER: ["Other"],
+};
+
+/** The form fields that would post this job again (for "Save as template"). */
+export function taskToTemplateData(t: any): TemplateData {
+  const tags: string[] = Array.isArray(t?.tags) ? t.tags : [];
+  const picked: [string, string?] = CATEGORIES[tags[0]]
+    ? [tags[0], CATEGORIES[tags[0]].includes(tags[1]) ? tags[1] : ""]
+    : CODE_TO_PICK[t?.category] || ["Other"];
+  const [reqType, reqValue] =
+    t?.workerRequirement === "KYC" ? ["kyc", ""] :
+    t?.workerRequirement === "HUMAN" ? ["human", ""] :
+    t?.requiresX ? ["x", ""] :
+    t?.requiresWallet ? ["wallet", ""] :
+    Number(t?.minRank) > 1 ? ["rank", String(t.minRank)] :
+    Number(t?.minSorsaScore) > 0 ? ["ogascore", String(t.minSorsaScore)] : ["none", ""];
+  const winners = Math.max(1, Number(t?.maxWorkers) || 1);
+  const pool = Number(t?.reward || 0) * winners;
+  return {
+    mode: "Challenge",
+    title: String(t?.title || "").slice(0, 200),
+    // Attachment links are appended to the brief when posting; don't carry them over
+    description: String(t?.description || "").split("\n\n**Attachments**")[0].slice(0, 10000),
+    currency: t?.currency || "NGN",
+    bounty: String(t?.currency === "NGN" || !t?.currency ? Math.round(pool) : Number(pool.toFixed(2))),
+    winners: String(winners),
+    category: picked[0], subcategory: picked[1] || "",
+    duration: "7 days", reqType, reqValue,
+    screenshot: !!t?.proofRequired,
+    trackingCode: t?.trackingCode || "",
+  };
+}
+
+export const listTemplates = () => apiRequest<JobTemplate[]>("/poster/templates");
+export const saveTemplate = (data: TemplateData, name?: string) =>
+  apiRequest<JobTemplate>("/poster/templates", { method: "POST", body: JSON.stringify({ name: name || data.title, data }) });
