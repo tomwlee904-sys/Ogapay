@@ -36,6 +36,7 @@ export interface User {
   isEmailVerified: boolean
   isTwoFactorEnabled: boolean
   kycStatus: string | null
+  kycTier: number
   onboardingComplete: boolean
   wallet: Record<string, WalletEntry>
   bankAccount: BankAccount | null
@@ -84,7 +85,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         referralCode: userData.referralCode || '',
         isEmailVerified: userData.isEmailVerified || false,
         isTwoFactorEnabled: userData.isTwoFactorEnabled || false,
-        kycStatus: userData.kycStatus || null,
+        // /users/me sends the KYC record as `kyc`; kycStatus was always empty
+        kycStatus: userData.kycStatus || userData.kyc?.status || null,
+        kycTier: Number(userData.kyc?.kycTier ?? 0),
         onboardingComplete: userData.onboardingComplete || false,
         wallet: userData.wallet || {},
         bankAccount: userData.bankAccount || null,
