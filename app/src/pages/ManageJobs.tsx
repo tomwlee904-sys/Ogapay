@@ -1,518 +1,245 @@
-﻿import { useState, useEffect, useCallback, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import Layout from "../components/Layout"
 import { apiRequest } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
-import { SkeletonPage, injectSkeletonStyles } from "../components/SkeletonLoader";
 import { useToast } from "../components/Toast";
+import { categoryLabel } from "../lib/categories";
+import "../styles/manage-jobs.css";
 
-const statusColor = {
-  open: "var(--green)",
-  in_progress: "var(--accent)",
-  completed: "var(--text3)",
-  draft: "#f59e0b",
-  disputed: "var(--red)",
-  cancelled: "var(--red)",
-  expired: "var(--text3)",
-};
-const statusBg = {
-  open: "rgba(16,185,129,0.12)",
-  in_progress: "rgba(var(--accent-rgb),0.12)",
-  completed: "rgba(255,255,255,0.05)",
-  draft: "rgba(245,158,11,0.12)",
-  disputed: "rgba(239,68,68,0.12)",
-  cancelled: "rgba(239,68,68,0.12)",
-  expired: "rgba(255,255,255,0.05)",
-};
-// PENDING = taken, work not sent yet; SUBMITTED = waiting for your review
-const subColor = { APPROVED: "var(--green)", PENDING: "var(--text3)", SUBMITTED: "#f59e0b", DISPUTED: "#f59e0b", REJECTED: "var(--red)", EXPIRED: "var(--text3)" };
-const subBg = {
-  APPROVED: "rgba(16,185,129,0.12)", PENDING: "rgba(148,163,184,0.12)", SUBMITTED: "rgba(245,158,11,0.12)", DISPUTED: "rgba(245,158,11,0.12)",
-  REJECTED: "rgba(239,68,68,0.12)", EXPIRED: "rgba(148,163,184,0.12)",
-};
+// Manage jobs: the poster's jobs, their review queue and job actions.
+// Counts come from each job's submissions (by status). The old page used
+// currentWorkers (slots taken) as "winners" and every submission as "pending",
+// and its drawer had a made-up AI score, a hard-coded chart and dead buttons.
 
-function pct(a: any, b: any) { return b ? Math.round((a / b) * 100) : 0; }
-
-function Badge({ label, color, bg }: { label: any; color?: any; bg?: any }) {
-  return (
-    <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 10px", borderRadius: 99, background: bg || "rgba(255,255,255,0.07)", color: color || "var(--text2)", display: "inline-flex", alignItems: "center", gap: 4 }}>
-      {label}
-    </span>
-  );
+type Sub = {
+  id: string; status: string; createdAt: string; submittedAt?: string | null; reviewedAt?: string | null
+  proof?: string | null; workerNotes?: string | null; posterNotes?: string | null; attachments?: any[]
+  autoApproveAt?: string | null
+  worker?: { id: string; username?: string | null; firstName?: string | null; lastName?: string | null; avatarUrl?: string | null }
 }
-
-function StatBox({ label, value, color }: { label: any; value: any; color?: any }) {
-  return (
-    <div style={{ background: "var(--bg2)", border: "1px solid var(--border)", borderRadius: 12, padding: "12px 14px", flex: 1 }}>
-      <div style={{ fontSize: 18, fontWeight: 900, color: color || "var(--text)" }}>{value}</div>
-      <div style={{ fontSize: 11, color: "var(--text3)", marginTop: 3, fontWeight: 600 }}>{label}</div>
-    </div>
-  );
-}
-
-function ProgressBar({ value, max, color }: { value: any; max: any; color?: any }) {
-  return (
-    <div style={{ height: 5, background: "var(--bg2)", borderRadius: 3, overflow: "hidden" }}>
-      <div style={{ width: `${pct(value, max)}%`, height: "100%", background: color || `linear-gradient(90deg,${"var(--accent)"},${"var(--green)"})`, borderRadius: 3, transition: "width 0.6s ease" }} />
-    </div>
-  );
+type Task = {
+  id: string; title: string; status: string; category?: string; reward: number | string; currency?: string
+  maxWorkers?: number; deadline?: string | null; createdAt?: string; submissions?: Sub[]
 }
 
 function Icon({ n, s = 16, c, style }: { n: any; s?: number; c?: any; style?: any }) {
-  return <i className={`ti ti-${n}`} style={{ fontSize: s, color: c || "var(--text2)", lineHeight: 1, flexShrink: 0, ...style }} />;
+  return <i className={`ti ti-${n}`} style={{ fontSize: s, color: c, ...style }} />;
 }
 
+const money = (n: number, cur = "NGN") =>
+  cur === "NGN" ? `₦${Math.round(n).toLocaleString("en-US")}` : `${cur === "USDC" || cur === "USDT" ? "$" : ""}${n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}${cur === "USDC" || cur === "USDT" ? "" : " " + cur}`;
+const day = (d?: string | null) => d ? new Date(d).toLocaleDateString("en-GB", { day: "numeric", month: "short" }) : "";
+const ago = (d?: string | null) => {
+  if (!d) return "";
+  const m = Math.round((Date.now() - new Date(d).getTime()) / 60000);
+  if (m < 1) return "just now";
+  if (m < 60) return `${m}m ago`;
+  if (m < 1440) return `${Math.round(m / 60)}h ago`;
+  return day(d);
+};
+const who = (w?: Sub["worker"]) => w?.username || [w?.firstName, w?.lastName].filter(Boolean).join(" ") || "Someone";
 
+const STATUS: Record<string, { label: string; cls: string }> = {
+  OPEN: { label: "Open", cls: "open" }, IN_PROGRESS: { label: "In progress", cls: "open" },
+  COOLING_DOWN: { label: "All slots taken", cls: "open" }, DRAFT: { label: "Paused", cls: "paused" },
+  COMPLETED: { label: "Completed", cls: "" }, CANCELLED: { label: "Cancelled", cls: "bad" },
+  EXPIRED: { label: "Expired", cls: "" }, DISPUTED: { label: "Disputed", cls: "bad" },
+};
+const Pill = ({ status }: { status: string }) => {
+  const s = STATUS[status] || { label: status.toLowerCase(), cls: "" };
+  return <span className={`mj-pill ${s.cls}`}>{s.label}</span>;
+};
 
-// ── JOB DETAIL DRAWER ─────────────────────────────────────────────────────
-function JobDrawer({ job, onClose, onStatusChange }: { job: any; onClose: any; onStatusChange: any }) {
+// Per-job numbers from its submissions
+function jobCounts(t: Task) {
+  const c: Record<string, number> = {};
+  for (const s of t.submissions || []) c[s.status] = (c[s.status] || 0) + 1;
+  const approved = c.APPROVED || 0, review = c.SUBMITTED || 0, working = c.PENDING || 0, disputed = c.DISPUTED || 0;
+  const slots = t.maxWorkers || 1;
+  return { approved, review, working, disputed, rejected: c.REJECTED || 0, slots, left: Math.max(0, slots - approved - review - working - disputed), paid: approved * Number(t.reward || 0) };
+}
+
+const Avatar = ({ w }: { w?: Sub["worker"] }) => (
+  <span className="mj-av">{w?.avatarUrl ? <img src={w.avatarUrl} alt="" /> : who(w).charAt(0).toUpperCase()}</span>
+);
+const WorkerLink = ({ w }: { w?: Sub["worker"] }) =>
+  w?.username ? <Link to={`/user/${w.username}`}>@{w.username}</Link> : <a>{who(w)}</a>;
+
+function Proof({ s }: { s: Sub }) {
+  const isImg = (u: string) => /\.(png|jpe?g|gif|webp|svg)(\?|$)/i.test(u);
+  const files = (Array.isArray(s.attachments) ? s.attachments : []).map((a: any) => typeof a === "string" ? a : a?.url || a?.path || "").filter(Boolean);
+  const proof = typeof s.proof === "string" ? s.proof.trim() : "";
+  if (!proof && !files.length) return null;
+  return (
+    <div className="mj-proof">
+      {proof && (/^https?:\/\//.test(proof)
+        ? (isImg(proof) ? <a href={proof} target="_blank" rel="noopener noreferrer"><img src={proof} alt="Proof" /></a> : <a href={proof} target="_blank" rel="noopener noreferrer"><Icon n="external-link" s={14} /> {proof}</a>)
+        : <p className="mj-note">{proof}</p>)}
+      {files.map((u: string, i: number) => isImg(u)
+        ? <a key={i} href={u} target="_blank" rel="noopener noreferrer"><img src={u} alt={`Attachment ${i + 1}`} /></a>
+        : <a key={i} href={u} target="_blank" rel="noopener noreferrer"><Icon n="paperclip" s={14} /> Attachment {i + 1}</a>)}
+    </div>
+  );
+}
+
+// ── Review drawer ─────────────────────────────────────────────────────────
+function JobDrawer({ task, onClose, onChanged }: { task: Task; onClose: () => void; onChanged: () => void }) {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState("overview");
-  const [copiedSecret, setCopiedSecret] = useState(false);
-  const [manualWinners, setManualWinners] = useState<any[]>([]);
-  const [submissions, setSubmissions] = useState<any[]>([]);
-  const [subsLoading, setSubsLoading] = useState(true);
-  const [pending, setPending] = useState(0);
-  const [rejected, setRejected] = useState(0);
-  const [actioning, setActioning] = useState<any>(null);
-  const [proofSubmission, setProofSubmission] = useState<any>(null);
+  const [subs, setSubs] = useState<Sub[] | null>(null);
+  const [busy, setBusy] = useState<string | null>(null);
+  const [rejecting, setRejecting] = useState<string | null>(null);
+  const [reason, setReason] = useState("");
+  const cur = task.currency || "NGN";
+  const reward = Number(task.reward || 0);
 
-  const fetchSubmissions = useCallback(async () => {
-    if (!job?.id) return;
-    setSubsLoading(true);
+  const load = useCallback(async () => {
     try {
-      const data = await apiRequest('/tasks/' + job.id + '/submissions');
-      const list = Array.isArray(data) ? data : []
-      setSubmissions(list)
-      setPending(list.filter(s => s.status === 'SUBMITTED').length)
-      setRejected(list.filter(s => s.status === 'REJECTED').length)
-    } catch (err) {
-      console.error('submissions fetch error:', err)
-    } finally {
-      setSubsLoading(false);
-    }
-  }, [job?.id]);
+      const data = await apiRequest<Sub[]>(`/tasks/${task.id}/submissions`);
+      setSubs(Array.isArray(data) ? data : []);
+    } catch (e: any) { setSubs([]); toast(e?.message || "Couldn't load the submissions", "error"); }
+  }, [task.id]);
+  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
 
-  useEffect(() => { fetchSubmissions() }, [fetchSubmissions]);
-
-  const handleApprove = async (submissionId: any) => {
-    setActioning(submissionId);
+  const review = async (s: Sub, status: "APPROVED" | "REJECTED") => {
+    setBusy(s.id);
     try {
-      await apiRequest('/tasks/submissions/' + submissionId + '/review', {
-        method: 'PATCH',
-        body: JSON.stringify({ status: 'APPROVED' }),
-      });
-      setSubmissions(prev =>
-        prev.map(s => s.id === submissionId ? { ...s, status: 'APPROVED' } : s)
-      )
-      toast('Approved — worker will be paid shortly', 'success');
-      setPending(p => Math.max(0, p - 1));
-    } catch (e) {
-      toast('Approve failed: ' + (e instanceof Error ? e.message : e), 'error');
-    }
-    setActioning(null);
+      await apiRequest(`/tasks/submissions/${s.id}/review`, { method: "PATCH", body: JSON.stringify({ status, ...(status === "REJECTED" && reason.trim() ? { posterNotes: reason.trim() } : {}) }) });
+      toast(status === "APPROVED" ? `Approved. @${who(s.worker)} gets ${money(reward, cur)}.` : "Rejected. The slot is open again.", "success");
+      setRejecting(null); setReason("");
+      await load(); onChanged();
+    } catch (e: any) { toast(e?.message || "That didn't work. Try again.", "error"); }
+    setBusy(null);
   };
 
-  const handleReject = async (submissionId: any) => {
-    setActioning(submissionId);
+  const setPaused = async (paused: boolean) => {
     try {
-      await apiRequest('/tasks/submissions/' + submissionId + '/review', {
-        method: 'PATCH',
-        body: JSON.stringify({ status: 'REJECTED' }),
-      });
-      setSubmissions(prev =>
-        prev.map(s => s.id === submissionId ? { ...s, status: 'REJECTED' } : s)
-      );
-      setPending(p => Math.max(0, p - 1));
-      setRejected(r => r + 1);
-    } catch (e) {
-      toast('Reject failed: ' + (e instanceof Error ? e.message : e), 'error');
-    }
-    setActioning(null);
+      await apiRequest(`/tasks/${task.id}`, { method: "PATCH", body: JSON.stringify({ status: paused ? "DRAFT" : "OPEN" }) });
+      toast(paused ? "Job paused. Workers can't see it until you resume." : "Job resumed", "success");
+      onChanged(); onClose();
+    } catch (e: any) { toast(e?.message || "Couldn't change the job", "error"); }
+  };
+  const cancel = async () => {
+    if (!window.confirm("Cancel this job? Money held for unfilled slots, including their share of the fee, goes back to your wallet.")) return;
+    try {
+      await apiRequest(`/escrow/refund/${task.id}`, { method: "POST" });
+      toast("Job cancelled. The money is back in your wallet.", "success");
+      onChanged(); onClose();
+    } catch (e: any) { toast(e?.message || "Couldn't cancel this job", "error"); }
+  };
+  const edit = () => {
+    try { sessionStorage.setItem("ogapay_edit_task", JSON.stringify({ id: task.id, title: task.title, reward, currency: cur, slots: task.maxWorkers, status: task.status.toLowerCase() })); } catch { /* storage off */ }
+    navigate(`/create?edit=${task.id}`);
   };
 
-    const copySecret = () => {
-    setCopiedSecret(true);
-    setTimeout(() => setCopiedSecret(false), 2000);
-  };
-
-  const toggleWinner = (id: any) => {
-    setManualWinners(w => w.includes(id) ? w.filter(x => x !== id) : [...w, id]);
-  };
-
-  const tabStyle = (t: any) => ({
-    padding: "10px 14px", fontSize: 11, fontWeight: 700, textTransform: "uppercase",
-    letterSpacing: "0.06em", cursor: "pointer", background: "transparent",
-    border: "none", fontFamily: "inherit", whiteSpace: "nowrap",
-    color: activeTab === t ? "var(--accent)" : "var(--text3)",
-    borderBottom: activeTab === t ? `2px solid ${"var(--accent)"}` : "2px solid transparent",
-  });
+  const list = subs || [];
+  const by = (st: string) => list.filter((s) => s.status === st);
+  const toReview = by("SUBMITTED"), working = by("PENDING"), approved = by("APPROVED"), rejected = by("REJECTED"), disputed = by("DISPUTED");
+  const live = ["OPEN", "DRAFT", "IN_PROGRESS", "COOLING_DOWN"].includes(task.status);
+  const counts = jobCounts({ ...task, submissions: subs || task.submissions });
 
   return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 90, display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
-      <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.75)" }} onClick={onClose} />
-      <div style={{ position: "relative", zIndex: 1, width: "100%", maxWidth: 600, background: "var(--card)", border: `1px solid ${"var(--border2)"}`, borderRadius: "24px 24px 0 0", maxHeight: "92vh", display: "flex", flexDirection: "column" }}>
-
-        {/* Drag pill */}
-        <div style={{ display: "flex", justifyContent: "center", paddingTop: 12, paddingBottom: 4, flexShrink: 0 }}>
-          <div style={{ width: 36, height: 4, borderRadius: 2, background: "rgba(255,255,255,0.15)" }} />
-        </div>
-
-        {/* Header */}
-        <div style={{ padding: "0 20px 14px", flexShrink: 0 }}>
-          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10 }}>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 15, fontWeight: 900, color: "var(--text)", marginBottom: 4 }}>{job.title}</div>
-              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                <Badge label={job.id} color={"var(--text3)"} />
-                <Badge label={job.status === "in_progress" ? "IN PROGRESS" : job.status.toUpperCase()} color={(statusColor as any)[job.status]} bg={(statusBg as any)[job.status]} />
-                <Badge label={<span style={{display:"inline-flex",alignItems:"center",gap:4}}>{job.selectionType === "creator" ? <><Icon n="user-check" s={12} /> Manual</> : <><Icon n="dice" s={12} /> Auto</>}</span>} />
-              </div>
-            </div>
-            <button onClick={onClose} style={{ width: 30, height: 30, borderRadius: 10, background: "var(--bg2)", border: "1px solid var(--border)", color: "var(--text3)", cursor: "pointer", flexShrink: 0, fontSize: 13, fontFamily: "inherit" }}><i className="ti ti-x" /></button>
+    <>
+      <div className="mj-scrim" onClick={onClose} />
+      <aside className="mj-drawer" role="dialog" aria-modal="true" aria-label={task.title}>
+        <div className="mj-dh">
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <h2>{task.title}</h2>
+            <div className="mj-meta"><Pill status={task.status} /><span>{categoryLabel(task.category)}</span><span>{money(reward, cur)} per person</span></div>
           </div>
+          <button className="mj-x" onClick={onClose} aria-label="Close"><Icon n="x" /></button>
         </div>
 
-        {/* Tab nav */}
-        <div style={{ display: "flex", borderBottom: `1px solid ${"var(--border)"}`, overflowX: "auto", flexShrink: 0 }}>
-          {["overview", "submissions", "analytics", "settings"].map(t => (
-            <button key={t} style={tabStyle(t)} onClick={() => setActiveTab(t)}>{t}</button>
-          ))}
-        </div>
+        <div className="mj-db">
+          <div className="mj-dgrid">
+            <div><b>{counts.approved}/{counts.slots}</b><span>approved</span></div>
+            <div><b>{counts.review}</b><span>to review</span></div>
+            <div><b>{money(counts.paid, cur)}</b><span>paid out</span></div>
+          </div>
 
-        {/* Tab content */}
-        <div style={{ flex: 1, overflowY: "auto", padding: 16 }}>
-
-          {/* OVERVIEW */}
-          {activeTab === "overview" && (
-            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-              {/* Stats */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-                <StatBox label="Winners" value={job.winners} color={"var(--green)"} />
-                <StatBox label="Pending" value={pending} color={"#f59e0b"} />
-                <StatBox label="Rejected" value={rejected} color={"var(--red)"} />
-              </div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-                <StatBox label="Approval Rate" value={`${job.approvalRate}%`} color={"var(--green)"} />
-                <StatBox label="Avg Fill Time" value={job.avgFillTime} />
-              </div>
-
-              {/* Budget */}
-              <div style={{ background: "var(--bg2)", border: "1px solid var(--border)", borderRadius: 12, padding: 14 }}>
-                <div style={{ fontSize: 11, color: "var(--text3)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10 }}>Budget</div>
-                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-                  <span style={{ fontSize: 13, color: "var(--text2)" }}>Total budget</span>
-                  <span style={{ fontSize: 13, fontWeight: 800, color: "var(--text)" }}>₦{job.budget.toLocaleString()}</span>
-                </div>
-                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-                  <span style={{ fontSize: 13, color: "var(--text2)" }}>Spent</span>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: "var(--red)" }}>₦{job.spent.toLocaleString()}</span>
-                </div>
-                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
-                  <span style={{ fontSize: 13, color: "var(--text2)" }}>Remaining</span>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: "var(--green)" }}>₦{job.remaining.toLocaleString()}</span>
-                </div>
-                <ProgressBar value={job.spent} max={job.budget} />
-                <div style={{ fontSize: 11, color: "var(--text3)", marginTop: 6 }}>{pct(job.spent, job.budget)}% of budget used</div>
-              </div>
-
-              {/* Slots */}
-              <div style={{ background: "var(--bg2)", border: "1px solid var(--border)", borderRadius: 12, padding: 14 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-                  <span style={{ fontSize: 11, color: "var(--text3)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em" }}>Slots</span>
-                  <span style={{ fontSize: 12, color: "var(--text2)", fontWeight: 600 }}>{job.winners} / {job.slots} filled</span>
-                </div>
-                <ProgressBar value={job.winners} max={job.slots} />
-              </div>
-
-              {/* Secret */}
-              <div style={{ background: "rgba(139,92,246,0.06)", border: "1px solid var(--bg2)", borderRadius: 12, padding: 14 }}>
-                <div style={{ fontSize: 11, color: "var(--accent)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8 }}>Job Secret (API)</div>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ flex: 1, fontFamily: "monospace", fontSize: 12, color: "var(--text2)", background: "rgba(0,0,0,0.3)", padding: "8px 10px", borderRadius: 8, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{job.secret}</span>
-                  <button onClick={copySecret} style={{ flexShrink: 0, background: copiedSecret ? "rgba(16,185,129,0.2)" : "var(--bg2)", border: "none", borderRadius: 8, padding: "7px 12px", fontSize: 11, fontWeight: 700, color: copiedSecret ? "var(--green)" : "var(--accent)", cursor: "pointer", fontFamily: "inherit" }}>
-                    {copiedSecret ? <>Copied <i className="ti ti-check" /></> : "Copy"}
-                  </button>
-                </div>
-                <div style={{ fontSize: 11, color: "var(--text3)", marginTop: 8, lineHeight: 1.5 }}>Use this secret to view submissions via API or choose winners programmatically.</div>
-              </div>
-
-              {/* Info */}
-              {[["Platform", job.platform], ["Reward/slot", `₦${job.reward.toLocaleString()}`], ["Selection", job.selectionType], ["Posted", job.posted], ["Deadline", job.deadline]].map(([k, v]) => (
-                <div key={k} style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: `1px solid ${"var(--border)"}` }}>
-                  <span style={{ fontSize: 12, color: "var(--text3)" }}>{k}</span>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: "var(--text)" }}>{v}</span>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* SUBMISSIONS */}
-          {activeTab === "submissions" && (
-            <div>
-              {job.selectionType === "creator" && manualWinners.length > 0 && (
-                <div style={{ background: "var(--bg2)", border: "1px solid rgba(139,92,246,0.3)", borderRadius: 12, padding: 12, marginBottom: 14, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                  <span style={{ fontSize: 12, color: "var(--accent)", fontWeight: 600 }}>{manualWinners.length} winner(s) selected</span>
-                  <button style={{ background: "var(--accent)", border: "none", borderRadius: 8, padding: "6px 14px", fontSize: 12, fontWeight: 700, color: "var(--on-accent)", cursor: "pointer", fontFamily: "inherit" }}>
-                    Confirm Winners →
-                  </button>
-                </div>
-              )}
-
-              {subsLoading ? (
-                <div style={{ textAlign: "center", padding: "40px 0", color: "var(--text3)", fontSize: 13 }}>Loading submissions...</div>
-              ) : submissions.length === 0 ? (
-                <div style={{ textAlign: "center", padding: "40px 0", color: "var(--text3)", fontSize: 13 }}>No submissions yet</div>
-              ) : (
-                submissions.map(sub => (
-                  <div key={sub.id} style={{ background: "var(--bg2)", border: "1px solid var(--border)", borderRadius: 14, padding: 14, marginBottom: 10 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
-                      <div style={{ width: 34, height: 34, borderRadius: 10, background: `hsl(${sub.id.charCodeAt(4) * 30},60%,45%)`, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 12, fontWeight: 900, flexShrink: 0 }}>
-                        {(sub.worker?.username || sub.worker?.firstName || '?')[0].toUpperCase()}
+          {subs === null ? <div className="ui-sk" style={{ height: 120 }} /> : (
+            <>
+              <section className="mj-sec">
+                <h4>Waiting for your review ({toReview.length})</h4>
+                {toReview.length === 0 ? <div className="mj-empty">Nothing to review right now.</div> : toReview.map((s) => (
+                  <div key={s.id} className="mj-sub">
+                    <div className="mj-who"><Avatar w={s.worker} /><div><WorkerLink w={s.worker} /><small>Sent {ago(s.submittedAt || s.createdAt)}</small></div></div>
+                    {s.workerNotes && <p className="mj-note">{s.workerNotes}</p>}
+                    <Proof s={s} />
+                    {s.autoApproveAt && <p className="mj-auto"><Icon n="clock-check" s={14} /> If you don't review it, it's approved and paid automatically on {new Date(s.autoApproveAt).toLocaleString("en-GB", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}.</p>}
+                    {rejecting === s.id ? (
+                      <div className="mj-reason">
+                        <textarea value={reason} maxLength={500} onChange={(e) => setReason(e.target.value)} placeholder={`Tell @${who(s.worker)} what was wrong (optional)`} autoFocus />
+                        <div className="mj-acts">
+                          <button className="ui-btn ui-btn-ghost" onClick={() => { setRejecting(null); setReason(""); }}>Back</button>
+                          <button className="ui-btn ui-btn-dark" disabled={busy === s.id} onClick={() => review(s, "REJECTED")}>{busy === s.id ? "Rejecting…" : "Reject work"}</button>
+                        </div>
                       </div>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{sub.worker?.username || sub.worker?.firstName || 'Unknown'}</div>
-                        <div style={{ fontSize: 11, color: "var(--text3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{sub.worker?.email || ''} · {new Date(sub.createdAt).toLocaleDateString()}</div>
-                      </div>
-                      <Badge label={(sub.status.charAt(0) + sub.status.slice(1).toLowerCase())} color={(subColor as any)[sub.status]} bg={(subBg as any)[sub.status]} />
-                    </div>
-
-                    {sub.status === 'SUBMITTED' && sub.autoApproveAt && (
-                      <div style={{ fontSize: 11, color: "var(--text3)", marginBottom: 10 }}>
-                        <i className="ti ti-clock-check" /> If you don't review it, it's approved and paid automatically on {new Date(sub.autoApproveAt).toLocaleString(undefined, { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}.
+                    ) : (
+                      <div className="mj-acts">
+                        <button className="ui-btn ui-btn-dark" disabled={busy === s.id} onClick={() => review(s, "APPROVED")}><Icon n="check" s={15} /> {busy === s.id ? "Approving…" : `Approve and pay ${money(reward, cur)}`}</button>
+                        <button className="ui-btn ui-btn-ghost" disabled={busy === s.id} onClick={() => { setRejecting(s.id); setReason(""); }}>Reject</button>
                       </div>
                     )}
-
-                    {/* Score bar */}
-                    <div style={{ marginBottom: 10 }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-                        <span style={{ fontSize: 10, color: "var(--text3)", fontWeight: 600 }}>AI Score</span>
-                        <span style={{ fontSize: 10, fontWeight: 800, color: sub.score >= 80 ? "var(--green)" : sub.score >= 60 ? "#f59e0b" : "var(--red)" }}>{sub.score}/100</span>
-                      </div>
-                      <ProgressBar value={sub.score} max={100} color={sub.score >= 80 ? "var(--green)" : sub.score >= 60 ? "#f59e0b" : "var(--red)"} />
-                    </div>
-
-                    {/* Proof + actions */}
-                    <div style={{ display: "flex", gap: 8 }}>
-                      {(sub.proof || (sub.attachments && sub.attachments.length > 0)) && (
-                        <button onClick={() => setProofSubmission(sub)}
-                          style={{ flex: 1, background: "var(--bg2)", border: "1px solid var(--border)", borderRadius: 10, padding: "8px 0", fontSize: 11, fontWeight: 700, color: "var(--text2)", cursor: "pointer", fontFamily: "inherit", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
-                          <Icon n="file-text" s={13} /> View Proof
-                        </button>
-                      )}
-                      {sub.status === 'SUBMITTED' && (
-                        <>
-                          <button
-                            onClick={() => handleApprove(sub.id)}
-                            disabled={actioning === sub.id}
-                            style={{ flex: 1, background: "rgba(16,185,129,0.12)", border: "1px solid rgba(16,185,129,0.3)", borderRadius: 10, padding: "8px 0", fontSize: 11, fontWeight: 700, color: "var(--green)", cursor: "pointer", fontFamily: "inherit", opacity: actioning === sub.id ? 0.6 : 1 }}>
-                            {actioning === sub.id ? '...' : <><i className="ti ti-circle-check" /> Approve</>}
-                          </button>
-                          <button
-                            onClick={() => handleReject(sub.id)}
-                            disabled={actioning === sub.id}
-                            style={{ flex: 1, background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.25)", borderRadius: 10, padding: "8px 0", fontSize: 11, fontWeight: 700, color: "var(--red)", cursor: "pointer", fontFamily: "inherit", opacity: actioning === sub.id ? 0.6 : 1 }}>
-                            {actioning === sub.id ? '...' : <><i className="ti ti-circle-x" /> Reject</>}
-                          </button>
-                        </>
-                      )}
-                      {job.selectionType === "creator" && sub.status === "approved" && (
-                        <button onClick={() => toggleWinner(sub.id)}
-                          style={{ flex: 1, background: manualWinners.includes(sub.id) ? "var(--bg2)" : "rgba(255,255,255,0.04)", border: `1px solid ${manualWinners.includes(sub.id) ? "var(--accent)" : "var(--border)"}`, borderRadius: 10, padding: "8px 0", fontSize: 11, fontWeight: 700, color: manualWinners.includes(sub.id) ? "var(--accent)" : "var(--text2)", cursor: "pointer", fontFamily: "inherit" }}>
-                          {manualWinners.includes(sub.id) ? <><i className="ti ti-star-filled" style={{color:"#F5B800"}} /> Winner</> : <><i className="ti ti-star" /> Pick</>}
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          )}
-
-          {/* ANALYTICS */}
-          {activeTab === "analytics" && (
-            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-                <StatBox label="Completion %" value={`${pct(job.winners, job.slots)}%`} color={"var(--accent)"} />
-                <StatBox label="Approval %" value={`${job.approvalRate}%`} color={"var(--green)"} />
-                <StatBox label="Avg Fill" value={job.avgFillTime} />
-              </div>
-
-              {/* Fake bar chart */}
-              <div style={{ background: "var(--bg2)", border: "1px solid var(--border)", borderRadius: 14, padding: 16 }}>
-                <div style={{ fontSize: 11, color: "var(--text3)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 14 }}>Submissions Per Day</div>
-                <div style={{ display: "flex", alignItems: "flex-end", gap: 6, height: 80 }}>
-                  {[12, 28, 45, 33, 15, 22, 40].map((v, i) => (
-                    <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
-                      <div style={{ width: "100%", height: `${(v / 50) * 70}px`, borderRadius: "4px 4px 0 0", background: i === 6 ? "var(--accent)" : "var(--bg2)" }} />
-                      <span style={{ fontSize: 9, color: "var(--text3)" }}>{["M", "T", "W", "T", "F", "S", "S"][i]}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Status breakdown */}
-              <div style={{ background: "var(--bg2)", border: "1px solid var(--border)", borderRadius: 14, padding: 16 }}>
-                <div style={{ fontSize: 11, color: "var(--text3)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12 }}>Status Breakdown</div>
-                {[
-                  { label: "Approved", value: job.winners, total: job.slots, color: "var(--green)" },
-                  { label: "Pending", value: job.pending, total: job.slots, color: "#f59e0b" },
-                  { label: "Rejected", value: job.rejected, total: job.slots, color: "var(--red)" },
-                  { label: "Remaining", value: job.slots - job.winners - job.pending - job.rejected, total: job.slots, color: "var(--text3)" },
-                ].map(row => (
-                  <div key={row.label} style={{ marginBottom: 10 }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-                      <span style={{ fontSize: 12, color: "var(--text2)" }}>{row.label}</span>
-                      <span style={{ fontSize: 12, fontWeight: 700, color: row.color }}>{row.value}</span>
-                    </div>
-                    <ProgressBar value={row.value} max={job.slots} color={row.color} />
                   </div>
                 ))}
-              </div>
-            </div>
-          )}
+              </section>
 
-          {/* SETTINGS */}
-          {activeTab === "settings" && (
-            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              {(job.status === "open" || job.status === "in_progress" || job.status === "draft") && (
-                <>
-                  <button onClick={() => { onStatusChange(job.id, job.status === "open" ? "draft" : "open"); onClose(); }}
-                    style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6, width: "100%", background: job.status === "open" ? "rgba(245,158,11,0.1)" : "rgba(16,185,129,0.1)", border: `1px solid ${job.status === "open" ? "rgba(245,158,11,0.3)" : "rgba(16,185,129,0.3)"}`, borderRadius: 14, padding: 14, fontSize: 13, fontWeight: 700, color: job.status === "open" ? "#f59e0b" : "var(--green)", cursor: "pointer", fontFamily: "inherit" }}>
-                    <Icon n={job.status === "open" ? "player-pause" : "player-play"} s={16} c={job.status === "open" ? "#f59e0b" : "var(--green)"} /> {job.status === "open" ? "Pause Job" : "Resume Job"}
-                  </button>
-                  <button onClick={() => { onClose(); navigate('/wallet'); }} style={{ width: "100%", background: "var(--bg2)", border: "1px solid var(--border)", borderRadius: 14, padding: 14, fontSize: 13, fontWeight: 700, color: "var(--text2)", cursor: "pointer", fontFamily: "inherit" }}>
-                    <i className="ti ti-coin" /> Top Up Budget
-                  </button>
-                  <button onClick={() => { try { sessionStorage.setItem('ogapay_edit_task', JSON.stringify({ id: job.id, title: job.title, reward: job.reward, currency: job.currency, slots: job.slots, status: job.status })); } catch(e) { console.error(e) } navigate('/create?edit=' + job.id); }} style={{ width: "100%", background: "var(--bg2)", border: "1px solid var(--border)", borderRadius: 14, padding: 14, fontSize: 13, fontWeight: 700, color: "var(--text2)", cursor: "pointer", fontFamily: "inherit" }}>
-                    <i className="ti ti-edit" /> Edit Job Details
-                  </button>
-                  <button onClick={async () => { if (!confirm('Cancel this job? The money held for it, including the fee, goes back to your wallet.')) return; try { await apiRequest('/escrow/refund/' + job.id, { method: 'POST' }); onStatusChange(job.id, 'cancelled', { local: true }); toast('Job cancelled. The money is back in your wallet.'); onClose(); } catch(e: any) { toast(e?.message || 'Could not cancel this job.', 'error'); } }} style={{ width: "100%", background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 14, padding: 14, fontSize: 13, fontWeight: 700, color: "var(--red)", cursor: "pointer", fontFamily: "inherit" }}>
-                    <i className="ti ti-trash" /> Close & Refund Remaining
-                  </button>
-                </>
+              {working.length > 0 && (
+                <section className="mj-sec">
+                  <h4>Working on it ({working.length})</h4>
+                  <div className="mj-rows">{working.map((s) => (
+                    <div key={s.id} className="mj-row"><div className="mj-who"><Avatar w={s.worker} /><div><WorkerLink w={s.worker} /><small>Took a slot {ago(s.createdAt)}</small></div></div></div>
+                  ))}</div>
+                </section>
               )}
-              {job.status === "completed" && (
-                <div style={{ textAlign: "center", padding: "20px 0" }}>
-                  <div style={{ fontSize: 32, marginBottom: 10 }}><i className="ti ti-circle-check" style={{color:"var(--green)"}} /></div>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text)" }}>Job Completed</div>
-                  <div style={{ fontSize: 12, color: "var(--text3)", marginTop: 6 }}>All slots filled. Budget fully distributed.</div>
-                  <button style={{ marginTop: 16, background: "var(--bg2)", border: "1px solid rgba(139,92,246,0.3)", borderRadius: 12, padding: "10px 24px", fontSize: 13, fontWeight: 700, color: "var(--accent)", cursor: "pointer", fontFamily: "inherit" }}>
-                    <i className="ti ti-clipboard" /> Download Report
-                  </button>
-                </div>
+              {disputed.length > 0 && (
+                <section className="mj-sec">
+                  <h4>In dispute ({disputed.length})</h4>
+                  <div className="mj-rows">{disputed.map((s) => (
+                    <div key={s.id} className="mj-row"><div className="mj-who"><Avatar w={s.worker} /><div><WorkerLink w={s.worker} /><small>Our team is reviewing this</small></div></div></div>
+                  ))}</div>
+                </section>
               )}
-              {job.status === "cancelled" && (
-                <div style={{ textAlign: "center", padding: "20px 0" }}>
-                  <div style={{ fontSize: 32, marginBottom: 10 }}><i className="ti ti-circle-x" style={{color:"var(--red)"}} /></div>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text)" }}>Job Cancelled</div>
-                  <div style={{ fontSize: 12, color: "var(--text3)", marginTop: 6 }}>This job was cancelled. Remaining budget has been refunded.</div>
-                </div>
+              {approved.length > 0 && (
+                <section className="mj-sec">
+                  <h4>Approved ({approved.length})</h4>
+                  <div className="mj-rows">{approved.map((s) => (
+                    <div key={s.id} className="mj-row"><div className="mj-who"><Avatar w={s.worker} /><div><WorkerLink w={s.worker} /><small>Paid {money(reward, cur)}{s.reviewedAt ? ` · ${day(s.reviewedAt)}` : ""}</small></div></div></div>
+                  ))}</div>
+                </section>
               )}
-              {job.status === "expired" && (
-                <div style={{ textAlign: "center", padding: "20px 0" }}>
-                  <div style={{ fontSize: 32, marginBottom: 10 }}><i className="ti ti-clock" style={{color:"var(--text3)"}} /></div>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text)" }}>Job Expired</div>
-                  <div style={{ fontSize: 12, color: "var(--text3)", marginTop: 6 }}>The deadline for this job has passed.</div>
-                </div>
+              {rejected.length > 0 && (
+                <section className="mj-sec">
+                  <h4>Rejected ({rejected.length})</h4>
+                  <div className="mj-rows">{rejected.map((s) => (
+                    <div key={s.id} className="mj-row"><div className="mj-who"><Avatar w={s.worker} /><div><WorkerLink w={s.worker} /><small>{s.reviewedAt ? day(s.reviewedAt) : "Rejected"}</small>{s.posterNotes && <p>“{s.posterNotes}”</p>}</div></div></div>
+                  ))}</div>
+                </section>
               )}
-              {job.status === "disputed" && (
-                <div style={{ textAlign: "center", padding: "20px 0" }}>
-                  <div style={{ fontSize: 32, marginBottom: 10 }}><i className="ti ti-alert-triangle" style={{color:"var(--red)"}} /></div>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text)" }}>Job Disputed</div>
-                  <div style={{ fontSize: 12, color: "var(--text3)", marginTop: 6 }}>This job has been disputed and is under review.</div>
-                </div>
-              )}
-            </div>
+              {list.length === 0 && <div className="mj-empty">No one has taken this job yet.</div>}
+            </>
           )}
         </div>
-      </div>
 
-      {/* ── Proof Modal ── */}
-      {proofSubmission && (
-        <>
-          <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.55)", zIndex: 999 }} onClick={() => setProofSubmission(null)} />
-          <div style={{ position: "fixed", inset: 0, zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 16, pointerEvents: "none" }}>
-          <div style={{ width: "100%", maxWidth: 560, maxHeight: "90vh", background: "var(--card)", border: "1px solid var(--border2)", borderRadius: 20, display: "flex", flexDirection: "column", overflow: "hidden", pointerEvents: "auto", boxShadow: "0 20px 60px rgba(0,0,0,0.3)" }}>
-            <div style={{ padding: "16px 20px 12px", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <div style={{ fontSize: 15, fontWeight: 900, color: "var(--text)" }}>Submission Proof</div>
-              <button onClick={() => setProofSubmission(null)} style={{ width: 30, height: 30, borderRadius: 10, background: "var(--bg2)", border: "1px solid var(--border)", color: "var(--text3)", cursor: "pointer", flexShrink: 0, fontSize: 13, fontFamily: "inherit" }}><i className="ti ti-x" /></button>
-            </div>
-            <div style={{ flex: 1, overflowY: "auto", padding: "0 20px 20px" }}>
-              {/* Worker info */}
-              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14, padding: 12, background: "var(--bg2)", borderRadius: 12 }}>
-                <div style={{ width: 36, height: 36, borderRadius: 10, background: `hsl(${proofSubmission.id.charCodeAt(4) * 30},60%,45%)`, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 13, fontWeight: 900, flexShrink: 0 }}>
-                  {(proofSubmission.worker?.username || proofSubmission.worker?.firstName || '?')[0].toUpperCase()}
-                </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text)" }}>{proofSubmission.worker?.username || proofSubmission.worker?.firstName || 'Unknown'}</div>
-                  <div style={{ fontSize: 11, color: "var(--text3)" }}>{proofSubmission.worker?.email || ''} · {new Date(proofSubmission.createdAt).toLocaleDateString()}</div>
-                </div>
-                <Badge label={(proofSubmission.status.charAt(0) + proofSubmission.status.slice(1).toLowerCase())} color={(subColor as any)[proofSubmission.status]} bg={(subBg as any)[proofSubmission.status]} />
-              </div>
-
-              {/* Score */}
-              <div style={{ marginBottom: 14 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-                  <span style={{ fontSize: 11, color: "var(--text3)", fontWeight: 600 }}>AI Score</span>
-                  <span style={{ fontSize: 11, fontWeight: 800, color: proofSubmission.score >= 80 ? "var(--green)" : proofSubmission.score >= 60 ? "#f59e0b" : "var(--red)" }}>{proofSubmission.score}/100</span>
-                </div>
-                <ProgressBar value={proofSubmission.score} max={100} color={proofSubmission.score >= 80 ? "var(--green)" : proofSubmission.score >= 60 ? "#f59e0b" : "var(--red)"} />
-              </div>
-
-              {/* Proof content */}
-              <div style={{ marginBottom: 14 }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text3)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>Proof</div>
-                {typeof proofSubmission.proof === 'string' && /^https?:\/\/.+\.(png|jpg|jpeg|gif|webp|svg)/i.test(proofSubmission.proof) ? (
-                  <img src={proofSubmission.proof} alt="Proof" className="proof-modal-img" style={{ width: "100%", height: "auto", borderRadius: 12, maxHeight: 500, objectFit: "contain", display: "block" }} />
-                ) : typeof proofSubmission.proof === 'string' && /^https?:\/\//.test(proofSubmission.proof) ? (
-                  <a href={proofSubmission.proof} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13, fontWeight: 600, color: "var(--accent)" }}>
-                    <Icon n="external-link" s={14} /> {proofSubmission.proof}
-                  </a>
-                ) : proofSubmission.proof ? (
-                  <div style={{ background: "var(--bg2)", border: "1px solid var(--border)", borderRadius: 10, padding: 12, fontSize: 13, color: "var(--text2)", lineHeight: 1.6, whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{proofSubmission.proof}</div>
-                ) : null}
-                {Array.isArray(proofSubmission.attachments) && proofSubmission.attachments.length > 0 && (
-                  <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 8 }}>
-                    {proofSubmission.attachments.map((att: any, i: number) => {
-                      const url = typeof att === 'string' ? att : att?.url || att?.path || '';
-                      return /\.(png|jpg|jpeg|gif|webp|svg)/i.test(url) ? (
-                        <img key={i} src={url} alt={`Attachment ${i + 1}`} className="proof-modal-img" style={{ width: "100%", height: "auto", borderRadius: 12, maxHeight: 500, objectFit: "contain", display: "block" }} />
-                      ) : (
-                        <a key={i} href={url} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13, fontWeight: 600, color: "var(--accent)" }}>
-                          <Icon n="file" s={14} /> {url}
-                        </a>
-                      );
-                    })}
-                  </div>
-                )}
-                {!proofSubmission.proof && (!proofSubmission.attachments || proofSubmission.attachments.length === 0) && (
-                  <div style={{ textAlign: "center", padding: "20px 0", color: "var(--text3)", fontSize: 13 }}>No proof provided</div>
-                )}
-              </div>
-
-              {/* Actions */}
-              {proofSubmission.status === 'SUBMITTED' && (
-                <div style={{ display: "flex", gap: 8 }}>
-                  <button onClick={() => { handleApprove(proofSubmission.id); setProofSubmission(null); }}
-                    disabled={actioning === proofSubmission.id}
-                    style={{ flex: 1, background: "rgba(16,185,129,0.12)", border: "1px solid rgba(16,185,129,0.3)", borderRadius: 10, padding: "10px 0", fontSize: 13, fontWeight: 700, color: "var(--green)", cursor: "pointer", fontFamily: "inherit", opacity: actioning === proofSubmission.id ? 0.6 : 1 }}>
-                    {actioning === proofSubmission.id ? 'Processing...' : <><i className="ti ti-circle-check" /> Approve</>}
-                  </button>
-                  <button onClick={() => { handleReject(proofSubmission.id); setProofSubmission(null); }}
-                    disabled={actioning === proofSubmission.id}
-                    style={{ flex: 1, background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.25)", borderRadius: 10, padding: "10px 0", fontSize: 13, fontWeight: 700, color: "var(--red)", cursor: "pointer", fontFamily: "inherit", opacity: actioning === proofSubmission.id ? 0.6 : 1 }}>
-                    {actioning === proofSubmission.id ? 'Processing...' : <><i className="ti ti-circle-x" /> Reject</>}
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-          </div>
-        </>
-      )}
-    </div>
+        <div className="mj-df">
+          <Link className="ui-btn ui-btn-ghost" to={`/tasks/${task.id}`}><Icon n="eye" s={15} /> Public page</Link>
+          {live && <button className="ui-btn ui-btn-ghost" onClick={edit}><Icon n="edit" s={15} /> Edit</button>}
+          {(task.status === "OPEN" || task.status === "DRAFT") && (
+            <button className="ui-btn ui-btn-ghost" onClick={() => setPaused(task.status === "OPEN")}>
+              <Icon n={task.status === "OPEN" ? "player-pause" : "player-play"} s={15} /> {task.status === "OPEN" ? "Pause" : "Resume"}
+            </button>
+          )}
+          {live && <button className="ui-btn ui-btn-ghost mj-danger" onClick={cancel}><Icon n="circle-x" s={15} /> Cancel job</button>}
+        </div>
+      </aside>
+    </>
   );
 }
 
@@ -822,293 +549,159 @@ function TemplatesPage({ onUseTemplate }: { onUseTemplate: any }) {
   );
 }
 
-// ── JOBS LIST PAGE ─────────────────────────────────────────────────────────
-function JobsListPage({ jobs, setJobs }: { jobs: any; setJobs: any }) {
-  const navigate = useNavigate();
-  const { toast } = useToast();
+// ── JOBS LIST ───────────────────────────────────────────────────────────────
+const FILTERS: { id: string; label: string; test: (t: Task) => boolean }[] = [
+  { id: "all", label: "All", test: () => true },
+  { id: "review", label: "Needs review", test: (t) => jobCounts(t).review > 0 },
+  { id: "open", label: "Open", test: (t) => ["OPEN", "IN_PROGRESS", "COOLING_DOWN"].includes(t.status) },
+  { id: "paused", label: "Paused", test: (t) => t.status === "DRAFT" },
+  { id: "closed", label: "Closed", test: (t) => ["COMPLETED", "CANCELLED", "EXPIRED", "DISPUTED"].includes(t.status) },
+];
+
+function JobsListPage({ tasks, reload }: { tasks: Task[]; reload: () => void }) {
   const [filter, setFilter] = useState("all");
-  const [selectedJob, setSelectedJob] = useState(null);
+  const [openId, setOpenId] = useState<string | null>(null);
+  const open = tasks.find((t) => t.id === openId) || null;
 
-  // opts.local: the server already changed it (e.g. cancel via the refund endpoint)
-  const handleStatusChange = (id: any, status: any, opts: { local?: boolean } = {}) => {
-    setJobs((j: any) => j.map((job: any) => job.id === id ? { ...job, status } : job));
-    if (opts.local) return;
-    try {
-      const stored = JSON.parse(localStorage.getItem('ogapay_job_statuses') || '{}');
-      stored[id] = status;
-      localStorage.setItem('ogapay_job_statuses', JSON.stringify(stored));
-      apiRequest('/tasks/' + id, {
-        method: 'PATCH',
-        body: JSON.stringify({ status: status.toUpperCase() }),
-      }).catch((e: any) => { toast(e?.message || 'Could not update the job', 'error'); setJobs((j: any) => j.map((job: any) => job.id === id ? { ...job, status: status === 'open' ? 'draft' : 'open' } : job)) });
-    } catch(e) { console.error(e) }
-    toast(status === 'open' ? 'Job resumed' : status === 'draft' ? 'Job paused' : 'Status updated');
-  };
+  const totals = useMemo(() => {
+    const paid: Record<string, number> = {};
+    let review = 0, approved = 0;
+    for (const t of tasks) {
+      const c = jobCounts(t);
+      review += c.review; approved += c.approved;
+      const cur = t.currency || "NGN";
+      paid[cur] = (paid[cur] || 0) + c.paid;
+    }
+    const live = tasks.filter(FILTERS[2].test).length;
+    const paidText = Object.entries(paid).filter(([, v]) => v > 0).map(([c, v]) => money(v, c)).join(" · ") || money(0);
+    return { review, approved, live, paidText };
+  }, [tasks]);
 
-  const statusFilters = ["all", "open", "in_progress", "completed", "draft", "cancelled", "expired"];
+  const shown = tasks.filter((FILTERS.find((f) => f.id === filter) || FILTERS[0]).test);
 
-  const filtered = filter === "all" ? jobs : jobs.filter((j: any) => j.status === filter);
-  const stats = {
-    open: jobs.filter((j: any) => j.status === "open").length,
-    in_progress: jobs.filter((j: any) => j.status === "in_progress").length,
-    completed: jobs.filter((j: any) => j.status === "completed").length,
-    totalSpent: jobs.reduce((a: any, j: any) => a + (j.spent || 0), 0),
-    totalWinners: jobs.reduce((a: any, j: any) => a + (j.winners || 0), 0),
-  };
-
-  const goToCreateJob = () => {
-    toast("Please use the Create Job page to create new jobs");
-  };
+  if (tasks.length === 0) {
+    return (
+      <div className="ui-empty" style={{ marginTop: 24 }}>
+        <p style={{ margin: "0 0 14px" }}>You haven't posted a job yet.</p>
+        <Link className="ui-btn ui-btn-dark" to="/create"><Icon n="plus" s={15} /> Post a job</Link>
+      </div>
+    );
+  }
 
   return (
-    <div style={{ width: "100%" }}>
-      {/* Summary stats */}
-      <div className="mj-stats-grid" style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 8, marginBottom: 16 }}>
-        {[
-          { label: "Open", value: stats.open, color: "var(--green)" },
-          { label: "In Progress", value: stats.in_progress, color: "var(--accent)" },
-          { label: "Completed", value: stats.completed, color: "var(--text3)" },
-          { label: "Winners", value: stats.totalWinners, color: "var(--accent)" },
-          { label: "Spent", value: `₦${(stats.totalSpent / 1000).toFixed(0)}k`, color: "var(--text)" },
-        ].map(s => (
-          <div key={s.label} style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 12, padding: "10px 8px", textAlign: "center" }}>
-            <div style={{ fontSize: 20, fontWeight: 900, color: s.color }}>{s.value}</div>
-            <div style={{ fontSize: 12, color: "var(--text3)", fontWeight: 700, marginTop: 3 }}>{s.label}</div>
-          </div>
-        ))}
+    <>
+      <div className="mj-summary">
+        <button className={`mj-sum${totals.review ? " hot" : ""}`} onClick={() => setFilter(totals.review ? "review" : "all")}><b>{totals.review}</b><span>waiting for your review</span></button>
+        <div className="mj-sum"><b>{totals.live}</b><span>open jobs</span></div>
+        <div className="mj-sum"><b>{totals.approved}</b><span>pieces of work approved</span></div>
+        <div className="mj-sum"><b>{totals.paidText}</b><span>paid to workers</span></div>
       </div>
 
-      {/* Filter pills */}
-      <div className="mj-filters" style={{ display: "flex", gap: 6, marginBottom: 16, overflowX: "auto", paddingBottom: 2 }}>
-        {statusFilters.map(f => (
-          <button key={f} onClick={() => setFilter(f)}
-            style={{ flexShrink: 0, padding: "8px 18px", borderRadius: 99, fontSize: 13, fontWeight: 700, cursor: "pointer", border: `1px solid ${filter === f ? "var(--accent)" : "var(--border)"}`, background: filter === f ? "var(--text)" : "var(--card)", color: filter === f ? "var(--bg)" : "var(--text2)", fontFamily: "inherit" }}>
-            {f === "in_progress" ? "In Progress" : f.charAt(0).toUpperCase() + f.slice(1)}
-            <span style={{ marginLeft: 6, fontSize: 11, opacity: 0.7 }}>
-              {f === "all" ? jobs.length : jobs.filter((j: any) => j.status === f).length}
-            </span>
-          </button>
-        ))}
+      <div className="mj-filters" role="tablist" aria-label="Filter jobs">
+        {FILTERS.map((f) => {
+          const n = tasks.filter(f.test).length;
+          if (f.id !== "all" && n === 0) return null;
+          return <button key={f.id} role="tab" aria-selected={filter === f.id} className={`mj-chip${filter === f.id ? " on" : ""}`} onClick={() => setFilter(f.id)}>{f.label}<em>{n}</em></button>;
+        })}
       </div>
 
-      {/* Job cards */}
-      {filtered.length === 0 ? (
-        <div style={{ textAlign: "center", padding: "60px 0", color: "var(--text3)" }}>
-          <div style={{ fontSize: 32, marginBottom: 12 }}><i className="ti ti-clipboard" /></div>
-          <div style={{ fontSize: 14, fontWeight: 600 }}>No jobs found</div>
-          <div style={{ fontSize: 12, marginTop: 6 }}>Create your first job to get started</div>
-        </div>
-      ) : filtered.map((job: any) => (
-        <div key={job.id} onClick={() => setSelectedJob(job)}
-          style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 18, padding: "20px 22px", marginBottom: 12, cursor: "pointer", transition: "border-color 0.15s" }}
-          onMouseEnter={e => e.currentTarget.style.borderColor = "var(--accent)"}
-          onMouseLeave={e => e.currentTarget.style.borderColor = "var(--border)"}>
-
-          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10, marginBottom: 12 }}>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 17, fontWeight: 800, color: "var(--text)", marginBottom: 8, lineHeight: 1.3 }}>{job.title}</div>
-              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                <Badge label={job.platform} />
-                <Badge label={<span style={{display:"inline-flex",alignItems:"center",gap:4}}>{job.selectionType === "creator" ? <><Icon n="user-check" s={12} /> Manual</> : <><Icon n="dice" s={12} /> Auto</>}</span>} />
-                <Badge label={job.status === "in_progress" ? "IN PROGRESS" : job.status.toUpperCase()} color={(statusColor as any)[job.status]} bg={(statusBg as any)[job.status]} />
+      <div className="mj-list">
+        {shown.map((t) => {
+          const c = jobCounts(t);
+          const cur = t.currency || "NGN";
+          return (
+            <article key={t.id} className="ui-card mj-job" onClick={() => setOpenId(t.id)}>
+              <div className="mj-job-top">
+                <div style={{ minWidth: 0 }}>
+                  <h3>{t.title}</h3>
+                  <div className="mj-meta">
+                    <Pill status={t.status} />
+                    <span>{categoryLabel(t.category)}</span>
+                    {t.createdAt && <span>Posted {day(t.createdAt)}</span>}
+                    {t.deadline && <span>Closes {day(t.deadline)}</span>}
+                  </div>
+                </div>
+                <div className="mj-reward"><b>{money(Number(t.reward || 0), cur)}</b><span>per person</span></div>
               </div>
-            </div>
-            <div style={{ textAlign: "right", flexShrink: 0 }}>
-              <div style={{ fontSize: 22, fontWeight: 900, color: "var(--green)" }}>₦{job.reward.toLocaleString()}</div>
-              <div style={{ fontSize: 12, color: "var(--text3)", marginTop: 2, fontWeight: 600 }}>per slot</div>
-            </div>
-          </div>
-
-          <div className="mj-job-stats" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 8, marginBottom: 12 }}>
-            {[
-              { label: "Winners", value: job.winners, color: "var(--green)" },
-              { label: "Pending", value: job.pending, color: "#f59e0b" },
-              { label: "Rejected", value: job.rejected, color: "var(--red)" },
-              { label: "Left", value: job.slots - job.winners - job.pending, color: "var(--text3)" },
-            ].map(s => (
-              <div key={s.label} style={{ background: "var(--bg2)", border: "1px solid var(--border)", borderRadius: 10, padding: "8px", textAlign: "center" }}>
-                <div style={{ fontSize: 20, fontWeight: 900, color: s.color }}>{s.value}</div>
-                <div style={{ fontSize: 12, color: "var(--text3)", fontWeight: 700, marginTop: 2 }}>{s.label}</div>
+              <div className="mj-bar" aria-hidden="true"><i style={{ width: `${Math.min(100, (c.approved / c.slots) * 100)}%` }} /></div>
+              <div className="mj-job-foot">
+                <div className="mj-counts">
+                  <span><b>{c.approved}</b> of {c.slots} approved</span>
+                  {c.review > 0 && <span className="warn"><b>{c.review}</b> to review</span>}
+                  {c.working > 0 && <span><b>{c.working}</b> working</span>}
+                  {["OPEN", "IN_PROGRESS", "DRAFT"].includes(t.status) && <span><b>{c.left}</b> {c.left === 1 ? "slot" : "slots"} left</span>}
+                </div>
+                <button className={`ui-btn ${c.review ? "ui-btn-dark" : "ui-btn-ghost"}`} onClick={(e) => { e.stopPropagation(); setOpenId(t.id); }}>
+                  {c.review ? <>Review {c.review} <Icon n="arrow-right" s={15} /></> : "Details"}
+                </button>
               </div>
-            ))}
-          </div>
+            </article>
+          );
+        })}
+      </div>
 
-          <div style={{ marginBottom: 10 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5 }}>
-              <span style={{ fontSize: 12, color: "var(--text2)", fontWeight: 600 }}>{pct(job.winners, job.slots)}% complete</span>
-              <span style={{ fontSize: 12, color: "var(--text2)", fontWeight: 600 }}>₦{job.remaining.toLocaleString()} remaining</span>
-            </div>
-            <ProgressBar value={job.winners} max={job.slots} />
-          </div>
-
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <span style={{ fontSize: 12, color: "var(--text3)", fontFamily: "monospace", fontWeight: 600 }}>{job.id}</span>
-            <div style={{ display: "flex", gap: 6 }}>
-              <span style={{ fontSize: 12, color: "var(--text2)", fontWeight: 600 }}>Deadline: {job.deadline}</span>
-              <div style={{ display: "flex", gap: 6 }}>
-                <span onClick={(e) => { e.stopPropagation(); 
-                  try { sessionStorage.setItem('ogapay_edit_task', JSON.stringify(job)); } catch(e) { console.error(e) }
-                  navigate('/create?edit=' + job.id);
-                }} style={{ display:"inline-flex", alignItems:"center", justifyContent:"center", height:40, padding:"0 14px", borderRadius:10, background:"var(--bg2)", border:"1px solid var(--border)", color:"var(--text2)", fontSize:12, fontWeight:700, gap:5, cursor:"pointer" }}><i className="ti ti-edit" style={{fontSize:14}} /> Edit</span>
-                <span style={{ display:"inline-flex", alignItems:"center", justifyContent:"center", height:40, padding:"0 18px", borderRadius:10, background:"var(--text)", color:"var(--bg)", fontSize:13, fontWeight:800, gap:6, cursor:"pointer" }}><i className="ti ti-eye" style={{fontSize:15}} /> View</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      ))}
-
-      {jobs.length === 0 && (
-        <button onClick={goToCreateJob}
-          style={{ width: "100%", background: "transparent", border: `2px dashed ${"var(--border)"}`, borderRadius: 18, padding: "32px 0", display: "flex", flexDirection: "column", alignItems: "center", gap: 10, cursor: "pointer", fontFamily: "inherit" }}>
-          <span style={{ fontSize: 32 }}>+</span>
-          <span style={{ fontSize: 14, fontWeight: 700, color: "var(--text2)" }}>Create your first job</span>
-        </button>
-      )}
-
-      {selectedJob && (
-        <JobDrawer job={selectedJob} onClose={() => setSelectedJob(null)} onStatusChange={handleStatusChange} />
-      )}
-    </div>
+      {open && <JobDrawer task={open} onClose={() => setOpenId(null)} onChanged={reload} />}
+    </>
   );
 }
 
 // ── MAIN PAGE ──────────────────────────────────────────────────────────────
 export default function MyJobs() {
   const { toast } = useToast();
-  const [jobs, setJobs] = useState([]);
+  const { user, isAuthed } = useAuth();
+  const [tasks, setTasks] = useState<Task[] | null>(null);
   const [page, setPage] = useState("jobs");
-  const [loading, setLoading] = useState(true);
-  const { user: authUser, isAuthed } = useAuth();
 
-  const mounted = useRef(true);
-
-  const fetchJobs = useCallback(async () => {
-    if (!isAuthed) { if (mounted.current) setLoading(false); return; }
-    const mapTaskToJob = (t: any) => ({
-      id: t.id || t._id,
-      customId: t.customId || "",
-      title: t.title || "Untitled Task",
-      type: t.type || t.mode || (t.category || "").toLowerCase() || "custom",
-      platform: Array.isArray(t.tags) ? t.tags[0] || "OgaPay" : t.platform || "OgaPay",
-      status: (t.status || "open").toLowerCase(),
-      selectionType: t.winnerMode || (t.type === "challenge" ? "random" : "creator"),
-      reward: Number(t.reward) || 0,
-      currency: t.currency || "NGN",
-      budget: Number(t.reward) * (t.maxWorkers || 1) || 0,
-      spent: Number(t.currentWorkers || 0) * Number(t.reward || 0),
-      remaining: Number(t.reward) * (t.maxWorkers || 1) - Number(t.currentWorkers || 0) * Number(t.reward || 0),
-      slots: t.maxWorkers || 1,
-      winners: t.currentWorkers || 0,
-      pending: t.pendingSubmissions ?? t._count?.submissions ?? 0,
-      rejected: t.rejectedSubmissions ?? 0,
-      approvalRate: t.maxWorkers > 0 ? Math.round((t.currentWorkers || 0) / t.maxWorkers * 100) : 0,
-      avgFillTime: "N/A",
-      deadline: t.deadline ? new Date(t.deadline).toLocaleDateString() : "N/A",
-      posted: t.createdAt ? new Date(t.createdAt).toLocaleDateString() : "N/A",
-      secret: t.escrowTxId || "",
-      submissions: [],
-    });
-
+  const load = useCallback(async () => {
+    if (!isAuthed) { setTasks([]); return; }
     try {
-      const tasks = await apiRequest('/tasks/my/created').catch(() => null) || [];
-      if (!mounted.current) return;
-      const mapped = (Array.isArray(tasks) ? tasks : ((tasks as any)?.tasks || [])).map(mapTaskToJob);
-      const stored = JSON.parse(localStorage.getItem('ogapay_job_statuses') || '{}');
-      mapped.forEach((j: any) => { if (stored[j.id]) j.status = stored[j.id]; });
-      setJobs(mapped);
-    } catch (e) {
-      if (!mounted.current) return;
-      console.warn("Failed to fetch jobs:", e);
+      const data = await apiRequest<Task[] | { tasks: Task[] }>("/tasks/my/created?limit=100");
+      setTasks(Array.isArray(data) ? data : data?.tasks || []);
+    } catch (e: any) {
+      setTasks((t) => t || []);
+      toast(e?.message || "Couldn't load your jobs", "error");
     }
-    if (mounted.current) setLoading(false);
   }, [isAuthed]);
 
   useEffect(() => {
-    // Re-arm on every run: the cleanup below clears it, and this effect re-runs
-    // when the signed-in user loads (it used to drop that fetch and show no jobs)
-    mounted.current = true
-    fetchJobs()
-    const onFocus = () => fetchJobs()
-    window.addEventListener('focus', onFocus)
-    return () => {
-      window.removeEventListener('focus', onFocus)
-      mounted.current = false
-    }
-  }, [authUser?.id])
+    load();
+    const onFocus = () => load();
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
+  }, [user?.id, load]);
 
-  useEffect(() => { injectSkeletonStyles(); }, []);
-
-  const PAGE_TABS = [
-    { id: "jobs", label: "My Jobs", icon: "briefcase" },
+  const TABS = [
+    { id: "jobs", label: "My jobs", icon: "briefcase" },
     { id: "templates", label: "Templates", icon: "files" },
     { id: "blacklist", label: "Blacklist", icon: "ban" },
   ];
 
-  const navRightLabel = page === "jobs" ? "+ Create Job" : page === "templates" ? "+ New Template" : null;
-
-  if (loading) {
-    return (
-      <Layout>
-        <SkeletonPage />
-      </Layout>
-    );
-  }
   return (
-    <Layout><div className="mj-page">
-      <style>{`
-        .mj-page { padding: 28px 24px 60px; width: 100%; max-width: 100%; }
-        
-        /* Summary stats grid - responsive */
-        .mj-stats-grid { display: grid; grid-template-columns: repeat(5,1fr); gap: 8px; margin-bottom: 16px; }
-        
-        /* Job stats grid */
-        .mj-job-stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; margin-bottom: 12px; }
-        
-        /* Filter pills scrollable */
-        .mj-filters { display: flex; gap: 6px; margin-bottom: 16px; overflow-x: auto; padding-bottom: 2px; -webkit-overflow-scrolling: touch; }
-        
-        /* Mobile */
-        @media(max-width:768px) {
-          .mj-page { padding: 16px 12px 60px; }
-          .mj-stats-grid { grid-template-columns: repeat(3,1fr); gap: 6px; }
-          .mj-stats-grid > *:nth-child(n+4) { display: none; } /* hide last 2 on smallest screens */
-          .mj-job-stats { grid-template-columns: repeat(2,1fr); gap: 6px; }
-          .mj-filters { gap: 4px; }
-        }
-        
-        @media(max-width:480px) {
-          .mj-page { padding: 12px 10px 60px; }
-          .mj-stats-grid { grid-template-columns: repeat(3,1fr); gap: 4px; }
-          .mj-job-stats { grid-template-columns: repeat(2,1fr); gap: 4px; }
-        }
-        
-        /* Tablet */
-        @media(min-width:769px) and (max-width:1023px) {
-          .mj-page { padding: 20px 20px 60px; }
-        }
-        @media(max-width:768px){.mj-page .proof-modal-img{max-height:45vh!important}}
-      `}</style>
+    <Layout>
+      <div className="ui-page">
+        <div className="ui-head">
+          <div>
+            <span className="ui-eyebrow">Posting</span>
+            <h1 className="ui-title">Manage jobs</h1>
+            <p className="ui-sub">Review work, pay people and keep track of what you've posted.</p>
+          </div>
+          <Link className="ui-btn ui-btn-dark" to="/create"><Icon n="plus" s={15} /> Post a job</Link>
+        </div>
 
+        <div className="mj-tabs" role="tablist">
+          {TABS.map((t) => (
+            <button key={t.id} role="tab" aria-selected={page === t.id} className={`mj-tab${page === t.id ? " on" : ""}`} onClick={() => setPage(t.id)}>
+              <Icon n={t.icon} s={15} /> {t.label}
+            </button>
+          ))}
+        </div>
 
-      {/* Sub tab nav — full labels */}
-      <div className="mj-tab-bar">
-        {PAGE_TABS.map(t => (
-          <button key={t.id} onClick={() => setPage(t.id)}
-            style={{ flex: 1, padding: "12px 8px", fontSize: 12, fontWeight: 700, cursor: "pointer", border: "none", fontFamily: "inherit", background: "transparent", color: page === t.id ? "var(--accent)" : "var(--text3)", borderBottom: page === t.id ? `2px solid ${"var(--accent)"}` : "2px solid transparent", transition: "all 0.15s", whiteSpace: "nowrap", display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
-            <i className={`ti ti-${t.icon}`} style={{fontSize:16}} /> {t.label}
-          </button>
-        ))}
+        {page === "jobs" && (tasks === null
+          ? <div style={{ display: "grid", gap: 10, marginTop: 20 }}>{[0, 1, 2].map((i) => <div key={i} className="ui-sk" style={{ height: 120 }} />)}</div>
+          : <JobsListPage tasks={tasks} reload={load} />)}
+        {page === "blacklist" && <div style={{ marginTop: 20 }}><BlacklistPage /></div>}
+        {page === "templates" && <div style={{ marginTop: 20 }}><TemplatesPage onUseTemplate={() => { setPage("jobs"); toast("Template loaded"); }} /></div>}
       </div>
-
-      {/* Page content */}
-      {page === "jobs" && <div className="mj-content"><JobsListPage jobs={jobs} setJobs={setJobs} /></div>}
-      {page === "blacklist" && <div className="mj-content"><BlacklistPage /></div>}
-      {page === "templates" && <div className="mj-content"><TemplatesPage onUseTemplate={(tpl: any) => {
-          setPage("jobs");
-          toast("Template loaded — create your job below!");
-        }} /></div>}
-  </div>
-</Layout>
+    </Layout>
   );
 }
-

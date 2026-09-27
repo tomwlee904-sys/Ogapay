@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { jobRequirements } from "../../lib/requirements";
+import { CATEGORY_LABELS as CATEGORY } from "../../lib/categories";
 
 /* Homepage cards for highlighted jobs and creator-store products. Kept separate
    from TaskCard so the rest of the app keeps its existing card design. */
@@ -9,11 +10,6 @@ type Convert = (amount: number, from: any, to: any) => number;
 const money = (n: number) => Math.round(n).toLocaleString("en-US");
 const usd = (n: number) => `$${n < 10 ? n.toFixed(2) : Math.round(n).toLocaleString("en-US")}`;
 
-const CATEGORY: Record<string, string> = {
-  SOCIAL_MEDIA: "Social media", DATA_ENTRY: "Data entry", CONTENT_WRITING: "Content writing",
-  APP_TESTING: "App testing", SURVEY: "Survey", DESIGN: "Design", TRANSLATION: "Translation",
-  WEB_RESEARCH: "Web research", VIDEO_REVIEW: "Video review", OTHER: "General",
-};
 
 const plain = (s?: string) => (s || "").replace(/[#*_`>]+/g, "").replace(/\s+/g, " ").trim();
 
