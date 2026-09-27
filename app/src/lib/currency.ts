@@ -26,7 +26,7 @@ export const CURRENCY_NAMES: Record<Currency, string> = {
 // ─── Withdrawal constants ─────────────────────────────────────────────────
 export const MIN_NGN_WITHDRAWAL = 5000;
 export const NGN_WITHDRAW_LIMITS = {
-  TIER_0: 5000,
+  TIER_0: 0, // unverified accounts can't withdraw (wallet.routes ngnWithdrawLimit)
   TIER_1: 10000,
   TIER_2: 20000,
   TIER_3: 200000,

@@ -129,7 +129,7 @@ export default function Drawer({ open, onClose }: DrawerProps) {
                 </div>
                 <i className="ti ti-chevron-right oga-user-card-chevron" />
               </div>
-                <button type="button" className="oga-topup" onClick={() => { onClose(); navigate('/wallet?add=1') }}>Top up</button>
+                <button type="button" className="oga-topup" onClick={() => { onClose(); navigate('/deposit') }}>Top up</button>
               </div>
 
               <div className="oga-drawer-divider" />

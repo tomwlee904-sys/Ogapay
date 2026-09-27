@@ -660,7 +660,7 @@ export default function Profile() {
                 </div>
                 <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,margin:'10px 0 14px'}}>
                   <button className="dash-btn" style={{width:'100%',justifyContent:'center'}} onClick={() => setFundModal('withdraw')}><Icon n="logout" s={14} c="var(--bg)" /> Withdraw</button>
-                  <button className="dash-btn" style={{width:'100%',justifyContent:'center'}} onClick={() => setFundModal('deposit')}><Icon n="plus" s={14} c="var(--bg)" /> Deposit</button>
+                  <button className="dash-btn" style={{width:'100%',justifyContent:'center'}} onClick={() => navigate('/deposit')}><Icon n="plus" s={14} c="var(--bg)" /> Deposit</button>
                 </div>
 
                 {/* Other balances */}

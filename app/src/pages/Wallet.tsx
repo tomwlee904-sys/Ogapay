@@ -1,266 +1,264 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import Layout from '../components/Layout'
-import FundWalletModal from '../components/FundWalletModal'
 import TransferModal from '../components/TransferModal'
+import WithdrawModal from '../components/wallet/WithdrawModal'
+import AddBankForm from '../components/wallet/AddBankForm'
+import Sheet from '../components/wallet/Sheet'
 import { apiRequest } from '../lib/api'
 import { useAuth } from '../context/AuthContext'
+import { useWalletBalance } from '../context/WalletBalanceContext'
+import { isCredit, isEscrowHeld, kycOf, isPending, isVoid, usefulNote, maskAcct, money, naira, statusLabel, txDetail, txTitle, when, withdrawLimit, type Balances, type Bank, type Summary, type Tx } from '../lib/wallet'
+import '../styles/wallet.css'
 
-// Tabs → backend TransactionType values
-const TX_TABS: { key: string; label: string; types: string[] }[] = [
-  { key: 'all', label: 'All', types: [] },
-  { key: 'deposit', label: 'Deposits', types: ['DEPOSIT'] },
-  { key: 'withdrawal', label: 'Withdrawals', types: ['WITHDRAWAL'] },
-  { key: 'transfer', label: 'Transfers', types: ['TRANSFER'] },
-  { key: 'earning', label: 'Earnings', types: ['TASK_PAYMENT', 'TASK_REWARD', 'EARNING', 'REFERRAL_BONUS', 'SIGNUP_BONUS'] },
-  { key: 'refund', label: 'Refunds', types: ['TASK_REFUND', 'REFUND'] },
-]
-// Used only when a row has no balance change to read the direction from
-const DEBIT_TYPES = ['WITHDRAWAL', 'TRANSFER', 'TASK_PAYMENT', 'PLATFORM_FEE', 'STORE_PURCHASE', 'ESCROW', 'SYSTEM_DEBIT']
-const txType = (t: any) => String(t.type || t.transactionType || '').toUpperCase()
+// Wallet: one balance (with what's on hold and on its way), lifetime totals
+// from the server (they used to be added up from the last 100 rows), saved bank
+// accounts, and the full history with load more. Adding money has its own page.
+
+const PAGE = 30
+const FILTERS = [
+  { key: 'all', label: 'All', test: (_: Tx) => true },
+  { key: 'in', label: 'Money in', test: (t: Tx) => !isVoid(t) && isCredit(t) },
+  { key: 'out', label: 'Money out', test: (t: Tx) => !isVoid(t) && !isCredit(t) },
+  { key: 'pending', label: 'Pending', test: (t: Tx) => isPending(t) },
+] as const
 
 export default function Wallet() {
-  const { refreshUser } = useAuth()
-  const [activeTab, setActiveTab] = useState('all')
-  const [balances, setBalances] = useState<Record<string, { balance: number; lockedBalance: number; available: number }> | null>(null)
-  const [transactions, setTransactions] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
-  const [modal, setModal] = useState<null | 'deposit' | 'withdraw' | 'transfer'>(null)
-  // /wallet?add=1 (Top up in the menu) opens Add money straight away
+  const { user, refreshUser } = useAuth()
+  const { refresh: refreshHeader } = useWalletBalance()
+  const navigate = useNavigate()
   const [params, setParams] = useSearchParams()
+  const [balances, setBalances] = useState<Balances | null>(null)
+  const [summary, setSummary] = useState<Summary | null>(null)
+  const [txs, setTxs] = useState<Tx[] | null>(null)
+  const [page, setPage] = useState(1)
+  const [more, setMore] = useState(false)
+  const [loadingMore, setLoadingMore] = useState(false)
+  const [filter, setFilter] = useState<(typeof FILTERS)[number]['key']>('all')
+  const [open, setOpen] = useState<string | null>(null)
+  const [banks, setBanks] = useState<Bank[] | null>(null)
+  const [bankMenu, setBankMenu] = useState<string | null>(null)
+  const [bankErr, setBankErr] = useState('')
+  const [modal, setModal] = useState<null | 'withdraw' | 'send' | 'bank'>(null)
+
+  // Old links: /wallet?add=1 (menu Top up) now goes to Add money
   useEffect(() => {
-    if (params.get('add') !== '1') return
-    setModal('deposit')
-    params.delete('add'); setParams(params, { replace: true })
-  }, [params, setParams])
+    if (params.get('add') === '1') navigate('/deposit', { replace: true })
+    else if (params.get('withdraw') === '1') { setModal('withdraw'); params.delete('withdraw'); setParams(params, { replace: true }) }
+  }, [params, setParams, navigate])
 
   const load = useCallback(async () => {
-    try {
-      const [balData, txData] = await Promise.all([
-        apiRequest<any>('/wallet/balance').catch(() => null),
-        apiRequest<any>('/users/transactions/history?limit=100').catch(() => null),
-      ])
-      if (balData) setBalances(balData)
-      if (txData) setTransactions(Array.isArray(txData) ? txData : [])
-    } catch {}
-    setLoading(false)
+    const [b, s, h, bk] = await Promise.all([
+      apiRequest<Balances>('/wallet/balance').catch(() => null),
+      apiRequest<Summary>('/wallet/summary').catch(() => null),
+      apiRequest<Tx[]>(`/users/transactions/history?page=1&limit=${PAGE}`).catch(() => null),
+      apiRequest<Bank[]>('/wallet/banks').catch(() => null),
+    ])
+    setBalances(b || {})
+    setSummary(s || {})
+    setTxs(Array.isArray(h) ? h : [])
+    setMore(Array.isArray(h) && h.length === PAGE)
+    setPage(1)
+    setBanks(Array.isArray(bk) ? bk : [])
   }, [])
-
   useEffect(() => { load() }, [load])
 
-  const refreshAll = () => { load(); refreshUser() }
+  const refreshAll = () => { load(); refreshUser(); refreshHeader() }
 
-  const ngnBal = balances?.NGN?.balance ?? 0
-  const usdcBal = balances?.USDC?.balance ?? 0
-  const solBal = balances?.SOL?.balance ?? 0
-  const ngnAvailable = balances?.NGN?.available ?? 0
-
-  // No money moved on these
-  const isVoid = (t: any) => ['FAILED', 'CANCELLED', 'REJECTED'].includes(String(t.status).toUpperCase())
-
-  // Naira only: USDC/SOL amounts must not be added into a naira figure
-  const ngnTotal = (type: string) => transactions
-    .filter(t => txType(t) === type && (t.currency || 'NGN') === 'NGN' && !isVoid(t))
-    .reduce((sum, t) => sum + Math.abs(Number(t.amount || 0)), 0)
-  const totalDeposits = ngnTotal('DEPOSIT')
-  const totalWithdrawn = ngnTotal('WITHDRAWAL')
-
-  const formatCurrency = (n: number) => {
-    if (n >= 1000) return 'NGN ' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-    return 'NGN ' + n.toFixed(2)
+  async function loadMore() {
+    setLoadingMore(true)
+    try {
+      const next = await apiRequest<Tx[]>(`/users/transactions/history?page=${page + 1}&limit=${PAGE}`)
+      const rows = Array.isArray(next) ? next : []
+      setTxs((l) => [...(l || []), ...rows.filter((r) => !(l || []).some((x) => x.id === r.id))])
+      setPage((p) => p + 1)
+      setMore(rows.length === PAGE)
+    } catch { /* keep the button */ }
+    setLoadingMore(false)
   }
 
-  const formatDate = (d: string) => {
-    const diff = Date.now() - new Date(d).getTime()
-    const mins = Math.floor(diff / 60000)
-    if (mins < 1) return 'Just now'
-    if (mins < 60) return mins + 'm ago'
-    const hrs = Math.floor(mins / 60)
-    if (hrs < 24) return hrs + 'h ago'
-    const days = Math.floor(hrs / 24)
-    if (days < 7) return days + 'd ago'
-    return new Date(d).toLocaleDateString()
+  async function bankAction(id: string, action: 'default' | 'remove') {
+    setBankMenu(null); setBankErr('')
+    try {
+      if (action === 'default') await apiRequest(`/wallet/banks/${id}/default`, { method: 'PUT' })
+      else await apiRequest(`/wallet/banks/${id}`, { method: 'DELETE' })
+      setBanks(await apiRequest<Bank[]>('/wallet/banks'))
+    } catch (e: any) { setBankErr(e?.message || "That didn't work. Try again.") }
   }
 
-  // Amounts are stored positive; the direction comes from the balance change,
-  // then the P2P metadata, then the type
-  const isCredit = (t: any) => {
-    const before = t.balanceBefore ?? t.balance_before
-    const after = t.balanceAfter ?? t.balance_after
-    if (before != null && after != null) {
-      const delta = Number(after) - Number(before)
-      if (delta !== 0) return delta > 0
-    }
-    const dir = t.metadata?.direction
-    if (dir === 'credit' || dir === 'debit') return dir === 'credit'
-    return !DEBIT_TYPES.includes(txType(t))
-  }
-
-  const displayType = (t: any) => {
-    if (txType(t) === 'TRANSFER' && t.metadata?.p2p) {
-      const who = t.metadata?.counterparty ? ' @' + t.metadata.counterparty : ''
-      return isCredit(t) ? 'Received' : 'Sent' + (who ? ' to' + who : '')
-    }
-    const type = txType(t).replace(/_/g, ' ')
-    return type.charAt(0) + type.slice(1).toLowerCase()
-  }
-
-  const displayAmount = (t: any) => {
-    const amt = Math.abs(Number(t.amount || 0))
-    const cur = t.currency || 'NGN'
-    return (isVoid(t) ? '' : isCredit(t) ? '+' : '-') + cur + ' ' + amt.toLocaleString('en-US', { minimumFractionDigits: 2 })
-  }
-
-  const statusColor = (s: string) => {
-    const st = (s || '').toLowerCase()
-    if (st === 'completed' || st === 'approved' || st === 'success') return 'var(--green)'
-    if (st === 'pending' || st === 'processing') return 'var(--gold)'
-    if (st === 'failed' || st === 'rejected') return 'var(--red)'
-    return 'var(--text2)'
-  }
-
-  const tab = TX_TABS.find(x => x.key === activeTab) || TX_TABS[0]
-  const filtered = tab.types.length === 0
-    ? transactions
-    : transactions.filter(t => tab.types.includes(txType(t)) && (tab.key !== 'earning' || isCredit(t)))
+  const ngn = balances?.NGN
+  const available = Number(ngn?.available ?? 0)
+  const sumNgn = summary?.NGN
+  // Bank withdrawals waiting to be paid are held too: show them once, as "on its way"
+  const onItsWay = Number(sumNgn?.withdrawing ?? 0)
+  const onHold = Math.max(0, Number(ngn?.lockedBalance ?? 0) - onItsWay)
+  const coins = (['USDC', 'USDT', 'SOL'] as const).filter((c) => Number(balances?.[c]?.balance ?? 0) > 0)
+  const { tier, verified } = kycOf(user)
+  const shown = (txs || []).filter(FILTERS.find((f) => f.key === filter)!.test)
+  const loading = balances === null
 
   return (
     <Layout>
-      <style>{`
-        .wl-hero{background:linear-gradient(135deg,rgba(var(--accent-rgb),.1),var(--card));border:1px solid var(--border);border-radius:14px;padding:28px 32px;margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px}
-        .wl-hero .wlh-label{color:var(--text2);font-size:13px;font-weight:600;margin-bottom:4px}
-        .wl-hero .wlh-bal{font-family:Geist;font-size:36px;font-weight:900;color:var(--text);letter-spacing:-.04em;background-clip:text}
-        .wl-hero .wlh-sub{color:var(--text2);font-size:14px}
-        .wl-actions{display:flex;gap:8px;flex-wrap:wrap}
-        .wla-btn{height:40px;padding:0 20px;border-radius:10px;font-weight:700;font-size:13px;display:inline-flex;align-items:center;gap:6px;cursor:pointer;transition:all .2s;text-decoration:none;font-family:inherit}
-        .wla-btn.primary{background:var(--accent);color:var(--on-accent);border:0}
-        .wla-btn.primary:hover{box-shadow:0 4px 20px rgba(var(--accent-rgb),.3)}
-        .wla-btn.outline{border:1px solid var(--border);background:transparent;color:var(--text2)}
-        .wla-btn.outline:hover{border-color:var(--accent);color:var(--accent)}
-        .wl-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
-        @media(max-width:900px){.wl-stats{grid-template-columns:repeat(2,1fr)}}
-        .wl-stat{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px;transition:all .25s}
-        .wl-stat:hover{transform:translateY(-2px);border-color:var(--accent)}
-        .wl-stat .wsi{width:36px;height:36px;border-radius:8px;display:grid;place-items:center;margin-bottom:8px}
-        .wl-stat .wsn{font-family:Geist;font-size:24px;font-weight:900}
-        .wl-stat .wsl{color:var(--text2);font-size:13px;margin-top:2px}
-        .wl-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:24px}
-        @media(max-width:600px){.wl-grid{grid-template-columns:1fr}}
-        .wl-card{display:flex;flex-direction:column;align-items:center;gap:8px;padding:20px;background:var(--card);border:1px solid var(--border);border-radius:14px;text-align:center;cursor:pointer;transition:all .25s;text-decoration:none;font-family:inherit;width:100%}
-        .wl-card:hover{transform:translateY(-3px);border-color:var(--accent);box-shadow:0 0 30px rgba(var(--accent-rgb),.08)}
-        .wl-card i{font-size:28px}
-        .wl-card .wlc-label{font-weight:700;font-size:14px;color:var(--text)}
-        .wl-card .wlc-desc{color:var(--text2);font-size:12px}
-        .wl-tabs{display:flex;gap:4px;margin-bottom:16px;flex-wrap:wrap}
-        .wl-tab{padding:8px 16px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;transition:all .2s}
-        .wl-tab.active,.wl-tab:hover{border-color:var(--accent);color:var(--accent);background:rgba(var(--accent-rgb),.08)}
-        .wl-table{width:100%;border-collapse:collapse;font-size:13px}
-        .wl-table th{text-align:left;padding:10px 12px;color:var(--text3);font-size:11px;font-weight:600;border-bottom:1px solid var(--border)}
-        .wl-table td{padding:12px;border-bottom:1px solid var(--border);color:var(--text2)}
-        .wl-table td strong{color:var(--text);font-weight:600}
-        .wl-table .amt{font-weight:700}
-        .wl-table .amt.plus{color:var(--green)}
-        .wl-table .amt.minus{color:var(--red)}
-        .wl-table .amt.void{color:var(--text3);text-decoration:line-through;font-weight:600}
-        .sec-title{font-family:Geist;font-size:18px;font-weight:800;margin:0 0 14px;display:flex;align-items:center;gap:8px}
-        .sec-title i{font-size:20px;color:var(--accent)}
-        .wl-empty{text-align:center;padding:48px;color:var(--text2);font-size:14px}
-        .wl-loading{text-align:center;padding:48px;color:var(--text3);display:flex;align-items:center;justify-content:center;gap:8px}
-        .wl-wrap{max-width:1100px;margin:0 auto;padding:28px 24px 60px}
-        @media(max-width:600px){
-          .wl-wrap{padding:16px 16px 40px}
-          .wl-hero{padding:20px;margin-bottom:16px}
-          .wl-hero .wlh-bal{font-size:28px}
-          .wl-actions{width:100%}
-          .wla-btn{flex:1;justify-content:center;padding:0 10px}
-          .wl-stats{gap:10px;margin-bottom:16px}
-          .wl-stat{padding:14px}
-          .wl-stat .wsn{font-size:17px}
-          .wl-table{font-size:12px}
-          .wl-table th,.wl-table td{padding:10px 8px}
-        }
-      `}</style>
-
-      <div className="wl-wrap">
-      <div className="wl-hero">
-        <div>
-          <div className="wlh-label">Wallet Balance</div>
-          <div className="wlh-bal">{formatCurrency(ngnAvailable)}</div>
-          <div className="wlh-sub">${usdcBal.toFixed(2)} USDC &middot; {solBal.toFixed(3)} SOL</div>
-        </div>
-        <div className="wl-actions">
-          <button type="button" className="wla-btn primary" onClick={() => setModal('deposit')}><i className="ti ti-plus" /> Deposit</button>
-          <button type="button" className="wla-btn outline" onClick={() => setModal('withdraw')}><i className="ti ti-logout" /> Withdraw</button>
-          <button type="button" className="wla-btn outline" onClick={() => setModal('transfer')}><i className="ti ti-transfer" /> Transfer</button>
-        </div>
-      </div>
-
-      <div className="wl-stats">
-        {[
-          { icon: 'ti ti-wallet', color: '#52525b', num: formatCurrency(ngnBal), label: 'Balance' },
-          { icon: 'ti ti-coin', color: '#16a34a', num: `$${usdcBal.toFixed(2)} USDC`, label: 'Crypto' },
-          { icon: 'ti ti-trending-up', color: '#52525b', num: formatCurrency(totalDeposits), label: 'Total Deposits' },
-          { icon: 'ti ti-trending-down', color: '#f5b301', num: formatCurrency(totalWithdrawn), label: 'Total Withdrawn' },
-        ].map((s, i) => (
-          <div className="wl-stat" key={i}>
-            <div className="wsi" style={{ background: `${s.color}15`, color: s.color }}><i className={s.icon} /></div>
-            <div className="wsn">{loading ? '...' : s.num}</div>
-            <div className="wsl">{s.label}</div>
+      <div className="ui-page">
+        <div className="ui-head">
+          <div>
+            <span className="ui-eyebrow"><i className="ti ti-wallet" /> Wallet</span>
+            <h1 className="ui-title">Your money</h1>
           </div>
-        ))}
-      </div>
-
-      <div className="wl-grid">
-        {[
-          { icon: 'ti ti-circle-plus', color: '#52525b', label: 'Deposit', desc: 'Add funds to your wallet', to: 'deposit' as const },
-          { icon: 'ti ti-logout', color: '#52525b', label: 'Withdraw', desc: 'Withdraw to bank or crypto', to: 'withdraw' as const },
-          { icon: 'ti ti-transfer', color: '#16a34a', label: 'Transfer', desc: 'Send to another user', to: 'transfer' as const },
-        ].map((c, i) => (
-          <button type="button" className="wl-card" key={i} onClick={() => setModal(c.to)}>
-            <i className={c.icon} style={{ color: c.color }} />
-            <div className="wlc-label">{c.label}</div>
-            <div className="wlc-desc">{c.desc}</div>
-          </button>
-        ))}
-      </div>
-
-      <div className="sec-title"><i className="ti ti-history" /> Transaction History</div>
-      <div className="wl-tabs">
-        {TX_TABS.map(t => (
-          <button key={t.key} className={`wl-tab ${activeTab === t.key ? 'active' : ''}`} onClick={() => setActiveTab(t.key)}>
-            {t.label}
-          </button>
-        ))}
-      </div>
-
-      {loading ? (
-        <div className="wl-loading"><span className="spinner" /> Loading transactions...</div>
-      ) : filtered.length === 0 ? (
-        <div className="wl-empty"><i className="ti ti-history" style={{ fontSize: 32, marginBottom: 8, display: 'block', color: 'var(--text3)' }} />No transactions found</div>
-      ) : (
-        <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 14, overflow: 'hidden' }}>
-          <table className="wl-table">
-            <thead><tr><th>Date</th><th>Type</th><th>Amount</th><th>Status</th></tr></thead>
-            <tbody>
-              {filtered.map((t, i) => (
-                <tr key={t.id || i}>
-                  <td><strong>{formatDate(t.createdAt || t.date)}</strong></td>
-                  <td>{displayType(t)}</td>
-                  <td className={`amt ${isVoid(t) ? 'void' : isCredit(t) ? 'plus' : 'minus'}`}>{displayAmount(t)}</td>
-                  <td style={{ color: statusColor(t.status), fontWeight: 600 }}>{String(t.status || 'Pending').toLowerCase().replace(/_/g, ' ').replace(/^\w/, (c: string) => c.toUpperCase())}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
         </div>
-      )}
+
+        <div className="wl-grid">
+          <div className="wl-main">
+            <section className="ui-card wl-bal" aria-label="Balance">
+              <div className="wl-bal-top">
+                <div>
+                  <div className="wl-bal-label">Available</div>
+                  {loading ? <div className="ui-sk" style={{ height: 46, width: 220, marginTop: 8, borderRadius: 12 }} /> : (
+                    <div className="wl-bal-num">{naira(available).split('.')[0]}<small>.{naira(available).split('.')[1]}</small></div>
+                  )}
+                  {(onHold > 0 || onItsWay > 0) && (
+                    <div className="wl-bal-notes">
+                      {onHold > 0 && <span><i className="ti ti-lock" /> {naira(onHold)} held for your jobs</span>}
+                      {onItsWay > 0 && <span><i className="ti ti-clock" /> {naira(onItsWay)} on its way to your bank</span>}
+                    </div>
+                  )}
+                </div>
+                <div className="wl-bal-actions">
+                  <Link className="ui-btn ui-btn-dark" to="/deposit"><i className="ti ti-plus" /> Add money</Link>
+                  <button type="button" className="ui-btn ui-btn-ghost" onClick={() => setModal('withdraw')}><i className="ti ti-arrow-up-right" /> Withdraw</button>
+                  <button type="button" className="ui-btn ui-btn-ghost" onClick={() => setModal('send')}><i className="ti ti-send" /> Send</button>
+                </div>
+              </div>
+              {coins.length > 0 && (
+                <div className="wl-coins">
+                  {coins.map((c) => (
+                    <span className="wl-coin" key={c}>
+                      <span className="wl-coin-dot" style={{ background: c === 'SOL' ? '#7c3aed' : c === 'USDT' ? '#16a34a' : '#2775ca' }}>{c === 'SOL' ? '◎' : '$'}</span>
+                      <b>{money(Number(balances?.[c]?.available ?? 0), c)}</b>
+                    </span>
+                  ))}
+                </div>
+              )}
+            </section>
+
+            <div className="wl-stats">
+              <div className="wl-stat"><span>Added</span><b>{summary ? naira(sumNgn?.deposited ?? 0, 0) : '…'}</b></div>
+              <div className="wl-stat"><span>Earned</span><b>{summary ? naira(sumNgn?.earned ?? 0, 0) : '…'}</b></div>
+              <div className="wl-stat"><span>Withdrawn</span><b>{summary ? naira(sumNgn?.withdrawn ?? 0, 0) : '…'}</b></div>
+            </div>
+
+            <section className="ui-card wl-sec" aria-labelledby="wl-history">
+              <div className="wl-sec-head"><h2 id="wl-history">History</h2></div>
+              <div className="wl-chips" role="group" aria-label="Filter history">
+                {FILTERS.map((f) => (
+                  <button key={f.key} type="button" className={`ui-chip${filter === f.key ? ' on' : ''}`} aria-pressed={filter === f.key} onClick={() => setFilter(f.key)}>{f.label}</button>
+                ))}
+              </div>
+              {txs === null ? (
+                <div style={{ display: 'grid', gap: 10, marginTop: 8 }}>{[0, 1, 2, 3].map((i) => <div key={i} className="ui-sk" style={{ height: 52, borderRadius: 12 }} />)}</div>
+              ) : shown.length === 0 ? (
+                <div className="wl-empty" style={{ marginTop: 8 }}>
+                  {txs.length === 0 ? <><b>No transactions yet</b>Money you add, earn, send or withdraw shows up here.</> : <>Nothing here{more ? ' yet. Load more to look further back.' : '.'}</>}
+                </div>
+              ) : (
+                <ul className="wl-txs">
+                  {shown.map((t) => {
+                    const cr = isCredit(t), v = isVoid(t), p = isPending(t), held = isEscrowHeld(t)
+                    const detail = txDetail(t)
+                    const amt = Math.abs(Number(t.amount || 0))
+                    return (
+                      <li className="wl-tx" key={t.id}>
+                        <button type="button" className="wl-tx-row" aria-expanded={open === t.id} onClick={() => setOpen(open === t.id ? null : t.id)}>
+                          <span className={`wl-tx-ic${v ? ' void' : cr ? ' in' : ''}`}><i className={`ti ${v ? 'ti-x' : cr ? 'ti-arrow-down-left' : 'ti-arrow-up-right'}`} /></span>
+                          <span className="wl-tx-main">
+                            <strong>{txTitle(t)}</strong>
+                            <span>{when(t.createdAt)}{detail ? ` · ${detail}` : ''}</span>
+                          </span>
+                          <span className="wl-tx-amt">
+                            <b className={v ? 'void' : cr ? 'in' : ''}>{v ? '' : cr ? '+' : '−'}{money(amt, t.currency)}</b>
+                            {(p || v || held) && <span className={`wl-pill ${v ? 'bad' : held ? 'hold' : 'wait'}`}>{held ? 'In escrow' : statusLabel(t.status)}</span>}
+                          </span>
+                        </button>
+                        {open === t.id && (
+                          <div className="wl-tx-more">
+                            <div><span>Status</span><b>{held ? 'Held in escrow for your job' : statusLabel(t.status)}</b></div>
+                            <div><span>Date</span><b>{new Date(t.createdAt).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' })}</b></div>
+                            {Number(t.fee || 0) > 0 && <div><span>Fee</span><b>{money(Number(t.fee), t.currency)}</b></div>}
+                            {usefulNote(t) && <div><span>Note</span><b>{usefulNote(t)}</b></div>}
+                            <div><span>Reference</span><code>{t.reference}</code></div>
+                          </div>
+                        )}
+                      </li>
+                    )
+                  })}
+                </ul>
+              )}
+              {more && txs && (
+                <div className="wl-more"><button type="button" className="ui-btn ui-btn-ghost" disabled={loadingMore} onClick={loadMore}>{loadingMore ? 'Loading…' : 'Load more'}</button></div>
+              )}
+            </section>
+          </div>
+
+          <aside className="wl-side">
+            <section className="ui-card wl-sec" aria-labelledby="wl-banks">
+              <div className="wl-sec-head">
+                <h2 id="wl-banks">Bank accounts</h2>
+                {verified && banks && banks.length > 0 && <button type="button" className="wl-link" onClick={() => setModal('bank')}><i className="ti ti-plus" /> Add</button>}
+              </div>
+              {!verified ? (
+                <p className="wl-note" style={{ margin: 0 }}>Verify your identity to add a bank account and withdraw. <Link to="/settings/verification">Verify now</Link></p>
+              ) : banks === null ? <div className="ui-sk" style={{ height: 62, borderRadius: 14 }} /> : banks.length === 0 ? (
+                <>
+                  <p className="wl-note" style={{ margin: '0 0 12px' }}>Add the account you want withdrawals paid into.</p>
+                  <button type="button" className="wl-add wl-full" onClick={() => setModal('bank')}><i className="ti ti-plus" /> Add bank account</button>
+                </>
+              ) : (
+                <ul className="wl-banks">
+                  {banks.map((b) => (
+                    <li className="wl-bank" key={b.id}>
+                      <span className="wl-bank-ic"><i className="ti ti-building-bank" /></span>
+                      <span className="wl-bank-main">
+                        <strong>{b.accountName}</strong>
+                        <span>{b.bankName} {maskAcct(b.accountNumber)}</span>
+                        {b.isDefault && <em className="wl-def">Default</em>}
+                      </span>
+                      <span className="wl-bank-menu">
+                        <button type="button" className="wl-icon-btn" aria-label={`Options for ${b.bankName} ${maskAcct(b.accountNumber)}`} aria-expanded={bankMenu === b.id} onClick={() => setBankMenu(bankMenu === b.id ? null : b.id)}><i className="ti ti-dots" /></button>
+                        {bankMenu === b.id && (
+                          <div className="wl-pop" role="menu" onMouseLeave={() => setBankMenu(null)}>
+                            {!b.isDefault && <button type="button" role="menuitem" onClick={() => bankAction(b.id, 'default')}><i className="ti ti-star" /> Make default</button>}
+                            <button type="button" role="menuitem" className="danger" onClick={() => { if (window.confirm(`Remove ${b.bankName} ${maskAcct(b.accountNumber)}?`)) bankAction(b.id, 'remove'); else setBankMenu(null) }}><i className="ti ti-trash" /> Remove</button>
+                          </div>
+                        )}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {bankErr && <div className="wl-err" role="alert" style={{ marginTop: 12, marginBottom: 0 }}><i className="ti ti-alert-circle" /><span>{bankErr}</span></div>}
+            </section>
+
+            <section className="ui-card wl-sec" aria-labelledby="wl-limits">
+              <div className="wl-sec-head"><h2 id="wl-limits">Withdrawal limit</h2></div>
+              <div className="wl-limit">
+                <span className="wl-note">{verified ? `Level ${tier} verification` : 'Not verified yet'}</span>
+                <b>{naira(withdrawLimit(verified ? tier : 0), 0)}</b>
+              </div>
+              <p className="wl-note" style={{ margin: '8px 0 0' }}>
+                Per withdrawal. The minimum is ₦5,000 and the fee is 1.5% (at least ₦100).
+                {tier < 3 && <> <Link to="/settings/verification">{verified ? 'Raise your limit' : 'Verify to withdraw'}</Link></>}
+              </p>
+            </section>
+          </aside>
+        </div>
       </div>
 
-      {(modal === 'deposit' || modal === 'withdraw') && (
-        <FundWalletModal initialStep={modal} onClose={() => { setModal(null); load() }} onDone={refreshAll} />
-      )}
-      {modal === 'transfer' && (
-        <TransferModal onClose={() => setModal(null)} onSuccess={refreshAll} />
+      {modal === 'withdraw' && <WithdrawModal balances={balances} onClose={() => { setModal(null); load() }} onDone={refreshAll} />}
+      {modal === 'send' && <TransferModal onClose={() => setModal(null)} onSuccess={refreshAll} />}
+      {modal === 'bank' && (
+        <Sheet title="Add bank account" onClose={() => setModal(null)}>
+          <AddBankForm makeDefault={!banks?.length} onCancel={() => setModal(null)} onSaved={() => { setModal(null); apiRequest<Bank[]>('/wallet/banks').then(setBanks).catch(() => {}) }} />
+        </Sheet>
       )}
     </Layout>
   )

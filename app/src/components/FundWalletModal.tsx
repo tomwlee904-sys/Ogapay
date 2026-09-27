@@ -1,11 +1,9 @@
-﻿import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { apiRequest } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
-import { MIN_NGN_WITHDRAWAL, NGN_WITHDRAW_LIMITS } from '../lib/currency';
 import VirtualAccountCard from './VirtualAccountCard';
-import TwoFactorField, { is2FAError } from './TwoFactorField';
-import { Link } from 'react-router-dom';
-import { useFlutterwave, closePaymentModal } from 'flutterwave-react-v3';
+import { useNavigate, useLocation } from 'react-router-dom';
+import WithdrawModal from './wallet/WithdrawModal';
 import {
   PublicKey,
   Transaction,
@@ -38,7 +36,7 @@ const INPUT: React.CSSProperties = {
   outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box',
 };
 
-type Step = 'select' | 'estimate' | 'swap' | 'sign' | 'confirming' | 'done' | 'withdraw' | 'ngnOptions';
+type Step = 'select' | 'estimate' | 'swap' | 'sign' | 'confirming' | 'done';
 
 interface Props {
   onClose: () => void;
@@ -48,16 +46,24 @@ interface Props {
   initialTab?: 'crypto' | 'bank';
 }
 
-export default function FundWalletModal({ onClose, onDone, initialStep, initialTab }: Props) {
-  const { refreshUser, user } = useAuth();
-  const [step, setStep] = useState<Step>(initialStep === 'withdraw' ? 'withdraw' : 'select');
+// Withdrawals use the wallet's Withdraw dialog (saved, verified bank accounts);
+// card / USSD payments use the Add money page, which confirms the payment itself.
+export default function FundWalletModal(props: Props) {
+  return props.initialStep === 'withdraw'
+    ? <WithdrawModal onClose={props.onClose} onDone={props.onDone} />
+    : <DepositModal {...props} />;
+}
+
+function DepositModal({ onClose, onDone, initialTab }: Props) {
+  const { refreshUser } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [step, setStep] = useState<Step>('select');
   const [error, setError] = useState('');
   const [msg, setMsg] = useState('');
 
   // ── Entry form state ──
   const [walletAddr, setWalletAddr] = useState('');
-  const [ngnAccount, setNgnAccount] = useState('');
-  const [ngnBank, setNgnBank] = useState('');
 
   // ── Crypto deposit state ──
   const [amountUsdc, setAmountUsdc] = useState('');
@@ -70,25 +76,8 @@ export default function FundWalletModal({ onClose, onDone, initialStep, initialT
   // ── Result ──
   const [result, setResult] = useState<any>(null);
 
-  // ── Withdraw state ──
-  const [wdAmount, setWdAmount] = useState('');
-  const [wdCurrency, setWdCurrency] = useState<'USDC' | 'SOL'>('USDC');
-  const [wdAddress, setWdAddress] = useState('');
-  // With 2FA on, withdrawals need a code from the authenticator app
-  const [otp, setOtp] = useState('');
-  const [otpAsked, setOtpAsked] = useState(false);
-  const needOtp = !!(user as any)?.isTwoFactorEnabled || otpAsked;
-  const [wdSubmitting, setWdSubmitting] = useState(false);
-  const [wdTab, setWdTab] = useState<'crypto' | 'bank'>('crypto');
-  const [wdBankAccount, setWdBankAccount] = useState('');
-  const [wdBankName, setWdBankName] = useState('');
-  const [wdAccountName, setWdAccountName] = useState('');
-
   // ── NGN deposit state ──
   const [ngnAmount, setNgnAmount] = useState('');
-  const [ngnProvider, setNgnProvider] = useState<'PAYSTACK' | 'FLUTTERWAVE' | ''>('');
-  const [ngnSubmitting, setNgnSubmitting] = useState(false);
-  const [fwTxRef, setFwTxRef] = useState('');
 
   const pollTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
@@ -191,208 +180,13 @@ export default function FundWalletModal({ onClose, onDone, initialStep, initialT
   }
 
 
-  // ── Flutterwave inline checkout config ──
-  const fwConfig = {
-    public_key: import.meta.env.VITE_FLUTTERWAVE_PUBLIC_KEY || "",
-    tx_ref: fwTxRef,
-    amount: parseFloat(ngnAmount) || 0,
-    currency: 'NGN' as const,
-    payment_options: 'card,ussd,mobilemoney,banktransfer' as const,
-    customer: {
-      email: user?.email || "",
-      phone_number: (user as any)?.phone || '',
-      name: `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || user?.email || '',
-    },
-    customizations: {
-      title: 'Fund OgaPay Wallet',
-      description: `Deposit ₦${parseFloat(ngnAmount || '0').toLocaleString('en-US', {maximumFractionDigits:0})} into your wallet`,
-      logo: 'https://ogapay.io/logo.png',
-    },
-  }
-
-  const handleFlutterPayment = useFlutterwave(fwConfig)
-
-  // When fwTxRef is set, open Flutterwave inline checkout
-  const [fwOpened, setFwOpened] = useState(false)
-  // Cleanup polling on unmount
-  useEffect(() => {
-    return () => {
-      if (pollTimerRef.current) { clearInterval(pollTimerRef.current); pollTimerRef.current = null }
-    }
-  }, [])
-
-  useEffect(() => {
-    if (fwTxRef && !fwOpened) {
-      setFwOpened(true)
-      handleFlutterPayment({
-        callback: (response) => {
-          closePaymentModal()
-          setStep("confirming")
-
-          // Poll wallet balance every 1.5s for up to ~20s to detect webhook credit
-          const depositAmount = parseFloat(ngnAmount) || 0
-          const POLL_INTERVAL = 1500
-          const POLL_LIMIT = 14
-          let pollCount = 0
-
-          pollTimerRef.current = setInterval(async () => {
-            pollCount++
-            if (pollCount > POLL_LIMIT) {
-              if (pollTimerRef.current) { clearInterval(pollTimerRef.current); pollTimerRef.current = null }
-              setStep("confirming")
-              setError("Payment is taking longer than expected to confirm. Your money is safe — check your wallet balance in a moment, then try again.")
-              setNgnSubmitting(false)
-              return
-            }
-
-            try {
-              const txData = await apiRequest<any>('/wallet/balance')
-              const newBalance = txData?.NGN?.balance || 0
-              // Get pre-payment balance by subtracting the deposit amount
-              // from current balance after each poll
-              if (newBalance >= depositAmount) {
-                if (pollTimerRef.current) { clearInterval(pollTimerRef.current); pollTimerRef.current = null }
-                refreshUser()
-                setFwTxRef("")
-                setFwOpened(false)
-                setResult({ reference: fwTxRef })
-                setStep("done")
-                onDone?.()
-              }
-            } catch {
-              // Network error — keep polling
-            }
-          }, POLL_INTERVAL)
-        },
-        onClose: () => {
-          if (pollTimerRef.current) { clearInterval(pollTimerRef.current); pollTimerRef.current = null }
-          setFwTxRef("")
-          setFwOpened(false)
-          setNgnSubmitting(false)
-          setError('Payment was cancelled.')
-        },
-      })
-    }
-  }, [fwTxRef])
-
-  // ─── NGN amount entered → show Paystack/Flutterwave ───
-  async function handleNgnDeposit() {
-    const amt = parseFloat(ngnAmount);
-    if (!amt || amt <= 0) { setError('Enter a valid amount'); return; }
-    if (!ngnProvider) { setError('Select a payment provider'); return; }
-    setError('');
-    setNgnSubmitting(true);
-
-    if (ngnProvider === "FLUTTERWAVE") {
-      // Inline Flutterwave checkout
-      try {
-        const data = await apiRequest<any>("/wallet/deposit", {
-          method: "POST",
-          body: JSON.stringify({
-            amount: amt,
-            currency: "NGN",
-            provider: "FLUTTERWAVE",
-          }),
-        });
-        const reference = data?.reference || data?.data?.reference || "";
-        if (!reference) throw new Error("No reference returned");
-        setFwTxRef(reference);
-        setFwOpened(false);
-      } catch (e: any) {
-        setError(e.message || "Deposit initiation failed");
-        setNgnSubmitting(false);
-      }
-    } else {
-      // Paystack: existing redirect flow
-      try {
-        const data = await apiRequest<any>("/wallet/deposit", {
-          method: "POST",
-          body: JSON.stringify({
-            amount: amt,
-            currency: "NGN",
-            provider: ngnProvider,
-            callbackUrl: window.location.origin + '/wallet',
-          }),
-        });
-        if (data.paymentUrl) {
-          window.location.href = data.paymentUrl;
-        } else {
-          setResult({ reference: data.reference });
-          setStep("done");
-          refreshUser();
-          onDone?.();
-        }
-      } catch (e: any) {
-        setError(e.message || "Deposit initiation failed");
-      }
-      setNgnSubmitting(false);
-    }
-  }
-
-  // ─── Withdraw crypto ───
-  async function handleWithdraw() {
-    const amt = parseFloat(wdAmount);
-    if (!amt || amt <= 0) { setError('Enter a valid amount'); return; }
-    if (!wdAddress) { setError('Enter a destination wallet address'); return; }
-    if (needOtp && otp.length !== 6) { setError('Enter the 6-digit code from your authenticator app'); return; }
-    setError('');
-    setWdSubmitting(true);
-    try {
-      const withdrawKey = crypto.randomUUID?.() || Math.random().toString(36).slice(2)
-      const res = await apiRequest('/wallet/withdraw/crypto', {
-        method: 'POST',
-        headers: { 'Idempotency-Key': withdrawKey },
-        body: JSON.stringify({ amount: amt, currency: wdCurrency, toAddress: wdAddress, ...(otp && { otp }) }),
-      });
-      setResult(res);
-      setStep('done');
-      refreshUser();
-      onDone?.();
-    } catch (e: any) {
-      if (is2FAError(e?.message)) { setOtpAsked(true); setOtp(''); }
-      setError(e.message || 'Withdrawal failed');
-    }
-    setWdSubmitting(false);
-  }
-
-  // ─── Withdraw NGN to bank ───
-  async function handleNgnWithdraw() {
-    const amt = parseFloat(wdAmount);
-    if (!amt || amt <= 0) { setError('Enter a valid amount'); return; }
-    if (amt < MIN_NGN_WITHDRAWAL) { setError(`Minimum withdrawal is ₦${MIN_NGN_WITHDRAWAL.toLocaleString()}`); return; }
-    if (!wdBankAccount || wdBankAccount.length < 10) { setError('Enter a valid 10-digit account number'); return; }
-    if (!wdBankName.trim()) { setError('Enter your bank name'); return; }
-    if (!wdAccountName.trim()) { setError('Enter the account name'); return; }
-    if (needOtp && otp.length !== 6) { setError('Enter the 6-digit code from your authenticator app'); return; }
-    const kycTier = (user as any)?.kyc?.kycTier ?? 0
-    const maxLimit = kycTier >= 3 ? NGN_WITHDRAW_LIMITS.TIER_3 : kycTier >= 2 ? NGN_WITHDRAW_LIMITS.TIER_2 : kycTier >= 1 ? NGN_WITHDRAW_LIMITS.TIER_1 : NGN_WITHDRAW_LIMITS.TIER_0
-    if (amt > maxLimit) {
-      const label = kycTier >= 3 ? 'Level 3 (Address + Docs)' : kycTier >= 2 ? 'Level 2 (BVN)' : kycTier >= 1 ? 'Level 1 (NIN)' : 'no KYC'
-      setError(`Withdrawal limit exceeded. Maximum ₦${maxLimit.toLocaleString()} with ${label}. Complete KYC to increase your limit.`)
-      return
-    }
-    setError('');
-    setWdSubmitting(true);
-    try {
-      const withdrawKey = crypto.randomUUID?.() || Math.random().toString(36).slice(2)
-      const res = await apiRequest('/wallet/withdraw', {
-        method: 'POST',
-        headers: { 'Idempotency-Key': withdrawKey },
-        body: JSON.stringify({ amount: amt, currency: 'NGN', accountNumber: wdBankAccount, bankName: wdBankName, accountName: wdAccountName, ...(otp && { otp }) }),
-      });
-      setResult(res);
-      setStep('done');
-      refreshUser();
-      onDone?.();
-    } catch (e: any) {
-      const msg = e?.message || ''
-      if (is2FAError(msg)) { setOtpAsked(true); setOtp(''); setError(msg) }
-      else if (msg.includes('insufficient')) setError('Insufficient NGN balance. Deposit more funds and try again.')
-      else if (msg.includes('limit') || msg.includes('tier')) setError('Withdrawal exceeds your KYC limit. Complete higher KYC tier to increase your limit.')
-      else if (msg.includes('bank') || msg.includes('account')) setError('Bank details rejected. Verify your account number, bank name, and account name.')
-      else setError(msg || 'Withdrawal failed. Please try again or contact support.')
-    }
-    setWdSubmitting(false);
+  // Card, USSD or bank app: the Add money page takes it from here and brings
+  // people back to where they were
+  function payByCard() {
+    const amt = Math.ceil(parseFloat(ngnAmount) || 0);
+    if (amt < 100) { setError('Minimum deposit is ₦100'); return; }
+    onClose();
+    navigate(`/deposit?method=card&amount=${amt}&back=${encodeURIComponent(location.pathname + location.search)}`);
   }
 
   // ─── Render helpers ───
@@ -484,19 +278,15 @@ export default function FundWalletModal({ onClose, onDone, initialStep, initialT
           ) : (
             <>
               <p style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.6, marginBottom: 16 }}>
-                Deposit Naira using your dedicated virtual account or via card/bank transfer.
+                Transfer to your own account number below, or pay by card, USSD or bank app.
               </p>
               <VirtualAccountCard />
               <div style={{ marginBottom: 20 }}>
                 <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--text3)', marginBottom: 4 }}>Amount (NGN)</label>
                 <input style={INPUT} type="number" step="100" min="100" placeholder="1000" value={ngnAmount} onChange={e => { setNgnAmount(e.target.value); setError(''); }} />
               </div>
-              <button style={{ ...BTN, background: 'var(--accent)', color: 'var(--on-accent)', width: '100%', justifyContent: 'center' }}
-                onClick={() => {
-                  if (!parseFloat(ngnAmount) || parseFloat(ngnAmount) < 100) { setError('Minimum deposit is ₦100'); return; }
-                  setStep('ngnOptions');
-                }}>
-                Continue to Payment
+              <button style={{ ...BTN, background: 'var(--accent)', color: 'var(--on-accent)', width: '100%', justifyContent: 'center' }} onClick={payByCard}>
+                Pay by card, USSD or bank app
               </button>
             </>
           )}
@@ -579,49 +369,6 @@ export default function FundWalletModal({ onClose, onDone, initialStep, initialT
   }
 
   // ═══════════════════════════════════════════════════
-  //  STEP: ngnOptions — Pick Paystack or Flutterwave
-  // ═══════════════════════════════════════════════════
-  if (step === 'ngnOptions') {
-    return (
-      <div style={MODAL_STYLE} onClick={handleSafeClose}>
-        <div style={INNER_STYLE} onClick={e => e.stopPropagation()}>
-          {renderHeader('Deposit via Bank')}
-          {renderError()}
-          <p style={{ fontSize: 13, color: 'var(--text2)', marginBottom: 12 }}>
-            Fund your NGN wallet using your preferred payment provider.
-          </p>
-          <div style={{ marginBottom: 16 }}>
-            <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--text3)', marginBottom: 4 }}>Amount (NGN)</label>
-            <input style={INPUT} type="number" step="100" min="100" placeholder="1000" value={ngnAmount} onChange={e => setNgnAmount(e.target.value)} />
-          </div>
-          <div style={{ marginBottom: 16 }}>
-            <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--text3)', marginBottom: 8 }}>Payment Provider</label>
-            <div style={{ display: 'flex', gap: 10 }}>
-              {[
-                { id: 'PAYSTACK' as const, label: 'Paystack', icon: 'ti ti-building-bank', desc: 'Bank transfer, card, USSD' },
-                { id: 'FLUTTERWAVE' as const, label: 'Flutterwave', icon: 'ti ti-wand', desc: 'Bank transfer, card, mobile money' },
-              ].map(p => (
-                <button key={p.id} onClick={() => setNgnProvider(p.id)}
-                  style={{ ...BTN, flex: 1, flexDirection: 'column', height: 'auto', padding: '14px 12px', gap: 6, background: ngnProvider === p.id ? 'var(--text)' : 'transparent', color: ngnProvider === p.id ? 'var(--bg)' : 'var(--text2)', border: ngnProvider === p.id ? 'none' : '1.5px solid var(--border)' }}>
-                  <i className={p.icon} style={{ fontSize: 22 }} />
-                  <span style={{ fontSize: 12 }}>{p.label}</span>
-                  <span style={{ fontSize: 10, opacity: 0.7 }}>{p.desc}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <button style={{ ...BTN, background: 'transparent', border: '1.5px solid var(--border)', color: 'var(--text2)', flex: 1 }} onClick={() => setStep('select')}>Back</button>
-            <button style={{ ...BTN, background: 'var(--green)', color: '#fff', flex: 1, opacity: ngnSubmitting ? 0.6 : 1 }} disabled={ngnSubmitting} onClick={handleNgnDeposit}>
-              {ngnSubmitting ? <><span className="spinner" style={{ width: 14, height: 14, borderWidth: 2 }} /> Processing...</> : 'Deposit'}
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // ═══════════════════════════════════════════════════
   //  STEP: confirming
   // ═══════════════════════════════════════════════════
   if (step === 'confirming') {
@@ -645,14 +392,19 @@ export default function FundWalletModal({ onClose, onDone, initialStep, initialT
     return (
       <div style={MODAL_STYLE} onClick={handleSafeClose}>
         <div style={INNER_STYLE} onClick={e => e.stopPropagation()}>
-          {renderHeader('Success')}
+          {renderHeader(result?.status === 'PENDING' ? 'Confirming' : 'Success')}
           <div style={{ textAlign: 'center', padding: '20px 0' }}>
             <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'color-mix(in srgb, var(--green) 9%, transparent)', display: 'grid', placeItems: 'center', margin: '0 auto 16px' }}>
-              <i className="ti ti-circle-check" style={{ fontSize: 32, color: 'var(--green)' }} />
+              <i className={result?.status === 'PENDING' ? 'ti ti-clock' : 'ti ti-circle-check'} style={{ fontSize: 32, color: 'var(--green)' }} />
             </div>
             <h3 style={{ fontFamily: 'Geist', fontSize: 17, fontWeight: 800, margin: '0 0 8px' }}>
-              {result?.signature ? 'Deposit Complete' : 'Request Submitted'}
+              {result?.status === 'PENDING' ? 'Still confirming' : result?.signature ? 'Deposit Complete' : 'Request Submitted'}
             </h3>
+            {result?.status === 'PENDING' && (
+              <p style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.6, margin: '0 0 8px' }}>
+                Your payment was sent. It will show in your wallet once the Solana network confirms it.
+              </p>
+            )}
             {result?.signature && (
               <p style={{ fontSize: 12, color: 'var(--text2)', wordBreak: 'break-all', fontFamily: 'monospace', background: 'var(--bg2)', padding: '8px 12px', borderRadius: 8, margin: '12px 0' }}>
                 Tx: {result.signature.slice(0, 16)}...{result.signature.slice(-8)}
@@ -670,112 +422,5 @@ export default function FundWalletModal({ onClose, onDone, initialStep, initialT
     );
   }
 
-  // ═══════════════════════════════════════════════════
-  //  STEP: withdraw — Crypto & Bank (NGN)
-  // ═══════════════════════════════════════════════════
-  const wdTabStyle = (active: boolean): React.CSSProperties => ({
-    ...BTN, flex: 1, justifyContent: 'center', borderRadius: 9,
-    background: active ? 'var(--text)' : 'transparent',
-    color: active ? 'var(--bg)' : 'var(--text2)',
-    border: active ? 'none' : '1.5px solid var(--border)',
-  });
-  return (
-    <div style={MODAL_STYLE} onClick={handleSafeClose}>
-      <div style={INNER_STYLE} onClick={e => e.stopPropagation()}>
-        {renderHeader('Withdraw Funds')}
-        {renderError()}
-        <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
-          <button style={wdTabStyle(wdTab === 'crypto')} onClick={() => setWdTab('crypto')}>
-            <i className="ti ti-currency-dollar" /> Crypto (USDC/SOL)
-          </button>
-          <button style={wdTabStyle(wdTab === 'bank')} onClick={() => setWdTab('bank')}>
-            <i className="ti ti-building-bank" /> Bank (NGN)
-          </button>
-        </div>
-        {wdTab === 'crypto' ? (
-          <>
-            <p style={{ fontSize: 13, color: 'var(--text2)', marginBottom: 16 }}>Withdraw USDC or SOL to an external wallet.</p>
-            <div style={{ marginBottom: 16 }}>
-              <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--text3)', marginBottom: 4 }}>Currency</label>
-              <div style={{ display: 'flex', gap: 8 }}>
-                {['USDC', 'SOL'].map(c => (
-                  <button key={c} onClick={() => setWdCurrency(c as any)}
-                    style={{ ...BTN, flex: 1, background: wdCurrency === c ? 'var(--text)' : 'transparent', color: wdCurrency === c ? 'var(--bg)' : 'var(--text2)', border: wdCurrency === c ? 'none' : '1.5px solid var(--border)', justifyContent: 'center' }}>
-                    {c}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div style={{ marginBottom: 16 }}>
-              <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--text3)', marginBottom: 4 }}>Amount</label>
-              <input style={INPUT} type="number" step="0.01" min="0" placeholder="10.00" value={wdAmount} onChange={e => setWdAmount(e.target.value)} />
-            </div>
-            <div style={{ marginBottom: 16 }}>
-              <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--text3)', marginBottom: 4 }}>Destination Wallet Address</label>
-              <input style={INPUT} placeholder="Enter Solana wallet address" value={wdAddress} onChange={e => setWdAddress(e.target.value)} />
-            </div>
-            {needOtp && <TwoFactorField value={otp} onChange={setOtp} />}
-            <div style={{ display: 'flex', gap: 8 }}>
-              <button style={{ ...BTN, background: 'transparent', border: '1.5px solid var(--border)', color: 'var(--text2)', flex: 1 }} onClick={() => setStep('select')}>Back</button>
-              <button style={{ ...BTN, background: '#DC2626', color: '#fff', flex: 1, opacity: wdSubmitting ? 0.6 : 1 }} disabled={wdSubmitting} onClick={handleWithdraw}>
-                {wdSubmitting ? <><span className="spinner" style={{ width: 14, height: 14, borderWidth: 2 }} /> Sending...</> : 'Withdraw'}
-              </button>
-            </div>
-          </>
-        ) : (
-          <>
-            <p style={{ fontSize: 13, color: 'var(--text2)', marginBottom: 16 }}>Withdraw NGN to your Nigerian bank account. Minimum withdrawal is <strong>₦{MIN_NGN_WITHDRAWAL.toLocaleString()}</strong>.</p>
-            <div style={{ marginBottom: 12 }}>
-              <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--text3)', marginBottom: 4 }}>Account Number</label>
-              <input style={INPUT} placeholder="0123456789" maxLength={10} value={wdBankAccount} onChange={e => { setWdBankAccount(e.target.value.replace(/\D/g, '').slice(0, 10)); setError(''); }} />
-            </div>
-            <div style={{ marginBottom: 12 }}>
-              <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--text3)', marginBottom: 4 }}>Bank Name</label>
-              <input style={INPUT} placeholder="Access Bank" value={wdBankName} onChange={e => { setWdBankName(e.target.value); setError(''); }} />
-            </div>
-            <div style={{ marginBottom: 12 }}>
-              <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--text3)', marginBottom: 4 }}>Account Name</label>
-              <input style={INPUT} placeholder="John Doe" value={wdAccountName} onChange={e => { setWdAccountName(e.target.value); setError(''); }} />
-            </div>
-            <div style={{ marginBottom: 16 }}>
-              <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--text3)', marginBottom: 4 }}>Amount (NGN)</label>
-              <input style={INPUT} type="number" step="100" min={MIN_NGN_WITHDRAWAL} placeholder={String(MIN_NGN_WITHDRAWAL)} value={wdAmount} onChange={e => { setWdAmount(e.target.value); setError(''); }} />
-            </div>
-            <KycLimitNotice user={user} />
-            {needOtp && <TwoFactorField value={otp} onChange={setOtp} />}
-            <div style={{ display: 'flex', gap: 8 }}>
-              <button style={{ ...BTN, background: 'transparent', border: '1.5px solid var(--border)', color: 'var(--text2)', flex: 1 }} onClick={() => setStep('select')}>Back</button>
-              <button style={{ ...BTN, background: '#DC2626', color: '#fff', flex: 1, opacity: wdSubmitting ? 0.6 : 1 }} disabled={wdSubmitting} onClick={handleNgnWithdraw}>
-                {wdSubmitting ? <><span className="spinner" style={{ width: 14, height: 14, borderWidth: 2 }} /> Processing...</> : 'Withdraw to Bank'}
-              </button>
-            </div>
-          </>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function KycLimitNotice({ user }: { user: any }) {
-  const kycTier = user?.kyc?.kycTier ?? 0
-  const kycStatus = user?.kyc?.status || user?.kycStatus
-  const maxLimit = kycTier >= 3 ? NGN_WITHDRAW_LIMITS.TIER_3 : kycTier >= 2 ? NGN_WITHDRAW_LIMITS.TIER_2 : kycTier >= 1 ? NGN_WITHDRAW_LIMITS.TIER_1 : NGN_WITHDRAW_LIMITS.TIER_0
-  const tierLabel = kycTier >= 3 ? 'Level 3 (Address + Docs)' : kycTier >= 2 ? 'Level 2 (BVN)' : kycTier >= 1 ? 'Level 1 (NIN)' : 'No KYC'
-  const desc = kycTier >= 3
-    ? `You can withdraw up to ₦${maxLimit.toLocaleString()} per transaction.`
-    : kycTier >= 2
-      ? `You can withdraw up to ₦${maxLimit.toLocaleString()} per transaction. Upgrade to Level 3 (Address + Docs) for ₦${NGN_WITHDRAW_LIMITS.TIER_3.toLocaleString()} limit.`
-      : kycTier >= 1
-        ? `You can withdraw up to ₦${maxLimit.toLocaleString()} per transaction. Upgrade to Level 2 (BVN) for ₦${NGN_WITHDRAW_LIMITS.TIER_2.toLocaleString()} limit.`
-        : `Verify your identity (KYC) to increase your withdrawal limit above ₦${maxLimit.toLocaleString()}.`
-  return (
-    <div style={{ fontSize: 11, color: 'var(--text3)', marginBottom: 14, padding: '8px 10px', background: 'var(--bg2)', borderRadius: 8, lineHeight: 1.5 }}>
-      <span style={{ fontWeight: 700 }}>{tierLabel}</span> &mdash; {desc}
-      {kycTier < 3 && (
-        <span style={{ display: 'block', marginTop: 6 }}>
-          <Link to="/settings/verification" style={{ color: 'var(--accent)', fontWeight: 700, textDecoration: 'none' }}>Increase limit → complete KYC</Link>
-        </span>
-      )}
-    </div>
-  );
+  return null;
 }

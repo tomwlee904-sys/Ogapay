@@ -18,6 +18,7 @@ const LoginPage = lazy(() => import('./pages/LoginPage'))
 const Dashboard = lazy(() => import('./pages/Dashboard'))
 const Profile = lazy(() => import('./pages/Profile'))
 const Wallet = lazy(() => import('./pages/Wallet'))
+const Deposit = lazy(() => import('./pages/Deposit'))
 const Earnings = lazy(() => import('./pages/Earnings'))
 const Referrals = lazy(() => import('./pages/Referrals'))
 const Settings = lazy(() => import('./pages/Settings'))
@@ -160,6 +161,7 @@ export default function App() {
             <Route path="/dashboard" element={<AuthGuard><Dashboard /></AuthGuard>} />
             <Route path="/profile" element={<AuthGuard><Profile /></AuthGuard>} />
             <Route path="/wallet" element={<AuthGuard><Wallet /></AuthGuard>} />
+            <Route path="/deposit" element={<AuthGuard><Deposit /></AuthGuard>} />
             <Route path="/link-wallet" element={<AuthGuard><LinkWallet /></AuthGuard>} />
             <Route path="/pair-device" element={<AuthGuard><DevicePairing /></AuthGuard>} />
             <Route path="/earnings" element={<AuthGuard><Earnings /></AuthGuard>} />
