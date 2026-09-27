@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import Layout from '../components/Layout'
 import FundWalletModal from '../components/FundWalletModal'
 import TransferModal from '../components/TransferModal'
@@ -25,6 +26,13 @@ export default function Wallet() {
   const [transactions, setTransactions] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [modal, setModal] = useState<null | 'deposit' | 'withdraw' | 'transfer'>(null)
+  // /wallet?add=1 (Top up in the menu) opens Add money straight away
+  const [params, setParams] = useSearchParams()
+  useEffect(() => {
+    if (params.get('add') !== '1') return
+    setModal('deposit')
+    params.delete('add'); setParams(params, { replace: true })
+  }, [params, setParams])
 
   const load = useCallback(async () => {
     try {

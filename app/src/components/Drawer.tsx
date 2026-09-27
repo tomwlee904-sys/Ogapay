@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { openSignIn } from '../lib/signin'
+import { useWalletBalance } from '../context/WalletBalanceContext'
+import { useCurrency } from '../context/CurrencyContext'
 
 interface DrawerProps {
   open: boolean
@@ -34,8 +36,12 @@ export default function Drawer({ open, onClose }: DrawerProps) {
   const { isAuthed, logout, user } = useAuth()
   const navigate = useNavigate()
 
-  const totalBalance = user?.wallet
-    ? Object.values(user.wallet).reduce((sum, entry) => sum + (entry?.balance || 0), 0)
+  // Same figure as the balance in the header: all wallets in US dollars.
+  // (user.wallet is never filled in, so this always showed 0.00.)
+  const { balances } = useWalletBalance()
+  const { convert } = useCurrency()
+  const totalBalance = balances
+    ? (['SOL', 'USDC', 'USDT', 'NGN'] as const).reduce((sum, c) => sum + (balances[c] ? convert(balances[c]!.balance, c as any, 'USDC') : 0), 0)
     : 0
 
   return (
@@ -105,6 +111,7 @@ export default function Drawer({ open, onClose }: DrawerProps) {
           <>
             <nav className="oga-drawer-nav">
               {/* ── User Card ── */}
+              <div className="oga-user-row">
               <div className="oga-user-card" onClick={() => { onClose(); navigate('/profile'); }}>
                 <div className="oga-user-card-avatar">
                   {user?.avatar ? (
@@ -117,11 +124,12 @@ export default function Drawer({ open, onClose }: DrawerProps) {
                   <div className="oga-user-card-name">{user?.displayName || user?.username || 'User'}</div>
                   <div className="oga-user-card-balance">
                     <i className="ti ti-wallet" style={{ fontSize: 12 }} />{' '}
-                    {new Intl.NumberFormat('en-US', { style: 'decimal', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(totalBalance)}{' '}
-                    <span style={{ color: 'var(--text3)', fontWeight: 500 }}>total</span>
+                    Balance: <b>${totalBalance < 0.01 ? '0.00' : totalBalance.toFixed(2)}</b>
                   </div>
                 </div>
                 <i className="ti ti-chevron-right oga-user-card-chevron" />
+              </div>
+                <button type="button" className="oga-topup" onClick={() => { onClose(); navigate('/wallet?add=1') }}>Top up</button>
               </div>
 
               <div className="oga-drawer-divider" />
