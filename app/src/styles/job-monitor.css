@@ -1,5 +1,6 @@
 /* Job monitor (/job-monitor) */
-.jm2-page { max-width: 1000px; }
+/* uses the shared page width (.ui-page) */
+.jm2-page { }
 .jm2-prefs { display: flex; gap: 18px; flex-wrap: wrap; }
 .jm2-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin: 24px 0 12px; }
 .jm2-tabs { display: flex; gap: 6px; }

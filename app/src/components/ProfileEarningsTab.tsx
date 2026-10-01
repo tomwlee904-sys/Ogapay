@@ -126,7 +126,7 @@ export default function TabEarningsContent() {
         @media(max-width:800px){.en-grid{grid-template-columns:repeat(2,1fr)}}
         @media(max-width:500px){.en-grid{grid-template-columns:1fr}}
         .en-stat{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;transition:all .25s}
-        .en-stat:hover{transform:translateY(-2px);border-color:var(--accent)}
+        .en-stat:hover{transform:none;border-color:var(--accent)}
         .en-stat .esi{width:32px;height:32px;border-radius:8px;display:grid;place-items:center;margin-bottom:8px}
         .en-stat .esn{font-family:Geist;font-size:22px;font-weight:900}
         .en-stat .esl{color:var(--text2);font-size:12px;margin-top:2px}

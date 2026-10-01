@@ -10,6 +10,10 @@ import { savedJobIds, setSaved } from '../lib/bookmarks'
 import { jobRequirements, rankName } from '../lib/requirements'
 import ApplyModal from '../components/ApplyModal'
 import { BoostedTag, PremiumMark } from '../components/Perks'
+import Money from '../components/Money'
+import { formatMoney } from '../lib/money'
+import { jobDeadline, deadlineLabel, deadlineDate } from '../lib/deadline'
+import { categoryLabel } from '../lib/categories'
 
 const BRAND = 'var(--accent)'
 const BRAND_LIGHT = 'rgba(var(--accent-rgb),0.10)'
@@ -265,12 +269,10 @@ export default function JobDetail() {
 
   function formatTask(t: any): JobData {
     const now = Date.now()
-    // No deadline means none: this used to invent one 7 days out
-    const rawDeadline = t.expiresAt || t.deadline
-    const parsedDeadline = rawDeadline
-      ? typeof rawDeadline === 'string' ? new Date(rawDeadline).getTime() : Number(rawDeadline)
-      : 0
-    void now
+    // The same deadline as the job list (lib/deadline): none, invalid or a real date.
+    // It used to invent one 7 days out when there was none.
+    const dl = jobDeadline(t, now)
+    const parsedDeadline = dl.state === 'open' || dl.state === 'ended' ? dl.at : 0
     const difficultyMap: Record<string, string> = {
       easy: 'Easy', medium: 'Medium', hard: 'Hard', expert: 'Expert',
       beginner: 'Easy', intermediate: 'Medium', advanced: 'Hard',
@@ -456,10 +458,8 @@ function WurkJobDetailView(props: any) {
 
   const agentName = job.brand || 'OgaPay'
   const agentInitial = agentName.slice(0, 2).toUpperCase()
-  const rewardAmount = Number(job.reward || 0).toLocaleString(undefined, { maximumFractionDigits: 2 })
   const currencyMap: Record<string, string> = { USD: 'USDC', USDC: 'USDC', NGN: 'NGN', SOL: 'SOL' }
   const rewardCurrency = currencyMap[job.currency] || 'NGN'
-  const rewardUsdLine = job.usdEquiv || (rewardCurrency !== 'USDC' ? (() => { const v = convert(Number(job.reward), rewardCurrency as any, 'USDC' as any); return v && !isNaN(v) ? `$ ${v.toFixed(2)} USD` : '' })() : '')
   const description = job.description || job.instructions || 'No description provided.'
   const profileHandle = (job.brandHandle || job.brand || '').replace('@', '')
   const handleText = job.brandHandle ? `@${job.brandHandle}` : 'Review the instructions carefully and only apply if you can add real value.'
@@ -504,13 +504,12 @@ function WurkJobDetailView(props: any) {
     setTranslating(false)
   }
 
-  const countdownStr = !job.deadline
-    ? 'No deadline'
-    : job.deadline <= Date.now()
-      ? 'Closed'
-      : countdown.d > 0
-        ? `${countdown.d}d ${countdown.h}h ${pad(countdown.m)}m`
-        : `${countdown.h}h ${pad(countdown.m)}m ${pad(countdown.s)}s`
+  const deadline = jobDeadline({ expiresAt: job.deadline || null })
+  const countdownStr = deadline.state !== 'open'
+    ? deadlineLabel(deadline)
+    : countdown.d > 0
+      ? `${countdown.d}d ${countdown.h}h ${pad(countdown.m)}m`
+      : `${countdown.h}h ${pad(countdown.m)}m ${pad(countdown.s)}s`
   const statusText = ({ open: 'Open', cooling_down: 'Full: waiting for work', completed: 'Completed', cancelled: 'Cancelled', draft: 'Paused', disputed: 'In dispute' } as Record<string, string>)[String(job.status || '').toLowerCase()] || (isOpen ? 'Open' : 'Closed')
 
   return (
@@ -761,47 +760,61 @@ function WurkJobDetailView(props: any) {
         }
 
         /* ── wurk-style refresh (overrides the older rules above) ── */
-        .wjd{font-family:'Geist',system-ui,sans-serif;background:var(--bg)}
-        .wjd-wrap{width:min(100% - 32px,1000px)}
-        .wjd-panel{border:1px solid var(--border)!important;border-radius:20px;background:var(--card)}
-        .wjd-back{border:1px solid var(--border);font-weight:600;border-radius:10px}
+        .wjd{font-family:var(--font);background:var(--bg);padding-top:var(--page-top)}
+        .wjd-wrap{width:min(100% - 2 * var(--gutter), var(--container))}
+        .wjd-panel{border:1px solid var(--border)!important;border-radius:var(--r-card);background:var(--card);box-shadow:var(--sh-1)}
+        .wjd-back{border:1px solid var(--border);font-weight:600;border-radius:var(--r-ctl);height:var(--ctl-h-sm)}
+        .wjd-headline{display:flex;justify-content:space-between;align-items:flex-end;gap:var(--sp-6);margin:var(--sp-4) 0 var(--sp-5)}
+        .wjd-headline-main{min-width:0}
+        .wjd-h1{margin:var(--sp-2) 0 0;font-size:var(--fs-title);font-weight:600;letter-spacing:var(--tracking-tight);line-height:1.15;color:var(--text);overflow-wrap:anywhere}
+        .wjd-facts{display:flex;flex-wrap:wrap;gap:6px 18px;margin:var(--sp-3) 0 0;padding:0;list-style:none;font-size:13.5px;color:var(--text2)}
+        .wjd-facts li{display:inline-flex;align-items:center;gap:6px}
+        .wjd-facts i{font-size:var(--icon)}
+        .wjd-facts .wjd-dot{width:7px;height:7px;border-radius:50%;background:var(--text3)}
+        .wjd-facts .is-open{color:var(--money)}
+        .wjd-facts .is-open .wjd-dot{background:var(--money)}
+        .wjd-headline-side{display:flex;flex-direction:column;align-items:flex-end;gap:var(--sp-3);flex-shrink:0}
+        .wjd-headline-side .o-money{align-items:flex-end}
+        @media(max-width:768px){.wjd-headline{flex-direction:column;align-items:stretch;gap:var(--sp-4)}.wjd-headline-side{flex-direction:row;align-items:center;justify-content:space-between}.wjd-headline-side .o-money{align-items:flex-start}}
         .wjd-agent{align-items:center;padding:18px 20px}
         .wjd-avatar{width:44px;height:44px;border-radius:12px;border:1px solid var(--border)!important;background:var(--card2);font-size:15px}
         .wjd-avatar img{border-radius:12px}
-        .wjd-kicker{font-family:var(--font-mono);font-weight:400;font-size:9px;letter-spacing:.1em;color:var(--text2)}
+        .wjd-kicker{font-family:var(--font-mono);font-weight:500;font-size:var(--fs-label);letter-spacing:.08em;color:var(--text2)}
         .wjd-name{font-size:17px;font-weight:600;letter-spacing:-.02em}
         .wjd-handle{font-size:12px;display:inline-flex;align-items:center;gap:6px}
         .wjd-badge{display:none}
         .wjd-sep{display:none}
-        .wjd-link{font-weight:500;font-size:12px;color:var(--text2)}
-        .wjd-icon-btn{border:1px solid var(--border)!important;border-radius:10px;width:34px;height:34px}
+        .wjd-link{font-weight:500;font-size:13px;color:var(--text2);min-height:36px}
+        .wjd-icon-btn{border:1px solid var(--border)!important;border-radius:var(--r-ctl);width:var(--ctl-h-sm);height:var(--ctl-h-sm)}
         .wjd-grid{gap:14px;margin-bottom:14px}
         .wjd-meta{padding:18px 20px 20px!important;border:1px solid var(--border)!important}
-        .wjd-title{font-family:var(--font-mono);font-weight:400;font-size:10px;letter-spacing:.1em;color:var(--text2);margin-bottom:18px}
+        .wjd-title{font-family:var(--font-mono);font-weight:500;font-size:var(--fs-label);letter-spacing:.08em;color:var(--text2);margin-bottom:18px}
         .wjd-rows{display:grid;grid-template-columns:1fr 1fr;gap:16px 18px}
         .wjd-row{display:block!important;padding:0!important;border:0!important}
         .wjd-row.wide{grid-column:1 / -1}
-        .wjd-label{font-family:var(--font-mono);font-weight:400!important;font-size:9px!important;letter-spacing:.1em;color:var(--text2)!important;padding:0;margin-bottom:5px}
-        .wjd-value{font-size:13px!important;font-weight:500!important;color:var(--text)!important}
-        .wjd-open-val{color:var(--green)!important}
+        .wjd-label{font-family:var(--font);font-weight:400!important;font-size:12.5px!important;letter-spacing:0;text-transform:none!important;color:var(--text2)!important;padding:0;margin-bottom:4px}
+        .wjd-value{font-size:14px!important;font-weight:500!important;color:var(--text)!important}
+        .wjd-open-val{color:var(--money)!important}
         .wjd-dot{width:6px;height:6px}
-        .wjd-reward{position:relative;display:block;text-align:left!important;padding:22px 24px!important;margin-bottom:14px;border:1px solid rgba(200,211,218,.55)!important;border-radius:20px;
-          background:linear-gradient(125deg,rgba(255,255,255,.96),rgba(243,247,249,.82) 70%,rgba(234,241,244,.72))!important;overflow:hidden}
-        [data-theme="dark"] .wjd-reward{background:linear-gradient(125deg,#151517,#111113 70%,#0e0f10)!important;border-color:rgba(255,255,255,.08)!important}
-        .wjd-reward-title{font-family:var(--font-mono);font-weight:400;font-size:9px;letter-spacing:.1em;color:var(--text2)!important;margin-bottom:8px}
+        .wjd-reward{position:relative;display:block;text-align:left!important;padding:22px 24px!important;margin-bottom:14px;border:1px solid color-mix(in srgb,var(--money) 14%,var(--border))!important;border-radius:var(--r-card);
+          background:var(--tint-reward)!important;overflow:hidden}
+        [data-theme="dark"] .wjd .wjd-reward{background:var(--tint-reward)!important;border-color:color-mix(in srgb,var(--money) 18%,var(--border))!important}
+        .wjd-reward-title{font-family:var(--font);font-weight:500;font-size:13px;letter-spacing:0;text-transform:none;color:var(--text2)!important;margin-bottom:8px}
         .wjd-amount{font-size:clamp(32px,4.4vw,44px)!important;font-weight:600!important;letter-spacing:-.055em;color:#17805c!important;-webkit-text-fill-color:#17805c!important}
         [data-theme="dark"] .wjd-amount{color:#34d399!important;-webkit-text-fill-color:#34d399!important}
         .wjd-token{font-size:12px!important;font-weight:500!important;color:var(--text2)!important;-webkit-text-fill-color:var(--text2)!important;margin-left:6px}
         .wjd-usd{font-family:var(--font-mono);font-size:11px!important;font-weight:400!important;letter-spacing:0;color:var(--text2)!important;margin-top:6px}
-        .wjd-reward-mark{position:absolute;right:18px;top:18px;width:34px;height:34px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--green);display:grid;place-items:center;font-size:16px}
+        .wjd-reward-mark{position:absolute;right:18px;top:18px;width:36px;height:36px;border-radius:var(--r-ctl);border:1px solid var(--border);background:var(--card);color:var(--money);display:grid;place-items:center;font-size:var(--icon)}
         .wjd-desc{padding:20px 22px 22px!important}
-        .wjd-desc-title{font-family:var(--font-mono);font-weight:400;font-size:10px;letter-spacing:.1em;color:var(--text2);border-bottom:0;padding-bottom:0;margin-bottom:14px}
-        .wjd-body{font-size:14px;color:var(--text);line-height:1.7}
+        .wjd-desc-title{font-family:var(--font-mono);font-weight:500;font-size:var(--fs-label);letter-spacing:.08em;color:var(--text2);border-bottom:0;padding-bottom:0;margin-bottom:14px}
+        .wjd-body{font-size:var(--fs-body);color:var(--text);line-height:1.7}
         .wjd-sub-title{font-size:14px;font-weight:600}
         .wjd-translate-row{justify-content:flex-start}
         .wjd-translate-btn{font-weight:500;color:var(--text2);text-decoration:underline;text-underline-offset:3px}
         .wjd-action-bar{border-top:1px solid var(--border);padding-top:16px;margin-top:20px}
-        .wjd-primary,.wjd-secondary{text-transform:none!important;letter-spacing:0!important;font-weight:600;font-size:14px;border-radius:12px;min-height:46px}
+        .wjd-primary,.wjd-secondary{text-transform:none!important;letter-spacing:0!important;font-weight:600;font-size:14px;border-radius:var(--r-ctl);min-height:var(--ctl-h-lg);transition:opacity var(--t-fast) var(--ease),border-color var(--t-fast) var(--ease)}
+        .wjd-primary:hover:not(:disabled){opacity:.86}
+        .wjd-secondary:hover:not(:disabled){border-color:var(--text3)!important}
         .wjd-primary{background:var(--accent)!important;color:var(--on-accent)!important}
         .wjd-primary:disabled{background:var(--card2)!important;color:var(--text3)!important}
         .wjd-secondary{background:var(--card)!important;color:var(--text)!important;border:1px solid var(--border)!important}
@@ -821,6 +834,27 @@ function WurkJobDetailView(props: any) {
             <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7" strokeLinecap="round" strokeLinejoin="round" /></svg>
             Back
           </button>
+
+          {/* ── Title: what the job is, where it stands, what it pays ── */}
+          <header className="wjd-headline">
+            <div className="wjd-headline-main">
+              <span className="ui-eyebrow"><i className="ti ti-briefcase" />{categoryLabel(job.category)}</span>
+              <h1 className="wjd-h1">{job.title}</h1>
+              <ul className="wjd-facts" aria-label="Job status">
+                <li className={isOpen ? 'is-open' : ''}><span className="wjd-dot" aria-hidden="true" />{statusText}</li>
+                <li><i className="ti ti-clock" aria-hidden="true" />{deadline.state === 'open' ? `Closes ${deadlineDate(deadline)}` : deadlineLabel(deadline)}</li>
+                <li><i className="ti ti-users" aria-hidden="true" />{job.slotsLeft} of {job.slots} {job.slots === 1 ? 'place' : 'places'} left</li>
+              </ul>
+            </div>
+            <div className="wjd-headline-side">
+              <Money amount={Number(job.reward || 0)} currency={rewardCurrency} convert={convert} size={30} positive note="per person" />
+              {authUser
+                ? <button className="ui-btn ui-btn-dark" type="button" disabled={!canManage && !isOpen} onClick={() => canManage ? navigate('/manage-jobs') : setShowApplyWarning(true)}>
+                    {canManage ? 'Manage submissions' : isOpen ? 'Take a place' : 'Job closed'}
+                  </button>
+                : <button className="ui-btn ui-btn-dark" type="button" onClick={() => navigate('/login?redirect=' + encodeURIComponent('/tasks/' + job.id))}>Sign in to apply</button>}
+            </div>
+          </header>
 
           {/* ── Creator Panel ── */}
           <section className="wjd-panel wjd-agent">
@@ -900,11 +934,7 @@ function WurkJobDetailView(props: any) {
           <section className="wjd-panel wjd-reward">
               <span className="wjd-reward-mark" aria-hidden="true"><i className="ti ti-currency-dollar" /></span>
               <div className="wjd-reward-title">Reward per person</div>
-              <div>
-                <span className="wjd-amount">{rewardAmount}</span>
-                <span className="wjd-token">{rewardCurrency}</span>
-              </div>
-              {rewardUsdLine && <div className="wjd-usd">{rewardUsdLine}</div>}
+              <Money amount={Number(job.reward || 0)} currency={rewardCurrency} convert={convert} size={40} positive />
           </section>
 
           {/* ── Description ── */}
@@ -1061,7 +1091,7 @@ function WurkJobDetailView(props: any) {
               <div className="wjd-config-strip">
                 <div className="wjd-config-cell">
                   <div className="wjd-config-cell-label">Reward</div>
-                  <div className="wjd-config-cell-value">{rewardAmount} {rewardCurrency} each</div>
+                  <div className="wjd-config-cell-value">{formatMoney(Number(job.reward || 0), rewardCurrency)} each</div>
                 </div>
                 <div className="wjd-config-cell">
                   <div className="wjd-config-cell-label">Places</div>
@@ -1069,7 +1099,7 @@ function WurkJobDetailView(props: any) {
                 </div>
                 <div className="wjd-config-cell">
                   <div className="wjd-config-cell-label">Closes</div>
-                  <div className="wjd-config-cell-value">{job.deadline ? new Date(job.deadline).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : 'No deadline'}</div>
+                  <div className="wjd-config-cell-value">{deadlineDate(deadline)}</div>
                 </div>
               </div>
 
@@ -1077,7 +1107,7 @@ function WurkJobDetailView(props: any) {
               <ol className="wjd-how-steps">
                 <li><strong>Take a place.</strong> It's reserved for you{jobRequirements(job).filter(r => r.icon !== 'award').length ? `, if you meet the requirements (${jobRequirements(job).filter(r => r.icon !== 'award').map(r => r.text).join(', ')})` : ''}.</li>
                 <li><strong>Do the work and send it in</strong> with the proof the poster asked for. Once every place is taken, you have 24 hours to send it, or your place goes to someone else.</li>
-                <li><strong>The poster checks it.</strong> If it's approved, {rewardAmount} {rewardCurrency} goes straight to your OgaPay wallet.</li>
+                <li><strong>The poster checks it.</strong> If it's approved, {formatMoney(Number(job.reward || 0), rewardCurrency)} goes straight to your OgaPay wallet.</li>
                 <li><strong>If it's rejected,</strong> you'll see the reason and the place opens up again.</li>
               </ol>
 

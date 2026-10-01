@@ -248,7 +248,7 @@ footer { @apply border-t border-[var(--border)] py-10 px-6 text-center bg-[var(-
   @apply relative min-h-[200px] p-5 rounded-2xl bg-[var(--card)] overflow-hidden transition-all duration-[.18s];
   border: 1.5px solid var(--border);
 }
-.step-card:hover { @apply -translate-y-1; }
+.step-card:hover { border-color: var(--border2); }
 
 /* ─── Stats ─── */
 .stat + .stat { @apply mt-[18px]; }

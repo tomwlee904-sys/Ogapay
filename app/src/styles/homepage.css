@@ -188,7 +188,7 @@ button { font: inherit; cursor: pointer; }
   animation:shimmer 7s ease-in-out infinite;
   pointer-events:none;
 }
-.job-card:hover { border-color:var(--accent) !important; transform:translateY(-2px); }
+.job-card:hover { border-color:var(--accent) !important; transform:none; }
 
 .progress-bar span {
   display:block; height:100%;

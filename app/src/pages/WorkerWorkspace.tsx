@@ -233,7 +233,7 @@ export default function WorkerWorkspace() {
         .ws-featured-card:hover{box-shadow:0 4px 20px rgba(0,0,0,.08);transform:translateX(4px)}
         .ws-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
         .ws-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px;cursor:pointer;transition:all .2s;display:flex;flex-direction:column;gap:8px}
-        .ws-card:hover{box-shadow:0 4px 20px rgba(0,0,0,.08);transform:translateY(-2px)}
+        .ws-card:hover{box-shadow:0 4px 20px rgba(0,0,0,.08);transform:none}
         .ws-card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
         .ws-card-title{font-size:15px;font-weight:700;color:var(--text);margin:0;flex:1;line-height:1.3}
         .ws-card-reward{font-size:16px;font-weight:800;color:${ws.color};white-space:nowrap}
@@ -260,7 +260,7 @@ export default function WorkerWorkspace() {
         .ws-related-title{font-size:14px;font-weight:800;color:var(--text);margin-bottom:12px}
         .ws-related-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
         .ws-related-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;cursor:pointer;text-align:center;transition:all .2s}
-        .ws-related-card:hover{border-color:${ws.color};transform:translateY(-2px)}
+        .ws-related-card:hover{border-color:${ws.color};transform:none}
         .ws-related-icon{font-size:20px;margin-bottom:6px;display:block;color:${ws.color}}
         .ws-related-label{font-size:12px;font-weight:700;color:var(--text2)}
         .ws-empty{padding:60px 24px;text-align:center;color:var(--text3)}

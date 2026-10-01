@@ -1,5 +1,5 @@
 /* Public profile (/user/:username) and direct hire page */
-.up-wrap { max-width: 1040px; margin: 0 auto; padding: 24px 24px 64px; }
+.up-wrap { max-width: calc(var(--container) + 2 * var(--gutter)); margin: 0 auto; padding: var(--page-top) var(--gutter) 64px; }
 .up-crumb { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; font-size: 13px; color: var(--text2); }
 .up-crumb button { display: inline-flex; align-items: center; gap: 6px; background: none; border: 0; padding: 6px 0; color: var(--text2); font: inherit; cursor: pointer; }
 .up-crumb button:hover { color: var(--text); }
@@ -129,7 +129,7 @@ a.up-item:hover { border-color: var(--text3); }
 .up-note.err { background: color-mix(in srgb, var(--red) 8%, transparent); color: var(--red); }
 
 @media (max-width: 760px) {
-  .up-wrap { padding: 14px 16px 48px; }
+  .up-wrap { padding: var(--page-top) var(--gutter) 48px; }
   .up-head { grid-template-columns: 1fr; padding: 18px; }
   .up-id { grid-template-columns: 56px 1fr; gap: 12px; }
   .up-avatar { width: 56px; height: 56px; border-radius: 13px; font-size: 20px; }

@@ -434,7 +434,7 @@ export default function Profile() {
     <div className="page-fade-in">
     <Layout>
       <style>{`
-        .pg{width:100%;max-width:100%;margin:0 auto;padding:0 16px 60px}
+        .pg{width:100%;max-width:calc(var(--container) + 2 * var(--gutter));margin:0 auto;padding:var(--page-top) var(--gutter) 60px}
         .page{max-width:100%!important;width:100%}
         .tab-bar{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:0;margin:0 0 20px;border:1px solid var(--border);border-radius:12px;overflow:hidden;background:var(--card)}
         .tab-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;height:72px;padding:10px 10px;border:none;border-right:1px solid var(--border);background:transparent;color:var(--text2);font-size:12px;font-weight:700;cursor:pointer;transition:background .13s,color .13s;text-align:center;font-family:inherit}
@@ -460,7 +460,7 @@ export default function Profile() {
         .profile-quick-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
         @media(max-width:600px){.profile-quick-grid{grid-template-columns:repeat(2,1fr);gap:10px}}
         .quick-tile{height:100px;border:1px solid var(--border);border-radius:20px;padding:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;font-size:12px;font-weight:700;color:var(--text2);background:var(--card);cursor:pointer;transition:transform .2s,box-shadow .2s,border-color .2s;text-decoration:none;font-family:inherit}
-        .quick-tile:hover{transform:translateY(-2px);box-shadow:var(--shadow-soft);border-color:rgba(var(--accent-rgb),0.2);color:var(--text)}
+        .quick-tile:hover{transform:none;box-shadow:var(--shadow-soft);border-color:rgba(var(--accent-rgb),0.2);color:var(--text)}
         .quick-tile i{font-size:20px}
         .page-head-sm{display:flex;align-items:center;gap:8px;margin-bottom:20px}
         .page-head-sm h2{font-size:20px;font-weight:800;margin:0}
@@ -477,7 +477,7 @@ export default function Profile() {
         .btn-outline{height:34px;padding:0 14px;border-radius:99px;border:1.5px solid var(--border);background:transparent;color:var(--text2);font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all .13s;font-family:inherit}
         .btn-outline:hover{border-color:var(--text);color:var(--text)}
         .btn-sm{height:30px;padding:0 12px;font-size:11px}
-        .dash-btn{height:48px;padding:0 24px;border-radius:var(--radius-sm);border:none;background:var(--text);color:var(--bg);font-size:14px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:transform .15s,opacity .15s;font-family:inherit}
+        .dash-btn{height:var(--ctl-h-lg);padding:0 24px;border-radius:var(--r-ctl);border:none;background:var(--text);color:var(--bg);font-size:14px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:transform .15s,opacity .15s;font-family:inherit}
         .dash-btn:hover{opacity:.9}.dash-btn:active{transform:scale(0.97)}
         .dash-input{width:100%;height:48px;padding:0 16px;border:1px solid var(--border);border-radius:16px;background:var(--card);color:var(--text);font-size:14px;outline:none;transition:border-color .2s,box-shadow .2s;font-family:inherit;box-sizing:border-box}
         .dash-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(var(--accent-rgb),0.1)}
@@ -488,6 +488,7 @@ export default function Profile() {
         .onboarding-banner .ob-btn{height:32px;padding:0 14px;border-radius:8px;border:none;background:var(--accent);color:var(--on-accent);font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:inherit}
         .onboarding-banner .ob-close{width:28px;height:28px;border:none;background:none;color:var(--text3);cursor:pointer;display:grid;place-items:center;font-size:16px;flex-shrink:0}
       `}</style>
+      <div className="pg">
 
       {/* Onboarding banners */}
       {!loading && !authUser?.walletAddress && (
@@ -1498,6 +1499,7 @@ export default function Profile() {
         <FundWalletModal initialStep={fundModal} onClose={() => { setFundModal(null); refreshWallet(); }} onDone={() => { refreshWallet(); refreshUser(); }} />
       )}
 
+      </div>
     </Layout>
     </div>
   );

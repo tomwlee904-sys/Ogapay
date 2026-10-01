@@ -122,7 +122,7 @@ export default function TabWorkerPortalContent() {
           border:1px solid var(--border);border-radius:10px;
           transition:all .2s;min-height:76px;background:var(--card);
         }
-        .wp-ws-tile:hover{transform:translateY(-2px);box-shadow:0 4px 16px rgba(0,0,0,.06)}
+        .wp-ws-tile:hover{transform:none;box-shadow:0 4px 16px rgba(0,0,0,.06)}
         .wp-ws-tile i{font-size:20px}
         .wp-ws-tile span{font-size:10px;color:var(--text3);text-align:center;line-height:1.2;font-weight:600}
         @media(max-width:700px){.wp-workspace-grid{grid-template-columns:repeat(3,1fr)}}

@@ -191,10 +191,10 @@ export default function Blog() {
   return (
     <Layout>
       <style>{`
-        .bl{max-width:1184px;margin:0 auto;padding:32px 32px 40px}
+        .bl{max-width:calc(var(--container) + 2 * var(--gutter));margin:0 auto;padding:var(--page-top) var(--gutter) 40px}
         .bl-head{display:flex;align-items:flex-start;justify-content:space-between;gap:20px}
         .bl-eyebrow{margin:0;font:400 9px/1.5 'Geist Mono',ui-monospace,monospace;letter-spacing:.07em;text-transform:uppercase;color:var(--text3)}
-        .bl-title{margin:8px 0 0;font-size:36px;line-height:1.15;font-weight:600;letter-spacing:-.05em;color:var(--text)}
+        .bl-title{margin:8px 0 0;font-size:var(--fs-title);line-height:1.12;font-weight:600;letter-spacing:var(--tracking-tight);color:var(--text)}
         .bl-sub{margin:8px 0 0;font-size:13px;line-height:1.75;color:var(--text2)}
         .bl-write{display:inline-flex;align-items:center;gap:8px;height:44px;padding:0 14px;border:0;border-radius:10px;background:var(--text);color:var(--bg);font:500 12px/1 inherit;cursor:pointer;white-space:nowrap;flex-shrink:0;margin-top:24px}
         .bl-write i{font-size:15px}
@@ -213,9 +213,7 @@ export default function Blog() {
         .bl-chips button.on{background:var(--text);border-color:var(--text);color:var(--bg)}
         .bl-tiles{margin-top:48px;border-radius:16px;overflow:hidden}
         @media (max-width:768px){
-          .bl{padding:20px 16px 32px}
           .bl-head{flex-direction:column;gap:0}
-          .bl-title{font-size:28px}
           .bl-write{margin-top:16px}
           .bl-bar{flex-direction:column;align-items:stretch;margin-top:28px}
           .bl-tools{flex-direction:column;align-items:stretch}
@@ -322,8 +320,8 @@ export default function Blog() {
           ) : (
             <div style={{ display: 'flex', gap: 8, maxWidth: 420, margin: '0 auto', flexWrap: 'wrap', justifyContent: 'center' }}>
               <input type="email" placeholder="Enter your email address" value={email} onChange={e => setEmail(e.target.value)} onKeyDown={e => e.key === 'Enter' && subscribe()} aria-label="Email address"
-                style={{ flex: 1, minWidth: 200, padding: '8px 14px', borderRadius: 20, border: 'none', fontSize: 13, background: 'rgba(255,255,255,0.15)', color: '#fff', outline: 'none' }} />
-              <button onClick={subscribe} disabled={subscribing} style={{ background: '#ADDD5A', color: '#1a2a00', border: 'none', padding: '8px 18px', borderRadius: 20, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>{subscribing ? 'Subscribing…' : 'Subscribe'}</button>
+                style={{ flex: 1, minWidth: 200, height: 'var(--ctl-h)', padding: '0 14px', borderRadius: 'var(--r-ctl)', border: '1px solid rgba(255,255,255,0.18)', fontSize: 14, background: 'rgba(255,255,255,0.1)', color: '#fff' }} />
+              <button onClick={subscribe} disabled={subscribing} style={{ background: '#fff', color: '#0a0a0a', border: 'none', height: 'var(--ctl-h)', padding: '0 18px', borderRadius: 'var(--r-ctl)', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>{subscribing ? 'Subscribing…' : 'Subscribe'}</button>
             </div>
           )}
           {subError && <p style={{ color: '#fca5a5', fontSize: 13, margin: '10px 0 0' }}>{subError}</p>}

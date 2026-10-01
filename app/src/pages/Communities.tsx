@@ -69,89 +69,75 @@ export default function Communities() {
   return (
     <Layout>
       <style>{`
-        .ch-hero{text-align:center;padding:20px 24px 36px;background:radial-gradient(ellipse at 50% 0%,rgba(var(--accent-rgb),.08) 0%,transparent 70%);border-radius:14px;margin-bottom:28px}
-        .ch-hero h1{font-family:Geist;font-size:38px;font-weight:900;margin:0 0 8px;color:var(--text);letter-spacing:-.04em;background-clip:text}
-        .ch-hero p{color:var(--text2);font-size:14px;max-width:500px;margin:0 auto 20px;line-height:1.6}
-        .ch-search{display:flex;align-items:center;gap:0;max-width:500px;margin:0 auto;background:var(--card);border:1.5px solid var(--border);border-radius:12px;overflow:hidden;transition:all .2s}
-        .ch-search:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px rgba(var(--accent-rgb),.1)}
-        .ch-search input{flex:1;border:0;background:transparent;color:var(--text);font-size:14px;padding:12px 16px;outline:none}
-        .ch-search input::placeholder{color:var(--text3)}
-        .ch-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-bottom:20px}
-        .ch-tabs{display:flex;align-items:center;gap:8px;margin-bottom:18px;flex-wrap:wrap}
-        .ch-tab{height:36px;padding:0 14px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text2);font:600 13px inherit;font-family:inherit;cursor:pointer}
+        .ch-toolbar{display:flex;align-items:center;gap:var(--sp-2);flex-wrap:wrap;margin:var(--sp-5) 0 var(--sp-4)}
+        .ch-toolbar .ui-search{flex:1;max-width:360px;min-width:200px;margin-left:auto}
+        .ch-count{margin:0 0 var(--sp-4)}
+        .ch-tab{height:var(--ctl-h-sm);padding:0 14px;border-radius:var(--r-pill);border:1px solid var(--border);background:var(--card);color:var(--text2);font:500 13px var(--font);cursor:pointer;transition:border-color var(--t-fast) var(--ease)}
+        .ch-tab:hover:not(.on){border-color:var(--border2);color:var(--text)}
         .ch-tab.on{background:var(--text);color:var(--bg);border-color:var(--text)}
-        .ch-create{margin-left:auto;height:36px;padding:0 14px;border-radius:10px;border:0;background:var(--text);color:var(--bg);font:700 13px inherit;font-family:inherit;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+        @media(max-width:640px){.ch-toolbar .ui-search{max-width:none;flex-basis:100%;order:3;margin-left:0}}
         .ch-mine{display:grid;gap:8px}
-        .ch-mine-row{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--card);border:1px solid var(--border);border-radius:12px;cursor:pointer;text-align:left;font:inherit;color:inherit;width:100%}
+        .ch-mine-row{display:flex;align-items:center;gap:12px;padding:14px 16px;background:var(--card);border:1px solid var(--border);border-radius:var(--r-md);cursor:pointer;text-align:left;font:inherit;color:inherit;width:100%}
         .ch-mine-row:hover{border-color:var(--text3)}
-        .ch-mine-av{width:40px;height:40px;border-radius:10px;display:grid;place-items:center;color:#fff;font-weight:800;overflow:hidden;flex-shrink:0}
+        .ch-mine-av{width:40px;height:40px;border-radius:var(--r-ctl);display:grid;place-items:center;color:#fff;font-weight:800;overflow:hidden;flex-shrink:0}
         .ch-mine-av img{width:100%;height:100%;object-fit:cover}
         .ch-mine-t{flex:1;min-width:0}
         .ch-mine-t strong{display:block;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-        .ch-mine-t span{font-size:12px;color:var(--text3)}
+        .ch-mine-t span{font-size:12.5px;color:var(--text2)}
         .ch-role{font-size:11px;font-weight:700;padding:3px 8px;border-radius:999px;border:1px solid var(--border);color:var(--text2)}
-        .cc-desc{font-size:12px;color:var(--text2);line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin:2px 0 8px}
-        .ch-stat{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;text-align:center}
-        .ch-stat .csi{width:34px;height:34px;border-radius:8px;background:rgba(var(--accent-rgb),.08);color:var(--accent);display:grid;place-items:center;margin:0 auto 6px;font-size:18px}
-        .ch-stat .csn{font-family:Geist;font-size:22px;font-weight:800}
-        .ch-stat .csl{color:var(--text2);font-size:12px;margin-top:2px}
-        .ch-filters{display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap}
-        .ch-pill{height:32px;padding:0 14px;border-radius:999px;border:1px solid var(--border);background:var(--bg);color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:4px}
-        .ch-pill:hover,.ch-pill.active{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
-        .ch-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:28px}
+        .cc-desc{font-size:13px;color:var(--text2);line-height:1.55;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin:2px 0 10px;min-height:calc(13px * 1.55 * 2)}
+                .ch-filters{display:flex;gap:6px;margin-bottom:var(--sp-5);flex-wrap:wrap}
+        .ch-pill{height:34px;padding:0 14px;border-radius:var(--r-pill);border:1px solid var(--border);background:var(--card);color:var(--text2);font:500 13px var(--font);cursor:pointer;transition:border-color var(--t-fast) var(--ease),background var(--t-fast) var(--ease);display:flex;align-items:center;gap:4px}
+        .ch-pill:hover:not(.active){border-color:var(--border2);color:var(--text)}
+        .ch-pill.active{background:var(--text);color:var(--bg);border-color:var(--text)}
+        .ch-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--sp-4);margin-bottom:var(--sp-6)}
         @media(max-width:1024px){.ch-grid{grid-template-columns:repeat(2,1fr)}}
         @media(max-width:640px){.ch-grid{grid-template-columns:1fr}}
-        .ch-card{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;transition:all .3s;cursor:pointer;display:flex;flex-direction:column}
-        .ch-card:hover{transform:translateY(-4px);border-color:var(--accent);box-shadow:0 8px 24px rgba(var(--accent-rgb),.1)}
-        .ch-card .ccb{height:90px;position:relative;overflow:hidden}
-        .ch-card .cca{width:48px;height:48px;border-radius:50%;border:3px solid var(--card);background:var(--bg2);display:grid;place-items:center;font-size:16px;font-weight:800;color:var(--accent);margin-top:-24px;margin-left:14px;position:relative;z-index:1}
-        .ch-card .cc-body{padding:6px 14px 14px;flex:1;display:flex;flex-direction:column}
-        .ch-card .cc-name{font-weight:700;font-size:15px;margin-bottom:2px}
-        .ch-card .cc-badge{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:700;background:rgba(var(--accent-rgb),.08);color:var(--accent);width:fit-content;margin-bottom:6px}
+                .ch-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r-card);overflow:hidden;transition:border-color var(--t) var(--ease),box-shadow var(--t) var(--ease);cursor:pointer;display:flex;flex-direction:column;box-shadow:var(--sh-1)}
+        .ch-card:hover{border-color:var(--border2);box-shadow:var(--sh-card)}
+        .ch-card .ccb{height:120px;position:relative;overflow:hidden}
+                .ch-card .cca{width:48px;height:48px;border-radius:var(--r-md);border:3px solid var(--card);background:var(--card2);display:grid;place-items:center;font-size:15px;font-weight:700;color:var(--text);margin-top:-24px;margin-left:20px;position:relative;z-index:1;overflow:hidden}
+        .ch-card .cc-body{padding:10px 20px 20px;flex:1;display:flex;flex-direction:column}
+        .ch-card .cc-name{font-weight:600;font-size:var(--fs-card);letter-spacing:-.015em;margin-bottom:6px}
+        .ch-card .cc-badge{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:var(--r-xs);font-size:11px;font-weight:500;background:var(--card2);border:1px solid var(--border);color:var(--text2);width:fit-content;margin-bottom:8px}
         .ch-card .cc-meta{display:flex;gap:12px;margin-bottom:8px;flex-wrap:wrap}
-        .ch-card .cc-meta span{display:flex;align-items:center;gap:4px;color:var(--text2);font-size:12px}
+        .ch-card .cc-meta span{display:flex;align-items:center;gap:4px;color:var(--text2);font-size:13px}
         .ch-card .cc-r{color:var(--text2);font-size:12px;margin-bottom:8px}
         .ch-card .cc-r strong{color:var(--green)}
         .ch-card .cc-actions{display:flex;gap:8px;margin-top:auto}
-        .ch-card .cc-actions button{flex:1;height:32px;border-radius:8px;font-size:11px;font-weight:700;transition:all .2s;cursor:pointer}
-        .ch-join{border:1px solid var(--accent);background:transparent;color:var(--accent)}
-        .ch-join:hover{background:var(--accent);color:var(--on-accent)}
+                .ch-card .cc-actions button{flex:1;height:var(--ctl-h-sm);border-radius:var(--r-ctl);font:600 13px var(--font);transition:background var(--t-fast) var(--ease),border-color var(--t-fast) var(--ease);cursor:pointer}
+        .ch-join{border:1px solid var(--border);background:var(--card);color:var(--text)}
+        .ch-join:hover{border-color:var(--text3);background:var(--card2)}
         .ch-preview{border:1px solid var(--border);background:transparent;color:var(--text2)}
         .ch-preview:hover{border-color:var(--accent);color:var(--accent)}
         .ch-trend{display:flex;gap:14px;overflow-x:auto;padding:4px 0 16px;scroll-snap-type:x mandatory}
         .ch-trend::-webkit-scrollbar{height:4px}
         .ch-trend::-webkit-scrollbar-thumb{background:var(--border2);border-radius:999px}
         .ch-trend .ch-card{min-width:260px;scroll-snap-align:start}
-        .sec-title{font-family:Geist;font-size:18px;font-weight:800;margin:0 0 4px}
-        .sec-sub{color:var(--text2);font-size:13px;margin:0 0 16px}
+        .sec-title{font-family:var(--font);font-size:var(--fs-h2);font-weight:600;letter-spacing:-.02em;margin:0 0 4px}
+        .sec-sub{color:var(--text2);font-size:13.5px;margin:0 0 var(--sp-4)}
         .ch-empty{text-align:center;padding:48px 24px;color:var(--text2);font-size:14px}
       `}</style>
 
-      <div className="ch-hero">
-        <h1>Communities</h1>
-        <p>Discover and join vibrant communities. Connect with creators, earn rewards, and grow together.</p>
-        <div className="ch-search">
-          <input type="text" placeholder="Search communities..." value={search} onChange={e => setSearch(e.target.value)} />
-          <button style={{ height: 44, padding: '0 18px', border: 0, background: 'var(--accent)', color: 'var(--on-accent)', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
-            <i className="ti ti-search" /> Search
-          </button>
+      <div className="ui-page">
+      <header className="ui-head">
+        <div>
+          <h1 className="ui-title" style={{ marginTop: 0 }}>Communities</h1>
+          <p className="ui-sub">Groups working and earning together on OgaPay. Join one to see its members' jobs first.</p>
         </div>
-      </div>
-
-      <div className="ch-stats">
-        {[
-          { icon: 'ti ti-users', num: stats?.total?.toLocaleString() || '0', label: 'Communities' },
-          { icon: 'ti ti-users-group', num: stats?.members?.toLocaleString() || '0', label: 'Active Members' },
-        ].map((s, i) => (
-          <div className="ch-stat" key={i}><div className="csi"><i className={s.icon} /></div><div className="csn">{s.num}</div><div className="csl">{s.label}</div></div>
-        ))}
-      </div>
-
-      <div className="ch-tabs">
+        <div className="ui-actions">
+          <button className="ui-btn ui-btn-dark" onClick={() => (signedIn ? navigate('/communities/create') : openSignIn({ redirect: '/communities/create' }))}><i className="ti ti-plus" /> Create community</button>
+        </div>
+      </header>
+      <div className="ch-toolbar">
         <button className={`ch-tab${tab === 'all' ? ' on' : ''}`} onClick={() => setTab('all')}>All communities</button>
         <button className={`ch-tab${tab === 'mine' ? ' on' : ''}`} onClick={() => (signedIn ? setTab('mine') : openSignIn({ redirect: '/communities/mine' }))}>My communities</button>
-        <button className="ch-create" onClick={() => (signedIn ? navigate('/communities/create') : openSignIn({ redirect: '/communities/create' }))}><i className="ti ti-plus" /> Create</button>
+        <div className="ui-search" role="search">
+          <i className="ti ti-search" />
+          <input className="ui-input" type="search" placeholder="Search communities" aria-label="Search communities" value={search} onChange={e => setSearch(e.target.value)} />
+        </div>
       </div>
+      {tab === 'all' && stats && <p className="ui-count ch-count"><b>{(stats.total || 0).toLocaleString()}</b> communities · <b>{(stats.members || 0).toLocaleString()}</b> members</p>}
 
       {tab === 'mine' ? (
         mine === null ? (
@@ -235,6 +221,7 @@ export default function Communities() {
 
       </>}
 
+      </div>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </Layout>
   )

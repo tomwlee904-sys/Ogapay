@@ -10,6 +10,8 @@ import Avatar from '../components/Avatar'
 import StarRating from '../components/StarRating'
 import DescriptionRenderer from '../components/DescriptionRenderer'
 import SellerCard from '../components/SellerCard'
+import Money from '../components/Money'
+import ItemCover, { itemCategoryLabel } from '../components/ItemCover'
 import { SkeletonPage, injectSkeletonStyles } from "../components/SkeletonLoader";
 
 interface ReviewItem {
@@ -204,14 +206,9 @@ export default function StoreProduct() {
 
   const p = product
   const cur = (p.currency || 'NGN') as string
-  const money = (n: number) => Math.round(n).toLocaleString('en-US')
-  const priceMain = cur === 'NGN' ? `₦${money(p.price)}` : cur === 'SOL' ? `${p.price} SOL` : `$${Number(p.price).toFixed(2)}`
-  const priceAlt = cur === 'NGN'
-    ? `≈ $${convert(p.price, 'NGN', 'USDC').toFixed(2)} USD`
-    : `≈ ₦${money(convert(p.price, cur as any, 'NGN'))}`
   const delivery = p.metadata?.delivery || '3 days'
   const revisions = p.metadata?.revisions ?? 3
-  const crumb = [p.category, p.metadata?.subcategory].filter(Boolean).join(' / ') || 'Store'
+  const crumb = [itemCategoryLabel(p.category, p.title), p.metadata?.subcategory].filter(Boolean).join(' / ') || 'Store'
 
   const buyLabel = purchasing ? 'Processing…' : purchased ? 'Purchased' : isOwner ? 'Edit listing' : isSoldOut ? 'Sold out' : 'Buy now'
   const onBuy = () => {
@@ -228,8 +225,7 @@ export default function StoreProduct() {
       </div>
       <div className="hc-reward sp-total">
         <span className="ui-label" style={{ margin: 0 }}>Total price</span>
-        <div className="hc-amt"><strong>{priceMain}</strong><span>{cur}</span></div>
-        <span className="hc-alt">{priceAlt} <span style={{ fontFamily: 'inherit' }}>estimated</span></span>
+        <Money amount={Number(p.price || 0)} currency={cur} convert={convert} size={34} />
       </div>
       <div className="sp-facts">
         <div><span><i className="ti ti-clock" />Delivery</span><b>{delivery}</b></div>
@@ -277,23 +273,24 @@ export default function StoreProduct() {
       <style>{`
         .sp-page{padding-top:24px}
         .sp-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
-        .sp-top button{display:inline-flex;align-items:center;gap:6px;background:none;border:0;cursor:pointer;font:500 12px 'Geist',system-ui,sans-serif;color:var(--text2);padding:4px 0}
+        .sp-top button{display:inline-flex;align-items:center;gap:6px;background:none;border:0;cursor:pointer;font:500 13px var(--font);color:var(--text2);padding:4px 0;min-height:36px}
         .sp-top button:hover{color:var(--text)}
         .sp-layout{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:20px;align-items:start;margin-top:18px}
         .sp-side{position:sticky;top:calc(var(--nav-h,64px) + 18px);display:flex;flex-direction:column;gap:14px}
-        .sp-media{aspect-ratio:16/10;border-radius:20px;border:1px solid var(--border);background:var(--card2);overflow:hidden;display:grid;place-items:center;color:var(--text3);font-size:40px}
-        .sp-media img{width:100%;height:100%;object-fit:cover;display:block}
+        .sp-media{aspect-ratio:16/10;border-radius:var(--r-card);border:1px solid var(--border);background:var(--card2);overflow:hidden}
+        .sp-media .o-cover{height:100%;aspect-ratio:auto;border-radius:0}
+        .sp-media .o-cover-tile{width:88px;height:88px;border-radius:24px;font-size:38px}
         .sp-about{padding:22px;margin-top:14px}
-        .sp-about h2{font-size:15px;font-weight:600;margin:0 0 12px;letter-spacing:-.01em}
+        .sp-about h2{font-size:var(--fs-h2);font-weight:600;margin:0 0 12px;letter-spacing:-.02em}
         .sp-price{padding:16px}
         .sp-price-head{display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:500;margin-bottom:12px}
-        .sp-pill{display:inline-flex;align-items:center;gap:5px;padding:4px 8px;border-radius:6px;background:#edf8f0;border:1px solid #c1dfcb;color:#17805c;font-size:10px;font-weight:500}
+        .sp-pill{display:inline-flex;align-items:center;gap:5px;padding:4px 8px;border-radius:var(--r-xs);background:#edf8f0;border:1px solid #c1dfcb;color:#17805c;font-size:11px;font-weight:500}
+        [data-theme="dark"] .sp-pill{background:#0f1e17;border-color:#1f4433;color:#6ee7b7}
         .sp-pill span{width:5px;height:5px;border-radius:50%;background:#17805c}
         .sp-pill-off{background:rgba(220,38,38,.08);border-color:rgba(220,38,38,.25);color:#dc2626}
         .sp-total{padding:16px}
-        .sp-total .hc-amt strong{font-size:34px}
-        .sp-facts{display:flex;flex-direction:column;gap:12px;padding:16px 4px;margin-bottom:14px;border-bottom:1px solid var(--border)}
-        .sp-facts div{display:flex;justify-content:space-between;align-items:center;font-size:12px}
+                .sp-facts{display:flex;flex-direction:column;gap:12px;padding:16px 4px;margin-bottom:14px;border-bottom:1px solid var(--border)}
+        .sp-facts div{display:flex;justify-content:space-between;align-items:center;font-size:13px}
         .sp-facts span{display:inline-flex;align-items:center;gap:8px;color:var(--text2)}
         .sp-facts b{font-weight:600}
         .sp-note{display:flex;align-items:center;gap:6px;font-size:12px;padding:10px 12px;border-radius:10px;margin-bottom:10px}
@@ -332,7 +329,7 @@ export default function StoreProduct() {
         <div className="sp-layout">
           <div>
             <div className="sp-media">
-              {p.image ? <img src={p.image} alt={p.title} /> : <i className="ti ti-photo" />}
+              <ItemCover src={p.image} category={p.category} title={p.title} alt={p.title} />
             </div>
 
             <div className="sp-mobile-only">{PriceCard}{CreatorCard}</div>

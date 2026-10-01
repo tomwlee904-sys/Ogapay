@@ -2,6 +2,10 @@ import { Link } from "react-router-dom";
 import { jobRequirements } from "../../lib/requirements";
 import { CATEGORY_LABELS as CATEGORY } from "../../lib/categories";
 import { BoostedTag, PremiumMark } from "../Perks";
+import Money from "../Money";
+import ItemCover, { itemCategoryLabel } from "../ItemCover";
+import { spokenMoney } from "../../lib/money";
+import { jobDeadline, deadlineLabel } from "../../lib/deadline";
 
 /* Homepage cards for highlighted jobs and creator-store products. Kept separate
    from TaskCard so the rest of the app keeps its existing card design. */
@@ -9,21 +13,8 @@ import { BoostedTag, PremiumMark } from "../Perks";
 type Convert = (amount: number, from: any, to: any) => number;
 
 const money = (n: number) => Math.round(n).toLocaleString("en-US");
-const usd = (n: number) => `$${n < 10 ? n.toFixed(2) : Math.round(n).toLocaleString("en-US")}`;
-
 
 const plain = (s?: string) => (s || "").replace(/[#*_`>]+/g, "").replace(/\s+/g, " ").trim();
-
-function timeLeft(end?: string | null) {
-  if (!end) return "No deadline";
-  const ms = new Date(end).getTime() - Date.now();
-  if (Number.isNaN(ms)) return "No deadline";
-  if (ms <= 0) return "Ended";
-  const m = Math.floor(ms / 60000), d = Math.floor(m / 1440), h = Math.floor((m % 1440) / 60);
-  if (d > 0) return `${d}d ${h}h left`;
-  if (h > 0) return `${h}h ${m % 60}m left`;
-  return `${m}m left`;
-}
 
 function Avatar({ src, name, size = 32 }: { src?: string | null; name: string; size?: number }) {
   return (
@@ -38,7 +29,7 @@ export function HomeJobCard({ task, convert, applied }: { task: any; convert: Co
   const name = poster.username || poster.firstName || task.creatorName || "OgaPay";
   const amount = Number(task.reward ?? task.amount ?? 0);
   const cur = task.currency || "NGN";
-  const alt = cur === "NGN" ? `≈ ${usd(convert(amount, "NGN", "USDC"))} USD` : `≈ ₦${money(convert(amount, cur, "NGN"))}`;
+  const deadline = jobDeadline(task);
   const max = Number(task.maxWorkers ?? task.slots ?? 0);
   const done = Number(task.submissionsCount ?? task._count?.submissions ?? task.currentWorkers ?? 0);
   const open = Math.max(0, max - done);
@@ -49,7 +40,7 @@ export function HomeJobCard({ task, convert, applied }: { task: any; convert: Co
   const reqs = jobRequirements(task);
 
   return (
-    <Link to={`/tasks/${task.id}`} className="hc-card" aria-label={`${task.title} by ${name}, ${cur === "NGN" ? "₦" : ""}${money(amount)} ${cur}. View job`}>
+    <Link to={`/tasks/${task.id}`} className="hc-card" aria-label={`${task.title} by ${name}, ${spokenMoney(amount, cur)} per worker. View job`}>
       <div className="hc-top">
         <span className="hc-type"><i className="ti ti-briefcase" />{task.category === "SOCIAL_MEDIA" ? "Social task" : "Custom job"}</span>
         {task.isBoosted ? <BoostedTag /> : task.featured && <span className="hc-pill"><i className="ti ti-star-filled" style={{ color: "#bd8517" }} />Highlighted</span>}
@@ -62,8 +53,7 @@ export function HomeJobCard({ task, convert, applied }: { task: any; convert: Co
 
       <div className="hc-reward">
         <span className="hc-lbl">Reward per worker</span>
-        <div className="hc-amt"><strong>{cur === "NGN" ? "₦" : ""}{money(amount)}</strong><span>{cur}</span></div>
-        <span className="hc-alt">{alt}</span>
+        <Money amount={amount} currency={cur} convert={convert} size={30} positive />
       </div>
 
       <div className="hc-reqs">
@@ -89,7 +79,7 @@ export function HomeJobCard({ task, convert, applied }: { task: any; convert: Co
       </div>
 
       <div className="hc-foot">
-        <time><i className="ti ti-clock" />{timeLeft(task.expiresAt || task.deadline)}</time>
+        <time className={deadline.state === "ended" ? "hc-ended" : undefined}><i className="ti ti-clock" />{deadlineLabel(deadline)}</time>
         {applied
           ? <span className="hc-go hc-done"><i className="ti ti-circle-check" />Submitted</span>
           : <span className="hc-go">View job<span className="hc-arrow"><i className="ti ti-arrow-up-right" /></span></span>}
@@ -128,30 +118,27 @@ export function HomeCommunityCard({ community: c }: { community: any }) {
 export function HomeProductCard({ item, convert }: { item: any; convert: Convert }) {
   const price = Number(item.price ?? 0);
   const cur = item.currency || "NGN";
-  const alt = cur === "NGN" ? `≈ ${usd(convert(price, "NGN", "USDC"))} USD` : `≈ ₦${money(convert(price, cur, "NGN"))}`;
   const seller = item.seller || "OgaPay";
-  const initials = (item.category || item.title || "OP").split(/\s+/).map((w: string) => w[0]).join("").slice(0, 3).toUpperCase();
   return (
-    <Link to={`/store/${item.id}`} className="hc-card hc-product">
+    <Link to={`/store/${item.id}`} className="hc-card hc-product" aria-label={`${item.title} by ${seller}, ${spokenMoney(price, cur)}. View details`}>
       <div className="hc-media">
-        {item.image ? <img src={item.image} alt="" loading="lazy" /> : <span className="hc-media-ph">{initials}</span>}
+        <ItemCover src={item.image} category={item.category} title={item.title} />
         <span className="hc-active"><span />Active</span>
       </div>
       <div className="hc-pbody">
-        <span className="hc-type">{item.category || "Service"}</span>
+        <span className="hc-type">{itemCategoryLabel(item.category, item.title)}</span>
         <h3>{item.title}</h3>
         <p className="hc-pdesc">{plain(item.description)}</p>
         <div className="hc-by">
           <Avatar src={item.sellerAvatar} name={seller} size={28} />
           <span className="hc-by-txt">
-            <b style={{ fontSize: 12 }}>{seller}</b>
-            <span>{item.reviewsCount > 0 ? <><b style={{ fontSize: 10, color: "var(--hv-ink)" }}>{Number(item.rating).toFixed(1)}</b> <i className="ti ti-star-filled" style={{ color: "#bd8517", fontSize: 9 }} /> · {item.reviewsCount} reviews</> : "New seller"}</span>
+            <b>{seller}</b>
+            <span>{item.reviewsCount > 0 ? <><b className="hc-rating">{Number(item.rating).toFixed(1)}</b> <i className="ti ti-star-filled hc-star" /> · {item.reviewsCount} reviews</> : item.official ? "From OgaPay" : "New seller"}</span>
           </span>
         </div>
         <div className="hc-reward hc-price">
-          <div className="hc-row"><span className="hc-lbl">Price</span><span className="hc-go" style={{ fontSize: 10 }}>View details <i className="ti ti-arrow-up-right" /></span></div>
-          <div className="hc-amt"><strong>{cur === "NGN" ? "₦" : ""}{money(price)}</strong><span>{cur}</span></div>
-          <span className="hc-alt">{alt} <span style={{ fontFamily: "inherit" }}>estimated</span></span>
+          <div className="hc-row"><span className="hc-lbl">Price</span><span className="hc-go">View details <i className="ti ti-arrow-up-right" /></span></div>
+          <Money amount={price} currency={cur} convert={convert} size={26} />
         </div>
       </div>
     </Link>

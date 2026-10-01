@@ -29,7 +29,7 @@
 }
 .of *, .of *::before, .of *::after { box-sizing: border-box; }
 
-.of-inner { max-width: 1184px; margin: 0 auto; padding: 56px 32px 20px; }
+.of-inner { max-width: calc(var(--container) + 2 * var(--gutter)); margin: 0 auto; padding: 56px var(--gutter) 20px; }
 .of-top { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 64px; align-items: start; }
 
 .of-brand { display: inline-flex; align-items: center; gap: 10px; font-size: 19px; font-weight: 800; letter-spacing: -.02em; color: var(--of-ink); text-decoration: none; }

@@ -622,16 +622,19 @@ export default function Tasks() {
   return (
     <Layout>
       <style>{`
-        .tl-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:22px}
-        .tl-search{flex:1;max-width:320px;min-width:180px}
+        .tl-bar{display:flex;align-items:center;gap:var(--sp-2);flex-wrap:wrap;margin:var(--sp-5) 0 var(--sp-5)}
+        .tl-search{flex:1;max-width:360px;min-width:200px}
         .tl-bar .ui-switch{margin-left:auto}
-        .tl-search .ui-input{height:38px}
         .tl-cats{max-height:210px;overflow:auto;padding-right:2px}
-        .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
-        @media(max-width:640px){.tl-search{max-width:none;order:3;flex-basis:100%}}
+        @media(max-width:640px){.tl-search{max-width:none;order:3;flex-basis:100%}.tl-bar .ui-switch{margin-left:0}}
       `}</style>
-      <div className="ui-page" style={{ paddingTop: 20 }}>
-        <h1 className="sr-only">Jobs timeline</h1>
+      <div className="ui-page">
+        <div className="ui-head">
+          <div>
+            <h1 className="ui-title" style={{ marginTop: 0 }}>Jobs</h1>
+            <p className="ui-sub">Paid jobs open right now, newest first. Rewards are held in escrow and paid in Naira or USDC when your work is approved.</p>
+          </div>
+        </div>
 
         <div className="tl-bar">
           <SortFilterMenu

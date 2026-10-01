@@ -1,0 +1,160 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   OgaPay visual system: the shared scale every page uses.
+   Loaded right after tokens.css (main.tsx). Page stylesheets use these
+   variables instead of their own numbers; exceptions are deliberate and noted.
+   Reference proportions: wurk.fun (1120px content, 10px control radius,
+   20px cards, 44px controls, mono labels used sparingly).
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* Spacing scale */
+  --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px; --sp-5: 24px; --sp-6: 32px; --sp-7: 48px; --sp-8: 64px;
+
+  /* Layout: one content width and one gutter for every main page */
+  --container: 1120px;
+  --gutter: 32px;
+  --page-top: 40px;          /* space under the top bar */
+  --section-gap: 96px;       /* between major homepage sections */
+
+  /* Radii */
+  --r-xs: 6px;    /* tiny badges, avatars in rows */
+  --r-sm: 8px;    /* small icon tiles, inner chips */
+  --r-ctl: 10px;  /* buttons, inputs, selects, segmented controls */
+  --r-md: 14px;   /* panels inside cards, product images, menus */
+  --r-card: 20px; /* cards */
+  --r-pill: 999px;/* filter chips and status pills only */
+
+  /* Controls */
+  --ctl-h: 44px; --ctl-h-sm: 36px; --ctl-h-lg: 48px;
+  --ctl-px: 16px; --ctl-gap: 8px;
+  --icon-sm: 14px; --icon: 16px; --icon-lg: 20px;
+
+  /* Type (Geist for text, Geist Mono for short labels) */
+  --font: 'Geist', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'Geist Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  --fs-hero: clamp(42px, 5vw, 70px);
+  --fs-display: clamp(30px, 3.6vw, 48px);   /* homepage section headings */
+  --fs-title: clamp(28px, 2.8vw, 34px);     /* page titles */
+  --fs-h2: 20px;                            /* in-page section headings */
+  --fs-card: 16px;                          /* card titles */
+  --fs-body: 15px; --lh-body: 1.65;
+  --fs-small: 13px; --lh-small: 1.55;
+  --fs-label: 10.5px;                       /* mono eyebrow labels */
+  --tracking-tight: -0.04em;
+  --tracking-display: -0.05em;
+
+  /* Colour: text3 used to be #9d9da4 (2.6:1 on white), too pale for
+     deadlines, requirements and form hints; now 4.6:1 */
+  --text3: #74747c;
+  --line: var(--border);
+  --line-strong: var(--border2);
+  --surface: var(--card);
+  --surface-2: var(--card2);
+  --money: #15803d;           /* earnings, positive amounts */
+  --focus: #2563eb;           /* keyboard focus ring */
+  --tint-reward: linear-gradient(180deg, #f6faf8 0%, #eff6f2 100%);
+
+  /* Elevation (restrained) */
+  --sh-1: 0 1px 2px rgba(16, 18, 24, 0.04);
+  --sh-card: 0 1px 2px rgba(16, 18, 24, 0.04), 0 10px 28px -20px rgba(16, 18, 24, 0.18);
+  --sh-pop: 0 24px 48px -24px rgba(16, 18, 24, 0.32);
+
+  /* Motion */
+  --t-fast: 150ms; --t: 200ms; --ease: cubic-bezier(.2, .7, .2, 1);
+}
+
+[data-theme="dark"] {
+  --text3: #8e8e97;           /* 6:1 on black */
+  --money: #4ade80;
+  --focus: #60a5fa;
+  --tint-reward: linear-gradient(180deg, #0f1a15 0%, #0b1310 100%);
+  --sh-1: none;
+  --sh-card: 0 1px 0 rgba(255, 255, 255, 0.03) inset, 0 12px 32px -22px rgba(0, 0, 0, 0.9);
+  --sh-pop: 0 24px 48px -20px rgba(0, 0, 0, 0.85);
+}
+
+@media (max-width: 768px) {
+  :root { --gutter: 16px; --page-top: 24px; --section-gap: 64px; --fs-body: 15px; }
+}
+
+/* ─── Foundation ──────────────────────────────────────────────────────────── */
+
+body { font-size: var(--fs-body); }
+p { line-height: var(--lh-body); }
+::selection { background: color-mix(in srgb, var(--focus) 22%, transparent); }
+
+/* One visible keyboard focus ring everywhere (mouse clicks don't show it).
+   :is() so it beats component rules that turn the outline off. */
+:is(a, button, [role="button"], [role="tab"], [role="switch"], summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+:is(input, select, textarea):focus-visible { outline: 2px solid var(--focus); outline-offset: 0; }
+
+/* Icon fonts sit on the text's middle, not its baseline */
+:where(button, a, label, span) > i.ti { line-height: 1; vertical-align: -0.125em; }
+
+/* Disabled controls look disabled and don't react */
+:where(button, input, select, textarea):disabled { cursor: not-allowed; }
+
+/* Shared container */
+.o-container { width: 100%; max-width: calc(var(--container) + 2 * var(--gutter)); margin: 0 auto; padding-left: var(--gutter); padding-right: var(--gutter); }
+
+/* ─── Money ───────────────────────────────────────────────────────────────── */
+/* One way to show an amount: the amount is the star, the currency is part of it
+   (₦1,500 or 2.50 USDC, never "₦1,500 NGN"), and a conversion is a quiet line
+   underneath (≈ $1.13). See lib/money.ts. */
+.o-money { display: inline-flex; flex-direction: column; gap: 2px; min-width: 0; }
+.o-money-main { font-weight: 650; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; color: var(--text); line-height: 1.05; white-space: nowrap; }
+.o-money-main small { font-size: .58em; font-weight: 600; letter-spacing: 0; margin-left: .25em; color: var(--text2); }
+.o-money-alt { font: 500 12px/1.4 var(--font); color: var(--text2); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.o-money.money-pos .o-money-main { color: var(--money); }
+
+/* Reward / price panel: a soft tint, no glow */
+.o-reward { background: var(--tint-reward); border: 1px solid color-mix(in srgb, var(--money) 14%, var(--line)); border-radius: var(--r-md); padding: var(--sp-3) var(--sp-4); }
+
+/* ─── Category covers (store items without their own picture) ───────────── */
+.o-cover { position: relative; width: 100%; aspect-ratio: 16 / 10; overflow: hidden; border-radius: var(--r-md); background: var(--surface-2); }
+.o-cover > img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.o-cover-fallback { position: absolute; inset: 0; display: grid; place-items: center; color: var(--text2); }
+.o-cover-fallback svg { width: 100%; height: 100%; display: block; }
+
+/* ─── Motion preferences ─────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  :root { --t-fast: 0ms; --t: 0ms; }
+}
+
+/* Branded category cover (ItemCover): a soft tint, a faint grid and the
+   category icon in an OgaPay-style tile */
+.o-cover-art {
+  position: absolute; inset: 0; display: grid; place-items: center;
+  --c1: #f4f4f5; --c2: #e9e9ec; --ink: #3f3f46;
+  background:
+    linear-gradient(var(--grid, rgba(0,0,0,.045)) 1px, transparent 1px) 0 0 / 22px 22px,
+    linear-gradient(90deg, var(--grid, rgba(0,0,0,.045)) 1px, transparent 1px) 0 0 / 22px 22px,
+    radial-gradient(120% 90% at 30% 10%, var(--c1), var(--c2));
+}
+.o-cover-art.tone-sand  { --c1: #fbf6ee; --c2: #f1e7d6; --ink: #7a5a2e; }
+.o-cover-art.tone-sky   { --c1: #f1f6fb; --c2: #e1ebf5; --ink: #2f5878; }
+.o-cover-art.tone-rose  { --c1: #fbf3f4; --c2: #f2e2e5; --ink: #7d3b49; }
+.o-cover-art.tone-mint  { --c1: #f0f8f4; --c2: #ddefe5; --ink: #22684a; }
+.o-cover-art.tone-amber { --c1: #fcf7ea; --c2: #f4e8c8; --ink: #7a5a12; }
+.o-cover-art.tone-violet{ --c1: #f5f3fb; --c2: #e7e2f4; --ink: #4f4486; }
+.o-cover-art.tone-slate { --c1: #f4f5f7; --c2: #e5e7eb; --ink: #3f4652; }
+[data-theme="dark"] .o-cover-art { --grid: rgba(255,255,255,.05); --c1: #17181b; --c2: #0f1012; --ink: #d4d4d8; }
+[data-theme="dark"] .o-cover-art.tone-sand  { --c1: #1f1a12; --c2: #14110c; --ink: #e8c98f; }
+[data-theme="dark"] .o-cover-art.tone-sky   { --c1: #121a22; --c2: #0c1117; --ink: #9cc3e6; }
+[data-theme="dark"] .o-cover-art.tone-rose  { --c1: #211417; --c2: #160d0f; --ink: #eaa9b6; }
+[data-theme="dark"] .o-cover-art.tone-mint  { --c1: #111c17; --c2: #0b130f; --ink: #8ad8b1; }
+[data-theme="dark"] .o-cover-art.tone-amber { --c1: #211b0e; --c2: #151109; --ink: #f0cd73; }
+[data-theme="dark"] .o-cover-art.tone-violet{ --c1: #18152a; --c2: #100e1b; --ink: #bdb2f2; }
+.o-cover-tile {
+  width: 64px; height: 64px; border-radius: 18px; display: grid; place-items: center;
+  background: color-mix(in srgb, var(--card) 88%, transparent); color: var(--ink);
+  border: 1px solid color-mix(in srgb, var(--ink) 16%, transparent);
+  box-shadow: 0 0 0 8px color-mix(in srgb, var(--card) 40%, transparent), 0 12px 28px -18px rgba(0,0,0,.35);
+  font-size: 28px;
+}
+
+/* Older radius names follow the scale (cards 20, small panels 14) */
+:root, [data-theme="dark"] { --radius: var(--r-card); --radius-lg: 24px; --radius-sm: var(--r-md); }

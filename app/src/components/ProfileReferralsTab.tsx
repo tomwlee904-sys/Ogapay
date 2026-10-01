@@ -95,7 +95,7 @@ export default function TabReferralsContent() {
         .rf-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
         @media(max-width:500px){.rf-stats{grid-template-columns:1fr}}
         .rf-stat{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center;transition:all .25s}
-        .rf-stat:hover{transform:translateY(-2px);border-color:var(--accent)}
+        .rf-stat:hover{transform:none;border-color:var(--accent)}
         .rf-stat i{font-size:24px;margin-bottom:6px;display:block}
         .rf-stat .rf-num{font-family:Geist;font-size:24px;font-weight:900}
         .rf-stat .rf-label{font-size:12px;color:var(--text2);margin-top:2px}

@@ -208,6 +208,6 @@ body.login-page main.login-main { flex:1; display:flex; align-items:center; just
 }
 @media(max-width:480px){
   .right{padding:24px 16px}
-  .auth-btn{height:54px;padding:0 12px;border-radius:14px;gap:12px}
+  .auth-btn{height:54px;padding:0 12px;border-radius:var(--r-ctl);gap:12px}
   .right h2{font-size:24px}
 }
