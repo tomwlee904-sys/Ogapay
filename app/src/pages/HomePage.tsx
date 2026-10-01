@@ -7,12 +7,11 @@ import Navbar from "../components/Navbar";
 import Drawer from "../components/Drawer";
 import Footer from "../components/Footer";
 import BottomNav from "../components/BottomNav";
-import { Logo } from "../components/Logo";
 import HelixStory, { type HelixPanel } from "../components/home/HelixStory";
 import Carousel from "../components/home/Carousel";
 import { HomeJobCard, HomeProductCard, HomeCommunityCard } from "../components/home/HomeCards";
 import ConnectArt from "../components/home/ConnectArt";
-import StrandsArt from "../components/home/StrandsArt";
+import NetworkFlow from "../components/home/NetworkFlow";
 import { useCurrency } from "../context/CurrencyContext";
 
 import "../styles/homepage.css";
@@ -93,20 +92,6 @@ function useJson<T = any>(path: string, pollMs = 0) {
   return data;
 }
 
-/* ─── hero network graphic ─────────────────────────────────────────────────── */
-
-function NetworkGraphic() {
-  // Strands drawn on a canvas (see StrandsArt); the logo tile sits on top
-  return (
-    <div className="hv-network" aria-hidden="true">
-      <span className="hv-network-stem top" />
-      <StrandsArt />
-      <div className="hv-network-hub"><Logo size={34} /></div>
-      <span className="hv-network-stem bottom" />
-    </div>
-  );
-}
-
 /* ─── hero ─────────────────────────────────────────────────────────────────── */
 
 function StatCard({ icon, label, value, sub, format, positive }: { icon: string; label: string; value: number | null; sub: string; format: (n: number) => string; positive?: boolean }) {
@@ -153,12 +138,8 @@ function Hero({ live, onCreate }: { live: any; onCreate: () => void }) {
           </div>
 
           <div>
-            <div className="hv-labels">
-              <span className="hv-mono hv-eyebrow"><span className="hv-dot" /> People + agents</span>
-              <span className="hv-mono">Escrow protected</span>
-            </div>
-            <NetworkGraphic />
-            <div className="hv-caption">Real people. Real work. One network.</div>
+            {/* the labels and caption are drawn inside the animation */}
+            <NetworkFlow />
             <div className="hv-mono hv-eyebrow" style={{ marginTop: 26 }}><span className="hv-dot" /> Platform activity</div>
             <div className="hv-stats">
               <StatCard icon="briefcase" label="Active jobs" value={n("activeJobs")} sub="Open to apply now" format={(x) => Math.round(x).toLocaleString()} />

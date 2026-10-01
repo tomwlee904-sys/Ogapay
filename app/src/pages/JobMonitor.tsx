@@ -53,8 +53,6 @@ export default function JobMonitor() {
   const [busy, setBusy] = useState<string | null>(null)
   const [checkedAt, setCheckedAt] = useState<Date | null>(null)
   const seen = useRef<Set<string> | null>(null)
-  const prefs = useRef({ alerts, sound })
-  prefs.current = { alerts, sound }
 
   const load = useCallback(async () => {
     try {
@@ -63,11 +61,8 @@ export default function JobMonitor() {
       if (seen.current) {
         // Only jobs that appear after the page opened count as new
         const added = list.filter((j) => !seen.current!.has(j.id))
-        if (added.length) {
-          setFresh((f) => new Set([...f, ...added.map((j) => j.id)]))
-          if (prefs.current.alerts) toast(added.length === 1 ? `New job: ${added[0].title}` : `${added.length} new jobs`, 'success')
-          if (prefs.current.sound) beep()
-        }
+        // (the pop-up and sound come from the site-wide job alert, which uses these switches)
+        if (added.length) setFresh((f) => new Set([...f, ...added.map((j) => j.id)]))
       }
       seen.current = new Set(list.map((j) => j.id))
       setJobs(list)

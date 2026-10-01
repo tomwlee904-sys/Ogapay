@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react'
-import { apiRequest, getAccessToken, getRefreshToken, getStoredUser, clearAuthSession, persistAuthSession } from '../lib/api'
+import { apiRequest, getAccessToken, getRefreshToken, getStoredUser, clearAuthSession, persistAuthSession, SESSION_EXPIRED_EVENT } from '../lib/api'
+import { openSignIn } from '../lib/signin'
 
 interface BankAccount {
   accountNumber: string
@@ -149,6 +150,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     return () => { mounted = false }
   }, [refreshUser])
+
+  // The session couldn't be renewed (api.ts already cleared it): show the
+  // signed-out state and ask to sign in again, back to the same page
+  useEffect(() => {
+    const onExpired = () => {
+      // Pages behind sign-in redirect to /login, which shows this note
+      try { sessionStorage.setItem('ogapay_session_ended', String(Date.now())) } catch { /* storage off */ }
+      setUser(null)
+      openSignIn({ notice: 'Your session ended. Please sign in again.', redirect: window.location.pathname + window.location.search })
+    }
+    window.addEventListener(SESSION_EXPIRED_EVENT, onExpired)
+    return () => window.removeEventListener(SESSION_EXPIRED_EVENT, onExpired)
+  }, [])
 
   useEffect(() => {
     document.body.setAttribute('data-auth', isAuthed ? 'authed' : 'public')

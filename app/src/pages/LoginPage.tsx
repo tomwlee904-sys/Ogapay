@@ -11,6 +11,14 @@ const ERRORS: Record<string, string> = {
   google_auth_failed: 'Google sign-in failed. Please try again.',
 }
 
+// Set by AuthContext when a session couldn't be renewed; shown for a minute
+const takeSessionNotice = () => {
+  try {
+    const v = sessionStorage.getItem('ogapay_session_ended')
+    return v && Date.now() - Number(v) < 60000 ? 'Your session ended. Please sign in again.' : ''
+  } catch { return '' }
+}
+
 /* /login and /pair open the sign-in dialog over the homepage, like wurk.fun.
    Referral links (/ref/CODE, /join?ref=CODE) open sign-up with the code saved.
    Closing it leaves you on the homepage. */
@@ -32,7 +40,7 @@ export default function LoginPage() {
     openSignIn({
       view: pathname === '/pair' ? 'pair' : params.get('mode') === 'signup' || isReferral ? 'signup' : 'options',
       code: params.get('code') || '',
-      notice: ERRORS[params.get('error') || ''] || '',
+      notice: ERRORS[params.get('error') || ''] || takeSessionNotice(),
       redirect,
       closeTo: '/',
     })

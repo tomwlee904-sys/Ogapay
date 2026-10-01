@@ -1,10 +1,9 @@
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { useAuth } from "../context/AuthContext"
-import { useTheme } from "../context/ThemeContext"
-import Footer from "../components/Footer"
-import Drawer from "../components/Drawer"
+import Layout from "../components/Layout"
 import { apiRequest } from "../lib/api"
+import { openSignIn } from "../lib/signin"
 
 const categories = ['All', 'News', 'Businesses', 'Freelancers', 'Case Studies']
 
@@ -25,7 +24,7 @@ function JoinCommunityTile({ onClick }: { onClick: () => void }) {
       onClick={onClick}
       style={{ position: 'relative', overflow: 'hidden', cursor: 'pointer', height: '100%', minHeight: 300 }}
     >
-      <img src="/assets/join-community.jpg" alt="Join the Community" style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0 }} />
+      <img src="/assets/join-community.jpg" alt="Join the Community" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0 }} />
       <div style={{ position: 'absolute', inset: 0, background: hovered ? 'rgba(10,10,10,0.18)' : 'transparent', transition: 'background 0.3s' }} />
       <div style={{ position: 'absolute', top: 14, left: 14, opacity: hovered ? 1 : 0, transform: hovered ? 'translateY(0)' : 'translateY(-8px)', transition: 'all 0.25s ease' }}>
         <button onClick={onClick} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'var(--bg)', color: 'var(--text)', fontSize: 13, fontWeight: 600, padding: '7px 14px', borderRadius: 8, border: 'none', cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.12)' }}>
@@ -131,7 +130,7 @@ function GetInspiredTile({ onClick }: { onClick: () => void }) {
       onClick={onClick}
       style={{ position: 'relative', overflow: 'hidden', cursor: 'pointer', background: '#FFD6D6', height: '100%', minHeight: 300 }}
     >
-      <img src="/assets/get-inspired.png" alt="Get Inspired" style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0 }} />
+      <img src="/assets/get-inspired.png" alt="Get Inspired" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0 }} />
       <div style={{ position: 'absolute', inset: 0, background: 'rgba(10,10,10,0.1)', opacity: hovered ? 1 : 0, transition: 'opacity 0.3s' }} />
       <div style={{ position: 'absolute', top: 14, left: 14, opacity: hovered ? 1 : 0, transform: hovered ? 'translateY(0)' : 'translateY(-8px)', transition: 'all 0.25s ease' }}>
         <button onClick={onClick} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'var(--bg)', color: 'var(--text)', fontSize: 13, fontWeight: 600, padding: '7px 14px', borderRadius: 8, border: 'none', cursor: 'pointer' }}>
@@ -144,7 +143,7 @@ function GetInspiredTile({ onClick }: { onClick: () => void }) {
 
 export default function Blog() {
   const [activeCategory, setActiveCategory] = useState('All')
-  const [showArticles, setShowArticles] = useState(false)
+  const [sort, setSort] = useState<'featured' | 'newest'>('featured')
   const [email, setEmail] = useState('')
   const [subscribed, setSubscribed] = useState(false)
   const [search, setSearch] = useState('')
@@ -153,8 +152,6 @@ export default function Blog() {
   const [allPosts, setAllPosts] = useState<any[] | null>(null)
   const navigate = useNavigate()
   const { isAuthed } = useAuth()
-  const { theme, toggle } = useTheme()
-  const [drawerOpen, setDrawerOpen] = useState(false)
 
   // Published posts from the API (this page used to show eight made-up posts
   // plus drafts kept in the browser's localStorage)
@@ -166,13 +163,18 @@ export default function Blog() {
     return () => { live = false }
   }, [])
 
+  const posts = allPosts || []
+  // Category chips only when posts actually have categories
+  const usedCategories = categories.filter((c) => c === 'All' || posts.some((p: any) => p.category === c))
   const q = search.trim().toLowerCase()
-  const filteredArticles = (allPosts || [])
+  const when = (p: any) => new Date(p.publishedAt || p.createdAt || 0).getTime()
+  const filteredArticles = posts
     .filter((p: any) => activeCategory === 'All' || p.category === activeCategory)
     .filter((p: any) => !q || `${p.title} ${p.excerpt || ''} ${(p.tags || []).join(' ')}`.toLowerCase().includes(q))
-  const popular = !q && activeCategory === 'All' && (allPosts || []).length >= 6
-    ? [...(allPosts || [])].sort((a: any, b: any) => (b.viewCount || 0) - (a.viewCount || 0)).slice(0, 3)
-    : []
+    .slice()
+    .sort((a: any, b: any) => sort === 'newest' ? when(b) - when(a) : (b.viewCount || 0) - (a.viewCount || 0) || when(b) - when(a))
+
+  const write = () => { if (isAuthed) navigate('/blog/write'); else openSignIn({ redirect: '/blog/write' }) }
 
   const subscribe = async () => {
     if (!email.trim() || subscribing) return
@@ -186,169 +188,84 @@ export default function Blog() {
     setSubscribing(false)
   }
 
-  if (!showArticles) {
-    return (
-      <div data-theme={theme} style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: 'var(--bg)', color: 'var(--text)' }}>
-        <style>{`
-          .blog-nav-link:hover { color: #0a0a0a !important; }
-          .blog-cat-btn:hover { background: #f0f0f0 !important; }
-          .blog-hero {
-            background: #0a0a0a;
-            min-height: 500px;
-            padding: 80px 40px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-          }
-          @media (max-width: 768px) {
-            .blog-hero {
-              min-height: 360px;
-              padding: 56px 24px;
-            }
-          }
-        `}</style>
-
-        {/* Nav — minimal like Fiverr blog */}
-        <nav style={{ borderBottom: '1px solid #e5e5e5', padding: '0.875rem 2.5rem', display: 'flex', alignItems: 'center', gap: 20, background: 'var(--card)', position: 'sticky', top: 0, zIndex: 100 }}>
-          <button onClick={() => setShowArticles(false)} style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
-            <span style={{ fontSize: 18, fontWeight: 700, color: '#1a1a1a' }}>blog.</span>
-          </button>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, maxWidth: 360, border: '1px solid #ddd', borderRadius: 6, padding: '6px 12px', background: 'var(--bg2)' }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#aaa" strokeWidth="2" style={{ verticalAlign: 'middle', flexShrink: 0 }}><circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" /></svg>
-            <input
-              placeholder="Search by topic or keyword"
-              style={{ border: 'none', background: 'none', outline: 'none', fontSize: 13, color: '#333', width: '100%' }}
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && setShowArticles(true)}
-            />
-          </div>
-          <button onClick={() => setShowArticles(true)} style={{ background: '#0a0a0a', color: '#fff', border: 'none', borderRadius: 6, padding: '7px 18px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Search</button>
-          <button onClick={toggle} style={{ background: "none", border: "1.5px solid #ddd", borderRadius: 8, width: 36, height: 36, display: "grid", placeItems: "center", cursor: "pointer", color: "#333", flexShrink: 0 }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              {theme === "dark" ? (
-                <><circle cx="12" cy="12" r="5" /><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" /></>
-              ) : (
-                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-              )}
-            </svg>
-          </button>
-          {/* Hamburger — right side like Fiverr */}
-          <div style={{ marginLeft: 'auto' }}>
-            <button onClick={() => setDrawerOpen(true)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#333" strokeWidth="2"><line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="18" x2="21" y2="18" /></svg>
-            </button>
-          </div>
-        </nav>
-
-        <Drawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
-
-        {/* HERO — full width, #0a0a0a background, centered text */}
-        <div className="blog-hero">
-          {/* Subtle background circles */}
-          <div style={{ position: 'absolute', top: -80, right: -80, width: 400, height: 400, borderRadius: '50%', background: 'rgba(255,255,255,0.04)' }} />
-          <div style={{ position: 'absolute', bottom: -60, left: -60, width: 300, height: 300, borderRadius: '50%', background: 'rgba(255,255,255,0.03)' }} />
-          <h1 style={{ fontSize: 56, fontWeight: 700, color: '#fff', lineHeight: 1.15, marginBottom: 28, position: 'relative', maxWidth: 900, margin: '0 auto 32px' }}>
-            Spark Your Next{' '}
-            <span style={{ color: '#fff', fontStyle: 'italic' }}>Breakthrough</span>
-          </h1>
-          <button
-            onClick={() => setShowArticles(true)}
-            style={{ background: '#0a0a0a', color: '#fff', border: '2px solid rgba(255,255,255,0.3)', borderRadius: 8, padding: '16px 48px', fontSize: 16, fontWeight: 700, cursor: 'pointer', position: 'relative' }}
-          >
-            View All Articles
-          </button>
-        </div>
-
-        {/* 4 CATEGORY TILES — stacked full width like Fiverr */}
-        <div style={{ display: 'flex', flexDirection: 'column' }}>
-          {/* Tile 1: Join The Community */}
-          <div style={{ height: 500, position: 'relative' }}>
-            <JoinCommunityTile onClick={() => { setActiveCategory('All'); setShowArticles(true) }} />
-          </div>
-
-          {/* Tiles 2+3: side by side */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', height: 420 }}>
-            <StartSellingTile onClick={() => { setActiveCategory('Freelancers'); setShowArticles(true) }} />
-            <GrowBusinessTile onClick={() => { setActiveCategory('Businesses'); setShowArticles(true) }} />
-          </div>
-
-          {/* Tile 4: Get Inspired */}
-          <div style={{ height: 460, position: 'relative' }}>
-            <GetInspiredTile onClick={() => { setActiveCategory('Freelancers'); setShowArticles(true) }} />
-          </div>
-        </div>
-
-        <Footer />
-      </div>
-    )
-  }
-
-  // Articles view
   return (
-    <div data-theme={theme} style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: 'var(--bg)', color: 'var(--text)' }}>
-        <nav style={{ background: 'var(--card)', borderBottom: '0.5px solid var(--border)', position: 'sticky', top: 0, zIndex: 100 }}>
-        <div style={{ maxWidth: 1400, margin: '0 auto', padding: '0.875rem 2rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
-          <button onClick={() => setShowArticles(false)} style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', cursor: 'pointer' }}>
-            <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--text)' }}>blog.</span>
-          </button>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, border: '1px solid var(--border)', borderRadius: 6, padding: '6px 12px', background: 'var(--bg2)', minWidth: 0, flex: '1 1 200px', maxWidth: 320 }}>
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" strokeWidth="2" style={{ flexShrink: 0 }}><circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" /></svg>
-            <input placeholder="Search articles" aria-label="Search articles" value={search} onChange={e => setSearch(e.target.value)} style={{ border: 'none', background: 'none', outline: 'none', fontSize: 13, color: 'var(--text)', width: '100%', minWidth: 0 }} />
+    <Layout>
+      <style>{`
+        .bl{max-width:1184px;margin:0 auto;padding:32px 32px 40px}
+        .bl-head{display:flex;align-items:flex-start;justify-content:space-between;gap:20px}
+        .bl-eyebrow{margin:0;font:400 9px/1.5 'Geist Mono',ui-monospace,monospace;letter-spacing:.07em;text-transform:uppercase;color:var(--text3)}
+        .bl-title{margin:8px 0 0;font-size:36px;line-height:1.15;font-weight:600;letter-spacing:-.05em;color:var(--text)}
+        .bl-sub{margin:8px 0 0;font-size:13px;line-height:1.75;color:var(--text2)}
+        .bl-write{display:inline-flex;align-items:center;gap:8px;height:44px;padding:0 14px;border:0;border-radius:10px;background:var(--text);color:var(--bg);font:500 12px/1 inherit;cursor:pointer;white-space:nowrap;flex-shrink:0;margin-top:24px}
+        .bl-write i{font-size:15px}
+        .bl-bar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:40px;padding-bottom:18px;border-bottom:1px solid var(--border)}
+        .bl-bar h2{margin:0;font-size:18px;line-height:1.4;font-weight:600;letter-spacing:-.035em;color:var(--text)}
+        .bl-count{display:block;margin-top:4px;font:400 10px/1.5 'Geist Mono',ui-monospace,monospace;color:var(--text3)}
+        .bl-tools{display:flex;align-items:center;gap:10px}
+        .bl-search{display:flex;align-items:center;gap:8px;height:44px;padding:0 12px;border:1px solid var(--border);border-radius:12px;background:var(--card);width:220px}
+        .bl-search i{color:var(--text3);font-size:15px}
+        .bl-search input{border:0;background:none;outline:none;font:400 12px inherit;color:var(--text);width:100%;min-width:0}
+        .bl-seg{display:flex;gap:2px;padding:4px;border-radius:12px;background:var(--bg2)}
+        .bl-seg button{height:36px;padding:0 15px;border:0;border-radius:8px;background:none;font:500 12px/1 inherit;color:var(--text2);cursor:pointer}
+        .bl-seg button.on{background:var(--card);color:var(--text);box-shadow:0 1px 2px rgba(0,0,0,.06)}
+        .bl-chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:16px}
+        .bl-chips button{height:32px;padding:0 12px;border:1px solid var(--border);border-radius:999px;background:none;font:500 12px/1 inherit;color:var(--text2);cursor:pointer}
+        .bl-chips button.on{background:var(--text);border-color:var(--text);color:var(--bg)}
+        .bl-tiles{margin-top:48px;border-radius:16px;overflow:hidden}
+        @media (max-width:768px){
+          .bl{padding:20px 16px 32px}
+          .bl-head{flex-direction:column;gap:0}
+          .bl-title{font-size:28px}
+          .bl-write{margin-top:16px}
+          .bl-bar{flex-direction:column;align-items:stretch;margin-top:28px}
+          .bl-tools{flex-direction:column;align-items:stretch}
+          .bl-search{width:auto}
+          .bl-seg button{flex:1}
+          .bl-tiles .bl-pair{grid-template-columns:1fr !important;height:auto !important}
+        }
+      `}</style>
+
+      <div className="bl">
+        {/* Header, after wurk.fun's blog */}
+        <header className="bl-head">
+          <div>
+            <p className="bl-eyebrow">The OgaPay blog</p>
+            <h1 className="bl-title">Stories worth sharing.</h1>
+            <p className="bl-sub">Ideas, guides and earning stories from the OgaPay community.</p>
           </div>
-          <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-            {categories.map(cat => (
-              <button key={cat} onClick={() => setActiveCategory(cat)} style={{ fontSize: 13, padding: '5px 14px', borderRadius: 20, border: '0.5px solid', borderColor: activeCategory === cat ? '#0a0a0a' : 'transparent', background: activeCategory === cat ? '#EEEDFE' : 'transparent', color: activeCategory === cat ? '#0a0a0a' : '#666', cursor: 'pointer', fontWeight: activeCategory === cat ? 600 : 400 }}>
-                {cat}
-              </button>
-            ))}
+          <button className="bl-write" onClick={write}><i className="ti ti-pencil" /> Write a blog</button>
+        </header>
+
+        <div className="bl-bar">
+          <div>
+            <h2>{sort === 'featured' ? 'Featured blogs' : 'Newest blogs'}</h2>
+            <span className="bl-count">{allPosts === null ? 'Loading…' : `${filteredArticles.length} ${filteredArticles.length === 1 ? 'story' : 'stories'}`}</span>
           </div>
-          <div style={{ display: 'flex', gap: 8 }}>
-            {isAuthed && <button onClick={() => navigate('/blog/write')} style={{ fontSize: 13, background: '#0a0a0a', color: '#fff', padding: '6px 16px', borderRadius: 20, border: 'none', cursor: 'pointer', fontWeight: 500 }}>+ Write Article</button>}
-            <a href="/" style={{ fontSize: 13, background: '#0a0a0a', color: '#fff', padding: '6px 16px', borderRadius: 20, textDecoration: 'none', fontWeight: 500 }}>Go to OgaPay →</a>
-            <button onClick={() => setDrawerOpen(true)} style={{ background: 'none', border: '1.5px solid #ddd', borderRadius: 6, width: 34, height: 34, display: 'grid', placeItems: 'center', cursor: 'pointer', padding: 0 }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#333" strokeWidth="2"><line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="18" x2="21" y2="18" /></svg>
-            </button>
+          <div className="bl-tools">
+            <label className="bl-search"><i className="ti ti-search" /><input placeholder="Search stories" aria-label="Search stories" value={search} onChange={(e) => setSearch(e.target.value)} /></label>
+            <div className="bl-seg" role="tablist" aria-label="Sort stories">
+              <button role="tab" aria-selected={sort === 'featured'} className={sort === 'featured' ? 'on' : ''} onClick={() => setSort('featured')}>Featured</button>
+              <button role="tab" aria-selected={sort === 'newest'} className={sort === 'newest' ? 'on' : ''} onClick={() => setSort('newest')}>Newest</button>
+            </div>
           </div>
         </div>
-      </nav>
 
-      <div style={{ maxWidth: 1400, margin: '0 auto', padding: '2rem 2rem 0' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
-          <span style={{ fontSize: 16, fontWeight: 500, color: 'var(--text)' }}>
-            {activeCategory === 'All' ? 'All articles' : activeCategory}
-            <span style={{ fontSize: 13, color: 'var(--text3)', marginLeft: 8 }}>({filteredArticles.length})</span>
-          </span>
-          <button onClick={() => setShowArticles(false)} style={{ fontSize: 13, color: 'var(--text)', background: 'none', border: 'none', cursor: 'pointer' }}>← Back to home</button>
-        </div>
-
-        {allPosts === null ? (
-          <div style={{ padding: '3rem 0', textAlign: 'center', color: 'var(--text3)', fontSize: 14 }}>Loading articles…</div>
-        ) : filteredArticles.length === 0 ? (
-          <div style={{ padding: '3rem 1rem', textAlign: 'center', color: 'var(--text2)', fontSize: 14, border: '1px dashed var(--border)', borderRadius: 16, marginBottom: '1.5rem' }}>
-            {q ? `No articles match "${search.trim()}".` : allPosts.length === 0 ? 'No articles yet. Check back soon.' : `No ${activeCategory} articles yet.`}
-            {isAuthed && <div style={{ marginTop: 12 }}><button onClick={() => navigate('/blog/write')} style={{ fontSize: 13, background: 'var(--text)', color: 'var(--bg)', padding: '8px 16px', borderRadius: 20, border: 'none', cursor: 'pointer', fontWeight: 600 }}>Write the first one</button></div>}
+        {usedCategories.length > 1 && (
+          <div className="bl-chips">
+            {usedCategories.map((cat) => <button key={cat} className={activeCategory === cat ? 'on' : ''} onClick={() => setActiveCategory(cat)}>{cat}</button>)}
           </div>
-        ) : (
-          <>
-            {popular.length > 0 && (
-              <div style={{ marginBottom: '2rem' }}>
-                <h2 style={{ fontSize: 17, fontWeight: 600, color: 'var(--text)', margin: '0 0 1rem' }}>Most read</h2>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '1rem' }}>
-                  {popular.map((post: any, i: number) => (
-                    <button key={post.id} onClick={() => navigate(`/blog/${post.slug}`)} style={{ display: 'flex', gap: 12, alignItems: 'flex-start', textAlign: 'left', background: 'var(--card)', border: '0.5px solid var(--border)', borderRadius: 14, padding: '14px 16px', cursor: 'pointer', color: 'inherit', font: 'inherit' }}>
-                      <span style={{ fontSize: 22, fontWeight: 800, color: 'var(--text3)', lineHeight: 1 }}>{i + 1}</span>
-                      <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)', lineHeight: 1.45 }}>{post.title}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(320px, 100%), 1fr))', gap: '1.5rem', marginBottom: '1.5rem' }}>
+        )}
+
+        <div style={{ marginTop: 24 }}>
+          {allPosts === null ? (
+            <div style={{ padding: '3rem 0', textAlign: 'center', color: 'var(--text3)', fontSize: 14 }}>Loading stories…</div>
+          ) : filteredArticles.length === 0 ? (
+            <div style={{ padding: '3rem 1rem', textAlign: 'center', color: 'var(--text2)', fontSize: 14, border: '1px dashed var(--border)', borderRadius: 16 }}>
+              {q ? `No stories match "${search.trim()}".` : posts.length === 0 ? 'No stories yet.' : `No ${activeCategory} stories yet.`}
+              <div style={{ marginTop: 12 }}><button onClick={write} style={{ fontSize: 13, background: 'var(--text)', color: 'var(--bg)', padding: '8px 16px', borderRadius: 10, border: 'none', cursor: 'pointer', fontWeight: 600 }}>Write the first one</button></div>
+            </div>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(320px, 100%), 1fr))', gap: '1.5rem' }}>
               {filteredArticles.map((post: any) => {
                 const badge = badgeColors[post.category] || { bg: '#EEEDFE', color: '#534AB7' }
                 const author = post.author ? `${post.author.firstName || ''} ${post.author.lastName || ''}`.trim() || post.author.username : 'OgaPay'
@@ -379,11 +296,25 @@ export default function Blog() {
                 )
               })}
             </div>
-          </>
-        )}
+          )}
+        </div>
+
+        {/* Explore tiles (kept from the old landing screen) */}
+        <div className="bl-tiles" style={{ display: 'flex', flexDirection: 'column' }}>
+          <div style={{ height: 420, position: 'relative' }}>
+            <JoinCommunityTile onClick={() => navigate('/communities')} />
+          </div>
+          <div className="bl-pair" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', height: 360 }}>
+            <StartSellingTile onClick={() => navigate('/store')} />
+            <GrowBusinessTile onClick={() => navigate('/create')} />
+          </div>
+          <div style={{ height: 380, position: 'relative' }}>
+            <GetInspiredTile onClick={() => { setSort('featured'); window.scrollTo({ top: 0, behavior: 'smooth' }) }} />
+          </div>
+        </div>
 
         {/* Newsletter */}
-        <div style={{ background: '#0a0a0a', borderRadius: 16, padding: '2rem', textAlign: 'center', marginBottom: 0 }}>
+        <div style={{ background: '#0a0a0a', borderRadius: 16, padding: '2rem', textAlign: 'center', marginTop: 32 }}>
           <h2 style={{ fontSize: 20, fontWeight: 500, color: '#fff', marginBottom: 8 }}>Stay in the loop</h2>
           <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.75)', marginBottom: '1.25rem' }}>Get the latest OgaPay tips, earnings stories, and platform updates.</p>
           {subscribed ? (
@@ -397,10 +328,7 @@ export default function Blog() {
           )}
           {subError && <p style={{ color: '#fca5a5', fontSize: 13, margin: '10px 0 0' }}>{subError}</p>}
         </div>
-        </div>
-
-        <Drawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
-        <Footer />
       </div>
+    </Layout>
   )
 }

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { CATEGORY_LABELS } from '../lib/categories'
 import { useNavigate } from 'react-router-dom'
 import { apiRequest } from '../lib/api'
 import { SkeletonPage, injectSkeletonStyles } from '../components/SkeletonLoader'
@@ -138,7 +139,8 @@ export default function TabNotificationsContent() {
       color: iconInfo.color,
       type: n.type,
       title: n.title,
-      desc: n.body || n.description || '',
+      // older notifications have category codes (CONTENT_WRITING) in the text
+      desc: String(n.body || n.description || '').replace(/[A-Z]+(?:_[A-Z]+)+/g, (c) => CATEGORY_LABELS[c] || c),
       time: n.createdAt ? timeAgo(n.createdAt) : '',
       read: n.read ?? n.isRead ?? false,
       link: linkFor(n),

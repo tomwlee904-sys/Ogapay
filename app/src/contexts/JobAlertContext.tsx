@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, useRef, useCallback, ReactNode } from 'react'
-import { API_BASE } from '../lib/api'
+import { API_BASE, getStoredUser } from '../lib/api'
 
 interface JobAlertContextType {
   latestJob: any
@@ -40,8 +40,10 @@ export function JobAlertProvider({ children }: { children: ReactNode }) {
     createdAt: t.createdAt,
   }), [])
 
+  // The same switches as on the Job monitor page; both are off until turned on there
+  // (this used to treat "never set" as on, so alerts and beeps came with the switches off)
   const poll = useCallback(async () => {
-    const alerts = localStorage.getItem('ogapay_jm_alerts') !== 'false'
+    const alerts = localStorage.getItem('ogapay_jm_alerts') === 'true'
     if (!alerts) return
 
     try {
@@ -52,7 +54,9 @@ export function JobAlertProvider({ children }: { children: ReactNode }) {
       })
       const json = await res.json()
       if (!json.success || !json.data) return
-      const tasks = (json.data.tasks || json.data) as any[]
+      const me = getStoredUser()?.id
+      // Only open jobs with a free place, and not your own
+      const tasks = ((json.data.tasks || json.data) as any[]).filter((t) => t.posterId !== me && (t.maxWorkers || 1) > (t.currentWorkers || 0))
       const sorted = [...tasks].sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
       const latest = sorted[0]
       if (latest && latest.id !== lastIdRef.current) {
@@ -60,7 +64,7 @@ export function JobAlertProvider({ children }: { children: ReactNode }) {
         lastIdRef.current = latest.id
         if (!firstLoadRef.current) {
           setLatestJob(pickAlertFields(latest))
-          const sound = localStorage.getItem('ogapay_jm_sound') !== 'false'
+          const sound = localStorage.getItem('ogapay_jm_sound') === 'true'
           if (sound) playSound()
         } else {
           firstLoadRef.current = false

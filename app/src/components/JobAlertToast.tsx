@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useJobAlert } from '../contexts/JobAlertContext'
+import { categoryLabel } from '../lib/categories'
 
 const SYM: Record<string, string> = {
   NGN: '₦', USD: '$', EUR: '€', GBP: '£', SOL: 'SOL ', USDC: 'USDC ', USDT: 'USDT ',
@@ -26,7 +27,8 @@ export default function JobAlertToast() {
 
   return (
     <div style={{
-      position: 'fixed', bottom: 24, right: 24, zIndex: 9999, maxWidth: 380, width: '100%',
+      // above the bottom bar on phones
+      position: 'fixed', bottom: window.innerWidth < 769 ? 96 : 24, right: window.innerWidth < 769 ? 12 : 24, zIndex: 9999, maxWidth: window.innerWidth < 769 ? 'calc(100% - 24px)' : 380, width: '100%',
       background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 14,
       boxShadow: '0 12px 40px rgba(0,0,0,0.12)', overflow: 'hidden',
       animation: 'toastIn 0.25s ease-out',
@@ -42,7 +44,7 @@ export default function JobAlertToast() {
           <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text)', marginBottom: 2 }}>New task available</div>
           <div style={{ fontSize: 12, color: 'var(--text2)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{latestJob.title}</div>
           <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 2 }}>
-            {fmt(latestJob.reward, latestJob.currency)} &middot; {latestJob.category || 'General'}
+            {fmt(latestJob.reward, latestJob.currency)} &middot; {categoryLabel(latestJob.category)}
           </div>
         </div>
         <button onClick={dismissAlert} style={{

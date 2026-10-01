@@ -18,15 +18,6 @@ html[data-theme="dark"] .hv {
     #000;
 }
 
-/* Network graphic */
-html[data-theme="dark"] .hv-network path { opacity: .22; }
-html[data-theme="dark"] .hv-network path.hv-flow { stroke: var(--mint); opacity: .75; }
-html[data-theme="dark"] .hv-network-hub {
-  background: linear-gradient(160deg, #1a1b1d, #0c0d0f);
-  border-color: rgba(255, 255, 255, 0.16);
-  box-shadow: 0 0 0 8px rgba(255, 255, 255, 0.03), 0 20px 50px -20px rgba(0, 0, 0, .9);
-}
-
 /* Glossy stat cards */
 html[data-theme="dark"] .hv-stat {
   background:

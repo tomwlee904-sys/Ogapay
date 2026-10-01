@@ -63,7 +63,7 @@ export default function Navbar({ onMenuToggle }: NavbarProps) {
         const data = await apiRequest<any>('/notifications?limit=10')
         const items = Array.isArray(data) ? data : data?.notifications ?? []
         if (!cancelled) setUnreadNotifs(items.filter((n: any) => !(n.read ?? n.isRead ?? false)).length)
-      } catch { toast('Failed to load notifications', 'error'); }
+      } catch { /* background check: keep the last count, try again on the next one */ }
     }
     fetchUnread()
     const onFocus = () => fetchUnread()

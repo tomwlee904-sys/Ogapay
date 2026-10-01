@@ -125,6 +125,8 @@ interface JobData {
   winnersSelected: number
   maxEntries: number
   community: string
+  submitted: number
+  requirementKey: string
 }
 
 export default function JobDetail() {
@@ -263,18 +265,20 @@ export default function JobDetail() {
 
   function formatTask(t: any): JobData {
     const now = Date.now()
-    const parsedDeadline = t.deadline
-      ? typeof t.deadline === 'string'
-        ? new Date(t.deadline).getTime()
-        : Number(t.deadline)
-      : now + 86400000 * 7
+    // No deadline means none: this used to invent one 7 days out
+    const rawDeadline = t.expiresAt || t.deadline
+    const parsedDeadline = rawDeadline
+      ? typeof rawDeadline === 'string' ? new Date(rawDeadline).getTime() : Number(rawDeadline)
+      : 0
+    void now
     const difficultyMap: Record<string, string> = {
       easy: 'Easy', medium: 'Medium', hard: 'Hard', expert: 'Expert',
       beginner: 'Easy', intermediate: 'Medium', advanced: 'Hard',
     }
-    const slots = Number(t.maxParticipants) || Number(t.slots) || Number(t.maxEntries) || 100
-    const filled = Number(t.completions) || Number(t.submissions) || 0
-    const slotsLeft = Number(t.slotsLeft) || Number(t.remainingSlots) || Math.max(0, slots - filled)
+    // Places come from maxWorkers / currentWorkers (the old fields didn't exist, so every job showed 0 / 100)
+    const slots = Number(t.maxWorkers) || Number(t.maxParticipants) || 1
+    const filled = Number(t.currentWorkers ?? 0) || 0
+    const slotsLeft = Math.max(0, slots - filled)
     return {
       id: t.id || t._id || '',
       creatorId: t.posterId || t.creatorId || t.creator?.id || '',
@@ -299,7 +303,7 @@ export default function JobDetail() {
       posted: t.createdAt || t.posted || new Date().toISOString(),
       status: t.status || 'open',
       difficulty: difficultyMap[t.difficulty?.toLowerCase()] || t.difficulty || 'Medium',
-      estimatedTime: t.estimatedTime || '15 minutes',
+      estimatedTime: Number(t.estimatedTime) > 0 ? (Number(t.estimatedTime) >= 60 ? `About ${Math.round(Number(t.estimatedTime) / 60)} h` : `About ${Number(t.estimatedTime)} min`) : '',
       steps: toArray(t.steps, []),
       requirements: toArray(t.requirements || t.qualifications, []),
       proofRequired: toArray(t.proofRequired || t.proofInstructions, []),
@@ -312,11 +316,13 @@ export default function JobDetail() {
       posterId: t.poster?.id || '',
       currentWorkers: Number(t.currentWorkers ?? 0),
       selectionType: t.selectionType || t.selection || 'Random',
-      capacity: `${filled} / ${slots}`,
+      capacity: `${filled} of ${slots}`,
       potentialWinners: slots,
       winnersSelected: filled,
       maxEntries: slots,
       community: t.community || 'All',
+      submitted: Number(t.submissionsCount ?? 0) || 0,
+      requirementKey: t.workerRequirement || '',
     }
   }
 
@@ -498,9 +504,14 @@ function WurkJobDetailView(props: any) {
     setTranslating(false)
   }
 
-  const countdownStr = countdown.d > 0
-    ? `${countdown.d}d ${countdown.h}h ${pad(countdown.m)}m ${pad(countdown.s)}s`
-    : `${pad(countdown.m)}m ${pad(countdown.s)}s`
+  const countdownStr = !job.deadline
+    ? 'No deadline'
+    : job.deadline <= Date.now()
+      ? 'Closed'
+      : countdown.d > 0
+        ? `${countdown.d}d ${countdown.h}h ${pad(countdown.m)}m`
+        : `${countdown.h}h ${pad(countdown.m)}m ${pad(countdown.s)}s`
+  const statusText = ({ open: 'Open', cooling_down: 'Full: waiting for work', completed: 'Completed', cancelled: 'Cancelled', draft: 'Paused', disputed: 'In dispute' } as Record<string, string>)[String(job.status || '').toLowerCase()] || (isOpen ? 'Open' : 'Closed')
 
   return (
     <Layout>
@@ -860,10 +871,10 @@ function WurkJobDetailView(props: any) {
               <div className="wjd-rows">
                 <div className="wjd-row">
                   <div className="wjd-label">Status</div>
-                  <div className="wjd-value wjd-open-val"><span className="wjd-dot" style={{ background: isOpen ? 'var(--green)' : '#94a3b8', border: `1.5px solid ${isOpen ? 'rgba(var(--green-rgb),0.8)' : '#64748b'}` }} />{isOpen ? 'Open' : 'Closed'}</div>
+                  <div className="wjd-value wjd-open-val"><span className="wjd-dot" style={{ background: isOpen ? 'var(--green)' : '#94a3b8', border: `1.5px solid ${isOpen ? 'rgba(var(--green-rgb),0.8)' : '#64748b'}` }} />{statusText}</div>
                 </div>
-                <div className="wjd-row"><div className="wjd-label">Mode</div><div className="wjd-value">{job.type || 'challenge'}</div></div>
-                <div className="wjd-row"><div className="wjd-label">Selection type</div><div className="wjd-value">{job.selectionType || 'Random'}</div></div>
+                <div className="wjd-row"><div className="wjd-label">How you're paid <InfoBtn text="The poster checks each submission. Approved work is paid straight to your wallet from the money already held for this job." /></div><div className="wjd-value">Poster approves each one</div></div>
+                <div className="wjd-row"><div className="wjd-label">Time to do it</div><div className="wjd-value">{job.estimatedTime || 'Not given'}</div></div>
                 <div className="wjd-row"><div className="wjd-label">Closes in</div><div className="wjd-value" style={{ fontVariantNumeric: 'tabular-nums' }}>{countdownStr}</div></div>
                 <div className="wjd-row"><div className="wjd-label">Minimum rank</div><div className="wjd-value">{Number(job.rankRequired || job.minRank) > 1 ? `${rankName(Number(job.rankRequired || job.minRank))} or higher` : 'None'}</div></div>
                 <div className="wjd-row"><div className="wjd-label">Requirements</div><div className="wjd-value">{jobRequirements(job).filter(r => r.icon !== 'award').map(r => r.text).join(', ') || 'No extra requirements'}</div></div>
@@ -876,11 +887,11 @@ function WurkJobDetailView(props: any) {
                 Participation
               </div>
               <div className="wjd-rows">
-                <div className="wjd-row"><div className="wjd-label">Community</div><div className="wjd-value">{job.community || 'All'}</div></div>
-                <div className="wjd-row"><div className="wjd-label">Max entries</div><div className="wjd-value">{job.maxEntries >= 100 ? 'Unlimited' : job.maxEntries}</div></div>
-                <div className="wjd-row"><div className="wjd-label">Capacity</div><div className="wjd-value">{job.capacity}</div></div>
-                <div className="wjd-row"><div className="wjd-label">Potential winners</div><div className="wjd-value">{job.potentialWinners}</div></div>
-                <div className="wjd-row"><div className="wjd-label">Winners selected</div><div className="wjd-value">{job.winnersSelected}</div></div>
+                <div className="wjd-row"><div className="wjd-label">Who can join</div><div className="wjd-value">Anyone who meets the requirements</div></div>
+                <div className="wjd-row"><div className="wjd-label">People paid</div><div className="wjd-value">Up to {job.slots}</div></div>
+                <div className="wjd-row"><div className="wjd-label">Places taken <InfoBtn text="Taking a place reserves it for you. Once every place is taken, people who haven't sent their work within 24 hours lose their place to someone else." /></div><div className="wjd-value">{job.capacity}</div></div>
+                <div className="wjd-row"><div className="wjd-label">Places left</div><div className="wjd-value">{job.slotsLeft}</div></div>
+                <div className="wjd-row"><div className="wjd-label">Work sent in</div><div className="wjd-value">{job.submitted}</div></div>
               </div>
             </div>
           </section>
@@ -888,7 +899,7 @@ function WurkJobDetailView(props: any) {
           {/* ── Reward ── */}
           <section className="wjd-panel wjd-reward">
               <span className="wjd-reward-mark" aria-hidden="true"><i className="ti ti-currency-dollar" /></span>
-              <div className="wjd-reward-title">Reward per winner</div>
+              <div className="wjd-reward-title">Reward per person</div>
               <div>
                 <span className="wjd-amount">{rewardAmount}</span>
                 <span className="wjd-token">{rewardCurrency}</span>
@@ -1033,101 +1044,62 @@ function WurkJobDetailView(props: any) {
         </div>
       </div>
 
-      {/* ── Info Panel Overlay (wurk.fun style) ── */}
+      {/* ── Info panel: how this job works ── */}
       {showInfo && (
         <div className="wjd-info-overlay" onClick={() => setShowInfo(false)}>
-          <div className="wjd-info-panel" onClick={(e: any) => e.stopPropagation()}>
+          <div className="wjd-info-panel" role="dialog" aria-modal="true" aria-label="How this job works" onClick={(e: any) => e.stopPropagation()}>
             <div className="wjd-info-header">
               <div className="wjd-info-header-title">
                 <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" /><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" /></svg>
-                About Custom Jobs
+                How this job works
               </div>
               <button className="wjd-info-close" type="button" onClick={() => setShowInfo(false)} aria-label="Close">
                 <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12" /></svg>
               </button>
             </div>
             <div className="wjd-info-body">
-              <div className="wjd-info-how-box">
-                <div>
-                  <div className="wjd-info-how-title">How Custom Jobs work</div>
-                  <div className="wjd-info-how-sub">Custom jobs let creators define how workers join, how submissions are reviewed, and whether a job is open to everyone or only to a specific community.</div>
-                </div>
-                <div className="wjd-info-how-hint" onClick={() => setShowInfo(false)}>Click Info button to close</div>
-              </div>
-
               <div className="wjd-config-strip">
                 <div className="wjd-config-cell">
-                  <div className="wjd-config-cell-label">Mode <InfoBtn text="Challenge: workers compete, winners are selected • Custom: workers apply individually, creator picks who to work with" /></div>
-                  <div className="wjd-config-cell-value">{job.type || 'challenge'}</div>
+                  <div className="wjd-config-cell-label">Reward</div>
+                  <div className="wjd-config-cell-value">{rewardAmount} {rewardCurrency} each</div>
                 </div>
                 <div className="wjd-config-cell">
-                  <div className="wjd-config-cell-label">Selection type <InfoBtn text="Random: winners are chosen at random from qualifying applicants • Manual: the creator personally reviews and selects winners" /></div>
-                  <div className="wjd-config-cell-value">{job.selectionType || 'Random'}</div>
+                  <div className="wjd-config-cell-label">Places</div>
+                  <div className="wjd-config-cell-value">{job.slotsLeft} of {job.slots} left</div>
                 </div>
                 <div className="wjd-config-cell">
-                  <div className="wjd-config-cell-label">Community <InfoBtn text="Open to everyone: any eligible worker can apply • Specific community: only members of the selected community can apply" /></div>
-                  <div className="wjd-config-cell-value">Open to everyone</div>
+                  <div className="wjd-config-cell-label">Closes</div>
+                  <div className="wjd-config-cell-value">{job.deadline ? new Date(job.deadline).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : 'No deadline'}</div>
                 </div>
               </div>
 
-              <div className="wjd-info-section-title">Modes</div>
-              <div className="wjd-info-section-sub">Mode explains how people participate in the job.</div>
-              <div className="wjd-info-row">
-                <div className="wjd-info-row-label">Challenge Mode</div>
-                <div className="wjd-info-row-val">Open competition. People submit work directly, multiple winners can be rewarded, and each winning submission receives the configured reward.</div>
-              </div>
-              <div className="wjd-info-row">
-                <div className="wjd-info-row-label">Selection Mode</div>
-                <div className="wjd-info-row-val">Direct hire flow. People apply first, the creator reviews applicants, and one person is usually selected for the full job reward.</div>
-              </div>
+              <div className="wjd-info-section-title">Step by step</div>
+              <ol className="wjd-how-steps">
+                <li><strong>Take a place.</strong> It's reserved for you{jobRequirements(job).filter(r => r.icon !== 'award').length ? `, if you meet the requirements (${jobRequirements(job).filter(r => r.icon !== 'award').map(r => r.text).join(', ')})` : ''}.</li>
+                <li><strong>Do the work and send it in</strong> with the proof the poster asked for. Once every place is taken, you have 24 hours to send it, or your place goes to someone else.</li>
+                <li><strong>The poster checks it.</strong> If it's approved, {rewardAmount} {rewardCurrency} goes straight to your OgaPay wallet.</li>
+                <li><strong>If it's rejected,</strong> you'll see the reason and the place opens up again.</li>
+              </ol>
 
-              <div style={{ marginTop: 24 }}>
-                <div className="wjd-info-section-title">Selection Types</div>
-                <div className="wjd-info-section-sub">Selection type explains how winners are chosen after valid entries come in.</div>
+              <div style={{ marginTop: 20 }}>
+                <div className="wjd-info-section-title">Your money is safe</div>
                 <div className="wjd-info-row">
-                  <div className="wjd-info-row-label">Creator Selection</div>
-                  <div className="wjd-info-row-val">The creator manually decides which submissions win. This is best for quality-based work such as design, writing, or anything that needs human judgment.</div>
+                  <div className="wjd-info-row-label">Held for you</div>
+                  <div className="wjd-info-row-val">The poster paid for every place when they posted the job. OgaPay holds that money until the work is approved.</div>
                 </div>
                 <div className="wjd-info-row">
-                  <div className="wjd-info-row-label">Random Selection</div>
-                  <div className="wjd-info-row-val">Winners are chosen randomly when the timer ends. If there are not enough submissions yet, valid submissions can still be rewarded and the timer can extend until the job is filled.</div>
-                </div>
-              </div>
-
-              <div style={{ marginTop: 24 }}>
-                <div className="wjd-info-section-title">Community Jobs</div>
-                <div className="wjd-info-section-sub">Some jobs are linked to a specific community instead of being open platform-wide.</div>
-                <div className="wjd-info-row">
-                  <div className="wjd-info-row-label">Who can join</div>
-                  <div className="wjd-info-row-val">Community jobs may only allow members of that community to participate.</div>
+                  <div className="wjd-info-row-label">If nobody reviews</div>
+                  <div className="wjd-info-row-val">The poster gets a reminder after a day. Work that still isn't reviewed after 3 days is approved and paid automatically.</div>
                 </div>
                 <div className="wjd-info-row">
-                  <div className="wjd-info-row-label">How to join</div>
-                  <div className="wjd-info-row-val">You can open the community profile, review what the community is about, and send a join request if you want access to its jobs.</div>
+                  <div className="wjd-info-row-label">If something's wrong</div>
+                  <div className="wjd-info-row-val">Use Report on this page, or contact support, and our team will look into it.</div>
                 </div>
               </div>
-
-              <div className="wjd-open-notice">This job is currently open to everyone and does not require a specific community.</div>
 
               <div className="wjd-important-box">
                 <span className="wjd-important-icon"><i className="ti ti-alert-triangle" /></span>
-                <div><strong>Important:</strong> Only apply or submit if you understand the configuration and genuinely have the skills to complete the work well.</div>
-              </div>
-
-              <div style={{ marginTop: 22 }}>
-                <div className="wjd-info-section-title">How to participate</div>
-                <div className="wjd-info-section-sub">Use this quick flow before joining a custom job.</div>
-                <ol className="wjd-how-steps">
-                  <li>Read the description, reward, mode, selection type, and community requirement.</li>
-                  <li>If it is a community job, open the community page and send a join request first when needed.</li>
-                  <li>Use the apply flow to send your application or submission, depending on the job setup.</li>
-                  <li>Wait for creator review or the random draw after the timer ends.</li>
-                  <li>If you are selected or rewarded, complete the work correctly and receive the payout.</li>
-                </ol>
-              </div>
-
-              <div className="wjd-current-config">
-                Current job configuration: <strong>{job.type || 'challenge'}</strong> mode with <strong>{job.selectionType || 'Random'}</strong> selection.
+                <div><strong>Only take a place if you can do the work well.</strong> Low-effort or copied work gets rejected.</div>
               </div>
             </div>
           </div>

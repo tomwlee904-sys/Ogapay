@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, type CSSProperties } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { apiRequest, getAccessToken } from '../lib/api'
@@ -6,9 +6,18 @@ import { openSignIn } from '../lib/signin'
 
 const filters = ['All', 'Trending', 'New', 'Crypto', 'Business', 'Content', 'Design', 'Marketing']
 
-function getGradient(cat: string) {
-  const g: Record<string, string> = { crypto: '#0a0a0a,var(--accent)', design: '#4a1a4e,#EC4899', content: '#1a4e3a,#22C55E', marketing: '#4e3a1a,#F5B301', business: '#1a2a4e,var(--accent)' }
-  return g[cat] || '#0a0a0a,var(--accent)'
+// The community's own cover picture; the colour gradient only when it has none
+// (the cards used to ignore the cover, so every card was a black block)
+function coverStyle(c: any): CSSProperties {
+  const url = c.coverImage || c.coverUrl
+  return url
+    ? { backgroundImage: `url("${String(url).replace(/"/g, '%22')}")`, backgroundSize: 'cover', backgroundPosition: 'center' }
+    // no picture: a soft tint (the old gradient ran into the accent colour, which is black)
+    : { background: 'linear-gradient(135deg, var(--bg2), color-mix(in srgb, var(--text) 12%, var(--bg2)))' }
+}
+
+function CardAvatar({ c }: { c: any }) {
+  return <div className="cca">{c.iconUrl ? <img src={c.iconUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} /> : c.initials}</div>
 }
 
 export default function Communities() {
@@ -181,8 +190,8 @@ export default function Communities() {
               <div className="ch-trend">
                 {trending.map(c => (
                   <div className="ch-card" key={c.id} style={{ minWidth: 260 }} onClick={() => navigate('/communities/' + c.id)}>
-                    <div className="ccb" style={{ background: `linear-gradient(135deg,${getGradient(c.category)})` }} />
-                    <div className="cca">{c.initials}</div>
+                    <div className="ccb" style={coverStyle(c)} />
+                    <CardAvatar c={c} />
                     <div className="cc-body">
                       <div className="cc-name">{c.name}</div>
                       <div className="cc-badge">{c.badge}</div>
@@ -204,8 +213,8 @@ export default function Communities() {
             <div className="ch-grid">
               {filtered.map(c => (
                 <div className="ch-card" key={c.id} onClick={() => navigate('/communities/' + c.id)}>
-                  <div className="ccb" style={{ background: `linear-gradient(135deg,${getGradient(c.category)})` }} />
-                  <div className="cca">{c.initials}</div>
+                  <div className="ccb" style={coverStyle(c)} />
+                  <CardAvatar c={c} />
                   <div className="cc-body">
                     <div className="cc-name">{c.name}</div>
                     <div className="cc-badge">{c.badge}</div>

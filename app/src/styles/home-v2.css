@@ -102,34 +102,12 @@ body:has(main.hv), body:has(main.hv) #root { overflow-x: clip; }
 .hv-hero .hv-lead { margin-top: 30px; }
 .hv-hero .hv-btns { margin-top: 32px; }
 
-.hv-labels { display: flex; justify-content: space-between; align-items: center; }
-.hv-network { position: relative; height: 210px; margin: 12px 0 6px; }
-.hv-strands { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
-.hv-network-hub {
-  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
-  width: 76px; height: 76px; border-radius: 20px;
-  background: linear-gradient(180deg, #ffffff 0%, #f4f4f5 100%);
-  border: 1px solid var(--hv-line); display: grid; place-items: center;
-  /* tile shadow, then the soft rounded halo ring around it */
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.9), 0 14px 34px -14px rgba(0,0,0,.28),
-    0 0 0 12px rgba(250,250,250,.85), 0 0 0 13px rgba(0,0,0,.05);
-  color: var(--hv-ink);
-}
-[data-theme="dark"] .hv-network-hub {
-  background: linear-gradient(180deg, #1d1f23 0%, #141518 100%);
-  border-color: rgba(255,255,255,.12);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.08), 0 18px 40px -16px rgba(0,0,0,.9),
-    0 0 0 12px rgba(12,13,15,.92), 0 0 0 13px rgba(255,255,255,.06);
-}
-/* short ticks above and below the hub */
-.hv-network-stem { position: absolute; left: 50%; width: 1px; height: 22px; background: var(--hv-line); }
-.hv-network-stem.top { top: 0; }
-.hv-network-stem.bottom { bottom: 0; }
-.hv-network-stem::before { content: ''; position: absolute; left: -3px; width: 7px; height: 1px; background: var(--hv-line); }
-.hv-network-stem.top::before { top: 0; }
-.hv-network-stem.bottom::before { bottom: 0; }
-.hv-caption { display: flex; align-items: center; justify-content: center; gap: 12px; font-size: 12px; color: var(--hv-faint); }
-.hv-caption::before, .hv-caption::after { content: ''; width: 22px; height: 1px; background: var(--hv-line); }
+/* Hero network animation (NetworkFlow): a black 1080 x 482 frame, as designed;
+   the OgaPay mark sits in its tile in white */
+.hv-netflow { position: relative; width: 100%; aspect-ratio: 1080 / 482; overflow: hidden; background: #000; margin: 12px 0 6px; }
+.hv-netflow canvas { display: block; width: 100%; height: 100%; }
+.hv-netflow-logo { position: absolute; left: 47%; top: 48%; width: 6%; height: 14%; display: grid; place-items: center; color: #fff; pointer-events: none; }
+.hv-netflow-logo svg { width: 100%; height: 100%; }
 
 .hv-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }
 .hv-stat {
@@ -297,7 +275,6 @@ body:has(main.hv), body:has(main.hv) #root { overflow-x: clip; }
   .hv-hero .hv-note { justify-content: center; }
   .hv-numbers-band { padding-top: 24px; padding-bottom: 24px; }
   .hv-connected-art { padding: 10px; }
-  .hv-network { height: 160px; }
   .hv-stats { gap: 8px; }
   .hv-stat { padding: 14px; border-radius: 14px; }
   .hv-stat-head { font-size: 12px; }

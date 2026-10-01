@@ -32,6 +32,11 @@ const USER_KEY = 'ogapay_user'
 const LEGACY_AUTH_KEY = 'ogapay-authenticated'
 
 let refreshInProgress: Promise<AuthTokens | null> | null = null
+// Set when the server turned the refresh token down (not a network blip)
+let refreshRejected = false
+
+/** Fired when the session can't be renewed; AuthContext signs out and asks to sign in again */
+export const SESSION_EXPIRED_EVENT = 'ogapay:session-expired'
 
 export function getAccessToken() {
   try { return localStorage.getItem(ACCESS_TOKEN_KEY) } catch { return null }
@@ -142,8 +147,9 @@ export async function refreshAuthSession(): Promise<AuthTokens | null> {
     }
 
     // Fallback to backend refresh
+    refreshRejected = false
     const refreshToken = getRefreshToken()
-    if (!refreshToken) return null
+    if (!refreshToken) { refreshRejected = true; return null }
 
     try {
       const res = await fetch(`${API_BASE}/auth/refresh`, {
@@ -151,6 +157,15 @@ export async function refreshAuthSession(): Promise<AuthTokens | null> {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ refreshToken }),
       })
+      if (res.status === 401 || res.status === 403) {
+        // Each refresh token works once. If another tab renewed the session
+        // meanwhile, use what it stored instead of signing out.
+        const now = getRefreshToken()
+        const access = getAccessToken()
+        if (now && now !== refreshToken && access) return { accessToken: access, refreshToken: now }
+        refreshRejected = true
+        return null
+      }
       const data = await parseResponse(res)
       const tokenObj = data?.tokens || data
       if (tokenObj?.accessToken) {
@@ -158,7 +173,7 @@ export async function refreshAuthSession(): Promise<AuthTokens | null> {
         return tokenObj
       }
     } catch {
-      // Both methods failed
+      // Network trouble: keep the session and try again next time
     }
     return null
   })()
@@ -185,10 +200,8 @@ export async function apiRequest<T = unknown>(path: string, options: ApiOptions 
     // no body, no Content-Type needed
   }
 
-  if (auth) {
-    const token = getAccessToken()
-    if (token) requestHeaders.set('Authorization', `Bearer ${token}`)
-  }
+  const sentToken = auth ? getAccessToken() : null
+  if (sentToken) requestHeaders.set('Authorization', `Bearer ${sentToken}`)
 
   const url = path.startsWith('http') ? path : `${API_BASE}${path.startsWith('/') ? path : `/${path}`}`
   const controller = new AbortController()
@@ -206,12 +219,22 @@ export async function apiRequest<T = unknown>(path: string, options: ApiOptions 
     throw err
   }
 
-  if (res.status === 401 && auth && retryOnUnauthorized) {
+  if (res.status === 401 && sentToken && retryOnUnauthorized) {
+    // Another request or tab may already have renewed the session
+    const current = getAccessToken()
+    if (current && current !== sentToken) {
+      return apiRequest<T>(path, { ...options, retryOnUnauthorized: false })
+    }
     const refreshed = await refreshAuthSession().catch(() => null)
     if (refreshed?.accessToken) {
       return apiRequest<T>(path, { ...options, retryOnUnauthorized: false })
     }
-    // Don't clear auth on 401 — let AuthContext handle it.
+    // The server turned the session down for good (expired, signed out
+    // elsewhere): sign out cleanly instead of showing empty pages and $0.00
+    if (refreshRejected && getAccessToken() === sentToken && !/^\/?auth\/(login|register|2fa|verify)/.test(path.replace(API_BASE, ''))) {
+      clearAuthSession()
+      window.dispatchEvent(new CustomEvent(SESSION_EXPIRED_EVENT))
+    }
   }
 
   return parseResponse(res)
