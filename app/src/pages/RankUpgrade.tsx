@@ -32,6 +32,8 @@ export default function RankUpgrade() {
   const [leaderRank, setLeaderRank] = useState<number | null>(null);
 
   useEffect(() => {
+    // Your rank needs an account; visitors see the tiers
+    if (!user) { setLoading(false); return; }
     (async () => {
       try {
         const data = await apiRequest<any>('/leaderboard/me');
@@ -42,7 +44,7 @@ export default function RankUpgrade() {
       } catch (_) {}
       setLoading(false);
     })();
-  }, []);
+  }, [user]);
 
   const currentLevel = profile?.level || 'BEGINNER';
   const currentIdx = getTierIndex(currentLevel);

@@ -95,12 +95,12 @@ export default function About() {
           <div className="ab-hero-overlay" />
           <div className="ab-hero-inner">
             <div className="ab-hero-tag">ABOUT US</div>
-            <div className="ab-hero-heading">
+            <h1 className="ab-hero-heading">
               Work.<br />
               Earn.<br />
               Grow.<br />
               <span className="green">Change.</span>
-            </div>
+            </h1>
             <p className="ab-hero-sub">
               Join thousands of talented Nigerian workers and task creators building better futures together.
             </p>

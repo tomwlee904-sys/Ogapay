@@ -251,9 +251,9 @@ export default function AdminWithdrawals() {
 
         {notice && <div className="aw-msg" role="status"><span>{notice}</span><button onClick={() => setNotice('')} aria-label="Dismiss"><i className="ti ti-x" /></button></div>}
 
-        {status === 'PROCESSING' && data && data.totals.length > 0 && (
+        {status === 'PROCESSING' && data && (data.totals || []).length > 0 && (
           <div className="aw-totals">
-            {data.totals.map(t => <span key={t.currency}><b>{t.count}</b> waiting · <b>{money(t.amount, t.currency)}</b></span>)}
+            {(data.totals || []).map(t => <span key={t.currency}><b>{t.count}</b> waiting · <b>{money(t.amount, t.currency)}</b></span>)}
           </div>
         )}
 
@@ -261,7 +261,7 @@ export default function AdminWithdrawals() {
           <div className="aw-empty">Loading…</div>
         ) : error ? (
           <div className="aw-empty" role="alert">{error}</div>
-        ) : !data || data.items.length === 0 ? (
+        ) : !data || !data.items?.length ? (
           <div className="aw-empty">{status === 'PROCESSING' ? 'No withdrawals waiting. All caught up.' : 'Nothing here yet.'}</div>
         ) : (
           <div className="aw-list">

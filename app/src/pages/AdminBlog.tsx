@@ -45,14 +45,15 @@ export default function AdminBlog() {
     setError('')
   }
 
-  const save = async () => {
+  const save = async (status: 'PUBLISHED' | 'DRAFT') => {
     if (!form.title.trim() || !form.content.trim()) { setError('Title and content are required'); return }
     setError(''); setSaving(true)
+    const body = JSON.stringify({ ...form, status })
     try {
       if (editing?.id) {
-        await apiRequest(`/blog/${editing.id}`, { method: 'PUT', body: JSON.stringify(form) })
+        await apiRequest(`/blog/${editing.id}`, { method: 'PUT', body })
       } else {
-        await apiRequest('/blog', { method: 'POST', body: JSON.stringify(form) })
+        await apiRequest('/blog', { method: 'POST', body })
       }
       setEditing(null); loadPosts()
     } catch (e: any) { setError(e.message || 'Save failed') }
@@ -141,11 +142,11 @@ export default function AdminBlog() {
           <textarea className="ab-editor" value={form.content} onChange={s('content')} placeholder="<h2>Your heading here</h2><p>Your content here...</p>" />
 
           <div style={{ display: 'flex', gap: 10, marginTop: 20, flexWrap: 'wrap', alignItems: 'center' }}>
-            <button onClick={() => { setForm(f => ({ ...f, status: 'PUBLISHED' })); setTimeout(save, 0) }}
+            <button onClick={() => save('PUBLISHED')} disabled={saving}
               style={{ height: 42, padding: '0 24px', borderRadius: 99, border: 'none', background: 'var(--accent)', color: 'var(--on-accent)', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
               {saving ? 'Saving...' : 'Publish'}
             </button>
-            <button onClick={() => { setForm(f => ({ ...f, status: 'DRAFT' })); setTimeout(save, 0) }}
+            <button onClick={() => save('DRAFT')} disabled={saving}
               style={{ height: 42, padding: '0 24px', borderRadius: 99, border: '1.5px solid var(--border)', background: 'transparent', color: 'var(--text)', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
               {saving ? 'Saving...' : 'Save Draft'}
             </button>
