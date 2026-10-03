@@ -27,16 +27,16 @@ const TYPE_ICONS: Record<string, { icon: string; color: string }> = {
   SIGNUP_BONUS:            { icon: 'ti ti-gift', color: 'var(--green)' },
   TASK_PAYMENT_RECEIVED:   { icon: 'ti ti-coin', color: 'var(--green)' },
   ESCROW_REFUNDED:         { icon: 'ti ti-arrow-back-up', color: '#EC4899' },
-  KYC_APPROVED:            { icon: 'ti ti-badge-check', color: 'var(--green)' },
-  KYC_REJECTED:            { icon: 'ti ti-x-circle', color: 'var(--red)' },
+  KYC_APPROVED:            { icon: 'ti ti-rosette-discount-check', color: 'var(--green)' },
+  KYC_REJECTED:            { icon: 'ti ti-circle-x', color: 'var(--red)' },
   NEW_TASK:                { icon: 'ti ti-briefcase', color: 'var(--accent)' },
   TASK_APPLICATION:        { icon: 'ti ti-users', color: 'var(--accent)' },
   TASK_SUBMISSION:         { icon: 'ti ti-upload', color: 'var(--accent)' },
-  SUBMISSION_APPROVED:     { icon: 'ti ti-check-circle', color: 'var(--green)' },
-  SUBMISSION_REJECTED:     { icon: 'ti ti-x-circle', color: 'var(--red)' },
+  SUBMISSION_APPROVED:     { icon: 'ti ti-circle-check', color: 'var(--green)' },
+  SUBMISSION_REJECTED:     { icon: 'ti ti-circle-x', color: 'var(--red)' },
   SUBMISSION_REVIEWED:     { icon: 'ti ti-eye', color: 'var(--accent)' },
   SLOT_EXPIRED:            { icon: 'ti ti-clock-x', color: 'var(--text3)' },
-  SLOT_REOPENED:           { icon: 'ti ti-door-open', color: '#F59E0B' },
+  SLOT_REOPENED:           { icon: 'ti ti-door-enter', color: '#F59E0B' },
   COOLDOWN:                { icon: 'ti ti-hourglass', color: '#F59E0B' },
   COOLDOWN_EXPIRED:        { icon: 'ti ti-hourglass-high', color: 'var(--green)' },
   DISPUTE_OPENED:          { icon: 'ti ti-alert-triangle', color: 'var(--red)' },
@@ -221,7 +221,7 @@ export default function TabNotificationsContent() {
         </div>
         <div className="nt-hero-right">
           {unreadCount > 0 && (
-            <button className="nt-mark-btn" onClick={markAllRead}><i className="ti ti-check-double" /> Mark all read</button>
+            <button className="nt-mark-btn" onClick={markAllRead}><i className="ti ti-checks" /> Mark all read</button>
           )}
         </div>
       </div>

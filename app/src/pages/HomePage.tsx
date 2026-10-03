@@ -189,21 +189,96 @@ function Ticker({ jobs }: { jobs: any[] }) {
 
 /* ─── choose your path ─────────────────────────────────────────────────────── */
 
-const PATHS = [
+type PathTab = {
+  label: string; eyebrow: string; heading: string; lead: string;
+  cta: { label: string; to: string };
+  steps?: [string, string][];
+  code?: { label: string; text: string };
+};
+type PathDef = { id: string; icon: string; title: string; desc: string; tags: string; tabs: PathTab[] };
+
+// Everything here is what the product does today; the developer API is read-only
+const PATHS: PathDef[] = [
   {
     id: "worker", icon: "user", title: "I'm a Worker", desc: "Earn rewards. Hire help when you need it.", tags: "Earn / Create",
-    steps: [["Create your account", "free, in under a minute"], ["Pick a paid task", "social, testing, research, design and more"], ["Submit your proof", "get paid from escrow once it's approved"]],
-    primary: { label: "Start earning", to: "/tasks" }, secondary: { label: "Create a job", to: "/create" },
+    tabs: [
+      {
+        label: "Earn", eyebrow: "Put your skills to work", heading: "Your first paid task starts here.",
+        lead: "Pick a task that fits your skills, do the work and send your proof. The reward is held in escrow and lands in your wallet once it's approved.",
+        cta: { label: "Browse jobs", to: "/tasks" },
+        steps: [
+          ["Create your account", "Free, and it takes under a minute."],
+          ["Pick a task", "Social, app testing, community, research and more."],
+          ["Submit proof, get paid", "Approved work is paid into your wallet. Verify your identity to withdraw to your bank."],
+        ],
+      },
+      {
+        label: "Create a job", eyebrow: "Hire real people", heading: "Post a job in a few minutes.",
+        lead: "Say what needs doing, set the reward per person and the proof you want. Your budget sits in escrow and is paid out as you approve work.",
+        cta: { label: "Create a job", to: "/create" },
+        steps: [
+          ["Fund your wallet", "Pay in with Paystack or a bank transfer."],
+          ["Post your job", "Instructions, reward per person and the proof you need."],
+          ["Review and approve", "Check each submission. Anything left unreviewed for 72 hours is approved automatically."],
+        ],
+      },
+    ],
   },
   {
-    id: "builder", icon: "robot", title: "I'm a Builder", desc: "Plug your app or AI agent into real people.", tags: "API / Webhooks / Agents",
-    steps: [["Turn on Developer Mode", "in Settings, then create an API key"], ["Post tasks from code", "set rewards, requirements and proof"], ["Collect results", "approve work and pay automatically"]],
-    primary: { label: "Build with OgaPay", to: "/developer" }, secondary: { label: "Read the docs", to: "/docs" },
+    id: "builder", icon: "code", title: "I'm a Builder", desc: "Read jobs, results and balances from your own app.", tags: "REST API / API keys",
+    tabs: [
+      {
+        label: "Quick start", eyebrow: "Developer API", heading: "Bring OgaPay data into your app.",
+        lead: "A read-only REST API. With an API key you can list open jobs and read your own jobs, submissions, balance and transactions.",
+        cta: { label: "Get an API key", to: "/developer" },
+        steps: [
+          ["Create an API key", "On the Developer API page, while signed in. Up to 5 active keys."],
+          ["Send it with each request", "As a Bearer token or in an X-API-Key header."],
+          ["Stay under the limit", "60 requests a minute for each key."],
+        ],
+        code: { label: "First request", text: `curl ${API_BASE}/dev/me \\\n  -H "Authorization: Bearer oga_live_YOUR_KEY"` },
+      },
+      {
+        label: "Endpoints", eyebrow: "Read-only", heading: "Seven endpoints, all GET.",
+        lead: "Posting jobs and paying people happen in the app. The API is for showing your OgaPay data wherever you need it.",
+        cta: { label: "Developer guide", to: "/developer" },
+        code: {
+          label: "Endpoints",
+          text: [`# Base URL: ${API_BASE}/dev`, "", "GET /me", "GET /jobs", "GET /jobs/:id", "GET /my/jobs", "GET /my/submissions", "GET /my/balance", "GET /my/transactions"].join("\n"),
+        },
+      },
+    ],
   },
 ];
 
+function PathCode({ label, text }: { label: string; text: string }) {
+  const [copied, setCopied] = useState(false);
+  const copy = () => {
+    navigator.clipboard?.writeText(text).then(() => {
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1600);
+    }).catch(() => {});
+  };
+  return (
+    <div className="hv-pp-code">
+      <div className="hv-pp-code-bar">
+        <span className="hv-mono">{label}</span>
+        <button type="button" onClick={copy} aria-label={copied ? "Copied" : "Copy code"}>
+          <i className={`ti ${copied ? "ti-check" : "ti-copy"}`} aria-hidden="true" /> {copied ? "Copied" : "Copy"}
+        </button>
+      </div>
+      <pre><code>{text}</code></pre>
+    </div>
+  );
+}
+
 function ChoosePath() {
-  const [open, setOpen] = useState<string | null>(null);
+  const [sel, setSel] = useState<string | null>(null);
+  const [tab, setTab] = useState(0);
+  const cur = PATHS.find((p) => p.id === sel);
+  const t = cur?.tabs[tab];
+  const pick = (id: string) => { setSel(sel === id ? null : id); setTab(0); };
+
   return (
     <section className="hv-section">
       <div className="hv-inner">
@@ -214,33 +289,62 @@ function ChoosePath() {
         </div>
         <div className="hv-paths">
           {PATHS.map((p) => {
-            const isOpen = open === p.id;
+            const on = sel === p.id;
             return (
-              <div key={p.id} className={`hv-path hv-reveal${isOpen ? " open" : ""}`}>
-                <button className="hv-path-head" onClick={() => setOpen(isOpen ? null : p.id)} aria-expanded={isOpen}>
-                  <span className="hv-path-icon"><i className={`ti ti-${p.icon}`} /></span>
-                  <span>
-                    <span className="hv-path-title" style={{ display: "block" }}>{p.title}</span>
-                    <span className="hv-path-desc" style={{ display: "block" }}>{p.desc}</span>
-                    <span className="hv-mono hv-path-tags" style={{ display: "block" }}>{p.tags}</span>
+              // useReveal adds "in" to this wrapper directly, so its class must never
+              // change with state; the selected look lives on the button inside
+              <div key={p.id} className="hv-reveal">
+                <button type="button" className={`hv-path${on ? " on" : ""}`} onClick={() => pick(p.id)}
+                  aria-expanded={on} aria-controls="hv-path-panel">
+                  <span className="hv-path-icon"><i className={`ti ti-${p.icon}`} aria-hidden="true" /></span>
+                  <span className="hv-path-copy">
+                    <span className="hv-path-title">{p.title}</span>
+                    <span className="hv-path-desc">{p.desc}</span>
+                    <span className="hv-mono hv-path-tags">{p.tags}</span>
                   </span>
-                  <span className="hv-chev"><i className="ti ti-chevron-down" /></span>
+                  <span className="hv-chev" aria-hidden="true"><i className="ti ti-chevron-down" /></span>
                 </button>
-                <div className="hv-path-body">
-                  <div>
-                    <ol className="hv-steps">
-                      {p.steps.map(([a, b]) => <li key={a}><b>{a}</b>, {b}</li>)}
-                    </ol>
-                    <div className="hv-path-cta">
-                      <Link to={p.primary.to} className="hv-btn hv-btn-dark">{p.primary.label} <i className="ti ti-arrow-right" /></Link>
-                      <Link to={p.secondary.to} className="hv-btn hv-btn-ghost">{p.secondary.label}</Link>
-                    </div>
-                  </div>
-                </div>
               </div>
             );
           })}
         </div>
+
+        {cur && t && (
+          <div className="hv-pp" id="hv-path-panel" role="region" aria-label={cur.title}>
+            <div className="hv-pp-bar">
+              <div className="hv-pp-tabs" role="tablist">
+                {cur.tabs.map((x, i) => (
+                  <button key={x.label} type="button" role="tab" aria-selected={i === tab}
+                    className={`hv-pp-tab${i === tab ? " on" : ""}`} onClick={() => setTab(i)}>{x.label}</button>
+                ))}
+              </div>
+              <button type="button" className="hv-pp-x" onClick={() => setSel(null)} aria-label="Close">
+                <i className="ti ti-x" aria-hidden="true" />
+              </button>
+            </div>
+            <div className="hv-pp-body" role="tabpanel" key={`${cur.id}-${tab}`}>
+              <div className="hv-pp-intro">
+                <span className="hv-mono">{t.eyebrow}</span>
+                <h3 className="hv-pp-title">{t.heading}</h3>
+                <p className="hv-pp-lead">{t.lead}</p>
+                <Link to={t.cta.to} className="hv-btn hv-btn-dark hv-pp-cta">{t.cta.label} <i className="ti ti-arrow-right" aria-hidden="true" /></Link>
+              </div>
+              <div className="hv-pp-side">
+                {t.steps && (
+                  <ol className="hv-pp-steps">
+                    {t.steps.map(([title, desc], i) => (
+                      <li key={title}>
+                        <span className="hv-pp-num">{String(i + 1).padStart(2, "0")}</span>
+                        <span><b>{title}</b><span>{desc}</span></span>
+                      </li>
+                    ))}
+                  </ol>
+                )}
+                {t.code && <PathCode {...t.code} />}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </section>
   );

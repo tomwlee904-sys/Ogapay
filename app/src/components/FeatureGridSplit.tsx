@@ -259,9 +259,9 @@ export default function FeatureGridSplit() {
           <TerminalMockup
             cmd="ogapay task complete --id 42"
             output={[
-              "✓ Task 'Design social media banner' approved",
-              "💰 ₦2,500 deposited to wallet",
-              "📊 New balance: ₦18,750",
+              "Task 'Design social media banner' approved",
+              "₦2,500 deposited to wallet",
+              "New balance: ₦18,750",
             ]}
           />
         }

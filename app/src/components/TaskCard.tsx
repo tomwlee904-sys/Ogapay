@@ -1,4 +1,5 @@
 ﻿import { useNavigate } from 'react-router-dom'
+import { IconBookmarkFilled } from '@tabler/icons-react'
 import { rankName } from '../lib/requirements'
 import { useState, useEffect, useRef } from 'react'
 import { apiRequest, getAccessToken } from '../lib/api'
@@ -211,7 +212,7 @@ export default function TaskCard({ task, hideApply }: { task: Task; hideApply?: 
             transition: 'color 0.15s',
             opacity: bookmarkLoading ? 0.6 : 1,
           }}>
-          <i className={`ti ${bookmarked ? 'ti-bookmark-filled' : 'ti-bookmark'}`} />
+          {bookmarked ? <IconBookmarkFilled size={16} aria-hidden="true" /> : <i className="ti ti-bookmark" />}
         </button>
       )}
 

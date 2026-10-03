@@ -32,7 +32,7 @@ export default function TabWorkerPortalContent() {
 
   const [stats, setStats] = useState([
     { icon: 'ti ti-star', color: 'var(--accent)', count: 0, label: 'Reviews' },
-    { icon: 'ti ti-zap', color: '#F59E0B', count: 0, label: 'Challenges Participated' },
+    { icon: 'ti ti-bolt', color: '#F59E0B', count: 0, label: 'Challenges Participated' },
     { icon: 'ti ti-trophy', color: 'var(--green)', count: 0, label: 'Won' },
     { icon: 'ti ti-heart', color: '#EC4899', count: 0, label: 'Compliments' },
     { icon: 'ti ti-users', color: 'var(--accent)', count: 0, label: 'Communities' },
@@ -90,7 +90,7 @@ export default function TabWorkerPortalContent() {
 
         setStats([
           { icon: 'ti ti-star', color: 'var(--accent)', count: reviews || 0, label: 'Reviews' },
-          { icon: 'ti ti-zap', color: '#F59E0B', count: submissions || 0, label: 'Tasks Done' },
+          { icon: 'ti ti-bolt', color: '#F59E0B', count: submissions || 0, label: 'Tasks Done' },
           { icon: 'ti ti-trophy', color: 'var(--green)', count: approved || 0, label: 'Approved' },
           { icon: 'ti ti-heart', color: '#EC4899', count: pending || 0, label: 'Pending Review' },
           { icon: 'ti ti-users', color: 'var(--accent)', count: communities || 0, label: 'Communities' },

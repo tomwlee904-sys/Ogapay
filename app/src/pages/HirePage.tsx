@@ -159,7 +159,7 @@ export default function HirePage() {
                   {worker.avatarUrl ? <img className="up-avatar" src={worker.avatarUrl} alt="" /> : <div className="up-avatar">{(worker.firstName?.[0] || worker.username[0]).toUpperCase()}</div>}
                   <div style={{ minWidth: 0 }}>
                     <b>{name}</b>
-                    <small>@{worker.username} · {worker.workerProfile?.tasksCompleted ?? 0} jobs done{worker.workerProfile?.totalRatings ? ` · ${Number(worker.workerProfile.avgRating).toFixed(1)}★` : ""}</small>
+                    <small>@{worker.username} · {worker.workerProfile?.tasksCompleted ?? 0} jobs done{worker.workerProfile?.totalRatings ? ` · ${Number(worker.workerProfile.avgRating).toFixed(1)} rating` : ""}</small>
                     {worker.bio && <p>{worker.bio}</p>}
                   </div>
                 </div>

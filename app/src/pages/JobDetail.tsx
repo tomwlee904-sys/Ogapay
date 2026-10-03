@@ -1050,7 +1050,7 @@ function WurkJobDetailView(props: any) {
                                     <button className="wjd-no" type="button" onClick={() => handleReject(sub.id)} disabled={rejecting === sub.id}>{rejecting === sub.id ? 'Rejecting...' : 'Reject'}</button>
                                   </>
                                 )}
-                                {sub.status === 'APPROVED' && (sub._approvedAt || sub.approvedAt) ? <PayoutCountdown approvedAt={sub._approvedAt || sub.approvedAt} /> : sub.status === 'APPROVED' ? <span style={{ color: 'var(--green)', fontSize: 12, fontWeight: 700 }}>✓ Approved</span> : null}
+                                {sub.status === 'APPROVED' && (sub._approvedAt || sub.approvedAt) ? <PayoutCountdown approvedAt={sub._approvedAt || sub.approvedAt} /> : sub.status === 'APPROVED' ? <span style={{ color: 'var(--green)', fontSize: 12, fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 4 }}><i className="ti ti-check" aria-hidden="true" /> Approved</span> : null}
                                 {sub.status === 'REJECTED' && <span style={{ color: '#dc2626', fontSize: 12, fontWeight: 700 }}><i className="ti ti-circle-x" /> Rejected</span>}
                                 {sub.status === 'EXPIRED' && <span style={{ color: 'var(--text3)', fontSize: 12, fontWeight: 700 }}><i className="ti ti-clock-x" /> Slot released</span>}
                                 <span style={{ color: 'var(--text3,#94a3b8)', fontSize: 12, marginLeft: 'auto' }}>{timeAgo(sub.createdAt)}</span>
@@ -1168,7 +1168,7 @@ function WurkJobDetailView(props: any) {
           <div className="wjd-report-modal" onClick={(e: any) => e.stopPropagation()}>
             <div className="wjd-report-head">
               <span style={{ fontSize: 15, fontWeight: 800 }}>Report Task</span>
-              <button className="wjd-close-btn" type="button" onClick={() => { if (!reportSubmitting) setShowReportModal(false) }}>✕</button>
+              <button className="wjd-close-btn" type="button" onClick={() => { if (!reportSubmitting) setShowReportModal(false) }} aria-label="Close"><i className="ti ti-x" aria-hidden="true" /></button>
             </div>
             <div className="wjd-report-body">
               {reportMsg && (
@@ -1204,7 +1204,7 @@ function WurkJobDetailView(props: any) {
           <div className="wjd-report-modal" style={{ maxWidth: 480 }} onClick={(e: any) => e.stopPropagation()}>
             <div className="wjd-report-head">
               <span style={{ fontSize: 15, fontWeight: 800 }}>Submission Detail</span>
-              <button className="wjd-close-btn" type="button" onClick={() => setSelectedSub(null)}>✕</button>
+              <button className="wjd-close-btn" type="button" onClick={() => setSelectedSub(null)} aria-label="Close"><i className="ti ti-x" aria-hidden="true" /></button>
             </div>
             <div className="wjd-report-body">
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>

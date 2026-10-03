@@ -72,7 +72,7 @@ export default function AdminVault() {
       if (d?.distributed) {
         showToast(<> <i className="ti ti-circle-check" style={{color:'var(--green)'}} /> Distributed {(d.totalNgp || 0).toLocaleString()} to {d.recipients} holders</>)
       } else {
-        showToast(`⏸ ${d?.reason || 'Skipped'}`)
+        showToast(`Skipped: ${d?.reason || 'nothing to do'}`)
       }
       fetchPool()
     } catch { showToast(<> <i className="ti ti-circle-x" style={{color:'var(--red)'}} /> Distribution failed</>) }
@@ -192,7 +192,7 @@ export default function AdminVault() {
                 <input style={S.input} type="number" value={seedAmount} onChange={e => setSeedAmount(e.target.value)} placeholder="1000" />
               </div>
               <button style={{ ...S.btnPrimary, marginTop: 18 }} onClick={handleSeedPay} disabled={seeding || !seedUserId || !seedAmount}>
-                {seeding ? '⏳ Seeding...' : <><i className="ti ti-droplet" /> Seed $PAY</>}
+                {seeding ? 'Seeding…' : <><i className="ti ti-droplet" /> Seed $PAY</>}
               </button>
             </div>
           </div>
@@ -219,7 +219,7 @@ export default function AdminVault() {
                 <input style={S.input} value={revDesc} onChange={e => setRevDesc(e.target.value)} placeholder="Optional note" />
               </div>
               <button style={{ ...S.btn, background: 'var(--green)', color: '#fff', marginTop: 18 }} onClick={handleAddRevenue} disabled={addingRevenue || !revAmount}>
-                {addingRevenue ? '⏳ Adding...' : <><i className="ti ti-coin" /> Add Revenue</>}
+                {addingRevenue ? 'Adding…' : <><i className="ti ti-coin" /> Add Revenue</>}
               </button>
             </div>
           </div>
@@ -231,7 +231,7 @@ export default function AdminVault() {
               Manually trigger a distribution. Normally runs automatically at midnight UTC.
             </p>
             <button style={{ ...S.btnPrimary, height: 44, fontSize: 14, padding: '0 24px' }} onClick={handleDistribute} disabled={distributing}>
-              <i className="ti ti-vault" style={{ fontSize: 16 }} /> {distributing ? '⏳ Distributing...' : <><i className="ti ti-package" /> Run Distribution Now</>}
+              <i className="ti ti-vault" style={{ fontSize: 16 }} /> {distributing ? 'Distributing…' : <><i className="ti ti-package" /> Run Distribution Now</>}
             </button>
           </div>
 

@@ -253,7 +253,7 @@ export default function StoreProduct() {
           <b>{p.seller} <i className="ti ti-arrow-up-right" /></b>
           <span className="sp-rating">
             {p.reviewsCount > 0
-              ? <><i className="ti ti-star-filled" style={{ color: '#bd8517' }} /> {Number(p.rating).toFixed(1)} <span>/ 5 · {p.reviewsCount} reviews</span></>
+              ? <><i className="ti ti-star" style={{ color: '#bd8517' }} /> {Number(p.rating).toFixed(1)} <span>/ 5 · {p.reviewsCount} reviews</span></>
               : <span>New creator</span>}
           </span>
         </span>

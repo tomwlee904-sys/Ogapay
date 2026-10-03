@@ -43,7 +43,7 @@ export function HomeJobCard({ task, convert, applied }: { task: any; convert: Co
     <Link to={`/tasks/${task.id}`} className="hc-card" aria-label={`${task.title} by ${name}, ${spokenMoney(amount, cur)} per worker. View job`}>
       <div className="hc-top">
         <span className="hc-type"><i className="ti ti-briefcase" />{task.category === "SOCIAL_MEDIA" ? "Social task" : "Custom job"}</span>
-        {task.isBoosted ? <BoostedTag /> : task.featured && <span className="hc-pill"><i className="ti ti-star-filled" style={{ color: "#bd8517" }} />Highlighted</span>}
+        {task.isBoosted ? <BoostedTag /> : task.featured && <span className="hc-pill"><i className="ti ti-star" style={{ color: "#bd8517" }} />Highlighted</span>}
       </div>
 
       <div className="hc-by">
@@ -133,7 +133,7 @@ export function HomeProductCard({ item, convert }: { item: any; convert: Convert
           <Avatar src={item.sellerAvatar} name={seller} size={28} />
           <span className="hc-by-txt">
             <b>{seller}</b>
-            <span>{item.reviewsCount > 0 ? <><b className="hc-rating">{Number(item.rating).toFixed(1)}</b> <i className="ti ti-star-filled hc-star" /> · {item.reviewsCount} reviews</> : item.official ? "From OgaPay" : "New seller"}</span>
+            <span>{item.reviewsCount > 0 ? <><b className="hc-rating">{Number(item.rating).toFixed(1)}</b> <i className="ti ti-star hc-star" /> · {item.reviewsCount} reviews</> : item.official ? "From OgaPay" : "New seller"}</span>
           </span>
         </div>
         <div className="hc-reward hc-price">

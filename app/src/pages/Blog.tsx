@@ -55,7 +55,7 @@ function StartSellingTile({ onClick }: { onClick: () => void }) {
         <div style={{ padding: '0.5rem', paddingTop: '0.75rem' }}>
           <div style={{ height: 80, background: 'rgba(255,255,255,0.2)', borderRadius: 6, marginBottom: 8 }} />
           <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}><div style={{ width: 18, height: 18, borderRadius: '50%', background: 'rgba(255,255,255,0.5)' }} /><div style={{ height: 8, background: 'rgba(255,255,255,0.4)', borderRadius: 4, flex: 1 }} /></div>
-          <div style={{ marginTop: 6, fontSize: 10, color: 'rgba(80,20,40,0.8)', fontWeight: 600 }}>5 ★</div>
+          <div style={{ marginTop: 6, fontSize: 10, color: 'rgba(80,20,40,0.8)', fontWeight: 600 }}>5 <i className="ti ti-star" aria-hidden="true" style={{ fontSize: "0.95em", verticalAlign: "-0.1em" }} /></div>
         </div>
       </div>
       {/* Card behind-right */}
@@ -63,19 +63,19 @@ function StartSellingTile({ onClick }: { onClick: () => void }) {
         <div style={{ padding: '0.5rem', paddingTop: '0.75rem' }}>
           <div style={{ height: 80, background: 'rgba(255,255,255,0.25)', borderRadius: 6, marginBottom: 8 }} />
           <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}><div style={{ width: 18, height: 18, borderRadius: '50%', background: 'rgba(255,255,255,0.5)' }} /><div style={{ height: 8, background: 'rgba(255,255,255,0.4)', borderRadius: 4, flex: 1 }} /></div>
-          <div style={{ marginTop: 6, fontSize: 10, color: 'rgba(80,20,40,0.8)', fontWeight: 600 }}>5 ★</div>
+          <div style={{ marginTop: 6, fontSize: 10, color: 'rgba(80,20,40,0.8)', fontWeight: 600 }}>5 <i className="ti ti-star" aria-hidden="true" style={{ fontSize: "0.95em", verticalAlign: "-0.1em" }} /></div>
         </div>
       </div>
       {/* Front card */}
       <div style={{ position: 'relative', zIndex: 5, background: '#0a0a0a', borderRadius: 10, width: 140, height: 175, border: '3px solid #0a0a0a', transform: hovered ? 'scale(1.06) translateY(-6px)' : 'scale(1)', transition: 'transform 0.3s cubic-bezier(0.34,1.56,0.64,1)', boxShadow: hovered ? '0 16px 40px rgba(0,0,0,0.4)' : '0 6px 20px rgba(0,0,0,0.25)' }}>
         <div style={{ padding: '0.5rem' }}>
-          <div style={{ height: 90, background: '#ffffff', borderRadius: 6, marginBottom: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 32 }}>🧑🏾‍💻</div>
+          <div style={{ height: 90, background: '#ffffff', borderRadius: 6, marginBottom: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 32 }}><i className="ti ti-user-code" aria-hidden="true" style={{ color: '#0a0a0a' }} /></div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
               <div style={{ width: 20, height: 20, borderRadius: '50%', background: '#0a0a0a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 8, color: '#fff', fontWeight: 700 }}>OG</div>
               <span style={{ fontSize: 11, fontWeight: 700, color: '#fff' }}>Chukwudi</span>
             </div>
-            <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.7)', fontWeight: 700 }}>5 ★</span>
+            <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.7)', fontWeight: 700 }}>5 <i className="ti ti-star" aria-hidden="true" style={{ fontSize: "0.95em", verticalAlign: "-0.1em" }} /></span>
           </div>
           <div style={{ height: 4, background: 'rgba(255,255,255,0.2)', borderRadius: 2 }}><div style={{ width: '80%', height: '100%', background: '#ffffff', borderRadius: 2 }} /></div>
         </div>
@@ -316,7 +316,7 @@ export default function Blog() {
           <h2 style={{ fontSize: 20, fontWeight: 500, color: '#fff', marginBottom: 8 }}>Stay in the loop</h2>
           <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.75)', marginBottom: '1.25rem' }}>Get the latest OgaPay tips, earnings stories, and platform updates.</p>
           {subscribed ? (
-            <p style={{ color: '#ADDD5A', fontWeight: 600, fontSize: 14 }}>✓ You're subscribed!</p>
+            <p style={{ color: '#ADDD5A', fontWeight: 600, fontSize: 14 }}><i className="ti ti-circle-check" aria-hidden="true" /> You're subscribed.</p>
           ) : (
             <div style={{ display: 'flex', gap: 8, maxWidth: 420, margin: '0 auto', flexWrap: 'wrap', justifyContent: 'center' }}>
               <input type="email" placeholder="Enter your email address" value={email} onChange={e => setEmail(e.target.value)} onKeyDown={e => e.key === 'Enter' && subscribe()} aria-label="Email address"

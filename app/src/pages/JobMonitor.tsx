@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { IconBookmarkFilled } from '@tabler/icons-react'
 import { Link, useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { useAuth } from '../context/AuthContext'
@@ -144,7 +145,7 @@ export default function JobMonitor() {
                   </div>
                   <b>{money(Number(j.reward || 0), j.currency)}</b>
                   <div className="jm2-acts">
-                    <button className="ui-btn ui-btn-ghost ui-btn-icon" aria-label={saved.includes(j.id) ? 'Unsave' : 'Save'} onClick={() => toggleSave(j.id)}><i className={`ti ${saved.includes(j.id) ? 'ti-bookmark-filled' : 'ti-bookmark'}`} /></button>
+                    <button className="ui-btn ui-btn-ghost ui-btn-icon" aria-label={saved.includes(j.id) ? 'Unsave' : 'Save'} onClick={() => toggleSave(j.id)}>{saved.includes(j.id) ? <IconBookmarkFilled size={16} aria-hidden="true" /> : <i className="ti ti-bookmark" />}</button>
                     {mine
                       ? <Link className="ui-btn ui-btn-ghost" to={`/tasks/${j.id}/submit`}>Open</Link>
                       : <button className="ui-btn ui-btn-dark" disabled={busy === j.id || left === 0} onClick={() => takeSlot(j)}>{busy === j.id ? 'Taking…' : 'Take a slot'}</button>}

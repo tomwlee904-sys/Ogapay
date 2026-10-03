@@ -171,7 +171,7 @@ export default function Drawer({ open, onClose }: DrawerProps) {
                   <span><strong>Browse Store</strong><small>Find products</small></span>
                 </Link>
                 <Link className="oga-drawer-item" to="/my-store" onClick={onClose}>
-                  <span className="oga-drawer-icon oga-drawer-icon--sub"><i className="ti ti-store" /></span>
+                  <span className="oga-drawer-icon oga-drawer-icon--sub"><i className="ti ti-building-store" /></span>
                   <span><strong>My Store</strong><small>Manage your shop</small></span>
                 </Link>
               </DrawerGroup>

@@ -499,7 +499,7 @@ export default function Store() {
           }} onClick={e => e.stopPropagation()}>
             {purchaseStep === 'processing' && (
               <>
-                <div style={{ fontSize: 36, marginBottom: 12 }}>⏳</div>
+                <div style={{ fontSize: 36, marginBottom: 12, color: 'var(--text2)' }}><i className="ti ti-hourglass" aria-hidden="true" /></div>
                 <div style={{ fontSize: 18, fontWeight: 800, marginBottom: 8 }}>Processing Purchase...</div>
                 <p style={{ fontSize: 14, color: 'var(--text2)', margin: 0 }}>
                   Your payment is being processed. Please wait.

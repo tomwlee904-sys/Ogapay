@@ -12,20 +12,20 @@ import { useCurrency } from "../context/CurrencyContext";
 const FLOW = [1, 2, 3, 4, 5, 8];
 
 const CAMPAIGN_TYPES = [
-  { id: "social", label: "Social Media", icon: "📱", desc: "Followers, likes, shares, comments" },
-  { id: "community", label: "Community Growth", icon: "👥", desc: "Telegram, Discord, group members" },
-  { id: "content", label: "Content Creation", icon: "✍️", desc: "Articles, videos, reviews" },
-  { id: "website", label: "Website Traffic", icon: "🌐", desc: "Visits, clicks, engagement" },
-  { id: "app", label: "App Testing", icon: "📲", desc: "Downloads, installs, reviews" },
-  { id: "survey", label: "Surveys & Research", icon: "📋", desc: "Responses, feedback, polls" },
-  { id: "crypto", label: "Crypto & Web3", icon: "🪙", desc: "Airdrops, token tasks, raids" },
-  { id: "custom", label: "Custom Task", icon: "⚡", desc: "Anything else you need done" },
+  { id: "social", label: "Social Media", icon: "ti-share", desc: "Followers, likes, shares, comments" },
+  { id: "community", label: "Community Growth", icon: "ti-users-group", desc: "Telegram, Discord, group members" },
+  { id: "content", label: "Content Creation", icon: "ti-pencil", desc: "Articles, videos, reviews" },
+  { id: "website", label: "Website Traffic", icon: "ti-world", desc: "Visits, clicks, engagement" },
+  { id: "app", label: "App Testing", icon: "ti-device-mobile", desc: "Downloads, installs, reviews" },
+  { id: "survey", label: "Surveys & Research", icon: "ti-clipboard-list", desc: "Responses, feedback, polls" },
+  { id: "crypto", label: "Crypto & Web3", icon: "ti-coin", desc: "Airdrops, token tasks, raids" },
+  { id: "custom", label: "Custom Task", icon: "ti-bolt", desc: "Anything else you need done" },
 ];
 
 const FORMATS = [
-  { id: "single", label: "Single Campaign", icon: "🎯", desc: "Create one campaign now" },
-  { id: "bulk", label: "Bulk Campaigns", icon: "📦", desc: "Create 2-10 similar campaigns" },
-  { id: "template", label: "Use Template", icon: "📄", desc: "Start from a pre-built template" },
+  { id: "single", label: "Single Campaign", icon: "ti-target", desc: "Create one campaign now" },
+  { id: "bulk", label: "Bulk Campaigns", icon: "ti-stack-2", desc: "Create 2-10 similar campaigns" },
+  { id: "template", label: "Use Template", icon: "ti-template", desc: "Start from a pre-built template" },
 ];
 
 // Starting points, all editable in the next step. They had no instructions, so
@@ -364,7 +364,7 @@ export default function CampaignWizard() {
                   setMessages([
                     {
                       role: "assistant",
-                      text: `Great choice! **${t.label}** — ${t.desc}\n\nTell me more details about what you need and I'll build your campaign.`,
+                      text: `Great choice: ${t.label} (${t.desc.toLowerCase()}).\n\nTell me more details about what you need and I'll build your campaign.`,
                     },
                   ]);
                 }}
@@ -379,7 +379,7 @@ export default function CampaignWizard() {
                   transition: "all 0.15s",
                 }}
               >
-                <div style={{ fontSize: 22, marginBottom: 4 }}>{t.icon}</div>
+                <div style={{ fontSize: 22, marginBottom: 4, color: "var(--text)" }}><i className={`ti ${t.icon}`} aria-hidden="true" /></div>
                 <div style={{ fontSize: 12, fontWeight: 600, color: "var(--text)" }}>{t.label}</div>
                 <div style={{ fontSize: 10, color: "var(--text3)", marginTop: 2 }}>{t.desc}</div>
               </button>
@@ -439,13 +439,13 @@ export default function CampaignWizard() {
               width: "100%",
             }}
           >
-            <span style={{ fontSize: 24 }}>{f.icon}</span>
+            <span style={{ fontSize: 22, color: "var(--text)", display: "inline-flex" }}><i className={`ti ${f.icon}`} aria-hidden="true" /></span>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text)" }}>{f.label}</div>
               <div style={{ fontSize: 11, color: "var(--text3)", marginTop: 2 }}>{f.desc}</div>
             </div>
             {format === f.id && (
-              <span style={{ color: "var(--accent)", fontSize: 16 }}>✓</span>
+              <i className="ti ti-check" aria-hidden="true" style={{ color: "var(--accent)", fontSize: 16 }} />
             )}
           </button>
         ))}
@@ -759,7 +759,7 @@ export default function CampaignWizard() {
             border: "1px solid rgba(var(--accent-rgb),0.12)",
           }}
         >
-          <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 8 }}>💰 Budget Preview</div>
+          <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 8 }}><i className="ti ti-calculator" aria-hidden="true" /> Budget preview</div>
           <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 4 }}>
             <span style={{ color: "var(--text3)" }}>Reward × Workers</span>
             <span>
@@ -869,7 +869,7 @@ export default function CampaignWizard() {
           marginBottom: 16,
         }}
       >
-        <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 4 }}>⚠️ Insufficient Balance</div>
+        <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 4 }}><i className="ti ti-alert-triangle" aria-hidden="true" style={{ color: "#d97706" }} /> Not enough in your wallet</div>
         <div style={{ fontSize: 11, color: "var(--text3)", marginBottom: 8 }}>
           Your wallet balance: ₦{walletBalance.toLocaleString()}
           <br />
@@ -888,7 +888,7 @@ export default function CampaignWizard() {
             cursor: "pointer",
           }}
         >
-          💳 Top Up Wallet
+          <i className="ti ti-credit-card" aria-hidden="true" /> Top up wallet
         </button>
       </div>
       ) : (
@@ -988,7 +988,7 @@ export default function CampaignWizard() {
         <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 8 }}>Before you publish</div>
         {checks.map((c, i) => (
           <div key={i} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, marginBottom: 4 }}>
-            <span style={{ color: c.passed ? "var(--green)" : "#d97706" }}>{c.passed ? "\u2713" : "\u2717"}</span>
+            <span style={{ color: c.passed ? "var(--green)" : "#d97706" }}><i className={`ti ${c.passed ? "ti-check" : "ti-x"}`} aria-hidden="true" /></span>
             <span style={{ color: c.passed ? "var(--text2)" : "#d97706" }}>{c.label}</span>
           </div>
         ))}
@@ -1013,7 +1013,7 @@ export default function CampaignWizard() {
             cursor: loading ? "not-allowed" : "pointer",
           }}
         >
-          {loading ? "Publishing..." : "🚀 Publish Now"}
+          {loading ? "Publishing…" : <><i className="ti ti-send" aria-hidden="true" /> Publish now</>}
         </button>
         <button
           onClick={() => publishCampaign("draft", null)}
@@ -1030,7 +1030,7 @@ export default function CampaignWizard() {
             cursor: loading ? "not-allowed" : "pointer",
           }}
         >
-          💾 Save Draft
+          <i className="ti ti-device-floppy" aria-hidden="true" /> Save draft
         </button>
       </div>
       <button
@@ -1048,7 +1048,7 @@ export default function CampaignWizard() {
           cursor: "pointer",
         }}
       >
-        ⏰ Schedule for Later
+        <i className="ti ti-clock" aria-hidden="true" /> Schedule for later
       </button>
     </div>
   );
@@ -1069,7 +1069,7 @@ export default function CampaignWizard() {
           fontFamily: "inherit", width: "100%",
         }}
       >
-        <div style={{ fontSize: 16, marginBottom: 4 }}>🚀 Publish Now</div>
+        <div style={{ fontSize: 16, marginBottom: 4 }}><i className="ti ti-send" aria-hidden="true" /> Publish now</div>
         <div style={{ fontSize: 12, color: "var(--text3)" }}>
           Campaign goes live immediately — workers can start right away
         </div>
@@ -1083,7 +1083,7 @@ export default function CampaignWizard() {
           fontFamily: "inherit", width: "100%",
         }}
       >
-        <div style={{ fontSize: 16, marginBottom: 4 }}>💾 Save as Draft</div>
+        <div style={{ fontSize: 16, marginBottom: 4 }}><i className="ti ti-device-floppy" aria-hidden="true" /> Save as draft</div>
         <div style={{ fontSize: 12, color: "var(--text3)" }}>
           Save to drafts — publish later from "My Campaigns"
         </div>
@@ -1093,7 +1093,7 @@ export default function CampaignWizard() {
         padding: "16px", borderRadius: 12,
         border: "1.5px solid var(--border)", background: "var(--bg)",
       }}>
-        <div style={{ fontSize: 16, marginBottom: 4 }}>⏰ Schedule for Later</div>
+        <div style={{ fontSize: 16, marginBottom: 4 }}><i className="ti ti-clock" aria-hidden="true" /> Schedule for later</div>
         <div style={{ fontSize: 12, color: "var(--text3)", marginBottom: 8 }}>
           Set a date &amp; time to auto-publish
         </div>
@@ -1143,7 +1143,7 @@ export default function CampaignWizard() {
           margin: "0 auto 12px",
         }}
       >
-        <span style={{ fontSize: 28 }}>✅</span>
+        <i className="ti ti-circle-check" aria-hidden="true" style={{ fontSize: 30, color: "var(--green)" }} />
       </div>
       <h3 style={{ margin: "0 0 4px", fontSize: 17, fontWeight: 700, color: "var(--green)" }}>
         Campaign Published Successfully!
@@ -1164,7 +1164,7 @@ export default function CampaignWizard() {
       >
         <div style={{ fontSize: 12, marginBottom: 6 }}>
           <span style={{ color: "var(--text3)" }}>Status:</span>{" "}
-          <span style={{ color: "var(--green)", fontWeight: 600 }}>🟢 LIVE</span>
+          <span style={{ color: "var(--green)", fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 6 }}><span aria-hidden="true" style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--green)" }} /> Live</span>
         </div>
         <div style={{ fontSize: 12, marginBottom: 6 }}>
           <span style={{ color: "var(--text3)" }}>Campaign:</span>{" "}
@@ -1182,7 +1182,7 @@ export default function CampaignWizard() {
               navigator.clipboard?.writeText(`https://ogapay.app/tasks/search?q=${encodeURIComponent(details.title || "campaign")}`);
             }}
           >
-            📋 Copy Link
+            <i className="ti ti-copy" aria-hidden="true" /> Copy link
           </span>
         </div>
       </div>

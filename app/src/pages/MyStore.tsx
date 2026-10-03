@@ -127,7 +127,7 @@ export default function MyStore() {
                   <span className={`ms2-badge ${p.isActive ? 'live' : ''}`}>{p.isActive ? 'Live' : 'Draft'}</span>
                   <span><b>{money(p.price, p.currency)}</b></span>
                   <span>{p.orders} {p.orders === 1 ? 'order' : 'orders'}</span>
-                  {p.reviewsCount > 0 && <span>★ {p.avgRating.toFixed(1)} ({p.reviewsCount})</span>}
+                  {p.reviewsCount > 0 && <span><i className="ti ti-star" aria-hidden="true" style={{ fontSize: "0.95em", verticalAlign: "-0.1em" }} /> {p.avgRating.toFixed(1)} ({p.reviewsCount})</span>}
                   {p.stock !== null && <span>{p.stock} in stock</span>}
                   <span>{p.delivery}</span>
                 </div>
