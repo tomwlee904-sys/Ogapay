@@ -5,19 +5,11 @@ import { useAuth } from "../context/AuthContext";
 import { useWalletBalance } from "../context/WalletBalanceContext";
 import { useCurrency } from "../context/CurrencyContext";
 
-const STEPS = [
-  "Qualification",
-  "Campaign Type",
-  "Format",
-  "Questions",
-  "Review",
-  "Budget",
-  "Summary",
-  "Compliance",
-  "Insights",
-  "Confirm",
-  "Success",
-];
+// The path through the builder (step numbers used below): type, format, details,
+// budget, summary, publish options. 9 is the success screen. There used to be an
+// eligibility gate first (step 0) that nobody could pass, and the summary was
+// shown three times (steps 5-7).
+const FLOW = [1, 2, 3, 4, 5, 8];
 
 const CAMPAIGN_TYPES = [
   { id: "social", label: "Social Media", icon: "📱", desc: "Followers, likes, shares, comments" },
@@ -36,20 +28,51 @@ const FORMATS = [
   { id: "template", label: "Use Template", icon: "📄", desc: "Start from a pre-built template" },
 ];
 
+// Starting points, all editable in the next step. They had no instructions, so
+// a template could never be published, and 500-2000 workers each.
 const TEMPLATES = [
-  { title: "Instagram Followers", platform: "Instagram", workers: 500, reward: 20, category: "Social Media" },
-  { title: "TikTok Engagement", platform: "TikTok", workers: 1000, reward: 15, category: "Social Media" },
-  { title: "Twitter Viral", platform: "Twitter/X", workers: 2000, reward: 10, category: "Social Media" },
-  { title: "Telegram Members", platform: "Telegram", workers: 300, reward: 25, category: "Community" },
-  { title: "YouTube Subscribers", platform: "YouTube", workers: 300, reward: 40, category: "Social Media" },
-  { title: "Website Testing", platform: "Web", workers: 100, reward: 100, category: "App Testing" },
+  { title: "Instagram Followers", platform: "Instagram", workers: 100, reward: 60, category: "Social Media", proof: "SCREENSHOT",
+    instructions: "Follow our Instagram account (link below), then send a screenshot that shows you follow it." },
+  { title: "TikTok Engagement", platform: "TikTok", workers: 100, reward: 80, category: "Social Media", proof: "SCREENSHOT",
+    instructions: "Like and comment on our TikTok video (link below), then send a screenshot of your comment." },
+  { title: "Repost on X", platform: "Twitter/X", workers: 200, reward: 50, category: "Social Media", proof: "SCREENSHOT",
+    instructions: "Repost and like our post on X (link below), then send a screenshot that shows your repost." },
+  { title: "Telegram Members", platform: "Telegram", workers: 100, reward: 60, category: "Community", proof: "USERNAME",
+    instructions: "Join our Telegram group (link below) and stay for at least 7 days. Send your Telegram username as proof." },
+  { title: "YouTube Subscribers", platform: "YouTube", workers: 50, reward: 200, category: "Social Media", proof: "SCREENSHOT",
+    instructions: "Subscribe to our YouTube channel (link below) and send a screenshot that shows you're subscribed." },
+  { title: "Website Testing", platform: "Web", workers: 20, reward: 500, category: "App Testing", proof: "SCREENSHOT",
+    instructions: "Visit our website (link below), try the main features and report anything that doesn't work, with screenshots." },
 ];
+
+const MIN_REWARD = 50; // the job API refuses less than ₦50 per worker
+
+// The AI and the templates name categories in words ("Social Media"); the job API
+// takes codes, so a campaign published with the AI's category was refused
+const CATEGORY_CODES = ["SOCIAL_MEDIA", "DATA_ENTRY", "CONTENT_WRITING", "APP_TESTING", "SURVEY", "DESIGN", "TRANSLATION", "WEB_RESEARCH", "VIDEO_REVIEW", "OTHER"];
+const TYPE_CATEGORY: Record<string, string> = { social: "SOCIAL_MEDIA", community: "SOCIAL_MEDIA", content: "CONTENT_WRITING", website: "WEB_RESEARCH", app: "APP_TESTING", survey: "SURVEY", crypto: "OTHER", custom: "OTHER" };
+const toCategory = (v?: string, type?: string | null) => {
+  const s = String(v || "").trim();
+  if (CATEGORY_CODES.includes(s)) return s;
+  const w = s.toLowerCase();
+  if (!w) return TYPE_CATEGORY[type || ""] || "OTHER";
+  if (/social|marketing|community|music|influenc|twitter|instagram|tiktok|telegram|discord|youtube|facebook/.test(w)) return "SOCIAL_MEDIA";
+  if (/content|article|blog|writ/.test(w)) return "CONTENT_WRITING";
+  if (/test|app|review|develop/.test(w)) return "APP_TESTING";
+  if (/survey|lead|poll/.test(w)) return "SURVEY";
+  if (/design|image/.test(w)) return "DESIGN";
+  if (/data|entry/.test(w)) return "DATA_ENTRY";
+  if (/video/.test(w)) return "VIDEO_REVIEW";
+  if (/translat/.test(w)) return "TRANSLATION";
+  if (/web|research|traffic/.test(w)) return "WEB_RESEARCH";
+  return TYPE_CATEGORY[type || ""] || "OTHER";
+};
+
 
 export default function CampaignWizard() {
   const [open, setOpen] = useState(false);
-  const [step, setStep] = useState(0);
+  const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
-  const [qualification, setQualification] = useState<any>(null);
   const [campaignType, setCampaignType] = useState<string | null>(null);
   const [format, setFormat] = useState<string>("single");
   const [bulkCount, setBulkCount] = useState(2);
@@ -58,27 +81,29 @@ export default function CampaignWizard() {
   const [aiResponse, setAiResponse] = useState<any>(null);
   const [details, setDetails] = useState<any>({});
   const [budget, setBudget] = useState<any>(null);
-  const [walletBalance, setWalletBalance] = useState(0);
   const [messages, setMessages] = useState<any[]>([]);
   const [streamPhase, setStreamPhase] = useState(0);
-  // Index into the current question set (used below but was never declared, so
-  // the wizard threw on every render and took the Create page down with it)
-  const [qaIndex, setQaIndex] = useState(0);
-  useEffect(() => { setQaIndex(0); }, [campaignType]);
   const endRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
   const { isAuthed, user } = useAuth();
   const { balances: walletBalances, refresh: refreshWallet } = useWalletBalance();
   const { preferredCurrency } = useCurrency();
+  const walletBalance = Number(walletBalances?.NGN?.available ?? walletBalances?.NGN?.balance ?? 0) || 0;
   const streamPhrases = ["Thinking...", "Analyzing your request...", "Detecting campaign type...", "Preparing options..."];
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, step]);
 
-  const publishCampaign = async (mode, scheduledDate) => {
+  const publishCampaign = async (mode: 'publish' | 'draft' | 'schedule', scheduledDate: string | null) => {
     if (!isAuthed) { navigate("/login"); return; }
+    const missing =
+      (details.title || "").trim().length < 5 ? "Give the campaign a title (at least 5 characters)." :
+      (details.instructions || "").trim().length < 20 ? "Add instructions for workers (at least 20 characters)." :
+      (details.reward || 0) < MIN_REWARD ? `The reward must be at least ₦${MIN_REWARD} per worker.` :
+      (details.workerCount || 0) < 1 ? "Set how many workers you need." : "";
+    if (missing) { alert(missing); return; }
     setLoading(true);
     try {
       const reward = details.reward || 0;
@@ -99,14 +124,14 @@ export default function CampaignWizard() {
 
       const body = {
         title: details.title || "Campaign",
-        description: details.instructions || "Complete the task as described",
-        category: details.category || "SOCIAL_MEDIA",
+        description: details.instructions,
+        category: toCategory(details.category, campaignType),
         reward: Math.round(reward),
         maxWorkers: Math.round(maxWorkers),
         currency: "NGN",
         instructions: details.instructions || "",
         proofRequired: details.proofRequired || undefined,
-        estimatedTime: details.estimatedTime || undefined,
+        estimatedTime: Number.isInteger(details.estimatedTime) ? details.estimatedTime : undefined,
         minRank: details.minRank || undefined,
         workerRequirement: details.workerRequirement || undefined,
         trackingCode: details.trackingCode || undefined,
@@ -114,7 +139,7 @@ export default function CampaignWizard() {
         ...(mode === "schedule" && scheduledDate ? { scheduledAt: scheduledDate } : {}),
       };
 
-      const result = await apiRequest("/tasks", {
+      const result = await apiRequest<any>("/tasks", {
         method: "POST",
         body: JSON.stringify(body),
       });
@@ -123,26 +148,11 @@ export default function CampaignWizard() {
         throw new Error(result?.message || result?.error || "Failed to create campaign");
       }
       setLoading(false);
-      setStep(10);
-    } catch (e) {
+      setStep(9);
+    } catch (e: any) {
       setLoading(false);
       alert(e?.message || "Failed to create campaign. Please try again.");
     }
-  };
-
-  const checkQualification = async () => {
-    setLoading(true);
-    try {
-      const res = await apiRequest("/campaigns/qualification");
-      const data = res?.data || res;
-      setQualification(data);
-      if (data.allPassed) {
-        setStep(1);
-      }
-    } catch {
-      setQualification({ allPassed: false, checks: {}, details: {} });
-    }
-    setLoading(false);
   };
 
   const detectCampaignIntent = async () => {
@@ -155,7 +165,7 @@ export default function CampaignWizard() {
     }, 600);
 
     try {
-      const res = await apiRequest("/campaigns/generate", {
+      const res = await apiRequest<any>("/campaigns/generate", {
         method: "POST",
         body: JSON.stringify({ prompt: intentText }),
       });
@@ -168,9 +178,9 @@ export default function CampaignWizard() {
           ...prev,
           title: data.campaign.title || "",
           platform: data.campaign.platform || "",
-          category: data.campaign.category || "",
+          category: toCategory(data.campaign.category),
           workerCount: data.campaign.workerCount || 50,
-          reward: data.campaign.reward || 20,
+          reward: Math.max(MIN_REWARD, Math.round(Number(data.campaign.reward) || MIN_REWARD)),
           instructions: data.campaign.instructions || "",
           proofRequired: data.campaign.proofRequired || "",
         }));
@@ -220,241 +230,7 @@ export default function CampaignWizard() {
     const fee = Math.ceil(total * 0.1);
     setBudget({ reward, workers, total, fee, grandTotal: total + fee });
   };
-
-  // ── Smart Questions Engine ───────────────────────────────────
-  const QUESTIONS: Record<string, { id: string; q: string; type: string; options?: string[]; dependsOn?: string }[]> = {
-    social: [
-      { id: "platform", q: "Which platform do you need help with?", type: "multi", options: ["Instagram", "TikTok", "Twitter/X", "YouTube", "Facebook"] },
-      { id: "action", q: "What action do you need workers to perform?", type: "single", options: ["Follow/Subscribe", "Like", "Comment", "Share/Repost", "Save/Bookmark"] },
-      { id: "audience", q: "Any target audience preferences?", type: "multi", options: ["Nigeria only", "Global", "Age 18-24", "Age 25-34", "English speaking", "No preference"] },
-      { id: "workers", q: "How many workers do you need?", type: "number", dependsOn: "platform" },
-      { id: "duration", q: "Campaign duration?", type: "single", options: ["1-3 days", "4-7 days", "1-2 weeks", "2-4 weeks", "Custom"] },
-      { id: "requirements", q: "Any special worker requirements?", type: "multi", options: ["Verified accounts only", "Min account age 30d", "Min 100 followers", "No special requirements"] },
-      { id: "proof", q: "How should workers prove completion?", type: "single", options: ["Screenshot", "Link", "Text response", "Video", "No proof needed"] },
-    ],
-    community: [
-      { id: "platform", q: "Which platform?", type: "multi", options: ["Telegram", "Discord", "Slack", "Reddit", "WhatsApp"] },
-      { id: "action", q: "What action?", type: "single", options: ["Join group", "Invite members", "Post content", "Engage daily", "Refer friends"] },
-      { id: "workers", q: "How many members do you need?", type: "number" },
-      { id: "duration", q: "Campaign duration?", type: "single", options: ["1-3 days", "4-7 days", "1-2 weeks", "Ongoing"] },
-      { id: "proof", q: "Proof required?", type: "single", options: ["Screenshot", "Link to profile", "Username submission", "No proof"] },
-    ],
-    content: [
-      { id: "format", q: "What type of content?", type: "single", options: ["Article/Blog", "Video", "Image/Design", "Review", "Social post"] },
-      { id: "topic", q: "What topic or theme?", type: "text" },
-      { id: "workers", q: "How many pieces of content?", type: "number" },
-      { id: "wordCount", q: "Minimum length requirements?", type: "single", options: ["50-100 words", "100-300 words", "300-500 words", "500+ words", "No minimum"] },
-      { id: "proof", q: "How to verify?", type: "single", options: ["Link to published content", "Document upload", "Screenshot", "Manual review"] },
-    ],
-    website: [
-      { id: "action", q: "What type of website task?", type: "single", options: ["Visit & browse", "Click specific links", "Fill form", "Sign up", "Leave feedback"] },
-      { id: "url", q: "What's the target URL?", type: "text" },
-      { id: "duration", q: "Minimum time on site?", type: "single", options: ["10 seconds", "30 seconds", "1 minute", "2+ minutes", "No minimum"] },
-      { id: "workers", q: "How many visitors?", type: "number" },
-      { id: "proof", q: "Proof required?", type: "single", options: ["Screenshot", "Referrer header", "No proof needed"] },
-    ],
-    app: [
-      { id: "action", q: "What type of app task?", type: "single", options: ["Download & install", "Test & review", "Beta test", "In-app purchase"] },
-      { id: "platform", q: "App platform?", type: "multi", options: ["iOS", "Android", "Web app", "Cross-platform"] },
-      { id: "workers", q: "How many testers?", type: "number" },
-      { id: "feedback", q: "Feedback required?", type: "single", options: ["Bug report", "Rating & review", "Screenshots", "Video walkthrough", "None"] },
-    ],
-    survey: [
-      { id: "questions", q: "How many survey questions?", type: "number" },
-      { id: "length", q: "Estimated completion time?", type: "single", options: ["Under 2 min", "2-5 min", "5-10 min", "10+ min"] },
-      { id: "workers", q: "How many responses?", type: "number" },
-      { id: "audience", q: "Target audience?", type: "multi", options: ["General", "Nigeria only", "Age specific", "Gender specific", "Interest based"] },
-      { id: "proof", q: "Verification method?", type: "single", options: ["Unique link tracking", "Completion code", "Manual review"] },
-    ],
-    crypto: [
-      { id: "action", q: "What type of crypto task?", type: "single", options: ["Airdrop participation", "Token swap", "NFT mint", "Raid campaign", "Staking", "Referral"] },
-      { id: "chain", q: "Blockchain?", type: "multi", options: ["Solana", "Ethereum", "BNB", "Polygon", "Base", "Any"] },
-      { id: "workers", q: "How many participants?", type: "number" },
-      { id: "requirements", q: "Special requirements?", type: "multi", options: ["Must have wallet", "Min transaction history", "Must follow X account", "Must join Telegram"] },
-    ],
-    custom: [
-      { id: "description", q: "Briefly describe what workers need to do", type: "text" },
-      { id: "workers", q: "How many workers do you need?", type: "number" },
-      { id: "duration", q: "Expected completion time?", type: "single", options: ["Same day", "1-3 days", "1 week", "2+ weeks", "Flexible"] },
-      { id: "skills", q: "Any specific skills required?", type: "text" },
-      { id: "proof", q: "How should workers prove completion?", type: "single", options: ["Screenshot", "Link", "File upload", "Text response", "Manual review"] },
-    ],
-  };
-
-  const getQuestions = () => {
-    return QUESTIONS[campaignType || "custom"] || QUESTIONS.custom;
-  };
-
-  const currentQSet = getQuestions();
-  const currentQ = currentQSet[qaIndex];
-
-  const answerQuestion = (answer: any) => {
-    if (!currentQ) return;
-
-    const qId = currentQ.id;
-    setQaAnswers((prev: any) => ({ ...prev, [qId]: answer }));
-    setQaHistory((prev: any) => [...prev, { q: currentQ.q, a: answer }]);
-    setDetails((prev: any) => {
-      const updates: any = {};
-      // Map answers to details fields
-      if (qId === "platform") updates.platform = Array.isArray(answer) ? answer[0] : answer;
-      if (qId === "workers") updates.workerCount = parseInt(answer) || 50;
-      if (qId === "action") updates.instructions = (prev.instructions || "") + (prev.instructions ? "\n" : "") + "Action: " + (Array.isArray(answer) ? answer.join(", ") : answer);
-      if (qId === "proof") updates.proofRequired = typeof answer === "string" ? answer.toUpperCase().replace(/ /g, "_") : "SCREENSHOT";
-      if (qId === "description") updates.instructions = (prev.instructions || "") + (prev.instructions ? "\n" : "") + answer;
-      if (qId === "duration") updates.estimatedTime = answer;
-      if (qId === "format") updates.category = answer;
-      return { ...prev, ...updates };
-    });
-
-    if (qaIndex < currentQSet.length - 1) {
-      setQaIndex((i) => i + 1);
-    } else {
-      // Questions complete - auto-advance to review
-      setStep(4);
-    }
-  };
-
-    const renderQualification = () => (
-    <div style={{ padding: "16px" }}>
-      {!qualification ? (
-        <div>
-          <h3 style={{ margin: "0 0 8px", fontSize: 16, fontWeight: 700 }}>
-            Let's check if you're ready to create campaigns
-          </h3>
-          <p style={{ margin: "0 0 16px", fontSize: 13, color: "var(--text3)" }}>
-            We need a few things set up before you can publish campaigns.
-          </p>
-          <button
-            onClick={checkQualification}
-            disabled={loading}
-            style={{
-              width: "100%",
-              padding: "12px",
-              borderRadius: 10,
-              border: "none",
-              background: loading ? "var(--border)" : "var(--accent)",
-              color: "#fff",
-              fontWeight: 600,
-              fontSize: 14,
-              cursor: loading ? "not-allowed" : "pointer",
-            }}
-          >
-            {loading ? "Checking..." : "Check My Status"}
-          </button>
-        </div>
-      ) : qualification.allPassed ? (
-        <div>
-          <div
-            style={{
-              textAlign: "center",
-              padding: "20px",
-              background: "rgba(16,185,129,0.08)",
-              borderRadius: 12,
-              marginBottom: 16,
-            }}
-          >
-            <span style={{ fontSize: 32 }}>✅</span>
-            <h3 style={{ margin: "8px 0 4px", fontSize: 15, fontWeight: 700, color: "var(--green)" }}>
-              You're ready to create campaigns!
-            </h3>
-            <p style={{ margin: 0, fontSize: 12, color: "var(--text3)" }}>All checks passed</p>
-          </div>
-          <button
-            onClick={() => setStep(1)}
-            style={{
-              width: "100%",
-              padding: "12px",
-              borderRadius: 10,
-              border: "none",
-              background: "var(--accent)",
-              color: "var(--on-accent)",
-              fontWeight: 600,
-              fontSize: 14,
-              cursor: "pointer",
-            }}
-          >
-            Continue →
-          </button>
-        </div>
-      ) : (
-        <div>
-          <h3 style={{ margin: "0 0 12px", fontSize: 15, fontWeight: 700 }}>Complete these first</h3>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            {Object.entries(qualification.details || {}).map(([key, val]: any) => (
-              <div
-                key={key}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  padding: "10px 12px",
-                  borderRadius: 8,
-                  background: val.passed ? "rgba(16,185,129,0.06)" : "rgba(245,158,11,0.06)",
-                  border: `1px solid ${val.passed ? "rgba(16,185,129,0.15)" : "rgba(245,158,11,0.15)"}`,
-                }}
-              >
-                <div>
-                  <div style={{ fontSize: 13, fontWeight: 600, textTransform: "capitalize" }}>
-                    {key.replace(/([A-Z])/g, " $1")}
-                  </div>
-                  <div style={{ fontSize: 11, color: "var(--text3)", marginTop: 2 }}>
-                    {val.status || val.verified !== undefined
-                      ? val.verified
-                        ? "Verified"
-                        : "Not verified"
-                      : val.connected
-                      ? "Connected"
-                      : val.days
-                      ? `${val.days} days old (need 7+)`
-                      : "Not set"}
-                  </div>
-                </div>
-                <div>
-                  {val.passed ? (
-                    <span style={{ color: "var(--green)", fontSize: 18 }}>✓</span>
-                  ) : (
-                    <button
-                      onClick={() => val.actionUrl && navigate(val.actionUrl)}
-                      style={{
-                        fontSize: 11,
-                        padding: "4px 10px",
-                        borderRadius: 999,
-                        border: "1px solid var(--accent)",
-                        background: "transparent",
-                        color: "var(--accent)",
-                        cursor: "pointer",
-                        fontWeight: 600,
-                      }}
-                    >
-                      Fix
-                    </button>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-          <button
-            onClick={checkQualification}
-            style={{
-              width: "100%",
-              marginTop: 16,
-              padding: "12px",
-              borderRadius: 10,
-              border: "none",
-              background: "var(--accent)",
-              color: "var(--on-accent)",
-              fontWeight: 600,
-              fontSize: 14,
-              cursor: "pointer",
-            }}
-          >
-            Re-check Status
-          </button>
-        </div>
-      )}
-    </div>
-  );
+  useEffect(() => { calculateBudget(); }, [details.reward, details.workerCount]);
 
   const renderCampaignType = () => (
     <div style={{ padding: "16px" }}>
@@ -612,7 +388,8 @@ export default function CampaignWizard() {
         </>
       )}
 
-      {messages.length > 1 && (
+      {/* Picking a type is enough to go on; describing it to the AI is optional */}
+      {(campaignType || messages.length > 1) && (
         <button
           onClick={() => setStep(2)}
           style={{
@@ -647,7 +424,6 @@ export default function CampaignWizard() {
             key={f.id}
             onClick={() => {
               setFormat(f.id);
-              if (f.id === "template") setStep(3);
             }}
             style={{
               display: "flex",
@@ -719,9 +495,11 @@ export default function CampaignWizard() {
                   setDetails({
                     title: t.title,
                     platform: t.platform,
-                    category: t.category,
+                    category: toCategory(t.category),
                     workerCount: t.workers,
                     reward: t.reward,
+                    instructions: t.instructions,
+                    proofRequired: t.proof,
                   });
                   calculateBudget();
                 }}
@@ -752,7 +530,7 @@ export default function CampaignWizard() {
       )}
 
       <button
-        onClick={() => setStep(format === "template" ? 5 : 3)}
+        onClick={() => { if (format === "template" && !selectedTemplate) { alert("Pick a template first."); return; } setStep(3); }}
         style={{
           width: "100%",
           marginTop: 16,
@@ -770,226 +548,6 @@ export default function CampaignWizard() {
       </button>
     </div>
   );
-
-  const renderSmartQuestions = () => {
-    if (!currentQ) {
-      return (
-        <div style={{ padding: "16px", textAlign: "center" }}>
-          <p style={{ fontSize: 14, color: "var(--text3)" }}>All questions answered!</p>
-          <button onClick={() => setStep(4)} style={{
-            marginTop: 12, padding: "10px 24px", borderRadius: 10,
-            border: "none", background: "var(--accent)", color: "var(--on-accent)",
-            fontWeight: 600, fontSize: 14, cursor: "pointer",
-          }}>Continue →</button>
-        </div>
-      );
-    }
-
-    return (
-      <div style={{ padding: "16px", display: "flex", flexDirection: "column", height: "100%" }}>
-        {/* Progress */}
-        <div style={{ marginBottom: 12 }}>
-          <div style={{ fontSize: 11, fontWeight: 600, color: "var(--text3)", marginBottom: 6 }}>
-            Question {qaIndex + 1} of {currentQSet.length}
-          </div>
-          <div style={{ height: 4, background: "var(--border)", borderRadius: 2, overflow: "hidden" }}>
-            <div style={{
-              height: "100%",
-              width: `${((qaIndex + 1) / currentQSet.length) * 100}%`,
-              background: "var(--accent)",
-              borderRadius: 2,
-              transition: "width 0.3s",
-            }} />
-          </div>
-        </div>
-
-        {/* Q&A history */}
-        {qaHistory.length > 0 && (
-          <div style={{ marginBottom: 16, display: "flex", flexDirection: "column", gap: 6 }}>
-            {qaHistory.map((h, i) => (
-              <div key={i}>
-                <div style={{ fontSize: 11, color: "var(--text3)", fontWeight: 600, marginBottom: 2 }}>{h.q}</div>
-                <div style={{
-                  alignSelf: "flex-end",
-                  padding: "6px 12px",
-                  borderRadius: "12px 12px 4px 12px",
-                  fontSize: 12,
-                  background: "var(--accent)",
-                  color: "var(--on-accent)",
-                  display: "inline-block",
-                }}>{Array.isArray(h.a) ? h.a.join(", ") : h.a}</div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Current question */}
-        <div style={{ flex: 1 }}>
-          <div style={{
-            padding: "14px",
-            borderRadius: 12,
-            background: "var(--bg2)",
-            border: "1px solid var(--border)",
-            marginBottom: 12,
-          }}>
-            <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text)", marginBottom: 4 }}>
-              {currentQ.q}
-            </div>
-            <div style={{ fontSize: 11, color: "var(--text3)" }}>
-              {currentQ.type === "multi" ? "Select all that apply" : currentQ.type === "single" ? "Select one" : "Type your answer"}
-            </div>
-          </div>
-
-          {/* Answer options */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            {currentQ.type === "single" && currentQ.options?.map((opt) => (
-              <button key={opt} onClick={() => answerQuestion(opt)}
-                style={{
-                  padding: "12px 14px",
-                  borderRadius: 10,
-                  border: "1px solid var(--border)",
-                  background: "var(--bg)",
-                  color: "var(--text)",
-                  cursor: "pointer",
-                  textAlign: "left",
-                  fontSize: 13,
-                  fontFamily: "inherit",
-                  transition: "all 0.15s",
-                }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = "var(--accent)"; e.currentTarget.style.background = "rgba(var(--accent-rgb),0.04)"; }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.background = "var(--bg)"; }}
-              >
-                {opt}
-              </button>
-            ))}
-
-            {currentQ.type === "multi" && (
-              <MultiSelectQuestion options={currentQ.options || []} onAnswer={answerQuestion} />
-            )}
-
-            {currentQ.type === "number" && (
-              <div>
-                <input type="number" min="1" max="10000" placeholder="Enter number..."
-                  id="qs-number-input"
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && (e.target as HTMLInputElement).value) {
-                      answerQuestion(parseInt((e.target as HTMLInputElement).value));
-                    }
-                  }}
-                  style={{
-                    width: "100%", height: 48, border: "1px solid var(--border)", borderRadius: 10,
-                    padding: "0 14px", fontSize: 14, background: "var(--bg)", color: "var(--text)",
-                    outline: "none", fontFamily: "inherit", boxSizing: "border-box",
-                  }}
-                  autoFocus
-                />
-                <button onClick={() => {
-                  const input = document.getElementById("qs-number-input") as HTMLInputElement;
-                  if (input?.value) answerQuestion(parseInt(input.value));
-                }}
-                  style={{
-                    marginTop: 8, width: "100%", padding: "10px", borderRadius: 8,
-                    border: "none", background: "var(--accent)", color: "var(--on-accent)",
-                    fontWeight: 600, fontSize: 13, cursor: "pointer", fontFamily: "inherit",
-                  }}
-                >Continue</button>
-              </div>
-            )}
-
-            {currentQ.type === "text" && (
-              <div>
-                <textarea placeholder="Type your answer..."
-                  id="qs-text-input"
-                  rows={3}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey && (e.target as HTMLTextAreaElement).value.trim()) {
-                      e.preventDefault();
-                      answerQuestion((e.target as HTMLTextAreaElement).value.trim());
-                    }
-                  }}
-                  style={{
-                    width: "100%", border: "1px solid var(--border)", borderRadius: 10,
-                    padding: "10px 14px", fontSize: 13, background: "var(--bg)", color: "var(--text)",
-                    outline: "none", fontFamily: "inherit", resize: "vertical", boxSizing: "border-box",
-                  }}
-                  autoFocus
-                />
-                <button onClick={() => {
-                  const ta = document.getElementById("qs-number-input") as HTMLTextAreaElement;
-                  if (ta?.value.trim()) answerQuestion(ta.value.trim());
-                }}
-                  style={{
-                    marginTop: 8, width: "100%", padding: "10px", borderRadius: 8,
-                    border: "none", background: "var(--accent)", color: "var(--on-accent)",
-                    fontWeight: 600, fontSize: 13, cursor: "pointer", fontFamily: "inherit",
-                  }}
-                >Continue</button>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  // ── Multi-Select Component ──────────────────────────────────────
-  function MultiSelectQuestion({ options, onAnswer }: { options: string[]; onAnswer: (v: string[]) => void }) {
-    const [selected, setSelected] = useState<string[]>([]);
-    const toggle = (opt: string) => {
-      setSelected((prev) =>
-        prev.includes(opt) ? prev.filter((x) => x !== opt) : [...prev, opt]
-      );
-    };
-    return (
-      <div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          {options.map((opt) => (
-            <button key={opt} onClick={() => toggle(opt)}
-              style={{
-                padding: "12px 14px",
-                borderRadius: 10,
-                border: `1.5px solid ${selected.includes(opt) ? "var(--accent)" : "var(--border)"}`,
-                background: selected.includes(opt) ? "rgba(var(--accent-rgb),0.06)" : "var(--bg)",
-                color: "var(--text)",
-                cursor: "pointer",
-                textAlign: "left",
-                fontSize: 13,
-                fontFamily: "inherit",
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-              }}
-            >
-              <div style={{
-                width: 18, height: 18, borderRadius: 4,
-                border: `1.5px solid ${selected.includes(opt) ? "var(--accent)" : "var(--border)"}`,
-                display: "flex", alignItems: "center", justifyContent: "center",
-                background: selected.includes(opt) ? "var(--accent)" : "transparent",
-                flexShrink: 0,
-              }}>
-                {selected.includes(opt) && (
-                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                )}
-              </div>
-              {opt}
-            </button>
-          ))}
-        </div>
-        <button onClick={() => onAnswer(selected)}
-          style={{
-            marginTop: 10, width: "100%", padding: "10px", borderRadius: 8,
-            border: "none", background: selected.length > 0 ? "var(--accent)" : "var(--border)",
-            color: "#fff",
-            fontWeight: 600, fontSize: 13, cursor: selected.length > 0 ? "pointer" : "not-allowed",
-            fontFamily: "inherit",
-          }}
-          disabled={selected.length === 0}
-        >Continue ({selected.length} selected)</button>
-      </div>
-    );
-  }
 
     const renderDetails = () => (
     <div style={{ padding: "16px", overflowY: "auto" }}>
@@ -1234,7 +792,7 @@ export default function CampaignWizard() {
       )}
 
       <button
-        onClick={() => setStep(5)}
+        onClick={() => setStep(4)}
         style={{
           width: "100%",
           marginTop: 16,
@@ -1301,6 +859,7 @@ export default function CampaignWizard() {
         </div>
       )}
 
+      {walletBalance < (budget?.grandTotal || 0) ? (
       <div
         style={{
           padding: "14px",
@@ -1332,9 +891,14 @@ export default function CampaignWizard() {
           💳 Top Up Wallet
         </button>
       </div>
+      ) : (
+        <div style={{ padding: "12px 14px", borderRadius: 10, border: "1px solid var(--border)", marginBottom: 16, fontSize: 12, color: "var(--text2)" }}>
+          Your wallet balance (₦{walletBalance.toLocaleString()}) covers this campaign.
+        </div>
+      )}
 
       <button
-        onClick={() => setStep(8)}
+        onClick={() => setStep(5)}
         style={{
           width: "100%",
           padding: "12px",
@@ -1353,20 +917,14 @@ export default function CampaignWizard() {
   );
 
   const renderSummary = () => {
+    // What the job API needs, and the money to fund it
     const checks = [
-      { label: "Content guidelines", passed: true },
-      { label: "Reward meets minimum (\u20A610)", passed: (details.reward || 0) >= 10 },
-      { label: "Duration valid (1-30d)", passed: true },
-      { label: "Instructions provided", passed: !!(details.instructions || "").trim() },
-      { label: "Proof requirement set", passed: !!details.proofRequired },
-      { label: "Wallet funded", passed: walletBalance >= (budget?.grandTotal || 0) },
+      { label: "A title (5+ characters)", passed: (details.title || "").trim().length >= 5 },
+      { label: "Instructions for workers (20+ characters)", passed: (details.instructions || "").trim().length >= 20 },
+      { label: `Reward of at least ₦${MIN_REWARD} per worker`, passed: (details.reward || 0) >= MIN_REWARD },
+      { label: "Enough money in your wallet", passed: walletBalance >= (budget?.grandTotal || 0) },
     ];
     const allGood = checks.every((c) => c.passed);
-    const similarOnes = [
-      { title: "TikTok Followers", reward: 18, filled: 850, rating: 4.9 },
-      { title: "Instagram Likes", reward: 15, filled: 420, rating: 4.7 },
-      { title: "YouTube Subscribe", reward: 30, filled: 280, rating: 4.6 },
-    ];
     return (
     <div style={{ padding: "16px" }}>
       <h3 style={{ margin: "0 0 4px", fontSize: 16, fontWeight: 700 }}>Campaign Summary</h3>
@@ -1427,7 +985,7 @@ export default function CampaignWizard() {
 
       {/* Compliance */}
       <div style={{ marginTop: 16, padding: "12px", borderRadius: 10, background: "var(--bg2)", border: "1px solid var(--border)" }}>
-        <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 8 }}>✅ Compliance &amp; Rules</div>
+        <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 8 }}>Before you publish</div>
         {checks.map((c, i) => (
           <div key={i} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, marginBottom: 4 }}>
             <span style={{ color: c.passed ? "var(--green)" : "#d97706" }}>{c.passed ? "\u2713" : "\u2717"}</span>
@@ -1435,21 +993,7 @@ export default function CampaignWizard() {
           </div>
         ))}
         <div style={{ marginTop: 6, fontSize: 12, fontWeight: 600, color: allGood ? "var(--green)" : "#d97706" }}>
-          {allGood ? "✅ Campaign approved — ready to publish" : "⚠️ Some items need attention"}
-        </div>
-      </div>
-
-      {/* Insights */}
-      <div style={{ marginTop: 12, padding: "12px", borderRadius: 10, background: "rgba(var(--accent-rgb),0.04)", border: "1px solid rgba(var(--accent-rgb),0.1)" }}>
-        <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 8 }}>📊 Market Insights</div>
-        {similarOnes.map((c, i) => (
-          <div key={i} style={{ display: "flex", justifyContent: "space-between", fontSize: 11, marginBottom: 4, color: "var(--text2)" }}>
-            <span>{c.title}</span>
-            <span>₦{c.reward}/ea · {c.filled} filled · {c.rating}★</span>
-          </div>
-        ))}
-        <div style={{ marginTop: 6, fontSize: 11, color: "var(--text3)" }}>
-          Your reward (₦{details.reward?.toLocaleString() || "—"}) is competitive for this category.
+          {allGood ? "Ready to publish" : "Fix the items marked above to publish"}
         </div>
       </div>
 
@@ -1490,7 +1034,7 @@ export default function CampaignWizard() {
         </button>
       </div>
       <button
-        onClick={() => setStep(9)}
+        onClick={() => setStep(8)}
         style={{
           width: "100%",
           marginTop: 8,
@@ -1573,7 +1117,7 @@ export default function CampaignWizard() {
         </button>
       </div>
 
-      <button onClick={() => setStep(6)}
+      <button onClick={() => setStep(5)}
         style={{
           padding: "10px", borderRadius: 8, border: "none",
           background: "transparent", color: "var(--text2)",
@@ -1648,13 +1192,12 @@ export default function CampaignWizard() {
           onClick={() => {
             setOpen(false);
             setTimeout(() => {
-              setStep(0);
+              setStep(1);
               setMessages([]);
               setIntentText("");
               setDetails({});
               setBudget(null);
               setCampaignType(null);
-              setQualification(null);
             }, 300);
           }}
           style={{
@@ -1691,8 +1234,6 @@ export default function CampaignWizard() {
 
   const renderStep = () => {
     switch (step) {
-      case 0:
-        return renderQualification();
       case 1:
         return renderCampaignType();
       case 2:
@@ -1703,10 +1244,6 @@ export default function CampaignWizard() {
         return renderBudget();
       case 5:
         return renderSummary();
-      case 6:
-        return renderSummary(); // Compliance (same layout for now)
-      case 7:
-        return renderSummary(); // Insights
       case 8:
         return renderConfirm();
       case 9:
@@ -1774,7 +1311,7 @@ export default function CampaignWizard() {
             </div>
 
             {/* Progress bar */}
-            {step > 0 && step < 10 && (
+            {FLOW.includes(step) && (
               <div style={{ marginTop: 10 }}>
                 <div
                   style={{
@@ -1783,14 +1320,14 @@ export default function CampaignWizard() {
                     alignItems: "center",
                   }}
                 >
-                  {STEPS.slice(0, -1).map((s, i) => (
+                  {FLOW.map((s, i) => (
                     <div
                       key={s}
                       style={{
                         flex: 1,
                         height: 3,
                         borderRadius: 2,
-                        background: i <= step ? "var(--accent)" : "var(--border)",
+                        background: i <= FLOW.indexOf(step) ? "var(--accent)" : "var(--border)",
                         transition: "background 0.3s",
                       }}
                     />
@@ -1806,6 +1343,8 @@ export default function CampaignWizard() {
       )}
       {!open && (
         <button
+          aria-label="Open the AI campaign builder"
+          title="AI campaign builder"
           onClick={() => setOpen(true)}
           style={{
             width: 52,
