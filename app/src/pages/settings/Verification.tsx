@@ -36,7 +36,9 @@ export default function Verification({ me, reload, providers }: SectionProps & {
   const synced = useRef(false)
 
   const submit = async () => {
-    if (!want) return
+    if (!want || busy) return
+    if (num.length !== 11) { setMsg({ ok: false, text: `Enter all 11 digits of your ${want}.` }); return }
+    if (!dob) { setMsg({ ok: false, text: `Enter your date of birth as it is on your ${want} record.` }); return }
     setBusy(true); setMsg(null)
     try {
       const r = await apiRequest<any>('/kyc/submit', {
@@ -112,7 +114,9 @@ export default function Verification({ me, reload, providers }: SectionProps & {
   }
 
   const ninForm = want && (
-    <form className="st2-panel st2-form" onSubmit={(e) => { e.preventDefault(); submit() }}>
+    // noValidate: submit() explains what's missing. The browser's own "required"
+    // bubble doesn't show in some in-app browsers, so the button looked dead.
+    <form className="st2-panel st2-form" noValidate onSubmit={(e) => { e.preventDefault(); submit() }}>
       <strong>{tier === 0 ? 'Get Level 1 with your NIN' : 'Upgrade to Level 2 with your BVN'}</strong>
       <label className="st2-f"><span>{want} (11 digits)</span>
         <input inputMode="numeric" autoComplete="off" value={num} maxLength={11} onChange={(e) => setNum(e.target.value.replace(/\D/g, '').slice(0, 11))} placeholder={want === 'NIN' ? 'National Identification Number' : 'Bank Verification Number'} required />
@@ -121,7 +125,7 @@ export default function Verification({ me, reload, providers }: SectionProps & {
         <input type="date" value={dob} max={new Date().toISOString().slice(0, 10)} onChange={(e) => setDob(e.target.value)} required />
       </label>
       {msg && <p className={msg.ok ? 'st2-ok' : 'st2-err'}>{msg.text}</p>}
-      <div className="st2-actions"><button className="up-btn primary" disabled={busy || num.length !== 11 || !dob}>{busy ? 'Checking…' : `Verify ${want}`}</button></div>
+      <div className="st2-actions"><button className="up-btn primary" disabled={busy}>{busy ? 'Checking…' : `Verify ${want}`}</button></div>
     </form>
   )
 
