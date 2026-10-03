@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { apiRequest } from '../lib/api'
+import { maskAcct } from '../lib/wallet'
 
 interface BankAccount {
   id: string
@@ -11,7 +12,7 @@ interface BankAccount {
   createdAt: string
 }
 
-export default function SavedBanksList() {
+export default function SavedBanksList({ bare = false }: { bare?: boolean }) {
   const [banks, setBanks] = useState<BankAccount[]>([])
   const [loading, setLoading] = useState(true)
   const [showAdd, setShowAdd] = useState(false)
@@ -84,22 +85,24 @@ export default function SavedBanksList() {
   if (loading) return null
 
   return (
-    <div style={{ marginBottom: 24 }}>
-      <div className="sec-title">
-        <i className="ti ti-building-bank" /> Saved Banks
-        {banks.length > 0 && (
-          <button onClick={openAdd} className="wla-btn outline" style={{ marginLeft: 'auto', height: 32, padding: '0 12px', fontSize: 12 }}>
-            <i className="ti ti-plus" /> Add Bank
-          </button>
-        )}
-      </div>
+    <div style={{ marginBottom: bare ? 0 : 24 }}>
+      {!bare && (
+        <div className="sec-title">
+          <i className="ti ti-building-bank" /> Saved Banks
+          {banks.length > 0 && (
+            <button onClick={openAdd} className="wla-btn outline" style={{ marginLeft: 'auto', height: 32, padding: '0 12px', fontSize: 12 }}>
+              <i className="ti ti-plus" /> Add Bank
+            </button>
+          )}
+        </div>
+      )}
 
       {banks.length === 0 && !showAdd && (
         <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 14, padding: 28, textAlign: 'center' }}>
           <i className="ti ti-building-bank" style={{ fontSize: 32, color: 'var(--text3)', marginBottom: 8, display: 'block' }} />
-          <div style={{ color: 'var(--text2)', fontSize: 13, marginBottom: 12 }}>No saved bank accounts yet. Add one to withdraw easily.</div>
+          <div style={{ color: 'var(--text2)', fontSize: 13, marginBottom: 12 }}>Add your own bank account. Withdrawals are paid into it.</div>
           <button onClick={openAdd} className="wla-btn primary" style={{ display: 'inline-flex' }}>
-            <i className="ti ti-plus" /> Add Bank Account
+            <i className="ti ti-plus" /> Add bank account
           </button>
         </div>
       )}
@@ -120,12 +123,12 @@ export default function SavedBanksList() {
                 <i className="ti ti-building-bank" style={{ color: bank.isDefault ? 'var(--accent)' : 'var(--text3)', fontSize: 18 }} />
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--text)', marginBottom: 2 }}>
-                  {bank.bankName}
-                  {bank.isDefault && <span style={{ marginLeft: 6, fontSize: 10, color: 'var(--accent)', fontWeight: 700 }}>DEFAULT</span>}
+                <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--text)', marginBottom: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {bank.accountName}
                 </div>
                 <div style={{ fontSize: 13, color: 'var(--text2)' }}>
-                  {bank.accountName} • {bank.accountNumber}
+                  {bank.bankName} {maskAcct(bank.accountNumber)}
+                  {bank.isDefault && <span style={{ marginLeft: 6, fontSize: 10, color: 'var(--text)', fontWeight: 600, letterSpacing: '.04em' }}>DEFAULT</span>}
                 </div>
               </div>
               <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
@@ -149,7 +152,7 @@ export default function SavedBanksList() {
             </div>
           ))}
           <button onClick={openAdd} className="wla-btn outline" style={{ alignSelf: 'flex-start', marginTop: 4 }}>
-            <i className="ti ti-plus" /> Add Another Bank
+            <i className="ti ti-plus" /> Add another bank
           </button>
         </div>
       )}

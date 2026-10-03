@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { apiRequest } from '../../lib/api'
+import '../../styles/wallet.css'
 
 type Dva = { accountNumber: string; bankName: string; accountName?: string | null }
 
@@ -9,8 +10,9 @@ const spaced = (n: string) => (/^\d{10}$/.test(n) ? `${n.slice(0, 3)} ${n.slice(
 
 // Wallet: the account number people transfer to, to add money (shown in full,
 // with Copy). An account number someone already has is always shown, since
-// money sent to it still arrives; getting a new one needs Level 1+.
-export default function MoneyInCard({ verified }: { verified: boolean }) {
+// money sent to it still arrives; getting a new one needs Level 1+. `embedded`
+// (Profile, the add-money pop-up) leaves out the links to other ways of adding money.
+export default function MoneyInCard({ verified, embedded = false }: { verified: boolean; embedded?: boolean }) {
   const [dva, setDva] = useState<Dva | null | undefined>(undefined)
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState('')
@@ -44,7 +46,7 @@ export default function MoneyInCard({ verified }: { verified: boolean }) {
           <p className="wl-note wl-dir-note">Transfer here from any bank app to add money to your wallet.</p>
           <div className="wl-dir-actions">
             <button type="button" className="ui-btn ui-btn-ghost" onClick={copy}><i className={`ti ${copied ? 'ti-check' : 'ti-copy'}`} /> {copied ? 'Copied' : 'Copy number'}</button>
-            <Link className="wl-link" to="/deposit">Other ways to add money</Link>
+            {!embedded && <Link className="wl-link" to="/deposit">Other ways to add money</Link>}
           </div>
         </>
       ) : verified ? (
@@ -60,7 +62,7 @@ export default function MoneyInCard({ verified }: { verified: boolean }) {
           <p className="wl-note wl-dir-note">Verify your identity to get your own account number. Until then you can add money by card or USSD.</p>
           <div className="wl-dir-actions">
             <Link className="ui-btn ui-btn-ghost" to="/settings/verification">Verify now</Link>
-            <Link className="wl-link" to="/deposit">Add money by card</Link>
+            {!embedded && <Link className="wl-link" to="/deposit">Add money by card</Link>}
           </div>
         </>
       )}

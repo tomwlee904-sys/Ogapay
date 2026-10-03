@@ -714,12 +714,16 @@ export default function Profile() {
                   <Toggle on={autoConvert} set={flip(autoConvert, 'autoConvert')} />
                 </div>
 
-                {/* Bank accounts (real: /wallet/banks) + deposit account */}
-                <div id="bank-section" style={{ padding: '13px 0 0', borderTop: '1px solid var(--border)', marginTop: 13 }}>
-                  <div style={{ fontSize: 13, fontWeight: 800, marginBottom: 10 }}>Bank accounts (NGN)</div>
-                  <SavedBanksList />
-                  <div style={{ fontSize: 13, fontWeight: 800, margin: '16px 0 10px' }}>Deposit account</div>
-                  <VirtualAccountCard />
+                {/* Your two kinds of account, labelled like the Wallet so they can't be
+                    mixed up: money in (the OgaPay account number to transfer to) and
+                    money out (your own banks, where withdrawals go) */}
+                <div id="bank-section" style={{ padding: '13px 0 0', borderTop: '1px solid var(--border)', marginTop: 13, display: 'grid', gap: 12 }}>
+                  <VirtualAccountCard flush />
+                  <section className="ui-card wl-sec wl-dir-card" aria-labelledby="pf-out">
+                    <div className="wl-dir-label"><span className="wl-dir out"><i className="ti ti-arrow-up-right" /></span> Money out</div>
+                    <h2 id="pf-out" className="wl-dir-title">Withdrawals go to</h2>
+                    <SavedBanksList bare />
+                  </section>
                 </div>
               </div>
             </div>
