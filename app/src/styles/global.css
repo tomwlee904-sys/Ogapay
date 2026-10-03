@@ -156,6 +156,7 @@ button{font:inherit}
   transition:background .14s,border-color .14s;
 }
 .connect-btn:hover{opacity:.88}
+.nav-mobile-signin{height:34px;padding:0 14px;font-size:12.5px;margin-right:4px}
 [data-theme="dark"] .connect-btn{background:var(--accent)}[data-theme="dark"] .connect-btn:hover{background:var(--accent)}
 .connect-btn svg{width:15px;height:15px;flex-shrink:0}
 

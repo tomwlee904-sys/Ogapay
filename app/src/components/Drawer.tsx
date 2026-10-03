@@ -85,6 +85,12 @@ export default function Drawer({ open, onClose }: DrawerProps) {
               <span><strong>Blog</strong><small>News &amp; updates</small></span>
             </Link>
 
+            {/* ── Vault ── */}
+            <Link className="oga-drawer-item" to="/vault" onClick={onClose}>
+              <span className="oga-drawer-icon"><i className="ti ti-shield-lock" /></span>
+              <span><strong>Vault</strong><small>Reward pool</small></span>
+            </Link>
+
             {/* ── FAQ ── */}
             <Link className="oga-drawer-item" to="/faq" onClick={onClose}>
               <span className="oga-drawer-icon"><i className="ti ti-help-circle" /></span>

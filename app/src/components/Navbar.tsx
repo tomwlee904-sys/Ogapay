@@ -151,8 +151,8 @@ export default function Navbar({ onMenuToggle }: NavbarProps) {
               {balanceText}
             </button>
           ) : (
-            <button className="icon-btn" onClick={() => openSignIn({ redirect: '/wallet' })} aria-label="Wallet">
-              <i className="ti ti-wallet" />
+            <button className="connect-btn nav-mobile-signin" onClick={() => openSignIn()}>
+              Sign in
             </button>
           )}
           <button className="icon-btn" onClick={toggle} aria-label="Toggle theme">
