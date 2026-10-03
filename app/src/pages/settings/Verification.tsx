@@ -8,8 +8,8 @@ import { Card, Row, type SectionProps } from './ui'
 // Levels as the backend enforces them (the old page asked for BVN first, which
 // the API always refuses, so nobody could get verified from Settings)
 const levels = (didit: boolean) => [
-  { tier: 1, name: 'Level 1', what: didit ? 'ID + selfie' : 'NIN', limit: '₦10,000 per withdrawal' },
-  { tier: 2, name: 'Level 2', what: 'BVN', limit: '₦20,000 per withdrawal' },
+  { tier: 1, name: 'Level 1', what: 'NIN', limit: '₦10,000 per withdrawal' },
+  { tier: 2, name: 'Level 2', what: didit ? 'ID + selfie' : 'BVN', limit: '₦20,000 per withdrawal' },
   { tier: 3, name: 'Level 3', what: 'ID documents, by our team', limit: '₦200,000 per withdrawal' },
 ]
 // Didit statuses that mean the person hasn't finished yet
@@ -26,6 +26,9 @@ export default function Verification({ me, reload, providers }: SectionProps & {
   const diditOpen = status === 'PENDING' && me.kyc?.provider === 'didit' // started, not finished
   const inReview = status === 'SUBMITTED'
   const want = tier === 0 ? 'NIN' : tier === 1 ? 'BVN' : null
+  // With Didit, one ID + selfie check takes anyone below Level 2 straight to Level 2
+  const useDidit = (didit && tier < 2) || diditOpen
+  const nextTier = useDidit ? 2 : tier + 1
   const [num, setNum] = useState('')
   const [dob, setDob] = useState('')
   const [busy, setBusy] = useState(false)
@@ -71,17 +74,17 @@ export default function Verification({ me, reload, providers }: SectionProps & {
 
   // Record the result of a Didit check. Right after coming back, Didit can
   // need a few seconds to finish, so ask again a few times.
-  const sync = useCallback(async (justBack: boolean) => {
+  const sync = useCallback(async (justBack: boolean, sessionId?: string | null) => {
     setChecking(true)
     try {
       let r: any = null
       for (let i = 0; i < (justBack ? 5 : 1); i++) {
         if (i) await wait(3000)
-        r = await apiRequest<any>('/kyc/didit/sync', { method: 'POST' })
+        r = await apiRequest<any>('/kyc/didit/sync', { method: 'POST', body: JSON.stringify({ sessionId: sessionId || undefined }) })
         if (!OPEN.includes(r?.didit)) break
       }
-      if (r?.status === 'APPROVED') { toast(r.message || "You're verified", 'success'); setMsg({ ok: true, text: r.message || "You're verified." }) }
-      else if (justBack && r?.message) setMsg({ ok: r.status !== 'REJECTED', text: r.message })
+      if (r?.status === 'APPROVED' && r?.didit === 'Approved' && r?.tier >= 2) { toast(r.message || "You're verified", 'success'); setMsg({ ok: true, text: r.message || "You're verified." }) }
+      else if (justBack && r?.message) setMsg({ ok: r.status !== 'REJECTED' && r.didit !== 'Declined', text: r.message })
       await reload(); refreshUser()
     } catch (e: any) {
       if (justBack) setMsg({ ok: false, text: e?.message || "We couldn't get your result yet. Refresh this page in a minute." })
@@ -93,11 +96,11 @@ export default function Verification({ me, reload, providers }: SectionProps & {
   // open earlier (finished on another device, say): record the result
   useEffect(() => {
     if (synced.current) return
-    const back = params.has('verificationSessionId')
+    const back = params.get('verificationSessionId')
     if (!back && !diditOpen) return
     synced.current = true
     if (back) setParams({}, { replace: true })
-    sync(back)
+    sync(!!back, back)
   }, [params, diditOpen, setParams, sync])
 
   const startHuman = async () => {
@@ -128,7 +131,7 @@ export default function Verification({ me, reload, providers }: SectionProps & {
 
   const diditPanel = (
     <div className="st2-panel st2-form">
-      <strong>{diditOpen ? 'Finish your ID check' : 'Get Level 1: verify your ID'}</strong>
+      <strong>{diditOpen ? 'Finish your ID check' : tier >= 1 ? 'Upgrade to Level 2: verify your ID' : 'Get Level 2: verify your ID'}</strong>
       <p className="st2-muted" style={{ margin: '6px 0 0', lineHeight: 1.55 }}>
         {diditOpen
           ? "You started an ID check with Didit but haven't finished it. Pick up where you left off."
@@ -141,9 +144,9 @@ export default function Verification({ me, reload, providers }: SectionProps & {
           {diditBusy ? 'Opening Didit…' : diditOpen ? 'Continue verification' : 'Verify with Didit'}
         </button>
       </div>
-      {!diditOpen && (
+      {!diditOpen && tier === 0 && (
         <p className="st2-muted" style={{ margin: '10px 0 0' }}>
-          No ID to scan? <button type="button" className="st2-linkbtn" onClick={() => { setUseNin((v) => !v); setMsg(null) }}>{useNin ? 'Hide the NIN form' : 'Use your NIN number instead'}</button> (our team checks it).
+          No ID to scan? <button type="button" className="st2-linkbtn" onClick={() => { setUseNin((v) => !v); setMsg(null) }}>{useNin ? 'Hide the NIN form' : 'Use your NIN number instead'}</button> for Level 1 (our team checks it).
         </p>
       )}
     </div>
@@ -155,7 +158,7 @@ export default function Verification({ me, reload, providers }: SectionProps & {
         <div className="st2-levels">
           {levels(didit).map((l) => {
             const done = tier >= l.tier
-            const next = !done && tier + 1 === l.tier
+            const next = !done && l.tier === nextTier
             return (
               <div key={l.tier} className={`st2-level${done ? ' done' : next ? ' next' : ''}`}>
                 <i className={`ti ${done ? 'ti-circle-check' : 'ti-circle-dashed'}`} />
@@ -175,10 +178,10 @@ export default function Verification({ me, reload, providers }: SectionProps & {
             <div className="st2-banner"><i className="ti ti-hourglass" /> {me.kyc?.provider === 'didit' ? "Your ID check is being reviewed." : 'Your NIN is with our team for review.'} We'll notify you when it's done.</div>
             {msg && <p className={msg.ok ? 'st2-ok' : 'st2-err'}>{msg.text}</p>}
           </>
-        ) : tier === 0 && (didit || diditOpen) ? (
+        ) : useDidit ? (
           <>
             {diditPanel}
-            {useNin && !diditOpen && ninForm}
+            {useNin && !diditOpen && tier === 0 && ninForm}
           </>
         ) : want ? ninForm : (
           <Row title="Need a higher limit?" sub="Level 3 is done by our team with your ID documents.">
