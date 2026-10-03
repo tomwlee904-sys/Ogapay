@@ -1,90 +1,103 @@
 import { useEffect, useRef } from 'react'
 import { Logo } from '../Logo'
 
-/* Hero network: 45 fine fibres run from "people + agents" behind the OgaPay tile
-   to "escrow protected", with long, softly tapered light trails. Adapted from
+/* Hero network: 45 fine fibres run from "people + agents" through the OgaPay tile
+   to "escrow protected", with light trails travelling along them. Adapted from
    network-animation-1.html (dark) and network-animation-light.html (light): same
-   1080 × 482 frame and 12 s loop, palette follows the site theme.
-   Changes from the files: the fibres stay spread where they meet the tile (they
-   bunched into a solid grey wedge), the tile is ~10% smaller, trails are softer
-   with a quieter teal, no canvas blur (costly on phones), and the labels are real
-   text so they stay readable on small screens. The canvas has no background of
-   its own (the files painted solid black or white), so the page shows through,
-   including the soft glow the homepage has in dark mode. Pauses off-screen and
-   in hidden tabs; one still frame for reduced motion. */
+   1080 × 482 frame, palette follows the site theme.
+   Matched to the wurk.fun hero: the fibres are bright (up to 75% opacity, with a
+   slow per-fibre shimmer) and gather into one bundle at the tile; a slow wave
+   runs through each fibre; and on a mouse the bundle bends toward the pointer
+   near it, easing in and out. The canvas is drawn at its on-screen size, so the
+   fibres stay 0.7px wide instead of being shrunk to half that. No background of
+   its own, so the page (and its dark-mode glow) shows through. Pauses
+   off-screen and in hidden tabs; one still frame for reduced motion. */
 
 const W = 1080, H = 482, TAU = Math.PI * 2, LOOP = 12
 const CX = 540, CY = 266
+const FIBRES = 45
 
 type Palette = {
-  fibre: [string, string]; packets: [string, string, string]; packetAlpha: number
+  fibre: string; packets: [string, string, string]; packetAlpha: number
   outer: [string, string]; bevel: [string, string, string, string]; face: [string, string, string]
   tileShadow: string | null; ticks: string
 }
 const DARK: Palette = {
-  fibre: ['157,169,180', '191,199,204'],
-  packets: ['150,196,190', '160,182,208', '196,205,214'], packetAlpha: .62,
+  fibre: '198,214,222',
+  packets: ['171,228,212', '169,202,244', '214,222,228'], packetAlpha: .85,
   outer: ['#020303', '#1c1e20'], bevel: ['#303336', '#1b1d20', '#101113', '#414447'], face: ['#222427', '#0b0c0e', 'rgba(142,151,160,.07)'],
   tileShadow: null, ticks: '#303235',
 }
 const LIGHT: Palette = {
-  fibre: ['116,128,139', '98,112,122'],
-  packets: ['58,128,120', '87,126,156', '101,122,139'], packetAlpha: .58,
+  fibre: '103,122,132',
+  packets: ['73,139,123', '78,108,151', '103,122,132'], packetAlpha: .7,
   outer: ['#fff', '#e7e9eb'], bevel: ['#fff', '#f8f9fa', '#eef0f2', '#e1e4e7'], face: ['#fff', '#f8f9fa', 'rgba(142,151,160,.07)'],
   tileShadow: 'rgba(40,53,67,.10)', ticks: '#dde1e4',
 }
+// Fibre opacity along the width: clear at the ends, strongest either side of
+// the tile, lower behind it
+const FIBRE_STOPS: [number, number][] = [[0, 0], [.12, .3], [.36, .75], [.5, .25], [.64, .75], [.88, .3], [1, 0]]
 
 const isDark = () => document.documentElement.getAttribute('data-theme') === 'dark'
+const clamp = (v: number) => Math.max(-1, Math.min(1, v))
 
 export default function NetworkFlow() {
+  const boxRef = useRef<HTMLElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
   useEffect(() => {
-    const canvas = canvasRef.current
-    if (!canvas) return
+    const box = boxRef.current, canvas = canvasRef.current
+    if (!box || !canvas) return
     const ctx = canvas.getContext('2d')
     if (!ctx) return
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)')
+    const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)')
     const small = window.innerWidth < 768
     const STEPS = small ? 120 : 180 // points per fibre
-    let visible = true, frame = 0, pal = isDark() ? DARK : LIGHT, lastT = 0
+    let visible = true, frame = 0, pal = isDark() ? DARK : LIGHT, lastT = 0, prevNow = 0
+    let unit = 2 // frame units per CSS pixel (set on resize)
+    // Pointer over the hero, -1..1 on each axis; `ptr` eases toward `target`
+    const ptr = [0, 0], target = [0, 0]
 
     const curve = (a: number, b: number, c: number, d: number, t: number) => { const s = 1 - t; return s * s * s * a + 3 * s * s * t * b + 3 * s * t * t * c + t * t * t * d }
-    // Same paths as the supplied files, except the spread at the centre (k*24 → k*46)
-    // so the fibres pass behind the tile instead of meeting in one dense point
+    // The supplied files' paths, gathered to a ±30 bundle where they meet the tile
     const point = (i: number, u: number, time: number): [number, number] => {
       const k = (i - 22) / 22, breath = Math.sin(time / LOOP * TAU) * 3
-      if (u < .5) { const t = u * 2; return [curve(56, 230, 371, CX, t), curve(263 + k * 160, 344 + k * 79, 253 + k * 34 + breath, CY - 12 + k * 46, t)] }
-      const t = (u - .5) * 2; return [curve(CX, 680, 828, 1023, t), curve(CY - 12 + k * 46, 236 + k * 34 + breath, 192 + k * 86, 255 + k * 159, t)]
+      let x: number, y: number
+      if (u < .5) { const t = u * 2; x = curve(56, 230, 371, CX, t); y = curve(263 + k * 160, 344 + k * 79, 253 + k * 34 + breath, CY - 12 + k * 30, t) }
+      else { const t = (u - .5) * 2; x = curve(CX, 680, 828, 1023, t); y = curve(CY - 12 + k * 30, 236 + k * 34 + breath, 192 + k * 86, 255 + k * 159, t) }
+      const env = Math.sin(Math.PI * u) // ends stay put
+      y += Math.sin(u * TAU + time * .32 + k * 1.2) * env * (5 + Math.abs(k) * 3)
+      // bend toward the pointer around its horizontal position
+      y += ptr[1] * 26 * Math.exp(-Math.pow((u - (.5 + ptr[0] * .2)) * 3.2, 2)) * env
+      return [x, y]
     }
     const path = (i: number, start: number, end: number, time: number) => {
       ctx.beginPath()
       const n = Math.max(3, Math.ceil((end - start) * STEPS))
       for (let j = 0; j <= n; j++) { const p = point(i, start + (end - start) * j / n, time); if (j) ctx.lineTo(p[0], p[1]); else ctx.moveTo(p[0], p[1]) }
     }
-    const box = (x: number, y: number, w: number, h: number, r: number) => {
+    const rect = (x: number, y: number, w: number, h: number, r: number) => {
       ctx.beginPath()
       if (typeof (ctx as any).roundRect === 'function') { (ctx as any).roundRect(x, y, w, h, r); return }
       ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath()
     }
-    // A square centred on the tile centre, ~10% smaller than the files' tile
-    const sq = (size: number, r: number) => box(CX - size / 2, CY - size / 2, size, size, r)
+    // A square centred on the tile centre
+    const sq = (size: number, r: number) => rect(CX - size / 2, CY - size / 2, size, size, r)
 
     const draw = (time: number) => {
       const p = pal
       ctx.clearRect(0, 0, W, H) // transparent: the page shows through
-      // Fibres: faint at the ends and close to the tile, so no bright wedge forms
-      const [fa, fb] = p.fibre
+      // Fibres, 0.7 CSS px wide, each with a slow shimmer
       const fade = ctx.createLinearGradient(50, 0, 1030, 0)
-      fade.addColorStop(0, `rgba(${fa},0)`); fade.addColorStop(.14, `rgba(${fa},.22)`); fade.addColorStop(.34, `rgba(${fb},.30)`)
-      fade.addColorStop(.42, `rgba(${fb},.16)`); fade.addColorStop(.58, `rgba(${fb},.16)`)
-      fade.addColorStop(.66, `rgba(${fb},.30)`); fade.addColorStop(.86, `rgba(${fa},.22)`); fade.addColorStop(1, `rgba(${fa},0)`)
-      ctx.lineWidth = .7; ctx.strokeStyle = fade
-      for (let i = 0; i < 45; i++) { path(i, 0, 1, time); ctx.stroke() }
-      // Long, softly tapered light trails (a wide faint stroke under a fine one
-      // gives the glow without canvas blur)
+      for (const [at, a] of FIBRE_STOPS) fade.addColorStop(at, `rgba(${p.fibre},${a})`)
+      ctx.lineWidth = .7 * unit; ctx.lineCap = 'round'; ctx.strokeStyle = fade
+      for (let i = 0; i < FIBRES; i++) { ctx.globalAlpha = .56 + .25 * Math.cos(i * .43 + time * .25); path(i, 0, 1, time); ctx.stroke() }
+      ctx.globalAlpha = 1
+      // Light trails: a wide faint stroke under a fine bright one (a glow without
+      // canvas blur, which is costly on phones)
       for (let j = 0; j < 13; j++) {
-        const i = (j * 17 + 4) % 45, u = ((time / LOOP) + (j * .61803398875)) % 1
+        const i = (j * 17 + 4) % FIBRES, u = ((time / LOOP) + (j * .61803398875)) % 1
         const length = .14 + (j % 3) * .02
         const color = j % 4 === 0 ? p.packets[0] : j % 3 === 0 ? p.packets[1] : p.packets[2]
         for (let s = 0; s < 22; s++) {
@@ -92,8 +105,8 @@ export default function NetworkFlow() {
           if (a < 0 || b > 1) continue
           const env = Math.pow(Math.sin(Math.PI * s / 22), 2) * Math.sin(Math.PI * (a + b) / 2)
           if (env < .02) continue
-          ctx.strokeStyle = `rgba(${color},${env * p.packetAlpha * .22})`; ctx.lineWidth = 2.6; path(i, a, b, time); ctx.stroke()
-          ctx.strokeStyle = `rgba(${color},${env * p.packetAlpha})`; ctx.lineWidth = .95; ctx.stroke()
+          ctx.strokeStyle = `rgba(${color},${env * p.packetAlpha * .22})`; ctx.lineWidth = 3 * unit; path(i, a, b, time); ctx.stroke()
+          ctx.strokeStyle = `rgba(${color},${env * p.packetAlpha})`; ctx.lineWidth = 1.15 * unit; ctx.stroke()
         }
       }
       // Tile: separate outer hairline, inset bevel, raised face (drawn over the fibres)
@@ -112,27 +125,61 @@ export default function NetworkFlow() {
       ctx.moveTo(CX, 372); ctx.lineTo(CX, 413); ctx.moveTo(CX - 4, 413); ctx.lineTo(CX + 4, 413); ctx.stroke()
     }
 
-    const resize = () => { const d = Math.min(window.devicePixelRatio || 1, 2); canvas.width = W * d; canvas.height = H * d; ctx.setTransform(d, 0, 0, d, 0, 0); draw(lastT) }
+    // Draw at the canvas's on-screen size (sharp, and hairlines stay hairlines)
+    const resize = () => {
+      const r = canvas.getBoundingClientRect()
+      if (!r.width || !r.height) return
+      const d = Math.min(window.devicePixelRatio || 1, 2)
+      const cw = Math.round(r.width * d), ch = Math.round(r.height * d)
+      if (canvas.width !== cw || canvas.height !== ch) { canvas.width = cw; canvas.height = ch }
+      ctx.setTransform(cw / W, 0, 0, ch / H, 0, 0)
+      unit = W / r.width
+      draw(lastT)
+    }
     const tick = (now: number) => {
-      if (visible && !reduced.matches) { lastT = now / 1000; draw(lastT) }
+      const dt = prevNow ? Math.min(.1, (now - prevNow) / 1000) : 0
+      prevNow = now
+      if (visible && !reduced.matches) {
+        const ease = 1 - Math.exp(-6 * dt)
+        ptr[0] += (target[0] - ptr[0]) * ease; ptr[1] += (target[1] - ptr[1]) * ease
+        lastT = now / 1000; draw(lastT)
+      }
       frame = requestAnimationFrame(tick)
     }
-    const io = new IntersectionObserver((e) => { visible = e[0].isIntersecting && !document.hidden })
+    const onMove = (e: PointerEvent) => {
+      if (e.pointerType === 'touch' || !finePointer.matches || reduced.matches) return
+      const r = box.getBoundingClientRect()
+      if (!r.width || !r.height) return
+      target[0] = clamp((e.clientX - r.left) / r.width * 2 - 1)
+      target[1] = clamp((e.clientY - r.top) / r.height * 2 - 1)
+    }
+    const onLeave = () => { target[0] = target[1] = 0 }
+    const io = new IntersectionObserver((e) => { visible = e[0].isIntersecting && !document.hidden; if (!visible) onLeave() })
     io.observe(canvas)
+    const ro = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(resize)
+    ro?.observe(canvas)
     const onVis = () => { visible = !document.hidden }
-    const onReduced = () => draw(lastT)
+    const onReduced = () => { onLeave(); ptr[0] = ptr[1] = 0; draw(lastT) }
     // redraw in the other palette when the theme changes
     const mo = new MutationObserver(() => { pal = isDark() ? DARK : LIGHT; draw(lastT) })
     mo.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] })
     document.addEventListener('visibilitychange', onVis)
     reduced.addEventListener?.('change', onReduced)
+    box.addEventListener('pointermove', onMove, { passive: true })
+    box.addEventListener('pointerleave', onLeave, { passive: true })
+    window.addEventListener('resize', resize, { passive: true })
     resize()
     frame = requestAnimationFrame(tick)
-    return () => { cancelAnimationFrame(frame); io.disconnect(); mo.disconnect(); document.removeEventListener('visibilitychange', onVis); reduced.removeEventListener?.('change', onReduced) }
+    return () => {
+      cancelAnimationFrame(frame); io.disconnect(); ro?.disconnect(); mo.disconnect()
+      document.removeEventListener('visibilitychange', onVis); reduced.removeEventListener?.('change', onReduced)
+      box.removeEventListener('pointermove', onMove); box.removeEventListener('pointerleave', onLeave)
+      window.removeEventListener('resize', resize)
+    }
   }, [])
 
   return (
-    <section className="hv-netflow" aria-label="People and agents connected through one network">
+    <section ref={boxRef} className="hv-netflow" aria-label="People and agents connected through one network">
       <canvas ref={canvasRef} aria-hidden="true" />
       <span className="hv-netflow-logo" aria-hidden="true"><Logo size={64} /></span>
       <span className="hv-netflow-label left" aria-hidden="true">People + agents</span>
