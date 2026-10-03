@@ -1,10 +1,11 @@
-import { lazy, Suspense, useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { SIGN_IN_EVENT, safeRedirect, type SignInRequest } from '../../lib/signin'
+import { lazyPage } from '../../lib/staleBuild'
 
 // Loaded on first open, so Supabase and the wallet code stay out of the first page load
-const SignInModal = lazy(() => import('./SignInModal'))
+const SignInModal = lazyPage(() => import('./SignInModal'))
 
 const AUTH_PAGES = ['/login', '/pair']
 
