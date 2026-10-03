@@ -4,14 +4,10 @@ import { apiRequest } from '../../lib/api'
 import { useToast } from '../../components/Toast'
 import { useAuth } from '../../context/AuthContext'
 import { Card, Row, type SectionProps } from './ui'
+import { levelsFor, UNLOCKS } from '../../lib/levels'
+import { naira } from '../../lib/wallet'
 
-// Levels as the backend enforces them (the old page asked for BVN first, which
-// the API always refuses, so nobody could get verified from Settings)
-const levels = (didit: boolean) => [
-  { tier: 1, name: 'Level 1', what: 'NIN', limit: '₦10,000 per withdrawal' },
-  { tier: 2, name: 'Level 2', what: didit ? 'ID + selfie' : 'BVN', limit: '₦20,000 per withdrawal' },
-  { tier: 3, name: 'Level 3', what: 'ID documents, by our team', limit: '₦200,000 per withdrawal' },
-]
+// Levels as the backend enforces them, in the same words as the Wallet (lib/levels)
 // Didit statuses that mean the person hasn't finished yet
 const OPEN = ['Not Started', 'In Progress', 'Resubmitted']
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms))
@@ -156,18 +152,19 @@ export default function Verification({ me, reload, providers }: SectionProps & {
     <>
       <Card title="Identity verification (KYC)" sub={`Needed before you can withdraw or send money.${didit ? ' ID checks are done by Didit.' : ''} Your ID details are never shown to other users.`}>
         <div className="st2-levels">
-          {levels(didit).map((l) => {
+          {levelsFor(didit).map((l) => {
             const done = tier >= l.tier
             const next = !done && l.tier === nextTier
             return (
               <div key={l.tier} className={`st2-level${done ? ' done' : next ? ' next' : ''}`}>
                 <i className={`ti ${done ? 'ti-circle-check' : 'ti-circle-dashed'}`} />
-                <div><strong>{l.name}: {l.what}</strong><span>{l.limit}</span></div>
+                <div><strong>{l.name}: {l.short}</strong><span>{l.how}. Withdraw up to {naira(l.limit, 0)} each time.</span></div>
                 {done && <em>Verified</em>}
               </div>
             )
           })}
         </div>
+        <p className="st2-muted" style={{ margin: '10px 0 0', lineHeight: 1.55 }}>Any level lets you {UNLOCKS}. Without one you can still earn and add money by card or USSD.</p>
 
         {status === 'REJECTED' && tier === 0 && (
           <div className="st2-banner"><i className="ti ti-alert-circle" /> Your last attempt wasn't approved{me.kyc?.rejectionReason ? `: ${me.kyc.rejectionReason}` : ''}. You can try again below.</div>

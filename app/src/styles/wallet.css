@@ -1,5 +1,43 @@
 /* Wallet (/wallet), Add money (/deposit) and the Withdraw / Add bank dialogs */
 
+/* Wallet, one column: balance, level and limit, money in | money out, history */
+.wl-stack { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; margin-top: 24px; }
+.wl-stack > * { min-width: 0; }
+.wl-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: stretch; }
+.wl-pair > * { min-width: 0; }
+
+/* Level and limit */
+.wl-badge { display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px; border-radius: 999px; font-size: 12px; font-weight: 500; border: 1px solid var(--border); color: var(--text2); white-space: nowrap; }
+.wl-badge.ok { border-color: color-mix(in srgb, var(--money) 35%, var(--border)); color: var(--money); background: color-mix(in srgb, var(--money) 8%, transparent); }
+.wl-level-head { margin: -4px 0 14px; font-size: 15px; color: var(--text); line-height: 1.5; }
+.wl-level-head b { font-weight: 600; font-variant-numeric: tabular-nums; }
+.wl-steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.wl-steps li { padding-top: 10px; border-top: 3px solid var(--border); display: grid; gap: 2px; min-width: 0; }
+.wl-steps li.done { border-top-color: var(--money); }
+.wl-steps li.next { border-top-color: var(--text3); }
+.wl-step-name { font-size: 13px; font-weight: 600; color: var(--text); }
+.wl-steps li:not(.done):not(.next) .wl-step-name { color: var(--text2); font-weight: 500; }
+.wl-step-limit { font-size: 12px; color: var(--text2); font-variant-numeric: tabular-nums; }
+.wl-level-foot { display: flex; justify-content: space-between; align-items: center; gap: 8px 16px; flex-wrap: wrap; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border); }
+.wl-level-next { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: var(--text); text-decoration: none; }
+.wl-level-next:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+/* Money in / money out: which way the money goes is the first thing you read */
+.wl-dir-card { display: flex; flex-direction: column; }
+.wl-dir-label { display: flex; align-items: center; gap: 8px; font: 500 11px var(--font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--text2); }
+.wl-dir { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-size: 15px; }
+.wl-dir.in { background: color-mix(in srgb, var(--money) 12%, transparent); color: var(--money); }
+.wl-dir.out { background: color-mix(in srgb, #ea580c 12%, transparent); color: #c2410c; }
+[data-theme="dark"] .wl-dir.out { color: #fb923c; }
+.wl-dir-add { margin-left: auto; font-family: 'Geist', system-ui, sans-serif; letter-spacing: 0; text-transform: none; }
+.wl-dir-title { margin: 10px 0 12px; font-size: 16px; font-weight: 600; letter-spacing: -.02em; color: var(--text); }
+.wl-acct-num { font-size: clamp(24px, 3vw, 30px); font-weight: 600; letter-spacing: .02em; color: var(--text); font-variant-numeric: tabular-nums; line-height: 1.1; }
+.wl-acct-sub { margin-top: 4px; font-size: 13px; color: var(--text2); }
+.wl-dir-note { margin: 10px 0 0; }
+.wl-dir-actions { display: flex; align-items: center; gap: 8px 16px; flex-wrap: wrap; margin-top: auto; padding-top: 14px; }
+.wl-totals { font-size: 12.5px; color: var(--text2); text-align: right; }
+.wl-totals b { color: var(--text); font-weight: 600; font-variant-numeric: tabular-nums; }
+
 .wl-grid { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 16px; margin-top: 24px; align-items: start; }
 /* minmax(0, 1fr): an auto column would grow to fit the buttons and overflow phones */
 .wl-main, .wl-side { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; min-width: 0; }
@@ -181,6 +219,15 @@
 }
 @media (max-width: 860px) {
   .wl-grid, .dp-grid { grid-template-columns: minmax(0, 1fr); }
+  .wl-pair { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 560px) {
+  .wl-steps { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .wl-steps li { grid-template-columns: minmax(0, 1fr) auto; align-items: baseline; padding: 9px 0 9px 12px; border-top: 0; border-left: 3px solid var(--border); }
+  .wl-steps li.done { border-left-color: var(--money); }
+  .wl-steps li.next { border-left-color: var(--text3); }
+  .wl-totals { text-align: left; }
+  .wl-sec-head:has(.wl-totals) { flex-wrap: wrap; }
 }
 @media (max-width: 768px) {
   .wl-bal { padding: 20px; }

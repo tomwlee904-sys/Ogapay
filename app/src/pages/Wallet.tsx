@@ -5,15 +5,18 @@ import TransferModal from '../components/TransferModal'
 import WithdrawModal from '../components/wallet/WithdrawModal'
 import AddBankForm from '../components/wallet/AddBankForm'
 import Sheet from '../components/wallet/Sheet'
+import LevelCard from '../components/wallet/LevelCard'
+import MoneyInCard from '../components/wallet/MoneyInCard'
 import { apiRequest } from '../lib/api'
 import { useAuth } from '../context/AuthContext'
 import { useWalletBalance } from '../context/WalletBalanceContext'
-import { isCredit, isEscrowHeld, kycOf, isPending, isVoid, usefulNote, maskAcct, money, naira, statusLabel, txDetail, txTitle, when, withdrawLimit, type Balances, type Bank, type Summary, type Tx } from '../lib/wallet'
+import { isCredit, isEscrowHeld, kycOf, isPending, isVoid, usefulNote, maskAcct, money, naira, statusLabel, txDetail, txTitle, when, type Balances, type Bank, type Summary, type Tx } from '../lib/wallet'
 import '../styles/wallet.css'
 
-// Wallet: one balance (with what's on hold and on its way), lifetime totals
-// from the server (they used to be added up from the last 100 rows), saved bank
-// accounts, and the full history with load more. Adding money has its own page.
+// Wallet, top to bottom: the balance (with what's on hold and on its way), your
+// verification level and what it lets you withdraw, money in (your OgaPay
+// account number) beside money out (your own bank), then the history with the
+// lifetime totals from the server. Adding money by card has its own page.
 
 const PAGE = 30
 const FILTERS = [
@@ -40,6 +43,12 @@ export default function Wallet() {
   const [bankMenu, setBankMenu] = useState<string | null>(null)
   const [bankErr, setBankErr] = useState('')
   const [modal, setModal] = useState<null | 'withdraw' | 'send' | 'bank'>(null)
+  const [didit, setDidit] = useState(false)
+
+  // Whether the ID + selfie check is on (it changes how Level 2 is reached)
+  useEffect(() => {
+    apiRequest<Record<string, boolean>>('/social/providers', { auth: false }).then((p) => setDidit(!!p?.didit)).catch(() => {})
+  }, [])
 
   // Old links: /wallet?add=1 (menu Top up) now goes to Add money
   useEffect(() => {
@@ -107,8 +116,7 @@ export default function Wallet() {
           </div>
         </div>
 
-        <div className="wl-grid">
-          <div className="wl-main">
+        <div className="wl-stack">
             <section className="ui-card wl-bal" aria-label="Balance">
               <div className="wl-bal-top">
                 <div>
@@ -141,14 +149,60 @@ export default function Wallet() {
               )}
             </section>
 
-            <div className="wl-stats">
-              <div className="wl-stat"><span>Added</span><b>{summary ? naira(sumNgn?.deposited ?? 0, 0) : '…'}</b></div>
-              <div className="wl-stat"><span>Earned</span><b>{summary ? naira(sumNgn?.earned ?? 0, 0) : '…'}</b></div>
-              <div className="wl-stat"><span>Withdrawn</span><b>{summary ? naira(sumNgn?.withdrawn ?? 0, 0) : '…'}</b></div>
+            <LevelCard tier={verified ? tier : 0} didit={didit} />
+
+            <div className="wl-pair">
+              <MoneyInCard verified={verified} />
+
+              <section className="ui-card wl-sec wl-dir-card" aria-labelledby="wl-out">
+                <div className="wl-dir-label">
+                  <span className="wl-dir out"><i className="ti ti-arrow-up-right" /></span> Money out
+                  {verified && banks && banks.length > 0 && <button type="button" className="wl-link wl-dir-add" onClick={() => setModal('bank')}><i className="ti ti-plus" /> Add bank</button>}
+                </div>
+                <h2 id="wl-out" className="wl-dir-title">Withdrawals go to</h2>
+              {!verified ? (
+                <p className="wl-note wl-dir-note">Verify your identity to add your bank and withdraw. <Link to="/settings/verification">Verify now</Link></p>
+              ) : banks === null ? <div className="ui-sk" style={{ height: 62, borderRadius: 14 }} /> : banks.length === 0 ? (
+                <>
+                  <p className="wl-note wl-dir-note">Add your own bank account. Withdrawals are paid into it.</p>
+                  <button type="button" className="wl-add wl-full" onClick={() => setModal('bank')}><i className="ti ti-plus" /> Add bank account</button>
+                </>
+              ) : (
+                <ul className="wl-banks">
+                  {banks.map((b) => (
+                    <li className="wl-bank" key={b.id}>
+                      <span className="wl-bank-ic"><i className="ti ti-building-bank" /></span>
+                      <span className="wl-bank-main">
+                        <strong>{b.accountName}</strong>
+                        <span>{b.bankName} {maskAcct(b.accountNumber)}</span>
+                        {b.isDefault && <em className="wl-def">Default</em>}
+                      </span>
+                      <span className="wl-bank-menu">
+                        <button type="button" className="wl-icon-btn" aria-label={`Options for ${b.bankName} ${maskAcct(b.accountNumber)}`} aria-expanded={bankMenu === b.id} onClick={() => setBankMenu(bankMenu === b.id ? null : b.id)}><i className="ti ti-dots" /></button>
+                        {bankMenu === b.id && (
+                          <div className="wl-pop" role="menu" onMouseLeave={() => setBankMenu(null)}>
+                            {!b.isDefault && <button type="button" role="menuitem" onClick={() => bankAction(b.id, 'default')}><i className="ti ti-star" /> Make default</button>}
+                            <button type="button" role="menuitem" className="danger" onClick={() => { if (window.confirm(`Remove ${b.bankName} ${maskAcct(b.accountNumber)}?`)) bankAction(b.id, 'remove'); else setBankMenu(null) }}><i className="ti ti-trash" /> Remove</button>
+                          </div>
+                        )}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {bankErr && <div className="wl-err" role="alert" style={{ marginTop: 12, marginBottom: 0 }}><i className="ti ti-alert-circle" /><span>{bankErr}</span></div>}
+              </section>
             </div>
 
             <section className="ui-card wl-sec" aria-labelledby="wl-history">
-              <div className="wl-sec-head"><h2 id="wl-history">History</h2></div>
+              <div className="wl-sec-head">
+                <h2 id="wl-history">History</h2>
+                {summary && (
+                  <span className="wl-totals">
+                    Added <b>{naira(sumNgn?.deposited ?? 0, 0)}</b> · Earned <b>{naira(sumNgn?.earned ?? 0, 0)}</b> · Withdrawn <b>{naira(sumNgn?.withdrawn ?? 0, 0)}</b>
+                  </span>
+                )}
+              </div>
               <div className="wl-chips" role="group" aria-label="Filter history">
                 {FILTERS.map((f) => (
                   <button key={f.key} type="button" className={`ui-chip${filter === f.key ? ' on' : ''}`} aria-pressed={filter === f.key} onClick={() => setFilter(f.key)}>{f.label}</button>
@@ -197,59 +251,6 @@ export default function Wallet() {
                 <div className="wl-more"><button type="button" className="ui-btn ui-btn-ghost" disabled={loadingMore} onClick={loadMore}>{loadingMore ? 'Loading…' : 'Load more'}</button></div>
               )}
             </section>
-          </div>
-
-          <aside className="wl-side">
-            <section className="ui-card wl-sec" aria-labelledby="wl-banks">
-              <div className="wl-sec-head">
-                <h2 id="wl-banks">Bank accounts</h2>
-                {verified && banks && banks.length > 0 && <button type="button" className="wl-link" onClick={() => setModal('bank')}><i className="ti ti-plus" /> Add</button>}
-              </div>
-              {!verified ? (
-                <p className="wl-note" style={{ margin: 0 }}>Verify your identity to add a bank account and withdraw. <Link to="/settings/verification">Verify now</Link></p>
-              ) : banks === null ? <div className="ui-sk" style={{ height: 62, borderRadius: 14 }} /> : banks.length === 0 ? (
-                <>
-                  <p className="wl-note" style={{ margin: '0 0 12px' }}>Add the account you want withdrawals paid into.</p>
-                  <button type="button" className="wl-add wl-full" onClick={() => setModal('bank')}><i className="ti ti-plus" /> Add bank account</button>
-                </>
-              ) : (
-                <ul className="wl-banks">
-                  {banks.map((b) => (
-                    <li className="wl-bank" key={b.id}>
-                      <span className="wl-bank-ic"><i className="ti ti-building-bank" /></span>
-                      <span className="wl-bank-main">
-                        <strong>{b.accountName}</strong>
-                        <span>{b.bankName} {maskAcct(b.accountNumber)}</span>
-                        {b.isDefault && <em className="wl-def">Default</em>}
-                      </span>
-                      <span className="wl-bank-menu">
-                        <button type="button" className="wl-icon-btn" aria-label={`Options for ${b.bankName} ${maskAcct(b.accountNumber)}`} aria-expanded={bankMenu === b.id} onClick={() => setBankMenu(bankMenu === b.id ? null : b.id)}><i className="ti ti-dots" /></button>
-                        {bankMenu === b.id && (
-                          <div className="wl-pop" role="menu" onMouseLeave={() => setBankMenu(null)}>
-                            {!b.isDefault && <button type="button" role="menuitem" onClick={() => bankAction(b.id, 'default')}><i className="ti ti-star" /> Make default</button>}
-                            <button type="button" role="menuitem" className="danger" onClick={() => { if (window.confirm(`Remove ${b.bankName} ${maskAcct(b.accountNumber)}?`)) bankAction(b.id, 'remove'); else setBankMenu(null) }}><i className="ti ti-trash" /> Remove</button>
-                          </div>
-                        )}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-              {bankErr && <div className="wl-err" role="alert" style={{ marginTop: 12, marginBottom: 0 }}><i className="ti ti-alert-circle" /><span>{bankErr}</span></div>}
-            </section>
-
-            <section className="ui-card wl-sec" aria-labelledby="wl-limits">
-              <div className="wl-sec-head"><h2 id="wl-limits">Withdrawal limit</h2></div>
-              <div className="wl-limit">
-                <span className="wl-note">{verified ? `Level ${tier} verification` : 'Not verified yet'}</span>
-                <b>{naira(withdrawLimit(verified ? tier : 0), 0)}</b>
-              </div>
-              <p className="wl-note" style={{ margin: '8px 0 0' }}>
-                Per withdrawal. The minimum is ₦5,000 and the fee is 1.5% (at least ₦100).
-                {tier < 3 && <> <Link to="/settings/verification">{verified ? 'Raise your limit' : 'Verify to withdraw'}</Link></>}
-              </p>
-            </section>
-          </aside>
         </div>
       </div>
 
