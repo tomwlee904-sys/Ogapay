@@ -60,12 +60,52 @@
 .db-help a { display: flex; align-items: center; gap: 10px; padding: 10px 0; font-size: 13px; color: var(--text); text-decoration: none; }
 .db-help a + a { border-top: 1px solid var(--border); }
 .db-help i { font-size: 17px; color: var(--text2); }
+/* One column: needs your attention, three numbers, hiring | earning, setup */
+.db-stack { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; margin-top: 22px; }
+.db-stack > * { min-width: 0; }
+
+.db-attn { border-color: color-mix(in srgb, #d97706 45%, var(--border)); }
+.db-attn ul { list-style: none; margin: 0; padding: 0; }
+.db-attn li { display: flex; align-items: center; gap: 12px; padding: 10px 0; }
+.db-attn li + li { border-top: 1px solid var(--border); }
+.db-attn .db-step-btn { margin-top: 0; flex-shrink: 0; text-decoration: none; }
+.db-attn-ic { width: 32px; height: 32px; flex-shrink: 0; border-radius: 10px; display: grid; place-items: center; font-size: 16px; background: color-mix(in srgb, #f59e0b 16%, transparent); color: #b45309; }
+[data-theme="dark"] .db-attn-ic { color: #fbbf24; }
+.db-attn-text { flex: 1; min-width: 0; font-size: 14px; color: var(--text); line-height: 1.45; }
+.db-attn-note { margin: 8px 0 0; font-size: 12px; color: var(--text2); }
+
+.db-snap { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+
+.db-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: start; }
+.db-pair.single { grid-template-columns: minmax(0, 1fr); }
+.db-pair > * { min-width: 0; }
+.db-role-label { font: 500 10.5px var(--font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--text2); margin-bottom: 4px; }
+.db-sub-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: 18px 0 10px; padding-top: 14px; border-top: 1px solid var(--border); }
+.db-sub-head span { font-size: 14px; font-weight: 600; color: var(--text); }
+.db-sub-head a { font-size: 12px; color: var(--text2); text-decoration: none; }
+.db-sub-head a:hover { color: var(--text); }
+.db-aside-link { margin: 0; font-size: 13px; color: var(--text2); }
+.db-aside-link a { color: var(--text); font-weight: 600; }
+
+.db-start { display: flex; flex-direction: column; gap: 8px; text-decoration: none; color: var(--text2); font-size: 13.5px; line-height: 1.55; transition: border-color var(--t-fast) var(--ease); }
+.db-start:hover { border-color: var(--text3); }
+.db-start strong { font-size: 16px; font-weight: 600; color: var(--text); letter-spacing: -.02em; }
+.db-start em { margin-top: auto; padding-top: 6px; font-style: normal; font-size: 13px; font-weight: 600; color: var(--text); display: inline-flex; align-items: center; gap: 6px; }
+.db-start-ic { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; font-size: 19px; background: var(--card2); color: var(--text); }
+
 
 @media (max-width: 960px) {
   .db-grid { grid-template-columns: 1fr; }
+  .db-pair { grid-template-columns: minmax(0, 1fr); }
 }
 @media (max-width: 768px) {
   .db-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .db-snap { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  .db-snap .db-stat { flex-direction: row; flex-wrap: wrap; align-items: baseline; column-gap: 10px; }
+  .db-snap .db-stat span { flex-basis: 100%; }
+  .db-attn li { flex-wrap: wrap; }
+  .db-attn-text { flex-basis: calc(100% - 44px); }
+  .db-attn .db-step-btn { margin-left: 44px; }
   .db-stat b { font-size: 20px; }
   .db-jobs { grid-template-columns: 1fr; }
   .db-list a { flex-wrap: wrap; }
