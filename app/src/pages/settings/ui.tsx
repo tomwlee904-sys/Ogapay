@@ -12,7 +12,7 @@ export type Me = {
   isEmailVerified: boolean; isPublic: boolean; isTwoFactorEnabled: boolean; hasPassword: boolean
   humanVerifiedAt: string | null; ogaScore: number; role: string
   preferences: Prefs
-  kyc: { status: string; kycTier: number; rejectionReason: string | null; idType: string | null } | null
+  kyc: { status: string; kycTier: number; rejectionReason: string | null; idType: string | null; provider?: string | null } | null
   connections: Record<'linkedin' | 'twitter' | 'github' | 'google' | 'telegram', { connected: boolean; handle: string | null }>
 }
 
