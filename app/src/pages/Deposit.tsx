@@ -28,7 +28,10 @@ export default function Deposit() {
   const { user, refreshUser } = useAuth()
   const { refresh: refreshBalance } = useWalletBalance()
   const [params, setParams] = useSearchParams()
-  const kycOk = kycOf(user).approved
+  // Same test as the Wallet page: approved at Level 1 or above. (Old records
+  // approved at Level 0 got an account number here while the wallet said
+  // "Not verified yet".)
+  const kycOk = kycOf(user).verified
 
   const [method, setMethod] = useState<Method>(() => {
     const m = params.get('method')
@@ -85,10 +88,11 @@ export default function Deposit() {
   }, [check?.phase, check?.reference]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Your account number ──
+  // An account number they already have is always shown: money sent to it still arrives
   useEffect(() => {
-    if (!kycOk) { setDva(null); return }
+    if (!user) { setDva(null); return }
     apiRequest<Dva | null>('/wallet/dva').then((d) => setDva(d && d.accountNumber ? d : null)).catch(() => setDva(null))
-  }, [kycOk])
+  }, [user?.id, kycOk])
 
   async function createDva() {
     setDvaBusy(true); setDvaErr('')
@@ -203,7 +207,9 @@ export default function Deposit() {
               <>
                 <h2>Bank transfer</h2>
                 <p>Your own account number. Anything you send to it is added to your naira balance, usually within minutes.</p>
-                {!kycOk ? (
+                {dva === undefined ? (
+                  <div className="ui-sk" style={{ height: 150, borderRadius: 16 }} />
+                ) : !dva && !kycOk ? (
                   <div className="dp-lock">
                     <i className="ti ti-shield-check" />
                     <h3>Verify your identity to get your account number</h3>
@@ -213,8 +219,6 @@ export default function Deposit() {
                       <button type="button" className="ui-btn ui-btn-ghost" onClick={() => setMethod('card')}>Pay by card instead</button>
                     </div>
                   </div>
-                ) : dva === undefined ? (
-                  <div className="ui-sk" style={{ height: 150, borderRadius: 16 }} />
                 ) : dva ? (
                   <>
                     <div className="dp-acct">
