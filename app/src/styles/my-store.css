@@ -37,10 +37,30 @@
 .ms2-img { display: flex; align-items: center; gap: 12px; }
 .ms2-img .ms2-thumb { width: 96px; height: 72px; }
 .ms2-modal > div { max-width: 620px; }
+.ms2-badge.bad { color: var(--red); border-color: color-mix(in srgb, var(--red) 35%, transparent); background: color-mix(in srgb, var(--red) 7%, transparent); }
+
+/* Payment state on an order (My Store and My orders) */
+.so-line { grid-column: 1 / -1; display: flex; gap: 8px; margin: 0; padding: 10px 12px; border-radius: 10px; background: var(--bg2); font-size: 12.5px; line-height: 1.55; color: var(--text2); }
+.so-line i { font-size: 15px; margin-top: 1px; flex-shrink: 0; color: var(--text3); }
+.so-line b { color: var(--text); font-weight: 600; }
+.so-line.bad { background: color-mix(in srgb, var(--red) 7%, transparent); color: var(--text); }
+.so-line.bad i { color: var(--red); }
+.so-how { display: flex; gap: 12px; padding: 14px 16px; margin-bottom: 18px; }
+.so-how > i { font-size: 22px; color: var(--green); flex-shrink: 0; margin-top: 1px; }
+.so-how b { color: var(--text); font-weight: 600; }
+.so-how p { margin: 4px 0 0; font-size: 13px; line-height: 1.6; color: var(--text2); }
+.so-thumb { width: 44px; height: 44px; flex-shrink: 0; font-size: 18px; }
+.so-report { grid-column: 1 / -1; display: grid; gap: 8px; }
+.so-report label { font-size: 13px; font-weight: 600; color: var(--text); }
+.so-report textarea { width: 100%; box-sizing: border-box; padding: 10px 12px; border: 1.5px solid var(--border); border-radius: 10px; background: var(--bg); color: var(--text); font-family: inherit; font-size: 14px; line-height: 1.5; resize: vertical; }
+.so-report textarea:focus { outline: none; border-color: var(--text); }
+
 @media (max-width: 760px) {
   .ms2-stats { grid-template-columns: 1fr 1fr; }
   .ms2-prod { grid-template-columns: 56px 1fr; }
   .ms2-thumb { width: 56px; height: 44px; }
   .ms2-row-acts { grid-column: 1 / -1; justify-content: flex-start; }
   .ms2-head h1 { font-size: 24px; }
+  .ms2-order .row-acts > span[style] { display: none; }
+  .ms2-order .row-acts .up-btn { flex: 1 1 auto; justify-content: center; }
 }

@@ -20,10 +20,11 @@ export default function OrderConfirmation() {
       <div className="ui-page">
         <div className="sc-done">
           <div className="sc-done-ic"><i className="ti ti-check" /></div>
-          <h1 className="ui-title">Payment complete</h1>
+          <h1 className="ui-title">Order placed</h1>
           <p className="ui-sub">
-            {s.seller ? <>@{s.seller} has been paid and told about your order.</> : <>The seller has been paid and told about your order.</>}
-            {' '}Use the chat to share any details they need and arrange delivery.
+            {s.seller ? <>@{s.seller} has been told about your order.</> : <>The seller has been told about your order.</>}
+            {' '}OgaPay holds your payment until you confirm you received it, or 3 days after the seller marks it delivered.
+            {' '}Use the chat to share any details they need.
           </p>
 
           {s.title && (
@@ -35,7 +36,7 @@ export default function OrderConfirmation() {
 
           <div className="ui-actions">
             <Link className="ui-btn ui-btn-dark ui-btn-lg" to={chat}><i className="ti ti-message-circle" /> {s.seller ? `Message @${s.seller}` : 'Open messages'}</Link>
-            <Link className="ui-btn ui-btn-ghost ui-btn-lg" to="/store">Back to the store</Link>
+            <Link className="ui-btn ui-btn-ghost ui-btn-lg" to="/store/orders">My orders</Link>
           </div>
           {id && <p className="sc-ref">Order reference {id.slice(0, 8).toUpperCase()}</p>}
         </div>

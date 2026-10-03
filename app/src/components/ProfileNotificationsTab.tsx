@@ -44,6 +44,10 @@ const TYPE_ICONS: Record<string, { icon: string; color: string }> = {
   JOIN_REQUEST_APPROVED:   { icon: 'ti ti-door', color: 'var(--green)' },
   NEW_MESSAGE:             { icon: 'ti ti-message', color: '#EC4899' },
   STORE_PURCHASE:          { icon: 'ti ti-shopping-cart', color: 'var(--green)' },
+  STORE_ORDER_UPDATE:      { icon: 'ti ti-package', color: 'var(--accent)' },
+  STORE_ORDER_REFUNDED:    { icon: 'ti ti-receipt-refund', color: 'var(--green)' },
+  STORE_PAYMENT_RELEASED:  { icon: 'ti ti-coin', color: 'var(--green)' },
+  STORE_ORDER_DISPUTED:    { icon: 'ti ti-alert-triangle', color: 'var(--red)' },
   DIRECT_HIRE:             { icon: 'ti ti-briefcase', color: 'var(--green)' },
   COMMUNITY_INVITE:        { icon: 'ti ti-users-plus', color: 'var(--accent)' },
   TRANSFER_RECEIVED:       { icon: 'ti ti-arrows-exchange', color: 'var(--green)' },
@@ -121,6 +125,11 @@ export default function TabNotificationsContent() {
   const linkFor = (n: any): string | null => {
     const d = n.data || {}
     if (n.link) return n.link
+    // Store orders: sellers manage them in My Store, buyers in My orders
+    if (n.type === 'STORE_PURCHASE' || n.type === 'STORE_PAYMENT_RELEASED') return '/my-store?tab=orders'
+    if (n.type === 'STORE_ORDER_DISPUTED') return /dispute/i.test(n.title || '') ? '/admin/moderation' : '/my-store?tab=orders'
+    if (n.type === 'STORE_ORDER_UPDATE') return /cancelled/i.test(n.title || '') ? '/my-store?tab=orders' : '/store/orders'
+    if (n.type === 'STORE_ORDER_REFUNDED') return '/store/orders'
     if (d.taskId && POSTER_JOB.has(n.type)) return `/manage-jobs?job=${d.taskId}`
     if (d.taskId && WORKER_JOB.has(n.type)) return `/tasks/${d.taskId}/submit`
     if (MONEY.has(n.type)) return '/wallet'

@@ -10,7 +10,7 @@ import MoneyInCard from '../components/wallet/MoneyInCard'
 import { apiRequest } from '../lib/api'
 import { useAuth } from '../context/AuthContext'
 import { useWalletBalance } from '../context/WalletBalanceContext'
-import { isCredit, isEscrowHeld, kycOf, isPending, isVoid, usefulNote, maskAcct, money, naira, statusLabel, txDetail, txTitle, when, type Balances, type Bank, type Summary, type Tx } from '../lib/wallet'
+import { isCredit, isEscrowHeld, isStoreHeld, kycOf, isPending, isVoid, usefulNote, maskAcct, money, naira, statusLabel, txDetail, txTitle, when, type Balances, type Bank, type Summary, type Tx } from '../lib/wallet'
 import '../styles/wallet.css'
 
 // Wallet, top to bottom: the balance (with what's on hold and on its way), your
@@ -235,7 +235,7 @@ export default function Wallet() {
                         </button>
                         {open === t.id && (
                           <div className="wl-tx-more">
-                            <div><span>Status</span><b>{held ? 'Held in escrow for your job' : statusLabel(t.status)}</b></div>
+                            <div><span>Status</span><b>{held ? (isStoreHeld(t) ? 'Held until you confirm you received the order' : 'Held in escrow for your job') : statusLabel(t.status)}</b></div>
                             <div><span>Date</span><b>{new Date(t.createdAt).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' })}</b></div>
                             {Number(t.fee || 0) > 0 && <div><span>Fee</span><b>{money(Number(t.fee), t.currency)}</b></div>}
                             {usefulNote(t) && <div><span>Note</span><b>{usefulNote(t)}</b></div>}

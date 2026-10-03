@@ -33,6 +33,7 @@ const Store = lazyPage(() => import('./pages/Store'))
 const StoreProduct = lazyPage(() => import('./pages/StoreProduct'))
 const StorePayment = lazyPage(() => import('./pages/StorePayment'))
 const OrderConfirmation = lazyPage(() => import('./pages/OrderConfirmation'))
+const StoreOrders = lazyPage(() => import('./pages/StoreOrders'))
 const SubmissionPage = lazyPage(() => import('./pages/SubmissionPage'))
 const SubmissionsRedirect = lazyPage(() => import('./pages/SubmissionPage').then((m) => ({ default: m.SubmissionsRedirect })))
 const CreateJob = lazyPage(() => import('./pages/CreateJob'))
@@ -134,6 +135,7 @@ export default function App() {
 
             <Route path="/tasks/:id" element={<JobDetail />} />
             <Route path="/store/pay/:id" element={<AuthGuard><StorePayment /></AuthGuard>} />
+            <Route path="/store/orders" element={<AuthGuard><StoreOrders /></AuthGuard>} />
             <Route path="/orders/:id" element={<AuthGuard><OrderConfirmation /></AuthGuard>} />
             <Route path="/store/:id" element={<StoreProduct />} />
             <Route path="/store" element={<Store />} />

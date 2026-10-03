@@ -4,6 +4,7 @@ import Layout from '../components/Layout'
 import { apiRequest } from '../lib/api'
 import { uploadImage } from '../lib/upload'
 import { useAuth } from '../context/AuthContext'
+import { orderBadge, orderWhen, type StoreOrder } from './StoreOrders'
 import '../styles/profile-public.css'
 import '../styles/hire.css'
 import '../styles/edit-profile.css'
@@ -14,11 +15,7 @@ type Product = {
   category: string; subcategory?: string; stock: number | null; isActive: boolean; status: 'Active' | 'Draft'
   sales: number; orders: number; avgRating: number; reviewsCount: number; delivery?: string; revisions?: number; tags?: string[]
 }
-type Order = {
-  id: string; quantity: number; total: number; currency: string; status: 'PENDING' | 'IN_PROGRESS' | 'DELIVERED'; createdAt: string
-  product: { id: string; name: string; imageUrl: string | null }
-  buyer: { username: string; name: string; avatarUrl: string | null }; conversationId: string | null
-}
+type Order = StoreOrder & { buyer: { username: string; name: string; avatarUrl: string | null } }
 
 const CATEGORIES = [
   'Graphics & Design', 'Writing & Translation', 'Social Media & Growth', 'Video & Animation', 'Web & App Development',
@@ -48,14 +45,18 @@ export default function MyStore() {
   }
   useEffect(load, [])
 
-  const revenue = useMemo(() => {
-    const by: Record<string, number> = {}
-    for (const o of orders || []) by[o.currency] = (by[o.currency] || 0) + o.total
-    const parts = Object.entries(by).map(([c, v]) => money(v, c))
-    return parts.length ? parts.join(' · ') : money(0)
+  // Paid to the seller (released, or paid at purchase on older orders) vs still held for the buyer
+  const [revenue, held] = useMemo(() => {
+    const sum = (list: Order[]) => {
+      const by: Record<string, number> = {}
+      for (const o of list) by[o.currency] = (by[o.currency] || 0) + o.total
+      return Object.entries(by).map(([c, v]) => money(v, c)).join(' · ')
+    }
+    const paid = (orders || []).filter((o) => o.releasedAt || (!o.protected && o.status !== 'CANCELLED'))
+    return [sum(paid) || money(0), sum((orders || []).filter((o) => o.held))]
   }, [orders])
   const live = (products || []).filter((p) => p.isActive).length
-  const open = (orders || []).filter((o) => o.status !== 'DELIVERED').length
+  const open = (orders || []).filter((o) => o.status === 'PENDING' || o.status === 'IN_PROGRESS').length
   const rated = (products || []).filter((p) => p.reviewsCount > 0)
   const avg = rated.length ? rated.reduce((s, p) => s + p.avgRating * p.reviewsCount, 0) / rated.reduce((s, p) => s + p.reviewsCount, 0) : 0
 
@@ -73,10 +74,17 @@ export default function MyStore() {
     setBusy('')
   }
   const moveOrder = async (o: Order, status: 'IN_PROGRESS' | 'DELIVERED') => {
-    if (status === 'DELIVERED' && !window.confirm(`Mark "${o.product.name}" for @${o.buyer.username} as delivered? The buyer is notified.`)) return
+    if (status === 'DELIVERED' && !window.confirm(`Mark "${o.product.name}" for @${o.buyer.username} as delivered? The buyer is notified${o.held ? ', and the payment comes to you when they confirm, or in 3 days if they report no problem' : ''}.`)) return
     setBusy(o.id)
     try { await apiRequest(`/store/orders/${o.id}`, { method: 'PATCH', body: JSON.stringify({ status }) }); load() }
     catch (e: any) { setError(e?.message || 'Could not update the order') }
+    setBusy('')
+  }
+  const refundOrder = async (o: Order) => {
+    if (!window.confirm(`Cancel @${o.buyer.username}'s order for "${o.product.name}" and refund ${money(o.total, o.currency)} to them? This can't be undone.`)) return
+    setBusy(o.id)
+    try { await apiRequest(`/store/orders/${o.id}/cancel`, { method: 'POST' }); load() }
+    catch (e: any) { setError(e?.message || 'Could not cancel the order') }
     setBusy('')
   }
 
@@ -86,7 +94,7 @@ export default function MyStore() {
         <div className="ms2-head">
           <div>
             <h1>My Store</h1>
-            <p>Sell services and digital products. Buyers pay from their OgaPay wallet.</p>
+            <p>Sell services and digital products. Buyers pay from their OgaPay wallet; the money comes to you when they confirm delivery, or 3 days after you mark it delivered.</p>
           </div>
           <div className="acts">
             {user?.username && <Link className="up-btn" to={`/user/${user.username}`}><i className="ti ti-eye" /> View public store</Link>}
@@ -97,7 +105,7 @@ export default function MyStore() {
         <div className="ms2-stats">
           <div className="up-card ms2-stat"><span><i className="ti ti-building-store" /> Live products</span><b>{products ? live : '…'}</b><small>{products ? `${products.length - live} draft` : ''}</small></div>
           <div className="up-card ms2-stat"><span><i className="ti ti-shopping-cart" /> Orders</span><b>{orders ? orders.length : '…'}</b><small>{orders ? `${open} to deliver` : ''}</small></div>
-          <div className="up-card ms2-stat"><span><i className="ti ti-coin" /> Revenue</span><b style={{ fontSize: 18 }}>{orders ? revenue : '…'}</b><small>paid to your wallet</small></div>
+          <div className="up-card ms2-stat"><span><i className="ti ti-coin" /> Revenue</span><b style={{ fontSize: 18 }}>{orders ? revenue : '…'}</b><small>{held ? `+ ${held} on hold` : 'paid to your wallet'}</small></div>
           <div className="up-card ms2-stat"><span><i className="ti ti-star" /> Rating</span><b>{rated.length ? avg.toFixed(1) : '—'}</b><small>{rated.reduce((s, p) => s + p.reviewsCount, 0)} reviews</small></div>
         </div>
 
@@ -152,13 +160,23 @@ export default function MyStore() {
                   <small>by <Link to={`/user/${o.buyer.username}`} style={{ color: 'var(--text2)' }}>@{o.buyer.username}</Link> · {new Date(o.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</small>
                 </div>
               </div>
-              <div className="amt">{money(o.total, o.currency)}<small>paid</small></div>
+              <div className="amt">{money(o.total, o.currency)}<small>{!o.protected ? 'paid' : o.refundedAt ? 'refunded to buyer' : o.releasedAt ? 'paid to you' : 'on hold'}</small></div>
+              {o.held && o.status === 'DELIVERED' && o.releaseAt && (
+                <p className="so-line"><i className="ti ti-clock" aria-hidden="true" /><span>Comes to you when the buyer confirms, or on <b>{orderWhen(o.releaseAt)}</b> if they report no problem.</span></p>
+              )}
+              {o.held && (o.status === 'PENDING' || o.status === 'IN_PROGRESS') && (
+                <p className="so-line"><i className="ti ti-shield-check" aria-hidden="true" /><span>The buyer's payment is held by OgaPay. Deliver, then mark it delivered: you're paid when they confirm, or 3 days later.</span></p>
+              )}
+              {o.status === 'DISPUTED' && (
+                <p className="so-line bad"><i className="ti ti-alert-triangle" aria-hidden="true" /><span>The buyer reported a problem: "{o.disputeReason}" The payment is on hold while OgaPay reviews it. Sort it out with them in your chat, or refund them.</span></p>
+              )}
               <div className="row-acts">
-                <span className={`ms2-badge ${o.status === 'DELIVERED' ? 'done' : o.status === 'IN_PROGRESS' ? 'work' : ''}`}>{o.status === 'DELIVERED' ? 'Delivered' : o.status === 'IN_PROGRESS' ? 'In progress' : 'New'}</span>
+                <span className={`ms2-badge ${orderBadge(o).cls}`}>{orderBadge(o).label}</span>
                 <span style={{ flex: 1 }} />
                 {o.conversationId && <Link className="up-btn" to={`/messages?c=${o.conversationId}`}><i className="ti ti-message" /> Message buyer</Link>}
+                {o.held && <button className="up-btn" disabled={busy === o.id} onClick={() => refundOrder(o)}>Cancel and refund</button>}
                 {o.status === 'PENDING' && <button className="up-btn" disabled={busy === o.id} onClick={() => moveOrder(o, 'IN_PROGRESS')}>Start</button>}
-                {o.status !== 'DELIVERED' && <button className="up-btn primary" disabled={busy === o.id} onClick={() => moveOrder(o, 'DELIVERED')}>Mark delivered</button>}
+                {(o.status === 'PENDING' || o.status === 'IN_PROGRESS') && <button className="up-btn primary" disabled={busy === o.id} onClick={() => moveOrder(o, 'DELIVERED')}>Mark delivered</button>}
               </div>
             </div>
           ))

@@ -217,7 +217,7 @@ export default function StorePayment() {
               <p className="sc-note"><i className="ti ti-bolt" /> Takes effect as soon as you pay. Not refundable once applied.</p>
             ) : (
               <p className="sc-note">
-                <i className="ti ti-message-circle" /> The seller is paid straight away and a chat with them opens so you can arrange delivery.
+                <i className="ti ti-shield-check" /> Buyer protection: OgaPay holds your payment. The seller gets it when you confirm you received the order, or 3 days after they mark it delivered. Something wrong? Report it before then and the money stays on hold.
               </p>
             )}
             <p className="sc-fine">By paying you agree to the <Link to="/terms">Terms of Service</Link>.</p>

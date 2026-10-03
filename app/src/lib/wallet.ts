@@ -51,7 +51,9 @@ const up = (s?: string | null) => String(s || '').toUpperCase()
 
 export const isVoid = (t: Tx) => ['FAILED', 'CANCELLED', 'REJECTED', 'REVERSED'].includes(up(t.status))
 // Money held for a live job (released to workers or refunded later)
-export const isEscrowHeld = (t: Tx) => String(t.reference || '').startsWith('OGA-ESCROW-') && up(t.status) === 'PENDING'
+export const isEscrowHeld = (t: Tx) => (String(t.reference || '').startsWith('OGA-ESCROW-') || isStoreHeld(t)) && up(t.status) === 'PENDING'
+// A store purchase held until the buyer confirms delivery
+export const isStoreHeld = (t: Tx) => up(t.type) === 'STORE_PURCHASE' && !!t.metadata?.held && up(t.status) === 'PENDING'
 export const isPending = (t: Tx) => ['PENDING', 'PROCESSING'].includes(up(t.status)) && !isEscrowHeld(t)
 // Descriptions that only repeat the title
 export const usefulNote = (t: Tx) => (t.description && !/^(deposit via|withdrawal via|escrow for task|usdc deposit|sent to @)/i.test(t.description) ? t.description : '')

@@ -43,6 +43,7 @@ interface StoreProductData {
   isActive: boolean
   createdAt: string
   metadata?: Record<string, any>
+  official?: boolean // sold by OgaPay itself (perks)
 }
 
 interface SellerProfile {
@@ -241,6 +242,9 @@ export default function StoreProduct() {
           <i className="ti ti-message" /> Contact seller
         </button>
       )}
+      {!isOwner && !p.official && (
+        <p className="sp-protect"><i className="ti ti-shield-check" aria-hidden="true" /> Buyer protection: your payment is held until you confirm you received the order.</p>
+      )}
     </div>
   )
 
@@ -293,6 +297,7 @@ export default function StoreProduct() {
         .sp-facts div{display:flex;justify-content:space-between;align-items:center;font-size:13px}
         .sp-facts span{display:inline-flex;align-items:center;gap:8px;color:var(--text2)}
         .sp-facts b{font-weight:600}
+        .sp-protect{display:flex;gap:8px;margin:12px 2px 0;font-size:12px;line-height:1.5;color:var(--text2)}.sp-protect i{font-size:15px;color:var(--green);flex-shrink:0;margin-top:1px}
         .sp-note{display:flex;align-items:center;gap:6px;font-size:12px;padding:10px 12px;border-radius:10px;margin-bottom:10px}
         .sp-note-err{background:rgba(220,38,38,.08);color:#dc2626}
         .sp-note-ok{background:rgba(var(--green-rgb),.1);color:var(--green)}
