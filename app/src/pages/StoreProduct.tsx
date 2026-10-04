@@ -266,7 +266,8 @@ export default function StoreProduct() {
       {seller && (
         <div className="sp-stats">
           <div><span>Tasks completed</span><b>{seller.tasksCompleted ?? 0}</b></div>
-          <div><span>Success rate</span><b>{seller.successRate != null ? `${Math.round(seller.successRate)}%` : '—'}</b></div>
+          {/* A rate needs finished work behind it: "0%" read as a bad seller when there was none yet */}
+          <div><span>Success rate</span><b>{(seller.tasksCompleted ?? 0) > 0 && seller.successRate != null ? `${Math.round(seller.successRate)}%` : <span style={{ font: 'inherit', fontSize: 13, letterSpacing: 0, textTransform: 'none', color: 'var(--text2)' }}>No jobs yet</span>}</b></div>
         </div>
       )}
     </div>

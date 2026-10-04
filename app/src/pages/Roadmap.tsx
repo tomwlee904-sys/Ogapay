@@ -5,73 +5,54 @@ const Icon = ({ n, s = 18, c }) => (
   <i className={`ti ti-${n}`} style={{ fontSize: s, color: c || "var(--text2)", lineHeight: 1, flexShrink: 0 }} />
 )
 
+// Keep this true: "done" means people can use it today. "upcoming" is what we
+// plan next, without dates.
 const phases = [
   {
-    title: "Phase 1 — Launch",
+    title: "Marketplace",
     status: "done",
     items: [
-      "User registration & login (email + Google OAuth)",
-      "Task browsing, applying & submitting proof",
-      "Job creation (social & custom tasks)",
-      "Community pages with join/request flow",
-      "Profile with wallet & bank account details",
-      "Basic wallet & NG Naira support",
+      "Sign in with email or a Solana wallet",
+      "Paid jobs: custom jobs, X campaigns and quick social tasks",
+      "AI campaign builder",
+      "Escrow on every job, with automatic approval after 72 hours",
+      "Requirements for workers: KYC, OgaScore, rank or a connected X account",
+      "Private direct hires",
+      "Communities with members, chat and jobs",
+      "Leaderboard, referrals and the blog",
     ],
   },
   {
-    title: "Phase 2 — Growth",
-    status: "active",
+    title: "Money and trust",
+    status: "done",
     items: [
-      "KYC/BVN verification for enhanced trust",
-      "Real-time wallet balance & transaction history",
-      "Earnings dashboard with charts & breakdowns",
-      "Referral program with tracking & rewards",
-      "Task history & submission tracking",
-      "Mobile responsive improvements",
+      "Wallet in Naira, USDC and SOL",
+      "Deposits by card or bank transfer, and your own account number",
+      "Withdrawals to Nigerian banks and crypto wallets",
+      "Free transfers between OgaPay users",
+      "Identity verification levels: NIN, ID with a selfie, documents",
+      "Store with buyer protection: payment held until delivery is confirmed",
+      "Vault: platform fees shared with $PAY holders every 12 hours",
+      "Read-only developer API",
     ],
   },
   {
-    title: "Phase 3 — Marketplace",
+    title: "Next",
     status: "upcoming",
     items: [
-      "Store / Service marketplace launch",
-      "Escrow payment system for task rewards",
-      "Multi-currency support (NGN, USDC, SOL)",
-      "Seller verification & rating system",
-      "Dispute resolution system",
-      "Advanced analytics for posters",
-    ],
-  },
-  {
-    title: "Phase 4 — AI & Automation",
-    status: "upcoming",
-    items: [
-      "AI agent integration via REST API",
-      "Automated task assignment & matching",
-      "AI-powered content verification",
-      "Smart contract-based escrow on Solana",
-      "Mobile app (iOS & Android)",
-      "Web3 wallet integration (Phantom, Backpack)",
-    ],
-  },
-  {
-    title: "Phase 5 — Scale",
-    status: "upcoming",
-    items: [
-      "International expansion (Ghana, Kenya, South Africa)",
-      "B2B enterprise task management",
-      "Advanced fraud detection & prevention",
-      "Community DAO governance",
-      "Open source SDK for developers",
-      "Bug bounty & security audit program",
+      "Contest jobs with ranked prizes for several winners",
+      "Jobs only members of a community can do",
+      "More ways to sort and filter jobs",
+      "Likes and comments on blog posts",
+      "An API for apps and AI agents to post and pay for jobs",
     ],
   },
 ]
 
 const statusStyles = {
-  done: { bg: "#16a34a18", color: "#16a34a", label: "Complete" },
+  done: { bg: "#16a34a18", color: "#16a34a", label: "Live" },
   active: { bg: "rgba(var(--accent-rgb),0.09)", color: "#52525b", label: "In Progress" },
-  upcoming: { bg: "var(--bg2)", color: "var(--text3)", label: "Upcoming" },
+  upcoming: { bg: "var(--bg2)", color: "var(--text3)", label: "Planned" },
 }
 
 export default function Roadmap() {
@@ -103,7 +84,7 @@ export default function Roadmap() {
       <div className="rm-page">
         <div className="rm-hero">
           <h1><Icon n="map-pin" s={28} /> Roadmap</h1>
-          <p>OgaPay is evolving. Here's what we've shipped and what's coming next on our journey to build Africa's leading task marketplace.</p>
+          <p>OgaPay is evolving. What you can use today, and what we plan to build next.</p>
         </div>
 
         <div className="rm-timeline">

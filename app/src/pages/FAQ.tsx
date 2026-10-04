@@ -88,6 +88,14 @@ export const TOPICS: Topic[] = [
     ],
   },
   {
+    id: 'store', title: 'Buying and selling in the store', items: [
+      { q: 'How does buying in the store work?', a: 'Choose Buy now on a product and pay from your OgaPay wallet. OgaPay holds the payment, and a chat opens with the seller so you can share details and arrange delivery. You can follow every order in Store, My orders.' },
+      { q: 'What is buyer protection?', a: 'The seller only gets your payment when you press Confirm received, or 3 days after they mark the order delivered. If something is wrong, choose Report a problem before then: the payment stays on hold while OgaPay looks into it. Until the seller starts work you can also cancel and get your money back.' },
+      { q: 'When do sellers get paid?', a: 'When the buyer confirms they received the order, or automatically 3 days after you mark it delivered if they report no problem. While the payment is held you can cancel and refund the buyer. Orders and payments are in My Store, Orders.' },
+      { q: 'Are there store fees?', a: 'No. Sellers receive the full price of each order.' },
+    ],
+  },
+  {
     id: 'communities', title: 'Communities', items: [
       { q: 'What are communities?', a: 'Groups built around a niche or an audience, with members, a group chat, a leaderboard and a feed of open and completed jobs.' },
       { q: 'How do I join one?', a: 'Open Communities and choose Join. Open communities let you in straight away; private ones send your request to the admins.' },

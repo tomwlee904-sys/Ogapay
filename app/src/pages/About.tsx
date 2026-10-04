@@ -1,197 +1,150 @@
-﻿import Layout from '../components/Layout'
+import { Link } from 'react-router-dom'
+import Layout from '../components/Layout'
 
-const NAVY = 'var(--accent)'
-const GREEN = 'var(--green)'
+// About OgaPay: what the product does today, how money is kept safe, and the
+// official channels (so people can tell us from impersonators). Everything here
+// should stay true; no user counts until there are numbers worth showing.
 
-function TablerIcon({ name, size = 20 }: { name: string; size?: number }) {
-  return <i className={`ti ti-${name}`} style={{ fontSize: size, lineHeight: 1 }} />
-}
+const DOES = [
+  { icon: 'briefcase', title: 'Earn from tasks', text: 'Pick paid tasks that fit your time and skills: social, app testing, research, writing, design and more. Get paid when your work is approved.', to: '/tasks', cta: 'Browse jobs' },
+  { icon: 'square-plus', title: 'Hire people', text: 'Post a job, set the reward per person and the proof you want, and review the work. You only pay for what you approve.', to: '/create', cta: 'Create a job' },
+  { icon: 'building-store', title: 'Sell your services', text: 'List services and digital products in the store. Buyers pay through OgaPay and you get paid when they confirm delivery.', to: '/store', cta: 'Visit the store' },
+  { icon: 'users', title: 'Work with your people', text: 'Join or start a community with its own chat, members and jobs from people you know.', to: '/communities', cta: 'Explore communities' },
+]
+
+const SAFE = [
+  { icon: 'lock', title: 'Escrow on every job', text: 'A job’s budget is locked before anyone starts, so workers can see the money is there. Work nobody reviews within 72 hours is approved automatically.' },
+  { icon: 'shield-check', title: 'Buyer protection in the store', text: 'Store payments are held until the buyer confirms delivery, or 3 days after the seller marks it delivered. Problems are reviewed by our team.' },
+  { icon: 'id-badge-2', title: 'Identity checks', text: 'Verification levels (NIN, ID with a selfie, documents) unlock withdrawals and higher limits, and posters can require them for their jobs.' },
+  { icon: 'flag', title: 'Reports and moderation', text: 'Report a job from its page, or tell support about a user or an order. Disputed work and store orders are settled by our team.' },
+]
+
+const LINKS = [
+  { icon: 'world', label: 'Website', value: 'ogapay.app', href: 'https://ogapay.app' },
+  { icon: 'brand-x', label: 'X (Twitter)', value: '@Ogapayhq', href: 'https://x.com/Ogapayhq' },
+  { icon: 'brand-telegram', label: 'Telegram', value: 't.me/ogapay', href: 'https://t.me/ogapay' },
+  { icon: 'mail', label: 'Email', value: 'support@ogapay.app', href: 'mailto:support@ogapay.app' },
+]
 
 export default function About() {
-
   return (
-    <Layout sidebar={false}>
+    <Layout>
       <style>{`
-        .ab-page{max-width:100%!important;padding:0}
-
-                        /* ---- Hero ---- */
-        .ab-hero{position:relative;min-height:600px;display:flex;align-items:center;overflow:hidden;background:var(--accent)}
-        .ab-hero-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center}
-        .ab-hero-overlay{position:absolute;inset:0;background:linear-gradient(135deg,rgba(var(--accent-rgb),.85) 0%,rgba(var(--accent-rgb),.6) 50%,rgba(var(--accent-rgb),.4) 100%)}
-        .ab-hero-inner{position:relative;z-index:2;width:100%;max-width:1100px;margin:0 auto;padding:80px 40px}
-        .ab-hero-tag{color:var(--green);font-size:13px;font-weight:800;letter-spacing:.14em;margin:0 0 12px;display:inline-block;background:rgba(22,163,74,.12);padding:4px 14px;border-radius:999px}
-        .ab-hero-heading{font-family:Geist,sans-serif;font-size:72px;font-weight:900;line-height:.92;color:#fff;margin:0}
-        .ab-hero-heading .green{color:var(--green);font-family:'DM Serif Display',Georgia,serif;font-style:italic;font-weight:400;font-size:72px}
-        @media(max-width:768px){
-          .ab-hero-heading{font-size:40px}
-          .ab-hero-heading .green{font-size:40px}
-        }
-        .ab-hero-sub{color:rgba(255,255,255,.75);font-size:17px;line-height:1.7;margin:16px 0 0;max-width:520px}
-        @media(max-width:600px){.ab-hero-sub{font-size:15px;max-width:none}}
-/* ── Mission ── */
-        .ab-mission{padding:80px 0;background:#fff}
-        .ab-mission-inner{max-width:1100px;margin:0 auto;padding:0 40px;display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center}
-        @media(max-width:768px){.ab-mission-inner{grid-template-columns:1fr;gap:30px;padding:0 24px}}
-        .ab-mission-heading{font-family:Geist;font-size:40px;font-weight:900;color:${NAVY};margin:0;line-height:1.2}
-        .ab-mission-right p{font-size:15px;color:#555;line-height:1.7;margin:0 0 32px}
-        .ab-mission-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
-        .ab-mission-stat{text-align:center}
-        .ab-mission-stat .num{font-family:Geist;font-size:32px;font-weight:900;color:${NAVY};display:block}
-        .ab-mission-stat .lbl{font-size:13px;color:#888;font-weight:600;margin-top:2px}
-
-        /* ── How it works ── */
-        .ab-how{background:#f7f7f7;padding:80px 0}
-        .ab-how-inner{max-width:900px;margin:0 auto;padding:0 40px;text-align:center}
-        .ab-how-heading{font-family:Geist;font-size:36px;font-weight:900;color:${NAVY};margin:0 0 40px}
-        .ab-how-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
-        @media(max-width:768px){.ab-how-steps{grid-template-columns:1fr;max-width:400px;margin:0 auto}}
-        .ab-how-step{text-align:center}
-        .ab-how-icon{width:64px;height:64px;border-radius:50%;background:${NAVY};display:flex;align-items:center;justify-content:center;margin:0 auto 14px;color:var(--on-accent);font-size:28px}
-        .ab-how-step h3{font-size:17px;font-weight:800;color:#222;margin:0 0 6px}
-        .ab-how-step p{font-size:13px;color:#777;line-height:1.5;margin:0;max-width:240px;margin-left:auto;margin-right:auto}
-
-        /* ── Why OgaPay ── */
-        .ab-why{background:${NAVY};padding:80px 0}
-        .ab-why-inner{max-width:900px;margin:0 auto;padding:0 40px;text-align:center}
-        .ab-why-heading{font-family:Geist;font-size:36px;font-weight:900;color:var(--on-accent);margin:0 0 40px}
-        .ab-why-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-        @media(max-width:600px){.ab-why-grid{grid-template-columns:1fr}}
-        .ab-why-card{border:1px solid rgba(255,255,255,.15);border-radius:14px;padding:28px 24px;text-align:left;transition:all .2s}
-        .ab-why-card:hover{border-color:rgba(255,255,255,.3);background:rgba(255,255,255,.03)}
-        .ab-why-card .ab-icon{font-size:28px;margin-bottom:10px;display:block;color:#fff}
-        .ab-why-card h3{font-size:16px;font-weight:800;color:#fff;margin:0 0 6px}
-        .ab-why-card p{font-size:13px;color:rgba(255,255,255,.6);line-height:1.5;margin:0}
-
-        /* ── Values ── */
-        .ab-values{padding:80px 0;background:#fff}
-        .ab-values-inner{max-width:900px;margin:0 auto;padding:0 40px;text-align:center}
-        .ab-values-heading{font-family:Geist;font-size:36px;font-weight:900;color:${NAVY};margin:0 0 40px}
-        .ab-values-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
-        @media(max-width:600px){.ab-values-grid{grid-template-columns:1fr;max-width:360px;margin:0 auto}}
-        .ab-values-card{border:1px solid #eee;border-radius:16px;padding:32px 24px;text-align:center;transition:all .2s}
-        .ab-values-card:hover{box-shadow:0 8px 24px rgba(var(--accent-rgb),.06);border-color:${NAVY}}
-        .ab-values-card .ab-icon{font-size:40px;margin-bottom:12px;display:block;color:${NAVY}}
-        .ab-values-card h3{font-size:17px;font-weight:800;color:#222;margin:0 0 6px}
-        .ab-values-card p{font-size:13px;color:#888;line-height:1.5;margin:0}
-
-        /* ── CTA ── */
-        .ab-cta{background:${NAVY};padding:64px 20px;text-align:center}
-        .ab-cta h2{font-family:Geist;font-size:36px;font-weight:900;color:var(--on-accent);margin:0 0 24px}
-        .ab-cta-actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
-        .ab-cta-primary,.ab-cta-outline{display:inline-flex;align-items:center;gap:8px;padding:14px 28px;border-radius:999px;font-size:15px;font-weight:700;cursor:pointer;transition:all .2s;text-decoration:none;font-family:inherit}
-        .ab-cta-primary{background:#fff;color:${NAVY};border:2px solid #fff}
-        .ab-cta-primary:hover{background:rgba(255,255,255,.9)}
-        .ab-cta-outline{background:transparent;color:#fff;border:2px solid rgba(255,255,255,.4)}
-        .ab-cta-outline:hover{border-color:#fff;background:rgba(255,255,255,.05)}
+        .ab2-sec{margin-top:56px}
+        .ab2-sec > h2{margin:0;font-size:22px;font-weight:600;letter-spacing:-.02em;color:var(--text)}
+        .ab2-sec > p{margin:8px 0 0;font-size:14px;line-height:1.65;color:var(--text2);max-width:680px}
+        .ab2-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:20px}
+        .ab2-card{padding:20px;display:flex;flex-direction:column;gap:8px}
+        .ab2-card .ic{width:40px;height:40px;border-radius:11px;background:var(--card2);border:1px solid var(--border);display:grid;place-items:center;font-size:19px;color:var(--text)}
+        .ab2-card h3{margin:6px 0 0;font-size:15.5px;font-weight:600;color:var(--text)}
+        .ab2-card p{margin:0;font-size:13.5px;line-height:1.6;color:var(--text2)}
+        .ab2-card a{margin-top:auto;padding-top:6px;font-size:13px;font-weight:600;color:var(--text);text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+        .ab2-card a:hover{text-decoration:underline}
+        .ab2-money{margin-top:20px;padding:6px 20px}
+        .ab2-money div{display:flex;justify-content:space-between;gap:16px;padding:14px 0;border-bottom:1px solid var(--border);font-size:13.5px}
+        .ab2-money div:last-child{border-bottom:0}
+        .ab2-money span{color:var(--text2)}
+        .ab2-money b{color:var(--text);font-weight:600;text-align:right}
+        .ab2-links{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:20px}
+        .ab2-link{padding:16px;display:flex;flex-direction:column;gap:4px;text-decoration:none;color:inherit;transition:border-color .15s ease}
+        .ab2-link:hover{border-color:var(--text3)}
+        .ab2-link i{font-size:20px;color:var(--text);margin-bottom:6px}
+        .ab2-link span{font-size:12px;color:var(--text3)}
+        .ab2-link b{font-size:13.5px;font-weight:600;color:var(--text);overflow-wrap:anywhere}
+        .ab2-warn{margin-top:12px;padding:14px 16px;display:flex;gap:10px;font-size:13px;line-height:1.55;color:var(--text2)}
+        .ab2-warn i{font-size:18px;color:#d97706;flex-shrink:0}
+        .ab2-foot{margin-top:56px;padding:22px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+        .ab2-foot p{margin:0;font-size:13.5px;color:var(--text2)}
+        @media(max-width:860px){.ab2-links{grid-template-columns:1fr 1fr}}
+        @media(max-width:640px){.ab2-grid{grid-template-columns:1fr}.ab2-sec{margin-top:44px}}
       `}</style>
+      <div className="ui-page">
+        <header>
+          <span className="ui-eyebrow"><i className="ti ti-info-circle" /> About OgaPay</span>
+          <h1 className="ui-title">A task marketplace for Africa, paid in Naira or USDC.</h1>
+          <p className="ui-sub">
+            OgaPay connects people who need work done with people ready to do it. Post a job, do paid tasks, or sell your
+            services, with the money held safely until the work is done.
+          </p>
+        </header>
 
-      <div className="ab-page">
-                {/* ---- Hero ---- */}
-        <section className="ab-hero">
-          <img loading="lazy" src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1200&q=80&auto=format&fit=crop"
-            alt="Nigerian workers collaborating"
-            className="ab-hero-bg"
-          />
-          <div className="ab-hero-overlay" />
-          <div className="ab-hero-inner">
-            <div className="ab-hero-tag">ABOUT US</div>
-            <h1 className="ab-hero-heading">
-              Work.<br />
-              Earn.<br />
-              Grow.<br />
-              <span className="green">Change.</span>
-            </h1>
-            <p className="ab-hero-sub">
-              Join thousands of talented Nigerian workers and task creators building better futures together.
-            </p>
+        <section className="ab2-sec">
+          <h2>What you can do</h2>
+          <div className="ab2-grid">
+            {DOES.map((d) => (
+              <div key={d.title} className="ui-card ab2-card">
+                <span className="ic"><i className={`ti ti-${d.icon}`} aria-hidden="true" /></span>
+                <h3>{d.title}</h3>
+                <p>{d.text}</p>
+                <Link to={d.to}>{d.cta} <i className="ti ti-arrow-right" aria-hidden="true" /></Link>
+              </div>
+            ))}
           </div>
         </section>
 
-        {/* ── How it Works ── */}
-        <section className="ab-how">
-          <div className="ab-how-inner">
-            <h2 className="ab-how-heading">Simple. Fast. Rewarding.</h2>
-            <div className="ab-how-steps">
-              <div className="ab-how-step">
-                <div className="ab-how-icon"><TablerIcon name="search" size={24} /></div>
-                <h3>Browse Tasks</h3>
-                <p>Explore hundreds of tasks from social media engagement to design, research, and testing.</p>
+        <section className="ab2-sec">
+          <h2>How we keep it safe</h2>
+          <div className="ab2-grid">
+            {SAFE.map((d) => (
+              <div key={d.title} className="ui-card ab2-card">
+                <span className="ic"><i className={`ti ti-${d.icon}`} aria-hidden="true" /></span>
+                <h3>{d.title}</h3>
+                <p>{d.text}</p>
               </div>
-              <div className="ab-how-step">
-                <div className="ab-how-icon"><TablerIcon name="circle-check" size={24} /></div>
-                <h3>Complete &amp; Submit</h3>
-                <p>Follow instructions, complete the work, and submit your proof through the platform.</p>
-              </div>
-              <div className="ab-how-step">
-                <div className="ab-how-icon"><TablerIcon name="coins" size={24} /></div>
-                <h3>Get Paid in NGN or USDC</h3>
-                <p>Receive payments directly to your bank account or crypto wallet. Fast, secure, reliable.</p>
-              </div>
-            </div>
+            ))}
           </div>
         </section>
 
-        {/* ── Why OgaPay ── */}
-        <section className="ab-why">
-          <div className="ab-why-inner">
-            <h2 className="ab-why-heading">Built different. Built for you.</h2>
-            <div className="ab-why-grid">
-              <div className="ab-why-card">
-                <span className="ab-icon"><TablerIcon name="flag" size={28} /></span>
-                <h3>Made for Nigeria</h3>
-                <p>Bank transfers, NGN support, local payment processors. Built with Nigerian workers and creators in mind from day one.</p>
-              </div>
-              <div className="ab-why-card">
-                <span className="ab-icon"><TablerIcon name="bolt" size={28} /></span>
-                <h3>Instant Payments</h3>
-                <p>Get paid in NGN or USDC as soon as your work is approved. No delays, no hidden fees, no unnecessary waiting.</p>
-              </div>
-              <div className="ab-why-card">
-                <span className="ab-icon"><TablerIcon name="lock" size={28} /></span>
-                <h3>Secure &amp; Trusted</h3>
-                <p>Escrow-protected payments ensure both workers and task creators are protected. KYC verified for safety.</p>
-              </div>
-              <div className="ab-why-card">
-                <span className="ab-icon"><TablerIcon name="world" size={28} /></span>
-                <h3>Earn in Crypto</h3>
-                <p>Receive USDC or SOL directly to your Solana wallet. Access global earnings without traditional banking barriers.</p>
-              </div>
-            </div>
+        <section className="ab2-sec">
+          <h2>Your money</h2>
+          <p>Your wallet holds Naira, USDC and SOL. USDC and SOL run on Solana.</p>
+          <div className="ui-card ab2-money">
+            <div><span>Add money</span><b>Card or bank transfer, or USDC</b></div>
+            <div><span>Your own account number</span><b>After you verify your identity</b></div>
+            <div><span>Withdraw</span><b>To a Nigerian bank (1.5%, min ₦100) or a crypto wallet (1%)</b></div>
+            <div><span>Posting a job</span><b>10% fee on the budget; workers keep the full reward</b></div>
+            <div><span>Sending to another OgaPay user</span><b>Free</b></div>
           </div>
         </section>
 
-        {/* ── Values ── */}
-        <section className="ab-values">
-          <div className="ab-values-inner">
-            <h2 className="ab-values-heading">Our Values</h2>
-            <div className="ab-values-grid">
-              <div className="ab-values-card">
-                <span className="ab-icon"><TablerIcon name="handshake" size={40} /></span>
-                <h3>Fairness</h3>
-                <p>Every task, every reward, every review is handled with transparency and fairness. No exploitation, no shortcuts.</p>
-              </div>
-              <div className="ab-values-card">
-                <span className="ab-icon"><TablerIcon name="rocket" size={40} /></span>
-                <h3>Opportunity</h3>
-                <p>We believe every Nigerian deserves access to earning opportunities. We lower the barrier so anyone can participate.</p>
-              </div>
-              <div className="ab-values-card">
-                <span className="ab-icon"><TablerIcon name="shield" size={40} /></span>
-                <h3>Trust</h3>
-                <p>Trust is the currency of our platform. Escrow, KYC, transparent reviews — everything we build starts with trust.</p>
-              </div>
-            </div>
+        <section className="ab2-sec">
+          <h2>The vault and $PAY</h2>
+          <p>
+            Every 12 hours, at 00:00 and 12:00 UTC, the platform fees in the vault are shared with $PAY holders according to
+            how much $PAY they hold. Payouts depend on the fees OgaPay actually earns, so they go up and down with activity.
+            Nothing on OgaPay is financial advice.
+          </p>
+          <div className="ui-actions" style={{ marginTop: 16 }}>
+            <Link className="ui-btn ui-btn-ghost" to="/vault">Open the vault <i className="ti ti-arrow-right" /></Link>
           </div>
         </section>
 
-        {/* ── CTA ── */}
-        <section className="ab-cta">
-          <h2>Ready to start earning?</h2>
-          <div className="ab-cta-actions">
-            <a href="/register" className="ab-cta-primary">Start Earning <TablerIcon name="arrow-right" size={16} /></a>
-            <a href="/create" className="ab-cta-outline">Create a Task <TablerIcon name="arrow-right" size={16} /></a>
+        <section className="ab2-sec">
+          <h2>Official channels</h2>
+          <p>These are the only places we post from. If someone contacts you from anywhere else claiming to be OgaPay, it isn't us.</p>
+          <div className="ab2-links">
+            {LINKS.map((l) => (
+              <a key={l.label} className="ui-card ab2-link" href={l.href} target={l.href.startsWith('http') ? '_blank' : undefined} rel="noopener noreferrer">
+                <i className={`ti ti-${l.icon}`} aria-hidden="true" />
+                <span>{l.label}</span>
+                <b>{l.value}</b>
+              </a>
+            ))}
+          </div>
+          <div className="ui-card ab2-warn">
+            <i className="ti ti-alert-triangle" aria-hidden="true" />
+            <span>OgaPay staff will never ask for your password, PIN or one-time codes, or ask you to send money to "unlock" a payout.</span>
           </div>
         </section>
+
+        <div className="ui-card ab2-foot">
+          <p>OgaPay is operated by OgaPay Technologies Ltd.</p>
+          <div className="ui-actions">
+            <Link className="ui-btn ui-btn-ghost" to="/terms">Terms</Link>
+            <Link className="ui-btn ui-btn-ghost" to="/privacy">Privacy</Link>
+            <Link className="ui-btn ui-btn-dark" to="/support">Contact support</Link>
+          </div>
+        </div>
       </div>
     </Layout>
   )

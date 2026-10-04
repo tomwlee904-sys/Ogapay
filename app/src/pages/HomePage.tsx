@@ -129,7 +129,7 @@ function Hero({ live, onCreate }: { live: any; onCreate: () => void }) {
             <p className="hv-h1-sub">Paid in Naira or USDC.</p>
             <p className="hv-lead">
               Post a paid task, hire someone for a project, or earn with the skills you already have.
-              OgaPay connects people who need work done with people ready to do it, and AI agents can hire them too.
+              OgaPay connects people who need work done with people ready to do it, and holds the money safely until the work is approved.
             </p>
             <div className="hv-btns">
               <button className="hv-btn hv-btn-dark" onClick={onCreate}>Create a job <i className="ti ti-plus" /></button>
@@ -407,8 +407,8 @@ function Possibilities() {
             <span className="hv-mono">Connected by design</span>
             <h3 className="hv-h3 hv-connected-title">The new work<br />economy for Africa</h3>
             <p className="hv-lead" style={{ marginTop: 18 }}>
-              From quick social tasks and app feedback to launch campaigns and ongoing projects, OgaPay connects people,
-              teams and AI agents with people who can help. Start with one task and build from there.
+              From quick social tasks and app feedback to launch campaigns and ongoing projects, OgaPay connects people
+              and teams with people who can help. Start with one task and build from there.
             </p>
             <a href="#ecosystem" className="hv-textlink" onClick={(e) => { e.preventDefault(); document.getElementById("ecosystem")?.scrollIntoView({ behavior: "smooth" }); }}>
               Explore OgaPay <i className="ti ti-arrow-down" />

@@ -1,87 +1,93 @@
-﻿import Layout from '../components/Layout'
+import { Link } from 'react-router-dom'
+import Layout from '../components/Layout'
 
-const DOCS_BASE = 'https://github.com/tomwlee904-sys/Ogapay/tree/main/docs'
+// Guides: where each topic is explained on the site. These used to link to
+// markdown files in our GitHub repository, which is private, so every link
+// was a 404 (and some guides described features we don't have).
 
-const GUIDES = [
-  { num: '01', file: '01-user-guide.md', title: 'OgaPay User Guide', desc: 'Complete platform walkthrough — getting started, account setup, worker & poster guides, wallet, communities, store, referrals, withdrawals, and FAQs.', icon: 'book' },
-  { num: '02', file: '02-quick-start.md', title: 'Quick Start Guide', desc: 'Get up and running in under 10 minutes — create account, verify email, connect wallet, create your first task, submit your first task, withdraw earnings.', icon: 'rocket' },
-  { num: '03', file: '03-beta-tester.md', title: 'Beta Tester Handbook', desc: 'How to test the platform, report bugs, earn rewards for finding issues, testing procedures, beta rules, and feedback submission.', icon: 'bug' },
-  { num: '04', file: '04-community-guide.md', title: 'Community Guide', desc: 'Creating and managing communities, community roles and rules, official communities, best practices for admins and members.', icon: 'users' },
-  { num: '05', file: '05-store-guide.md', title: 'Store Seller Guide', desc: 'Selling on the OgaPay Store — create products, set pricing, manage orders, deliver work, store analytics, and seller best practices.', icon: 'shopping-cart' },
-  { num: '06', file: '06-jobs-hiring.md', title: 'Jobs & Hiring Guide', desc: 'Posting and applying for jobs, the hiring process, job categories, best practices for employers and applicants.', icon: 'briefcase' },
-  { num: '07', file: '07-wallet-guide.md', title: 'Wallet & Payments Guide', desc: 'Deposits via Paystack, withdrawals to bank and crypto, escrow system, NGN wallet, USDC wallet, SOL wallet, troubleshooting.', icon: 'wallet' },
-  { num: '08', file: '08-admin-handbook.md', title: 'Admin Handbook', desc: 'Platform administration — user management, task moderation, community moderation, store management, vault, analytics, platform settings.', icon: 'shield' },
-  { num: '09', file: '09-api-docs.md', title: 'API Documentation', desc: 'Developer API reference — authentication, tasks, wallet, store, communities, referrals, notifications, AI services, webhooks, error codes.', icon: 'code' },
-  { num: '10', file: '10-pulse-ai-guide.md', title: 'Pulse AI Guide', desc: 'OgaPay Pulse AI assistant — what it is, supported commands, task creation assistance, navigation, wallet help, campaign assistance.', icon: 'sparkles' },
+type Guide = { icon: string; title: string; desc: string; to: string }
+
+const SECTIONS: { title: string; guides: Guide[] }[] = [
+  {
+    title: 'Getting started',
+    guides: [
+      { icon: 'rocket', title: 'How OgaPay works', desc: 'What you can do here, what you need to start, and who can use it.', to: '/faq#basics' },
+      { icon: 'id-badge-2', title: 'Verify your identity', desc: 'KYC levels, what each one unlocks, OgaScore and Human Verified.', to: '/faq#kyc' },
+      { icon: 'wallet', title: 'Your wallet', desc: 'Adding money by card or bank transfer, and the currencies your wallet holds.', to: '/faq#wallet' },
+    ],
+  },
+  {
+    title: 'Earning',
+    guides: [
+      { icon: 'briefcase', title: 'Doing jobs', desc: 'Finding work, sending proof, and when you get paid.', to: '/faq#earning' },
+      { icon: 'building-bank', title: 'Withdrawing', desc: 'Sending money to your bank or a crypto wallet, fees and timing.', to: '/faq#withdrawals' },
+      { icon: 'users-plus', title: 'Referrals', desc: 'Invite links and bonuses.', to: '/faq#referrals' },
+    ],
+  },
+  {
+    title: 'Hiring and selling',
+    guides: [
+      { icon: 'square-plus', title: 'Posting a job', desc: 'Writing the brief, choosing who can take part, and reviewing work.', to: '/faq#posting' },
+      { icon: 'shield-check', title: 'Escrow and fees', desc: 'How your budget is held, the 10% fee, and what happens to unused money.', to: '/faq#fees' },
+      { icon: 'building-store', title: 'Buying and selling in the store', desc: 'Buyer protection, when sellers are paid, and reporting a problem.', to: '/faq#store' },
+    ],
+  },
+  {
+    title: 'More',
+    guides: [
+      { icon: 'users', title: 'Communities', desc: 'Joining, creating and running a community.', to: '/faq#communities' },
+      { icon: 'shield-lock', title: 'Vault and $PAY', desc: 'How platform fees are shared with $PAY holders every 12 hours.', to: '/faq#vault' },
+      { icon: 'code', title: 'Developer API', desc: 'Read-only API keys for your own apps: jobs, submissions and balances.', to: '/developer' },
+    ],
+  },
 ]
 
 export default function Docs() {
   return (
     <Layout>
-      <div style={{ maxWidth: 800, margin: '0 auto', padding: '28px 20px 60px' }}>
-        <h1 style={{ fontFamily: 'Geist, sans-serif', fontSize: 28, fontWeight: 900, margin: '0 0 4px' }}>
-          Documentation
-        </h1>
-        <p style={{ fontSize: 14, color: 'var(--text2)', margin: '0 0 24px' }}>
-          Complete guides for using the OgaPay platform.
-        </p>
+      <style>{`
+        .dc-sec{margin-top:var(--sp-7,40px)}
+        .dc-sec h2{margin:0 0 12px;font:500 11px/1.4 var(--font-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--text3)}
+        .dc-card{display:flex;gap:14px;align-items:flex-start;padding:16px;text-decoration:none;color:inherit;transition:border-color .15s ease,transform .15s ease}
+        .dc-card:hover{border-color:var(--text3);transform:translateY(-1px)}
+        .dc-card:focus-visible{outline:2px solid var(--text);outline-offset:2px}
+        .dc-ic{width:38px;height:38px;border-radius:10px;background:var(--card2);border:1px solid var(--border);display:grid;place-items:center;font-size:18px;color:var(--text);flex-shrink:0}
+        .dc-card b{display:block;font-size:14px;font-weight:600;color:var(--text)}
+        .dc-card span{display:block;margin-top:4px;font-size:12.5px;line-height:1.55;color:var(--text2)}
+        .dc-help{margin-top:var(--sp-7,40px);display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:18px 20px}
+        .dc-help p{margin:0;font-size:13.5px;color:var(--text2)}
+        .dc-help b{color:var(--text)}
+        @media(max-width:860px){.dc-grid{grid-template-columns:1fr}}
+      `}</style>
+      <div className="ui-page">
+        <header className="ui-head">
+          <div>
+            <span className="ui-eyebrow"><i className="ti ti-book" /> Guides</span>
+            <h1 className="ui-title">How to use OgaPay</h1>
+            <p className="ui-sub">Short answers to how everything works, from your first job to withdrawing your earnings.</p>
+          </div>
+          <div className="ui-actions">
+            <Link className="ui-btn ui-btn-ghost" to="/faq">All questions <i className="ti ti-arrow-right" /></Link>
+          </div>
+        </header>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {GUIDES.map(g => (
-            <a
-              key={g.num}
-              href={`${DOCS_BASE}/${g.file}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{
-                display: 'block',
-                padding: '16px 18px',
-                borderRadius: 12,
-                border: '1px solid var(--border)',
-                background: 'var(--card)',
-                textDecoration: 'none',
-                color: 'inherit',
-                transition: 'border-color .15s',
-              }}
-              onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--accent)'}
-              onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border)'}
-            >
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
-                <div style={{
-                  width: 36, height: 36, borderRadius: 10,
-                  background: 'rgba(var(--accent-rgb),0.08)',
-                  display: 'grid', placeItems: 'center',
-                  flexShrink: 0, fontSize: 16, color: 'var(--accent)'
-                }}>
-                  <i className={`ti ti-${g.icon}`} />
-                </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>
-                    {g.title}
-                  </div>
-                  <div style={{ fontSize: 12, color: 'var(--text2)', lineHeight: 1.5 }}>
-                    {g.desc}
-                  </div>
-                </div>
-                <div style={{ fontSize: 11, color: 'var(--text3)', flexShrink: 0, paddingTop: 2 }}>
-                  #{g.num}
-                </div>
-              </div>
-            </a>
-          ))}
-        </div>
+        {SECTIONS.map((s) => (
+          <section key={s.title} className="dc-sec" aria-label={s.title}>
+            <h2>{s.title}</h2>
+            <div className="ui-grid-3 dc-grid">
+              {s.guides.map((g) => (
+                <Link key={g.title} to={g.to} className="ui-card dc-card">
+                  <span className="dc-ic"><i className={`ti ti-${g.icon}`} aria-hidden="true" /></span>
+                  <span style={{ marginTop: 0 }}><b>{g.title}</b><span>{g.desc}</span></span>
+                </Link>
+              ))}
+            </div>
+          </section>
+        ))}
 
-        <div style={{
-          marginTop: 32, padding: '16px 18px', borderRadius: 12,
-          background: 'rgba(var(--accent-rgb),0.04)',
-          border: '1px solid rgba(var(--accent-rgb),0.12)',
-          fontSize: 12, color: 'var(--text2)', lineHeight: 1.6
-        }}>
-          <strong><i className="ti ti-book" style={{marginRight:4}} /> All guides are also available on GitHub:</strong>{' '}
-          <a href={DOCS_BASE} target="_blank" rel="noopener noreferrer"
-             style={{ color: 'var(--accent)', fontWeight: 600 }}>
-            github.com/tomwlee904-sys/Ogapay/tree/main/docs
-          </a>
+        <div className="ui-card dc-help">
+          <p><b>Can't find what you need?</b> Send us a ticket and we'll reply by email.</p>
+          <Link className="ui-btn ui-btn-dark" to="/support"><i className="ti ti-lifebuoy" /> Contact support</Link>
         </div>
       </div>
     </Layout>

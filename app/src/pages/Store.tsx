@@ -38,6 +38,7 @@ import FundJobWalletModal from '../components/FundJobWalletModal'
 import { SkeletonPage } from '../components/SkeletonLoader'
 import { formatCompact } from '../lib/currency'
 import { sized } from '../lib/img'
+import { itemCategoryLabel } from '../components/ItemCover'
 
 const OGAPAY_BLUE = 'var(--accent)'
 
@@ -240,7 +241,8 @@ function StorePage({
           <label className="ui-label" htmlFor="st-cat">Category</label>
           <select id="st-cat" className="ui-select" value={category} onChange={e => updateURL({ category: e.target.value || undefined, page: undefined })}>
             <option value="">All</option>
-            {allCategories.map(c => <option key={c} value={c}>{c}</option>)}
+            {/* OgaPay's own items come with codes (BADGE, SERVICE); show their names */}
+            {[...allCategories].sort((a, b) => itemCategoryLabel(a).localeCompare(itemCategoryLabel(b))).map(c => <option key={c} value={c}>{itemCategoryLabel(c)}</option>)}
           </select>
         </div>
         <div>

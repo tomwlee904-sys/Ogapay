@@ -176,7 +176,7 @@ export default function VaultHistory() {
       return (
         <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 8, padding: '8px 12px', fontSize: 12 }}>
           <div style={{ fontWeight: 700, marginBottom: 2 }}>{label}</div>
-          <div style={{ color: OGAPAY_BLUE, fontWeight: 600 }}>{(payload[0].value || 0).toLocaleString()} $PAY</div>
+          <div style={{ color: OGAPAY_BLUE, fontWeight: 600 }}>₦{(payload[0].value || 0).toLocaleString()}</div>
         </div>
       )
     }
@@ -196,7 +196,7 @@ export default function VaultHistory() {
             {/* Page header */}
             <div style={S.hero}>
               <h1 style={S.title}>Distribution History</h1>
-              <p style={S.sub}>View all past $PAY token distributions to holders</p>
+              <p style={S.sub}>Every vault distribution to $PAY holders, and what each wallet received. Amounts are in Naira.</p>
             </div>
 
             {/* Check your wallet rewards card */}
@@ -252,7 +252,7 @@ export default function VaultHistory() {
                 {/* 3 stat cards */}
                 <div style={S.statRow}>
                   <div style={S.statCard}>
-                    <div style={{ ...S.statNum, color: OGAPAY_BLUE }}>{(rewardsData?.totalReceivedPay || 0).toLocaleString()} $PAY</div>
+                    <div style={{ ...S.statNum, color: OGAPAY_BLUE }}>₦{(rewardsData?.totalReceivedNgn ?? rewardsData?.totalReceivedPay ?? 0).toLocaleString()}</div>
                     <div style={S.statLabel}>Total Received</div>
                   </div>
                   <div style={S.statCard}>
@@ -277,7 +277,7 @@ export default function VaultHistory() {
                 {/* Received in period + USD estimate */}
                 <div style={S.statRow}>
                   <div style={S.statCard}>
-                    <div style={{ ...S.statNum, color: OGAPAY_BLUE }}>{(rewardsData?.receivedInPeriodPay || 0).toLocaleString()} $PAY</div>
+                    <div style={{ ...S.statNum, color: OGAPAY_BLUE }}>₦{(rewardsData?.receivedInPeriodNgn ?? rewardsData?.receivedInPeriodPay ?? 0).toLocaleString()}</div>
                     <div style={S.statLabel}>Received in Period</div>
                   </div>
                   <div style={S.statCard}>
@@ -306,7 +306,7 @@ export default function VaultHistory() {
                       </ResponsiveContainer>
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--text3)' }}>
-                      <span>USD estimate uses the current $PAY price.</span>
+                      <span>USD estimate uses today's Naira rate.</span>
                       <span>Grouped in UTC.</span>
                     </div>
                   </>
@@ -369,8 +369,8 @@ export default function VaultHistory() {
                           <div style={{ fontSize: 12 }}>{batch.distributedAt ? new Date(batch.distributedAt).toLocaleString() : '—'}</div>
                         </div>
                         <div>
-                          <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--text3)', marginBottom: 2 }}>Total $PAY</div>
-                          <div style={{ fontSize: 12, fontWeight: 700 }}>{(batch.totalPay || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                          <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--text3)', marginBottom: 2 }}>Total shared</div>
+                          <div style={{ fontSize: 12, fontWeight: 700 }}>₦{(batch.totalNgn ?? batch.totalPay ?? 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
                           <span style={{
@@ -402,7 +402,7 @@ export default function VaultHistory() {
                               {batchDetail.map((w: any, i: number) => (
                                 <div key={i} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: 8, padding: '8px 0', borderBottom: i < batchDetail.length - 1 ? '1px solid var(--border)' : 'none', fontSize: 12, alignItems: 'center' }}>
                                   <span style={{ fontFamily: 'monospace', fontSize: 11, color: OGAPAY_BLUE }}>{truncateWallet(w.wallet || w.address || '')}{w.you && <b style={{ marginLeft: 6, fontFamily: 'inherit', fontSize: 10, color: 'var(--text)', background: 'var(--card2)', borderRadius: 999, padding: '1px 7px' }}>You</b>}</span>
-                                  <span style={{ textAlign: 'right' as const, fontWeight: 600 }}>{(w.amount || w.shareNgp || 0).toLocaleString()}</span>
+                                  <span style={{ textAlign: 'right' as const, fontWeight: 600 }}>₦{(w.amount || w.shareNgp || 0).toLocaleString()}</span>
                                   <span style={{ textAlign: 'right' as const, color: 'var(--text2)', fontSize: 11 }}>{(w.vaultSharePct || 0).toFixed(4)}%</span>
                                 </div>
                               ))}
