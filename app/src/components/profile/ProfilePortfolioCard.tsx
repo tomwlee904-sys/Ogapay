@@ -3,6 +3,7 @@ import { apiRequest } from '../../lib/api'
 import { uploadImage } from '../../lib/upload'
 import '../../styles/profile-own.css'
 import '../../styles/profile-public.css'
+import { sized } from '../../lib/img'
 
 type Item = { id: string; title: string; description: string | null; url: string | null; imageUrl: string | null }
 const blank = { title: '', description: '', url: '', imageUrl: '' }
@@ -72,7 +73,7 @@ export default function ProfilePortfolioCard() {
           <div className="po-pf">
             {items.map((it) => (
               <div className="po-pf-item" key={it.id}>
-                <div className="img">{it.imageUrl ? <img src={it.imageUrl} alt="" loading="lazy" /> : <i className="ti ti-photo" />}</div>
+                <div className="img">{it.imageUrl ? <img src={sized(it.imageUrl, 400)} alt="" loading="lazy" /> : <i className="ti ti-photo" />}</div>
                 <div className="b"><b>{it.title}</b>{it.description && <p>{it.description}</p>}</div>
                 <div className="acts">
                   <button className="po-btn" onClick={() => open(it)}>Edit</button>

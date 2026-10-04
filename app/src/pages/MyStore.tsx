@@ -9,6 +9,7 @@ import '../styles/profile-public.css'
 import '../styles/hire.css'
 import '../styles/edit-profile.css'
 import '../styles/my-store.css'
+import { sized } from '../lib/img'
 
 type Product = {
   id: string; name: string; description: string; price: number; currency: string; imageUrl: string | null
@@ -128,7 +129,7 @@ export default function MyStore() {
             </div>
           ) : products.map((p) => (
             <div className="up-card ms2-prod" key={p.id}>
-              <div className="ms2-thumb">{p.imageUrl ? <img src={p.imageUrl} alt="" loading="lazy" /> : <i className="ti ti-package" />}</div>
+              <div className="ms2-thumb">{p.imageUrl ? <img src={sized(p.imageUrl, 72)} alt="" loading="lazy" /> : <i className="ti ti-package" />}</div>
               <div style={{ minWidth: 0 }}>
                 <h3>{p.name}</h3>
                 <div className="meta">

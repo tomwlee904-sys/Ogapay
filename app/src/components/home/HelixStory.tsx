@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import "../../styles/helix.css";
+import { sized } from '../../lib/img'
 
 /* The OgaPay ecosystem, laid out like wurk.fun's helix: a particle double helix
    pinned under the header (at most 800px tall, so tall screens and phones in
@@ -349,7 +350,7 @@ export default function HelixStory({ panels, jobs }: { panels: HelixPanel[]; job
           <div className="hx-layer" aria-hidden="true">
             {chips.map((j, k) => (
               <div key={j.id || k} className="hx-chip" ref={(el) => { chipEls.current[k] = el; }} title={`${j.poster?.username} created a job`}>
-                <span className="hx-av">{j.poster?.avatarUrl ? <img src={j.poster.avatarUrl} alt="" loading="lazy" /> : (j.poster?.username || "?")[0].toUpperCase()}</span>
+                <span className="hx-av">{j.poster?.avatarUrl ? <img src={sized(j.poster.avatarUrl, 26, true)} alt="" loading="lazy" /> : (j.poster?.username || "?")[0].toUpperCase()}</span>
                 <span><b>Created a job</b><small>{ago(j.createdAt)}</small></span>
               </div>
             ))}

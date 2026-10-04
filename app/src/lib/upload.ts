@@ -35,12 +35,13 @@ export async function uploadImage(
 
   // Compress images before upload
   let uploadFile = file
-  if (isImage && purpose !== 'avatars') {
+  if (isImage && file.type !== 'image/gif') {
     try {
       const imageCompression = (await import('browser-image-compression')).default
+      const avatar = purpose === 'avatars' || purpose === 'community-avatars'
       uploadFile = await imageCompression(file, {
-        maxSizeMB: 0.5,
-        maxWidthOrHeight: 800,
+        maxSizeMB: avatar ? 0.2 : 0.5,
+        maxWidthOrHeight: avatar ? 512 : 1600,
         useWebWorker: true,
       })
     } catch {

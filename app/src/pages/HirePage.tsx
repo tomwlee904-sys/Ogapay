@@ -7,6 +7,7 @@ import { useAuth } from "../context/AuthContext"
 import { openSignIn } from "../lib/signin"
 import "../styles/profile-public.css"
 import "../styles/hire.css"
+import { sized } from '../lib/img'
 
 const FEE_PCT = 10 // same as the job fee (added on top; the worker gets the full budget)
 const MIN_BUDGET = 100
@@ -156,7 +157,7 @@ export default function HirePage() {
               <div className="hr-sec-h"><h2>Your creator</h2>{worker && <Link to={`/user/${worker.username}`}>View profile</Link>}</div>
               {worker ? (
                 <div className="hr-who">
-                  {worker.avatarUrl ? <img className="up-avatar" src={worker.avatarUrl} alt="" /> : <div className="up-avatar">{(worker.firstName?.[0] || worker.username[0]).toUpperCase()}</div>}
+                  {worker.avatarUrl ? <img className="up-avatar" src={sized(worker.avatarUrl, 128, true)} alt="" /> : <div className="up-avatar">{(worker.firstName?.[0] || worker.username[0]).toUpperCase()}</div>}
                   <div style={{ minWidth: 0 }}>
                     <b>{name}</b>
                     <small>@{worker.username} · {worker.workerProfile?.tasksCompleted ?? 0} jobs done{worker.workerProfile?.totalRatings ? ` · ${Number(worker.workerProfile.avgRating).toFixed(1)} rating` : ""}</small>

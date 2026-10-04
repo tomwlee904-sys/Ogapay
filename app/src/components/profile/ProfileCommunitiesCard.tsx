@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { apiRequest } from '../../lib/api'
 import '../../styles/profile-own.css'
 import '../../styles/profile-public.css'
+import { sized } from '../../lib/img'
 
 // Your communities, plus any invites waiting for an answer
 export default function ProfileCommunitiesCard() {
@@ -52,7 +53,7 @@ export default function ProfileCommunitiesCard() {
         ) : (
           list.slice(0, 5).map((c) => (
             <Link className="po-row" to={`/communities/${c.communityId}`} key={c.communityId}>
-              <span className="ic" style={{ background: c.accentColor || 'var(--text)' }}>{c.iconUrl ? <img src={c.iconUrl} alt="" /> : c.name.slice(0, 2).toUpperCase()}</span>
+              <span className="ic" style={{ background: c.accentColor || 'var(--text)' }}>{c.iconUrl ? <img src={sized(c.iconUrl, 36, true)} alt="" /> : c.name.slice(0, 2).toUpperCase()}</span>
               <span className="mid"><b>{c.name}</b><small>{c.memberCount} members</small></span>
               {c.role !== 'MEMBER' && <span className="po-tag">{c.role}</span>}
             </Link>

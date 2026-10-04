@@ -3,6 +3,8 @@ import ReactDOM from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import App from './App'
 import { reloadForUpdate } from './lib/staleBuild'
+// Icons: the Tabler font cut down to the icons we use (scripts/icons-subset.mjs)
+import './styles/icons/tabler-icons.css'
 import './styles/tokens.css'
 import './styles/system.css'
 import './styles/variables.css'

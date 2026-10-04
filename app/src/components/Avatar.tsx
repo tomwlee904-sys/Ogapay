@@ -1,4 +1,5 @@
 ﻿import { useState } from 'react'
+import { sized } from '../lib/img'
 
 interface Props {
   src?: string | null
@@ -32,7 +33,7 @@ export default function Avatar({ src, name = '?', size = 36 }: Props) {
 
   if (src && !failed) {
     return (
-      <img loading="lazy" src={src}
+      <img loading="lazy" src={sized(src, size, true)}
         alt=""
         width={size}
         height={size}

@@ -54,7 +54,9 @@ export default function NetworkFlow() {
     const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)')
     const small = window.innerWidth < 768
     const STEPS = small ? 120 : 180 // points per fibre
-    let visible = true, frame = 0, pal = isDark() ? DARK : LIGHT, lastT = 0, prevNow = 0
+    // Phones: 30 frames a second is plenty here and halves the work
+    const minGap = small ? 1000 / 30 - 2 : 0
+    let visible = true, frame = 0, pal = isDark() ? DARK : LIGHT, lastT = 0, prevNow = 0, lastDraw = 0, dead = false
     let unit = 2 // frame units per CSS pixel (set on resize)
     // Pointer over the hero, -1..1 on each axis; `ptr` eases toward `target`
     const ptr = [0, 0], target = [0, 0]
@@ -139,7 +141,8 @@ export default function NetworkFlow() {
     const tick = (now: number) => {
       const dt = prevNow ? Math.min(.1, (now - prevNow) / 1000) : 0
       prevNow = now
-      if (visible && !reduced.matches) {
+      if (visible && !reduced.matches && now - lastDraw >= minGap) {
+        lastDraw = now
         const ease = 1 - Math.exp(-6 * dt)
         ptr[0] += (target[0] - ptr[0]) * ease; ptr[1] += (target[1] - ptr[1]) * ease
         lastT = now / 1000; draw(lastT)
@@ -169,8 +172,14 @@ export default function NetworkFlow() {
     box.addEventListener('pointerleave', onLeave, { passive: true })
     window.addEventListener('resize', resize, { passive: true })
     resize()
-    frame = requestAnimationFrame(tick)
+    // A still frame shows straight away; the motion starts once the page has
+    // loaded, so it doesn't compete with loading the page on slow phones
+    const start = () => { if (!dead && !frame) frame = requestAnimationFrame(tick) }
+    const idle = () => ('requestIdleCallback' in window ? (window as any).requestIdleCallback(start, { timeout: 1500 }) : setTimeout(start, 200))
+    if (document.readyState === 'complete') idle()
+    else window.addEventListener('load', idle, { once: true })
     return () => {
+      dead = true; window.removeEventListener('load', idle)
       cancelAnimationFrame(frame); io.disconnect(); ro?.disconnect(); mo.disconnect()
       document.removeEventListener('visibilitychange', onVis); reduced.removeEventListener?.('change', onReduced)
       box.removeEventListener('pointermove', onMove); box.removeEventListener('pointerleave', onLeave)

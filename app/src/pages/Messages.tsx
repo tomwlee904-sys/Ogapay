@@ -4,6 +4,7 @@ import Layout from '../components/Layout'
 import { apiRequest } from '../lib/api'
 import { useAuth } from '../context/AuthContext'
 import '../styles/messages.css'
+import { sized } from '../lib/img'
 
 type Person = { id: string; username: string | null; name: string; avatarUrl: string | null }
 type Conv = { id: string; participants: Person[]; lastMessage: { content: string; createdAt: string; senderId: string } | null; unread: number; updatedAt: string }
@@ -25,7 +26,7 @@ function Linkified({ text }: { text: string }) {
 }
 
 function Avatar({ p }: { p?: Person }) {
-  return <span className="ms-av">{p?.avatarUrl ? <img src={p.avatarUrl} alt="" /> : (p?.name?.trim()?.[0] || p?.username?.[0] || '?').toUpperCase()}</span>
+  return <span className="ms-av">{p?.avatarUrl ? <img src={sized(p.avatarUrl, 40, true)} alt="" /> : (p?.name?.trim()?.[0] || p?.username?.[0] || '?').toUpperCase()}</span>
 }
 
 export default function Messages() {

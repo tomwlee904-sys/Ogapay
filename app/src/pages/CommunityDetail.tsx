@@ -7,6 +7,7 @@ import { uploadImage } from '../lib/upload'
 import { useToast } from '../components/Toast'
 import '../styles/profile-public.css'
 import '../styles/community.css'
+import { sized } from '../lib/img'
 
 // Community page, ported from the June version (leaderboard, open and completed
 // jobs, members-only chat, owner settings) onto the current design. The live page
@@ -36,7 +37,7 @@ const roleLabel = (r: string) => (r === 'OWNER' ? 'Owner' : r === 'ADMIN' ? 'Adm
 const when = (d: string) => new Date(d).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
 
 function Face({ url, name, size = 34 }: { url: string | null; name: string; size?: number }) {
-  return <span className="cm2-face" style={{ width: size, height: size, fontSize: size * 0.36 }}>{url ? <img src={url} alt="" loading="lazy" /> : initials(name)}</span>
+  return <span className="cm2-face" style={{ width: size, height: size, fontSize: size * 0.36 }}>{url ? <img src={sized(url, size, true)} alt="" loading="lazy" /> : initials(name)}</span>
 }
 
 export default function CommunityDetail() {
@@ -149,9 +150,9 @@ export default function CommunityDetail() {
         <div className="up-crumb"><button onClick={() => navigate('/communities')}><i className="ti ti-arrow-left" /> Communities</button><span>{c.isPublic ? 'Public' : 'Private'}{cat ? ` · ${cat}` : ''}</span></div>
 
         <section className="up-card cm2-head">
-          <div className="cm2-cover" style={c.coverImage ? { backgroundImage: `url("${encodeURI(c.coverImage)}")` } : { background: `linear-gradient(135deg, ${accent}, color-mix(in srgb, ${accent} 35%, #0a0a0a))` }} />
+          <div className="cm2-cover" style={c.coverImage ? { backgroundImage: `url("${encodeURI(sized(c.coverImage, 1100))}")` } : { background: `linear-gradient(135deg, ${accent}, color-mix(in srgb, ${accent} 35%, #0a0a0a))` }} />
           <div className="cm2-id">
-            <span className="cm2-logo" style={{ background: accent }}>{c.iconUrl ? <img src={c.iconUrl} alt="" /> : initials(c.name)}</span>
+            <span className="cm2-logo" style={{ background: accent }}>{c.iconUrl ? <img src={sized(c.iconUrl, 96, true)} alt="" /> : initials(c.name)}</span>
             <div className="cm2-title">
               <h1>{c.name}</h1>
               <div className="cm2-sub">

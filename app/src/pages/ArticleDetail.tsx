@@ -4,6 +4,7 @@ import { useTheme } from '../context/ThemeContext'
 import { apiRequest } from '../lib/api'
 import Footer from '../components/Footer'
 import Drawer from '../components/Drawer'
+import { sized } from '../lib/img'
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
@@ -172,7 +173,7 @@ export default function ArticleDetail() {
           <span>{estimateReadTime(post.content || '')}</span>
         </div>
 
-        <div style={{ height: 400, borderRadius: 16, overflow: 'hidden', marginBottom: 40, background: post.coverColor || 'var(--accent)', backgroundImage: post.coverImage ? `url(${post.coverImage})` : undefined, backgroundSize: 'cover', backgroundPosition: 'center' }}>
+        <div style={{ height: 400, borderRadius: 16, overflow: 'hidden', marginBottom: 40, background: post.coverColor || 'var(--accent)', backgroundImage: post.coverImage ? `url(${sized(post.coverImage, 1100)})` : undefined, backgroundSize: 'cover', backgroundPosition: 'center' }}>
           {!post.coverImage && (
             <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               {(() => {
@@ -233,7 +234,7 @@ export default function ArticleDetail() {
               const inits = ((rp.author?.firstName?.[0] || '') + (rp.author?.lastName?.[0] || '')) || 'OG'
               return (
                 <div key={rp.id} onClick={() => navigate(`/blog/${rp.slug}`)} style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 14, overflow: 'hidden', cursor: 'pointer' }}>
-                  <div style={{ height: 160, background: rp.coverColor || 'var(--accent)', backgroundImage: rp.coverImage ? `url(${rp.coverImage})` : undefined, backgroundSize: 'cover', backgroundPosition: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{ height: 160, background: rp.coverColor || 'var(--accent)', backgroundImage: rp.coverImage ? `url(${sized(rp.coverImage, 360)})` : undefined, backgroundSize: 'cover', backgroundPosition: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     {!rp.coverImage && (() => {
                       const cat = (rp.category || '').toLowerCase();
                       const s = "rgba(255,255,255,0.3)";

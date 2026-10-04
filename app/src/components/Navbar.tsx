@@ -8,6 +8,7 @@ import { apiRequest } from '../lib/api'
 import { useWalletBalance } from '../context/WalletBalanceContext'
 import { Logo } from './Logo'
 import { openSignIn } from '../lib/signin'
+import { sized } from '../lib/img'
 
 const WALLET_CURRENCIES = ['SOL', 'USDC', 'USDT', 'NGN'] as const
 
@@ -117,7 +118,7 @@ export default function Navbar({ onMenuToggle }: NavbarProps) {
               </button>
               <button className="profile-btn" onClick={() => navigate('/profile')} aria-label="Profile">
                 {user?.avatar ? (
-                  <img src={user.avatar} alt={user.displayName || user.username} />
+                  <img src={sized(user.avatar, 36, true)} alt={user.displayName || user.username} />
                 ) : (
                   <Silhouette />
                 )}

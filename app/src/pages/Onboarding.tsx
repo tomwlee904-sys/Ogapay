@@ -176,7 +176,6 @@ export default function OgaPayOnboarding() {
 
   return (
     <>
-      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css" />
       <style>{css}</style>
 
       <div className="og-wrap">

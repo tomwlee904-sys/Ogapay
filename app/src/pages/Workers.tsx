@@ -5,6 +5,7 @@ import { apiRequest } from '../lib/api'
 import '../styles/profile-public.css'
 import '../styles/workers.css'
 import { PremiumMark } from '../components/Perks'
+import { sized } from '../lib/img'
 
 // Find workers. Ported from the June page (the live one showed six made-up people).
 // Fixed on the way: its page count never worked because the API helper drops
@@ -119,7 +120,7 @@ export default function Workers() {
                 return (
                   <section key={w.id} className="up-card wk2-card">
                     <Link to={`/user/${w.username}`} className="wk2-top">
-                      <span className={`wk2-av${w.frame ? ' oga-frame' : ''}`}>{w.avatarUrl ? <img src={w.avatarUrl} alt="" loading="lazy" /> : initials(name)}</span>
+                      <span className={`wk2-av${w.frame ? ' oga-frame' : ''}`}>{w.avatarUrl ? <img src={sized(w.avatarUrl, 56, true)} alt="" loading="lazy" /> : initials(name)}</span>
                       <span className="wk2-id">
                         <strong>{name}{w.premium && <PremiumMark />}</strong>
                         <small>@{w.username}{w.level ? ` · ${level(w.level)}` : ''}</small>

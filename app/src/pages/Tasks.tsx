@@ -13,6 +13,7 @@ import { useCurrency } from '../context/CurrencyContext'
 import { SkeletonPage, injectSkeletonStyles } from "../components/SkeletonLoader"
 import ApplyModal from '../components/ApplyModal'
 import { HomeJobCard } from '../components/home/HomeCards'
+import { sized } from '../lib/img'
 
 const OGAPAY_BLUE = 'var(--accent)'
 
@@ -216,7 +217,7 @@ function JobDetailModal({ job, onClose, onApply }: { job: any; onClose: () => vo
         <div className='listed-by-header' style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', padding: '10px 14px', marginBottom: 12, background: 'linear-gradient(135deg, rgba(59,91,219,0.24) 0%, rgba(255,255,255,0.45) 50%, rgba(16,185,129,0.24) 100%)', borderRadius: 12, border: '1px solid var(--border)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <div style={{ width: 36, height: 36, borderRadius: '50%', background: OGAPAY_BLUE, color: 'var(--on-accent)', display: 'grid', placeItems: 'center', fontSize: 12, fontWeight: 900, overflow: 'hidden', flexShrink: 0, border: '2px solid white' }}>
-              {(job.poster?.avatarUrl || job.poster?.avatar || job.creatorAvatar) ? <img src={job.poster?.avatarUrl || job.poster?.avatar || job.creatorAvatar} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : formatAddress(job.creatorName || job.creator?.username || job.creator || '')}
+              {(job.poster?.avatarUrl || job.poster?.avatar || job.creatorAvatar) ? <img src={sized(job.poster?.avatarUrl || job.poster?.avatar || job.creatorAvatar, 40, true)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : formatAddress(job.creatorName || job.creator?.username || job.creator || '')}
             </div>
             <div>
               <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 2 }}>Listed by</div>

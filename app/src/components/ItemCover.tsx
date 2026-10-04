@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { sized } from '../lib/img'
 
 /* Cover for a store item. A seller's own picture is shown as is; a missing or
    broken picture, or a demo placeholder (random picsum.photos images, the old
@@ -41,8 +42,9 @@ export function isPlaceholderImage(src?: string | null) {
   return !src || PLACEHOLDER.test(src)
 }
 
-export default function ItemCover({ src, category, title, className = '', alt = '' }: {
+export default function ItemCover({ src, category, title, className = '', alt = '', width = 640 }: {
   src?: string | null; category?: string | null; title?: string | null; className?: string; alt?: string
+  width?: number // largest width it's shown at, in CSS pixels
 }) {
   const [broken, setBroken] = useState(false)
   const look = coverLook(category, title)
@@ -50,7 +52,7 @@ export default function ItemCover({ src, category, title, className = '', alt = 
   return (
     <div className={`o-cover ${className}`.trim()}>
       {usePicture
-        ? <img src={src!} alt={alt} loading="lazy" onError={() => setBroken(true)} />
+        ? <img src={sized(src, width)} alt={alt} loading="lazy" onError={() => setBroken(true)} />
         : (
           <div className={`o-cover-art tone-${look.tone}`} role={alt ? 'img' : undefined} aria-label={alt || undefined}>
             <span className="o-cover-tile"><i className={`ti ti-${look.icon}`} /></span>

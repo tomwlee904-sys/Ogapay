@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { openSignIn } from '../lib/signin'
 import { useWalletBalance } from '../context/WalletBalanceContext'
 import { useCurrency } from '../context/CurrencyContext'
+import { sized } from '../lib/img'
 
 interface DrawerProps {
   open: boolean
@@ -121,7 +122,7 @@ export default function Drawer({ open, onClose }: DrawerProps) {
               <div className="oga-user-card" onClick={() => { onClose(); navigate('/profile'); }}>
                 <div className="oga-user-card-avatar">
                   {user?.avatar ? (
-                    <img src={user.avatar} alt="" />
+                    <img src={sized(user.avatar, 48, true)} alt="" />
                   ) : (
                     <span>{(user?.displayName || user?.username || '?').charAt(0).toUpperCase()}</span>
                   )}

@@ -5,6 +5,7 @@ import { apiRequest } from '../lib/api'
 import { useWalletBalance } from '../context/WalletBalanceContext'
 import '../styles/profile-public.css'
 import '../styles/my-store.css'
+import { sized } from '../lib/img'
 
 // What the user bought in the store. The payment is held by OgaPay until they
 // confirm they received it, or 3 days after the seller marks it delivered; until
@@ -125,7 +126,7 @@ export default function StoreOrders() {
             return (
               <div className="up-card ms2-order" key={o.id}>
                 <div className="who">
-                  <span className="ms2-thumb so-thumb">{o.product.imageUrl ? <img src={o.product.imageUrl} alt="" loading="lazy" /> : <i className="ti ti-package" />}</span>
+                  <span className="ms2-thumb so-thumb">{o.product.imageUrl ? <img src={sized(o.product.imageUrl, 44, true)} alt="" loading="lazy" /> : <i className="ti ti-package" />}</span>
                   <div style={{ minWidth: 0 }}>
                     <b><Link to={`/store/${o.product.id}`} style={{ color: 'inherit', textDecoration: 'none' }}>{o.product.name}</Link>{o.quantity > 1 ? ` × ${o.quantity}` : ''}</b>
                     <small>

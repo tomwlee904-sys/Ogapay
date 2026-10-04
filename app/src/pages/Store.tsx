@@ -37,6 +37,7 @@ import { useWalletBalance } from '../context/WalletBalanceContext'
 import FundJobWalletModal from '../components/FundJobWalletModal'
 import { SkeletonPage } from '../components/SkeletonLoader'
 import { formatCompact } from '../lib/currency'
+import { sized } from '../lib/img'
 
 const OGAPAY_BLUE = 'var(--accent)'
 
@@ -65,7 +66,7 @@ function SafeImage({ src, alt, style }: { src: string; alt: string; style?: Reac
       </div>
     )
   }
-  return <img src={src} alt={alt} loading="lazy" style={{ ...style, position: 'absolute', inset: 0 }} onError={() => setFailed(true)} />
+  return <img src={sized(src, 320)} alt={alt} loading="lazy" style={{ ...style, position: 'absolute', inset: 0 }} onError={() => setFailed(true)} />
 }
 
 interface StoreItem {
@@ -440,7 +441,7 @@ export default function Store() {
                 background: 'var(--bg2)', overflow: 'hidden', flexShrink: 0,
               }}>
                 {buyingProduct.image ? (
-                  <img src={buyingProduct.image} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  <img src={sized(buyingProduct.image, 480)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 ) : (
                   <div style={{ display: 'grid', placeItems: 'center', height: '100%', color: 'var(--text3)', fontSize: 20 }}>
                     <i className="ti ti-box" />

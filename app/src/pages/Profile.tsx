@@ -25,6 +25,7 @@ import TabNotificationsContent from '../components/ProfileNotificationsTab'
 import TabReferralsContent from '../components/ProfileReferralsTab'
 import TabMyTasksContent from '../components/ProfileMyTasksTab'
 import TabEarningsContent from '../components/ProfileEarningsTab'
+import { sized } from '../lib/img'
 const Icon = ({ n, s = 16, c }: { n: any; s?: number; c?: any }) => (
   <i className={`ti ti-${n}`} style={{ fontSize: s, color: c || "var(--text2)", lineHeight: 1, flexShrink: 0 }} />
 );
@@ -752,7 +753,7 @@ export default function Profile() {
                   ) : (
                     <>
                       <div style={{width:64,height:64,borderRadius:'50%',background:'var(--text)',color:'var(--bg)',fontSize:22,fontWeight:800,display:'grid',placeItems:'center',flexShrink:0}}>
-                        {user?.avatarUrl ? <img src={user.avatarUrl} alt="" loading="lazy" style={{width:64,height:64,borderRadius:'50%',objectFit:'cover'}} /> : (user?.firstName?.[0] || 'U') + (user?.lastName?.[0] || '')}
+                        {user?.avatarUrl ? <img src={sized(user.avatarUrl, 64, true)} alt="" loading="lazy" style={{width:64,height:64,borderRadius:'50%',objectFit:'cover'}} /> : (user?.firstName?.[0] || 'U') + (user?.lastName?.[0] || '')}
                       </div>
                       <div>
                         <div style={{fontSize:17,fontWeight:800}}>{user?.firstName || 'User'} {user?.lastName || ''}</div>

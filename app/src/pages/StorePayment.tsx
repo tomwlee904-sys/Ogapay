@@ -7,6 +7,7 @@ import { useWalletBalance } from '../context/WalletBalanceContext'
 import { API_BASE, apiRequest, getAccessToken } from '../lib/api'
 import { CURRENCY_SYMBOLS, type Currency } from '../lib/currency'
 import '../styles/checkout.css'
+import { sized } from '../lib/img'
 
 // Store checkout. A purchase takes the item's price from the buyer's wallet in the
 // item's currency (POST /store/:id/purchase); there is no other payment path, so the
@@ -157,7 +158,7 @@ export default function StorePayment() {
         <div className="sc-grid">
           <div className="sc-main">
             <section className="ui-card sc-product">
-              <div className="sc-thumb">{item.image ? <img src={item.image} alt="" /> : <i className="ti ti-package" />}</div>
+              <div className="sc-thumb">{item.image ? <img src={sized(item.image, 320)} alt="" /> : <i className="ti ti-package" />}</div>
               <div className="sc-product-t">
                 <h2>{item.title}</h2>
                 {item.official ? <p className="sc-by">Sold by OgaPay</p> : <p className="sc-by">Sold by <Link to={`/user/${item.seller}`}>@{item.seller}</Link></p>}

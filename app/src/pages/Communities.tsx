@@ -3,13 +3,14 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { apiRequest, getAccessToken } from '../lib/api'
 import { openSignIn } from '../lib/signin'
+import { sized } from '../lib/img'
 
 const filters = ['All', 'Trending', 'New', 'Crypto', 'Business', 'Content', 'Design', 'Marketing']
 
 // The community's own cover picture; the colour gradient only when it has none
 // (the cards used to ignore the cover, so every card was a black block)
 function coverStyle(c: any): CSSProperties {
-  const url = c.coverImage || c.coverUrl
+  const url = sized(c.coverImage || c.coverUrl, 400)
   return url
     ? { backgroundImage: `url("${String(url).replace(/"/g, '%22')}")`, backgroundSize: 'cover', backgroundPosition: 'center' }
     // no picture: a soft tint (the old gradient ran into the accent colour, which is black)
@@ -17,7 +18,7 @@ function coverStyle(c: any): CSSProperties {
 }
 
 function CardAvatar({ c }: { c: any }) {
-  return <div className="cca">{c.iconUrl ? <img src={c.iconUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} /> : c.initials}</div>
+  return <div className="cca">{c.iconUrl ? <img src={sized(c.iconUrl, 56, true)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} /> : c.initials}</div>
 }
 
 export default function Communities() {
@@ -148,7 +149,7 @@ export default function Communities() {
           <div className="ch-mine">
             {mine.map((m) => (
               <button key={m.communityId} className="ch-mine-row" onClick={() => navigate('/communities/' + (m.slug || m.communityId))}>
-                <span className="ch-mine-av" style={{ background: m.accentColor || 'var(--text)' }}>{m.iconUrl ? <img src={m.iconUrl} alt="" /> : (m.name || '?').slice(0, 2).toUpperCase()}</span>
+                <span className="ch-mine-av" style={{ background: m.accentColor || 'var(--text)' }}>{m.iconUrl ? <img src={sized(m.iconUrl, 40, true)} alt="" /> : (m.name || '?').slice(0, 2).toUpperCase()}</span>
                 <span className="ch-mine-t"><strong>{m.name}</strong><span>{(m.memberCount || 0).toLocaleString()} member{m.memberCount === 1 ? '' : 's'}{m.isPublic ? '' : ' · private'}</span></span>
                 <span className="ch-role">{m.role === 'OWNER' ? 'Owner' : m.role === 'ADMIN' ? 'Admin' : m.role === 'MODERATOR' ? 'Moderator' : 'Member'}</span>
               </button>

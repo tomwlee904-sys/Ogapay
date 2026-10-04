@@ -4,6 +4,7 @@ import { useAuth } from "../context/AuthContext"
 import Layout from "../components/Layout"
 import { apiRequest } from "../lib/api"
 import { openSignIn } from "../lib/signin"
+import { sized } from '../lib/img'
 
 const categories = ['All', 'News', 'Businesses', 'Freelancers', 'Case Studies']
 
@@ -273,7 +274,7 @@ export default function Blog() {
                   <a key={post.id} href={`/blog/${post.slug}`} onClick={(e) => { e.preventDefault(); navigate(`/blog/${post.slug}`) }} style={{ background: 'var(--card)', border: '0.5px solid var(--border)', borderRadius: 16, overflow: 'hidden', cursor: 'pointer', textDecoration: 'none', color: 'inherit', display: 'flex', flexDirection: 'column' }}>
                     <div style={{ height: 200, background: 'var(--bg2)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
                       {post.coverImage
-                        ? <img src={post.coverImage} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        ? <img src={sized(post.coverImage, 640)} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                         : <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" strokeWidth="1.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" /></svg>}
                     </div>
                     <div style={{ padding: '1.25rem' }}>
@@ -282,7 +283,7 @@ export default function Blog() {
                       {post.excerpt && <p style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.6, margin: '0 0 10px' }}>{post.excerpt}</p>}
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--text2)', flexWrap: 'wrap' }}>
                         {post.author?.avatarUrl
-                          ? <img src={post.author.avatarUrl} alt="" style={{ width: 22, height: 22, borderRadius: '50%', objectFit: 'cover' }} />
+                          ? <img src={sized(post.author.avatarUrl, 22, true)} alt="" style={{ width: 22, height: 22, borderRadius: '50%', objectFit: 'cover' }} />
                           : <div style={{ width: 22, height: 22, borderRadius: '50%', background: 'var(--text)', color: 'var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 600 }}>{initials}</div>}
                         <span>{author}</span>
                         <span>·</span>

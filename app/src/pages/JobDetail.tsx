@@ -14,6 +14,7 @@ import Money from '../components/Money'
 import { formatMoney } from '../lib/money'
 import { jobDeadline, deadlineLabel, deadlineDate } from '../lib/deadline'
 import { categoryLabel } from '../lib/categories'
+import { sized } from '../lib/img'
 
 const BRAND = 'var(--accent)'
 const BRAND_LIGHT = 'rgba(var(--accent-rgb),0.10)'
@@ -860,7 +861,7 @@ function WurkJobDetailView(props: any) {
           <section className="wjd-panel wjd-agent">
             <div className="wjd-agent-left">
               <div className="wjd-avatar">
-                {job.brandAvatar ? <img src={job.brandAvatar} alt="" /> : agentInitial}
+                {job.brandAvatar ? <img src={sized(job.brandAvatar, 56, true)} alt="" /> : agentInitial}
               </div>
               <div>
                 <div className="wjd-kicker">Listed by</div>
@@ -1033,7 +1034,7 @@ function WurkJobDetailView(props: any) {
                         {submissions.map((sub: any) => (
                           <div className="wjd-sub-item" key={sub.id} onClick={() => setSelectedSub(sub)}>
                             <div className="wjd-sub-avatar">
-                              {sub.worker?.avatarUrl ? <img src={sub.worker.avatarUrl} alt="" /> : (sub.worker?.username || 'U')[0].toUpperCase()}
+                              {sub.worker?.avatarUrl ? <img src={sized(sub.worker.avatarUrl, 32, true)} alt="" /> : (sub.worker?.username || 'U')[0].toUpperCase()}
                             </div>
                             <div style={{ flex: 1, minWidth: 0 }}>
                               <div style={{ color: 'var(--text,#0f172a)', fontSize: 14, fontWeight: 700 }}>{sub.worker?.username || sub.worker?.firstName || 'Anonymous'}</div>
@@ -1209,7 +1210,7 @@ function WurkJobDetailView(props: any) {
             <div className="wjd-report-body">
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
                 <div className="wjd-sub-avatar" style={{ width: 44, height: 44, fontSize: 18 }}>
-                  {selectedSub.worker?.avatarUrl ? <img src={selectedSub.worker.avatarUrl} alt="" style={{ width: 44, height: 44, borderRadius: '50%', objectFit: 'cover' }} /> : (selectedSub.worker?.username || 'U')[0].toUpperCase()}
+                  {selectedSub.worker?.avatarUrl ? <img src={sized(selectedSub.worker.avatarUrl, 44, true)} alt="" style={{ width: 44, height: 44, borderRadius: '50%', objectFit: 'cover' }} /> : (selectedSub.worker?.username || 'U')[0].toUpperCase()}
                 </div>
                 <div>
                   <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text,#0f172a)' }}>{selectedSub.worker?.username || selectedSub.worker?.firstName || 'Anonymous'}</div>

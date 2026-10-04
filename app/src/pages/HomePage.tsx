@@ -17,6 +17,7 @@ import { useCurrency } from "../context/CurrencyContext";
 import "../styles/homepage.css";
 import "../styles/home-v2.css";
 import "../styles/home-cards.css";
+import { sized } from '../lib/img'
 
 /* ─── helpers ──────────────────────────────────────────────────────────────── */
 
@@ -174,7 +175,7 @@ function Ticker({ jobs }: { jobs: any[] }) {
           const name = p.username || p.firstName || t.creatorName || "OgaPay";
           return (
             <Link key={`${t.id}-${i}`} to={`/tasks/${t.id}`} className="hv-tick" aria-hidden={i >= items.length}>
-              <span className="hv-tick-av">{p.avatarUrl ? <img src={p.avatarUrl} alt="" loading="lazy" /> : name.charAt(0).toUpperCase()}</span>
+              <span className="hv-tick-av">{p.avatarUrl ? <img src={sized(p.avatarUrl, 24, true)} alt="" loading="lazy" /> : name.charAt(0).toUpperCase()}</span>
               <b>{name}</b>
               <span className="amt">+{reward(Number(t.reward ?? t.amount ?? 0), t.currency)}</span>
               <span style={{ color: "var(--text2)" }}>{t.title}</span>
@@ -486,7 +487,7 @@ function Journal({ posts }: { posts: any[] }) {
         <SectionHead eyebrow="From the journal" title="Featured blogs" sub="Learn more about OgaPay" more="View all blogs" to="/blog" />
         <Carousel label="Featured blogs carousel" items={posts} render={(p) => (
           <Link to={`/blog/${p.slug || p.id}`} className="hc-card hc-product hc-story">
-            <div className="hc-media">{p.coverImage ? <img src={p.coverImage} alt="" loading="lazy" /> : <span className="hc-media-ph">OP</span>}</div>
+            <div className="hc-media">{p.coverImage ? <img src={sized(p.coverImage, 400)} alt="" loading="lazy" /> : <span className="hc-media-ph">OP</span>}</div>
             <div className="hc-pbody">
               <span className="hc-type">{date(p.publishedAt || p.createdAt)}</span>
               <h3>{p.title}</h3>

@@ -6,6 +6,7 @@ import Money from "../Money";
 import ItemCover, { itemCategoryLabel } from "../ItemCover";
 import { spokenMoney } from "../../lib/money";
 import { jobDeadline, deadlineLabel } from "../../lib/deadline";
+import { sized } from '../../lib/img'
 
 /* Homepage cards for highlighted jobs and creator-store products. Kept separate
    from TaskCard so the rest of the app keeps its existing card design. */
@@ -19,7 +20,7 @@ const plain = (s?: string) => (s || "").replace(/[#*_`>]+/g, "").replace(/\s+/g,
 function Avatar({ src, name, size = 32 }: { src?: string | null; name: string; size?: number }) {
   return (
     <span className="hc-av" style={{ width: size, height: size }}>
-      {src ? <img src={src} alt="" loading="lazy" /> : name.charAt(0).toUpperCase()}
+      {src ? <img src={sized(src, 32, true)} alt="" loading="lazy" /> : name.charAt(0).toUpperCase()}
     </span>
   );
 }
@@ -96,7 +97,7 @@ export function HomeCommunityCard({ community: c }: { community: any }) {
   return (
     <Link to={`/communities/${c.id}`} className="hc-card hc-product hc-community" aria-label={`${c.name}, ${members} members. View community`}>
       <div className="hc-media">
-        {c.coverImage ? <img src={c.coverImage} alt="" loading="lazy" /> : <span className="hc-media-ph">{initials}</span>}
+        {c.coverImage ? <img src={sized(c.coverImage, 400)} alt="" loading="lazy" /> : <span className="hc-media-ph">{initials}</span>}
         {(c.badge || c.category) && <span className="hc-badge">{c.badge || c.category}</span>}
       </div>
       <div className="hc-pbody">
@@ -122,7 +123,7 @@ export function HomeProductCard({ item, convert }: { item: any; convert: Convert
   return (
     <Link to={`/store/${item.id}`} className="hc-card hc-product" aria-label={`${item.title} by ${seller}, ${spokenMoney(price, cur)}. View details`}>
       <div className="hc-media">
-        <ItemCover src={item.image} category={item.category} title={item.title} />
+        <ItemCover src={item.image} category={item.category} title={item.title} width={320} />
         <span className="hc-active"><span />Active</span>
       </div>
       <div className="hc-pbody">

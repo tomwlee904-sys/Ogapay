@@ -84,6 +84,7 @@ function useElapsed(createdAt?: string) {
 }
 
 import type { Task } from '../lib/types';
+import { sized } from '../lib/img'
 
 export default function TaskCard({ task, hideApply }: { task: Task; hideApply?: boolean }) {
   const { rates } = useCurrency()
@@ -344,7 +345,7 @@ export default function TaskCard({ task, hideApply }: { task: Task; hideApply?: 
             boxShadow: '0 2px 8px rgba(var(--accent-rgb),0.25)',
           }}>
             {creatorAvatar
-              ? <img src={creatorAvatar} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
+              ? <img src={sized(creatorAvatar, 36, true)} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
               : formatAddress(creatorName)}
           </div>
           <span style={{ fontWeight: 800, fontSize: 15, color: isDark ? '#ffffff' : 'var(--text, #0a0a0a)' }}>

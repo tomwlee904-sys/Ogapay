@@ -7,6 +7,7 @@ import { useAuth } from "../context/AuthContext"
 import { openSignIn } from "../lib/signin"
 import "../styles/profile-public.css"
 import { PremiumMark } from "../components/Perks";
+import { sized } from '../lib/img'
 
 type Tab = "store" | "portfolio" | "reviews" | "communities"
 
@@ -203,7 +204,7 @@ export default function UserProfile() {
         <section className="up-card up-head">
           <div className="up-id">
             {profile.avatarUrl
-              ? <img className={`up-avatar${profile.frame ? ' oga-frame' : ''}`} src={profile.avatarUrl} alt="" />
+              ? <img className={`up-avatar${profile.frame ? ' oga-frame' : ''}`} src={sized(profile.avatarUrl, 128, true)} alt="" />
               : <div className={`up-avatar${profile.frame ? ' oga-frame' : ''}`}>{(first[0] || handle[0] || "?").toUpperCase()}{last[0]?.toUpperCase() || ""}</div>}
             <div style={{ minWidth: 0 }}>
               <div className="up-eyebrow">Creator profile</div>
@@ -279,7 +280,7 @@ export default function UserProfile() {
               <div className="up-grid">
                 {products.map((p) => (
                   <Link className="up-card up-item" to={`/store/${p.id}`} key={p.id}>
-                    <div className="img">{p.image ? <img src={p.image} alt="" loading="lazy" /> : <i className="ti ti-package" />}</div>
+                    <div className="img">{p.image ? <img src={sized(p.image, 400)} alt="" loading="lazy" /> : <i className="ti ti-package" />}</div>
                     <div className="body">
                       <div className="meta">{String(p.category || "").replace(/_/g, " ")} · {fmtDate(p.createdAt)}</div>
                       <h3>{p.title}</h3>
@@ -310,7 +311,7 @@ export default function UserProfile() {
               <div className="up-grid">
                 {portfolio.map((it) => (
                   <div className="up-card up-item" key={it.id}>
-                    {it.imageUrl && <div className="img"><img src={it.imageUrl} alt="" loading="lazy" /></div>}
+                    {it.imageUrl && <div className="img"><img src={sized(it.imageUrl, 400)} alt="" loading="lazy" /></div>}
                     <div className="body">
                       <h3>{it.title}</h3>
                       {it.description && <p>{it.description}</p>}
@@ -356,7 +357,7 @@ export default function UserProfile() {
                 {reviews.reviews.map((r) => (
                   <article className="up-card up-rev" key={r.id}>
                     <div className="who">
-                      {r.reviewer?.avatarUrl ? <img src={r.reviewer.avatarUrl} alt="" /> : <span className="ph">{(r.reviewer?.name || "?")[0].toUpperCase()}</span>}
+                      {r.reviewer?.avatarUrl ? <img src={sized(r.reviewer.avatarUrl, 32, true)} alt="" /> : <span className="ph">{(r.reviewer?.name || "?")[0].toUpperCase()}</span>}
                       <div style={{ minWidth: 0 }}>
                         {r.reviewer ? <Link to={`/user/${r.reviewer.username}`}>{r.reviewer.name}</Link> : <b>OgaPay user</b>}
                         <small>{fmtDate(r.date)}</small>
@@ -385,7 +386,7 @@ export default function UserProfile() {
                 {communities.map((c) => (
                   <Link className="up-card up-row" to={`/communities/${c.id}`} key={c.id}>
                     <div className="ic" style={{ background: c.accentColor || "var(--text)" }}>
-                      {c.coverImage ? <img src={c.coverImage} alt="" loading="lazy" /> : c.initials}
+                      {c.coverImage ? <img src={sized(c.coverImage, 160)} alt="" loading="lazy" /> : c.initials}
                     </div>
                     <div style={{ minWidth: 0 }}>
                       <b>{c.name}</b>

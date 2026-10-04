@@ -5,6 +5,7 @@ import { apiRequest, getAccessToken } from '../lib/api'
 import { openSignIn } from '../lib/signin'
 import '../styles/profile-public.css'
 import '../styles/leaderboard.css'
+import { sized } from '../lib/img'
 
 // Ported from the June leaderboard. Its Weekly/Monthly tabs did nothing, all four
 // boards showed the same list and it exposed everyone's earnings; the backend
@@ -35,7 +36,7 @@ const level = (l: string | null) => (l ? l.charAt(0) + l.slice(1).toLowerCase() 
 function Avatar({ e, size }: { e: Entry; size: number }) {
   return (
     <span className="lb2-av" style={{ width: size, height: size, fontSize: size * 0.36 }}>
-      {e.avatarUrl ? <img src={e.avatarUrl} alt="" loading="lazy" /> : initials(e.name)}
+      {e.avatarUrl ? <img src={sized(e.avatarUrl, 40, true)} alt="" loading="lazy" /> : initials(e.name)}
     </span>
   )
 }
