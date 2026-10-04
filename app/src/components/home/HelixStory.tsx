@@ -149,7 +149,13 @@ export default function HelixStory({ panels, jobs }: { panels: HelixPanel[]; job
         const e = Math.max(0, a - 0.35) / 0.65; // 0 while it holds in the middle
         const o = clamp(1 - (a - 0.4) / 0.5); // fades as it moves; the next one comes in as this one leaves
         const pw = el.offsetWidth, ph = el.offsetHeight;
-        const fit = Math.min(1, (H - 16) / Math.max(1, ph), (W - 8) / Math.max(1, pw));
+        const fitW = (W - 8) / Math.max(1, pw), fitH = (H - 16) / Math.max(1, ph);
+        // Phones: fitting the whole panel into the short stage shrank it to about half
+        // the screen width with unreadable text. Like wurk.fun, keep it at least ~80% of
+        // the width and let it run under the header and bottom bar while it holds;
+        // it moves on as you scroll
+        const minFit = narrow ? (0.8 * W) / Math.max(1, pw) : 0;
+        const fit = Math.min(1, fitW, Math.max(fitH, minFit));
         const room = Math.max(0, (W - pw * fit) / 2); // keep it on screen
         const x = W / 2 + (narrow ? 0 : clamp(PANEL_X[k % PANEL_X.length] * W, -room, room));
         const y = H / 2 - sg * e * H * 0.85;

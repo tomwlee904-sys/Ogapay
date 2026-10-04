@@ -14,6 +14,7 @@ import { SkeletonPage, injectSkeletonStyles } from "../components/SkeletonLoader
 import ApplyModal from '../components/ApplyModal'
 import { HomeJobCard } from '../components/home/HomeCards'
 import { sized } from '../lib/img'
+import { jobDeadline } from '../lib/deadline'
 
 const OGAPAY_BLUE = 'var(--accent)'
 
@@ -573,6 +574,8 @@ export default function Tasks() {
 
   const filtered = jobs
     .filter(j => {
+      // "Open right now": older jobs can have a past deadline but no expiry, so the API lists them
+      if (jobDeadline(j).state === 'ended') return false
       const q = search.trim().toLowerCase()
       if (q) {
         const who = (j.poster?.username || j.creator?.username || j.creatorName || '').toLowerCase()

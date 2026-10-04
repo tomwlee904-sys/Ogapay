@@ -18,6 +18,7 @@ import "../styles/homepage.css";
 import "../styles/home-v2.css";
 import "../styles/home-cards.css";
 import { sized } from '../lib/img'
+import { jobDeadline } from '../lib/deadline'
 
 /* ─── helpers ──────────────────────────────────────────────────────────────── */
 
@@ -533,7 +534,9 @@ export default function HomePage() {
   const live = useJson<any>("/stats/live", 60000);
   const all = useJson<any>("/stats");
   const { data: jobsRes, error: jobsErr } = useApi("/tasks?status=OPEN", { auth: false });
-  const jobs = useMemo(() => listOf(jobsRes), [jobsRes]);
+  // Some older jobs have a past deadline but no expiry, so the API still lists them
+  // as open; don't highlight ones that have already ended
+  const jobs = useMemo(() => listOf(jobsRes).filter((j: any) => jobDeadline(j).state !== "ended"), [jobsRes]);
   const jobsLoading = !jobsRes && !jobsErr;
   // The discovery panels that pass over the ecosystem helix (only those with content)
   const storeRes = useJson<any>("/store?limit=9&sort=newest");
