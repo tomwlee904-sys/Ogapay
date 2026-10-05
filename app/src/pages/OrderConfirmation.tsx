@@ -5,7 +5,7 @@ import '../styles/checkout.css'
 
 // Shown after a store purchase. Checkout passes the item and the chat the purchase
 // opened with the seller; after a reload that state is gone, so fall back to the inbox.
-type Done = { title?: string; seller?: string; total?: number; currency?: Currency; conversationId?: string }
+type Done = { title?: string; seller?: string; total?: number; currency?: Currency; conversationId?: string; briefSent?: boolean }
 
 export default function OrderConfirmation() {
   const { id } = useParams<{ id: string }>()
@@ -24,8 +24,11 @@ export default function OrderConfirmation() {
           <p className="ui-sub">
             {s.seller ? <>@{s.seller} has been told about your order.</> : <>The seller has been told about your order.</>}
             {' '}OgaPay holds your payment until you confirm you received it, or 3 days after the seller marks it delivered.
-            {' '}Use the chat to share any details they need.
+            {s.briefSent === true ? ' Your brief and attachments are in your chat with them.' : ' Use the chat to share any details they need.'}
           </p>
+          {s.briefSent === false && (
+            <p className="sc-note warn" style={{ justifyContent: 'center' }}><i className="ti ti-info-circle" aria-hidden="true" /> We couldn't send your brief. Please paste it into the chat with the seller.</p>
+          )}
 
           {s.title && (
             <div className="ui-card ui-card-pad">

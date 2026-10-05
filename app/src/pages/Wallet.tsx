@@ -73,6 +73,8 @@ export default function Wallet() {
   useEffect(() => { load() }, [load])
 
   const refreshAll = () => { load(); refreshUser(); refreshHeader() }
+  // Verification may have changed since sign-in (approved by our team, or on another device)
+  useEffect(() => { refreshUser() }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   async function loadMore() {
     setLoadingMore(true)

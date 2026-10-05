@@ -1,8 +1,8 @@
 /* Store checkout (/store/pay/:id) and order confirmation (/orders/:id) */
-.sc-wrap { max-width: 960px; }
+.sc-wrap { max-width: 1180px; }
 .sc-back { display: flex; width: fit-content; align-items: center; gap: 6px; margin-bottom: 18px; font-size: 13px; color: var(--text2); text-decoration: none; }
 .sc-back:hover { color: var(--text); }
-.sc-grid { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 16px; align-items: start; margin-top: 24px; }
+.sc-grid { display: grid; grid-template-columns: minmax(0, 1fr) 400px; gap: 20px; align-items: start; margin-top: 24px; }
 .sc-main { display: grid; gap: 16px; }
 
 .sc-product { display: flex; gap: 16px; padding: 16px; }
@@ -41,6 +41,74 @@
 .sc-fine { margin: 10px 0 0; font-size: 11px; color: var(--text3); }
 .sc-fine a { color: var(--text2); }
 
+/* Steps: Product > Order details > Payment */
+.sc-steps { list-style: none; margin: 0; padding: 0; display: flex; align-items: center; gap: 10px 28px; flex-wrap: wrap; }
+.sc-steps li, .sc-steps li a { display: inline-flex; align-items: center; gap: 10px; font-size: 14px; color: var(--text2); text-decoration: none; }
+.sc-steps li a:hover { color: var(--text); }
+.sc-steps .n { width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--border); display: grid; place-items: center; font: 500 12px var(--font-mono); color: var(--text2); background: var(--card); }
+.sc-steps li.on { color: var(--text); font-weight: 600; }
+.sc-steps li.on .n { background: var(--text); border-color: var(--text); color: var(--bg); }
+.sc-steps li.done .n { color: var(--text); }
+
+/* Order details */
+.sc-sec-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.sc-h { margin: 0; display: flex; align-items: center; gap: 10px; font-size: 19px; font-weight: 600; letter-spacing: -.02em; color: var(--text); }
+.sc-h i { font-size: 20px; }
+.sc-h2 { margin: 0; font-size: 16px; font-weight: 600; color: var(--text); }
+.sc-opt { font: 400 11px var(--font-mono); color: var(--text3); }
+.sc-lead { margin: 10px 0 0; font-size: 13.5px; line-height: 1.6; color: var(--text2); }
+.sc-lead b { color: var(--text); }
+.sc-label { display: block; margin: 20px 0 8px; font-size: 13.5px; font-weight: 600; color: var(--text); }
+.sc-brief { width: 100%; box-sizing: border-box; min-height: 180px; padding: 14px 16px; border: 1px solid var(--border); border-radius: 14px; background: var(--card2); color: var(--text); font-family: inherit; font-size: 14px; line-height: 1.6; resize: vertical; }
+.sc-brief:focus { outline: none; border-color: var(--text3); background: var(--card); }
+.sc-count { margin-top: 6px; font: 400 11px var(--font-mono); color: var(--text3); }
+.sc-divider { height: 1px; background: var(--border); margin: 22px 0; }
+.sc-drop { margin-top: 12px; padding: 22px 16px; border: 1.5px dashed var(--border); border-radius: 14px; background: var(--card2); display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; font-size: 13px; color: var(--text2); }
+.sc-drop > i { font-size: 22px; color: var(--text); }
+.sc-drop small { font-size: 12px; color: var(--text3); }
+.sc-files { list-style: none; padding: 0; margin: 10px 0 0; display: grid; gap: 6px; }
+.sc-files li { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 10px; font-size: 13px; color: var(--text); }
+.sc-files li span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sc-files li button { border: 0; background: none; color: var(--text3); cursor: pointer; font-size: 15px; padding: 2px; }
+
+/* Right column */
+.sc-side { display: grid; gap: 16px; position: sticky; top: calc(var(--nav-h, 72px) + 16px); }
+.sc-side-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.sc-side-head h2 { margin: 0; font-size: 16px; font-weight: 600; color: var(--text); }
+.sc-side-head a { display: inline-flex; align-items: center; gap: 4px; font-size: 13px; color: var(--text2); text-decoration: none; }
+.sc-side-head a:hover { color: var(--text); }
+.sc-prod { display: flex; gap: 14px; margin-top: 16px; }
+.sc-thumb.sm { width: 76px; height: 76px; border-radius: 12px; font-size: 22px; }
+.sc-prod-t { display: block; font-size: 15px; font-weight: 600; line-height: 1.35; color: var(--text); }
+.sc-prod-c { display: block; margin-top: 6px; font-size: 12px; color: var(--text2); }
+.sc-facts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border); }
+.sc-facts span { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text2); }
+.sc-facts b { display: block; margin-top: 4px; font-size: 14px; font-weight: 600; color: var(--text); }
+.sc-desc2 { margin: 14px 0 0; font-size: 13px; line-height: 1.6; color: var(--text2); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; white-space: pre-line; }
+.sc-desc2.open { -webkit-line-clamp: unset; display: block; }
+.sc-more { margin-top: 6px; border: 0; background: none; padding: 0; display: inline-flex; align-items: center; gap: 4px; font-family: inherit; font-size: 12.5px; font-weight: 600; color: var(--text); cursor: pointer; }
+.sc-seller { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border); }
+.sc-seller-row { display: flex; align-items: center; gap: 12px; margin-top: 8px; text-decoration: none; color: inherit; }
+.sc-seller-row b { display: flex; align-items: center; gap: 4px; font-size: 14px; font-weight: 600; color: var(--text); }
+.sc-seller-row small { display: block; margin-top: 2px; font-size: 12px; color: var(--text2); }
+.sc-seller-bio { margin: 10px 0 0; font-size: 13px; line-height: 1.6; color: var(--text2); }
+
+/* Payment */
+.sc-terms { margin-top: 20px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-size: 13.5px; color: var(--text2); }
+.sc-amount { margin: 18px 0 6px; }
+.sc-amount span { display: block; font-size: 12.5px; color: var(--text2); }
+.sc-amount b { display: block; margin-top: 4px; font-size: 32px; font-weight: 600; letter-spacing: -.03em; color: var(--text); font-variant-numeric: tabular-nums; }
+.sc-opt-head { display: flex; align-items: center; gap: 10px; margin: 18px 0 10px; font-size: 14.5px; font-weight: 600; color: var(--text); }
+.sc-opt-head .n { width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--border); display: grid; place-items: center; font: 500 11px var(--font-mono); color: var(--text2); }
+.sc-or { display: flex; align-items: center; gap: 12px; margin: 22px 0 4px; font: 400 11px var(--font-mono); text-transform: uppercase; letter-spacing: .08em; color: var(--text3); }
+.sc-or::before, .sc-or::after { content: ""; flex: 1; height: 1px; background: var(--border); }
+.sc-methods { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.sc-methods span { display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; border: 1px solid var(--border); border-radius: 999px; font-size: 12.5px; color: var(--text); }
+.sc-brief-sum { margin-top: 14px; padding: 12px 14px; border-radius: 12px; background: var(--card2); }
+.sc-brief-sum p { margin: 8px 0 0; font-size: 13px; line-height: 1.55; color: var(--text); white-space: pre-line; display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden; }
+.sc-brief-sum p.empty { color: var(--text2); }
+.sc-brief-sum small { display: flex; align-items: center; gap: 5px; margin-top: 8px; font-size: 12px; color: var(--text2); }
+
 /* Order confirmation */
 .sc-done { max-width: 520px; margin: 0 auto; text-align: center; }
 .sc-done-ic { width: 64px; height: 64px; margin: 0 auto 18px; border-radius: 50%; display: grid; place-items: center; font-size: 30px; background: color-mix(in srgb, var(--green) 14%, transparent); color: var(--green); }
@@ -51,7 +119,10 @@
 
 @media (max-width: 768px) {
   .sc-grid { grid-template-columns: 1fr; }
-  .sc-summary { position: static; }
+  .sc-summary, .sc-side { position: static; }
+  .sc-steps { gap: 10px 16px; }
+  .sc-steps li { font-size: 13px; }
+  .sc-amount b { font-size: 28px; }
   .sc-product { flex-direction: column; }
   .sc-thumb { width: 100%; height: 160px; }
 }

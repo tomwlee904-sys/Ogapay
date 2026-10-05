@@ -1,26 +1,35 @@
-import { useEffect, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { useEffect, useRef, useState } from 'react'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import Layout from '../components/Layout'
+import Avatar from '../components/Avatar'
 import FundWalletModal from '../components/FundWalletModal'
+import { itemCategoryLabel } from '../components/ItemCover'
 import { useAuth } from '../context/AuthContext'
 import { useWalletBalance } from '../context/WalletBalanceContext'
 import { API_BASE, apiRequest, getAccessToken } from '../lib/api'
 import { CURRENCY_SYMBOLS, type Currency } from '../lib/currency'
-import '../styles/checkout.css'
 import { sized } from '../lib/img'
+import { uploadImage } from '../lib/upload'
+import '../styles/checkout.css'
 
-// Store checkout. A purchase takes the item's price from the buyer's wallet in the
-// item's currency (POST /store/:id/purchase); there is no other payment path, so the
-// old card/crypto/manual options (which showed a made-up address and charged the
-// wallet after a card payment) and the 5% fee the backend never charged are gone.
-// Short of money? "Add money" opens the wallet top-up, then you pay from the wallet.
+// Store checkout, in the steps wurk.fun uses: Product > Order details > Payment.
+//  - Order details: an optional brief and attachments for the seller, with the
+//    product, the seller and the order total.
+//  - Payment: from the buyer's OgaPay wallet in the item's currency (there's no
+//    other payment path); short of money, "Add money" opens the wallet top-up.
+// The brief and attachment links become the first message in the buyer's
+// private chat with the seller once the order is paid. OgaPay's own items (perks)
+// have no seller, so they skip straight to payment.
 
 type Item = {
   id: string; title: string; description: string; price: number; currency: Currency
   seller: string; sellerId?: string; sellerAvatar: string | null; image: string
   stock: number | null; isActive?: boolean; category?: string; official?: boolean
+  metadata?: { delivery?: string; revisions?: number; subcategory?: string }
 }
+type Seller = { username: string; name: string; avatarUrl: string | null; bio: string | null; rating: number; reviews: number }
 type MyJob = { id: string; title: string; status: string; expiresAt?: string | null; hiredWorkerId?: string | null }
+type Upload = { name: string; url: string }
 
 // OgaPay's own items (no seller): what each one does, and what's permanent
 const PERKS: Record<string, { kind: string; what: string; permanent?: boolean }> = {
@@ -30,19 +39,55 @@ const PERKS: Record<string, { kind: string; what: string; permanent?: boolean }>
   BOOST: { kind: 'TASK_BOOST', what: 'Your chosen open job is listed first on the jobs page for 24 hours, with a Boosted tag.' },
 }
 
+const BRIEF_MAX = 4000 // the chat message holds 5,000 characters, links included
+const MAX_FILES = 5
+
 const money = (n: number, c: Currency) =>
   `${CURRENCY_SYMBOLS[c] || ''}${n.toLocaleString('en-US', { minimumFractionDigits: c === 'NGN' ? 0 : 2, maximumFractionDigits: c === 'SOL' ? 4 : 2 })}${c === 'NGN' ? '' : ' ' + c}`
 
+// The brief survives a reload or a trip back to the product page
+const draftKey = (id: string) => `ogapay_order_draft_${id}`
+const readDraft = (id: string): { brief: string; files: Upload[] } => {
+  try { const d = JSON.parse(sessionStorage.getItem(draftKey(id)) || ''); return { brief: String(d.brief || ''), files: Array.isArray(d.files) ? d.files : [] } } catch { return { brief: '', files: [] } }
+}
+
+function Steps({ step, itemId, official }: { step: 'details' | 'pay'; itemId: string; official?: boolean }) {
+  const steps = official ? ['Product', 'Payment'] : ['Product', 'Order details', 'Payment']
+  const at = official ? (step === 'pay' ? 1 : 0) : step === 'details' ? 1 : 2
+  return (
+    <ol className="sc-steps" aria-label="Checkout steps">
+      {steps.map((s, i) => (
+        <li key={s} className={i < at ? 'done' : i === at ? 'on' : ''} aria-current={i === at ? 'step' : undefined}>
+          {i === 0 ? (
+            <Link to={`/store/${itemId}`}><span className="n"><i className="ti ti-check" aria-hidden="true" /></span>{s}</Link>
+          ) : (
+            <><span className="n">{i < at ? <i className="ti ti-check" aria-hidden="true" /> : i + 1}</span>{s}</>
+          )}
+        </li>
+      ))}
+    </ol>
+  )
+}
+
 export default function StorePayment() {
-  const { id } = useParams<{ id: string }>()
+  const { id = '' } = useParams<{ id: string }>()
+  const [params, setParams] = useSearchParams()
   const navigate = useNavigate()
   const { user } = useAuth()
   const { balances, refresh } = useWalletBalance()
   const [item, setItem] = useState<Item | null>(null)
+  const [seller, setSeller] = useState<Seller | null>(null)
   const [loadError, setLoadError] = useState('')
   const [topUp, setTopUp] = useState(false)
   const [paying, setPaying] = useState(false)
   const [error, setError] = useState('')
+  const [more, setMore] = useState(false)
+  // Order details
+  const [brief, setBrief] = useState(() => readDraft(id).brief)
+  const [files, setFiles] = useState<Upload[]>(() => readDraft(id).files)
+  const [uploading, setUploading] = useState(false)
+  const [fileError, setFileError] = useState('')
+  const fileRef = useRef<HTMLInputElement>(null)
   // OgaPay's own items
   const [owned, setOwned] = useState<string[]>([])
   const [jobs, setJobs] = useState<MyJob[] | null>(null)
@@ -56,6 +101,24 @@ export default function StorePayment() {
       .catch((e: any) => setLoadError(e?.message || "This product couldn't be loaded"))
   }, [id])
 
+  useEffect(() => {
+    if (!item?.seller || item.official) return
+    apiRequest<any>('/users/' + encodeURIComponent(item.seller), { auth: false })
+      .then((d) => d?.username && setSeller({
+        username: d.username,
+        name: [d.firstName, d.lastName].filter(Boolean).join(' ') || d.username,
+        avatarUrl: d.avatarUrl || null,
+        bio: d.workerProfile?.bio || null,
+        rating: Number(d.workerProfile?.avgRating || 0),
+        reviews: Number(d.workerProfile?.totalRatings || 0),
+      }))
+      .catch(() => {})
+  }, [item?.seller, item?.official])
+
+  useEffect(() => {
+    try { sessionStorage.setItem(draftKey(id), JSON.stringify({ brief, files })) } catch { /* storage off */ }
+  }, [id, brief, files])
+
   const perk = item?.official ? PERKS[String(item.category || '').toUpperCase()] : undefined
   useEffect(() => {
     if (!item?.official || !user) return
@@ -68,6 +131,10 @@ export default function StorePayment() {
       }).catch(() => setJobs([]))
     }
   }, [item?.id, user?.id]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Perks have no order details; everything else starts there
+  const step: 'details' | 'pay' = item?.official || params.get('step') === 'pay' ? 'pay' : 'details'
+  useEffect(() => { window.scrollTo({ top: 0 }) }, [step])
 
   if (loadError) {
     return (
@@ -85,10 +152,10 @@ export default function StorePayment() {
     return (
       <Layout>
         <div className="ui-page sc-wrap">
-          <div className="ui-sk" style={{ height: 28, width: 180 }} />
+          <div className="ui-sk" style={{ height: 28, width: 280 }} />
           <div className="sc-grid" style={{ marginTop: 24 }}>
-            <div className="ui-sk" style={{ height: 320 }} />
-            <div className="ui-sk" style={{ height: 240 }} />
+            <div className="ui-sk" style={{ height: 360 }} />
+            <div className="ui-sk" style={{ height: 300 }} />
           </div>
         </div>
       </Layout>
@@ -102,6 +169,37 @@ export default function StorePayment() {
   const alreadyHave = !!perk?.permanent && owned.includes(perk.kind)
   const needJob = perk?.kind === 'TASK_BOOST' && !jobId
   const canPay = !own && !soldOut && !alreadyHave && !needJob && short === 0 && !paying
+  const delivery = item.metadata?.delivery || '3 days'
+  const revisions = item.metadata?.revisions ?? 3
+  const category = [itemCategoryLabel(item.category, item.title), item.metadata?.subcategory].filter(Boolean).join(' / ')
+
+  const addFiles = async (list: FileList | null) => {
+    if (!list?.length) return
+    setFileError('')
+    const room = MAX_FILES - files.length
+    const pick = Array.from(list).slice(0, room)
+    if (list.length > room) setFileError(`Up to ${MAX_FILES} files.`)
+    setUploading(true)
+    for (const f of pick) {
+      if (f.size > 10 * 1024 * 1024) { setFileError(`${f.name} is over 10 MB.`); continue }
+      try {
+        const url = await uploadImage(f, 'task-attachments')
+        setFiles((prev) => [...prev, { name: f.name, url }])
+      } catch (e: any) {
+        setFileError(`${f.name}: ${e?.message || 'upload failed'}`)
+      }
+    }
+    setUploading(false)
+    if (fileRef.current) fileRef.current.value = ''
+  }
+
+  // The brief and attachments, as the first message to the seller
+  const briefMessage = () => {
+    const parts = [`Order brief for "${item.title}":`]
+    if (brief.trim()) parts.push(brief.trim())
+    if (files.length) parts.push('Attachments:\n' + files.map((f) => `${f.name}: ${f.url}`).join('\n'))
+    return parts.join('\n\n')
+  }
 
   const pay = async () => {
     setPaying(true); setError('')
@@ -121,7 +219,13 @@ export default function StorePayment() {
       }
       const order = await apiRequest<{ id: string; conversationId?: string }>(`/store/${item.id}/purchase`, { method: 'POST', body: JSON.stringify({ quantity: 1 }) })
       refresh()
-      navigate(`/orders/${order.id}`, { replace: true, state: { title: item.title, seller: item.seller, total: item.price, currency: item.currency, conversationId: order.conversationId } })
+      // Send the brief; if that fails the order still stands and they can send it in the chat
+      let briefSent = true
+      if ((brief.trim() || files.length) && order.conversationId) {
+        briefSent = await apiRequest('/messages', { method: 'POST', body: JSON.stringify({ conversationId: order.conversationId, content: briefMessage() }) }).then(() => true, () => false)
+      }
+      try { sessionStorage.removeItem(draftKey(item.id)) } catch { /* storage off */ }
+      navigate(`/orders/${order.id}`, { replace: true, state: { title: item.title, seller: item.seller, total: item.price, currency: item.currency, conversationId: order.conversationId, briefSent: (brief.trim() || files.length) ? briefSent : undefined } })
     } catch (e: any) {
       setError(e?.message || 'Payment failed. You have not been charged.')
       setPaying(false)
@@ -148,82 +252,205 @@ export default function StorePayment() {
     )
   }
 
+  const blocked = own ? "This is your own product, so you can't buy it." : soldOut ? "This product isn't available right now." : alreadyHave ? 'You already have this.' : ''
+
+  const ProductCard = (
+    <section className="ui-card ui-card-pad sc-side-card">
+      <div className="sc-side-head"><h2>Your product</h2><Link to={`/store/${item.id}`}>View product <i className="ti ti-arrow-up-right" aria-hidden="true" /></Link></div>
+      <div className="sc-prod">
+        <div className="sc-thumb sm">{item.image ? <img src={sized(item.image, 96, true)} alt="" /> : <i className="ti ti-package" />}</div>
+        <div style={{ minWidth: 0 }}>
+          <b className="sc-prod-t">{item.title}</b>
+          {category && <span className="sc-prod-c">{category}</span>}
+        </div>
+      </div>
+      {!item.official && (
+        <div className="sc-facts">
+          <div><span><i className="ti ti-clock" aria-hidden="true" /> Delivery</span><b>{delivery}</b></div>
+          <div><span><i className="ti ti-refresh" aria-hidden="true" /> Revisions</span><b>{revisions}</b></div>
+        </div>
+      )}
+      {(perk?.what || item.description) && (
+        <>
+          <p className={`sc-desc2${more ? ' open' : ''}`}>{perk ? perk.what : item.description}</p>
+          {!perk && item.description.length > 180 && (
+            <button type="button" className="sc-more" onClick={() => setMore(!more)}>{more ? 'Show less' : 'Read more'} <i className={`ti ti-chevron-${more ? 'up' : 'down'}`} aria-hidden="true" /></button>
+          )}
+        </>
+      )}
+      {!item.official && (
+        <div className="sc-seller">
+          <span className="ui-label">Your seller</span>
+          <Link to={`/user/${item.seller}`} className="sc-seller-row">
+            <Avatar src={seller?.avatarUrl || item.sellerAvatar} name={seller?.name || item.seller} size={40} />
+            <span style={{ minWidth: 0 }}>
+              <b>{seller?.name || '@' + item.seller} <i className="ti ti-arrow-up-right" aria-hidden="true" /></b>
+              <small>{seller && seller.reviews > 0 ? `${seller.rating.toFixed(1)} / 5 · ${seller.reviews} review${seller.reviews === 1 ? '' : 's'}` : 'No reviews yet'}</small>
+            </span>
+          </Link>
+          {seller?.bio && <p className="sc-seller-bio">{seller.bio}</p>}
+        </div>
+      )}
+    </section>
+  )
+
   return (
     <Layout>
       <div className="ui-page sc-wrap">
-        <Link to={`/store/${item.id}`} className="sc-back"><i className="ti ti-arrow-left" /> Back to product</Link>
-        <span className="ui-eyebrow">Checkout</span>
-        <h1 className="ui-title">Review and pay</h1>
+        <Steps step={step} itemId={item.id} official={item.official} />
 
-        <div className="sc-grid">
-          <div className="sc-main">
-            <section className="ui-card sc-product">
-              <div className="sc-thumb">{item.image ? <img src={sized(item.image, 320)} alt="" /> : <i className="ti ti-package" />}</div>
-              <div className="sc-product-t">
-                <h2>{item.title}</h2>
-                {item.official ? <p className="sc-by">Sold by OgaPay</p> : <p className="sc-by">Sold by <Link to={`/user/${item.seller}`}>@{item.seller}</Link></p>}
-                {perk ? <p className="sc-desc">{perk.what}</p> : item.description && <p className="sc-desc">{item.description}</p>}
-              </div>
-            </section>
-
-            {perk?.kind === 'TASK_BOOST' && (
+        {step === 'details' ? (
+          <div className="sc-grid">
+            <div className="sc-main">
               <section className="ui-card ui-card-pad">
-                <label className="ui-label" htmlFor="sc-job">Job to boost</label>
-                {jobs === null ? <div className="ui-sk" style={{ height: 42, borderRadius: 10 }} />
-                  : jobs.length === 0 ? <p className="sc-desc" style={{ margin: 0 }}>You have no open jobs to boost. <Link to="/create">Post a job</Link> first.</p>
-                  : (
-                    <select id="sc-job" className="ui-select" value={jobId} onChange={(e) => setJobId(e.target.value)}>
-                      <option value="">Choose one of your open jobs</option>
-                      {jobs.map((j) => <option key={j.id} value={j.id}>{j.title}</option>)}
-                    </select>
-                  )}
+                <div className="sc-sec-head">
+                  <h1 className="sc-h"><i className="ti ti-file-pencil" aria-hidden="true" /> Message to the seller</h1>
+                  <span className="sc-opt">Optional</span>
+                </div>
+                <p className="sc-lead">Add the requirements, goals or context the seller needs for your order.</p>
+                <label className="sc-label" htmlFor="sc-brief">Your order brief</label>
+                <textarea id="sc-brief" className="sc-brief" rows={8} maxLength={BRIEF_MAX} value={brief} onChange={(e) => setBrief(e.target.value)}
+                  placeholder="Describe your preferred style, sizes, deadline or anything else the seller should know..." />
+                <div className="sc-count">{brief.length.toLocaleString()} / {BRIEF_MAX.toLocaleString()}</div>
+
+                <div className="sc-divider" />
+                <div className="sc-sec-head">
+                  <h2 className="sc-h2">Attachments</h2>
+                  <span className="sc-opt">{files.length} / {MAX_FILES}</span>
+                </div>
+                <p className="sc-lead" style={{ marginTop: 4 }}>Up to {MAX_FILES} files, 10 MB each.</p>
+                <div className="sc-drop" onDragOver={(e) => e.preventDefault()} onDrop={(e) => { e.preventDefault(); addFiles(e.dataTransfer.files) }}>
+                  <i className="ti ti-upload" aria-hidden="true" />
+                  <span>Drop files here or choose them from your device.</span>
+                  <button type="button" className="ui-btn ui-btn-ghost" disabled={uploading || files.length >= MAX_FILES} onClick={() => fileRef.current?.click()}>
+                    <i className="ti ti-paperclip" aria-hidden="true" /> {uploading ? 'Uploading…' : 'Choose files'}
+                  </button>
+                  <small>Images and PDF files.</small>
+                  <input ref={fileRef} type="file" hidden multiple accept="image/*,application/pdf" onChange={(e) => addFiles(e.target.files)} />
+                </div>
+                {fileError && <p className="sc-error" role="alert">{fileError}</p>}
+                {files.length > 0 && (
+                  <ul className="sc-files">
+                    {files.map((f) => (
+                      <li key={f.url}>
+                        <i className="ti ti-file" aria-hidden="true" /><span>{f.name}</span>
+                        <button type="button" aria-label={`Remove ${f.name}`} onClick={() => setFiles((x) => x.filter((y) => y.url !== f.url))}><i className="ti ti-x" aria-hidden="true" /></button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                <p className="sc-note"><i className="ti ti-lock" aria-hidden="true" /> Your brief and attachments go to the seller in your private chat once you pay.</p>
               </section>
-            )}
+            </div>
 
-            <section className="ui-card ui-card-pad">
-              <span className="ui-label">Pay with</span>
-              <div className="sc-method">
-                <span className="sc-method-ic"><i className="ti ti-wallet" /></span>
-                <div className="sc-method-t">
-                  <strong>Your {item.currency} wallet</strong>
-                  <span>Available: {money(available, item.currency)}</span>
-                </div>
-                <span className={`sc-state${short ? ' warn' : ''}`}>{short ? 'Not enough' : 'Ready'}</span>
-              </div>
-              {short > 0 && !own && !soldOut && (
-                <div className="sc-short">
-                  <p>You need <b>{money(short, item.currency)}</b> more. Add money by card, bank transfer or crypto, then come back here to pay.</p>
-                  <button className="ui-btn ui-btn-ghost" onClick={() => setTopUp(true)}><i className="ti ti-plus" /> Add money</button>
-                </div>
-              )}
-            </section>
+            <aside className="sc-side">
+              {ProductCard}
+              <section className="ui-card ui-card-pad">
+                <h2 className="sc-h2" style={{ display: 'flex', alignItems: 'center', gap: 8 }}><i className="ti ti-receipt" aria-hidden="true" /> Order summary</h2>
+                <div className="sc-line total" style={{ marginTop: 6 }}><span>Order total</span><span>{money(item.price, item.currency)}</span></div>
+                <p className="sc-fine" style={{ marginTop: 0 }}>No fees for buyers.</p>
+                <p className="sc-note"><i className="ti ti-shield-check" aria-hidden="true" /> Buyer protection: OgaPay holds your payment until you confirm you received the order.</p>
+                {blocked && <p className="sc-note warn"><i className="ti ti-info-circle" aria-hidden="true" /> {blocked}</p>}
+                <button className="ui-btn ui-btn-dark ui-btn-lg sc-pay" disabled={!!blocked || uploading} onClick={() => setParams({ step: 'pay' })}>
+                  Proceed to payment <i className="ti ti-arrow-right" aria-hidden="true" />
+                </button>
+              </section>
+            </aside>
           </div>
+        ) : (
+          <>
+            <div className="sc-terms">
+              <span>By paying you agree to our Terms of Service.</span>
+              <Link className="ui-btn ui-btn-ghost" to="/terms" target="_blank">Read terms</Link>
+            </div>
+            <div className="sc-grid">
+              <div className="sc-main">
+                {perk?.kind === 'TASK_BOOST' && (
+                  <section className="ui-card ui-card-pad">
+                    <label className="ui-label" htmlFor="sc-job">Job to boost</label>
+                    {jobs === null ? <div className="ui-sk" style={{ height: 42, borderRadius: 10 }} />
+                      : jobs.length === 0 ? <p className="sc-desc" style={{ margin: 0 }}>You have no open jobs to boost. <Link to="/create">Post a job</Link> first.</p>
+                      : (
+                        <select id="sc-job" className="ui-select" value={jobId} onChange={(e) => setJobId(e.target.value)}>
+                          <option value="">Choose one of your open jobs</option>
+                          {jobs.map((j) => <option key={j.id} value={j.id}>{j.title}</option>)}
+                        </select>
+                      )}
+                  </section>
+                )}
 
-          <aside className="ui-card ui-card-pad sc-summary">
-            <span className="ui-label">Order summary</span>
-            <div className="sc-line"><span>{item.title}</span><span>{money(item.price, item.currency)}</span></div>
-            <div className="sc-line"><span>Quantity</span><span>1</span></div>
-            <div className="sc-line total"><span>Total</span><span>{money(item.price, item.currency)}</span></div>
+                <section className="ui-card ui-card-pad">
+                  <h1 className="sc-h"><i className="ti ti-credit-card" aria-hidden="true" /> Payment details</h1>
+                  <div className="sc-amount">
+                    <span>Total to pay</span>
+                    <b>{money(item.price, item.currency)}</b>
+                  </div>
 
-            {own && <p className="sc-note warn"><i className="ti ti-info-circle" /> This is your own product, so you can't buy it.</p>}
-            {alreadyHave && <p className="sc-note"><i className="ti ti-circle-check" /> You already have this.</p>}
-            {soldOut && !own && <p className="sc-note warn"><i className="ti ti-info-circle" /> This product isn't available right now.</p>}
+                  <div className="sc-opt-head"><span className="n">1</span> Pay from your OgaPay wallet</div>
+                  <div className="sc-method">
+                    <span className="sc-method-ic"><i className="ti ti-wallet" aria-hidden="true" /></span>
+                    <div className="sc-method-t">
+                      <strong>Your {item.currency} wallet</strong>
+                      <span>Available: {money(available, item.currency)}</span>
+                    </div>
+                    <span className={`sc-state${short ? ' warn' : ''}`}>{short ? 'Not enough' : 'Ready'}</span>
+                  </div>
+                  <button className="ui-btn ui-btn-dark ui-btn-lg sc-pay" disabled={!canPay} onClick={pay}>
+                    {paying ? <><i className="ti ti-loader-2 sc-spin" aria-hidden="true" /> Paying…</> : <>Pay {money(item.price, item.currency)}</>}
+                  </button>
+                  {error && <p className="sc-error" role="alert">{error}</p>}
+                  {blocked && <p className="sc-note warn"><i className="ti ti-info-circle" aria-hidden="true" /> {blocked}</p>}
 
-            <button className="ui-btn ui-btn-dark ui-btn-lg sc-pay" disabled={!canPay} onClick={pay}>
-              {paying ? <><i className="ti ti-loader-2 sc-spin" /> Paying…</> : <>Pay {money(item.price, item.currency)}</>}
-            </button>
-            {error && <p className="sc-error" role="alert">{error}</p>}
+                  <div className="sc-or"><span>or</span></div>
 
-            {item.official ? (
-              <p className="sc-note"><i className="ti ti-bolt" /> Takes effect as soon as you pay. Not refundable once applied.</p>
-            ) : (
-              <p className="sc-note">
-                <i className="ti ti-shield-check" /> Buyer protection: OgaPay holds your payment. The seller gets it when you confirm you received the order, or 3 days after they mark it delivered. Something wrong? Report it before then and the money stays on hold.
-              </p>
-            )}
-            <p className="sc-fine">By paying you agree to the <Link to="/terms">Terms of Service</Link>.</p>
-          </aside>
-        </div>
+                  <div className="sc-opt-head"><span className="n">2</span> Add money, then pay</div>
+                  <p className="sc-lead" style={{ marginTop: 0 }}>
+                    {short > 0
+                      ? <>You need <b>{money(short, item.currency)}</b> more. </>
+                      : null}
+                    {item.currency === 'NGN'
+                      ? 'Top up by card or bank transfer (or to your own OgaPay account number once you’re verified). The money lands in your wallet and you come back here to pay.'
+                      : `Send ${item.currency} to your OgaPay wallet address. It lands in your wallet and you come back here to pay.`}
+                  </p>
+                  <div className="sc-methods">
+                    {item.currency === 'NGN' ? (
+                      <>
+                        <span><i className="ti ti-credit-card" aria-hidden="true" /> Card</span>
+                        <span><i className="ti ti-building-bank" aria-hidden="true" /> Bank transfer</span>
+                        <span><i className="ti ti-currency-dollar" aria-hidden="true" /> USDC</span>
+                      </>
+                    ) : (
+                      <span><i className="ti ti-currency-solana" aria-hidden="true" /> {item.currency} on Solana</span>
+                    )}
+                  </div>
+                  <button type="button" className="ui-btn ui-btn-ghost ui-btn-lg sc-pay" onClick={() => setTopUp(true)}><i className="ti ti-plus" aria-hidden="true" /> Add money</button>
+                </section>
+              </div>
+
+              <aside className="sc-side">
+                <section className="ui-card ui-card-pad">
+                  <h2 className="sc-h2" style={{ display: 'flex', alignItems: 'center', gap: 8 }}><i className="ti ti-list-details" aria-hidden="true" /> Overview</h2>
+                  <div className="sc-line"><span>{item.title}</span><span>{money(item.price, item.currency)}</span></div>
+                  {!item.official && <div className="sc-line"><span>Seller</span><span>@{item.seller}</span></div>}
+                  {!item.official && <div className="sc-line"><span>Delivery</span><span>{delivery}</span></div>}
+                  <div className="sc-line"><span>Fees</span><span>None</span></div>
+                  <div className="sc-line total"><span>Total</span><span>{money(item.price, item.currency)}</span></div>
+                  {!item.official && (
+                    <div className="sc-brief-sum">
+                      <div className="sc-sec-head"><span className="ui-label" style={{ margin: 0 }}>Your brief</span><button type="button" className="sc-more" onClick={() => setParams({})}>Edit</button></div>
+                      {brief.trim() ? <p>{brief.trim()}</p> : <p className="empty">No message. You can still talk to the seller in your chat after paying.</p>}
+                      {files.length > 0 && <small><i className="ti ti-paperclip" aria-hidden="true" /> {files.length} attachment{files.length === 1 ? '' : 's'}</small>}
+                    </div>
+                  )}
+                  {item.official
+                    ? <p className="sc-note"><i className="ti ti-bolt" aria-hidden="true" /> Takes effect as soon as you pay. Not refundable once applied.</p>
+                    : <p className="sc-note"><i className="ti ti-shield-check" aria-hidden="true" /> Buyer protection: the seller gets your payment when you confirm you received the order, or 3 days after they mark it delivered. Something wrong? Report it before then and the money stays on hold.</p>}
+                </section>
+                {item.official && ProductCard}
+              </aside>
+            </div>
+          </>
+        )}
       </div>
       {topUp && <FundWalletModal initialStep="deposit" initialTab={item.currency === 'NGN' ? 'bank' : 'crypto'} onClose={() => { setTopUp(false); refresh() }} onDone={() => refresh()} />}
     </Layout>

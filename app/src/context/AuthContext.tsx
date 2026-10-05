@@ -63,6 +63,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true)
   const isAuthed = !!user
 
+  const refreshUser = useCallback(async () => {
+    try {
+      const data = await apiRequest<any>('/auth/me')
+      const u: User = data.user || data
+      setUser(u)
+      persistAuthSession({ user: { id: u.id, email: u.email, firstName: u.firstName, lastName: u.lastName, username: u.username, avatarUrl: u.avatar, role: u.role as any, referralCode: u.referralCode, isEmailVerified: u.isEmailVerified, createdAt: u.createdAt, kycStatus: u.kycStatus, kycTier: u.kycTier } as any })
+      return u as any
+    } catch {
+      if (!getAccessToken()) {
+        clearAuthSession()
+        setUser(null)
+      } else {
+        const cached = getStoredUser()
+        if (cached) {
+          setUser(cached as unknown as User)
+        }
+      }
+    }
+  }, [])
+
   const login = useCallback((payload: { user?: any; tokens?: { accessToken?: string; refreshToken?: string } }) => {
     const { user: userData, tokens } = payload
     persistAuthSession({
@@ -97,28 +117,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         createdAt: userData.createdAt || new Date().toISOString(),
       }
       setUser(mapped)
+      // The sign-in response has no KYC level, so a verified user looked unverified
+      // (wallet: "Verify your identity to withdraw") until the page was reloaded.
+      // Load the full profile straight away.
+      refreshUser()
     }
-  }, [])
+  }, [refreshUser])
 
-  const refreshUser = useCallback(async () => {
-    try {
-      const data = await apiRequest<any>('/auth/me')
-      const u: User = data.user || data
-      setUser(u)
-      persistAuthSession({ user: { id: u.id, email: u.email, firstName: u.firstName, lastName: u.lastName, username: u.username, avatarUrl: u.avatar, role: u.role as any, referralCode: u.referralCode, isEmailVerified: u.isEmailVerified, createdAt: u.createdAt } })
-      return u as any
-    } catch {
-      if (!getAccessToken()) {
-        clearAuthSession()
-        setUser(null)
-      } else {
-        const cached = getStoredUser()
-        if (cached) {
-          setUser(cached as unknown as User)
-        }
-      }
-    }
-  }, [])
 
   const updateUser = useCallback((partial: Partial<User>) => {
     setUser(prev => prev ? { ...prev, ...partial } : null)
