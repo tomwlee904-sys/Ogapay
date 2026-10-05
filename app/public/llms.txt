@@ -1,0 +1,52 @@
+# OgaPay
+
+> A Nigerian marketplace for paid tasks and freelance services. People earn by completing tasks or selling services; businesses post jobs and pay only for work they approve. Payments in Naira or USDC, held in escrow.
+
+Website: https://ogapay.app
+Operator: OgaPay Technologies Ltd
+Contact: support@ogapay.app
+Official channels: https://x.com/Ogapayhq, https://t.me/ogapay (no other accounts speak for OgaPay)
+
+## How it works
+
+- Posting a job: the poster sets a brief, the proof required, the reward per worker and the number of workers. The budget plus a 10% platform fee is locked in escrow before anyone starts. Workers keep 100% of the reward shown.
+- Doing a job: workers take a job, submit proof, and are paid into their OgaPay wallet when the poster approves. Work the poster leaves unreviewed is approved automatically, after 3 days at most.
+- Cancelling: a job nobody has taken can be cancelled; the budget and fee go back to the poster.
+- Requirements a poster can set: verified identity (KYC level), minimum OgaScore, minimum rank, a connected X account.
+- Store: people sell services and digital products. The buyer's payment is held until they confirm delivery, or 3 days after the seller marks the order delivered. No store fees.
+- Communities: groups with members, a chat, a leaderboard and a feed of jobs.
+- Money: wallets hold Naira, USDC and SOL (USDC and SOL on Solana). Withdrawals go to a Nigerian bank (1.5% fee, minimum ₦100) or a crypto wallet (1%) and need identity verification. Transfers between OgaPay users are free.
+- Vault: every 12 hours (00:00 and 12:00 UTC) platform fees in the vault are shared with $PAY holders by how much they hold. Payouts vary with activity. Nothing on OgaPay is financial advice.
+
+## Public pages
+
+- Jobs: https://ogapay.app/tasks
+- For businesses: https://ogapay.app/hire
+- Store: https://ogapay.app/store
+- Find workers: https://ogapay.app/workers
+- Communities: https://ogapay.app/communities
+- Leaderboard: https://ogapay.app/leaderboard
+- Vault: https://ogapay.app/vault
+- Blog: https://ogapay.app/blog
+- FAQ: https://ogapay.app/faq
+- Guides: https://ogapay.app/docs
+- About: https://ogapay.app/about
+- Support: https://ogapay.app/support
+- Terms: https://ogapay.app/terms
+- Privacy: https://ogapay.app/privacy
+
+## Developer API (read-only)
+
+Docs and keys: https://ogapay.app/developer
+Base URL: https://ogapay.app/api/v1/dev
+Auth: `Authorization: Bearer oga_live_...` (create a key on the developer page; keys can only read)
+
+- GET /me: your account (username, name, OgaScore, KYC level)
+- GET /jobs: open public jobs, newest first (category, search, page, limit)
+- GET /jobs/:id: one public job
+- GET /my/jobs: jobs you posted (page, limit)
+- GET /my/submissions: work you submitted, with status and payment (page, limit)
+- GET /my/balance: your wallets (balance, locked, available)
+- GET /my/transactions: your wallet history (page, limit)
+
+The API cannot post jobs, move money or approve work.

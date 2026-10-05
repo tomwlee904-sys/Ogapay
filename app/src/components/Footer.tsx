@@ -12,7 +12,7 @@ const socials = [
 ]
 
 const columns = [
-  { title: 'Explore', links: [['Create a job', '/create'], ['Browse jobs', '/tasks'], ['Creator store', '/store'], ['Vault', '/vault'], ['Blog', '/blog']] },
+  { title: 'Explore', links: [['Create a job', '/create'], ['Browse jobs', '/tasks'], ['Creator store', '/store'], ['For businesses', '/hire'], ['Vault', '/vault'], ['Blog', '/blog']] },
   { title: 'Resources', links: [['About OgaPay', '/about'], ['Guides', '/docs'], ['Developer', '/developer'], ['FAQ', '/faq'], ['Support', '/support'], ['Terms', '/terms'], ['Privacy', '/privacy']] },
 ]
 

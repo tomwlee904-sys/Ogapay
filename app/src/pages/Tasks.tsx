@@ -428,8 +428,8 @@ async function fetchTasks(category?: string) {
 
   const url =
     category && !['all', 'trending', 'new'].includes(category.toLowerCase())
-      ? '/tasks?category=' + encodeURIComponent(category.toUpperCase())
-      : '/tasks'
+      ? '/tasks?limit=100&category=' + encodeURIComponent(category.toUpperCase())
+      : '/tasks?limit=100'
 
   try {
     const data = await apiRequest<any>(url, { auth: false })
@@ -444,10 +444,12 @@ async function fetchTasks(category?: string) {
 }
 
 // ─── Tasks data with SWR ────────────────────────────────────────
+// limit=100 (the API's most): sorting and filters run on this list, and the
+// default page of 20 hid every job after the 20th
 function useTasksData(category?: string) {
   const url = category && !['all', 'trending', 'new'].includes((category || '').toLowerCase())
-    ? '/tasks?category=' + encodeURIComponent(category.toUpperCase())
-    : '/tasks'
+    ? '/tasks?limit=100&category=' + encodeURIComponent(category.toUpperCase())
+    : '/tasks?limit=100'
   return useApi<any[]>(url, { auth: false })
 }
 

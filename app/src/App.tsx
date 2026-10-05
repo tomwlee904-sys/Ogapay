@@ -66,6 +66,7 @@ const TaskHistory = lazyPage(() => import('./pages/TaskHistory'))
 const Developer = lazyPage(() => import('./pages/Developer'))
 const Roadmap = lazyPage(() => import('./pages/Roadmap'))
 const About = lazyPage(() => import('./pages/About'))
+const ForBusinesses = lazyPage(() => import('./pages/ForBusinesses'))
 const Workers = lazyPage(() => import('./pages/Workers'))
 const WorkerWorkspace = lazyPage(() => import('./pages/WorkerWorkspace'))
 const Writer = lazyPage(() => import('./pages/Writer'))
@@ -202,7 +203,8 @@ export default function App() {
 
             {/* ── Developer & Roadmap ── */}
             <Route path="/roadmap" element={<Roadmap />} />
-            <Route path="/use-cases" element={<Navigate to="/about" replace />} />
+            <Route path="/hire" element={<ForBusinesses />} />
+            <Route path="/use-cases" element={<Navigate to="/hire" replace />} />
             <Route path="/about" element={<About />} />
 
             {/* ── Admin ── */}
