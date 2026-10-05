@@ -161,7 +161,7 @@ export default function FAQ() {
         .fq-layout{display:grid;grid-template-columns:230px minmax(0,1fr);gap:28px;align-items:start}
         .fq-side{position:sticky;top:calc(var(--nav-h,64px) + 20px)}
         .fq-side-head{display:flex;justify-content:space-between;padding:0 10px 10px;font:400 9px var(--font-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--text2)}
-        .fq-topic{width:100%;display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:10px;border:0;background:none;cursor:pointer;font:400 12.5px 'Geist',system-ui,sans-serif;color:var(--text2);text-align:left}
+        .fq-topic{width:100%;display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:10px;border:0;background:none;cursor:pointer;font:400 12.5px 'Inter',system-ui,sans-serif;color:var(--text2);text-align:left}
         .fq-topic .n{font:400 10px var(--font-mono);color:var(--text3);width:18px}
         .fq-topic .c{margin-left:auto;font:400 10px var(--font-mono);color:var(--text3)}
         .fq-topic:hover{color:var(--text)}
@@ -171,7 +171,7 @@ export default function FAQ() {
         .fq-sec-head h2{margin:0;font-size:17px;font-weight:600;letter-spacing:-.02em}
         .fq-list{border:1px solid var(--border);border-radius:16px;background:var(--card);overflow:hidden}
         .fq-item+.fq-item{border-top:1px solid var(--border)}
-        .fq-q{width:100%;display:flex;justify-content:space-between;align-items:center;gap:16px;padding:15px 16px;border:0;background:none;cursor:pointer;font:500 13.5px 'Geist',system-ui,sans-serif;color:var(--text);text-align:left}
+        .fq-q{width:100%;display:flex;justify-content:space-between;align-items:center;gap:16px;padding:15px 16px;border:0;background:none;cursor:pointer;font:500 13.5px 'Inter',system-ui,sans-serif;color:var(--text);text-align:left}
         .fq-q i{font-size:15px;color:var(--text3);transition:transform .2s ease;flex-shrink:0}
         .fq-item.open .fq-q i{transform:rotate(180deg)}
         .fq-q:focus-visible{outline:2px solid var(--text);outline-offset:-2px;border-radius:12px}
@@ -186,7 +186,7 @@ export default function FAQ() {
           .fq-side{display:none}
           .fq-chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:18px;scrollbar-width:none;position:sticky;top:var(--nav-h,64px);background:var(--bg);z-index:5;padding-top:8px}
           .fq-chips::-webkit-scrollbar{display:none}
-          .fq-chips button{flex-shrink:0;height:32px;padding:0 12px;border-radius:999px;border:1px solid var(--border);background:var(--card);font:500 12px 'Geist',system-ui,sans-serif;color:var(--text2);cursor:pointer}
+          .fq-chips button{flex-shrink:0;height:32px;padding:0 12px;border-radius:999px;border:1px solid var(--border);background:var(--card);font:500 12px 'Inter',system-ui,sans-serif;color:var(--text2);cursor:pointer}
           .fq-chips button.on{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
         }
         @media(prefers-reduced-motion:reduce){.fq-a{transition:none}.fq-q i{transition:none}}

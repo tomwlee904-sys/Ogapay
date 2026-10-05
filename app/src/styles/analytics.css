@@ -1,10 +1,10 @@
 /* Analytics (/analytics) */
 .an2-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
-.an2-head h1 { font: 800 30px/1.1 Geist, sans-serif; letter-spacing: -.02em; margin: 0 0 6px; color: var(--text); }
+.an2-head h1 { font: 800 30px/1.1 Inter, sans-serif; letter-spacing: -.02em; margin: 0 0 6px; color: var(--text); }
 .an2-head p { margin: 0; font-size: 14px; color: var(--text2); }
 .an2-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 12px; }
 .an2-stat { padding: 16px 18px; min-width: 0; }
-.an2-stat b { display: block; font: 700 24px/1.2 Geist, sans-serif; color: var(--text); margin: 8px 0 2px; letter-spacing: -.02em; overflow-wrap: anywhere; }
+.an2-stat b { display: block; font: 700 24px/1.2 Inter, sans-serif; color: var(--text); margin: 8px 0 2px; letter-spacing: -.02em; overflow-wrap: anywhere; }
 .an2-stat span { font-size: 12px; color: var(--text3); }
 .an2-spent { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 12px 16px; margin-bottom: 12px; font-size: 13px; color: var(--text2); }
 .an2-spent i { font-size: 18px; color: var(--text3); }
@@ -13,7 +13,7 @@
 .an2-spent a { color: var(--text); font-weight: 700; font-size: 13px; }
 .an2-charts { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
 .an2-chart { padding: 16px 18px 12px; min-width: 0; }
-.an2-chart h2, .an2-sec h2 { font: 700 15px Geist, sans-serif; margin: 0 0 12px; color: var(--text); }
+.an2-chart h2, .an2-sec h2 { font: 700 15px Inter, sans-serif; margin: 0 0 12px; color: var(--text); }
 .an2-plot { height: 210px; }
 .an2-wait { height: 100%; display: grid; place-items: center; color: var(--text3); font-size: 13px; }
 .an2-empty { margin-bottom: 12px; }

@@ -1,5 +1,5 @@
 .hr-head { margin-bottom: 20px; }
-.hr-head h1 { font: 800 28px/1.15 Geist, sans-serif; letter-spacing: -.02em; margin: 0 0 6px; color: var(--text); }
+.hr-head h1 { font: 800 28px/1.15 Inter, sans-serif; letter-spacing: -.02em; margin: 0 0 6px; color: var(--text); }
 .hr-head p { margin: 0; color: var(--text2); font-size: 14px; }
 .hr-steps { list-style: none; display: flex; gap: 18px; padding: 0; margin: 16px 0 0; flex-wrap: wrap; }
 .hr-steps li { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text3); }
@@ -13,7 +13,7 @@
 .hr-main { display: grid; gap: 14px; min-width: 0; }
 .hr-sec { padding: 20px 22px; }
 .hr-sec-h { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px; }
-.hr-sec-h h2, .hr-pay h2 { font: 700 16px Geist, sans-serif; margin: 0; color: var(--text); }
+.hr-sec-h h2, .hr-pay h2 { font: 700 16px Inter, sans-serif; margin: 0; color: var(--text); }
 .hr-sec-h a { font-size: 13px; font-weight: 700; color: var(--text); }
 .hr-tag { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 700; color: var(--text2); padding: 3px 8px; border: 1px solid var(--border); border-radius: 99px; }
 .hr-who { display: grid; grid-template-columns: 56px 1fr; gap: 12px; }

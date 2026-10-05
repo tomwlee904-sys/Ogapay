@@ -1,7 +1,7 @@
 /* Manage jobs (/manage-jobs): the poster's jobs and the review drawer */
 .mj-tabs { display: flex; gap: 4px; margin-top: 22px; border-bottom: 1px solid var(--border); overflow-x: auto; scrollbar-width: none; }
 .mj-tabs::-webkit-scrollbar { display: none; }
-.mj-tab { display: inline-flex; align-items: center; gap: 7px; height: 40px; padding: 0 14px; border: 0; border-bottom: 2px solid transparent; margin-bottom: -1px; background: none; color: var(--text2); font: 500 13px 'Geist', system-ui, sans-serif; cursor: pointer; white-space: nowrap; }
+.mj-tab { display: inline-flex; align-items: center; gap: 7px; height: 40px; padding: 0 14px; border: 0; border-bottom: 2px solid transparent; margin-bottom: -1px; background: none; color: var(--text2); font: 500 13px 'Inter', system-ui, sans-serif; cursor: pointer; white-space: nowrap; }
 .mj-tab.on { color: var(--text); border-bottom-color: var(--text); }
 .mj-tab i { font-size: 15px; }
 
@@ -68,7 +68,7 @@ button.mj-sum:hover { border-color: var(--text3); }
 .mj-acts { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
 .mj-acts .ui-btn { flex: 1 1 140px; }
 .mj-reason { margin-top: 10px; display: grid; gap: 8px; }
-.mj-reason textarea { width: 100%; min-height: 72px; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--card2); color: var(--text); font: 13px/1.5 'Geist', system-ui, sans-serif; resize: vertical; outline: none; }
+.mj-reason textarea { width: 100%; min-height: 72px; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--card2); color: var(--text); font: 13px/1.5 'Inter', system-ui, sans-serif; resize: vertical; outline: none; }
 .mj-rows { border: 1px solid var(--border); border-radius: 14px; }
 .mj-row { display: flex; align-items: center; gap: 10px; padding: 10px 12px; font-size: 13px; }
 .mj-row + .mj-row { border-top: 1px solid var(--border); }
@@ -101,7 +101,7 @@ button.mj-sum:hover { border-color: var(--text3); }
 .mj-tpl-rename { display: flex; gap: 6px; }
 .mj-tpl-rename .ui-input { max-width: 320px; }
 .mj-row > .ui-btn { flex-shrink: 0; }
-.mj-block { margin-left: auto; flex-shrink: 0; height: 26px; padding: 0 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--text2); font: 500 11px 'Geist', system-ui, sans-serif; cursor: pointer; }
+.mj-block { margin-left: auto; flex-shrink: 0; height: 26px; padding: 0 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--text2); font: 500 11px 'Inter', system-ui, sans-serif; cursor: pointer; }
 .mj-block:hover { color: #dc2626; border-color: color-mix(in srgb, #dc2626 40%, var(--border)); }
 @media (max-width: 768px) {
   .mj-tool-form { grid-template-columns: 1fr; }

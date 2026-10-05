@@ -194,14 +194,14 @@ export default function Blog() {
       <style>{`
         .bl{max-width:calc(var(--container) + 2 * var(--gutter));margin:0 auto;padding:var(--page-top) var(--gutter) 40px}
         .bl-head{display:flex;align-items:flex-start;justify-content:space-between;gap:20px}
-        .bl-eyebrow{margin:0;font:400 9px/1.5 'Geist Mono',ui-monospace,monospace;letter-spacing:.07em;text-transform:uppercase;color:var(--text3)}
+        .bl-eyebrow{margin:0;font:400 9px/1.5 'JetBrains Mono',ui-monospace,monospace;letter-spacing:.07em;text-transform:uppercase;color:var(--text3)}
         .bl-title{margin:8px 0 0;font-size:var(--fs-title);line-height:1.12;font-weight:600;letter-spacing:var(--tracking-tight);color:var(--text)}
         .bl-sub{margin:8px 0 0;font-size:13px;line-height:1.75;color:var(--text2)}
         .bl-write{display:inline-flex;align-items:center;gap:8px;height:44px;padding:0 14px;border:0;border-radius:10px;background:var(--text);color:var(--bg);font:500 12px/1 inherit;cursor:pointer;white-space:nowrap;flex-shrink:0;margin-top:24px}
         .bl-write i{font-size:15px}
         .bl-bar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:40px;padding-bottom:18px;border-bottom:1px solid var(--border)}
         .bl-bar h2{margin:0;font-size:18px;line-height:1.4;font-weight:600;letter-spacing:-.035em;color:var(--text)}
-        .bl-count{display:block;margin-top:4px;font:400 10px/1.5 'Geist Mono',ui-monospace,monospace;color:var(--text3)}
+        .bl-count{display:block;margin-top:4px;font:400 10px/1.5 'JetBrains Mono',ui-monospace,monospace;color:var(--text3)}
         .bl-tools{display:flex;align-items:center;gap:10px}
         .bl-search{display:flex;align-items:center;gap:8px;height:44px;padding:0 12px;border:1px solid var(--border);border-radius:12px;background:var(--card);width:220px}
         .bl-search i{color:var(--text3);font-size:15px}

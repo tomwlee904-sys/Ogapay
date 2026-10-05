@@ -2,7 +2,7 @@
 .ms-shell { display: grid; grid-template-columns: 320px minmax(0, 1fr); height: calc(100dvh - var(--nav-h, 64px) - 64px); min-height: 480px; background: var(--card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
 .ms-side { border-right: 1px solid var(--border); display: flex; flex-direction: column; min-height: 0; min-width: 0; }
 .ms-side-h { padding: 16px 16px 10px; }
-.ms-side-h h1 { font: 800 20px Geist, sans-serif; margin: 0 0 10px; }
+.ms-side-h h1 { font: 800 20px Inter, sans-serif; margin: 0 0 10px; }
 .ms-search { display: flex; align-items: center; gap: 8px; height: 38px; padding: 0 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg); }
 .ms-search input { flex: 1; border: 0; background: transparent; outline: 0; color: var(--text); font: 13px inherit; font-family: inherit; min-width: 0; }
 .ms-search i { color: var(--text3); }

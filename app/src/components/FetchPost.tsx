@@ -77,7 +77,7 @@ export default function FetchPost({ onPostFetched }: { onPostFetched?: (data: Po
       }}>
         <h3 style={{
           fontSize: 16, fontWeight: 800, margin: 0, color: C.text,
-          fontFamily: 'Geist,sans-serif',
+          fontFamily: 'Inter,sans-serif',
         }}>
           Custom Twitter Raid
         </h3>

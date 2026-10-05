@@ -194,7 +194,7 @@ const rankStyles = `
 .rank-wrap { max-width: 680px; margin: 0 auto; padding: 32px 20px 80px; }
 .rank-header { display: flex; align-items: center; gap: 16px; margin-bottom: 28px; }
 .rank-header-icon { width: 56px; height: 56px; display: grid; place-items: center; background: var(--bg2); border-radius: 14px; flex-shrink: 0; }
-.rank-title { font-size: 24px; font-weight: 900; margin: 0 0 4px; color: var(--text); font-family: 'Geist', sans-serif; }
+.rank-title { font-size: 24px; font-weight: 900; margin: 0 0 4px; color: var(--text); font-family: 'Inter', sans-serif; }
 .rank-subtitle { font-size: 13px; color: var(--text2); margin: 0; line-height: 1.5; }
 .rank-loading { text-align: center; padding: 60px 0; color: var(--text2); font-size: 14px; }
 
@@ -233,7 +233,7 @@ const rankStyles = `
 .rank-unlock-item { font-size: 11px; color: var(--text2); padding: 3px 10px; border-radius: 6px; background: var(--bg2); border: 1px solid var(--border); }
 
 .rank-info-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 20px; }
-.rank-info-card h3 { font-size: 15px; font-weight: 800; margin: 0 0 10px; color: var(--text); font-family: 'Geist', sans-serif; }
+.rank-info-card h3 { font-size: 15px; font-weight: 800; margin: 0 0 10px; color: var(--text); font-family: 'Inter', sans-serif; }
 .rank-info-card p { font-size: 13px; color: var(--text2); line-height: 1.6; margin: 0 0 12px; }
 .rank-info-card ul { margin: 0 0 12px; padding-left: 18px; }
 .rank-info-card li { font-size: 13px; color: var(--text2); line-height: 1.8; }

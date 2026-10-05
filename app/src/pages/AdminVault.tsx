@@ -103,7 +103,7 @@ export default function AdminVault() {
       <Layout>
         <div style={{ textAlign: 'center', padding: '60px 24px' }}>
           <i className="ti ti-shield-lock" style={{ fontSize: 48, color: 'var(--text3)' }} />
-          <h2 style={{ fontFamily: 'Geist', marginTop: 12 }}>Admin Access Required</h2>
+          <h2 style={{ fontFamily: 'Inter', marginTop: 12 }}>Admin Access Required</h2>
           <p style={{ color: 'var(--text2)' }}>You need admin privileges to access this page.</p>
         </div>
       </Layout>
@@ -124,7 +124,7 @@ export default function AdminVault() {
     btnPrimary: { height: 38, padding: '0 18px', borderRadius: 9, border: 'none', fontWeight: 700, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', gap: 6, background: OGAPAY_BLUE, color: 'var(--on-accent)' },
     statGrid: { display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12, marginBottom: 16 },
     statCard: { background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 12, padding: 16, textAlign: 'center' as const },
-    statNum: { fontFamily: 'Geist', fontSize: 24, fontWeight: 900 },
+    statNum: { fontFamily: 'Inter', fontSize: 24, fontWeight: 900 },
     statLabel: { fontSize: 11, color: 'var(--text2)', marginTop: 2 },
     flexRow: { display: 'flex', gap: 8, alignItems: 'flex-end' as const, flexWrap: 'wrap' as const },
     formGroup: { flex: 1, minWidth: 140 },
@@ -136,7 +136,7 @@ export default function AdminVault() {
     <Layout>
       {toast && <div style={S.toast}>{toast}</div>}
       <div style={S.page}>
-        <h1 style={{ fontFamily: 'Geist', fontSize: 28, fontWeight: 900, margin: '0 0 4px' }}>
+        <h1 style={{ fontFamily: 'Inter', fontSize: 28, fontWeight: 900, margin: '0 0 4px' }}>
           <i className="ti ti-vault" style={{ color: OGAPAY_BLUE }} /> Vault Admin
         </h1>
         <p style={{ color: 'var(--text2)', fontSize: 14, margin: '0 0 24px' }}>

@@ -37,7 +37,7 @@ function ConfigCardMockup() {
   return (
     <div style={{
       background: "#F8F8FA", borderRadius: 16, padding: 20,
-      border: "1px solid #D0E2CC", fontFamily: "'Geist', sans-serif",
+      border: "1px solid #D0E2CC", fontFamily: "'Inter', sans-serif",
     }}>
       <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
         <div>
@@ -199,7 +199,7 @@ function FeatureBlock({ title, description, mockup, reverse, accent }: FeatureBl
           >
             <h3 style={{
               display: "flex", alignItems: "center", gap: 10,
-              fontFamily: "'Geist', sans-serif",
+              fontFamily: "'Inter', sans-serif",
               fontSize: "clamp(18px, 1.6vw, 22px)",
               fontWeight: 800,
               color: "#0a0a0a",

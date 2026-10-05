@@ -1,7 +1,7 @@
 /* Own profile (/profile) sections */
 .po-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius, 16px); overflow: hidden; }
 .po-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 18px 22px; border-bottom: 1px solid var(--border); }
-.po-head h3 { display: flex; align-items: center; gap: 8px; font: 800 14px Geist, sans-serif; margin: 0; color: var(--text); }
+.po-head h3 { display: flex; align-items: center; gap: 8px; font: 800 14px Inter, sans-serif; margin: 0; color: var(--text); }
 .po-head h3 i { font-size: 16px; color: var(--text2); }
 .po-head a, .po-head button.lnk { font-size: 12px; font-weight: 700; color: var(--text); background: none; border: 0; cursor: pointer; font-family: inherit; text-decoration: none; }
 .po-body { padding: 18px 22px; }
@@ -31,7 +31,7 @@
 .po-ok { display: inline-flex; align-items: center; gap: 6px; color: var(--green); font-weight: 700; font-size: 13px; }
 
 .po-quick { padding: 20px 22px 8px; }
-.po-quick-h { display: flex; align-items: center; gap: 8px; font: 800 15px Geist, sans-serif; margin-bottom: 16px; color: var(--text); }
+.po-quick-h { display: flex; align-items: center; gap: 8px; font: 800 15px Inter, sans-serif; margin-bottom: 16px; color: var(--text); }
 .po-quick-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0 28px; }
 .po-quick-col h4 { font: 400 11px var(--font-mono, ui-monospace, monospace); letter-spacing: .14em; text-transform: uppercase; color: var(--text3); margin: 0 0 8px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
 .po-ql { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); text-decoration: none; color: inherit; }

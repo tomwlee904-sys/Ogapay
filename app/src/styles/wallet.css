@@ -29,7 +29,7 @@
 .wl-dir.in { background: color-mix(in srgb, var(--money) 12%, transparent); color: var(--money); }
 .wl-dir.out { background: color-mix(in srgb, #ea580c 12%, transparent); color: #c2410c; }
 [data-theme="dark"] .wl-dir.out { color: #fb923c; }
-.wl-dir-add { margin-left: auto; font-family: 'Geist', system-ui, sans-serif; letter-spacing: 0; text-transform: none; }
+.wl-dir-add { margin-left: auto; font-family: 'Inter', system-ui, sans-serif; letter-spacing: 0; text-transform: none; }
 .wl-dir-title { margin: 10px 0 12px; font-size: 16px; font-weight: 600; letter-spacing: -.02em; color: var(--text); }
 .wl-acct-num { font-size: clamp(24px, 3vw, 30px); font-weight: 600; letter-spacing: .02em; color: var(--text); font-variant-numeric: tabular-nums; line-height: 1.1; }
 .wl-acct-sub { margin-top: 4px; font-size: 13px; color: var(--text2); }
@@ -56,7 +56,7 @@
 .wl-coins { display: flex; gap: 8px; flex-wrap: wrap; padding-top: 16px; border-top: 1px solid var(--border); }
 .wl-coin { display: inline-flex; align-items: center; gap: 8px; height: 34px; padding: 0 12px; border: 1px solid var(--border); border-radius: 999px; font-size: 12.5px; color: var(--text2); }
 .wl-coin b { color: var(--text); font-weight: 600; font-variant-numeric: tabular-nums; }
-.wl-coin-dot { width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center; font: 700 9px 'Geist', sans-serif; color: #fff; }
+.wl-coin-dot { width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center; font: 700 9px 'Inter', sans-serif; color: #fff; }
 
 /* Lifetime numbers */
 .wl-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
@@ -68,7 +68,7 @@
 .wl-sec { padding: 20px; }
 .wl-sec-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
 .wl-sec-head h2 { margin: 0; font-size: 16px; font-weight: 600; letter-spacing: -.02em; color: var(--text); }
-.wl-link { border: 0; background: none; padding: 0; font: 500 12.5px 'Geist', system-ui, sans-serif; color: var(--text2); cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; }
+.wl-link { border: 0; background: none; padding: 0; font: 500 12.5px 'Inter', system-ui, sans-serif; color: var(--text2); cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; }
 .wl-link:hover { color: var(--text); }
 .wl-chips { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; margin: 0 -2px 6px; padding: 2px; }
 .wl-chips::-webkit-scrollbar { display: none; }
@@ -114,7 +114,7 @@
 .wl-icon-btn { width: 32px; height: 32px; border: 0; border-radius: var(--r-ctl); background: transparent; color: var(--text2); display: grid; place-items: center; cursor: pointer; font-size: 17px; }
 .wl-icon-btn:hover { background: var(--card2); color: var(--text); }
 .wl-pop { position: absolute; right: 0; top: calc(100% + 4px); z-index: 30; min-width: 170px; padding: 6px; border: 1px solid var(--border); border-radius: 12px; background: var(--card); box-shadow: 0 20px 40px -20px rgba(0,0,0,.35); }
-.wl-pop button { width: 100%; display: flex; align-items: center; gap: 8px; height: 34px; padding: 0 10px; border: 0; border-radius: 8px; background: none; font: 400 12.5px 'Geist', system-ui, sans-serif; color: var(--text); cursor: pointer; text-align: left; }
+.wl-pop button { width: 100%; display: flex; align-items: center; gap: 8px; height: 34px; padding: 0 10px; border: 0; border-radius: 8px; background: none; font: 400 12.5px 'Inter', system-ui, sans-serif; color: var(--text); cursor: pointer; text-align: left; }
 .wl-pop button:hover { background: var(--card2); }
 .wl-pop button.danger { color: var(--red); }
 .wl-note { font-size: 12.5px; line-height: 1.55; color: var(--text2); }
@@ -130,7 +130,7 @@
 .wl-amount { position: relative; }
 .wl-amount > span { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-size: 15px; font-weight: 600; color: var(--text2); pointer-events: none; }
 .wl-amount .ui-input { padding-left: 32px; padding-right: 64px; font-size: 18px; font-weight: 600; font-variant-numeric: tabular-nums; }
-.wl-amount .wl-max { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); height: 30px; padding: 0 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); font: 600 11.5px 'Geist', sans-serif; color: var(--text); cursor: pointer; }
+.wl-amount .wl-max { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); height: 30px; padding: 0 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); font: 600 11.5px 'Inter', sans-serif; color: var(--text); cursor: pointer; }
 .wl-hint { margin-top: 6px; font-size: 12px; color: var(--text2); display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
 .wl-hint.err { color: var(--red); }
 .wl-quick { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
@@ -143,7 +143,7 @@
 .wl-ok { color: var(--green); }
 .wl-full { width: 100%; }
 .wl-seg { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; border-radius: 12px; background: var(--card2); margin-bottom: 18px; }
-.wl-seg button { height: 36px; border: 0; border-radius: 9px; background: transparent; font: 500 13px 'Geist', system-ui, sans-serif; color: var(--text2); cursor: pointer; }
+.wl-seg button { height: 36px; border: 0; border-radius: 9px; background: transparent; font: 500 13px 'Inter', system-ui, sans-serif; color: var(--text2); cursor: pointer; }
 .wl-seg button[aria-pressed="true"] { background: var(--card); color: var(--text); box-shadow: 0 1px 2px rgba(0,0,0,.08), 0 0 0 1px var(--border); }
 
 /* Pick a saved bank */
@@ -151,7 +151,7 @@
 .wl-pick label { display: flex; align-items: center; gap: 12px; padding: 12px; border: 1px solid var(--border); border-radius: 14px; cursor: pointer; }
 .wl-pick label:has(input:checked) { border-color: var(--text); box-shadow: 0 0 0 1px var(--text); }
 .wl-pick input { accent-color: var(--text); width: 16px; height: 16px; margin: 0; flex-shrink: 0; }
-.wl-add { display: flex; align-items: center; justify-content: center; gap: 6px; height: 44px; border: 1px dashed var(--border2, var(--border)); border-radius: 14px; background: none; font: 500 13px 'Geist', system-ui, sans-serif; color: var(--text); cursor: pointer; }
+.wl-add { display: flex; align-items: center; justify-content: center; gap: 6px; height: 44px; border: 1px dashed var(--border2, var(--border)); border-radius: 14px; background: none; font: 500 13px 'Inter', system-ui, sans-serif; color: var(--text); cursor: pointer; }
 .wl-add:hover { border-color: var(--text3); }
 
 /* Bank search */
@@ -177,7 +177,7 @@
 /* Dialog */
 .wl-overlay { position: fixed; inset: 0; z-index: 500; background: rgba(0,0,0,.45); display: flex; align-items: center; justify-content: center; padding: 20px; animation: wl-fade .15s ease; }
 .wl-sheet:focus { outline: none; }
-.wl-sheet { width: 100%; max-width: 460px; max-height: min(90vh, 760px); display: flex; flex-direction: column; background: var(--card); border: 1px solid var(--border); border-radius: 20px; box-shadow: 0 30px 60px -30px rgba(0,0,0,.45); font-family: 'Geist', system-ui, sans-serif; color: var(--text); animation: wl-rise .18s ease; }
+.wl-sheet { width: 100%; max-width: 460px; max-height: min(90vh, 760px); display: flex; flex-direction: column; background: var(--card); border: 1px solid var(--border); border-radius: 20px; box-shadow: 0 30px 60px -30px rgba(0,0,0,.45); font-family: 'Inter', system-ui, sans-serif; color: var(--text); animation: wl-rise .18s ease; }
 .wl-sheet-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 18px 20px 0; }
 .wl-sheet-head h2 { margin: 0; font-size: 18px; font-weight: 600; letter-spacing: -.02em; }
 .wl-x { width: 34px; height: 34px; border: 0; border-radius: 10px; background: var(--card2); color: var(--text2); display: grid; place-items: center; cursor: pointer; font-size: 17px; }
@@ -206,7 +206,7 @@
 .dp-acct-num { font-size: clamp(26px, 4vw, 32px) !important; letter-spacing: .06em; font-variant-numeric: tabular-nums; }
 .dp-steps { margin: 18px 0 0; padding: 0; list-style: none; counter-reset: dp; display: grid; gap: 8px; font-size: 13px; line-height: 1.55; color: var(--text2); }
 .dp-steps li { display: flex; gap: 10px; counter-increment: dp; }
-.dp-steps li::before { content: counter(dp); flex-shrink: 0; width: 20px; height: 20px; margin-top: 1px; border-radius: 50%; background: var(--card2); color: var(--text); font: 600 11px/20px 'Geist', sans-serif; text-align: center; }
+.dp-steps li::before { content: counter(dp); flex-shrink: 0; width: 20px; height: 20px; margin-top: 1px; border-radius: 50%; background: var(--card2); color: var(--text); font: 600 11px/20px 'Inter', sans-serif; text-align: center; }
 .dp-lock { padding: 22px; border: 1px dashed var(--border); border-radius: 16px; text-align: center; }
 .dp-lock i { font-size: 26px; color: var(--text); }
 .dp-lock h3 { margin: 8px 0 4px; font-size: 15px; font-weight: 600; color: var(--text); }

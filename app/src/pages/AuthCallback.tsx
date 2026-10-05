@@ -178,7 +178,7 @@ export default function AuthCallback() {
       minHeight: "100vh",
       display: "grid",
       placeItems: "center",
-      fontFamily: "'Geist', sans-serif",
+      fontFamily: "'Inter', sans-serif",
       background: "#f6f8fc",
     }}>
       <div style={{

@@ -469,13 +469,13 @@ export default function TaskCard({ task, hideApply }: { task: CardTask; hideAppl
         }}>
           <span className="oga-shimmer tc-reward-amount" style={{ color: isDark ? '#ffffff' : undefined, textShadow: isDark ? 'none' : undefined,
             fontSize: 34, fontWeight: 900,
-            fontFamily: 'Geist, sans-serif', lineHeight: 1,
+            fontFamily: 'Inter, sans-serif', lineHeight: 1,
           }}>
             {shown.converted ? <><small style={{ fontSize: '.55em', marginRight: 4 }}>≈</small>{shown.converted}</> : reward.toLocaleString()}
           </span>
           <span className="oga-token-shimmer" style={{ color: isDark ? '#ffffff' : undefined,
             fontSize: 13, fontWeight: 800,
-            fontFamily: 'Geist, sans-serif',
+            fontFamily: 'Inter, sans-serif',
           }}>
             {shown.converted ? '' : rewardCurrency}
           </span>

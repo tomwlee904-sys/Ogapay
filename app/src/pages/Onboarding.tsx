@@ -23,7 +23,7 @@ const Logo = ({ size = 28 }) => (
 const css = `
   @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Outfit:wght@600;700;800;900&display=swap');
 
-  .og-wrap { font-family: "Geist", sans-serif; background: #f4f4f5; height: 100vh; display: flex; flex-direction: column; overflow: hidden; color: #111; font-size: 14px; }
+  .og-wrap { font-family: "Inter", sans-serif; background: #f4f4f5; height: 100vh; display: flex; flex-direction: column; overflow: hidden; color: #111; font-size: 14px; }
 
   /* layout */
   .og-body { display: grid; grid-template-columns: 52px 1fr 268px; flex: 1; overflow: hidden; }
@@ -47,7 +47,7 @@ const css = `
 
   /* content */
   .og-content { overflow-y:auto; padding:24px 22px; background:#fafafa; }
-  .og-h1 { font-family:"Geist",sans-serif; font-size:20px; font-weight:800; margin-bottom:2px; }
+  .og-h1 { font-family:"Inter",sans-serif; font-size:20px; font-weight:800; margin-bottom:2px; }
   .og-sub { font-size:13px; color:#71717a; margin-bottom:20px; }
 
   /* intro strip */
@@ -71,7 +71,7 @@ const css = `
   .og-pcard:hover { border-color:#a1a1aa; box-shadow:0 2px 8px rgba(0,0,0,.06); }
   .og-pcard.sel { border-color:#111; box-shadow:0 0 0 3px rgba(17,17,17,.07); }
   .og-step-num { display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; border:1.5px solid #e4e4e7; border-radius:6px; font-size:11px; font-weight:800; color:#71717a; margin-bottom:14px; }
-  .og-pcard h3 { font-family:"Geist",sans-serif; font-size:15px; font-weight:800; line-height:1.2; margin-bottom:8px; }
+  .og-pcard h3 { font-family:"Inter",sans-serif; font-size:15px; font-weight:800; line-height:1.2; margin-bottom:8px; }
   .og-pcard p { font-size:12px; color:#71717a; line-height:1.5; margin-bottom:14px; }
 
   /* os selector */
@@ -87,7 +87,7 @@ const css = `
 
   /* connect card */
   .og-connect { background:#fff; border:1.5px solid #e4e4e7; border-radius:12px; padding:18px; margin-bottom:18px; }
-  .og-connect h3 { font-family:"Geist",sans-serif; font-size:15px; font-weight:800; margin-bottom:4px; }
+  .og-connect h3 { font-family:"Inter",sans-serif; font-size:15px; font-weight:800; margin-bottom:4px; }
   .og-connect p { font-size:12px; color:var(--accent); margin-bottom:12px; }
 
   /* provider options */
@@ -115,7 +115,7 @@ const css = `
 
   /* right panel */
   .og-right { background:#fff; border-left:1px solid #e4e4e7; overflow-y:auto; padding:20px 16px; }
-  .og-rh2 { font-family:"Geist",sans-serif; font-size:16px; font-weight:800; margin-bottom:4px; }
+  .og-rh2 { font-family:"Inter",sans-serif; font-size:16px; font-weight:800; margin-bottom:4px; }
   .og-rsub { font-size:12px; color:#71717a; margin-bottom:16px; line-height:1.5; }
 
   /* resource card */
@@ -264,7 +264,7 @@ export default function OgaPayOnboarding() {
                   <I n="check" s={22} c="#4ade80" />
                 </div>
                 <div>
-                  <div style={{ fontFamily: "Geist,sans-serif", fontSize: 15, fontWeight: 800, marginBottom: 3 }}>Setup complete!</div>
+                  <div style={{ fontFamily: "Inter,sans-serif", fontSize: 15, fontWeight: 800, marginBottom: 3 }}>Setup complete!</div>
                   <div style={{ fontSize: 13, color: "rgba(255,255,255,.7)" }}>You're ready to start receiving tasks and earning on OgaPay.</div>
                 </div>
               </div>
@@ -439,7 +439,7 @@ export default function OgaPayOnboarding() {
 
             <div className="og-divider" />
 
-            <h3 style={{ fontFamily: "Geist,sans-serif", fontSize: 15, fontWeight: 800, marginBottom: 4 }}>Video tutorials</h3>
+            <h3 style={{ fontFamily: "Inter,sans-serif", fontSize: 15, fontWeight: 800, marginBottom: 4 }}>Video tutorials</h3>
             <p style={{ fontSize: 12, color: "#71717a", marginBottom: 12 }}>Step by step guides to get you started.</p>
 
             <div className="og-video">

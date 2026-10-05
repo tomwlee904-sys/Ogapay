@@ -186,7 +186,7 @@ function JobDetailModal({ job, onClose, onApply }: { job: any; onClose: () => vo
               <span style={{ padding: '3px 8px', borderRadius: 5, background: 'rgba(var(--accent-rgb),0.08)', color: OGAPAY_BLUE, fontSize: 10, fontWeight: 700 }}>{job.category || job.taskCategory || 'Task'}</span>
               {job.featured && <span style={{ padding: '3px 8px', borderRadius: 5, background: 'rgba(245,158,11,0.12)', color: 'var(--gold)', fontSize: 10, fontWeight: 700 }}>Featured</span>}
             </div>
-            <h2 style={{ fontFamily: 'Geist', fontSize: 18, fontWeight: 900, margin: 0 }}>{job.title}</h2>
+            <h2 style={{ fontFamily: 'Inter', fontSize: 18, fontWeight: 900, margin: 0 }}>{job.title}</h2>
           </div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text3)', fontSize: 20, cursor: 'pointer', padding: 4 }}>
             <i className="ti ti-x" />
@@ -304,7 +304,7 @@ function JobDetailModal({ job, onClose, onApply }: { job: any; onClose: () => vo
             <i className="ti ti-currency-naira" style={{ fontSize: 22, color: OGAPAY_BLUE }} />
           </div>
           <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>Reward Per Task</div>
-          <div style={{ fontSize: 30, fontWeight: 900, fontFamily: 'Geist', color: OGAPAY_BLUE, lineHeight: 1 }}>
+          <div style={{ fontSize: 30, fontWeight: 900, fontFamily: 'Inter', color: OGAPAY_BLUE, lineHeight: 1 }}>
             ₦{Number(job.reward || job.amount || 0).toLocaleString()}
           </div>
           <div style={{ fontSize: 12, color: 'var(--text3)', fontWeight: 600, marginTop: 6 }}>
@@ -379,7 +379,7 @@ function JobDetailModal({ job, onClose, onApply }: { job: any; onClose: () => vo
       {showReportModal && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 1200, display: 'grid', placeItems: 'center', padding: 16, background: 'rgba(0,0,0,0.5)' }} onClick={() => { if(!reportSubmitting) setShowReportModal(false) }}>
           <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 16, padding: 24, maxWidth: 440, width: '100%' }} onClick={e => e.stopPropagation()}>
-            <h3 style={{ fontFamily: 'Geist', fontSize: 16, fontWeight: 900, margin: '0 0 12px' }}>Report Task</h3>
+            <h3 style={{ fontFamily: 'Inter', fontSize: 16, fontWeight: 900, margin: '0 0 12px' }}>Report Task</h3>
             {reportMsg && (
               <div style={{ padding: '8px 12px', borderRadius: 8, marginBottom: 12, fontSize: 12, fontWeight: 600,
                 background: reportMsg.includes('submitted') ? 'rgba(var(--accent-rgb),0.08)' : 'rgba(var(--red-rgb),0.1)',

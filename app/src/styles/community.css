@@ -2,10 +2,10 @@
 .cm2-head { overflow: hidden; }
 .cm2-cover { height: 150px; background-size: cover; background-position: center; border-bottom: 1px solid var(--border); }
 .cm2-id { display: grid; grid-template-columns: 76px minmax(0, 1fr) auto; gap: 12px 16px; align-items: start; padding: 12px 22px 0; }
-.cm2-logo { width: 76px; height: 76px; margin-top: -44px; border-radius: 18px; border: 3px solid var(--card); display: grid; place-items: center; color: #fff; font: 800 26px Geist, sans-serif; overflow: hidden; }
+.cm2-logo { width: 76px; height: 76px; margin-top: -44px; border-radius: 18px; border: 3px solid var(--card); display: grid; place-items: center; color: #fff; font: 800 26px Inter, sans-serif; overflow: hidden; }
 .cm2-logo img { width: 100%; height: 100%; object-fit: cover; }
 .cm2-title { min-width: 0; padding-bottom: 2px; }
-.cm2-title h1 { font: 800 24px/1.15 Geist, sans-serif; letter-spacing: -.02em; margin: 0 0 4px; color: var(--text); overflow-wrap: anywhere; }
+.cm2-title h1 { font: 800 24px/1.15 Inter, sans-serif; letter-spacing: -.02em; margin: 0 0 4px; color: var(--text); overflow-wrap: anywhere; }
 .cm2-sub { font-size: 13px; color: var(--text2); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .cm2-sub a { color: var(--text); font-weight: 600; text-decoration: none; }
 .cm2-social { width: 28px; height: 28px; border-radius: 8px; border: 1px solid var(--border); display: inline-grid; place-items: center; color: var(--text2) !important; }
@@ -17,7 +17,7 @@
 .cm2-invite > i { font-size: 20px; }
 .cm2-invite > div { flex: 1; min-width: 200px; }
 .cm2-ask { padding: 18px 20px; margin-top: 12px; }
-.cm2-ask h2 { font: 700 16px Geist, sans-serif; margin: 0 0 4px; }
+.cm2-ask h2 { font: 700 16px Inter, sans-serif; margin: 0 0 4px; }
 .cm2-ask textarea, .cm2-f input, .cm2-f textarea, .cm2-inline input, .cm2-send input { width: 100%; box-sizing: border-box; border: 1px solid var(--border); border-radius: 10px; background: var(--bg2); color: var(--text); font: inherit; font-size: 14px; padding: 10px 12px; outline: 0; }
 .cm2-ask textarea { margin: 12px 0; resize: vertical; }
 .cm2-ask textarea:focus, .cm2-f input:focus, .cm2-f textarea:focus, .cm2-inline input:focus, .cm2-send input:focus { border-color: var(--text3); }
@@ -29,7 +29,7 @@
 .cm2-member:hover { background: var(--bg2); }
 .cm2-member span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cm2-member em { font-style: normal; font-size: 10px; color: var(--text3); }
-.cm2-face { border-radius: 50%; background: var(--bg2); border: 1px solid var(--border); display: inline-grid; place-items: center; overflow: hidden; flex-shrink: 0; font-weight: 800; color: var(--text2); font-family: Geist, sans-serif; }
+.cm2-face { border-radius: 50%; background: var(--bg2); border: 1px solid var(--border); display: inline-grid; place-items: center; overflow: hidden; flex-shrink: 0; font-weight: 800; color: var(--text2); font-family: Inter, sans-serif; }
 .cm2-face img { width: 100%; height: 100%; object-fit: cover; }
 .cm2-inline { display: flex; gap: 8px; }
 .cm2-inline input { flex: 1; min-width: 0; height: 40px; padding: 0 12px; }

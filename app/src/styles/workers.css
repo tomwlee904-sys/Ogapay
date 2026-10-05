@@ -1,6 +1,6 @@
 /* Find workers (/workers) */
 .wk2-head { margin-bottom: 16px; }
-.wk2-head h1 { font: 800 30px/1.1 Geist, sans-serif; letter-spacing: -.02em; margin: 0 0 6px; color: var(--text); }
+.wk2-head h1 { font: 800 30px/1.1 Inter, sans-serif; letter-spacing: -.02em; margin: 0 0 6px; color: var(--text); }
 .wk2-head p { margin: 0; font-size: 14px; color: var(--text2); }
 .wk2-bar { display: flex; gap: 8px; margin-bottom: 10px; }
 .wk2-search { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; height: 44px; padding: 0 12px; border: 1px solid var(--border); border-radius: 12px; background: var(--card); }
@@ -17,7 +17,7 @@
 .wk2-card { padding: 16px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
 .wk2-top { display: flex; align-items: center; gap: 12px; text-decoration: none; color: inherit; min-width: 0; }
 .wk2-top:hover strong { text-decoration: underline; }
-.wk2-av { width: 46px; height: 46px; border-radius: 12px; background: var(--bg2); border: 1px solid var(--border); display: grid; place-items: center; overflow: hidden; flex-shrink: 0; font: 800 16px Geist, sans-serif; color: var(--text2); }
+.wk2-av { width: 46px; height: 46px; border-radius: 12px; background: var(--bg2); border: 1px solid var(--border); display: grid; place-items: center; overflow: hidden; flex-shrink: 0; font: 800 16px Inter, sans-serif; color: var(--text2); }
 .wk2-av img { width: 100%; height: 100%; object-fit: cover; }
 .wk2-id { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .wk2-id strong { font-size: 15px; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

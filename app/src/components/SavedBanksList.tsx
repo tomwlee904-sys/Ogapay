@@ -167,7 +167,7 @@ export default function SavedBanksList({ bare = false }: { bare?: boolean }) {
             maxWidth: 440, width: '100%', padding: 28, maxHeight: '90vh', overflowY: 'auto',
           }} onClick={e => e.stopPropagation()}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-              <h3 style={{ fontFamily: 'Geist', fontSize: 18, fontWeight: 800, margin: 0 }}>Add Bank Account</h3>
+              <h3 style={{ fontFamily: 'Inter', fontSize: 18, fontWeight: 800, margin: 0 }}>Add Bank Account</h3>
               <button style={{ width: 32, height: 32, border: '1px solid var(--border)', borderRadius: 8, background: 'var(--bg2)', cursor: 'pointer', display: 'grid', placeItems: 'center', color: 'var(--text3)', fontSize: 18 }} onClick={() => setShowAdd(false)}>
                 <i className="ti ti-x" />
               </button>

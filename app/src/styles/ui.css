@@ -127,10 +127,10 @@
 .ui-chip em { font-style: normal; opacity: .6; margin-left: 5px; }
 
 /* Store perks: Premium badge, worker frame, boosted job */
-.oga-prem { display: inline-flex; align-items: center; gap: 4px; margin-left: 6px; padding: 2px 8px; border-radius: 999px; background: color-mix(in srgb, #d4a017 16%, transparent); color: #a16207; font: 600 11px/1.4 'Geist', system-ui, sans-serif; vertical-align: middle; white-space: nowrap; }
+.oga-prem { display: inline-flex; align-items: center; gap: 4px; margin-left: 6px; padding: 2px 8px; border-radius: 999px; background: color-mix(in srgb, #d4a017 16%, transparent); color: #a16207; font: 600 11px/1.4 'Inter', system-ui, sans-serif; vertical-align: middle; white-space: nowrap; }
 .oga-prem.icon { padding: 2px 5px; }
 .oga-prem i { font-size: 13px; }
 [data-theme="dark"] .oga-prem { color: #facc15; }
 .oga-frame { box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px #d4a017 !important; }
-.oga-boost { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 999px; background: color-mix(in srgb, var(--green) 14%, transparent); color: var(--green); font: 600 11px/1.3 'Geist', system-ui, sans-serif; white-space: nowrap; }
+.oga-boost { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 999px; background: color-mix(in srgb, var(--green) 14%, transparent); color: var(--green); font: 600 11px/1.3 'Inter', system-ui, sans-serif; white-space: nowrap; }
 .oga-boost i { font-size: 13px; }

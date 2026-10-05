@@ -155,7 +155,7 @@ export default function TransferModal({ onClose, onSuccess }: Props) {
 
   const header = (title: string) => (
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
-      <h3 style={{ fontFamily: 'Geist', fontSize: 18, fontWeight: 800, margin: 0 }}>{title}</h3>
+      <h3 style={{ fontFamily: 'Inter', fontSize: 18, fontWeight: 800, margin: 0 }}>{title}</h3>
       <button aria-label="Close" onClick={onClose} style={{ width: 32, height: 32, border: '1px solid var(--border)', borderRadius: 8, background: 'var(--bg2)', cursor: 'pointer', display: 'grid', placeItems: 'center', color: 'var(--text3)', fontSize: 18 }}>
         <i className="ti ti-x" />
       </button>
@@ -241,7 +241,7 @@ export default function TransferModal({ onClose, onSuccess }: Props) {
           <>
             {header('Confirm transfer')}
             <div style={{ textAlign: 'center', padding: '6px 0 18px' }}>
-              <div style={{ fontFamily: 'Geist', fontSize: 30, fontWeight: 900, letterSpacing: '-.03em' }}>{naira(amt)}</div>
+              <div style={{ fontFamily: 'Inter', fontSize: 30, fontWeight: 900, letterSpacing: '-.03em' }}>{naira(amt)}</div>
               <div style={{ fontSize: 13, color: 'var(--text2)', marginTop: 4 }}>to</div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px', border: '1px solid var(--border)', borderRadius: 10, marginBottom: 12 }}>

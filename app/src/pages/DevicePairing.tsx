@@ -122,7 +122,7 @@ export default function DevicePairing() {
       <div style={{ maxWidth: 640, margin: '0 auto', padding: '40px 20px' }}>
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <h1 style={{ fontFamily: 'Geist', fontSize: 28, fontWeight: 900, margin: '0 0 6px', color: 'var(--text)' }}>Device Pairing</h1>
+          <h1 style={{ fontFamily: 'Inter', fontSize: 28, fontWeight: 900, margin: '0 0 6px', color: 'var(--text)' }}>Device Pairing</h1>
           <p style={{ fontSize: 14, color: 'var(--text2)', margin: 0 }}>Securely link your devices to your OgaPay account</p>
         </div>
 
@@ -254,7 +254,7 @@ export default function DevicePairing() {
         {paired && (
           <div style={{ textAlign: 'center', padding: 24 }}>
             <i className="ti ti-circle-check" style={{ fontSize: 40, color: OGAPAY_BLUE, display: 'block', marginBottom: 12 }} />
-            <div style={{ fontSize: 18, fontWeight: 900, fontFamily: 'Geist', color: 'var(--text)' }}>Device paired successfully!</div>
+            <div style={{ fontSize: 18, fontWeight: 900, fontFamily: 'Inter', color: 'var(--text)' }}>Device paired successfully!</div>
             <p style={{ fontSize: 13, color: 'var(--text2)', margin: '4px 0 0' }}>Redirecting to settings...</p>
           </div>
         )}

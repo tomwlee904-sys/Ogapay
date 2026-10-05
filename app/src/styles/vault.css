@@ -1,24 +1,24 @@
 /* Vault (/vault), wurk.fun layout */
 .vt2-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
-.vt2-head h1 { font: 800 30px/1.1 Geist, sans-serif; letter-spacing: -.02em; margin: 0 0 6px; color: var(--text); }
+.vt2-head h1 { font: 800 30px/1.1 Inter, sans-serif; letter-spacing: -.02em; margin: 0 0 6px; color: var(--text); }
 .vt2-head p { margin: 0; font-size: 14px; color: var(--text2); }
 .vt2-top { display: grid; grid-template-columns: 1.4fr 1fr; gap: 12px; margin-bottom: 12px; }
 .vt2-bal { padding: 20px 22px; background: linear-gradient(135deg, color-mix(in srgb, var(--green) 7%, var(--card)), var(--card)); }
-.vt2-big { font: 700 44px/1.05 Geist, sans-serif; letter-spacing: -.03em; color: var(--green); margin: 10px 0 8px; overflow-wrap: anywhere; }
+.vt2-big { font: 700 44px/1.05 Inter, sans-serif; letter-spacing: -.03em; color: var(--green); margin: 10px 0 8px; overflow-wrap: anywhere; }
 .vt2-big small { font-size: 16px; font-weight: 600; color: var(--text2); margin-left: 6px; letter-spacing: 0; }
 .vt2-sub { font-size: 12px; color: var(--text3); }
 .vt2-next { padding: 20px 22px; }
-.vt2-count { font: 700 28px/1.1 Geist, sans-serif; color: var(--text); margin: 10px 0 6px; letter-spacing: -.02em; }
+.vt2-count { font: 700 28px/1.1 Inter, sans-serif; color: var(--text); margin: 10px 0 6px; letter-spacing: -.02em; }
 .vt2-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 12px; }
 .vt2-stat { padding: 16px 18px; }
-.vt2-stat b { display: block; font: 700 24px/1.2 Geist, sans-serif; color: var(--text); margin-top: 8px; letter-spacing: -.02em; overflow-wrap: anywhere; }
+.vt2-stat b { display: block; font: 700 24px/1.2 Inter, sans-serif; color: var(--text); margin-top: 8px; letter-spacing: -.02em; overflow-wrap: anywhere; }
 .vt2-sec { padding: 18px 22px; margin-bottom: 12px; }
-.vt2-sec h2 { font: 700 16px Geist, sans-serif; margin: 0; color: var(--text); }
+.vt2-sec h2 { font: 700 16px Inter, sans-serif; margin: 0; color: var(--text); }
 .vt2-sec > p, .vt2-sec .lead { font-size: 13px; color: var(--text2); margin: 4px 0 14px; }
 .vt2-mine { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
 .vt2-mine div { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; }
 .vt2-mine span { font-size: 11px; color: var(--text3); display: block; }
-.vt2-mine b { font: 700 18px Geist, sans-serif; color: var(--text); display: block; margin-top: 4px; overflow-wrap: anywhere; }
+.vt2-mine b { font: 700 18px Inter, sans-serif; color: var(--text); display: block; margin-top: 4px; overflow-wrap: anywhere; }
 .vt2-claim { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 12px; padding: 12px 14px; border: 1px solid var(--text); border-radius: 12px; }
 .vt2-claim span { flex: 1; min-width: 180px; font-size: 13px; color: var(--text2); }
 .vt2-check { display: flex; gap: 8px; }

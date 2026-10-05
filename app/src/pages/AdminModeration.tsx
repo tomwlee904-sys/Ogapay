@@ -77,7 +77,7 @@ export default function AdminModeration() {
     <Layout sidebar>
       <style>{`
         .mod-wrap{max-width:1100px;margin:0 auto;padding:28px 24px 60px}
-        .mod-wrap h1{font-family:Geist,sans-serif;font-size:28px;font-weight:900;margin:0 0 4px}
+        .mod-wrap h1{font-family:Inter,sans-serif;font-size:28px;font-weight:900;margin:0 0 4px}
         .mod-wrap .sub{color:var(--text2);font-size:14px;margin:0 0 20px}
         .mod-queue{display:flex;flex-direction:column;gap:12px}
         .mod-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;gap:16px}

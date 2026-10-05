@@ -1,10 +1,10 @@
 /* Developer API (/developer) */
 .dv-wrap { max-width: 860px; }
 .dv-head { margin-bottom: 18px; }
-.dv-head h1 { font: 800 30px/1.1 Geist, sans-serif; letter-spacing: -.02em; margin: 0 0 6px; color: var(--text); }
+.dv-head h1 { font: 800 30px/1.1 Inter, sans-serif; letter-spacing: -.02em; margin: 0 0 6px; color: var(--text); }
 .dv-head p { margin: 0; font-size: 14px; color: var(--text2); max-width: 620px; line-height: 1.55; }
 .dv-card { padding: 18px 20px; margin-bottom: 12px; }
-.dv-card h2 { font: 700 16px Geist, sans-serif; margin: 0 0 4px; color: var(--text); }
+.dv-card h2 { font: 700 16px Inter, sans-serif; margin: 0 0 4px; color: var(--text); }
 .dv-sub { font-size: 13px; color: var(--text3); margin: 0 0 12px; line-height: 1.55; }
 .dv-sub code, .dv-ep p code, .dv-key-t code { font: 12.5px var(--font-mono, ui-monospace, monospace); color: var(--text); background: var(--bg2); border: 1px solid var(--border); border-radius: 6px; padding: 1px 5px; }
 .dv-code { position: relative; margin: 0 0 12px; }

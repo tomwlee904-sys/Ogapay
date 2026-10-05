@@ -60,7 +60,7 @@ export default function Roadmap() {
       <style>{`
         .rm-page{max-width:800px;margin:0 auto;padding:0 0 60px}
         .rm-hero{text-align:center;padding:40px 20px 32px}
-        .rm-hero h1{font-family:Geist;font-size:32px;font-weight:900;margin:0 0 8px}
+        .rm-hero h1{font-family:Inter;font-size:32px;font-weight:900;margin:0 0 8px}
         .rm-hero p{color:var(--text2);font-size:14px;margin:0;max-width:500px;margin:0 auto;line-height:1.6}
         .rm-timeline{position:relative}
         .rm-timeline::before{content:'';position:absolute;left:28px;top:0;bottom:0;width:2px;background:var(--border)}
@@ -71,7 +71,7 @@ export default function Roadmap() {
         .rm-dot.upcoming{background:var(--card);color:var(--text3)}
         @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(var(--accent-rgb),.4)}50%{box-shadow:0 0 0 6px rgba(var(--accent-rgb),0)}}
         .rm-phase-header{display:flex;align-items:center;gap:10px;margin-bottom:12px}
-        .rm-phase-header h2{font-family:Geist;font-size:17px;font-weight:800;margin:0}
+        .rm-phase-header h2{font-family:Inter;font-size:17px;font-weight:800;margin:0}
         .rm-status{display:inline-flex;align-items:center;height:22px;padding:0 10px;border-radius:99px;font-size:10px;font-weight:700}
         .rm-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px 20px}
         .rm-item{display:flex;align-items:center;gap:10px;padding:7px 0;font-size:13px;color:var(--text2)}

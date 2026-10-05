@@ -95,7 +95,7 @@ export default function CreateCommunity() {
         .cc-back{display:inline-flex;align-items:center;gap:6px;margin-bottom:20px;color:var(--text2);font-size:13px;font-weight:600;cursor:pointer;border:none;background:none;padding:0}
         .cc-back:hover{color:var(--text)}
         .cc-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:28px}
-        .cc-card h1{font-family:Geist;font-size:24px;font-weight:900;margin:0 0 4px}
+        .cc-card h1{font-family:Inter;font-size:24px;font-weight:900;margin:0 0 4px}
         .cc-card .cc-sub{color:var(--text2);font-size:13px;margin:0 0 24px}
         .cc-field{margin-bottom:18px}
         .cc-field label{display:block;font-size:12px;font-weight:700;color:var(--text2);margin-bottom:6px}

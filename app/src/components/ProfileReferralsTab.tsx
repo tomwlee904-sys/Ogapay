@@ -90,14 +90,14 @@ export default function TabReferralsContent() {
       <style>{`
         .rf-hero{margin-bottom:20px}
         .rf-hero .rf-greeting{color:var(--text2);font-size:13px;font-weight:600;margin-bottom:2px}
-        .rf-hero h1{font-family:Geist;font-size:28px;font-weight:900;margin:0 0 4px}
+        .rf-hero h1{font-family:Inter;font-size:28px;font-weight:900;margin:0 0 4px}
         .rf-hero p{color:var(--text2);font-size:14px;margin:0}
         .rf-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
         @media(max-width:500px){.rf-stats{grid-template-columns:1fr}}
         .rf-stat{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center;transition:all .25s}
         .rf-stat:hover{transform:none;border-color:var(--accent)}
         .rf-stat i{font-size:24px;margin-bottom:6px;display:block}
-        .rf-stat .rf-num{font-family:Geist;font-size:24px;font-weight:900}
+        .rf-stat .rf-num{font-family:Inter;font-size:24px;font-weight:900}
         .rf-stat .rf-label{font-size:12px;color:var(--text2);margin-top:2px}
         .rf-ref-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px 24px;margin-bottom:20px;transition:all .25s}
         .rf-ref-card:hover{border-color:var(--border2)}
@@ -235,7 +235,7 @@ export default function TabReferralsContent() {
         </div>
       </div>
 
-      <div style={{fontFamily:'Geist',fontSize:15,fontWeight:800,marginBottom:12}}>
+      <div style={{fontFamily:'Inter',fontSize:15,fontWeight:800,marginBottom:12}}>
         <i className="ti ti-list" style={{color:'var(--accent)',marginRight:6}} />Referral History
       </div>
 
@@ -244,7 +244,7 @@ export default function TabReferralsContent() {
       ) : referrals.length === 0 ? (
         <div className="rf-empty">
           <i className="ti ti-users" />
-          <h3 style={{fontFamily:'Geist',fontWeight:800,margin:'0 0 4px',color:'var(--text)'}}>No referrals yet</h3>
+          <h3 style={{fontFamily:'Inter',fontWeight:800,margin:'0 0 4px',color:'var(--text)'}}>No referrals yet</h3>
           <p style={{fontSize:13,margin:0}}>Share your link to start earning</p>
         </div>
       ) : (

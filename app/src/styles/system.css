@@ -29,9 +29,9 @@
   --ctl-px: 16px; --ctl-gap: 8px;
   --icon-sm: 14px; --icon: 16px; --icon-lg: 20px;
 
-  /* Type (Geist for text, Geist Mono for short labels) */
-  --font: 'Geist', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-mono: 'Geist Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  /* Type (Inter for text, JetBrains Mono for short labels) */
+  --font: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
   --fs-hero: clamp(42px, 5vw, 70px);
   --fs-display: clamp(30px, 3.6vw, 48px);   /* homepage section headings */
   --fs-title: clamp(28px, 2.8vw, 34px);     /* page titles */
@@ -41,7 +41,7 @@
   --fs-small: 13px; --lh-small: 1.55;
   --fs-label: 10.5px;                       /* mono eyebrow labels */
   --tracking-tight: -0.04em;
-  --tracking-display: -0.05em;
+  --tracking-display: -0.06em;  /* wurk.fun sets Inter headings at -0.055 to -0.065em */
 
   /* Colour: text3 used to be #9d9da4 (2.6:1 on white), too pale for
      deadlines, requirements and form hints; now 4.6:1 */

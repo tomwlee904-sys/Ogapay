@@ -63,7 +63,7 @@ export default function VerifyEmailPage() {
   }
 
   const wrap = (children: React.ReactNode) => (
-    <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', background: 'var(--bg)', padding: 16, fontFamily: "'Geist', system-ui, sans-serif" }}>
+    <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', background: 'var(--bg)', padding: 16, fontFamily: "'Inter', system-ui, sans-serif" }}>
       <div className="ui-card" style={{ width: '100%', maxWidth: 420, padding: 28 }}>{children}</div>
     </div>
   )

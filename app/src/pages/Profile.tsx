@@ -652,7 +652,7 @@ export default function Profile() {
                 <div style={{display:'flex',justifyContent:'space-between',alignItems:'baseline',gap:10,padding:'14px 0 6px',flexWrap:'wrap'}}>
                   <div>
                     <div style={{fontSize:11,fontWeight:700,color:'var(--text3)',textTransform:'uppercase',letterSpacing:'.06em'}}>Available</div>
-                    <div style={{fontFamily:'Geist',fontSize:26,fontWeight:900,letterSpacing:'-.02em'}}>{loading ? <span className="skeleton" style={{width:120,height:24,display:'inline-block'}} /> : show(totalNgn)}</div>
+                    <div style={{fontFamily:'Inter',fontSize:26,fontWeight:900,letterSpacing:'-.02em'}}>{loading ? <span className="skeleton" style={{width:120,height:24,display:'inline-block'}} /> : show(totalNgn)}</div>
                   </div>
                   {!loading && lockedNgn > 0 && <span style={{fontSize:12,color:'var(--text2)'}}>{show(lockedNgn)} held in escrow</span>}
                 </div>
@@ -911,7 +911,7 @@ export default function Profile() {
         <div style={{position:'fixed',inset:0,zIndex:400,background:'rgba(0,0,0,.5)',display:'flex',alignItems:'center',justifyContent:'center',padding:20}} onClick={() => setShowEdit(false)}>
           <div style={{background:'var(--card)',border:'1px solid var(--border)',borderRadius:16,maxWidth:520,width:'100%',padding:28,maxHeight:'90vh',overflowY:'auto'}} onClick={e => e.stopPropagation()}>
             <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:24}}>
-              <h3 style={{fontFamily:'Geist',fontSize:20,fontWeight:800,margin:0}}><i className="ti ti-user-edit" style={{color:'var(--accent)',marginRight:8}} />Edit Profile</h3>
+              <h3 style={{fontFamily:'Inter',fontSize:20,fontWeight:800,margin:0}}><i className="ti ti-user-edit" style={{color:'var(--accent)',marginRight:8}} />Edit Profile</h3>
               <button style={{width:32,height:32,border:'1px solid var(--border)',borderRadius:8,background:'var(--bg2)',cursor:'pointer',display:'grid',placeItems:'center',color:'var(--text3)',fontSize:18}} onClick={() => setShowEdit(false)}>
                 <i className="ti ti-x" />
               </button>

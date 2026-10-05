@@ -242,7 +242,7 @@ function DepositModal({ onClose, onDone, initialTab }: Props) {
   function renderHeader(title: string) {
     return (
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-        <h3 style={{ fontFamily: 'Geist', fontSize: 18, fontWeight: 800, margin: 0 }}>{title}</h3>
+        <h3 style={{ fontFamily: 'Inter', fontSize: 18, fontWeight: 800, margin: 0 }}>{title}</h3>
         <button style={{ width: 32, height: 32, border: '1px solid var(--border)', borderRadius: 8, background: 'var(--bg2)', cursor: 'pointer', display: 'grid', placeItems: 'center', color: 'var(--text3)', fontSize: 18 }} onClick={onClose}>
           <i className="ti ti-x" />
         </button>
@@ -463,7 +463,7 @@ function DepositModal({ onClose, onDone, initialTab }: Props) {
             <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'color-mix(in srgb, var(--green) 9%, transparent)', display: 'grid', placeItems: 'center', margin: '0 auto 16px' }}>
               <i className={result?.status === 'PENDING' ? 'ti ti-clock' : 'ti ti-circle-check'} style={{ fontSize: 32, color: 'var(--green)' }} />
             </div>
-            <h3 style={{ fontFamily: 'Geist', fontSize: 17, fontWeight: 800, margin: '0 0 8px' }}>
+            <h3 style={{ fontFamily: 'Inter', fontSize: 17, fontWeight: 800, margin: '0 0 8px' }}>
               {result?.status === 'PENDING' ? 'Still confirming' : result?.signature ? 'Deposit Complete' : 'Request Submitted'}
             </h3>
             {result?.status === 'PENDING' && (

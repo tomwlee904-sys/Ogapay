@@ -52,7 +52,7 @@
 .db-steps span { display: block; margin-top: 2px; font-size: 12px; line-height: 1.5; color: var(--text2); }
 .db-check { width: 20px; height: 20px; flex-shrink: 0; border-radius: 50%; border: 1.5px solid var(--border2); display: grid; place-items: center; font-size: 12px; margin-top: 1px; }
 .db-steps li.done .db-check { border-color: var(--green); background: var(--green); color: #fff; }
-.db-step-btn { display: inline-flex; align-items: center; margin-top: 8px; height: var(--ctl-h-sm); padding: 0 12px; border-radius: var(--r-ctl); border: 1px solid var(--border); background: var(--card); color: var(--text); font: 600 12px 'Geist', system-ui, sans-serif; text-decoration: none; cursor: pointer; }
+.db-step-btn { display: inline-flex; align-items: center; margin-top: 8px; height: var(--ctl-h-sm); padding: 0 12px; border-radius: var(--r-ctl); border: 1px solid var(--border); background: var(--card); color: var(--text); font: 600 12px 'Inter', system-ui, sans-serif; text-decoration: none; cursor: pointer; }
 .db-step-btn:hover:not(:disabled) { border-color: var(--text3); }
 .db-step-btn:disabled { opacity: .6; cursor: default; }
 

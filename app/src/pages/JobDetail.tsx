@@ -517,7 +517,7 @@ function WurkJobDetailView(props: any) {
     <Layout>
       <style>{`
         @keyframes oga-sweep{0%{background-position:-200% center}to{background-position:200% center}}
-        .wjd{background:var(--bg,#f9fafb);color:var(--text,#1f2937);font-family:Inter,'Geist',system-ui,sans-serif;padding:20px 0 60px;min-height:100vh}
+        .wjd{background:var(--bg,#f9fafb);color:var(--text,#1f2937);font-family:Inter,'Inter',system-ui,sans-serif;padding:20px 0 60px;min-height:100vh}
         .wjd-wrap{width:min(100% - 32px,900px);margin:0 auto}
         .wjd-panel{background:var(--card,#fff);border:0.5px solid var(--border,#e5e7eb);border-radius:18px}
         .wjd-back{display:inline-flex;align-items:center;gap:8px;height:38px;border:0.5px solid var(--border,#e5e7eb);border-radius:10px;background:var(--card,#fff);color:var(--text2,#475569);padding:0 14px;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:16px;font-family:inherit}

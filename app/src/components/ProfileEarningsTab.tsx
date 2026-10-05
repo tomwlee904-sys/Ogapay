@@ -123,7 +123,7 @@ export default function TabEarningsContent() {
     <>
       <style>{`
         .en-hero{margin-bottom:20px}
-        .en-hero h1{font-family:Geist;font-size:28px;font-weight:900;margin:0 0 4px}
+        .en-hero h1{font-family:Inter;font-size:28px;font-weight:900;margin:0 0 4px}
         .en-hero p{color:var(--text2);font-size:14px;margin:0}
         .en-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
         @media(max-width:800px){.en-grid{grid-template-columns:repeat(2,1fr)}}
@@ -131,11 +131,11 @@ export default function TabEarningsContent() {
         .en-stat{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;transition:all .25s}
         .en-stat:hover{transform:none;border-color:var(--accent)}
         .en-stat .esi{width:32px;height:32px;border-radius:8px;display:grid;place-items:center;margin-bottom:8px}
-        .en-stat .esn{font-family:Geist;font-size:22px;font-weight:900}
+        .en-stat .esn{font-family:Inter;font-size:22px;font-weight:900}
         .en-stat .esl{color:var(--text2);font-size:12px;margin-top:2px}
         .en-graph-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px 24px;margin-bottom:24px}
         .en-graph-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px}
-        .en-graph-title{font-family:Geist;font-size:15px;font-weight:800}
+        .en-graph-title{font-family:Inter;font-size:15px;font-weight:800}
         .en-tabs{display:flex;gap:4px}
         .en-tab{padding:5px 12px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text2);font-size:11px;font-weight:600;cursor:pointer;transition:all .2s}
         .en-tab:hover,.en-tab.active{border-color:var(--accent);color:var(--accent);background:rgba(var(--accent-rgb),.08)}

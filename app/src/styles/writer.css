@@ -1,6 +1,6 @@
 /* Writer workspace (/writer) */
 .wr2-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
-.wr2-head h1 { font: 800 30px/1.1 Geist, sans-serif; letter-spacing: -.02em; margin: 0 0 6px; color: var(--text); }
+.wr2-head h1 { font: 800 30px/1.1 Inter, sans-serif; letter-spacing: -.02em; margin: 0 0 6px; color: var(--text); }
 .wr2-head p { margin: 0; font-size: 14px; color: var(--text2); }
 .wr2-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
 .wr2-card { display: flex; gap: 12px; align-items: flex-start; padding: 14px 16px; text-decoration: none; color: inherit; min-width: 0; }

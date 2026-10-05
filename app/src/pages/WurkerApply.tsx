@@ -29,7 +29,7 @@ export default function WurkerApply() {
           <div style={{width:72,height:72,borderRadius:'50%',background:'#16a34a18',display:'grid',placeItems:'center',margin:'0 auto 20px'}}>
             <i className="ti ti-circle-check" style={{fontSize:36,color:'#16a34a'}} />
           </div>
-          <h1 style={{fontFamily:'Geist',fontSize:24,fontWeight:800,margin:'0 0 8px'}}>Application Submitted!</h1>
+          <h1 style={{fontFamily:'Inter',fontSize:24,fontWeight:800,margin:'0 0 8px'}}>Application Submitted!</h1>
           <p style={{color:'var(--text2)',fontSize:14,margin:'0 0 24px',lineHeight:1.6}}>
             Thanks for applying to become a Wurker on OgaPay. Our team will review your application and get back to you within 48 hours.
           </p>
@@ -51,7 +51,7 @@ export default function WurkerApply() {
         .wa-line{width:40px;height:2px;background:var(--border)}
         .wa-line.done{background:#16a34a}
         .wa-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:28px 30px}
-        .wa-card h2{font-family:Geist;font-size:20px;font-weight:800;margin:0 0 4px}
+        .wa-card h2{font-family:Inter;font-size:20px;font-weight:800;margin:0 0 4px}
         .wa-card .sub{color:var(--text2);font-size:13px;margin:0 0 20px}
         .wa-label{font-size:12px;font-weight:700;color:var(--text2);display:block;margin-bottom:6px}
         .wa-input{width:100%;height:44px;padding:0 14px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg2);color:var(--text);font-size:13px;outline:none;font-family:inherit;margin-bottom:16px}

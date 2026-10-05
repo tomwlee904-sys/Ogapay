@@ -14,7 +14,7 @@
 .sb-files li span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .sb-files button { width: 28px; height: 28px; border: 0; border-radius: 8px; background: none; color: var(--text2); cursor: pointer; display: grid; place-items: center; }
 .sb-files button:hover { background: var(--card); color: var(--text); }
-.sb-drop { display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; height: 64px; border: 1px dashed var(--border2); border-radius: 12px; background: none; color: var(--text); font: 500 13px 'Geist', system-ui, sans-serif; cursor: pointer; }
+.sb-drop { display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; height: 64px; border: 1px dashed var(--border2); border-radius: 12px; background: none; color: var(--text); font: 500 13px 'Inter', system-ui, sans-serif; cursor: pointer; }
 .sb-drop:hover { border-color: var(--text3); background: var(--card2); }
 .sb-drop small { color: var(--text3); font-weight: 400; }
 .sb-send { width: 100%; margin-top: 16px; }
