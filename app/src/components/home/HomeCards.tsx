@@ -31,7 +31,9 @@ export function HomeJobCard({ task, convert, applied }: { task: any; convert: Co
   const amount = Number(task.reward ?? task.amount ?? 0);
   const cur = task.currency || "NGN";
   const deadline = jobDeadline(task);
-  const max = Number(task.maxWorkers ?? task.slots ?? 0);
+  // Contests: entries are unlimited; the count is shown against the poster's target
+  const contest = !!task.isContest;
+  const max = contest ? Number(task.entryTarget || 0) : Number(task.maxWorkers ?? task.slots ?? 0);
   const done = Number(task.submissionsCount ?? task._count?.submissions ?? task.currentWorkers ?? 0);
   const open = Math.max(0, max - done);
   const pct = max > 0 ? Math.min(100, (done / max) * 100) : 0;
@@ -41,9 +43,9 @@ export function HomeJobCard({ task, convert, applied }: { task: any; convert: Co
   const reqs = jobRequirements(task);
 
   return (
-    <Link to={`/tasks/${task.id}`} className="hc-card" aria-label={`${task.title} by ${name}, ${spokenMoney(amount, cur)} per worker. View job`}>
+    <Link to={`/tasks/${task.id}`} className="hc-card" aria-label={`${task.title} by ${name}, ${contest ? `contest, 1st place prize ${spokenMoney(amount, cur)}` : `${spokenMoney(amount, cur)} per worker`}. View job`}>
       <div className="hc-top">
-        <span className="hc-type"><i className="ti ti-briefcase" />{task.category === "SOCIAL_MEDIA" ? "Social task" : "Custom job"}</span>
+        <span className="hc-type">{contest ? <><i className="ti ti-award" />Contest</> : <><i className="ti ti-briefcase" />{task.category === "SOCIAL_MEDIA" ? "Social task" : "Custom job"}</>}</span>
         {task.isBoosted ? <BoostedTag /> : task.featured && <span className="hc-pill"><i className="ti ti-star" style={{ color: "#bd8517" }} />Highlighted</span>}
       </div>
 
@@ -53,7 +55,7 @@ export function HomeJobCard({ task, convert, applied }: { task: any; convert: Co
       </div>
 
       <div className="hc-reward">
-        <span className="hc-lbl">Reward per worker</span>
+        <span className="hc-lbl">{contest ? "1st place prize" : "Reward per worker"}</span>
         <Money amount={amount} currency={cur} convert={convert} size={30} positive />
       </div>
 
@@ -70,11 +72,13 @@ export function HomeJobCard({ task, convert, applied }: { task: any; convert: Co
       </div>
 
       <div className="hc-subs">
-        <div className="hc-row"><span>Submissions</span><strong>{done} / {max || "∞"}</strong></div>
+        <div className="hc-row"><span>Submissions</span><strong>{contest ? (max ? `${done} / ${max} target` : done) : `${done} / ${max || "∞"}`}</strong></div>
         <div className="hc-bar"><span style={{ width: `${pct}%` }} /></div>
         <ul className="hc-dots">
           <li>{done} submitted</li>
-          <li>{max ? (open > 0 ? `${open} open` : "Target reached") : "Unlimited entries"}</li>
+          {contest
+            ? <>{max > 0 && <li>{open > 0 ? `${open} to target` : "Target reached"}</li>}<li>Unlimited entries</li></>
+            : <li>{max ? (open > 0 ? `${open} open` : "Target reached") : "Unlimited entries"}</li>}
           {task.featured && <li>Featured</li>}
         </ul>
       </div>

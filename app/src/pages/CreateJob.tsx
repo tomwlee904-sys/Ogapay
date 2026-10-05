@@ -248,6 +248,62 @@ function InfoTip({ text }: any) {
 
 // -- EXTRA REQUIREMENTS ACCORDION ------------------------------------------
 // -- PER-ACTION REQUIREMENT (Wurk.fun style) --------------------------------
+// "1st", "2nd", "3rd", "4th" ...
+const ordinal = (n: number) => `${n}${n % 10 === 1 && n % 100 !== 11 ? "st" : n % 10 === 2 && n % 100 !== 12 ? "nd" : n % 10 === 3 && n % 100 !== 13 ? "rd" : "th"}`;
+
+// Contest prizes: one per place (up to 10), 1st first, plus an optional entry target
+function ContestPrizes({ currency, setCurrency, prizes, setPrizes, target, setTarget, floor }: {
+  currency: string; setCurrency: (v: string) => void; prizes: string[]; setPrizes: (f: (p: string[]) => string[]) => void
+  target: string; setTarget: (v: string) => void; floor: number
+}) {
+  const sym = currency === "NGN" ? "₦" : currency === "USDC" ? "$" : "◎";
+  return (
+    <>
+      <div className="cf-row">
+        <div className="cf-field">
+          <label htmlFor="cj-cur">Currency</label>
+          <select id="cj-cur" className="ui-select" value={currency} onChange={e => setCurrency(e.target.value)}>
+            <option value="NGN">NGN</option><option value="USDC">USDC</option><option value="SOL">SOL</option>
+          </select>
+        </div>
+        <div className="cf-field">
+          <label htmlFor="cj-target">Entry target (optional)</label>
+          <input id="cj-target" className="ui-input" type="number" min={1} max={100000} value={target} onChange={e => setTarget(e.target.value.replace(/[^0-9]/g, ""))} placeholder="e.g. 20" />
+          <p className="cf-hint">Shown as entries / target. Entries stay unlimited.</p>
+        </div>
+      </div>
+      <div className="cf-field">
+        <span className="cf-lbl">Prizes</span>
+        <div className="cf-prizes">
+          {prizes.map((p, i) => (
+            <div key={i} className="cf-prize">
+              <span className="cf-place">{ordinal(i + 1)}</span>
+              <div className="cf-prefix">
+                <span>{sym}</span>
+                <input className="ui-input" inputMode="decimal" aria-label={`${ordinal(i + 1)} place prize`} value={p} placeholder="0"
+                  onChange={e => { const v = e.target.value.replace(/[^0-9.,]/g, ""); setPrizes(ps => ps.map((x, j) => (j === i ? v : x))); }} />
+              </div>
+              {prizes.length > 1 && (
+                <button type="button" className="cf-prize-x" aria-label={`Remove ${ordinal(i + 1)} place`} onClick={() => setPrizes(ps => ps.filter((_, j) => j !== i))}>
+                  <i className="ti ti-x" />
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+        {prizes.length < 10 && (
+          <button type="button" className="ui-btn ui-btn-ghost cf-prize-add" onClick={() => setPrizes(ps => [...ps, ""])}><i className="ti ti-plus" /> Add a place</button>
+        )}
+        <p className="cf-hint">
+          At least {money(floor, currency)} a place, and a lower place can't pay more than the one above. When entries close you rank the
+          winners; if you haven't within 3 days, the earliest entries you haven't rejected win. Places nobody fills come back to you with
+          their share of the fee.
+        </p>
+      </div>
+    </>
+  );
+}
+
 const REQ_MODES = [
   { value: "rank", label: "Rank" },
   { value: "kyc", label: "KYC Verified" },
@@ -444,6 +500,9 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
   const [currency, setCurrency] = useState<string>(init.currency || "NGN");
   const [bounty, setBounty] = useState<string>(init.bounty?.toString() || "");
   const [winnersInput, setWinnersInput] = useState<string>(String(init.winners || 10));
+  // Contest: a prize per place, 1st first
+  const [prizesInput, setPrizesInput] = useState<string[]>(Array.isArray(init.prizes) && init.prizes.length ? init.prizes.map(String).slice(0, 10) : ["", "", ""]);
+  const [entryTarget, setEntryTarget] = useState<string>(init.entryTarget ? String(init.entryTarget) : "");
   const [category, setCategory] = useState<string>(init.category || "");
   const [subcategory, setSubcategory] = useState<string>(init.subcategory || "");
   const [duration, setDuration] = useState<string>(init.duration || "7 days");
@@ -473,20 +532,23 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
   useEffect(() => {
     const t = setTimeout(() => {
       try {
-        localStorage.setItem(CUSTOM_DRAFT_KEY, JSON.stringify({ mode, title, description, currency, bounty, winners: winnersInput, category, subcategory, duration, reqType, reqValue, screenshot, trackingCode }));
+        localStorage.setItem(CUSTOM_DRAFT_KEY, JSON.stringify({ mode, title, description, currency, bounty, winners: winnersInput, prizes: prizesInput, entryTarget, category, subcategory, duration, reqType, reqValue, screenshot, trackingCode }));
       } catch { /* storage full or blocked */ }
     }, 400);
     return () => clearTimeout(t);
-  }, [mode, title, description, currency, bounty, winnersInput, category, subcategory, duration, reqType, reqValue, screenshot, trackingCode]);
+  }, [mode, title, description, currency, bounty, winnersInput, prizesInput, entryTarget, category, subcategory, duration, reqType, reqValue, screenshot, trackingCode]);
 
-  const winners = mode === "Selection" ? 1 : Math.min(1000, Math.max(0, parseInt(winnersInput) || 0));
-  const rewardPool = parseFloat(String(bounty).replace(/,/g, "")) || 0;
-  const perWinner = winners > 0 ? rewardPool / winners : 0;
+  const isContest = mode === "Contest";
+  const prizeNums = prizesInput.map(p => parseFloat(String(p).replace(/,/g, "")) || 0);
+  const winners = isContest ? prizesInput.length : mode === "Selection" ? 1 : Math.min(1000, Math.max(0, parseInt(winnersInput) || 0));
+  const rewardPool = isContest ? prizeNums.reduce((s, p) => s + p, 0) : parseFloat(String(bounty).replace(/,/g, "")) || 0;
+  const perWinner = isContest ? prizeNums[0] || 0 : winners > 0 ? rewardPool / winners : 0;
   const platformFee = rewardPool * 0.10;
   const totalToPay = rewardPool + platformFee;
   const floor = currency === "NGN" ? Math.max(minReward("NGN"), CATEGORY_MIN_PAYOUT[category] || 0) : minReward(currency);
   const minTotal = floor * Math.max(winners, 1);
-  const deadline = deadlineFor(duration);
+  // A contest always ends (entries close, then winners are picked)
+  const deadline = deadlineFor(isContest && duration === "No deadline" ? "7 days" : duration);
   const alt = currency === "USDC"
     ? `≈ ₦${Math.round(convert(totalToPay, "USDC" as any, "NGN" as any)).toLocaleString("en-US")}`
     : `≈ $${convert(totalToPay, currency as any, "USDC" as any).toFixed(2)} USD`;
@@ -496,8 +558,13 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
     { ok: title.trim().length >= 5, label: "Give the job a short title." },
     { ok: description.trim().length >= 20, label: "Describe the task and what people should submit." },
     { ok: !!category, label: "Pick a category." },
-    { ok: rewardPool > 0 && rewardPool >= minTotal, label: `Set a total budget of at least ${money(minTotal, currency)}.` },
-    { ok: winners >= 1, label: "Choose how many people you will pay." },
+    ...(isContest ? [
+      { ok: prizeNums.every(p => p >= floor), label: `Give every place a prize of at least ${money(floor, currency)}.` },
+      { ok: prizeNums.every((p, i) => i === 0 || p <= prizeNums[i - 1]), label: "Prizes go from 1st place down: a lower place can't pay more than the one above." },
+    ] : [
+      { ok: rewardPool > 0 && rewardPool >= minTotal, label: `Set a total budget of at least ${money(minTotal, currency)}.` },
+      { ok: winners >= 1, label: "Choose how many people you will pay." },
+    ]),
   ];
   const ready = checklist.every(c => c.ok);
 
@@ -561,6 +628,11 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
         reward: Number(perWinner.toFixed(currency === "NGN" ? 2 : 6)),
         currency,
         maxWorkers: winners,
+        ...(isContest && {
+          isContest: true,
+          prizes: prizeNums.map(p => Number(p.toFixed(currency === "NGN" ? 2 : 6))),
+          ...(parseInt(entryTarget) > 0 && { entryTarget: parseInt(entryTarget) }),
+        }),
         tags: [category, subcategory].filter(Boolean).slice(0, 5),
         ...(deadline && { deadline: deadline.toISOString() }),
         ...(screenshot && { proofRequired: "Screenshot required" }),
@@ -579,7 +651,11 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
     }
   };
 
-  const rows: [string, string, string?][] = [
+  const rows: [string, string, string?][] = isContest ? [
+    ["Platform fee (10%)", money(platformFee, currency)],
+    ["Places", String(winners)],
+    ["1st place prize", money(perWinner, currency)],
+  ] : [
     ["Platform fee (10%)", money(platformFee, currency)],
     [mode === "Selection" ? "Person hired" : "Winners", String(winners || 0)],
     [mode === "Selection" ? "Paid to them" : "Reward per winner", money(perWinner, currency)],
@@ -625,6 +701,7 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
                     <div className="cf-modes" role="radiogroup" aria-label="Mode">
                       {[
                         ["Challenge", "ti-trophy", "Pay every approved entry, up to your number of winners."],
+                        ["Contest", "ti-award", "Rank the best entries when it ends and pay a prize for each place."],
                         ["Selection", "ti-user-check", "People apply and you choose one person for the work."],
                       ].map(([m, icon, d]) => (
                         <button key={m} type="button" role="radio" aria-checked={mode === m} className={`cf-mode${mode === m ? " on" : ""}`} onClick={() => setMode(m)}>
@@ -657,6 +734,10 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
                     <div className="cf-count"><span>Include the task, expected result and what to submit. Markdown supported.</span><span>{description.length.toLocaleString()} / 10,000</span></div>
                   </div>
 
+                  {isContest ? (
+                    <ContestPrizes currency={currency} setCurrency={setCurrency} prizes={prizesInput} setPrizes={setPrizesInput}
+                      target={entryTarget} setTarget={setEntryTarget} floor={floor} />
+                  ) : (
                   <div className="cf-row-3">
                     <div className="cf-field">
                       <label htmlFor="cj-cur">Currency</label>
@@ -679,6 +760,7 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
                       <p className="cf-hint">{money(perWinner, currency)} per {mode === "Selection" ? "person" : "winner"} · 1 to 1,000</p>
                     </div>
                   </div>
+                  )}
 
                   <div className="cf-row">
                     <div className="cf-field">
@@ -698,11 +780,13 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
                   </div>
 
                   <div className="cf-field">
-                    <label htmlFor="cj-dur">Job closes after</label>
-                    <select id="cj-dur" className="ui-select" value={duration} onChange={e => setDuration(e.target.value)}>
-                      {DURATIONS.map(([l]) => <option key={l} value={l}>{l}</option>)}
+                    <label htmlFor="cj-dur">{isContest ? "Entries close after" : "Job closes after"}</label>
+                    <select id="cj-dur" className="ui-select" value={isContest && duration === "No deadline" ? "7 days" : duration} onChange={e => setDuration(e.target.value)}>
+                      {DURATIONS.filter(([l]) => !(isContest && l === "No deadline")).map(([l]) => <option key={l} value={l}>{l}</option>)}
                     </select>
-                    <p className="cf-hint">{deadline ? `Closes ${deadline.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}. Unused budget returns to your wallet.` : "Stays open until all places are filled or you cancel it."}</p>
+                    <p className="cf-hint">{isContest && deadline
+                      ? `Entries close ${deadline.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}. You then have 3 days to rank the winners.`
+                      : deadline ? `Closes ${deadline.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}. Unused budget returns to your wallet.` : "Stays open until all places are filled or you cancel it."}</p>
                   </div>
 
                   <Fold title="Audience and requirements" sub="Choose who can take part" open={openReq} onToggle={() => setOpenReq(o => !o)}>
@@ -754,10 +838,15 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
                     <div><span>Title</span><b>{title}</b></div>
                     <div><span>Category</span><b>{category}{subcategory ? ` / ${subcategory}` : ""}</b></div>
                     <div><span>Mode</span><b>{mode}</b></div>
-                    <div><span>{mode === "Selection" ? "People hired" : "Winners"}</span><b>{winners}</b></div>
-                    <div><span>Reward per {mode === "Selection" ? "person" : "winner"}</span><b>{money(perWinner, currency)}</b></div>
+                    {isContest ? (
+                      <div><span>Prizes</span><b>{prizeNums.map((p, i) => `${ordinal(i + 1)} ${money(p, currency)}`).join(" · ")}</b></div>
+                    ) : (<>
+                      <div><span>{mode === "Selection" ? "People hired" : "Winners"}</span><b>{winners}</b></div>
+                      <div><span>Reward per {mode === "Selection" ? "person" : "winner"}</span><b>{money(perWinner, currency)}</b></div>
+                    </>)}
                     <div><span>Who can take part</span><b>{reqLabel(reqType, reqValue)}</b></div>
-                    <div><span>Closes</span><b>{deadline ? deadline.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "No deadline"}</b></div>
+                    <div><span>{isContest ? "Entries close" : "Closes"}</span><b>{deadline ? deadline.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "No deadline"}</b></div>
+                    {isContest && <div><span>Winners</span><b>You rank them within 3 days of the close, or the earliest entries win</b></div>}
                     {screenshot && <div><span>Proof</span><b>Screenshot required</b></div>}
                     {files.length > 0 && <div><span>Attachments</span><b>{files.length} file{files.length > 1 ? "s" : ""}</b></div>}
                     <div><span>Your {currency} balance</span><b style={{ color: balance >= totalToPay ? "var(--green)" : "var(--red)" }}>{money(balance, currency)}</b></div>

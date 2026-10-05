@@ -28,7 +28,14 @@
 .cf-prefix .ui-input { padding-left: 28px; }
 
 /* Mode cards */
-.cf-modes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.cf-modes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+/* Contest prizes */
+.cf-prizes { display: grid; gap: 8px; }
+.cf-prize { display: grid; grid-template-columns: 52px 1fr 36px; align-items: center; gap: 10px; }
+.cf-place { font: 500 12px var(--font-mono); letter-spacing: .04em; color: var(--text2); text-transform: uppercase; }
+.cf-prize-x { width: 36px; height: 36px; border-radius: 10px; border: 1px solid var(--border); background: var(--card); color: var(--text2); display: grid; place-items: center; cursor: pointer; }
+.cf-prize-x:hover { color: var(--text); border-color: var(--text3); }
+.cf-prize-add { margin-top: 10px; }
 .cf-mode { display: flex; gap: 10px; align-items: flex-start; text-align: left; padding: 14px; border-radius: 14px; border: 1px solid var(--border); background: var(--card); cursor: pointer; font-family: inherit; color: var(--text); transition: border-color .15s ease, box-shadow .15s ease; }
 .cf-mode i { font-size: 18px; margin-top: 1px; }
 .cf-mode b { display: block; font-size: 13px; font-weight: 600; }
