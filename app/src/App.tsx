@@ -4,6 +4,7 @@ import { Routes, Route, Navigate, useParams } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
 import { ThemeProvider } from './context/ThemeContext'
 import { CurrencyProvider } from './context/CurrencyContext'
+import CanonicalUrl from './components/CanonicalUrl'
 import ProtectedRoute from './components/ProtectedRoute'
 import ErrorBoundary from './components/ErrorBoundary'
 import { ToastProvider } from './components/Toast'
@@ -104,6 +105,7 @@ export default function App() {
         <Suspense fallback={<PageLoader />}>
           <JobAlertProvider>
           <SignInHost />
+          <CanonicalUrl />
           <Routes>
             {/* ── Public routes ── */}
             <Route path="/" element={<HomePage />} />
