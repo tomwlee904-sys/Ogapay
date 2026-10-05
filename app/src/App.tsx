@@ -1,6 +1,6 @@
 import { Suspense } from 'react'
 import { lazyPage } from './lib/staleBuild'
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate, useParams } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
 import { ThemeProvider } from './context/ThemeContext'
 import { CurrencyProvider } from './context/CurrencyContext'
@@ -87,7 +87,11 @@ const AdminModeration = lazyPage(() => import('./pages/AdminModeration'))
 const AdminWithdrawals = lazyPage(() => import('./pages/AdminWithdrawals'))
 const AdminKyc = lazyPage(() => import('./pages/AdminKyc'))
 const AdminSupport = lazyPage(() => import('./pages/AdminSupport'))
-const WorkspacePortal = lazyPage(() => import('./pages/WorkspacePortal'))
+// /worker-portal/:category was a second, unlinked copy of the worker workspace
+function WorkspaceRedirect() {
+  const { category = '' } = useParams()
+  return <Navigate to={`/worker/${category}`} replace />
+}
 const Docs = lazyPage(() => import('./pages/Docs'))
 const DevicePairing = lazyPage(() => import('./pages/DevicePairing'))
 const RankUpgrade = lazyPage(() => import("./pages/RankUpgrade"))
@@ -168,7 +172,7 @@ export default function App() {
             <Route path="/earnings" element={<AuthGuard><Earnings /></AuthGuard>} />
             <Route path="/referrals" element={<AuthGuard><Referrals /></AuthGuard>} />
             <Route path="/worker-portal" element={<AuthGuard><WorkerPortal /></AuthGuard>} />
-            <Route path="/worker-portal/:category" element={<AuthGuard><WorkspacePortal /></AuthGuard>} />
+            <Route path="/worker-portal/:category" element={<WorkspaceRedirect />} />
             <Route path="/settings" element={<AuthGuard><Settings /></AuthGuard>} />
             <Route path="/settings/:section" element={<AuthGuard><Settings /></AuthGuard>} />
             <Route path="/notifications" element={<AuthGuard><Notifications /></AuthGuard>} />

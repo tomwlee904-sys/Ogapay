@@ -10,7 +10,7 @@ export default function ProfileQuickLinks({ username }: { username?: string }) {
     {
       title: 'Earn',
       links: [
-        { icon: 'briefcase', label: 'Available Jobs', desc: 'Browse jobs you can do', to: '/jobs' },
+        { icon: 'briefcase', label: 'Available Jobs', desc: 'Browse jobs you can do', to: '/tasks' },
         { icon: 'clipboard-list', label: 'My Work', desc: 'Jobs you applied to and submitted', to: '/my-tasks' },
         { icon: 'activity', label: 'Job Monitor', desc: 'Follow new and eligible jobs', to: '/job-monitor' },
         { icon: 'building-store', label: 'My Store', desc: 'Your products and orders', to: '/my-store' },
