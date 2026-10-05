@@ -37,11 +37,12 @@ type Job = { id?: string; createdAt?: string; poster?: { username?: string; avat
 // Timeline, in "units" of scroll: one per story, then the panels, then the finale
 const PANEL_UNITS = 1.8;
 const FINALE_UNITS = 1.4;
-// Where each story's card sits across the stage (card centre, fraction of width)
-const STORY_X = [0.42, 0.6, 0.5, 0.4, 0.64, 0.46];
+// Where each story's card sits across the stage (card centre, fraction of width):
+// in the middle, like wurk.fun
+const STORY_X = [0.5, 0.5, 0.5, 0.5, 0.5, 0.5];
 const MINI_X = [0.2, 0.8, 0.26, 0.76, 0.22, 0.74];
 const CHIP_AT = [[0.14, 0.2], [0.8, 0.3], [0.1, 0.62], [0.84, 0.6], [0.3, 0.84], [0.66, 0.12]];
-const PANEL_X = [0, -0.05, 0.05, 0];
+const PANEL_X = [0, 0, 0, 0];
 
 const clamp = (v: number, a = 0, b = 1) => Math.min(b, Math.max(a, v));
 const smooth = (v: number) => { const x = clamp(v); return x * x * (3 - 2 * x); };
@@ -153,12 +154,15 @@ export default function HelixStory({ panels, jobs }: { panels: HelixPanel[]; job
         // Phones: fitting the whole panel into the short stage shrank it to about half
         // the screen width with unreadable text. Like wurk.fun, keep it at least ~80% of
         // the width and let it run under the header and bottom bar while it holds;
-        // it moves on as you scroll
-        const minFit = narrow ? (0.8 * W) / Math.max(1, pw) : 0;
+        // it moves on as you scroll. Wider screens: full size too (fitting the height
+        // shrank Highlighted jobs to ~60% on laptops); a tall panel shows its top while it
+        // holds and the rest as it scrolls up, the way wurk.fun's does
+        const minFit = narrow ? (0.8 * W) / Math.max(1, pw) : 1;
         const fit = Math.min(1, fitW, Math.max(fitH, minFit));
         const room = Math.max(0, (W - pw * fit) / 2); // keep it on screen
         const x = W / 2 + (narrow ? 0 : clamp(PANEL_X[k % PANEL_X.length] * W, -room, room));
-        const y = H / 2 - sg * e * H * 0.85;
+        const hold = narrow ? H / 2 : Math.max(H / 2, (ph * fit) / 2 + 16);
+        const y = hold - sg * e * H * 0.85;
         el.style.opacity = String(o);
         el.style.visibility = o > 0.01 ? "visible" : "hidden";
         el.style.transform = `translate(${Math.round(x - pw / 2)}px, ${Math.round(y - ph / 2)}px) scale(${fit * (0.94 + 0.06 * o)}) rotate(${(sg * e * 3).toFixed(2)}deg)`;
