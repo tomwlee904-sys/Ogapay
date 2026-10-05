@@ -132,7 +132,8 @@ function Hero({ live, onCreate }: { live: any; onCreate: () => void }) {
             </div>
             <h1 className="hv-h1">Earn your way.<span className="hv-h1-sub">Hire the help you need.</span></h1>
             <p className="hv-lead">
-              Earn on your schedule. Hire without the risk. Payment is released only after the work is approved.
+              Earn on your schedule doing simple tasks or offering your skills. Need help? Post a job or promote your business.
+              We hold payment until approval.
             </p>
             <div className="hv-btns">
               <Link to="/tasks" className="hv-btn hv-btn-dark">Start earning <i className="ti ti-arrow-right" /></Link>
