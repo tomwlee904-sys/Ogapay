@@ -5,6 +5,8 @@ import { openSignIn } from '../lib/signin'
 import { useWalletBalance } from '../context/WalletBalanceContext'
 import { useCurrency } from '../context/CurrencyContext'
 import { sized } from '../lib/img'
+import { displayPref } from '../lib/money'
+import CurrencySwitch from './CurrencySwitch'
 
 interface DrawerProps {
   open: boolean
@@ -37,12 +39,13 @@ export default function Drawer({ open, onClose }: DrawerProps) {
   const { isAuthed, logout, user } = useAuth()
   const navigate = useNavigate()
 
-  // Same figure as the balance in the header: all wallets in US dollars.
-  // (user.wallet is never filled in, so this always showed 0.00.)
+  // Same figure as the balance in the header: all wallets in the display
+  // currency, naira (also for "Both") or dollars.
   const { balances } = useWalletBalance()
-  const { convert } = useCurrency()
+  const { convert, preferredCurrency } = useCurrency()
+  const inUsd = displayPref(preferredCurrency) === 'USDC'
   const totalBalance = balances
-    ? (['SOL', 'USDC', 'USDT', 'NGN'] as const).reduce((sum, c) => sum + (balances[c] ? convert(balances[c]!.balance, c as any, 'USDC') : 0), 0)
+    ? (['SOL', 'USDC', 'USDT', 'NGN'] as const).reduce((sum, c) => { const v = balances[c] ? convert(balances[c]!.balance, c as any, inUsd ? 'USDC' : 'NGN') : 0; return sum + (Number.isFinite(v) ? v : 0) }, 0)
     : 0
 
   return (
@@ -104,8 +107,10 @@ export default function Drawer({ open, onClose }: DrawerProps) {
               <span><strong>Support</strong><small>Contact support</small></span>
             </Link>
 
+            <CurrencySwitch />
+
             {/* ── Bottom CTA ── */}
-            <div className="oga-drawer-guest-cta" style={{ marginTop: 32 }}>
+            <div className="oga-drawer-guest-cta" style={{ marginTop: 24 }}>
               <button type="button" className="oga-drawer-guest-signin" onClick={() => { onClose(); openSignIn() }}>
                 Sign In
               </button>
@@ -131,7 +136,7 @@ export default function Drawer({ open, onClose }: DrawerProps) {
                   <div className="oga-user-card-name">{user?.displayName || user?.username || 'User'}</div>
                   <div className="oga-user-card-balance">
                     <i className="ti ti-wallet" style={{ fontSize: 12 }} />{' '}
-                    Balance: <b>${totalBalance < 0.01 ? '0.00' : totalBalance.toFixed(2)}</b>
+                    Balance: <b>{inUsd ? `$${totalBalance < 0.01 ? '0.00' : totalBalance.toFixed(2)}` : `₦${Math.round(Math.max(0, totalBalance)).toLocaleString('en-US')}`}</b>
                   </div>
                 </div>
                 <i className="ti ti-chevron-right oga-user-card-chevron" />
@@ -286,6 +291,8 @@ export default function Drawer({ open, onClose }: DrawerProps) {
                   <span><strong>Messages</strong><small>Your conversations</small></span>
                 </Link>
               </DrawerGroup>
+
+              <CurrencySwitch />
 
               {/* ── Logout ── */}
               <button className="oga-drawer-item oga-drawer-logout" onClick={() => { logout(); onClose(); navigate('/'); }}>

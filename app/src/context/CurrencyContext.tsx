@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode } from 'react'
 import {
   Currency,
   DisplayMode,
@@ -60,14 +60,13 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
         const json = await res.json()
         const data = json.data ?? json
         const p = data.preferences || data
+        // The account's saved display currency wins. Without one, keep what this
+        // browser has (it used to fall back to the account's base currency, NGN,
+        // and undo a choice made before signing in)
         if (p?.defaultCurrency) {
           const mode = p.defaultCurrency as DisplayMode
           setPreferredCurrencyState(mode)
           storeCurrency(mode as any)
-        } else if (data?.currency && CURRENCIES.includes(data.currency as Currency)) {
-          const backendCurrency = data.currency as Currency
-          setPreferredCurrencyState(backendCurrency)
-          storeCurrency(backendCurrency)
         }
       } catch { /* silently ignore */ }
     })()
@@ -87,20 +86,22 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
     return () => clearInterval(interval)
   }, [refreshRates])
 
+  // Save to the account shortly after the last change, so quick switching
+  // (₦ > $ > Both) can't land out of order and leave an older choice saved
+  const saveTimer = useRef<number | undefined>(undefined)
   const setPreferredCurrency = useCallback(async (c: DisplayMode) => {
     setPreferredCurrencyState(c)
     storeCurrency(c as any)
-    // Sync to backend if authenticated
     const token = getAccessToken()
-    if (token) {
-      try {
-        await fetch(`${API_BASE}/users/me/preferences`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-          body: JSON.stringify({ preferences: { defaultCurrency: c } }),
-        })
-      } catch { /* silently ignore */ }
-    }
+    if (!token) return
+    window.clearTimeout(saveTimer.current)
+    saveTimer.current = window.setTimeout(() => {
+      fetch(`${API_BASE}/users/me/preferences`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getAccessToken()}` },
+        body: JSON.stringify({ preferences: { defaultCurrency: c } }),
+      }).catch(() => { /* kept in this browser; saved next time */ })
+    }, 400)
   }, [])
 
   const resolveCurrency = (cur?: Currency): Currency => cur || (preferredCurrency === 'BOTH' ? 'NGN' : preferredCurrency)

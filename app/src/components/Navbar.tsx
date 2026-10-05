@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { useToast } from '../components/Toast'
 import { useTheme } from '../context/ThemeContext'
 import { useCurrency } from '../context/CurrencyContext'
+import { displayPref } from '../lib/money'
 import { apiRequest } from '../lib/api'
 import { useWalletBalance } from '../context/WalletBalanceContext'
 import { Logo } from './Logo'
@@ -40,21 +41,26 @@ export default function Navbar({ onMenuToggle }: NavbarProps) {
   const { toast } = useToast()
   const { isAuthed, isLoading, user } = useAuth()
   const { theme, toggle } = useTheme()
-  const { convert } = useCurrency()
+  const { convert, preferredCurrency } = useCurrency()
   const [unreadNotifs, setUnreadNotifs] = useState(0)
   const [scrolled, setScrolled] = useState(false)
   const navRef = useRef<HTMLElement>(null)
 
   const { balances: walletBalances } = useWalletBalance()
-  const portfolioUsd = walletBalances
+  // The whole wallet in the display currency: naira (also for "Both") or dollars
+  const inUsd = displayPref(preferredCurrency) === 'USDC'
+  const total = walletBalances
     ? Object.entries(walletBalances).reduce((sum, [currency, entry]) => {
         if (WALLET_CURRENCIES.includes(currency as any) && entry) {
-          return sum + convert(entry.balance, currency as any, 'USDC')
+          const v = convert(entry.balance, currency as any, inUsd ? 'USDC' : 'NGN')
+          return sum + (Number.isFinite(v) ? v : 0)
         }
         return sum
       }, 0)
     : 0
-  const balanceText = `$${(portfolioUsd < 0.01 ? 0 : portfolioUsd).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+  const balanceText = inUsd
+    ? `$${(total < 0.01 ? 0 : total).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+    : `₦${Math.round(Math.max(0, total)).toLocaleString('en-US')}`
 
   useEffect(() => {
     if (!isAuthed) return

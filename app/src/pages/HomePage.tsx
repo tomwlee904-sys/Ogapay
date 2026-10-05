@@ -19,6 +19,7 @@ import "../styles/home-v2.css";
 import "../styles/home-cards.css";
 import { sized } from '../lib/img'
 import { jobDeadline } from '../lib/deadline'
+import { displayPref, formatUsd } from '../lib/money'
 
 /* ─── helpers ──────────────────────────────────────────────────────────────── */
 
@@ -108,6 +109,9 @@ function StatCard({ icon, label, value, sub, format, positive }: { icon: string;
 }
 
 function Hero({ live, onCreate }: { live: any; onCreate: () => void }) {
+  const { preferredCurrency, convert } = useCurrency();
+  const inUsd = displayPref(preferredCurrency) === "USDC";
+  const fundedFmt = (v: number) => (inUsd ? formatUsd(convert(v, "NGN", "USDC")) : naira(v));
   const n = (k: string) => (live && typeof live[k] === "number" ? live[k] : live ? 0 : null);
   // On a quiet day the 24h figures are zero; show the all-time figure instead and say so.
   const recentOrTotal = (recent: string, total: string) => {
@@ -145,7 +149,7 @@ function Hero({ live, onCreate }: { live: any; onCreate: () => void }) {
             <div className="hv-mono hv-eyebrow" style={{ marginTop: 26 }}><span className="hv-dot" /> Platform activity</div>
             <div className="hv-stats">
               <StatCard icon="briefcase" label="Active jobs" value={n("activeJobs")} sub="Open to apply now" format={(x) => Math.round(x).toLocaleString()} />
-              <StatCard icon="coins" label="Rewards funded" value={rewards.value} sub={rewards.sub} format={naira} />
+              <StatCard icon="coins" label="Rewards funded" value={rewards.value} sub={rewards.sub} format={fundedFmt} />
               <StatCard icon="circle-check" label="Tasks approved" value={approved.value} sub={approved.sub} format={(x) => Math.round(x).toLocaleString()} />
               <StatCard icon="users" label="Active workers" value={n("activeWorkers")} sub="Have earned on OgaPay" format={(x) => Math.round(x).toLocaleString()} positive />
             </div>

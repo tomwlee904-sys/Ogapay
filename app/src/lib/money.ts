@@ -36,6 +36,37 @@ export function formatConversion(amount: number, currency: string, convert: Conv
   return `≈ ₦${Math.round(ngn).toLocaleString('en-US')}`
 }
 
+// ── The display currency setting (Settings > Payments, and the menu) ──
+// NGN: amounts in naira. USDC: amounts in dollars. BOTH: the real currency plus a
+// conversion line. Older saved values (SOL, USDT) count as dollars.
+export type DisplayPref = 'NGN' | 'USDC' | 'BOTH'
+export const displayPref = (p?: string | null): DisplayPref => (p === 'BOTH' ? 'BOTH' : p === 'NGN' || !p ? 'NGN' : 'USDC')
+
+/** "$0.08", "$12.50", "$1,240" */
+export function formatUsd(n: number): string {
+  const v = Number(n) || 0
+  return `$${v >= 1000 ? Math.round(v).toLocaleString('en-US') : v.toFixed(2)}`
+}
+
+const isDollar = (c: string) => c === 'USDC' || c === 'USDT'
+
+/** How an amount shows for someone who chose `pref`.
+ *  exact: where money actually moves (wallet, checkout, withdrawals) the real
+ *  currency stays first and the preferred one is only the "≈" line. Elsewhere
+ *  (cards, job pages) the amount is shown in the preferred currency, with the
+ *  real one underneath. */
+export function displayMoney(amount: number, currency: string, pref: string | null | undefined, convert: Convert, exact = false): { converted: string; alt: string } {
+  const p = displayPref(pref)
+  const n = Number(amount) || 0
+  if (p === 'BOTH') return { converted: '', alt: formatConversion(n, currency, convert) }
+  const home = p === 'NGN' ? currency === 'NGN' : isDollar(currency)
+  if (home || !n) return { converted: '', alt: '' }
+  const v = p === 'NGN' ? convert(n, currency, 'NGN') : convert(n, currency, 'USDC')
+  if (!Number.isFinite(v) || v <= 0) return { converted: '', alt: '' } // no rate yet: just the real amount
+  const text = p === 'NGN' ? `₦${Math.round(v).toLocaleString('en-US')}` : formatUsd(v)
+  return exact ? { converted: '', alt: `≈ ${text}` } : { converted: text, alt: formatMoney(n, currency) }
+}
+
 /** For screen readers: "1,500 naira", "2.50 USDC" */
 export function spokenMoney(amount: number, currency = 'NGN'): string {
   return currency === 'NGN' ? `${amountNumber(amount, 'NGN')} naira` : formatMoney(amount, currency)

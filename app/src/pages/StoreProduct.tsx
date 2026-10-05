@@ -226,7 +226,7 @@ export default function StoreProduct() {
       </div>
       <div className="hc-reward sp-total">
         <span className="ui-label" style={{ margin: 0 }}>Total price</span>
-        <Money amount={Number(p.price || 0)} currency={cur} convert={convert} size={34} />
+        <Money amount={Number(p.price || 0)} currency={cur} convert={convert} size={34} exact />
       </div>
       <div className="sp-facts">
         <div><span><i className="ti ti-clock" />Delivery</span><b>{delivery}</b></div>

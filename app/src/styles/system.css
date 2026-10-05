@@ -108,6 +108,7 @@ p { line-height: var(--lh-body); }
 .o-money-main { font-weight: 650; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; color: var(--text); line-height: 1.05; white-space: nowrap; }
 .o-money-main small { font-size: .58em; font-weight: 600; letter-spacing: 0; margin-left: .25em; color: var(--text2); }
 .o-money-alt { font: 500 12px/1.4 var(--font); color: var(--text2); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.o-money-main small.o-money-approx { margin: 0 .2em 0 0; }
 .o-money.money-pos .o-money-main { color: var(--money); }
 
 /* Reward / price panel: a soft tint, no glow */
