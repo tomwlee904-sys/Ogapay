@@ -21,7 +21,9 @@ export default function Carousel<T>({ items, render, label, autoMs = 6500 }: {
     if (!el) return;
     const ro = new ResizeObserver(([e]) => {
       const w = e.contentRect.width;
-      setPerView(w >= 900 ? 3 : w >= 560 ? 2 : 1);
+      // 3 across like wurk.fun once each card gets ~240px (the desktop panels are
+      // ~880px inside, which the old 900px cut-off dropped to 2)
+      setPerView(w >= 720 ? 3 : w >= 480 ? 2 : 1);
     });
     ro.observe(el);
     return () => ro.disconnect();
