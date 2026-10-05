@@ -1,9 +1,8 @@
-// @ts-nocheck
-import { useState } from 'react'
+import { useState, type ChangeEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
 
-const Icon = ({ n, s = 18, c }) => (
+const Icon = ({ n, s = 18, c }: { n: string; s?: number; c?: string }) => (
   <i className={`ti ti-${n}`} style={{ fontSize: s, color: c || "var(--text2)", lineHeight: 1, flexShrink: 0 }} />
 )
 
@@ -14,7 +13,7 @@ export default function WurkerApply() {
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
 
-  const update = (k) => (e) => setForm(f => ({ ...f, [k]: e.target.value }))
+  const update = (k: keyof typeof form) => (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => setForm(f => ({ ...f, [k]: e.target.value }))
 
   const handleSubmit = async () => {
     setSubmitting(true)

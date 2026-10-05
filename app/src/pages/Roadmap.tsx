@@ -1,7 +1,6 @@
-// @ts-nocheck
 import Layout from '../components/Layout'
 
-const Icon = ({ n, s = 18, c }) => (
+const Icon = ({ n, s = 18, c }: { n: string; s?: number; c?: string }) => (
   <i className={`ti ti-${n}`} style={{ fontSize: s, color: c || "var(--text2)", lineHeight: 1, flexShrink: 0 }} />
 )
 
@@ -89,7 +88,7 @@ export default function Roadmap() {
 
         <div className="rm-timeline">
           {phases.map((phase, i) => {
-            const st = statusStyles[phase.status]
+            const st = statusStyles[phase.status as keyof typeof statusStyles]
             const dotClass = phase.status === "done" ? "done" : phase.status === "active" ? "active" : "upcoming"
             return (
               <div className="rm-phase" key={i}>

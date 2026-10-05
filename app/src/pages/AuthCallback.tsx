@@ -1,4 +1,3 @@
-// @ts-nocheck
 // Fix: client-side PKCE flow — get Supabase session, exchange with backend for app tokens, redirect to dashboard
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
@@ -51,7 +50,7 @@ export default function AuthCallback() {
               console.warn('Backend exchange failed, using Supabase session directly');
             }
           } catch (exchangeErr) {
-            console.warn('Backend exchange error, using Supabase session directly:', exchangeErr.message);
+            console.warn('Backend exchange error, using Supabase session directly:', (exchangeErr as Error).message);
           }
 
           if (appTokens && appTokens.refreshToken && appTokens.accessToken) {
@@ -128,7 +127,7 @@ export default function AuthCallback() {
                 }
               }
             } catch (syncErr) {
-              console.warn('Profile sync skipped:', syncErr.message);
+              console.warn('Profile sync skipped:', (syncErr as Error).message);
             }
           }
 
@@ -172,7 +171,7 @@ export default function AuthCallback() {
     error: { text: "Something went wrong", sub: "Redirecting to login..." },
   };
 
-  const msg = statusMessages[status] || statusMessages.processing;
+  const msg = statusMessages[status as keyof typeof statusMessages] || statusMessages.processing;
 
   return (
     <div style={{

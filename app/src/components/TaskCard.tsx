@@ -84,10 +84,34 @@ function useElapsed(createdAt?: string) {
   return display
 }
 
-import type { Task } from '../lib/types';
+import type { Task, Poster } from '../lib/types';
+
+// Jobs reach this card from several endpoints, some with older field names
+type CardTask = Task & {
+  amount?: number
+  creatorName?: string
+  creator?: string | { username?: string; avatarUrl?: string | null; avatar?: string | null }
+  creatorAvatar?: string | null
+  poster?: Poster & { firstName?: string; lastName?: string; avatar?: string | null }
+  maxSlots?: number
+  slots?: number
+  currentWorkers?: number
+  filled?: number
+  slotsFilled?: number
+  submissionsCount?: number
+  _count?: { submissions?: number }
+  rankRequired?: number
+  rank?: number
+  minOgaScore?: number
+  closesAt?: string | null
+  deadline?: string | null
+  endsAt?: string | null
+  jobType?: string
+  job_type?: string
+}
 import { sized } from '../lib/img'
 
-export default function TaskCard({ task, hideApply }: { task: Task; hideApply?: boolean }) {
+export default function TaskCard({ task, hideApply }: { task: CardTask; hideApply?: boolean }) {
   const { rates, preferredCurrency, convert } = useCurrency()
   const { theme } = useTheme()
   const isDark = theme === 'dark'
@@ -102,14 +126,15 @@ export default function TaskCard({ task, hideApply }: { task: Task; hideApply?: 
   const shown = displayMoney(reward, rewardCurrency, preferredCurrency, convert)
   const status        = task.status || 'OPEN'
   const posterName = task.poster ? (task.poster.firstName ? task.poster.firstName + (task.poster.lastName ? ' ' + task.poster.lastName : '') : task.poster.username || '') : ''
-  const creatorName   = posterName || task.creatorName || task.creator?.username || task.creator || 'Anonymous'
-  const creatorAvatar = task.creatorAvatar || task.poster?.avatarUrl || task.poster?.avatar || task.creator?.avatarUrl || task.creator?.avatar || null
+  const creatorObj    = typeof task.creator === 'object' ? task.creator : undefined
+  const creatorName   = posterName || task.creatorName || creatorObj?.username || (typeof task.creator === 'string' ? task.creator : '') || 'Anonymous'
+  const creatorAvatar = task.creatorAvatar || task.poster?.avatarUrl || task.poster?.avatar || creatorObj?.avatarUrl || creatorObj?.avatar || null
   const slotsTotal    = task.maxWorkers || task.maxSlots || task.slots || 100
   const slotsFilled   = task.currentWorkers || task.filled || task.slotsFilled || 0
   const submissionsCount = task.submissionsCount ?? task._count?.submissions ?? task.currentWorkers ?? 0
   const openSlots     = Math.max(0, slotsTotal - slotsFilled)
   const progress      = slotsTotal > 0 ? Math.min((slotsFilled / slotsTotal) * 100, 100) : 0
-  const rankRequired  = (task.minRank && task.minRank > 0) ? task.minRank : (task.rankRequired > 0 ? task.rankRequired : (task.rank || null))
+  const rankRequired  = (task.minRank && task.minRank > 0) ? task.minRank : ((task.rankRequired ?? 0) > 0 ? task.rankRequired : (task.rank || null))
   const minPayHolding = task.minOgaScore && task.minOgaScore > 100000 ? task.minOgaScore : null
   const unlimited     = slotsTotal >= 999
 

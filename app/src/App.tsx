@@ -71,14 +71,6 @@ const Writer = lazyPage(() => import('./pages/Writer'))
 const Analytics = lazyPage(() => import('./pages/Analytics'))
 const Bookmarks = lazyPage(() => import('./pages/Bookmarks'))
 const ManageJobs = lazyPage(() => import('./pages/ManageJobs'))
-const PostJobPage = lazyPage(() => import('./pages/Jobs/PostJobPage'))
-
-const JobsListingPage = lazyPage(() => import('./pages/Jobs/JobsListingPage'))
-
-const JobDetailPage = lazyPage(() => import('./pages/JobDetail'))
-
-const MyJobListingsPage = lazyPage(() => import('./pages/Jobs/MyJobListingsPage'))
-
 const UserProfile = lazyPage(() => import('./pages/UserProfile'))
 const HirePage = lazyPage(() => import('./pages/HirePage'))
 const Admin = lazyPage(() => import('./pages/Admin'))

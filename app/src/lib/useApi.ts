@@ -3,12 +3,12 @@ import useSWRInfinite from 'swr/infinite'
 import { apiRequest } from './api'
 import type { ApiResponse } from './types'
 
-const BASE_FETCHER = async (url: string) => {
+const BASE_FETCHER = async (url: string): Promise<any> => {
   const res = await apiRequest(url, { auth: false })
   return res
 }
 
-const AUTH_FETCHER = async (url: string) => {
+const AUTH_FETCHER = async (url: string): Promise<any> => {
   const res = await apiRequest(url, { auth: true })
   return res
 }
@@ -18,7 +18,7 @@ export function useApi<T = any>(
   options?: { auth?: boolean; revalidateOnFocus?: boolean; refreshInterval?: number }
 ) {
   const fetcher = options?.auth !== false ? AUTH_FETCHER : BASE_FETCHER
-  return useSWR<ApiResponse<T> | T>(url, fetcher, {
+  return useSWR<ApiResponse<T> | T, any, string | null>(url, fetcher, {
     revalidateOnFocus: options?.revalidateOnFocus ?? false,
     refreshInterval: options?.refreshInterval,
     errorRetryCount: 2,

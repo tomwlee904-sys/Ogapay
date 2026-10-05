@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, type CSSProperties } from "react";
 
-const I = ({ n, s = 18, c = "currentColor" }) => (
-  <i className={`ti ti-${n}`} style={{ fontSize: s, color: c, lineHeight: 1, flexShrink: 0 }} />
+const I = ({ n, s = 18, c = "currentColor", style }: { n: string; s?: number; c?: string; style?: CSSProperties }) => (
+  <i className={`ti ti-${n}`} style={{ fontSize: s, color: c, lineHeight: 1, flexShrink: 0, ...style }} />
 );
 
 const Logo = ({ size = 28 }) => (
@@ -164,8 +164,8 @@ const RESOURCE_LINKS = [
 
 export default function OgaPayOnboarding() {
   const [activeNav, setActiveNav] = useState("home");
-  const [selectedPlatform, setPlatform] = useState(null);
-  const [selectedProvider, setProvider] = useState(null);
+  const [selectedPlatform, setPlatform] = useState<string | null>(null);
+  const [selectedProvider, setProvider] = useState<string | null>(null);
   const [os, setOs] = useState("Windows");
   const [step1Done, setStep1Done] = useState(false);
   const [step2Done, setStep2Done] = useState(false);

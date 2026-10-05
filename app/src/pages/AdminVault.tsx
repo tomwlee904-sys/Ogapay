@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react'
+﻿import { useState, useEffect, type ReactNode } from 'react'
 import { useAuth } from '../context/AuthContext'
 import Layout from '../components/Layout'
 import { apiRequest } from '../lib/api'
@@ -23,9 +23,9 @@ export default function AdminVault() {
   const [revSource, setRevSource] = useState('task_fee')
   const [revDesc, setRevDesc] = useState('')
   const [addingRevenue, setAddingRevenue] = useState(false)
-  const [toast, setToast] = useState('')
+  const [toast, setToast] = useState<ReactNode>('')
 
-  const showToast = (msg: string) => {
+  const showToast = (msg: ReactNode) => {
     setToast(msg)
     setTimeout(() => setToast(''), 3000)
   }
