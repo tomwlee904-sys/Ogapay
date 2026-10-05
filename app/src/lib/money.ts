@@ -67,6 +67,29 @@ export function displayMoney(amount: number, currency: string, pref: string | nu
   return exact ? { converted: '', alt: `≈ ${text}` } : { converted: text, alt: formatMoney(n, currency) }
 }
 
+const shortNum = (v: number, sym: string) =>
+  v >= 1e6 ? `${sym}${(v / 1e6).toFixed(1).replace(/\.0$/, '')}M` : v >= 1e4 ? `${sym}${(v / 1e3).toFixed(1).replace(/\.0$/, '')}K` : ''
+
+/** One line of text for stats and lists, following the display currency:
+ *  "₦3,433", "≈ $2.59", "≈ ₦7,500". "Both" keeps the real amount here (cards
+ *  show the conversion underneath). exact: the real currency, always.
+ *  short: "₦1.2M", "$12.5K" for big figures. */
+export function showMoney(amount: number, currency = 'NGN', pref: string | null | undefined, convert: Convert, opts: { exact?: boolean; short?: boolean } = {}): string {
+  const p = displayPref(pref)
+  const n = Number(amount) || 0
+  const fmtNgn = (v: number) => (opts.short && shortNum(v, '₦')) || `₦${Math.round(v).toLocaleString('en-US')}`
+  const fmtUsd = (v: number) => (opts.short && shortNum(v, '$')) || formatUsd(v)
+  if (!opts.exact && p !== 'BOTH') {
+    const home = p === 'NGN' ? currency === 'NGN' : isDollar(currency)
+    if (!home && !n) return p === 'NGN' ? '₦0' : '$0.00' // nothing yet: in the chosen currency
+    if (!home) {
+      const v = convert(n, currency, p === 'NGN' ? 'NGN' : 'USDC')
+      if (Number.isFinite(v) && v > 0) return `≈ ${p === 'NGN' ? fmtNgn(v) : fmtUsd(v)}`
+    }
+  }
+  return currency === 'NGN' ? fmtNgn(n) : formatMoney(n, currency)
+}
+
 /** For screen readers: "1,500 naira", "2.50 USDC" */
 export function spokenMoney(amount: number, currency = 'NGN'): string {
   return currency === 'NGN' ? `${amountNumber(amount, 'NGN')} naira` : formatMoney(amount, currency)

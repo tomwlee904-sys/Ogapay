@@ -6,6 +6,7 @@ import { openSignIn } from '../lib/signin'
 import '../styles/profile-public.css'
 import '../styles/leaderboard.css'
 import { sized } from '../lib/img'
+import { useMoney } from '../lib/useMoney'
 
 // Ported from the June leaderboard. Its Weekly/Monthly tabs did nothing, all four
 // boards showed the same list and it exposed everyone's earnings; the backend
@@ -28,8 +29,6 @@ const PERIODS: { id: Period; label: string }[] = [
   { id: 'all', label: 'All time' },
 ]
 
-const naira = (n: number) => '₦' + Math.round(n).toLocaleString('en-US')
-const compact = (n: number) => (n >= 1e6 ? `₦${(n / 1e6).toFixed(1)}M` : n >= 1e4 ? `₦${(n / 1e3).toFixed(1)}K` : naira(n))
 const initials = (name: string) => name.split(' ').map((w) => w[0]).join('').toUpperCase().slice(0, 2) || '?'
 const level = (l: string | null) => (l ? l.charAt(0) + l.slice(1).toLowerCase() : '')
 
@@ -46,6 +45,8 @@ function Who({ e, children }: { e: Entry; children: React.ReactNode }) {
 }
 
 export default function Leaderboard() {
+  // Amounts in the display currency the person chose
+  const show = useMoney()
   const [board, setBoard] = useState<Board>('earners')
   const [period, setPeriod] = useState<Period>('month')
   const [entries, setEntries] = useState<Entry[] | null>(null)
@@ -66,7 +67,7 @@ export default function Leaderboard() {
     return () => { live = false }
   }, [board, period, signedIn])
 
-  const value = (e: Entry) => (board === 'referrers' ? `${e.count}` : e.amount != null ? naira(e.amount) : '—')
+  const value = (e: Entry) => (board === 'referrers' ? `${e.count}` : e.amount != null ? show(e.amount) : '—')
   const top = entries?.slice(0, 3) || []
   const podium = top.length === 3 ? [top[1], top[0], top[2]] : top
   const rest = entries?.slice(3) || []
@@ -88,7 +89,7 @@ export default function Leaderboard() {
         </div>
 
         <div className="lb2-stats">
-          <section className="up-card lb2-stat"><div className="up-eyebrow">Paid to workers</div><b>{totals ? compact(totals.paidNgn) : '…'}</b><span>{periodLabel}</span></section>
+          <section className="up-card lb2-stat"><div className="up-eyebrow">Paid to workers</div><b>{totals ? show(totals.paidNgn, 'NGN', { short: true }) : '…'}</b><span>{periodLabel}</span></section>
           <section className="up-card lb2-stat"><div className="up-eyebrow">Jobs paid</div><b>{totals ? totals.jobsPaid.toLocaleString() : '…'}</b><span>{periodLabel}</span></section>
           <section className="up-card lb2-stat"><div className="up-eyebrow">People earning</div><b>{totals ? totals.earners.toLocaleString() : '…'}</b><span>{periodLabel}</span></section>
         </div>
@@ -109,7 +110,7 @@ export default function Leaderboard() {
               <div className="lb2-me-rank">{me.rank ? `#${me.rank}` : 'Not ranked yet'}</div>
               <div className="lb2-me-sub">
                 {me.rank
-                  ? <>{board === 'referrers' ? cfg.unit(me.count) : <>{naira(me.amount)} · {cfg.unit(me.count)}</>} {periodLabel}</>
+                  ? <>{board === 'referrers' ? cfg.unit(me.count) : <>{show(me.amount)} · {cfg.unit(me.count)}</>} {periodLabel}</>
                   : board === 'earners' ? 'Complete a paid job to get on the board.' : board === 'posters' ? 'Pay a worker for a job to get on the board.' : 'Invite someone who completes a job.'}
               </div>
             </div>

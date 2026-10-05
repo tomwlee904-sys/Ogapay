@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useCurrency } from '../context/CurrencyContext'
+import { useMoney } from '../lib/useMoney'
 import { useAuth } from '../context/AuthContext'
 import { apiRequest } from '../lib/api'
 import { SkeletonPage, injectSkeletonStyles } from "../components/SkeletonLoader"
@@ -100,7 +101,9 @@ export default function TabEarningsContent() {
     return out
   })()
 
-  const naira = (v: number) => fmt(v, 'NGN')
+  // In the display currency the person chose (it always showed naira)
+  const show = useMoney()
+  const naira = (v: number) => show(v, 'NGN')
   const filtered = tab === 'all' ? history : history.filter(h => h.kind === tab)
 
   const formatDate = (d: string) => {
@@ -223,7 +226,7 @@ export default function TabEarningsContent() {
             <div className="en-h-item" key={i}>
               <span className="en-h-date">{formatDate(h.date)}</span>
               <span className="en-h-source">{h.source}</span>
-              <span className="en-h-amount">{h.pending && <em style={{ fontStyle: 'normal', color: 'var(--text3)', fontWeight: 500, marginRight: 6 }}>on the way</em>}+{fmt(h.amount, h.currency)}</span>
+              <span className="en-h-amount">{h.pending && <em style={{ fontStyle: 'normal', color: 'var(--text3)', fontWeight: 500, marginRight: 6 }}>on the way</em>}+{show(h.amount, h.currency || 'NGN')}</span>
             </div>
           ))}
           {filtered.length === 0 && (

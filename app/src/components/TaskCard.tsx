@@ -5,6 +5,7 @@ import { useState, useEffect, useRef } from 'react'
 import { apiRequest, getAccessToken } from '../lib/api'
 import { savedJobIds, setSaved, onSavedJobsChange } from '../lib/bookmarks'
 import { useCurrency } from '../context/CurrencyContext'
+import { displayMoney } from '../lib/money'
 import { useTheme } from '../context/ThemeContext'
 
 const OGAPAY_BLUE = 'var(--accent)'
@@ -87,7 +88,7 @@ import type { Task } from '../lib/types';
 import { sized } from '../lib/img'
 
 export default function TaskCard({ task, hideApply }: { task: Task; hideApply?: boolean }) {
-  const { rates } = useCurrency()
+  const { rates, preferredCurrency, convert } = useCurrency()
   const { theme } = useTheme()
   const isDark = theme === 'dark'
   const navigate = useNavigate()
@@ -96,6 +97,9 @@ export default function TaskCard({ task, hideApply }: { task: Task; hideApply?: 
   const title         = task.title || 'Untitled Task'
   const description   = task.description || ''
   const reward        = Number(task.reward || task.amount || 0)
+  // It always said NGN (even for USDC jobs) with a dollar line; now the display currency decides
+  const rewardCurrency = task.currency || 'NGN'
+  const shown = displayMoney(reward, rewardCurrency, preferredCurrency, convert)
   const status        = task.status || 'OPEN'
   const posterName = task.poster ? (task.poster.firstName ? task.poster.firstName + (task.poster.lastName ? ' ' + task.poster.lastName : '') : task.poster.username || '') : ''
   const creatorName   = posterName || task.creatorName || task.creator?.username || task.creator || 'Anonymous'
@@ -442,18 +446,20 @@ export default function TaskCard({ task, hideApply }: { task: Task; hideApply?: 
             fontSize: 34, fontWeight: 900,
             fontFamily: 'Geist, sans-serif', lineHeight: 1,
           }}>
-            {reward.toLocaleString()}
+            {shown.converted ? <><small style={{ fontSize: '.55em', marginRight: 4 }}>≈</small>{shown.converted}</> : reward.toLocaleString()}
           </span>
           <span className="oga-token-shimmer" style={{ color: isDark ? '#ffffff' : undefined,
             fontSize: 13, fontWeight: 800,
             fontFamily: 'Geist, sans-serif',
           }}>
-            NGN
+            {shown.converted ? '' : rewardCurrency}
           </span>
         </div>
-        <div style={{ fontSize: 12, color: isDark ? 'rgba(255,255,255,0.5)' : 'var(--text3, #9ca3af)', fontWeight: 600 }}>
-          ${(reward * rates.NGN).toFixed(2)} USD
-        </div>
+        {shown.alt && (
+          <div style={{ fontSize: 12, color: isDark ? 'rgba(255,255,255,0.5)' : 'var(--text3, #9ca3af)', fontWeight: 600 }}>
+            {shown.alt}
+          </div>
+        )}
       </div>
 
       {/* ══ META TAGS ══ */}

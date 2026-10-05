@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import Layout from "../components/Layout";
 import { apiRequest, API_BASE } from "../lib/api";
 import { useCurrency } from "../context/CurrencyContext";
+import { useMoney } from "../lib/useMoney";
 import { useAuth } from "../context/AuthContext";
 import { useWalletBalance } from "../context/WalletBalanceContext";
 
@@ -127,6 +128,7 @@ function InfoBtn({ text }: { text: string }) {
 export default function Profile() {
   useEffect(() => { injectSkeletonStyles(); }, []);
   const { fmt, preferredCurrency } = useCurrency()
+  const show = useMoney()
   const navigate = useNavigate();
   const { user: authUser, refreshUser } = useAuth();
   const { balances: walletBal, refresh: refreshWallet } = useWalletBalance();
@@ -650,9 +652,9 @@ export default function Profile() {
                 <div style={{display:'flex',justifyContent:'space-between',alignItems:'baseline',gap:10,padding:'14px 0 6px',flexWrap:'wrap'}}>
                   <div>
                     <div style={{fontSize:11,fontWeight:700,color:'var(--text3)',textTransform:'uppercase',letterSpacing:'.06em'}}>Available</div>
-                    <div style={{fontFamily:'Geist',fontSize:26,fontWeight:900,letterSpacing:'-.02em'}}>{loading ? <span className="skeleton" style={{width:120,height:24,display:'inline-block'}} /> : fmt(totalNgn, "NGN")}</div>
+                    <div style={{fontFamily:'Geist',fontSize:26,fontWeight:900,letterSpacing:'-.02em'}}>{loading ? <span className="skeleton" style={{width:120,height:24,display:'inline-block'}} /> : show(totalNgn)}</div>
                   </div>
-                  {!loading && lockedNgn > 0 && <span style={{fontSize:12,color:'var(--text2)'}}>{fmt(lockedNgn, "NGN")} held in escrow</span>}
+                  {!loading && lockedNgn > 0 && <span style={{fontSize:12,color:'var(--text2)'}}>{show(lockedNgn)} held in escrow</span>}
                 </div>
                 <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,margin:'10px 0 14px'}}>
                   <button className="dash-btn" style={{width:'100%',justifyContent:'center'}} onClick={() => setFundModal('withdraw')}><Icon n="logout" s={14} c="var(--bg)" /> Withdraw</button>
@@ -796,7 +798,7 @@ export default function Profile() {
                     <StatRow label="OgaScore" val={profileData?.workerProfile?.reputationScore?.toFixed(1) || '0.0'} info onInfoClick={() => setShowInfo('ogaScore')} />
                     <StatRow label="Tasks Completed" val={profileData?.workerProfile?.tasksCompleted ?? 0} />
                     <StatRow label="Success Rate" val={profileData?.workerProfile?.successRate ? profileData.workerProfile.successRate + '%' : '0%'} info onInfoClick={() => setShowInfo('successRate')} />
-                    <StatRow label="Total Earned" val={profileData?.workerProfile?.totalEarned ? fmt(Number(profileData.workerProfile.totalEarned), "NGN") : fmt(0, "NGN")} />
+                    <StatRow label="Total Earned" val={profileData?.workerProfile?.totalEarned ? show(Number(profileData.workerProfile.totalEarned)) : show(0)} />
                     <StatRow label="Avg Rating" val={profileData?.workerProfile?.avgRating?.toFixed(1) || '0.0'} info />
                     <StatRow label="Skills" val={profileData?.workerProfile?.skills?.length ? profileData.workerProfile.skills.slice(0,3).join(', ')+(profileData.workerProfile.skills.length>3?' +' + (profileData.workerProfile.skills.length - 3):'') : '-'} />
                     <StatRow label="Categories" val={profileData?.workerProfile?.categories?.length ? profileData.workerProfile.categories.join(', ') : '-'} />

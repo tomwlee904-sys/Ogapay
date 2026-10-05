@@ -8,6 +8,7 @@ import { categoryLabel } from '../lib/categories'
 import { rankName } from '../lib/requirements'
 import { jobDeadline, deadlineLabel } from '../lib/deadline'
 import { withdrawLimit } from '../lib/wallet'
+import { useMoney } from '../lib/useMoney'
 import '../styles/dashboard.css'
 
 // Dashboard, top to bottom: what needs you now (work to review, work to send),
@@ -28,7 +29,6 @@ type Job = {
 const LEVELS = ['BEGINNER', 'INTERMEDIATE', 'ADVANCED', 'EXPERT', 'LEGEND']
 const LIVE = ['OPEN', 'IN_PROGRESS', 'COOLING_DOWN', 'DRAFT']
 const STATUS: Record<string, string> = { OPEN: 'Open', IN_PROGRESS: 'In progress', COOLING_DOWN: 'Wrapping up', DRAFT: 'Draft' }
-const money = (n: number, cur = 'NGN') => cur === 'NGN' ? `₦${Math.round(n).toLocaleString('en-US')}` : `$${n.toFixed(2)}`
 const greeting = () => { const h = new Date().getHours(); return h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening' }
 const when = (d?: string | null) => d ? new Date(d).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }) : ''
 const toReviewOn = (j: Job) => (j.submissions || []).filter((s) => s.status === 'SUBMITTED').length
@@ -37,6 +37,8 @@ const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one :
 export default function Dashboard() {
   const { user } = useAuth()
   const { balances } = useWalletBalance()
+  // Amounts follow the display currency; limits and "withdraw your ₦…" stay in naira
+  const show = useMoney()
   const [me, setMe] = useState<Me | null>(null)
   const [earned, setEarned] = useState<number | null>(null)
   const [subs, setSubs] = useState<Sub[] | null>(null)
@@ -90,7 +92,7 @@ export default function Dashboard() {
     ...reviewJobs.slice(0, 3).map((j) => ({ key: `r-${j.id}`, icon: 'ti-inbox', text: `${plural(toReviewOn(j), 'submission', 'submissions')} to review on “${j.title}”`, to: `/manage-jobs?job=${j.id}`, cta: 'Review' })),
     ...working.slice(0, 3).map((s) => ({ key: `w-${s.id}`, icon: 'ti-pencil', text: `Send your work for “${s.task?.title || 'your job'}”`, to: `/tasks/${s.taskId}/submit`, cta: 'Open' })),
     // (a new account sees this in the setup steps right below instead)
-    ...(!kycOk && ngn > 0 && !isNew ? [{ key: 'kyc', icon: 'ti-id', text: `Verify your identity to withdraw your ${money(ngn)}`, to: '/settings/verification', cta: 'Verify' }] : []),
+    ...(!kycOk && ngn > 0 && !isNew ? [{ key: 'kyc', icon: 'ti-id', text: `Verify your identity to withdraw your ${show(ngn, 'NGN', { exact: true })}`, to: '/settings/verification', cta: 'Verify' }] : []),
   ]
   const moreReview = reviewJobs.length - 3
 
@@ -158,7 +160,7 @@ export default function Dashboard() {
       <div className="db-role-label">Earning</div>
       <div className="db-sec-head">
         <h2>Your work</h2>
-        <Link to="/earnings">{earned === null ? 'Earnings' : `${money(earned)} earned`}</Link>
+        <Link to="/earnings">{earned === null ? 'Earnings' : `${show(earned)} earned`}</Link>
       </div>
       {active.length === 0 ? (
         <div className="db-empty">You're not working on anything right now.</div>
@@ -172,7 +174,7 @@ export default function Dashboard() {
                   <span>{s.status === 'PENDING' ? 'Send your work when it\'s done' : s.autoApproveAt ? `In review · paid automatically ${when(s.autoApproveAt)} if not reviewed` : 'Waiting for review'}</span>
                 </div>
                 <em className={s.status === 'PENDING' ? 'todo' : 'wait'}>{s.status === 'PENDING' ? 'To do' : 'In review'}</em>
-                <b>{money(Number(s.task?.reward || 0), s.task?.currency)}</b>
+                <b>{show(Number(s.task?.reward || 0), s.task?.currency || 'NGN')}</b>
               </Link>
             </li>
           ))}
@@ -187,7 +189,7 @@ export default function Dashboard() {
             <Link key={j.id} to={`/tasks/${j.id}`} className="db-job">
               <span className="db-job-cat">{categoryLabel(j.category)}</span>
               <strong>{j.title}</strong>
-              <b>{money(Number(j.reward || 0), j.currency)}</b>
+              <b>{show(Number(j.reward || 0), j.currency || 'NGN')}</b>
             </Link>
           ))}
         </div>
@@ -230,11 +232,11 @@ export default function Dashboard() {
           {isNew && setup}
 
           <div className="db-snap">
-            <Link to="/wallet" className="db-stat"><span>Balance</span><b>{money(ngn)}</b><small>Open wallet →</small></Link>
+            <Link to="/wallet" className="db-stat"><span>Balance</span><b>{show(ngn)}</b><small>Open wallet →</small></Link>
             <Link to="/wallet" className="db-stat">
               <span>Your level</span>
               <b>{kycOk ? `Level ${kycTier}` : 'Not verified'}</b>
-              <small>{kycOk ? `Withdraw up to ${money(withdrawLimit(kycTier))} each time` : 'Verify to withdraw and send money'}</small>
+              <small>{kycOk ? `Withdraw up to ${show(withdrawLimit(kycTier), 'NGN', { exact: true })} each time` : 'Verify to withdraw and send money'}</small>
             </Link>
             <Link to="/rank" className="db-stat"><span>OgaScore</span><b>{me?.ogaScore ?? '…'}</b><small>{rankLabel} · {plural(me?.workerProfile?.tasksCompleted ?? 0, 'job', 'jobs')} done</small></Link>
           </div>

@@ -5,6 +5,7 @@ import { apiRequest } from '../lib/api'
 import { uploadImage } from '../lib/upload'
 import { useAuth } from '../context/AuthContext'
 import { orderBadge, orderWhen, type StoreOrder } from './StoreOrders'
+import { useMoney } from '../lib/useMoney'
 import '../styles/profile-public.css'
 import '../styles/hire.css'
 import '../styles/edit-profile.css'
@@ -31,6 +32,8 @@ const blank = { name: '', description: '', price: '', currency: 'NGN', category:
 type Form = typeof blank
 
 export default function MyStore() {
+  // Prices and revenue in the display currency; order payments and refunds stay real
+  const show = useMoney()
   const { user } = useAuth()
   const [params, setParams] = useSearchParams()
   const tab = params.get('tab') === 'orders' ? 'orders' : 'products'
@@ -51,11 +54,11 @@ export default function MyStore() {
     const sum = (list: Order[]) => {
       const by: Record<string, number> = {}
       for (const o of list) by[o.currency] = (by[o.currency] || 0) + o.total
-      return Object.entries(by).map(([c, v]) => money(v, c)).join(' · ')
+      return Object.entries(by).map(([c, v]) => show(v, c)).join(' · ')
     }
     const paid = (orders || []).filter((o) => o.releasedAt || (!o.protected && o.status !== 'CANCELLED'))
-    return [sum(paid) || money(0), sum((orders || []).filter((o) => o.held))]
-  }, [orders])
+    return [sum(paid) || show(0), sum((orders || []).filter((o) => o.held))]
+  }, [orders, show])
   const live = (products || []).filter((p) => p.isActive).length
   const open = (orders || []).filter((o) => o.status === 'PENDING' || o.status === 'IN_PROGRESS').length
   const rated = (products || []).filter((p) => p.reviewsCount > 0)
@@ -134,7 +137,7 @@ export default function MyStore() {
                 <h3>{p.name}</h3>
                 <div className="meta">
                   <span className={`ms2-badge ${p.isActive ? 'live' : ''}`}>{p.isActive ? 'Live' : 'Draft'}</span>
-                  <span><b>{money(p.price, p.currency)}</b></span>
+                  <span><b>{show(p.price, p.currency)}</b></span>
                   <span>{p.orders} {p.orders === 1 ? 'order' : 'orders'}</span>
                   {p.reviewsCount > 0 && <span><i className="ti ti-star" aria-hidden="true" style={{ fontSize: "0.95em", verticalAlign: "-0.1em" }} /> {p.avgRating.toFixed(1)} ({p.reviewsCount})</span>}
                   {p.stock !== null && <span>{p.stock} in stock</span>}
