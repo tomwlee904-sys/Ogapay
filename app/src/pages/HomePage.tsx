@@ -128,19 +128,18 @@ function Hero({ live, onCreate }: { live: any; onCreate: () => void }) {
           <div className="hv-hero-copy">
             <div className="hv-tag">
               <span className="hv-tag-icon"><i className="ti ti-arrow-up-right" /></span>
-              <span className="hv-mono">The task network for Africa, on Solana.</span>
+              <span className="hv-mono">Paid tasks. Freelance services. One marketplace.</span>
             </div>
-            <h1 className="hv-h1">Work, earn, grow.</h1>
-            <p className="hv-h1-sub">Paid in Naira or USDC.</p>
+            <h1 className="hv-h1">Earn your way.<span className="hv-h1-sub">Hire the help you need.</span></h1>
             <p className="hv-lead">
-              Post a paid task, hire someone for a project, or earn with the skills you already have.
-              OgaPay connects people who need work done with people ready to do it, and holds the money safely until the work is approved.
+              Earn by completing simple tasks or offering your services. Need something done? Post a task,
+              promote your business, or hire someone for your next project. We hold the money until the work is approved.
             </p>
             <div className="hv-btns">
-              <button className="hv-btn hv-btn-dark" onClick={onCreate}>Create a job <i className="ti ti-plus" /></button>
-              <Link to="/tasks" className="hv-btn hv-btn-ghost">Start earning <i className="ti ti-arrow-right" /></Link>
+              <Link to="/tasks" className="hv-btn hv-btn-dark">Start earning <i className="ti ti-arrow-right" /></Link>
+              <button className="hv-btn hv-btn-ghost" onClick={onCreate}>Create a job <i className="ti ti-arrow-right" /></button>
             </div>
-            <div className="hv-note">Fund jobs with Naira or crypto. Withdraw to your bank or wallet.</div>
+            <div className="hv-note">Pay and get paid in Naira or USDC. Withdraw to your bank or wallet.</div>
           </div>
 
           <div>
