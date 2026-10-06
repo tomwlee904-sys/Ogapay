@@ -67,6 +67,9 @@ const Developer = lazyPage(() => import('./pages/Developer'))
 const Roadmap = lazyPage(() => import('./pages/Roadmap'))
 const About = lazyPage(() => import('./pages/About'))
 const ForBusinesses = lazyPage(() => import('./pages/ForBusinesses'))
+const Socials = lazyPage(() => import('./pages/Socials'))
+const License = lazyPage(() => import('./pages/License'))
+const Copyright = lazyPage(() => import('./pages/Copyright'))
 const Workers = lazyPage(() => import('./pages/Workers'))
 const WorkerWorkspace = lazyPage(() => import('./pages/WorkerWorkspace'))
 const Writer = lazyPage(() => import('./pages/Writer'))
@@ -204,6 +207,9 @@ export default function App() {
             {/* ── Developer & Roadmap ── */}
             <Route path="/roadmap" element={<Roadmap />} />
             <Route path="/hire" element={<ForBusinesses />} />
+            <Route path="/socials" element={<Socials />} />
+            <Route path="/license" element={<License />} />
+            <Route path="/copyright" element={<Copyright />} />
             <Route path="/use-cases" element={<Navigate to="/hire" replace />} />
             <Route path="/about" element={<About />} />
 
