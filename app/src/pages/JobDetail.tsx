@@ -348,13 +348,17 @@ export default function JobDetail() {
   // Poster cancels an open job nobody has joined: the escrow goes back to their wallet
   const handleCancelJob = async () => {
     if (!job || cancelling) return
-    if (!window.confirm('Cancel this job? The money held for it, including the fee, goes back to your wallet. This can\'t be undone.')) return
+    // Admins can cancel someone else's untouched job (spam, tests): the money goes back to the poster
+    const forPoster = job.posterId !== authUser?.id
+    if (!window.confirm(forPoster
+      ? 'Cancel this job as an admin? Nobody has taken it. The money held for it, including the fee, goes back to the poster\'s wallet. This can\'t be undone.'
+      : 'Cancel this job? The money held for it, including the fee, goes back to your wallet. This can\'t be undone.')) return
     setCancelling(true)
     try {
       await apiRequest(`/escrow/refund/${job.id}`, { method: 'POST' })
       setJob({ ...job, status: 'cancelled' })
       refreshUser?.()
-      window.alert('Job cancelled. The money is back in your wallet.')
+      window.alert(forPoster ? 'Job cancelled. The money is back in the poster\'s wallet.' : 'Job cancelled. The money is back in your wallet.')
     } catch (e: any) {
       window.alert(e?.message || 'Could not cancel this job.')
     }
@@ -1040,7 +1044,7 @@ function WurkJobDetailView(props: any) {
                   <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
                   {showSubs ? 'Hide Submissions' : 'View Submissions'}
                 </button>}
-                {canManage && isOpen && !job.currentWorkers && (
+                {(canManage || authUser?.role === 'ADMIN') && isOpen && !job.currentWorkers && (
                   <button className="wjd-secondary" type="button" onClick={handleCancelJob} disabled={cancelling} style={{ color: 'var(--red)' }}>
                     {cancelling ? 'Cancelling…' : 'Cancel job'}
                   </button>
