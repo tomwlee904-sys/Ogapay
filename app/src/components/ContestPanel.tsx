@@ -48,6 +48,7 @@ export default function ContestPanel({ jobId, contest, currency, endsAt, canMana
         .cp-place{font:500 12px var(--font-mono);letter-spacing:.04em;text-transform:uppercase;color:var(--text2)}
         .cp-who{display:inline-flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600;color:var(--text);text-decoration:none}
         .cp-who:hover{text-decoration:underline}
+        .cp-none{font-size:12.5px;color:var(--text3)}
         .cp-facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:14px}
         .cp-fact{padding:12px 14px;border:1px solid var(--border);border-radius:var(--r-ctl,12px)}
         .cp-fact span{display:block;font-size:12px;color:var(--text3)}
@@ -73,6 +74,7 @@ export default function ContestPanel({ jobId, contest, currency, endsAt, canMana
             <div key={i} className={`cp-prize${i === 0 ? ' first' : ''}`}>
               <span className="cp-place">{ordinal(i + 1)} place</span>
               {w?.username && <Link className="cp-who" to={`/user/${encodeURIComponent(w.username)}`}>@{w.username}</Link>}
+              {paid && !w && <span className="cp-none">Not filled: returned to the poster</span>}
               <Money amount={p} currency={currency} convert={convert} size={i === 0 ? 22 : 16} positive />
             </div>
           )
@@ -108,7 +110,9 @@ function PickWinners({ jobId, contest, currency, convert, onPaid }: {
   useEffect(() => {
     apiRequest<any>(`/tasks/${jobId}/submissions?limit=500`)
       .then((r) => {
-        const list: Entry[] = (r?.data || r?.submissions || []).filter((s: Entry) => s.status === 'SUBMITTED')
+        // apiRequest already unwraps { data }: a list comes back as the array itself
+        const all: Entry[] = Array.isArray(r) ? r : r?.data || r?.submissions || []
+        const list = all.filter((s) => s.status === 'SUBMITTED')
         list.sort((a, b) => new Date(a.submittedAt || 0).getTime() - new Date(b.submittedAt || 0).getTime())
         setEntries(list)
         setPicks(Array(Math.min(contest.prizes.length, list.length)).fill(''))

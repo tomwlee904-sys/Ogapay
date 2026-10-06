@@ -847,16 +847,18 @@ function WurkJobDetailView(props: any) {
           {/* ── Title: what the job is, where it stands, what it pays ── */}
           <header className="wjd-headline">
             <div className="wjd-headline-main">
-              <span className="ui-eyebrow"><i className="ti ti-briefcase" />{categoryLabel(job.category)}</span>
+              <span className="ui-eyebrow"><i className={`ti ${contest ? 'ti-award' : 'ti-briefcase'}`} />{contest ? `Contest · ${categoryLabel(job.category)}` : categoryLabel(job.category)}</span>
               <h1 className="wjd-h1">{job.title}</h1>
               <ul className="wjd-facts" aria-label="Job status">
                 <li className={isOpen ? 'is-open' : ''}><span className="wjd-dot" aria-hidden="true" />{statusText}</li>
                 <li><i className="ti ti-clock" aria-hidden="true" />{deadline.state === 'open' ? `Closes ${deadlineDate(deadline)}` : deadlineLabel(deadline)}</li>
-                <li><i className="ti ti-users" aria-hidden="true" />{job.slotsLeft} of {job.slots} {job.slots === 1 ? 'place' : 'places'} left</li>
+                {contest
+                  ? <li><i className="ti ti-users" aria-hidden="true" />{contest.entries} {contest.entries === 1 ? 'entry' : 'entries'}{contest.entryTarget ? ` of ${contest.entryTarget} target` : ''}</li>
+                  : <li><i className="ti ti-users" aria-hidden="true" />{job.slotsLeft} of {job.slots} {job.slots === 1 ? 'place' : 'places'} left</li>}
               </ul>
             </div>
             <div className="wjd-headline-side">
-              <Money amount={Number(job.reward || 0)} currency={rewardCurrency} convert={convert} size={30} positive note="per person" />
+              <Money amount={Number(job.reward || 0)} currency={rewardCurrency} convert={convert} size={30} positive note={contest ? '1st place prize' : 'per person'} />
               {authUser
                 ? <button className="ui-btn ui-btn-dark" type="button" disabled={!canManage && !isOpen} onClick={() => canManage ? navigate('/manage-jobs') : setShowApplyWarning(true)}>
                     {canManage ? 'Manage submissions' : isOpen ? 'Take a place' : 'Job closed'}
