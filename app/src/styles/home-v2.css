@@ -126,16 +126,53 @@ body:has(main.hv), body:has(main.hv) #root { overflow-x: clip; }
 }
 
 .hv-stats { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-3); margin-top: var(--sp-3); }
+/* Glass cards, the same recipe as wurk.fun: a translucent gradient over a
+   blurred backdrop; optics = a tinted glow bottom-right, a white glow top-left
+   and a curved light arc (a ring gradient centred past the bottom-right corner);
+   a hairline rim inset 3px; a sweep of light when the card appears; and a
+   reflection that follows the pointer (--glass-x/--glass-y from HomePage). */
 .hv-stat {
-  position: relative; overflow: hidden;
-  border: 1px solid var(--hv-line); border-radius: var(--r-card);
-  background: var(--card); padding: 18px 20px;
-  box-shadow: var(--sh-card);
+  --glass-tint: 132, 169, 187;
+  --glass-rim: rgba(255, 255, 255, .92);
+  position: relative; isolation: isolate; overflow: visible;
+  border: 1px solid rgba(170, 184, 195, .38); border-radius: 20px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, .8), rgba(243, 248, 250, .46));
+  padding: 19px 21px 18px;
+  box-shadow: 0 8px 22px -12px rgba(34, 60, 76, .15), 0 2px 5px rgba(36, 56, 68, .024),
+    inset 0 1px 1px rgba(255, 255, 255, .92), inset 0 -1px 2px rgba(121, 148, 162, .08);
+  -webkit-backdrop-filter: blur(20px) saturate(1.35); backdrop-filter: blur(20px) saturate(1.35);
+  animation: hv-stat-enter .75s cubic-bezier(.2, .7, .2, 1) var(--stat-delay, 0s) both;
 }
-[data-theme="dark"] .hv-stat-icon { background: #15161a; border-color: rgba(255,255,255,.12); }
+.hv-stat::after { content: ""; position: absolute; z-index: 2; inset: 3px; border: 1px solid; border-color: var(--glass-rim) transparent rgba(130, 153, 169, .09) var(--glass-rim); border-radius: 16px; opacity: .65; pointer-events: none; }
+.hv-stat-optics { position: absolute; z-index: 0; inset: 0; overflow: hidden; border-radius: inherit; pointer-events: none;
+  background: radial-gradient(ellipse at 100% 100%, rgba(var(--glass-tint), .23), transparent 65%), radial-gradient(ellipse at 0% 0%, rgba(255, 255, 255, .7), transparent 62%); }
+.hv-stat-optics::before { content: ""; position: absolute; inset: 0; opacity: .8;
+  background: radial-gradient(ellipse at 105% 130%, transparent 44%, rgba(var(--glass-tint), .13) 48%, rgba(255, 255, 255, .55) 51%, transparent 58%); }
+.hv-stat-sweep { position: absolute; inset: -50% -60%; opacity: 0;
+  background: linear-gradient(112deg, transparent 36%, rgba(255, 255, 255, .094) 43%, rgba(255, 255, 255, .64) 50%, rgba(255, 255, 255, .04) 57%, transparent 64%);
+  animation: hv-stat-glint 1.6s ease-out calc(var(--stat-delay, 0s) + .35s) 1 both; }
+.hv-stat-reflection { position: absolute; z-index: 0; inset: 0; border-radius: inherit; opacity: 0; transition: opacity .45s; pointer-events: none;
+  background: radial-gradient(ellipse at var(--glass-x, 25%) var(--glass-y, 0%), rgba(255, 255, 255, .76), rgba(255, 255, 255, .16) 38%, transparent 70%); }
+.hv-stat[data-glass] .hv-stat-reflection { opacity: .75; }
+@keyframes hv-stat-enter { 0% { opacity: 0; transform: translate3d(0, 26px, 0) scale(.94); } 65% { opacity: 1; } 100% { opacity: 1; transform: none; } }
+@keyframes hv-stat-glint { 0% { opacity: 0; transform: translate3d(-32%, 0, 0); } 32% { opacity: .75; } 100% { opacity: 0; transform: translate3d(32%, 0, 0); } }
+@media (prefers-reduced-motion: reduce) { .hv-stat, .hv-stat-sweep { animation: none; } }
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) { .hv-stat { background: #f5f8fa; } }
+[data-theme="dark"] .hv-stat {
+  --glass-rim: rgba(255, 255, 255, .22);
+  border-color: rgba(173, 192, 206, .21);
+  background: linear-gradient(135deg, rgba(32, 39, 44, .65), rgba(14, 18, 21, .48) 55%, rgba(24, 32, 37, .6));
+  box-shadow: 0 10px 26px -12px rgba(0, 0, 0, .73), 0 2px 4px rgba(0, 0, 0, .53), inset 0 1px 1px rgba(255, 255, 255, .12), inset 0 -1px 2px rgba(0, 0, 0, .6);
+}
+[data-theme="dark"] .hv-stat::after { border-bottom-color: rgba(255, 255, 255, .02); }
+[data-theme="dark"] .hv-stat-optics { background: radial-gradient(ellipse at 100% 100%, rgba(var(--glass-tint), .12), transparent 65%), radial-gradient(ellipse at 0% 0%, rgba(255, 255, 255, .035), transparent 62%); }
+[data-theme="dark"] .hv-stat-optics::before { background: radial-gradient(ellipse at 105% 130%, transparent 44%, rgba(var(--glass-tint), .065) 48%, rgba(255, 255, 255, .07) 51%, transparent 58%); }
+[data-theme="dark"] .hv-stat-reflection { background: radial-gradient(ellipse at var(--glass-x, 25%) var(--glass-y, 0%), rgba(255, 255, 255, .13), rgba(255, 255, 255, .02) 38%, transparent 70%); }
+[data-theme="dark"] .hv-stat-sweep { background: linear-gradient(112deg, transparent 36%, rgba(255, 255, 255, .01) 43%, rgba(255, 255, 255, .15) 50%, rgba(255, 255, 255, .01) 57%, transparent 64%); }
+[data-theme="dark"] .hv-stat-icon { color: rgb(178, 193, 202); border-color: rgba(224, 239, 255, .08); background: rgba(255, 255, 255, .027); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .05); }
 .hv-stat-head { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--hv-muted); position: relative; z-index: 1; }
-.hv-stat-icon { width: 28px; height: 28px; border-radius: var(--r-sm); border: 1px solid var(--hv-line); display: grid; place-items: center; background: var(--hv-card); font-size: var(--icon-sm); color: var(--hv-ink); }
-.hv-stat-val { font-size: clamp(26px, 2.4vw, 32px); letter-spacing: -.035em; font-weight: 600; margin-top: 14px; line-height: 1; position: relative; z-index: 1; font-variant-numeric: tabular-nums; }
+.hv-stat-icon { width: 26px; height: 26px; border-radius: 8px; border: 1px solid rgba(200, 211, 218, .42); display: grid; place-items: center; background: rgba(255, 255, 255, .38); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .7), 0 1px 3px rgba(24, 51, 74, .024); font-size: 15px; color: rgb(83, 102, 116); }
+.hv-stat-val { font-size: clamp(28px, 2.6vw, 34px); letter-spacing: -.05em; font-weight: 550; margin: 14px 0 0; line-height: 1; position: relative; z-index: 1; font-variant-numeric: tabular-nums; }
 .hv-stat-val.pos { color: var(--money); }
 .hv-stat-sub { font-size: 12.5px; color: var(--hv-muted); margin-top: var(--sp-2); position: relative; z-index: 1; }
 .hv-sk { display: inline-block; height: 30px; width: 96px; border-radius: 8px; background: var(--hv-soft); animation: hv-pulse 1.4s ease-in-out infinite; }
@@ -288,6 +325,26 @@ body:has(main.hv), body:has(main.hv) #root { overflow-x: clip; }
   .hv-journal { grid-auto-columns: calc((100% - 16px) / 2); }
 }
 
+/* Recent payouts drifting under the hero network (components/home/PayoutStrip.tsx) */
+.hv-earn { width: 100%; min-width: 0; margin-top: 14px; font-size: 12px; line-height: 1.4; contain: inline-size; }
+/* The strip is wider than any screen: keep the hero columns from growing to fit it */
+.hv-hero-grid > * { min-width: 0; }
+.hv-earn-vp { overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain; scrollbar-width: none;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 16px, #000 calc(100% - 16px), transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 16px, #000 calc(100% - 16px), transparent); }
+.hv-earn-vp::-webkit-scrollbar { display: none; }
+.hv-earn-track { display: flex; width: max-content; will-change: transform; }
+.hv-earn-list { display: flex; flex: 0 0 auto; align-items: center; gap: 28px; margin: 0; padding: 0 28px 0 0; list-style: none; }
+.hv-earn-item { display: flex; flex: 0 0 auto; align-items: center; gap: 7px; min-height: 38px; white-space: nowrap; }
+.hv-earn-who { display: inline-flex; align-items: center; gap: 7px; color: var(--hv-ink); text-decoration: none; font-weight: 500; }
+.hv-earn-av { display: inline-grid; place-items: center; width: 24px; height: 24px; flex: 0 0 24px; overflow: hidden; border: 1px solid var(--hv-line); border-radius: 50%; background: var(--hv-soft); color: var(--hv-muted); font-size: 11px; font-weight: 600; }
+.hv-earn-av img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.hv-earn-name { max-width: 116px; overflow: hidden; text-overflow: ellipsis; }
+.hv-earn-amt { color: var(--money, #15803d); font-weight: 600; font-variant-numeric: tabular-nums; }
+.hv-earn-time { color: var(--hv-muted); font-family: var(--font-mono); font-size: 10.5px; }
+.hv-earn :is(a, .hv-earn-vp):focus-visible { outline: 2px solid var(--hv-ink); outline-offset: -2px; border-radius: 4px; }
+@media (prefers-reduced-motion: reduce) { .hv-earn-track { will-change: auto; } }
+
 /* ── Phone ── */
 @media (max-width: 768px) {
   .hv-frame { border: 0; }
@@ -305,9 +362,11 @@ body:has(main.hv), body:has(main.hv) #root { overflow-x: clip; }
   .hv-numbers-band { padding-top: 24px; padding-bottom: 24px; }
   .hv-connected-art { padding: 10px; }
   .hv-stats { gap: 8px; }
-  .hv-stat { padding: 14px; border-radius: var(--r-md); }
-  .hv-stat-head { font-size: 12px; }
-  .hv-stat-icon { display: none; }
+  .hv-stat { padding: 14px 12px; border-radius: 17px; }
+  .hv-stat::after { border-radius: 13px; }
+  .hv-stat-head { font-size: 12px; gap: 7px; }
+  .hv-stat-icon { width: 22px; height: 22px; border-radius: 7px; font-size: 13px; }
+  .hv-stat-val { font-size: 28px; }
   .hv-hero-foot { grid-template-columns: 1fr; gap: 10px; justify-items: center; margin-top: 36px; }
   .hv-hero-foot > :last-child { justify-self: center; }
   /* Still two cards side by side: icon and chevron on top, words below */

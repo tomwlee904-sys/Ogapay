@@ -12,6 +12,7 @@ import Carousel from "../components/home/Carousel";
 import { HomeJobCard, HomeProductCard, HomeCommunityCard } from "../components/home/HomeCards";
 import ConnectArt from "../components/home/ConnectArt";
 import NetworkFlow from "../components/home/NetworkFlow";
+import PayoutStrip from "../components/home/PayoutStrip";
 import { useCurrency } from "../context/CurrencyContext";
 
 import "../styles/homepage.css";
@@ -97,10 +98,24 @@ function useJson<T = any>(path: string, pollMs = 0) {
 
 /* ─── hero ─────────────────────────────────────────────────────────────────── */
 
-function StatCard({ icon, label, value, sub, format, positive }: { icon: string; label: string; value: number | null; sub: string; format: (n: number) => string; positive?: boolean }) {
+// A glass card like wurk.fun's: a soft gradient over a blurred backdrop, a tinted
+// glow and a curved light arc (optics), a hairline rim, a light sweep when it
+// appears, and a reflection that follows the pointer
+function StatCard({ icon, label, value, sub, format, positive, tint, delay }: { icon: string; label: string; value: number | null; sub: string; format: (n: number) => string; positive?: boolean; tint: string; delay: number }) {
   const v = useCountUp(value);
+  const ref = useRef<HTMLDivElement>(null);
+  const glass = (e: React.PointerEvent) => {
+    const el = ref.current;
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    el.style.setProperty("--glass-x", `${(((e.clientX - r.left) / r.width) * 100).toFixed(1)}%`);
+    el.style.setProperty("--glass-y", `${(((e.clientY - r.top) / r.height) * 100).toFixed(1)}%`);
+  };
   return (
-    <div className="hv-stat">
+    <div ref={ref} className="hv-stat" style={{ ["--glass-tint" as any]: tint, ["--stat-delay" as any]: `${delay}s` }}
+      onPointerMove={glass} onPointerEnter={() => ref.current?.setAttribute("data-glass", "on")} onPointerLeave={() => ref.current?.removeAttribute("data-glass")}>
+      <span className="hv-stat-optics" aria-hidden="true"><span className="hv-stat-sweep" /></span>
+      <span className="hv-stat-reflection" aria-hidden="true" />
       <div className="hv-stat-head"><span className="hv-stat-icon"><i className={`ti ti-${icon}`} /></span>{label}</div>
       <div className={`hv-stat-val${positive ? " pos" : ""}`}>{value == null ? <span className="hv-sk" /> : format(v)}</div>
       <div className="hv-stat-sub">{sub}</div>
@@ -145,12 +160,13 @@ function Hero({ live, onCreate }: { live: any; onCreate: () => void }) {
           <div>
             {/* the labels and caption are drawn inside the animation */}
             <NetworkFlow />
+            <PayoutStrip />
             <div className="hv-mono hv-eyebrow" style={{ marginTop: 26 }}><span className="hv-dot" /> Platform activity</div>
             <div className="hv-stats">
-              <StatCard icon="briefcase" label="Active jobs" value={n("activeJobs")} sub="Open to apply now" format={(x) => Math.round(x).toLocaleString()} />
-              <StatCard icon="coins" label="Rewards funded" value={rewards.value} sub={rewards.sub} format={fundedFmt} />
-              <StatCard icon="circle-check" label="Tasks approved" value={approved.value} sub={approved.sub} format={(x) => Math.round(x).toLocaleString()} />
-              <StatCard icon="users" label="Active workers" value={n("activeWorkers")} sub="Have earned on OgaPay" format={(x) => Math.round(x).toLocaleString()} positive />
+              <StatCard icon="briefcase" label="Active jobs" value={n("activeJobs")} sub="Open to apply now" format={(x) => Math.round(x).toLocaleString()} tint="132, 169, 187" delay={0.1} />
+              <StatCard icon="coins" label="Rewards funded" value={rewards.value} sub={rewards.sub} format={fundedFmt} tint="143, 181, 167" delay={0.28} />
+              <StatCard icon="circle-check" label="Tasks approved" value={approved.value} sub={approved.sub} format={(x) => Math.round(x).toLocaleString()} tint="160, 162, 194" delay={0.46} />
+              <StatCard icon="users" label="Active workers" value={n("activeWorkers")} sub="Have earned on OgaPay" format={(x) => Math.round(x).toLocaleString()} positive tint="152, 169, 188" delay={0.64} />
             </div>
           </div>
         </div>
