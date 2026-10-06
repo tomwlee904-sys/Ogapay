@@ -509,6 +509,7 @@ const CATEGORY_LABEL: Record<string, string> = {
 }
 const endOf = (j: any) => j.expiresAt || j.deadline || j.closesAt || j.endsAt
 const openSlots = (j: any) => {
+  if (j.isContest) return Infinity // contests take unlimited entries
   const max = Number(j.maxWorkers ?? j.slots ?? 0)
   if (!max) return Infinity
   const done = Number(j.submissionsCount ?? j._count?.submissions ?? j.currentWorkers ?? j.filled ?? 0)

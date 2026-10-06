@@ -11,6 +11,7 @@ import { jobRequirements, rankName } from '../lib/requirements'
 import ApplyModal from '../components/ApplyModal'
 import { BoostedTag, PremiumMark } from '../components/Perks'
 import Money from '../components/Money'
+import ContestPanel, { type ContestInfo } from '../components/ContestPanel'
 import { formatMoney } from '../lib/money'
 import { jobDeadline, deadlineLabel, deadlineDate } from '../lib/deadline'
 import { categoryLabel } from '../lib/categories'
@@ -141,6 +142,9 @@ export default function JobDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
   const [job, setJob] = useState<JobData | null>(null)
+  // Contests: prizes, entries and winners (from GET /tasks/:id); reloaded after the poster pays the winners
+  const [contest, setContest] = useState<ContestInfo | null>(null)
+  const [reloadKey, setReloadKey] = useState(0)
   const [loading, setLoading] = useState(true)
   const [showSubs, setShowSubs] = useState(false)
   const [showApply, setShowApply] = useState(false)
@@ -180,6 +184,7 @@ export default function JobDetail() {
         if (json.success && json.data) {
           const t = json.data.task || json.data
           setJob(formatTask(t))
+          setContest(json.data.contest || null)
         } else {
           const res2 = await fetch(`${API_BASE}/jobs/${id}`)
           const json2 = await res2.json()
@@ -195,7 +200,7 @@ export default function JobDetail() {
       setLoading(false)
     }
     fetchJob()
-  }, [id])
+  }, [id, reloadKey])
 
   useEffect(() => { injectSkeletonStyles() }, [])
 
@@ -422,6 +427,8 @@ export default function JobDetail() {
       handleReject={handleReject}
       timeAgo={timeAgo}
       authUser={authUser}
+      contest={contest}
+      onContestPaid={() => setReloadKey((k) => k + 1)}
     />
   )
 }
@@ -455,6 +462,7 @@ function WurkJobDetailView(props: any) {
     showReportModal, setShowReportModal, reportCategory, setReportCategory,
     reportDesc, setReportDesc, reportMsg, setReportMsg, reportSubmitting, handleSubmitReport,
     submissions, subsLoading, approving, rejecting, handleApprove, handleReject, timeAgo, authUser,
+    contest, onContestPaid,
   } = props
 
   const agentName = job.brand || 'OgaPay'
@@ -839,16 +847,18 @@ function WurkJobDetailView(props: any) {
           {/* ── Title: what the job is, where it stands, what it pays ── */}
           <header className="wjd-headline">
             <div className="wjd-headline-main">
-              <span className="ui-eyebrow"><i className="ti ti-briefcase" />{categoryLabel(job.category)}</span>
+              <span className="ui-eyebrow"><i className={`ti ${contest ? 'ti-award' : 'ti-briefcase'}`} />{contest ? `Contest · ${categoryLabel(job.category)}` : categoryLabel(job.category)}</span>
               <h1 className="wjd-h1">{job.title}</h1>
               <ul className="wjd-facts" aria-label="Job status">
                 <li className={isOpen ? 'is-open' : ''}><span className="wjd-dot" aria-hidden="true" />{statusText}</li>
                 <li><i className="ti ti-clock" aria-hidden="true" />{deadline.state === 'open' ? `Closes ${deadlineDate(deadline)}` : deadlineLabel(deadline)}</li>
-                <li><i className="ti ti-users" aria-hidden="true" />{job.slotsLeft} of {job.slots} {job.slots === 1 ? 'place' : 'places'} left</li>
+                {contest
+                  ? <li><i className="ti ti-users" aria-hidden="true" />{contest.entries} {contest.entries === 1 ? 'entry' : 'entries'}{contest.entryTarget ? ` of ${contest.entryTarget} target` : ''}</li>
+                  : <li><i className="ti ti-users" aria-hidden="true" />{job.slotsLeft} of {job.slots} {job.slots === 1 ? 'place' : 'places'} left</li>}
               </ul>
             </div>
             <div className="wjd-headline-side">
-              <Money amount={Number(job.reward || 0)} currency={rewardCurrency} convert={convert} size={30} positive note="per person" />
+              <Money amount={Number(job.reward || 0)} currency={rewardCurrency} convert={convert} size={30} positive note={contest ? '1st place prize' : 'per person'} />
               {authUser
                 ? <button className="ui-btn ui-btn-dark" type="button" disabled={!canManage && !isOpen} onClick={() => canManage ? navigate('/manage-jobs') : setShowApplyWarning(true)}>
                     {canManage ? 'Manage submissions' : isOpen ? 'Take a place' : 'Job closed'}
@@ -908,7 +918,11 @@ function WurkJobDetailView(props: any) {
                   <div className="wjd-label">Status</div>
                   <div className="wjd-value wjd-open-val"><span className="wjd-dot" style={{ background: isOpen ? 'var(--green)' : '#94a3b8', border: `1.5px solid ${isOpen ? 'rgba(var(--green-rgb),0.8)' : '#64748b'}` }} />{statusText}</div>
                 </div>
-                <div className="wjd-row"><div className="wjd-label">How you're paid <InfoBtn text="The poster checks each submission. Approved work is paid straight to your wallet from the money already held for this job." /></div><div className="wjd-value">Poster approves each one</div></div>
+                {contest ? (
+                  <div className="wjd-row"><div className="wjd-label">How you're paid <InfoBtn text="When entries close the poster ranks the best entries and each place's prize is paid to your wallet from the money already held for this contest. If the poster doesn't pick within 3 days, the earliest entries they haven't rejected win." /></div><div className="wjd-value">Prizes for the top {contest.prizes.length === 1 ? 'entry' : `${contest.prizes.length} entries`}</div></div>
+                ) : (
+                  <div className="wjd-row"><div className="wjd-label">How you're paid <InfoBtn text="The poster checks each submission. Approved work is paid straight to your wallet from the money already held for this job." /></div><div className="wjd-value">Poster approves each one</div></div>
+                )}
                 <div className="wjd-row"><div className="wjd-label">Time to do it</div><div className="wjd-value">{job.estimatedTime || 'Not given'}</div></div>
                 <div className="wjd-row"><div className="wjd-label">Closes in</div><div className="wjd-value" style={{ fontVariantNumeric: 'tabular-nums' }}>{countdownStr}</div></div>
                 <div className="wjd-row"><div className="wjd-label">Minimum rank</div><div className="wjd-value">{Number(job.rankRequired || job.minRank) > 1 ? `${rankName(Number(job.rankRequired || job.minRank))} or higher` : 'None'}</div></div>
@@ -923,20 +937,30 @@ function WurkJobDetailView(props: any) {
               </div>
               <div className="wjd-rows">
                 <div className="wjd-row"><div className="wjd-label">Who can join</div><div className="wjd-value">Anyone who meets the requirements</div></div>
+                {contest ? (<>
+                  <div className="wjd-row"><div className="wjd-label">Prize places</div><div className="wjd-value">{contest.prizes.length}</div></div>
+                  <div className="wjd-row"><div className="wjd-label">Entries</div><div className="wjd-value">{contest.entryTarget ? `${contest.entries} / ${contest.entryTarget} target` : `${contest.entries} (unlimited)`}</div></div>
+                </>) : (<>
                 <div className="wjd-row"><div className="wjd-label">People paid</div><div className="wjd-value">Up to {job.slots}</div></div>
                 <div className="wjd-row"><div className="wjd-label">Places taken <InfoBtn text="Taking a place reserves it for you. Once every place is taken, people who haven't sent their work within 24 hours lose their place to someone else." /></div><div className="wjd-value">{job.capacity}</div></div>
                 <div className="wjd-row"><div className="wjd-label">Places left</div><div className="wjd-value">{job.slotsLeft}</div></div>
+                </>)}
                 <div className="wjd-row"><div className="wjd-label">Work sent in</div><div className="wjd-value">{job.submitted}</div></div>
               </div>
             </div>
           </section>
 
           {/* ── Reward ── */}
+          {contest ? (
+            <ContestPanel jobId={job.id} contest={contest} currency={rewardCurrency} endsAt={job.deadline || null}
+              canManage={canManage} convert={convert} onPaid={onContestPaid} />
+          ) : (
           <section className="wjd-panel wjd-reward">
               <span className="wjd-reward-mark" aria-hidden="true"><i className="ti ti-currency-dollar" /></span>
               <div className="wjd-reward-title">Reward per person</div>
               <Money amount={Number(job.reward || 0)} currency={rewardCurrency} convert={convert} size={40} positive />
           </section>
+          )}
 
           {/* ── Description ── */}
           <section className="wjd-panel wjd-desc">
@@ -1002,7 +1026,7 @@ function WurkJobDetailView(props: any) {
                 <button className="wjd-primary" type="button" disabled={!canManage && !isOpen}
                   onClick={() => canManage ? navigate('/manage-jobs') : setShowApplyWarning(true)}>
                   <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" /></svg>
-                  {canManage ? 'Manage Submissions' : isOpen ? 'Apply' : 'Job Closed'}
+                  {canManage ? 'Manage Submissions' : isOpen ? (contest ? 'Enter contest' : 'Apply') : (contest ? 'Entries closed' : 'Job Closed')}
                 </button>
                 <button className="wjd-secondary" type="button" onClick={() => setShowSubs(!showSubs)}>
                   <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
