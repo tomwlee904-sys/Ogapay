@@ -36,6 +36,10 @@
       "destination": "/api/profile-meta?u=:username"
     },
     {
+      "source": "/sitemap-(jobs|store|people|blog|communities)\\.xml",
+      "destination": "https://ogapay-production.up.railway.app/api/v1/sitemaps/$1"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
