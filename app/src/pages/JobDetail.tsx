@@ -1,5 +1,5 @@
 ﻿import { useState, useEffect, useRef } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, Link } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { useCurrency } from '../context/CurrencyContext'
 import { useAuth } from '../context/AuthContext'
@@ -12,6 +12,7 @@ import ApplyModal from '../components/ApplyModal'
 import { BoostedTag, PremiumMark } from '../components/Perks'
 import Money from '../components/Money'
 import ContestPanel, { type ContestInfo } from '../components/ContestPanel'
+import JobActivity from '../components/JobActivity'
 import { formatMoney } from '../lib/money'
 import { jobDeadline, deadlineLabel, deadlineDate } from '../lib/deadline'
 import { categoryLabel } from '../lib/categories'
@@ -144,6 +145,8 @@ export default function JobDetail() {
   const [job, setJob] = useState<JobData | null>(null)
   // Contests: prizes, entries and winners (from GET /tasks/:id); reloaded after the poster pays the winners
   const [contest, setContest] = useState<ContestInfo | null>(null)
+  // Members-only job: the community whose members can take it
+  const [community, setCommunity] = useState<{ id: string; name: string; slug: string } | null>(null)
   const [reloadKey, setReloadKey] = useState(0)
   const [loading, setLoading] = useState(true)
   const [showSubs, setShowSubs] = useState(false)
@@ -185,6 +188,7 @@ export default function JobDetail() {
           const t = json.data.task || json.data
           setJob(formatTask(t))
           setContest(json.data.contest || null)
+          setCommunity(json.data.community || null)
         } else {
           const res2 = await fetch(`${API_BASE}/jobs/${id}`)
           const json2 = await res2.json()
@@ -429,6 +433,7 @@ export default function JobDetail() {
       authUser={authUser}
       contest={contest}
       onContestPaid={() => setReloadKey((k) => k + 1)}
+      community={community}
     />
   )
 }
@@ -462,7 +467,7 @@ function WurkJobDetailView(props: any) {
     showReportModal, setShowReportModal, reportCategory, setReportCategory,
     reportDesc, setReportDesc, reportMsg, setReportMsg, reportSubmitting, handleSubmitReport,
     submissions, subsLoading, approving, rejecting, handleApprove, handleReject, timeAgo, authUser,
-    contest, onContestPaid,
+    contest, onContestPaid, community,
   } = props
 
   const agentName = job.brand || 'OgaPay'
@@ -852,6 +857,9 @@ function WurkJobDetailView(props: any) {
               <ul className="wjd-facts" aria-label="Job status">
                 <li className={isOpen ? 'is-open' : ''}><span className="wjd-dot" aria-hidden="true" />{statusText}</li>
                 <li><i className="ti ti-clock" aria-hidden="true" />{deadline.state === 'open' ? `Closes ${deadlineDate(deadline)}` : deadlineLabel(deadline)}</li>
+                {community && (
+                  <li><i className="ti ti-lock" aria-hidden="true" />Members of <Link to={`/communities/${community.slug || community.id}`} style={{ color: 'inherit', fontWeight: 600 }}>{community.name}</Link> only</li>
+                )}
                 {contest
                   ? <li><i className="ti ti-users" aria-hidden="true" />{contest.entries} {contest.entries === 1 ? 'entry' : 'entries'}{contest.entryTarget ? ` of ${contest.entryTarget} target` : ''}</li>
                   : <li><i className="ti ti-users" aria-hidden="true" />{job.slotsLeft} of {job.slots} {job.slots === 1 ? 'place' : 'places'} left</li>}
@@ -936,7 +944,7 @@ function WurkJobDetailView(props: any) {
                 Participation
               </div>
               <div className="wjd-rows">
-                <div className="wjd-row"><div className="wjd-label">Who can join</div><div className="wjd-value">Anyone who meets the requirements</div></div>
+                <div className="wjd-row"><div className="wjd-label">Who can join</div><div className="wjd-value">{community ? `Members of ${community.name} who meet the requirements` : 'Anyone who meets the requirements'}</div></div>
                 {contest ? (<>
                   <div className="wjd-row"><div className="wjd-label">Prize places</div><div className="wjd-value">{contest.prizes.length}</div></div>
                   <div className="wjd-row"><div className="wjd-label">Entries</div><div className="wjd-value">{contest.entryTarget ? `${contest.entries} / ${contest.entryTarget} target` : `${contest.entries} (unlimited)`}</div></div>
@@ -1028,10 +1036,10 @@ function WurkJobDetailView(props: any) {
                   <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" /></svg>
                   {canManage ? 'Manage Submissions' : isOpen ? (contest ? 'Enter contest' : 'Apply') : (contest ? 'Entries closed' : 'Job Closed')}
                 </button>
-                <button className="wjd-secondary" type="button" onClick={() => setShowSubs(!showSubs)}>
+                {canManage && <button className="wjd-secondary" type="button" onClick={() => setShowSubs(!showSubs)}>
                   <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
                   {showSubs ? 'Hide Submissions' : 'View Submissions'}
-                </button>
+                </button>}
                 {canManage && isOpen && !job.currentWorkers && (
                   <button className="wjd-secondary" type="button" onClick={handleCancelJob} disabled={cancelling} style={{ color: 'var(--red)' }}>
                     {cancelling ? 'Cancelling…' : 'Cancel job'}
@@ -1096,6 +1104,9 @@ function WurkJobDetailView(props: any) {
               )}
             </section>
           )}
+
+          {/* ── Public submissions: who sent work and what was paid (no proof) ── */}
+          {!canManage && <JobActivity jobId={job.id} convert={convert} isContest={!!contest} />}
         </div>
       </div>
 

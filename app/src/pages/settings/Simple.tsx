@@ -88,7 +88,7 @@ export function Developer() {
     window.dispatchEvent(new Event('ogapay:devmode'))
   }
   return (
-    <Card title="Developer API" sub="Read-only API keys for your own apps: your jobs, submissions, balance and public jobs.">
+    <Card title="Developer API" sub="API keys for your own apps and agents: read your jobs and balance, and (with write access) post jobs and pay for approved work.">
       <Row title="Show Developer API in the menu" id="dev-toggle"><Toggle on={on} onChange={toggle} labelledBy="dev-toggle" /></Row>
       <Row title="Create keys and read the docs"><Link className="up-btn" to="/developer">Open Developer API</Link></Row>
     </Card>

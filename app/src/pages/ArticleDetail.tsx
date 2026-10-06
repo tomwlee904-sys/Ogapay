@@ -5,6 +5,7 @@ import { apiRequest } from '../lib/api'
 import Footer from '../components/Footer'
 import Drawer from '../components/Drawer'
 import { sized } from '../lib/img'
+import BlogReactions from '../components/BlogReactions'
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
@@ -222,6 +223,9 @@ export default function ArticleDetail() {
             </button>
           </div>
         </div>
+
+        {/* Likes, comments and tips */}
+        {slug && <BlogReactions slug={slug} post={post} />}
       </article>
 
       {related.length > 0 && (

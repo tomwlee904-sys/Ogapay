@@ -23,7 +23,7 @@ type Community = {
   userRole: string | null; hasRequested: boolean; openJobCount: number; completedJobCount: number; createdAt: string
 }
 type Ranked = { rank: number; id: string; username: string; firstName: string; lastName: string; avatarUrl: string | null; role: string; level: string; tasksCompleted: number; totalEarned: number | null }
-type Job = { id: string; title: string; reward: number; currency: string; submissionCount?: number; createdAt?: string; completedAt?: string; deadline?: string | null; workers?: { id: string; username: string }[] }
+type Job = { id: string; title: string; reward: number; currency: string; submissionCount?: number; createdAt?: string; completedAt?: string; deadline?: string | null; workers?: { id: string; username: string }[]; membersOnly?: boolean; isContest?: boolean }
 type Msg = { id: string; text: string; createdAt: string; sender: { id: string; username: string; firstName: string; avatarUrl: string | null } }
 type Req = { id: string; message: string; createdAt: string; user: { id: string; username: string; firstName: string; lastName: string; avatarUrl: string | null } }
 
@@ -211,6 +211,12 @@ export default function CommunityDetail() {
 
         {tab === 'About' && <About c={c} isMember={isMember} isLeader={isLeader} canModerate={canModerate} role={role} onChange={load} />}
         {tab === 'Leaderboard' && <Leaderboard id={c.id} />}
+        {tab === 'Open jobs' && (role === 'OWNER' || role === 'ADMIN') && (
+          <div className="cm2-post">
+            <span>Post a job only your members can take.</span>
+            <Link className="ui-btn ui-btn-dark" to={`/create?type=custom&community=${c.id}`}><i className="ti ti-plus" /> Members-only job</Link>
+          </div>
+        )}
         {tab === 'Open jobs' && <Jobs id={c.id} kind="open" cat={cat} />}
         {tab === 'Completed' && <Jobs id={c.id} kind="completed" cat={cat} />}
         {tab === 'Chat' && (isMember
@@ -395,18 +401,19 @@ function Jobs({ id, kind, cat }: { id: string; kind: 'open' | 'completed'; cat: 
   const [d, setD] = useState<{ jobs: Job[]; totalPages: number } | null>(null)
   useEffect(() => {
     setD(null)
-    apiRequest<any>(`/communities/${id}/jobs/${kind}?page=${page}`, { auth: false }).then((x) => setD({ jobs: x?.jobs || [], totalPages: x?.totalPages || 1 })).catch(() => setD({ jobs: [], totalPages: 1 }))
+    // Signed in, so a private community's members-only jobs show to its members
+    apiRequest<any>(`/communities/${id}/jobs/${kind}?page=${page}`, { auth: true }).then((x) => setD({ jobs: x?.jobs || [], totalPages: x?.totalPages || 1 })).catch(() => setD({ jobs: [], totalPages: 1 }))
   }, [id, kind, page])
   if (!d) return <div className="up-empty"><i className="ti ti-loader-2" />Loading…</div>
   return (
     <>
-      <p className="cm2-muted cm2-note">{kind === 'open' ? 'Open' : 'Completed'} jobs in {cat || 'this category'} across OgaPay.</p>
+      <p className="cm2-muted cm2-note">Jobs only this community's members can take, then {kind === 'open' ? 'open' : 'completed'} jobs in {cat || 'this category'} across OgaPay.</p>
       {d.jobs.length === 0 ? <div className="up-empty"><i className="ti ti-briefcase" />No {kind} jobs right now.</div> : (
         <section className="up-card cm2-list">
           {d.jobs.map((j) => (
             <Link key={j.id} to={`/tasks/${j.id}`} className="cm2-job">
               <span className="cm2-job-t">
-                <strong>{j.title}</strong>
+                <strong>{j.title}{j.membersOnly && <span className="cm2-only"><i className="ti ti-lock" />Members only</span>}{j.isContest && <span className="cm2-only"><i className="ti ti-award" />Contest</span>}</strong>
                 <small>{kind === 'open'
                   ? `${j.submissionCount || 0} submission${j.submissionCount === 1 ? '' : 's'}${j.deadline ? ` · due ${new Date(j.deadline).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}` : ''}`
                   : `Completed ${j.completedAt ? new Date(j.completedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : ''}${j.workers?.length ? ` · ${j.workers.length} worker${j.workers.length === 1 ? '' : 's'} paid` : ''}`}</small>

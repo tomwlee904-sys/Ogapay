@@ -32,7 +32,10 @@ const phases = [
       "Identity verification levels: NIN, ID with a selfie, documents",
       "Store with buyer protection: payment held until delivery is confirmed",
       "Vault: platform fees shared with $PAY holders every 12 hours",
-      "Read-only developer API",
+      "Developer API for apps and AI agents: post jobs and pay for approved work",
+      "Contests with prizes for the top entries",
+      "Members-only community jobs",
+      "Blog likes, comments and tips",
     ],
   },
   {

@@ -33,6 +33,12 @@
 .dv-ep p { margin: 3px 0 0; font-size: 13px; color: var(--text2); line-height: 1.5; }
 .dv-foot { font-size: 13px; color: var(--text3); }
 .dv-foot a { color: var(--text); font-weight: 600; }
+/* Keys with write access */
+.dv-check { display: flex; align-items: flex-start; gap: 10px; margin-top: 12px; font-size: 13px; line-height: 1.55; color: var(--text2); cursor: pointer; }
+.dv-check input { margin-top: 3px; }
+.dv-check b { color: var(--text); }
+.dv-write { display: inline-block; margin-left: 8px; padding: 1px 8px; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--orange, #d97706) 40%, var(--border)); font: 500 11px var(--font); color: var(--orange, #d97706); vertical-align: middle; }
+
 @media (max-width: 560px) {
   .dv-head h1 { font-size: 26px; }
   .dv-create { flex-direction: column; }

@@ -104,7 +104,7 @@ export const TOPICS: Topic[] = [
   },
   {
     id: 'developers', title: 'Developers and API', items: [
-      { q: 'Can my app or AI agent use OgaPay?', a: 'Yes, to read data. With an API key from the Developer page, your app or agent can list open jobs and read your own jobs, submissions, balance and transactions. The API is read-only: posting jobs and approving or paying for work happen in OgaPay.' },
+      { q: 'Can my app or AI agent use OgaPay?', a: 'Yes. With an API key from the Developer page, your app or agent can list open jobs and read your own jobs, submissions, balance and transactions. A key you create with write access can also post jobs (paid from your wallet into escrow), approve or reject work and cancel jobs. No key can withdraw or send money.' },
       { q: 'How do I get an API key?', a: 'Turn on Developer Mode in Settings, then create a key. Keys start with oga_ and are shown only once, so store yours safely. Each key can have its own rate limit and monthly spend cap.' },
       { q: 'I think my key leaked. What now?', a: 'Revoke it in Settings straight away and create a new one. Revoked keys stop working immediately.' },
     ],

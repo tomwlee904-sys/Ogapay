@@ -137,7 +137,7 @@ export default function ForBusinesses() {
 
         <section className="fb-sec">
           <h2>For developers</h2>
-          <p>A read-only developer API lets you pull jobs and platform stats into your own tools.</p>
+          <p>The developer API lets your own tools or AI agent post jobs, pay for approved work and read results. Keys can never withdraw or send money.</p>
           <div className="ui-actions" style={{ marginTop: 16 }}>
             <Link className="ui-btn ui-btn-ghost" to="/developer">Developer docs <i className="ti ti-arrow-right" /></Link>
             <Link className="ui-btn ui-btn-ghost" to="/faq">FAQ</Link>

@@ -14,7 +14,9 @@ Official channels: https://x.com/Ogapayhq, https://t.me/ogapay (no other account
 - Cancelling: a job nobody has taken can be cancelled; the budget and fee go back to the poster.
 - Requirements a poster can set: verified identity (KYC level), minimum OgaScore, minimum rank, a connected X account.
 - Store: people sell services and digital products. The buyer's payment is held until they confirm delivery, or 3 days after the seller marks the order delivered. No store fees.
-- Communities: groups with members, a chat, a leaderboard and a feed of jobs.
+- Communities: groups with members, a chat, a leaderboard and a feed of jobs. Owners and admins can post jobs only their members can take.
+- Contests: prizes for the top places; the poster ranks the winners after the end date, or the earliest entries win 3 days later.
+- Blog: posts can be liked, commented on and tipped (a naira transfer to the author).
 - Money: wallets hold Naira, USDC and SOL (USDC and SOL on Solana). Withdrawals go to a Nigerian bank (1.5% fee, minimum ₦100) or a crypto wallet (1%) and need identity verification. Transfers between OgaPay users are free.
 - Vault: every 12 hours (00:00 and 12:00 UTC) platform fees in the vault are shared with $PAY holders by how much they hold. Payouts vary with activity. Nothing on OgaPay is financial advice.
 
@@ -35,11 +37,11 @@ Official channels: https://x.com/Ogapayhq, https://t.me/ogapay (no other account
 - Terms: https://ogapay.app/terms
 - Privacy: https://ogapay.app/privacy
 
-## Developer API (read-only)
+## Developer API
 
 Docs and keys: https://ogapay.app/developer
 Base URL: https://ogapay.app/api/v1/dev
-Auth: `Authorization: Bearer oga_live_...` (create a key on the developer page; keys can only read)
+Auth: `Authorization: Bearer oga_live_...` (create a key on the developer page; every key reads, a key with write access can also post jobs and pay for work)
 
 - GET /me: your account (username, name, OgaScore, KYC level)
 - GET /jobs: open public jobs, newest first (category, search, page, limit)
@@ -49,4 +51,12 @@ Auth: `Authorization: Bearer oga_live_...` (create a key on the developer page; 
 - GET /my/balance: your wallets (balance, locked, available)
 - GET /my/transactions: your wallet history (page, limit)
 
-The API cannot post jobs, move money or approve work.
+With write access:
+- POST /jobs: post a job, a contest or a members-only community job; the budget and 10% fee go from your wallet into escrow (30 an hour per key)
+- GET /jobs/:id/submissions: work sent for your job, with the proof
+- POST /submissions/:id/approve: pay the worker from escrow (rating?, feedback?)
+- POST /submissions/:id/reject: reason required; the place opens again
+- POST /jobs/:id/winners: pay a contest's winners after it ends, 1st place first
+- POST /jobs/:id/cancel: cancel a job nobody has taken; budget and fee come back
+
+No key can withdraw or send money.

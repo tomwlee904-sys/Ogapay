@@ -518,6 +518,14 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
     apiRequest<any[]>("/campaigns").then((l) => setCampaigns(Array.isArray(l) ? l : [])).catch(() => {});
   }, [isAuthed]);
   const campaignChoices = campaigns.filter((c) => c.currency === currency && c.status !== "ENDED");
+  // Members-only: communities you own or run (/create?community=… from a community page)
+  const [communityId, setCommunityId] = useState<string>(() => new URLSearchParams(window.location.search).get("community") || "");
+  const [myCommunities, setMyCommunities] = useState<{ communityId: string; name: string; role: string }[]>([]);
+  useEffect(() => {
+    if (!isAuthed) return;
+    apiRequest<any[]>("/communities/mine/list").then((l) => setMyCommunities((Array.isArray(l) ? l : []).filter((c) => ["OWNER", "ADMIN"].includes(c.role)))).catch(() => {});
+  }, [isAuthed]);
+  const community = myCommunities.find((c) => c.communityId === communityId) || null;
   const [files, setFiles] = useState<File[]>([]);
   const [openReq, setOpenReq] = useState<boolean>(!!init.reqType && init.reqType !== "none");
   const [openExtra, setOpenExtra] = useState(false);
@@ -639,7 +647,8 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
         ...reqFields(reqType, reqValue),
         ...(trackingCode.trim() && { trackingCode: trackingCode.trim() }),
         ...(uploaded.length && { attachments: uploaded.map(u => u.url) }),
-        ...(campaignId && campaignChoices.some((c) => c.id === campaignId) && { campaignId }),
+        ...(!community && campaignId && campaignChoices.some((c) => c.id === campaignId) && { campaignId }),
+        ...(community && { communityId: community.communityId }),
       });
       try { localStorage.removeItem(CUSTOM_DRAFT_KEY); } catch { /* ignore */ }
       refreshWalletBal();
@@ -793,7 +802,18 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
                     <RequirementPicker type={reqType} value={reqValue} onChange={(t, v) => { setReqType(t); setReqValue(v); }} />
                   </Fold>
 
-                  {campaignChoices.length > 0 && (
+                  {myCommunities.length > 0 && (
+                    <div className="cf-field">
+                      <label htmlFor="cj-community">Who can see and take it</label>
+                      <select id="cj-community" className="ui-select" value={community ? community.communityId : ""} onChange={e => setCommunityId(e.target.value)}>
+                        <option value="">Everyone on OgaPay</option>
+                        {myCommunities.map((c) => <option key={c.communityId} value={c.communityId}>Members of {c.name} only</option>)}
+                      </select>
+                      <p className="cf-hint">{community ? `Only members of ${community.name} can take it. It shows on the community page, not in the public job list.` : "Communities you own or run can have jobs only their members can take."}</p>
+                    </div>
+                  )}
+
+                  {campaignChoices.length > 0 && !community && (
                     <div className="cf-field">
                       <label htmlFor="cj-campaign">Campaign (optional)</label>
                       <select id="cj-campaign" className="ui-select" value={campaignChoices.some((c) => c.id === campaignId) ? campaignId : ""} onChange={e => setCampaignId(e.target.value)}>
@@ -844,7 +864,7 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
                       <div><span>{mode === "Selection" ? "People hired" : "Winners"}</span><b>{winners}</b></div>
                       <div><span>Reward per {mode === "Selection" ? "person" : "winner"}</span><b>{money(perWinner, currency)}</b></div>
                     </>)}
-                    <div><span>Who can take part</span><b>{reqLabel(reqType, reqValue)}</b></div>
+                    <div><span>Who can take part</span><b>{community ? `Members of ${community.name}` : ""}{community && reqType !== "none" ? " · " : ""}{!community || reqType !== "none" ? reqLabel(reqType, reqValue) : ""}</b></div>
                     <div><span>{isContest ? "Entries close" : "Closes"}</span><b>{deadline ? deadline.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "No deadline"}</b></div>
                     {isContest && <div><span>Winners</span><b>You rank them within 3 days of the close, or the earliest entries win</b></div>}
                     {screenshot && <div><span>Proof</span><b>Screenshot required</b></div>}

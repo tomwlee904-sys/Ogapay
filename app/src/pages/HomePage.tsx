@@ -202,7 +202,7 @@ type PathTab = {
 };
 type PathDef = { id: string; icon: string; title: string; desc: string; tags: string; tabs: PathTab[] };
 
-// Everything here is what the product does today; the developer API is read-only
+// Everything here is what the product does today
 const PATHS: PathDef[] = [
   {
     id: "worker", icon: "user", title: "I'm a Worker", desc: "Earn rewards. Hire help when you need it.", tags: "Earn / Create",
@@ -230,11 +230,11 @@ const PATHS: PathDef[] = [
     ],
   },
   {
-    id: "builder", icon: "code", title: "I'm a Builder", desc: "Read jobs, results and balances from your own app.", tags: "REST API / API keys",
+    id: "builder", icon: "code", title: "I'm a Builder", desc: "Post jobs and read results from your own app or agent.", tags: "REST API / API keys",
     tabs: [
       {
         label: "Quick start", eyebrow: "Developer API", heading: "Bring OgaPay data into your app.",
-        lead: "A read-only REST API. With an API key you can list open jobs and read your own jobs, submissions, balance and transactions.",
+        lead: "A REST API for your app or AI agent. Every key reads your jobs, submissions, balance and transactions; a key with write access can also post jobs and pay for approved work.",
         cta: { label: "Get an API key", to: "/developer" },
         steps: [
           ["Create an API key", "On the Developer API page, while signed in. Up to 5 active keys."],
@@ -244,12 +244,12 @@ const PATHS: PathDef[] = [
         code: { label: "First request", text: `curl ${API_BASE}/dev/me \\\n  -H "Authorization: Bearer oga_live_YOUR_KEY"` },
       },
       {
-        label: "Endpoints", eyebrow: "Read-only", heading: "Seven endpoints, all GET.",
-        lead: "Posting jobs and paying people happen in the app. The API is for showing your OgaPay data wherever you need it.",
+        label: "Endpoints", eyebrow: "Read and write", heading: "Read data, post jobs, pay for work.",
+        lead: "Write endpoints need a key with write access. No key can withdraw or send money.",
         cta: { label: "Developer guide", to: "/developer" },
         code: {
           label: "Endpoints",
-          text: [`# Base URL: ${API_BASE}/dev`, "", "GET /me", "GET /jobs", "GET /jobs/:id", "GET /my/jobs", "GET /my/submissions", "GET /my/balance", "GET /my/transactions"].join("\n"),
+          text: [`# Base URL: ${API_BASE}/dev`, "", "GET  /me", "GET  /jobs", "GET  /jobs/:id", "GET  /my/jobs", "GET  /my/submissions", "GET  /my/balance", "GET  /my/transactions", "", "# With write access", "POST /jobs", "GET  /jobs/:id/submissions", "POST /submissions/:id/approve", "POST /submissions/:id/reject", "POST /jobs/:id/winners", "POST /jobs/:id/cancel"].join("\n"),
         },
       },
     ],
