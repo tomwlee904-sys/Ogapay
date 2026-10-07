@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useTheme } from '../context/ThemeContext'
 import { apiRequest } from '../lib/api'
@@ -64,6 +64,7 @@ export default function ArticleDetail() {
   const navigate = useNavigate()
   const { theme, toggle } = useTheme()
   const [post, setPost] = useState<any>(null)
+  const loadedSlug = useRef<string | null>(null)
   const [related, setRelated] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [drawerOpen, setDrawerOpen] = useState(false)
@@ -72,11 +73,14 @@ export default function ArticleDetail() {
   const [copied, setCopied] = useState(false)
 
   useEffect(() => {
-    if (!slug) return
+    if (!slug || loadedSlug.current === slug) return
     setLoading(true)
     apiRequest<any>(`/blog/${slug}`)
       .then(data => {
         setPost(data)
+        loadedSlug.current = data?.slug || null
+        // An old or alternative link: show the post's own address (without loading it twice)
+        if (data?.slug && data.slug !== slug) navigate(`/blog/${data.slug}`, { replace: true })
         return apiRequest<any>(`/blog?category=${data.category}&limit=3`)
       })
       .then(data => setRelated((data.posts || []).filter((p: any) => p.slug !== slug).slice(0, 3)))
@@ -287,7 +291,7 @@ export default function ArticleDetail() {
               const inits = ((rp.author?.firstName?.[0] || '') + (rp.author?.lastName?.[0] || '')) || 'OG'
               return (
                 <div key={rp.id} onClick={() => navigate(`/blog/${rp.slug}`)} style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 14, overflow: 'hidden', cursor: 'pointer' }}>
-                  <div style={{ height: 160, background: rp.coverColor || 'var(--accent)', backgroundImage: rp.coverImage ? `url(${sized(rp.coverImage, 360)})` : undefined, backgroundSize: 'cover', backgroundPosition: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{ aspectRatio: '16 / 9', background: rp.coverColor || 'var(--accent)', backgroundImage: rp.coverImage ? `url(${sized(rp.coverImage, 360)})` : undefined, backgroundSize: 'cover', backgroundPosition: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     {!rp.coverImage && (() => {
                       const cat = (rp.category || '').toLowerCase();
                       const s = "rgba(255,255,255,0.3)";

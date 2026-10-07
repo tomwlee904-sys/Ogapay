@@ -96,6 +96,7 @@
 .hc-price { margin-top: auto; padding: 12px 14px; }
 
 /* Stories (journal) reuse the product shell */
+.hc-story .hc-media { aspect-ratio: 16 / 9; } /* blog covers are 16:9; 16:10 cut their edges */
 .hc-story .hc-pbody h3 { font-size: 17px; }
 .hc-story .hc-pdesc { -webkit-line-clamp: 3; }
 .hc-story-foot { display: flex; justify-content: space-between; align-items: center; margin-top: auto; padding-top: 6px; font-size: 12px; color: var(--hv-muted); }

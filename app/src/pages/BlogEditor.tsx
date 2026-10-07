@@ -183,7 +183,7 @@ export default function BlogEditor() {
         .color-swatch.selected{border-color:var(--text)}
         .color-swatch:hover{border-color:var(--text)}
         .preview-card{background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:16px}
-        .preview-cover{height:160px;display:flex;align-items:center;justify-content:center;font-size:36px;color:rgba(255,255,255,.3)}
+        .preview-cover{aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;font-size:36px;color:rgba(255,255,255,.3)}
         .preview-body{padding:20px;max-width:700px;margin:0 auto;line-height:1.7;font-size:14px;color:var(--text2)}
         .preview-body h1{font-size:24px;font-weight:800;color:var(--text);margin:0 0 8px}
         .preview-body p{margin:0 0 12px}
@@ -242,7 +242,7 @@ export default function BlogEditor() {
                 </select>
               </div>
               <div>
-                <label className="be-label">Cover image (optional)</label>
+                <label className="be-label">Cover image (optional, 16:9, e.g. 1600 × 900)</label>
                 <div className="be-cover">
                   {form.coverImage && <img src={form.coverImage} alt="Cover" />}
                   <label className="be-btn-secondary be-cover-btn">
