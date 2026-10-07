@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { apiRequest } from '../lib/api'
 import { uploadImage } from '../lib/upload'
+import { renderBlog } from '../lib/blogMarkdown'
 
 // Articles used to be saved only in this browser's localStorage, so nobody else
 // ever saw them. They now go to the API; posts by members wait for an admin to
@@ -118,6 +119,27 @@ export default function BlogEditor() {
     setSaving(false)
   }
 
+  // A picture inside the article: upload it, then put "![caption](link)" on its own line at the cursor
+  const insertImage = async (file?: File) => {
+    if (!file) return
+    if (file.size > 5 * 1024 * 1024) { setError('Image must be under 5MB'); return }
+    setUploading(true)
+    try {
+      const url = await uploadImage(file, 'blog-images')
+      const ta = document.getElementById('blog-body') as HTMLTextAreaElement | null
+      const at = ta ? ta.selectionStart : form.body.length
+      const line = `![Describe the picture](${url})`
+      setForm(f => {
+        const before = f.body.slice(0, at), after = f.body.slice(at)
+        return { ...f, body: `${before}${before && !before.endsWith('\n') ? '\n' : ''}${line}\n${after.startsWith('\n') ? after.slice(1) : after}` }
+      })
+      setError('')
+    } catch (e: any) {
+      setError(e?.message || 'Failed to upload the image')
+    }
+    setUploading(false)
+  }
+
   const pickCover = async (file?: File) => {
     if (!file) return
     if (file.size > 5 * 1024 * 1024) { setError('Image must be under 5MB'); return }
@@ -189,6 +211,15 @@ export default function BlogEditor() {
         .preview-body p{margin:0 0 12px}
         .preview-body ul{padding-left:20px;margin:0 0 12px}
         .preview-body li{margin-bottom:4px}
+        .preview-md h2{font-size:18px;font-weight:800;margin:16px 0 8px;color:var(--text)}
+        .preview-md h3{font-size:16px;font-weight:700;margin:16px 0 8px;color:var(--text)}
+        .preview-md strong{color:var(--text)}
+        .preview-md ol{padding-left:20px;margin:0 0 12px}
+        .preview-md a{color:var(--text);text-decoration:underline}
+        .preview-md figure{margin:14px 0}
+        .preview-md figure img{display:block;width:100%;height:auto;border-radius:10px;border:1px solid var(--border)}
+        .preview-md figcaption{margin-top:6px;font-size:12px;color:var(--text3);text-align:center}
+        .preview-md blockquote{border-left:3px solid var(--border);margin:12px 0;padding-left:12px}
       `}</style>
 
       <div className="be-page">
@@ -216,14 +247,7 @@ export default function BlogEditor() {
               <div className="preview-body">
                 <span style={{display:'inline-block',fontSize:11,fontWeight:500,background:badgeColors[form.category]?.bg||'#EEEDFE',color:badgeColors[form.category]?.color||'#534AB7',padding:'3px 10px',borderRadius:20,marginBottom:8}}>{form.category}</span>
                 <h1>{form.title || 'Untitled Article'}</h1>
-                {form.body.split('\n').map((line, i) => {
-                  if (line.startsWith('### ')) return <h3 key={i} style={{fontSize:16,fontWeight:700,margin:'16px 0 8px',color:'var(--text)'}}>{line.replace('### ','')}</h3>
-                  if (line.startsWith('## ')) return <h2 key={i} style={{fontSize:18,fontWeight:800,margin:'16px 0 8px',color:'var(--text)'}}>{line.replace('## ','')}</h2>
-                  if (line.startsWith('# ')) return <h1 key={i} style={{fontSize:22,fontWeight:800,margin:'16px 0 8px',color:'var(--text)'}}>{line.replace('# ','')}</h1>
-                  if (line.startsWith('- ')) return <li key={i} style={{marginLeft:20,marginBottom:4}}>{line.replace('- ','')}</li>
-                  if (line.trim() === '') return <br key={i} />
-                  return <p key={i}>{line}</p>
-                })}
+                <div className="preview-md" dangerouslySetInnerHTML={{ __html: renderBlog(form.body) }} />
               </div>
             </div>
           </div>
@@ -270,9 +294,14 @@ export default function BlogEditor() {
               <button className="be-tb-btn" onClick={() => wrapSelection('- ','')}><i className="ti ti-list" /> Bullet</button>
               <button className="be-tb-btn" onClick={() => wrapSelection('## ','')}><i className="ti ti-heading" /> Heading</button>
               <button className="be-tb-btn" onClick={insertList}><i className="ti ti-list-check" /> List</button>
+              <button className="be-tb-btn" onClick={() => wrapSelection('[', '](https://)')}><i className="ti ti-link" /> Link</button>
+              <label className="be-tb-btn" style={{ cursor: uploading ? 'wait' : 'pointer' }}>
+                <i className="ti ti-photo" /> {uploading ? 'Uploading…' : 'Image'}
+                <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" hidden disabled={uploading} onChange={(e) => { insertImage(e.target.files?.[0]); e.target.value = '' }} />
+              </label>
             </div>
             <textarea id="blog-body" className="be-textarea" value={form.body} onChange={s('body')} maxLength={50000} placeholder="Write your article here..." />
-            <p className="be-hint">Use ## for headings, - for bullet points, **bold** and *italic*. Links and HTML aren't supported.</p>
+            <p className="be-hint">Use ## for headings, - or 1. for lists, **bold**, *italic* and [text](https://link) for links. Image adds a picture on its own line: ![caption](link). HTML isn't supported.</p>
 
             {/* Actions */}
             <div className="be-actions">

@@ -6,6 +6,7 @@ import Footer from '../components/Footer'
 import Drawer from '../components/Drawer'
 import { sized } from '../lib/img'
 import BlogReactions from '../components/BlogReactions'
+import { renderBlog } from '../lib/blogMarkdown'
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
@@ -16,41 +17,7 @@ function estimateReadTime(content: string) {
   return `${Math.max(1, Math.ceil(words / 200))} min read`
 }
 
-function escapeHtml(text: string) {
-  return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;')
-}
-
-function renderContent(text: string) {
-  if (!text) return { __html: '' }
-  let html = ''
-  let list: 'ul' | 'ol' | null = null
-  const openList = (kind: 'ul' | 'ol') => {
-    if (list === kind) return
-    if (list) html += `</${list}>`
-    html += `<${kind}>`
-    list = kind
-  }
-  const closeList = () => { if (list) { html += `</${list}>`; list = null } }
-  for (const raw of text.split('\n')) {
-    const line = raw.replace(/\r$/, '')
-    if (line.startsWith('- ')) { openList('ul'); html += `<li>${escapeHtml(line.slice(2))}</li>`; continue }
-    const num = line.match(/^\d+\. (.*)$/)
-    if (num) { openList('ol'); html += `<li>${escapeHtml(num[1])}</li>`; continue }
-    closeList()
-    if (line.trim() === '') continue
-    if (line.startsWith('### ')) { html += `<h3>${escapeHtml(line.slice(4))}</h3>`; continue }
-    if (line.startsWith('## '))  { html += `<h2>${escapeHtml(line.slice(3))}</h2>`; continue }
-    if (line.startsWith('# '))   { html += `<h2>${escapeHtml(line.slice(2))}</h2>`; continue }
-    if (line.startsWith('> '))   { html += `<blockquote>${escapeHtml(line.slice(2))}</blockquote>`; continue }
-    html += `<p>${escapeHtml(line)}</p>`
-  }
-  closeList()
-  // Inline formatting
-  html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-             .replace(/\*(.+?)\*/g, '<em>$1</em>')
-             .replace(/`(.+?)`/g, '<code>$1</code>')
-  return { __html: html }
-}
+const renderContent = (text: string) => ({ __html: renderBlog(text || '') })
 
 const SHARE_TARGETS: { label: string; icon: JSX.Element; href?: (url: string, text: string) => string }[] = [
   { label: 'Copy link', icon: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7" /><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7" /></svg> },
@@ -193,6 +160,9 @@ export default function ArticleDetail() {
         .ad-content li { font-size: 16px; line-height: 1.75; margin-bottom: 6px; color: var(--text); }
         .ad-content blockquote { border-left: 3px solid var(--border); margin: 24px 0; padding: 4px 0 4px 18px; color: var(--text2); }
         .ad-content img { max-width: 100%; border-radius: 12px; margin: 24px 0; }
+        .ad-content figure { margin: 28px 0 30px; }
+        .ad-content figure img { display: block; width: 100%; height: auto; margin: 0; border-radius: 12px; border: 1px solid var(--border); }
+        .ad-content figcaption { margin-top: 10px; font-size: 13px; line-height: 1.5; color: var(--text3); text-align: center; }
         .ad-content a { color: var(--accent); text-decoration: underline; }
         .ad-content pre { background: #1a1a2e; color: #e4e4e4; padding: 16px 20px; border-radius: 12px; overflow-x: auto; -webkit-overflow-scrolling: touch; font-size: 13px; line-height: 1.6; margin: 20px 0; }
         .ad-content code { background: rgba(var(--accent-rgb),0.08); padding: 2px 6px; border-radius: 4px; font-size: 14px; }
