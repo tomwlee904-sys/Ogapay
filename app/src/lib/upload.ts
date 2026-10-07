@@ -15,6 +15,8 @@ const uploadRoutes: Record<string, UploadRoute> = {
   'community-avatars': { path: '/uploads/community', field: 'cover', responseKey: 'url' },
   // Blog covers used to fall through to 'avatars' and replace the writer's profile picture
   'blog-covers':      { path: '/uploads/store', field: 'file', responseKey: 'url' },
+  // Pictures inside an article (the editor's Image button)
+  'blog-images':      { path: '/uploads/store', field: 'file', responseKey: 'url' },
   'user-covers':      { path: '/users/cover', field: 'cover', responseKey: 'coverUrl' },
   'kyc-docs':         { path: '/kyc/documents/id_front', field: 'document', responseKey: 'url' },
   'task-attachments': { path: '/uploads/proof', field: 'file', responseKey: 'url' },
