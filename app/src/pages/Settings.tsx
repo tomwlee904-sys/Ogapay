@@ -10,6 +10,7 @@ import Security from './settings/Security'
 import Verification from './settings/Verification'
 import Connections, { PLATFORMS } from './settings/Connections'
 import Devices from './settings/Devices'
+import Creator from './settings/Creator'
 import '../styles/profile-public.css'
 import '../styles/settings.css'
 
@@ -23,6 +24,7 @@ const SECTIONS = [
   { id: 'security', label: 'Security', icon: 'ti-shield-lock' },
   { id: 'verification', label: 'Verification', icon: 'ti-id' },
   { id: 'connections', label: 'Connections', icon: 'ti-link' },
+  { id: 'creator', label: 'Creator', icon: 'ti-speakerphone' },
   { id: 'payments', label: 'Payments', icon: 'ti-wallet' },
   { id: 'devices', label: 'Devices', icon: 'ti-devices' },
   { id: 'developer', label: 'Developer', icon: 'ti-code' },
@@ -126,6 +128,7 @@ export default function Settings() {
               : section === 'security' ? <Security {...props} />
               : section === 'verification' ? <Verification {...props} providers={providers} />
               : section === 'connections' ? <Connections {...props} providers={providers} />
+              : section === 'creator' ? <Creator />
               : section === 'payments' ? <Payments {...props} />
               : section === 'devices' ? <Devices />
               : <Developer />}

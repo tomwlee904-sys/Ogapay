@@ -134,6 +134,17 @@ interface JobData {
   community: string
   submitted: number
   requirementKey: string
+  // What workers need; lib/requirements reads these (they were dropped here, so the
+  // page always said "No extra requirements" and "Minimum rank: None")
+  workerRequirement: string
+  minRank: number
+  rankRequired?: number
+  minSorsaScore: number
+  requiresWallet: boolean
+  requiresX: boolean
+  requiresLinkedin: boolean
+  audiencePlatform: string | null
+  minFollowers: number
 }
 
 export default function JobDetail() {
@@ -335,6 +346,14 @@ export default function JobDetail() {
       community: t.community || 'All',
       submitted: Number(t.submissionsCount ?? 0) || 0,
       requirementKey: t.workerRequirement || '',
+      workerRequirement: t.workerRequirement || '',
+      minRank: Number(t.minRank) || 0,
+      minSorsaScore: Number(t.minSorsaScore ?? t.minOgaScore) || 0,
+      requiresWallet: !!t.requiresWallet,
+      requiresX: !!t.requiresX,
+      requiresLinkedin: !!t.requiresLinkedin,
+      audiencePlatform: t.audiencePlatform || null,
+      minFollowers: Number(t.minFollowers) || 0,
     }
   }
 

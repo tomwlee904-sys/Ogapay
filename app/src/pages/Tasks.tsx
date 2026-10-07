@@ -455,7 +455,7 @@ function useTasksData(category?: string) {
 
 // ─── Sort / filter menu ─────────────────────────────────────────
 const SORTS: [string, string][] = [['default', 'Default'], ['reward', 'Reward'], ['newest', 'Newest'], ['closing', 'Closing time']]
-const REQS: [string, string][] = [['all', 'All'], ['open', 'Open to everyone'], ['ogascore', 'OgaScore required'], ['wallet', 'Wallet required'], ['rank', 'Rank required']]
+const REQS: [string, string][] = [['all', 'All'], ['open', 'Open to everyone'], ['ogascore', 'OgaScore required'], ['wallet', 'Wallet required'], ['rank', 'Rank required'], ['audience', 'Creators only']]
 
 function SortFilterMenu({ sort, req, category, categories, onSort, onReq, onCategory }: {
   sort: string; req: string; category: string; categories: string[]
@@ -586,7 +586,8 @@ export default function Tasks() {
       }
       if (category !== 'All' && j.category !== categoryKey(category)) return false
       const score = Number(j.minOgaScore ?? j.minSorsaScore ?? 0), rank = Number(j.minRank ?? 0)
-      if (req === 'open' && (score > 0 || rank > 1 || j.requiresWallet || j.requiresX || j.requiresLinkedin || j.workerRequirement)) return false
+      if (req === 'open' && (score > 0 || rank > 1 || j.requiresWallet || j.requiresX || j.requiresLinkedin || j.workerRequirement || Number(j.minFollowers) > 0)) return false
+      if (req === 'audience' && !(Number(j.minFollowers) > 0)) return false
       if (req === 'ogascore' && score <= 0) return false
       if (req === 'wallet' && !j.requiresWallet) return false
       if (req === 'rank' && rank <= 1) return false

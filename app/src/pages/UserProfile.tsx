@@ -8,6 +8,7 @@ import { openSignIn } from "../lib/signin"
 import "../styles/profile-public.css"
 import { PremiumMark } from "../components/Perks";
 import { sized } from '../lib/img'
+import CreatorAudiences from "../components/profile/CreatorAudiences"
 
 type Tab = "store" | "portfolio" | "reviews" | "communities"
 
@@ -245,6 +246,8 @@ export default function UserProfile() {
             ))}
           </div>
         </section>
+
+        {profile?.id && <CreatorAudiences userId={profile.id} />}
 
         {hasAbout && (
           <section className="up-card up-about">

@@ -198,6 +198,10 @@ export default function Drawer({ open, onClose }: DrawerProps) {
                   <span className="oga-drawer-icon oga-drawer-icon--sub"><i className="ti ti-user-search" /></span>
                   <span><strong>Find workers</strong><small>Hire people for your work</small></span>
                 </Link>
+                <Link className="oga-drawer-item" to="/creators" onClick={onClose}>
+                  <span className="oga-drawer-icon oga-drawer-icon--sub"><i className="ti ti-speakerphone" /></span>
+                  <span><strong>Creators</strong><small>Hire verified micro-influencers</small></span>
+                </Link>
                 <Link className="oga-drawer-item" to="/leaderboard" onClick={onClose}>
                   <span className="oga-drawer-icon oga-drawer-icon--sub"><i className="ti ti-trophy" /></span>
                   <span><strong>Leaderboard</strong><small>Top earners and posters</small></span>

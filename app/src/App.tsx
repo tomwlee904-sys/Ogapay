@@ -71,6 +71,7 @@ const Socials = lazyPage(() => import('./pages/Socials'))
 const License = lazyPage(() => import('./pages/License'))
 const Copyright = lazyPage(() => import('./pages/Copyright'))
 const Workers = lazyPage(() => import('./pages/Workers'))
+const Creators = lazyPage(() => import('./pages/Creators'))
 const WorkerWorkspace = lazyPage(() => import('./pages/WorkerWorkspace'))
 const Writer = lazyPage(() => import('./pages/Writer'))
 const Analytics = lazyPage(() => import('./pages/Analytics'))
@@ -83,6 +84,7 @@ const AdminVault = lazyPage(() => import('./pages/AdminVault'))
 const AdminModeration = lazyPage(() => import('./pages/AdminModeration'))
 const AdminWithdrawals = lazyPage(() => import('./pages/AdminWithdrawals'))
 const AdminKyc = lazyPage(() => import('./pages/AdminKyc'))
+const AdminCreators = lazyPage(() => import('./pages/AdminCreators'))
 const AdminSupport = lazyPage(() => import('./pages/AdminSupport'))
 // /worker-portal/:category was a second, unlinked copy of the worker workspace
 function WorkspaceRedirect() {
@@ -155,6 +157,7 @@ export default function App() {
             <Route path="/terms" element={<Terms />} />
             <Route path="/leaderboard" element={<Leaderboard />} />
             <Route path="/workers" element={<Workers />} />
+            <Route path="/creators" element={<Creators />} />
             <Route path="/writer" element={<Writer />} />
             <Route path="/user/:username" element={<UserProfile />} />
             <Route path="/user/:username/hire" element={<HirePage />} />
@@ -220,6 +223,7 @@ export default function App() {
             <Route path="/admin/moderation" element={<AdminGuard><AdminModeration /></AdminGuard>} />
             <Route path="/admin/withdrawals" element={<AdminGuard><AdminWithdrawals /></AdminGuard>} />
             <Route path="/admin/kyc" element={<AdminGuard><AdminKyc /></AdminGuard>} />
+            <Route path="/admin/creators" element={<AdminGuard><AdminCreators /></AdminGuard>} />
             <Route path="/admin/support" element={<AdminGuard><AdminSupport /></AdminGuard>} />
             <Route path="/admin/login" element={<Navigate to="/login?redirect=/admin" replace />} />
             <Route path="/admin/*" element={<AdminGuard><Admin /></AdminGuard>} />

@@ -1,6 +1,8 @@
 /* What a job asks of workers, in words. Same rules the server checks when
    someone applies (task.service checkWorkerRequirements). */
 
+import { audienceRequirement, platformOf } from './creators'
+
 export const LEVEL_NAMES = ['Beginner', 'Intermediate', 'Advanced', 'Expert', 'Legend']
 
 /** minRank 1–5 is a worker level; anything higher counts as Legend */
@@ -18,5 +20,8 @@ export function jobRequirements(job: any): { icon: string; text: string }[] {
   if (job.requiresWallet) reqs.push({ icon: 'wallet', text: 'Solana wallet connected' })
   if (job.requiresX) reqs.push({ icon: 'brand-x', text: 'X account connected' })
   if (job.requiresLinkedin) reqs.push({ icon: 'brand-linkedin', text: 'LinkedIn connected' })
+  if (job.audiencePlatform && Number(job.minFollowers) > 0) {
+    reqs.push({ icon: platformOf(job.audiencePlatform).icon.replace(/^ti-/, ''), text: `Creators: ${audienceRequirement(job.audiencePlatform, Number(job.minFollowers))}` })
+  }
   return reqs
 }

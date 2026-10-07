@@ -1,5 +1,6 @@
 import { ReactNode } from "react";
 import { rankName } from "../../lib/requirements";
+import { AUDIENCE_PLATFORMS, audienceRequirement } from "../../lib/creators";
 import { API_BASE, apiRequest, getAccessToken } from "../../lib/api";
 import { useProviders } from "../../lib/providers";
 
@@ -17,7 +18,15 @@ export const REQ_OPTIONS: [string, string][] = [
   ["wallet", "Connected Solana wallet"],
   ["rank", "Minimum worker rank"],
   ["ogascore", "Minimum OgaScore"],
+  ["audience", "Minimum followers (creators)"],
 ];
+
+// "INSTAGRAM:10000" <-> { platform, min }
+export function parseAudience(value: string): { platform: string; min: number } {
+  const m = /^([A-Z]+):(\d+)$/.exec(value || "");
+  const platform = m && AUDIENCE_PLATFORMS.some((p) => p.id === m[1]) ? m[1] : "INSTAGRAM";
+  return { platform, min: Math.max(1, Math.min(500000000, parseInt(m?.[2] || "", 10) || 1000)) };
+}
 
 export function reqFields(type: string, value: string): Record<string, any> {
   const n = Math.max(1, parseInt(value) || 1);
@@ -28,6 +37,7 @@ export function reqFields(type: string, value: string): Record<string, any> {
     case "wallet": return { requiresWallet: true };
     case "rank": return { minRank: Math.min(5, Math.max(2, n)) }; // 2 Intermediate … 5 Legend
     case "ogascore": return { minSorsaScore: Math.min(100, n) };
+    case "audience": { const a = parseAudience(value); return { audiencePlatform: a.platform, minFollowers: a.min }; }
     default: return {};
   }
 }
@@ -35,11 +45,12 @@ export function reqFields(type: string, value: string): Record<string, any> {
 export function reqLabel(type: string, value: string) {
   if (type === "rank") return `${rankName(Math.max(2, parseInt(value) || 2))} rank or higher`;
   if (type === "ogascore") return `OgaScore ≥ ${Math.max(1, parseInt(value) || 1)}`;
+  if (type === "audience") { const a = parseAudience(value); return `Creators: ${audienceRequirement(a.platform, a.min)}`; }
   return REQ_OPTIONS.find(([v]) => v === type)?.[1] || "Anyone can take part";
 }
 
 export function RequirementPicker({ type, value, onChange }: { type: string; value: string; onChange: (t: string, v: string) => void }) {
-  const needsValue = type === "rank" || type === "ogascore";
+  const needsValue = type === "rank" || type === "ogascore" || type === "audience";
   // "Human verified" only while VeryAI is set up (nobody could take the job otherwise)
   const providers = useProviders();
   const options = REQ_OPTIONS.filter(([v]) => v !== "human" || providers?.very || type === "human");
@@ -59,6 +70,26 @@ export function RequirementPicker({ type, value, onChange }: { type: string; val
           </select>
         </div>
       )}
+      {type === "audience" && (() => {
+        const a = parseAudience(value);
+        const unit = AUDIENCE_PLATFORMS.find((p) => p.id === a.platform)?.unit || "followers";
+        return (
+          <>
+            <div className="cf-field">
+              <label htmlFor="cf-aud-platform">Platform</label>
+              <select id="cf-aud-platform" className="ui-select" value={a.platform} onChange={e => onChange(type, `${e.target.value}:${a.min}`)}>
+                {AUDIENCE_PLATFORMS.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
+              </select>
+            </div>
+            <div className="cf-field">
+              <label htmlFor="cf-aud-min">Minimum {unit}</label>
+              <input id="cf-aud-min" className="ui-input" type="number" min={1} step={100} value={a.min} placeholder="e.g. 1000"
+                onChange={e => onChange(type, `${a.platform}:${Math.max(1, parseInt(e.target.value, 10) || 1)}`)} />
+              <p className="cf-hint">Only creators with a verified audience this size can take it. Nano is 1,000+, Micro 10,000+.</p>
+            </div>
+          </>
+        );
+      })()}
       {type === "ogascore" && (
         <div className="cf-field">
           <label htmlFor="cf-score">Minimum OgaScore</label>

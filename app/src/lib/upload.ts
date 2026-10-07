@@ -17,6 +17,8 @@ const uploadRoutes: Record<string, UploadRoute> = {
   'blog-covers':      { path: '/uploads/store', field: 'file', responseKey: 'url' },
   // Pictures inside an article (the editor's Image button)
   'blog-images':      { path: '/uploads/store', field: 'file', responseKey: 'url' },
+  // Profile screenshot for a creator audience (Settings, Creator)
+  'creator-proofs':   { path: '/uploads/proof', field: 'file', responseKey: 'url' },
   'user-covers':      { path: '/users/cover', field: 'cover', responseKey: 'coverUrl' },
   'kyc-docs':         { path: '/kyc/documents/id_front', field: 'document', responseKey: 'url' },
   'task-attachments': { path: '/uploads/proof', field: 'file', responseKey: 'url' },

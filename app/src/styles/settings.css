@@ -116,3 +116,14 @@
   .st2-codes { grid-template-columns: repeat(2, 1fr); }
   .st2-actions .up-btn { flex: 1 1 auto; }
 }
+
+/* Settings > Creator */
+.cr-badge { display: inline-flex; align-items: center; gap: 3px; margin-left: 8px; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 999px; vertical-align: 1px; background: var(--bg2); color: var(--text2); }
+.cr-badge.ok { background: color-mix(in srgb, var(--green) 14%, transparent); color: var(--green); }
+.cr-note { margin: -4px 0 10px 50px; font-size: 12.5px; color: var(--red); line-height: 1.45; }
+.cr-error { margin: 0; font-size: 13px; color: var(--red); }
+.cr-proof { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.cr-proof img { width: 64px; height: 64px; object-fit: cover; border-radius: 10px; border: 1px solid var(--border); }
+.st2-f small { display: block; margin-top: 5px; }
+.cr-list .st2-conn-t span { white-space: normal; overflow: visible; }
+
