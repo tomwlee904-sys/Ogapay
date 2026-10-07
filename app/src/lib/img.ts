@@ -18,7 +18,11 @@ export function sized(url: string | null | undefined, css: number, square = fals
   const [base, query] = url.split('?')
   const params = new URLSearchParams(query || '')
   params.set('width', String(px))
+  // Supabase's default resize is "cover" against the ORIGINAL height when only a width is
+  // given, so a 1444x812 cover asked for at 1024 came back 1024x812 with its sides cut off.
+  // "contain" keeps the whole picture; the page's CSS decides any cropping.
   if (square) { params.set('height', String(px)); params.set('resize', 'cover') }
+  else params.set('resize', 'contain')
   params.set('quality', '75')
   return base.replace(OBJECT, RENDER) + '?' + params.toString()
 }
