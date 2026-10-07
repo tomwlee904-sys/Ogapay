@@ -325,26 +325,6 @@ body:has(main.hv), body:has(main.hv) #root { overflow-x: clip; }
   .hv-journal { grid-auto-columns: calc((100% - 16px) / 2); }
 }
 
-/* Recent payouts drifting under the hero network (components/home/PayoutStrip.tsx) */
-.hv-earn { width: 100%; min-width: 0; margin-top: 14px; font-size: 12px; line-height: 1.4; contain: inline-size; }
-/* The strip is wider than any screen: keep the hero columns from growing to fit it */
-.hv-hero-grid > * { min-width: 0; }
-.hv-earn-vp { overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain; scrollbar-width: none;
-  -webkit-mask-image: linear-gradient(90deg, transparent, #000 16px, #000 calc(100% - 16px), transparent);
-  mask-image: linear-gradient(90deg, transparent, #000 16px, #000 calc(100% - 16px), transparent); }
-.hv-earn-vp::-webkit-scrollbar { display: none; }
-.hv-earn-track { display: flex; width: max-content; will-change: transform; }
-.hv-earn-list { display: flex; flex: 0 0 auto; align-items: center; gap: 28px; margin: 0; padding: 0 28px 0 0; list-style: none; }
-.hv-earn-item { display: flex; flex: 0 0 auto; align-items: center; gap: 7px; min-height: 38px; white-space: nowrap; }
-.hv-earn-who { display: inline-flex; align-items: center; gap: 7px; color: var(--hv-ink); text-decoration: none; font-weight: 500; }
-.hv-earn-av { display: inline-grid; place-items: center; width: 24px; height: 24px; flex: 0 0 24px; overflow: hidden; border: 1px solid var(--hv-line); border-radius: 50%; background: var(--hv-soft); color: var(--hv-muted); font-size: 11px; font-weight: 600; }
-.hv-earn-av img { display: block; width: 100%; height: 100%; object-fit: cover; }
-.hv-earn-name { max-width: 116px; overflow: hidden; text-overflow: ellipsis; }
-.hv-earn-amt { color: var(--money, #15803d); font-weight: 600; font-variant-numeric: tabular-nums; }
-.hv-earn-time { color: var(--hv-muted); font-family: var(--font-mono); font-size: 10.5px; }
-.hv-earn :is(a, .hv-earn-vp):focus-visible { outline: 2px solid var(--hv-ink); outline-offset: -2px; border-radius: 4px; }
-@media (prefers-reduced-motion: reduce) { .hv-earn-track { will-change: auto; } }
-
 /* ── Phone ── */
 @media (max-width: 768px) {
   .hv-frame { border: 0; }
