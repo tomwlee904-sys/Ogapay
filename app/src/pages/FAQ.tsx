@@ -15,7 +15,7 @@ export const TOPICS: Topic[] = [
     id: 'basics', title: 'Platform basics', items: [
       { q: 'What is OgaPay?', a: 'OgaPay is a task marketplace. People and businesses post paid tasks and jobs; workers complete them, submit proof and get paid from escrow once the work is approved. You can hold your balance in Naira or USDC and withdraw to a Nigerian bank account or a Solana wallet.' },
       { q: 'How does it work end to end?', a: 'A poster funds a task, and the budget is locked in escrow. Workers apply and submit proof. The poster approves, rejects or disputes each submission. Approved work is paid straight from escrow into the worker\'s wallet, and any unused budget goes back to the poster.' },
-      { q: 'What do I need to get started?', a: 'An OgaPay account (email or Google sign-in) is enough to browse and apply for most tasks. Some tasks ask for KYC, a minimum OgaScore, a connected wallet or a verified X account. To withdraw money you need at least Tier 1 KYC.' },
+      { q: 'What do I need to get started?', a: 'An OgaPay account (email or Google sign-in) is enough to browse and apply for most tasks. Some tasks ask for KYC, a minimum OgaScore, a connected wallet or a verified X account. To withdraw money you need to verify your identity (Level 1 or above).' },
       { q: 'Can I earn and post jobs from the same account?', a: 'Yes. One account can do both. Your earnings, the jobs you post and your wallet all live in the same place.' },
       { q: 'Is OgaPay only for Nigeria?', a: 'Anyone can sign up and earn. Naira deposits and bank withdrawals work with Nigerian banks; everyone else can deposit and withdraw in USDC on Solana.' },
     ],
@@ -32,9 +32,9 @@ export const TOPICS: Topic[] = [
   },
   {
     id: 'kyc', title: 'KYC, OgaScore and trust', items: [
-      { q: 'What are the KYC tiers?', a: 'Tier 1 is your NIN. Tier 2 adds your BVN. Tier 3 adds your address and supporting documents. Checks run through Dojah against official records, and each tier raises your limits.' },
-      { q: 'Why do I need KYC?', a: 'It keeps the marketplace free of fake accounts. KYC is required to withdraw money and to post tasks, and some tasks are only open to verified workers.' },
-      { q: 'What is OgaScore?', a: 'A reputation score out of 100. You gain points by connecting and verifying accounts: LinkedIn, NIN, BVN and Human Verified are worth 10 each, X and GitHub 8 each, Google and Telegram 5 each. Posters can require a minimum OgaScore, so a higher score opens better-paid work.' },
+      { q: 'What are the verification levels?', a: 'The quickest route is Level 2: in Settings, Verification, scan an ID and take a selfie with Didit, which takes about two minutes. Level 1 is your NIN, checked by our team, and Level 3 adds ID documents, checked by our team through support. Any level lets you withdraw to your bank, send money to other users and get your own account number, and each level raises your withdrawal limit.' },
+      { q: 'Why do I need to verify?', a: 'It keeps the marketplace free of fake accounts. Verification is required to withdraw money and to send money to other users, and some tasks are only open to verified workers. Browsing, applying for most tasks and posting jobs do not need it.' },
+      { q: 'What is OgaScore?', a: 'A reputation score out of 66, built only from things we have verified. LinkedIn and Human Verified are worth 10 each, X and GitHub 8 each, Google and Telegram 5 each, and identity verification 10 per level (20 at Level 2 or above). Posters can require a minimum OgaScore, so a higher score opens better-paid work.' },
       { q: 'What is "Human Verified"?', a: 'A one-time check through Very that confirms you are a unique real person. It adds to your OgaScore and helps keep bots out.' },
       { q: 'How do I report a user or a task?', a: 'Use Report on the job page, profile or submission. Reports go to the moderation team for review.' },
     ],
@@ -68,16 +68,16 @@ export const TOPICS: Topic[] = [
   {
     id: 'withdrawals', title: 'Withdrawals', items: [
       { q: 'How do I withdraw?', a: 'Open Wallet, choose Withdraw, pick a saved bank account (NGN) or enter a Solana address (USDC or SOL), enter the amount and confirm.' },
-      { q: 'What are the limits?', a: 'The minimum is ₦5,000 or its equivalent. The maximum per withdrawal depends on your KYC tier: ₦10,000 at Tier 1, ₦20,000 at Tier 2 and ₦200,000 at Tier 3.' },
+      { q: 'What are the limits?', a: 'The minimum is ₦5,000 or its equivalent. The maximum per withdrawal depends on your verification level: ₦10,000 at Level 1, ₦20,000 at Level 2 and ₦200,000 at Level 3.' },
       { q: 'How long does it take?', a: 'Bank withdrawals are processed within 24 hours, and usually much sooner. Crypto withdrawals arrive once the Solana transaction confirms, typically within minutes.' },
       { q: 'My withdrawal failed. Where is my money?', a: 'Funds are only locked while a withdrawal is processing. If the payout fails, the lock is released and the money is available in your wallet again.' },
     ],
   },
   {
     id: 'referrals', title: 'Referrals and bonuses', items: [
-      { q: 'How do referrals pay?', a: 'Share your referral link. You earn ₦1,000 when a friend you invited verifies their email or passes Tier 1 KYC, and another ₦500 when they complete their first approved task.' },
+      { q: 'How do referrals pay?', a: 'Share your referral link. You earn ₦1,000 when a friend you invited verifies their email or their identity, and another ₦500 when they complete their first approved task.' },
       { q: 'Is there a limit?', a: 'Referral bonuses are paid for up to 20 referrals per person. This stops people farming the programme with fake accounts.' },
-      { q: 'Do new users get a bonus?', a: 'Yes. New users receive a ₦1,000 welcome bonus once they pass Tier 1 KYC.' },
+      { q: 'Do new users get a bonus?', a: 'Yes. New users receive a ₦1,000 welcome bonus once they verify their identity.' },
     ],
   },
   {
