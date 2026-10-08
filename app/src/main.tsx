@@ -4,6 +4,8 @@ import { BrowserRouter } from 'react-router-dom'
 import App from './App'
 import { reloadForUpdate } from './lib/staleBuild'
 import { initErrorReporting } from './lib/errorReport'
+// Text fonts, served from ogapay.app (they used to block the first paint from Google)
+import './styles/fonts.css'
 // Icons: the Tabler font cut down to the icons we use (scripts/icons-subset.mjs)
 import './styles/icons/tabler-icons.css'
 import './styles/tokens.css'
