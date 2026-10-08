@@ -7,6 +7,7 @@ import { useToast } from '../components/Toast'
 import { apiRequest } from '../lib/api'
 import { categoryLabel } from '../lib/categories'
 import { savedJobIds, setSaved, onSavedJobsChange } from '../lib/bookmarks'
+import { useJobAlert } from '../contexts/JobAlertContext'
 import '../styles/job-monitor.css'
 
 // Job monitor: open jobs, newest first, checked every 30 seconds while the page is
@@ -30,20 +31,12 @@ const ago = (d?: string) => {
 const readPref = (k: string) => { try { return localStorage.getItem(k) === 'true' } catch { return false } }
 const writePref = (k: string, v: boolean) => { try { localStorage.setItem(k, String(v)) } catch { /* storage off */ } }
 
-function beep() {
-  try {
-    const ctx = new AudioContext()
-    const osc = ctx.createOscillator(); const gain = ctx.createGain()
-    osc.connect(gain); gain.connect(ctx.destination)
-    osc.frequency.value = 800; gain.gain.value = 0.12
-    osc.start(); osc.stop(ctx.currentTime + 0.15)
-  } catch { /* audio blocked */ }
-}
-
 export default function JobMonitor() {
   const navigate = useNavigate()
   const { user } = useAuth()
   const { toast } = useToast()
+  // The same chime the site-wide alert plays; switching Sound on plays it once
+  const { testSound } = useJobAlert()
   const [jobs, setJobs] = useState<Job[] | null>(null)
   const [taken, setTaken] = useState<Set<string>>(new Set())
   const [saved, setSavedIds] = useState<string[]>([])
@@ -118,7 +111,8 @@ export default function JobMonitor() {
           </div>
           <div className="jm2-prefs">
             <label className="ui-switch"><input type="checkbox" checked={alerts} onChange={(e) => { setAlerts(e.target.checked); writePref('ogapay_jm_alerts', e.target.checked) }} /><span className="ui-switch-track" /> Pop-up alerts</label>
-            <label className="ui-switch"><input type="checkbox" checked={sound} onChange={(e) => { setSound(e.target.checked); writePref('ogapay_jm_sound', e.target.checked); if (e.target.checked) beep() }} /><span className="ui-switch-track" /> Sound</label>
+            <label className="ui-switch"><input type="checkbox" checked={sound} onChange={(e) => { setSound(e.target.checked); writePref('ogapay_jm_sound', e.target.checked); if (e.target.checked) testSound() }} /><span className="ui-switch-track" /> Sound</label>
+            {(alerts || sound) && <p className="jm2-prefs-note">Works on every OgaPay page while it's open. Your browser plays sound only after you've tapped the page once. Your own jobs don't alert you.</p>}
           </div>
         </div>
 

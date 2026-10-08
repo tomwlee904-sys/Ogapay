@@ -2,6 +2,7 @@
 /* uses the shared page width (.ui-page) */
 .jm2-page { }
 .jm2-prefs { display: flex; gap: 18px; flex-wrap: wrap; }
+.jm2-prefs-note { flex-basis: 100%; margin: 0; max-width: 340px; font-size: 12px; line-height: 1.5; color: var(--text3); }
 .jm2-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin: 24px 0 12px; }
 .jm2-tabs { display: flex; gap: 6px; }
 .jm2-live { display: inline-flex; align-items: center; gap: 8px; font: 400 11px var(--font-mono); color: var(--text2); }
