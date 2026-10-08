@@ -1,23 +1,38 @@
 import { ReactNode, useEffect, useRef, useState } from "react";
 
-/* Paged carousel: N cards per view (3 / 2 / 1 by width), a "01 / 03" counter
+const TABLET_QUERY = "(min-width: 768px)";
+
+/* Paged carousel: 3 / 2 / 1 cards by container width, or 1 on phones and 3 from
+   tablet width when requested. A "01 / 03" counter
    and prev/next buttons underneath. Auto-advances unless hovered, focused or
    the user prefers reduced motion. Every page is full: the last one shows the
    last N items (7 jobs page as 1-3, 4-6, 5-7, not 1-3, 4-6, 7 alone). */
-export default function Carousel<T>({ items, render, label, autoMs = 6500 }: {
+export default function Carousel<T>({ items, render, label, autoMs = 6500, layout = "auto" }: {
   items: T[];
   render: (item: T, i: number) => ReactNode;
   label: string;
   autoMs?: number;
+  layout?: "auto" | "one-or-three";
 }) {
   const wrap = useRef<HTMLDivElement>(null);
-  const [perView, setPerView] = useState(3);
+  const [perView, setPerView] = useState(() =>
+    layout === "one-or-three" && typeof window !== "undefined"
+      ? (window.matchMedia(TABLET_QUERY).matches ? 3 : 1)
+      : 3
+  );
   const [page, setPage] = useState(0);
   const [paused, setPaused] = useState(false);
   const [stopped, setStopped] = useState(false); // user pressed pause
   const touchX = useRef<number | null>(null);
 
   useEffect(() => {
+    if (layout === "one-or-three") {
+      const query = window.matchMedia(TABLET_QUERY);
+      const update = () => setPerView(query.matches ? 3 : 1);
+      update();
+      query.addEventListener("change", update);
+      return () => query.removeEventListener("change", update);
+    }
     const el = wrap.current;
     if (!el) return;
     const ro = new ResizeObserver(([e]) => {
@@ -28,7 +43,7 @@ export default function Carousel<T>({ items, render, label, autoMs = 6500 }: {
     });
     ro.observe(el);
     return () => ro.disconnect();
-  }, []);
+  }, [layout]);
 
   const pages = Math.max(1, Math.ceil(items.length / perView));
   useEffect(() => { if (page > pages - 1) setPage(pages - 1); }, [pages, page]);
@@ -46,7 +61,7 @@ export default function Carousel<T>({ items, render, label, autoMs = 6500 }: {
 
   return (
     <div
-      className="hv-car"
+      className={`hv-car${layout === "one-or-three" ? " hv-car--one-or-three" : ""}`}
       ref={wrap}
       aria-roledescription="carousel"
       aria-label={label}

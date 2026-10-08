@@ -463,12 +463,12 @@ function HighlightedJobs({ jobs, loading }: { jobs: any[]; loading: boolean }) {
   return (
     <section className="hv-section" id="featured-jobs">
       <div className="hv-inner">
-        <div className="hv-panel">
+        <div className="hv-panel hv-panel--featured">
         <SectionHead eyebrow="Find your next opportunity" title="Highlighted jobs" sub="Featured jobs" more="More jobs" to="/tasks" />
-        {loading && <div className="hv-car"><div className="hv-car-view"><div className="hv-car-track" style={{ ["--hv-per" as any]: 3 }}>{[0, 1, 2].map((i) => <div key={i} className="hv-car-slide"><div className="hc-card" style={{ height: 480 }}><span className="hv-sk" /></div></div>)}</div></div></div>}
+        {loading && <div className="hv-car hv-car--loading"><div className="hv-car-view"><div className="hv-car-track">{[0, 1, 2].map((i) => <div key={i} className="hv-car-slide"><div className="hc-card" style={{ height: 480 }}><span className="hv-sk" /></div></div>)}</div></div></div>}
         {!loading && shown.length === 0 && <div className="hv-empty" style={{ marginTop: 28 }}>No open jobs right now. <Link to="/create" style={{ fontWeight: 600 }}>Post the first one</Link>.</div>}
         {!loading && shown.length > 0 && (
-          <Carousel label="Highlighted jobs carousel" items={shown} render={(t) => <HomeJobCard task={t} convert={convert} />} />
+          <Carousel label="Highlighted jobs carousel" layout="one-or-three" items={shown} render={(t) => <HomeJobCard task={t} convert={convert} />} />
         )}
         </div>
       </div>
@@ -484,9 +484,9 @@ function CreatorStore({ items }: { items: any[] }) {
   return (
     <section className="hv-section">
       <div className="hv-inner">
-        <div className="hv-panel hv-reveal">
+        <div className="hv-panel hv-panel--featured hv-reveal">
           <SectionHead eyebrow="Made by creators" title="Creator Store" sub="Featured products and services from OgaPay sellers" more="Browse all products" to="/store" />
-          <Carousel label="Creator store carousel" items={items} render={(it) => <HomeProductCard item={it} convert={convert} />} />
+          <Carousel label="Creator store carousel" layout="one-or-three" items={items} render={(it) => <HomeProductCard item={it} convert={convert} />} />
         </div>
       </div>
     </section>
@@ -501,9 +501,9 @@ function Journal({ posts }: { posts: any[] }) {
   return (
     <section className="hv-section">
       <div className="hv-inner">
-        <div className="hv-panel hv-reveal">
+        <div className="hv-panel hv-panel--featured hv-reveal">
         <SectionHead eyebrow="From the journal" title="Featured blogs" sub="Learn more about OgaPay" more="View all blogs" to="/blog" />
-        <Carousel label="Featured blogs carousel" items={posts} render={(p) => (
+        <Carousel label="Featured blogs carousel" layout="one-or-three" items={posts} render={(p) => (
           <Link to={`/blog/${p.slug || p.id}`} className="hc-card hc-product hc-story">
             <div className="hc-media">{p.coverImage ? <img src={sized(p.coverImage, 400)} alt="" loading="lazy" /> : <span className="hc-media-ph">OP</span>}</div>
             <div className="hc-pbody">
