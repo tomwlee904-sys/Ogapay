@@ -14,6 +14,29 @@
 .hv-car-track { display: flex; gap: var(--hv-car-gap); transition: transform .6s cubic-bezier(.16,1,.3,1); }
 .hv-car-slide { flex: 0 0 calc((100% - (var(--hv-per) - 1) * var(--hv-car-gap)) / var(--hv-per)); min-width: 0; display: flex; }
 .hv-car-slide > * { flex: 1; }
+/* Tablets fit three cards a row (~190px each): narrow cards get tighter spacing
+   and smaller type, so nothing is cut or crowded */
+.hv-car-slide { container-type: inline-size; }
+@container (max-width: 260px) {
+  .hc-card { padding: 14px; gap: 10px; }
+  .hc-product { padding: 10px; }
+  .hc-reward { padding: 10px 12px; }
+  .hc-reward .o-money-main, .hc-price .o-money-main { font-size: 22px !important; }
+  .hc-by { gap: 8px; }
+  .hc-by-txt b { font-size: 12.5px; }
+  .hc-reqs, .hc-dots, .hc-row, .hc-lbl, .hc-cat, .hc-cmeta { font-size: 11.5px; }
+  .hc-brief p { font-size: 12.5px; -webkit-line-clamp: 3; min-height: calc(12.5px * 1.55 * 3); }
+  .hc-foot { gap: 8px; }
+  .hc-foot time { font-size: 11.5px; white-space: nowrap; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  /* the whole card is the link: keep the arrow, drop the "View job" words */
+  .hc-go:not(.hc-done) { font-size: 0; gap: 0; }
+  .hc-done { font-size: 12px; white-space: nowrap; }
+  .hc-arrow { width: 28px; height: 28px; flex-shrink: 0; }
+  .hc-pbody { padding: 12px 2px 2px; gap: 8px; }
+  .hc-pbody h3, .hc-story .hc-pbody h3, .hc-community .hc-pbody h3 { font-size: 15px; }
+  .hc-pdesc { font-size: 12.5px; }
+  .hc-story-foot { font-size: 11px; }
+}
 .hv-car-nav { display: flex; justify-content: space-between; align-items: center; margin-top: 18px; }
 .hv-car-btns { display: flex; gap: 8px; }
 .hv-car-btns button { width: var(--ctl-h); height: var(--ctl-h); border-radius: var(--r-ctl); border: 1px solid var(--hv-line); background: var(--hv-card); color: var(--hv-ink); cursor: pointer; display: grid; place-items: center; font-size: var(--icon); transition: border-color var(--t-fast) var(--ease); }

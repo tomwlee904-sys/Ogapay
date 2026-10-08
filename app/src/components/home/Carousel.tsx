@@ -1,6 +1,6 @@
 import { ReactNode, useEffect, useRef, useState } from "react";
 
-/* Paged carousel: N cards per view (3 / 2 / 1 by width), a "01 / 03" counter
+/* Paged carousel: N cards per view (3, or 1 on phones), a "01 / 03" counter
    and prev/next buttons underneath. Auto-advances unless hovered, focused or
    the user prefers reduced motion. Every page is full: the last one shows the
    last N items (7 jobs page as 1-3, 4-6, 5-7, not 1-3, 4-6, 7 alone). */
@@ -22,9 +22,9 @@ export default function Carousel<T>({ items, render, label, autoMs = 6500 }: {
     if (!el) return;
     const ro = new ResizeObserver(([e]) => {
       const w = e.contentRect.width;
-      // 3 across like wurk.fun once each card gets ~240px (the desktop panels are
-      // ~880px inside, which the old 900px cut-off dropped to 2)
-      setPerView(w >= 720 ? 3 : w >= 480 ? 2 : 1);
+      // 3 across from tablets up (narrow cards switch to a compact layout in
+      // home-cards.css), one at a time on phones
+      setPerView(w >= 480 ? 3 : 1);
     });
     ro.observe(el);
     return () => ro.disconnect();
