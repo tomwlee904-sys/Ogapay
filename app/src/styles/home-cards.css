@@ -138,3 +138,9 @@
   .hv-panel--featured { padding: 25px 27px 20px; }
   .hv-panel--featured .hv-shead { flex-direction: row; align-items: flex-end; gap: 20px; }
 }
+
+/* Compact status legends stay on one line inside the three-card tablet row. */
+.hv-panel--featured .hc-subs { container-type: inline-size; }
+.hv-panel--featured .hc-dots { flex-wrap: nowrap; gap: 4px; font-size: clamp(9px, 5.8cqi, 11px); overflow-x: auto; scrollbar-width: none; }
+.hv-panel--featured .hc-dots li { flex: 0 0 auto; gap: 3px; white-space: nowrap; }
+.hv-panel--featured .hc-dots li::before { width: 3px; height: 3px; flex-shrink: 0; }
