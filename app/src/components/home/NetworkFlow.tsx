@@ -53,7 +53,11 @@ export default function NetworkFlow() {
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)')
     const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)')
     const small = window.innerWidth < 768
-    const STEPS = small ? 120 : 180 // points per fibre
+    // Phones: fewer points per fibre and pieces per light trail. At phone width a
+    // fibre point is ~6px apart and a trail piece ~5px, which still reads as smooth
+    // curves and soft trails, for about a third of the work.
+    const STEPS = small ? 64 : 180 // points per fibre
+    const SEGS = small ? 10 : 22 // pieces per light trail, each drawn twice
     // Phones: 30 frames a second is plenty here and halves the work
     const minGap = small ? 1000 / 30 - 2 : 0
     let visible = true, frame = 0, pal = isDark() ? DARK : LIGHT, lastT = 0, prevNow = 0, lastDraw = 0, dead = false
@@ -102,10 +106,10 @@ export default function NetworkFlow() {
         const i = (j * 17 + 4) % FIBRES, u = ((time / LOOP) + (j * .61803398875)) % 1
         const length = .14 + (j % 3) * .02
         const color = j % 4 === 0 ? p.packets[0] : j % 3 === 0 ? p.packets[1] : p.packets[2]
-        for (let s = 0; s < 22; s++) {
-          const a = u - length + s * length / 22, b = a + length / 22
+        for (let s = 0; s < SEGS; s++) {
+          const a = u - length + s * length / SEGS, b = a + length / SEGS
           if (a < 0 || b > 1) continue
-          const env = Math.pow(Math.sin(Math.PI * s / 22), 2) * Math.sin(Math.PI * (a + b) / 2)
+          const env = Math.pow(Math.sin(Math.PI * s / SEGS), 2) * Math.sin(Math.PI * (a + b) / 2)
           if (env < .02) continue
           ctx.strokeStyle = `rgba(${color},${env * p.packetAlpha * .22})`; ctx.lineWidth = 3 * unit; path(i, a, b, time); ctx.stroke()
           ctx.strokeStyle = `rgba(${color},${env * p.packetAlpha})`; ctx.lineWidth = 1.15 * unit; ctx.stroke()

@@ -1,3 +1,4 @@
+import { earlyFetch } from './early'
 import { clearAllDrafts } from "./draft"
 
 export const API_BASE =
@@ -208,7 +209,9 @@ export async function apiRequest<T = unknown>(path: string, options: ApiOptions 
   const timeoutId = setTimeout(() => controller.abort(), 15000)
   let res: Response;
   try {
-    res = await fetch(url, { ...init, headers: requestHeaders, signal: controller.signal })
+    // A signed-out GET may already have been asked for by index.html (lib/early.ts)
+    const plainGet = !sentToken && !init.body && (init.method || 'GET').toUpperCase() === 'GET'
+    res = await (plainGet ? earlyFetch : fetch)(url, { ...init, headers: requestHeaders, signal: controller.signal })
     clearTimeout(timeoutId)
 
   } catch (err: any) {

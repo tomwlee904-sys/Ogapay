@@ -203,6 +203,10 @@ export default function HelixStory({ panels, jobs }: { panels: HelixPanel[]; job
     const small = window.innerWidth < 769;
     const N = small ? 2800 : 5200;
     const DUST = small ? 90 : 180;
+    // Phones: 30 frames a second, like the hero's network, halves the work; the
+    // helix moves slowly, so it looks the same
+    const minGap = small ? 1000 / 30 - 2 : 0;
+    let lastDraw = 0;
     let w = 0, h = 0, dpr = 1, raf = 0, visible = false, ink = "#111", ts = tRef.current, spin = 0, last = 0;
     // b: across the ribbon (-1..1); k: 0 main coil, 1 second strand (fades in for the panels), 2 spray
     const ps = Array.from({ length: N }, () => {
@@ -240,7 +244,8 @@ export default function HelixStory({ panels, jobs }: { panels: HelixPanel[]; job
     const draw = (now: number) => {
       if (!w || !h) return;
       const dt = last ? Math.min(64, now - last) : 16; last = now;
-      ts += (tRef.current - ts) * (reduce ? 1 : 0.1);
+      // catches up with the scroll at the same speed whatever the frame rate
+      ts += (tRef.current - ts) * (reduce ? 1 : 1 - Math.pow(0.9, dt / 16.7));
       if (!reduce) spin += dt * 0.00018;
       const S = STEPS.length;
       const m = smooth((ts - (S - 0.8)) / 1.8); // 0 coil, 1 double helix
@@ -308,7 +313,10 @@ export default function HelixStory({ panels, jobs }: { panels: HelixPanel[]; job
       ctx.globalAlpha = 1;
     };
 
-    const loop = (now: number) => { draw(now); raf = visible && !reduce ? requestAnimationFrame(loop) : 0; };
+    const loop = (now: number) => {
+      if (now - lastDraw >= minGap) { lastDraw = now; draw(now); }
+      raf = visible && !reduce ? requestAnimationFrame(loop) : 0;
+    };
     readInk(); size(); draw(performance.now());
     const io = new IntersectionObserver(([e]) => {
       visible = e.isIntersecting;

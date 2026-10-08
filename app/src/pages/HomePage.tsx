@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { API_BASE } from "../lib/api";
+import { earlyFetch } from "../lib/early";
 import { useApi } from "../lib/useApi";
 import Navbar from "../components/Navbar";
 import Drawer from "../components/Drawer";
@@ -87,7 +88,7 @@ function useJson<T = any>(path: string, pollMs = 0) {
   const [data, setData] = useState<T | null>(null);
   useEffect(() => {
     let alive = true;
-    const load = () => fetch(`${API_BASE}${path}`).then((r) => r.json()).then((d) => { if (alive) setData(d); }).catch(() => {});
+    const load = () => earlyFetch(`${API_BASE}${path}`).then((r) => r.json()).then((d) => { if (alive) setData(d); }).catch(() => {});
     load();
     const id = pollMs ? window.setInterval(load, pollMs) : 0;
     return () => { alive = false; if (id) window.clearInterval(id); };
