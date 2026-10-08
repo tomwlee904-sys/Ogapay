@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext'
 import { API_BASE, apiRequest, getAccessToken } from '../lib/api'
 import { categoryLabel } from '../lib/categories'
 import { jobRequirements } from '../lib/requirements'
+import { renderJobText } from '../lib/jobText'
 import '../styles/submit.css'
 
 // Submit work for a job (/tasks/:id/submit). Takes a slot if you haven't yet,
@@ -69,7 +70,11 @@ export default function SubmissionPage() {
   const cur = task.currency || 'NGN'
   const reward = Number(task.reward || 0)
   const reqs = jobRequirements(task)
-  const brief = (task.proofRequired || task.instructions || task.description || '').trim()
+  const brief = (task.instructions || task.description || '').trim()
+  // The Create form's "Screenshot required" switch (the server checks it too)
+  const needsShot = /screenshot required/i.test(task.proofRequired || '')
+  // Anything else the poster wrote about proof
+  const proofNote = !needsShot && task.proofRequired ? task.proofRequired.trim() : ''
   const closed = !['OPEN', 'COOLING_DOWN'].includes(task.status)
 
   const addFiles = (list: FileList | null) => {
@@ -80,6 +85,7 @@ export default function SubmissionPage() {
 
   const submit = async () => {
     if (!link.trim() && !notes.trim() && files.length === 0) { setError('Add a link, a note or a file so the poster can check your work.'); return }
+    if (needsShot && files.length === 0) { setError('This job needs a screenshot. Add at least one image of your work.'); return }
     const token = getAccessToken()
     if (!token) { navigate('/login?redirect=' + encodeURIComponent(location.pathname)); return }
     setError('')
@@ -160,7 +166,7 @@ export default function SubmissionPage() {
                 <input id="sb-link" className="ui-input" type="url" inputMode="url" value={link} onChange={(e) => setLink(e.target.value)} placeholder="https://… (post, document, recording)" />
                 <label className="ui-label" htmlFor="sb-notes">Note for the poster</label>
                 <textarea id="sb-notes" className="ui-input sb-textarea" maxLength={1000} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="What you did, anything they should know" />
-                <span className="ui-label">Screenshots or files ({files.length}/{MAX_FILES})</span>
+                <span className="ui-label">{needsShot ? 'Screenshot (required)' : 'Screenshots or files'} ({files.length}/{MAX_FILES})</span>
                 {files.length > 0 && (
                   <ul className="sb-files">
                     {files.map((f, i) => (
@@ -178,7 +184,7 @@ export default function SubmissionPage() {
                 <button className="ui-btn ui-btn-dark ui-btn-lg sb-send" disabled={!!busy} onClick={submit}>
                   {busy ? <><i className="ti ti-loader-2 sb-spin" /> {busy}</> : <>Send work</>}
                 </button>
-                <p className="sb-small">Add at least a link, a note or a file. The poster reviews it and you're paid {money(reward, cur)} when it's approved.</p>
+                <p className="sb-small">{needsShot ? 'Add at least one screenshot.' : 'Add at least a link, a note or a file.'} The poster reviews it and you're paid {money(reward, cur)} when it's approved.</p>
               </section>
             )}
           </div>
@@ -186,7 +192,8 @@ export default function SubmissionPage() {
           <aside className="ui-card ui-card-pad sb-side">
             <div className="sb-reward"><b>{money(reward, cur)}</b><span>per person</span></div>
             <div className="sb-meta"><span>{categoryLabel(task.category)}</span>{task.poster?.username && <span>by <Link to={`/user/${task.poster.username}`}>@{task.poster.username}</Link></span>}</div>
-            {brief && <><span className="ui-label">What to do</span><p className="sb-brief">{brief}</p></>}
+            {brief && <><span className="ui-label">What to do</span><div className="sb-brief" dangerouslySetInnerHTML={{ __html: renderJobText(brief) }} /></>}
+            {(needsShot || proofNote) && <><span className="ui-label">Proof</span><p className="sb-proof"><i className="ti ti-photo" /> {needsShot ? 'Attach at least one screenshot of your work.' : proofNote}</p></>}
             <span className="ui-label">Requirements</span>
             {reqs.length ? <ul className="sb-reqs">{reqs.map((r) => <li key={r.text}><i className={`ti ti-${r.icon}`} /> {r.text}</li>)}</ul> : <p className="sb-brief">None. Anyone can take part.</p>}
           </aside>
