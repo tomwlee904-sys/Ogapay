@@ -126,6 +126,7 @@ interface JobData {
   similarJobs: any[]
   instructions: string
   posterId: string
+  featured: boolean
   selectionType: string
   capacity: string
   potentialWinners: number
@@ -173,6 +174,7 @@ export default function JobDetail() {
     return () => { live = false }
   }, [id])
   const [cancelling, setCancelling] = useState(false)
+  const [highlighting, setHighlighting] = useState(false)
   const [error, setError] = useState('')
   const [showReportModal, setShowReportModal] = useState(false)
   const [reportCategory, setReportCategory] = useState('')
@@ -337,6 +339,7 @@ export default function JobDetail() {
       similarJobs: Array.isArray(t.similarJobs) ? t.similarJobs.slice(0, 4) : [],
       instructions: t.instructions || t.description || '',
       posterId: t.poster?.id || '',
+      featured: !!t.featured,
       currentWorkers: Number(t.currentWorkers ?? 0),
       selectionType: t.selectionType || t.selection || 'Random',
       capacity: `${filled} of ${slots}`,
@@ -365,6 +368,19 @@ export default function JobDetail() {
   }
 
   // Poster cancels an open job nobody has joined: the escrow goes back to their wallet
+  // Admins: highlight the job (badge, shown first on the homepage and the jobs page)
+  const toggleHighlight = async () => {
+    if (!job || highlighting) return
+    setHighlighting(true)
+    try {
+      await apiRequest(`/tasks/${job.id}/feature`, { method: 'PATCH', body: JSON.stringify({ featured: !job.featured }) })
+      setJob({ ...job, featured: !job.featured })
+    } catch (e: any) {
+      window.alert(e?.message || "Couldn't change the highlight.")
+    }
+    setHighlighting(false)
+  }
+
   const handleCancelJob = async () => {
     if (!job || cancelling) return
     // Admins can cancel someone else's untouched job (spam, tests): the money goes back to the poster
@@ -428,6 +444,8 @@ export default function JobDetail() {
       handleBookmark={handleBookmark}
       handleCancelJob={handleCancelJob}
       cancelling={cancelling}
+      toggleHighlight={toggleHighlight}
+      highlighting={highlighting}
       showApply={showApply}
       setShowApply={setShowApply}
       showApplyWarning={showApplyWarning}
@@ -485,7 +503,7 @@ function ErrorState({ message, onBack }: { message: string; onBack: () => void }
 function WurkJobDetailView(props: any) {
   const {
     job, fmt, convert, navigate, countdown, showSubs, setShowSubs, isOpen, canManage,
-    bookmarked, handleBookmark, handleCancelJob, cancelling, showApply, setShowApply, showApplyWarning, setShowApplyWarning,
+    bookmarked, handleBookmark, handleCancelJob, cancelling, toggleHighlight, highlighting, showApply, setShowApply, showApplyWarning, setShowApplyWarning,
     showShare, setShowShare, showInfo, setShowInfo,
     showReportModal, setShowReportModal, reportCategory, setReportCategory,
     reportDesc, setReportDesc, reportMsg, setReportMsg, reportSubmitting, handleSubmitReport,
@@ -928,6 +946,17 @@ function WurkJobDetailView(props: any) {
                 <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
                 Info
               </button>
+              {authUser?.role === 'ADMIN' && (
+                <>
+                  <span className="wjd-sep">|</span>
+                  {/* Admins: highlighted jobs get a badge and are shown first on the homepage and the jobs page */}
+                  <button className="wjd-link" type="button" onClick={toggleHighlight} disabled={highlighting}
+                    title="Highlighted jobs get a badge and are shown first on the homepage and the jobs page">
+                    <i className={`ti ${job.featured ? 'ti-x' : 'ti-star'}`} aria-hidden="true" />
+                    {highlighting ? 'Saving…' : job.featured ? 'Remove highlight' : 'Highlight'}
+                  </button>
+                </>
+              )}
               <span className="wjd-sep">|</span>
               <button className="wjd-icon-btn" type="button" onClick={handleBookmark} aria-label="Bookmark">
                 {bookmarked
