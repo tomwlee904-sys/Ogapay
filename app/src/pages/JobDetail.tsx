@@ -17,6 +17,7 @@ import { formatMoney } from '../lib/money'
 import { jobDeadline, deadlineLabel, deadlineDate } from '../lib/deadline'
 import { categoryLabel } from '../lib/categories'
 import { sized } from '../lib/img'
+import { renderJobText, renderJobLine } from '../lib/jobText'
 
 const BRAND = 'var(--accent)'
 const BRAND_LIGHT = 'rgba(var(--accent-rgb),0.10)'
@@ -47,23 +48,6 @@ function InfoBtn({ text }: { text: string }) {
 
 
 function pad(n: number) { return String(n).padStart(2, '0') }
-
-function linkifyText(text: string): string {
-  const escaped = text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;')
-  const withLinks = escaped.replace(
-    /(https?:\/\/[^\s<>"']+|www\.[^\s<>"']+)/gi,
-    (m) => {
-      const href = m.startsWith('www.') ? 'https://' + m : m
-      return '<a href="' + href + '" target="_blank" rel="noopener noreferrer" class="wjd-linkified">' + m + '</a>'
-    }
-  )
-  return withLinks.replace(/\n/g, '<br />')
-}
 
 function toArray<T>(val: T | T[] | undefined | null, fallback: T[]): T[] {
   if (Array.isArray(val)) return val
@@ -863,6 +847,18 @@ function WurkJobDetailView(props: any) {
         .wjd-desc{padding:20px 22px 22px!important}
         .wjd-desc-title{font-family:var(--font-mono);font-weight:500;font-size:var(--fs-label);letter-spacing:.08em;color:var(--text2);border-bottom:0;padding-bottom:0;margin-bottom:14px}
         .wjd-body{font-size:var(--fs-body);color:var(--text);line-height:1.7}
+        .wjd-body{white-space:normal}
+        .wjd-body p{margin:0 0 12px}
+        .wjd-body>:last-child{margin-bottom:0}
+        .wjd-body ul,.wjd-body ol{margin:0 0 12px;padding-left:22px}
+        .wjd-body ul{list-style:disc}
+        .wjd-body ol{list-style:decimal}
+        .wjd-body li::marker{color:var(--text2)}
+        .wjd-body li{margin:4px 0;padding-left:2px}
+        .wjd-body h3{font-size:15px;font-weight:600;color:var(--text);margin:16px 0 6px}
+        .wjd-body>h3:first-child{margin-top:0}
+        .wjd-body strong{font-weight:650;color:var(--text)}
+        .wjd-body code{font-family:var(--font-mono);font-size:.9em;background:var(--bg2);border:1px solid var(--border);border-radius:5px;padding:1px 5px}
         .wjd-sub-title{font-size:14px;font-weight:600}
         .wjd-translate-row{justify-content:flex-start}
         .wjd-translate-btn{font-weight:500;color:var(--text2);text-decoration:underline;text-underline-offset:3px}
@@ -1029,12 +1025,12 @@ function WurkJobDetailView(props: any) {
               Description
             </div>
 
-            <div className="wjd-body" dangerouslySetInnerHTML={{ __html: linkifyText(description) }} />
+            <div className="wjd-body" dangerouslySetInnerHTML={{ __html: renderJobText(description) }} />
 
             {job.steps.length > 0 && (
               <>
                 <div className="wjd-sub-title">Steps</div>
-                <ul className="wjd-list">{job.steps.map((step: string, i: number) => <li key={i} dangerouslySetInnerHTML={{ __html: linkifyText(step) }} />)}</ul>
+                <ul className="wjd-list">{job.steps.map((step: string, i: number) => <li key={i} dangerouslySetInnerHTML={{ __html: renderJobLine(step) }} />)}</ul>
               </>
             )}
 
@@ -1048,14 +1044,14 @@ function WurkJobDetailView(props: any) {
                     Show original
                   </button>
                 </div>
-                <div className="wjd-body" dangerouslySetInnerHTML={{ __html: linkifyText(translatedText) }} />
+                <div className="wjd-body" dangerouslySetInnerHTML={{ __html: renderJobText(translatedText) }} />
               </div>
             )}
 
             {job.requirements.length > 0 && (
               <>
                 <div className="wjd-sub-title">Requirements</div>
-                <ul className="wjd-list">{job.requirements.map((item: string, i: number) => <li key={i} dangerouslySetInnerHTML={{ __html: linkifyText(item) }} />)}</ul>
+                <ul className="wjd-list">{job.requirements.map((item: string, i: number) => <li key={i} dangerouslySetInnerHTML={{ __html: renderJobLine(item) }} />)}</ul>
               </>
             )}
 

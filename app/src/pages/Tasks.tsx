@@ -1,4 +1,5 @@
 ﻿import { useState, useEffect, useRef } from 'react'
+import { renderJobText } from '../lib/jobText'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import Modal from '../components/Modal'
 import Layout from '../components/Layout'
@@ -196,6 +197,13 @@ function JobDetailModal({ job, onClose, onApply }: { job: any; onClose: () => vo
   
         {/* ── DARK MODE OVERRIDES ── */}
         <style>{`
+          .tk-job-text p{margin:0 0 10px}
+          .tk-job-text>:last-child{margin-bottom:0}
+          .tk-job-text ul,.tk-job-text ol{margin:0 0 10px;padding-left:20px}
+          .tk-job-text ul{list-style:disc}
+          .tk-job-text ol{list-style:decimal}
+          .tk-job-text h3{font-size:14px;font-weight:600;margin:12px 0 4px}
+          .tk-job-text a{color:var(--accent);text-decoration:underline}
           [data-theme="dark"] .ngn-shimmer {
             color: #ffffff !important;
             -webkit-text-fill-color: #ffffff !important;
@@ -317,7 +325,7 @@ function JobDetailModal({ job, onClose, onApply }: { job: any; onClose: () => vo
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 10, fontWeight: 800, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10, paddingBottom: 10, borderBottom: '1px solid var(--border)' }}>
             <i className="ti ti-file-text" style={{ fontSize: 14 }} /> Description
           </div>
-          <p style={{ fontSize: 13, color: 'var(--text)', lineHeight: 1.7, margin: 0 }}>{job.description}</p>
+          <div className="tk-job-text" style={{ fontSize: 13, color: 'var(--text)', lineHeight: 1.7 }} dangerouslySetInnerHTML={{ __html: renderJobText(job.description) }} />
         </div>
 
         {/* ── REQUIREMENTS ── */}

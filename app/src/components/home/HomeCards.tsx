@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { plainJobText } from '../../lib/jobText'
 import { jobRequirements } from "../../lib/requirements";
 import { CATEGORY_LABELS as CATEGORY } from "../../lib/categories";
 import { BoostedTag, PremiumMark } from "../Perks";
@@ -68,7 +69,7 @@ export function HomeJobCard({ task, convert, applied }: { task: any; convert: Co
       <div className="hc-brief">
         <span className="hc-type"><i className="ti ti-file-text" />The brief</span>
         <span className="hc-cat">{category}{tag}</span>
-        <p><b>{task.title}</b> {plain(task.description) !== plain(task.title) ? plain(task.description) : ""}</p>
+        <p><b>{task.title}</b> {plainJobText(task.description) !== plain(task.title) ? plainJobText(task.description) : ""}</p>
       </div>
 
       <div className="hc-subs">
