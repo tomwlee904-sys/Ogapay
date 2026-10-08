@@ -4,11 +4,11 @@ import { naira, MIN_WITHDRAW_NGN } from '../../lib/wallet'
 
 // Wallet: your verification level, what it lets you withdraw, the three steps,
 // and how to take the next one
-export default function LevelCard({ tier, didit, diditNin = false }: { tier: number; didit: boolean; diditNin?: boolean }) {
-  const levels = levelsFor(didit, diditNin)
+export default function LevelCard({ tier, didit, ninInstant = false }: { tier: number; didit: boolean; ninInstant?: boolean }) {
+  const levels = levelsFor(didit, ninInstant)
   const current = levels.find((l) => l.tier === tier)
-  const next = nextStep(tier, didit, diditNin)
-  const nextTier = nextTierFor(tier, didit, diditNin)
+  const next = nextStep(tier, didit)
+  const nextTier = nextTierFor(tier, didit)
   return (
     <section className="ui-card wl-sec wl-level" aria-labelledby="wl-level">
       <div className="wl-sec-head">

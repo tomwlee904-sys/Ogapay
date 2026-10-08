@@ -4,14 +4,12 @@ import { apiRequest } from '../../lib/api'
 import { useToast } from '../../components/Toast'
 import { useAuth } from '../../context/AuthContext'
 import { Card, Row, type SectionProps } from './ui'
-import { levelsFor, nextTierFor, UNLOCKS } from '../../lib/levels'
+import { levelsFor, UNLOCKS } from '../../lib/levels'
 import { naira } from '../../lib/wallet'
 
 // Levels as the backend enforces them, in the same words as the Wallet (lib/levels)
 // Didit statuses that mean the person hasn't finished yet
 const OPEN = ['Not Started', 'In Progress', 'Resubmitted']
-// The two Didit checks: NIN + selfie (Level 1) and ID document + selfie (Level 2)
-type Flow = 'nin' | 'id'
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
 export default function Verification({ me, reload, providers }: SectionProps & { providers: Record<string, boolean> | null }) {
@@ -21,60 +19,57 @@ export default function Verification({ me, reload, providers }: SectionProps & {
   const status = me.kyc?.status || 'NONE'
   const tier = status === 'APPROVED' ? me.kyc?.kycTier || 0 : 0
   const didit = !!providers?.didit
-  const diditNin = !!providers?.diditNin
+  const ninInstant = !!providers?.ninInstant // a NIN is confirmed with NIMC on the spot
   const diditOpen = status === 'PENDING' && me.kyc?.provider === 'didit' // started, not finished
-  const openFlow: Flow | null = diditOpen ? (me.kyc?.idType === 'NIN' ? 'nin' : 'id') : null
   const inReview = status === 'SUBMITTED'
-  const want = tier === 0 ? 'NIN' : tier === 1 ? 'BVN' : null
-  // With the NIN check on, someone with no level picks NIN + selfie (Level 1 in
-  // seconds) or ID + selfie (Level 2). Otherwise, with Didit, one ID + selfie
-  // check takes anyone below Level 2 straight to Level 2.
-  const ninChoice = diditNin && tier === 0
+  const want = tier === 0 ? 'NIN' : null // Level 2 is the ID + selfie check
+  // With Didit, one ID + selfie check takes anyone below Level 2 straight to Level 2
   const useDidit = (didit && tier < 2) || diditOpen
-  const nextTier = nextTierFor(tier, didit, diditNin)
+  const nextTier = useDidit ? 2 : tier + 1
   const [num, setNum] = useState('')
   const [dob, setDob] = useState('')
   const [busy, setBusy] = useState(false)
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null)
+  const [ninMsg, setNinMsg] = useState<{ ok: boolean; text: string } | null>(null)
   const [humanBusy, setHumanBusy] = useState(false)
-  const [diditBusy, setDiditBusy] = useState<Flow | null>(null)
+  const [diditBusy, setDiditBusy] = useState(false)
   const [checking, setChecking] = useState(false)
   const [useNin, setUseNin] = useState(false)
   const synced = useRef(false)
 
   const submit = async () => {
     if (!want || busy) return
-    if (num.length !== 11) { setMsg({ ok: false, text: `Enter all 11 digits of your ${want}.` }); return }
-    if (!dob) { setMsg({ ok: false, text: `Enter your date of birth as it is on your ${want} record.` }); return }
-    setBusy(true); setMsg(null)
+    if (num.length !== 11) { setNinMsg({ ok: false, text: `Enter all 11 digits of your ${want}.` }); return }
+    if (!dob) { setNinMsg({ ok: false, text: `Enter your date of birth as it is on your ${want} record.` }); return }
+    setBusy(true); setNinMsg(null)
     try {
       const r = await apiRequest<any>('/kyc/submit', {
         method: 'POST',
         body: JSON.stringify({ idType: want, idNumber: num, dateOfBirth: new Date(`${dob}T00:00:00Z`).toISOString() }),
       })
-      setMsg({ ok: r?.status === 'APPROVED', text: r?.message || 'Submitted' })
+      setNinMsg({ ok: r?.status === 'APPROVED', text: r?.message || 'Submitted' })
       if (r?.status === 'APPROVED') toast(r.message, 'success')
       setNum(''); setDob('')
       await reload()
       refreshUser()
     } catch (e: any) {
-      setMsg({ ok: false, text: e?.message || 'Verification failed' })
+      setNinMsg({ ok: false, text: e?.message || 'Verification failed' })
     } finally { setBusy(false) }
   }
 
   // Open Didit (a new check, or the one they started)
-  const startDidit = async (flow: Flow) => {
-    setDiditBusy(flow); setMsg(null)
+  const startDidit = async () => {
+    setDiditBusy(true); setMsg(null)
     try {
-      const r = await apiRequest<any>('/kyc/didit/session', { method: 'POST', body: JSON.stringify({ flow }) })
+      const r = await apiRequest<any>('/kyc/didit/session', { method: 'POST' })
       if (r?.url) { window.location.href = r.url; return }
       // Their earlier check had already finished: show its result
       setMsg({ ok: r?.status !== 'REJECTED', text: r?.message || 'Your verification was updated.' })
       await reload(); refreshUser()
     } catch (e: any) {
-      setMsg({ ok: false, text: e?.message || `Couldn't open the ${flow === 'nin' ? 'NIN' : 'ID'} check. Please try again.` })
+      setMsg({ ok: false, text: e?.message || "Couldn't open the ID check. Please try again." })
     }
-    setDiditBusy(null)
+    setDiditBusy(false)
   }
 
   // Record the result of a Didit check. Right after coming back, Didit can
@@ -88,8 +83,7 @@ export default function Verification({ me, reload, providers }: SectionProps & {
         r = await apiRequest<any>('/kyc/didit/sync', { method: 'POST', body: JSON.stringify({ sessionId: sessionId || undefined }) })
         if (!OPEN.includes(r?.didit)) break
       }
-      // verified: this check raised their level (older servers: an approved Level 2)
-      if (r?.verified || (r?.status === 'APPROVED' && r?.didit === 'Approved' && r?.tier >= 2)) { toast(r.message || "You're verified", 'success'); setMsg({ ok: true, text: r.message || "You're verified." }) }
+      if (r?.status === 'APPROVED' && r?.didit === 'Approved' && r?.tier >= 2) { toast(r.message || "You're verified", 'success'); setMsg({ ok: true, text: r.message || "You're verified." }) }
       else if (justBack && r?.message) setMsg({ ok: r.status !== 'REJECTED' && r.didit !== 'Declined', text: r.message })
       await reload(); refreshUser()
     } catch (e: any) {
@@ -125,15 +119,21 @@ export default function Verification({ me, reload, providers }: SectionProps & {
     // noValidate: submit() explains what's missing. The browser's own "required"
     // bubble doesn't show in some in-app browsers, so the button looked dead.
     <form className="st2-panel st2-form" noValidate onSubmit={(e) => { e.preventDefault(); submit() }}>
-      <strong>{tier === 0 ? 'Get Level 1 with your NIN' : 'Upgrade to Level 2 with your BVN'}</strong>
+      <strong>{useDidit ? 'No ID card to scan? Get Level 1 with your NIN' : 'Get Level 1 with your NIN'}</strong>
+      {ninInstant && (
+        <p className="st2-muted" style={{ margin: 0, lineHeight: 1.55 }}>
+          We confirm your NIN, date of birth and name with NIMC through Didit, our verification partner. It takes a few seconds.
+          The name on your OgaPay account, <b>{`${me.firstName || ''} ${me.lastName || ''}`.trim() || 'not set'}</b>, must match your NIN: <Link className="st2-linkbtn" to="/settings/account">change it</Link> first if it doesn't.
+        </p>
+      )}
       <label className="st2-f"><span>{want} (11 digits)</span>
-        <input inputMode="numeric" autoComplete="off" value={num} maxLength={11} onChange={(e) => setNum(e.target.value.replace(/\D/g, '').slice(0, 11))} placeholder={want === 'NIN' ? 'National Identification Number' : 'Bank Verification Number'} required />
+        <input inputMode="numeric" autoComplete="off" value={num} maxLength={11} onChange={(e) => setNum(e.target.value.replace(/\D/g, '').slice(0, 11))} placeholder="National Identification Number" required />
       </label>
       <label className="st2-f"><span>Date of birth (as on your {want} record)</span>
         <input type="date" value={dob} max={new Date().toISOString().slice(0, 10)} onChange={(e) => setDob(e.target.value)} required />
       </label>
-      {msg && <p className={msg.ok ? 'st2-ok' : 'st2-err'}>{msg.text}</p>}
-      <div className="st2-actions"><button className="up-btn primary" disabled={busy}>{busy ? 'Checking…' : `Verify ${want}`}</button></div>
+      {ninMsg && <p className={ninMsg.ok ? 'st2-ok' : 'st2-err'}>{ninMsg.text}</p>}
+      <div className="st2-actions"><button className={`up-btn${useDidit ? '' : ' primary'}`} disabled={busy}>{busy ? 'Checking…' : `Verify ${want}`}</button></div>
     </form>
   )
 
@@ -148,11 +148,11 @@ export default function Verification({ me, reload, providers }: SectionProps & {
       {checking && <p className="st2-muted"><i className="ti ti-loader-2" /> Checking your result…</p>}
       {msg && !checking && <p className={msg.ok ? 'st2-ok' : 'st2-err'}>{msg.text}</p>}
       <div className="st2-actions">
-        <button className="up-btn primary" onClick={() => startDidit('id')} disabled={!!diditBusy || checking}>
+        <button className="up-btn primary" onClick={startDidit} disabled={diditBusy || checking}>
           {diditBusy ? 'Opening Didit…' : diditOpen ? 'Continue verification' : 'Verify with Didit'}
         </button>
       </div>
-      {!diditOpen && tier === 0 && (
+      {!diditOpen && tier === 0 && !ninInstant && (
         <p className="st2-muted" style={{ margin: '10px 0 0' }}>
           No ID to scan? <button type="button" className="st2-linkbtn" onClick={() => { setUseNin((v) => !v); setMsg(null) }}>{useNin ? 'Hide the NIN form' : 'Use your NIN number instead'}</button> for Level 1 (our team checks it).
         </p>
@@ -160,47 +160,11 @@ export default function Verification({ me, reload, providers }: SectionProps & {
     </div>
   )
 
-  // No level yet, with the NIN check on: the two ways in, side by side
-  const choice = (flow: Flow) => {
-    const nin = flow === 'nin'
-    const open = openFlow === flow
-    return (
-      <Row
-        key={flow}
-        title={nin ? 'NIN + selfie: Level 1' : 'ID + selfie: Level 2'}
-        sub={open
-          ? "You started this check but haven't finished it. Pick up where you left off."
-          : nin
-            ? 'Type your NIN and take a selfie. We check them against your NIMC record in seconds.'
-            : "Scan a national ID card, international passport, driver's licence or voter's card, then take a selfie. About 2 minutes."}
-      >
-        <button className={`up-btn${nin ? ' primary' : ''}`} onClick={() => startDidit(flow)} disabled={!!diditBusy || checking}>
-          {diditBusy === flow ? 'Opening Didit…' : open ? 'Continue' : nin ? 'Verify with NIN' : 'Verify with ID'}
-        </button>
-      </Row>
-    )
-  }
-
-  const choicePanel = (
-    <div className="st2-panel">
-      <strong>{diditOpen ? 'Finish verifying your identity' : 'Choose how to verify'}</strong>
-      {choice('nin')}
-      {(didit || openFlow === 'id') && choice('id')}
-      <p className="st2-muted" style={{ margin: '4px 0 0', lineHeight: 1.55 }}>
-        {didit
-          ? "Both happen on Didit's secure page. Start with your NIN for Level 1 now, and add an ID for Level 2 whenever you need a higher limit."
-          : "It happens on Didit's secure page and takes about a minute."}
-      </p>
-      {checking && <p className="st2-muted"><i className="ti ti-loader-2" /> Checking your result…</p>}
-      {msg && !checking && <p className={msg.ok ? 'st2-ok' : 'st2-err'}>{msg.text}</p>}
-    </div>
-  )
-
   return (
     <>
-      <Card title="Identity verification (KYC)" sub={`Needed before you can withdraw or send money.${didit || diditNin ? ' Checks are done by Didit.' : ''} Your ID details are never shown to other users.`}>
+      <Card title="Identity verification (KYC)" sub={`Needed before you can withdraw or send money.${didit ? ' ID checks are done by Didit.' : ''} Your ID details are never shown to other users.`}>
         <div className="st2-levels">
-          {levelsFor(didit, diditNin).map((l) => {
+          {levelsFor(didit, ninInstant).map((l) => {
             const done = tier >= l.tier
             const next = !done && l.tier === nextTier
             return (
@@ -220,13 +184,14 @@ export default function Verification({ me, reload, providers }: SectionProps & {
 
         {inReview && tier === 0 ? (
           <>
-            <div className="st2-banner"><i className="ti ti-hourglass" /> {me.kyc?.provider === 'didit' ? `Your ${me.kyc?.idType === 'NIN' ? 'NIN' : 'ID'} check is being reviewed.` : 'Your NIN is with our team for review.'} We'll notify you when it's done.</div>
+            <div className="st2-banner"><i className="ti ti-hourglass" /> {me.kyc?.provider === 'didit' ? "Your ID check is being reviewed." : 'Your NIN is with our team for review.'} We'll notify you when it's done.</div>
             {msg && <p className={msg.ok ? 'st2-ok' : 'st2-err'}>{msg.text}</p>}
+            {ninMsg && <p className={ninMsg.ok ? 'st2-ok' : 'st2-err'}>{ninMsg.text}</p>}
           </>
-        ) : ninChoice ? choicePanel : useDidit ? (
+        ) : useDidit ? (
           <>
             {diditPanel}
-            {useNin && !diditOpen && tier === 0 && ninForm}
+            {(useNin || ninInstant) && !diditOpen && tier === 0 && ninForm}
           </>
         ) : want ? ninForm : (
           <Row title="Need a higher limit?" sub="Level 3 is done by our team with your ID documents.">

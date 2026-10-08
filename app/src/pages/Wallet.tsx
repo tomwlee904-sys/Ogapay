@@ -44,11 +44,12 @@ export default function Wallet() {
   const [bankErr, setBankErr] = useState('')
   const [modal, setModal] = useState<null | 'withdraw' | 'send' | 'bank'>(null)
   const [didit, setDidit] = useState(false)
-  const [diditNin, setDiditNin] = useState(false)
+  const [ninInstant, setNinInstant] = useState(false)
 
-  // Whether the ID + selfie and NIN + selfie checks are on (they change how each level is reached)
+  // Whether the ID + selfie check is on (it changes how Level 2 is reached) and
+  // whether a NIN is confirmed on the spot
   useEffect(() => {
-    apiRequest<Record<string, boolean>>('/social/providers', { auth: false }).then((p) => { setDidit(!!p?.didit); setDiditNin(!!p?.diditNin) }).catch(() => {})
+    apiRequest<Record<string, boolean>>('/social/providers', { auth: false }).then((p) => { setDidit(!!p?.didit); setNinInstant(!!p?.ninInstant) }).catch(() => {})
   }, [])
 
   // Old links: /wallet?add=1 (menu Top up) now goes to Add money
@@ -152,7 +153,7 @@ export default function Wallet() {
               )}
             </section>
 
-            <LevelCard tier={verified ? tier : 0} didit={didit} diditNin={diditNin} />
+            <LevelCard tier={verified ? tier : 0} didit={didit} ninInstant={ninInstant} />
 
             <div className="wl-pair">
               <MoneyInCard verified={verified} />
