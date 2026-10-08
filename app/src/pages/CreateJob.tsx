@@ -1193,7 +1193,7 @@ function CreateTask() {
 
         <div className="cj-foot">
           <span>You'll review the payment before your job goes live.</span>
-          <a href="https://t.me/OgaPayCommunity" target="_blank" rel="noopener noreferrer"><i className="ti ti-brand-telegram" /> Get help on Telegram <i className="ti ti-arrow-up-right" /></a>
+          <a className="tap" href="https://t.me/OgaPayCommunity" target="_blank" rel="noopener noreferrer"><i className="ti ti-brand-telegram" /> Get help on Telegram <i className="ti ti-arrow-up-right" /></a>
         </div>
       </div>
 

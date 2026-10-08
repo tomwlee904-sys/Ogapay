@@ -76,7 +76,7 @@ export default function About() {
                 <span className="ic"><i className={`ti ti-${d.icon}`} aria-hidden="true" /></span>
                 <h3>{d.title}</h3>
                 <p>{d.text}</p>
-                <Link to={d.to}>{d.cta} <i className="ti ti-arrow-right" aria-hidden="true" /></Link>
+                <Link to={d.to} className="tap">{d.cta} <i className="ti ti-arrow-right" aria-hidden="true" /></Link>
               </div>
             ))}
           </div>

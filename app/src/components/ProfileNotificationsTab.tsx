@@ -215,6 +215,7 @@ export default function TabNotificationsContent() {
         .nt-desc{color:var(--text2);font-size:12px;margin-bottom:2px}
         .nt-time{font-size:11px;color:var(--text3)}
         .nt-del{position:absolute;top:10px;right:10px;width:24px;height:24px;border-radius:6px;border:none;background:transparent;color:var(--text3);cursor:pointer;display:grid;place-items:center;font-size:14px;transition:all .15s}
+        .nt-del::after{content:'';position:absolute;inset:-10px}
         .nt-del:hover{background:rgba(var(--red-rgb,239,68,68),.1);color:var(--red)}
         .nt-empty{text-align:center;padding:48px 20px;color:var(--text2)}
         .nt-empty i{font-size:36px;color:var(--text3);margin-bottom:12px;display:block}

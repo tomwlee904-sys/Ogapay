@@ -255,7 +255,7 @@ function StorePage({
 
       <div className="st-row">
         <span className="ui-count"><b>{products.length ? (page - 1) * limit + products.length : 0}</b> of {total} products</span>
-        <button className="link" type="button" onClick={() => navigate('/create')}>Create a job <i className="ti ti-plus" /></button>
+        <button className="link tap" type="button" onClick={() => navigate('/create')}>Create a job <i className="ti ti-plus" /></button>
       </div>
 
       {error && (

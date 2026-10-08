@@ -124,8 +124,8 @@ export default function EditProfile() {
     <Layout>
       <div className="up-wrap" style={{ maxWidth: 760 }}>
         <div className="up-crumb">
-          <Link to="/profile" style={{ color: 'var(--text2)', textDecoration: 'none' }}><i className="ti ti-arrow-left" /> Profile</Link>
-          <span>Edit profile</span>
+          <Link to="/profile" className="tap" style={{ color: 'var(--text2)', textDecoration: 'none' }}><i className="ti ti-arrow-left" aria-hidden="true" /> Profile</Link>
+          <h1>Edit profile</h1>
         </div>
 
         {!form ? (
@@ -133,7 +133,7 @@ export default function EditProfile() {
         ) : (
           <form onSubmit={save} noValidate>
             <section className="up-card hr-sec">
-              <div className="hr-sec-h"><h2>Basics</h2>{me?.username && <Link to={`/user/${me.username}`}>View public profile</Link>}</div>
+              <div className="hr-sec-h"><h2>Basics</h2>{me?.username && <Link to={`/user/${me.username}`} className="tap">View public profile</Link>}</div>
               <div className="ep-avatar">
                 {avatar ? <img className="up-avatar" src={avatar} alt="" /> : <div className="up-avatar">{(form.firstName[0] || '?').toUpperCase()}</div>}
                 <div>

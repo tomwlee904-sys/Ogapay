@@ -140,7 +140,7 @@ export default function UserProfile() {
       <Layout>
         <div className="up-wrap">
           <div className="up-crumb">
-            <button onClick={() => navigate(-1)}><i className="ti ti-arrow-left" /> Back</button>
+            <button className="tap" onClick={() => navigate(-1)}><i className="ti ti-arrow-left" aria-hidden="true" /> Back</button>
             <span>Public profile</span>
           </div>
           {state === "loading" ? (
@@ -197,7 +197,7 @@ export default function UserProfile() {
     <Layout>
       <div className="up-wrap">
         <div className="up-crumb">
-          <button onClick={() => navigate(-1)}><i className="ti ti-arrow-left" /> Back</button>
+          <button className="tap" onClick={() => navigate(-1)}><i className="ti ti-arrow-left" aria-hidden="true" /> Back</button>
           <span>Public profile</span>
         </div>
 

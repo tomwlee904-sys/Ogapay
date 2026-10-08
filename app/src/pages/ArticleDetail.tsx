@@ -171,17 +171,17 @@ export default function ArticleDetail() {
       <div style={{ position: 'fixed', top: 0, left: 0, height: 3, background: 'var(--accent)', zIndex: 9999, width: `${progress}%`, transition: 'width 0.1s' }} />
 
       <nav className="ad-bar" style={{ borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 20, background: 'var(--card)', position: 'sticky', top: 0, zIndex: 100 }}>
-        <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none' }}>
+        <a href="/" className="tap" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none' }}>
           <span style={{ width: 28, height: 28, display: 'flex' }} dangerouslySetInnerHTML={{ __html: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 34 34" fill="none" width="28" height="28"><rect width="34" height="34" rx="6" fill="white"/><rect x="6.5" y="6.5" width="7.1" height="7.1" rx="1.3" fill="black"/><path d="M15 6.5H20.7C21.5 6.5 22.2 7.2 22.2 8V13.6H15V6.5Z" fill="black"/><path d="M23.4 6.5H26C29.2 6.5 31.2 8.5 31.2 11.7V13.6H23.4V6.5Z" fill="black"/><rect x="6.5" y="15" width="7.1" height="7.1" fill="black"/><rect x="15" y="15" width="7.1" height="7.1" fill="black"/><path d="M23.4 15H31.2V16.9C31.2 20.1 29.2 22.1 26 22.1H23.4V15Z" fill="black"/><rect x="6.5" y="23.4" width="7.1" height="7.1" rx="1.3" fill="black"/><path d="M15 23.4H20.7C21.5 23.4 22.2 24.1 22.2 24.9V29.2C22.2 30 21.5 30.7 20.7 30.7H15V23.4Z" fill="black"/></svg>` }} />
           <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--text)' }}>OgaPay</span>
         </a>
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 12 }}>
-          <button onClick={toggle} style={{ background: "none", border: "1.5px solid var(--border)", borderRadius: 8, width: 36, height: 36, display: "grid", placeItems: "center", cursor: "pointer", color: "var(--text)" }}>
+          <button className="tap" onClick={toggle} aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"} style={{ background: "none", border: "1.5px solid var(--border)", borderRadius: 8, width: 36, height: 36, display: "grid", placeItems: "center", cursor: "pointer", color: "var(--text)" }}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               {theme === "dark" ? (<><circle cx="12" cy="12" r="5" /><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" /></>) : (<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />)}
             </svg>
           </button>
-          <button onClick={() => setDrawerOpen(true)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
+          <button onClick={() => setDrawerOpen(true)} aria-label="Open menu" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 11 }}>
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--text)" strokeWidth="2"><line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="18" x2="21" y2="18" /></svg>
           </button>
         </div>
@@ -200,7 +200,7 @@ export default function ArticleDetail() {
         </div>
 
         <nav className="ad-crumbs" aria-label="Breadcrumb">
-          <a href="/blog" onClick={(e) => { e.preventDefault(); navigate('/blog') }}>Blog</a>
+          <a href="/blog" className="tap" onClick={(e) => { e.preventDefault(); navigate('/blog') }}>Blog</a>
           <span>/</span>
           <span>{post.category}</span>
         </nav>

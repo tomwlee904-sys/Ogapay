@@ -148,7 +148,7 @@ export default function Navbar({ onMenuToggle }: NavbarProps) {
       </div>
       {/* ── Mobile ── */}
       <div className="nav-mobile flex justify-between items-center w-full px-4 h-full">
-        <Link to="/" className="flex items-center no-underline gap-1.5" style={{textDecoration:'none',color:'inherit',fontWeight:800,fontSize:16}}>
+        <Link to="/" className="tap flex items-center no-underline gap-1.5" style={{textDecoration:'none',color:'inherit',fontWeight:800,fontSize:16}}>
           <Logo size={28} />
           <span>OgaPay</span>
         </Link>

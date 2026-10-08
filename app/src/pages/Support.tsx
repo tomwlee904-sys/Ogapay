@@ -117,7 +117,7 @@ export default function Support() {
           )}
         </div>
 
-        <div className="up-sec-h sp2-h" style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12 }}><h2>Help topics</h2><Link to="/docs" style={{ fontSize: 13, color: 'var(--text2)' }}>Browse all guides <i className="ti ti-arrow-right" aria-hidden="true" /></Link></div>
+        <div className="up-sec-h sp2-h" style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12 }}><h2>Help topics</h2><Link to="/docs" className="tap" style={{ fontSize: 13, color: 'var(--text2)' }}>Browse all guides <i className="ti ti-arrow-right" aria-hidden="true" /></Link></div>
         <div className="sp2-grid">
           {HELP.map((h) => (
             <Link key={h.id} to={`/faq#${h.id}`} className="up-card sp2-topic">

@@ -128,7 +128,7 @@ export default function Dashboard() {
   const hiring = (
     <section className="ui-card ui-card-pad db-role">
       <div className="db-role-label">Hiring</div>
-      <div className="db-sec-head"><h2>Your jobs</h2><Link to="/manage-jobs">Manage jobs</Link></div>
+      <div className="db-sec-head"><h2>Your jobs</h2><Link to="/manage-jobs" className="tap">Manage jobs</Link></div>
       {live.length === 0 ? (
         <div className="db-empty">None of your jobs are open right now. <Link to="/create">Post a job</Link></div>
       ) : (

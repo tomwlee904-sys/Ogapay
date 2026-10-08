@@ -374,7 +374,7 @@ export default function StoreProduct() {
               )}
               {!user && (
                 <p style={{ fontSize: 12, color: 'var(--text2)', margin: '12px 0 0' }}>
-                  <button onClick={() => navigate('/login?redirect=/store/' + id)} style={{ background: 'none', border: 0, padding: 0, color: 'var(--text)', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', textDecoration: 'underline' }}>Log in</button> to leave a review.
+                  <button className="tap" onClick={() => navigate('/login?redirect=/store/' + id)} style={{ background: 'none', border: 0, padding: 0, color: 'var(--text)', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', textDecoration: 'underline' }}>Log in</button> to leave a review.
                 </p>
               )}
             </section>

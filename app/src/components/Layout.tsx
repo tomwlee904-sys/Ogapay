@@ -1,63 +1,15 @@
 ﻿import { useState, useEffect, useRef, ReactNode } from 'react'
-import { useNavigate, useLocation, useNavigationType } from 'react-router-dom'
+import { useLocation, useNavigationType } from 'react-router-dom'
 import Navbar from './Navbar'
-import { openSignIn } from '../lib/signin'
 import Drawer from './Drawer'
 import Sidebar from './Sidebar'
 import Footer from './Footer'
 import BottomNav from './BottomNav'
 import JobAlertToast from './JobAlertToast'
-import { useAuth } from '../context/AuthContext'
 
 interface LayoutProps {
   children: ReactNode
   sidebar?: boolean
-}
-
-function FAB() {
-  const navigate = useNavigate()
-  const { user } = useAuth()
-  const [open, setOpen] = useState(false)
-  const isAuthed = !!user
-
-  const actions = [
-    { icon: 'search', label: 'Browse Tasks', path: '/tasks' },
-    { icon: 'plus', label: 'Create Task', path: '/create' },
-    { icon: 'wallet', label: 'Wallet', path: '/wallet' },
-    { icon: 'arrow-up', label: 'Withdraw', path: '/wallet' },
-  ]
-
-  return (
-    <>
-      <style>{`
-        .fab-wrap{position:fixed;bottom:calc(var(--bottom-nav-h) + 12px + env(safe-area-inset-bottom,0px));right:16px;z-index:99;display:flex;flex-direction:column;align-items:flex-end;gap:10px}
-        .fab-btn{width:52px;height:52px;border-radius:50%;border:none;background:var(--accent);color:var(--on-accent);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 20px rgba(var(--accent-rgb),.35);transition:transform .2s;font-size:22px}
-        .fab-btn:hover{transform:scale(1.08)}
-        .fab-btn.open{transform:rotate(45deg)}
-        .fab-actions{display:flex;flex-direction:column;gap:8px;align-items:flex-end}
-        .fab-action{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--border);border-radius:24px;padding:8px 16px 8px 12px;cursor:pointer;box-shadow:0 2px 12px rgba(0,0,0,.1);white-space:nowrap;font-size:13px;font-weight:700;color:var(--text);transition:all .15s;font-family:inherit}
-        .fab-action:hover{border-color:var(--accent);background:rgba(var(--accent-rgb),0.03)}
-        .fab-action i{font-size:16px;color:var(--accent)}
-        @media(min-width:769px){.fab-wrap{display:none}}
-      `}</style>
-      <div className="fab-wrap">
-        {open && isAuthed && (
-          <div className="fab-actions">
-            {actions.map(a => (
-              <div key={a.path} className="fab-action" onClick={() => { navigate(a.path); setOpen(false) }}>
-                <i className={`ti ti-${a.icon}`} />
-                {a.label}
-              </div>
-            ))}
-          </div>
-        )}
-        <button className={`fab-btn${open ? ' open' : ''}`} onClick={() => { if (!isAuthed) { openSignIn({ redirect: '/create' }); } else { setOpen(o => !o); }}}>
-          <i className="ti ti-plus" />
-        </button>
-      </div>
-      {open && isAuthed && <div onClick={() => setOpen(false)} style={{ position:'fixed', inset:0, zIndex:98 }} />}
-    </>
-  )
 }
 
 export default function Layout({ children, sidebar = false }: LayoutProps) {
@@ -113,7 +65,6 @@ export default function Layout({ children, sidebar = false }: LayoutProps) {
         {sidebar && <Sidebar />}
       </div>
       <Footer />
-      <FAB />
       <BottomNav />
       <div className="toast" id="appToast" />
       <JobAlertToast />

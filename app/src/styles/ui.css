@@ -134,3 +134,12 @@
 .oga-frame { box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px #d4a017 !important; }
 .oga-boost { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 999px; background: color-mix(in srgb, var(--green) 14%, transparent); color: var(--green); font: 600 11px/1.3 'Inter', system-ui, sans-serif; white-space: nowrap; }
 .oga-boost i { font-size: 13px; }
+
+/* Tap area: small links, buttons and switches also answer taps in an invisible
+   box at least 44 × 44px around them (the size phone guidelines ask for), so
+   nothing on screen moves. Add class "tap", or list a class here. */
+:is(.tap, .wl-link, .wl-level-next, .sb-back, .si-link, .hv-scrollhint, .hv-textlink, .hv-tick, .ep-switch, .wjd-translate-btn, .nt-tab) { position: relative; }
+:is(.tap, .wl-link, .wl-level-next, .sb-back, .si-link, .hv-scrollhint, .hv-textlink, .hv-tick, .ep-switch, .wjd-translate-btn, .nt-tab)::after {
+  content: ''; position: absolute; top: 50%; left: 50%;
+  width: max(100%, 44px); height: max(100%, 44px); transform: translate(-50%, -50%);
+}

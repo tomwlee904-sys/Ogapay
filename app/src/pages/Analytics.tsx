@@ -92,7 +92,7 @@ export default function Analytics() {
           <section className="up-card an2-spent">
             <i className="ti ti-briefcase" />
             <span>Your jobs paid out <b>{naira(t.spentNgn)}</b> to workers ({span}).</span>
-            <Link to="/manage-jobs">Manage jobs</Link>
+            <Link to="/manage-jobs" className="tap">Manage jobs</Link>
           </section>
         )}
 

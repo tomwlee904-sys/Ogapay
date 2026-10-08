@@ -3,7 +3,9 @@
 .up-crumb { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; font-size: 13px; color: var(--text2); }
 .up-crumb button { display: inline-flex; align-items: center; gap: 6px; background: none; border: 0; padding: 6px 0; color: var(--text2); font: inherit; cursor: pointer; }
 .up-crumb button:hover { color: var(--text); }
-.up-crumb span { padding-left: 12px; border-left: 1px solid var(--border); font: 400 11px var(--font-mono, ui-monospace, monospace); color: var(--text3); }
+/* the page's name; on Edit profile it is the page heading (h1) */
+.up-crumb h1 { margin: 0; font-weight: 400; }
+.up-crumb span, .up-crumb h1 { padding-left: 12px; border-left: 1px solid var(--border); font: 400 11px var(--font-mono, ui-monospace, monospace); color: var(--text3); }
 
 .up-card { background: var(--card); border: 1px solid var(--border); border-radius: 18px; }
 .up-head { padding: 24px; display: grid; grid-template-columns: 1fr 200px; gap: 20px 24px; }

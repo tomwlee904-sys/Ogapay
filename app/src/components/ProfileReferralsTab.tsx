@@ -230,7 +230,7 @@ export default function TabReferralsContent() {
         <div className="rf-ref-title"><i className="ti ti-link" style={{color:'var(--accent)',marginRight:6}} />Your Referral Link</div>
         <div className="rf-ref-desc">Share this link with friends — you earn when they sign up and complete tasks</div>
         <div className="rf-ref-row">
-          <input type="text" value={refUrl} readOnly />
+          <input type="text" value={refUrl} readOnly aria-label="Your referral link" />
           <button onClick={copyLink}>{copied ? 'Copied!' : 'Copy Link'}</button>
         </div>
       </div>
