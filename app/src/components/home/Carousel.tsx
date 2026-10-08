@@ -1,9 +1,14 @@
-import { ReactNode, useEffect, useRef, useState } from "react";
+import { ReactNode, useEffect, useLayoutEffect, useRef, useState } from "react";
 
 /* Paged carousel: N cards per view (3, or 1 on phones), a "01 / 03" counter
    and prev/next buttons underneath. Auto-advances unless hovered, focused or
    the user prefers reduced motion. Every page is full: the last one shows the
    last N items (7 jobs page as 1-3, 4-6, 5-7, not 1-3, 4-6, 7 alone). */
+// 3 across on tablets and up, one at a time on phones (like wurk.fun). A phone is
+// a window under 640px wide; the carousel also needs 480px for three cards.
+const PHONE_MAX = 640;
+const perViewFor = (carouselW: number) => (window.innerWidth >= PHONE_MAX && carouselW >= 480 ? 3 : 1);
+
 export default function Carousel<T>({ items, render, label, autoMs = 6500 }: {
   items: T[];
   render: (item: T, i: number) => ReactNode;
@@ -11,23 +16,26 @@ export default function Carousel<T>({ items, render, label, autoMs = 6500 }: {
   autoMs?: number;
 }) {
   const wrap = useRef<HTMLDivElement>(null);
-  const [perView, setPerView] = useState(3);
+  // Start from the window width, so a phone never shows three squeezed cards
+  // while waiting for the first measurement
+  const [perView, setPerView] = useState(() => (typeof window !== "undefined" && window.innerWidth < PHONE_MAX ? 1 : 3));
   const [page, setPage] = useState(0);
   const [paused, setPaused] = useState(false);
   const [stopped, setStopped] = useState(false); // user pressed pause
   const touchX = useRef<number | null>(null);
 
-  useEffect(() => {
+  // Measure before the first paint, then follow size changes. The window resize
+  // listener backs up the observer, which some phones deliver late. (Narrow
+  // tablet cards switch to a compact layout in home-cards.css.)
+  useLayoutEffect(() => {
     const el = wrap.current;
     if (!el) return;
-    const ro = new ResizeObserver(([e]) => {
-      const w = e.contentRect.width;
-      // 3 across from tablets up (narrow cards switch to a compact layout in
-      // home-cards.css), one at a time on phones
-      setPerView(w >= 480 ? 3 : 1);
-    });
+    const update = () => setPerView(perViewFor(el.offsetWidth));
+    update();
+    const ro = new ResizeObserver(update);
     ro.observe(el);
-    return () => ro.disconnect();
+    window.addEventListener("resize", update);
+    return () => { ro.disconnect(); window.removeEventListener("resize", update); };
   }, []);
 
   const pages = Math.max(1, Math.ceil(items.length / perView));
