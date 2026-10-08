@@ -46,7 +46,7 @@ export default function Privacy() {
         <header className="lg-head">
           <div className="up-eyebrow">Legal</div>
           <h1>Privacy policy</h1>
-          <p>Last updated: October 2026</p>
+          <p>Last updated: 8 October 2026</p>
           <p className="lg-lead">OgaPay Technologies Ltd. ("OgaPay", "we", "us") runs the OgaPay marketplace. This policy explains what personal data we collect, why, who we share it with and the choices you have.</p>
         </header>
 
@@ -101,6 +101,7 @@ export default function Privacy() {
                 <li><b>Didit</b> checks your ID document and selfie when you verify with an ID.</li>
                 <li><b>Supabase</b> hosts our database and uploaded files. <b>Railway</b> runs our servers and <b>Vercel</b> hosts the website.</li>
                 <li><b>Resend</b> delivers our emails.</li>
+                <li><b>Sentry</b> receives technical details when something breaks (the page or action that failed, your browser and, if you're signed in, your account ID) so we can fix it. It doesn't receive passwords, codes or what you type in forms.</li>
                 <li><b>Google</b> and <b>X</b> if you choose to sign in with or connect those accounts.</li>
                 <li><b>Solana</b>: crypto withdrawals are recorded on a public blockchain (see Wallets and crypto).</li>
               </ul>
