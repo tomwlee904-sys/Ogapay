@@ -141,7 +141,7 @@ export default function Privacy() {
               <h2><span>08</span>KYC and identity checks</h2>
               <ul>
                 <li>You need Level 1 verification or above before you can withdraw money or send money to another user.</li>
-                <li>If you verify with an ID and a selfie, Didit, an identity verification provider, checks the document and compares your selfie with the photo on it. If you verify with your NIN, our team checks it.</li>
+                <li>If you verify with an ID and a selfie, Didit, an identity verification provider, checks the document and compares your selfie with the photo on it. If you verify with your NIN, Didit sends your NIN, the name on your account and your date of birth to the National Identity Management Commission (NIMC) to confirm they match its record. If that check can't be done, our team checks it.</li>
                 <li>We keep KYC records and documents with restricted access for as long as the law requires. They are used only for verification, fraud prevention and legal compliance.</li>
                 <li>Your BVN and NIN are never shown to other users.</li>
               </ul>

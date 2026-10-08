@@ -1119,7 +1119,7 @@ export default function Profile() {
                 <div style={{fontSize:12,fontWeight:700,color:'var(--text2)',marginBottom:8}}>How to increase your OgaScore:</div>
                 <ul style={{fontSize:12,color:'var(--text)',lineHeight:1.8,paddingLeft:18,margin:'0 0 4px'}}>
                   <li>Connect social accounts (LinkedIn +10, X +8, GitHub +8, Google +5, Telegram +5)</li>
-                  <li>Complete KYC/BVN verification (+20)</li>
+                  <li>Complete identity verification (+20)</li>
                   <li>Complete tasks on time</li>
                   <li>Fill in your profile (bio, avatar, skills)</li>
                   <li>Connect a Solana wallet</li>
