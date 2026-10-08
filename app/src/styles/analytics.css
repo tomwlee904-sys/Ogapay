@@ -21,7 +21,7 @@
 .an2-sec { padding: 16px 18px; margin-bottom: 12px; }
 .an2-scroll { overflow-x: auto; }
 .an2-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-.an2-table th { text-align: left; font: 400 10px var(--font-mono, ui-monospace, monospace); letter-spacing: .08em; text-transform: uppercase; color: var(--text3); padding: 8px 10px; border-bottom: 1px solid var(--border); }
+.an2-table th { text-align: left; font: 400 11px var(--font-mono, ui-monospace, monospace); letter-spacing: .08em; text-transform: uppercase; color: var(--text3); padding: 8px 10px; border-bottom: 1px solid var(--border); }
 .an2-table td { padding: 10px; border-bottom: 1px solid var(--border); color: var(--text2); white-space: nowrap; }
 .an2-table td.amt { font-weight: 700; color: var(--text); }
 .an2-table tr:last-child td { border-bottom: 0; }

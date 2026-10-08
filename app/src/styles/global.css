@@ -407,7 +407,7 @@ button{font:inherit}
   background:linear-gradient(135deg,#232323,#333333);
   border:2px solid var(--border);font-size:12px;font-weight:800;
 }
-.listed{color:var(--text3);font-size:10px;text-transform:uppercase;letter-spacing:1px;font-weight:700}
+.listed{color:var(--text3);font-size:11px;text-transform:uppercase;letter-spacing:1px;font-weight:700}
 .job-name{margin-top:2px;color:var(--text);font-size:14px;font-weight:800}
 .job-body{position:relative;z-index:1;padding:18px 20px 20px;display:flex;flex-direction:column;flex:1}
 .progress-line{
@@ -436,14 +436,14 @@ button{font:inherit}
 .reward strong{font-family:"Inter",sans-serif;background:var(--brand-blue);background-size:240% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;font-size:32px;font-weight:900;letter-spacing:-.6px;animation:gradientShift 5s ease-in-out infinite,metricPulse 4.8s ease-in-out infinite}
 .reward span{color:var(--text2);font-size:12px;font-weight:800}
 .reward small{display:block;margin-top:3px;color:var(--text3);font-size:11px;font-weight:700;letter-spacing:1px}
-.reward .usd-equiv{display:block;margin-top:2px;color:var(--text3);font-size:10px;font-weight:600;opacity:.7}
+.reward .usd-equiv{display:block;margin-top:2px;color:var(--text3);font-size:11px;font-weight:600;opacity:.7}
 .job-tags{color:var(--text3);font-size:12px;font-weight:700;margin-bottom:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .about{border-top:1px solid var(--border);padding-top:12px;margin-top:auto}
 [data-theme="dark"] .about{border-top-color:#232323}
 .about-head{
   display:flex;align-items:center;justify-content:space-between;
   color:var(--text3);text-transform:uppercase;letter-spacing:1px;
-  font-size:10px;font-weight:800;margin-bottom:8px;
+  font-size:11px;font-weight:800;margin-bottom:8px;
 }
 .about-head .about-left{display:flex;align-items:center;gap:6px}
 .about-head .about-icon{width:14px;height:14px;flex-shrink:0}
@@ -698,11 +698,11 @@ footer
   .reward strong{font-size:32px}
   .reward span{font-size:12px}
   .reward small{font-size:11px;letter-spacing:1px}
-  .reward .usd-equiv{font-size:10px}
+  .reward .usd-equiv{font-size:11px}
   .job-tags{font-size:12px;margin-bottom:13px}
   .about{padding-top:12px}
   [data-theme="dark"] .about{border-top-color:#232323}
-  .about-head{font-size:10px;margin-bottom:8px}
+  .about-head{font-size:11px;margin-bottom:8px}
   .about p{font-size:13px;line-height:1.45;min-height:39px}
   .dots{display:none}
   .job-card{order:unset!important}
@@ -779,7 +779,7 @@ footer
   .job-card{min-height:440px}
   .job-top{min-height:62px;padding:12px 16px}
   .avatar{width:38px;height:38px}
-  .listed{font-size:10px}
+  .listed{font-size:11px}
   .job-name{font-size:15px}
   .job-body{padding:18px 20px 20px}
   .progress-line,.dot-indicators{font-size:11px}

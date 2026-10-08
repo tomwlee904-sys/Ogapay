@@ -128,7 +128,7 @@ export default function SavedBanksList({ bare = false }: { bare?: boolean }) {
                 </div>
                 <div style={{ fontSize: 13, color: 'var(--text2)' }}>
                   {bank.bankName} {maskAcct(bank.accountNumber)}
-                  {bank.isDefault && <span style={{ marginLeft: 6, fontSize: 10, color: 'var(--text)', fontWeight: 600, letterSpacing: '.04em' }}>DEFAULT</span>}
+                  {bank.isDefault && <span style={{ marginLeft: 6, fontSize: 11, color: 'var(--text)', fontWeight: 600, letterSpacing: '.04em' }}>DEFAULT</span>}
                 </div>
               </div>
               <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>

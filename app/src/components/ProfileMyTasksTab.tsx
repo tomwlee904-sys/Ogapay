@@ -152,7 +152,7 @@ export default function TabMyTasksContent() {
         .mt-meta{font-size:11px;color:var(--text3);display:flex;gap:10px}
         .mt-right{text-align:right;flex-shrink:0}
         .mt-reward{font-weight:700;font-size:14px;margin-bottom:4px}
-        .mt-status{padding:3px 8px;border-radius:5px;font-size:10px;font-weight:700;display:inline-block}
+        .mt-status{padding:3px 8px;border-radius:5px;font-size:11px;font-weight:700;display:inline-block}
         .mt-empty{text-align:center;padding:48px 20px;color:var(--text2)}
         .mt-empty i{font-size:36px;color:var(--text3);margin-bottom:12px;display:block}
       `}</style>
@@ -190,7 +190,7 @@ export default function TabMyTasksContent() {
                   </div>
                 </div>
                 <span style={{
-                  padding: '3px 8px', borderRadius: 5, fontSize: 10, fontWeight: 700,
+                  padding: '3px 8px', borderRadius: 5, fontSize: 11, fontWeight: 700,
                   background: t.status === 'OPEN' ? 'rgba(22,163,74,0.12)' : 'rgba(245,158,11,0.12)',
                   color: t.status === 'OPEN' ? 'var(--green)' : '#f59e0b',
                 }}>

@@ -205,7 +205,7 @@ const rankStyles = `
 .rank-stats-row { display: flex; gap: 20px; }
 .rank-stat { text-align: center; }
 .rank-stat-val { display: block; font-size: 20px; font-weight: 900; color: var(--text); }
-.rank-stat-lbl { font-size: 10px; color: var(--text3); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+.rank-stat-lbl { font-size: 11px; color: var(--text3); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
 
 .rank-next-section { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border); }
 .rank-next-label { font-size: 13px; color: var(--text2); margin-bottom: 12px; }
@@ -225,9 +225,9 @@ const rankStyles = `
 .rank-tier-name { font-size: 15px; font-weight: 800; margin-bottom: 2px; }
 .rank-tier-reqs { font-size: 11px; color: var(--text3); }
 .rank-tier-right { flex-shrink: 0; }
-.rank-current-tag { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: var(--accent); padding: 3px 10px; border-radius: 20px; background: color-mix(in srgb, var(--accent) 8%, transparent); }
-.rank-unlocked-tag { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: var(--green); padding: 3px 10px; border-radius: 20px; background: color-mix(in srgb, var(--green) 8%, transparent); }
-.rank-locked-tag { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text3); }
+.rank-current-tag { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: var(--accent); padding: 3px 10px; border-radius: 20px; background: color-mix(in srgb, var(--accent) 8%, transparent); }
+.rank-unlocked-tag { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: var(--green); padding: 3px 10px; border-radius: 20px; background: color-mix(in srgb, var(--green) 8%, transparent); }
+.rank-locked-tag { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text3); }
 
 .rank-tier-unlocks { width: 100%; display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; padding-top: 10px; border-top: 1px solid var(--border); }
 .rank-unlock-item { font-size: 11px; color: var(--text2); padding: 3px 10px; border-radius: 6px; background: var(--bg2); border: 1px solid var(--border); }
@@ -247,7 +247,7 @@ const rankStyles = `
   .rank-stat-val { font-size: 16px; }
   .rank-current-card { padding: 16px; }
   .rank-current-top { flex-direction: column; }
-  .rank-progress-label { min-width: 100px; font-size: 10px; }
+  .rank-progress-label { min-width: 100px; font-size: 11px; }
   .rank-tier-card { padding: 12px; }
 }
 `;

@@ -70,7 +70,7 @@ export default function SellerCard({ seller }: Props) {
             <div style={{ fontSize: 15, fontWeight: 800, color: s.isRating ? '#f5b301' : 'var(--text)' }}>
               {s.isRating ? <><i className="ti ti-star" style={{color:"#F5B800",fontSize:12}} /> {s.num.toFixed(1)}</> : s.num}
             </div>
-            <div style={{ fontSize: 10, color: 'var(--text3)', marginTop: 2, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+            <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 2, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
               {s.label}
             </div>
           </div>

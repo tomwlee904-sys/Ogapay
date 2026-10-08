@@ -273,7 +273,7 @@ export default function ArticleDetail() {
                     })()}
                   </div>
                   <div style={{ padding: '1rem' }}>
-                    <span style={{ fontSize: 10, fontWeight: 600, background: b.bg, color: b.color, padding: '2px 8px', borderRadius: 20, marginBottom: 6, display: 'inline-block' }}>{rp.category}</span>
+                    <span style={{ fontSize: 11, fontWeight: 600, background: b.bg, color: b.color, padding: '2px 8px', borderRadius: 20, marginBottom: 6, display: 'inline-block' }}>{rp.category}</span>
                     <p style={{ fontSize: 13, fontWeight: 600, lineHeight: 1.4, margin: '6px 0', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{rp.title}</p>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: 'var(--text3)' }}>
                       <span>{na}</span> <span>·</span> <span>{rp.publishedAt ? formatDate(rp.publishedAt) : ''}</span>

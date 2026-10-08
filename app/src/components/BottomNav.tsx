@@ -54,7 +54,7 @@ export default function BottomNav() {
         .btb-tab .btb-icon-wrap{position:relative;display:flex;align-items:center;justify-content:center;width:24px;height:24px}
         .btb-tab i{font-size:20px;color:rgba(0,0,0,0.45);stroke-width:1.5;transition:color .2s,transform .2s;display:block}
         [data-theme="dark"] .btb-tab i{color:rgba(255,255,255,0.5)}
-        .btb-tab span{font-size:10px;font-weight:700;color:#6B7280;transition:color .2s;white-space:nowrap;line-height:1.2}
+        .btb-tab span{font-size:11px;font-weight:700;color:#6B7280;transition:color .2s;white-space:nowrap;line-height:1.2}
         [data-theme="dark"] .btb-tab span{color:rgba(255,255,255,0.5)}
         .btb-tab.active i,.btb-tab.active span{color:var(--btb-active)}
         .btb-tab.active i{transform:scale(1.1)}
@@ -67,7 +67,7 @@ export default function BottomNav() {
         .btb-center:active{transform:scale(0.9);box-shadow:0 2px 8px rgba(var(--accent-rgb),0.25)}
         .btb-center i{font-size:26px;color:var(--on-accent);transition:transform .2s}
         .btb-center:active i{transform:rotate(90deg)}
-        .btb-center-label{font-size:10px;font-weight:700;color:rgba(0,0,0,0.35);text-align:center;white-space:nowrap;line-height:1.2;transition:color .2s;margin-top:30px}
+        .btb-center-label{font-size:11px;font-weight:700;color:rgba(0,0,0,0.35);text-align:center;white-space:nowrap;line-height:1.2;transition:color .2s;margin-top:30px}
         [data-theme="dark"] .btb-center-label{color:rgba(255,255,255,0.35)}
 
 
@@ -115,7 +115,8 @@ export default function BottomNav() {
             >
               <div className="btb-icon-wrap">
                 <i className={`ti ti-${t.icon}`} />
-                {t.badge && t.badge > 0 && (
+                {/* `badge && …` showed a stray 0 when there was nothing unread */}
+                {t.badge != null && t.badge > 0 && (
                   <span className="btb-badge">{t.badge > 99 ? '99+' : t.badge}</span>
                 )}
               </div>

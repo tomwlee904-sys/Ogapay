@@ -39,7 +39,7 @@
   --fs-card: 16px;                          /* card titles */
   --fs-body: 15px; --lh-body: 1.65;
   --fs-small: 13px; --lh-small: 1.55;
-  --fs-label: 10.5px;                       /* mono eyebrow labels */
+  --fs-label: 11px;                         /* mono eyebrow labels (11px: the smallest we use for text) */
   --tracking-tight: -0.04em;
   --tracking-display: -0.06em;  /* wurk.fun sets Inter headings at -0.055 to -0.065em */
 

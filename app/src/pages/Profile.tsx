@@ -691,7 +691,7 @@ export default function Profile() {
                     </button>
                     {pairCode && (
                       <div style={{textAlign:'center',padding:'12px',marginBottom:10,background:'var(--bg2)',borderRadius:10,fontSize:12}}>
-                        <div style={{fontSize:10,color:'var(--text3)',marginBottom:4,fontWeight:600}}>Pairing Code (expires in 5 min)</div>
+                        <div style={{fontSize:12,color:'var(--text3)',marginBottom:4,fontWeight:600}}>Pairing Code (expires in 5 min)</div>
                         <div style={{fontSize:20,fontWeight:900,letterSpacing:3,color:'var(--text)',fontFamily:'monospace',wordBreak:'break-all'}}>{pairCode}</div>
                         <button type="button" onClick={() => { navigator.clipboard.writeText(pairCode); toast('Code copied!') }} style={{marginTop:6,fontSize:11,color:'var(--text2)',background:'none',border:'none',cursor:'pointer',textDecoration:'underline',fontFamily:'inherit'}}>Copy code</button>
                       </div>
@@ -1090,7 +1090,7 @@ export default function Profile() {
                     </div>
                     <span style={{flex:1,textAlign:'left'}}>{p.label}</span>
                     {connecting === p.id && <span className="spinner" style={{width:16,height:16,borderWidth:2}} />}
-                    {!installed && <span style={{fontSize:10,color:'var(--text3)',fontWeight:400}}>Not installed</span>}
+                    {!installed && <span style={{fontSize:12,color:'var(--text3)',fontWeight:400}}>Not installed</span>}
                   </button>
                 );
               })}

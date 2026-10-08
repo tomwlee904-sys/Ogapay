@@ -19,7 +19,7 @@ const S: Record<string, React.CSSProperties> = {
   statRow: { display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12, marginBottom: 16 },
   statCard: { background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 10, padding: 14, textAlign: 'center' as const },
   statNum: { fontFamily: 'Inter', fontSize: 20, fontWeight: 900 },
-  statLabel: { fontSize: 10, color: 'var(--text2)', marginTop: 2, fontWeight: 600, textTransform: 'uppercase' as const, letterSpacing: '0.04em' },
+  statLabel: { fontSize: 11, color: 'var(--text2)', marginTop: 2, fontWeight: 600, textTransform: 'uppercase' as const, letterSpacing: '0.04em' },
   pill: { padding: '5px 12px', borderRadius: 999, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text2)', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' },
   pillActive: { padding: '5px 12px', borderRadius: 999, border: `1px solid ${OGAPAY_BLUE}`, background: OGAPAY_BLUE, color: 'var(--on-accent)', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' },
   empty: { textAlign: 'center' as const, padding: '48px 20px', color: 'var(--text2)' },
@@ -297,8 +297,8 @@ export default function VaultHistory() {
                     <div style={{ width: '100%', height: 200, marginBottom: 8 }}>
                       <ResponsiveContainer>
                         <BarChart data={chartData} margin={{ top: 4, right: 4, left: -16, bottom: 0 }}>
-                          <XAxis dataKey="label" tick={{ fontSize: 10, fill: 'var(--text3)' }} axisLine={false} tickLine={false} />
-                          <YAxis tick={{ fontSize: 10, fill: 'var(--text3)' }} axisLine={false} tickLine={false}
+                          <XAxis dataKey="label" tick={{ fontSize: 11, fill: 'var(--text3)' }} axisLine={false} tickLine={false} />
+                          <YAxis tick={{ fontSize: 11, fill: 'var(--text3)' }} axisLine={false} tickLine={false}
                             tickFormatter={(v: number) => v >= 1000 ? `${(v/1000).toFixed(1)}k` : String(v)} />
                           <Tooltip content={<CustomTooltip />} />
                           <Bar dataKey="amount" fill={OGAPAY_BLUE} radius={[4, 4, 0, 0]} maxBarSize={32} />
@@ -330,19 +330,19 @@ export default function VaultHistory() {
                 </span>
                 <div style={{ display: 'flex', gap: 6 }}>
                   <button onClick={() => { setBatchPage(1); fetchBatches(1) }} disabled={batchPage <= 1}
-                    style={{ height: 28, padding: '0 8px', borderRadius: 6, border: '1px solid var(--border)', background: 'transparent', color: batchPage <= 1 ? 'var(--text3)' : 'var(--text2)', fontSize: 10, fontWeight: 700, cursor: batchPage <= 1 ? 'default' : 'pointer', fontFamily: 'inherit' }}>
+                    style={{ height: 28, padding: '0 8px', borderRadius: 6, border: '1px solid var(--border)', background: 'transparent', color: batchPage <= 1 ? 'var(--text3)' : 'var(--text2)', fontSize: 11, fontWeight: 700, cursor: batchPage <= 1 ? 'default' : 'pointer', fontFamily: 'inherit' }}>
                     First
                   </button>
                   <button onClick={() => { const p = Math.max(1, batchPage - 1); setBatchPage(p); fetchBatches(p) }} disabled={batchPage <= 1}
-                    style={{ height: 28, padding: '0 8px', borderRadius: 6, border: '1px solid var(--border)', background: 'transparent', color: batchPage <= 1 ? 'var(--text3)' : 'var(--text2)', fontSize: 10, fontWeight: 700, cursor: batchPage <= 1 ? 'default' : 'pointer', fontFamily: 'inherit' }}>
+                    style={{ height: 28, padding: '0 8px', borderRadius: 6, border: '1px solid var(--border)', background: 'transparent', color: batchPage <= 1 ? 'var(--text3)' : 'var(--text2)', fontSize: 11, fontWeight: 700, cursor: batchPage <= 1 ? 'default' : 'pointer', fontFamily: 'inherit' }}>
                     Prev
                   </button>
                   <button onClick={() => { const p = Math.min(batchTotalPages, batchPage + 1); setBatchPage(p); fetchBatches(p) }} disabled={batchPage >= batchTotalPages}
-                    style={{ height: 28, padding: '0 8px', borderRadius: 6, border: '1px solid var(--border)', background: 'transparent', color: batchPage >= batchTotalPages ? 'var(--text3)' : 'var(--text2)', fontSize: 10, fontWeight: 700, cursor: batchPage >= batchTotalPages ? 'default' : 'pointer', fontFamily: 'inherit' }}>
+                    style={{ height: 28, padding: '0 8px', borderRadius: 6, border: '1px solid var(--border)', background: 'transparent', color: batchPage >= batchTotalPages ? 'var(--text3)' : 'var(--text2)', fontSize: 11, fontWeight: 700, cursor: batchPage >= batchTotalPages ? 'default' : 'pointer', fontFamily: 'inherit' }}>
                     Next
                   </button>
                   <button onClick={() => { setBatchPage(batchTotalPages); fetchBatches(batchTotalPages) }} disabled={batchPage >= batchTotalPages}
-                    style={{ height: 28, padding: '0 8px', borderRadius: 6, border: '1px solid var(--border)', background: 'transparent', color: batchPage >= batchTotalPages ? 'var(--text3)' : 'var(--text2)', fontSize: 10, fontWeight: 700, cursor: batchPage >= batchTotalPages ? 'default' : 'pointer', fontFamily: 'inherit' }}>
+                    style={{ height: 28, padding: '0 8px', borderRadius: 6, border: '1px solid var(--border)', background: 'transparent', color: batchPage >= batchTotalPages ? 'var(--text3)' : 'var(--text2)', fontSize: 11, fontWeight: 700, cursor: batchPage >= batchTotalPages ? 'default' : 'pointer', fontFamily: 'inherit' }}>
                     Last
                   </button>
                 </div>
@@ -361,20 +361,20 @@ export default function VaultHistory() {
                     <div style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 10, padding: 14 }}>
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr auto', gap: 8, alignItems: 'center' }}>
                         <div>
-                          <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--text3)', marginBottom: 2 }}>Batch</div>
+                          <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--text3)', marginBottom: 2 }}>Batch</div>
                           <div style={{ fontWeight: 700, color: OGAPAY_BLUE, cursor: 'pointer' }}>#{batch.batchNumber || batch.id?.slice(0, 8) || '—'}</div>
                         </div>
                         <div>
-                          <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--text3)', marginBottom: 2 }}>Distribution Time</div>
+                          <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--text3)', marginBottom: 2 }}>Distribution Time</div>
                           <div style={{ fontSize: 12 }}>{batch.distributedAt ? new Date(batch.distributedAt).toLocaleString() : '—'}</div>
                         </div>
                         <div>
-                          <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--text3)', marginBottom: 2 }}>Total shared</div>
+                          <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--text3)', marginBottom: 2 }}>Total shared</div>
                           <div style={{ fontSize: 12, fontWeight: 700 }}>₦{(batch.totalNgn ?? batch.totalPay ?? 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
                           <span style={{
-                            padding: '3px 8px', borderRadius: 5, fontSize: 10, fontWeight: 700,
+                            padding: '3px 8px', borderRadius: 5, fontSize: 11, fontWeight: 700,
                             background: batch.status === 'COMPLETED' ? GREEN_BG : batch.status === 'PENDING' ? 'rgba(245,158,11,0.12)' : 'rgba(220,38,38,0.12)',
                             color: batch.status === 'COMPLETED' ? GREEN : batch.status === 'PENDING' ? '#f59e0b' : '#dc2626',
                           }}>
@@ -394,14 +394,14 @@ export default function VaultHistory() {
                             <div style={{ textAlign: 'center', padding: 12, fontSize: 12, color: 'var(--text2)' }}>Loading details...</div>
                           ) : batchDetail && batchDetail.length > 0 ? (
                             <>
-                              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: 8, padding: '8px 0', borderBottom: '1px solid var(--border)', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--text3)' }}>
+                              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: 8, padding: '8px 0', borderBottom: '1px solid var(--border)', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--text3)' }}>
                                 <span>Wallet</span>
                                 <span style={{ textAlign: 'right' as const }}>Amount</span>
                                 <span style={{ textAlign: 'right' as const }}>Vault Share</span>
                               </div>
                               {batchDetail.map((w: any, i: number) => (
                                 <div key={i} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: 8, padding: '8px 0', borderBottom: i < batchDetail.length - 1 ? '1px solid var(--border)' : 'none', fontSize: 12, alignItems: 'center' }}>
-                                  <span style={{ fontFamily: 'monospace', fontSize: 11, color: OGAPAY_BLUE }}>{truncateWallet(w.wallet || w.address || '')}{w.you && <b style={{ marginLeft: 6, fontFamily: 'inherit', fontSize: 10, color: 'var(--text)', background: 'var(--card2)', borderRadius: 999, padding: '1px 7px' }}>You</b>}</span>
+                                  <span style={{ fontFamily: 'monospace', fontSize: 11, color: OGAPAY_BLUE }}>{truncateWallet(w.wallet || w.address || '')}{w.you && <b style={{ marginLeft: 6, fontFamily: 'inherit', fontSize: 11, color: 'var(--text)', background: 'var(--card2)', borderRadius: 999, padding: '1px 7px' }}>You</b>}</span>
                                   <span style={{ textAlign: 'right' as const, fontWeight: 600 }}>₦{(w.amount || w.shareNgp || 0).toLocaleString()}</span>
                                   <span style={{ textAlign: 'right' as const, color: 'var(--text2)', fontSize: 11 }}>{(w.vaultSharePct || 0).toFixed(4)}%</span>
                                 </div>

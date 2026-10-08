@@ -141,7 +141,7 @@ export default function TabEarningsContent() {
         .en-tab:hover,.en-tab.active{border-color:var(--accent);color:var(--accent);background:rgba(var(--accent-rgb),.08)}
         .en-graph{display:flex;align-items:flex-end;gap:4px;height:120px}
         .en-bar{flex:1;border-radius:4px 4px 0 0;min-height:8px;position:relative;background:linear-gradient(to top, rgba(var(--accent-rgb),.3), var(--accent));transition:height .3s}
-        .en-bar .en-val{position:absolute;top:-22px;left:50%;transform:translateX(-50%);font-size:9px;color:var(--text3);white-space:nowrap}
+        .en-bar .en-val{position:absolute;top:-22px;left:50%;transform:translateX(-50%);font-size:11px;color:var(--text3);white-space:nowrap}
         .en-history{margin-top:16px}
         .en-h-item{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)}
         .en-h-item:last-child{border-bottom:0}

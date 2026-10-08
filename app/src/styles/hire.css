@@ -3,7 +3,7 @@
 .hr-head p { margin: 0; color: var(--text2); font-size: 14px; }
 .hr-steps { list-style: none; display: flex; gap: 18px; padding: 0; margin: 16px 0 0; flex-wrap: wrap; }
 .hr-steps li { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text3); }
-.hr-steps li span { width: 22px; height: 22px; border-radius: 7px; border: 1px solid var(--border); display: grid; place-items: center; font: 400 10px var(--font-mono, ui-monospace, monospace); }
+.hr-steps li span { width: 22px; height: 22px; border-radius: 7px; border: 1px solid var(--border); display: grid; place-items: center; font: 400 11px var(--font-mono, ui-monospace, monospace); }
 .hr-steps li.on { color: var(--text); }
 .hr-steps li.on span { border-color: var(--text); }
 .hr-steps li.done { color: var(--text2); }

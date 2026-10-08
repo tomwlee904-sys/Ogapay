@@ -28,7 +28,7 @@ export default function CreatorAudiences({ userId }: { userId: string }) {
         .ca-chip i{font-size:18px}
         .ca-chip b{font-size:15px;font-weight:800;letter-spacing:-.01em}
         .ca-chip span{font-size:12px;color:var(--text2)}
-        .ca-chip em{font-style:normal;font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:999px;background:var(--text);color:var(--bg)}
+        .ca-chip em{font-style:normal;font-size:11px;font-weight:700;padding:2px 7px;border-radius:999px;background:var(--text);color:var(--bg)}
         .ca-sub{margin:8px 0 0;font-size:12px;color:var(--text3);display:flex;gap:5px;align-items:baseline}
       `}</style>
       <h2>Creator{top.tier ? ` · ${top.tier}` : ''}</h2>

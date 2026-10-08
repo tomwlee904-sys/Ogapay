@@ -311,7 +311,7 @@ export default function StoreProduct() {
         .sp-bio{font-size:12.5px;line-height:1.6;color:var(--text2);margin:10px 0 0}
         .sp-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
         .sp-stats div{border:1px solid var(--border);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:4px}
-        .sp-stats span{font:400 9px var(--font-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--text2)}
+        .sp-stats span{font:400 11px var(--font-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--text2)}
         .sp-stats b{font-size:16px;font-weight:600}
         .sp-reviews{padding:22px;margin-top:14px}
         .sp-review{border-top:1px solid var(--border);padding:14px 0}

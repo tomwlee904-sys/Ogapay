@@ -113,7 +113,7 @@ export default function Sidebar() {
           )}
           {user?.role === 'ADMIN' && (
             <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px solid var(--border)' }}>
-              <div className="sidebar-section" style={{ fontSize: 10, marginBottom: 4 }}>ADMIN</div>
+              <div className="sidebar-section" style={{ fontSize: 11, marginBottom: 4 }}>ADMIN</div>
               <Link className="sidebar-link" to="/admin">
                 <i className="ti ti-shield" /> <span><strong>Admin Panel</strong><small>Platform management</small></span>
               </Link>

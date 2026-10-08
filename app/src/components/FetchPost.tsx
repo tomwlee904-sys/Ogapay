@@ -89,7 +89,7 @@ export default function FetchPost({ onPostFetched }: { onPostFetched?: (data: Po
       <div style={{ padding: '16px 20px' }}>
         {/* URL Input */}
         <label style={{
-          fontSize: 10, fontWeight: 700, color: C.text3,
+          fontSize: 11, fontWeight: 700, color: C.text3,
           textTransform: 'uppercase', letterSpacing: '0.08em',
           display: 'block', marginBottom: 6,
         }}>
@@ -149,7 +149,7 @@ export default function FetchPost({ onPostFetched }: { onPostFetched?: (data: Po
         {error && (
           <p style={{ fontSize: 11, color: 'var(--red)', margin: '4px 0 0' }}>{error}</p>
         )}
-        <p style={{ fontSize: 10, color: C.text3, margin: '4px 0 0' }}>
+        <p style={{ fontSize: 12, color: C.text3, margin: '4px 0 0' }}>
           Enter the URL of the X post you want to promote.
         </p>
       </div>

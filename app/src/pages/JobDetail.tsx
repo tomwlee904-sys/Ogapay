@@ -563,10 +563,10 @@ function WurkJobDetailView(props: any) {
         .wjd-agent-left{display:flex;align-items:flex-start;gap:16px;min-width:0}
         .wjd-avatar{display:grid;place-items:center;overflow:hidden;background:linear-gradient(145deg,rgba(var(--accent-rgb),.10),rgba(16,185,129,.14));color:#0f172a;font-weight:900;border:0.5px solid var(--border,#e5e7eb);flex:0 0 auto;width:52px;height:52px;border-radius:50%;font-size:18px}
         .wjd-avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%}
-        .wjd-kicker{color:var(--text3,#9ca3af);letter-spacing:.1em;text-transform:uppercase;font-weight:700;font-size:10px;margin-bottom:4px}
+        .wjd-kicker{color:var(--text3,#9ca3af);letter-spacing:.1em;text-transform:uppercase;font-weight:700;font-size:11px;margin-bottom:4px}
         .wjd-name{display:flex;align-items:center;gap:8px;color:var(--text,#0f172a);font-size:18px;font-weight:900;line-height:1.2;margin-bottom:3px}
         .wjd-handle{color:var(--text2,#6b7280);font-size:13px;font-weight:500}
-        .wjd-mark{display:grid;place-items:center;width:20px;height:20px;border-radius:5px;background:var(--accent);color:var(--on-accent);font-size:10px;font-weight:900}
+        .wjd-mark{display:grid;place-items:center;width:20px;height:20px;border-radius:5px;background:var(--accent);color:var(--on-accent);font-size:11px;font-weight:900}
         .wjd-actions-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex-shrink:0}
         .wjd-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:100px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
         .wjd-badge-open{background:rgba(var(--green-rgb),0.12);border:1px solid rgba(var(--green-rgb),0.3);color:var(--green)}
@@ -588,7 +588,7 @@ function WurkJobDetailView(props: any) {
 
         .wjd-reward{display:flex;align-items:center;justify-content:center;gap:20px;padding:20px 24px;margin-bottom:16px;background:rgba(var(--accent-rgb),0.06);border-color:rgba(var(--accent-rgb),0.18)}
         .wjd-dollar{width:42px;height:42px;border-radius:12px;background:rgba(var(--accent-rgb),0.10);color:var(--accent);display:grid;place-items:center;font-size:18px;font-weight:900;flex-shrink:0}
-        .wjd-reward-title{color:var(--text3,#6b7280);font-size:10px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;margin-bottom:6px}
+        .wjd-reward-title{color:var(--text3,#6b7280);font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;margin-bottom:6px}
         .wjd-amount{background:linear-gradient(90deg,var(--accent),var(--accent),var(--accent),var(--accent),var(--accent));background-size:200% auto;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:oga-sweep 4s linear infinite;font-size:clamp(28px,4vw,36px);font-weight:900;display:inline-block}
         .wjd-token{background:linear-gradient(90deg,var(--accent),var(--accent),var(--accent));background-size:200% auto;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:oga-sweep 4s linear infinite;font-size:14px;font-weight:900;margin-left:8px;display:inline-block}
         .wjd-usd{color:var(--text3,#64748b);font-size:12px;font-weight:600;letter-spacing:.06em;margin-top:3px}
@@ -638,7 +638,7 @@ function WurkJobDetailView(props: any) {
         .wjd-config-strip{display:grid;grid-template-columns:1fr 1fr 1fr;border:0.5px solid var(--border,#e5e7eb);border-radius:12px;overflow:hidden;margin-bottom:24px}
         .wjd-config-cell{padding:12px 16px;border-right:0.5px solid var(--border,#e5e7eb)}
         .wjd-config-cell:last-child{border-right:none}
-        .wjd-config-cell-label{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3,#9ca3af);font-weight:700;margin-bottom:5px}
+        .wjd-config-cell-label{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3,#9ca3af);font-weight:700;margin-bottom:5px}
         .wjd-config-cell-value{font-size:14px;font-weight:700;color:var(--text,#0f172a)}
         .wjd-info-section-title{font-size:15px;font-weight:700;color:var(--text,#0f172a);margin-bottom:4px}
         .wjd-info-section-sub{font-size:13px;color:var(--text2,#6b7280);margin-bottom:12px}

@@ -184,8 +184,8 @@ function JobDetailModal({ job, onClose, onApply }: { job: any; onClose: () => vo
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
           <div style={{ flex: 1 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-              <span style={{ padding: '3px 8px', borderRadius: 5, background: 'rgba(var(--accent-rgb),0.08)', color: OGAPAY_BLUE, fontSize: 10, fontWeight: 700 }}>{job.category || job.taskCategory || 'Task'}</span>
-              {job.featured && <span style={{ padding: '3px 8px', borderRadius: 5, background: 'rgba(245,158,11,0.12)', color: 'var(--gold)', fontSize: 10, fontWeight: 700 }}>Featured</span>}
+              <span style={{ padding: '3px 8px', borderRadius: 5, background: 'rgba(var(--accent-rgb),0.08)', color: OGAPAY_BLUE, fontSize: 11, fontWeight: 700 }}>{job.category || job.taskCategory || 'Task'}</span>
+              {job.featured && <span style={{ padding: '3px 8px', borderRadius: 5, background: 'rgba(245,158,11,0.12)', color: 'var(--gold)', fontSize: 11, fontWeight: 700 }}>Featured</span>}
             </div>
             <h2 style={{ fontFamily: 'Inter', fontSize: 18, fontWeight: 900, margin: 0 }}>{job.title}</h2>
           </div>
@@ -229,7 +229,7 @@ function JobDetailModal({ job, onClose, onApply }: { job: any; onClose: () => vo
               {(job.poster?.avatarUrl || job.poster?.avatar || job.creatorAvatar) ? <img src={sized(job.poster?.avatarUrl || job.poster?.avatar || job.creatorAvatar, 40, true)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : formatAddress(job.creatorName || job.creator?.username || job.creator || '')}
             </div>
             <div>
-              <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 2 }}>Listed by</div>
+              <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 2 }}>Listed by</div>
               <div style={{ fontWeight: 800, fontSize: 14 }}>{job.creatorName || job.creator?.username || job.creator || 'Anonymous'}</div>
             </div>
           </div>
@@ -250,29 +250,29 @@ function JobDetailModal({ job, onClose, onApply }: { job: any; onClose: () => vo
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
           {/* Configuration */}
           <div style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 12, padding: '14px 16px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 10, fontWeight: 800, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 800, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>
               <i className="ti ti-adjustments" style={{ fontSize: 14 }} /> Configuration
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               <div>
-                <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', marginBottom: 2 }}>Status</div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', marginBottom: 2 }}>Status</div>
                 <div style={{ fontSize: 13, fontWeight: 800, display: 'flex', alignItems: 'center', gap: 6, color: job.status === 'OPEN' ? 'var(--accent)' : 'var(--text)' }}>
                   <span style={{ width: 7, height: 7, borderRadius: '50%', background: job.status === 'OPEN' ? 'var(--accent)' : 'var(--text3)', display: 'inline-block' }} />
                   {job.status === 'OPEN' ? 'Open' : (job.status || 'Closed')}
                 </div>
               </div>
               <div>
-                <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', marginBottom: 2 }}>Type</div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', marginBottom: 2 }}>Type</div>
                 <div style={{ fontSize: 13, fontWeight: 700 }}>{job.category || job.taskCategory || 'General'}</div>
               </div>
               {job.difficulty && (
                 <div>
-                  <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', marginBottom: 2 }}>Difficulty</div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', marginBottom: 2 }}>Difficulty</div>
                   <div style={{ fontSize: 13, fontWeight: 700 }}>{job.difficulty}</div>
                 </div>
               )}
               <div>
-                <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', marginBottom: 2 }}>Closes In</div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', marginBottom: 2 }}>Closes In</div>
                 <div style={{ fontSize: 13, fontWeight: 800, color: timeLeft === 'Expired' ? 'var(--red)' : 'var(--gold)' }}>{timeLeft || '—'}</div>
               </div>
             </div>
@@ -280,26 +280,26 @@ function JobDetailModal({ job, onClose, onApply }: { job: any; onClose: () => vo
 
           {/* Participation */}
           <div style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 12, padding: '14px 16px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 10, fontWeight: 800, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 800, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>
               <i className="ti ti-users" style={{ fontSize: 14 }} /> Participation
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               <div>
-                <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', marginBottom: 2 }}>Community</div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', marginBottom: 2 }}>Community</div>
                 <div style={{ fontSize: 13, fontWeight: 700 }}>{job.community || 'All'}</div>
               </div>
               <div>
-                <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', marginBottom: 2 }}>Max Slots</div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', marginBottom: 2 }}>Max Slots</div>
                 <div style={{ fontSize: 13, fontWeight: 800 }}>{job.slots || 'Unlimited'}</div>
               </div>
               <div>
-                <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', marginBottom: 2 }}>Capacity</div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', marginBottom: 2 }}>Capacity</div>
                 <div style={{ fontSize: 13, fontWeight: 800 }}>
                   {job.slots ? `${job.slots - (job.slotsRemaining ?? 0)} / ${job.slots}` : 'Unlimited'}
                 </div>
               </div>
               <div>
-                <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', marginBottom: 2 }}>Open Slots</div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', marginBottom: 2 }}>Open Slots</div>
                 <div style={{ fontSize: 13, fontWeight: 800, color: OGAPAY_BLUE }}>{job.slotsRemaining ?? job.slots ?? 'Unlimited'}</div>
               </div>
             </div>
@@ -322,7 +322,7 @@ function JobDetailModal({ job, onClose, onApply }: { job: any; onClose: () => vo
 
         {/* ── DESCRIPTION ── */}
         <div style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 12, padding: '14px 16px', marginBottom: 16 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 10, fontWeight: 800, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10, paddingBottom: 10, borderBottom: '1px solid var(--border)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 800, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10, paddingBottom: 10, borderBottom: '1px solid var(--border)' }}>
             <i className="ti ti-file-text" style={{ fontSize: 14 }} /> Description
           </div>
           <div className="tk-job-text" style={{ fontSize: 13, color: 'var(--text)', lineHeight: 1.7 }} dangerouslySetInnerHTML={{ __html: renderJobText(job.description) }} />
@@ -331,7 +331,7 @@ function JobDetailModal({ job, onClose, onApply }: { job: any; onClose: () => vo
         {/* ── REQUIREMENTS ── */}
         {job.requirements && (
           <div style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 12, padding: '14px 16px', marginBottom: 16 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 10, fontWeight: 800, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10, paddingBottom: 10, borderBottom: '1px solid var(--border)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 800, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10, paddingBottom: 10, borderBottom: '1px solid var(--border)' }}>
               <i className="ti ti-checklist" style={{ fontSize: 14 }} /> Requirements
             </div>
             <div style={{ fontSize: 13, color: 'var(--text)', lineHeight: 1.7 }}>{job.requirements}</div>
@@ -353,7 +353,7 @@ function JobDetailModal({ job, onClose, onApply }: { job: any; onClose: () => vo
         {/* ── SUBMISSIONS PANEL ── */}
         {showSubmissions && (
           <div style={{ marginTop: 12, padding: '14px 16px', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 12 }}>
-            <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10 }}>Submissions</div>
+            <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10 }}>Submissions</div>
             {submissionsLoading ? (
               <div style={{ fontSize: 12, color: 'var(--text3)' }}>Loading...</div>
             ) : submissions.length === 0 ? (

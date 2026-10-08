@@ -138,7 +138,7 @@ export default function DevicePairing() {
           )}
 
           <div style={{ padding: 24 }}>
-            <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>Pairing Code</div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>Pairing Code</div>
 
             {/* Code display */}
             <div style={{

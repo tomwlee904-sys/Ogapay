@@ -158,13 +158,13 @@ export default function FAQ() {
         .fq-icon{width:48px;height:48px;border-radius:14px;border:1px solid var(--border);background:var(--card2);display:grid;place-items:center;font-size:22px;color:var(--text2);flex-shrink:0}
         .fq-bar{display:flex;justify-content:space-between;align-items:center;gap:16px;margin:26px 0 22px;padding-bottom:22px;border-bottom:1px solid var(--border);flex-wrap:wrap}
         .fq-bar .ui-search{flex:1;max-width:440px}
-        .fq-count{font:400 10px var(--font-mono);color:var(--text2);letter-spacing:.04em}
+        .fq-count{font:400 12px var(--font-mono);color:var(--text2);letter-spacing:.04em}
         .fq-layout{display:grid;grid-template-columns:230px minmax(0,1fr);gap:28px;align-items:start}
         .fq-side{position:sticky;top:calc(var(--nav-h,64px) + 20px)}
-        .fq-side-head{display:flex;justify-content:space-between;padding:0 10px 10px;font:400 9px var(--font-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--text2)}
+        .fq-side-head{display:flex;justify-content:space-between;padding:0 10px 10px;font:400 11px var(--font-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--text2)}
         .fq-topic{width:100%;display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:10px;border:0;background:none;cursor:pointer;font:400 12.5px 'Inter',system-ui,sans-serif;color:var(--text2);text-align:left}
-        .fq-topic .n{font:400 10px var(--font-mono);color:var(--text3);width:18px}
-        .fq-topic .c{margin-left:auto;font:400 10px var(--font-mono);color:var(--text3)}
+        .fq-topic .n{font:400 11px var(--font-mono);color:var(--text3);width:18px}
+        .fq-topic .c{margin-left:auto;font:400 11px var(--font-mono);color:var(--text3)}
         .fq-topic:hover{color:var(--text)}
         .fq-topic.on{background:var(--card2);color:var(--text);font-weight:500}
         .fq-sec{margin-bottom:30px;scroll-margin-top:90px}

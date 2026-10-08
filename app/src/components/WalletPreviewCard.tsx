@@ -72,7 +72,7 @@ export default function WalletPreviewCard({ data }: WalletPreviewCardProps) {
 
       {/* Wallet info sub-card */}
       <div style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 10, padding: 14, marginBottom: 10 }}>
-        <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text3)', marginBottom: 4 }}>Wallet</div>
+        <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text3)', marginBottom: 4 }}>Wallet</div>
         <div style={{ fontFamily: 'monospace', fontSize: 13, fontWeight: 600, color: 'var(--text)', wordBreak: 'break-all' }}>
           {data?.user?.name ? (
             <span>

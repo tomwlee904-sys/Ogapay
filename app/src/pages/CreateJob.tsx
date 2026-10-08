@@ -1083,7 +1083,7 @@ function CreateTask() {
         .cj-panel-head b{font-size:14px;font-weight:600}
         .cj-menu{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;padding:16px}
         .cj-steps{display:flex;justify-content:center;align-items:center;gap:12px;flex-wrap:wrap;margin:26px 0 0;font-size:11.5px;color:var(--text2)}
-        .cj-steps span.n{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:6px;border:1px solid var(--border);font:400 10px var(--font-mono);margin-right:6px}
+        .cj-steps span.n{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:6px;border:1px solid var(--border);font:400 11px var(--font-mono);margin-right:6px}
         .cj-steps i{font-size:12px;color:var(--text3)}
         .cj-foot{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:24px;padding-top:18px;border-top:1px solid var(--border);font-size:12px;color:var(--text2)}
         .cj-foot a{display:inline-flex;align-items:center;gap:6px;color:var(--text);font-weight:500;text-decoration:none}

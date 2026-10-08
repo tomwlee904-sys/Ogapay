@@ -381,7 +381,7 @@ export default function CampaignWizard() {
               >
                 <div style={{ fontSize: 22, marginBottom: 4, color: "var(--text)" }}><i className={`ti ${t.icon}`} aria-hidden="true" /></div>
                 <div style={{ fontSize: 12, fontWeight: 600, color: "var(--text)" }}>{t.label}</div>
-                <div style={{ fontSize: 10, color: "var(--text3)", marginTop: 2 }}>{t.desc}</div>
+                <div style={{ fontSize: 12, color: "var(--text3)", marginTop: 2 }}>{t.desc}</div>
               </button>
             ))}
           </div>

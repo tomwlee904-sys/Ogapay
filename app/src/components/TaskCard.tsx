@@ -357,7 +357,7 @@ export default function TaskCard({ task, hideApply }: { task: CardTask; hideAppl
         background: isDark ? 'transparent' : 'linear-gradient(135deg, rgba(59,91,219,0.24) 0%, rgba(255,255,255,0.45) 50%, rgba(16,185,129,0.24) 100%)',
       }}>
         <div style={{
-          fontSize: 10, fontWeight: 700,
+          fontSize: 11, fontWeight: 700,
           color: isDark ? 'rgba(255,255,255,0.5)' : 'var(--text3, #9ca3af)',
           letterSpacing: '0.1em',
           textTransform: 'uppercase',
@@ -387,7 +387,7 @@ export default function TaskCard({ task, hideApply }: { task: CardTask; hideAppl
       <div style={{ padding: '16px 20px 8px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 7 }}>
           <span style={{
-            fontSize: 10, fontWeight: 700,
+            fontSize: 11, fontWeight: 700,
             color: 'var(--text3, #9ca3af)',
             textTransform: 'uppercase', letterSpacing: '0.08em',
           }}>
@@ -515,7 +515,7 @@ export default function TaskCard({ task, hideApply }: { task: CardTask; hideAppl
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       }}>
         <span style={{
-          fontSize: 10, fontWeight: 800,
+          fontSize: 11, fontWeight: 800,
           color: isDark ? 'rgba(255,255,255,0.5)' : 'var(--text3, #9ca3af)',
           textTransform: 'uppercase', letterSpacing: '0.08em',
           display: 'flex', alignItems: 'center', gap: 5,

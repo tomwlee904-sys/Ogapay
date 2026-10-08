@@ -43,7 +43,7 @@
 .of-globe { display: block; width: 100%; max-width: 100%; min-width: 0; height: 220px; }
 .of-nav { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 40px; padding: 0 18px; }
 .of-col { display: flex; flex-direction: column; }
-.of-label { margin: 0 0 10px; font: 400 9px/1.3 'JetBrains Mono', ui-monospace, monospace; letter-spacing: .1em; text-transform: uppercase; color: var(--of-muted); }
+.of-label { margin: 0 0 10px; font: 400 11px/1.3 'JetBrains Mono', ui-monospace, monospace; letter-spacing: .1em; text-transform: uppercase; color: var(--of-muted); }
 .of-link { display: flex; align-items: center; justify-content: space-between; gap: 24px; min-height: 40px; font-size: 13px; color: var(--of-ink); text-decoration: none; }
 .of-link i { font-size: 13px; color: var(--of-faint); transition: transform .2s ease, color .2s ease; }
 .of-link:hover i { color: var(--of-ink); transform: translate(2px, -2px); }
@@ -53,7 +53,7 @@
 .of-socials { display: flex; gap: 8px; }
 .of-social { width: 44px; height: 44px; border-radius: 10px; border: 1px solid var(--of-line); background: var(--of-card); color: var(--of-muted); display: grid; place-items: center; font-size: 17px; text-decoration: none; transition: color .15s ease, border-color .15s ease; }
 .of-social:hover { color: var(--of-ink); border-color: var(--of-faint); }
-.of-tag { display: inline-flex; align-items: center; gap: 10px; font: 400 10px 'JetBrains Mono', ui-monospace, monospace; letter-spacing: .02em; color: var(--of-muted); }
+.of-tag { display: inline-flex; align-items: center; gap: 10px; font: 400 12px 'JetBrains Mono', ui-monospace, monospace; letter-spacing: .02em; color: var(--of-muted); }
 .of-tag span { width: 20px; height: 1px; background: var(--of-line); }
 
 .of-bottom { display: flex; justify-content: space-between; align-items: center; gap: 12px 24px; flex-wrap: wrap; margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--of-line); font-size: 11px; color: var(--of-muted); }

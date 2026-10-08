@@ -141,7 +141,7 @@ function PaymentMockup() {
         <div style={{ fontSize: 12, fontWeight: 700, color: "#1C3316" }}>Instant Payout</div>
         <div style={{ display: "flex", gap: 4 }}>
           {["NGN", "USDC", "SOL"].map(c => (
-            <span key={c} style={{ padding: "1px 7px", border: "1px solid rgba(10,10,10,.1)", borderRadius: 99, fontSize: 9, fontWeight: 600, color: "#0a0a0a" }}>{c}</span>
+            <span key={c} style={{ padding: "1px 7px", border: "1px solid rgba(10,10,10,.1)", borderRadius: 99, fontSize: 11, fontWeight: 600, color: "#0a0a0a" }}>{c}</span>
           ))}
         </div>
       </div>

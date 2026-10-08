@@ -426,7 +426,7 @@ footer { @apply border-t border-[var(--border)] py-10 px-6 text-center bg-[var(-
 }
 .store-seller-meta {
   @apply text-[var(--text3)];
-  font-size: 10.5px;
+  font-size: 12px;
 }
 .store-rating {
   @apply flex items-center shrink-0 bg-[var(--card)] border border-[var(--border)] rounded-[999px];
@@ -435,7 +435,7 @@ footer { @apply border-t border-[var(--border)] py-10 px-6 text-center bg-[var(-
 }
 .store-rating-text {
   @apply font-bold text-[var(--text2)];
-  font-size: 10.5px;
+  font-size: 12px;
 }
 
 /* ─── Store Price Section ─── */

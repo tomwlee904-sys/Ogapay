@@ -62,7 +62,7 @@ const css = `
   .og-prog-fill { height:100%; background:#111; border-radius:99px; transition:width .4s ease; }
 
   /* step label */
-  .og-step-lbl { font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.1em; color:#a1a1aa; margin-bottom:12px; display:flex; align-items:center; gap:6px; }
+  .og-step-lbl { font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.1em; color:#a1a1aa; margin-bottom:12px; display:flex; align-items:center; gap:6px; }
 
   /* platform grid */
   .og-platform-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:22px; position:relative; }
@@ -95,7 +95,7 @@ const css = `
   .og-provider-opt { border:1.5px solid #e4e4e7; border-radius:8px; padding:10px 12px; cursor:pointer; text-align:center; font-size:12px; font-weight:700; transition:border-color .14s,background .14s; display:flex; flex-direction:column; align-items:center; gap:6px; }
   .og-provider-opt:hover { border-color:#a1a1aa; background:#fafafa; }
   .og-provider-opt.sel { border-color:#111; background:#f9f9f9; }
-  .og-provider-opt span { font-size:10px; color:#71717a; font-weight:600; }
+  .og-provider-opt span { font-size:11px; color:#71717a; font-weight:600; }
 
   /* checklist */
   .og-checklist { background:#fff; border:1.5px solid #e4e4e7; border-radius:12px; padding:14px 16px; margin-bottom:18px; }
@@ -131,9 +131,9 @@ const css = `
   .og-video-play { width:36px; height:36px; border-radius:50%; background:rgba(0,0,0,.08); display:grid; place-items:center; }
   .og-video-meta { padding:10px 12px; display:flex; align-items:flex-start; justify-content:space-between; }
   .og-video-meta h4 { font-size:12px; font-weight:700; margin-bottom:2px; }
-  .og-video-meta small { font-size:10px; color:#71717a; font-weight:700; text-transform:uppercase; letter-spacing:.05em; }
+  .og-video-meta small { font-size:11px; color:#71717a; font-weight:700; text-transform:uppercase; letter-spacing:.05em; }
   .og-divider { border-top:1px solid #e4e4e7; margin:14px 0; }
-  .og-links-title { font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.1em; color:#a1a1aa; margin:14px 0 10px; }
+  .og-links-title { font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.1em; color:#a1a1aa; margin:14px 0 10px; }
   .og-rlink { display:flex; align-items:center; gap:7px; font-size:13px; font-weight:600; color:#111; text-decoration:none; margin-bottom:8px; transition:color .14s; }
   .og-rlink:hover { color:var(--accent); }
 

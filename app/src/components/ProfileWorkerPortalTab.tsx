@@ -124,7 +124,7 @@ export default function TabWorkerPortalContent() {
         }
         .wp-ws-tile:hover{transform:none;box-shadow:0 4px 16px rgba(0,0,0,.06)}
         .wp-ws-tile i{font-size:20px}
-        .wp-ws-tile span{font-size:10px;color:var(--text3);text-align:center;line-height:1.2;font-weight:600}
+        .wp-ws-tile span{font-size:11px;color:var(--text3);text-align:center;line-height:1.2;font-weight:600}
         @media(max-width:700px){.wp-workspace-grid{grid-template-columns:repeat(3,1fr)}}
         @media(max-width:400px){.wp-workspace-grid{grid-template-columns:repeat(2,1fr)}}
         .wp-nav-tile{
@@ -160,7 +160,7 @@ export default function TabWorkerPortalContent() {
         }
         .wp-edit-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--card)}
         .wp-bio-box{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px;margin-top:14px}
-        .wp-bio-label{font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.06em;margin-bottom:6px;text-transform:uppercase}
+        .wp-bio-label{font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.06em;margin-bottom:6px;text-transform:uppercase}
         .wp-bio-text{font-size:13px;color:var(--text2);line-height:1.5}
         .wp-stats-list{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden}
         .wp-stat-row{
