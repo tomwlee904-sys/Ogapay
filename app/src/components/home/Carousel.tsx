@@ -2,7 +2,8 @@ import { ReactNode, useEffect, useRef, useState } from "react";
 
 /* Paged carousel: N cards per view (3 / 2 / 1 by width), a "01 / 03" counter
    and prev/next buttons underneath. Auto-advances unless hovered, focused or
-   the user prefers reduced motion. */
+   the user prefers reduced motion. Every page is full: the last one shows the
+   last N items (7 jobs page as 1-3, 4-6, 5-7, not 1-3, 4-6, 7 alone). */
 export default function Carousel<T>({ items, render, label, autoMs = 6500 }: {
   items: T[];
   render: (item: T, i: number) => ReactNode;
@@ -39,6 +40,8 @@ export default function Carousel<T>({ items, render, label, autoMs = 6500 }: {
   }, [paused, stopped, pages, autoMs]);
 
   const go = (p: number) => setPage(((p % pages) + pages) % pages);
+  // First item on this page; the last page backs up so it's never half empty
+  const start = Math.max(0, Math.min(page * perView, items.length - perView));
   const pad = (n: number) => String(n).padStart(2, "0");
 
   return (
@@ -63,10 +66,10 @@ export default function Carousel<T>({ items, render, label, autoMs = 6500 }: {
       <div className="hv-car-view">
         <div
           className="hv-car-track"
-          style={{ transform: `translateX(calc(${-page} * (100% + var(--hv-car-gap))))`, ["--hv-per" as any]: perView }}
+          style={{ transform: `translateX(calc(${-start} * (100% + var(--hv-car-gap)) / ${perView}))`, ["--hv-per" as any]: perView }}
         >
           {items.map((it, i) => (
-            <div className="hv-car-slide" key={i} aria-hidden={Math.floor(i / perView) !== page}>
+            <div className="hv-car-slide" key={i} aria-hidden={i < start || i >= start + perView}>
               {render(it, i)}
             </div>
           ))}
