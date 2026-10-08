@@ -117,3 +117,30 @@
 .hc-cmeta i { font-size: 14px; }
 .hc-community .hc-pdesc { -webkit-line-clamp: 3; }
 .hc-cpaid { color: var(--money); font-weight: 600; font-size: 13px; }
+
+/* Featured rows keep one card on phones and three from tablet width, including loading. */
+.hv-car--loading { --hv-per: 1; }
+@media (min-width: 768px) { .hv-car--loading { --hv-per: 3; } }
+.hv-car--one-or-three :is(.hc-top, .hc-foot, .hc-story-foot) { flex-wrap: wrap; gap: 8px; }
+
+/* Keep the featured collection headers compact, with the browse link beside
+   the title from tablet width. Scope this to the three homepage collections. */
+.hv-panel--featured .hv-shead .hv-h2 { font-size: 28px; line-height: 1.18; }
+.hv-panel--featured .hv-car { margin-top: 16px; }
+@media (max-width: 767px) {
+  .hv-panel--featured { padding: 17px 14px 14px; }
+  .hv-panel--featured .hv-shead { gap: 2px; }
+  .hv-panel--featured .hv-sub { display: none; }
+  .hv-panel--featured .hv-more { padding: 8px 0; }
+  .hv-panel--featured .hv-car { margin-top: 4px; }
+}
+@media (min-width: 768px) and (max-width: 1024px) {
+  .hv-panel--featured { padding: 25px 27px 20px; }
+  .hv-panel--featured .hv-shead { flex-direction: row; align-items: flex-end; gap: 20px; }
+}
+
+/* Compact status legends stay on one line inside the three-card tablet row. */
+.hv-panel--featured .hc-subs { container-type: inline-size; }
+.hv-panel--featured .hc-dots { flex-wrap: nowrap; gap: 4px; font-size: clamp(9px, 5.8cqi, 11px); overflow-x: auto; scrollbar-width: none; }
+.hv-panel--featured .hc-dots li { flex: 0 0 auto; gap: 3px; white-space: nowrap; }
+.hv-panel--featured .hc-dots li::before { width: 3px; height: 3px; flex-shrink: 0; }
