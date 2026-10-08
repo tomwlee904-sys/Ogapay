@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom'
 import App from './App'
 import { reloadForUpdate } from './lib/staleBuild'
 import { initErrorReporting } from './lib/errorReport'
+import { initInstall } from './lib/install'
 // Text fonts, served from ogapay.app (they used to block the first paint from Google)
 import './styles/fonts.css'
 // Icons: the Tabler font cut down to the icons we use (scripts/icons-subset.mjs)
@@ -20,6 +21,9 @@ import './styles/nav.css'
 
 // A page's code from an older deploy failed to load: reload once for the new version
 window.addEventListener('vite:preloadError', (e) => { if (reloadForUpdate()) e.preventDefault() })
+
+// "Install the app": keep the browser's install offer (it can come before React renders)
+initInstall()
 
 // Error alerts (Sentry), only when VITE_SENTRY_DSN is set; loads after the page
 initErrorReporting()

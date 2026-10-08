@@ -9,6 +9,7 @@ import ProtectedRoute from './components/ProtectedRoute'
 import ErrorBoundary from './components/ErrorBoundary'
 import { ToastProvider } from './components/Toast'
 import SignInHost from './components/auth/SignInHost'
+import { InstallHost } from './components/InstallApp'
 import PageLoader from './components/PageLoader'
 import AdminGuard from './components/AdminGuard'
 import { JobAlertProvider } from './contexts/JobAlertContext'
@@ -112,6 +113,7 @@ export default function App() {
         <Suspense fallback={<PageLoader />}>
           <JobAlertProvider>
           <SignInHost />
+          <InstallHost />
           <CanonicalUrl />
           <Routes>
             {/* ── Public routes ── */}

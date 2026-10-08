@@ -19,13 +19,19 @@ export default defineConfig({
       manifest: {
         name: "OgaPay - Nigeria's Microtask Marketplace",
         short_name: 'OgaPay',
-        description: 'Earn NGN and crypto by completing tasks, or hire workers for your projects.',
+        description: 'Earn in Naira or USDC doing paid jobs, or hire people for yours. Money held in escrow until work is approved.',
         theme_color: '#111111',
         background_color: '#111111',
         display: 'standalone',
         orientation: 'portrait-primary',
         start_url: '/',
-        icons: [{ src: '/logo-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' }],
+        // The mark sits inside the middle 80%, so the same image works where
+        // Android crops icons to its own shape (maskable)
+        icons: [
+          { src: '/favicon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+          { src: '/logo-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+          { src: '/logo-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+        ],
       },
       selfDestroying: true,
     }),

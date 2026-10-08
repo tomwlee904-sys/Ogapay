@@ -7,6 +7,7 @@ import { useCurrency } from '../context/CurrencyContext'
 import { sized } from '../lib/img'
 import { displayPref } from '../lib/money'
 import CurrencySwitch from './CurrencySwitch'
+import { InstallMenuItem } from './InstallApp'
 
 interface DrawerProps {
   open: boolean
@@ -106,6 +107,8 @@ export default function Drawer({ open, onClose }: DrawerProps) {
               <span className="oga-drawer-icon"><i className="ti ti-headset" /></span>
               <span><strong>Support</strong><small>Contact support</small></span>
             </Link>
+
+            <InstallMenuItem onDone={onClose} />
 
             <CurrencySwitch />
 
@@ -251,6 +254,8 @@ export default function Drawer({ open, onClose }: DrawerProps) {
                 <span className="oga-drawer-icon"><i className="ti ti-headset" /></span>
                 <span><strong>Support</strong><small>Contact support</small></span>
               </Link>
+
+              <InstallMenuItem onDone={onClose} />
 
               <div className="oga-drawer-divider" />
 
