@@ -39,7 +39,9 @@ function Copy({ text }: { text: string }) {
 function Row({ r, onDone }: { r: Rec; onDone: (id: string, msg: string) => void }) {
   const [mode, setMode] = useState<null | 'approve' | 'reject' | 'revoke'>(null)
   const [reason, setReason] = useState('')
-  const [level, setLevel] = useState(r.idType === 'BVN' || r.provider === 'didit' ? 2 : Math.max(1, r.kycTier || 1))
+  // A BVN or a Didit ID + selfie check asks for Level 2; a NIN (typed in, or Didit's NIN + selfie check) Level 1
+  const asksLevel2 = r.idType === 'BVN' || (r.provider === 'didit' && r.idType !== 'NIN')
+  const [level, setLevel] = useState(asksLevel2 ? 2 : Math.max(1, r.kycTier || 1))
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const name = `${r.user.firstName || ''} ${r.user.lastName || ''}`.trim() || r.user.username
@@ -78,7 +80,7 @@ function Row({ r, onDone }: { r: Rec; onDone: (id: string, msg: string) => void 
       <dl className="aw-amounts">
         <div><dt>{r.idType || 'ID'}</dt><dd className="aw-mono">{r.idNumber || '—'}{r.idNumber && <Copy text={r.idNumber} />}</dd></div>
         <div><dt>Date of birth</dt><dd>{day(r.dateOfBirth)}</dd></div>
-        <div><dt>{r.status === 'APPROVED' ? 'Level' : 'Asks for'}</dt><dd>{r.status === 'APPROVED' ? `Level ${r.kycTier}` : r.idType === 'BVN' || r.provider === 'didit' ? 'Level 2' : 'Level 1'}</dd></div>
+        <div><dt>{r.status === 'APPROVED' ? 'Level' : 'Asks for'}</dt><dd>{r.status === 'APPROVED' ? `Level ${r.kycTier}` : asksLevel2 ? 'Level 2' : 'Level 1'}</dd></div>
       </dl>
 
       {r.sameNumber.length > 0 && (
@@ -90,11 +92,12 @@ function Row({ r, onDone }: { r: Rec; onDone: (id: string, msg: string) => void 
       {r.status === 'APPROVED' && (
         !r.providerRef
           ? <p className="aw-kind"><i className="ti ti-alert-circle" /> Approved before automatic checks were in place (26 Sept 2026), so it may never have been checked. Look it up in Dojah and revoke it if it doesn't match.</p>
-          : <p className="aw-kind"><i className="ti ti-circle-check" /> {r.provider === 'admin' ? 'Approved by an admin' : r.provider === 'didit' ? 'ID + selfie checked by Didit' : 'Checked by Dojah'}{r.verifiedAt ? ` on ${day(r.verifiedAt)}` : ''}.</p>
+          : <p className="aw-kind"><i className="ti ti-circle-check" /> {r.provider === 'admin' ? 'Approved by an admin' : r.provider === 'didit' ? (r.kycTier < 2 && r.idType === 'NIN' ? 'NIN + selfie checked against NIMC by Didit' : 'ID + selfie checked by Didit') : 'Checked by Dojah'}{r.verifiedAt ? ` on ${day(r.verifiedAt)}` : ''}.</p>
       )}
       {r.status === 'REJECTED' && r.rejectionReason && <p className="aw-note">{r.rejectionReason}</p>}
-      {r.status === 'SUBMITTED' && (
-        <p className="aw-kind"><i className="ti ti-search" /> Dojah couldn't check this automatically. Look the number up in the Dojah dashboard and compare the name and date of birth before approving.</p>
+      {r.status === 'SUBMITTED' && (r.provider === 'didit'
+        ? <p className="aw-kind"><i className="ti ti-search" /> Didit sent this {r.idType === 'NIN' ? 'NIN + selfie' : 'ID + selfie'} check for review, or the number is already on another account. Open the session in the Didit console and check it before approving.</p>
+        : <p className="aw-kind"><i className="ti ti-search" /> Dojah couldn't check this automatically. Look the number up in the Dojah dashboard and compare the name and date of birth before approving.</p>
       )}
 
       {r.status !== 'REJECTED' && (mode === null ? (
@@ -115,7 +118,7 @@ function Row({ r, onDone }: { r: Rec; onDone: (id: string, msg: string) => void 
               <p>{name} will be able to withdraw and send money, and any sign-up or referral bonus will be paid.</p>
               <label htmlFor={`lvl-${r.id}`}>Level</label>
               <select id={`lvl-${r.id}`} className="ui-input" value={level} onChange={(e) => setLevel(Number(e.target.value))}>
-                <option value={1}>Level 1: NIN (₦10,000 per withdrawal)</option>
+                <option value={1}>Level 1: NIN or Didit NIN check (₦10,000 per withdrawal)</option>
                 <option value={2}>Level 2: BVN or Didit ID check (₦20,000 per withdrawal)</option>
                 <option value={3}>Level 3: ID documents (₦200,000 per withdrawal)</option>
               </select>

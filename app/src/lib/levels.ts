@@ -8,8 +8,12 @@ import { withdrawLimit } from './wallet'
 
 export type Level = { tier: number; name: string; short: string; how: string; limit: number }
 
-export const levelsFor = (didit: boolean): Level[] => [
-  { tier: 1, name: 'Level 1', short: 'NIN', how: 'Your NIN, checked by our team', limit: withdrawLimit(1) },
+// didit: the ID + selfie check is on (Level 2). diditNin: the NIN + selfie check
+// is on (Level 1, checked against the NIMC record in seconds instead of by our team).
+export const levelsFor = (didit: boolean, diditNin = false): Level[] => [
+  diditNin
+    ? { tier: 1, name: 'Level 1', short: 'NIN + selfie', how: 'Your NIN and a selfie, checked against your NIMC record in seconds', limit: withdrawLimit(1) }
+    : { tier: 1, name: 'Level 1', short: 'NIN', how: 'Your NIN, checked by our team', limit: withdrawLimit(1) },
   didit
     ? { tier: 2, name: 'Level 2', short: 'ID + selfie', how: 'Scan an ID and take a selfie with Didit (about 2 minutes)', limit: withdrawLimit(2) }
     : { tier: 2, name: 'Level 2', short: 'BVN', how: 'Your BVN', limit: withdrawLimit(2) },
@@ -19,12 +23,14 @@ export const levelsFor = (didit: boolean): Level[] => [
 // What any level (1+) lets you do, on top of adding money by card or USSD
 export const UNLOCKS = 'withdraw to your bank, send money to OgaPay users and get your own account number'
 
-// The level someone at `tier` works towards: with Didit, one check goes straight to Level 2
-export const nextTierFor = (tier: number, didit: boolean) => (didit && tier < 2 ? 2 : tier + 1)
+// The level someone at `tier` works towards: with the NIN check, Level 1 first
+// (it takes seconds); otherwise with Didit, one ID check goes straight to Level 2
+export const nextTierFor = (tier: number, didit: boolean, diditNin = false) =>
+  diditNin && tier <= 0 ? 1 : didit && tier < 2 ? 2 : tier + 1
 
 // The next step for someone at `tier`, and where to take it
-export const nextStep = (tier: number, didit: boolean): { to: string; label: string } | null => {
-  if (tier <= 0) return { to: '/settings/verification', label: didit ? 'Verify with Didit' : 'Verify your identity' }
+export const nextStep = (tier: number, didit: boolean, diditNin = false): { to: string; label: string } | null => {
+  if (tier <= 0) return { to: '/settings/verification', label: diditNin ? 'Verify with your NIN' : didit ? 'Verify with Didit' : 'Verify your identity' }
   if (tier === 1) return { to: '/settings/verification', label: didit ? 'Get Level 2 with an ID + selfie check' : 'Get Level 2 with your BVN' }
   if (tier === 2) return { to: '/support', label: 'Ask for Level 3' }
   return null
