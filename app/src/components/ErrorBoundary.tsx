@@ -1,6 +1,7 @@
 import React from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { isStaleBuildError, reloadForUpdate } from '../lib/staleBuild'
+import { reportError } from '../lib/errorReport'
 
 interface Props { children: React.ReactNode; resetKey?: string }
 interface State { hasError: boolean; error: Error | null }
@@ -15,6 +16,7 @@ class Boundary extends React.Component<Props, State> {
   componentDidCatch(error: Error, info: React.ErrorInfo) {
     if (isStaleBuildError(error) && reloadForUpdate()) return
     console.error('[ErrorBoundary]', error, info.componentStack)
+    reportError(error)
   }
   componentDidUpdate(prev: Props) {
     if (this.state.hasError && prev.resetKey !== this.props.resetKey) this.setState({ hasError: false, error: null })

@@ -1,7 +1,16 @@
+import { useEffect } from 'react'
 import Layout from '../components/Layout'
 import { Link } from 'react-router-dom'
 
 export default function NotFound() {
+  // The server answers 200 for every address (it's one app), so tell search
+  // engines not to index a missing page as if it were real
+  useEffect(() => {
+    const m = document.createElement('meta')
+    m.name = 'robots'; m.content = 'noindex'
+    document.head.appendChild(m)
+    return () => { m.remove() }
+  }, [])
   return (
     <Layout sidebar={false}>
       <div style={{textAlign:'center',padding:'80px 20px'}}>
