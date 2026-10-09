@@ -4,8 +4,9 @@ import { useToast } from '../../components/Toast'
 import { useCurrency } from '../../context/CurrencyContext'
 import type { DisplayMode } from '../../lib/currency'
 import { Card, PrefRow, Row, Toggle, type SectionProps } from './ui'
+import { PushSettingsCard } from '../../components/PushAlerts'
 
-// Email alerts. Push notifications and "USDC alerts" were removed: nothing sent them.
+// Alerts on this device (push, components/PushAlerts.tsx) and email alerts
 export function Notifications(props: SectionProps) {
   const { toast } = useToast()
   const { me } = props
@@ -15,6 +16,7 @@ export function Notifications(props: SectionProps) {
       {!me.isEmailVerified && (
         <div className="st2-banner"><i className="ti ti-mail-exclamation" /> Verify your email to get these. <Link to="/settings/account">Resend the link</Link></div>
       )}
+      <PushSettingsCard toast={toast} />
       <Card title="Email alerts" sub={`Sent to ${me.email}. You'll always see everything under Notifications in the app.`}>
         <PrefRow {...props} toast={toast} k="emailNotifications" title="Email me" sub="Turn off to stop all emails below" />
         <PrefRow {...props} toast={toast} k="taskAlerts" disabled={off} title="Job updates" sub="Applications, submissions, approvals, rejections and disputes on your jobs" />

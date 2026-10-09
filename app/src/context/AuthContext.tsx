@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react'
+import { dropPushOnSignOut } from '../lib/push'
 import { apiRequest, getAccessToken, getRefreshToken, getStoredUser, clearAuthSession, persistAuthSession, SESSION_EXPIRED_EVENT } from '../lib/api'
 import { openSignIn } from '../lib/signin'
 
@@ -130,6 +131,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const logout = useCallback(async () => {
+    // This device stops getting the account's alerts (while still signed in, so the server hears it)
+    await dropPushOnSignOut()
     try {
       await apiRequest('/auth/logout', { method: 'POST', body: JSON.stringify({ refreshToken: getRefreshToken() }) })
     } catch { /* ignore */ }

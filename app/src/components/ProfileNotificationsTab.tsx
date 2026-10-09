@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { apiRequest } from '../lib/api'
 import { SkeletonPage, injectSkeletonStyles } from '../components/SkeletonLoader'
 import { useAuth } from '../context/AuthContext'
+import { PushOffer } from './PushAlerts'
 
 function timeAgo(date: string | Date) {
   const diff = Date.now() - new Date(date).getTime()
@@ -236,6 +237,7 @@ export default function TabNotificationsContent() {
         </div>
       </div>
 
+      <PushOffer />
       <div className="nt-tabs">
         {[
           { id: 'all', label: 'All' },

@@ -10,6 +10,7 @@ import ErrorBoundary from './components/ErrorBoundary'
 import { ToastProvider } from './components/Toast'
 import SignInHost from './components/auth/SignInHost'
 import { InstallHost } from './components/InstallApp'
+import { PushHost } from './components/PushAlerts'
 import PageLoader from './components/PageLoader'
 import AdminGuard from './components/AdminGuard'
 import { JobAlertProvider } from './contexts/JobAlertContext'
@@ -114,6 +115,7 @@ export default function App() {
           <JobAlertProvider>
           <SignInHost />
           <InstallHost />
+          <PushHost />
           <CanonicalUrl />
           <Routes>
             {/* ── Public routes ── */}
