@@ -144,6 +144,11 @@ export default function Profile() {
   const [bankName, setBankName] = useState("");
   const [accountName, setAccountName] = useState("");
   const [editingBank, setEditingBank] = useState(false);
+  // Saved withdrawal banks (Wallet → Money out); null until known, so the banner never flashes
+  const [bankCount, setBankCount] = useState<number | null>(null);
+  useEffect(() => {
+    apiRequest<any[]>('/wallet/banks').then((d) => setBankCount(Array.isArray(d) ? d.length : 0)).catch(() => {});
+  }, []);
   const [savingBank, setSavingBank] = useState(false);
   const [bankMsg, setBankMsg] = useState("");
   const [kycDocument, setKycDocument] = useState<File | null>(null);
@@ -522,7 +527,8 @@ export default function Profile() {
           <button className="ob-close" onClick={e => ((e.currentTarget.closest('.onboarding-banner') as HTMLElement)!.style.display='none')}><i className="ti ti-x" /></button>
         </div>
       )}
-      {!loading && !authUser?.bankAccount && (
+      {/* Withdrawals use the saved banks; the old profile field (bankAccount) is no longer filled in */}
+      {!loading && bankCount === 0 && !authUser?.bankAccount && (
         <div className="onboarding-banner">
           <i className="ti ti-building-bank" style={{color:'#f59e0b',fontSize:20}} />
           <span className="ob-msg">Add a bank account to withdraw in Naira</span>
@@ -719,7 +725,7 @@ export default function Profile() {
                   <section className="ui-card wl-sec wl-dir-card" aria-labelledby="pf-out">
                     <div className="wl-dir-label"><span className="wl-dir out"><i className="ti ti-arrow-up-right" /></span> Money out</div>
                     <h2 id="pf-out" className="wl-dir-title">Withdrawals go to</h2>
-                    <SavedBanksList bare />
+                    <SavedBanksList bare onCount={setBankCount} />
                   </section>
                 </div>
               </div>

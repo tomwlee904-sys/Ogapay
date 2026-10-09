@@ -12,7 +12,8 @@ interface BankAccount {
   createdAt: string
 }
 
-export default function SavedBanksList({ bare = false }: { bare?: boolean }) {
+// onCount: told how many accounts are saved, after loading and each change
+export default function SavedBanksList({ bare = false, onCount }: { bare?: boolean; onCount?: (n: number) => void }) {
   const [banks, setBanks] = useState<BankAccount[]>([])
   const [loading, setLoading] = useState(true)
   const [showAdd, setShowAdd] = useState(false)
@@ -30,6 +31,7 @@ export default function SavedBanksList({ bare = false }: { bare?: boolean }) {
     try {
       const data = await apiRequest<BankAccount[]>('/wallet/banks')
       setBanks(data || [])
+      onCount?.((data || []).length)
     } catch { /* ignore */ }
     setLoading(false)
   }
@@ -65,7 +67,9 @@ export default function SavedBanksList({ bare = false }: { bare?: boolean }) {
   async function handleDelete(id: string) {
     try {
       await apiRequest(`/wallet/banks/${id}`, { method: 'DELETE' })
-      setBanks(prev => prev.filter(b => b.id !== id))
+      const left = banks.filter(b => b.id !== id)
+      setBanks(left)
+      onCount?.(left.length)
     } catch { /* ignore */ }
   }
 
