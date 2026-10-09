@@ -236,7 +236,7 @@ export default function Dashboard() {
             <Link to="/wallet" className="db-stat">
               <span>Your level</span>
               <b>{kycOk ? `Level ${kycTier}` : 'Not verified'}</b>
-              <small>{kycOk ? `Withdraw up to ${show(withdrawLimit(kycTier), 'NGN', { exact: true })} each time` : 'Verify to withdraw and send money'}</small>
+              <small>{kycOk ? `Withdraw up to ${show(withdrawLimit(kycTier), 'NGN', { exact: true })} a day` : 'Verify to withdraw and send money'}</small>
             </Link>
             <Link to="/rank" className="db-stat"><span>OgaScore</span><b>{me?.ogaScore ?? '…'}</b><small>{rankLabel} · {plural(me?.workerProfile?.tasksCompleted ?? 0, 'job', 'jobs')} done</small></Link>
           </div>

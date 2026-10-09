@@ -6,7 +6,7 @@ import TwoFactorField, { is2FAError } from '../TwoFactorField'
 import { apiRequest } from '../../lib/api'
 import { useAuth } from '../../context/AuthContext'
 import { useWalletBalance } from '../../context/WalletBalanceContext'
-import { MIN_WITHDRAW_NGN, kycOf, maskAcct, money, naira, newKey, ngnWithdrawFee, shortAddr, withdrawLimit, type Balances, type Bank } from '../../lib/wallet'
+import { MIN_WITHDRAW_NGN, kycOf, maskAcct, money, naira, newKey, ngnWithdrawFee, shortAddr, whenAgain, withdrawLimit, type Allowance, type Balances, type Bank } from '../../lib/wallet'
 
 type Done = { kind: 'bank'; net: number; bank: Bank; reference: string } | { kind: 'crypto'; amount: number; currency: string; to: string; reference: string; pending: boolean }
 
@@ -20,6 +20,8 @@ export default function WithdrawModal({ onClose, onDone, balances: given }: { on
   const balances = (given || ctx) as Balances | null
   const { tier, verified } = kycOf(user)
   const limit = withdrawLimit(tier)
+  // What's left of today's limit (the server counts the last 24 hours)
+  const [allow, setAllow] = useState<Allowance | null>(null)
 
   const [tab, setTab] = useState<'bank' | 'crypto'>('bank')
   const [banks, setBanks] = useState<Bank[] | null>(null)
@@ -48,6 +50,13 @@ export default function WithdrawModal({ onClose, onDone, balances: given }: { on
       if (!l.length) setAdding(true)
     }).catch(() => setBanks([]))
   }, [verified])
+  useEffect(() => {
+    if (!verified) return
+    apiRequest<Allowance>('/wallet/withdraw-limit').then((a) => setAllow(a || null)).catch(() => setAllow(null))
+  }, [verified])
+  const dayLimit = allow?.dailyLimit ?? limit
+  const left = allow ? allow.leftToday : limit
+  const usedUp = !!allow && allow.leftToday < MIN_WITHDRAW_NGN
 
   const cur = tab === 'bank' ? 'NGN' : coin
   const available = Number(balances?.[cur]?.available ?? 0)
@@ -61,13 +70,15 @@ export default function WithdrawModal({ onClose, onDone, balances: given }: { on
     if (amt > available) return `You have ${money(available, cur)} available.`
     if (tab === 'bank') {
       if (amt < MIN_WITHDRAW_NGN) return `The minimum is ${naira(MIN_WITHDRAW_NGN, 0)}.`
-      if (amt > limit) return `Your limit is ${naira(limit, 0)} per withdrawal.`
+      if (amt > left) return usedUp
+        ? `You've used today's limit of ${naira(dayLimit, 0)}.${allow?.nextAt ? ` You can withdraw again from ${whenAgain(allow.nextAt)}.` : ''}`
+        : `You can withdraw up to ${naira(left, 0)} today (your limit is ${naira(dayLimit, 0)} a day).`
     }
     return ''
-  }, [amt, available, cur, tab, limit])
+  }, [amt, available, cur, tab, left, usedUp, dayLimit, allow])
 
   const max = () => {
-    const m = tab === 'bank' ? Math.min(available, limit) : available
+    const m = tab === 'bank' ? Math.min(available, left) : available
     setAmount(m > 0 ? String(Math.floor(m * (tab === 'bank' ? 1 : 1e6)) / (tab === 'bank' ? 1 : 1e6)) : '')
   }
 
@@ -206,7 +217,9 @@ export default function WithdrawModal({ onClose, onDone, balances: given }: { on
             <div className={`wl-hint${problem ? ' err' : ''}`}>
               {problem || <>
                 <span>Available {money(available, cur)}</span>
-                <span>Limit {naira(limit, 0)}{tab === 'crypto' ? ' worth' : ''} per withdrawal</span>
+                <span>{usedUp
+                  ? <>Today's limit used{allow?.nextAt ? ` · again from ${whenAgain(allow.nextAt)}` : ''}</>
+                  : <>{naira(left, 0)}{tab === 'crypto' ? ' worth' : ''} left today of {naira(dayLimit, 0)}</>}</span>
               </>}
             </div>
           </div>

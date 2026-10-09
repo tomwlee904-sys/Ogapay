@@ -19,14 +19,14 @@ export default function LevelCard({ tier, didit, ninInstant = false }: { tier: n
       </div>
       <p className="wl-level-head">
         {tier > 0
-          ? <>You can withdraw up to <b>{naira(current?.limit ?? 0, 0)}</b> each time.</>
+          ? <>You can withdraw up to <b>{naira(current?.limit ?? 0, 0)}</b> a day.</>
           : <>Verify your identity to {UNLOCKS}.</>}
       </p>
       <ol className="wl-steps" aria-label="Verification levels">
         {levels.map((l) => (
           <li key={l.tier} className={tier >= l.tier ? 'done' : l.tier === nextTier ? 'next' : ''}>
             <span className="wl-step-name">{l.name}: {l.short}</span>
-            <span className="wl-step-limit">{naira(l.limit, 0)} per withdrawal</span>
+            <span className="wl-step-limit">{naira(l.limit, 0)} a day</span>
           </li>
         ))}
       </ol>

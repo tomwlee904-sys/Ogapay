@@ -30,8 +30,12 @@ export function kycOf(user: any) {
   return { approved: status === 'APPROVED', tier, verified: status === 'APPROVED' && tier >= 1 }
 }
 export const MIN_WITHDRAW_NGN = 5000
-// Per withdrawal, by KYC level (wallet.routes ngnWithdrawLimit)
-export const withdrawLimit = (tier: number) => (tier >= 3 ? 200000 : tier >= 2 ? 20000 : tier >= 1 ? 10000 : 0)
+// The most you can take out in a day (the last 24 hours), by KYC level
+// (backend services/withdrawLimits.service.js)
+export const withdrawLimit = (tier: number) => (tier >= 3 ? 50000 : tier >= 2 ? 10000 : tier >= 1 ? 5000 : 0)
+// Today's allowance, from GET /wallet/withdraw-limit; all in naira
+export type Allowance = { level: number; dailyLimit: number; usedToday: number; leftToday: number; minimum: number; nextAt: string | null }
+export const whenAgain = (iso: string) => new Date(iso).toLocaleString('en-GB', { hour: 'numeric', minute: '2-digit', hour12: true, day: 'numeric', month: 'short' })
 // 1.5%, at least ₦100 (wallet.service calculateWithdrawalFee)
 export const ngnWithdrawFee = (amount: number) => Math.max(100, amount * 0.015)
 

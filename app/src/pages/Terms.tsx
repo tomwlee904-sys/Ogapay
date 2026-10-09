@@ -55,7 +55,7 @@ export default function Terms() {
         <header className="lg-head">
           <div className="up-eyebrow">Legal</div>
           <h1>Terms of Service</h1>
-          <p>Last updated: 8 October 2026</p>
+          <p>Last updated: 9 October 2026</p>
           <p className="lg-lead">These terms are the agreement between you and OgaPay Technologies Ltd. ("OgaPay", "we", "us") for using the OgaPay marketplace, where people post paid jobs, do them, hire creators, and buy and sell services. By creating an account or using OgaPay you accept them. If you don't, please don't use OgaPay.</p>
         </header>
 
@@ -88,13 +88,13 @@ export default function Terms() {
 
             <section id="kyc">
               <h2><span>{n('kyc')}</span>Identity checks and limits</h2>
-              <p>To withdraw money, send money to other users, get your own account number, and take some jobs, you need to verify your identity (KYC). The more you verify, the more you can withdraw at a time:</p>
+              <p>To withdraw money, send money to other users, get your own account number, and take some jobs, you need to verify your identity (KYC). The more you verify, the more you can withdraw in a day:</p>
               <ul>
-                <li>Level 1 (your NIN, confirmed with the National Identity Management Commission (NIMC) through Didit, or checked by our team when that isn't possible): up to ₦10,000 per withdrawal</li>
-                <li>Level 2 (an ID document and a selfie, checked by our verification partner Didit): up to ₦20,000 per withdrawal</li>
-                <li>Level 3 (ID documents, checked by our team through support): up to ₦200,000 per withdrawal</li>
+                <li>Level 1 (your NIN, confirmed with the National Identity Management Commission (NIMC) through Didit, or checked by our team when that isn't possible): up to ₦5,000 a day</li>
+                <li>Level 2 (an ID document and a selfie, checked by our verification partner Didit): up to ₦10,000 a day</li>
+                <li>Level 3 (ID documents, checked by our team through support): up to ₦50,000 a day</li>
               </ul>
-              <p>Crypto withdrawals count against the same limit at the naira rate on the day. We may ask for more information, refuse a check, or remove a verification we later find was wrong. Using someone else's identity is not allowed.</p>
+              <p>A day means the 24 hours before each withdrawal. Bank and crypto withdrawals count together, crypto at the naira rate on the day; ones that fail or are rejected don't count. We may ask for more information, refuse a check, or remove a verification we later find was wrong. Using someone else's identity is not allowed.</p>
             </section>
 
             <section id="posting">

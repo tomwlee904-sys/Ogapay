@@ -69,7 +69,7 @@ export const TOPICS: Topic[] = [
   {
     id: 'withdrawals', title: 'Withdrawals', items: [
       { q: 'How do I withdraw?', a: 'Open Wallet, choose Withdraw, pick a saved bank account (NGN) or enter a Solana address (USDC or SOL), enter the amount and confirm.' },
-      { q: 'What are the limits?', a: 'The minimum is ₦5,000 or its equivalent. The maximum per withdrawal depends on your verification level: ₦10,000 at Level 1, ₦20,000 at Level 2 and ₦200,000 at Level 3.' },
+      { q: 'What are the limits?', a: 'The minimum is ₦5,000 or its equivalent. The most you can withdraw in a day depends on your verification level: ₦5,000 at Level 1, ₦10,000 at Level 2 and ₦50,000 at Level 3. Bank and crypto withdrawals count together over the last 24 hours, and the Withdraw screen shows how much you have left.' },
       { q: 'How long does it take?', a: 'Bank withdrawals are processed within 24 hours, and usually much sooner. Crypto withdrawals arrive once the Solana transaction confirms, typically within minutes.' },
       { q: 'My withdrawal failed. Where is my money?', a: 'Funds are only locked while a withdrawal is processing. If the payout fails, the lock is released and the money is available in your wallet again.' },
     ],
