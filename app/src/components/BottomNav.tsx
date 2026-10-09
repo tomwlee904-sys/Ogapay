@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { apiRequest } from '../lib/api'
+import { openSignIn } from '../lib/signin'
 
 export default function BottomNav() {
   const location = useLocation()
@@ -33,13 +34,18 @@ export default function BottomNav() {
     return () => window.removeEventListener('focus', onFocus)
   }, [isAuthed])
 
+  // Every tab works signed out too (they used to be greyed out and did nothing):
+  // Create is a public page; Earnings, Alerts and Profile open the sign-in dialog
+  // over the current page and go there once signed in
   const tabs = [
-    { icon: 'home', label: 'Jobs', path: '/tasks', authRequired: false },
+    { icon: 'home', label: 'Jobs', path: '/tasks' },
     { icon: 'briefcase', label: 'Earnings', path: '/earnings', authRequired: true },
-    { icon: 'plus', label: 'Create', path: '/create', authRequired: true, center: true },
+    { icon: 'plus', label: 'Create', path: '/create', center: true },
     { icon: 'bell', label: 'Alerts', path: '/notifications', authRequired: true, badge: unreadCount },
-    { icon: 'user', label: 'Profile', path: null, authRequired: false },
+    { icon: 'user', label: 'Profile', path: '/profile', authRequired: true },
   ]
+  const go = (t: { path: string; authRequired?: boolean }) =>
+    t.authRequired && !isAuthed ? openSignIn({ redirect: t.path }) : navigate(t.path)
 
   return (
     <>
@@ -79,13 +85,11 @@ export default function BottomNav() {
         {tabs.map(t => {
           if (t.center) {
             const isActive = location.pathname === '/create' || location.pathname.startsWith('/create/')
-            const disabled = t.authRequired && !isAuthed
             return (
               <div key={t.label} className="btb-center-wrap">
                 <button
                   className="btb-center"
-                  onClick={() => { if (disabled) return; navigate(t.path) }}
-                  disabled={disabled}
+                  onClick={() => go(t)}
                   aria-label={t.label}
                 >
                   <i className="ti ti-plus" />
@@ -96,22 +100,12 @@ export default function BottomNav() {
               </div>
             )
           }
-          const isActive = t.path ? (location.pathname === t.path || location.pathname.startsWith(t.path + '/')) : false
-          const disabled = t.authRequired && !isAuthed
-          const handleClick = () => {
-            if (disabled) return
-            if (t.icon === 'user') {
-              navigate(isAuthed ? '/profile' : '/login')
-            } else if (t.path) {
-              navigate(t.path)
-            }
-          }
+          const isActive = location.pathname === t.path || location.pathname.startsWith(t.path + '/')
           return (
             <button
               key={t.label}
               className={`btb-tab${isActive ? ' active' : ''}`}
-              onClick={handleClick}
-              disabled={disabled}
+              onClick={() => go(t)}
             >
               <div className="btb-icon-wrap">
                 <i className={`ti ti-${t.icon}`} />
