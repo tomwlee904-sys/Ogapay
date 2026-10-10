@@ -326,7 +326,7 @@ body:has(main.hv), body:has(main.hv) #root { overflow-x: clip; }
 }
 
 /* ── Phone ── */
-@media (max-width: 768px) {
+@media (max-width: 767px) {
   .hv-frame { border: 0; }
   .hv-hero { padding: 32px 0 16px; }
   .hv-h1 { white-space: normal; }

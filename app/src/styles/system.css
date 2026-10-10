@@ -73,7 +73,7 @@
   --sh-pop: 0 24px 48px -20px rgba(0, 0, 0, 0.85);
 }
 
-@media (max-width: 768px) {
+@media (max-width: 767px) {
   :root { --gutter: 16px; --page-top: 24px; --section-gap: 64px; --fs-body: 15px; }
 }
 

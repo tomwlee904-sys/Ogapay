@@ -816,7 +816,7 @@ function WurkJobDetailView(props: any) {
         .wjd-facts .is-open .wjd-dot{background:var(--money)}
         .wjd-headline-side{display:flex;flex-direction:column;align-items:flex-end;gap:var(--sp-3);flex-shrink:0}
         .wjd-headline-side .o-money{align-items:flex-end}
-        @media(max-width:768px){.wjd-headline{flex-direction:column;align-items:stretch;gap:var(--sp-4)}.wjd-headline-side{flex-direction:row;align-items:center;justify-content:space-between}.wjd-headline-side .o-money{align-items:flex-start}}
+        @media(max-width:767px){.wjd-headline{flex-direction:column;align-items:stretch;gap:var(--sp-4)}.wjd-headline-side{flex-direction:row;align-items:center;justify-content:space-between}.wjd-headline-side .o-money{align-items:flex-start}}
         .wjd-agent{align-items:center;padding:18px 20px}
         .wjd-avatar{width:44px;height:44px;border-radius:12px;border:1px solid var(--border)!important;background:var(--card2);font-size:15px}
         .wjd-avatar img{border-radius:12px}

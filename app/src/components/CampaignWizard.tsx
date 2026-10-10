@@ -1256,7 +1256,7 @@ export default function CampaignWizard() {
   return (
     <div className="cw-ai" style={{ position: "fixed", zIndex: 999 }}>
       {/* Phones: above the bottom bar (64px) and its raised Create button, not on top of Profile */}
-      <style>{`.cw-ai{bottom:24px;right:24px}@media(max-width:768px){.cw-ai{bottom:calc(88px + env(safe-area-inset-bottom,0px));right:16px}}`}</style>
+      <style>{`.cw-ai{bottom:24px;right:24px}@media(max-width:767px){.cw-ai{bottom:calc(88px + env(safe-area-inset-bottom,0px));right:16px}}`}</style>
       {open && (
         <div
           style={{

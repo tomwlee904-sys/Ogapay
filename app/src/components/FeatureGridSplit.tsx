@@ -227,7 +227,7 @@ function FeatureBlock({ title, description, mockup, reverse, accent }: FeatureBl
         </div>
       </div>
       <style>{`
-        @media(max-width:768px){
+        @media(max-width:767px){
           section > div > div > div { grid-template-columns: 1fr !important }
           [style*="order"] { order: unset !important }
           [style*="padding"] { padding: 20px !important }

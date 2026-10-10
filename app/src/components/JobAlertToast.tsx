@@ -28,7 +28,7 @@ export default function JobAlertToast() {
   return (
     <div style={{
       // above the bottom bar on phones
-      position: 'fixed', bottom: window.innerWidth < 769 ? 96 : 24, right: window.innerWidth < 769 ? 12 : 24, zIndex: 9999, maxWidth: window.innerWidth < 769 ? 'calc(100% - 24px)' : 380, width: '100%',
+      position: 'fixed', bottom: window.innerWidth < 768 ? 96 : 24, right: window.innerWidth < 768 ? 12 : 24, zIndex: 9999, maxWidth: window.innerWidth < 768 ? 'calc(100% - 24px)' : 380, width: '100%',
       background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 14,
       boxShadow: '0 12px 40px rgba(0,0,0,0.12)', overflow: 'hidden',
       animation: 'toastIn 0.25s ease-out',

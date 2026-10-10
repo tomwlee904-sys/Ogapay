@@ -229,7 +229,7 @@
   .wl-totals { text-align: left; }
   .wl-sec-head:has(.wl-totals) { flex-wrap: wrap; }
 }
-@media (max-width: 768px) {
+@media (max-width: 767px) {
   .wl-bal { padding: 20px; }
   .wl-bal-actions { width: 100%; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .wl-bal-actions .ui-btn { min-width: 0; padding: 0 8px; }

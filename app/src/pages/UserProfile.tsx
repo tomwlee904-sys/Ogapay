@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react"
+import ItemCover from '../components/ItemCover'
 import { useParams, useNavigate, Link } from "react-router-dom"
 import Layout from "../components/Layout"
 import InviteToCommunity from "../components/profile/InviteToCommunity"
@@ -283,7 +284,7 @@ export default function UserProfile() {
               <div className="up-grid">
                 {products.map((p) => (
                   <Link className="up-card up-item" to={`/store/${p.id}`} key={p.id}>
-                    <div className="img">{p.image ? <img src={sized(p.image, 400)} alt="" loading="lazy" /> : <i className="ti ti-package" />}</div>
+                    <div className="img"><ItemCover src={p.image} category={p.category} title={p.title} width={400} /></div>
                     <div className="body">
                       <div className="meta">{String(p.category || "").replace(/_/g, " ")} · {fmtDate(p.createdAt)}</div>
                       <h3>{p.title}</h3>

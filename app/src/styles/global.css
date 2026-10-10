@@ -117,7 +117,7 @@ button{font:inherit}
 .premium-quick-link span{font-size:12px;font-weight:700;color:var(--text2)}
 
 /* ── Mobile section padding ── */
-@media(max-width:768px){
+@media(max-width:767px){
   .premium-stats-grid{gap:12px}
   .premium-quick-grid{gap:10px}
   .premium-quick-link{height:90px}
@@ -594,7 +594,7 @@ footer
   .quick-grid{grid-template-columns:1fr 1fr}
   .job-card{min-height:460px}
 }
-@media(max-width:768px){
+@media(max-width:767px){
   :root{--nav-h:72px}
   body{padding-bottom:92px;background:var(--card)}
   [data-theme="dark"] body{background:#000000}
@@ -904,7 +904,7 @@ body.auth-open{overflow:hidden}
 [data-theme="dark"] .oga-balance-card{background:#111111;border-color:#333333}
 .oga-profile-btn{width:100%;height:70px;margin-top:12px;border:2px solid var(--border2);border-radius:999px;background:var(--card);color:var(--text);font-size:21px;font-weight:900;cursor:pointer}
 [data-theme="dark"] .oga-profile-btn{background:#111111;border-color:#333333;color:#ffffff}
-@media(max-width:768px){.oga-drawer{width:100vw}.mobile-drawer.oga-drawer{right:0}.oga-drawer-item strong{font-size:20px}.oga-drawer-item small{font-size:17px}}
+@media(max-width:767px){.oga-drawer{width:100vw}.mobile-drawer.oga-drawer{right:0}.oga-drawer-item strong{font-size:20px}.oga-drawer-item small{font-size:17px}}
 @media(max-width:420px){.oga-drawer-brand{font-size:24px}.oga-drawer-head{height:82px}.oga-drawer-item{min-height:68px}.oga-drawer-icon{width:44px;height:44px}.oga-drawer-actions button{font-size:16px}.oga-profile-btn{font-size:19px}}
 
 /* compact drawer sizing */
@@ -932,7 +932,7 @@ body.auth-open{overflow:hidden}
 .oga-balance-card{padding:12px 14px;border-radius:12px;margin-bottom:8px}
 .oga-balance-card span{font-size:11px}.oga-balance-card strong{font-size:22px}
 .oga-profile-btn{height:52px;margin-top:10px;font-size:15px;border-width:1.5px}
-@media(max-width:768px){.oga-drawer{width:min(360px,100vw)}.oga-drawer-item strong{font-size:15px}.oga-drawer-item small{font-size:13px}}
+@media(max-width:767px){.oga-drawer{width:min(360px,100vw)}.oga-drawer-item strong{font-size:15px}.oga-drawer-item small{font-size:13px}}
 @media(max-width:420px){.oga-drawer{width:100vw}.oga-drawer-brand{font-size:19px}.oga-drawer-head{height:64px}.oga-drawer-item{min-height:56px}.oga-drawer-icon{width:36px;height:36px}.oga-drawer-actions button{font-size:14px}.oga-profile-btn{font-size:15px}}
 
 /* Homepage 2026 additions */
@@ -993,7 +993,7 @@ body.auth-open{overflow:hidden}
 .platform-pill img{width:22px;height:22px;flex-shrink:0;display:block}
 @media(max-width:800px){.earn-section .container{grid-template-columns:1fr;gap:32px;text-align:center}.earn-sub{margin-left:auto;margin-right:auto}.scroll-col{height:360px}.col-2{display:none}}
 
-@media(max-width:768px){
+@media(max-width:767px){
   
 }
 @media(max-width:480px){

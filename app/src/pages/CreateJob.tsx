@@ -1096,7 +1096,8 @@ function CreateTask() {
         .cj-xstart span{font-size:11.5px;color:var(--text2);margin-top:-4px}
         .cj-xstart label{font-size:11.5px;font-weight:500;margin-top:4px}
         .cj-xstart .ui-btn{width:100%}
-        @media(max-width:900px){.cj-cards{grid-template-columns:1fr}.cj-card{min-height:0}}
+        @media(max-width:1023px){.cj-cards{gap:10px}.cj-card{padding:16px}.cj-plats{grid-template-columns:repeat(3,1fr)}.cj-go .ui-btn{font-size:13px;padding-left:12px;padding-right:12px}}
+        @media(max-width:767px){.cj-cards{grid-template-columns:1fr}.cj-card{min-height:0}.cj-plats{grid-template-columns:repeat(5,1fr)}}
       `}</style>
       <div className="ui-page" style={{ paddingTop: 28 }}>
         <header className="ui-head">

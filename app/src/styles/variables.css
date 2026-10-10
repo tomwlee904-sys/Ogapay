@@ -6,7 +6,7 @@
 @keyframes pageIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 
 /* Legacy — body padding for fixed bottom nav */
-@media (max-width: 768px) {
+@media (max-width: 767px) {
   body:has(.bottom-nav) {
     padding-bottom: 60px !important;
   }

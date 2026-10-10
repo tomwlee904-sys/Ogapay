@@ -5,6 +5,7 @@ import { AuthProvider } from './context/AuthContext'
 import { ThemeProvider } from './context/ThemeContext'
 import { CurrencyProvider } from './context/CurrencyContext'
 import CanonicalUrl from './components/CanonicalUrl'
+import PageTitle from './components/PageTitle'
 import ProtectedRoute from './components/ProtectedRoute'
 import ErrorBoundary from './components/ErrorBoundary'
 import { ToastProvider } from './components/Toast'
@@ -118,6 +119,7 @@ export default function App() {
           <InstallHost />
           <PushHost />
           <CanonicalUrl />
+          <PageTitle />
           <Routes>
             {/* ── Public routes ── */}
             <Route path="/" element={<HomePage />} />

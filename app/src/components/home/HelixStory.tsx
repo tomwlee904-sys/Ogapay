@@ -86,7 +86,7 @@ export default function HelixStory({ panels, jobs }: { panels: HelixPanel[]; job
       const bnH = bn && getComputedStyle(bn).display !== "none" ? bn.getBoundingClientRect().height : 0;
       H = Math.round(Math.max(420, Math.min(800, window.innerHeight - stageTop - (bnH ? bnH + 12 : 24))));
       W = stage.clientWidth;
-      unit = window.innerWidth < 769 ? 260 : 300;
+      unit = window.innerWidth < 768 ? 260 : 300;
       stage.style.top = `${stageTop}px`;
       stage.style.height = `${H}px`;
       scene.style.height = `${H + TRef.current * unit}px`;
@@ -200,7 +200,7 @@ export default function HelixStory({ panels, jobs }: { panels: HelixPanel[]; job
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const small = window.innerWidth < 769;
+    const small = window.innerWidth < 768;
     const N = small ? 2800 : 5200;
     const DUST = small ? 90 : 180;
     // Phones: 30 frames a second, like the hero's network, halves the work; the

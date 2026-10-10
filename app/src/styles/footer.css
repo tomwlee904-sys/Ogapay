@@ -63,7 +63,7 @@
   .of-top { grid-template-columns: minmax(0, 1fr); gap: 32px; }
   .of-nav { padding: 0; }
 }
-@media (max-width: 768px) {
+@media (max-width: 767px) {
   .of-inner { padding: 44px 16px calc(96px + env(safe-area-inset-bottom, 0px)); }
   .of-title { font-size: 30px; }
   .of-globe { height: 180px; }

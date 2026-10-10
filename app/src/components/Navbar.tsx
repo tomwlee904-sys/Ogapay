@@ -89,11 +89,11 @@ export default function Navbar({ onMenuToggle }: NavbarProps) {
   return (
     <header className={`nav${scrolled ? ' scrolled' : ''}`} ref={navRef}>
       <style>{`
-        @media(max-width:768px) {
+        @media(max-width:767px) {
           .nav-desktop { display: none !important; }
           .nav-mobile { display: flex !important; }
         }
-        @media(min-width:769px) {
+        @media(min-width:768px) {
           .nav-mobile { display: none !important; }
         }
       `}</style>

@@ -68,7 +68,7 @@
   .hx-lead { padding: 0 24px 10px; }
   .hx-skip { right: 24px; }
 }
-@media (max-width: 768px) {
+@media (max-width: 767px) {
   .hx { padding-top: 28px; }
   .hx-scene { padding: 0 12px; }
   .hx-lead { padding: 0 12px 8px; gap: 10px; }

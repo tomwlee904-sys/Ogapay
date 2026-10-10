@@ -22,7 +22,7 @@
 .jm2-list b { font-size: 15px; font-weight: 600; color: var(--green); flex-shrink: 0; font-variant-numeric: tabular-nums; }
 .jm2-acts { display: flex; gap: 6px; flex-shrink: 0; }
 
-@media (max-width: 768px) {
+@media (max-width: 767px) {
   .jm2-list { padding: 4px 14px; }
   .jm2-list li { flex-wrap: wrap; gap: 8px 12px; }
   .jm2-list li.new { margin: 0 -14px; padding-left: 14px; padding-right: 14px; }

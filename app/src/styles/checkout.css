@@ -117,7 +117,7 @@
 .sc-done .ui-actions { justify-content: center; margin-top: 24px; }
 .sc-ref { margin-top: 18px; font: 400 11px var(--font-mono); color: var(--text3); }
 
-@media (max-width: 768px) {
+@media (max-width: 767px) {
   .sc-grid { grid-template-columns: 1fr; }
   .sc-summary, .sc-side { position: static; }
   .sc-steps { gap: 10px 16px; }

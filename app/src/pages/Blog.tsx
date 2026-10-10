@@ -213,7 +213,7 @@ export default function Blog() {
         .bl-chips button{height:32px;padding:0 12px;border:1px solid var(--border);border-radius:999px;background:none;font:500 12px/1 inherit;color:var(--text2);cursor:pointer}
         .bl-chips button.on{background:var(--text);border-color:var(--text);color:var(--bg)}
         .bl-tiles{margin-top:48px;border-radius:16px;overflow:hidden}
-        @media (max-width:768px){
+        @media (max-width:767px){
           .bl-head{flex-direction:column;gap:0}
           .bl-write{margin-top:16px}
           .bl-bar{flex-direction:column;align-items:stretch;margin-top:28px}

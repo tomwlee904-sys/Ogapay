@@ -277,13 +277,13 @@ button { font: inherit; cursor: pointer; }
 
 
 .show-mobile { display: none !important; }
-@media(min-width:769px) {
+@media(min-width:768px) {
   .hp-store-section .store-grid { overflow-x:hidden !important; scroll-snap-type:none !important; }
 }
 @media(max-width:640px) {
   .hp-store-section .store-grid{-webkit-mask-image:linear-gradient(to right,transparent 0,#000 20px,#000 calc(100% - 20px),transparent 100%);mask-image:linear-gradient(to right,transparent 0,#000 20px,#000 calc(100% - 20px),transparent 100%)}
 }
-@media(max-width:768px) {
+@media(max-width:767px) {
   --bottom-nav-h:64px;
   body { padding-bottom:var(--bottom-nav-h); }
   .show-mobile { display: block !important; }
@@ -423,13 +423,13 @@ button { font: inherit; cursor: pointer; }
 .hero-stat-label { font-size:13px; }
 [data-theme="dark"] .hero-stat-value { color:var(--text); }
 [data-theme="dark"] .hero-stat-label { color:var(--text2); }
-@media(max-width:768px) {
+@media(max-width:767px) {
   .hero-stat-value { font-size:18px !important; }
   .hero-stat-label { font-size:10px !important; }
   .stat-item { padding:8px 4px !important; }
   .stat-item .hero-stat-value { font-size:18px !important; }
 }
-@media(max-width:768px) {
+@media(max-width:767px) {
   .story-card-inner { flex-direction:column !important; min-height:auto !important; }
   .story-card-text { padding:24px 22px 8px !important; min-height:auto !important; }
   .story-card-img { min-height:220px !important; padding:0 !important; }
@@ -437,7 +437,7 @@ button { font: inherit; cursor: pointer; }
 }
 
 /* ─── GET STARTED ACCORDION ─── */
-@media (max-width: 768px) {
+@media (max-width: 767px) {
   .gs-grid {
     flex-direction: column !important;
     max-width: 100% !important;
@@ -454,19 +454,19 @@ button { font: inherit; cursor: pointer; }
 }
 /* ─── Container size variants ─── */
 .container-sm { max-width: 640px; margin: 0 auto; padding: 0 32px; }
-.container-md { max-width: 768px; margin: 0 auto; padding: 0 32px; }
+.container-md { max-width: 767px; margin: 0 auto; padding: 0 32px; }
 .container-lg { max-width: 1024px; margin: 0 auto; padding: 0 32px; }
 .container-xl { max-width: 1280px; margin: 0 auto; padding: 0 32px; }
-@media(max-width:768px) {
+@media(max-width:767px) {
   .container-sm, .container-md, .container-lg, .container-xl { padding: 0 12px; }
 }
 
 /* ─── Mobile font-weight overrides (homepage.css loads last, must redeclare) ─── */
-@media(max-width:768px) {
+@media(max-width:767px) {
   .section-title { font-weight: 700; }
 }
 
-@media(max-width:768px) {
+@media(max-width:767px) {
   .hero h1 { font-weight: 700 !important; }
   .hero-analytics .stat-value,
   .hero-analytics .stat strong,
