@@ -1,266 +1,165 @@
-﻿import { useState, useEffect, useRef } from 'react'
+import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { apiRequest } from '../lib/api'
 import { useAuth } from '../context/AuthContext'
-import { SkeletonStats, SkeletonPage, injectSkeletonStyles } from "../components/SkeletonLoader";
+import { naira } from '../lib/wallet'
+import { sized } from '../lib/img'
 
-function InfoBtn({ text }: { text: string }) {
-  const [show, setShow] = useState(false);
-  const ref = useRef<HTMLSpanElement>(null);
-  return (
-    <span ref={ref} style={{ position: "relative", display: "inline-flex", marginLeft: 4, verticalAlign: "middle" }}
-      onMouseEnter={() => setShow(true)}
-      onMouseLeave={() => setShow(false)}
-      onClick={(e) => { e.stopPropagation(); setShow(s => !s) }}>
-      <i className="ti ti-info-circle" style={{ fontSize: 12, color: "var(--text3)", cursor: "pointer" }} />
-      {show && (
-        <div style={{
-          position: "absolute", bottom: "calc(100% + 6px)", left: "50%",
-          transform: "translateX(-50%)", background: "var(--text)", color: "var(--card)",
-          fontSize: 11, lineHeight: 1.5, padding: "6px 10px", borderRadius: 8,
-          whiteSpace: "normal", width: 240, zIndex: 99, pointerEvents: "none",
-          boxShadow: "0 4px 12px rgba(0,0,0,0.2)"
-        }}>
-          {text}
-        </div>
-      )}
-    </span>
-  );
-}
+// Referrals, laid out like wurk.fun's: totals, your link (with ready-made
+// shares), the people you brought in, and what you've been paid for them.
+// The bonus is paid once a referred person verifies their email or ID
+// (backend wallet.service rewardForReferral), for up to `rewardCap` people.
 
-function formatTimeAgo(dateStr: string) {
-  const date = new Date(dateStr)
-  const now = new Date()
-  const diff = now.getTime() - date.getTime()
-  const days = Math.floor(diff / (1000 * 60 * 60 * 24))
-  if (days === 0) return 'Today'
-  if (days === 1) return 'Yesterday'
-  if (days < 7) return `${days} days ago`
-  if (days < 14) return '1 week ago'
-  return date.toLocaleDateString()
+type Referral = { username: string; avatarUrl: string | null; joinedAt: string; rewardedAt: string | null }
+type Stats = {
+  referralCode: string; totalReferrals: number; rewardedReferrals: number; totalEarned: number | string
+  bonusPerReferral?: number; rewardCap?: number; referrals?: Referral[]
 }
+type Bonus = { id: string; amount: number | string; status: string; description?: string; createdAt: string }
+
+const day = (d: string) => new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
 
 export default function TabReferralsContent() {
   const { user } = useAuth()
-  const { user: authUser } = useAuth()
-  const [copied, setCopied] = useState(false)
-  const [stats, setStats] = useState<any>(null)
-  const [referrals, setReferrals] = useState<any[]>([])
+  const [stats, setStats] = useState<Stats | null>(null)
+  const [bonuses, setBonuses] = useState<Bonus[]>([])
   const [loading, setLoading] = useState(true)
+  const [copied, setCopied] = useState(false)
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [statsData, txData] = await Promise.all([
-          apiRequest<any>('/users/referrals/stats').catch(() => null),
-          apiRequest<any>('/users/transactions/history?type=REFERRAL_BONUS').catch(() => null),
-        ])
-        if (statsData) setStats(statsData)
-        if (txData) {
-          const list = Array.isArray(txData) ? txData : txData?.data ?? txData?.transactions ?? []
-          setReferrals(list.filter((t: any) => t.type === 'REFERRAL_BONUS'))
-        }
-      } catch (e: any) { console.error(e) }
+    let alive = true
+    const load = async () => {
+      const [s, tx] = await Promise.all([
+        apiRequest<Stats>('/users/referrals/stats').catch(() => null),
+        apiRequest<any>('/users/transactions/history?type=REFERRAL_BONUS').catch(() => null),
+      ])
+      if (!alive) return
+      if (s) setStats(s)
+      const list = Array.isArray(tx) ? tx : tx?.data ?? tx?.transactions ?? []
+      setBonuses(list.filter((t: any) => t.type === 'REFERRAL_BONUS'))
       setLoading(false)
     }
-    fetchData()
-    const onFocus = () => fetchData()
+    load()
+    const onFocus = () => load()
     window.addEventListener('focus', onFocus)
-    return () => window.removeEventListener('focus', onFocus)
-  }, [authUser?.id])
+    return () => { alive = false; window.removeEventListener('focus', onFocus) }
+  }, [user?.id])
 
+  const code = (user as any)?.referralCode || stats?.referralCode || ''
+  const link = code ? `https://ogapay.app/ref/${code}` : ''
+  const bonus = stats?.bonusPerReferral ?? 1000
+  const cap = stats?.rewardCap ?? 20
+  const rewarded = stats?.rewardedReferrals ?? 0
+  const people = stats?.referrals ?? []
+  const shareText = `Let's earn together!\n\nGet paid in Naira or USDC for small jobs on OgaPay.\nJoin me: ${link}`
 
-  const totalReferrals = stats?.totalReferrals ?? stats?.total ?? referrals.length
-  const rewardedReferrals = stats?.rewardedReferrals ?? 0
-  const referralTier = stats?.referralTier ?? null
-  const totalEarned = stats?.totalEarnings ?? stats?.earnings ?? 0
-  const monthEarned = stats?.monthEarnings ?? stats?.month ?? 0
-  const refCode = user?.referralCode || stats?.referralCode || ''
-  const refUrl = refCode ? `${window.location.origin}/ref/${refCode}` : `${window.location.origin}/ref/your-code`
-
-  const copyLink = async () => {
-    try {
-      await navigator.clipboard.writeText(refUrl)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-    } catch (e: any) { console.error(e) }
-  }
+  const copy = () => navigator.clipboard?.writeText(link).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000) }).catch(() => {})
 
   return (
-    <>
+    <div className="rf2">
       <style>{`
-        .rf-hero{margin-bottom:20px}
-        .rf-hero .rf-greeting{color:var(--text2);font-size:13px;font-weight:600;margin-bottom:2px}
-        .rf-hero h1{font-family:Inter;font-size:28px;font-weight:900;margin:0 0 4px}
-        .rf-hero p{color:var(--text2);font-size:14px;margin:0}
-        .rf-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
-        @media(max-width:500px){.rf-stats{grid-template-columns:1fr}}
-        .rf-stat{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center;transition:all .25s}
-        .rf-stat:hover{transform:none;border-color:var(--accent)}
-        .rf-stat i{font-size:24px;margin-bottom:6px;display:block}
-        .rf-stat .rf-num{font-family:Inter;font-size:24px;font-weight:900}
-        .rf-stat .rf-label{font-size:12px;color:var(--text2);margin-top:2px}
-        .rf-ref-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px 24px;margin-bottom:20px;transition:all .25s}
-        .rf-ref-card:hover{border-color:var(--border2)}
-        .rf-ref-title{font-weight:700;font-size:15px;margin-bottom:4px}
-        .rf-ref-desc{font-size:13px;color:var(--text2);margin-bottom:12px}
-        .rf-ref-row{display:flex;gap:8px}
-        .rf-ref-row input{flex:1;height:38px;padding:0 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg2);color:var(--text);font-size:13px;outline:0}
-        .rf-ref-row input:focus{border-color:var(--accent)}
-        .rf-ref-row button{height:38px;padding:0 16px;border-radius:8px;font-weight:700;font-size:12px;display:inline-flex;align-items:center;gap:5px;cursor:pointer;border:0;background:var(--accent);color:var(--on-accent);transition:all .2s}
-        .rf-ref-row button:hover{box-shadow:0 4px 16px rgba(var(--accent-rgb),.25)}
-        .rf-list{display:grid;gap:6px}
-        .rf-item{display:flex;align-items:center;gap:14px;padding:12px 16px;background:var(--card);border:1px solid var(--border);border-radius:10px;transition:all .2s}
-        .rf-item:hover{border-color:var(--border2)}
-        .rf-avatar{width:36px;height:36px;border-radius:50%;background:var(--bg2);display:grid;place-items:center;flex-shrink:0;font-size:16px;color:var(--text3)}
-        .rf-info{flex:1;min-width:0}
-        .rf-name{font-weight:700;font-size:13px;margin-bottom:1px}
-        .rf-date{font-size:11px;color:var(--text3)}
-        .rf-earn{font-weight:700;font-size:13px;color:var(--green);white-space:nowrap}
-        .rf-empty{text-align:center;padding:48px 20px;color:var(--text2)}
-        .rf-empty i{font-size:36px;color:var(--text3);margin-bottom:12px;display:block}
+        .rf2{display:grid;gap:16px}
+        .rf2-top{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2fr);gap:16px}
+        @media(max-width:760px){.rf2-top{grid-template-columns:1fr}}
+        .rf2-card{background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden}
+        .rf2-pad{padding:20px}
+        .rf2-label{font:500 var(--fs-label,11px) var(--font-mono,ui-monospace,monospace);letter-spacing:.1em;text-transform:uppercase;color:var(--text2)}
+        .rf2-big{font-size:34px;font-weight:600;letter-spacing:-.02em;margin-top:8px;color:var(--text)}
+        .rf2-sub{font-size:13px;color:var(--text2);margin-top:6px;line-height:1.5}
+        .rf2-link{display:flex;gap:8px;margin-top:12px}
+        .rf2-link input{flex:1;min-width:0;min-height:44px;padding:0 12px;border:1px solid var(--border);border-radius:12px;background:var(--bg2);color:var(--text);font:14px var(--font-mono,ui-monospace,monospace)}
+        .rf2-btn{min-height:44px;padding:0 16px;border-radius:12px;border:1px solid var(--border);background:var(--card);color:var(--text);font:600 14px inherit;font-family:inherit;display:inline-flex;align-items:center;gap:6px;cursor:pointer;text-decoration:none;white-space:nowrap}
+        .rf2-btn.dark{background:var(--text);color:var(--bg);border-color:var(--text)}
+        .rf2-shares{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+        .rf2-head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid var(--border)}
+        .rf2-head h2{margin:0;font-size:16px;font-weight:600}
+        .rf2-count{font:400 12px var(--font-mono,ui-monospace,monospace);color:var(--text2)}
+        .rf2-row{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr) minmax(0,1fr);gap:12px;align-items:center;padding:12px 20px;border-bottom:1px solid var(--border);font-size:14px}
+        .rf2-row:last-child{border-bottom:0}
+        .rf2-row.th{background:var(--bg2);font:600 12px inherit;letter-spacing:.06em;text-transform:uppercase;color:var(--text2)}
+        .rf2-who{display:flex;align-items:center;gap:10px;min-width:0}
+        .rf2-who img,.rf2-who span.av{width:32px;height:32px;border-radius:50%;object-fit:cover;background:var(--bg2);display:grid;place-items:center;flex-shrink:0;color:var(--text3)}
+        .rf2-who a{color:var(--text);text-decoration:none;font-weight:600;overflow:hidden;text-overflow:ellipsis}
+        .rf2-pill{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--text2)}
+        .rf2-pill.ok{color:var(--green)}
+        .rf2-empty{padding:28px 20px;color:var(--text2);font-size:14px;line-height:1.6}
+        .rf2-empty b{display:block;color:var(--text);font-size:15px;margin-bottom:4px}
+        .rf2-steps{margin:10px 0 0;padding-left:18px;color:var(--text2);font-size:13px;line-height:1.7}
       `}</style>
 
-      <div className="rf-hero">
-        <div className="rf-greeting">Earn by sharing</div>
-        <h1>Referrals</h1>
-        <p>Invite friends and earn rewards when they join OgaPay</p>
+      <div className="rf2-top">
+        <section className="rf2-card rf2-pad" aria-label="Total referrals">
+          <div className="rf2-label">Total referrals</div>
+          <div className="rf2-big">{loading ? '…' : stats?.totalReferrals ?? 0}</div>
+          <div className="rf2-sub">{rewarded} verified · {naira(Number(stats?.totalEarned || 0), 0)} earned</div>
+        </section>
+        <section className="rf2-card rf2-pad" aria-labelledby="rf2-link-h">
+          <div className="rf2-label" id="rf2-link-h">Your referral link</div>
+          <div className="rf2-sub">You earn <b>{naira(bonus, 0)}</b> for each friend who joins with your link and verifies their email or ID, for up to {cap} friends ({rewarded} of {cap} so far).</div>
+          {link ? (
+            <>
+              <div className="rf2-link">
+                <input readOnly value={link} aria-label="Your referral link" onFocus={(e) => e.currentTarget.select()} />
+                <button type="button" className="rf2-btn dark" onClick={copy}>{copied ? 'Copied!' : 'Copy'}</button>
+              </div>
+              <div className="rf2-shares">
+                <a className="rf2-btn" href={`https://wa.me/?text=${encodeURIComponent(shareText)}`} target="_blank" rel="noopener noreferrer"><i className="ti ti-brand-whatsapp" aria-hidden="true" /> WhatsApp</a>
+                <a className="rf2-btn" href={`https://x.com/intent/post?text=${encodeURIComponent(shareText)}`} target="_blank" rel="noopener noreferrer"><i className="ti ti-brand-x" aria-hidden="true" /> Post on X</a>
+                <a className="rf2-btn" href={`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent("Get paid in Naira or USDC for small jobs on OgaPay")}`} target="_blank" rel="noopener noreferrer"><i className="ti ti-brand-telegram" aria-hidden="true" /> Telegram</a>
+              </div>
+            </>
+          ) : <div className="rf2-sub">Loading your link…</div>}
+        </section>
       </div>
 
-      
-      {/* Referral Tier Badge */}
-      {!loading && (() => {
-        const tierConfigs = {
-          bronze: { icon: "ti ti-medal", label: "Bronze", color: "#CD7F32", bg: "rgba(205,127,50,0.08)", border: "rgba(205,127,50,0.2)" },
-          silver: { icon: "ti ti-medal-2", label: "Silver", color: "#A8A8A8", bg: "rgba(168,168,168,0.08)", border: "rgba(168,168,168,0.2)" },
-          gold:   { icon: "ti ti-medal", label: "Gold", color: "#F5A623", bg: "rgba(245,166,35,0.08)", border: "rgba(245,166,35,0.2)" },
-        };
-        const tc = referralTier ? tierConfigs[referralTier as keyof typeof tierConfigs] : null;
-
-        let nextLabel = "";
-        let progress = 0;
-        if (!referralTier) {
-          progress = Math.min(rewardedReferrals / 5, 1);
-          nextLabel = rewardedReferrals >= 5 ? "" : rewardedReferrals + "/5 to Bronze";
-        } else if (referralTier === "bronze") {
-          progress = Math.min((rewardedReferrals - 5) / 5, 1);
-          nextLabel = rewardedReferrals >= 10 ? "" : rewardedReferrals + "/10 to Silver";
-        } else if (referralTier === "silver") {
-          progress = Math.min((rewardedReferrals - 10) / 10, 1);
-          nextLabel = rewardedReferrals >= 20 ? "" : rewardedReferrals + "/20 to Gold";
-        } else if (referralTier === "gold") {
-          progress = 1;
-          nextLabel = "Max tier reached!";
-        }
-
-        return (
-          <div style={{
-            background: "var(--card)", border: "1px solid var(--border)",
-            borderRadius: 14, padding: "16px 20px", marginBottom: 20,
-          }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
-              <div style={{
-                width: 40, height: 40, borderRadius: 10,
-                background: tc?.bg || "var(--bg2)",
-                display: "grid", placeItems: "center", fontSize: 20, flexShrink: 0,
-              }}>
-                <i className={tc?.icon || "ti ti-clipboard-list"} style={{ color: tc?.color || "var(--text2)" }} />
-              </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text)" }}>
-                  {tc ? tc.label + " Referrer" : "Referral Tier"}<InfoBtn text="Your referral tier is based on how many of your referred users have completed their first task. Bronze: 5+ paid referrals, Silver: 10+, Gold: 20 (max)." />
-                </div>
-                <div style={{ fontSize: 12, color: "var(--text2)", marginTop: 2 }}>
-                  {nextLabel || "Earn paid referrals to unlock tiers"}
-                </div>
-              </div>
-              {tc && (
-                <div style={{
-                  fontSize: 12, fontWeight: 700, padding: "4px 10px", borderRadius: 20,
-                  background: tc.bg, color: tc.color, border: "1px solid " + tc.border,
-                }}>
-                  {tc.label}
-                </div>
-              )}
-            </div>
-            {referralTier !== "gold" && (
-              <div style={{
-                width: "100%", height: 6, borderRadius: 3,
-                background: "var(--bg2)", overflow: "hidden",
-              }}>
-                <div style={{
-                  width: (progress * 100) + "%", height: "100%", borderRadius: 3,
-                  background: tc?.color || "var(--accent)",
-                  transition: "width 0.4s ease",
-                }} />
-              </div>
-            )}
-            {referralTier === "gold" && (
-              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                {["Bronze", "Silver", "Gold"].map((t, i) => (
-                  <div key={t} style={{
-                    fontSize: 11, fontWeight: 600, padding: "3px 8px", borderRadius: 12,
-                    background: i < 2 ? "rgba(34,197,94,0.1)" : tc!.bg,
-                    color: i < 2 ? "#16A34A" : tc!.color,
-                    border: "1px solid " + (i < 2 ? "rgba(34,197,94,0.2)" : tc!.border),
-                  }}>
-                    {<i className={["ti ti-medal","ti ti-medal-2","ti ti-medal"][i]} />} {t}
-                  </div>
-                ))}
-              </div>
-            )}
+      <section className="rf2-card" aria-labelledby="rf2-hist">
+        <div className="rf2-head"><h2 id="rf2-hist">Referral history</h2><span className="rf2-count">{people.length} {people.length === 1 ? 'referral' : 'referrals'}</span></div>
+        {people.length === 0 ? (
+          <div className="rf2-empty">
+            <b>No referrals yet</b>
+            People who join through your referral link will appear here.
+            <ol className="rf2-steps">
+              <li>Share your link on WhatsApp, X or Telegram.</li>
+              <li>Your friend signs up with it and verifies their email or ID.</li>
+              <li>{naira(bonus, 0)} goes to your wallet.</li>
+            </ol>
           </div>
-        );
-      })()}
-
-<div className="rf-stats">
-        {[
-          { icon: 'ti ti-users', color: 'var(--accent)', count: String(totalReferrals), label: 'Total Referrals' },
-          { icon: 'ti ti-coin', color: 'var(--green)', count: `₦${Number(totalEarned).toLocaleString()}`, label: 'Total Earned' },
-          { icon: 'ti ti-trending-up', color: 'var(--accent)', count: `₦${Number(monthEarned).toLocaleString()}`, label: 'This Month' },
-        ].map((s, i) => (
-          <div className="rf-stat" key={i}>
-            <i className={s.icon} style={{color: s.color}} />
-            <div className="rf-num" style={{color: s.color}}>{s.count}</div>
-            <div className="rf-label">{s.label}</div>
-          </div>
-        ))}
-      </div>
-
-      <div className="rf-ref-card">
-        <div className="rf-ref-title"><i className="ti ti-link" style={{color:'var(--accent)',marginRight:6}} />Your Referral Link</div>
-        <div className="rf-ref-desc">Share this link with friends — you earn when they sign up and complete tasks</div>
-        <div className="rf-ref-row">
-          <input type="text" value={refUrl} readOnly aria-label="Your referral link" />
-          <button onClick={copyLink}>{copied ? 'Copied!' : 'Copy Link'}</button>
-        </div>
-      </div>
-
-      <div style={{fontFamily:'Inter',fontSize:15,fontWeight:800,marginBottom:12}}>
-        <i className="ti ti-list" style={{color:'var(--accent)',marginRight:6}} />Referral History
-      </div>
-
-      {loading ? (
-        <SkeletonPage />
-      ) : referrals.length === 0 ? (
-        <div className="rf-empty">
-          <i className="ti ti-users" />
-          <h3 style={{fontFamily:'Inter',fontWeight:800,margin:'0 0 4px',color:'var(--text)'}}>No referrals yet</h3>
-          <p style={{fontSize:13,margin:0}}>Share your link to start earning</p>
-        </div>
-      ) : (
-        <div className="rf-list">
-          {referrals.map((r, i) => (
-            <div className="rf-item" key={i}>
-              <div className="rf-avatar"><i className="ti ti-user" /></div>
-              <div className="rf-info">
-                <div className="rf-name">{r.description || 'Referred User'}</div>
-                <div className="rf-date">{formatTimeAgo(r.createdAt || r.date)}</div>
+        ) : (
+          <div role="table" aria-label="People you referred">
+            <div className="rf2-row th" role="row"><span role="columnheader">Person</span><span role="columnheader">Joined</span><span role="columnheader">Your bonus</span></div>
+            {people.map((p) => (
+              <div className="rf2-row" role="row" key={p.username + p.joinedAt}>
+                <span className="rf2-who" role="cell">
+                  {p.avatarUrl ? <img src={sized(p.avatarUrl, 32, true)} alt="" /> : <span className="av"><i className="ti ti-user" aria-hidden="true" /></span>}
+                  <Link to={`/user/${p.username}`}>@{p.username}</Link>
+                </span>
+                <span role="cell">{day(p.joinedAt)}</span>
+                <span role="cell">{p.rewardedAt
+                  ? <span className="rf2-pill ok"><i className="ti ti-circle-check" aria-hidden="true" /> {naira(bonus, 0)} paid</span>
+                  : <span className="rf2-pill"><i className="ti ti-clock" aria-hidden="true" /> Waiting for them to verify</span>}</span>
               </div>
-              <div className="rf-earn">+₦{Number(r.amount || 0).toLocaleString()}</div>
-            </div>
-          ))}
-        </div>
-      )}
-    </>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <section className="rf2-card" aria-labelledby="rf2-earn">
+        <div className="rf2-head"><h2 id="rf2-earn">Referral earnings</h2><span className="rf2-count">{bonuses.length} {bonuses.length === 1 ? 'payment' : 'payments'}</span></div>
+        {bonuses.length === 0 ? (
+          <div className="rf2-empty">No referral earnings yet. You're paid when someone you referred verifies their email or ID.</div>
+        ) : (
+          <div role="table" aria-label="Referral payments">
+            <div className="rf2-row th" role="row"><span role="columnheader">Status</span><span role="columnheader">Reward</span><span role="columnheader">Date</span></div>
+            {bonuses.map((b) => (
+              <div className="rf2-row" role="row" key={b.id}>
+                <span role="cell" className={`rf2-pill${b.status === 'COMPLETED' ? ' ok' : ''}`}>{b.status === 'COMPLETED' ? 'Paid' : b.status.charAt(0) + b.status.slice(1).toLowerCase()}</span>
+                <span role="cell" style={{ fontWeight: 600 }}>{naira(Number(b.amount || 0), 0)}</span>
+                <span role="cell">{day(b.createdAt)}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+    </div>
   )
 }

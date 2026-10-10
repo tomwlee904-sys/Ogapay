@@ -5,6 +5,7 @@ import { apiRequest } from '../lib/api'
 import { SkeletonPage, injectSkeletonStyles } from '../components/SkeletonLoader'
 import { useAuth } from '../context/AuthContext'
 import { PushOffer } from './PushAlerts'
+import { renderJobText } from '../lib/jobText'
 
 function timeAgo(date: string | Date) {
   const diff = Date.now() - new Date(date).getTime()
@@ -56,6 +57,7 @@ const TYPE_ICONS: Record<string, { icon: string; color: string }> = {
 }
 
 function resolveIcon(type: string, title: string) {
+  if (type === 'PLATFORM_UPDATE') return { icon: 'ti ti-speakerphone', color: 'var(--accent)' }
   const mapped = TYPE_ICONS[type]
   if (mapped) return mapped
   // Fallback: guess from title if type is unknown
@@ -214,6 +216,7 @@ export default function TabNotificationsContent() {
         .nt-content{flex:1;min-width:0}
         .nt-title{font-weight:700;font-size:13px;margin-bottom:2px;padding-right:20px}
         .nt-desc{color:var(--text2);font-size:12px;margin-bottom:2px}
+        .nt-update{color:var(--text);font-size:14px;line-height:1.6;margin:6px 0}.nt-update p{margin:0 0 10px}.nt-update ul,.nt-update ol{margin:0 0 10px;padding-left:20px}
         .nt-time{font-size:11px;color:var(--text3)}
         .nt-del{position:absolute;top:10px;right:10px;width:24px;height:24px;border-radius:6px;border:none;background:transparent;color:var(--text3);cursor:pointer;display:grid;place-items:center;font-size:14px;transition:all .15s}
         .nt-del::after{content:'';position:absolute;inset:-10px}
@@ -266,7 +269,9 @@ export default function TabNotificationsContent() {
               </div>
               <div className="nt-content">
                 <div className="nt-title">{n.title}</div>
-                <div className="nt-desc">{n.desc}</div>
+                {n.type === 'PLATFORM_UPDATE'
+                  ? <div className="nt-desc nt-update" dangerouslySetInnerHTML={{ __html: renderJobText(String(n.body || '')) }} />
+                  : <div className="nt-desc">{n.desc}</div>}
                 <div className="nt-time">{n.time}</div>
               </div>
               <button className="nt-del" onClick={(e) => deleteNotif(n.id, e)} title="Delete">
