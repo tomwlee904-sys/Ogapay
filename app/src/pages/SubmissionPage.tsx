@@ -15,7 +15,7 @@ import '../styles/submit.css'
 // /tasks/:id/submissions are sent to the review drawer in Manage jobs.
 
 type Task = {
-  id: string; title: string; description?: string; instructions?: string | null; proofRequired?: string | null
+  id: string; title: string; description?: string; instructions?: string | null; proofRequired?: string | null; isContest?: boolean
   reward: number | string; currency?: string; category?: string; status: string; posterId?: string
   poster?: { username?: string | null }
   [k: string]: any
@@ -184,7 +184,7 @@ export default function SubmissionPage() {
                 <button className="ui-btn ui-btn-dark ui-btn-lg sb-send" disabled={!!busy} onClick={submit}>
                   {busy ? <><i className="ti ti-loader-2 sb-spin" /> {busy}</> : <>Send work</>}
                 </button>
-                <p className="sb-small">{needsShot ? 'Add at least one screenshot.' : 'Add at least a link, a note or a file.'} The poster reviews it and you're paid {money(reward, cur)} when it's approved.</p>
+                <p className="sb-small">{needsShot ? 'Add at least one screenshot.' : 'Add at least a link, a note or a file.'} {task.isContest ? 'The poster picks the winners when the contest ends, and prizes go to the best entries.' : <>The poster reviews it and you're paid {money(reward, cur)} when it's approved.</>}</p>
               </section>
             )}
           </div>

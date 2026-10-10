@@ -81,3 +81,11 @@ export function plainJobText(text?: string | null): string {
     .replace(/\s+/g, ' ')
     .trim()
 }
+
+// A brief that sends people to a link ("click the survey link", "fill out our
+// form", "link below") but contains no web address can't be done; the Create
+// screen warns about it. Asking for a link as proof ("send the link to your
+// post") doesn't count.
+const SENDS_TO_LINK = /\b(click|open|visit|tap|follow|use|go to)\b[^.\n]{0,30}\b(link|url|form|survey|website)\b|\b(survey|form|registration|sign[- ]?up)\s+link\b|\blink\s+(below|above)\b|\b(fill|complete)\s+(out\s+|in\s+)?(our|the|this)\s+(survey|form|questionnaire)\b/i
+const HAS_ADDRESS = /(https?:\/\/|www\.)\S+|\b[a-z0-9-]+\.(com|app|ng|io|org|net|co|xyz|me|ly|gl|link|site|dev)(\/\S*)?\b/i
+export const missingLink = (text: string) => SENDS_TO_LINK.test(text || '') && !HAS_ADDRESS.test(text || '')

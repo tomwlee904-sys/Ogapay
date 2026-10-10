@@ -8,7 +8,6 @@ import { useToast } from '../components/Toast'
 import { API_BASE, apiRequest, getAccessToken } from '../lib/api'
 import { savedJobIds, setSaved } from '../lib/bookmarks'
 import { jobRequirements, rankName } from '../lib/requirements'
-import ApplyModal from '../components/ApplyModal'
 import { BoostedTag, PremiumMark } from '../components/Perks'
 import Money from '../components/Money'
 import ContestPanel, { type ContestInfo } from '../components/ContestPanel'
@@ -146,7 +145,6 @@ export default function JobDetail() {
   const [reloadKey, setReloadKey] = useState(0)
   const [loading, setLoading] = useState(true)
   const [showSubs, setShowSubs] = useState(false)
-  const [showApply, setShowApply] = useState(false)
   const [showApplyWarning, setShowApplyWarning] = useState(false)
   const [showShare, setShowShare] = useState(false)
   const [showInfo, setShowInfo] = useState(false)
@@ -430,8 +428,6 @@ export default function JobDetail() {
       cancelling={cancelling}
       toggleHighlight={toggleHighlight}
       highlighting={highlighting}
-      showApply={showApply}
-      setShowApply={setShowApply}
       showApplyWarning={showApplyWarning}
       setShowApplyWarning={setShowApplyWarning}
       showShare={showShare}
@@ -487,7 +483,7 @@ function ErrorState({ message, onBack }: { message: string; onBack: () => void }
 function WurkJobDetailView(props: any) {
   const {
     job, fmt, convert, navigate, countdown, showSubs, setShowSubs, isOpen, canManage,
-    bookmarked, handleBookmark, handleCancelJob, cancelling, toggleHighlight, highlighting, showApply, setShowApply, showApplyWarning, setShowApplyWarning,
+    bookmarked, handleBookmark, handleCancelJob, cancelling, toggleHighlight, highlighting, showApplyWarning, setShowApplyWarning,
     showShare, setShowShare, showInfo, setShowInfo,
     showReportModal, setShowReportModal, reportCategory, setReportCategory,
     reportDesc, setReportDesc, reportMsg, setReportMsg, reportSubmitting, handleSubmitReport,
@@ -500,6 +496,12 @@ function WurkJobDetailView(props: any) {
   const currencyMap: Record<string, string> = { USD: 'USDC', USDC: 'USDC', NGN: 'NGN', SOL: 'SOL' }
   const rewardCurrency = currencyMap[job.currency] || 'NGN'
   const description = job.description || job.instructions || 'No description provided.'
+  // Older jobs (and ones made through the API) keep instructions apart from the
+  // description; show them when they say something the description doesn't.
+  // The create forms send the same text twice, so those show it once.
+  const same = (s: string) => String(s || '').replace(/\s+/g, ' ').trim().toLowerCase()
+  const extraInstructions = job.instructions && job.description && !same(job.description).includes(same(job.instructions)) ? job.instructions : ''
+  const proofText = job.proofRequired.filter((p: string) => p && !same(description).includes(same(p))).join(' · ')
   const profileHandle = (job.brandHandle || job.brand || '').replace('@', '')
   const handleText = job.brandHandle ? `@${job.brandHandle}` : 'Review the instructions carefully and only apply if you can add real value.'
 
@@ -1027,6 +1029,19 @@ function WurkJobDetailView(props: any) {
 
             <div className="wjd-body" dangerouslySetInnerHTML={{ __html: renderJobText(description) }} />
 
+            {extraInstructions && (
+              <>
+                <div className="wjd-sub-title">What to do</div>
+                <div className="wjd-body" dangerouslySetInnerHTML={{ __html: renderJobText(extraInstructions) }} />
+              </>
+            )}
+            {proofText && (
+              <>
+                <div className="wjd-sub-title">Proof to send</div>
+                <div className="wjd-body"><p>{proofText}</p></div>
+              </>
+            )}
+
             {job.steps.length > 0 && (
               <>
                 <div className="wjd-sub-title">Steps</div>
@@ -1082,7 +1097,7 @@ function WurkJobDetailView(props: any) {
                 <button className="wjd-primary" type="button" disabled={!canManage && !isOpen}
                   onClick={() => canManage ? navigate('/manage-jobs') : setShowApplyWarning(true)}>
                   <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" /></svg>
-                  {canManage ? 'Manage Submissions' : isOpen ? (contest ? 'Enter contest' : 'Apply') : (contest ? 'Entries closed' : 'Job Closed')}
+                  {canManage ? 'Manage Submissions' : isOpen ? (contest ? 'Enter contest' : 'Take a place') : (contest ? 'Entries closed' : 'Job Closed')}
                 </button>
                 {canManage && <button className="wjd-secondary" type="button" onClick={() => setShowSubs(!showSubs)}>
                   <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
@@ -1225,7 +1240,7 @@ function WurkJobDetailView(props: any) {
         <div className="wjd-modal-bg" onClick={() => setShowApplyWarning(false)}>
           <div className="wjd-before" role="dialog" aria-modal="true" onClick={(e: any) => e.stopPropagation()}>
             <div className="wjd-modal-head">
-              <div className="wjd-before-title">Before you apply</div>
+              <div className="wjd-before-title">Before you start</div>
               <button className="wjd-close-btn" type="button" onClick={() => setShowApplyWarning(false)}><i className="ti ti-x" /></button>
             </div>
             <div className="wjd-before-copy">Please confirm the following before continuing:</div>
@@ -1236,13 +1251,12 @@ function WurkJobDetailView(props: any) {
               <li>Spamming jobs may get your account blocked.</li>
             </ul>
             <div className="wjd-before-actions">
-              <button className="wjd-understand" type="button" onClick={() => { setShowApplyWarning(false); setShowApply(true) }}>I understand</button>
+              {/* The submit page shows what to do and the proof, and takes the place when the work is sent */}
+              <button className="wjd-understand" type="button" onClick={() => { setShowApplyWarning(false); navigate(`/tasks/${job.id}/submit`) }}>I understand</button>
             </div>
           </div>
         </div>
       )}
-
-      <ApplyModal open={showApply} onClose={() => setShowApply(false)} jobId={job.id} jobTitle={job.title} reward={job.reward} currency={rewardCurrency} onApplied={(jid) => { /* optimistic */ }} />
 
       {showShare && <SharePanel job={job} onClose={() => setShowShare(false)} />}
 

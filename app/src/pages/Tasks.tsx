@@ -12,7 +12,6 @@ import { useApi } from '../lib/useApi'
 import { useTheme } from '../context/ThemeContext'
 import { useCurrency } from '../context/CurrencyContext'
 import { SkeletonPage, injectSkeletonStyles } from "../components/SkeletonLoader"
-import ApplyModal from '../components/ApplyModal'
 import { HomeJobCard } from '../components/home/HomeCards'
 import { sized } from '../lib/img'
 import { jobDeadline } from '../lib/deadline'
@@ -92,7 +91,7 @@ function JobDetailModal({ job, onClose, onApply }: { job: any; onClose: () => vo
   const { user } = useAuth()
   const { toast: showToast } = useToast()
   const { rates } = useCurrency()
-  const [showApplyModal, setShowApplyModal] = useState(false)
+  const navigate = useNavigate()
   const [applySubmitting, setApplySubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [notes, setNotes] = useState('')
@@ -124,7 +123,6 @@ function JobDetailModal({ job, onClose, onApply }: { job: any; onClose: () => vo
 
   // Reset all form state when switching to a different job
   useEffect(() => {
-    setShowApplyModal(false)
     setSubmitted(false)
     setNotes('')
     setShowReportModal(false)
@@ -341,8 +339,8 @@ function JobDetailModal({ job, onClose, onApply }: { job: any; onClose: () => vo
         {/* ── ACTIONS ── */}
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
           {!isMyTask && (
-            <button onClick={() => { setShowApplyModal(true); setSubmitted(false) }} style={{ flex: '1 1 140px', height: 46, borderRadius: 12, background: OGAPAY_BLUE, color: 'var(--on-accent)', border: 'none', fontWeight: 800, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
-              <i className="ti ti-edit" /> Apply
+            <button onClick={() => navigate(`/tasks/${job.id}/submit`)} style={{ flex: '1 1 140px', height: 46, borderRadius: 12, background: OGAPAY_BLUE, color: 'var(--on-accent)', border: 'none', fontWeight: 800, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+              <i className="ti ti-edit" /> {job.isContest ? 'Enter contest' : 'Take a place'}
             </button>
           )}
           <button onClick={handleViewSubmissions} style={{ flex: '1 1 140px', height: 46, borderRadius: 12, background: OGAPAY_BLUE, color: 'var(--on-accent)', border: 'none', fontWeight: 800, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
@@ -373,15 +371,6 @@ function JobDetailModal({ job, onClose, onApply }: { job: any; onClose: () => vo
       </div>
 
       {/* Apply Modal */}
-      <ApplyModal
-        open={showApplyModal}
-        onClose={() => { setShowApplyModal(false); setSubmitted(false) }}
-        jobId={job.id}
-        jobTitle={job.title}
-        reward={job.reward}
-        currency={job.currency || 'NGN'}
-        onApplied={(jid) => { if (jid) setSubmissions(prev => [...prev, jid]) }}
-      />
 
       {/* Report Modal */}
       {showReportModal && (

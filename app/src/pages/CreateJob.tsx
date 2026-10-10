@@ -18,6 +18,7 @@ import { Steps, Fold, Toggle as CfToggle, OverviewCard, RequirementPicker, DURAT
 import TemplatesModal from "../components/create/TemplatesModal";
 import { useProviders } from "../lib/providers";
 import "../styles/create.css";
+import { missingLink } from '../lib/jobText'
 // -- COLOR TOKENS ----------------------------------------------------------
 const C = {
   text: "var(--text)",
@@ -741,6 +742,9 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
                         placeholder="What should people do? Describe the result, what to submit and how you'll choose winners." />
                     </div>
                     <div className="cf-count"><span>Include the task, expected result and what to submit. Markdown supported.</span><span>{description.length.toLocaleString()} / 10,000</span></div>
+                    {missingLink(description) && (
+                      <p className="cf-warn" role="status"><i className="ti ti-link-off" aria-hidden="true" /> Your brief sends people to a link, but there's no web address in it. Add the link (https://…) so they can do the job.</p>
+                    )}
                   </div>
 
                   {isContest ? (
