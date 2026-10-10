@@ -19,6 +19,7 @@ import TemplatesModal from "../components/create/TemplatesModal";
 import { useProviders } from "../lib/providers";
 import "../styles/create.css";
 import { missingLink } from '../lib/jobText'
+import InfoTip from '../components/InfoTip'
 // -- COLOR TOKENS ----------------------------------------------------------
 const C = {
   text: "var(--text)",
@@ -136,11 +137,6 @@ const IconSettings = () => (
     <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
   </svg>
 );
-const IconInfo = () => (
-  <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-    <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
-  </svg>
-);
 const IconClose = () => (
   <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
     <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
@@ -223,29 +219,6 @@ function SelectField({ label, value, onChange, options, style = {} }: any) {
   );
 }
 
-// -- INFO TOOLTIP ----------------------------------------------------------
-function InfoTip({ text }: any) {
-  const [show, setShow] = useState(false);
-  return (
-    <span style={{ position: "relative", display: "inline-flex" }}>
-      <span onMouseEnter={() => setShow(true)} onMouseLeave={() => setShow(false)} onClick={() => setShow(s => !s)}
-        style={{ cursor: "pointer", display: "flex", color: C.text3 }}>
-        <IconInfo />
-      </span>
-      {show && (
-        <div style={{
-          position: "absolute", bottom: "calc(100% + 6px)", left: "50%",
-          transform: "translateX(-50%)", background: C.text, color: C.card,
-          fontSize: 11, lineHeight: 1.5, padding: "6px 10px", borderRadius: 8,
-          whiteSpace: "normal", width: 200, zIndex: 99, pointerEvents: "none",
-          boxShadow: "0 4px 12px rgba(0,0,0,0.2)"
-        }}>
-          {text}
-        </div>
-      )}
-    </span>
-  );
-}
 
 // -- EXTRA REQUIREMENTS ACCORDION ------------------------------------------
 // -- PER-ACTION REQUIREMENT (Wurk.fun style) --------------------------------
@@ -402,7 +375,14 @@ function ExtraRequirements({ value, onChange }: any) {
       }}>
         <IconSettings />
         <div style={{ flex: 1 }}>
-          <span style={{ fontSize: 13, fontWeight: 700, color: C.text }}>Extra requirements <InfoTip text="Min Worker Level: minimum experience tier (Beginner?Legend) a worker needs to apply • Min OgaScore: minimum reputation score required • KYC Verified: only identity-verified workers can apply • Verified X Account: only workers with a connected X account can apply" /></span>
+          <span style={{ fontSize: 13, fontWeight: 700, color: C.text }}>Extra requirements <InfoTip label="What are the extra requirements?" title="Extra requirements">
+            <ul>
+              <li><b>Minimum rank:</b> how experienced someone must be (Beginner, Intermediate, Advanced, Expert, Legend).</li>
+              <li><b>Minimum OgaScore:</b> their trust score from verified accounts and ID checks.</li>
+              <li><b>ID verified:</b> only people who verified their identity can take it.</li>
+              <li><b>Connected X account:</b> only people who connected X can take it.</li>
+            </ul>
+          </InfoTip></span>
           <span style={{ fontSize: 12, color: C.accent }}>(Requirement: Rank {value.minRank || 0})</span>
           <div style={{ fontSize: 11, color: C.text3, marginTop: 2 }}>Seeker, verified X accounts, holdings, oga score, rank...</div>
         </div>
@@ -707,7 +687,13 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
                 </div>
                 <div className="cf-body">
                   <div className="cf-field">
-                    <span className="cf-lbl">Mode</span>
+                    <span className="cf-lbl">Mode <InfoTip label="What are the job modes?" title="Job modes">
+                      <ul>
+                        <li><b>Challenge:</b> everyone whose work you approve is paid the reward, until your number of winners is reached. Best for simple tasks.</li>
+                        <li><b>Contest:</b> people send entries until it closes, then you rank the best and pay a prize for each place. Best for creative work.</li>
+                        <li><b>Selection:</b> people apply, you choose who does the work, and they're paid when you approve it.</li>
+                      </ul>
+                    </InfoTip></span>
                     <div className="cf-modes" role="radiogroup" aria-label="Mode">
                       {[
                         ["Challenge", "ti-trophy", "Pay every approved entry, up to your number of winners."],
@@ -793,7 +779,10 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
                   </div>
 
                   <div className="cf-field">
-                    <label htmlFor="cj-dur">{isContest ? "Entries close after" : "Job closes after"}</label>
+                    <label htmlFor="cj-dur">{isContest ? "Entries close after" : "Job closes after"} <InfoTip label="What happens when the job closes?" title="When it closes">
+                      <p>No one can take a place or send new work. Work already sent is still reviewed, and money for places nobody used comes back to your wallet.</p>
+                      <p>Work you don't review within 3 days is approved and paid automatically.</p>
+                    </InfoTip></label>
                     <select id="cj-dur" className="ui-select" value={isContest && duration === "No deadline" ? "7 days" : duration} onChange={e => setDuration(e.target.value)}>
                       {DURATIONS.filter(([l]) => !(isContest && l === "No deadline")).map(([l]) => <option key={l} value={l}>{l}</option>)}
                     </select>
@@ -808,7 +797,9 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
 
                   {myCommunities.length > 0 && (
                     <div className="cf-field">
-                      <label htmlFor="cj-community">Who can see and take it</label>
+                      <label htmlFor="cj-community">Who can see and take it <InfoTip label="Who can see and take this job?" title="Who can take it">
+                        <p>Everyone on OgaPay, or only members of a community you own or run. A members-only job is hidden from everyone else.</p>
+                      </InfoTip></label>
                       <select id="cj-community" className="ui-select" value={community ? community.communityId : ""} onChange={e => setCommunityId(e.target.value)}>
                         <option value="">Everyone on OgaPay</option>
                         {myCommunities.map((c) => <option key={c.communityId} value={c.communityId}>Members of {c.name} only</option>)}

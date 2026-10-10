@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState, type ReactNode } from "react"
 import ItemCover from '../components/ItemCover'
 import { useParams, useNavigate, Link } from "react-router-dom"
 import Layout from "../components/Layout"
@@ -10,6 +10,7 @@ import "../styles/profile-public.css"
 import { PremiumMark } from "../components/Perks";
 import { sized } from '../lib/img'
 import CreatorAudiences from "../components/profile/CreatorAudiences"
+import InfoTip from '../components/InfoTip'
 
 type Tab = "store" | "portfolio" | "reviews" | "communities"
 
@@ -201,10 +202,16 @@ export default function UserProfile() {
 
   // ── Stats ──────────────────────────────────────────────────────────────
   // The join date is in the header, so compliments take the first spot (like wurk.fun)
-  const stats: { icon: string; label: string; value: string; sub?: string }[] = [
-    { icon: "ti-heart", label: "Compliments", value: String(compliments ?? 0) },
-    { icon: "ti-briefcase", label: "Jobs done", value: String(wp.tasksCompleted ?? 0), sub: wp.tasksCompleted ? `${Math.round(wp.successRate || 0)}% success rate` : undefined },
-    ...(profile?.preferences?.showRank ? [{ icon: "ti-trophy", label: "Rank", value: LEVEL_NAMES[wp.level] || "Beginner", sub: `OgaScore ${profile?.ogaScore ?? 0}` }] : []),
+  const stats: { icon: string; label: string; value: string; sub?: string; tip?: ReactNode }[] = [
+    { icon: "ti-heart", label: "Compliments", value: String(compliments ?? 0),
+      tip: <p>How many people complimented this profile. Anyone signed in can give one compliment per profile, and take it back.</p> },
+    { icon: "ti-briefcase", label: "Jobs done", value: String(wp.tasksCompleted ?? 0), sub: wp.tasksCompleted ? `${Math.round(wp.successRate || 0)}% success rate` : undefined,
+      tip: <p>Jobs this person was paid for. The success rate is the share of their work that was approved (approved ÷ approved and rejected).</p> },
+    ...(profile?.preferences?.showRank ? [{ icon: "ti-trophy", label: "Rank", value: LEVEL_NAMES[wp.level] || "Beginner", sub: `OgaScore ${profile?.ogaScore ?? 0}`,
+      tip: <>
+        <p><b>Rank</b> grows with jobs done and rating: Intermediate at 10 jobs, Advanced at 50 (4.0★), Expert at 200 (4.5★), Legend at 500 (4.8★).</p>
+        <p><b>OgaScore</b> (out of 66) comes from checks we verified: connected LinkedIn, X, GitHub, Google and Telegram, ID verification and Human verification. Some jobs need a minimum.</p>
+      </> }] : []),
     { icon: "ti-building-store", label: "Products", value: String(counts.storeItems ?? products.length) },
     { icon: "ti-users", label: "Communities", value: String(counts.communityMemberships ?? communities.length) },
   ]
@@ -274,7 +281,7 @@ export default function UserProfile() {
           <div className="up-stats">
             {stats.map((s) => (
               <div className="up-stat" key={s.label}>
-                <div className="l"><i className={`ti ${s.icon}`} /> {s.label}</div>
+                <div className="l"><i className={`ti ${s.icon}`} /> {s.label}{s.tip && <InfoTip label={`What is ${s.label}?`} title={s.label}>{s.tip}</InfoTip>}</div>
                 <div className="v">{s.value}</div>
                 {s.sub && <div className="s">{s.sub}</div>}
               </div>

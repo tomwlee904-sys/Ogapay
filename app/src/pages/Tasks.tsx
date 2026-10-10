@@ -15,6 +15,7 @@ import { SkeletonPage, injectSkeletonStyles } from "../components/SkeletonLoader
 import { HomeJobCard } from '../components/home/HomeCards'
 import { sized } from '../lib/img'
 import { jobDeadline } from '../lib/deadline'
+import InfoTip from '../components/InfoTip'
 
 const OGAPAY_BLUE = 'var(--accent)'
 
@@ -658,6 +659,9 @@ export default function Tasks() {
             <input type="checkbox" checked={availableOnly} onChange={e => setAvailableOnly(e.target.checked)} />
             <span className="ui-switch-track" aria-hidden="true" />
           </label>
+          <InfoTip label="What does Available for me show?" title="Available for me">
+            <p>Only jobs you can take right now: still open, with a place free, not taken by you already, and with requirements you meet (like OgaScore, rank or a connected account).</p>
+          </InfoTip>
         </div>
 
         {loading ? (

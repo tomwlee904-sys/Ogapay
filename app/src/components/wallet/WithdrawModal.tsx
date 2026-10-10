@@ -7,6 +7,7 @@ import { apiRequest } from '../../lib/api'
 import { useAuth } from '../../context/AuthContext'
 import { useWalletBalance } from '../../context/WalletBalanceContext'
 import { MIN_WITHDRAW_NGN, kycOf, maskAcct, money, naira, newKey, ngnWithdrawFee, shortAddr, whenAgain, withdrawLimit, type Allowance, type Balances, type Bank } from '../../lib/wallet'
+import InfoTip from '../InfoTip'
 
 type Done = { kind: 'bank'; net: number; bank: Bank; reference: string } | { kind: 'crypto'; amount: number; currency: string; to: string; reference: string; pending: boolean }
 
@@ -145,7 +146,7 @@ export default function WithdrawModal({ onClose, onDone, balances: given }: { on
         <div className="dp-lock">
           <i className="ti ti-shield-check" />
           <h3>Verify your identity to withdraw</h3>
-          <p>Withdrawals need Level 1 verification (your NIN). It takes a couple of minutes and lets you withdraw up to {naira(withdrawLimit(1), 0)} at a time.</p>
+          <p>Withdrawals need Level 1 verification: a bank account in your name (free) or your NIN. It takes a minute and lets you withdraw up to {naira(withdrawLimit(1), 0)} a day.</p>
           <Link className="ui-btn ui-btn-dark" to="/settings/verification" onClick={onClose}>Verify now</Link>
         </div>
       </Sheet>
@@ -219,7 +220,11 @@ export default function WithdrawModal({ onClose, onDone, balances: given }: { on
                 <span>Available {money(available, cur)}</span>
                 <span>{usedUp
                   ? <>Today's limit used{allow?.nextAt ? ` · again from ${whenAgain(allow.nextAt)}` : ''}</>
-                  : <>{naira(left, 0)}{tab === 'crypto' ? ' worth' : ''} left today of {naira(dayLimit, 0)}</>}</span>
+                  : <>{naira(left, 0)}{tab === 'crypto' ? ' worth' : ''} left today of {naira(dayLimit, 0)}</>}
+                  <InfoTip label="How do withdrawal limits work?" title="Daily withdrawal limit">
+                    <p>How much you can take out in any 24 hours, bank and crypto together. It depends on your verification level: {naira(withdrawLimit(1), 0)} at Level 1, {naira(withdrawLimit(2), 0)} at Level 2 and {naira(withdrawLimit(3), 0)} at Level 3.</p>
+                    <p>The smallest withdrawal is {naira(MIN_WITHDRAW_NGN, 0)}. Verify a higher level in Settings → Verification to raise your limit.</p>
+                  </InfoTip></span>
               </>}
             </div>
           </div>

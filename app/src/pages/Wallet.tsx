@@ -12,6 +12,7 @@ import { useAuth } from '../context/AuthContext'
 import { useWalletBalance } from '../context/WalletBalanceContext'
 import { isCredit, isEscrowHeld, isStoreHeld, kycOf, isPending, isVoid, usefulNote, maskAcct, money, naira, statusLabel, txDetail, txTitle, when, type Balances, type Bank, type Summary, type Tx } from '../lib/wallet'
 import '../styles/wallet.css'
+import InfoTip from '../components/InfoTip'
 
 // Wallet, top to bottom: the balance (with what's on hold and on its way), your
 // verification level and what it lets you withdraw, money in (your OgaPay
@@ -131,7 +132,10 @@ export default function Wallet() {
                   )}
                   {(onHold > 0 || onItsWay > 0) && (
                     <div className="wl-bal-notes">
-                      {onHold > 0 && <span><i className="ti ti-lock" /> {naira(onHold)} held for your jobs</span>}
+                      {onHold > 0 && <span><i className="ti ti-lock" /> {naira(onHold)} held for your jobs <InfoTip label="What is held money?" title="Held for your jobs">
+                        <p>Money for jobs you posted or things you bought, kept safe by OgaPay. Workers are paid from it when you approve their work; store sellers are paid when you confirm the order (or after 3 days).</p>
+                        <p>Money for places nobody used comes back to your wallet when the job ends.</p>
+                      </InfoTip></span>}
                       {onItsWay > 0 && <span><i className="ti ti-clock" /> {naira(onItsWay)} on its way to your bank</span>}
                     </div>
                   )}

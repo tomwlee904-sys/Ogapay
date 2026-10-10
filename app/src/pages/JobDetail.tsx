@@ -1220,6 +1220,20 @@ function WurkJobDetailView(props: any) {
                 </div>
               </div>
 
+              <div className="wjd-info-section-title">This kind of job</div>
+              <div className="wjd-info-row">
+                <div className="wjd-info-row-label">{contest ? 'Contest' : 'Challenge'}</div>
+                <div className="wjd-info-row-val">{contest
+                  ? 'Send one entry before it closes. The poster then ranks the best entries and pays a prize for each place. Only the winners are paid.'
+                  : `Everyone whose work is approved is paid ${formatMoney(Number(job.reward || 0), rewardCurrency)}, until all ${job.slots} ${job.slots === 1 ? 'place is' : 'places are'} used.`}</div>
+              </div>
+              <div className="wjd-info-row" style={{ marginBottom: 20 }}>
+                <div className="wjd-info-row-label">Who can take it</div>
+                <div className="wjd-info-row-val">{community
+                  ? <>Only members of <Link to={`/communities/${community.slug || community.id}`} style={{ color: 'inherit', fontWeight: 600 }}>{community.name}</Link>. Open the community and ask to join first.</>
+                  : 'Anyone on OgaPay who meets the requirements shown on this page.'}</div>
+              </div>
+
               <div className="wjd-info-section-title">Step by step</div>
               <ol className="wjd-how-steps">
                 <li><strong>Take a place.</strong> It's reserved for you{jobRequirements(job).filter(r => r.icon !== 'award').length ? `, if you meet the requirements (${jobRequirements(job).filter(r => r.icon !== 'award').map(r => r.text).join(', ')})` : ''}.</li>
