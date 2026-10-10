@@ -129,17 +129,21 @@ export default function Verification({ me, reload, providers }: SectionProps & {
 
   const bankPanel = bankKyc && tier === 0 && !diditOpen && (
     <div className="st2-panel st2-form">
-      <strong>Get Level 1 with your bank account <span className="st2-free">Free · instant</span></strong>
-      <p className="st2-muted" style={{ margin: 0, lineHeight: 1.55 }}>
-        Your bank already checked who you are. Pick your bank and type your account number: if the account is in your name, <b>{myName || 'not set'}</b>, you're Level 1 straight away and it becomes your withdrawal account.
-        {!myName || !me.firstName || !me.lastName ? <> <Link className="st2-linkbtn" to="/edit-profile">Add your name</Link> first.</> : <> Not your name on the bank? <Link className="st2-linkbtn" to="/edit-profile">Change it</Link> first, since it can't be changed after.</>}
-      </p>
+      <strong>Verify with your bank account <span className="st2-free">Free · 1 minute</span></strong>
+      <ol className="st2-steps">
+        <li>Choose your bank.</li>
+        <li>Type your 10-digit account number.</li>
+        <li>If the name on the account is <b>{myName || 'your name'}</b>, you're verified. Your earnings will be paid into this account.</li>
+      </ol>
+      {!me.firstName || !me.lastName
+        ? <div className="st2-warn"><i className="ti ti-alert-circle" aria-hidden="true" /><span>First, <Link className="st2-linkbtn" to="/edit-profile">add your name</Link> exactly as it is on your bank account.</span></div>
+        : <div className="st2-warn"><i className="ti ti-alert-circle" aria-hidden="true" /><span>Is your name different on your bank account? <Link className="st2-linkbtn" to="/edit-profile">Change it here first</Link>. You can't change it after you're verified.</span></div>}
       {bankMsg ? <p className="st2-ok">{bankMsg}</p> : (
-        <AddBankForm note="This must be an account in your own name. Business accounts aren't accepted." action={{ label: 'Verify with this account', busyLabel: 'Verifying…', run: (b, n) => verifyBank(b, n) }} />
+        <AddBankForm note="Use your own personal account, not a business account or someone else's." action={{ label: 'Verify me', busyLabel: 'Verifying…', run: (b, n) => verifyBank(b, n) }} />
       )}
       {(ninInstant || !didit) && (
         <p className="st2-muted" style={{ margin: '4px 0 0' }}>
-          No bank account in your name? <button type="button" className="st2-linkbtn" onClick={() => setUseNin((v) => !v)}>{useNin ? 'Hide the NIN form' : 'Use your NIN instead'}</button>
+          No bank account in your own name? <button type="button" className="st2-linkbtn" onClick={() => setUseNin((v) => !v)}>{useNin ? 'Hide the NIN form' : 'Use your NIN instead'}</button>
         </p>
       )}
     </div>
@@ -192,7 +196,7 @@ export default function Verification({ me, reload, providers }: SectionProps & {
 
   return (
     <>
-      <Card title="Identity verification (KYC)" sub={`Needed before you can withdraw or send money.${didit ? ' ID checks are done by Didit.' : ''} Your ID details are never shown to other users.`}>
+      <Card title="Verify your identity" sub="You need this before you can withdraw your earnings or send money. Your details are private and never shown to other users.">
         <div className="st2-levels">
           {levelsFor(didit, ninInstant, bankKyc).map((l) => {
             const done = tier >= l.tier
@@ -200,7 +204,7 @@ export default function Verification({ me, reload, providers }: SectionProps & {
             return (
               <div key={l.tier} className={`st2-level${done ? ' done' : next ? ' next' : ''}`}>
                 <i className={`ti ${done ? 'ti-circle-check' : 'ti-circle-dashed'}`} />
-                <div><strong>{l.name}: {l.short}</strong><span>{l.how}. Withdraw up to {naira(l.limit, 0)} a day.</span></div>
+                <div><strong>{l.name}: withdraw up to {naira(l.limit, 0)} a day</strong><span>{l.how}</span></div>
                 {done && <em>Verified</em>}
               </div>
             )

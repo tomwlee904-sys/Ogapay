@@ -11,9 +11,9 @@ export type Level = { tier: number; name: string; short: string; how: string; li
 // ninInstant: a NIN is confirmed with NIMC on the spot (otherwise our team checks it)
 // bank: Level 1 can also come from a bank account in your name (free, instant)
 export const levelsFor = (didit: boolean, ninInstant = false, bank = false): Level[] => [
-  { tier: 1, name: 'Level 1', short: bank ? 'Bank account or NIN' : 'NIN', how: bank ? 'A bank account in your name (instant), or your NIN' : ninInstant ? 'Your NIN, confirmed with NIMC in seconds' : 'Your NIN, checked by our team', limit: withdrawLimit(1) },
-  { tier: 2, name: 'Level 2', short: 'ID + selfie', how: didit ? 'Scan an ID and take a selfie with Didit (about 2 minutes)' : 'An ID and selfie check, through support', limit: withdrawLimit(2) },
-  { tier: 3, name: 'Level 3', short: 'ID documents', how: 'ID documents, checked by our team through support', limit: withdrawLimit(3) },
+  { tier: 1, name: 'Level 1', short: bank ? 'Bank account or NIN' : 'NIN', how: bank ? 'Verify with your bank account (free) or your NIN' : ninInstant ? 'Your NIN, confirmed with NIMC in seconds' : 'Your NIN, checked by our team', limit: withdrawLimit(1) },
+  { tier: 2, name: 'Level 2', short: 'ID + selfie', how: didit ? 'Take a photo of your ID card and a selfie (about 2 minutes)' : 'A photo of your ID card and a selfie, through support', limit: withdrawLimit(2) },
+  { tier: 3, name: 'Level 3', short: 'ID documents', how: 'Send your ID documents to our support team', limit: withdrawLimit(3) },
 ]
 
 // What any level (1+) lets you do, on top of adding money by card or USSD
