@@ -114,7 +114,14 @@ async function parseResponse(res: Response) {
   const text = await res.text()
   const json = text ? JSON.parse(text) : null
   if (!res.ok) {
-    const message = json?.message || json?.error || 'Request failed'
+    let message = json?.message || json?.error || 'Request failed'
+    // "Validation failed" alone doesn't say what to fix: add the server's reason
+    // (validate.js sends errors: [{ field, message }])
+    const first = Array.isArray(json?.errors) ? json.errors.find((e: any) => e?.message) : null
+    if (/^validation failed$/i.test(message) && first) {
+      const field = String(first.field || '').replace(/([A-Z])/g, ' $1').toLowerCase().trim()
+      message = field ? `Check your ${field}: ${String(first.message).replace(/^String /, '')}` : String(first.message)
+    }
     throw new Error(message)
   }
   return json && 'data' in json ? json.data : json

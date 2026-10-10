@@ -138,6 +138,8 @@ export default function JobDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
   const [job, setJob] = useState<JobData | null>(null)
+  // Your own place on this job, if you took one (GET /tasks/:id sends it when signed in)
+  const [mySub, setMySub] = useState<{ status: string } | null>(null)
   // Name the job in the browser tab (PageTitle sets the generic one first)
   useEffect(() => { if (job?.title) document.title = `${job.title} | OgaPay Jobs` }, [job?.title])
   // Contests: prizes, entries and winners (from GET /tasks/:id); reloaded after the poster pays the winners
@@ -184,6 +186,7 @@ export default function JobDetail() {
         if (json.success && json.data) {
           const t = json.data.task || json.data
           setJob(formatTask(t))
+          setMySub(json.data.userSubmission || null)
           setContest(json.data.contest || null)
           setCommunity(json.data.community || null)
         } else {
@@ -412,6 +415,15 @@ export default function JobDetail() {
 
   const isOpen = ['open', 'active', 'published'].includes(String(job.status || '').toLowerCase())
   const canManage = Boolean(authUser && (job.creatorId === authUser.id || job.posterId === authUser.id || isMyTask))
+  // Already took a place: say where you are instead of offering "Take a place" again.
+  // The submit page shows the details (your work, the poster's note, payout time).
+  const mine = !canManage && authUser && mySub && mySub.status !== 'EXPIRED' ? mySub.status : null
+  const myLabel = mine === 'PENDING' ? 'Continue your work'
+    : mine === 'SUBMITTED' || mine === 'DISPUTED' ? 'Sent · waiting for review'
+    : mine === 'APPROVED' ? 'Approved · see your work'
+    : mine === 'REJECTED' ? 'Not approved · see why'
+    : null
+  const openMine = () => navigate(`/tasks/${job.id}/submit`)
 
   return (
     <WurkJobDetailView
@@ -424,6 +436,8 @@ export default function JobDetail() {
       setShowSubs={setShowSubs}
       isOpen={isOpen}
       canManage={canManage}
+      myLabel={myLabel}
+      openMine={openMine}
       bookmarked={bookmarked}
       handleBookmark={handleBookmark}
       handleCancelJob={handleCancelJob}
@@ -484,7 +498,7 @@ function ErrorState({ message, onBack }: { message: string; onBack: () => void }
 /* ── Main View ── */
 function WurkJobDetailView(props: any) {
   const {
-    job, fmt, convert, navigate, countdown, showSubs, setShowSubs, isOpen, canManage,
+    job, fmt, convert, navigate, countdown, showSubs, setShowSubs, isOpen, canManage, myLabel, openMine,
     bookmarked, handleBookmark, handleCancelJob, cancelling, toggleHighlight, highlighting, showApplyWarning, setShowApplyWarning,
     showShare, setShowShare, showInfo, setShowInfo,
     showReportModal, setShowReportModal, reportCategory, setReportCategory,
@@ -908,7 +922,9 @@ function WurkJobDetailView(props: any) {
             </div>
             <div className="wjd-headline-side">
               <Money amount={Number(job.reward || 0)} currency={rewardCurrency} convert={convert} size={30} positive note={contest ? '1st place prize' : 'per person'} />
-              {authUser
+              {authUser && myLabel
+                ? <button className="ui-btn ui-btn-dark" type="button" onClick={openMine}>{myLabel}</button>
+                : authUser
                 ? <button className="ui-btn ui-btn-dark" type="button" disabled={!canManage && !isOpen} onClick={() => canManage ? navigate('/manage-jobs') : setShowApplyWarning(true)}>
                     {canManage ? 'Manage submissions' : isOpen ? 'Take a place' : 'Job closed'}
                   </button>
@@ -1096,10 +1112,10 @@ function WurkJobDetailView(props: any) {
               </div>
             ) : (
               <div className="wjd-action-bar">
-                <button className="wjd-primary" type="button" disabled={!canManage && !isOpen}
-                  onClick={() => canManage ? navigate('/manage-jobs') : setShowApplyWarning(true)}>
+                <button className="wjd-primary" type="button" disabled={!myLabel && !canManage && !isOpen}
+                  onClick={() => myLabel ? openMine() : canManage ? navigate('/manage-jobs') : setShowApplyWarning(true)}>
                   <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" /></svg>
-                  {canManage ? 'Manage Submissions' : isOpen ? (contest ? 'Enter contest' : 'Take a place') : (contest ? 'Entries closed' : 'Job Closed')}
+                  {myLabel || (canManage ? 'Manage Submissions' : isOpen ? (contest ? 'Enter contest' : 'Take a place') : (contest ? 'Entries closed' : 'Job Closed'))}
                 </button>
                 {canManage && <button className="wjd-secondary" type="button" onClick={() => setShowSubs(!showSubs)}>
                   <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>

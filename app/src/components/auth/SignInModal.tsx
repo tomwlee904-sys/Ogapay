@@ -46,6 +46,22 @@ const friendly = (msg = '') => {
   return msg || 'Something went wrong. Please try again.'
 }
 
+// Sign-up: what's wrong with a password, in plain words (null when it's fine)
+const passwordProblem = (pw: string) =>
+  pw.length < 8 ? 'Use at least 8 characters for your password.'
+    : !/[A-Z]/.test(pw) ? 'Add at least one capital letter (A–Z) to your password.'
+    : !/[0-9]/.test(pw) ? 'Add at least one number (0–9) to your password.'
+    : null
+
+// A username the server accepts (3–30 letters, numbers or _) from an email:
+// "kemi.adeyemi+jobs@x.com" → "kemi_adeyemi_jobs". `extra` adds 4 digits.
+const usernameFrom = (email: string, extra = false) => {
+  let u = email.trim().split('@')[0].toLowerCase().replace(/[^a-z0-9_]+/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '')
+  if (u.length < 3) u = (u ? u + '_' : '') + 'user'
+  u = u.slice(0, extra ? 25 : 30)
+  return extra ? `${u}${Math.floor(1000 + Math.random() * 9000)}` : u
+}
+
 const isMobile = () => /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
 
 // Official icons, from each wallet's @solana/wallet-adapter package (Trust cropped to its shield)
@@ -170,19 +186,33 @@ export default function SignInModal({ initialView = 'options', initialCode = '',
   const signup = (e: FormEvent) => {
     e.preventDefault()
     if (!name.trim() || !email.trim() || !password) { setError('Fill in your name, email and a password.'); return }
-    if (password.length < 8) { setError('Use at least 8 characters for your password.'); return }
+    // The server's rules (validate.js registerSchema), checked here so the reason is clear
+    const pwProblem = passwordProblem(password)
+    if (pwProblem) { setError(pwProblem); return }
     const parts = name.trim().split(/\s+/)
+    if (parts.some((p) => p.length < 2)) { setError('Enter your name with at least 2 letters in each part, e.g. Ada Okafor.'); return }
     const body: Record<string, string> = {
       firstName: parts[0],
       lastName: parts.slice(1).join(' ') || parts[0],
       email: email.trim(),
       password,
-      username: email.trim().split('@')[0],
+      username: usernameFrom(email),
     }
     const ref = localStorage.getItem('ogapay_referral')
     if (ref) body.referralCode = ref
     run('signup', async () => {
-      const result = await apiRequest<any>('/auth/signup', { method: 'POST', auth: false, body: JSON.stringify(body) })
+      // The username comes from the email (it can be changed later in Edit profile).
+      // If someone already has it, try it with a few digits added.
+      let result: any
+      for (let i = 0; ; i++) {
+        try {
+          result = await apiRequest<any>('/auth/signup', { method: 'POST', auth: false, body: JSON.stringify(body) })
+          break
+        } catch (err: any) {
+          if (i < 3 && /username already taken/i.test(err?.message || '')) { body.username = usernameFrom(email, true); continue }
+          throw err
+        }
+      }
       localStorage.setItem('ogapay_is_new_user', 'true')
       finish(result, true)
     })
@@ -323,7 +353,7 @@ export default function SignInModal({ initialView = 'options', initialCode = '',
             <input id="si-pw2" className="si-input" type={showPw ? 'text' : 'password'} autoComplete="new-password" value={password} onChange={e => setPassword(e.target.value)} />
             <button type="button" className="si-eye" onClick={() => setShowPw(s => !s)} aria-label={showPw ? 'Hide password' : 'Show password'}><i className={`ti ti-eye${showPw ? '-off' : ''}`} /></button>
           </div>
-          <p className="si-hint" style={{ marginTop: 0 }}>At least 8 characters.</p>
+          <p className="si-hint" style={{ marginTop: 0 }}>At least 8 characters, with a capital letter and a number.</p>
         </div>
         {errorLine}
         <button type="submit" className="si-primary" disabled={busy === 'signup'}>{busy === 'signup' ? <><Spinner /> Creating account…</> : 'Create account'}</button>

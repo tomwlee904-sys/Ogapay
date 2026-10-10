@@ -6,6 +6,7 @@ import { API_BASE, apiRequest, getAccessToken } from '../lib/api'
 import { categoryLabel } from '../lib/categories'
 import { jobRequirements } from '../lib/requirements'
 import { renderJobText } from '../lib/jobText'
+import { saveDraft, loadDraft, clearDraft } from '../lib/draft'
 import '../styles/submit.css'
 
 // Submit work for a job (/tasks/:id/submit). Takes a slot if you haven't yet,
@@ -45,6 +46,22 @@ export default function SubmissionPage() {
   const [files, setFiles] = useState<File[]>([])
   const [busy, setBusy] = useState('')
   const [error, setError] = useState('')
+
+  // A half-written link and note are kept for this job and person until the
+  // work is sent (leaving the page used to lose them). Files can't be kept.
+  const draftKey = `submit_${id}`
+  const [restored, setRestored] = useState(false)
+  useEffect(() => {
+    if (!id) return
+    const d = loadDraft(draftKey, user?.id)
+    if (d) { setLink(String(d.data.link || '')); setNotes(String(d.data.notes || '')) }
+    setRestored(true)
+  }, [id, user?.id])
+  useEffect(() => {
+    if (!restored || !id) return
+    if (link.trim() || notes.trim()) saveDraft(draftKey, { link, notes }, user?.id)
+    else clearDraft(draftKey, user?.id)
+  }, [link, notes, restored])
 
   const loadMine = async () => {
     try {
@@ -111,6 +128,7 @@ export default function SubmissionPage() {
       setBusy('Sending your work…')
       await apiRequest(`/tasks/${task.id}/submit`, { method: 'POST', body: JSON.stringify({ ...(link.trim() && { proof: link.trim() }), ...(notes.trim() && { workerNotes: notes.trim() }), ...(urls.length && { attachments: urls }) }) })
       setLink(''); setNotes(''); setFiles([])
+      clearDraft(draftKey, user?.id)
       await loadMine()
     } catch (e: any) {
       setError(e?.message || 'Something went wrong. Your work was not sent.')
