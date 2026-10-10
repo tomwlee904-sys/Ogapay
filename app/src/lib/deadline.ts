@@ -17,10 +17,17 @@ export function jobDeadline(task: { expiresAt?: any; deadline?: any } | null | u
   return at <= now ? { state: 'ended', at } : { state: 'open', at }
 }
 
-/** "3d 4h left", "5h 12m left", "Ended", "No deadline" */
-export function deadlineLabel(d: Deadline, now = Date.now()): string {
+/** "3d 4h left", "5h 12m left", "Ended", "No deadline"; with `seconds`,
+ *  "3d 4h 12m 08s left" (job cards tick it every second, like wurk.fun) */
+export function deadlineLabel(d: Deadline, now = Date.now(), seconds = false): string {
   if (d.state === 'none' || d.state === 'invalid') return 'No deadline'
-  if (d.state === 'ended') return 'Ended'
+  if (d.state === 'ended' || d.at <= now) return 'Ended'
+  if (seconds) {
+    const t = Math.floor((d.at - now) / 1000)
+    const days = Math.floor(t / 86400), h = Math.floor((t % 86400) / 3600), mm = Math.floor((t % 3600) / 60), ss = t % 60
+    const p2 = (n: number) => String(n).padStart(2, '0')
+    return days > 0 ? `${days}d ${h}h ${p2(mm)}m ${p2(ss)}s left` : h > 0 ? `${h}h ${p2(mm)}m ${p2(ss)}s left` : `${mm}m ${p2(ss)}s left`
+  }
   const m = Math.floor((d.at - now) / 60000), days = Math.floor(m / 1440), h = Math.floor((m % 1440) / 60)
   if (days > 0) return `${days}d ${h}h left`
   if (h > 0) return `${h}h ${m % 60}m left`

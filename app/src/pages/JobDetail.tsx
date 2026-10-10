@@ -551,7 +551,7 @@ function WurkJobDetailView(props: any) {
   const countdownStr = deadline.state !== 'open'
     ? deadlineLabel(deadline)
     : countdown.d > 0
-      ? `${countdown.d}d ${countdown.h}h ${pad(countdown.m)}m`
+      ? `${countdown.d}d ${countdown.h}h ${pad(countdown.m)}m ${pad(countdown.s)}s`
       : `${countdown.h}h ${pad(countdown.m)}m ${pad(countdown.s)}s`
   const statusText = ({ open: 'Open', cooling_down: 'Full: waiting for work', completed: 'Completed', cancelled: 'Cancelled', draft: 'Paused', disputed: 'In dispute' } as Record<string, string>)[String(job.status || '').toLowerCase()] || (isOpen ? 'Open' : 'Closed')
 

@@ -36,6 +36,50 @@
       "destination": "/api/profile-meta?u=:username"
     },
     {
+      "source": "/tasks/:id",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "(?i).*(bot|crawler|spider|facebookexternalhit|whatsapp|slack|discord|telegram|linkedin|embedly|pinterest|skype|reddit|preview).*"
+        }
+      ],
+      "destination": "/api/page-meta?t=job&id=:id"
+    },
+    {
+      "source": "/store/:id",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "(?i).*(bot|crawler|spider|facebookexternalhit|whatsapp|slack|discord|telegram|linkedin|embedly|pinterest|skype|reddit|preview).*"
+        }
+      ],
+      "destination": "/api/page-meta?t=product&id=:id"
+    },
+    {
+      "source": "/blog/:slug",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "(?i).*(bot|crawler|spider|facebookexternalhit|whatsapp|slack|discord|telegram|linkedin|embedly|pinterest|skype|reddit|preview).*"
+        }
+      ],
+      "destination": "/api/page-meta?t=blog&id=:slug"
+    },
+    {
+      "source": "/(tasks|store|blog|leaderboard|vault|create|faq|communities|developer|about)",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "(?i).*(bot|crawler|spider|facebookexternalhit|whatsapp|slack|discord|telegram|linkedin|embedly|pinterest|skype|reddit|preview).*"
+        }
+      ],
+      "destination": "/api/page-meta?t=page&p=/$1"
+    },
+    {
       "source": "/sitemap-(jobs|store|people|blog|communities)\\.xml",
       "destination": "https://ogapay-production.up.railway.app/api/v1/sitemaps/$1"
     },

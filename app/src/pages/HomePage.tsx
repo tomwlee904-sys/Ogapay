@@ -123,7 +123,7 @@ function StatCard({ icon, label, value, sub, format, positive, tint, delay }: { 
   );
 }
 
-function Hero({ live, onCreate }: { live: any; onCreate: () => void }) {
+function Hero({ live, onCreate, jobs }: { live: any; onCreate: () => void; jobs: any[] }) {
   const { preferredCurrency, convert } = useCurrency();
   const inUsd = displayPref(preferredCurrency) === "USDC";
   const fundedFmt = (v: number) => (inUsd ? formatUsd(convert(v, "NGN", "USDC")) : naira(v));
@@ -135,7 +135,7 @@ function Hero({ live, onCreate }: { live: any; onCreate: () => void }) {
   };
   const rewards = recentOrTotal("last24hPaid", "totalPaidOut");
   const approved = recentOrTotal("last24hTasks", "tasksDone");
-  const scrollOn = () => document.getElementById("hv-ticker")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  const scrollOn = () => document.getElementById("hv-next")?.scrollIntoView({ behavior: "smooth", block: "start" });
   return (
     <section className="hv-hero">
       <div className="hv-inner">
@@ -160,6 +160,8 @@ function Hero({ live, onCreate }: { live: any; onCreate: () => void }) {
           <div>
             {/* the labels and caption are drawn inside the animation */}
             <NetworkFlow />
+            {/* The latest paid jobs right under the graphic, above the fold (like wurk.fun) */}
+            <Ticker jobs={jobs} />
             <div className="hv-mono hv-eyebrow" style={{ marginTop: 26 }}><span className="hv-dot" /> Platform activity</div>
             <div className="hv-stats">
               <StatCard icon="briefcase" label="Active jobs" value={n("activeJobs")} sub="Open to apply now" format={(x) => Math.round(x).toLocaleString()} tint="132, 169, 187" delay={0.1} />
@@ -584,8 +586,8 @@ export default function HomePage() {
       <Navbar onMenuToggle={() => setDrawerOpen(true)} />
       <main ref={rootRef} className="hv" style={{ paddingTop: "var(--nav-h)", overflowX: "clip" }}>
         <div className="hv-frame">
-          <Hero live={live} onCreate={onCreate} />
-          <Ticker jobs={jobs} />
+          <Hero live={live} onCreate={onCreate} jobs={jobs} />
+          <div id="hv-next" />
           <ChoosePath />
           <Numbers live={live} all={all} />
           <Possibilities />

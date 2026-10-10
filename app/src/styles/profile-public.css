@@ -148,3 +148,6 @@ a.up-item:hover { border-color: var(--text3); }
   .up-post { grid-template-columns: 1fr; gap: 4px; }
   .up-top { display: none; }
 }
+
+.up-compliment.on { border-color: #e11d48; color: #e11d48; }
+.up-compliment.on i { color: #e11d48; }

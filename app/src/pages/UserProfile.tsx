@@ -135,6 +135,35 @@ export default function UserProfile() {
     setInviteOpen(true)
   }
 
+  // Compliments (like wurk.fun's): one per person, counted on the profile
+  const [compliments, setCompliments] = useState<number | null>(null)
+  const [complimented, setComplimented] = useState(false)
+  const [complimenting, setComplimenting] = useState(false)
+  useEffect(() => { setCompliments(profile?._count?.complimentsReceived ?? null) }, [profile])
+  useEffect(() => {
+    setComplimented(false)
+    if (!me || isMe || state !== "ok") return
+    let live = true
+    apiRequest<{ complimented: boolean; count: number }>(`/users/${encodeURIComponent(handle)}/compliment`)
+      .then((r) => { if (live) { setComplimented(!!r?.complimented); if (typeof r?.count === "number") setCompliments(r.count) } })
+      .catch(() => {})
+    return () => { live = false }
+  }, [me, isMe, state, handle])
+  const compliment = async () => {
+    if (!me) { openSignIn({ redirect: `/user/${handle}` }); return }
+    if (complimenting) return
+    setComplimenting(true)
+    const was = complimented
+    setComplimented(!was); setCompliments((c) => Math.max(0, (c ?? 0) + (was ? -1 : 1)))
+    try {
+      const r = await apiRequest<{ complimented: boolean; count: number }>(`/users/${encodeURIComponent(handle)}/compliment`, { method: was ? "DELETE" : "POST" })
+      setComplimented(!!r?.complimented); if (typeof r?.count === "number") setCompliments(r.count)
+    } catch {
+      setComplimented(was); setCompliments((c) => Math.max(0, (c ?? 0) + (was ? 1 : -1)))
+    }
+    setComplimenting(false)
+  }
+
   // ── States ─────────────────────────────────────────────────────────────
   if (state !== "ok") {
     return (
@@ -171,11 +200,11 @@ export default function UserProfile() {
   }
 
   // ── Stats ──────────────────────────────────────────────────────────────
+  // The join date is in the header, so compliments take the first spot (like wurk.fun)
   const stats: { icon: string; label: string; value: string; sub?: string }[] = [
+    { icon: "ti-heart", label: "Compliments", value: String(compliments ?? 0) },
     { icon: "ti-briefcase", label: "Jobs done", value: String(wp.tasksCompleted ?? 0), sub: wp.tasksCompleted ? `${Math.round(wp.successRate || 0)}% success rate` : undefined },
-    profile?.preferences?.showRank
-      ? { icon: "ti-trophy", label: "Rank", value: LEVEL_NAMES[wp.level] || "Beginner", sub: `OgaScore ${profile?.ogaScore ?? 0}` }
-      : { icon: "ti-calendar", label: "Member since", value: fmtDate(profile.createdAt, { month: "short", year: "numeric" }) },
+    ...(profile?.preferences?.showRank ? [{ icon: "ti-trophy", label: "Rank", value: LEVEL_NAMES[wp.level] || "Beginner", sub: `OgaScore ${profile?.ogaScore ?? 0}` }] : []),
     { icon: "ti-building-store", label: "Products", value: String(counts.storeItems ?? products.length) },
     { icon: "ti-users", label: "Communities", value: String(counts.communityMemberships ?? communities.length) },
   ]
@@ -225,6 +254,11 @@ export default function UserProfile() {
                   <Link className="up-btn primary" to={`/user/${handle}/hire`}><i className="ti ti-briefcase" /> Hire</Link>
                 )}
                 {!isMe && <button className="up-btn" onClick={invite}><i className="ti ti-user-plus" /> Invite</button>}
+                {!isMe && (
+                  <button className={`up-btn up-compliment${complimented ? " on" : ""}`} onClick={compliment} aria-pressed={complimented} disabled={complimenting}>
+                    <i className={`ti ${complimented ? "ti-heart-check" : "ti-heart"}`} /> {complimented ? "Complimented" : "Compliment"}
+                  </button>
+                )}
                 <button className="up-btn" onClick={share}><i className={`ti ${shared ? "ti-check" : "ti-share"}`} /> {shared ? "Link copied" : "Share"}</button>
               </div>
             </div>

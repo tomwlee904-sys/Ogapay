@@ -6,7 +6,8 @@ import { BoostedTag, PremiumMark } from "../Perks";
 import Money from "../Money";
 import ItemCover, { itemCategoryLabel } from "../ItemCover";
 import { spokenMoney } from "../../lib/money";
-import { jobDeadline, deadlineLabel } from "../../lib/deadline";
+import { jobDeadline } from "../../lib/deadline";
+import DeadlineTick from "../DeadlineTick";
 import { sized } from '../../lib/img'
 
 /* Homepage cards for highlighted jobs and creator-store products. Kept separate
@@ -85,7 +86,7 @@ export function HomeJobCard({ task, convert, applied }: { task: any; convert: Co
       </div>
 
       <div className="hc-foot">
-        <time className={deadline.state === "ended" ? "hc-ended" : undefined}><i className="ti ti-clock" />{deadlineLabel(deadline)}</time>
+        <time className={deadline.state === "ended" ? "hc-ended" : undefined}><i className="ti ti-clock" /><DeadlineTick deadline={deadline} /></time>
         {applied
           ? <span className="hc-go hc-done"><i className="ti ti-circle-check" />Submitted</span>
           : <span className="hc-go">View job<span className="hc-arrow"><i className="ti ti-arrow-up-right" /></span></span>}

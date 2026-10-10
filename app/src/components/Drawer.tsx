@@ -8,6 +8,8 @@ import { sized } from '../lib/img'
 import { displayPref } from '../lib/money'
 import CurrencySwitch from './CurrencySwitch'
 import { InstallMenuItem } from './InstallApp'
+import { apiRequest } from '../lib/api'
+import Money from './Money'
 
 interface DrawerProps {
   open: boolean
@@ -24,6 +26,45 @@ function DrawerGroup({ label, icon, subtitle, children, defaultOpen }: { label: 
         <i className="ti ti-chevron-down oga-drawer-chevron" />
       </div>
       <div className="oga-drawer-subnav">{children}</div>
+    </div>
+  )
+}
+
+// The newest open jobs, like wurk.fun's menu: the menu itself leads to work.
+// Loaded when the menu opens, at most once a minute.
+type MiniJob = { id: string; title: string; reward: number | string; currency?: string; isContest?: boolean; prizes?: number[]; status?: string; maxWorkers?: number; currentWorkers?: number; createdAt?: string }
+let newJobsCache: { at: number; jobs: MiniJob[] } | null = null
+function DrawerNewJobs({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const [jobs, setJobs] = useState<MiniJob[] | null>(newJobsCache?.jobs ?? null)
+  useEffect(() => {
+    if (!open || (newJobsCache && Date.now() - newJobsCache.at < 60000)) return
+    let live = true
+    apiRequest<any>('/tasks?limit=12', { auth: false })
+      .then((d) => {
+        const list: MiniJob[] = Array.isArray(d) ? d : d?.data || d?.tasks || d?.jobs || []
+        const fresh = list
+          .filter((j) => j.status === 'OPEN' && (j.isContest || !j.maxWorkers || Number(j.currentWorkers || 0) < Number(j.maxWorkers)))
+          .sort((a, b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')))
+          .slice(0, 3)
+        newJobsCache = { at: Date.now(), jobs: fresh }
+        if (live) setJobs(fresh)
+      })
+      .catch(() => { if (live) setJobs((j) => j ?? []) })
+    return () => { live = false }
+  }, [open])
+  if (!jobs || !jobs.length) return null
+  return (
+    <div className="oga-newjobs" aria-label="New jobs">
+      <div className="oga-newjobs-head"><span>New jobs</span><Link to="/tasks" onClick={onClose}>See all <i className="ti ti-arrow-right" aria-hidden="true" /></Link></div>
+      {jobs.map((j) => {
+        const prize = j.isContest && Array.isArray(j.prizes) && j.prizes.length ? Number(j.prizes[0]) : null
+        return (
+          <Link key={j.id} className="oga-newjob" to={`/tasks/${j.id}`} onClick={onClose}>
+            <span className="oga-newjob-t">{j.title}</span>
+            <span className="oga-newjob-pay"><Money amount={Number(prize ?? j.reward ?? 0)} currency={j.currency || 'NGN'} size={13} /><small>{prize != null ? '1st prize' : 'each'}</small></span>
+          </Link>
+        )
+      })}
     </div>
   )
 }
@@ -71,6 +112,7 @@ export default function Drawer({ open, onClose }: DrawerProps) {
               <span className="oga-drawer-icon"><i className="ti ti-briefcase" /></span>
               <span><strong>Jobs</strong><small>Browse available tasks</small></span>
             </Link>
+            <DrawerNewJobs open={open} onClose={onClose} />
 
             {/* ── Store ── */}
             <Link className="oga-drawer-item" to="/store" onClick={onClose}>
@@ -154,6 +196,7 @@ export default function Drawer({ open, onClose }: DrawerProps) {
                 <span className="oga-drawer-icon"><i className="ti ti-circle-plus" /></span>
                 <span><strong>Create Job</strong><small>Post a new task</small></span>
               </Link>
+              <DrawerNewJobs open={open} onClose={onClose} />
 
               {/* ── Jobs (expandable) ── */}
               <DrawerGroup label="Jobs" icon="briefcase" subtitle="Find work and manage your jobs">

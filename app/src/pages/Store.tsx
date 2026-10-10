@@ -213,7 +213,7 @@ function StorePage({
         .st-row{display:flex;justify-content:space-between;align-items:center;gap:var(--sp-3);margin:var(--sp-5) 0 var(--sp-4)}
         .st-row a,.st-row button.link{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:500;color:var(--text);text-decoration:none;background:none;border:0;cursor:pointer;font-family:inherit;padding:6px 2px}
         @media(max-width:860px){.st-filter{grid-template-columns:1fr 1fr}.st-filter>:first-child{grid-column:1 / -1}}
-        @media(max-width:520px){.st-filter{grid-template-columns:1fr}}
+        @media(max-width:520px){.st-filter{gap:10px var(--sp-3);padding:var(--sp-3)}}
       `}</style>
 
       <header className="ui-head">

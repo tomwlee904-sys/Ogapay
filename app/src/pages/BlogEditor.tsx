@@ -157,7 +157,7 @@ export default function BlogEditor() {
   return (
     <Layout>
       <style>{`
-        .be-page{max-width:900px;margin:0 auto;padding:0 0 40px;color:var(--text)}
+        .be-page{max-width:calc(900px + 2 * var(--gutter));margin:0 auto;padding:24px var(--gutter) 40px;color:var(--text)}
         .be-title{font-size:22px;font-weight:800;margin:0 0 4px}
         .be-sub{font-size:13px;color:var(--text2);margin-bottom:24px}
         .be-error{background:#fef2f2;border:1px solid #fca5a5;border-radius:8px;padding:10px 14px;font-size:13px;color:#dc2626;margin-bottom:16px}

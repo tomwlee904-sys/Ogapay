@@ -370,3 +370,4 @@ body:has(main.hv), body:has(main.hv) #root { overflow-x: clip; }
   .hv-journal { grid-auto-columns: 86%; }
   .hv-final { padding: 80px 0 120px; }
 }
+.hv-hero .hv-ticker { margin-top: 18px; }

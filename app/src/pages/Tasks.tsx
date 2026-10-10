@@ -632,12 +632,14 @@ export default function Tasks() {
         .tl-bar .ui-switch{margin-left:auto}
         .tl-cats{max-height:210px;overflow:auto;padding-right:2px}
         @media(max-width:640px){.tl-search{max-width:none;order:3;flex-basis:100%}.tl-bar .ui-switch{margin-left:0}}
+        @media(max-width:767px){.tl-head .ui-title{font-size:26px}.tl-head .ui-sub{margin-top:4px;font-size:13px}}
       `}</style>
       <div className="ui-page">
-        <div className="ui-head">
+        {/* Short, so the first job shows in full on phones (like wurk.fun) */}
+        <div className="ui-head tl-head">
           <div>
             <h1 className="ui-title" style={{ marginTop: 0 }}>Jobs</h1>
-            <p className="ui-sub">Paid jobs open right now, newest first. Rewards are held in escrow and paid in Naira or USDC when your work is approved.</p>
+            <p className="ui-sub">Newest first. Paid in Naira or USDC when your work is approved.</p>
           </div>
         </div>
 
