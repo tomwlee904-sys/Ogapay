@@ -138,6 +138,8 @@ export default function JobDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
   const [job, setJob] = useState<JobData | null>(null)
+  // Name the job in the browser tab (PageTitle sets the generic one first)
+  useEffect(() => { if (job?.title) document.title = `${job.title} | OgaPay Jobs` }, [job?.title])
   // Contests: prizes, entries and winners (from GET /tasks/:id); reloaded after the poster pays the winners
   const [contest, setContest] = useState<ContestInfo | null>(null)
   // Members-only job: the community whose members can take it

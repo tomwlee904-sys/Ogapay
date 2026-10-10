@@ -5,7 +5,7 @@ import Content from '../components/ProfileReferralsTab'
 export default function Referrals() {
   return (
     <Layout>
-      <div style={{ maxWidth: 1040, margin: '0 auto', padding: '24px 16px 60px' }}>
+      <div style={{ maxWidth: 'calc(1040px + 2 * var(--gutter))', margin: '0 auto', padding: '24px var(--gutter) 60px' }}>
         <Content />
       </div>
     </Layout>

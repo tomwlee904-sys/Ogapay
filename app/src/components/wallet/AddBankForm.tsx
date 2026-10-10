@@ -128,7 +128,7 @@ export default function AddBankForm({ onSaved, onCancel, makeDefault, action, no
       </div>
 
       {checking ? <div className="wl-resolving"><span className="spinner" style={{ width: 14, height: 14, borderWidth: 2 }} /> Checking the account…</div>
-        : name ? <div className="wl-resolved" aria-live="polite"><i className="ti ti-circle-check" /> {name}</div>
+        : name ? <div className={`wl-resolved${action && error ? ' neutral' : ''}`} aria-live="polite"><i className={`ti ${action && error ? 'ti-building-bank' : 'ti-circle-check'}`} /> {name}</div>
         : null}
       {error && <div className="wl-err" role="alert"><i className="ti ti-alert-circle" /><span>{error}</span></div>}
       {name && <p className="wl-note" style={{ margin: '-4px 0 14px' }}>{note || 'Only add accounts in your own name.'}</p>}

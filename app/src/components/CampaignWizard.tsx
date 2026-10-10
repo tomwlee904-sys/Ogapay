@@ -71,6 +71,17 @@ const toCategory = (v?: string, type?: string | null) => {
 
 export default function CampaignWizard() {
   const [open, setOpen] = useState(false);
+  // Hidden while the page footer is on screen, so it doesn't cover the footer's last line
+  const [atFooter, setAtFooter] = useState(false);
+  useEffect(() => {
+    if (typeof IntersectionObserver === 'undefined') return;
+    const io = new IntersectionObserver(([e]) => setAtFooter(e.isIntersecting), { rootMargin: '0px 0px -40px 0px' });
+    // The footer can render after this button: look for it for a few seconds
+    let tries = 0;
+    const find = () => { const f = document.querySelector('footer.of'); if (f) io.observe(f); else if (tries++ < 10) t = setTimeout(find, 500) };
+    let t = setTimeout(find, 0);
+    return () => { clearTimeout(t); io.disconnect() };
+  }, []);
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [campaignType, setCampaignType] = useState<string | null>(null);
@@ -1254,7 +1265,7 @@ export default function CampaignWizard() {
   };
 
   return (
-    <div className="cw-ai" style={{ position: "fixed", zIndex: 999 }}>
+    <div className="cw-ai" style={{ position: "fixed", zIndex: 999, transition: "opacity .2s", ...(atFooter && !open ? { opacity: 0, pointerEvents: "none" } : {}) }}>
       {/* Phones: above the bottom bar (64px) and its raised Create button, not on top of Profile */}
       <style>{`.cw-ai{bottom:24px;right:24px}@media(max-width:767px){.cw-ai{bottom:calc(88px + env(safe-area-inset-bottom,0px));right:16px}}`}</style>
       {open && (

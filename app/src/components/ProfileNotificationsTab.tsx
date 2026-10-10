@@ -216,7 +216,7 @@ export default function TabNotificationsContent() {
         .nt-content{flex:1;min-width:0}
         .nt-title{font-weight:700;font-size:13px;margin-bottom:2px;padding-right:20px}
         .nt-desc{color:var(--text2);font-size:12px;margin-bottom:2px}
-        .nt-update{color:var(--text);font-size:14px;line-height:1.6;margin:6px 0}.nt-update p{margin:0 0 10px}.nt-update ul,.nt-update ol{margin:0 0 10px;padding-left:20px}
+        .nt-update{color:var(--text);font-size:14px;line-height:1.6;margin:6px 0}.nt-update p{margin:0 0 10px}.nt-update ul,.nt-update ol{margin:0 0 10px;padding-left:20px}.nt-update ul{list-style:disc}.nt-update ol{list-style:decimal}.nt-update li{margin:4px 0}.nt-update a{color:var(--text);text-decoration:underline;text-underline-offset:2px;font-weight:600}
         .nt-time{font-size:11px;color:var(--text3)}
         .nt-del{position:absolute;top:10px;right:10px;width:24px;height:24px;border-radius:6px;border:none;background:transparent;color:var(--text3);cursor:pointer;display:grid;place-items:center;font-size:14px;transition:all .15s}
         .nt-del::after{content:'';position:absolute;inset:-10px}

@@ -5,7 +5,7 @@ import NotificationsList from '../components/ProfileNotificationsTab'
 export default function Notifications() {
   return (
     <Layout>
-      <div style={{ maxWidth: 820, margin: '0 auto', padding: '24px 16px 60px' }}>
+      <div style={{ maxWidth: 'calc(820px + 2 * var(--gutter))', margin: '0 auto', padding: '24px var(--gutter) 60px' }}>
         <NotificationsList />
       </div>
     </Layout>

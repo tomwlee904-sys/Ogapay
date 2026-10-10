@@ -1085,7 +1085,7 @@ function CreateTask() {
         .cj-panel{margin-top:14px;overflow:hidden;scroll-margin-top:90px}
         .cj-panel-head{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid var(--border)}
         .cj-panel-head b{font-size:14px;font-weight:600}
-        .cj-menu{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;padding:16px}
+        .cj-menu{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px;padding:16px}
         .cj-steps{display:flex;justify-content:center;align-items:center;gap:12px;flex-wrap:wrap;margin:26px 0 0;font-size:11.5px;color:var(--text2)}
         .cj-steps span.n{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:6px;border:1px solid var(--border);font:400 11px var(--font-mono);margin-right:6px}
         .cj-steps i{font-size:12px;color:var(--text3)}
@@ -1146,7 +1146,7 @@ function CreateTask() {
                 <b>Start with your X post</b>
                 <span>Find your post, then choose its actions and budget.</span>
                 <label htmlFor="cj-xurl">X post URL</label>
-                <input id="cj-xurl" className="ui-input" type="url" value={xUrl} onChange={e => setXUrl(e.target.value)} placeholder="https://x.com/username/status/…" />
+                <input id="cj-xurl" className="ui-input" type="url" value={xUrl} onChange={e => setXUrl(e.target.value)} placeholder="Paste your X post link" />
                 <button type="submit" className="ui-btn ui-btn-dark" disabled={!xUrl.trim()}><i className="ti ti-search" /> Find post</button>
               </form>
             )}

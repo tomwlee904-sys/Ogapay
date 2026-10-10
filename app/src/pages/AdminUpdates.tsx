@@ -36,7 +36,7 @@ export default function AdminUpdates() {
   return (
     <Layout>
       <style>{`
-        .au{max-width:760px;margin:0 auto;display:grid;gap:16px}
+        .au{max-width:calc(760px + 2 * var(--gutter));margin:0 auto;padding:24px var(--gutter) 60px;display:grid;gap:16px}
         .au-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;display:grid;gap:12px}
         .au-card h2{margin:0;font-size:16px;font-weight:600}
         .au label{font-size:13px;font-weight:600;color:var(--text)}
@@ -51,7 +51,7 @@ export default function AdminUpdates() {
         .au-past details{border:1px solid var(--border);border-radius:12px;padding:12px 14px}
         .au-past summary{cursor:pointer;font-weight:600;font-size:14px}
         .au-past time{display:block;font-size:12px;color:var(--text2);font-weight:400;margin-top:2px}
-        .au-body p{margin:0 0 10px}.au-body ul,.au-body ol{margin:0 0 10px;padding-left:20px}
+        .au-body p{margin:0 0 10px}.au-body ul,.au-body ol{margin:0 0 10px;padding-left:20px}.au-body ul{list-style:disc}.au-body ol{list-style:decimal}.au-body li{margin:4px 0}.au-body a{color:var(--text);text-decoration:underline;text-underline-offset:2px;font-weight:600}
       `}</style>
       <div className="au">
         <div>
