@@ -21,7 +21,6 @@ import ProfilePortfolioCard from '../components/profile/ProfilePortfolioCard'
 import '../styles/profile-own.css'
 
 /* ─── Icons ─── */
-import TabWorkerPortalContent from '../components/ProfileWorkerPortalTab'
 import TabNotificationsContent from '../components/ProfileNotificationsTab'
 import TabReferralsContent from '../components/ProfileReferralsTab'
 import TabMyTasksContent from '../components/ProfileMyTasksTab'
@@ -134,7 +133,8 @@ export default function Profile() {
   const { balances: walletBal, refresh: refreshWallet } = useWalletBalance();
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
-  const [tab, setTab] = useState(searchParams.get("tab") || "profile");
+  // ?tab=portal (the retired Worker Portal tab) falls back to the profile
+  const [tab, setTab] = useState(() => { const t = searchParams.get("tab") || "profile"; return t === "portal" ? "profile" : t });
   const [showBal, setShowBal] = useState(false);
   const [fundModal, setFundModal] = useState<null | 'deposit' | 'withdraw'>(null);
   const [savingPref, setSavingPref] = useState(false);
@@ -413,7 +413,6 @@ export default function Profile() {
     { id: "my-tasks", label: "My Tasks", icon: "clipboard-list" },
     { id: "referrals", label: "Referrals", icon: "affiliate" },
     { id: "notifications", label: "Notifications", icon: "bell" },
-    { id: "portal", label: "Worker Portal", icon: "briefcase" },
     { id: "store", label: "My Store", icon: "building-store" },
   ];
   const tabNav = (id: string) => {
@@ -1194,8 +1193,6 @@ export default function Profile() {
       {/* Tab: Notifications */}
       {tab === "notifications" && <TabNotificationsContent />}
 
-      {/* Tab: Worker Portal */}
-      {tab === "portal" && <TabWorkerPortalContent />}
 
       {fundModal && (
         <FundWalletModal initialStep={fundModal} onClose={() => { setFundModal(null); refreshWallet(); }} onDone={() => { refreshWallet(); refreshUser(); }} />

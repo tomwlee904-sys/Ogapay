@@ -91,7 +91,6 @@ export default function Sidebar() {
           <Link className="sidebar-link" to="/store"><i className="ti ti-building-store" /> <span><strong>Store</strong></span></Link>
           <Link className="sidebar-link" to="/workers"><i className="ti ti-users" /> <span><strong>Workers</strong></span></Link>
           <Link className="sidebar-link" to="/my-store"><i className="ti ti-building-store" /> <span><strong>My Store</strong></span></Link>
-          <Link className="sidebar-link" to="/worker-portal"><i className="ti ti-layout" /> <span><strong>Worker Portal</strong></span></Link>
           <Link className="sidebar-link" to="/messages"><i className="ti ti-message" /> <span><strong>Messages</strong></span></Link>
         </SidebarGroup>
 

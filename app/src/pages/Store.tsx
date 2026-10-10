@@ -292,33 +292,6 @@ function StorePage({
   )
 }
 
-// ═══════════════════════════════════════════════
-// STORE NAV
-// ═══════════════════════════════════════════════
-function StoreNav({ activeView, onChange }: { activeView: string; onChange: (v: string) => void }) {
-  const tabs = [
-    { key: 'store', label: 'Store', icon: 'ti ti-building-store' },
-    { key: 'worker-portal', label: 'My Portal', icon: 'ti ti-briefcase' },
-  ]
-  return (
-    <div style={{ display: 'flex', gap: 4, marginBottom: 20, paddingBottom: 12, borderBottom: '1px solid var(--border)', overflowX: 'auto' }}>
-      {tabs.map(t => (
-        <button key={t.key} onClick={() => onChange(t.key)} style={{
-          background: activeView === t.key ? 'var(--card)' : 'transparent',
-          color: activeView === t.key ? OGAPAY_BLUE : 'var(--text3)',
-          border: '1px solid',
-          borderColor: activeView === t.key ? OGAPAY_BLUE : 'var(--border)',
-          borderRadius: 8, padding: '8px 14px', fontSize: 12, fontWeight: 600,
-          cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap',
-          display: 'flex', alignItems: 'center', gap: 6, transition: 'all 0.15s',
-        }}>
-          <i className={t.icon} style={{ fontSize: 14 }} />
-          {t.label}
-        </button>
-      ))}
-    </div>
-  )
-}
 
 // ═══════════════════════════════════════════════
 // MAIN STORE COMPONENT
@@ -403,8 +376,6 @@ export default function Store() {
     navigate('/messages')
     closePurchaseModal()
   }
-
-  const showNav = ['store', 'worker-portal'].includes(activeView)
 
   return (
     <Layout>

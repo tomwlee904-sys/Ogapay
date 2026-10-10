@@ -1,6 +1,6 @@
 import { Suspense } from 'react'
 import { lazyPage } from './lib/staleBuild'
-import { Routes, Route, Navigate, useParams } from 'react-router-dom'
+import { Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
 import { ThemeProvider } from './context/ThemeContext'
 import { CurrencyProvider } from './context/CurrencyContext'
@@ -41,7 +41,6 @@ const StoreOrders = lazyPage(() => import('./pages/StoreOrders'))
 const SubmissionPage = lazyPage(() => import('./pages/SubmissionPage'))
 const SubmissionsRedirect = lazyPage(() => import('./pages/SubmissionPage').then((m) => ({ default: m.SubmissionsRedirect })))
 const CreateJob = lazyPage(() => import('./pages/CreateJob'))
-const WorkerPortal = lazyPage(() => import('./pages/WorkerPortal'))
 const Communities = lazyPage(() => import('./pages/Communities'))
 const CreateCommunity = lazyPage(() => import('./pages/CreateCommunity'))
 const CommunityDetail = lazyPage(() => import('./pages/CommunityDetail'))
@@ -75,7 +74,6 @@ const License = lazyPage(() => import('./pages/License'))
 const Copyright = lazyPage(() => import('./pages/Copyright'))
 const Workers = lazyPage(() => import('./pages/Workers'))
 const Creators = lazyPage(() => import('./pages/Creators'))
-const WorkerWorkspace = lazyPage(() => import('./pages/WorkerWorkspace'))
 const Writer = lazyPage(() => import('./pages/Writer'))
 const Analytics = lazyPage(() => import('./pages/Analytics'))
 const Bookmarks = lazyPage(() => import('./pages/Bookmarks'))
@@ -91,11 +89,6 @@ const AdminCreators = lazyPage(() => import('./pages/AdminCreators'))
 const AdminHighlights = lazyPage(() => import('./pages/AdminHighlights'))
 const AdminUpdates = lazyPage(() => import('./pages/AdminUpdates'))
 const AdminSupport = lazyPage(() => import('./pages/AdminSupport'))
-// /worker-portal/:category was a second, unlinked copy of the worker workspace
-function WorkspaceRedirect() {
-  const { category = '' } = useParams()
-  return <Navigate to={`/worker/${category}`} replace />
-}
 const Docs = lazyPage(() => import('./pages/Docs'))
 const DevicePairing = lazyPage(() => import('./pages/DevicePairing'))
 const RankUpgrade = lazyPage(() => import("./pages/RankUpgrade"))
@@ -180,8 +173,8 @@ export default function App() {
             <Route path="/pair-device" element={<AuthGuard><DevicePairing /></AuthGuard>} />
             <Route path="/earnings" element={<AuthGuard><Earnings /></AuthGuard>} />
             <Route path="/referrals" element={<AuthGuard><Referrals /></AuthGuard>} />
-            <Route path="/worker-portal" element={<AuthGuard><WorkerPortal /></AuthGuard>} />
-            <Route path="/worker-portal/:category" element={<WorkspaceRedirect />} />
+            {/* The worker portal repeated the jobs list by category: old links go to Jobs */}
+            <Route path="/worker-portal/*" element={<Navigate to="/tasks" replace />} />
             <Route path="/settings" element={<AuthGuard><Settings /></AuthGuard>} />
             <Route path="/settings/:section" element={<AuthGuard><Settings /></AuthGuard>} />
             <Route path="/notifications" element={<AuthGuard><Notifications /></AuthGuard>} />
@@ -200,7 +193,7 @@ export default function App() {
             <Route path="/bookmarks" element={<AuthGuard><Bookmarks /></AuthGuard>} />
             <Route path="/communities/mine" element={<AuthGuard><Communities /></AuthGuard>} />
             <Route path="/analytics" element={<AuthGuard><Analytics /></AuthGuard>} />
-            <Route path="/worker/:category" element={<AuthGuard><WorkerWorkspace /></AuthGuard>} />
+            <Route path="/worker/*" element={<Navigate to="/tasks" replace />} />
 
             {/* ── Create job routes (collapsed) ── */}
             <Route path="/create" element={<CreateJob />} />
