@@ -20,7 +20,10 @@ const POPULAR = /^(access bank|guaranty trust|gtbank|zenith|first bank|united ba
 
 // Add a bank account: pick the bank, type the 10-digit number, and the account
 // name comes back from the bank before it can be saved.
-export default function AddBankForm({ onSaved, onCancel, makeDefault }: { onSaved: (b: Bank) => void; onCancel?: () => void; makeDefault?: boolean }) {
+// With `action`, the button runs it instead of saving the account (Settings →
+// Verification uses it to verify with the account).
+type Action = { label: string; busyLabel: string; run: (bank: BankOption, accountNumber: string, accountName: string) => Promise<void> }
+export default function AddBankForm({ onSaved, onCancel, makeDefault, action, note }: { onSaved?: (b: Bank) => void; onCancel?: () => void; makeDefault?: boolean; action?: Action; note?: string }) {
   const listId = useId()
   const [banks, setBanks] = useState<BankOption[] | null>(null)
   const [banksErr, setBanksErr] = useState('')
@@ -69,9 +72,14 @@ export default function AddBankForm({ onSaved, onCancel, makeDefault }: { onSave
   async function save() {
     if (!bank || !name) return
     setSaving(true); setError('')
+    if (action) {
+      try { await action.run(bank, acct, name) } catch (e: any) { setError(e?.message || 'Something went wrong. Try again.') }
+      setSaving(false)
+      return
+    }
     try {
       const saved = await apiRequest<Bank>('/wallet/banks', { method: 'POST', body: JSON.stringify({ bankCode: bank.code, bankName: bank.name, accountNumber: acct, accountName: name, setDefault: !!makeDefault }) })
-      onSaved(saved)
+      onSaved?.(saved)
     } catch (e: any) {
       setError(e?.message || "Couldn't save this account. Try again.")
     }
@@ -123,12 +131,12 @@ export default function AddBankForm({ onSaved, onCancel, makeDefault }: { onSave
         : name ? <div className="wl-resolved" aria-live="polite"><i className="ti ti-circle-check" /> {name}</div>
         : null}
       {error && <div className="wl-err" role="alert"><i className="ti ti-alert-circle" /><span>{error}</span></div>}
-      {name && <p className="wl-note" style={{ margin: '-4px 0 14px' }}>Only add accounts in your own name.</p>}
+      {name && <p className="wl-note" style={{ margin: '-4px 0 14px' }}>{note || 'Only add accounts in your own name.'}</p>}
 
       <div className="ui-actions">
         {onCancel && <button type="button" className="ui-btn ui-btn-ghost" onClick={onCancel}>Cancel</button>}
         <button type="button" className="ui-btn ui-btn-dark" style={{ flex: 1 }} disabled={!name || saving} onClick={save}>
-          {saving ? 'Saving…' : 'Save account'}
+          {saving ? (action?.busyLabel || 'Saving…') : (action?.label || 'Save account')}
         </button>
       </div>
     </div>

@@ -6,6 +6,8 @@ import { useAuth } from '../../context/AuthContext'
 import { Card, Row, type SectionProps } from './ui'
 import { levelsFor, UNLOCKS } from '../../lib/levels'
 import { naira } from '../../lib/wallet'
+import AddBankForm from '../../components/wallet/AddBankForm'
+import '../../styles/wallet.css'
 
 // Levels as the backend enforces them, in the same words as the Wallet (lib/levels)
 // Didit statuses that mean the person hasn't finished yet
@@ -20,6 +22,7 @@ export default function Verification({ me, reload, providers }: SectionProps & {
   const tier = status === 'APPROVED' ? me.kyc?.kycTier || 0 : 0
   const didit = !!providers?.didit
   const ninInstant = !!providers?.ninInstant // a NIN is confirmed with NIMC on the spot
+  const bankKyc = !!providers?.bankKyc // Level 1 from a bank account in their name (free)
   const diditOpen = status === 'PENDING' && me.kyc?.provider === 'didit' // started, not finished
   const inReview = status === 'SUBMITTED'
   const want = tier === 0 ? 'NIN' : null // Level 2 is the ID + selfie check
@@ -115,6 +118,33 @@ export default function Verification({ me, reload, providers }: SectionProps & {
     setHumanBusy(false)
   }
 
+  const [bankMsg, setBankMsg] = useState('')
+  const verifyBank = async (bank: { code: string; name: string }, accountNumber: string) => {
+    const r = await apiRequest<any>('/kyc/bank', { method: 'POST', body: JSON.stringify({ bankCode: bank.code, bankName: bank.name, accountNumber }) })
+    toast(r?.message || "You're verified", 'success')
+    setBankMsg(r?.message || "You're verified. Level 1 is on.")
+    await reload(); refreshUser()
+  }
+  const myName = `${me.firstName || ''} ${me.lastName || ''}`.trim()
+
+  const bankPanel = bankKyc && tier === 0 && !diditOpen && (
+    <div className="st2-panel st2-form">
+      <strong>Get Level 1 with your bank account <span className="st2-free">Free · instant</span></strong>
+      <p className="st2-muted" style={{ margin: 0, lineHeight: 1.55 }}>
+        Your bank already checked who you are. Pick your bank and type your account number: if the account is in your name, <b>{myName || 'not set'}</b>, you're Level 1 straight away and it becomes your withdrawal account.
+        {!myName || !me.firstName || !me.lastName ? <> <Link className="st2-linkbtn" to="/edit-profile">Add your name</Link> first.</> : <> Not your name on the bank? <Link className="st2-linkbtn" to="/edit-profile">Change it</Link> first, since it can't be changed after.</>}
+      </p>
+      {bankMsg ? <p className="st2-ok">{bankMsg}</p> : (
+        <AddBankForm note="This must be an account in your own name. Business accounts aren't accepted." action={{ label: 'Verify with this account', busyLabel: 'Verifying…', run: (b, n) => verifyBank(b, n) }} />
+      )}
+      {(ninInstant || !didit) && (
+        <p className="st2-muted" style={{ margin: '4px 0 0' }}>
+          No bank account in your name? <button type="button" className="st2-linkbtn" onClick={() => setUseNin((v) => !v)}>{useNin ? 'Hide the NIN form' : 'Use your NIN instead'}</button>
+        </p>
+      )}
+    </div>
+  )
+
   const ninForm = want && (
     // noValidate: submit() explains what's missing. The browser's own "required"
     // bubble doesn't show in some in-app browsers, so the button looked dead.
@@ -164,13 +194,13 @@ export default function Verification({ me, reload, providers }: SectionProps & {
     <>
       <Card title="Identity verification (KYC)" sub={`Needed before you can withdraw or send money.${didit ? ' ID checks are done by Didit.' : ''} Your ID details are never shown to other users.`}>
         <div className="st2-levels">
-          {levelsFor(didit, ninInstant).map((l) => {
+          {levelsFor(didit, ninInstant, bankKyc).map((l) => {
             const done = tier >= l.tier
             const next = !done && l.tier === nextTier
             return (
               <div key={l.tier} className={`st2-level${done ? ' done' : next ? ' next' : ''}`}>
                 <i className={`ti ${done ? 'ti-circle-check' : 'ti-circle-dashed'}`} />
-                <div><strong>{l.name}: {l.short}</strong><span>{l.how}. Withdraw up to {naira(l.limit, 0)} each time.</span></div>
+                <div><strong>{l.name}: {l.short}</strong><span>{l.how}. Withdraw up to {naira(l.limit, 0)} a day.</span></div>
                 {done && <em>Verified</em>}
               </div>
             )
@@ -184,9 +214,16 @@ export default function Verification({ me, reload, providers }: SectionProps & {
 
         {inReview && tier === 0 ? (
           <>
-            <div className="st2-banner"><i className="ti ti-hourglass" /> {me.kyc?.provider === 'didit' ? "Your ID check is being reviewed." : 'Your NIN is with our team for review.'} We'll notify you when it's done.</div>
+            <div className="st2-banner"><i className="ti ti-hourglass" /> {me.kyc?.provider === 'didit' ? "Your ID check is being reviewed." : 'Your NIN is with our team for review.'} We'll notify you when it's done.{bankPanel ? ' Or skip the wait with your bank account below.' : ''}</div>
             {msg && <p className={msg.ok ? 'st2-ok' : 'st2-err'}>{msg.text}</p>}
             {ninMsg && <p className={ninMsg.ok ? 'st2-ok' : 'st2-err'}>{ninMsg.text}</p>}
+            {me.kyc?.provider !== 'didit' && bankPanel}
+          </>
+        ) : bankPanel ? (
+          <>
+            {bankPanel}
+            {useNin && ninForm}
+            {useDidit && diditPanel}
           </>
         ) : useDidit ? (
           <>

@@ -4,8 +4,8 @@ import { naira, MIN_WITHDRAW_NGN } from '../../lib/wallet'
 
 // Wallet: your verification level, what it lets you withdraw, the three steps,
 // and how to take the next one
-export default function LevelCard({ tier, didit, ninInstant = false }: { tier: number; didit: boolean; ninInstant?: boolean }) {
-  const levels = levelsFor(didit, ninInstant)
+export default function LevelCard({ tier, didit, ninInstant = false, bank = false }: { tier: number; didit: boolean; ninInstant?: boolean; bank?: boolean }) {
+  const levels = levelsFor(didit, ninInstant, bank)
   const current = levels.find((l) => l.tier === tier)
   const next = nextStep(tier, didit)
   const nextTier = nextTierFor(tier, didit)

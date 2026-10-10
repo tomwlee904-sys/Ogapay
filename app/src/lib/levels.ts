@@ -9,8 +9,9 @@ import { withdrawLimit } from './wallet'
 export type Level = { tier: number; name: string; short: string; how: string; limit: number }
 
 // ninInstant: a NIN is confirmed with NIMC on the spot (otherwise our team checks it)
-export const levelsFor = (didit: boolean, ninInstant = false): Level[] => [
-  { tier: 1, name: 'Level 1', short: 'NIN', how: ninInstant ? 'Your NIN, confirmed with NIMC in seconds' : 'Your NIN, checked by our team', limit: withdrawLimit(1) },
+// bank: Level 1 can also come from a bank account in your name (free, instant)
+export const levelsFor = (didit: boolean, ninInstant = false, bank = false): Level[] => [
+  { tier: 1, name: 'Level 1', short: bank ? 'Bank account or NIN' : 'NIN', how: bank ? 'A bank account in your name (instant), or your NIN' : ninInstant ? 'Your NIN, confirmed with NIMC in seconds' : 'Your NIN, checked by our team', limit: withdrawLimit(1) },
   { tier: 2, name: 'Level 2', short: 'ID + selfie', how: didit ? 'Scan an ID and take a selfie with Didit (about 2 minutes)' : 'An ID and selfie check, through support', limit: withdrawLimit(2) },
   { tier: 3, name: 'Level 3', short: 'ID documents', how: 'ID documents, checked by our team through support', limit: withdrawLimit(3) },
 ]

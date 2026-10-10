@@ -90,7 +90,7 @@ export default function Terms() {
               <h2><span>{n('kyc')}</span>Identity checks and limits</h2>
               <p>To withdraw money, send money to other users, get your own account number, and take some jobs, you need to verify your identity (KYC). The more you verify, the more you can withdraw in a day:</p>
               <ul>
-                <li>Level 1 (your NIN, confirmed with the National Identity Management Commission (NIMC) through Didit, or checked by our team when that isn't possible): up to ₦5,000 a day</li>
+                <li>Level 1 (a bank account in your name, confirmed with your bank through our payment partner; or your NIN, confirmed with the National Identity Management Commission (NIMC) through Didit, or checked by our team when that isn't possible): up to ₦5,000 a day. If you verify with a bank account, bank withdrawals only go to accounts in your name.</li>
                 <li>Level 2 (an ID document and a selfie, checked by our verification partner Didit): up to ₦10,000 a day</li>
                 <li>Level 3 (ID documents, checked by our team through support): up to ₦50,000 a day</li>
               </ul>

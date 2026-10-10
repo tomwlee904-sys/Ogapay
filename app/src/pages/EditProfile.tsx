@@ -112,6 +112,9 @@ export default function EditProfile() {
     setSaving(false)
   }
 
+  // A verified name (matched with a NIN or a bank account) can't be changed
+  const nameLocked = me?.kyc?.status === 'APPROVED' && Number(me?.kyc?.kycTier || 0) >= 1
+
   const field = (k: keyof Form, label: string, props: React.InputHTMLAttributes<HTMLInputElement> = {}) => (
     <label className="ep-field">
       <span>{label}</span>
@@ -143,9 +146,10 @@ export default function EditProfile() {
                 <input ref={fileRef} type="file" accept="image/*" hidden onChange={(e) => pickAvatar(e.target.files?.[0])} />
               </div>
               <div className="hr-row">
-                {field('firstName', 'First name', { maxLength: 50, autoComplete: 'given-name' })}
-                {field('lastName', 'Last name', { maxLength: 50, autoComplete: 'family-name' })}
+                {field('firstName', 'First name', { maxLength: 50, autoComplete: 'given-name', disabled: nameLocked })}
+                {field('lastName', 'Last name', { maxLength: 50, autoComplete: 'family-name', disabled: nameLocked })}
               </div>
+              {nameLocked && <p className="ep-note" style={{ margin: '-6px 0 12px', fontSize: 13, color: 'var(--text2)' }}><i className="ti ti-lock" aria-hidden="true" /> Your name is verified, so it can't be changed here. <Link to="/support">Contact support</Link> if it's wrong.</p>}
               {field('username', 'Username', { maxLength: 30, autoCapitalize: 'off', spellCheck: false })}
               <label className="ep-field"><span>Email</span><input className="hr-input" value={me?.email || ''} disabled /><small>Contact support to change your email.</small></label>
               <label className="ep-field">
