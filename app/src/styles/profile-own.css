@@ -67,3 +67,19 @@
   .po-head { padding: 14px 16px; }
   .po-body, .po-quick { padding: 14px 16px; }
 }
+
+/* Connect X by posting a code (components/profile/ProfileConnectXCard.tsx XVerify) */
+.xv { display: grid; gap: 14px; margin: 12px 0 4px; }
+.xv-step { display: grid; grid-template-columns: 28px 1fr; gap: 12px; align-items: start; }
+.xv-step + .xv-step { padding-top: 14px; border-top: 1px solid var(--border); }
+.xv-n { width: 28px; height: 28px; display: grid; place-items: center; border: 1px solid var(--border); border-radius: 8px; font: 500 12px var(--font-mono, ui-monospace, monospace); color: var(--text2); }
+.xv-body { display: grid; gap: 10px; min-width: 0; }
+.xv-body b { font-size: 14px; color: var(--text); }
+.xv-body .po-btn { justify-self: start; min-height: 44px; }
+.xv-code { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 14px; border: 1px solid var(--border); border-radius: 12px; background: var(--bg2); }
+.xv-code code { font: 600 15px var(--font-mono, ui-monospace, monospace); letter-spacing: .06em; color: var(--text); word-break: break-all; }
+.xv-code button { border: 0; background: none; color: var(--text2); font: 600 13px inherit; font-family: inherit; cursor: pointer; min-height: 32px; }
+.xv-input { width: 100%; min-height: 44px; padding: 0 12px; border: 1px solid var(--border); border-radius: 12px; background: var(--bg2); color: var(--text); font: 14px inherit; font-family: inherit; }
+.xv-verify { justify-self: stretch !important; }
+.xv-msg { padding: 12px 14px; border-radius: 12px; background: rgba(239, 68, 68, .1); color: var(--text); font-size: 13px; line-height: 1.5; }
+.xv-msg.ok { background: rgba(16, 185, 129, .12); }

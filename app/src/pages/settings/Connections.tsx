@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import { apiRequest } from '../../lib/api'
 import { useToast } from '../../components/Toast'
 import { Card, type SectionProps } from './ui'
+import { XVerify } from '../../components/profile/ProfileConnectXCard'
 
 type Platform = 'linkedin' | 'twitter' | 'github' | 'google' | 'telegram'
 export const PLATFORMS: { id: Platform; label: string; icon: string; pts: number }[] = [
@@ -29,6 +30,7 @@ export default function Connections({ me, setMe, reload, providers }: SectionPro
   const { toast } = useToast()
   const [params, setParams] = useSearchParams()
   const [busy, setBusy] = useState<Platform | null>(null)
+  const [xOpen, setXOpen] = useState(false)
   const handled = useRef(false)
 
   // Finish a Telegram sign-in that came back to this page
@@ -90,10 +92,21 @@ export default function Connections({ me, setMe, reload, providers }: SectionPro
         </div>
       </Card>
 
-      <Card title="Connected accounts" sub="Connect through each site's own sign-in. We never post for you.">
+      <Card title="Connected accounts" sub="We never post for you or get access to your accounts.">
         {PLATFORMS.map((p) => {
           const c = me.connections?.[p.id]
           const available = !!providers?.[p.id]
+          // X: post a code instead of X sign-in (the way wurk.fun does it)
+          if (p.id === 'twitter' && !c?.connected) return (
+            <div key={p.id}>
+              <div className="st2-conn">
+                <span className="st2-conn-ico"><i className={`ti ${p.icon}`} /></span>
+                <div className="st2-conn-t"><strong>{p.label}</strong><span>+{p.pts} OgaScore</span></div>
+                <button className="up-btn primary" onClick={() => setXOpen((v) => !v)}>{xOpen ? 'Close' : 'Connect'}</button>
+              </div>
+              {xOpen && <XVerify onConnected={(h) => { setMe((m) => ({ ...m, connections: { ...m.connections, twitter: { connected: true, handle: h } } })); toast(`@${h} connected`, 'success'); setXOpen(false); reload() }} />}
+            </div>
+          )
           return (
             <div key={p.id} className="st2-conn">
               <span className="st2-conn-ico"><i className={`ti ${p.icon}`} /></span>
