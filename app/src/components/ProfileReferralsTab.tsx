@@ -7,7 +7,7 @@ import { sized } from '../lib/img'
 
 // Referrals, laid out like wurk.fun's: totals, your link (with ready-made
 // shares), the people you brought in, and what you've been paid for them.
-// The bonus is paid once a referred person verifies their email or ID
+// The bonus is paid once a referred person reaches Level 1 (bank or NIN check)
 // (backend wallet.service rewardForReferral), for up to `rewardCap` people.
 
 type Referral = { username: string; avatarUrl: string | null; joinedAt: string; rewardedAt: string | null }
@@ -95,7 +95,7 @@ export default function TabReferralsContent() {
         </section>
         <section className="rf2-card rf2-pad" aria-labelledby="rf2-link-h">
           <div className="rf2-label" id="rf2-link-h">Your referral link</div>
-          <div className="rf2-sub">You earn <b>{naira(bonus, 0)}</b> for each friend who joins with your link and verifies their email or ID, for up to {cap} friends ({rewarded} of {cap} so far).</div>
+          <div className="rf2-sub">You earn <b>{naira(bonus, 0)}</b> for each friend who joins with your link and verifies their ID (Level 1: bank account or NIN), for up to {cap} friends ({rewarded} of {cap} so far).</div>
           {link ? (
             <>
               <div className="rf2-link">
@@ -120,7 +120,7 @@ export default function TabReferralsContent() {
             People who join through your referral link will appear here.
             <ol className="rf2-steps">
               <li>Share your link on WhatsApp, X or Telegram.</li>
-              <li>Your friend signs up with it and verifies their email or ID.</li>
+              <li>Your friend signs up with it and verifies their ID (Level 1) in Settings → Verification.</li>
               <li>{naira(bonus, 0)} goes to your wallet.</li>
             </ol>
           </div>
@@ -146,7 +146,7 @@ export default function TabReferralsContent() {
       <section className="rf2-card" aria-labelledby="rf2-earn">
         <div className="rf2-head"><h2 id="rf2-earn">Referral earnings</h2><span className="rf2-count">{bonuses.length} {bonuses.length === 1 ? 'payment' : 'payments'}</span></div>
         {bonuses.length === 0 ? (
-          <div className="rf2-empty">No referral earnings yet. You're paid when someone you referred verifies their email or ID.</div>
+          <div className="rf2-empty">No referral earnings yet. You're paid when someone you referred verifies their ID (Level 1).</div>
         ) : (
           <div role="table" aria-label="Referral payments">
             <div className="rf2-row th" role="row"><span role="columnheader">Status</span><span role="columnheader">Reward</span><span role="columnheader">Date</span></div>

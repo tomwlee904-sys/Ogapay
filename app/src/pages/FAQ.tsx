@@ -76,7 +76,7 @@ export const TOPICS: Topic[] = [
   },
   {
     id: 'referrals', title: 'Referrals and bonuses', items: [
-      { q: 'How do referrals pay?', a: 'Share your referral link. You earn ₦500 when a friend you invited verifies their email or their identity, and another ₦500 when their first job is approved.' },
+      { q: 'How do referrals pay?', a: 'Share your referral link. You earn ₦500 when a friend you invited verifies their identity (Level 1: a bank account in their name or their NIN), and another ₦500 when their first job is approved.' },
       { q: 'Is there a limit?', a: 'Referral bonuses are paid for up to 20 referrals per person. This stops people farming the programme with fake accounts.' },
       { q: 'Do new users get a bonus?', a: 'The first 50 people to verify their identity (Level 1) get a ₦1,000 welcome bonus.' },
     ],
