@@ -14,12 +14,14 @@ const Icon = ({ n, s = 18, c = "currentColor", style }: { n: string; s?: number;
   <i className={`ti ti-${n}`} style={{ fontSize: s, color: c, lineHeight: 1, flexShrink: 0, ...style }} />
 );
 
+// What each rank unlocks: only what's real (jobs whose minRank needs it; the
+// leaderboard shows everyone's rank). Don't promise perks that don't exist.
 const TIERS = [
-  { level: "BEGINNER", label: "Beginner", icon: "seedling", color: "#9CA3AF", tasks: 0, rating: 0, unlocks: ["Access to all open tasks", "Basic task discovery"] },
-  { level: "INTERMEDIATE", label: "Intermediate", icon: "star", color: "#52525b", tasks: 10, rating: 0, unlocks: ["Higher-paying task visibility", "Priority support", "Community access"] },
-  { level: "ADVANCED", label: "Advanced", icon: "flame", color: "#8B5CF6", tasks: 50, rating: 4.0, unlocks: ["Exclusive advanced tasks", "Early access to new features", "Premium communities"] },
-  { level: "EXPERT", label: "Expert", icon: "diamond", color: "#F59E0B", tasks: 200, rating: 4.5, unlocks: ["Expert-level task pools", "Direct creator invitations", "Higher reward multipliers"] },
-  { level: "LEGEND", label: "Legend", icon: "crown", color: "#EF4444", tasks: 500, rating: 4.8, unlocks: ["Legend-only premium tasks", "Revenue share eligibility", "Platform governance rights"] },
+  { level: "BEGINNER", label: "Beginner", icon: "seedling", color: "#9CA3AF", tasks: 0, rating: 0, unlocks: ["Every job without a rank requirement", "Earn in Naira or USDC"] },
+  { level: "INTERMEDIATE", label: "Intermediate", icon: "star", color: "#52525b", tasks: 10, rating: 0, unlocks: ["Jobs that need Intermediate rank"] },
+  { level: "ADVANCED", label: "Advanced", icon: "flame", color: "#8B5CF6", tasks: 50, rating: 4.0, unlocks: ["Jobs that need Advanced rank or lower"] },
+  { level: "EXPERT", label: "Expert", icon: "diamond", color: "#F59E0B", tasks: 200, rating: 4.5, unlocks: ["Jobs that need Expert rank or lower"] },
+  { level: "LEGEND", label: "Legend", icon: "crown", color: "#EF4444", tasks: 500, rating: 4.8, unlocks: ["Every job, whatever rank it needs"] },
 ];
 
 function getTierIndex(level: string) {
@@ -185,7 +187,7 @@ export default function RankUpgrade() {
                 <li><strong>Avg rating</strong>: the average of the stars posters gave you (1–5)</li>
                 <li><strong>OgaScore</strong>: your trust score from checks we verified (connected accounts, ID and Human verification), out of 66</li>
               </ul>
-              <p className="rank-info-note">Higher ranks unlock exclusive tasks, premium communities, and greater rewards.</p>
+              <p className="rank-info-note">Job posters can choose the rank a job needs, so higher ranks open up jobs that only experienced people can take.</p>
             </div>
           </>
         )}
