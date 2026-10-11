@@ -88,6 +88,7 @@ const AdminKyc = lazyPage(() => import('./pages/AdminKyc'))
 const AdminCreators = lazyPage(() => import('./pages/AdminCreators'))
 const AdminHighlights = lazyPage(() => import('./pages/AdminHighlights'))
 const AdminUpdates = lazyPage(() => import('./pages/AdminUpdates'))
+const AdminRanks = lazyPage(() => import('./pages/AdminRanks'))
 const AdminSupport = lazyPage(() => import('./pages/AdminSupport'))
 const Docs = lazyPage(() => import('./pages/Docs'))
 const DevicePairing = lazyPage(() => import('./pages/DevicePairing'))
@@ -227,6 +228,7 @@ export default function App() {
             <Route path="/admin/creators" element={<AdminGuard><AdminCreators /></AdminGuard>} />
             <Route path="/admin/highlights" element={<AdminGuard><AdminHighlights /></AdminGuard>} />
             <Route path="/admin/updates" element={<AdminGuard><AdminUpdates /></AdminGuard>} />
+            <Route path="/admin/ranks" element={<AdminGuard><AdminRanks /></AdminGuard>} />
             <Route path="/admin/support" element={<AdminGuard><AdminSupport /></AdminGuard>} />
             <Route path="/admin/login" element={<Navigate to="/login?redirect=/admin" replace />} />
             <Route path="/admin/*" element={<AdminGuard><Admin /></AdminGuard>} />

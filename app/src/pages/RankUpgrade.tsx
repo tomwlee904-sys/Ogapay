@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import Layout from "../components/Layout";
 import { useAuth } from "../context/AuthContext";
 import { apiRequest } from "../lib/api";
+import RankClaimPanel from "../components/RankClaimPanel";
 
 const C = {
   text: "var(--text)", text2: "var(--text2)", text3: "var(--text3)",
@@ -31,6 +32,7 @@ export default function RankUpgrade() {
   const [loading, setLoading] = useState(true);
   const [leaderRank, setLeaderRank] = useState<number | null>(null);
 
+  const [reload, setReload] = useState(0);
   useEffect(() => {
     // Your rank needs an account; visitors see the tiers
     if (!user) { setLoading(false); return; }
@@ -44,22 +46,21 @@ export default function RankUpgrade() {
       } catch (_) {}
       setLoading(false);
     })();
-  }, [user]);
+  }, [user, reload]);
 
   const currentLevel = profile?.level || 'BEGINNER';
   const currentIdx = getTierIndex(currentLevel);
   const nextTier = TIERS[currentIdx + 1];
   const tasksCompleted = profile?.tasksCompleted || 0;
   const avgRating = profile?.avgRating || 0;
-  const reputationScore = profile?.reputationScore || 0;
+  // The real OgaScore (verified checks), not the internal reputation figure
+  const ogaScore = profile?.ogaScore ?? 0;
 
-  const progressToNext = nextTier ? Math.min(100, Math.round(
-    ((tasksCompleted - TIERS[currentIdx].tasks) / (nextTier.tasks - TIERS[currentIdx].tasks)) * 100
-  )) : 100;
-
-  const ratingProgressToNext = nextTier && nextTier.rating > 0 ? Math.min(100, Math.round(
-    ((avgRating - TIERS[currentIdx].rating) / (nextTier.rating - TIERS[currentIdx].rating)) * 100
-  )) : 100;
+  // Share of what the next rank needs, kept between 0 and 100 (a negative
+  // width used to be ignored by the browser, so the bars looked full)
+  const pct = (have: number, need: number) => (need > 0 ? Math.max(0, Math.min(100, Math.round((have / need) * 100))) : 100);
+  const progressToNext = nextTier ? pct(tasksCompleted, nextTier.tasks) : 100;
+  const ratingProgressToNext = nextTier && nextTier.rating > 0 ? pct(avgRating, nextTier.rating) : 100;
 
   return (
     <Layout>
@@ -101,7 +102,7 @@ export default function RankUpgrade() {
                     <span className="rank-stat-lbl">Avg Rating</span>
                   </div>
                   <div className="rank-stat">
-                    <span className="rank-stat-val">{reputationScore}</span>
+                    <span className="rank-stat-val">{ogaScore}</span>
                     <span className="rank-stat-lbl">OgaScore</span>
                   </div>
                 </div>
@@ -131,6 +132,9 @@ export default function RankUpgrade() {
                 </div>
               )}
             </div>
+
+            {/* Claim a new rank (rules, review) and the X score: signed in only */}
+            {user && <RankClaimPanel onRankChanged={() => setReload((n) => n + 1)} />}
 
             {/* All Tiers */}
             <div className="rank-tiers-title">All Ranks</div>
@@ -175,11 +179,11 @@ export default function RankUpgrade() {
             {/* Rank Info */}
             <div className="rank-info-card">
               <h3>How Ranking Works</h3>
-              <p>Your rank is automatically updated when a task creator reviews your submission. The better your ratings and the more tasks you complete, the higher your rank.</p>
+              <p>Do good work, get rated, and when you meet the next rank's needs, claim it on this page. You agree to the rules when you claim; most people get their new rank at once, and some accounts are checked by our team first (usually within 24–48 hours). You move up one rank at a time.</p>
               <ul>
-                <li><strong>OgaScore</strong> — calculated from avg rating, success rate, and experience</li>
-                <li><strong>Tasks Completed</strong> — total approved submissions</li>
-                <li><strong>Avg Rating</strong> — average star rating across all reviews (1–5)</li>
+                <li><strong>Tasks done</strong>: jobs you were paid for</li>
+                <li><strong>Avg rating</strong>: the average of the stars posters gave you (1–5)</li>
+                <li><strong>OgaScore</strong>: your trust score from checks we verified (connected accounts, ID and Human verification), out of 66</li>
               </ul>
               <p className="rank-info-note">Higher ranks unlock exclusive tasks, premium communities, and greater rewards.</p>
             </div>

@@ -209,9 +209,11 @@ export default function UserProfile() {
       tip: <p>Jobs this person was paid for. The success rate is the share of their work that was approved (approved ÷ approved and rejected).</p> },
     ...(profile?.preferences?.showRank ? [{ icon: "ti-trophy", label: "Rank", value: LEVEL_NAMES[wp.level] || "Beginner", sub: `OgaScore ${profile?.ogaScore ?? 0}`,
       tip: <>
-        <p><b>Rank</b> grows with jobs done and rating: Intermediate at 10 jobs, Advanced at 50 (4.0★), Expert at 200 (4.5★), Legend at 500 (4.8★).</p>
+        <p><b>Rank</b> shows experience: Intermediate at 10 jobs, Advanced at 50 (4.0★), Expert at 200 (4.5★), Legend at 500 (4.8★). People claim their new rank when they qualify, and some accounts are checked by our team first.</p>
         <p><b>OgaScore</b> (out of 66) comes from checks we verified: connected LinkedIn, X, GitHub, Google and Telegram, ID verification and Human verification. Some jobs need a minimum.</p>
       </> }] : []),
+    ...(typeof profile?.xScore === "number" ? [{ icon: "ti-brand-x", label: "X score", value: `${profile.xScore}/100`,
+      tip: <p>How much job posters can trust this person's X account, from things OgaPay checks: X connected, followers once checked, a blue tick, and their record on social-media jobs. Some jobs need a minimum.</p> }] : []),
     { icon: "ti-building-store", label: "Products", value: String(counts.storeItems ?? products.length) },
     { icon: "ti-users", label: "Communities", value: String(counts.communityMemberships ?? communities.length) },
   ]

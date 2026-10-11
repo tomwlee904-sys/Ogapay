@@ -13,7 +13,7 @@ const TITLES: Record<string, string> = {
   '/vault': 'Vault', '/vault/history': 'Vault history', '/developer': 'Developer API', '/safe': 'Staying safe',
   '/privacy': 'Privacy policy', '/terms': 'Terms of service', '/leaderboard': 'Leaderboard',
   '/workers': 'Workers', '/creators': 'Creators', '/dashboard': 'Dashboard', '/profile': 'My profile',
-  '/wallet': 'Wallet', '/deposit': 'Add money', '/earnings': 'Earnings', '/referrals': 'Referrals',
+  '/wallet': 'Wallet', '/deposit': 'Add money', '/earnings': 'Earnings', '/referrals': 'Referrals', '/rank': 'Ranks',
   '/settings': 'Settings', '/notifications': 'Notifications', '/messages': 'Messages', '/my-tasks': 'My tasks',
   '/my-store': 'My store', '/campaigns': 'Campaigns', '/my-jobs': 'My jobs', '/manage-jobs': 'Manage jobs',
   '/edit-profile': 'Edit profile', '/task-history': 'Task history', '/bookmarks': 'Bookmarks',

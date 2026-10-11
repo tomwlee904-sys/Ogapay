@@ -209,6 +209,10 @@ export default function Drawer({ open, onClose }: DrawerProps) {
                   <span className="oga-drawer-icon oga-drawer-icon--sub"><i className="ti ti-trophy" /></span>
                   <span><strong>Leaderboard</strong><small>Top earners and posters</small></span>
                 </Link>
+                <Link className="oga-drawer-item" to="/rank" onClick={onClose}>
+                  <span className="oga-drawer-icon oga-drawer-icon--sub"><i className="ti ti-award" /></span>
+                  <span><strong>Your rank</strong><small>Claim a new rank, see your X score</small></span>
+                </Link>
                 <Link className="oga-drawer-item" to="/writer" onClick={onClose}>
                   <span className="oga-drawer-icon oga-drawer-icon--sub"><i className="ti ti-pencil" /></span>
                   <span><strong>Writer workspace</strong><small>Writing jobs and tips</small></span>

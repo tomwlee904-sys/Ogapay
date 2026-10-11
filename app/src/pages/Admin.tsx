@@ -10,6 +10,7 @@ const CARDS = [
   { to: '/admin/creators', icon: 'ti-speakerphone', title: 'Creator checks', desc: 'Follower counts waiting to be verified' },
   { to: '/admin/moderation', icon: 'ti-flag', title: 'Moderation', desc: 'Submissions waiting over 24h' },
   { to: '/admin/updates', icon: 'ti-speakerphone', title: 'Platform updates', desc: 'Tell every user what is new, in their Notifications' },
+  { to: '/admin/ranks', icon: 'ti-trophy', title: 'Rank claims', desc: 'Review rank-ups from accounts with warning signs' },
   { to: '/admin/highlights', icon: 'ti-star', title: 'Highlighted jobs', desc: 'Jobs shown first on the homepage and jobs page' },
   { to: '/admin/support', icon: 'ti-lifebuoy', title: 'Support and reports', desc: 'Help centre tickets and reports, priority first' },
   { to: '/admin/blog', icon: 'ti-news', title: 'Blog', desc: 'Articles waiting for review, and publishing' },

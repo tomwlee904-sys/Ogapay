@@ -40,6 +40,11 @@ export default function Dashboard() {
   // Amounts follow the display currency; limits and "withdraw your ₦…" stay in naira
   const show = useMoney()
   const [me, setMe] = useState<Me | null>(null)
+  // A rank you can claim (services/rank.service.js): shown first on the dashboard
+  const [rankUp, setRankUp] = useState<{ name: string } | null>(null)
+  useEffect(() => {
+    apiRequest<any>('/scores/me').then((d) => setRankUp(d?.rank?.canClaim && d.rank.next ? { name: d.rank.next.name } : null)).catch(() => {})
+  }, [])
   const [earned, setEarned] = useState<number | null>(null)
   const [subs, setSubs] = useState<Sub[] | null>(null)
   const [created, setCreated] = useState<Job[] | null>(null)
@@ -213,6 +218,13 @@ export default function Dashboard() {
         </div>
 
         <div className="db-stack">
+          {rankUp && (
+            <section className="ui-card ui-card-pad db-rankup" aria-label="New rank available">
+              <span className="db-attn-ic"><i className="ti ti-trophy" /></span>
+              <div><b>You qualify for {rankUp.name}</b><span>Claim your new rank to unlock more jobs and better-paying ones.</span></div>
+              <Link className="ui-btn ui-btn-dark" to="/rank">Claim it</Link>
+            </section>
+          )}
           {attention.length > 0 && (
             <section className="ui-card ui-card-pad db-attn" aria-labelledby="db-attn">
               <div className="db-sec-head"><h2 id="db-attn">Needs your attention</h2>{moreReview > 0 && <Link to="/manage-jobs">{plural(moreReview, 'more job', 'more jobs')} to review</Link>}</div>
