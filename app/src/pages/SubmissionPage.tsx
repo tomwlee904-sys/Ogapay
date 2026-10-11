@@ -111,7 +111,8 @@ export default function SubmissionPage() {
       if (!mine || mine.status !== 'PENDING') {
         setBusy('Taking a slot…')
         await apiRequest(`/tasks/${task.id}/apply`, { method: 'POST' }).catch((e: any) => {
-          if (!String(e?.message || '').toLowerCase().includes('already')) throw e
+          // Only "You have already applied" is fine here; other refusals (like a similar job done) must show
+          if (!/already applied/i.test(String(e?.message || ''))) throw e
         })
       }
       // 2. Upload files

@@ -140,6 +140,8 @@ export default function JobDetail() {
   const [job, setJob] = useState<JobData | null>(null)
   // Your own place on this job, if you took one (GET /tasks/:id sends it when signed in)
   const [mySub, setMySub] = useState<{ status: string } | null>(null)
+  // The poster's similar jobs: people who did one of them can't take this one
+  const [linkedJobs, setLinkedJobs] = useState<{ id: string; title: string }[]>([])
   // Name the job in the browser tab (PageTitle sets the generic one first)
   useEffect(() => { if (job?.title) document.title = `${job.title} | OgaPay Jobs` }, [job?.title])
   // Contests: prizes, entries and winners (from GET /tasks/:id); reloaded after the poster pays the winners
@@ -187,6 +189,7 @@ export default function JobDetail() {
           const t = json.data.task || json.data
           setJob(formatTask(t))
           setMySub(json.data.userSubmission || null)
+          setLinkedJobs(Array.isArray(json.data.similarJobs) ? json.data.similarJobs : [])
           setContest(json.data.contest || null)
           setCommunity(json.data.community || null)
         } else {
@@ -437,6 +440,7 @@ export default function JobDetail() {
       isOpen={isOpen}
       canManage={canManage}
       myLabel={myLabel}
+      linkedJobs={linkedJobs}
       openMine={openMine}
       bookmarked={bookmarked}
       handleBookmark={handleBookmark}
@@ -498,7 +502,7 @@ function ErrorState({ message, onBack }: { message: string; onBack: () => void }
 /* ── Main View ── */
 function WurkJobDetailView(props: any) {
   const {
-    job, fmt, convert, navigate, countdown, showSubs, setShowSubs, isOpen, canManage, myLabel, openMine,
+    job, fmt, convert, navigate, countdown, showSubs, setShowSubs, isOpen, canManage, myLabel, openMine, linkedJobs,
     bookmarked, handleBookmark, handleCancelJob, cancelling, toggleHighlight, highlighting, showApplyWarning, setShowApplyWarning,
     showShare, setShowShare, showInfo, setShowInfo,
     showReportModal, setShowReportModal, reportCategory, setReportCategory,
@@ -1003,6 +1007,9 @@ function WurkJobDetailView(props: any) {
                 <div className="wjd-row"><div className="wjd-label">Closes in</div><div className="wjd-value" style={{ fontVariantNumeric: 'tabular-nums' }}>{countdownStr}</div></div>
                 <div className="wjd-row"><div className="wjd-label">Minimum rank</div><div className="wjd-value">{Number(job.rankRequired || job.minRank) > 1 ? `${rankName(Number(job.rankRequired || job.minRank))} or higher` : 'None'}</div></div>
                 <div className="wjd-row"><div className="wjd-label">Requirements</div><div className="wjd-value">{jobRequirements(job).filter(r => r.icon !== 'award').map(r => r.text).join(', ') || 'No extra requirements'}</div></div>
+                {linkedJobs?.length > 0 && (
+                  <div className="wjd-row"><div className="wjd-label">Not for</div><div className="wjd-value">People who already did {linkedJobs.map((s: any, i: number) => <span key={s.id}>{i ? ', ' : ''}<Link to={`/tasks/${s.id}`} style={{ color: 'inherit', fontWeight: 600 }}>{s.title}</Link></span>)}. Each person is paid for only one of these.</div></div>
+                )}
                 <div className="wjd-row wide"><div className="wjd-label">Category</div><div className="wjd-value">{String(job.category || 'Custom').replace(/_/g, ' ').toLowerCase().replace(/^\w/, (l: string) => l.toUpperCase())}</div></div>
               </div>
             </div>

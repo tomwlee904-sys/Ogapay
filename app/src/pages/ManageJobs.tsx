@@ -7,6 +7,7 @@ import { useToast } from "../components/Toast";
 import { categoryLabel } from "../lib/categories";
 import { listTemplates, saveTemplate, taskToTemplateData, type JobTemplate, type TemplateData } from "../components/create/shared";
 import "../styles/manage-jobs.css";
+import InfoTip from '../components/InfoTip'
 
 // Manage jobs: the poster's jobs, their review queue and job actions.
 // Counts come from each job's submissions (by status). The old page used
@@ -23,6 +24,7 @@ type Task = {
   id: string; title: string; status: string; category?: string; reward: number | string; currency?: string
   maxWorkers?: number; deadline?: string | null; createdAt?: string; submissions?: Sub[]
   description?: string | null
+  excludesTaskIds?: string[]
 }
 
 function Icon({ n, s = 16, c, style }: { n: any; s?: number; c?: any; style?: any }) {
@@ -86,7 +88,7 @@ function Proof({ s }: { s: Sub }) {
 }
 
 // ── Review drawer ─────────────────────────────────────────────────────────
-function JobDrawer({ task, onClose, onChanged }: { task: Task; onClose: () => void; onChanged: () => void }) {
+function JobDrawer({ task, allTasks, onClose, onChanged }: { task: Task; allTasks: Task[]; onClose: () => void; onChanged: () => void }) {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [subs, setSubs] = useState<Sub[] | null>(null);
@@ -164,10 +166,14 @@ function JobDrawer({ task, onClose, onChanged }: { task: Task; onClose: () => vo
   };
   const [editing, setEditing] = useState(false);
   const [ed, setEd] = useState({ title: task.title, brief: "", deadline: "" });
+  // Similar jobs: people who took part in any of them can't take this one (and the other way round)
+  const others = allTasks.filter((t) => t.id !== task.id);
+  const [similar, setSimilar] = useState<string[]>(task.excludesTaskIds || []);
   const [edBusy, setEdBusy] = useState(false);
   const [edErr, setEdErr] = useState("");
   const startEdit = () => {
     setEd({ title: task.title, brief: (task.description || "").split("\n\n**Attachments**")[0], deadline: task.deadline ? new Date(task.deadline).toISOString().slice(0, 10) : "" });
+    setSimilar(task.excludesTaskIds || []);
     setEdErr(""); setEditing(true);
   };
   const saveEdit = async () => {
@@ -175,7 +181,7 @@ function JobDrawer({ task, onClose, onChanged }: { task: Task; onClose: () => vo
     if (title.length < 5) { setEdErr("Give the job a title of at least 5 characters."); return; }
     if (brief.length < 20) { setEdErr("Describe the job in at least 20 characters."); return; }
     const attachments = (task.description || "").includes("\n\n**Attachments**") ? (task.description || "").slice((task.description || "").indexOf("\n\n**Attachments**")) : "";
-    const body: Record<string, any> = { title, description: brief + attachments, instructions: brief + attachments };
+    const body: Record<string, any> = { title, description: brief + attachments, instructions: brief + attachments, excludesTaskIds: similar };
     if (ed.deadline) body.deadline = new Date(ed.deadline + "T23:59:00").toISOString();
     setEdBusy(true); setEdErr("");
     try {
@@ -214,6 +220,19 @@ function JobDrawer({ task, onClose, onChanged }: { task: Task; onClose: () => vo
               <textarea id="mj-ed-brief" className="ui-input mj-edit-brief" maxLength={10000} value={ed.brief} onChange={(e) => setEd({ ...ed, brief: e.target.value })} />
               <label className="ui-label" htmlFor="mj-ed-deadline">Closes on (optional)</label>
               <input id="mj-ed-deadline" className="ui-input" type="date" min={new Date(Date.now() + 86400e3).toISOString().slice(0, 10)} value={ed.deadline} onChange={(e) => setEd({ ...ed, deadline: e.target.value })} />
+              {others.length > 0 && (
+                <fieldset className="mj-similar">
+                  <legend className="ui-label">Not for people who did these jobs <InfoTip label="What are similar jobs?" title="Similar jobs">
+                    <p>Tick your jobs that ask for the same thing (for example two jobs that both ask people to follow you on X). Anyone who took part in one of them can't take this job, and the other way round, so nobody is paid twice for the same action.</p>
+                  </InfoTip></legend>
+                  {others.slice(0, 40).map((t) => (
+                    <label key={t.id} className="mj-similar-row">
+                      <input type="checkbox" checked={similar.includes(t.id)} onChange={(e) => setSimilar((s) => e.target.checked ? [...s, t.id] : s.filter((x) => x !== t.id))} />
+                      <span>{t.title}</span>
+                    </label>
+                  ))}
+                </fieldset>
+              )}
               <p className="mj-edit-note">The reward and number of people can't change once the job is funded. To change them, cancel the job and post a new one.</p>
               {edErr && <p className="mj-tool-err" role="alert">{edErr}</p>}
               <div className="mj-acts">
@@ -541,7 +560,7 @@ function JobsListPage({ tasks, reload }: { tasks: Task[]; reload: () => void }) 
         })}
       </div>
 
-      {open && <JobDrawer task={open} onClose={() => setOpenId(null)} onChanged={reload} />}
+      {open && <JobDrawer task={open} allTasks={tasks} onClose={() => setOpenId(null)} onChanged={reload} />}
     </>
   );
 }

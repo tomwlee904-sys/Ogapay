@@ -88,7 +88,7 @@ export default function JobMonitor() {
     setBusy(j.id)
     try {
       await apiRequest(`/tasks/${j.id}/apply`, { method: 'POST' }).catch((e: any) => {
-        if (!String(e?.message || '').toLowerCase().includes('already')) throw e
+        if (!/already applied/i.test(String(e?.message || ''))) throw e // other refusals (e.g. a similar job done) must show
       })
       navigate(`/tasks/${j.id}/submit`)
     } catch (e: any) { toast(e?.message || "Couldn't take a slot", 'error') }

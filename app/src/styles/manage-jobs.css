@@ -115,3 +115,10 @@ button.mj-sum:hover { border-color: var(--text3); }
 .mj-edit .ui-label { margin-top: 8px; }
 .mj-edit-brief { height: auto; min-height: 140px; padding: 10px 14px; line-height: 1.55; resize: vertical; }
 .mj-edit-note { margin: 8px 0 0; font-size: 12px; line-height: 1.5; color: var(--text2); }
+
+/* Edit job: similar jobs (people who did one can't take the others) */
+.mj-similar { border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px 6px; margin: 12px 0 0; }
+.mj-similar legend { padding: 0 4px; }
+.mj-similar-row { display: flex; align-items: flex-start; gap: 10px; min-height: 40px; padding: 8px 0; font-size: 14px; line-height: 1.4; border-top: 1px solid var(--border); cursor: pointer; }
+.mj-similar-row:first-of-type { border-top: 0; }
+.mj-similar-row input { width: 18px; height: 18px; margin-top: 1px; flex-shrink: 0; }
