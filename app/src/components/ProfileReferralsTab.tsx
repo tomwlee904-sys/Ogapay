@@ -47,7 +47,7 @@ export default function TabReferralsContent() {
 
   const code = (user as any)?.referralCode || stats?.referralCode || ''
   const link = code ? `https://ogapay.app/ref/${code}` : ''
-  const bonus = stats?.bonusPerReferral ?? 1000
+  const bonus = stats?.bonusPerReferral ?? 500
   const cap = stats?.rewardCap ?? 20
   const rewarded = stats?.rewardedReferrals ?? 0
   const people = stats?.referrals ?? []

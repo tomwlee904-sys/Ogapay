@@ -36,7 +36,8 @@ export default function AuthCallback() {
               {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ access_token: session.access_token }),
+                // The referral link's code (saved by /ref/:code), for a brand-new account
+                body: JSON.stringify({ access_token: session.access_token, referralCode: (() => { try { return localStorage.getItem('ogapay_referral') || undefined } catch { return undefined } })() }),
               }
             );
 
