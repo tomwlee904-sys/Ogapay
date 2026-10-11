@@ -124,6 +124,8 @@ interface JobData {
   minRank: number
   rankRequired?: number
   minSorsaScore: number
+  minXScore: number
+  minJobsDone: number
   requiresWallet: boolean
   requiresX: boolean
   requiresLinkedin: boolean
@@ -342,6 +344,8 @@ export default function JobDetail() {
       workerRequirement: t.workerRequirement || '',
       minRank: Number(t.minRank) || 0,
       minSorsaScore: Number(t.minSorsaScore ?? t.minOgaScore) || 0,
+      minXScore: Number(t.minXScore) || 0,
+      minJobsDone: Number(t.minJobsDone) || 0,
       requiresWallet: !!t.requiresWallet,
       requiresX: !!t.requiresX,
       requiresLinkedin: !!t.requiresLinkedin,

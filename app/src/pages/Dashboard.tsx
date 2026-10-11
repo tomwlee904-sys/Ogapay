@@ -9,6 +9,7 @@ import { rankName } from '../lib/requirements'
 import { jobDeadline, deadlineLabel } from '../lib/deadline'
 import { withdrawLimit } from '../lib/wallet'
 import { useMoney } from '../lib/useMoney'
+import InfoTip from '../components/InfoTip'
 import '../styles/dashboard.css'
 
 // Dashboard, top to bottom: what needs you now (work to review, work to send),
@@ -17,13 +18,16 @@ import '../styles/dashboard.css'
 // only works gets that side alone; a new account gets two starter cards and the
 // setup steps first. It used to be built for workers only, so posters saw "not
 // working on anything" while their own jobs were one line at the top.
+// Starter jobs (the Highlighted ones) are listed in full for anyone with fewer
+// than STARTER_UNTIL finished jobs, the ones they can do right now first.
 
-type Me = { ogaScore?: number; workerProfile?: { tasksCompleted?: number; level?: string } | null; kyc?: { status?: string; kycTier?: number } | null }
+type Me = { ogaScore?: number; humanVerifiedAt?: string | null; workerProfile?: { tasksCompleted?: number; level?: string } | null; kyc?: { status?: string; kycTier?: number } | null }
 type Sub = { id: string; status: string; taskId: string; autoApproveAt?: string | null; task?: { id: string; title: string; reward: number | string; currency?: string } }
 type Job = {
   id: string; title: string; reward: number | string; currency?: string; category?: string; posterId?: string; status?: string
   maxWorkers?: number; currentWorkers?: number; expiresAt?: string | null; deadline?: string | null
   submissions?: { status: string }[]
+  featured?: boolean; workerRequirement?: string | null; minJobsDone?: number; excludesTaskIds?: string[]
 }
 
 const LEVELS = ['BEGINNER', 'INTERMEDIATE', 'ADVANCED', 'EXPERT', 'LEGEND']
@@ -33,6 +37,8 @@ const greeting = () => { const h = new Date().getHours(); return h < 12 ? 'Good 
 const when = (d?: string | null) => d ? new Date(d).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }) : ''
 const toReviewOn = (j: Job) => (j.submissions || []).filter((s) => s.status === 'SUBMITTED').length
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`
+const STARTER_UNTIL = 5
+const placesLeft = (j: Job) => Math.max(0, (Number(j.maxWorkers) || 1) - (Number(j.currentWorkers) || 0))
 
 export default function Dashboard() {
   const { user } = useAuth()
@@ -57,7 +63,7 @@ export default function Dashboard() {
     apiRequest<{ totalEarned?: number }>('/users/me/earnings').then((d) => setEarned(Number(d?.totalEarned || 0))).catch(() => setEarned(0))
     apiRequest<{ submissions: Sub[] }>('/tasks/my/submissions').then((d) => setSubs(d?.submissions || [])).catch(() => setSubs([]))
     apiRequest<Job[]>('/tasks/my/created?limit=100').then((d) => setCreated(Array.isArray(d) ? d : [])).catch(() => setCreated([]))
-    apiRequest<Job[] | { tasks: Job[] }>('/tasks?limit=12').then((d: any) => setJobs(Array.isArray(d) ? d : d?.tasks || [])).catch(() => setJobs([]))
+    apiRequest<Job[] | { tasks: Job[] }>('/tasks?limit=100').then((d: any) => setJobs(Array.isArray(d) ? d : d?.tasks || [])).catch(() => setJobs([]))
     // Saved banks (the old check read a profile field the bank form never sets)
     apiRequest<any[]>('/wallet/banks').then((d) => setHasBank(Array.isArray(d) && d.length > 0)).catch(() => {})
   }, [])
@@ -73,11 +79,28 @@ export default function Dashboard() {
   const active = [...working, ...waiting]
   // Not your own jobs, and not ones you've already taken part in
   const taken = new Set((subs || []).map((s) => s.taskId))
-  const forYou = (jobs || []).filter((j) => j.posterId !== user.id && !taken.has(j.id)).slice(0, 4)
+  // A similar job you've done (linked either way) can't be taken too
+  const similarTaken = (j: Job) => (j.excludesTaskIds || []).some((id) => taken.has(id)) ||
+    (jobs || []).some((o) => taken.has(o.id) && (o.excludesTaskIds || []).includes(j.id))
+  const jobsDone = me?.workerProfile?.tasksCompleted ?? 0
+  const starter = me && jobsDone < STARTER_UNTIL
+    ? (jobs || []).filter((j) => j.featured && j.posterId !== user.id && !taken.has(j.id) && !similarTaken(j) && placesLeft(j) > 0 && jobDeadline(j).state !== 'ended')
+    : []
+  const starterIds = new Set(starter.map((j) => j.id))
+  const forYou = (jobs || []).filter((j) => j.posterId !== user.id && !taken.has(j.id) && !starterIds.has(j.id)).slice(0, 4)
   const rank = me?.workerProfile?.level
   const rankLabel = rank ? rankName(LEVELS.indexOf(rank) + 1) : 'Beginner'
   const kycTier = (me?.kyc?.status || user.kycStatus) === 'APPROVED' ? Number(me?.kyc?.kycTier ?? user.kycTier ?? 0) : 0
   const kycOk = kycTier >= 1
+  // What stands between you and a starter job (null: you can do it now)
+  const stepFor = (j: Job): { text: string; tag: string; order: number } | null => {
+    const need = Number(j.minJobsDone) || 0
+    if (need > jobsDone) return { text: need === 1 ? 'Opens after your first approved job' : `Opens after ${need} approved jobs`, tag: 'Later', order: 2 }
+    if (j.workerRequirement === 'KYC' && !kycOk) return { text: 'Verify your ID first (Level 1)', tag: 'Verify ID', order: 1 }
+    if (j.workerRequirement === 'HUMAN' && !me?.humanVerifiedAt) return { text: 'Get Human Verified first, it takes a minute', tag: 'Verify', order: 1 }
+    return null
+  }
+  const starterSorted = starter.map((j) => ({ j, step: stepFor(j) })).sort((a, b) => (a.step?.order ?? 0) - (b.step?.order ?? 0))
 
   const loaded = subs !== null && created !== null
   const hires = mine.length > 0
@@ -124,6 +147,32 @@ export default function Dashboard() {
                 ? <button className="db-step-btn" onClick={resend} disabled={mail === 'sending' || mail === 'sent'}>{mail === 'sending' ? 'Sending…' : mail === 'sent' ? 'Link sent. Check your inbox' : mail === 'failed' ? 'Couldn\'t send. Try again' : 'Send the link again'}</button>
                 : <Link className="db-step-btn" to={s.to!}>{s.cta}</Link>)}
             </div>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )
+
+  const starterCard = starterSorted.length > 0 && (
+    <section className="ui-card ui-card-pad db-starter" aria-labelledby="db-starter">
+      <div className="db-sec-head">
+        <h2 id="db-starter">Starter jobs <InfoTip label="What are starter jobs?" title="Starter jobs">
+          <p>Quick jobs from the OgaPay team to help you learn OgaPay and earn your first naira. Do them in any order. Each one pays once, and it leaves this list when you've taken it.</p>
+          <p>Send real proof: work that just copies the brief is rejected.</p>
+        </InfoTip></h2>
+        <span className="db-count">{starterSorted.length} for you</span>
+      </div>
+      <ul className="db-list">
+        {starterSorted.map(({ j, step }) => (
+          <li key={j.id}>
+            <Link to={`/tasks/${j.id}`}>
+              <div>
+                <strong>{j.title}</strong>
+                <span>{step ? step.text : `${plural(placesLeft(j), 'place', 'places')} left`}</span>
+              </div>
+              {step && <em className={step.order === 2 ? 'later' : 'wait'}>{step.tag}</em>}
+              <b>{show(Number(j.reward || 0), j.currency || 'NGN')}</b>
+            </Link>
           </li>
         ))}
       </ul>
@@ -241,6 +290,7 @@ export default function Dashboard() {
             </section>
           )}
 
+          {starterCard}
           {isNew && setup}
 
           <div className="db-snap">

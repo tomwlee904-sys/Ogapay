@@ -19,6 +19,7 @@ export const REQ_OPTIONS: [string, string][] = [
   ["rank", "Minimum worker rank"],
   ["ogascore", "Minimum OgaScore"],
   ["xscore", "Minimum X score"],
+  ["jobs", "Finished jobs on OgaPay"],
   ["audience", "Minimum followers (creators)"],
 ];
 
@@ -39,6 +40,7 @@ export function reqFields(type: string, value: string): Record<string, any> {
     case "rank": return { minRank: Math.min(5, Math.max(2, n)) }; // 2 Intermediate … 5 Legend
     case "ogascore": return { minSorsaScore: Math.min(100, n) };
     case "xscore": return { minXScore: Math.min(100, n) };
+    case "jobs": return { minJobsDone: Math.min(1000, n) };
     case "audience": { const a = parseAudience(value); return { audiencePlatform: a.platform, minFollowers: a.min }; }
     default: return {};
   }
@@ -48,12 +50,13 @@ export function reqLabel(type: string, value: string) {
   if (type === "rank") return `${rankName(Math.max(2, parseInt(value) || 2))} rank or higher`;
   if (type === "ogascore") return `OgaScore ≥ ${Math.max(1, parseInt(value) || 1)}`;
   if (type === "xscore") return `X score ≥ ${Math.max(1, parseInt(value) || 1)}`;
+  if (type === "jobs") { const n = Math.max(1, parseInt(value) || 1); return `${n}+ ${n === 1 ? "job" : "jobs"} done on OgaPay`; }
   if (type === "audience") { const a = parseAudience(value); return `Creators: ${audienceRequirement(a.platform, a.min)}`; }
   return REQ_OPTIONS.find(([v]) => v === type)?.[1] || "Anyone can take part";
 }
 
 export function RequirementPicker({ type, value, onChange }: { type: string; value: string; onChange: (t: string, v: string) => void }) {
-  const needsValue = type === "rank" || type === "ogascore" || type === "xscore" || type === "audience";
+  const needsValue = type === "rank" || type === "ogascore" || type === "xscore" || type === "jobs" || type === "audience";
   // "Human verified" only while VeryAI is set up (nobody could take the job otherwise)
   const providers = useProviders();
   const options = REQ_OPTIONS.filter(([v]) => v !== "human" || providers?.very || type === "human");
@@ -99,6 +102,14 @@ export function RequirementPicker({ type, value, onChange }: { type: string; val
           <input id="cf-xscore" className="ui-input" type="number" min={1} max={100} value={value} placeholder="e.g. 40"
             onChange={e => onChange(type, e.target.value)} />
           <p className="cf-hint">0–100, from X connected, checked followers, a blue tick and their record on social jobs. 40+ is a solid account.</p>
+        </div>
+      )}
+      {type === "jobs" && (
+        <div className="cf-field">
+          <label htmlFor="cf-jobs">Jobs they've finished</label>
+          <input id="cf-jobs" className="ui-input" type="number" min={1} max={1000} value={value} placeholder="e.g. 1"
+            onChange={e => onChange(type, e.target.value)} />
+          <p className="cf-hint">Only people with this many approved jobs on OgaPay can take it. New members see it once they get there.</p>
         </div>
       )}
       {type === "ogascore" && (
@@ -298,7 +309,8 @@ export function taskToTemplateData(t: any): TemplateData {
     t?.requiresWallet ? ["wallet", ""] :
     Number(t?.minRank) > 1 ? ["rank", String(t.minRank)] :
     Number(t?.minSorsaScore) > 0 ? ["ogascore", String(t.minSorsaScore)] :
-    Number(t?.minXScore) > 0 ? ["xscore", String(t.minXScore)] : ["none", ""];
+    Number(t?.minXScore) > 0 ? ["xscore", String(t.minXScore)] :
+    Number(t?.minJobsDone) > 0 ? ["jobs", String(t.minJobsDone)] : ["none", ""];
   const winners = Math.max(1, Number(t?.maxWorkers) || 1);
   const pool = Number(t?.reward || 0) * winners;
   return {

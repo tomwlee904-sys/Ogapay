@@ -584,7 +584,7 @@ export default function Tasks() {
       }
       if (category !== 'All' && j.category !== categoryKey(category)) return false
       const score = Number(j.minOgaScore ?? j.minSorsaScore ?? 0), rank = Number(j.minRank ?? 0)
-      if (req === 'open' && (score > 0 || rank > 1 || j.requiresWallet || j.requiresX || j.requiresLinkedin || j.workerRequirement || Number(j.minFollowers) > 0)) return false
+      if (req === 'open' && (score > 0 || rank > 1 || j.requiresWallet || j.requiresX || j.requiresLinkedin || j.workerRequirement || Number(j.minFollowers) > 0 || Number(j.minJobsDone) > 0 || Number(j.minXScore) > 0)) return false
       if (req === 'audience' && !(Number(j.minFollowers) > 0)) return false
       if (req === 'ogascore' && score <= 0) return false
       if (req === 'wallet' && !j.requiresWallet) return false

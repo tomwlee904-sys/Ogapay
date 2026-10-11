@@ -19,6 +19,8 @@ export function jobRequirements(job: any): { icon: string; text: string }[] {
   if (score > 0) reqs.push({ icon: 'shield-check', text: `OgaScore ${score}+` })
   const xs = Number(job.minXScore ?? 0)
   if (xs > 0) reqs.push({ icon: 'brand-x', text: `X score ${xs}+` })
+  const jobs = Number(job.minJobsDone ?? 0)
+  if (jobs > 0) reqs.push({ icon: 'circle-check', text: `${jobs}+ ${jobs === 1 ? 'job' : 'jobs'} done on OgaPay` })
   if (job.requiresWallet) reqs.push({ icon: 'wallet', text: 'Solana wallet connected' })
   if (job.requiresX) reqs.push({ icon: 'brand-x', text: 'X account connected' })
   if (job.requiresLinkedin) reqs.push({ icon: 'brand-linkedin', text: 'LinkedIn connected' })
