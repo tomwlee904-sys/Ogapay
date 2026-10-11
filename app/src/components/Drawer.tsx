@@ -7,7 +7,6 @@ import { useCurrency } from '../context/CurrencyContext'
 import { sized } from '../lib/img'
 import { displayPref } from '../lib/money'
 import CurrencySwitch from './CurrencySwitch'
-import { InstallMenuItem } from './InstallApp'
 
 interface DrawerProps {
   open: boolean
@@ -28,6 +27,9 @@ function DrawerGroup({ label, icon, subtitle, children, defaultOpen }: { label: 
   )
 }
 
+// Vault, Notifications and "Install the app" aren't listed here: Vault is in the
+// top bar (and footer), notifications are Alerts in the bottom bar, and the
+// install card offers itself (InstallHost). The menu showed them twice.
 export default function Drawer({ open, onClose }: DrawerProps) {
   // Settings > Developer: "Show Developer API in the menu"
   const readDev = () => { try { return localStorage.getItem('ogapay_developer_mode') === 'true' } catch { return false } }
@@ -90,12 +92,6 @@ export default function Drawer({ open, onClose }: DrawerProps) {
               <span><strong>Blog</strong><small>News &amp; updates</small></span>
             </Link>
 
-            {/* ── Vault ── */}
-            <Link className="oga-drawer-item" to="/vault" onClick={onClose}>
-              <span className="oga-drawer-icon"><i className="ti ti-shield-lock" /></span>
-              <span><strong>Vault</strong><small>Reward pool</small></span>
-            </Link>
-
             {/* ── FAQ ── */}
             <Link className="oga-drawer-item" to="/faq" onClick={onClose}>
               <span className="oga-drawer-icon"><i className="ti ti-help-circle" /></span>
@@ -107,8 +103,6 @@ export default function Drawer({ open, onClose }: DrawerProps) {
               <span className="oga-drawer-icon"><i className="ti ti-headset" /></span>
               <span><strong>Support</strong><small>Contact support</small></span>
             </Link>
-
-            <InstallMenuItem onDone={onClose} />
 
             <CurrencySwitch />
 
@@ -235,18 +229,6 @@ export default function Drawer({ open, onClose }: DrawerProps) {
                 <span><strong>Blog</strong><small>News and updates</small></span>
               </Link>
 
-              {/* ── Vault ── */}
-              <Link className="oga-drawer-item" to="/vault" onClick={onClose}>
-                <span className="oga-drawer-icon"><i className="ti ti-shield-lock" /></span>
-                <span><strong>Vault</strong><small>Rewards and earnings</small></span>
-              </Link>
-
-              {/* ── Notifications ── */}
-              <Link className="oga-drawer-item" to="/notifications" onClick={onClose}>
-                <span className="oga-drawer-icon"><i className="ti ti-bell" /></span>
-                <span><strong>Notifications</strong><small>Activity and alerts</small></span>
-              </Link>
-
               {/* ── FAQ ── */}
               <Link className="oga-drawer-item" to="/faq" onClick={onClose}>
                 <span className="oga-drawer-icon"><i className="ti ti-help-circle" /></span>
@@ -258,8 +240,6 @@ export default function Drawer({ open, onClose }: DrawerProps) {
                 <span className="oga-drawer-icon"><i className="ti ti-headset" /></span>
                 <span><strong>Support</strong><small>Contact support</small></span>
               </Link>
-
-              <InstallMenuItem onDone={onClose} />
 
               <div className="oga-drawer-divider" />
 
