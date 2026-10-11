@@ -316,7 +316,7 @@ body:has(main.hv), body:has(main.hv) #root { overflow-x: clip; }
 
 /* ── Tablet ── */
 @media (max-width: 1024px) {
-  .hv-hero-grid { grid-template-columns: 1fr; gap: 40px; }
+  .hv-hero-grid { grid-template-columns: minmax(0, 1fr); gap: 40px; }
   .hv-hero-copy { padding-top: 0; }
   .hv-connected { grid-template-columns: 1fr; gap: 28px; }
   .hv-poss { grid-template-columns: 1fr; gap: 18px; }
@@ -370,4 +370,6 @@ body:has(main.hv), body:has(main.hv) #root { overflow-x: clip; }
   .hv-journal { grid-auto-columns: 86%; }
   .hv-final { padding: 80px 0 120px; }
 }
-.hv-hero .hv-ticker { margin-top: 18px; }
+/* The ticker strip is wider than the screen: keep the hero columns from growing
+   to fit it (they did on phones, stretching the network graphic to ~4,700px tall) */
+.hv-hero-grid > * { min-width: 0; }
