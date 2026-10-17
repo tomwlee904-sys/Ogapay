@@ -192,12 +192,12 @@ export default function NetworkFlow() {
   }, [])
 
   return (
-    <section ref={boxRef} className="hv-netflow" aria-label="People and teams connected through one network">
+    <section ref={boxRef} className="hv-netflow" aria-label="Hirers and earners, connected by OgaPay. One network.">
       <canvas ref={canvasRef} aria-hidden="true" />
       <span className="hv-netflow-logo" aria-hidden="true"><Logo size={64} /></span>
-      <span className="hv-netflow-label left" aria-hidden="true">People + teams</span>
-      <span className="hv-netflow-label right" aria-hidden="true">Escrow protected</span>
-      <span className="hv-netflow-caption">Real people. Real work. One network.</span>
+      <span className="hv-netflow-label left" aria-hidden="true">Hirers + earners</span>
+      <span className="hv-netflow-label right" aria-hidden="true">Connected by OgaPay</span>
+      <span className="hv-netflow-caption">One network.</span>
     </section>
   )
 }
