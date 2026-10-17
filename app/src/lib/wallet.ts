@@ -135,3 +135,14 @@ export const when = (d: string) => {
   if (t.toDateString() === y.toDateString()) return `Yesterday, ${time}`
   return t.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: t.getFullYear() === today.getFullYear() ? undefined : 'numeric' })
 }
+
+/** Bank withdrawals are paid every Thursday at 10:00 Lagos time (09:00 UTC);
+ *  the backend's payout.service.js nextPayoutDay uses the same rule. */
+export function nextPayoutDay(from = new Date()): Date {
+  const d = new Date(Date.UTC(from.getUTCFullYear(), from.getUTCMonth(), from.getUTCDate(), 9, 0, 0))
+  let days = (4 - d.getUTCDay() + 7) % 7
+  if (days === 0 && from >= d) days = 7
+  d.setUTCDate(d.getUTCDate() + days)
+  return d
+}
+export const payoutDayLabel = (d: Date) => d.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'Africa/Lagos' })

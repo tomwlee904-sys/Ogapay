@@ -70,13 +70,13 @@ export const TOPICS: Topic[] = [
     id: 'withdrawals', title: 'Withdrawals', items: [
       { q: 'How do I withdraw?', a: 'Open Wallet, choose Withdraw, pick a saved bank account (NGN) or enter a Solana address (USDC or SOL), enter the amount and confirm.' },
       { q: 'What are the limits?', a: 'The minimum is ₦5,000 or its equivalent. The most you can withdraw in a day depends on your verification level: ₦5,000 at Level 1, ₦10,000 at Level 2 and ₦50,000 at Level 3. Bank and crypto withdrawals count together over the last 24 hours, and the Withdraw screen shows how much you have left.' },
-      { q: 'How long does it take?', a: 'Bank withdrawals are processed within 24 hours, and usually much sooner. Crypto withdrawals arrive once the Solana transaction confirms, typically within minutes.' },
+      { q: 'How long does it take?', a: 'Bank withdrawals are paid every Thursday morning: anything you request before then goes out that Thursday. The money is sent automatically to a bank account in your own name; other accounts are checked by our team first, which can take longer. Crypto withdrawals arrive once the Solana transaction confirms, typically within minutes.' },
       { q: 'My withdrawal failed. Where is my money?', a: 'Funds are only locked while a withdrawal is processing. If the payout fails, the lock is released and the money is available in your wallet again.' },
     ],
   },
   {
     id: 'referrals', title: 'Referrals and bonuses', items: [
-      { q: 'How do referrals pay?', a: 'Share your referral link. You earn ₦500 when a friend you invited verifies their identity (Level 1: a bank account in their name or their NIN), and another ₦500 when their first job is approved.' },
+      { q: 'How do referrals pay?', a: 'Share your referral link. You earn ₦500 when a friend you invited verifies their identity (Level 1: a bank account in their name or their NIN), and another ₦500 when a job they do is approved (a job posted by someone else, not you). Both are paid once per friend.' },
       { q: 'Is there a limit?', a: 'Referral bonuses are paid for up to 20 referrals per person. This stops people farming the programme with fake accounts.' },
       { q: 'Do new users get a bonus?', a: 'Yes. Verify your identity (Level 1) and ₦1,000 goes into your wallet straight away. Verifying is free in Settings → Verification and takes a minute. One bonus per person.' },
     ],

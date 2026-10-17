@@ -23,6 +23,8 @@ interface Withdrawal {
   destination: { bankName: string | null; bankCode: string | null; accountNumber: string | null; accountName: string | null; address: string | null }
   settledAt: string | null
   note: string | null
+  // Thursday payouts (backend payout.service.js)
+  autoPayout?: { state: 'sending' | 'sent' | 'review'; reason?: string; transferId?: number | string; at?: string } | null
   user: { id: string; email: string; name: string; kycTier: number } | null
 }
 interface Page { items: Withdrawal[]; total: number; page: number; pages: number; totals: { currency: string; count: number; amount: number }[] }
@@ -30,7 +32,7 @@ interface Page { items: Withdrawal[]; total: number; page: number; pages: number
 const TABS: [Status, string][] = [['PROCESSING', 'Pending'], ['COMPLETED', 'Paid'], ['FAILED', 'Rejected']]
 
 const KIND: Record<Kind, { label: string; icon: string; hint: string }> = {
-  manual: { label: 'Pay by hand', icon: 'building-bank', hint: 'The money is held. Send the transfer, then mark it paid.' },
+  manual: { label: 'Bank withdrawal', icon: 'building-bank', hint: 'The money is held. It goes out automatically on Thursday if the account is in their name; otherwise send the transfer by hand, then mark it paid.' },
   flutterwave: { label: 'Flutterwave transfer', icon: 'send', hint: 'Sent automatically. Check its status in Flutterwave before settling it here.' },
   crypto: { label: 'Crypto, not confirmed', icon: 'currency-solana', hint: 'Already sent and debited. Check the signature: mark paid if it landed, reject only if it never did.' },
 }
@@ -64,6 +66,9 @@ function Row({ w, onSettled }: { w: Withdrawal; onSettled: (id: string, msg: str
   const k = KIND[w.kind]
   const d = w.destination
   const sig = w.kind === 'crypto' ? w.externalRef : null
+  const auto = w.autoPayout || null
+  // An automatic transfer is out: settling it here too would pay twice (the server refuses)
+  const inFlight = auto?.state === 'sending' || auto?.state === 'sent'
 
   const settle = async () => {
     if (mode === 'reject' && !reason.trim()) { setError('Give a reason. The user will see it.'); return }
@@ -111,11 +116,21 @@ function Row({ w, onSettled }: { w: Withdrawal; onSettled: (id: string, msg: str
         {sig && <a className="aw-link" href={`https://solscan.io/tx/${sig}`} target="_blank" rel="noreferrer">View transaction <i className="ti ti-external-link" /></a>}
       </div>
 
-      <p className="aw-kind"><i className={`ti ti-${k.icon}`} /><b>{k.label}.</b> {w.status === 'PROCESSING' ? k.hint : ''}</p>
+      <p className="aw-kind"><i className={`ti ti-${k.icon}`} /><b>{k.label}.</b> {w.status === 'PROCESSING' && !auto ? k.hint : ''}</p>
+      {w.status === 'PROCESSING' && auto && (
+        <p className={`aw-auto ${auto.state}`}>
+          <i className={`ti ti-${auto.state === 'review' ? 'alert-triangle' : 'send'}`} />
+          {auto.state === 'review'
+            ? <span><b>Needs you:</b> {auto.reason || 'The automatic payout skipped it.'} Send it by hand and mark it paid, or reject it.</span>
+            : auto.state === 'sent'
+              ? <span><b>Sent by the Thursday payout</b>{auto.transferId ? ` (Flutterwave transfer ${auto.transferId})` : ''}. It settles by itself when Flutterwave confirms.</span>
+              : <span><b>Being sent by the Thursday payout.</b> {auto.reason || ''} It settles by itself when Flutterwave confirms.</span>}
+        </p>
+      )}
       <p className="aw-ref aw-mono">{w.reference}{w.status !== 'PROCESSING' && w.externalRef && !sig ? ` · payout ref ${w.externalRef}` : ''}</p>
       {w.status !== 'PROCESSING' && w.note && <p className="aw-note">{w.note}</p>}
 
-      {w.status === 'PROCESSING' && (mode === null ? (
+      {w.status === 'PROCESSING' && !inFlight && (mode === null ? (
         <div className="aw-actions">
           <button className="ui-btn ui-btn-dark" onClick={() => setMode('approve')}><i className="ti ti-check" /> Mark as paid</button>
           <button className="ui-btn ui-btn-ghost" onClick={() => setMode('reject')}><i className="ti ti-x" /> Reject</button>
@@ -213,6 +228,9 @@ export default function AdminWithdrawals() {
         .aw-kind b{color:var(--text);font-weight:600}
         .aw-ref{margin:-6px 0 0;color:var(--text3)}
         .aw-note{margin:0;font-size:12.5px;padding:8px 10px;border-radius:10px;background:var(--card2,var(--bg));color:var(--text2)}
+        .aw-auto{margin:0;font-size:12.5px;line-height:1.5;padding:8px 10px;border-radius:10px;display:flex;gap:8px;align-items:flex-start;background:var(--card2,var(--bg));color:var(--text2)}
+        .aw-auto b{color:var(--text);font-weight:600}
+        .aw-auto.review{background:color-mix(in srgb,#f59e0b 14%,transparent);color:var(--text)}
         .aw-actions{display:flex;gap:8px;flex-wrap:wrap}
         .aw-confirm{border-top:1px solid var(--border);padding-top:12px;display:flex;flex-direction:column;gap:8px}
         .aw-confirm p{margin:0;font-size:13px;color:var(--text2);line-height:1.5}
@@ -236,7 +254,7 @@ export default function AdminWithdrawals() {
         <div className="aw-head">
           <div>
             <h1>Withdrawals</h1>
-            <p>Send each pending payout, then mark it paid. Rejecting returns the money to the user's wallet.</p>
+            <p>Bank withdrawals are paid automatically every Thursday at 10am to accounts in the person's own name. The ones that need you wait here: send them by hand and mark them paid, or reject to return the money.</p>
           </div>
           <button className="ui-btn ui-btn-ghost" onClick={() => load()} disabled={loading}><i className="ti ti-refresh" /> Refresh</button>
         </div>

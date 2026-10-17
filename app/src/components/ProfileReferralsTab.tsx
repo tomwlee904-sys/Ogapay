@@ -95,7 +95,7 @@ export default function TabReferralsContent() {
         </section>
         <section className="rf2-card rf2-pad" aria-labelledby="rf2-link-h">
           <div className="rf2-label" id="rf2-link-h">Your referral link</div>
-          <div className="rf2-sub">You earn <b>{naira(bonus, 0)}</b> for each friend who joins with your link and verifies their ID (Level 1: bank account or NIN), for up to {cap} friends ({rewarded} of {cap} so far).</div>
+          <div className="rf2-sub">You earn <b>{naira(bonus, 0)}</b> for each friend who joins with your link and verifies their ID (Level 1: bank account or NIN), and another <b>{naira(bonus, 0)}</b> when a job they do is approved (posted by someone other than you). For up to {cap} friends ({rewarded} of {cap} so far).</div>
           {link ? (
             <>
               <div className="rf2-link">
