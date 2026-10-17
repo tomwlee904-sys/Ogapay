@@ -27,7 +27,7 @@ function JoinCommunityTile({ onClick }: { onClick: () => void }) {
     >
       <img src="/assets/join-community.jpg" alt="Join the Community" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0 }} />
       <div style={{ position: 'absolute', inset: 0, background: hovered ? 'rgba(10,10,10,0.18)' : 'transparent', transition: 'background 0.3s' }} />
-      <div style={{ position: 'absolute', top: 14, left: 14, opacity: hovered ? 1 : 0, transform: hovered ? 'translateY(0)' : 'translateY(-8px)', transition: 'all 0.25s ease' }}>
+      <div style={{ position: 'absolute', top: 14, left: 14, zIndex: 10, opacity: 1, transition: 'all 0.25s ease' }}>
         <button onClick={onClick} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'var(--bg)', color: 'var(--text)', fontSize: 13, fontWeight: 600, padding: '7px 14px', borderRadius: 8, border: 'none', cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.12)' }}>
           Join The Community <span style={{ background: '#1a1a1a', color: '#fff', borderRadius: 4, padding: '2px 6px', fontSize: 12 }}>→</span>
         </button>
@@ -46,7 +46,7 @@ function StartSellingTile({ onClick }: { onClick: () => void }) {
       onClick={onClick}
       style={{ background: '#4A1B3A', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1.5rem', position: 'relative', overflow: 'hidden', cursor: 'pointer', height: '100%', minHeight: 280 }}
     >
-      <div style={{ position: 'absolute', top: 14, left: 14, opacity: hovered ? 1 : 0, transform: hovered ? 'translateY(0)' : 'translateY(-8px)', transition: 'all 0.25s ease' }}>
+      <div style={{ position: 'absolute', top: 14, left: 14, zIndex: 10, opacity: 1, transition: 'all 0.25s ease' }}>
         <button onClick={onClick} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'var(--bg)', color: 'var(--text)', fontSize: 13, fontWeight: 600, padding: '7px 14px', borderRadius: 8, border: 'none', cursor: 'pointer' }}>
           Start Selling <span style={{ background: '#1a1a1a', color: '#fff', borderRadius: 4, padding: '2px 6px', fontSize: 12 }}>→</span>
         </button>
@@ -95,7 +95,7 @@ function GrowBusinessTile({ onClick }: { onClick: () => void }) {
       onClick={onClick}
       style={{ background: '#0a0a0a', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden', cursor: 'pointer', height: '100%', minHeight: 280 }}
     >
-      <div style={{ position: 'absolute', top: 14, left: 14, opacity: hovered ? 1 : 0, transform: hovered ? 'translateY(0)' : 'translateY(-8px)', transition: 'all 0.25s ease' }}>
+      <div style={{ position: 'absolute', top: 14, left: 14, zIndex: 10, opacity: 1, transition: 'all 0.25s ease' }}>
         <button onClick={onClick} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'var(--bg)', color: 'var(--text)', fontSize: 13, fontWeight: 600, padding: '7px 14px', borderRadius: 8, border: 'none', cursor: 'pointer' }}>
           Grow Your Business <span style={{ background: '#1a1a1a', color: '#fff', borderRadius: 4, padding: '2px 6px', fontSize: 12 }}>→</span>
         </button>
@@ -133,7 +133,7 @@ function GetInspiredTile({ onClick }: { onClick: () => void }) {
     >
       <img src="/assets/get-inspired.png" alt="Get Inspired" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0 }} />
       <div style={{ position: 'absolute', inset: 0, background: 'rgba(10,10,10,0.1)', opacity: hovered ? 1 : 0, transition: 'opacity 0.3s' }} />
-      <div style={{ position: 'absolute', top: 14, left: 14, opacity: hovered ? 1 : 0, transform: hovered ? 'translateY(0)' : 'translateY(-8px)', transition: 'all 0.25s ease' }}>
+      <div style={{ position: 'absolute', top: 14, left: 14, zIndex: 10, opacity: 1, transition: 'all 0.25s ease' }}>
         <button onClick={onClick} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'var(--bg)', color: 'var(--text)', fontSize: 13, fontWeight: 600, padding: '7px 14px', borderRadius: 8, border: 'none', cursor: 'pointer' }}>
           Get Inspired <span style={{ background: '#1a1a1a', color: '#fff', borderRadius: 4, padding: '2px 6px', fontSize: 12 }}>→</span>
         </button>
@@ -212,7 +212,9 @@ export default function Blog() {
         .bl-chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:16px}
         .bl-chips button{height:32px;padding:0 12px;border:1px solid var(--border);border-radius:999px;background:none;font:500 12px/1 inherit;color:var(--text2);cursor:pointer}
         .bl-chips button.on{background:var(--text);border-color:var(--text);color:var(--bg)}
-        .bl-tiles{margin-top:48px;border-radius:16px;overflow:hidden}
+        .bl-explore-head{margin-top:56px}
+        .bl-explore-head h2{margin:6px 0 0;font-size:clamp(22px,3vw,30px);font-weight:600;letter-spacing:-.02em;line-height:1.2;color:var(--text)}
+        .bl-tiles{margin-top:16px;border-radius:16px;overflow:hidden}
         @media (max-width:767px){
           .bl-head{flex-direction:column;gap:0}
           .bl-write{margin-top:16px}
@@ -221,6 +223,9 @@ export default function Blog() {
           .bl-search{width:auto}
           .bl-seg button{flex:1}
           .bl-tiles .bl-pair{grid-template-columns:1fr !important;height:auto !important}
+          .bl-tiles .bl-tile-big{height:220px !important}
+          .bl-tiles .bl-pair > div{min-height:200px !important}
+          .bl-explore-head{margin-top:40px}
         }
       `}</style>
 
@@ -298,16 +303,21 @@ export default function Blog() {
           )}
         </div>
 
-        {/* Explore tiles (kept from the old landing screen) */}
+        {/* Explore OgaPay: links to the rest of the site (tiles kept from the old landing screen).
+            Labels are always visible: they used to show only on mouse hover. */}
+        <div className="bl-explore-head">
+          <p className="bl-eyebrow">Explore OgaPay</p>
+          <h2>Find your people. Grow your work.</h2>
+        </div>
         <div className="bl-tiles" style={{ display: 'flex', flexDirection: 'column' }}>
-          <div style={{ height: 420, position: 'relative' }}>
+          <div className="bl-tile-big" style={{ height: 420, position: 'relative' }}>
             <JoinCommunityTile onClick={() => navigate('/communities')} />
           </div>
           <div className="bl-pair" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', height: 360 }}>
             <StartSellingTile onClick={() => navigate('/store')} />
             <GrowBusinessTile onClick={() => navigate('/create')} />
           </div>
-          <div style={{ height: 380, position: 'relative' }}>
+          <div className="bl-tile-big" style={{ height: 380, position: 'relative' }}>
             <GetInspiredTile onClick={() => { setSort('featured'); window.scrollTo({ top: 0, behavior: 'smooth' }) }} />
           </div>
         </div>
