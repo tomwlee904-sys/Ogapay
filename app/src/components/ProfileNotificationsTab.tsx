@@ -31,6 +31,7 @@ const TYPE_ICONS: Record<string, { icon: string; color: string }> = {
   ESCROW_REFUNDED:         { icon: 'ti ti-arrow-back-up', color: '#EC4899' },
   KYC_APPROVED:            { icon: 'ti ti-rosette-discount-check', color: 'var(--green)' },
   KYC_REJECTED:            { icon: 'ti ti-circle-x', color: 'var(--red)' },
+  VERIFY_REMINDER:         { icon: 'ti ti-id', color: 'var(--accent)' },
   NEW_TASK:                { icon: 'ti ti-briefcase', color: 'var(--accent)' },
   TASK_APPLICATION:        { icon: 'ti ti-users', color: 'var(--accent)' },
   TASK_SUBMISSION:         { icon: 'ti ti-upload', color: 'var(--accent)' },
@@ -133,6 +134,7 @@ export default function TabNotificationsContent() {
     if (n.type === 'STORE_ORDER_DISPUTED') return /dispute/i.test(n.title || '') ? '/admin/moderation' : '/my-store?tab=orders'
     if (n.type === 'STORE_ORDER_UPDATE') return /cancelled/i.test(n.title || '') ? '/my-store?tab=orders' : '/store/orders'
     if (n.type === 'STORE_ORDER_REFUNDED') return '/store/orders'
+    if (n.type === 'VERIFY_REMINDER') return '/settings/verification'
     if (d.taskId && POSTER_JOB.has(n.type)) return `/manage-jobs?job=${d.taskId}`
     if (d.taskId && WORKER_JOB.has(n.type)) return `/tasks/${d.taskId}/submit`
     if (MONEY.has(n.type)) return '/wallet'
