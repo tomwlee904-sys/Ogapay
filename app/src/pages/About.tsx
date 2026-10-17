@@ -22,7 +22,7 @@ const SAFE = [
 const LINKS = [
   { icon: 'world', label: 'Website', value: 'ogapay.app', href: 'https://ogapay.app' },
   { icon: 'brand-x', label: 'X (Twitter)', value: '@Ogapayhq', href: 'https://x.com/Ogapayhq' },
-  { icon: 'brand-telegram', label: 'Telegram', value: 't.me/ogapay', href: 'https://t.me/ogapay' },
+  { icon: 'brand-telegram', label: 'Telegram', value: 't.me/ogapayhq', href: 'https://t.me/ogapayhq' },
   { icon: 'mail', label: 'Email', value: 'support@ogapay.app', href: 'mailto:support@ogapay.app' },
 ]
 

@@ -268,7 +268,7 @@ export default function FAQ() {
                 <p className="ui-sub" style={{ margin: '4px 0 0' }}>Message the team on Telegram or email support@ogapay.app.</p>
               </div>
               <div className="ui-actions">
-                <a className="ui-btn ui-btn-ghost" href="https://t.me/ogapay" target="_blank" rel="noopener noreferrer"><i className="ti ti-brand-telegram" /> Telegram</a>
+                <a className="ui-btn ui-btn-ghost" href="https://t.me/ogapayhq" target="_blank" rel="noopener noreferrer"><i className="ti ti-brand-telegram" /> Telegram</a>
                 <a className="ui-btn ui-btn-dark" href="mailto:support@ogapay.app"><i className="ti ti-mail" /> Email us</a>
               </div>
             </div>

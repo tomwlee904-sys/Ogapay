@@ -6,7 +6,7 @@ import Layout from '../components/Layout'
 
 const CHANNELS = [
   { icon: 'brand-x', name: 'X (Twitter)', handle: '@Ogapayhq', text: 'Platform updates, new jobs and highlights from the community.', href: 'https://x.com/Ogapayhq', cta: 'Follow on X' },
-  { icon: 'brand-telegram', name: 'Telegram', handle: 't.me/ogapay', text: 'Meet other members, ask questions and stay in the loop.', href: 'https://t.me/ogapay', cta: 'Join Telegram' },
+  { icon: 'brand-telegram', name: 'Telegram', handle: 't.me/ogapayhq', text: 'Our channel: news, new jobs and updates first.', href: 'https://t.me/ogapayhq', cta: 'Join the channel' },
   { icon: 'mail', name: 'Email', handle: 'support@ogapay.app', text: 'Questions about your account, a payment or an order.', href: 'mailto:support@ogapay.app', cta: 'Email support' },
 ]
 

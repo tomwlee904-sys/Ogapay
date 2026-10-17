@@ -5,7 +5,7 @@ import '../styles/footer.css'
 
 const socials = [
   { icon: 'brand-x', href: 'https://x.com/Ogapayhq', label: 'OgaPay on X' },
-  { icon: 'brand-telegram', href: 'https://t.me/ogapay', label: 'OgaPay on Telegram' },
+  { icon: 'brand-telegram', href: 'https://t.me/ogapayhq', label: 'OgaPay on Telegram' },
   { icon: 'brand-instagram', href: 'https://instagram.com/ogapayhq?igsh=ajJrZzJ3Z2tjMXZm', label: 'OgaPay on Instagram' },
   { icon: 'brand-facebook', href: 'https://www.facebook.com/share/18bRPkuPVy/', label: 'OgaPay on Facebook' },
   { icon: 'brand-tiktok', href: 'https://tiktok.com/@ogapay', label: 'OgaPay on TikTok' },

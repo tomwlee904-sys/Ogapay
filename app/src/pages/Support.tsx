@@ -130,7 +130,7 @@ export default function Support() {
         <div className="up-sec-h sp2-h"><h2>Contact us</h2></div>
         <div className="sp2-contact">
           <a className="up-card sp2-c" href="mailto:support@ogapay.app"><i className="ti ti-mail" /><div><strong>Email</strong><span>support@ogapay.app · replies within 24 hours</span></div></a>
-          <a className="up-card sp2-c" href="https://t.me/ogapay" target="_blank" rel="noopener noreferrer"><i className="ti ti-brand-telegram" /><div><strong>Telegram</strong><span>Community group and announcements</span></div></a>
+          <a className="up-card sp2-c" href="https://t.me/ogapayhq" target="_blank" rel="noopener noreferrer"><i className="ti ti-brand-telegram" /><div><strong>Telegram</strong><span>Our channel: announcements and new jobs</span></div></a>
           <a className="up-card sp2-c" href="https://x.com/Ogapayhq" target="_blank" rel="noopener noreferrer"><i className="ti ti-brand-x" /><div><strong>X (Twitter)</strong><span>@Ogapayhq · status updates</span></div></a>
         </div>
         <p className="sp2-warn"><i className="ti ti-shield-lock" /> OgaPay staff will never ask for your password, PIN or one-time codes, or ask you to send money to "unlock" a payout.</p>
