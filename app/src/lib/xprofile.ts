@@ -48,6 +48,10 @@ export function xProfileOf(me: any): XProfile | null {
   }
 }
 
+/** Whether the profile has actually been read from X: the server sends an empty one
+ *  (every field null) for accounts connected before profiles were read */
+export const xRead = (p: XProfile | null | undefined): p is XProfile => !!p && !!(p.updatedAt || p.name || p.avatarUrl)
+
 /** X keeps each profile picture in a few sizes and the saved link is often the
  *  48 px one ("..._normal.jpg"), blurry on a phone. `css` is the size shown at. */
 export function xPic(url: string | null | undefined, css: number): string {

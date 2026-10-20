@@ -14,7 +14,7 @@ export type Me = {
   humanVerifiedAt: string | null; ogaScore: number; role: string
   preferences: Prefs
   kyc: { status: string; kycTier: number; rejectionReason: string | null; idType: string | null; provider?: string | null } | null
-  // X also carries the profile read from X (null until it has been read)
+  // X also carries the profile read from X (all fields empty until it has been read; see xRead)
   connections: Record<'linkedin' | 'twitter' | 'github' | 'google' | 'telegram', { connected: boolean; handle: string | null; profile?: XProfile | null }>
 }
 

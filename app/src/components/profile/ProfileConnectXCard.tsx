@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { apiRequest } from '../../lib/api'
 import { useAuth } from '../../context/AuthContext'
-import type { XProfile } from '../../lib/xprofile'
+import { xRead, type XProfile } from '../../lib/xprofile'
 import { XProfileSummary, XRefresh } from './XProfile'
 import '../../styles/profile-own.css'
 
@@ -98,7 +98,7 @@ export default function ProfileConnectXCard({ connected, handle, profile, onChan
         <div className="po-body xp">
           <XProfileSummary handle={shownHandle} profile={shown} banner />
           <p className="xp-note">
-            {shown ? 'You can take jobs that require an X account.' : "You can take jobs that require an X account. Refresh from X to bring in your picture, name, bio and followers."}
+            {xRead(shown) ? 'You can take jobs that require an X account.' : "You can take jobs that require an X account. Refresh from X to bring in your picture, name, bio and followers."}
           </p>
           <XRefresh handle={shownHandle} onRefreshed={(p, h) => update(h, p)} />
         </div>

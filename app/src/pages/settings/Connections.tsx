@@ -6,7 +6,8 @@ import { Card, type SectionProps } from './ui'
 import { XVerify } from '../../components/profile/ProfileConnectXCard'
 import { XAvatar, XBlueTick, XRefresh, xLink } from '../../components/profile/XProfile'
 import { compact } from '../../lib/creators'
-import type { XProfile } from '../../lib/xprofile'
+import { xRead, type XProfile } from '../../lib/xprofile'
+import { useAuth } from '../../context/AuthContext'
 
 type Platform = 'linkedin' | 'twitter' | 'github' | 'google' | 'telegram'
 export const PLATFORMS: { id: Platform; label: string; icon: string; pts: number }[] = [
@@ -31,6 +32,8 @@ function telegramResult(): Record<string, any> | null {
 
 export default function Connections({ me, setMe, reload, providers }: SectionProps & { providers: Record<string, boolean> | null }) {
   const { toast } = useToast()
+  // X may have given the account its picture; the top bar and menu read it from the signed-in user
+  const { refreshUser } = useAuth()
   const [params, setParams] = useSearchParams()
   const [busy, setBusy] = useState<Platform | null>(null)
   const [xOpen, setXOpen] = useState(false)
@@ -111,12 +114,12 @@ export default function Connections({ me, setMe, reload, providers }: SectionPro
                 <div className="st2-conn-t"><strong>{p.label}</strong><span>+{p.pts} OgaScore</span></div>
                 <button className="up-btn primary" onClick={() => setXOpen((v) => !v)}>{xOpen ? 'Close' : 'Connect'}</button>
               </div>
-              {xOpen && <XVerify onConnected={(h, x) => { setX(h, x); toast(`@${h} connected`, 'success'); setXOpen(false); reload() }} />}
+              {xOpen && <XVerify onConnected={(h, x) => { setX(h, x); toast(`@${h} connected`, 'success'); setXOpen(false); reload(); refreshUser() }} />}
             </div>
           )
           // X connected: the X profile (picture, name, followers) and a way to refresh it
           if (p.id === 'twitter' && c?.handle) {
-            const x = c.profile || null
+            const x = xRead(c.profile) ? c.profile : null
             const h = c.handle.replace(/^@/, '')
             return (
               <div key={p.id}>
@@ -136,7 +139,7 @@ export default function Connections({ me, setMe, reload, providers }: SectionPro
                   </div>
                   <button className="up-btn" onClick={() => disconnect(p.id)} disabled={busy === p.id}>Disconnect</button>
                 </div>
-                <div className="xp-conn-refresh"><XRefresh handle={h} onRefreshed={(profile, handle) => { setX(handle, profile); reload() }} /></div>
+                <div className="xp-conn-refresh"><XRefresh handle={h} onRefreshed={(profile, handle) => { setX(handle, profile); reload(); refreshUser() }} /></div>
               </div>
             )
           }
