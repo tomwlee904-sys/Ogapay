@@ -1,0 +1,51 @@
+/* X profile summary and "Refresh from X" (components/profile/XProfile.tsx):
+   Profile, Settings > Connections and public profiles */
+.xp { display: grid; gap: 12px; min-width: 0; }
+/* width/height on the <img> keep the 3:1 space while it loads */
+.xp-banner { display: block; width: 100%; height: auto; aspect-ratio: 3 / 1; object-fit: cover; border-radius: var(--r-md, 14px); border: 1px solid var(--border); background: var(--bg2); }
+.xp-top { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.xp-av { flex-shrink: 0; border-radius: 50%; object-fit: cover; background: var(--bg2); border: 1px solid var(--border); box-sizing: border-box; }
+.xp-av-ph { display: grid; place-items: center; background: var(--text); color: var(--bg); border: 0; font-family: Inter, sans-serif; font-weight: 800; line-height: 1; }
+.xp-id { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.xp-name { display: flex; align-items: center; gap: 5px; min-width: 0; }
+.xp-name b { font-size: 15px; font-weight: 800; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.xp-blue { color: #1d9bf0; font-size: 17px; flex-shrink: 0; }
+.xp-handle { align-self: flex-start; display: inline-flex; align-items: center; gap: 4px; max-width: 100%; font-size: 13px; color: var(--text2); text-decoration: none; }
+.xp-handle span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.xp-handle i { font-size: 13px; color: var(--text3); }
+.xp-handle:hover { color: var(--text); }
+.xp-handle:hover span { text-decoration: underline; text-underline-offset: 2px; }
+.xp-bio { margin: 0; font-size: 13px; line-height: 1.55; color: var(--text2); white-space: pre-line; overflow-wrap: anywhere; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; line-clamp: 3; overflow: hidden; }
+.xp-counts { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 13px; color: var(--text2); }
+.xp-counts b { color: var(--text); font-weight: 800; }
+.xp-note { margin: 0; font-size: 13px; line-height: 1.5; color: var(--text2); }
+
+.xr-open { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0; border: 0; background: none; color: var(--text); font: 700 13px inherit; font-family: inherit; cursor: pointer; }
+.xr-open i { font-size: 15px; color: var(--text2); }
+.xr-open:hover { text-decoration: underline; text-underline-offset: 3px; }
+.xr { display: grid; gap: 10px; padding: 12px; border: 1px solid var(--border); border-radius: var(--r-md, 14px); background: var(--bg2); }
+.xr-l { font-size: 13px; line-height: 1.5; color: var(--text2); }
+.xr-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.xr-row .xv-input { flex: 1 1 240px; min-width: 0; background: var(--card); }
+.xr-row .po-btn { min-height: 44px; }
+
+/* Settings > Connections: the X row shows the X picture instead of the logo tile */
+.xp-conn-av { position: relative; width: 38px; height: 38px; flex-shrink: 0; }
+.xp-conn-av .xp-mark { position: absolute; right: -4px; bottom: -4px; width: 18px; height: 18px; border-radius: 50%; background: var(--text); color: var(--bg); display: grid; place-items: center; font-size: 11px; box-shadow: 0 0 0 2px var(--card); }
+.st2-conn-t strong.xp-conn-name { display: flex; align-items: center; gap: 4px; min-width: 0; }
+/* beats .st2-conn-t span (the grey second line) */
+.st2-conn-t .xp-conn-name span { font-size: 14px; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.xp-conn-name .xp-blue { font-size: 16px; }
+.xp-conn-sub a { color: inherit; }
+.xp-conn-sub em { font-style: normal; }
+.xp-conn-sub em::before { content: '·'; margin: 0 5px; }
+.xp-conn-refresh { padding: 0 0 6px 50px; }
+
+@media (max-width: 767px) {
+  .xr-row .xv-input { flex-basis: 100%; }
+  .xr-row .po-btn { flex: 1 1 0; }
+  .xp-conn-refresh { padding-left: 0; }
+  /* next to the Disconnect button there's no room for both: followers go on their own line */
+  .st2-conn-t .xp-conn-sub { display: flex; flex-direction: column; }
+  .xp-conn-sub em::before { content: none; }
+}

@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { apiRequest } from '../../lib/api'
+import type { XProfile } from '../../lib/xprofile'
 
 // What GET /users/me returns that Settings uses
 export type Prefs = {
@@ -13,7 +14,8 @@ export type Me = {
   humanVerifiedAt: string | null; ogaScore: number; role: string
   preferences: Prefs
   kyc: { status: string; kycTier: number; rejectionReason: string | null; idType: string | null; provider?: string | null } | null
-  connections: Record<'linkedin' | 'twitter' | 'github' | 'google' | 'telegram', { connected: boolean; handle: string | null }>
+  // X also carries the profile read from X (null until it has been read)
+  connections: Record<'linkedin' | 'twitter' | 'github' | 'google' | 'telegram', { connected: boolean; handle: string | null; profile?: XProfile | null }>
 }
 
 export type SectionProps = { me: Me; setMe: (fn: (m: Me) => Me) => void; reload: () => Promise<void> }

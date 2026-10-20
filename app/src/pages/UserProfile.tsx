@@ -11,6 +11,8 @@ import { PremiumMark } from "../components/Perks";
 import { sized } from '../lib/img'
 import CreatorAudiences from "../components/profile/CreatorAudiences"
 import InfoTip from '../components/InfoTip'
+import { XProfileSummary } from '../components/profile/XProfile'
+import type { XPublic } from '../lib/xprofile'
 
 type Tab = "store" | "portfolio" | "reviews" | "communities"
 
@@ -224,6 +226,7 @@ export default function UserProfile() {
   const skills: string[] = Array.isArray(wp.skills) ? wp.skills : []
   const categories: string[] = Array.isArray(wp.categories) ? wp.categories.map((c: string) => c.replace(/_/g, " ").toLowerCase()) : []
   const hasAbout = skills.length > 0 || categories.length > 0 || wp.isAvailable
+  const x: XPublic | null = profile?.x?.handle ? profile.x : null
 
   const tabs: { key: Tab; label: string; icon: string; count: number }[] = [
     { key: "store", label: "Store", icon: "ti-building-store", count: products.length },
@@ -290,6 +293,14 @@ export default function UserProfile() {
             ))}
           </div>
         </section>
+
+        {/* Their X account as X shows it (only when they connected X) */}
+        {x && (
+          <section className="up-card up-x" aria-labelledby="up-x-h">
+            <h2 id="up-x-h"><i className="ti ti-brand-x" aria-hidden="true" /> On X</h2>
+            <XProfileSummary handle={x.handle} profile={x} size={48} />
+          </section>
+        )}
 
         {profile?.id && <CreatorAudiences userId={profile.id} />}
 

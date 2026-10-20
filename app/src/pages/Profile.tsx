@@ -26,6 +26,7 @@ import TabReferralsContent from '../components/ProfileReferralsTab'
 import TabMyTasksContent from '../components/ProfileMyTasksTab'
 import TabEarningsContent from '../components/ProfileEarningsTab'
 import { sized } from '../lib/img'
+import { xProfileOf } from '../lib/xprofile'
 const Icon = ({ n, s = 16, c }: { n: any; s?: number; c?: any }) => (
   <i className={`ti ti-${n}`} style={{ fontSize: s, color: c || "var(--text2)", lineHeight: 1, flexShrink: 0 }} />
 );
@@ -215,6 +216,16 @@ export default function Profile() {
     } catch (err) {
       toast('Failed to load profile data', 'error');
     }
+  };
+
+  // After X is connected or refreshed: load the account again without the page
+  // skeleton. If X gave the account its picture, the menus need it too.
+  const reloadMe = async () => {
+    const d = await apiRequest<any>('/users/me').catch(() => null);
+    if (!d) return;
+    const pictureChanged = (d.avatarUrl || null) !== (profileData?.avatarUrl || null);
+    setProfileData(d);
+    if (pictureChanged) refreshUser();
   };
 
   useEffect(() => {
@@ -865,7 +876,7 @@ export default function Profile() {
 
           <div className="prof-grid" style={{marginBottom:20}}>
             <ProfileCommunitiesCard />
-            <ProfileConnectXCard connected={!!profileData?.twitterOAuthConnected} handle={profileData?.twitterOAuthHandle || profileData?.twitterUsername} />
+            <ProfileConnectXCard connected={!!profileData?.twitterOAuthConnected} handle={profileData?.twitterOAuthHandle || profileData?.twitterUsername} profile={xProfileOf(profileData)} onChange={reloadMe} />
           </div>
 
           <div style={{marginBottom:20}}><ProfilePortfolioCard /></div>

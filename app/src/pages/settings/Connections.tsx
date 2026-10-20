@@ -4,6 +4,9 @@ import { apiRequest } from '../../lib/api'
 import { useToast } from '../../components/Toast'
 import { Card, type SectionProps } from './ui'
 import { XVerify } from '../../components/profile/ProfileConnectXCard'
+import { XAvatar, XBlueTick, XRefresh, xLink } from '../../components/profile/XProfile'
+import { compact } from '../../lib/creators'
+import type { XProfile } from '../../lib/xprofile'
 
 type Platform = 'linkedin' | 'twitter' | 'github' | 'google' | 'telegram'
 export const PLATFORMS: { id: Platform; label: string; icon: string; pts: number }[] = [
@@ -73,6 +76,10 @@ export default function Connections({ me, setMe, reload, providers }: SectionPro
     setBusy(null)
   }
 
+  // Show what the server sent back right away; reload() then brings the rest of the account
+  const setX = (handle: string, profile: XProfile | null) =>
+    setMe((m) => ({ ...m, connections: { ...m.connections, twitter: { connected: true, handle, profile } } }))
+
   const tier = me.kyc?.status === 'APPROVED' ? me.kyc.kycTier : 0
   const social = PLATFORMS.reduce((s, p) => s + (me.connections?.[p.id]?.connected ? p.pts : 0), 0)
   const kycPts = (tier >= 1 ? 10 : 0) + (tier >= 2 ? 10 : 0)
@@ -104,9 +111,35 @@ export default function Connections({ me, setMe, reload, providers }: SectionPro
                 <div className="st2-conn-t"><strong>{p.label}</strong><span>+{p.pts} OgaScore</span></div>
                 <button className="up-btn primary" onClick={() => setXOpen((v) => !v)}>{xOpen ? 'Close' : 'Connect'}</button>
               </div>
-              {xOpen && <XVerify onConnected={(h) => { setMe((m) => ({ ...m, connections: { ...m.connections, twitter: { connected: true, handle: h } } })); toast(`@${h} connected`, 'success'); setXOpen(false); reload() }} />}
+              {xOpen && <XVerify onConnected={(h, x) => { setX(h, x); toast(`@${h} connected`, 'success'); setXOpen(false); reload() }} />}
             </div>
           )
+          // X connected: the X profile (picture, name, followers) and a way to refresh it
+          if (p.id === 'twitter' && c?.handle) {
+            const x = c.profile || null
+            const h = c.handle.replace(/^@/, '')
+            return (
+              <div key={p.id}>
+                <div className="st2-conn">
+                  {x ? (
+                    <span className="xp-conn-av">
+                      <XAvatar url={x.avatarUrl} name={x.name || `@${h}`} size={38} />
+                      <span className="xp-mark"><i className="ti ti-brand-x" aria-hidden="true" /></span>
+                    </span>
+                  ) : <span className="st2-conn-ico"><i className={`ti ${p.icon}`} /></span>}
+                  <div className="st2-conn-t">
+                    <strong className="xp-conn-name"><span>{x?.name || p.label}</span>{x?.blue && <XBlueTick />}</strong>
+                    <span className="xp-conn-sub">
+                      <a href={xLink(h)} target="_blank" rel="noopener noreferrer">@{h}</a>
+                      {typeof x?.followers === 'number' && <em>{compact(x.followers)} {x.followers === 1 ? 'follower' : 'followers'}</em>}
+                    </span>
+                  </div>
+                  <button className="up-btn" onClick={() => disconnect(p.id)} disabled={busy === p.id}>Disconnect</button>
+                </div>
+                <div className="xp-conn-refresh"><XRefresh handle={h} onRefreshed={(profile, handle) => { setX(handle, profile); reload() }} /></div>
+              </div>
+            )
+          }
           return (
             <div key={p.id} className="st2-conn">
               <span className="st2-conn-ico"><i className={`ti ${p.icon}`} /></span>

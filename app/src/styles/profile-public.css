@@ -50,6 +50,13 @@
 .up-avail { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--green); margin-bottom: 10px; }
 .up-avail::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
 
+/* "On X" (components/profile/XProfile.tsx XProfileSummary) */
+.up-x { margin-top: 14px; padding: 18px 22px; }
+.up-x h2 { display: flex; align-items: center; gap: 8px; font: 700 15px Inter, sans-serif; margin: 0 0 12px; color: var(--text); }
+.up-x h2 i { font-size: 16px; color: var(--text2); }
+.up-x .xp { max-width: 640px; }
+@media (max-width: 767px) { .up-x { padding: 16px; } }
+
 .up-tabs-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 22px 0 16px; }
 .up-tabs { display: inline-flex; gap: 4px; padding: 4px; border-radius: 12px; background: var(--bg2); border: 1px solid var(--border); overflow-x: auto; max-width: 100%; scrollbar-width: none; }
 .up-tabs::-webkit-scrollbar { display: none; }

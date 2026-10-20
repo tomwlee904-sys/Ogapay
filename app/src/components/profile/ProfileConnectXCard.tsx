@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { apiRequest } from '../../lib/api'
 import { useAuth } from '../../context/AuthContext'
+import type { XProfile } from '../../lib/xprofile'
+import { XProfileSummary, XRefresh } from './XProfile'
 import '../../styles/profile-own.css'
 
 const XLogo = ({ size = 18 }: { size?: number }) => (
@@ -11,8 +13,9 @@ const XLogo = ({ size = 18 }: { size?: number }) => (
 
 // Connect X the way wurk.fun does: no X sign-in. Get a code, post it on X (the
 // ready-made post also shares your referral link), then paste the post's link.
-// The server reads the post and links its author (services/xverify.service.js).
-export function XVerify({ onConnected }: { onConnected?: (handle: string) => void }) {
+// The server reads the post and links its author (services/xverify.service.js),
+// and sends back the X profile it read from the post (null if X didn't answer).
+export function XVerify({ onConnected }: { onConnected?: (handle: string, profile: XProfile | null) => void }) {
   const { user } = useAuth()
   const [code, setCode] = useState('')
   const [url, setUrl] = useState('')
@@ -38,9 +41,9 @@ export function XVerify({ onConnected }: { onConnected?: (handle: string) => voi
   const verify = async () => {
     setBusy('verify'); setMsg(null)
     try {
-      const r = await apiRequest<{ handle: string }>('/social/twitter/verify-post', { method: 'POST', body: JSON.stringify({ url: url.trim() }) })
+      const r = await apiRequest<{ handle: string; profile?: XProfile | null }>('/social/twitter/verify-post', { method: 'POST', body: JSON.stringify({ url: url.trim() }) })
       setMsg({ ok: true, text: `@${r.handle} is connected.` })
-      onConnected?.(r.handle)
+      onConnected?.(r.handle, r.profile ?? null)
     } catch (e: any) { setMsg({ ok: false, text: e?.message || "Couldn't verify that post. Try again." }) }
     setBusy('')
   }
@@ -74,25 +77,46 @@ export function XVerify({ onConnected }: { onConnected?: (handle: string) => voi
   )
 }
 
-// Profile: some jobs need a connected X account
-export default function ProfileConnectXCard({ connected, handle, onConnected }: { connected: boolean; handle?: string | null; onConnected?: (handle: string) => void }) {
-  const [now, setNow] = useState<string | null>(null)
-  const linked = connected || !!now
+// Profile: some jobs need a connected X account. Once connected it shows the X
+// profile; `onChange` lets the page load the account again (X may have given it a picture).
+export default function ProfileConnectXCard({ connected, handle, profile, onChange }: {
+  connected: boolean; handle?: string | null; profile?: XProfile | null; onChange?: () => void
+}) {
+  // What the last connect or refresh sent back, shown until the page's data catches up
+  const [now, setNow] = useState<{ handle: string; profile: XProfile | null } | null>(null)
+  const shownHandle = now?.handle || handle || ''
+  const shown = now?.profile ?? profile ?? null
+  const update = (h: string, p: XProfile | null) => { setNow({ handle: h, profile: p }); onChange?.() }
+
+  if ((connected || now) && shownHandle) {
+    return (
+      <section className="po-card">
+        <div className="po-head">
+          <h3><XLogo size={15} /> X profile</h3>
+          <span className="po-ok"><i className="ti ti-circle-check" /> Connected</span>
+        </div>
+        <div className="po-body xp">
+          <XProfileSummary handle={shownHandle} profile={shown} banner />
+          <p className="xp-note">
+            {shown ? 'You can take jobs that require an X account.' : "You can take jobs that require an X account. Refresh from X to bring in your picture, name, bio and followers."}
+          </p>
+          <XRefresh handle={shownHandle} onRefreshed={(p, h) => update(h, p)} />
+        </div>
+      </section>
+    )
+  }
   return (
     <section className="po-card">
       <div className="po-body po-x">
         <span className="logo"><XLogo /></span>
         <div>
-          <b>{linked ? 'X account connected' : 'Connect your X account'}</b>
-          {linked ? (
-            <>
-              <p>You can take jobs that require an X account.</p>
-              <span className="po-ok"><i className="ti ti-circle-check" /> @{now || handle || 'connected'}</span>
-            </>
+          <b>{connected ? 'X account connected' : 'Connect your X account'}</b>
+          {connected ? (
+            <p>You can take jobs that require an X account.</p>
           ) : (
             <>
               <p>Post your verification message, then verify its link. We never post for you or get access to your account.</p>
-              <XVerify onConnected={(h) => { setNow(h); onConnected?.(h) }} />
+              <XVerify onConnected={update} />
             </>
           )}
         </div>
