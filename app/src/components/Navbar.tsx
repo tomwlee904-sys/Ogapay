@@ -105,7 +105,7 @@ export default function Navbar({ onMenuToggle }: NavbarProps) {
           OgaPay
         </Link>
         <div className="nav-links">
-          <NavLink className="nav-link" to="/tasks"><i className="ti ti-briefcase" />Earn</NavLink>
+          <NavLink className="nav-link" to="/tasks"><i className="ti ti-briefcase" />Jobs</NavLink>
           <NavLink className="nav-link" to="/create"><i className="ti ti-square-plus" />Create</NavLink>
           <NavLink className="nav-link" to="/store"><i className="ti ti-building-store" />Store</NavLink>
           <NavLink className="nav-link" to="/vault"><i className="ti ti-shield-lock" />Vault</NavLink>
