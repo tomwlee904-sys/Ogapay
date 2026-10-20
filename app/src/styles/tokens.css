@@ -131,15 +131,20 @@
   --nav-h: 64px;
 }
 
-/* The bottom dock (components/BottomNav.tsx) shows on phones and tablets, up to
-   1023px. --bottom-nav-h is its height plus the gap below it (72 + 12);
-   --dock-clear adds the iPhone home bar: anything fixed to the bottom of the
-   screen sits at least that high. The footer is the page's space for it. */
-@media (max-width: 1023px) {
+/* The bottom dock (components/BottomNav.tsx) shows on phones, and on tablets up
+   to 1023px that are at least 600px tall (phones held sideways keep the top bar).
+   Same query as DOCK_HIDDEN there, inverted; footer.css, nav.css and messages.css
+   repeat it. --bottom-nav-h is its height plus the gap below it (72 + 12);
+   --dock-clear adds the iPhone home bar (env() is 0 until the viewport meta has
+   viewport-fit=cover): anything fixed to the bottom of the screen sits at least
+   that high. The footer is the page's space for it, and scroll-padding keeps
+   whatever Tab moves to (or a #link jumps to) out from under it. */
+@media (max-width: 767.98px), (max-width: 1023.98px) and (min-height: 600px) {
   :root {
     --bottom-nav-h: 84px;
     --dock-clear: calc(var(--bottom-nav-h) + env(safe-area-inset-bottom, 0px));
   }
+  html { scroll-padding-bottom: calc(var(--dock-clear) + 8px); }
 }
 
 body { --100vh: calc(var(--vh) * 100); }
@@ -230,7 +235,7 @@ body { --100vh: calc(var(--vh) * 100); }
 .app-layout .main { @apply flex-1 min-w-0; }
 .app-layout .page { @apply mx-auto w-full; padding-top: var(--nav-h); }
 /* The sidebar repeats the menu drawer; below 1024px it squeezed the page to a sliver */
-@media (max-width: 1023px) { .app-layout .sidebar { display: none; } }
+@media (max-width: 1023.98px) { .app-layout .sidebar { display: none; } }
 
 /* ─── Footer ─── */
 footer { @apply border-t border-[var(--border)] py-10 px-6 text-center bg-[var(--bg2)]; }

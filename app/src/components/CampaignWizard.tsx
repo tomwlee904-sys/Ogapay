@@ -1266,10 +1266,13 @@ export default function CampaignWizard() {
 
   return (
     <div className="cw-ai" style={{ position: "fixed", zIndex: 999, transition: "opacity .2s", ...(atFooter && !open ? { opacity: 0, pointerEvents: "none" } : {}) }}>
-      {/* Phones and tablets: above the bottom dock (--dock-clear, tokens.css), not on top of Profile */}
-      <style>{`.cw-ai{bottom:max(24px,calc(var(--dock-clear,0px) + 12px));right:24px}@media(max-width:767px){.cw-ai{right:16px}}`}</style>
+      {/* Phones and tablets: above the bottom dock (--dock-clear, tokens.css), not on top of Profile.
+          The panel never grows past the top of a short screen, where its close button is */}
+      <style>{`.cw-ai{bottom:max(24px,calc(var(--dock-clear,0px) + 12px));right:24px}@media(max-width:767px){.cw-ai{right:16px}}
+.cw-ai-panel{max-height:calc(100vh - max(24px,calc(var(--dock-clear,0px) + 12px)) - 72px);max-height:calc(100dvh - max(24px,calc(var(--dock-clear,0px) + 12px)) - 72px)}`}</style>
       {open && (
         <div
+          className="cw-ai-panel"
           style={{
             position: "absolute",
             bottom: 56,

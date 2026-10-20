@@ -1,19 +1,26 @@
 import { useState, useEffect, useRef } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import type { MouseEvent } from 'react'
+import { Link, useLocation } from 'react-router-dom'
 import { IconBellFilled } from '@tabler/icons-react'
 import { useAuth } from '../context/AuthContext'
 import { apiRequest } from '../lib/api'
 import { openSignIn } from '../lib/signin'
 import { sized } from '../lib/img'
 
-// The bottom dock on phones and tablets (up to 1023px; the desktop top bar takes
-// over from 1024px, where admin pages also get the sidebar). Built after wurk.fun's
-// mobile dock: a floating rounded bar, the current tab on its own tile, Create as
-// a raised button in the middle and the profile picture in a thin ring.
+// The bottom dock on phones (below 768px) and on tablets up to 1023px that are at
+// least 600px tall. Phones held sideways (768-1023 wide but short) keep the desktop
+// top bar instead, as before, so the dock doesn't eat half of a short screen. From
+// 1024px the desktop top bar takes over (and admin pages get the sidebar). Built
+// after wurk.fun's mobile dock: a floating rounded bar, the current tab on its own
+// tile, Create as a raised button in the middle and the profile picture in a ring.
 //
 // Space for it: tokens.css sets --bottom-nav-h (dock height + its gap below) and
-// --dock-clear (that plus the iPhone home bar) over the same widths; the footer,
-// toasts and other floating buttons sit above it with those.
+// --dock-clear over the same screens (see DOCK_HIDDEN below; footer.css, nav.css
+// and messages.css use the same query); the footer, toasts and other floating
+// buttons sit above it with those. The env(safe-area-inset-*) terms only take
+// effect once index.html's viewport meta has viewport-fit=cover (it doesn't yet,
+// so on iPhones the dock sits 12px above the bottom of the page, not above the
+// home bar as on wurk).
 
 type TabKey = 'jobs' | 'store' | 'create' | 'alerts' | 'profile'
 type Tab = {
@@ -31,15 +38,25 @@ type Tab = {
 // Earnings used to be the second tab when signed in; it is on the Profile page (its
 // tab and quick link) and the Dashboard, so the dock shows the Store for everyone.
 const TABS: Tab[] = [
-  { key: 'jobs', label: 'Jobs', path: '/tasks', icon: 'ti-briefcase' },
-  { key: 'store', label: 'Store', path: '/store', icon: 'ti-building-store' },
+  { key: 'jobs', label: 'Jobs', path: '/tasks', icon: 'ti-briefcase', also: ['/my-tasks', '/manage-jobs', '/job-monitor'] },
+  { key: 'store', label: 'Store', path: '/store', icon: 'ti-building-store', also: ['/my-store', '/orders'] },
   { key: 'create', label: 'Create', path: '/create', icon: 'ti-plus' },
   { key: 'alerts', label: 'Alerts', path: '/notifications', icon: 'ti-bell', authRequired: true },
-  { key: 'profile', label: 'Profile', path: '/profile', icon: 'ti-user', authRequired: true, also: ['/settings', '/earnings'] },
+  { key: 'profile', label: 'Profile', path: '/profile', icon: 'ti-user', authRequired: true, also: ['/edit-profile', '/settings', '/earnings'] },
 ]
 
+// The screens that hide the dock. tokens.css, footer.css and messages.css show
+// it on exactly the opposite ones, "(max-width: 767.98px), (max-width: 1023.98px)
+// and (min-height: 600px)", and nav.css trims the top bar there (CSS can't share
+// the query). The .98 means a fractional width such as 1023.5px (125% Windows
+// display scaling, for example) can't fall between the dock and the top bar.
+const DOCK_HIDDEN = '(min-width: 1024px), (min-width: 768px) and (max-height: 599.98px)'
+
 const under = (pathname: string, p: string) => pathname === p || pathname.startsWith(p + '/')
-const isActive = (t: Tab, pathname: string) => [t.path, ...(t.also || [])].some((p) => under(pathname, p))
+const isActive = (t: Tab, pathname: string, ownProfile: string | null) =>
+  [t.path, ...(t.also || [])].some((p) => under(pathname, p)) ||
+  // your own public page (/user/<you>) belongs to Profile too
+  (t.key === 'profile' && !!ownProfile && under(pathname.toLowerCase(), ownProfile))
 
 // Each page renders its own Layout, so the dock is mounted afresh after a tap
 // changes page: the tap is kept here so the new dock finishes the bounce
@@ -55,9 +72,10 @@ const reducedMotion = () =>
 
 export default function BottomNav() {
   const location = useLocation()
-  const navigate = useNavigate()
   const { isAuthed, user } = useAuth()
   const avatar: string | null = isAuthed ? (user as any)?.avatar || (user as any)?.avatarUrl || null : null
+  const username: string = isAuthed ? (user as any)?.username || '' : ''
+  const ownProfile = username ? `/user/${encodeURIComponent(username)}`.toLowerCase() : null
   const [unreadCount, setUnreadCount] = useState(0)
   const [pulse, setPulse] = useState<{ key: TabKey; elapsed: number } | null>(runningPulse)
   const pulseTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -105,20 +123,28 @@ export default function BottomNav() {
     return () => { if (pulseTimer.current) clearTimeout(pulseTimer.current) }
   }, [])
 
-  const go = (t: Tab) => {
+  // The items are real links, so Ctrl/Cmd/middle-click and "Open in new tab" work;
+  // a plain click is handled here and by <Link> (which skips modified clicks)
+  const go = (e: MouseEvent<HTMLAnchorElement>, t: Tab) => {
+    if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return
+
     // A short bounce on the tapped icon, as on wurk
     if (pulseTimer.current) clearTimeout(pulseTimer.current)
     lastTap = { key: t.key, at: Date.now() }
     setPulse({ key: t.key, elapsed: 0 })
     pulseTimer.current = setTimeout(() => setPulse(null), PULSE_MS)
 
-    if (t.authRequired && !isAuthed) return openSignIn({ redirect: t.path })
-    // Tapping the tab you are on takes you back to the top of it
-    if (location.pathname === t.path) {
-      window.scrollTo({ top: 0, behavior: reducedMotion() ? 'auto' : 'smooth' })
+    if (t.authRequired && !isAuthed) {
+      e.preventDefault()
+      openSignIn({ redirect: t.path })
       return
     }
-    navigate(t.path)
+    // Tapping the tab you are on takes you back to the top of it
+    if (location.pathname === t.path) {
+      e.preventDefault()
+      window.scrollTo({ top: 0, behavior: reducedMotion() ? 'auto' : 'smooth' })
+    }
+    // anything else: <Link> navigates
   }
 
   return (
@@ -133,9 +159,11 @@ export default function BottomNav() {
           --dk-shine:rgba(255,255,255,.9);
           --dk-reflection:rgba(255,255,255,.55);
           --dk-shadow:rgba(16,21,37,.1);
-          --dk-selected:rgba(15,23,42,.065);
-          --dk-selected-edge:rgba(15,23,42,.05);
-          --dk-hover:rgba(15,23,42,.04);
+          /* Stronger than wurk's dark-mode tile: a white dock over a white page
+             needs a visible tile and edge to show the current tab */
+          --dk-selected:rgba(15,23,42,.1);
+          --dk-selected-edge:rgba(15,23,42,.16);
+          --dk-hover:rgba(15,23,42,.05);
           --dk-create:linear-gradient(145deg,#2b2c33,#0a0a0c);
           --dk-create-ink:#ffffff;
           --dk-create-shadow:inset 0 1px 0 rgba(255,255,255,.2),0 8px 18px rgba(10,10,12,.24);
@@ -143,7 +171,9 @@ export default function BottomNav() {
           --dk-badge-edge:#ffffff;
         }
         [data-theme="dark"] .btb{
-          --dk-glass:rgba(22,25,32,.4);
+          /* wurk uses .4; .8 keeps the light labels readable (4.5:1+) when a white
+             photo or button scrolls under the dock, and looks the same over black */
+          --dk-glass:rgba(22,25,32,.8);
           --dk-solid:#1b1e25;
           --dk-ink:#ffffff;
           --dk-muted:#e2e6ed;
@@ -185,7 +215,7 @@ export default function BottomNav() {
           position:relative;z-index:1;
           display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
           min-width:0;min-height:44px;margin:0;padding:3px 2px;
-          border:0;border-radius:21px;background:transparent;color:var(--dk-muted);box-shadow:none;
+          border:0;border-radius:21px;background:transparent;color:var(--dk-muted);box-shadow:none;text-decoration:none;
           font-family:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;
           transition:color 180ms ease,background-color 180ms ease,box-shadow 180ms ease;
         }
@@ -205,6 +235,8 @@ export default function BottomNav() {
         .btb-shell .ti-bell{font-size:23px}
         .btb-svg{width:23px;height:23px;display:block}
         .btb-label{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;font-size:11px;line-height:13px;font-weight:600;letter-spacing:.01em;white-space:nowrap}
+        /* A cue that isn't only colour: the current tab's label is bolder (Create too) */
+        .btb-item--active .btb-label{font-weight:800}
 
         /* Create: the raised button in the middle, never on a tile */
         .btb-item--create{color:var(--dk-ink);padding-block:1px}
@@ -218,11 +250,17 @@ export default function BottomNav() {
         .btb-av{width:100%;height:100%;border-radius:50%;object-fit:cover;display:block}
         .btb-item--active .btb-shell--profile{box-shadow:inset 0 0 0 1.5px var(--dk-ink)}
 
-        .btb-badge{position:absolute;top:-1px;right:-3px;box-sizing:border-box;min-width:18px;height:18px;padding:0 4px;border:2px solid var(--dk-badge-edge);border-radius:9px;background:#ef4444;color:#fff;font-size:11px;font-weight:700;line-height:14px;text-align:center;pointer-events:none}
+        /* Unread count: up and to the right of the bell so the bell stays readable
+           (capped at 9+; the full count is in the link's label). #dc2626 keeps
+           white text at 4.5:1 */
+        .btb-badge{position:absolute;top:-4px;right:-7px;box-sizing:border-box;min-width:18px;height:18px;padding:0 4px;border:2px solid var(--dk-badge-edge);border-radius:9px;background:#dc2626;color:#fff;font-size:11px;font-weight:700;line-height:14px;text-align:center;white-space:nowrap;pointer-events:none}
 
         /* Tap bounce */
         .btb-shell--pulse{animation:btb-bounce 420ms ease both}
         @keyframes btb-bounce{0%,100%{transform:scale(1)}44%{transform:scale(1.12)}68%{transform:scale(.97)}}
+        /* Create sits 1px under the dock's top edge, so it bounces less and isn't clipped */
+        .btb-item--create .btb-shell--pulse{animation-name:btb-bounce-create}
+        @keyframes btb-bounce-create{0%,100%{transform:scale(1)}44%{transform:scale(1.04)}68%{transform:scale(.98)}}
 
         @media (prefers-reduced-motion:reduce){
           .btb-item{transition:none}
@@ -241,29 +279,30 @@ export default function BottomNav() {
           .btb-item:focus-visible{outline-color:Highlight}
         }
 
-        /* Desktop: the top bar's links take over */
-        @media (min-width:1024px){.btb{display:none}}
+        /* Desktop, and phones held sideways: the top bar's links take over */
+        @media ${DOCK_HIDDEN}{.btb{display:none}}
         @media print{.btb{display:none}}
       `}</style>
       <nav className="btb" aria-label="Main">
         {TABS.map((t) => {
-          const active = isActive(t, location.pathname)
-          const badge = t.key === 'alerts' && unreadCount > 0 ? (unreadCount > 99 ? '99+' : String(unreadCount)) : null
+          const active = isActive(t, location.pathname, ownProfile)
+          const badge = t.key === 'alerts' && unreadCount > 0 ? (unreadCount > 9 ? '9+' : String(unreadCount)) : null
           const showAvatar = t.key === 'profile' && avatar && !avatarFailed
           // The bell fills in on the Alerts page (the icon font has no filled bell)
           const filledBell = t.key === 'alerts' && active
           return (
-            <button
+            <Link
               key={t.key}
-              type="button"
+              to={t.path}
               className={
                 'btb-item' +
                 (active ? ' btb-item--active' : '') +
                 (t.key === 'create' ? ' btb-item--create' : '')
               }
               aria-label={badge ? `${t.label}, ${unreadCount} unread` : t.label}
-              aria-current={active ? 'page' : undefined}
-              onClick={() => go(t)}
+              // "page" on the tab's own page; "true" on the pages under it (/tasks/123, /settings)
+              aria-current={active ? (location.pathname === t.path ? 'page' : 'true') : undefined}
+              onClick={(e) => go(e, t)}
             >
               <span
                 className={
@@ -283,7 +322,7 @@ export default function BottomNav() {
                 {badge && <span className="btb-badge">{badge}</span>}
               </span>
               <span className="btb-label" aria-hidden="true">{t.label}</span>
-            </button>
+            </Link>
           )
         })}
       </nav>

@@ -49,3 +49,10 @@
   .ms-back { display: grid; }
   .ms-msg { max-width: 85%; }
 }
+/* With the bottom dock (same query as tokens.css) the 480px floor pushed the
+   composer under the dock on phones shorter than ~660px (iPhone SE, 360x640
+   Androids) and on tablets shorter than ~700px: the height above already fits
+   the screen, so only keep a small floor for phones held sideways */
+@media (max-width: 767.98px), (max-width: 1023.98px) and (min-height: 600px) {
+  .ms-shell { min-height: 280px; }
+}
