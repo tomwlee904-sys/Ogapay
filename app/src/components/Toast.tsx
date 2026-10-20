@@ -23,7 +23,8 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     <ToastContext.Provider value={{ toast }}>
       {children}
       <div style={{
-        position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)',
+        // above the bottom dock on phones and tablets (--dock-clear, tokens.css)
+        position: 'fixed', bottom: 'max(24px, calc(var(--dock-clear, 0px) + 12px))', left: '50%', transform: 'translateX(-50%)',
         zIndex: 9999, display: 'flex', flexDirection: 'column', gap: 8, pointerEvents: 'none',
       }}>
         {items.map(t => (

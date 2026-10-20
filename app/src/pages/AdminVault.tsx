@@ -129,7 +129,7 @@ export default function AdminVault() {
     flexRow: { display: 'flex', gap: 8, alignItems: 'flex-end' as const, flexWrap: 'wrap' as const },
     formGroup: { flex: 1, minWidth: 140 },
     formLabel: { fontSize: 11, fontWeight: 700, color: 'var(--text2)', marginBottom: 4, display: 'block' },
-    toast: { position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', background: '#111827', color: '#fff', padding: '12px 24px', borderRadius: 10, fontSize: 13, fontWeight: 600, zIndex: 9999, boxShadow: '0 4px 20px rgba(0,0,0,0.3)' },
+    toast: { position: 'fixed', bottom: 'max(24px, calc(var(--dock-clear, 0px) + 12px))', left: '50%', transform: 'translateX(-50%)', background: '#111827', color: '#fff', padding: '12px 24px', borderRadius: 10, fontSize: 13, fontWeight: 600, zIndex: 9999, boxShadow: '0 4px 20px rgba(0,0,0,0.3)' },
   }
 
   return (

@@ -104,10 +104,11 @@ export default function Navbar({ onMenuToggle }: NavbarProps) {
           <span className="logo-mark"><OgaLogo /></span>
           OgaPay
         </Link>
+        {/* nav-link-dock: also in the bottom dock, so hidden on tablets where the dock shows (nav.css) */}
         <div className="nav-links">
-          <NavLink className="nav-link" to="/tasks"><i className="ti ti-briefcase" />Jobs</NavLink>
-          <NavLink className="nav-link" to="/create"><i className="ti ti-square-plus" />Create</NavLink>
-          <NavLink className="nav-link" to="/store"><i className="ti ti-building-store" />Store</NavLink>
+          <NavLink className="nav-link nav-link-dock" to="/tasks"><i className="ti ti-briefcase" />Jobs</NavLink>
+          <NavLink className="nav-link nav-link-dock" to="/create"><i className="ti ti-square-plus" />Create</NavLink>
+          <NavLink className="nav-link nav-link-dock" to="/store"><i className="ti ti-building-store" />Store</NavLink>
           <NavLink className="nav-link" to="/vault"><i className="ti ti-shield-lock" />Vault</NavLink>
           <NavLink className="nav-link" to="/faq"><i className="ti ti-help-circle" />FAQ</NavLink>
         </div>

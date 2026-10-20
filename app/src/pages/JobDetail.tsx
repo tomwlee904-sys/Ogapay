@@ -1421,7 +1421,8 @@ function SharePanel({ job, onClose }: { job: JobData; onClose: () => void }) {
     { label: 'Telegram', icon: 'TG', href: `https://t.me/share/url?url=${encodeURIComponent(url)}&text=Earn+${job.currency === 'USD' ? '$' : '₦'}${job.reward}+on+OgaPay` },
   ]
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+    // zIndex 300, like the other sheets: over the bottom dock (100), which covered the copy-link row
+    <div style={{ position: 'fixed', inset: 0, zIndex: 300, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
       <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)' }} onClick={onClose} />
       <div style={{ position: 'relative', width: '100%', maxWidth: 420, background: 'var(--card,#fff)', border: '0.5px solid var(--border,#e5e7eb)', borderRadius: '20px 20px 0 0', padding: '20px 20px 32px', display: 'flex', flexDirection: 'column', gap: 14 }}>
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 4 }}>

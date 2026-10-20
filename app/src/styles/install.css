@@ -1,9 +1,9 @@
 /* "Get the OgaPay app" (components/InstallApp.tsx) */
 
-/* The card: phones only, above the bottom bar and its raised Create button */
+/* The card: phones only, just above the bottom dock */
 .ia-card {
   position: fixed; z-index: 99; left: 12px; right: 12px;
-  bottom: calc(92px + env(safe-area-inset-bottom, 0px));
+  bottom: calc(var(--dock-clear, 0px) + 8px);
   max-width: 480px; margin: 0 auto;
   display: flex; align-items: center; gap: 12px;
   padding: 12px 8px 12px 12px;

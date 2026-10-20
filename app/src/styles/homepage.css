@@ -284,13 +284,12 @@ button { font: inherit; cursor: pointer; }
   .hp-store-section .store-grid{-webkit-mask-image:linear-gradient(to right,transparent 0,#000 20px,#000 calc(100% - 20px),transparent 100%);mask-image:linear-gradient(to right,transparent 0,#000 20px,#000 calc(100% - 20px),transparent 100%)}
 }
 @media(max-width:767px) {
-  --bottom-nav-h:64px;
-  body { padding-bottom:var(--bottom-nav-h); }
+  /* No body/main padding for the bottom dock: the footer holds that space
+     (footer.css), so it isn't added twice. --bottom-nav-h is set in tokens.css. */
   .show-mobile { display: block !important; }
 
   .hide-mobile { display:none !important; }
   .container { padding: 0 12px; }
-  main { padding-bottom:var(--bottom-nav-h); }
 
   /* Hero */
   .hero { padding-top: 32px !important; }

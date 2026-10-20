@@ -1,17 +1,78 @@
 import { useState, useEffect, useRef } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
+import { IconBellFilled } from '@tabler/icons-react'
 import { useAuth } from '../context/AuthContext'
 import { apiRequest } from '../lib/api'
 import { openSignIn } from '../lib/signin'
 import { sized } from '../lib/img'
 
+// The bottom dock on phones and tablets (up to 1023px; the desktop top bar takes
+// over from 1024px, where admin pages also get the sidebar). Built after wurk.fun's
+// mobile dock: a floating rounded bar, the current tab on its own tile, Create as
+// a raised button in the middle and the profile picture in a thin ring.
+//
+// Space for it: tokens.css sets --bottom-nav-h (dock height + its gap below) and
+// --dock-clear (that plus the iPhone home bar) over the same widths; the footer,
+// toasts and other floating buttons sit above it with those.
+
+type TabKey = 'jobs' | 'store' | 'create' | 'alerts' | 'profile'
+type Tab = {
+  key: TabKey
+  label: string
+  path: string
+  icon: string
+  authRequired?: boolean
+  /** Other pages (and everything under them) that light this tab */
+  also?: string[]
+}
+
+// Every tab works signed out: Jobs, Store and Create are public pages; Alerts and
+// Profile open the sign-in dialog over the current page and go there once signed in.
+// Earnings used to be the second tab when signed in; it is on the Profile page (its
+// tab and quick link) and the Dashboard, so the dock shows the Store for everyone.
+const TABS: Tab[] = [
+  { key: 'jobs', label: 'Jobs', path: '/tasks', icon: 'ti-briefcase' },
+  { key: 'store', label: 'Store', path: '/store', icon: 'ti-building-store' },
+  { key: 'create', label: 'Create', path: '/create', icon: 'ti-plus' },
+  { key: 'alerts', label: 'Alerts', path: '/notifications', icon: 'ti-bell', authRequired: true },
+  { key: 'profile', label: 'Profile', path: '/profile', icon: 'ti-user', authRequired: true, also: ['/settings', '/earnings'] },
+]
+
+const under = (pathname: string, p: string) => pathname === p || pathname.startsWith(p + '/')
+const isActive = (t: Tab, pathname: string) => [t.path, ...(t.also || [])].some((p) => under(pathname, p))
+
+// Each page renders its own Layout, so the dock is mounted afresh after a tap
+// changes page: the tap is kept here so the new dock finishes the bounce
+const PULSE_MS = 440
+let lastTap: { key: TabKey; at: number } | null = null
+const runningPulse = () => {
+  const elapsed = lastTap ? Date.now() - lastTap.at : PULSE_MS
+  return lastTap && elapsed < PULSE_MS ? { key: lastTap.key, elapsed } : null
+}
+
+const reducedMotion = () =>
+  typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+
 export default function BottomNav() {
   const location = useLocation()
   const navigate = useNavigate()
   const { isAuthed, user } = useAuth()
-  const avatar = isAuthed ? (user as any)?.avatar || (user as any)?.avatarUrl || null : null
+  const avatar: string | null = isAuthed ? (user as any)?.avatar || (user as any)?.avatarUrl || null : null
   const [unreadCount, setUnreadCount] = useState(0)
+  const [pulse, setPulse] = useState<{ key: TabKey; elapsed: number } | null>(runningPulse)
+  const pulseTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  // The picture: a resized copy first; lib/img retries the original once if that
+  // fails, and after that the dock shows the plain person icon
+  const avatarSrc = avatar ? sized(avatar, 64, true) : ''
+  const [avatarFailed, setAvatarFailed] = useState(false)
+  const avatarErrors = useRef(0)
+  useEffect(() => { setAvatarFailed(false); avatarErrors.current = 0 }, [avatar])
+  const onAvatarError = () => {
+    avatarErrors.current += 1
+    if (avatarErrors.current > (avatarSrc !== avatar ? 1 : 0)) setAvatarFailed(true)
+  }
 
   const fetchUnread = async () => {
     if (!isAuthed) return
@@ -23,6 +84,7 @@ export default function BottomNav() {
   }
 
   useEffect(() => {
+    if (!isAuthed) setUnreadCount(0)
     fetchUnread()
     pollingRef.current = setInterval(fetchUnread, 30000)
     return () => {
@@ -36,98 +98,195 @@ export default function BottomNav() {
     return () => window.removeEventListener('focus', onFocus)
   }, [isAuthed])
 
-  // Every tab works signed out too (they used to be greyed out and did nothing):
-  // Create and Store are public pages; Alerts and Profile open the sign-in
-  // dialog over the current page and go there once signed in. Signed out, the
-  // second tab is the Store (nothing to show under Earnings yet).
-  const tabs = [
-    { icon: 'home', label: 'Jobs', path: '/tasks' },
-    isAuthed
-      ? { icon: 'briefcase', label: 'Earnings', path: '/earnings', authRequired: true }
-      : { icon: 'building-store', label: 'Store', path: '/store' },
-    { icon: 'plus', label: 'Create', path: '/create', center: true },
-    { icon: 'bell', label: 'Alerts', path: '/notifications', authRequired: true, badge: unreadCount },
-    { icon: 'user', label: 'Profile', path: '/profile', authRequired: true },
-  ]
-  const go = (t: { path: string; authRequired?: boolean }) =>
-    t.authRequired && !isAuthed ? openSignIn({ redirect: t.path }) : navigate(t.path)
+  useEffect(() => {
+    // A bounce carried over from the dock on the previous page: clear it when it ends
+    const p = runningPulse()
+    if (p) pulseTimer.current = setTimeout(() => setPulse(null), PULSE_MS - p.elapsed)
+    return () => { if (pulseTimer.current) clearTimeout(pulseTimer.current) }
+  }, [])
+
+  const go = (t: Tab) => {
+    // A short bounce on the tapped icon, as on wurk
+    if (pulseTimer.current) clearTimeout(pulseTimer.current)
+    lastTap = { key: t.key, at: Date.now() }
+    setPulse({ key: t.key, elapsed: 0 })
+    pulseTimer.current = setTimeout(() => setPulse(null), PULSE_MS)
+
+    if (t.authRequired && !isAuthed) return openSignIn({ redirect: t.path })
+    // Tapping the tab you are on takes you back to the top of it
+    if (location.pathname === t.path) {
+      window.scrollTo({ top: 0, behavior: reducedMotion() ? 'auto' : 'smooth' })
+      return
+    }
+    navigate(t.path)
+  }
 
   return (
     <>
       <style>{`
-        :root{--btb-active:#1A1A2E}
-        [data-theme="dark"]{--btb-active:#D4D4E8}
-        .btb{position:fixed;bottom:calc(10px + env(safe-area-inset-bottom,0px));left:12px;right:12px;max-width:520px;margin:0 auto;z-index:100;background:rgba(255,255,255,0.88);-webkit-backdrop-filter:blur(22px) saturate(180%);backdrop-filter:blur(22px) saturate(180%);border:1px solid rgba(0,0,0,0.07);border-radius:26px;box-shadow:0 10px 30px rgba(16,21,37,0.12);display:flex;align-items:stretch;justify-content:space-around;height:64px;padding:0 4px}
-        [data-theme="dark"] .btb{background:rgba(18,19,22,0.88);border-color:rgba(255,255,255,0.08);box-shadow:0 10px 30px rgba(0,0,0,0.5)}
-        .btb-av{width:24px;height:24px;border-radius:50%;object-fit:cover;display:block;box-shadow:0 0 0 1.5px rgba(0,0,0,0.08)}
-        .btb-tab.active .btb-av{box-shadow:0 0 0 2px var(--btb-active)}
-        
-        .btb-tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;padding:6px 2px;border:none;background:transparent;font-family:inherit;position:relative;min-height:44px;min-width:44px;transition:all .2s}
-        .btb-tab:active{transform:scale(0.92)}
-        .btb-tab .btb-icon-wrap{position:relative;display:flex;align-items:center;justify-content:center;width:24px;height:24px}
-        .btb-tab i{font-size:20px;color:rgba(0,0,0,0.45);stroke-width:1.5;transition:color .2s,transform .2s;display:block}
-        [data-theme="dark"] .btb-tab i{color:rgba(255,255,255,0.5)}
-        .btb-tab span{font-size:11px;font-weight:700;color:#6B7280;transition:color .2s;white-space:nowrap;line-height:1.2}
-        [data-theme="dark"] .btb-tab span{color:rgba(255,255,255,0.5)}
-        .btb-tab.active i,.btb-tab.active span{color:var(--btb-active)}
-        .btb-tab.active i{transform:scale(1.1)}
-        .btb-tab:disabled{opacity:0.4;cursor:not-allowed}
+        .btb{
+          --dk-glass:rgba(255,255,255,.8);
+          --dk-solid:#ffffff;
+          --dk-ink:#111318;
+          --dk-muted:#4a505c;
+          --dk-edge:rgba(15,23,42,.09);
+          --dk-shine:rgba(255,255,255,.9);
+          --dk-reflection:rgba(255,255,255,.55);
+          --dk-shadow:rgba(16,21,37,.1);
+          --dk-selected:rgba(15,23,42,.065);
+          --dk-selected-edge:rgba(15,23,42,.05);
+          --dk-hover:rgba(15,23,42,.04);
+          --dk-create:linear-gradient(145deg,#2b2c33,#0a0a0c);
+          --dk-create-ink:#ffffff;
+          --dk-create-shadow:inset 0 1px 0 rgba(255,255,255,.2),0 8px 18px rgba(10,10,12,.24);
+          --dk-ring:rgba(15,23,42,.14);
+          --dk-badge-edge:#ffffff;
+        }
+        [data-theme="dark"] .btb{
+          --dk-glass:rgba(22,25,32,.4);
+          --dk-solid:#1b1e25;
+          --dk-ink:#ffffff;
+          --dk-muted:#e2e6ed;
+          --dk-edge:rgba(255,255,255,.2);
+          --dk-shine:rgba(255,255,255,.32);
+          --dk-reflection:rgba(255,255,255,.07);
+          --dk-shadow:rgba(0,0,0,.24);
+          --dk-selected:rgba(255,255,255,.1);
+          --dk-selected-edge:rgba(255,255,255,.07);
+          --dk-hover:rgba(255,255,255,.06);
+          --dk-create:linear-gradient(145deg,rgba(255,255,255,.98),rgba(215,225,221,.9));
+          --dk-create-ink:#07110d;
+          --dk-create-shadow:inset 0 1px 0 #fff,0 8px 20px rgba(0,0,0,.34);
+          --dk-ring:rgba(255,255,255,.2);
+          --dk-badge-edge:#282c34;
+        }
 
-        .btb-badge{position:absolute;top:-4px;right:-6px;min-width:16px;height:16px;border-radius:8px;background:var(--red);color:#fff;font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center;padding:0 4px;line-height:1;pointer-events:none;box-shadow:0 1px 3px rgba(0,0,0,0.2)}
+        .btb{
+          position:fixed;z-index:100;
+          left:max(12px,env(safe-area-inset-left,0px));right:max(12px,env(safe-area-inset-right,0px));
+          bottom:calc(12px + env(safe-area-inset-bottom,0px));
+          max-width:520px;height:72px;margin:0 auto;padding:6px;box-sizing:border-box;
+          display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:2px;
+          overflow:hidden;isolation:isolate;
+          border:1px solid var(--dk-edge);border-radius:28px;
+          background:var(--dk-solid);color:var(--dk-ink);
+          box-shadow:0 8px 28px var(--dk-shadow),0 2px 6px var(--dk-shadow),inset 0 1px 0 var(--dk-shine),inset 0 -1px 0 var(--dk-reflection);
+          font-family:inherit;
+        }
+        @supports ((-webkit-backdrop-filter:blur(1px)) or (backdrop-filter:blur(1px))){
+          .btb{background:var(--dk-glass);-webkit-backdrop-filter:blur(16px) saturate(165%);backdrop-filter:blur(16px) saturate(165%)}
+        }
+        /* Glass reflections */
+        .btb::before,.btb::after{content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none}
+        .btb::before{background:radial-gradient(ellipse at 12% 0%,var(--dk-reflection),transparent 56%),linear-gradient(115deg,var(--dk-reflection),transparent 32% 70%,var(--dk-reflection));opacity:.6}
+        .btb::after{inset:1px;border:1px solid transparent;border-top-color:var(--dk-shine);border-bottom-color:var(--dk-reflection);box-shadow:inset 1px 0 3px var(--dk-reflection),inset -1px 0 3px var(--dk-reflection)}
 
-        .btb-center-wrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;min-height:44px}
-        .btb-center{width:50px;height:50px;border-radius:18px;background:var(--accent);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;position:absolute;top:-12px;z-index:10;box-shadow:0 4px 16px rgba(var(--accent-rgb),0.35);transition:transform .2s,box-shadow .2s;font-family:inherit}
-        .btb-center:active{transform:scale(0.9);box-shadow:0 2px 8px rgba(var(--accent-rgb),0.25)}
-        .btb-center i{font-size:26px;color:var(--on-accent);transition:transform .2s}
-        .btb-center:active i{transform:rotate(90deg)}
-        .btb-center-label{font-size:11px;font-weight:700;color:rgba(0,0,0,0.35);text-align:center;white-space:nowrap;line-height:1.2;transition:color .2s;margin-top:30px}
-        [data-theme="dark"] .btb-center-label{color:rgba(255,255,255,0.35)}
+        .btb-item{
+          position:relative;z-index:1;
+          display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+          min-width:0;min-height:44px;margin:0;padding:3px 2px;
+          border:0;border-radius:21px;background:transparent;color:var(--dk-muted);box-shadow:none;
+          font-family:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;
+          transition:color 180ms ease,background-color 180ms ease,box-shadow 180ms ease;
+        }
+        .btb-item--active:not(.btb-item--create){
+          background:var(--dk-selected);color:var(--dk-ink);
+          box-shadow:inset 0 1px 0 var(--dk-shine),inset 0 0 0 1px var(--dk-selected-edge),0 2px 5px rgba(0,0,0,.04);
+        }
+        @media (hover:hover) and (pointer:fine){
+          .btb-item:not(.btb-item--active):not(.btb-item--create):hover{background:var(--dk-hover);color:var(--dk-ink)}
+        }
+        .btb-item:not(.btb-item--create):active{background:var(--dk-selected)}
+        .btb-item:focus{outline:none}
+        .btb-item:focus-visible{outline:2px solid var(--dk-ink);outline-offset:-3px}
 
+        .btb-shell{position:relative;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;width:36px;height:36px;border-radius:50%}
+        .btb-shell i{font-size:22px;line-height:1;display:block}
+        .btb-shell .ti-bell{font-size:23px}
+        .btb-svg{width:23px;height:23px;display:block}
+        .btb-label{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;font-size:11px;line-height:13px;font-weight:600;letter-spacing:.01em;white-space:nowrap}
 
-        .btb-center-wrap.has-label i,.btb-center-wrap.has-label .btb-center-label{color:var(--btb-active)}
+        /* Create: the raised button in the middle, never on a tile */
+        .btb-item--create{color:var(--dk-ink);padding-block:1px}
+        .btb-item--create .btb-shell{width:46px;height:46px;border-radius:14px;margin-top:-6px;background:var(--dk-create);color:var(--dk-create-ink);box-shadow:var(--dk-create-shadow)}
+        .btb-item--create .btb-shell i{font-size:24px}
+        @media (max-width:480px){.btb-item--create .btb-shell{width:44px;height:44px}}
 
-        @media(min-width:768px){.btb{display:none}}
+        /* Profile: the picture in a thin ring */
+        .btb-shell--profile{padding:2px;box-sizing:border-box;background:var(--dk-selected);box-shadow:inset 0 0 0 1px var(--dk-ring)}
+        .btb-shell--profile i{font-size:20px}
+        .btb-av{width:100%;height:100%;border-radius:50%;object-fit:cover;display:block}
+        .btb-item--active .btb-shell--profile{box-shadow:inset 0 0 0 1.5px var(--dk-ink)}
+
+        .btb-badge{position:absolute;top:-1px;right:-3px;box-sizing:border-box;min-width:18px;height:18px;padding:0 4px;border:2px solid var(--dk-badge-edge);border-radius:9px;background:#ef4444;color:#fff;font-size:11px;font-weight:700;line-height:14px;text-align:center;pointer-events:none}
+
+        /* Tap bounce */
+        .btb-shell--pulse{animation:btb-bounce 420ms ease both}
+        @keyframes btb-bounce{0%,100%{transform:scale(1)}44%{transform:scale(1.12)}68%{transform:scale(.97)}}
+
+        @media (prefers-reduced-motion:reduce){
+          .btb-item{transition:none}
+          .btb-shell--pulse{animation:none}
+        }
+        @media (prefers-reduced-transparency:reduce){
+          .btb{background:var(--dk-solid);-webkit-backdrop-filter:none;backdrop-filter:none}
+          .btb::before,.btb::after{display:none}
+        }
+        @media (forced-colors:active){
+          .btb{background:Canvas;color:CanvasText;border-color:CanvasText}
+          .btb::before,.btb::after{display:none}
+          .btb-item{color:CanvasText}
+          .btb-item--active:not(.btb-item--create){background:Highlight;color:HighlightText}
+          .btb-item--create .btb-shell{background:ButtonFace;color:ButtonText;border:1px solid ButtonText}
+          .btb-item:focus-visible{outline-color:Highlight}
+        }
+
+        /* Desktop: the top bar's links take over */
+        @media (min-width:1024px){.btb{display:none}}
+        @media print{.btb{display:none}}
       `}</style>
-      <div className="btb">
-        {tabs.map(t => {
-          if (t.center) {
-            const isActive = location.pathname === '/create' || location.pathname.startsWith('/create/')
-            return (
-              <div key={t.label} className="btb-center-wrap">
-                <button
-                  className="btb-center"
-                  onClick={() => go(t)}
-                  aria-label={t.label}
-                >
-                  <i className="ti ti-plus" />
-                </button>
-                <span className="btb-center-label" style={{color: isActive ? "var(--btb-active, #1A1A2E)" : undefined}}>
-                  {t.label}
-                </span>
-              </div>
-            )
-          }
-          const isActive = location.pathname === t.path || location.pathname.startsWith(t.path + '/')
+      <nav className="btb" aria-label="Main">
+        {TABS.map((t) => {
+          const active = isActive(t, location.pathname)
+          const badge = t.key === 'alerts' && unreadCount > 0 ? (unreadCount > 99 ? '99+' : String(unreadCount)) : null
+          const showAvatar = t.key === 'profile' && avatar && !avatarFailed
+          // The bell fills in on the Alerts page (the icon font has no filled bell)
+          const filledBell = t.key === 'alerts' && active
           return (
             <button
-              key={t.label}
-              className={`btb-tab${isActive ? ' active' : ''}`}
+              key={t.key}
+              type="button"
+              className={
+                'btb-item' +
+                (active ? ' btb-item--active' : '') +
+                (t.key === 'create' ? ' btb-item--create' : '')
+              }
+              aria-label={badge ? `${t.label}, ${unreadCount} unread` : t.label}
+              aria-current={active ? 'page' : undefined}
               onClick={() => go(t)}
             >
-              <div className="btb-icon-wrap">
-                {t.label === 'Profile' && avatar
-                  ? <img className="btb-av" src={sized(avatar, 48, true)} alt="" />
-                  : <i className={`ti ti-${t.icon}`} />}
-                {/* `badge && …` showed a stray 0 when there was nothing unread */}
-                {t.badge != null && t.badge > 0 && (
-                  <span className="btb-badge">{t.badge > 99 ? '99+' : t.badge}</span>
-                )}
-              </div>
-              <span>{t.label}</span>
+              <span
+                className={
+                  'btb-shell' +
+                  (t.key === 'profile' ? ' btb-shell--profile' : '') +
+                  (pulse?.key === t.key ? ' btb-shell--pulse' : '')
+                }
+                // a bounce carried over from the previous page picks up where it was
+                style={pulse?.key === t.key && pulse.elapsed ? { animationDelay: `-${pulse.elapsed}ms` } : undefined}
+                aria-hidden="true"
+              >
+                {showAvatar
+                  ? <img className="btb-av" src={avatarSrc} alt="" onError={onAvatarError} />
+                  : filledBell
+                    ? <IconBellFilled className="btb-svg" size={23} />
+                    : <i className={`ti ${t.icon}`} />}
+                {badge && <span className="btb-badge">{badge}</span>}
+              </span>
+              <span className="btb-label" aria-hidden="true">{t.label}</span>
             </button>
           )
         })}
-      </div>
+      </nav>
     </>
   )
 }

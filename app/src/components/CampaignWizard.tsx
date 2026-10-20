@@ -1266,8 +1266,8 @@ export default function CampaignWizard() {
 
   return (
     <div className="cw-ai" style={{ position: "fixed", zIndex: 999, transition: "opacity .2s", ...(atFooter && !open ? { opacity: 0, pointerEvents: "none" } : {}) }}>
-      {/* Phones: above the bottom bar (64px) and its raised Create button, not on top of Profile */}
-      <style>{`.cw-ai{bottom:24px;right:24px}@media(max-width:767px){.cw-ai{bottom:calc(88px + env(safe-area-inset-bottom,0px));right:16px}}`}</style>
+      {/* Phones and tablets: above the bottom dock (--dock-clear, tokens.css), not on top of Profile */}
+      <style>{`.cw-ai{bottom:max(24px,calc(var(--dock-clear,0px) + 12px));right:24px}@media(max-width:767px){.cw-ai{right:16px}}`}</style>
       {open && (
         <div
           style={{

@@ -63,6 +63,13 @@
   .nav .nav-link i { display: none; }
   .nav .nav-actions { gap: 8px; }
 }
+/* Tablets below 1024px also get the bottom dock (components/BottomNav.tsx), which
+   has Jobs, Store, Create and Profile: the bar keeps only what the dock doesn't
+   (Vault, FAQ, balance, theme, menu). From 1024px the bar is unchanged. */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .nav .nav-link-dock, .nav .nav-desktop .profile-btn { display: none; }
+  .nav .nav-links { justify-content: center; gap: 8px; }
+}
 
 @media (max-width: 767px) {
   .nav .nav-mobile-actions { gap: 4px; }

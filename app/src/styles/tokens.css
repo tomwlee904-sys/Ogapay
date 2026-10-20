@@ -93,6 +93,7 @@
   --radius-sm: 12px;
   --nav-h: 64px;
   --bottom-nav-h: 0px;
+  --dock-clear: 0px;
   --vh: 1vh;
   --100vh: 100vh;
 }
@@ -128,7 +129,17 @@
   --radius-lg: 20px;
   --radius-sm: 12px;
   --nav-h: 64px;
-  --bottom-nav-h: 0px;
+}
+
+/* The bottom dock (components/BottomNav.tsx) shows on phones and tablets, up to
+   1023px. --bottom-nav-h is its height plus the gap below it (72 + 12);
+   --dock-clear adds the iPhone home bar: anything fixed to the bottom of the
+   screen sits at least that high. The footer is the page's space for it. */
+@media (max-width: 1023px) {
+  :root {
+    --bottom-nav-h: 84px;
+    --dock-clear: calc(var(--bottom-nav-h) + env(safe-area-inset-bottom, 0px));
+  }
 }
 
 body { --100vh: calc(var(--vh) * 100); }
@@ -210,7 +221,8 @@ body { --100vh: calc(var(--vh) * 100); }
   @apply flex;
   width: 100%;
   margin: 0 auto;
-  padding: 20px 0 calc(var(--bottom-nav-h) + 12px);
+  /* The footer below holds the space for the bottom dock */
+  padding: 20px 0 12px;
   min-height: var(--100vh);
   animation: pageIn .2s ease;
 }
@@ -298,7 +310,8 @@ footer { @apply border-t border-[var(--border)] py-10 px-6 text-center bg-[var(-
 
 /* ─── Toast ─── */
 .toast {
-  @apply fixed bottom-6 left-1/2 px-6 py-3 rounded-xl bg-[var(--card)] text-[var(--text)] text-sm font-semibold z-[999] pointer-events-none;
+  @apply fixed left-1/2 px-6 py-3 rounded-xl bg-[var(--card)] text-[var(--text)] text-sm font-semibold z-[999] pointer-events-none;
+  bottom: max(24px, calc(var(--dock-clear) + 12px)); /* above the bottom dock */
   transform: translateX(-50%) translateY(100px);
   border: 1px solid var(--border) !important;
   box-shadow: var(--shadow-md);

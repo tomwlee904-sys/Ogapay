@@ -1,5 +1,6 @@
 .ms-wrap { max-width: 1080px; margin: 0 auto; padding: 20px 20px 40px; }
-.ms-shell { display: grid; grid-template-columns: 320px minmax(0, 1fr); height: calc(100dvh - var(--nav-h, 64px) - 64px); min-height: 480px; background: var(--card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
+/* Fills the screen below the top bar, and above the bottom dock where it shows (--dock-clear) */
+.ms-shell { display: grid; grid-template-columns: 320px minmax(0, 1fr); height: calc(100dvh - var(--nav-h, 64px) - 64px - var(--dock-clear, 0px)); min-height: 480px; background: var(--card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
 .ms-side { border-right: 1px solid var(--border); display: flex; flex-direction: column; min-height: 0; min-width: 0; }
 .ms-side-h { padding: 16px 16px 10px; }
 .ms-side-h h1 { font: 800 20px Inter, sans-serif; margin: 0 0 10px; }
@@ -41,7 +42,7 @@
 
 @media (max-width: 760px) {
   .ms-wrap { padding: 0; }
-  .ms-shell { grid-template-columns: minmax(0, 1fr); border-radius: 0; border-left: 0; border-right: 0; height: calc(100dvh - var(--nav-h, 64px) - var(--bottom-nav-h, 64px)); }
+  .ms-shell { grid-template-columns: minmax(0, 1fr); border-radius: 0; border-left: 0; border-right: 0; height: calc(100dvh - var(--nav-h, 64px) - 20px - var(--dock-clear, 0px) - 8px); }
   .ms-shell.open .ms-side { display: none; }
   .ms-shell:not(.open) .ms-main { display: none; }
   .ms-side { border-right: 0; }
