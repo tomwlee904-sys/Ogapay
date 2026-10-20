@@ -90,7 +90,7 @@ export default function Terms() {
               <h2><span>{n('kyc')}</span>Identity checks and limits</h2>
               <p>To withdraw money, send money to other users, get your own account number, and take some jobs, you need to verify your identity (KYC). The more you verify, the more you can withdraw in a day:</p>
               <ul>
-                <li>Level 1 (a bank account in your name, confirmed with your bank through our payment partner; or your NIN, confirmed with the National Identity Management Commission (NIMC) through Didit, or checked by our team when that isn't possible): up to ₦5,000 a day. If you verify with a bank account, bank withdrawals only go to accounts in your name.</li>
+                <li>Level 1 (a bank account in your name, confirmed with your bank through our payment partner; or your NIN, confirmed with the National Identity Management Commission (NIMC) through Didit, or checked by our team when that isn't possible): up to ₦5,000 a day. Bank withdrawals only go to accounts in your own name.</li>
                 <li>Level 2 (an ID document and a selfie, checked by our verification partner Didit): up to ₦10,000 a day</li>
                 <li>Level 3 (ID documents, checked by our team through support): up to ₦50,000 a day</li>
               </ul>
@@ -147,7 +147,7 @@ export default function Terms() {
               <ul>
                 <li><b>Balances.</b> Your wallet can hold naira (NGN) and crypto (USDC, SOL). Money held for your jobs, your store orders or a withdrawal in progress isn't available to spend.</li>
                 <li><b>Adding money.</b> By bank transfer to your own account number, by card, USSD or bank app through our payment partners, or with USDC on Solana. Money is added once the payment is confirmed. Payments made to the wrong account or reference may take longer to trace.</li>
-                <li><b>Withdrawing to a bank.</b> The minimum is ₦5,000 or its equivalent and the fee is 1.5% (at least ₦100); both are shown before you confirm. Bank withdrawals are paid by our team, usually within 24 hours. Withdraw only to accounts in your own name.</li>
+                <li><b>Withdrawing to a bank.</b> The minimum is ₦5,000 or its equivalent and the fee is 1.5% (at least ₦100); both are shown before you confirm. Bank withdrawals are paid every Thursday morning; a request made before then goes out that Thursday. They only go to a bank account in your own name, as your bank records it, and a bank account added less than a day before the payout is checked by our team first.</li>
                 <li><b>Crypto.</b> Crypto withdrawals cost 1%, are sent on the Solana network straight away and can't be reversed. Check the address; we can't recover crypto sent to a wrong address.</li>
                 <li><b>Sending to other users</b> is free, instant and final once sent.</li>
                 <li><b>Mistakes and reversals.</b> If money reaches your wallet by mistake or through a payment that is later reversed or found to be fraudulent, we may take it back or hold it while we check.</li>

@@ -244,7 +244,7 @@ export default function WithdrawModal({ onClose, onDone, balances: given }: { on
             {busy ? 'Sending…' : amt && !problem ? `Withdraw ${money(amt, cur)}` : 'Withdraw'}
           </button>
           <p className="wl-note" style={{ margin: '12px 0 0', textAlign: 'center' }}>
-            {tab === 'bank' ? `Bank withdrawals are paid every Thursday (next: ${payoutDayLabel(nextPayoutDay())}). Accounts not in your name are checked by our team first.` : 'Sent on Solana straight away. Check the address: crypto sent to a wrong address can’t be recovered.'}
+            {tab === 'bank' ? `Bank withdrawals are paid every Thursday (next: ${payoutDayLabel(nextPayoutDay())}). Money only goes to a bank account in your own name.` : 'Sent on Solana straight away. Check the address: crypto sent to a wrong address can’t be recovered.'}
             {tier < 3 && <> <Link to="/settings/verification" onClick={onClose}>Raise your limit</Link></>}
           </p>
         </>
