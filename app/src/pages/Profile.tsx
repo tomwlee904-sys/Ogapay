@@ -219,16 +219,22 @@ export default function Profile() {
   };
 
   // After X is connected or refreshed: load the account again without the page
-  // skeleton. If X gave the account its picture, the menus need it too.
+  // skeleton. If X gave the account its picture, the menus need it too (and the
+  // account update that follows doesn't need to reload this page again).
+  const quietUserUpdate = useRef(false);
   const reloadMe = async () => {
     const d = await apiRequest<any>('/users/me').catch(() => null);
     if (!d) return;
     const pictureChanged = (d.avatarUrl || null) !== (profileData?.avatarUrl || null);
     setProfileData(d);
-    if (pictureChanged) refreshUser();
+    if (pictureChanged) {
+      quietUserUpdate.current = true;
+      Promise.resolve(refreshUser()).finally(() => setTimeout(() => { quietUserUpdate.current = false; }, 1000));
+    }
   };
 
   useEffect(() => {
+    if (quietUserUpdate.current) { quietUserUpdate.current = false; return; }
     setLoading(true);
     loadProfile().finally(() => setLoading(false));
   }, [authUser]);

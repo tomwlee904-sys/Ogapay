@@ -47,7 +47,8 @@ export function tierFor(n: number): string | null {
 
 /** 12400 -> "12.4k", 1250000 -> "1.3M" */
 export function compact(n: number): string {
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(n >= 10_000_000 ? 0 : 1).replace(/\.0$/, '')}M`
+  // from 999,500 the k form would round up to "1000k"
+  if (n >= 999_500) return `${(n / 1_000_000).toFixed(n >= 10_000_000 ? 0 : 1).replace(/\.0$/, '')}M`
   if (n >= 1_000) return `${(n / 1_000).toFixed(n >= 100_000 ? 0 : 1).replace(/\.0$/, '')}k`
   return String(n)
 }

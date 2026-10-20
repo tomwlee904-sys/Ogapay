@@ -62,10 +62,22 @@ export function xBanner(url: string | null | undefined, css: number): string {
   return /\/profile_banners\/\d+\/\d+$/.test(url) ? `${url}/${css * 2 > 600 ? '1080x360' : '600x200'}` : url
 }
 
+/** What's wrong with a pasted link, or '' when it's a link to a post (x.com/<name>/status/<id>) */
+export function xPostLinkProblem(raw: string, handle: string): string {
+  const s = raw.trim()
+  if (/^(https?:\/\/)?(www\.|mobile\.)?(x|twitter)\.com\/[A-Za-z0-9_]{1,15}\/status(es)?\/\d{5,25}/i.test(s)) return ''
+  if (/^(https?:\/\/)?(www\.|mobile\.)?(x|twitter)\.com\/[A-Za-z0-9_]{1,15}\/?(\?.*)?$/i.test(s)) {
+    return "That's the link to your profile, not a post. On X, open one of your posts, tap Share, then Copy link, and paste that here."
+  }
+  return `Paste the link to one of your posts, like https://x.com/${handle}/status/123…`
+}
+
 /** The server's message when it has one; "Request failed" and broken replies get a plain one */
 export function xError(e: any, fallback: string): string {
   const m = String(e?.message || '')
   if (/timed out/i.test(m)) return 'That took too long. Wait a minute and try again.'
+  // A server that doesn't have this yet (mid-update)
+  if (/^route .* not found$/i.test(m)) return "This is still being switched on. Try again in a few minutes."
   if (!m || /^request failed$|json|unexpected token|failed to fetch|networkerror|load failed/i.test(m)) return fallback
   return m
 }

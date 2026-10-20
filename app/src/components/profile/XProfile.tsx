@@ -1,7 +1,7 @@
 import { useEffect, useId, useState, type FormEvent } from 'react'
 import { apiRequest } from '../../lib/api'
 import { compact, fullCount } from '../../lib/creators'
-import { xBanner, xError, xPic, type XProfile, type XShown } from '../../lib/xprofile'
+import { xBanner, xError, xPic, xPostLinkProblem, type XProfile, type XShown } from '../../lib/xprofile'
 import { useToast } from '../Toast'
 import '../../styles/profile-own.css'
 import '../../styles/xprofile.css'
@@ -92,6 +92,8 @@ export function XRefresh({ handle, onRefreshed }: { handle: string; onRefreshed:
   const submit = async (e: FormEvent) => {
     e.preventDefault()
     if (busy || !url.trim()) return
+    const problem = xPostLinkProblem(url, handle)
+    if (problem) { setErr(problem); return }
     setBusy(true); setErr('')
     try {
       const r = await apiRequest<{ handle: string; profile: XProfile }>('/social/twitter/refresh-profile', { method: 'POST', body: JSON.stringify({ url: url.trim() }) })
@@ -109,7 +111,7 @@ export function XRefresh({ handle, onRefreshed }: { handle: string; onRefreshed:
   }
   return (
     <form className="xr" onSubmit={submit}>
-      <label className="xr-l" htmlFor={id}>Paste the link to any post from @{handle}. We read your picture, name, bio and followers from it.</label>
+      <label className="xr-l" htmlFor={id}>Paste the link to any post from @{handle} (on X: open the post, tap Share, then Copy link). We read your picture, name, bio and followers from it.</label>
       <div className="xr-row">
         <input id={id} className="xv-input" value={url} onChange={(e) => { setUrl(e.target.value); setErr('') }} placeholder={`https://x.com/${handle}/status/...`} inputMode="url" autoComplete="off" autoFocus />
         <button type="submit" className="po-btn primary" disabled={busy || !url.trim()}>{busy ? 'Refreshing…' : 'Refresh'}</button>
