@@ -9,7 +9,7 @@ import { useWalletBalance } from '../../context/WalletBalanceContext'
 import { MIN_WITHDRAW_NGN, kycOf, maskAcct, money, naira, newKey, ngnWithdrawFee, shortAddr, whenAgain, withdrawLimit, type Allowance, type Balances, type Bank, nextPayoutDay, payoutDayLabel } from '../../lib/wallet'
 import InfoTip from '../InfoTip'
 
-type Done = { kind: 'bank'; net: number; bank: Bank; reference: string; payDay: Date } | { kind: 'crypto'; amount: number; currency: string; to: string; reference: string; pending: boolean }
+type Done = { kind: 'bank'; net: number; bank: Bank; reference: string; payDay: Date; teamCheck?: boolean } | { kind: 'crypto'; amount: number; currency: string; to: string; reference: string; pending: boolean }
 
 // Withdraw to a bank account (paid every Thursday, automatically when the account
 // is in their own name: backend payout.service.js) or to a Solana wallet (sent
@@ -93,12 +93,12 @@ export default function WithdrawModal({ onClose, onDone, balances: given }: { on
     try {
       if (tab === 'bank') {
         if (!bank) throw new Error('Choose a bank account.')
-        const r = await apiRequest<{ reference: string; netAmount?: number; payoutDate?: string }>('/wallet/withdraw', {
+        const r = await apiRequest<{ reference: string; netAmount?: number; payoutDate?: string; teamCheck?: boolean }>('/wallet/withdraw', {
           method: 'POST',
           headers: { 'Idempotency-Key': key.current },
           body: JSON.stringify({ amount: amt, currency: 'NGN', bankCode: bank.bankCode, bankName: bank.bankName, accountNumber: bank.accountNumber, accountName: bank.accountName, ...(otp && { otp }) }),
         })
-        setDone({ kind: 'bank', net: Number(r?.netAmount ?? amt - fee), bank, reference: r?.reference || '', payDay: r?.payoutDate ? new Date(r.payoutDate) : nextPayoutDay() })
+        setDone({ kind: 'bank', net: Number(r?.netAmount ?? amt - fee), bank, reference: r?.reference || '', payDay: r?.payoutDate ? new Date(r.payoutDate) : nextPayoutDay(), teamCheck: !!r?.teamCheck })
       } else {
         const to = address.trim()
         if (!/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(to)) throw new Error("That isn't a Solana wallet address.")
@@ -126,7 +126,9 @@ export default function WithdrawModal({ onClose, onDone, balances: given }: { on
           {done.kind === 'bank' ? (
             <>
               <h3>Withdrawal requested</h3>
-              <p>{naira(done.net)} will be sent to {done.bank.bankName} {maskAcct(done.bank.accountNumber)} on <b>{payoutDayLabel(done.payDay)}</b>. We pay bank withdrawals every Thursday. You'll see it in your history as Processing until it's paid.</p>
+              {done.teamCheck
+                ? <p>{naira(done.net)} will be sent to {done.bank.bankName} {maskAcct(done.bank.accountNumber)} once our team has checked it, because the name on this bank account is a little different from yours. You'll see it in your history as Processing until it's paid.</p>
+                : <p>{naira(done.net)} will be sent to {done.bank.bankName} {maskAcct(done.bank.accountNumber)} on <b>{payoutDayLabel(done.payDay)}</b>. We pay bank withdrawals every Thursday. You'll see it in your history as Processing until it's paid.</p>}
             </>
           ) : (
             <>
@@ -244,7 +246,7 @@ export default function WithdrawModal({ onClose, onDone, balances: given }: { on
             {busy ? 'Sending…' : amt && !problem ? `Withdraw ${money(amt, cur)}` : 'Withdraw'}
           </button>
           <p className="wl-note" style={{ margin: '12px 0 0', textAlign: 'center' }}>
-            {tab === 'bank' ? `Bank withdrawals are paid every Thursday (next: ${payoutDayLabel(nextPayoutDay())}). Money only goes to a bank account in your own name.` : 'Sent on Solana straight away. Check the address: crypto sent to a wrong address can’t be recovered.'}
+            {tab === 'bank' ? `Bank withdrawals are paid every Thursday (next: ${payoutDayLabel(nextPayoutDay())}). Money only goes to a bank account in your own name; if your bank spells it differently, our team checks it first.` : 'Sent on Solana straight away. Check the address: crypto sent to a wrong address can’t be recovered.'}
             {tier < 3 && <> <Link to="/settings/verification" onClick={onClose}>Raise your limit</Link></>}
           </p>
         </>
