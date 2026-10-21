@@ -16,12 +16,14 @@ const Icon = ({ n, s = 18, c = "currentColor", style }: { n: string; s?: number;
 
 // What each rank unlocks: only what's real (jobs whose minRank needs it; the
 // leaderboard shows everyone's rank). Don't promise perks that don't exist.
+// raters: how many different job posters must have rated your work (the
+// server's rank rules), so a few friendly ratings can't lift a rank
 const TIERS = [
-  { level: "BEGINNER", label: "Beginner", icon: "seedling", color: "#9CA3AF", tasks: 0, rating: 0, unlocks: ["Every job without a rank requirement", "Earn in Naira or USDC"] },
-  { level: "INTERMEDIATE", label: "Intermediate", icon: "star", color: "#52525b", tasks: 10, rating: 0, unlocks: ["Jobs that need Intermediate rank"] },
-  { level: "ADVANCED", label: "Advanced", icon: "flame", color: "#8B5CF6", tasks: 50, rating: 4.0, unlocks: ["Jobs that need Advanced rank or lower"] },
-  { level: "EXPERT", label: "Expert", icon: "diamond", color: "#F59E0B", tasks: 200, rating: 4.5, unlocks: ["Jobs that need Expert rank or lower"] },
-  { level: "LEGEND", label: "Legend", icon: "crown", color: "#EF4444", tasks: 500, rating: 4.8, unlocks: ["Every job, whatever rank it needs"] },
+  { level: "BEGINNER", label: "Beginner", icon: "seedling", color: "#9CA3AF", tasks: 0, rating: 0, raters: 0, unlocks: ["Every job without a rank requirement", "Earn in Naira or USDC"] },
+  { level: "INTERMEDIATE", label: "Intermediate", icon: "star", color: "#52525b", tasks: 10, rating: 0, raters: 0, unlocks: ["Jobs that need Intermediate rank"] },
+  { level: "ADVANCED", label: "Advanced", icon: "flame", color: "#8B5CF6", tasks: 50, rating: 4.0, raters: 5, unlocks: ["Jobs that need Advanced rank or lower"] },
+  { level: "EXPERT", label: "Expert", icon: "diamond", color: "#F59E0B", tasks: 200, rating: 4.5, raters: 20, unlocks: ["Jobs that need Expert rank or lower"] },
+  { level: "LEGEND", label: "Legend", icon: "crown", color: "#EF4444", tasks: 500, rating: 4.8, raters: 50, unlocks: ["Every job, whatever rank it needs"] },
 ];
 
 function getTierIndex(level: string) {
@@ -55,6 +57,8 @@ export default function RankUpgrade() {
   const nextTier = TIERS[currentIdx + 1];
   const tasksCompleted = profile?.tasksCompleted || 0;
   const avgRating = profile?.avgRating || 0;
+  // Different job posters who rated your work
+  const ratedBy = Number(profile?.ratedBy || 0);
   // The real OgaScore (verified checks), not the internal reputation figure
   const ogaScore = profile?.ogaScore ?? 0;
 
@@ -63,6 +67,7 @@ export default function RankUpgrade() {
   const pct = (have: number, need: number) => (need > 0 ? Math.max(0, Math.min(100, Math.round((have / need) * 100))) : 100);
   const progressToNext = nextTier ? pct(tasksCompleted, nextTier.tasks) : 100;
   const ratingProgressToNext = nextTier && nextTier.rating > 0 ? pct(avgRating, nextTier.rating) : 100;
+  const ratersProgressToNext = nextTier && nextTier.raters > 0 ? pct(ratedBy, nextTier.raters) : 100;
 
   return (
     <Layout>
@@ -130,6 +135,14 @@ export default function RankUpgrade() {
                         </div>
                       </div>
                     )}
+                    {nextTier.raters > 0 && (
+                      <div className="rank-progress-row">
+                        <span className="rank-progress-label rank-progress-long">Rated by {nextTier.raters} different job posters (you have {ratedBy})</span>
+                        <div className="rank-progress-bar">
+                          <div className="rank-progress-fill" style={{ width: `${Math.min(ratersProgressToNext, 100)}%`, background: nextTier.color }} />
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -158,6 +171,7 @@ export default function RankUpgrade() {
                         <div className="rank-tier-reqs">
                           {tier.tasks > 0 ? `${tier.tasks}+ tasks` : 'No minimum tasks'}
                           {tier.rating > 0 ? `  \u2022  ${tier.rating}+ avg rating` : ''}
+                          {tier.raters > 0 ? `  \u2022  rated by ${tier.raters}+ different job posters` : ''}
                         </div>
                       </div>
                     </div>
@@ -185,6 +199,7 @@ export default function RankUpgrade() {
               <ul>
                 <li><strong>Tasks done</strong>: jobs you were paid for</li>
                 <li><strong>Avg rating</strong>: the average of the stars posters gave you (1–5)</li>
+                <li><strong>Different job posters</strong>: higher ranks need ratings from a number of different posters (Advanced 5, Expert 20, Legend 50), not just one or two</li>
                 <li><strong>OgaScore</strong>: your trust score from checks we verified (connected accounts, ID and Human verification), out of 66</li>
               </ul>
               <p className="rank-info-note">Job posters can choose the rank a job needs, so higher ranks open up jobs that only experienced people can take.</p>
@@ -218,6 +233,8 @@ const rankStyles = `
 .rank-progress-group { display: flex; flex-direction: column; gap: 10px; }
 .rank-progress-row { display: flex; align-items: center; gap: 12px; }
 .rank-progress-label { font-size: 11px; color: var(--text3); font-weight: 600; min-width: 130px; flex-shrink: 0; }
+/* A longer label wraps onto two lines so the bar keeps room on a phone */
+.rank-progress-label.rank-progress-long { flex-shrink: 1; max-width: 60%; line-height: 1.35; }
 .rank-progress-bar { flex: 1; height: 6px; background: var(--border); border-radius: 99px; overflow: hidden; }
 .rank-progress-fill { height: 100%; border-radius: 99px; transition: width 0.6s ease; }
 

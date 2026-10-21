@@ -1195,7 +1195,7 @@ export default function Profile() {
                   When a job poster approves your work, they can give it 1 to 5 stars and a short note. Your rating is the average of those stars. The number in brackets is how many ratings you have.
                 </p>
                 <p style={{fontSize:13,color:'var(--text)',lineHeight:1.6,marginBottom:12}}>
-                  Higher ranks need a good rating as well as finished jobs: Advanced needs 4.0, Expert 4.5 and Legend 4.8.
+                  Higher ranks need a good rating as well as finished jobs: Advanced needs 4.0, Expert 4.5 and Legend 4.8, from a number of different job posters (Advanced 5, Expert 20, Legend 50).
                 </p>
                 <div style={{fontSize:12,fontWeight:700,color:'var(--text2)',marginBottom:6}}>Your ratings and notes show on your public profile under Reviews.</div>
               </>

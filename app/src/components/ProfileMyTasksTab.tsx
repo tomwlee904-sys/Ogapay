@@ -31,28 +31,43 @@ function InfoBtn({ text }: { text: string }) {
   );
 }
 
+// PENDING is a taken slot with no work sent yet; SUBMITTED is work waiting
+// for review (it used to show the raw word "SUBMITTED")
 const STATUS_MAP: Record<string, string> = {
   APPLIED: 'In Progress',
-  PENDING: 'Under Review',
+  PENDING: 'In Progress',
+  SUBMITTED: 'Under Review',
   APPROVED: 'Approved',
   REJECTED: 'Rejected',
+  DISPUTED: 'In dispute',
   EXPIRED: 'Slot released',
 }
 
 const COLOR_MAP: Record<string, string> = {
   APPLIED: 'var(--accent)',
-  PENDING: '#F59E0B',
+  PENDING: 'var(--accent)',
+  SUBMITTED: '#F59E0B',
   APPROVED: 'var(--green)',
   REJECTED: '#DC2626',
+  DISPUTED: '#F59E0B',
   EXPIRED: 'var(--text3)',
 }
 
 const PROGRESS_MAP: Record<string, number> = {
   APPLIED: 40,
-  PENDING: 70,
+  PENDING: 40,
+  SUBMITTED: 70,
   APPROVED: 100,
   REJECTED: 0,
   EXPIRED: 0,
+}
+
+// A contest slot taken but never sent, once an entry can't be sent any more
+// (the end date passed, or the winners were paid)
+const unsentContest = (s: any) => {
+  const e = s.task?.expiresAt || s.task?.deadline
+  return !!s.isContest && !s.submittedAt && s.contestResult !== 'WON'
+    && (s.contestResult === 'NOT_PLACED' || (s.status === 'PENDING' && !!e && new Date(e).getTime() <= Date.now()))
 }
 
 const tabs = [
@@ -219,11 +234,17 @@ export default function TabMyTasksContent() {
       ) : (
         <div className="mt-list">
           {(filtered || []).map((s: any) => {
-            // Contest results: a win, or an entry that didn't place once winners are paid
-            const status = s.contestResult === 'WON' ? 'Won' : s.contestResult === 'NOT_PLACED' ? "Didn't place" : STATUS_MAP[s.status] || s.status
-            const color = s.contestResult === 'NOT_PLACED' ? 'var(--text3)' : COLOR_MAP[s.status] || 'var(--accent)'
-            // What was really paid (a contest's reward is its 1st prize)
+            // Contest results: a win, an entry that didn't place once winners are
+            // paid, a slot never sent, or an entry waiting for the winners
+            const unsent = unsentContest(s)
+            const out = unsent || s.contestResult === 'NOT_PLACED'
+            const status = s.contestResult === 'WON' ? 'Won' : unsent ? 'Not sent' : out ? "Didn't place"
+              : s.isContest && s.status === 'SUBMITTED' ? 'Entered' : STATUS_MAP[s.status] || s.status
+            const color = out ? 'var(--text3)' : COLOR_MAP[s.status] || 'var(--accent)'
+            // What was really paid. A contest's reward is its 1st prize, so until
+            // a place is won it's "Up to" that, not what this entry will get.
             const shownAmount = Number(s.paidAmount ?? s.task?.reward ?? 0)
+            const upTo = !!s.isContest && s.contestResult !== 'WON'
             const progress = PROGRESS_MAP[s.status] || 50
             return (
               <div className="mt-item" key={s.id} onClick={() => { const tid = s.task?.id || s.taskId; if (tid) navigate('/tasks/' + tid) }} style={{cursor:'pointer'}}>
@@ -241,7 +262,7 @@ export default function TabMyTasksContent() {
                   </div>
                 </div>
                 <div className="mt-right">
-                  {s.contestResult !== 'NOT_PLACED' && <div className="mt-reward">{fmtCurrency(s.task?.currency || 'NGN', shownAmount)}</div>}
+                  {!out && <div className="mt-reward">{upTo ? 'Up to ' : ''}{fmtCurrency(s.task?.currency || 'NGN', shownAmount)}</div>}
                   <span className="mt-status" style={{background: `${color}15`, color}}>{status}</span>
                 </div>
               </div>

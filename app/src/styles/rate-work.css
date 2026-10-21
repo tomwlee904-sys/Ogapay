@@ -4,8 +4,8 @@
 .rw-legend span { color: var(--text3); font-weight: 400; }
 .rw-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .rw-stars { display: inline-flex; gap: 2px; }
-/* 40px targets, easy to tap on a phone */
-.rw-star { width: 40px; height: 40px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 10px; background: none; cursor: pointer; }
+/* 44px targets, the site's smallest tap size: they sit next to "Approve and pay" */
+.rw-star { width: 44px; height: 44px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 10px; background: none; cursor: pointer; }
 .rw-star:hover { background: var(--card2); }
 .rw-star:focus-visible { outline: 2px solid var(--text); outline-offset: 1px; }
 .rw-star:disabled { cursor: default; }

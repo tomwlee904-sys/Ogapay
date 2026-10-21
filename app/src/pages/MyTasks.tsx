@@ -32,24 +32,37 @@ const STATUS: Record<string, { label: string; cls: string }> = {
   DISPUTED: { label: 'In dispute', cls: 'wait' }, EXPIRED: { label: 'Slot released', cls: '' },
 }
 const notPlaced = (s: Sub) => s.contestResult === 'NOT_PLACED'
+const endsAt = (s: Sub) => s.task?.expiresAt || s.task?.deadline || null
+const ended = (s: Sub) => { const e = endsAt(s); return !!e && new Date(e).getTime() <= Date.now() }
+// A contest slot taken but never sent, once an entry can't be sent any more:
+// the end date has passed (the winners may not be picked yet: the job stays
+// open for up to 3 days while they are), or the winners were paid. It used to
+// stay under "To do" with a send-before time that had already gone.
+const unsent = (s: Sub) => !!s.isContest && !s.submittedAt && s.contestResult !== 'WON'
+  && (notPlaced(s) || (s.status === 'PENDING' && ended(s)))
+// Out of the running: didn't place, or no entry was sent in time
+const out = (s: Sub) => notPlaced(s) || unsent(s)
+// Every place can be awarded before the end date, which closes the contest
+// early, so "entries have closed" isn't always why
+const awardedEarly = (s: Sub) => { const e = endsAt(s); return !!s.winnersPaidAt && !!e && new Date(s.winnersPaidAt).getTime() < new Date(e).getTime() }
+const unsentText = (s: Sub) => awardedEarly(s) ? 'All the places were awarded before you sent an entry.' : "Entries have closed. You didn't send an entry."
 const TABS = [
   { id: 'all', label: 'All', test: () => true },
-  { id: 'todo', label: 'To do', test: (s: Sub) => s.status === 'PENDING' && !notPlaced(s) },
-  { id: 'review', label: 'In review', test: (s: Sub) => (s.status === 'SUBMITTED' || s.status === 'DISPUTED') && !notPlaced(s) },
+  { id: 'todo', label: 'To do', test: (s: Sub) => s.status === 'PENDING' && !out(s) },
+  { id: 'review', label: 'In review', test: (s: Sub) => (s.status === 'SUBMITTED' || s.status === 'DISPUTED') && !out(s) },
   { id: 'won', label: 'Won', test: (s: Sub) => s.contestResult === 'WON' },
   { id: 'paid', label: 'Paid', test: (s: Sub) => s.status === 'APPROVED' },
-  { id: 'lost', label: "Didn't place", test: notPlaced },
-  { id: 'closed', label: 'Not approved', test: (s: Sub) => s.status === 'REJECTED' || s.status === 'EXPIRED' },
+  { id: 'lost', label: "Didn't place", test: out },
+  { id: 'closed', label: 'Not approved', test: (s: Sub) => (s.status === 'REJECTED' || s.status === 'EXPIRED') && !out(s) },
 ]
 
 const day = (d?: string | null) => d ? new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : ''
 const when = (d?: string | null) => d ? new Date(d).toLocaleString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : ''
-const endsAt = (s: Sub) => s.task?.expiresAt || s.task?.deadline || null
-const ended = (s: Sub) => { const e = endsAt(s); return !!e && new Date(e).getTime() <= Date.now() }
 
 // The status pill: contests have their own results
 function badge(s: Sub): { label: string; cls: string; icon?: string } {
   if (s.contestResult === 'WON') return { label: 'Won', cls: 'won', icon: 'ti-trophy' }
+  if (unsent(s)) return { label: 'Not sent', cls: '' }
   if (s.contestResult === 'NOT_PLACED') return { label: "Didn't place", cls: '' }
   if (s.isContest && s.status === 'SUBMITTED') return { label: 'Entered', cls: 'wait' }
   return STATUS[s.status] || { label: s.status.toLowerCase(), cls: '' }
@@ -83,11 +96,8 @@ export default function MyTasks() {
 
   function detail(s: Sub) {
     if (s.contestResult === 'WON') return `Won ${ordinal(s.place || 1)} place: ${show(paid(s), cur(s), { exact: true })}`
-    if (s.contestResult === 'NOT_PLACED') {
-      return s.status === 'PENDING'
-        ? 'The contest ended before you sent an entry'
-        : `The winners were paid${s.winnersPaidAt ? ` on ${day(s.winnersPaidAt)}` : ''} and this entry didn't place`
-    }
+    if (unsent(s)) return unsentText(s)
+    if (s.contestResult === 'NOT_PLACED') return `The winners were paid${s.winnersPaidAt ? ` on ${day(s.winnersPaidAt)}` : ''} and this entry didn't place`
     if (s.isContest && s.status === 'PENDING') return endsAt(s) ? `Send your entry before ${when(endsAt(s))}` : 'Send your entry before the contest ends'
     if (s.isContest && s.status === 'SUBMITTED') {
       return ended(s)
@@ -108,7 +118,7 @@ export default function MyTasks() {
   // The amount on the right: what you were paid, the prize on offer, or nothing
   function amount(s: Sub) {
     if (s.status === 'APPROVED') return <b className="paid">{show(paid(s), cur(s), { exact: true })}</b>
-    if (notPlaced(s)) return null
+    if (out(s)) return null
     if (s.isContest) return <b>Up to {show(Number(s.task?.reward || 0), cur(s))}</b>
     return <b>{show(Number(s.task?.reward || 0), cur(s))}</b>
   }

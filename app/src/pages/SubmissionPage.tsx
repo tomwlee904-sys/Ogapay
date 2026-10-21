@@ -25,7 +25,7 @@ type Task = {
 type Mine = {
   id: string; status: string; taskId: string; proof?: string | null; workerNotes?: string | null; posterNotes?: string | null; attachments?: string[]; autoApproveAt?: string | null; submittedAt?: string | null
   // Contest entries: the place won and the result (from /tasks/my/submissions)
-  place?: number | null; paidAmount?: number | null; contestResult?: 'WON' | 'NOT_PLACED' | 'WAITING' | null
+  place?: number | null; paidAmount?: number | null; contestResult?: 'WON' | 'NOT_PLACED' | 'WAITING' | null; winnersPaidAt?: string | null
 }
 
 const MAX_FILES = 5
@@ -145,6 +145,16 @@ export default function SubmissionPage() {
   const status = mine?.status
   // What you were really paid (a contest's reward is its 1st prize)
   const paidAmount = Number(mine?.paidAmount ?? reward)
+  // Contests: once the end date passes no entry can be sent, but the job stays
+  // open for up to 3 days while the winners are picked, so the form used to
+  // show and the server then refused the entry. Every place can also be
+  // awarded before the end date, which closes the contest early.
+  const endsAt: string | null = task.expiresAt || task.deadline || null
+  const winnersPaidAt: string | null = mine?.winnersPaidAt ?? task.winnersPaidAt ?? null
+  const awardedEarly = !!winnersPaidAt && !!endsAt && new Date(winnersPaidAt).getTime() < new Date(endsAt).getTime()
+  const entriesClosed = !!task.isContest && (!!winnersPaidAt || (!!endsAt && new Date(endsAt).getTime() <= Date.now()))
+  // No entry sent (a slot taken, or none) and entries have closed
+  const notSent = entriesClosed && !mine?.submittedAt && mine?.contestResult !== 'WON' && (!status || status === 'PENDING' || status === 'EXPIRED')
   return (
     <Layout>
       <div className="ui-page sb-wrap">
@@ -154,11 +164,23 @@ export default function SubmissionPage() {
 
         <div className="sb-grid">
           <div>
-            {mine?.contestResult === 'NOT_PLACED' ? (
+            {notSent ? (
+              <section className="ui-card ui-card-pad sb-state">
+                <span className="sb-ic"><i className="ti ti-lock" /></span>
+                <h2>{awardedEarly ? 'This contest is closed' : 'Entries have closed'}</h2>
+                <p>
+                  {awardedEarly
+                    ? (mine ? 'All the places were awarded before you sent an entry.' : 'All the places were awarded, so it isn\'t taking entries any more.')
+                    : (mine ? 'You didn\'t send an entry.' : 'This contest isn\'t taking entries any more.')}
+                  {!winnersPaidAt && task.winnersDueAt ? ` The winners are picked by ${when(task.winnersDueAt)}.` : ''}
+                </p>
+                <div className="ui-actions"><Link className="ui-btn ui-btn-ghost" to={`/tasks/${task.id}`}>{winnersPaidAt ? 'See the winners' : 'Back to the job'}</Link><Link className="ui-btn ui-btn-ghost" to="/tasks">Find more jobs</Link></div>
+              </section>
+            ) : mine?.contestResult === 'NOT_PLACED' ? (
               <section className="ui-card ui-card-pad sb-state">
                 <span className="sb-ic"><i className="ti ti-flag" /></span>
-                <h2>{status === 'PENDING' ? 'This contest has ended' : "Your entry didn't place"}</h2>
-                <p>{status === 'PENDING' ? 'It ended before you sent an entry.' : "The winners of this contest have been paid, and this entry wasn't one of them. Thanks for taking part."}</p>
+                <h2>Your entry didn't place</h2>
+                <p>The winners of this contest have been paid, and this entry wasn't one of them. Thanks for taking part.</p>
                 <div className="ui-actions"><Link className="ui-btn ui-btn-ghost" to={`/tasks/${task.id}`}>See the winners</Link><Link className="ui-btn ui-btn-ghost" to="/tasks">Find more jobs</Link></div>
               </section>
             ) : status === 'SUBMITTED' && task.isContest ? (

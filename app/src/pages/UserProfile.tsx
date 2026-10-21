@@ -24,8 +24,13 @@ type Review = {
   date: string
   subject: { id?: string; title: string }
   reviewer: { username: string; name: string; avatarUrl: string | null } | null
+  // Rated by our team from the moderation queue, not by the job's poster
+  byTeam?: boolean
 }
-type ReviewData = { average: number; total: number; distribution: Record<string, number>; reviews: Review[] }
+type ReviewData = {
+  average: number; total: number; distribution: Record<string, number>; reviews: Review[]
+  jobs?: { average: number; total: number }; products?: { average: number; total: number }
+}
 
 const LEVEL_NAMES: Record<string, string> = {
   BEGINNER: "Beginner", INTERMEDIATE: "Intermediate", ADVANCED: "Advanced", EXPERT: "Expert", LEGEND: "Legend",
@@ -112,8 +117,15 @@ export default function UserProfile() {
   const isMe = !!me?.username && me.username.toLowerCase() === handle.toLowerCase()
   const wp = profile?.workerProfile || {}
   const counts = profile?._count || {}
-  const avg = reviews?.total ? reviews.average : Number(wp.avgRating || 0)
-  const reviewTotal = reviews?.total ?? Number(wp.totalRatings || 0)
+  // The headline is the job rating, the same one that counts for rank (and
+  // that the person sees on their own profile). It used to mix in store
+  // reviews, so visitors and the person saw different numbers.
+  const avg = Number(wp.avgRating || 0)
+  const jobRatings = Number(wp.totalRatings || 0)
+  const reviewTotal = reviews?.total ?? jobRatings
+  // Store reviews have their own number
+  const storeAvg = Number(reviews?.products?.average || 0)
+  const storeTotal = Number(reviews?.products?.total || 0)
 
   useEffect(() => {
     document.title = state === "ok" ? `${name} (@${handle}) | OgaPay` : "Profile | OgaPay"
@@ -280,7 +292,7 @@ export default function UserProfile() {
             <div className="up-eyebrow">Average rating</div>
             <div className="n">{avg.toFixed(1)}<small>/ 5</small></div>
             <Stars value={avg} />
-            <div className="c">{reviewTotal} {reviewTotal === 1 ? "review" : "reviews"}</div>
+            <div className="c">{jobRatings} {jobRatings === 1 ? "job rating" : "job ratings"}</div>
           </div>
 
           <div className="up-stats">
@@ -395,9 +407,14 @@ export default function UserProfile() {
               <>
                 <div className="up-card up-rev-sum">
                   <div>
-                    <div className="n">{reviews.average.toFixed(1)}</div>
-                    <Stars value={reviews.average} />
-                    <div style={{ fontSize: 12, color: "var(--text3)", marginTop: 4 }}>{reviews.total} {reviews.total === 1 ? "review" : "reviews"}</div>
+                    <div className="n">{(jobRatings > 0 || !storeTotal ? avg : storeAvg).toFixed(1)}</div>
+                    <Stars value={jobRatings > 0 || !storeTotal ? avg : storeAvg} />
+                    {jobRatings > 0 && <div style={{ fontSize: 12, color: "var(--text3)", marginTop: 4 }}>{jobRatings} {jobRatings === 1 ? "job rating" : "job ratings"}</div>}
+                    {storeTotal > 0 && (
+                      <div style={{ fontSize: 12, color: "var(--text3)", marginTop: 4 }}>
+                        {jobRatings > 0 ? `Store reviews: ${storeAvg.toFixed(1)} (${storeTotal})` : `${storeTotal} ${storeTotal === 1 ? "store review" : "store reviews"}`}
+                      </div>
+                    )}
                   </div>
                   <div className="up-bars">
                     {[5, 4, 3, 2, 1].map((n) => {
@@ -415,9 +432,10 @@ export default function UserProfile() {
                 {reviews.reviews.map((r) => (
                   <article className="up-card up-rev" key={r.id}>
                     <div className="who">
-                      {r.reviewer?.avatarUrl ? <img src={sized(r.reviewer.avatarUrl, 32, true)} alt="" /> : <span className="ph">{(r.reviewer?.name || "?")[0].toUpperCase()}</span>}
+                      {r.byTeam ? <span className="ph" aria-hidden="true"><i className="ti ti-shield-check" /></span>
+                        : r.reviewer?.avatarUrl ? <img src={sized(r.reviewer.avatarUrl, 32, true)} alt="" /> : <span className="ph">{(r.reviewer?.name || "?")[0].toUpperCase()}</span>}
                       <div style={{ minWidth: 0 }}>
-                        {r.reviewer ? <Link to={`/user/${r.reviewer.username}`}>{r.reviewer.name}</Link> : <b>OgaPay user</b>}
+                        {r.byTeam ? <b>OgaPay team</b> : r.reviewer ? <Link to={`/user/${r.reviewer.username}`}>{r.reviewer.name}</Link> : <b>OgaPay user</b>}
                         <small>{fmtDate(r.date)}</small>
                       </div>
                       <span style={{ marginLeft: "auto" }}><Stars value={r.rating} /></span>

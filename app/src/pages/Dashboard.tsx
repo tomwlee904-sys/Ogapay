@@ -23,7 +23,8 @@ import '../styles/dashboard.css'
 
 type Me = { ogaScore?: number; humanVerifiedAt?: string | null; workerProfile?: { tasksCompleted?: number; level?: string } | null; kyc?: { status?: string; kycTier?: number } | null }
 type Sub = {
-  id: string; status: string; taskId: string; autoApproveAt?: string | null; task?: { id: string; title: string; reward: number | string; currency?: string }
+  id: string; status: string; taskId: string; autoApproveAt?: string | null; submittedAt?: string | null
+  task?: { id: string; title: string; reward: number | string; currency?: string; expiresAt?: string | null; deadline?: string | null }
   isContest?: boolean; contestResult?: 'WON' | 'NOT_PLACED' | 'WAITING' | null
 }
 type Job = {
@@ -82,9 +83,16 @@ export default function Dashboard() {
   const earnedBy = Object.entries(earned || {}).filter(([, v]) => Number(v) > 0).sort(([a], [b]) => (a === 'NGN' ? -1 : b === 'NGN' ? 1 : a.localeCompare(b)))
   const earnedText = earned === null ? 'Earnings'
     : earnedBy.length > 1 ? `${earnedBy.map(([c, v]) => show(Number(v), c, { exact: true })).join(' + ')} earned`
-      : `${show(Number(earnedBy[0]?.[1] || 0), earnedBy[0]?.[0] || 'NGN')} earned`
+      // Exact like My tasks: the money actually paid, never a converted figure
+      : `${show(Number(earnedBy[0]?.[1] || 0), earnedBy[0]?.[0] || 'NGN', { exact: true })} earned`
+  // A contest slot with no entry sent can't be sent once the end date passes
+  // (the job stays open while the winners are picked), so it isn't "To do"
+  const closedUnsent = (s: Sub) => {
+    const e = s.task?.expiresAt || s.task?.deadline
+    return !!s.isContest && !s.submittedAt && !!e && new Date(e).getTime() <= Date.now()
+  }
   // Contest entries that didn't place are finished, not "in review" forever
-  const working = (subs || []).filter((s) => s.status === 'PENDING' && s.contestResult !== 'NOT_PLACED')
+  const working = (subs || []).filter((s) => s.status === 'PENDING' && s.contestResult !== 'NOT_PLACED' && !closedUnsent(s))
   const waiting = (subs || []).filter((s) => s.status === 'SUBMITTED' && s.contestResult !== 'NOT_PLACED')
   const active = [...working, ...waiting]
   // Not your own jobs, and not ones you've already taken part in
