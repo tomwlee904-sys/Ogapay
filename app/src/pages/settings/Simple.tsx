@@ -97,7 +97,7 @@ function NewJobsOnPhone({ me, setMe, toast }: SectionProps & { toast: (m: string
           <small className="st2-muted">Smaller jobs stay off your phone. Jobs paid in USDC or SOL are compared at today's rate.</small>
         </form>
       )}
-      <small className="st2-muted">At most 10 a day. After that, one alert says how many more there are.</small>
+      <small className="st2-muted">At most 10 a day on your phone. After that, one alert says how many more there are. Jobs kept off the phone still show in your notifications.</small>
     </div>
   )
 }
