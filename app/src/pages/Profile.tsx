@@ -18,6 +18,7 @@ import ProfileQuickLinks from '../components/profile/ProfileQuickLinks'
 import ProfileCommunitiesCard from '../components/profile/ProfileCommunitiesCard'
 import ProfileConnectXCard from '../components/profile/ProfileConnectXCard'
 import ProfilePortfolioCard from '../components/profile/ProfilePortfolioCard'
+import ProfileWithdrawalsCard from '../components/profile/ProfileWithdrawalsCard'
 import '../styles/profile-own.css'
 
 /* ─── Icons ─── */
@@ -50,18 +51,6 @@ const QUICK = [
 /* ─── Helpers ─── */
 const f = new Intl.NumberFormat("en-US");
 
-function formatTimeAgo(dateStr: string) {
-  if (!dateStr) return '';
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const mins = Math.floor(diff / 60000);
-  if (mins < 1) return 'Just now';
-  if (mins < 60) return mins + 'm ago';
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return hrs + 'h ago';
-  const days = Math.floor(hrs / 24);
-  if (days < 30) return days + 'd ago';
-  return new Date(dateStr).toLocaleDateString();
-}
 
 function Toggle({ on, set }: { on: any; set: any }) {
   return (
@@ -170,7 +159,8 @@ export default function Profile() {
 
   // ── API Data state ──
   const [profileData, setProfileData] = useState<any>(null);
-  const [transactions, setTransactions] = useState<any[]>([]);
+  // Bumped when the add money / withdraw sheet closes, so Withdrawal History loads again
+  const [wdKey, setWdKey] = useState(0);
   const [referralStats, setReferralStats] = useState<any>(null);
   const [kycStatus, setKycStatus] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -183,9 +173,8 @@ export default function Profile() {
   // ── Fetch all data on mount & when authUser changes (e.g. wallet connected on Dashboard) ──
   const loadProfile = async () => {
     try {
-      const [userData, txData, refData, kycData] = await Promise.all([
+      const [userData, refData, kycData] = await Promise.all([
         apiRequest<any>('/users/me').catch(() => null),
-        apiRequest<any>('/users/transactions/history').catch(() => null),
         apiRequest<any>('/users/referrals/stats').catch(() => null),
         apiRequest<any>('/kyc/status').catch(() => null),
       ]);
@@ -211,7 +200,6 @@ export default function Profile() {
           setEditingBank(false)
         }
       }
-      if (txData) setTransactions(Array.isArray(txData) ? txData : txData?.data || []);
       if (refData) setReferralStats(refData);
       if (kycData) setKycStatus(kycData);
     } catch (err) {
@@ -292,13 +280,6 @@ export default function Profile() {
   const totalNgn = walletBal?.NGN?.available ?? ngnBal;
 
   // formatNgn replaced by useCurrency fmt
-
-  // Earnings from transactions
-  const earningsTotal = transactions
-    .filter((t: any) => Number(t.amount || 0) > 0)
-    .reduce((sum: number, t: any) => sum + Number(t.amount || 0), 0);
-
-  const withdrawals = transactions.filter((t: any) => (t.type || '').toLowerCase().includes('withdraw'));
 
   // Referral link
   const refCode = user?.referralCode || referralStats?.referralCode || '';
@@ -897,41 +878,8 @@ export default function Profile() {
 
           <div style={{marginBottom:20}}><ProfileQuickLinks username={user?.username} /></div>
 
-          {/* Withdrawal History */}
-          <div  className="profile-card prof-full" style={{marginBottom:20}}>
-            <div className="card-head"><span><Icon n="history" s={15} /> Withdrawal History</span></div>
-            <div style={{overflowX:'auto'}}>
-              {loading ? (
-                <div className="loading"><span className="spinner" /> Loading...</div>
-              ) : withdrawals.length === 0 ? (
-                <div style={{textAlign:'center',color:'var(--text3)',padding:'28px 16px',fontSize:13}}>
-                  <Icon n="history-off" s={28} c="var(--text3)" />
-                  <div style={{marginTop:8}}>No withdrawals yet</div>
-                </div>
-              ) : (
-                <table style={{width:'100%',borderCollapse:'collapse'}}>
-                  <thead>
-                    <tr>
-                      <th style={{fontSize:11,fontWeight:800,textTransform:'uppercase',letterSpacing:'.06em',color:'var(--text2)',padding:'12px 16px',borderBottom:'1px solid var(--border)',textAlign:'left'}}>Amount</th>
-                      <th style={{fontSize:11,fontWeight:800,textTransform:'uppercase',letterSpacing:'.06em',color:'var(--text2)',padding:'12px 16px',borderBottom:'1px solid var(--border)',textAlign:'left'}}>Transaction</th>
-                      <th style={{fontSize:11,fontWeight:800,textTransform:'uppercase',letterSpacing:'.06em',color:'var(--text2)',padding:'12px 16px',borderBottom:'1px solid var(--border)',textAlign:'left'}}>Date</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {withdrawals.map((w: any,i: number) => (
-                      <tr key={w.id || i}>
-                        <td style={{padding:'13px 16px',fontSize:13,color:'var(--text2)',borderBottom:'1px solid var(--border)',fontWeight:700}}>
-                          {w.currency || 'NGN'} {Math.abs(Number(w.amount || 0)).toLocaleString()}
-                        </td>
-                        <td style={{padding:'13px 16px',fontSize:12,color:'var(--text2)',borderBottom:'1px solid var(--border)',fontFamily:'monospace'}}>{w.reference || w.id || '—'}</td>
-                        <td style={{padding:'13px 16px',fontSize:13,color:'var(--text2)',borderBottom:'1px solid var(--border)'}}>{formatTimeAgo(w.createdAt || w.date)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-            </div>
-          </div>
+          {/* Withdrawal History: every withdrawal, page by page, with its status */}
+          <div style={{marginBottom:20}}><ProfileWithdrawalsCard key={wdKey} /></div>
 
         </>
       )}
@@ -1249,7 +1197,7 @@ export default function Profile() {
 
 
       {fundModal && (
-        <FundWalletModal initialStep={fundModal} onClose={() => { setFundModal(null); refreshWallet(); }} onDone={() => { refreshWallet(); refreshUser(); }} />
+        <FundWalletModal initialStep={fundModal} onClose={() => { setFundModal(null); refreshWallet(); setWdKey((k) => k + 1); }} onDone={() => { refreshWallet(); refreshUser(); }} />
       )}
 
       </div>

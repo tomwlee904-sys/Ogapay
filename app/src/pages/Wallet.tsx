@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import Layout from '../components/Layout'
 import TransferModal from '../components/TransferModal'
@@ -10,7 +10,7 @@ import MoneyInCard from '../components/wallet/MoneyInCard'
 import { apiRequest } from '../lib/api'
 import { useAuth } from '../context/AuthContext'
 import { useWalletBalance } from '../context/WalletBalanceContext'
-import { isCredit, isEscrowHeld, isStoreHeld, kycOf, isPending, isVoid, usefulNote, maskAcct, money, naira, statusLabel, txDetail, txTitle, when, type Balances, type Bank, type Summary, type Tx } from '../lib/wallet'
+import { isCredit, isEscrowHeld, isStoreHeld, kycOf, isPending, isVoid, usefulNote, maskAcct, money, naira, PAYOUT_LABEL, payoutNote, payoutStatusOf, statusLabel, txDetail, txTitle, when, type Balances, type Bank, type PayoutStatus, type Summary, type Tx } from '../lib/wallet'
 import '../styles/wallet.css'
 import InfoTip from '../components/InfoTip'
 
@@ -20,12 +20,20 @@ import InfoTip from '../components/InfoTip'
 // lifetime totals from the server. Adding money by card has its own page.
 
 const PAGE = 30
+const isWithdrawal = (t: Tx) => String(t.type || '').toUpperCase() === 'WITHDRAWAL'
+// Money out is job funding, fees, transfers and purchases; withdrawals to your
+// bank or crypto wallet have their own filter
 const FILTERS = [
   { key: 'all', label: 'All', test: (_: Tx) => true },
   { key: 'in', label: 'Money in', test: (t: Tx) => !isVoid(t) && isCredit(t) },
-  { key: 'out', label: 'Money out', test: (t: Tx) => !isVoid(t) && !isCredit(t) },
+  { key: 'out', label: 'Money out', test: (t: Tx) => !isVoid(t) && !isCredit(t) && !isWithdrawal(t) },
+  { key: 'withdrawals', label: 'Withdrawals', test: (t: Tx) => isWithdrawal(t) },
   { key: 'pending', label: 'Pending', test: (t: Tx) => isPending(t) },
 ] as const
+// The Withdrawals filter asks the server for withdrawals only, so every one of
+// them shows, not just those among the latest pages of everything
+const historyUrl = (page: number, onlyWithdrawals: boolean) => `/users/transactions/history?page=${page}&limit=${PAGE}${onlyWithdrawals ? '&type=WITHDRAWAL' : ''}`
+const PAYOUT_PILL: Record<PayoutStatus, string> = { processing: 'wait', paid: 'ok', failed: 'bad', refunded: 'hold' }
 
 export default function Wallet() {
   const { user, refreshUser } = useAuth()
@@ -61,29 +69,43 @@ export default function Wallet() {
   }, [params, setParams, navigate])
 
   const load = useCallback(async () => {
-    const [b, s, h, bk] = await Promise.all([
+    const [b, s, bk] = await Promise.all([
       apiRequest<Balances>('/wallet/balance').catch(() => null),
       apiRequest<Summary>('/wallet/summary').catch(() => null),
-      apiRequest<Tx[]>(`/users/transactions/history?page=1&limit=${PAGE}`).catch(() => null),
       apiRequest<Bank[]>('/wallet/banks').catch(() => null),
     ])
     setBalances(b || {})
     setSummary(s || {})
-    setTxs(Array.isArray(h) ? h : [])
-    setMore(Array.isArray(h) && h.length === PAGE)
-    setPage(1)
     setBanks(Array.isArray(bk) ? bk : [])
   }, [])
   useEffect(() => { load() }, [load])
 
-  const refreshAll = () => { load(); refreshUser(); refreshHeader() }
+  // The history loads again when the Withdrawals filter is switched on or off.
+  // Only the latest request's answer is used, so a quick switch can't show the
+  // wrong list.
+  const onlyWd = filter === 'withdrawals'
+  const histSeq = useRef(0)
+  const loadHistory = useCallback(async () => {
+    const seq = ++histSeq.current
+    const h = await apiRequest<Tx[]>(historyUrl(1, onlyWd)).catch(() => null)
+    if (seq !== histSeq.current) return
+    setTxs(Array.isArray(h) ? h : [])
+    setMore(Array.isArray(h) && h.length === PAGE)
+    setPage(1)
+  }, [onlyWd])
+  useEffect(() => { setTxs(null); loadHistory() }, [loadHistory])
+
+  const reload = () => { load(); loadHistory() }
+  const refreshAll = () => { reload(); refreshUser(); refreshHeader() }
   // Verification may have changed since sign-in (approved by our team, or on another device)
   useEffect(() => { refreshUser() }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   async function loadMore() {
     setLoadingMore(true)
+    const seq = histSeq.current
     try {
-      const next = await apiRequest<Tx[]>(`/users/transactions/history?page=${page + 1}&limit=${PAGE}`)
+      const next = await apiRequest<Tx[]>(historyUrl(page + 1, onlyWd))
+      if (seq !== histSeq.current) { setLoadingMore(false); return }
       const rows = Array.isArray(next) ? next : []
       setTxs((l) => [...(l || []), ...rows.filter((r) => !(l || []).some((x) => x.id === r.id))])
       setPage((p) => p + 1)
@@ -221,12 +243,14 @@ export default function Wallet() {
                 <div style={{ display: 'grid', gap: 10, marginTop: 8 }}>{[0, 1, 2, 3].map((i) => <div key={i} className="ui-sk" style={{ height: 52, borderRadius: 12 }} />)}</div>
               ) : shown.length === 0 ? (
                 <div className="wl-empty" style={{ marginTop: 8 }}>
-                  {txs.length === 0 ? <><b>No transactions yet</b>Money you add, earn, send or withdraw shows up here.</> : <>Nothing here{more ? ' yet. Load more to look further back.' : '.'}</>}
+                  {txs.length === 0 && onlyWd ? <><b>No withdrawals yet</b>Money you send to your bank or crypto wallet shows up here.</> : txs.length === 0 ? <><b>No transactions yet</b>Money you add, earn, send or withdraw shows up here.</> : <>Nothing here{more ? ' yet. Load more to look further back.' : '.'}</>}
                 </div>
               ) : (
                 <ul className="wl-txs">
                   {shown.map((t) => {
                     const cr = isCredit(t), v = isVoid(t), p = isPending(t), held = isEscrowHeld(t)
+                    // Withdrawals always say where they stand (processing, paid, failed, refunded)
+                    const wd = isWithdrawal(t) ? payoutStatusOf(t) : null
                     const detail = txDetail(t)
                     const amt = Math.abs(Number(t.amount || 0))
                     return (
@@ -239,12 +263,13 @@ export default function Wallet() {
                           </span>
                           <span className="wl-tx-amt">
                             <b className={v ? 'void' : cr ? 'in' : ''}>{v ? '' : cr ? '+' : '−'}{money(amt, t.currency)}</b>
-                            {(p || v || held) && <span className={`wl-pill ${v ? 'bad' : held ? 'hold' : 'wait'}`}>{held ? 'In escrow' : statusLabel(t.status)}</span>}
+                            {wd ? <span className={`wl-pill ${PAYOUT_PILL[wd]}`}>{PAYOUT_LABEL[wd]}</span>
+                              : (p || v || held) && <span className={`wl-pill ${v ? 'bad' : held ? 'hold' : 'wait'}`}>{held ? 'In escrow' : statusLabel(t.status)}</span>}
                           </span>
                         </button>
                         {open === t.id && (
                           <div className="wl-tx-more">
-                            <div><span>Status</span><b>{held ? (isStoreHeld(t) ? 'Held until you confirm you received the order' : 'Held in escrow for your job') : statusLabel(t.status)}</b></div>
+                            <div><span>Status</span><b>{wd ? [PAYOUT_LABEL[wd], payoutNote(t)].filter(Boolean).join('. ') : held ? (isStoreHeld(t) ? 'Held until you confirm you received the order' : 'Held in escrow for your job') : statusLabel(t.status)}</b></div>
                             <div><span>Date</span><b>{new Date(t.createdAt).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' })}</b></div>
                             {Number(t.fee || 0) > 0 && <div><span>Fee</span><b>{money(Number(t.fee), t.currency)}</b></div>}
                             {usefulNote(t) && <div><span>Note</span><b>{usefulNote(t)}</b></div>}
@@ -263,7 +288,7 @@ export default function Wallet() {
         </div>
       </div>
 
-      {modal === 'withdraw' && <WithdrawModal balances={balances} onClose={() => { setModal(null); load() }} onDone={refreshAll} />}
+      {modal === 'withdraw' && <WithdrawModal balances={balances} onClose={() => { setModal(null); reload() }} onDone={refreshAll} />}
       {modal === 'send' && <TransferModal onClose={() => setModal(null)} onSuccess={refreshAll} />}
       {modal === 'bank' && (
         <Sheet title="Add bank account" onClose={() => setModal(null)}>

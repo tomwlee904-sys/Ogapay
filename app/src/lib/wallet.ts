@@ -19,6 +19,8 @@ export type Tx = {
   metadata?: any
   createdAt: string
   completedAt?: string | null
+  // Withdrawals only (users.service getTransactionHistory)
+  payoutStatus?: PayoutStatus
 }
 
 export const MIN_DEPOSIT_NGN = 100
@@ -125,6 +127,24 @@ export function txDetail(t: Tx) {
     return [m.bankName, maskAcct(m.accountNumber)].filter(Boolean).join(' ')
   }
   if (m.note) return `“${m.note}”`
+  return ''
+}
+
+// Where a withdrawal stands. The server sends payoutStatus; older answers fall
+// back to the raw status. Every failed withdrawal gives the money back.
+export type PayoutStatus = 'processing' | 'paid' | 'failed' | 'refunded'
+export function payoutStatusOf(t: Tx): PayoutStatus {
+  if (t.payoutStatus) return t.payoutStatus
+  const v = up(t.status)
+  return v === 'COMPLETED' ? 'paid' : v === 'FAILED' ? 'failed' : v === 'REVERSED' ? 'refunded' : 'processing'
+}
+export const PAYOUT_LABEL: Record<PayoutStatus, string> = { processing: 'Processing', paid: 'Paid', failed: 'Failed', refunded: 'Refunded' }
+// One line under a withdrawal that didn't go through
+export function payoutNote(t: Tx) {
+  const s = payoutStatusOf(t)
+  const why = String(t.metadata?.rejectReason || '').trim()
+  if (s === 'failed') return `${why ? `Not paid: ${why}. ` : ''}The money is back in your wallet.`
+  if (s === 'refunded') return 'The money was sent back to your wallet.'
   return ''
 }
 
