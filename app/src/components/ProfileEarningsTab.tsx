@@ -135,6 +135,7 @@ export default function TabEarningsContent() {
         @media(max-width:800px){.en-grid{grid-template-columns:repeat(2,1fr)}}
         @media(max-width:500px){.en-grid{grid-template-columns:1fr}}
         @media(min-width:801px){.en-grid5{grid-template-columns:repeat(5,1fr)}}
+        @media(min-width:501px) and (max-width:800px){.en-grid5>:last-child{grid-column:1/-1}}
         .en-stat{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;transition:all .25s}
         .en-stat:hover{transform:none;border-color:var(--accent)}
         .en-stat .esi{width:32px;height:32px;border-radius:8px;display:grid;place-items:center;margin-bottom:8px}

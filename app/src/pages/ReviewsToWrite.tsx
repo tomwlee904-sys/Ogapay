@@ -20,11 +20,15 @@ type Item = {
   reviewedAt: string
   rateBy: string
   posterNotes: string | null
+  // What the worker was paid (a contest place's own prize)
+  payout?: number | string | null
   task: { id: string; title: string; reward: string | number; currency: string; isContest: boolean }
   worker: { id: string; username: string | null; firstName: string | null; lastName: string | null; avatarUrl: string | null }
 }
 
 const who = (w: Item['worker']) => w.username || [w.firstName, w.lastName].filter(Boolean).join(' ') || 'Someone'
+// "@ada" for a username; a plain name gets no "@" so it doesn't look like a handle
+const label = (w: Item['worker']) => (w.username ? '@' + w.username : who(w))
 const day = (s: string) => new Date(s).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
 const PLACE = ['', '1st', '2nd', '3rd']
 const placeName = (p: number) => PLACE[p] || `${p}th`
@@ -58,12 +62,12 @@ export default function ReviewsToWrite() {
     setBusy(s.id)
     try {
       await apiRequest(`/tasks/submissions/${s.id}/rate`, { method: 'POST', body: JSON.stringify({ rating, ...(note ? { feedback: note } : {}) }) })
-      toast(`Thanks. @${who(s.worker)} got your ${rating}/5 rating.`, 'success')
+      toast(`Thanks. ${label(s.worker)} got your ${rating}/5 rating.`, 'success')
       setList((l) => l?.filter((x) => x.id !== s.id) || l)
     } catch (e: any) {
       toast(e?.message || "That didn't work. Try again.", 'error')
-      // Already rated (another tab) or too old: it no longer belongs on the list
-      if (/already has a rating|can be rated for/i.test(e?.message || '')) setList((l) => l?.filter((x) => x.id !== s.id) || l)
+      // Already rated (another tab), too old or disputed: it no longer belongs on the list
+      if (/already has a rating|can be rated for|dispute/i.test(e?.message || '')) setList((l) => l?.filter((x) => x.id !== s.id) || l)
     }
     setBusy(null)
   }
@@ -103,10 +107,10 @@ export default function ReviewsToWrite() {
                       <Link to={`/manage-jobs?job=${encodeURIComponent(s.task.id)}`} className="rtw-job">{s.task.title}</Link>
                       <small>{howApproved(s)} {day(s.reviewedAt)} · Rate by {day(s.rateBy)}</small>
                     </div>
-                    <Money amount={Number(s.task.reward || 0)} currency={s.task.currency} size={14} />
+                    <Money amount={Number(s.payout ?? s.task.reward ?? 0)} currency={s.task.currency} size={14} />
                   </div>
                   <RateWork
-                    who={`@${name}`}
+                    who={label(s.worker)}
                     optional={false}
                     rating={stars[s.id] || 0}
                     note={notes[s.id] || ''}

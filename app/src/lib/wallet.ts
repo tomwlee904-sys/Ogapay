@@ -59,8 +59,18 @@ export const isEscrowHeld = (t: Tx) => (String(t.reference || '').startsWith('OG
 // A store purchase held until the buyer confirms delivery
 export const isStoreHeld = (t: Tx) => up(t.type) === 'STORE_PURCHASE' && !!t.metadata?.held && up(t.status) === 'PENDING'
 export const isPending = (t: Tx) => ['PENDING', 'PROCESSING'].includes(up(t.status)) && !isEscrowHeld(t)
-// Descriptions that only repeat the title
-export const usefulNote = (t: Tx) => (t.description && !/^(deposit via|withdrawal via|escrow for task|usdc deposit|sent to @)/i.test(t.description) ? t.description : '')
+// Descriptions that only repeat the title. Transfers and tips are written as
+// "Received from @ada", "Tip to @bola: Great work" and so on: the title already
+// names the person, so only the sender's note after ": " is worth showing.
+const P2P_LEAD = /^(received from|sent to|tip from|tip to)\s/i
+export const usefulNote = (t: Tx) => {
+  const d = String(t.description || '')
+  if (P2P_LEAD.test(d)) {
+    const i = d.indexOf(': ')
+    return i >= 0 ? d.slice(i + 2).trim() : ''
+  }
+  return d && !/^(deposit via|withdrawal via|escrow for task|usdc deposit)/i.test(d) ? d : ''
+}
 
 // Amounts are stored positive; the direction comes from the balance change, then
 // the P2P metadata, then the type
@@ -81,7 +91,9 @@ export function txTitle(t: Tx) {
   switch (up(t.type)) {
     case 'DEPOSIT': return 'Added money'
     case 'WITHDRAWAL': return t.metadata?.toAddress || t.metadata?.walletAddress ? 'Withdrawal to crypto wallet' : 'Withdrawal to bank'
-    case 'TRANSFER': return t.metadata?.p2p ? (cr ? `Received from${who || ' a user'}` : `Sent to${who || ' a user'}`) : 'Transfer'
+    case 'TRANSFER':
+      if (t.metadata?.tip) return cr ? `Tip from${who || ' a member'}` : `Tip to${who || ' a member'}`
+      return t.metadata?.p2p ?(cr ? `Received from${who || ' a user'}` : `Sent to${who || ' a user'}`) : 'Transfer'
     case 'TASK_PAYMENT': return cr ? 'Job payment' : 'Job funded'
     case 'TASK_REWARD': return 'Reward'
     case 'EARNING': return 'Earning'
