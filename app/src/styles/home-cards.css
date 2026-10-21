@@ -65,7 +65,9 @@
 .hc-av img { width: 100%; height: 100%; object-fit: cover; }
 .hc-by-txt { display: flex; flex-direction: column; min-width: 0; }
 .hc-by-txt > span { font-size: 12px; color: var(--hv-muted); }
-.hc-by-txt b { font-size: 13.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hc-by-txt b { display: flex; align-items: center; min-width: 0; font-size: 13.5px; font-weight: 600; white-space: nowrap; overflow: hidden; }
+.hc-by-txt b > * { flex-shrink: 0; }
+.hc-by-txt b > .hc-by-name { flex-shrink: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .hc-rating { font-size: 12px; color: var(--hv-ink); }
 .hc-star { color: #b7791f; font-size: 11px; }
 

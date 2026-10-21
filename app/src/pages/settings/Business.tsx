@@ -45,7 +45,7 @@ export default function Business() {
       <Card title="Verified business" sub="Posting jobs for a business? Get a Verified business badge on your jobs and your profile, so workers can see a real, registered business is behind them. It's optional. You can post jobs without it.">
         {data.verified ? (
           <div className="st2-panel">
-            <strong>Verified as {data.verifiedName}</strong> <VerifiedBusinessMark label name={data.verifiedName} />
+            <strong>Verified as {data.verifiedName}</strong> <VerifiedBusinessMark name={data.verifiedName} />
             <p className="st2-muted" style={{ margin: '6px 0 0' }}>
               {data.verifiedAt ? `Checked on ${fmt(data.verifiedAt)}. ` : ''}The badge shows next to your name on your jobs and profile. To change your business details, <Link to="/support">contact support</Link>.
             </p>

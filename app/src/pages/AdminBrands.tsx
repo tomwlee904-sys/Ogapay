@@ -14,6 +14,8 @@ interface Item {
   id: string; companyName: string; regNumber: string; website: string | null; socialUrl: string | null
   contactEmail: string; status: Status; note: string | null; reviewedAt: string | null; createdAt: string; updatedAt: string
   user: { id: string; username: string; firstName: string; lastName: string; email: string; createdAt: string; kycVerified: boolean; jobsPosted: number }
+  // Other accounts that sent the same CAC number
+  sameNumber?: { username: string | null; status: Status; companyName: string }[]
 }
 
 const TABS: [Status, string][] = [['PENDING', 'Waiting'], ['APPROVED', 'Verified'], ['REJECTED', 'Rejected']]
@@ -65,6 +67,17 @@ function Row({ it, onDone }: { it: Item; onDone: (id: string, msg: string) => vo
         <div><dt>Social page</dt><dd>{it.socialUrl ? <a href={it.socialUrl} target="_blank" rel="noopener noreferrer nofollow">{host(it.socialUrl)}</a> : 'None'}</dd></div>
         <div><dt>Contact email</dt><dd>{it.contactEmail}</dd></div>
       </dl>
+      {!!it.sameNumber?.length && (
+        <p className="aw-warn" role="note">
+          <i className="ti ti-alert-triangle" aria-hidden="true" />
+          <span>
+            This CAC number was also sent by {it.sameNumber.map((o, i) => (
+              <span key={i}>{i > 0 && ', '}{o.username ? <Link to={`/user/${o.username}`}>@{o.username}</Link> : 'a deleted account'} ({o.status === 'APPROVED' ? 'verified' : o.status === 'PENDING' ? 'waiting' : 'rejected'})</span>
+            ))}. CAC details are public, so anyone can copy them: make sure the website or page really belongs to this poster.
+            {it.sameNumber.some((o) => o.status === 'APPROVED') && ' A number can only be verified for one account.'}
+          </span>
+        </p>
+      )}
       <p className="aw-kind"><i className="ti ti-search" /> Look the CAC number up on the CAC public search and check it matches the business name. Then check the website or page belongs to the same business.</p>
       {it.status === 'REJECTED' && it.note && <p className="aw-note">{it.note}</p>}
 
@@ -103,14 +116,16 @@ export default function AdminBrands() {
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
   const [loading, setLoading] = useState(true)
+  const [q, setQ] = useState('')
 
-  const load = async (s = status) => {
+  const load = async (s = status, term = q) => {
     setLoading(true); setError('')
-    try { setItems((await apiRequest<{ items: Item[] }>(`/brands/admin/queue?status=${s}`)).items) }
+    const search = term.trim() ? `&q=${encodeURIComponent(term.trim())}` : ''
+    try { setItems((await apiRequest<{ items: Item[] }>(`/brands/admin/queue?status=${s}${search}`)).items) }
     catch (e: any) { setItems(null); setError(e?.message || 'Could not load business checks') }
     setLoading(false)
   }
-  useEffect(() => { load(status) }, [status])
+  useEffect(() => { load(status, q) }, [status])
 
   const onDone = (id: string, msg: string) => {
     setNotice(msg)
@@ -141,6 +156,10 @@ export default function AdminBrands() {
         .aw-amounts dd{margin:0;font-size:14px;font-weight:600;overflow-wrap:anywhere}
         .aw-amounts dd a{color:var(--text)}
         .aw-kind{margin:0;font-size:12.5px;color:var(--text2);display:flex;gap:6px;align-items:baseline;line-height:1.5}
+        .aw-warn{margin:0;font-size:12.5px;line-height:1.5;padding:8px 10px;border-radius:10px;display:flex;gap:6px;align-items:baseline;background:color-mix(in srgb,var(--red) 10%,transparent);color:var(--text)}
+        .aw-warn a{color:inherit;font-weight:600}
+        .aw-search{display:flex;gap:8px;margin-bottom:14px}
+        .aw-search .ui-input{flex:1;min-width:0}
         .aw-note{margin:0;font-size:12.5px;padding:8px 10px;border-radius:10px;background:var(--card2,var(--bg));color:var(--text2)}
         .aw-actions{display:flex;gap:8px;flex-wrap:wrap}
         .aw-confirm{border-top:1px solid var(--border);padding-top:12px;display:flex;flex-direction:column;gap:8px}
@@ -173,6 +192,11 @@ export default function AdminBrands() {
           ))}
         </div>
 
+        <form className="aw-search" role="search" onSubmit={(e) => { e.preventDefault(); load(status, q) }}>
+          <input className="ui-input" type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search by username, business name or CAC number" aria-label="Search business checks" />
+          <button className="ui-btn ui-btn-ghost" type="submit" disabled={loading}>Search</button>
+        </form>
+
         {notice && <div className="aw-msg" role="status"><span>{notice}</span><button onClick={() => setNotice('')} aria-label="Dismiss"><i className="ti ti-x" /></button></div>}
 
         {loading && !items ? (
@@ -180,7 +204,7 @@ export default function AdminBrands() {
         ) : error ? (
           <div className="aw-empty" role="alert">{error}</div>
         ) : !items || items.length === 0 ? (
-          <div className="aw-empty">{status === 'PENDING' ? 'Nothing waiting for review. All caught up.' : 'Nothing here yet.'}</div>
+          <div className="aw-empty">{status === 'PENDING' ? (q.trim() ? 'Nothing matches that search.' : 'Nothing waiting for review. All caught up.') : q.trim() ? 'Nothing matches that search.' : 'Nothing here yet.'}</div>
         ) : (
           <div className="aw-list">
             {items.map((it) => <Row key={it.id} it={it} onDone={onDone} />)}

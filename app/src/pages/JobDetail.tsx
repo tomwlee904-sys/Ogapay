@@ -8,7 +8,7 @@ import { useToast } from '../components/Toast'
 import { API_BASE, apiRequest, getAccessToken } from '../lib/api'
 import { savedJobIds, setSaved } from '../lib/bookmarks'
 import { jobRequirements, rankName } from '../lib/requirements'
-import { BoostedTag, PremiumMark, VerifiedBusinessMark } from '../components/Perks'
+import { BoostedTag, PremiumMark, VerifiedBusinessLine } from '../components/Perks'
 import Money from '../components/Money'
 import ContestPanel, { type ContestInfo } from '../components/ContestPanel'
 import JobActivity from '../components/JobActivity'
@@ -329,7 +329,7 @@ export default function JobDetail() {
       brand: t.poster?.username || t.creatorName || t.brand || t.creator?.name || '',
       brandHandle: t.poster?.username || t.creatorHandle || t.brandHandle || '',
       brandAvatar: t.poster?.avatarUrl || t.creatorAvatar || t.brandAvatar || '',
-      brandVerified: t.poster?.posterProfile?.isVerified || t.creatorVerified || false,
+      brandVerified: !!(t.poster?.posterProfile?.isVerified && t.poster?.posterProfile?.verifiedName),
       brandVerifiedName: t.poster?.posterProfile?.verifiedName || null,
       brandPremium: !!t.poster?.premium,
       boosted: !!t.isBoosted,
@@ -651,7 +651,7 @@ function WurkJobDetailView(props: any) {
         .wjd-avatar{display:grid;place-items:center;overflow:hidden;background:linear-gradient(145deg,rgba(var(--accent-rgb),.10),rgba(16,185,129,.14));color:#0f172a;font-weight:900;border:0.5px solid var(--border,#e5e7eb);flex:0 0 auto;width:52px;height:52px;border-radius:50%;font-size:18px}
         .wjd-avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%}
         .wjd-kicker{color:var(--text3,#9ca3af);letter-spacing:.1em;text-transform:uppercase;font-weight:700;font-size:11px;margin-bottom:4px}
-        .wjd-name{display:flex;align-items:center;gap:8px;color:var(--text,#0f172a);font-size:18px;font-weight:900;line-height:1.2;margin-bottom:3px}
+        .wjd-name{display:flex;flex-wrap:wrap;row-gap:4px;align-items:center;gap:8px;min-width:0;overflow-wrap:anywhere;color:var(--text,#0f172a);font-size:18px;font-weight:900;line-height:1.2;margin-bottom:3px}
         .wjd-handle{color:var(--text2,#6b7280);font-size:13px;font-weight:500}
         .wjd-mark{display:grid;place-items:center;width:20px;height:20px;border-radius:5px;background:var(--accent);color:var(--on-accent);font-size:11px;font-weight:900}
         .wjd-actions-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex-shrink:0}
@@ -1011,14 +1011,14 @@ function WurkJobDetailView(props: any) {
               <div className="wjd-avatar">
                 {job.brandAvatar ? <img src={sized(job.brandAvatar, 56, true)} alt="" /> : agentInitial}
               </div>
-              <div>
+              <div style={{ minWidth: 0 }}>
                 <div className="wjd-kicker">Listed by</div>
                 <div className="wjd-name">
                   {agentName}
-                  {job.brandVerified && <VerifiedBusinessMark label name={job.brandVerifiedName} />}
                   {job.brandPremium && <PremiumMark />}
                   {job.boosted && <span style={{ marginLeft: 8 }}><BoostedTag /></span>}
                 </div>
+                {job.brandVerified && <VerifiedBusinessLine name={job.brandVerifiedName} />}
                 <div className="wjd-handle">{handleText}</div>
               </div>
             </div>

@@ -134,6 +134,13 @@
 /* Verified business (a poster whose business was checked by our team) */
 .oga-biz { display: inline-flex; align-items: center; gap: 4px; margin-left: 6px; padding: 2px 8px; border-radius: 999px; background: color-mix(in srgb, #2563eb 14%, transparent); color: #1d4ed8; font: 600 11px/1.4 'Inter', system-ui, sans-serif; vertical-align: middle; white-space: nowrap; }
 .oga-biz.icon { padding: 2px 5px; }
+.oga-biz.full { white-space: normal; max-width: 100%; }
+.oga-biz.full b { font-weight: 700; overflow-wrap: anywhere; }
+.oga-biz-line { display: flex; align-items: center; gap: 4px; min-width: 0; margin-top: 2px; color: #1d4ed8; font: 500 11.5px/1.35 'Inter', system-ui, sans-serif; }
+.oga-biz-line i { font-size: 13px; flex-shrink: 0; }
+.oga-biz-line span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.oga-biz-line b { font-weight: 700; }
+[data-theme="dark"] .oga-biz-line { color: #93c5fd; }
 .oga-biz i { font-size: 13px; }
 [data-theme="dark"] .oga-biz { color: #93c5fd; }
 .oga-frame { box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px #d4a017 !important; }
