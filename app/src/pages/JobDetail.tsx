@@ -176,11 +176,18 @@ export default function JobDetail() {
   const [submissions, setSubmissions] = useState<any[]>([])
   const [subsLoading, setSubsLoading] = useState(false)
   const countdown = useCountdown(job?.deadline || 0)
+  // The job last loaded. Reloading the same job (after the poster awards or pays
+  // contest places) keeps the page up instead of the loading skeleton, so any
+  // message on it (like an award that failed) stays readable.
+  const loadedId = useRef<string | null>(null)
 
   useEffect(() => {
     if (!id) return
-    setLoading(true)
-    setError('')
+    const quiet = loadedId.current === id
+    if (!quiet) {
+      setLoading(true)
+      setError('')
+    }
     const fetchJob = async () => {
       try {
         // Signed in: send the token so private direct-hire jobs load for the poster and hired worker
@@ -194,17 +201,20 @@ export default function JobDetail() {
           setLinkedJobs(Array.isArray(json.data.similarJobs) ? json.data.similarJobs : [])
           setContest(json.data.contest || null)
           setCommunity(json.data.community || null)
-        } else {
+          loadedId.current = id
+        } else if (!quiet) {
           const res2 = await fetch(`${API_BASE}/jobs/${id}`)
           const json2 = await res2.json()
           if (json2.success && json2.data) {
             setJob(formatTask(json2.data))
+            loadedId.current = id
           } else {
             setError('Task not found')
           }
         }
       } catch {
-        setError('Failed to load task')
+        // A reload that fails keeps the page as it was
+        if (!quiet) setError('Failed to load task')
       }
       setLoading(false)
     }
@@ -570,7 +580,19 @@ function WurkJobDetailView(props: any) {
   }
 
   const deadline = jobDeadline({ expiresAt: job.deadline || null })
-  const countdownStr = deadline.state !== 'open'
+  // A job that finished before its closing date (a contest with every place
+  // awarded, a job with every place filled, or a cancelled one) stops counting down
+  const jobStatus = String(job.status || '').toLowerCase()
+  const closedEarly = deadline.state === 'open' && (!!contest?.winnersPaidAt || ['completed', 'cancelled', 'expired'].includes(jobStatus))
+  const closedEarlyText = contest?.winnersPaidAt ? 'Closed early: every place awarded'
+    : jobStatus === 'cancelled' ? 'Cancelled'
+    : jobStatus === 'completed' ? 'Closed early: every place filled'
+    : 'Closed'
+  // Contests where every place pays the same prize: places can be awarded before entries close
+  const equalPrizes = !!contest && contest.prizes.length > 0 && new Set(contest.prizes).size === 1
+  const countdownStr = closedEarly
+    ? closedEarlyText
+    : deadline.state !== 'open'
     ? deadlineLabel(deadline)
     : countdown.d > 0
       ? `${countdown.d}d ${countdown.h}h ${pad(countdown.m)}m ${pad(countdown.s)}s`
@@ -919,7 +941,7 @@ function WurkJobDetailView(props: any) {
               <h1 className="wjd-h1">{job.title}</h1>
               <ul className="wjd-facts" aria-label="Job status">
                 <li className={isOpen ? 'is-open' : ''}><span className="wjd-dot" aria-hidden="true" />{statusText}</li>
-                <li><i className="ti ti-clock" aria-hidden="true" />{deadline.state === 'open' ? `Closes ${deadlineDate(deadline)}` : deadlineLabel(deadline)}</li>
+                <li><i className="ti ti-clock" aria-hidden="true" />{closedEarly ? closedEarlyText : deadline.state === 'open' ? `Closes ${deadlineDate(deadline)}` : deadlineLabel(deadline)}</li>
                 {community && (
                   <li><i className="ti ti-lock" aria-hidden="true" />Members of <Link to={`/communities/${community.slug || community.id}`} style={{ color: 'inherit', fontWeight: 600 }}>{community.name}</Link> only</li>
                 )}
@@ -1003,12 +1025,12 @@ function WurkJobDetailView(props: any) {
                   <div className="wjd-value wjd-open-val"><span className="wjd-dot" style={{ background: isOpen ? 'var(--green)' : '#94a3b8', border: `1.5px solid ${isOpen ? 'rgba(var(--green-rgb),0.8)' : '#64748b'}` }} />{statusText}</div>
                 </div>
                 {contest ? (
-                  <div className="wjd-row"><div className="wjd-label">How you're paid <InfoBtn text="When entries close the poster ranks the best entries and each place's prize is paid to your wallet from the money already held for this contest. If the poster doesn't pick within 3 days, the earliest entries they haven't rejected win." /></div><div className="wjd-value">Prizes for the top {contest.prizes.length === 1 ? 'entry' : `${contest.prizes.length} entries`}</div></div>
+                  <div className="wjd-row"><div className="wjd-label">How you're paid <InfoBtn text={"When entries close the poster ranks the best entries and each place's prize is paid to your wallet from the money already held for this contest. If the poster doesn't pick within 3 days, the earliest entries they haven't rejected win." + (equalPrizes ? " Every place in this contest pays the same prize, so the poster can also award places before entries close; once every place is awarded, the contest ends early." : "")} /></div><div className="wjd-value">Prizes for the top {contest.prizes.length === 1 ? 'entry' : `${contest.prizes.length} entries`}</div></div>
                 ) : (
                   <div className="wjd-row"><div className="wjd-label">How you're paid <InfoBtn text="The poster checks each submission. Approved work is paid straight to your wallet from the money already held for this job." /></div><div className="wjd-value">Poster approves each one</div></div>
                 )}
                 <div className="wjd-row"><div className="wjd-label">Time to do it</div><div className="wjd-value">{job.estimatedTime || 'Not given'}</div></div>
-                <div className="wjd-row"><div className="wjd-label">Closes in</div><div className="wjd-value" style={{ fontVariantNumeric: 'tabular-nums' }}>{countdownStr}</div></div>
+                <div className="wjd-row"><div className="wjd-label">{closedEarly ? 'Ended' : 'Closes in'}</div><div className="wjd-value" style={{ fontVariantNumeric: 'tabular-nums' }}>{countdownStr}</div></div>
                 <div className="wjd-row"><div className="wjd-label">Minimum rank</div><div className="wjd-value">{Number(job.rankRequired || job.minRank) > 1 ? `${rankName(Number(job.rankRequired || job.minRank))} or higher` : 'None'}</div></div>
                 <div className="wjd-row"><div className="wjd-label">Requirements</div><div className="wjd-value">{jobRequirements(job).filter(r => r.icon !== 'award').map(r => r.text).join(', ') || 'No extra requirements'}</div></div>
                 {linkedJobs?.length > 0 && (
@@ -1040,7 +1062,7 @@ function WurkJobDetailView(props: any) {
           {/* ── Reward ── */}
           {contest ? (
             <ContestPanel jobId={job.id} contest={contest} currency={rewardCurrency} endsAt={job.deadline || null}
-              canManage={canManage} convert={convert} onPaid={onContestPaid} />
+              canManage={canManage} cancelled={jobStatus === 'cancelled'} convert={convert} onPaid={onContestPaid} />
           ) : (
           <section className="wjd-panel wjd-reward">
               <span className="wjd-reward-mark" aria-hidden="true"><i className="ti ti-currency-dollar" /></span>
@@ -1226,8 +1248,8 @@ function WurkJobDetailView(props: any) {
                   <div className="wjd-config-cell-value">{job.slotsLeft} of {job.slots} left</div>
                 </div>
                 <div className="wjd-config-cell">
-                  <div className="wjd-config-cell-label">Closes</div>
-                  <div className="wjd-config-cell-value">{deadlineDate(deadline)}</div>
+                  <div className="wjd-config-cell-label">{closedEarly ? 'Ended' : 'Closes'}</div>
+                  <div className="wjd-config-cell-value">{closedEarly ? closedEarlyText : deadlineDate(deadline)}</div>
                 </div>
               </div>
 
@@ -1235,7 +1257,7 @@ function WurkJobDetailView(props: any) {
               <div className="wjd-info-row">
                 <div className="wjd-info-row-label">{contest ? 'Contest' : 'Challenge'}</div>
                 <div className="wjd-info-row-val">{contest
-                  ? 'Send one entry before it closes. The poster then ranks the best entries and pays a prize for each place. Only the winners are paid.'
+                  ? `Send one entry before it closes. The poster then ranks the best entries and pays a prize for each place. Only the winners are paid.${equalPrizes ? ' Every place pays the same prize, so the poster can also award places before entries close; once every place is awarded, the contest ends early.' : ''}`
                   : `Everyone whose work is approved is paid ${formatMoney(Number(job.reward || 0), rewardCurrency)}, until all ${job.slots} ${job.slots === 1 ? 'place is' : 'places are'} used.`}</div>
               </div>
               <div className="wjd-info-row" style={{ marginBottom: 20 }}>

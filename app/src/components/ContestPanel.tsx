@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Money from './Money'
 import { apiRequest } from '../lib/api'
+import { formatMoney } from '../lib/money'
 
 // A contest on its job page: the prize for each place, entries against the
 // target, when entries close and when winners are picked, then the winners.
@@ -9,6 +10,7 @@ import { apiRequest } from '../lib/api'
 // if they don't within 3 days, the earliest entries they haven't rejected win.
 // When every place pays the same prize, the poster can award an entry a place
 // while entries are still open; the pick at the end fills the places left.
+// Awarding the last place that way finishes the contest early.
 
 export type ContestInfo = {
   prizes: number[]
@@ -19,22 +21,29 @@ export type ContestInfo = {
   winners: { place: number; prize: number; username?: string; avatarUrl?: string | null }[]
 }
 
-type Entry = { id: string; status: string; proof?: string | null; submittedAt?: string | null; worker?: { username?: string } }
+type Entry = {
+  id: string; status: string; proof?: string | null; workerNotes?: string | null; attachments?: any[] | null
+  submittedAt?: string | null; worker?: { username?: string }
+}
 
 export const ordinal = (n: number) => `${n}${n % 10 === 1 && n % 100 !== 11 ? 'st' : n % 10 === 2 && n % 100 !== 12 ? 'nd' : n % 10 === 3 && n % 100 !== 13 ? 'rd' : 'th'}`
 const when = (d: string | number | Date) => new Date(d).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
 
-export default function ContestPanel({ jobId, contest, currency, endsAt, canManage, convert, onPaid }: {
+export default function ContestPanel({ jobId, contest, currency, endsAt, canManage, cancelled = false, convert, onPaid }: {
   jobId: string
   contest: ContestInfo
   currency: string
   endsAt: string | number | null
   canManage: boolean
+  // The poster cancelled it: nothing is held any more and no place can be awarded
+  cancelled?: boolean
   convert: any
   onPaid: () => void
 }) {
   const ended = !!endsAt && new Date(endsAt).getTime() <= Date.now()
   const paid = !!contest.winnersPaidAt
+  // Every place was awarded before the closing date, so entries closed then
+  const closedEarly = paid && !ended
   const target = contest.entryTarget || 0
   // Places awarded so far (early awards show before the contest finishes)
   const awarded = contest.winners.length
@@ -66,6 +75,7 @@ export default function ContestPanel({ jobId, contest, currency, endsAt, canMana
         .cp-err{font-size:13px;color:var(--red)}
         .cp-entry{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:var(--r-ctl,12px)}
         .cp-entry a{font-size:12.5px}
+        .cp-entry-links{display:inline-flex;gap:12px;margin-left:auto}
         .cp-entry-who{display:grid;gap:2px;min-width:0}
         .cp-entry-who b{font-size:13.5px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
         .cp-entry-who span{font-size:12px;color:var(--text3)}
@@ -74,7 +84,7 @@ export default function ContestPanel({ jobId, contest, currency, endsAt, canMana
 
       <div className="cp-head">
         <b><i className="ti ti-award" /> {paid ? 'Winners' : 'Prizes'}</b>
-        <span>{paid ? 'Contest finished' : ended ? 'Entries closed' : 'Contest'}</span>
+        <span>{paid ? 'Contest finished' : cancelled ? 'Cancelled' : ended ? 'Entries closed' : 'Contest'}</span>
       </div>
 
       <div className="cp-prizes">
@@ -93,22 +103,28 @@ export default function ContestPanel({ jobId, contest, currency, endsAt, canMana
 
       <div className="cp-facts">
         <div className="cp-fact"><span>Entries</span><b>{target ? `${contest.entries} / ${target} target` : contest.entries}</b></div>
-        <div className="cp-fact"><span>{ended ? 'Entries closed' : 'Entries close'}</span><b>{endsAt ? when(endsAt) : 'No end date'}</b></div>
+        <div className="cp-fact">
+          <span>{ended || closedEarly || cancelled ? 'Entries closed' : 'Entries close'}</span>
+          <b>{closedEarly ? 'Closed early: every place awarded' : cancelled && !ended ? 'Contest cancelled' : endsAt ? when(endsAt) : 'No end date'}</b>
+        </div>
       </div>
 
-      {!paid && (
+      {cancelled && !paid && (
+        <p className="cp-note">This contest was cancelled, so no prizes are paid. The money held for it went back to the poster.</p>
+      )}
+      {!paid && !cancelled && (
         <p className="cp-note">
           Anyone who meets the requirements can enter, as many people as want to. When entries close the poster ranks the winners
           {contest.winnersDueAt ? ` by ${when(contest.winnersDueAt)}` : ''}; if they don't, the earliest entries they haven't rejected win.
           Prizes are held by OgaPay until then.
-          {equalPrizes && ' The poster can also award a strong entry its place before entries close.'}
+          {equalPrizes && ' The poster can also award a strong entry its place before entries close; once every place is awarded, the contest ends early.'}
         </p>
       )}
 
-      {canManage && !ended && !paid && equalPrizes && awarded < contest.prizes.length && (
+      {canManage && !cancelled && !ended && !paid && equalPrizes && awarded < contest.prizes.length && (
         <AwardNow jobId={jobId} prize={contest.prizes[0]} placesLeft={contest.prizes.length - awarded} currency={currency} convert={convert} onPaid={onPaid} />
       )}
-      {canManage && ended && !paid && <PickWinners jobId={jobId} contest={contest} currency={currency} convert={convert} onPaid={onPaid} />}
+      {canManage && !cancelled && ended && !paid && <PickWinners jobId={jobId} contest={contest} currency={currency} convert={convert} onPaid={onPaid} />}
     </section>
   )
 }
@@ -149,6 +165,9 @@ function PickWinners({ jobId, contest, currency, convert, onPaid }: {
       onPaid()
     } catch (e: any) {
       setError(e?.message || 'Could not pay the winners. Try again.')
+      // The winners may have been paid anyway (a timeout, or paid automatically
+      // meanwhile): reload the contest so the page shows where it really stands
+      onPaid()
     } finally {
       setBusy(false)
     }
@@ -158,7 +177,11 @@ function PickWinners({ jobId, contest, currency, convert, onPaid }: {
     <div className="cp-pick">
       <h3>Pick the winners</h3>
       {entries.length === 0 ? (
-        <p className="cp-note">There are no entries to pick from. The prizes and fee come back to your wallet automatically.</p>
+        <p className="cp-note">
+          {first > 0
+            ? `There are no entries to pick from. The prizes for the ${contest.prizes.length - first} place${contest.prizes.length - first === 1 ? '' : 's'} left, and their share of the fee, come back to your wallet automatically.`
+            : 'There are no entries to pick from. The prizes and fee come back to your wallet automatically.'}
+        </p>
       ) : (
         <>
           <p className="cp-note" style={{ margin: 0 }}>
@@ -190,12 +213,16 @@ function PickWinners({ jobId, contest, currency, convert, onPaid }: {
 
 // While entries are open (equal prizes only): award a strong entry its place now.
 // The prize is paid at once; the pick when entries close fills the places left.
+// Awarding the last place finishes the contest: entries close at once.
 function AwardNow({ jobId, prize, placesLeft, currency, convert, onPaid }: {
   jobId: string; prize: number; placesLeft: number; currency: string; convert: any; onPaid: () => void
 }) {
   const [entries, setEntries] = useState<Entry[] | null>(null)
   const [busy, setBusy] = useState('')
   const [error, setError] = useState('')
+  // Bumped after a failed award so the list is read again (an entry may have been rejected or won meanwhile)
+  const [refresh, setRefresh] = useState(0)
+  const last = placesLeft === 1
 
   useEffect(() => {
     apiRequest<any>(`/tasks/${jobId}/submissions?limit=500`)
@@ -206,11 +233,20 @@ function AwardNow({ jobId, prize, placesLeft, currency, convert, onPaid }: {
         setEntries(list)
       })
       .catch(() => setEntries([]))
-  }, [jobId, placesLeft])
+  }, [jobId, placesLeft, refresh])
+
+  // A link opens straight away; screenshots, files and notes are read in Manage jobs
+  const linkOf = (e: Entry) => {
+    const p = typeof e.proof === 'string' ? e.proof.trim() : ''
+    return /^https?:\/\//.test(p) ? p : ''
+  }
+  const hasMore = (e: Entry) => !linkOf(e) || !!e.workerNotes || (Array.isArray(e.attachments) && e.attachments.length > 0)
 
   const award = async (e: Entry) => {
     const name = `@${e.worker?.username || 'this entry'}`
-    if (!window.confirm(`Award ${name} a place now? The prize is paid to them at once and can't be undone.`)) return
+    const ask = `Award ${name} a place now? ${formatMoney(prize, currency)} is paid to them at once and can't be undone.`
+      + (last ? ' This is the last place: the contest ends now and no more entries can be sent.' : '')
+    if (!window.confirm(ask)) return
     setBusy(e.id)
     setError('')
     try {
@@ -218,6 +254,10 @@ function AwardNow({ jobId, prize, placesLeft, currency, convert, onPaid }: {
       onPaid()
     } catch (err: any) {
       setError(err?.message || 'Could not award the place. Try again.')
+      // The place may have been awarded anyway (a timeout), or entries closed
+      // meanwhile: reload the contest and the entries so the page is up to date
+      onPaid()
+      setRefresh((n) => n + 1)
     } finally {
       setBusy('')
     }
@@ -225,10 +265,13 @@ function AwardNow({ jobId, prize, placesLeft, currency, convert, onPaid }: {
 
   return (
     <div className="cp-pick">
-      <h3>Award a place now</h3>
+      <h3>{last ? 'Award the last place now' : 'Award a place now'}</h3>
       <p className="cp-note" style={{ margin: 0 }}>
-        Read an entry (View), and if it's ready to use, award it a place: <Money amount={prize} currency={currency} convert={convert} size={13} positive /> is paid at once.
-        {' '}{placesLeft} place{placesLeft === 1 ? '' : 's'} left; the rest are picked when entries close.
+        Read an entry first (View opens its link; Read opens it in Manage jobs with any screenshots and notes). If it's ready to use,
+        award it a place: <Money amount={prize} currency={currency} convert={convert} size={13} positive /> is paid at once.
+        {' '}{last
+          ? 'This is the last place: when you award it, the contest ends and no more entries can be sent.'
+          : `${placesLeft} places left; the rest are picked when entries close. If you award every place, the contest ends early.`}
       </p>
       {!entries ? (
         <p className="cp-note">Loading entries…</p>
@@ -241,7 +284,10 @@ function AwardNow({ jobId, prize, placesLeft, currency, convert, onPaid }: {
               <b>@{e.worker?.username || 'someone'}</b>
               {e.submittedAt && <span>Sent {when(e.submittedAt)}</span>}
             </div>
-            {e.proof && /^https?:\/\//.test(e.proof) && <a href={e.proof} target="_blank" rel="noopener noreferrer">View</a>}
+            <span className="cp-entry-links">
+              {linkOf(e) && <a href={linkOf(e)} target="_blank" rel="noopener noreferrer">View</a>}
+              {hasMore(e) && <Link to={`/manage-jobs?job=${encodeURIComponent(jobId)}`} title="Read this entry in Manage jobs">Read</Link>}
+            </span>
             <button className="ui-btn ui-btn-dark" type="button" disabled={!!busy} onClick={() => award(e)}>
               {busy === e.id ? 'Paying…' : 'Award now'}
             </button>

@@ -271,7 +271,8 @@ function ContestPrizes({ currency, setCurrency, prizes, setPrizes, target, setTa
         <p className="cf-hint">
           At least {money(floor, currency)} a place, and a lower place can't pay more than the one above. When entries close you rank the
           winners; if you haven't within 3 days, the earliest entries you haven't rejected win. Places nobody fills come back to you with
-          their share of the fee.
+          their share of the fee. If every place pays the same prize, you can also award places before entries close; once every place is
+          awarded, the contest ends early.
         </p>
       </div>
     </>
@@ -861,7 +862,7 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
                     </>)}
                     <div><span>Who can take part</span><b>{community ? `Members of ${community.name}` : ""}{community && reqType !== "none" ? " · " : ""}{!community || reqType !== "none" ? reqLabel(reqType, reqValue) : ""}</b></div>
                     <div><span>{isContest ? "Entries close" : "Closes"}</span><b>{deadline ? deadline.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "No deadline"}</b></div>
-                    {isContest && <div><span>Winners</span><b>You rank them within 3 days of the close, or the earliest entries win</b></div>}
+                    {isContest && <div><span>Winners</span><b>You rank them within 3 days of the close, or the earliest entries win{prizeNums.length > 0 && new Set(prizeNums).size === 1 ? ". Every place pays the same prize, so you can also award places before entries close; once every place is awarded, the contest ends early" : ""}</b></div>}
                     {screenshot && <div><span>Proof</span><b>Screenshot required</b></div>}
                     {files.length > 0 && <div><span>Attachments</span><b>{files.length} file{files.length > 1 ? "s" : ""}</b></div>}
                     <div><span>Your {currency} balance</span><b style={{ color: balance >= totalToPay ? "var(--green)" : "var(--red)" }}>{money(balance, currency)}</b></div>

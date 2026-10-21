@@ -55,7 +55,7 @@ export default function Terms() {
         <header className="lg-head">
           <div className="up-eyebrow">Legal</div>
           <h1>Terms of Service</h1>
-          <p>Last updated: 9 October 2026</p>
+          <p>Last updated: 21 October 2026</p>
           <p className="lg-lead">These terms are the agreement between you and OgaPay Technologies Ltd. ("OgaPay", "we", "us") for using the OgaPay marketplace, where people post paid jobs, do them, hire creators, and buy and sell services. By creating an account or using OgaPay you accept them. If you don't, please don't use OgaPay.</p>
         </header>
 
@@ -114,6 +114,7 @@ export default function Terms() {
               <ul>
                 <li>In a contest you set a prize for each place. All the prizes plus the platform fee are held when the contest goes live.</li>
                 <li>When entries close you have 3 days to rank the winners from the entries that follow your brief. If you don't, the earliest entries that weren't rejected win, in the order they were sent, so the prizes are always paid.</li>
+                <li>In a contest where every place pays the same prize, you can also award places before entries close. Once every place is awarded, the contest ends early and no more entries can be sent.</li>
                 <li>Prizes for places with no eligible entry, and the matching part of the fee, go back to your wallet. A contest that gets no entries is refunded in full.</li>
                 <li>Entrants must send their own original work. By entering, you allow the poster to use the winning entry for the purpose the brief describes, unless the brief says otherwise.</li>
               </ul>
