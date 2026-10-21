@@ -27,6 +27,7 @@ import TabMyTasksContent from '../components/ProfileMyTasksTab'
 import TabEarningsContent from '../components/ProfileEarningsTab'
 import { sized } from '../lib/img'
 import { xProfileOf } from '../lib/xprofile'
+import { isPhone, openInWalletUrl, PHONE_WALLET_LINE, WALLET_APPS, type WalletAppId } from '../lib/walletApps'
 const Icon = ({ n, s = 16, c }: { n: any; s?: number; c?: any }) => (
   <i className={`ti ti-${n}`} style={{ fontSize: s, color: c || "var(--text2)", lineHeight: 1, flexShrink: 0 }} />
 );
@@ -239,16 +240,18 @@ export default function Profile() {
     loadProfile().finally(() => setLoading(false));
   }, [authUser]);
 
-  // Detect installed Solana wallets
+  // Detect installed Solana wallets. Checked again each time the wallet list
+  // opens: inside a wallet app's browser the wallet can be added after the
+  // page has loaded. Newer Backpack versions put the Solana side on .solana.
   useEffect(() => {
     const found: string[] = [];
     if (typeof window !== "undefined") {
       if ((window as any).phantom?.solana?.isPhantom) found.push("phantom");
-      if ((window as any).backpack?.isBackpack) found.push("backpack");
+      if ((window as any).backpack?.isBackpack || (window as any).backpack?.solana) found.push("backpack");
       if ((window as any).solflare?.isSolflare) found.push("solflare");
     }
     setDetectedWallets(found);
-  }, []);
+  }, [showWalletOptions]);
 
   useEffect(() => {
     if (editingBank) {
@@ -362,7 +365,7 @@ export default function Profile() {
     try {
             let wallet: any;
       if (id === "phantom") wallet = (window as any).phantom?.solana;
-      else if (id === "backpack") wallet = (window as any).backpack;
+      else if (id === "backpack") wallet = (window as any).backpack?.solana || (window as any).backpack;
       else if (id === "solflare") wallet = (window as any).solflare;
       if (!wallet?.connect) { setConnecting(null); return; }
 
@@ -1089,6 +1092,9 @@ export default function Profile() {
             <p style={{color:'var(--text2)',fontSize:13,margin:'0 0 16px',lineHeight:1.5}}>
               Select a wallet provider to connect. You'll be asked to sign a message to verify ownership.
             </p>
+            {isPhone() && detectedWallets.length === 0 && (
+              <p style={{color:'var(--text)',fontSize:13,fontWeight:600,margin:'-6px 0 14px',lineHeight:1.5}}>{PHONE_WALLET_LINE}</p>
+            )}
             <div style={{display:'grid',gap:10}}>
               {[
                 { id:'phantom', label:'Phantom', icon:'brand-phantom' },
@@ -1096,6 +1102,21 @@ export default function Profile() {
                 { id:'solflare', label:'Solflare', icon:'brand-flare' },
               ].map(p => {
                 const installed = detectedWallets.includes(p.id);
+                // Phone browsers never see the wallet apps, so "Not installed" was
+                // wrong there: open this page inside the app, where it connects
+                if (!installed && isPhone()) return (
+                  <a key={p.id} href={openInWalletUrl(p.id as WalletAppId)}
+                    style={{
+                      display:'flex',alignItems:'center',gap:12,padding:'14px 16px',
+                      borderRadius:10,border:'1.5px solid var(--border)',
+                      background:'var(--bg2)',textDecoration:'none',
+                      fontFamily:'inherit',fontSize:13,fontWeight:700,color:'var(--text)',
+                    }}>
+                    <img src={WALLET_APPS.find(w => w.id === p.id)?.icon} alt="" aria-hidden="true" width={32} height={32} style={{borderRadius:8,flexShrink:0}} />
+                    <span style={{flex:1,textAlign:'left'}}>Open in {p.label}</span>
+                    <Icon n="external-link" s={16} c="var(--text3)" />
+                  </a>
+                );
                 return (
                   <button key={p.id}
                     onClick={() => connectWallet(p.id)}

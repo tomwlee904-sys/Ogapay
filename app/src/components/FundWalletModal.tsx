@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import VirtualAccountCard from './VirtualAccountCard';
 import { useNavigate, useLocation } from 'react-router-dom';
 import WithdrawModal from './wallet/WithdrawModal';
+import { isPhone, openInWalletUrl, PHONE_WALLET_LINE, WALLET_APPS } from '../lib/walletApps';
 import {
   PublicKey,
   Transaction,
@@ -115,16 +116,19 @@ function DepositModal({ onClose, onDone, initialTab }: Props) {
     const found: string[] = [];
     if (typeof window !== 'undefined') {
       if ((window as any).phantom?.solana?.isPhantom) found.push('phantom');
-      if ((window as any).backpack?.isBackpack) found.push('backpack');
+      // Newer Backpack versions put the Solana side on .solana
+      if ((window as any).backpack?.isBackpack || (window as any).backpack?.solana) found.push('backpack');
       if ((window as any).solflare?.isSolflare) found.push('solflare');
     }
     return found;
   })();
+  // A phone browser never sees the wallet apps: offer to open this page in one
+  const openInApp = !detectedWallets.length && isPhone();
 
   function getWallet(): any {
     const id = detectedWallets[0];
     if (id === 'phantom') return (window as any).phantom?.solana;
-    if (id === 'backpack') return (window as any).backpack;
+    if (id === 'backpack') return (window as any).backpack?.solana || (window as any).backpack;
     if (id === 'solflare') return (window as any).solflare;
     return null;
   }
@@ -306,6 +310,17 @@ function DepositModal({ onClose, onDone, initialTab }: Props) {
                     <span style={{ fontFamily: 'var(--font-mono, monospace)', fontSize: 13 }}>{walletAddr.slice(0, 4)}…{walletAddr.slice(-4)}</span>
                     <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--green)', display: 'inline-flex', alignItems: 'center', gap: 4 }}><i className="ti ti-circle-check" /> {walletName || 'Wallet'} connected</span>
                   </div>
+                ) : openInApp ? (
+                  <>
+                    <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', lineHeight: 1.5, margin: '0 0 8px' }}>{PHONE_WALLET_LINE}</p>
+                    <div style={{ display: 'grid', gap: 8 }}>
+                      {WALLET_APPS.map(w => (
+                        <a key={w.id} href={openInWalletUrl(w.id)} style={{ ...BTN, width: '100%', height: 44, background: 'transparent', border: '1.5px solid var(--border)', color: 'var(--text)', textDecoration: 'none', boxSizing: 'border-box' }}>
+                          <img src={w.icon} alt="" aria-hidden="true" width={22} height={22} style={{ borderRadius: 6 }} /> Open in {w.name}
+                        </a>
+                      ))}
+                    </div>
+                  </>
                 ) : (
                   <button type="button" style={{ ...BTN, width: '100%', height: 42, background: 'transparent', border: '1.5px solid var(--border)', color: 'var(--text)', opacity: connecting ? 0.6 : 1 }} disabled={connecting} onClick={connectWallet}>
                     <i className="ti ti-wallet" /> {connecting ? 'Connecting…' : walletName ? `Connect ${walletName}` : 'Connect a Solana wallet'}

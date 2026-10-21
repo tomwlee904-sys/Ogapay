@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext'
 import { API_BASE, apiRequest } from '../../lib/api'
 import { supabase } from '../../lib/supabaseClient'
 import type { SignInView } from '../../lib/signin'
+import { isPhone, openInWalletUrl, PHONE_WALLET_LINE } from '../../lib/walletApps'
 import '../../styles/signin.css'
 
 /* Sign-in dialog in the wurk.fun style: pick a method (wallet, Google, email,
@@ -62,17 +63,16 @@ const usernameFrom = (email: string, extra = false) => {
   return extra ? `${u}${Math.floor(1000 + Math.random() * 9000)}` : u
 }
 
-const isMobile = () => /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
-
 // Official icons, from each wallet's @solana/wallet-adapter package (Trust cropped to its shield)
 interface WalletDef { id: string; name: string; icon: string; detect: () => any; install: string; openIn?: (url: string) => string }
 const win = () => window as any
 const WALLETS: WalletDef[] = [
   { id: 'phantom', name: 'Phantom', icon: '/wallets/phantom.svg', detect: () => (win().phantom?.solana?.isPhantom ? win().phantom.solana : null), install: 'https://phantom.app/download',
-    openIn: (url) => `https://phantom.app/ul/browse/${encodeURIComponent(url)}?ref=${encodeURIComponent(location.origin)}` },
+    openIn: (url) => openInWalletUrl('phantom', url) },
   { id: 'solflare', name: 'Solflare', icon: '/wallets/solflare.svg', detect: () => (win().solflare?.isSolflare ? win().solflare : null), install: 'https://solflare.com/download',
-    openIn: (url) => `https://solflare.com/ul/v1/browse/${encodeURIComponent(url)}?ref=${encodeURIComponent(location.origin)}` },
-  { id: 'backpack', name: 'Backpack', icon: '/wallets/backpack.png', detect: () => win().backpack?.solana || (win().backpack?.isBackpack ? win().backpack : null), install: 'https://backpack.app/downloads' },
+    openIn: (url) => openInWalletUrl('solflare', url) },
+  { id: 'backpack', name: 'Backpack', icon: '/wallets/backpack.png', detect: () => win().backpack?.solana || (win().backpack?.isBackpack ? win().backpack : null), install: 'https://backpack.app/downloads',
+    openIn: (url) => openInWalletUrl('backpack', url) },
   { id: 'trust', name: 'Trust Wallet', icon: '/wallets/trust.svg', detect: () => win().trustwallet?.solana || null, install: 'https://trustwallet.com/download' },
   { id: 'bitget', name: 'Bitget Wallet', icon: '/wallets/bitget.svg', detect: () => win().bitkeep?.solana || null, install: 'https://web3.bitget.com/en/wallet-download' },
 ]
@@ -260,7 +260,7 @@ export default function SignInModal({ initialView = 'options', initialCode = '',
 
   const pickWallet = (w: WalletDef) => {
     if (w.detect()) { walletLogin(w); return }
-    if (isMobile() && w.openIn) { window.location.href = w.openIn(window.location.href); return }
+    if (isPhone() && w.openIn) { window.location.href = w.openIn(window.location.href); return }
     window.open(w.install, '_blank', 'noopener')
   }
 
@@ -293,6 +293,8 @@ export default function SignInModal({ initialView = 'options', initialCode = '',
     body = (
       <>
         <p className="si-desc">Sign a free message with a wallet that's linked to your OgaPay account. No transaction is sent.</p>
+        {/* Phone browsers never see the wallet apps; their rows open OgaPay inside the app instead */}
+        {isPhone() && !WALLETS.some(w => w.detect()) && <p className="si-notice ok" role="note">{PHONE_WALLET_LINE}</p>}
         {noticeLine}{errorLine}
         <div className="si-options">
           {WALLETS.map(w => {
@@ -300,7 +302,7 @@ export default function SignInModal({ initialView = 'options', initialCode = '',
             const running = busy === `wallet:${w.id}`
             return (
               <Option key={w.id} name={w.name} disabled={!!busy}
-                desc={running ? 'Waiting for your wallet…' : found ? 'Detected in this browser' : isMobile() && w.openIn ? `Open OgaPay in the ${w.name} app` : 'Not detected in this browser. Get it'}
+                desc={running ? 'Waiting for your wallet…' : found ? 'Detected in this browser' : isPhone() && w.openIn ? `Open in ${w.name}` : 'Not detected in this browser. Get it'}
                 tag={found && !running ? 'Detected' : undefined}
                 icon={running ? <Spinner /> : <img className="si-wlogo" src={w.icon} alt="" aria-hidden="true" />}
                 onClick={() => pickWallet(w)} />
