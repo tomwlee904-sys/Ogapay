@@ -829,7 +829,10 @@ export default function Profile() {
                     <StatRow label="Rating" val={profileData?.workerProfile?.totalRatings ? `${Number(profileData.workerProfile.avgRating || 0).toFixed(1)}/5 (${profileData.workerProfile.totalRatings})` : 'No ratings yet'} info onInfoClick={() => setShowInfo('avgRating')} />
                     <StatRow label="Skills" val={profileData?.workerProfile?.skills?.length ? profileData.workerProfile.skills.slice(0,3).join(', ')+(profileData.workerProfile.skills.length>3?' +' + (profileData.workerProfile.skills.length - 3):'') : '-'} />
                     <StatRow label="Categories" val={profileData?.workerProfile?.categories?.length ? profileData.workerProfile.categories.join(', ') : '-'} />
-                    <StatRow label="Human Verified" val={isHumanVerified ? 'Yes' : 'No'} valClass={isHumanVerified ? 'yes' : 'no'} info onInfoClick={() => setShowInfo('humanVerified')} />
+                    {/* The Verify button lives on Settings > Verification; link straight to it */}
+                    <StatRow label="Human Verified" val={isHumanVerified ? 'Yes' : (
+                      <>No <a href="/settings/verification" onClick={e => { e.preventDefault(); navigate('/settings/verification') }} style={{marginLeft:6,color:'var(--accent)',fontWeight:700,textDecoration:'underline'}}>Verify</a></>
+                    )} valClass={isHumanVerified ? 'yes' : 'no'} info onInfoClick={() => setShowInfo('humanVerified')} />
                     {!isKycVerified && (
                       <button className="dash-btn" style={{width:'100%',justifyContent:'center',marginTop:8}} onClick={() => navigate('/settings/verification')}>
                         <Icon n="shield-check" s={14} c="var(--bg)" /> Verify Identity (KYC)
@@ -1210,7 +1213,7 @@ export default function Profile() {
                   Why it matters: Some tasks require Human Verified status as a trust signal. Task creators use it to filter out bots and ensure real people are completing their work.
                 </p>
                 <p style={{fontSize:13,color:'var(--text)',lineHeight:1.6,marginBottom:12}}>
-                  How to get it: Go to <strong>Settings → Connected Accounts</strong> and click "Verify" on the Human Verified (VeryAI) entry. You'll be redirected to the VeryAI app for a quick biometric scan.
+                  How to get it: Go to <strong>Settings → Verification</strong> and tap "Verify with VeryAI" under Human verification. You'll be sent to the VeryAI app for a quick scan.
                 </p>
                 <div style={{fontSize:12,fontWeight:700,color:'var(--text2)',marginBottom:6}}>Also adds +10 to your OgaScore</div>
               </>
