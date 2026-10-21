@@ -27,7 +27,8 @@ function Avatar({ src, name, size = 32 }: { src?: string | null; name: string; s
   );
 }
 
-export function HomeJobCard({ task, convert, applied }: { task: any; convert: Convert; applied?: boolean }) {
+// myStatus: your submission's status on this job, if you took a place (Jobs page)
+export function HomeJobCard({ task, convert, myStatus }: { task: any; convert: Convert; myStatus?: string }) {
   const poster = task.poster || task.creator || {};
   const name = poster.username || poster.firstName || task.creatorName || "OgaPay";
   const amount = Number(task.reward ?? task.amount ?? 0);
@@ -87,9 +88,14 @@ export function HomeJobCard({ task, convert, applied }: { task: any; convert: Co
 
       <div className="hc-foot">
         <time className={deadline.state === "ended" ? "hc-ended" : undefined}><i className="ti ti-clock" /><DeadlineTick deadline={deadline} /></time>
-        {applied
+        {myStatus === 'SUBMITTED' || myStatus === 'APPROVED' || myStatus === 'DISPUTED'
           ? <span className="hc-go hc-done"><i className="ti ti-circle-check" />Submitted</span>
-          : <span className="hc-go">View job<span className="hc-arrow"><i className="ti ti-arrow-up-right" /></span></span>}
+          : myStatus === 'PENDING'
+            // A place taken but no work sent yet: it expires if the work never comes
+            ? <span className="hc-go hc-done hc-todo"><i className="ti ti-hourglass" />Send your work</span>
+            : myStatus === 'REJECTED'
+              ? <span className="hc-go hc-done hc-no"><i className="ti ti-circle-x" />Not approved</span>
+              : <span className="hc-go">View job<span className="hc-arrow"><i className="ti ti-arrow-up-right" /></span></span>}
       </div>
     </Link>
   );

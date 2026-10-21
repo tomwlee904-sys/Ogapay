@@ -142,7 +142,8 @@ export const PAYOUT_LABEL: Record<PayoutStatus, string> = { processing: 'Process
 // One line under a withdrawal that didn't go through
 export function payoutNote(t: Tx) {
   const s = payoutStatusOf(t)
-  const why = String(t.metadata?.rejectReason || '').trim()
+  // Our team often ends the reason with a full stop; drop it so it isn't doubled
+  const why = String(t.metadata?.rejectReason || '').trim().replace(/[.!?\s]+$/, '')
   if (s === 'failed') return `${why ? `Not paid: ${why}. ` : ''}The money is back in your wallet.`
   if (s === 'refunded') return 'The money was sent back to your wallet.'
   return ''

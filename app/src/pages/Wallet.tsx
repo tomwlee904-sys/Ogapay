@@ -43,6 +43,8 @@ export default function Wallet() {
   const [balances, setBalances] = useState<Balances | null>(null)
   const [summary, setSummary] = useState<Summary | null>(null)
   const [txs, setTxs] = useState<Tx[] | null>(null)
+  // The history request failed: say so, rather than "No withdrawals yet"
+  const [histFailed, setHistFailed] = useState(false)
   const [page, setPage] = useState(1)
   const [more, setMore] = useState(false)
   const [loadingMore, setLoadingMore] = useState(false)
@@ -89,6 +91,7 @@ export default function Wallet() {
     const seq = ++histSeq.current
     const h = await apiRequest<Tx[]>(historyUrl(1, onlyWd)).catch(() => null)
     if (seq !== histSeq.current) return
+    setHistFailed(h === null)
     setTxs(Array.isArray(h) ? h : [])
     setMore(Array.isArray(h) && h.length === PAGE)
     setPage(1)
@@ -241,6 +244,11 @@ export default function Wallet() {
               </div>
               {txs === null ? (
                 <div style={{ display: 'grid', gap: 10, marginTop: 8 }}>{[0, 1, 2, 3].map((i) => <div key={i} className="ui-sk" style={{ height: 52, borderRadius: 12 }} />)}</div>
+              ) : histFailed ? (
+                <div className="wl-empty" style={{ marginTop: 8 }}>
+                  <b>Couldn't load your history</b>Check your connection and try again.
+                  <div className="wl-more"><button type="button" className="ui-btn ui-btn-ghost" onClick={() => { setTxs(null); loadHistory() }}>Try again</button></div>
+                </div>
               ) : shown.length === 0 ? (
                 <div className="wl-empty" style={{ marginTop: 8 }}>
                   {txs.length === 0 && onlyWd ? <><b>No withdrawals yet</b>Money you send to your bank or crypto wallet shows up here.</> : txs.length === 0 ? <><b>No transactions yet</b>Money you add, earn, send or withdraw shows up here.</> : <>Nothing here{more ? ' yet. Load more to look further back.' : '.'}</>}

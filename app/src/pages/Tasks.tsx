@@ -418,8 +418,8 @@ export function invalidateTasksCache() {
   tasksCacheMap.clear()
 }
 
-// Signed in, the list is asked for with the sign-in so each job says whether you can
-// take it ("eligible", for the "Available for me" switch); cached per person.
+// Signed in, the list is asked for with the sign-in and ?eligible=1 so each job says
+// whether you can take it (for the "Available for me" switch); cached per person.
 async function fetchTasks(category?: string, userId?: string) {
   const cacheKey = `${userId || 'guest'}:${(category || 'all').toLowerCase()}`
   const now = Date.now()
@@ -432,7 +432,7 @@ async function fetchTasks(category?: string, userId?: string) {
       : '/tasks?limit=100'
 
   try {
-    const data = await apiRequest<any>(url, { auth: !!userId })
+    const data = await apiRequest<any>(userId ? url + '&eligible=1' : url, { auth: !!userId })
     const list = Array.isArray(data)
       ? data
       : data?.data || data?.tasks || data?.jobs || []
@@ -533,7 +533,8 @@ export default function Tasks() {
   const [sort, setSort] = useState(searchParams.get('sort') || 'default')
   const [req, setReq] = useState(searchParams.get('req') || 'all')
   const [availableOnly, setAvailableOnly] = useState(searchParams.get('available') === '1')
-  const [mySubmissions, setMySubmissions] = useState<string[]>([])
+  // Your place on each job you've taken: job id -> submission status
+  const [mySubmissions, setMySubmissions] = useState<Record<string, string>>({})
   const [selectedJob, setSelectedJob] = useState<any>(null)
 
   useEffect(() => {
@@ -545,7 +546,9 @@ export default function Tasks() {
       apiRequest('/tasks/my/submissions').catch(() => null).then((d: any) => {
         if (!alive || !d) return
         const list = Array.isArray(d) ? d : d?.submissions || []
-        setMySubmissions(list.map((s: any) => s.taskId || s.task?.id).filter(Boolean))
+        const byJob: Record<string, string> = {}
+        for (const s of list) { const id = s.taskId || s.task?.id; if (id) byJob[id] = String(s.status || '') }
+        setMySubmissions(byJob)
       })
     }
     return () => { alive = false }
@@ -594,7 +597,9 @@ export default function Tasks() {
       if (req === 'wallet' && !j.requiresWallet) return false
       if (req === 'rank' && rank <= 1) return false
       if (availableOnly) {
-        if (openSlots(j) <= 0 || isClosed(j) || mySubmissions.includes(j.id)) return false
+        // A place that expired (no work sent in time) can be taken again, so it doesn't count
+        const mine = mySubmissions[j.id]
+        if (openSlots(j) <= 0 || isClosed(j) || (mine && mine !== 'EXPIRED')) return false
         // The server's own check (requirements, blocked, similar job taken); only sent when signed in
         if (j.eligible === false) return false
       }
@@ -690,7 +695,7 @@ export default function Tasks() {
           <>
             <div className="ui-grid-3">
               {paginated.map(job => (
-                <HomeJobCard key={job.id} task={job} convert={convert} applied={mySubmissions.includes(job.id)} />
+                <HomeJobCard key={job.id} task={job} convert={convert} myStatus={mySubmissions[job.id]} />
               ))}
             </div>
             {totalPages > 1 && (

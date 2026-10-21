@@ -2,11 +2,21 @@ import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { apiRequest } from '../../lib/api'
 import Money from '../Money'
-import { PAYOUT_LABEL, payoutNote, payoutStatusOf, txDetail, txTitle, when, type Tx } from '../../lib/wallet'
+import { money, PAYOUT_LABEL, payoutNote, payoutStatusOf, txDetail, txTitle, when, type Tx } from '../../lib/wallet'
 import '../../styles/profile-own.css'
 
 const PAGE = 10
 const url = (p: number) => `/users/transactions/history?type=WITHDRAWAL&page=${p}&limit=${PAGE}`
+
+// A bank withdrawal's fee comes off the amount, so say what reached the bank
+// (the amount shown is what left the wallet)
+function netLine(w: Tx, s: string) {
+  const fee = Number(w.fee || 0)
+  if (fee <= 0 || s === 'failed' || s === 'refunded') return ''
+  const net = Number(w.metadata?.netAmount ?? Math.abs(Number(w.amount || 0)) - fee)
+  const cur = w.currency || 'NGN'
+  return `Your bank ${s === 'paid' ? 'got' : 'gets'} ${money(net, cur)} after the ${money(fee, cur)} fee`
+}
 
 // Every withdrawal you've made, newest first, page by page. It asks the history
 // for withdrawals only: the latest transactions of any type are mostly job
@@ -65,11 +75,13 @@ export default function ProfileWithdrawalsCard() {
             const s = payoutStatusOf(w)
             const detail = txDetail(w)
             const note = payoutNote(w)
+            const net = w.metadata?.toAddress || w.metadata?.walletAddress ? '' : netLine(w, s)
             return (
               <li key={w.id} className="pf-wd-row">
                 <div className="pf-wd-main">
                   <strong>{txTitle(w)}</strong>
                   <span>{when(w.createdAt)}{detail ? ` · ${detail}` : ''}</span>
+                  {net && <span>{net}</span>}
                   {note && <span className="pf-wd-note">{note}</span>}
                 </div>
                 <div className="pf-wd-side">

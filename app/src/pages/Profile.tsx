@@ -812,7 +812,7 @@ export default function Profile() {
                     <StatRow label="Categories" val={profileData?.workerProfile?.categories?.length ? profileData.workerProfile.categories.join(', ') : '-'} />
                     {/* The Verify button lives on Settings > Verification; link straight to it */}
                     <StatRow label="Human Verified" val={isHumanVerified ? 'Yes' : (
-                      <>No <a href="/settings/verification" onClick={e => { e.preventDefault(); navigate('/settings/verification') }} style={{marginLeft:6,color:'var(--accent)',fontWeight:700,textDecoration:'underline'}}>Verify</a></>
+                      <>No <a href="/settings/verification" onClick={e => { e.preventDefault(); navigate('/settings/verification') }} style={{display:'inline-flex',alignItems:'center',minHeight:44,padding:'0 8px',margin:'-13px -8px -13px 0',color:'var(--accent)',fontWeight:700,textDecoration:'underline'}}>Verify</a></>
                     )} valClass={isHumanVerified ? 'yes' : 'no'} info onInfoClick={() => setShowInfo('humanVerified')} />
                     {!isKycVerified && (
                       <button className="dash-btn" style={{width:'100%',justifyContent:'center',marginTop:8}} onClick={() => navigate('/settings/verification')}>
@@ -1134,7 +1134,7 @@ export default function Profile() {
               <div className="wjd-info-overlay" onClick={() => setShowInfo(null)}>
                 <div className="wjd-info-panel" onClick={e => e.stopPropagation()}>
                   <div className="wjd-info-header"><div className="wjd-info-header-title"><Icon n="trending-up" s={15} /> Success Rate</div><button className="wjd-info-close" onClick={() => setShowInfo(null)}><i className="ti ti-x" /></button></div>
-                  <div className="wjd-info-body"><p style={{fontSize:13,lineHeight:1.7,margin:0,color:'var(--text2)'}}>Your success rate is the percentage of your submitted tasks that were approved: approved / (approved + rejected) × 100. A high success rate improves your OgaScore and helps you qualify for higher-paying tasks.</p></div>
+                  <div className="wjd-info-body"><p style={{fontSize:13,lineHeight:1.7,margin:0,color:'var(--text2)'}}>Your success rate is the percentage of your submitted tasks that were approved: approved / (approved + rejected) × 100. It shows how often your work gets approved. It doesn't change your OgaScore or your rank.</p></div>
                 </div>
               </div>
             )}
@@ -1171,7 +1171,7 @@ export default function Profile() {
               <>
                 <h2 style={{fontSize:18,fontWeight:900,marginBottom:16}}>What is Rank?</h2>
                 <p style={{fontSize:13,color:'var(--text)',lineHeight:1.6,marginBottom:12}}>
-                  Your Rank (level) reflects your experience and standing on OgaPay. It's determined by your OgaScore, tasks completed, success rate, and overall platform activity.
+                  Your Rank (level) reflects your experience on OgaPay. It comes from two things: how many jobs you've finished and your average rating from posters. Intermediate needs 10 finished jobs, Advanced 50 with a 4.0 rating, Expert 200 with 4.5, and Legend 500 with 4.8.
                 </p>
                 <p style={{fontSize:13,color:'var(--text)',lineHeight:1.6,marginBottom:12}}>
                   Higher ranks unlock access to exclusive tasks, premium communities, and higher reward opportunities. Keep completing tasks and building your reputation to level up.

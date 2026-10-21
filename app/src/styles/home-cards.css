@@ -95,6 +95,9 @@
 .hc-dots li::before { content: ''; width: 4px; height: 4px; border-radius: 50%; background: var(--money); }
 .hc-done { color: var(--green); }
 .hc-done i { font-size: 15px; }
+.hc-done.hc-todo { color: var(--hv-ink); }
+.hc-done.hc-todo i { color: var(--gold); }
+.hc-done.hc-no { color: var(--hv-muted); }
 .hc-foot { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--hv-line); padding-top: 12px; margin-top: auto; }
 .hc-foot time { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 500; color: var(--hv-muted); }
 .hc-foot time.hc-ended { color: var(--red); }

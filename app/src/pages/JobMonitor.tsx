@@ -42,6 +42,7 @@ export default function JobMonitor() {
   // The same chime the site-wide alert plays; switching Sound on plays it once
   const { testSound } = useJobAlert()
   const [jobs, setJobs] = useState<Job[] | null>(null)
+  // Jobs you hold a place on. An expired place (no work sent in time) can be taken again, so it's left out.
   const [taken, setTaken] = useState<Set<string>>(new Set())
   const [saved, setSavedIds] = useState<string[]>([])
   const [fresh, setFresh] = useState<Set<string>>(new Set())
@@ -55,7 +56,8 @@ export default function JobMonitor() {
 
   const load = useCallback(async () => {
     try {
-      const d: any = await apiRequest('/tasks?limit=50')
+      // ?eligible=1: each job says whether you can take it (the "Available for me" switch)
+      const d: any = await apiRequest('/tasks?limit=50&eligible=1')
       const list: Job[] = (Array.isArray(d) ? d : d?.tasks || []).filter((j: Job) => j.posterId !== user?.id)
       if (seen.current) {
         // Only jobs that appear after the page opened count as new
@@ -76,8 +78,8 @@ export default function JobMonitor() {
   }, [load])
 
   useEffect(() => {
-    apiRequest<{ submissions: { taskId: string }[] }>('/tasks/my/submissions')
-      .then((d) => setTaken(new Set((d?.submissions || []).map((s) => s.taskId)))).catch(() => {})
+    apiRequest<{ submissions: { taskId: string; status: string }[] }>('/tasks/my/submissions')
+      .then((d) => setTaken(new Set((d?.submissions || []).filter((s) => s.status !== 'EXPIRED').map((s) => s.taskId)))).catch(() => {})
     let live = true
     savedJobIds().then((ids) => { if (live) setSavedIds([...ids]) })
     const off = onSavedJobsChange((ids) => setSavedIds([...ids]))
@@ -120,7 +122,7 @@ export default function JobMonitor() {
           <div className="jm2-prefs">
             <label className="ui-switch"><input type="checkbox" checked={alerts} onChange={(e) => { setAlerts(e.target.checked); writePref('ogapay_jm_alerts', e.target.checked) }} /><span className="ui-switch-track" /> Pop-up alerts</label>
             <label className="ui-switch"><input type="checkbox" checked={sound} onChange={(e) => { setSound(e.target.checked); writePref('ogapay_jm_sound', e.target.checked); if (e.target.checked) testSound() }} /><span className="ui-switch-track" /> Sound</label>
-            {(alerts || sound) && <p className="jm2-prefs-note">Works on every OgaPay page while it's open. Your browser plays sound only after you've tapped the page once. Your own jobs don't alert you.</p>}
+            {(alerts || sound) && <p className="jm2-prefs-note">Works on every OgaPay page while it's open. Your browser plays sound only after you've tapped the page once. Your own jobs don't alert you{availableOnly ? ", and with Available for me on, neither do jobs you can't take" : ''}.</p>}
           </div>
         </div>
 

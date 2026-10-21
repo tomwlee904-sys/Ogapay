@@ -95,7 +95,10 @@ export function JobAlertProvider({ children }: { children: ReactNode }) {
     try {
       const token = localStorage.getItem('ogapay_access_token')
       if (!token) return
-      const res = await fetch(API_BASE + '/tasks?limit=50', {
+      // "Available for me" on the Job monitor: only alert for jobs you can take
+      // (?eligible=1 makes the server say which; it's skipped otherwise, as it costs more)
+      const onlyMine = pref('ogapay_jm_available')
+      const res = await fetch(API_BASE + '/tasks?limit=50' + (onlyMine ? '&eligible=1' : ''), {
         headers: { 'Authorization': 'Bearer ' + token },
       })
       const json = await res.json()
@@ -109,7 +112,7 @@ export function JobAlertProvider({ children }: { children: ReactNode }) {
         return
       }
       const seen = seenRef.current
-      const added = tasks.filter((t) => !seen.has(t.id))
+      const added = tasks.filter((t) => !seen.has(t.id) && (!onlyMine || t.eligible !== false))
       tasks.forEach((t) => seen.add(t.id))
       if (!added.length || !mountedRef.current) return
       const newest = [...added].sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())[0]
