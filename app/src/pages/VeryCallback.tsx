@@ -1,18 +1,34 @@
-﻿import { useEffect, useRef } from 'react'
-import { useSearchParams, useNavigate } from 'react-router-dom'
+﻿import { useEffect, useRef, useState } from 'react'
+import { Link, useSearchParams, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { apiRequest } from '../lib/api'
+import { apiRequest, getAccessToken } from '../lib/api'
+
+// VeryAI sends the person here after the palm scan, with ?code=&state=.
+// On Android this page often opens in a different browser or tab from the one
+// that started the check (VeryAI hands off from in-app browsers, and the VeryAI
+// app opens the default browser), where the person may not be signed in. The
+// server finishes the check from the state either way, so a signed-out visit
+// shows the result here instead of losing it on the way to sign-in.
+const SETTINGS = '/settings/verification'
+const SIGN_IN = `/login?redirect=${encodeURIComponent(SETTINGS)}`
 
 const VeryCallback = () => {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const { refreshUser } = useAuth()
   const done = useRef(false)
+  const [result, setResult] = useState<{ ok: boolean; text: string } | null>(null)
 
   useEffect(() => {
     if (done.current) return
     done.current = true
-    const fail = (message: string) => navigate('/settings/verification?human=error&message=' + encodeURIComponent(message), { replace: true })
+    const signedIn = !!getAccessToken()
+    const fail = (message: string) => {
+      if (signedIn) navigate(`${SETTINGS}?human=error&message=` + encodeURIComponent(message), { replace: true })
+      // An older server only finishes checks for a signed-in browser
+      else if (/no token|invalid access token|unauthori[sz]ed/i.test(message)) setResult({ ok: false, text: 'Sign in to OgaPay in this browser, then start the check again from Settings.' })
+      else setResult({ ok: false, text: message })
+    }
 
     const code = searchParams.get('code')
     const state = searchParams.get('state')
@@ -23,10 +39,31 @@ const VeryCallback = () => {
       method: 'POST',
       body: JSON.stringify({ code, state }),
     }).then(async () => {
+      if (!signedIn) { setResult({ ok: true, text: "You're verified as a human." }); return }
       await refreshUser()
-      navigate('/settings/verification?human=verified', { replace: true })
+      navigate(`${SETTINGS}?human=verified`, { replace: true })
     }).catch((err: any) => fail(err?.message || 'Verification failed'))
   }, [])
+
+  if (result) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', padding: 16, fontFamily: 'inherit' }}>
+        <div style={{ textAlign: 'center', maxWidth: 380 }}>
+          <i className={`ti ${result.ok ? 'ti-circle-check' : 'ti-alert-circle'}`} style={{ fontSize: 44, color: result.ok ? 'var(--green)' : 'var(--red, #dc2626)' }} />
+          <div style={{ fontWeight: 700, fontSize: 18, marginTop: 10 }}>{result.ok ? 'Scan confirmed' : "Verification didn't go through"}</div>
+          <p style={{ fontSize: 14, color: 'var(--text2)', marginTop: 8, lineHeight: 1.5 }}>{result.text}</p>
+          {result.ok && (
+            <p style={{ fontSize: 14, color: 'var(--text2)', marginTop: 8, lineHeight: 1.5 }}>
+              Go back to OgaPay where you started: it shows Verified (tap Check again if it doesn't yet). Or sign in here.
+            </p>
+          )}
+          <div className="btn-row" style={{ justifyContent: 'center', marginTop: 16 }}>
+            <Link className="btn btn-primary" to={SIGN_IN}>Sign in</Link>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div style={{minHeight:'100vh',display:'grid',placeItems:'center',fontFamily:'inherit'}}>

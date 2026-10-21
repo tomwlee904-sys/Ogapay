@@ -118,6 +118,49 @@ export default function Verification({ me, reload, providers }: SectionProps & {
     setHumanBusy(false)
   }
 
+  // "Check again": the server looks at this person's latest VeryAI check and,
+  // if VeryAI sent a result it couldn't confirm at the time, asks VeryAI again.
+  // The result can also have arrived in another browser or tab (VeryAI often
+  // opens one on Android), so this reads the server, never this page's copy.
+  // Servers before /very/check only have /very/status.
+  const [humanMsg, setHumanMsg] = useState('')
+  const [humanChecking, setHumanChecking] = useState(false)
+  const lastHumanCheck = useRef(0)
+  const checkHuman = useCallback(async (quiet = false) => {
+    lastHumanCheck.current = Date.now()
+    if (!quiet) setHumanChecking(true)
+    try {
+      let r: any
+      try { r = await apiRequest<any>('/social/very/check', { method: 'POST' }) }
+      catch (e) { r = await apiRequest<any>('/social/very/status').catch(() => { throw e }) }
+      if (r?.verified) {
+        setHumanMsg('')
+        toast("You're verified as a human", 'success')
+        await reload(); refreshUser()
+      } else if (!quiet) {
+        setHumanMsg(r?.message || r?.check?.message || "You're not verified yet. If the VeryAI app says the scan is complete, go back to the browser page that opened VeryAI, or start a new check.")
+      } else if (r?.check?.message) {
+        setHumanMsg(r.check.message)
+      }
+    } catch (e: any) {
+      if (!quiet) setHumanMsg(e?.message || "Couldn't check right now. Please try again.")
+    }
+    setHumanChecking(false)
+  }, [reload, refreshUser, toast])
+
+  // Look once on opening, and again when the person comes back to this tab
+  // (from the VeryAI app, say), so a finished scan shows without a reload
+  const humanPending = !me.humanVerifiedAt && !!providers?.very
+  useEffect(() => {
+    if (!humanPending) return
+    if (!lastHumanCheck.current) checkHuman(true)
+    const onVisible = () => {
+      if (document.visibilityState === 'visible' && Date.now() - lastHumanCheck.current > 15000) checkHuman(true)
+    }
+    document.addEventListener('visibilitychange', onVisible)
+    return () => document.removeEventListener('visibilitychange', onVisible)
+  }, [humanPending, checkHuman])
+
   const [bankMsg, setBankMsg] = useState('')
   const verifyBank = async (bank: { code: string; name: string }, accountNumber: string) => {
     const r = await apiRequest<any>('/kyc/bank', { method: 'POST', body: JSON.stringify({ bankCode: bank.code, bankName: bank.name, accountNumber }) })
@@ -247,9 +290,18 @@ export default function Verification({ me, reload, providers }: SectionProps & {
           sub={me.humanVerifiedAt ? <span className="st2-ok"><i className="ti ti-circle-check" /> Verified</span> : <span className="st2-muted">Not verified</span>}
         >
           {!me.humanVerifiedAt && (providers?.very
-            ? <button className="up-btn primary" onClick={startHuman} disabled={humanBusy}>{humanBusy ? 'Opening VeryAI…' : 'Verify with VeryAI'}</button>
+            ? <>
+                <button className="up-btn primary" onClick={startHuman} disabled={humanBusy}>{humanBusy ? 'Opening VeryAI…' : 'Verify with VeryAI'}</button>
+                <button className="up-btn" onClick={() => checkHuman()} disabled={humanChecking}>{humanChecking ? 'Checking…' : 'Check again'}</button>
+              </>
             : <span className="st2-muted">Coming soon</span>)}
         </Row>
+        {humanPending && (
+          <p className="st2-row-sub" style={{ margin: '0 0 4px' }}>
+            After the scan, go back to the browser page that opened VeryAI: it brings you back here. Already scanned? Tap Check again.
+          </p>
+        )}
+        {humanPending && humanMsg && <p className="st2-err">{humanMsg}</p>}
       </Card>
     </>
   )

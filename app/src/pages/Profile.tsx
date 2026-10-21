@@ -1161,7 +1161,7 @@ export default function Profile() {
                   Why it matters: Some tasks require Human Verified status as a trust signal. Task creators use it to filter out bots and ensure real people are completing their work.
                 </p>
                 <p style={{fontSize:13,color:'var(--text)',lineHeight:1.6,marginBottom:12}}>
-                  How to get it: Go to <strong>Settings → Verification</strong> and tap "Verify with VeryAI" under Human verification. You'll be sent to the VeryAI app for a quick scan.
+                  How to get it: Go to <strong>Settings → Verification</strong> and tap "Verify with VeryAI" for a quick palm scan in the VeryAI app. After the scan, go back to the browser page that opened VeryAI. Already scanned? Tap "Check again" there.
                 </p>
                 <div style={{fontSize:12,fontWeight:700,color:'var(--text2)',marginBottom:6}}>Also adds +10 to your OgaScore</div>
               </>
