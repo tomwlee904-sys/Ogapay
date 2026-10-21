@@ -1,5 +1,5 @@
-﻿import { useState, useEffect, useRef, ReactNode } from 'react'
-import { useLocation, useNavigationType } from 'react-router-dom'
+﻿// Scroll position on page changes (top on open, kept on Back) is ScrollManager's job, in App
+import { useState, useEffect, ReactNode } from 'react'
 import Navbar from './Navbar'
 import Drawer from './Drawer'
 import Sidebar from './Sidebar'
@@ -26,26 +26,6 @@ export default function Layout({ children, sidebar = false }: LayoutProps) {
       window.removeEventListener('offline', goOffline)
     }
   }, [])
-
-  const location = useLocation()
-  const navigationType = useNavigationType()
-  const scrollRef = useRef<Record<string, number>>({})
-  const scrollKey = location.pathname + location.search
-
-  // Save scroll per route before navigating away
-  useEffect(() => {
-    return () => { scrollRef.current[scrollKey] = window.scrollY }
-  }, [scrollKey])
-
-  // Restore scroll on POP (back/forward) navigation only
-  // Use a small delay so async content has time to render before restoring position
-  useEffect(() => {
-    if (navigationType !== 'POP') return
-    const saved = scrollRef.current[scrollKey]
-    if (saved) {
-      setTimeout(() => window.scrollTo(0, saved), 30)
-    }
-  }, [scrollKey, navigationType])
 
   return (
     <>

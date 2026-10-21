@@ -524,7 +524,8 @@ export default function Tasks() {
   const [jobs, setJobs] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState(searchParams.get('search') || '')
-  const [page, setPage] = useState(1)
+  // The page number is in the address too, so Back from a job returns to the same page
+  const [page, setPage] = useState(() => Math.max(1, Math.floor(Number(searchParams.get('page'))) || 1))
   const perPage = 12
   const [category, setCategory] = useState(searchParams.get('category') || 'All')
   const [sort, setSort] = useState(searchParams.get('sort') || 'default')
@@ -609,8 +610,15 @@ export default function Tasks() {
     })
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / perPage))
-  const paginated = filtered.slice((page - 1) * perPage, page * perPage)
-  useEffect(() => { setPage(1) }, [search, sort, req, category, availableOnly])
+  const shown = Math.min(page, totalPages) // an old address can name a page that no longer exists
+  const paginated = filtered.slice((shown - 1) * perPage, shown * perPage)
+  // A new search or filter starts again at page 1. Opening the list keeps the
+  // page number from the address.
+  const filterKey = [search, sort, req, category, availableOnly].join('|')
+  const lastFilters = useRef(filterKey)
+  useEffect(() => {
+    if (lastFilters.current !== filterKey) { lastFilters.current = filterKey; setPage(1) }
+  }, [filterKey])
 
   useEffect(() => {
     setSearchParams(prev => {
@@ -618,9 +626,10 @@ export default function Tasks() {
       const set = (k: string, v: string, def: string) => { if (v && v !== def) next.set(k, v); else next.delete(k) }
       set('category', category, 'All'); set('search', search, ''); set('sort', sort, 'default'); set('req', req, 'all')
       set('available', availableOnly ? '1' : '', '')
+      set('page', page > 1 ? String(page) : '', '')
       return next
     }, { replace: true })
-  }, [category, search, sort, req, availableOnly, setSearchParams])
+  }, [category, search, sort, req, availableOnly, page, setSearchParams])
 
   const goPage = (p: number) => { setPage(p); window.scrollTo({ top: 0, behavior: 'smooth' }) }
   const clearAll = () => { setSearch(''); setReq('all'); setCategory('All'); setAvailableOnly(false) }
@@ -682,9 +691,9 @@ export default function Tasks() {
             </div>
             {totalPages > 1 && (
               <nav className="ui-pager" aria-label="Pages">
-                <button className="ui-btn ui-btn-ghost" disabled={page === 1} onClick={() => goPage(page - 1)}><i className="ti ti-arrow-left" />Previous</button>
-                <span>Page {page} of {totalPages}</span>
-                <button className="ui-btn ui-btn-ghost" disabled={page === totalPages} onClick={() => goPage(page + 1)}>Next<i className="ti ti-arrow-right" /></button>
+                <button className="ui-btn ui-btn-ghost" disabled={shown === 1} onClick={() => goPage(shown - 1)}><i className="ti ti-arrow-left" />Previous</button>
+                <span>Page {shown} of {totalPages}</span>
+                <button className="ui-btn ui-btn-ghost" disabled={shown === totalPages} onClick={() => goPage(shown + 1)}>Next<i className="ti ti-arrow-right" /></button>
               </nav>
             )}
           </>

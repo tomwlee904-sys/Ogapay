@@ -6,6 +6,7 @@ import { ThemeProvider } from './context/ThemeContext'
 import { CurrencyProvider } from './context/CurrencyContext'
 import CanonicalUrl from './components/CanonicalUrl'
 import PageTitle from './components/PageTitle'
+import ScrollManager from './components/ScrollManager'
 import ProtectedRoute from './components/ProtectedRoute'
 import ErrorBoundary from './components/ErrorBoundary'
 import { ToastProvider } from './components/Toast'
@@ -106,6 +107,9 @@ export default function App() {
           <WalletBalanceProvider>
           <CurrencyProvider>
         <ToastProvider>
+        {/* Outside Suspense and the error screen, so it keeps running while a
+            page's code loads or after a page fails */}
+        <ScrollManager />
         <ErrorBoundary>
         <Suspense fallback={<PageLoader />}>
           <JobAlertProvider>
