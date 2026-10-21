@@ -64,6 +64,9 @@ const TYPE_ICONS: Record<string, { icon: string; color: string }> = {
   SUSPENSION_LIFTED:       { icon: 'ti ti-circle-check', color: 'var(--green)' },
   WARNING_WITHDRAWN:       { icon: 'ti ti-circle-check', color: 'var(--green)' },
   WARNING_APPEAL:          { icon: 'ti ti-message-report', color: '#F59E0B' },
+  BRAND_APPLICATION:       { icon: 'ti ti-building-store', color: 'var(--accent)' },
+  BRAND_VERIFIED:          { icon: 'ti ti-rosette-discount-check', color: 'var(--green)' },
+  BRAND_REJECTED:          { icon: 'ti ti-building-store', color: 'var(--red)' },
 }
 
 function resolveIcon(type: string, title: string) {
@@ -147,6 +150,9 @@ export default function TabNotificationsContent() {
     // Warnings (same rules as the backend push.service linkFor)
     if (['ACCOUNT_WARNING', 'JOBS_SUSPENDED', 'SUSPENSION_LIFTED', 'WARNING_WITHDRAWN'].includes(n.type)) return '/warnings'
     if (n.type === 'WARNING_APPEAL') return '/admin/warnings'
+    // Verified business badge
+    if (n.type === 'BRAND_VERIFIED' || n.type === 'BRAND_REJECTED') return '/settings/business'
+    if (n.type === 'BRAND_APPLICATION') return '/admin/brands'
     if (d.taskId && POSTER_JOB.has(n.type)) return `/manage-jobs?job=${d.taskId}`
     if (d.taskId && WORKER_JOB.has(n.type)) return `/tasks/${d.taskId}/submit`
     if (MONEY.has(n.type)) return '/wallet'

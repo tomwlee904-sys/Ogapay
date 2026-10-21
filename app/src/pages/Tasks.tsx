@@ -13,6 +13,7 @@ import { useTheme } from '../context/ThemeContext'
 import { useCurrency } from '../context/CurrencyContext'
 import { SkeletonPage, injectSkeletonStyles } from "../components/SkeletonLoader"
 import { HomeJobCard } from '../components/home/HomeCards'
+import { VerifiedBusinessMark } from '../components/Perks'
 import { sized } from '../lib/img'
 import { jobDeadline } from '../lib/deadline'
 import InfoTip from '../components/InfoTip'
@@ -229,7 +230,7 @@ function JobDetailModal({ job, onClose, onApply }: { job: any; onClose: () => vo
             </div>
             <div>
               <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 2 }}>Listed by</div>
-              <div style={{ fontWeight: 800, fontSize: 14 }}>{job.creatorName || job.creator?.username || job.creator || 'Anonymous'}</div>
+              <div style={{ fontWeight: 800, fontSize: 14 }}>{job.creatorName || job.creator?.username || job.creator || 'Anonymous'}{(job._raw?.poster || job.poster)?.posterProfile?.isVerified && <VerifiedBusinessMark name={(job._raw?.poster || job.poster)?.posterProfile?.verifiedName} />}</div>
             </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>

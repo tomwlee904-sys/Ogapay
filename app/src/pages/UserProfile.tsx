@@ -8,7 +8,7 @@ import { apiRequest } from "../lib/api"
 import { useAuth } from "../context/AuthContext"
 import { openSignIn } from "../lib/signin"
 import "../styles/profile-public.css"
-import { PremiumMark } from "../components/Perks";
+import { PremiumMark, VerifiedBusinessMark } from "../components/Perks";
 import { sized } from '../lib/img'
 import CreatorAudiences from "../components/profile/CreatorAudiences"
 import InfoTip from '../components/InfoTip'
@@ -276,6 +276,7 @@ export default function UserProfile() {
                 <h1>{name}</h1>
                 {profile.humanVerified && <span className="up-badge ok"><i className="ti ti-fingerprint" /> Human verified</span>}
                 {profile.kycVerified && <span className="up-badge ok"><i className="ti ti-shield-check" /> ID verified</span>}
+                {profile.posterProfile?.isVerified && <VerifiedBusinessMark label name={profile.posterProfile.verifiedName} />}
                 {profile.premium && <PremiumMark label />}
               </div>
               <div className="up-handle">@{handle} · Joined {fmtDate(profile.createdAt, { month: "long", year: "numeric" })}</div>
@@ -297,6 +298,10 @@ export default function UserProfile() {
                 {/* Admins: warn this member for breaking the rules (Admin > Warnings) */}
                 {!isMe && me?.role === "ADMIN" && (
                   <Link className="up-btn" to={`/admin/warnings?warn=${encodeURIComponent(handle)}`}><i className="ti ti-alert-triangle" /> Warn</Link>
+                )}
+                {/* Posters can ask for the Verified business badge (optional, Settings > Business) */}
+                {isMe && !profile.posterProfile?.isVerified && (profile.posterProfile?.totalPosted || 0) > 0 && (
+                  <Link className="up-btn" to="/settings/business"><i className="ti ti-rosette-discount-check" /> Get a Verified business badge</Link>
                 )}
               </div>
             </div>

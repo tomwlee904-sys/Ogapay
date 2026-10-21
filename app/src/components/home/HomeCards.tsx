@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { plainJobText } from '../../lib/jobText'
 import { jobRequirements } from "../../lib/requirements";
 import { CATEGORY_LABELS as CATEGORY } from "../../lib/categories";
-import { BoostedTag, PremiumMark } from "../Perks";
+import { BoostedTag, PremiumMark, VerifiedBusinessMark } from "../Perks";
 import Money from "../Money";
 import ItemCover, { itemCategoryLabel } from "../ItemCover";
 import { spokenMoney } from "../../lib/money";
@@ -54,7 +54,7 @@ export function HomeJobCard({ task, convert, myStatus }: { task: any; convert: C
 
       <div className="hc-by">
         <Avatar src={poster.avatarUrl} name={name} />
-        <span className="hc-by-txt"><span>Listed by</span><b>{name}{poster.premium && <PremiumMark />}</b></span>
+        <span className="hc-by-txt"><span>Listed by</span><b>{name}{poster.posterProfile?.isVerified && <VerifiedBusinessMark name={poster.posterProfile.verifiedName} />}{poster.premium && <PremiumMark />}</b></span>
       </div>
 
       <div className="hc-reward">

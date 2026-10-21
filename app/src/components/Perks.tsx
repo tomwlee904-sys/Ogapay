@@ -11,3 +11,14 @@ export function PremiumMark({ label = false }: { label?: boolean }) {
 export function BoostedTag() {
   return <span className="oga-boost" title="Boosted: listed first for now"><i className="ti ti-rocket" aria-hidden="true" />Boosted</span>
 }
+
+// A job poster whose business an admin has checked (Settings > Business).
+// `name` is the checked business name, shown on hover.
+export function VerifiedBusinessMark({ label = false, name }: { label?: boolean; name?: string | null }) {
+  const title = name ? `Verified business: ${name}` : 'Verified business'
+  return (
+    <span className={`oga-biz${label ? '' : ' icon'}`} title={title} aria-label={label ? undefined : title}>
+      <i className="ti ti-rosette-discount-check" aria-hidden="true" />{label && 'Verified business'}
+    </span>
+  )
+}

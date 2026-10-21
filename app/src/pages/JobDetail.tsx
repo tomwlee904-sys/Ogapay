@@ -8,7 +8,7 @@ import { useToast } from '../components/Toast'
 import { API_BASE, apiRequest, getAccessToken } from '../lib/api'
 import { savedJobIds, setSaved } from '../lib/bookmarks'
 import { jobRequirements, rankName } from '../lib/requirements'
-import { BoostedTag, PremiumMark } from '../components/Perks'
+import { BoostedTag, PremiumMark, VerifiedBusinessMark } from '../components/Perks'
 import Money from '../components/Money'
 import ContestPanel, { type ContestInfo } from '../components/ContestPanel'
 import JobActivity from '../components/JobActivity'
@@ -84,6 +84,7 @@ interface JobData {
   brandHandle: string
   brandAvatar: string
   brandVerified: boolean
+  brandVerifiedName?: string | null
   brandPremium?: boolean
   boosted?: boolean
   category: string
@@ -329,6 +330,7 @@ export default function JobDetail() {
       brandHandle: t.poster?.username || t.creatorHandle || t.brandHandle || '',
       brandAvatar: t.poster?.avatarUrl || t.creatorAvatar || t.brandAvatar || '',
       brandVerified: t.poster?.posterProfile?.isVerified || t.creatorVerified || false,
+      brandVerifiedName: t.poster?.posterProfile?.verifiedName || null,
       brandPremium: !!t.poster?.premium,
       boosted: !!t.isBoosted,
       category: t.category || 'Others / General',
@@ -1012,6 +1014,7 @@ function WurkJobDetailView(props: any) {
                 <div className="wjd-kicker">Listed by</div>
                 <div className="wjd-name">
                   {agentName}
+                  {job.brandVerified && <VerifiedBusinessMark label name={job.brandVerifiedName} />}
                   {job.brandPremium && <PremiumMark />}
                   {job.boosted && <span style={{ marginLeft: 8 }}><BoostedTag /></span>}
                 </div>
