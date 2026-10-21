@@ -973,7 +973,7 @@ body.auth-open{overflow:hidden}
 .earn-section .earn-sub{color:var(--text2)}
 [data-theme="dark"] .earn-section .earn-sub{color:rgba(255,255,255,.6)}
 .earn-section .container{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center}
-.earn-label{font-family:"DM Mono",monospace;font-size:12px;font-weight:700;letter-spacing:1px;color:var(--accent,#0a0a0a);margin:0 0 12px}
+.earn-label{font-family:var(--font-mono);font-size:12px;font-weight:700;letter-spacing:1px;color:var(--accent,#0a0a0a);margin:0 0 12px}
 .earn-heading{font-family:"Inter";font-size:clamp(32px,4vw,44px);font-weight:800;letter-spacing:-1px;line-height:1.1;margin:0 0 16px;color:var(--on-accent)}
 .earn-sub{font-size:16px;line-height:1.65;color:var(--text2);margin:0 0 28px;max-width:480px}
 .earn-cta{display:inline-flex;align-items:center;gap:10px;height:48px;padding:0 28px;border-radius:999px;background:var(--primary);color:var(--bg);font-weight:800;font-size:15px;text-decoration:none;transition:.2s}

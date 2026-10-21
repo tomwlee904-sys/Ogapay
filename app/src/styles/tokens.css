@@ -364,7 +364,7 @@ footer { @apply border-t border-[var(--border)] py-10 px-6 text-center bg-[var(-
 }
 .store-card-img-placeholder {
   @apply grid place-items-center w-full h-full;
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--font);
   font-size: 26px;
   font-weight: 900;
   color: var(--text3);
@@ -561,7 +561,7 @@ footer { @apply border-t border-[var(--border)] py-10 px-6 text-center bg-[var(-
 .community-cover {
   @apply relative w-full shrink-0 overflow-hidden flex items-center justify-center;
   height: 192px;
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--font);
   font-size: 42px;
   font-weight: 900;
 }

@@ -10,7 +10,7 @@ function TerminalMockup({ cmd, output }: { cmd: string; output: string[] }) {
     <div style={{
       background: "#121611", borderRadius: 16, overflow: "hidden",
       boxShadow: "0 20px 60px rgba(0,0,0,.18)",
-      fontFamily: "'JetBrains Mono', 'DM Mono', monospace", fontSize: 13,
+      fontFamily: "var(--font-mono)", fontSize: 13,
     }}>
       <div style={{ display: "flex", alignItems: "center", padding: "12px 16px", borderBottom: "1px solid rgba(255,255,255,.06)" }}>
         <div style={{ display: "flex", gap: 7 }}>

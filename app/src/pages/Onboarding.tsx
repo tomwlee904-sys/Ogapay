@@ -21,8 +21,6 @@ const Logo = ({ size = 28 }) => (
 );
 
 const css = `
-  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Outfit:wght@600;700;800;900&display=swap');
-
   .og-wrap { font-family: "Inter", sans-serif; background: #f4f4f5; height: 100vh; display: flex; flex-direction: column; overflow: hidden; color: #111; font-size: 14px; }
 
   /* layout */
