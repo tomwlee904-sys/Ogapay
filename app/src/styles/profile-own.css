@@ -83,3 +83,6 @@
 .xv-verify { justify-self: stretch !important; }
 .xv-msg { padding: 12px 14px; border-radius: 12px; background: rgba(239, 68, 68, .1); color: var(--text); font-size: 13px; line-height: 1.5; }
 .xv-msg.ok { background: rgba(16, 185, 129, .12); }
+.xp-score { margin: 0; font-size: 13px; line-height: 1.5; color: var(--text2); }
+.xp-score b { color: var(--text); }
+.xp-score a { margin-left: 6px; color: var(--text); font-weight: 700; text-decoration: underline; }

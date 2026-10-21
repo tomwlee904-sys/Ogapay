@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { apiRequest } from '../../lib/api'
 import { useAuth } from '../../context/AuthContext'
 import { xRead, type XProfile } from '../../lib/xprofile'
@@ -88,7 +89,21 @@ export default function ProfileConnectXCard({ connected, handle, profile, onChan
   const shown = now?.profile ?? profile ?? null
   const update = (h: string, p: XProfile | null) => { setNow({ handle: h, profile: p }); onChange?.() }
 
-  if ((connected || now) && shownHandle) {
+  // Your X score (services/xscore.service.js). Some jobs need a minimum, so show it
+  // here too; the full breakdown is on /rank. Loaded again after a connect or refresh,
+  // since new followers or a blue tick change it.
+  const isConnected = !!((connected || now) && shownHandle)
+  const [xScore, setXScore] = useState<{ score: number; max: number } | null>(null)
+  useEffect(() => {
+    if (!isConnected) return
+    let live = true
+    apiRequest<{ x: { connected: boolean; score: number; max: number } }>('/scores/me')
+      .then((d) => { if (live && d?.x?.connected) setXScore({ score: d.x.score, max: d.x.max || 100 }) })
+      .catch(() => {})
+    return () => { live = false }
+  }, [isConnected, now])
+
+  if (isConnected) {
     return (
       <section className="po-card">
         <div className="po-head">
@@ -100,6 +115,9 @@ export default function ProfileConnectXCard({ connected, handle, profile, onChan
           <p className="xp-note">
             {xRead(shown) ? 'You can take jobs that require an X account.' : "You can take jobs that require an X account. Refresh from X to bring in your picture, name, bio and followers."}
           </p>
+          {xScore && (
+            <p className="xp-score">X score <b>{xScore.score}</b> / {xScore.max} <Link to="/rank">See breakdown</Link></p>
+          )}
           <XRefresh handle={shownHandle} onRefreshed={(p, h) => update(h, p)} />
         </div>
       </section>
