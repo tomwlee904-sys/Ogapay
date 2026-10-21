@@ -824,7 +824,7 @@ export default function Profile() {
                     <StatRow label="Tasks Completed" val={profileData?.workerProfile?.tasksCompleted ?? 0} />
                     <StatRow label="Success Rate" val={profileData?.workerProfile?.successRate ? profileData.workerProfile.successRate + '%' : '0%'} info onInfoClick={() => setShowInfo('successRate')} />
                     <StatRow label="Total Earned" val={profileData?.workerProfile?.totalEarned ? show(Number(profileData.workerProfile.totalEarned)) : show(0)} />
-                    <StatRow label="Avg Rating" val={profileData?.workerProfile?.avgRating?.toFixed(1) || '0.0'} info />
+                    <StatRow label="Rating" val={profileData?.workerProfile?.totalRatings ? `${Number(profileData.workerProfile.avgRating || 0).toFixed(1)}/5 (${profileData.workerProfile.totalRatings})` : 'No ratings yet'} info onInfoClick={() => setShowInfo('avgRating')} />
                     <StatRow label="Skills" val={profileData?.workerProfile?.skills?.length ? profileData.workerProfile.skills.slice(0,3).join(', ')+(profileData.workerProfile.skills.length>3?' +' + (profileData.workerProfile.skills.length - 3):'') : '-'} />
                     <StatRow label="Categories" val={profileData?.workerProfile?.categories?.length ? profileData.workerProfile.categories.join(', ') : '-'} />
                     <StatRow label="Human Verified" val={isHumanVerified ? 'Yes' : 'No'} valClass={isHumanVerified ? 'yes' : 'no'} info onInfoClick={() => setShowInfo('humanVerified')} />
@@ -1187,13 +1187,18 @@ export default function Profile() {
                 </div>
               </div>
             )}
+            {/* Keep in sync with the backend: task.service reviewSubmission and calculateLevel */}
             {showInfo === 'avgRating' && (
-              <div className="wjd-info-overlay" onClick={() => setShowInfo(null)}>
-                <div className="wjd-info-panel" onClick={e => e.stopPropagation()}>
-                  <div className="wjd-info-header"><div className="wjd-info-header-title"><Icon n="star" s={15} /> Avg Rating</div><button className="wjd-info-close" onClick={() => setShowInfo(null)}><i className="ti ti-x" /></button></div>
-                  <div className="wjd-info-body"><p style={{fontSize:13,lineHeight:1.7,margin:0,color:'var(--text2)'}}>Your average rating is calculated from reviews left by task creators after you complete a task. Ratings range from 1–5 stars. Consistently high ratings unlock higher task levels (Advanced, Expert, Legend).</p></div>
-                </div>
-              </div>
+              <>
+                <h2 style={{fontSize:18,fontWeight:900,marginBottom:16}}>What is Rating?</h2>
+                <p style={{fontSize:13,color:'var(--text)',lineHeight:1.6,marginBottom:12}}>
+                  When a job poster approves your work, they can give it 1 to 5 stars and a short note. Your rating is the average of those stars. The number in brackets is how many ratings you have.
+                </p>
+                <p style={{fontSize:13,color:'var(--text)',lineHeight:1.6,marginBottom:12}}>
+                  Higher ranks need a good rating as well as finished jobs: Advanced needs 4.0, Expert 4.5 and Legend 4.8.
+                </p>
+                <div style={{fontSize:12,fontWeight:700,color:'var(--text2)',marginBottom:6}}>Your ratings and notes show on your public profile under Reviews.</div>
+              </>
             )}
             {showInfo === 'humanVerified' && (
               <>

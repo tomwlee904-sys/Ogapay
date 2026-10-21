@@ -12,6 +12,7 @@ import { BoostedTag, PremiumMark } from '../components/Perks'
 import Money from '../components/Money'
 import ContestPanel, { type ContestInfo } from '../components/ContestPanel'
 import JobActivity from '../components/JobActivity'
+import RateWork, { RatedStars } from '../components/RateWork'
 import { formatMoney } from '../lib/money'
 import { jobDeadline, deadlineLabel, deadlineDate } from '../lib/deadline'
 import { categoryLabel } from '../lib/categories'
@@ -243,21 +244,26 @@ export default function JobDetail() {
   const [approving, setApproving] = useState<string | null>(null)
   const [rejecting, setRejecting] = useState<string | null>(null)
 
-  const handleApprove = async (subId: string) => {
+  // Optional 1-5 stars and a short note go with the approval (components/RateWork.tsx)
+  const handleApprove = async (subId: string, rating = 0, note = '') => {
     setApproving(subId)
     try {
       const token = localStorage.getItem('ogapay_access_token')
       if (!token) return
+      const feedback = note.trim()
       const res = await fetch(API_BASE + '/tasks/submissions/' + subId + '/review', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-        body: JSON.stringify({ status: 'APPROVED' }),
+        body: JSON.stringify({ status: 'APPROVED', ...(rating ? { rating, ...(feedback ? { feedback } : {}) } : {}) }),
       })
       const json = await res.json()
       if (json.success) {
         const apiApprovedAt = json.data?.approvedAt || json.approvedAt
-        setSubmissions(prev => prev.map(s => s.id === subId ? { ...s, status: 'APPROVED', _approvedAt: apiApprovedAt || Date.now() } : s))
+        setSubmissions(prev => prev.map(s => s.id === subId ? { ...s, status: 'APPROVED', rating: rating || null, feedback: rating && feedback ? feedback : null, _approvedAt: apiApprovedAt || Date.now() } : s))
+        showToast(rating ? `Approved and paid. You gave ${rating}/5.` : 'Approved and paid.', 'success')
         refreshUser()
+      } else {
+        showToast(json.message || 'Failed to approve submission', 'error')
       }
     } catch (e: any) { showToast(e?.message || 'Failed to approve submission', 'error') }
     setApproving(null)
@@ -545,6 +551,10 @@ function WurkJobDetailView(props: any) {
   const [transError, setTransError] = useState('')
   const [showTranslatePicker, setShowTranslatePicker] = useState(false)
   const [selectedSub, setSelectedSub] = useState<any | null>(null)
+  // Stars and a note for the work open in the detail window; cleared for each new one
+  const [rateStars, setRateStars] = useState(0)
+  const [rateNote, setRateNote] = useState('')
+  useEffect(() => { setRateStars(0); setRateNote('') }, [selectedSub?.id])
 
   const LANGUAGES = [
     { code: 'es', label: 'Spanish' }, { code: 'fr', label: 'French' },
@@ -703,6 +713,8 @@ function WurkJobDetailView(props: any) {
         /* Modals */
         .wjd-modal-bg{position:fixed;inset:0;z-index:10000;display:grid;place-items:center;background:rgba(0,0,0,.5);padding:20px}
         .wjd-before,.wjd-report-modal{width:min(94vw,540px);background:var(--card,#fff);color:var(--text,#0f172a);border-radius:18px;box-shadow:0 30px 70px rgba(0,0,0,0.2);overflow:hidden}
+        /* Taller than a phone screen (a submission with stars and a note): scroll inside, so Approve stays reachable */
+        .wjd-report-modal{max-height:calc(100vh - 40px);max-height:calc(100dvh - 40px);overflow-y:auto;overscroll-behavior:contain}
         .wjd-before{padding:24px 26px}
         .wjd-modal-head{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:20px}
         .wjd-before-title{font-size:17px;font-weight:900}
@@ -1193,11 +1205,12 @@ function WurkJobDetailView(props: any) {
                               <div className="wjd-sub-actions" onClick={(e: any) => e.stopPropagation()}>
                                 {sub.status === 'SUBMITTED' && (
                                   <>
-                                    <button className="wjd-ok" type="button" onClick={() => handleApprove(sub.id)} disabled={approving === sub.id}>{approving === sub.id ? 'Approving...' : 'Approve'}</button>
+                                    <button className="wjd-ok" type="button" onClick={() => setSelectedSub(sub)} disabled={approving === sub.id}>{approving === sub.id ? 'Approving...' : 'Approve'}</button>
                                     <button className="wjd-no" type="button" onClick={() => handleReject(sub.id)} disabled={rejecting === sub.id}>{rejecting === sub.id ? 'Rejecting...' : 'Reject'}</button>
                                   </>
                                 )}
                                 {sub.status === 'APPROVED' && (sub._approvedAt || sub.approvedAt) ? <PayoutCountdown approvedAt={sub._approvedAt || sub.approvedAt} /> : sub.status === 'APPROVED' ? <span style={{ color: 'var(--green)', fontSize: 12, fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 4 }}><i className="ti ti-check" aria-hidden="true" /> Approved</span> : null}
+                                {sub.status === 'APPROVED' && sub.rating ? <span style={{ color: 'var(--text2,#475569)', fontSize: 12, display: 'inline-flex', alignItems: 'center', gap: 4 }}><RatedStars value={sub.rating} /> {sub.rating}/5</span> : null}
                                 {sub.status === 'REJECTED' && <span style={{ color: '#dc2626', fontSize: 12, fontWeight: 700 }}><i className="ti ti-circle-x" /> Rejected</span>}
                                 {sub.status === 'EXPIRED' && <span style={{ color: 'var(--text3)', fontSize: 12, fontWeight: 700 }}><i className="ti ti-clock-x" /> Slot released</span>}
                                 <span style={{ color: 'var(--text3,#94a3b8)', fontSize: 12, marginLeft: 'auto' }}>{timeAgo(sub.createdAt)}</span>
@@ -1399,9 +1412,23 @@ function WurkJobDetailView(props: any) {
               )}
               <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3,#9ca3af)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Submitted</div>
               <div style={{ fontSize: 13, color: 'var(--text2,#475569)', marginBottom: 16 }}>{timeAgo(selectedSub.createdAt)}</div>
+              {selectedSub.status === 'APPROVED' && selectedSub.rating ? (
+                <>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3,#9ca3af)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Your rating</div>
+                  <div style={{ fontSize: 13, color: 'var(--text,#0f172a)', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                    <RatedStars value={selectedSub.rating} size={14} /> {selectedSub.rating}/5{selectedSub.feedback ? ` · “${selectedSub.feedback}”` : ''}
+                  </div>
+                </>
+              ) : null}
+              {selectedSub.status === 'SUBMITTED' && !contest && (
+                <div style={{ marginBottom: 14 }}>
+                  <RateWork who={selectedSub.worker?.username ? `@${selectedSub.worker.username}` : 'this worker'} rating={rateStars} note={rateNote}
+                    onRating={setRateStars} onNote={setRateNote} disabled={approving === selectedSub.id} />
+                </div>
+              )}
               {selectedSub.status === 'SUBMITTED' && (
-                <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
-                  <button className="wjd-ok" type="button" onClick={() => { handleApprove(selectedSub.id); setSelectedSub(null) }} disabled={approving === selectedSub.id}>{approving === selectedSub.id ? 'Approving...' : 'Approve'}</button>
+                <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                  <button className="wjd-ok" type="button" onClick={() => { handleApprove(selectedSub.id, contest ? 0 : rateStars, rateNote); setSelectedSub(null) }} disabled={approving === selectedSub.id}>{approving === selectedSub.id ? 'Approving...' : contest ? 'Approve' : `Approve and pay ${formatMoney(Number(job.reward || 0), rewardCurrency)}`}</button>
                   <button className="wjd-no" type="button" onClick={() => { handleReject(selectedSub.id); setSelectedSub(null) }} disabled={rejecting === selectedSub.id}>{rejecting === selectedSub.id ? 'Rejecting...' : 'Reject'}</button>
                 </div>
               )}

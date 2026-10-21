@@ -9,6 +9,7 @@ import { listTemplates, saveTemplate, taskToTemplateData, type JobTemplate, type
 import "../styles/manage-jobs.css";
 import InfoTip from '../components/InfoTip'
 import { missingLink, missingLinkText } from "../lib/jobText";
+import RateWork, { RatedStars } from '../components/RateWork'
 
 // Manage jobs: the poster's jobs, their review queue and job actions.
 // Counts come from each job's submissions (by status). The old page used
@@ -19,6 +20,7 @@ type Sub = {
   id: string; status: string; createdAt: string; submittedAt?: string | null; reviewedAt?: string | null
   proof?: string | null; workerNotes?: string | null; posterNotes?: string | null; attachments?: any[]
   autoApproveAt?: string | null
+  rating?: number | null; feedback?: string | null
   worker?: { id: string; username?: string | null; firstName?: string | null; lastName?: string | null; avatarUrl?: string | null }
 }
 type Task = {
@@ -96,6 +98,9 @@ function JobDrawer({ task, allTasks, onClose, onChanged }: { task: Task; allTask
   const [busy, setBusy] = useState<string | null>(null);
   const [rejecting, setRejecting] = useState<string | null>(null);
   const [reason, setReason] = useState("");
+  // Stars and a note for each piece of work, sent with "Approve and pay" (optional)
+  const [stars, setStars] = useState<Record<string, number>>({});
+  const [notes, setNotes] = useState<Record<string, string>>({});
   const [blocked, setBlocked] = useState<Set<string>>(new Set());
   const [tpl, setTpl] = useState<"" | "saving" | "saved">("");
   const cur = task.currency || "NGN";
@@ -120,9 +125,15 @@ function JobDrawer({ task, allTasks, onClose, onChanged }: { task: Task; allTask
 
   const review = async (s: Sub, status: "APPROVED" | "REJECTED") => {
     setBusy(s.id);
+    const rating = status === "APPROVED" ? stars[s.id] || 0 : 0;
+    const note = (notes[s.id] || "").trim();
     try {
-      await apiRequest(`/tasks/submissions/${s.id}/review`, { method: "PATCH", body: JSON.stringify({ status, ...(status === "REJECTED" && reason.trim() ? { posterNotes: reason.trim() } : {}) }) });
-      toast(status === "APPROVED" ? `Approved. @${who(s.worker)} gets ${money(reward, cur)}.` : "Rejected. The slot is open again.", "success");
+      await apiRequest(`/tasks/submissions/${s.id}/review`, { method: "PATCH", body: JSON.stringify({
+        status,
+        ...(status === "REJECTED" && reason.trim() ? { posterNotes: reason.trim() } : {}),
+        ...(rating ? { rating, ...(note ? { feedback: note } : {}) } : {}),
+      }) });
+      toast(status === "APPROVED" ? `Approved. @${who(s.worker)} gets ${money(reward, cur)}${rating ? ` and your ${rating}/5 rating` : ""}.` : "Rejected. The slot is open again.", "success");
       setRejecting(null); setReason("");
       await load(); onChanged();
     } catch (e: any) { toast(e?.message || "That didn't work. Try again.", "error"); }
@@ -274,10 +285,14 @@ function JobDrawer({ task, allTasks, onClose, onChanged }: { task: Task; allTask
                         </div>
                       </div>
                     ) : (
+                      <>
+                      <RateWork who={`@${who(s.worker)}`} rating={stars[s.id] || 0} note={notes[s.id] || ""} disabled={busy === s.id}
+                        onRating={(v) => setStars((m) => ({ ...m, [s.id]: v }))} onNote={(v) => setNotes((m) => ({ ...m, [s.id]: v }))} />
                       <div className="mj-acts">
                         <button className="ui-btn ui-btn-dark" disabled={busy === s.id} onClick={() => review(s, "APPROVED")}><Icon n="check" s={15} /> {busy === s.id ? "Approving…" : `Approve and pay ${money(reward, cur)}`}</button>
                         <button className="ui-btn ui-btn-ghost" disabled={busy === s.id} onClick={() => { setRejecting(s.id); setReason(""); }}>Reject</button>
                       </div>
+                      </>
                     )}
                   </div>
                 ))}
@@ -303,7 +318,7 @@ function JobDrawer({ task, allTasks, onClose, onChanged }: { task: Task; allTask
                 <section className="mj-sec">
                   <h4>Approved ({approved.length})</h4>
                   <div className="mj-rows">{approved.map((s) => (
-                    <div key={s.id} className="mj-row"><div className="mj-who"><Avatar w={s.worker} /><div><WorkerLink w={s.worker} /><small>Paid {money(reward, cur)}{s.reviewedAt ? ` · ${day(s.reviewedAt)}` : ""}</small></div></div></div>
+                    <div key={s.id} className="mj-row"><div className="mj-who"><Avatar w={s.worker} /><div><WorkerLink w={s.worker} /><small>Paid {money(reward, cur)}{s.reviewedAt ? ` · ${day(s.reviewedAt)}` : ""}</small>{s.rating ? <p><RatedStars value={s.rating} /> {s.rating}/5{s.feedback ? ` · “${s.feedback}”` : ""}</p> : null}</div></div></div>
                   ))}</div>
                 </section>
               )}

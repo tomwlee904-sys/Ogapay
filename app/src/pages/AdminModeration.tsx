@@ -1,12 +1,16 @@
 import { useState, useEffect } from 'react'
 import Layout from '../components/Layout'
 import { apiRequest } from '../lib/api'
+import RateWork from '../components/RateWork'
 
 export default function AdminModeration() {
   const [queue, setQueue] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState<string | null>(null)
   const [msg, setMsg] = useState('')
+  // Optional stars and a note for work we approve; they count towards the worker's rating
+  const [stars, setStars] = useState<Record<string, number>>({})
+  const [notes, setNotes] = useState<Record<string, string>>({})
   // Store orders where the buyer reported a problem: the payment waits for us
   const [disputes, setDisputes] = useState<any[] | null>(null)
   const loadDisputes = () => apiRequest<any[]>('/store/admin/disputes').then((d) => setDisputes(Array.isArray(d) ? d : [])).catch(() => setDisputes([]))
@@ -44,7 +48,7 @@ export default function AdminModeration() {
     try {
       await apiRequest(`/admin/moderation/resolve/${submissionId}`, {
         method: 'POST',
-        body: JSON.stringify({ action }),
+        body: JSON.stringify({ action, ...(action === 'APPROVED' && stars[submissionId] ? { rating: stars[submissionId], feedback: (notes[submissionId] || '').trim() || undefined } : {}) }),
       })
       setQueue(prev => prev.filter(s => s.id !== submissionId))
       setMsg(`Submission ${action.toLowerCase()} successfully`)
@@ -162,6 +166,8 @@ export default function AdminModeration() {
                     <span><i className="ti ti-clock" /> {s.submittedAt ? timeSince(s.submittedAt) : '?'} ago</span>
                     {s.proof && <span><i className="ti ti-link" /> <a href={s.proof} target="_blank" rel="noreferrer" style={{color:'var(--accent)',textDecoration:'none'}}>Proof</a></span>}
                   </div>
+                  <RateWork who={s.worker?.firstName || 'the worker'} rating={stars[s.id] || 0} note={notes[s.id] || ''} disabled={busy === s.id}
+                    onRating={(v) => setStars((m) => ({ ...m, [s.id]: v }))} onNote={(v) => setNotes((m) => ({ ...m, [s.id]: v }))} />
                 </div>
                 <div className="mod-actions">
                   <button className="btn-approve" onClick={() => handleResolve(s.id, 'APPROVED')} disabled={busy === s.id}>
