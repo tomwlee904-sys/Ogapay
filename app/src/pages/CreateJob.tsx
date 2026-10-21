@@ -18,7 +18,7 @@ import { Steps, Fold, Toggle as CfToggle, OverviewCard, RequirementPicker, DURAT
 import TemplatesModal from "../components/create/TemplatesModal";
 import { useProviders } from "../lib/providers";
 import "../styles/create.css";
-import { missingLink, missingLinkText } from '../lib/jobText'
+import { missingLink, missingLinkText, TEMPLATE_BLANKS } from '../lib/jobText'
 import InfoTip from '../components/InfoTip'
 // -- COLOR TOKENS ----------------------------------------------------------
 const C = {
@@ -279,7 +279,7 @@ function ContestPrizes({ currency, setCurrency, prizes, setPrizes, target, setTa
         <span className="cf-lbl">How winners are chosen <InfoTip label="How are winners chosen?" title="Choosing the winners">
           <ul>
             <li><b>I pick the winners:</b> when entries close you rank the best entries. If you haven't within 3 days, the earliest entries you haven't rejected win.</li>
-            <li><b>Random draw:</b> nobody picks, not even you. When entries close OgaPay draws the winners at random from the entries you haven't rejected, and pays them at once. The seed and the drawn order are shown on the job page, so anyone can check the draw. Good for giveaways like "comment and 3 people win". Reject any entry that breaks your rules before entries close: rejected entries aren't in the draw.</li>
+            <li><b>Random draw:</b> nobody picks, not even you. When entries close OgaPay draws the winners at random from the entries you haven't rejected, and pays them at once. The seed and the drawn order are shown on the job page, so anyone can check the draw. Good for giveaways like "comment and 3 people win". Only verified people can enter, so each person gets one ticket. Reject any entry that breaks your rules before entries close: rejected entries aren't in the draw, and after the close nothing can be rejected.</li>
           </ul>
         </InfoTip></span>
         <div className="cf-modes" role="radiogroup" aria-label="How winners are chosen">
@@ -572,6 +572,8 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
     { ok: title.trim().length >= 5, label: "Give the job a short title." },
     { ok: description.trim().length >= 20, label: "Describe the task and what people should submit." },
     ...(linkNeeded ? [{ ok: false, label: missingLinkText(linkNeeded) }] : []),
+    // A ready-made example's blanks (app link, phone type) left as they were
+    { ok: !TEMPLATE_BLANKS.test(description), label: "Replace the parts in [brackets] with your app's details." },
     { ok: !!category, label: "Pick a category." },
     ...(isContest ? [
       { ok: prizeNums.every(p => p >= floor), label: `Give every place a prize of at least ${money(floor, currency)}.` },
@@ -924,7 +926,8 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
         setTitle(d.title || ""); setDescription(d.description || "");
         if (!example) { setBounty(d.bounty || ""); if (d.currency) setCurrency(d.currency); if (d.duration) setDuration(d.duration); setTrackingCode(d.trackingCode || ""); setScreenshot(!!d.screenshot); }
         // Ready-made examples (app testing) suggest a budget and duration
-        else if (d.bounty) { setBounty(d.bounty); if (d.currency) setCurrency(d.currency); if (d.duration) setDuration(d.duration); }
+        // and start from the same proof settings as on a fresh form
+        else if (d.bounty) { setBounty(d.bounty); if (d.currency) setCurrency(d.currency); if (d.duration) setDuration(d.duration); setScreenshot(!!d.screenshot); setTrackingCode(d.trackingCode || ""); }
         if (d.mode) setMode(d.mode);
         setWinnersInput(String(d.winners || 10));
         if (d.category && CATEGORIES[d.category]) { setCategory(d.category); setSubcategory(d.subcategory && CATEGORIES[d.category].includes(d.subcategory) ? d.subcategory : ""); }

@@ -29,7 +29,10 @@ export type ContestInfo = {
 // The public record of a random draw (server: contest.service.js drawOrder).
 // entries: usernames in the order they were sent; order: entry numbers
 // (1 = first sent) in the order drawn; the first `places` won.
-export type DrawRecord = { method: string; seed: string; drawnAt: string; places: number; entries: string[]; order: number[] }
+// entries: a username, or null when the name is hidden (private profile or closed account);
+// rejected: how many entries the poster rejected before entries closed
+export type DrawRecord = { method: string; seed: string; drawnAt: string; places: number; entries: (string | null)[]; rejected?: number; order: number[] }
+const entryName = (u: string | null | undefined) => (u ? `@${u}` : 'Name hidden')
 
 const sha256Hex = async (text: string) => {
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text))
@@ -183,9 +186,9 @@ export default function ContestPanel({ jobId, contest, currency, endsAt, canMana
 
       {!paid && !cancelled && random && (
         <p className="cp-note">
-          Anyone who meets the requirements can enter, as many people as want to. {ended ? 'Entries are closed and the draw runs within 15 minutes: ' : 'When entries close, '}
-          the winners are drawn at random from the entries the poster hasn't rejected, and their prizes are paid at once. Nobody picks them, not even the poster.
-          The seed and the drawn order are shown here afterwards, so anyone can check the draw. Prizes are held by OgaPay until then.
+          Verified people who meet the requirements can enter, one entry each. {ended ? 'Entries are closed and the draw runs within 15 minutes: ' : 'When entries close, '}
+          the winners are drawn at random from the entries the poster hasn't rejected, and their prizes are paid at once. Nobody picks them, not even the poster,
+          and once entries close no entry can be rejected. The seed and the drawn order are shown here afterwards, so anyone can check the draw. Prizes are held by OgaPay until then.
         </p>
       )}
       {!paid && !cancelled && !random && (
@@ -233,14 +236,15 @@ function DrawRecordView({ draw }: { draw: DrawRecord }) {
       <p className="cp-note" style={{ margin: 0 }}>
         Drawn {when(draw.drawnAt)} from {draw.entries.length} {draw.entries.length === 1 ? 'entry' : 'entries'} (sent, not rejected, account open).
         {draw.places > 0 ? ` The first ${draw.places === 1 ? 'one' : draw.places} drawn won.` : ''}
+        {draw.rejected ? ` The poster rejected ${draw.rejected} ${draw.rejected === 1 ? 'entry' : 'entries'} before entries closed, so ${draw.rejected === 1 ? 'it was' : 'they were'} not in the draw.` : ''}
       </p>
       <div className="cp-seed" aria-label="Seed">Seed: {draw.seed}</div>
       {draw.order.length > 0 && (
         <ol className="cp-order">
           {shown.map((num, k) => (
             <li key={num} className={k < draw.places ? 'won' : ''}>
-              <b>{k + 1}. @{draw.entries[num - 1]}</b>
-              <em>{k < draw.places ? `${ordinal(k + 1)} place` : `entry ${num}`}</em>
+              <b>{k + 1}. {entryName(draw.entries[num - 1])}</b>
+              <em>{k < draw.places ? `${ordinal(k + 1)} place · entry ${num}` : `entry ${num}`}</em>
             </li>
           ))}
         </ol>
@@ -259,8 +263,8 @@ function DrawRecordView({ draw }: { draw: DrawRecord }) {
       <details>
         <summary>How to check it yourself</summary>
         <p>
-          Number the entries 1 to {draw.entries.length} in the order they were sent: {draw.entries.map((u, i) => `${i + 1}. @${u}`).join(', ') || 'none'}.
-          Start with that list. For each position i from the last (counting from 0) down to 1: take the SHA-256 of the text seed:i:k with k = 0,
+          Each entry's number (1 to {draw.entries.length}) is its place in the order the entries were sent, shown next to it in the list above.
+          Start with the list 1 to {draw.entries.length}. For each position i from the last (counting from 0) down to 1: take the SHA-256 of the text seed:i:k with k = 0,
           read its first 12 hex characters as a number r, and if r is at or above the largest multiple of i+1 below 2^48, try k = 1, 2 and so on.
           Then swap position i with position r mod (i+1). The list you end with is the drawn order.
         </p>

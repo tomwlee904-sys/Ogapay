@@ -28,7 +28,8 @@ function inline(raw: string) {
   let s = escapeHtml(raw.replace(/\u0000/g, ''))
   s = s.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+|\/(?!\/)[^\s)]*)\)/g, (_m, text: string, url: string) => keep(anchor(url, emphasis(text))))
   s = s.replace(/(https?:\/\/[^\s<>"']+|www\.[^\s<>"']+)/gi, (m) => {
-    const trail = (m.match(/[.,;:!?)]+$/) || [''])[0] // "see https://x.com." keeps the full stop outside
+    // "see https://x.com." keeps the full stop outside; "[https://x.com]" the bracket
+    const trail = (m.match(/[.,;:!?)\]]+$/) || [''])[0]
     const url = trail ? m.slice(0, -trail.length) : m
     return keep(anchor(url.startsWith('www.') ? `https://${url}` : url, url)) + trail
   })
@@ -82,6 +83,8 @@ export function plainJobText(text?: string | null): string {
     .trim()
 }
 
+// "App link:" (the app testing example) with no web address counts as well
+const NAMES_A_LINK = /\b(app|install|download|store)\s+link\s*:/i
 // A job that sends people somewhere but gives no address can't be done: a
 // worker took a "complete our survey" job (2026-10-09) that had no link to the
 // survey. Create job and Edit job stop until the link is in. It looks for:
@@ -141,6 +144,8 @@ export function missingLink(text: string, hasFiles = false): string {
   if (place && !onProfile) return /app|apk/i.test(place) ? 'app' : 'website'
   const link = firstMatch(LINK_ASK, t, (gap) => PROOF.test(gap)) || firstMatch(LINK_HERE, t, (gap) => PROOF.test(gap)) || (NAMED_LINK.test(t) ? 'link' : '')
   if (link && !onProfile) return 'link'
+  // "App link:" (the app testing example) with no web address counts as well
+  if (NAMES_A_LINK.test(t)) return 'link'
   return ''
 }
 
@@ -151,3 +156,7 @@ export function missingLinkText(thing: string): string {
   if (thing === 'website' || thing === 'app') return `Add the link to the ${thing} so people can do the job.`
   return `Add the link to your ${thing} so people can do the job.`
 }
+
+// The blanks of a ready-made example (components/create/TemplatesModal.tsx),
+// written in [brackets]: the Create checklist won't let a job go out with any left
+export const TEMPLATE_BLANKS = /\[(paste your app'?s? store link|Android \/ iOS \/ both|the main thing your app does)[^\]]*\]/i

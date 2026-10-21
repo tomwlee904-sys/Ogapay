@@ -42,7 +42,7 @@ type Task = {
   _count?: { submissions?: number; applications?: number }
 }
 type Application = {
-  id: string; status: "WAITING" | "PICKED" | "NOT_PICKED"; pitch: string; createdAt: string
+  id: string; workerId?: string; status: "WAITING" | "PICKED" | "NOT_PICKED"; pitch: string; createdAt: string
   worker?: Sub["worker"] & { workerProfile?: { tasksCompleted?: number; avgRating?: number; totalRatings?: number } | null }
 }
 
@@ -323,7 +323,8 @@ function JobDrawer({ task, allTasks, focusId, onClose, onChanged }: { task: Task
               {task.isSelection && (
                 <section className="mj-sec">
                   <h4>Applications ({apps?.length ?? 0})</h4>
-                  {task.status === "OPEN" && <p className="mj-auto"><Icon n="user-check" s={14} /> Read the notes and pick one person. They get 24 hours to send the work, and you pay {money(reward, cur)} only when you approve it.</p>}
+                  {task.status === "OPEN" && task.hiredWorkerId && <p className="mj-auto"><Icon n="clock-check" s={14} /> You picked someone. Review their work below when it comes in. If you reject it, or their 24 hours run out with no work, you can pick again.</p>}
+                  {task.status === "OPEN" && !task.hiredWorkerId && <p className="mj-auto"><Icon n="user-check" s={14} /> Read the notes and pick one person. They get 24 hours to send the work, and you pay {money(reward, cur)} only when you approve it.</p>}
                   {apps === null ? <div className="ui-sk" style={{ height: 80 }} /> : apps.length === 0 ? <div className="mj-empty">No one has applied yet.</div> : apps.map((a) => {
                     const p = a.worker?.workerProfile;
                     return (
@@ -331,11 +332,11 @@ function JobDrawer({ task, allTasks, focusId, onClose, onChanged }: { task: Task
                         <div className="mj-who">
                           <Avatar w={a.worker} />
                           <div><WorkerLink w={a.worker} /><small>Applied {ago(a.createdAt)}{p ? ` · ${p.tasksCompleted || 0} ${p.tasksCompleted === 1 ? "job" : "jobs"} done` : ""}{p?.totalRatings ? ` · ${Number(p.avgRating || 0).toFixed(1)} rating` : ""}</small></div>
-                          {a.status === "PICKED" && <span className="mj-pill open">Picked</span>}
+                          {a.status === "PICKED" && <span className="mj-pill open">{task.hiredWorkerId === a.workerId ? "Picked" : "Was picked"}</span>}
                           {a.status === "NOT_PICKED" && <span className="mj-pill">Not picked</span>}
                         </div>
                         <p className="mj-note">{a.pitch}</p>
-                        {task.status === "OPEN" && a.status !== "PICKED" && (
+                        {task.status === "OPEN" && !task.hiredWorkerId && a.status !== "PICKED" && (
                           <div className="mj-acts">
                             <button className="ui-btn ui-btn-dark" disabled={!!busy} onClick={() => pick(a)}><Icon n="user-check" s={15} /> {busy === a.id ? "Picking…" : `Pick @${who(a.worker)}`}</button>
                           </div>

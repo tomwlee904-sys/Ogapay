@@ -23,6 +23,8 @@ type Sub = {
   task?: {
     id: string; title: string; reward: number | string; currency?: string; category?: string; poster?: { username?: string | null }
     expiresAt?: string | null; deadline?: string | null; winnersDueAt?: string | null
+    // A random-draw contest: nobody picks, the winners are drawn when entries close
+    randomDraw?: boolean
   }
 }
 
@@ -99,6 +101,11 @@ export default function MyTasks() {
     if (unsent(s)) return unsentText(s)
     if (s.contestResult === 'NOT_PLACED') return `The winners were paid${s.winnersPaidAt ? ` on ${day(s.winnersPaidAt)}` : ''} and this entry didn't place`
     if (s.isContest && s.status === 'PENDING') return endsAt(s) ? `Send your entry before ${when(endsAt(s))}` : 'Send your entry before the contest ends'
+    if (s.isContest && s.status === 'SUBMITTED' && s.task?.randomDraw) {
+      return ended(s)
+        ? 'Entries have closed · winners are drawn at random within 15 minutes'
+        : `Entry sent ${day(s.submittedAt || s.createdAt)} · winners are drawn at random when it closes`
+    }
     if (s.isContest && s.status === 'SUBMITTED') {
       return ended(s)
         ? `Entries have closed · winners are picked${s.task?.winnersDueAt ? ` by ${when(s.task.winnersDueAt)}` : ' soon'}`

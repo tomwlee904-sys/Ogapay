@@ -15,7 +15,7 @@ export const TOPICS: Topic[] = [
     id: 'basics', title: 'Platform basics', items: [
       { q: 'What is OgaPay?', a: 'OgaPay is a task marketplace. People and businesses post paid tasks and jobs; workers complete them, submit proof and get paid from escrow once the work is approved. You can hold your balance in Naira or USDC and withdraw to a Nigerian bank account or a Solana wallet.' },
       { q: 'How does it work end to end?', a: 'A poster funds a task, and the budget is locked in escrow. Workers apply and submit proof. The poster approves, rejects or disputes each submission. Approved work is paid straight from escrow into the worker\'s wallet, and any unused budget goes back to the poster.' },
-      { q: 'What do I need to get started?', a: 'An OgaPay account (email or Google sign-in) is enough to browse and apply for most tasks. Some tasks ask for KYC, a minimum OgaScore, a connected wallet or a verified X account. To withdraw money you need to verify your identity (Level 1 or above).' },
+      { q: 'What do I need to get started?', a: 'An OgaPay account (email or Google sign-in) is enough to browse and apply for most tasks. Some tasks ask for KYC, a minimum OgaScore, a connected wallet, a connected X account or a blue tick on X. To withdraw money you need to verify your identity (Level 1 or above).' },
       { q: 'Can I earn and post jobs from the same account?', a: 'Yes. One account can do both. Your earnings, the jobs you post and your wallet all live in the same place.' },
       { q: 'Is OgaPay only for Nigeria?', a: 'Anyone can sign up and earn. Naira deposits and bank withdrawals work with Nigerian banks; everyone else can deposit and withdraw in USDC on Solana.' },
     ],
@@ -44,7 +44,7 @@ export const TOPICS: Topic[] = [
     id: 'posting', title: 'Creating and managing jobs', items: [
       { q: 'How do I post a job?', a: 'Go to Create, pick Custom job, X campaign or Quick task, write the brief, set the reward and number of places, then fund it from your wallet. The job goes live as soon as it is funded.' },
       { q: 'What is the difference between Challenge and Selection mode?', a: 'Challenge pays every approved submission, up to the number of places you set. Selection is for one-off projects: people apply, and you choose one person to do the work and receive the full reward.' },
-      { q: 'Can I limit who takes part?', a: 'Yes. You can require KYC, a minimum OgaScore, a minimum worker rank, a connected wallet or a verified X account, and you can post only to your own community.' },
+      { q: 'Can I limit who takes part?', a: 'Yes. You can require KYC, a minimum OgaScore, a minimum worker rank, a connected wallet, a connected X account or a blue tick on X, and you can post only to your own community.' },
       { q: 'How do I review submissions?', a: 'Open the job and choose View submissions (or use Manage jobs). Approve pays the worker immediately; Reject returns that place to the pool with your note.' },
       { q: 'Can I cancel a job?', a: 'Yes, as long as nobody has started on it. The escrowed budget is returned to your wallet. If people have already submitted, review their work first.' },
       { q: 'Can I edit a job after posting?', a: 'You can request edits to the description, requirements and deadline. The reward can\'t be lowered once people have started applying.' },

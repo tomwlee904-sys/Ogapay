@@ -33,7 +33,7 @@
 [data-theme="dark"] .sb-ic.wait { color: #fbbf24; }
 .sb-quote { margin: 12px 0 0; padding: 10px 14px; border-left: 3px solid var(--border2); background: var(--card2); border-radius: 0 10px 10px 0; font-size: 14px; color: var(--text); }
 .sb-sent { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border); display: grid; gap: 6px; }
-.sb-sent p { margin: 0; font-size: 13px; line-height: 1.55; color: var(--text); white-space: pre-wrap; }
+.sb-sent p { margin: 0; font-size: 13px; line-height: 1.55; color: var(--text); white-space: pre-wrap; overflow-wrap: anywhere; }
 .sb-sent a { display: inline-flex; gap: 6px; align-items: center; font-size: 13px; color: var(--text); overflow-wrap: anywhere; }
 
 .sb-side { position: sticky; top: calc(var(--nav-h, 72px) + 16px); display: grid; gap: 6px; }

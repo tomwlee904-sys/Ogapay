@@ -158,7 +158,10 @@ export default function JobMonitor() {
                     <button className="ui-btn ui-btn-ghost ui-btn-icon" aria-label={saved.includes(j.id) ? 'Unsave' : 'Save'} onClick={() => toggleSave(j.id)}>{saved.includes(j.id) ? <IconBookmarkFilled size={16} aria-hidden="true" /> : <i className="ti ti-bookmark" />}</button>
                     {mine
                       ? <Link className="ui-btn ui-btn-ghost" to={`/tasks/${j.id}/submit`}>Open</Link>
-                      : <button className="ui-btn ui-btn-dark" disabled={busy === j.id || left === 0} onClick={() => takeSlot(j)}>{busy === j.id ? 'Taking…' : 'Take a slot'}</button>}
+                      // A Selection job is applied to with a note (on the next page), not taken
+                      : j.isSelection
+                        ? <button className="ui-btn ui-btn-dark" disabled={left === 0} onClick={() => takeSlot(j)}>Apply</button>
+                        : <button className="ui-btn ui-btn-dark" disabled={busy === j.id || left === 0} onClick={() => takeSlot(j)}>{busy === j.id ? 'Taking…' : 'Take a slot'}</button>}
                   </div>
                 </li>
               )

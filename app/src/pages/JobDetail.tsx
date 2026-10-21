@@ -458,7 +458,8 @@ export default function JobDetail() {
     : mine === 'APPROVED' ? 'Approved · see your work'
     : mine === 'REJECTED' ? 'Not approved · see why'
     // Selection job, applied but no place (yet)
-    : !canManage && authUser && !mine && myApp?.status === 'WAITING' ? 'Applied · waiting for the pick'
+    // (once the job has closed nobody will be picked, so don't keep promising a pick)
+    : !canManage && authUser && !mine && myApp?.status === 'WAITING' ? (isOpen ? 'Applied · waiting for the pick' : 'Job closed')
     : !canManage && authUser && !mine && myApp?.status === 'NOT_PICKED' ? 'Not picked'
     : null
   const openMine = () => navigate(`/tasks/${job.id}/submit`)

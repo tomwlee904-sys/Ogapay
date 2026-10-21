@@ -24,7 +24,7 @@ const STEPS = [
     body: "With an API key, your app or AI agent can list open jobs and read your jobs, submissions and balance. Posting and payouts stay in OgaPay, with escrow on every job.",
     cta: "Get an API key", href: "/developer" },
   { tab: "Trust", icon: "ti-shield-check", eyebrow: "Your job, your rules", title: "Choose who takes part",
-    body: "Require KYC, a minimum OgaScore, a worker level or a verified X account. Funds stay in escrow until you approve the work.",
+    body: "Require KYC, a minimum OgaScore, a worker level, a connected X account or a blue tick on X. Funds stay in escrow until you approve the work.",
     cta: "See job requirements", href: "/faq" },
   { tab: "Community", icon: "ti-users", eyebrow: "Better together", title: "Work with your people",
     body: "Bring your community or build one from people you trust. Share paid tasks with members first and grow together.",

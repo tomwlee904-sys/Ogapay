@@ -12,33 +12,41 @@ import { CATEGORIES, listTemplates, money, type JobTemplate, type TemplateData }
 type Example = TemplateData & { note?: string };
 
 // App testing for app startups: link, phone type, feedback questions and proof.
+// The parts the poster must fill in are in [brackets]; the Create checklist
+// (TEMPLATE_BLANKS in lib/jobText.ts) won't let the job go out while any is left.
 // Suggested ₦1,500 per tester (a 15-20 minute job) for 20 testers over 7 days.
 const APP_TESTING: Example = {
   // Everyone who tests properly gets paid, so it is a normal job, not a contest
   mode: "Challenge",
+  // The best-paid example, so one person with many accounts would take many
+  // places: human verification by default (the poster can remove it)
+  reqType: "human",
   title: "Test our app and give feedback",
   category: "App Testing & Install", subcategory: "Beta Testing", winners: "20",
   currency: "NGN", bounty: "30000", duration: "7 days",
-  note: "Suggested: ₦1,500 per tester, 20 testers, 7 days. Change any of it.",
+  note: "Suggested: ₦1,500 per tester, 20 testers, 7 days. Fill in the parts in [brackets]; change anything else you like.",
   description: [
     "Test our app and tell us honestly what you think. It takes about 15 to 20 minutes.",
     "",
-    "App link: [paste the Play Store, App Store, TestFlight or download link]",
+    // Store and store-testing links only: an app file from anywhere else skips the stores' safety checks
+    "App link: [paste your app's store link: Play Store, Play testing, App Store or TestFlight]",
     "Phone: [Android / iOS / both]",
     "",
     "What to do:",
     "1. Install the app and create an account.",
-    "2. Use [the main thing your app does, for example send money or place an order] at least once.",
+    "2. Use [the main thing your app does, for example set up your profile or search for a product] at least once.",
     "3. Note anything that breaks, is slow or is confusing.",
     "",
-    "Answer these questions in your submission:",
+    "You never need to pay or send your own money to do this job.",
+    "",
+    "Answer these questions in your submission (a sentence or two each):",
     "1. How easy was it to sign up? Give a score from 1 to 5 and say why.",
     "2. What did you like most?",
     "3. What confused you or didn't work?",
     "4. Would you keep using it or tell a friend? Why?",
     "5. What one thing should we change first?",
     "",
-    "Proof: a short screen recording of you using the app (share a Google Drive or unlisted YouTube link) or at least 3 screenshots. Also say your phone model and whether it is Android or iOS.",
+    "Proof: a short screen recording of you using the app (put the Google Drive or unlisted YouTube link in the Link box) or at least 3 screenshots. Also say your phone model and whether it is Android or iOS.",
   ].join("\n"),
 };
 
