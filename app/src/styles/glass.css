@@ -1,0 +1,58 @@
+/* Frosted glass on what floats over the page, like wurk.fun: the menu panel,
+   dropdown menus, the new-job alert, and a light blur behind dimmed pop-up
+   windows (the top bar, sign-in window and bottom dock already have theirs).
+   Loaded last (main.tsx). Glass only where the browser can blur, and not for
+   people who ask their device for less transparency: they keep the solid look. */
+
+:root {
+  --glass-panel: rgba(251, 251, 252, .78);
+  --glass-pop: rgba(255, 255, 255, .82);
+  --glass-item: rgba(255, 255, 255, .55);
+  --glass-edge: rgba(15, 23, 42, .08);
+}
+[data-theme="dark"] {
+  --glass-panel: rgba(10, 11, 14, .8);
+  --glass-pop: rgba(22, 25, 32, .84);
+  --glass-item: rgba(255, 255, 255, .04);
+  --glass-edge: rgba(255, 255, 255, .09);
+}
+
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  @media (prefers-reduced-transparency: no-preference) {
+    /* Menu panel (Drawer) */
+    .oga-drawer,
+    [data-theme="dark"] .oga-drawer {
+      background: var(--glass-panel);
+      border-left-color: var(--glass-edge);
+      -webkit-backdrop-filter: blur(30px) saturate(175%);
+      backdrop-filter: blur(30px) saturate(175%);
+    }
+
+    /* Dropdown menus (jobs sort and filter, and every .ui-menu) */
+    .ui-menu,
+    html[data-theme="dark"] .ui-menu {
+      background: var(--glass-pop);
+      border-color: var(--glass-edge);
+      -webkit-backdrop-filter: blur(20px) saturate(160%);
+      backdrop-filter: blur(20px) saturate(160%);
+    }
+    .ui-menu .ui-menu-item:not(.on),
+    html[data-theme="dark"] .ui-menu .ui-menu-item:not(.on) { background: var(--glass-item); }
+
+    /* The new-job alert (components/JobAlertToast.tsx) */
+    .job-alert-toast {
+      background: var(--glass-pop) !important;
+      border-color: var(--glass-edge) !important;
+      -webkit-backdrop-filter: blur(18px) saturate(135%);
+      backdrop-filter: blur(18px) saturate(135%);
+    }
+
+    /* A light blur behind dimmed pop-up windows: the class-based ones, and the
+       inline ones (a fixed, full-screen layer with a black see-through background) */
+    .st2-overlay, .sp2-overlay, .wl-overlay, .wjd-info-overlay,
+    [style*="position: fixed"][style*="inset: 0px"][style*="background: rgba(0, 0, 0, 0."] {
+      -webkit-backdrop-filter: blur(2px);
+      backdrop-filter: blur(2px);
+    }
+  }
+}

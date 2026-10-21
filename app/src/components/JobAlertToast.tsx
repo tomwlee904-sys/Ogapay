@@ -26,7 +26,7 @@ export default function JobAlertToast() {
   if (!latestJob) return null
 
   return (
-    <div style={{
+    <div className="job-alert-toast" style={{
       // above the bottom dock on phones and tablets (--dock-clear, tokens.css)
       position: 'fixed', bottom: 'max(24px, calc(var(--dock-clear, 0px) + 12px))', right: window.innerWidth < 768 ? 12 : 24, zIndex: 9999, maxWidth: window.innerWidth < 768 ? 'calc(100% - 24px)' : 380, width: '100%',
       background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 14,

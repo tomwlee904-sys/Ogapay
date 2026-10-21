@@ -18,6 +18,7 @@ import './styles/ui.css'
 import './styles/home-cards.css'
 import './styles/dark.css'
 import './styles/nav.css'
+import './styles/glass.css' // last: frosted glass on floating panels
 
 // A page's code from an older deploy failed to load: reload once for the new version
 window.addEventListener('vite:preloadError', (e) => { if (reloadForUpdate()) e.preventDefault() })
