@@ -622,6 +622,8 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
         reward: Number(perWinner.toFixed(currency === "NGN" ? 2 : 6)),
         currency,
         maxWorkers: winners,
+        // Selection: people apply with a note and you pick one person (server: task.service.js)
+        ...(mode === "Selection" && { isSelection: true }),
         ...(isContest && {
           isContest: true,
           prizes: prizeNums.map(p => Number(p.toFixed(currency === "NGN" ? 2 : 6))),
@@ -696,14 +698,14 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
                       <ul>
                         <li><b>Challenge:</b> everyone whose work you approve is paid the reward, until your number of winners is reached. Best for simple tasks.</li>
                         <li><b>Contest:</b> people send entries until it closes, then you rank the best and pay a prize for each place. Best for creative work.</li>
-                        <li><b>Selection:</b> people apply, you choose who does the work, and they're paid when you approve it.</li>
+                        <li><b>Selection:</b> people apply with a short note. You read the notes in Manage jobs and pick one person. They have 24 hours to send the work, and they're paid when you approve it. Cancel before you pick and you get all your money back.</li>
                       </ul>
                     </InfoTip></span>
                     <div className="cf-modes" role="radiogroup" aria-label="Mode">
                       {[
                         ["Challenge", "ti-trophy", "Pay every approved entry, up to your number of winners."],
                         ["Contest", "ti-award", "Rank the best entries when it ends and pay a prize for each place."],
-                        ["Selection", "ti-user-check", "People apply and you choose one person for the work."],
+                        ["Selection", "ti-user-check", "People apply with a note. You pick one person to do the work."],
                       ].map(([m, icon, d]) => (
                         <button key={m} type="button" role="radio" aria-checked={mode === m} className={`cf-mode${mode === m ? " on" : ""}`} onClick={() => setMode(m)}>
                           <i className={`ti ${icon}`} /><span style={{ margin: 0 }}><b>{m}</b><span>{d}</span></span>

@@ -19,6 +19,7 @@ import '../styles/job-monitor.css'
 type Job = {
   id: string; title: string; reward: number | string; currency?: string; category?: string; createdAt?: string
   maxWorkers?: number; currentWorkers?: number; posterId?: string; poster?: { username?: string | null }
+  isSelection?: boolean
 }
 
 const POLL_MS = 30000
@@ -85,6 +86,8 @@ export default function JobMonitor() {
     setSaved(id, on).catch(() => { setSavedIds((s) => on ? s.filter((x) => x !== id) : [...s, id]); toast("Couldn't update your saved jobs", 'error') })
   }
   const takeSlot = async (j: Job) => {
+    // A Selection job takes an application with a note (on the submit page), not a place
+    if (j.isSelection) { navigate(`/tasks/${j.id}/submit`); return }
     setBusy(j.id)
     try {
       await apiRequest(`/tasks/${j.id}/apply`, { method: 'POST' }).catch((e: any) => {

@@ -30,6 +30,13 @@ type Task = {
   excludesTaskIds?: string[]
   // A contest: entries aren't approved one by one, places are awarded on the job page
   isContest?: boolean
+  // Selection jobs: people apply with a note and the poster picks one (hiredWorkerId)
+  isSelection?: boolean; hiredWorkerId?: string | null
+  _count?: { submissions?: number; applications?: number }
+}
+type Application = {
+  id: string; status: "WAITING" | "PICKED" | "NOT_PICKED"; pitch: string; createdAt: string
+  worker?: Sub["worker"] & { workerProfile?: { tasksCompleted?: number; avgRating?: number; totalRatings?: number } | null }
 }
 
 function Icon({ n, s = 16, c, style }: { n: any; s?: number; c?: any; style?: any }) {
@@ -127,6 +134,26 @@ function JobDrawer({ task, allTasks, focusId, onClose, onChanged }: { task: Task
     focused.current = true;
     window.requestAnimationFrame(() => document.getElementById(`mj-sub-${focusId}`)?.scrollIntoView({ block: "start" }));
   }, [subs, focusId]);
+  // Selection job: the applications, oldest first
+  const [apps, setApps] = useState<Application[] | null>(null);
+  const loadApps = useCallback(async () => {
+    if (!task.isSelection) return;
+    try {
+      const data = await apiRequest<Application[]>(`/tasks/${task.id}/applications`);
+      setApps(Array.isArray(data) ? data : []);
+    } catch (e: any) { setApps([]); toast(e?.message || "Couldn't load the applications", "error"); }
+  }, [task.id, task.isSelection]);
+  useEffect(() => { loadApps(); }, [loadApps]);
+  const pick = async (a: Application) => {
+    if (!window.confirm(`Pick @${who(a.worker)} for this job? They get 24 hours to send the work. Everyone else who applied is told they weren't picked.`)) return;
+    setBusy(a.id);
+    try {
+      await apiRequest(`/tasks/${task.id}/applications/${a.id}/pick`, { method: "POST" });
+      toast(`You picked @${who(a.worker)}. They have 24 hours to send the work.`, "success");
+      await Promise.all([loadApps(), load()]); onChanged();
+    } catch (e: any) { toast(e?.message || "That didn't work. Try again.", "error"); }
+    setBusy(null);
+  };
   useEffect(() => {
     apiRequest<{ worker: { id: string } }[]>("/poster/blocked")
       .then((d) => setBlocked(new Set((Array.isArray(d) ? d : []).map((b) => b.worker.id)))).catch(() => {});
@@ -282,6 +309,31 @@ function JobDrawer({ task, allTasks, focusId, onClose, onChanged }: { task: Task
 
           {subs === null ? <div className="ui-sk" style={{ height: 120 }} /> : (
             <>
+              {task.isSelection && (
+                <section className="mj-sec">
+                  <h4>Applications ({apps?.length ?? 0})</h4>
+                  {task.status === "OPEN" && <p className="mj-auto"><Icon n="user-check" s={14} /> Read the notes and pick one person. They get 24 hours to send the work, and you pay {money(reward, cur)} only when you approve it.</p>}
+                  {apps === null ? <div className="ui-sk" style={{ height: 80 }} /> : apps.length === 0 ? <div className="mj-empty">No one has applied yet.</div> : apps.map((a) => {
+                    const p = a.worker?.workerProfile;
+                    return (
+                      <div key={a.id} className="mj-sub">
+                        <div className="mj-who">
+                          <Avatar w={a.worker} />
+                          <div><WorkerLink w={a.worker} /><small>Applied {ago(a.createdAt)}{p ? ` · ${p.tasksCompleted || 0} ${p.tasksCompleted === 1 ? "job" : "jobs"} done` : ""}{p?.totalRatings ? ` · ${Number(p.avgRating || 0).toFixed(1)} rating` : ""}</small></div>
+                          {a.status === "PICKED" && <span className="mj-pill open">Picked</span>}
+                          {a.status === "NOT_PICKED" && <span className="mj-pill">Not picked</span>}
+                        </div>
+                        <p className="mj-note">{a.pitch}</p>
+                        {task.status === "OPEN" && a.status !== "PICKED" && (
+                          <div className="mj-acts">
+                            <button className="ui-btn ui-btn-dark" disabled={!!busy} onClick={() => pick(a)}><Icon n="user-check" s={15} /> {busy === a.id ? "Picking…" : `Pick @${who(a.worker)}`}</button>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </section>
+              )}
               <section className="mj-sec">
                 <h4>Waiting for your review ({toReview.length})</h4>
                 {contest && toReview.length > 0 && (
@@ -351,7 +403,7 @@ function JobDrawer({ task, allTasks, focusId, onClose, onChanged }: { task: Task
                   ))}</div>
                 </section>
               )}
-              {list.length === 0 && <div className="mj-empty">No one has taken this job yet.</div>}
+              {list.length === 0 && !task.isSelection && <div className="mj-empty">No one has taken this job yet.</div>}
             </>
           )}
         </div>
@@ -577,6 +629,9 @@ function JobsListPage({ tasks, reload }: { tasks: Task[]; reload: () => void }) 
         {shown.map((t) => {
           const c = jobCounts(t);
           const cur = t.currency || "NGN";
+          // Selection job waiting for the poster to pick someone
+          const applied = t._count?.applications || 0;
+          const toPick = !!t.isSelection && t.status === "OPEN" && !c.working && !c.review && !c.approved && applied > 0;
           return (
             <article key={t.id} className="ui-card mj-job" onClick={() => setOpenId(t.id)}>
               <div className="mj-job-top">
@@ -597,10 +652,12 @@ function JobsListPage({ tasks, reload }: { tasks: Task[]; reload: () => void }) 
                   <span><b>{c.approved}</b> of {c.slots} approved</span>
                   {c.review > 0 && <span className="warn"><b>{c.review}</b> to review</span>}
                   {c.working > 0 && <span><b>{c.working}</b> working</span>}
-                  {["OPEN", "IN_PROGRESS", "DRAFT"].includes(t.status) && <span><b>{c.left}</b> {c.left === 1 ? "slot" : "slots"} left</span>}
+                  {t.isSelection
+                    ? <span className={toPick ? "warn" : ""}><b>{applied}</b> applied</span>
+                    : ["OPEN", "IN_PROGRESS", "DRAFT"].includes(t.status) && <span><b>{c.left}</b> {c.left === 1 ? "slot" : "slots"} left</span>}
                 </div>
-                <button className={`ui-btn ${c.review ? "ui-btn-dark" : "ui-btn-ghost"}`} onClick={(e) => { e.stopPropagation(); setOpenId(t.id); }}>
-                  {c.review ? <>Review {c.review} <Icon n="arrow-right" s={15} /></> : "Details"}
+                <button className={`ui-btn ${c.review || toPick ? "ui-btn-dark" : "ui-btn-ghost"}`} onClick={(e) => { e.stopPropagation(); setOpenId(t.id); }}>
+                  {c.review ? <>Review {c.review} <Icon n="arrow-right" s={15} /></> : toPick ? <>Pick someone <Icon n="arrow-right" s={15} /></> : "Details"}
                 </button>
               </div>
             </article>

@@ -15,13 +15,19 @@ import '../styles/submit.css'
 // It used to demand a wallet, X, Telegram, email and KYC for every job and
 // failed for anyone who had already taken a slot. Posters opening
 // /tasks/:id/submissions are sent to the review drawer in Manage jobs.
+// A Selection job takes an application with a short note instead; only the
+// person the poster picks gets the place and this page's send-work form.
 
 type Task = {
   id: string; title: string; description?: string; instructions?: string | null; proofRequired?: string | null; isContest?: boolean
   reward: number | string; currency?: string; category?: string; status: string; posterId?: string
   poster?: { username?: string | null }
+  isSelection?: boolean; hiredWorkerId?: string | null
   [k: string]: any
 }
+// Your application to a Selection job (from GET /tasks/:id)
+type Application = { id: string; pitch: string; status: 'WAITING' | 'PICKED' | 'NOT_PICKED'; createdAt: string }
+const PITCH_MIN = 10
 type Mine = {
   id: string; status: string; taskId: string; proof?: string | null; workerNotes?: string | null; posterNotes?: string | null; attachments?: string[]; autoApproveAt?: string | null; submittedAt?: string | null
   // Contest entries: the place won and the result (from /tasks/my/submissions)
@@ -51,6 +57,8 @@ export default function SubmissionPage() {
   const [files, setFiles] = useState<File[]>([])
   const [busy, setBusy] = useState('')
   const [error, setError] = useState('')
+  const [application, setApplication] = useState<Application | null>(null)
+  const [pitch, setPitch] = useState('')
 
   // A half-written link and note are kept for this job and person until the
   // work is sent (leaving the page used to lose them). Files can't be kept.
@@ -76,7 +84,7 @@ export default function SubmissionPage() {
   }
   useEffect(() => {
     if (!id) return
-    apiRequest<Task | { task: Task }>('/tasks/' + id).then((d: any) => setTask(d?.task || d || null)).catch(() => setTask(null))
+    apiRequest<Task | { task: Task }>('/tasks/' + id).then((d: any) => { setTask(d?.task || d || null); setApplication(d?.userApplication || null) }).catch(() => setTask(null))
     loadMine()
   }, [id])
 
@@ -138,6 +146,23 @@ export default function SubmissionPage() {
       await loadMine()
     } catch (e: any) {
       setError(e?.message || 'Something went wrong. Your work was not sent.')
+    }
+    setBusy('')
+  }
+
+  // Selection job: send an application with a note (it doesn't take the place)
+  const sendApplication = async () => {
+    const note = pitch.trim()
+    if (note.length < PITCH_MIN) { setError(`Write a short note on why you are a good fit (at least ${PITCH_MIN} characters).`); return }
+    if (!getAccessToken()) { navigate('/login?redirect=' + encodeURIComponent(location.pathname)); return }
+    setError('')
+    setBusy('Sending your application…')
+    try {
+      const a = await apiRequest<Application>(`/tasks/${task.id}/apply`, { method: 'POST', body: JSON.stringify({ pitch: note }) })
+      setApplication(a)
+      setPitch('')
+    } catch (e: any) {
+      setError(e?.message || 'Something went wrong. Your application was not sent.')
     }
     setBusy('')
   }
@@ -214,6 +239,39 @@ export default function SubmissionPage() {
                 <p>{status === 'REJECTED' ? 'The poster didn\'t approve this work.' : status === 'EXPIRED' ? 'No work was sent before the time ran out, so the slot went to someone else.' : 'Our team is looking at this submission.'}</p>
                 {mine?.posterNotes && <blockquote className="sb-quote">“{mine.posterNotes}”</blockquote>}
                 <div className="ui-actions"><Link className="ui-btn ui-btn-ghost" to="/tasks">Find other jobs</Link></div>
+              </section>
+            ) : task.isSelection && !mine && application?.status === 'NOT_PICKED' ? (
+              <section className="ui-card ui-card-pad sb-state">
+                <span className="sb-ic bad"><i className="ti ti-user-x" /></span>
+                <h2>You were not picked</h2>
+                <p>{task.poster?.username ? `@${task.poster.username}` : 'The poster'} picked someone else for this job. Thanks for applying.</p>
+                <div className="ui-actions"><Link className="ui-btn ui-btn-ghost" to="/tasks">Find other jobs</Link></div>
+              </section>
+            ) : task.isSelection && !mine && application && !closed ? (
+              <section className="ui-card ui-card-pad sb-state">
+                <span className="sb-ic wait"><i className="ti ti-hourglass" /></span>
+                <h2>Application sent</h2>
+                <p>{task.poster?.username ? `@${task.poster.username}` : 'The poster'} reads the applications and picks one person. You'll get a notification if it's you, and then you have 24 hours to send the work.</p>
+                <div className="sb-sent"><span className="ui-label">Your note</span><p>{application.pitch}</p></div>
+                <div className="ui-actions"><Link className="ui-btn ui-btn-ghost" to="/tasks">Find more jobs</Link></div>
+              </section>
+            ) : task.isSelection && !mine && !closed && task.hiredWorkerId && task.hiredWorkerId !== user?.id ? (
+              <section className="ui-card ui-card-pad sb-state">
+                <span className="sb-ic bad"><i className="ti ti-user-check" /></span>
+                <h2>Someone was picked</h2>
+                <p>The poster already picked someone for this job.</p>
+                <div className="ui-actions"><Link className="ui-btn ui-btn-ghost" to="/tasks">Find other jobs</Link></div>
+              </section>
+            ) : task.isSelection && !mine && !closed ? (
+              <section className="ui-card ui-card-pad sb-form">
+                <p className="sb-held"><i className="ti ti-user-check" /> The poster picks one person for this job. Tell them why it should be you.</p>
+                <label className="ui-label" htmlFor="sb-pitch">Why are you a good fit?</label>
+                <textarea id="sb-pitch" className="ui-input sb-textarea" maxLength={1000} value={pitch} onChange={(e) => setPitch(e.target.value)} placeholder="Your experience with this kind of work, links to past work, how soon you can deliver" />
+                {error && <p className="sb-error" role="alert">{error}</p>}
+                <button className="ui-btn ui-btn-dark ui-btn-lg sb-send" disabled={!!busy} onClick={sendApplication}>
+                  {busy ? <><i className="ti ti-loader-2 sb-spin" /> {busy}</> : <>Send application</>}
+                </button>
+                <p className="sb-small">Applying doesn't take the job. If you're picked, you have 24 hours to send the work, and you're paid {money(reward, cur)} when the poster approves it.</p>
               </section>
             ) : closed ? (
               <section className="ui-card ui-card-pad sb-state">

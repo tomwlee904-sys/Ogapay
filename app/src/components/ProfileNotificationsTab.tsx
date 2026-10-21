@@ -52,6 +52,8 @@ const TYPE_ICONS: Record<string, { icon: string; color: string }> = {
   STORE_PAYMENT_RELEASED:  { icon: 'ti ti-coin', color: 'var(--green)' },
   STORE_ORDER_DISPUTED:    { icon: 'ti ti-alert-triangle', color: 'var(--red)' },
   DIRECT_HIRE:             { icon: 'ti ti-briefcase', color: 'var(--green)' },
+  SELECTION_PICKED:        { icon: 'ti ti-user-check', color: 'var(--green)' },
+  SELECTION_NOT_PICKED:    { icon: 'ti ti-user-x', color: 'var(--text3)' },
   COMMUNITY_INVITE:        { icon: 'ti ti-users-plus', color: 'var(--accent)' },
   TRANSFER_RECEIVED:       { icon: 'ti ti-arrows-exchange', color: 'var(--green)' },
   INFO:                    { icon: 'ti ti-bell', color: 'var(--accent)' },
@@ -124,7 +126,7 @@ export default function TabNotificationsContent() {
   // Where a notification opens. Job ones differ by who received them: posters
   // review in Manage jobs, workers see their status on the submit page.
   const POSTER_JOB = new Set(['TASK_APPLICATION', 'TASK_SUBMISSION', 'SUBMISSION_REVIEWED', 'REVIEW_REMINDER', 'DISPUTE_OPENED', 'COOLDOWN'])
-  const WORKER_JOB = new Set(['SUBMISSION_APPROVED', 'SUBMISSION_REJECTED', 'SLOT_EXPIRED', 'DIRECT_HIRE'])
+  const WORKER_JOB = new Set(['SUBMISSION_APPROVED', 'SUBMISSION_REJECTED', 'SLOT_EXPIRED', 'DIRECT_HIRE', 'SELECTION_PICKED'])
   const MONEY = new Set(['TRANSFER_RECEIVED', 'ESCROW_REFUNDED', 'CLOSED_ACCOUNT_DEPOSIT', 'WITHDRAWAL', 'WITHDRAWAL_SUCCESS', 'WITHDRAWAL_FAILED', 'DEPOSIT', 'DEPOSIT_SUCCESS', 'DEPOSIT_RECEIVED', 'TASK_PAYMENT', 'TASK_PAYMENT_RECEIVED', 'TASK_REFUND', 'TASK_REWARD', 'REFERRAL_BONUS', 'SIGNUP_BONUS'])
   const linkFor = (n: any): string | null => {
     const d = n.data || {}

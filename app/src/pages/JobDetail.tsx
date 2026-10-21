@@ -112,6 +112,9 @@ interface JobData {
   posterId: string
   featured: boolean
   selectionType: string
+  // Selection job: people apply with a note and the poster picks one person
+  isSelection?: boolean
+  applicationsCount?: number
   capacity: string
   potentialWinners: number
   winnersSelected: number
@@ -143,6 +146,8 @@ export default function JobDetail() {
   const [job, setJob] = useState<JobData | null>(null)
   // Your own place on this job, if you took one (GET /tasks/:id sends it when signed in)
   const [mySub, setMySub] = useState<{ status: string } | null>(null)
+  // Selection jobs: your application (WAITING, PICKED or NOT_PICKED)
+  const [myApp, setMyApp] = useState<{ status: string } | null>(null)
   // The poster's similar jobs: people who did one of them can't take this one
   const [linkedJobs, setLinkedJobs] = useState<{ id: string; title: string }[]>([])
   // Name the job in the browser tab (PageTitle sets the generic one first)
@@ -197,8 +202,9 @@ export default function JobDetail() {
         const json = await res.json()
         if (json.success && json.data) {
           const t = json.data.task || json.data
-          setJob(formatTask(t))
+          setJob({ ...formatTask(t), applicationsCount: Number(json.data.applicationsCount || 0) })
           setMySub(json.data.userSubmission || null)
+          setMyApp(json.data.userApplication || null)
           setLinkedJobs(Array.isArray(json.data.similarJobs) ? json.data.similarJobs : [])
           setContest(json.data.contest || null)
           setCommunity(json.data.community || null)
@@ -350,6 +356,7 @@ export default function JobDetail() {
       featured: !!t.featured,
       currentWorkers: Number(t.currentWorkers ?? 0),
       selectionType: t.selectionType || t.selection || 'Random',
+      isSelection: !!t.isSelection,
       capacity: `${filled} of ${slots}`,
       potentialWinners: slots,
       winnersSelected: filled,
@@ -445,6 +452,9 @@ export default function JobDetail() {
     : mine === 'SUBMITTED' || mine === 'DISPUTED' ? 'Sent · waiting for review'
     : mine === 'APPROVED' ? 'Approved · see your work'
     : mine === 'REJECTED' ? 'Not approved · see why'
+    // Selection job, applied but no place (yet)
+    : !canManage && authUser && !mine && myApp?.status === 'WAITING' ? 'Applied · waiting for the pick'
+    : !canManage && authUser && !mine && myApp?.status === 'NOT_PICKED' ? 'Not picked'
     : null
   const openMine = () => navigate(`/tasks/${job.id}/submit`)
 
@@ -972,6 +982,8 @@ function WurkJobDetailView(props: any) {
                 )}
                 {contest
                   ? <li><i className="ti ti-users" aria-hidden="true" />{contest.entries} {contest.entries === 1 ? 'entry' : 'entries'}{contest.entryTarget ? ` of ${contest.entryTarget} target` : ''}</li>
+                  : job.isSelection
+                  ? <li><i className="ti ti-user-check" aria-hidden="true" />{job.applicationsCount || 0} applied · the poster picks one person</li>
                   : <li><i className="ti ti-users" aria-hidden="true" />{job.slotsLeft} of {job.slots} {job.slots === 1 ? 'place' : 'places'} left</li>}
               </ul>
             </div>
@@ -981,7 +993,7 @@ function WurkJobDetailView(props: any) {
                 ? <button className="ui-btn ui-btn-dark" type="button" onClick={openMine}>{myLabel}</button>
                 : authUser
                 ? <button className="ui-btn ui-btn-dark" type="button" disabled={!canManage && !isOpen} onClick={() => canManage ? navigate('/manage-jobs') : setShowApplyWarning(true)}>
-                    {canManage ? 'Manage submissions' : isOpen ? 'Take a place' : 'Job closed'}
+                    {canManage ? 'Manage submissions' : isOpen ? (job.isSelection ? 'Apply' : 'Take a place') : 'Job closed'}
                   </button>
                 : <button className="ui-btn ui-btn-dark" type="button" onClick={() => navigate('/login?redirect=' + encodeURIComponent('/tasks/' + job.id))}>Sign in to apply</button>}
             </div>
@@ -1173,7 +1185,7 @@ function WurkJobDetailView(props: any) {
                 <button className="wjd-primary" type="button" disabled={!myLabel && !canManage && !isOpen}
                   onClick={() => myLabel ? openMine() : canManage ? navigate('/manage-jobs') : setShowApplyWarning(true)}>
                   <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" /></svg>
-                  {myLabel || (canManage ? 'Manage Submissions' : isOpen ? (contest ? 'Enter contest' : 'Take a place') : (contest ? 'Entries closed' : 'Job Closed'))}
+                  {myLabel || (canManage ? 'Manage Submissions' : isOpen ? (contest ? 'Enter contest' : job.isSelection ? 'Apply' : 'Take a place') : (contest ? 'Entries closed' : 'Job Closed'))}
                 </button>
                 {canManage && <button className="wjd-secondary" type="button" onClick={() => setShowSubs(!showSubs)}>
                   <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
