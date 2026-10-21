@@ -219,8 +219,11 @@ export default function TabMyTasksContent() {
       ) : (
         <div className="mt-list">
           {(filtered || []).map((s: any) => {
-            const status = STATUS_MAP[s.status] || s.status
-            const color = COLOR_MAP[s.status] || 'var(--accent)'
+            // Contest results: a win, or an entry that didn't place once winners are paid
+            const status = s.contestResult === 'WON' ? 'Won' : s.contestResult === 'NOT_PLACED' ? "Didn't place" : STATUS_MAP[s.status] || s.status
+            const color = s.contestResult === 'NOT_PLACED' ? 'var(--text3)' : COLOR_MAP[s.status] || 'var(--accent)'
+            // What was really paid (a contest's reward is its 1st prize)
+            const shownAmount = Number(s.paidAmount ?? s.task?.reward ?? 0)
             const progress = PROGRESS_MAP[s.status] || 50
             return (
               <div className="mt-item" key={s.id} onClick={() => { const tid = s.task?.id || s.taskId; if (tid) navigate('/tasks/' + tid) }} style={{cursor:'pointer'}}>
@@ -238,7 +241,7 @@ export default function TabMyTasksContent() {
                   </div>
                 </div>
                 <div className="mt-right">
-                  <div className="mt-reward">{fmtCurrency(s.task?.currency || 'NGN', Number(s.task?.reward || 0))}</div>
+                  {s.contestResult !== 'NOT_PLACED' && <div className="mt-reward">{fmtCurrency(s.task?.currency || 'NGN', shownAmount)}</div>}
                   <span className="mt-status" style={{background: `${color}15`, color}}>{status}</span>
                 </div>
               </div>

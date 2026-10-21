@@ -7,6 +7,7 @@ import { categoryLabel } from '../lib/categories'
 import { jobRequirements } from '../lib/requirements'
 import { renderJobText } from '../lib/jobText'
 import { saveDraft, loadDraft, clearDraft } from '../lib/draft'
+import { ordinal } from '../components/ContestPanel'
 import '../styles/submit.css'
 
 // Submit work for a job (/tasks/:id/submit). Takes a slot if you haven't yet,
@@ -21,7 +22,11 @@ type Task = {
   poster?: { username?: string | null }
   [k: string]: any
 }
-type Mine = { id: string; status: string; taskId: string; proof?: string | null; workerNotes?: string | null; posterNotes?: string | null; attachments?: string[]; autoApproveAt?: string | null; submittedAt?: string | null }
+type Mine = {
+  id: string; status: string; taskId: string; proof?: string | null; workerNotes?: string | null; posterNotes?: string | null; attachments?: string[]; autoApproveAt?: string | null; submittedAt?: string | null
+  // Contest entries: the place won and the result (from /tasks/my/submissions)
+  place?: number | null; paidAmount?: number | null; contestResult?: 'WON' | 'NOT_PLACED' | 'WAITING' | null
+}
 
 const MAX_FILES = 5
 const money = (n: number, cur = 'NGN') => cur === 'NGN' ? `₦${Math.round(n).toLocaleString('en-US')}` : `$${n.toFixed(2)}`
@@ -138,6 +143,8 @@ export default function SubmissionPage() {
   }
 
   const status = mine?.status
+  // What you were really paid (a contest's reward is its 1st prize)
+  const paidAmount = Number(mine?.paidAmount ?? reward)
   return (
     <Layout>
       <div className="ui-page sb-wrap">
@@ -147,7 +154,22 @@ export default function SubmissionPage() {
 
         <div className="sb-grid">
           <div>
-            {status === 'SUBMITTED' ? (
+            {mine?.contestResult === 'NOT_PLACED' ? (
+              <section className="ui-card ui-card-pad sb-state">
+                <span className="sb-ic"><i className="ti ti-flag" /></span>
+                <h2>{status === 'PENDING' ? 'This contest has ended' : "Your entry didn't place"}</h2>
+                <p>{status === 'PENDING' ? 'It ended before you sent an entry.' : "The winners of this contest have been paid, and this entry wasn't one of them. Thanks for taking part."}</p>
+                <div className="ui-actions"><Link className="ui-btn ui-btn-ghost" to={`/tasks/${task.id}`}>See the winners</Link><Link className="ui-btn ui-btn-ghost" to="/tasks">Find more jobs</Link></div>
+              </section>
+            ) : status === 'SUBMITTED' && task.isContest ? (
+              <section className="ui-card ui-card-pad sb-state">
+                <span className="sb-ic wait"><i className="ti ti-hourglass" /></span>
+                <h2>Entry sent</h2>
+                <p>{task.poster?.username ? `@${task.poster.username}` : 'The poster'} picks the winners after the contest ends. You'll get a notification if your entry wins a place.</p>
+                <Sent m={mine!} />
+                <div className="ui-actions"><Link className="ui-btn ui-btn-ghost" to="/my-tasks">My tasks</Link><Link className="ui-btn ui-btn-ghost" to="/tasks">Find more jobs</Link></div>
+              </section>
+            ) : status === 'SUBMITTED' ? (
               <section className="ui-card ui-card-pad sb-state">
                 <span className="sb-ic wait"><i className="ti ti-hourglass" /></span>
                 <h2>Waiting for review</h2>
@@ -158,9 +180,9 @@ export default function SubmissionPage() {
               </section>
             ) : status === 'APPROVED' ? (
               <section className="ui-card ui-card-pad sb-state">
-                <span className="sb-ic ok"><i className="ti ti-check" /></span>
-                <h2>Approved and paid</h2>
-                <p>{money(reward, cur)} went to your wallet.</p>
+                <span className="sb-ic ok"><i className={`ti ${mine?.contestResult === 'WON' ? 'ti-trophy' : 'ti-check'}`} /></span>
+                <h2>{mine?.contestResult === 'WON' ? `You won ${ordinal(mine.place || 1)} place` : 'Approved and paid'}</h2>
+                <p>{money(paidAmount, cur)} went to your wallet.</p>
                 <div className="ui-actions"><Link className="ui-btn ui-btn-dark" to="/wallet">Open wallet</Link><Link className="ui-btn ui-btn-ghost" to="/tasks">Find more jobs</Link></div>
               </section>
             ) : status === 'REJECTED' || status === 'EXPIRED' || status === 'DISPUTED' ? (
@@ -209,7 +231,7 @@ export default function SubmissionPage() {
           </div>
 
           <aside className="ui-card ui-card-pad sb-side">
-            <div className="sb-reward"><b>{money(reward, cur)}</b><span>per person</span></div>
+            <div className="sb-reward"><b>{money(reward, cur)}</b><span>{task.isContest ? '1st prize' : 'per person'}</span></div>
             <div className="sb-meta"><span>{categoryLabel(task.category)}</span>{task.poster?.username && <span>by <Link to={`/user/${task.poster.username}`}>@{task.poster.username}</Link></span>}</div>
             {brief && <><span className="ui-label">What to do</span><div className="sb-brief" dangerouslySetInnerHTML={{ __html: renderJobText(brief) }} /></>}
             {(needsShot || proofNote) && <><span className="ui-label">Proof</span><p className="sb-proof"><i className="ti ti-photo" /> {needsShot ? 'Attach at least one screenshot of your work.' : proofNote}</p></>}

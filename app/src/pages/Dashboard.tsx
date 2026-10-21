@@ -22,7 +22,10 @@ import '../styles/dashboard.css'
 // than STARTER_UNTIL finished jobs, the ones they can do right now first.
 
 type Me = { ogaScore?: number; humanVerifiedAt?: string | null; workerProfile?: { tasksCompleted?: number; level?: string } | null; kyc?: { status?: string; kycTier?: number } | null }
-type Sub = { id: string; status: string; taskId: string; autoApproveAt?: string | null; task?: { id: string; title: string; reward: number | string; currency?: string } }
+type Sub = {
+  id: string; status: string; taskId: string; autoApproveAt?: string | null; task?: { id: string; title: string; reward: number | string; currency?: string }
+  isContest?: boolean; contestResult?: 'WON' | 'NOT_PLACED' | 'WAITING' | null
+}
 type Job = {
   id: string; title: string; reward: number | string; currency?: string; category?: string; posterId?: string; status?: string
   maxWorkers?: number; currentWorkers?: number; expiresAt?: string | null; deadline?: string | null
@@ -51,7 +54,8 @@ export default function Dashboard() {
   useEffect(() => {
     apiRequest<any>('/scores/me').then((d) => setRankUp(d?.rank?.canClaim && d.rank.next ? { name: d.rank.next.name } : null)).catch(() => {})
   }, [])
-  const [earned, setEarned] = useState<number | null>(null)
+  // Earned per currency: USDC is never added to the naira total
+  const [earned, setEarned] = useState<Record<string, number> | null>(null)
   const [subs, setSubs] = useState<Sub[] | null>(null)
   const [created, setCreated] = useState<Job[] | null>(null)
   const [jobs, setJobs] = useState<Job[] | null>(null)
@@ -60,7 +64,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     apiRequest<Me>('/users/me').then(setMe).catch(() => setMe({}))
-    apiRequest<{ totalEarned?: number }>('/users/me/earnings').then((d) => setEarned(Number(d?.totalEarned || 0))).catch(() => setEarned(0))
+    apiRequest<{ totalEarned?: number; earned?: Record<string, number> }>('/users/me/earnings').then((d) => setEarned(d?.earned || { NGN: Number(d?.totalEarned || 0) })).catch(() => setEarned({}))
     apiRequest<{ submissions: Sub[] }>('/tasks/my/submissions').then((d) => setSubs(d?.submissions || [])).catch(() => setSubs([]))
     apiRequest<Job[]>('/tasks/my/created?limit=100').then((d) => setCreated(Array.isArray(d) ? d : [])).catch(() => setCreated([]))
     apiRequest<Job[] | { tasks: Job[] }>('/tasks?limit=100').then((d: any) => setJobs(Array.isArray(d) ? d : d?.tasks || [])).catch(() => setJobs([]))
@@ -74,8 +78,14 @@ export default function Dashboard() {
   const mine = created || []
   const live = mine.filter((j) => LIVE.includes(String(j.status || 'OPEN')))
   const reviewJobs = mine.filter((j) => toReviewOn(j) > 0)
-  const working = (subs || []).filter((s) => s.status === 'PENDING')
-  const waiting = (subs || []).filter((s) => s.status === 'SUBMITTED')
+  // "₦3,200 earned", or "₦3,200 + 1.50 USDC earned": each currency its own total, naira first
+  const earnedBy = Object.entries(earned || {}).filter(([, v]) => Number(v) > 0).sort(([a], [b]) => (a === 'NGN' ? -1 : b === 'NGN' ? 1 : a.localeCompare(b)))
+  const earnedText = earned === null ? 'Earnings'
+    : earnedBy.length > 1 ? `${earnedBy.map(([c, v]) => show(Number(v), c, { exact: true })).join(' + ')} earned`
+      : `${show(Number(earnedBy[0]?.[1] || 0), earnedBy[0]?.[0] || 'NGN')} earned`
+  // Contest entries that didn't place are finished, not "in review" forever
+  const working = (subs || []).filter((s) => s.status === 'PENDING' && s.contestResult !== 'NOT_PLACED')
+  const waiting = (subs || []).filter((s) => s.status === 'SUBMITTED' && s.contestResult !== 'NOT_PLACED')
   const active = [...working, ...waiting]
   // Not your own jobs, and not ones you've already taken part in
   const taken = new Set((subs || []).map((s) => s.taskId))
@@ -214,7 +224,7 @@ export default function Dashboard() {
       <div className="db-role-label">Earning</div>
       <div className="db-sec-head">
         <h2>Your work</h2>
-        <Link to="/earnings">{earned === null ? 'Earnings' : `${show(earned)} earned`}</Link>
+        <Link to="/earnings">{earnedText}</Link>
       </div>
       {active.length === 0 ? (
         <div className="db-empty">You're not working on anything right now.</div>
@@ -225,10 +235,10 @@ export default function Dashboard() {
               <Link to={`/tasks/${s.taskId}/submit`}>
                 <div>
                   <strong>{s.task?.title || 'Job'}</strong>
-                  <span>{s.status === 'PENDING' ? 'Send your work when it\'s done' : s.autoApproveAt ? `In review · paid automatically ${when(s.autoApproveAt)} if not reviewed` : 'Waiting for review'}</span>
+                  <span>{s.status === 'PENDING' ? (s.isContest ? 'Send your entry before the contest ends' : 'Send your work when it\'s done') : s.isContest ? 'Entry sent · winners are picked after it ends' : s.autoApproveAt ?`In review · paid automatically ${when(s.autoApproveAt)} if not reviewed` : 'Waiting for review'}</span>
                 </div>
-                <em className={s.status === 'PENDING' ? 'todo' : 'wait'}>{s.status === 'PENDING' ? 'To do' : 'In review'}</em>
-                <b>{show(Number(s.task?.reward || 0), s.task?.currency || 'NGN')}</b>
+                <em className={s.status === 'PENDING' ? 'todo' : 'wait'}>{s.status === 'PENDING' ? 'To do' : s.isContest ? 'Entered' : 'In review'}</em>
+                <b>{s.isContest ? 'Up to ' : ''}{show(Number(s.task?.reward || 0), s.task?.currency || 'NGN')}</b>
               </Link>
             </li>
           ))}
