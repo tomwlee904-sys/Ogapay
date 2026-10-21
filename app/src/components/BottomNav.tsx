@@ -151,7 +151,7 @@ export default function BottomNav() {
     <>
       <style>{`
         .btb{
-          --dk-glass:rgba(255,255,255,.8);
+          --dk-glass:rgba(255,255,255,.6);
           --dk-solid:#ffffff;
           --dk-ink:#111318;
           --dk-muted:#4a505c;
@@ -173,7 +173,7 @@ export default function BottomNav() {
         [data-theme="dark"] .btb{
           /* wurk uses .4; .8 keeps the light labels readable (4.5:1+) when a white
              photo or button scrolls under the dock, and looks the same over black */
-          --dk-glass:rgba(22,25,32,.8);
+          --dk-glass:rgba(22,25,32,.6);
           --dk-solid:#1b1e25;
           --dk-ink:#ffffff;
           --dk-muted:#e2e6ed;
