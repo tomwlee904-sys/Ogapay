@@ -11,6 +11,7 @@ const CARDS = [
   { to: '/admin/moderation', icon: 'ti-flag', title: 'Moderation', desc: 'Submissions waiting over 24h' },
   { to: '/admin/updates', icon: 'ti-speakerphone', title: 'Platform updates', desc: 'Tell every user what is new, in their Notifications' },
   { to: '/admin/ranks', icon: 'ti-trophy', title: 'Rank claims', desc: 'Review rank-ups from accounts with warning signs' },
+  { to: '/admin/warnings', icon: 'ti-alert-triangle', title: 'Warnings', desc: 'Warnings, appeals and members who cannot take jobs' },
   { to: '/admin/highlights', icon: 'ti-star', title: 'Highlighted jobs', desc: 'Jobs shown first on the homepage and jobs page' },
   { to: '/admin/support', icon: 'ti-lifebuoy', title: 'Support and reports', desc: 'Help centre tickets and reports, priority first' },
   { to: '/admin/blog', icon: 'ti-news', title: 'Blog', desc: 'Articles waiting for review, and publishing' },

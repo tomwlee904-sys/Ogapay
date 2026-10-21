@@ -294,6 +294,10 @@ export default function UserProfile() {
                   </button>
                 )}
                 <button className="up-btn" onClick={share}><i className={`ti ${shared ? "ti-check" : "ti-share"}`} /> {shared ? "Link copied" : "Share"}</button>
+                {/* Admins: warn this member for breaking the rules (Admin > Warnings) */}
+                {!isMe && me?.role === "ADMIN" && (
+                  <Link className="up-btn" to={`/admin/warnings?warn=${encodeURIComponent(handle)}`}><i className="ti ti-alert-triangle" /> Warn</Link>
+                )}
               </div>
             </div>
           </div>

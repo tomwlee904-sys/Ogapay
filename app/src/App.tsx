@@ -91,6 +91,8 @@ const AdminCreators = lazyPage(() => import('./pages/AdminCreators'))
 const AdminHighlights = lazyPage(() => import('./pages/AdminHighlights'))
 const AdminUpdates = lazyPage(() => import('./pages/AdminUpdates'))
 const AdminRanks = lazyPage(() => import('./pages/AdminRanks'))
+const AdminWarnings = lazyPage(() => import('./pages/AdminWarnings'))
+const MyWarnings = lazyPage(() => import('./pages/MyWarnings'))
 const AdminSupport = lazyPage(() => import('./pages/AdminSupport'))
 const Docs = lazyPage(() => import('./pages/Docs'))
 const DevicePairing = lazyPage(() => import('./pages/DevicePairing'))
@@ -184,6 +186,7 @@ export default function App() {
             <Route path="/settings" element={<AuthGuard><Settings /></AuthGuard>} />
             <Route path="/settings/:section" element={<AuthGuard><Settings /></AuthGuard>} />
             <Route path="/notifications" element={<AuthGuard><Notifications /></AuthGuard>} />
+            <Route path="/warnings" element={<AuthGuard><MyWarnings /></AuthGuard>} />
             <Route path="/messages" element={<AuthGuard><Messages /></AuthGuard>} />
             <Route path="/my-tasks" element={<AuthGuard><MyTasks /></AuthGuard>} />
             <Route path="/my-store" element={<AuthGuard><MyStore /></AuthGuard>} />
@@ -235,6 +238,7 @@ export default function App() {
             <Route path="/admin/highlights" element={<AdminGuard><AdminHighlights /></AdminGuard>} />
             <Route path="/admin/updates" element={<AdminGuard><AdminUpdates /></AdminGuard>} />
             <Route path="/admin/ranks" element={<AdminGuard><AdminRanks /></AdminGuard>} />
+            <Route path="/admin/warnings" element={<AdminGuard><AdminWarnings /></AdminGuard>} />
             <Route path="/admin/support" element={<AdminGuard><AdminSupport /></AdminGuard>} />
             <Route path="/admin/login" element={<Navigate to="/login?redirect=/admin" replace />} />
             <Route path="/admin/*" element={<AdminGuard><Admin /></AdminGuard>} />

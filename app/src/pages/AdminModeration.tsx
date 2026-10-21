@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { apiRequest } from '../lib/api'
 import RateWork from '../components/RateWork'
@@ -12,6 +13,10 @@ export default function AdminModeration() {
   // Optional stars and a note for work we approve; they count towards the worker's rating
   const [stars, setStars] = useState<Record<string, number>>({})
   const [notes, setNotes] = useState<Record<string, string>>({})
+  // "Spam / fake work" reject: also warns the worker (backend services/warning.service.js)
+  const [spamFor, setSpamFor] = useState<string | null>(null)
+  const [spamReason, setSpamReason] = useState('SPAM')
+  const [spamNote, setSpamNote] = useState('')
   // Store orders where the buyer reported a problem: the payment waits for us
   const [disputes, setDisputes] = useState<any[] | null>(null)
   const loadDisputes = () => apiRequest<any[]>('/store/admin/disputes').then((d) => setDisputes(Array.isArray(d) ? d : [])).catch(() => setDisputes([]))
@@ -43,16 +48,21 @@ export default function AdminModeration() {
     setBusy(null)
   }
 
-  const handleResolve = async (submissionId: string, action: 'APPROVED' | 'REJECTED') => {
+  const handleResolve = async (submissionId: string, action: 'APPROVED' | 'REJECTED', warn?: { reason: string; note: string }) => {
+    if (warn && warn.note.trim().length < 5) { setMsg('Failed: say what you saw (the worker reads it)'); return }
     setBusy(submissionId)
     setMsg('')
     try {
-      await apiRequest(`/admin/moderation/resolve/${submissionId}`, {
+      const res = await apiRequest<any>(`/admin/moderation/resolve/${submissionId}`, {
         method: 'POST',
-        body: JSON.stringify({ action, ...(action === 'APPROVED' && stars[submissionId] ? { rating: stars[submissionId], feedback: (notes[submissionId] || '').trim() || undefined } : {}) }),
+        body: JSON.stringify({ action, ...(action === 'APPROVED' && stars[submissionId] ? { rating: stars[submissionId], feedback: (notes[submissionId] || '').trim() || undefined } : {}), ...(warn && { warn: warn.reason, posterNotes: warn.note.trim() }) }),
       })
       setQueue(prev => prev.filter(s => s.id !== submissionId))
-      setMsg(`Submission ${action.toLowerCase()} successfully`)
+      setSpamFor(null); setSpamNote('')
+      const outcome = res?.warning?.outcome
+      setMsg(warn
+        ? `Rejected and warned${outcome === 'RANK_DOWN' ? ': 2nd warning in 30 days, their rank went down one step' : outcome === 'SUSPENDED' ? ': 3rd warning in 30 days, they can no longer take new jobs' : ''}`
+        : `Submission ${action.toLowerCase()} successfully`)
     } catch (err: any) {
       setMsg(err.message || 'Failed to resolve')
     }
@@ -97,6 +107,12 @@ export default function AdminModeration() {
         .mod-actions button:disabled{opacity:.5;cursor:not-allowed}
         .btn-approve{background:#059669;color:#fff}
         .btn-reject{background:#dc2626;color:#fff}
+        .btn-spam{background:transparent;color:var(--text);border:1px solid var(--border)!important}
+        .mod-spam{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px}
+        .mod-spam .ui-select{width:auto;min-width:180px}
+        .mod-spam .ui-input{flex:1;min-width:200px}
+        .mod-spam button{padding:8px 14px;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer}
+        .mod-spam p{margin:0;width:100%;font-size:12px;color:var(--text2)}
         .btn-flag{background:var(--accent);color:var(--on-accent);padding:10px 20px;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:16px}
         .mod-empty{padding:40px;text-align:center;color:var(--text2);font-size:14px}
         .mod-msg{padding:10px 14px;border-radius:10px;font-size:13px;margin-bottom:16px;background:#d1fae5;color:#065f46}
@@ -164,7 +180,7 @@ export default function AdminModeration() {
                 <div className="mod-card-info">
                   <h3>{s.task?.title || 'Untitled Task'}</h3>
                   <div className="meta">
-                    <span><i className="ti ti-user" /> {s.worker?.firstName || '?'} {s.worker?.lastName || ''}</span>
+                    <span><i className="ti ti-user" /> {s.worker?.username ? <Link to={`/user/${s.worker.username}`} style={{ color: 'inherit' }}>@{s.worker.username}</Link> : `${s.worker?.firstName || '?'} ${s.worker?.lastName || ''}`}</span>
                     <span><i className="ti ti-currency-naira" /> {s.task?.reward || '?'} {s.task?.currency || ''}</span>
                     <span><i className="ti ti-clock" /> {s.submittedAt ? timeSince(s.submittedAt) : '?'} ago</span>
                     {s.proof && <span><i className="ti ti-link" /> <a href={s.proof} target="_blank" rel="noreferrer" style={{color:'var(--accent)',textDecoration:'none'}}>Proof</a></span>}
@@ -178,6 +194,21 @@ export default function AdminModeration() {
                   )}
                   <RateWork who={s.worker?.firstName || 'the worker'} rating={stars[s.id] || 0} note={notes[s.id] || ''} disabled={busy === s.id}
                     onRating={(v) => setStars((m) => ({ ...m, [s.id]: v }))} onNote={(v) => setNotes((m) => ({ ...m, [s.id]: v }))} />
+                  {spamFor === s.id && (
+                    <div className="mod-spam">
+                      <select className="ui-select" value={spamReason} onChange={(e) => setSpamReason(e.target.value)} aria-label="Warning reason">
+                        <option value="SPAM">Spam or low-effort work</option>
+                        <option value="FAKE_WORK">Fake proof</option>
+                        <option value="COPIED">Copied or AI-written work</option>
+                        <option value="RULES">Broke the site rules</option>
+                      </select>
+                      <input className="ui-input" value={spamNote} onChange={(e) => setSpamNote(e.target.value)} maxLength={500} placeholder="What you saw (the worker reads this)" aria-label="What you saw" />
+                      <button className="btn-reject" onClick={() => handleResolve(s.id, 'REJECTED', { reason: spamReason, note: spamNote })} disabled={busy === s.id}>
+                        {busy === s.id ? '...' : 'Reject and warn'}
+                      </button>
+                      <p>A 2nd warning in 30 days lowers their rank; a 3rd stops new jobs.</p>
+                    </div>
+                  )}
                 </div>
                 <div className="mod-actions">
                   <button className="btn-approve" onClick={() => handleResolve(s.id, 'APPROVED')} disabled={busy === s.id}>
@@ -185,6 +216,9 @@ export default function AdminModeration() {
                   </button>
                   <button className="btn-reject" onClick={() => handleResolve(s.id, 'REJECTED')} disabled={busy === s.id}>
                     {busy === s.id ? '...' : 'Reject'}
+                  </button>
+                  <button className="btn-spam" onClick={() => { setSpamFor(spamFor === s.id ? null : s.id); setSpamReason('SPAM'); setSpamNote('') }} disabled={busy === s.id} aria-expanded={spamFor === s.id}>
+                    Spam / fake work
                   </button>
                 </div>
               </div>

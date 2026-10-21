@@ -59,6 +59,11 @@ const TYPE_ICONS: Record<string, { icon: string; color: string }> = {
   TRANSFER_RECEIVED:       { icon: 'ti ti-arrows-exchange', color: 'var(--green)' },
   TIP_RECEIVED:            { icon: 'ti ti-heart-handshake', color: 'var(--green)' },
   INFO:                    { icon: 'ti ti-bell', color: 'var(--accent)' },
+  ACCOUNT_WARNING:         { icon: 'ti ti-alert-triangle', color: '#F59E0B' },
+  JOBS_SUSPENDED:          { icon: 'ti ti-ban', color: 'var(--red)' },
+  SUSPENSION_LIFTED:       { icon: 'ti ti-circle-check', color: 'var(--green)' },
+  WARNING_WITHDRAWN:       { icon: 'ti ti-circle-check', color: 'var(--green)' },
+  WARNING_APPEAL:          { icon: 'ti ti-message-report', color: '#F59E0B' },
 }
 
 function resolveIcon(type: string, title: string) {
@@ -139,6 +144,9 @@ export default function TabNotificationsContent() {
     if (n.type === 'STORE_ORDER_UPDATE') return /cancelled/i.test(n.title || '') ? '/my-store?tab=orders' : '/store/orders'
     if (n.type === 'STORE_ORDER_REFUNDED') return '/store/orders'
     if (n.type === 'VERIFY_REMINDER') return '/settings/verification'
+    // Warnings (same rules as the backend push.service linkFor)
+    if (['ACCOUNT_WARNING', 'JOBS_SUSPENDED', 'SUSPENSION_LIFTED', 'WARNING_WITHDRAWN'].includes(n.type)) return '/warnings'
+    if (n.type === 'WARNING_APPEAL') return '/admin/warnings'
     if (d.taskId && POSTER_JOB.has(n.type)) return `/manage-jobs?job=${d.taskId}`
     if (d.taskId && WORKER_JOB.has(n.type)) return `/tasks/${d.taskId}/submit`
     if (MONEY.has(n.type)) return '/wallet'

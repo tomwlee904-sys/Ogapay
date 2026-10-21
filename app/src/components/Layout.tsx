@@ -6,6 +6,7 @@ import Sidebar from './Sidebar'
 import Footer from './Footer'
 import BottomNav from './BottomNav'
 import JobAlertToast from './JobAlertToast'
+import WarningBanner from './WarningBanner'
 
 interface LayoutProps {
   children: ReactNode
@@ -39,6 +40,7 @@ export default function Layout({ children, sidebar = false }: LayoutProps) {
       <div className="app-layout">
         <main className="main">
           <section className="page">
+            <WarningBanner />
             {children}
           </section>
         </main>
