@@ -5,14 +5,16 @@ import { apiRequest } from '../lib/api'
 import { useToast } from '../components/Toast'
 
 /* Admin: rule warnings (backend services/warning.service.js). Warn a member,
-   read appeals, withdraw a warning (a rank it took comes back) and lift a
-   suspension. Warnings from the moderation queue show here too. */
+   read appeals and answer them (keep the warning with a reply, or withdraw it:
+   a rank it took comes back, and a suspension lifts once fewer than 3 count)
+   and lift a suspension. Warnings from the moderation queue show here too. */
 
 type Person = { id: string; username: string; firstName?: string; lastName?: string; levelName: string; jobsSuspendedAt: string | null }
 type Warning = {
   id: string; reason: string; reasonLabel: string; note: string | null; taskId: string | null; submissionId: string | null
   outcome: 'WARNING' | 'RANK_DOWN' | 'SUSPENDED'; fromLevelName: string | null; toLevelName: string | null
   appealNote: string | null; appealedAt: string | null; withdrawnAt: string | null; withdrawNote: string | null
+  appealDecidedAt?: string | null; appealReply?: string | null
   createdAt: string; user: Person; issuedBy: string | null
 }
 type Data = { warnings: Warning[]; suspended: (Person & { recentWarnings: number })[]; reasons: { code: string; label: string; rule: string }[] }
@@ -49,6 +51,7 @@ export default function AdminWarnings() {
   }
   const needNote = (key: string) => { const n = (notes[key] || '').trim(); if (n.length < 5) { toast('Write a short note first (they see it)', 'error'); return null } return n }
   const withdraw = (w: Warning) => { const note = needNote(w.id); if (note) run(w.id, () => apiRequest(`/warnings/admin/${w.id}/withdraw`, { method: 'POST', body: JSON.stringify({ note }) }), 'Warning withdrawn') }
+  const keep = (w: Warning) => { const note = needNote(w.id); if (note) run(w.id, () => apiRequest(`/warnings/admin/${w.id}/appeal/decline`, { method: 'POST', body: JSON.stringify({ note }) }), 'Reply sent. The warning stays.') }
   const lift = (p: Person) => { const note = needNote(p.id); if (note) run(p.id, () => apiRequest(`/warnings/admin/users/${p.id}/lift`, { method: 'POST', body: JSON.stringify({ note }) }), `@${p.username} can take jobs again`) }
 
   return (
@@ -128,10 +131,12 @@ export default function AdminWarnings() {
               <p>{day(w.createdAt)} by @{w.issuedBy || 'admin'}{w.outcome === 'RANK_DOWN' ? ` · ${w.fromLevelName} to ${w.toLevelName}` : ''}{w.taskId ? <> · <Link to={`/tasks/${w.taskId}`}>job</Link></> : null}</p>
               {w.note && <p><b>Note:</b> {w.note}</p>}
               {w.appealNote && <p><b>Their appeal ({day(w.appealedAt!)}):</b> {w.appealNote}</p>}
+              {w.appealReply && <p><b>Your reply (warning kept{w.appealDecidedAt ? `, ${day(w.appealDecidedAt)}` : ''}):</b> {w.appealReply}</p>}
               {w.withdrawNote && <p><b>Withdrawn:</b> {w.withdrawNote}</p>}
               {!w.withdrawnAt && (
                 <div className="aw-row">
-                  <input className="ui-input" placeholder="Why you are withdrawing it (they see this)" value={notes[w.id] || ''} onChange={(e) => setNotes({ ...notes, [w.id]: e.target.value })} maxLength={300} aria-label={`Note for the warning to @${w.user.username}`} />
+                  <input className="ui-input" placeholder={w.appealedAt && !w.appealDecidedAt ? 'Your reply to the appeal (they see this)' : 'Why you are withdrawing it (they see this)'} value={notes[w.id] || ''} onChange={(e) => setNotes({ ...notes, [w.id]: e.target.value })} maxLength={300} aria-label={`Note for the warning to @${w.user.username}`} />
+                  {w.appealedAt && !w.appealDecidedAt && <button className="ui-btn ui-btn-dark" onClick={() => keep(w)} disabled={!!busy}>{busy === w.id ? 'Saving…' : 'Keep warning'}</button>}
                   <button className="ui-btn ui-btn-ghost" onClick={() => withdraw(w)} disabled={!!busy}>{busy === w.id ? 'Saving…' : 'Withdraw warning'}</button>
                 </div>
               )}

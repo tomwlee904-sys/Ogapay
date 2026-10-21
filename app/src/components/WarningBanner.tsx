@@ -12,6 +12,7 @@ export type MyWarning = {
   id: string; reason: string; reasonLabel: string; rule: string; note: string | null; taskId: string | null
   outcome: 'WARNING' | 'RANK_DOWN' | 'SUSPENDED'; fromLevelName: string | null; toLevelName: string | null
   seenAt: string | null; appealNote: string | null; appealedAt: string | null
+  appealDecidedAt?: string | null; appealReply?: string | null
   withdrawnAt: string | null; withdrawNote: string | null; createdAt: string
 }
 export type MyWarnings = { suspended: { since: string } | null; recentWarnings: number; windowDays: number; unseen: MyWarning[]; warnings: MyWarning[] }
@@ -19,6 +20,31 @@ export type MyWarnings = { suspended: { since: string } | null; recentWarnings: 
 // One fetch per minute at most: every page has its own Layout
 let cache: { at: number; userId: string; data: MyWarnings } | null = null
 export function clearWarningsCache() { cache = null }
+let inflight: { userId: string; p: Promise<MyWarnings | null> } | null = null
+function fetchWarnings(userId: string): Promise<MyWarnings | null> {
+  if (cache && cache.userId === userId && Date.now() - cache.at < 60000) return Promise.resolve(cache.data)
+  if (inflight && inflight.userId === userId) return inflight.p
+  const p = apiRequest<MyWarnings>('/warnings/me')
+    .then((d) => { if (d) cache = { at: Date.now(), userId, data: d }; return d || null })
+    .catch(() => null)
+    .finally(() => { inflight = null })
+  inflight = { userId, p }
+  return p
+}
+
+// The member's warnings for the menu: it shows a Warnings link once there are
+// any, so the history and the appeal button can be found again after "Got it"
+export function useMyWarnings(): MyWarnings | null {
+  const { user } = useAuth()
+  const [data, setData] = useState<MyWarnings | null>(cache && cache.userId === user?.id ? cache.data : null)
+  useEffect(() => {
+    if (!user?.id) { setData(null); return }
+    let live = true
+    fetchWarnings(user.id).then((d) => { if (live && d) setData(d) })
+    return () => { live = false }
+  }, [user?.id])
+  return data
+}
 
 export default function WarningBanner() {
   const { user } = useAuth()
@@ -28,11 +54,8 @@ export default function WarningBanner() {
 
   useEffect(() => {
     if (!user?.id) { setData(null); return }
-    if (cache && cache.userId === user.id && Date.now() - cache.at < 60000) { setData(cache.data); return }
     let live = true
-    apiRequest<MyWarnings>('/warnings/me')
-      .then((d) => { if (!d) return; cache = { at: Date.now(), userId: user.id, data: d }; if (live) setData(d) })
-      .catch(() => {})
+    fetchWarnings(user.id).then((d) => { if (live && d) setData(d) })
     return () => { live = false }
   }, [user?.id])
 

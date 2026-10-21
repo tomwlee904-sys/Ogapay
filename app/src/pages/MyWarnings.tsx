@@ -108,7 +108,10 @@ export default function MyWarnings() {
             <p><strong>Result:</strong> {outcomeText(w)}</p>
             {w.withdrawNote && <p><strong>Admin's note:</strong> {w.withdrawNote}</p>}
             {w.appealedAt ? (
-              <p><strong>Your appeal ({day(w.appealedAt)}):</strong> {w.appealNote}{!w.withdrawnAt && ' An admin will reply.'}</p>
+              <>
+                <p><strong>Your appeal ({day(w.appealedAt)}):</strong> {w.appealNote}{!w.withdrawnAt && !w.appealDecidedAt && ' An admin will reply.'}</p>
+                {w.appealReply && !w.withdrawnAt && <p><strong>Admin's reply{w.appealDecidedAt ? ` (${day(w.appealDecidedAt)})` : ''}:</strong> {w.appealReply} The warning stays.</p>}
+              </>
             ) : !w.withdrawnAt && (open === w.id ? (
               <div style={{ display: 'grid', gap: 8 }}>
                 <label className="ui-label" htmlFor={`ap-${w.id}`}>Why is this warning wrong?</label>

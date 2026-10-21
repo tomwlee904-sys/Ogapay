@@ -64,6 +64,7 @@ const TYPE_ICONS: Record<string, { icon: string; color: string }> = {
   JOBS_SUSPENDED:          { icon: 'ti ti-ban', color: 'var(--red)' },
   SUSPENSION_LIFTED:       { icon: 'ti ti-circle-check', color: 'var(--green)' },
   WARNING_WITHDRAWN:       { icon: 'ti ti-circle-check', color: 'var(--green)' },
+  WARNING_APPEAL_DECLINED: { icon: 'ti ti-message-reply', color: 'var(--text2)' },
   WARNING_APPEAL:          { icon: 'ti ti-message-report', color: '#F59E0B' },
   BRAND_APPLICATION:       { icon: 'ti ti-building-store', color: 'var(--accent)' },
   BRAND_VERIFIED:          { icon: 'ti ti-rosette-discount-check', color: 'var(--green)' },
@@ -149,7 +150,7 @@ export default function TabNotificationsContent() {
     if (n.type === 'STORE_ORDER_REFUNDED') return '/store/orders'
     if (n.type === 'VERIFY_REMINDER') return '/settings/verification'
     // Warnings (same rules as the backend push.service linkFor)
-    if (['ACCOUNT_WARNING', 'JOBS_SUSPENDED', 'SUSPENSION_LIFTED', 'WARNING_WITHDRAWN'].includes(n.type)) return '/warnings'
+    if (['ACCOUNT_WARNING', 'JOBS_SUSPENDED', 'SUSPENSION_LIFTED', 'WARNING_WITHDRAWN', 'WARNING_APPEAL_DECLINED'].includes(n.type)) return '/warnings'
     if (n.type === 'WARNING_APPEAL') return '/admin/warnings'
     // Verified business badge
     if (n.type === 'BRAND_VERIFIED' || n.type === 'BRAND_REJECTED') return '/settings/business'

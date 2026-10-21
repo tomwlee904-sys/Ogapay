@@ -7,6 +7,7 @@ import { useCurrency } from '../context/CurrencyContext'
 import { sized } from '../lib/img'
 import { displayPref } from '../lib/money'
 import CurrencySwitch from './CurrencySwitch'
+import { useMyWarnings } from './WarningBanner'
 
 interface DrawerProps {
   open: boolean
@@ -34,6 +35,9 @@ export default function Drawer({ open, onClose }: DrawerProps) {
   // Settings > Developer: "Show Developer API in the menu"
   const readDev = () => { try { return localStorage.getItem('ogapay_developer_mode') === 'true' } catch { return false } }
   const [devMode, setDevMode] = useState(readDev)
+  // Warnings: only listed for members who have had one (shared with the banner's fetch)
+  const myWarnings = useMyWarnings()
+  const hasWarnings = !!myWarnings && (myWarnings.warnings.length > 0 || !!myWarnings.suspended)
   useEffect(() => {
     const sync = () => setDevMode(readDev())
     window.addEventListener('ogapay:devmode', sync); window.addEventListener('storage', sync)
@@ -279,6 +283,12 @@ export default function Drawer({ open, onClose }: DrawerProps) {
                   <span className="oga-drawer-icon oga-drawer-icon--sub"><i className="ti ti-settings" /></span>
                   <span><strong>Settings</strong><small>Account preferences</small></span>
                 </Link>
+                {hasWarnings && (
+                <Link className="oga-drawer-item" to="/warnings" onClick={onClose}>
+                  <span className="oga-drawer-icon oga-drawer-icon--sub"><i className="ti ti-alert-triangle" /></span>
+                  <span><strong>Warnings</strong><small>Your warnings and appeals</small></span>
+                </Link>
+                )}
                 <Link className="oga-drawer-item" to="/messages" onClick={onClose}>
                   <span className="oga-drawer-icon oga-drawer-icon--sub"><i className="ti ti-message" /></span>
                   <span><strong>Messages</strong><small>Your conversations</small></span>
