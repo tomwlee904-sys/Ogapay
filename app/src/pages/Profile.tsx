@@ -820,7 +820,9 @@ export default function Profile() {
                 ) : (
                   <>
                     <StatRow label="Rank" val={(l => l.charAt(0) + l.slice(1).toLowerCase())(String(profileData?.workerProfile?.level || 'BEGINNER'))} info onInfoClick={() => setShowInfo('rank')} />
-                    <StatRow label="OgaScore" val={profileData?.workerProfile?.reputationScore?.toFixed(1) || '0.0'} info onInfoClick={() => setShowInfo('ogaScore')} />
+                    {/* The same OgaScore the Dashboard, public profiles and job requirements use
+                        (services/ogascore.service.js), not the old reputationScore formula */}
+                    <StatRow label="OgaScore" val={profileData?.ogaScore ?? 0} info onInfoClick={() => setShowInfo('ogaScore')} />
                     <StatRow label="Tasks Completed" val={profileData?.workerProfile?.tasksCompleted ?? 0} />
                     <StatRow label="Success Rate" val={profileData?.workerProfile?.successRate ? profileData.workerProfile.successRate + '%' : '0%'} info onInfoClick={() => setShowInfo('successRate')} />
                     <StatRow label="Total Earned" val={profileData?.workerProfile?.totalEarned ? show(Number(profileData.workerProfile.totalEarned)) : show(0)} />
@@ -1165,17 +1167,15 @@ export default function Profile() {
               <>
                 <h2 style={{fontSize:18,fontWeight:900,marginBottom:16}}>What is OgaScore?</h2>
                 <p style={{fontSize:13,color:'var(--text)',lineHeight:1.6,marginBottom:12}}>
-                  OgaScore is your reputation score on OgaPay. It reflects your trust level and activity on the platform. A higher score unlocks premium communities and higher-paying tasks.
+                  OgaScore (out of 66) shows how much of you we have verified. Some jobs need a minimum OgaScore.
                 </p>
-                <div style={{fontSize:12,fontWeight:700,color:'var(--text2)',marginBottom:8}}>How to increase your OgaScore:</div>
+                <div style={{fontSize:12,fontWeight:700,color:'var(--text2)',marginBottom:8}}>What counts:</div>
                 <ul style={{fontSize:12,color:'var(--text)',lineHeight:1.8,paddingLeft:18,margin:'0 0 4px'}}>
-                  <li>Connect social accounts (LinkedIn +10, X +8, GitHub +8, Google +5, Telegram +5)</li>
-                  <li>Complete identity verification (+20)</li>
-                  <li>Complete tasks on time</li>
-                  <li>Fill in your profile (bio, avatar, skills)</li>
-                  <li>Connect a Solana wallet</li>
-                  <li>Refer friends to OgaPay</li>
+                  <li>Connected accounts: LinkedIn +10, X +8, GitHub +8, Google +5, Telegram +5</li>
+                  <li>ID verification: Level 1 +10, Level 2 +10 more</li>
+                  <li>Human verification +10</li>
                 </ul>
+                <p style={{fontSize:12,color:'var(--text2)',lineHeight:1.6,margin:'8px 0 0'}}>Nothing else changes it. Do these in Settings &rarr; Verification and Settings &rarr; Connections.</p>
               </>
             )}
 
