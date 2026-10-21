@@ -5,15 +5,50 @@ import { CATEGORIES, listTemplates, money, type JobTemplate, type TemplateData }
 
 // Pick a starting point for a custom job: your saved templates (Manage jobs >
 // Templates, or "Save as template" on this page) or a few worded examples.
-// Examples fill the wording and how many people to pay, not the budget.
+// Examples fill the wording and how many people to pay. Most leave the budget
+// to you; ready-made ones (like app testing) also suggest a budget and a
+// duration, which you can change before posting.
 
-const EXAMPLES: TemplateData[] = [
+type Example = TemplateData & { note?: string };
+
+// App testing for app startups: link, phone type, feedback questions and proof.
+// Suggested ₦1,500 per tester (a 15-20 minute job) for 20 testers over 7 days.
+const APP_TESTING: Example = {
+  // Everyone who tests properly gets paid, so it is a normal job, not a contest
+  mode: "Challenge",
+  title: "Test our app and give feedback",
+  category: "App Testing & Install", subcategory: "Beta Testing", winners: "20",
+  currency: "NGN", bounty: "30000", duration: "7 days",
+  note: "Suggested: ₦1,500 per tester, 20 testers, 7 days. Change any of it.",
+  description: [
+    "Test our app and tell us honestly what you think. It takes about 15 to 20 minutes.",
+    "",
+    "App link: [paste the Play Store, App Store, TestFlight or download link]",
+    "Phone: [Android / iOS / both]",
+    "",
+    "What to do:",
+    "1. Install the app and create an account.",
+    "2. Use [the main thing your app does, for example send money or place an order] at least once.",
+    "3. Note anything that breaks, is slow or is confusing.",
+    "",
+    "Answer these questions in your submission:",
+    "1. How easy was it to sign up? Give a score from 1 to 5 and say why.",
+    "2. What did you like most?",
+    "3. What confused you or didn't work?",
+    "4. Would you keep using it or tell a friend? Why?",
+    "5. What one thing should we change first?",
+    "",
+    "Proof: a short screen recording of you using the app (share a Google Drive or unlisted YouTube link) or at least 3 screenshots. Also say your phone model and whether it is Android or iOS.",
+  ].join("\n"),
+};
+
+const EXAMPLES: Example[] = [
+  APP_TESTING,
   { title: "Follow and repost on X", category: "Social Media", subcategory: "X / Twitter", winners: "50", description: "Follow our account and repost the pinned post. Submit a link to your repost." },
   { title: "Join our Telegram community", category: "Community", winners: "200", description: "Join our Telegram channel and say hello in the group. Submit a screenshot showing you joined." },
   { title: "Like and comment on our Instagram post", category: "Social Media", subcategory: "Instagram", winners: "100", description: "Like our latest post and leave a genuine comment (not just emojis). Submit a screenshot of your comment." },
   { title: "Subscribe and like on YouTube", category: "Social Media", subcategory: "YouTube", winners: "150", description: "Subscribe to our channel and like the latest video. Submit a screenshot." },
   { title: "Write a product review", category: "App / Website Review", subcategory: "App Reviews", winners: "25", description: "Use our product and write an honest review of at least 100 words. Submit a link or paste the review." },
-  { title: "Beta test our app", category: "App Testing & Install", subcategory: "Beta Testing", winners: "20", description: "Install the app, try the main features and report any bugs or confusing parts. Include screenshots or a screen recording." },
 ];
 
 export default function TemplatesModal({ onClose, onUse }: { onClose: () => void; onUse: (data: TemplateData, example: boolean) => void }) {
@@ -68,11 +103,11 @@ export default function TemplatesModal({ onClose, onUse }: { onClose: () => void
                 <button className="ui-btn ui-btn-dark" onClick={() => use(t.data, false)}>Use</button>
               </div>
             ))
-          ) : EXAMPLES.map((d) => (
+          ) : EXAMPLES.map(({ note, ...d }) => (
             <div key={d.title} className="tm-item">
               <div className="tm-item-t">
                 <strong>{d.title}</strong>
-                <span>{summary(d)}</span>
+                <span>{note || summary(d)}</span>
                 <p>{d.description}</p>
               </div>
               <button className="ui-btn ui-btn-ghost" onClick={() => use(d, true)}>Use</button>

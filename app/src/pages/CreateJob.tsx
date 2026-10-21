@@ -923,6 +923,8 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
       {showTemplates && <TemplatesModal onClose={() => setShowTemplates(false)} onUse={(d: TemplateData, example: boolean) => {
         setTitle(d.title || ""); setDescription(d.description || "");
         if (!example) { setBounty(d.bounty || ""); if (d.currency) setCurrency(d.currency); if (d.duration) setDuration(d.duration); setTrackingCode(d.trackingCode || ""); setScreenshot(!!d.screenshot); }
+        // Ready-made examples (app testing) suggest a budget and duration
+        else if (d.bounty) { setBounty(d.bounty); if (d.currency) setCurrency(d.currency); if (d.duration) setDuration(d.duration); }
         if (d.mode) setMode(d.mode);
         setWinnersInput(String(d.winners || 10));
         if (d.category && CATEGORIES[d.category]) { setCategory(d.category); setSubcategory(d.subcategory && CATEGORIES[d.category].includes(d.subcategory) ? d.subcategory : ""); }
@@ -1223,7 +1225,7 @@ function CreateTask() {
       </div>
 
       <CampaignWizard />
-      {showMainTemplates && <TemplatesModal onClose={() => setShowMainTemplates(false)} onUse={(d: TemplateData, example: boolean) => { setCustomTemplate({ ...(example ? { ...d, bounty: "" } : d), desc: d.description }); setShowCustom(true); }} />}
+      {showMainTemplates && <TemplatesModal onClose={() => setShowMainTemplates(false)} onUse={(d: TemplateData, example: boolean) => { setCustomTemplate({ ...(example && !d.bounty ? { ...d, bounty: "" } : d), desc: d.description }); setShowCustom(true); }} />}
       {success && <SuccessModal taskId={typeof success === 'string' && success !== 'true' ? success : undefined} onClose={() => setSuccess(false)} />}
     </Layout>
   );
