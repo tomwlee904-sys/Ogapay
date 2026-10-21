@@ -33,6 +33,7 @@ const TYPE_ICONS: Record<string, { icon: string; color: string }> = {
   KYC_REJECTED:            { icon: 'ti ti-circle-x', color: 'var(--red)' },
   VERIFY_REMINDER:         { icon: 'ti ti-id', color: 'var(--accent)' },
   NEW_TASK:                { icon: 'ti ti-briefcase', color: 'var(--accent)' },
+  NEW_TASKS_MORE:          { icon: 'ti ti-briefcase', color: 'var(--accent)' },
   TASK_APPLICATION:        { icon: 'ti ti-users', color: 'var(--accent)' },
   TASK_SUBMISSION:         { icon: 'ti ti-upload', color: 'var(--accent)' },
   SUBMISSION_APPROVED:     { icon: 'ti ti-circle-check', color: 'var(--green)' },
@@ -153,6 +154,8 @@ export default function TabNotificationsContent() {
     // Verified business badge
     if (n.type === 'BRAND_VERIFIED' || n.type === 'BRAND_REJECTED') return '/settings/business'
     if (n.type === 'BRAND_APPLICATION') return '/admin/brands'
+    // The day's grouped new-job alert (backend jobAlerts.service)
+    if (n.type === 'NEW_TASKS_MORE') return '/tasks'
     if (d.taskId && POSTER_JOB.has(n.type)) return `/manage-jobs?job=${d.taskId}`
     if (d.taskId && WORKER_JOB.has(n.type)) return `/tasks/${d.taskId}/submit`
     if (MONEY.has(n.type)) return '/wallet'

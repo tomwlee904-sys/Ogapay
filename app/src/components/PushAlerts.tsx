@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { listenForAlertTaps, pushState, resyncPush, sendTestPush, turnOffPush, turnOnPush, type PushState } from '../lib/push'
@@ -14,9 +14,10 @@ export function usePushState() {
   return [state, setState] as const
 }
 
-const WHAT = 'Payments, messages, job updates and community invites, as they happen.'
+const WHAT = 'Payments, messages, job updates, new jobs and community invites, as they happen.'
 
-export function PushSettingsCard({ toast }: { toast: (m: string, t?: 'success' | 'error') => void }) {
+// children: more choices shown under the device switch (Settings adds "New jobs on this phone")
+export function PushSettingsCard({ toast, children }: { toast: (m: string, t?: 'success' | 'error') => void; children?: ReactNode }) {
   const [state, setState] = usePushState()
   const [busy, setBusy] = useState(false)
   if (!state || state === 'unavailable') return null
@@ -73,6 +74,7 @@ export function PushSettingsCard({ toast }: { toast: (m: string, t?: 'success' |
               <i className="ti ti-bell-ringing" aria-hidden="true" /> Send a test
             </button>
           )}
+          {children}
         </>
       )}
     </section>

@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { useToast } from '../../components/Toast'
 import { useCurrency } from '../../context/CurrencyContext'
 import type { DisplayMode } from '../../lib/currency'
-import { Card, PrefRow, Row, Toggle, type SectionProps } from './ui'
+import { Card, PrefRow, Row, Toggle, savePref, type Prefs, type SectionProps } from './ui'
 import { PushSettingsCard } from '../../components/PushAlerts'
 
 // Alerts on this device (push, components/PushAlerts.tsx) and email alerts
@@ -16,7 +16,7 @@ export function Notifications(props: SectionProps) {
       {!me.isEmailVerified && (
         <div className="st2-banner"><i className="ti ti-mail-exclamation" /> Verify your email to get these. <Link to="/settings/account">Resend the link</Link></div>
       )}
-      <PushSettingsCard toast={toast} />
+      <PushSettingsCard toast={toast}><NewJobsOnPhone {...props} toast={toast} /></PushSettingsCard>
       <Card title="Email alerts" sub={`Sent to ${me.email}. You'll always see everything under Notifications in the app.`}>
         <PrefRow {...props} toast={toast} k="emailNotifications" title="Email me" sub="Turn off to stop all emails below" />
         <PrefRow {...props} toast={toast} k="taskAlerts" disabled={off} title="Job updates" sub="Applications, submissions, approvals, rejections and disputes on your jobs" />
@@ -28,6 +28,77 @@ export function Notifications(props: SectionProps) {
         <PrefRow {...props} toast={toast} k="weeklyDigest" disabled={off} title="Weekly earnings summary" sub="On Mondays, what you earned from jobs the week before" />
       </Card>
     </>
+  )
+}
+
+type JobPush = 'OFF' | 'CATEGORIES' | 'ALL'
+const JOB_PUSH: { id: JobPush; label: string }[] = [
+  { id: 'OFF', label: 'Off' },
+  { id: 'CATEGORIES', label: 'My categories' },
+  { id: 'ALL', label: 'All jobs' },
+]
+const MAX_MIN_REWARD = 10000000 // same cap as the backend (user.service)
+
+// New jobs on the phone, inside the Push alerts card. Saved on the account, so
+// it's the same for every device with alerts on (backend jobAlerts.service).
+// Never chosen works like My categories, so that's what shows.
+function NewJobsOnPhone({ me, setMe, toast }: SectionProps & { toast: (m: string, t?: 'success' | 'error') => void }) {
+  const mode: JobPush = me.preferences.jobPush ?? 'CATEGORIES'
+  const saved = me.preferences.jobPushMinReward || 0
+  const [min, setMin] = useState(saved ? String(saved) : '')
+  const [busy, setBusy] = useState(false)
+  const setPrefs = (p: Partial<Prefs>) => setMe((m) => ({ ...m, preferences: { ...m.preferences, ...p } }))
+
+  const pick = async (m: JobPush) => {
+    if (m === me.preferences.jobPush) return
+    const before = me.preferences.jobPush
+    setPrefs({ jobPush: m })
+    try { await savePref('jobPush', m) }
+    catch (e: any) { setPrefs({ jobPush: before }); toast(e?.message || "Couldn't save that", 'error') }
+  }
+  const typed = Number(min || 0)
+  const saveMin = async () => {
+    if (typed === saved || busy) return
+    if (typed > MAX_MIN_REWARD) { toast('The most you can set is ₦10,000,000', 'error'); return }
+    setBusy(true)
+    try {
+      await savePref('jobPushMinReward', typed)
+      setPrefs({ jobPushMinReward: typed })
+      toast(typed ? `Only jobs paying ₦${typed.toLocaleString('en-US')} or more will go to your phone` : 'Jobs of any reward will go to your phone', 'success')
+    } catch (e: any) {
+      toast(e?.message || "Couldn't save that", 'error')
+    } finally { setBusy(false) }
+  }
+
+  return (
+    <div className="st2-jobs">
+      <div className="st2-row-title" id="push-jobs">New jobs on this phone</div>
+      <div className="st2-row-sub">
+        {mode === 'OFF' && 'None go to your phone. Jobs in your categories still show under Notifications.'}
+        {mode === 'CATEGORIES' && <>New jobs in the categories on <Link to="/edit-profile">your profile</Link> that you can take.</>}
+        {mode === 'ALL' && 'Every new job you can take, whatever the category.'}
+      </div>
+      <div className="st2-seg" role="radiogroup" aria-labelledby="push-jobs">
+        {JOB_PUSH.map((m) => (
+          <button key={m.id} type="button" role="radio" aria-checked={mode === m.id} className={mode === m.id ? 'on' : ''} onClick={() => pick(m.id)}>{m.label}</button>
+        ))}
+      </div>
+      {mode !== 'OFF' && (
+        <form className="st2-jobs-min" onSubmit={(e) => { e.preventDefault(); saveMin() }}>
+          <label className="st2-f" htmlFor="push-jobs-min"><span>Minimum reward (optional)</span></label>
+          <div className="st2-inline">
+            <div className="st2-naira">
+              <b aria-hidden="true">₦</b>
+              <input id="push-jobs-min" inputMode="numeric" autoComplete="off" placeholder="Any amount" value={min}
+                onChange={(e) => setMin(e.target.value.replace(/\D/g, '').replace(/^0+/, '').slice(0, 8))} onBlur={saveMin} />
+            </div>
+            {typed !== saved && <button type="submit" className="ui-btn ui-btn-ghost" disabled={busy}>Save</button>}
+          </div>
+          <small className="st2-muted">Smaller jobs stay off your phone. Jobs paid in USDC or SOL are compared at today's rate.</small>
+        </form>
+      )}
+      <small className="st2-muted">At most 10 a day. After that, one alert says how many more there are.</small>
+    </div>
   )
 }
 

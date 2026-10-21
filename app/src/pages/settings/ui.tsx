@@ -7,6 +7,8 @@ export type Prefs = {
   emailNotifications: boolean; taskAlerts: boolean; payoutAlerts: boolean; communityAlerts: boolean
   newTaskAlerts: boolean; weeklyDigest: boolean; loginAlerts: boolean; autoConvert: boolean
   showEarnings: boolean; showRank: boolean; defaultCurrency: string
+  // New jobs on the phone: null = never chosen (category jobs, as before)
+  jobPush: 'OFF' | 'CATEGORIES' | 'ALL' | null; jobPushMinReward: number
 }
 export type Me = {
   id: string; email: string; username: string; firstName: string; lastName: string; avatarUrl: string | null
@@ -21,7 +23,7 @@ export type Me = {
 export type SectionProps = { me: Me; setMe: (fn: (m: Me) => Me) => void; reload: () => Promise<void> }
 
 // Save one preference (the backend merges it into the rest)
-export async function savePref(key: keyof Prefs | 'isPublic', value: boolean | string) {
+export async function savePref(key: keyof Prefs | 'isPublic', value: boolean | string | number) {
   const r = await apiRequest<{ preferences: Prefs & { isPublic: boolean } }>('/users/me/preferences', {
     method: 'PATCH',
     body: JSON.stringify({ preferences: { [key]: value } }),
