@@ -11,6 +11,9 @@ import { formatMoney } from '../lib/money'
 // When every place pays the same prize, the poster can award an entry a place
 // while entries are still open; the pick at the end fills the places left.
 // Awarding the last place that way finishes the contest early.
+// A random-draw contest has no pick: when entries close the server draws the
+// winners from the valid entries and the record (seed and drawn order) shows
+// here, with a button that re-runs the draw in the browser to check it.
 
 export type ContestInfo = {
   prizes: number[]
@@ -19,6 +22,37 @@ export type ContestInfo = {
   winnersDueAt: string | null
   winnersPaidAt: string | null
   winners: { place: number; prize: number; username?: string; avatarUrl?: string | null }[]
+  randomDraw?: boolean
+  draw?: DrawRecord | null
+}
+
+// The public record of a random draw (server: contest.service.js drawOrder).
+// entries: usernames in the order they were sent; order: entry numbers
+// (1 = first sent) in the order drawn; the first `places` won.
+export type DrawRecord = { method: string; seed: string; drawnAt: string; places: number; entries: string[]; order: number[] }
+
+const sha256Hex = async (text: string) => {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text))
+  return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, '0')).join('')
+}
+// The same shuffle the server runs: for each position from the last down to the
+// second, 48 bits of SHA-256("seed:i:k") pick the position to swap with (k goes
+// up while the number lands in the uneven top slice, so every pick is fair)
+export async function redraw(seed: string, count: number) {
+  const order = Array.from({ length: count }, (_, i) => i)
+  for (let i = count - 1; i > 0; i--) {
+    const span = i + 1
+    const limit = Math.floor(2 ** 48 / span) * span
+    let r = 0
+    let k = 0
+    do {
+      r = parseInt((await sha256Hex(`${seed}:${i}:${k}`)).slice(0, 12), 16)
+      k++
+    } while (r >= limit)
+    const j = r % span
+    ;[order[i], order[j]] = [order[j], order[i]]
+  }
+  return order.map((i) => i + 1)
 }
 
 type Entry = {
@@ -67,6 +101,7 @@ export default function ContestPanel({ jobId, contest, currency, endsAt, canMana
   // Places awarded so far (early awards show before the contest finishes)
   const awarded = contest.winners.length
   const equalPrizes = contest.prizes.length > 0 && new Set(contest.prizes).size === 1
+  const random = !!contest.randomDraw
 
   return (
     <section className="wjd-panel cp">
@@ -98,6 +133,19 @@ export default function ContestPanel({ jobId, contest, currency, endsAt, canMana
         .cp-entry-who{display:grid;gap:2px;min-width:0}
         .cp-entry-who b{font-size:13.5px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
         .cp-entry-who span{font-size:12px;color:var(--text3)}
+        .cp-tag{display:inline-flex;align-items:center;gap:6px;margin:0 0 12px;padding:5px 10px;border-radius:999px;font-size:12px;font-weight:600;color:var(--text);background:color-mix(in srgb,var(--text) 6%,transparent);border:1px solid var(--border)}
+        .cp-draw{margin-top:18px;padding-top:18px;border-top:1px solid var(--border);display:grid;gap:10px}
+        .cp-draw h3{margin:0;font-size:15px;font-weight:600;color:var(--text)}
+        .cp-seed{font:500 12px var(--font-mono);color:var(--text2);word-break:break-all;padding:10px 12px;border:1px solid var(--border);border-radius:var(--r-ctl,12px);background:var(--card)}
+        .cp-order{margin:0;padding:0;list-style:none;display:grid;gap:6px}
+        .cp-order li{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 12px;border:1px solid var(--border);border-radius:var(--r-ctl,12px);font-size:13px;color:var(--text2)}
+        .cp-order li b{color:var(--text);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+        .cp-order li.won{border-color:color-mix(in srgb,var(--money,var(--green)) 30%,var(--border))}
+        .cp-order em{font-style:normal;font-size:12px;color:var(--text3);flex-shrink:0}
+        .cp-check{display:flex;align-items:center;flex-wrap:wrap;gap:10px}
+        .cp-ok{font-size:13px;font-weight:600;color:var(--green)}
+        .cp-draw details summary{cursor:pointer;font-size:13px;color:var(--text2)}
+        .cp-draw details p{margin:8px 0 0;font-size:12.5px;line-height:1.6;color:var(--text2)}
         @media(max-width:600px){.cp{padding:18px}.cp-facts{grid-template-columns:1fr}.cp-row{grid-template-columns:44px 1fr}.cp-row .cp-amt{grid-column:2}}
       `}</style>
 
@@ -105,6 +153,7 @@ export default function ContestPanel({ jobId, contest, currency, endsAt, canMana
         <b><i className="ti ti-award" /> {paid ? 'Winners' : 'Prizes'}</b>
         <span>{paid ? 'Contest finished' : cancelled ? 'Cancelled' : ended ? 'Entries closed' : 'Contest'}</span>
       </div>
+      {random && <div className="cp-tag"><i className="ti ti-arrows-shuffle" aria-hidden="true" /> {paid ? 'Drawn at random' : 'Winners drawn at random'}</div>}
 
       <div className="cp-prizes">
         {contest.prizes.map((p, i) => {
@@ -131,7 +180,15 @@ export default function ContestPanel({ jobId, contest, currency, endsAt, canMana
       {cancelled && !paid && (
         <p className="cp-note">This contest was cancelled, so no prizes are paid. The money held for it went back to {canManage ? 'your wallet' : 'the poster'}.</p>
       )}
-      {!paid && !cancelled && (
+
+      {!paid && !cancelled && random && (
+        <p className="cp-note">
+          Anyone who meets the requirements can enter, as many people as want to. {ended ? 'Entries are closed and the draw runs within 15 minutes: ' : 'When entries close, '}
+          the winners are drawn at random from the entries the poster hasn't rejected, and their prizes are paid at once. Nobody picks them, not even the poster.
+          The seed and the drawn order are shown here afterwards, so anyone can check the draw. Prizes are held by OgaPay until then.
+        </p>
+      )}
+      {!paid && !cancelled && !random && (
         <p className="cp-note">
           Anyone who meets the requirements can enter, as many people as want to. When entries close the poster ranks the winners
           {contest.winnersDueAt ? ` by ${when(contest.winnersDueAt)}` : ''}; if they don't, the earliest entries they haven't rejected win.
@@ -142,12 +199,73 @@ export default function ContestPanel({ jobId, contest, currency, endsAt, canMana
         </p>
       )}
 
-      {canManage && !cancelled && !ended && !paid && equalPrizes && awarded < contest.prizes.length && (
+      {contest.draw && <DrawRecordView draw={contest.draw} />}
+
+      {canManage && !cancelled && !random && !ended && !paid && equalPrizes && awarded < contest.prizes.length && (
         <AwardNow jobId={jobId} prize={contest.prizes[0]} places={contest.prizes.length} placesLeft={contest.prizes.length - awarded}
           currency={currency} convert={convert} onPaid={onPaid} />
       )}
-      {canManage && !cancelled && ended && !paid && <PickWinners jobId={jobId} contest={contest} currency={currency} convert={convert} onPaid={onPaid} />}
+      {canManage && !cancelled && !random && ended && !paid && <PickWinners jobId={jobId} contest={contest} currency={currency} convert={convert} onPaid={onPaid} />}
     </section>
+  )
+}
+
+// The record of a random draw: when it ran, the seed, the drawn order, and a
+// button that re-runs the same shuffle in the browser to check it
+function DrawRecordView({ draw }: { draw: DrawRecord }) {
+  const [all, setAll] = useState(false)
+  const [check, setCheck] = useState<'' | 'running' | 'match' | 'nomatch' | 'error'>('')
+  const shown = all ? draw.order : draw.order.slice(0, Math.max(10, draw.places))
+
+  const run = async () => {
+    setCheck('running')
+    try {
+      const again = await redraw(draw.seed, draw.entries.length)
+      setCheck(again.join(',') === draw.order.join(',') ? 'match' : 'nomatch')
+    } catch {
+      setCheck('error')
+    }
+  }
+
+  return (
+    <div className="cp-draw">
+      <h3>The draw</h3>
+      <p className="cp-note" style={{ margin: 0 }}>
+        Drawn {when(draw.drawnAt)} from {draw.entries.length} {draw.entries.length === 1 ? 'entry' : 'entries'} (sent, not rejected, account open).
+        {draw.places > 0 ? ` The first ${draw.places === 1 ? 'one' : draw.places} drawn won.` : ''}
+      </p>
+      <div className="cp-seed" aria-label="Seed">Seed: {draw.seed}</div>
+      {draw.order.length > 0 && (
+        <ol className="cp-order">
+          {shown.map((num, k) => (
+            <li key={num} className={k < draw.places ? 'won' : ''}>
+              <b>{k + 1}. @{draw.entries[num - 1]}</b>
+              <em>{k < draw.places ? `${ordinal(k + 1)} place` : `entry ${num}`}</em>
+            </li>
+          ))}
+        </ol>
+      )}
+      {draw.order.length > shown.length && (
+        <button className="ui-btn ui-btn-ghost" type="button" onClick={() => setAll(true)}>Show all {draw.order.length}</button>
+      )}
+      <div className="cp-check">
+        <button className="ui-btn ui-btn-ghost" type="button" disabled={check === 'running' || !draw.entries.length} onClick={run}>
+          <i className="ti ti-shield-check" /> {check === 'running' ? 'Checking…' : 'Check the draw'}
+        </button>
+        {check === 'match' && <span className="cp-ok">The seed gives this exact order.</span>}
+        {check === 'nomatch' && <span className="cp-err">The seed gives a different order.</span>}
+        {check === 'error' && <span className="cp-err">Your browser can't run the check. Try another browser.</span>}
+      </div>
+      <details>
+        <summary>How to check it yourself</summary>
+        <p>
+          Number the entries 1 to {draw.entries.length} in the order they were sent: {draw.entries.map((u, i) => `${i + 1}. @${u}`).join(', ') || 'none'}.
+          Start with that list. For each position i from the last (counting from 0) down to 1: take the SHA-256 of the text seed:i:k with k = 0,
+          read its first 12 hex characters as a number r, and if r is at or above the largest multiple of i+1 below 2^48, try k = 1, 2 and so on.
+          Then swap position i with position r mod (i+1). The list you end with is the drawn order.
+        </p>
+      </details>
+    </div>
   )
 }
 

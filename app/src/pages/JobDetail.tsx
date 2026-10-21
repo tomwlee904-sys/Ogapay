@@ -1062,7 +1062,11 @@ function WurkJobDetailView(props: any) {
                   <div className="wjd-value wjd-open-val"><span className="wjd-dot" style={{ background: isOpen ? 'var(--green)' : '#94a3b8', border: `1.5px solid ${isOpen ? 'rgba(var(--green-rgb),0.8)' : '#64748b'}` }} />{statusText}</div>
                 </div>
                 {contest ? (
-                  <div className="wjd-row"><div className="wjd-label">How you're paid <InfoBtn text={"When entries close the poster ranks the best entries and each place's prize is paid to your wallet from the money already held for this contest. If the poster doesn't pick within 3 days, the earliest entries they haven't rejected win." + earlyAwardText} /></div><div className="wjd-value">Prizes for the top {contest.prizes.length === 1 ? 'entry' : `${contest.prizes.length} entries`}</div></div>
+                  <div className="wjd-row"><div className="wjd-label">How you're paid <InfoBtn text={contest.randomDraw
+                    ? "When entries close the winners are drawn at random from the entries the poster hasn't rejected. Each place's prize is paid to your wallet at once from the money already held for this contest. The seed and the drawn order are shown on this page so anyone can check the draw."
+                    : "When entries close the poster ranks the best entries and each place's prize is paid to your wallet from the money already held for this contest. If the poster doesn't pick within 3 days, the earliest entries they haven't rejected win." + earlyAwardText} /></div><div className="wjd-value">{contest.randomDraw
+                    ? `Drawn at random: ${contest.prizes.length} ${contest.prizes.length === 1 ? 'prize' : 'prizes'}`
+                    : `Prizes for the top ${contest.prizes.length === 1 ? 'entry' : `${contest.prizes.length} entries`}`}</div></div>
                 ) : (
                   <div className="wjd-row"><div className="wjd-label">How you're paid <InfoBtn text="The poster checks each submission. Approved work is paid straight to your wallet from the money already held for this job." /></div><div className="wjd-value">Poster approves each one</div></div>
                 )}
@@ -1295,7 +1299,9 @@ function WurkJobDetailView(props: any) {
               <div className="wjd-info-row">
                 <div className="wjd-info-row-label">{contest ? 'Contest' : 'Challenge'}</div>
                 <div className="wjd-info-row-val">{contest
-                  ? `Send one entry before it closes. The poster then ranks the best entries and pays a prize for each place. Only the winners are paid.${earlyAwardText}`
+                  ? (contest.randomDraw
+                    ? 'Send one entry before it closes. The winners are then drawn at random from the entries the poster hasn\'t rejected, and paid at once. Only the winners are paid.'
+                    : 'Send one entry before it closes. The poster then ranks the best entries and pays a prize for each place. Only the winners are paid.' + earlyAwardText)
                   : `Everyone whose work is approved is paid ${formatMoney(Number(job.reward || 0), rewardCurrency)}, until all ${job.slots} ${job.slots === 1 ? 'place is' : 'places are'} used.`}</div>
               </div>
               <div className="wjd-info-row" style={{ marginBottom: 20 }}>

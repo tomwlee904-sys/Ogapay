@@ -226,9 +226,9 @@ function SelectField({ label, value, onChange, options, style = {} }: any) {
 const ordinal = (n: number) => `${n}${n % 10 === 1 && n % 100 !== 11 ? "st" : n % 10 === 2 && n % 100 !== 12 ? "nd" : n % 10 === 3 && n % 100 !== 13 ? "rd" : "th"}`;
 
 // Contest prizes: one per place (up to 10), 1st first, plus an optional entry target
-function ContestPrizes({ currency, setCurrency, prizes, setPrizes, target, setTarget, floor }: {
+function ContestPrizes({ currency, setCurrency, prizes, setPrizes, target, setTarget, floor, randomDraw, setRandomDraw }: {
   currency: string; setCurrency: (v: string) => void; prizes: string[]; setPrizes: (f: (p: string[]) => string[]) => void
-  target: string; setTarget: (v: string) => void; floor: number
+  target: string; setTarget: (v: string) => void; floor: number; randomDraw: boolean; setRandomDraw: (v: boolean) => void
 }) {
   const sym = currency === "NGN" ? "₦" : currency === "USDC" ? "$" : "◎";
   return (
@@ -269,11 +269,29 @@ function ContestPrizes({ currency, setCurrency, prizes, setPrizes, target, setTa
           <button type="button" className="ui-btn ui-btn-ghost cf-prize-add" onClick={() => setPrizes(ps => [...ps, ""])}><i className="ti ti-plus" /> Add a place</button>
         )}
         <p className="cf-hint">
-          At least {money(floor, currency)} a place, and a lower place can't pay more than the one above. When entries close you rank the
-          winners; if you haven't within 3 days, the earliest entries you haven't rejected win. Places nobody fills come back to you with
-          their share of the fee. If every place pays the same prize (or there is only one place), you can also award places before entries
-          close; once every place is awarded, the contest ends early.
+          At least {money(floor, currency)} a place, and a lower place can't pay more than the one above. {randomDraw
+            ? "When entries close the winners are drawn at random from the entries you haven't rejected."
+            : "When entries close you rank the winners; if you haven't within 3 days, the earliest entries you haven't rejected win."} Places
+          nobody fills come back to you with their share of the fee.{randomDraw ? "" : " If every place pays the same prize (or there is only one place), you can also award places before entries close; once every place is awarded, the contest ends early."}
         </p>
+      </div>
+      <div className="cf-field">
+        <span className="cf-lbl">How winners are chosen <InfoTip label="How are winners chosen?" title="Choosing the winners">
+          <ul>
+            <li><b>I pick the winners:</b> when entries close you rank the best entries. If you haven't within 3 days, the earliest entries you haven't rejected win.</li>
+            <li><b>Random draw:</b> nobody picks, not even you. When entries close OgaPay draws the winners at random from the entries you haven't rejected, and pays them at once. The seed and the drawn order are shown on the job page, so anyone can check the draw. Good for giveaways like "comment and 3 people win". Reject any entry that breaks your rules before entries close: rejected entries aren't in the draw.</li>
+          </ul>
+        </InfoTip></span>
+        <div className="cf-modes" role="radiogroup" aria-label="How winners are chosen">
+          {([
+            [false, "ti-list-numbers", "I pick the winners", "Rank the best entries when it ends."],
+            [true, "ti-arrows-shuffle", "Random draw", "Winners drawn at random when it ends."],
+          ] as const).map(([v, icon, label, d]) => (
+            <button key={label} type="button" role="radio" aria-checked={randomDraw === v} className={`cf-mode${randomDraw === v ? " on" : ""}`} onClick={() => setRandomDraw(v)}>
+              <i className={`ti ${icon}`} /><span style={{ margin: 0 }}><b>{label}</b><span>{d}</span></span>
+            </button>
+          ))}
+        </div>
       </div>
     </>
   );
@@ -485,6 +503,8 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
   // Contest: a prize per place, 1st first
   const [prizesInput, setPrizesInput] = useState<string[]>(Array.isArray(init.prizes) && init.prizes.length ? init.prizes.map(String).slice(0, 10) : ["", "", ""]);
   const [entryTarget, setEntryTarget] = useState<string>(init.entryTarget ? String(init.entryTarget) : "");
+  // Contest: winners drawn at random when entries close, instead of picked by you
+  const [randomDraw, setRandomDraw] = useState<boolean>(!!init.randomDraw);
   const [category, setCategory] = useState<string>(init.category || "");
   const [subcategory, setSubcategory] = useState<string>(init.subcategory || "");
   const [duration, setDuration] = useState<string>(init.duration || "7 days");
@@ -522,11 +542,11 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
   useEffect(() => {
     const t = setTimeout(() => {
       try {
-        localStorage.setItem(CUSTOM_DRAFT_KEY, JSON.stringify({ mode, title, description, currency, bounty, winners: winnersInput, prizes: prizesInput, entryTarget, category, subcategory, duration, reqType, reqValue, screenshot, trackingCode }));
+        localStorage.setItem(CUSTOM_DRAFT_KEY, JSON.stringify({ mode, title, description, currency, bounty, winners: winnersInput, prizes: prizesInput, entryTarget, randomDraw, category, subcategory, duration, reqType, reqValue, screenshot, trackingCode }));
       } catch { /* storage full or blocked */ }
     }, 400);
     return () => clearTimeout(t);
-  }, [mode, title, description, currency, bounty, winnersInput, prizesInput, entryTarget, category, subcategory, duration, reqType, reqValue, screenshot, trackingCode]);
+  }, [mode, title, description, currency, bounty, winnersInput, prizesInput, entryTarget, randomDraw, category, subcategory, duration, reqType, reqValue, screenshot, trackingCode]);
 
   const isContest = mode === "Contest";
   const prizeNums = prizesInput.map(p => parseFloat(String(p).replace(/,/g, "")) || 0);
@@ -628,6 +648,7 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
           isContest: true,
           prizes: prizeNums.map(p => Number(p.toFixed(currency === "NGN" ? 2 : 6))),
           ...(parseInt(entryTarget) > 0 && { entryTarget: parseInt(entryTarget) }),
+          ...(randomDraw && { randomDraw: true }),
         }),
         tags: [category, subcategory].filter(Boolean).slice(0, 5),
         ...(deadline && { deadline: deadline.toISOString() }),
@@ -697,7 +718,7 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
                     <span className="cf-lbl">Mode <InfoTip label="What are the job modes?" title="Job modes">
                       <ul>
                         <li><b>Challenge:</b> everyone whose work you approve is paid the reward, until your number of winners is reached. Best for simple tasks.</li>
-                        <li><b>Contest:</b> people send entries until it closes, then you rank the best and pay a prize for each place. Best for creative work.</li>
+                        <li><b>Contest:</b> people send entries until it closes, then you rank the best and pay a prize for each place. Best for creative work. Or choose a random draw: the winners are drawn at random from the entries, good for giveaways.</li>
                         <li><b>Selection:</b> people apply with a short note. You read the notes in Manage jobs and pick one person. They have 24 hours to send the work, and they're paid when you approve it. Cancel before you pick and you get all your money back.</li>
                       </ul>
                     </InfoTip></span>
@@ -742,7 +763,7 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
 
                   {isContest ? (
                     <ContestPrizes currency={currency} setCurrency={setCurrency} prizes={prizesInput} setPrizes={setPrizesInput}
-                      target={entryTarget} setTarget={setEntryTarget} floor={floor} />
+                      target={entryTarget} setTarget={setEntryTarget} floor={floor} randomDraw={randomDraw} setRandomDraw={setRandomDraw} />
                   ) : (
                   <div className="cf-row-3">
                     <div className="cf-field">
@@ -794,7 +815,7 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
                       {DURATIONS.filter(([l]) => !(isContest && l === "No deadline")).map(([l]) => <option key={l} value={l}>{l}</option>)}
                     </select>
                     <p className="cf-hint">{isContest && deadline
-                      ? `Entries close ${deadline.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}. You then have 3 days to rank the winners.`
+                      ? `Entries close ${deadline.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}. ${randomDraw ? "The winners are then drawn at random." : "You then have 3 days to rank the winners."}`
                       : deadline ? `Closes ${deadline.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}. Unused budget returns to your wallet.` : "Stays open until all places are filled or you cancel it."}</p>
                   </div>
 
@@ -868,7 +889,7 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
                     </>)}
                     <div><span>Who can take part</span><b>{community ? `Members of ${community.name}` : ""}{community && reqType !== "none" ? " · " : ""}{!community || reqType !== "none" ? reqLabel(reqType, reqValue) : ""}</b></div>
                     <div><span>{isContest ? "Entries close" : "Closes"}</span><b>{deadline ? deadline.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "No deadline"}</b></div>
-                    {isContest && <div><span>Winners</span><b>You rank them within 3 days of the close, or the earliest entries win{prizeNums.length === 1 ? ". You can also award the place to an entry before entries close; the contest then ends early" : prizeNums.length > 1 && new Set(prizeNums).size === 1 ? ". Every place pays the same prize, so you can also award places before entries close; once every place is awarded, the contest ends early" : ""}</b></div>}
+                    {isContest && <div><span>Winners</span><b>{randomDraw ? "Drawn at random when entries close, from the entries you haven't rejected" : "You rank them within 3 days of the close, or the earliest entries win" + (prizeNums.length === 1 ? ". You can also award the place to an entry before entries close; the contest then ends early" : prizeNums.length > 1 && new Set(prizeNums).size === 1 ? ". Every place pays the same prize, so you can also award places before entries close; once every place is awarded, the contest ends early" : "")}</b></div>}
                     {screenshot && <div><span>Proof</span><b>Screenshot required</b></div>}
                     {files.length > 0 && <div><span>Attachments</span><b>{files.length} file{files.length > 1 ? "s" : ""}</b></div>}
                     <div><span>Your {currency} balance</span><b style={{ color: balance >= totalToPay ? "var(--green)" : "var(--red)" }}>{money(balance, currency)}</b></div>
