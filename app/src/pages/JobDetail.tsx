@@ -132,6 +132,7 @@ interface JobData {
   minJobsDone: number
   requiresWallet: boolean
   requiresX: boolean
+  requiresXBlue: boolean
   requiresLinkedin: boolean
   audiencePlatform: string | null
   minFollowers: number
@@ -371,6 +372,7 @@ export default function JobDetail() {
       minJobsDone: Number(t.minJobsDone) || 0,
       requiresWallet: !!t.requiresWallet,
       requiresX: !!t.requiresX,
+      requiresXBlue: !!t.requiresXBlue,
       requiresLinkedin: !!t.requiresLinkedin,
       audiencePlatform: t.audiencePlatform || null,
       minFollowers: Number(t.minFollowers) || 0,

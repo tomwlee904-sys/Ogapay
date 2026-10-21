@@ -22,7 +22,8 @@ export function jobRequirements(job: any): { icon: string; text: string }[] {
   const jobs = Number(job.minJobsDone ?? 0)
   if (jobs > 0) reqs.push({ icon: 'circle-check', text: `${jobs}+ ${jobs === 1 ? 'job' : 'jobs'} done on OgaPay` })
   if (job.requiresWallet) reqs.push({ icon: 'wallet', text: 'Solana wallet connected' })
-  if (job.requiresX) reqs.push({ icon: 'brand-x', text: 'X account connected' })
+  if (job.requiresXBlue) reqs.push({ icon: 'rosette-discount-check', text: 'Blue tick on X' })
+  else if (job.requiresX) reqs.push({ icon: 'brand-x', text: 'X account connected' })
   if (job.requiresLinkedin) reqs.push({ icon: 'brand-linkedin', text: 'LinkedIn connected' })
   if (job.audiencePlatform && Number(job.minFollowers) > 0) {
     reqs.push({ icon: platformOf(job.audiencePlatform).icon.replace(/^ti-/, ''), text: `Creators: ${audienceRequirement(job.audiencePlatform, Number(job.minFollowers))}` })

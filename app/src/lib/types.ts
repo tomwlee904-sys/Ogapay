@@ -28,6 +28,7 @@ export interface Task {
   workerRequirement?: string;
   requiresLinkedin?: boolean;
   requiresX?: boolean;
+  requiresXBlue?: boolean;
   audiencePlatform?: string | null;
   minFollowers?: number;
   requiresWallet?: boolean;

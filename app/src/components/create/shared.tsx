@@ -14,7 +14,8 @@ export const REQ_OPTIONS: [string, string][] = [
   ["none", "Anyone can take part"],
   ["kyc", "KYC verified workers"],
   ["human", "Human verified (Very)"],
-  ["x", "Verified X account"],
+  ["x", "Connected X account"],
+  ["xblue", "Blue-tick X account"],
   ["wallet", "Connected Solana wallet"],
   ["rank", "Minimum worker rank"],
   ["ogascore", "Minimum OgaScore"],
@@ -36,6 +37,7 @@ export function reqFields(type: string, value: string): Record<string, any> {
     case "kyc": return { workerRequirement: "KYC" };
     case "human": return { workerRequirement: "HUMAN" };
     case "x": return { requiresX: true };
+    case "xblue": return { requiresXBlue: true };
     case "wallet": return { requiresWallet: true };
     case "rank": return { minRank: Math.min(5, Math.max(2, n)) }; // 2 Intermediate … 5 Legend
     case "ogascore": return { minSorsaScore: Math.min(100, n) };
@@ -305,6 +307,7 @@ export function taskToTemplateData(t: any): TemplateData {
   const [reqType, reqValue] =
     t?.workerRequirement === "KYC" ? ["kyc", ""] :
     t?.workerRequirement === "HUMAN" ? ["human", ""] :
+    t?.requiresXBlue ? ["xblue", ""] :
     t?.requiresX ? ["x", ""] :
     t?.requiresWallet ? ["wallet", ""] :
     Number(t?.minRank) > 1 ? ["rank", String(t.minRank)] :

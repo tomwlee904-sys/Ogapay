@@ -300,7 +300,8 @@ function ContestPrizes({ currency, setCurrency, prizes, setPrizes, target, setTa
 const REQ_MODES = [
   { value: "rank", label: "Rank" },
   { value: "kyc", label: "KYC Verified" },
-  { value: "verified_x", label: "Verified X" },
+  { value: "verified_x", label: "Connected X" },
+  { value: "blue_x", label: "Blue-tick X" },
   { value: "oga_score", label: "Min OgaScore" },
 ];
 
@@ -316,7 +317,7 @@ function ActionRequirement({ value, onChange, compact }: { value: any; onChange:
   const set = (partial: any) => onChange({ ...value, ...partial });
 
   const modeLabel = REQ_MODES.find(m => m.value === mode)?.label || "Rank";
-  const summary = mode === "rank" ? `Rank ${minRank || 1}` : mode === "oga_score" ? `OgaScore > ${minOgaScore || 0}` : mode === "kyc" ? "KYC" : "Verified X";
+  const summary = mode === "rank" ? `Rank ${minRank || 1}` : mode === "oga_score" ? `OgaScore > ${minOgaScore || 0}` : mode === "kyc" ? "KYC" : mode === "blue_x" ? "Blue-tick X" : "Connected X";
 
   if (compact) {
     return (
@@ -1281,6 +1282,7 @@ function PlatformDetail({ platform, onBack, onCreated }: any) {
         minRank: actionReq.mode === "rank" ? (actionReq.minRank || 0) : undefined,
         workerRequirement: actionReq.mode === "kyc" ? "KYC" : actionReq.humanVerified ? "HUMAN" : undefined,
         requiresX: actionReq.mode === "verified_x" || undefined,
+        requiresXBlue: actionReq.mode === "blue_x" || undefined,
         minSorsaScore: actionReq.mode === "oga_score" ? (Math.min(100, parseInt(actionReq.minOgaScore)) || undefined) : undefined,
       };
       // -- Check wallet balance before submitting --
