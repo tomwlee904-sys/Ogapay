@@ -31,7 +31,7 @@ export type ContestInfo = {
 // (1 = first sent) in the order drawn; the first `places` won.
 // entries: a username, or null when the name is hidden (private profile or closed account);
 // rejected: how many entries the poster rejected before entries closed
-export type DrawRecord = { method: string; seed: string; drawnAt: string; places: number; entries: (string | null)[]; rejected?: number; order: number[] }
+export type DrawRecord = { method: string; seed: string; drawnAt: string; places: number; entries: (string | null)[]; rejected?: number; flagged?: number; order: number[] }
 const entryName = (u: string | null | undefined) => (u ? `@${u}` : 'Name hidden')
 
 const sha256Hex = async (text: string) => {
@@ -187,7 +187,7 @@ export default function ContestPanel({ jobId, contest, currency, endsAt, canMana
       {!paid && !cancelled && random && (
         <p className="cp-note">
           Verified people who meet the requirements can enter, one entry each. {ended ? 'Entries are closed and the draw runs within 15 minutes: ' : 'When entries close, '}
-          the winners are drawn at random from the entries the poster hasn't rejected, and their prizes are paid at once. Nobody picks them, not even the poster,
+          the winners are drawn at random from the entries the poster hasn't rejected (entries flagged as a copy or spam aren't in the draw), and their prizes are paid at once. Nobody picks them, not even the poster,
           and once entries close no entry can be rejected. The seed and the drawn order are shown here afterwards, so anyone can check the draw. Prizes are held by OgaPay until then.
         </p>
       )}
@@ -234,7 +234,7 @@ function DrawRecordView({ draw }: { draw: DrawRecord }) {
     <div className="cp-draw">
       <h3>The draw</h3>
       <p className="cp-note" style={{ margin: 0 }}>
-        Drawn {when(draw.drawnAt)} from {draw.entries.length} {draw.entries.length === 1 ? 'entry' : 'entries'} (sent, not rejected, account open).
+        Drawn {when(draw.drawnAt)} from {draw.entries.length} {draw.entries.length === 1 ? 'entry' : 'entries'} (sent, not rejected, not flagged as a copy or spam, account open){draw.flagged ? `. ${draw.flagged} flagged ${draw.flagged === 1 ? 'entry was' : 'entries were'} left out` : ''}.
         {draw.places > 0 ? ` The first ${draw.places === 1 ? 'one' : draw.places} drawn won.` : ''}
         {draw.rejected ? ` The poster rejected ${draw.rejected} ${draw.rejected === 1 ? 'entry' : 'entries'} before entries closed, so ${draw.rejected === 1 ? 'it was' : 'they were'} not in the draw.` : ''}
       </p>
