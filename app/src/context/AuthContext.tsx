@@ -37,6 +37,8 @@ export interface User {
   referralCode: string
   isEmailVerified: boolean
   isTwoFactorEnabled: boolean
+  // False for an account made with Google that has no password yet
+  hasPassword?: boolean
   kycStatus: string | null
   kycTier: number
   onboardingComplete: boolean

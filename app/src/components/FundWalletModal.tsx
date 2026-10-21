@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import VirtualAccountCard from './VirtualAccountCard';
 import { useNavigate, useLocation } from 'react-router-dom';
 import WithdrawModal from './wallet/WithdrawModal';
-import { isPhone, openInWalletUrl, PHONE_WALLET_LINE, WALLET_APPS } from '../lib/walletApps';
+import { isPhone, openInWalletUrl, PHONE_WALLET_LINE, phoneWalletSignInLine, WALLET_APPS } from '../lib/walletApps';
 import {
   PublicKey,
   Transaction,
@@ -80,7 +80,7 @@ export default function FundWalletModal(props: Props) {
 }
 
 function DepositModal({ onClose, onDone, initialTab }: Props) {
-  const { refreshUser } = useAuth();
+  const { user, refreshUser } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [step, setStep] = useState<Step>('select');
@@ -312,7 +312,15 @@ function DepositModal({ onClose, onDone, initialTab }: Props) {
                   </div>
                 ) : openInApp ? (
                   <>
-                    <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', lineHeight: 1.5, margin: '0 0 8px' }}>{PHONE_WALLET_LINE}</p>
+                    <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', lineHeight: 1.5, margin: '0 0 4px' }}>{PHONE_WALLET_LINE}</p>
+                    {/* The wallet app's browser needs a fresh sign-in, and Google won't work there */}
+                    <p style={{ fontSize: 12.5, color: 'var(--text2)', lineHeight: 1.5, margin: '0 0 8px' }}>
+                      {phoneWalletSignInLine(user?.hasPassword)}
+                      {user?.hasPassword === false && (<>
+                        {' '}<button type="button" onClick={() => { onClose(); navigate('/settings/security'); }}
+                          style={{ background: 'none', border: 'none', padding: 0, font: 'inherit', fontWeight: 700, color: 'var(--accent)', textDecoration: 'underline', cursor: 'pointer' }}>Set a password</button>
+                      </>)}
+                    </p>
                     <div style={{ display: 'grid', gap: 8 }}>
                       {WALLET_APPS.map(w => (
                         <a key={w.id} href={openInWalletUrl(w.id)} style={{ ...BTN, width: '100%', height: 44, background: 'transparent', border: '1.5px solid var(--border)', color: 'var(--text)', textDecoration: 'none', boxSizing: 'border-box' }}>

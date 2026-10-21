@@ -31,3 +31,24 @@ export const openInWalletUrl = (id: WalletAppId, url = window.location.href) =>
   `${BROWSE[id]}${encodeURIComponent(url)}?ref=${encodeURIComponent(window.location.origin)}`
 
 export const PHONE_WALLET_LINE = 'On a phone, open OgaPay inside your wallet app to connect.'
+
+// The wallet app's browser doesn't share Safari's or Chrome's sign-in, so
+// OgaPay asks you to sign in again there. Google refuses to sign anyone in
+// inside an app's built-in browser ("disallowed_useragent"), so it has to be
+// email and password. Someone who signed up with Google has no password yet
+// (hasPassword false) and is told to set one in Settings before leaving
+// (shown with a "Set a password" link to /settings/security).
+export const phoneWalletSignInLine = (hasPassword?: boolean) =>
+  hasPassword === false
+    ? "You'll need to sign in again there, and Google sign-in usually doesn't work inside wallet apps. Set a password first so you can sign in with your email."
+    : "You'll need to sign in again there with your email and password. Google sign-in usually doesn't work inside wallet apps."
+
+// True on a phone inside a wallet app's own browser: the app has added its
+// wallet to the page, which Safari and Chrome on a phone never have
+export const inWalletAppBrowser = () => {
+  if (!isPhone() || typeof window === 'undefined') return false
+  const w = window as any
+  return !!(w.phantom?.solana || w.solflare || w.backpack || w.trustwallet?.solana || w.bitkeep?.solana || w.solana)
+}
+
+export const WALLET_APP_SIGNIN_LINE = "Google sign-in usually doesn't work inside wallet apps. Sign in with Email (signed up with Google? Use Forgot password there to set a password), or with Pair devices."

@@ -27,7 +27,7 @@ import TabMyTasksContent from '../components/ProfileMyTasksTab'
 import TabEarningsContent from '../components/ProfileEarningsTab'
 import { sized } from '../lib/img'
 import { xProfileOf } from '../lib/xprofile'
-import { isPhone, openInWalletUrl, PHONE_WALLET_LINE, WALLET_APPS, type WalletAppId } from '../lib/walletApps'
+import { isPhone, openInWalletUrl, PHONE_WALLET_LINE, phoneWalletSignInLine, WALLET_APPS, type WalletAppId } from '../lib/walletApps'
 const Icon = ({ n, s = 16, c }: { n: any; s?: number; c?: any }) => (
   <i className={`ti ti-${n}`} style={{ fontSize: s, color: c || "var(--text2)", lineHeight: 1, flexShrink: 0 }} />
 );
@@ -1092,9 +1092,17 @@ export default function Profile() {
             <p style={{color:'var(--text2)',fontSize:13,margin:'0 0 16px',lineHeight:1.5}}>
               Select a wallet provider to connect. You'll be asked to sign a message to verify ownership.
             </p>
-            {isPhone() && detectedWallets.length === 0 && (
-              <p style={{color:'var(--text)',fontSize:13,fontWeight:600,margin:'-6px 0 14px',lineHeight:1.5}}>{PHONE_WALLET_LINE}</p>
-            )}
+            {isPhone() && detectedWallets.length === 0 && (<>
+              <p style={{color:'var(--text)',fontSize:13,fontWeight:600,margin:'-6px 0 6px',lineHeight:1.5}}>{PHONE_WALLET_LINE}</p>
+              {/* The wallet app's browser needs a fresh sign-in, and Google won't work there */}
+              <p style={{color:'var(--text2)',fontSize:12.5,margin:'0 0 14px',lineHeight:1.5}}>
+                {phoneWalletSignInLine(authUser?.hasPassword)}
+                {authUser?.hasPassword === false && (<>
+                  {' '}<button type="button" onClick={() => { setShowWalletOptions(false); navigate('/settings/security'); }}
+                    style={{background:'none',border:'none',padding:0,font:'inherit',fontWeight:700,color:'var(--accent)',textDecoration:'underline',cursor:'pointer'}}>Set a password</button>
+                </>)}
+              </p>
+            </>)}
             <div style={{display:'grid',gap:10}}>
               {[
                 { id:'phantom', label:'Phantom', icon:'brand-phantom' },

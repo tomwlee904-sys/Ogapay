@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext'
 import { API_BASE, apiRequest } from '../../lib/api'
 import { supabase } from '../../lib/supabaseClient'
 import type { SignInView } from '../../lib/signin'
-import { isPhone, openInWalletUrl, PHONE_WALLET_LINE } from '../../lib/walletApps'
+import { inWalletAppBrowser, isPhone, openInWalletUrl, PHONE_WALLET_LINE, WALLET_APP_SIGNIN_LINE } from '../../lib/walletApps'
 import '../../styles/signin.css'
 
 /* Sign-in dialog in the wurk.fun style: pick a method (wallet, Google, email,
@@ -44,6 +44,11 @@ const friendly = (msg = '') => {
   if (/route .*not found|cannot post/i.test(msg)) return "This sign-in option isn't available yet. Use email or Google for now."
   if (/user rejected|rejected the request|user denied/i.test(msg)) return 'You cancelled the request in your wallet.'
   if (/failed to fetch|network/i.test(msg)) return "Couldn't reach OgaPay. Check your connection and try again."
+  // Email sign-in for an account made with Google (no password yet). Inside a
+  // wallet app "sign in with Google" is no help, so point at Forgot password.
+  if (/sign in with google or reset your password/i.test(msg)) return inWalletAppBrowser()
+    ? "This account was made with Google and has no password yet. Tap Forgot password to set one, then sign in here."
+    : "This account was made with Google and has no password yet. Go back and use Continue with Google, or tap Forgot password to set one."
   return msg || 'Something went wrong. Please try again.'
 }
 
@@ -115,6 +120,13 @@ export default function SignInModal({ initialView = 'options', initialCode = '',
   const [code, setCode] = useState(initialCode.toUpperCase())
   const [challenge, setChallenge] = useState<{ token: string; userId: string } | null>(null)
   const [otp, setOtp] = useState('')
+  // Checked again shortly after opening: some wallet apps add their wallet to
+  // the page a moment after it loads
+  const [inWalletApp, setInWalletApp] = useState(inWalletAppBrowser)
+  useEffect(() => {
+    const t = setTimeout(() => setInWalletApp(inWalletAppBrowser()), 800)
+    return () => clearTimeout(t)
+  }, [])
 
   const dialogRef = useRef<HTMLDivElement>(null)
   const titleRef = useRef<HTMLHeadingElement>(null)
@@ -272,17 +284,25 @@ export default function SignInModal({ initialView = 'options', initialCode = '',
 
   let body: ReactNode = null
   if (view === 'options') {
+    // Inside a wallet app (after "Open in Phantom" and the like) Google refuses
+    // to sign in, so Email comes first and Google says it likely won't work
+    const googleOption = (
+      <Option name="Continue with Google" disabled={busy === 'google'} onClick={google}
+        desc={inWalletApp ? "Usually doesn't work inside wallet apps" : 'Sign in or create an account with your Google account'}
+        icon={busy === 'google' ? <Spinner /> : <GoogleIcon />} />
+    )
     body = (
       <>
         <p className="si-desc">Choose how you want to sign in or create your OgaPay account.</p>
+        {inWalletApp && <p className="si-notice ok" role="note">{WALLET_APP_SIGNIN_LINE}</p>}
         {noticeLine}{errorLine}
         <div className="si-options">
           <Option name="Continue with wallet" desc="Phantom, Solflare, Backpack and more" onClick={() => go('wallets')}
             icon={<span className="si-wgrid" aria-hidden="true">{WALLETS.slice(0, 4).map(w => <img key={w.id} src={w.icon} alt="" />)}</span>} />
-          <Option name="Continue with Google" desc="Sign in or create an account with your Google account" onClick={google} disabled={busy === 'google'}
-            icon={busy === 'google' ? <Spinner /> : <GoogleIcon />} />
+          {!inWalletApp && googleOption}
           <Option name="Email" desc="Sign in or create an account with your email" onClick={() => go('email')}
             icon={<i className="ti ti-mail" aria-hidden="true" />} />
+          {inWalletApp && googleOption}
           <Option name="Pair devices" desc="Signed in on another device? Pair this one with a code" onClick={() => go('pair')}
             icon={<i className="ti ti-devices" aria-hidden="true" />} />
         </div>
@@ -309,7 +329,7 @@ export default function SignInModal({ initialView = 'options', initialCode = '',
             )
           })}
         </div>
-        <p className="si-hint">New to OgaPay? Create an account with email or Google, then connect your wallet in Settings to use it here.</p>
+        <p className="si-hint">New to OgaPay? Create an account with {inWalletApp ? 'email' : 'email or Google'}, then connect your wallet in Settings to use it here.</p>
       </>
     )
   } else if (view === 'email') {
