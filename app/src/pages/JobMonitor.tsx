@@ -8,18 +8,21 @@ import { apiRequest } from '../lib/api'
 import { categoryLabel } from '../lib/categories'
 import { savedJobIds, setSaved, onSavedJobsChange } from '../lib/bookmarks'
 import { useJobAlert } from '../contexts/JobAlertContext'
+import InfoTip from '../components/InfoTip'
 import '../styles/job-monitor.css'
 
 // Job monitor: open jobs, newest first, checked every 30 seconds while the page is
 // open, with an optional pop-up and sound for new ones. "Take a slot" reserves a
 // place and opens the submit page. It used to call a hard-coded production API
 // address, alert on every visit, keep "applied" only in this browser and map
-// categories with codes the API doesn't use.
+// categories with codes the API doesn't use. "Available for me" hides jobs you've
+// taken and jobs the server says you can't take (the list's "eligible" flag).
 
 type Job = {
   id: string; title: string; reward: number | string; currency?: string; category?: string; createdAt?: string
   maxWorkers?: number; currentWorkers?: number; posterId?: string; poster?: { username?: string | null }
   isSelection?: boolean
+  eligible?: boolean // sent only when signed in: false when applying would be refused
 }
 
 const POLL_MS = 30000
@@ -45,6 +48,7 @@ export default function JobMonitor() {
   const [tab, setTab] = useState<'open' | 'saved'>('open')
   const [alerts, setAlerts] = useState(() => readPref('ogapay_jm_alerts'))
   const [sound, setSound] = useState(() => readPref('ogapay_jm_sound'))
+  const [availableOnly, setAvailableOnly] = useState(() => readPref('ogapay_jm_available'))
   const [busy, setBusy] = useState<string | null>(null)
   const [checkedAt, setCheckedAt] = useState<Date | null>(null)
   const seen = useRef<Set<string> | null>(null)
@@ -99,7 +103,8 @@ export default function JobMonitor() {
   }
 
   const list = jobs || []
-  const open = list.filter((j) => (j.maxWorkers || 1) > (j.currentWorkers || 0))
+  const open = list.filter((j) => (j.maxWorkers || 1) > (j.currentWorkers || 0)
+    && (!availableOnly || (!taken.has(j.id) && j.eligible !== false)))
   const shown = (tab === 'saved' ? list.filter((j) => saved.includes(j.id)) : open)
     .slice().sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
 
@@ -124,11 +129,17 @@ export default function JobMonitor() {
             <button role="tab" aria-selected={tab === 'open'} className={`ui-chip${tab === 'open' ? ' on' : ''}`} onClick={() => setTab('open')}>Open now<em>{open.length}</em></button>
             <button role="tab" aria-selected={tab === 'saved'} className={`ui-chip${tab === 'saved' ? ' on' : ''}`} onClick={() => setTab('saved')}>Saved<em>{list.filter((j) => saved.includes(j.id)).length}</em></button>
           </div>
+          <span className="jm2-avail">
+            <label className="ui-switch"><input type="checkbox" checked={availableOnly} onChange={(e) => { setAvailableOnly(e.target.checked); writePref('ogapay_jm_available', e.target.checked) }} /><span className="ui-switch-track" /> Available for me</label>
+            <InfoTip label="What does Available for me show?" title="Available for me">
+              <p>Only open jobs you can take right now: a place is free, you haven't taken it already, and you meet what the poster asked for (like OgaScore, rank or a connected account).</p>
+            </InfoTip>
+          </span>
           <span className="jm2-live"><i /> {checkedAt ? `Checked ${checkedAt.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}` : 'Checking…'}</span>
         </div>
 
         {jobs === null ? <div className="ui-sk" style={{ height: 240 }} /> : shown.length === 0 ? (
-          <div className="ui-empty">{tab === 'saved' ? 'You haven\'t saved any open jobs.' : 'No open jobs right now. New ones will appear here.'}</div>
+          <div className="ui-empty">{tab === 'saved' ? 'You haven\'t saved any open jobs.' : availableOnly ? 'No open jobs you can take right now. Turn off "Available for me" to see them all.' : 'No open jobs right now. New ones will appear here.'}</div>
         ) : (
           <ul className="ui-card jm2-list">
             {shown.map((j) => {

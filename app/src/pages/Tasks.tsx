@@ -418,8 +418,10 @@ export function invalidateTasksCache() {
   tasksCacheMap.clear()
 }
 
-async function fetchTasks(category?: string) {
-  const cacheKey = (category || 'all').toLowerCase()
+// Signed in, the list is asked for with the sign-in so each job says whether you can
+// take it ("eligible", for the "Available for me" switch); cached per person.
+async function fetchTasks(category?: string, userId?: string) {
+  const cacheKey = `${userId || 'guest'}:${(category || 'all').toLowerCase()}`
   const now = Date.now()
   const cached = tasksCacheMap.get(cacheKey)
   if (cached && cached.timestamp + CACHE_TTL > now) return cached.data
@@ -430,7 +432,7 @@ async function fetchTasks(category?: string) {
       : '/tasks?limit=100'
 
   try {
-    const data = await apiRequest<any>(url, { auth: false })
+    const data = await apiRequest<any>(url, { auth: !!userId })
     const list = Array.isArray(data)
       ? data
       : data?.data || data?.tasks || data?.jobs || []
@@ -537,11 +539,12 @@ export default function Tasks() {
   useEffect(() => {
     let alive = true
     setLoading(true)
-    fetchTasks('all').then(data => { if (alive) { setJobs(data || []); setLoading(false) } })
+    fetchTasks('all', user?.id).then(data => { if (alive) { setJobs(data || []); setLoading(false) } })
     if (user) {
-      apiRequest('/tasks/my/submissions').catch(() => null).then((res: any) => {
-        if (!alive || !res) return
-        const list = Array.isArray(res) ? res : res?.data || []
+      // apiRequest already unwraps { data }: this is { submissions, buckets, stats }
+      apiRequest('/tasks/my/submissions').catch(() => null).then((d: any) => {
+        if (!alive || !d) return
+        const list = Array.isArray(d) ? d : d?.submissions || []
         setMySubmissions(list.map((s: any) => s.taskId || s.task?.id).filter(Boolean))
       })
     }
@@ -553,11 +556,11 @@ export default function Tasks() {
     const onFocus = () => {
       const now = Date.now()
       tasksCacheMap.forEach((v, k) => { if (now - v.timestamp > FOCUS_STALE_AGE) tasksCacheMap.delete(k) })
-      fetchTasks('all').then(data => setJobs(data || []))
+      fetchTasks('all', user?.id).then(data => setJobs(data || []))
     }
     window.addEventListener('focus', onFocus)
     return () => window.removeEventListener('focus', onFocus)
-  }, [])
+  }, [user?.id])
 
   // ?job=<id> opens the quick-view modal (links from notifications use this)
   useEffect(() => {
@@ -592,7 +595,8 @@ export default function Tasks() {
       if (req === 'rank' && rank <= 1) return false
       if (availableOnly) {
         if (openSlots(j) <= 0 || isClosed(j) || mySubmissions.includes(j.id)) return false
-        if (j.eligibility && j.eligibility.isEligible === false) return false
+        // The server's own check (requirements, blocked, similar job taken); only sent when signed in
+        if (j.eligible === false) return false
       }
       return true
     })
