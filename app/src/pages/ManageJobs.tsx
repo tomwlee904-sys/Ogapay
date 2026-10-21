@@ -10,6 +10,7 @@ import "../styles/manage-jobs.css";
 import InfoTip from '../components/InfoTip'
 import { missingLink, missingLinkText } from "../lib/jobText";
 import RateWork, { RatedStars } from '../components/RateWork'
+import RateWork, { RatedStars, ratedByTeam } from '../components/RateWork'
 
 // Manage jobs: the poster's jobs, their review queue and job actions.
 // Counts come from each job's submissions (by status). The old page used
@@ -21,6 +22,8 @@ type Sub = {
   proof?: string | null; workerNotes?: string | null; posterNotes?: string | null; attachments?: any[]
   autoApproveAt?: string | null
   rating?: number | null; feedback?: string | null
+  // Who rated it (an admin can rate flagged work) and who moderated it
+  ratedById?: string | null; moderatedById?: string | null
   worker?: { id: string; username?: string | null; firstName?: string | null; lastName?: string | null; avatarUrl?: string | null }
 }
 type Task = {
@@ -104,6 +107,8 @@ function Proof({ s }: { s: Sub }) {
 function JobDrawer({ task, allTasks, focusId, onClose, onChanged }: { task: Task; allTasks: Task[]; focusId?: string | null; onClose: () => void; onChanged: () => void }) {
   const navigate = useNavigate();
   const { toast } = useToast();
+  // These are the signed-in person's own jobs, so they are the poster
+  const { user } = useAuth();
   const [subs, setSubs] = useState<Sub[] | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [rejecting, setRejecting] = useState<string | null>(null);
@@ -359,8 +364,9 @@ function JobDrawer({ task, allTasks, focusId, onClose, onChanged }: { task: Task
                       </div>
                     ) : (
                       <>
-                      <RateWork who={`@${who(s.worker)}`} rating={stars[s.id] || 0} note={notes[s.id] || ""} disabled={busy === s.id}
-                        onRating={(v) => setStars((m) => ({ ...m, [s.id]: v }))} onNote={(v) => setNotes((m) => ({ ...m, [s.id]: v }))} />
+                      {/* Stars go with "Approve and pay", which a contest entry doesn't have */}
+                      {!contest && <RateWork who={`@${who(s.worker)}`} rating={stars[s.id] || 0} note={notes[s.id] || ""} disabled={busy === s.id}
+                        onRating={(v) => setStars((m) => ({ ...m, [s.id]: v }))} onNote={(v) => setNotes((m) => ({ ...m, [s.id]: v }))} />}
                       <div className="mj-acts">
                         {!contest && <button className="ui-btn ui-btn-dark" disabled={busy === s.id} onClick={() => review(s, "APPROVED")}><Icon n="check" s={15} /> {busy === s.id ? "Approving…" : `Approve and pay ${money(reward, cur)}`}</button>}
                         <button className="ui-btn ui-btn-ghost" disabled={busy === s.id} onClick={() => { setRejecting(s.id); setReason(""); }}>Reject</button>
@@ -391,7 +397,7 @@ function JobDrawer({ task, allTasks, focusId, onClose, onChanged }: { task: Task
                 <section className="mj-sec">
                   <h4>Approved ({approved.length})</h4>
                   <div className="mj-rows">{approved.map((s) => (
-                    <div key={s.id} className="mj-row"><div className="mj-who"><Avatar w={s.worker} /><div><WorkerLink w={s.worker} /><small>Paid {money(reward, cur)}{s.reviewedAt ? ` · ${day(s.reviewedAt)}` : ""}</small>{s.rating ? <p><RatedStars value={s.rating} /> {s.rating}/5{s.feedback ? ` · “${s.feedback}”` : ""}</p> : null}</div></div></div>
+                    <div key={s.id} className="mj-row"><div className="mj-who"><Avatar w={s.worker} /><div><WorkerLink w={s.worker} /><small>Paid {money(reward, cur)}{s.reviewedAt ? ` · ${day(s.reviewedAt)}` : ""}</small>{s.rating ? <p>{ratedByTeam(s, user?.id) ? "Rated by the OgaPay team: " : ""}<RatedStars value={s.rating} /> {s.rating}/5{s.feedback ? ` · “${s.feedback}”` : ""}</p> : null}</div></div></div>
                   ))}</div>
                 </section>
               )}

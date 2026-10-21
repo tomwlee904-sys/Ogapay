@@ -30,6 +30,14 @@ export function RatedStars({ value, size = 12 }: { value: number; size?: number 
   )
 }
 
+// Whether an admin gave a rating rather than the job's poster: an admin can
+// approve flagged work from the moderation queue with stars. Older ratings
+// don't say who rated them, so a moderated one counts as the team's.
+export function ratedByTeam(sub: { ratedById?: string | null; moderatedById?: string | null }, posterId?: string | null) {
+  if (sub.ratedById) return !!posterId && sub.ratedById !== posterId
+  return !!sub.moderatedById
+}
+
 export default function RateWork({ who, rating, note, onRating, onNote, disabled }: {
   who: string
   rating: number

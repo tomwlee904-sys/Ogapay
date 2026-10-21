@@ -57,6 +57,9 @@ export default function RankUpgrade() {
   const nextTier = TIERS[currentIdx + 1];
   const tasksCompleted = profile?.tasksCompleted || 0;
   const avgRating = profile?.avgRating || 0;
+  // The rating the ranks check: each poster's ratings averaged first, so one
+  // poster who rated many jobs counts once (older servers don't send it)
+  const rankRating = Number(profile?.rankRating ?? avgRating);
   // Different job posters who rated your work
   const ratedBy = Number(profile?.ratedBy || 0);
   // The real OgaScore (verified checks), not the internal reputation figure
@@ -66,7 +69,7 @@ export default function RankUpgrade() {
   // width used to be ignored by the browser, so the bars looked full)
   const pct = (have: number, need: number) => (need > 0 ? Math.max(0, Math.min(100, Math.round((have / need) * 100))) : 100);
   const progressToNext = nextTier ? pct(tasksCompleted, nextTier.tasks) : 100;
-  const ratingProgressToNext = nextTier && nextTier.rating > 0 ? pct(avgRating, nextTier.rating) : 100;
+  const ratingProgressToNext = nextTier && nextTier.rating > 0 ? pct(rankRating, nextTier.rating) : 100;
   const ratersProgressToNext = nextTier && nextTier.raters > 0 ? pct(ratedBy, nextTier.raters) : 100;
 
   return (
@@ -129,7 +132,7 @@ export default function RankUpgrade() {
                     </div>
                     {nextTier.rating > 0 && (
                       <div className="rank-progress-row">
-                        <span className="rank-progress-label">Rating ({avgRating.toFixed(1)}/{nextTier.rating})</span>
+                        <span className="rank-progress-label">Rating ({rankRating.toFixed(1)}/{nextTier.rating})</span>
                         <div className="rank-progress-bar">
                           <div className="rank-progress-fill" style={{ width: `${Math.min(ratingProgressToNext, 100)}%`, background: nextTier.color }} />
                         </div>

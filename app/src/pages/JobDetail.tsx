@@ -12,7 +12,7 @@ import { BoostedTag, PremiumMark } from '../components/Perks'
 import Money from '../components/Money'
 import ContestPanel, { type ContestInfo } from '../components/ContestPanel'
 import JobActivity from '../components/JobActivity'
-import RateWork, { RatedStars } from '../components/RateWork'
+import RateWork, { RatedStars, ratedByTeam } from '../components/RateWork'
 import { formatMoney } from '../lib/money'
 import { jobDeadline, deadlineLabel, deadlineDate } from '../lib/deadline'
 import { categoryLabel } from '../lib/categories'
@@ -265,7 +265,7 @@ export default function JobDetail() {
       const json = await res.json()
       if (json.success) {
         const apiApprovedAt = json.data?.approvedAt || json.approvedAt
-        setSubmissions(prev => prev.map(s => s.id === subId ? { ...s, status: 'APPROVED', rating: rating || null, feedback: rating && feedback ? feedback : null, _approvedAt: apiApprovedAt || Date.now() } : s))
+        setSubmissions(prev => prev.map(s => s.id === subId ? { ...s, status: 'APPROVED', rating: rating || null, feedback: rating && feedback ? feedback : null, ratedById: rating ? job?.posterId ?? null : null, _approvedAt: apiApprovedAt || Date.now() } : s))
         showToast(rating ? `Approved and paid. You gave ${rating}/5.` : 'Approved and paid.', 'success')
         refreshUser()
       } else {
@@ -1445,7 +1445,7 @@ function WurkJobDetailView(props: any) {
               <div style={{ fontSize: 13, color: 'var(--text2,#475569)', marginBottom: 16 }}>{timeAgo(selectedSub.createdAt)}</div>
               {selectedSub.status === 'APPROVED' && selectedSub.rating ? (
                 <>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3,#9ca3af)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Your rating</div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3,#9ca3af)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>{ratedByTeam(selectedSub, job.posterId) ? 'Rated by the OgaPay team' : 'Your rating'}</div>
                   <div style={{ fontSize: 13, color: 'var(--text,#0f172a)', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                     <RatedStars value={selectedSub.rating} size={14} /> {selectedSub.rating}/5{selectedSub.feedback ? ` · “${selectedSub.feedback}”` : ''}
                   </div>

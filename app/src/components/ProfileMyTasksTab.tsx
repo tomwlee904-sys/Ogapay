@@ -140,9 +140,13 @@ export default function TabMyTasksContent() {
     return () => document.removeEventListener('visibilitychange', onVisible)
   }, [user?.id])
 
+  // A contest entry that didn't place (it stays SUBMITTED) or a contest slot
+  // never sent is finished, not in progress or waiting for review: it shows
+  // under All only, with its "Didn't place" or "Not sent" badge (as in MyTasks)
   const filtered = tab === 'all'
     ? submissions
     : submissions.filter(s => {
+        if ((tab === 'in progress' || tab === 'under review') && (s.contestResult === 'NOT_PLACED' || unsentContest(s))) return false
         const display = STATUS_MAP[s.status] || s.status
         return display.toLowerCase() === tab
       })
