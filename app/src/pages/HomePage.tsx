@@ -135,7 +135,6 @@ function Hero({ live, onCreate }: { live: any; onCreate: () => void }) {
   };
   const rewards = recentOrTotal("last24hPaid", "totalPaidOut");
   const approved = recentOrTotal("last24hTasks", "tasksDone");
-  const scrollOn = () => document.getElementById("hv-ticker")?.scrollIntoView({ behavior: "smooth", block: "start" });
   return (
     <section className="hv-hero">
       <div className="hv-inner">
@@ -154,7 +153,6 @@ function Hero({ live, onCreate }: { live: any; onCreate: () => void }) {
               <Link to="/tasks" className="hv-btn hv-btn-dark">Start earning <i className="ti ti-arrow-right" /></Link>
               <button className="hv-btn hv-btn-ghost" onClick={onCreate}>Create a job <i className="ti ti-arrow-right" /></button>
             </div>
-            <div className="hv-note">Pay and get paid in Naira or USDC. Withdraw to your bank or wallet.</div>
           </div>
 
           <div>
@@ -172,8 +170,6 @@ function Hero({ live, onCreate }: { live: any; onCreate: () => void }) {
 
         <div className="hv-hero-foot">
           <span className="hv-powered"><i className="ti ti-shield-check" /> Powered by Solana</span>
-          <button className="hv-scrollhint" onClick={scrollOn}>Your next task starts here <i className="ti ti-arrow-down" /></button>
-          <span className="hv-mono">NGN + USDC <span style={{ margin: "0 8px" }}>/</span> Escrow on every job</span>
         </div>
       </div>
     </section>
