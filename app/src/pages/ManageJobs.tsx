@@ -12,6 +12,7 @@ import { missingLink, missingLinkText } from "../lib/jobText";
 import RateWork, { RatedStars } from '../components/RateWork'
 import RateWork, { RatedStars, ratedByTeam } from '../components/RateWork'
 import CopyFlag from '../components/CopyFlag'
+import TransferModal from '../components/TransferModal'
 
 // Manage jobs: the poster's jobs, their review queue and job actions.
 // Counts come from each job's submissions (by status). The old page used
@@ -121,6 +122,8 @@ function JobDrawer({ task, allTasks, focusId, onClose, onChanged }: { task: Task
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [blocked, setBlocked] = useState<Set<string>>(new Set());
   const [tpl, setTpl] = useState<"" | "saving" | "saved">("");
+  // Approved work the poster is tipping (opens the send window as a tip)
+  const [tipFor, setTipFor] = useState<Sub | null>(null);
   const cur = task.currency || "NGN";
   const reward = Number(task.reward || 0);
   const contest = !!task.isContest;
@@ -401,7 +404,7 @@ function JobDrawer({ task, allTasks, focusId, onClose, onChanged }: { task: Task
                 <section className="mj-sec">
                   <h4>Approved ({approved.length})</h4>
                   <div className="mj-rows">{approved.map((s) => (
-                    <div key={s.id} className="mj-row"><div className="mj-who"><Avatar w={s.worker} /><div><WorkerLink w={s.worker} /><small>Paid {money(reward, cur)}{s.reviewedAt ? ` · ${day(s.reviewedAt)}` : ""}</small>{s.rating ? <p>{ratedByTeam(s, user?.id) ? "Rated by the OgaPay team: " : ""}<RatedStars value={s.rating} /> {s.rating}/5{s.feedback ? ` · “${s.feedback}”` : ""}</p> : null}</div></div></div>
+                    <div key={s.id} className="mj-row"><div className="mj-who"><Avatar w={s.worker} /><div><WorkerLink w={s.worker} /><small>Paid {money(reward, cur)}{s.reviewedAt ? ` · ${day(s.reviewedAt)}` : ""}</small>{s.rating ? <p>{ratedByTeam(s, user?.id) ? "Rated by the OgaPay team: " : ""}<RatedStars value={s.rating} /> {s.rating}/5{s.feedback ? ` · “${s.feedback}”` : ""}</p> : null}</div></div>{s.worker?.username && <button className="ui-btn ui-btn-ghost" onClick={() => setTipFor(s)}><Icon n="heart-handshake" s={15} /> Tip</button>}</div>
                   ))}</div>
                 </section>
               )}
@@ -430,6 +433,11 @@ function JobDrawer({ task, allTasks, focusId, onClose, onChanged }: { task: Task
           {live && <button className="ui-btn ui-btn-ghost mj-danger" onClick={cancel}><Icon n="circle-x" s={15} /> Cancel job</button>}
         </div>
       </aside>
+      {tipFor?.worker?.username && (
+        <TransferModal tip submissionId={tipFor.id} forLabel={`For their work on "${task.title}"`}
+          to={{ id: tipFor.worker.id, username: tipFor.worker.username, firstName: tipFor.worker.firstName || undefined, lastName: tipFor.worker.lastName || undefined, avatarUrl: tipFor.worker.avatarUrl }}
+          onClose={() => setTipFor(null)} />
+      )}
     </>
   );
 }

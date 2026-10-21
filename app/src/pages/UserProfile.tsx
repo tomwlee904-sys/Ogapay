@@ -3,6 +3,7 @@ import ItemCover from '../components/ItemCover'
 import { useParams, useNavigate, Link } from "react-router-dom"
 import Layout from "../components/Layout"
 import InviteToCommunity from "../components/profile/InviteToCommunity"
+import TransferModal from "../components/TransferModal"
 import { apiRequest } from "../lib/api"
 import { useAuth } from "../context/AuthContext"
 import { openSignIn } from "../lib/signin"
@@ -70,6 +71,7 @@ export default function UserProfile() {
   const [communities, setCommunities] = useState<any[]>([])
   const [tab, setTab] = useState<Tab>("store")
   const [inviteOpen, setInviteOpen] = useState(false)
+  const [tipOpen, setTipOpen] = useState(false)
   const [shared, setShared] = useState(false)
 
   useEffect(() => {
@@ -148,6 +150,13 @@ export default function UserProfile() {
   const invite = () => {
     if (!me) { openSignIn({ redirect: `/user/${handle}` }); return }
     setInviteOpen(true)
+  }
+
+  // Tip: send them naira from your wallet as a thank-you (needs Level 1; the
+  // window says so if you aren't verified yet)
+  const tip = () => {
+    if (!me) { openSignIn({ redirect: `/user/${handle}` }); return }
+    setTipOpen(true)
   }
 
   // Compliments (like wurk.fun's): one per person, counted on the profile
@@ -278,6 +287,7 @@ export default function UserProfile() {
                   <Link className="up-btn primary" to={`/user/${handle}/hire`}><i className="ti ti-briefcase" /> Hire</Link>
                 )}
                 {!isMe && <button className="up-btn" onClick={invite}><i className="ti ti-user-plus" /> Invite</button>}
+                {!isMe && <button className="up-btn" onClick={tip}><i className="ti ti-heart-handshake" /> Tip</button>}
                 {!isMe && (
                   <button className={`up-btn up-compliment${complimented ? " on" : ""}`} onClick={compliment} aria-pressed={complimented} disabled={complimenting}>
                     <i className={`ti ${complimented ? "ti-heart-check" : "ti-heart"}`} /> {complimented ? "Complimented" : "Compliment"}
@@ -498,6 +508,10 @@ export default function UserProfile() {
       </div>
 
       {inviteOpen && <InviteToCommunity username={handle} name={first || handle} onClose={() => setInviteOpen(false)} />}
+      {tipOpen && profile?.id && (
+        <TransferModal tip onClose={() => setTipOpen(false)}
+          to={{ id: profile.id, username: profile.username || handle,firstName: profile.firstName, lastName: profile.lastName, avatarUrl: profile.avatarUrl }} />
+      )}
     </Layout>
   )
 }

@@ -1,10 +1,16 @@
 import { useState, useEffect, useRef } from 'react'
+import { Link } from 'react-router-dom'
 import { apiRequest } from '../lib/api'
 import { useAuth } from '../context/AuthContext'
+import { kycOf } from '../lib/wallet'
 import TwoFactorField, { is2FAError } from './TwoFactorField'
 
 // Send NGN to another OgaPay user (POST /wallet/send — internal ledger, instant).
-interface Recipient {
+// Also used for tips: opened from a profile or from approved work with the
+// person already chosen. A tip is the same send (same ₦100 minimum and balance
+// rules) marked as a tip, so the receiver is told "@you tipped them" and it
+// shows under Tips in their Earnings.
+export interface Recipient {
   id: string
   username?: string
   firstName?: string
@@ -16,6 +22,14 @@ interface Recipient {
 interface Props {
   onClose: () => void
   onSuccess?: () => void
+  // Who it goes to, already chosen (they can't be changed in the window)
+  to?: Recipient
+  // Send it as a tip
+  tip?: boolean
+  // A poster's tip for this piece of approved work (the server checks it)
+  submissionId?: string
+  // What the tip is for, shown under the title (e.g. the job)
+  forLabel?: string
 }
 
 const MIN_SEND = 100
@@ -68,13 +82,15 @@ function Person({ r }: { r: Recipient }) {
   )
 }
 
-export default function TransferModal({ onClose, onSuccess }: Props) {
+export default function TransferModal({ onClose, onSuccess, to, tip = false, submissionId, forLabel }: Props) {
   const { user } = useAuth()
+  // Sending money and tips need Level 1 (the server checks it too)
+  const verified = kycOf(user).verified
   const [step, setStep] = useState<'form' | 'confirm' | 'done'>('form')
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<Recipient[]>([])
   const [searching, setSearching] = useState(false)
-  const [recipient, setRecipient] = useState<Recipient | null>(null)
+  const [recipient, setRecipient] = useState<Recipient | null>(to || null)
   const [amount, setAmount] = useState('')
   const [note, setNote] = useState('')
   const [available, setAvailable] = useState<number | null>(null)
@@ -88,6 +104,7 @@ export default function TransferModal({ onClose, onSuccess }: Props) {
 
   // Available = balance minus money held in escrow; that's what the backend lets you send
   useEffect(() => {
+    if (!verified) return
     apiRequest<any>('/wallet/balance')
       .then(d => setAvailable(Number(d?.NGN?.available ?? 0)))
       .catch(() => setAvailable(0))
@@ -138,6 +155,8 @@ export default function TransferModal({ onClose, onSuccess }: Props) {
           amount: amt,
           currency: 'NGN',
           note: note.trim() || undefined,
+          ...(tip && { tip: true }),
+          ...(tip && submissionId && { submissionId }),
           ...(otp && { otp }),
         }),
       })
@@ -145,7 +164,9 @@ export default function TransferModal({ onClose, onSuccess }: Props) {
       setStep('done')
       onSuccess?.()
     } catch (e: any) {
-      setError(e?.message || 'Transfer failed. Please try again.')
+      const msg = e?.message || (tip ? "The tip didn't go through. Please try again." : 'Transfer failed. Please try again.')
+      // The server's Level 1 message names NIN; say it simply
+      setError(/Level 1/i.test(msg) ? 'Sending money and tips needs Level 1. Verify your identity first.' : msg)
       // A missing or wrong 2FA code: stay here so the code can be entered
       if (is2FAError(e?.message)) { setOtpAsked(true); setOtp('') }
       else setStep('form')
@@ -170,11 +191,24 @@ export default function TransferModal({ onClose, onSuccess }: Props) {
 
   return (
     <div style={MODAL_STYLE} onClick={() => { if (!submitting) onClose() }}>
-      <div style={INNER_STYLE} onClick={e => e.stopPropagation()} role="dialog" aria-modal="true">
+      <div style={INNER_STYLE} onClick={e => e.stopPropagation()} role="dialog" aria-modal="true" aria-label={tip ? 'Send a tip' : 'Send money'}>
 
-        {step === 'form' && (
+        {!verified && (
           <>
-            {header('Send money')}
+            {header(tip ? 'Send a tip' : 'Send money')}
+            <div style={{ fontSize: 14, color: 'var(--text2)', lineHeight: 1.55, marginBottom: 18 }}>
+              Sending money and tips needs Level 1. Verify your identity first. It's free and takes a few minutes.
+            </div>
+            <Link to="/settings/verification" onClick={onClose} style={{ ...BTN, textDecoration: 'none' }}>
+              <i className="ti ti-shield-check" /> Verify now
+            </Link>
+          </>
+        )}
+
+        {verified && step === 'form' && (
+          <>
+            {header(tip ? (recipient && !recipient.email ? `Tip @${recipient.username}` : 'Send a tip') : 'Send money')}
+            {tip && forLabel && <div style={{ fontSize: 13, color: 'var(--text2)', margin: '-10px 0 12px' }}>{forLabel}</div>}
             <div style={{ fontSize: 12, color: 'var(--text2)', marginBottom: 16 }}>
               Available: <strong style={{ color: 'var(--text)' }}>{available === null ? '…' : naira(available)}</strong>
             </div>
@@ -184,7 +218,7 @@ export default function TransferModal({ onClose, onSuccess }: Props) {
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', border: '1px solid var(--border)', borderRadius: 10, marginBottom: 16, background: 'var(--bg2)' }}>
                 <Avatar r={recipient} size={34} />
                 <Person r={recipient} />
-                <button onClick={() => { setRecipient(null); setQuery(''); setResults([]) }} style={{ background: 'none', border: 'none', color: 'var(--text)', fontWeight: 700, fontSize: 12, cursor: 'pointer', textDecoration: 'underline', fontFamily: 'inherit' }}>Change</button>
+                {!to && <button onClick={() => { setRecipient(null); setQuery(''); setResults([]) }} style={{ background: 'none', border: 'none', color: 'var(--text)', fontWeight: 700, fontSize: 12, cursor: 'pointer', textDecoration: 'underline', fontFamily: 'inherit' }}>Change</button>}
               </div>
             ) : (
               <div style={{ marginBottom: 16 }}>
@@ -227,7 +261,7 @@ export default function TransferModal({ onClose, onSuccess }: Props) {
             </div>
 
             <label style={LABEL}>Note (optional)</label>
-            <input style={{ ...INPUT, marginBottom: 18 }} placeholder="What's it for?" value={note} maxLength={140}
+            <input style={{ ...INPUT, marginBottom: 18 }} placeholder={tip ? 'Say thanks (optional)' : "What's it for?"} value={note} maxLength={140}
               onChange={e => setNote(e.target.value)} />
 
             {errorBox}
@@ -237,9 +271,9 @@ export default function TransferModal({ onClose, onSuccess }: Props) {
           </>
         )}
 
-        {step === 'confirm' && recipient && (
+        {verified && step === 'confirm' && recipient && (
           <>
-            {header('Confirm transfer')}
+            {header(tip ? 'Confirm tip' : 'Confirm transfer')}
             <div style={{ textAlign: 'center', padding: '6px 0 18px' }}>
               <div style={{ fontFamily: 'Inter', fontSize: 30, fontWeight: 900, letterSpacing: '-.03em' }}>{naira(amt)}</div>
               <div style={{ fontSize: 13, color: 'var(--text2)', marginTop: 4 }}>to</div>
@@ -255,20 +289,20 @@ export default function TransferModal({ onClose, onSuccess }: Props) {
             {needOtp && <TwoFactorField value={otp} onChange={setOtp} />}
             {errorBox}
             <button style={{ ...BTN, opacity: submitting ? 0.6 : 1 }} disabled={submitting} onClick={send}>
-              {submitting ? <><span className="spinner" style={{ width: 16, height: 16, borderWidth: 2 }} /> Sending…</> : <><i className="ti ti-send" /> Send {naira(amt)}</>}
+              {submitting ? <><span className="spinner" style={{ width: 16, height: 16, borderWidth: 2 }} /> Sending…</> : <><i className={`ti ${tip ? 'ti-heart-handshake' : 'ti-send'}`} /> {tip ? 'Tip' : 'Send'} {naira(amt)}</>}
             </button>
             <button onClick={() => setStep('form')} disabled={submitting} style={{ ...BTN, background: 'transparent', color: 'var(--text2)', marginTop: 8, height: 40, fontWeight: 700 }}>Back</button>
           </>
         )}
 
-        {step === 'done' && recipient && (
+        {verified && step === 'done' && recipient && (
           <>
-            {header('Sent')}
+            {header(tip ? 'Tip sent' : 'Sent')}
             <div style={{ textAlign: 'center', padding: '8px 0 20px' }}>
               <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'color-mix(in srgb, var(--green) 10%, transparent)', display: 'grid', placeItems: 'center', margin: '0 auto 16px' }}>
                 <i className="ti ti-circle-check" style={{ fontSize: 32, color: 'var(--green)' }} />
               </div>
-              <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 6 }}>{naira(amt)} sent to {handle(recipient)}</div>
+              <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 6 }}>{tip ? `You tipped ${handle(recipient)} ${naira(amt)}` : `${naira(amt)} sent to ${handle(recipient)}`}</div>
               {reference && (
                 <div style={{ fontSize: 12, color: 'var(--text3)' }}>
                   Reference: <span style={{ fontFamily: 'monospace', fontWeight: 700, color: 'var(--text2)' }}>{reference}</span>

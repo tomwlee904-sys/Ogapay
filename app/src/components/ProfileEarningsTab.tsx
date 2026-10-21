@@ -8,13 +8,18 @@ import type { Currency } from '../lib/currency'
 
 // Earnings from the wallet ledger. This used to look for lower-case statuses
 // ("completed") and add amounts as text, so it showed ₦0, "?" and raw type names.
-type Kind = 'task' | 'referral' | 'bonus' | 'vault'
+type Kind = 'task' | 'referral' | 'bonus' | 'vault' | 'tip'
 type HistoryItem = { date: string; source: string; amount: number; currency: Currency; ngn: number; kind: Kind; pending: boolean }
 
-const LABEL: Record<Kind, string> = { task: 'Job payment', referral: 'Referral bonus', bonus: 'Sign-up bonus', vault: 'Vault reward' }
+const LABEL: Record<Kind, string> = { task: 'Job payment', referral: 'Referral bonus', bonus: 'Sign-up bonus', vault: 'Vault reward', tip: 'Tip' }
 const MONEY: Currency[] = ['NGN', 'USDC', 'USDT', 'SOL']
 
 function kindOf(t: any): Kind | null {
+  // Tips from other members (profile, approved work or a blog post) are transfers
+  // the server marks { tip: true }; first, so a tip's note can't make it look like a vault reward
+  if (t.type === 'TRANSFER' && t.metadata?.tip) return 'tip'
+  // Blog tips from before tips were marked: their record says 'Received: Tip for "<post>"'
+  if (t.type === 'TRANSFER' && /^Received: Tip for "/.test(t.description || '')) return 'tip'
   const ref = `${t.reference || ''} ${t.description || ''}`.toUpperCase()
   if (ref.includes('VAULT')) return 'vault'
   if (['TASK_PAYMENT', 'EARNING', 'TASK_REWARD'].includes(t.type)) return 'task'
@@ -81,8 +86,9 @@ export default function TabEarningsContent() {
 
   const done = history.filter((h) => !h.pending)
   const sum = (k: Kind) => done.filter((h) => h.kind === k).reduce((s, h) => s + h.ngn, 0)
-  const referrals = sum('referral'), bonuses = sum('bonus'), vault = sum('vault')
-  const totalEarned = taskTotal + referrals + bonuses + vault
+  const referrals = sum('referral'), bonuses = sum('bonus'), vault = sum('vault'), tips = sum('tip')
+  const tipCount = done.filter((h) => h.kind === 'tip').length
+  const totalEarned = taskTotal + referrals + bonuses + vault + tips
   const pending = history.filter((h) => h.pending).reduce((s, h) => s + h.ngn, 0)
   const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).getTime()
   const monthEarnings = done.filter((h) => new Date(h.date).getTime() >= monthStart).reduce((s, h) => s + h.ngn, 0)
@@ -128,6 +134,7 @@ export default function TabEarningsContent() {
         .en-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
         @media(max-width:800px){.en-grid{grid-template-columns:repeat(2,1fr)}}
         @media(max-width:500px){.en-grid{grid-template-columns:1fr}}
+        @media(min-width:801px){.en-grid5{grid-template-columns:repeat(5,1fr)}}
         .en-stat{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;transition:all .25s}
         .en-stat:hover{transform:none;border-color:var(--accent)}
         .en-stat .esi{width:32px;height:32px;border-radius:8px;display:grid;place-items:center;margin-bottom:8px}
@@ -152,7 +159,7 @@ export default function TabEarningsContent() {
 
       <div className="en-hero">
         <h1>Earnings</h1>
-        <p>Money you've earned from jobs, referrals, bonuses and the vault</p>
+        <p>Money you've earned from jobs, referrals, bonuses, tips and the vault</p>
       </div>
 
       <div className="en-grid">
@@ -194,12 +201,13 @@ export default function TabEarningsContent() {
         </div>
       </div>
 
-      <div className="en-grid" style={{marginBottom:24}}>
+      <div className="en-grid en-grid5" style={{marginBottom:24}}>
         {[
           { icon: 'ti ti-briefcase', color: 'var(--accent)', num: naira(taskTotal), label: 'From jobs', sub: `${jobsPaid} recent ${jobsPaid === 1 ? 'payment' : 'payments'}` },
           { icon: 'ti ti-affiliate', color: 'var(--accent)', num: naira(referrals), label: 'From referrals', sub: 'Referral bonuses' },
           { icon: 'ti ti-gift', color: '#F59E0B', num: naira(bonuses), label: 'Bonuses', sub: 'Sign-up bonus' },
           { icon: 'ti ti-vault', color: 'var(--green)', num: naira(vault), label: 'From the vault', sub: 'Vault rewards' },
+          { icon: 'ti ti-heart-handshake', color: 'var(--green)', num: naira(tips), label: 'Tips', sub: `${tipCount} recent ${tipCount === 1 ? 'tip' : 'tips'} from members` },
         ].map((s, i) => (
           <div className="en-stat" key={i}>
             <div className="esi" style={{ background: `${s.color}15`, color: s.color }}><i className={s.icon} /></div>
@@ -214,7 +222,7 @@ export default function TabEarningsContent() {
         <div className="en-graph-header">
           <span className="en-graph-title"><i className="ti ti-history" style={{color:'var(--accent)',marginRight:6}} />Earnings History</span>
           <div className="en-tabs">
-            {([['all', 'All'], ['task', 'Jobs'], ['referral', 'Referrals'], ['bonus', 'Bonuses'], ['vault', 'Vault']] as const).map(([t, label]) => (
+            {([['all', 'All'], ['task', 'Jobs'], ['referral', 'Referrals'], ['bonus', 'Bonuses'], ['vault', 'Vault'], ['tip', 'Tips']] as const).map(([t, label]) => (
               <button key={t} className={`en-tab ${tab === t ? 'active' : ''}`} onClick={() => setTab(t)}>
                 {label}
               </button>

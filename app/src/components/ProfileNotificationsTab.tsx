@@ -57,6 +57,7 @@ const TYPE_ICONS: Record<string, { icon: string; color: string }> = {
   SELECTION_NOT_PICKED:    { icon: 'ti ti-user-x', color: 'var(--text3)' },
   COMMUNITY_INVITE:        { icon: 'ti ti-users-plus', color: 'var(--accent)' },
   TRANSFER_RECEIVED:       { icon: 'ti ti-arrows-exchange', color: 'var(--green)' },
+  TIP_RECEIVED:            { icon: 'ti ti-heart-handshake', color: 'var(--green)' },
   INFO:                    { icon: 'ti ti-bell', color: 'var(--accent)' },
 }
 
@@ -128,7 +129,7 @@ export default function TabNotificationsContent() {
   // review in Manage jobs, workers see their status on the submit page.
   const POSTER_JOB = new Set(['TASK_APPLICATION', 'TASK_SUBMISSION', 'SUBMISSION_REVIEWED', 'REVIEW_REMINDER', 'DISPUTE_OPENED', 'COOLDOWN'])
   const WORKER_JOB = new Set(['SUBMISSION_APPROVED', 'SUBMISSION_REJECTED', 'SLOT_EXPIRED', 'DIRECT_HIRE', 'SELECTION_PICKED', 'WORK_RATED'])
-  const MONEY = new Set(['TRANSFER_RECEIVED', 'ESCROW_REFUNDED', 'CLOSED_ACCOUNT_DEPOSIT', 'WITHDRAWAL', 'WITHDRAWAL_SUCCESS', 'WITHDRAWAL_FAILED', 'DEPOSIT', 'DEPOSIT_SUCCESS', 'DEPOSIT_RECEIVED', 'TASK_PAYMENT', 'TASK_PAYMENT_RECEIVED', 'TASK_REFUND', 'TASK_REWARD', 'REFERRAL_BONUS', 'SIGNUP_BONUS'])
+  const MONEY = new Set(['TRANSFER_RECEIVED', 'ESCROW_REFUNDED', 'CLOSED_ACCOUNT_DEPOSIT', 'WITHDRAWAL', 'WITHDRAWAL_SUCCESS', 'WITHDRAWAL_FAILED', 'DEPOSIT', 'DEPOSIT_SUCCESS', 'DEPOSIT_RECEIVED', 'TASK_PAYMENT', 'TASK_PAYMENT_RECEIVED', 'TASK_REFUND', 'TASK_REWARD', 'REFERRAL_BONUS', 'SIGNUP_BONUS', 'TIP_RECEIVED'])
   const linkFor = (n: any): string | null => {
     const d = n.data || {}
     if (n.link) return n.link

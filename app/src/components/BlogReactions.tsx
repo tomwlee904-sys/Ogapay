@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { apiRequest } from '../lib/api'
 import { useAuth } from '../context/AuthContext'
 import { sized } from '../lib/img'
+import { kycOf } from '../lib/wallet'
 
 // Likes, comments and tips under a blog post. A tip is a naira transfer from your
 // wallet to the author (the same transfer as sending money, with the same 2FA rule).
@@ -155,6 +156,8 @@ function TipModal({ slug, author, onClose, onSent }: { slug: string; author?: st
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const value = Number(amount.replace(/[^0-9]/g, '')) || 0
+  // A tip sends money, which needs Level 1 (the server checks it too)
+  const verified = kycOf(useAuth().user).verified
 
   const send = async () => {
     setBusy(true)
@@ -165,7 +168,7 @@ function TipModal({ slug, author, onClose, onSent }: { slug: string; author?: st
     } catch (e: any) {
       const msg = e?.message || 'Could not send the tip'
       if (/2FA|authenticator/i.test(msg)) setNeedOtp(true)
-      setError(msg)
+      setError(/Level 1/i.test(msg) ? 'Tipping needs Level 1. Verify your identity first.' : msg)
     } finally {
       setBusy(false)
     }
@@ -178,6 +181,15 @@ function TipModal({ slug, author, onClose, onSent }: { slug: string; author?: st
           <b style={{ fontSize: 16, color: 'var(--text)' }}>Tip {author ? `@${author}` : 'the author'}</b>
           <p style={{ margin: '6px 0 0', fontSize: 13, lineHeight: 1.55, color: 'var(--text2)' }}>Goes straight from your OgaPay naira wallet to theirs. No fee.</p>
         </div>
+        {!verified ? (
+          <>
+            <p style={{ margin: 0, fontSize: 14, lineHeight: 1.55, color: 'var(--text2)' }}>Sending money and tips needs Level 1. Verify your identity first. It's free and takes a few minutes.</p>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+              <button type="button" className="ui-btn ui-btn-ghost" onClick={onClose}>Cancel</button>
+              <Link className="ui-btn ui-btn-dark" to="/settings/verification" onClick={onClose}>Verify now</Link>
+            </div>
+          </>
+        ) : <>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           {[200, 500, 1000, 2000].map((v) => (
             <button key={v} type="button" className={`ui-btn ${value === v ? 'ui-btn-dark' : 'ui-btn-ghost'}`} onClick={() => setAmount(String(v))}>{naira(v)}</button>
@@ -198,6 +210,7 @@ function TipModal({ slug, author, onClose, onSent }: { slug: string; author?: st
           <button type="button" className="ui-btn ui-btn-ghost" onClick={onClose}>Cancel</button>
           <button type="button" className="ui-btn ui-btn-dark" disabled={busy || value < 100 || (needOtp && !otp)} onClick={send}>{busy ? 'Sending…' : `Send ${naira(value)}`}</button>
         </div>
+        </>}
       </div>
     </div>
   )
