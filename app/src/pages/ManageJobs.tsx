@@ -8,6 +8,7 @@ import { categoryLabel } from "../lib/categories";
 import { listTemplates, saveTemplate, taskToTemplateData, type JobTemplate, type TemplateData } from "../components/create/shared";
 import "../styles/manage-jobs.css";
 import InfoTip from '../components/InfoTip'
+import { missingLink, missingLinkText } from "../lib/jobText";
 
 // Manage jobs: the poster's jobs, their review queue and job actions.
 // Counts come from each job's submissions (by status). The old page used
@@ -176,10 +177,16 @@ function JobDrawer({ task, allTasks, onClose, onChanged }: { task: Task; allTask
     setSimilar(task.excludesTaskIds || []);
     setEdErr(""); setEditing(true);
   };
+  // Same check as Create job: a job that sends people to a survey, form, site or
+  // app can't be saved without its link (files on the job count when the brief
+  // points to them)
+  const hasFiles = (task.description || "").includes("\n\n**Attachments**");
+  const linkNeeded = editing ? missingLink(`${ed.title}\n${ed.brief}`, hasFiles) : "";
   const saveEdit = async () => {
     const title = ed.title.trim(), brief = ed.brief.trim();
     if (title.length < 5) { setEdErr("Give the job a title of at least 5 characters."); return; }
     if (brief.length < 20) { setEdErr("Describe the job in at least 20 characters."); return; }
+    if (linkNeeded) { setEdErr(missingLinkText(linkNeeded)); return; }
     const attachments = (task.description || "").includes("\n\n**Attachments**") ? (task.description || "").slice((task.description || "").indexOf("\n\n**Attachments**")) : "";
     const body: Record<string, any> = { title, description: brief + attachments, instructions: brief + attachments, excludesTaskIds: similar };
     if (ed.deadline) body.deadline = new Date(ed.deadline + "T23:59:00").toISOString();
@@ -218,6 +225,7 @@ function JobDrawer({ task, allTasks, onClose, onChanged }: { task: Task; allTask
               <input id="mj-ed-title" className="ui-input" maxLength={200} value={ed.title} onChange={(e) => setEd({ ...ed, title: e.target.value })} />
               <label className="ui-label" htmlFor="mj-ed-brief">Brief</label>
               <textarea id="mj-ed-brief" className="ui-input mj-edit-brief" maxLength={10000} value={ed.brief} onChange={(e) => setEd({ ...ed, brief: e.target.value })} />
+              {linkNeeded && <p className="mj-edit-warn" role="status"><Icon n="link-off" s={15} /> {missingLinkText(linkNeeded)} Paste the full address (https://...) in the brief.</p>}
               <label className="ui-label" htmlFor="mj-ed-deadline">Closes on (optional)</label>
               <input id="mj-ed-deadline" className="ui-input" type="date" min={new Date(Date.now() + 86400e3).toISOString().slice(0, 10)} value={ed.deadline} onChange={(e) => setEd({ ...ed, deadline: e.target.value })} />
               {others.length > 0 && (

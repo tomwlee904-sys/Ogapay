@@ -18,7 +18,7 @@ import { Steps, Fold, Toggle as CfToggle, OverviewCard, RequirementPicker, DURAT
 import TemplatesModal from "../components/create/TemplatesModal";
 import { useProviders } from "../lib/providers";
 import "../styles/create.css";
-import { missingLink } from '../lib/jobText'
+import { missingLink, missingLinkText } from '../lib/jobText'
 import InfoTip from '../components/InfoTip'
 // -- COLOR TOKENS ----------------------------------------------------------
 const C = {
@@ -544,9 +544,13 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
     : `≈ $${convert(totalToPay, currency as any, "USDC" as any).toFixed(2)} USD`;
   const balance = Number(walletBalances?.[currency]?.balance || 0);
 
+  // A job that sends people to a survey, form, site or app needs its link
+  // (a worker took a survey job with no link to the survey); this stops posting
+  const linkNeeded = missingLink(`${title}\n${description}`, files.length > 0);
   const checklist = [
     { ok: title.trim().length >= 5, label: "Give the job a short title." },
     { ok: description.trim().length >= 20, label: "Describe the task and what people should submit." },
+    ...(linkNeeded ? [{ ok: false, label: missingLinkText(linkNeeded) }] : []),
     { ok: !!category, label: "Pick a category." },
     ...(isContest ? [
       { ok: prizeNums.every(p => p >= floor), label: `Give every place a prize of at least ${money(floor, currency)}.` },
@@ -729,8 +733,8 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
                         placeholder="What should people do? Describe the result, what to submit and how you'll choose winners." />
                     </div>
                     <div className="cf-count"><span>Include the task, expected result and what to submit. Markdown supported.</span><span>{description.length.toLocaleString()} / 10,000</span></div>
-                    {missingLink(description) && (
-                      <p className="cf-warn" role="status"><i className="ti ti-link-off" aria-hidden="true" /> Your brief sends people to a link, but there's no web address in it. Add the link (https://…) so they can do the job.</p>
+                    {linkNeeded && (
+                      <p className="cf-warn" role="status"><i className="ti ti-link-off" aria-hidden="true" /> {missingLinkText(linkNeeded)} Paste the full address (https://...) in the description.</p>
                     )}
                   </div>
 

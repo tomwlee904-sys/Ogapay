@@ -82,10 +82,72 @@ export function plainJobText(text?: string | null): string {
     .trim()
 }
 
-// A brief that sends people to a link ("click the survey link", "fill out our
-// form", "link below") but contains no web address can't be done; the Create
-// screen warns about it. Asking for a link as proof ("send the link to your
-// post") doesn't count.
-const SENDS_TO_LINK = /\b(click|open|visit|tap|follow|use|go to)\b[^.\n]{0,30}\b(link|url|form|survey|website)\b|\b(survey|form|registration|sign[- ]?up)\s+link\b|\blink\s+(below|above)\b|\b(fill|complete)\s+(out\s+|in\s+)?(our|the|this)\s+(survey|form|questionnaire)\b/i
-const HAS_ADDRESS = /(https?:\/\/|www\.)\S+|\b[a-z0-9-]+\.(com|app|ng|io|org|net|co|xyz|me|ly|gl|link|site|dev)(\/\S*)?\b/i
-export const missingLink = (text: string) => SENDS_TO_LINK.test(text || '') && !HAS_ADDRESS.test(text || '')
+// A job that sends people somewhere but gives no address can't be done: a
+// worker took a "complete our survey" job (2026-10-09) that had no link to the
+// survey. Create job and Edit job stop until the link is in. It looks for:
+// - fill / complete / answer / take / do a survey, form, questionnaire or poll
+// - visit / open / download / install / sign up on a website or app
+// - "click the link", "use the survey link", "the link below"
+// Kept narrow so normal jobs pass: asking for a link as proof ("paste your link
+// below", "follow us and send the link"), an app they already use ("open your
+// bank app and screenshot it"), any app of their choice ("a VPN app"), well-known
+// apps (X, WhatsApp...) and "in this form:" (meaning layout) don't count.
+
+// Up to four words between the verb and the thing, in the same sentence
+const GAP = String.raw`((?:[^\s.!?;\n]+\s+){0,4}?)`
+const FILL_IN = new RegExp(String.raw`\b(?:fill(?:ing|ed)?|complet(?:e|es|ing|ed)|answer(?:ing)?|tak(?:e|ing)|do(?:ing)?|respond(?:ing)?\s+to|participat(?:e|ing)\s+in|vot(?:e|ing)\s+in|submit(?:ting)?)\s+${GAP}(survey|questionnaire|poll|form)s?\b(?!\s+(?:of|a|an|their|your)\b)`, 'gi')
+const GO_TO = new RegExp(String.raw`\b(?:visit(?:ing)?|open(?:ing)?(?!\s+(?:to|for)\b)|download(?:ing)?|install(?:ing)?|sign(?:ing)?[\s-]?up|register(?:ing)?|log(?:ging)?[\s-]?in(?:to)?|go(?:ing)?\s+to|check(?:ing)?\s+out|creat(?:e|ing)\s+an?\s+account)\s+${GAP}(web\s?site|web\s?page|landing\s+page|site|app|apk)s?\b(?!\s+(?:settings|store)\b)`, 'gi')
+const LINK_ASK = new RegExp(String.raw`\b(?:click(?:ing)?|open|visit|tap|follow|use|go\s+to)\s+${GAP}(links?|url)\b`, 'gi')
+const LINK_HERE = /\b((?:[^\s.!?;\n]+\s+){0,3}?)(links?)\s+(?:below|above)\b/gi
+const NAMED_LINK = /\b(survey|form|registration|sign[- ]?up)\s+link\b/i
+// A form named by its maker, or one said to be just below or above ("your" is
+// one they already have, like "your Google Forms dashboard")
+const MAKER_FORM = /((?:\byour\s+)?)\b(?:google\s+|microsoft\s+|type|jot)(form)s?\b/gi
+const FORM_HERE = /((?:\byour\s+)?)\b(survey|questionnaire|poll|form)s?\s+(?:below|above)\b/gi
+// "Open your app", "a VPN app", "any app", or a well-known app nobody needs a link for
+const NOT_A_PLACE = /\b(your|any|a|an|every|other|ogapay|x|twitter|instagram|ig|tiktok|facebook|fb|whatsapp|telegram|youtube|snapchat|linkedin|threads|discord|google|gmail|chrome|camera|gallery|settings|browser)\b/i
+// The link is one they send back as proof, not one they're sent to
+const PROOF = /\b(your|send|submit|share|drop|paste|post|comment|reply|provide|attach|and|with)\b/i
+const HAS_ADDRESS = /(https?:\/\/|www\.)\S+|\b[a-z0-9-]+\.(com|app|ng|io|org|net|co|xyz|me|ly|gl|gle|link|site|dev|ai|tv|info|biz|africa|online|store|shop|live|page|so|to|be|gg|fun|tech|club|top|cc|us|uk)(\/\S*)?\b/i
+// An @handle is enough for a poll, or when the place is on their profile ("link in bio")
+const HAS_HANDLE = /(^|[^\w@])@[A-Za-z0-9_]{2,}/
+const ON_PROFILE = /\b(bio|pinned|profile)\b/i
+// Files added to the job become links in it, so "fill the attached form" is fine
+const POINTS_TO_FILES = /\battach(ed|ment|ments)\b|\bfiles?\s+(below|above)\b/i
+
+// The first thing the pattern finds that `skip` doesn't rule out
+function firstMatch(re: RegExp, text: string, skip: (gap: string, before: string) => boolean): string {
+  for (const m of text.matchAll(re)) {
+    const before = text.slice(0, (m.index || 0) + m[0].lastIndexOf(m[2])) // the text up to the thing itself
+    if (!skip(m[1] || '', before)) return m[2].toLowerCase().replace(/s$/, '')
+  }
+  return ''
+}
+
+// What the job sends people to without giving its address ('survey', 'form',
+// 'questionnaire', 'poll', 'website', 'app' or 'link'), or '' when nothing is
+// missing. Pass the title and brief together; `hasFiles` when files are attached.
+export function missingLink(text: string, hasFiles = false): string {
+  const t = String(text || '')
+  if (HAS_ADDRESS.test(t)) return ''
+  if (hasFiles && POINTS_TO_FILES.test(t)) return ''
+  const handle = HAS_HANDLE.test(t)
+  const onProfile = handle && ON_PROFILE.test(t)
+  const form = firstMatch(FILL_IN, t, (gap, before) =>
+    /\bany\b/i.test(gap) || /\bin\s+(this|that|the\s+following|the\s+same|this\s+exact)\s+$/i.test(before))
+    || firstMatch(MAKER_FORM, t, (yours) => !!yours) || firstMatch(FORM_HERE, t, (yours) => !!yours)
+  if (form && !onProfile && !(handle && form === 'poll')) return form
+  const place = firstMatch(GO_TO, t, (gap) => NOT_A_PLACE.test(gap))
+  if (place && !onProfile) return /app|apk/i.test(place) ? 'app' : 'website'
+  const link = firstMatch(LINK_ASK, t, (gap) => PROOF.test(gap)) || firstMatch(LINK_HERE, t, (gap) => PROOF.test(gap)) || (NAMED_LINK.test(t) ? 'link' : '')
+  if (link && !onProfile) return 'link'
+  return ''
+}
+
+// The checklist line for missingLink's answer
+export function missingLinkText(thing: string): string {
+  if (!thing) return ''
+  if (thing === 'link') return 'Add the link (https://...) so people can do the job.'
+  if (thing === 'website' || thing === 'app') return `Add the link to the ${thing} so people can do the job.`
+  return `Add the link to your ${thing} so people can do the job.`
+}
