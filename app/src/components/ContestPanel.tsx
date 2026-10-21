@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Money from './Money'
 import { apiRequest } from '../lib/api'
@@ -29,6 +29,22 @@ type Entry = {
 export const ordinal = (n: number) => `${n}${n % 10 === 1 && n % 100 !== 11 ? 'st' : n % 10 === 2 && n % 100 !== 12 ? 'nd' : n % 10 === 3 && n % 100 !== 13 ? 'rd' : 'th'}`
 const when = (d: string | number | Date) => new Date(d).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
 
+// No clear answer from the server (it took too long, the connection dropped or
+// an error page came back): what was asked may still have gone through
+const unsure = (e: any) => e?.message === 'Request timed out' || e instanceof TypeError || e instanceof SyntaxError
+
+// Reload the contest after a failed award or pick. When the answer was unclear,
+// reload again later too: the server can take up to 30 seconds to save an award
+// and the app stops waiting after 15, so the first reload can come too soon.
+function useReloadAfterError(onPaid: () => void) {
+  const timers = useRef<number[]>([])
+  useEffect(() => () => timers.current.forEach((t) => window.clearTimeout(t)), [])
+  return (again: boolean) => {
+    onPaid()
+    if (again) timers.current.push(window.setTimeout(onPaid, 5000), window.setTimeout(onPaid, 16000))
+  }
+}
+
 export default function ContestPanel({ jobId, contest, currency, endsAt, canManage, cancelled = false, convert, onPaid }: {
   jobId: string
   contest: ContestInfo
@@ -40,10 +56,13 @@ export default function ContestPanel({ jobId, contest, currency, endsAt, canMana
   convert: any
   onPaid: () => void
 }) {
-  const ended = !!endsAt && new Date(endsAt).getTime() <= Date.now()
-  const paid = !!contest.winnersPaidAt
-  // Every place was awarded before the closing date, so entries closed then
-  const closedEarly = paid && !ended
+  const endsTime = endsAt ? new Date(endsAt).getTime() : null
+  const ended = endsTime != null && endsTime <= Date.now()
+  const paidTime = contest.winnersPaidAt ? new Date(contest.winnersPaidAt).getTime() : null
+  const paid = paidTime != null
+  // Every place was awarded before the closing date, so entries closed then.
+  // Still true once that date has passed: the winners were paid before it.
+  const closedEarly = paidTime != null && (endsTime == null || !ended || paidTime < endsTime)
   const target = contest.entryTarget || 0
   // Places awarded so far (early awards show before the contest finishes)
   const awarded = contest.winners.length
@@ -110,19 +129,22 @@ export default function ContestPanel({ jobId, contest, currency, endsAt, canMana
       </div>
 
       {cancelled && !paid && (
-        <p className="cp-note">This contest was cancelled, so no prizes are paid. The money held for it went back to the poster.</p>
+        <p className="cp-note">This contest was cancelled, so no prizes are paid. The money held for it went back to {canManage ? 'your wallet' : 'the poster'}.</p>
       )}
       {!paid && !cancelled && (
         <p className="cp-note">
           Anyone who meets the requirements can enter, as many people as want to. When entries close the poster ranks the winners
           {contest.winnersDueAt ? ` by ${when(contest.winnersDueAt)}` : ''}; if they don't, the earliest entries they haven't rejected win.
           Prizes are held by OgaPay until then.
-          {equalPrizes && ' The poster can also award a strong entry its place before entries close; once every place is awarded, the contest ends early.'}
+          {equalPrizes && (contest.prizes.length === 1
+            ? ' The poster can also award the place to a strong entry before entries close; the contest then ends early.'
+            : ' The poster can also award a strong entry its place before entries close; once every place is awarded, the contest ends early.')}
         </p>
       )}
 
       {canManage && !cancelled && !ended && !paid && equalPrizes && awarded < contest.prizes.length && (
-        <AwardNow jobId={jobId} prize={contest.prizes[0]} placesLeft={contest.prizes.length - awarded} currency={currency} convert={convert} onPaid={onPaid} />
+        <AwardNow jobId={jobId} prize={contest.prizes[0]} places={contest.prizes.length} placesLeft={contest.prizes.length - awarded}
+          currency={currency} convert={convert} onPaid={onPaid} />
       )}
       {canManage && !cancelled && ended && !paid && <PickWinners jobId={jobId} contest={contest} currency={currency} convert={convert} onPaid={onPaid} />}
     </section>
@@ -136,6 +158,7 @@ function PickWinners({ jobId, contest, currency, convert, onPaid }: {
   const [picks, setPicks] = useState<string[]>([])
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  const reload = useReloadAfterError(onPaid)
 
   useEffect(() => {
     apiRequest<any>(`/tasks/${jobId}/submissions?limit=500`)
@@ -164,10 +187,12 @@ function PickWinners({ jobId, contest, currency, convert, onPaid }: {
       await apiRequest(`/tasks/${jobId}/winners`, { method: 'POST', body: JSON.stringify({ winners: picks }) })
       onPaid()
     } catch (e: any) {
-      setError(e?.message || 'Could not pay the winners. Try again.')
+      setError(unsure(e)
+        ? "We couldn't confirm this. The winners may have been paid: check the places above before you try again."
+        : e?.message || 'Could not pay the winners. Try again.')
       // The winners may have been paid anyway (a timeout, or paid automatically
       // meanwhile): reload the contest so the page shows where it really stands
-      onPaid()
+      reload(unsure(e))
     } finally {
       setBusy(false)
     }
@@ -214,15 +239,21 @@ function PickWinners({ jobId, contest, currency, convert, onPaid }: {
 // While entries are open (equal prizes only): award a strong entry its place now.
 // The prize is paid at once; the pick when entries close fills the places left.
 // Awarding the last place finishes the contest: entries close at once.
-function AwardNow({ jobId, prize, placesLeft, currency, convert, onPaid }: {
-  jobId: string; prize: number; placesLeft: number; currency: string; convert: any; onPaid: () => void
+function AwardNow({ jobId, prize, places, placesLeft, currency, convert, onPaid }: {
+  jobId: string; prize: number; places: number; placesLeft: number; currency: string; convert: any; onPaid: () => void
 }) {
   const [entries, setEntries] = useState<Entry[] | null>(null)
   const [busy, setBusy] = useState('')
   const [error, setError] = useState('')
   // Bumped after a failed award so the list is read again (an entry may have been rejected or won meanwhile)
   const [refresh, setRefresh] = useState(0)
+  const reload = useReloadAfterError(onPaid)
   const last = placesLeft === 1
+  // A contest with a single place: it is the only place, not the lowest one
+  const only = places === 1
+
+  // A place was awarded since the error (a reload found it): the error is out of date
+  useEffect(() => { setError('') }, [placesLeft])
 
   useEffect(() => {
     apiRequest<any>(`/tasks/${jobId}/submissions?limit=500`)
@@ -244,8 +275,9 @@ function AwardNow({ jobId, prize, placesLeft, currency, convert, onPaid }: {
 
   const award = async (e: Entry) => {
     const name = `@${e.worker?.username || 'this entry'}`
-    const ask = `Award ${name} a place now? ${formatMoney(prize, currency)} is paid to them at once and can't be undone.`
-      + (last ? ' This is the last place: the contest ends now and no more entries can be sent.' : '')
+    const ask = `Award ${name} ${only ? 'the' : 'a'} place now? ${formatMoney(prize, currency)} is paid to them at once and can't be undone.`
+      + (only ? ' This contest has one place: the contest ends now and no more entries can be sent.'
+        : last ? ' This is the last place: the contest ends now and no more entries can be sent.' : '')
     if (!window.confirm(ask)) return
     setBusy(e.id)
     setError('')
@@ -253,10 +285,12 @@ function AwardNow({ jobId, prize, placesLeft, currency, convert, onPaid }: {
       await apiRequest(`/tasks/${jobId}/winners/now`, { method: 'POST', body: JSON.stringify({ submissionId: e.id }) })
       onPaid()
     } catch (err: any) {
-      setError(err?.message || 'Could not award the place. Try again.')
+      setError(unsure(err)
+        ? "We couldn't confirm this. It may have gone through: check the places above before you try again."
+        : err?.message || 'Could not award the place. Try again.')
       // The place may have been awarded anyway (a timeout), or entries closed
       // meanwhile: reload the contest and the entries so the page is up to date
-      onPaid()
+      reload(unsure(err))
       setRefresh((n) => n + 1)
     } finally {
       setBusy('')
@@ -265,11 +299,13 @@ function AwardNow({ jobId, prize, placesLeft, currency, convert, onPaid }: {
 
   return (
     <div className="cp-pick">
-      <h3>{last ? 'Award the last place now' : 'Award a place now'}</h3>
+      <h3>{only ? 'Award the place now' : last ? 'Award the last place now' : 'Award a place now'}</h3>
       <p className="cp-note" style={{ margin: 0 }}>
         Read an entry first (View opens its link; Read opens it in Manage jobs with any screenshots and notes). If it's ready to use,
-        award it a place: <Money amount={prize} currency={currency} convert={convert} size={13} positive /> is paid at once.
-        {' '}{last
+        award it {only ? 'the' : 'a'} place: <Money amount={prize} currency={currency} convert={convert} size={13} positive /> is paid at once.
+        {' '}{only
+          ? 'This contest has one place: when you award it, the contest ends and no more entries can be sent.'
+          : last
           ? 'This is the last place: when you award it, the contest ends and no more entries can be sent.'
           : `${placesLeft} places left; the rest are picked when entries close. If you award every place, the contest ends early.`}
       </p>
@@ -286,7 +322,7 @@ function AwardNow({ jobId, prize, placesLeft, currency, convert, onPaid }: {
             </div>
             <span className="cp-entry-links">
               {linkOf(e) && <a href={linkOf(e)} target="_blank" rel="noopener noreferrer">View</a>}
-              {hasMore(e) && <Link to={`/manage-jobs?job=${encodeURIComponent(jobId)}`} title="Read this entry in Manage jobs">Read</Link>}
+              {hasMore(e) && <Link to={`/manage-jobs?job=${encodeURIComponent(jobId)}&entry=${encodeURIComponent(e.id)}`} title="Read this entry in Manage jobs">Read</Link>}
             </span>
             <button className="ui-btn ui-btn-dark" type="button" disabled={!!busy} onClick={() => award(e)}>
               {busy === e.id ? 'Paying…' : 'Award now'}

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import Layout from "../components/Layout"
 import { apiRequest } from "../lib/api";
@@ -28,6 +28,8 @@ type Task = {
   maxWorkers?: number; deadline?: string | null; createdAt?: string; submissions?: Sub[]
   description?: string | null
   excludesTaskIds?: string[]
+  // A contest: entries aren't approved one by one, places are awarded on the job page
+  isContest?: boolean
 }
 
 function Icon({ n, s = 16, c, style }: { n: any; s?: number; c?: any; style?: any }) {
@@ -91,7 +93,8 @@ function Proof({ s }: { s: Sub }) {
 }
 
 // ── Review drawer ─────────────────────────────────────────────────────────
-function JobDrawer({ task, allTasks, onClose, onChanged }: { task: Task; allTasks: Task[]; onClose: () => void; onChanged: () => void }) {
+// focusId: an entry to scroll to and mark (the Read link on a contest's job page)
+function JobDrawer({ task, allTasks, focusId, onClose, onChanged }: { task: Task; allTasks: Task[]; focusId?: string | null; onClose: () => void; onChanged: () => void }) {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [subs, setSubs] = useState<Sub[] | null>(null);
@@ -105,14 +108,25 @@ function JobDrawer({ task, allTasks, onClose, onChanged }: { task: Task; allTask
   const [tpl, setTpl] = useState<"" | "saving" | "saved">("");
   const cur = task.currency || "NGN";
   const reward = Number(task.reward || 0);
+  const contest = !!task.isContest;
 
   const load = useCallback(async () => {
     try {
-      const data = await apiRequest<Sub[]>(`/tasks/${task.id}/submissions`);
+      // The server sends 50 by default (newest first, people still working count
+      // too): ask for up to 500 so every entry waiting for review is listed, the
+      // same as the contest's award list on the job page
+      const data = await apiRequest<Sub[]>(`/tasks/${task.id}/submissions?limit=500`);
       setSubs(Array.isArray(data) ? data : []);
     } catch (e: any) { setSubs([]); toast(e?.message || "Couldn't load the submissions", "error"); }
   }, [task.id]);
   useEffect(() => { load(); }, [load]);
+  // Once the entries are in, scroll to the one asked for (only the first time)
+  const focused = useRef(false);
+  useEffect(() => {
+    if (!subs || !focusId || focused.current) return;
+    focused.current = true;
+    window.requestAnimationFrame(() => document.getElementById(`mj-sub-${focusId}`)?.scrollIntoView({ block: "start" }));
+  }, [subs, focusId]);
   useEffect(() => {
     apiRequest<{ worker: { id: string } }[]>("/poster/blocked")
       .then((d) => setBlocked(new Set((Array.isArray(d) ? d : []).map((b) => b.worker.id)))).catch(() => {});
@@ -133,7 +147,7 @@ function JobDrawer({ task, allTasks, onClose, onChanged }: { task: Task; allTask
         ...(status === "REJECTED" && reason.trim() ? { posterNotes: reason.trim() } : {}),
         ...(rating ? { rating, ...(note ? { feedback: note } : {}) } : {}),
       }) });
-      toast(status === "APPROVED" ? `Approved. @${who(s.worker)} gets ${money(reward, cur)}${rating ? ` and your ${rating}/5 rating` : ""}.` : "Rejected. The slot is open again.", "success");
+      toast(status === "APPROVED" ? `Approved. @${who(s.worker)} gets ${money(reward, cur)}${rating ? ` and your ${rating}/5 rating` : ""}.` : contest ? "Rejected. This entry can't win a place." : "Rejected. The slot is open again.", "success");
       setRejecting(null); setReason("");
       await load(); onChanged();
     } catch (e: any) { toast(e?.message || "That didn't work. Try again.", "error"); }
@@ -270,12 +284,19 @@ function JobDrawer({ task, allTasks, onClose, onChanged }: { task: Task; allTask
             <>
               <section className="mj-sec">
                 <h4>Waiting for your review ({toReview.length})</h4>
+                {contest && toReview.length > 0 && (
+                  <p className="mj-contest">
+                    <Icon n="award" s={14} /> <span>This is a contest, so entries aren't approved one by one. Reject any that break your brief here,
+                    then award places on the <Link to={`/tasks/${task.id}`}>job page</Link>.</span>
+                  </p>
+                )}
                 {toReview.length === 0 ? <div className="mj-empty">Nothing to review right now.</div> : toReview.map((s) => (
-                  <div key={s.id} className="mj-sub">
+                  <div key={s.id} id={`mj-sub-${s.id}`} className={`mj-sub${s.id === focusId ? " is-focus" : ""}`}>
                     <div className="mj-who"><Avatar w={s.worker} /><div><WorkerLink w={s.worker} /><small>Sent {ago(s.submittedAt || s.createdAt)}</small></div><BlockBtn w={s.worker} /></div>
                     {s.workerNotes && <p className="mj-note">{s.workerNotes}</p>}
                     <Proof s={s} />
-                    {s.autoApproveAt && <p className="mj-auto"><Icon n="clock-check" s={14} /> If you don't review it, it's approved and paid automatically on {new Date(s.autoApproveAt).toLocaleString("en-GB", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}.</p>}
+                    {/* Contest entries are never approved automatically */}
+                    {!contest && s.autoApproveAt && <p className="mj-auto"><Icon n="clock-check" s={14} /> If you don't review it, it's approved and paid automatically on {new Date(s.autoApproveAt).toLocaleString("en-GB", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}.</p>}
                     {rejecting === s.id ? (
                       <div className="mj-reason">
                         <textarea value={reason} maxLength={500} onChange={(e) => setReason(e.target.value)} placeholder={`Tell @${who(s.worker)} what was wrong (optional)`} autoFocus />
@@ -289,7 +310,7 @@ function JobDrawer({ task, allTasks, onClose, onChanged }: { task: Task; allTask
                       <RateWork who={`@${who(s.worker)}`} rating={stars[s.id] || 0} note={notes[s.id] || ""} disabled={busy === s.id}
                         onRating={(v) => setStars((m) => ({ ...m, [s.id]: v }))} onNote={(v) => setNotes((m) => ({ ...m, [s.id]: v }))} />
                       <div className="mj-acts">
-                        <button className="ui-btn ui-btn-dark" disabled={busy === s.id} onClick={() => review(s, "APPROVED")}><Icon n="check" s={15} /> {busy === s.id ? "Approving…" : `Approve and pay ${money(reward, cur)}`}</button>
+                        {!contest && <button className="ui-btn ui-btn-dark" disabled={busy === s.id} onClick={() => review(s, "APPROVED")}><Icon n="check" s={15} /> {busy === s.id ? "Approving…" : `Approve and pay ${money(reward, cur)}`}</button>}
                         <button className="ui-btn ui-btn-ghost" disabled={busy === s.id} onClick={() => { setRejecting(s.id); setReason(""); }}>Reject</button>
                       </div>
                       </>
@@ -500,10 +521,14 @@ const FILTERS: { id: string; label: string; test: (t: Task) => boolean }[] = [
 
 function JobsListPage({ tasks, reload }: { tasks: Task[]; reload: () => void }) {
   const [filter, setFilter] = useState("all");
-  // ?job=<id> opens that job's drawer (links from Profile and /tasks/:id/submissions)
+  // ?job=<id> opens that job's drawer (links from Profile and /tasks/:id/submissions);
+  // &entry=<id> also scrolls to that entry (the Read link on a contest's job page)
   const [params, setParams] = useSearchParams();
   const [openId, setOpenIdState] = useState<string | null>(params.get("job"));
-  const setOpenId = (v: string | null) => { setOpenIdState(v); if (!v && params.get("job")) { params.delete("job"); setParams(params, { replace: true }); } };
+  const setOpenId = (v: string | null) => {
+    setOpenIdState(v);
+    if (!v && (params.get("job") || params.get("entry"))) { params.delete("job"); params.delete("entry"); setParams(params, { replace: true }); }
+  };
   const open = tasks.find((t) => t.id === openId) || null;
 
   const totals = useMemo(() => {
@@ -583,7 +608,7 @@ function JobsListPage({ tasks, reload }: { tasks: Task[]; reload: () => void }) 
         })}
       </div>
 
-      {open && <JobDrawer task={open} allTasks={tasks} onClose={() => setOpenId(null)} onChanged={reload} />}
+      {open && <JobDrawer task={open} allTasks={tasks} focusId={open.id === params.get("job") ? params.get("entry") : null} onClose={() => setOpenId(null)} onChanged={reload} />}
     </>
   );
 }

@@ -593,13 +593,26 @@ function WurkJobDetailView(props: any) {
   // A job that finished before its closing date (a contest with every place
   // awarded, a job with every place filled, or a cancelled one) stops counting down
   const jobStatus = String(job.status || '').toLowerCase()
-  const closedEarly = deadline.state === 'open' && (!!contest?.winnersPaidAt || ['completed', 'cancelled', 'expired'].includes(jobStatus))
-  const closedEarlyText = contest?.winnersPaidAt ? 'Closed early: every place awarded'
-    : jobStatus === 'cancelled' ? 'Cancelled'
+  // A contest whose every place was awarded before its closing date. Its entries
+  // closed then, so it says so even once that date has passed.
+  const deadlineAt = deadline.state === 'open' || deadline.state === 'ended' ? deadline.at : null
+  const awardedEarly = !!contest?.winnersPaidAt
+    && (deadline.state === 'open' || deadlineAt == null || new Date(contest.winnersPaidAt).getTime() < deadlineAt)
+  const closedEarly = awardedEarly || (deadline.state === 'open' && ['completed', 'cancelled', 'expired'].includes(jobStatus))
+  const closedEarlyText = awardedEarly ? 'Closed early: every place awarded'
+    : jobStatus === 'cancelled' ? 'Cancelled before it closed'
     : jobStatus === 'completed' ? 'Closed early: every place filled'
     : 'Closed'
+  // The headline already says "Cancelled" next to the clock, so there it gives the date it was to close
+  const clockText = closedEarly
+    ? (!awardedEarly && jobStatus === 'cancelled' ? `Was to close ${deadlineDate(deadline)}` : closedEarlyText)
+    : deadline.state === 'open' ? `Closes ${deadlineDate(deadline)}` : deadlineLabel(deadline)
   // Contests where every place pays the same prize: places can be awarded before entries close
   const equalPrizes = !!contest && contest.prizes.length > 0 && new Set(contest.prizes).size === 1
+  const earlyAwardText = !contest || !equalPrizes ? ''
+    : contest.prizes.length === 1
+    ? ' The poster can also award the place to an entry before entries close; the contest then ends early.'
+    : ' Every place in this contest pays the same prize, so the poster can also award places before entries close; once every place is awarded, the contest ends early.'
   const countdownStr = closedEarly
     ? closedEarlyText
     : deadline.state !== 'open'
@@ -953,7 +966,7 @@ function WurkJobDetailView(props: any) {
               <h1 className="wjd-h1">{job.title}</h1>
               <ul className="wjd-facts" aria-label="Job status">
                 <li className={isOpen ? 'is-open' : ''}><span className="wjd-dot" aria-hidden="true" />{statusText}</li>
-                <li><i className="ti ti-clock" aria-hidden="true" />{closedEarly ? closedEarlyText : deadline.state === 'open' ? `Closes ${deadlineDate(deadline)}` : deadlineLabel(deadline)}</li>
+                <li><i className="ti ti-clock" aria-hidden="true" />{clockText}</li>
                 {community && (
                   <li><i className="ti ti-lock" aria-hidden="true" />Members of <Link to={`/communities/${community.slug || community.id}`} style={{ color: 'inherit', fontWeight: 600 }}>{community.name}</Link> only</li>
                 )}
@@ -1037,7 +1050,7 @@ function WurkJobDetailView(props: any) {
                   <div className="wjd-value wjd-open-val"><span className="wjd-dot" style={{ background: isOpen ? 'var(--green)' : '#94a3b8', border: `1.5px solid ${isOpen ? 'rgba(var(--green-rgb),0.8)' : '#64748b'}` }} />{statusText}</div>
                 </div>
                 {contest ? (
-                  <div className="wjd-row"><div className="wjd-label">How you're paid <InfoBtn text={"When entries close the poster ranks the best entries and each place's prize is paid to your wallet from the money already held for this contest. If the poster doesn't pick within 3 days, the earliest entries they haven't rejected win." + (equalPrizes ? " Every place in this contest pays the same prize, so the poster can also award places before entries close; once every place is awarded, the contest ends early." : "")} /></div><div className="wjd-value">Prizes for the top {contest.prizes.length === 1 ? 'entry' : `${contest.prizes.length} entries`}</div></div>
+                  <div className="wjd-row"><div className="wjd-label">How you're paid <InfoBtn text={"When entries close the poster ranks the best entries and each place's prize is paid to your wallet from the money already held for this contest. If the poster doesn't pick within 3 days, the earliest entries they haven't rejected win." + earlyAwardText} /></div><div className="wjd-value">Prizes for the top {contest.prizes.length === 1 ? 'entry' : `${contest.prizes.length} entries`}</div></div>
                 ) : (
                   <div className="wjd-row"><div className="wjd-label">How you're paid <InfoBtn text="The poster checks each submission. Approved work is paid straight to your wallet from the money already held for this job." /></div><div className="wjd-value">Poster approves each one</div></div>
                 )}
@@ -1270,7 +1283,7 @@ function WurkJobDetailView(props: any) {
               <div className="wjd-info-row">
                 <div className="wjd-info-row-label">{contest ? 'Contest' : 'Challenge'}</div>
                 <div className="wjd-info-row-val">{contest
-                  ? `Send one entry before it closes. The poster then ranks the best entries and pays a prize for each place. Only the winners are paid.${equalPrizes ? ' Every place pays the same prize, so the poster can also award places before entries close; once every place is awarded, the contest ends early.' : ''}`
+                  ? `Send one entry before it closes. The poster then ranks the best entries and pays a prize for each place. Only the winners are paid.${earlyAwardText}`
                   : `Everyone whose work is approved is paid ${formatMoney(Number(job.reward || 0), rewardCurrency)}, until all ${job.slots} ${job.slots === 1 ? 'place is' : 'places are'} used.`}</div>
               </div>
               <div className="wjd-info-row" style={{ marginBottom: 20 }}>
