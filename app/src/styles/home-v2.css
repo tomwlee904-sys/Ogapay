@@ -344,7 +344,8 @@ body:has(main.hv), body:has(main.hv) #root { overflow-x: clip; }
   .hv-stats { gap: 8px; }
   .hv-stat { padding: 14px 12px; border-radius: 17px; }
   .hv-stat::after { border-radius: 13px; }
-  .hv-stat-head { font-size: 12px; gap: 7px; }
+  .hv-stat-head { font-size: 11px; gap: 7px; }
+  .hv-stat-sub { font-size: 11px; }
   .hv-stat-icon { width: 22px; height: 22px; border-radius: 7px; font-size: 13px; }
   .hv-stat-val { font-size: 28px; }
   .hv-hero-foot { grid-template-columns: 1fr; gap: 10px; justify-items: center; margin-top: 36px; }
