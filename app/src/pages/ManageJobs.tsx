@@ -11,6 +11,7 @@ import InfoTip from '../components/InfoTip'
 import { missingLink, missingLinkText } from "../lib/jobText";
 import RateWork, { RatedStars } from '../components/RateWork'
 import RateWork, { RatedStars, ratedByTeam } from '../components/RateWork'
+import CopyFlag from '../components/CopyFlag'
 
 // Manage jobs: the poster's jobs, their review queue and job actions.
 // Counts come from each job's submissions (by status). The old page used
@@ -21,6 +22,8 @@ type Sub = {
   id: string; status: string; createdAt: string; submittedAt?: string | null; reviewedAt?: string | null
   proof?: string | null; workerNotes?: string | null; posterNotes?: string | null; attachments?: any[]
   autoApproveAt?: string | null
+  // Set by the server when the entry looks copied from another one on this job, or only says "done"
+  spamReason?: string | null; similarToId?: string | null
   rating?: number | null; feedback?: string | null
   // Who rated it (an admin can rate flagged work) and who moderated it
   ratedById?: string | null; moderatedById?: string | null
@@ -350,6 +353,7 @@ function JobDrawer({ task, allTasks, focusId, onClose, onChanged }: { task: Task
                 {toReview.length === 0 ? <div className="mj-empty">Nothing to review right now.</div> : toReview.map((s) => (
                   <div key={s.id} id={`mj-sub-${s.id}`} className={`mj-sub${s.id === focusId ? " is-focus" : ""}`}>
                     <div className="mj-who"><Avatar w={s.worker} /><div><WorkerLink w={s.worker} /><small>Sent {ago(s.submittedAt || s.createdAt)}</small></div><BlockBtn w={s.worker} /></div>
+                    <CopyFlag reason={s.spamReason} copy={!!s.similarToId} />
                     {s.workerNotes && <p className="mj-note">{s.workerNotes}</p>}
                     <Proof s={s} />
                     {/* Contest entries are never approved automatically */}

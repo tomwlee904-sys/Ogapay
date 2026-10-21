@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import Layout from '../components/Layout'
 import { apiRequest } from '../lib/api'
 import RateWork from '../components/RateWork'
+import CopyFlag from '../components/CopyFlag'
 
 export default function AdminModeration() {
   const [queue, setQueue] = useState<any[]>([])
@@ -88,6 +89,8 @@ export default function AdminModeration() {
         .mod-card-info{flex:1;min-width:0}
         .mod-card-info h3{font-size:15px;font-weight:700;margin:0 0 2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
         .mod-card-info .meta{font-size:12px;color:var(--text2);display:flex;gap:12px;flex-wrap:wrap}
+        .mod-text{margin:8px 0 0;padding:8px 10px;border-radius:8px;background:var(--card2);font-size:12px;line-height:1.5;color:var(--text);white-space:pre-wrap;overflow-wrap:anywhere}
+        .mod-text-match{border:1px dashed var(--border)}
         .mod-card-info .meta span{display:inline-flex;align-items:center;gap:4px}
         .mod-actions{display:flex;gap:8px;flex-shrink:0}
         .mod-actions button{padding:8px 18px;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;transition:opacity .13s}
@@ -144,7 +147,7 @@ export default function AdminModeration() {
         )}
 
         <h2 className="mod-h2">Job submissions</h2>
-        <p className="sub" style={{ marginTop: -6 }}>Submissions unreviewed for more than 24 hours, flagged for moderator action</p>
+        <p className="sub" style={{ marginTop: -6 }}>Possible copies and spam first (they are never paid automatically), then work left unreviewed for more than 24 hours</p>
 
         <button className="btn-flag" onClick={handleFlagAll} disabled={busy === 'flag'}>
           {busy === 'flag' ? 'Flagging...' : 'Manually Flag All Expired'}
@@ -166,6 +169,13 @@ export default function AdminModeration() {
                     <span><i className="ti ti-clock" /> {s.submittedAt ? timeSince(s.submittedAt) : '?'} ago</span>
                     {s.proof && <span><i className="ti ti-link" /> <a href={s.proof} target="_blank" rel="noreferrer" style={{color:'var(--accent)',textDecoration:'none'}}>Proof</a></span>}
                   </div>
+                  <CopyFlag reason={s.spamReason} copy={!!s.similarToId} compact />
+                  {s.workerNotes && <p className="mod-text"><b>{s.worker?.username ? `@${s.worker.username}` : 'Worker'}:</b> {s.workerNotes}</p>}
+                  {s.similarTo && (
+                    <p className="mod-text mod-text-match">
+                      <b>Matched @{s.similarTo.worker?.username || 'someone'}{s.similarTo.status ? ` (${s.similarTo.status.toLowerCase()})` : ''}:</b> {s.similarTo.workerNotes || (s.similarTo.proof && s.similarTo.proof !== 'Proof attached' ? s.similarTo.proof : 'No text')}
+                    </p>
+                  )}
                   <RateWork who={s.worker?.firstName || 'the worker'} rating={stars[s.id] || 0} note={notes[s.id] || ''} disabled={busy === s.id}
                     onRating={(v) => setStars((m) => ({ ...m, [s.id]: v }))} onNote={(v) => setNotes((m) => ({ ...m, [s.id]: v }))} />
                 </div>

@@ -13,6 +13,7 @@ import Money from '../components/Money'
 import ContestPanel, { type ContestInfo } from '../components/ContestPanel'
 import JobActivity from '../components/JobActivity'
 import RateWork, { RatedStars, ratedByTeam } from '../components/RateWork'
+import CopyFlag from '../components/CopyFlag'
 import { formatMoney } from '../lib/money'
 import { jobDeadline, deadlineLabel, deadlineDate } from '../lib/deadline'
 import { categoryLabel } from '../lib/categories'
@@ -1228,6 +1229,7 @@ function WurkJobDetailView(props: any) {
                             <div style={{ flex: 1, minWidth: 0 }}>
                               <div style={{ color: 'var(--text,#0f172a)', fontSize: 14, fontWeight: 700 }}>{sub.worker?.username || sub.worker?.firstName || 'Anonymous'}</div>
                               <div style={{ color: 'var(--text2,#475569)', fontSize: 13 }}>{sub.workerNotes || 'No message'}</div>
+                              <CopyFlag reason={sub.spamReason} copy={!!sub.similarToId} compact />
                               {sub.proof && (
                                 sub.proof.startsWith('http://') || sub.proof.startsWith('https://')
                                   ? <a href={sub.proof} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)', fontSize: 12, wordBreak: 'break-all', textDecoration: 'underline' }}>{sub.proof}</a>
@@ -1433,6 +1435,7 @@ function WurkJobDetailView(props: any) {
                   <PayoutCountdown approvedAt={selectedSub._approvedAt || selectedSub.approvedAt} />
                 </div>
               )}
+              {selectedSub.spamReason && <div style={{ margin: '-4px 0 14px' }}><CopyFlag reason={selectedSub.spamReason} copy={!!selectedSub.similarToId} compact={selectedSub.status !== 'SUBMITTED'} /></div>}
               <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3,#9ca3af)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Notes</div>
               <div style={{ fontSize: 14, color: 'var(--text,#0f172a)', marginBottom: 14, lineHeight: 1.5 }}>{selectedSub.workerNotes || 'No message'}</div>
               {selectedSub.proof && (

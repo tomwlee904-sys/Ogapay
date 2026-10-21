@@ -1,0 +1,7 @@
+/* "Possible copy" / "Possible spam" note on an entry (CopyFlag.tsx).
+   Amber tint over the card, text in the theme's own colour so it reads in
+   light and dark mode. */
+.copy-flag { margin: 10px 0 0; padding: 9px 12px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; border-radius: 10px; border: 1px solid color-mix(in srgb, #d97706 45%, var(--border)); background: color-mix(in srgb, #d97706 10%, transparent); font-size: 12px; line-height: 1.5; color: var(--text); overflow-wrap: anywhere; }
+.copy-flag-b { display: inline-flex; align-items: center; gap: 4px; padding: 1px 8px; border-radius: 999px; background: color-mix(in srgb, #d97706 22%, transparent); font-weight: 600; font-size: 11px; white-space: nowrap; }
+.copy-flag-b .ti { font-size: 13px; color: #d97706; }
+.copy-flag-compact { margin-top: 6px; padding: 6px 10px; }
