@@ -1,0 +1,14 @@
+/* Reviews to write (pages/ReviewsToWrite.tsx): one card per piece of approved work */
+.rtw-card { padding: 14px; }
+.rtw-top { display: flex; align-items: center; gap: 12px; }
+.rtw-av { width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0; display: grid; place-items: center; overflow: hidden; background: var(--card2); color: var(--text2); font-weight: 700; font-size: 15px; }
+.rtw-av img { width: 100%; height: 100%; object-fit: cover; }
+.rtw-mid { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.rtw-name { font-weight: 700; font-size: 14px; color: var(--text); text-decoration: none; }
+.rtw-job { font-size: 13px; color: var(--text2); text-decoration: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rtw-name:hover, .rtw-job:hover { text-decoration: underline; }
+.rtw-mid small { font-size: 12px; color: var(--text3); }
+.rtw-actions { display: flex; justify-content: flex-end; margin-top: 10px; }
+@media (max-width: 767px) {
+  .rtw-actions .up-btn { width: 100%; height: 44px; }
+}

@@ -15,7 +15,7 @@ const TITLES: Record<string, string> = {
   '/workers': 'Workers', '/creators': 'Creators', '/dashboard': 'Dashboard', '/profile': 'My profile',
   '/wallet': 'Wallet', '/deposit': 'Add money', '/earnings': 'Earnings', '/referrals': 'Referrals', '/rank': 'Ranks',
   '/settings': 'Settings', '/notifications': 'Notifications', '/messages': 'Messages', '/my-tasks': 'My tasks',
-  '/my-store': 'My store', '/campaigns': 'Campaigns', '/my-jobs': 'My jobs', '/manage-jobs': 'Manage jobs',
+  '/my-store': 'My store', '/campaigns': 'Campaigns', '/my-jobs': 'My jobs', '/manage-jobs': 'Manage jobs', '/reviews-to-write': 'Reviews to write',
   '/edit-profile': 'Edit profile', '/task-history': 'Task history', '/bookmarks': 'Bookmarks',
   '/analytics': 'Analytics', '/create': 'Create a job', '/createcustom': 'Create a custom job',
   '/createsocial': 'Create an X campaign', '/tasks/new': 'Create a job', '/post-job': 'Create a job',

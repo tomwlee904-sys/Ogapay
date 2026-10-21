@@ -38,18 +38,20 @@ export function ratedByTeam(sub: { ratedById?: string | null; moderatedById?: st
   return !!sub.moderatedById
 }
 
-export default function RateWork({ who, rating, note, onRating, onNote, disabled }: {
+export default function RateWork({ who, rating, note, onRating, onNote, disabled, optional = true }: {
   who: string
   rating: number
   note: string
   onRating: (n: number) => void
   onNote: (s: string) => void
   disabled?: boolean
+  // Stars are optional when approving; rating approved work later (Reviews to write) needs them
+  optional?: boolean
 }) {
   const id = useId()
   return (
     <fieldset className="rw" disabled={disabled}>
-      <legend className="rw-legend">Rate {who}'s work <span>(optional)</span></legend>
+      <legend className="rw-legend">Rate {who}'s work{optional && <span> (optional)</span>}</legend>
       <div className="rw-row">
         <div className="rw-stars" role="group" aria-label={`Stars for ${who}`}>
           {[1, 2, 3, 4, 5].map((i) => (

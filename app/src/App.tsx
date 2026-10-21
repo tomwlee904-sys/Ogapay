@@ -79,6 +79,7 @@ const Writer = lazyPage(() => import('./pages/Writer'))
 const Analytics = lazyPage(() => import('./pages/Analytics'))
 const Bookmarks = lazyPage(() => import('./pages/Bookmarks'))
 const ManageJobs = lazyPage(() => import('./pages/ManageJobs'))
+const ReviewsToWrite = lazyPage(() => import('./pages/ReviewsToWrite'))
 const UserProfile = lazyPage(() => import('./pages/UserProfile'))
 const HirePage = lazyPage(() => import('./pages/HirePage'))
 const Admin = lazyPage(() => import('./pages/Admin'))
@@ -193,6 +194,7 @@ export default function App() {
 
             <Route path="/job-monitor" element={<AuthGuard><JobMonitor /></AuthGuard>} />
             <Route path="/manage-jobs" element={<AuthGuard><ManageJobs /></AuthGuard>} />
+            <Route path="/reviews-to-write" element={<AuthGuard><ReviewsToWrite /></AuthGuard>} />
             <Route path="/edit-profile" element={<AuthGuard><EditProfile /></AuthGuard>} />
             <Route path="/task-history" element={<Navigate to="/my-tasks" replace />} />
             <Route path="/bookmarks" element={<AuthGuard><Bookmarks /></AuthGuard>} />
