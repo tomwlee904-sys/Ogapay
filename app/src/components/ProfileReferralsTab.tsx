@@ -7,8 +7,9 @@ import { sized } from '../lib/img'
 
 // Referrals, laid out like wurk.fun's: totals, your link (with ready-made
 // shares), the people you brought in, and what you've been paid for them.
-// The bonus is paid once a referred person reaches Level 1 (bank or NIN check)
-// (backend wallet.service rewardForReferral), for up to `rewardCap` people.
+// The bonus is paid once a referred person finishes their first paid job (a job
+// someone other than the inviter posted), once per friend, for up to `rewardCap`
+// people (backend referral.service maybeTriggerReferralBonus).
 
 type Referral = { username: string; avatarUrl: string | null; joinedAt: string; rewardedAt: string | null }
 type Stats = {
@@ -95,7 +96,7 @@ export default function TabReferralsContent() {
         </section>
         <section className="rf2-card rf2-pad" aria-labelledby="rf2-link-h">
           <div className="rf2-label" id="rf2-link-h">Your referral link</div>
-          <div className="rf2-sub">You earn <b>{naira(bonus, 0)}</b> for each friend who joins with your link and verifies their ID (Level 1: bank account or NIN), and another <b>{naira(bonus, 0)}</b> when a job they do is approved (posted by someone other than you). For up to {cap} friends ({rewarded} of {cap} so far).</div>
+          <div className="rf2-sub">You earn <b>{naira(bonus, 0)}</b> for each friend who joins with your link and finishes their first paid job (a job posted by someone other than you). Signing up or verifying alone doesn't pay. For up to {cap} friends ({rewarded} of {cap} so far).</div>
           {link ? (
             <>
               <div className="rf2-link">
@@ -120,7 +121,7 @@ export default function TabReferralsContent() {
             People who join through your referral link will appear here.
             <ol className="rf2-steps">
               <li>Share your link on WhatsApp, X or Telegram.</li>
-              <li>Your friend signs up with it and verifies their ID (Level 1) in Settings → Verification.</li>
+              <li>Your friend signs up with it and finishes their first paid job.</li>
               <li>{naira(bonus, 0)} goes to your wallet.</li>
             </ol>
           </div>
@@ -136,7 +137,7 @@ export default function TabReferralsContent() {
                 <span role="cell">{day(p.joinedAt)}</span>
                 <span role="cell">{p.rewardedAt
                   ? <span className="rf2-pill ok"><i className="ti ti-circle-check" aria-hidden="true" /> {naira(bonus, 0)} paid</span>
-                  : <span className="rf2-pill"><i className="ti ti-clock" aria-hidden="true" /> Waiting for them to verify</span>}</span>
+                  : <span className="rf2-pill"><i className="ti ti-clock" aria-hidden="true" /> Waiting for their first paid job</span>}</span>
               </div>
             ))}
           </div>
@@ -146,7 +147,7 @@ export default function TabReferralsContent() {
       <section className="rf2-card" aria-labelledby="rf2-earn">
         <div className="rf2-head"><h2 id="rf2-earn">Referral earnings</h2><span className="rf2-count">{bonuses.length} {bonuses.length === 1 ? 'payment' : 'payments'}</span></div>
         {bonuses.length === 0 ? (
-          <div className="rf2-empty">No referral earnings yet. You're paid when someone you referred verifies their ID (Level 1).</div>
+          <div className="rf2-empty">No referral earnings yet. You're paid when someone you referred finishes their first paid job.</div>
         ) : (
           <div role="table" aria-label="Referral payments">
             <div className="rf2-row th" role="row"><span role="columnheader">Status</span><span role="columnheader">Reward</span><span role="columnheader">Date</span></div>
