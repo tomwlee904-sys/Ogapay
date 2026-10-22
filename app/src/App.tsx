@@ -45,6 +45,8 @@ const CreateJob = lazyPage(() => import('./pages/CreateJob'))
 const Communities = lazyPage(() => import('./pages/Communities'))
 const CreateCommunity = lazyPage(() => import('./pages/CreateCommunity'))
 const CommunityDetail = lazyPage(() => import('./pages/CommunityDetail'))
+const CommunityJoin = lazyPage(() => import('./pages/CommunityJoin'))
+const CommunityInvitations = lazyPage(() => import('./pages/CommunityInvitations'))
 const FAQ = lazyPage(() => import('./pages/FAQ'))
 const Support = lazyPage(() => import('./pages/Support'))
 const Vault = lazyPage(() => import('./pages/Vault'))
@@ -157,6 +159,8 @@ export default function App() {
             <Route path="/communities" element={<Communities />} />
             <Route path="/communities/create" element={<CreateCommunity />} />
             <Route path="/communities/:id" element={<CommunityDetail />} />
+            <Route path="/communities/:id/request" element={<CommunityJoin />} />
+            <Route path="/communities/invitations" element={<AuthGuard><CommunityInvitations /></AuthGuard>} />
             <Route path="/faq" element={<FAQ />} />
             <Route path="/docs" element={<Docs />} />
             <Route path="/support" element={<Support />} />

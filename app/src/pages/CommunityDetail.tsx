@@ -7,25 +7,33 @@ import { uploadImage } from '../lib/upload'
 import { useToast } from '../components/Toast'
 import '../styles/profile-public.css'
 import '../styles/community.css'
+import '../styles/community-join.css'
 import { sized } from '../lib/img'
 
 // Community page, ported from the June version (leaderboard, open and completed
-// jobs, members-only chat, owner settings) onto the current design. The live page
-// before this was an "about" box with "feed coming soon". Dropped from June:
-// invite codes and join requirements (the API never had them) and file
-// attachments on join requests (the API ignored them).
+// jobs, members-only chat, owner settings) onto the current design. Joining a
+// private community, or one with an entry task or requirements, goes through
+// the join page (/communities/:id/request: request with message and files, or
+// an invite code). Leaders set the entry task, requirements and invite codes here.
 
 type Member = { id: string; role: string; user: { id: string; username: string; firstName: string; lastName: string; avatarUrl: string | null } }
 type Community = {
   id: string; slug: string; name: string; description: string | null; iconUrl: string | null; coverImage: string | null
   accentColor: string | null; category: string | null; isPublic: boolean; owner: { id: string; username: string; firstName: string; lastName: string; avatarUrl: string | null }
   twitter: string; telegram: string; discord: string; memberCount: number; requestCount: number; recentMembers: Member[]
-  userRole: string | null; hasRequested: boolean; openJobCount: number; completedJobCount: number; createdAt: string
+  userRole: string | null; hasRequested: boolean; hasEntryTask?: boolean; hasJoinRequirements?: boolean; openJobCount: number; completedJobCount: number; createdAt: string
 }
 type Ranked = { rank: number; id: string; username: string; firstName: string; lastName: string; avatarUrl: string | null; role: string; level: string; tasksCompleted: number; totalEarned: number | null }
 type Job = { id: string; title: string; reward: number; currency: string; submissionCount?: number; createdAt?: string; completedAt?: string; deadline?: string | null; workers?: { id: string; username: string }[]; membersOnly?: boolean; isContest?: boolean }
 type Msg = { id: string; text: string; createdAt: string; sender: { id: string; username: string; firstName: string; avatarUrl: string | null } }
-type Req = { id: string; message: string; createdAt: string; user: { id: string; username: string; firstName: string; lastName: string; avatarUrl: string | null } }
+type Req = {
+  id: string; message: string | null; attachments: string[]; createdAt: string
+  user: { id: string; username: string; firstName: string; lastName: string; avatarUrl: string | null; rank: number; rankName: string; verificationLevel: number; xConnected: boolean; jobsDone: number }
+}
+type JoinSettings = { entryTaskTitle: string; entryTaskSteps: string; minRank: number; requiresKyc: boolean; requiresX: boolean; minJobsDone: number }
+type Code = { id: string; code: string; maxUses: number | null; uses: number; expiresAt: string | null; revokedAt: string | null; active: boolean }
+const RANKS = ['Anyone', 'Beginner', 'Intermediate', 'Advanced', 'Expert', 'Legend']
+const fileName = (u: string) => { try { return decodeURIComponent(new URL(u).pathname.split('/').pop() || 'file').replace(/^\d+-/, '') } catch { return 'file' } }
 
 const TABS = ['About', 'Leaderboard', 'Open jobs', 'Completed', 'Chat'] as const
 type Tab = (typeof TABS)[number]
@@ -52,8 +60,6 @@ export default function CommunityDetail() {
   const [tab, setTab] = useState<Tab>('About')
   const [busy, setBusy] = useState(false)
   const [invite, setInvite] = useState<any>(null)
-  const [asking, setAsking] = useState(false)
-  const [askMsg, setAskMsg] = useState('')
 
   const role = c?.userRole || null
   const isMember = !!role
@@ -85,26 +91,17 @@ export default function CommunityDetail() {
     setBusy(false)
   }
 
+  // Private communities, and ones with an entry task or requirements, use the join page
+  const viaJoinPage = !!c && (!c.isPublic || !!c.hasEntryTask || !!c.hasJoinRequirements)
   const join = async () => {
+    if (viaJoinPage) { navigate(`/communities/${c!.slug}/request`); return }
     if (!signedIn) { openSignIn({ redirect: '/communities/' + id }); return }
-    if (!c!.isPublic) { setAsking(true); return }
     setBusy(true)
     try {
       await apiRequest(`/communities/${c!.id}/join`, { method: 'POST' })
       toast('You joined ' + c!.name, 'success')
       load()
     } catch (e: any) { toast(e?.message || "Couldn't join", 'error') }
-    setBusy(false)
-  }
-
-  const sendRequest = async () => {
-    setBusy(true)
-    try {
-      await apiRequest(`/communities/${c!.id}/request`, { method: 'POST', body: JSON.stringify({ message: askMsg.trim().slice(0, 500) }) })
-      setAsking(false); setAskMsg('')
-      setC((x) => (x ? { ...x, hasRequested: true } : x))
-      toast('Request sent. The community leaders will review it.', 'success')
-    } catch (e: any) { toast(e?.message || "Couldn't send your request", 'error') }
     setBusy(false)
   }
 
@@ -147,7 +144,7 @@ export default function CommunityDetail() {
   return (
     <Layout>
       <div className="up-wrap">
-        <div className="up-crumb"><button onClick={() => navigate('/communities')}><i className="ti ti-arrow-left" /> Communities</button><span>{c.isPublic ? 'Public' : 'Private'}{cat ? ` · ${cat}` : ''}</span></div>
+        <div className="up-crumb"><button onClick={() => navigate('/communities')}><i className="ti ti-arrow-left" /> Communities</button><span>{c.isPublic ? 'Public' : 'Private'}{cat ? ` · ${cat}` : ''}</span>{signedIn && <Link to="/communities/invitations" style={{ marginLeft: 'auto', color: 'var(--text2)' }}>Your invitations</Link>}</div>
 
         <section className="up-card cm2-head">
           <div className="cm2-cover" style={c.coverImage ? { backgroundImage: `url("${encodeURI(sized(c.coverImage, 1100))}")` } : { background: `linear-gradient(135deg, ${accent}, color-mix(in srgb, ${accent} 35%, #0a0a0a))` }} />
@@ -165,7 +162,7 @@ export default function CommunityDetail() {
               {isMember ? (
                 role === 'OWNER' ? <span className="cm2-badge">You own this</span> : <button className="up-btn" onClick={leave} disabled={busy}>Leave</button>
               ) : c.hasRequested ? (
-                <button className="up-btn" disabled>Request sent</button>
+                <Link className="up-btn" to={`/communities/${c.slug}/request`}>Request sent</Link>
               ) : (
                 <button className="up-btn primary" onClick={join} disabled={busy}><i className="ti ti-user-plus" /> {c.isPublic ? 'Join' : 'Request to join'}</button>
               )}
@@ -184,18 +181,6 @@ export default function CommunityDetail() {
             <div><b>@{invite.inviter?.username || 'Someone'}</b> invited you to join <b>{c.name}</b>.{invite.message && <div className="cm2-muted">{invite.message}</div>}</div>
             <button className="up-btn" onClick={() => answerInvite('decline')} disabled={busy}>Decline</button>
             <button className="up-btn primary" onClick={() => answerInvite('accept')} disabled={busy}>Accept</button>
-          </div>
-        )}
-
-        {asking && (
-          <div className="up-card cm2-ask">
-            <h2>Ask to join {c.name}</h2>
-            <p className="cm2-muted">This community is private. Tell the leaders a little about yourself.</p>
-            <textarea value={askMsg} onChange={(e) => setAskMsg(e.target.value)} maxLength={500} rows={3} placeholder="Optional message" />
-            <div className="cm2-row-end">
-              <button className="up-btn" onClick={() => setAsking(false)}>Cancel</button>
-              <button className="up-btn primary" onClick={sendRequest} disabled={busy}>{busy ? 'Sending…' : 'Send request'}</button>
-            </div>
           </div>
         )}
 
@@ -278,7 +263,9 @@ function About({ c, isMember, isLeader, canModerate, role, onChange }: { c: Comm
         </section>
       )}
 
-      {canModerate && !c.isPublic && <Requests id={c.id} onAccept={onChange} />}
+      {canModerate && (!c.isPublic || c.requestCount > 0) && <Requests id={c.id} onAccept={onChange} />}
+      {isLeader && <JoinRules c={c} onSaved={onChange} />}
+      {isLeader && <InviteCodes c={c} />}
       {isLeader && <Settings c={c} isOwner={role === 'OWNER'} onSaved={onChange} />}
     </div>
   )
@@ -293,7 +280,7 @@ function Requests({ id, onAccept }: { id: string; onAccept: () => void }) {
     try {
       await apiRequest(`/communities/${id}/requests/${r.id}`, { method: 'PATCH', body: JSON.stringify({ action }) })
       setList((l) => (l || []).filter((x) => x.id !== r.id))
-      if (action === 'accept') { toast(`@${r.user.username} joined`, 'success'); onAccept() }
+      if (action === 'accept') { toast(`@${r.user.username} joined`, 'success'); onAccept() } else toast('Request declined', 'success')
     } catch (e: any) { toast(e?.message || 'Something went wrong', 'error'); load() }
   }
   return (
@@ -306,13 +293,126 @@ function Requests({ id, onAccept }: { id: string; onAccept: () => void }) {
               <Face url={r.user.avatarUrl} name={fullName(r.user)} />
               <div className="cm2-req-t">
                 <Link to={`/user/${r.user.username}`}><strong>{fullName(r.user)}</strong></Link> <span className="cm2-muted">@{r.user.username}</span>
+                <div className="cj-req-meta">
+                  <span>{r.user.rankName} rank</span>
+                  <span>{r.user.verificationLevel > 0 ? `Level ${r.user.verificationLevel}` : 'Not verified'}</span>
+                  <span>{r.user.jobsDone} job{r.user.jobsDone === 1 ? '' : 's'} done</span>
+                  {r.user.xConnected && <span>X connected</span>}
+                </div>
                 {r.message && <p>{r.message}</p>}
+                {r.attachments?.length > 0 && (
+                  <div className="cj-req-files">
+                    {r.attachments.map((u) => <a key={u} href={u} target="_blank" rel="noopener noreferrer nofollow"><i className="ti ti-paperclip" />{fileName(u)}</a>)}
+                  </div>
+                )}
               </div>
-              <button className="up-btn" onClick={() => answer(r, 'decline')}>Decline</button>
-              <button className="up-btn primary" onClick={() => answer(r, 'accept')}>Accept</button>
+              <div className="cj-req-btns">
+                <button className="up-btn" onClick={() => answer(r, 'decline')}>Decline</button>
+                <button className="up-btn primary" onClick={() => answer(r, 'accept')}>Accept</button>
+              </div>
             </div>
           ))}
         </div>
+      )}
+    </section>
+  )
+}
+
+// Entry task and requirements, shown on the join page and checked on each request
+function JoinRules({ c, onSaved }: { c: Community; onSaved: () => void }) {
+  const { toast } = useToast()
+  const [f, setF] = useState<JoinSettings | null>(null)
+  const [saving, setSaving] = useState(false)
+  useEffect(() => {
+    apiRequest<{ settings: JoinSettings }>(`/communities/${c.id}/join-info`).then((d) => setF(d.settings)).catch(() => setF(null))
+  }, [c.id])
+  if (!f) return null
+  const save = async () => {
+    setSaving(true)
+    try {
+      await apiRequest(`/communities/${c.id}/join-settings`, { method: 'PATCH', body: JSON.stringify(f) })
+      toast('Join rules saved', 'success')
+      onSaved()
+    } catch (e: any) { toast(e?.message || "Couldn't save", 'error') }
+    setSaving(false)
+  }
+  return (
+    <section className="up-card up-about cj-rules">
+      <h2>Join rules</h2>
+      <p className="cm2-muted" style={{ marginTop: 0 }}>Shown on your join page. Requirements are checked when someone asks to join{c.isPublic ? ' or joins' : ''}.</p>
+      <label className="cm2-f"><span>Entry task title</span><input value={f.entryTaskTitle} maxLength={120} onChange={(e) => setF({ ...f, entryTaskTitle: e.target.value })} placeholder="e.g. Follow us on X" /></label>
+      <label className="cm2-f"><span>Entry task steps (links work)</span><textarea value={f.entryTaskSteps} maxLength={2000} rows={4} onChange={(e) => setF({ ...f, entryTaskSteps: e.target.value })} placeholder="What to do before asking to join" /></label>
+      <div className="cj-row">
+        <label className="cm2-f"><span>Minimum rank</span>
+          <select className="cj-in" value={f.minRank} onChange={(e) => setF({ ...f, minRank: Number(e.target.value) })}>
+            {RANKS.map((r, i) => <option key={r} value={i}>{i === 0 ? r : `${r} or higher`}</option>)}
+          </select>
+        </label>
+        <label className="cm2-f"><span>Jobs done on OgaPay</span><input type="number" inputMode="numeric" min={0} max={1000} value={f.minJobsDone} onChange={(e) => setF({ ...f, minJobsDone: Math.max(0, Math.min(1000, Math.floor(Number(e.target.value) || 0))) })} /></label>
+      </div>
+      <div className="cj-checks">
+        <label><input type="checkbox" checked={f.requiresKyc} onChange={(e) => setF({ ...f, requiresKyc: e.target.checked })} /> Level 1 verification (KYC)</label>
+        <label><input type="checkbox" checked={f.requiresX} onChange={(e) => setF({ ...f, requiresX: e.target.checked })} /> A connected X account</label>
+      </div>
+      <div className="cm2-row-end">
+        <Link className="up-btn" to={`/communities/${c.slug}/request`}>View join page</Link>
+        <button className="up-btn primary" onClick={save} disabled={saving}>{saving ? 'Saving…' : 'Save join rules'}</button>
+      </div>
+    </section>
+  )
+}
+
+// Codes that join straight away (also private communities)
+function InviteCodes({ c }: { c: Community }) {
+  const { toast } = useToast()
+  const [list, setList] = useState<Code[] | null>(null)
+  const [maxUses, setMaxUses] = useState('')
+  const [days, setDays] = useState('7')
+  const [busy, setBusy] = useState(false)
+  const load = () => apiRequest<Code[]>(`/communities/${c.id}/invite-codes`).then((d) => setList(d || [])).catch(() => setList([]))
+  useEffect(() => { load() }, [c.id])
+  const create = async () => {
+    setBusy(true)
+    try {
+      const k = await apiRequest<Code>(`/communities/${c.id}/invite-codes`, { method: 'POST', body: JSON.stringify({ ...(maxUses && { maxUses: Number(maxUses) }), ...(days && { expiresInDays: Number(days) }) }) })
+      setList((l) => [k, ...(l || [])])
+      navigator.clipboard?.writeText(k.code).catch(() => {})
+      toast(`Code ${k.code} created and copied`, 'success')
+    } catch (e: any) { toast(e?.message || "Couldn't create a code", 'error') }
+    setBusy(false)
+  }
+  const revoke = async (k: Code) => {
+    if (!window.confirm(`Revoke ${k.code}? It will stop working.`)) return
+    try {
+      await apiRequest(`/communities/${c.id}/invite-codes/${k.id}`, { method: 'DELETE' })
+      load()
+    } catch (e: any) { toast(e?.message || "Couldn't revoke", 'error') }
+  }
+  const copy = (k: Code) => navigator.clipboard?.writeText(k.code).then(() => toast('Code copied', 'success')).catch(() => {})
+  return (
+    <section className="up-card up-about">
+      <h2>Invite codes</h2>
+      <p className="cm2-muted" style={{ marginTop: 0 }}>Anyone with a working code joins straight away, even a private community, without the requirements.</p>
+      <div className="cj-newcode">
+        <label className="cm2-f"><span>Max uses (blank = no limit)</span><input type="number" inputMode="numeric" min={1} value={maxUses} onChange={(e) => setMaxUses(e.target.value.replace(/\D/g, ''))} placeholder="No limit" /></label>
+        <label className="cm2-f"><span>Expires</span>
+          <select className="cj-in" value={days} onChange={(e) => setDays(e.target.value)}>
+            <option value="1">In 1 day</option><option value="7">In 7 days</option><option value="30">In 30 days</option><option value="">Never</option>
+          </select>
+        </label>
+        <button className="up-btn primary" onClick={create} disabled={busy}>{busy ? 'Creating…' : 'New code'}</button>
+      </div>
+      {list && list.length > 0 && (
+        <ul className="cj-codes">
+          {list.map((k) => (
+            <li key={k.id} className={k.active ? '' : 'off'}>
+              <code>{k.code}</code>
+              <small>{k.uses}{k.maxUses != null ? `/${k.maxUses}` : ''} used{k.revokedAt ? ' · revoked' : !k.active ? ' · ended' : k.expiresAt ? ` · until ${new Date(k.expiresAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}` : ''}</small>
+              {k.active && <button className="up-btn" onClick={() => copy(k)} aria-label={`Copy ${k.code}`}><i className="ti ti-copy" /></button>}
+              {!k.revokedAt && <button className="up-btn" onClick={() => revoke(k)}>Revoke</button>}
+            </li>
+          ))}
+        </ul>
       )}
     </section>
   )
