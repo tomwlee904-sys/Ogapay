@@ -50,6 +50,9 @@ export default function Dashboard() {
   // Amounts follow the display currency; limits and "withdraw your ₦…" stay in naira
   const show = useMoney()
   const [me, setMe] = useState<Me | null>(null)
+  // Starter jobs fold away so they don't fill the page; the choice is remembered
+  const [starterOpen, setStarterOpen] = useState(() => { try { return localStorage.getItem('ogapay-starter-open') === '1' } catch { return false } })
+  const toggleStarter = () => setStarterOpen((o) => { try { localStorage.setItem('ogapay-starter-open', o ? '0' : '1') } catch { /* private mode */ } return !o })
   // A rank you can claim (services/rank.service.js): shown first on the dashboard
   const [rankUp, setRankUp] = useState<{ name: string } | null>(null)
   useEffect(() => {
@@ -178,9 +181,11 @@ export default function Dashboard() {
           <p>Quick jobs from the OgaPay team to help you learn OgaPay and earn your first naira. Do them in any order. Each one pays once, and it leaves this list when you've taken it.</p>
           <p>Send real proof: work that just copies the brief is rejected.</p>
         </InfoTip></h2>
-        <span className="db-count">{starterSorted.length} for you</span>
+        <button type="button" className="db-fold" onClick={toggleStarter} aria-expanded={starterOpen} aria-controls="db-starter-list">
+          {starterSorted.length} for you <i className={`ti ti-chevron-${starterOpen ? 'up' : 'down'}`} aria-hidden="true" />
+        </button>
       </div>
-      <ul className="db-list">
+      {starterOpen && <ul className="db-list" id="db-starter-list">
         {starterSorted.map(({ j, step }) => (
           <li key={j.id}>
             <Link to={`/tasks/${j.id}`}>
@@ -193,7 +198,7 @@ export default function Dashboard() {
             </Link>
           </li>
         ))}
-      </ul>
+      </ul>}
     </section>
   )
 

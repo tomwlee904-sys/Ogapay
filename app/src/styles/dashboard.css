@@ -126,3 +126,10 @@
 .db-rankup > div { flex: 1; min-width: 200px; display: grid; gap: 2px; }
 .db-rankup b { font-size: 15px; font-weight: 600; }
 .db-rankup span:not(.db-attn-ic) { font-size: 13.5px; color: var(--text2); }
+
+/* Starter jobs fold away: the count is the button that opens them */
+.db-fold { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 4px 0 10px; border: 0; background: none; color: var(--text2); font: 400 11px var(--font-mono); cursor: pointer; }
+.db-fold:hover { color: var(--text); }
+.db-fold i { font-size: 16px; }
+.db-starter .db-sec-head { margin-bottom: 0; }
+.db-starter .db-list { margin-top: 12px; }
