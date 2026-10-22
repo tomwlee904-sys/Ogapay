@@ -34,6 +34,8 @@ type Task = {
   maxWorkers?: number; deadline?: string | null; createdAt?: string; submissions?: Sub[]
   description?: string | null
   excludesTaskIds?: string[]
+  // "Member of community": a public job only that community's members can take
+  requiredCommunityId?: string | null; communityId?: string | null
   // A contest: entries aren't approved one by one, places are awarded on the job page
   isContest?: boolean
   // Selection jobs: people apply with a note and the poster picks one (hiredWorkerId)
@@ -234,9 +236,18 @@ function JobDrawer({ task, allTasks, focusId, onClose, onChanged }: { task: Task
   const [similar, setSimilar] = useState<string[]>(task.excludesTaskIds || []);
   const [edBusy, setEdBusy] = useState(false);
   const [edErr, setEdErr] = useState("");
+  // Member of community: communities this poster leads, plus OgaPay's own
+  const canNeedCommunity = !task.communityId && !task.hiredWorkerId;
+  const [reqCommunity, setReqCommunity] = useState<string>(task.requiredCommunityId || "");
+  const [requirable, setRequirable] = useState<{ id: string; name: string; mine: boolean }[]>([]);
+  useEffect(() => {
+    if (!editing || !canNeedCommunity) return;
+    apiRequest<any[]>("/communities/mine/requirable").then((l) => setRequirable(Array.isArray(l) ? l : [])).catch(() => {});
+  }, [editing, canNeedCommunity]);
   const startEdit = () => {
     setEd({ title: task.title, brief: (task.description || "").split("\n\n**Attachments**")[0], deadline: task.deadline ? new Date(task.deadline).toISOString().slice(0, 10) : "" });
     setSimilar(task.excludesTaskIds || []);
+    setReqCommunity(task.requiredCommunityId || "");
     setEdErr(""); setEditing(true);
   };
   // Same check as Create job: a job that sends people to a survey, form, site or
@@ -252,6 +263,7 @@ function JobDrawer({ task, allTasks, focusId, onClose, onChanged }: { task: Task
     const attachments = (task.description || "").includes("\n\n**Attachments**") ? (task.description || "").slice((task.description || "").indexOf("\n\n**Attachments**")) : "";
     const body: Record<string, any> = { title, description: brief + attachments, instructions: brief + attachments, excludesTaskIds: similar };
     if (ed.deadline) body.deadline = new Date(ed.deadline + "T23:59:00").toISOString();
+    if (canNeedCommunity && reqCommunity !== (task.requiredCommunityId || "")) body.requiredCommunityId = reqCommunity || null;
     setEdBusy(true); setEdErr("");
     try {
       await apiRequest(`/tasks/${task.id}`, { method: "PATCH", body: JSON.stringify(body) });
@@ -290,6 +302,17 @@ function JobDrawer({ task, allTasks, focusId, onClose, onChanged }: { task: Task
               {linkNeeded && <p className="mj-edit-warn" role="status"><Icon n="link-off" s={15} /> {missingLinkText(linkNeeded)} Paste the full address (https://...) in the brief.</p>}
               <label className="ui-label" htmlFor="mj-ed-deadline">Closes on (optional)</label>
               <input id="mj-ed-deadline" className="ui-input" type="date" min={new Date(Date.now() + 86400e3).toISOString().slice(0, 10)} value={ed.deadline} onChange={(e) => setEd({ ...ed, deadline: e.target.value })} />
+              {canNeedCommunity && (requirable.length > 0 || reqCommunity) && (
+                <>
+                  <label className="ui-label" htmlFor="mj-ed-community">Community members only (optional)</label>
+                  <select id="mj-ed-community" className="ui-input" value={reqCommunity} onChange={(e) => setReqCommunity(e.target.value)}>
+                    <option value="">Anyone who meets the requirements</option>
+                    {reqCommunity && !requirable.some((c) => c.id === reqCommunity) && <option value={reqCommunity}>The community set now</option>}
+                    {requirable.map((c) => <option key={c.id} value={c.id}>Members of {c.name}{c.mine ? "" : " (OgaPay)"}</option>)}
+                  </select>
+                  <p className="mj-edit-note">The job stays on the jobs page; only members can take it. People already working on it keep their place.</p>
+                </>
+              )}
               {others.length > 0 && (
                 <fieldset className="mj-similar">
                   <legend className="ui-label">Not for people who did these jobs <InfoTip label="What are similar jobs?" title="Similar jobs">

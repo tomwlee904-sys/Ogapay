@@ -10,6 +10,9 @@ export const rankName = (n: number) => LEVEL_NAMES[Math.min(5, Math.max(1, Math.
 
 export function jobRequirements(job: any): { icon: string; text: string }[] {
   const reqs: { icon: string; text: string }[] = []
+  // Member of community (listed first: it decides who can take the job at all)
+  const rc = job.requiredCommunity
+  if (rc?.name) reqs.push({ icon: 'users-group', text: rc.isMember ? 'Member of ' + rc.name : 'Join ' + rc.name + ' to take this job' })
   if (job.workerRequirement === 'HUMAN') reqs.push({ icon: 'fingerprint', text: 'Human verified' })
   else if (job.workerRequirement === 'KYC') reqs.push({ icon: 'id-badge-2', text: 'KYC verified' })
   else if (typeof job.workerRequirement === 'string' && job.workerRequirement.trim()) reqs.push({ icon: 'user-check', text: job.workerRequirement })

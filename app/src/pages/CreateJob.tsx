@@ -529,6 +529,15 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
     apiRequest<any[]>("/communities/mine/list").then((l) => setMyCommunities((Array.isArray(l) ? l : []).filter((c) => ["OWNER", "ADMIN"].includes(c.role)))).catch(() => {});
   }, [isAuthed]);
   const community = myCommunities.find((c) => c.communityId === communityId) || null;
+  // "Member of community": the job stays public, but only that community's members
+  // can take it. Communities you lead, plus OgaPay's own.
+  const [requiredCommunityId, setRequiredCommunityId] = useState("");
+  const [requirable, setRequirable] = useState<{ id: string; name: string; slug: string; mine: boolean }[]>([]);
+  useEffect(() => {
+    if (!isAuthed) return;
+    apiRequest<any[]>("/communities/mine/requirable").then((l) => setRequirable(Array.isArray(l) ? l : [])).catch(() => {});
+  }, [isAuthed]);
+  const requiredCommunity = !community ? requirable.find((c) => c.id === requiredCommunityId) || null : null;
   const [files, setFiles] = useState<File[]>([]);
   const [openReq, setOpenReq] = useState<boolean>(!!init.reqType && init.reqType !== "none");
   const [openExtra, setOpenExtra] = useState(false);
@@ -661,6 +670,7 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
         ...(uploaded.length && { attachments: uploaded.map(u => u.url) }),
         ...(!community && campaignId && campaignChoices.some((c) => c.id === campaignId) && { campaignId }),
         ...(community && { communityId: community.communityId }),
+        ...(requiredCommunity && { requiredCommunityId: requiredCommunity.id }),
       });
       try { localStorage.removeItem(CUSTOM_DRAFT_KEY); } catch { /* ignore */ }
       refreshWalletBal();
@@ -836,6 +846,19 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
                         {myCommunities.map((c) => <option key={c.communityId} value={c.communityId}>Members of {c.name} only</option>)}
                       </select>
                       <p className="cf-hint">{community ? `Only members of ${community.name} can take it. It shows on the community page, not in the public job list.` : "Communities you own or run can have jobs only their members can take."}</p>
+                    </div>
+                  )}
+
+                  {requirable.length > 0 && !community && (
+                    <div className="cf-field">
+                      <label htmlFor="cj-required-community">Community members only (optional) <InfoTip label="What does Member of community mean?" title="Member of community">
+                        <p>The job stays on the public jobs page, but only members of the community you pick can take it. Everyone else sees a button to join the community first.</p>
+                      </InfoTip></label>
+                      <select id="cj-required-community" className="ui-select" value={requiredCommunity ? requiredCommunity.id : ""} onChange={e => setRequiredCommunityId(e.target.value)}>
+                        <option value="">Anyone who meets the requirements</option>
+                        {requirable.map((c) => <option key={c.id} value={c.id}>Members of {c.name}{c.mine ? "" : " (OgaPay)"}</option>)}
+                      </select>
+                      <p className="cf-hint">{requiredCommunity ? `Listed publicly. Only members of ${requiredCommunity.name} can take it.` : "Pick a community to make joining it a requirement."}</p>
                     </div>
                   )}
 

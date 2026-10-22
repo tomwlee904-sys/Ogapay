@@ -138,6 +138,8 @@ interface JobData {
   requiresLinkedin: boolean
   audiencePlatform: string | null
   minFollowers: number
+  // "Member of community": public job only that community's members can take
+  requiredCommunity: { id: string; name: string; slug: string; isMember: boolean } | null
 }
 
 export default function JobDetail() {
@@ -379,6 +381,7 @@ export default function JobDetail() {
       requiresLinkedin: !!t.requiresLinkedin,
       audiencePlatform: t.audiencePlatform || null,
       minFollowers: Number(t.minFollowers) || 0,
+      requiredCommunity: t.requiredCommunity || null,
     }
   }
 
@@ -463,6 +466,9 @@ export default function JobDetail() {
     : !canManage && authUser && !mine && myApp?.status === 'NOT_PICKED' ? 'Not picked'
     : null
   const openMine = () => navigate(`/tasks/${job.id}/submit`)
+  // Not a member of the community this job needs: the button sends them to join it
+  const needJoin = !!job.requiredCommunity && !job.requiredCommunity.isMember && !canManage && !myLabel
+  const joinPath = job.requiredCommunity ? `/communities/${job.requiredCommunity.slug}/request` : ''
 
   return (
     <WurkJobDetailView
@@ -476,6 +482,8 @@ export default function JobDetail() {
       isOpen={isOpen}
       canManage={canManage}
       myLabel={myLabel}
+      needJoin={needJoin}
+      joinPath={joinPath}
       linkedJobs={linkedJobs}
       openMine={openMine}
       bookmarked={bookmarked}
@@ -538,7 +546,7 @@ function ErrorState({ message, onBack }: { message: string; onBack: () => void }
 /* ── Main View ── */
 function WurkJobDetailView(props: any) {
   const {
-    job, fmt, convert, navigate, countdown, showSubs, setShowSubs, isOpen, canManage, myLabel, openMine, linkedJobs,
+    job, fmt, convert, navigate, countdown, showSubs, setShowSubs, isOpen, canManage, myLabel, openMine, linkedJobs, needJoin, joinPath,
     bookmarked, handleBookmark, handleCancelJob, cancelling, toggleHighlight, highlighting, showApplyWarning, setShowApplyWarning,
     showShare, setShowShare, showInfo, setShowInfo,
     showReportModal, setShowReportModal, reportCategory, setReportCategory,
@@ -983,6 +991,9 @@ function WurkJobDetailView(props: any) {
               <ul className="wjd-facts" aria-label="Job status">
                 <li className={isOpen ? 'is-open' : ''}><span className="wjd-dot" aria-hidden="true" />{statusText}</li>
                 <li><i className="ti ti-clock" aria-hidden="true" />{clockText}</li>
+                {job.requiredCommunity && (
+                  <li><i className="ti ti-users-group" aria-hidden="true" />{job.requiredCommunity.isMember ? 'For members of ' : 'Join '}<Link to={job.requiredCommunity.isMember ? `/communities/${job.requiredCommunity.slug}` : joinPath} style={{ color: 'inherit', fontWeight: 600 }}>{job.requiredCommunity.name}</Link>{job.requiredCommunity.isMember ? ' (you are one)' : ' to take this job'}</li>
+                )}
                 {community && (
                   <li><i className="ti ti-lock" aria-hidden="true" />Members of <Link to={`/communities/${community.slug || community.id}`} style={{ color: 'inherit', fontWeight: 600 }}>{community.name}</Link> only</li>
                 )}
@@ -997,6 +1008,8 @@ function WurkJobDetailView(props: any) {
               <Money amount={Number(job.reward || 0)} currency={rewardCurrency} convert={convert} size={30} positive note={contest ? '1st place prize' : 'per person'} />
               {authUser && myLabel
                 ? <button className="ui-btn ui-btn-dark" type="button" onClick={openMine}>{myLabel}</button>
+                : authUser && needJoin && isOpen
+                ? <Link className="ui-btn ui-btn-dark" to={joinPath}>Join {job.requiredCommunity!.name} to take this job</Link>
                 : authUser
                 ? <button className="ui-btn ui-btn-dark" type="button" disabled={!canManage && !isOpen} onClick={() => canManage ? navigate('/manage-jobs') : setShowApplyWarning(true)}>
                     {canManage ? 'Manage submissions' : isOpen ? (job.isSelection ? 'Apply' : 'Take a place') : 'Job closed'}
@@ -1190,6 +1203,10 @@ function WurkJobDetailView(props: any) {
                 <button className="wjd-primary" type="button" onClick={() => navigate('/login')} style={{ width: '100%', maxWidth: 300 }}>
                   Sign In
                 </button>
+              </div>
+            ) : needJoin && isOpen ? (
+              <div className="wjd-action-bar">
+                <Link className="wjd-primary" to={joinPath} style={{ textDecoration: 'none' }}>Join {job.requiredCommunity!.name} to take this job</Link>
               </div>
             ) : (
               <div className="wjd-action-bar">
