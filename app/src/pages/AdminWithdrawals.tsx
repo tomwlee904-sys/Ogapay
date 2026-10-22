@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { apiRequest } from '../lib/api'
 
@@ -26,6 +27,8 @@ interface Withdrawal {
   // Thursday payouts (backend payout.service.js)
   autoPayout?: { state: 'sending' | 'sent' | 'review'; reason?: string; transferId?: number | string; at?: string } | null
   user: { id: string; email: string; name: string; kycTier: number } | null
+  // Pending bank withdrawals: other open accounts that use the same bank account
+  sharedWith?: { id: string; username: string }[]
 }
 interface Page { items: Withdrawal[]; total: number; page: number; pages: number; totals: { currency: string; count: number; amount: number }[] }
 
@@ -116,6 +119,12 @@ function Row({ w, onSettled }: { w: Withdrawal; onSettled: (id: string, msg: str
         {sig && <a className="aw-link" href={`https://solscan.io/tx/${sig}`} target="_blank" rel="noreferrer">View transaction <i className="ti ti-external-link" /></a>}
       </div>
 
+      {w.status === 'PROCESSING' && !!w.sharedWith?.length && (
+        <p className="aw-auto review aw-shared" role="note">
+          <i className="ti ti-alert-triangle" />
+          <span><b>Shares a bank account with {w.sharedWith.map((u, i) => <span key={u.id}>{i ? ', ' : ''}<Link to={`/user/${encodeURIComponent(u.username)}`}>@{u.username}</Link></span>)}.</b> Each person may have one account. Check <Link to="/admin/linked-accounts">Linked accounts</Link> before paying.</span>
+        </p>
+      )}
       <p className="aw-kind"><i className={`ti ti-${k.icon}`} /><b>{k.label}.</b> {w.status === 'PROCESSING' && !auto ? k.hint : ''}</p>
       {w.status === 'PROCESSING' && auto && (
         <p className={`aw-auto ${auto.state}`}>

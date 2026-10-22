@@ -92,6 +92,7 @@ const AdminHighlights = lazyPage(() => import('./pages/AdminHighlights'))
 const AdminUpdates = lazyPage(() => import('./pages/AdminUpdates'))
 const AdminRanks = lazyPage(() => import('./pages/AdminRanks'))
 const AdminWarnings = lazyPage(() => import('./pages/AdminWarnings'))
+const AdminLinked = lazyPage(() => import('./pages/AdminLinked'))
 const AdminBrands = lazyPage(() => import('./pages/AdminBrands'))
 const MyWarnings = lazyPage(() => import('./pages/MyWarnings'))
 const AdminSupport = lazyPage(() => import('./pages/AdminSupport'))
@@ -240,6 +241,7 @@ export default function App() {
             <Route path="/admin/updates" element={<AdminGuard><AdminUpdates /></AdminGuard>} />
             <Route path="/admin/ranks" element={<AdminGuard><AdminRanks /></AdminGuard>} />
             <Route path="/admin/warnings" element={<AdminGuard><AdminWarnings /></AdminGuard>} />
+            <Route path="/admin/linked-accounts" element={<AdminGuard><AdminLinked /></AdminGuard>} />
             <Route path="/admin/brands" element={<AdminGuard><AdminBrands /></AdminGuard>} />
             <Route path="/admin/support" element={<AdminGuard><AdminSupport /></AdminGuard>} />
             <Route path="/admin/login" element={<Navigate to="/login?redirect=/admin" replace />} />
