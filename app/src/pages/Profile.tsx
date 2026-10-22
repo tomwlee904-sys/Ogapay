@@ -71,6 +71,17 @@ function CopyBtn({ text }: { text: any }) {
   );
 }
 
+// Icon-only copy button that sits inside the referral link box
+function RefCopy({ text }: { text: string }) {
+  const [ok, setOk] = useState(false);
+  const copy = () => { navigator.clipboard?.writeText(text); setOk(true); setTimeout(() => setOk(false), 1800); };
+  return (
+    <button type="button" onClick={copy} className="pw-copy" aria-label={ok ? "Copied" : "Copy referral link"}>
+      <Icon n={ok ? "check" : "copy"} s={16} c={ok ? "var(--green)" : "var(--text2)"} />
+    </button>
+  );
+}
+
 function StatRow({ label, val, info, valClass, onInfoClick }: { label: any; val: any; info?: any; valClass?: any; onInfoClick?: () => void }) {
   return (
     <div className="stat-row">
@@ -135,6 +146,8 @@ export default function Profile() {
   const [bankName, setBankName] = useState("");
   const [accountName, setAccountName] = useState("");
   const [editingBank, setEditingBank] = useState(false);
+  const [moneyIn, setMoneyIn] = useState(false);
+  const [moneyOut, setMoneyOut] = useState(false);
   // Saved withdrawal banks (Wallet → Money out); null until known, so the banner never flashes
   const [bankCount, setBankCount] = useState<number | null>(null);
   useEffect(() => {
@@ -243,6 +256,7 @@ export default function Profile() {
 
   useEffect(() => {
     if (editingBank) {
+      setMoneyOut(true);
       setTimeout(() => document.getElementById('bank-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150);
     }
   }, [editingBank]);
@@ -438,17 +452,6 @@ export default function Profile() {
       <style>{`
         .pg{width:100%;max-width:calc(var(--container) + 2 * var(--gutter));margin:0 auto;padding:var(--page-top) var(--gutter) 60px}
         .page{max-width:100%!important;width:100%}
-        .tab-bar{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:0;margin:0 0 20px;border:1px solid var(--border);border-radius:12px;overflow:hidden;background:var(--card)}
-        .tab-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;height:72px;padding:10px 10px;border:none;border-right:1px solid var(--border);background:transparent;color:var(--text2);font-size:12px;font-weight:700;cursor:pointer;transition:background .13s,color .13s;text-align:center;font-family:inherit}
-        .tab-btn:last-child{border-right:none}
-        .tab-btn:hover{background:var(--bg2);color:var(--text)}
-        .tab-btn.active{background:rgba(var(--accent-rgb),0.06);color:var(--text)}
-        .tab-btn i{font-size:18px;color:var(--text3);transition:color .13s}
-        .tab-btn.active i{color:var(--accent)}
-        @media(max-width:640px){.tab-bar{overflow-x:auto;overflow-y:hidden;grid-template-columns:none;display:flex;flex-wrap:nowrap;border-radius:10px;scrollbar-width:none;-webkit-overflow-scrolling:touch;-webkit-mask-image:linear-gradient(to right,transparent 0,#000 20px,#000 calc(100% - 20px),transparent 100%);mask-image:linear-gradient(to right,transparent 0,#000 20px,#000 calc(100% - 20px),transparent 100%)}.tab-btn{min-width:84px;height:64px;padding:8px 6px;font-size:11px;white-space:nowrap}.tab-btn i{font-size:17px}}
-        .prof-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:32px}
-        @media(max-width:820px){.prof-grid{grid-template-columns:1fr}}
-        .prof-full{grid-column:1/-1;margin-bottom:32px}
         .profile-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:0;overflow:hidden;transition:box-shadow .25s ease}
         .profile-card-sm{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px}
         .profile-card-head{display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid var(--border);font-size:14px;font-weight:800}
@@ -607,36 +610,35 @@ export default function Profile() {
         </div>
       )}
 
-      {/* Tab Bar */}
+      {/* Tab Bar: icon + label pills on wider screens; an equal icon-over-label grid on phones */}
       <div className="tab-bar" ref={tabBarRef}>
         {(tabs || []).map(t => (
-          <button key={t.id} className={`tab-btn ${tab === t.id ? 'active' : ''}`} onClick={() => tabNav(t.id)}>
+          <button key={t.id} className={`tab-btn ${tab === t.id ? 'active' : ''} tab-${t.id}`} onClick={() => tabNav(t.id)}>
             <i className={`ti ti-${t.icon}`} />
-            {t.label}
+            <span>{t.label}</span>
           </button>
         ))}
       </div>
 
-      {/* Tab: Profile (default) */}
+      {/* Tab: Profile (default). Laid out like wurk.fun's /profile: account on the
+          left, profile on the right, then full-width quick links and histories */}
       {tab === "profile" && (
         <>
-          {/* 2-column grid */}
-          <div className="prof-grid">
-            {/* LEFT: Account Information */}
-            <div className="profile-card">
+          <div className="pw-grid">
+            <div className="pw-col pw-left">
+            {/* Account Information */}
+            <div className="profile-card pw-account">
               <div className="profile-card-head">
                 <span><Icon n="wallet" s={15} /> Account Information</span>
-                {loading ? <span className="skeleton" style={{width:60,height:14}} /> : null}
+                <a href="/wallet" className="pw-head-link" onClick={e => { e.preventDefault(); navigate('/wallet') }}>Wallet</a>
               </div>
               <div className="profile-card-body">
                 {/* Wallet address row */}
-                <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'10px 0',borderBottom:'1px dashed var(--border)',fontSize:13}}>
-                  <span style={{color:'var(--text2)',fontWeight:600}}>Wallet Address</span>
-                  {loading ? (
-                    <span className="skeleton" style={{width:120,height:14}} />
-                  ) : hasWallet ? (
-                    <div style={{display:'flex',alignItems:'center',gap:6}}>
-                      <span style={{fontFamily:'monospace',fontSize:12,background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:6,padding:'4px 10px'}}>{shortAddr}</span>
+                <div className="pw-line">
+                  <span className="pw-line-l">Wallet address</span>
+                  {hasWallet ? (
+                    <div style={{display:'flex',alignItems:'center',gap:6,minWidth:0}}>
+                      <span className="pw-addr">{shortAddr}</span>
                       <CopyBtn text={walletAddress} />
                     </div>
                   ) : (
@@ -644,32 +646,52 @@ export default function Profile() {
                   )}
                 </div>
 
-                {/* Full Name row */}
-                <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'10px 0',borderBottom:'1px dashed var(--border)',fontSize:13}}>
-                  <span style={{color:'var(--text2)',fontWeight:600}}>Full Name</span>
-                  {loading ? (
-                    <span className="skeleton" style={{width:120,height:14}} />
+                {/* Naira balance: always visible */}
+                <div className="pw-bal">
+                  <div>
+                    <div className="pw-bal-k">Available</div>
+                    <div className="pw-bal-v">{show(totalNgn)}</div>
+                  </div>
+                  {lockedNgn > 0 && <span style={{fontSize:12,color:'var(--text2)'}}>{show(lockedNgn)} held in escrow</span>}
+                </div>
+
+                {/* Main actions: equal buttons in one row */}
+                <div className="pw-acts">
+                  <button className="dash-btn" onClick={() => setFundModal('withdraw')}><Icon n="logout" s={14} c="var(--bg)" /> Withdraw</button>
+                  <button className="dash-btn" onClick={() => navigate('/deposit')}><Icon n="plus" s={14} c="var(--bg)" /> Deposit</button>
+                </div>
+
+                {/* Secondary wallet actions: two outlined buttons */}
+                <div className={`pw-acts2 ${hasWallet ? '' : 'one'}`}>
+                  {hasWallet ? (
+                    <>
+                      <button className="btn-outline" onClick={handleGeneratePairCode} disabled={generatingPair}>
+                        <Icon n="device-mobile" s={14} /> {generatingPair ? 'Generating…' : 'Pair Device'}
+                      </button>
+                      <button className="btn-outline" onClick={() => setShowWalletOptions(true)}>
+                        <Icon n="link" s={14} /> Link Extra Wallet
+                      </button>
+                    </>
                   ) : (
-                    <span style={{fontWeight:700}}>{user?.firstName || 'User'} {user?.lastName || ''}</span>
+                    <button className="btn-outline" onClick={() => setShowWalletOptions(true)}>
+                      <Icon n="wallet" s={14} /> Connect Solana wallet
+                    </button>
                   )}
                 </div>
-
-                {/* Naira balance: always visible */}
-                <div style={{display:'flex',justifyContent:'space-between',alignItems:'baseline',gap:10,padding:'14px 0 6px',flexWrap:'wrap'}}>
-                  <div>
-                    <div style={{fontSize:11,fontWeight:700,color:'var(--text3)',textTransform:'uppercase',letterSpacing:'.06em'}}>Available</div>
-                    <div style={{fontFamily:'Inter',fontSize:26,fontWeight:900,letterSpacing:'-.02em'}}>{loading ? <span className="skeleton" style={{width:120,height:24,display:'inline-block'}} /> : show(totalNgn)}</div>
+                {pairCode && (
+                  <div style={{textAlign:'center',padding:'12px',marginBottom:10,background:'var(--bg2)',borderRadius:10,fontSize:12}}>
+                    <div style={{fontSize:12,color:'var(--text3)',marginBottom:4,fontWeight:600}}>Pairing Code (expires in 5 min)</div>
+                    <div style={{fontSize:20,fontWeight:900,letterSpacing:3,color:'var(--text)',fontFamily:'monospace',wordBreak:'break-all'}}>{pairCode}</div>
+                    <button type="button" onClick={() => { navigator.clipboard.writeText(pairCode); toast('Code copied!') }} style={{marginTop:6,fontSize:11,color:'var(--text2)',background:'none',border:'none',cursor:'pointer',textDecoration:'underline',fontFamily:'inherit'}}>Copy code</button>
                   </div>
-                  {!loading && lockedNgn > 0 && <span style={{fontSize:12,color:'var(--text2)'}}>{show(lockedNgn)} held in escrow</span>}
-                </div>
-                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,margin:'10px 0 14px'}}>
-                  <button className="dash-btn" style={{width:'100%',justifyContent:'center'}} onClick={() => setFundModal('withdraw')}><Icon n="logout" s={14} c="var(--bg)" /> Withdraw</button>
-                  <button className="dash-btn" style={{width:'100%',justifyContent:'center'}} onClick={() => navigate('/deposit')}><Icon n="plus" s={14} c="var(--bg)" /> Deposit</button>
-                </div>
+                )}
 
-                {/* Other balances */}
-                <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'10px 0',borderTop:'1px dashed var(--border)',fontSize:13}}>
-                  <span style={{color:'var(--text2)',fontWeight:600}}>Show all balances</span>
+                {/* Settings toggles */}
+                <div className="pw-toggle">
+                  <div>
+                    <div className="pw-toggle-t">Show all balances</div>
+                    <div className="pw-toggle-d">USDC and SOL next to your naira.</div>
+                  </div>
                   <Toggle on={showBal} set={setShowBal} />
                 </div>
                 {showBal && (
@@ -683,57 +705,52 @@ export default function Profile() {
                     <a href="/wallet" style={{display:'inline-block',marginTop:8,fontSize:12,color:'var(--text)',fontWeight:700}}>Open wallet →</a>
                   </div>
                 )}
-
-                {!hasWallet && (
-                  <button className="dash-btn" style={{width:'100%',justifyContent:'center',margin:'6px 0 10px',background:'transparent',border:'1.5px solid var(--border)',color:'var(--text)'}} onClick={() => setShowWalletOptions(true)}>
-                    <Icon n="wallet" s={14} /> Connect Solana wallet
-                  </button>
-                )}
-
-                {hasWallet && (
-                  <>
-                    <button className="dash-btn" style={{width:'100%',justifyContent:'center',margin:'6px 0 10px',background:'transparent',border:'1.5px solid var(--border)',color:'var(--text)'}} onClick={handleGeneratePairCode} disabled={generatingPair}>
-                      <Icon n="device-mobile" s={14} /> {generatingPair ? 'Generating…' : 'Pair Device'}
-                    </button>
-                    {pairCode && (
-                      <div style={{textAlign:'center',padding:'12px',marginBottom:10,background:'var(--bg2)',borderRadius:10,fontSize:12}}>
-                        <div style={{fontSize:12,color:'var(--text3)',marginBottom:4,fontWeight:600}}>Pairing Code (expires in 5 min)</div>
-                        <div style={{fontSize:20,fontWeight:900,letterSpacing:3,color:'var(--text)',fontFamily:'monospace',wordBreak:'break-all'}}>{pairCode}</div>
-                        <button type="button" onClick={() => { navigator.clipboard.writeText(pairCode); toast('Code copied!') }} style={{marginTop:6,fontSize:11,color:'var(--text2)',background:'none',border:'none',cursor:'pointer',textDecoration:'underline',fontFamily:'inherit'}}>Copy code</button>
-                      </div>
-                    )}
-                    <button className="dash-btn" style={{width:'100%',justifyContent:'center',marginBottom:10,background:'transparent',border:'1.5px solid var(--border)',color:'var(--text)'}} onClick={() => setShowWalletOptions(true)}>
-                      <Icon n="link" s={14} /> Link Extra Wallet
-                    </button>
-                  </>
-                )}
-
                 {/* Auto-convert (saved: preferences.autoConvert) */}
-                <div style={{padding:'13px 0 4px',borderTop:'1px solid var(--border)',display:'flex',alignItems:'flex-start',justifyContent:'space-between',gap:12}}>
+                <div className="pw-toggle">
                   <div>
-                    <div style={{fontSize:13,fontWeight:800}}>Auto-convert USDC</div>
-                    <div style={{fontSize:12,color:'var(--text2)',lineHeight:1.45}}>Turn USDC you earn into naira automatically, at the current rate.</div>
+                    <div className="pw-toggle-t">Auto-convert USDC</div>
+                    <div className="pw-toggle-d">Turn USDC you earn into naira automatically, at the current rate.</div>
                   </div>
                   <Toggle on={autoConvert} set={flip(autoConvert, 'autoConvert')} />
                 </div>
 
                 {/* Your two kinds of account, labelled like the Wallet so they can't be
                     mixed up: money in (the OgaPay account number to transfer to) and
-                    money out (your own banks, where withdrawals go) */}
-                <div id="bank-section" style={{ padding: '13px 0 0', borderTop: '1px solid var(--border)', marginTop: 13, display: 'grid', gap: 12 }}>
-                  <VirtualAccountCard flush />
-                  <section className="ui-card wl-sec wl-dir-card" aria-labelledby="pf-out">
-                    <div className="wl-dir-label"><span className="wl-dir out"><i className="ti ti-arrow-up-right" /></span> Money out</div>
-                    <h2 id="pf-out" className="wl-dir-title">Withdrawals go to</h2>
-                    <SavedBanksList bare onCount={setBankCount} />
-                  </section>
+                    money out (your own banks, where withdrawals go). Folded to keep
+                    this card about as tall as the Profile card */}
+                <div id="bank-section" className="pw-money">
+                  <details className="pw-fold" open={moneyIn} onToggle={e => setMoneyIn((e.currentTarget as HTMLDetailsElement).open)}>
+                    <summary>
+                      <span className="wl-dir in pw-fold-ic"><i className="ti ti-arrow-down-left" /></span>
+                      <span className="pw-fold-m"><b>Money in</b><small>Your OgaPay account number for transfers</small></span>
+                      <i className="ti ti-chevron-down pw-fold-chev" />
+                    </summary>
+                    <div className="pw-fold-b"><VirtualAccountCard flush /></div>
+                  </details>
+                  <details className="pw-fold" open={moneyOut} onToggle={e => setMoneyOut((e.currentTarget as HTMLDetailsElement).open)}>
+                    <summary>
+                      <span className="wl-dir out pw-fold-ic"><i className="ti ti-arrow-up-right" /></span>
+                      <span className="pw-fold-m"><b>Money out</b><small>{bankCount ? `Withdrawals go to ${bankCount} saved bank${bankCount === 1 ? '' : 's'}` : 'Add the bank withdrawals go to'}</small></span>
+                      <i className="ti ti-chevron-down pw-fold-chev" />
+                    </summary>
+                    <div className="pw-fold-b">
+                      <section className="ui-card wl-sec wl-dir-card" aria-labelledby="pf-out">
+                        <h2 id="pf-out" className="wl-dir-title">Withdrawals go to</h2>
+                        <SavedBanksList bare onCount={setBankCount} />
+                      </section>
+                    </div>
+                  </details>
                 </div>
               </div>
             </div>
 
-            {/* RIGHT: Profile Card */}
-            <div  className="profile-card">
-              <div  className="profile-card-head">
+            <div className="pw-communities"><ProfileCommunitiesCard /></div>
+            </div>
+
+            <div className="pw-col pw-right">
+            {/* Profile */}
+            <div className="profile-card pw-profile">
+              <div className="profile-card-head">
                 <span><Icon n="user" s={15} /> Profile</span>
                 <button className="btn-outline btn-sm" onClick={() => {
                   setEditForm({
@@ -750,136 +767,119 @@ export default function Profile() {
                   <Icon n="edit" s={12} /> Edit
                 </button>
               </div>
-              <div  className="profile-card-body">
-                {/* User info */}
-                <div style={{display:'flex',alignItems:'center',gap:14,paddingBottom:14,borderBottom:'1px solid var(--border)',marginBottom:14}}>
-                  {loading ? (
-                    <>
-                      <span className="skeleton" style={{width:64,height:64,borderRadius:'50%',display:'inline-block'}} />
-                      <div><span className="skeleton" style={{width:120,height:16,display:'block',marginBottom:6}} /><span className="skeleton" style={{width:80,height:12,display:'block'}} /></div>
-                    </>
-                  ) : (
-                    <>
-                      <div style={{width:64,height:64,borderRadius:'50%',background:'var(--text)',color:'var(--bg)',fontSize:22,fontWeight:800,display:'grid',placeItems:'center',flexShrink:0}}>
-                        {user?.avatarUrl ? <img src={sized(user.avatarUrl, 64, true)} alt="" loading="lazy" style={{width:64,height:64,borderRadius:'50%',objectFit:'cover'}} /> : (user?.firstName?.[0] || 'U') + (user?.lastName?.[0] || '')}
-                      </div>
-                      <div>
-                        <div style={{fontSize:17,fontWeight:800}}>{user?.firstName || 'User'} {user?.lastName || ''}</div>
-                        <div style={{fontSize:13,color:'var(--text2)'}}>@{user?.username || 'user'}</div>
-                      </div>
-                    </>
-                  )}
+              <div className="profile-card-body">
+                {/* Avatar, name, bio */}
+                <div className="pw-who">
+                  <div className="pw-av">
+                    {user?.avatarUrl ? <img src={sized(user.avatarUrl, 64, true)} alt="" loading="lazy" /> : (user?.firstName?.[0] || 'U') + (user?.lastName?.[0] || '')}
+                  </div>
+                  <div style={{minWidth:0}}>
+                    <div className="pw-name">{user?.firstName || 'User'} {user?.lastName || ''}</div>
+                    <div className="pw-handle">@{user?.username || 'user'}</div>
+                    {(profileData?.workerProfile?.bio || profileData?.bio) && (
+                      <div className="pw-bio">{profileData.workerProfile?.bio || profileData.bio}</div>
+                    )}
+                  </div>
                 </div>
 
                 {/* Public profile */}
-                {!loading && (
-                  <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:10,padding:'0 0 14px',marginBottom:14,borderBottom:'1px solid var(--border)'}}>
-                    <div style={{minWidth:0}}>
-                      <div style={{fontSize:13,fontWeight:800}}>Public profile {isPublic ? '' : '(private)'}</div>
-                      {user?.username && <a href={`/user/${user.username}`} style={{fontSize:12,color:'var(--text2)'}}>ogapay.app/user/{user.username} →</a>}
-                    </div>
-                    <Toggle on={isPublic} set={flip(isPublic, 'isPublic')} />
+                <div className="pw-toggle" style={{borderTop:0,padding:'0 0 14px'}}>
+                  <div style={{minWidth:0}}>
+                    <div className="pw-toggle-t">Public profile {isPublic ? '' : '(private)'}</div>
+                    {user?.username && <a href={`/user/${user.username}`} style={{fontSize:12,color:'var(--text2)'}}>ogapay.app/user/{user.username} →</a>}
                   </div>
-                )}
-
-                {/* Bio */}
-                {!loading && (profileData?.workerProfile?.bio || profileData?.bio) && (
-                  <div style={{fontSize:13,lineHeight:1.5,marginBottom:14}}>
-                    {profileData.workerProfile?.bio || profileData.bio}
-                  </div>
-                )}
-
-                {/* Followers */}
-                <div style={{display:'flex',gap:20,fontSize:13,fontWeight:700,paddingBottom:14,borderBottom:'1px solid var(--border)',marginBottom:14}}>
-                  <span>{profileData?._count?.taskSubmissions || 0} <span style={{fontWeight:400,color:'var(--text2)'}}>Submissions</span></span>
-                  <span>{profileData?._count?.tasksCreated || 0} <span style={{fontWeight:400,color:'var(--text2)'}}>Tasks Created</span></span>
+                  <Toggle on={isPublic} set={flip(isPublic, 'isPublic')} />
                 </div>
 
-                {/* Stats */}
-                {loading ? (
-                  <div><span className="skeleton" style={{width:'100%',height:14,display:'block',marginBottom:8}} /><span className="skeleton" style={{width:'80%',height:14,display:'block',marginBottom:8}} /><span className="skeleton" style={{width:'60%',height:14,display:'block'}} /></div>
-                ) : (
-                  <>
+                {/* Activity: counts on the left, status rows on the right */}
+                <div className="pw-sec-h">Activity</div>
+                <div className="pw-activity">
+                  <div className="pw-counts">
+                    {[
+                      { ic: 'send', n: profileData?._count?.taskSubmissions || 0, l: 'Submissions' },
+                      { ic: 'circle-check', n: profileData?.workerProfile?.tasksCompleted ?? 0, l: 'Tasks completed' },
+                      { ic: 'clipboard-plus', n: profileData?._count?.tasksCreated || 0, l: 'Tasks created' },
+                      { ic: 'trending-up', n: profileData?.workerProfile?.successRate ? profileData.workerProfile.successRate + '%' : '0%', l: 'Success rate', info: 'successRate' },
+                      { ic: 'coin', n: profileData?.workerProfile?.totalEarned ? show(Number(profileData.workerProfile.totalEarned)) : show(0), l: 'Total earned' },
+                    ].map(c => (
+                      <div className="pw-count" key={c.l}>
+                        <Icon n={c.ic} s={16} />
+                        <b>{c.n}</b>
+                        <span>{c.l}{c.info && (
+                          <button className="pw-i" aria-label={`About ${c.l}`} onClick={() => setShowInfo(c.info as any)}><Icon n="info-circle" s={13} c="var(--text3)" /></button>
+                        )}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="pw-status">
                     <StatRow label="Rank" val={(l => l.charAt(0) + l.slice(1).toLowerCase())(String(profileData?.workerProfile?.level || 'BEGINNER'))} info onInfoClick={() => setShowInfo('rank')} />
                     {/* The same OgaScore the Dashboard, public profiles and job requirements use
                         (services/ogascore.service.js), not the old reputationScore formula */}
                     <StatRow label="OgaScore" val={profileData?.ogaScore ?? 0} info onInfoClick={() => setShowInfo('ogaScore')} />
-                    <StatRow label="Tasks Completed" val={profileData?.workerProfile?.tasksCompleted ?? 0} />
-                    <StatRow label="Success Rate" val={profileData?.workerProfile?.successRate ? profileData.workerProfile.successRate + '%' : '0%'} info onInfoClick={() => setShowInfo('successRate')} />
-                    <StatRow label="Total Earned" val={profileData?.workerProfile?.totalEarned ? show(Number(profileData.workerProfile.totalEarned)) : show(0)} />
+                    {/* The Verify button lives on Settings > Verification; link straight to it */}
+                    <StatRow label="Human verified" val={isHumanVerified ? 'Yes' : (
+                      <a href="/settings/verification" className="pw-pill" onClick={e => { e.preventDefault(); navigate('/settings/verification') }}>Verify</a>
+                    )} valClass={isHumanVerified ? 'yes' : ''} info onInfoClick={() => setShowInfo('humanVerified')} />
+                    <StatRow label="Identity (KYC)" val={isKycVerified ? 'Verified' : (
+                      <a href="/settings/verification" className="pw-pill" onClick={e => { e.preventDefault(); navigate('/settings/verification') }}>Verify</a>
+                    )} valClass={isKycVerified ? 'yes' : ''} />
                     <StatRow label="Rating" val={profileData?.workerProfile?.totalRatings ? `${Number(profileData.workerProfile.avgRating || 0).toFixed(1)}/5 (${profileData.workerProfile.totalRatings})` : 'No ratings yet'} info onInfoClick={() => setShowInfo('avgRating')} />
                     <StatRow label="Skills" val={profileData?.workerProfile?.skills?.length ? profileData.workerProfile.skills.slice(0,3).join(', ')+(profileData.workerProfile.skills.length>3?' +' + (profileData.workerProfile.skills.length - 3):'') : '-'} />
                     <StatRow label="Categories" val={profileData?.workerProfile?.categories?.length ? profileData.workerProfile.categories.join(', ') : '-'} />
-                    {/* The Verify button lives on Settings > Verification; link straight to it */}
-                    <StatRow label="Human Verified" val={isHumanVerified ? 'Yes' : (
-                      <>No <a href="/settings/verification" onClick={e => { e.preventDefault(); navigate('/settings/verification') }} style={{display:'inline-flex',alignItems:'center',minHeight:44,padding:'0 8px',margin:'-13px -8px -13px 0',color:'var(--accent)',fontWeight:700,textDecoration:'underline'}}>Verify</a></>
-                    )} valClass={isHumanVerified ? 'yes' : 'no'} info onInfoClick={() => setShowInfo('humanVerified')} />
-                    {!isKycVerified && (
-                      <button className="dash-btn" style={{width:'100%',justifyContent:'center',marginTop:8}} onClick={() => navigate('/settings/verification')}>
-                        <Icon n="shield-check" s={14} c="var(--bg)" /> Verify Identity (KYC)
+                  </div>
+                </div>
+
+                {/* Referral link */}
+                <div className="pw-ref">
+                  <div className="pw-sec-h" style={{display:'flex',alignItems:'center',gap:8,flexWrap:'wrap'}}>
+                    Your Referral Link
+                    {referralStats?.referralTier && (() => {
+                      const tierConfigs: Record<string, { icon: string; label: string; color: string; bg: string; border: string }> = {
+                        bronze: { icon: 'ti ti-medal', label: 'Bronze', color: '#CD7F32', bg: 'rgba(205,127,50,0.08)', border: 'rgba(205,127,50,0.2)' },
+                        silver: { icon: 'ti ti-medal-2', label: 'Silver', color: '#A8A8A8', bg: 'rgba(168,168,168,0.08)', border: 'rgba(168,168,168,0.2)' },
+                        gold:   { icon: 'ti ti-medal', label: 'Gold', color: '#F5A623', bg: 'rgba(245,166,35,0.08)', border: 'rgba(245,166,35,0.2)' },
+                      };
+                      const tc = tierConfigs[referralStats.referralTier];
+                      if (!tc) return null;
+                      return (
+                        <span style={{
+                          display: 'inline-flex', alignItems: 'center', gap: 6,
+                          fontSize: 12, fontWeight: 600, textTransform: 'none', letterSpacing: 0,
+                          padding: '3px 10px', borderRadius: 20,
+                          background: tc.bg, color: tc.color, border: `1px solid ${tc.border}`,
+                        }}>
+                          <i className={tc.icon} /> {tc.label} Referrer<InfoBtn text="Your referral tier is based on how many of your referred users have completed their first task. Bronze: 5+ paid referrals, Silver: 10+, Gold: 20 (max)." />
+                        </span>
+                      );
+                    })()}
+                  </div>
+                  {refUrl ? (
+                    <div className="pw-ref-row">
+                      <div className="pw-ref-in">
+                        <span>{refUrl}</span>
+                        <RefCopy text={refUrl} />
+                      </div>
+                      <button className="dash-btn pw-ref-x" onClick={() => window.open('https://twitter.com/intent/tweet?text='+encodeURIComponent('Join me on OgaPay! '+refUrl), '_blank')}>
+                        <XIcon size={14} /> Post on X
                       </button>
-                    )}
-                  </>
-                )}
+                    </div>
+                  ) : (
+                    <div style={{fontSize:12,color:'var(--text3)'}}>Generate your referral link by completing your profile.</div>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Referral Link - full width */}
-          <div className="profile-card prof-full" style={{marginBottom:20}}>
-            <div className="card-head"><span><Icon n="affiliate" s={15} /> Your Referral Link</span></div>
-            <div className="card-body">
-              {/* Referral Tier Badge */}
-              {referralStats?.referralTier && !loading && (() => {
-                const tierConfigs: Record<string, { icon: string; label: string; color: string; bg: string; border: string }> = {
-                  bronze: { icon: 'ti ti-medal', label: 'Bronze', color: '#CD7F32', bg: 'rgba(205,127,50,0.08)', border: 'rgba(205,127,50,0.2)' },
-                  silver: { icon: 'ti ti-medal-2', label: 'Silver', color: '#A8A8A8', bg: 'rgba(168,168,168,0.08)', border: 'rgba(168,168,168,0.2)' },
-                  gold:   { icon: 'ti ti-medal', label: 'Gold', color: '#F5A623', bg: 'rgba(245,166,35,0.08)', border: 'rgba(245,166,35,0.2)' },
-                };
-                const tc = tierConfigs[referralStats.referralTier];
-                if (!tc) return null;
-                return (
-                  <div style={{
-                    display: 'inline-flex', alignItems: 'center', gap: 6,
-                    fontSize: 12, fontWeight: 600,
-                    padding: '4px 10px', borderRadius: 20, marginBottom: 12,
-                    background: tc.bg, color: tc.color, border: `1px solid ${tc.border}`,
-                  }}>
-                    <i className={tc.icon} /> {tc.label} Referrer<InfoBtn text="Your referral tier is based on how many of your referred users have completed their first task. Bronze: 5+ paid referrals, Silver: 10+, Gold: 20 (max)." />
-                  </div>
-                );
-              })()}
-              {loading ? (
-                <span className="skeleton" style={{width:'60%',height:14,display:'inline-block'}} />
-              ) : refUrl ? (
-                <>
-                  <div style={{background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:9,padding:'10px 14px',display:'flex',alignItems:'center',gap:10}}>
-                    <span style={{fontFamily:'monospace',fontSize:12,flex:1,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{refUrl}</span>
-                    <CopyBtn text={refUrl} />
-                  </div>
-                  <div style={{display:'flex',gap:8,marginTop:10}}>
-                    <button className="dash-btn" style={{background:'transparent',border:'1.5px solid var(--border)',color:'var(--text)'}} onClick={() => window.open('https://twitter.com/intent/tweet?text='+encodeURIComponent('Join me on OgaPay! '+refUrl), '_blank')}>
-                      <XIcon size={14} /> Post on X
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <div style={{fontSize:12,color:'var(--text3)'}}>Generate your referral link by completing your profile.</div>
-              )}
+            <div className="pw-x"><ProfileConnectXCard connected={!!profileData?.twitterOAuthConnected} handle={profileData?.twitterOAuthHandle || profileData?.twitterUsername} profile={xProfileOf(profileData)} onChange={reloadMe} /></div>
             </div>
           </div>
 
-          <div className="prof-grid" style={{marginBottom:20}}>
-            <ProfileCommunitiesCard />
-            <ProfileConnectXCard connected={!!profileData?.twitterOAuthConnected} handle={profileData?.twitterOAuthHandle || profileData?.twitterUsername} profile={xProfileOf(profileData)} onChange={reloadMe} />
-          </div>
+          <div className="pw-full"><ProfileQuickLinks username={user?.username} /></div>
 
-          <div style={{marginBottom:20}}><ProfilePortfolioCard /></div>
-
-          <div style={{marginBottom:20}}><ProfileQuickLinks username={user?.username} /></div>
+          <div className="pw-full"><ProfilePortfolioCard /></div>
 
           {/* Withdrawal History: every withdrawal, page by page, with its status */}
-          <div style={{marginBottom:20}}><ProfileWithdrawalsCard key={wdKey} /></div>
+          <div className="pw-full"><ProfileWithdrawalsCard key={wdKey} /></div>
 
         </>
       )}

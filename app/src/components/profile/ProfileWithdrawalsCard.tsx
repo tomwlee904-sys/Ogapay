@@ -52,7 +52,7 @@ export default function ProfileWithdrawalsCard() {
   }
 
   return (
-    <section className="profile-card prof-full pf-wd" aria-labelledby="pf-wd-title">
+    <section className="profile-card pf-wd" aria-labelledby="pf-wd-title">
       <div className="profile-card-head">
         <span id="pf-wd-title" className="pf-wd-title"><i className="ti ti-history" /> Withdrawal History</span>
         <Link to="/wallet" className="pf-wd-link">Wallet</Link>
@@ -70,28 +70,34 @@ export default function ProfileWithdrawalsCard() {
           <div>No withdrawals yet</div>
         </div>
       ) : (
-        <ul className="pf-wd-list">
-          {rows.map((w) => {
-            const s = payoutStatusOf(w)
-            const detail = txDetail(w)
-            const note = payoutNote(w)
-            const net = w.metadata?.toAddress || w.metadata?.walletAddress ? '' : netLine(w, s)
-            return (
-              <li key={w.id} className="pf-wd-row">
-                <div className="pf-wd-main">
-                  <strong>{txTitle(w)}</strong>
-                  <span>{when(w.createdAt)}{detail ? ` · ${detail}` : ''}</span>
-                  {net && <span>{net}</span>}
-                  {note && <span className="pf-wd-note">{note}</span>}
-                </div>
-                <div className="pf-wd-side">
-                  <Money amount={Math.abs(Number(w.amount || 0))} currency={w.currency || 'NGN'} exact size={14} className={s === 'failed' || s === 'refunded' ? 'pf-wd-void' : ''} />
-                  <span className={`pf-wd-pill ${s}`}>{PAYOUT_LABEL[s]}</span>
-                </div>
-              </li>
-            )
-          })}
-        </ul>
+        <div className="pf-wd-scroll">
+          <table className="pf-wd-table">
+            <thead>
+              <tr><th>Withdrawal</th><th>Date</th><th>Details</th><th className="r">Amount</th><th className="r">Status</th></tr>
+            </thead>
+            <tbody>
+              {rows.map((w) => {
+                const s = payoutStatusOf(w)
+                const detail = txDetail(w)
+                const note = payoutNote(w)
+                const net = w.metadata?.toAddress || w.metadata?.walletAddress ? '' : netLine(w, s)
+                return (
+                  <tr key={w.id}>
+                    <td><strong>{txTitle(w)}</strong></td>
+                    <td className="nw">{when(w.createdAt)}</td>
+                    <td>
+                      {detail || (!net && !note) ? <span className="pf-wd-sub" style={{ marginTop: 0 }}>{detail || '-'}</span> : null}
+                      {net && <span className="pf-wd-sub">{net}</span>}
+                      {note && <span className="pf-wd-sub pf-wd-note">{note}</span>}
+                    </td>
+                    <td className="r"><Money amount={Math.abs(Number(w.amount || 0))} currency={w.currency || 'NGN'} exact size={14} className={s === 'failed' || s === 'refunded' ? 'pf-wd-void' : ''} /></td>
+                    <td className="r"><span className={`pf-wd-pill ${s}`}>{PAYOUT_LABEL[s]}</span></td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
       )}
       {more && rows && !failed && (
         <div className="pf-wd-more"><button type="button" className="pf-wd-more-btn" disabled={busy} onClick={loadMore}>{busy ? 'Loading…' : 'Load more'}</button></div>
