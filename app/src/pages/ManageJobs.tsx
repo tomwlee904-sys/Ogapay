@@ -9,7 +9,6 @@ import { listTemplates, saveTemplate, taskToTemplateData, type JobTemplate, type
 import "../styles/manage-jobs.css";
 import InfoTip from '../components/InfoTip'
 import { missingLink, missingLinkText } from "../lib/jobText";
-import RateWork, { RatedStars } from '../components/RateWork'
 import RateWork, { RatedStars, ratedByTeam } from '../components/RateWork'
 import CopyFlag from '../components/CopyFlag'
 import TransferModal from '../components/TransferModal'
