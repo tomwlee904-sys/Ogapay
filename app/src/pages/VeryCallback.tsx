@@ -7,17 +7,21 @@ import { apiRequest, getAccessToken } from '../lib/api'
 // On Android this page often opens in a different browser or tab from the one
 // that started the check (VeryAI hands off from in-app browsers, and the VeryAI
 // app opens the default browser), where the person may not be signed in. The
-// server finishes the check from the state either way, so a signed-out visit
-// shows the result here instead of losing it on the way to sign-in.
+// server confirms the scan with VeryAI either way, but a signed-out browser
+// only gets a one-time claim key: the account is verified once its owner signs
+// in here (Settings, Verification hands the key over). That stops a VeryAI
+// address passed to someone else from verifying the account.
 const SETTINGS = '/settings/verification'
 const SIGN_IN = `/login?redirect=${encodeURIComponent(SETTINGS)}`
+// Settings, Verification reads the same key
+const VERY_CLAIM_KEY = 'ogapay_very_claim'
 
 const VeryCallback = () => {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const { refreshUser } = useAuth()
   const done = useRef(false)
-  const [result, setResult] = useState<{ ok: boolean; text: string } | null>(null)
+  const [result, setResult] = useState<{ ok: boolean; text: string; waiting?: boolean } | null>(null)
 
   useEffect(() => {
     if (done.current) return
@@ -38,8 +42,15 @@ const VeryCallback = () => {
     apiRequest<any>('/social/very/complete', {
       method: 'POST',
       body: JSON.stringify({ code, state }),
-    }).then(async () => {
-      if (!signedIn) { setResult({ ok: true, text: "You're verified as a human." }); return }
+    }).then(async (r: any) => {
+      if (!signedIn) {
+        if (r?.claim) { try { localStorage.setItem(VERY_CLAIM_KEY, r.claim) } catch { /* private mode */ } }
+        if (r?.verified) { setResult({ ok: true, text: "You're verified as a human." }); return }
+        const who = r?.account ? ` (${r.account})` : ''
+        setResult({ ok: true, waiting: true, text: (r?.message || 'To finish, sign in to OgaPay in this browser with the account that started this check.') + (who ? ` This check is for${who}.` : '') })
+        return
+      }
+      if (r && r.verified === false) { fail(r.message || 'Verification was not completed'); return }
       await refreshUser()
       navigate(`${SETTINGS}?human=verified`, { replace: true })
     }).catch((err: any) => fail(err?.message || 'Verification failed'))
@@ -50,9 +61,9 @@ const VeryCallback = () => {
       <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', padding: 16, fontFamily: 'inherit' }}>
         <div style={{ textAlign: 'center', maxWidth: 380 }}>
           <i className={`ti ${result.ok ? 'ti-circle-check' : 'ti-alert-circle'}`} style={{ fontSize: 44, color: result.ok ? 'var(--green)' : 'var(--red, #dc2626)' }} />
-          <div style={{ fontWeight: 700, fontSize: 18, marginTop: 10 }}>{result.ok ? 'Scan confirmed' : "Verification didn't go through"}</div>
+          <h1 style={{ fontWeight: 700, fontSize: 18, marginTop: 10 }}>{result.waiting ? 'Sign in to finish' : result.ok ? 'Scan confirmed' : "Verification didn't go through"}</h1>
           <p style={{ fontSize: 14, color: 'var(--text2)', marginTop: 8, lineHeight: 1.5 }}>{result.text}</p>
-          {result.ok && (
+          {result.ok && !result.waiting && (
             <p style={{ fontSize: 14, color: 'var(--text2)', marginTop: 8, lineHeight: 1.5 }}>
               Go back to OgaPay where you started: it shows Verified (tap Check again if it doesn't yet). Or sign in here.
             </p>

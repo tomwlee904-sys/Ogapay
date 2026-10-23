@@ -9,6 +9,9 @@ import { naira } from '../../lib/wallet'
 import AddBankForm from '../../components/wallet/AddBankForm'
 import '../../styles/wallet.css'
 
+// Where VeryCallback keeps the claim key from a scan that came back signed out
+const VERY_CLAIM_KEY = 'ogapay_very_claim'
+
 // Levels as the backend enforces them, in the same words as the Wallet (lib/levels)
 // Didit statuses that mean the person hasn't finished yet
 const OPEN = ['Not Started', 'In Progress', 'Resubmitted']
@@ -131,14 +134,23 @@ export default function Verification({ me, reload, providers }: SectionProps & {
     if (!quiet) setHumanChecking(true)
     try {
       let r: any
-      try { r = await apiRequest<any>('/social/very/check', { method: 'POST' }) }
+      // A scan that came back to this browser while signed out left a claim
+      // key here; handing it over finishes that check for this account
+      let claim: string | null = null
+      try { claim = localStorage.getItem(VERY_CLAIM_KEY) } catch { /* private mode */ }
+      try { r = await apiRequest<any>('/social/very/check', { method: 'POST', body: JSON.stringify(claim ? { claim } : {}) }) }
       catch (e) { r = await apiRequest<any>('/social/very/status').catch(() => { throw e }) }
+      if (claim && (r?.claim === 'used' || r?.claim === 'invalid' || r?.verified)) {
+        try { localStorage.removeItem(VERY_CLAIM_KEY) } catch { /* ignore */ }
+      }
       if (r?.verified) {
         setHumanMsg('')
         toast("You're verified as a human", 'success')
         await reload(); refreshUser()
       } else if (!quiet) {
         setHumanMsg(r?.message || r?.check?.message || "You're not verified yet. If the VeryAI app says the scan is complete, go back to the browser page that opened VeryAI, or start a new check.")
+      } else if (claim && r?.message) {
+        setHumanMsg(r.message)
       } else if (r?.check?.message) {
         setHumanMsg(r.check.message)
       }
