@@ -405,7 +405,7 @@ function ExtraRequirements({ value, onChange }: any) {
             </ul>
           </InfoTip></span>
           <span style={{ fontSize: 12, color: C.accent }}>(Requirement: Rank {value.minRank || 0})</span>
-          <div style={{ fontSize: 11, color: C.text3, marginTop: 2 }}>Seeker, verified X accounts, holdings, oga score, rank...</div>
+          <div style={{ fontSize: 11, color: C.text3, marginTop: 2 }}>Rank, OgaScore, ID check, connected X account</div>
         </div>
         <span style={{ color: C.text3, transform: open ? "rotate(180deg)" : "none", transition: "transform 0.2s", display: "flex" }}>
           <IconChevronDown />
