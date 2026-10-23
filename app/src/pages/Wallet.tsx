@@ -5,6 +5,7 @@ import TransferModal from '../components/TransferModal'
 import WithdrawModal from '../components/wallet/WithdrawModal'
 import AddBankForm from '../components/wallet/AddBankForm'
 import Sheet from '../components/wallet/Sheet'
+import ConvertUsdc from '../components/wallet/ConvertUsdc'
 import LevelCard from '../components/wallet/LevelCard'
 import MoneyInCard from '../components/wallet/MoneyInCard'
 import { apiRequest } from '../lib/api'
@@ -54,7 +55,7 @@ export default function Wallet() {
   const [banks, setBanks] = useState<Bank[] | null>(null)
   const [bankMenu, setBankMenu] = useState<string | null>(null)
   const [bankErr, setBankErr] = useState('')
-  const [modal, setModal] = useState<null | 'withdraw' | 'send' | 'bank'>(null)
+  const [modal, setModal] = useState<null | 'withdraw' | 'send' | 'bank' | 'convert'>(null)
   const [didit, setDidit] = useState(false)
   const [ninInstant, setNinInstant] = useState(false)
   const [bankKyc, setBankKyc] = useState(false)
@@ -181,6 +182,9 @@ export default function Wallet() {
                       <b>{money(Number(balances?.[c]?.available ?? 0), c)}</b>
                     </span>
                   ))}
+                  {Number(balances?.USDC?.available ?? 0) > 0 && (
+                    <button type="button" className="wl-coin wl-coin-btn" onClick={() => setModal('convert')}><i className="ti ti-arrows-exchange" aria-hidden="true" /> Convert USDC to naira</button>
+                  )}
                 </div>
               )}
             </section>
@@ -300,6 +304,11 @@ export default function Wallet() {
 
       {modal === 'withdraw' && <WithdrawModal balances={balances} onClose={() => { setModal(null); reload() }} onDone={refreshAll} />}
       {modal === 'send' && <TransferModal onClose={() => setModal(null)} onSuccess={refreshAll} />}
+      {modal === 'convert' && (
+        <Sheet title="Convert USDC to naira" onClose={() => setModal(null)}>
+          <ConvertUsdc available={Number(balances?.USDC?.available ?? 0)} onCancel={() => setModal(null)} onDone={refreshAll} />
+        </Sheet>
+      )}
       {modal === 'bank' && (
         <Sheet title="Add bank account" onClose={() => setModal(null)}>
           <AddBankForm makeDefault={!banks?.length} onCancel={() => setModal(null)} onSaved={() => { setModal(null); dropShared('/wallet/banks'); sharedGet<Bank[]>('/wallet/banks').then(setBanks).catch(() => {}) }} />

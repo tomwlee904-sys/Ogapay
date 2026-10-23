@@ -24,6 +24,8 @@ export type Tx = {
 }
 
 export const MIN_DEPOSIT_NGN = 100
+// Largest single card / USSD / bank-app payment (backend MAX_DEPOSIT_NGN)
+export const MAX_DEPOSIT_NGN = 10_000_000
 
 // KYC from the signed-in user (/auth/me sends kycStatus + kycTier, and kyc)
 export function kycOf(user: any) {

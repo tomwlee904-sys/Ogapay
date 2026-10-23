@@ -6,7 +6,7 @@ import { apiRequest } from '../lib/api'
 import { sharedGet, dropShared } from '../lib/shared'
 import { useAuth } from '../context/AuthContext'
 import { useWalletBalance } from '../context/WalletBalanceContext'
-import { MIN_DEPOSIT_NGN, kycOf, naira } from '../lib/wallet'
+import { MIN_DEPOSIT_NGN, MAX_DEPOSIT_NGN, kycOf, naira } from '../lib/wallet'
 import '../styles/wallet.css'
 
 // Add money: bank transfer to the user's own account number (Flutterwave
@@ -21,7 +21,7 @@ type Dva = { accountNumber: string; bankName: string; accountName?: string | nul
 type Check = { phase: 'checking' | 'done' | 'failed' | 'cancelled' | 'slow'; amount?: number; reference: string }
 
 const BACK_KEY = 'oga_deposit_back'
-const QUICK = [1000, 5000, 10000, 20000]
+const QUICK = [1000, 5000, 10000, 20000, 50000]
 // Only same-site paths
 const safeBack = (p?: string | null) => (p && p.startsWith('/') && !p.startsWith('//') ? p : '')
 
@@ -113,6 +113,7 @@ export default function Deposit() {
   const amt = Number(amount) || 0
   async function pay() {
     if (amt < MIN_DEPOSIT_NGN) { setError(`The minimum is ${naira(MIN_DEPOSIT_NGN, 0)}.`); return }
+    if (amt > MAX_DEPOSIT_NGN) { setError(`The most you can add in one payment is ${naira(MAX_DEPOSIT_NGN, 0)}.`); return }
     setPaying(true); setError('')
     try {
       const r = await apiRequest<{ paymentUrl?: string; reference: string }>('/wallet/deposit', {
@@ -237,6 +238,7 @@ export default function Deposit() {
                       <li>The money shows in your wallet once the bank confirms it. We'll notify you.</li>
                       <li>Keep using the same number: it's yours.</li>
                     </ol>
+                    <p className="wl-note" style={{ margin: '10px 0 0' }}>Limit: no OgaPay limit on transfers to this number. Your bank's own daily transfer limit applies. No OgaPay fee.</p>
                   </>
                 ) : (
                   <div className="dp-lock">
@@ -267,7 +269,7 @@ export default function Deposit() {
                   {paying ? 'Opening payment page…' : amt ? `Pay ${naira(amt, 0)}` : 'Enter an amount'}
                 </button>
                 <p className="wl-note" style={{ margin: '12px 0 0', textAlign: 'center' }}>
-                  Minimum {naira(MIN_DEPOSIT_NGN, 0)}. No OgaPay fee.{' '}
+                  Minimum {naira(MIN_DEPOSIT_NGN, 0)}, up to {naira(MAX_DEPOSIT_NGN, 0)} per payment. No OgaPay fee.{' '}
                   <button type="button" className="wl-link" style={{ display: 'inline', fontWeight: 600, color: 'var(--text)' }} onClick={() => setProvider(provider === 'FLUTTERWAVE' ? 'PAYSTACK' : 'FLUTTERWAVE')}>
                     Pay with {provider === 'FLUTTERWAVE' ? 'Paystack' : 'Flutterwave'} instead
                   </button>
