@@ -266,7 +266,7 @@ export default function StoreProduct() {
           <i className="ti ti-message" /> Contact seller
         </button>
       )}
-      {!isOwner && !p.official && (
+      {!isOwner && !p.official && !onRequest && (
         <p className="sp-protect"><i className="ti ti-shield-check" aria-hidden="true" /> Buyer protection: your payment is held until you confirm you received the order.</p>
       )}
     </div>

@@ -63,7 +63,7 @@ export default function ReportUser({ userId, username, onClose }: { userId: stri
             </fieldset>
             <label style={{ display: 'block', marginTop: 10 }}>
               <span style={{ fontSize: 13, fontWeight: 600 }}>What happened?</span>
-              <textarea className="hr-input hr-area" style={{ width: '100%', minHeight: 100, marginTop: 6 }} maxLength={2000} value={note} onChange={(e) => { setNote(e.target.value); setErr('') }}
+              <textarea style={{ display: 'block', width: '100%', minHeight: 100, marginTop: 6, padding: '10px 12px', border: '1px solid var(--border)', borderRadius: 10, background: 'var(--bg2)', color: 'var(--text)', font: '400 14px/1.5 Inter, sans-serif', resize: 'vertical', boxSizing: 'border-box' }} maxLength={2000} value={note} onChange={(e) => { setNote(e.target.value); setErr('') }}
                 placeholder="Links to the job, messages or posts help us check it quickly." />
             </label>
             {err && <div className="up-note err" role="alert" style={{ marginTop: 8 }}>{err}</div>}
