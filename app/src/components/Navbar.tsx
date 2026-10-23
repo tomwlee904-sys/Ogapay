@@ -59,6 +59,10 @@ export default function Navbar({ onMenuToggle }: NavbarProps) {
         return sum
       }, 0)
     : 0
+  // The pill is every wallet added up (naira + USDC/USDT/SOL converted), so it
+  // can be more than the naira you can spend that the Dashboard and Wallet show.
+  // It says "Total" and explains itself on hover.
+  const balanceTip = `Total of all your wallets (naira, USDC, USDT and SOL) in ${inUsd ? 'dollars' : 'naira'}. Your spendable naira is on the Wallet page.`
   const balanceText = inUsd
     ? `$${(total < 0.01 ? 0 : total).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
     : `₦${Math.round(Math.max(0, total)).toLocaleString('en-US')}`
@@ -104,8 +108,8 @@ export default function Navbar({ onMenuToggle }: NavbarProps) {
           )}
           {!isLoading && isAuthed && (
             <>
-              <button className="balance-display" onClick={() => navigate('/wallet')} aria-label={`Wallet, ${balanceText}`}>
-                {balanceText}
+              <button className="balance-display" onClick={() => navigate('/wallet')} aria-label={`Wallet: total of all your wallets, ${balanceText}`} title={balanceTip}>
+                <small className="balance-total-label">Total</small> {balanceText}
               </button>
               <button className="profile-btn" onClick={() => navigate('/profile')} aria-label="Profile">
                 {user?.avatar ? (
@@ -139,8 +143,8 @@ export default function Navbar({ onMenuToggle }: NavbarProps) {
         </Link>
         <div className="nav-mobile-actions flex items-center">
           {!isLoading && isAuthed ? (
-            <button className="balance-display" onClick={() => navigate('/wallet')} aria-label={`Wallet, ${balanceText}`}>
-              {balanceText}
+            <button className="balance-display" onClick={() => navigate('/wallet')} aria-label={`Wallet: total of all your wallets, ${balanceText}`} title={balanceTip}>
+              <small className="balance-total-label">Total</small> {balanceText}
             </button>
           ) : (
             <button className="connect-btn nav-mobile-signin" onClick={() => openSignIn()}>

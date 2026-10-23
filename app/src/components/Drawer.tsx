@@ -145,7 +145,7 @@ export default function Drawer({ open, onClose }: DrawerProps) {
                   <div className="oga-user-card-name">{user?.displayName || user?.username || 'User'}</div>
                   <div className="oga-user-card-balance">
                     <i className="ti ti-wallet" style={{ fontSize: 12 }} />{' '}
-                    Balance: <b>{inUsd ? `$${totalBalance < 0.01 ? '0.00' : totalBalance.toFixed(2)}` : `₦${Math.round(Math.max(0, totalBalance)).toLocaleString('en-US')}`}</b>
+                    Total balance: <b>{inUsd ? `$${totalBalance < 0.01 ? '0.00' : totalBalance.toFixed(2)}` : `₦${Math.round(Math.max(0, totalBalance)).toLocaleString('en-US')}`}</b>
                   </div>
                 </div>
                 <i className="ti ti-chevron-right oga-user-card-chevron" />
