@@ -38,6 +38,10 @@ export default function TabEarningsContent() {
   const [taskTotal, setTaskTotal] = useState(0)
   const [availableBalance, setAvailableBalance] = useState<number | null>(null)
   const [history, setHistory] = useState<HistoryItem[]>([])
+  // Per-day totals from the server for the chart, so 90 days and a year work
+  // (the history list below only has the latest 100 entries)
+  const [series, setSeries] = useState<{ day: string; kind: Kind; currency: Currency; amount: number }[] | null>(null)
+  const [seriesKind, setSeriesKind] = useState<'all' | Kind>('all')
 
   async function loadData() {
     const [summary, balanceData, txData] = await Promise.all([
@@ -84,6 +88,16 @@ export default function TabEarningsContent() {
 
   useEffect(() => { injectSkeletonStyles(); }, []);
 
+  const days = ({ '7d': 7, '30d': 30, '90d': 90, '1y': 365 } as Record<string, number>)[period] || 30
+  useEffect(() => {
+    let live = true
+    setSeries(null)
+    apiRequest<any>(`/users/me/earnings/series?days=${days}`)
+      .then((d) => { if (live) setSeries(Array.isArray(d?.series) ? d.series : []) })
+      .catch(() => { if (live) setSeries([]) })
+    return () => { live = false }
+  }, [days, authUser?.id])
+
   const done = history.filter((h) => !h.pending)
   const sum = (k: Kind) => done.filter((h) => h.kind === k).reduce((s, h) => s + h.ngn, 0)
   const referrals = sum('referral'), bonuses = sum('bonus'), vault = sum('vault'), tips = sum('tip')
@@ -94,18 +108,26 @@ export default function TabEarningsContent() {
   const monthEarnings = done.filter((h) => new Date(h.date).getTime() >= monthStart).reduce((s, h) => s + h.ngn, 0)
   const jobsPaid = done.filter((h) => h.kind === 'task').length
 
-  // Money earned per day (oldest first)
-  const days = period === '7d' ? 7 : 30
+  // Money earned per bar (oldest first): a day for 7 and 30 days, a week for 90
+  // days, a month (30 days) for the last year. From the server's per-day totals,
+  // or the recent history while those load.
+  const step = days === 365 ? 30 : days === 90 ? 7 : 1
+  const barCount = Math.ceil(days / step)
+  const toNgn = (amount: number, cur: Currency) => cur === 'NGN' ? amount : convert(amount, cur, 'NGN')
+  const points = series
+    ? series.filter((p) => seriesKind === 'all' || p.kind === seriesKind).map((p) => ({ date: p.day + 'T12:00:00Z', ngn: toNgn(Number(p.amount) || 0, p.currency) }))
+    : done.filter((h) => seriesKind === 'all' || h.kind === seriesKind).map((h) => ({ date: h.date, ngn: h.ngn }))
   const bars = (() => {
-    if (!done.length) return []
-    const out = new Array(days).fill(0)
+    if (!points.length) return []
+    const out = new Array(barCount).fill(0)
     const now = Date.now()
-    for (const h of done) {
-      const idx = Math.floor((now - new Date(h.date).getTime()) / 86400000)
-      if (idx >= 0 && idx < days) out[days - 1 - idx] += h.ngn
+    for (const h of points) {
+      const idx = Math.floor((now - new Date(h.date).getTime()) / 86400000 / step)
+      if (idx >= 0 && idx < barCount) out[barCount - 1 - idx] += h.ngn
     }
     return out
   })()
+  const rangeTotal = bars.reduce((a, b) => a + b, 0)
 
   // In the display currency the person chose (it always showed naira)
   const show = useMoney()
@@ -144,7 +166,7 @@ export default function TabEarningsContent() {
         .en-graph-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px 24px;margin-bottom:24px}
         .en-graph-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px}
         .en-graph-title{font-family:Inter;font-size:15px;font-weight:800}
-        .en-tabs{display:flex;gap:4px}
+        .en-tabs{display:flex;gap:4px;flex-wrap:wrap}
         .en-tab{padding:5px 12px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text2);font-size:11px;font-weight:600;cursor:pointer;transition:all .2s}
         .en-tab:hover,.en-tab.active{border-color:var(--accent);color:var(--accent);background:rgba(var(--accent-rgb),.08)}
         .en-graph{display:flex;align-items:flex-end;gap:4px;height:120px}
@@ -182,10 +204,20 @@ export default function TabEarningsContent() {
         <div className="en-graph-header">
           <span className="en-graph-title"><i className="ti ti-trending-up" style={{color:'var(--accent)',marginRight:6}} />Earnings Overview</span>
           <div className="en-tabs">
-            {['7d', '30d'].map(p => (
-              <button key={p} className={`en-tab ${period === p ? 'active' : ''}`} onClick={() => setPeriod(p)}>
-                {p === '7d' ? '7 Days' : '30 Days'}
+            {([['7d', '7 Days'], ['30d', '30 Days'], ['90d', '90 Days'], ['1y', 'Last year']] as const).map(([p, label]) => (
+              <button key={p} className={`en-tab ${period === p ? 'active' : ''}`} aria-pressed={period === p} onClick={() => setPeriod(p)}>
+                {label}
               </button>
+            ))}
+          </div>
+        </div>
+        <div className="en-graph-header" style={{ marginTop: -6 }}>
+          <span style={{ fontSize: 13, color: 'var(--text2)' }}>
+            {naira(rangeTotal)} earned in the {days === 365 ? 'last year' : `last ${days} days`}{step > 1 ? ` · each bar is ${step === 7 ? 'a week' : 'a month'}` : ''}
+          </span>
+          <div className="en-tabs" aria-label="What to show">
+            {([['all', 'All'], ['task', 'Jobs'], ['referral', 'Referrals'], ['tip', 'Tips'], ['vault', 'Vault']] as const).map(([k, label]) => (
+              <button key={k} className={`en-tab ${seriesKind === k ? 'active' : ''}`} aria-pressed={seriesKind === k} onClick={() => setSeriesKind(k)}>{label}</button>
             ))}
           </div>
         </div>
@@ -193,12 +225,12 @@ export default function TabEarningsContent() {
           {bars.some((b) => b > 0) && bars.map((b, i) => {
             const h = Math.min(Math.max(b / Math.max(...bars, 1) * 100, 4), 100)
             return (
-              <div key={i} className="en-bar" style={{ height: h + '%' }}>
-                {b > 0 && <div className="en-val">{naira(b)}</div>}
+              <div key={i} className="en-bar" style={{ height: h + "%" }} title={naira(b)}>
+                {b > 0 && barCount <= 13 && <div className="en-val">{naira(b)}</div>}
               </div>
             )
           })}
-          {bars.every((b) => !b) && <div style={{width:'100%',textAlign:'center',color:'var(--text2)',fontSize:12,padding:24}}>Nothing earned in the last {days} days</div>}
+          {bars.every((b) => !b) && <div style={{width:'100%',textAlign:'center',color:'var(--text2)',fontSize:12,padding:24}}>Nothing earned in the {days === 365 ? 'last year' : `last ${days} days`}</div>}
         </div>
       </div>
 

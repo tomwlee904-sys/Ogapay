@@ -175,6 +175,10 @@ export default function Drawer({ open, onClose }: DrawerProps) {
                   <span className="oga-drawer-icon oga-drawer-icon--sub"><i className="ti ti-list-check" /></span>
                   <span><strong>My tasks</strong><small>Jobs you've taken</small></span>
                 </Link>
+                <Link className="oga-drawer-item" to="/my-reviews" onClick={onClose}>
+                  <span className="oga-drawer-icon oga-drawer-icon--sub"><i className="ti ti-star" /></span>
+                  <span><strong>My reviews</strong><small>What posters said about your work</small></span>
+                </Link>
                 <Link className="oga-drawer-item" to="/job-monitor" onClick={onClose}>
                   <span className="oga-drawer-icon oga-drawer-icon--sub"><i className="ti ti-activity" /></span>
                   <span><strong>Job monitor</strong><small>New jobs as they're posted</small></span>

@@ -56,6 +56,8 @@ const awardedEarly = (s: Sub) => { const e = endsAt(s); return !!s.winnersPaidAt
 const unsentText = (s: Sub) => awardedEarly(s) ? 'All the places were awarded before you sent an entry.' : "Entries have closed. You didn't send an entry."
 const TABS = [
   { id: 'all', label: 'All', test: () => true },
+  // Open: still to do or waiting for review (the totals header's "Open")
+  { id: 'open', label: 'Open', test: (s: Sub) => ['PENDING', 'SUBMITTED', 'DISPUTED'].includes(s.status) && !out(s) },
   { id: 'todo', label: 'To do', test: (s: Sub) => s.status === 'PENDING' && !out(s) },
   // Places you hold and the time left on each (Claimed places)
   { id: 'claimed', label: 'Claimed places', test: (s: Sub) => !!s.holdEndsAt && s.status === 'PENDING' && !out(s) },
@@ -181,10 +183,13 @@ export default function MyTasks() {
           </div>
         ) : (
           <>
+            {/* Totals, like wurk's My submissions: each one is also a filter */}
             <div className="mt2-sum">
-              <div><b>{count('todo')}</b><span>to do</span></div>
-              <div><b>{count('review')}</b><span>in review</span></div>
-              <div><b>{count('paid')}</b><span>paid{count('won') > 0 ? ` · ${count('won')} won` : ''}</span></div>
+              {([['all', 'total entries'], ['open', 'open'], ['won', 'winners'], ['paid', 'paid']] as const).map(([id, label]) => (
+                <button key={id} type="button" className={`mt2-sum-btn${tab === id ? ' on' : ''}`} aria-pressed={tab === id} onClick={() => setTab(id)}>
+                  <b>{count(id)}</b><span>{label}</span>
+                </button>
+              ))}
               <div>
                 {totals.length === 0
                   ? <b>{show(0, 'NGN', { exact: true })}</b>

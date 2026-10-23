@@ -34,6 +34,7 @@ const MyTasks = lazyPage(() => import('./pages/MyTasks'))
 // Selection jobs and hires: My work list and the workspace with the job chat
 const MyWork = lazyPage(() => import('./pages/MyWork'))
 const Workspace = lazyPage(() => import('./pages/Workspace'))
+const MyReviews = lazyPage(() => import('./pages/MyReviews'))
 const MyStore = lazyPage(() => import('./pages/MyStore'))
 const Tasks = lazyPage(() => import('./pages/Tasks'))
 const JobDetail = lazyPage(() => import('./pages/JobDetail'))
@@ -64,6 +65,10 @@ const Privacy = lazyPage(() => import('./pages/Privacy'))
 const Terms = lazyPage(() => import('./pages/Terms'))
 const Blog = lazyPage(() => import('./pages/Blog'))
 const BlogEditor = lazyPage(() => import('./pages/BlogEditor'))
+const BlogAll = lazyPage(() => import('./pages/BlogAll'))
+const BlogMine = lazyPage(() => import('./pages/BlogMine'))
+const BrandKit = lazyPage(() => import('./pages/BrandKit'))
+const JoinTestTeam = lazyPage(() => import('./pages/JoinTestTeam'))
 const ArticleDetail = lazyPage(() => import('./pages/ArticleDetail'))
 const AdminBlog = lazyPage(() => import('./pages/AdminBlog'))
 const Campaigns = lazyPage(() => import('./pages/Campaigns'))
@@ -143,6 +148,10 @@ export default function App() {
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/verify/callback" element={<VeryCallback />} />
             <Route path="/blog" element={<Blog />} />
+            <Route path="/blog/all" element={<BlogAll />} />
+            <Route path="/blog/my" element={<AuthGuard><BlogMine /></AuthGuard>} />
+            <Route path="/brand-kit" element={<BrandKit />} />
+            <Route path="/join-test-team" element={<JoinTestTeam />} />
             {/* Old demo pages (sample content, not linked from the app) */}
             <Route path="/features" element={<Navigate to="/about" replace />} />
             <Route path="/feature-grid" element={<Navigate to="/about" replace />} />
@@ -201,6 +210,7 @@ export default function App() {
             <Route path="/my-tasks" element={<AuthGuard><MyTasks /></AuthGuard>} />
             <Route path="/my-work" element={<AuthGuard><MyWork /></AuthGuard>} />
             <Route path="/work/:id" element={<AuthGuard><Workspace /></AuthGuard>} />
+            <Route path="/my-reviews" element={<AuthGuard><MyReviews /></AuthGuard>} />
             <Route path="/my-store" element={<AuthGuard><MyStore /></AuthGuard>} />
             <Route path="/campaigns" element={<AuthGuard><Campaigns /></AuthGuard>} />
             <Route path="/post-job" element={<Navigate to="/create" replace />} />

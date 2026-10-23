@@ -83,6 +83,7 @@ export default function Sidebar() {
           <Link className="sidebar-link" to="/manage-jobs"><i className="ti ti-briefcase" /> <span><strong>My Jobs</strong></span></Link>
           <Link className="sidebar-link" to="/job-monitor"><i className="ti ti-device-desktop" /> <span><strong>Job Monitor</strong></span></Link>
           <Link className="sidebar-link" to="/my-tasks"><i className="ti ti-clipboard-list" /> <span><strong>My Tasks</strong></span></Link>
+          <Link className="sidebar-link" to="/my-reviews"><i className="ti ti-star" /> <span><strong>My Reviews</strong></span></Link>
           <Link className="sidebar-link" to="/bookmarks"><i className="ti ti-bookmark" /> <span><strong>Bookmarks</strong></span></Link>
           <Link className="sidebar-link" to="/leaderboard"><i className="ti ti-trophy" /> <span><strong>Leaderboard</strong></span></Link>
         </SidebarGroup>
