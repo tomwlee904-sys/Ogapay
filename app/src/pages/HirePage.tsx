@@ -57,6 +57,13 @@ export default function HirePage() {
   const short = available !== null && total > available
   const briefOk = brief.trim().length >= 20
   const ready = !!worker && canHire && !isSelf && briefOk && amt >= MIN_BUDGET && !short && !uploading && !submitting
+  // Why the pay button is still off, in plain words (shown under it)
+  const why = !worker ? `Loading ${name}'s profile…`
+    : !briefOk ? 'Write at least 20 characters about the job.'
+    : amt < MIN_BUDGET ? `Set a budget of at least ${naira(MIN_BUDGET)}.`
+    : short ? 'Top up your wallet to cover the total.'
+    : uploading ? 'Wait for your files to finish uploading.'
+    : ''
 
   const addFiles = async (list: FileList | null) => {
     if (!list?.length) return
@@ -223,9 +230,12 @@ export default function HirePage() {
             ) : isSelf ? (
               <div className="up-note err">You can't hire yourself.</div>
             ) : (
-              <button className="up-btn primary hr-cta" disabled={!ready} onClick={submit}>
-                {submitting ? "Hiring…" : amt >= MIN_BUDGET ? `Pay ${naira(total)} & hire` : "Pay & hire"}
-              </button>
+              <>
+                <button className="up-btn primary hr-cta" disabled={!ready} onClick={submit} aria-describedby={why ? "hr-why" : undefined}>
+                  {submitting ? "Hiring…" : ready ? `Pay ${naira(total)} & hire` : "Continue to payment"}
+                </button>
+                {why && !submitting && <p className="hr-small" id="hr-why" style={{ marginTop: 8 }}>{why}</p>}
+              </>
             )}
             <p className="hr-small"><i className="ti ti-shield-lock" /> Paid from your OgaPay wallet and held in escrow. {name} is paid when you approve the work.</p>
           </aside>
