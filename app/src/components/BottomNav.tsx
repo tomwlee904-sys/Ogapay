@@ -3,7 +3,7 @@ import type { MouseEvent } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { IconBellFilled } from '@tabler/icons-react'
 import { useAuth } from '../context/AuthContext'
-import { apiRequest } from '../lib/api'
+import { useUnreadCount } from '../lib/shared'
 import { openSignIn } from '../lib/signin'
 import { sized } from '../lib/img'
 
@@ -76,10 +76,10 @@ export default function BottomNav() {
   const avatar: string | null = isAuthed ? (user as any)?.avatar || (user as any)?.avatarUrl || null : null
   const username: string = isAuthed ? (user as any)?.username || '' : ''
   const ownProfile = username ? `/user/${encodeURIComponent(username)}`.toLowerCase() : null
-  const [unreadCount, setUnreadCount] = useState(0)
+  // Shared with the top bar: one check for both (lib/shared)
+  const unreadCount = useUnreadCount(isAuthed)
   const [pulse, setPulse] = useState<{ key: TabKey; elapsed: number } | null>(runningPulse)
   const pulseTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   // The picture: a resized copy first; lib/img retries the original once if that
   // fails, and after that the dock shows the plain person icon
@@ -91,30 +91,6 @@ export default function BottomNav() {
     avatarErrors.current += 1
     if (avatarErrors.current > (avatarSrc !== avatar ? 1 : 0)) setAvatarFailed(true)
   }
-
-  const fetchUnread = async () => {
-    if (!isAuthed) return
-    try {
-      const data = await apiRequest<any>('/notifications?limit=1&unreadOnly=true')
-      const count = data?.unreadCount ?? 0
-      setUnreadCount(count)
-    } catch { /* ignore */ }
-  }
-
-  useEffect(() => {
-    if (!isAuthed) setUnreadCount(0)
-    fetchUnread()
-    pollingRef.current = setInterval(fetchUnread, 30000)
-    return () => {
-      if (pollingRef.current) clearInterval(pollingRef.current)
-    }
-  }, [isAuthed])
-
-  useEffect(() => {
-    const onFocus = () => fetchUnread()
-    window.addEventListener('focus', onFocus)
-    return () => window.removeEventListener('focus', onFocus)
-  }, [isAuthed])
 
   useEffect(() => {
     // A bounce carried over from the dock on the previous page: clear it when it ends

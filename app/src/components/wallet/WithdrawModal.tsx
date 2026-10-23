@@ -4,6 +4,7 @@ import Sheet from './Sheet'
 import AddBankForm from './AddBankForm'
 import TwoFactorField, { is2FAError } from '../TwoFactorField'
 import { apiRequest } from '../../lib/api'
+import { sharedGet } from '../../lib/shared'
 import { useAuth } from '../../context/AuthContext'
 import { useWalletBalance } from '../../context/WalletBalanceContext'
 import { MIN_WITHDRAW_NGN, kycOf, maskAcct, money, naira, newKey, ngnWithdrawFee, shortAddr, whenAgain, withdrawLimit, type Allowance, type Balances, type Bank, nextPayoutDay, payoutDayLabel } from '../../lib/wallet'
@@ -45,7 +46,7 @@ export default function WithdrawModal({ onClose, onDone, balances: given }: { on
 
   useEffect(() => {
     if (!verified) return
-    apiRequest<Bank[]>('/wallet/banks').then((list) => {
+    sharedGet<Bank[]>('/wallet/banks', 5000).then((list) => {
       const l = Array.isArray(list) ? list : []
       setBanks(l)
       setBankId((l.find((b) => b.isDefault) || l[0])?.id || '')

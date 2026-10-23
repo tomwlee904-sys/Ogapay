@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import Layout from '../components/Layout'
 import FundWalletModal from '../components/FundWalletModal'
 import { apiRequest } from '../lib/api'
+import { sharedGet, dropShared } from '../lib/shared'
 import { useAuth } from '../context/AuthContext'
 import { useWalletBalance } from '../context/WalletBalanceContext'
 import { MIN_DEPOSIT_NGN, kycOf, naira } from '../lib/wallet'
@@ -91,13 +92,14 @@ export default function Deposit() {
   // An account number they already have is always shown: money sent to it still arrives
   useEffect(() => {
     if (!user) { setDva(null); return }
-    apiRequest<Dva | null>('/wallet/dva').then((d) => setDva(d && d.accountNumber ? d : null)).catch(() => setDva(null))
+    sharedGet<Dva | null>('/wallet/dva', 5000).then((d) => setDva(d && d.accountNumber ? d : null)).catch(() => setDva(null))
   }, [user?.id, kycOk])
 
   async function createDva() {
     setDvaBusy(true); setDvaErr('')
     try {
       const d = await apiRequest<Dva>('/wallet/dva', { method: 'POST' })
+      dropShared('/wallet/dva')
       setDva(d)
     } catch (e: any) { setDvaErr(e?.message || "Couldn't create your account number. Try again in a minute.") }
     setDvaBusy(false)

@@ -2,6 +2,7 @@
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import Layout from "../components/Layout";
 import { apiRequest, API_BASE } from "../lib/api";
+import { sharedGet } from "../lib/shared";
 import { useCurrency } from "../context/CurrencyContext";
 import { useMoney } from "../lib/useMoney";
 import { useAuth } from "../context/AuthContext";
@@ -151,7 +152,7 @@ export default function Profile() {
   // Saved withdrawal banks (Wallet → Money out); null until known, so the banner never flashes
   const [bankCount, setBankCount] = useState<number | null>(null);
   useEffect(() => {
-    apiRequest<any[]>('/wallet/banks').then((d) => setBankCount(Array.isArray(d) ? d.length : 0)).catch(() => {});
+    sharedGet<any[]>('/wallet/banks', 5000).then((d) => setBankCount(Array.isArray(d) ? d.length : 0)).catch(() => {});
   }, []);
   const [savingBank, setSavingBank] = useState(false);
   const [bankMsg, setBankMsg] = useState("");

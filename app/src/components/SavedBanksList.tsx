@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { apiRequest } from '../lib/api'
+import { sharedGet, dropShared } from '../lib/shared'
 import { maskAcct } from '../lib/wallet'
 
 interface BankAccount {
@@ -29,7 +30,7 @@ export default function SavedBanksList({ bare = false, onCount }: { bare?: boole
 
   async function load() {
     try {
-      const data = await apiRequest<BankAccount[]>('/wallet/banks')
+      const data = await sharedGet<BankAccount[]>('/wallet/banks', 5000)
       setBanks(data || [])
       onCount?.((data || []).length)
     } catch { /* ignore */ }
@@ -55,6 +56,7 @@ export default function SavedBanksList({ bare = false, onCount }: { bare?: boole
         method: 'POST',
         body: JSON.stringify({ bankCode, bankName, accountNumber: accNo, accountName: accName, setDefault }),
       })
+      dropShared('/wallet/banks')
       await load()
       setShowAdd(false)
       setAccNo(''); setBankCode(''); setBankName(''); setAccName(''); setSetDefault(false)
@@ -67,6 +69,7 @@ export default function SavedBanksList({ bare = false, onCount }: { bare?: boole
   async function handleDelete(id: string) {
     try {
       await apiRequest(`/wallet/banks/${id}`, { method: 'DELETE' })
+      dropShared('/wallet/banks')
       const left = banks.filter(b => b.id !== id)
       setBanks(left)
       onCount?.(left.length)
@@ -76,6 +79,7 @@ export default function SavedBanksList({ bare = false, onCount }: { bare?: boole
   async function handleSetDefault(id: string) {
     try {
       await apiRequest(`/wallet/banks/${id}/default`, { method: 'PUT' })
+      dropShared('/wallet/banks')
       setBanks(prev => prev.map(b => ({ ...b, isDefault: b.id === id })))
     } catch { /* ignore */ }
   }

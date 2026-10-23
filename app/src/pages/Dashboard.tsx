@@ -4,6 +4,7 @@ import Layout from '../components/Layout'
 import { useAuth } from '../context/AuthContext'
 import { useWalletBalance } from '../context/WalletBalanceContext'
 import { apiRequest } from '../lib/api'
+import { sharedGet } from '../lib/shared'
 import { categoryLabel } from '../lib/categories'
 import { rankName } from '../lib/requirements'
 import { jobDeadline, deadlineLabel } from '../lib/deadline'
@@ -73,7 +74,7 @@ export default function Dashboard() {
     apiRequest<Job[]>('/tasks/my/created?limit=100').then((d) => setCreated(Array.isArray(d) ? d : [])).catch(() => setCreated([]))
     apiRequest<Job[] | { tasks: Job[] }>('/tasks?limit=100').then((d: any) => setJobs(Array.isArray(d) ? d : d?.tasks || [])).catch(() => setJobs([]))
     // Saved banks (the old check read a profile field the bank form never sets)
-    apiRequest<any[]>('/wallet/banks').then((d) => setHasBank(Array.isArray(d) && d.length > 0)).catch(() => {})
+    sharedGet<any[]>('/wallet/banks', 5000).then((d) => setHasBank(Array.isArray(d) && d.length > 0)).catch(() => {})
   }, [])
 
   if (!user) return <Layout><div className="ui-page"><div className="ui-sk" style={{ height: 200 }} /></div></Layout>

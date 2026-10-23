@@ -1,5 +1,6 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import { apiRequest } from '../../lib/api'
+import { dropShared } from '../../lib/shared'
 import type { Bank } from '../../lib/wallet'
 
 type BankOption = { code: string; name: string }
@@ -79,6 +80,7 @@ export default function AddBankForm({ onSaved, onCancel, makeDefault, action, no
     }
     try {
       const saved = await apiRequest<Bank>('/wallet/banks', { method: 'POST', body: JSON.stringify({ bankCode: bank.code, bankName: bank.name, accountNumber: acct, accountName: name, setDefault: !!makeDefault }) })
+      dropShared('/wallet/banks')
       onSaved?.(saved)
     } catch (e: any) {
       setError(e?.message || "Couldn't save this account. Try again.")

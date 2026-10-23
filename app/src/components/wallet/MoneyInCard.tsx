@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { apiRequest } from '../../lib/api'
+import { sharedGet, dropShared } from '../../lib/shared'
 import '../../styles/wallet.css'
 
 type Dva = { accountNumber: string; bankName: string; accountName?: string | null }
@@ -19,12 +20,12 @@ export default function MoneyInCard({ verified, embedded = false }: { verified: 
   const [copied, setCopied] = useState(false)
 
   useEffect(() => {
-    apiRequest<Dva | null>('/wallet/dva').then((d) => setDva(d && d.accountNumber ? d : null)).catch(() => setDva(null))
+    sharedGet<Dva | null>('/wallet/dva', 5000).then((d) => setDva(d && d.accountNumber ? d : null)).catch(() => setDva(null))
   }, [verified])
 
   const create = async () => {
     setBusy(true); setErr('')
-    try { setDva(await apiRequest<Dva>('/wallet/dva', { method: 'POST' })) }
+    try { setDva(await apiRequest<Dva>('/wallet/dva', { method: 'POST' })); dropShared('/wallet/dva') }
     catch (e: any) { setErr(e?.message || "Couldn't create your account number. Try again in a minute.") }
     setBusy(false)
   }

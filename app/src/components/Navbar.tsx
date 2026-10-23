@@ -5,7 +5,7 @@ import { useToast } from '../components/Toast'
 import { useTheme } from '../context/ThemeContext'
 import { useCurrency } from '../context/CurrencyContext'
 import { displayPref } from '../lib/money'
-import { apiRequest } from '../lib/api'
+import { useUnreadCount } from '../lib/shared'
 import { useWalletBalance } from '../context/WalletBalanceContext'
 import { Logo } from './Logo'
 import { openSignIn } from '../lib/signin'
@@ -42,7 +42,8 @@ export default function Navbar({ onMenuToggle }: NavbarProps) {
   const { isAuthed, isLoading, user } = useAuth()
   const { theme, toggle } = useTheme()
   const { convert, preferredCurrency } = useCurrency()
-  const [unreadNotifs, setUnreadNotifs] = useState(0)
+  // Shared with the dock: one check for both (lib/shared)
+  const unreadNotifs = useUnreadCount(isAuthed)
   const [scrolled, setScrolled] = useState(false)
   const navRef = useRef<HTMLElement>(null)
 
@@ -61,23 +62,6 @@ export default function Navbar({ onMenuToggle }: NavbarProps) {
   const balanceText = inUsd
     ? `$${(total < 0.01 ? 0 : total).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
     : `₦${Math.round(Math.max(0, total)).toLocaleString('en-US')}`
-
-  useEffect(() => {
-    if (!isAuthed) return
-    let cancelled = false
-    async function fetchUnread() {
-      try {
-        const data = await apiRequest<any>('/notifications?limit=10')
-        const items = Array.isArray(data) ? data : data?.notifications ?? []
-        if (!cancelled) setUnreadNotifs(items.filter((n: any) => !(n.read ?? n.isRead ?? false)).length)
-      } catch { /* background check: keep the last count, try again on the next one */ }
-    }
-    fetchUnread()
-    const onFocus = () => fetchUnread()
-    window.addEventListener('focus', onFocus)
-    const interval = setInterval(fetchUnread, 30000)
-    return () => { cancelled = true; window.removeEventListener('focus', onFocus); clearInterval(interval) }
-  }, [isAuthed])
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10)

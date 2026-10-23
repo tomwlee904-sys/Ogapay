@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { CATEGORY_LABELS } from '../lib/categories'
 import { useNavigate } from 'react-router-dom'
 import { apiRequest } from '../lib/api'
+import { refreshUnread } from '../lib/shared'
 import { SkeletonPage, injectSkeletonStyles } from '../components/SkeletonLoader'
 import { useAuth } from '../context/AuthContext'
 import { PushOffer } from './PushAlerts'
@@ -197,17 +198,20 @@ export default function TabNotificationsContent() {
   const markAllRead = async () => {
     try { await apiRequest('/notifications/read-all', { method: 'PATCH' }) } catch { /* ignore */ }
     resetAndFetch()
+    refreshUnread(true) // the badge in the top bar and dock
   }
 
   const markOneRead = async (id: string | number) => {
     try { await apiRequest(`/notifications/${id}/read`, { method: 'PATCH' }) } catch { /* ignore */ }
     resetAndFetch()
+    refreshUnread(true) // the badge in the top bar and dock
   }
 
   const deleteNotif = async (id: string | number, e: React.MouseEvent) => {
     e.stopPropagation()
     try { await apiRequest(`/notifications/${id}`, { method: 'DELETE' }) } catch { /* ignore */ }
     resetAndFetch()
+    refreshUnread(true) // the badge in the top bar and dock
   }
 
   const loadMore = () => {

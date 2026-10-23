@@ -8,6 +8,7 @@ import Sheet from '../components/wallet/Sheet'
 import LevelCard from '../components/wallet/LevelCard'
 import MoneyInCard from '../components/wallet/MoneyInCard'
 import { apiRequest } from '../lib/api'
+import { sharedGet, dropShared } from '../lib/shared'
 import { useAuth } from '../context/AuthContext'
 import { useWalletBalance } from '../context/WalletBalanceContext'
 import { isCredit, isEscrowHeld, isStoreHeld, kycOf, isPending, isVoid, usefulNote, maskAcct, money, naira, PAYOUT_LABEL, payoutNote, payoutStatusOf, statusLabel, txDetail, txTitle, when, type Balances, type Bank, type PayoutStatus, type Summary, type Tx } from '../lib/wallet'
@@ -74,7 +75,7 @@ export default function Wallet() {
     const [b, s, bk] = await Promise.all([
       apiRequest<Balances>('/wallet/balance').catch(() => null),
       apiRequest<Summary>('/wallet/summary').catch(() => null),
-      apiRequest<Bank[]>('/wallet/banks').catch(() => null),
+      sharedGet<Bank[]>('/wallet/banks', 5000).catch(() => null),
     ])
     setBalances(b || {})
     setSummary(s || {})
@@ -122,7 +123,8 @@ export default function Wallet() {
     try {
       if (action === 'default') await apiRequest(`/wallet/banks/${id}/default`, { method: 'PUT' })
       else await apiRequest(`/wallet/banks/${id}`, { method: 'DELETE' })
-      setBanks(await apiRequest<Bank[]>('/wallet/banks'))
+      dropShared('/wallet/banks')
+      setBanks(await sharedGet<Bank[]>('/wallet/banks'))
     } catch (e: any) { setBankErr(e?.message || "That didn't work. Try again.") }
   }
 
@@ -300,7 +302,7 @@ export default function Wallet() {
       {modal === 'send' && <TransferModal onClose={() => setModal(null)} onSuccess={refreshAll} />}
       {modal === 'bank' && (
         <Sheet title="Add bank account" onClose={() => setModal(null)}>
-          <AddBankForm makeDefault={!banks?.length} onCancel={() => setModal(null)} onSaved={() => { setModal(null); apiRequest<Bank[]>('/wallet/banks').then(setBanks).catch(() => {}) }} />
+          <AddBankForm makeDefault={!banks?.length} onCancel={() => setModal(null)} onSaved={() => { setModal(null); dropShared('/wallet/banks'); sharedGet<Bank[]>('/wallet/banks').then(setBanks).catch(() => {}) }} />
         </Sheet>
       )}
     </Layout>
