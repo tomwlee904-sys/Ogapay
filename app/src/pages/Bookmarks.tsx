@@ -26,7 +26,7 @@ export default function Bookmarks() {
     <Layout>
       <div className="up-wrap" style={{ maxWidth: 860 }}>
         <div className="up-sec-h" style={{ marginBottom: 18 }}>
-          <h2 style={{ fontSize: 24 }}>Saved jobs</h2>
+          <h1 style={{ fontSize: 24 }}>Saved jobs</h1>
           <p>Jobs you bookmarked. Tap the bookmark on any job to add it here.</p>
         </div>
 

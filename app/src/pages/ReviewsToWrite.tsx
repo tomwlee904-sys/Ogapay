@@ -76,7 +76,7 @@ export default function ReviewsToWrite() {
     <Layout>
       <div className="up-wrap" style={{ maxWidth: 860 }}>
         <div className="up-sec-h" style={{ marginBottom: 18 }}>
-          <h2 style={{ fontSize: 24 }}>Reviews to write</h2>
+          <h1 style={{ fontSize: 24 }}>Reviews to write</h1>
           <p>Work you approved in the last {days} days without stars. Your stars count towards each worker's rating and show on their public profile.</p>
         </div>
 
