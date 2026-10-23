@@ -115,8 +115,8 @@ export default function Creators() {
         ) : list.length === 0 ? (
           <div className="up-empty">
             <i className="ti ti-speakerphone" />
-            {platform || size || search ? 'No creators match these filters yet.' : 'No creators are listed yet.'}{' '}
-            <Link to="/settings/creator">Add your audience</Link> to be one of the first.
+            {platform || size || search ? 'No verified creators match these filters yet.' : 'No verified creators yet.'}{' '}
+            <Link className="tap" to="/settings/creator">Add your audience</Link> to be listed first.
           </div>
         ) : (
           <>
