@@ -302,7 +302,7 @@ export default function TabNotificationsContent() {
                   : <div className="nt-desc">{n.desc}</div>}
                 <div className="nt-time">{n.time}</div>
               </div>
-              <button className="nt-del" onClick={(e) => deleteNotif(n.id, e)} title="Delete">
+              <button className="nt-del" onClick={(e) => deleteNotif(n.id, e)} title="Delete" aria-label="Delete this alert">
                 <i className="ti ti-x" />
               </button>
             </div>

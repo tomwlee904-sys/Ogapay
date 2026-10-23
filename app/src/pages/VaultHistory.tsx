@@ -329,20 +329,20 @@ export default function VaultHistory() {
                   Page {batchPage} of {batchTotalPages} · {batchTotalBatches} batches
                 </span>
                 <div style={{ display: 'flex', gap: 6 }}>
-                  <button onClick={() => { setBatchPage(1); fetchBatches(1) }} disabled={batchPage <= 1}
-                    style={{ height: 28, padding: '0 8px', borderRadius: 6, border: '1px solid var(--border)', background: 'transparent', color: batchPage <= 1 ? 'var(--text3)' : 'var(--text2)', fontSize: 11, fontWeight: 700, cursor: batchPage <= 1 ? 'default' : 'pointer', fontFamily: 'inherit' }}>
+                  <button className="pg-btn" onClick={() => { setBatchPage(1); fetchBatches(1) }} disabled={batchPage <= 1}
+                    style={{ height: 36, padding: '0 12px', borderRadius: 6, border: '1px solid var(--border)', background: 'transparent', color: batchPage <= 1 ? 'var(--text3)' : 'var(--text2)', fontSize: 11, fontWeight: 700, cursor: batchPage <= 1 ? 'default' : 'pointer', fontFamily: 'inherit' }}>
                     First
                   </button>
-                  <button onClick={() => { const p = Math.max(1, batchPage - 1); setBatchPage(p); fetchBatches(p) }} disabled={batchPage <= 1}
-                    style={{ height: 28, padding: '0 8px', borderRadius: 6, border: '1px solid var(--border)', background: 'transparent', color: batchPage <= 1 ? 'var(--text3)' : 'var(--text2)', fontSize: 11, fontWeight: 700, cursor: batchPage <= 1 ? 'default' : 'pointer', fontFamily: 'inherit' }}>
+                  <button className="pg-btn" onClick={() => { const p = Math.max(1, batchPage - 1); setBatchPage(p); fetchBatches(p) }} disabled={batchPage <= 1}
+                    style={{ height: 36, padding: '0 12px', borderRadius: 6, border: '1px solid var(--border)', background: 'transparent', color: batchPage <= 1 ? 'var(--text3)' : 'var(--text2)', fontSize: 11, fontWeight: 700, cursor: batchPage <= 1 ? 'default' : 'pointer', fontFamily: 'inherit' }}>
                     Prev
                   </button>
-                  <button onClick={() => { const p = Math.min(batchTotalPages, batchPage + 1); setBatchPage(p); fetchBatches(p) }} disabled={batchPage >= batchTotalPages}
-                    style={{ height: 28, padding: '0 8px', borderRadius: 6, border: '1px solid var(--border)', background: 'transparent', color: batchPage >= batchTotalPages ? 'var(--text3)' : 'var(--text2)', fontSize: 11, fontWeight: 700, cursor: batchPage >= batchTotalPages ? 'default' : 'pointer', fontFamily: 'inherit' }}>
+                  <button className="pg-btn" onClick={() => { const p = Math.min(batchTotalPages, batchPage + 1); setBatchPage(p); fetchBatches(p) }} disabled={batchPage >= batchTotalPages}
+                    style={{ height: 36, padding: '0 12px', borderRadius: 6, border: '1px solid var(--border)', background: 'transparent', color: batchPage >= batchTotalPages ? 'var(--text3)' : 'var(--text2)', fontSize: 11, fontWeight: 700, cursor: batchPage >= batchTotalPages ? 'default' : 'pointer', fontFamily: 'inherit' }}>
                     Next
                   </button>
-                  <button onClick={() => { setBatchPage(batchTotalPages); fetchBatches(batchTotalPages) }} disabled={batchPage >= batchTotalPages}
-                    style={{ height: 28, padding: '0 8px', borderRadius: 6, border: '1px solid var(--border)', background: 'transparent', color: batchPage >= batchTotalPages ? 'var(--text3)' : 'var(--text2)', fontSize: 11, fontWeight: 700, cursor: batchPage >= batchTotalPages ? 'default' : 'pointer', fontFamily: 'inherit' }}>
+                  <button className="pg-btn" onClick={() => { setBatchPage(batchTotalPages); fetchBatches(batchTotalPages) }} disabled={batchPage >= batchTotalPages}
+                    style={{ height: 36, padding: '0 12px', borderRadius: 6, border: '1px solid var(--border)', background: 'transparent', color: batchPage >= batchTotalPages ? 'var(--text3)' : 'var(--text2)', fontSize: 11, fontWeight: 700, cursor: batchPage >= batchTotalPages ? 'default' : 'pointer', fontFamily: 'inherit' }}>
                     Last
                   </button>
                 </div>
@@ -380,9 +380,9 @@ export default function VaultHistory() {
                           }}>
                             {batch.status || 'COMPLETED'}
                           </span>
-                          <button onClick={() => handleBatchToggle(batch.id)}
+                          <button className="tap" onClick={() => handleBatchToggle(batch.id)} aria-expanded={expandedBatch === batch.id} aria-label={expandedBatch === batch.id ? 'Hide this batch' : 'Show this batch'}
                             style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text3)', fontFamily: 'inherit', padding: 2, transition: 'transform .15s', transform: expandedBatch === batch.id ? 'rotate(180deg)' : 'rotate(0deg)' }}>
-                            <i className="ti ti-chevron-down" style={{ fontSize: 16 }} />
+                            <i className="ti ti-chevron-down" style={{ fontSize: 16 }} aria-hidden="true" />
                           </button>
                         </div>
                       </div>
