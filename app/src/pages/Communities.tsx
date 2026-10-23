@@ -34,38 +34,55 @@ export default function Communities() {
   const signedIn = !!getAccessToken()
   const [tab, setTab] = useState<'all' | 'mine'>(location.pathname === '/communities/mine' ? 'mine' : 'all')
   const [mine, setMine] = useState<any[] | null>(null)
+  // Like wurk: "Has open jobs" and "Last 30 days" filters, and 12 a page.
+  // The server filters and pages (the page used to load every community at once).
+  const [hasJobs, setHasJobs] = useState(false)
+  const [recent, setRecent] = useState(false)
+  const [page, setPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [query, setQuery] = useState('')
+
+  // Search waits until typing stops
+  useEffect(() => {
+    const t = setTimeout(() => setQuery(search.trim()), 350)
+    return () => clearTimeout(t)
+  }, [search])
+  useEffect(() => { setPage(1) }, [filter, hasJobs, recent, query])
 
   useEffect(() => {
+    let live = true
     async function fetchCommunities() {
+      setLoading(true)
+      const qs = new URLSearchParams({ page: String(page), limit: '12' })
+      if (filter === 'new') qs.set('sort', 'newest')
+      else if (filter !== 'all' && filter !== 'trending') qs.set('category', filter)
+      if (hasJobs) qs.set('hasJobs', '1')
+      if (recent) qs.set('recent', '1')
+      if (query) qs.set('search', query)
       try {
         // (this used to call the production API directly, even from test builds)
-        const data = await apiRequest<any>('/communities', { auth: false })
+        const data = await apiRequest<any>(`/communities?${qs}`, { auth: false })
+        if (!live) return
         setCommunities(data?.communities || [])
         setStats(data?.stats || null)
-        setTrending(data?.trending || [])
+        setTotalPages(Number(data?.totalPages) || 1)
+        // Trending stays the first unfiltered page's pick
+        if (filter === 'all' && !hasJobs && !recent && !query && page === 1) setTrending(data?.trending || [])
       } catch {}
-      setLoading(false)
+      if (live) setLoading(false)
     }
     fetchCommunities()
-  }, [])
+    return () => { live = false }
+  }, [filter, hasJobs, recent, query, page])
 
   useEffect(() => {
     if (tab !== 'mine' || !signedIn || mine) return
     apiRequest<any[]>('/communities/mine/list').then((d) => setMine(Array.isArray(d) ? d : [])).catch(() => setMine([]))
   }, [tab, signedIn, mine])
 
-  const monthAgo = Date.now() - 30 * 86400000
-
-  const filtered = communities.filter(c => {
-    if (filter === 'trending' && !c.trending) return false
-    if (filter === 'new' && new Date(c.createdAt).getTime() < monthAgo) return false
-    if (filter !== 'all' && filter !== 'trending' && filter !== 'new' && c.category !== filter) return false
-    if (search) {
-      const q = search.toLowerCase()
-      return `${c.name} ${c.desc || ''} ${c.badge || ''}`.toLowerCase().includes(q)
-    }
-    return true
-  })
+  // "Trending" keeps the busiest first (the server's default order) and only
+  // shows the ones the server marks trending on this page
+  const filtered = filter === 'trending' ? communities.filter((c) => c.trending) : communities
 
   return (
     <Layout>
@@ -117,6 +134,10 @@ export default function Communities() {
         .ch-trend .ch-card{min-width:260px;scroll-snap-align:start}
         .sec-title{font-family:var(--font);font-size:var(--fs-h2);font-weight:600;letter-spacing:-.02em;margin:0 0 4px}
         .sec-sub{color:var(--text2);font-size:13.5px;margin:0 0 var(--sp-4)}
+        .ch-sep{width:1px;align-self:stretch;background:var(--border);margin:0 4px}
+        .ch-pages{display:flex;align-items:center;justify-content:center;gap:12px;margin:0 0 var(--sp-6);font-size:13px;color:var(--text2)}
+        .ch-pages .ch-pill{height:44px}
+        .ch-pill:disabled{opacity:.45;cursor:default}
         .ch-empty{text-align:center;padding:48px 24px;color:var(--text2);font-size:14px}
       `}</style>
 
@@ -161,6 +182,9 @@ export default function Communities() {
         {filters.map(f => (
           <button key={f} className={`ch-pill ${filter === f.toLowerCase() ? 'active' : ''}`} onClick={() => setFilter(f.toLowerCase())}>{f}</button>
         ))}
+        <span className="ch-sep" aria-hidden="true" />
+        <button className={`ch-pill ${hasJobs ? 'active' : ''}`} aria-pressed={hasJobs} onClick={() => setHasJobs(!hasJobs)}><i className="ti ti-briefcase" /> Has open jobs</button>
+        <button className={`ch-pill ${recent ? 'active' : ''}`} aria-pressed={recent} onClick={() => setRecent(!recent)}><i className="ti ti-calendar" /> Last 30 days</button>
       </div>
 
       {loading ? (
@@ -195,7 +219,7 @@ export default function Communities() {
           <div className="sec-sub">Discover and join communities that match your interests</div>
 
           {filtered.length === 0 ? (
-            <div className="ch-empty"><i className="ti ti-users" style={{ fontSize: 32, marginBottom: 8, display: 'block', color: 'var(--text3)' }} />No communities found. Try a different filter.</div>
+            <div className="ch-empty"><i className="ti ti-users" style={{ fontSize: 32, marginBottom: 8, display: 'block', color: 'var(--text3)' }} />{hasJobs ? 'No communities with open jobs match.' : 'No communities found.'} Try a different filter.</div>
           ) : (
             <div className="ch-grid">
               {filtered.map(c => (
@@ -208,6 +232,7 @@ export default function Communities() {
                     {c.desc && <div className="cc-desc">{c.desc}</div>}
                     <div className="cc-meta">
                       <span><i className="ti ti-users" /> {c.members?.toLocaleString()} member{c.members === 1 ? '' : 's'}</span>
+                      {c.openJobs > 0 && <span><i className="ti ti-briefcase" /> {c.openJobs} open job{c.openJobs === 1 ? '' : 's'}</span>}
                     </div>
                     <div className="cc-actions">
                       <button className="ch-join" onClick={(e) => { e.stopPropagation(); navigate('/communities/' + c.id) }}>View</button>
@@ -216,6 +241,13 @@ export default function Communities() {
                 </div>
               ))}
             </div>
+          )}
+          {totalPages > 1 && (
+            <nav className="ch-pages" aria-label="Pages">
+              <button className="ch-pill" disabled={page <= 1} onClick={() => { setPage(page - 1); window.scrollTo({ top: 0 }) }}><i className="ti ti-chevron-left" /> Previous</button>
+              <span>Page {page} of {totalPages}</span>
+              <button className="ch-pill" disabled={page >= totalPages} onClick={() => { setPage(page + 1); window.scrollTo({ top: 0 }) }}>Next <i className="ti ti-chevron-right" /></button>
+            </nav>
           )}
         </>
       )}

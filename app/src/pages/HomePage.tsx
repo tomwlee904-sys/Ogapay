@@ -178,25 +178,31 @@ function Hero({ live, onCreate }: { live: any; onCreate: () => void }) {
 
 /* ─── live ticker ──────────────────────────────────────────────────────────── */
 
-function Ticker({ jobs }: { jobs: any[] }) {
-  if (jobs.length === 0) return <div id="hv-ticker" />;
-  const items = jobs.slice(0, 14);
+// Real payouts (like wurk's ticker): who got paid, how much and when. This used
+// to list new jobs. People with a private profile show as "A member", with no
+// picture or profile link (the server leaves their name out).
+type Payout = { username: string | null; avatarUrl: string | null; private?: boolean; amount: number; currency: string; at: string };
+function Ticker({ payouts }: { payouts: Payout[] }) {
+  if (payouts.length === 0) return <div id="hv-ticker" />;
+  const items = payouts.slice(0, 20);
   const row = [...items, ...items];
   return (
-    <div id="hv-ticker" className="hv-ticker" aria-label="Latest jobs">
+    <div id="hv-ticker" className="hv-ticker" aria-label="Latest payouts to workers">
       <div className="hv-ticker-track">
-        {row.map((t, i) => {
-          const p = t.poster || t.creator || {};
-          const name = p.username || p.firstName || t.creatorName || "OgaPay";
-          return (
-            <Link key={`${t.id}-${i}`} to={`/tasks/${t.id}`} className="hv-tick" aria-hidden={i >= items.length}>
+        {row.map((p, i) => {
+          const name = p.username || "A member";
+          const inner = (
+            <>
               <span className="hv-tick-av">{p.avatarUrl ? <img src={sized(p.avatarUrl, 24, true)} alt="" loading="lazy" /> : name.charAt(0).toUpperCase()}</span>
-              <b>{name}</b>
-              <span className="amt">+{reward(Number(t.reward ?? t.amount ?? 0), t.currency)}</span>
-              <span style={{ color: "var(--text2)" }}>{t.title}</span>
-              <span className="ago">{ago(t.createdAt)}</span>
-            </Link>
+              <b>{p.username ? `@${p.username}` : name}</b>
+              <span className="amt">+{reward(Number(p.amount || 0), p.currency)}</span>
+              <span style={{ color: "var(--text2)" }}>paid</span>
+              <span className="ago">{ago(p.at)}</span>
+            </>
           );
+          return p.username
+            ? <Link key={i} to={`/user/${p.username}`} className="hv-tick" aria-hidden={i >= items.length} tabIndex={i >= items.length ? -1 : undefined}>{inner}</Link>
+            : <span key={i} className="hv-tick" aria-hidden={i >= items.length}>{inner}</span>;
         })}
       </div>
     </div>
@@ -547,6 +553,8 @@ export default function HomePage() {
 
   const live = useJson<any>("/stats/live", 60000);
   const all = useJson<any>("/stats");
+  const payoutsRes = useJson<any>("/stats/payouts", 120000);
+  const payouts: Payout[] = Array.isArray(payoutsRes?.data) ? payoutsRes.data : [];
   const { data: jobsRes, error: jobsErr } = useApi("/tasks?status=OPEN", { auth: false });
   // Some older jobs have a past deadline but no expiry, so the API still lists them
   // as open; don't highlight ones that have already ended
@@ -581,7 +589,7 @@ export default function HomePage() {
       <main ref={rootRef} className="hv" style={{ paddingTop: "var(--nav-h)", overflowX: "clip" }}>
         <div className="hv-frame">
           <Hero live={live} onCreate={onCreate} />
-          <Ticker jobs={jobs} />
+          <Ticker payouts={payouts} />
           <ChoosePath />
           <Numbers live={live} all={all} />
           <Possibilities />
