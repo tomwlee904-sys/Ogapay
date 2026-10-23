@@ -7,7 +7,9 @@ import '../styles/messages.css'
 import { sized } from '../lib/img'
 
 type Person = { id: string; username: string | null; name: string; avatarUrl: string | null }
-type Conv = { id: string; participants: Person[]; lastMessage: { content: string; createdAt: string; senderId: string } | null; unread: number; updatedAt: string }
+type Conv = { id: string; participants: Person[]; lastMessage: { content: string; createdAt: string; senderId: string } | null; unread: number; updatedAt: string
+  // A private job chat (Selection jobs): the job it's about
+  job?: { id: string; title: string } | null }
 type Msg = { id: string; content: string; createdAt: string; senderId: string }
 
 const shortTime = (d: string) => {
@@ -78,7 +80,7 @@ export default function Messages() {
   useEffect(() => {
     if (!toUser || convs === null) return
     const name = toUser.replace(/^@/, '').toLowerCase()
-    const hit = convs.find((c) => c.participants.some((p) => p.username?.toLowerCase() === name))
+    const hit = convs.find((c) => !c.job && c.participants.some((p) => p.username?.toLowerCase() === name))
     if (hit) { setParams({ c: hit.id }, { replace: true }); return }
     if (name === user?.username?.toLowerCase()) { setParams({}, { replace: true }); return }
     apiRequest<any>('/users/' + encodeURIComponent(name))
@@ -137,6 +139,7 @@ export default function Messages() {
                     <Avatar p={p} />
                     <span className="mid">
                       <b>{p?.name?.trim() || p?.username || 'OgaPay user'}</b>
+                      {c.job && <small className="ms-job"><i className="ti ti-briefcase" aria-hidden="true" /> Job chat: {c.job.title}</small>}
                       <small>{c.lastMessage ? (mine ? 'You: ' : '') + c.lastMessage.content.split('\n')[0] : 'No messages yet'}</small>
                     </span>
                     <span className="end">

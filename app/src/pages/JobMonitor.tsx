@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext'
 import { useToast } from '../components/Toast'
 import { apiRequest } from '../lib/api'
 import { categoryLabel } from '../lib/categories'
+import { jobRequirements } from '../lib/requirements'
 import { savedJobIds, setSaved, onSavedJobsChange } from '../lib/bookmarks'
 import { useJobAlert } from '../contexts/JobAlertContext'
 import InfoTip from '../components/InfoTip'
@@ -23,6 +24,8 @@ type Job = {
   maxWorkers?: number; currentWorkers?: number; posterId?: string; poster?: { username?: string | null }
   isSelection?: boolean
   eligible?: boolean // sent only when signed in: false when applying would be refused
+  // Requirements (lib/requirements reads these)
+  [k: string]: any
 }
 
 const POLL_MS = 30000
@@ -152,6 +155,8 @@ export default function JobMonitor() {
                   <div className="jm2-t">
                     <Link to={`/tasks/${j.id}`}>{fresh.has(j.id) && <span className="jm2-new">New</span>}{j.title}</Link>
                     <span>{categoryLabel(j.category)}{j.poster?.username ? ` · @${j.poster.username}` : ''} · {ago(j.createdAt)} · {left === 0 ? 'full' : `${left} ${left === 1 ? 'slot' : 'slots'} left`}</span>
+                    {/* What the job asks for, like wurk's "Requires Rank 2 · Human verification" line */}
+                    {(() => { const reqs = jobRequirements(j); return <span className={`jm2-req${reqs.length ? '' : ' none'}`}><i className={`ti ti-${reqs.length ? 'shield-check' : 'circle-check'}`} aria-hidden="true" />{reqs.length ? 'Requires ' + reqs.map((r) => r.text).join(' · ') : 'No extra requirements'}</span> })()}
                   </div>
                   <b>{money(Number(j.reward || 0), j.currency)}</b>
                   <div className="jm2-acts">

@@ -353,6 +353,7 @@ function JobDrawer({ task, allTasks, focusId, onClose, onChanged }: { task: Task
                 <section className="mj-sec">
                   <h4>Applications ({apps?.length ?? 0})</h4>
                   {task.status === "OPEN" && task.hiredWorkerId && <p className="mj-auto"><Icon n="clock-check" s={14} /> You picked someone. Review their work below when it comes in. If you reject it, or their 24 hours run out with no work, you can pick again.</p>}
+                  {task.hiredWorkerId && <Link className="ui-btn ui-btn-ghost" to={`/work/${task.id}`} style={{ alignSelf: "flex-start" }}><Icon n="messages" s={14} /> Open the job chat and workspace</Link>}
                   {task.status === "OPEN" && !task.hiredWorkerId && <p className="mj-auto"><Icon n="user-check" s={14} /> Read the notes and pick one person. They get 24 hours to send the work, and you pay {money(reward, cur)} only when you approve it.</p>}
                   {apps === null ? <div className="ui-sk" style={{ height: 80 }} /> : apps.length === 0 ? <div className="mj-empty">No one has applied yet.</div> : apps.map((a) => {
                     const p = a.worker?.workerProfile;

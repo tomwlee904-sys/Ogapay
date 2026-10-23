@@ -9,6 +9,7 @@ import { renderJobText } from '../lib/jobText'
 import { saveDraft, loadDraft, clearDraft } from '../lib/draft'
 import { ordinal } from '../components/ContestPanel'
 import '../styles/submit.css'
+import { uploadProof } from '../lib/upload'
 import { PayoutCheckNote, PayoutCheckStatus } from '../components/PayoutCheck'
 
 // Submit work for a job (/tasks/:id/submit). Takes a slot if you haven't yet,
@@ -132,18 +133,19 @@ export default function SubmissionPage() {
         })
       }
       // 2. Upload files
+      // (Watermarked jobs: images are stamped by the server; the originals stay yours
+      // until the poster approves the work)
       const urls: string[] = []
+      const originals: { url: string; originalUrl: string }[] = []
       for (const [i, f] of files.entries()) {
         setBusy(`Uploading file ${i + 1} of ${files.length}…`)
-        const fd = new FormData(); fd.append('file', f)
-        const r = await fetch(`${API_BASE}/uploads/proof`, { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: fd })
-        const j = await r.json().catch(() => ({}))
-        if (!r.ok || !j?.data?.url) throw new Error(`"${f.name}" couldn't be uploaded${j?.message ? `: ${j.message}` : ''}. Try again or remove it.`)
-        urls.push(j.data.url)
+        const up = await uploadProof(f, task.id, !!task.watermark)
+        urls.push(up.url)
+        if (up.originalUrl) originals.push({ url: up.url, originalUrl: up.originalUrl })
       }
       // 3. Submit
       setBusy('Sending your work…')
-      await apiRequest(`/tasks/${task.id}/submit`, { method: 'POST', body: JSON.stringify({ ...(link.trim() && { proof: link.trim() }), ...(notes.trim() && { workerNotes: notes.trim() }), ...(urls.length && { attachments: urls }) }) })
+      await apiRequest(`/tasks/${task.id}/submit`, { method: 'POST', body: JSON.stringify({ ...(link.trim() && { proof: link.trim() }), ...(notes.trim() && { workerNotes: notes.trim() }), ...(urls.length && { attachments: urls }), ...(originals.length && { originals }) }) })
       setLink(''); setNotes(''); setFiles([])
       clearDraft(draftKey, user?.id)
       await loadMine()
@@ -293,6 +295,7 @@ export default function SubmissionPage() {
                 <label className="ui-label" htmlFor="sb-notes">Note for the poster</label>
                 <textarea id="sb-notes" className="ui-input sb-textarea" maxLength={1000} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="What you did, anything they should know" />
                 <span className="ui-label">{needsShot ? 'Screenshot (required)' : 'Screenshots or files'} ({files.length}/{MAX_FILES})</span>
+                {task.watermark && <p className="sb-small"><i className="ti ti-droplet" /> Watermarks are on: the poster sees your images stamped with OGAPAY, and gets the originals only when they approve your work.</p>}
                 {files.length > 0 && (
                   <ul className="sb-files">
                     {files.map((f, i) => (

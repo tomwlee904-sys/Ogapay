@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import { CATEGORIES, listTemplates, money, type JobTemplate, type TemplateData } from "./shared";
+import { CATEGORIES, listTemplates, listCommunityTemplates, copyTemplate, setTemplatePublic, money, type JobTemplate, type TemplateData, type TemplateFile } from "./shared";
 
 // Pick a starting point for a custom job: your saved templates (Manage jobs >
 // Templates, or "Save as template" on this page) or a few worded examples.
@@ -59,10 +59,37 @@ const EXAMPLES: Example[] = [
   { title: "Write a product review", category: "App / Website Review", subcategory: "App Reviews", winners: "25", description: "Use our product and write an honest review of at least 100 words. Submit a link or paste the review." },
 ];
 
-export default function TemplatesModal({ onClose, onUse }: { onClose: () => void; onUse: (data: TemplateData, example: boolean) => void }) {
+export default function TemplatesModal({ onClose, onUse }: { onClose: () => void; onUse: (data: TemplateData, example: boolean, files?: TemplateFile[]) => void }) {
   const { isAuthed } = useAuth();
   const [mine, setMine] = useState<JobTemplate[] | null>(isAuthed ? null : []);
-  const [tab, setTab] = useState<"mine" | "examples">("mine");
+  const [tab, setTab] = useState<"mine" | "community" | "examples">("mine");
+  // Community library: templates other members shared
+  const [community, setCommunity] = useState<JobTemplate[] | null>(null);
+  const [q, setQ] = useState("");
+  const [preview, setPreview] = useState<JobTemplate | null>(null);
+  const [busy, setBusy] = useState("");
+  useEffect(() => {
+    if (tab !== "community" || !isAuthed) return;
+    const t = setTimeout(() => {
+      listCommunityTemplates(q.trim()).then((r) => setCommunity(r?.items || [])).catch(() => setCommunity([]));
+    }, q ? 300 : 0);
+    return () => clearTimeout(t);
+  }, [tab, q, isAuthed]);
+  // "Add to my templates": a private copy you can change
+  const addToMine = async (t: JobTemplate) => {
+    setBusy(t.id);
+    try {
+      const copy = await copyTemplate(t.id);
+      setMine((m) => (m && copy && !m.some((x) => x.id === copy.id) ? [copy, ...m] : m));
+      setBusy("added:" + t.id);
+    } catch { setBusy("error:" + t.id); }
+  };
+  const togglePublic = async (t: JobTemplate) => {
+    try {
+      const row = await setTemplatePublic(t.id, !t.isPublic);
+      setMine((m) => m && m.map((x) => (x.id === t.id ? { ...x, isPublic: row?.isPublic ?? !t.isPublic } : x)));
+    } catch { /* leave it as it was */ }
+  };
 
   useEffect(() => {
     if (!isAuthed) return;
@@ -74,7 +101,8 @@ export default function TemplatesModal({ onClose, onUse }: { onClose: () => void
     return () => window.removeEventListener("keydown", k);
   }, [onClose]);
 
-  const use = (d: TemplateData, example: boolean) => { onUse(d, example); onClose(); };
+  const use = (d: TemplateData, example: boolean, files?: TemplateFile[] | null) => { onUse(d, example, files || []); onClose(); };
+  const fileCount = (t: JobTemplate) => (t.files?.length ? `${t.files.length} file${t.files.length > 1 ? "s" : ""}` : null);
   const summary = (d: TemplateData) => [
     d.bounty && Number(d.bounty) > 0 ? `Budget ${money(Number(d.bounty), (d.currency as any) || "NGN")}` : null,
     d.winners ? `${d.winners} ${d.winners === "1" ? "person" : "people"}` : null,
@@ -91,10 +119,44 @@ export default function TemplatesModal({ onClose, onUse }: { onClose: () => void
         </div>
         <div className="tm-tabs" role="tablist">
           <button role="tab" aria-selected={tab === "mine"} className={tab === "mine" ? "on" : ""} onClick={() => setTab("mine")}>My templates{mine?.length ? ` (${mine.length})` : ""}</button>
+          <button role="tab" aria-selected={tab === "community"} className={tab === "community" ? "on" : ""} onClick={() => { setTab("community"); setPreview(null); }}>Community</button>
           <button role="tab" aria-selected={tab === "examples"} className={tab === "examples" ? "on" : ""} onClick={() => setTab("examples")}>Examples</button>
         </div>
         <div className="tm-body">
-          {tab === "mine" ? (
+          {tab === "community" ? (
+            !isAuthed ? <div className="tm-empty">Sign in to browse templates other members shared.</div>
+            : preview ? (
+              <div className="tm-preview">
+                <button className="ui-btn ui-btn-ghost" onClick={() => setPreview(null)}><i className="ti ti-arrow-left" /> All community templates</button>
+                <strong>{preview.name}</strong>
+                <span className="tm-meta">Community template{preview.author ? ` by @${preview.author.username}` : ""}{preview.copies ? ` · added by ${preview.copies} ${preview.copies === 1 ? "person" : "people"}` : ""}</span>
+                {preview.data.description && <p className="tm-desc">{preview.data.description}</p>}
+                {!!preview.files?.length && (
+                  <div className="tm-files"><b>Attachments</b>{preview.files.map((x) => <a key={x.url} href={x.url} target="_blank" rel="noreferrer"><i className="ti ti-paperclip" /> {x.name}</a>)}</div>
+                )}
+                <div className="ui-actions">
+                  <button className="ui-btn ui-btn-dark" onClick={() => use(preview.data, false, preview.files)}>Use</button>
+                  <button className="ui-btn ui-btn-ghost" disabled={busy === preview.id || busy === "added:" + preview.id} onClick={() => addToMine(preview)}>
+                    <i className={`ti ${busy === "added:" + preview.id ? "ti-check" : "ti-plus"}`} /> {busy === "added:" + preview.id ? "Added to my templates" : busy === "error:" + preview.id ? "Couldn't add. Retry" : "Add to my templates"}
+                  </button>
+                </div>
+              </div>
+            ) : (<>
+              <input className="ui-input tm-search" type="search" placeholder="Search community templates" aria-label="Search community templates" value={q} onChange={(e) => setQ(e.target.value)} />
+              {community === null ? <div className="ui-sk" style={{ height: 120 }} /> : community.length === 0 ? (
+                <div className="tm-empty">{q ? "No shared templates match that." : "No shared templates yet. Tick Public when you save a template to share yours."}</div>
+              ) : community.map((t) => (
+                <div key={t.id} className="tm-item">
+                  <div className="tm-item-t">
+                    <strong>{t.name}</strong>
+                    <span>{[t.author ? `@${t.author.username}` : null, summary(t.data), fileCount(t)].filter(Boolean).join(" · ") || "Shared job"}</span>
+                    {t.data.description && <p>{t.data.description}</p>}
+                  </div>
+                  <button className="ui-btn ui-btn-ghost" onClick={() => setPreview(t)}>Preview</button>
+                </div>
+              ))}
+            </>)
+          ) : tab === "mine" ? (
             mine === null ? <div className="ui-sk" style={{ height: 120 }} /> : mine.length === 0 ? (
               <div className="tm-empty">
                 {isAuthed
@@ -105,10 +167,15 @@ export default function TemplatesModal({ onClose, onUse }: { onClose: () => void
               <div key={t.id} className="tm-item">
                 <div className="tm-item-t">
                   <strong>{t.name}</strong>
-                  <span>{summary(t.data) || "Saved job"}</span>
+                  <span>{[summary(t.data), fileCount(t), t.isPublic ? "Public" : null].filter(Boolean).join(" · ") || "Saved job"}</span>
                   {t.data.description && <p>{t.data.description}</p>}
                 </div>
-                <button className="ui-btn ui-btn-dark" onClick={() => use(t.data, false)}>Use</button>
+                <div className="tm-item-acts">
+                  <button className="ui-btn ui-btn-ghost" onClick={() => togglePublic(t)} aria-pressed={!!t.isPublic} title={t.isPublic ? "Shared in the community library. Tap to make it private." : "Only you can see it. Tap to share it in the community library."}>
+                    <i className={`ti ${t.isPublic ? "ti-world" : "ti-lock"}`} /> {t.isPublic ? "Public" : "Private"}
+                  </button>
+                  <button className="ui-btn ui-btn-dark" onClick={() => use(t.data, false, t.files)}>Use</button>
+                </div>
               </div>
             ))
           ) : EXAMPLES.map(({ note, ...d }) => (

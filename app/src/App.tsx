@@ -31,6 +31,9 @@ const Settings = lazyPage(() => import('./pages/Settings'))
 const Notifications = lazyPage(() => import('./pages/Notifications'))
 const Messages = lazyPage(() => import('./pages/Messages'))
 const MyTasks = lazyPage(() => import('./pages/MyTasks'))
+// Selection jobs and hires: My work list and the workspace with the job chat
+const MyWork = lazyPage(() => import('./pages/MyWork'))
+const Workspace = lazyPage(() => import('./pages/Workspace'))
 const MyStore = lazyPage(() => import('./pages/MyStore'))
 const Tasks = lazyPage(() => import('./pages/Tasks'))
 const JobDetail = lazyPage(() => import('./pages/JobDetail'))
@@ -196,6 +199,8 @@ export default function App() {
             <Route path="/warnings" element={<AuthGuard><MyWarnings /></AuthGuard>} />
             <Route path="/messages" element={<AuthGuard><Messages /></AuthGuard>} />
             <Route path="/my-tasks" element={<AuthGuard><MyTasks /></AuthGuard>} />
+            <Route path="/my-work" element={<AuthGuard><MyWork /></AuthGuard>} />
+            <Route path="/work/:id" element={<AuthGuard><Workspace /></AuthGuard>} />
             <Route path="/my-store" element={<AuthGuard><MyStore /></AuthGuard>} />
             <Route path="/campaigns" element={<AuthGuard><Campaigns /></AuthGuard>} />
             <Route path="/post-job" element={<Navigate to="/create" replace />} />

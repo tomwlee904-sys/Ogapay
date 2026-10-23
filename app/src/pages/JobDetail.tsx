@@ -159,6 +159,10 @@ export default function JobDetail() {
   const [mySub, setMySub] = useState<{ status: string; holdEndsAt?: string | null; payoutCheck?: string | null; payoutCheckDueAt?: string | null; payoutCheckReason?: string | null } | null>(null)
   // Selection jobs: your application (WAITING, PICKED or NOT_PICKED)
   const [myApp, setMyApp] = useState<{ status: string } | null>(null)
+  // Why you can't take this job, each reason with a code (server: task.service eligibilityFor)
+  const [eligibility, setEligibility] = useState<{ eligible: boolean; reasons: { code: string; text: string }[] } | null>(null)
+  // Selection job or private hire: who was picked (opens the workspace for them and the poster)
+  const [hiredId, setHiredId] = useState<string | null>(null)
   // The poster's similar jobs: people who did one of them can't take this one
   const [linkedJobs, setLinkedJobs] = useState<{ id: string; title: string }[]>([])
   // Name the job in the browser tab (PageTitle sets the generic one first)
@@ -216,6 +220,8 @@ export default function JobDetail() {
           setJob({ ...formatTask(t), applicationsCount: Number(json.data.applicationsCount || 0) })
           setMySub(json.data.userSubmission || null)
           setMyApp(json.data.userApplication || null)
+          setEligibility(json.data.eligibility || null)
+          setHiredId(t?.hiredWorkerId || null)
           setLinkedJobs(Array.isArray(json.data.similarJobs) ? json.data.similarJobs : [])
           setContest(json.data.contest || null)
           setCommunity(json.data.community || null)
@@ -530,7 +536,50 @@ export default function JobDetail() {
       onContestPaid={() => setReloadKey((k) => k + 1)}
       onReload={() => setReloadKey((k) => k + 1)}
       community={community}
+      eligibility={!canManage && !myLabel ? eligibility : null}
+      workspaceLink={hiredId && (canManage || hiredId === authUser?.id) ? `/work/${job.id}` : null}
     />
+  )
+}
+
+// Where each "why you can't take this job" reason is fixed
+const FIXES: Record<string, { label: string; to: string }> = {
+  KYC: { label: 'Verify your ID', to: '/settings/verification' },
+  HUMAN: { label: 'Verify you are human', to: '/settings/verification' },
+  OGASCORE: { label: 'Raise your OgaScore', to: '/settings/verification' },
+  WALLET: { label: 'Connect a wallet', to: '/settings/connections' },
+  X: { label: 'Connect X', to: '/settings/connections' },
+  X_BLUE: { label: 'Refresh your X profile', to: '/settings/connections' },
+  X_SCORE: { label: 'Connect X', to: '/settings/connections' },
+  AUDIENCE: { label: 'Add your audience', to: '/settings/creator' },
+  RANK: { label: 'How ranks work', to: '/rank' },
+  JOBS: { label: 'Find a starter job', to: '/tasks' },
+  SIMILAR: { label: 'Find other jobs', to: '/tasks?available=1' },
+  EXCLUDED: { label: 'Find other jobs', to: '/tasks?available=1' },
+  CLOSED: { label: 'Find other jobs', to: '/tasks?available=1' },
+  BLOCKED: { label: 'Find other jobs', to: '/tasks?available=1' },
+  SUSPENDED: { label: 'See your warnings', to: '/warnings' },
+  VERIFIED_PERSON: { label: 'Verify your ID', to: '/settings/verification' },
+}
+
+// The red "Eligibility requirements" box: what you're missing and how to fix it
+function EligibilityBanner({ eligibility, joinPath }: { eligibility: { eligible: boolean; reasons: { code: string; text: string }[] } | null; joinPath?: string }) {
+  if (!eligibility || eligibility.eligible || !eligibility.reasons?.length) return null
+  return (
+    <section className="wjd-elig" role="alert" aria-label="Why you can't take this job">
+      <b><i className="ti ti-lock" aria-hidden="true" /> You can't take this job yet</b>
+      <ul>
+        {eligibility.reasons.map((r) => {
+          const fix = r.code === 'COMMUNITY' && joinPath ? { label: 'Join the community', to: joinPath } : FIXES[r.code]
+          return (
+            <li key={r.code + r.text}>
+              <span>{r.text}</span>
+              {fix && <Link to={fix.to}>{fix.label} <i className="ti ti-arrow-right" aria-hidden="true" /></Link>}
+            </li>
+          )
+        })}
+      </ul>
+    </section>
   )
 }
 
@@ -563,7 +612,7 @@ function WurkJobDetailView(props: any) {
     showReportModal, setShowReportModal, reportCategory, setReportCategory,
     reportDesc, setReportDesc, reportMsg, setReportMsg, reportSubmitting, handleSubmitReport,
     submissions, subsLoading, approving, rejecting, handleApprove, handleReject, timeAgo, authUser,
-    contest, onContestPaid, community, onReload,
+    contest, onContestPaid, community, onReload, eligibility, workspaceLink,
   } = props
   // Re-render while a payout check runs, so Approve opens when its window ends
   const clock = useNow(anyWaiting(submissions))
@@ -913,6 +962,15 @@ function WurkJobDetailView(props: any) {
         .wjd-wrap{width:min(100% - 2 * var(--gutter), var(--container))}
         .wjd-panel{border:1px solid var(--border)!important;border-radius:var(--r-card);background:var(--card);box-shadow:var(--sh-1)}
         .wjd-back{border:1px solid var(--border);font-weight:600;border-radius:var(--r-ctl);height:var(--ctl-h-sm)}
+        .wjd-elig{margin:var(--sp-4) 0 0;padding:14px 16px;border-radius:14px;border:1px solid rgba(var(--red-rgb),.35);background:rgba(var(--red-rgb),.07)}
+        .wjd-elig>b{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--red)}
+        .wjd-elig ul{list-style:none;margin:8px 0 0;padding:0;display:flex;flex-direction:column;gap:8px}
+        .wjd-elig li{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:6px 12px;font-size:13px;line-height:1.5;color:var(--text)}
+        .wjd-elig li a{display:inline-flex;align-items:center;gap:4px;min-height:36px;font-weight:600;color:var(--accent);white-space:nowrap}
+        .wjd-workspace{display:flex;align-items:center;gap:12px;margin:var(--sp-4) 0 0;padding:12px 16px;border-radius:14px;border:1px solid var(--border);background:var(--card);color:var(--text);text-decoration:none;min-height:44px}
+        .wjd-workspace>i{font-size:20px;color:var(--accent)}
+        .wjd-workspace span{flex:1;min-width:0;display:flex;flex-direction:column}
+        .wjd-workspace b{font-size:14px}.wjd-workspace small{font-size:12px;color:var(--text2)}
         .wjd-headline{display:flex;justify-content:space-between;align-items:flex-end;gap:var(--sp-6);margin:var(--sp-4) 0 var(--sp-5)}
         .wjd-headline-main{min-width:0}
         .wjd-h1{margin:var(--sp-2) 0 0;font-size:var(--fs-title);font-weight:600;letter-spacing:var(--tracking-tight);line-height:1.15;color:var(--text);overflow-wrap:anywhere}
@@ -995,6 +1053,11 @@ function WurkJobDetailView(props: any) {
             <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7" strokeLinecap="round" strokeLinejoin="round" /></svg>
             Back
           </button>
+
+          <EligibilityBanner eligibility={eligibility} joinPath={joinPath} />
+          {workspaceLink && (
+            <Link to={workspaceLink} className="wjd-workspace"><i className="ti ti-messages" aria-hidden="true" /><span><b>{canManage ? 'Job chat and workspace' : 'Your workspace'}</b><small>{canManage ? 'Talk to the person you picked and see their work.' : 'The brief, your work and the private job chat with the poster.'}</small></span><i className="ti ti-arrow-right" aria-hidden="true" /></Link>
+          )}
 
           {/* ── Title: what the job is, where it stands, what it pays ── */}
           <header className="wjd-headline">

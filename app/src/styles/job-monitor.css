@@ -30,3 +30,8 @@
   .jm2-t { flex-basis: 100%; }
   .jm2-list b { margin-right: auto; }
 }
+
+/* Requirement line on each row */
+.jm2-t .jm2-req { display: flex; align-items: flex-start; gap: 5px; margin-top: 3px; font-size: 12px; color: var(--text2); line-height: 1.4; }
+.jm2-t .jm2-req i { font-size: 13px; margin-top: 1px; color: var(--accent); flex-shrink: 0; }
+.jm2-t .jm2-req.none i { color: var(--green); }

@@ -168,7 +168,10 @@ export default function MyTasks() {
             <h1 className="ui-title">My tasks</h1>
             <p className="ui-sub">Jobs you've taken and where each one stands.</p>
           </div>
-          <Link className="ui-btn ui-btn-dark" to="/tasks"><i className="ti ti-search" /> Find work</Link>
+          <div className="ui-actions">
+            <Link className="ui-btn ui-btn-ghost" to="/my-work"><i className="ti ti-briefcase" /> My work</Link>
+            <Link className="ui-btn ui-btn-dark" to="/tasks"><i className="ti ti-search" /> Find work</Link>
+          </div>
         </div>
 
         {subs === null ? <div className="ui-sk" style={{ height: 240, marginTop: 24 }} /> : list.length === 0 ? (

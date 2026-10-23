@@ -14,7 +14,8 @@ import { PlatformActionButton } from "../components/PlatformActionButton";
 import CampaignWizard from "../components/CampaignWizard";
 import XCampaignBuilder from "../components/create/XCampaignBuilder";
 import QuickTaskForm from "../components/create/QuickTaskForm";
-import { Steps, Fold, Toggle as CfToggle, OverviewCard, RequirementPicker, DURATIONS, deadlineFor, money, minReward, reqFields, reqLabel, uploadJobFile, createTask, apiErrorText, CATEGORIES, CATEGORY_MAP, listTemplates, saveTemplate, type TemplateData } from "../components/create/shared";
+import { Steps, Fold, Toggle as CfToggle, OverviewCard, RequirementPicker, DURATIONS, deadlineFor, money, minReward, reqFields, reqLabel, uploadJobFile, createTask, apiErrorText, CATEGORIES, CATEGORY_MAP, listTemplates, saveTemplate, getStrictRules, strictRulesApply, SELECTION_TIMES, type TemplateData, type TemplateFile, type StrictRules } from "../components/create/shared";
+import { rankName } from "../lib/requirements";
 import TemplatesModal from "../components/create/TemplatesModal";
 import { useProviders } from "../lib/providers";
 import "../styles/create.css";
@@ -36,7 +37,6 @@ const C = {
 };
 
 // -- CONSTANTS --------------------------------------------------------------
-const SELECTION_TIMES = ["1h", "6h", "12h", "24h", "48h", "72h", "7 days"];
 const COOLDOWN_OPTIONS = ["None", "1 hour", "6 hours", "12 hours", "24 hours", "3 days", "7 days"];
 const APPROVAL_DAYS = ["1 day", "2 days", "3 days", "4 days", "5 days"];
 const PLATFORM_FEE_PCT = 10;
@@ -227,6 +227,20 @@ function SelectField({ label, value, onChange, options, style = {} }: any) {
 const ordinal = (n: number) => `${n}${n % 10 === 1 && n % 100 !== 11 ? "st" : n % 10 === 2 && n % 100 !== 12 ? "nd" : n % 10 === 3 && n % 100 !== 13 ? "rd" : "th"}`;
 
 // Contest prizes: one per place (up to 10), 1st first, plus an optional entry target
+// "Split evenly": the total of the prizes shared equally between the places.
+// Naira in whole naira (crypto to 6 places); what's left over goes to 1st place,
+// so a lower place never pays more than the one above.
+function splitEvenly(prizes: string[], currency: string): string[] {
+  const nums = prizes.map(p => parseFloat(String(p).replace(/,/g, "")) || 0);
+  const total = nums.reduce((s, p) => s + p, 0);
+  if (!(total > 0)) return prizes;
+  const unit = currency === "NGN" ? 1 : 1e-6;
+  const each = Math.floor(total / prizes.length / unit) * unit;
+  const first = total - each * (prizes.length - 1);
+  const fmt = (n: number) => currency === "NGN" ? String(Math.round(n)) : String(Number(n.toFixed(6)));
+  return prizes.map((_, i) => fmt(i === 0 ? first : each));
+}
+
 function ContestPrizes({ currency, setCurrency, prizes, setPrizes, target, setTarget, floor, randomDraw, setRandomDraw }: {
   currency: string; setCurrency: (v: string) => void; prizes: string[]; setPrizes: (f: (p: string[]) => string[]) => void
   target: string; setTarget: (v: string) => void; floor: number; randomDraw: boolean; setRandomDraw: (v: boolean) => void
@@ -266,9 +280,15 @@ function ContestPrizes({ currency, setCurrency, prizes, setPrizes, target, setTa
             </div>
           ))}
         </div>
-        {prizes.length < 10 && (
-          <button type="button" className="ui-btn ui-btn-ghost cf-prize-add" onClick={() => setPrizes(ps => [...ps, ""])}><i className="ti ti-plus" /> Add a place</button>
-        )}
+        <div className="cf-prize-actions">
+          {prizes.length < 10 && (
+            <button type="button" className="ui-btn ui-btn-ghost cf-prize-add" onClick={() => setPrizes(ps => [...ps, ""])}><i className="ti ti-plus" /> Add a place</button>
+          )}
+          {prizes.length > 1 && (
+            <button type="button" className="ui-btn ui-btn-ghost cf-prize-add" onClick={() => setPrizes(ps => splitEvenly(ps, currency))}
+              title="Share the total of your prizes equally between the places"><i className="ti ti-equal" /> Split evenly</button>
+          )}
+        </div>
         <p className="cf-hint">
           At least {money(floor, currency)} a place, and a lower place can't pay more than the one above. {randomDraw
             ? "When entries close the winners are drawn at random from the entries you haven't rejected."
@@ -449,32 +469,31 @@ function ExtraRequirements({ value, onChange }: any) {
   );
 }
 
-// -- EXCLUDE USERS ----------------------------------------------------------
-function ExcludeUsers({ value, onChange }: any) {
-  const [open, setOpen] = useState(false);
+// -- EXCLUDE PEOPLE FROM PAST JOBS -------------------------------------------
+// Up to 5 of your past jobs: people who sent work on them can't take this one
+// (server: task.service requirementsMissing, so Available for me and job alerts
+// leave them out too).
+function ExcludePastJobs({ value, onChange }: { value: string[]; onChange: (ids: string[]) => void }) {
+  const [jobs, setJobs] = useState<{ id: string; title: string; createdAt: string; submissionsCount?: number }[] | null>(null);
+  useEffect(() => {
+    apiRequest<any[]>("/tasks/my/created?limit=50").then((l) => setJobs((Array.isArray(l) ? l : []).filter((t) => (t._count?.submissions || t.submissionsCount || 0) > 0)))
+      .catch(() => setJobs([]));
+  }, []);
+  const toggle = (id: string) => onChange(value.includes(id) ? value.filter((x) => x !== id) : value.length >= 5 ? value : [...value, id]);
+  if (jobs === null) return <div className="ui-sk" style={{ height: 60 }} />;
+  if (!jobs.length) return <p className="cf-hint">Jobs you posted that people worked on show here, so you can keep those people out of this one.</p>;
   return (
-    <div style={{ border: `1px solid ${C.border}`, borderRadius: 10 }}>
-      <div onClick={() => setOpen(o => !o)} style={{
-        display: "flex", alignItems: "center", gap: 10, padding: "12px 14px",
-        cursor: "pointer", userSelect: "none"
-      }}>
-        <IconUsers />
-        <span style={{ flex: 1, fontSize: 13, fontWeight: 700, color: C.text }}>Exclude certain users</span>
-        <span style={{ color: C.text3, transform: open ? "rotate(180deg)" : "none", transition: "transform 0.2s", display: "flex" }}>
-          <IconChevronDown />
-        </span>
+    <div className="cf-field">
+      <span className="cf-lbl">Exclude people from your past jobs ({value.length}/5)</span>
+      <div className="cf-exclude">
+        {jobs.map((t) => (
+          <label key={t.id} className={value.includes(t.id) ? "on" : ""}>
+            <input type="checkbox" checked={value.includes(t.id)} disabled={!value.includes(t.id) && value.length >= 5} onChange={() => toggle(t.id)} />
+            <span><b>{t.title}</b><small>{new Date(t.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}</small></span>
+          </label>
+        ))}
       </div>
-      {open && (
-        <div style={{ borderTop: `1px solid ${C.border}`, padding: 14, display: "flex", flexDirection: "column", gap: 10 }}>
-          <div>
-            <label style={{ fontSize: 12, fontWeight: 600, color: C.text2, display: "block", marginBottom: 5 }}>Exclude usernames (comma separated)</label>
-            <input type="text" value={value.excludedUsers || ""}
-              onChange={e => onChange({ ...value, excludedUsers: e.target.value })}
-              placeholder="user1, user2, ..."
-              style={{ width: "100%", border: `1px solid ${C.border}`, borderRadius: 8, padding: "8px 12px", fontSize: 13, color: C.text, outline: "none", fontFamily: "inherit", background: C.card }} />
-          </div>
-        </div>
-      )}
+      <p className="cf-hint">People who sent work on the jobs you tick can't take this one, so you reach new people.</p>
     </div>
   );
 }
@@ -542,6 +561,20 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
   }, [isAuthed]);
   const requiredCommunity = !community ? requirable.find((c) => c.id === requiredCommunityId) || null : null;
   const [files, setFiles] = useState<File[]>([]);
+  // Files that came with a template (already uploaded): attached when you publish
+  const [templateFiles, setTemplateFiles] = useState<TemplateFile[]>(Array.isArray(init.templateFiles) ? init.templateFiles : []);
+  // Selection: how long people can apply (hours, as text)
+  const [selectionHours, setSelectionHours] = useState<string>(SELECTION_TIMES.some(([h]) => h === String(init.selectionHours)) ? String(init.selectionHours) : "24");
+  const [hideAfter, setHideAfter] = useState<boolean>(!!init.hideAfterComplete);
+  const [watermark, setWatermark] = useState<boolean>(!!init.watermark);
+  const [excludeJobs, setExcludeJobs] = useState<string[]>([]);
+  const [shareTemplate, setShareTemplate] = useState(false);
+  // Refine with AI: the brief before the last rewrite, for Undo
+  const [refining, setRefining] = useState(false);
+  const [refineError, setRefineError] = useState("");
+  const [beforeRefine, setBeforeRefine] = useState<string | null>(null);
+  const [strictRules, setStrictRules] = useState<StrictRules | null>(null);
+  useEffect(() => { getStrictRules().then(setStrictRules).catch(() => {}); }, []);
   const [openReq, setOpenReq] = useState<boolean>(!!init.reqType && init.reqType !== "none");
   const [openExtra, setOpenExtra] = useState(false);
   const [showTemplates, setShowTemplates] = useState(false);
@@ -555,11 +588,11 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
   useEffect(() => {
     const t = setTimeout(() => {
       try {
-        localStorage.setItem(CUSTOM_DRAFT_KEY, JSON.stringify({ mode, title, description, currency, bounty, winners: winnersInput, prizes: prizesInput, entryTarget, randomDraw, category, subcategory, duration, reqType, reqValue, screenshot, trackingCode, payoutCheck: String(payoutCheck) }));
+        localStorage.setItem(CUSTOM_DRAFT_KEY, JSON.stringify({ mode, title, description, currency, bounty, winners: winnersInput, prizes: prizesInput, entryTarget, randomDraw, category, subcategory, duration, reqType, reqValue, screenshot, trackingCode, payoutCheck: String(payoutCheck), selectionHours, hideAfterComplete: hideAfter, watermark, templateFiles }));
       } catch { /* storage full or blocked */ }
     }, 400);
     return () => clearTimeout(t);
-  }, [mode, title, description, currency, bounty, winnersInput, prizesInput, entryTarget, randomDraw, category, subcategory, duration, reqType, reqValue, screenshot, trackingCode, payoutCheck]);
+  }, [mode, title, description, currency, bounty, winnersInput, prizesInput, entryTarget, randomDraw, category, subcategory, duration, reqType, reqValue, screenshot, trackingCode, payoutCheck, selectionHours, hideAfter, watermark, templateFiles]);
 
   const isContest = mode === "Contest";
   // The payout check is for social jobs (not contests: winners are picked when they end)
@@ -573,7 +606,14 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
   const floor = currency === "NGN" ? Math.max(minReward("NGN"), CATEGORY_MIN_PAYOUT[category] || 0) : minReward(currency);
   const minTotal = floor * Math.max(winners, 1);
   // A contest always ends (entries close, then winners are picked)
-  const deadline = deadlineFor(isContest && duration === "No deadline" ? "7 days" : duration);
+  const chosenDeadline = deadlineFor(isContest && duration === "No deadline" ? "7 days" : duration);
+  // Selection: the job stays open at least 24 hours after applications close, so
+  // the person you pick has time to send the work (the server checks this too)
+  const isSelection = mode === "Selection";
+  const appsCloseAt = isSelection ? new Date(Date.now() + Number(selectionHours) * 3600000) : null;
+  const minSelectionEnd = appsCloseAt ? new Date(appsCloseAt.getTime() + 25 * 3600000) : null;
+  const deadline = chosenDeadline && minSelectionEnd && chosenDeadline < minSelectionEnd ? minSelectionEnd : chosenDeadline;
+  const deadlineMoved = !!(chosenDeadline && deadline !== chosenDeadline);
   const alt = currency === "USDC"
     ? `≈ ₦${Math.round(convert(totalToPay, "USDC" as any, "NGN" as any)).toLocaleString("en-US")}`
     : `≈ $${convert(totalToPay, currency as any, "USDC" as any).toFixed(2)} USD`;
@@ -598,6 +638,27 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
     ]),
   ];
   const ready = checklist.every(c => c.ok);
+  // Few places and high pay: a higher rank and a one-person check are added (shown before paying)
+  const strict = strictRulesApply(strictRules, { mode, places: winners, perPerson: perWinner, currency, community: !!community });
+  const personCheck = strictRules?.personCheck === "HUMAN" ? "human verification (VeryAI)" : "ID verification (KYC)";
+  const strictText = strict && strictRules
+    ? `${rankName(strictRules.rank)} rank or higher and ${reqType === "kyc" ? "ID verification (KYC)" : reqType === "human" ? "human verification (VeryAI)" : personCheck}`
+    : "";
+
+  // Refine with AI: a clearer brief from what you wrote (server: briefRefine.service)
+  const refine = async () => {
+    if (!isAuthed) { navigate("/login?redirect=" + encodeURIComponent("/create?type=custom")); return; }
+    setRefineError("");
+    setRefining(true);
+    try {
+      const r = await apiRequest<{ description: string }>("/campaigns/refine-brief", { method: "POST", body: JSON.stringify({ title, description, mode }) });
+      if (r?.description) { setBeforeRefine(description); setDescription(r.description.slice(0, 10000)); }
+    } catch (e: any) {
+      setRefineError(e?.message || "We couldn't refine the brief right now.");
+    } finally {
+      setRefining(false);
+    }
+  };
 
   // Markdown helpers for the toolbar
   const wrap = (before: string, after = before, placeholder = "text") => {
@@ -620,7 +681,7 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
 
   const addFiles = (list: FileList | null) => {
     const picked = Array.from(list || []).filter(f => f.size <= 10 * 1024 * 1024);
-    setFiles(prev => [...prev, ...picked].slice(0, 10));
+    setFiles(prev => [...prev, ...picked].slice(0, Math.max(0, 10 - templateFiles.length)));
   };
 
   // Keep this form as a reusable template (Manage jobs > Templates)
@@ -628,7 +689,15 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
     if (!isAuthed) { navigate("/login?redirect=" + encodeURIComponent("/create?type=custom")); return; }
     setTplSaved("saving");
     try {
-      await saveTemplate({ mode, title: title.trim(), description, currency, bounty, winners: winnersInput, category, subcategory, duration, reqType, reqValue, screenshot, trackingCode, ...(payoutCheck > 0 && { payoutCheck: String(payoutCheck) }) });
+      // Files you added go with the template (uploaded now), plus any it came with
+      const added: TemplateFile[] = [];
+      for (const f of files) added.push({ name: f.name, url: await uploadJobFile(f) });
+      await saveTemplate({
+        mode, title: title.trim(), description, currency, bounty, winners: winnersInput, category, subcategory, duration, reqType, reqValue, screenshot, trackingCode,
+        ...(payoutCheck > 0 && { payoutCheck: String(payoutCheck) }),
+        ...(isSelection && { selectionHours }), ...(hideAfter && { hideAfterComplete: true }), ...(watermark && { watermark: true }),
+      }, undefined, { isPublic: shareTemplate, files: [...templateFiles, ...added].slice(0, 10) });
+      if (added.length) { setTemplateFiles(tf => [...tf, ...added].slice(0, 10)); setFiles([]); }
       setTplSaved("saved");
     } catch { setTplSaved("error"); }
   };
@@ -647,7 +716,7 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
     setSubmitting(true);
     setSubmitError("");
     try {
-      const uploaded: { name: string; url: string }[] = [];
+      const uploaded: { name: string; url: string }[] = [...templateFiles];
       for (const f of files) uploaded.push({ name: f.name, url: await uploadJobFile(f) });
       // Links also go in the brief so workers see them even where attachments aren't shown
       const brief = description.trim() + (uploaded.length ? `\n\n**Attachments**\n${uploaded.map(u => `- [${u.name}](${u.url})`).join("\n")}` : "");
@@ -660,7 +729,10 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
         currency,
         maxWorkers: winners,
         // Selection: people apply with a note and you pick one person (server: task.service.js)
-        ...(mode === "Selection" && { isSelection: true }),
+        ...(isSelection && { isSelection: true, selectionHours: Number(selectionHours) }),
+        ...(hideAfter && { hideAfterComplete: true }),
+        ...(watermark && { watermark: true }),
+        ...(excludeJobs.length && { excludeDoersOfTaskIds: excludeJobs }),
         ...(isContest && {
           isContest: true,
           prizes: prizeNums.map(p => Number(p.toFixed(currency === "NGN" ? 2 : 6))),
@@ -727,8 +799,11 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
                   <b><i className="ti ti-settings" /> Job configuration</b>
                   <div className="ui-actions">
                     <button className="ui-btn ui-btn-ghost" onClick={() => setShowTemplates(true)}><i className="ti ti-template" /> Templates</button>
+                    <label className="cf-share" title="Share this template in the community library so others can copy it">
+                      <input type="checkbox" checked={shareTemplate} onChange={e => { setShareTemplate(e.target.checked); setTplSaved(""); }} /> Public
+                    </label>
                     <button className="ui-btn ui-btn-ghost" disabled={tplSaved === "saving" || (!title.trim() && !description.trim())} onClick={saveAsTemplate}>
-                      <i className={`ti ${tplSaved === "saved" ? "ti-check" : "ti-device-floppy"}`} /> {tplSaved === "saving" ? "Saving…" : tplSaved === "saved" ? "Saved as template" : tplSaved === "error" ? "Couldn't save. Retry" : "Save as template"}
+                      <i className={`ti ${tplSaved === "saved" ? "ti-check" : "ti-device-floppy"}`} /> {tplSaved === "saving" ? "Saving…" : tplSaved === "saved" ? (shareTemplate ? "Saved and shared" : "Saved as template") : tplSaved === "error" ? "Couldn't save. Retry" : "Save as template"}
                     </button>
                   </div>
                 </div>
@@ -769,12 +844,20 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
                         <button type="button" title="Heading" aria-label="Heading" onClick={() => linePrefix("## ")}><i className="ti ti-heading" /></button>
                         <button type="button" title="Link" aria-label="Link" onClick={() => wrap("[", "](https://)", "link text")}><i className="ti ti-link" /></button>
                         <span className="sep" />
+                        <button type="button" className="cf-refine" disabled={refining || description.trim().length < 10} onClick={refine}
+                          title="Rewrite the brief so it says clearly what to do, what to send and how it's judged">
+                          <i className={`ti ${refining ? "ti-loader-2" : "ti-sparkles"}`} /> {refining ? "Refining…" : "Refine with AI"}
+                        </button>
                         <button type="button" title="Attach files" aria-label="Attach files" onClick={() => fileRef.current?.click()}><i className="ti ti-paperclip" /></button>
                       </div>
                       <textarea id="cj-desc" ref={descRef} value={description} maxLength={10000} onChange={e => setDescription(e.target.value)}
                         placeholder="What should people do? Describe the result, what to submit and how you'll choose winners." />
                     </div>
                     <div className="cf-count"><span>Include the task, expected result and what to submit. Markdown supported.</span><span>{description.length.toLocaleString()} / 10,000</span></div>
+                    {beforeRefine !== null && (
+                      <p className="cf-hint">Rewritten by AI. Check it says what you want. <button type="button" className="cf-link" onClick={() => { setDescription(beforeRefine); setBeforeRefine(null); }}>Undo</button></p>
+                    )}
+                    {refineError && <p className="cf-hint err" role="alert">{refineError}</p>}
                     {linkNeeded && (
                       <p className="cf-warn" role="status"><i className="ti ti-link-off" aria-hidden="true" /> {missingLinkText(linkNeeded)} Paste the full address (https://...) in the description.</p>
                     )}
@@ -808,6 +891,21 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
                   </div>
                   )}
 
+                  {isSelection && (
+                    <div className="cf-field">
+                      <span className="cf-lbl">Applications open for <InfoTip label="What is the application window?" title="Application window">
+                        <p>People can apply with a note for this long. Then applications close and you pick one person. You can pick sooner if you find the right person.</p>
+                        <p>The job stays open at least 24 hours after applications close, so the person you pick has time to send the work.</p>
+                      </InfoTip></span>
+                      <div className="cf-chips" role="radiogroup" aria-label="Applications open for">
+                        {SELECTION_TIMES.map(([h, l]) => (
+                          <button key={h} type="button" role="radio" aria-checked={selectionHours === h} className={selectionHours === h ? "on" : ""} onClick={() => setSelectionHours(h)}>{l}</button>
+                        ))}
+                      </div>
+                      <p className="cf-hint">Applications close {appsCloseAt?.toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}. Your brief becomes the first message of a private job chat with the person you pick.</p>
+                    </div>
+                  )}
+
                   <div className="cf-row">
                     <div className="cf-field">
                       <label htmlFor="cj-cat">Category</label>
@@ -835,7 +933,7 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
                     </select>
                     <p className="cf-hint">{isContest && deadline
                       ? `Entries close ${deadline.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}. ${randomDraw ? "The winners are then drawn at random." : "You then have 3 days to rank the winners."}`
-                      : deadline ? `Closes ${deadline.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}. Unused budget returns to your wallet.` : "Stays open until all places are filled or you cancel it."}</p>
+                      : deadline ? `Closes ${deadline.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}${deadlineMoved ? " (moved to 24 hours after applications close)" : ""}. Unused budget returns to your wallet.` : "Stays open until all places are filled or you cancel it."}</p>
                   </div>
 
                   {checkable && (
@@ -848,9 +946,16 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
                     </div>
                   )}
 
-                  <Fold title="Audience and requirements" sub="Choose who can take part" open={openReq} onToggle={() => setOpenReq(o => !o)}>
+                  <Fold title="Audience and requirements" sub={excludeJobs.length ? `Choose who can take part · ${excludeJobs.length} past job${excludeJobs.length > 1 ? "s" : ""} excluded` : "Choose who can take part"} open={openReq} onToggle={() => setOpenReq(o => !o)}>
                     <RequirementPicker type={reqType} value={reqValue} onChange={(t, v) => { setReqType(t); setReqValue(v); }} />
+                    {isAuthed && openReq && <ExcludePastJobs value={excludeJobs} onChange={setExcludeJobs} />}
                   </Fold>
+
+                  {strict && strictRules && (
+                    <p className="cf-warn" role="status"><i className="ti ti-shield-check" aria-hidden="true" />
+                      <span><b>Stricter rules added automatically:</b> {strictText}. This job has {winners} place{winners === 1 ? "" : "s"} paying {money(perWinner, currency)} each ({money(strictRules.minReward[currency] || 0, currency)} or more), so one person with many accounts could take them all. Pay under {money(strictRules.minReward[currency] || 0, currency)} a person, or open more than {strictRules.maxPlaces} places, to skip this.</span>
+                    </p>
+                  )}
 
                   {myCommunities.length > 0 && (
                     <div className="cf-field">
@@ -893,15 +998,18 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
                     <span className="cf-lbl">Attachments (up to 10 files, 10 MB each)</span>
                     <button type="button" className="cf-drop" onClick={() => fileRef.current?.click()}><i className="ti ti-upload" /> Add briefs, examples or creatives for workers</button>
                     <input ref={fileRef} type="file" multiple hidden accept="image/*,video/*,.pdf,.doc,.docx,.txt" onChange={e => { addFiles(e.target.files); e.target.value = ""; }} />
-                    {files.length > 0 && (
+                    {(files.length > 0 || templateFiles.length > 0) && (
                       <div className="cf-files">
+                        {templateFiles.map((f, i) => <span key={f.url}><a href={f.url} target="_blank" rel="noreferrer">{f.name}</a><button type="button" aria-label={`Remove ${f.name}`} onClick={() => setTemplateFiles(fs => fs.filter((_, j) => j !== i))}>×</button></span>)}
                         {files.map((f, i) => <span key={f.name + i}>{f.name}<button type="button" aria-label={`Remove ${f.name}`} onClick={() => setFiles(fs => fs.filter((_, j) => j !== i))}>×</button></span>)}
                       </div>
                     )}
                   </div>
 
-                  <Fold title="Extra submission options" sub="Proof and tracking" open={openExtra} onToggle={() => setOpenExtra(o => !o)}>
+                  <Fold title="Extra submission options" sub="Proof, watermarks, visibility and tracking" open={openExtra} onToggle={() => setOpenExtra(o => !o)}>
                     <CfToggle on={screenshot} onChange={setScreenshot} label="Screenshot required" desc="People must attach at least one screenshot with their submission." />
+                    <CfToggle on={watermark} onChange={setWatermark} label="Watermarks on" desc="Images people send are stamped with OGAPAY. You see the stamped copy; you get the original when you approve the work." />
+                    <CfToggle on={hideAfter} onChange={setHideAfter} label="Hide job after completion" desc="Once it's finished, the job leaves the public job list and profiles. You and the people who took part can still open it." />
                     <div className="cf-field">
                       <label htmlFor="cj-track">Tracking code (optional)</label>
                       <input id="cj-track" className="ui-input" maxLength={64} value={trackingCode} onChange={e => setTrackingCode(e.target.value)} placeholder="e.g. OGA-LAUNCH-24" />
@@ -933,8 +1041,13 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
                     <div><span>{isContest ? "Entries close" : "Closes"}</span><b>{deadline ? deadline.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "No deadline"}</b></div>
                     {isContest && <div><span>Winners</span><b>{randomDraw ? "Drawn at random when entries close, from the entries you haven't rejected" : "You rank them within 3 days of the close, or the earliest entries win" + (prizeNums.length === 1 ? ". You can also award the place to an entry before entries close; the contest then ends early" : prizeNums.length > 1 && new Set(prizeNums).size === 1 ? ". Every place pays the same prize, so you can also award places before entries close; once every place is awarded, the contest ends early" : "")}</b></div>}
                     {screenshot && <div><span>Proof</span><b>Screenshot required</b></div>}
+                    {isSelection && <div><span>Applications</span><b>Open for {SELECTION_TIMES.find(([h]) => h === selectionHours)?.[1]}, then you pick one person</b></div>}
+                    {strict && <div><span>Added automatically</span><b>{strictText}</b></div>}
+                    {excludeJobs.length > 0 && <div><span>Excluded</span><b>People from {excludeJobs.length} past job{excludeJobs.length > 1 ? "s" : ""}</b></div>}
+                    {watermark && <div><span>Images</span><b>Watermarked</b></div>}
+                    {hideAfter && <div><span>When finished</span><b>Hidden from public lists</b></div>}
                     {checkable && <div><span>Payout check</span><b>{PAYOUT_CHECKS.find(c => c.minutes === payoutCheck)?.label || "Instant"}</b></div>}
-                    {files.length > 0 && <div><span>Attachments</span><b>{files.length} file{files.length > 1 ? "s" : ""}</b></div>}
+                    {files.length + templateFiles.length > 0 && <div><span>Attachments</span><b>{files.length + templateFiles.length} file{files.length + templateFiles.length > 1 ? "s" : ""}</b></div>}
                     <div><span>Your {currency} balance</span><b style={{ color: balance >= totalToPay ? "var(--green)" : "var(--red)" }}>{money(balance, currency)}</b></div>
                   </div>
                   {balance < totalToPay && (
@@ -962,8 +1075,10 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
         </div>
       </div>
 
-      {showTemplates && <TemplatesModal onClose={() => setShowTemplates(false)} onUse={(d: TemplateData, example: boolean) => {
-        setTitle(d.title || ""); setDescription(d.description || "");
+      {showTemplates && <TemplatesModal onClose={() => setShowTemplates(false)} onUse={(d: TemplateData, example: boolean, tplFiles?: TemplateFile[]) => {
+        setTitle(d.title || ""); setDescription(d.description || ""); setBeforeRefine(null);
+        setTemplateFiles(Array.isArray(tplFiles) ? tplFiles.slice(0, 10) : []);
+        if (!example) { setHideAfter(!!d.hideAfterComplete); setWatermark(!!d.watermark); if (d.selectionHours && SELECTION_TIMES.some(([h]) => h === d.selectionHours)) setSelectionHours(d.selectionHours); }
         if (!example) { setBounty(d.bounty || ""); if (d.currency) setCurrency(d.currency); if (d.duration) setDuration(d.duration); setTrackingCode(d.trackingCode || ""); setScreenshot(!!d.screenshot); setPayoutCheck(PAYOUT_CHECKS.some(c => String(c.minutes) === d.payoutCheck) ? Number(d.payoutCheck) : 0); }
         // Ready-made examples (app testing) suggest a budget and duration
         // and start from the same proof settings as on a fresh form
@@ -1061,7 +1176,7 @@ function CreateTask() {
     window.history.replaceState({}, "", window.location.pathname);
     listTemplates().then((list) => {
       const t = (list || []).find((x) => x.id === id);
-      if (t) { setCustomTemplate({ ...t.data, desc: t.data.description }); setShowCustom(true); }
+      if (t) { setCustomTemplate({ ...t.data, desc: t.data.description, templateFiles: t.files || [] }); setShowCustom(true); }
     }).catch(() => { /* signed out or gone: show the normal page */ });
   }, []);
 
@@ -1268,7 +1383,7 @@ function CreateTask() {
       </div>
 
       <CampaignWizard />
-      {showMainTemplates && <TemplatesModal onClose={() => setShowMainTemplates(false)} onUse={(d: TemplateData, example: boolean) => { setCustomTemplate({ ...(example && !d.bounty ? { ...d, bounty: "" } : d), desc: d.description }); setShowCustom(true); }} />}
+      {showMainTemplates && <TemplatesModal onClose={() => setShowMainTemplates(false)} onUse={(d: TemplateData, example: boolean, tplFiles?: TemplateFile[]) => { setCustomTemplate({ ...(example && !d.bounty ? { ...d, bounty: "" } : d), desc: d.description, templateFiles: tplFiles || [] }); setShowCustom(true); }} />}
       {success && <SuccessModal taskId={typeof success === 'string' && success !== 'true' ? success : undefined} onClose={() => setSuccess(false)} />}
     </Layout>
   );

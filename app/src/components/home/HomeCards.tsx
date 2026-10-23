@@ -38,7 +38,10 @@ export function HomeJobCard({ task, convert, myStatus }: { task: any; convert: C
   const contest = !!task.isContest;
   const max = contest ? Number(task.entryTarget || 0) : Number(task.maxWorkers ?? task.slots ?? 0);
   const done = Number(task.submissionsCount ?? task._count?.submissions ?? task.currentWorkers ?? 0);
-  const open = Math.max(0, max - done);
+  // Places still free: a contest counts entries against its target; other jobs
+  // count places taken (currentWorkers), since a released place opens again
+  const taken = contest ? done : Number(task.currentWorkers ?? done);
+  const open = Math.max(0, max - taken);
   const pct = max > 0 ? Math.min(100, (done / max) * 100) : 0;
   const category = CATEGORY[task.category] || "General";
   const tag = Array.isArray(task.tags) && task.tags[0] && task.tags[0] !== category ? ` / ${task.tags[0]}` : "";
@@ -81,7 +84,9 @@ export function HomeJobCard({ task, convert, myStatus }: { task: any; convert: C
           <li>{done} submitted</li>
           {contest
             ? <>{max > 0 && <li>{open > 0 ? `${open} to target` : "Target reached"}</li>}<li>Unlimited entries</li></>
-            : <li>{max ? (open > 0 ? `${open} open` : "Target reached") : "Unlimited entries"}</li>}
+            : task.isSelection
+              ? <li>{open > 0 ? "Poster picks 1 person" : "Person picked"}</li>
+              : <li>{max ? (open > 0 ? `${open} open` : "Target reached") : "Unlimited entries"}</li>}
           {task.featured && <li>Featured</li>}
         </ul>
       </div>

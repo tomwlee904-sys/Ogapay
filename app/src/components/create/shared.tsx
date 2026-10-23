@@ -290,8 +290,18 @@ export type TemplateData = {
   screenshot?: boolean; trackingCode?: string
   // Social jobs: payout check window in minutes, as text ("0", "60", ...)
   payoutCheck?: string
+  // Selection jobs: hours people can apply ("0.5", "4", "24", ...)
+  selectionHours?: string
+  hideAfterComplete?: boolean
+  watermark?: boolean
 }
-export type JobTemplate = { id: string; name: string; data: TemplateData; createdAt: string; updatedAt: string }
+export type TemplateFile = { name: string; url: string }
+export type JobTemplate = {
+  id: string; name: string; data: TemplateData; createdAt: string; updatedAt: string
+  // Shared in the community library, files that go with the brief, copies others made
+  isPublic?: boolean; files?: TemplateFile[] | null; copies?: number; copiedFromId?: string | null
+  author?: { username: string; avatarUrl?: string | null } | null
+}
 
 // API code -> [picker category, subcategory] for jobs whose tags don't say
 const CODE_TO_PICK: Record<string, [string, string?]> = {
@@ -335,5 +345,30 @@ export function taskToTemplateData(t: any): TemplateData {
 }
 
 export const listTemplates = () => apiRequest<JobTemplate[]>("/poster/templates");
-export const saveTemplate = (data: TemplateData, name?: string) =>
-  apiRequest<JobTemplate>("/poster/templates", { method: "POST", body: JSON.stringify({ name: name || data.title, data }) });
+export const saveTemplate = (data: TemplateData, name?: string, opts: { isPublic?: boolean; files?: TemplateFile[] } = {}) =>
+  apiRequest<JobTemplate>("/poster/templates", { method: "POST", body: JSON.stringify({ name: name || data.title, data, ...(opts.isPublic && { isPublic: true }), ...(opts.files?.length && { files: opts.files }) }) });
+// The community library: templates other members shared
+export const listCommunityTemplates = (q = "") =>
+  apiRequest<{ items: JobTemplate[]; total: number }>(`/poster/templates/community${q ? `?q=${encodeURIComponent(q)}` : ""}`);
+// "Add to my templates"
+export const copyTemplate = (id: string) => apiRequest<JobTemplate>(`/poster/templates/${id}/copy`, { method: "POST" });
+export const setTemplatePublic = (id: string, isPublic: boolean) =>
+  apiRequest<JobTemplate>(`/poster/templates/${id}`, { method: "PATCH", body: JSON.stringify({ isPublic }) });
+
+// ── Automatic stricter rules (server: task.service strictRulesFor) ───────────
+// Jobs with 1 to maxPlaces places paying at least minReward a person need a
+// higher rank and a one-person check, so one person with many accounts can't
+// take every place. Read from GET /tasks/strict-rules.
+export type StrictRules = { maxPlaces: number; minReward: Record<string, number>; rank: number; personCheck: "HUMAN" | "KYC" };
+export const getStrictRules = () => apiRequest<StrictRules>("/tasks/strict-rules", { auth: false });
+export function strictRulesApply(r: StrictRules | null, j: { mode: string; places: number; perPerson: number; currency: string; community?: boolean }) {
+  if (!r || j.mode !== "Challenge" || j.community) return false;
+  const floor = r.minReward[j.currency];
+  return j.places >= 1 && j.places <= r.maxPlaces && !!floor && j.perPerson >= floor;
+}
+
+// ── Selection window ─────────────────────────────────────────────────────────
+// How long people can apply to a Selection job (server: task.service SELECTION_HOURS)
+export const SELECTION_TIMES: [string, string][] = [
+  ["0.5", "30 minutes"], ["1", "1 hour"], ["4", "4 hours"], ["8", "8 hours"], ["12", "12 hours"], ["24", "24 hours"], ["72", "3 days"], ["168", "7 days"],
+];
