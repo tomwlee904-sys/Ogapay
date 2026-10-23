@@ -5,6 +5,7 @@ import Money from '../components/Money'
 import RateWork from '../components/RateWork'
 import { useToast } from '../components/Toast'
 import { apiRequest } from '../lib/api'
+import { Pagination } from '../components/Pagination'
 import '../styles/profile-public.css'
 import '../styles/reviews-to-write.css'
 
@@ -32,6 +33,7 @@ const label = (w: Item['worker']) => (w.username ? '@' + w.username : who(w))
 const day = (s: string) => new Date(s).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
 const PLACE = ['', '1st', '2nd', '3rd']
 const placeName = (p: number) => PLACE[p] || `${p}th`
+const PER_PAGE = 20
 
 // How the work was approved, in a few words
 const howApproved = (s: Item) => {
@@ -48,12 +50,24 @@ export default function ReviewsToWrite() {
   const [stars, setStars] = useState<Record<string, number>>({})
   const [notes, setNotes] = useState<Record<string, string>>({})
   const [busy, setBusy] = useState<string | null>(null)
+  // 20 at a time: one long page of every card was slow on phones
+  const [page, setPage] = useState(1)
+  const [loading, setLoading] = useState(false)
 
-  useEffect(() => {
+  const load = () => {
+    setLoading(true); setError(false)
     apiRequest<{ items: Item[]; days: number }>('/tasks/my/to-rate')
       .then((d) => { setList(Array.isArray(d?.items) ? d.items : []); if (d?.days) setDays(d.days) })
       .catch(() => { setError(true); setList([]) })
-  }, [])
+      .finally(() => setLoading(false))
+  }
+  useEffect(load, [])
+
+  const total = list?.length || 0
+  const pages = Math.max(1, Math.ceil(total / PER_PAGE))
+  // Rating the last card on the last page moves back a page
+  useEffect(() => { if (page > pages) setPage(pages) }, [page, pages])
+  const shown = (list || []).slice((page - 1) * PER_PAGE, page * PER_PAGE)
 
   const save = async (s: Item) => {
     const rating = stars[s.id] || 0
@@ -76,23 +90,29 @@ export default function ReviewsToWrite() {
     <Layout>
       <div className="up-wrap" style={{ maxWidth: 860 }}>
         <div className="up-sec-h" style={{ marginBottom: 18 }}>
-          <h1 style={{ fontSize: 24 }}>Reviews to write</h1>
+          <h1 style={{ fontSize: 24 }}>Reviews to write{list !== null && !error && <span className="rtw-count">{total} pending</span>}</h1>
           <p>Work you approved in the last {days} days without stars. Your stars count towards each worker's rating and show on their public profile.</p>
+          <button className="up-btn" onClick={load} disabled={loading} style={{ marginTop: 10 }}>
+            <i className="ti ti-refresh" aria-hidden="true" /> {loading ? 'Refreshing…' : 'Refresh'}
+          </button>
         </div>
 
         {list === null ? (
           <div className="up-skel" style={{ height: 160 }} />
         ) : error ? (
-          <div className="up-empty"><i className="ti ti-cloud-off" />Couldn't load your reviews to write. Refresh to try again.</div>
+          <div className="up-empty"><i className="ti ti-cloud-off" />Couldn't load your reviews to write. Press Refresh to try again.</div>
         ) : list.length === 0 ? (
           <div className="up-empty">
-            <i className="ti ti-star" />
+            <i className="ti ti-circle-check" />
+            <b style={{ display: 'block', fontSize: 16, color: 'var(--text)', marginBottom: 4 }}>All caught up</b>
             Nothing to review. Work you approve without stars shows here for {days} days.
             <div style={{ marginTop: 14 }}><Link className="up-btn" to="/manage-jobs">Go to My Jobs</Link></div>
           </div>
         ) : (
+          <>
+          {pages > 1 && <p className="rtw-range">Showing {(page - 1) * PER_PAGE + 1}–{(page - 1) * PER_PAGE + shown.length} of {total}</p>}
           <div className="up-list">
-            {list.map((s) => {
+            {shown.map((s) => {
               const name = who(s.worker)
               return (
                 <div className="up-card rtw-card" key={s.id}>
@@ -127,6 +147,17 @@ export default function ReviewsToWrite() {
               )
             })}
           </div>
+          <div style={{ marginTop: 18 }}>
+            <Pagination
+              page={page}
+              totalPages={pages}
+              firstItem={(page - 1) * PER_PAGE + 1}
+              lastItem={(page - 1) * PER_PAGE + shown.length}
+              totalItems={total}
+              onPageChange={(n) => { setPage(n); window.scrollTo({ top: 0 }) }}
+            />
+          </div>
+          </>
         )}
       </div>
     </Layout>

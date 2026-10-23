@@ -64,6 +64,8 @@ export default function HirePage() {
     : short ? 'Top up your wallet to cover the total.'
     : uploading ? 'Wait for your files to finish uploading.'
     : ''
+  // What share of the total goes to the creator (the fee is added on top of the budget)
+  const creatorShare = total > 0 ? Math.round((amt / total) * 1000) / 10 : 100 - FEE_PCT
 
   const addFiles = async (list: FileList | null) => {
     if (!list?.length) return
@@ -213,14 +215,19 @@ export default function HirePage() {
                 </ul>
               )}
               <p className="hr-note">Your brief becomes the first message in a private chat with {name}. Only you and {name} can see this job.</p>
+              <button type="button" className="up-btn primary hr-next" onClick={() => document.getElementById('hr-pay')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>
+                Continue to payment <i className="ti ti-arrow-down" />
+              </button>
             </section>
           </div>
 
-          <aside className="up-card hr-pay">
+          <aside className="up-card hr-pay" id="hr-pay">
             <h2>Payment</h2>
-            <div className="hr-line"><span>{name} receives</span><b>{amt ? naira(amt) : "—"}</b></div>
-            <div className="hr-line"><span>Platform fee ({FEE_PCT}%)</span><b>{amt ? naira(fee) : "—"}</b></div>
+            <div className="hr-line"><span>Creator gets <small>(the full budget)</small></span><b>{amt ? naira(amt) : "—"}</b></div>
+            <div className="hr-line"><span>OgaPay fee {FEE_PCT}% <small>(added on top)</small></span><b>{amt ? naira(fee) : "—"}</b></div>
             <div className="hr-line total"><span>You pay</span><b>{amt ? naira(total) : "—"}</b></div>
+            <div className="hr-split" aria-hidden="true"><span style={{ width: `${creatorShare}%` }} /></div>
+            <p className="hr-small" style={{ marginTop: -4 }}>{creatorShare}% of what you pay goes to {name}, {Math.round((100 - creatorShare) * 10) / 10}% is OgaPay's fee.</p>
             {user && <div className={`hr-line ${short ? "bad" : ""}`}><span>Wallet available</span><b>{available === null ? "…" : naira(available)}</b></div>}
             {short && <div className="up-note err">Not enough in your wallet. <Link to="/wallet">Top up</Link></div>}
             {error && <div className="up-note err" role="alert">{error}</div>}

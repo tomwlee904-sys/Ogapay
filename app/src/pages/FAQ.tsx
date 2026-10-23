@@ -105,6 +105,51 @@ export const TOPICS: Topic[] = [
     ],
   },
   {
+    id: 'troubleshooting', title: 'Troubleshooting', items: [
+      { q: 'My withdrawal says Failed or Rejected. Where is my money?', a: 'Back in your wallet. The amount is only held while a withdrawal is processing. If the bank transfer fails or our team rejects the withdrawal, the hold is released and the money is available again straight away. You get a notification with the reason (for example the bank\'s message), so check your bank details and try again.' },
+      { q: 'My withdrawal has said Processing for days.', a: 'Bank withdrawals are paid once a week, on Thursday at 10:00 Lagos time, so a withdrawal you request on Friday waits until the next Thursday. It is paid the Thursday after that if the bank account was added less than a day before the payout. A withdrawal also waits for our team when your bank spells your name a little differently from your OgaPay account, or when your account is waiting for a check because it looks linked to other accounts. The money stays held in your wallet the whole time.' },
+      { q: 'Why was my withdrawal refused when I requested it?', a: 'The message tells you which rule stopped it. The usual ones: the amount is under the ₦5,000 minimum (or its value in USDC); it is over what is left of your daily limit (the message says when more frees up); you haven\'t verified to Level 1 yet; the bank account isn\'t in your name; or the bank account is already used by another OgaPay account.' },
+      { q: 'Why can\'t I withdraw more today?', a: 'The daily limit counts everything you withdrew in the last 24 hours, bank and crypto together, in naira at today\'s rate: ₦5,000 at Level 1, ₦10,000 at Level 2 and ₦50,000 at Level 3. It is a rolling 24 hours, not a calendar day, so each withdrawal stops counting 24 hours after you made it. Withdrawals that failed or were rejected don\'t count. Verify to a higher level in Settings to raise it.' },
+      { q: 'I paid by card or bank transfer but my balance didn\'t go up.', a: 'After you pay, the Add money page asks Paystack or Flutterwave about the payment every few seconds, and most deposits show within a minute. If it says the payment is still being checked, don\'t pay again: the deposit is matched to its reference as soon as the provider confirms it. If it still hasn\'t arrived after an hour, contact Support with the payment reference and your bank or card receipt.' },
+      { q: 'I sent money to my OgaPay account number and it hasn\'t arrived.', a: 'Money sent to your personal account number is added when Flutterwave tells us it has arrived, usually within minutes, but a slow bank can take longer. We add the amount Flutterwave records for the transfer. If it hasn\'t arrived after a few hours, contact Support with the sending bank, the amount, the time and the receipt or session ID.' },
+      { q: 'My USDC deposit hasn\'t shown up.', a: 'A deposit from your connected Solana wallet is added once the transaction confirms on Solana, usually within a minute. Check that the transaction succeeded in your wallet app. If it did and your OgaPay balance hasn\'t changed, contact Support with the transaction signature.' },
+      { q: 'It says my account has been banned.', a: 'A banned account can\'t sign in or use OgaPay. Accounts are banned for things like fake accounts, bots or fraud. If you think it\'s a mistake, email support@ogapay.app from the email address on the account and explain what happened.' },
+      { q: 'It says I can\'t take new jobs right now.', a: 'That happens after a 3rd warning within 30 days. You can\'t take new jobs until an admin reviews it and lifts it. Money you have earned can still be withdrawn, and work you already sent is still reviewed and paid. You can send an appeal note from the warning banner.' },
+      { q: 'My rank went down.', a: 'A 2nd warning within 30 days moves your rank down one step. Warnings older than 30 days, or ones an admin withdraws after an appeal, no longer count. You can claim your rank again once you meet its requirements.' },
+      { q: 'I can\'t apply for a job.', a: 'The job page lists what it needs. Common reasons: all places are taken, the deadline has passed, you don\'t meet a requirement (verification level, OgaScore, rank, a connected X account, a blue tick on X or membership of a community), or you were already paid on a linked job (posters can link similar jobs so each person is paid once across them).' },
+      { q: 'My payout check failed.', a: 'When the check ends we look at your X post again. It fails if the post was deleted, isn\'t from the X account connected to your OgaPay account, or no longer replies to or quotes the job\'s post. Keep the post up and unchanged until the check is over.' },
+      { q: 'I didn\'t get my ₦1,000 sign-up bonus.', a: 'It is paid once per person, when you reach Level 1 with your NIN or ID, or when you finish your first paid job (a job someone else posted), whichever comes first. Verifying with only a bank account doesn\'t pay it on its own; then it comes with your first paid job. If your account looks linked to other accounts, the bonus waits until our team has checked it.' },
+      { q: 'I didn\'t get my referral bonus.', a: 'You get ₦500 when a friend you invited finishes their first paid job on a job posted by someone else (not you or them). Your friend must be verified to Level 1, neither of you can be banned, and it is paid for up to 20 friends. Signing up or verifying alone doesn\'t pay. Bonuses for accounts that look linked wait for a check.' },
+      { q: 'My 2FA code doesn\'t work.', a: 'Codes from your authenticator app change every 30 seconds, so type the current one. If codes are always wrong, set your phone\'s time to automatic. If you lost the phone, sign in with one of the backup codes you saved when you turned 2FA on, or contact Support.' },
+      { q: 'I can\'t add my bank account.', a: 'The account must be in your own name, as your bank records it, and it can\'t already be used by another OgaPay account: each person can have one OgaPay account and each bank account belongs to one of them.' },
+      { q: 'I\'m not getting job alerts on my phone.', a: 'Turn them on in Settings, Notifications, Push alerts, and allow notifications when your browser asks. On iPhone, add OgaPay to your home screen first. To avoid spam you get at most 10 new-job alerts a day.' },
+      { q: 'The seller never delivered my order.', a: 'Report a problem on the order, or cancel it if the seller hasn\'t started. An order the seller hasn\'t marked delivered 14 days after you bought it is refunded to your wallet automatically.' },
+      { q: 'A page looks broken or out of date.', a: 'We update OgaPay often. Refresh the page (or close and reopen the app) to load the latest version. If it is still broken, tell Support which page and what you see, with a screenshot.' },
+    ],
+  },
+  {
+    id: 'safety', title: 'Safety & payments', items: [
+      { q: 'Will OgaPay ever ask for my password or codes?', a: 'No. OgaPay staff will never ask for your password, your 2FA or email codes, or your crypto wallet\'s seed phrase or private key, in chat, by email or on Telegram. Anyone who asks is trying to take your account.' },
+      { q: 'Which channels are really OgaPay?', a: 'This website (ogapay.app), @Ogapayhq on X, t.me/ogapayhq on Telegram and the email address support@ogapay.app. Other accounts using our name, including t.me/ogapay, are not us.' },
+      { q: 'Someone asked me to pay to get a job.', a: 'That\'s a scam. Workers never pay to take a job on OgaPay: the reward is already locked in escrow by the poster before the job goes live. Don\'t send money, and report the person.' },
+      { q: 'Someone wants to pay me, or be paid, outside OgaPay.', a: 'Keep payments on OgaPay. Outside the platform there is no escrow, no buyer protection and no record we can check, so we can\'t help you get money back.' },
+      { q: 'Someone sent me a screenshot of a payment.', a: 'Only trust your own OgaPay wallet. Screenshots are easy to fake. Money for a job, a sale or a send shows in your Wallet transactions.' },
+      { q: 'How do I report a scam, a fake job or a bad user?', a: 'Report the job from its page, or the person from their profile, or open a ticket on the Support page. Add links and screenshots so our team can act quickly.' },
+      { q: 'Can I have more than one OgaPay account?', a: 'No. One account per person. Accounts that share a bank account, a phone number or an ID number are linked and checked by our team: their bonuses are held and their withdrawals wait for a review until it\'s cleared.' },
+      { q: 'Why can I only withdraw to a bank account in my own name?', a: 'So a stolen account can\'t be emptied into someone else\'s bank. We check the name on the account with the bank\'s own record (through Flutterwave), not the name you type. If it only partly matches, our team checks it before the money is sent.' },
+      { q: 'Why does a new bank account wait for the next payout?', a: 'A bank account added less than a day before the Thursday payout is paid the Thursday after. If someone got into your account and added their bank, this gives you time to see the "new bank account" alert and stop it.' },
+      { q: 'Why can a bank account belong to only one OgaPay account?', a: 'One person used to run many accounts and withdraw them all to the same bank. Now a bank account that one open OgaPay account has saved, verified with or withdrawn to can\'t be used by another.' },
+      { q: 'What fees will I pay?', a: 'Posting a job or hiring someone: a 10% fee added on top of the budget, charged once when you fund it. Doing work: none, you keep 100% of the reward. Withdrawals: 1.5% to a bank (minimum ₦100) and 1% to a crypto wallet. Sending to another OgaPay user and selling in the store: free.' },
+      { q: 'How do ranks work?', a: 'Everyone starts as Beginner. Intermediate needs 10 approved jobs. Advanced needs 50 jobs and a 4.0 rating from at least 5 different posters, Expert 200 jobs and 4.5 from 20 posters, and Legend 500 jobs and 4.8 from 50 posters. When you qualify you claim the next rank on the Ranks page, one step at a time. Most accounts get it at once; some are checked by our team first.' },
+      { q: 'What gets an account a warning?', a: 'Spam or low-effort work, fake or edited proof, copied or AI-written work where the job asks for your own words, and breaking the site rules (bots, scripts or extra accounts). A 1st warning is only a warning, a 2nd within 30 days lowers your rank, and a 3rd stops you taking new jobs until an admin reviews it.' },
+      { q: 'Can a poster keep my work and not pay?', a: 'The reward is locked in escrow before you start. Work the poster doesn\'t review is approved and paid automatically 3 days after you sent it. If your work is rejected and you followed the brief, open a dispute from the job page and an admin will look at the evidence.' },
+      { q: 'Should I turn on two-factor authentication?', a: 'Yes. With 2FA on, withdrawals and sends to other users ask for the 6-digit code from your authenticator app, so a stolen password alone can\'t move your money. Turn it on in Settings, Security, and keep your backup codes somewhere safe.' },
+      { q: 'How are the bonus rules kept fair?', a: 'Each person gets the ₦1,000 sign-up bonus once, and an inviter\'s ₦500 is only paid when the friend finishes a real paid job for someone else. Bursts of sign-ups from one inviter, and accounts sharing a bank, phone or ID, are flagged; their bonuses are held until our team checks them.' },
+      { q: 'Is my store payment safe?', a: 'Yes. Your payment is held until you press Confirm received, or 3 days after the seller marks the order delivered. Report a problem before then and the payment stays on hold while OgaPay decides. Orders not delivered within 14 days are refunded automatically.' },
+      { q: 'I sent money to the wrong person.', a: 'Sends between OgaPay users arrive instantly, so check the username and amount before you confirm. If it went to the wrong person, message them and contact Support with the transaction reference.' },
+    ],
+  },
+  {
     id: 'developers', title: 'Developers and API', items: [
       { q: 'Can my app or AI agent use OgaPay?', a: 'Yes. With an API key from the Developer page, your app or agent can list open jobs and read your own jobs, submissions, balance and transactions. A key you create with write access can also post jobs (paid from your wallet into escrow), approve or reject work and cancel jobs. No key can withdraw or send money.' },
       { q: 'How do I get an API key?', a: 'Turn on Developer Mode in Settings, then create a key. Keys start with oga_ and are shown only once, so store yours safely. Each key can have its own rate limit and monthly spend cap.' },
@@ -114,12 +159,15 @@ export const TOPICS: Topic[] = [
 ]
 
 const TOTAL = TOPICS.reduce((n, t) => n + t.items.length, 0)
+// Each answer's own address, e.g. /faq#q-my-2fa-code-doesnt-work
+const answerId = (q: string) => 'q-' + q.toLowerCase().replace(/['’]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 70)
 const pad = (n: number) => String(n).padStart(2, '0')
 
 export default function FAQ() {
   const [search, setSearch] = useState('')
   const [open, setOpen] = useState<string | null>(null)
   const [active, setActive] = useState(TOPICS[0].id)
+  const [copied, setCopied] = useState<string | null>(null)
   const sectionRefs = useRef<Record<string, HTMLElement | null>>({})
 
   const q = search.trim().toLowerCase()
@@ -140,8 +188,20 @@ export default function FAQ() {
 
   // Open a question from the URL hash, e.g. /faq#withdrawals
   useEffect(() => {
-    const id = window.location.hash.replace('#', '')
+    const id = decodeURIComponent(window.location.hash.replace('#', ''))
     if (id && TOPICS.some(t => t.id === id)) setTimeout(() => jump(id), 200)
+    // A link to one answer: open it and scroll to it
+    for (const t of TOPICS) {
+      const item = t.items.find(i => answerId(i.q) === id)
+      if (item) {
+        setOpen(t.id + ':' + item.q)
+        setTimeout(() => {
+          const el = document.getElementById(id)
+          if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 100, behavior: 'smooth' })
+        }, 250)
+        break
+      }
+    }
   }, [])
 
   const jump = (id: string) => {
@@ -182,6 +242,8 @@ export default function FAQ() {
         .fq-a > div{overflow:hidden}
         .fq-a p{margin:0;padding:0 16px 16px;font-size:13.5px;line-height:1.7;color:var(--text2)}
         .fq-chips{display:none}
+        .fq-link{display:inline-flex;align-items:center;gap:5px;min-height:36px;margin:0 16px 10px;font-size:12px;font-weight:600;color:var(--text3);text-decoration:none}
+        .fq-link:hover{color:var(--text)}
         .fq-help{margin-top:12px;display:flex;justify-content:space-between;align-items:center;gap:16px;padding:20px;flex-wrap:wrap}
         @media(max-width:860px){
           .fq-layout{grid-template-columns:1fr}
@@ -251,11 +313,18 @@ export default function FAQ() {
                     const key = t.id + ':' + item.q
                     const isOpen = open === key || (!!q && t.items.length <= 3)
                     return (
-                      <div key={key} className={`fq-item${isOpen ? ' open' : ''}`}>
+                      <div key={key} id={answerId(item.q)} className={`fq-item${isOpen ? ' open' : ''}`}>
                         <button className="fq-q" aria-expanded={isOpen} onClick={() => setOpen(open === key ? null : key)}>
                           {item.q}<i className="ti ti-chevron-down" />
                         </button>
-                        <div className="fq-a" role="region"><div><p>{item.a}</p></div></div>
+                        <div className="fq-a" role="region"><div><p>{item.a}</p>
+                          <a className="fq-link" href={`#${answerId(item.q)}`} tabIndex={isOpen ? 0 : -1} onClick={(e) => {
+                            e.preventDefault()
+                            const url = `${window.location.origin}/faq#${answerId(item.q)}`
+                            window.history.replaceState(null, '', `#${answerId(item.q)}`)
+                            navigator.clipboard?.writeText(url).then(() => { setCopied(key); setTimeout(() => setCopied(null), 2000) }).catch(() => {})
+                          }}><i className="ti ti-link" /> {copied === key ? 'Link copied' : 'Link to this answer'}</a>
+                        </div></div>
                       </div>
                     )
                   })}

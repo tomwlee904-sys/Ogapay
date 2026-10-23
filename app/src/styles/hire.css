@@ -63,3 +63,11 @@
   .hr-row { grid-template-columns: 1fr; }
   .hr-sec { padding: 16px; }
 }
+
+/* Fee split bar and the phone-only "Continue to payment" button (the payment box
+   sits below the form on phones, so the pay button used to be out of sight) */
+.hr-split { height: 8px; border-radius: 99px; background: var(--border); overflow: hidden; }
+.hr-split span { display: block; height: 100%; background: var(--green, #16a34a); border-radius: 99px; }
+.hr-line small { font-weight: 400; color: var(--text3); font-size: 12px; }
+.hr-next { display: none; width: 100%; height: 46px; margin-top: 14px; }
+@media (max-width: 860px) { .hr-next { display: inline-flex; } }
