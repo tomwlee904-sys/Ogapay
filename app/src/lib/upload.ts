@@ -123,3 +123,26 @@ export async function uploadProof(file: File, taskId?: string, watermark = false
   if (!r.ok || !j?.data?.url) throw new Error(`"${file.name}" couldn't be uploaded${j?.message ? `: ${j.message}` : ''}. Try again or remove it.`)
   return { url: j.data.url, ...(j.data.originalUrl && { originalUrl: j.data.originalUrl }) }
 }
+
+// A sample file for a store product or an attachment on a support message:
+// sent as-is (no compression), up to 25 MB. Returns what the server saved.
+export type UploadedFile = { url: string; name: string; type: string; size: number | null }
+export const MAX_FILE_MB = 25
+export async function uploadFile(file: File, purpose: 'store-file' | 'support'): Promise<UploadedFile> {
+  const token = getAccessToken()
+  if (!token) throw new Error('Not authenticated')
+  if (file.size > MAX_FILE_MB * 1024 * 1024) throw new Error(`${file.name} is over ${MAX_FILE_MB} MB`)
+  const formData = new FormData()
+  formData.append('file', file)
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 300_000)
+  try {
+    const res = await fetch(`${API_BASE}/uploads/${purpose}`, { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: formData, signal: controller.signal })
+    const json = await res.json().catch(() => ({}))
+    if (!res.ok) throw new Error(json?.message || 'Upload failed')
+    const d = json.data || json
+    return { url: d.url, name: d.name || file.name, type: d.type || 'image', size: d.size ?? file.size }
+  } finally {
+    clearTimeout(timeout)
+  }
+}

@@ -7,7 +7,9 @@ import '../styles/messages.css'
 import { sized } from '../lib/img'
 
 type Person = { id: string; username: string | null; name: string; avatarUrl: string | null }
-type Conv = { id: string; participants: Person[]; lastMessage: { content: string; createdAt: string; senderId: string } | null; unread: number; updatedAt: string
+// The store product a chat is about ("Contact seller" on a product page)
+type ChatProduct = { id: string; name: string; image: string; price: number; currency: string; priceOnRequest?: boolean; removed?: boolean }
+type Conv = { id: string; participants: Person[]; lastMessage: { content: string; createdAt: string; senderId: string } | null; unread: number; updatedAt: string; product?: ChatProduct | null
   // A private job chat (Selection jobs): the job it's about
   job?: { id: string; title: string } | null }
 type Msg = { id: string; content: string; createdAt: string; senderId: string }
@@ -37,6 +39,9 @@ export default function Messages() {
   const openId = params.get('c')
   // /messages?user=<username> (e.g. "Contact seller"): open your chat with them, or start one
   const toUser = params.get('user')
+  // &product=<id>: the chat is about this product; it's sent with the next message
+  const productParam = params.get('product')
+  const [pendingProduct, setPendingProduct] = useState<ChatProduct | null>(null)
   const [newTo, setNewTo] = useState<Person | null>(null)
   const [convs, setConvs] = useState<Conv[] | null>(null)
   const [msgs, setMsgs] = useState<Msg[] | null>(null)
@@ -78,10 +83,17 @@ export default function Messages() {
   }, [msgs])
 
   useEffect(() => {
+    if (!productParam) { setPendingProduct(null); return }
+    apiRequest<any>('/store/' + encodeURIComponent(productParam), { auth: false })
+      .then((d) => setPendingProduct(d?.id ? { id: d.id, name: d.title || d.name, image: d.image || '', price: Number(d.price), currency: d.currency, priceOnRequest: !!d.priceOnRequest } : null))
+      .catch(() => setPendingProduct(null))
+  }, [productParam])
+
+  useEffect(() => {
     if (!toUser || convs === null) return
     const name = toUser.replace(/^@/, '').toLowerCase()
     const hit = convs.find((c) => !c.job && c.participants.some((p) => p.username?.toLowerCase() === name))
-    if (hit) { setParams({ c: hit.id }, { replace: true }); return }
+    if (hit) { setParams(productParam ? { c: hit.id, product: productParam } : { c: hit.id }, { replace: true }); return }
     if (name === user?.username?.toLowerCase()) { setParams({}, { replace: true }); return }
     apiRequest<any>('/users/' + encodeURIComponent(name))
       .then((u) => { setNewTo({ id: u.id, username: u.username, name: [u.firstName, u.lastName].filter(Boolean).join(' '), avatarUrl: u.avatarUrl || null }); setMsgs([]) })
@@ -91,6 +103,7 @@ export default function Messages() {
   const active = convs?.find((c) => c.id === openId)
   const other = active?.participants[0] || (!openId ? newTo || undefined : undefined)
   const composing = !!openId || !!newTo
+  const chatProduct = pendingProduct || active?.product || null
   const shown = useMemo(() => {
     const s = q.trim().toLowerCase()
     if (!convs) return []
@@ -102,10 +115,12 @@ export default function Messages() {
     if (!content || (!openId && !newTo) || sending) return
     setSending(true); setErr('')
     try {
-      const sent = await apiRequest<{ conversationId?: string }>('/messages', { method: 'POST', body: JSON.stringify(openId ? { conversationId: openId, content } : { recipientId: newTo!.id, content }) })
+      const about = productParam ? { productId: productParam } : {}
+      const sent = await apiRequest<{ conversationId?: string }>('/messages', { method: 'POST', body: JSON.stringify(openId ? { conversationId: openId, content, ...about } : { recipientId: newTo!.id, content, ...about }) })
       setDraft('')
       stick.current = true
       if (!openId && sent?.conversationId) { setNewTo(null); setParams({ c: sent.conversationId }, { replace: true }) }
+      else if (productParam && openId) setParams({ c: openId }, { replace: true })
       else if (openId) loadThread(openId)
       loadConvs()
     } catch (e: any) {
@@ -165,6 +180,17 @@ export default function Messages() {
                     {other?.username && <small>@{other.username}</small>}
                   </div>
                 </div>
+                {chatProduct && (
+                  <div className="ms-product">
+                    <span className="ms-product-img">{chatProduct.image ? <img src={sized(chatProduct.image, 56)} alt="" /> : <i className="ti ti-package" />}</span>
+                    <span className="ms-product-mid">
+                      <small>About this product</small>
+                      <b>{chatProduct.name}</b>
+                      <small>{chatProduct.removed ? 'No longer listed' : chatProduct.priceOnRequest ? 'Price on request' : chatProduct.currency === 'NGN' ? '₦' + chatProduct.price.toLocaleString('en-US', { maximumFractionDigits: 2 }) : `${chatProduct.price} ${chatProduct.currency}`}</small>
+                    </span>
+                    {!chatProduct.removed && <Link className="ms-product-btn" to={`/store/${chatProduct.id}`}>View product</Link>}
+                  </div>
+                )}
                 <div className="ms-thread" ref={threadRef} onScroll={(e) => { const el = e.currentTarget; stick.current = el.scrollHeight - el.scrollTop - el.clientHeight < 60 }}>
                   {msgs === null ? <div className="ms-empty">Loading…</div>
                     : msgs.length === 0 ? <div className="ms-empty">{newTo ? `Start a conversation with @${newTo.username}.` : 'No messages yet. Say hello.'}</div>

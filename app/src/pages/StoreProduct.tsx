@@ -8,7 +8,7 @@ import { useCurrency } from '../context/CurrencyContext'
 import { CURRENCY_SYMBOLS, Currency } from '../lib/currency'
 import Avatar from '../components/Avatar'
 import StarRating from '../components/StarRating'
-import DescriptionRenderer from '../components/DescriptionRenderer'
+import { renderBlog } from '../lib/blogMarkdown'
 import SellerCard from '../components/SellerCard'
 import Money from '../components/Money'
 import ItemCover, { itemCategoryLabel } from '../components/ItemCover'
@@ -44,7 +44,22 @@ interface StoreProductData {
   createdAt: string
   metadata?: Record<string, any>
   official?: boolean // sold by OgaPay itself (perks)
+  priceOnRequest?: boolean
+  sampleFiles?: { url: string; name: string; type: string; size: number | null }[]
+  sellerInfo?: { lastActiveAt: string | null; challengesWon: number; compliments: number; reviews: number; newCreator: boolean } | null
 }
+
+// "Last active 6h ago"
+function activeAgo(d: string | null | undefined): string {
+  if (!d) return 'a while ago'
+  const mins = Math.floor((Date.now() - new Date(d).getTime()) / 60000)
+  if (mins < 60) return mins <= 1 ? 'just now' : `${mins}m ago`
+  if (mins < 1440) return `${Math.floor(mins / 60)}h ago`
+  const days = Math.floor(mins / 1440)
+  return days < 30 ? `${days}d ago` : `${Math.floor(days / 30)}mo ago`
+}
+const FILE_ICON: Record<string, string> = { image: 'ti-photo', audio: 'ti-music', video: 'ti-movie', pdf: 'ti-file-type-pdf', text: 'ti-file-text' }
+const fileSize = (n: number | null) => (!n ? '' : n > 1048576 ? `${(n / 1048576).toFixed(1)} MB` : `${Math.max(1, Math.round(n / 1024))} KB`)
 
 interface SellerProfile {
   id: string
@@ -211,9 +226,15 @@ export default function StoreProduct() {
   const revisions = p.metadata?.revisions ?? 3
   const crumb = [itemCategoryLabel(p.category, p.title), p.metadata?.subcategory].filter(Boolean).join(' / ') || 'Store'
 
-  const buyLabel = purchasing ? 'Processing…' : purchased ? 'Purchased' : isOwner ? 'Edit listing' : isSoldOut ? 'Sold out' : 'Buy now'
+  const onRequest = !!p.priceOnRequest
+  const contactSeller = () => {
+    if (!user) return navigate('/login?redirect=/store/' + p.id)
+    navigate('/messages?user=' + encodeURIComponent(p.seller) + '&product=' + p.id)
+  }
+  const buyLabel = purchasing ? 'Processing…' : purchased ? 'Purchased' : isOwner ? 'Edit listing' : isSoldOut ? 'Sold out' : onRequest ? 'Ask for a price' : 'Buy now'
   const onBuy = () => {
     if (isOwner) return navigate('/my-store')
+    if (onRequest) return contactSeller()
     if (!user) return navigate('/login?redirect=/store/' + p.id)
     navigate('/store/pay/' + p.id)
   }
@@ -225,8 +246,11 @@ export default function StoreProduct() {
         {isSoldOut ? <span className="sp-pill sp-pill-off">Sold out</span> : <span className="sp-pill"><span />Active</span>}
       </div>
       <div className="hc-reward sp-total">
-        <span className="ui-label" style={{ margin: 0 }}>Total price</span>
-        <Money amount={Number(p.price || 0)} currency={cur} convert={convert} size={34} exact />
+        <span className="ui-label" style={{ margin: 0 }}>{onRequest ? 'Price' : 'Total price'}</span>
+        {onRequest
+          ? <b style={{ display: 'block', fontSize: 24, fontWeight: 600, marginTop: 6 }}>Price on request</b>
+          : <Money amount={Number(p.price || 0)} currency={cur} convert={convert} size={34} exact />}
+        {onRequest && <small style={{ display: 'block', color: 'var(--text2)', marginTop: 6, fontSize: 12 }}>Message the seller with what you need. They'll reply with a price.</small>}
       </div>
       <div className="sp-facts">
         <div><span><i className="ti ti-clock" />Delivery</span><b>{delivery}</b></div>
@@ -237,8 +261,8 @@ export default function StoreProduct() {
       <button className="ui-btn ui-btn-dark ui-btn-lg" style={{ width: '100%' }} onClick={onBuy} disabled={purchasing || purchased || (!!isSoldOut && !isOwner)}>
         {buyLabel} {!purchased && !isSoldOut && <i className={isOwner ? 'ti ti-edit' : 'ti ti-arrow-right'} />}
       </button>
-      {!isOwner && (
-        <button className="ui-btn ui-btn-ghost ui-btn-lg" style={{ width: '100%', marginTop: 8 }} onClick={() => navigate('/messages?user=' + p.seller)}>
+      {!isOwner && !onRequest && !p.official && (
+        <button className="ui-btn ui-btn-ghost ui-btn-lg" style={{ width: '100%', marginTop: 8 }} onClick={contactSeller}>
           <i className="ti ti-message" /> Contact seller
         </button>
       )}
@@ -258,10 +282,17 @@ export default function StoreProduct() {
           <span className="sp-rating">
             {p.reviewsCount > 0
               ? <><i className="ti ti-star" style={{ color: '#bd8517' }} /> {Number(p.rating).toFixed(1)} <span>/ 5 · {p.reviewsCount} reviews</span></>
-              : <span>New creator</span>}
+              : p.sellerInfo?.newCreator !== false ? <span className="sp-new">New creator</span> : <span>No reviews on this product yet</span>}
           </span>
         </span>
       </button>
+      {p.sellerInfo && (
+        <ul className="sp-trust">
+          <li><i className="ti ti-clock" aria-hidden="true" /> Last active {activeAgo(p.sellerInfo.lastActiveAt)}</li>
+          <li><i className="ti ti-trophy" aria-hidden="true" /> {p.sellerInfo.challengesWon} {p.sellerInfo.challengesWon === 1 ? 'challenge' : 'challenges'} won</li>
+          {p.sellerInfo.compliments > 0 && <li><i className="ti ti-heart" aria-hidden="true" /> {p.sellerInfo.compliments} {p.sellerInfo.compliments === 1 ? 'compliment' : 'compliments'}</li>}
+        </ul>
+      )}
       {seller?.bio && <p className="sp-bio">{seller.bio}</p>}
       {seller && (
         <div className="sp-stats">
@@ -316,6 +347,24 @@ export default function StoreProduct() {
         .sp-reviews{padding:22px;margin-top:14px}
         .sp-review{border-top:1px solid var(--border);padding:14px 0}
         .sp-review:first-of-type{border-top:0}
+        .sp-trust{list-style:none;margin:12px 0 0;padding:0;display:flex;flex-direction:column;gap:6px;font-size:12.5px;color:var(--text2)}
+        .sp-trust li{display:flex;align-items:center;gap:8px}.sp-trust i{font-size:15px;color:var(--text3)}
+        .sp-new{display:inline-flex;padding:2px 8px;border-radius:999px;background:var(--card2);border:1px solid var(--border);color:var(--text)!important;font-weight:500}
+        .sp-files{padding:22px;margin-top:14px}
+        .sp-files h2{font-size:15px;font-weight:600;margin:0 0 10px}
+        .sp-file{display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--border);color:var(--text);text-decoration:none;min-height:44px}
+        .sp-file:first-of-type{border-top:0}
+        .sp-file i{font-size:20px;color:var(--text2);flex-shrink:0}
+        .sp-file span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px}
+        .sp-file small{color:var(--text3);font-size:12px}
+        .sp-file-media{margin:6px 0 10px}
+        .sp-file-media audio,.sp-file-media video{width:100%;border-radius:10px;max-height:320px}
+        .sp-file-media img{max-width:100%;border-radius:10px;display:block}
+        .sp-desc{font-size:14px;line-height:1.7;color:var(--text2);overflow-wrap:anywhere}
+        .sp-desc table{border-collapse:collapse;width:100%;display:block;overflow-x:auto}
+        .sp-desc td,.sp-desc th{border:1px solid var(--border);padding:6px 8px}
+        .sp-desc pre{overflow-x:auto;background:var(--card2);padding:10px;border-radius:8px}
+        .sp-desc img{max-width:100%}
         .sp-mobile-only{display:none}
         @media(max-width:900px){
           .sp-layout{grid-template-columns:1fr}
@@ -342,8 +391,31 @@ export default function StoreProduct() {
 
             <section className="ui-card sp-about">
               <h2>About this product</h2>
-              <DescriptionRenderer text={p.description} />
+              <div className="sp-desc" dangerouslySetInnerHTML={{ __html: renderBlog(p.description || '') }} />
             </section>
+
+            {p.sampleFiles && p.sampleFiles.length > 0 && (
+              <section className="ui-card sp-files">
+                <h2>Samples <span style={{ color: 'var(--text2)', fontWeight: 400 }}>· {p.sampleFiles.length}</span></h2>
+                {p.sampleFiles.map((f, i) => (
+                  <div key={i}>
+                    {(f.type === 'audio' || f.type === 'video' || f.type === 'image') && (
+                      <div className="sp-file-media">
+                        {f.type === 'audio' ? <audio controls preload="none" src={f.url} aria-label={f.name} />
+                          : f.type === 'video' ? <video controls preload="metadata" src={f.url} aria-label={f.name} />
+                          : <img src={f.url} alt={f.name} loading="lazy" />}
+                      </div>
+                    )}
+                    <a className="sp-file" href={f.url} target="_blank" rel="noopener noreferrer nofollow">
+                      <i className={`ti ${FILE_ICON[f.type] || 'ti-file'}`} aria-hidden="true" />
+                      <span>{f.name}</span>
+                      <small>{fileSize(f.size)}</small>
+                      <i className="ti ti-external-link" aria-hidden="true" style={{ fontSize: 15 }} />
+                    </a>
+                  </div>
+                ))}
+              </section>
+            )}
 
             <section className="ui-card sp-reviews">
               <h2 style={{ fontSize: 15, fontWeight: 600, margin: '0 0 6px' }}>Reviews {p.reviewsCount > 0 && <span style={{ color: 'var(--text2)', fontWeight: 400 }}>· {p.reviewsCount}</span>}</h2>

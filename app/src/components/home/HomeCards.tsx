@@ -138,7 +138,7 @@ export function HomeProductCard({ item, convert }: { item: any; convert: Convert
   const cur = item.currency || "NGN";
   const seller = item.seller || "OgaPay";
   return (
-    <Link to={`/store/${item.id}`} className="hc-card hc-product" aria-label={`${item.title} by ${seller}, ${spokenMoney(price, cur)}. View details`}>
+    <Link to={`/store/${item.id}`} className="hc-card hc-product" aria-label={`${item.title} by ${seller}, ${item.priceOnRequest ? "price on request" : spokenMoney(price, cur)}. View details`}>
       <div className="hc-media">
         <ItemCover src={item.image} category={item.category} title={item.title} width={320} />
         <span className="hc-active"><span />Active</span>
@@ -156,7 +156,8 @@ export function HomeProductCard({ item, convert }: { item: any; convert: Convert
         </div>
         <div className="hc-reward hc-price">
           <div className="hc-row"><span className="hc-lbl">Price</span><span className="hc-go">View details <i className="ti ti-arrow-up-right" /></span></div>
-          <Money amount={price} currency={cur} convert={convert} size={26} />
+          {/* Price on request: the buyer messages the seller for a quote */}
+          {item.priceOnRequest ? <b style={{ fontSize: 20, fontWeight: 600 }}>On request</b> : <Money amount={price} currency={cur} convert={convert} size={26} />}
         </div>
       </div>
     </Link>

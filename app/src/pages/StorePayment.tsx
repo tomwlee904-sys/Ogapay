@@ -97,7 +97,8 @@ export default function StorePayment() {
   useEffect(() => {
     if (!id) return
     apiRequest<Item>('/store/' + id, { auth: false })
-      .then(setItem)
+      // A price-on-request product has no fixed price to pay: ask the seller instead
+      .then((d: any) => { if (d?.priceOnRequest) setLoadError('This product is priced on request. Message the seller from the product page for a price.'); else setItem(d) })
       .catch((e: any) => setLoadError(e?.message || "This product couldn't be loaded"))
   }, [id])
 

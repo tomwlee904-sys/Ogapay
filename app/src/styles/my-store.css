@@ -64,3 +64,30 @@
   .ms2-order .row-acts > span[style] { display: none; }
   .ms2-order .row-acts .up-btn { flex: 1 1 auto; justify-content: center; }
 }
+
+/* Active / Hidden product groups */
+.ms2-group + .ms2-group { margin-top: 22px; }
+.ms2-group-h { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; font: 600 15px/1.3 Inter, sans-serif; margin: 0 0 10px; color: var(--text); }
+.ms2-group-h em { font-style: normal; font-size: 12px; color: var(--text3); }
+.ms2-group-h small { flex-basis: 100%; font-weight: 400; font-size: 12px; color: var(--text3); }
+/* Write / Preview and Fixed / On request switches */
+.ms2-seg { display: inline-flex; padding: 3px; gap: 3px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg2); }
+.ms2-seg button { min-height: 36px; padding: 0 12px; border: 0; border-radius: 8px; background: none; color: var(--text2); font: 500 13px Inter, sans-serif; cursor: pointer; }
+.ms2-seg button.on { background: var(--card); color: var(--text); box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+.ms2-seg-wide { display: flex; }
+.ms2-seg-wide button { flex: 1; min-height: 40px; }
+.ms2-preview { min-height: 140px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px; font-size: 14px; line-height: 1.65; color: var(--text2); overflow-wrap: anywhere; }
+.ms2-preview table { border-collapse: collapse; display: block; overflow-x: auto; }
+.ms2-preview td, .ms2-preview th { border: 1px solid var(--border); padding: 4px 8px; }
+.ms2-preview img { max-width: 100%; }
+/* What the seller gets / what the buyer pays */
+.ms2-split { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 2px 0 12px; }
+.ms2-split div { border: 1px solid var(--border); border-radius: 10px; padding: 8px 10px; display: flex; flex-direction: column; gap: 2px; }
+.ms2-split span { font-size: 11.5px; color: var(--text3); }
+.ms2-split b { font-size: 15px; color: var(--text); }
+.ms2-split small { grid-column: 1 / -1; font-size: 11.5px; color: var(--text3); }
+/* Sample files */
+.ms2-files { list-style: none; margin: 0 0 8px; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.ms2-files li { display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); border-radius: 10px; padding: 4px 4px 4px 10px; min-width: 0; }
+.ms2-files a { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text); font-size: 13px; }
+.ms2-files .up-btn { height: 36px; min-width: 36px; padding: 0 8px; }

@@ -2,7 +2,8 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { apiRequest } from '../lib/api'
-import { uploadImage } from '../lib/upload'
+import { uploadImage, uploadFile, MAX_FILE_MB, type UploadedFile } from '../lib/upload'
+import { renderBlog } from '../lib/blogMarkdown'
 import { useAuth } from '../context/AuthContext'
 import { orderBadge, orderWhen, type StoreOrder } from './StoreOrders'
 import { useMoney } from '../lib/useMoney'
@@ -16,7 +17,13 @@ type Product = {
   id: string; name: string; description: string; price: number; currency: string; imageUrl: string | null
   category: string; subcategory?: string; stock: number | null; isActive: boolean; status: 'Active' | 'Draft'
   sales: number; orders: number; avgRating: number; reviewsCount: number; delivery?: string; revisions?: number; tags?: string[]
+  priceOnRequest?: boolean; sampleFiles?: UploadedFile[]; searchTags?: string
+  sellerReceives?: number; buyerPays?: number; feePercent?: number
 }
+const MAX_FILES = 5
+const FILE_ICON: Record<string, string> = { image: 'ti-photo', audio: 'ti-music', video: 'ti-movie', pdf: 'ti-file-type-pdf', text: 'ti-file-text' }
+// OgaPay takes no fee on store sales today (backend STORE_FEE_PERCENT = 0)
+const STORE_FEE_PERCENT = 0
 type Order = StoreOrder & { buyer: { username: string; name: string; avatarUrl: string | null } }
 
 const CATEGORIES = [
@@ -28,7 +35,7 @@ const MIN_NGN = 100
 
 const money = (n: number, cur = 'NGN') =>
   cur === 'NGN' ? '₦' + Number(n).toLocaleString('en-US', { maximumFractionDigits: 2 }) : `${Number(n).toLocaleString('en-US', { maximumFractionDigits: 6 })} ${cur}`
-const blank = { name: '', description: '', price: '', currency: 'NGN', category: CATEGORIES[0], imageUrl: '', stock: '', delivery: '3 days', revisions: '2', tags: '' }
+const blank = { name: '', description: '', price: '', currency: 'NGN', category: CATEGORIES[0], subcategory: '', imageUrl: '', stock: '', delivery: '3 days', revisions: '2', tags: '', priceMode: 'fixed' }
 type Form = typeof blank
 
 export default function MyStore() {
@@ -107,7 +114,7 @@ export default function MyStore() {
         </div>
 
         <div className="ms2-stats">
-          <div className="up-card ms2-stat"><span><i className="ti ti-building-store" /> Live products</span><b>{products ? live : '…'}</b><small>{products ? `${products.length - live} draft` : ''}</small></div>
+          <div className="up-card ms2-stat"><span><i className="ti ti-building-store" /> Live products</span><b>{products ? live : '…'}</b><small>{products ? `${products.length - live} hidden` : ''}</small></div>
           <div className="up-card ms2-stat"><span><i className="ti ti-shopping-cart" /> Orders</span><b>{orders ? orders.length : '…'}</b><small>{orders ? `${open} to deliver` : ''}</small></div>
           <div className="up-card ms2-stat"><span><i className="ti ti-coin" /> Revenue</span><b style={{ fontSize: 18 }}>{orders ? revenue : '…'}</b><small>{held ? `+ ${held} on hold` : 'paid to your wallet'}</small></div>
           <div className="up-card ms2-stat"><span><i className="ti ti-star" /> Rating</span><b>{rated.length ? avg.toFixed(1) : '—'}</b><small>{rated.reduce((s, p) => s + p.reviewsCount, 0)} reviews</small></div>
@@ -130,14 +137,24 @@ export default function MyStore() {
               List your first product or service. It shows in the OgaPay store and on your public profile.
               <div style={{ marginTop: 14 }}><button className="up-btn primary" onClick={() => setEditing('new')}><i className="ti ti-plus" /> Add product</button></div>
             </div>
-          ) : products.map((p) => (
+          ) : (['active', 'hidden'] as const).map((group) => {
+            const list = products.filter((p) => (group === 'active' ? p.isActive : !p.isActive))
+            if (!list.length) return null
+            return (
+              <section key={group} className="ms2-group">
+                <h2 className="ms2-group-h">
+                  {group === 'active' ? 'Active' : 'Hidden'} <em>{list.length}</em>
+                  <small>{group === 'active' ? 'In your public store' : 'Not shown to buyers. Publish to list them again.'}</small>
+                </h2>
+                {list.map((p) => (
             <div className="up-card ms2-prod" key={p.id}>
               <div className="ms2-thumb">{p.imageUrl ? <img src={sized(p.imageUrl, 72)} alt="" loading="lazy" /> : <i className="ti ti-package" />}</div>
               <div style={{ minWidth: 0 }}>
                 <h3>{p.name}</h3>
                 <div className="meta">
-                  <span className={`ms2-badge ${p.isActive ? 'live' : ''}`}>{p.isActive ? 'Live' : 'Draft'}</span>
-                  <span><b>{show(p.price, p.currency)}</b></span>
+                  <span className={`ms2-badge ${p.isActive ? 'live' : ''}`}>{p.isActive ? 'Live' : 'Hidden'}</span>
+                  <span><b>{p.priceOnRequest ? 'Price on request' : show(p.price, p.currency)}</b></span>
+                  {!!p.sampleFiles?.length && <span><i className="ti ti-paperclip" aria-hidden="true" /> {p.sampleFiles.length}</span>}
                   <span>{p.orders} {p.orders === 1 ? 'order' : 'orders'}</span>
                   {p.reviewsCount > 0 && <span><i className="ti ti-star" aria-hidden="true" style={{ fontSize: "0.95em", verticalAlign: "-0.1em" }} /> {p.avgRating.toFixed(1)} ({p.reviewsCount})</span>}
                   {p.stock !== null && <span>{p.stock} in stock</span>}
@@ -151,7 +168,10 @@ export default function MyStore() {
                 <button className="up-btn" disabled={busy === p.id} onClick={() => remove(p)} aria-label={`Delete ${p.name}`}><i className="ti ti-trash" /></button>
               </div>
             </div>
-          ))
+                ))}
+              </section>
+            )
+          })
         ) : (
           orders === null ? <div className="up-skel" style={{ height: 140 }} />
           : orders.length === 0 ? <div className="up-empty"><i className="ti ti-receipt" />No orders yet. When someone buys, it shows here and you get a message from them.</div>
@@ -194,10 +214,19 @@ export default function MyStore() {
 
 function ProductEditor({ product, onClose, onSaved }: { product: Product | null; onClose: () => void; onSaved: () => void }) {
   const [form, setForm] = useState<Form>(() => product ? {
-    name: product.name, description: product.description, price: String(product.price), currency: product.currency,
-    category: product.category, imageUrl: product.imageUrl || '', stock: product.stock === null ? '' : String(product.stock),
-    delivery: product.delivery || '3 days', revisions: String(product.revisions ?? 2), tags: (product.tags || []).join(', '),
+    name: product.name, description: product.description, price: product.priceOnRequest ? '' : String(product.price), currency: product.currency,
+    category: product.category, subcategory: product.subcategory || '', imageUrl: product.imageUrl || '', stock: product.stock === null ? '' : String(product.stock),
+    delivery: product.delivery || '3 days', revisions: String(product.revisions ?? 2),
+    tags: product.searchTags || (product.tags || []).join(', '), priceMode: product.priceOnRequest ? 'request' : 'fixed',
   } : blank)
+  const [files, setFiles] = useState<UploadedFile[]>(product?.sampleFiles || [])
+  const [filesBusy, setFilesBusy] = useState(false)
+  const [descTab, setDescTab] = useState<'write' | 'preview'>('write')
+  const [tagsBusy, setTagsBusy] = useState(false)
+  const sampleRef = useRef<HTMLInputElement>(null)
+  const onRequest = form.priceMode === 'request'
+  const priceNum = Number(form.price) || 0
+  const fee = Math.round(priceNum * STORE_FEE_PERCENT) / 100
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [msg, setMsg] = useState('')
   const [saving, setSaving] = useState(false)
@@ -219,20 +248,53 @@ function ProductEditor({ product, onClose, onSaved }: { product: Product | null;
     if (fileRef.current) fileRef.current.value = ''
   }
 
+  const addFiles = async (list: FileList | null) => {
+    if (!list?.length) return
+    const room = MAX_FILES - files.length
+    if (room <= 0) { setMsg(`Up to ${MAX_FILES} files`); return }
+    setFilesBusy(true); setMsg('')
+    try {
+      for (const f of Array.from(list).slice(0, room)) {
+        const up = await uploadFile(f, 'store-file')
+        setFiles((cur) => [...cur, up].slice(0, MAX_FILES))
+      }
+      if (list.length > room) setMsg(`Only ${MAX_FILES} files per product. The rest were left out.`)
+    } catch (e: any) { setMsg(e?.message || 'Upload failed') }
+    setFilesBusy(false)
+    if (sampleRef.current) sampleRef.current.value = ''
+  }
+
+  // Search words from the title, category and description (the store's AI helper)
+  const makeTags = async () => {
+    if (form.name.trim().length < 3) { setErrors((e) => ({ ...e, name: 'Add a title first' })); return }
+    setTagsBusy(true)
+    try {
+      const d = await apiRequest<{ tags: string }>('/ai/search-tags', { method: 'POST', body: JSON.stringify({ name: form.name, category: form.category, subcategory: form.subcategory, description: form.description }) })
+      if (d?.tags) set('tags', d.tags.slice(0, 200))
+    } catch (e: any) { setMsg(e?.message || "Couldn't make tags") }
+    setTagsBusy(false)
+  }
+
   const save = async (status: 'ACTIVE' | 'DRAFT') => {
     const errs: Record<string, string> = {}
     const price = Number(form.price)
     if (form.name.trim().length < 3) errs.name = 'At least 3 characters'
     if (form.description.trim().length < 10) errs.description = 'Describe what the buyer gets (10+ characters)'
-    if (!(price > 0)) errs.price = 'Enter a price'
+    if (onRequest) { /* no price needed */ }
+    else if (!(price > 0)) errs.price = 'Enter a price'
     else if (form.currency === 'NGN' && price < MIN_NGN) errs.price = `Minimum ₦${MIN_NGN}`
     if (form.stock !== '' && !(Number.isInteger(Number(form.stock)) && Number(form.stock) >= 0)) errs.stock = 'Whole number, or leave empty'
     if (Object.keys(errs).length) { setErrors(errs); return }
 
+    const words = form.tags.split(',').map((t) => t.trim()).filter(Boolean)
     const body = {
-      name: form.name.trim(), description: form.description.trim(), price, currency: form.currency, category: form.category,
+      name: form.name.trim(), description: form.description.trim(), currency: form.currency, category: form.category,
+      ...(onRequest ? { priceOnRequest: true } : { priceOnRequest: false, price }),
+      subcategory: form.subcategory.trim() || null,
       imageUrl: form.imageUrl || null, stock: form.stock === '' ? null : Number(form.stock), delivery: form.delivery,
-      revisions: Number(form.revisions), tags: form.tags.split(',').map((t) => t.trim()).filter(Boolean).slice(0, 8), status,
+      // The first few words show on the product card; all of them are searched
+      revisions: Number(form.revisions), tags: words.filter((t) => t.length <= 30).slice(0, 8), searchTags: form.tags.trim().slice(0, 200) || null,
+      sampleFiles: files, status,
     }
     setSaving(true); setMsg('')
     try {
@@ -255,22 +317,58 @@ function ProductEditor({ product, onClose, onSaved }: { product: Product | null;
         </div>
 
         <label className="ep-field"><span>Title</span><input className="hr-input" maxLength={120} value={form.name} onChange={(e) => set('name', e.target.value)} placeholder="e.g. Logo design: 3 concepts" aria-invalid={!!errors.name} />{errors.name && <em>{errors.name}</em>}</label>
-        <label className="ep-field"><span>What the buyer gets</span><textarea className="hr-input hr-area" style={{ minHeight: 120 }} maxLength={5000} value={form.description} onChange={(e) => set('description', e.target.value)} placeholder="Deliverables, format, what you need from the buyer." aria-invalid={!!errors.description} />{errors.description && <em>{errors.description}</em>}</label>
+        <div className="ep-field">
+          <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+            What the buyer gets
+            <span className="ms2-seg" role="tablist" aria-label="Description">
+              <button type="button" role="tab" aria-selected={descTab === 'write'} className={descTab === 'write' ? 'on' : ''} onClick={() => setDescTab('write')}>Write</button>
+              <button type="button" role="tab" aria-selected={descTab === 'preview'} className={descTab === 'preview' ? 'on' : ''} onClick={() => setDescTab('preview')}>Preview</button>
+            </span>
+          </span>
+          {descTab === 'write'
+            ? <textarea className="hr-input hr-area" style={{ minHeight: 140 }} maxLength={5000} value={form.description} onChange={(e) => set('description', e.target.value)} placeholder={'Deliverables, format, what you need from the buyer.\n\n## What you get\n- 3 logo ideas\n- **PNG and SVG** files'} aria-invalid={!!errors.description} aria-label="What the buyer gets" />
+            : <div className="ms2-preview" dangerouslySetInnerHTML={{ __html: renderBlog(form.description) || '<p style="color:var(--text3)">Nothing to preview yet.</p>' }} />}
+          {errors.description ? <em>{errors.description}</em> : <small>Formatting: ## heading, **bold**, *italic*, - list, 1. list, [link](https://…), | table |.</small>}
+        </div>
+
+        <div className="ep-field">
+          <span>Pricing</span>
+          <div className="ms2-seg ms2-seg-wide" role="radiogroup" aria-label="Pricing">
+            <button type="button" role="radio" aria-checked={!onRequest} className={!onRequest ? 'on' : ''} onClick={() => set('priceMode', 'fixed')}>Fixed price</button>
+            <button type="button" role="radio" aria-checked={onRequest} className={onRequest ? 'on' : ''} onClick={() => set('priceMode', 'request')}>Price on request</button>
+          </div>
+          {onRequest && <small>Buyers message you with what they need and you agree a price in the chat. It can't be bought directly.</small>}
+        </div>
 
         <div className="hr-row">
-          <label className="ep-field"><span>Price</span>
-            <div style={{ display: 'flex', gap: 6 }}>
-              <select value={form.currency} onChange={(e) => set('currency', e.target.value)} style={{ width: 92, flexShrink: 0 }} aria-label="Currency">
-                <option value="NGN">₦ NGN</option><option value="USDC">USDC</option><option value="SOL">SOL</option>
-              </select>
-              <input className="hr-input" inputMode="decimal" value={form.price} onChange={(e) => set('price', e.target.value.replace(/[^0-9.]/g, ''))} placeholder="5000" aria-invalid={!!errors.price} />
-            </div>
-            {errors.price ? <em>{errors.price}</em> : <small>Paid to your wallet when someone buys.</small>}
-          </label>
+          {!onRequest && (
+            <label className="ep-field"><span>Price</span>
+              <div style={{ display: 'flex', gap: 6 }}>
+                <select value={form.currency} onChange={(e) => set('currency', e.target.value)} style={{ width: 92, flexShrink: 0 }} aria-label="Currency">
+                  <option value="NGN">₦ NGN</option><option value="USDC">USDC</option><option value="SOL">SOL</option>
+                </select>
+                <input className="hr-input" inputMode="decimal" value={form.price} onChange={(e) => set('price', e.target.value.replace(/[^0-9.]/g, ''))} placeholder="5000" aria-invalid={!!errors.price} />
+              </div>
+              {errors.price && <em>{errors.price}</em>}
+            </label>
+          )}
           <label className="ep-field"><span>Category</span>
             <select value={form.category} onChange={(e) => set('category', e.target.value)}>{cats.map((c) => <option key={c} value={c}>{c}</option>)}</select>
           </label>
+          {onRequest && (
+            <label className="ep-field"><span>Subcategory (optional)</span><input className="hr-input" maxLength={60} value={form.subcategory} onChange={(e) => set('subcategory', e.target.value)} placeholder="e.g. Logos" /></label>
+          )}
         </div>
+        {!onRequest && (
+          <>
+            <div className="ms2-split" aria-live="polite">
+              <div><span>You receive per sale</span><b>{money(priceNum, form.currency)}</b></div>
+              <div><span>Buyer pays, incl. fee</span><b>{money(priceNum + fee, form.currency)}</b></div>
+              <small>OgaPay takes no fee on store sales right now, so the buyer pays your price and you get all of it.</small>
+            </div>
+            <label className="ep-field"><span>Subcategory (optional)</span><input className="hr-input" maxLength={60} value={form.subcategory} onChange={(e) => set('subcategory', e.target.value)} placeholder="e.g. Logos" /></label>
+          </>
+        )}
 
         <div className="hr-row">
           <label className="ep-field"><span>Delivery time</span>
@@ -283,23 +381,56 @@ function ProductEditor({ product, onClose, onSaved }: { product: Product | null;
 
         <div className="hr-row">
           <label className="ep-field"><span>Stock (optional)</span><input className="hr-input" inputMode="numeric" value={form.stock} onChange={(e) => set('stock', e.target.value.replace(/[^0-9]/g, ''))} placeholder="Unlimited" aria-invalid={!!errors.stock} />{errors.stock ? <em>{errors.stock}</em> : <small>Leave empty for services.</small>}</label>
-          <label className="ep-field"><span>Tags (optional)</span><input className="hr-input" maxLength={200} value={form.tags} onChange={(e) => set('tags', e.target.value)} placeholder="logo, branding" /></label>
         </div>
 
         <div className="ep-field">
-          <span>Cover image</span>
+          <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+            Search tags (optional)
+            <button type="button" className="up-btn" style={{ height: 36 }} disabled={tagsBusy} onClick={makeTags}><i className="ti ti-sparkles" /> {tagsBusy ? 'Making…' : 'Generate tags with AI'}</button>
+          </span>
+          <input className="hr-input" maxLength={200} value={form.tags} onChange={(e) => set('tags', e.target.value)} placeholder="logo, branding, flyer" aria-label="Search tags" />
+          <small>Words buyers might search for, separated by commas. {form.tags.length}/200</small>
+        </div>
+
+        <div className="ep-field">
+          <span>Sample files (optional)</span>
+          {files.length > 0 && (
+            <ul className="ms2-files">
+              {files.map((f, i) => (
+                <li key={f.url}>
+                  <i className={`ti ${FILE_ICON[f.type] || 'ti-file'}`} aria-hidden="true" />
+                  <a href={f.url} target="_blank" rel="noopener noreferrer">{f.name}</a>
+                  <button type="button" className="up-btn" aria-label={`Remove ${f.name}`} onClick={() => setFiles((cur) => cur.filter((_, j) => j !== i))}><i className="ti ti-x" /></button>
+                </li>
+              ))}
+            </ul>
+          )}
+          <div>
+            <button type="button" className="up-btn" disabled={filesBusy || files.length >= MAX_FILES} onClick={() => sampleRef.current?.click()}>
+              <i className="ti ti-paperclip" /> {filesBusy ? 'Uploading…' : files.length >= MAX_FILES ? `${MAX_FILES} files added` : 'Add files'}
+            </button>
+            <input ref={sampleRef} type="file" multiple hidden accept="image/*,audio/*,video/mp4,video/webm,video/quicktime,application/pdf,.txt,.csv,.md,text/plain,text/csv,text/markdown" onChange={(e) => addFiles(e.target.files)} />
+          </div>
+          <small>Up to {MAX_FILES} files, {MAX_FILE_MB} MB each: images, audio, video, PDF, TXT, CSV or Markdown. Buyers can open them before paying.</small>
+        </div>
+
+        <div className="ep-field">
+          <span>Thumbnail</span>
           <div className="ms2-img">
             <div className="ms2-thumb">{form.imageUrl ? <img src={form.imageUrl} alt="" /> : <i className="ti ti-photo" />}</div>
             <button type="button" className="up-btn" disabled={uploading} onClick={() => fileRef.current?.click()}>{uploading ? 'Uploading…' : form.imageUrl ? 'Replace' : 'Upload image'}</button>
             {form.imageUrl && <button type="button" className="up-btn" onClick={() => set('imageUrl', '')}>Remove</button>}
+          </div>
+          <small>Wide pictures work best (16:10). It shows on the product card.</small>
+          <div style={{ display: 'none' }}>
             <input ref={fileRef} type="file" accept="image/*" hidden onChange={(e) => upload(e.target.files?.[0])} />
           </div>
         </div>
 
         {msg && <div className="up-note err" role="alert">{msg}</div>}
         <div style={{ display: 'flex', gap: 8, marginTop: 18, flexWrap: 'wrap' }}>
-          <button className="up-btn" disabled={saving || uploading} onClick={() => save('DRAFT')}>{product && !product.isActive ? 'Save draft' : product ? 'Save & unpublish' : 'Save as draft'}</button>
-          <button className="up-btn primary" style={{ flex: 1 }} disabled={saving || uploading} onClick={() => save('ACTIVE')}>{saving ? 'Saving…' : product?.isActive ? 'Save changes' : 'Publish'}</button>
+          <button className="up-btn" disabled={saving || uploading || filesBusy} onClick={() => save('DRAFT')}>{product && !product.isActive ? 'Save hidden' : product ? 'Save & hide' : 'Save as hidden'}</button>
+          <button className="up-btn primary" style={{ flex: 1 }} disabled={saving || uploading || filesBusy} onClick={() => save('ACTIVE')}>{saving ? 'Saving…' : product?.isActive ? 'Save changes' : 'Publish'}</button>
         </div>
       </div>
     </div>
