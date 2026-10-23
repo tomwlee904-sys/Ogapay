@@ -4,6 +4,7 @@ import { useParams, useNavigate, Link } from "react-router-dom"
 import Layout from "../components/Layout"
 import InviteToCommunity from "../components/profile/InviteToCommunity"
 import TransferModal from "../components/TransferModal"
+import ReportUser from "../components/profile/ReportUser"
 import { apiRequest } from "../lib/api"
 import { useAuth } from "../context/AuthContext"
 import { openSignIn } from "../lib/signin"
@@ -150,6 +151,13 @@ export default function UserProfile() {
   const invite = () => {
     if (!me) { openSignIn({ redirect: `/user/${handle}` }); return }
     setInviteOpen(true)
+  }
+
+  // Report this user: reason + note to the admin queue
+  const [reportOpen, setReportOpen] = useState(false)
+  const report = () => {
+    if (!me) { openSignIn({ redirect: `/user/${handle}` }); return }
+    setReportOpen(true)
   }
 
   // Tip: send them naira from your wallet as a thank-you (needs Level 1; the
@@ -302,6 +310,7 @@ export default function UserProfile() {
                   </button>
                 )}
                 <button className="up-btn" onClick={share}><i className={`ti ${shared ? "ti-check" : "ti-share"}`} /> {shared ? "Link copied" : "Share"}</button>
+                {!isMe && <button className="up-btn" onClick={report}><i className="ti ti-flag" /> Report</button>}
                 {/* Admins: warn this member for breaking the rules (Admin > Warnings) */}
                 {!isMe && me?.role === "ADMIN" && (
                   <Link className="up-btn" to={`/admin/warnings?warn=${encodeURIComponent(handle)}`}><i className="ti ti-alert-triangle" /> Warn</Link>
@@ -528,6 +537,7 @@ export default function UserProfile() {
         </section>
       </div>
 
+      {reportOpen && profile?.id && <ReportUser userId={profile.id} username={profile.username || handle} onClose={() => setReportOpen(false)} />}
       {inviteOpen && <InviteToCommunity username={handle} name={first || handle} onClose={() => setInviteOpen(false)} />}
       {tipOpen && profile?.id && (
         <TransferModal tip onClose={() => setTipOpen(false)}

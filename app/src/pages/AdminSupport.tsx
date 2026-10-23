@@ -11,6 +11,9 @@ type Ticket = {
   targetType?: string | null; targetId?: string | null; email?: string | null
   status: string; adminNotes?: string | null; createdAt: string; priority?: boolean
   user?: { id: string; firstName?: string; lastName?: string; email?: string } | null
+  // Files sent with a support message, and who a "Report this user" is about
+  attachments?: string[]
+  reportedUser?: { id: string; username: string; firstName?: string; lastName?: string } | null
 }
 const STATUSES = [['open', 'Open'], ['in_review', 'In review'], ['resolved', 'Resolved'], ['dismissed', 'Dismissed']] as const
 const when = (d: string) => new Date(d).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
@@ -61,7 +64,7 @@ export default function AdminSupport() {
             {items.map((t) => {
               const who = [t.user?.firstName, t.user?.lastName].filter(Boolean).join(' ') || 'A user'
               const reply = t.email || t.user?.email
-              const target = t.targetType && t.targetId && TARGET_LINK[t.targetType]?.(t.targetId)
+              const target = t.targetType === 'user' && t.reportedUser ? `/user/${t.reportedUser.username}` : t.targetType && t.targetId && TARGET_LINK[t.targetType]?.(t.targetId)
               return (
                 <article key={t.id} className="ui-card ui-card-pad">
                   <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', marginBottom: 6 }}>
@@ -71,6 +74,14 @@ export default function AdminSupport() {
                   </div>
                   <h2 style={{ margin: '0 0 6px', fontSize: 16, fontWeight: 600 }}>{t.subject || t.category}</h2>
                   <p style={{ margin: '0 0 10px', fontSize: 13.5, lineHeight: 1.6, color: 'var(--text)', whiteSpace: 'pre-wrap' }}>{t.description}</p>
+                  {t.reportedUser && <p style={{ margin: '0 0 8px', fontSize: 13 }}>About <Link to={`/user/${t.reportedUser.username}`} style={{ color: 'var(--text)', fontWeight: 600 }}>@{t.reportedUser.username}</Link></p>}
+                  {!!t.attachments?.length && (
+                    <p style={{ margin: '0 0 10px', display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                      {t.attachments.map((u, i) => (
+                        <a key={u} href={u} target="_blank" rel="noopener noreferrer nofollow" className="ui-chip" style={{ minHeight: 36 }}><i className="ti ti-paperclip" /> File {i + 1}</a>
+                      ))}
+                    </p>
+                  )}
                   <p style={{ margin: '0 0 12px', fontSize: 12.5, color: 'var(--text2)' }}>
                     From {who}{reply && <> · <a href={`mailto:${reply}?subject=${encodeURIComponent('Re: ' + (t.subject || t.category))}`} style={{ color: 'var(--text)', fontWeight: 600 }}>{reply}</a></>}
                     {target && <> · <Link to={target} style={{ color: 'var(--text)', fontWeight: 600 }}>Open what was reported</Link></>}

@@ -1,9 +1,9 @@
-﻿import { useState, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
+﻿import { useState, useRef, useEffect } from 'react'
+import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import Layout from '../components/Layout'
 import { uploadImage } from '../lib/upload'
-import { API_BASE } from '../lib/api'
+import { API_BASE, apiRequest } from '../lib/api'
 
 const CATEGORIES = ['Crypto', 'Business', 'Content', 'Design', 'Marketing', 'Technology', 'Gaming', 'Education', 'Social', 'Other']
 const PRESET_COLORS = ['#7C3AED', 'var(--accent)', '#EC4899', '#22C55E', '#F59E0B', '#EF4444', '#06B6D4', '#8B5CF6']
@@ -30,6 +30,13 @@ export default function CreateCommunity() {
   const [coverImage, setCoverImage] = useState<File | null>(null)
   const [coverPreview, setCoverPreview] = useState<string | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
+  // Creating a community costs ₦500 from your naira wallet (free for admins).
+  // Shown before you create; nothing is charged if creating fails.
+  const [fee, setFee] = useState<{ fee: number; available: number; canPay: boolean } | null>(null)
+  useEffect(() => {
+    apiRequest<{ fee: number; available: number; canPay: boolean }>('/communities/create/fee').then(setFee).catch(() => setFee(null))
+  }, [])
+  const feeText = (n: number) => '₦' + n.toLocaleString('en-NG', { maximumFractionDigits: 2 })
 
   const update = (field: string, value: any) => setForm(prev => ({ ...prev, [field]: value }))
 
@@ -41,6 +48,7 @@ export default function CreateCommunity() {
       setError('Community name must be at least 2 characters')
       return
     }
+    if (fee && fee.fee > 0 && !window.confirm(`Create "${form.name.trim()}"? ${feeText(fee.fee)} will be taken from your naira wallet.`)) return
 
     const token = localStorage.getItem('ogapay_access_token')
     if (!token) { navigate('/login'); return }
@@ -114,6 +122,11 @@ export default function CreateCommunity() {
         .cc-submit{width:100%;height:46px;border:0;border-radius:12px;background:var(--accent);color:var(--on-accent);font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:8px}
         .cc-submit:hover{opacity:.9}
         .cc-submit:disabled{opacity:.5;cursor:not-allowed}
+        .cc-fee{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border:1px solid var(--border);border-radius:12px;background:var(--bg2,var(--card2));margin:4px 0 12px;font-size:13px;line-height:1.5}
+        .cc-fee i{font-size:18px;color:var(--text2);margin-top:1px}
+        .cc-fee div{display:flex;flex-direction:column;gap:2px}
+        .cc-fee span{color:var(--text2)}
+        .cc-fee a{color:var(--text);font-weight:600;text-decoration:underline;min-height:32px;display:inline-flex;align-items:center}
       `}</style>
 
       <div className="cc-wrap">
@@ -260,8 +273,18 @@ export default function CreateCommunity() {
                 </div>
               </div>
             </div>
-            <button type="submit" className="cc-submit" disabled={submitting}>
-              {submitting ? <><i className="ti ti-loader" style={{ animation: 'spin 1s linear infinite' }} /> Creating...</> : <><i className="ti ti-users" /> Create Community</>}
+            {fee && fee.fee > 0 && (
+              <div className="cc-fee" role="note">
+                <i className="ti ti-receipt" aria-hidden="true" />
+                <div>
+                  <b>Creating a community costs {feeText(fee.fee)}</b>
+                  <span>Taken from your naira wallet when you create it (you have {feeText(fee.available)} available). It keeps spam communities out. If creating fails, nothing is charged.</span>
+                  {!fee.canPay && <Link to="/deposit?back=/communities/create">Add money first</Link>}
+                </div>
+              </div>
+            )}
+            <button type="submit" className="cc-submit" disabled={submitting || (!!fee && !fee.canPay)}>
+              {submitting ? <><i className="ti ti-loader" style={{ animation: 'spin 1s linear infinite' }} /> Creating...</> : <><i className="ti ti-users" /> {fee && fee.fee > 0 ? `Pay ${feeText(fee.fee)} and create` : 'Create Community'}</>}
             </button>
           </form>
         </div>
