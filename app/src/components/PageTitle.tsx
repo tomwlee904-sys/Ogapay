@@ -21,13 +21,41 @@ const TITLES: Record<string, string> = {
   '/createsocial': 'Create an X campaign', '/tasks/new': 'Create a job', '/post-job': 'Create a job',
   '/roadmap': 'Roadmap', '/hire': 'Hire', '/socials': 'Socials', '/license': 'License', '/copyright': 'Copyright',
   '/use-cases': 'Use cases', '/about': 'About OgaPay', '/features': 'Features', '/admin': 'Admin',
+  '/writer': 'Writer workspace', '/job-monitor': 'Job monitor', '/pair-device': 'Pair a device', '/link-wallet': 'Link a wallet',
+  '/verify-email': 'Verify your email', '/reset-password': 'Choose a new password', '/communities/invitations': 'Community invitations',
+  '/docs/api': 'API docs', '/ecosystem': 'About OgaPay', '/feature-grid': 'Features',
+  // Admin pages each say which one they are
+  '/admin/blog': 'Admin: Blog', '/admin/vault': 'Admin: Vault', '/admin/moderation': 'Admin: Moderation',
+  '/admin/withdrawals': 'Admin: Withdrawals', '/admin/kyc': 'Admin: Identity checks', '/admin/creators': 'Admin: Creator checks',
+  '/admin/highlights': 'Admin: Highlighted jobs', '/admin/updates': 'Admin: Platform updates', '/admin/ranks': 'Admin: Rank claims',
+  '/admin/warnings': 'Admin: Warnings', '/admin/linked-accounts': 'Admin: Linked accounts', '/admin/brands': 'Admin: Business checks',
+  '/admin/support': 'Admin: Support and reports',
 }
+
+// Pages with an id in the address. Pages about one thing (an article, a job, a
+// product) replace this with its own name once it loads.
+const PATTERNS: [RegExp, string][] = [
+  [/^\/blog\/edit\/[^/]+$/, 'Edit your article'],
+  [/^\/blog\/[^/]+$/, 'Blog'],
+  [/^\/tasks\/[^/]+\/submit$/, 'Submit your work'],
+  [/^\/tasks\/[^/]+\/submissions$/, 'Submissions'],
+  [/^\/tasks\/[^/]+$/, 'Job'],
+  [/^\/store\/pay\/[^/]+$/, 'Checkout'],
+  [/^\/store\/[^/]+$/, 'Store'],
+  [/^\/orders\/[^/]+$/, 'Your order'],
+  [/^\/communities\/[^/]+\/request$/, 'Ask to join a community'],
+  [/^\/communities\/[^/]+$/, 'Community'],
+  [/^\/user\/[^/]+\/hire$/, 'Hire'],
+  [/^\/user\/[^/]+$/, 'Profile'],
+  [/^\/ref\/[^/]+$/, 'Join OgaPay'],
+]
 
 export default function PageTitle() {
   const { pathname } = useLocation()
   useEffect(() => {
     const path = pathname.replace(/\/+$/, '') || '/'
-    const name = TITLES[path] || (path.startsWith('/settings/') ? 'Settings' : path.startsWith('/admin/') ? 'Admin' : null)
+    const name = TITLES[path] || PATTERNS.find(([re]) => re.test(path))?.[1]
+      || (path.startsWith('/settings/') ? 'Settings' : path.startsWith('/admin/') ? 'Admin' : null)
     document.title = name ? `${name} | OgaPay` : HOME
   }, [pathname])
   return null

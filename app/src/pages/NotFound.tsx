@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import Layout from '../components/Layout'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 
 export default function NotFound() {
   // The server answers 200 for every address (it's one app), so tell search
@@ -11,6 +11,9 @@ export default function NotFound() {
     document.head.appendChild(m)
     return () => { m.remove() }
   }, [])
+  // After PageTitle (which runs first, on every address change)
+  const { pathname } = useLocation()
+  useEffect(() => { document.title = 'Page not found | OgaPay' }, [pathname])
   return (
     <Layout sidebar={false}>
       <div style={{textAlign:'center',padding:'80px 20px'}}>

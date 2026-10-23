@@ -61,6 +61,9 @@ export default function CommunityDetail() {
   const [busy, setBusy] = useState(false)
   const [invite, setInvite] = useState<any>(null)
 
+  // Name the community in the browser tab
+  useEffect(() => { if (c?.name) document.title = `${c.name} | OgaPay Communities` }, [c?.name])
+
   const role = c?.userRole || null
   const isMember = !!role
   const isLeader = role === 'OWNER' || role === 'ADMIN'
