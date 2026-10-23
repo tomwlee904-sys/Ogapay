@@ -20,6 +20,7 @@ import { categoryLabel } from '../lib/categories'
 import { sized } from '../lib/img'
 import { renderJobText, renderJobLine } from '../lib/jobText'
 import { PayoutCheckStatus, checkBlocksApprove, anyWaiting, useNow } from '../components/PayoutCheck'
+import SocialJobPanel, { type SocialInfo } from '../components/SocialJobPanel'
 
 const BRAND = 'var(--accent)'
 const BRAND_LIGHT = 'rgba(var(--accent-rgb),0.10)'
@@ -108,6 +109,8 @@ interface JobData {
   proofRequired: string[]
   // Social jobs: the payout check, in words from the server (null when none)
   payoutCheck?: { minutes: number; checkable: boolean; note: string } | null
+  // Quick social jobs on X: action, price, target post, place hold, batches, progress
+  social?: SocialInfo | null
   tags: string[]
   approvalTime: string
   payoutDay: string
@@ -153,7 +156,7 @@ export default function JobDetail() {
   const navigate = useNavigate()
   const [job, setJob] = useState<JobData | null>(null)
   // Your own place on this job, if you took one (GET /tasks/:id sends it when signed in)
-  const [mySub, setMySub] = useState<{ status: string; payoutCheck?: string | null; payoutCheckDueAt?: string | null; payoutCheckReason?: string | null } | null>(null)
+  const [mySub, setMySub] = useState<{ status: string; holdEndsAt?: string | null; payoutCheck?: string | null; payoutCheckDueAt?: string | null; payoutCheckReason?: string | null } | null>(null)
   // Selection jobs: your application (WAITING, PICKED or NOT_PICKED)
   const [myApp, setMyApp] = useState<{ status: string } | null>(null)
   // The poster's similar jobs: people who did one of them can't take this one
@@ -357,6 +360,7 @@ export default function JobDetail() {
       proofRequired: toArray(t.proofRequired || t.proofInstructions, []),
       // Social jobs: the payout check, in words from the server (null when none)
       payoutCheck: t.payoutCheck || null,
+      social: t.social || null,
       tags: toArray(t.tags || t.searchTags, []),
       approvalTime: t.approvalTime || '48 hours',
       payoutDay: t.payoutDay || 'Daily',
@@ -524,6 +528,7 @@ export default function JobDetail() {
       authUser={authUser}
       contest={contest}
       onContestPaid={() => setReloadKey((k) => k + 1)}
+      onReload={() => setReloadKey((k) => k + 1)}
       community={community}
     />
   )
@@ -558,7 +563,7 @@ function WurkJobDetailView(props: any) {
     showReportModal, setShowReportModal, reportCategory, setReportCategory,
     reportDesc, setReportDesc, reportMsg, setReportMsg, reportSubmitting, handleSubmitReport,
     submissions, subsLoading, approving, rejecting, handleApprove, handleReject, timeAgo, authUser,
-    contest, onContestPaid, community,
+    contest, onContestPaid, community, onReload,
   } = props
   // Re-render while a payout check runs, so Approve opens when its window ends
   const clock = useNow(anyWaiting(submissions))
@@ -1026,6 +1031,7 @@ function WurkJobDetailView(props: any) {
             </div>
           </header>
           {mySub?.payoutCheck && <PayoutCheckStatus sub={mySub} who="worker" />}
+          {job.social && <SocialJobPanel jobId={job.id} social={job.social} holdEndsAt={mySub?.holdEndsAt} signedIn={!!authUser} onTimeUp={onReload} />}
 
           {/* ── Creator Panel ── */}
           <section className="wjd-panel wjd-agent">
@@ -1300,7 +1306,7 @@ function WurkJobDetailView(props: any) {
           )}
 
           {/* ── Public submissions: who sent work and what was paid (no proof) ── */}
-          {!canManage && <JobActivity jobId={job.id} convert={convert} isContest={!!contest} />}
+          {!canManage && <JobActivity jobId={job.id} convert={convert} isContest={!!contest} rewarded={!!job.social} />}
         </div>
       </div>
 

@@ -23,6 +23,9 @@ type Sub = {
   payoutCheck?: string | null; payoutCheckDueAt?: string | null; payoutCheckReason?: string | null
   isContest?: boolean; place?: number | null; prize?: number | null; winnersPaidAt?: string | null
   paidAmount?: number | null; contestResult?: 'WON' | 'NOT_PLACED' | 'WAITING' | null
+  // A taken place with no work sent yet: when it is freed (15 minutes on quick
+  // social jobs, 24 / 72 hours on custom jobs)
+  holdEndsAt?: string | null
   task?: {
     id: string; title: string; reward: number | string; currency?: string; category?: string; poster?: { username?: string | null }
     expiresAt?: string | null; deadline?: string | null; winnersDueAt?: string | null
@@ -54,12 +57,22 @@ const unsentText = (s: Sub) => awardedEarly(s) ? 'All the places were awarded be
 const TABS = [
   { id: 'all', label: 'All', test: () => true },
   { id: 'todo', label: 'To do', test: (s: Sub) => s.status === 'PENDING' && !out(s) },
+  // Places you hold and the time left on each (Claimed places)
+  { id: 'claimed', label: 'Claimed places', test: (s: Sub) => !!s.holdEndsAt && s.status === 'PENDING' && !out(s) },
   { id: 'review', label: 'In review', test: (s: Sub) => (s.status === 'SUBMITTED' || s.status === 'DISPUTED') && !out(s) },
   { id: 'won', label: 'Won', test: (s: Sub) => s.contestResult === 'WON' },
   { id: 'paid', label: 'Paid', test: (s: Sub) => s.status === 'APPROVED' },
   { id: 'lost', label: "Didn't place", test: out },
   { id: 'closed', label: 'Not approved', test: (s: Sub) => (s.status === 'REJECTED' || s.status === 'EXPIRED') && !out(s) },
 ]
+
+// "14:59" for under an hour, else "5h 20m"
+const left = (ms: number) => {
+  const sec = Math.max(0, Math.floor(ms / 1000))
+  if (sec < 3600) return `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`
+  const h = Math.floor(sec / 3600)
+  return `${h}h ${Math.floor((sec % 3600) / 60)}m`
+}
 
 const day = (d?: string | null) => d ? new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : ''
 const when = (d?: string | null) => d ? new Date(d).toLocaleString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : ''
@@ -79,6 +92,18 @@ export default function MyTasks() {
   // One total per currency: naira and USDC are never added together
   const [earned, setEarned] = useState<Record<string, number>>({})
   const [tab, setTab] = useState('all')
+  // Ticks every second while a place is held, for the countdowns
+  const [now, setNow] = useState(() => Date.now())
+  const holding = (subs || []).some((s) => s.holdEndsAt && s.status === 'PENDING')
+  useEffect(() => {
+    if (!holding) return
+    const t = setInterval(() => setNow(Date.now()), 1000)
+    return () => clearInterval(t)
+  }, [holding])
+  const holdText = (s: Sub) => {
+    const ms = new Date(s.holdEndsAt as string).getTime() - now
+    return ms > 0 ? `Place held for ${left(ms)} · send your proof before then or it goes to someone else` : 'Your time ran out · the place is being freed'
+  }
 
   useEffect(() => {
     apiRequest<{ submissions: Sub[]; stats?: { totalEarned?: number; earned?: Record<string, number> } }>('/tasks/my/submissions')
@@ -115,7 +140,8 @@ export default function MyTasks() {
         : `Entry sent ${day(s.submittedAt || s.createdAt)} · winners are picked after ${endsAt(s) ? when(endsAt(s)) : 'it ends'}`
     }
     switch (s.status) {
-      case 'PENDING': return 'Send your work when it\'s done'
+      case 'PENDING': if (s.holdEndsAt) return holdText(s)
+        return 'Send your work when it\'s done'
       case 'SUBMITTED': return s.autoApproveAt ? `Sent ${day(s.submittedAt || s.createdAt)} · paid automatically ${when(s.autoApproveAt)} if not reviewed` : `Sent ${day(s.submittedAt || s.createdAt)}`
       case 'APPROVED': return `Approved${s.reviewedAt ? ` ${day(s.reviewedAt)}` : ''}`
       case 'REJECTED': return `Not approved${s.reviewedAt ? ` ${day(s.reviewedAt)}` : ''}`

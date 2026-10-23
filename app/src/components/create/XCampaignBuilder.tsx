@@ -7,21 +7,26 @@ import { useAuth } from "../../context/AuthContext";
 import { useCurrency } from "../../context/CurrencyContext";
 import { useWalletBalance } from "../../context/WalletBalanceContext";
 import { PayoutCheckPicker, PAYOUT_CHECKS } from "../PayoutCheck";
-import { OverviewCard, RequirementPicker, Steps, Fold, DURATIONS, deadlineFor, money, minReward, reqFields, reqLabel, createTask, apiErrorText } from "./shared";
+import { OverviewCard, RequirementPicker, Steps, Fold, DURATIONS, deadlineFor, money, reqFields, reqLabel, createTask, apiErrorText } from "./shared";
+import { useSocialPrices, priceOf, isStaggered, batchSizeFor, X_TARGET, SocialAction } from "./socialPrices";
 
-/* X campaign: pick an X post, choose the actions you want (reposts, comments,
-   likes...), set how many people and the reward for each. Each action becomes
-   its own funded job, so workers see one clear instruction per task. */
+/* X campaign ("Start with your X post"): paste the post link, see the post,
+   choose the actions you want (reposts, comments, likes...) and how many people
+   for each. Each action pays its fixed price (socialPrices.ts, checked by the
+   server; blue-tick accounts only at 2.4x) and becomes its own funded job, so
+   workers see one clear instruction per task. Paid in naira. */
 
 type Post = { id?: string; url: string; authorName: string; authorUsername: string; avatarUrl: string | null; text: string; likes: number; reposts: number; replies: number };
-type Comp = { on: boolean; qty: string; reward: string };
+type Comp = { on: boolean; qty: string };
 
-const COMPONENTS = [
-  { id: "repost", label: "Reposts", verb: "Repost", icon: "ti-repeat", proof: "a screenshot of your repost", qty: 50, ngn: 60 },
-  { id: "comment", label: "Comments", verb: "Comment on", icon: "ti-message-circle", proof: "the link to your comment", qty: 20, ngn: 100 },
-  { id: "like", label: "Likes", verb: "Like", icon: "ti-heart", proof: "a screenshot showing you liked it", qty: 100, ngn: 50 },
-  { id: "bookmark", label: "Bookmarks", verb: "Bookmark", icon: "ti-bookmark", proof: "a screenshot of your bookmarks", qty: 50, ngn: 50 },
-  { id: "quote", label: "Quotes", verb: "Quote", icon: "ti-quote", proof: "the link to your quote post", qty: 20, ngn: 120 },
+const COMPONENTS: { id: string; action: SocialAction; label: string; verb: string; icon: string; proof: string; qty: number }[] = [
+  { id: "repost", action: "REPOST", label: "Reposts", verb: "Repost", icon: "ti-repeat", proof: "a screenshot of your repost", qty: 50 },
+  { id: "comment", action: "REPLY", label: "Comments", verb: "Comment on", icon: "ti-message-circle", proof: "the link to your comment", qty: 20 },
+  { id: "like", action: "LIKE", label: "Likes", verb: "Like", icon: "ti-heart", proof: "a screenshot showing you liked it", qty: 100 },
+  { id: "bookmark", action: "BOOKMARK", label: "Bookmarks", verb: "Bookmark", icon: "ti-bookmark", proof: "a screenshot of your bookmarks", qty: 50 },
+  { id: "quote", action: "QUOTE", label: "Quotes", verb: "Quote", icon: "ti-quote", proof: "the link to your quote post", qty: 20 },
+  { id: "view", action: "VIEW", label: "Views", verb: "View", icon: "ti-eye", proof: "a screenshot showing you opened the post", qty: 500 },
+  { id: "follow", action: "FOLLOW", label: "Follows", verb: "Follow the author of", icon: "ti-user-plus", proof: "a screenshot showing you follow the author", qty: 50 },
 ];
 
 const X_URL = /^https?:\/\/(?:www\.|mobile\.)?(?:x|twitter)\.com\/([A-Za-z0-9_]{1,15})\/status\/(\d+)/i;
@@ -37,9 +42,12 @@ export default function XCampaignBuilder({ initialUrl = "", onClose, onCreated }
   const [finding, setFinding] = useState(false);
   const [findError, setFindError] = useState("");
   const [step, setStep] = useState<1 | 2 | 3>(1);
-  const [currency, setCurrency] = useState<"NGN" | "USDC">("NGN");
+  // Action prices are in naira, so campaigns are paid in naira
+  const currency = "NGN" as const;
+  const prices = useSocialPrices();
+  const [blueOnly, setBlueOnly] = useState(false);
   const [comps, setComps] = useState<Record<string, Comp>>(() =>
-    Object.fromEntries(COMPONENTS.map((c, i) => [c.id, { on: i === 0, qty: String(c.qty), reward: String(c.ngn) }])));
+    Object.fromEntries(COMPONENTS.map((c, i) => [c.id, { on: i === 0, qty: String(c.qty) }])));
   const [reqType, setReqType] = useState("none");
   const [reqValue, setReqValue] = useState("");
   const [duration, setDuration] = useState("7 days");
@@ -78,28 +86,25 @@ export default function XCampaignBuilder({ initialUrl = "", onClose, onCreated }
   // Coming from the chooser with a link already pasted
   useEffect(() => { if (initialUrl) findPost(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Rewards are entered in the chosen currency
-  const rate = (ngn: number) => currency === "NGN" ? ngn : Math.max(minReward("USDC"), Number(convert(ngn, "NGN" as any, "USDC" as any).toFixed(2)));
-  const switchCurrency = (next: "NGN" | "USDC") => {
-    setCurrency(next);
-    setComps(prev => Object.fromEntries(COMPONENTS.map(c => [c.id, { ...prev[c.id], reward: String(next === "NGN" ? c.ngn : Math.max(minReward("USDC"), Number(convert(c.ngn, "NGN" as any, "USDC" as any).toFixed(2)))) }])));
-  };
+  // The "Blue-tick X account" requirement is the same thing as the switch
+  const blue = blueOnly || reqType === "xblue";
 
   const lines = useMemo(() => COMPONENTS.filter(c => comps[c.id].on).map(c => {
     const qty = Math.min(1000, Math.max(0, parseInt(comps[c.id].qty) || 0));
-    const reward = parseFloat(comps[c.id].reward) || 0;
-    return { ...c, qty, reward, subtotal: qty * reward, valid: qty >= 1 && reward >= minReward(currency) };
-  }), [comps, currency]);
+    const reward = priceOf(prices, c.action, blue);
+    return { ...c, qty, reward, subtotal: qty * reward, valid: qty >= 1 && reward > 0 };
+  }), [comps, prices, blue]);
   const subtotal = lines.reduce((s, l) => s + l.subtotal, 0);
-  const fee = subtotal * 0.10;
+  // The fee is worked out per job, to the kobo, as the server does
+  const fee = lines.reduce((s, l) => s + Math.round(l.subtotal * 10) / 100, 0);
   const total = subtotal + fee;
   const balance = Number(walletBalances?.[currency]?.balance || 0);
-  const alt = currency === "NGN" ? `≈ $${convert(total, "NGN" as any, "USDC" as any).toFixed(2)} USD` : `≈ ₦${Math.round(convert(total, "USDC" as any, "NGN" as any)).toLocaleString("en-US")}`;
+  const alt = `≈ $${convert(total, "NGN" as any, "USDC" as any).toFixed(2)} USD`;
 
   const checklist = [
     { ok: !!post, label: "Find the X post you want to grow." },
     { ok: lines.length > 0, label: "Choose at least one action." },
-    { ok: lines.length > 0 && lines.every(l => l.valid), label: `Set at least 1 person and ${money(minReward(currency), currency)} per action.` },
+    { ok: lines.length > 0 && lines.every(l => l.valid), label: "Set at least 1 person for each action." },
   ];
   const ready = checklist.every(c => c.ok);
 
@@ -110,7 +115,7 @@ export default function XCampaignBuilder({ initialUrl = "", onClose, onCreated }
       setError(""); setStep(3); window.scrollTo({ top: 0, behavior: "smooth" }); return;
     }
     const remaining = lines.filter(l => !created[l.id]);
-    const remainingCost = remaining.reduce((s, l) => s + l.subtotal * 1.1, 0);
+    const remainingCost = remaining.reduce((s, l) => s + l.subtotal + Math.round(l.subtotal * 10) / 100, 0);
     if (balance < remainingCost) { setShowFund(true); return; }
     setBusy(true); setError("");
     const deadline = deadlineFor(duration);
@@ -122,10 +127,11 @@ export default function XCampaignBuilder({ initialUrl = "", onClose, onCreated }
           `${l.verb} ${who} post on X: ${post!.url}`,
           ``,
           `Then submit ${l.proof}. Use your own active account; submissions from new or empty accounts may be rejected.`,
+          `You have ${prices.holdMinutes} minutes after taking a place to send it.`,
           reqType !== "none" ? `\nWho can take part: ${reqLabel(reqType, reqValue)}.` : "",
         ].join("\n");
         done[l.id] = await createTask({
-          title: `${l.verb} ${who} post on X`.slice(0, 200),
+          title: `${blue ? "Blue-tick: " : ""}${l.verb} ${who} post on X`.slice(0, 200),
           description: brief,
           instructions: brief,
           category: "SOCIAL_MEDIA",
@@ -133,6 +139,9 @@ export default function XCampaignBuilder({ initialUrl = "", onClose, onCreated }
           currency,
           maxWorkers: l.qty,
           tags: ["x-campaign", l.id],
+          socialAction: l.action,
+          ...(X_TARGET.test(post!.url) && { targetUrl: post!.url }),
+          ...(blue && { requiresXBlue: true }),
           payoutCooldownMinutes: payoutCheck,
           proofRequired: `Submit ${l.proof}`,
           ...(deadline && { deadline: deadline.toISOString() }),
@@ -151,7 +160,7 @@ export default function XCampaignBuilder({ initialUrl = "", onClose, onCreated }
   };
 
   const rows: [string, string, string?][] = [
-    ...lines.map(l => [`${l.label} × ${l.qty}`, money(l.subtotal, currency), `${money(l.reward, currency)} each`] as [string, string, string]),
+    ...lines.map(l => [`${l.label} × ${l.qty}`, money(l.subtotal, currency), `${money(l.reward, currency)} each${blue ? " (blue tick)" : ""}`] as [string, string, string]),
     ["Platform fee (10%)", money(fee, currency)],
     ...(payoutCheck > 0 ? [["Payout check", PAYOUT_CHECKS.find(c => c.minutes === payoutCheck)?.label || ""] as [string, string]] : []),
   ];
@@ -222,12 +231,14 @@ export default function XCampaignBuilder({ initialUrl = "", onClose, onCreated }
               <section className="ui-card cf-card">
                 <div className="cf-head">
                   <b><i className="ti ti-stack-2" /> Actions and rewards</b>
-                  <select className="ui-select" style={{ width: 110, height: 36 }} value={currency} onChange={e => switchCurrency(e.target.value as any)} aria-label="Currency">
-                    <option value="NGN">NGN</option><option value="USDC">USDC</option>
-                  </select>
+                  <span className="ui-count">Paid in NGN</span>
                 </div>
                 <div className="cf-body">
-                  <p className="cf-hint" style={{ margin: 0 }}>Choose the actions you need, then set how many people and the reward each person gets. A 10% platform fee is added at payment.</p>
+                  <p className="cf-hint" style={{ margin: 0 }}>Choose the actions you need and how many people for each. Each action has a set price; a 10% platform fee is added at payment.</p>
+                  <label className="qt-blue">
+                    <input type="checkbox" checked={blue} onChange={e => { setBlueOnly(e.target.checked); if (e.target.checked && reqType === "none") setReqType("xblue"); if (!e.target.checked && reqType === "xblue") setReqType("none"); }} />
+                    <span><b>Blue-tick accounts only</b><small>Only X accounts with a blue tick can take part. {prices.blueTimes}x the price.</small></span>
+                  </label>
                   <div>
                     {COMPONENTS.map(c => {
                       const st = comps[c.id];
@@ -238,7 +249,7 @@ export default function XCampaignBuilder({ initialUrl = "", onClose, onCreated }
                             <span className="xc-check">{st.on && <i className="ti ti-check" />}</span>
                             <i className={`ti ${c.icon}`} />
                             <b>{c.label}</b>
-                            {line && <small>{money(line.subtotal, currency)}</small>}
+                            <small>{line ? money(line.subtotal, currency) : `${money(priceOf(prices, c.action, blue), currency)} each`}</small>
                           </button>
                           {st.on && (
                             <div className="xc-comp-body">
@@ -248,13 +259,13 @@ export default function XCampaignBuilder({ initialUrl = "", onClose, onCreated }
                               </div>
                               <div className="cf-field">
                                 <label>Reward each</label>
-                                <input className="ui-input" inputMode="decimal" value={st.reward} onChange={e => setComps(p => ({ ...p, [c.id]: { ...p[c.id], reward: e.target.value.replace(/[^0-9.]/g, "") } }))} />
+                                <input className="ui-input" readOnly value={money(priceOf(prices, c.action, blue), currency)} />
                               </div>
                               <div className="cf-field">
                                 <label>Budget</label>
                                 <input className="ui-input" readOnly value={money(line?.subtotal || 0, currency)} />
                               </div>
-                              <p className="cf-hint">Min {money(minReward(currency), currency)} each · suggested {money(rate(c.ngn), currency)} · people submit {c.proof}.</p>
+                              <p className="cf-hint">People submit {c.proof} within {prices.holdMinutes} minutes of taking a place.{line && isStaggered(prices, c.action, line.qty) ? ` To keep bots out, places open ${batchSizeFor(line.qty)} at a time, every ${prices.stagger.everyMinutes} minutes.` : ""}</p>
                             </div>
                           )}
                         </div>

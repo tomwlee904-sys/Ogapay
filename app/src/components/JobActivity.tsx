@@ -25,8 +25,10 @@ const STATUS: Record<Item['status'], [string, string]> = {
   REJECTED: ['Not accepted', 'var(--text3)'],
 }
 
-export default function JobActivity({ jobId, convert, isContest }: { jobId: string; convert: any; isContest?: boolean }) {
+export default function JobActivity({ jobId, convert, isContest, rewarded }: { jobId: string; convert: any; isContest?: boolean; rewarded?: boolean }) {
   const [data, setData] = useState<Activity | null>(null)
+  // Quick social jobs open on "Rewarded": the people who were paid
+  const [onlyPaid, setOnlyPaid] = useState(!!rewarded)
   const [failed, setFailed] = useState(false)
   useEffect(() => {
     let live = true
@@ -57,6 +59,9 @@ export default function JobActivity({ jobId, convert, isContest }: { jobId: stri
         .ja-who small{display:block;font-size:12px;color:var(--text3)}
         .ja-st{font-size:12.5px;font-weight:600;text-align:right;white-space:nowrap}
         .ja-empty{font-size:13.5px;color:var(--text2);margin:0}
+        .ja-tabs{display:flex;gap:6px;margin-bottom:10px}
+        .ja-tabs button{min-height:36px;padding:0 12px;border-radius:99px;border:1px solid var(--border);background:var(--card);color:var(--text2);font-size:12.5px;font-weight:500;font-family:inherit;cursor:pointer}
+        .ja-tabs button.on{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
       `}</style>
       <div className="ja-head">
         <b><i className="ti ti-list-check" /> Submissions</b>
@@ -73,8 +78,14 @@ export default function JobActivity({ jobId, convert, isContest }: { jobId: stri
       ) : total === 0 ? (
         <p className="ja-empty">{isContest ? 'No entries yet. Be the first.' : 'No work sent yet. Be the first.'}</p>
       ) : (
+        <>
+        <div className="ja-tabs" role="tablist" aria-label="Show">
+          <button type="button" role="tab" aria-selected={!onlyPaid} className={!onlyPaid ? 'on' : ''} onClick={() => setOnlyPaid(false)}>All ({total})</button>
+          <button type="button" role="tab" aria-selected={onlyPaid} className={onlyPaid ? 'on' : ''} onClick={() => setOnlyPaid(true)}>Rewarded ({data.counts.approved})</button>
+        </div>
+        {onlyPaid && data.counts.approved === 0 && <p className="ja-empty">Nobody has been paid yet.</p>}
         <div className="ja-list">
-          {data.items.map((s) => {
+          {data.items.filter((s) => !onlyPaid || s.status === 'APPROVED').map((s) => {
             const [label, color] = STATUS[s.status]
             const name = s.worker?.username
             return (
@@ -93,6 +104,7 @@ export default function JobActivity({ jobId, convert, isContest }: { jobId: stri
             )
           })}
         </div>
+        </>
       )}
     </section>
   )
