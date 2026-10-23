@@ -3,6 +3,10 @@ import { Link } from 'react-router-dom'
 import { Logo } from './Logo'
 import '../styles/footer.css'
 
+// PLACEHOLDER: no OgaPay YouTube channel address is known yet. Confirm the real
+// channel and change it here before relying on this link.
+export const YOUTUBE_URL = 'https://www.youtube.com/@ogapayhq'
+
 const socials = [
   { icon: 'brand-x', href: 'https://x.com/Ogapayhq', label: 'OgaPay on X' },
   { icon: 'brand-telegram', href: 'https://t.me/ogapayhq', label: 'OgaPay on Telegram' },
@@ -13,7 +17,7 @@ const socials = [
 
 const columns = [
   { title: 'Explore', links: [['Create a job', '/create'], ['Browse jobs', '/tasks'], ['Creator store', '/store'], ['For businesses', '/hire'], ['Vault', '/vault'], ['Blog', '/blog']] },
-  { title: 'Resources', links: [['About OgaPay', '/about'], ['Guides', '/docs'], ['Developer', '/developer'], ['FAQ', '/faq'], ['Support', '/support'], ['Socials', '/socials'], ['Terms', '/terms'], ['Privacy', '/privacy'], ['License', '/license'], ['Copyright', '/copyright']] },
+  { title: 'Resources', links: [['About OgaPay', '/about'], ['Guides', '/docs'], ['Developer', '/developer'], ['FAQ', '/faq'], ['Support', '/support'], ['Socials', '/socials'], ['Brand kit', '/brand-kit'], ['Join the test team', '/join-test-team'], ['Terms', '/terms'], ['Privacy', '/privacy'], ['License', '/license'], ['Copyright', '/copyright']] },
 ]
 
 /* ─── Dotted globe ─────────────────────────────────────────────────────────────
