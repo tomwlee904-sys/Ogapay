@@ -135,7 +135,7 @@
    to 1023px that are at least 600px tall (phones held sideways keep the top bar).
    Same query as DOCK_HIDDEN there, inverted; footer.css, nav.css and messages.css
    repeat it. --bottom-nav-h is its height plus the gap below it (72 + 12);
-   --dock-clear adds the iPhone home bar (env() is 0 until the viewport meta has
+   --dock-clear adds the iPhone home bar (env() works because index.html has
    viewport-fit=cover): anything fixed to the bottom of the screen sits at least
    that high. The footer is the page's space for it, and scroll-padding keeps
    whatever Tab moves to (or a #link jumps to) out from under it. */
@@ -228,6 +228,10 @@ body { --100vh: calc(var(--vh) * 100); }
   margin: 0 auto;
   /* The footer below holds the space for the bottom dock */
   padding: 20px 0 12px;
+  /* index.html has viewport-fit=cover, so the page reaches under an iPhone's
+     notch when held sideways; keep the content clear of it */
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
   min-height: var(--100vh);
   animation: pageIn .2s ease;
 }

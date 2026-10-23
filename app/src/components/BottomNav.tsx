@@ -17,10 +17,9 @@ import { sized } from '../lib/img'
 // Space for it: tokens.css sets --bottom-nav-h (dock height + its gap below) and
 // --dock-clear over the same screens (see DOCK_HIDDEN below; footer.css, nav.css
 // and messages.css use the same query); the footer, toasts and other floating
-// buttons sit above it with those. The env(safe-area-inset-*) terms only take
-// effect once index.html's viewport meta has viewport-fit=cover (it doesn't yet,
-// so on iPhones the dock sits 12px above the bottom of the page, not above the
-// home bar as on wurk).
+// buttons sit above it with those. index.html's viewport meta has
+// viewport-fit=cover, so the env(safe-area-inset-*) terms are real on iPhones:
+// the dock sits above the home bar and --dock-clear grows to match.
 
 type TabKey = 'jobs' | 'store' | 'create' | 'alerts' | 'profile'
 type Tab = {

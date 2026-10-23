@@ -3,7 +3,10 @@
    ═══════════════════════════════════════════ */
 
 @keyframes spin { to { transform: rotate(360deg); } }
-@keyframes pageIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+/* Opacity only: a transform on .app-layout made it the box that position:fixed
+   children (the AI builder button, toasts, open dialogs) were placed against,
+   so they jumped while a page opened. */
+@keyframes pageIn { from { opacity: 0; } to { opacity: 1; } }
 
 /* Legacy — body padding for fixed bottom nav */
 @media (max-width: 767px) {
