@@ -244,6 +244,11 @@ export default function Blog() {
           <div>
             <h2>{sort === 'featured' ? 'Featured blogs' : 'Newest blogs'}</h2>
             <span className="bl-count">{allPosts === null ? 'Loading…' : `${filteredArticles.length} ${filteredArticles.length === 1 ? 'story' : 'stories'}`}</span>
+            {/* This page shows the newest 100; every post is on /blog/all */}
+            <span className="bl-count" style={{ marginLeft: 10 }}>
+              <a href="/blog/all" onClick={(e) => { e.preventDefault(); navigate('/blog/all') }} style={{ color: 'var(--text)', fontWeight: 600 }}>All blogs</a>
+              {isAuthed && <> · <a href="/blog/my" onClick={(e) => { e.preventDefault(); navigate('/blog/my') }} style={{ color: 'var(--text)', fontWeight: 600 }}>My blogs</a></>}
+            </span>
           </div>
           <div className="bl-tools">
             <label className="bl-search"><i className="ti ti-search" /><input placeholder="Search stories" aria-label="Search stories" value={search} onChange={(e) => setSearch(e.target.value)} /></label>

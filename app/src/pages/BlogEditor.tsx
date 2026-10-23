@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { apiRequest } from '../lib/api'
@@ -23,7 +23,18 @@ const badgeColors: Record<string, { bg: string; color: string }> = {
 export default function BlogEditor() {
   const navigate = useNavigate()
   const { id } = useParams()
-  const [preview, setPreview] = useState(false)
+  // write: the form; preview: the article as readers see it; split: writing and
+  // preview side by side (wide screens only, phones get the two tabs)
+  const [mode, setMode] = useState<'write' | 'preview' | 'split'>('write')
+  const [wide, setWide] = useState(() => typeof window !== 'undefined' && window.matchMedia('(min-width: 900px)').matches)
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 900px)')
+    const on = () => setWide(mq.matches)
+    mq.addEventListener?.('change', on)
+    return () => mq.removeEventListener?.('change', on)
+  }, [])
+  const view = mode === 'split' && !wide ? 'write' : mode
+  const preview = view === 'preview'
   const [saved, setSaved] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -42,6 +53,12 @@ export default function BlogEditor() {
 
   const s = (k: string) => (e: any) => setForm(f => ({ ...f, [k]: e.target.value }))
 
+  // Autosave: the form as it was last saved (or loaded), so only real changes are saved
+  const lastSaved = useRef(JSON.stringify(form))
+  const postId = useRef<string | undefined>(id)
+  const [savedAt, setSavedAt] = useState<Date | null>(null)
+  const dirty = JSON.stringify(form) !== lastSaved.current
+
   // The route is behind AuthGuard, so we're signed in here
   const loadMine = () => apiRequest<any>('/blog/user/mine').then((d) => setMine(d?.posts || [])).catch(() => setMine([]))
   useEffect(() => { loadMine() }, [])
@@ -51,14 +68,17 @@ export default function BlogEditor() {
     if (!id) return
     apiRequest<any>(`/blog/user/${id}`)
       .then((post) => {
-        setForm({
+        const loaded = {
           title: post.title || '',
           category: post.category || 'News',
           body: post.content || '',
           excerpt: post.excerpt || '',
           coverImage: post.coverImage || '',
           tags: Array.isArray(post.tags) ? post.tags.join(', ') : '',
-        })
+        }
+        lastSaved.current = JSON.stringify(loaded)
+        postId.current = id
+        setForm(loaded)
         setStatus(post.status)
       })
       .catch(() => setError('Post not found'))
@@ -80,22 +100,29 @@ export default function BlogEditor() {
     }, 0)
   }
 
-  const insertList = () => {
-    const ta = document.getElementById('blog-body') as HTMLTextAreaElement
-    if (!ta) return
-    const text = form.body
-    const newText = text + '\n- Item 1\n- Item 2\n- Item 3'
-    setForm(f => ({ ...f, body: newText }))
+  // Put a block (list, table, checklist) on its own lines at the cursor
+  const insertBlock = (block: string) => {
+    const ta = document.getElementById('blog-body') as HTMLTextAreaElement | null
+    const at = ta ? ta.selectionStart : form.body.length
+    setForm(f => {
+      const before = f.body.slice(0, at), after = f.body.slice(at)
+      return { ...f, body: `${before}${before && !before.endsWith('\n') ? '\n' : ''}${block}\n${after.startsWith('\n') ? after.slice(1) : after}` }
+    })
   }
+  const insertList = () => insertBlock('- Item 1\n- Item 2\n- Item 3')
 
   const bodyLines = form.body.split('\n')
   const autoExcerpt = (bodyLines.find(l => l.trim() && !l.startsWith('-') && !l.startsWith('#')) || form.body).replace(/[*`]/g, '').trim().slice(0, 200)
 
-  const save = async (want: 'draft' | 'published') => {
+  // auto: the 30-second autosave. It never shows errors and only saves drafts
+  // (saving a published or in-review post as a draft would take it down).
+  const save = async (want: 'draft' | 'published', auto = false) => {
     if (saving) return
-    if (form.title.trim().length < 5) { setError('Give your article a title (at least 5 characters)'); return }
-    if (form.body.trim().length < 50) { setError('Write a little more: at least 50 characters'); return }
-    setError(''); setSaving(true)
+    if (form.title.trim().length < 5) { if (!auto) setError('Give your article a title (at least 5 characters)'); return }
+    if (form.body.trim().length < 50) { if (!auto) setError('Write a little more: at least 50 characters'); return }
+    const snapshot = JSON.stringify(form)
+    if (!auto) setError('')
+    setSaving(true)
     const payload = {
       title: form.title.trim(),
       category: form.category,
@@ -106,23 +133,42 @@ export default function BlogEditor() {
       status: want,
     }
     try {
-      const post = id
-        ? await apiRequest<any>(`/blog/user/${id}`, { method: 'PUT', body: JSON.stringify(payload) })
+      const editId = id || postId.current
+      const post = editId
+        ? await apiRequest<any>(`/blog/user/${editId}`, { method: 'PUT', body: JSON.stringify(payload) })
         : await apiRequest<any>('/blog/user', { method: 'POST', body: JSON.stringify(payload) })
+      lastSaved.current = snapshot
+      setSavedAt(new Date())
       setStatus(post?.status || null)
-      setSaved(post?.status === 'PUBLISHED' ? 'Published.' : post?.status === 'PENDING' ? "Sent for review. We'll publish it once an admin has approved it." : 'Draft saved.')
+      if (!auto) setSaved(post?.status === 'PUBLISHED' ? 'Published.' : post?.status === 'PENDING' ? "Sent for review. We'll publish it once an admin has approved it." : 'Draft saved.')
       loadMine()
-      if (!id && post?.id) navigate(`/blog/edit/${post.id}`, { replace: true })
+      if (!editId && post?.id) {
+        postId.current = post.id
+        // An autosave lets you keep typing on this page; a button press moves to the edit address
+        if (auto) window.history.replaceState(window.history.state, '', `/blog/edit/${post.id}`)
+        else navigate(`/blog/edit/${post.id}`, { replace: true })
+      }
     } catch (e: any) {
-      setError(e?.message || 'Failed to save. Try again.')
+      if (!auto) setError(e?.message || 'Failed to save. Try again.')
     }
     setSaving(false)
   }
 
+  // Every 30 seconds, save a draft if something changed since the last save
+  const saveRef = useRef(save)
+  saveRef.current = save
+  const autoOkRef = useRef(false)
+  autoOkRef.current = (status === null || status === 'DRAFT') && dirty && !saving && !uploading
+  useEffect(() => {
+    const t = window.setInterval(() => { if (autoOkRef.current) saveRef.current('draft', true) }, 30000)
+    return () => window.clearInterval(t)
+  }, [])
+  const hhmm = (d: Date) => d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
+
   // A picture inside the article: upload it, then put "![caption](link)" on its own line at the cursor
   const insertImage = async (file?: File) => {
     if (!file) return
-    if (file.size > 5 * 1024 * 1024) { setError('Image must be under 5MB'); return }
+    if (file.size > 25 * 1024 * 1024) { setError('Image must be under 25MB'); return }
     setUploading(true)
     try {
       const url = await uploadImage(file, 'blog-images')
@@ -142,7 +188,7 @@ export default function BlogEditor() {
 
   const pickCover = async (file?: File) => {
     if (!file) return
-    if (file.size > 5 * 1024 * 1024) { setError('Image must be under 5MB'); return }
+    if (file.size > 25 * 1024 * 1024) { setError('Image must be under 25MB'); return }
     setUploading(true)
     try {
       const url = await uploadImage(file, 'blog-covers')
@@ -220,6 +266,22 @@ export default function BlogEditor() {
         .preview-md figure img{display:block;width:100%;height:auto;border-radius:10px;border:1px solid var(--border)}
         .preview-md figcaption{margin-top:6px;font-size:12px;color:var(--text3);text-align:center}
         .preview-md blockquote{border-left:3px solid var(--border);margin:12px 0;padding-left:12px}
+        .preview-md pre{background:#1a1a2e;color:#e4e4e4;padding:12px 14px;border-radius:10px;overflow-x:auto;font-size:12px;line-height:1.6;margin:12px 0}
+        .preview-md code{background:rgba(127,127,127,.12);padding:1px 5px;border-radius:4px;font-size:12px}
+        .preview-md pre code{background:none;padding:0;color:inherit}
+        .preview-md .md-table{overflow-x:auto;margin:12px 0}
+        .preview-md table{border-collapse:collapse;width:100%;font-size:13px}
+        .preview-md th,.preview-md td{border:1px solid var(--border);padding:6px 8px;text-align:left}
+        .preview-md li.md-task{list-style:none;margin-left:-18px}
+        .be-modes{display:flex;gap:8px;margin-bottom:20px;align-items:center;flex-wrap:wrap}
+        .be-mode{height:34px;padding:0 16px;border-radius:99px;border:1.5px solid var(--border);background:transparent;color:var(--text2);font-size:12px;font-weight:700;cursor:pointer}
+        .be-mode.on{border-color:#0a0a0a;background:#0a0a0a;color:#fff}
+        .be-mode.split{display:none}
+        @media(min-width:900px){.be-mode.split{display:inline-block}}
+        .be-autosave{margin-left:auto;font-size:12px;color:var(--text3)}
+        .be-split{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+        .be-split .be-textarea{min-height:480px}
+        .be-split-preview{border:1.5px solid var(--border);border-radius:8px;background:var(--card);padding:12px 14px;overflow:auto;max-height:640px;min-height:480px;font-size:14px;line-height:1.7;color:var(--text2);box-sizing:border-box}
       `}</style>
 
       <div className="be-page">
@@ -231,9 +293,13 @@ export default function BlogEditor() {
         {saved && <div className="be-saved">{saved}</div>}
 
         {/* Preview Toggle */}
-        <div style={{display:'flex',gap:10,marginBottom:20}}>
-          <button onClick={() => setPreview(false)} style={{height:34,padding:'0 16px',borderRadius:99,border:preview?'1.5px solid var(--border)':'none',background:preview?'transparent':'#0a0a0a',color:preview?'var(--text2)':'#fff',fontSize:12,fontWeight:700,cursor:'pointer'}}>Edit</button>
-          <button onClick={() => setPreview(true)} style={{height:34,padding:'0 16px',borderRadius:99,border:preview?'none':'1.5px solid var(--border)',background:preview?'#0a0a0a':'transparent',color:preview?'#fff':'var(--text2)',fontSize:12,fontWeight:700,cursor:'pointer'}}>Preview</button>
+        <div className="be-modes">
+          <button className={`be-mode${view === 'write' ? ' on' : ''}`} onClick={() => setMode('write')} aria-pressed={view === 'write'}>Edit</button>
+          <button className={`be-mode${view === 'preview' ? ' on' : ''}`} onClick={() => setMode('preview')} aria-pressed={view === 'preview'}>Preview</button>
+          <button className={`be-mode split${view === 'split' ? ' on' : ''}`} onClick={() => setMode('split')} aria-pressed={view === 'split'}>Side by side</button>
+          <span className="be-autosave" aria-live="polite">
+            {saving ? 'Saving…' : dirty ? ((status === null || status === 'DRAFT') ? 'Unsaved changes · draft autosaves every 30 s' : 'Unsaved changes') : savedAt ? `Saved ${hhmm(savedAt)}` : ''}
+          </span>
         </div>
 
         {preview ? (
@@ -293,15 +359,26 @@ export default function BlogEditor() {
               <button className="be-tb-btn" onClick={() => wrapSelection('*','*')}><i className="ti ti-italic" /> Italic</button>
               <button className="be-tb-btn" onClick={() => wrapSelection('- ','')}><i className="ti ti-list" /> Bullet</button>
               <button className="be-tb-btn" onClick={() => wrapSelection('## ','')}><i className="ti ti-heading" /> Heading</button>
-              <button className="be-tb-btn" onClick={insertList}><i className="ti ti-list-check" /> List</button>
+              <button className="be-tb-btn" onClick={insertList}><i className="ti ti-list-numbers" /> List</button>
+              <button className="be-tb-btn" onClick={() => wrapSelection('~~','~~')}><i className="ti ti-strikethrough" /> Strike</button>
+              <button className="be-tb-btn" onClick={() => insertBlock('- [ ] First thing to do\n- [ ] Second thing\n- [x] Already done')}><i className="ti ti-checkbox" /> Checklist</button>
+              <button className="be-tb-btn" onClick={() => insertBlock('| Column 1 | Column 2 |\n| --- | --- |\n| Cell | Cell |\n| Cell | Cell |')}><i className="ti ti-table" /> Table</button>
+              <button className="be-tb-btn" onClick={() => wrapSelection('\n```\n', '\n```\n')}><i className="ti ti-code" /> Code block</button>
               <button className="be-tb-btn" onClick={() => wrapSelection('[', '](https://)')}><i className="ti ti-link" /> Link</button>
               <label className="be-tb-btn" style={{ cursor: uploading ? 'wait' : 'pointer' }}>
                 <i className="ti ti-photo" /> {uploading ? 'Uploading…' : 'Image'}
                 <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" hidden disabled={uploading} onChange={(e) => { insertImage(e.target.files?.[0]); e.target.value = '' }} />
               </label>
             </div>
-            <textarea id="blog-body" className="be-textarea" value={form.body} onChange={s('body')} maxLength={50000} placeholder="Write your article here..." />
-            <p className="be-hint">Use ## for headings, - or 1. for lists, **bold**, *italic* and [text](https://link) for links. Image adds a picture on its own line: ![caption](link). HTML isn't supported.</p>
+            {view === 'split' ? (
+              <div className="be-split">
+                <textarea id="blog-body" className="be-textarea" value={form.body} onChange={s('body')} maxLength={50000} placeholder="Write your article here..." />
+                <div className="be-split-preview preview-md" aria-label="Live preview" dangerouslySetInnerHTML={{ __html: renderBlog(form.body) || '<p>The preview shows here as you type.</p>' }} />
+              </div>
+            ) : (
+              <textarea id="blog-body" className="be-textarea" value={form.body} onChange={s('body')} maxLength={50000} placeholder="Write your article here..." />
+            )}
+            <p className="be-hint">Use ## for headings, - or 1. for lists, - [ ] for a checklist, **bold**, *italic*, ~~strike~~, ``` lines around code, | cells | rows for a table and [text](https://link) for links. Image adds a picture (up to 25 MB) on its own line: ![caption](link). HTML isn't supported.</p>
 
             {/* Actions */}
             <div className="be-actions">
@@ -321,7 +398,10 @@ export default function BlogEditor() {
         <div className="be-mine">
           <div className="be-mine-h">
             <h2>My articles</h2>
-            {id && <Link to="/blog/write">+ New article</Link>}
+            <span style={{ display: 'flex', gap: 14 }}>
+              <Link to="/blog/my">All my blogs</Link>
+              {id && <Link to="/blog/write">+ New article</Link>}
+            </span>
           </div>
           {mine === null ? <p className="be-hint">Loading…</p> : mine.length === 0 ? <p className="be-hint">Nothing yet. Your drafts and submitted articles will show here.</p> : (
             <div className="be-mine-list">

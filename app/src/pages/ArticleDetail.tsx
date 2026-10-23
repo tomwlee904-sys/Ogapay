@@ -172,6 +172,13 @@ export default function ArticleDetail() {
         .ad-content a { color: var(--accent); text-decoration: underline; }
         .ad-content pre { background: #1a1a2e; color: #e4e4e4; padding: 16px 20px; border-radius: 12px; overflow-x: auto; -webkit-overflow-scrolling: touch; font-size: 13px; line-height: 1.6; margin: 20px 0; }
         .ad-content code { background: rgba(var(--accent-rgb),0.08); padding: 2px 6px; border-radius: 4px; font-size: 14px; }
+        .ad-content pre code { background: none; padding: 0; color: inherit; font-size: 13px; }
+        .ad-content .md-table { overflow-x: auto; margin: 20px 0; }
+        .ad-content table { border-collapse: collapse; width: 100%; font-size: 14px; }
+        .ad-content th, .ad-content td { border: 1px solid var(--border); padding: 8px 10px; text-align: left; vertical-align: top; }
+        .ad-content th { background: var(--bg2, rgba(0,0,0,0.03)); font-weight: 650; }
+        .ad-content li.md-task { list-style: none; margin-left: -20px; }
+        .ad-content del { color: var(--text3); }
       `}</style>
 
       <div style={{ position: 'fixed', top: 0, left: 0, height: 3, background: 'var(--accent)', zIndex: 9999, width: `${progress}%`, transition: 'width 0.1s' }} />

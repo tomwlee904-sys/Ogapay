@@ -14,9 +14,10 @@ const uploadRoutes: Record<string, UploadRoute> = {
   // There is no /uploads/community/avatar route; the community image upload serves both
   'community-avatars': { path: '/uploads/community', field: 'cover', responseKey: 'url' },
   // Blog covers used to fall through to 'avatars' and replace the writer's profile picture
-  'blog-covers':      { path: '/uploads/store', field: 'file', responseKey: 'url' },
+  // Blog pictures have their own route that takes up to 25 MB
+  'blog-covers':      { path: '/uploads/blog', field: 'file', responseKey: 'url' },
   // Pictures inside an article (the editor's Image button)
-  'blog-images':      { path: '/uploads/store', field: 'file', responseKey: 'url' },
+  'blog-images':      { path: '/uploads/blog', field: 'file', responseKey: 'url' },
   // Profile screenshot for a creator audience (Settings, Creator)
   'creator-proofs':   { path: '/uploads/proof', field: 'file', responseKey: 'url' },
   'user-covers':      { path: '/users/cover', field: 'cover', responseKey: 'coverUrl' },
