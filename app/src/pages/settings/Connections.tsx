@@ -8,6 +8,7 @@ import { XAvatar, XBlueTick, XRefresh, xLink } from '../../components/profile/XP
 import { compact } from '../../lib/creators'
 import { xRead, type XProfile } from '../../lib/xprofile'
 import { useAuth } from '../../context/AuthContext'
+import TelegramBot from './TelegramBot'
 
 type Platform = 'linkedin' | 'twitter' | 'github' | 'google' | 'telegram'
 export const PLATFORMS: { id: Platform; label: string; icon: string; pts: number }[] = [
@@ -159,6 +160,8 @@ export default function Connections({ me, setMe, reload, providers }: SectionPro
           )
         })}
       </Card>
+
+      <TelegramBot />
     </>
   )
 }

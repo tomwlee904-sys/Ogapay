@@ -98,6 +98,14 @@
 }
 .si-primary:hover:not(:disabled) { opacity: .88; }
 .si-primary:disabled { opacity: .45; cursor: default; }
+/* "Email me a code instead": a quieter second button under Sign in */
+.si-secondary {
+  width: 100%; min-height: 44px; border-radius: 14px; border: 1px solid #e2e8f0; background: #fff; color: #0f172a; cursor: pointer;
+  font: inherit; font-size: 14px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+}
+.si-secondary:hover { background: #f8fafc; }
+html[data-theme="dark"] .si-secondary { background: transparent; color: #f5f5f5; border-color: rgba(255, 255, 255, .18); }
+html[data-theme="dark"] .si-secondary:hover { background: rgba(255, 255, 255, .06); }
 .si-spin { width: 16px; height: 16px; border-radius: 50%; border: 2px solid rgba(255, 255, 255, .35); border-top-color: #fff; animation: si-spin .8s linear infinite; }
 @keyframes si-spin { to { transform: rotate(360deg) } }
 .si-switch { margin: 0; text-align: center; font-size: 13px; color: #64748b; }

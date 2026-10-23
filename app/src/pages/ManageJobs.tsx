@@ -13,6 +13,7 @@ import RateWork, { RatedStars, ratedByTeam } from '../components/RateWork'
 import CopyFlag from '../components/CopyFlag'
 import { PayoutCheckStatus, checkBlocksApprove, anyWaiting, useNow } from '../components/PayoutCheck'
 import TransferModal from '../components/TransferModal'
+import { isXFollowJob } from "../lib/followJobs";
 
 // Manage jobs: the poster's jobs, their review queue and job actions.
 // Counts come from each job's submissions (by status). The old page used
@@ -36,7 +37,7 @@ type Sub = {
 type Task = {
   id: string; title: string; status: string; category?: string; reward: number | string; currency?: string
   maxWorkers?: number; deadline?: string | null; createdAt?: string; submissions?: Sub[]
-  description?: string | null
+  description?: string | null; instructions?: string | null; tags?: string[]
   excludesTaskIds?: string[]
   // "Member of community": a public job only that community's members can take
   requiredCommunityId?: string | null; communityId?: string | null
@@ -453,6 +454,7 @@ function JobDrawer({ task, allTasks, focusId, onClose, onChanged }: { task: Task
 
         <div className="mj-df">
           <Link className="ui-btn ui-btn-ghost" to={`/tasks/${task.id}`}><Icon n="eye" s={15} /> Public page</Link>
+          {isXFollowJob(task) && <Link className="ui-btn ui-btn-ghost" to={`/manage-jobs/${task.id}/followers`}><Icon n="chart-line" s={15} /> Follower analytics</Link>}
           <button className="ui-btn ui-btn-ghost" disabled={tpl !== ""} onClick={saveAsTemplate}><Icon n={tpl === "saved" ? "check" : "device-floppy"} s={15} /> {tpl === "saving" ? "Saving…" : tpl === "saved" ? "Saved" : "Save as template"}</button>
           {live && !editing && <button className="ui-btn ui-btn-ghost" onClick={startEdit}><Icon n="edit" s={15} /> Edit</button>}
           {(task.status === "OPEN" || task.status === "DRAFT") && (

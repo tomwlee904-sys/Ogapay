@@ -143,3 +143,10 @@
 .st2-f small { display: block; margin-top: 5px; }
 .cr-list .st2-conn-t span { white-space: normal; overflow: visible; }
 
+
+/* Settings > Connections > Telegram bot */
+.tgb-code p { margin: 0 0 10px; font-size: 13.5px; color: var(--text2); }
+.tgb-code-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+.tgb-code-row code { font-family: var(--font-mono, monospace); font-size: 17px; font-weight: 700; letter-spacing: .06em; padding: 8px 12px; border-radius: 10px; background: var(--bg2); border: 1px solid var(--border); color: var(--text); word-break: break-all; }
+.tgb-open { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 10px; text-decoration: none; }
+.tgb-cmds { margin: 10px 0 0; line-height: 1.5; }

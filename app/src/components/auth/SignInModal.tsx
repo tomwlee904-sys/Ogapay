@@ -10,7 +10,7 @@ import '../../styles/signin.css'
 /* Sign-in dialog in the wurk.fun style: pick a method (wallet, Google, email,
    pair a device), then one short step for that method. */
 
-type View = SignInView | 'twofa'
+type View = SignInView | 'twofa' | 'emailcode'
 type Notice = { text: string; ok?: boolean } | null
 
 interface Props {
@@ -30,8 +30,9 @@ const TITLES: Record<View, string> = {
   forgot: 'Reset your password',
   pair: 'Sign in on this device',
   twofa: 'Two-factor authentication',
+  emailcode: 'Sign in with an email code',
 }
-const BACK: Partial<Record<View, View>> = { wallets: 'options', email: 'options', signup: 'email', forgot: 'email', pair: 'options', twofa: 'options' }
+const BACK: Partial<Record<View, View>> = { wallets: 'options', email: 'options', signup: 'email', forgot: 'email', pair: 'options', twofa: 'options', emailcode: 'email' }
 
 // Every sign-in endpoint answers { user, tokens }
 const toSession = (r: any) => {
@@ -120,6 +121,9 @@ export default function SignInModal({ initialView = 'options', initialCode = '',
   const [code, setCode] = useState(initialCode.toUpperCase())
   const [challenge, setChallenge] = useState<{ token: string; userId: string } | null>(null)
   const [otp, setOtp] = useState('')
+  // Email code sign-in: the 6-digit code, and whether one was sent
+  const [mailCode, setMailCode] = useState('')
+  const [codeSent, setCodeSent] = useState(false)
   // Checked again shortly after opening: some wallet apps add their wallet to
   // the page a moment after it loads
   const [inWalletApp, setInWalletApp] = useState(inWalletAppBrowser)
@@ -239,6 +243,27 @@ export default function SignInModal({ initialView = 'options', initialCode = '',
     })
   }
 
+  // "Email me a code": the server always gives the same answer, whether or not
+  // the email has an account (auth/email-code/request)
+  const sendMailCode = (e?: FormEvent) => {
+    e?.preventDefault()
+    if (!email.trim()) { setError('Enter the email on your account.'); return }
+    run('mailcode', async () => {
+      await apiRequest('/auth/email-code/request', { method: 'POST', auth: false, body: JSON.stringify({ email: email.trim() }) })
+      setCodeSent(true)
+      setMailCode('')
+      setNotice({ text: 'If that email has an account, we sent a code. It works for 10 minutes.', ok: true })
+    })
+  }
+
+  const mailCodeLogin = (e: FormEvent) => {
+    e.preventDefault()
+    if (mailCode.length !== 6) { setError('Enter the 6-digit code from the email.'); return }
+    run('mailcodein', async () => finish(await apiRequest<any>('/auth/email-code/verify', {
+      method: 'POST', auth: false, body: JSON.stringify({ email: email.trim(), code: mailCode }),
+    })))
+  }
+
   const pairLogin = (e: FormEvent) => {
     e.preventDefault()
     const c = code.replace(/[\s-]/g, '')
@@ -354,6 +379,9 @@ export default function SignInModal({ initialView = 'options', initialCode = '',
         </div>
         {errorLine}
         <button type="submit" className="si-primary" disabled={busy === 'email'}>{busy === 'email' ? <><Spinner /> Signing in…</> : 'Sign in'}</button>
+        <button type="button" className="si-secondary" onClick={() => { setCodeSent(false); go('emailcode') }}>
+          <i className="ti ti-mail" aria-hidden="true" /> Email me a code instead
+        </button>
         <p className="si-switch">New to OgaPay? <button type="button" className="si-link" onClick={() => go('signup')}>Create an account</button></p>
       </form>
     )
@@ -394,6 +422,37 @@ export default function SignInModal({ initialView = 'options', initialCode = '',
         </div>
         {errorLine}
         <button type="submit" className="si-primary" disabled={busy === 'forgot'}>{busy === 'forgot' ? <><Spinner /> Sending…</> : 'Send reset link'}</button>
+      </form>
+    )
+  } else if (view === 'emailcode') {
+    body = !codeSent ? (
+      <form className="si-form" onSubmit={sendMailCode} noValidate>
+        <p className="si-desc">No password needed. We'll email you a 6-digit code to sign in. It works once, for 10 minutes.</p>
+        {noticeLine}
+        <div className="si-field">
+          <label htmlFor="si-email4">Email address</label>
+          <input id="si-email4" className="si-input" type="email" inputMode="email" autoComplete="email" placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)} />
+        </div>
+        {errorLine}
+        <button type="submit" className="si-primary" disabled={busy === 'mailcode'}>{busy === 'mailcode' ? <><Spinner /> Sending…</> : 'Email me a code'}</button>
+        <p className="si-hint">Only for accounts whose email is verified.</p>
+      </form>
+    ) : (
+      <form className="si-form" onSubmit={mailCodeLogin} noValidate>
+        {noticeLine}
+        <p className="si-desc">Enter the code we sent to <b>{email.trim()}</b>.</p>
+        <div className="si-field">
+          <label htmlFor="si-mailcode">6-digit code</label>
+          <input id="si-mailcode" className="si-input otp" inputMode="numeric" autoComplete="one-time-code" maxLength={6} placeholder="000000"
+            value={mailCode} onChange={e => setMailCode(e.target.value.replace(/\D/g, '').slice(0, 6))} />
+        </div>
+        {errorLine}
+        <button type="submit" className="si-primary" disabled={busy === 'mailcodein' || mailCode.length !== 6}>{busy === 'mailcodein' ? <><Spinner /> Signing in…</> : 'Sign in'}</button>
+        <div className="si-row">
+          <button type="button" className="si-link" onClick={() => { setCodeSent(false); setNotice(null); setError('') }}>Use another email</button>
+          <button type="button" className="si-link" disabled={busy === 'mailcode'} onClick={() => sendMailCode()}>Send a new code</button>
+        </div>
+        <p className="si-hint">After 5 wrong tries the code stops working and you need a new one.</p>
       </form>
     )
   } else if (view === 'pair') {
