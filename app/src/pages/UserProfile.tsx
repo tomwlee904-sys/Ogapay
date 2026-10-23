@@ -281,6 +281,13 @@ export default function UserProfile() {
               </div>
               <div className="up-handle">@{handle} · Joined {fmtDate(profile.createdAt, { month: "long", year: "numeric" })}</div>
               {profile.bio && <p className="up-bio">{profile.bio}</p>}
+              {/* The longer "More about you" text from Edit profile */}
+              {profile.about && (
+                <details className="up-about">
+                  <summary>More about {first || handle}</summary>
+                  <p style={{ whiteSpace: "pre-line", margin: "6px 0 0", overflowWrap: "anywhere" }}>{profile.about}</p>
+                </details>
+              )}
               <div className="up-actions">
                 {isMe ? (
                   <Link className="up-btn primary" to="/profile"><i className="ti ti-pencil" /> Edit profile</Link>
@@ -401,12 +408,17 @@ export default function UserProfile() {
                 {portfolio.map((it) => (
                   <div className="up-card up-item" key={it.id}>
                     {it.imageUrl && <div className="img"><img src={sized(it.imageUrl, 400)} alt="" loading="lazy" /></div>}
+                    {/* Uploaded audio and video play here; a PDF opens in a new tab */}
+                    {it.url && it.mediaType === "video" && <video src={it.url} controls preload="metadata" playsInline style={{ width: "100%", display: "block", background: "#000", maxHeight: 280 }} />}
                     <div className="body">
                       <h3>{it.title}</h3>
                       {it.description && <p>{it.description}</p>}
-                      {it.url && (
+                      {it.url && it.mediaType === "audio" && <audio src={it.url} controls preload="none" style={{ width: "100%", marginTop: 8 }} />}
+                      {it.url && it.mediaType !== "audio" && it.mediaType !== "video" && (
                         <div className="foot">
-                          <a href={it.url} target="_blank" rel="noopener noreferrer nofollow">Open link <i className="ti ti-external-link" /></a>
+                          {it.mediaType === "pdf"
+                            ? <a href={it.url} target="_blank" rel="noopener noreferrer nofollow"><i className="ti ti-file-type-pdf" /> Open PDF</a>
+                            : <a href={it.url} target="_blank" rel="noopener noreferrer nofollow">Open link <i className="ti ti-external-link" /></a>}
                         </div>
                       )}
                     </div>

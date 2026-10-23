@@ -16,7 +16,7 @@ const CATEGORIES: [string, string][] = [
 const USERNAME_RE = /^[A-Za-z0-9_]{3,30}$/
 
 type Form = {
-  firstName: string; lastName: string; username: string; bio: string; skills: string
+  firstName: string; lastName: string; username: string; bio: string; about: string; skills: string
   categories: string[]; isAvailable: boolean; isPublic: boolean; showEarnings: boolean; showRank: boolean
   twitter: string; telegram: string; discord: string; website: string
 }
@@ -44,6 +44,7 @@ export default function EditProfile() {
   const fromUser = (u: any): Form => ({
     firstName: u.firstName || '', lastName: u.lastName || '', username: u.username || '',
     bio: u.workerProfile?.bio || u.workerProfileBio || '',
+    about: u.about || '',
     skills: (u.workerProfile?.skills || []).join(', '),
     categories: u.workerProfile?.categories || [],
     isAvailable: u.workerProfile?.isAvailable !== false,
@@ -88,6 +89,7 @@ export default function EditProfile() {
       if (form[k].trim() !== base[k]) body[k] = form[k].trim()
     }
     if (form.bio.trim() !== base.bio) body.bio = form.bio.trim()
+    if (form.about.trim() !== base.about) body.about = form.about.trim() || null
     const skills = form.skills.split(',').map((s) => s.trim()).filter(Boolean).slice(0, 15)
     if (skills.join('|') !== base.skills.split(',').map((s) => s.trim()).filter(Boolean).join('|')) body.skills = skills
     if (form.categories.join('|') !== base.categories.join('|')) body.categories = form.categories
@@ -157,6 +159,22 @@ export default function EditProfile() {
                 <textarea className="hr-input hr-area" style={{ minHeight: 110 }} maxLength={1000} value={form.bio} onChange={(e) => set('bio', e.target.value)} placeholder="What you do and what clients can hire you for." />
                 <small>{form.bio.length} / 1,000</small>
               </label>
+              <label className="ep-field">
+                <span>More about you (optional)</span>
+                <textarea className="hr-input hr-area" style={{ minHeight: 150 }} maxLength={2000} value={form.about} onChange={(e) => set('about', e.target.value)} placeholder="Your experience, tools you use, past clients, the kind of work you enjoy." />
+                <small>{form.about.length} / 2,000 · shown under "More about you" on your public profile</small>
+              </label>
+              <p className="ep-note" role="note" style={{ margin: '0 0 4px', fontSize: 13, color: 'var(--text2)' }}>
+                <i className="ti ti-shield-lock" aria-hidden="true" /> Keep phone numbers, bank details and your home address out of your bio. Anyone can read it. Clients can message you on OgaPay.
+              </p>
+            </section>
+
+            <section className="up-card hr-sec">
+              <div className="hr-sec-h"><h2>Verified creator</h2></div>
+              <p style={{ margin: '0 0 12px', fontSize: 14, color: 'var(--text2)' }}>
+                Have an audience on X, Instagram, TikTok or YouTube? Add it to get the verified creator badge and be listed where brands look for creators.
+              </p>
+              <Link to="/settings/creator" className="up-btn" style={{ minHeight: 44, display: 'inline-flex', alignItems: 'center', gap: 6 }}><i className="ti ti-rosette-discount-check" aria-hidden="true" /> Apply for verified creator</Link>
             </section>
 
             <section className="up-card hr-sec">

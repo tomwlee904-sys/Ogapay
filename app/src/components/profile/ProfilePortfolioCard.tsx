@@ -5,8 +5,11 @@ import '../../styles/profile-own.css'
 import '../../styles/profile-public.css'
 import { sized } from '../../lib/img'
 
-type Item = { id: string; title: string; description: string | null; url: string | null; imageUrl: string | null }
-const blank = { title: '', description: '', url: '', imageUrl: '' }
+type Media = 'image' | 'audio' | 'video' | 'pdf'
+type Item = { id: string; title: string; description: string | null; url: string | null; imageUrl: string | null; mediaType?: Media | null }
+const blank = { title: '', description: '', url: '', imageUrl: '', mediaType: '' as Media | '' }
+const MEDIA_LABEL: Record<Media, string> = { image: 'Picture', audio: 'Audio', video: 'Video', pdf: 'PDF' }
+const MEDIA_ICON: Record<Media, string> = { image: 'ti-photo', audio: 'ti-music', video: 'ti-movie', pdf: 'ti-file-type-pdf' }
 
 // Work samples shown on your public profile's Portfolio tab
 export default function ProfilePortfolioCard() {
@@ -17,13 +20,14 @@ export default function ProfilePortfolioCard() {
   const [uploading, setUploading] = useState(false)
   const [err, setErr] = useState('')
   const fileRef = useRef<HTMLInputElement>(null)
+  const mediaRef = useRef<HTMLInputElement>(null)
 
   const load = () => apiRequest<Item[]>('/users/me/portfolio').then((d) => setItems(Array.isArray(d) ? d : [])).catch(() => setItems([]))
   useEffect(() => { load() }, [])
 
   const open = (it: Item | 'new') => {
     setEditing(it); setErr('')
-    setForm(it === 'new' ? blank : { title: it.title, description: it.description || '', url: it.url || '', imageUrl: it.imageUrl || '' })
+    setForm(it === 'new' ? blank : { title: it.title, description: it.description || '', url: it.url || '', imageUrl: it.imageUrl || '', mediaType: it.mediaType || '' })
   }
 
   const upload = async (f?: File) => {
@@ -34,11 +38,28 @@ export default function ProfilePortfolioCard() {
     setUploading(false)
   }
 
+  // An audio, video or PDF sample (up to 25 MB): it becomes the item's link and
+  // plays or opens on your public profile
+  const uploadMedia = async (f?: File) => {
+    if (!f) return
+    if (f.size > 25 * 1024 * 1024) { setErr('Files can be up to 25 MB'); return }
+    setUploading(true); setErr('')
+    try {
+      const fd = new FormData()
+      fd.append('file', f)
+      const d = await apiRequest<{ url: string; mediaType: Media }>('/users/me/portfolio/file', { method: 'POST', body: fd })
+      setForm((x) => ({ ...x, url: d.url, mediaType: d.mediaType, title: x.title || f.name.replace(/\.[^.]+$/, '').slice(0, 100) }))
+    } catch (e: any) { setErr(e?.message || 'Upload failed') }
+    setUploading(false)
+    if (mediaRef.current) mediaRef.current.value = ''
+  }
+
   const save = async () => {
     if (!form.title.trim()) { setErr('Give it a title'); return }
     if (form.url && !/^https?:\/\//i.test(form.url.trim())) { setErr('Links must start with http:// or https://'); return }
     setSaving(true); setErr('')
-    const body = JSON.stringify({ title: form.title.trim(), description: form.description.trim() || null, url: form.url.trim() || null, imageUrl: form.imageUrl || null })
+    const url = form.url.trim() || null
+    const body = JSON.stringify({ title: form.title.trim(), description: form.description.trim() || null, url, imageUrl: form.imageUrl || null, mediaType: (url && form.mediaType) || null })
     try {
       if (editing === 'new') await apiRequest('/users/me/portfolio', { method: 'POST', body })
       else if (editing) await apiRequest('/users/me/portfolio/' + editing.id, { method: 'PATCH', body })
@@ -73,7 +94,7 @@ export default function ProfilePortfolioCard() {
           <div className="po-pf">
             {items.map((it) => (
               <div className="po-pf-item" key={it.id}>
-                <div className="img">{it.imageUrl ? <img src={sized(it.imageUrl, 400)} alt="" loading="lazy" /> : <i className="ti ti-photo" />}</div>
+                <div className="img">{it.imageUrl ? <img src={sized(it.imageUrl, 400)} alt="" loading="lazy" /> : <i className={`ti ${it.mediaType ? MEDIA_ICON[it.mediaType] : 'ti-photo'}`} />}</div>
                 <div className="b"><b>{it.title}</b>{it.description && <p>{it.description}</p>}</div>
                 <div className="acts">
                   <button className="po-btn" onClick={() => open(it)}>Edit</button>
@@ -94,7 +115,15 @@ export default function ProfilePortfolioCard() {
               <button className="x" aria-label="Close" onClick={() => setEditing(null)}><i className="ti ti-x" /></button>
             </div>
             <label className="po-field"><span>Title</span><input maxLength={100} value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="e.g. Launch video for a fintech" /></label>
-            <label className="po-field"><span>Link (optional)</span><input maxLength={2048} value={form.url} onChange={(e) => setForm({ ...form, url: e.target.value })} placeholder="https://" inputMode="url" /></label>
+            <label className="po-field"><span>Link (optional)</span><input maxLength={2048} value={form.url} onChange={(e) => setForm({ ...form, url: e.target.value, mediaType: '' })} placeholder="https://" inputMode="url" /></label>
+            <div className="po-field">
+              <span>Or upload a file: audio, video or PDF (optional, up to 25 MB)</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                {form.mediaType && form.url && <span style={{ fontSize: 13, color: 'var(--text2)' }}><i className={`ti ${MEDIA_ICON[form.mediaType]}`} aria-hidden="true" /> {MEDIA_LABEL[form.mediaType]} uploaded</span>}
+                <button type="button" className="po-btn" disabled={uploading} onClick={() => mediaRef.current?.click()}>{uploading ? 'Uploading…' : form.mediaType ? 'Replace file' : 'Upload file'}</button>
+                <input ref={mediaRef} type="file" hidden accept="audio/*,video/mp4,video/webm,video/quicktime,application/pdf,image/*" onChange={(e) => uploadMedia(e.target.files?.[0])} />
+              </div>
+            </div>
             <label className="po-field"><span>Description (optional)</span><textarea maxLength={1000} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="What you did and the result" /></label>
             <div className="po-field">
               <span>Image (optional)</span>
