@@ -288,6 +288,8 @@ export type TemplateData = {
   mode?: string; title?: string; description?: string; currency?: string; bounty?: string; winners?: string
   category?: string; subcategory?: string; duration?: string; reqType?: string; reqValue?: string
   screenshot?: boolean; trackingCode?: string
+  // Social jobs: payout check window in minutes, as text ("0", "60", ...)
+  payoutCheck?: string
 }
 export type JobTemplate = { id: string; name: string; data: TemplateData; createdAt: string; updatedAt: string }
 
@@ -328,6 +330,7 @@ export function taskToTemplateData(t: any): TemplateData {
     duration: "7 days", reqType, reqValue,
     screenshot: !!t?.proofRequired,
     trackingCode: t?.trackingCode || "",
+    ...(Number(t?.payoutCooldownMinutes) > 0 && { payoutCheck: String(t.payoutCooldownMinutes) }),
   };
 }
 

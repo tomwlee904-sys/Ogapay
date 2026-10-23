@@ -1,0 +1,34 @@
+/* Payout check (social jobs): the Create job picker and the status line on
+   the job page, My tasks, the submission page and Manage jobs. Colours come
+   from the theme tokens, so light and dark both work. */
+.pc-pick { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 8px; }
+.pc-opt { display: flex; flex-direction: column; gap: 2px; min-height: 44px; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--border); background: var(--card); color: var(--text); text-align: left; cursor: pointer; font: inherit; }
+.pc-opt b { font-size: 14px; font-weight: 600; }
+.pc-opt span { font-size: 12px; line-height: 1.4; color: var(--text2); }
+.pc-opt:hover { border-color: color-mix(in srgb, var(--text) 35%, var(--border)); }
+.pc-opt:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
+.pc-opt.is-on { border-color: var(--green); background: color-mix(in srgb, var(--green) 10%, var(--card)); }
+.pc-help { margin: 8px 0 0; font-size: 12px; line-height: 1.5; color: var(--text2); }
+
+.pc-status { margin: 10px 0 0; padding: 9px 12px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; border-radius: 10px; border: 1px solid var(--border); background: var(--card2); font-size: 12px; line-height: 1.5; color: var(--text); overflow-wrap: anywhere; }
+.pc-status .ti { font-size: 14px; }
+.pc-badge { display: inline-flex; align-items: center; gap: 4px; padding: 1px 8px; border-radius: 999px; font-weight: 600; font-size: 11px; white-space: nowrap; background: color-mix(in srgb, var(--text) 10%, transparent); }
+.pc-status.is-wait .pc-badge { background: color-mix(in srgb, #2563eb 18%, transparent); }
+.pc-status.is-wait .ti { color: #3b82f6; }
+.pc-status.is-pass { border-color: color-mix(in srgb, var(--green) 45%, var(--border)); background: color-mix(in srgb, var(--green) 8%, transparent); }
+.pc-status.is-pass .pc-badge { background: color-mix(in srgb, var(--green) 22%, transparent); }
+.pc-status.is-pass .ti { color: var(--green); }
+.pc-status.is-fail { border-color: color-mix(in srgb, #dc2626 45%, var(--border)); background: color-mix(in srgb, #dc2626 8%, transparent); }
+.pc-status.is-fail .pc-badge { background: color-mix(in srgb, #dc2626 20%, transparent); }
+.pc-status.is-fail .ti { color: #ef4444; }
+.pc-status.is-ask { border-color: color-mix(in srgb, #d97706 45%, var(--border)); background: color-mix(in srgb, #d97706 8%, transparent); }
+.pc-status.is-ask .pc-badge { background: color-mix(in srgb, #d97706 22%, transparent); }
+.pc-status.is-ask .ti { color: #d97706; }
+.pc-status-compact { margin-top: 6px; padding: 6px 10px; }
+.pc-note { margin: 10px 0 0; display: flex; gap: 8px; align-items: flex-start; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--border); background: var(--card2); font-size: 13px; line-height: 1.5; color: var(--text); }
+.pc-note .ti { font-size: 16px; color: var(--green); margin-top: 1px; }
+
+@media (max-width: 767px) {
+  .pc-pick { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .pc-opt { padding: 10px; }
+}

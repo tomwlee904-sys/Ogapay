@@ -5,6 +5,7 @@ import { useAuth } from "../../context/AuthContext";
 import { useCurrency } from "../../context/CurrencyContext";
 import { useWalletBalance } from "../../context/WalletBalanceContext";
 import { RequirementPicker, money, minReward, reqFields, createTask, apiErrorText, deadlineFor } from "./shared";
+import { PayoutCheckPicker } from "../PayoutCheck";
 
 /* Quick task: a preset social action on one platform. The poster picks the
    action, pastes a link or handle and chooses how many people; each person
@@ -42,6 +43,8 @@ export default function QuickTaskForm({ platform, onBack, onCreated }: { platfor
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [showFund, setShowFund] = useState(false);
+  // Payout check window in minutes (0 = instant, as before). Only X posts can be re-checked.
+  const [payoutCheck, setPayoutCheck] = useState(0);
 
   // Preset price per action is defined in Naira; USDC is converted, never below the minimum
   const priceNgn = Math.max(minReward("NGN"), Number(platform.pricePerAction) || 50);
@@ -70,6 +73,7 @@ export default function QuickTaskForm({ platform, onBack, onCreated }: { platfor
         maxWorkers: qty,            // number of people
         currency,
         tags: ["quick-task", platform.id, action.toLowerCase()].slice(0, 5),
+        payoutCooldownMinutes: payoutCheck,
         proofRequired: `Submit ${proof}`,
         ...(deadline && { deadline: deadline.toISOString() }),
         ...reqFields(reqType, reqValue),
@@ -124,6 +128,12 @@ export default function QuickTaskForm({ platform, onBack, onCreated }: { platfor
       </div>
 
       <RequirementPicker type={reqType} value={reqValue} onChange={(t, v) => { setReqType(t); setReqValue(v); }} />
+
+      <div className="cf-field">
+        <span className="cf-lbl">Payout check</span>
+        <PayoutCheckPicker value={payoutCheck} onChange={setPayoutCheck} />
+        {platform.id !== "x" && payoutCheck > 0 && <p className="cf-hint">Only X posts can be checked automatically. On {platform.name} the wait still applies, and you review the proof.</p>}
+      </div>
 
       {isAuthed && (
         <p className="cf-hint" style={{ margin: 0 }}>Paid from your {currency} balance: <b style={{ color: balance >= total ? "var(--green)" : "var(--red)" }}>{money(balance, currency)}</b></p>

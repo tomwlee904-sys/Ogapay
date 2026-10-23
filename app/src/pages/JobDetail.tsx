@@ -19,6 +19,7 @@ import { jobDeadline, deadlineLabel, deadlineDate } from '../lib/deadline'
 import { categoryLabel } from '../lib/categories'
 import { sized } from '../lib/img'
 import { renderJobText, renderJobLine } from '../lib/jobText'
+import { PayoutCheckStatus, checkBlocksApprove, anyWaiting, useNow } from '../components/PayoutCheck'
 
 const BRAND = 'var(--accent)'
 const BRAND_LIGHT = 'rgba(var(--accent-rgb),0.10)'
@@ -105,6 +106,8 @@ interface JobData {
   steps: string[]
   requirements: string[]
   proofRequired: string[]
+  // Social jobs: the payout check, in words from the server (null when none)
+  payoutCheck?: { minutes: number; checkable: boolean; note: string } | null
   tags: string[]
   approvalTime: string
   payoutDay: string
@@ -150,7 +153,7 @@ export default function JobDetail() {
   const navigate = useNavigate()
   const [job, setJob] = useState<JobData | null>(null)
   // Your own place on this job, if you took one (GET /tasks/:id sends it when signed in)
-  const [mySub, setMySub] = useState<{ status: string } | null>(null)
+  const [mySub, setMySub] = useState<{ status: string; payoutCheck?: string | null; payoutCheckDueAt?: string | null; payoutCheckReason?: string | null } | null>(null)
   // Selection jobs: your application (WAITING, PICKED or NOT_PICKED)
   const [myApp, setMyApp] = useState<{ status: string } | null>(null)
   // The poster's similar jobs: people who did one of them can't take this one
@@ -352,6 +355,8 @@ export default function JobDetail() {
       steps: toArray(t.steps, []),
       requirements: toArray(t.requirements || t.qualifications, []),
       proofRequired: toArray(t.proofRequired || t.proofInstructions, []),
+      // Social jobs: the payout check, in words from the server (null when none)
+      payoutCheck: t.payoutCheck || null,
       tags: toArray(t.tags || t.searchTags, []),
       approvalTime: t.approvalTime || '48 hours',
       payoutDay: t.payoutDay || 'Daily',
@@ -482,6 +487,7 @@ export default function JobDetail() {
       isOpen={isOpen}
       canManage={canManage}
       myLabel={myLabel}
+      mySub={mine ? mySub : null}
       needJoin={needJoin}
       joinPath={joinPath}
       linkedJobs={linkedJobs}
@@ -546,7 +552,7 @@ function ErrorState({ message, onBack }: { message: string; onBack: () => void }
 /* ── Main View ── */
 function WurkJobDetailView(props: any) {
   const {
-    job, fmt, convert, navigate, countdown, showSubs, setShowSubs, isOpen, canManage, myLabel, openMine, linkedJobs, needJoin, joinPath,
+    job, fmt, convert, navigate, countdown, showSubs, setShowSubs, isOpen, canManage, myLabel, mySub, openMine, linkedJobs, needJoin, joinPath,
     bookmarked, handleBookmark, handleCancelJob, cancelling, toggleHighlight, highlighting, showApplyWarning, setShowApplyWarning,
     showShare, setShowShare, showInfo, setShowInfo,
     showReportModal, setShowReportModal, reportCategory, setReportCategory,
@@ -554,6 +560,8 @@ function WurkJobDetailView(props: any) {
     submissions, subsLoading, approving, rejecting, handleApprove, handleReject, timeAgo, authUser,
     contest, onContestPaid, community,
   } = props
+  // Re-render while a payout check runs, so Approve opens when its window ends
+  const clock = useNow(anyWaiting(submissions))
 
   const agentName = job.brand || 'OgaPay'
   const agentInitial = agentName.slice(0, 2).toUpperCase()
@@ -1017,6 +1025,7 @@ function WurkJobDetailView(props: any) {
                 : <button className="ui-btn ui-btn-dark" type="button" onClick={() => navigate('/login?redirect=' + encodeURIComponent('/tasks/' + job.id))}>Sign in to apply</button>}
             </div>
           </header>
+          {mySub?.payoutCheck && <PayoutCheckStatus sub={mySub} who="worker" />}
 
           {/* ── Creator Panel ── */}
           <section className="wjd-panel wjd-agent">
@@ -1089,6 +1098,9 @@ function WurkJobDetailView(props: any) {
                     : `Prizes for the top ${contest.prizes.length === 1 ? 'entry' : `${contest.prizes.length} entries`}`}</div></div>
                 ) : (
                   <div className="wjd-row"><div className="wjd-label">How you're paid <InfoBtn text="The poster checks each submission. Approved work is paid straight to your wallet from the money already held for this job." /></div><div className="wjd-value">Poster approves each one</div></div>
+                )}
+                {job.payoutCheck && (
+                  <div className="wjd-row wide"><div className="wjd-label">Payout check <InfoBtn text="A longer check means your payout result comes later, not that your work failed. Verified means eligible, not guaranteed paid: places are still limited." /></div><div className="wjd-value">{job.payoutCheck.note}</div></div>
                 )}
                 <div className="wjd-row"><div className="wjd-label">Time to do it</div><div className="wjd-value">{job.estimatedTime || 'Not given'}</div></div>
                 <div className="wjd-row"><div className="wjd-label">{closedEarly ? 'Ended' : 'Closes in'}</div><div className="wjd-value" style={{ fontVariantNumeric: 'tabular-nums' }}>{countdownStr}</div></div>
@@ -1251,6 +1263,7 @@ function WurkJobDetailView(props: any) {
                               <div style={{ color: 'var(--text,#0f172a)', fontSize: 14, fontWeight: 700 }}>{sub.worker?.username || sub.worker?.firstName || 'Anonymous'}</div>
                               <div style={{ color: 'var(--text2,#475569)', fontSize: 13 }}>{sub.workerNotes || 'No message'}</div>
                               <CopyFlag reason={sub.spamReason} copy={!!sub.similarToId} compact />
+                              {sub.status === 'SUBMITTED' && <PayoutCheckStatus sub={sub} who="poster" compact />}
                               {sub.proof && (
                                 sub.proof.startsWith('http://') || sub.proof.startsWith('https://')
                                   ? <a href={sub.proof} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)', fontSize: 12, wordBreak: 'break-all', textDecoration: 'underline' }}>{sub.proof}</a>
@@ -1259,7 +1272,7 @@ function WurkJobDetailView(props: any) {
                               <div className="wjd-sub-actions" onClick={(e: any) => e.stopPropagation()}>
                                 {sub.status === 'SUBMITTED' && (
                                   <>
-                                    <button className="wjd-ok" type="button" onClick={() => setSelectedSub(sub)} disabled={approving === sub.id}>{approving === sub.id ? 'Approving...' : 'Approve'}</button>
+                                    <button className="wjd-ok" type="button" onClick={() => setSelectedSub(sub)} disabled={approving === sub.id || checkBlocksApprove(sub, clock)} title={checkBlocksApprove(sub, clock) ? 'Payout check still running' : undefined}>{approving === sub.id ? 'Approving...' : 'Approve'}</button>
                                     <button className="wjd-no" type="button" onClick={() => handleReject(sub.id)} disabled={rejecting === sub.id}>{rejecting === sub.id ? 'Rejecting...' : 'Reject'}</button>
                                   </>
                                 )}
@@ -1456,6 +1469,7 @@ function WurkJobDetailView(props: any) {
                   <PayoutCountdown approvedAt={selectedSub._approvedAt || selectedSub.approvedAt} />
                 </div>
               )}
+              {selectedSub.status === 'SUBMITTED' && selectedSub.payoutCheck && <div style={{ margin: '-4px 0 14px' }}><PayoutCheckStatus sub={selectedSub} who="poster" compact /></div>}
               {selectedSub.spamReason && <div style={{ margin: '-4px 0 14px' }}><CopyFlag reason={selectedSub.spamReason} copy={!!selectedSub.similarToId} compact={selectedSub.status !== 'SUBMITTED'} /></div>}
               <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3,#9ca3af)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Notes</div>
               <div style={{ fontSize: 14, color: 'var(--text,#0f172a)', marginBottom: 14, lineHeight: 1.5 }}>{selectedSub.workerNotes || 'No message'}</div>
@@ -1485,7 +1499,7 @@ function WurkJobDetailView(props: any) {
               )}
               {selectedSub.status === 'SUBMITTED' && (
                 <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
-                  <button className="wjd-ok" type="button" onClick={() => { handleApprove(selectedSub.id, contest ? 0 : rateStars, rateNote); setSelectedSub(null) }} disabled={approving === selectedSub.id}>{approving === selectedSub.id ? 'Approving...' : contest ? 'Approve' : `Approve and pay ${formatMoney(Number(job.reward || 0), rewardCurrency)}`}</button>
+                  <button className="wjd-ok" type="button" onClick={() => { handleApprove(selectedSub.id, contest ? 0 : rateStars, rateNote); setSelectedSub(null) }} disabled={approving === selectedSub.id || checkBlocksApprove(selectedSub, clock)}>{approving === selectedSub.id ? 'Approving...' : contest ? 'Approve' : `Approve and pay ${formatMoney(Number(job.reward || 0), rewardCurrency)}`}</button>
                   <button className="wjd-no" type="button" onClick={() => { handleReject(selectedSub.id); setSelectedSub(null) }} disabled={rejecting === selectedSub.id}>{rejecting === selectedSub.id ? 'Rejecting...' : 'Reject'}</button>
                 </div>
               )}

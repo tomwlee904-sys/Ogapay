@@ -9,6 +9,7 @@ import { renderJobText } from '../lib/jobText'
 import { saveDraft, loadDraft, clearDraft } from '../lib/draft'
 import { ordinal } from '../components/ContestPanel'
 import '../styles/submit.css'
+import { PayoutCheckNote, PayoutCheckStatus } from '../components/PayoutCheck'
 
 // Submit work for a job (/tasks/:id/submit). Takes a slot if you haven't yet,
 // uploads files, then submits: the same steps as the job page's apply dialog.
@@ -30,6 +31,8 @@ type Application = { id: string; pitch: string; status: 'WAITING' | 'PICKED' | '
 const PITCH_MIN = 10
 type Mine = {
   id: string; status: string; taskId: string; proof?: string | null; workerNotes?: string | null; posterNotes?: string | null; attachments?: string[]; autoApproveAt?: string | null; submittedAt?: string | null
+  // Social jobs with a payout check: WAITING until payoutCheckDueAt, then the result
+  payoutCheck?: string | null; payoutCheckDueAt?: string | null; payoutCheckReason?: string | null
   // Contest entries: the place won and the result (from /tasks/my/submissions)
   place?: number | null; paidAmount?: number | null; contestResult?: 'WON' | 'NOT_PLACED' | 'WAITING' | null; winnersPaidAt?: string | null
 }
@@ -221,6 +224,7 @@ export default function SubmissionPage() {
                 <span className="sb-ic wait"><i className="ti ti-hourglass" /></span>
                 <h2>Waiting for review</h2>
                 <p>{task.poster?.username ? `@${task.poster.username}` : 'The poster'} is checking your work. You'll get a notification when they decide.</p>
+                {mine?.payoutCheck && <PayoutCheckStatus sub={mine} who="worker" />}
                 {mine?.autoApproveAt && <p className="sb-small"><i className="ti ti-clock-check" /> If they don't review it, it's approved and you're paid automatically on {when(mine.autoApproveAt)}.</p>}
                 <Sent m={mine!} />
                 <div className="ui-actions"><Link className="ui-btn ui-btn-ghost" to="/my-tasks">My tasks</Link><Link className="ui-btn ui-btn-ghost" to="/tasks">Find more jobs</Link></div>
@@ -283,6 +287,7 @@ export default function SubmissionPage() {
             ) : (
               <section className="ui-card ui-card-pad sb-form">
                 {status === 'PENDING' && <p className="sb-held"><i className="ti ti-circle-check" /> You have a slot on this job. Send your work when it's done.</p>}
+                <PayoutCheckNote info={task.payoutCheck} />
                 <label className="ui-label" htmlFor="sb-link">Link to your work</label>
                 <input id="sb-link" className="ui-input" type="url" inputMode="url" value={link} onChange={(e) => setLink(e.target.value)} placeholder="https://… (post, document, recording)" />
                 <label className="ui-label" htmlFor="sb-notes">Note for the poster</label>

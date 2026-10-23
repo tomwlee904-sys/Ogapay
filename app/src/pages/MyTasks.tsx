@@ -6,6 +6,7 @@ import { apiRequest } from '../lib/api'
 import { categoryLabel } from '../lib/categories'
 import { useMoney } from '../lib/useMoney'
 import '../styles/my-tasks.css'
+import { PayoutCheckStatus } from '../components/PayoutCheck'
 
 // Jobs you've taken as a worker and where each one stands. Rows open the submit
 // page, which shows the next step (send work, wait for review, result). The old
@@ -18,6 +19,8 @@ import '../styles/my-tasks.css'
 type Sub = {
   id: string; status: string; taskId: string; createdAt: string; submittedAt?: string | null; reviewedAt?: string | null
   autoApproveAt?: string | null; posterNotes?: string | null
+  // Social jobs with a payout check: WAITING until payoutCheckDueAt, then the result
+  payoutCheck?: string | null; payoutCheckDueAt?: string | null; payoutCheckReason?: string | null
   isContest?: boolean; place?: number | null; prize?: number | null; winnersPaidAt?: string | null
   paidAmount?: number | null; contestResult?: 'WON' | 'NOT_PLACED' | 'WAITING' | null
   task?: {
@@ -180,6 +183,7 @@ export default function MyTasks() {
                         <span className="mt2-meta">{s.isContest ? 'Contest · ' : ''}{categoryLabel(s.task?.category)}{s.task?.poster?.username ? ` · @${s.task.poster.username}` : ''}</span>
                         <span className="mt2-detail">{detail(s)}</span>
                         {s.status === 'REJECTED' && s.posterNotes && <span className="mt2-note">“{s.posterNotes}”</span>}
+                        {s.status === 'SUBMITTED' && s.payoutCheck && <PayoutCheckStatus sub={s} who="worker" compact />}
                       </div>
                       <div className="mt2-r">
                         {amount(s)}

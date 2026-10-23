@@ -20,6 +20,7 @@ import { useProviders } from "../lib/providers";
 import "../styles/create.css";
 import { missingLink, missingLinkText, TEMPLATE_BLANKS } from '../lib/jobText'
 import InfoTip from '../components/InfoTip'
+import { PayoutCheckPicker, PAYOUT_CHECKS } from '../components/PayoutCheck'
 // -- COLOR TOKENS ----------------------------------------------------------
 const C = {
   text: "var(--text)",
@@ -513,6 +514,8 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
   const [reqValue, setReqValue] = useState<string>(init.reqValue || "");
   const [screenshot, setScreenshot] = useState<boolean>(!!init.screenshot);
   const [trackingCode, setTrackingCode] = useState<string>(init.trackingCode || "");
+  // Social jobs: payout check window in minutes (0 = instant, as before)
+  const [payoutCheck, setPayoutCheck] = useState<number>(() => PAYOUT_CHECKS.some(c => String(c.minutes) === String(init.payoutCheck)) ? Number(init.payoutCheck) : 0);
   // Optional campaign (/create?campaign=… from the Campaigns page)
   const [campaignId, setCampaignId] = useState<string>(() => new URLSearchParams(window.location.search).get("campaign") || "");
   const [campaigns, setCampaigns] = useState<{ id: string; name: string; currency: string; status: string }[]>([]);
@@ -552,13 +555,15 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
   useEffect(() => {
     const t = setTimeout(() => {
       try {
-        localStorage.setItem(CUSTOM_DRAFT_KEY, JSON.stringify({ mode, title, description, currency, bounty, winners: winnersInput, prizes: prizesInput, entryTarget, randomDraw, category, subcategory, duration, reqType, reqValue, screenshot, trackingCode }));
+        localStorage.setItem(CUSTOM_DRAFT_KEY, JSON.stringify({ mode, title, description, currency, bounty, winners: winnersInput, prizes: prizesInput, entryTarget, randomDraw, category, subcategory, duration, reqType, reqValue, screenshot, trackingCode, payoutCheck: String(payoutCheck) }));
       } catch { /* storage full or blocked */ }
     }, 400);
     return () => clearTimeout(t);
-  }, [mode, title, description, currency, bounty, winnersInput, prizesInput, entryTarget, randomDraw, category, subcategory, duration, reqType, reqValue, screenshot, trackingCode]);
+  }, [mode, title, description, currency, bounty, winnersInput, prizesInput, entryTarget, randomDraw, category, subcategory, duration, reqType, reqValue, screenshot, trackingCode, payoutCheck]);
 
   const isContest = mode === "Contest";
+  // The payout check is for social jobs (not contests: winners are picked when they end)
+  const checkable = CATEGORY_MAP[category] === "SOCIAL_MEDIA" && !isContest;
   const prizeNums = prizesInput.map(p => parseFloat(String(p).replace(/,/g, "")) || 0);
   const winners = isContest ? prizesInput.length : mode === "Selection" ? 1 : Math.min(1000, Math.max(0, parseInt(winnersInput) || 0));
   const rewardPool = isContest ? prizeNums.reduce((s, p) => s + p, 0) : parseFloat(String(bounty).replace(/,/g, "")) || 0;
@@ -623,7 +628,7 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
     if (!isAuthed) { navigate("/login?redirect=" + encodeURIComponent("/create?type=custom")); return; }
     setTplSaved("saving");
     try {
-      await saveTemplate({ mode, title: title.trim(), description, currency, bounty, winners: winnersInput, category, subcategory, duration, reqType, reqValue, screenshot, trackingCode });
+      await saveTemplate({ mode, title: title.trim(), description, currency, bounty, winners: winnersInput, category, subcategory, duration, reqType, reqValue, screenshot, trackingCode, ...(payoutCheck > 0 && { payoutCheck: String(payoutCheck) }) });
       setTplSaved("saved");
     } catch { setTplSaved("error"); }
   };
@@ -671,6 +676,7 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
         ...(!community && campaignId && campaignChoices.some((c) => c.id === campaignId) && { campaignId }),
         ...(community && { communityId: community.communityId }),
         ...(requiredCommunity && { requiredCommunityId: requiredCommunity.id }),
+        ...(checkable && { payoutCooldownMinutes: payoutCheck }),
       });
       try { localStorage.removeItem(CUSTOM_DRAFT_KEY); } catch { /* ignore */ }
       refreshWalletBal();
@@ -832,6 +838,16 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
                       : deadline ? `Closes ${deadline.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}. Unused budget returns to your wallet.` : "Stays open until all places are filled or you cancel it."}</p>
                   </div>
 
+                  {checkable && (
+                    <div className="cf-field">
+                      <span className="cf-lbl">Payout check <InfoTip label="What is a payout check?" title="Payout check">
+                        <p>Work can't be paid until the time you pick has passed since it was sent. Then we look at the worker's X post again: it must still be up, be from their connected X account, and still reply to or quote your post.</p>
+                        <p>Posts that fail are flagged for you and not paid automatically. Likes and follows can't be checked automatically; you review them.</p>
+                      </InfoTip></span>
+                      <PayoutCheckPicker value={payoutCheck} onChange={setPayoutCheck} />
+                    </div>
+                  )}
+
                   <Fold title="Audience and requirements" sub="Choose who can take part" open={openReq} onToggle={() => setOpenReq(o => !o)}>
                     <RequirementPicker type={reqType} value={reqValue} onChange={(t, v) => { setReqType(t); setReqValue(v); }} />
                   </Fold>
@@ -917,6 +933,7 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
                     <div><span>{isContest ? "Entries close" : "Closes"}</span><b>{deadline ? deadline.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "No deadline"}</b></div>
                     {isContest && <div><span>Winners</span><b>{randomDraw ? "Drawn at random when entries close, from the entries you haven't rejected" : "You rank them within 3 days of the close, or the earliest entries win" + (prizeNums.length === 1 ? ". You can also award the place to an entry before entries close; the contest then ends early" : prizeNums.length > 1 && new Set(prizeNums).size === 1 ? ". Every place pays the same prize, so you can also award places before entries close; once every place is awarded, the contest ends early" : "")}</b></div>}
                     {screenshot && <div><span>Proof</span><b>Screenshot required</b></div>}
+                    {checkable && <div><span>Payout check</span><b>{PAYOUT_CHECKS.find(c => c.minutes === payoutCheck)?.label || "Instant"}</b></div>}
                     {files.length > 0 && <div><span>Attachments</span><b>{files.length} file{files.length > 1 ? "s" : ""}</b></div>}
                     <div><span>Your {currency} balance</span><b style={{ color: balance >= totalToPay ? "var(--green)" : "var(--red)" }}>{money(balance, currency)}</b></div>
                   </div>
@@ -947,7 +964,7 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
 
       {showTemplates && <TemplatesModal onClose={() => setShowTemplates(false)} onUse={(d: TemplateData, example: boolean) => {
         setTitle(d.title || ""); setDescription(d.description || "");
-        if (!example) { setBounty(d.bounty || ""); if (d.currency) setCurrency(d.currency); if (d.duration) setDuration(d.duration); setTrackingCode(d.trackingCode || ""); setScreenshot(!!d.screenshot); }
+        if (!example) { setBounty(d.bounty || ""); if (d.currency) setCurrency(d.currency); if (d.duration) setDuration(d.duration); setTrackingCode(d.trackingCode || ""); setScreenshot(!!d.screenshot); setPayoutCheck(PAYOUT_CHECKS.some(c => String(c.minutes) === d.payoutCheck) ? Number(d.payoutCheck) : 0); }
         // Ready-made examples (app testing) suggest a budget and duration
         // and start from the same proof settings as on a fresh form
         else if (d.bounty) { setBounty(d.bounty); if (d.currency) setCurrency(d.currency); if (d.duration) setDuration(d.duration); setScreenshot(!!d.screenshot); setTrackingCode(d.trackingCode || ""); }

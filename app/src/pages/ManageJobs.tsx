@@ -11,6 +11,7 @@ import InfoTip from '../components/InfoTip'
 import { missingLink, missingLinkText } from "../lib/jobText";
 import RateWork, { RatedStars, ratedByTeam } from '../components/RateWork'
 import CopyFlag from '../components/CopyFlag'
+import { PayoutCheckStatus, checkBlocksApprove, anyWaiting, useNow } from '../components/PayoutCheck'
 import TransferModal from '../components/TransferModal'
 
 // Manage jobs: the poster's jobs, their review queue and job actions.
@@ -22,6 +23,9 @@ type Sub = {
   id: string; status: string; createdAt: string; submittedAt?: string | null; reviewedAt?: string | null
   proof?: string | null; workerNotes?: string | null; posterNotes?: string | null; attachments?: any[]
   autoApproveAt?: string | null
+  // Social jobs with a payout check: WAITING until payoutCheckDueAt, then PASSED,
+  // SKIPPED, FAILED or UNKNOWN with a plain reason (Approve waits for the window)
+  payoutCheck?: string | null; payoutCheckDueAt?: string | null; payoutCheckReason?: string | null
   // Set by the server when the entry looks copied from another one on this job, or only says "done"
   spamReason?: string | null; similarToId?: string | null
   rating?: number | null; feedback?: string | null
@@ -115,6 +119,8 @@ function JobDrawer({ task, allTasks, focusId, onClose, onChanged }: { task: Task
   // These are the signed-in person's own jobs, so they are the poster
   const { user } = useAuth();
   const [subs, setSubs] = useState<Sub[] | null>(null);
+  // Re-render while a payout check runs, so Approve opens when its window ends
+  const clock = useNow(anyWaiting(subs));
   const [busy, setBusy] = useState<string | null>(null);
   const [rejecting, setRejecting] = useState<string | null>(null);
   const [reason, setReason] = useState("");
@@ -380,6 +386,7 @@ function JobDrawer({ task, allTasks, focusId, onClose, onChanged }: { task: Task
                   <div key={s.id} id={`mj-sub-${s.id}`} className={`mj-sub${s.id === focusId ? " is-focus" : ""}`}>
                     <div className="mj-who"><Avatar w={s.worker} /><div><WorkerLink w={s.worker} /><small>Sent {ago(s.submittedAt || s.createdAt)}</small></div><BlockBtn w={s.worker} /></div>
                     <CopyFlag reason={s.spamReason} copy={!!s.similarToId} />
+                    <PayoutCheckStatus sub={s} who="poster" />
                     {s.workerNotes && <p className="mj-note">{s.workerNotes}</p>}
                     <Proof s={s} />
                     {/* Contest entries are never approved automatically */}
@@ -398,7 +405,7 @@ function JobDrawer({ task, allTasks, focusId, onClose, onChanged }: { task: Task
                       {!contest && <RateWork who={`@${who(s.worker)}`} rating={stars[s.id] || 0} note={notes[s.id] || ""} disabled={busy === s.id}
                         onRating={(v) => setStars((m) => ({ ...m, [s.id]: v }))} onNote={(v) => setNotes((m) => ({ ...m, [s.id]: v }))} />}
                       <div className="mj-acts">
-                        {!contest && <button className="ui-btn ui-btn-dark" disabled={busy === s.id} onClick={() => review(s, "APPROVED")}><Icon n="check" s={15} /> {busy === s.id ? "Approving…" : `Approve and pay ${money(reward, cur)}`}</button>}
+                        {!contest && <button className="ui-btn ui-btn-dark" disabled={busy === s.id || checkBlocksApprove(s, clock)} title={checkBlocksApprove(s, clock) ? "Payout check still running" : undefined} onClick={() => review(s, "APPROVED")}><Icon n="check" s={15} /> {busy === s.id ? "Approving…" : `Approve and pay ${money(reward, cur)}`}</button>}
                         <button className="ui-btn ui-btn-ghost" disabled={busy === s.id} onClick={() => { setRejecting(s.id); setReason(""); }}>Reject</button>
                       </div>
                       </>

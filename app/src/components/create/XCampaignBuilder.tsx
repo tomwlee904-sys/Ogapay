@@ -6,6 +6,7 @@ import { apiRequest } from "../../lib/api";
 import { useAuth } from "../../context/AuthContext";
 import { useCurrency } from "../../context/CurrencyContext";
 import { useWalletBalance } from "../../context/WalletBalanceContext";
+import { PayoutCheckPicker, PAYOUT_CHECKS } from "../PayoutCheck";
 import { OverviewCard, RequirementPicker, Steps, Fold, DURATIONS, deadlineFor, money, minReward, reqFields, reqLabel, createTask, apiErrorText } from "./shared";
 
 /* X campaign: pick an X post, choose the actions you want (reposts, comments,
@@ -43,6 +44,8 @@ export default function XCampaignBuilder({ initialUrl = "", onClose, onCreated }
   const [reqValue, setReqValue] = useState("");
   const [duration, setDuration] = useState("7 days");
   const [openExtra, setOpenExtra] = useState(false);
+  // Payout check window in minutes for every action (0 = instant, as before)
+  const [payoutCheck, setPayoutCheck] = useState(0);
   const [created, setCreated] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -130,6 +133,7 @@ export default function XCampaignBuilder({ initialUrl = "", onClose, onCreated }
           currency,
           maxWorkers: l.qty,
           tags: ["x-campaign", l.id],
+          payoutCooldownMinutes: payoutCheck,
           proofRequired: `Submit ${l.proof}`,
           ...(deadline && { deadline: deadline.toISOString() }),
           ...reqFields(reqType, reqValue),
@@ -149,6 +153,7 @@ export default function XCampaignBuilder({ initialUrl = "", onClose, onCreated }
   const rows: [string, string, string?][] = [
     ...lines.map(l => [`${l.label} × ${l.qty}`, money(l.subtotal, currency), `${money(l.reward, currency)} each`] as [string, string, string]),
     ["Platform fee (10%)", money(fee, currency)],
+    ...(payoutCheck > 0 ? [["Payout check", PAYOUT_CHECKS.find(c => c.minutes === payoutCheck)?.label || ""] as [string, string]] : []),
   ];
 
   return (
@@ -255,6 +260,11 @@ export default function XCampaignBuilder({ initialUrl = "", onClose, onCreated }
                         </div>
                       );
                     })}
+                  </div>
+
+                  <div className="cf-field">
+                    <span className="cf-lbl">Payout check</span>
+                    <PayoutCheckPicker value={payoutCheck} onChange={setPayoutCheck} />
                   </div>
 
                   <Fold title="Extra settings" sub={`Requirement: ${reqLabel(reqType, reqValue)} · Closes after ${duration}`} open={openExtra} onToggle={() => setOpenExtra(o => !o)}>
