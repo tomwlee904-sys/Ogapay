@@ -17,7 +17,8 @@ export type StoreOrder = {
   protected: boolean; held: boolean
   deliveredAt: string | null; releaseAt: string | null; releasedAt: string | null; refundedAt: string | null
   disputedAt: string | null; disputeReason: string | null
-  product: { id: string; name: string; imageUrl: string | null }
+  // available: false once the seller deletes the product; the order keeps its name, price and picture
+  product: { id: string; name: string; imageUrl: string | null; price?: number; available?: boolean }
   conversationId: string | null
 }
 type Bought = StoreOrder & { seller: { username: string; name: string; avatarUrl: string | null } | null }
@@ -128,9 +129,9 @@ export default function StoreOrders() {
                 <div className="who">
                   <span className="ms2-thumb so-thumb">{o.product.imageUrl ? <img src={sized(o.product.imageUrl, 44, true)} alt="" loading="lazy" /> : <i className="ti ti-package" />}</span>
                   <div style={{ minWidth: 0 }}>
-                    <b><Link to={`/store/${o.product.id}`} style={{ color: 'inherit', textDecoration: 'none' }}>{o.product.name}</Link>{o.quantity > 1 ? ` × ${o.quantity}` : ''}</b>
+                    <b><Link className="tap" to={o.product.available === false ? `/orders/${o.id}` : `/store/${o.product.id}`} style={{ color: 'inherit', textDecoration: 'none' }}>{o.product.name}</Link>{o.quantity > 1 ? ` × ${o.quantity}` : ''}</b>
                     <small>
-                      {o.seller ? <>from <Link to={`/user/${o.seller.username}`} style={{ color: 'var(--text2)' }}>@{o.seller.username}</Link> · </> : null}
+                      {o.seller ? <>from <Link className="tap" to={`/user/${o.seller.username}`} style={{ color: 'var(--text2)' }}>@{o.seller.username}</Link> · </> : null}
                       {new Date(o.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                     </small>
                   </div>
