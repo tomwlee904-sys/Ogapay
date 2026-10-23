@@ -118,6 +118,7 @@ export default function Dashboard() {
   const stepFor = (j: Job): { text: string; tag: string; order: number } | null => {
     const need = Number(j.minJobsDone) || 0
     if (need > jobsDone) return { text: need === 1 ? 'Opens after your first approved job' : `Opens after ${need} approved jobs`, tag: 'Later', order: 2 }
+    if (j.workerRequirement === 'KYC2' && kycTier < 2) return { text: 'Verify your ID with a selfie first (Level 2)', tag: 'Verify ID', order: 1 }
     if (j.workerRequirement === 'KYC' && !kycOk) return { text: 'Verify your ID first (Level 1)', tag: 'Verify ID', order: 1 }
     if (j.workerRequirement === 'HUMAN' && !me?.humanVerifiedAt) return { text: 'Get Human Verified first, it takes a minute', tag: 'Verify', order: 1 }
     return null

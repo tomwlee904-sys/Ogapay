@@ -4,7 +4,7 @@ import FundJobWalletModal from "../FundJobWalletModal";
 import { useAuth } from "../../context/AuthContext";
 import { useCurrency } from "../../context/CurrencyContext";
 import { useWalletBalance } from "../../context/WalletBalanceContext";
-import { RequirementPicker, money, minReward, reqFields, createTask, apiErrorText, deadlineFor } from "./shared";
+import { RequirementPicker, NO_REQS, type Reqs, money, minReward, reqFields, createTask, apiErrorText, deadlineFor } from "./shared";
 import { PayoutCheckPicker } from "../PayoutCheck";
 import { useSocialPrices, priceOf, isStaggered, batchSizeFor, ACTION_OF, PACK_NAMES, X_TARGET, RaidPack } from "./socialPrices";
 
@@ -42,8 +42,7 @@ export default function QuickTaskForm({ platform, onBack, onCreated }: { platfor
   const [link, setLink] = useState("");
   const [qtyInput, setQtyInput] = useState("100");
   const [currency, setCurrency] = useState<"NGN" | "USDC">("NGN");
-  const [reqType, setReqType] = useState("none");
-  const [reqValue, setReqValue] = useState("");
+  const [reqs, setReqs] = useState<Reqs>(NO_REQS);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [showFund, setShowFund] = useState(false);
@@ -58,7 +57,7 @@ export default function QuickTaskForm({ platform, onBack, onCreated }: { platfor
   const social = isX ? ACTION_OF[action] : undefined;
   const isRaid = social === "RAID";
   // The "Blue-tick X account" requirement is the same thing as the switch
-  const blue = isX && (blueOnly || reqType === "xblue");
+  const blue = isX && (blueOnly || reqs.extra === "xblue");
   const cur: "NGN" | "USDC" = isX ? "NGN" : currency;
 
   // Preset price per action is defined in Naira; USDC is converted, never below the minimum
@@ -101,7 +100,7 @@ export default function QuickTaskForm({ platform, onBack, onCreated }: { platfor
         payoutCooldownMinutes: payoutCheck,
         proofRequired: `Submit ${proof}`,
         ...(deadline && { deadline: deadline.toISOString() }),
-        ...reqFields(reqType, reqValue),
+        ...reqFields(reqs),
       });
       refreshWallet();
       onCreated(taskId);
@@ -130,7 +129,7 @@ export default function QuickTaskForm({ platform, onBack, onCreated }: { platfor
 
       {isX && (
         <label className="qt-blue">
-          <input type="checkbox" checked={blue} onChange={e => { setBlueOnly(e.target.checked); if (e.target.checked && reqType === "none") setReqType("xblue"); if (!e.target.checked && reqType === "xblue") setReqType("none"); }} />
+          <input type="checkbox" checked={blue} onChange={e => { setBlueOnly(e.target.checked); if (e.target.checked && reqs.extra === "none") setReqs({ ...reqs, extra: "xblue", value: "" }); if (!e.target.checked && reqs.extra === "xblue") setReqs({ ...reqs, extra: "none", value: "" }); }} />
           <span><b>Blue-tick accounts only</b><small>Only X accounts with a blue tick can take part. {prices.blueTimes}x the price.</small></span>
         </label>
       )}
@@ -188,7 +187,7 @@ export default function QuickTaskForm({ platform, onBack, onCreated }: { platfor
         <p className="cf-hint">People will submit {proof}.</p>
       </div>
 
-      <RequirementPicker type={reqType} value={reqValue} onChange={(t, v) => { setReqType(t); setReqValue(v); }} />
+      <RequirementPicker reqs={reqs} onChange={setReqs} />
 
       <div className="cf-field">
         <span className="cf-lbl">Payout check</span>

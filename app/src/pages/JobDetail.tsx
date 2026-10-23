@@ -545,6 +545,7 @@ export default function JobDetail() {
 // Where each "why you can't take this job" reason is fixed
 const FIXES: Record<string, { label: string; to: string }> = {
   KYC: { label: 'Verify your ID', to: '/settings/verification' },
+  KYC2: { label: 'Verify your ID with a selfie', to: '/settings/verification' },
   HUMAN: { label: 'Verify you are human', to: '/settings/verification' },
   OGASCORE: { label: 'Raise your OgaScore', to: '/settings/verification' },
   WALLET: { label: 'Connect a wallet', to: '/settings/connections' },

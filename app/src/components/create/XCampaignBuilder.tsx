@@ -7,7 +7,7 @@ import { useAuth } from "../../context/AuthContext";
 import { useCurrency } from "../../context/CurrencyContext";
 import { useWalletBalance } from "../../context/WalletBalanceContext";
 import { PayoutCheckPicker, PAYOUT_CHECKS } from "../PayoutCheck";
-import { OverviewCard, RequirementPicker, Steps, Fold, DURATIONS, deadlineFor, money, reqFields, reqLabel, createTask, apiErrorText } from "./shared";
+import { OverviewCard, RequirementPicker, NO_REQS, type Reqs, reqsAny, Steps, Fold, DURATIONS, deadlineFor, money, reqFields, reqLabel, createTask, apiErrorText } from "./shared";
 import { useSocialPrices, priceOf, isStaggered, batchSizeFor, X_TARGET, SocialAction } from "./socialPrices";
 
 /* X campaign ("Start with your X post"): paste the post link, see the post,
@@ -48,8 +48,7 @@ export default function XCampaignBuilder({ initialUrl = "", onClose, onCreated }
   const [blueOnly, setBlueOnly] = useState(false);
   const [comps, setComps] = useState<Record<string, Comp>>(() =>
     Object.fromEntries(COMPONENTS.map((c, i) => [c.id, { on: i === 0, qty: String(c.qty) }])));
-  const [reqType, setReqType] = useState("none");
-  const [reqValue, setReqValue] = useState("");
+  const [reqs, setReqs] = useState<Reqs>(NO_REQS);
   const [duration, setDuration] = useState("7 days");
   const [openExtra, setOpenExtra] = useState(false);
   // Payout check window in minutes for every action (0 = instant, as before)
@@ -87,7 +86,7 @@ export default function XCampaignBuilder({ initialUrl = "", onClose, onCreated }
   useEffect(() => { if (initialUrl) findPost(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // The "Blue-tick X account" requirement is the same thing as the switch
-  const blue = blueOnly || reqType === "xblue";
+  const blue = blueOnly || reqs.extra === "xblue";
 
   const lines = useMemo(() => COMPONENTS.filter(c => comps[c.id].on).map(c => {
     const qty = Math.min(1000, Math.max(0, parseInt(comps[c.id].qty) || 0));
@@ -128,7 +127,7 @@ export default function XCampaignBuilder({ initialUrl = "", onClose, onCreated }
           ``,
           `Then submit ${l.proof}. Use your own active account; submissions from new or empty accounts may be rejected.`,
           `You have ${prices.holdMinutes} minutes after taking a place to send it.`,
-          reqType !== "none" ? `\nWho can take part: ${reqLabel(reqType, reqValue)}.` : "",
+          reqsAny(reqs) ? `\nWho can take part: ${reqLabel(reqs)}.` : "",
         ].join("\n");
         done[l.id] = await createTask({
           title: `${blue ? "Blue-tick: " : ""}${l.verb} ${who} post on X`.slice(0, 200),
@@ -145,7 +144,7 @@ export default function XCampaignBuilder({ initialUrl = "", onClose, onCreated }
           payoutCooldownMinutes: payoutCheck,
           proofRequired: `Submit ${l.proof}`,
           ...(deadline && { deadline: deadline.toISOString() }),
-          ...reqFields(reqType, reqValue),
+          ...reqFields(reqs),
         });
         setCreated({ ...done });
       }
@@ -236,7 +235,7 @@ export default function XCampaignBuilder({ initialUrl = "", onClose, onCreated }
                 <div className="cf-body">
                   <p className="cf-hint" style={{ margin: 0 }}>Choose the actions you need and how many people for each. Each action has a set price; a 10% platform fee is added at payment.</p>
                   <label className="qt-blue">
-                    <input type="checkbox" checked={blue} onChange={e => { setBlueOnly(e.target.checked); if (e.target.checked && reqType === "none") setReqType("xblue"); if (!e.target.checked && reqType === "xblue") setReqType("none"); }} />
+                    <input type="checkbox" checked={blue} onChange={e => { setBlueOnly(e.target.checked); if (e.target.checked && reqs.extra === "none") setReqs({ ...reqs, extra: "xblue", value: "" }); if (!e.target.checked && reqs.extra === "xblue") setReqs({ ...reqs, extra: "none", value: "" }); }} />
                     <span><b>Blue-tick accounts only</b><small>Only X accounts with a blue tick can take part. {prices.blueTimes}x the price.</small></span>
                   </label>
                   <div>
@@ -278,8 +277,8 @@ export default function XCampaignBuilder({ initialUrl = "", onClose, onCreated }
                     <PayoutCheckPicker value={payoutCheck} onChange={setPayoutCheck} />
                   </div>
 
-                  <Fold title="Extra settings" sub={`Requirement: ${reqLabel(reqType, reqValue)} · Closes after ${duration}`} open={openExtra} onToggle={() => setOpenExtra(o => !o)}>
-                    <RequirementPicker type={reqType} value={reqValue} onChange={(t, v) => { setReqType(t); setReqValue(v); }} />
+                  <Fold title="Extra settings" sub={`Who can take part: ${reqLabel(reqs)} · Closes after ${duration}`} open={openExtra} onToggle={() => setOpenExtra(o => !o)}>
+                    <RequirementPicker reqs={reqs} onChange={setReqs} />
                     <div className="cf-field">
                       <label>Campaign closes after</label>
                       <select className="ui-select" value={duration} onChange={e => setDuration(e.target.value)}>

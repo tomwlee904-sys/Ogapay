@@ -14,7 +14,7 @@ import { PlatformActionButton } from "../components/PlatformActionButton";
 import CampaignWizard from "../components/CampaignWizard";
 import XCampaignBuilder from "../components/create/XCampaignBuilder";
 import QuickTaskForm from "../components/create/QuickTaskForm";
-import { Steps, Fold, Toggle as CfToggle, OverviewCard, RequirementPicker, DURATIONS, deadlineFor, money, minReward, reqFields, reqLabel, uploadJobFile, createTask, apiErrorText, CATEGORIES, CATEGORY_MAP, listTemplates, saveTemplate, getStrictRules, strictRulesApply, SELECTION_TIMES, type TemplateData, type TemplateFile, type StrictRules } from "../components/create/shared";
+import { Steps, Fold, Toggle as CfToggle, OverviewCard, RequirementPicker, reqsFrom, reqsToSaved, reqsAny, type Reqs, DURATIONS, deadlineFor, money, minReward, reqFields, reqLabel, uploadJobFile, createTask, apiErrorText, CATEGORIES, CATEGORY_MAP, listTemplates, saveTemplate, getStrictRules, strictRulesApply, SELECTION_TIMES, type TemplateData, type TemplateFile, type StrictRules } from "../components/create/shared";
 import { rankName } from "../lib/requirements";
 import TemplatesModal from "../components/create/TemplatesModal";
 import { useProviders } from "../lib/providers";
@@ -529,8 +529,7 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
   const [category, setCategory] = useState<string>(init.category || "");
   const [subcategory, setSubcategory] = useState<string>(init.subcategory || "");
   const [duration, setDuration] = useState<string>(init.duration || "7 days");
-  const [reqType, setReqType] = useState<string>(init.reqType || "none");
-  const [reqValue, setReqValue] = useState<string>(init.reqValue || "");
+  const [reqs, setReqs] = useState<Reqs>(() => reqsFrom(init));
   const [screenshot, setScreenshot] = useState<boolean>(!!init.screenshot);
   const [trackingCode, setTrackingCode] = useState<string>(init.trackingCode || "");
   // Social jobs: payout check window in minutes (0 = instant, as before)
@@ -575,7 +574,7 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
   const [beforeRefine, setBeforeRefine] = useState<string | null>(null);
   const [strictRules, setStrictRules] = useState<StrictRules | null>(null);
   useEffect(() => { getStrictRules().then(setStrictRules).catch(() => {}); }, []);
-  const [openReq, setOpenReq] = useState<boolean>(!!init.reqType && init.reqType !== "none");
+  const [openReq, setOpenReq] = useState<boolean>(() => reqsAny(reqsFrom(init)) || !!communityId);
   const [openExtra, setOpenExtra] = useState(false);
   const [showTemplates, setShowTemplates] = useState(false);
   const [tplSaved, setTplSaved] = useState<"" | "saving" | "saved" | "error">("");
@@ -588,11 +587,11 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
   useEffect(() => {
     const t = setTimeout(() => {
       try {
-        localStorage.setItem(CUSTOM_DRAFT_KEY, JSON.stringify({ mode, title, description, currency, bounty, winners: winnersInput, prizes: prizesInput, entryTarget, randomDraw, category, subcategory, duration, reqType, reqValue, screenshot, trackingCode, payoutCheck: String(payoutCheck), selectionHours, hideAfterComplete: hideAfter, watermark, templateFiles }));
+        localStorage.setItem(CUSTOM_DRAFT_KEY, JSON.stringify({ mode, title, description, currency, bounty, winners: winnersInput, prizes: prizesInput, entryTarget, randomDraw, category, subcategory, duration, ...reqsToSaved(reqs), screenshot, trackingCode, payoutCheck: String(payoutCheck), selectionHours, hideAfterComplete: hideAfter, watermark, templateFiles }));
       } catch { /* storage full or blocked */ }
     }, 400);
     return () => clearTimeout(t);
-  }, [mode, title, description, currency, bounty, winnersInput, prizesInput, entryTarget, randomDraw, category, subcategory, duration, reqType, reqValue, screenshot, trackingCode, payoutCheck, selectionHours, hideAfter, watermark, templateFiles]);
+  }, [mode, title, description, currency, bounty, winnersInput, prizesInput, entryTarget, randomDraw, category, subcategory, duration, reqs, screenshot, trackingCode, payoutCheck, selectionHours, hideAfter, watermark, templateFiles]);
 
   const isContest = mode === "Contest";
   // The payout check is for social jobs (not contests: winners are picked when they end)
@@ -642,7 +641,7 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
   const strict = strictRulesApply(strictRules, { mode, places: winners, perPerson: perWinner, currency, community: !!community });
   const personCheck = strictRules?.personCheck === "HUMAN" ? "human verification (VeryAI)" : "ID verification (KYC)";
   const strictText = strict && strictRules
-    ? `${rankName(strictRules.rank)} rank or higher and ${reqType === "kyc" ? "ID verification (KYC)" : reqType === "human" ? "human verification (VeryAI)" : personCheck}`
+    ? `${rankName(strictRules.rank)} rank or higher and ${reqs.id === "kyc" ? "ID verification (NIN)" : reqs.id === "kyc2" ? "ID + selfie verification" : reqs.id === "human" ? "human verification (VeryAI)" : personCheck}`
     : "";
 
   // Refine with AI: a clearer brief from what you wrote (server: briefRefine.service)
@@ -693,7 +692,7 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
       const added: TemplateFile[] = [];
       for (const f of files) added.push({ name: f.name, url: await uploadJobFile(f) });
       await saveTemplate({
-        mode, title: title.trim(), description, currency, bounty, winners: winnersInput, category, subcategory, duration, reqType, reqValue, screenshot, trackingCode,
+        mode, title: title.trim(), description, currency, bounty, winners: winnersInput, category, subcategory, duration, ...reqsToSaved(reqs), screenshot, trackingCode,
         ...(payoutCheck > 0 && { payoutCheck: String(payoutCheck) }),
         ...(isSelection && { selectionHours }), ...(hideAfter && { hideAfterComplete: true }), ...(watermark && { watermark: true }),
       }, undefined, { isPublic: shareTemplate, files: [...templateFiles, ...added].slice(0, 10) });
@@ -742,7 +741,7 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
         tags: [category, subcategory].filter(Boolean).slice(0, 5),
         ...(deadline && { deadline: deadline.toISOString() }),
         ...(screenshot && { proofRequired: "Screenshot required" }),
-        ...reqFields(reqType, reqValue),
+        ...reqFields(reqs),
         ...(trackingCode.trim() && { trackingCode: trackingCode.trim() }),
         ...(uploaded.length && { attachments: uploaded.map(u => u.url) }),
         ...(!community && campaignId && campaignChoices.some((c) => c.id === campaignId) && { campaignId }),
@@ -946,8 +945,33 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
                     </div>
                   )}
 
-                  <Fold title="Audience and requirements" sub={excludeJobs.length ? `Choose who can take part · ${excludeJobs.length} past job${excludeJobs.length > 1 ? "s" : ""} excluded` : "Choose who can take part"} open={openReq} onToggle={() => setOpenReq(o => !o)}>
-                    <RequirementPicker type={reqType} value={reqValue} onChange={(t, v) => { setReqType(t); setReqValue(v); }} />
+                  <Fold title="Audience and requirements" sub={[community ? `Members of ${community.name} only` : requiredCommunity ? `Members of ${requiredCommunity.name}` : "", reqLabel(reqs), excludeJobs.length ? `${excludeJobs.length} past job${excludeJobs.length > 1 ? "s" : ""} excluded` : ""].filter(Boolean).join(" · ")} open={openReq} onToggle={() => setOpenReq(o => !o)}>
+                    {(myCommunities.length > 0 || requirable.length > 0) && (
+                      <div className="cf-field">
+                        <label htmlFor="cj-audience">Who can see it <InfoTip label="Who can see and take this job?" title="Who can see it">
+                          <p><b>Everyone on OgaPay:</b> listed on the jobs page for anyone who meets the requirements below.</p>
+                          <p><b>Hidden, members only:</b> only shows on the community page. For communities you own or run.</p>
+                          <p><b>Listed for everyone, members take it:</b> stays on the jobs page, but only members can take it. Everyone else sees a button to join first.</p>
+                        </InfoTip></label>
+                        <select id="cj-audience" className="ui-select"
+                          value={community ? `only:${community.communityId}` : requiredCommunity ? `req:${requiredCommunity.id}` : ""}
+                          onChange={e => {
+                            const v = e.target.value;
+                            setCommunityId(v.startsWith("only:") ? v.slice(5) : "");
+                            setRequiredCommunityId(v.startsWith("req:") ? v.slice(4) : "");
+                          }}>
+                          <option value="">Everyone on OgaPay</option>
+                          {myCommunities.length > 0 && <optgroup label="Hidden, members only">
+                            {myCommunities.map((c) => <option key={c.communityId} value={`only:${c.communityId}`}>Members of {c.name} only</option>)}
+                          </optgroup>}
+                          {requirable.length > 0 && <optgroup label="Listed for everyone, members take it">
+                            {requirable.map((c) => <option key={c.id} value={`req:${c.id}`}>Members of {c.name} can take it{c.mine ? "" : " (OgaPay)"}</option>)}
+                          </optgroup>}
+                        </select>
+                        <p className="cf-hint">{community ? `Only members of ${community.name} can take it. It shows on the community page, not in the public job list.` : requiredCommunity ? `Listed publicly. Only members of ${requiredCommunity.name} can take it.` : "Anyone who meets the requirements below can take it."}</p>
+                      </div>
+                    )}
+                    <RequirementPicker reqs={reqs} onChange={setReqs} />
                     {isAuthed && openReq && <ExcludePastJobs value={excludeJobs} onChange={setExcludeJobs} />}
                   </Fold>
 
@@ -955,32 +979,6 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
                     <p className="cf-warn" role="status"><i className="ti ti-shield-check" aria-hidden="true" />
                       <span><b>Stricter rules added automatically:</b> {strictText}. This job has {winners} place{winners === 1 ? "" : "s"} paying {money(perWinner, currency)} each ({money(strictRules.minReward[currency] || 0, currency)} or more), so one person with many accounts could take them all. Pay under {money(strictRules.minReward[currency] || 0, currency)} a person, or open more than {strictRules.maxPlaces} places, to skip this.</span>
                     </p>
-                  )}
-
-                  {myCommunities.length > 0 && (
-                    <div className="cf-field">
-                      <label htmlFor="cj-community">Who can see and take it <InfoTip label="Who can see and take this job?" title="Who can take it">
-                        <p>Everyone on OgaPay, or only members of a community you own or run. A members-only job is hidden from everyone else.</p>
-                      </InfoTip></label>
-                      <select id="cj-community" className="ui-select" value={community ? community.communityId : ""} onChange={e => setCommunityId(e.target.value)}>
-                        <option value="">Everyone on OgaPay</option>
-                        {myCommunities.map((c) => <option key={c.communityId} value={c.communityId}>Members of {c.name} only</option>)}
-                      </select>
-                      <p className="cf-hint">{community ? `Only members of ${community.name} can take it. It shows on the community page, not in the public job list.` : "Communities you own or run can have jobs only their members can take."}</p>
-                    </div>
-                  )}
-
-                  {requirable.length > 0 && !community && (
-                    <div className="cf-field">
-                      <label htmlFor="cj-required-community">Community members only (optional) <InfoTip label="What does Member of community mean?" title="Member of community">
-                        <p>The job stays on the public jobs page, but only members of the community you pick can take it. Everyone else sees a button to join the community first.</p>
-                      </InfoTip></label>
-                      <select id="cj-required-community" className="ui-select" value={requiredCommunity ? requiredCommunity.id : ""} onChange={e => setRequiredCommunityId(e.target.value)}>
-                        <option value="">Anyone who meets the requirements</option>
-                        {requirable.map((c) => <option key={c.id} value={c.id}>Members of {c.name}{c.mine ? "" : " (OgaPay)"}</option>)}
-                      </select>
-                      <p className="cf-hint">{requiredCommunity ? `Listed publicly. Only members of ${requiredCommunity.name} can take it.` : "Pick a community to make joining it a requirement."}</p>
-                    </div>
                   )}
 
                   {campaignChoices.length > 0 && !community && (
@@ -1037,7 +1035,7 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
                       <div><span>{mode === "Selection" ? "People hired" : "Winners"}</span><b>{winners}</b></div>
                       <div><span>Reward per {mode === "Selection" ? "person" : "winner"}</span><b>{money(perWinner, currency)}</b></div>
                     </>)}
-                    <div><span>Who can take part</span><b>{community ? `Members of ${community.name}` : ""}{community && reqType !== "none" ? " · " : ""}{!community || reqType !== "none" ? reqLabel(reqType, reqValue) : ""}</b></div>
+                    <div><span>Who can take part</span><b>{community ? `Members of ${community.name}` : ""}{community && reqsAny(reqs) ? " · " : ""}{!community || reqsAny(reqs) ? reqLabel(reqs) : ""}{requiredCommunity ? ` · Members of ${requiredCommunity.name}` : ""}</b></div>
                     <div><span>{isContest ? "Entries close" : "Closes"}</span><b>{deadline ? deadline.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "No deadline"}</b></div>
                     {isContest && <div><span>Winners</span><b>{randomDraw ? "Drawn at random when entries close, from the entries you haven't rejected" : "You rank them within 3 days of the close, or the earliest entries win" + (prizeNums.length === 1 ? ". You can also award the place to an entry before entries close; the contest then ends early" : prizeNums.length > 1 && new Set(prizeNums).size === 1 ? ". Every place pays the same prize, so you can also award places before entries close; once every place is awarded, the contest ends early" : "")}</b></div>}
                     {screenshot && <div><span>Proof</span><b>Screenshot required</b></div>}
@@ -1086,7 +1084,7 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
         if (d.mode) setMode(d.mode);
         setWinnersInput(String(d.winners || 10));
         if (d.category && CATEGORIES[d.category]) { setCategory(d.category); setSubcategory(d.subcategory && CATEGORIES[d.category].includes(d.subcategory) ? d.subcategory : ""); }
-        setReqType(d.reqType || "none"); setReqValue(d.reqValue || ""); setOpenReq(!!d.reqType && d.reqType !== "none");
+        { const r = reqsFrom(d); setReqs(r); setOpenReq(reqsAny(r)); }
         setTplSaved("");
       }} />}
       {showFundModal && (

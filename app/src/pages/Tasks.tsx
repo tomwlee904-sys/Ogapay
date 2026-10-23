@@ -457,7 +457,8 @@ function useTasksData(category?: string) {
 
 // ─── Sort / filter menu ─────────────────────────────────────────
 const SORTS: [string, string][] = [['default', 'Default'], ['reward', 'Reward'], ['newest', 'Newest'], ['closing', 'Closing time']]
-const REQS: [string, string][] = [['all', 'All'], ['open', 'Open to everyone'], ['ogascore', 'OgaScore required'], ['wallet', 'Wallet required'], ['rank', 'Rank required'], ['audience', 'Creators only']]
+// Requirement groups, as on the Create form (rank, identity check, one extra)
+const REQS: [string, string][] = [['all', 'All'], ['open', 'Open to everyone'], ['identity', 'ID / Human verified'], ['x', 'X jobs'], ['community', 'Community'], ['audience', 'Creator jobs'], ['rank', 'Rank required']]
 
 function SortFilterMenu({ sort, req, category, categories, onSort, onReq, onCategory }: {
   sort: string; req: string; category: string; categories: string[]
@@ -595,8 +596,9 @@ export default function Tasks() {
       const score = Number(j.minOgaScore ?? j.minSorsaScore ?? 0), rank = Number(j.minRank ?? 0)
       if (req === 'open' && (j.requiredCommunityId || score > 0 || rank > 1 || j.requiresWallet || j.requiresX || j.requiresXBlue || j.requiresLinkedin || j.workerRequirement || Number(j.minFollowers) > 0 || Number(j.minJobsDone) > 0 || Number(j.minXScore) > 0)) return false
       if (req === 'audience' && !(Number(j.minFollowers) > 0)) return false
-      if (req === 'ogascore' && score <= 0) return false
-      if (req === 'wallet' && !j.requiresWallet) return false
+      if (req === 'identity' && !['KYC', 'KYC2', 'HUMAN'].includes(j.workerRequirement)) return false
+      if (req === 'x' && !(j.requiresX || j.requiresXBlue || Number(j.minXScore) > 0)) return false
+      if (req === 'community' && !j.requiredCommunityId) return false
       if (req === 'rank' && rank <= 1) return false
       if (availableOnly) {
         // A place that expired (no work sent in time) can be taken again, so it doesn't count

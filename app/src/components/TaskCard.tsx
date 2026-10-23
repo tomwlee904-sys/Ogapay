@@ -1,6 +1,6 @@
 ﻿import { useNavigate } from 'react-router-dom'
 import { IconBookmarkFilled } from '@tabler/icons-react'
-import { rankName } from '../lib/requirements'
+import { rankName, requirementLine } from '../lib/requirements'
 import { useState, useEffect, useRef } from 'react'
 import { apiRequest, getAccessToken } from '../lib/api'
 import { savedJobIds, setSaved, onSavedJobsChange } from '../lib/bookmarks'
@@ -501,12 +501,8 @@ export default function TaskCard({ task, hideApply }: { task: CardTask; hideAppl
             <span>{rankName(Number(rankRequired))}+</span>
           </>
         )}
-        {task.workerRequirement && (
-          <>
-            <span style={{ color: 'var(--border2, #d1d5db)' }}>|</span>
-            <span>Req: {task.workerRequirement === 'HUMAN' ? 'Human verified' : task.workerRequirement === 'KYC' ? 'KYC verified' : task.workerRequirement}</span>
-          </>
-        )}
+        <span style={{ color: 'var(--border2, #d1d5db)' }}>|</span>
+        <span>{requirementLine(task)}</span>
       </div>
 
       {/* ══ ABOUT THIS JOB + TIMER ══ */}

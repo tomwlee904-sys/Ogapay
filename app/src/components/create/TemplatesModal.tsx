@@ -20,7 +20,7 @@ const APP_TESTING: Example = {
   mode: "Challenge",
   // The best-paid example, so one person with many accounts would take many
   // places: human verification by default (the poster can remove it)
-  reqType: "human",
+  reqId: "human",
   title: "Test our app and give feedback",
   category: "App Testing & Install", subcategory: "Beta Testing", winners: "20",
   currency: "NGN", bounty: "30000", duration: "7 days",
