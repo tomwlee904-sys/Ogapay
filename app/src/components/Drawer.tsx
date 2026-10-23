@@ -18,19 +18,19 @@ function DrawerGroup({ label, icon, subtitle, children, defaultOpen }: { label: 
   const [open, setOpen] = useState(defaultOpen ?? false)
   return (
     <div className={`oga-drawer-group ${open ? 'open' : ''}`}>
-      <div className="oga-drawer-item oga-drawer-group-toggle" onClick={() => setOpen(!open)} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setOpen(!open) } }}>
+      <div className="oga-drawer-item oga-drawer-group-toggle" onClick={() => setOpen(!open)} role="button" tabIndex={0} aria-expanded={open} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setOpen(!open) } }}>
         <span className="oga-drawer-icon"><i className={`ti ti-${icon}`} /></span>
         <span><strong>{label}</strong>{subtitle && <small>{subtitle}</small>}</span>
-        <i className="ti ti-chevron-down oga-drawer-chevron" />
+        <i className="ti ti-chevron-down oga-drawer-chevron" aria-hidden="true" />
       </div>
       <div className="oga-drawer-subnav">{children}</div>
     </div>
   )
 }
 
-// Vault, Notifications and "Install the app" aren't listed here: Vault is in the
-// top bar (and footer), notifications are Alerts in the bottom bar, and the
-// install card offers itself (InstallHost). The menu showed them twice.
+// Notifications and "Install the app" aren't listed here: notifications are
+// Alerts in the bottom bar, and the install card offers itself (InstallHost).
+// Vault is listed: on phones and tablets the top bar doesn't show it.
 export default function Drawer({ open, onClose }: DrawerProps) {
   // Settings > Developer: "Show Developer API in the menu"
   const readDev = () => { try { return localStorage.getItem('ogapay_developer_mode') === 'true' } catch { return false } }
@@ -45,6 +45,14 @@ export default function Drawer({ open, onClose }: DrawerProps) {
   }, [])
   const { isAuthed, logout, user } = useAuth()
   const navigate = useNavigate()
+
+  // Escape closes the menu
+  useEffect(() => {
+    if (!open) return
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [open, onClose])
 
   // Same figure as the balance in the header: all wallets in the display
   // currency, naira (also for "Both") or dollars.
@@ -66,7 +74,7 @@ export default function Drawer({ open, onClose }: DrawerProps) {
             <div style={{ fontSize: 12, color: 'var(--text3)', marginTop: 1 }}>Browse OgaPay</div>
           </div>
           <button className="oga-drawer-close" onClick={onClose} aria-label="Close menu">
-            <i className="ti ti-x" />
+            <i className="ti ti-x" aria-hidden="true" />
           </button>
         </div>
 
@@ -175,6 +183,14 @@ export default function Drawer({ open, onClose }: DrawerProps) {
                   <span className="oga-drawer-icon oga-drawer-icon--sub"><i className="ti ti-briefcase" /></span>
                   <span><strong>My jobs</strong><small>Review work on jobs you posted</small></span>
                 </Link>
+                <Link className="oga-drawer-item" to="/campaigns" onClick={onClose}>
+                  <span className="oga-drawer-icon oga-drawer-icon--sub"><i className="ti ti-speakerphone" /></span>
+                  <span><strong>Campaigns</strong><small>Your X campaigns</small></span>
+                </Link>
+                <Link className="oga-drawer-item" to="/reviews-to-write" onClick={onClose}>
+                  <span className="oga-drawer-icon oga-drawer-icon--sub"><i className="ti ti-star" /></span>
+                  <span><strong>Reviews to write</strong><small>Rate people who worked for you</small></span>
+                </Link>
               </DrawerGroup>
 
               {/* ── Store (expandable) ── */}
@@ -218,6 +234,10 @@ export default function Drawer({ open, onClose }: DrawerProps) {
                 <Link className="oga-drawer-item" to="/roadmap" onClick={onClose}>
                   <span className="oga-drawer-icon oga-drawer-icon--sub"><i className="ti ti-map-2" /></span>
                   <span><strong>Roadmap</strong><small>What we're building next</small></span>
+                </Link>
+                <Link className="oga-drawer-item" to="/vault" onClick={onClose}>
+                  <span className="oga-drawer-icon oga-drawer-icon--sub"><i className="ti ti-shield-lock" /></span>
+                  <span><strong>Vault</strong><small>Your share of platform revenue</small></span>
                 </Link>
               </DrawerGroup>
 
@@ -268,6 +288,14 @@ export default function Drawer({ open, onClose }: DrawerProps) {
                 <Link className="oga-drawer-item" to="/wallet" onClick={onClose}>
                   <span className="oga-drawer-icon oga-drawer-icon--sub"><i className="ti ti-wallet" /></span>
                   <span><strong>Wallet</strong><small>Balance, deposits and withdrawals</small></span>
+                </Link>
+                <Link className="oga-drawer-item" to="/earnings" onClick={onClose}>
+                  <span className="oga-drawer-icon oga-drawer-icon--sub"><i className="ti ti-coin" /></span>
+                  <span><strong>Earnings</strong><small>What you earned and from where</small></span>
+                </Link>
+                <Link className="oga-drawer-item" to="/referrals" onClick={onClose}>
+                  <span className="oga-drawer-icon oga-drawer-icon--sub"><i className="ti ti-user-plus" /></span>
+                  <span><strong>Referrals</strong><small>Invite friends, see your bonuses</small></span>
                 </Link>
                 <Link className="oga-drawer-item" to="/analytics" onClick={onClose}>
                   <span className="oga-drawer-icon oga-drawer-icon--sub"><i className="ti ti-chart-bar" /></span>

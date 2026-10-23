@@ -53,9 +53,10 @@ const QUICK = [
 const f = new Intl.NumberFormat("en-US");
 
 
-function Toggle({ on, set }: { on: any; set: any }) {
+// An on/off switch; `label` is what screen readers say it switches
+function Toggle({ on, set, label }: { on: any; set: any; label: string }) {
   return (
-    <button onClick={() => set((v: any) => !v)} className="tg-btn">
+    <button type="button" role="switch" aria-checked={!!on} aria-label={label} onClick={() => set((v: any) => !v)} className="tg-btn tap">
       <span className={`tg-knob ${on ? "on" : ""}`} />
     </button>
   );
@@ -693,7 +694,7 @@ export default function Profile() {
                     <div className="pw-toggle-t">Show all balances</div>
                     <div className="pw-toggle-d">USDC and SOL next to your naira.</div>
                   </div>
-                  <Toggle on={showBal} set={setShowBal} />
+                  <Toggle on={showBal} set={setShowBal} label="Show all balances" />
                 </div>
                 {showBal && (
                   <div style={{padding:'0 0 8px'}}>
@@ -712,7 +713,7 @@ export default function Profile() {
                     <div className="pw-toggle-t">Auto-convert USDC</div>
                     <div className="pw-toggle-d">Turn USDC you earn into naira automatically, at the current rate.</div>
                   </div>
-                  <Toggle on={autoConvert} set={flip(autoConvert, 'autoConvert')} />
+                  <Toggle on={autoConvert} set={flip(autoConvert, 'autoConvert')} label="Auto-convert USDC" />
                 </div>
 
                 {/* Your two kinds of account, labelled like the Wallet so they can't be
@@ -789,7 +790,7 @@ export default function Profile() {
                     <div className="pw-toggle-t">Public profile {isPublic ? '' : '(private)'}</div>
                     {user?.username && <a href={`/user/${user.username}`} style={{fontSize:12,color:'var(--text2)'}}>ogapay.app/user/{user.username} →</a>}
                   </div>
-                  <Toggle on={isPublic} set={flip(isPublic, 'isPublic')} />
+                  <Toggle on={isPublic} set={flip(isPublic, 'isPublic')} label="Public profile" />
                 </div>
 
                 {/* Activity: counts on the left, status rows on the right */}

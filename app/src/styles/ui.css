@@ -150,8 +150,8 @@
 /* Tap area: small links, buttons and switches also answer taps in an invisible
    box at least 44 × 44px around them (the size phone guidelines ask for), so
    nothing on screen moves. Add class "tap", or list a class here. */
-:is(.tap, .wl-link, .wl-level-next, .sb-back, .si-link, .hv-scrollhint, .hv-textlink, .hv-tick, .ep-switch, .wjd-translate-btn, .nt-tab, .en-tab, .nav .icon-btn, .nav .balance-display, .st2-switch, .pg-btn) { position: relative; }
-:is(.tap, .wl-link, .wl-level-next, .sb-back, .si-link, .hv-scrollhint, .hv-textlink, .hv-tick, .ep-switch, .wjd-translate-btn, .nt-tab, .en-tab, .nav .icon-btn, .nav .balance-display, .st2-switch, .pg-btn)::after {
+:is(.tap, .wl-link, .wl-level-next, .sb-back, .si-link, .hv-scrollhint, .hv-textlink, .hv-tick, .ep-switch, .wjd-translate-btn, .nt-tab, .en-tab, .nav .icon-btn, .nav .balance-display, .st2-toggle, .pg-btn) { position: relative; }
+:is(.tap, .wl-link, .wl-level-next, .sb-back, .si-link, .hv-scrollhint, .hv-textlink, .hv-tick, .ep-switch, .wjd-translate-btn, .nt-tab, .en-tab, .nav .icon-btn, .nav .balance-display, .st2-toggle, .pg-btn)::after {
   content: ''; position: absolute; top: 50%; left: 50%;
   width: max(100%, 44px); height: max(100%, 44px); transform: translate(-50%, -50%);
 }
