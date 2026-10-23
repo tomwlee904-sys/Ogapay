@@ -101,7 +101,8 @@ export const TOPICS: Topic[] = [
     id: 'communities', title: 'Communities', items: [
       { q: 'What are communities?', a: 'Groups built around a niche or an audience, with members, a group chat, a leaderboard and a feed of open and completed jobs.' },
       { q: 'How do I join one?', a: 'Open Communities and choose Join. Open communities let you in straight away; private ones send your request to the admins.' },
-      { q: 'Can I create my own and post jobs to it?', a: 'Yes. Create a community, invite people, and share paid jobs with your members first so your next task starts with people you already trust.' },
+      { q: 'Can I create my own and post jobs to it?', a: 'Yes. Create a community, invite people, and share paid jobs with your members first so your next task starts with people you already trust. Creating a community costs ₦500 from your naira wallet (it keeps spam communities out); you see the fee before you create, and nothing is charged if creating fails.' },
+      { q: 'Can I turn my USDC into naira?', a: 'Yes. In Wallet, choose Convert USDC to naira, enter an amount (or 25%, 50%, Max) and you see the rate and the exact naira amount before you confirm. There is no fee. USDC held for a job or a withdrawal cannot be converted. You can also switch on automatic conversion in Settings so USDC you receive becomes naira straight away.' },
     ],
   },
   {
