@@ -9,8 +9,7 @@ import Layout from '../components/Layout'
 type QA = { q: string; a: string }
 export type Topic = { id: string; title: string; items: QA[] }
 
-// Also searched from the Support page
-export const TOPICS: Topic[] = [
+const ALL_TOPICS: Topic[] = [
   {
     id: 'basics', title: 'Platform basics', items: [
       { q: 'What is OgaPay?', a: 'OgaPay is a task marketplace. People and businesses post paid tasks and jobs; workers complete them, submit proof and get paid from escrow once the work is approved. You can hold your balance in Naira or USDC and withdraw to a Nigerian bank account or a Solana wallet.' },
@@ -159,6 +158,23 @@ export const TOPICS: Topic[] = [
   },
 ]
 
+// The topics people need most come first (money, then problems, then earning);
+// Platform basics moved down. Also searched from the Support page.
+const ORDER = ['withdrawals', 'wallet', 'troubleshooting', 'earning', 'safety', 'kyc', 'basics', 'posting', 'fees', 'referrals', 'store', 'communities', 'vault', 'developers']
+export const TOPICS: Topic[] = [
+  ...ORDER.map((id) => ALL_TOPICS.find((t) => t.id === id)).filter((t): t is Topic => !!t),
+  ...ALL_TOPICS.filter((t) => !ORDER.includes(t.id)),
+]
+
+// Top questions: the answers people look for most, one tap away
+const TOP: { label: string; q: string }[] = [
+  { label: 'Withdrawal still Processing', q: 'My withdrawal has said Processing for days.' },
+  { label: 'Withdrawal failed or rejected', q: 'My withdrawal says Failed or Rejected. Where is my money?' },
+  { label: 'Deposit not showing', q: "I paid by card or bank transfer but my balance didn't go up." },
+  { label: 'Sign-up bonus not received', q: "I didn't get my ₦1,000 sign-up bonus." },
+  { label: "Can't apply for a job", q: "I can't apply for a job." },
+]
+
 const TOTAL = TOPICS.reduce((n, t) => n + t.items.length, 0)
 // Each answer's own address, e.g. /faq#q-my-2fa-code-doesnt-work
 const answerId = (q: string) => 'q-' + q.toLowerCase().replace(/['’]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 70)
@@ -170,6 +186,11 @@ export default function FAQ() {
   const [active, setActive] = useState(TOPICS[0].id)
   const [copied, setCopied] = useState<string | null>(null)
   const sectionRefs = useRef<Record<string, HTMLElement | null>>({})
+  const chipsRef = useRef<HTMLElement | null>(null)
+  const topItems = TOP.map((x) => {
+    const topic = TOPICS.find((t) => t.items.some((i) => i.q === x.q))
+    return topic ? { ...x, topic: topic.id } : null
+  }).filter((x): x is { label: string; q: string; topic: string } => !!x)
 
   const q = search.trim().toLowerCase()
   const shown = useMemo(() => TOPICS
@@ -182,7 +203,7 @@ export default function FAQ() {
     const io = new IntersectionObserver(entries => {
       const visible = entries.filter(e => e.isIntersecting).sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)
       if (visible[0]) setActive(visible[0].target.id.replace('topic-', ''))
-    }, { rootMargin: '-90px 0px -60% 0px' })
+    }, { rootMargin: '-130px 0px -60% 0px' })
     Object.values(sectionRefs.current).forEach(el => el && io.observe(el))
     return () => io.disconnect()
   }, [shown])
@@ -196,78 +217,109 @@ export default function FAQ() {
       const item = t.items.find(i => answerId(i.q) === id)
       if (item) {
         setOpen(t.id + ':' + item.q)
-        setTimeout(() => {
-          const el = document.getElementById(id)
-          if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 100, behavior: 'smooth' })
-        }, 250)
+        setTimeout(() => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 250)
         break
       }
     }
   }, [])
 
+  // scroll-margin-top (CSS) keeps the heading clear of the top bar and, on
+  // phones, the sticky topic chips
   const jump = (id: string) => {
     const el = sectionRefs.current[id]
     if (!el) return
-    window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 90, behavior: 'smooth' })
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' })
     setActive(id)
   }
+
+  // Open one answer from Top questions
+  const openAnswer = (topicId: string, q: string) => {
+    const id = answerId(q)
+    setSearch('')
+    setOpen(topicId + ':' + q)
+    window.history.replaceState(null, '', `#${id}`)
+    setTimeout(() => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 60)
+  }
+
+  // Phone: keep the chosen topic chip in view in the sideways chip row
+  useEffect(() => {
+    const row = chipsRef.current
+    const chip = row?.querySelector<HTMLElement>('button.on')
+    if (!row || !chip || row.offsetParent === null || row.scrollWidth <= row.clientWidth) return
+    row.scrollTo({ left: chip.offsetLeft - (row.clientWidth - chip.offsetWidth) / 2, behavior: 'smooth' })
+  }, [active])
 
   return (
     <Layout>
       <style>{`
-        .fq-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}
-        .fq-brand{display:flex;gap:16px;align-items:flex-start}
-        .fq-icon{width:48px;height:48px;border-radius:14px;border:1px solid var(--border);background:var(--card2);display:grid;place-items:center;font-size:22px;color:var(--text2);flex-shrink:0}
-        .fq-bar{display:flex;justify-content:space-between;align-items:center;gap:16px;margin:26px 0 22px;padding-bottom:22px;border-bottom:1px solid var(--border);flex-wrap:wrap}
-        .fq-bar .ui-search{flex:1;max-width:440px}
+        .fq-sub-link{display:none}
+        .fq-bar{display:flex;justify-content:space-between;align-items:center;gap:8px 16px;margin:24px 0 0;flex-wrap:wrap}
+        .fq-bar .ui-search{flex:1;max-width:520px}
         .fq-count{font:400 12px var(--font-mono);color:var(--text2);letter-spacing:.04em}
+        .fq-top{margin:20px 0 0}
+        .fq-top h2{margin:0 0 10px;font:500 var(--fs-label)/1.4 var(--font-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--text2)}
+        .fq-top ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px}
+        .fq-top a{display:flex;align-items:center;gap:8px;min-height:44px;padding:0 14px;border:1px solid var(--border);border-radius:var(--r-ctl);background:var(--card);font-size:13.5px;font-weight:500;color:var(--text);text-decoration:none}
+        .fq-top a:hover{border-color:var(--text3)}
+        .fq-top a i{color:var(--text2);font-size:15px;flex-shrink:0}
+        .fq-rule{margin:24px 0;border:0;border-top:1px solid var(--border)}
         .fq-layout{display:grid;grid-template-columns:230px minmax(0,1fr);gap:28px;align-items:start}
-        .fq-side{position:sticky;top:calc(var(--nav-h,64px) + 20px)}
+        .fq-side{position:sticky;top:calc(var(--nav-h,64px) + 20px);max-height:calc(100vh - var(--nav-h,64px) - 40px);overflow-y:auto}
         .fq-side-head{display:flex;justify-content:space-between;padding:0 10px 10px;font:400 11px var(--font-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--text2)}
-        .fq-topic{width:100%;display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:10px;border:0;background:none;cursor:pointer;font:400 12.5px 'Inter',system-ui,sans-serif;color:var(--text2);text-align:left}
+        .fq-topic{width:100%;display:flex;align-items:center;gap:10px;min-height:40px;padding:8px 10px;border-radius:10px;border:0;background:none;cursor:pointer;font:400 13px var(--font);color:var(--text2);text-align:left}
         .fq-topic .n{font:400 11px var(--font-mono);color:var(--text3);width:18px}
         .fq-topic .c{margin-left:auto;font:400 11px var(--font-mono);color:var(--text3)}
         .fq-topic:hover{color:var(--text)}
-        .fq-topic.on{background:var(--card2);color:var(--text);font-weight:500}
-        .fq-sec{margin-bottom:30px;scroll-margin-top:90px}
+        .fq-topic.on{background:var(--card2);color:var(--text);font-weight:600}
+        .fq-sec{margin-bottom:30px;scroll-margin-top:calc(var(--nav-h,64px) + 20px)}
         .fq-sec-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px}
         .fq-sec-head h2{margin:0;font-size:17px;font-weight:600;letter-spacing:-.02em}
         .fq-list{border:1px solid var(--border);border-radius:16px;background:var(--card);overflow:hidden}
+        .fq-item{scroll-margin-top:calc(var(--nav-h,64px) + 20px)}
         .fq-item+.fq-item{border-top:1px solid var(--border)}
-        .fq-q{width:100%;display:flex;justify-content:space-between;align-items:center;gap:16px;padding:15px 16px;border:0;background:none;cursor:pointer;font:500 13.5px 'Inter',system-ui,sans-serif;color:var(--text);text-align:left}
+        .fq-q{width:100%;display:flex;justify-content:space-between;align-items:center;gap:16px;min-height:48px;padding:14px 16px;border:0;background:none;cursor:pointer;font:500 14px/1.45 var(--font);color:var(--text);text-align:left}
         .fq-q i{font-size:15px;color:var(--text3);transition:transform .2s ease;flex-shrink:0}
         .fq-item.open .fq-q i{transform:rotate(180deg)}
         .fq-q:focus-visible{outline:2px solid var(--text);outline-offset:-2px;border-radius:12px}
         .fq-a{display:grid;grid-template-rows:0fr;transition:grid-template-rows .25s ease}
         .fq-item.open .fq-a{grid-template-rows:1fr}
         .fq-a > div{overflow:hidden}
-        .fq-a p{margin:0;padding:0 16px 16px;font-size:13.5px;line-height:1.7;color:var(--text2)}
+        .fq-a p{margin:0;padding:0 16px 16px;max-width:68ch;font-size:14px;line-height:1.7;color:var(--text2)}
         .fq-chips{display:none}
-        .fq-link{display:inline-flex;align-items:center;gap:5px;min-height:36px;margin:0 16px 10px;font-size:12px;font-weight:600;color:var(--text3);text-decoration:none}
+        .fq-link{display:inline-flex;align-items:center;gap:5px;min-height:36px;margin:0 16px 10px;font-size:12.5px;font-weight:600;color:var(--text2);text-decoration:none}
         .fq-link:hover{color:var(--text)}
         .fq-help{margin-top:12px;display:flex;justify-content:space-between;align-items:center;gap:16px;padding:20px;flex-wrap:wrap}
-        @media(max-width:860px){
-          .fq-layout{grid-template-columns:1fr}
+        @media(max-width:1023.98px){
+          .fq-layout{grid-template-columns:200px minmax(0,1fr);gap:24px}
+        }
+        @media(max-width:767.98px){
+          .fq-contact{display:none}
+          .fq-sub-link{display:inline}
+          .fq-bar{margin-top:16px}
+          .fq-bar .ui-search{flex:1 1 100%;max-width:none}
+          .fq-top{margin-top:16px}
+          .fq-top ul{grid-template-columns:minmax(0,1fr);gap:6px}
+          .fq-rule{display:none}
+          .fq-layout{grid-template-columns:minmax(0,1fr)}
           .fq-side{display:none}
-          .fq-chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:18px;scrollbar-width:none;position:sticky;top:var(--nav-h,64px);background:var(--bg);z-index:5;padding-top:8px}
+          .fq-chips{display:flex;gap:8px;overflow-x:auto;margin:16px calc(-1 * var(--gutter)) 16px;padding:8px var(--gutter);scroll-padding-inline:var(--gutter);scrollbar-width:none;position:sticky;top:var(--nav-h,64px);background:var(--bg);z-index:5;border-bottom:1px solid var(--border)}
           .fq-chips::-webkit-scrollbar{display:none}
-          .fq-chips button{flex-shrink:0;height:32px;padding:0 12px;border-radius:999px;border:1px solid var(--border);background:var(--card);font:500 12px 'Inter',system-ui,sans-serif;color:var(--text2);cursor:pointer}
-          .fq-chips button.on{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+          .fq-chips button{flex-shrink:0;height:36px;padding:0 14px;border-radius:999px;border:1px solid var(--border);background:var(--card);font:500 13px/1 var(--font);color:var(--text2);cursor:pointer;position:relative}
+          .fq-chips button::after{content:'';position:absolute;left:0;right:0;top:50%;height:44px;transform:translateY(-50%)}
+          .fq-chips button.on{background:var(--text);color:var(--bg);border-color:var(--text)}
+          .fq-sec,.fq-item{scroll-margin-top:calc(var(--nav-h,64px) + 64px)}
         }
         @media(prefers-reduced-motion:reduce){.fq-a{transition:none}.fq-q i{transition:none}}
       `}</style>
 
-      <div className="ui-page" style={{ paddingTop: 28 }}>
-        <header className="fq-head">
-          <div className="fq-brand">
-            <span className="fq-icon" aria-hidden="true"><i className="ti ti-help" /></span>
-            <div>
-              <span className="ui-eyebrow">Help center</span>
-              <h1 className="ui-title" style={{ marginTop: 4 }}>Frequently asked questions</h1>
-              <p className="ui-sub">Answers about jobs, payments, rewards and working with OgaPay.</p>
-            </div>
+      <div className="ui-page">
+        <header className="ui-head">
+          <div>
+            <span className="ui-eyebrow">Help centre</span>
+            <h1 className="ui-title">Frequently asked questions</h1>
+            <p className="ui-sub">Answers about jobs, payments and rewards.<span className="fq-sub-link"> Can't find it? <Link to="/support" className="tap" style={{ color: 'var(--text)', fontWeight: 600 }}>Contact support</Link></span></p>
           </div>
-          <Link to="/support" className="ui-btn ui-btn-ghost"><i className="ti ti-headset" /> Contact support</Link>
+          <div className="ui-actions fq-contact"><Link to="/support" className="ui-btn ui-btn-ghost"><i className="ti ti-headset" aria-hidden="true" /> Contact support</Link></div>
         </header>
 
         <div className="fq-bar">
@@ -279,8 +331,20 @@ export default function FAQ() {
           <span className="fq-count">{q ? `${shownCount} of ${TOTAL} answers` : `${TOTAL} answers · ${TOPICS.length} topics`}</span>
         </div>
 
-        <nav className="fq-chips" aria-label="Topics">
-          {shown.map(t => <button key={t.id} className={active === t.id ? 'on' : ''} onClick={() => jump(t.id)}>{t.title}</button>)}
+        {!q && topItems.length > 0 && (
+          <section className="fq-top" aria-labelledby="fq-top-h">
+            <h2 id="fq-top-h">Top questions</h2>
+            <ul>
+              {topItems.map((x) => (
+                <li key={x.q}><a href={`#${answerId(x.q)}`} onClick={(e) => { e.preventDefault(); openAnswer(x.topic, x.q) }}><i className="ti ti-arrow-right" aria-hidden="true" />{x.label}</a></li>
+              ))}
+            </ul>
+          </section>
+        )}
+        <hr className="fq-rule" />
+
+        <nav className="fq-chips" aria-label="Topics" ref={chipsRef}>
+          {shown.map(t => <button key={t.id} type="button" className={active === t.id ? 'on' : ''} aria-current={active === t.id ? 'true' : undefined} onClick={() => jump(t.id)}>{t.title}</button>)}
         </nav>
 
         <div className="fq-layout">
@@ -335,12 +399,12 @@ export default function FAQ() {
 
             <div className="ui-card fq-help">
               <div>
-                <b style={{ fontSize: 14 }}>Still stuck?</b>
-                <p className="ui-sub" style={{ margin: '4px 0 0' }}>Message the team on Telegram or email support@ogapay.app.</p>
+                <b style={{ fontSize: 15 }}>Still stuck?</b>
+                <p className="ui-sub" style={{ margin: '4px 0 0' }}>Send a ticket or email support@ogapay.app. We reply by email within 24 hours.</p>
               </div>
               <div className="ui-actions">
-                <a className="ui-btn ui-btn-ghost" href="https://t.me/ogapayhq" target="_blank" rel="noopener noreferrer"><i className="ti ti-brand-telegram" /> Telegram</a>
-                <a className="ui-btn ui-btn-dark" href="mailto:support@ogapay.app"><i className="ti ti-mail" /> Email us</a>
+                <Link className="ui-btn ui-btn-dark" to="/support"><i className="ti ti-ticket" aria-hidden="true" /> Send a ticket</Link>
+                <a className="ui-btn ui-btn-ghost" href="mailto:support@ogapay.app"><i className="ti ti-mail" aria-hidden="true" /> Email us</a>
               </div>
             </div>
           </div>
