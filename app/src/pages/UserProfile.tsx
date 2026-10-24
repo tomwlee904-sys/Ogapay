@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react"
+import { useEffect, useRef, useState, type ReactNode } from "react"
 import ItemCover from '../components/ItemCover'
 import { useParams, useNavigate, Link } from "react-router-dom"
 import Layout from "../components/Layout"
@@ -74,6 +74,17 @@ export default function UserProfile() {
   const [inviteOpen, setInviteOpen] = useState(false)
   const [tipOpen, setTipOpen] = useState(false)
   const [shared, setShared] = useState(false)
+  const [reloadKey, setReloadKey] = useState(0)
+  // The "More" menu (Invite, Tip, Report, Warn)
+  const [moreOpen, setMoreOpen] = useState(false)
+  const moreRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (!moreOpen) return
+    const off = (e: MouseEvent) => { if (!moreRef.current?.contains(e.target as Node)) setMoreOpen(false) }
+    const esc = (e: KeyboardEvent) => { if (e.key === "Escape") setMoreOpen(false) }
+    document.addEventListener("mousedown", off); document.addEventListener("keydown", esc)
+    return () => { document.removeEventListener("mousedown", off); document.removeEventListener("keydown", esc) }
+  }, [moreOpen])
 
   useEffect(() => {
     let live = true
@@ -111,7 +122,7 @@ export default function UserProfile() {
       })
       .catch((e) => { if (live) setState(/not found/i.test(e?.message || "") ? "missing" : "error") })
     return () => { live = false }
-  }, [username])
+  }, [username, reloadKey])
 
   const first = profile?.firstName || ""
   const last = profile?.lastName || ""
@@ -222,7 +233,7 @@ export default function UserProfile() {
                   : "Check your connection and try again."}
               </p>
               {state === "error"
-                ? <button className="up-btn" onClick={() => window.location.reload()}>Try again</button>
+                ? <button className="up-btn" onClick={() => setReloadKey((k) => k + 1)}>Try again</button>
                 : <Link className="up-btn" to="/">Go home</Link>}
             </div>
           )}
@@ -272,14 +283,15 @@ export default function UserProfile() {
           <span>Public profile</span>
         </div>
 
+        <div className="up-layout">
+        <div className="up-main">
         {/* ── Header ── */}
-        <section className="up-card up-head">
+        <section className={`up-card up-head${isMe ? '' : ' has-side'}`}>
           <div className="up-id">
             {profile.avatarUrl
               ? <img className={`up-avatar${profile.frame ? ' oga-frame' : ''}`} src={sized(profile.avatarUrl, 128, true)} alt="" />
               : <div className={`up-avatar${profile.frame ? ' oga-frame' : ''}`}>{(first[0] || handle[0] || "?").toUpperCase()}{last[0]?.toUpperCase() || ""}</div>}
             <div style={{ minWidth: 0 }}>
-              <div className="up-eyebrow">Creator profile</div>
               <div className="up-name">
                 <h1>{name}</h1>
                 {profile.humanVerified && <span className="up-badge ok"><i className="ti ti-fingerprint" /> Human verified</span>}
@@ -291,35 +303,45 @@ export default function UserProfile() {
               {profile.bio && <p className="up-bio">{profile.bio}</p>}
               {/* The longer "More about you" text from Edit profile */}
               {profile.about && (
-                <details className="up-about">
+                <details className="up-more">
                   <summary>More about {first || handle}</summary>
                   <p style={{ whiteSpace: "pre-line", margin: "6px 0 0", overflowWrap: "anywhere" }}>{profile.about}</p>
                 </details>
               )}
-              <div className="up-actions">
-                {isMe ? (
-                  <Link className="up-btn primary" to="/profile"><i className="ti ti-pencil" /> Edit profile</Link>
-                ) : (
-                  <Link className="up-btn primary" to={`/user/${handle}/hire`}><i className="ti ti-briefcase" /> Hire</Link>
-                )}
-                {!isMe && <button className="up-btn" onClick={invite}><i className="ti ti-user-plus" /> Invite</button>}
-                {!isMe && <button className="up-btn" onClick={tip}><i className="ti ti-heart-handshake" /> Tip</button>}
-                {!isMe && (
-                  <button className={`up-btn up-compliment${complimented ? " on" : ""}`} onClick={compliment} aria-pressed={complimented} disabled={complimenting}>
-                    <i className={`ti ${complimented ? "ti-heart-check" : "ti-heart"}`} /> {complimented ? "Complimented" : "Compliment"}
-                  </button>
-                )}
-                <button className="up-btn" onClick={share}><i className={`ti ${shared ? "ti-check" : "ti-share"}`} /> {shared ? "Link copied" : "Share"}</button>
-                {!isMe && <button className="up-btn" onClick={report}><i className="ti ti-flag" /> Report</button>}
-                {/* Admins: warn this member for breaking the rules (Admin > Warnings) */}
-                {!isMe && me?.role === "ADMIN" && (
-                  <Link className="up-btn" to={`/admin/warnings?warn=${encodeURIComponent(handle)}`}><i className="ti ti-alert-triangle" /> Warn</Link>
-                )}
-                {/* Posters can ask for the Verified business badge (optional, Settings > Business) */}
-                {isMe && !profile.posterProfile?.isVerified && (profile.posterProfile?.totalPosted || 0) > 0 && (
-                  <Link className="up-btn" to="/settings/business"><i className="ti ti-rosette-discount-check" /> Get a Verified business badge</Link>
-                )}
-              </div>
+            </div>
+            {/* One clear main action (Hire, or Edit profile on your own); the rest are quieter */}
+            <div className="up-actions">
+              {isMe ? (
+                <Link className="up-btn primary" to="/edit-profile"><i className="ti ti-pencil" /> Edit profile</Link>
+              ) : (
+                <Link className="up-btn primary up-hire-main" to={`/user/${handle}/hire`}><i className="ti ti-briefcase" /> Hire {first || handle}</Link>
+              )}
+              {!isMe && (
+                <button className={`up-btn up-compliment${complimented ? " on" : ""}`} onClick={compliment} aria-pressed={complimented} disabled={complimenting}>
+                  <i className={`ti ${complimented ? "ti-heart-check" : "ti-heart"}`} /> {complimented ? "Complimented" : "Compliment"}
+                </button>
+              )}
+              <button className="up-btn" onClick={share}><i className={`ti ${shared ? "ti-check" : "ti-share"}`} /> {shared ? "Link copied" : "Share"}</button>
+              {!isMe && (
+                <div className="up-menu-wrap" ref={moreRef}>
+                  <button className="up-btn" aria-haspopup="menu" aria-expanded={moreOpen} onClick={() => setMoreOpen((o) => !o)}><i className="ti ti-dots" /> More</button>
+                  {moreOpen && (
+                    <div className="up-menu" role="menu">
+                      <button role="menuitem" onClick={() => { setMoreOpen(false); invite() }}><i className="ti ti-user-plus" /> Invite to a community</button>
+                      <button role="menuitem" onClick={() => { setMoreOpen(false); tip() }}><i className="ti ti-coin" /> Send a tip</button>
+                      <button role="menuitem" className="danger" onClick={() => { setMoreOpen(false); report() }}><i className="ti ti-flag" /> Report</button>
+                      {/* Admins: warn this member for breaking the rules (Admin > Warnings) */}
+                      {me?.role === "ADMIN" && (
+                        <Link role="menuitem" className="danger" to={`/admin/warnings?warn=${encodeURIComponent(handle)}`}><i className="ti ti-alert-triangle" /> Warn</Link>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+              {/* Posters can ask for the Verified business badge (optional, Settings > Business) */}
+              {isMe && !profile.posterProfile?.isVerified && (profile.posterProfile?.totalPosted || 0) > 0 && (
+                <Link className="up-btn" to="/settings/business"><i className="ti ti-rosette-discount-check" /> Get a Verified business badge</Link>
+              )}
             </div>
           </div>
 
@@ -366,9 +388,9 @@ export default function UserProfile() {
 
         {/* ── Tabs ── */}
         <div className="up-tabs-row">
-          <div className="up-tabs" role="tablist">
+          <div className="up-tabs up-tabs-fit" role="tablist">
             {tabs.map((t) => (
-              <button key={t.key} role="tab" aria-selected={tab === t.key} className={`up-tab ${tab === t.key ? "on" : ""}`} onClick={() => setTab(t.key)}>
+              <button key={t.key} role="tab" aria-selected={tab === t.key} className={`up-tab ${tab === t.key ? "on" : ""}`} onClick={(e) => { setTab(t.key); e.currentTarget.scrollIntoView({ inline: "nearest", block: "nearest" }) }}>
                 <i className={`ti ${t.icon}`} /> {t.label} {t.count > 0 && <em>{t.count}</em>}
               </button>
             ))}
@@ -516,25 +538,40 @@ export default function UserProfile() {
           </section>
         )}
 
-        {/* ── Writing ── */}
-        <section className="up-writing">
-          <div className="up-eyebrow">Published writing</div>
-          <div className="up-sec-h" style={{ marginTop: 4 }}><h2>From the creator</h2></div>
-          {blogs.length === 0 ? (
-            <div className="up-empty"><i className="ti ti-writing" />No published blogs yet.</div>
-          ) : (
-            blogs.map((b) => (
-              <Link className="up-post" to={`/blog/${b.slug || b.id}`} key={b.id}>
-                <time>{fmtDate(b.publishedAt || b.createdAt)}</time>
-                <div>
-                  <h3>{b.title}</h3>
-                  {b.excerpt && <p>{b.excerpt}</p>}
-                  <span>Read story →</span>
-                </div>
-              </Link>
-            ))
-          )}
-        </section>
+        {/* ── Writing: only when there is some (or a prompt on your own profile) ── */}
+        {(blogs.length > 0 || isMe) && (
+          <section className="up-writing">
+            <div className="up-sec-h"><h2>Published writing</h2></div>
+            {blogs.length === 0 ? (
+              <div className="up-empty"><i className="ti ti-writing" />You haven't published a story yet. <Link to="/blog/write" style={{ color: "var(--text)", fontWeight: 600 }}>Write one</Link></div>
+            ) : (
+              blogs.map((b) => (
+                <Link className="up-post" to={`/blog/${b.slug || b.id}`} key={b.id}>
+                  <time>{fmtDate(b.publishedAt || b.createdAt)}</time>
+                  <div>
+                    <h3>{b.title}</h3>
+                    {b.excerpt && <p>{b.excerpt}</p>}
+                    <span>Read story →</span>
+                  </div>
+                </Link>
+              ))
+            )}
+          </section>
+        )}
+        </div>
+
+        {/* Desktop side panel: rating and Hire stay in view */}
+        <aside className="up-side" aria-label="Rating">
+          <div className="up-card up-rating">
+            <div className="up-eyebrow">Average rating</div>
+            <div className="n">{avg.toFixed(1)}<small>/ 5</small></div>
+            <Stars value={avg} />
+            <div className="c">{jobRatings} {jobRatings === 1 ? "job rating" : "job ratings"}</div>
+            {!isMe && <Link className="up-btn primary up-hire" to={`/user/${handle}/hire`}><i className="ti ti-briefcase" /> Hire {first || handle}</Link>}
+            {!isMe && <p className="up-side-note">Your money is held until you approve the work.</p>}
+          </div>
+        </aside>
+        </div>
       </div>
 
       {reportOpen && profile?.id && <ReportUser userId={profile.id} username={profile.username || handle} onClose={() => setReportOpen(false)} />}
