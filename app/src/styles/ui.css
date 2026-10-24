@@ -155,3 +155,37 @@
   content: ''; position: absolute; top: 50%; left: 50%;
   width: max(100%, 44px); height: max(100%, 44px); transform: translate(-50%, -50%);
 }
+
+/* ─── Layout building blocks (UI/UX review, docs in review/report.md) ─────────
+   Breakpoints: phone <=767.98px, tablet 768-1023.98px, desktop >=1024px. */
+
+/* Main column + side panel. Desktop: side panel 340px on the right, staying in
+   view. Tablet and phone: one column; put .ui-split-side first in the markup's
+   order with .ui-split-side-first when the side panel is the action/summary. */
+.ui-split { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; }
+@media (min-width: 1024px) {
+  .ui-split { grid-template-columns: minmax(0, 1fr) 340px; gap: 24px; }
+  .ui-split-side { position: sticky; top: calc(var(--nav-h) + 16px); }
+}
+@media (max-width: 1023.98px) { .ui-split-side-first { order: -1; } }
+
+/* Numbers: 2 per row inside one card on phone, 4 per row from tablet */
+.ui-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border: 1px solid var(--border); border-radius: var(--r-card); background: var(--card); overflow: hidden; }
+.ui-stats > * { padding: 14px 16px; min-width: 0; border-top: 1px solid var(--border); border-left: 1px solid var(--border); margin: -1px 0 0 -1px; }
+.ui-stats-label { display: block; font-size: 12px; color: var(--text2); }
+.ui-stats-value { display: block; margin-top: 4px; font-size: 20px; font-weight: 600; letter-spacing: -0.01em; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (min-width: 768px) { .ui-stats { grid-template-columns: repeat(4, minmax(0, 1fr)); } .ui-stats > * { padding: 16px 20px; } }
+
+/* The page's one main action, kept on screen above the bottom bar on phone and
+   tablet (static on desktop, where the side panel holds it) */
+.ui-actionbar { position: sticky; bottom: calc(var(--dock-clear) + 8px); z-index: 20; display: flex; align-items: center; gap: 12px; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--r-card); background: var(--card); box-shadow: 0 10px 30px -12px rgba(0, 0, 0, .35); }
+.ui-actionbar-text { flex: 1; min-width: 0; font-size: 13px; color: var(--text2); line-height: 1.35; }
+.ui-actionbar-text b { display: block; font-size: 15px; color: var(--text); }
+@media (min-width: 1024px) { .ui-actionbar.ui-actionbar-mobile-only { position: static; box-shadow: none; } }
+
+/* Narrow reading/form column that keeps the page's left edge */
+.ui-narrow { max-width: 760px; }
+
+/* Sideways chip/tab rows: fade at the right edge so people see there's more */
+.ui-scroll-row { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; -webkit-mask-image: linear-gradient(90deg, #000 85%, transparent); mask-image: linear-gradient(90deg, #000 85%, transparent); }
+.ui-scroll-row::-webkit-scrollbar { display: none; }

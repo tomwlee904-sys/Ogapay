@@ -99,7 +99,7 @@ export default function CreateCommunity() {
   return (
     <Layout>
       <style>{`
-        .cc-wrap{max-width:600px;margin:0 auto;padding:0 0 40px}
+        .cc-wrap{max-width:calc(600px + 2 * var(--gutter));margin:0 auto;padding:var(--page-top, 24px) var(--gutter) 40px}
         .cc-back{display:inline-flex;align-items:center;gap:6px;margin-bottom:20px;color:var(--text2);font-size:13px;font-weight:600;cursor:pointer;border:none;background:none;padding:0}
         .cc-back:hover{color:var(--text)}
         .cc-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:28px}

@@ -61,7 +61,7 @@ export default function Roadmap() {
   return (
     <Layout>
       <style>{`
-        .rm-page{max-width:800px;margin:0 auto;padding:0 0 60px}
+        .rm-page{max-width:calc(800px + 2 * var(--gutter));margin:0 auto;padding:0 var(--gutter) 60px}
         .rm-hero{text-align:center;padding:40px 20px 32px}
         .rm-hero h1{font-family:Inter;font-size:32px;font-weight:900;margin:0 0 8px}
         .rm-hero p{color:var(--text2);font-size:14px;margin:0;max-width:500px;margin:0 auto;line-height:1.6}

@@ -51,7 +51,8 @@
   .vt2-big { font-size: 36px; }
 }
 @media (max-width: 560px) {
-  .vt2-stats, .vt2-kpis { grid-template-columns: 1fr; }
+  /* two per row on phones (one per row stacked 8 tiles before your own share) */
+  .vt2-stats, .vt2-kpis { grid-template-columns: 1fr 1fr; gap: 8px; }
   .vt2-head h1 { font-size: 26px; }
   .vt2-table th:nth-child(3), .vt2-table td:nth-child(3) { display: none; }
 }
