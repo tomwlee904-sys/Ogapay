@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Layout from "../components/Layout";
 import { API_BASE, apiRequest } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
@@ -14,7 +14,7 @@ import { PlatformActionButton } from "../components/PlatformActionButton";
 import CampaignWizard from "../components/CampaignWizard";
 import XCampaignBuilder from "../components/create/XCampaignBuilder";
 import QuickTaskForm from "../components/create/QuickTaskForm";
-import { Steps, Fold, Toggle as CfToggle, OverviewCard, RequirementPicker, reqsFrom, reqsToSaved, reqsAny, type Reqs, DURATIONS, deadlineFor, money, minReward, reqFields, reqLabel, uploadJobFile, createTask, apiErrorText, CATEGORIES, CATEGORY_MAP, listTemplates, saveTemplate, getStrictRules, strictRulesApply, SELECTION_TIMES, type TemplateData, type TemplateFile, type StrictRules } from "../components/create/shared";
+import { Steps, Fold, Toggle as CfToggle, OverviewCard, PayBar, RequirementPicker, reqsFrom, reqsToSaved, reqsAny, type Reqs, DURATIONS, deadlineFor, money, minReward, reqFields, reqLabel, uploadJobFile, createTask, apiErrorText, CATEGORIES, CATEGORY_MAP, listTemplates, saveTemplate, getStrictRules, strictRulesApply, SELECTION_TIMES, type TemplateData, type TemplateFile, type StrictRules } from "../components/create/shared";
 import { rankName } from "../lib/requirements";
 import TemplatesModal from "../components/create/TemplatesModal";
 import { useProviders } from "../lib/providers";
@@ -241,6 +241,17 @@ function splitEvenly(prizes: string[], currency: string): string[] {
   return prizes.map((_, i) => fmt(i === 0 ? first : each));
 }
 
+const DRAW_MODES = [
+  [false, "ti-list-numbers", "I pick the winners", "Rank the best entries when it ends."],
+  [true, "ti-arrows-shuffle", "Random draw", "Winners drawn at random when it ends."],
+] as const;
+// Job modes: [mode, icon, description]
+const JOB_MODES = [
+  ["Challenge", "ti-trophy", "Pay every approved entry, up to your number of winners."],
+  ["Contest", "ti-award", "Rank the best entries when it ends and pay a prize for each place."],
+  ["Selection", "ti-user-check", "People apply with a note. You pick one person to do the work."],
+] as const;
+
 function ContestPrizes({ currency, setCurrency, prizes, setPrizes, target, setTarget, floor, randomDraw, setRandomDraw }: {
   currency: string; setCurrency: (v: string) => void; prizes: string[]; setPrizes: (f: (p: string[]) => string[]) => void
   target: string; setTarget: (v: string) => void; floor: number; randomDraw: boolean; setRandomDraw: (v: boolean) => void
@@ -269,7 +280,7 @@ function ContestPrizes({ currency, setCurrency, prizes, setPrizes, target, setTa
               <span className="cf-place">{ordinal(i + 1)}</span>
               <div className="cf-prefix">
                 <span>{sym}</span>
-                <input className="ui-input" inputMode="decimal" aria-label={`${ordinal(i + 1)} place prize`} value={p} placeholder="0"
+                <input id={`cj-prize-${i}`} className="ui-input" inputMode="decimal" aria-label={`${ordinal(i + 1)} place prize`} value={p} placeholder="0"
                   onChange={e => { const v = e.target.value.replace(/[^0-9.,]/g, ""); setPrizes(ps => ps.map((x, j) => (j === i ? v : x))); }} />
               </div>
               {prizes.length > 1 && (
@@ -303,16 +314,14 @@ function ContestPrizes({ currency, setCurrency, prizes, setPrizes, target, setTa
             <li><b>Random draw:</b> nobody picks, not even you. When entries close OgaPay draws the winners at random from the entries you haven't rejected, and pays them at once. The seed and the drawn order are shown on the job page, so anyone can check the draw. Good for giveaways like "comment and 3 people win". Only verified people can enter, so each person gets one ticket. Reject any entry that breaks your rules before entries close: rejected entries aren't in the draw, and after the close nothing can be rejected.</li>
           </ul>
         </InfoTip></span>
-        <div className="cf-modes" role="radiogroup" aria-label="How winners are chosen">
-          {([
-            [false, "ti-list-numbers", "I pick the winners", "Rank the best entries when it ends."],
-            [true, "ti-arrows-shuffle", "Random draw", "Winners drawn at random when it ends."],
-          ] as const).map(([v, icon, label, d]) => (
+        <div className="cf-modes cf-modes-2" role="radiogroup" aria-label="How winners are chosen">
+          {DRAW_MODES.map(([v, icon, label, d]) => (
             <button key={label} type="button" role="radio" aria-checked={randomDraw === v} className={`cf-mode${randomDraw === v ? " on" : ""}`} onClick={() => setRandomDraw(v)}>
-              <i className={`ti ${icon}`} /><span style={{ margin: 0 }}><b>{label}</b><span>{d}</span></span>
+              <i className={`ti ${icon}`} /><span className="cf-mode-t"><b>{label}</b><span className="cf-mode-d">{d}</span></span>
             </button>
           ))}
         </div>
+        <p className="cf-hint cf-mode-desc">{DRAW_MODES.find(([v]) => v === randomDraw)?.[3]}</p>
       </div>
     </>
   );
@@ -595,6 +604,8 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
   const [openExtra, setOpenExtra] = useState(false);
   const [showTemplates, setShowTemplates] = useState(false);
   const [tplSaved, setTplSaved] = useState<"" | "saving" | "saved" | "error">("");
+  // "Save as template" opens a small panel with the public-library option
+  const [saveOpen, setSaveOpen] = useState(false);
   const [showFundModal, setShowFundModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
@@ -638,22 +649,26 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
   // A job that sends people to a survey, form, site or app needs its link
   // (a worker took a survey job with no link to the survey); this stops posting
   const linkNeeded = missingLink(`${title}\n${description}`, files.length > 0);
-  const checklist = [
-    { ok: title.trim().length >= 5 && !LINK_ONLY.test(title), label: LINK_ONLY.test(title) ? "Use a title that says what to do, not just a link." : "Give the job a short title." },
-    { ok: description.trim().length >= 20, label: "Describe the task and what people should submit." },
-    ...(linkNeeded ? [{ ok: false, label: missingLinkText(linkNeeded) }] : []),
+  // Each item names the field it's about (id), so the pay bar can jump to it
+  const lowPrize = Math.max(0, prizeNums.findIndex(p => p < floor));
+  const risingPrize = Math.max(0, prizeNums.findIndex((p, i) => i > 0 && p > prizeNums[i - 1]));
+  const checklist: { ok: boolean; label: string; field: string }[] = [
+    { ok: title.trim().length >= 5 && !LINK_ONLY.test(title), label: LINK_ONLY.test(title) ? "Use a title that says what to do, not just a link." : "Give the job a short title.", field: "cj-title" },
+    { ok: description.trim().length >= 20, label: "Describe the task and what people should submit.", field: "cj-desc" },
+    ...(linkNeeded ? [{ ok: false, label: missingLinkText(linkNeeded), field: "cj-desc" }] : []),
     // A ready-made example's blanks (app link, phone type) left as they were
-    { ok: !TEMPLATE_BLANKS.test(description), label: "Replace the parts in [brackets] with your app's details." },
-    { ok: !!category, label: "Pick a category." },
+    { ok: !TEMPLATE_BLANKS.test(description), label: "Replace the parts in [brackets] with your app's details.", field: "cj-desc" },
     ...(isContest ? [
-      { ok: prizeNums.every(p => p >= floor), label: `Give every place a prize of at least ${money(floor, currency)}.` },
-      { ok: prizeNums.every((p, i) => i === 0 || p <= prizeNums[i - 1]), label: "Prizes go from 1st place down: a lower place can't pay more than the one above." },
+      { ok: prizeNums.every(p => p >= floor), label: `Give every place a prize of at least ${money(floor, currency)}.`, field: `cj-prize-${lowPrize}` },
+      { ok: prizeNums.every((p, i) => i === 0 || p <= prizeNums[i - 1]), label: "Prizes go from 1st place down: a lower place can't pay more than the one above.", field: `cj-prize-${risingPrize}` },
     ] : [
-      { ok: rewardPool > 0 && rewardPool >= minTotal, label: `Set a total budget of at least ${money(minTotal, currency)}.` },
-      { ok: winners >= 1, label: "Choose how many people you will pay." },
+      { ok: rewardPool > 0 && rewardPool >= minTotal, label: `Set a total budget of at least ${money(minTotal, currency)}.`, field: "cj-budget" },
+      { ok: winners >= 1, label: "Choose how many people you will pay.", field: "cj-win" },
     ]),
+    { ok: !!category, label: "Pick a category.", field: "cj-cat" },
   ];
   const ready = checklist.every(c => c.ok);
+  const missing = checklist.filter(c => !c.ok);
   // Few places and high pay: a higher rank and a one-person check are added (shown before paying)
   const strict = strictRulesApply(strictRules, { mode, places: winners, perPerson: perWinner, currency, community: !!community });
   const personCheck = strictRules?.personCheck === "HUMAN" ? "human verification (VeryAI)" : "ID verification (KYC)";
@@ -726,6 +741,17 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  // The bar above the bottom dock (phone and tablet): Continue jumps to the
+  // first thing still missing; on the payment step it's the same Pay button
+  const barAction = () => {
+    if (step === 3) { publish(); return; }
+    const first = isAuthed ? missing[0] : undefined;
+    const el = first ? document.getElementById(first.field) : null;
+    if (!el) { goToPayment(); return; }
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+    el.focus({ preventScroll: true });
+  };
+
   const publish = async () => {
     if (!ready) { setStep(2); return; }
     if (balance < totalToPay) { setShowFundModal(true); return; }
@@ -776,26 +802,34 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
     }
   };
 
+  // Overview in money order: what people get, the budget, the fee, then You pay
+  // (the same numbers as before: rewardPool + platformFee = totalToPay)
   const rows: [string, string, string?][] = isContest ? [
+    ["1st place prize", money(perWinner, currency), `${winners} ${winners === 1 ? "place" : "places"}`],
+    ["Prizes total", money(rewardPool, currency)],
     ["Platform fee (10%)", money(platformFee, currency)],
-    ["Places", String(winners)],
-    ["1st place prize", money(perWinner, currency)],
+  ] : isSelection ? [
+    ["Paid to the person you pick", money(perWinner, currency)],
+    ["Platform fee (10%)", money(platformFee, currency)],
   ] : [
+    ["Reward per winner", money(perWinner, currency), `× ${winners || 0} ${winners === 1 ? "winner" : "winners"}`],
+    ["Rewards budget", money(rewardPool, currency)],
     ["Platform fee (10%)", money(platformFee, currency)],
-    [mode === "Selection" ? "Person hired" : "Winners", String(winners || 0)],
-    [mode === "Selection" ? "Paid to them" : "Reward per winner", money(perWinner, currency)],
   ];
+  const barNote = !isAuthed ? "Sign in to continue. Your draft is saved."
+    : step === 3 ? (balance < totalToPay ? `You need ${money(totalToPay - balance, currency)} more in your wallet` : `Paid from your ${currency} balance`)
+    : ready ? "Includes the 10% platform fee"
+    : `${missing.length} ${missing.length === 1 ? "thing" : "things"} left: ${missing[0].label}`;
 
   return (
     <Layout>
-      <div className="ui-page" style={{ paddingTop: 28 }}>
-        <header className="ui-head">
+      <div className="ui-page">
+        <button type="button" className="cw-back" onClick={onClose}><i className="ti ti-arrow-left" aria-hidden="true" /> Job type</button>
+        <header className="ui-head cw-head">
           <div>
-            <span className="ui-eyebrow"><i className="ti ti-sparkles" /> Made for your next idea</span>
             <h1 className="ui-title">Create a custom job</h1>
-            <p className="ui-sub">Describe the work, choose how people are rewarded and review your budget.</p>
+            <p className="ui-sub">Describe the work and set the reward.</p>
           </div>
-          <button className="ui-btn ui-btn-ghost" onClick={onClose}><i className="ti ti-arrow-left" /> Change job type</button>
         </header>
 
         <Steps labels={["Choose type", "Job details", "Payment"]} current={step} />
@@ -812,17 +846,30 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
             {step === 2 ? (
               <section className="ui-card cf-card">
                 <div className="cf-head">
-                  <b><i className="ti ti-settings" /> Job configuration</b>
+                  <b><i className="ti ti-settings" /> Job details</b>
                   <div className="ui-actions">
-                    <button className="ui-btn ui-btn-ghost" onClick={() => setShowTemplates(true)}><i className="ti ti-template" /> Templates</button>
-                    <label className="cf-share" title="Share this template in the community library so others can copy it">
-                      <input type="checkbox" checked={shareTemplate} onChange={e => { setShareTemplate(e.target.checked); setTplSaved(""); }} /> Public
-                    </label>
-                    <button className="ui-btn ui-btn-ghost" disabled={tplSaved === "saving" || (!title.trim() && !description.trim())} onClick={saveAsTemplate}>
-                      <i className={`ti ${tplSaved === "saved" ? "ti-check" : "ti-device-floppy"}`} /> {tplSaved === "saving" ? "Saving…" : tplSaved === "saved" ? (shareTemplate ? "Saved and shared" : "Saved as template") : tplSaved === "error" ? "Couldn't save. Retry" : "Save as template"}
+                    <button type="button" className="ui-btn ui-btn-ghost ui-btn-sm" onClick={() => setShowTemplates(true)}><i className="ti ti-template" /> Use a template</button>
+                    <button type="button" className="ui-btn ui-btn-ghost ui-btn-sm" aria-expanded={saveOpen} aria-controls="cf-save"
+                      disabled={!saveOpen && !title.trim() && !description.trim()} onClick={() => { setSaveOpen(o => !o); setTplSaved(""); }}>
+                      <i className="ti ti-device-floppy" /> Save as template
                     </button>
                   </div>
                 </div>
+                {saveOpen && (
+                  <div className="cf-save" id="cf-save">
+                    <p>Keep this form to post a similar job later. It's saved under Templates, here and in Manage jobs.</p>
+                    <label className="cf-save-share">
+                      <input type="checkbox" checked={shareTemplate} onChange={e => { setShareTemplate(e.target.checked); setTplSaved(""); }} />
+                      <span>Also share it in the public template library, so other people can copy it</span>
+                    </label>
+                    <div className="cf-save-acts">
+                      <button type="button" className="ui-btn ui-btn-dark ui-btn-sm" disabled={tplSaved === "saving" || tplSaved === "saved"} onClick={saveAsTemplate}>
+                        <i className={`ti ${tplSaved === "saved" ? "ti-check" : "ti-device-floppy"}`} /> {tplSaved === "saving" ? "Saving…" : tplSaved === "saved" ? (shareTemplate ? "Saved and shared" : "Saved") : tplSaved === "error" ? "Couldn't save. Try again" : "Save template"}
+                      </button>
+                      <button type="button" className="ui-btn ui-btn-text ui-btn-sm" onClick={() => setSaveOpen(false)}>{tplSaved === "saved" ? "Done" : "Cancel"}</button>
+                    </div>
+                  </div>
+                )}
                 <div className="cf-body">
                   <div className="cf-field">
                     <span className="cf-lbl">Mode <InfoTip label="What are the job modes?" title="Job modes">
@@ -833,16 +880,13 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
                       </ul>
                     </InfoTip></span>
                     <div className="cf-modes" role="radiogroup" aria-label="Mode">
-                      {[
-                        ["Challenge", "ti-trophy", "Pay every approved entry, up to your number of winners."],
-                        ["Contest", "ti-award", "Rank the best entries when it ends and pay a prize for each place."],
-                        ["Selection", "ti-user-check", "People apply with a note. You pick one person to do the work."],
-                      ].map(([m, icon, d]) => (
+                      {JOB_MODES.map(([m, icon, d]) => (
                         <button key={m} type="button" role="radio" aria-checked={mode === m} className={`cf-mode${mode === m ? " on" : ""}`} onClick={() => setMode(m)}>
-                          <i className={`ti ${icon}`} /><span style={{ margin: 0 }}><b>{m}</b><span>{d}</span></span>
+                          <i className={`ti ${icon}`} /><span className="cf-mode-t"><b>{m}</b><span className="cf-mode-d">{d}</span></span>
                         </button>
                       ))}
                     </div>
+                    <p className="cf-hint cf-mode-desc">{JOB_MODES.find(([m]) => m === mode)?.[2]}</p>
                   </div>
 
                   <div className="cf-field">
@@ -871,16 +915,19 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
                         <button type="button" title="Heading" aria-label="Heading" onClick={() => linePrefix("## ")}><i className="ti ti-heading" /></button>
                         <button type="button" title="Link" aria-label="Link" onClick={() => wrap("[", "](https://)", "link text")}><i className="ti ti-link" /></button>
                         <span className="sep" />
-                        <button type="button" className="cf-refine" disabled={refining || description.trim().length < 10} onClick={refine}
-                          title="Rewrite the brief so it says clearly what to do, what to send and how it's judged">
-                          <i className={`ti ${refining ? "ti-loader-2" : "ti-sparkles"}`} /> {refining ? "Refining…" : "Refine with AI"}
-                        </button>
                         <button type="button" title="Attach files" aria-label="Attach files" onClick={() => fileRef.current?.click()}><i className="ti ti-paperclip" /></button>
                       </div>
                       <textarea id="cj-desc" ref={descRef} value={description} maxLength={10000} onChange={e => setDescription(e.target.value)}
                         placeholder="What should people do? Describe the result, what to submit and how you'll choose winners." />
                     </div>
-                    <div className="cf-count"><span>Include the task, expected result and what to submit. Markdown supported.</span><span>{description.length.toLocaleString()} / 10,000</span></div>
+                    <div className="cf-count">
+                      <button type="button" className="ui-btn ui-btn-ghost ui-btn-sm cf-refine" disabled={refining || description.trim().length < 10} onClick={refine}
+                        title="Rewrite the brief so it says clearly what to do, what to send and how it's judged">
+                        <i className={`ti ${refining ? "ti-loader-2" : "ti-sparkles"}`} /> {refining ? "Refining…" : "Refine with AI"}
+                      </button>
+                      <span>{description.length.toLocaleString()} / 10,000</span>
+                    </div>
+                    <p className="cf-hint">Include the task, expected result and what to submit. Markdown supported.</p>
                     {beforeRefine !== null && (
                       <p className="cf-hint">Rewritten by AI. Check it says what you want. <button type="button" className="cf-link" onClick={() => { setDescription(beforeRefine); setBeforeRefine(null); }}>Undo</button></p>
                     )}
@@ -894,18 +941,18 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
                     <ContestPrizes currency={currency} setCurrency={setCurrency} prizes={prizesInput} setPrizes={setPrizesInput}
                       target={entryTarget} setTarget={setEntryTarget} floor={floor} randomDraw={randomDraw} setRandomDraw={setRandomDraw} />
                   ) : (
-                  <div className="cf-row-3">
-                    <div className="cf-field">
-                      <label htmlFor="cj-cur">Currency</label>
-                      <select id="cj-cur" className="ui-select" value={currency} onChange={e => setCurrency(e.target.value)}>
-                        <option value="NGN">NGN</option><option value="USDC">USDC</option><option value="SOL">SOL</option>
-                      </select>
-                    </div>
+                  <div className="cf-row">
                     <div className="cf-field">
                       <label htmlFor="cj-budget">Total budget</label>
-                      <div className="cf-prefix">
-                        <span>{currency === "NGN" ? "₦" : currency === "USDC" ? "$" : "◎"}</span>
-                        <input id="cj-budget" className="ui-input" inputMode="decimal" value={bounty} onChange={e => setBounty(e.target.value.replace(/[^0-9.,]/g, ""))} placeholder="0" />
+                      {/* Currency sits inside the budget field: it's the budget's unit */}
+                      <div className="cf-money">
+                        <select id="cj-cur" className="ui-select" aria-label="Currency" value={currency} onChange={e => setCurrency(e.target.value)}>
+                          <option value="NGN">NGN</option><option value="USDC">USDC</option><option value="SOL">SOL</option>
+                        </select>
+                        <div className="cf-prefix">
+                          <span>{currency === "NGN" ? "₦" : currency === "USDC" ? "$" : "◎"}</span>
+                          <input id="cj-budget" className="ui-input" inputMode="decimal" value={bounty} onChange={e => setBounty(e.target.value.replace(/[^0-9.,]/g, ""))} placeholder="0" />
+                        </div>
                       </div>
                       <p className="cf-hint">Minimum: {money(minTotal, currency)}</p>
                     </div>
@@ -1086,6 +1133,9 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
                 </div>
               </section>
             )}
+
+            <PayBar total={totalToPay} currency={currency} note={barNote} onAction={barAction} busy={submitting}
+              label={!isAuthed ? "Sign in" : step === 2 ? "Continue" : submitting ? "Publishing…" : "Pay and publish"} />
           </div>
 
           <OverviewCard
@@ -1133,36 +1183,15 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
 function SuccessModal({ onClose, taskId }: any) {
   const navigate = useNavigate();
   return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center" }}>
-      <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.6)" }} onClick={onClose} />
-      <div style={{
-        position: "relative", background: C.card, borderRadius: 24, maxWidth: 380,
-        width: "90%", padding: "32px 24px", textAlign: "center"
-      }}>
-        <div style={{
-          width: 64, height: 64, borderRadius: "50%", background: C.bg2,
-          border: `2px solid ${C.accent}`, display: "flex", alignItems: "center",
-          justifyContent: "center", margin: "0 auto 16px", color: C.accent
-        }}>
-          <IconCheckCircle />
-        </div>
-        <h2 style={{ margin: "0 0 8px", fontSize: 20, fontWeight: 800, color: C.text }}>Job Created!</h2>
-        <p style={{ margin: "0 0 20px", fontSize: 14, color: C.text2, lineHeight: 1.6 }}>
-          Your job has been submitted and is now live. Workers can start completing it immediately.
-        </p>
-        <div style={{ display: "flex", gap: 10 }}>
-          <button onClick={() => navigate(taskId ? "/tasks/" + taskId : "/tasks")}
-            style={{
-              flex: 1, padding: "12px", borderRadius: 10, border: `1px solid ${C.border}`,
-              background: C.card, color: C.text, fontSize: 13, fontWeight: 600,
-              cursor: "pointer", fontFamily: "inherit"
-            }}>View Task</button>
-          <button onClick={() => navigate("/manage-jobs")}
-            style={{
-              flex: 1, padding: "12px", borderRadius: 10, border: "none",
-              background: C.accent, color: C.card, fontSize: 13, fontWeight: 700,
-              cursor: "pointer", fontFamily: "inherit"
-            }}>Manage Jobs</button>
+    <div className="cjt-done" role="dialog" aria-modal="true" aria-labelledby="cjt-done-t">
+      <div className="cjt-done-scrim" onClick={onClose} />
+      <div className="ui-card cjt-done-card">
+        <span className="cjt-done-ic" aria-hidden="true"><i className="ti ti-circle-check" /></span>
+        <h2 id="cjt-done-t">Your job is live</h2>
+        <p>People can start working on it now. Review their work in Manage jobs.</p>
+        <div className="cjt-done-acts">
+          <button type="button" className="ui-btn ui-btn-ghost" onClick={() => navigate(taskId ? "/tasks/" + taskId : "/tasks")}>View job</button>
+          <button type="button" className="ui-btn ui-btn-dark" onClick={() => navigate("/manage-jobs")}>Manage jobs</button>
         </div>
       </div>
     </div>
@@ -1187,6 +1216,8 @@ function CreateTask() {
   const quickRef = useRef<HTMLDivElement>(null);
   const [showX, setShowX] = useState(false);
   const [xUrl, setXUrl] = useState("");
+  // The AI builder opens from its own option on this page (CampaignWizard)
+  const [aiOpen, setAiOpen] = useState(false);
 
   // /create?type=custom (back from sign-in with a saved draft) or ?type=x
   useEffect(() => {
@@ -1261,130 +1292,117 @@ function CreateTask() {
     />;
   }
 
+  const showQuick = () => setTimeout(() => quickRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
   const pickPlatform = (p: any) => {
     setSelectedPlatform(p);
     setOpenPanel("quick");
-    setTimeout(() => quickRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
+    showQuick();
   };
   const QUICK_ICONS = ["x", "youtube", "telegram", "instagram", "tiktok"];
 
+  // Phone: each option is a compact row (whole row taps its button, chevron on
+  // the right), so all four fit above the bottom bar. Tablet: three cards, no
+  // bullets. Desktop: three cards with bullets. Styles: create.css (.cjt-*).
   return (
     <Layout>
-      <style>{`
-        .cj-intro{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin:34px 0 14px;flex-wrap:wrap}
-        .cj-intro b{font-size:14px;font-weight:600}
-        .cj-intro span{font-size:12px;color:var(--text2)}
-        .cj-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
-        .cj-card{display:flex;flex-direction:column;padding:18px;min-height:300px}
-        .cj-card.on{border-color:var(--text3);box-shadow:0 20px 40px -32px rgba(0,0,0,.45)}
-        .cj-icon{width:40px;height:40px;border-radius:12px;border:1px solid var(--border);background:var(--card2);display:grid;place-items:center;font-size:18px;color:var(--text)}
-        .cj-card h3{margin:22px 0 6px;font-size:17px;font-weight:600;letter-spacing:-.02em}
-        .cj-card p{margin:0;font-size:12.5px;line-height:1.6;color:var(--text2)}
-        .cj-card ul{margin:18px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px;font-size:11.5px;color:var(--text2)}
-        .cj-card li{display:flex;align-items:center;gap:8px}
-        .cj-card li::before{content:'';width:4px;height:4px;border-radius:50%;background:var(--text3)}
-        .cj-plats{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:18px}
-        .cj-plats button{height:40px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);display:grid;place-items:center;cursor:pointer}
-        .cj-plats button:hover,.cj-plats button.on{border-color:var(--text)}
-        .cj-go{margin-top:auto;padding-top:18px}
-        .cj-go .ui-btn{width:100%;justify-content:space-between;height:44px}
-        .cj-panel{margin-top:14px;overflow:hidden;scroll-margin-top:90px}
-        .cj-panel-head{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid var(--border)}
-        .cj-panel-head b{font-size:14px;font-weight:600}
-        .cj-menu{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px;padding:16px}
-        .cj-steps{display:flex;justify-content:center;align-items:center;gap:12px;flex-wrap:wrap;margin:26px 0 0;font-size:11.5px;color:var(--text2)}
-        .cj-steps span.n{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:6px;border:1px solid var(--border);font:400 11px var(--font-mono);margin-right:6px}
-        .cj-steps i{font-size:12px;color:var(--text3)}
-        .cj-foot{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:24px;padding-top:18px;border-top:1px solid var(--border);font-size:12px;color:var(--text2)}
-        .cj-foot a{display:inline-flex;align-items:center;gap:6px;color:var(--text);font-weight:500;text-decoration:none}
-        .cj-xstart{display:flex;flex-direction:column;gap:8px;margin-top:14px;padding-top:14px;border-top:1px solid var(--border)}
-        .cj-xstart b{font-size:13px;font-weight:600}
-        .cj-xstart span{font-size:11.5px;color:var(--text2);margin-top:-4px}
-        .cj-xstart label{font-size:11.5px;font-weight:500;margin-top:4px}
-        .cj-xstart .ui-btn{width:100%}
-        @media(max-width:1023px){.cj-cards{gap:10px}.cj-card{padding:16px}.cj-plats{grid-template-columns:repeat(3,1fr)}.cj-go .ui-btn{font-size:13px;padding-left:12px;padding-right:12px}}
-        @media(max-width:767px){.cj-cards{grid-template-columns:1fr}.cj-card{min-height:0}.cj-plats{grid-template-columns:repeat(5,1fr)}}
-      `}</style>
-      <div className="ui-page" style={{ paddingTop: 28 }}>
+      <div className="ui-page cjt">
         <header className="ui-head">
           <div>
-            <span className="ui-eyebrow"><i className="ti ti-sparkles" /> Made for your next idea</span>
+            <span className="ui-eyebrow">Posting</span>
             <h1 className="ui-title">Create a job</h1>
-            <p className="ui-sub">Choose a task, set your budget and put people to work.</p>
+            <p className="ui-sub">Pick a job type and set your budget.</p>
           </div>
-          <button className="ui-btn ui-btn-ghost" onClick={() => setShowMainTemplates(true)}><i className="ti ti-template" /> Start from a template</button>
+          <div className="ui-actions cjt-head-acts">
+            {isAuthed && <Link className="ui-btn ui-btn-ghost" to="/manage-jobs"><i className="ti ti-briefcase" /> Posted jobs</Link>}
+            <button type="button" className="ui-btn ui-btn-ghost" onClick={() => setShowMainTemplates(true)}><i className="ti ti-template" /> Start from a template</button>
+          </div>
         </header>
 
-        <div className="cj-intro">
-          <b>What would you like to create?</b>
-          <span>Choose the option that fits your goal.</span>
-        </div>
+        <ol className="cjt-steps" aria-label="How it works">
+          <li><span className="n">1</span>Choose a job type</li>
+          <li><span className="n">2</span>Set details and budget</li>
+          <li><span className="n">3</span>Review and pay</li>
+        </ol>
 
-        <div className="cj-cards">
-          <div className="ui-card cj-card">
-            <span className="cj-icon"><i className="ti ti-clipboard-text" /></span>
+        <div className="cjt-cards">
+          <div className="ui-card cjt-card">
+            <span className="cjt-icon" aria-hidden="true"><i className="ti ti-clipboard-text" /></span>
             <h3>Custom job</h3>
             <p>Get creative work, feedback or research from people.</p>
             <ul>
               <li>Write your brief and set the reward</li>
               <li>Pay every approved entry, or choose one person</li>
             </ul>
-            <div className="cj-go">
-              <button className="ui-btn ui-btn-dark" onClick={() => setShowCustom(true)}>Create custom job <i className="ti ti-arrow-right" /></button>
+            <div className="cjt-go">
+              <button type="button" className="ui-btn ui-btn-dark" onClick={() => setShowCustom(true)}><span className="cjt-go-l">Create custom job</span> <i className="ti ti-arrow-right" aria-hidden="true" /></button>
             </div>
           </div>
 
-          <div className={`ui-card cj-card${openPanel === "x" ? " on" : ""}`}>
-            <span className="cj-icon">{PLATFORMS[0].icon}</span>
-            <h3>X campaign</h3>
-            <p>Grow an X post with a campaign you configure yourself.</p>
+          <div className={`ui-card cjt-card${openPanel === "x" ? " on" : ""}`}>
+            <span className="cjt-icon" aria-hidden="true">{PLATFORMS[0].icon}</span>
+            <h3>Grow an X post</h3>
+            <p>Get reposts, comments, likes, views and follows on one post.</p>
             <ul>
-              <li>Combine reposts, comments, likes, views and follows</li>
+              <li>Choose the actions and how many people for each</li>
               <li>₦5 a view, ₦50 a like or repost, ₦100 a follow</li>
             </ul>
-            <div className="cj-go">
-              <button className="ui-btn ui-btn-dark" aria-expanded={openPanel === "x"} onClick={() => setOpenPanel(openPanel === "x" ? null : "x")}>
-                {openPanel === "x" ? "Close X campaign setup" : "Set up X campaign"} <i className={`ti ti-chevron-${openPanel === "x" ? "up" : "down"}`} />
+            <div className="cjt-go">
+              <button type="button" className="ui-btn ui-btn-dark" aria-expanded={openPanel === "x"} onClick={() => setOpenPanel(openPanel === "x" ? null : "x")}>
+                <span className="cjt-go-l">{openPanel === "x" ? "Close" : "Set up"}</span> <i className={`ti ti-chevron-${openPanel === "x" ? "up" : "down"}`} aria-hidden="true" />
               </button>
             </div>
             {openPanel === "x" && (
-              <form className="cj-xstart" onSubmit={e => { e.preventDefault(); setShowX(true); }}>
-                <b>Start with your X post</b>
-                <span>Find your post, then choose its actions and budget.</span>
-                <label htmlFor="cj-xurl">X post URL</label>
-                <input id="cj-xurl" className="ui-input" type="url" value={xUrl} onChange={e => setXUrl(e.target.value)} placeholder="Paste your X post link" />
+              <form className="cjt-xstart" onSubmit={e => { e.preventDefault(); setShowX(true); }}>
+                <label htmlFor="cj-xurl">Start with your X post</label>
+                <span>Paste its link, then choose the actions and budget.</span>
+                <input id="cj-xurl" className="ui-input" type="url" value={xUrl} onChange={e => setXUrl(e.target.value)} placeholder="https://x.com/…/status/…" />
                 <button type="submit" className="ui-btn ui-btn-dark" disabled={!xUrl.trim()}><i className="ti ti-search" /> Find post</button>
               </form>
             )}
           </div>
 
-          <div className={`ui-card cj-card${openPanel === "quick" ? " on" : ""}`}>
-            <span className="cj-icon"><i className="ti ti-bolt" /></span>
+          <div className={`ui-card cjt-card${openPanel === "quick" ? " on" : ""}`}>
+            <span className="cjt-icon" aria-hidden="true"><i className="ti ti-bolt" /></span>
             <h3>Quick task</h3>
-            <p>Pick a ready-made social task. Just add a link and quantity.</p>
+            <p>A ready-made social task. Add a link and how many people.</p>
             <ul>
               <li>Likes, followers, subscribers and members</li>
               <li>Preset pricing across popular platforms</li>
             </ul>
-            <div className="cj-plats">
+            <div className="cjt-plats">
               {PLATFORMS.filter(p => QUICK_ICONS.includes(p.id)).map(p => (
-                <button key={p.id} className={selectedPlatform?.id === p.id ? "on" : ""} aria-label={p.name} title={p.name} onClick={() => pickPlatform(p)}>{p.icon}</button>
+                <button type="button" key={p.id} className={selectedPlatform?.id === p.id ? "on" : ""} aria-label={p.name} title={p.name} onClick={() => pickPlatform(p)}>{p.icon}</button>
               ))}
             </div>
-            <div className="cj-go">
-              <button className="ui-btn ui-btn-dark" aria-expanded={openPanel === "quick"} onClick={() => { setSelectedPlatform(null); setOpenPanel(openPanel === "quick" ? null : "quick") }}>
-                Choose a quick task <i className={`ti ti-chevron-${openPanel === "quick" ? "up" : "down"}`} />
+            <div className="cjt-go">
+              <button type="button" className="ui-btn ui-btn-dark" aria-expanded={openPanel === "quick"} onClick={() => { setSelectedPlatform(null); const next = openPanel === "quick" ? null : "quick"; setOpenPanel(next); if (next) showQuick(); }}>
+                <span className="cjt-go-l">Choose a quick task</span> <i className={`ti ti-chevron-${openPanel === "quick" ? "up" : "down"}`} aria-hidden="true" />
               </button>
+            </div>
+          </div>
+
+          <div className="ui-card cjt-card cjt-ai">
+            <span className="cjt-icon" aria-hidden="true"><i className="ti ti-sparkles" /></span>
+            <h3>Build it with AI</h3>
+            <p>Describe what you need. AI sets up the job for you to check.</p>
+            <div className="cjt-go">
+              <button type="button" className="ui-btn ui-btn-ghost" aria-expanded={aiOpen} onClick={() => setAiOpen(true)}><span className="cjt-go-l">Describe your job</span> <i className="ti ti-arrow-right" aria-hidden="true" /></button>
             </div>
           </div>
         </div>
 
+        {/* Phone: the header buttons move here, under the options */}
+        <div className="cjt-more">
+          <button type="button" className="ui-btn ui-btn-text" onClick={() => setShowMainTemplates(true)}><i className="ti ti-template" /> Start from a template</button>
+          {isAuthed && <Link className="ui-btn ui-btn-text" to="/manage-jobs"><i className="ti ti-briefcase" /> Your posted jobs</Link>}
+        </div>
+
         {openPanel === "quick" && (
-          <section className="ui-card cj-panel" ref={quickRef}>
+          <section className="ui-card cjt-panel" ref={quickRef}>
             {!selectedPlatform ? (
               <>
-                <div className="cj-panel-head"><b>Choose a platform</b><button className="ui-btn ui-btn-ghost" onClick={() => setOpenPanel(null)}>Close</button></div>
-                <div className="cj-menu">
+                <div className="cjt-panel-head"><b>Choose a platform</b><button type="button" className="ui-btn ui-btn-ghost ui-btn-sm" onClick={() => setOpenPanel(null)}>Close</button></div>
+                <div className="cjt-menu">
                   {PLATFORMS.map(p => (
                     <PlatformActionButton key={p.id} icon={p.icon} label={p.name} actionCount={p.actions.length} hasDropdown={true} onClick={() => pickPlatform(p)} />
                   ))}
@@ -1396,19 +1414,13 @@ function CreateTask() {
           </section>
         )}
 
-        <div className="cj-steps" aria-label="How it works">
-          <span><span className="n">1</span>Choose your task</span><i className="ti ti-arrow-right" />
-          <span><span className="n">2</span>Set details and budget</span><i className="ti ti-arrow-right" />
-          <span><span className="n">3</span>Review and pay</span>
-        </div>
-
-        <div className="cj-foot">
+        <div className="cjt-foot">
           <span>You'll review the payment before your job goes live.</span>
           <a className="tap" href="https://t.me/ogapayhq" target="_blank" rel="noopener noreferrer"><i className="ti ti-brand-telegram" /> OgaPay on Telegram <i className="ti ti-arrow-up-right" /></a>
         </div>
       </div>
 
-      <CampaignWizard />
+      <CampaignWizard open={aiOpen} onOpenChange={setAiOpen} />
       {showMainTemplates && <TemplatesModal onClose={() => setShowMainTemplates(false)} onUse={(d: TemplateData, example: boolean, tplFiles?: TemplateFile[]) => { setCustomTemplate({ ...(example && !d.bounty ? { ...d, bounty: "" } : d), desc: d.description, templateFiles: tplFiles || [] }); setShowCustom(true); }} />}
       {success && <SuccessModal taskId={typeof success === 'string' && success !== 'true' ? success : undefined} onClose={() => setSuccess(false)} />}
     </Layout>

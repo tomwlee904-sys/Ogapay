@@ -121,6 +121,10 @@ function JobDrawer({ task, allTasks, focusId, onClose, onChanged }: { task: Task
   // These are the signed-in person's own jobs, so they are the poster
   const { user } = useAuth();
   const [subs, setSubs] = useState<Sub[] | null>(null);
+  // First load failed: show "couldn't load" with Try again instead of an empty
+  // review list. A later refresh that fails keeps the list and says so.
+  const [subsErr, setSubsErr] = useState(false);
+  const subsLoaded = useRef(false);
   // Re-render while a payout check runs, so Approve opens when its window ends
   const clock = useNow(anyWaiting(subs));
   const [busy, setBusy] = useState<string | null>(null);
@@ -144,7 +148,11 @@ function JobDrawer({ task, allTasks, focusId, onClose, onChanged }: { task: Task
       // same as the contest's award list on the job page
       const data = await apiRequest<Sub[]>(`/tasks/${task.id}/submissions?limit=500`);
       setSubs(Array.isArray(data) ? data : []);
-    } catch (e: any) { setSubs([]); toast(e?.message || "Couldn't load the submissions", "error"); }
+      subsLoaded.current = true; setSubsErr(false);
+    } catch (e: any) {
+      if (subsLoaded.current) toast("Couldn't refresh the list. Close and reopen the job to try again.", "error");
+      else setSubsErr(true);
+    }
   }, [task.id]);
   useEffect(() => { load(); }, [load]);
   // Once the entries are in, scroll to the one asked for (only the first time)
@@ -156,12 +164,18 @@ function JobDrawer({ task, allTasks, focusId, onClose, onChanged }: { task: Task
   }, [subs, focusId]);
   // Selection job: the applications, oldest first
   const [apps, setApps] = useState<Application[] | null>(null);
+  const [appsErr, setAppsErr] = useState(false);
+  const appsLoaded = useRef(false);
   const loadApps = useCallback(async () => {
     if (!task.isSelection) return;
     try {
       const data = await apiRequest<Application[]>(`/tasks/${task.id}/applications`);
       setApps(Array.isArray(data) ? data : []);
-    } catch (e: any) { setApps([]); toast(e?.message || "Couldn't load the applications", "error"); }
+      appsLoaded.current = true; setAppsErr(false);
+    } catch (e: any) {
+      if (appsLoaded.current) toast("Couldn't refresh the applications. Reopen the job to try again.", "error");
+      else setAppsErr(true);
+    }
   }, [task.id, task.isSelection]);
   useEffect(() => { loadApps(); }, [loadApps]);
   const pick = async (a: Application) => {
@@ -178,8 +192,22 @@ function JobDrawer({ task, allTasks, focusId, onClose, onChanged }: { task: Task
     apiRequest<{ worker: { id: string } }[]>("/poster/blocked")
       .then((d) => setBlocked(new Set((Array.isArray(d) ? d : []).map((b) => b.worker.id)))).catch(() => {});
   }, []);
+  // A worker's "..." menu (Block / Unblock), kept away from Approve and Reject
+  const [menuFor, setMenuFor] = useState<string | null>(null);
+  const menuForRef = useRef<string | null>(null);
+  menuForRef.current = menuFor;
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    if (!menuFor) return;
+    const close = (e: MouseEvent) => { if (!(e.target as HTMLElement | null)?.closest?.(".mj-more-wrap")) setMenuFor(null); };
+    document.addEventListener("mousedown", close);
+    return () => document.removeEventListener("mousedown", close);
+  }, [menuFor]);
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      if (menuForRef.current) { setMenuFor(null); return; }
+      onClose();
+    };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
@@ -212,8 +240,19 @@ function JobDrawer({ task, allTasks, focusId, onClose, onChanged }: { task: Task
       toast(on ? `@${who(w)} is blocked` : `@${who(w)} is unblocked`, "success");
     } catch (e: any) { toast(e?.message || "That didn't work", "error"); }
   };
-  const BlockBtn = ({ w }: { w?: Sub["worker"] }) => w?.id ? (
-    <button className="mj-block" onClick={() => toggleBlock(w)}>{blocked.has(w.id) ? "Unblock" : "Block"}</button>
+  const BlockBtn = ({ w, k }: { w?: Sub["worker"]; k: string }) => w?.id ? (
+    <span className="mj-more-wrap">
+      <button type="button" className="mj-more" aria-label={`More for @${who(w)}`} aria-haspopup="menu" aria-expanded={menuFor === k} onClick={() => setMenuFor(menuFor === k ? null : k)}>
+        <Icon n="dots" s={18} />
+      </button>
+      {menuFor === k && (
+        <span className="mj-menu" role="menu">
+          <button type="button" role="menuitem" className={blocked.has(w.id) ? "" : "danger"} onClick={() => { setMenuFor(null); toggleBlock(w); }}>
+            <Icon n={blocked.has(w.id) ? "lock-open" : "ban"} s={16} /> {blocked.has(w.id) ? `Unblock @${who(w)}` : `Block @${who(w)} from your jobs`}
+          </button>
+        </span>
+      )}
+    </span>
   ) : null;
 
   const saveAsTemplate = async () => {
@@ -348,15 +387,19 @@ function JobDrawer({ task, allTasks, focusId, onClose, onChanged }: { task: Task
             <div><b>{money(counts.paid, cur)}</b><span>paid out</span></div>
           </div>
 
-          {subs === null ? <div className="ui-sk" style={{ height: 120 }} /> : (
+          {subs === null ? (subsErr
+            ? <div className="mj-loaderr"><LoadError what="the work sent for this job" onRetry={() => { setSubsErr(false); load(); }} /></div>
+            : <div className="ui-sk" style={{ height: 120 }} />) : (
             <>
               {task.isSelection && (
                 <section className="mj-sec">
-                  <h4>Applications ({apps?.length ?? 0})</h4>
+                  <h4>Applications{apps ? ` (${apps.length})` : ""}</h4>
                   {task.status === "OPEN" && task.hiredWorkerId && <p className="mj-auto"><Icon n="clock-check" s={14} /> You picked someone. Review their work below when it comes in. If you reject it, or their 24 hours run out with no work, you can pick again.</p>}
                   {task.hiredWorkerId && <Link className="ui-btn ui-btn-ghost" to={`/work/${task.id}`} style={{ alignSelf: "flex-start" }}><Icon n="messages" s={14} /> Open the job chat and workspace</Link>}
                   {task.status === "OPEN" && !task.hiredWorkerId && <p className="mj-auto"><Icon n="user-check" s={14} /> Read the notes and pick one person. They get 24 hours to send the work, and you pay {money(reward, cur)} only when you approve it.</p>}
-                  {apps === null ? <div className="ui-sk" style={{ height: 80 }} /> : apps.length === 0 ? <div className="mj-empty">No one has applied yet.</div> : apps.map((a) => {
+                  {apps === null ? (appsErr
+                    ? <div className="mj-loaderr"><LoadError what="the applications" onRetry={() => { setAppsErr(false); loadApps(); }} /></div>
+                    : <div className="ui-sk" style={{ height: 80 }} />) : apps.length === 0 ? <div className="mj-empty">No one has applied yet.</div> : apps.map((a) => {
                     const p = a.worker?.workerProfile;
                     return (
                       <div key={a.id} className="mj-sub">
@@ -387,7 +430,7 @@ function JobDrawer({ task, allTasks, focusId, onClose, onChanged }: { task: Task
                 )}
                 {toReview.length === 0 ? <div className="mj-empty">Nothing to review right now.</div> : toReview.map((s) => (
                   <div key={s.id} id={`mj-sub-${s.id}`} className={`mj-sub${s.id === focusId ? " is-focus" : ""}`}>
-                    <div className="mj-who"><Avatar w={s.worker} /><div><WorkerLink w={s.worker} /><small>Sent {ago(s.submittedAt || s.createdAt)}</small></div><BlockBtn w={s.worker} /></div>
+                    <div className="mj-who"><Avatar w={s.worker} /><div><WorkerLink w={s.worker} /><small>Sent {ago(s.submittedAt || s.createdAt)}</small></div><BlockBtn w={s.worker} k={s.id} /></div>
                     <CopyFlag reason={s.spamReason} copy={!!s.similarToId} />
                     <PayoutCheckStatus sub={s} who="poster" />
                     {s.workerNotes && <p className="mj-note">{s.workerNotes}</p>}
@@ -421,7 +464,7 @@ function JobDrawer({ task, allTasks, focusId, onClose, onChanged }: { task: Task
                 <section className="mj-sec">
                   <h4>Working on it ({working.length})</h4>
                   <div className="mj-rows">{working.map((s) => (
-                    <div key={s.id} className="mj-row"><div className="mj-who"><Avatar w={s.worker} /><div><WorkerLink w={s.worker} /><small>Took a slot {ago(s.createdAt)}</small></div></div><BlockBtn w={s.worker} /></div>
+                    <div key={s.id} className="mj-row"><div className="mj-who"><Avatar w={s.worker} /><div><WorkerLink w={s.worker} /><small>Took a slot {ago(s.createdAt)}</small></div></div><BlockBtn w={s.worker} k={s.id} /></div>
                   ))}</div>
                 </section>
               )}
@@ -445,7 +488,7 @@ function JobDrawer({ task, allTasks, focusId, onClose, onChanged }: { task: Task
                 <section className="mj-sec">
                   <h4>Rejected ({rejected.length})</h4>
                   <div className="mj-rows">{rejected.map((s) => (
-                    <div key={s.id} className="mj-row"><div className="mj-who"><Avatar w={s.worker} /><div><WorkerLink w={s.worker} /><small>{s.reviewedAt ? day(s.reviewedAt) : "Rejected"}</small>{s.posterNotes && <p>“{s.posterNotes}”</p>}</div></div><BlockBtn w={s.worker} /></div>
+                    <div key={s.id} className="mj-row"><div className="mj-who"><Avatar w={s.worker} /><div><WorkerLink w={s.worker} /><small>{s.reviewedAt ? day(s.reviewedAt) : "Rejected"}</small>{s.posterNotes && <p>“{s.posterNotes}”</p>}</div></div><BlockBtn w={s.worker} k={s.id} /></div>
                   ))}</div>
                 </section>
               )}
@@ -484,12 +527,13 @@ type Blocked = { id: string; reason?: string | null; createdAt: string; worker: 
 function BlacklistPage() {
   const { toast } = useToast();
   const [rows, setRows] = useState<Blocked[] | null>(null);
+  const [failed, setFailed] = useState(false);
   const [name, setName] = useState("");
   const [reason, setReason] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
-  const load = useCallback(() => apiRequest<Blocked[]>("/poster/blocked").then((d) => setRows(Array.isArray(d) ? d : [])).catch(() => setRows([])), []);
+  const load = useCallback(() => apiRequest<Blocked[]>("/poster/blocked").then((d) => { setRows(Array.isArray(d) ? d : []); setFailed(false); }).catch(() => setFailed(true)), []);
   useEffect(() => { load(); }, [load]);
 
   const block = async () => {
@@ -525,8 +569,10 @@ function BlacklistPage() {
       </section>
 
       <section className="mj-sec">
-        <h4>Blocked ({rows?.length ?? 0})</h4>
-        {rows === null ? <div className="ui-sk" style={{ height: 80 }} /> : rows.length === 0 ? (
+        <h4>Blocked{rows ? ` (${rows.length})` : ""}</h4>
+        {rows === null ? (failed
+          ? <LoadError what="the people you've blocked" onRetry={() => { setFailed(false); load(); }} />
+          : <div className="ui-sk" style={{ height: 80 }} />) : rows.length === 0 ? (
           <div className="mj-empty">You haven't blocked anyone. You can also block someone from the review panel of any job.</div>
         ) : (
           <div className="mj-rows">
@@ -549,10 +595,11 @@ function TemplatesPage() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [rows, setRows] = useState<JobTemplate[] | null>(null);
+  const [failed, setFailed] = useState(false);
   const [editing, setEditing] = useState<string | null>(null);
   const [draftName, setDraftName] = useState("");
 
-  const load = useCallback(() => listTemplates().then((d) => setRows(Array.isArray(d) ? d : [])).catch(() => setRows([])), []);
+  const load = useCallback(() => listTemplates().then((d) => { setRows(Array.isArray(d) ? d : []); setFailed(false); }).catch(() => setFailed(true)), []);
   useEffect(() => { load(); }, [load]);
 
   const rename = async (t: JobTemplate) => {
@@ -581,10 +628,13 @@ function TemplatesPage() {
   return (
     <div className="mj-tool">
       <p className="mj-tool-p" style={{ margin: 0 }}>Post similar jobs faster. Save a template from the Create page (<b>Save as template</b>) or from any job's details here, then use it to start a new job with everything filled in.</p>
-      {rows === null ? <div className="ui-sk" style={{ height: 120 }} /> : rows.length === 0 ? (
+      {rows === null ? (failed
+        ? <LoadError what="your templates" onRetry={() => { setFailed(false); load(); }} />
+        : <div className="ui-sk" style={{ height: 120 }} />) : rows.length === 0 ? (
         <div className="ui-empty">
-          <p style={{ margin: "0 0 14px" }}>No templates yet.</p>
-          <Link className="ui-btn ui-btn-dark" to="/create?type=custom"><Icon n="plus" s={15} /> Create a job</Link>
+          <strong>No templates yet</strong>
+          Save a job form as a template when you post, then start the next one from it.
+          <div className="mj-empty-acts"><Link className="ui-btn ui-btn-dark" to="/create?type=custom"><Icon n="plus" s={15} /> Create a job</Link></div>
         </div>
       ) : (
         <div className="mj-list">
@@ -654,19 +704,22 @@ function JobsListPage({ tasks, reload }: { tasks: Task[]; reload: () => void }) 
   if (tasks.length === 0) {
     return (
       <div className="ui-empty" style={{ marginTop: 24 }}>
-        <p style={{ margin: "0 0 14px" }}>You haven't posted a job yet.</p>
-        <Link className="ui-btn ui-btn-dark" to="/create"><Icon n="plus" s={15} /> Post a job</Link>
+        <strong>You haven't posted a job yet</strong>
+        Jobs you post show here, with the work people send for you to review.
+        <div className="mj-empty-acts"><Link className="ui-btn ui-btn-dark" to="/create"><Icon n="plus" s={15} /> Post a job</Link></div>
       </div>
     );
   }
 
   return (
     <>
-      <div className="mj-summary">
-        <button className={`mj-sum${totals.review ? " hot" : ""}`} onClick={() => setFilter(totals.review ? "review" : "all")}><b>{totals.review}</b><span>waiting for your review</span></button>
-        <div className="mj-sum"><b>{totals.live}</b><span>open jobs</span></div>
-        <div className="mj-sum"><b>{totals.approved}</b><span>pieces of work approved</span></div>
-        <div className="mj-sum"><b>{totals.paidText}</b><span>paid to workers</span></div>
+      <div className="ui-stats mj-summary">
+        <button type="button" className={`mj-sum${totals.review ? " hot" : ""}`} onClick={() => setFilter(totals.review ? "review" : "all")}>
+          <span className="ui-stats-label">Waiting for your review</span><b className="ui-stats-value">{totals.review}</b>
+        </button>
+        <div className="mj-sum"><span className="ui-stats-label">Open jobs</span><b className="ui-stats-value">{totals.live}</b></div>
+        <div className="mj-sum"><span className="ui-stats-label">Work approved</span><b className="ui-stats-value">{totals.approved}</b></div>
+        <div className="mj-sum"><span className="ui-stats-label">Paid to workers</span><b className="ui-stats-value" title={totals.paidText}>{totals.paidText}</b></div>
       </div>
 
       <div className="mj-filters" role="tablist" aria-label="Filter jobs">
@@ -677,7 +730,7 @@ function JobsListPage({ tasks, reload }: { tasks: Task[]; reload: () => void }) 
         })}
       </div>
 
-      <div className="mj-list">
+      <div className="mj-list mj-jobs">
         {shown.map((t) => {
           const c = jobCounts(t);
           const cur = t.currency || "NGN";
@@ -764,7 +817,7 @@ export default function MyJobs() {
             <h1 className="ui-title">Manage jobs</h1>
             <p className="ui-sub">Review work, pay people and keep track of what you've posted.</p>
           </div>
-          <Link className="ui-btn ui-btn-dark" to="/create"><Icon n="plus" s={15} /> Post a job</Link>
+          {!(page === "jobs" && tasks?.length === 0) && <div className="ui-actions mj-post"><Link className="ui-btn ui-btn-dark" to="/create"><Icon n="plus" s={15} /> Post a job</Link></div>}
         </div>
 
         <div className="mj-tabs" role="tablist">
