@@ -3,6 +3,9 @@ import Layout from "../components/Layout";
 import { useAuth } from "../context/AuthContext";
 import { apiRequest } from "../lib/api";
 import RankClaimPanel from "../components/RankClaimPanel";
+import LoadError from "../components/LoadError";
+import { openSignIn } from "../lib/signin";
+import "../styles/legal.css";
 
 const C = {
   text: "var(--text)", text2: "var(--text2)", text3: "var(--text3)",
@@ -37,9 +40,12 @@ export default function RankUpgrade() {
   const [leaderRank, setLeaderRank] = useState<number | null>(null);
 
   const [reload, setReload] = useState(0);
+  // A failed load is not "Beginner with 0 tasks": say so and offer Try again
+  const [failed, setFailed] = useState(false);
   useEffect(() => {
     // Your rank needs an account; visitors see the tiers
     if (!user) { setLoading(false); return; }
+    setFailed(false);
     (async () => {
       try {
         const data = await apiRequest<any>('/leaderboard/me');
@@ -47,7 +53,7 @@ export default function RankUpgrade() {
           setProfile(data.profile);
         }
         if (data?.rank != null) setLeaderRank(data.rank);
-      } catch (_) {}
+      } catch (_) { setFailed(true); }
       setLoading(false);
     })();
   }, [user, reload]);
@@ -72,132 +78,109 @@ export default function RankUpgrade() {
   const ratingProgressToNext = nextTier && nextTier.rating > 0 ? pct(rankRating, nextTier.rating) : 100;
   const ratersProgressToNext = nextTier && nextTier.raters > 0 ? pct(ratedBy, nextTier.raters) : 100;
 
-  return (
-    <Layout>
-      <style>{rankStyles}</style>
-      <div className="rank-wrap">
-        {/* Header */}
-        <div className="rank-header">
-          <div className="rank-header-icon">
-            <Icon n={TIERS[currentIdx]?.icon || "seedling"} s={36} />
-          </div>
+  const tier = TIERS[currentIdx] || TIERS[0];
+
+  const yourRank = !user ? (
+    <div className="ui-card rank-card rank-signin">
+      <h2>See your rank</h2>
+      <p>Ranks open better-paid jobs. Sign in to see your rank, track your progress and claim the next one.</p>
+      <button type="button" className="ui-btn ui-btn-dark" onClick={() => openSignIn({ redirect: "/rank" })}>Sign in</button>
+    </div>
+  ) : loading ? (
+    <div className="ui-card rank-card"><div className="ui-sk" style={{ height: 140 }} /></div>
+  ) : failed ? (
+    <LoadError what="your rank" onRetry={() => { setLoading(true); setReload((n) => n + 1); }} />
+  ) : (
+    <>
+      <div className="ui-card rank-card">
+        <div className="rank-current-top">
+          <span className="rank-tile" style={{ ["--tier" as any]: tier.color }}><Icon n={tier.icon} s={20} /></span>
           <div>
-            <h1 className="rank-title">Rank & Progression</h1>
-            <p className="rank-subtitle">
-              Complete tasks and maintain high ratings to level up and unlock exclusive opportunities.
-            </p>
+            <div className="rank-current-name">{tier.label}</div>
+            {leaderRank && <div className="rank-position">#{leaderRank} on the leaderboard</div>}
           </div>
         </div>
+        <div className="rank-stats-row">
+          <div className="rank-stat"><span className="rank-stat-val">{tasksCompleted}</span><span className="rank-stat-lbl">Tasks done</span></div>
+          <div className="rank-stat"><span className="rank-stat-val">{avgRating.toFixed(1)}</span><span className="rank-stat-lbl">Avg rating</span></div>
+          <div className="rank-stat"><span className="rank-stat-val">{ogaScore}</span><span className="rank-stat-lbl">OgaScore</span></div>
+        </div>
 
-        {loading ? (
-          <div className="rank-loading">Loading rank data...</div>
-        ) : (
-          <>
-            {/* Current Rank Card */}
-            <div className="rank-current-card" style={{ borderLeftColor: TIERS[currentIdx]?.color }}>
-              <div className="rank-current-top">
-                <div>
-                  <div className="rank-current-badge" style={{ background: TIERS[currentIdx]?.color + '20', color: TIERS[currentIdx]?.color }}>
-                    <Icon n={TIERS[currentIdx]?.icon || "seedling"} s={16} /> {TIERS[currentIdx]?.label}
-                  </div>
-                  {leaderRank && <div className="rank-position">#{leaderRank} on Leaderboard</div>}
-                </div>
-                <div className="rank-stats-row">
-                  <div className="rank-stat">
-                    <span className="rank-stat-val">{tasksCompleted}</span>
-                    <span className="rank-stat-lbl">Tasks Done</span>
-                  </div>
-                  <div className="rank-stat">
-                    <span className="rank-stat-val">{avgRating.toFixed(1)}</span>
-                    <span className="rank-stat-lbl">Avg Rating</span>
-                  </div>
-                  <div className="rank-stat">
-                    <span className="rank-stat-val">{ogaScore}</span>
-                    <span className="rank-stat-lbl">OgaScore</span>
-                  </div>
-                </div>
+        {nextTier && (
+          <div className="rank-next-section">
+            <div className="rank-next-label">Next: <strong><Icon n={nextTier.icon} s={14} /> {nextTier.label}</strong></div>
+            <div className="rank-progress-group">
+              <div className="rank-progress-row">
+                <span className="rank-progress-label">Tasks ({tasksCompleted}/{nextTier.tasks})</span>
+                <div className="rank-progress-bar"><div className="rank-progress-fill" style={{ width: `${Math.min(progressToNext, 100)}%` }} /></div>
               </div>
-
-              {nextTier && (
-                <div className="rank-next-section">
-                  <div className="rank-next-label">
-                    Next: <strong style={{ color: nextTier.color }}><Icon n={nextTier.icon} s={14} /> {nextTier.label}</strong>
-                  </div>
-                  <div className="rank-progress-group">
-                    <div className="rank-progress-row">
-                      <span className="rank-progress-label">Tasks ({tasksCompleted}/{nextTier.tasks})</span>
-                      <div className="rank-progress-bar">
-                        <div className="rank-progress-fill" style={{ width: `${Math.min(progressToNext, 100)}%`, background: nextTier.color }} />
-                      </div>
-                    </div>
-                    {nextTier.rating > 0 && (
-                      <div className="rank-progress-row">
-                        <span className="rank-progress-label">Rating ({rankRating.toFixed(1)}/{nextTier.rating})</span>
-                        <div className="rank-progress-bar">
-                          <div className="rank-progress-fill" style={{ width: `${Math.min(ratingProgressToNext, 100)}%`, background: nextTier.color }} />
-                        </div>
-                      </div>
-                    )}
-                    {nextTier.raters > 0 && (
-                      <div className="rank-progress-row">
-                        <span className="rank-progress-label rank-progress-long">Rated by {nextTier.raters} different job posters (you have {ratedBy})</span>
-                        <div className="rank-progress-bar">
-                          <div className="rank-progress-fill" style={{ width: `${Math.min(ratersProgressToNext, 100)}%`, background: nextTier.color }} />
-                        </div>
-                      </div>
-                    )}
-                  </div>
+              {nextTier.rating > 0 && (
+                <div className="rank-progress-row">
+                  <span className="rank-progress-label">Rating ({rankRating.toFixed(1)}/{nextTier.rating})</span>
+                  <div className="rank-progress-bar"><div className="rank-progress-fill" style={{ width: `${Math.min(ratingProgressToNext, 100)}%` }} /></div>
+                </div>
+              )}
+              {nextTier.raters > 0 && (
+                <div className="rank-progress-row">
+                  <span className="rank-progress-label">Rated by {nextTier.raters} different job posters (you have {ratedBy})</span>
+                  <div className="rank-progress-bar"><div className="rank-progress-fill" style={{ width: `${Math.min(ratersProgressToNext, 100)}%` }} /></div>
                 </div>
               )}
             </div>
+          </div>
+        )}
+      </div>
+      {/* Claim a new rank (rules, review) and the X score */}
+      <RankClaimPanel onRankChanged={() => setReload((n) => n + 1)} />
+    </>
+  );
 
-            {/* Claim a new rank (rules, review) and the X score: signed in only */}
-            {user && <RankClaimPanel onRankChanged={() => setReload((n) => n + 1)} />}
+  // Visitors (and a failed load) see the ladder without a "Current" tag
+  const known = !!user && !loading && !failed;
 
-            {/* All Tiers */}
-            <div className="rank-tiers-title">All Ranks</div>
-            <div className="rank-tiers-list">
-              {TIERS.map((tier, i) => {
-                const isUnlocked = i <= currentIdx;
-                const isCurrent = i === currentIdx;
+  return (
+    <Layout>
+      <style>{rankStyles}</style>
+      <div className="ui-page">
+        <header>
+          <span className="ui-eyebrow"><i className="ti ti-trophy" /> Ranks</span>
+          <h1 className="ui-title">Ranks</h1>
+          <p className="ui-sub">Do good work and get rated to move up. Higher ranks open jobs that only experienced people can take.</p>
+        </header>
+
+        <div className="rank-grid">
+          <aside className="rank-side">{yourRank}</aside>
+
+          <div className="rank-main">
+            <h2 className="rank-tiers-title">All ranks</h2>
+            <div className="ui-card rank-tiers-list">
+              {TIERS.map((t, i) => {
+                const isCurrent = known && i === currentIdx;
+                const isUnlocked = known && i <= currentIdx;
                 return (
-                  <div key={tier.level} className={`rank-tier-card ${isCurrent ? 'current' : ''} ${isUnlocked ? 'unlocked' : 'locked'}`}
-                    style={{ borderColor: isCurrent ? tier.color : 'var(--border)' }}>
-                    <div className="rank-tier-left">
-                      <div className="rank-tier-icon" style={{ background: isUnlocked ? tier.color + '20' : 'var(--bg2)' }}>
-                        {isUnlocked ? <Icon n={tier.icon} s={20} /> : <Icon n="lock" s={20} />}
+                  <div key={t.level} className={`rank-tier${isCurrent ? " current" : ""}`}>
+                    <span className="rank-tile" style={{ ["--tier" as any]: t.color }}><Icon n={t.icon} s={18} /></span>
+                    <div className="rank-tier-body">
+                      <div className="rank-tier-name">
+                        {t.label}
+                        {isCurrent && <span className="rank-tag current">Your rank</span>}
+                        {isUnlocked && !isCurrent && <span className="rank-tag ok">Unlocked</span>}
+                        {known && !isUnlocked && <span className="rank-tag"><Icon n="lock" s={12} /> Locked</span>}
                       </div>
-                      <div>
-                        <div className="rank-tier-name" style={{ color: isUnlocked ? tier.color : 'var(--text3)' }}>
-                          {tier.label}
-                        </div>
-                        <div className="rank-tier-reqs">
-                          {tier.tasks > 0 ? `${tier.tasks}+ tasks` : 'No minimum tasks'}
-                          {tier.rating > 0 ? `  \u2022  ${tier.rating}+ avg rating` : ''}
-                          {tier.raters > 0 ? `  \u2022  rated by ${tier.raters}+ different job posters` : ''}
-                        </div>
+                      <div className="rank-tier-reqs">
+                        {t.tasks > 0 ? `${t.tasks}+ tasks` : "No minimum tasks"}
+                        {t.rating > 0 ? ` \u2022 ${t.rating}+ avg rating` : ""}
+                        {t.raters > 0 ? ` \u2022 rated by ${t.raters}+ different job posters` : ""}
                       </div>
+                      <div className="rank-tier-unlocks">Unlocks: {t.unlocks.join(" \u00b7 ")}</div>
                     </div>
-                    <div className="rank-tier-right">
-                      {isCurrent && <div className="rank-current-tag">Current</div>}
-                      {isUnlocked && !isCurrent && <div className="rank-unlocked-tag">Unlocked</div>}
-                      {!isUnlocked && <div className="rank-locked-tag">Locked</div>}
-                    </div>
-                    {isUnlocked && (
-                      <div className="rank-tier-unlocks">
-                        {tier.unlocks.map((u, j) => (
-                          <span key={j} className="rank-unlock-item">{u}</span>
-                        ))}
-                      </div>
-                    )}
                   </div>
                 );
               })}
             </div>
 
-            {/* Rank Info */}
-            <div className="rank-info-card">
-              <h3>How Ranking Works</h3>
+            <div className="ui-card rank-info-card lg-prose">
+              <h2>How ranking works</h2>
               <p>Do good work, get rated, and when you meet the next rank's needs, claim it on this page. You agree to the rules when you claim; most people get their new rank at once, and some accounts are checked by our team first (usually within 24–48 hours). You move up one rank at a time.</p>
               <ul>
                 <li><strong>Tasks done</strong>: jobs you were paid for</li>
@@ -207,73 +190,67 @@ export default function RankUpgrade() {
               </ul>
               <p className="rank-info-note">Job posters can choose the rank a job needs, so higher ranks open up jobs that only experienced people can take.</p>
             </div>
-          </>
-        )}
+          </div>
+        </div>
       </div>
     </Layout>
   );
 }
 
 const rankStyles = `
-.rank-wrap { max-width: 680px; margin: 0 auto; padding: 32px 20px 80px; }
-.rank-header { display: flex; align-items: center; gap: 16px; margin-bottom: 28px; }
-.rank-header-icon { width: 56px; height: 56px; display: grid; place-items: center; background: var(--bg2); border-radius: 14px; flex-shrink: 0; }
-.rank-title { font-size: 24px; font-weight: 900; margin: 0 0 4px; color: var(--text); font-family: 'Inter', sans-serif; }
-.rank-subtitle { font-size: 13px; color: var(--text2); margin: 0; line-height: 1.5; }
-.rank-loading { text-align: center; padding: 60px 0; color: var(--text2); font-size: 14px; }
+/* Mobile and tablet: your rank first, then the ladder. Desktop: the ladder on the
+   left and your rank in a side panel that stays in view. */
+.rank-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; margin-top: 28px; align-items: start; }
+.rank-side { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.rank-main { min-width: 0; }
+@media (min-width: 1024px) {
+  .rank-grid { grid-template-columns: minmax(0, 1fr) 380px; gap: 24px; }
+  .rank-side { order: 2; position: sticky; top: calc(var(--nav-h) + 16px); }
+}
+.rank-card { padding: 20px; }
+.rank-signin h2 { margin: 0 0 6px; font-size: 17px; font-weight: 600; color: var(--text); }
+.rank-signin p { margin: 0 0 14px; font-size: 14px; line-height: 1.6; color: var(--text2); }
+/* tier colour only on the icon tile, never as text */
+.rank-tile { width: 40px; height: 40px; border-radius: 11px; display: grid; place-items: center; flex-shrink: 0; color: var(--text); background: color-mix(in srgb, var(--tier) 20%, var(--card)); border: 1px solid color-mix(in srgb, var(--tier) 45%, var(--border)); }
+.rank-current-top { display: flex; align-items: center; gap: 12px; }
+.rank-current-name { font-size: 18px; font-weight: 600; color: var(--text); }
+.rank-position { font-size: 13px; color: var(--text2); margin-top: 2px; }
+.rank-stats-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 16px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+.rank-stat { padding: 10px 12px; border-left: 1px solid var(--border); }
+.rank-stat:first-child { border-left: 0; }
+.rank-stat-val { display: block; font-size: 20px; font-weight: 600; color: var(--text); }
+.rank-stat-lbl { font-size: 12px; color: var(--text2); }
+.rank-next-section { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--border); }
+.rank-next-label { font-size: 13.5px; color: var(--text2); margin-bottom: 12px; }
+.rank-next-label strong { color: var(--text); }
+.rank-progress-group { display: flex; flex-direction: column; gap: 12px; }
+.rank-progress-row { display: flex; flex-direction: column; gap: 6px; }
+.rank-progress-label { font-size: 12.5px; color: var(--text2); line-height: 1.4; }
+.rank-progress-bar { height: 6px; background: var(--card2); border: 1px solid var(--border); border-radius: 99px; overflow: hidden; }
+.rank-progress-fill { height: 100%; border-radius: 99px; background: var(--green); transition: width 0.6s ease; }
 
-.rank-current-card { background: var(--card); border: 1px solid var(--border); border-left: 4px solid; border-radius: 14px; padding: 24px; margin-bottom: 24px; }
-.rank-current-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; }
-.rank-current-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 20px; font-size: 14px; font-weight: 800; margin-bottom: 6px; }
-.rank-position { font-size: 12px; color: var(--text2); font-weight: 600; }
-.rank-stats-row { display: flex; gap: 20px; }
-.rank-stat { text-align: center; }
-.rank-stat-val { display: block; font-size: 20px; font-weight: 900; color: var(--text); }
-.rank-stat-lbl { font-size: 11px; color: var(--text3); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+.rank-tiers-title { margin: 0 0 12px; font: 500 var(--fs-label)/1.4 var(--font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--text2); }
+.rank-tiers-list { overflow: hidden; margin-bottom: 20px; }
+.rank-tier { display: flex; gap: 14px; padding: 16px 18px; border-top: 1px solid var(--border); }
+.rank-tier:first-child { border-top: 0; }
+.rank-tier.current { background: var(--card2); }
+.rank-tier-body { min-width: 0; flex: 1; }
+.rank-tier-name { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 15.5px; font-weight: 600; color: var(--text); }
+.rank-tag { display: inline-flex; align-items: center; gap: 4px; height: 22px; padding: 0 8px; border-radius: var(--r-pill); font-size: 12px; font-weight: 500; color: var(--text2); border: 1px solid var(--border); }
+.rank-tag.current { background: var(--text); color: var(--bg); border-color: var(--text); }
+.rank-tag.ok { color: var(--green); border-color: color-mix(in srgb, var(--green) 40%, var(--border)); }
+.rank-tier-reqs { margin-top: 4px; font-size: 13px; line-height: 1.5; color: var(--text2); }
+.rank-tier-unlocks { margin-top: 4px; font-size: 13px; line-height: 1.5; color: var(--text); }
 
-.rank-next-section { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border); }
-.rank-next-label { font-size: 13px; color: var(--text2); margin-bottom: 12px; }
-.rank-progress-group { display: flex; flex-direction: column; gap: 10px; }
-.rank-progress-row { display: flex; align-items: center; gap: 12px; }
-.rank-progress-label { font-size: 11px; color: var(--text3); font-weight: 600; min-width: 130px; flex-shrink: 0; }
-/* A longer label wraps onto two lines so the bar keeps room on a phone */
-.rank-progress-label.rank-progress-long { flex-shrink: 1; max-width: 60%; line-height: 1.35; }
-.rank-progress-bar { flex: 1; height: 6px; background: var(--border); border-radius: 99px; overflow: hidden; }
-.rank-progress-fill { height: 100%; border-radius: 99px; transition: width 0.6s ease; }
-
-.rank-tiers-title { font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text2); margin-bottom: 14px; }
-.rank-tiers-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px; }
-.rank-tier-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; display: flex; flex-wrap: wrap; align-items: center; gap: 12px; transition: all 0.2s; }
-.rank-tier-card.current { border-width: 2px; }
-.rank-tier-card.locked { opacity: 0.55; }
-.rank-tier-left { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 160px; }
-.rank-tier-icon { width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; flex-shrink: 0; }
-.rank-tier-name { font-size: 15px; font-weight: 800; margin-bottom: 2px; }
-.rank-tier-reqs { font-size: 11px; color: var(--text3); }
-.rank-tier-right { flex-shrink: 0; }
-.rank-current-tag { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: var(--accent); padding: 3px 10px; border-radius: 20px; background: color-mix(in srgb, var(--accent) 8%, transparent); }
-.rank-unlocked-tag { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: var(--green); padding: 3px 10px; border-radius: 20px; background: color-mix(in srgb, var(--green) 8%, transparent); }
-.rank-locked-tag { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text3); }
-
-.rank-tier-unlocks { width: 100%; display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; padding-top: 10px; border-top: 1px solid var(--border); }
-.rank-unlock-item { font-size: 11px; color: var(--text2); padding: 3px 10px; border-radius: 6px; background: var(--bg2); border: 1px solid var(--border); }
-
-.rank-info-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 20px; }
-.rank-info-card h3 { font-size: 15px; font-weight: 800; margin: 0 0 10px; color: var(--text); font-family: 'Inter', sans-serif; }
-.rank-info-card p { font-size: 13px; color: var(--text2); line-height: 1.6; margin: 0 0 12px; }
-.rank-info-card ul { margin: 0 0 12px; padding-left: 18px; }
-.rank-info-card li { font-size: 13px; color: var(--text2); line-height: 1.8; }
+.rank-info-card { padding: 20px; }
+.rank-info-card h2 { font-size: 16px; font-weight: 600; margin: 0 0 10px; color: var(--text); }
+.rank-info-card p, .rank-info-card li { font-size: 14px; color: var(--text2); line-height: 1.6; }
+.rank-info-card p { margin: 0 0 10px; }
 .rank-info-card li strong { color: var(--text); }
-.rank-info-note { font-size: 12px; color: var(--text3); font-style: italic; margin: 0 !important; }
-@media(max-width:480px) {
-  .rank-wrap { padding: 16px 12px 72px; }
-  .rank-header-icon { width: 44px; height: 44px; }
-  .rank-title { font-size: 20px; }
-  .rank-stats-row { gap: 12px; }
-  .rank-stat-val { font-size: 16px; }
-  .rank-current-card { padding: 16px; }
-  .rank-current-top { flex-direction: column; }
-  .rank-progress-label { min-width: 100px; font-size: 11px; }
-  .rank-tier-card { padding: 12px; }
+.rank-info-note { font-size: 13px !important; margin: 0 !important; }
+@media (max-width: 767.98px) {
+  .rank-grid { margin-top: 20px; }
+  .rank-card, .rank-info-card { padding: 16px; }
+  .rank-tier { padding: 14px 16px; }
 }
 `;

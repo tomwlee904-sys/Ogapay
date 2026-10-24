@@ -2,7 +2,6 @@ import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'rea
 import bs58 from 'bs58'
 import { useAuth } from '../../context/AuthContext'
 import { API_BASE, apiRequest } from '../../lib/api'
-import { supabase } from '../../lib/supabaseClient'
 import type { SignInView } from '../../lib/signin'
 import { inWalletAppBrowser, isPhone, openInWalletUrl, PHONE_WALLET_LINE, WALLET_APP_SIGNIN_LINE } from '../../lib/walletApps'
 import '../../styles/signin.css'
@@ -23,7 +22,7 @@ interface Props {
 }
 
 const TITLES: Record<View, string> = {
-  options: 'Sign in to OgaPay',
+  options: 'Sign in or create an account',
   wallets: 'Choose a Solana wallet',
   email: 'Sign in with email',
   signup: 'Create your account',
@@ -32,7 +31,7 @@ const TITLES: Record<View, string> = {
   twofa: 'Two-factor authentication',
   emailcode: 'Sign in with an email code',
 }
-const BACK: Partial<Record<View, View>> = { wallets: 'options', email: 'options', signup: 'email', forgot: 'email', pair: 'options', twofa: 'options', emailcode: 'email' }
+const BACK: Partial<Record<View, View>> = { wallets: 'options', email: 'options', signup: 'options', forgot: 'email', pair: 'options', twofa: 'options', emailcode: 'email' }
 
 // Every sign-in endpoint answers { user, tokens }
 const toSession = (r: any) => {
@@ -94,9 +93,9 @@ function GoogleIcon() {
   )
 }
 
-function Option({ icon, name, desc, tag, onClick, disabled }: { icon: ReactNode; name: string; desc: string; tag?: string; onClick: () => void; disabled?: boolean }) {
+function Option({ icon, name, desc, tag, onClick, disabled, primary }: { icon: ReactNode; name: string; desc: string; tag?: string; onClick: () => void; disabled?: boolean; primary?: boolean }) {
   return (
-    <button type="button" className="si-opt" onClick={onClick} disabled={disabled}>
+    <button type="button" className={`si-opt${primary ? ' primary' : ''}`} onClick={onClick} disabled={disabled}>
       <span className="si-opt-icon">{icon}</span>
       <span className="si-opt-info"><span className="si-opt-name">{name}</span><span className="si-opt-desc">{desc}</span></span>
       {tag ? <span className="si-opt-tag">{tag}</span> : <i className="ti ti-arrow-right si-opt-arrow" aria-hidden="true" />}
@@ -181,6 +180,8 @@ export default function SignInModal({ initialView = 'options', initialCode = '',
   const google = () => run('google', async () => {
     if (redirect) sessionStorage.setItem('ogapay_after_login', redirect)
     try {
+      // Loaded only here, so a Supabase problem can't break email, wallet or pairing
+      const { supabase } = await import('../../lib/supabaseClient')
       const { error: err } = await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: `${window.location.origin}/auth/callback` } })
       if (err) throw err
     } catch {
@@ -311,23 +312,28 @@ export default function SignInModal({ initialView = 'options', initialCode = '',
   if (view === 'options') {
     // Inside a wallet app (after "Open in Phantom" and the like) Google refuses
     // to sign in, so Email comes first and Google says it likely won't work
+    // Most people sign in with Google or email on an Android phone, so Google is
+    // the one filled row and the wallet and pairing options sit under "Other ways"
     const googleOption = (
-      <Option name="Continue with Google" disabled={busy === 'google'} onClick={google}
-        desc={inWalletApp ? "Usually doesn't work inside wallet apps" : 'Sign in or create an account with your Google account'}
-        icon={busy === 'google' ? <Spinner /> : <GoogleIcon />} />
+      <Option name="Continue with Google" disabled={busy === 'google'} onClick={google} primary={!inWalletApp}
+        desc={inWalletApp ? "Usually doesn't work inside wallet apps" : 'Sign in or create an account in one tap'}
+        icon={busy === 'google' ? <Spinner /> : <span className="si-gbadge"><GoogleIcon /></span>} />
     )
     body = (
       <>
-        <p className="si-desc">Choose how you want to sign in or create your OgaPay account.</p>
+        <p className="si-desc">New here? Any option below also creates your free account.</p>
         {inWalletApp && <p className="si-notice ok" role="note">{WALLET_APP_SIGNIN_LINE}</p>}
         {noticeLine}{errorLine}
         <div className="si-options">
-          <Option name="Continue with wallet" desc="Phantom, Solflare, Backpack and more" onClick={() => go('wallets')}
-            icon={<span className="si-wgrid" aria-hidden="true">{WALLETS.slice(0, 4).map(w => <img key={w.id} src={w.icon} alt="" />)}</span>} />
           {!inWalletApp && googleOption}
-          <Option name="Email" desc="Sign in or create an account with your email" onClick={() => go('email')}
+          <Option name="Continue with email" desc="Sign in or create an account with your email" onClick={() => go('email')}
             icon={<i className="ti ti-mail" aria-hidden="true" />} />
           {inWalletApp && googleOption}
+        </div>
+        <p className="si-group">Other ways</p>
+        <div className="si-options">
+          <Option name="Solana wallet" desc="Phantom, Solflare, Backpack and more" onClick={() => go('wallets')}
+            icon={<span className="si-wgrid" aria-hidden="true">{WALLETS.slice(0, 4).map(w => <img key={w.id} src={w.icon} alt="" />)}</span>} />
           <Option name="Pair devices" desc="Signed in on another device? Pair this one with a code" onClick={() => go('pair')}
             icon={<i className="ti ti-devices" aria-hidden="true" />} />
         </div>
@@ -389,6 +395,15 @@ export default function SignInModal({ initialView = 'options', initialCode = '',
     body = (
       <form className="si-form" onSubmit={signup} noValidate>
         <p className="si-desc">Earn from tasks, hire people and sell in the store. It takes a minute.</p>
+        {/* Referral links land here: Google works for sign-up too */}
+        {!inWalletApp && (
+          <>
+            <button type="button" className="si-google" onClick={google} disabled={busy === 'google'}>
+              {busy === 'google' ? <Spinner /> : <span className="si-gbadge"><GoogleIcon /></span>} Continue with Google
+            </button>
+            <p className="si-or"><span>or with your email</span></p>
+          </>
+        )}
         <div className="si-field">
           <label htmlFor="si-name">Full name</label>
           <input id="si-name" className="si-input" autoComplete="name" value={name} onChange={e => setName(e.target.value)} />
@@ -471,7 +486,7 @@ export default function SignInModal({ initialView = 'options', initialCode = '',
         <p className="si-hint">Codes expire after 5 minutes and can be used once.</p>
         <ol className="si-steps" aria-label="How to get a pairing code">
           <li><i>01</i><b>Use your signed-in device</b><span>Open OgaPay on a phone or computer where you're already signed in.</span></li>
-          <li><i>02</i><b>Create a code</b><span>Go to Pair a device (/pair-device) and select Create code.</span></li>
+          <li><i>02</i><b>Create a code</b><span>Open Settings, then Devices, and select Pair a device to create a code.</span></li>
           <li><i>03</i><b>Sign in here</b><span>Enter the code on this device, or scan its QR code.</span></li>
         </ol>
       </form>

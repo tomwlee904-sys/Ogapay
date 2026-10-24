@@ -1,24 +1,22 @@
 import { useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { Logo } from './Logo'
+import { CHANNELS } from '../lib/channels'
 import '../styles/footer.css'
 
 // PLACEHOLDER: no OgaPay YouTube channel address is known yet. Confirm the real
 // channel and change it here before relying on this link.
 export const YOUTUBE_URL = 'https://www.youtube.com/@ogapayhq'
 
-const socials = [
-  { icon: 'brand-x', href: 'https://x.com/Ogapayhq', label: 'OgaPay on X' },
-  { icon: 'brand-telegram', href: 'https://t.me/ogapayhq', label: 'OgaPay on Telegram' },
-  { icon: 'brand-instagram', href: 'https://instagram.com/ogapayhq?igsh=ajJrZzJ3Z2tjMXZm', label: 'OgaPay on Instagram' },
-  { icon: 'brand-facebook', href: 'https://www.facebook.com/share/18bRPkuPVy/', label: 'OgaPay on Facebook' },
-  { icon: 'brand-tiktok', href: 'https://tiktok.com/@ogapayhq', label: 'OgaPay on TikTok' },
-]
+// The official channels only (lib/channels.ts, the same list About and Socials show)
+const socials = CHANNELS.map((c) => ({ icon: c.icon, href: c.href, label: c.id === 'email' ? 'Email OgaPay support' : `OgaPay on ${c.name.replace(/ \(.*\)$/, '')}` }))
 
+// Two even link groups; the legal pages are one short row at the bottom
 const columns = [
   { title: 'Explore', links: [['Create a job', '/create'], ['Browse jobs', '/tasks'], ['Creator store', '/store'], ['For businesses', '/hire'], ['Vault', '/vault'], ['Blog', '/blog']] },
-  { title: 'Resources', links: [['About OgaPay', '/about'], ['Guides', '/docs'], ['Developer', '/developer'], ['FAQ', '/faq'], ['Support', '/support'], ['Socials', '/socials'], ['Brand kit', '/brand-kit'], ['Join the test team', '/join-test-team'], ['Terms', '/terms'], ['Privacy', '/privacy'], ['License', '/license'], ['Copyright', '/copyright']] },
+  { title: 'Company', links: [['About OgaPay', '/about'], ['Guides', '/docs'], ['Developer', '/developer'], ['FAQ', '/faq'], ['Support', '/support'], ['Socials', '/socials'], ['Brand kit', '/brand-kit'], ['Join the test team', '/join-test-team']] },
 ]
+const legal = [['Terms', '/terms'], ['Privacy', '/privacy'], ['License', '/license'], ['Copyright', '/copyright']]
 
 /* ─── Dotted globe ─────────────────────────────────────────────────────────────
    Points on a sphere, drawn orthographically. Land is a rough outline of Africa,
@@ -252,7 +250,7 @@ export default function Footer() {
         <div className="of-mid">
           <div className="of-socials">
             {socials.map((s) => (
-              <a key={s.icon} href={s.href} target="_blank" rel="noopener noreferrer" aria-label={s.label} className="of-social">
+              <a key={s.icon} href={s.href} target={s.href.startsWith('http') ? '_blank' : undefined} rel="noopener noreferrer" aria-label={s.label} className="of-social">
                 <i className={`ti ti-${s.icon}`} />
               </a>
             ))}
@@ -262,6 +260,9 @@ export default function Footer() {
 
         <div className="of-bottom">
           <span>© {new Date().getFullYear()} OgaPay Technologies Ltd.</span>
+          <nav className="of-legal" aria-label="Legal">
+            {legal.map(([label, to]) => <Link key={to} to={to}>{label}</Link>)}
+          </nav>
           <span className="of-built"><SolanaMark /> Built on Solana</span>
         </div>
       </div>

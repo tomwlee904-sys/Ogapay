@@ -47,17 +47,28 @@ export default function Docs() {
     <Layout>
       <style>{`
         .dc-sec{margin-top:var(--sp-7,40px)}
-        .dc-sec h2{margin:0 0 12px;font:500 11px/1.4 var(--font-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--text3)}
+        .dc-sec h2{margin:0 0 12px;font:500 var(--fs-label)/1.4 var(--font-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--text2)}
         .dc-card{display:flex;gap:14px;align-items:flex-start;padding:16px;text-decoration:none;color:inherit;transition:border-color .15s ease,transform .15s ease}
         .dc-card:hover{border-color:var(--text3);transform:translateY(-1px)}
         .dc-card:focus-visible{outline:2px solid var(--text);outline-offset:2px}
         .dc-ic{width:38px;height:38px;border-radius:10px;background:var(--card2);border:1px solid var(--border);display:grid;place-items:center;font-size:18px;color:var(--text);flex-shrink:0}
         .dc-card b{display:block;font-size:14px;font-weight:600;color:var(--text)}
-        .dc-card span:not(.dc-ic){display:block;margin-top:4px;font-size:12.5px;line-height:1.55;color:var(--text2)}
+        .dc-card .dc-txt span{display:block;margin-top:4px;font-size:13px;line-height:1.55;color:var(--text2)}
         .dc-help{margin-top:var(--sp-7,40px);display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:18px 20px}
         .dc-help p{margin:0;font-size:13.5px;color:var(--text2)}
         .dc-help b{color:var(--text)}
-        @media(max-width:860px){.dc-grid{grid-template-columns:1fr}}
+        .dc-txt{flex:1;min-width:0}
+        .dc-chev{display:none}
+        /* Phone: each section is one card of short rows (12 separate cards were ~3 screens) */
+        @media(max-width:767.98px){
+          .dc-sec{margin-top:32px}
+          .dc-grid{gap:0;border:1px solid var(--border);border-radius:var(--r-card);background:var(--card);overflow:hidden}
+          .dc-grid .dc-card{border:0;border-radius:0;box-shadow:none;border-top:1px solid var(--border);align-items:center;padding:12px 16px;min-height:56px}
+          .dc-grid .dc-card:first-child{border-top:0}
+          .dc-card:hover{transform:none}
+          .dc-ic{width:34px;height:34px;font-size:17px}
+          .dc-chev{display:block;font-size:18px;color:var(--text3);flex-shrink:0}
+        }
       `}</style>
       <div className="ui-page">
         <header className="ui-head">
@@ -78,7 +89,8 @@ export default function Docs() {
               {s.guides.map((g) => (
                 <Link key={g.title} to={g.to} className="ui-card dc-card">
                   <span className="dc-ic"><i className={`ti ti-${g.icon}`} aria-hidden="true" /></span>
-                  <span style={{ marginTop: 0 }}><b>{g.title}</b><span>{g.desc}</span></span>
+                  <span className="dc-txt"><b>{g.title}</b><span>{g.desc}</span></span>
+                  <i className="ti ti-chevron-right dc-chev" aria-hidden="true" />
                 </Link>
               ))}
             </div>

@@ -31,15 +31,50 @@ const ENDPOINTS: { method?: string; path: string; desc: string; params?: string;
 ]
 const day = (d: string) => new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
 
-function Code({ children }: { children: string }) {
+// A code block with its own header bar (label left, Copy right), so the button
+// never covers the code
+function Code({ children, label = 'Code' }: { children: string; label?: string }) {
   const { toast } = useToast()
   return (
     <div className="dv-code">
+      <div className="dv-code-bar">
+        <span>{label}</span>
+        <button type="button" className="dv-copy" aria-label={`Copy ${label}`} onClick={() => navigator.clipboard?.writeText(children).then(() => toast('Copied', 'success')).catch(() => {})}><i className="ti ti-copy" aria-hidden="true" /> Copy</button>
+      </div>
       <pre><code>{children}</code></pre>
-      <button className="dv-copy" aria-label="Copy" onClick={() => navigator.clipboard?.writeText(children).then(() => toast('Copied', 'success')).catch(() => {})}><i className="ti ti-copy" /></button>
     </div>
   )
 }
+
+// Parameters as separate chips that never break in the middle (the long ones
+// keep their explanation in brackets as plain text after the chip)
+function Params({ text }: { text: string }) {
+  const parts = text.split(/, (?![^(\[]*[)\]])/)
+  return (
+    <span className="dv-params">
+      {parts.map((p) => {
+        const m = p.match(/^([^(]+?)\s*(\(.*\))?$/)
+        return <span key={p} className="dv-param"><code>{m ? m[1] : p}</code>{m?.[2] && <small>{m[2].slice(1, -1)}</small>}</span>
+      })}
+    </span>
+  )
+}
+
+function Endpoint({ e }: { e: typeof ENDPOINTS[number] }) {
+  const method = e.method || 'GET'
+  return (
+    <div className="dv-ep">
+      <span className="dv-method" data-m={method}>{method}</span>
+      <div>
+        <code className="dv-path">/dev{e.path}</code>
+        <p>{e.desc}</p>
+        {e.params && <div className="dv-ep-params"><span className="dv-plabel">{method === 'POST' ? 'Body' : 'Query'}</span><Params text={e.params} /></div>}
+      </div>
+    </div>
+  )
+}
+
+const NAV = [['keys', 'API keys'], ['auth', 'Authentication'], ['read', 'Read endpoints'], ['write', 'Write endpoints'], ['examples', 'Examples']]
 
 function Keys() {
   const { toast } = useToast()
@@ -82,14 +117,14 @@ function Keys() {
   const revoked = (keys || []).filter((k) => k.revokedAt)
 
   return (
-    <section className="up-card dv-card">
+    <section className="ui-card dv-card" id="keys">
       <h2>Your API keys</h2>
       <p className="dv-sub">Up to 5 active keys. Treat them like passwords: anyone with a key can read your balance and history, and a key with write access can also spend your balance on jobs.</p>
 
       {fresh && (
         <div className="dv-fresh" role="status">
           <strong>Copy your new key now. It won't be shown again.</strong>
-          <Code>{fresh}</Code>
+          <Code label="Your new key">{fresh}</Code>
           <button className="up-btn" onClick={() => setFresh(null)}>I've saved it</button>
         </div>
       )}
@@ -127,52 +162,66 @@ function Keys() {
 
 export default function Developer() {
   const signedIn = !!getAccessToken()
+  const reads = ENDPOINTS.filter((e) => !e.write)
+  const writes = ENDPOINTS.filter((e) => e.write)
+  const go = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   return (
     <Layout>
-      <div className="up-wrap dv-wrap">
-        <div className="dv-head">
-          <h1>Developer API</h1>
-          <p>Read your OgaPay data and public jobs from your own apps, and let your app or AI agent post jobs and pay for approved work. Every key can read; give a key write access when it should post jobs. No key can withdraw or send money.</p>
-        </div>
-
-        {signedIn ? <Keys /> : (
-          <section className="up-card dv-card">
-            <h2>Your API keys</h2>
-            <p className="dv-sub">Sign in to create a key.</p>
-            <button className="up-btn primary" onClick={() => openSignIn({ redirect: '/developer' })}>Sign in</button>
-          </section>
-        )}
-
-        <section className="up-card dv-card">
-          <h2>Authentication</h2>
-          <p className="dv-sub">Send your key in the <code>Authorization</code> header (or <code>X-API-Key</code>). Base URL:</p>
-          <Code>{BASE}</Code>
-          <Code>{`curl ${BASE}/me \\\n  -H "Authorization: Bearer oga_live_YOUR_KEY"`}</Code>
-          <p className="dv-sub">Responses look like <code>{'{ "success": true, "data": … }'}</code>; lists add <code>pagination</code>. Limit: 60 requests a minute per key. Errors: <code>401</code> missing, wrong or revoked key; <code>429</code> too many requests.</p>
-        </section>
-
-        <section className="up-card dv-card">
-          <h2>Endpoints</h2>
-          <p className="dv-sub">Page size is up to 50 (default 20). Endpoints marked <b>write</b> need a key with write access (<code>403</code> otherwise). Send JSON bodies with <code>Content-Type: application/json</code>.</p>
-          <div className="dv-eps">
-            {ENDPOINTS.map((e) => (
-              <div key={e.path} className="dv-ep">
-                <span className="dv-method">{e.method || 'GET'}</span>
-                <div>
-                  <code className="dv-path">/dev{e.path}</code>{e.write && <span className="dv-write">write</span>}
-                  <p>{e.desc}{e.params && <> {e.method === 'POST' ? 'Body' : 'Query'}: <code>{e.params}</code></>}</p>
-                </div>
-              </div>
-            ))}
+      <div className="ui-page">
+        <header className="ui-head">
+          <div>
+            <span className="ui-eyebrow"><i className="ti ti-code" /> Developers</span>
+            <h1 className="ui-title">Developer API</h1>
+            <p className="ui-sub">Read your OgaPay data and public jobs from your own apps, and let your app or AI agent post jobs and pay for approved work. No key can withdraw or send money.</p>
           </div>
-          <p className="dv-sub" style={{ marginTop: 14 }}>Example: open design jobs</p>
-          <Code>{`curl "${BASE}/jobs?category=DESIGN&limit=5" \\\n  -H "Authorization: Bearer oga_live_YOUR_KEY"`}</Code>
-          <p className="dv-sub">Categories: SOCIAL_MEDIA, DATA_ENTRY, CONTENT_WRITING, APP_TESTING, SURVEY, DESIGN, TRANSLATION, WEB_RESEARCH, VIDEO_REVIEW, OTHER.</p>
-          <p className="dv-sub" style={{ marginTop: 14 }}>Example: post a job for 20 people at ₦200 each (a key with write access)</p>
-          <Code>{`curl -X POST ${BASE}/jobs \\\n  -H "Authorization: Bearer oga_live_YOUR_KEY" \\\n  -H "Content-Type: application/json" \\\n  -d '{"title":"Try our app and tell us what broke","description":"Install the app, sign up and send a screenshot of the home page.","category":"APP_TESTING","reward":200,"currency":"NGN","maxWorkers":20}'`}</Code>
-        </section>
+          {!signedIn && (
+            <div className="ui-actions">
+              <button type="button" className="ui-btn ui-btn-dark" onClick={() => openSignIn({ redirect: '/developer' })}>Sign in to create a key</button>
+            </div>
+          )}
+        </header>
 
-        <p className="dv-foot">Building something bigger? <Link to="/support">Tell us</Link> what you need.</p>
+        <div className="dv-layout">
+          <nav className="dv-nav" aria-label="On this page">
+            <div className="dv-nav-label">On this page</div>
+            {NAV.filter(([id]) => signedIn || id !== 'keys').map(([id, label]) => <button key={id} type="button" onClick={() => go(id)}>{label}</button>)}
+          </nav>
+
+          <div className="dv-main">
+            {signedIn && <Keys />}
+
+            <section className="ui-card dv-card" id="auth">
+              <h2>Authentication</h2>
+              <p className="dv-sub">Send your key in the <code>Authorization</code> header (or <code>X-API-Key</code>). Every key can read; give a key write access when it should post jobs.</p>
+              <Code label="Base URL">{BASE}</Code>
+              <Code label="cURL">{`curl ${BASE}/me \\\n  -H "Authorization: Bearer oga_live_YOUR_KEY"`}</Code>
+              <p className="dv-sub">Responses look like <code>{'{ "success": true, "data": … }'}</code>; lists add <code>pagination</code>. Limit: 60 requests a minute per key. Errors: <code>401</code> missing, wrong or revoked key; <code>429</code> too many requests.</p>
+            </section>
+
+            <section className="ui-card dv-card" id="read">
+              <h2>Read endpoints <span className="dv-h2-note">any key</span></h2>
+              <p className="dv-sub">Page size is up to 50 (default 20).</p>
+              <div className="dv-eps">{reads.map((e) => <Endpoint key={e.path} e={e} />)}</div>
+            </section>
+
+            <section className="ui-card dv-card" id="write">
+              <h2>Write endpoints <span className="dv-h2-note write">needs write access</span></h2>
+              <p className="dv-sub">A key without write access gets <code>403</code>. Send JSON bodies with <code>Content-Type: application/json</code>.</p>
+              <div className="dv-eps">{writes.map((e) => <Endpoint key={e.method + e.path} e={e} />)}</div>
+            </section>
+
+            <section className="ui-card dv-card" id="examples">
+              <h2>Examples</h2>
+              <p className="dv-sub">Open design jobs:</p>
+              <Code label="cURL">{`curl "${BASE}/jobs?category=DESIGN&limit=5" \\\n  -H "Authorization: Bearer oga_live_YOUR_KEY"`}</Code>
+              <p className="dv-sub">Categories: SOCIAL_MEDIA, DATA_ENTRY, CONTENT_WRITING, APP_TESTING, SURVEY, DESIGN, TRANSLATION, WEB_RESEARCH, VIDEO_REVIEW, OTHER.</p>
+              <p className="dv-sub">Post a job for 20 people at ₦200 each (a key with write access):</p>
+              <Code label="cURL">{`curl -X POST ${BASE}/jobs \\\n  -H "Authorization: Bearer oga_live_YOUR_KEY" \\\n  -H "Content-Type: application/json" \\\n  -d '{"title":"Try our app and tell us what broke","description":"Install the app, sign up and send a screenshot of the home page.","category":"APP_TESTING","reward":200,"currency":"NGN","maxWorkers":20}'`}</Code>
+            </section>
+
+            <p className="dv-foot">Building something bigger? <Link to="/support">Tell us</Link> what you need.</p>
+          </div>
+        </div>
       </div>
     </Layout>
   )

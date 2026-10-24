@@ -56,23 +56,38 @@
 .of-tag { display: inline-flex; align-items: center; gap: 10px; font: 400 12px 'JetBrains Mono', ui-monospace, monospace; letter-spacing: .02em; color: var(--of-muted); }
 .of-tag span { width: 20px; height: 1px; background: var(--of-line); }
 
-.of-bottom { display: flex; justify-content: space-between; align-items: center; gap: 12px 24px; flex-wrap: wrap; margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--of-line); font-size: 11px; color: var(--of-muted); }
+.of-bottom { display: flex; justify-content: space-between; align-items: center; gap: 12px 24px; flex-wrap: wrap; margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--of-line); font-size: 12px; color: var(--of-muted); }
 .of-built { display: inline-flex; align-items: center; gap: 7px; }
+/* Terms · Privacy · License · Copyright: one short row instead of a link column */
+.of-legal { display: flex; flex-wrap: wrap; gap: 0 18px; }
+.of-legal a { display: inline-flex; align-items: center; min-height: 36px; color: var(--of-muted); text-decoration: none; }
+.of-legal a:hover { color: var(--of-ink); text-decoration: underline; text-underline-offset: 3px; }
+.of-legal a:focus-visible { outline: 2px solid var(--of-ink); outline-offset: 2px; border-radius: 4px; }
 
-@media (max-width: 900px) {
-  .of-top { grid-template-columns: minmax(0, 1fr); gap: 32px; }
+/* Tablet: brand block on top, then the globe and the two link groups */
+@media (max-width: 1023.98px) {
+  .of-top { grid-template-columns: minmax(0, 1fr); gap: 28px; }
   .of-nav { padding: 0; }
+  .of-globe { height: 180px; }
 }
 /* Room at the bottom for the bottom dock (the screens that show it, see tokens.css) */
 @media (max-width: 767.98px), (max-width: 1023.98px) and (min-height: 600px) {
   .of-inner { padding-bottom: calc(var(--dock-clear) + 12px); }
 }
-@media (max-width: 767px) {
-  .of-inner { padding: 44px 16px calc(var(--dock-clear) + 12px); }
-  .of-title { font-size: 30px; }
-  .of-globe { height: 180px; }
+/* Phone: about one screen. No globe, a smaller headline, the two link groups
+   side by side and the legal links as one row */
+@media (max-width: 767.98px) {
+  .of-inner { padding: 36px 16px calc(var(--dock-clear) + 12px); }
+  .of-top { gap: 24px; }
+  .of-title { margin-top: 20px; font-size: 24px; }
+  .of-lead { margin-top: 10px; }
+  .of-globe { display: none; }
   .of-nav { gap: 20px; }
-  .of-mid { flex-direction: column; align-items: flex-start; }
+  .of-link { gap: 10px; }
+  .of-mid { margin-top: 20px; }
+  .of-tag { display: none; }
+  .of-bottom { flex-direction: column; align-items: flex-start; gap: 4px; }
+  .of-legal { order: -1; }
 }
 
 /* Compact footer on signed-in app pages (CompactFooter) */
