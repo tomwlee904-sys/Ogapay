@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import Layout from '../components/Layout'
+import AdminShell, { AdminEmpty, AdminSkeleton } from '../components/AdminShell'
+import LoadError from '../components/LoadError'
 import { apiRequest } from '../lib/api'
 import { money } from '../lib/wallet'
 
@@ -27,8 +28,8 @@ function JobRow({ job, onToggle, busy }: { job: Job; onToggle: (j: Job) => void;
           {job.poster?.username ? `@${job.poster.username} · ` : ''}{money(Number(job.reward) || 0, job.currency)} each · {placesLeft(job)} place{placesLeft(job) === 1 ? '' : 's'} left
         </span>
       </div>
-      <button className={`ui-btn ${job.featured ? 'ui-btn-ghost' : 'ui-btn-dark'}`} onClick={() => onToggle(job)} disabled={busy}>
-        <i className={`ti ${job.featured ? 'ti-x' : 'ti-star'}`} aria-hidden="true" /> {busy ? 'Saving…' : job.featured ? 'Remove highlight' : 'Highlight'}
+      <button type="button" className="ui-btn ui-btn-ghost" onClick={() => onToggle(job)} disabled={busy} aria-label={`${job.featured ? 'Remove the highlight from' : 'Highlight'} ${job.title}`}>
+        <i className={`ti ${job.featured ? 'ti-x' : 'ti-star'}`} aria-hidden="true" /> {busy ? 'Saving…' : job.featured ? 'Remove' : 'Highlight'}
       </button>
     </li>
   )
@@ -41,17 +42,22 @@ export default function AdminHighlights() {
   const [busyId, setBusyId] = useState<string | null>(null)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
+  // A list that failed to load shows "couldn't load", never "none"
+  const [hlFailed, setHlFailed] = useState(false)
+  const [resFailed, setResFailed] = useState(false)
 
   const loadHighlighted = async () => {
+    setHlFailed(false)
     try { setHighlighted(await apiRequest<Job[]>('/tasks/featured')) }
-    catch (e: any) { setHighlighted([]); setError(e?.message || 'Could not load highlighted jobs') }
+    catch { setHighlighted(null); setHlFailed(true) }
   }
   const find = async (q = search) => {
+    setResFailed(false)
     try {
       const qs = new URLSearchParams({ status: 'OPEN', limit: '15', ...(q.trim() && { search: q.trim() }) })
       const r = await apiRequest<any>(`/tasks?${qs}`)
       setResults(Array.isArray(r) ? r : r?.items || r?.tasks || [])
-    } catch (e: any) { setResults([]); setError(e?.message || 'Could not search jobs') }
+    } catch { setResults(null); setResFailed(true) }
   }
   useEffect(() => { loadHighlighted(); find('') }, [])
 
@@ -69,50 +75,52 @@ export default function AdminHighlights() {
   }
 
   return (
-    <Layout sidebar>
+    <AdminShell
+      section="highlights"
+      title="Highlighted jobs"
+      sub="Shown first, with a Highlighted badge, on the homepage and the jobs page."
+      how={<p>Highlight good, open jobs so new people find work quickly, and remove the highlight when a job is full. A job that bought a Boost in the Store shows "Boosted" instead while the boost lasts.</p>}
+    >
       <style>{`
-        .ah{max-width:980px;margin:0 auto;padding:28px 24px 64px}
-        .ah h1{font-size:28px;font-weight:600;letter-spacing:-.02em;margin:0 0 4px}
-        .ah-sub{color:var(--text2);font-size:14px;margin:0 0 20px;max-width:640px;line-height:1.55}
-        .ah h2{font-size:16px;font-weight:600;margin:24px 0 10px}
+        .ah-cols{display:grid;grid-template-columns:minmax(0,1fr);gap:24px;align-items:start}
+        @media (min-width:1024px){.ah-cols{grid-template-columns:minmax(0,5fr) minmax(0,7fr)}.ah-now{position:sticky;top:calc(var(--nav-h) + 16px)}}
+        .ah-cols h2{margin:0 0 10px;font-size:17px;font-weight:600}
         .ah-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
-        .ah-row{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:14px 16px;border:1px solid var(--border);border-radius:12px;background:var(--card)}
+        .ah-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border:1px solid var(--border);border-radius:var(--r-md);background:var(--card)}
         .ah-main{display:flex;flex-direction:column;gap:3px;min-width:0}
-        .ah-title{font-size:14px;font-weight:600;color:var(--text);text-decoration:none;overflow-wrap:anywhere}
+        .ah-title{font-size:14px;font-weight:600;color:var(--text);text-decoration:none;overflow-wrap:anywhere;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
         .ah-title:hover{text-decoration:underline}
         .ah-meta{font-size:12.5px;color:var(--text2)}
-        .ah-row .ui-btn{flex-shrink:0;white-space:nowrap}
-        .ah-empty{color:var(--text2);font-size:13px;padding:14px 16px;border:1px dashed var(--border);border-radius:12px}
-        .ah-search{display:flex;gap:8px;margin-bottom:10px}
-        .ah-search .ui-input{flex:1;min-width:0}
-        .ah-notice{font-size:13px;color:var(--green);margin:0 0 10px}
-        .ah-error{font-size:13px;color:var(--red,#dc2626);margin:0 0 10px}
-        @media (max-width:560px){
-          .ah{padding:20px 16px 56px}
-          .ah-row{flex-direction:column;align-items:stretch}
-          .ah-row .ui-btn{justify-content:center}
-        }
+        .ah-row .ui-btn{flex-shrink:0}
+        @media (max-width:767.98px){.ah-row .ui-btn{padding:0 12px}}
       `}</style>
-      <div className="ah">
-        <h1>Highlighted jobs</h1>
-        <p className="ah-sub">Highlighted jobs get the Highlighted badge and are shown first on the homepage and the jobs page. Highlight good, open jobs so new people find work quickly, and remove the highlight when a job is full.</p>
-        {notice && <p className="ah-notice" role="status">{notice}</p>}
-        {error && <p className="ah-error" role="alert">{error}</p>}
+      {notice && <div className="adm-msg" role="status"><span>{notice}</span><button type="button" onClick={() => setNotice('')} aria-label="Dismiss"><i className="ti ti-x" aria-hidden="true" /></button></div>}
+      {error && <div className="adm-msg bad" role="alert"><span>{error}</span><button type="button" onClick={() => setError('')} aria-label="Dismiss"><i className="ti ti-x" aria-hidden="true" /></button></div>}
 
-        <h2>Highlighted now{highlighted ? ` (${highlighted.length})` : ''}</h2>
-        {highlighted === null ? <p className="ah-empty">Loading…</p>
-          : highlighted.length === 0 ? <p className="ah-empty">No open job is highlighted.</p>
-          : <ul className="ah-list">{highlighted.map((j) => <JobRow key={j.id} job={{ ...j, featured: true }} onToggle={toggle} busy={busyId === j.id} />)}</ul>}
+      <div className="ah-cols">
+        <section className="ah-now" aria-labelledby="ah-now">
+          <h2 id="ah-now">Highlighted now{highlighted && !hlFailed ? ` (${highlighted.length})` : ''}</h2>
+          {hlFailed ? <LoadError what="highlighted jobs" onRetry={loadHighlighted} />
+            : highlighted === null ? <AdminSkeleton rows={2} height={64} />
+            : highlighted.length === 0 ? <AdminEmpty compact title="No open job is highlighted">Highlight one from the list.</AdminEmpty>
+            : <ul className="ah-list">{highlighted.map((j) => <JobRow key={j.id} job={{ ...j, featured: true }} onToggle={toggle} busy={busyId === j.id} />)}</ul>}
+        </section>
 
-        <h2>Find an open job to highlight</h2>
-        <form className="ah-search" onSubmit={(e) => { e.preventDefault(); find() }}>
-          <input className="ui-input" type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search open jobs by title" aria-label="Search open jobs" />
-          <button className="ui-btn ui-btn-ghost" type="submit"><i className="ti ti-search" aria-hidden="true" /> Search</button>
-        </form>
-        {results === null ? <p className="ah-empty">Loading…</p>
-          : results.length === 0 ? <p className="ah-empty">No open jobs found.</p>
-          : <ul className="ah-list">{results.map((j) => <JobRow key={j.id} job={j} onToggle={toggle} busy={busyId === j.id} />)}</ul>}
+        <section aria-labelledby="ah-find">
+          <h2 id="ah-find">Find an open job to highlight</h2>
+          <form className="adm-search" role="search" onSubmit={(e) => { e.preventDefault(); find() }}>
+            <div className="ui-search">
+              <i className="ti ti-search" aria-hidden="true" />
+              <input className="ui-input" type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search open jobs" aria-label="Search open jobs by title" />
+              <button className="ui-search-btn" type="submit" aria-label="Search"><i className="ti ti-arrow-right" aria-hidden="true" /></button>
+            </div>
+          </form>
+          {resFailed ? <LoadError what="open jobs" onRetry={() => find()} />
+            : results === null ? <AdminSkeleton rows={3} height={64} />
+            : results.length === 0 ? <AdminEmpty compact title="No open jobs found" />
+            : <ul className="ah-list">{results.map((j) => <JobRow key={j.id} job={j} onToggle={toggle} busy={busyId === j.id} />)}</ul>}
+        </section>
       </div>
-    </Layout>
+    </AdminShell>
   )
 }

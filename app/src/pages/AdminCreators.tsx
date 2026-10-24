@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import Layout from '../components/Layout'
+import AdminShell, { AdminEmpty, AdminRefresh, AdminSkeleton } from '../components/AdminShell'
+import LoadError from '../components/LoadError'
 import { apiRequest } from '../lib/api'
 import { fullCount, platformOf, tierFor } from '../lib/creators'
 
@@ -50,10 +51,10 @@ function Row({ it, onDone }: { it: Item; onDone: (id: string, msg: string) => vo
   }
 
   return (
-    <article className="aw-row ui-card">
-      <header className="aw-top">
-        <div className="aw-who">
-          <b>{name} <Link to={`/user/${it.user.username}`} className="ak-handle">@{it.user.username}</Link></b>
+    <article className="adm-row ui-card">
+      <header className="adm-top">
+        <div className="adm-who">
+          <b>{name} <Link to={`/user/${it.user.username}`} className="adm-handle">@{it.user.username}</Link></b>
           <span>{it.user.email}</span>
         </div>
         <time dateTime={it.submittedAt} title={new Date(it.submittedAt).toLocaleString()}>{ago(it.submittedAt)}</time>
@@ -61,26 +62,25 @@ function Row({ it, onDone }: { it: Item; onDone: (id: string, msg: string) => vo
 
       <div className="ac-body">
         {it.proofUrl ? (
-          <a className="ac-proof" href={it.proofUrl} target="_blank" rel="noopener noreferrer" title="Open the screenshot full size">
+          <a className="ac-proof" href={it.proofUrl} target="_blank" rel="noopener noreferrer" title="Open the screenshot full size" aria-label={`Open the screenshot of @${it.handle} full size`}>
             <img src={it.proofUrl} alt={`Screenshot of ${it.handle} on ${p.label}`} />
           </a>
         ) : <div className="ac-proof ac-none">No screenshot</div>}
-        <dl className="aw-amounts ac-facts">
+        <dl className="ac-facts">
           <div><dt>Platform</dt><dd><i className={`ti ${p.icon}`} />&nbsp;{p.label}</dd></div>
           <div><dt>Handle</dt><dd><a href={p.url(it.handle)} target="_blank" rel="noopener noreferrer">@{it.handle}</a></dd></div>
           <div><dt>They say</dt><dd>{fullCount(it.followers)} {p.unit}{it.tier ? ` · ${it.tier}` : ''}</dd></div>
         </dl>
       </div>
-      <p className="aw-kind"><i className="ti ti-search" /> Open the profile link and the screenshot. The handle and the count must match before you verify.</p>
-      {it.status === 'REJECTED' && it.note && <p className="aw-note">{it.note}</p>}
+      {it.status === 'REJECTED' && it.note && <p className="adm-note">{it.note}</p>}
 
       {it.status === 'PENDING' && (mode === null ? (
-        <div className="aw-actions">
-          <button className="ui-btn ui-btn-dark" onClick={() => setMode('approve')}><i className="ti ti-check" /> Verify</button>
-          <button className="ui-btn ui-btn-ghost" onClick={() => setMode('reject')}><i className="ti ti-x" /> Reject</button>
+        <div className="adm-actions">
+          <button className="ui-btn ui-btn-dark" onClick={() => setMode('approve')}><i className="ti ti-check" aria-hidden="true" /> Verify</button>
+          <button className="ui-btn ui-btn-ghost" onClick={() => setMode('reject')}><i className="ti ti-x" aria-hidden="true" /> Reject</button>
         </div>
       ) : (
-        <div className="aw-confirm">
+        <div className="adm-confirm">
           {mode === 'approve' ? (
             <>
               <label htmlFor={`cnt-${it.id}`}>{p.unit[0].toUpperCase() + p.unit.slice(1)} shown in the screenshot</label>
@@ -94,9 +94,9 @@ function Row({ it, onDone }: { it: Item; onDone: (id: string, msg: string) => vo
                 placeholder="e.g. The screenshot doesn't show the follower count." />
             </>
           )}
-          {error && <p className="aw-error" role="alert">{error}</p>}
-          <div className="aw-actions">
-            <button className={`ui-btn ${mode === 'approve' ? 'ui-btn-dark' : 'aw-danger'}`} onClick={act} disabled={busy}>
+          {error && <p className="adm-error" role="alert">{error}</p>}
+          <div className="adm-actions">
+            <button className={`ui-btn ${mode === 'approve' ? 'ui-btn-dark' : 'adm-danger'}`} onClick={act} disabled={busy}>
               {busy ? 'Saving…' : mode === 'approve' ? 'Confirm verify' : 'Confirm reject'}
             </button>
             <button className="ui-btn ui-btn-ghost" onClick={() => { setMode(null); setError('') }} disabled={busy}>Cancel</button>
@@ -113,10 +113,18 @@ export default function AdminCreators() {
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
   const [loading, setLoading] = useState(true)
+  const [checkedAt, setCheckedAt] = useState<Date | null>(null)
+  // Waiting count, kept on its tab while another tab is open
+  const [waiting, setWaiting] = useState<number | null>(null)
 
   const load = async (s = status) => {
     setLoading(true); setError('')
-    try { setItems((await apiRequest<{ items: Item[] }>(`/creators/admin/queue?status=${s}`)).items) }
+    try {
+      const list = (await apiRequest<{ items: Item[] }>(`/creators/admin/queue?status=${s}`)).items
+      setItems(list)
+      setCheckedAt(new Date())
+      if (s === 'PENDING') setWaiting(list?.length ?? 0)
+    }
     catch (e: any) { setItems(null); setError(e?.message || 'Could not load creator checks') }
     setLoading(false)
   }
@@ -125,82 +133,64 @@ export default function AdminCreators() {
   const onDone = (id: string, msg: string) => {
     setNotice(msg)
     setItems((l) => l && l.filter((x) => x.id !== id))
+    if (status === 'PENDING') setWaiting((n) => (n == null ? n : Math.max(0, n - 1)))
   }
 
+  const countFor = (s: Status) => (error ? null : status === s && items ? items.length : s === 'PENDING' ? waiting : null)
+
   return (
-    <Layout sidebar>
+    <AdminShell
+      section="creators"
+      title="Creator checks"
+      sub="Check follower screenshots before you verify. Creators are told either way."
+      howLabel="How to check"
+      how={<>
+        <p>Creators send a screenshot for Instagram, TikTok, YouTube and Facebook. X is read from X and never lands here.</p>
+        <p>Open the profile link and the screenshot. <b>The handle and the count must match</b> before you verify. Correct the count if the screenshot shows a different number.</p>
+      </>}
+      actions={<AdminRefresh onClick={() => load()} loading={loading} />}
+    >
       <style>{`
-        .aw{max-width:980px;margin:0 auto;padding:28px 24px 64px}
-        .aw-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:18px}
-        .aw-head h1{font-size:28px;font-weight:600;letter-spacing:-.02em;margin:0 0 4px}
-        .aw-head p{color:var(--text2);font-size:14px;margin:0;max-width:600px}
-        .aw-tabs{display:flex;gap:6px;border-bottom:1px solid var(--border);margin-bottom:14px}
-        .aw-tabs button{background:none;border:0;border-bottom:2px solid transparent;padding:10px 12px;font-family:inherit;font-size:13px;font-weight:500;color:var(--text2);cursor:pointer;margin-bottom:-1px}
-        .aw-tabs button[aria-selected="true"]{color:var(--text);border-bottom-color:var(--text)}
-        .aw-list{display:flex;flex-direction:column;gap:12px}
-        .aw-row{padding:18px 20px;display:flex;flex-direction:column;gap:12px}
-        .aw-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
-        .aw-who{display:flex;flex-direction:column;gap:2px;min-width:0}
-        .aw-who b{font-size:15px;font-weight:600}
-        .aw-who span{font-size:12px;color:var(--text2);word-break:break-all}
-        .ak-handle{font-weight:400;font-size:13px;color:var(--text2);text-decoration:none}
-        .aw-top time{font-size:12px;color:var(--text3);white-space:nowrap}
-        .ac-body{display:grid;grid-template-columns:180px 1fr;gap:14px;align-items:start}
-        .ac-proof{display:block;border:1px solid var(--border);border-radius:12px;overflow:hidden;background:var(--bg2);aspect-ratio:3/4}
+        .ac-body{display:grid;grid-template-columns:180px minmax(0,1fr);gap:16px;align-items:start}
+        .ac-proof{display:block;border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden;background:var(--card2);aspect-ratio:3/4}
         .ac-proof img{width:100%;height:100%;object-fit:contain;display:block}
-        .ac-none{display:grid;place-items:center;font-size:12px;color:var(--text3)}
-        .aw-amounts{display:grid;grid-template-columns:1fr;gap:10px;margin:0}
-        .aw-amounts div{background:var(--card2,var(--bg));border:1px solid var(--border);border-radius:12px;padding:10px 12px;min-width:0}
-        .aw-amounts dt{font-size:11px;color:var(--text3);margin-bottom:2px}
-        .aw-amounts dd{margin:0;font-size:15px;font-weight:600;display:flex;align-items:center;overflow-wrap:anywhere}
-        .aw-amounts dd a{color:var(--text)}
-        .aw-kind{margin:0;font-size:12.5px;color:var(--text2);display:flex;gap:6px;align-items:baseline;line-height:1.5}
-        .aw-note{margin:0;font-size:12.5px;padding:8px 10px;border-radius:10px;background:var(--card2,var(--bg));color:var(--text2)}
-        .aw-actions{display:flex;gap:8px;flex-wrap:wrap}
-        .aw-confirm{border-top:1px solid var(--border);padding-top:12px;display:flex;flex-direction:column;gap:8px}
-        .aw-confirm p{margin:0;font-size:13px;color:var(--text2);line-height:1.5}
-        .aw-confirm label{font-size:12px;font-weight:500}
-        .aw-confirm textarea{resize:vertical;min-height:64px;padding-top:10px}
-        .aw-danger{background:var(--red);color:#fff}
-        .aw-error{color:var(--red) !important;margin:0;font-size:13px}
-        .aw-msg{padding:10px 14px;border-radius:12px;font-size:13px;margin-bottom:14px;background:color-mix(in srgb,var(--green) 12%,transparent);color:var(--text);display:flex;justify-content:space-between;gap:10px}
-        .aw-msg button{background:none;border:0;color:var(--text2);cursor:pointer}
-        .aw-empty{padding:48px 20px;text-align:center;color:var(--text2);font-size:14px}
-        @media (max-width:640px){
-          .aw{padding:20px 16px 56px}
-          .ac-body{grid-template-columns:1fr}
-          .ac-proof{max-width:240px}
-          .aw-actions .ui-btn{flex:1}
+        .ac-none{display:grid;place-items:center;font-size:12.5px;color:var(--text2);text-align:center;padding:8px}
+        .ac-facts{display:grid;gap:10px;margin:0}
+        .ac-facts div{min-width:0}
+        .ac-facts dt{font-size:12px;color:var(--text2);margin-bottom:1px}
+        .ac-facts dd{margin:0;font-size:15px;font-weight:600;display:flex;align-items:center;gap:4px;overflow-wrap:anywhere;min-width:0}
+        .ac-facts dd a{color:var(--text)}
+        @media (max-width:1023.98px){.ac-body{grid-template-columns:140px minmax(0,1fr)}}
+        @media (max-width:767.98px){
+          .ac-body{grid-template-columns:104px minmax(0,1fr);gap:12px}
+          .ac-facts{gap:8px}
+          .ac-facts dd{font-size:14px}
         }
       `}</style>
-
-      <div className="aw">
-        <div className="aw-head">
-          <div>
-            <h1>Creator checks</h1>
-            <p>Verify the follower counts creators send for Instagram, TikTok, YouTube and Facebook. X is read from X and doesn't need checking. Creators are notified either way.</p>
-          </div>
-          <button className="ui-btn ui-btn-ghost" onClick={() => load()} disabled={loading}><i className="ti ti-refresh" /> Refresh</button>
-        </div>
-
-        <div className="aw-tabs" role="tablist">
-          {TABS.map(([s, label]) => (
-            <button key={s} role="tab" aria-selected={status === s} onClick={() => { setStatus(s); setNotice('') }}>{label}</button>
-          ))}
-        </div>
-
-        {notice && <div className="aw-msg" role="status"><span>{notice}</span><button onClick={() => setNotice('')} aria-label="Dismiss"><i className="ti ti-x" /></button></div>}
-
-        {loading && !items ? (
-          <div className="aw-empty">Loading…</div>
-        ) : error ? (
-          <div className="aw-empty" role="alert">{error}</div>
-        ) : !items || items.length === 0 ? (
-          <div className="aw-empty">{status === 'PENDING' ? 'Nothing waiting for review. All caught up.' : 'Nothing here yet.'}</div>
-        ) : (
-          <div className="aw-list">{items.map((it) => <Row key={it.id} it={it} onDone={onDone} />)}</div>
-        )}
+      <div className="adm-tabs even" role="tablist" aria-label="Creator check status">
+        {TABS.map(([s, label]) => {
+          const n = countFor(s)
+          return (
+            <button key={s} type="button" role="tab" aria-selected={status === s} onClick={() => { setStatus(s); setNotice('') }}>
+              {label}{n != null && <em>{n}</em>}
+            </button>
+          )
+        })}
       </div>
-    </Layout>
+
+      {notice && <div className="adm-msg" role="status"><span>{notice}</span><button type="button" onClick={() => setNotice('')} aria-label="Dismiss"><i className="ti ti-x" aria-hidden="true" /></button></div>}
+
+      {error ? (
+        <LoadError what="creator checks" onRetry={() => load()} />
+      ) : loading && !items ? (
+        <AdminSkeleton height={220} />
+      ) : !items || items.length === 0 ? (
+        status === 'PENDING'
+          ? <AdminEmpty done title="Nothing waiting for review" at={checkedAt}>All caught up.</AdminEmpty>
+          : <AdminEmpty title={status === 'VERIFIED' ? 'No verified creators yet' : 'No rejected checks'} />
+      ) : (
+        <div className="adm-list">{items.map((it) => <Row key={it.id} it={it} onDone={onDone} />)}</div>
+      )}
+    </AdminShell>
   )
 }
