@@ -8,7 +8,7 @@ export default function Referrals() {
       <div className="ui-page">
         <div className="ui-head" style={{ marginBottom: 20 }}>
           <div>
-            <span className="ui-eyebrow">Invite friends</span>
+
             <h1 className="ui-title">Referrals</h1>
           </div>
         </div>
