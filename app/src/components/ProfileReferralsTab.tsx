@@ -219,7 +219,7 @@ export default function TabReferralsContent() {
   const friends = [...people].sort((a, b) => STEP_ORDER[(a.step || 'job') as Step] - STEP_ORDER[(b.step || 'job') as Step])
   const someoneToRemind = people.some((p) => p.step === 'verify' || p.step === 'job')
   // Says what the friend gets, not just the inviter
-  const shareText = `Join me on OgaPay and get ${naira(signup, 0)} when you verify your NIN.\n\nThen earn from small jobs (follows, reviews, app tests), paid in Naira or USDC.\nSign up with my link: ${link}`
+  const shareText = `Join me on OgaPay: verify your NIN, finish your first job and get a ${naira(signup, 0)} bonus on top of your pay.\n\nEarn from small jobs (follows, reviews, app tests), paid in Naira or USDC.\nSign up with my link: ${link}`
 
   const copy = () => navigator.clipboard?.writeText(link).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000) }).catch(() => {})
   // Phones: the system share sheet (WhatsApp, SMS, Telegram...) in one tap; elsewhere copy the link
@@ -273,8 +273,8 @@ export default function TabReferralsContent() {
             ) : statsFailed ? <Failed what="your link" onRetry={retry} /> : <div className="ui-sk" style={{ height: 96, borderRadius: 12, marginTop: 16 }} aria-hidden="true" />}
             <ol className="rf3-how" aria-label="How it works">
               <li><span><b>Share your link</b><br />on WhatsApp, X or Telegram</span></li>
-              <li><span><b>Your friend verifies their NIN</b><br />they get {naira(signup, 0)}</span></li>
-              <li><span><b>They finish a paid job</b><br />you get {naira(bonus, 0)}</span></li>
+              <li><span><b>Your friend verifies their NIN</b><br />and takes a job</span></li>
+              <li><span><b>They finish a paid job</b><br />you get {naira(bonus, 0)}, they get {naira(signup, 0)}</span></li>
             </ol>
           </section>
 
