@@ -1,16 +1,15 @@
 ﻿import { useState, useEffect, useRef } from "react";
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import Layout from "../components/Layout";
-import { apiRequest, API_BASE } from "../lib/api";
+import LoadError from "../components/LoadError";
+import { apiRequest } from "../lib/api";
 import { sharedGet } from "../lib/shared";
-import { useCurrency } from "../context/CurrencyContext";
 import { useMoney } from "../lib/useMoney";
 import { useAuth } from "../context/AuthContext";
 import { useWalletBalance } from "../context/WalletBalanceContext";
 
-import { injectSkeletonStyles, SkeletonPage } from '../components/SkeletonLoader'
+import { injectSkeletonStyles } from '../components/SkeletonLoader'
 import { useToast } from '../components/Toast'
-import { uploadImage } from '../lib/upload'
 import bs58 from "bs58"
 import VirtualAccountCard from '../components/VirtualAccountCard'
 import SavedBanksList from '../components/SavedBanksList'
@@ -22,8 +21,6 @@ import ProfilePortfolioCard from '../components/profile/ProfilePortfolioCard'
 import ProfileWithdrawalsCard from '../components/profile/ProfileWithdrawalsCard'
 import '../styles/profile-own.css'
 
-/* ─── Icons ─── */
-import TabNotificationsContent from '../components/ProfileNotificationsTab'
 import TabReferralsContent from '../components/ProfileReferralsTab'
 import TabMyTasksContent from '../components/ProfileMyTasksTab'
 import TabEarningsContent from '../components/ProfileEarningsTab'
@@ -40,18 +37,8 @@ const XIcon = ({ size = 14 }) => (
   </svg>
 );
 
-const QUICK = [
-  { icon: "activity", label: "Job Monitor", page: "monitor" },
-  { icon: "lock", label: "Vault", page: "vault" },
-  { icon: "news", label: "Blogs", page: "blog" },
-  { icon: "checklist", label: "Available Jobs", page: "tasks" },
-  { icon: "bookmark", label: "Bookmarks", page: "bookmarks" },
-  { icon: "circle-plus", label: "Create Job", page: "create" },
-];
-
-/* ─── Helpers ─── */
-const f = new Intl.NumberFormat("en-US");
-
+// "Finish setting up" folded to one line (this browser only)
+const SETUP_FOLD_KEY = "ogapay_profile_setup_folded";
 
 // An on/off switch; `label` is what screen readers say it switches
 function Toggle({ on, set, label }: { on: any; set: any; label: string }) {
@@ -66,8 +53,8 @@ function CopyBtn({ text }: { text: any }) {
   const [ok, setOk] = useState(false);
   const copy = () => { navigator.clipboard?.writeText(text); setOk(true); setTimeout(() => setOk(false), 1800); };
   return (
-    <button onClick={copy} className="btn-outline btn-sm">
-      <Icon n={ok ? "check" : "copy"} s={13} c={ok ? "var(--green)" : "var(--text2)"} />
+    <button type="button" onClick={copy} className="ui-btn ui-btn-ghost ui-btn-sm">
+      <Icon n={ok ? "check" : "copy"} s={14} c={ok ? "var(--green)" : "var(--text2)"} />
       {ok ? "Copied!" : "Copy"}
     </button>
   );
@@ -78,7 +65,7 @@ function RefCopy({ text }: { text: string }) {
   const [ok, setOk] = useState(false);
   const copy = () => { navigator.clipboard?.writeText(text); setOk(true); setTimeout(() => setOk(false), 1800); };
   return (
-    <button type="button" onClick={copy} className="pw-copy" aria-label={ok ? "Copied" : "Copy referral link"}>
+    <button type="button" onClick={copy} className="pw-copy tap" aria-label={ok ? "Copied" : "Copy referral link"}>
       <Icon n={ok ? "check" : "copy"} s={16} c={ok ? "var(--green)" : "var(--text2)"} />
     </button>
   );
@@ -88,8 +75,8 @@ function StatRow({ label, val, info, valClass, onInfoClick }: { label: any; val:
   return (
     <div className="stat-row">
       <span className="stat-label">{label}{info && (
-        <button onClick={e => { e.stopPropagation(); onInfoClick?.() }} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', verticalAlign: 'middle', marginLeft: 3 }}>
-          <Icon n="info-circle" s={13} c="var(--text3)" />
+        <button type="button" className="pw-i tap" aria-label={`About ${typeof label === 'string' ? label : 'this'}`} onClick={e => { e.stopPropagation(); onInfoClick?.() }}>
+          <Icon n="info-circle" s={14} c="var(--text3)" />
         </button>
       )}</span>
       <span className={`stat-val ${valClass === "no" ? "text-red" : valClass === "yes" ? "text-green" : ""}`}>
@@ -130,7 +117,6 @@ function InfoBtn({ text }: { text: string }) {
 // ── Inject skeleton styles on mount ──
 export default function Profile() {
   useEffect(() => { injectSkeletonStyles(); }, []);
-  const { fmt, preferredCurrency } = useCurrency()
   const show = useMoney()
   const navigate = useNavigate();
   const { user: authUser, refreshUser } = useAuth();
@@ -157,23 +143,18 @@ export default function Profile() {
   }, []);
   const [savingBank, setSavingBank] = useState(false);
   const [bankMsg, setBankMsg] = useState("");
-  const [kycDocument, setKycDocument] = useState<File | null>(null);
-  const [kycDocumentPreview, setKycDocumentPreview] = useState("");
-  const [kycUploading, setKycUploading] = useState(false);
 
   // ── Info Modal State ──
   const [showInfo, setShowInfo] = useState<string | null>(null);
 
-  // ── Edit Profile Modal State ──
-  const [showEdit, setShowEdit] = useState(false);
-  const [editForm, setEditForm] = useState({ firstName: '', lastName: '', username: '', bio: '', avatarUrl: '' });
-  const [editErrors, setEditErrors] = useState<Record<string, string>>({});
-  const [savingProfile, setSavingProfile] = useState(false);
-  const [usernameCheck, setUsernameCheck] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle');
-  const usernameCheckTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // "Finish setting up" folded to one line
+  const [setupFolded, setSetupFolded] = useState(() => { try { return localStorage.getItem(SETUP_FOLD_KEY) === "1" } catch { return false } });
+  const foldSetup = (v: boolean) => { setSetupFolded(v); try { localStorage.setItem(SETUP_FOLD_KEY, v ? "1" : "0") } catch { /* private window */ } };
 
   // ── API Data state ──
   const [profileData, setProfileData] = useState<any>(null);
+  // Your account (/users/me) didn't load: show "couldn't load", never a placeholder name
+  const [loadFailed, setLoadFailed] = useState(false);
   // Bumped when the add money / withdraw sheet closes, so Withdrawal History loads again
   const [wdKey, setWdKey] = useState(0);
   const [referralStats, setReferralStats] = useState<any>(null);
@@ -182,8 +163,6 @@ export default function Profile() {
   const [connecting, setConnecting] = useState<string | null>(null);
   const [detectedWallets, setDetectedWallets] = useState<string[]>([]);
   const [showWalletOptions, setShowWalletOptions] = useState(false);
-  const [pairCode, setPairCode] = useState('');
-  const [generatingPair, setGeneratingPair] = useState(false);
 
   // ── Fetch all data on mount & when authUser changes (e.g. wallet connected on Dashboard) ──
   const loadProfile = async () => {
@@ -193,6 +172,9 @@ export default function Profile() {
         apiRequest<any>('/users/referrals/stats').catch(() => null),
         apiRequest<any>('/kyc/status').catch(() => null),
       ]);
+      // Keep what was already shown if a later reload fails; only an account
+      // that never loaded counts as "couldn't load"
+      setLoadFailed(!userData && !profileData);
       if (userData) {
         setProfileData(userData);
         const ba = userData.bankAccount;
@@ -409,317 +391,203 @@ export default function Profile() {
     setConnecting(null);
   }
 
-  const handleGeneratePairCode = async () => {
-    setGeneratingPair(true)
-    try {
-      const data: any = await apiRequest('/devices/pair/generate', { method: 'POST' })
-      if (data?.code) {
-        setPairCode(data.code)
-        setTimeout(() => setPairCode(''), 5 * 60 * 1000)
-      }
-    } catch (err: any) {
-      toast(err.message || 'Failed to generate code', 'error')
-    } finally {
-      setGeneratingPair(false)
-    }
-  }
-
+  // The same text tabs at every size. Notifications (the Alerts tab) and My
+  // Store (a page of its own) were tabs here; old ?tab= links go to their pages.
   const tabs = [
     { id: "profile", label: "Profile", icon: "user" },
     { id: "earnings", label: "Earnings", icon: "currency-dollar" },
-    { id: "my-tasks", label: "My Tasks", icon: "clipboard-list" },
+    { id: "my-tasks", label: "My tasks", icon: "clipboard-list" },
     { id: "referrals", label: "Referrals", icon: "affiliate" },
-    { id: "notifications", label: "Notifications", icon: "bell" },
-    { id: "store", label: "My Store", icon: "building-store" },
   ];
-  const tabNav = (id: string) => {
-    if (id === "store") { navigate("/my-store"); return; }
-    setTab(id);
-  };
-
-  // Scroll active tab into view on mobile
-  const tabBarRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    if (tabBarRef.current) {
-      const activeBtn = tabBarRef.current.querySelector('.tab-btn.active');
-      if (activeBtn) {
-        activeBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-      }
-    }
+    if (tab === "notifications") navigate("/notifications", { replace: true });
+    else if (tab === "store") navigate("/my-store", { replace: true });
   }, [tab]);
 
-  return loading ? <SkeletonPage /> : (
+  // Resend the email verification link (Finish setting up)
+  const resendEmail = async () => {
+    if (verifSending) return;
+    setVerifSending(true);
+    setVerifMsg('');
+    try {
+      await apiRequest('/auth/resend-verification', {
+        method: 'POST',
+        body: JSON.stringify({ email: authUser?.email }),
+      });
+      setVerifMsg(<><i className="ti ti-circle-check" style={{color:'var(--green)'}} /> Sent. Check your inbox.</>);
+      setTimeout(() => setVerifMsg(''), 8000);
+    } catch (err: any) {
+      setVerifMsg(<><i className="ti ti-circle-x" style={{color:'var(--red)'}} /> {err?.message || "Couldn't send it. Try again."}</>);
+    } finally {
+      setVerifSending(false);
+    }
+  };
+
+  // One "Finish setting up" card in place of the old banners, most important
+  // first. Withdrawals use the saved banks (the old profile bankAccount field is
+  // no longer filled in); the bank count is null until known, so it never flashes.
+  const setupSteps: { id: string; done: boolean; optional?: boolean; icon: string; title: string; sub: React.ReactNode; action: string; go: () => void }[] = [
+    { id: "kyc", done: isKycVerified, icon: "shield-check", title: "Verify your identity", sub: "Needed before you can withdraw", action: "Verify", go: () => navigate('/settings/verification') },
+    { id: "bank", done: bankCount === null || bankCount > 0 || !!authUser?.bankAccount, icon: "building-bank", title: "Add a bank account", sub: "Where your naira withdrawals go", action: "Add", go: () => { setTab('profile'); setEditingBank(true); } },
+    { id: "email", done: !!authUser?.isEmailVerified, icon: "mail", title: "Verify your email", sub: verifMsg || "Open the link we emailed you, so you get job and payment alerts", action: verifSending ? "Sending…" : "Resend", go: resendEmail },
+    { id: "wallet", done: !!authUser?.walletAddress, optional: true, icon: "wallet", title: "Connect a Solana wallet", sub: "Optional, for USDC and SOL", action: "Connect", go: () => setShowWalletOptions(true) },
+  ];
+  const setupLeft = setupSteps.filter((s) => !s.done);
+  const setupDone = setupSteps.length - setupLeft.length;
+  // Hidden once everything that matters is done (the wallet is optional)
+  const showSetup = !!profileData && setupLeft.some((s) => !s.optional);
+
+  const fullName = [user?.firstName, user?.lastName].filter(Boolean).join(" ") || user?.username || "Your profile";
+  const initials = ((user?.firstName?.[0] || user?.username?.[0] || "?") + (user?.lastName?.[0] || "")).toUpperCase();
+  const rankName = (l => l.charAt(0) + l.slice(1).toLowerCase())(String(profileData?.workerProfile?.level || 'BEGINNER'));
+  const bio = profileData?.workerProfile?.bio || profileData?.bio || "";
+
+  if (loading) {
+    return (
+      <Layout>
+        <div className="pf-page" aria-busy="true">
+          <div className="pf-head">
+            <div className="pf-who">
+              <span className="pf-av ui-sk" />
+              <div className="pf-id"><div className="ui-sk" style={{ height: 26, width: 180, borderRadius: 8 }} /><div className="ui-sk" style={{ height: 14, width: 110, marginTop: 10, borderRadius: 6 }} /></div>
+            </div>
+          </div>
+          <div className="ui-sk" style={{ height: 52, marginBottom: 20 }} />
+          <div className="ui-sk" style={{ height: 360 }} />
+        </div>
+      </Layout>
+    );
+  }
+
+  return (
     <div className="page-fade-in">
     <Layout>
-      <style>{`
-        .pg{width:100%;max-width:calc(var(--container) + 2 * var(--gutter));margin:0 auto;padding:var(--page-top) var(--gutter) 60px}
-        .page{max-width:100%!important;width:100%}
-        .profile-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:0;overflow:hidden;transition:box-shadow .25s ease}
-        .profile-card-sm{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px}
-        .profile-card-head{display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid var(--border);font-size:14px;font-weight:800}
-        .profile-card-body{padding:20px 24px}
-        .stat-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);font-size:13px}
-        .stat-row:last-child{border-bottom:none}
-        .stat-label{color:var(--text2);font-weight:600;display:flex;align-items:center;gap:5px}
-        .stat-val{font-weight:800;color:var(--text);font-size:14px}
-        .text-red{color:#ef4444!important}
-        .text-green{color:var(--green)!important}
-        .profile-quick-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-        @media(max-width:600px){.profile-quick-grid{grid-template-columns:repeat(2,1fr);gap:10px}}
-        .quick-tile{height:100px;border:1px solid var(--border);border-radius:20px;padding:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;font-size:12px;font-weight:700;color:var(--text2);background:var(--card);cursor:pointer;transition:transform .2s,box-shadow .2s,border-color .2s;text-decoration:none;font-family:inherit}
-        .quick-tile:hover{transform:none;box-shadow:var(--shadow-soft);border-color:rgba(var(--accent-rgb),0.2);color:var(--text)}
-        .quick-tile i{font-size:20px}
-        .page-head-sm{display:flex;align-items:center;gap:8px;margin-bottom:20px}
-        .page-head-sm h2{font-size:20px;font-weight:800;margin:0}
-        .pill-btn{height:32px;padding:0 14px;border-radius:99px;border:1.5px solid var(--border);background:transparent;color:var(--text2);font-size:12px;font-weight:700;cursor:pointer;transition:all .13s;font-family:inherit;white-space:nowrap}
-        .pill-btn.active{background:var(--text);color:var(--bg);border-color:var(--text)}
-        .pill-btn:hover:not(.active){border-color:var(--text)}
-        .search-wrap{position:relative}
-        .search-wrap input{width:100%;height:40px;padding:0 14px 0 36px;border:1.5px solid var(--border);border-radius:10px;background:var(--card);color:var(--text);font-size:13px;outline:none;transition:border-color .13s}
-        .search-wrap input:focus{border-color:var(--accent)}
-        .tg-btn{width:40px;height:22px;border-radius:99px;border:none;background:var(--border);cursor:pointer;position:relative;flex-shrink:0;transition:background .2s;padding:0}
-        .tg-btn .tg-knob{width:16px;height:16px;border-radius:50%;background:white;position:absolute;top:3px;left:3px;transition:all .2s;box-shadow:0 1px 3px rgba(0,0,0,.15)}
-        .tg-btn .tg-knob.on{left:21px;background:var(--accent)}
-        .tg-btn:has(.on){background:rgba(var(--accent-rgb),.2)}
-        .btn-outline{height:34px;padding:0 14px;border-radius:99px;border:1.5px solid var(--border);background:transparent;color:var(--text2);font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all .13s;font-family:inherit}
-        .btn-outline:hover{border-color:var(--text);color:var(--text)}
-        .btn-sm{height:30px;padding:0 12px;font-size:11px}
-        .dash-btn{height:var(--ctl-h-lg);padding:0 24px;border-radius:var(--r-ctl);border:none;background:var(--text);color:var(--bg);font-size:14px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:transform .15s,opacity .15s;font-family:inherit}
-        .dash-btn:hover{opacity:.9}.dash-btn:active{transform:scale(0.97)}
-        .dash-input{width:100%;height:48px;padding:0 16px;border:1px solid var(--border);border-radius:16px;background:var(--card);color:var(--text);font-size:14px;outline:none;transition:border-color .2s,box-shadow .2s;font-family:inherit;box-sizing:border-box}
-        .dash-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(var(--accent-rgb),0.1)}
-        .skeleton{background:var(--bg2);border-radius:var(--radius-sm);animation:pulse 1.5s ease-in-out infinite;min-height:16px}
-        @keyframes pulse{0%{opacity:.6}50%{opacity:.3}100%{opacity:.6}}
-        .onboarding-banner{display:flex;align-items:center;gap:12px;padding:16px 20px;background:rgba(var(--accent-rgb),.08);border:1px solid rgba(var(--accent-rgb),.15);border-radius:var(--radius);margin-bottom:12px;font-size:13px}
-        .onboarding-banner .ob-msg{flex:1;color:var(--text)}
-        .onboarding-banner .ob-btn{height:32px;padding:0 14px;border-radius:8px;border:none;background:var(--accent);color:var(--on-accent);font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:inherit}
-        .onboarding-banner .ob-close{width:28px;height:28px;border:none;background:none;color:var(--text3);cursor:pointer;display:grid;place-items:center;font-size:16px;flex-shrink:0}
-      `}</style>
-      <div className="pg">
+      <div className="pf-page">
 
-      {/* Onboarding banners */}
-      {!loading && !authUser?.walletAddress && (
-        <div className="onboarding-banner">
-          <i className="ti ti-wallet" style={{color:'var(--accent)',fontSize:20}} />
-          <span className="ob-msg">Connect your wallet to unlock full features</span>
-          <button className="ob-btn" onClick={() => setShowWalletOptions(true)}>Connect Wallet</button>
-          <button className="ob-close" onClick={e => ((e.currentTarget.closest('.onboarding-banner') as HTMLElement)!.style.display='none')}><i className="ti ti-x" /></button>
+      {loadFailed ? (
+        <LoadError what="your profile" onRetry={() => { setLoading(true); loadProfile().finally(() => setLoading(false)); }} />
+      ) : (<>
+      {/* Who you are: the first thing on the Profile tab */}
+      <header className="pf-head">
+        <div className="pf-who">
+          <span className="pf-av">
+            {user?.avatarUrl ? <img src={sized(user.avatarUrl, 128, true)} alt="" /> : initials}
+          </span>
+          <div className="pf-id">
+            <h1 className="pf-name">{fullName}</h1>
+            {user?.username && <div className="pf-handle">@{user.username}</div>}
+            {bio && <p className="pf-bio">{bio}</p>}
+            <div className="pf-chips">
+              <button type="button" className="pf-chip" onClick={() => setShowInfo('rank')} aria-label={`Rank: ${rankName}. What is rank?`}><i className="ti ti-trophy" aria-hidden="true" /> {rankName}</button>
+              <button type="button" className="pf-chip" onClick={() => setShowInfo('ogaScore')} aria-label={`OgaScore ${profileData?.ogaScore ?? 0}. What is OgaScore?`}><i className="ti ti-shield-check" aria-hidden="true" /> OgaScore {profileData?.ogaScore ?? 0}</button>
+              {user?.username && <Link className="pf-chip pf-chip-pub" to={`/user/${user.username}`}><i className="ti ti-external-link" aria-hidden="true" /> Public profile</Link>}
+            </div>
+          </div>
         </div>
-      )}
-      {!loading && !authUser?.isEmailVerified && (
-        <div className="onboarding-banner">
-          <i className="ti ti-mail" style={{color:'#f59e0b',fontSize:20}} />
-          <span className="ob-msg">{verifMsg || 'Verify your email address to receive account notifications'}</span>
-          <button className="ob-btn" onClick={async () => {
-            if (verifSending) return;
-            setVerifSending(true);
-            setVerifMsg('');
-            try {
-              await apiRequest('/auth/resend-verification', {
-                method: 'POST',
-                body: JSON.stringify({ email: authUser?.email }),
-              });
-              setVerifMsg(<> <i className="ti ti-circle-check" style={{color:'var(--green)'}} /> Verification email sent! Check your inbox.</>);
-              setTimeout(() => setVerifMsg(''), 8000);
-            } catch (err: any) {
-              setVerifMsg(<> <i className="ti ti-circle-x" style={{color:'var(--red)'}} /> {err?.message || 'Failed to send. Please try again.'}</>);
-            } finally {
-              setVerifSending(false);
-            }
-          }} disabled={verifSending}>
-            {verifSending ? 'Sending...' : 'Resend Email'}
-          </button>
-          <button className="ob-close" onClick={e => ((e.currentTarget.closest('.onboarding-banner') as HTMLElement)!.style.display='none')}><i className="ti ti-x" /></button>
+        <div className="pf-head-acts">
+          {user?.username && <Link className="ui-btn ui-btn-ghost pf-pub" to={`/user/${user.username}`}><i className="ti ti-external-link" aria-hidden="true" /> View public profile</Link>}
+          <Link className="ui-btn ui-btn-dark pf-edit" to="/edit-profile" aria-label="Edit profile"><i className="ti ti-pencil" aria-hidden="true" /><span>Edit profile</span></Link>
         </div>
-      )}
-      {/* Withdrawals use the saved banks; the old profile field (bankAccount) is no longer filled in */}
-      {!loading && bankCount === 0 && !authUser?.bankAccount && (
-        <div className="onboarding-banner">
-          <i className="ti ti-building-bank" style={{color:'#f59e0b',fontSize:20}} />
-          <span className="ob-msg">Add a bank account to withdraw in Naira</span>
-          <button className="ob-btn" onClick={() => { setTab('profile'); setEditingBank(true); }}>Add Bank Account</button>
-          <button className="ob-close" onClick={e => ((e.currentTarget.closest('.onboarding-banner') as HTMLElement)!.style.display='none')}><i className="ti ti-x" /></button>
-        </div>
-      )}
-      {!loading && !isKycVerified && (
-        <div className="onboarding-banner">
-          <i className="ti ti-shield-check" style={{color:'var(--red)',fontSize:20}} />
-          <span className="ob-msg">Complete identity verification to withdraw</span>
-          <button className="ob-btn" onClick={() => navigate('/settings/verification')}>Verify Now</button>
-          <button className="ob-close" onClick={e => ((e.currentTarget.closest('.onboarding-banner') as HTMLElement)!.style.display='none')}><i className="ti ti-x" /></button>
-        </div>
-      )}
+      </header>
 
-      {/* Post email verification banner */}
+      {/* After the email link: confirmation */}
       {searchParams.get('verified') === 'true' && (
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: 12,
-          padding: '14px 16px', marginBottom: 12,
-          background: 'rgba(var(--green-rgb),0.08)',
-          border: '1px solid rgba(22,163,74,0.25)',
-          borderRadius: 12
-        }}>
-          <i className="ti ti-circle-check" style={{ fontSize: 22, color: 'var(--green)', flexShrink: 0 }} />
-          <div style={{ flex: 1 }}>
-            <div style={{ fontWeight: 800, fontSize: 14, color: 'var(--green)' }}>
-              Email Verified! <i className="ti ti-sparkles" style={{color:'var(--green)',marginLeft:6}} />
-            </div>
-            <div style={{ fontSize: 12, color: 'var(--text2)', marginTop: 2 }}>
-              Your account is confirmed. Review your details below and complete your profile.
-            </div>
-          </div>
-          <button
-            onClick={() => {
-              const p = new URLSearchParams(window.location.search)
-              p.delete('verified')
-              window.history.replaceState({}, '', `${window.location.pathname}${p.toString() ? '?' + p.toString() : ''}`)
-            }}
-            style={{ background: 'none', border: 'none', color: 'var(--text3)', cursor: 'pointer', fontSize: 18, flexShrink: 0 }}
-          >
-            <i className="ti ti-x" />
-          </button>
+        <div className="pf-notice ok" role="status">
+          <i className="ti ti-circle-check" aria-hidden="true" />
+          <div><b>Email verified</b><span>Your account is confirmed. Check your details below.</span></div>
+          <button type="button" className="pf-notice-x tap" aria-label="Dismiss" onClick={() => {
+            const p = new URLSearchParams(window.location.search)
+            p.delete('verified')
+            window.history.replaceState({}, '', `${window.location.pathname}${p.toString() ? '?' + p.toString() : ''}`)
+          }}><i className="ti ti-x" /></button>
         </div>
       )}
 
-      {/* Post KYC submission banner */}
+      {/* After sending ID documents */}
       {searchParams.get('kyc') === 'submitted' && (
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: 12,
-          padding: '14px 16px', marginBottom: 12,
-          background: 'rgba(245,158,11,0.08)',
-          border: '1px solid rgba(245,158,11,0.25)',
-          borderRadius: 12
-        }}>
-          <i className="ti ti-shield-check" style={{ fontSize: 22, color: '#b45309', flexShrink: 0 }} />
-          <div style={{ flex: 1 }}>
-            <div style={{ fontWeight: 800, fontSize: 14, color: '#b45309' }}>
-              KYC Submitted for Review
-            </div>
-            <div style={{ fontSize: 12, color: 'var(--text2)', marginTop: 2 }}>
-              We'll notify you within 24 hours once your identity is verified. Your details are saved below.
-            </div>
-          </div>
-          <button
-            onClick={() => {
-              const p = new URLSearchParams(window.location.search)
-              p.delete('kyc')
-              window.history.replaceState({}, '', `${window.location.pathname}${p.toString() ? '?' + p.toString() : ''}`)
-            }}
-            style={{ background: 'none', border: 'none', color: 'var(--text3)', cursor: 'pointer', fontSize: 18, flexShrink: 0 }}
-          >
-            <i className="ti ti-x" />
-          </button>
+        <div className="pf-notice warn" role="status">
+          <i className="ti ti-shield-check" aria-hidden="true" />
+          <div><b>ID sent for review</b><span>We'll let you know within 24 hours once your identity is checked.</span></div>
+          <button type="button" className="pf-notice-x tap" aria-label="Dismiss" onClick={() => {
+            const p = new URLSearchParams(window.location.search)
+            p.delete('kyc')
+            window.history.replaceState({}, '', `${window.location.pathname}${p.toString() ? '?' + p.toString() : ''}`)
+          }}><i className="ti ti-x" /></button>
         </div>
       )}
 
-      {/* Tab Bar: icon + label pills on wider screens; an equal icon-over-label grid on phones */}
-      <div className="tab-bar" ref={tabBarRef}>
-        {(tabs || []).map(t => (
-          <button key={t.id} className={`tab-btn ${tab === t.id ? 'active' : ''} tab-${t.id}`} onClick={() => tabNav(t.id)}>
-            <i className={`ti ti-${t.icon}`} />
+      {/* Finish setting up: one card, most important step first */}
+      {showSetup && (
+        <section className="ui-card pf-setup" aria-labelledby="pf-setup-h">
+          <div className="pf-setup-head">
+            <div style={{ minWidth: 0 }}>
+              <h2 id="pf-setup-h">Finish setting up</h2>
+              <p>{setupDone} of {setupSteps.length} done</p>
+            </div>
+            <button type="button" className="ui-btn ui-btn-text ui-btn-sm" aria-expanded={!setupFolded} aria-controls="pf-steps" onClick={() => foldSetup(!setupFolded)}>
+              {setupFolded ? `Show ${setupLeft.length} step${setupLeft.length === 1 ? '' : 's'}` : 'Hide'}
+            </button>
+          </div>
+          <div className="pf-setup-bar" aria-hidden="true"><span style={{ width: `${(setupDone / setupSteps.length) * 100}%` }} /></div>
+          {!setupFolded && (
+            <ul className="pf-steps" id="pf-steps">
+              {setupLeft.map((s) => (
+                <li key={s.id}>
+                  <button type="button" className="pf-step" onClick={s.go} disabled={s.id === 'email' && verifSending}>
+                    <span className="pf-step-ic"><i className={`ti ti-${s.icon}`} aria-hidden="true" /></span>
+                    <span className="pf-step-m"><b>{s.title}</b><small>{s.sub}</small></span>
+                    <span className="pf-step-go">{s.action}<i className="ti ti-chevron-right" aria-hidden="true" /></span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      )}
+      </>)}
+
+      {/* Tabs: the same four at every size */}
+      <div className="tab-bar" role="tablist" aria-label="Profile sections">
+        {tabs.map(t => (
+          <button key={t.id} type="button" role="tab" aria-selected={tab === t.id} className={`tab-btn ${tab === t.id ? 'active' : ''}`} onClick={() => setTab(t.id)}>
+            <i className={`ti ti-${t.icon}`} aria-hidden="true" />
             <span>{t.label}</span>
           </button>
         ))}
       </div>
 
-      {/* Tab: Profile (default). Laid out like wurk.fun's /profile: account on the
-          left, profile on the right, then full-width quick links and histories */}
-      {tab === "profile" && (
+      {/* Tab: Profile (default). Balance and communities on the left, profile and
+          X on the right (two columns from tablet), then portfolio and withdrawals */}
+      {tab === "profile" && !loadFailed && (
         <>
           <div className="pw-grid">
             <div className="pw-col pw-left">
-            {/* Account Information */}
+            {/* Balance: naira first; crypto in its own fold */}
             <div className="profile-card pw-account">
               <div className="profile-card-head">
-                <span><Icon n="wallet" s={15} /> Account Information</span>
-                <a href="/wallet" className="pw-head-link" onClick={e => { e.preventDefault(); navigate('/wallet') }}>Wallet</a>
+                <span><Icon n="wallet" s={15} /> Balance</span>
+                <Link to="/wallet" className="pw-head-link">Wallet</Link>
               </div>
               <div className="profile-card-body">
-                {/* Wallet address row */}
-                <div className="pw-line">
-                  <span className="pw-line-l">Wallet address</span>
-                  {hasWallet ? (
-                    <div style={{display:'flex',alignItems:'center',gap:6,minWidth:0}}>
-                      <span className="pw-addr">{shortAddr}</span>
-                      <CopyBtn text={walletAddress} />
-                    </div>
-                  ) : (
-                    <span style={{color:'var(--text3)',fontSize:12}}>Not connected</span>
-                  )}
-                </div>
-
                 {/* Naira balance: always visible */}
                 <div className="pw-bal">
                   <div>
                     <div className="pw-bal-k">Available</div>
                     <div className="pw-bal-v">{show(totalNgn)}</div>
                   </div>
-                  {lockedNgn > 0 && <span style={{fontSize:12,color:'var(--text2)'}}>{show(lockedNgn)} held in escrow</span>}
+                  {lockedNgn > 0 && <span className="pw-bal-held">{show(lockedNgn)} held in escrow</span>}
                 </div>
 
                 {/* Main actions: equal buttons in one row */}
                 <div className="pw-acts">
-                  <button className="dash-btn" onClick={() => setFundModal('withdraw')}><Icon n="logout" s={14} c="var(--bg)" /> Withdraw</button>
-                  <button className="dash-btn" onClick={() => navigate('/deposit')}><Icon n="plus" s={14} c="var(--bg)" /> Deposit</button>
-                </div>
-
-                {/* Secondary wallet actions: two outlined buttons */}
-                <div className={`pw-acts2 ${hasWallet ? '' : 'one'}`}>
-                  {hasWallet ? (
-                    <>
-                      <button className="btn-outline" onClick={handleGeneratePairCode} disabled={generatingPair}>
-                        <Icon n="device-mobile" s={14} /> {generatingPair ? 'Generating…' : 'Pair Device'}
-                      </button>
-                      <button className="btn-outline" onClick={() => setShowWalletOptions(true)}>
-                        <Icon n="link" s={14} /> Link Extra Wallet
-                      </button>
-                    </>
-                  ) : (
-                    <button className="btn-outline" onClick={() => setShowWalletOptions(true)}>
-                      <Icon n="wallet" s={14} /> Connect Solana wallet
-                    </button>
-                  )}
-                </div>
-                {pairCode && (
-                  <div style={{textAlign:'center',padding:'12px',marginBottom:10,background:'var(--bg2)',borderRadius:10,fontSize:12}}>
-                    <div style={{fontSize:12,color:'var(--text3)',marginBottom:4,fontWeight:600}}>Pairing Code (expires in 5 min)</div>
-                    <div style={{fontSize:20,fontWeight:900,letterSpacing:3,color:'var(--text)',fontFamily:'monospace',wordBreak:'break-all'}}>{pairCode}</div>
-                    <button type="button" onClick={() => { navigator.clipboard.writeText(pairCode); toast('Code copied!') }} style={{marginTop:6,fontSize:11,color:'var(--text2)',background:'none',border:'none',cursor:'pointer',textDecoration:'underline',fontFamily:'inherit'}}>Copy code</button>
-                  </div>
-                )}
-
-                {/* Settings toggles */}
-                <div className="pw-toggle">
-                  <div>
-                    <div className="pw-toggle-t">Show all balances</div>
-                    <div className="pw-toggle-d">USDC and SOL next to your naira.</div>
-                  </div>
-                  <Toggle on={showBal} set={setShowBal} label="Show all balances" />
-                </div>
-                {showBal && (
-                  <div style={{padding:'0 0 8px'}}>
-                    {[['USDC', usdcBal, 2], ['SOL', solBal, 4]].map(([c, v, d]: any) => (
-                      <div key={c} style={{display:'flex',justifyContent:'space-between',padding:'8px 0',fontSize:14,borderBottom:'1px dashed var(--border)'}}>
-                        <span style={{fontWeight:700}}>{c}</span>
-                        <span style={{fontFamily:'var(--font-mono, monospace)'}}>{Number(v || 0).toFixed(d)}</span>
-                      </div>
-                    ))}
-                    <a href="/wallet" style={{display:'inline-block',marginTop:8,fontSize:12,color:'var(--text)',fontWeight:700}}>Open wallet →</a>
-                  </div>
-                )}
-                {/* Auto-convert (saved: preferences.autoConvert) */}
-                <div className="pw-toggle">
-                  <div>
-                    <div className="pw-toggle-t">Auto-convert USDC</div>
-                    <div className="pw-toggle-d">Turn USDC you earn into naira automatically, at the current rate.</div>
-                  </div>
-                  <Toggle on={autoConvert} set={flip(autoConvert, 'autoConvert')} label="Auto-convert USDC" />
+                  <button type="button" className="ui-btn ui-btn-dark ui-btn-lg" onClick={() => setFundModal('withdraw')}><i className="ti ti-logout" aria-hidden="true" /> Withdraw</button>
+                  <button type="button" className="ui-btn ui-btn-ghost ui-btn-lg" onClick={() => navigate('/deposit')}><i className="ti ti-plus" aria-hidden="true" /> Deposit</button>
                 </div>
 
                 {/* Your two kinds of account, labelled like the Wallet so they can't be
                     mixed up: money in (the OgaPay account number to transfer to) and
-                    money out (your own banks, where withdrawals go). Folded to keep
-                    this card about as tall as the Profile card */}
+                    money out (your own banks, where withdrawals go). Then the crypto
+                    side (Solana wallet, USDC and SOL) folded away */}
                 <div id="bank-section" className="pw-money">
                   <details className="pw-fold" open={moneyIn} onToggle={e => setMoneyIn((e.currentTarget as HTMLDetailsElement).open)}>
                     <summary>
@@ -742,6 +610,72 @@ export default function Profile() {
                       </section>
                     </div>
                   </details>
+                  <details className="pw-fold">
+                    <summary>
+                      <span className="pw-fold-ic pw-crypto-ic"><i className="ti ti-currency-solana" /></span>
+                      <span className="pw-fold-m"><b>Crypto (USDC and SOL)</b><small>{hasWallet ? `Solana wallet ${shortAddr}` : 'No Solana wallet connected'}</small></span>
+                      <i className="ti ti-chevron-down pw-fold-chev" />
+                    </summary>
+                    <div className="pw-fold-b">
+                      {/* Wallet address row */}
+                      <div className="pw-line">
+                        <span className="pw-line-l">Wallet address</span>
+                        {hasWallet ? (
+                          <div style={{display:'flex',alignItems:'center',gap:6,minWidth:0}}>
+                            <span className="pw-addr">{shortAddr}</span>
+                            <CopyBtn text={walletAddress} />
+                          </div>
+                        ) : (
+                          <span style={{color:'var(--text3)',fontSize:13}}>Not connected</span>
+                        )}
+                      </div>
+
+                      {/* Wallet actions: two outlined buttons */}
+                      <div className={`pw-acts2 ${hasWallet ? '' : 'one'}`}>
+                        {hasWallet ? (
+                          <>
+                            <Link className="ui-btn ui-btn-ghost" to="/pair-device">
+                              <Icon n="device-mobile" s={15} /> Pair a device
+                            </Link>
+                            <button type="button" className="ui-btn ui-btn-ghost" onClick={() => setShowWalletOptions(true)}>
+                              <Icon n="link" s={15} /> Link another wallet
+                            </button>
+                          </>
+                        ) : (
+                          <button type="button" className="ui-btn ui-btn-ghost" onClick={() => setShowWalletOptions(true)}>
+                            <Icon n="wallet" s={15} /> Connect Solana wallet
+                          </button>
+                        )}
+                      </div>
+
+                      <div className="pw-toggle">
+                        <div>
+                          <div className="pw-toggle-t">Show all balances</div>
+                          <div className="pw-toggle-d">USDC and SOL next to your naira.</div>
+                        </div>
+                        <Toggle on={showBal} set={setShowBal} label="Show all balances" />
+                      </div>
+                      {showBal && (
+                        <div style={{padding:'0 0 8px'}}>
+                          {[['USDC', usdcBal, 2], ['SOL', solBal, 4]].map(([c, v, d]: any) => (
+                            <div key={c} style={{display:'flex',justifyContent:'space-between',padding:'8px 0',fontSize:14,borderBottom:'1px dashed var(--border)'}}>
+                              <span style={{fontWeight:700}}>{c}</span>
+                              <span style={{fontFamily:'var(--font-mono, monospace)'}}>{Number(v || 0).toFixed(d)}</span>
+                            </div>
+                          ))}
+                          <Link to="/wallet" style={{display:'inline-block',marginTop:8,fontSize:13,color:'var(--text)',fontWeight:700}}>Open wallet →</Link>
+                        </div>
+                      )}
+                      {/* Auto-convert (saved: preferences.autoConvert) */}
+                      <div className="pw-toggle">
+                        <div>
+                          <div className="pw-toggle-t">Auto-convert USDC</div>
+                          <div className="pw-toggle-d">Turn USDC you earn into naira automatically, at the current rate.</div>
+                        </div>
+                        <Toggle on={autoConvert} set={flip(autoConvert, 'autoConvert')} label="Auto-convert USDC" />
+                      </div>
+                    </div>
+                  </details>
                 </div>
               </div>
             </div>
@@ -750,84 +684,57 @@ export default function Profile() {
             </div>
 
             <div className="pw-col pw-right">
-            {/* Profile */}
+            {/* Profile: reputation (name and photo are in the header above) */}
             <div className="profile-card pw-profile">
               <div className="profile-card-head">
                 <span><Icon n="user" s={15} /> Profile</span>
-                <button className="btn-outline btn-sm" onClick={() => {
-                  setEditForm({
-                    firstName: user?.firstName || '',
-                    lastName: user?.lastName || '',
-                    username: user?.username || '',
-                    bio: profileData?.workerProfile?.bio || '',
-                    avatarUrl: user?.avatarUrl || '',
-                  });
-                  setEditErrors({});
-                  setUsernameCheck('idle');
-                  setShowEdit(true);
-                }}>
-                  <Icon n="edit" s={12} /> Edit
-                </button>
+                <Link to="/edit-profile" className="pw-head-link">Edit</Link>
               </div>
               <div className="profile-card-body">
-                {/* Avatar, name, bio */}
-                <div className="pw-who">
-                  <div className="pw-av">
-                    {user?.avatarUrl ? <img src={sized(user.avatarUrl, 64, true)} alt="" loading="lazy" /> : (user?.firstName?.[0] || 'U') + (user?.lastName?.[0] || '')}
-                  </div>
-                  <div style={{minWidth:0}}>
-                    <div className="pw-name">{user?.firstName || 'User'} {user?.lastName || ''}</div>
-                    <div className="pw-handle">@{user?.username || 'user'}</div>
-                    {(profileData?.workerProfile?.bio || profileData?.bio) && (
-                      <div className="pw-bio">{profileData.workerProfile?.bio || profileData.bio}</div>
-                    )}
-                  </div>
-                </div>
-
                 {/* Public profile */}
-                <div className="pw-toggle" style={{borderTop:0,padding:'0 0 14px'}}>
+                <div className="pw-toggle pw-toggle-first">
                   <div style={{minWidth:0}}>
                     <div className="pw-toggle-t">Public profile {isPublic ? '' : '(private)'}</div>
-                    {user?.username && <a href={`/user/${user.username}`} style={{fontSize:12,color:'var(--text2)'}}>ogapay.app/user/{user.username} →</a>}
+                    {user?.username && <Link to={`/user/${user.username}`} className="pw-toggle-d">ogapay.app/user/{user.username} →</Link>}
                   </div>
                   <Toggle on={isPublic} set={flip(isPublic, 'isPublic')} label="Public profile" />
                 </div>
 
-                {/* Activity: counts on the left, status rows on the right */}
+                {/* Activity: total earned first, then the counts and status rows */}
                 <div className="pw-sec-h">Activity</div>
                 <div className="pw-activity">
                   <div className="pw-counts">
                     {[
+                      { ic: 'coin', n: profileData?.workerProfile?.totalEarned ? show(Number(profileData.workerProfile.totalEarned)) : show(0), l: 'Total earned', lead: true },
                       { ic: 'send', n: profileData?._count?.taskSubmissions || 0, l: 'Submissions' },
                       { ic: 'circle-check', n: profileData?.workerProfile?.tasksCompleted ?? 0, l: 'Tasks completed' },
                       { ic: 'clipboard-plus', n: profileData?._count?.tasksCreated || 0, l: 'Tasks created' },
                       { ic: 'trending-up', n: profileData?.workerProfile?.successRate ? profileData.workerProfile.successRate + '%' : '0%', l: 'Success rate', info: 'successRate' },
-                      { ic: 'coin', n: profileData?.workerProfile?.totalEarned ? show(Number(profileData.workerProfile.totalEarned)) : show(0), l: 'Total earned' },
                     ].map(c => (
-                      <div className="pw-count" key={c.l}>
+                      <div className={`pw-count${c.lead ? ' lead' : ''}`} key={c.l}>
                         <Icon n={c.ic} s={16} />
                         <b>{c.n}</b>
                         <span>{c.l}{c.info && (
-                          <button className="pw-i" aria-label={`About ${c.l}`} onClick={() => setShowInfo(c.info as any)}><Icon n="info-circle" s={13} c="var(--text3)" /></button>
+                          <button type="button" className="pw-i tap" aria-label={`About ${c.l}`} onClick={() => setShowInfo(c.info as any)}><Icon n="info-circle" s={14} c="var(--text3)" /></button>
                         )}</span>
                       </div>
                     ))}
                   </div>
                   <div className="pw-status">
-                    <StatRow label="Rank" val={(l => l.charAt(0) + l.slice(1).toLowerCase())(String(profileData?.workerProfile?.level || 'BEGINNER'))} info onInfoClick={() => setShowInfo('rank')} />
-                    {/* The same OgaScore the Dashboard, public profiles and job requirements use
-                        (services/ogascore.service.js), not the old reputationScore formula */}
-                    <StatRow label="OgaScore" val={profileData?.ogaScore ?? 0} info onInfoClick={() => setShowInfo('ogaScore')} />
                     {/* The Verify button lives on Settings > Verification; link straight to it */}
                     <StatRow label="Human verified" val={isHumanVerified ? 'Yes' : (
-                      <a href="/settings/verification" className="pw-pill" onClick={e => { e.preventDefault(); navigate('/settings/verification') }}>Verify</a>
+                      <Link to="/settings/verification" className="pw-pill tap">Verify</Link>
                     )} valClass={isHumanVerified ? 'yes' : ''} info onInfoClick={() => setShowInfo('humanVerified')} />
                     <StatRow label="Identity (KYC)" val={isKycVerified ? 'Verified' : (
-                      <a href="/settings/verification" className="pw-pill" onClick={e => { e.preventDefault(); navigate('/settings/verification') }}>Verify</a>
+                      <Link to="/settings/verification" className="pw-pill tap">Verify</Link>
                     )} valClass={isKycVerified ? 'yes' : ''} />
                     <StatRow label="Rating" val={profileData?.workerProfile?.totalRatings ? `${Number(profileData.workerProfile.avgRating || 0).toFixed(1)}/5 (${profileData.workerProfile.totalRatings})` : 'No ratings yet'} info onInfoClick={() => setShowInfo('avgRating')} />
-                    <StatRow label="Skills" val={profileData?.workerProfile?.skills?.length ? profileData.workerProfile.skills.slice(0,3).join(', ')+(profileData.workerProfile.skills.length>3?' +' + (profileData.workerProfile.skills.length - 3):'') : '-'} />
-                    <StatRow label="Categories" val={profileData?.workerProfile?.categories?.length ? profileData.workerProfile.categories.join(', ') : '-'} />
+                    <StatRow label="Skills" val={profileData?.workerProfile?.skills?.length ? profileData.workerProfile.skills.slice(0,3).join(', ')+(profileData.workerProfile.skills.length>3?' +' + (profileData.workerProfile.skills.length - 3):'') : (
+                      <Link to="/edit-profile" className="pw-pill tap">Add</Link>
+                    )} />
+                    <StatRow label="Categories" val={profileData?.workerProfile?.categories?.length ? profileData.workerProfile.categories.join(', ') : (
+                      <Link to="/edit-profile" className="pw-pill tap">Add</Link>
+                    )} />
                   </div>
                 </div>
 
@@ -861,12 +768,12 @@ export default function Profile() {
                         <span>{refUrl}</span>
                         <RefCopy text={refUrl} />
                       </div>
-                      <button className="dash-btn pw-ref-x" onClick={() => window.open('https://twitter.com/intent/tweet?text='+encodeURIComponent('Join me on OgaPay! '+refUrl), '_blank')}>
+                      <button type="button" className="ui-btn ui-btn-ghost pw-ref-x" onClick={() => window.open('https://twitter.com/intent/tweet?text='+encodeURIComponent('Join me on OgaPay! '+refUrl), '_blank')}>
                         <XIcon size={14} /> Post on X
                       </button>
                     </div>
                   ) : (
-                    <div style={{fontSize:12,color:'var(--text3)'}}>Generate your referral link by completing your profile.</div>
+                    <div style={{fontSize:13,color:'var(--text2)'}}>Your referral link shows here once your account has a referral code. <Link to="/referrals" style={{color:'var(--text)',fontWeight:600}}>Referrals</Link></div>
                   )}
                 </div>
               </div>
@@ -876,7 +783,8 @@ export default function Profile() {
             </div>
           </div>
 
-          <div className="pw-full"><ProfileQuickLinks username={user?.username} /></div>
+          {/* Shortcuts (tablet and desktop; on phones the menu and the bottom bar have them) */}
+          <div className="pw-full pw-quick"><ProfileQuickLinks username={user?.username} /></div>
 
           <div className="pw-full"><ProfilePortfolioCard /></div>
 
@@ -886,160 +794,8 @@ export default function Profile() {
         </>
       )}
 
-      {/* Edit Profile Modal */}
-      {showEdit && (
-        <div style={{position:'fixed',inset:0,zIndex:400,background:'rgba(0,0,0,.5)',display:'flex',alignItems:'center',justifyContent:'center',padding:20}} onClick={() => setShowEdit(false)}>
-          <div style={{background:'var(--card)',border:'1px solid var(--border)',borderRadius:16,maxWidth:520,width:'100%',padding:28,maxHeight:'90vh',overflowY:'auto'}} onClick={e => e.stopPropagation()}>
-            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:24}}>
-              <h3 style={{fontFamily:'Inter',fontSize:20,fontWeight:800,margin:0}}><i className="ti ti-user-edit" style={{color:'var(--accent)',marginRight:8}} />Edit Profile</h3>
-              <button style={{width:32,height:32,border:'1px solid var(--border)',borderRadius:8,background:'var(--bg2)',cursor:'pointer',display:'grid',placeItems:'center',color:'var(--text3)',fontSize:18}} onClick={() => setShowEdit(false)}>
-                <i className="ti ti-x" />
-              </button>
-            </div>
 
-            {/* Avatar */}
-            <div style={{display:'flex',alignItems:'center',gap:16,marginBottom:24}}>
-              <div style={{width:72,height:72,borderRadius:'50%',background:'var(--bg2)',border:'2px solid var(--border)',overflow:'hidden',flexShrink:0,display:'grid',placeItems:'center'}}>
-                {editForm.avatarUrl ? (
-                  <img src={editForm.avatarUrl} alt="" loading="lazy" style={{width:'100%',height:'100%',objectFit:'cover'}} />
-                ) : (
-                  <span style={{fontSize:24,fontWeight:800,color:'var(--text3)'}}>{(editForm.firstName?.[0] || 'U') + (editForm.lastName?.[0] || '')}</span>
-                )}
-              </div>
-              <div>
-                <div style={{fontSize:13,fontWeight:700,marginBottom:4}}>Profile Photo</div>
-                <label style={{display:'inline-flex',alignItems:'center',gap:6,height:34,padding:'0 14px',borderRadius:8,border:'1.5px solid var(--border)',background:'var(--bg2)',cursor:'pointer',fontSize:12,fontWeight:600,color:'var(--text2)',fontFamily:'inherit'}}>
-                  <i className="ti ti-camera" /> Upload Photo
-                  <input type="file" accept="image/*" style={{display:'none'}}
-                    onChange={async (e) => {
-                      const file = e.target.files?.[0];
-                      if (!file) return;
-                      // Validate file size (max 5MB)
-                      if (file.size > 5 * 1024 * 1024) {
-                        setEditErrors(prev => ({...prev, avatar: 'Image must be under 5MB'}));
-                        return;
-                      }
-                      try {
-                        const url = await uploadImage(file, 'avatars');
-                        setEditForm(f => ({...f, avatarUrl: url}));
-                      } catch {
-                        const el = document.getElementById('appToast');
-                        if (el) { el.textContent = 'Image upload failed. Try a smaller file or paste a URL instead.'; el.classList.add('show'); setTimeout(() => el.classList.remove('show'), 3500); }
-                      }
-                    }} />
-                </label>
-                <div style={{fontSize:11,color:'var(--text3)',marginTop:4}}>Upload a photo from your device, or paste a URL below</div>
-                <input type="text" placeholder="https://example.com/photo.jpg" style={{width:'100%',marginTop:8,padding:'6px 10px',border:'1px solid var(--border)',borderRadius:6,fontSize:12,background:'var(--bg2)',color:'var(--text)',outline:'none'}}
-                  value={editForm.avatarUrl} onChange={e => setEditForm(f => ({...f, avatarUrl: e.target.value}))} />
-              </div>
-            </div>
-
-            {/* First & Last Name */}
-            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:16}}>
-              <div>
-                <label style={{display:'block',fontSize:11,fontWeight:700,color:'var(--text3)',marginBottom:4,textTransform:'uppercase',letterSpacing:'.04em'}}>First Name</label>
-                <input className="dash-input" value={editForm.firstName} onChange={e => setEditForm(f => ({...f, firstName: e.target.value}))} placeholder="John" />
-              </div>
-              <div>
-                <label style={{display:'block',fontSize:11,fontWeight:700,color:'var(--text3)',marginBottom:4,textTransform:'uppercase',letterSpacing:'.04em'}}>Last Name</label>
-                <input className="dash-input" value={editForm.lastName} onChange={e => setEditForm(f => ({...f, lastName: e.target.value}))} placeholder="Doe" />
-              </div>
-            </div>
-
-            {/* Username */}
-            <div style={{marginBottom:16}}>
-              <label style={{display:'block',fontSize:11,fontWeight:700,color:'var(--text3)',marginBottom:4,textTransform:'uppercase',letterSpacing:'.04em'}}>Username</label>
-              <div style={{display:'flex',gap:8,alignItems:'center'}}>
-                <div style={{flex:1,position:'relative'}}>
-                  <span style={{position:'absolute',left:12,top:'50%',transform:'translateY(-50%)',fontSize:13,color:'var(--text3)',fontWeight:600}}>@</span>
-                  <input className="dash-input" style={{paddingLeft:28}} value={editForm.username} 
-                    onChange={e => {
-                      const val = e.target.value.replace(/[^a-zA-Z0-9_]/g,'').toLowerCase();
-                      setEditForm(f => ({...f, username: val}));
-                      setEditErrors(e => ({...e, username: ''}));
-                      if (usernameCheckTimer.current) clearTimeout(usernameCheckTimer.current);
-                      if (val && val !== (user?.username || '')) {
-                        setUsernameCheck('checking');
-                        usernameCheckTimer.current = setTimeout(async () => {
-                          try {
-                            const result = await apiRequest<any>('/users/directory/list?search=' + encodeURIComponent(val) + '&limit=1').catch(() => null);
-                            const users = result?.data || result || [];
-                            const taken = users.some((u: any) => u.username?.toLowerCase() === val);
-                            setUsernameCheck(taken ? 'taken' : 'available');
-                          } catch { setUsernameCheck('idle'); }
-                        }, 600);
-                      } else {
-                        setUsernameCheck('idle');
-                      }
-                    }}
-                    placeholder="username" />
-                </div>
-                {usernameCheck === 'checking' && <span className="spinner" style={{width:16,height:16,borderWidth:2}} />}
-                {usernameCheck === 'available' && <i className="ti ti-check" style={{color:'var(--green)',fontSize:18}} />}
-                {usernameCheck === 'taken' && <i className="ti ti-x" style={{color:'var(--red)',fontSize:18}} />}
-              </div>
-              {usernameCheck === 'taken' && <div style={{fontSize:11,color:'var(--red)',marginTop:4}}>Username is taken</div>}
-              {usernameCheck === 'available' && <div style={{fontSize:11,color:'var(--green)',marginTop:4}}>Username is available</div>}
-              {editErrors.username && <div style={{fontSize:11,color:'var(--red)',marginTop:4}}>{editErrors.username}</div>}
-            </div>
-
-            {/* Bio */}
-            <div style={{marginBottom:20}}>
-              <label style={{display:'block',fontSize:11,fontWeight:700,color:'var(--text3)',marginBottom:4,textTransform:'uppercase',letterSpacing:'.04em'}}>
-                Bio <span style={{fontWeight:400,textTransform:'none'}}>({editForm.bio.length}/160)</span>
-              </label>
-              <textarea className="dash-input" style={{height:80,padding:'10px 14px',resize:'vertical',fontFamily:'inherit',lineHeight:1.5}}
-                value={editForm.bio} onChange={e => {
-                  if (e.target.value.length <= 160) setEditForm(f => ({...f, bio: e.target.value}));
-                }} placeholder="Tell task posters about yourself..." />
-              {editErrors.bio && <div style={{fontSize:11,color:'var(--red)',marginTop:4}}>{editErrors.bio}</div>}
-            </div>
-
-            {editErrors.general && <div style={{fontSize:12,color:'var(--red)',marginBottom:12,textAlign:'center'}}>{editErrors.general}</div>}
-
-            {/* Actions */}
-            <div style={{display:'flex',gap:12}}>
-              <button className="dash-btn" style={{flex:1,justifyContent:'center',opacity:savingProfile?0.6:1}} disabled={savingProfile}
-                onClick={async () => {
-                  if (!editForm.firstName.trim()) { setEditErrors({firstName:'First name is required'}); return; }
-                  if (!editForm.username.trim()) { setEditErrors({username:'Username is required'}); return; }
-                  if (usernameCheck === 'taken') { setEditErrors({username:'This username is taken'}); return; }
-                  setSavingProfile(true); setEditErrors({});
-                  try {
-                    const body: Record<string, any> = {};
-                    if (editForm.firstName !== (user?.firstName || '')) body.firstName = editForm.firstName;
-                    if (editForm.lastName !== (user?.lastName || '')) body.lastName = editForm.lastName;
-                    if (editForm.username !== (user?.username || '')) body.username = editForm.username;
-                    if (editForm.avatarUrl !== (user?.avatarUrl || '') && editForm.avatarUrl && !editForm.avatarUrl.startsWith('data:')) body.avatarUrl = editForm.avatarUrl;
-                    if (editForm.bio !== (profileData?.workerProfile?.bio || '')) body.bio = editForm.bio;
-
-                    if (Object.keys(body).length > 0) {
-                      const updated = await apiRequest('/users/me', {
-                        method: 'PATCH',
-                        body: JSON.stringify(body),
-                      }).catch(() => null);
-                      if (!updated) throw new Error('Failed to update profile');
-                      const userData = await apiRequest('/users/me').catch(() => null);
-                      if (userData) setProfileData(userData);
-                    }
-
-                    setShowEdit(false);
-                    toast('Profile updated successfully');
-                    refreshUser();
-                  } catch (err: any) {
-                    setEditErrors({general: err.message || 'Failed to save'});
-                  }
-                  setSavingProfile(false);
-                }}>
-                {savingProfile ? <><span className="spinner" style={{width:14,height:14,borderWidth:2}} /> Saving...</> : <><i className="ti ti-check" /> Save Changes</>}
-              </button>
-              <button className="btn-outline" style={{flex:1,justifyContent:'center'}} onClick={() => setShowEdit(false)}>Cancel</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-{showWalletOptions && (
+      {showWalletOptions && (
         <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.5)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:1000}}
           onClick={() => setShowWalletOptions(false)}>
           <div onClick={e => e.stopPropagation()} style={{background:'var(--card)',border:'1px solid var(--border)',borderRadius:16,padding:24,maxWidth:380,width:'90%'}}>
@@ -1072,7 +828,7 @@ export default function Profile() {
                     style={{
                       display:'flex',alignItems:'center',gap:12,padding:'14px 16px',
                       borderRadius:10,border:'1.5px solid var(--border)',
-                      background:'var(--bg2)',textDecoration:'none',
+                      background:'var(--card2)',textDecoration:'none',
                       fontFamily:'inherit',fontSize:13,fontWeight:700,color:'var(--text)',
                     }}>
                     <img src={WALLET_APPS.find(w => w.id === p.id)?.icon} alt="" aria-hidden="true" width={32} height={32} style={{borderRadius:8,flexShrink:0}} />
@@ -1087,7 +843,7 @@ export default function Profile() {
                     style={{
                       display:'flex',alignItems:'center',gap:12,padding:'14px 16px',
                       borderRadius:10,border:'1.5px solid var(--border)',
-                      background:'var(--bg2)',cursor:installed && connecting !== p.id ? 'pointer' : 'default',
+                      background:'var(--card2)',cursor:installed && connecting !== p.id ? 'pointer' : 'default',
                       fontFamily:'inherit',fontSize:13,fontWeight:700,color:'var(--text)',
                       opacity:installed ? 1 : 0.5,transition:'border-color .13s',
                     }}>
@@ -1194,8 +950,6 @@ export default function Profile() {
       {/* Tab: Referrals */}
       {tab === "referrals" && <TabReferralsContent />}
 
-      {/* Tab: Notifications */}
-      {tab === "notifications" && <TabNotificationsContent />}
 
 
       {fundModal && (

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { NavLink, Navigate, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import Layout from '../components/Layout'
+import LoadError from '../components/LoadError'
 import { apiRequest } from '../lib/api'
 import { useToast } from '../components/Toast'
 import type { Me } from './settings/ui'
@@ -18,16 +19,17 @@ import '../styles/settings.css'
 // Settings, one route per section: /settings/account, /settings/security, ...
 // Old links (/settings#kyc, /settings?tab=kyc, OAuth and VeryAI returns to
 // /settings?...) are sent to the right section.
+// Ordered by importance: money-critical sections (Verification, Payments) first
 const SECTIONS = [
   { id: 'account', label: 'Account', icon: 'ti-user' },
-  { id: 'notifications', label: 'Notifications', icon: 'ti-bell' },
-  { id: 'privacy', label: 'Privacy', icon: 'ti-lock' },
-  { id: 'security', label: 'Security', icon: 'ti-shield-lock' },
   { id: 'verification', label: 'Verification', icon: 'ti-id' },
+  { id: 'payments', label: 'Payments', icon: 'ti-wallet' },
+  { id: 'notifications', label: 'Notifications', icon: 'ti-bell' },
+  { id: 'security', label: 'Security', icon: 'ti-shield-lock' },
+  { id: 'privacy', label: 'Privacy', icon: 'ti-lock' },
   { id: 'connections', label: 'Connections', icon: 'ti-link' },
   { id: 'creator', label: 'Creator', icon: 'ti-speakerphone' },
   { id: 'business', label: 'Business', icon: 'ti-building-store' },
-  { id: 'payments', label: 'Payments', icon: 'ti-wallet' },
   { id: 'devices', label: 'Devices', icon: 'ti-devices' },
   { id: 'developer', label: 'Developer', icon: 'ti-code' },
 ] as const
@@ -59,6 +61,15 @@ export default function Settings() {
   const [err, setErr] = useState(false)
   const [providers, setProviders] = useState<Record<string, boolean> | null>(null)
   const toasted = useRef(false)
+  // Phones: the section chips scroll sideways; bring the selected one into view
+  // (people sent to Verification couldn't see where they were)
+  const navRef = useRef<HTMLElement>(null)
+  useEffect(() => {
+    const nav = navRef.current
+    const on = nav?.querySelector<HTMLElement>('a.on')
+    if (!nav || !on || nav.scrollWidth <= nav.clientWidth) return
+    nav.scrollTo({ left: on.offsetLeft - (nav.clientWidth - on.offsetWidth) / 2, behavior: 'smooth' })
+  }, [section])
 
   const reload = useCallback(async () => {
     try {
@@ -111,7 +122,7 @@ export default function Settings() {
           <p>Your account, privacy, security and verification.</p>
         </div>
         <div className="st2-body">
-          <nav className="st2-nav" aria-label="Settings sections">
+          <nav className="st2-nav" aria-label="Settings sections" ref={navRef}>
             {SECTIONS.map((s) => (
               <NavLink key={s.id} to={`/settings/${s.id}`} className={({ isActive }) => (isActive ? 'on' : '')}>
                 <i className={`ti ${s.icon}`} /> {s.label}
@@ -121,9 +132,9 @@ export default function Settings() {
           <div className="st2-content">
             <h2 className="st2-section-title">{current.label}</h2>
             {err && !me ? (
-              <div className="up-empty"><i className="ti ti-cloud-off" />Couldn't load your settings. <button className="up-btn" onClick={() => reload()}>Try again</button></div>
+              <LoadError what="your settings" onRetry={() => { reload() }} />
             ) : !props ? (
-              <div className="up-empty"><i className="ti ti-loader-2" />Loading…</div>
+              <div aria-busy="true"><div className="ui-sk" style={{ height: 140, marginBottom: 12 }} /><div className="ui-sk" style={{ height: 96 }} /></div>
             ) : section === 'account' ? <Account {...props} />
               : section === 'notifications' ? <Notifications {...props} />
               : section === 'privacy' ? <Privacy {...props} />
