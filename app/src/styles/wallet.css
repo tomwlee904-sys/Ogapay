@@ -1,20 +1,26 @@
 /* Wallet (/wallet), Add money (/deposit) and the Withdraw / Add bank dialogs */
 
-/* Wallet, one column: balance, level and limit, money in | money out, history */
-.wl-stack { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; margin-top: 24px; }
-.wl-stack > * { min-width: 0; }
-.wl-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: stretch; }
+/* Wallet: .ui-split puts the main column (balance, level, history) beside a
+   340px side panel (level card, money in, money out) on desktop. Phones and
+   tablets get one column, side panel after the history; tablets show money in |
+   money out side by side. */
+.wl-split { margin-top: 24px; }
+.wl-main, .wl-side { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; min-width: 0; align-content: start; }
+.wl-pair { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
 .wl-pair > * { min-width: 0; }
+@media (min-width: 768px) and (max-width: 1023.98px) { .wl-pair { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: stretch; } }
+/* A side panel taller than a short laptop screen would hide its bottom while it sticks */
+@media (min-width: 1024px) and (max-height: 820px) { .wl-side.ui-split-side { position: static; } }
 
 /* Level and limit */
 .wl-badge { display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px; border-radius: 999px; font-size: 12px; font-weight: 500; border: 1px solid var(--border); color: var(--text2); white-space: nowrap; }
 .wl-badge.ok { border-color: color-mix(in srgb, var(--money) 35%, var(--border)); color: var(--money); background: color-mix(in srgb, var(--money) 8%, transparent); }
 .wl-level-head { margin: -4px 0 14px; font-size: 15px; color: var(--text); line-height: 1.5; }
 .wl-level-head b { font-weight: 600; font-variant-numeric: tabular-nums; }
-.wl-steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
-.wl-steps li { padding-top: 10px; border-top: 3px solid var(--border); display: grid; gap: 2px; min-width: 0; }
-.wl-steps li.done { border-top-color: var(--money); }
-.wl-steps li.next { border-top-color: var(--text3); }
+.wl-steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: minmax(0, 1fr); }
+.wl-steps li { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: baseline; gap: 2px 12px; min-width: 0; padding: 9px 0 9px 12px; border-left: 3px solid var(--border); }
+.wl-steps li.done { border-left-color: var(--money); }
+.wl-steps li.next { border-left-color: var(--text3); }
 .wl-step-name { font-size: 13px; font-weight: 600; color: var(--text); }
 .wl-steps li:not(.done):not(.next) .wl-step-name { color: var(--text2); font-weight: 500; }
 .wl-step-limit { font-size: 12px; color: var(--text2); font-variant-numeric: tabular-nums; }
@@ -35,12 +41,36 @@
 .wl-acct-sub { margin-top: 4px; font-size: 13px; color: var(--text2); }
 .wl-dir-note { margin: 10px 0 0; }
 .wl-dir-actions { display: flex; align-items: center; gap: 8px 16px; flex-wrap: wrap; margin-top: auto; padding-top: 14px; }
-.wl-totals { font-size: 12.5px; color: var(--text2); text-align: right; }
-.wl-totals b { color: var(--text); font-weight: 600; font-variant-numeric: tabular-nums; }
 
-.wl-grid { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 16px; margin-top: 24px; align-items: start; }
-/* minmax(0, 1fr): an auto column would grow to fit the buttons and overflow phones */
-.wl-main, .wl-side { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; min-width: 0; }
+/* Not verified: one banner with one button, the levels folded away */
+.wl-verify { padding: 20px; }
+.wl-verify-top { display: flex; align-items: center; gap: 14px; }
+.wl-verify-ic { width: 40px; height: 40px; flex-shrink: 0; border-radius: var(--r-ctl); display: grid; place-items: center; background: var(--card2); color: var(--text); font-size: 20px; }
+.wl-verify-text { flex: 1; min-width: 0; }
+.wl-verify-text h2 { margin: 0; font-size: 16px; font-weight: 600; letter-spacing: -.02em; color: var(--text); }
+.wl-verify-text p { margin: 4px 0 0; font-size: 13px; line-height: 1.5; color: var(--text2); }
+.wl-verify-btn { flex-shrink: 0; }
+/* Verified (phones and tablets): level, daily limit and Upgrade on one line */
+.wl-lvrow { padding: 14px 20px; }
+.wl-lvrow-top { display: flex; align-items: center; gap: 8px 12px; flex-wrap: wrap; }
+.wl-lvrow-limit { flex: 1; min-width: 0; margin: 0; font-size: 14px; font-weight: 400; color: var(--text2); }
+.wl-lvrow-limit b { color: var(--text); font-weight: 600; font-variant-numeric: tabular-nums; }
+/* "See limits": the three levels */
+.wl-limits { margin-top: 12px; border-top: 1px solid var(--border); }
+.wl-limits summary { display: flex; align-items: center; gap: 6px; min-height: 44px; list-style: none; cursor: pointer; font-size: 13px; font-weight: 600; color: var(--text); }
+.wl-limits summary::-webkit-details-marker { display: none; }
+.wl-limits summary i { font-size: 15px; color: var(--text2); transition: transform var(--t-fast) var(--ease); }
+.wl-limits[open] summary i { transform: rotate(180deg); }
+.wl-limits .wl-steps { margin-bottom: 4px; }
+.wl-limits-foot { margin: 10px 0 2px; }
+.wl-lvrow .wl-limits { margin-top: 10px; }
+
+/* Lifetime totals under the History title: one strip of three */
+.wl-lifetime { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin-bottom: 14px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+.wl-lifetime > div { min-width: 0; padding: 10px 14px; }
+.wl-lifetime > div + div { border-left: 1px solid var(--border); }
+.wl-lifetime span { display: block; font-size: 12px; color: var(--text2); }
+.wl-lifetime b { display: block; margin-top: 2px; font-size: 16px; font-weight: 600; letter-spacing: -.02em; color: var(--text); font-variant-numeric: tabular-nums; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* Balance */
 .wl-bal { padding: 24px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; }
@@ -53,6 +83,9 @@
 .wl-bal-notes i { font-size: 14px; }
 .wl-bal-actions { display: flex; gap: 8px; }
 .wl-bal-actions .ui-btn { min-width: 112px; }
+.wl-bal-err { margin-top: 8px; display: grid; justify-items: start; gap: 4px; font-size: 13px; line-height: 1.5; color: var(--text2); }
+.wl-bal-err b { font-size: 16px; font-weight: 600; color: var(--text); }
+.wl-bal-err .ui-btn { margin-top: 6px; }
 .wl-coins { display: flex; gap: 8px; flex-wrap: wrap; padding-top: 16px; border-top: 1px solid var(--border); }
 .wl-coin { display: inline-flex; align-items: center; gap: 8px; height: 34px; padding: 0 12px; border: 1px solid var(--border); border-radius: 999px; font-size: 12.5px; color: var(--text2); }
 .wl-coin b { color: var(--text); font-weight: 600; font-variant-numeric: tabular-nums; }
@@ -72,6 +105,7 @@
 .wl-link:hover { color: var(--text); }
 .wl-chips { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; margin: 0 -2px 6px; padding: 2px; }
 .wl-chips::-webkit-scrollbar { display: none; }
+.wl-chips .ui-chip { height: 36px; }
 
 /* History */
 .wl-txs { list-style: none; margin: 0; padding: 0; }
@@ -163,7 +197,7 @@
 .wl-combo-list .none { color: var(--text2); cursor: default; }
 .wl-resolved { display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 12px; border-radius: 10px; background: color-mix(in srgb, var(--green) 10%, var(--card)); font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 14px; }
 .wl-resolved i { color: var(--green); font-size: 17px; }
-.wl-resolved.neutral { background: var(--bg2); }
+.wl-resolved.neutral { background: var(--card2); }
 .wl-resolved.neutral i { color: var(--text2); }
 .wl-resolving { display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 12px; font-size: 13px; color: var(--text2); margin-bottom: 14px; }
 
@@ -189,16 +223,23 @@
 @keyframes wl-fade { from { opacity: 0; } }
 @keyframes wl-rise { from { opacity: 0; transform: translateY(8px); } }
 
-/* Add money */
+/* Add money: method list + panel from tablet up (240px rail on tablet, 320px
+   and staying in view on desktop); on phones a row of three choices above the panel */
 .dp-grid { display: grid; grid-template-columns: 320px minmax(0, 1fr); gap: 16px; margin-top: 24px; align-items: start; }
 .dp-methods { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
+.dp-panel > * { max-width: 560px; }
+@media (min-width: 1024px) { .dp-methods { position: sticky; top: calc(var(--nav-h) + 16px); } }
+@media (min-width: 768px) and (max-width: 1023.98px) { .dp-grid { grid-template-columns: 240px minmax(0, 1fr); } }
 .dp-method { display: flex; gap: 12px; align-items: flex-start; width: 100%; padding: 14px; border: 1px solid var(--border); border-radius: 16px; background: var(--card); text-align: left; cursor: pointer; font-family: inherit; color: inherit; transition: border-color .15s; }
 .dp-method:hover { border-color: var(--text3); }
 .dp-method[aria-pressed="true"] { border-color: var(--text); box-shadow: 0 0 0 1px var(--text); }
 .dp-method .wl-bank-ic { width: 38px; height: 38px; }
 .dp-method strong { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; color: var(--text); }
 .dp-m-text > span { display: block; margin-top: 3px; font-size: 12.5px; line-height: 1.5; color: var(--text2); }
-.dp-method em { font: normal 500 9.5px var(--font-mono); letter-spacing: .06em; text-transform: uppercase; padding: 2px 7px; border-radius: 999px; background: color-mix(in srgb, var(--green) 14%, transparent); color: var(--green); }
+.dp-method em { font: normal 500 11px var(--font); padding: 2px 8px; border-radius: 999px; background: var(--card2); color: var(--text2); white-space: nowrap; }
+.dp-m-text .dp-m-short { display: none; }
+.dp-m-text em { display: inline-block; margin-top: 8px; }
+.dp-copy { flex-shrink: 0; }
 .dp-panel { padding: 24px; }
 .dp-panel h2 { margin: 0 0 4px; font-size: 18px; font-weight: 600; letter-spacing: -.02em; color: var(--text); }
 .dp-panel > p { margin: 0 0 20px; font-size: 13px; line-height: 1.6; color: var(--text2); }
@@ -216,38 +257,39 @@
 .dp-lock p { margin: 0 auto 14px; max-width: 360px; font-size: 13px; line-height: 1.55; color: var(--text2); }
 .dp-status { max-width: 520px; margin: 32px auto 0; padding: 32px 24px; }
 
-@media (max-width: 1024px) {
-  .wl-grid { grid-template-columns: minmax(0, 1fr) 300px; }
-  .dp-grid { grid-template-columns: 280px minmax(0, 1fr); }
-}
-@media (max-width: 860px) {
-  .wl-grid, .dp-grid { grid-template-columns: minmax(0, 1fr); }
-  .wl-pair { grid-template-columns: minmax(0, 1fr); }
-}
-@media (max-width: 560px) {
-  .wl-steps { grid-template-columns: minmax(0, 1fr); gap: 0; }
-  .wl-steps li { grid-template-columns: minmax(0, 1fr) auto; align-items: baseline; padding: 9px 0 9px 12px; border-top: 0; border-left: 3px solid var(--border); }
-  .wl-steps li.done { border-left-color: var(--money); }
-  .wl-steps li.next { border-left-color: var(--text3); }
-  .wl-totals { text-align: left; }
-  .wl-sec-head:has(.wl-totals) { flex-wrap: wrap; }
-}
-@media (max-width: 767px) {
+@media (max-width: 767.98px) {
   .wl-bal { padding: 20px; }
+  /* Three equal buttons; their icons don't fit beside the words on a phone */
   .wl-bal-actions { width: 100%; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .wl-bal-actions .ui-btn { min-width: 0; padding: 0 8px; }
+  .wl-bal-actions .ui-btn i { display: none; }
   .wl-stats { gap: 8px; }
   .wl-stat { padding: 12px; }
   .wl-stat b { font-size: 15px; }
+  .wl-stat span { letter-spacing: .05em; }
   .wl-sec, .dp-panel { padding: 16px; }
+  .wl-verify, .wl-lvrow { padding: 16px; }
+  .wl-verify-top { flex-wrap: wrap; align-items: flex-start; }
+  .wl-verify-text { flex-basis: calc(100% - 54px); }
+  .wl-verify-btn { width: 100%; }
+  .wl-lifetime > div { padding: 10px 12px; }
+  .wl-lifetime b { font-size: 15px; }
+  /* Filter chips run to the card's edges and fade there, so it's clear there are more */
+  .wl-chips { margin: 0 -16px 6px; padding: 2px 16px; scroll-padding-inline: 16px; -webkit-mask-image: linear-gradient(90deg, #000 85%, transparent); mask-image: linear-gradient(90deg, #000 85%, transparent); }
+  .wl-chips .ui-chip { height: 40px; }
   .wl-tx-more { margin-left: 0; }
   .wl-overlay { align-items: flex-end; padding: 0; }
   .wl-sheet { max-width: none; max-height: 92dvh; border-radius: 20px 20px 0 0; border-bottom: 0; padding-bottom: env(safe-area-inset-bottom); }
-  .dp-methods { grid-template-columns: minmax(0, 1fr); }
-}
-@media (max-width: 420px) {
-  .wl-stat span { font-size: 11px; letter-spacing: .05em; }
-  .wl-bal-actions .ui-btn i { display: none; }
+  /* Add money: three choices in one row (icon over a short name), the panel right under them */
+  .dp-grid { grid-template-columns: minmax(0, 1fr); margin-top: 16px; gap: 12px; }
+  .dp-methods { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .dp-method { flex-direction: column; align-items: center; gap: 6px; padding: 12px 6px; text-align: center; border-radius: var(--r-md); }
+  .dp-method .wl-bank-ic { width: 36px; height: 36px; }
+  .dp-m-text { display: grid; justify-items: center; gap: 4px; min-width: 0; }
+  .dp-m-text strong { display: none; }
+  .dp-m-text > span { display: none; }
+  .dp-m-text .dp-m-short { display: block; margin: 0; font-size: 13px; font-weight: 600; line-height: 1.3; color: var(--text); }
+  .dp-m-text em { margin-top: 0; padding: 2px 6px; white-space: normal; line-height: 1.3; border-radius: 8px; }
 }
 @media (prefers-reduced-motion: reduce) { .wl-overlay, .wl-sheet { animation: none; } }
 
@@ -265,3 +307,10 @@
 .wl-cv-done { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 6px; }
 .wl-cv-done i { font-size: 40px; color: var(--green); }
 .wl-cv-done p { margin: 0 0 12px; color: var(--text2); font-size: 13px; }
+
+/* Shown only on desktop / only below desktop (the level card moves into the side panel) */
+.wl-wide-only { display: none; }
+@media (min-width: 1024px) {
+  .wl-wide-only { display: block; }
+  .wl-narrow-only { display: none; }
+}
