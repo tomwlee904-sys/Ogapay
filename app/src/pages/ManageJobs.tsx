@@ -44,6 +44,8 @@ type Task = {
   requiredCommunityId?: string | null; communityId?: string | null
   // A contest: entries aren't approved one by one, places are awarded on the job page
   isContest?: boolean
+  // Quick social jobs use set prices; private hires: neither can have the pay raised
+  socialAction?: string | null
   // Selection jobs: people apply with a note and the poster picks one (hiredWorkerId)
   isSelection?: boolean; hiredWorkerId?: string | null
   _count?: { submissions?: number; applications?: number }
@@ -236,6 +238,24 @@ function JobDrawer({ task, allTasks, focusId, onClose, onChanged }: { task: Task
       toast("Job cancelled. The money is back in your wallet.", "success");
       onChanged(); onClose();
     } catch (e: any) { toast(e?.message || "Couldn't cancel this job", "error"); }
+  };
+  // Raise the pay per person: the extra for every place (plus the 10% fee) is held
+  // from the wallet now; work approved from now on is paid the new amount
+  const canRaise = (task.status === "OPEN" || task.status === "IN_PROGRESS") && !task.isContest && !task.socialAction && !task.hiredWorkerId;
+  const raisePay = async () => {
+    const input = window.prompt(`New pay per person (now ${money(reward, cur)}):`, String(cur === "NGN" ? Math.ceil((reward * 1.5) / 50) * 50 : +(reward * 1.5).toFixed(2)));
+    if (input === null) return;
+    const to = Number(String(input).replace(/[^\d.]/g, ""));
+    if (!Number.isFinite(to) || to <= reward) { toast(`Enter more than ${money(reward, cur)}`, "error"); return; }
+    const places = Number(task.maxWorkers) || 1;
+    const extra = (to - reward) * places;
+    const fee = Math.round(extra * 10) / 100; // 10%, to the kobo
+    if (!window.confirm(`Raise the pay to ${money(to, cur)} per person?\n\n${money(extra, cur)} more is held for the ${places} places, plus a ${money(fee, cur)} fee: ${money(extra + fee, cur)} from your wallet.\n\nWork you approve from now on is paid ${money(to, cur)}. Money for places nobody uses comes back when the job closes.`)) return;
+    try {
+      await apiRequest(`/tasks/${task.id}/raise-pay`, { method: "POST", body: JSON.stringify({ reward: to }) });
+      toast(`Pay raised to ${money(to, cur)} per person`, "success");
+      onChanged(); onClose();
+    } catch (e: any) { toast(e?.message || "Couldn't raise the pay", "error"); }
   };
   const [editing, setEditing] = useState(false);
   const [ed, setEd] = useState({ title: task.title, brief: "", deadline: "" });
@@ -459,6 +479,7 @@ function JobDrawer({ task, allTasks, focusId, onClose, onChanged }: { task: Task
           {isXFollowJob(task) && <Link className="ui-btn ui-btn-ghost" to={`/manage-jobs/${task.id}/followers`}><Icon n="chart-line" s={15} /> Follower analytics</Link>}
           <button className="ui-btn ui-btn-ghost" disabled={tpl !== ""} onClick={saveAsTemplate}><Icon n={tpl === "saved" ? "check" : "device-floppy"} s={15} /> {tpl === "saving" ? "Saving…" : tpl === "saved" ? "Saved" : "Save as template"}</button>
           {live && !editing && <button className="ui-btn ui-btn-ghost" onClick={startEdit}><Icon n="edit" s={15} /> Edit</button>}
+          {canRaise && !editing && <button className="ui-btn ui-btn-ghost" onClick={raisePay}><Icon n="trending-up" s={15} /> Raise pay</button>}
           {(task.status === "OPEN" || task.status === "DRAFT") && (
             <button className="ui-btn ui-btn-ghost" onClick={() => setPaused(task.status === "OPEN")}>
               <Icon n={task.status === "OPEN" ? "player-pause" : "player-play"} s={15} /> {task.status === "OPEN" ? "Pause" : "Resume"}
