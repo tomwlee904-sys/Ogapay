@@ -1,11 +1,7 @@
 import Layout from '../components/Layout'
 
-const Icon = ({ n, s = 18, c }: { n: string; s?: number; c?: string }) => (
-  <i className={`ti ti-${n}`} style={{ fontSize: s, color: c || "var(--text2)", lineHeight: 1, flexShrink: 0 }} />
-)
-
 // Keep this true: "done" means people can use it today. "upcoming" is what we
-// plan next, without dates.
+// plan next, without dates, and never something already listed as live.
 const phases = [
   {
     title: "Marketplace",
@@ -42,76 +38,71 @@ const phases = [
     title: "Next",
     status: "upcoming",
     items: [
-      "Contest jobs with ranked prizes for several winners",
-      "Jobs only members of a community can do",
       "More ways to sort and filter jobs",
-      "Likes and comments on blog posts",
-      "An API for apps and AI agents to post and pay for jobs",
     ],
+    note: "More coming soon. Follow our channels to hear first.",
   },
 ]
-
-const statusStyles = {
-  done: { bg: "#16a34a18", color: "#16a34a", label: "Live" },
-  active: { bg: "rgba(var(--accent-rgb),0.09)", color: "#52525b", label: "In Progress" },
-  upcoming: { bg: "var(--bg2)", color: "var(--text3)", label: "Planned" },
-}
 
 export default function Roadmap() {
   return (
     <Layout>
       <style>{`
-        .rm-page{max-width:calc(800px + 2 * var(--gutter));margin:0 auto;padding:0 var(--gutter) 60px}
-        .rm-hero{text-align:center;padding:40px 20px 32px}
-        .rm-hero h1{font-family:Inter;font-size:32px;font-weight:900;margin:0 0 8px}
-        .rm-hero p{color:var(--text2);font-size:14px;margin:0;max-width:500px;margin:0 auto;line-height:1.6}
-        .rm-timeline{position:relative}
-        .rm-timeline::before{content:'';position:absolute;left:28px;top:0;bottom:0;width:2px;background:var(--border)}
-        .rm-phase{position:relative;padding-left:68px;margin-bottom:28px}
-        .rm-dot{position:absolute;left:18px;top:6px;width:22px;height:22px;border-radius:50%;border:2px solid var(--border);background:var(--card);display:grid;place-items:center;z-index:1;font-size:11px}
-        .rm-dot.done{border-color:#16a34a;background:#16a34a;color:#fff}
-        .rm-dot.active{border-color:var(--accent);background:var(--accent);color:var(--on-accent);animation:pulse 2s infinite}
-        .rm-dot.upcoming{background:var(--card);color:var(--text3)}
-        @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(var(--accent-rgb),.4)}50%{box-shadow:0 0 0 6px rgba(var(--accent-rgb),0)}}
+        .rm-timeline{position:relative;margin-top:32px}
+        .rm-timeline::before{content:'';position:absolute;left:11px;top:4px;bottom:0;width:2px;background:var(--border)}
+        .rm-phase{position:relative;padding-left:36px;margin-bottom:24px}
+        .rm-dot{position:absolute;left:0;top:2px;width:24px;height:24px;border-radius:50%;border:2px solid var(--border);background:var(--card);display:grid;place-items:center;z-index:1;font-size:12px;color:var(--text3)}
+        .rm-dot.done{border-color:var(--green);background:color-mix(in srgb,var(--green) 16%,var(--card));color:var(--green)}
         .rm-phase-header{display:flex;align-items:center;gap:10px;margin-bottom:12px}
-        .rm-phase-header h2{font-family:Inter;font-size:17px;font-weight:800;margin:0}
-        .rm-status{display:inline-flex;align-items:center;height:22px;padding:0 10px;border-radius:99px;font-size:11px;font-weight:700}
-        .rm-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px 20px}
-        .rm-item{display:flex;align-items:center;gap:10px;padding:7px 0;font-size:13px;color:var(--text2)}
-        .rm-item.done{color:var(--text)}
-        .rm-item.done i{color:#16a34a}
-        .rm-item.active i{color:var(--accent)}
+        .rm-phase-header h2{margin:0;font-size:var(--fs-h2);font-weight:600;letter-spacing:-.02em;color:var(--text)}
+        .rm-status{display:inline-flex;align-items:center;height:24px;padding:0 10px;border-radius:var(--r-pill);font-size:12px;font-weight:600}
+        .rm-status.done{background:color-mix(in srgb,var(--green) 14%,transparent);color:var(--green)}
+        .rm-status.upcoming{background:var(--card2);color:var(--text2);border:1px solid var(--border)}
+        .rm-card{padding:14px 20px}
+        .rm-item{display:flex;align-items:flex-start;gap:10px;padding:7px 0;font-size:14px;line-height:1.5;color:var(--text)}
+        .rm-item i{font-size:16px;flex-shrink:0;margin-top:2px}
+        .rm-item.done i{color:var(--green)}
+        .rm-item.upcoming{color:var(--text2)}
+        .rm-item.upcoming i{color:var(--text3)}
+        .rm-note{margin:8px 0 2px;font-size:13px;color:var(--text2)}
+        /* Desktop: the three phases side by side as a board */
+        @media(min-width:1024px){
+          .rm-timeline{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;align-items:start}
+          .rm-timeline::before,.rm-dot{display:none}
+          .rm-phase{padding-left:0;margin:0}
+        }
       `}</style>
 
-      <div className="rm-page">
-        <div className="rm-hero">
-          <h1><Icon n="map-pin" s={28} /> Roadmap</h1>
-          <p>OgaPay is evolving. What you can use today, and what we plan to build next.</p>
-        </div>
+      <div className="ui-page">
+        <header>
+          <span className="ui-eyebrow"><i className="ti ti-map-2" /> Roadmap</span>
+          <h1 className="ui-title">What's live and what's next</h1>
+          <p className="ui-sub">What you can use on OgaPay today, and what we plan to build next.</p>
+        </header>
 
         <div className="rm-timeline">
-          {phases.map((phase, i) => {
-            const st = statusStyles[phase.status as keyof typeof statusStyles]
-            const dotClass = phase.status === "done" ? "done" : phase.status === "active" ? "active" : "upcoming"
+          {phases.map((phase) => {
+            const done = phase.status === "done"
             return (
-              <div className="rm-phase" key={i}>
-                <div className={`rm-dot ${dotClass}`}>
-                  {phase.status === "done" ? <i className="ti ti-check" style={{fontSize:10}} /> : 
-                   phase.status === "active" ? <i className="ti ti-loader" style={{fontSize:9,animation:'spin 1s linear infinite'}} /> : i+1}
+              <section className="rm-phase" key={phase.title} aria-label={phase.title}>
+                <div className={`rm-dot ${done ? "done" : "upcoming"}`} aria-hidden="true">
+                  <i className={`ti ${done ? "ti-check" : "ti-clock"}`} />
                 </div>
                 <div className="rm-phase-header">
                   <h2>{phase.title}</h2>
-                  <span className="rm-status" style={{background:st.bg,color:st.color}}>{st.label}</span>
+                  <span className={`rm-status ${done ? "done" : "upcoming"}`}>{done ? "Live" : "Planned"}</span>
                 </div>
-                <div className="rm-card">
-                  {phase.items.map((item, j) => (
-                    <div className={`rm-item ${phase.status === "done" ? "done" : phase.status === "active" ? "active" : ""}`} key={j}>
-                      <i className="ti ti-checkbox" style={{fontSize:14,flexShrink:0}} />
+                <div className="ui-card rm-card">
+                  {phase.items.map((item) => (
+                    <div className={`rm-item ${done ? "done" : "upcoming"}`} key={item}>
+                      {/* a tick for live, an open circle for planned (they used to look the same) */}
+                      <i className={`ti ${done ? "ti-circle-check" : "ti-circle-dashed"}`} aria-hidden="true" />
                       <span>{item}</span>
                     </div>
                   ))}
+                  {phase.note && <p className="rm-note">{phase.note}</p>}
                 </div>
-              </div>
+              </section>
             )
           })}
         </div>

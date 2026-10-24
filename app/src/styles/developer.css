@@ -1,46 +1,76 @@
-/* Developer API (/developer) */
-.dv-wrap { max-width: 860px; }
-.dv-head { margin-bottom: 18px; }
-.dv-head h1 { font: 800 30px/1.1 Inter, sans-serif; letter-spacing: -.02em; margin: 0 0 6px; color: var(--text); }
-.dv-head p { margin: 0; font-size: 14px; color: var(--text2); max-width: 620px; line-height: 1.55; }
-.dv-card { padding: 18px 20px; margin-bottom: 12px; }
-.dv-card h2 { font: 700 16px Inter, sans-serif; margin: 0 0 4px; color: var(--text); }
-.dv-sub { font-size: 13px; color: var(--text3); margin: 0 0 12px; line-height: 1.55; }
-.dv-sub code, .dv-ep p code, .dv-key-t code { font: 12.5px var(--font-mono, ui-monospace, monospace); color: var(--text); background: var(--bg2); border: 1px solid var(--border); border-radius: 6px; padding: 1px 5px; }
-.dv-code { position: relative; margin: 0 0 12px; }
-.dv-code pre { margin: 0; padding: 12px 44px 12px 14px; background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; overflow-x: auto; }
+/* Developer API (/developer). Page frame: .ui-page. From 1024px a docs layout:
+   a sticky section list on the left and a 760px reading column. */
+.dv-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; margin-top: 28px; align-items: start; }
+.dv-nav { display: none; }
+.dv-main { min-width: 0; max-width: 760px; }
+@media (min-width: 1024px) {
+  .dv-layout { grid-template-columns: 200px minmax(0, 760px); gap: 40px; }
+  .dv-nav { display: flex; flex-direction: column; gap: 2px; position: sticky; top: calc(var(--nav-h) + 16px); }
+  .dv-nav-label { margin-bottom: 8px; font: 500 var(--fs-label)/1.4 var(--font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--text2); }
+  .dv-nav button { text-align: left; background: none; border: 0; padding: 8px; border-radius: 8px; font: inherit; font-size: 13.5px; color: var(--text2); cursor: pointer; }
+  .dv-nav button:hover { color: var(--text); background: var(--card2); }
+}
+
+.dv-card { padding: 20px; margin-bottom: 12px; scroll-margin-top: calc(var(--nav-h) + 16px); }
+.dv-card h2 { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font: 600 17px var(--font); margin: 0 0 6px; color: var(--text); }
+.dv-h2-note { font: 500 12px var(--font); padding: 2px 9px; border-radius: var(--r-pill); background: var(--card2); border: 1px solid var(--border); color: var(--text2); }
+.dv-h2-note.write { color: var(--text); }
+.dv-sub { font-size: 13.5px; color: var(--text2); margin: 0 0 12px; line-height: 1.55; }
+.dv-sub code, .dv-ep p code, .dv-key-t code { font: 12.5px var(--font-mono, ui-monospace, monospace); color: var(--text); background: var(--card2); border: 1px solid var(--border); border-radius: 6px; padding: 1px 5px; }
+
+/* Code block: a header bar with the label and a 36px Copy button (44px tap area) */
+.dv-code { margin: 0 0 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--card2); overflow: hidden; }
+.dv-code-bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 4px 4px 4px 14px; border-bottom: 1px solid var(--border); }
+.dv-code-bar > span { font: 500 var(--fs-label) var(--font-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--text2); }
+.dv-code pre { margin: 0; padding: 12px 14px; overflow-x: auto; }
 .dv-code code { font: 12.5px/1.6 var(--font-mono, ui-monospace, monospace); color: var(--text); white-space: pre; }
-.dv-copy { position: absolute; top: 6px; right: 6px; width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--text2); cursor: pointer; display: grid; place-items: center; }
+.dv-copy { position: relative; display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--text); font: 600 12.5px var(--font); cursor: pointer; }
+.dv-copy::after { content: ''; position: absolute; inset: -4px; }
+.dv-copy:hover { border-color: var(--text3); }
+
 .dv-fresh { padding: 12px 14px; border: 1px solid var(--text); border-radius: 12px; margin-bottom: 12px; display: grid; gap: 8px; }
 .dv-fresh strong { font-size: 14px; color: var(--text); }
 .dv-fresh .dv-code { margin: 0; }
 .dv-fresh .up-btn { justify-self: start; }
 .dv-create { display: flex; gap: 8px; margin-bottom: 10px; }
-.dv-input { flex: 1; min-width: 0; height: 40px; padding: 0 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg2); color: var(--text); font: inherit; font-size: 14px; outline: 0; }
+.dv-input { flex: 1; min-width: 0; height: 44px; padding: 0 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--card2); color: var(--text); font: inherit; font-size: 14px; outline: 0; }
 .dv-input:focus { border-color: var(--text3); }
-.dv-err { color: var(--red, #dc2626); font-size: 13px; margin: 0 0 10px; }
+.dv-err { color: var(--red); font-size: 13px; margin: 0 0 10px; }
 .dv-keys { display: grid; }
 .dv-key { display: flex; align-items: center; gap: 12px; padding: 11px 0; border-top: 1px solid var(--border); }
 .dv-key-t { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
 .dv-key-t strong { font-size: 14px; color: var(--text); }
-.dv-key-t span { font-size: 12.5px; color: var(--text3); }
+.dv-key-t span { font-size: 12.5px; color: var(--text2); }
 .dv-revoked { margin: 8px 0 0; }
-.dv-eps { display: grid; }
-.dv-ep { display: grid; grid-template-columns: 48px minmax(0, 1fr); gap: 10px; padding: 10px 0; border-top: 1px solid var(--border); }
-.dv-ep:first-child { border-top: 0; }
-.dv-method { height: 22px; border-radius: 6px; background: color-mix(in srgb, var(--green) 14%, transparent); color: var(--green); font: 700 11px var(--font-mono, ui-monospace, monospace); display: grid; place-items: center; }
-.dv-path { font: 600 13px var(--font-mono, ui-monospace, monospace); color: var(--text); overflow-wrap: anywhere; }
-.dv-ep p { margin: 3px 0 0; font-size: 13px; color: var(--text2); line-height: 1.5; }
-.dv-foot { font-size: 13px; color: var(--text3); }
-.dv-foot a { color: var(--text); font-weight: 600; }
-/* Keys with write access */
-.dv-check { display: flex; align-items: flex-start; gap: 10px; margin-top: 12px; font-size: 13px; line-height: 1.55; color: var(--text2); cursor: pointer; }
-.dv-check input { margin-top: 3px; }
-.dv-check b { color: var(--text); }
-.dv-write { display: inline-block; margin-left: 8px; padding: 1px 8px; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--orange, #d97706) 40%, var(--border)); font: 500 11px var(--font); color: var(--orange, #d97706); vertical-align: middle; }
 
-@media (max-width: 560px) {
-  .dv-head h1 { font-size: 26px; }
+/* Endpoints: method | path, description, parameters as chips */
+.dv-eps { display: grid; }
+.dv-ep { display: grid; grid-template-columns: 52px minmax(0, 1fr); gap: 12px; padding: 12px 0; border-top: 1px solid var(--border); }
+.dv-ep:first-child { border-top: 0; }
+.dv-method { height: 24px; border-radius: 6px; background: color-mix(in srgb, var(--green) 14%, transparent); color: var(--green); font: 700 12px var(--font-mono, ui-monospace, monospace); display: grid; place-items: center; }
+.dv-method[data-m="POST"] { background: color-mix(in srgb, #3b82f6 16%, transparent); color: #2563eb; }
+[data-theme="dark"] .dv-method[data-m="POST"] { color: #93c5fd; }
+.dv-path { font: 600 13.5px var(--font-mono, ui-monospace, monospace); color: var(--text); overflow-wrap: anywhere; }
+.dv-ep p { margin: 4px 0 0; font-size: 13.5px; color: var(--text2); line-height: 1.55; }
+.dv-ep-params { display: flex; gap: 8px; align-items: baseline; margin-top: 8px; }
+.dv-plabel { flex-shrink: 0; font: 500 var(--fs-label) var(--font-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--text2); }
+.dv-params { display: flex; flex-wrap: wrap; gap: 6px; min-width: 0; }
+.dv-param { display: inline-flex; flex-direction: column; gap: 2px; max-width: 100%; }
+.dv-param code { align-self: flex-start; white-space: nowrap; font: 12.5px var(--font-mono, ui-monospace, monospace); color: var(--text); background: var(--card2); border: 1px solid var(--border); border-radius: 6px; padding: 1px 6px; }
+.dv-param small { font-size: 12.5px; line-height: 1.45; color: var(--text2); }
+.dv-param:has(small) { flex-basis: 100%; }
+.dv-foot { font-size: 13.5px; color: var(--text2); }
+.dv-foot a { color: var(--text); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+/* Keys with write access */
+.dv-check { display: flex; align-items: flex-start; gap: 10px; margin-top: 12px; font-size: 13px; line-height: 1.55; color: var(--text2); cursor: pointer; min-height: 44px; }
+.dv-check input { margin-top: 3px; width: 18px; height: 18px; flex-shrink: 0; }
+.dv-check b { color: var(--text); }
+.dv-write { display: inline-block; margin-left: 8px; padding: 1px 8px; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--gold) 40%, var(--border)); font: 500 12px var(--font); color: var(--text); vertical-align: middle; }
+
+@media (max-width: 767.98px) {
+  .dv-layout { margin-top: 20px; }
+  .dv-card { padding: 16px; }
   .dv-create { flex-direction: column; }
   .dv-key { align-items: flex-start; }
+  .dv-ep-params { flex-direction: column; gap: 6px; }
 }

@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { apiRequest, getAccessToken } from '../lib/api'
 import { openSignIn } from '../lib/signin'
+import '../styles/legal.css'
 
 // /join-test-team: asks people to help test new OgaPay features. Applying uses
 // the normal community join flow for the "OgaPay Beta Testers" community
@@ -35,13 +36,25 @@ export default function JoinTestTeam() {
   return (
     <Layout>
       <style>{`
-        .tt-card{margin-top:28px;border:1px solid var(--border);border-radius:16px;background:var(--card);padding:20px}
-        .tt-card h2{margin:0 0 8px;font-size:18px;font-weight:700;color:var(--text)}
-        .tt-card p,.tt-card li{font-size:14px;line-height:1.7;color:var(--text2)}
-        .tt-card ul{margin:8px 0 0;padding-left:20px}
-        .tt-btn{margin-top:16px;min-height:46px;padding:0 24px;border-radius:99px;border:none;background:#0a0a0a;color:#fff;font-size:15px;font-weight:700;cursor:pointer}
-        .tt-btn:disabled{opacity:.5;cursor:default}
-        .tt-note{margin-top:10px;font-size:13px;color:var(--text3)}
+        .tt-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;margin-top:28px;align-items:start}
+        .tt-card{padding:20px}
+        .tt-card h2{margin:0 0 10px;font-size:18px;font-weight:600;color:var(--text)}
+        .tt-card p{margin:0;font-size:14px;line-height:1.7;color:var(--text2)}
+        .tt-list{margin:0 0 12px;padding:0;list-style:none;display:grid;gap:10px}
+        .tt-list li{display:flex;gap:10px;font-size:14px;line-height:1.6;color:var(--text2)}
+        .tt-list i{font-size:18px;color:var(--green);flex-shrink:0;margin-top:2px}
+        .tt-status{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 12px;border-radius:var(--r-pill);background:var(--card2);border:1px solid var(--border);font-size:12.5px;font-weight:600;color:var(--text)}
+        .tt-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+        .tt-note{margin:12px 0 0;font-size:13px;line-height:1.55;color:var(--text2)}
+        .tt-foot{margin-top:24px;font-size:13px;color:var(--text2)}
+        @media(min-width:768px){.tt-card{max-width:none}}
+        /* Desktop: what testers do on the left, the status and button on the right, kept in view */
+        @media(min-width:1024px){
+          .tt-grid{grid-template-columns:minmax(0,1fr) 360px;gap:24px}
+          .tt-side{position:sticky;top:calc(var(--nav-h) + 16px)}
+          .tt-main{max-width:680px}
+        }
+        @media(max-width:767.98px){.tt-actions .ui-btn{flex:1 1 auto}}
       `}</style>
       <div className="ui-page">
         <header>
@@ -50,39 +63,47 @@ export default function JoinTestTeam() {
           <p className="ui-sub">Try new features before everyone else, tell us what breaks, and help shape OgaPay.</p>
         </header>
 
-        <div className="tt-card">
-          <h2>What testers do</h2>
-          <ul>
-            <li>Get early access to new pages and features in the OgaPay Beta Testers community.</li>
-            <li>Follow short test steps on your phone or computer and report what didn't work, with a screenshot.</li>
-            <li>Share honest feedback on what's confusing or slow.</li>
-          </ul>
-          <p style={{ marginTop: 10 }}>We pick a small group from the requests. Tell us in your request which phone you use and how often you use OgaPay.</p>
+        <div className="tt-grid">
+          <div className="ui-card tt-card tt-main">
+            <h2>What testers do</h2>
+            <ul className="tt-list">
+              <li><i className="ti ti-circle-check" aria-hidden="true" />Get early access to new pages and features in the OgaPay Beta Testers community.</li>
+              <li><i className="ti ti-circle-check" aria-hidden="true" />Follow short test steps on your phone or computer and report what didn't work, with a screenshot.</li>
+              <li><i className="ti ti-circle-check" aria-hidden="true" />Share honest feedback on what's confusing or slow.</li>
+            </ul>
+            <p>We pick a small group from the requests. Tell us in your request which phone you use and how often you use OgaPay.</p>
+          </div>
 
-          {info === null ? <p className="tt-note">Loading…</p> : info === 'missing' ? (
-            <>
-              <button className="tt-btn" disabled>Applications open soon</button>
-              <p className="tt-note">The test team isn't taking requests yet. Follow us on <a href="https://t.me/ogapayhq" target="_blank" rel="noopener noreferrer">Telegram</a> to hear when it opens.</p>
-            </>
-          ) : member ? (
-            <>
-              <button className="tt-btn" onClick={() => navigate(`/communities/${BETA_COMMUNITY_SLUG}`)}>Open the test team</button>
-              <p className="tt-note">You're already in {info.name}.</p>
-            </>
-          ) : pending ? (
-            <>
-              <button className="tt-btn" onClick={() => navigate(joinPath)}>See my request</button>
-              <p className="tt-note">Your request is waiting for the team leaders.</p>
-            </>
-          ) : (
-            <>
-              <button className="tt-btn" onClick={apply}>{signedIn ? 'Apply to join' : 'Sign in to apply'}</button>
-              {info.requirements?.length > 0 && <p className="tt-note">To apply: {info.requirements.join(' · ')}</p>}
-            </>
-          )}
+          <div className="ui-card tt-card tt-side" aria-live="polite">
+            <h2>Apply</h2>
+            {info === null ? <p className="tt-note" style={{ marginTop: 0 }}>Loading…</p> : info === 'missing' ? (
+              <>
+                <span className="tt-status"><i className="ti ti-clock" aria-hidden="true" /> Applications open soon</span>
+                <p className="tt-note">The test team isn't taking requests yet. Follow our Telegram channel to hear when it opens.</p>
+                <div className="tt-actions">
+                  <a className="ui-btn ui-btn-dark" href="https://t.me/ogapayhq" target="_blank" rel="noopener noreferrer"><i className="ti ti-brand-telegram" aria-hidden="true" /> Get notified on Telegram</a>
+                </div>
+              </>
+            ) : member ? (
+              <>
+                <p>You're already in {info.name}.</p>
+                <div className="tt-actions"><button className="ui-btn ui-btn-dark" onClick={() => navigate(`/communities/${BETA_COMMUNITY_SLUG}`)}>Open the test team</button></div>
+              </>
+            ) : pending ? (
+              <>
+                <p>Your request is waiting for the team leaders.</p>
+                <div className="tt-actions"><button className="ui-btn ui-btn-dark" onClick={() => navigate(joinPath)}>See my request</button></div>
+              </>
+            ) : (
+              <>
+                {info.requirements?.length > 0 ? <p>To apply: {info.requirements.join(' · ')}</p> : <p>Requests are open.</p>}
+                <div className="tt-actions"><button className="ui-btn ui-btn-dark" onClick={apply}>{signedIn ? 'Apply to join' : 'Sign in to apply'}</button></div>
+              </>
+            )}
+          </div>
         </div>
 
-        <p className="tt-note" style={{ marginTop: 24 }}>Found a bug but don't want to join? <Link to="/support">Tell Support</Link>.</p>
+        <p className="tt-foot lg-prose">Found a bug but don't want to join? <Link to="/support">Tell Support</Link>.</p>
       </div>
     </Layout>
   )

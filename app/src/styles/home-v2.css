@@ -118,12 +118,13 @@ body:has(main.hv), body:has(main.hv) #root { overflow-x: clip; }
 .hv-netflow-label.right { right: 5%; }
 .hv-netflow-caption { position: absolute; left: 50%; bottom: 3%; transform: translateX(-50%); display: flex; align-items: center; gap: 12px; white-space: nowrap; font-size: 12.5px; color: var(--text2); }
 .hv-netflow-caption::before, .hv-netflow-caption::after { content: ''; width: 28px; height: 1px; background: var(--border2); }
-@media (max-width: 480px) {
+@media (max-width: 767.98px) {
   .hv-netflow-label { font-size: 11px; letter-spacing: .08em; top: 7%; }
-  .hv-netflow-caption { font-size: 11.5px; bottom: 1%; }
+  .hv-netflow-caption { font-size: 12px; bottom: 1%; }
   .hv-netflow-caption::before, .hv-netflow-caption::after { width: 16px; }
 }
 
+.hv-hero-live { margin-top: 26px; }
 .hv-stats { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-3); margin-top: var(--sp-3); }
 /* Glass cards, the same recipe as wurk.fun: a translucent gradient over a
    blurred backdrop; optics = a tinted glow bottom-right, a white glow top-left
@@ -177,8 +178,9 @@ body:has(main.hv), body:has(main.hv) #root { overflow-x: clip; }
 .hv-sk { display: inline-block; height: 30px; width: 96px; border-radius: 8px; background: var(--hv-soft); animation: hv-pulse 1.4s ease-in-out infinite; }
 @keyframes hv-pulse { 50% { opacity: .45; } }
 
-.hv-hero-foot { display: flex; align-items: center; margin-top: 56px; padding-top: 18px; }
-.hv-powered { display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--hv-muted); }
+/* Trust line under the hero buttons */
+.hv-powered { display: flex; align-items: center; gap: 8px; margin: 20px 0 0; font-size: 12.5px; line-height: 1.5; color: var(--hv-muted); }
+.hv-powered i { font-size: 15px; }
 
 /* ── Ticker ── */
 .hv-ticker { border-top: 1px solid var(--hv-line); border-bottom: 1px solid var(--hv-line); overflow: hidden; padding: 14px 0; mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); }
@@ -192,8 +194,9 @@ body:has(main.hv), body:has(main.hv) #root { overflow-x: clip; }
 .hv-tick .amt { color: var(--hv-pos); font-weight: 600; }
 .hv-tick .ago { color: var(--hv-faint); font-size: 12px; }
 
-/* ── Choose your path: two cards, and the chosen one opens a panel below both ── */
-.hv-paths { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 48px; }
+/* ── Choose your path: three cards (earn, hire, build), and the chosen one opens
+   a panel below them ── */
+.hv-paths { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-top: 48px; }
 .hv-paths > .hv-reveal { display: flex; }
 .hv-path { width: 100%; display: grid; grid-template-columns: 48px 1fr 30px; align-items: center; gap: 20px; padding: 24px; min-height: 144px; border: 1px solid var(--hv-line); border-radius: 16px; background: var(--hv-card); color: inherit; font-family: inherit; text-align: left; cursor: pointer; transition: border-color .2s ease, box-shadow .2s ease; }
 .hv-path:hover { border-color: var(--hv-faint); }
@@ -213,6 +216,9 @@ body:has(main.hv), body:has(main.hv) #root { overflow-x: clip; }
 .hv-pp-tab { height: 44px; padding: 0 18px; border-radius: 8px; border: 1px solid transparent; background: none; color: var(--hv-muted); font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer; transition: background .15s ease, color .15s ease; }
 .hv-pp-tab:hover { color: var(--hv-ink); }
 .hv-pp-tab.on { background: var(--hv-soft); border-color: var(--hv-line); color: var(--hv-ink); }
+.hv-pp-name { padding-left: 4px; font-size: 14px; font-weight: 600; color: var(--hv-ink); }
+.hv-pp-ctas { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 24px; }
+.hv-pp-ctas .hv-pp-cta { margin-top: 0; }
 .hv-pp-x { width: 44px; height: 44px; border-radius: 10px; border: 0; background: none; color: var(--hv-muted); font-size: 18px; display: grid; place-items: center; cursor: pointer; flex-shrink: 0; }
 .hv-pp-x:hover { background: var(--hv-soft); color: var(--hv-ink); }
 .hv-pp-body { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 64px; padding: 36px; animation: hv-pp-in .3s ease both; }
@@ -229,8 +235,8 @@ body:has(main.hv), body:has(main.hv) #root { overflow-x: clip; }
 .hv-pp-steps b + span { display: block; font-size: 13px; line-height: 1.6; color: var(--hv-muted); margin-top: 3px; }
 .hv-pp-code { border: 1px solid var(--hv-line); border-radius: 12px; background: var(--hv-soft); overflow: hidden; }
 .hv-pp-code-bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 8px 8px 14px; border-bottom: 1px solid var(--hv-line); }
-.hv-pp-code-bar .hv-mono { font-size: 9px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.hv-pp-code-bar button { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--hv-line); background: var(--hv-card); color: var(--hv-ink); font-family: inherit; font-size: 12px; font-weight: 600; cursor: pointer; flex-shrink: 0; }
+.hv-pp-code-bar .hv-mono { font-size: var(--fs-label); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hv-pp-code-bar button { display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--hv-line); background: var(--hv-card); color: var(--hv-ink); font-family: inherit; font-size: 12px; font-weight: 600; cursor: pointer; flex-shrink: 0; }
 .hv-pp-code pre { margin: 0; padding: 14px; overflow-x: auto; font: 12.5px/1.7 'JetBrains Mono', monospace; color: var(--hv-ink); }
 @keyframes hv-pp-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .hv-pp, .hv-pp-body { animation: none; } }
@@ -247,9 +253,10 @@ body:has(main.hv), body:has(main.hv) #root { overflow-x: clip; }
 .hv-num-lbl { font-size: 14px; color: var(--hv-muted); margin-top: 12px; }
 
 /* ── Possibilities / connected by design ── */
-.hv-poss { display: grid; grid-template-columns: 1.4fr 1fr; gap: 48px; align-items: end; padding-bottom: 40px; border-bottom: 1px solid var(--hv-line); }
+.hv-poss { display: grid; grid-template-columns: minmax(0, 1.8fr) minmax(0, 1fr); gap: 48px; align-items: end; padding-bottom: 40px; border-bottom: 1px solid var(--hv-line); }
 .hv-poss .hv-lead { max-width: 340px; justify-self: end; font-size: 14.5px; }
-.hv-poss-title { font-size: clamp(40px, 5.4vw, 76px); letter-spacing: -.06em; line-height: .98; }
+/* balanced lines, so "needs," is never left alone on a line */
+.hv-poss-title { font-size: clamp(40px, 4.6vw, 64px); letter-spacing: -.06em; line-height: .98; text-wrap: balance; }
 .hv-poss-title span { color: var(--hv-faint); }
 .hv-ruled { display: inline-flex; align-items: center; gap: 12px; }
 .hv-ruled::before { content: ''; width: 28px; height: 1px; background: var(--hv-line); }
@@ -279,6 +286,8 @@ body:has(main.hv), body:has(main.hv) #root { overflow-x: clip; }
 .hv-seg button.on { background: var(--hv-ink); color: var(--bg); }
 .hv-jobs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 40px; }
 .hv-empty { border: 1px dashed var(--hv-line); border-radius: var(--hv-radius); padding: 48px 24px; text-align: center; color: var(--hv-muted); font-size: 14px; grid-column: 1 / -1; }
+.hv-btns.hv-empty-btns { justify-content: center; margin-top: 14px; }
+.hv-empty-btns .hv-btn { flex: 0 1 auto !important; height: var(--ctl-h); padding: 0 16px; font-size: 14px; white-space: nowrap; }
 
 /* ── Journal ── */
 .hv-journal { display: grid; grid-auto-flow: column; grid-auto-columns: calc((100% - 32px) / 3); gap: 16px; margin-top: 40px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; scroll-behavior: smooth; }
@@ -311,8 +320,15 @@ body:has(main.hv), body:has(main.hv) #root { overflow-x: clip; }
   .hv-fade { animation: none; }
 }
 
+/* ── Desktop: the hero copy starts near the top (it used to float ~250px down,
+   centred against the animation) ── */
+@media (min-width: 1024px) {
+  .hv-hero-grid { align-items: start; }
+  .hv-hero-copy { padding-top: 48px; }
+}
+
 /* ── Tablet ── */
-@media (max-width: 1024px) {
+@media (max-width: 1023.98px) {
   .hv-hero-grid { grid-template-columns: minmax(0, 1fr); gap: 40px; }
   .hv-hero-copy { padding-top: 0; }
   .hv-connected { grid-template-columns: 1fr; gap: 28px; }
@@ -320,44 +336,65 @@ body:has(main.hv), body:has(main.hv) #root { overflow-x: clip; }
   .hv-poss .hv-lead { justify-self: start; }
   .hv-jobs { grid-template-columns: 1fr 1fr; }
   .hv-journal { grid-auto-columns: calc((100% - 16px) / 2); }
+  /* the jobs come straight after the hero here (HomePage) */
+  .hv-jobs-first { padding-top: 40px; }
+}
+@media (min-width: 768px) and (max-width: 1023.98px) {
+  /* a smaller animation, and the four numbers in one row, so they sit higher */
+  .hv-hero-grid { gap: 28px; }
+  .hv-hero-net { max-width: 560px; margin: 0 auto; }
+  .hv-stats { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .hv-stat { padding: 16px; }
+  .hv-stat-head { font-size: 12.5px; gap: 8px; }
+  .hv-stat-val { font-size: 28px; }
+  /* three paths in a row: icon and chevron on top, words below */
+  .hv-path { grid-template-columns: 1fr auto; grid-template-areas: "icon chev" "copy copy"; align-items: start; align-content: start; gap: 16px 8px; padding: 18px; min-height: 0; }
+  .hv-path-icon { grid-area: icon; }
+  .hv-chev { grid-area: chev; }
+  .hv-path-copy { grid-area: copy; }
 }
 
 /* ── Phone ── */
-@media (max-width: 767px) {
+@media (max-width: 767.98px) {
   .hv-frame { border: 0; }
   .hv-hero { padding: 32px 0 16px; }
   .hv-h1 { white-space: normal; }
+  /* one centred line: the arrow tile looked stray beside centred, wrapped text */
   .hv-tag { margin-bottom: 22px; }
+  .hv-tag-icon { display: none; }
+  .hv-tag .hv-mono { letter-spacing: .05em; }
   .hv-btns .hv-btn { flex: 1; }
   /* Hero centred on phones, like wurk */
   .hv-hero-copy { text-align: center; }
   .hv-hero .hv-lead { margin-left: auto; margin-right: auto; }
   .hv-hero .hv-btns { justify-content: center; }
   .hv-hero .hv-btns .hv-btn { flex: 0 1 auto; }
+  .hv-powered { justify-content: center; }
   .hv-numbers-band { padding-top: 24px; padding-bottom: 24px; }
   .hv-connected-art { padding: 10px; }
   .hv-stats { gap: 8px; }
   .hv-stat { padding: 14px 12px; border-radius: 17px; }
   .hv-stat::after { border-radius: 13px; }
-  .hv-stat-head { font-size: 11px; gap: 7px; }
-  .hv-stat-sub { font-size: 11px; }
+  .hv-stat-head { font-size: 12px; gap: 7px; }
+  .hv-stat-sub { font-size: 12px; }
   .hv-stat-icon { width: 22px; height: 22px; border-radius: 7px; font-size: 13px; }
   .hv-stat-val { font-size: 28px; }
-  .hv-hero-foot { justify-content: center; margin-top: 36px; }
-  /* Still two cards side by side: icon and chevron on top, words below */
-  .hv-paths { gap: 10px; margin-top: 32px; }
-  .hv-path { grid-template-columns: 1fr auto; grid-template-areas: "icon chev" "copy copy"; align-items: start; align-content: start; gap: 16px 8px; padding: 16px; min-height: 0; border-radius: 14px; }
-  .hv-path-icon { grid-area: icon; width: 40px; height: 40px; border-radius: 12px; font-size: 18px; }
-  .hv-chev { grid-area: chev; width: 28px; height: 28px; }
-  .hv-path-copy { grid-area: copy; }
+  .hv-jobs-first { padding-top: 32px; }
+  /* Three paths as full-width rows: icon | words | chevron */
+  .hv-paths { grid-template-columns: minmax(0, 1fr); gap: 10px; margin-top: 32px; }
+  .hv-path { grid-template-columns: 40px minmax(0, 1fr) 28px; align-items: center; gap: 14px; padding: 14px 16px; min-height: 0; border-radius: 14px; }
+  .hv-path-icon { width: 40px; height: 40px; border-radius: 12px; font-size: 18px; }
+  .hv-chev { width: 28px; height: 28px; }
   .hv-path-title { font-size: 16px; }
-  .hv-path-desc { font-size: 12.5px; }
+  .hv-path-desc { font-size: 13px; }
+  .hv-path-tags { margin-top: 6px; }
   .hv-pp { margin-top: 12px; border-radius: 16px; }
   .hv-pp-bar { padding: 10px 12px; }
   .hv-pp-tab { height: 40px; padding: 0 14px; }
   .hv-pp-body { grid-template-columns: 1fr; gap: 28px; padding: 24px 18px; }
   .hv-pp-title { font-size: 24px; }
   .hv-pp-cta { width: 100%; justify-content: center; }
+  .hv-pp-ctas .hv-pp-cta { flex: 1 1 140px; width: auto; }
   .hv-pp-code pre { white-space: pre-wrap; word-break: break-all; font-size: 12px; }
   .hv-numbers { grid-template-columns: 1fr !important; }
   .hv-num { border-left: 0; padding: 26px 0; border-bottom: 1px solid var(--hv-line); }

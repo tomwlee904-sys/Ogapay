@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { API_BASE, getAccessToken } from '../lib/api'
 import { useAuth } from '../context/AuthContext'
+import AuthShell from '../components/auth/AuthShell'
 
 // Email verification is by link: the email has /verify-email?token=…&userId=….
 // Without a valid link this page sends a new one: signed in, straight away;
@@ -62,11 +63,8 @@ export default function VerifyEmailPage() {
     setBusy(false)
   }
 
-  const wrap = (children: React.ReactNode) => (
-    <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', background: 'var(--bg)', padding: 16, fontFamily: "'Inter', system-ui, sans-serif" }}>
-      <div className="ui-card" style={{ width: '100%', maxWidth: 420, padding: 28 }}>{children}</div>
-    </div>
-  )
+  // The shared sign-in page frame: logo, card, no marketing footer
+  const wrap = (children: React.ReactNode) => <AuthShell>{children}</AuthShell>
 
   if (step === 'checking') {
     return wrap(<p style={{ margin: 0, fontSize: 14, color: 'var(--text2)', textAlign: 'center' }}><span className="spinner" style={{ width: 16, height: 16, borderWidth: 2, verticalAlign: -3, marginRight: 8 }} />Checking your link…</p>)
@@ -100,18 +98,20 @@ export default function VerifyEmailPage() {
           ? <>We'll send a new link to <b style={{ color: 'var(--text)' }}>{user?.email || 'your email'}</b>.</>
           : 'Enter the email you signed up with and we’ll send a new link.'}
       </p>
-      {!signedIn && (
-        <div style={{ marginBottom: 14 }}>
-          <label className="ui-label" htmlFor="ve-email">Email</label>
-          <input id="ve-email" className="ui-input" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && email.trim()) send() }} placeholder="you@example.com" />
-        </div>
-      )}
-      {err && <p role="alert" style={{ margin: '0 0 12px', fontSize: 13, color: 'var(--red)' }}>{err}</p>}
-      <button type="button" className="ui-btn ui-btn-dark ui-btn-lg" style={{ width: '100%' }} disabled={busy || (!signedIn && !email.trim())} onClick={send}>
-        {busy ? 'Sending…' : 'Send verification link'}
-      </button>
-      <p style={{ margin: '16px 0 0', fontSize: 12.5, color: 'var(--text2)', textAlign: 'center' }}>
-        {signedIn ? <Link to="/dashboard" style={{ color: 'var(--text)', fontWeight: 600 }}>Back to dashboard</Link> : <Link to="/login" style={{ color: 'var(--text)', fontWeight: 600 }}>Sign in</Link>}
+      {/* a real form, so Enter / Go on the keyboard sends it; the button stays
+          enabled and says what's missing instead of greying out */}
+      <form noValidate onSubmit={(e) => { e.preventDefault(); if (!signedIn && !email.trim()) { setErr('Enter the email you signed up with.'); return } send() }}>
+        {!signedIn && (
+          <div className="as-field">
+            <label className="ui-label" htmlFor="ve-email">Email</label>
+            <input id="ve-email" className="ui-input" type="email" inputMode="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" />
+          </div>
+        )}
+        {err && <p role="alert" className="as-alert">{err}</p>}
+        <button type="submit" className={`ui-btn ui-btn-dark ui-btn-lg${busy ? ' is-loading' : ''}`} style={{ width: '100%' }} disabled={busy}>Send verification link</button>
+      </form>
+      <p className="as-links">
+        {signedIn ? <Link to="/dashboard" className="ui-btn ui-btn-text">Back to dashboard</Link> : <Link to="/login" className="ui-btn ui-btn-text">Sign in</Link>}
       </p>
     </>,
   )
