@@ -14,6 +14,7 @@ import CopyFlag from '../components/CopyFlag'
 import { PayoutCheckStatus, checkBlocksApprove, anyWaiting, useNow } from '../components/PayoutCheck'
 import TransferModal from '../components/TransferModal'
 import { isXFollowJob } from "../lib/followJobs";
+import LoadError from "../components/LoadError";
 
 // Manage jobs: the poster's jobs, their review queue and job actions.
 // Counts come from each job's submissions (by status). The old page used
@@ -726,6 +727,7 @@ export default function MyJobs() {
   const { toast } = useToast();
   const { user, isAuthed } = useAuth();
   const [tasks, setTasks] = useState<Task[] | null>(null);
+  const [loadFailed, setLoadFailed] = useState(false);
   const [page, setPage] = useState("jobs");
 
   const load = useCallback(async () => {
@@ -733,9 +735,10 @@ export default function MyJobs() {
     try {
       const data = await apiRequest<Task[] | { tasks: Task[] }>("/tasks/my/created?limit=100");
       setTasks(Array.isArray(data) ? data : data?.tasks || []);
-    } catch (e: any) {
-      setTasks((t) => t || []);
-      toast(e?.message || "Couldn't load your jobs", "error");
+      setLoadFailed(false);
+    } catch {
+      // Keep what's shown; never turn a failed load into "You haven't posted a job yet"
+      setLoadFailed(true);
     }
   }, [isAuthed]);
 
@@ -773,7 +776,8 @@ export default function MyJobs() {
         </div>
 
         {page === "jobs" && (tasks === null
-          ? <div style={{ display: "grid", gap: 10, marginTop: 20 }}>{[0, 1, 2].map((i) => <div key={i} className="ui-sk" style={{ height: 120 }} />)}</div>
+          ? loadFailed ? <div style={{ marginTop: 20 }}><LoadError what="your jobs" onRetry={() => { setLoadFailed(false); load(); }} /></div>
+          : <div style={{ display: "grid", gap: 10, marginTop: 20 }}>{[0, 1, 2].map((i) => <div key={i} className="ui-sk" style={{ height: 120 }} />)}</div>
           : <JobsListPage tasks={tasks} reload={load} />)}
         {page === "blacklist" && <div style={{ marginTop: 20 }}><BlacklistPage /></div>}
         {page === "templates" && <div style={{ marginTop: 20 }}><TemplatesPage /></div>}

@@ -195,6 +195,29 @@ function SolanaMark() {
   )
 }
 
+// Signed-in app pages: one short line instead of the full footer (the full one
+// added 1.5-2 phone screens under every tool page)
+export function CompactFooter() {
+  return (
+    <footer className="of of-compact">
+      <div className="of-compact-inner">
+        <span>© {new Date().getFullYear()} OgaPay</span>
+        <nav aria-label="Footer" className="of-compact-links">
+          <Link to="/faq">FAQ</Link>
+          <Link to="/support">Support</Link>
+          <Link to="/terms">Terms</Link>
+          <Link to="/privacy">Privacy</Link>
+        </nav>
+        <div className="of-compact-socials">
+          {socials.map((s) => (
+            <a key={s.icon} href={s.href} target="_blank" rel="noopener noreferrer" aria-label={s.label}><i className={`ti ti-${s.icon}`} /></a>
+          ))}
+        </div>
+      </div>
+    </footer>
+  )
+}
+
 export default function Footer() {
   return (
     <footer className="of">

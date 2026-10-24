@@ -252,7 +252,7 @@ export default function TabMyTasksContent() {
             const progress = PROGRESS_MAP[s.status] || 50
             return (
               <div className="mt-item" key={s.id} onClick={() => { const tid = s.task?.id || s.taskId; if (tid) navigate('/tasks/' + tid) }} style={{cursor:'pointer'}}>
-                <div className="mt-icon" style={{background: `${color}15`, color}}>
+                <div className="mt-icon" style={{background: `color-mix(in srgb, ${color} 9%, transparent)`, color}}>
                   <i className="ti ti-file-text" />
                 </div>
                 <div className="mt-info">
@@ -267,7 +267,7 @@ export default function TabMyTasksContent() {
                 </div>
                 <div className="mt-right">
                   {!out && <div className="mt-reward">{upTo ? 'Up to ' : ''}{fmtCurrency(s.task?.currency || 'NGN', shownAmount)}</div>}
-                  <span className="mt-status" style={{background: `${color}15`, color}}>{status}</span>
+                  <span className="mt-status" style={{background: `color-mix(in srgb, ${color} 9%, transparent)`, color}}>{status}</span>
                 </div>
               </div>
             )

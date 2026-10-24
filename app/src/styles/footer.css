@@ -74,3 +74,15 @@
   .of-nav { gap: 20px; }
   .of-mid { flex-direction: column; align-items: flex-start; }
 }
+
+/* Compact footer on signed-in app pages (CompactFooter) */
+.of-compact-inner { max-width: calc(var(--container, 1120px) + 2 * var(--gutter, 16px)); margin: 0 auto; padding: 18px var(--gutter, 16px); display: flex; flex-wrap: wrap; align-items: center; gap: 10px 20px; font-size: 13px; color: var(--of-muted); }
+.of-compact-links { display: flex; flex-wrap: wrap; gap: 4px 16px; }
+.of-compact-links a { color: var(--text2); text-decoration: none; min-height: 32px; display: inline-flex; align-items: center; }
+.of-compact-links a:hover { color: var(--text); text-decoration: underline; }
+.of-compact-socials { display: flex; gap: 4px; margin-left: auto; }
+.of-compact-socials a { width: 36px; height: 36px; display: grid; place-items: center; border-radius: 10px; color: var(--text2); text-decoration: none; }
+.of-compact-socials a:hover { background: var(--bg2); color: var(--text); }
+@media (max-width: 767.98px), (max-width: 1023.98px) and (min-height: 600px) {
+  .of-compact-inner { padding-bottom: calc(var(--dock-clear) + 12px); }
+}

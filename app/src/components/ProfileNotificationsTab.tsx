@@ -292,7 +292,7 @@ export default function TabNotificationsContent() {
               markOneRead(n.id)
               if (n.link) navigate(n.link)
             }}>
-              <div className="nt-icon" style={{background: `${n.color}15`, color: n.color}}>
+              <div className="nt-icon" style={{background: `color-mix(in srgb, ${n.color} 9%, transparent)`, color: n.color}}>
                 <i className={n.icon} />
               </div>
               <div className="nt-content">

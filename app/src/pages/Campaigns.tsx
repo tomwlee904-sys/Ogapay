@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import LoadError from '../components/LoadError'
 import Layout from '../components/Layout'
 import Sheet from '../components/wallet/Sheet'
 import { apiRequest } from '../lib/api'
@@ -20,6 +21,7 @@ const blank = { name: '', description: '', platforms: [] as string[], budget: ''
 
 export default function Campaigns() {
   const [list, setList] = useState<Campaign[] | null>(null)
+  const [loadFailed, setLoadFailed] = useState(false)
   const [err, setErr] = useState('')
   const [editing, setEditing] = useState<Campaign | 'new' | null>(null)
   const [form, setForm] = useState(blank)
@@ -28,7 +30,7 @@ export default function Campaigns() {
   const [viewing, setViewing] = useState<Campaign | null>(null)
   const [jobs, setJobs] = useState<JobRow[] | null>(null)
 
-  const load = () => apiRequest<Campaign[]>('/campaigns').then((l) => setList(Array.isArray(l) ? l : [])).catch((e) => { setErr(e?.message || "Couldn't load your campaigns"); setList([]) })
+  const load = () => apiRequest<Campaign[]>('/campaigns').then((l) => setList(Array.isArray(l) ? l : [])).catch(() => setLoadFailed(true))
   useEffect(() => { load() }, [])
 
   const openForm = (c: Campaign | 'new') => {
@@ -67,7 +69,9 @@ export default function Campaigns() {
         </div>
         {err && <p role="alert" style={{ color: 'var(--red)', fontSize: 13 }}>{err}</p>}
 
-        {list === null ? (
+        {list === null && loadFailed ? (
+          <div style={{ marginTop: 24 }}><LoadError what="your campaigns" onRetry={() => { setLoadFailed(false); load() }} /></div>
+        ) : list === null ? (
           <div className="ui-grid-3" style={{ marginTop: 24 }}>{[0, 1, 2].map((i) => <div key={i} className="ui-sk" style={{ height: 200 }} />)}</div>
         ) : list.length === 0 ? (
           <div className="ui-empty" style={{ marginTop: 24 }}>

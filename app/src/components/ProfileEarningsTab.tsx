@@ -193,7 +193,7 @@ export default function TabEarningsContent() {
           { icon: 'ti ti-trending-up', color: 'var(--accent)', num: naira(monthEarnings), label: 'This month' },
         ].map((s, i) => (
           <div className="en-stat" key={i}>
-            <div className="esi" style={{ background: `${s.color}15`, color: s.color }}><i className={s.icon} /></div>
+            <div className="esi" style={{ background: `color-mix(in srgb, ${s.color} 9%, transparent)`, color: s.color }}><i className={s.icon} /></div>
             <div className="esn" style={{ color: s.color }}>{s.num}</div>
             <div className="esl">{s.label}</div>
           </div>
@@ -243,7 +243,7 @@ export default function TabEarningsContent() {
           { icon: 'ti ti-heart-handshake', color: 'var(--green)', num: naira(tips), label: 'Tips', sub: `${tipCount} recent ${tipCount === 1 ? 'tip' : 'tips'} from members` },
         ].map((s, i) => (
           <div className="en-stat" key={i}>
-            <div className="esi" style={{ background: `${s.color}15`, color: s.color }}><i className={s.icon} /></div>
+            <div className="esi" style={{ background: `color-mix(in srgb, ${s.color} 9%, transparent)`, color: s.color }}><i className={s.icon} /></div>
             <div className="esn">{s.num}</div>
             <div className="esl">{s.label}</div>
             <div style={{fontSize:11,color:'var(--text3)',marginTop:2}}>{s.sub}</div>

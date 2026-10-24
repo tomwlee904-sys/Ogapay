@@ -238,7 +238,7 @@ export default function DevicePairing() {
                 minHeight: 180, background: 'var(--bg)',
               }}>
                 {hasActiveCode ? (
-                  <QRCodeCanvas value={pairingUrl} size={160} bgColor="transparent" fgColor="var(--accent)" />
+                  <QRCodeCanvas value={pairingUrl} size={160} bgColor="#ffffff" fgColor="#0a0a0a" marginSize={2} />
                 ) : (
                   <div style={{ textAlign: 'center', color: 'var(--text3)', fontSize: 13 }}>
                     <i className="ti ti-qrcode" style={{ fontSize: 32, display: 'block', marginBottom: 8 }} />

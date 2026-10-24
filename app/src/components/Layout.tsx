@@ -3,7 +3,9 @@ import { useState, useEffect, ReactNode } from 'react'
 import Navbar from './Navbar'
 import Drawer from './Drawer'
 import Sidebar from './Sidebar'
-import Footer from './Footer'
+import Footer, { CompactFooter } from './Footer'
+import { useLocation } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
 import BottomNav from './BottomNav'
 import JobAlertToast from './JobAlertToast'
 import WarningBanner from './WarningBanner'
@@ -13,7 +15,13 @@ interface LayoutProps {
   sidebar?: boolean
 }
 
+// Pages for visitors (marketing, legal, help): these keep the full footer
+const FULL_FOOTER = /^\/(about|hire|roadmap|socials|brand-kit|privacy|terms|license|copyright|developer|docs|join-test-team|rank)?$/
+
 export default function Layout({ children, sidebar = false }: LayoutProps) {
+  const { user } = useAuth()
+  const { pathname } = useLocation()
+  const fullFooter = !user || FULL_FOOTER.test(pathname.length > 1 ? pathname.replace(/\/$/, '') : pathname)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [online, setOnline] = useState(navigator.onLine)
 
@@ -46,7 +54,7 @@ export default function Layout({ children, sidebar = false }: LayoutProps) {
         </main>
         {sidebar && <Sidebar />}
       </div>
-      <Footer />
+      {fullFooter ? <Footer /> : <CompactFooter />}
       <BottomNav />
       <div className="toast" id="appToast" />
       <JobAlertToast />

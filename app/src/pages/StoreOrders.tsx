@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Layout from '../components/Layout'
+import LoadError from '../components/LoadError'
 import { apiRequest } from '../lib/api'
 import { useWalletBalance } from '../context/WalletBalanceContext'
 import '../styles/profile-public.css'
@@ -46,15 +47,17 @@ export default function StoreOrders() {
   const { refresh } = useWalletBalance()
   const [orders, setOrders] = useState<Bought[] | null>(null)
   const [error, setError] = useState('')
+  const [loadFailed, setLoadFailed] = useState(false)
   const [note, setNote] = useState('')
   const [busy, setBusy] = useState('')
   const [show, setShow] = useState<'open' | 'all'>('open')
   const [reporting, setReporting] = useState<string | null>(null)
   const [reason, setReason] = useState('')
 
+  // A failed load keeps what was shown; on the first load it shows Try again, never "nothing bought"
   const load = () => apiRequest<Bought[]>('/store/my-purchases')
-    .then((d) => setOrders(Array.isArray(d) ? d : []))
-    .catch((e: any) => { setOrders([]); setError(e?.message || "Couldn't load your orders.") })
+    .then((d) => { setOrders(Array.isArray(d) ? d : []); setLoadFailed(false) })
+    .catch(() => setLoadFailed(true))
   useEffect(() => { load() }, [])
 
   const act = async (o: Bought, path: string, done: string, body?: object) => {
@@ -114,7 +117,7 @@ export default function StoreOrders() {
         {note && <div className="up-note ok" role="status" style={{ marginBottom: 12 }}><i className="ti ti-circle-check" /> {note}</div>}
         {error && <div className="up-note err" role="alert" style={{ marginBottom: 12 }}>{error}</div>}
 
-        {orders === null ? <div className="up-skel" style={{ height: 140 }} />
+        {orders === null ? (loadFailed ? <LoadError what="your orders" onRetry={() => { setLoadFailed(false); load() }} /> : <div className="up-skel" style={{ height: 140 }} />)
           : list.length === 0 ? (
             <div className="up-empty">
               <i className="ti ti-shopping-bag" />

@@ -9,7 +9,7 @@
 .po-empty .ic { width: 48px; height: 48px; border-radius: 12px; border: 1px solid var(--border); background: var(--bg2); display: grid; place-items: center; margin: 0 auto 12px; font-size: 20px; color: var(--text2); }
 .po-empty b { display: block; font-size: 15px; color: var(--text); margin-bottom: 4px; }
 .po-empty p { font-size: 13px; color: var(--text2); line-height: 1.55; margin: 0 0 14px; }
-.po-btn { height: 38px; padding: 0 14px; border-radius: 10px; border: 1px solid var(--border); background: var(--card); color: var(--text); font: 700 13px inherit; font-family: inherit; display: inline-flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; text-decoration: none; }
+.po-btn { height: 38px; padding: 0 14px; border-radius: 10px; border: 1px solid var(--border); background: var(--card); color: var(--text); font-weight:700;font-size:13px;font-family:inherit; font-family: inherit; display: inline-flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; text-decoration: none; }
 .po-btn:hover { border-color: var(--text3); }
 .po-btn.primary { background: var(--text); color: var(--bg); border-color: var(--text); }
 .po-btn:disabled { opacity: .5; cursor: not-allowed; }
@@ -78,7 +78,7 @@
 .xv-body .po-btn { justify-self: start; min-height: 44px; }
 .xv-code { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 14px; border: 1px solid var(--border); border-radius: 12px; background: var(--bg2); }
 .xv-code code { font: 600 15px var(--font-mono, ui-monospace, monospace); letter-spacing: .06em; color: var(--text); word-break: break-all; }
-.xv-code button { border: 0; background: none; color: var(--text2); font: 600 13px inherit; font-family: inherit; cursor: pointer; min-height: 32px; }
+.xv-code button { border: 0; background: none; color: var(--text2); font-weight:600;font-size:13px;font-family:inherit; font-family: inherit; cursor: pointer; min-height: 32px; }
 .xv-input { width: 100%; min-height: 44px; padding: 0 12px; border: 1px solid var(--border); border-radius: 12px; background: var(--bg2); color: var(--text); font: 14px inherit; font-family: inherit; }
 .xv-verify { justify-self: stretch !important; }
 .xv-msg { padding: 12px 14px; border-radius: 12px; background: rgba(239, 68, 68, .1); color: var(--text); font-size: 13px; line-height: 1.5; }
@@ -116,7 +116,7 @@
 /* ── /profile layout, arranged like wurk.fun's profile (pages/Profile.tsx) ── */
 /* Tabs: icon + label pills, left-aligned, divider under */
 .tab-bar { display: flex; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; gap: 6px; margin: 0 0 20px; padding: 0 0 14px; border-bottom: 1px solid var(--border); }
-.tab-btn { display: inline-flex; align-items: center; gap: 7px; height: 38px; padding: 0 14px; border: 1px solid transparent; border-radius: 99px; background: transparent; color: var(--text2); font: 700 13px inherit; font-family: inherit; cursor: pointer; white-space: nowrap; transition: background .13s, color .13s, border-color .13s; }
+.tab-btn { display: inline-flex; align-items: center; gap: 7px; height: 38px; padding: 0 14px; border: 1px solid transparent; border-radius: 99px; background: transparent; color: var(--text2); font-weight:700;font-size:13px;font-family:inherit; font-family: inherit; cursor: pointer; white-space: nowrap; transition: background .13s, color .13s, border-color .13s; }
 .tab-btn i { font-size: 17px; color: var(--text3); }
 .tab-btn:hover { background: var(--bg2); color: var(--text); }
 .tab-btn.active { background: var(--card); border-color: var(--border); color: var(--text); }

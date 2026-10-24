@@ -197,7 +197,7 @@ export default function Blog() {
         .bl-eyebrow{margin:0;font:400 11px/1.5 'JetBrains Mono',ui-monospace,monospace;letter-spacing:.07em;text-transform:uppercase;color:var(--text3)}
         .bl-title{margin:8px 0 0;font-size:var(--fs-title);line-height:1.12;font-weight:600;letter-spacing:var(--tracking-tight);color:var(--text)}
         .bl-sub{margin:8px 0 0;font-size:13px;line-height:1.75;color:var(--text2)}
-        .bl-write{display:inline-flex;align-items:center;gap:8px;height:44px;padding:0 14px;border:0;border-radius:10px;background:var(--text);color:var(--bg);font:500 12px/1 inherit;cursor:pointer;white-space:nowrap;flex-shrink:0;margin-top:24px}
+        .bl-write{display:inline-flex;align-items:center;gap:8px;height:44px;padding:0 14px;border:0;border-radius:10px;background:var(--text);color:var(--bg);font-weight:500;font-size:12px;line-height:1;font-family:inherit;cursor:pointer;white-space:nowrap;flex-shrink:0;margin-top:24px}
         .bl-write i{font-size:15px}
         .bl-bar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:40px;padding-bottom:18px;border-bottom:1px solid var(--border)}
         .bl-bar h2{margin:0;font-size:18px;line-height:1.4;font-weight:600;letter-spacing:-.035em;color:var(--text)}
@@ -205,12 +205,12 @@ export default function Blog() {
         .bl-tools{display:flex;align-items:center;gap:10px}
         .bl-search{display:flex;align-items:center;gap:8px;height:44px;padding:0 12px;border:1px solid var(--border);border-radius:12px;background:var(--card);width:220px}
         .bl-search i{color:var(--text3);font-size:15px}
-        .bl-search input{border:0;background:none;outline:none;font:400 12px inherit;color:var(--text);width:100%;min-width:0}
+        .bl-search input{border:0;background:none;outline:none;font-weight:400;font-size:12px;font-family:inherit;color:var(--text);width:100%;min-width:0}
         .bl-seg{display:flex;gap:2px;padding:4px;border-radius:12px;background:var(--bg2)}
-        .bl-seg button{height:36px;padding:0 15px;border:0;border-radius:8px;background:none;font:500 12px/1 inherit;color:var(--text2);cursor:pointer}
+        .bl-seg button{height:36px;padding:0 15px;border:0;border-radius:8px;background:none;font-weight:500;font-size:12px;line-height:1;font-family:inherit;color:var(--text2);cursor:pointer}
         .bl-seg button.on{background:var(--card);color:var(--text);box-shadow:0 1px 2px rgba(0,0,0,.06)}
         .bl-chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:16px}
-        .bl-chips button{height:32px;padding:0 12px;border:1px solid var(--border);border-radius:999px;background:none;font:500 12px/1 inherit;color:var(--text2);cursor:pointer}
+        .bl-chips button{height:32px;padding:0 12px;border:1px solid var(--border);border-radius:999px;background:none;font-weight:500;font-size:12px;line-height:1;font-family:inherit;color:var(--text2);cursor:pointer}
         .bl-chips button.on{background:var(--text);border-color:var(--text);color:var(--bg)}
         .bl-explore-head{margin-top:56px}
         .bl-explore-head h2{margin:6px 0 0;font-size:clamp(22px,3vw,30px);font-weight:600;letter-spacing:-.02em;line-height:1.2;color:var(--text)}

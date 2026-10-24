@@ -235,7 +235,7 @@ body { --100vh: calc(var(--vh) * 100); }
   min-height: var(--100vh);
   animation: pageIn .2s ease;
 }
-.app-layout .sidebar { @apply w-[320px] shrink-0 sticky top-5 h-fit p-3; }
+.app-layout .sidebar { @apply w-[320px] shrink-0 sticky h-fit p-3; top: calc(var(--nav-h) + 16px); margin-top: calc(var(--nav-h) + 8px); }
 .app-layout .main { @apply flex-1 min-w-0; }
 .app-layout .page { @apply mx-auto w-full; padding-top: var(--nav-h); }
 /* The sidebar repeats the menu drawer; below 1024px it squeezed the page to a sliver */
@@ -312,6 +312,9 @@ footer { @apply border-t border-[var(--border)] py-10 px-6 text-center bg-[var(-
 .sidebar-link.active { @apply text-[var(--accent)]; background: rgba(var(--accent-rgb),.08); }
 .sidebar-link i { @apply text-xl w-[22px] text-center shrink-0; }
 .sidebar-link strong { @apply text-[15px] font-extrabold text-[var(--text)]; }
+/* Title over subtitle (they ran together: "Create JobPost a new task") */
+.sidebar-link > span { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.sidebar-link small { font-size: 12px; font-weight: 500; color: var(--text3); line-height: 1.35; }
 .sidebar-link small { @apply text-xs font-medium text-[var(--text3)] mt-px; }
 .sidebar-section { @apply text-[11px] font-extrabold text-[var(--text3)] tracking-widest uppercase px-[14px] pt-[18px] pb-[6px]; }
 .sidebar-subnav { @apply ml-4 mb-1 mt-0.5 pl-5 gap-px; border-left: 2px solid var(--border); }

@@ -11,7 +11,7 @@
 .wk2-sort { height: 44px; border: 1px solid var(--border); border-radius: 12px; background: var(--card); color: var(--text); font: inherit; font-size: 13px; padding: 0 10px; }
 .wk2-skills { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; margin-bottom: 16px; padding-bottom: 2px; }
 .wk2-skills::-webkit-scrollbar { display: none; }
-.wk2-skill { flex-shrink: 0; height: 32px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--border); background: var(--card); color: var(--text2); font: 600 12px inherit; font-family: inherit; cursor: pointer; }
+.wk2-skill { flex-shrink: 0; height: 32px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--border); background: var(--card); color: var(--text2); font-weight:600;font-size:12px;font-family:inherit; font-family: inherit; cursor: pointer; }
 .wk2-skill.on { background: var(--text); color: var(--bg); border-color: var(--text); }
 .wk2-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
 .wk2-card { padding: 16px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import LoadError from '../components/LoadError'
 import Layout from '../components/Layout'
 import { apiRequest } from '../lib/api'
 
@@ -24,7 +25,7 @@ export default function BlogMine() {
   useEffect(() => {
     apiRequest<any>('/blog/user/mine')
       .then((d) => setPosts(d?.posts || []))
-      .catch((e) => { setError(e?.message || 'Could not load your articles'); setPosts([]) })
+      .catch((e) => { setError(e?.message || 'Could not load your articles') })
   }, [])
 
   const counts = useMemo(() => {
@@ -75,8 +76,7 @@ export default function BlogMine() {
           ))}
         </div>
         <input className="bm-search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search my articles by title" aria-label="Search my articles" />
-        {error && <div className="bm-empty" style={{ marginBottom: 12 }}>{error}</div>}
-        {posts === null ? <div className="bm-empty">Loading…</div> : shown.length === 0 ? (
+        {posts === null ? (error ? <LoadError what="your articles" onRetry={() => window.location.reload()} /> : <div className="bm-empty">Loading…</div>) : shown.length === 0 ? (
           <div className="bm-empty">
             {posts.length === 0 ? <>You haven't written anything yet. <Link to="/blog/write">Write your first article</Link>.</> : 'Nothing here.'}
           </div>

@@ -32,7 +32,7 @@
 .cj-field textarea, .cj-code input, .cj-in { width: 100%; box-sizing: border-box; border: 1px solid var(--border); border-radius: 10px; background: var(--bg2); color: var(--text); font: inherit; font-size: 16px; padding: 10px 12px; outline: 0; }
 .cj-field textarea { resize: vertical; line-height: 1.5; min-height: 96px; }
 .cj-field textarea:focus, .cj-code input:focus, .cj-in:focus { border-color: var(--text3); }
-.cj-drop { width: 100%; min-height: 48px; display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; border: 1px dashed var(--border); border-radius: 10px; background: none; color: var(--text); font: 600 13px inherit; font-family: inherit; cursor: pointer; padding: 10px; }
+.cj-drop { width: 100%; min-height: 48px; display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; border: 1px dashed var(--border); border-radius: 10px; background: none; color: var(--text); font-weight:600;font-size:13px;font-family:inherit; font-family: inherit; cursor: pointer; padding: 10px; }
 .cj-drop:hover { border-color: var(--text3); }
 .cj-drop small { font-weight: 400; color: var(--text3); font-size: 12px; }
 .cj-files { list-style: none; margin: 0 0 8px; padding: 0; display: grid; gap: 6px; }

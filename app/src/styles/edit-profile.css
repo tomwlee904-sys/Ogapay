@@ -11,7 +11,7 @@ form .hr-sec + .hr-sec { margin-top: 14px; }
 .ep-avatar .up-avatar { width: 64px; height: 64px; border-radius: 14px; font-size: 22px; }
 .ep-avatar p { margin: 6px 0 0; font-size: 11px; color: var(--text3); }
 .ep-chips { display: flex; flex-wrap: wrap; gap: 6px; }
-.ep-chip { height: 32px; padding: 0 12px; border-radius: 99px; border: 1px solid var(--border); background: var(--card); color: var(--text2); font: 600 12px inherit; font-family: inherit; cursor: pointer; }
+.ep-chip { height: 32px; padding: 0 12px; border-radius: 99px; border: 1px solid var(--border); background: var(--card); color: var(--text2); font-weight:600;font-size:12px;font-family:inherit; font-family: inherit; cursor: pointer; }
 .ep-chip.on { background: var(--text); color: var(--bg); border-color: var(--text); }
 .ep-toggle { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 12px 0; border-top: 1px solid var(--border); }
 .ep-toggle:first-of-type { border-top: 0; }

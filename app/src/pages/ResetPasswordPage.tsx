@@ -74,17 +74,23 @@ export default function ResetPasswordPage() {
             Reset your password
           </h1>
           <p style={{ fontSize: 13, color: "var(--text2)", margin: 0 }}>
-            {submitted ? "Done!" : "Enter your new password below."}
+            {submitted ? "Done!" : token && userId ? "Enter your new password below." : "This link doesn't work any more."}
           </p>
         </div>
 
         {error && (
           <div style={{
-            padding: "10px 14px", background: "#fef2f2", border: "1px solid #fca5a5",
-            borderRadius: 8, fontSize: 12, color: "#991b1b", marginBottom: 16, fontWeight: 600,
+            padding: "10px 14px", background: "color-mix(in srgb, var(--red, #ef4444) 10%, transparent)", border: "1px solid color-mix(in srgb, var(--red, #ef4444) 40%, transparent)",
+            borderRadius: 8, fontSize: 13, color: "var(--red, #dc2626)", marginBottom: 16, fontWeight: 600,
           }}>
             {error}
           </div>
+        )}
+        {/* A broken or expired link: a way out instead of a dead end */}
+        {(!token || !userId) && (
+          <button type="button" className="ui-btn ui-btn-dark" style={{ width: "100%", marginBottom: 12 }} onClick={() => navigate("/forgot-password")}>
+            Send me a new reset link
+          </button>
         )}
 
         {message && (

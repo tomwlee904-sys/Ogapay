@@ -1,12 +1,17 @@
 import Layout from '../components/Layout'
 import Content from '../components/ProfileReferralsTab'
 
-// Real referral stats (this page used to show demo referrals)
+// Real referral stats (this page used to show demo referrals), in the shared page shell
 export default function Referrals() {
   return (
     <Layout>
-      <div style={{ maxWidth: 'calc(1040px + 2 * var(--gutter))', margin: '0 auto', padding: '24px var(--gutter) 60px' }}>
-        <h1 style={{ fontSize: 24, margin: '0 0 16px' }}>Referrals</h1>
+      <div className="ui-page">
+        <div className="ui-head" style={{ marginBottom: 20 }}>
+          <div>
+            <span className="ui-eyebrow">Invite friends</span>
+            <h1 className="ui-title">Referrals</h1>
+          </div>
+        </div>
         <Content />
       </div>
     </Layout>

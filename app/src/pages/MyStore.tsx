@@ -12,6 +12,7 @@ import '../styles/hire.css'
 import '../styles/edit-profile.css'
 import '../styles/my-store.css'
 import { sized } from '../lib/img'
+import LoadError from '../components/LoadError'
 
 type Product = {
   id: string; name: string; description: string; price: number; currency: string; imageUrl: string | null
@@ -47,12 +48,15 @@ export default function MyStore() {
   const [products, setProducts] = useState<Product[] | null>(null)
   const [orders, setOrders] = useState<Order[] | null>(null)
   const [error, setError] = useState('')
+  const [failed, setFailed] = useState({ products: false, orders: false })
   const [editing, setEditing] = useState<Product | 'new' | null>(null)
   const [busy, setBusy] = useState('')
 
   const load = () => {
-    apiRequest<any>('/store/my-products').then((d) => setProducts(Array.isArray(d?.products) ? d.products : [])).catch(() => { setProducts([]); setError("Couldn't load your products.") })
-    apiRequest<Order[]>('/store/my-orders').then((d) => setOrders(Array.isArray(d) ? d : [])).catch(() => setOrders([]))
+    // A failed load shows Try again, never "0 products" or "no orders"
+    setFailed({ products: false, orders: false })
+    apiRequest<any>('/store/my-products').then((d) => setProducts(Array.isArray(d?.products) ? d.products : [])).catch(() => setFailed((f) => ({ ...f, products: true })))
+    apiRequest<Order[]>('/store/my-orders').then((d) => setOrders(Array.isArray(d) ? d : [])).catch(() => setFailed((f) => ({ ...f, orders: true })))
   }
   useEffect(load, [])
 
@@ -130,7 +134,7 @@ export default function MyStore() {
         {error && <div className="up-note err" role="alert" style={{ marginBottom: 12 }}>{error} <button className="up-btn" style={{ height: 26, padding: '0 8px', marginLeft: 8 }} onClick={() => setError('')}>Dismiss</button></div>}
 
         {tab === 'products' ? (
-          products === null ? <div className="up-skel" style={{ height: 140 }} />
+          products === null ? (failed.products ? <LoadError what="your products" onRetry={load} /> : <div className="up-skel" style={{ height: 140 }} />)
           : products.length === 0 ? (
             <div className="up-empty">
               <i className="ti ti-building-store" />
@@ -173,7 +177,7 @@ export default function MyStore() {
             )
           })
         ) : (
-          orders === null ? <div className="up-skel" style={{ height: 140 }} />
+          orders === null ? (failed.orders ? <LoadError what="your orders" onRetry={load} /> : <div className="up-skel" style={{ height: 140 }} />)
           : orders.length === 0 ? <div className="up-empty"><i className="ti ti-receipt" />No orders yet. When someone buys, it shows here and you get a message from them.</div>
           : orders.map((o) => (
             <div className="up-card ms2-order" key={o.id}>

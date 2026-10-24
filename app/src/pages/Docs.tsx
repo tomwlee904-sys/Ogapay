@@ -53,7 +53,7 @@ export default function Docs() {
         .dc-card:focus-visible{outline:2px solid var(--text);outline-offset:2px}
         .dc-ic{width:38px;height:38px;border-radius:10px;background:var(--card2);border:1px solid var(--border);display:grid;place-items:center;font-size:18px;color:var(--text);flex-shrink:0}
         .dc-card b{display:block;font-size:14px;font-weight:600;color:var(--text)}
-        .dc-card span{display:block;margin-top:4px;font-size:12.5px;line-height:1.55;color:var(--text2)}
+        .dc-card span:not(.dc-ic){display:block;margin-top:4px;font-size:12.5px;line-height:1.55;color:var(--text2)}
         .dc-help{margin-top:var(--sp-7,40px);display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:18px 20px}
         .dc-help p{margin:0;font-size:13.5px;color:var(--text2)}
         .dc-help b{color:var(--text)}

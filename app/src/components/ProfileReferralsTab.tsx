@@ -104,8 +104,12 @@ export default function TabReferralsContent() {
     <div className="rf2">
       <style>{`
         .rf2{display:grid;gap:16px}
-        .rf2-top{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2fr);gap:16px}
-        @media(max-width:760px){.rf2-top{grid-template-columns:1fr}}
+        .rf2-lead-text{margin:8px 0 0;font-size:14px;line-height:1.55;color:var(--text2);max-width:640px}
+        .rf2-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+        .rf2-stats>div{padding:16px 20px;display:flex;flex-direction:column;gap:6px;min-width:0}
+        .rf2-stats>div+div{border-left:1px solid var(--border)}
+        .rf2-stats b{font-size:22px;font-weight:600;letter-spacing:-.01em;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+        @media(max-width:767.98px){.rf2-stats>div{padding:14px 12px}.rf2-stats b{font-size:18px}}
         .rf2-card{background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden}
         .rf2-pad{padding:20px}
         .rf2-label{font:500 var(--fs-label,11px) var(--font-mono,ui-monospace,monospace);letter-spacing:.1em;text-transform:uppercase;color:var(--text2)}
@@ -113,15 +117,15 @@ export default function TabReferralsContent() {
         .rf2-sub{font-size:13px;color:var(--text2);margin-top:6px;line-height:1.5}
         .rf2-link{display:flex;gap:8px;margin-top:12px}
         .rf2-link input{flex:1;min-width:0;min-height:44px;padding:0 12px;border:1px solid var(--border);border-radius:12px;background:var(--bg2);color:var(--text);font:14px var(--font-mono,ui-monospace,monospace)}
-        .rf2-btn{min-height:44px;padding:0 16px;border-radius:12px;border:1px solid var(--border);background:var(--card);color:var(--text);font:600 14px inherit;font-family:inherit;display:inline-flex;align-items:center;gap:6px;cursor:pointer;text-decoration:none;white-space:nowrap}
+        .rf2-btn{min-height:44px;padding:0 16px;border-radius:12px;border:1px solid var(--border);background:var(--card);color:var(--text);font-weight:600;font-size:14px;font-family:inherit;font-family:inherit;display:inline-flex;align-items:center;gap:6px;cursor:pointer;text-decoration:none;white-space:nowrap}
         .rf2-btn.dark{background:var(--text);color:var(--bg);border-color:var(--text)}
-        .rf2-shares{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+        .rf2-shares{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:10px}.rf2-shares .rf2-btn{justify-content:center;padding:0 10px}
         .rf2-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid var(--border)}
         .rf2-head h2{margin:0;font-size:16px;font-weight:600}
         .rf2-count{font:400 12px var(--font-mono,ui-monospace,monospace);color:var(--text2)}
         .rf2-row{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr) minmax(0,1fr);gap:12px;align-items:center;padding:12px 20px;border-bottom:1px solid var(--border);font-size:14px}
         .rf2-row:last-child{border-bottom:0}
-        .rf2-row.th{background:var(--bg2);font:600 12px inherit;letter-spacing:.06em;text-transform:uppercase;color:var(--text2)}
+        .rf2-row.th{background:var(--bg2);font-weight:600;font-size:12px;font-family:inherit;letter-spacing:.06em;text-transform:uppercase;color:var(--text2)}
         .rf2-who{display:flex;align-items:center;gap:10px;min-width:0}
         .rf2-who img,.rf2-who span.av{width:32px;height:32px;border-radius:50%;object-fit:cover;background:var(--bg2);display:grid;place-items:center;flex-shrink:0;color:var(--text3)}
         .rf2-who a{color:var(--text);text-decoration:none;font-weight:600;overflow:hidden;text-overflow:ellipsis}
@@ -131,13 +135,14 @@ export default function TabReferralsContent() {
         .rf2-empty b{display:block;color:var(--text);font-size:15px;margin-bottom:4px}
         .rf2-steps{margin:10px 0 0;padding-left:18px;color:var(--text2);font-size:13px;line-height:1.7}
         .rf2-step{display:flex;flex-direction:column;align-items:flex-start;gap:6px}
-        .rf2-remind{min-height:36px;padding:0 12px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);font:600 13px inherit;font-family:inherit;cursor:pointer}
+        .rf2-remind{min-height:36px;padding:0 12px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);font-weight:600;font-size:13px;font-family:inherit;font-family:inherit;cursor:pointer}
         .rf2-remind:disabled{opacity:.6;cursor:default}
         .rf2-note{font-size:12px;color:var(--text2)}
         .rf2-tabs{display:inline-flex;flex-shrink:0;border:1px solid var(--border);border-radius:10px;overflow:hidden}
-        .rf2-tabs button{min-height:36px;padding:0 12px;white-space:nowrap;border:0;background:var(--card);color:var(--text2);font:600 13px inherit;font-family:inherit;cursor:pointer}
+        .rf2-tabs button{min-height:36px;padding:0 12px;white-space:nowrap;border:0;background:var(--card);color:var(--text2);font-weight:600;font-size:13px;font-family:inherit;font-family:inherit;cursor:pointer}
         .rf2-tabs button[aria-pressed="true"]{background:var(--text);color:var(--bg)}
-        .rf2-prizes{display:flex;flex-wrap:wrap;gap:6px 14px;padding:12px 20px;border-bottom:1px solid var(--border);font-size:13px;color:var(--text2)}
+        .rf2-prizes{display:flex;flex-wrap:wrap;gap:6px 8px;padding:12px 20px;border-bottom:1px solid var(--border);font-size:13px;color:var(--text2)}
+        .rf2-prizes span{padding:4px 10px;border:1px solid var(--border);border-radius:999px;white-space:nowrap}
         .rf2-prizes b{color:var(--text)}
         .rf2-lead{display:grid;grid-template-columns:40px minmax(0,1fr) auto auto;gap:12px;align-items:center;padding:10px 20px;border-bottom:1px solid var(--border);font-size:14px}
         .rf2-lead:last-child{border-bottom:0}
@@ -147,30 +152,29 @@ export default function TabReferralsContent() {
         @media(max-width:520px){.rf2-row{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.rf2-row>:nth-child(2){display:none}.rf2-lead{grid-template-columns:32px minmax(0,1fr) auto;padding:10px 16px}.rf2-lead .won{grid-column:2/4;justify-self:start}}
       `}</style>
 
-      <div className="rf2-top">
-        <section className="rf2-card rf2-pad" aria-label="Total referrals">
-          <div className="rf2-label">Total referrals</div>
-          <div className="rf2-big">{loading ? '…' : stats?.totalReferrals ?? 0}</div>
-          <div className="rf2-sub">{rewarded} verified · {naira(Number(stats?.totalEarned || 0), 0)} earned</div>
-        </section>
-        <section className="rf2-card rf2-pad" aria-labelledby="rf2-link-h">
-          <div className="rf2-label" id="rf2-link-h">Your referral link</div>
-          <div className="rf2-sub">You earn <b>{naira(bonus, 0)}</b> for each friend who joins with your link, verifies their NIN and finishes their first paid job (a job posted by someone other than you). For up to {cap} friends ({rewarded} of {cap} so far). Your friend gets <b>{naira(signup, 0)}</b> when they verify.</div>
-          {link ? (
-            <>
-              <div className="rf2-link">
-                <input readOnly value={link} aria-label="Your referral link" onFocus={(e) => e.currentTarget.select()} />
-                <button type="button" className="rf2-btn dark" onClick={copy}>{copied ? 'Copied!' : 'Copy'}</button>
-              </div>
-              <div className="rf2-shares">
-                <a className="rf2-btn" href={`https://wa.me/?text=${encodeURIComponent(shareText)}`} target="_blank" rel="noopener noreferrer"><i className="ti ti-brand-whatsapp" aria-hidden="true" /> WhatsApp</a>
-                <a className="rf2-btn" href={`https://x.com/intent/post?text=${encodeURIComponent(shareText)}`} target="_blank" rel="noopener noreferrer"><i className="ti ti-brand-x" aria-hidden="true" /> Post on X</a>
-                <a className="rf2-btn" href={`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent("Get paid in Naira or USDC for small jobs on OgaPay")}`} target="_blank" rel="noopener noreferrer"><i className="ti ti-brand-telegram" aria-hidden="true" /> Telegram</a>
-              </div>
-            </>
-          ) : <div className="rf2-sub">Loading your link…</div>}
-        </section>
-      </div>
+      <section className="rf2-card rf2-pad" aria-labelledby="rf2-link-h">
+        <div className="rf2-label" id="rf2-link-h">Your referral link</div>
+        <p className="rf2-lead-text">Earn <b>{naira(bonus, 0)}</b> for each friend who joins with your link, verifies their NIN and finishes a paid job. Your friend gets <b>{naira(signup, 0)}</b> when they verify.</p>
+        {link ? (
+          <>
+            <div className="rf2-link">
+              <input readOnly value={link} aria-label="Your referral link" onFocus={(e) => e.currentTarget.select()} />
+              <button type="button" className="rf2-btn dark" onClick={copy}>{copied ? 'Copied!' : 'Copy'}</button>
+            </div>
+            <div className="rf2-shares">
+              <a className="rf2-btn" href={`https://wa.me/?text=${encodeURIComponent(shareText)}`} target="_blank" rel="noopener noreferrer"><i className="ti ti-brand-whatsapp" aria-hidden="true" /> WhatsApp</a>
+              <a className="rf2-btn" href={`https://x.com/intent/post?text=${encodeURIComponent(shareText)}`} target="_blank" rel="noopener noreferrer" aria-label="Post on X"><i className="ti ti-brand-x" aria-hidden="true" /> X</a>
+              <a className="rf2-btn" href={`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent("Get paid in Naira or USDC for small jobs on OgaPay")}`} target="_blank" rel="noopener noreferrer"><i className="ti ti-brand-telegram" aria-hidden="true" /> Telegram</a>
+            </div>
+          </>
+        ) : <div className="rf2-sub">Loading your link…</div>}
+      </section>
+
+      <section className="rf2-card rf2-stats" aria-label="Your referral numbers">
+        <div><span className="rf2-label">Friends joined</span><b>{loading ? '…' : stats?.totalReferrals ?? 0}</b></div>
+        <div><span className="rf2-label">Bonuses paid</span><b>{loading ? '…' : `${rewarded} / ${cap}`}</b></div>
+        <div><span className="rf2-label">Earned</span><b>{loading ? '…' : naira(Number(stats?.totalEarned || 0), 0)}</b></div>
+      </section>
 
       <section className="rf2-card" aria-labelledby="rf2-top">
         <div className="rf2-head">
@@ -186,7 +190,6 @@ export default function TabReferralsContent() {
         <div className="rf2-prizes">
           {(board?.prizes || [10000, 5000, 3000, 1000]).slice(0, 3).map((p, i) => <span key={i}>{['1st', '2nd', '3rd'][i]} <b>{naira(p, 0)}</b></span>)}
           <span>4th–10th <b>{naira(board?.prizes?.[3] ?? 1000, 0)}</b> each</span>
-          <span>A friend counts once they verify their NIN and finish a paid job.</span>
         </div>
         {board && board.leaders.length === 0 ? (
           <div className="rf2-empty"><b>No one has qualified {week === 'this' ? 'yet this week' : 'last week'}</b>{week === 'this' ? 'Share your link now. One verified friend with a finished job could put you on top.' : ''}</div>
@@ -207,7 +210,7 @@ export default function TabReferralsContent() {
         )}
         {board?.me && week === 'this' && !board.leaders.some((l) => l.isMe) && (
           <div className="rf2-empty" style={{ borderTop: '1px solid var(--border)' }}>
-            {board.me.friends > 0 ? `You have ${board.me.friends} qualified ${board.me.friends === 1 ? 'friend' : 'friends'} this week (#${board.me.rank}).` : 'You have no qualified friends this week yet. Remind the friends below who still have a step to do.'}
+            {board.me.friends > 0 ? `You have ${board.me.friends} qualified ${board.me.friends === 1 ? 'friend' : 'friends'} this week (#${board.me.rank}).` : (people.some((p) => p.step === 'verify' || p.step === 'job') ? 'No qualified friends this week yet. Remind the friends below who still have a step to do.' : 'No qualified friends this week yet. Share your link above to get on the board.')}
           </div>
         )}
       </section>
