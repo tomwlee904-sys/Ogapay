@@ -8,7 +8,10 @@ import { useToast } from '../components/Toast'
 import '../styles/profile-public.css'
 import '../styles/community.css'
 import '../styles/community-join.css'
+import '../styles/store.css'
 import { sized } from '../lib/img'
+import LoadError from '../components/LoadError'
+import { accentTile, safeAccent } from '../components/community/colors'
 
 // Community page, ported from the June version (leaderboard, open and completed
 // jobs, members-only chat, owner settings) onto the current design. Joining a
@@ -35,8 +38,8 @@ type Code = { id: string; code: string; maxUses: number | null; uses: number; ex
 const RANKS = ['Anyone', 'Beginner', 'Intermediate', 'Advanced', 'Expert', 'Legend']
 const fileName = (u: string) => { try { return decodeURIComponent(new URL(u).pathname.split('/').pop() || 'file').replace(/^\d+-/, '') } catch { return 'file' } }
 
-const TABS = ['About', 'Leaderboard', 'Open jobs', 'Completed', 'Chat'] as const
-type Tab = (typeof TABS)[number]
+// Four tabs fit a phone; Open and Completed jobs share one tab, and leader tools have their own
+type Tab = 'Jobs' | 'Leaderboard' | 'Chat' | 'About' | 'Manage'
 const money = (n: number, c = 'NGN') => (c === 'NGN' ? '₦' + Math.round(n).toLocaleString('en-US') : `${n.toLocaleString('en-US')} ${c}`)
 const initials = (s: string) => s.split(/\s+/).map((w) => w[0]).join('').toUpperCase().slice(0, 2) || '?'
 const fullName = (u: { firstName?: string; lastName?: string; username?: string }) => `${u.firstName || ''} ${u.lastName || ''}`.trim() || u.username || 'Member'
@@ -57,7 +60,12 @@ export default function CommunityDetail() {
 
   const [c, setC] = useState<Community | null>(null)
   const [loading, setLoading] = useState(true)
-  const [tab, setTab] = useState<Tab>('About')
+  const [failed, setFailed] = useState(false)
+  // Members land on Jobs, visitors on About (until they pick a tab)
+  const [picked, setPicked] = useState<Tab | null>(null)
+  const ctaRef = useRef<HTMLDivElement>(null)
+  const tabsRef = useRef<HTMLDivElement>(null)
+  const [ctaGone, setCtaGone] = useState(false)
   const [busy, setBusy] = useState(false)
   const [invite, setInvite] = useState<any>(null)
 
@@ -69,11 +77,21 @@ export default function CommunityDetail() {
   const isLeader = role === 'OWNER' || role === 'ADMIN'
   const canModerate = isLeader || role === 'MODERATOR'
 
+  // "Not found" means the community is gone; any other failure gets Try again
   const load = () => apiRequest<Community>('/communities/' + id, { auth: signedIn })
-    .then((d) => setC(d))
-    .catch(() => setC(null))
+    .then((d) => { setC(d); setFailed(false) })
+    .catch((e: any) => { setC(null); setFailed(e instanceof TypeError || !/not found/i.test(e?.message || '')) })
     .finally(() => setLoading(false))
   useEffect(() => { setLoading(true); load() }, [id])
+
+  // Phone: visitors keep Join on screen once the header button scrolls away
+  useEffect(() => {
+    const el = ctaRef.current
+    if (!el || typeof IntersectionObserver === 'undefined') return
+    const io = new IntersectionObserver(([e]) => setCtaGone(!e.isIntersecting && e.boundingClientRect.top < 0))
+    io.observe(el)
+    return () => io.disconnect()
+  }, [c?.id, loading])
 
   // A pending invite to this community
   useEffect(() => {
@@ -114,7 +132,7 @@ export default function CommunityDetail() {
     try {
       await apiRequest(`/communities/${c!.id}/leave`, { method: 'POST' })
       toast('You left ' + c!.name, 'success')
-      setTab('About')
+      setPicked('About')
       load()
     } catch (e: any) { toast(e?.message || "Couldn't leave", 'error') }
     setBusy(false)
@@ -125,18 +143,38 @@ export default function CommunityDetail() {
       .then(() => toast('Link copied', 'success')).catch(() => {})
   }
 
-  if (loading) return <Layout><div className="up-wrap"><div className="up-empty"><i className="ti ti-loader-2" />Loading…</div></div></Layout>
+  if (loading) return <Layout><div className="ui-page"><div className="ui-sk" style={{ height: 22, width: 140, borderRadius: 8 }} /><div className="ui-sk" style={{ height: 260, marginTop: 18 }} /></div></Layout>
   if (!c) {
     return (
       <Layout>
-        <div className="up-wrap">
-          <div className="up-empty"><i className="ti ti-users" />This community doesn't exist or was deleted.<div style={{ marginTop: 12 }}><Link className="up-btn" to="/communities">Browse communities</Link></div></div>
+        <div className="ui-page">
+          <div className="up-crumb"><button className="tap" onClick={() => navigate('/communities')}><i className="ti ti-arrow-left" /> Communities</button></div>
+          <div className="ui-narrow">
+            {failed ? <LoadError what="this community" onRetry={() => { setLoading(true); load() }} /> : (
+              <div className="ui-empty">
+                <h1 className="cj-state-h">We can't find this community</h1>
+                It may have been deleted or made private, or the link is wrong.
+                <div style={{ marginTop: 14 }}><Link className="ui-btn ui-btn-dark" to="/communities">Browse communities</Link></div>
+              </div>
+            )}
+          </div>
         </div>
       </Layout>
     )
   }
 
-  const accent = c.accentColor || '#52525b'
+  const accent = safeAccent(c.accentColor)
+  const canManage = isLeader || (canModerate && (!c.isPublic || c.requestCount > 0))
+  const tabs: Tab[] = ['Jobs', 'Leaderboard', 'Chat', 'About', ...(canManage ? ['Manage' as Tab] : [])]
+  const tab: Tab = picked && tabs.includes(picked) ? picked : isMember ? 'Jobs' : 'About'
+  const pick = (t: Tab) => {
+    setPicked(t)
+    // Chat fills the screen under the tabs, so bring the tabs to the top
+    if (t === 'Chat') setTimeout(() => tabsRef.current?.scrollIntoView({ block: 'start', behavior: 'smooth' }), 0)
+  }
+  const canJoin = !isMember && !c.hasRequested
+  const joinLabel = c.isPublic && !viaJoinPage ? 'Join' : 'Request to join'
+  const canInvite = isMember && (c.isPublic || canModerate)
   const socials = [
     { url: safeLink(c.twitter), icon: 'ti-brand-x', label: 'X' },
     { url: safeLink(c.telegram), icon: 'ti-brand-telegram', label: 'Telegram' },
@@ -146,28 +184,28 @@ export default function CommunityDetail() {
 
   return (
     <Layout>
-      <div className="up-wrap">
-        <div className="up-crumb"><button onClick={() => navigate('/communities')}><i className="ti ti-arrow-left" /> Communities</button><span>{c.isPublic ? 'Public' : 'Private'}{cat ? ` · ${cat}` : ''}</span>{signedIn && <Link to="/communities/invitations" style={{ marginLeft: 'auto', color: 'var(--text2)' }}>Your invitations</Link>}</div>
+      <div className="ui-page cm2-page">
+        <div className="up-crumb"><button className="tap" onClick={() => navigate('/communities')}><i className="ti ti-arrow-left" /> Communities</button><span>{c.isPublic ? 'Public' : 'Private'}{cat ? ` · ${cat}` : ''}</span></div>
 
         <section className="up-card cm2-head">
           <div className="cm2-cover" style={c.coverImage ? { backgroundImage: `url("${encodeURI(sized(c.coverImage, 1100))}")` } : { background: `linear-gradient(135deg, ${accent}, color-mix(in srgb, ${accent} 35%, #0a0a0a))` }} />
           <div className="cm2-id">
-            <span className="cm2-logo" style={{ background: accent }}>{c.iconUrl ? <img src={sized(c.iconUrl, 96, true)} alt="" /> : initials(c.name)}</span>
+            <span className="cm2-logo" style={accentTile(accent)}>{c.iconUrl ? <img src={sized(c.iconUrl, 96, true)} alt="" /> : initials(c.name)}</span>
             <div className="cm2-title">
               <h1>{c.name}</h1>
               <div className="cm2-sub">
                 by <Link to={`/user/${c.owner.username}`}>@{c.owner.username}</Link> · {c.memberCount.toLocaleString()} member{c.memberCount === 1 ? '' : 's'}
-                {socials.map((s) => <a key={s.label} href={s.url} target="_blank" rel="noopener noreferrer nofollow" aria-label={s.label} className="cm2-social"><i className={`ti ${s.icon}`} /></a>)}
+                {socials.map((s) => <a key={s.label} href={s.url} target="_blank" rel="noopener noreferrer nofollow" aria-label={s.label} className="cm2-social tap"><i className={`ti ${s.icon}`} /></a>)}
               </div>
             </div>
-            <div className="cm2-cta">
+            <div className="cm2-cta" ref={ctaRef}>
               <button className="up-btn" onClick={share} aria-label="Copy link"><i className="ti ti-link" /></button>
               {isMember ? (
                 role === 'OWNER' ? <span className="cm2-badge">You own this</span> : <button className="up-btn" onClick={leave} disabled={busy}>Leave</button>
               ) : c.hasRequested ? (
                 <Link className="up-btn" to={`/communities/${c.slug}/request`}>Request sent</Link>
               ) : (
-                <button className="up-btn primary" onClick={join} disabled={busy}><i className="ti ti-user-plus" /> {c.isPublic ? 'Join' : 'Request to join'}</button>
+                <button className="up-btn primary" onClick={join} disabled={busy}><i className="ti ti-user-plus" /> {joinLabel}</button>
               )}
             </div>
           </div>
@@ -187,90 +225,133 @@ export default function CommunityDetail() {
           </div>
         )}
 
-        <div className="up-tabs-row">
-          <div className="up-tabs" role="tablist">
-            {TABS.map((t) => (
-              <button key={t} role="tab" aria-selected={tab === t} className={`up-tab${tab === t ? ' on' : ''}`} onClick={() => setTab(t)}>
-                {t}{t === 'Open jobs' && <em>{c.openJobCount}</em>}{t === 'Chat' && !isMember && <i className="ti ti-lock" />}
+        <div className="up-tabs-row cm2-tabs-row" ref={tabsRef}>
+          <div className={`up-tabs cm2-tabs${tabs.length > 4 ? ' cm2-tabs-many' : ''}`} role="tablist">
+            {tabs.map((t) => (
+              <button key={t} role="tab" aria-selected={tab === t} className={`up-tab${tab === t ? ' on' : ''}`} onClick={() => pick(t)}>
+                {t}{t === 'Jobs' && c.openJobCount > 0 && <em>{c.openJobCount}</em>}{t === 'Manage' && c.requestCount > 0 && <em>{c.requestCount}</em>}{t === 'Chat' && !isMember && <i className="ti ti-lock" aria-hidden="true" />}
               </button>
             ))}
           </div>
         </div>
 
-        {tab === 'About' && <About c={c} isMember={isMember} isLeader={isLeader} canModerate={canModerate} role={role} onChange={load} />}
-        {tab === 'Leaderboard' && <Leaderboard id={c.id} />}
-        {tab === 'Open jobs' && (role === 'OWNER' || role === 'ADMIN') && (
-          <div className="cm2-post">
-            <span>Post a job only your members can take.</span>
-            <Link className="ui-btn ui-btn-dark" to={`/create?type=custom&community=${c.id}`}><i className="ti ti-plus" /> Members-only job</Link>
+        <div className="cm2-body">
+          <div className="cm2-main">
+            {tab === 'About' && <About c={c} isMember={isMember} canInvite={canInvite} />}
+            {tab === 'Manage' && (
+              <div className="cm2-about">
+                {canModerate && (!c.isPublic || c.requestCount > 0) && <Requests id={c.id} onAccept={load} />}
+                {isLeader && <JoinRules c={c} onSaved={load} />}
+                {isLeader && <InviteCodes c={c} />}
+                {isLeader && <Settings c={c} isOwner={role === 'OWNER'} onSaved={load} />}
+              </div>
+            )}
+            {tab === 'Leaderboard' && <Leaderboard id={c.id} />}
+            {tab === 'Jobs' && <JobsTab c={c} isLeader={isLeader} cat={cat} />}
+            {tab === 'Chat' && (isMember
+              ? <Chat id={c.id} meId={me?.id} />
+              : <div className="ui-empty"><strong>Members only</strong>Only members can read and post in the chat.{canJoin && <div style={{ marginTop: 12 }}><button className="ui-btn ui-btn-dark" onClick={join} disabled={busy}>{c.isPublic && !viaJoinPage ? 'Join to chat' : 'Request to join'}</button></div>}</div>)}
+          </div>
+
+          {/* Desktop: membership, members and invite stay beside the tabs */}
+          <aside className="cm2-side">
+            {canJoin && (
+              <section className="up-card cm2-joincard">
+                <h2>Join {c.name}</h2>
+                <p className="cm2-muted">{c.isPublic && !viaJoinPage ? 'Anyone can join. Members see its jobs first and can use the chat.' : 'The managers review each request. Members see its jobs first.'}</p>
+                <button className="ui-btn ui-btn-dark" style={{ width: '100%' }} onClick={join} disabled={busy}><i className="ti ti-user-plus" /> {joinLabel}</button>
+              </section>
+            )}
+            <MembersCard c={c} />
+            {canInvite && <InviteCard id={c.id} />}
+          </aside>
+        </div>
+
+        {canJoin && ctaGone && (
+          <div className="ui-actionbar cm2-joinbar">
+            <div className="ui-actionbar-text"><b>{c.name}</b>{c.memberCount.toLocaleString()} member{c.memberCount === 1 ? '' : 's'}</div>
+            <button className="ui-btn ui-btn-dark" onClick={join} disabled={busy}><i className="ti ti-user-plus" /> {joinLabel}</button>
           </div>
         )}
-        {tab === 'Open jobs' && <Jobs id={c.id} kind="open" cat={cat} />}
-        {tab === 'Completed' && <Jobs id={c.id} kind="completed" cat={cat} />}
-        {tab === 'Chat' && (isMember
-          ? <Chat id={c.id} meId={me?.id} />
-          : <div className="up-empty"><i className="ti ti-lock" />Only members can read and post in the chat.{!c.hasRequested && <div style={{ marginTop: 12 }}><button className="up-btn primary" onClick={join} disabled={busy}>{c.isPublic ? 'Join to chat' : 'Request to join'}</button></div>}</div>)}
       </div>
     </Layout>
   )
 }
 
-function About({ c, isMember, isLeader, canModerate, role, onChange }: { c: Community; isMember: boolean; isLeader: boolean; canModerate: boolean; role: string | null; onChange: () => void }) {
-  const { toast } = useToast()
-  const [inviteName, setInviteName] = useState('')
-  const [inviting, setInviting] = useState(false)
-  const canInvite = isMember && (c.isPublic || canModerate)
-
-  const sendInvite = async () => {
-    const u = inviteName.trim().replace(/^@/, '')
-    if (!u) return
-    setInviting(true)
-    try {
-      const r = await apiRequest<any>(`/communities/${c.id}/invite`, { method: 'POST', body: JSON.stringify({ username: u }) })
-      toast(r?.alreadyInvited ? `@${u} already has an invite` : `Invite sent to @${u}`, 'success')
-      setInviteName('')
-    } catch (e: any) { toast(e?.message || "Couldn't send the invite", 'error') }
-    setInviting(false)
-  }
-
+function About({ c, isMember, canInvite }: { c: Community; isMember: boolean; canInvite: boolean }) {
   return (
     <div className="cm2-about">
       <section className="up-card up-about">
         <h2>About</h2>
         <p className="up-bio" style={{ marginTop: 0 }}>{c.description || 'No description yet.'}</p>
-        <div className="cm2-muted" style={{ marginTop: 10 }}>Created {new Date(c.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
+        <div className="cm2-muted" style={{ marginTop: 10 }}>Created {new Date(c.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}{isMember ? '' : ` · ${c.isPublic ? 'Public' : 'Private'}`}</div>
       </section>
-
-      {c.recentMembers.length > 0 && (
-        <section className="up-card up-about">
-          <h2>Members</h2>
-          <div className="cm2-members">
-            {c.recentMembers.map((m) => (
-              <Link key={m.id} to={`/user/${m.user.username}`} className="cm2-member" title={fullName(m.user)}>
-                <Face url={m.user.avatarUrl} name={fullName(m.user)} size={40} />
-                <span>{m.user.username}</span>
-                {roleLabel(m.role) && <em>{roleLabel(m.role)}</em>}
-              </Link>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {canInvite && (
-        <section className="up-card up-about">
-          <h2>Invite someone</h2>
-          <form className="cm2-inline" onSubmit={(e) => { e.preventDefault(); sendInvite() }}>
-            <input value={inviteName} onChange={(e) => setInviteName(e.target.value)} placeholder="@username" aria-label="Username to invite" />
-            <button className="up-btn primary" disabled={inviting || !inviteName.trim()}>{inviting ? 'Sending…' : 'Invite'}</button>
-          </form>
-        </section>
-      )}
-
-      {canModerate && (!c.isPublic || c.requestCount > 0) && <Requests id={c.id} onAccept={onChange} />}
-      {isLeader && <JoinRules c={c} onSaved={onChange} />}
-      {isLeader && <InviteCodes c={c} />}
-      {isLeader && <Settings c={c} isOwner={role === 'OWNER'} onSaved={onChange} />}
+      <div className="cm2-side-copy">
+        <MembersCard c={c} />
+        {canInvite && <InviteCard id={c.id} />}
+      </div>
     </div>
+  )
+}
+
+function MembersCard({ c }: { c: Community }) {
+  if (!c.recentMembers.length) return null
+  return (
+    <section className="up-card up-about">
+      <h2>Members <span className="cm2-muted">{c.memberCount.toLocaleString()}</span></h2>
+      <div className="cm2-members">
+        {c.recentMembers.map((m) => (
+          <Link key={m.id} to={`/user/${m.user.username}`} className="cm2-member" title={fullName(m.user)}>
+            <Face url={m.user.avatarUrl} name={fullName(m.user)} size={40} />
+            <span>{m.user.username}</span>
+            {roleLabel(m.role) && <em>{roleLabel(m.role)}</em>}
+          </Link>
+        ))}
+      </div>
+    </section>
+  )
+}
+
+function InviteCard({ id }: { id: string }) {
+  const { toast } = useToast()
+  const [inviteName, setInviteName] = useState('')
+  const [inviting, setInviting] = useState(false)
+  const sendInvite = async () => {
+    const u = inviteName.trim().replace(/^@/, '')
+    if (!u) return
+    setInviting(true)
+    try {
+      const r = await apiRequest<any>(`/communities/${id}/invite`, { method: 'POST', body: JSON.stringify({ username: u }) })
+      toast(r?.alreadyInvited ? `@${u} already has an invite` : `Invite sent to @${u}`, 'success')
+      setInviteName('')
+    } catch (e: any) { toast(e?.message || "Couldn't send the invite", 'error') }
+    setInviting(false)
+  }
+  return (
+    <section className="up-card up-about">
+      <h2>Invite someone</h2>
+      <form className="cm2-inline" onSubmit={(e) => { e.preventDefault(); sendInvite() }}>
+        <input value={inviteName} onChange={(e) => setInviteName(e.target.value)} placeholder="@username" aria-label="Username to invite" />
+        <button className="up-btn primary" disabled={inviting || !inviteName.trim()}>{inviting ? 'Sending…' : 'Invite'}</button>
+      </form>
+    </section>
+  )
+}
+
+// Open and completed jobs in one tab, with a switch between them
+function JobsTab({ c, isLeader, cat }: { c: Community; isLeader: boolean; cat: string }) {
+  const [kind, setKind] = useState<'open' | 'completed'>('open')
+  return (
+    <>
+      <div className="cm2-jobs-head">
+        <div className="st-seg" role="tablist" aria-label="Jobs">
+          <button role="tab" aria-selected={kind === 'open'} className={kind === 'open' ? 'on' : ''} onClick={() => setKind('open')}>Open <em>{c.openJobCount}</em></button>
+          <button role="tab" aria-selected={kind === 'completed'} className={kind === 'completed' ? 'on' : ''} onClick={() => setKind('completed')}>Completed <em>{c.completedJobCount}</em></button>
+        </div>
+        {isLeader && kind === 'open' && <Link className="ui-btn ui-btn-ghost" to={`/create?type=custom&community=${c.id}`}><i className="ti ti-plus" /> Members-only job</Link>}
+      </div>
+      <Jobs key={kind} id={c.id} kind={kind} cat={cat} />
+    </>
   )
 }
 
@@ -480,8 +561,8 @@ function Leaderboard({ id }: { id: string }) {
     setD(null)
     apiRequest<any>(`/communities/${id}/leaderboard?page=${page}`, { auth: !!getAccessToken() }).then((x) => setD({ members: x?.members || [], totalPages: x?.totalPages || 1 })).catch(() => setD({ members: [], totalPages: 1 }))
   }, [id, page])
-  if (!d) return <div className="up-empty"><i className="ti ti-loader-2" />Loading…</div>
-  if (d.members.length === 0) return <div className="up-empty"><i className="ti ti-trophy" />No members yet.</div>
+  if (!d) return <div className="ui-sk" style={{ height: 200 }} />
+  if (d.members.length === 0) return <div className="ui-empty"><strong>No members yet</strong>Members are ranked by the jobs they finish.</div>
   return (
     <>
       <section className="up-card cm2-list">
@@ -507,11 +588,11 @@ function Jobs({ id, kind, cat }: { id: string; kind: 'open' | 'completed'; cat: 
     // Signed in, so a private community's members-only jobs show to its members
     apiRequest<any>(`/communities/${id}/jobs/${kind}?page=${page}`, { auth: true }).then((x) => setD({ jobs: x?.jobs || [], totalPages: x?.totalPages || 1 })).catch(() => setD({ jobs: [], totalPages: 1 }))
   }, [id, kind, page])
-  if (!d) return <div className="up-empty"><i className="ti ti-loader-2" />Loading…</div>
+  if (!d) return <div className="ui-sk" style={{ height: 200 }} />
   return (
     <>
       <p className="cm2-muted cm2-note">Jobs only this community's members can take, then {kind === 'open' ? 'open' : 'completed'} jobs in {cat || 'this category'} across OgaPay.</p>
-      {d.jobs.length === 0 ? <div className="up-empty"><i className="ti ti-briefcase" />No {kind} jobs right now.</div> : (
+      {d.jobs.length === 0 ? <div className="ui-empty"><strong>No {kind} jobs right now</strong>{kind === 'open' ? 'New jobs for this community show here first.' : 'Finished jobs show here.'}</div> : (
         <section className="up-card cm2-list">
           {d.jobs.map((j) => (
             <Link key={j.id} to={`/tasks/${j.id}`} className="cm2-job">

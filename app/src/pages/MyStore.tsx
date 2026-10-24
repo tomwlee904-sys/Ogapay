@@ -13,6 +13,7 @@ import '../styles/edit-profile.css'
 import '../styles/my-store.css'
 import { sized } from '../lib/img'
 import LoadError from '../components/LoadError'
+import { StoreTabs, RowMenu, type MenuItem } from '../components/store/StoreUi'
 
 type Product = {
   id: string; name: string; description: string; price: number; currency: string; imageUrl: string | null
@@ -59,6 +60,13 @@ export default function MyStore() {
     apiRequest<Order[]>('/store/my-orders').then((d) => setOrders(Array.isArray(d) ? d : [])).catch(() => setFailed((f) => ({ ...f, orders: true })))
   }
   useEffect(load, [])
+  // "Sell a product" on the store opens the add form straight away
+  useEffect(() => {
+    if (params.get('add') === '1') {
+      setEditing('new')
+      const next = new URLSearchParams(params); next.delete('add'); setParams(next, { replace: true })
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Paid to the seller (released, or paid at purchase on older orders) vs still held for the buyer
   const [revenue, held] = useMemo(() => {
@@ -103,112 +111,152 @@ export default function MyStore() {
     setBusy('')
   }
 
+  // A number that failed to load shows a dash, never 0
+  const stat = (ready: boolean, failedLoad: boolean, value: string | number) => (ready ? value : failedLoad ? '—' : '…')
+
   return (
     <Layout>
-      <div className="up-wrap">
-        <div className="ms2-head">
+      <div className="ui-page ms2-page">
+        <header className="ui-head">
           <div>
-            <h1>My Store</h1>
-            <p>Sell services and digital products. Buyers pay from their OgaPay wallet; the money comes to you when they confirm delivery, or 3 days after you mark it delivered.</p>
+            <h1 className="ui-title" style={{ marginTop: 0 }}>My store</h1>
+            <p className="ui-sub">Sell services and digital products. You're paid when the buyer confirms delivery.</p>
           </div>
-          <div className="acts">
-            {user?.username && <Link className="up-btn" to={`/user/${user.username}`}><i className="ti ti-eye" /> View public store</Link>}
-            <button className="up-btn primary" onClick={() => setEditing('new')}><i className="ti ti-plus" /> Add product</button>
+          <div className="ui-actions ms2-acts">
+            {user?.username && <Link className="ui-btn ui-btn-ghost" to={`/user/${user.username}`}><i className="ti ti-eye" /> <span className="ms2-hide-phone">View public store</span><span className="ms2-show-phone">Public store</span></Link>}
+            <button className="ui-btn ui-btn-dark" onClick={() => setEditing('new')}><i className="ti ti-plus" /> Add product</button>
           </div>
-        </div>
+        </header>
+        <StoreTabs active="mine" />
 
-        <div className="ms2-stats">
-          <div className="up-card ms2-stat"><span><i className="ti ti-building-store" /> Live products</span><b>{products ? live : '…'}</b><small>{products ? `${products.length - live} hidden` : ''}</small></div>
-          <div className="up-card ms2-stat"><span><i className="ti ti-shopping-cart" /> Orders</span><b>{orders ? orders.length : '…'}</b><small>{orders ? `${open} to deliver` : ''}</small></div>
-          <div className="up-card ms2-stat"><span><i className="ti ti-coin" /> Revenue</span><b style={{ fontSize: 18 }}>{orders ? revenue : '…'}</b><small>{held ? `+ ${held} on hold` : 'paid to your wallet'}</small></div>
-          <div className="up-card ms2-stat"><span><i className="ti ti-star" /> Rating</span><b>{rated.length ? avg.toFixed(1) : '—'}</b><small>{rated.reduce((s, p) => s + p.reviewsCount, 0)} reviews</small></div>
-        </div>
-
-        <div className="up-tabs-row" style={{ marginTop: 0 }}>
-          <div className="up-tabs" role="tablist">
-            <button role="tab" aria-selected={tab === 'products'} className={`up-tab ${tab === 'products' ? 'on' : ''}`} onClick={() => setParams({})}><i className="ti ti-package" /> Products {products?.length ? <em>{products.length}</em> : null}</button>
-            <button role="tab" aria-selected={tab === 'orders'} className={`up-tab ${tab === 'orders' ? 'on' : ''}`} onClick={() => setParams({ tab: 'orders' })}><i className="ti ti-receipt" /> Orders {open ? <em>{open} open</em> : null}</button>
-          </div>
-        </div>
-
-        {error && <div className="up-note err" role="alert" style={{ marginBottom: 12 }}>{error} <button className="up-btn" style={{ height: 26, padding: '0 8px', marginLeft: 8 }} onClick={() => setError('')}>Dismiss</button></div>}
-
-        {tab === 'products' ? (
-          products === null ? (failed.products ? <LoadError what="your products" onRetry={load} /> : <div className="up-skel" style={{ height: 140 }} />)
-          : products.length === 0 ? (
-            <div className="up-empty">
-              <i className="ti ti-building-store" />
-              List your first product or service. It shows in the OgaPay store and on your public profile.
-              <div style={{ marginTop: 14 }}><button className="up-btn primary" onClick={() => setEditing('new')}><i className="ti ti-plus" /> Add product</button></div>
-            </div>
-          ) : (['active', 'hidden'] as const).map((group) => {
-            const list = products.filter((p) => (group === 'active' ? p.isActive : !p.isActive))
-            if (!list.length) return null
-            return (
-              <section key={group} className="ms2-group">
-                <h2 className="ms2-group-h">
-                  {group === 'active' ? 'Active' : 'Hidden'} <em>{list.length}</em>
-                  <small>{group === 'active' ? 'In your public store' : 'Not shown to buyers. Publish to list them again.'}</small>
-                </h2>
-                {list.map((p) => (
-            <div className="up-card ms2-prod" key={p.id}>
-              <div className="ms2-thumb">{p.imageUrl ? <img src={sized(p.imageUrl, 72)} alt="" loading="lazy" /> : <i className="ti ti-package" />}</div>
-              <div style={{ minWidth: 0 }}>
-                <h3>{p.name}</h3>
-                <div className="meta">
-                  <span className={`ms2-badge ${p.isActive ? 'live' : ''}`}>{p.isActive ? 'Live' : 'Hidden'}</span>
-                  <span><b>{p.priceOnRequest ? 'Price on request' : show(p.price, p.currency)}</b></span>
-                  {!!p.sampleFiles?.length && <span><i className="ti ti-paperclip" aria-hidden="true" /> {p.sampleFiles.length}</span>}
-                  <span>{p.orders} {p.orders === 1 ? 'order' : 'orders'}</span>
-                  {p.reviewsCount > 0 && <span><i className="ti ti-star" aria-hidden="true" style={{ fontSize: "0.95em", verticalAlign: "-0.1em" }} /> {p.avgRating.toFixed(1)} ({p.reviewsCount})</span>}
-                  {p.stock !== null && <span>{p.stock} in stock</span>}
-                  <span>{p.delivery}</span>
-                </div>
-              </div>
-              <div className="ms2-row-acts">
-                {p.isActive && <Link className="up-btn" to={`/store/${p.id}`}>View</Link>}
-                <button className="up-btn" disabled={busy === p.id} onClick={() => setEditing(p)}>Edit</button>
-                <button className="up-btn" disabled={busy === p.id} onClick={() => setStatus(p, !p.isActive)}>{p.isActive ? 'Unpublish' : 'Publish'}</button>
-                <button className="up-btn" disabled={busy === p.id} onClick={() => remove(p)} aria-label={`Delete ${p.name}`}><i className="ti ti-trash" /></button>
-              </div>
-            </div>
-                ))}
-              </section>
-            )
-          })
-        ) : (
-          orders === null ? (failed.orders ? <LoadError what="your orders" onRetry={load} /> : <div className="up-skel" style={{ height: 140 }} />)
-          : orders.length === 0 ? <div className="up-empty"><i className="ti ti-receipt" />No orders yet. When someone buys, it shows here and you get a message from them.</div>
-          : orders.map((o) => (
-            <div className="up-card ms2-order" key={o.id}>
-              <div className="who">
-                <span className="av">{o.buyer.avatarUrl ? <img src={o.buyer.avatarUrl} alt="" /> : (o.buyer.name[0] || '?').toUpperCase()}</span>
-                <div style={{ minWidth: 0 }}>
-                  <b>{o.product.name}{o.quantity > 1 ? ` × ${o.quantity}` : ''}</b>
-                  <small>by <Link to={`/user/${o.buyer.username}`} style={{ color: 'var(--text2)' }}>@{o.buyer.username}</Link> · {new Date(o.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</small>
-                </div>
-              </div>
-              <div className="amt">{money(o.total, o.currency)}<small>{!o.protected ? 'paid' : o.refundedAt ? 'refunded to buyer' : o.releasedAt ? 'paid to you' : 'on hold'}</small></div>
-              {o.held && o.status === 'DELIVERED' && o.releaseAt && (
-                <p className="so-line"><i className="ti ti-clock" aria-hidden="true" /><span>Comes to you when the buyer confirms, or on <b>{orderWhen(o.releaseAt)}</b> if they report no problem.</span></p>
-              )}
-              {o.held && (o.status === 'PENDING' || o.status === 'IN_PROGRESS') && (
-                <p className="so-line"><i className="ti ti-shield-check" aria-hidden="true" /><span>The buyer's payment is held by OgaPay. Deliver, then mark it delivered: you're paid when they confirm, or 3 days later.</span></p>
-              )}
-              {o.status === 'DISPUTED' && (
-                <p className="so-line bad"><i className="ti ti-alert-triangle" aria-hidden="true" /><span>The buyer reported a problem: "{o.disputeReason}" The payment is on hold while OgaPay reviews it. Sort it out with them in your chat, or refund them.</span></p>
-              )}
-              <div className="row-acts">
-                <span className={`ms2-badge ${orderBadge(o).cls}`}>{orderBadge(o).label}</span>
-                <span style={{ flex: 1 }} />
-                {o.conversationId && <Link className="up-btn" to={`/messages?c=${o.conversationId}`}><i className="ti ti-message" /> Message buyer</Link>}
-                {o.held && <button className="up-btn" disabled={busy === o.id} onClick={() => refundOrder(o)}>Cancel and refund</button>}
-                {o.status === 'PENDING' && <button className="up-btn" disabled={busy === o.id} onClick={() => moveOrder(o, 'IN_PROGRESS')}>Start</button>}
-                {(o.status === 'PENDING' || o.status === 'IN_PROGRESS') && <button className="up-btn primary" disabled={busy === o.id} onClick={() => moveOrder(o, 'DELIVERED')}>Mark delivered</button>}
-              </div>
-            </div>
-          ))
+        {open > 0 && tab !== 'orders' && (
+          <button className="ui-card ms2-alert" onClick={() => setParams({ tab: 'orders' })}>
+            <i className="ti ti-alert-circle" aria-hidden="true" />
+            <span><b>Action needed: {open} order{open === 1 ? '' : 's'} to deliver</b>Buyers are waiting. Open your orders.</span>
+            <i className="ti ti-chevron-right" aria-hidden="true" />
+          </button>
         )}
+
+        <div className="ui-stats ms2-kpis">
+          <div><span className="ui-stats-label">Live products</span><span className="ui-stats-value">{stat(!!products, failed.products, live)}</span>{products && <small>{products.length - live} hidden</small>}</div>
+          <div><span className="ui-stats-label">Orders</span><span className="ui-stats-value">{stat(!!orders, failed.orders, orders?.length ?? 0)}</span>{orders && <small>{open} to deliver</small>}</div>
+          <div><span className="ui-stats-label">Revenue</span><span className="ui-stats-value ms2-rev">{stat(!!orders, failed.orders, revenue)}</span>{orders && <small>{held ? `+ ${held} on hold` : 'paid to your wallet'}</small>}</div>
+          <div><span className="ui-stats-label">Rating</span><span className="ui-stats-value">{stat(!!products, failed.products, rated.length ? avg.toFixed(1) : '—')}</span>{products && <small>{rated.reduce((s, p) => s + p.reviewsCount, 0)} reviews</small>}</div>
+        </div>
+
+        <div className="ui-split ms2-layout">
+          <div className="ms2-main">
+            <div className="st-seg ms2-tabs" role="tablist" aria-label="My store">
+              <button role="tab" aria-selected={tab === 'products'} className={tab === 'products' ? 'on' : ''} onClick={() => setParams({})}>Products {products?.length ? <em>{products.length}</em> : null}</button>
+              <button role="tab" aria-selected={tab === 'orders'} className={tab === 'orders' ? 'on' : ''} onClick={() => setParams({ tab: 'orders' })}>Orders {open ? <em>{open} open</em> : null}</button>
+            </div>
+
+            {error && (
+              <div className="up-note err ms2-err" role="alert">
+                <span>{error}</span>
+                <button className="ui-btn ui-btn-text ui-btn-sm ui-btn-icon tap" aria-label="Dismiss" onClick={() => setError('')}><i className="ti ti-x" /></button>
+              </div>
+            )}
+
+            {tab === 'products' ? (
+              products === null ? (failed.products ? <LoadError what="your products" onRetry={load} /> : <div className="ui-sk" style={{ height: 160 }} />)
+              : products.length === 0 ? (
+                <div className="ui-empty">
+                  <strong>List your first product or service</strong>
+                  It shows in the OgaPay store and on your public profile.
+                  <div style={{ marginTop: 14 }}><button className="ui-btn ui-btn-dark" onClick={() => setEditing('new')}><i className="ti ti-plus" /> Add product</button></div>
+                </div>
+              ) : (['active', 'hidden'] as const).map((group) => {
+                const list = products.filter((p) => (group === 'active' ? p.isActive : !p.isActive))
+                if (!list.length) return null
+                return (
+                  <section key={group} className="ms2-group">
+                    <h2 className="ms2-group-h">
+                      {group === 'active' ? 'Active' : 'Hidden'} <em>{list.length}</em>
+                      <small>{group === 'active' ? 'In your public store' : 'Not shown to buyers. Publish to list them again.'}</small>
+                    </h2>
+                    {list.map((p) => {
+                      const menu: MenuItem[] = [
+                        ...(p.isActive ? [{ label: 'View in store', icon: 'ti-eye', to: `/store/${p.id}` }] : []),
+                        { label: p.isActive ? 'Unpublish (hide)' : 'Publish', icon: p.isActive ? 'ti-eye-off' : 'ti-world', disabled: busy === p.id, onSelect: () => setStatus(p, !p.isActive) },
+                        { label: 'Delete product', icon: 'ti-trash', danger: true, disabled: busy === p.id, onSelect: () => remove(p) },
+                      ]
+                      return (
+                        <div className="up-card ms2-prod" key={p.id}>
+                          {/* Tapping the product opens it for editing */}
+                          <button type="button" className="ms2-prod-main" disabled={busy === p.id} onClick={() => setEditing(p)} aria-label={`Edit ${p.name}`}>
+                            <span className="ms2-thumb">{p.imageUrl ? <img src={sized(p.imageUrl, 72)} alt="" loading="lazy" /> : <i className="ti ti-package" />}</span>
+                            <span style={{ minWidth: 0 }}>
+                              <h3>{p.name}</h3>
+                              <span className="meta">
+                                <span className={`ms2-badge ${p.isActive ? 'live' : ''}`}>{p.isActive ? 'Live' : 'Hidden'}</span>
+                                <span><b>{p.priceOnRequest ? 'Price on request' : show(p.price, p.currency)}</b></span>
+                                <span>{p.orders} {p.orders === 1 ? 'order' : 'orders'}</span>
+                                {p.reviewsCount > 0 && <span><i className="ti ti-star" aria-hidden="true" /> {p.avgRating.toFixed(1)} ({p.reviewsCount})</span>}
+                                {!!p.sampleFiles?.length && <span className="ms2-hide-phone"><i className="ti ti-paperclip" aria-hidden="true" /> {p.sampleFiles.length}</span>}
+                                {p.stock !== null && <span className="ms2-hide-phone">{p.stock} in stock</span>}
+                                <span className="ms2-hide-phone">{p.delivery}</span>
+                              </span>
+                            </span>
+                          </button>
+                          <div className="ms2-row-acts">
+                            <button className="ui-btn ui-btn-ghost ui-btn-sm ms2-hide-phone" disabled={busy === p.id} onClick={() => setEditing(p)}><i className="ti ti-pencil" /> Edit</button>
+                            <RowMenu label={`More actions for ${p.name}`} items={menu} />
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </section>
+                )
+              })
+            ) : (
+              orders === null ? (failed.orders ? <LoadError what="your orders" onRetry={load} /> : <div className="ui-sk" style={{ height: 160 }} />)
+              : orders.length === 0 ? <div className="ui-empty"><strong>No orders yet</strong>When someone buys, it shows here and you get a message from them.</div>
+              : orders.map((o) => {
+                const b = orderBadge(o)
+                // One next step per state; refunding sits in the menu and asks first (refundOrder)
+                const menu: MenuItem[] = []
+                if (o.status === 'PENDING') menu.push({ label: 'Mark delivered', icon: 'ti-check', disabled: busy === o.id, onSelect: () => moveOrder(o, 'DELIVERED') })
+                if (o.held) menu.push({ label: 'Cancel and refund', icon: 'ti-arrow-back-up', danger: true, disabled: busy === o.id, onSelect: () => refundOrder(o) })
+                return (
+                  <div className="up-card ms2-order so-order" key={o.id}>
+                    <div className="who">
+                      <span className="av">{o.buyer.avatarUrl ? <img src={o.buyer.avatarUrl} alt="" /> : (o.buyer.name[0] || '?').toUpperCase()}</span>
+                      <div style={{ minWidth: 0 }}>
+                        <b className="so-name"><span>{o.product.name}{o.quantity > 1 ? ` × ${o.quantity}` : ''}</span><span className={`ms2-badge ${b.cls}`}>{b.label}</span></b>
+                        <small>by <Link className="tap" to={`/user/${o.buyer.username}`} style={{ color: 'var(--text2)' }}>@{o.buyer.username}</Link> · {new Date(o.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</small>
+                      </div>
+                    </div>
+                    <div className="amt">{money(o.total, o.currency)}<small>{!o.protected ? 'paid' : o.refundedAt ? 'refunded to buyer' : o.releasedAt ? 'paid to you' : 'on hold'}</small></div>
+                    {o.held && o.status === 'DELIVERED' && o.releaseAt && (
+                      <p className="so-line"><i className="ti ti-clock" aria-hidden="true" /><span>Comes to you when the buyer confirms, or on <b>{orderWhen(o.releaseAt)}</b> if they report no problem.</span></p>
+                    )}
+                    {o.held && (o.status === 'PENDING' || o.status === 'IN_PROGRESS') && (
+                      <p className="so-line"><i className="ti ti-shield-check" aria-hidden="true" /><span>The buyer's payment is held by OgaPay. Deliver, then mark it delivered: you're paid when they confirm, or 3 days later.</span></p>
+                    )}
+                    {o.status === 'DISPUTED' && (
+                      <p className="so-line bad"><i className="ti ti-alert-triangle" aria-hidden="true" /><span>The buyer reported a problem: "{o.disputeReason}" The payment is on hold while OgaPay reviews it. Sort it out with them in your chat, or refund them.</span></p>
+                    )}
+                    <div className="so-acts">
+                      {o.status === 'PENDING' && <button className="ui-btn ui-btn-dark so-main-btn" disabled={busy === o.id} onClick={() => moveOrder(o, 'IN_PROGRESS')}>Start</button>}
+                      {o.status === 'IN_PROGRESS' && <button className="ui-btn ui-btn-dark so-main-btn" disabled={busy === o.id} onClick={() => moveOrder(o, 'DELIVERED')}><i className="ti ti-check" /> Mark delivered</button>}
+                      {o.conversationId && <Link className="ui-btn ui-btn-ghost" to={`/messages?c=${o.conversationId}`}><i className="ti ti-message" /> Message buyer</Link>}
+                      <RowMenu label={`More actions for ${o.product.name}`} items={menu} />
+                    </div>
+                  </div>
+                )
+              })
+            )}
+          </div>
+
+          <aside className="ui-split-side ms2-side">
+            <div className="ui-card ms2-how">
+              <h2>How you get paid</h2>
+              <p>Buyers pay from their OgaPay wallet and OgaPay holds the money. It comes to you when they confirm delivery, or 3 days after you mark the order delivered if they report no problem.</p>
+              {user?.username && <Link className="ui-btn ui-btn-ghost" to={`/user/${user.username}`}><i className="ti ti-eye" /> View public store</Link>}
+            </div>
+          </aside>
+        </div>
       </div>
 
       {editing && <ProductEditor product={editing === 'new' ? null : editing} onClose={() => setEditing(null)} onSaved={() => { setEditing(null); load() }} />}
@@ -234,6 +282,8 @@ function ProductEditor({ product, onClose, onSaved }: { product: Product | null;
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [msg, setMsg] = useState('')
   const [saving, setSaving] = useState(false)
+  // Optional fields start folded unless this product already uses them
+  const [moreOpen, setMoreOpen] = useState(() => !!product && (product.stock !== null || !!product.searchTags || !!product.tags?.length || !!product.sampleFiles?.length))
   const [uploading, setUploading] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
   const set = (k: keyof Form, v: string) => { setForm((f) => ({ ...f, [k]: v })); setErrors((e) => ({ ...e, [k]: '' })); setMsg('') }
@@ -315,9 +365,9 @@ function ProductEditor({ product, onClose, onSaved }: { product: Product | null;
   return (
     <div className="up-modal ms2-modal" onClick={() => !saving && onClose()}>
       <div role="dialog" aria-modal="true" aria-labelledby="ms2-h" onClick={(e) => e.stopPropagation()} className="ms2-form">
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div className="ms2-sheet-head">
           <h3 id="ms2-h">{product ? 'Edit product' : 'Add product'}</h3>
-          <button className="x" aria-label="Close" onClick={onClose}><i className="ti ti-x" /></button>
+          <button className="x tap" aria-label="Close" onClick={onClose}><i className="ti ti-x" /></button>
         </div>
 
         <label className="ep-field"><span>Title</span><input className="hr-input" maxLength={120} value={form.name} onChange={(e) => set('name', e.target.value)} placeholder="e.g. Logo design: 3 concepts" aria-invalid={!!errors.name} />{errors.name && <em>{errors.name}</em>}</label>
@@ -374,6 +424,19 @@ function ProductEditor({ product, onClose, onSaved }: { product: Product | null;
           </>
         )}
 
+        <div className="ep-field">
+          <span>Thumbnail</span>
+          <div className="ms2-img">
+            <div className="ms2-thumb">{form.imageUrl ? <img src={form.imageUrl} alt="" /> : <i className="ti ti-photo" />}</div>
+            <button type="button" className="up-btn" disabled={uploading} onClick={() => fileRef.current?.click()}>{uploading ? 'Uploading…' : form.imageUrl ? 'Replace' : 'Upload image'}</button>
+            {form.imageUrl && <button type="button" className="up-btn" onClick={() => set('imageUrl', '')}>Remove</button>}
+          </div>
+          <small>Wide pictures work best (16:10). It shows on the product card.</small>
+          <div style={{ display: 'none' }}>
+            <input ref={fileRef} type="file" accept="image/*" hidden onChange={(e) => upload(e.target.files?.[0])} />
+          </div>
+        </div>
+
         <div className="hr-row">
           <label className="ep-field"><span>Delivery time</span>
             <select value={form.delivery} onChange={(e) => set('delivery', e.target.value)}>{(DELIVERY.includes(form.delivery) ? DELIVERY : [form.delivery, ...DELIVERY]).map((d) => <option key={d}>{d}</option>)}</select>
@@ -383,6 +446,8 @@ function ProductEditor({ product, onClose, onSaved }: { product: Product | null;
           </label>
         </div>
 
+        <details className="ms2-more" open={moreOpen || !!errors.stock} onToggle={(e) => setMoreOpen((e.target as HTMLDetailsElement).open)}>
+          <summary>More options <small>Stock, search tags, sample files</small></summary>
         <div className="hr-row">
           <label className="ep-field"><span>Stock (optional)</span><input className="hr-input" inputMode="numeric" value={form.stock} onChange={(e) => set('stock', e.target.value.replace(/[^0-9]/g, ''))} placeholder="Unlimited" aria-invalid={!!errors.stock} />{errors.stock ? <em>{errors.stock}</em> : <small>Leave empty for services.</small>}</label>
         </div>
@@ -418,21 +483,10 @@ function ProductEditor({ product, onClose, onSaved }: { product: Product | null;
           <small>Up to {MAX_FILES} files, {MAX_FILE_MB} MB each: images, audio, video, PDF, TXT, CSV or Markdown. Buyers can open them before paying.</small>
         </div>
 
-        <div className="ep-field">
-          <span>Thumbnail</span>
-          <div className="ms2-img">
-            <div className="ms2-thumb">{form.imageUrl ? <img src={form.imageUrl} alt="" /> : <i className="ti ti-photo" />}</div>
-            <button type="button" className="up-btn" disabled={uploading} onClick={() => fileRef.current?.click()}>{uploading ? 'Uploading…' : form.imageUrl ? 'Replace' : 'Upload image'}</button>
-            {form.imageUrl && <button type="button" className="up-btn" onClick={() => set('imageUrl', '')}>Remove</button>}
-          </div>
-          <small>Wide pictures work best (16:10). It shows on the product card.</small>
-          <div style={{ display: 'none' }}>
-            <input ref={fileRef} type="file" accept="image/*" hidden onChange={(e) => upload(e.target.files?.[0])} />
-          </div>
-        </div>
+        </details>
 
         {msg && <div className="up-note err" role="alert">{msg}</div>}
-        <div style={{ display: 'flex', gap: 8, marginTop: 18, flexWrap: 'wrap' }}>
+        <div className="ms2-sheet-foot">
           <button className="up-btn" disabled={saving || uploading || filesBusy} onClick={() => save('DRAFT')}>{product && !product.isActive ? 'Save hidden' : product ? 'Save & hide' : 'Save as hidden'}</button>
           <button className="up-btn primary" style={{ flex: 1 }} disabled={saving || uploading || filesBusy} onClick={() => save('ACTIVE')}>{saving ? 'Saving…' : product?.isActive ? 'Save changes' : 'Publish'}</button>
         </div>

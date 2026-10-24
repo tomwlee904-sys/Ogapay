@@ -1,0 +1,71 @@
+/* Store pages: Shop | My orders | My store tabs, the compact product card and
+   grid, row menus and the Open / All switches (components/store/StoreUi.tsx).
+   Breakpoints: phone <=767.98px, tablet 768-1023.98px, desktop >=1024px. */
+
+/* Section tabs (page navigation): underlined, equal parts on phone */
+.st-tabs { display: flex; gap: 4px; margin-top: var(--sp-4); border-bottom: 1px solid var(--border); }
+.st-tab { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 0 14px; font: 500 14px var(--font); color: var(--text2); text-decoration: none; white-space: nowrap; box-shadow: inset 0 -2px 0 transparent; transition: color var(--t-fast) var(--ease), box-shadow var(--t-fast) var(--ease); }
+.st-tab i { font-size: 16px; }
+.st-tab:hover { color: var(--text); }
+.st-tab.on { color: var(--text); font-weight: 600; box-shadow: inset 0 -2px 0 var(--text); }
+@media (max-width: 767.98px) {
+  .st-tabs { gap: 0; }
+  .st-tab { flex: 1 1 0; min-width: 0; padding: 0 6px; gap: 6px; font-size: 13.5px; }
+}
+
+/* Two or three choices as equal parts (Open | All, Products | Orders):
+   the selected one is filled (black in light mode, white in dark mode) */
+.st-seg { display: inline-grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 4px; padding: 4px; border: 1px solid var(--border); border-radius: calc(var(--r-ctl) + 2px); background: var(--card2); }
+.st-seg button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 40px; padding: 0 16px; border: 0; border-radius: 8px; background: none; color: var(--text2); font: 500 13.5px var(--font); cursor: pointer; white-space: nowrap; }
+.st-seg button:hover:not(.on) { color: var(--text); }
+.st-seg button.on { background: var(--text); color: var(--bg); font-weight: 600; }
+.st-seg button em { font-style: normal; font-size: 12px; opacity: .7; }
+@media (max-width: 767.98px) { .st-seg { display: grid; width: 100%; } }
+
+/* "⋯" menu on a row */
+.st-menu { position: relative; flex-shrink: 0; }
+.st-menu-btn { color: var(--text2); }
+.st-menu-list { position: absolute; right: 0; top: calc(100% + 6px); z-index: 30; min-width: 220px; padding: 6px; border: 1px solid var(--border); border-radius: var(--r-md); background: var(--card); box-shadow: var(--sh-pop); display: flex; flex-direction: column; }
+.st-menu-item { display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 12px; border: 0; border-radius: var(--r-sm); background: none; color: var(--text); font: 500 14px var(--font); text-align: left; text-decoration: none; cursor: pointer; }
+.st-menu-item i { font-size: 17px; color: var(--text2); }
+.st-menu-item:hover:not(:disabled) { background: var(--card2); }
+.st-menu-item:disabled { opacity: .45; cursor: not-allowed; }
+.st-menu-item.danger { color: var(--red); }
+.st-menu-item.danger i { color: var(--red); }
+.st-menu-item:not(.danger) + .st-menu-item.danger { margin-top: 6px; position: relative; }
+.st-menu-item:not(.danger) + .st-menu-item.danger::before { content: ''; position: absolute; left: 8px; right: 8px; top: -4px; height: 1px; background: var(--border); }
+
+/* Product grid: 2 per row on phone, 3 on tablet and desktop, 4 from 1280px */
+.st-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--sp-4); }
+@media (min-width: 1280px) { .st-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+@media (max-width: 767.98px) { .st-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; } }
+
+/* Compact product card */
+.stc { display: flex; flex-direction: column; min-width: 0; height: 100%; padding: 10px; border: 1px solid var(--border); border-radius: var(--r-card); background: var(--card); color: var(--text); text-decoration: none; box-shadow: var(--sh-1); transition: border-color var(--t) var(--ease), box-shadow var(--t) var(--ease); }
+.stc:hover { border-color: var(--border2); box-shadow: var(--sh-card); }
+.stc-media { position: relative; aspect-ratio: 4 / 3; border-radius: var(--r-md); border: 1px solid var(--border); overflow: hidden; background: var(--card2); }
+.stc-media .o-cover { height: 100%; aspect-ratio: auto; border-radius: 0; }
+.stc-media .o-cover-tile { transform: scale(.85); }
+.stc-badge { position: absolute; top: 8px; left: 8px; padding: 3px 8px; border-radius: var(--r-xs); background: color-mix(in srgb, var(--card) 90%, transparent); border: 1px solid var(--border); color: var(--text); font: 600 12px/1.3 var(--font); backdrop-filter: blur(6px); }
+.stc-badge.off { color: var(--red); }
+.stc-body { display: flex; flex-direction: column; gap: 6px; flex: 1; padding: 12px 4px 4px; min-width: 0; }
+.stc-type { font: 500 var(--fs-label)/1.4 var(--font-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--text2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.stc-title { margin: 0; font-size: 15px; font-weight: 600; line-height: 1.35; letter-spacing: -.01em; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: calc(15px * 1.35 * 2); overflow-wrap: anywhere; }
+.stc-by { display: flex; align-items: center; gap: 6px; min-width: 0; font-size: 12.5px; color: var(--text2); }
+.stc-by b { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; color: var(--text); }
+.stc-rate { display: inline-flex; align-items: center; gap: 3px; flex-shrink: 0; font-weight: 600; color: var(--text); }
+.stc-rate i { font-size: 13px; color: var(--gold); }
+.stc-rate em { font-style: normal; font-weight: 400; color: var(--text2); }
+.stc-new { flex-shrink: 0; }
+.stc-price { margin-top: auto; padding-top: 4px; }
+.stc-price b { font-size: 15px; font-weight: 600; }
+.stc-price .o-money-alt { font-size: 12px; }
+@media (max-width: 767.98px) {
+  .stc { padding: 8px; }
+  .stc-media { aspect-ratio: 1 / 1; border-radius: 12px; }
+  .stc-media .o-cover-tile { transform: scale(.7); }
+  .stc-type { display: none; }
+  .stc-body { padding: 10px 2px 2px; gap: 6px; }
+  .stc-title { font-size: 14px; min-height: calc(14px * 1.35 * 2); }
+  .stc-rate em { display: none; }
+}
