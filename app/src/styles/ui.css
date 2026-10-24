@@ -189,3 +189,74 @@
 /* Sideways chip/tab rows: fade at the right edge so people see there's more */
 .ui-scroll-row { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; -webkit-mask-image: linear-gradient(90deg, #000 85%, transparent); mask-image: linear-gradient(90deg, #000 85%, transparent); }
 .ui-scroll-row::-webkit-scrollbar { display: none; }
+
+/* ─── Shared controls: tabs, segmented control, chips (UI/UX review F60) ──────
+   One selected look everywhere: filled with the text colour (black in light
+   mode, white in dark), or for underline tabs a 2px bar in the text colour.
+   Mark the selected item with .on or the matching aria state (aria-selected,
+   aria-pressed, aria-checked, aria-current="page"); both are styled.
+
+   .ui-tabs   Underline tabs for switching views of one page (Open / Done /
+              All). 44px tall, scrolls sideways when there are many (add
+              .ui-scroll-row for the edge fade); .ui-tabs-even makes 2-3 tabs
+              share the width equally. An <em> inside a tab is a count.
+                <div class="ui-tabs" role="tablist">
+                  <button class="ui-tab on" role="tab" aria-selected="true">Open <em>3</em></button>
+                  <button class="ui-tab" role="tab" aria-selected="false">Done</button>
+                </div>
+   .ui-seg    Segmented control: 2-4 equal parts in a tinted track, for a
+              choice that changes what's shown (Featured / Newest, Naira /
+              USDC / Both). Full width; put it in a narrower box to shrink it.
+                <div class="ui-seg" role="radiogroup">
+                  <button class="on" role="radio" aria-checked="true">Featured</button>
+                  <button role="radio" aria-checked="false">Newest</button>
+                </div>
+   .ui-chip   Filter chip (the rule above; 36px from here on). Rows of chips
+              go in .ui-scroll-row on phones. <em> inside is a count.
+   .ui-switch Toggle switch (above, unchanged). */
+
+/* Tabs */
+.ui-tabs { display: flex; gap: 4px; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; box-shadow: inset 0 -1px 0 var(--border); }
+.ui-tabs::-webkit-scrollbar { display: none; }
+.ui-tab {
+  position: relative; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  min-height: 44px; padding: 0 12px; border: 0; background: none; color: var(--text2);
+  font: 500 14px/1.2 var(--font); white-space: nowrap; text-decoration: none; cursor: pointer;
+  transition: color var(--t-fast) var(--ease);
+}
+.ui-tab::after { content: ''; position: absolute; left: 10px; right: 10px; bottom: 0; height: 2px; border-radius: 2px; background: transparent; transition: background var(--t-fast) var(--ease); }
+.ui-tab:hover { color: var(--text); }
+.ui-tab.on, .ui-tab[aria-selected="true"], .ui-tab[aria-current="page"] { color: var(--text); font-weight: 600; }
+.ui-tab.on::after, .ui-tab[aria-selected="true"]::after, .ui-tab[aria-current="page"]::after { background: var(--text); }
+.ui-tab em { font-style: normal; min-width: 20px; height: 20px; padding: 0 6px; box-sizing: border-box; border-radius: var(--r-pill); background: var(--card2); color: var(--text2); font: 600 12px/20px var(--font); text-align: center; }
+.ui-tab.on em, .ui-tab[aria-selected="true"] em, .ui-tab[aria-current="page"] em { background: var(--text); color: var(--bg); }
+.ui-tab:focus-visible { outline: 2px solid var(--text); outline-offset: -4px; border-radius: var(--r-ctl); }
+.ui-tab:disabled { opacity: .45; cursor: not-allowed; }
+.ui-tabs-even > .ui-tab { flex: 1 1 0; min-width: 0; }
+
+/* Segmented control */
+.ui-seg { display: flex; gap: 4px; padding: 4px; border: 1px solid var(--border); border-radius: calc(var(--r-ctl) + 4px); background: var(--card2); }
+.ui-seg > button, .ui-seg > a {
+  flex: 1 1 0; min-width: 0; min-height: 36px; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 0 12px; border: 0; border-radius: var(--r-ctl); background: transparent; color: var(--text2);
+  font: 500 14px/1.2 var(--font); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-decoration: none; cursor: pointer;
+  transition: background var(--t-fast) var(--ease), color var(--t-fast) var(--ease);
+}
+.ui-seg > :hover { color: var(--text); }
+.ui-seg > .on, .ui-seg > [aria-selected="true"], .ui-seg > [aria-pressed="true"], .ui-seg > [aria-checked="true"], .ui-seg > [aria-current="page"] { background: var(--text); color: var(--bg); font-weight: 600; }
+.ui-seg > :focus-visible { outline: 2px solid var(--text); outline-offset: 1px; }
+.ui-seg > :disabled { opacity: .45; cursor: not-allowed; }
+.ui-seg em { font-style: normal; opacity: .7; }
+
+/* Chips: 36px, and the same filled look for the aria states as for .on */
+.ui-chip { height: 36px; }
+.ui-chip[aria-selected="true"], .ui-chip[aria-pressed="true"], .ui-chip[aria-checked="true"], .ui-chip[aria-current="page"] { background: var(--text); color: var(--bg); border-color: var(--text); }
+.ui-chip:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+.ui-chip:disabled { opacity: .45; cursor: not-allowed; }
+
+@media (prefers-reduced-motion: reduce) { .ui-tab, .ui-tab::after, .ui-seg > * { transition: none; } }
+@media (forced-colors: active) {
+  .ui-tab.on::after, .ui-tab[aria-selected="true"]::after { background: Highlight; }
+  .ui-seg > .on, .ui-seg > [aria-selected="true"], .ui-seg > [aria-pressed="true"], .ui-seg > [aria-checked="true"],
+  .ui-chip.on, .ui-chip[aria-selected="true"], .ui-chip[aria-pressed="true"], .ui-chip[aria-checked="true"] { background: Highlight; color: HighlightText; border-color: Highlight; }
+}

@@ -61,7 +61,9 @@
 /* ─── CSS Variable Tokens (kept for existing component compatibility) ─── */
 :root {
   --bg: #FFFFFF;
-  --bg2: #FFFFFF;
+  /* Inset surfaces (inputs, tracks, placeholders, hover fills): was #FFFFFF,
+     the same as the page and cards, so they vanished. Same as --card2 here. */
+  --bg2: #f6f6f7;
   --card: #ffffff;
   --card2: #f6f6f7;
   --border: #e7e7e9;
@@ -80,6 +82,9 @@
   --green-rgb: 23, 128, 92;
   --red: #dc2626;
   --red-rgb: 220, 38, 38;
+  /* Text on a --green fill, and amber warning text readable in both themes */
+  --on-green: #ffffff;
+  --warn: #b45309;
   --brand-blue: linear-gradient(90deg, #0a0a0a, #3f3f46, #71717a, #0a0a0a);
   --earn-gradient: linear-gradient(90deg, #17805c, #0a0a0a, #17805c);
   --shadow: 0 12px 30px -24px rgba(0, 0, 0, 0.35);
@@ -100,7 +105,10 @@
 
 [data-theme="dark"] {
   --bg: #000000;
-  --bg2: #000000;
+  /* Was #000 (the page colour). Close to dark.css's .ui-input fill, so old
+     inputs match the shared ones; borderless fills inside cards should use
+     --card2 to show (UI/UX review F07). */
+  --bg2: #0e0e10;
   --card: #0f0f11;
   --card2: #18181b;
   --border: rgba(255, 255, 255, 0.1);
@@ -119,6 +127,8 @@
   --green-rgb: 114, 223, 176;
   --red: #ef4444;
   --red-rgb: 239, 68, 68;
+  --on-green: #052e1c;
+  --warn: #fbbf24;
   --shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
   --shadow-soft: 0 2px 8px rgba(0, 0, 0, 0.2);
   --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.3);
