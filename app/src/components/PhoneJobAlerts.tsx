@@ -16,7 +16,6 @@ const STATE_TEXT: Partial<Record<PushState, string>> = {
   'install-first': 'On iPhone, add OgaPay to your Home Screen first (Share, then Add to Home Screen), then open it from there.',
   blocked: 'Notifications are blocked for ogapay.app. Allow them in your browser or phone settings, then come back.',
   unsupported: "This browser can't show phone alerts. Try Chrome, or the OgaPay app from your Home Screen.",
-  unavailable: "Phone alerts aren't available right now.",
 }
 
 export default function PhoneJobAlerts() {
@@ -62,7 +61,8 @@ export default function PhoneJobAlerts() {
     } finally { setBusy(false) }
   }
 
-  if (state === null) return null
+  // Nothing to set up and nothing the person can do about it: don't show a dead-end card
+  if (state === null || state === 'unavailable') return null
   return (
     <div className="jm2-phone" aria-labelledby="jm2-phone-h">
       <div className="jm2-phone-head">

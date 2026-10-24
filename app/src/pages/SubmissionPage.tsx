@@ -11,6 +11,9 @@ import { ordinal } from '../components/ContestPanel'
 import '../styles/submit.css'
 import { uploadProof } from '../lib/upload'
 import { PayoutCheckNote, PayoutCheckStatus } from '../components/PayoutCheck'
+import LoadError from '../components/LoadError'
+import Money from '../components/Money'
+import { formatMoney } from '../lib/money'
 
 // Submit work for a job (/tasks/:id/submit). Takes a slot if you haven't yet,
 // uploads files, then submits: the same steps as the job page's apply dialog.
@@ -39,7 +42,10 @@ type Mine = {
 }
 
 const MAX_FILES = 5
-const money = (n: number, cur = 'NGN') => cur === 'NGN' ? `₦${Math.round(n).toLocaleString('en-US')}` : `$${n.toFixed(2)}`
+// Amounts in sentences ("₦800 went to your wallet"); the summary card uses <Money>
+const money = (n: number, cur = 'NGN') => formatMoney(n, cur === 'USD' ? 'USDC' : cur)
+// A brief longer than this is cut to 3 lines on phones, with "Read the full brief"
+const LONG_BRIEF = 180
 const when = (d?: string | null) => d ? new Date(d).toLocaleString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : ''
 
 // /tasks/:id/submissions: posters review in Manage jobs
@@ -63,6 +69,10 @@ export default function SubmissionPage() {
   const [error, setError] = useState('')
   const [application, setApplication] = useState<Application | null>(null)
   const [pitch, setPitch] = useState('')
+  // The job couldn't be loaded (network or server error), as opposed to not existing
+  const [loadErr, setLoadErr] = useState(false)
+  const [reloadKey, setReloadKey] = useState(0)
+  const [fullBrief, setFullBrief] = useState(false)
 
   // A half-written link and note are kept for this job and person until the
   // work is sent (leaving the page used to lose them). Files can't be kept.
@@ -88,15 +98,42 @@ export default function SubmissionPage() {
   }
   useEffect(() => {
     if (!id) return
-    apiRequest<Task | { task: Task }>('/tasks/' + id).then((d: any) => { setTask(d?.task || d || null); setApplication(d?.userApplication || null) }).catch(() => setTask(null))
+    setLoadErr(false)
+    apiRequest<Task | { task: Task }>('/tasks/' + id).then((d: any) => { setTask(d?.task || d || null); setApplication(d?.userApplication || null) }).catch((e: any) => {
+      // Only the server saying so means the job is gone; anything else is a failed load
+      if (/not found/i.test(String(e?.message || ''))) setTask(null)
+      else setLoadErr(true)
+    })
     loadMine()
-  }, [id])
+  }, [id, reloadKey])
 
+  if (loadErr && !task) {
+    return (
+      <Layout>
+        <div className="ui-page">
+          <Link to={`/tasks/${id}`} className="sb-back"><i className="ti ti-arrow-left" aria-hidden="true" /> Back to the job</Link>
+          <h1 className="ui-title" style={{ marginTop: 0 }}>Send your work</h1>
+          <div style={{ marginTop: 20 }}><LoadError what="this job" onRetry={() => setReloadKey((k) => k + 1)} /></div>
+        </div>
+      </Layout>
+    )
+  }
   if (task === undefined || mine === undefined) {
-    return <Layout><div className="ui-page sb-wrap"><div className="ui-sk" style={{ height: 40, width: 260 }} /><div className="sb-grid"><div className="ui-sk" style={{ height: 380 }} /><div className="ui-sk" style={{ height: 260 }} /></div></div></Layout>
+    return <Layout><div className="ui-page"><div className="ui-sk" style={{ height: 40, width: 260 }} /><div className="sb-grid"><div className="ui-sk" style={{ height: 380 }} /><div className="ui-sk" style={{ height: 260 }} /></div></div></Layout>
   }
   if (!task) {
-    return <Layout><div className="ui-page sb-wrap"><div className="ui-empty"><p>This job doesn't exist or was removed.</p><Link className="ui-btn ui-btn-ghost" to="/tasks">Find other jobs</Link></div></div></Layout>
+    return (
+      <Layout>
+        <div className="ui-page">
+          <div className="ui-empty sb-gone">
+            <i className="ti ti-briefcase" aria-hidden="true" />
+            <h1>This job isn't available</h1>
+            <p>It was removed by the poster, or the link is wrong.</p>
+            <Link className="ui-btn ui-btn-dark" to="/tasks">Browse jobs</Link>
+          </div>
+        </div>
+      </Layout>
+    )
   }
   // Your own job: review it instead
   if (user && task.posterId === user.id) return <Navigate to={`/manage-jobs?job=${task.id}`} replace />
@@ -126,7 +163,7 @@ export default function SubmissionPage() {
     try {
       // 1. Take a slot unless you already hold one
       if (!mine || mine.status !== 'PENDING') {
-        setBusy('Taking a slot…')
+        setBusy('Taking a place…')
         await apiRequest(`/tasks/${task.id}/apply`, { method: 'POST' }).catch((e: any) => {
           // Only "You have already applied" is fine here; other refusals (like a similar job done) must show
           if (!/already applied/i.test(String(e?.message || ''))) throw e
@@ -187,13 +224,13 @@ export default function SubmissionPage() {
   const notSent = entriesClosed && !mine?.submittedAt && mine?.contestResult !== 'WON' && (!status || status === 'PENDING' || status === 'EXPIRED')
   return (
     <Layout>
-      <div className="ui-page sb-wrap">
-        <Link to={`/tasks/${task.id}`} className="sb-back"><i className="ti ti-arrow-left" /> Back to the job</Link>
-        <span className="ui-eyebrow">Submit work</span>
-        <h1 className="ui-title">{task.title}</h1>
+      <div className="ui-page">
+        <Link to={`/tasks/${task.id}`} className="sb-back"><i className="ti ti-arrow-left" aria-hidden="true" /> Back to the job</Link>
+        <span className="ui-eyebrow">Send your work</span>
+        <h1 className="ui-title sb-title">{task.title}</h1>
 
         <div className="sb-grid">
-          <div>
+          <div className="sb-main">
             {notSent ? (
               <section className="ui-card ui-card-pad sb-state">
                 <span className="sb-ic"><i className="ti ti-lock" /></span>
@@ -241,8 +278,8 @@ export default function SubmissionPage() {
             ) : status === 'REJECTED' || status === 'EXPIRED' || status === 'DISPUTED' ? (
               <section className="ui-card ui-card-pad sb-state">
                 <span className="sb-ic bad"><i className={`ti ${status === 'DISPUTED' ? 'ti-scale' : 'ti-x'}`} /></span>
-                <h2>{status === 'REJECTED' ? 'Not approved' : status === 'EXPIRED' ? 'Your slot expired' : 'In dispute'}</h2>
-                <p>{status === 'REJECTED' ? 'The poster didn\'t approve this work.' : status === 'EXPIRED' ? 'No work was sent before the time ran out, so the slot went to someone else.' : 'Our team is looking at this submission.'}</p>
+                <h2>{status === 'REJECTED' ? 'Not approved' : status === 'EXPIRED' ? 'Your place expired' : 'In dispute'}</h2>
+                <p>{status === 'REJECTED' ? 'The poster didn\'t approve this work.' : status === 'EXPIRED' ? 'No work was sent before the time ran out, so the place went to someone else.' : 'Our team is looking at this submission.'}</p>
                 {mine?.posterNotes && <blockquote className="sb-quote">“{mine.posterNotes}”</blockquote>}
                 <div className="ui-actions"><Link className="ui-btn ui-btn-ghost" to="/tasks">Find other jobs</Link></div>
               </section>
@@ -288,7 +325,7 @@ export default function SubmissionPage() {
               </section>
             ) : (
               <section className="ui-card ui-card-pad sb-form">
-                {status === 'PENDING' && <p className="sb-held"><i className="ti ti-circle-check" /> You have a slot on this job. Send your work when it's done.</p>}
+                {status === 'PENDING' && <p className="sb-held"><i className="ti ti-circle-check" aria-hidden="true" /> You have a place on this job. Send your work when it's done.</p>}
                 <PayoutCheckNote info={task.payoutCheck} />
                 <label className="ui-label" htmlFor="sb-link">Link to your work</label>
                 <input id="sb-link" className="ui-input" type="url" inputMode="url" value={link} onChange={(e) => setLink(e.target.value)} placeholder="https://… (post, document, recording)" />
@@ -318,13 +355,29 @@ export default function SubmissionPage() {
             )}
           </div>
 
-          <aside className="ui-card ui-card-pad sb-side">
-            <div className="sb-reward"><b>{money(reward, cur)}</b><span>{task.isContest ? '1st prize' : 'per person'}</span></div>
-            <div className="sb-meta"><span>{categoryLabel(task.category)}</span>{task.poster?.username && <span>by <Link to={`/user/${task.poster.username}`}>@{task.poster.username}</Link></span>}</div>
-            {brief && <><span className="ui-label">What to do</span><div className="sb-brief" dangerouslySetInnerHTML={{ __html: renderJobText(brief) }} /></>}
-            {(needsShot || proofNote) && <><span className="ui-label">Proof</span><p className="sb-proof"><i className="ti ti-photo" /> {needsShot ? 'Attach at least one screenshot of your work.' : proofNote}</p></>}
-            <span className="ui-label">Requirements</span>
-            {reqs.length ? <ul className="sb-reqs">{reqs.map((r) => <li key={r.text}><i className={`ti ti-${r.icon}`} /> {r.text}</li>)}</ul> : <p className="sb-brief">None. Anyone can take part.</p>}
+          {/* The job in short. Tablet and desktop: one card beside the form. Phone:
+              the reward and a 3-line brief above the form, proof and requirements below it. */}
+          <aside className="ui-card ui-card-pad sb-side" aria-label="About this job">
+            <div className="sb-sum">
+              <div className="sb-reward"><Money amount={reward} currency={cur === 'USD' ? 'USDC' : cur} size={26} positive note={task.isContest ? '1st prize' : 'per person'} /></div>
+              <div className="sb-meta"><span>{categoryLabel(task.category)}</span>{task.poster?.username && <span>by <Link to={`/user/${task.poster.username}`}>@{task.poster.username}</Link></span>}</div>
+              {brief && (
+                <>
+                  <span className="ui-label">What to do</span>
+                  <div id="sb-brief" className={`sb-brief${brief.length > LONG_BRIEF && !fullBrief ? ' is-cut' : ''}`} dangerouslySetInnerHTML={{ __html: renderJobText(brief) }} />
+                  {brief.length > LONG_BRIEF && (
+                    <button type="button" className="sb-brief-btn tap" aria-expanded={fullBrief} aria-controls="sb-brief" onClick={() => setFullBrief((v) => !v)}>
+                      {fullBrief ? 'Show less' : 'Read the full brief'}
+                    </button>
+                  )}
+                </>
+              )}
+            </div>
+            <div className="sb-more">
+              {(needsShot || proofNote) && <><span className="ui-label">Proof</span><p className="sb-proof"><i className="ti ti-photo" aria-hidden="true" /> {needsShot ? 'Attach at least one screenshot of your work.' : proofNote}</p></>}
+              <span className="ui-label">Requirements</span>
+              {reqs.length ? <ul className="sb-reqs">{reqs.map((r) => <li key={r.text}><i className={`ti ti-${r.icon}`} aria-hidden="true" /> {r.text}</li>)}</ul> : <p className="sb-brief">None. Anyone can take part.</p>}
+            </div>
           </aside>
         </div>
       </div>

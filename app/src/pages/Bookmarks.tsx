@@ -1,66 +1,120 @@
 import { useEffect, useState } from 'react'
+import { IconBookmarkFilled } from '@tabler/icons-react'
 import { Link } from 'react-router-dom'
 import Layout from '../components/Layout'
+import JobsNav from '../components/JobsNav'
+import LoadError from '../components/LoadError'
+import Money from '../components/Money'
+import { useToast } from '../components/Toast'
 import { listSavedJobs, setSaved, type SavedJob } from '../lib/bookmarks'
-import '../styles/profile-public.css'
+import { categoryLabel } from '../lib/categories'
+import '../styles/job-monitor.css'
 
-const money = (n: number | string, cur = 'NGN') =>
-  cur === 'NGN' ? '₦' + Number(n).toLocaleString('en-US', { maximumFractionDigits: 2 }) : `${Number(n).toLocaleString('en-US', { maximumFractionDigits: 6 })} ${cur}`
+const STATUS: Record<string, string> = { COMPLETED: 'Completed', CANCELLED: 'Cancelled', EXPIRED: 'Closed', DRAFT: 'Paused', DISPUTED: 'In dispute' }
+const isOpen = (b: SavedJob) => ['OPEN', 'COOLING_DOWN'].includes(String(b.task?.status || ''))
 
-// Saved jobs (server-side, the same list the bookmark icons use)
+// Saved jobs (server-side, the same list the bookmark icons use). Same page
+// frame, header and job rows as Jobs and Job monitor; open jobs first.
 export default function Bookmarks() {
+  const { toast } = useToast()
   const [list, setList] = useState<SavedJob[] | null>(null)
   const [error, setError] = useState(false)
+  const [reloadKey, setReloadKey] = useState(0)
+  // Rows taken off this visit: they stay in place with an Undo until you leave
+  const [removed, setRemoved] = useState<Set<string>>(new Set())
 
   useEffect(() => {
-    listSavedJobs().then(setList).catch(() => { setError(true); setList([]) })
-  }, [])
+    let live = true
+    setError(false)
+    listSavedJobs()
+      .then((l) => { if (live) setList(l) })
+      .catch(() => { if (live) { setError(true); setList(null) } })
+    return () => { live = false }
+  }, [reloadKey])
 
   const remove = async (taskId: string) => {
-    const before = list
-    setList((l) => l?.filter((b) => b.taskId !== taskId) || l)
-    try { await setSaved(taskId, false) } catch { setList(before) }
+    setRemoved((r) => new Set(r).add(taskId))
+    try { await setSaved(taskId, false) } catch {
+      setRemoved((r) => { const n = new Set(r); n.delete(taskId); return n })
+      toast("Couldn't remove it from your saved jobs", 'error')
+    }
+  }
+  const undo = async (taskId: string) => {
+    setRemoved((r) => { const n = new Set(r); n.delete(taskId); return n })
+    try { await setSaved(taskId, true) } catch {
+      setRemoved((r) => new Set(r).add(taskId))
+      toast("Couldn't save it again", 'error')
+    }
+  }
+
+  const openJobs = (list || []).filter(isOpen)
+  const closedJobs = (list || []).filter((b) => !isOpen(b))
+
+  const row = (b: SavedJob) => {
+    const t = b.task
+    const title = t?.title || 'Job no longer available'
+    if (removed.has(b.taskId)) {
+      return (
+        <li key={b.id} className="jm2-removed">
+          <span>Removed from your saved jobs.</span>
+          <button type="button" className="ui-btn ui-btn-text ui-btn-sm" onClick={() => undo(b.taskId)}>Undo</button>
+        </li>
+      )
+    }
+    const open = isOpen(b)
+    return (
+      <li key={b.id} className={open ? undefined : 'is-closed'}>
+        <div className="jm2-t">
+          {t ? <Link to={`/tasks/${b.taskId}`}>{title}</Link> : <a aria-disabled="true">{title}</a>}
+          <span>{t ? <>{categoryLabel(t.category)} · {open ? 'Open' : STATUS[String(t.status)] || String(t.status).replace(/_/g, ' ').toLowerCase()}</> : 'Removed by the poster'}</span>
+        </div>
+        {t && <b className="jm2-pay"><Money amount={Number(t.reward || 0)} currency={t.currency || 'NGN'} size={15} positive={open} /></b>}
+        <div className="jm2-acts">
+          <button type="button" className="ui-btn ui-btn-ghost ui-btn-icon" aria-label={`Remove ${title} from saved jobs`} onClick={() => remove(b.taskId)}>
+            <IconBookmarkFilled size={16} aria-hidden="true" />
+          </button>
+          {t && <Link className="ui-btn ui-btn-ghost" to={`/tasks/${b.taskId}`}>{open ? 'Open' : 'View'}</Link>}
+        </div>
+      </li>
+    )
   }
 
   return (
     <Layout>
-      <div className="up-wrap" style={{ maxWidth: 860 }}>
-        <div className="up-sec-h" style={{ marginBottom: 18 }}>
-          <h1 style={{ fontSize: 24 }}>Saved jobs</h1>
-          <p>Jobs you bookmarked. Tap the bookmark on any job to add it here.</p>
+      <div className="ui-page">
+        <div className="ui-head">
+          <div>
+            <h1 className="ui-title" style={{ marginTop: 0 }}>Saved jobs</h1>
+            <p className="ui-sub">Tap the bookmark on any job to keep it here.</p>
+          </div>
         </div>
+        <JobsNav />
 
-        {list === null ? (
-          <div className="up-skel" style={{ height: 120 }} />
-        ) : error ? (
-          <div className="up-empty"><i className="ti ti-cloud-off" />Couldn't load your saved jobs. Refresh to try again.</div>
-        ) : list.length === 0 ? (
-          <div className="up-empty">
-            <i className="ti ti-bookmark" />
-            No saved jobs yet.
-            <div style={{ marginTop: 14 }}><Link className="up-btn" to="/tasks">Browse jobs</Link></div>
-          </div>
-        ) : (
-          <div className="up-list">
-            {list.map((b) => {
-              const t = b.task
-              const open = ['OPEN', 'COOLING_DOWN'].includes(String(t?.status || ''))
-              return (
-                <div className="up-card up-row" key={b.id}>
-                  <Link to={`/tasks/${b.taskId}`} style={{ flex: 1, minWidth: 0, textDecoration: 'none', color: 'inherit' }}>
-                    <b style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t?.title || 'Job no longer available'}</b>
-                    <small>
-                      {t ? <>{money(t.reward, t.currency)} · {String(t.category).replace(/_/g, ' ').toLowerCase()} · {open ? 'Open' : String(t.status).replace(/_/g, ' ').toLowerCase()}</> : 'Removed by the creator'}
-                    </small>
-                  </Link>
-                  <button className="up-btn" style={{ height: 34, padding: '0 12px' }} onClick={() => remove(b.taskId)} aria-label={`Remove ${t?.title || 'job'} from saved`}>
-                    <i className="ti ti-bookmark-off" /> Remove
-                  </button>
-                </div>
-              )
-            })}
-          </div>
-        )}
+        <div style={{ marginTop: 20 }}>
+          {error ? (
+            <LoadError what="your saved jobs" onRetry={() => setReloadKey((k) => k + 1)} />
+          ) : list === null ? (
+            <div className="ui-sk" style={{ height: 160 }} />
+          ) : list.length === 0 ? (
+            <div className="ui-empty">
+              <i className="ti ti-bookmark" aria-hidden="true" style={{ fontSize: 28, display: 'block', marginBottom: 10, color: 'var(--text3)' }} />
+              <strong>No saved jobs yet</strong>
+              Tap the bookmark on a job to keep it here for later.
+              <div style={{ marginTop: 16 }}><Link className="ui-btn ui-btn-dark" to="/tasks">Browse jobs</Link></div>
+            </div>
+          ) : (
+            <>
+              {openJobs.length > 0 ? <ul className="ui-card jm2-list">{openJobs.map(row)}</ul>
+                : <div className="ui-empty" style={{ padding: '32px 24px' }}>None of your saved jobs are open any more. <Link to="/tasks" style={{ color: 'var(--text)', fontWeight: 600 }}>Browse open jobs</Link></div>}
+              {closedJobs.length > 0 && (
+                <>
+                  <h2 className="jm2-group-h">No longer open</h2>
+                  <ul className="ui-card jm2-list">{closedJobs.map(row)}</ul>
+                </>
+              )}
+            </>
+          )}
+        </div>
       </div>
     </Layout>
   )
