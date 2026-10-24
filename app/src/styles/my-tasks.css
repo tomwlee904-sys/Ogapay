@@ -1,47 +1,119 @@
-/* My tasks (/my-tasks) */
+/* Your work pages: My tasks (/my-tasks), Hired & orders (/my-work),
+   My reviews (/my-reviews) and Reviews to write (/reviews-to-write).
+   All use .ui-page + .ui-head, then the shared sub-navigation (WorkNav). */
 
-.mt2-page { max-width: 1000px; }
-.mt2-sum { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-top: 24px; }
-.mt2-sum div, .mt2-sum-btn { padding: 14px 16px; border: 1px solid var(--border); border-radius: 16px; background: var(--card); }
-.mt2-sum { grid-template-columns: repeat(5, minmax(0, 1fr)); }
-.mt2-sum-btn { text-align: left; cursor: pointer; font: inherit; color: inherit; min-height: 44px; }
-.mt2-sum-btn.on { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
-.mt2-sum-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.mt2-sum b { display: block; font-size: 22px; font-weight: 600; letter-spacing: -.03em; color: var(--text); font-variant-numeric: tabular-nums; }
-.mt2-sum span { font-size: 12px; color: var(--text2); }
-/* Earned in a second currency (USDC): its own smaller line, never added to naira */
-.mt2-sum b + b { font-size: 15px; margin-top: 2px; color: var(--text2); }
-.mt2-tabs { display: flex; gap: 6px; margin: 20px 0 12px; overflow-x: auto; scrollbar-width: none; }
-.mt2-tabs::-webkit-scrollbar { display: none; }
+/* ── Sub-navigation under the title: Taken | Hired & orders | Reviews | To rate ── */
+.wn-nav { display: flex; gap: 4px; margin-top: var(--sp-5); border-bottom: 1px solid var(--border); overflow-x: auto; scrollbar-width: none; }
+.wn-nav::-webkit-scrollbar { display: none; }
+.wn-link { position: relative; flex-shrink: 0; display: inline-flex; align-items: center; height: 44px; padding: 0 12px; font: 500 14px var(--font); color: var(--text2); text-decoration: none; white-space: nowrap; transition: color var(--t-fast) var(--ease); }
+.wn-link:first-child { padding-left: 0; }
+.wn-link:hover { color: var(--text); }
+.wn-link.on { color: var(--text); font-weight: 600; }
+.wn-link.on::after { content: ''; position: absolute; left: 12px; right: 12px; bottom: 0; height: 2px; border-radius: 2px; background: var(--text); }
+.wn-link.on:first-child::after { left: 0; }
+@media (max-width: 767.98px) {
+  /* Runs to the screen edges so a cut-off last item shows there is more */
+  .wn-nav { margin: var(--sp-4) calc(-1 * var(--gutter)) 0; padding: 0 var(--gutter); scroll-padding-inline: var(--gutter); }
+}
 
+.mt2-body { margin-top: 20px; }
+@media (min-width: 1024px) { .mt2-desk { align-self: flex-end; } }
+@media (max-width: 1023.98px) { .mt2-desk { display: none; } }
+
+/* ── Side panel (first on phone and tablet): held places, then the totals ── */
+.mt2-side { display: grid; gap: 12px; min-width: 0; }
+.mt2-main { min-width: 0; }
+@media (min-width: 1024px) {
+  .mt2-side .ui-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+.mt2-more { display: block; margin-top: 2px; font-size: 13px; font-weight: 600; color: var(--text2); font-variant-numeric: tabular-nums; }
+
+/* A place you hold: the countdown and Send proof, in amber */
+.mt2-held { display: grid; gap: 8px; padding: var(--sp-4); border-radius: var(--r-card); border: 1px solid color-mix(in srgb, #d97706 50%, var(--border)); background: color-mix(in srgb, #f59e0b 8%, var(--card)); }
+.mt2-held-top { display: flex; align-items: center; gap: 12px; }
+.mt2-held-ic { width: 36px; height: 36px; flex-shrink: 0; border-radius: var(--r-ctl); display: grid; place-items: center; font-size: 18px; background: color-mix(in srgb, #f59e0b 18%, transparent); color: #b45309; }
+.mt2-held-k { display: block; font-size: 12.5px; color: var(--text2); }
+.mt2-held-time { display: block; font-size: 24px; font-weight: 650; letter-spacing: -0.02em; line-height: 1.15; color: #b45309; font-variant-numeric: tabular-nums; }
+[data-theme="dark"] .mt2-held-ic, [data-theme="dark"] .mt2-held-time { color: #fbbf24; }
+.mt2-held-title { font-size: 14px; font-weight: 600; line-height: 1.4; color: var(--text); }
+.mt2-held-sub { font-size: 12.5px; line-height: 1.45; color: var(--text2); }
+.mt2-held-go { width: 100%; margin-top: 4px; }
+
+/* ── Filter chips: one sideways row on phone, wrapping from tablet ── */
+.mt2-tabs { margin: 0 0 12px; padding-block: 2px; }
+.mt2-tabs .ui-chip { height: 36px; }
+@media (max-width: 767.98px) {
+  .mt2-tabs { margin-inline: calc(-1 * var(--gutter)); padding-inline: var(--gutter); scroll-padding-inline: var(--gutter); }
+  .mt2-tabs .ui-chip { height: 40px; }
+}
+@media (min-width: 768px) {
+  .mt2-tabs { flex-wrap: wrap; overflow: visible; -webkit-mask-image: none; mask-image: none; }
+}
+
+/* ── Rows: title, meta and detail on the left; amount and status on the right.
+   Phone: amount and status move to their own line under the title. ── */
 .mt2-list { list-style: none; margin: 0; padding: 4px 18px; }
 .mt2-list li + li { border-top: 1px solid var(--border); }
 .mt2-list a { display: flex; align-items: center; gap: 16px; padding: 14px 0; text-decoration: none; }
 .mt2-t { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
-.mt2-t strong { font-size: 14px; font-weight: 600; color: var(--text); }
-.mt2-meta { font-size: 12px; color: var(--text3); }
-.mt2-detail { font-size: 12px; color: var(--text2); }
-.mt2-note { margin-top: 4px; font-size: 12px; color: var(--text); padding: 6px 10px; border-left: 2px solid var(--border2); background: var(--card2); border-radius: 0 8px 8px 0; }
-.mt2-r { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; }
-.mt2-r b { font-size: 14px; font-weight: 600; color: var(--text); font-variant-numeric: tabular-nums; }
+.mt2-t strong { font-size: 14px; font-weight: 600; line-height: 1.4; color: var(--text); overflow-wrap: anywhere; }
+.mt2-meta { font-size: 12.5px; color: var(--text3); }
+.mt2-detail { font-size: 12.5px; line-height: 1.45; color: var(--text2); }
+.mt2-note { margin-top: 4px; font-size: 12.5px; color: var(--text); padding: 6px 10px; border-left: 2px solid var(--border2); background: var(--card2); border-radius: 0 8px 8px 0; }
+.mt2-r { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; max-width: 40%; }
+.mt2-r b { font-size: 14px; font-weight: 600; color: var(--text); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .mt2-r b.paid { color: var(--green); }
-.mt2-r em { font: normal 500 10px var(--font-mono); letter-spacing: .06em; text-transform: uppercase; padding: 4px 8px; border-radius: 999px; background: var(--card2); color: var(--text2); }
+/* Status pills: sentence case, 12px */
+.mt2-r em { display: inline-flex; align-items: center; gap: 4px; font: normal 600 12px/1.25 var(--font); padding: 4px 9px; border-radius: var(--r-pill); background: var(--card2); color: var(--text2); text-align: right; }
+.mt2-r em i { font-size: 13px; }
 .mt2-r em.todo { color: var(--text); }
 .mt2-r em.wait { background: color-mix(in srgb, #f59e0b 16%, transparent); color: #b45309; }
-.mt2-r em.ok { background: color-mix(in srgb, var(--green) 14%, transparent); color: var(--green); }
-.mt2-r em.bad { background: color-mix(in srgb, #ef4444 12%, transparent); color: #dc2626; }
-.mt2-r em.won { display: inline-flex; align-items: center; gap: 4px; background: var(--green); color: #fff; }
-.mt2-r em.won i { font-size: 12px; }
+.mt2-r em.ok, .mt2-r em.won { background: color-mix(in srgb, var(--green) 16%, transparent); color: var(--green); }
+.mt2-r em.bad { background: color-mix(in srgb, var(--red) 14%, transparent); color: var(--red); }
 [data-theme="dark"] .mt2-r em.wait { color: #fbbf24; }
-[data-theme="dark"] .mt2-r em.won { color: #052e16; }
-
-@media (min-width: 768px) and (max-width: 1023px) {
-  .mt2-sum { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-  .mt2-sum > :last-child { grid-column: 1 / -1; }
-}
-@media (max-width: 767px) {
-  .mt2-sum { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .mt2-sum > :last-child { grid-column: 1 / -1; }
+@media (max-width: 767.98px) {
   .mt2-list { padding: 4px 14px; }
-  .mt2-list a { align-items: flex-start; }
+  .mt2-list a { flex-wrap: wrap; row-gap: 8px; }
+  .mt2-t { flex-basis: 100%; }
+  .mt2-r { max-width: none; width: 100%; flex-direction: row-reverse; justify-content: space-between; align-items: center; }
 }
+
+/* ── Empty state: what happens, in three steps, and one button ── */
+.mt2-empty { padding: 40px var(--sp-5); }
+.mt2-steps { list-style: none; counter-reset: mt2; display: grid; gap: 12px; max-width: 420px; margin: 20px auto 22px; padding: 0; text-align: left; }
+.mt2-steps li { counter-increment: mt2; display: grid; grid-template-columns: 28px minmax(0, 1fr); column-gap: 12px; font-size: 13px; line-height: 1.45; color: var(--text2); }
+.mt2-steps li::before { content: counter(mt2); grid-row: span 2; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: var(--card2); color: var(--text); font: 600 13px var(--font); }
+.mt2-steps b { color: var(--text); font-size: 14px; font-weight: 600; }
+@media (max-width: 767.98px) { .mt2-empty { padding: 32px 20px; } }
+
+/* ── My reviews: the rating card (side panel on desktop) and the list ── */
+.mr-hero { display: grid; gap: 14px; padding: 20px; }
+.mr-avg { display: flex; align-items: center; gap: 14px; }
+.mr-avg-num { font-size: 44px; font-weight: 650; letter-spacing: -0.04em; line-height: 1; color: var(--text); font-variant-numeric: tabular-nums; }
+.mr-avg small { display: block; margin-top: 4px; font-size: 13px; color: var(--text2); }
+.mr-dist { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.mr-dist li { display: grid; grid-template-columns: 30px minmax(0, 1fr) 30px; align-items: center; gap: 8px; font-size: 12.5px; color: var(--text2); font-variant-numeric: tabular-nums; }
+.mr-dist li > :last-child { text-align: right; }
+.mr-bar { height: 8px; border-radius: var(--r-pill); background: var(--card2); overflow: hidden; }
+.mr-bar i { display: block; height: 100%; border-radius: inherit; background: var(--gold); }
+.mr-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; padding-top: 14px; border-top: 1px solid var(--border); }
+.mr-facts span { display: block; font-size: 12px; color: var(--text2); }
+.mr-facts b { display: block; margin-top: 2px; font-size: 16px; font-weight: 600; color: var(--text); font-variant-numeric: tabular-nums; }
+.mr-note { margin: 0; font-size: 12.5px; line-height: 1.5; color: var(--text2); }
+.mr-list { list-style: none; margin: 0; padding: 4px 18px; }
+.mr-list li { padding: 14px 0; border-bottom: 1px solid var(--border); }
+.mr-list li:last-child { border-bottom: 0; }
+.mr-top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.mr-top a, .mr-top > b { font-size: 14px; font-weight: 600; color: var(--text); }
+.mr-top small { margin-left: auto; color: var(--text3); font-size: 12.5px; }
+.mr-subj { font-size: 13px; color: var(--text2); margin-top: 4px; overflow-wrap: anywhere; }
+.mr-subj a { color: var(--text); }
+.mr-list p { margin: 6px 0 0; font-size: 14px; line-height: 1.55; overflow-wrap: anywhere; }
+.mr-pages { display: flex; align-items: center; justify-content: center; gap: 12px; margin: 18px 0; font-size: 13px; color: var(--text2); }
+/* Tablet: the rating card is one row (average | bars | facts) */
+@media (min-width: 768px) and (max-width: 1023.98px) {
+  .mr-hero { grid-template-columns: auto minmax(0, 1fr) minmax(0, 1fr); align-items: center; column-gap: 28px; }
+  .mr-facts { border-top: 0; padding-top: 0; border-left: 1px solid var(--border); padding-left: 24px; }
+  .mr-hero .mr-note { grid-column: 1 / -1; }
+}
+@media (max-width: 767.98px) { .mr-list { padding: 4px 14px; } }

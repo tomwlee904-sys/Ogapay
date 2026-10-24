@@ -1,135 +1,148 @@
-/* Dashboard (/dashboard) */
-.db-alert { display: flex; align-items: center; gap: 12px; margin-top: 22px; padding: 14px 16px; border-radius: 16px; border: 1px solid #d97706; background: color-mix(in srgb, #f59e0b 8%, var(--card)); color: var(--text2); font-size: 13px; line-height: 1.5; text-decoration: none; }
-.db-alert b { color: var(--text); font-weight: 600; }
-.db-alert > span:nth-child(2) { flex: 1; }
-.db-alert > i { font-size: 17px; color: var(--text); }
-.db-alert-ic { width: 34px; height: 34px; flex-shrink: 0; border-radius: 10px; display: grid; place-items: center; font-size: 17px; background: color-mix(in srgb, #f59e0b 18%, transparent); color: #b45309; }
-[data-theme="dark"] .db-alert-ic { color: #fbbf24; }
+/* Dashboard (/dashboard)
+   Phone: money card, what needs you, next setup step, real jobs.
+   Tablet: one column; money card as one row; hiring | earning side by side.
+   Desktop: main column + the money card in the sticky side panel (.ui-split). */
 
-.db-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-top: 22px; }
-.db-stat { display: flex; flex-direction: column; gap: 2px; padding: 16px; border: 1px solid var(--border); border-radius: 16px; background: var(--card); text-decoration: none; transition: border-color .15s; min-width: 0; }
-.db-stat:hover { border-color: var(--text3); }
-.db-stat span { font: 400 11px var(--font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--text2); }
-.db-stat b { margin-top: 6px; font-size: 24px; font-weight: 600; letter-spacing: -.03em; color: var(--text); font-variant-numeric: tabular-nums; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.db-stat small { font-size: 12px; color: var(--text2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.db-page { --db-amber: #b45309; --db-amber-line: #d97706; }
+[data-theme="dark"] .db-page { --db-amber: #fbbf24; --db-amber-line: #f59e0b; }
 
-.db-grid { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 16px; margin-top: 16px; align-items: start; }
-.db-main, .db-side { display: grid; gap: 16px; }
+/* Header: the greeting alone; Find work / Post a job only on desktop (the
+   bottom bar has Jobs and Create on phone and tablet) */
+.db-head .ui-title { margin: 0; }
+.db-head { align-items: center; }
+@media (max-width: 1023.98px) { .db-desk { display: none; } }
+
+.db-split { margin-top: var(--sp-5); }
+.db-main, .db-side { display: grid; gap: var(--sp-4); min-width: 0; }
+.db-main > * { min-width: 0; }
+
+/* ── Money card: balance with Add money / Wallet, then level and OgaScore 2 across ── */
+.db-money { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); overflow: hidden; }
+.db-bal { grid-column: 1 / -1; display: flex; flex-direction: column; gap: 4px; padding: var(--sp-4); border-bottom: 1px solid var(--border); }
+.db-k { font-size: 12px; color: var(--text2); }
+.db-amt { font-size: 30px; font-weight: 650; letter-spacing: -0.03em; line-height: 1.15; color: var(--text); font-variant-numeric: tabular-nums; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.db-sk-amt { display: block; width: 160px; height: 34px; border-radius: var(--r-sm); }
+.db-sk-num { display: inline-block; width: 44px; height: 20px; border-radius: var(--r-xs); vertical-align: middle; }
+.db-bal-err { font-size: 13px; line-height: 1.5; color: var(--text2); padding: 6px 0; }
+.db-bal-btns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-2); margin-top: var(--sp-3); }
+.db-bal-btns .ui-btn { min-width: 0; }
+.db-cell { display: flex; flex-direction: column; gap: 2px; min-width: 0; min-height: 44px; padding: var(--sp-3) var(--sp-4); text-decoration: none; transition: background var(--t-fast) var(--ease); }
+.db-cell + .db-cell { border-left: 1px solid var(--border); }
+.db-cell:hover { background: var(--card2); }
+.db-cell b { margin-top: 2px; font-size: 17px; font-weight: 600; letter-spacing: -0.01em; color: var(--text); font-variant-numeric: tabular-nums; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.db-cell small { font-size: 12px; line-height: 1.4; color: var(--text2); }
+/* Tablet: one row (balance | level | score) across the full width */
+@media (min-width: 768px) and (max-width: 1023.98px) {
+  .db-money { grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr) minmax(0, 1fr); }
+  .db-bal { grid-column: auto; border-bottom: 0; padding: 20px; }
+  .db-bal-btns { max-width: 300px; }
+  .db-cell { padding: 20px; border-left: 1px solid var(--border); justify-content: center; }
+}
+
+/* ── Section heads and lists ── */
 .db-sec-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
-.db-sec-head h2 { margin: 0; font-size: 16px; font-weight: 600; letter-spacing: -.02em; color: var(--text); }
-.db-sec-head a { font-size: 12px; color: var(--text2); text-decoration: none; }
+.db-sec-head h2 { margin: 0; font-size: var(--fs-card); font-weight: 600; letter-spacing: -.02em; color: var(--text); }
+.db-sec-head a { font-size: 13px; color: var(--text2); text-decoration: none; white-space: nowrap; }
 .db-sec-head a:hover { color: var(--text); }
-.db-count { font: 400 11px var(--font-mono); color: var(--text2); }
-.db-empty { padding: 18px; border: 1px dashed var(--border); border-radius: 14px; font-size: 13px; color: var(--text2); text-align: center; }
+.db-count { font-size: 12px; color: var(--text2); white-space: nowrap; }
+.db-empty { padding: 18px; border: 1px dashed var(--border2); border-radius: var(--r-md); font-size: 13px; line-height: 1.5; color: var(--text2); text-align: center; }
 .db-empty a { color: var(--text); font-weight: 600; }
+.db-textbtn { border: 0; background: none; padding: 0; font: 600 13px var(--font); color: var(--text); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
 
 .db-list { list-style: none; margin: 0; padding: 0; }
 .db-list li + li { border-top: 1px solid var(--border); }
-.db-list a { display: flex; align-items: center; gap: 12px; padding: 12px 2px; text-decoration: none; }
+.db-list a { display: flex; align-items: center; gap: 12px; padding: 12px 2px; min-height: 44px; text-decoration: none; }
 .db-list a > div { flex: 1; min-width: 0; }
 .db-list strong { display: block; font-size: 14px; font-weight: 600; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.db-list a > div span { display: block; margin-top: 2px; font-size: 12px; color: var(--text2); }
-.db-list em { font: normal 500 10px var(--font-mono); letter-spacing: .06em; text-transform: uppercase; padding: 4px 8px; border-radius: 999px; flex-shrink: 0; }
+.db-list a > div span { display: block; margin-top: 2px; font-size: 12.5px; color: var(--text2); }
+/* Status pills: sentence case, 12px */
+.db-list em { font: normal 600 12px/1.2 var(--font); padding: 4px 9px; border-radius: var(--r-pill); flex-shrink: 0; white-space: nowrap; }
 .db-list em.todo { background: var(--card2); color: var(--text); }
-.db-list em.wait { background: color-mix(in srgb, #f59e0b 16%, transparent); color: #b45309; }
-[data-theme="dark"] .db-list em.wait { color: #fbbf24; }
+.db-list em.wait { background: color-mix(in srgb, var(--db-amber-line) 16%, transparent); color: var(--db-amber); }
 .db-list em.later { background: transparent; color: var(--text2); border: 1px solid var(--border); }
-.db-starter .db-sec-head h2 { display: flex; align-items: center; gap: 4px; }
-/* Phones: price beside the title (the line under it already says what's needed) */
-@media (max-width: 767px) {
-  .db-starter .db-list a { flex-wrap: nowrap; align-items: flex-start; }
-  .db-starter .db-list a > div { flex-basis: auto; }
-  .db-starter .db-list strong { white-space: normal; line-height: 1.35; }
-  .db-starter .db-list em { display: none; }
-}
 .db-list b { font-size: 14px; font-weight: 600; color: var(--green); flex-shrink: 0; font-variant-numeric: tabular-nums; }
+/* Jobs: title up to two lines, pay on the right */
+.db-jobs a { align-items: flex-start; }
+.db-jobs strong { white-space: normal; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.db-jobs b { padding-top: 1px; }
 
-.db-jobs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-.db-job { display: flex; flex-direction: column; gap: 6px; padding: 14px; border: 1px solid var(--border); border-radius: 14px; text-decoration: none; transition: border-color .15s; }
-.db-job:hover { border-color: var(--text3); }
-.db-job-cat { font: 400 11px var(--font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--text2); }
-.db-job strong { font-size: 14px; font-weight: 600; line-height: 1.35; color: var(--text); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.db-job b { margin-top: auto; font-size: 15px; font-weight: 600; color: var(--green); }
+.db-starter .db-sec-head { margin-bottom: 0; align-items: center; }
+.db-starter .db-sec-head h2 { display: flex; align-items: center; gap: 4px; }
+.db-starter .db-list { margin-top: 12px; }
+/* Starter jobs fold away: the count is the button that opens them */
+.db-fold { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 4px 0 10px; border: 0; background: none; color: var(--text2); font: 500 13px var(--font); cursor: pointer; white-space: nowrap; }
+.db-fold:hover { color: var(--text); }
+.db-fold i { font-size: 16px; }
 
-.db-bar { height: 6px; border-radius: 999px; background: var(--card2); overflow: hidden; margin-bottom: 8px; }
+/* ── Setup: progress, the next step (or all four) ── */
+.db-bar { height: 6px; border-radius: var(--r-pill); background: var(--card2); overflow: hidden; margin-bottom: 4px; }
 .db-bar i { display: block; height: 100%; background: var(--green); border-radius: inherit; }
 .db-steps { list-style: none; margin: 0; padding: 0; }
-.db-steps li { display: flex; gap: 12px; padding: 12px 0; }
+.db-steps li { display: grid; grid-template-columns: 20px minmax(0, 1fr); column-gap: 12px; padding: 12px 0; }
 .db-steps li + li { border-top: 1px solid var(--border); }
-.db-steps strong { display: block; font-size: 13px; font-weight: 600; color: var(--text); }
+.db-steps li > :nth-child(3) { grid-column: 2; justify-self: start; }
+.db-step-text strong { display: block; font-size: 14px; font-weight: 600; color: var(--text); }
 .db-steps li.done strong { color: var(--text2); font-weight: 500; text-decoration: line-through; text-decoration-color: var(--text3); }
-.db-steps span { display: block; margin-top: 2px; font-size: 12px; line-height: 1.5; color: var(--text2); }
-.db-check { width: 20px; height: 20px; flex-shrink: 0; border-radius: 50%; border: 1.5px solid var(--border2); display: grid; place-items: center; font-size: 12px; margin-top: 1px; }
-.db-steps li.done .db-check { border-color: var(--green); background: var(--green); color: #fff; }
-.db-step-btn { display: inline-flex; align-items: center; margin-top: 8px; height: var(--ctl-h-sm); padding: 0 12px; border-radius: var(--r-ctl); border: 1px solid var(--border); background: var(--card); color: var(--text); font: 600 12px 'Inter', system-ui, sans-serif; text-decoration: none; cursor: pointer; }
+.db-step-text span { display: block; margin-top: 2px; font-size: 13px; line-height: 1.5; color: var(--text2); max-width: 68ch; }
+.db-check { width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid var(--border2); display: grid; place-items: center; font-size: 12px; margin-top: 1px; }
+.db-steps li.done .db-check { border-color: var(--green); background: var(--green); color: var(--bg); }
+.db-step-btn { display: inline-flex; align-items: center; justify-content: center; margin-top: 8px; height: var(--ctl-h-sm); padding: 0 12px; border-radius: var(--r-ctl); border: 1px solid var(--border); background: var(--card); color: var(--text); font: 600 13px var(--font); text-decoration: none; cursor: pointer; white-space: nowrap; }
 .db-step-btn:hover:not(:disabled) { border-color: var(--text3); }
 .db-step-btn:disabled { opacity: .6; cursor: default; }
+.db-step-go { margin-top: 10px; }
+.db-more { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; margin: 4px 0 -10px; padding: 0; border: 0; background: none; color: var(--text2); font: 500 13px var(--font); cursor: pointer; }
+.db-more:hover { color: var(--text); }
+.db-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+/* Tablet and desktop: text on the left, the button on the right */
+@media (min-width: 768px) {
+  .db-steps li { grid-template-columns: 20px minmax(0, 1fr) auto; align-items: center; }
+  .db-steps li > :nth-child(3) { grid-column: 3; margin-top: 0; }
+  .db-check { align-self: start; margin-top: 2px; }
+}
+@media (max-width: 767.98px) {
+  .db-steps.one .db-step-go { width: 100%; }
+  .db-steps.one li > :nth-child(3) { justify-self: stretch; }
+}
 
-.db-help { display: grid; }
-.db-help a { display: flex; align-items: center; gap: 10px; padding: 10px 0; font-size: 13px; color: var(--text); text-decoration: none; }
-.db-help a + a { border-top: 1px solid var(--border); }
-.db-help i { font-size: 17px; color: var(--text2); }
-/* One column: needs your attention, three numbers, hiring | earning, setup */
-.db-stack { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; margin-top: 22px; }
-.db-stack > * { min-width: 0; }
-
-.db-attn { border-color: color-mix(in srgb, #d97706 45%, var(--border)); }
+/* ── Needs your attention ── */
+.db-attn { border-color: color-mix(in srgb, var(--db-amber-line) 45%, var(--border)); }
 .db-attn ul { list-style: none; margin: 0; padding: 0; }
 .db-attn li { display: flex; align-items: center; gap: 12px; padding: 10px 0; }
 .db-attn li + li { border-top: 1px solid var(--border); }
-.db-attn .db-step-btn { margin-top: 0; flex-shrink: 0; text-decoration: none; }
-.db-attn-ic { width: 32px; height: 32px; flex-shrink: 0; border-radius: 10px; display: grid; place-items: center; font-size: 16px; background: color-mix(in srgb, #f59e0b 16%, transparent); color: #b45309; }
-[data-theme="dark"] .db-attn-ic { color: #fbbf24; }
+.db-attn .db-step-btn { margin-top: 0; flex-shrink: 0; }
+.db-attn-ic { width: 32px; height: 32px; flex-shrink: 0; border-radius: var(--r-ctl); display: grid; place-items: center; font-size: 16px; background: color-mix(in srgb, var(--db-amber-line) 16%, transparent); color: var(--db-amber); }
 .db-attn-text { flex: 1; min-width: 0; font-size: 14px; color: var(--text); line-height: 1.45; }
-.db-attn-note { margin: 8px 0 0; font-size: 12px; color: var(--text2); }
+.db-attn-note { margin: 8px 0 0; font-size: 12.5px; color: var(--text2); }
 
-.db-snap { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
-
-.db-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: start; }
+/* ── Hiring | earning ── */
+.db-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-4); align-items: start; }
 .db-pair.single { grid-template-columns: minmax(0, 1fr); }
 .db-pair > * { min-width: 0; }
-.db-role-label { font: 500 11px var(--font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--text2); margin-bottom: 4px; }
-.db-sub-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: 18px 0 10px; padding-top: 14px; border-top: 1px solid var(--border); }
-.db-sub-head span { font-size: 14px; font-weight: 600; color: var(--text); }
-.db-sub-head a { font-size: 12px; color: var(--text2); text-decoration: none; }
+.db-role-label { font: 500 var(--fs-label) var(--font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--text2); margin-bottom: 4px; }
+.db-sub-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: 18px 0 6px; padding-top: 14px; border-top: 1px solid var(--border); }
+.db-sub-head h3 { margin: 0; font-size: 14px; font-weight: 600; color: var(--text); }
+.db-sub-head a { font-size: 13px; color: var(--text2); text-decoration: none; }
 .db-sub-head a:hover { color: var(--text); }
-.db-aside-link { margin: 0; font-size: 13px; color: var(--text2); }
+.db-aside-link { margin: 0; font-size: 13px; line-height: 1.5; color: var(--text2); }
 .db-aside-link a { color: var(--text); font-weight: 600; }
 
-.db-start { display: flex; flex-direction: column; gap: 8px; text-decoration: none; color: var(--text2); font-size: 13.5px; line-height: 1.55; transition: border-color var(--t-fast) var(--ease); }
-.db-start:hover { border-color: var(--text3); }
-.db-start strong { font-size: 16px; font-weight: 600; color: var(--text); letter-spacing: -.02em; }
-.db-start em { margin-top: auto; padding-top: 6px; font-style: normal; font-size: 13px; font-weight: 600; color: var(--text); display: inline-flex; align-items: center; gap: 6px; }
-.db-start-ic { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; font-size: 19px; background: var(--card2); color: var(--text); }
-
-
-@media (max-width: 960px) {
-  .db-grid { grid-template-columns: 1fr; }
-  .db-pair { grid-template-columns: minmax(0, 1fr); }
-}
-@media (max-width: 767px) {
-  .db-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .db-snap { grid-template-columns: minmax(0, 1fr); gap: 8px; }
-  .db-snap .db-stat { flex-direction: row; flex-wrap: wrap; align-items: baseline; column-gap: 10px; }
-  .db-snap .db-stat span { flex-basis: 100%; }
-  .db-attn li { flex-wrap: wrap; }
-  .db-attn-text { flex-basis: calc(100% - 44px); }
-  .db-attn .db-step-btn { margin-left: 44px; }
-  .db-stat b { font-size: 20px; }
-  .db-jobs { grid-template-columns: 1fr; }
-  .db-list a { flex-wrap: wrap; }
-  .db-list a > div { flex-basis: 100%; }
-}
-
-/* New rank to claim (/rank) */
+/* ── New rank to claim (/rank) ── */
 .db-rankup { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
 .db-rankup > div { flex: 1; min-width: 200px; display: grid; gap: 2px; }
 .db-rankup b { font-size: 15px; font-weight: 600; }
 .db-rankup span:not(.db-attn-ic) { font-size: 13.5px; color: var(--text2); }
 
-/* Starter jobs fold away: the count is the button that opens them */
-.db-fold { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 4px 0 10px; border: 0; background: none; color: var(--text2); font: 400 11px var(--font-mono); cursor: pointer; }
-.db-fold:hover { color: var(--text); }
-.db-fold i { font-size: 16px; }
-.db-starter .db-sec-head { margin-bottom: 0; }
-.db-starter .db-list { margin-top: 12px; }
+@media (max-width: 767.98px) {
+  .db-split { margin-top: var(--sp-4); }
+  .db-pair { grid-template-columns: minmax(0, 1fr); }
+  .db-amt { font-size: 28px; }
+  .db-attn li { flex-wrap: wrap; }
+  .db-attn-text { flex-basis: calc(100% - 44px); }
+  .db-attn .db-step-btn { margin-left: 44px; }
+  .db-list a { flex-wrap: wrap; row-gap: 6px; }
+  .db-list a > div { flex-basis: 100%; }
+  .db-jobs a, .db-starter .db-list a { flex-wrap: nowrap; }
+  .db-jobs a > div, .db-starter .db-list a > div { flex-basis: auto; }
+  .db-starter .db-list strong { white-space: normal; line-height: 1.35; }
+  .db-starter .db-list em { display: none; }
+}
