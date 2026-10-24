@@ -1,56 +1,38 @@
 import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import Layout from '../components/Layout'
+import AdminShell, { ADMIN_GROUPS } from '../components/AdminShell'
 
-// Only pages that exist (Users, Tasks, Disputes and Analytics had no page and
-// just came back here)
-const CARDS = [
-  { to: '/admin/withdrawals', icon: 'ti-cash', title: 'Withdrawals', desc: 'Pay out and settle pending withdrawals' },
-  { to: '/admin/linked-accounts', icon: 'ti-users-group', title: 'Linked accounts', desc: 'Accounts that share a bank, phone or ID: one person, one account' },
-  { to: '/admin/kyc', icon: 'ti-id', title: 'Identity checks', desc: 'KYC waiting for review, and past approvals' },
-  { to: '/admin/creators', icon: 'ti-speakerphone', title: 'Creator checks', desc: 'Follower counts waiting to be verified' },
-  { to: '/admin/brands', icon: 'ti-rosette-discount-check', title: 'Business checks', desc: 'Posters asking for the Verified business badge' },
-  { to: '/admin/moderation', icon: 'ti-flag', title: 'Moderation', desc: 'Submissions waiting over 24h' },
-  { to: '/admin/updates', icon: 'ti-speakerphone', title: 'Platform updates', desc: 'Tell every user what is new, in their Notifications' },
-  { to: '/admin/ranks', icon: 'ti-trophy', title: 'Rank claims', desc: 'Review rank-ups from accounts with warning signs' },
-  { to: '/admin/warnings', icon: 'ti-alert-triangle', title: 'Warnings', desc: 'Warnings, appeals and members who cannot take jobs' },
-  { to: '/admin/highlights', icon: 'ti-star', title: 'Highlighted jobs', desc: 'Jobs shown first on the homepage and jobs page' },
-  { to: '/admin/support', icon: 'ti-lifebuoy', title: 'Support and reports', desc: 'Help centre tickets and reports, priority first' },
-  { to: '/admin/blog', icon: 'ti-news', title: 'Blog', desc: 'Articles waiting for review, and publishing' },
-  { to: '/admin/vault', icon: 'ti-building-bank', title: 'Vault', desc: 'Revenue pool, distributions and $PAY' },
-]
-
+// The admin hub: every admin page, grouped. Phone: one card of rows per group;
+// tablet: 2 columns; desktop: 3 columns. (Waiting counts need one admin summary
+// endpoint; none exists yet, so the rows don't show counts.)
 export default function Admin() {
   const { isAuthed } = useAuth()
 
   if (!isAuthed) return null
 
   return (
-    <Layout sidebar>
-      <style>{`
-        .admin-wrap{max-width:1100px;margin:0 auto;padding:28px 24px 60px}
-        .admin-wrap h1{font-family:Inter,sans-serif;font-size:28px;font-weight:900;margin:0 0 4px}
-        .admin-wrap p{color:var(--text2);font-size:14px;margin:0 0 24px}
-        .admin-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px}
-        .admin-card{display:block;color:inherit;text-decoration:none;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;cursor:pointer;transition:border-color .13s}
-        .admin-card:hover{border-color:var(--text2)}
-        .admin-card i{font-size:24px;color:var(--accent);display:block;margin-bottom:10px}
-        .admin-card h3{font-size:15px;font-weight:800;margin:0 0 4px}
-        .admin-card p{font-size:12px;color:var(--text2);margin:0}
-      `}</style>
-      <div className="admin-wrap">
-        <h1>Admin</h1>
-        <p>Money out, identity checks, moderation and content.</p>
-        <div className="admin-grid">
-          {CARDS.map((c) => (
-            <Link key={c.to} className="admin-card" to={c.to}>
-              <i className={`ti ${c.icon}`} />
-              <h3>{c.title}</h3>
-              <p>{c.desc}</p>
-            </Link>
-          ))}
-        </div>
+    <AdminShell section="hub" title="Admin" sub="Money out, identity checks, moderation and content.">
+      <div className="adm-hub">
+        {ADMIN_GROUPS.map((g, i) => (
+          <section key={g.title} aria-labelledby={`adm-g-${i}`}>
+            <h2 className="adm-hub-label" id={`adm-g-${i}`}>{g.title}</h2>
+            <ul className="adm-hub-list">
+              {g.items.map((c) => (
+                <li key={c.to}>
+                  <Link className="adm-hub-item" to={c.to}>
+                    <span className="adm-hub-ic"><i className={`ti ${c.icon}`} aria-hidden="true" /></span>
+                    <span>
+                      <b>{c.title}</b>
+                      <small>{c.desc}</small>
+                    </span>
+                    <i className="ti ti-chevron-right" aria-hidden="true" />
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ))}
       </div>
-    </Layout>
+    </AdminShell>
   )
 }
