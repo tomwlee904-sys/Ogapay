@@ -1,0 +1,222 @@
+/* Job page (/tasks/:id). Was a 330-line inline <style> with three override layers.
+   Phone and tablet: one column in this order: title and facts, reward + main
+   button, what to do, poster, job details (folded), activity; the main button
+   then stays in a bar above the bottom dock. Desktop (>=1024px): description on
+   the left, a 340px side panel (reward + button, poster, details) that stays in
+   view. Breakpoints: 767.98px and 1023.98px only. Colours from theme tokens. */
+
+.wjd-panel { background: var(--card); border: 1px solid var(--border); border-radius: var(--r-card); box-shadow: var(--sh-1); }
+
+.wjd-back { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; margin-bottom: 12px; padding: 0; border: 0; background: none; font: 500 13px var(--font); color: var(--text2); cursor: pointer; }
+.wjd-back:hover { color: var(--text); }
+
+/* ─── Layout ─────────────────────────────────────────────────────────────── */
+/* Below 1024px the two columns dissolve (display: contents) so every block
+   can be put in reading order; a flex column also lets the action bar stick. */
+.wjd-layout { display: flex; flex-direction: column; gap: 16px; }
+.wjd-main, .wjd-side { display: contents; }
+.wjd-headline { order: 1; }
+.wjd-elig, .wjd-workspace { order: 2; }
+.wjd-act { order: 3; }
+.wjd-paycheck, .wjd-layout .sjp { order: 4; }
+.wjd-desc { order: 5; }
+.wjd-layout .cp { order: 6; }
+.wjd-agent { order: 7; }
+.wjd-details { order: 8; }
+.wjd-subs-panel { order: 9; }
+.wjd-layout .ja { order: 10; }
+.wjd-bar { order: 11; }
+.wjd-paycheck > * { margin: 0; }
+@media (min-width: 1024px) {
+  .wjd-layout { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 24px; align-items: start; }
+  .wjd-main { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+  .wjd-side { display: flex; flex-direction: column; gap: 16px; position: sticky; top: calc(var(--nav-h) + 16px); max-height: calc(100vh - var(--nav-h) - 32px); overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; }
+  .wjd-bar { display: none !important; }
+  .wjd-desc .wjd-body { max-width: 72ch; }
+}
+
+/* ─── Title and facts ────────────────────────────────────────────────────── */
+.wjd-headline { min-width: 0; }
+.wjd-h1 { overflow-wrap: anywhere; }
+.wjd-facts { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: var(--sp-3) 0 0; padding: 0; list-style: none; font-size: 13.5px; color: var(--text2); }
+.wjd-facts li { display: inline-flex; align-items: center; gap: 6px; }
+.wjd-facts li a { color: inherit; font-weight: 600; }
+.wjd-facts i { font-size: var(--icon); }
+.wjd-facts .wjd-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--text3); }
+.wjd-facts .is-open { color: var(--money); }
+.wjd-facts .is-open .wjd-dot { background: var(--money); }
+
+/* Why you can't take it */
+.wjd-elig { padding: 14px 16px; border-radius: 14px; border: 1px solid color-mix(in srgb, var(--red) 35%, transparent); background: color-mix(in srgb, var(--red) 7%, transparent); }
+.wjd-elig > b { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--red); }
+.wjd-elig ul { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.wjd-elig li { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 6px 12px; font-size: 13px; line-height: 1.5; color: var(--text); }
+.wjd-elig li a { display: inline-flex; align-items: center; gap: 4px; min-height: 36px; font-weight: 600; color: var(--text); text-decoration: underline; text-underline-offset: 3px; white-space: nowrap; }
+.wjd-workspace { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 14px; border: 1px solid var(--border); background: var(--card); color: var(--text); text-decoration: none; min-height: 44px; }
+.wjd-workspace > i { font-size: 20px; color: var(--text); }
+.wjd-workspace span { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.wjd-workspace b { font-size: 14px; }
+.wjd-workspace small { font-size: 12.5px; color: var(--text2); }
+
+/* ─── Reward and the main button ─────────────────────────────────────────── */
+.wjd-act { display: flex; flex-direction: column; gap: 12px; padding: 18px 20px; }
+.wjd-act-pay { display: flex; flex-direction: column; gap: 4px; }
+.wjd-act-lbl { font-size: 13px; color: var(--text2); }
+.wjd-cta { width: 100%; height: auto; min-height: var(--ctl-h-lg); padding-block: 10px; white-space: normal; text-align: center; line-height: 1.3; }
+.wjd-wide { width: 100%; }
+.wjd-tools { display: flex; gap: 8px; }
+.wjd-tools .ui-btn { flex: 1 1 0; min-width: 0; padding: 0 8px; font-weight: 500; }
+.wjd-tools .ui-btn[aria-pressed="true"] { border-color: var(--text); }
+.wjd-more { display: flex; flex-direction: column; border: 1px solid var(--border); border-radius: var(--r-ctl); overflow: hidden; }
+.wjd-more-item { display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 14px; border: 0; background: var(--card); color: var(--text); font: 500 14px var(--font); text-align: left; cursor: pointer; }
+.wjd-more-item + .wjd-more-item { border-top: 1px solid var(--border); }
+.wjd-more-item:hover:not(:disabled) { background: var(--card2); }
+.wjd-more-item i { font-size: 16px; color: var(--text2); }
+/* Cancel (money goes back, can't be undone): set apart and quiet; it asks first */
+.wjd-cancel { min-height: 44px; margin-top: 4px; padding: 12px 0 0; border: 0; border-top: 1px solid var(--border); background: none; font: 600 13px var(--font); color: var(--red); text-align: left; cursor: pointer; }
+.wjd-cancel:disabled { opacity: .5; cursor: default; }
+
+/* ─── Poster ─────────────────────────────────────────────────────────────── */
+.wjd-agent { display: flex; align-items: center; gap: 14px; padding: 16px 20px; }
+.wjd-avatar { display: grid; place-items: center; flex: 0 0 auto; width: 44px; height: 44px; overflow: hidden; border-radius: 12px; border: 1px solid var(--border); background: var(--card2); color: var(--text); font-size: 15px; font-weight: 700; }
+.wjd-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.wjd-agent-txt { min-width: 0; }
+.wjd-kicker { margin-bottom: 2px; font: 500 var(--fs-label) var(--font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--text2); }
+.wjd-name { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; min-width: 0; overflow-wrap: anywhere; font-size: 16px; font-weight: 600; letter-spacing: -.02em; line-height: 1.25; color: var(--text); }
+.wjd-handle { display: inline-flex; align-items: center; min-height: 28px; font-size: 13px; color: var(--text2); text-decoration: none; }
+.wjd-handle:hover { color: var(--text); text-decoration: underline; }
+
+/* ─── Job details (folded on phone and tablet) ───────────────────────────── */
+.wjd-details > summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 52px; padding: 0 20px; list-style: none; cursor: pointer; font-size: 15px; font-weight: 600; color: var(--text); }
+.wjd-details > summary::-webkit-details-marker { display: none; }
+.wjd-details > summary span { display: inline-flex; align-items: center; gap: 8px; }
+.wjd-details > summary span i { font-size: 18px; color: var(--text2); }
+.wjd-chev { font-size: 16px; color: var(--text2); transition: transform var(--t-fast) var(--ease); }
+.wjd-details[open] .wjd-chev { transform: rotate(180deg); }
+.wjd-dl { display: grid; gap: 0; margin: 0; padding: 0 20px 12px; }
+.wjd-dl > div { padding: 10px 0; border-top: 1px solid var(--border); }
+.wjd-dl dt { display: flex; align-items: center; gap: 2px; font-size: 12.5px; color: var(--text2); }
+.wjd-dl dd { margin: 3px 0 0; font-size: 14px; font-weight: 500; line-height: 1.45; color: var(--text); }
+.wjd-dl dd a { color: inherit; font-weight: 600; }
+@media (min-width: 768px) and (max-width: 1023.98px) {
+  .wjd-dl { grid-template-columns: 1fr 1fr; column-gap: 24px; }
+  .wjd-dl > .wide { grid-column: 1 / -1; }
+}
+
+/* ─── What to do ─────────────────────────────────────────────────────────── */
+.wjd-desc { padding: 20px 22px 22px; }
+.wjd-desc-title { display: flex; align-items: center; gap: 8px; margin: 0 0 14px; font-size: 16px; font-weight: 600; color: var(--text); }
+.wjd-desc-title i { font-size: 18px; color: var(--text2); }
+.wjd-body { font-size: var(--fs-body); line-height: 1.7; color: var(--text); white-space: normal; overflow-wrap: anywhere; }
+.wjd-body p { margin: 0 0 12px; }
+.wjd-body > :last-child { margin-bottom: 0; }
+.wjd-body ul, .wjd-body ol { margin: 0 0 12px; padding-left: 22px; }
+.wjd-body ul { list-style: disc; }
+.wjd-body ol { list-style: decimal; }
+.wjd-body li::marker { color: var(--text2); }
+.wjd-body li { margin: 4px 0; padding-left: 2px; }
+.wjd-body h3 { font-size: 15px; font-weight: 600; color: var(--text); margin: 16px 0 6px; }
+.wjd-body > h3:first-child { margin-top: 0; }
+.wjd-body strong { font-weight: 650; color: var(--text); }
+.wjd-body code { font-family: var(--font-mono); font-size: .9em; background: var(--card2); border: 1px solid var(--border); border-radius: 5px; padding: 1px 5px; }
+.wjd-body a, .wjd-linkified { color: var(--text); text-decoration: underline; text-underline-offset: 2px; word-break: break-word; }
+.wjd-sub-title { margin: 20px 0 8px; font-size: 14px; font-weight: 600; color: var(--text); }
+.wjd-list { margin: 0; padding-left: 22px; font-size: 14px; line-height: 1.65; color: var(--text); display: grid; gap: 4px; list-style: disc; }
+ol.wjd-list { list-style: decimal; }
+.wjd-reqs { list-style: none; margin: 0 0 8px; padding: 0; display: grid; gap: 6px; font-size: 14px; color: var(--text); }
+.wjd-reqs li { display: flex; align-items: flex-start; gap: 8px; line-height: 1.45; }
+.wjd-reqs i { flex-shrink: 0; margin-top: 2px; font-size: 16px; color: var(--text2); }
+.wjd-anyone { margin: 0; font-size: 14px; color: var(--text2); }
+.wjd-translate-row { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; margin-top: 16px; }
+.wjd-translate-btn { min-height: 32px; padding: 0; border: 0; background: none; font: 500 13px var(--font); color: var(--text2); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.wjd-tr-select.ui-select { width: auto; height: var(--ctl-h-sm); font-size: 13px; }
+.wjd-tr-note { font-size: 12.5px; color: var(--text2); }
+.wjd-tr-note.bad { color: var(--red); }
+.wjd-translated { margin-top: 20px; padding: 16px 18px; border: 1px solid var(--border); border-radius: 12px; background: var(--card2); }
+.wjd-translated-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; font-size: 12.5px; font-weight: 600; color: var(--text2); }
+
+/* ─── Sticky main action (phone and tablet) ──────────────────────────────── */
+.wjd-bar .ui-actionbar-text { display: flex; flex-direction: column; gap: 2px; }
+.wjd-bar .o-money-alt { display: none; }
+.wjd-bar-cta.wjd-cta { width: auto; max-width: 60%; flex-shrink: 0; }
+
+/* ─── Poster: work sent in ───────────────────────────────────────────────── */
+.wjd-subs-panel { padding: 20px 22px; }
+.wjd-title { display: flex; align-items: center; gap: 8px; margin: 0 0 16px; font-size: 15px; font-weight: 600; color: var(--text); }
+.wjd-sub-list { display: grid; gap: 10px; }
+.wjd-sub-item { display: flex; gap: 12px; padding: 14px 16px; border: 1px solid var(--border); border-radius: 12px; background: var(--card2); cursor: pointer; }
+.wjd-sub-avatar { width: 36px; height: 36px; flex-shrink: 0; display: grid; place-items: center; overflow: hidden; border-radius: 10px; background: var(--accent); color: var(--on-accent); font-size: 13px; font-weight: 700; }
+.wjd-sub-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.wjd-sub-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+.wjd-ok, .wjd-no { position: relative; min-height: var(--ctl-h-sm); padding: 0 14px; border-radius: var(--r-ctl); font: 600 13px var(--font); cursor: pointer; }
+.wjd-ok::after, .wjd-no::after { content: ''; position: absolute; left: 0; right: 0; top: 50%; height: 44px; transform: translateY(-50%); }
+.wjd-ok { border: 0; background: var(--accent); color: var(--on-accent); }
+.wjd-no { border: 1px solid var(--border); background: var(--card); color: var(--red); }
+.wjd-ok:disabled, .wjd-no:disabled { opacity: .5; cursor: not-allowed; }
+.wjd-empty { padding: 24px 0; text-align: center; font-size: 14px; color: var(--text2); }
+.wjd-amber { color: color-mix(in srgb, var(--gold) 55%, var(--text)); }
+
+/* ─── Not found / couldn't load ──────────────────────────────────────────── */
+.wjd-state i { display: block; margin-bottom: 10px; font-size: 28px; color: var(--text3); }
+.wjd-state h1 { margin: 0; font-size: 20px; font-weight: 600; letter-spacing: -.02em; color: var(--text); }
+.wjd-state p { margin: 6px auto 18px; max-width: 420px; }
+.wjd-state .ui-actions { justify-content: center; }
+
+/* ─── "How this job works" panel (also used by Profile) ──────────────────── */
+.wjd-info-overlay { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: flex-start; justify-content: center; padding: 24px 16px; overflow-y: auto; -webkit-overflow-scrolling: touch; background: rgba(0, 0, 0, .5); }
+.wjd-info-panel { width: 100%; max-width: 680px; max-height: 85vh; overflow-y: auto; border: 1px solid var(--border); border-radius: var(--r-card); background: var(--card); box-shadow: 0 24px 60px rgba(0, 0, 0, .25); }
+.wjd-info-header { position: sticky; top: 0; display: flex; align-items: center; justify-content: space-between; padding: 12px 12px 12px 20px; border-bottom: 1px solid var(--border); border-radius: var(--r-card) var(--r-card) 0 0; background: var(--card); }
+.wjd-info-header-title { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 600; color: var(--text); }
+.wjd-info-close, .wjd-close-btn { width: 40px; height: 40px; display: grid; place-items: center; border: 0; border-radius: var(--r-ctl); background: transparent; color: var(--text2); cursor: pointer; font-size: 16px; }
+.wjd-info-close:hover, .wjd-close-btn:hover { background: var(--card2); color: var(--text); }
+.wjd-info-body { padding: 20px 24px 28px; }
+.wjd-config-strip { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin-bottom: 24px; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+.wjd-config-cell { padding: 12px 16px; border-right: 1px solid var(--border); }
+.wjd-config-cell:last-child { border-right: 0; }
+.wjd-config-cell-label { margin-bottom: 4px; font-size: 12px; color: var(--text2); }
+.wjd-config-cell-value { font-size: 14px; font-weight: 600; color: var(--text); }
+.wjd-info-section-title { margin-bottom: 4px; font-size: 15px; font-weight: 600; color: var(--text); }
+.wjd-info-section-sub { margin-bottom: 12px; font-size: 13px; color: var(--text2); }
+.wjd-info-row { display: grid; grid-template-columns: 160px 1fr; gap: 14px; padding: 13px 0; border-top: 1px solid var(--border); }
+.wjd-info-row-label { font-size: 13px; font-weight: 600; color: var(--text); }
+.wjd-info-row-val { font-size: 13px; line-height: 1.6; color: var(--text2); }
+.wjd-important-box { display: flex; gap: 10px; align-items: flex-start; margin: 12px 0; padding: 12px 16px; border: 1px solid color-mix(in srgb, var(--gold) 35%, transparent); border-radius: 10px; background: color-mix(in srgb, var(--gold) 10%, transparent); font-size: 13px; line-height: 1.6; color: var(--text); }
+.wjd-important-icon { flex-shrink: 0; padding-top: 1px; font-size: 16px; color: color-mix(in srgb, var(--gold) 55%, var(--text)); }
+.wjd-how-steps { display: grid; gap: 5px; margin-top: 8px; padding-left: 18px; list-style: decimal; }
+.wjd-how-steps li { font-size: 13px; line-height: 1.6; color: var(--text2); }
+.wjd-how-steps strong { color: var(--text); }
+
+/* ─── Dialogs ────────────────────────────────────────────────────────────── */
+.wjd-modal-bg { position: fixed; inset: 0; z-index: 10000; display: grid; place-items: center; padding: 20px; background: rgba(0, 0, 0, .5); }
+.wjd-before, .wjd-report-modal { width: min(94vw, 540px); overflow: hidden; border: 1px solid var(--border); border-radius: var(--r-card); background: var(--card); color: var(--text); box-shadow: 0 30px 70px rgba(0, 0, 0, .25); }
+/* Taller than a phone screen (a submission with stars and a note): scroll inside, so Approve stays reachable */
+.wjd-report-modal { max-height: calc(100vh - 40px); max-height: calc(100dvh - 40px); overflow-y: auto; overscroll-behavior: contain; }
+.wjd-before { padding: 20px 24px 24px; }
+.wjd-modal-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 12px; }
+.wjd-before-title { font-size: 17px; font-weight: 600; }
+.wjd-before-copy { margin-bottom: 12px; font-size: 14px; line-height: 1.5; color: var(--text2); }
+.wjd-before-list { display: grid; gap: 5px; margin: 0 0 22px; padding-left: 22px; list-style: disc; font-size: 14px; line-height: 1.6; color: var(--text); }
+.wjd-before-actions { display: flex; justify-content: flex-end; }
+.wjd-report-head { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px 10px 20px; border-bottom: 1px solid var(--border); font-size: 15px; font-weight: 600; }
+.wjd-report-body { padding: 18px 20px 22px; }
+.wjd-report-label { display: block; margin-bottom: 6px; font-size: 13px; font-weight: 600; color: var(--text); }
+.wjd-report-input { width: 100%; min-height: var(--ctl-h); margin-bottom: 14px; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--r-ctl); background: var(--card2); color: var(--text); font: 400 14px var(--font); outline: none; }
+.wjd-report-input:focus { border-color: var(--text3); }
+.wjd-report-actions { display: flex; gap: 10px; }
+.wjd-report-actions .ui-btn { flex: 1; }
+.wjd-sub-label { margin-bottom: 4px; font-size: 12px; color: var(--text2); }
+
+@media (max-width: 767.98px) {
+  .wjd-act { padding: 16px; }
+  .wjd-desc { padding: 18px 16px 20px; }
+  .wjd-subs-panel { padding: 18px 16px; }
+  .wjd-agent { padding: 14px 16px; }
+  .wjd-details > summary { padding: 0 16px; }
+  .wjd-dl { padding: 0 16px 10px; }
+  .wjd-info-row { grid-template-columns: 1fr; gap: 4px; }
+  .wjd-config-strip { grid-template-columns: 1fr 1fr; }
+  .wjd-config-cell { border-bottom: 1px solid var(--border); }
+  .wjd-config-cell:nth-child(even) { border-right: 0; }
+  .wjd-config-cell:last-child { border-bottom: 0; }
+  .wjd-tools .ui-btn { font-size: 13px; gap: 6px; }
+}

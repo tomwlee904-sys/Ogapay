@@ -21,35 +21,12 @@ import { sized } from '../lib/img'
 import { renderJobText, renderJobLine } from '../lib/jobText'
 import { PayoutCheckStatus, checkBlocksApprove, anyWaiting, useNow } from '../components/PayoutCheck'
 import SocialJobPanel, { type SocialInfo } from '../components/SocialJobPanel'
+import InfoTip from '../components/InfoTip'
+import { useMedia, DESKTOP } from '../hooks/useMedia'
+import '../styles/job-detail.css'
 
 const BRAND = 'var(--accent)'
 const BRAND_LIGHT = 'rgba(var(--accent-rgb),0.10)'
-// ── Info tooltip ─────────────────────────────────────────────────────
-function InfoBtn({ text }: { text: string }) {
-  const [show, setShow] = useState(false);
-  const ref = useRef<HTMLSpanElement>(null);
-  return (
-    <span ref={ref} style={{ position: "relative", display: "inline-flex", marginLeft: 4, verticalAlign: "middle" }}
-      onMouseEnter={() => setShow(true)}
-      onMouseLeave={() => setShow(false)}
-      onClick={(e) => { e.stopPropagation(); setShow(s => !s) }}>
-      <i className="ti ti-info-circle" style={{ fontSize: 12, color: "var(--text3)", cursor: "pointer" }} />
-      {show && (
-        <div style={{
-          position: "absolute", bottom: "calc(100% + 6px)", left: "50%",
-          transform: "translateX(-50%)", background: "var(--text)", color: "var(--card)",
-          fontSize: 11, lineHeight: 1.5, padding: "6px 10px", borderRadius: 8,
-          whiteSpace: "normal", width: 240, zIndex: 99, pointerEvents: "none",
-          boxShadow: "0 4px 12px rgba(0,0,0,0.2)"
-        }}>
-          {text}
-        </div>
-      )}
-    </span>
-  );
-}
-
-
 function pad(n: number) { return String(n).padStart(2, '0') }
 
 function toArray<T>(val: T | T[] | undefined | null, fallback: T[]): T[] {
@@ -214,6 +191,7 @@ export default function JobDetail() {
         // Signed in: send the token so private direct-hire jobs load for the poster and hired worker
         const token = getAccessToken()
         const res = await fetch(`${API_BASE}/tasks/${id}`, token ? { headers: { Authorization: `Bearer ${token}` } } : undefined)
+        if (res.status >= 500) throw new Error('server error')
         const json = await res.json()
         if (json.success && json.data) {
           const t = json.data.task || json.data
@@ -464,7 +442,8 @@ export default function JobDetail() {
   }
 
   if (loading) return <Layout><SkeletonPage /></Layout>
-  if (error || !job) return <ErrorState message={error || 'Task not found'} onBack={() => navigate(-1)} />
+  // Not found and couldn't load are different: only the second offers Try again. Both stay on this link.
+  if (error || !job) return <ErrorState notFound={error !== 'Failed to load task'} onRetry={() => setReloadKey((k) => k + 1)} />
 
   const isOpen = ['open', 'active', 'published'].includes(String(job.status || '').toLowerCase())
   const canManage = Boolean(authUser && (job.creatorId === authUser.id || job.posterId === authUser.id || isMyTask))
@@ -584,20 +563,19 @@ function EligibilityBanner({ eligibility, joinPath }: { eligibility: { eligible:
   )
 }
 
-/* ── Error State ── */
-function ErrorState({ message, onBack }: { message: string; onBack: () => void }) {
+/* ── Not found / couldn't load ── */
+function ErrorState({ notFound, onRetry }: { notFound: boolean; onRetry: () => void }) {
   return (
     <Layout>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', padding: '0 16px' }}>
-        <div style={{ textAlign: 'center', maxWidth: 400 }}>
-          <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'rgba(var(--red-rgb),0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', color: '#dc2626' }}>
-            <svg width="28" height="28" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
-            </svg>
+      <div className="ui-page">
+        <div className="ui-empty wjd-state" role={notFound ? undefined : 'alert'}>
+          <i className={`ti ${notFound ? 'ti-briefcase' : 'ti-wifi-off'}`} aria-hidden="true" />
+          <h1>{notFound ? "This job isn't available" : "We couldn't load this job"}</h1>
+          <p>{notFound ? 'It was removed by the poster, or the link is wrong.' : 'Check your connection and try again. Nothing has changed on your account.'}</p>
+          <div className="ui-actions">
+            {!notFound && <button type="button" className="ui-btn ui-btn-dark" onClick={onRetry}><i className="ti ti-refresh" aria-hidden="true" /> Try again</button>}
+            <Link className={`ui-btn ${notFound ? 'ui-btn-dark' : 'ui-btn-ghost'}`} to="/tasks">Browse jobs</Link>
           </div>
-          <h2 style={{ fontSize: 20, fontWeight: 800, color: 'var(--text)', margin: '0 0 8px' }}>{message || 'Task not found'}</h2>
-          <p style={{ fontSize: 14, color: 'var(--text2)', margin: '0 0 20px', lineHeight: 1.5 }}>The task you're looking for doesn't exist or has been removed.</p>
-          <button onClick={onBack} style={{ padding: '12px 28px', borderRadius: 10, border: 'none', background: BRAND, color: 'var(--on-accent)', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>Go Back</button>
         </div>
       </div>
     </Layout>
@@ -642,6 +620,18 @@ function WurkJobDetailView(props: any) {
   const [rateStars, setRateStars] = useState(0)
   const [rateNote, setRateNote] = useState('')
   useEffect(() => { setRateStars(0); setRateNote('') }, [selectedSub?.id])
+  const desktop = useMedia(DESKTOP)
+  const [moreOpen, setMoreOpen] = useState(false)
+  // The bar above the dock shows only while the reward card's button is off screen
+  const ctaBox = useRef<HTMLDivElement>(null)
+  const [ctaSeen, setCtaSeen] = useState(true)
+  useEffect(() => {
+    const el = ctaBox.current
+    if (!el || typeof IntersectionObserver === 'undefined') return
+    const io = new IntersectionObserver(([e]) => setCtaSeen(e.isIntersecting), { rootMargin: '-64px 0px -96px 0px' })
+    io.observe(el)
+    return () => io.disconnect()
+  }, [])
 
   const LANGUAGES = [
     { code: 'es', label: 'Spanish' }, { code: 'fr', label: 'French' },
@@ -709,668 +699,294 @@ function WurkJobDetailView(props: any) {
       : `${countdown.h}h ${pad(countdown.m)}m ${pad(countdown.s)}s`
   const statusText = ({ open: 'Open', cooling_down: 'Full: waiting for work', completed: 'Completed', cancelled: 'Cancelled', draft: 'Paused', disputed: 'In dispute' } as Record<string, string>)[String(job.status || '').toLowerCase()] || (isOpen ? 'Open' : 'Closed')
 
+  // Back: to the page you came from inside OgaPay, or to Jobs when the job was
+  // opened from a shared link (going "back" then would leave OgaPay)
+  const goBack = () => ((window.history.state?.idx ?? 0) > 0 ? navigate(-1) : navigate('/tasks'))
+  const reqList = jobRequirements(job)
+  const blocked = !!eligibility && !eligibility.eligible && eligibility.reasons?.length > 0
+  // The one main action, built once for the reward card and the bar above the dock
+  const ctaText = !authUser ? 'Sign in to take a place'
+    : myLabel ? myLabel
+    : needJoin && isOpen ? `Join ${job.requiredCommunity!.name} to take this job`
+    : canManage ? 'Manage submissions'
+    : isOpen ? (contest ? 'Enter contest' : job.isSelection ? 'Apply' : 'Take a place')
+    : (contest ? 'Entries closed' : 'Job closed')
+  const cta = (extra = '') => {
+    const cls = `ui-btn ui-btn-dark ui-btn-lg wjd-cta${extra ? ' ' + extra : ''}`
+    if (!authUser) return <button className={cls} type="button" onClick={() => navigate('/login?redirect=' + encodeURIComponent('/tasks/' + job.id))}>{ctaText}</button>
+    if (myLabel) return <button className={cls} type="button" onClick={openMine}>{ctaText}</button>
+    if (needJoin && isOpen) return <Link className={cls} to={joinPath}>{ctaText}</Link>
+    return <button className={cls} type="button" disabled={!canManage && !isOpen} onClick={() => canManage ? navigate('/manage-jobs') : setShowApplyWarning(true)}>{ctaText}</button>
+  }
+  const bookmarkIcon = bookmarked
+    ? <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" /></svg>
+    : <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" /></svg>
+
   return (
     <Layout>
-      <style>{`
-        @keyframes oga-sweep{0%{background-position:-200% center}to{background-position:200% center}}
-        .wjd{background:var(--bg,#f9fafb);color:var(--text,#1f2937);font-family:Inter,'Inter',system-ui,sans-serif;padding:20px 0 60px;min-height:100vh}
-        .wjd-wrap{width:min(100% - 32px,900px);margin:0 auto}
-        .wjd-panel{background:var(--card,#fff);border:0.5px solid var(--border,#e5e7eb);border-radius:18px}
-        .wjd-back{display:inline-flex;align-items:center;gap:8px;height:38px;border:0.5px solid var(--border,#e5e7eb);border-radius:10px;background:var(--card,#fff);color:var(--text2,#475569);padding:0 14px;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:16px;font-family:inherit}
-        .wjd-agent{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;padding:20px 24px;margin-bottom:16px}
-        .wjd-agent-left{display:flex;align-items:flex-start;gap:16px;min-width:0}
-        .wjd-avatar{display:grid;place-items:center;overflow:hidden;background:linear-gradient(145deg,rgba(var(--accent-rgb),.10),rgba(16,185,129,.14));color:#0f172a;font-weight:900;border:0.5px solid var(--border,#e5e7eb);flex:0 0 auto;width:52px;height:52px;border-radius:50%;font-size:18px}
-        .wjd-avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%}
-        .wjd-kicker{color:var(--text3,#9ca3af);letter-spacing:.1em;text-transform:uppercase;font-weight:700;font-size:11px;margin-bottom:4px}
-        .wjd-name{display:flex;flex-wrap:wrap;row-gap:4px;align-items:center;gap:8px;min-width:0;overflow-wrap:anywhere;color:var(--text,#0f172a);font-size:18px;font-weight:900;line-height:1.2;margin-bottom:3px}
-        .wjd-handle{color:var(--text2,#6b7280);font-size:13px;font-weight:500}
-        .wjd-mark{display:grid;place-items:center;width:20px;height:20px;border-radius:5px;background:var(--accent);color:var(--on-accent);font-size:11px;font-weight:900}
-        .wjd-actions-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex-shrink:0}
-        .wjd-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:100px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
-        .wjd-badge-open{background:rgba(var(--green-rgb),0.12);border:1px solid rgba(var(--green-rgb),0.3);color:var(--green)}
-        .wjd-badge-closed{background:rgba(100,116,139,0.12);color:var(--text2)}
-        .wjd-dot{width:8px;height:8px;border-radius:50%;background:#059669;display:inline-block;animation:wjdPulse 1.8s ease-in-out infinite}
-        .wjd-link{border:0;background:transparent;color:var(--text2,#6b7280);cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-weight:700;font-size:13px;font-family:inherit;padding:6px 10px;border-radius:8px}
-        .wjd-link:hover{background:var(--bg,#f3f4f6)}
-        .wjd-sep{color:var(--border,#d1d5db);font-size:18px;user-select:none}
-        .wjd-icon-btn{width:34px;height:34px;border:0.5px solid var(--border,#e5e7eb);border-radius:8px;background:var(--card,#fff);cursor:pointer;display:grid;place-items:center;color:var(--text2,#6b7280)}
+      <div className="ui-page wjd">
+        <button className="wjd-back tap" type="button" onClick={goBack}>
+          <i className="ti ti-arrow-left" aria-hidden="true" /> Back
+        </button>
 
-        .wjd-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
-        .wjd-meta{padding:20px 22px 22px}
-        .wjd-title{display:flex;align-items:center;gap:8px;color:var(--text3,#6b7280);font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;margin-bottom:16px}
-        .wjd-rows{display:grid;gap:12px}
-        .wjd-row{display:grid;grid-template-columns:130px minmax(0,1fr);gap:12px;align-items:start}
-        .wjd-label{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--text3,#9ca3af);font-weight:700;padding-top:2px}
-        .wjd-value{color:var(--text,#0f172a);font-size:14px;font-weight:600}
-        .wjd-open-val{display:inline-flex;align-items:center;gap:7px;color:#047857}
-
-        .wjd-reward{display:flex;align-items:center;justify-content:center;gap:20px;padding:20px 24px;margin-bottom:16px;background:rgba(var(--accent-rgb),0.06);border-color:rgba(var(--accent-rgb),0.18)}
-        .wjd-dollar{width:42px;height:42px;border-radius:12px;background:rgba(var(--accent-rgb),0.10);color:var(--accent);display:grid;place-items:center;font-size:18px;font-weight:900;flex-shrink:0}
-        .wjd-reward-title{color:var(--text3,#6b7280);font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;margin-bottom:6px}
-        .wjd-amount{background:linear-gradient(90deg,var(--accent),var(--accent),var(--accent),var(--accent),var(--accent));background-size:200% auto;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:oga-sweep 4s linear infinite;font-size:clamp(28px,4vw,36px);font-weight:900;display:inline-block}
-        .wjd-token{background:linear-gradient(90deg,var(--accent),var(--accent),var(--accent));background-size:200% auto;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:oga-sweep 4s linear infinite;font-size:14px;font-weight:900;margin-left:8px;display:inline-block}
-        .wjd-usd{color:var(--text3,#64748b);font-size:12px;font-weight:600;letter-spacing:.06em;margin-top:3px}
-
-        .wjd-desc{padding:20px 24px 22px;margin-bottom:16px}
-        .wjd-desc-title{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:var(--text2,#0f172a);text-transform:uppercase;letter-spacing:.08em;padding-bottom:14px;border-bottom:1px solid var(--border,#e5e7eb);margin-bottom:18px}
-        .wjd-body{color:var(--text2,#374151);font-size:14px;line-height:1.65;white-space:pre-wrap}
-        .wjd-linkified{color:var(--accent);text-decoration:underline;word-break:break-word;cursor:pointer}
-        .wjd-linkified:hover{opacity:.8}
-        .wjd-sub-title{color:var(--text,#0f172a);font-size:15px;font-weight:700;margin:18px 0 8px}
-        .wjd-list{margin:0;padding-left:20px;color:var(--text2,#374151);font-size:14px;line-height:1.65;display:grid;gap:4px}
-
-        .wjd-translate-row{display:flex;justify-content:flex-end;margin-top:14px}
-        .wjd-translate-btn{background:none;border:none;color:var(--text3,#9ca3af);cursor:pointer;font-size:12px;font-weight:700;font-family:inherit;display:inline-flex;align-items:center;gap:5px}
-
-        .wjd-subs-panel{padding:20px 24px;margin-bottom:12px}
-        .wjd-sub-list{display:grid;gap:10px}
-        .wjd-sub-item{display:flex;gap:12px;padding:14px 16px;border:0.5px solid var(--border,#e5e7eb);border-radius:12px;background:var(--bg,#f8fafc);cursor:pointer}
-        .wjd-sub-avatar{width:36px;height:36px;border-radius:50%;background:var(--accent);color:var(--on-accent);display:grid;place-items:center;font-size:13px;font-weight:900;flex-shrink:0}
-        .wjd-sub-avatar img{width:100%;height:100%;border-radius:50%;object-fit:cover}
-        .wjd-sub-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
-        .wjd-ok{height:30px;border-radius:8px;padding:0 14px;font-size:12px;font-weight:700;cursor:pointer;border:0;background:var(--green);color:#fff;font-family:inherit}
-        .wjd-no{height:30px;border-radius:8px;padding:0 14px;font-size:12px;font-weight:700;cursor:pointer;border:0.5px solid var(--border,#e5e7eb);background:var(--card,#fff);color:#dc2626;font-family:inherit}
-        .wjd-empty{text-align:center;padding:28px 0;color:var(--text2,#64748b);font-size:14px}
-
-        .wjd-action-bar{display:flex;gap:12px;padding:12px 0 0;border-top:0.5px solid var(--border,#e5e7eb);margin-top:18px}
-        .wjd-primary,.wjd-secondary{min-height:44px;border:0;border-radius:12px;background:var(--accent);color:var(--on-accent);padding:0 28px;display:inline-flex;align-items:center;justify-content:center;gap:9px;font-size:13px;font-weight:700;cursor:pointer;text-transform:uppercase;letter-spacing:.04em;font-family:inherit}
-        .wjd-primary:disabled{background:var(--border,#cbd5e1);color:var(--text3,#64748b);cursor:not-allowed}
-        .wjd-secondary{min-width:200px}
-        .wjd-signin-card{background:var(--card,#fff);border:0.5px solid var(--border,#e5e7eb);border-radius:18px;padding:28px 24px;text-align:center;margin-top:18px}
-        .wjd-signin-icon{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:50%;background:rgba(var(--accent-rgb),0.06);color:var(--accent,var(--accent));margin-bottom:14px}
-        .wjd-signin-text{font-size:14px;color:var(--text2,#475569);line-height:1.5;margin-bottom:16px}
-
-        .wjd-sticky-bar{position:sticky;bottom:calc(var(--bottom-nav-h) + env(safe-area-inset-bottom,0px));z-index:10;background:var(--card,#fff);border-top:0.5px solid var(--border,#e5e7eb);padding:10px 0;margin-top:0;display:flex;gap:12px}
-
-        /* Info panel overlay */
-        .wjd-info-overlay{position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,0.4);display:flex;align-items:flex-start;justify-content:center;padding:24px 16px;overflow-y:auto;-webkit-overflow-scrolling:touch}
-        .wjd-info-panel{background:var(--card,#fff);border-radius:18px;width:100%;max-width:680px;max-height:85vh;overflow-y:auto;-webkit-overflow-scrolling:touch;border:0.5px solid var(--border,#e5e7eb);box-shadow:0 24px 60px rgba(0,0,0,0.18)}
-        .wjd-info-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;background:var(--bg,#f3f4f6);border-radius:18px 18px 0 0;position:sticky;top:0;border-bottom:0.5px solid var(--border,#e5e7eb)}
-        .wjd-info-header-title{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:700;color:var(--text,#0f172a)}
-        .wjd-info-close{width:30px;height:30px;border-radius:8px;background:var(--card,#fff);border:0.5px solid var(--border,#e5e7eb);display:grid;place-items:center;cursor:pointer;color:var(--text2,#6b7280)}
-        .wjd-info-body{padding:20px 24px 28px}
-        .wjd-info-how-box{background:rgba(var(--accent-rgb),0.05);border:0.5px solid rgba(var(--accent-rgb),0.15);border-radius:14px;padding:16px 18px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
-        .wjd-info-how-title{font-size:14px;font-weight:700;color:var(--text,#0f172a);margin-bottom:5px}
-        .wjd-info-how-sub{font-size:13px;color:var(--text2,#374151);line-height:1.6}
-        .wjd-info-how-hint{font-size:11px;color:var(--text3,#9ca3af);cursor:pointer;white-space:nowrap;padding-top:2px;flex-shrink:0}
-        .wjd-config-strip{display:grid;grid-template-columns:1fr 1fr 1fr;border:0.5px solid var(--border,#e5e7eb);border-radius:12px;overflow:hidden;margin-bottom:24px}
-        .wjd-config-cell{padding:12px 16px;border-right:0.5px solid var(--border,#e5e7eb)}
-        .wjd-config-cell:last-child{border-right:none}
-        .wjd-config-cell-label{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3,#9ca3af);font-weight:700;margin-bottom:5px}
-        .wjd-config-cell-value{font-size:14px;font-weight:700;color:var(--text,#0f172a)}
-        .wjd-info-section-title{font-size:15px;font-weight:700;color:var(--text,#0f172a);margin-bottom:4px}
-        .wjd-info-section-sub{font-size:13px;color:var(--text2,#6b7280);margin-bottom:12px}
-        .wjd-info-row{display:grid;grid-template-columns:160px 1fr;gap:14px;padding:13px 0;border-top:0.5px solid var(--border,#f1f5f9)}
-        .wjd-info-row-label{font-size:13px;font-weight:700;color:var(--text,#0f172a)}
-        .wjd-info-row-val{font-size:13px;color:var(--text2,#374151);line-height:1.6}
-        .wjd-open-notice{border:0.5px solid var(--border,#e5e7eb);border-radius:10px;padding:12px 16px;font-size:13px;color:var(--text2,#6b7280);margin:16px 0}
-        .wjd-important-box{background:rgba(109,40,217,0.06);border:0.5px solid rgba(109,40,217,0.2);border-radius:10px;padding:12px 16px;margin:12px 0;font-size:13px;color:var(--text2,#374151);line-height:1.6;display:flex;gap:10px;align-items:flex-start}
-        .wjd-important-icon{color:#7c3aed;font-size:16px;flex-shrink:0;padding-top:1px}
-        .wjd-how-steps{padding-left:18px;margin-top:8px;display:grid;gap:5px}
-        .wjd-how-steps li{font-size:13px;color:var(--text2,#374151);line-height:1.6}
-        .wjd-current-config{border:0.5px solid var(--border,#e5e7eb);border-radius:10px;padding:12px 16px;margin-top:16px;font-size:13px;color:var(--text2,#6b7280)}
-
-        /* Modals */
-        .wjd-modal-bg{position:fixed;inset:0;z-index:10000;display:grid;place-items:center;background:rgba(0,0,0,.5);padding:20px}
-        .wjd-before,.wjd-report-modal{width:min(94vw,540px);background:var(--card,#fff);color:var(--text,#0f172a);border-radius:18px;box-shadow:0 30px 70px rgba(0,0,0,0.2);overflow:hidden}
-        /* Taller than a phone screen (a submission with stars and a note): scroll inside, so Approve stays reachable */
-        .wjd-report-modal{max-height:calc(100vh - 40px);max-height:calc(100dvh - 40px);overflow-y:auto;overscroll-behavior:contain}
-        .wjd-before{padding:24px 26px}
-        .wjd-modal-head{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:20px}
-        .wjd-before-title{font-size:17px;font-weight:900}
-        .wjd-close-btn{width:32px;height:32px;border:0;background:transparent;color:var(--text2,#6b7280);display:grid;place-items:center;cursor:pointer;border-radius:8px;font-size:16px}
-        .wjd-before-copy{font-size:14px;margin-bottom:12px;color:var(--text2,#374151);line-height:1.5}
-        .wjd-before-list{margin:0 0 22px;padding-left:22px;color:var(--text,#1f2937);font-size:13px;line-height:1.6;display:grid;gap:5px}
-        .wjd-before-actions{display:flex;justify-content:flex-end}
-        .wjd-understand{min-width:200px;min-height:44px;border-radius:12px;border:0;background:var(--accent);color:var(--on-accent);font-size:13px;font-weight:700;text-transform:uppercase;cursor:pointer;font-family:inherit}
-        .wjd-report-head{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:0.5px solid var(--border,#e5e7eb)}
-        .wjd-report-body{padding:18px 20px 22px}
-        .wjd-report-label{display:block;color:var(--text,#0f172a);font-size:13px;font-weight:700;margin-bottom:6px}
-        .wjd-report-input{width:100%;border:0.5px solid var(--border,#e5e7eb);border-radius:10px;background:var(--bg,#f8fafc);color:var(--text,#0f172a);font-size:14px;padding:10px 12px;margin-bottom:14px;font-family:inherit;outline:none}
-        .wjd-report-actions{display:flex;gap:10px}
-        .wjd-report-cancel,.wjd-report-submit{flex:1;border-radius:10px;padding:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit}
-        .wjd-report-cancel{border:0.5px solid var(--border,#e5e7eb);background:var(--bg,#f8fafc);color:var(--text2,#475569)}
-        .wjd-report-submit{border:0;background:#dc2626;color:#fff}
-        .wjd-report-submit:disabled{background:var(--border,#cbd5e1);cursor:not-allowed}
-
-        @media(max-width:640px){
-          .wjd{padding:12px 0 40px}
-          .wjd-wrap{width:min(100% - 24px,900px)}
-          .wjd-agent{flex-direction:column;gap:12px;padding:18px 20px}
-          .wjd-grid{grid-template-columns:1fr;gap:10px}
-          .wjd-reward{flex-direction:column;text-align:center;gap:12px;padding:20px 18px}
-          .wjd-dollar{margin:0 auto}
-          .wjd-row{grid-template-columns:110px 1fr}
-          .wjd-desc{padding:20px 18px 22px}
-          .wjd-action-bar,.wjd-sticky-bar{flex-direction:column;gap:10px}
-          .wjd-primary,.wjd-secondary{width:100%;min-width:unset}
-          .wjd-info-row{grid-template-columns:1fr}
-          .wjd-config-strip{grid-template-columns:1fr 1fr}
-          .wjd-config-cell{border-bottom:0.5px solid var(--border,#e5e7eb)}
-          .wjd-config-cell:nth-child(odd){border-right:0.5px solid var(--border,#e5e7eb)}
-          .wjd-config-cell:last-child{border-bottom:none;border-right:none}
-        }
-        @keyframes wjdPulse{0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,0.5)}70%{box-shadow:0 0 0 7px rgba(34,197,94,0)}}
-        .wjd-actions-top{gap:12px}
-        .wjd-agent{border:1px solid var(--border,#e5e7eb)}
-        .wjd-avatar{border:2px solid var(--border,#e5e7eb)}
-        .wjd-link:hover{background:var(--bg,#f3f4f6)}
-        .wjd-icon-btn{width:34px;height:34px;border:none;border-radius:8px;background:transparent;cursor:pointer;display:grid;place-items:center;color:var(--text2,#6b7280)}
-        .wjd-icon-btn:hover{background:var(--bg,#f3f4f6)}
-        .wjd-reward{background:rgba(var(--accent-rgb),0.06);border:1px solid rgba(var(--accent-rgb),0.18);border-radius:20px;padding:28px 32px;text-align:center}
-        .wjd-reward-title{color:var(--accent);font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;margin-bottom:12px}
-        .wjd-amount{font-size:52px;font-weight:900;color:var(--text);line-height:1;background:none!important;-webkit-background-clip:unset!important;background-clip:unset!important;-webkit-text-fill-color:unset!important;animation:none!important}
-        .wjd-token{font-size:18px;font-weight:700;color:var(--text2);margin-left:4px;background:none!important;-webkit-background-clip:unset!important;background-clip:unset!important;-webkit-text-fill-color:unset!important;animation:none!important}
-        .wjd-usd{color:var(--text3);font-size:14px;font-weight:600;margin-top:8px}
-        .wjd-meta{border:1px solid var(--border,#e5e7eb);padding:24px}
-        .wjd-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text3,#9ca3af);display:flex;align-items:center;gap:8px;margin-bottom:16px}
-        .wjd-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border,#e5e7eb)}
-        .wjd-row:last-child{border-bottom:none}
-        .wjd-label{font-size:12px;font-weight:600;color:var(--text3,#9ca3af);text-transform:uppercase}
-        .wjd-value{font-size:14px;font-weight:700;color:var(--text,#0f172a)}
-        .wjd-signin-card{background:var(--card,#fff);border:1px solid var(--border,#e5e7eb);border-radius:16px;padding:28px 24px;text-align:center;margin-top:18px}
-        .wjd-signin-text{font-size:15px;font-weight:600;color:var(--text2,#475569);margin-bottom:16px}
-        @media(max-width:700px){
-          .wjd-amount{font-size:36px}
-          .wjd-token{font-size:15px}
-        }
-        [data-theme="dark"] .wjd-panel {
-          background: var(--card) !important;
-          border-color: var(--border) !important;
-        }
-        [data-theme="dark"] .wjd-back {
-          background: var(--card) !important;
-          border-color: var(--border) !important;
-          color: var(--text2) !important;
-        }
-        [data-theme="dark"] .wjd-avatar {
-          color: var(--text) !important;
-          border-color: var(--border) !important;
-        }
-        [data-theme="dark"] .wjd-name {
-          color: var(--text) !important;
-        }
-        [data-theme="dark"] .wjd-handle {
-          color: var(--text2) !important;
-        }
-        [data-theme="dark"] .wjd-mark {
-          background: var(--accent) !important;
-        }
-        [data-theme="dark"] .wjd-amount {
-          -webkit-text-fill-color: #ffffff !important;
-          color: #ffffff !important;
-          background: none !important;
-          animation: none !important;
-        }
-        [data-theme="dark"] .wjd-token {
-          -webkit-text-fill-color: #ffffff !important;
-          color: #ffffff !important;
-          background: none !important;
-          animation: none !important;
-        }
-        [data-theme="dark"] .wjd-reward {
-          background: #1e1e1e !important;
-          border-color: rgba(255,255,255,0.08) !important;
-        }
-        [data-theme="dark"] .wjd-dollar {
-          background: rgba(255,255,255,0.06) !important;
-          color: #ffffff !important;
-        }
-        [data-theme="dark"] .wjd-usd {
-          color: var(--text3) !important;
-        }
-        [data-theme="dark"] .wjd-value {
-          color: var(--text) !important;
-        }
-        [data-theme="dark"] .wjd-open-val {
-          color: #34D399 !important;
-        }
-        [data-theme="dark"] .wjd-link {
-          color: var(--text2) !important;
-        }
-        [data-theme="dark"] .wjd-link:hover {
-          background: rgba(255,255,255,0.06) !important;
-        }
-        [data-theme="dark"] .wjd-icon-btn {
-          background: var(--card) !important;
-          border-color: var(--border) !important;
-          color: var(--text2) !important;
-        }
-        [data-theme="dark"] .wjd-primary {
-          background: var(--accent) !important;
-        }
-        [data-theme="dark"] .wjd-info-section-title {
-          color: var(--text) !important;
-        }
-        [data-theme="dark"] .wjd-info-section-sub {
-          color: var(--text2) !important;
-        }
-        [data-theme="dark"] .wjd-info-row-label {
-          color: var(--text) !important;
-        }
-        [data-theme="dark"] .wjd-info-row-val {
-          color: var(--text2) !important;
-        }
-        [data-theme="dark"] .wjd-data-box {
-          background: transparent !important;
-          border: none !important;
-          padding: 0 !important;
-          margin: 0 !important;
-        }
-
-        /* ── wurk-style refresh (overrides the older rules above) ── */
-        .wjd{font-family:var(--font);background:var(--bg);padding-top:var(--page-top)}
-        .wjd-wrap{width:min(100% - 2 * var(--gutter), var(--container))}
-        .wjd-panel{border:1px solid var(--border)!important;border-radius:var(--r-card);background:var(--card);box-shadow:var(--sh-1)}
-        .wjd-back{border:1px solid var(--border);font-weight:600;border-radius:var(--r-ctl);height:var(--ctl-h-sm)}
-        .wjd-elig{margin:var(--sp-4) 0 0;padding:14px 16px;border-radius:14px;border:1px solid rgba(var(--red-rgb),.35);background:rgba(var(--red-rgb),.07)}
-        .wjd-elig>b{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--red)}
-        .wjd-elig ul{list-style:none;margin:8px 0 0;padding:0;display:flex;flex-direction:column;gap:8px}
-        .wjd-elig li{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:6px 12px;font-size:13px;line-height:1.5;color:var(--text)}
-        .wjd-elig li a{display:inline-flex;align-items:center;gap:4px;min-height:36px;font-weight:600;color:var(--accent);white-space:nowrap}
-        .wjd-workspace{display:flex;align-items:center;gap:12px;margin:var(--sp-4) 0 0;padding:12px 16px;border-radius:14px;border:1px solid var(--border);background:var(--card);color:var(--text);text-decoration:none;min-height:44px}
-        .wjd-workspace>i{font-size:20px;color:var(--accent)}
-        .wjd-workspace span{flex:1;min-width:0;display:flex;flex-direction:column}
-        .wjd-workspace b{font-size:14px}.wjd-workspace small{font-size:12px;color:var(--text2)}
-        .wjd-headline{display:flex;justify-content:space-between;align-items:flex-end;gap:var(--sp-6);margin:var(--sp-4) 0 var(--sp-5)}
-        .wjd-headline-main{min-width:0}
-        .wjd-h1{margin:var(--sp-2) 0 0;font-size:var(--fs-title);font-weight:600;letter-spacing:var(--tracking-tight);line-height:1.15;color:var(--text);overflow-wrap:anywhere}
-        .wjd-facts{display:flex;flex-wrap:wrap;gap:6px 18px;margin:var(--sp-3) 0 0;padding:0;list-style:none;font-size:13.5px;color:var(--text2)}
-        .wjd-facts li{display:inline-flex;align-items:center;gap:6px}
-        .wjd-facts i{font-size:var(--icon)}
-        .wjd-facts .wjd-dot{width:7px;height:7px;border-radius:50%;background:var(--text3)}
-        .wjd-facts .is-open{color:var(--money)}
-        .wjd-facts .is-open .wjd-dot{background:var(--money)}
-        .wjd-headline-side{display:flex;flex-direction:column;align-items:flex-end;gap:var(--sp-3);flex-shrink:0}
-        .wjd-headline-side .o-money{align-items:flex-end}
-        @media(max-width:767px){.wjd-headline{flex-direction:column;align-items:stretch;gap:var(--sp-4)}.wjd-headline-side{flex-direction:row;align-items:center;justify-content:space-between}.wjd-headline-side .o-money{align-items:flex-start}}
-        .wjd-agent{align-items:center;padding:18px 20px}
-        .wjd-avatar{width:44px;height:44px;border-radius:12px;border:1px solid var(--border)!important;background:var(--card2);font-size:15px}
-        .wjd-avatar img{border-radius:12px}
-        .wjd-kicker{font-family:var(--font-mono);font-weight:500;font-size:var(--fs-label);letter-spacing:.08em;color:var(--text2)}
-        .wjd-name{font-size:17px;font-weight:600;letter-spacing:-.02em}
-        .wjd-handle{font-size:12px;display:inline-flex;align-items:center;gap:6px}
-        .wjd-badge{display:none}
-        .wjd-sep{display:none}
-        .wjd-link{font-weight:500;font-size:13px;color:var(--text2);min-height:36px}
-        .wjd-icon-btn{border:1px solid var(--border)!important;border-radius:var(--r-ctl);width:var(--ctl-h-sm);height:var(--ctl-h-sm)}
-        .wjd-grid{gap:14px;margin-bottom:14px}
-        .wjd-meta{padding:18px 20px 20px!important;border:1px solid var(--border)!important}
-        .wjd-title{font-family:var(--font-mono);font-weight:500;font-size:var(--fs-label);letter-spacing:.08em;color:var(--text2);margin-bottom:18px}
-        .wjd-rows{display:grid;grid-template-columns:1fr 1fr;gap:16px 18px}
-        .wjd-row{display:block!important;padding:0!important;border:0!important}
-        .wjd-row.wide{grid-column:1 / -1}
-        .wjd-label{font-family:var(--font);font-weight:400!important;font-size:12.5px!important;letter-spacing:0;text-transform:none!important;color:var(--text2)!important;padding:0;margin-bottom:4px}
-        .wjd-value{font-size:14px!important;font-weight:500!important;color:var(--text)!important}
-        .wjd-open-val{color:var(--money)!important}
-        .wjd-dot{width:6px;height:6px}
-        .wjd-reward{position:relative;display:block;text-align:left!important;padding:22px 24px!important;margin-bottom:14px;border:1px solid color-mix(in srgb,var(--money) 14%,var(--border))!important;border-radius:var(--r-card);
-          background:var(--tint-reward)!important;overflow:hidden}
-        [data-theme="dark"] .wjd .wjd-reward{background:var(--tint-reward)!important;border-color:color-mix(in srgb,var(--money) 18%,var(--border))!important}
-        .wjd-reward-title{font-family:var(--font);font-weight:500;font-size:13px;letter-spacing:0;text-transform:none;color:var(--text2)!important;margin-bottom:8px}
-        .wjd-amount{font-size:clamp(32px,4.4vw,44px)!important;font-weight:600!important;letter-spacing:-.055em;color:#17805c!important;-webkit-text-fill-color:#17805c!important}
-        [data-theme="dark"] .wjd-amount{color:#34d399!important;-webkit-text-fill-color:#34d399!important}
-        .wjd-token{font-size:12px!important;font-weight:500!important;color:var(--text2)!important;-webkit-text-fill-color:var(--text2)!important;margin-left:6px}
-        .wjd-usd{font-family:var(--font-mono);font-size:11px!important;font-weight:400!important;letter-spacing:0;color:var(--text2)!important;margin-top:6px}
-        .wjd-reward-mark{position:absolute;right:18px;top:18px;width:36px;height:36px;border-radius:var(--r-ctl);border:1px solid var(--border);background:var(--card);color:var(--money);display:grid;place-items:center;font-size:var(--icon)}
-        .wjd-desc{padding:20px 22px 22px!important}
-        .wjd-desc-title{font-family:var(--font-mono);font-weight:500;font-size:var(--fs-label);letter-spacing:.08em;color:var(--text2);border-bottom:0;padding-bottom:0;margin-bottom:14px}
-        .wjd-body{font-size:var(--fs-body);color:var(--text);line-height:1.7}
-        .wjd-body{white-space:normal}
-        .wjd-body p{margin:0 0 12px}
-        .wjd-body>:last-child{margin-bottom:0}
-        .wjd-body ul,.wjd-body ol{margin:0 0 12px;padding-left:22px}
-        .wjd-body ul{list-style:disc}
-        .wjd-body ol{list-style:decimal}
-        .wjd-body li::marker{color:var(--text2)}
-        .wjd-body li{margin:4px 0;padding-left:2px}
-        .wjd-body h3{font-size:15px;font-weight:600;color:var(--text);margin:16px 0 6px}
-        .wjd-body>h3:first-child{margin-top:0}
-        .wjd-body strong{font-weight:650;color:var(--text)}
-        .wjd-body code{font-family:var(--font-mono);font-size:.9em;background:var(--bg2);border:1px solid var(--border);border-radius:5px;padding:1px 5px}
-        .wjd-sub-title{font-size:14px;font-weight:600}
-        .wjd-translate-row{justify-content:flex-start}
-        .wjd-translate-btn{font-weight:500;color:var(--text2);text-decoration:underline;text-underline-offset:3px}
-        .wjd-action-bar{border-top:1px solid var(--border);padding-top:16px;margin-top:20px}
-        .wjd-primary,.wjd-secondary{text-transform:none!important;letter-spacing:0!important;font-weight:600;font-size:14px;border-radius:var(--r-ctl);min-height:var(--ctl-h-lg);transition:opacity var(--t-fast) var(--ease),border-color var(--t-fast) var(--ease)}
-        .wjd-primary:hover:not(:disabled){opacity:.86}
-        .wjd-secondary:hover:not(:disabled){border-color:var(--text3)!important}
-        .wjd-primary{background:var(--accent)!important;color:var(--on-accent)!important}
-        .wjd-primary:disabled{background:var(--card2)!important;color:var(--text3)!important}
-        .wjd-secondary{background:var(--card)!important;color:var(--text)!important;border:1px solid var(--border)!important}
-        .wjd-sub-item{border:1px solid var(--border);background:var(--card2)}
-        .wjd-sub-avatar{border-radius:10px}
-        .wjd-sub-avatar img{border-radius:10px}
-        @media(max-width:640px){
-          .wjd-agent{flex-direction:row;flex-wrap:wrap}
-          .wjd-rows{grid-template-columns:1fr 1fr}
-        }
-      `}
-</style>
-
-      <div className="wjd">
-        <div className="wjd-wrap">
-          <button className="wjd-back" type="button" onClick={() => navigate(-1)}>
-            <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7" strokeLinecap="round" strokeLinejoin="round" /></svg>
-            Back
-          </button>
-
-          <EligibilityBanner eligibility={eligibility} joinPath={joinPath} />
-          {workspaceLink && (
-            <Link to={workspaceLink} className="wjd-workspace"><i className="ti ti-messages" aria-hidden="true" /><span><b>{canManage ? 'Job chat and workspace' : 'Your workspace'}</b><small>{canManage ? 'Talk to the person you picked and see their work.' : 'The brief, your work and the private job chat with the poster.'}</small></span><i className="ti ti-arrow-right" aria-hidden="true" /></Link>
-          )}
-
-          {/* ── Title: what the job is, where it stands, what it pays ── */}
-          <header className="wjd-headline">
-            <div className="wjd-headline-main">
-              <span className="ui-eyebrow"><i className={`ti ${contest ? 'ti-award' : 'ti-briefcase'}`} />{contest ? `Contest · ${categoryLabel(job.category)}` : categoryLabel(job.category)}</span>
-              <h1 className="wjd-h1">{job.title}</h1>
+        <div className="wjd-layout">
+          <div className="wjd-main">
+            {/* ── Title: what the job is and where it stands ── */}
+            <header className="wjd-headline">
+              <span className="ui-eyebrow"><i className={`ti ${contest ? 'ti-award' : 'ti-briefcase'}`} aria-hidden="true" />{contest ? `Contest · ${categoryLabel(job.category)}` : categoryLabel(job.category)}</span>
+              <h1 className="ui-title wjd-h1">{job.title}</h1>
               <ul className="wjd-facts" aria-label="Job status">
                 <li className={isOpen ? 'is-open' : ''}><span className="wjd-dot" aria-hidden="true" />{statusText}</li>
                 <li><i className="ti ti-clock" aria-hidden="true" />{clockText}</li>
                 {job.requiredCommunity && (
-                  <li><i className="ti ti-users-group" aria-hidden="true" />{job.requiredCommunity.isMember ? 'For members of ' : 'Join '}<Link to={job.requiredCommunity.isMember ? `/communities/${job.requiredCommunity.slug}` : joinPath} style={{ color: 'inherit', fontWeight: 600 }}>{job.requiredCommunity.name}</Link>{job.requiredCommunity.isMember ? ' (you are one)' : ' to take this job'}</li>
+                  <li><i className="ti ti-users-group" aria-hidden="true" />{job.requiredCommunity.isMember ? 'For members of ' : 'Join '}<Link to={job.requiredCommunity.isMember ? `/communities/${job.requiredCommunity.slug}` : joinPath}>{job.requiredCommunity.name}</Link>{job.requiredCommunity.isMember ? ' (you are one)' : ' to take this job'}</li>
                 )}
                 {community && (
-                  <li><i className="ti ti-lock" aria-hidden="true" />Members of <Link to={`/communities/${community.slug || community.id}`} style={{ color: 'inherit', fontWeight: 600 }}>{community.name}</Link> only</li>
+                  <li><i className="ti ti-lock" aria-hidden="true" />Members of <Link to={`/communities/${community.slug || community.id}`}>{community.name}</Link> only</li>
                 )}
                 {contest
                   ? <li><i className="ti ti-users" aria-hidden="true" />{contest.entries} {contest.entries === 1 ? 'entry' : 'entries'}{contest.entryTarget ? ` of ${contest.entryTarget} target` : ''}</li>
                   : job.isSelection
                   ? <li><i className="ti ti-user-check" aria-hidden="true" />{job.applicationsCount || 0} applied · the poster picks one person</li>
-                  : <li><i className="ti ti-users" aria-hidden="true" />{job.slotsLeft} of {job.slots} {job.slots === 1 ? 'place' : 'places'} left</li>}
+                  : <li><i className="ti ti-users" aria-hidden="true" />{job.slotsLeft} of {job.slots} {job.slots === 1 ? 'place' : 'places'} left
+                      <InfoTip label="How places work" title="Places">
+                        <p>Taking a place reserves it for you. Once every place is taken, people who haven't sent their work within 24 hours lose their place to someone else.</p>
+                      </InfoTip></li>}
               </ul>
-            </div>
-            <div className="wjd-headline-side">
-              <Money amount={Number(job.reward || 0)} currency={rewardCurrency} convert={convert} size={30} positive note={contest ? '1st place prize' : 'per person'} />
-              {authUser && myLabel
-                ? <button className="ui-btn ui-btn-dark" type="button" onClick={openMine}>{myLabel}</button>
-                : authUser && needJoin && isOpen
-                ? <Link className="ui-btn ui-btn-dark" to={joinPath}>Join {job.requiredCommunity!.name} to take this job</Link>
-                : authUser
-                ? <button className="ui-btn ui-btn-dark" type="button" disabled={!canManage && !isOpen} onClick={() => canManage ? navigate('/manage-jobs') : setShowApplyWarning(true)}>
-                    {canManage ? 'Manage submissions' : isOpen ? (job.isSelection ? 'Apply' : 'Take a place') : 'Job closed'}
-                  </button>
-                : <button className="ui-btn ui-btn-dark" type="button" onClick={() => navigate('/login?redirect=' + encodeURIComponent('/tasks/' + job.id))}>Sign in to apply</button>}
-            </div>
-          </header>
-          {mySub?.payoutCheck && <PayoutCheckStatus sub={mySub} who="worker" />}
-          {job.social && <SocialJobPanel jobId={job.id} social={job.social} holdEndsAt={mySub?.holdEndsAt} signedIn={!!authUser} onTimeUp={onReload} />}
+            </header>
 
-          {/* ── Creator Panel ── */}
-          <section className="wjd-panel wjd-agent">
-            <div className="wjd-agent-left">
+            {blocked && <EligibilityBanner eligibility={eligibility} joinPath={joinPath} />}
+            {workspaceLink && (
+              <Link to={workspaceLink} className="wjd-workspace"><i className="ti ti-messages" aria-hidden="true" /><span><b>{canManage ? 'Job chat and workspace' : 'Your workspace'}</b><small>{canManage ? 'Talk to the person you picked and see their work.' : 'The brief, your work and the private job chat with the poster.'}</small></span><i className="ti ti-arrow-right" aria-hidden="true" /></Link>
+            )}
+            {mySub?.payoutCheck && <div className="wjd-paycheck"><PayoutCheckStatus sub={mySub} who="worker" /></div>}
+            {job.social && <SocialJobPanel jobId={job.id} social={job.social} holdEndsAt={mySub?.holdEndsAt} signedIn={!!authUser} onTimeUp={onReload} />}
+
+            {/* ── What to do: the brief, proof, steps and who can take it ── */}
+            <section className="wjd-panel wjd-desc" aria-labelledby="wjd-what">
+              <h2 className="wjd-desc-title" id="wjd-what"><i className="ti ti-file-text" aria-hidden="true" /> What to do</h2>
+              <div className="wjd-body" dangerouslySetInnerHTML={{ __html: renderJobText(description) }} />
+
+              {extraInstructions && (
+                <>
+                  <h3 className="wjd-sub-title">More instructions</h3>
+                  <div className="wjd-body" dangerouslySetInnerHTML={{ __html: renderJobText(extraInstructions) }} />
+                </>
+              )}
+              {proofText && (
+                <>
+                  <h3 className="wjd-sub-title">Proof to send</h3>
+                  <div className="wjd-body"><p>{proofText}</p></div>
+                </>
+              )}
+              {job.steps.length > 0 && (
+                <>
+                  <h3 className="wjd-sub-title">Steps</h3>
+                  <ol className="wjd-list">{job.steps.map((step: string, i: number) => <li key={i} dangerouslySetInnerHTML={{ __html: renderJobLine(step) }} />)}</ol>
+                </>
+              )}
+
+              <h3 className="wjd-sub-title">Requirements</h3>
+              {reqList.length > 0 && <ul className="wjd-reqs">{reqList.map((r) => <li key={r.text}><i className={`ti ti-${r.icon}`} aria-hidden="true" />{r.text}</li>)}</ul>}
+              {job.requirements.length > 0 && <ul className="wjd-list">{job.requirements.map((item: string, i: number) => <li key={i} dangerouslySetInnerHTML={{ __html: renderJobLine(item) }} />)}</ul>}
+              {reqList.length === 0 && job.requirements.length === 0 && <p className="wjd-anyone">No extra requirements: anyone on OgaPay can take it.</p>}
+
+              {translatedText && (
+                <div className="wjd-translated">
+                  <div className="wjd-translated-head">
+                    <span>{LANGUAGES.find(l => l.code === targetLang)?.label || targetLang.toUpperCase()} translation</span>
+                    <button type="button" className="wjd-translate-btn" onClick={() => setTranslatedText(null)}>Show original</button>
+                  </div>
+                  <div className="wjd-body" dangerouslySetInnerHTML={{ __html: renderJobText(translatedText) }} />
+                </div>
+              )}
+
+              <div className="wjd-translate-row">
+                <button type="button" className="wjd-translate-btn" aria-expanded={showTranslatePicker} onClick={() => setShowTranslatePicker(!showTranslatePicker)}>
+                  Translate {showTranslatePicker ? '▲' : '▼'}
+                </button>
+                {showTranslatePicker && (
+                  <>
+                    <select className="ui-select wjd-tr-select" aria-label="Translate to" value={targetLang} onChange={e => { setTargetLang(e.target.value); translateDescription(e.target.value) }} disabled={translating}>
+                      {LANGUAGES.map(l => <option key={l.code} value={l.code}>{l.label}</option>)}
+                    </select>
+                    {translating && <span className="wjd-tr-note">Translating…</span>}
+                    {transError && <span className="wjd-tr-note bad">{transError}</span>}
+                  </>
+                )}
+              </div>
+            </section>
+
+            {contest && (
+              <ContestPanel jobId={job.id} contest={contest} currency={rewardCurrency} endsAt={job.deadline || null}
+                canManage={canManage} cancelled={jobStatus === 'cancelled'} convert={convert} onPaid={onContestPaid} />
+            )}
+
+            {/* ── Poster: the work sent in ── */}
+            {showSubs && (
+              <section className="wjd-panel wjd-subs-panel" aria-labelledby="wjd-subs-h">
+                <h2 className="wjd-title" id="wjd-subs-h"><i className="ti ti-users" aria-hidden="true" /> Work sent in</h2>
+                {canManage ? (
+                  subsLoading
+                    ? <div className="wjd-empty">Loading the work sent in…</div>
+                    : submissions.length === 0
+                      ? <div className="wjd-empty">Nothing sent in yet. Work appears here as people send it.</div>
+                      : (
+                        <div className="wjd-sub-list">
+                          {submissions.map((sub: any) => (
+                            <div className="wjd-sub-item" key={sub.id} onClick={() => setSelectedSub(sub)}>
+                              <div className="wjd-sub-avatar">
+                                {sub.worker?.avatarUrl ? <img src={sized(sub.worker.avatarUrl, 32, true)} alt="" /> : (sub.worker?.username || 'U')[0].toUpperCase()}
+                              </div>
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{ color: 'var(--text)', fontSize: 14, fontWeight: 600 }}>{sub.worker?.username || sub.worker?.firstName || 'Anonymous'}</div>
+                                <div style={{ color: 'var(--text2)', fontSize: 13 }}>{sub.workerNotes || 'No message'}</div>
+                                <CopyFlag reason={sub.spamReason} copy={!!sub.similarToId} compact />
+                                {sub.status === 'SUBMITTED' && <PayoutCheckStatus sub={sub} who="poster" compact />}
+                                {sub.proof && (
+                                  sub.proof.startsWith('http://') || sub.proof.startsWith('https://')
+                                    ? <a href={sub.proof} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--text)', fontSize: 12.5, wordBreak: 'break-all', textDecoration: 'underline' }}>{sub.proof}</a>
+                                    : <div style={{ color: 'var(--text)', fontSize: 12.5, wordBreak: 'break-all' }}>{sub.proof}</div>
+                                )}
+                                <div className="wjd-sub-actions" onClick={(e: any) => e.stopPropagation()}>
+                                  {sub.status === 'SUBMITTED' && (
+                                    <>
+                                      <button className="wjd-ok" type="button" onClick={() => setSelectedSub(sub)} disabled={approving === sub.id || checkBlocksApprove(sub, clock)} title={checkBlocksApprove(sub, clock) ? 'Payout check still running' : undefined}>{approving === sub.id ? 'Approving...' : 'Approve'}</button>
+                                      <button className="wjd-no" type="button" onClick={() => handleReject(sub.id)} disabled={rejecting === sub.id}>{rejecting === sub.id ? 'Rejecting...' : 'Reject'}</button>
+                                    </>
+                                  )}
+                                  {sub.status === 'APPROVED' && (sub._approvedAt || sub.approvedAt) ? <PayoutCountdown approvedAt={sub._approvedAt || sub.approvedAt} /> : sub.status === 'APPROVED' ? <span style={{ color: 'var(--green)', fontSize: 12.5, fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 4 }}><i className="ti ti-check" aria-hidden="true" /> Approved</span> : null}
+                                  {sub.status === 'APPROVED' && sub.rating ? <span style={{ color: 'var(--text2)', fontSize: 12.5, display: 'inline-flex', alignItems: 'center', gap: 4 }}><RatedStars value={sub.rating} /> {sub.rating}/5</span> : null}
+                                  {sub.status === 'REJECTED' && <span style={{ color: 'var(--red)', fontSize: 12.5, fontWeight: 600 }}><i className="ti ti-circle-x" aria-hidden="true" /> Rejected</span>}
+                                  {sub.status === 'EXPIRED' && <span style={{ color: 'var(--text2)', fontSize: 12.5, fontWeight: 600 }}><i className="ti ti-clock-x" aria-hidden="true" /> Place released</span>}
+                                  <span style={{ color: 'var(--text2)', fontSize: 12.5, marginLeft: 'auto' }}>{timeAgo(sub.createdAt)}</span>
+                                </div>
+                                {sub.status === 'SUBMITTED' && sub.autoApproveAt && (
+                                  <div style={{ color: 'var(--text2)', fontSize: 12.5, marginTop: 6 }}>
+                                    <i className="ti ti-clock-check" aria-hidden="true" /> If you don't review it, it's approved and paid automatically on{' '}
+                                    {new Date(sub.autoApproveAt).toLocaleString(undefined, { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}.
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )
+                ) : (
+                  <div className="wjd-empty">Only the poster can see the work sent in.</div>
+                )}
+              </section>
+            )}
+
+            {/* ── Public submissions: who sent work and what was paid (no proof) ── */}
+            {!canManage && <JobActivity jobId={job.id} convert={convert} isContest={!!contest} rewarded={!!job.social} />}
+          </div>
+
+          {/* ── Side panel on desktop; placed in reading order on phone and tablet ── */}
+          <div className="wjd-side">
+            <section className="wjd-panel wjd-act" aria-label={contest ? 'Prize and entry' : 'Reward'}>
+              <div className="wjd-act-pay">
+                <span className="wjd-act-lbl">{contest ? '1st place prize' : 'Reward per person'}</span>
+                <Money amount={Number(job.reward || 0)} currency={rewardCurrency} convert={convert} size={desktop ? 36 : 30} positive />
+              </div>
+              <div ref={ctaBox}>{cta()}</div>
+              {canManage && (
+                <button className="ui-btn ui-btn-ghost wjd-wide" type="button" aria-expanded={showSubs} onClick={() => setShowSubs(!showSubs)}>
+                  <i className="ti ti-eye" aria-hidden="true" /> {showSubs ? 'Hide the work sent in' : 'See the work sent in'}
+                </button>
+              )}
+              <div className="wjd-tools">
+                <button className="ui-btn ui-btn-ghost" type="button" aria-pressed={bookmarked} onClick={handleBookmark}>{bookmarkIcon}{bookmarked ? 'Saved' : 'Save'}</button>
+                <button className="ui-btn ui-btn-ghost" type="button" onClick={() => setShowShare(true)}><i className="ti ti-share" aria-hidden="true" /> Share</button>
+                <button className="ui-btn ui-btn-ghost" type="button" aria-expanded={moreOpen} aria-controls="wjd-more" onClick={() => setMoreOpen((o: boolean) => !o)}><i className="ti ti-dots" aria-hidden="true" /> More</button>
+              </div>
+              {moreOpen && (
+                <div className="wjd-more" id="wjd-more">
+                  <button type="button" className="wjd-more-item" onClick={() => { setMoreOpen(false); setShowInfo(true) }}><i className="ti ti-info-circle" aria-hidden="true" /> How this job works</button>
+                  <button type="button" className="wjd-more-item" onClick={() => { setMoreOpen(false); setShowReportModal(true) }}><i className="ti ti-flag" aria-hidden="true" /> Report this job</button>
+                  {authUser?.role === 'ADMIN' && (
+                    // Admins: highlighted jobs get a badge and are shown first on the homepage and the jobs page
+                    <button type="button" className="wjd-more-item" onClick={toggleHighlight} disabled={highlighting}
+                      title="Highlighted jobs get a badge and are shown first on the homepage and the jobs page">
+                      <i className={`ti ${job.featured ? 'ti-x' : 'ti-star'}`} aria-hidden="true" />
+                      {highlighting ? 'Saving…' : job.featured ? 'Remove highlight' : 'Highlight this job'}
+                    </button>
+                  )}
+                </div>
+              )}
+              {(canManage || authUser?.role === 'ADMIN') && isOpen && !job.currentWorkers && (
+                <button className="wjd-cancel" type="button" onClick={handleCancelJob} disabled={cancelling}>
+                  {cancelling ? 'Cancelling…' : 'Cancel job'}
+                </button>
+              )}
+            </section>
+
+            <section className="wjd-panel wjd-agent" aria-label="Listed by">
               <div className="wjd-avatar">
                 {job.brandAvatar ? <img src={sized(job.brandAvatar, 56, true)} alt="" /> : agentInitial}
               </div>
-              <div style={{ minWidth: 0 }}>
+              <div className="wjd-agent-txt">
                 <div className="wjd-kicker">Listed by</div>
                 <div className="wjd-name">
                   {agentName}
                   {job.brandPremium && <PremiumMark />}
-                  {job.boosted && <span style={{ marginLeft: 8 }}><BoostedTag /></span>}
+                  {job.boosted && <BoostedTag />}
                 </div>
                 {job.brandVerified && <VerifiedBusinessLine name={job.brandVerifiedName} />}
-                <div className="wjd-handle">{handleText}</div>
+                {profileHandle && <Link className="wjd-handle" to={`/user/${encodeURIComponent(profileHandle)}`}>@{profileHandle}</Link>}
               </div>
-            </div>
-            <div className="wjd-actions-top">
-              <span className={`wjd-badge ${isOpen ? 'wjd-badge-open' : 'wjd-badge-closed'}`}>
-                <span className="wjd-dot" style={{ background: isOpen ? 'var(--green)' : '#94a3b8' }} />
-                {isOpen ? 'Open' : 'Closed'}
-              </span>
-              <button className="wjd-link" type="button" onClick={() => setShowReportModal(true)}>
-                <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
-                Report
-              </button>
-              <span className="wjd-sep">|</span>
-              <button className="wjd-link" type="button" onClick={() => setShowInfo(true)}>
-                <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
-                Info
-              </button>
-              {authUser?.role === 'ADMIN' && (
-                <>
-                  <span className="wjd-sep">|</span>
-                  {/* Admins: highlighted jobs get a badge and are shown first on the homepage and the jobs page */}
-                  <button className="wjd-link" type="button" onClick={toggleHighlight} disabled={highlighting}
-                    title="Highlighted jobs get a badge and are shown first on the homepage and the jobs page">
-                    <i className={`ti ${job.featured ? 'ti-x' : 'ti-star'}`} aria-hidden="true" />
-                    {highlighting ? 'Saving…' : job.featured ? 'Remove highlight' : 'Highlight'}
-                  </button>
-                </>
-              )}
-              <span className="wjd-sep">|</span>
-              <button className="wjd-icon-btn" type="button" onClick={handleBookmark} aria-label="Bookmark">
-                {bookmarked
-                  ? <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" /></svg>
-                  : <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" /></svg>}
-              </button>
-            </div>
-          </section>
-
-          {/* ── Config + Participation Grid ── */}
-          <section className="wjd-grid">
-            <div className="wjd-panel wjd-meta">
-              <div className="wjd-title">
-                <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /></svg>
-                Configuration
-              </div>
-              <div className="wjd-rows">
-                <div className="wjd-row">
-                  <div className="wjd-label">Status</div>
-                  <div className="wjd-value wjd-open-val"><span className="wjd-dot" style={{ background: isOpen ? 'var(--green)' : '#94a3b8', border: `1.5px solid ${isOpen ? 'rgba(var(--green-rgb),0.8)' : '#64748b'}` }} />{statusText}</div>
-                </div>
-                {contest ? (
-                  <div className="wjd-row"><div className="wjd-label">How you're paid <InfoBtn text={contest.randomDraw
-                    ? "When entries close the winners are drawn at random from the entries the poster hasn't rejected. Each place's prize is paid to your wallet at once from the money already held for this contest. The seed and the drawn order are shown on this page so anyone can check the draw."
-                    : "When entries close the poster ranks the best entries and each place's prize is paid to your wallet from the money already held for this contest. If the poster doesn't pick within 3 days, the earliest entries they haven't rejected win." + earlyAwardText} /></div><div className="wjd-value">{contest.randomDraw
-                    ? `Drawn at random: ${contest.prizes.length} ${contest.prizes.length === 1 ? 'prize' : 'prizes'}`
-                    : `Prizes for the top ${contest.prizes.length === 1 ? 'entry' : `${contest.prizes.length} entries`}`}</div></div>
-                ) : (
-                  <div className="wjd-row"><div className="wjd-label">How you're paid <InfoBtn text="The poster checks each submission. Approved work is paid straight to your wallet from the money already held for this job." /></div><div className="wjd-value">Poster approves each one</div></div>
-                )}
-                {job.payoutCheck && (
-                  <div className="wjd-row wide"><div className="wjd-label">Payout check <InfoBtn text="A longer check means your payout result comes later, not that your work failed. Verified means eligible, not guaranteed paid: places are still limited." /></div><div className="wjd-value">{job.payoutCheck.note}</div></div>
-                )}
-                <div className="wjd-row"><div className="wjd-label">Time to do it</div><div className="wjd-value">{job.estimatedTime || 'Not given'}</div></div>
-                <div className="wjd-row"><div className="wjd-label">{closedEarly ? 'Ended' : 'Closes in'}</div><div className="wjd-value" style={{ fontVariantNumeric: 'tabular-nums' }}>{countdownStr}</div></div>
-                <div className="wjd-row"><div className="wjd-label">Minimum rank</div><div className="wjd-value">{Number(job.rankRequired || job.minRank) > 1 ? `${rankName(Number(job.rankRequired || job.minRank))} or higher` : 'None'}</div></div>
-                <div className="wjd-row"><div className="wjd-label">Requirements</div><div className="wjd-value">{jobRequirements(job).filter(r => r.icon !== 'award').map(r => r.text).join(', ') || 'No extra requirements'}</div></div>
-                {linkedJobs?.length > 0 && (
-                  <div className="wjd-row"><div className="wjd-label">Not for</div><div className="wjd-value">People who already did {linkedJobs.map((s: any, i: number) => <span key={s.id}>{i ? ', ' : ''}<Link to={`/tasks/${s.id}`} style={{ color: 'inherit', fontWeight: 600 }}>{s.title}</Link></span>)}. Each person is paid for only one of these.</div></div>
-                )}
-                <div className="wjd-row wide"><div className="wjd-label">Category</div><div className="wjd-value">{String(job.category || 'Custom').replace(/_/g, ' ').toLowerCase().replace(/^\w/, (l: string) => l.toUpperCase())}</div></div>
-              </div>
-            </div>
-            <div className="wjd-panel wjd-meta">
-              <div className="wjd-title">
-                <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>
-                Participation
-              </div>
-              <div className="wjd-rows">
-                <div className="wjd-row"><div className="wjd-label">Who can join</div><div className="wjd-value">{community ? `Members of ${community.name} who meet the requirements` : 'Anyone who meets the requirements'}</div></div>
-                {contest ? (<>
-                  <div className="wjd-row"><div className="wjd-label">Prize places</div><div className="wjd-value">{contest.prizes.length}</div></div>
-                  <div className="wjd-row"><div className="wjd-label">Entries</div><div className="wjd-value">{contest.entryTarget ? `${contest.entries} / ${contest.entryTarget} target` : `${contest.entries} (unlimited)`}</div></div>
-                </>) : (<>
-                <div className="wjd-row"><div className="wjd-label">People paid</div><div className="wjd-value">Up to {job.slots}</div></div>
-                <div className="wjd-row"><div className="wjd-label">Places taken <InfoBtn text="Taking a place reserves it for you. Once every place is taken, people who haven't sent their work within 24 hours lose their place to someone else." /></div><div className="wjd-value">{job.capacity}</div></div>
-                <div className="wjd-row"><div className="wjd-label">Places left</div><div className="wjd-value">{job.slotsLeft}</div></div>
-                </>)}
-                <div className="wjd-row"><div className="wjd-label">Work sent in</div><div className="wjd-value">{job.submitted}</div></div>
-              </div>
-            </div>
-          </section>
-
-          {/* ── Reward ── */}
-          {contest ? (
-            <ContestPanel jobId={job.id} contest={contest} currency={rewardCurrency} endsAt={job.deadline || null}
-              canManage={canManage} cancelled={jobStatus === 'cancelled'} convert={convert} onPaid={onContestPaid} />
-          ) : (
-          <section className="wjd-panel wjd-reward">
-              <span className="wjd-reward-mark" aria-hidden="true"><i className="ti ti-currency-dollar" /></span>
-              <div className="wjd-reward-title">Reward per person</div>
-              <Money amount={Number(job.reward || 0)} currency={rewardCurrency} convert={convert} size={40} positive />
-          </section>
-          )}
-
-          {/* ── Description ── */}
-          <section className="wjd-panel wjd-desc">
-            <div className="wjd-desc-title">
-              <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /><polyline points="10 9 9 9 8 9" /></svg>
-              Description
-            </div>
-
-            <div className="wjd-body" dangerouslySetInnerHTML={{ __html: renderJobText(description) }} />
-
-            {extraInstructions && (
-              <>
-                <div className="wjd-sub-title">What to do</div>
-                <div className="wjd-body" dangerouslySetInnerHTML={{ __html: renderJobText(extraInstructions) }} />
-              </>
-            )}
-            {proofText && (
-              <>
-                <div className="wjd-sub-title">Proof to send</div>
-                <div className="wjd-body"><p>{proofText}</p></div>
-              </>
-            )}
-
-            {job.steps.length > 0 && (
-              <>
-                <div className="wjd-sub-title">Steps</div>
-                <ul className="wjd-list">{job.steps.map((step: string, i: number) => <li key={i} dangerouslySetInnerHTML={{ __html: renderJobLine(step) }} />)}</ul>
-              </>
-            )}
-
-            {translatedText && (
-              <div style={{ marginTop: 20, padding: 18, background: 'rgba(var(--accent-rgb),0.04)', border: '0.5px solid rgba(var(--accent-rgb),0.15)', borderRadius: 12 }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-                  <span style={{ fontSize: 11, fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                    {LANGUAGES.find(l => l.code === targetLang)?.label || targetLang.toUpperCase()} Translation
-                  </span>
-                  <button type="button" onClick={() => setTranslatedText(null)} style={{ background: 'none', border: 'none', color: '#6b7280', cursor: 'pointer', fontSize: 12, fontWeight: 700, fontFamily: 'inherit' }}>
-                    Show original
-                  </button>
-                </div>
-                <div className="wjd-body" dangerouslySetInnerHTML={{ __html: renderJobText(translatedText) }} />
-              </div>
-            )}
-
-            {job.requirements.length > 0 && (
-              <>
-                <div className="wjd-sub-title">Requirements</div>
-                <ul className="wjd-list">{job.requirements.map((item: string, i: number) => <li key={i} dangerouslySetInnerHTML={{ __html: renderJobLine(item) }} />)}</ul>
-              </>
-            )}
-
-            <div className="wjd-translate-row">
-              <button type="button" className="wjd-translate-btn" onClick={() => setShowTranslatePicker(!showTranslatePicker)}>
-                Translate {showTranslatePicker ? '\u25B2' : '\u25BC'}
-              </button>
-            </div>
-            {showTranslatePicker && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'flex-end', marginTop: 8 }}>
-                <select value={targetLang} onChange={e => { setTargetLang(e.target.value); translateDescription(e.target.value) }} disabled={translating} style={{ height: 30, padding: '0 8px', borderRadius: 6, border: '0.5px solid var(--border,#e5e7eb)', background: 'var(--card,#fff)', color: 'var(--text,#0f172a)', fontSize: 12, fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer', outline: 'none' }}>
-                  {LANGUAGES.map(l => <option key={l.code} value={l.code}>{l.label}</option>)}
-                </select>
-                {translating && <span style={{ fontSize: 11, color: '#9ca3af', fontWeight: 700 }}>Translating...</span>}
-                {transError && <span style={{ fontSize: 11, color: '#dc2626', fontWeight: 700 }}>{transError}</span>}
-              </div>
-            )}
-
-            {!authUser ? (
-              <div className="wjd-signin-card">
-                <div className="wjd-signin-text">Sign in to apply for this task</div>
-                <button className="wjd-primary" type="button" onClick={() => navigate('/login')} style={{ width: '100%', maxWidth: 300 }}>
-                  Sign In
-                </button>
-              </div>
-            ) : needJoin && isOpen ? (
-              <div className="wjd-action-bar">
-                <Link className="wjd-primary" to={joinPath} style={{ textDecoration: 'none' }}>Join {job.requiredCommunity!.name} to take this job</Link>
-              </div>
-            ) : (
-              <div className="wjd-action-bar">
-                <button className="wjd-primary" type="button" disabled={!myLabel && !canManage && !isOpen}
-                  onClick={() => myLabel ? openMine() : canManage ? navigate('/manage-jobs') : setShowApplyWarning(true)}>
-                  <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" /></svg>
-                  {myLabel || (canManage ? 'Manage Submissions' : isOpen ? (contest ? 'Enter contest' : job.isSelection ? 'Apply' : 'Take a place') : (contest ? 'Entries closed' : 'Job Closed'))}
-                </button>
-                {canManage && <button className="wjd-secondary" type="button" onClick={() => setShowSubs(!showSubs)}>
-                  <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
-                  {showSubs ? 'Hide Submissions' : 'View Submissions'}
-                </button>}
-                {(canManage || authUser?.role === 'ADMIN') && isOpen && !job.currentWorkers && (
-                  <button className="wjd-secondary" type="button" onClick={handleCancelJob} disabled={cancelling} style={{ color: 'var(--red)' }}>
-                    {cancelling ? 'Cancelling…' : 'Cancel job'}
-                  </button>
-                )}
-              </div>
-            )}
-          </section>
-
-          {/* ── Submissions Panel ── */}
-          {showSubs && (
-            <section className="wjd-panel wjd-subs-panel">
-              <div className="wjd-title">
-                <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /></svg>
-                Submissions
-              </div>
-              {canManage ? (
-                subsLoading
-                  ? <div className="wjd-empty">Loading submissions...</div>
-                  : submissions.length === 0
-                    ? <div className="wjd-empty">No submissions yet. They will appear here once workers submit their work.</div>
-                    : (
-                      <div className="wjd-sub-list">
-                        {submissions.map((sub: any) => (
-                          <div className="wjd-sub-item" key={sub.id} onClick={() => setSelectedSub(sub)}>
-                            <div className="wjd-sub-avatar">
-                              {sub.worker?.avatarUrl ? <img src={sized(sub.worker.avatarUrl, 32, true)} alt="" /> : (sub.worker?.username || 'U')[0].toUpperCase()}
-                            </div>
-                            <div style={{ flex: 1, minWidth: 0 }}>
-                              <div style={{ color: 'var(--text,#0f172a)', fontSize: 14, fontWeight: 700 }}>{sub.worker?.username || sub.worker?.firstName || 'Anonymous'}</div>
-                              <div style={{ color: 'var(--text2,#475569)', fontSize: 13 }}>{sub.workerNotes || 'No message'}</div>
-                              <CopyFlag reason={sub.spamReason} copy={!!sub.similarToId} compact />
-                              {sub.status === 'SUBMITTED' && <PayoutCheckStatus sub={sub} who="poster" compact />}
-                              {sub.proof && (
-                                sub.proof.startsWith('http://') || sub.proof.startsWith('https://')
-                                  ? <a href={sub.proof} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)', fontSize: 12, wordBreak: 'break-all', textDecoration: 'underline' }}>{sub.proof}</a>
-                                  : <div style={{ color: 'var(--accent)', fontSize: 12, wordBreak: 'break-all' }}>{sub.proof}</div>
-                              )}
-                              <div className="wjd-sub-actions" onClick={(e: any) => e.stopPropagation()}>
-                                {sub.status === 'SUBMITTED' && (
-                                  <>
-                                    <button className="wjd-ok" type="button" onClick={() => setSelectedSub(sub)} disabled={approving === sub.id || checkBlocksApprove(sub, clock)} title={checkBlocksApprove(sub, clock) ? 'Payout check still running' : undefined}>{approving === sub.id ? 'Approving...' : 'Approve'}</button>
-                                    <button className="wjd-no" type="button" onClick={() => handleReject(sub.id)} disabled={rejecting === sub.id}>{rejecting === sub.id ? 'Rejecting...' : 'Reject'}</button>
-                                  </>
-                                )}
-                                {sub.status === 'APPROVED' && (sub._approvedAt || sub.approvedAt) ? <PayoutCountdown approvedAt={sub._approvedAt || sub.approvedAt} /> : sub.status === 'APPROVED' ? <span style={{ color: 'var(--green)', fontSize: 12, fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 4 }}><i className="ti ti-check" aria-hidden="true" /> Approved</span> : null}
-                                {sub.status === 'APPROVED' && sub.rating ? <span style={{ color: 'var(--text2,#475569)', fontSize: 12, display: 'inline-flex', alignItems: 'center', gap: 4 }}><RatedStars value={sub.rating} /> {sub.rating}/5</span> : null}
-                                {sub.status === 'REJECTED' && <span style={{ color: '#dc2626', fontSize: 12, fontWeight: 700 }}><i className="ti ti-circle-x" /> Rejected</span>}
-                                {sub.status === 'EXPIRED' && <span style={{ color: 'var(--text3)', fontSize: 12, fontWeight: 700 }}><i className="ti ti-clock-x" /> Slot released</span>}
-                                <span style={{ color: 'var(--text3,#94a3b8)', fontSize: 12, marginLeft: 'auto' }}>{timeAgo(sub.createdAt)}</span>
-                              </div>
-                              {sub.status === 'SUBMITTED' && sub.autoApproveAt && (
-                                <div style={{ color: 'var(--text3,#94a3b8)', fontSize: 12, marginTop: 6 }}>
-                                  <i className="ti ti-clock-check" /> If you don't review it, it's approved and paid automatically on{' '}
-                                  {new Date(sub.autoApproveAt).toLocaleString(undefined, { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}.
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )
-              ) : (
-                <div className="wjd-empty">Only the task creator can view submissions.</div>
-              )}
             </section>
-          )}
 
-          {/* ── Public submissions: who sent work and what was paid (no proof) ── */}
-          {!canManage && <JobActivity jobId={job.id} convert={convert} isContest={!!contest} rewarded={!!job.social} />}
+            <details className="wjd-panel wjd-details" open={desktop || undefined}>
+              <summary><span><i className="ti ti-list-details" aria-hidden="true" /> Job details</span><i className="ti ti-chevron-down wjd-chev" aria-hidden="true" /></summary>
+              <dl className="wjd-dl">
+                <div>
+                  <dt>How you're paid
+                    <InfoTip label="How you're paid" title="How you're paid">
+                      <p>{contest
+                        ? (contest.randomDraw
+                          ? "When entries close the winners are drawn at random from the entries the poster hasn't rejected. Each place's prize is paid to your wallet at once from the money already held for this contest. The seed and the drawn order are shown on this page so anyone can check the draw."
+                          : "When entries close the poster ranks the best entries and each place's prize is paid to your wallet from the money already held for this contest. If the poster doesn't pick within 3 days, the earliest entries they haven't rejected win." + earlyAwardText)
+                        : 'The poster checks each submission. Approved work is paid straight to your wallet from the money already held for this job.'}</p>
+                    </InfoTip>
+                  </dt>
+                  <dd>{contest
+                    ? (contest.randomDraw
+                      ? `Drawn at random: ${contest.prizes.length} ${contest.prizes.length === 1 ? 'prize' : 'prizes'}`
+                      : `Prizes for the top ${contest.prizes.length === 1 ? 'entry' : `${contest.prizes.length} entries`}`)
+                    : 'Poster approves each one'}</dd>
+                </div>
+                {job.payoutCheck && (
+                  <div className="wide">
+                    <dt>Payout check
+                      <InfoTip label="What the payout check means" title="Payout check">
+                        <p>A longer check means your payout result comes later, not that your work failed. Verified means eligible, not guaranteed paid: places are still limited.</p>
+                      </InfoTip>
+                    </dt>
+                    <dd>{job.payoutCheck.note}</dd>
+                  </div>
+                )}
+                <div><dt>Time to do it</dt><dd>{job.estimatedTime || 'Not given'}</dd></div>
+                <div><dt>Who can take it</dt><dd>{community ? `Members of ${community.name} who meet the requirements` : 'Anyone who meets the requirements'}</dd></div>
+                {contest && <div><dt>Prize places</dt><dd>{contest.prizes.length}</dd></div>}
+                <div><dt>Work sent in</dt><dd>{job.submitted}</dd></div>
+                {linkedJobs?.length > 0 && (
+                  <div className="wide"><dt>Not for</dt><dd>People who already did {linkedJobs.map((s: any, i: number) => <span key={s.id}>{i ? ', ' : ''}<Link to={`/tasks/${s.id}`}>{s.title}</Link></span>)}. Each person is paid for only one of these.</dd></div>
+                )}
+              </dl>
+            </details>
+          </div>
+
+          {/* ── The main button, kept above the bottom dock once the reward card scrolls away (phone and tablet) ── */}
+          {!ctaSeen && (
+            <div className="ui-actionbar wjd-bar">
+              <span className="ui-actionbar-text">
+                <Money amount={Number(job.reward || 0)} currency={rewardCurrency} convert={convert} size={17} positive />
+                <span>{contest ? '1st place prize' : 'per person'}</span>
+              </span>
+              {cta('wjd-bar-cta')}
+            </div>
+          )}
         </div>
       </div>
 
@@ -1458,7 +1074,7 @@ function WurkJobDetailView(props: any) {
           <div className="wjd-before" role="dialog" aria-modal="true" onClick={(e: any) => e.stopPropagation()}>
             <div className="wjd-modal-head">
               <div className="wjd-before-title">Before you start</div>
-              <button className="wjd-close-btn" type="button" onClick={() => setShowApplyWarning(false)}><i className="ti ti-x" /></button>
+              <button className="wjd-close-btn" type="button" aria-label="Close" onClick={() => setShowApplyWarning(false)}><i className="ti ti-x" aria-hidden="true" /></button>
             </div>
             <div className="wjd-before-copy">Please confirm the following before continuing:</div>
             <ul className="wjd-before-list">
@@ -1469,7 +1085,7 @@ function WurkJobDetailView(props: any) {
             </ul>
             <div className="wjd-before-actions">
               {/* The submit page shows what to do and the proof, and takes the place when the work is sent */}
-              <button className="wjd-understand" type="button" onClick={() => { setShowApplyWarning(false); navigate(`/tasks/${job.id}/submit`) }}>I understand</button>
+              <button className="ui-btn ui-btn-dark" type="button" onClick={() => { setShowApplyWarning(false); navigate(`/tasks/${job.id}/submit`) }}>I understand</button>
             </div>
           </div>
         </div>
@@ -1482,30 +1098,30 @@ function WurkJobDetailView(props: any) {
         <div className="wjd-modal-bg" onClick={() => { if (!reportSubmitting) setShowReportModal(false) }}>
           <div className="wjd-report-modal" onClick={(e: any) => e.stopPropagation()}>
             <div className="wjd-report-head">
-              <span style={{ fontSize: 15, fontWeight: 800 }}>Report Task</span>
+              <span>Report this job</span>
               <button className="wjd-close-btn" type="button" onClick={() => { if (!reportSubmitting) setShowReportModal(false) }} aria-label="Close"><i className="ti ti-x" aria-hidden="true" /></button>
             </div>
             <div className="wjd-report-body">
               {reportMsg && (
-                <div style={{ padding: '10px 14px', borderRadius: 10, marginBottom: 12, fontSize: 13, fontWeight: 700, background: reportMsg.includes('submitted') ? 'rgba(22,163,74,0.12)' : 'rgba(var(--red-rgb),0.1)', color: reportMsg.includes('submitted') ? 'var(--green)' : '#dc2626' }}>
+                <div role="status" style={{ padding: '10px 14px', borderRadius: 10, marginBottom: 12, fontSize: 13, fontWeight: 600, background: reportMsg.includes('submitted') ? 'color-mix(in srgb, var(--green) 12%, transparent)' : 'color-mix(in srgb, var(--red) 10%, transparent)', color: reportMsg.includes('submitted') ? 'var(--green)' : 'var(--red)' }}>
                   {reportMsg}
                 </div>
               )}
-              <label className="wjd-report-label">Category *</label>
-              <select className="wjd-report-input" value={reportCategory} onChange={(e: any) => setReportCategory(e.target.value)}>
+              <label className="wjd-report-label" htmlFor="wjd-rep-cat">What's wrong</label>
+              <select id="wjd-rep-cat" className="ui-select wjd-report-input" value={reportCategory} onChange={(e: any) => setReportCategory(e.target.value)}>
                 <option value="">Select a category</option>
                 <option value="spam">Spam</option>
-                <option value="scam">Scam / Fraud</option>
-                <option value="inappropriate">Inappropriate Content</option>
-                <option value="misleading">Misleading Information</option>
+                <option value="scam">Scam or fraud</option>
+                <option value="inappropriate">Inappropriate content</option>
+                <option value="misleading">Misleading information</option>
                 <option value="other">Other</option>
               </select>
-              <label className="wjd-report-label">Description *</label>
-              <textarea className="wjd-report-input" value={reportDesc} onChange={(e: any) => setReportDesc(e.target.value)} placeholder="Describe the issue in detail..." rows={4} style={{ resize: 'vertical' }} />
+              <label className="wjd-report-label" htmlFor="wjd-rep-desc">Tell us more</label>
+              <textarea id="wjd-rep-desc" className="wjd-report-input" value={reportDesc} onChange={(e: any) => setReportDesc(e.target.value)} placeholder="Describe the issue in detail..." rows={4} style={{ resize: 'vertical' }} />
               <div className="wjd-report-actions">
-                <button className="wjd-report-cancel" type="button" onClick={() => { setShowReportModal(false); setReportMsg('') }}>Cancel</button>
-                <button className="wjd-report-submit" type="button" onClick={handleSubmitReport} disabled={!reportCategory || !reportDesc.trim() || reportSubmitting}>
-                  {reportSubmitting ? 'Submitting...' : 'Submit Report'}
+                <button className="ui-btn ui-btn-ghost" type="button" onClick={() => { setShowReportModal(false); setReportMsg('') }}>Cancel</button>
+                <button className="ui-btn ui-btn-dark" type="button" onClick={handleSubmitReport} disabled={!reportCategory || !reportDesc.trim() || reportSubmitting}>
+                  {reportSubmitting ? 'Sending…' : 'Send report'}
                 </button>
               </div>
             </div>
@@ -1518,7 +1134,7 @@ function WurkJobDetailView(props: any) {
         <div className="wjd-modal-bg" onClick={() => setSelectedSub(null)}>
           <div className="wjd-report-modal" style={{ maxWidth: 480 }} onClick={(e: any) => e.stopPropagation()}>
             <div className="wjd-report-head">
-              <span style={{ fontSize: 15, fontWeight: 800 }}>Submission Detail</span>
+              <span>Work sent in</span>
               <button className="wjd-close-btn" type="button" onClick={() => setSelectedSub(null)} aria-label="Close"><i className="ti ti-x" aria-hidden="true" /></button>
             </div>
             <div className="wjd-report-body">
@@ -1527,36 +1143,36 @@ function WurkJobDetailView(props: any) {
                   {selectedSub.worker?.avatarUrl ? <img src={sized(selectedSub.worker.avatarUrl, 44, true)} alt="" style={{ width: 44, height: 44, borderRadius: '50%', objectFit: 'cover' }} /> : (selectedSub.worker?.username || 'U')[0].toUpperCase()}
                 </div>
                 <div>
-                  <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text,#0f172a)' }}>{selectedSub.worker?.username || selectedSub.worker?.firstName || 'Anonymous'}</div>
-                  {selectedSub.worker?.email && <div style={{ fontSize: 12, color: 'var(--text2,#475569)' }}>{selectedSub.worker.email}</div>}
+                  <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)' }}>{selectedSub.worker?.username || selectedSub.worker?.firstName || 'Anonymous'}</div>
+                  {selectedSub.worker?.email && <div style={{ fontSize: 12, color: 'var(--text2)' }}>{selectedSub.worker.email}</div>}
                 </div>
               </div>
-              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3,#9ca3af)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Status</div>
-              <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 14, color: selectedSub.status === 'APPROVED' ? 'var(--green)' : selectedSub.status === 'REJECTED' ? '#dc2626' : '#d97706' }}>{selectedSub.status}</div>
+              <div style={{ fontSize: 12.5, color: 'var(--text2)', marginBottom: 4 }}>Status</div>
+              <div style={{ fontSize: 14, fontWeight: 800, marginBottom: 14, color: selectedSub.status === 'APPROVED' ? 'var(--green)' : selectedSub.status === 'REJECTED' ? 'var(--red)' : 'color-mix(in srgb, var(--gold) 55%, var(--text))' }}>{selectedSub.status}</div>
               {selectedSub.status === 'APPROVED' && (selectedSub._approvedAt || selectedSub.approvedAt) && (
                 <div style={{ marginBottom: 14 }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3,#9ca3af)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Payout</div>
+                  <div style={{ fontSize: 12.5, color: 'var(--text2)', marginBottom: 4 }}>Payout</div>
                   <PayoutCountdown approvedAt={selectedSub._approvedAt || selectedSub.approvedAt} />
                 </div>
               )}
               {selectedSub.status === 'SUBMITTED' && selectedSub.payoutCheck && <div style={{ margin: '-4px 0 14px' }}><PayoutCheckStatus sub={selectedSub} who="poster" compact /></div>}
               {selectedSub.spamReason && <div style={{ margin: '-4px 0 14px' }}><CopyFlag reason={selectedSub.spamReason} copy={!!selectedSub.similarToId} compact={selectedSub.status !== 'SUBMITTED'} /></div>}
-              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3,#9ca3af)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Notes</div>
-              <div style={{ fontSize: 14, color: 'var(--text,#0f172a)', marginBottom: 14, lineHeight: 1.5 }}>{selectedSub.workerNotes || 'No message'}</div>
+              <div style={{ fontSize: 12.5, color: 'var(--text2)', marginBottom: 4 }}>Notes</div>
+              <div style={{ fontSize: 14, color: 'var(--text)', marginBottom: 14, lineHeight: 1.5 }}>{selectedSub.workerNotes || 'No message'}</div>
               {selectedSub.proof && (
                 <>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3,#9ca3af)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Proof</div>
-                  <div style={{ fontSize: 13, color: BRAND, wordBreak: 'break-all', marginBottom: 14 }}>
-                    <a href={selectedSub.proof} target="_blank" rel="noopener noreferrer" style={{ color: BRAND }}>{selectedSub.proof}</a>
+                  <div style={{ fontSize: 12.5, color: 'var(--text2)', marginBottom: 4 }}>Proof</div>
+                  <div style={{ fontSize: 13, wordBreak: 'break-all', marginBottom: 14 }}>
+                    <a href={selectedSub.proof} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--text)', textDecoration: 'underline' }}>{selectedSub.proof}</a>
                   </div>
                 </>
               )}
-              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3,#9ca3af)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>Submitted</div>
-              <div style={{ fontSize: 13, color: 'var(--text2,#475569)', marginBottom: 16 }}>{timeAgo(selectedSub.createdAt)}</div>
+              <div style={{ fontSize: 12.5, color: 'var(--text2)', marginBottom: 4 }}>Submitted</div>
+              <div style={{ fontSize: 13, color: 'var(--text2)', marginBottom: 16 }}>{timeAgo(selectedSub.createdAt)}</div>
               {selectedSub.status === 'APPROVED' && selectedSub.rating ? (
                 <>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3,#9ca3af)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>{ratedByTeam(selectedSub, job.posterId) ? 'Rated by the OgaPay team' : 'Your rating'}</div>
-                  <div style={{ fontSize: 13, color: 'var(--text,#0f172a)', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                  <div style={{ fontSize: 12.5, color: 'var(--text2)', marginBottom: 4 }}>{ratedByTeam(selectedSub, job.posterId) ? 'Rated by the OgaPay team' : 'Your rating'}</div>
+                  <div style={{ fontSize: 13, color: 'var(--text)', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                     <RatedStars value={selectedSub.rating} size={14} /> {selectedSub.rating}/5{selectedSub.feedback ? ` · “${selectedSub.feedback}”` : ''}
                   </div>
                 </>
@@ -1586,13 +1202,13 @@ function PayoutCountdown({ approvedAt }: { approvedAt: number }) {
   const endTime = Number(approvedAt) + 86400000
   const { d, h, m } = useCountdown(endTime)
   if (endTime - Date.now() <= 0) {
-    return <span style={{ color: 'var(--green)', fontSize: 12, fontWeight: 700 }}>Payout available</span>
+    return <span style={{ color: 'var(--green)', fontSize: 12.5, fontWeight: 600 }}>Payout available</span>
   }
   const parts: string[] = []
   if (d > 0) parts.push(`${d}d`)
   parts.push(`${h}h`)
   parts.push(`${m}m`)
-  return <span style={{ color: '#d97706', fontSize: 12, fontWeight: 700 }}>Payout in {parts.join(' ')}</span>
+  return <span className="wjd-amber" style={{ fontSize: 12.5, fontWeight: 600 }}>Payout in {parts.join(' ')}</span>
 }
 
 /* ── Apply Modal ── */
@@ -1619,23 +1235,23 @@ function SharePanel({ job, onClose }: { job: JobData; onClose: () => void }) {
           <div style={{ width: 36, height: 4, borderRadius: 2, background: 'var(--border,#e5e7eb)' }} />
         </div>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <p style={{ fontWeight: 800, color: 'var(--text,#0f172a)', margin: 0, fontSize: 15 }}>Share this Job</p>
-          <button onClick={onClose} style={{ width: 34, height: 34, borderRadius: '50%', background: 'var(--bg,#f3f4f6)', border: '0.5px solid var(--border,#e5e7eb)', color: 'var(--text2,#6b7280)', cursor: 'pointer', display: 'grid', placeItems: 'center' }}>
+          <p style={{ fontWeight: 600, color: 'var(--text)', margin: 0, fontSize: 15 }}>Share this job</p>
+          <button onClick={onClose} aria-label="Close" style={{ width: 40, height: 40, borderRadius: '50%', background: 'var(--card2)', border: '0.5px solid var(--border,#e5e7eb)', color: 'var(--text2,#6b7280)', cursor: 'pointer', display: 'grid', placeItems: 'center' }}>
             <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12" /></svg>
           </button>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
           {shares.map(s => (
-            <a key={s.label} href={s.href} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, padding: '14px 8px', background: 'var(--bg,#f8fafc)', border: '0.5px solid var(--border,#e5e7eb)', borderRadius: 12, textDecoration: 'none', color: 'inherit', fontSize: 12 }}>
+            <a key={s.label} href={s.href} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, padding: '14px 8px', background: 'var(--card2)', border: '0.5px solid var(--border,#e5e7eb)', borderRadius: 12, textDecoration: 'none', color: 'inherit', fontSize: 12 }}>
               <div style={{ width: 40, height: 40, borderRadius: '50%', background: BRAND_LIGHT, display: 'grid', placeItems: 'center', color: BRAND, fontWeight: 800, fontSize: 13 }}>{s.icon}</div>
               <span style={{ fontWeight: 600, color: 'var(--text2,#6b7280)' }}>{s.label}</span>
             </a>
           ))}
         </div>
         <div>
-          <p style={{ fontSize: 11, fontWeight: 700, color: 'var(--text3,#9ca3af)', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 8px' }}>Or copy link</p>
+          <p style={{ fontSize: 12.5, color: 'var(--text2)', margin: '0 0 8px' }}>Or copy the link</p>
           <div style={{ display: 'flex', gap: 8 }}>
-            <input readOnly value={url} style={{ flex: 1, padding: '10px 12px', borderRadius: 10, border: '0.5px solid var(--border,#e5e7eb)', background: 'var(--bg,#f8fafc)', color: 'var(--text,#0f172a)', fontSize: 12, fontFamily: 'monospace', outline: 'none' }} />
+            <input readOnly value={url} style={{ flex: 1, padding: '10px 12px', borderRadius: 10, border: '0.5px solid var(--border,#e5e7eb)', background: 'var(--card2)', color: 'var(--text)', fontSize: 12, fontFamily: 'monospace', outline: 'none' }} />
             <button onClick={copy} style={{ padding: '10px 18px', borderRadius: 10, border: 'none', background: BRAND, color: 'var(--on-accent)', fontWeight: 700, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>
               {copied ? 'Copied!' : 'Copy'}
             </button>
