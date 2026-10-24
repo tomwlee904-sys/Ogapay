@@ -3,7 +3,8 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { apiRequest, API_BASE } from '../lib/api'
 import { useCurrency } from '../context/CurrencyContext'
-import { HomeProductCard } from '../components/home/HomeCards'
+import { StoreTabs, StoreCard } from '../components/store/StoreUi'
+import LoadError from '../components/LoadError'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../components/Toast'
 import { useApi } from '../lib/useApi'
@@ -38,7 +39,7 @@ import FundJobWalletModal from '../components/FundJobWalletModal'
 import { SkeletonPage } from '../components/SkeletonLoader'
 import { formatCompact } from '../lib/currency'
 import { sized } from '../lib/img'
-import { itemCategoryLabel } from '../components/ItemCover'
+import { itemCategoryLabel, coverLook } from '../components/ItemCover'
 
 const OGAPAY_BLUE = 'var(--accent)'
 
@@ -91,22 +92,6 @@ const S = {
   grid: { display: 'grid', gap: 16 } as React.CSSProperties,
   btnPrimary: { height: 38, padding: '0 18px', borderRadius: 9, background: OGAPAY_BLUE, color: 'var(--on-accent)', border: 'none', fontWeight: 700, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', gap: 6 },
   btnOutline: { height: 38, padding: '0 18px', borderRadius: 9, border: '1.5px solid var(--border)', background: 'transparent', color: 'var(--text2)', fontWeight: 700, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', gap: 6 },
-}
-
-// ═══════════════════════════════════════════════
-// CATEGORIES (from API, fallback icons)
-// ═══════════════════════════════════════════════
-const CATEGORY_ICONS: Record<string, string> = {
-  'All': 'ti ti-layout-grid',
-  'design': 'ti ti-palette', 'Design': 'ti ti-palette',
-  'social': 'ti ti-share', 'Social': 'ti ti-share',
-  'marketing': 'ti ti-trending-up', 'Marketing': 'ti ti-trending-up',
-  'dev': 'ti ti-code', 'Development': 'ti ti-code',
-  'communities': 'ti ti-users', 'Communities': 'ti ti-users',
-  'content': 'ti ti-edit', 'Content': 'ti ti-edit',
-  'crypto': 'ti ti-coin', 'Crypto': 'ti ti-coin',
-  'ai': 'ti ti-robot', 'AI': 'ti ti-robot',
-  'templates': 'ti ti-files', 'Templates': 'ti ti-files',
 }
 
 // ═══════════════════════════════════════════════
@@ -205,88 +190,117 @@ function StorePage({
 
   const totalPages = Math.max(1, Math.ceil(total / limit))
   const submitSearch = (e?: React.FormEvent) => { e?.preventDefault(); updateURL({ search: searchInput.trim() || undefined, page: undefined }) }
+  const filtered = !!(category || search)
+  const clearFilters = () => { setSearchInput(''); updateURL({ search: undefined, category: undefined, page: undefined }) }
+  const sell = () => navigate(user ? '/my-store?add=1' : '/login?redirect=/my-store')
+  // OgaPay's own items come with codes (BADGE, SERVICE); show their names
+  const cats = Array.from(new Set([...allCategories, category].filter(Boolean)))
+    .sort((a, b) => itemCategoryLabel(a).localeCompare(itemCategoryLabel(b)))
 
+  // Phone: title, the store tabs, search, one sideways row of categories, then
+  // products two to a row (they start about 330px down instead of 560px)
   return (
     <div className="ui-page">
       <style>{`
-        .st-filter{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr) minmax(0,1fr);gap:var(--sp-4);padding:var(--sp-4);margin-top:var(--sp-5)}
-        .st-row{display:flex;justify-content:space-between;align-items:center;gap:var(--sp-3);margin:var(--sp-5) 0 var(--sp-4)}
-        .st-row a,.st-row button.link{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:500;color:var(--text);text-decoration:none;background:none;border:0;cursor:pointer;font-family:inherit;padding:6px 2px}
-        @media(max-width:860px){.st-filter{grid-template-columns:1fr 1fr}.st-filter>:first-child{grid-column:1 / -1}}
-        @media(max-width:520px){.st-filter{gap:10px var(--sp-3);padding:var(--sp-3)}}
+        .st-search{margin-top:var(--sp-4)}
+        .st-cats{margin-top:var(--sp-3);padding-block:4px}
+        .st-cats .ui-chip{display:inline-flex;align-items:center;gap:6px;height:36px}
+        .st-cats .ui-chip i{font-size:15px}
+        @media(min-width:768px){.st-cats{flex-wrap:wrap;overflow:visible;-webkit-mask-image:none;mask-image:none}}
+        .st-row{display:flex;justify-content:space-between;align-items:center;gap:var(--sp-3);margin:var(--sp-3) 0;min-height:40px}
+        .st-sort{display:inline-flex;align-items:center;gap:8px;margin-left:auto;font-size:13px;color:var(--text2)}
+        .st-sort .ui-select{width:auto;height:var(--ctl-h-sm);padding:0 30px 0 12px;font-size:13px;background-position:right 10px center}
+        .st-sk{height:340px}
+        .st-sell{display:flex;align-items:center;justify-content:space-between;gap:var(--sp-3);flex-wrap:wrap;margin-top:var(--sp-5);padding:16px 20px}
+        .st-sell p{margin:0;flex:1 1 260px;font-size:13.5px;line-height:1.55;color:var(--text2)}
+        .st-sell p b{display:block;color:var(--text);font-weight:600}
+        .st-sell .ui-actions{flex-shrink:0}
+        .st-creators{display:none}
+        @media(max-width:767.98px){.st-head .ui-actions{display:none}.st-sk{height:280px}.st-sell{padding:16px}.st-sell .ui-actions,.st-sell .ui-btn{width:100%}.st-creators{display:inline-flex;white-space:normal}}
       `}</style>
 
-      <header className="ui-head">
+      <header className="ui-head st-head">
         <div>
-          <h1 className="ui-title" style={{ marginTop: 0 }}>Products</h1>
+          <h1 className="ui-title" style={{ marginTop: 0 }}>Store</h1>
           <p className="ui-sub">Services and digital products from OgaPay creators.</p>
         </div>
         <div className="ui-actions">
-          <button className="ui-btn ui-btn-ghost" onClick={() => navigate('/workers')}>Browse creators <i className="ti ti-arrow-up-right" /></button>
-          {user && <button className="ui-btn ui-btn-ghost" onClick={() => navigate('/store/orders')}>My orders <i className="ti ti-receipt" /></button>}
-          <button className="ui-btn ui-btn-dark" onClick={() => navigate(user ? '/my-store' : '/login?redirect=/my-store')}>My store <i className="ti ti-user" /></button>
+          <button className="ui-btn ui-btn-ghost" onClick={() => navigate('/workers')}><i className="ti ti-users" /> Creators</button>
         </div>
       </header>
 
-      <form className="ui-card st-filter" onSubmit={submitSearch} role="search">
-        <div>
-          <label className="ui-label" htmlFor="st-search">Search products</label>
-          <div className="ui-search">
-            <input id="st-search" className="ui-input" style={{ paddingLeft: 14 }} placeholder="Design, writing, development..."
-              value={searchInput} onChange={e => setSearchInput(e.target.value)} />
-            <button type="submit" className="ui-search-btn" aria-label="Search"><i className="ti ti-search" /></button>
-          </div>
-        </div>
-        <div>
-          <label className="ui-label" htmlFor="st-cat">Category</label>
-          <select id="st-cat" className="ui-select" value={category} onChange={e => updateURL({ category: e.target.value || undefined, page: undefined })}>
-            <option value="">All</option>
-            {/* OgaPay's own items come with codes (BADGE, SERVICE); show their names */}
-            {[...allCategories].sort((a, b) => itemCategoryLabel(a).localeCompare(itemCategoryLabel(b))).map(c => <option key={c} value={c}>{itemCategoryLabel(c)}</option>)}
-          </select>
-        </div>
-        <div>
-          <label className="ui-label" htmlFor="st-sort">Sort by</label>
-          <select id="st-sort" className="ui-select" value={sort} onChange={e => updateURL({ sort: e.target.value || undefined, page: undefined })}>
-            {STORE_SORTS.map(([v, l]) => <option key={v || 'quality'} value={v}>{l}</option>)}
-          </select>
-        </div>
+      <StoreTabs active="shop" />
+
+      <form className="ui-search st-search" onSubmit={submitSearch} role="search">
+        <i className="ti ti-search" aria-hidden="true" />
+        <input id="st-search" className="ui-input" type="search" aria-label="Search products" placeholder="Search logos, writing, apps…"
+          value={searchInput} onChange={e => setSearchInput(e.target.value)} />
+        <button type="submit" className="ui-search-btn" aria-label="Search"><i className="ti ti-arrow-right" /></button>
       </form>
 
+      {cats.length > 0 && (
+        <div className="ui-scroll-row st-cats" role="group" aria-label="Categories">
+          <button type="button" className={`ui-chip${!category ? ' on' : ''}`} aria-pressed={!category} onClick={() => updateURL({ category: undefined, page: undefined })}><i className="ti ti-layout-grid" aria-hidden="true" />All</button>
+          {cats.map(c => (
+            <button key={c} type="button" className={`ui-chip${category === c ? ' on' : ''}`} aria-pressed={category === c} onClick={() => updateURL({ category: c, page: undefined })}>
+              <i className={`ti ti-${coverLook(c).icon}`} aria-hidden="true" />{itemCategoryLabel(c)}
+            </button>
+          ))}
+        </div>
+      )}
+
       <div className="st-row">
-        <span className="ui-count"><b>{products.length ? (page - 1) * limit + products.length : 0}</b> of {total} products</span>
-        <button className="link tap" type="button" onClick={() => navigate('/create')}>Create a job <i className="ti ti-plus" /></button>
+        {/* No count while loading or after a failed load: "0 of 0" read as an empty store */}
+        {!loading && !error && <span className="ui-count"><b>{products.length ? (page - 1) * limit + products.length : 0}</b> of {total} products</span>}
+        <label className="st-sort">Sort
+          <select className="ui-select" aria-label="Sort products" value={sort} onChange={e => updateURL({ sort: e.target.value || undefined, page: undefined })}>
+            {STORE_SORTS.map(([v, l]) => <option key={v || 'quality'} value={v}>{l}</option>)}
+          </select>
+        </label>
       </div>
 
-      {error && (
-        <div className="ui-empty" style={{ marginBottom: 16 }}>
-          <b style={{ color: 'var(--text)' }}>Couldn't load products</b>
-          <p style={{ margin: '6px 0 14px' }}>{error}</p>
-          <button className="ui-btn ui-btn-ghost" onClick={fetchProducts}>Try again</button>
-        </div>
-      )}
-
       {loading ? (
-        <div className="ui-grid-3">{[0, 1, 2, 3, 4, 5].map(i => <div key={i} className="ui-sk" style={{ height: 460 }} />)}</div>
-      ) : !error && products.length === 0 ? (
+        <div className="st-grid" aria-busy="true">{[0, 1, 2, 3, 4, 5].map(i => <div key={i} className="ui-sk st-sk" />)}</div>
+      ) : error ? (
+        <LoadError what="the store" onRetry={fetchProducts} />
+      ) : products.length === 0 ? (
         <div className="ui-empty">
-          <i className="ti ti-building-store" style={{ fontSize: 28, display: 'block', marginBottom: 10, color: 'var(--text3)' }} />
-          <b style={{ color: 'var(--text)' }}>No products found</b>
-          <p style={{ margin: '6px 0 16px' }}>Try a different search or category.</p>
-          <button className="ui-btn ui-btn-ghost" onClick={() => { setSearchInput(''); updateURL({ search: undefined, category: undefined, page: undefined }) }}>Clear filters</button>
+          {filtered ? (
+            <>
+              <strong>No products match</strong>
+              Try another word or category.
+              <div style={{ marginTop: 14 }}><button className="ui-btn ui-btn-ghost" onClick={clearFilters}>Clear filters</button></div>
+            </>
+          ) : (
+            <>
+              <strong>No products yet</strong>
+              Sell a service or digital product and it shows here.
+              <div style={{ marginTop: 14 }}><button className="ui-btn ui-btn-ghost" onClick={sell}><i className="ti ti-plus" /> Sell a product</button></div>
+            </>
+          )}
         </div>
       ) : (
-        <div className="ui-grid-3">
-          {products.map(p => <HomeProductCard key={p.id} item={p} convert={convert} />)}
+        <div className="st-grid">
+          {products.map(p => <StoreCard key={p.id} item={p} />)}
         </div>
       )}
 
-      {totalPages > 1 && (
+      {totalPages > 1 && !error && (
         <nav className="ui-pager" aria-label="Pages">
           <button className="ui-btn ui-btn-ghost" disabled={page <= 1} onClick={() => { updateURL({ page: page - 1 > 1 ? String(page - 1) : undefined }); window.scrollTo({ top: 0, behavior: 'smooth' }) }}><i className="ti ti-arrow-left" />Previous</button>
           <span>Page {page} of {totalPages}</span>
           <button className="ui-btn ui-btn-ghost" disabled={page >= totalPages} onClick={() => { updateURL({ page: String(page + 1) }); window.scrollTo({ top: 0, behavior: 'smooth' }) }}>Next<i className="ti ti-arrow-right" /></button>
         </nav>
+      )}
+
+      {!loading && !error && products.length > 0 && (
+        <section className="ui-card st-sell">
+          <p><b>Sell on OgaPay</b>List a service or digital product. Buyers pay from their wallet and you're paid when they confirm.</p>
+          <div className="ui-actions">
+            <button className="ui-btn ui-btn-ghost" onClick={sell}><i className="ti ti-plus" /> Sell a product</button>
+            <button className="ui-btn ui-btn-text st-creators" onClick={() => navigate('/workers')}>Looking for a person? Browse creators</button>
+          </div>
+        </section>
       )}
     </div>
   )

@@ -25,6 +25,7 @@ export default function OrderConfirmation() {
   const s = (useLocation().state || {}) as Done
   const [order, setOrder] = useState<Order | null>(null)
   const [state, setState] = useState<'loading' | 'ok' | 'missing' | 'error'>('loading')
+  const [reloadKey, setReloadKey] = useState(0)
 
   useEffect(() => {
     if (!id) { setState('missing'); return }
@@ -32,7 +33,7 @@ export default function OrderConfirmation() {
     apiRequest<Order>(`/store/orders/${id}`)
       .then((o) => { setOrder(o); setState('ok') })
       .catch((e: any) => setState(e?.status === 404 || /not found/i.test(e?.message || '') ? 'missing' : 'error'))
-  }, [id])
+  }, [id, reloadKey])
 
   if (state === 'loading') {
     return <Layout><div className="ui-page"><div className="sc-done"><p className="ui-sub">Loading your order…</p></div></div></Layout>
@@ -43,16 +44,16 @@ export default function OrderConfirmation() {
       <Layout>
         <div className="ui-page">
           <div className="sc-done">
-            <div className="sc-done-ic" style={{ background: 'var(--bg2)', color: 'var(--text2)' }}><i className="ti ti-receipt-off" aria-hidden="true" /></div>
-            <h1 className="ui-title">{state === 'missing' ? 'Order not found' : "Couldn't load this order"}</h1>
+            <div className="sc-done-ic" style={{ background: 'var(--card2)', color: 'var(--text2)' }}><i className="ti ti-receipt-off" aria-hidden="true" /></div>
+            <h1 className="ui-title">{state === 'missing' ? 'Order not found' : "We couldn't load this order"}</h1>
             <p className="ui-sub">
               {state === 'missing'
                 ? "There's no order with this link on your account. Your orders are all under My orders."
-                : 'Please check your connection and try again.'}
+                : 'Check your connection and try again. Nothing has changed on your account.'}
             </p>
             <div className="ui-actions">
               <Link className="ui-btn ui-btn-dark ui-btn-lg" to="/store/orders">My orders</Link>
-              {state === 'error' && <button type="button" className="ui-btn ui-btn-ghost ui-btn-lg" onClick={() => window.location.reload()}>Try again</button>}
+              {state === 'error' && <button type="button" className="ui-btn ui-btn-ghost ui-btn-lg" onClick={() => setReloadKey((k) => k + 1)}>Try again</button>}
             </div>
           </div>
         </div>

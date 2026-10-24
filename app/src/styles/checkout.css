@@ -1,5 +1,5 @@
 /* Store checkout (/store/pay/:id) and order confirmation (/orders/:id) */
-.sc-wrap { max-width: 1180px; }
+/* The page frame is the shared .ui-page (1120px); the old 1180px wrapper moved the left edge */
 .sc-back { display: flex; width: fit-content; align-items: center; gap: 6px; margin-bottom: 18px; font-size: 13px; color: var(--text2); text-decoration: none; }
 .sc-back:hover { color: var(--text); }
 .sc-grid { display: grid; grid-template-columns: minmax(0, 1fr) 400px; gap: 20px; align-items: start; margin-top: 24px; }
@@ -33,12 +33,12 @@
 .sc-line.total { border-bottom: 0; padding-top: 14px; font-size: 15px; font-weight: 600; color: var(--text); }
 .sc-pay { width: 100%; margin-top: 8px; }
 .sc-spin { animation: spin 1s linear infinite; }
-.sc-error { margin: 10px 0 0; font-size: 13px; color: #dc2626; }
+.sc-error { margin: 10px 0 0; font-size: 13px; color: var(--red); }
 .sc-note { display: flex; gap: 8px; margin: 14px 0 0; font-size: 12px; line-height: 1.55; color: var(--text2); }
 .sc-note i { font-size: 15px; margin-top: 1px; flex-shrink: 0; }
 .sc-note.warn { color: #b45309; }
 [data-theme="dark"] .sc-note.warn { color: #fbbf24; }
-.sc-fine { margin: 10px 0 0; font-size: 11px; color: var(--text3); }
+.sc-fine { margin: 10px 0 0; font-size: 12px; color: var(--text2); }
 .sc-fine a { color: var(--text2); }
 
 /* Steps: Product > Order details > Payment */
@@ -69,7 +69,7 @@
 .sc-files { list-style: none; padding: 0; margin: 10px 0 0; display: grid; gap: 6px; }
 .sc-files li { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 10px; font-size: 13px; color: var(--text); }
 .sc-files li span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.sc-files li button { border: 0; background: none; color: var(--text3); cursor: pointer; font-size: 15px; padding: 2px; }
+.sc-files li button { border: 0; background: none; color: var(--text2); cursor: pointer; font-size: 16px; padding: 4px; }
 
 /* Right column */
 .sc-side { display: grid; gap: 16px; position: sticky; top: calc(var(--nav-h, 72px) + 16px); }
@@ -117,7 +117,11 @@
 .sc-done .ui-actions { justify-content: center; margin-top: 24px; }
 .sc-ref { margin-top: 18px; font: 400 11px var(--font-mono); color: var(--text3); }
 
-@media (max-width: 767px) {
+/* Phone only: the order total and Continue stay above the bottom bar */
+.sc-bar { display: none; }
+@media (max-width: 1023.98px) { .sc-grid { grid-template-columns: minmax(0, 1fr) 300px; gap: 16px; } }
+@media (max-width: 767.98px) {
+  .sc-bar { display: flex; grid-column: 1 / -1; }
   .sc-grid { grid-template-columns: 1fr; }
   .sc-summary, .sc-side { position: static; }
   .sc-steps { gap: 10px 16px; }

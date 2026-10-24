@@ -78,6 +78,8 @@ export default function StorePayment() {
   const [item, setItem] = useState<Item | null>(null)
   const [seller, setSeller] = useState<Seller | null>(null)
   const [loadError, setLoadError] = useState('')
+  const [loadKind, setLoadKind] = useState<'gone' | 'failed' | 'request'>('failed')
+  const [reloadKey, setReloadKey] = useState(0)
   const [topUp, setTopUp] = useState(false)
   const [paying, setPaying] = useState(false)
   const [error, setError] = useState('')
@@ -96,11 +98,17 @@ export default function StorePayment() {
 
   useEffect(() => {
     if (!id) return
+    setLoadError('')
     apiRequest<Item>('/store/' + id, { auth: false })
       // A price-on-request product has no fixed price to pay: ask the seller instead
-      .then((d: any) => { if (d?.priceOnRequest) setLoadError('This product is priced on request. Message the seller from the product page for a price.'); else setItem(d) })
-      .catch((e: any) => setLoadError(e?.message || "This product couldn't be loaded"))
-  }, [id])
+      .then((d: any) => { if (d?.priceOnRequest) { setLoadKind('request'); setLoadError('This product is priced on request. Message the seller from the product page for a price.') } else setItem(d) })
+      .catch((e: any) => {
+        // "Not found" means the listing is gone; anything else is a failed request with Try again
+        const gone = !(e instanceof TypeError) && /not found|unavailable/i.test(e?.message || '')
+        setLoadKind(gone ? 'gone' : 'failed')
+        setLoadError(gone ? "This product isn't listed any more." : "We couldn't load this product. Check your connection and try again. Nothing has changed on your account.")
+      })
+  }, [id, reloadKey])
 
   useEffect(() => {
     if (!item?.seller || item.official) return
@@ -141,9 +149,13 @@ export default function StorePayment() {
     return (
       <Layout>
         <div className="ui-page sc-wrap">
-          <div className="ui-empty">
-            <p>{loadError}</p>
-            <Link className="ui-btn ui-btn-ghost" to="/store">Back to the store</Link>
+          <div className="ui-empty" role={loadKind === 'failed' ? 'alert' : undefined}>
+            <p style={{ marginTop: 0 }}>{loadError}</p>
+            <div className="ui-actions" style={{ justifyContent: 'center' }}>
+              {loadKind === 'failed' && <button className="ui-btn ui-btn-dark" onClick={() => setReloadKey((k) => k + 1)}><i className="ti ti-refresh" /> Try again</button>}
+              {loadKind === 'request' && <Link className="ui-btn ui-btn-dark" to={`/store/${id}`}>Open the product</Link>}
+              <Link className="ui-btn ui-btn-ghost" to="/store">Back to the store</Link>
+            </div>
           </div>
         </div>
       </Layout>
@@ -335,7 +347,7 @@ export default function StorePayment() {
                     {files.map((f) => (
                       <li key={f.url}>
                         <i className="ti ti-file" aria-hidden="true" /><span>{f.name}</span>
-                        <button type="button" aria-label={`Remove ${f.name}`} onClick={() => setFiles((x) => x.filter((y) => y.url !== f.url))}><i className="ti ti-x" aria-hidden="true" /></button>
+                        <button type="button" className="tap" aria-label={`Remove ${f.name}`} onClick={() => setFiles((x) => x.filter((y) => y.url !== f.url))}><i className="ti ti-x" aria-hidden="true" /></button>
                       </li>
                     ))}
                   </ul>
@@ -357,6 +369,12 @@ export default function StorePayment() {
                 </button>
               </section>
             </aside>
+            {!blocked && (
+              <div className="ui-actionbar sc-bar">
+                <div className="ui-actionbar-text"><b>{money(item.price, item.currency)}</b>Order total, no fees</div>
+                <button className="ui-btn ui-btn-dark" disabled={uploading} onClick={() => setParams({ step: 'pay' })}>Continue <i className="ti ti-arrow-right" aria-hidden="true" /></button>
+              </div>
+            )}
           </div>
         ) : (
           <>
