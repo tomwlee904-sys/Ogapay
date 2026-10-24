@@ -1,30 +1,36 @@
-/* Follower analytics page (pages/FollowerAnalytics.tsx) */
-.fa-page { max-width: 860px; }
-.fa-back { display: flex; width: fit-content; align-items: center; gap: 6px; margin-bottom: 14px; font-size: 13px; font-weight: 600; color: var(--text2); text-decoration: none; min-height: 32px; }
+/* Follower analytics page (pages/FollowerAnalytics.tsx). Uses the shared page
+   width (.ui-page) so its left edge lines up with Manage jobs. */
+.fa-back { display: flex; width: fit-content; align-items: center; gap: 6px; min-height: 44px; margin: -10px 0 0; font-size: 13px; font-weight: 600; color: var(--text2); text-decoration: none; }
 .fa-back:hover { color: var(--text); }
-.fa-error { margin-top: 20px; color: var(--red); font-size: 14px; }
-.fa-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 22px; }
-.fa-stat { background: var(--card); border: 1px solid var(--border); border-radius: var(--r-card); padding: 14px 16px; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
-.fa-stat span { font-size: 12px; color: var(--text2); }
-.fa-stat b { font-size: 24px; font-weight: 700; letter-spacing: -0.02em; color: var(--text); }
-.fa-stat small { font-size: 12px; color: var(--text3); overflow-wrap: anywhere; }
-.fa-card { margin-top: 16px; }
+.fa-state { margin-top: 24px; }
+.fa-state-acts { margin-top: 14px; }
+.fa-sk { display: grid; gap: 16px; margin-top: 22px; }
+/* Numbers in one card: first full width + 2 on phone, 3 across from tablet */
+.fa-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 22px; border: 1px solid var(--border); border-radius: var(--r-card); background: var(--card); overflow: hidden; }
+.fa-stat { padding: 14px 16px; display: flex; flex-direction: column; gap: 4px; min-width: 0; border-top: 1px solid var(--border); border-left: 1px solid var(--border); margin: -1px 0 0 -1px; }
+.fa-stat span { font-size: 12.5px; color: var(--text2); }
+.fa-stat b { font-size: 22px; font-weight: 600; letter-spacing: -0.02em; color: var(--text); }
+.fa-stat small { font-size: 12px; color: var(--text2); overflow-wrap: anywhere; }
+.fa-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; margin-top: 16px; align-items: start; }
+.fa-side { display: grid; gap: 16px; }
+@media (min-width: 1024px) { .fa-grid { grid-template-columns: minmax(0, 1fr) 340px; } }
 .fa-card .ui-hint { margin-bottom: 14px; }
 .fa-empty { font-size: 13.5px; color: var(--text2); margin: 8px 0 0; }
 .fa-chart { margin: 0; }
-.fa-chart svg { width: 100%; height: 200px; display: block; }
+.fa-chart svg { width: 100%; height: 220px; display: block; }
 .fa-line { stroke: var(--accent); stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; }
 .fa-area { fill: var(--accent); opacity: .08; }
-.fa-chart figcaption { display: flex; justify-content: space-between; gap: 8px; font-size: 11.5px; color: var(--text3); margin-top: 6px; flex-wrap: wrap; }
-.fa-table { margin-top: 16px; border-top: 1px solid var(--border); }
-.fa-tr { display: grid; grid-template-columns: 1fr auto 72px; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--border); font-size: 13.5px; align-items: center; }
+.fa-chart figcaption { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; color: var(--text2); margin-top: 6px; flex-wrap: wrap; }
+.fa-table { margin-top: 10px; }
+.fa-tr { display: grid; grid-template-columns: 1fr auto 64px; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--border); font-size: 13.5px; align-items: center; }
+.fa-tr:last-child { border-bottom: 0; }
 .fa-tr span { color: var(--text2); }
 .fa-tr b { color: var(--text); font-weight: 600; }
-.fa-tr em { font-style: normal; text-align: right; color: var(--green, #16a34a); font-weight: 600; }
+.fa-tr em { font-style: normal; text-align: right; color: var(--green); font-weight: 600; }
 .fa-tr em.down { color: var(--red); }
 .fa-note p { font-size: 13.5px; line-height: 1.6; color: var(--text2); margin: 8px 0 0; }
 .fa-note h2 { display: flex; align-items: center; gap: 8px; }
-@media (max-width: 767px) {
+@media (max-width: 767.98px) {
   .fa-stats { grid-template-columns: 1fr 1fr; }
   .fa-stats .fa-stat:first-child { grid-column: 1 / -1; }
 }

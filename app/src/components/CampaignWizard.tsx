@@ -69,8 +69,12 @@ const toCategory = (v?: string, type?: string | null) => {
 };
 
 
-export default function CampaignWizard() {
-  const [open, setOpen] = useState(false);
+// open / onOpenChange: the page can open it from its own button (Create shows a
+// "Build it with AI" option). The floating button only shows on desktop.
+export default function CampaignWizard({ open: openProp, onOpenChange }: { open?: boolean; onOpenChange?: (open: boolean) => void } = {}) {
+  const [openState, setOpenState] = useState(false);
+  const open = openProp ?? openState;
+  const setOpen = (v: boolean) => { if (onOpenChange) onOpenChange(v); else setOpenState(v); };
   // Hidden while the page footer is on screen, so it doesn't cover the footer's last line
   const [atFooter, setAtFooter] = useState(false);
   useEffect(() => {
@@ -1269,7 +1273,14 @@ export default function CampaignWizard() {
       {/* Phones and tablets: above the bottom dock (--dock-clear, tokens.css), not on top of Profile.
           The panel never grows past the top of a short screen, where its close button is */}
       <style>{`.cw-ai{bottom:max(24px,calc(var(--dock-clear,0px) + 12px));right:24px}@media(max-width:767px){.cw-ai{right:16px}}
-.cw-ai-panel{max-height:calc(100vh - max(24px,calc(var(--dock-clear,0px) + 12px)) - 72px);max-height:calc(100dvh - max(24px,calc(var(--dock-clear,0px) + 12px)) - 72px)}`}</style>
+.cw-ai-panel{max-height:calc(100vh - max(24px,calc(var(--dock-clear,0px) + 12px)) - 72px);max-height:calc(100dvh - max(24px,calc(var(--dock-clear,0px) + 12px)) - 72px)}
+.cw-ai-fab{display:inline-flex;align-items:center;gap:8px;height:48px;padding:0 18px 0 16px;border-radius:999px;border:0;background:var(--accent);color:var(--on-accent);font:600 14px var(--font,inherit);cursor:pointer;box-shadow:0 10px 30px -12px rgba(0,0,0,.45)}
+.cw-ai-fab i{font-size:18px}
+.cw-ai-x{width:44px;height:44px;margin:-10px -10px -10px 0;display:grid;place-items:center;background:none;border:0;border-radius:10px;color:var(--text2);cursor:pointer}
+.cw-ai-x:hover{background:var(--card2);color:var(--text)}
+@media(max-width:1023.98px){.cw-ai-fab{display:none}}
+.cw-ai-panel{bottom:0!important}
+@media(min-width:1024px){.cw-ai-panel{bottom:60px!important}}`}</style>
       {open && (
         <div
           className="cw-ai-panel"
@@ -1307,19 +1318,10 @@ export default function CampaignWizard() {
                   <path d="M12 18v4" />
                   <path d="M8 22h8" />
                 </svg>
-                <span style={{ fontWeight: 800, fontSize: 14, color: "var(--text)" }}>Campaign Builder</span>
+                <span style={{ fontWeight: 600, fontSize: 14, color: "var(--text)" }}>AI job builder</span>
               </div>
-              <button
-                onClick={() => setOpen(false)}
-                style={{
-                  background: "none",
-                  border: "none",
-                  color: "var(--text2)",
-                  cursor: "pointer",
-                  padding: 2,
-                }}
-              >
-                <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <button type="button" className="cw-ai-x" aria-label="Close the AI job builder" onClick={() => setOpen(false)}>
+                <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" aria-hidden="true">
                   <line x1="18" y1="6" x2="6" y2="18" />
                   <line x1="6" y1="6" x2="18" y2="18" />
                 </svg>
@@ -1358,29 +1360,8 @@ export default function CampaignWizard() {
         </div>
       )}
       {!open && (
-        <button
-          aria-label="Open the AI campaign builder"
-          title="AI campaign builder"
-          onClick={() => setOpen(true)}
-          style={{
-            width: 52,
-            height: 52,
-            borderRadius: "50%",
-            border: "none",
-            background: "linear-gradient(135deg, var(--accent), var(--green))",
-            color: "#fff",
-            cursor: "pointer",
-            boxShadow: "0 4px 20px rgba(var(--accent-rgb),0.4)",
-            display: "grid",
-            placeItems: "center",
-          }}
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M12 2a4 4 0 0 1 4 4v2a4 4 0 0 1-8 0V6a4 4 0 0 1 4-4z" />
-            <path d="M5 13h14" />
-            <path d="M12 18v4" />
-            <path d="M8 22h8" />
-          </svg>
+        <button type="button" className="cw-ai-fab" onClick={() => setOpen(true)}>
+          <i className="ti ti-sparkles" aria-hidden="true" /> AI builder
         </button>
       )}
       <style>{`@keyframes wizSpin { to { transform: rotate(360deg); } }`}</style>

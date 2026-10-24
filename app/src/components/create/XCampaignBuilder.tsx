@@ -7,7 +7,7 @@ import { useAuth } from "../../context/AuthContext";
 import { useCurrency } from "../../context/CurrencyContext";
 import { useWalletBalance } from "../../context/WalletBalanceContext";
 import { PayoutCheckPicker, PAYOUT_CHECKS } from "../PayoutCheck";
-import { OverviewCard, RequirementPicker, NO_REQS, type Reqs, reqsAny, Steps, Fold, DURATIONS, deadlineFor, money, reqFields, reqLabel, createTask, apiErrorText } from "./shared";
+import { OverviewCard, PayBar, RequirementPicker, NO_REQS, type Reqs, reqsAny, Steps, Fold, DURATIONS, deadlineFor, money, reqFields, reqLabel, createTask, apiErrorText } from "./shared";
 import { useSocialPrices, priceOf, isStaggered, batchSizeFor, X_TARGET, SocialAction } from "./socialPrices";
 
 /* X campaign ("Start with your X post"): paste the post link, see the post,
@@ -166,14 +166,13 @@ export default function XCampaignBuilder({ initialUrl = "", onClose, onCreated }
 
   return (
     <Layout>
-      <div className="ui-page" style={{ paddingTop: 28 }}>
-        <header className="ui-head">
+      <div className="ui-page">
+        <button type="button" className="cw-back" onClick={onClose}><i className="ti ti-arrow-left" aria-hidden="true" /> Job type</button>
+        <header className="ui-head cw-head">
           <div>
-            <span className="ui-eyebrow"><i className="ti ti-sparkles" /> Made for your next idea</span>
-            <h1 className="ui-title">Create an X campaign</h1>
-            <p className="ui-sub">Choose the actions and rewards for your post. Review the total before paying.</p>
+            <h1 className="ui-title">Grow an X post</h1>
+            <p className="ui-sub">Pick the actions and how many people. Check the total before you pay.</p>
           </div>
-          <button className="ui-btn ui-btn-ghost" onClick={onClose}><i className="ti ti-arrow-left" /> Change job type</button>
         </header>
 
         <Steps labels={["Enter post", "Set rewards", "Payment"]} current={step} />
@@ -182,7 +181,7 @@ export default function XCampaignBuilder({ initialUrl = "", onClose, onCreated }
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             {!isAuthed && (
               <div className="cw-banner" style={{ margin: 0 }}>
-                <span>Plan your campaign now. Sign in to see the post preview and pay.</span>
+                <span>Plan it now. Sign in to see the post preview and pay.</span>
                 <button className="ui-btn ui-btn-dark" onClick={() => navigate("/login?redirect=/create")}>Sign in</button>
               </div>
             )}
@@ -296,6 +295,12 @@ export default function XCampaignBuilder({ initialUrl = "", onClose, onCreated }
                   {error && <div className="cf-error">{error}</div>}
                 </div>
               </section>
+            )}
+
+            {step >= 2 && (
+              <PayBar total={total} currency={currency} onAction={publish} busy={busy}
+                note={!isAuthed ? "Sign in to pay" : step < 3 ? (ready ? "Includes the 10% platform fee" : checklist.find(c => !c.ok)?.label || "") : balance < total ? `You need ${money(total - balance, currency)} more in your wallet` : `Paid from your ${currency} balance`}
+                label={!isAuthed ? "Sign in" : step < 3 ? "Continue" : busy ? "Publishing…" : "Pay and publish"} />
             )}
           </div>
 
