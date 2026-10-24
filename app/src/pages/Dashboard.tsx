@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Layout from '../components/Layout'
+import LoadError from '../components/LoadError'
 import { useAuth } from '../context/AuthContext'
 import { useWalletBalance } from '../context/WalletBalanceContext'
 import { apiRequest } from '../lib/api'
@@ -13,18 +14,20 @@ import { useMoney } from '../lib/useMoney'
 import InfoTip from '../components/InfoTip'
 import '../styles/dashboard.css'
 
-// Dashboard, top to bottom: what needs you now (work to review, work to send),
-// three numbers (balance, your level, OgaScore), then hiring (jobs you posted)
-// beside earning (work you've taken, and jobs for you). Someone who only hires or
-// only works gets that side alone; a new account gets two starter cards and the
-// setup steps first. It used to be built for workers only, so posters saw "not
-// working on anything" while their own jobs were one line at the top.
+// Dashboard. Phone, top to bottom: your money (balance, level, OgaScore in one
+// card), what needs you now (work to review, work to send, reviews to write),
+// the next setup step, then real jobs. Desktop: the same main column with the
+// money card in a side panel that stays in view. Someone who only hires or only
+// works gets that side alone; a new account gets real jobs straight away (it
+// used to get two promo cards and a 4-step checklist that filled the screen).
 // Starter jobs (the Highlighted ones) are listed in full for anyone with fewer
 // than STARTER_UNTIL finished jobs, the ones they can do right now first.
+// A request that fails says so with Try again: it never shows "nothing here".
 
-type Me = { ogaScore?: number; humanVerifiedAt?: string | null; workerProfile?: { tasksCompleted?: number; level?: string } | null; kyc?: { status?: string; kycTier?: number } | null }
+type Me = { ogaScore?: number | null; humanVerifiedAt?: string | null; workerProfile?: { tasksCompleted?: number; level?: string } | null; kyc?: { status?: string; kycTier?: number } | null }
 type Sub = {
   id: string; status: string; taskId: string; autoApproveAt?: string | null; submittedAt?: string | null
+  holdEndsAt?: string | null
   task?: { id: string; title: string; reward: number | string; currency?: string; expiresAt?: string | null; deadline?: string | null }
   isContest?: boolean; contestResult?: 'WON' | 'NOT_PLACED' | 'WAITING' | null
 }
@@ -34,12 +37,15 @@ type Job = {
   submissions?: { status: string }[]
   featured?: boolean; workerRequirement?: string | null; minJobsDone?: number; excludesTaskIds?: string[]
 }
+type Step = { key: string; done: boolean; label: string; sub: string; to?: string; cta?: string; action?: 'mail' }
 
 const LEVELS = ['BEGINNER', 'INTERMEDIATE', 'ADVANCED', 'EXPERT', 'LEGEND']
 const LIVE = ['OPEN', 'IN_PROGRESS', 'COOLING_DOWN', 'DRAFT']
 const STATUS: Record<string, string> = { OPEN: 'Open', IN_PROGRESS: 'In progress', COOLING_DOWN: 'Wrapping up', DRAFT: 'Draft' }
 const greeting = () => { const h = new Date().getHours(); return h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening' }
 const when = (d?: string | null) => d ? new Date(d).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }) : ''
+// "Sat 14:30": when a held place is freed
+const at = (d: string) => new Date(d).toLocaleString('en-GB', { weekday: 'short', hour: '2-digit', minute: '2-digit' })
 const toReviewOn = (j: Job) => (j.submissions || []).filter((s) => s.status === 'SUBMITTED').length
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`
 const STARTER_UNTIL = 5
@@ -47,13 +53,15 @@ const placesLeft = (j: Job) => Math.max(0, (Number(j.maxWorkers) || 1) - (Number
 
 export default function Dashboard() {
   const { user } = useAuth()
-  const { balances } = useWalletBalance()
+  const { balances, error: balanceError, refresh: refreshBalance } = useWalletBalance()
   // Amounts follow the display currency; limits and "withdraw your ₦…" stay in naira
   const show = useMoney()
   const [me, setMe] = useState<Me | null>(null)
   // Starter jobs fold away so they don't fill the page; the choice is remembered
   const [starterOpen, setStarterOpen] = useState(() => { try { return localStorage.getItem('ogapay-starter-open') === '1' } catch { return false } })
   const toggleStarter = () => setStarterOpen((o) => { try { localStorage.setItem('ogapay-starter-open', o ? '0' : '1') } catch { /* private mode */ } return !o })
+  // Setup shows only the next step until "See all steps" is tapped
+  const [allSteps, setAllSteps] = useState(false)
   // A rank you can claim (services/rank.service.js): shown first on the dashboard
   const [rankUp, setRankUp] = useState<{ name: string } | null>(null)
   useEffect(() => {
@@ -65,17 +73,39 @@ export default function Dashboard() {
   const [created, setCreated] = useState<Job[] | null>(null)
   const [jobs, setJobs] = useState<Job[] | null>(null)
   const [hasBank, setHasBank] = useState(false)
+  // Work you approved without stars (posters only), for "Needs your attention"
+  const [toRate, setToRate] = useState(0)
   const [mail, setMail] = useState<'idle' | 'sending' | 'sent' | 'failed'>('idle')
+  // Which requests failed: their part of the page says so, with Try again
+  const [failed, setFailed] = useState<{ me?: boolean; work?: boolean; jobs?: boolean }>({})
 
-  useEffect(() => {
-    apiRequest<Me>('/users/me').then(setMe).catch(() => setMe({}))
-    apiRequest<{ totalEarned?: number; earned?: Record<string, number> }>('/users/me/earnings').then((d) => setEarned(d?.earned || { NGN: Number(d?.totalEarned || 0) })).catch(() => setEarned({}))
-    apiRequest<{ submissions: Sub[] }>('/tasks/my/submissions').then((d) => setSubs(d?.submissions || [])).catch(() => setSubs([]))
-    apiRequest<Job[]>('/tasks/my/created?limit=100').then((d) => setCreated(Array.isArray(d) ? d : [])).catch(() => setCreated([]))
-    apiRequest<Job[] | { tasks: Job[] }>('/tasks?limit=100').then((d: any) => setJobs(Array.isArray(d) ? d : d?.tasks || [])).catch(() => setJobs([]))
+  const loadJobs = useCallback(() => {
+    setFailed((f) => ({ ...f, jobs: false }))
+    setJobs(null)
+    apiRequest<Job[] | { tasks: Job[] }>('/tasks?limit=100')
+      .then((d: any) => setJobs(Array.isArray(d) ? d : d?.tasks || []))
+      .catch(() => setFailed((f) => ({ ...f, jobs: true })))
+  }, [])
+
+  const load = useCallback(() => {
+    setFailed({})
+    setMe(null); setEarned(null); setSubs(null); setCreated(null)
+    apiRequest<Me>('/users/me').then(setMe).catch(() => { setMe({}); setFailed((f) => ({ ...f, me: true })) })
+    // On a failure the link just says "Earnings", never "₦0 earned"
+    apiRequest<{ totalEarned?: number; earned?: Record<string, number> }>('/users/me/earnings').then((d) => setEarned(d?.earned || { NGN: Number(d?.totalEarned || 0) })).catch(() => setEarned(null))
+    apiRequest<{ submissions: Sub[] }>('/tasks/my/submissions').then((d) => setSubs(d?.submissions || [])).catch(() => setFailed((f) => ({ ...f, work: true })))
+    apiRequest<Job[]>('/tasks/my/created?limit=100').then((d) => {
+      const list = Array.isArray(d) ? d : []
+      setCreated(list)
+      if (list.length > 0) {
+        apiRequest<{ items?: unknown[] }>('/tasks/my/to-rate').then((r) => setToRate(Array.isArray(r?.items) ? r.items.length : 0)).catch(() => {})
+      }
+    }).catch(() => setFailed((f) => ({ ...f, work: true })))
+    loadJobs()
     // Saved banks (the old check read a profile field the bank form never sets)
     sharedGet<any[]>('/wallet/banks', 5000).then((d) => setHasBank(Array.isArray(d) && d.length > 0)).catch(() => {})
-  }, [])
+  }, [loadJobs])
+  useEffect(() => { load() }, [load])
 
   if (!user) return <Layout><div className="ui-page"><div className="ui-sk" style={{ height: 200 }} /></div></Layout>
 
@@ -109,7 +139,7 @@ export default function Dashboard() {
     ? (jobs || []).filter((j) => j.featured && j.posterId !== user.id && !taken.has(j.id) && !similarTaken(j) && placesLeft(j) > 0 && jobDeadline(j).state !== 'ended')
     : []
   const starterIds = new Set(starter.map((j) => j.id))
-  const forYou = (jobs || []).filter((j) => j.posterId !== user.id && !taken.has(j.id) && !starterIds.has(j.id)).slice(0, 4)
+  const forYou = (jobs || []).filter((j) => j.posterId !== user.id && !taken.has(j.id) && !starterIds.has(j.id)).slice(0, 5)
   const rank = me?.workerProfile?.level
   const rankLabel = rank ? rankName(LEVELS.indexOf(rank) + 1) : 'Beginner'
   const kycTier = (me?.kyc?.status || user.kycStatus) === 'APPROVED' ? Number(me?.kyc?.kycTier ?? user.kycTier ?? 0) : 0
@@ -130,19 +160,25 @@ export default function Dashboard() {
   const works = (subs || []).length > 0
   const isNew = loaded && !hires && !works
 
-  const steps = [
-    { done: !!(user.firstName && user.lastName && user.avatar), label: 'Add your name and a photo', sub: 'People trust those they can recognise.', to: '/edit-profile', cta: 'Edit profile' },
-    { done: !!user.isEmailVerified, label: 'Verify your email', sub: 'So you get job alerts and payment receipts.', action: 'mail' as const },
-    { done: !!(hasBank || user.walletAddress || user.bankAccount), label: 'Add a way to get paid', sub: 'A bank account or a Solana wallet for withdrawals.', to: '/wallet', cta: 'Open wallet' },
-    { done: kycOk, label: 'Verify your identity', sub: 'Free and takes a minute. You need it to withdraw and send money, and some jobs ask for it. Verify with your NIN to get your ₦1,000 bonus now (otherwise it comes with your first paid job).', to: '/settings/verification', cta: 'Verify' },
+  // Most valuable first: identity unlocks withdrawals and the bonus
+  const steps: Step[] = [
+    { key: 'id', done: kycOk, label: 'Verify your identity', sub: 'Free, takes a minute, and needed to withdraw. Verify with your NIN to get your ₦1,000 bonus now.', to: '/settings/verification', cta: 'Verify now' },
+    { key: 'pay', done: !!(hasBank || user.walletAddress || user.bankAccount), label: 'Add a way to get paid', sub: 'A bank account or a Solana wallet for withdrawals.', to: '/wallet', cta: 'Open wallet' },
+    { key: 'mail', done: !!user.isEmailVerified, label: 'Verify your email', sub: 'So you get job alerts and payment receipts.', action: 'mail' },
+    { key: 'photo', done: !!(user.firstName && user.lastName && user.avatar), label: 'Add your name and a photo', sub: 'People trust those they can recognise.', to: '/edit-profile', cta: 'Edit profile' },
   ]
   const doneCount = steps.filter((s) => s.done).length
+  const nextStep = steps.find((s) => !s.done)
 
   // Things waiting on you, most useful first
   const attention: { key: string; icon: string; text: string; to: string; cta: string }[] = [
     ...reviewJobs.slice(0, 3).map((j) => ({ key: `r-${j.id}`, icon: 'ti-inbox', text: `${plural(toReviewOn(j), 'submission', 'submissions')} to review on “${j.title}”`, to: `/manage-jobs?job=${j.id}`, cta: 'Review' })),
-    ...working.slice(0, 3).map((s) => ({ key: `w-${s.id}`, icon: 'ti-pencil', text: `Send your work for “${s.task?.title || 'your job'}”`, to: `/tasks/${s.taskId}/submit`, cta: 'Open' })),
-    // (a new account sees this in the setup steps right below instead)
+    ...working.slice(0, 3).map((s) => {
+      const held = s.holdEndsAt && new Date(s.holdEndsAt).getTime() > Date.now() ? ` before ${at(s.holdEndsAt)}` : ''
+      return { key: `w-${s.id}`, icon: 'ti-pencil', text: `Send your work for “${s.task?.title || 'your job'}”${held}`, to: `/tasks/${s.taskId}/submit`, cta: 'Open' }
+    }),
+    ...(toRate > 0 ? [{ key: 'rate', icon: 'ti-star', text: `${plural(toRate, 'review', 'reviews')} to write for people who worked for you`, to: '/reviews-to-write', cta: 'Rate' }] : []),
+    // (a new account sees this in the setup step instead)
     ...(!kycOk && ngn > 0 && !isNew ? [{ key: 'kyc', icon: 'ti-id', text: `Verify your identity to withdraw your ${show(ngn, 'NGN', { exact: true })}`, to: '/settings/verification', cta: 'Verify' }] : []),
   ]
   const moreReview = reviewJobs.length - 3
@@ -155,24 +191,70 @@ export default function Dashboard() {
     } catch { setMail('failed') }
   }
 
-  const setup = doneCount < steps.length && (
-    <section className="ui-card ui-card-pad">
-      <div className="db-sec-head"><h2>Finish setting up</h2><span className="db-count">{doneCount} of {steps.length}</span></div>
-      <div className="db-bar"><i style={{ width: `${(doneCount / steps.length) * 100}%` }} /></div>
-      <ul className="db-steps">
-        {steps.map((s) => (
-          <li key={s.label} className={s.done ? 'done' : ''}>
-            <span className="db-check">{s.done ? <i className="ti ti-check" /> : null}</span>
-            <div>
-              <strong>{s.label}</strong>
+  // ── Your money: balance, level and OgaScore in one card ──
+  const scoreValue = me === null ? <span className="ui-sk db-sk-num" aria-label="Loading" />
+    : failed.me ? '–' : (me.ogaScore ?? 0)
+  const scoreSub = me === null ? '' : failed.me ? "Couldn't load your score"
+    : !me.ogaScore && jobsDone === 0 ? 'Finish a job to start your score'
+      : `${rankLabel} · ${plural(jobsDone, 'job', 'jobs')} done`
+  const money = (
+    <section className="ui-card db-money" aria-label="Your money">
+      <div className="db-bal">
+        <span className="db-k">Available balance</span>
+        {balances ? <b className="db-amt">{show(ngn)}</b>
+          : balanceError ? (
+            <span className="db-bal-err">Couldn't load your balance. <button type="button" className="db-textbtn tap" onClick={() => { refreshBalance() }}>Try again</button></span>
+          ) : <span className="ui-sk db-sk-amt" aria-label="Loading" />}
+        <div className="db-bal-btns">
+          <Link className="ui-btn ui-btn-dark" to="/deposit"><i className="ti ti-plus" aria-hidden="true" /> Add money</Link>
+          <Link className="ui-btn ui-btn-ghost" to="/wallet"><i className="ti ti-wallet" aria-hidden="true" /> Wallet</Link>
+        </div>
+      </div>
+      <Link to={kycOk ? '/wallet' : '/settings/verification'} className="db-cell">
+        <span className="db-k">Your level</span>
+        <b>{kycOk ? `Level ${kycTier}` : 'Not verified'}</b>
+        <small>{kycOk ? `Withdraw up to ${show(withdrawLimit(kycTier), 'NGN', { exact: true })} a day` : 'Verify to withdraw and send money'}</small>
+      </Link>
+      <Link to="/rank" className="db-cell">
+        <span className="db-k">OgaScore</span>
+        <b>{scoreValue}</b>
+        {scoreSub && <small>{scoreSub}</small>}
+      </Link>
+    </section>
+  )
+
+  // ── Setup: the next step only, or all four ──
+  const stepAction = (s: Step, primary: boolean) => {
+    const cls = primary ? 'ui-btn ui-btn-dark db-step-go' : 'db-step-btn'
+    if (s.action === 'mail') {
+      return (
+        <button type="button" className={cls} onClick={resend} disabled={mail === 'sending' || mail === 'sent'}>
+          {mail === 'sending' ? 'Sending…' : mail === 'sent' ? 'Link sent. Check your inbox' : mail === 'failed' ? 'Couldn\'t send. Try again' : 'Send the link again'}
+        </button>
+      )
+    }
+    return <Link className={cls} to={s.to!}>{s.cta}</Link>
+  }
+  const shownSteps = allSteps ? steps : nextStep ? [nextStep] : []
+  const setup = nextStep && (
+    <section className="ui-card ui-card-pad db-setup" aria-labelledby="db-setup">
+      <div className="db-sec-head"><h2 id="db-setup">Finish setting up</h2><span className="db-count">{doneCount} of {steps.length} done</span></div>
+      <div className="db-bar" aria-hidden="true"><i style={{ width: `${(doneCount / steps.length) * 100}%` }} /></div>
+      <ul className={`db-steps${allSteps ? '' : ' one'}`}>
+        {shownSteps.map((s) => (
+          <li key={s.key} className={s.done ? 'done' : ''}>
+            <span className="db-check" aria-hidden="true">{s.done ? <i className="ti ti-check" /> : null}</span>
+            <div className="db-step-text">
+              <strong>{s.done && <span className="db-sr">Done: </span>}{s.label}</strong>
               {!s.done && <span>{s.sub}</span>}
-              {!s.done && (s.action === 'mail'
-                ? <button className="db-step-btn" onClick={resend} disabled={mail === 'sending' || mail === 'sent'}>{mail === 'sending' ? 'Sending…' : mail === 'sent' ? 'Link sent. Check your inbox' : mail === 'failed' ? 'Couldn\'t send. Try again' : 'Send the link again'}</button>
-                : <Link className="db-step-btn" to={s.to!}>{s.cta}</Link>)}
             </div>
+            {!s.done && stepAction(s, !allSteps)}
           </li>
         ))}
       </ul>
+      <button type="button" className="db-more" aria-expanded={allSteps} onClick={() => setAllSteps((v) => !v)}>
+        {allSteps ? 'Show only the next step' : `See all ${steps.length} steps`} <i className={`ti ti-chevron-${allSteps ? 'up' : 'down'}`} aria-hidden="true" />
+      </button>
     </section>
   )
 
@@ -202,6 +284,27 @@ export default function Dashboard() {
         ))}
       </ul>}
     </section>
+  )
+
+  // Real jobs: title, category and places left, pay on the right
+  const jobsList = failed.jobs ? (
+    <div className="db-empty">We couldn't load jobs. <button type="button" className="db-textbtn tap" onClick={loadJobs}>Try again</button></div>
+  ) : jobs === null ? <div className="ui-sk" style={{ height: 150 }} /> : forYou.length === 0 ? (
+    <div className="db-empty">No open jobs right now. Check back soon.</div>
+  ) : (
+    <ul className="db-list db-jobs">
+      {forYou.map((j) => (
+        <li key={j.id}>
+          <Link to={`/tasks/${j.id}`}>
+            <div>
+              <strong>{j.title}</strong>
+              <span>{categoryLabel(j.category)} · {plural(placesLeft(j), 'place', 'places')} left</span>
+            </div>
+            <b>{show(Number(j.reward || 0), j.currency || 'NGN')}</b>
+          </Link>
+        </li>
+      ))}
+    </ul>
   )
 
   const hiring = (
@@ -239,7 +342,7 @@ export default function Dashboard() {
       <div className="db-role-label">Earning</div>
       <div className="db-sec-head">
         <h2>Your work</h2>
-        <Link to="/earnings">{earnedText}</Link>
+        <Link to="/earnings" className="tap">{earnedText}</Link>
       </div>
       {active.length === 0 ? (
         <div className="db-empty">You're not working on anything right now.</div>
@@ -250,7 +353,7 @@ export default function Dashboard() {
               <Link to={`/tasks/${s.taskId}/submit`}>
                 <div>
                   <strong>{s.task?.title || 'Job'}</strong>
-                  <span>{s.status === 'PENDING' ? (s.isContest ? 'Send your entry before the contest ends' : 'Send your work when it\'s done') : s.isContest ? 'Entry sent · winners are picked after it ends' : s.autoApproveAt ?`In review · paid automatically ${when(s.autoApproveAt)} if not reviewed` : 'Waiting for review'}</span>
+                  <span>{s.status === 'PENDING' ? (s.isContest ? 'Send your entry before the contest ends' : 'Send your work when it\'s done') : s.isContest ? 'Entry sent · winners are picked after it ends' : s.autoApproveAt ? `In review · paid automatically ${when(s.autoApproveAt)} if not reviewed` : 'Waiting for review'}</span>
                 </div>
                 <em className={s.status === 'PENDING' ? 'todo' : 'wait'}>{s.status === 'PENDING' ? 'To do' : s.isContest ? 'Entered' : 'In review'}</em>
                 <b>{s.isContest ? 'Up to ' : ''}{show(Number(s.task?.reward || 0), s.task?.currency || 'NGN')}</b>
@@ -259,103 +362,83 @@ export default function Dashboard() {
           ))}
         </ul>
       )}
-      <div className="db-sub-head"><span>Jobs for you</span><Link to="/tasks">See all jobs</Link></div>
-      {jobs === null ? <div className="ui-sk" style={{ height: 90 }} /> : forYou.length === 0 ? (
-        <div className="db-empty">No open jobs right now. Check back soon.</div>
-      ) : (
-        <div className="db-jobs">
-          {forYou.map((j) => (
-            <Link key={j.id} to={`/tasks/${j.id}`} className="db-job">
-              <span className="db-job-cat">{categoryLabel(j.category)}</span>
-              <strong>{j.title}</strong>
-              <b>{show(Number(j.reward || 0), j.currency || 'NGN')}</b>
-            </Link>
-          ))}
-        </div>
-      )}
+      <div className="db-sub-head"><h3>Jobs for you</h3><Link to="/tasks" className="tap">See all jobs</Link></div>
+      {jobsList}
     </section>
+  )
+
+  // New accounts: real jobs first, hiring as one line underneath
+  const newWork = (
+    <>
+      <section className="ui-card ui-card-pad" aria-labelledby="db-forYou">
+        <div className="db-sec-head"><h2 id="db-forYou">Jobs for you</h2><Link to="/tasks" className="tap">See all jobs</Link></div>
+        {jobsList}
+      </section>
+      <p className="db-aside-link">Need work done? <Link to="/create">Post your first job</Link>. Your money is held safely until you approve the work.</p>
+    </>
   )
 
   return (
     <Layout sidebar={false}>
       <div className="ui-page db-page">
-        <div className="ui-head">
-          <div>
-            <span className="ui-eyebrow">Dashboard</span>
-            <h1 className="ui-title">{greeting()}, {user.firstName || user.username || 'there'}</h1>
-          </div>
+        <div className="ui-head db-head">
+          <h1 className="ui-title">{greeting()}, {user.firstName || user.username || 'there'}</h1>
           <div className="ui-actions">
-            {user.role === 'ADMIN' && <Link className="ui-btn ui-btn-ghost" to="/admin"><i className="ti ti-shield-cog" /> Admin panel</Link>}
-            <Link className="ui-btn ui-btn-ghost" to="/tasks"><i className="ti ti-search" /> Find work</Link>
-            <Link className="ui-btn ui-btn-dark" to="/create"><i className="ti ti-plus" /> Post a job</Link>
+            {user.role === 'ADMIN' && <Link className="ui-btn ui-btn-ghost" to="/admin"><i className="ti ti-shield-cog" aria-hidden="true" /> Admin panel</Link>}
+            {/* Phone and tablet have Jobs and Create in the bottom bar */}
+            <Link className="ui-btn ui-btn-dark db-desk" to="/tasks"><i className="ti ti-search" aria-hidden="true" /> Find work</Link>
+            <Link className="ui-btn ui-btn-ghost db-desk" to="/create"><i className="ti ti-plus" aria-hidden="true" /> Post a job</Link>
           </div>
         </div>
 
-        <div className="db-stack">
-          {rankUp && (
-            <section className="ui-card ui-card-pad db-rankup" aria-label="New rank available">
-              <span className="db-attn-ic"><i className="ti ti-trophy" /></span>
-              <div><b>You qualify for {rankUp.name}</b><span>Claim your new rank to unlock more jobs and better-paying ones.</span></div>
-              <Link className="ui-btn ui-btn-dark" to="/rank">Claim it</Link>
-            </section>
-          )}
-          {attention.length > 0 && (
-            <section className="ui-card ui-card-pad db-attn" aria-labelledby="db-attn">
-              <div className="db-sec-head"><h2 id="db-attn">Needs your attention</h2>{moreReview > 0 && <Link to="/manage-jobs">{plural(moreReview, 'more job', 'more jobs')} to review</Link>}</div>
-              <ul>
-                {attention.map((a) => (
-                  <li key={a.key}>
-                    <span className="db-attn-ic"><i className={`ti ${a.icon}`} /></span>
-                    <span className="db-attn-text">{a.text}</span>
-                    <Link className="db-step-btn" to={a.to}>{a.cta}</Link>
-                  </li>
-                ))}
-              </ul>
-              {reviewJobs.length > 0 && <p className="db-attn-note">Work you don't review is approved and paid automatically after a few days.</p>}
-            </section>
-          )}
+        <div className="ui-split db-split">
+          <aside className="ui-split-side ui-split-side-first db-side" aria-label="Your money">
+            {money}
+          </aside>
 
-          {starterCard}
-          {isNew && setup}
+          <div className="db-main">
+            {rankUp && (
+              <section className="ui-card ui-card-pad db-rankup" aria-label="New rank available">
+                <span className="db-attn-ic"><i className="ti ti-trophy" aria-hidden="true" /></span>
+                <div><b>You qualify for {rankUp.name}</b><span>Claim your new rank to unlock more jobs and better-paying ones.</span></div>
+                <Link className="ui-btn ui-btn-dark" to="/rank">Claim it</Link>
+              </section>
+            )}
+            {attention.length > 0 && (
+              <section className="ui-card ui-card-pad db-attn" aria-labelledby="db-attn">
+                <div className="db-sec-head"><h2 id="db-attn">Needs your attention</h2>{moreReview > 0 && <Link to="/manage-jobs" className="tap">{plural(moreReview, 'more job', 'more jobs')} to review</Link>}</div>
+                <ul>
+                  {attention.map((a) => (
+                    <li key={a.key}>
+                      <span className="db-attn-ic"><i className={`ti ${a.icon}`} aria-hidden="true" /></span>
+                      <span className="db-attn-text">{a.text}</span>
+                      <Link className="db-step-btn" to={a.to}>{a.cta}</Link>
+                    </li>
+                  ))}
+                </ul>
+                {reviewJobs.length > 0 && <p className="db-attn-note">Work you don't review is approved and paid automatically after a few days.</p>}
+              </section>
+            )}
 
-          <div className="db-snap">
-            <Link to="/wallet" className="db-stat"><span>Balance</span><b>{show(ngn)}</b><small>Open wallet →</small></Link>
-            <Link to="/wallet" className="db-stat">
-              <span>Your level</span>
-              <b>{kycOk ? `Level ${kycTier}` : 'Not verified'}</b>
-              <small>{kycOk ? `Withdraw up to ${show(withdrawLimit(kycTier), 'NGN', { exact: true })} a day` : 'Verify to withdraw and send money'}</small>
-            </Link>
-            <Link to="/rank" className="db-stat"><span>OgaScore</span><b>{me?.ogaScore ?? '…'}</b><small>{rankLabel} · {plural(me?.workerProfile?.tasksCompleted ?? 0, 'job', 'jobs')} done</small></Link>
+            {starterCard}
+            {isNew && setup}
+
+            {failed.work ? (
+              <LoadError what="your jobs and work" onRetry={load} />
+            ) : !loaded ? (
+              <div className="ui-sk" style={{ height: 200 }} />
+            ) : isNew ? newWork : (
+              <div className={`db-pair${hires && works ? '' : ' single'}`}>
+                {hires && hiring}
+                {(works || !hires) && earning}
+                {hires && !works && (
+                  <p className="db-aside-link">Want to earn too? <Link to="/tasks">See jobs you can do</Link></p>
+                )}
+              </div>
+            )}
+
+            {!isNew && (loaded || failed.work) && setup}
           </div>
-
-          {!loaded ? (
-            <div className="ui-sk" style={{ height: 200, borderRadius: 20 }} />
-          ) : isNew ? (
-            <div className="db-pair">
-              <Link to="/tasks" className="ui-card ui-card-pad db-start">
-                <span className="db-start-ic"><i className="ti ti-search" /></span>
-                <strong>Find your first job</strong>
-                <span>Paid tasks you can do from your phone: testing, writing, design and more. Get paid in naira or USDC.</span>
-                <em>Browse jobs <i className="ti ti-arrow-right" /></em>
-              </Link>
-              <Link to="/create" className="ui-card ui-card-pad db-start">
-                <span className="db-start-ic"><i className="ti ti-plus" /></span>
-                <strong>Post your first job</strong>
-                <span>Describe the work, set a reward and how many people you need. The money is held safely until you approve the work.</span>
-                <em>Post a job <i className="ti ti-arrow-right" /></em>
-              </Link>
-            </div>
-          ) : (
-            <div className={`db-pair${hires && works ? '' : ' single'}`}>
-              {hires && hiring}
-              {(works || !hires) && earning}
-              {hires && !works && (
-                <p className="db-aside-link">Want to earn too? <Link to="/tasks">See jobs you can do</Link></p>
-              )}
-            </div>
-          )}
-
-          {!isNew && setup}
         </div>
       </div>
     </Layout>

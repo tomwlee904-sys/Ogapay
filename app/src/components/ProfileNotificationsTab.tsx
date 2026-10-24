@@ -3,7 +3,7 @@ import { CATEGORY_LABELS } from '../lib/categories'
 import { useNavigate } from 'react-router-dom'
 import { apiRequest } from '../lib/api'
 import { refreshUnread } from '../lib/shared'
-import { SkeletonPage, injectSkeletonStyles } from '../components/SkeletonLoader'
+import LoadError from './LoadError'
 import { useAuth } from '../context/AuthContext'
 import { PushOffer } from './PushAlerts'
 import { renderJobText } from '../lib/jobText'
@@ -88,33 +88,48 @@ function resolveIcon(type: string, title: string) {
   return TYPE_ICONS.INFO
 }
 
-export default function TabNotificationsContent() {
+// "Today", "Yesterday" or "Earlier": the day group a notification sits under
+function dayGroup(date?: string) {
+  if (!date) return 'Earlier'
+  const d = new Date(date); const t = new Date()
+  const start = new Date(t.getFullYear(), t.getMonth(), t.getDate()).getTime()
+  if (d.getTime() >= start) return 'Today'
+  if (d.getTime() >= start - 86400000) return 'Yesterday'
+  return 'Earlier'
+}
+
+// The alerts list. page: the /notifications page (its own h1 header); without
+// it, the Profile tab (an h2 section heading). One card of rows grouped by day;
+// a failed load says so with Try again (it used to say "All caught up!").
+export default function TabNotificationsContent({ page: asPage = false }: { page?: boolean }) {
   const { user: authUser } = useAuth()
   const navigate = useNavigate()
-  const [notifs, setNotifs] = useState<any[]>([])
+  const [notifs, setNotifs] = useState<any[] | null>(null)
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
-  const [loading, setLoading] = useState(true)
+  const [failed, setFailed] = useState(false)
   const [loadingMore, setLoadingMore] = useState(false)
-  const [filter, setFilter] = useState('all')
+  const [filter, setFilter] = useState<'all' | 'unread'>('all')
+  // The row whose ⋯ menu is open
+  const [menu, setMenu] = useState<string | null>(null)
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const LIMIT = 20
 
   const fetchNotifs = useCallback(async (pageNum: number, append = false) => {
-    if (pageNum === 1) setLoading(true)
-    else setLoadingMore(true)
+    if (pageNum > 1) setLoadingMore(true)
     try {
       const data = await apiRequest<any>(`/notifications?limit=${LIMIT}&page=${pageNum}`)
       const items = Array.isArray(data) ? data : data?.notifications ?? []
-      setNotifs(prev => append ? [...prev, ...items] : items)
+      setNotifs(prev => append ? [...(prev || []), ...items] : items)
+      setFailed(false)
       if (data?.pagination) {
         setTotalPages(data.pagination.pages || 1)
       }
     } catch {
-      if (!append) setNotifs([])
+      // A failed refresh keeps what is already shown; only a first load shows the error
+      if (!append) setFailed(true)
     }
-    setLoading(false)
     setLoadingMore(false)
   }, [])
 
@@ -134,7 +149,13 @@ export default function TabNotificationsContent() {
     }
   }, [authUser?.id, fetchNotifs])
 
-  useEffect(() => { injectSkeletonStyles() }, [])
+  // Close the ⋯ menu on any tap elsewhere
+  useEffect(() => {
+    if (!menu) return
+    const close = () => setMenu(null)
+    document.addEventListener('click', close)
+    return () => document.removeEventListener('click', close)
+  }, [menu])
 
   // Where a notification opens. Job ones differ by who received them: posters
   // review in Manage jobs, workers see their status on the submit page.
@@ -177,8 +198,9 @@ export default function TabNotificationsContent() {
       type: n.type,
       title: n.title,
       // older notifications have category codes (CONTENT_WRITING) in the text
-      desc: String(n.body || n.description || '').replace(/[A-Z]+(?:_[A-Z]+)+/g, (c) => CATEGORY_LABELS[c] || c),
+      desc: String(n.body || n.description || '').replace(/[A-Z]+(?:_[A-Z]+)+/g, (c) => CATEGORY_LABELS[c] || c),
       time: n.createdAt ? timeAgo(n.createdAt) : '',
+      group: dayGroup(n.createdAt),
       read: n.read ?? n.isRead ?? false,
       link: linkFor(n),
     }
@@ -189,11 +211,10 @@ export default function TabNotificationsContent() {
     fetchNotifs(1)
   }
 
-  const mapped = notifs.map(mapNotif)
-  const filtered = filter === 'all' ? mapped
-    : filter === 'unread' ? mapped.filter(n => !n.read)
-    : mapped.filter(n => n.read)
+  const mapped = (notifs || []).map(mapNotif)
+  const filtered = filter === 'all' ? mapped : mapped.filter(n => !n.read)
   const unreadCount = mapped.filter(n => !n.read).length
+  const groups = ['Today', 'Yesterday', 'Earlier'].map((g) => ({ g, items: filtered.filter((n) => n.group === g) })).filter((x) => x.items.length > 0)
 
   const markAllRead = async () => {
     try { await apiRequest('/notifications/read-all', { method: 'PATCH' }) } catch { /* ignore */ }
@@ -207,8 +228,8 @@ export default function TabNotificationsContent() {
     refreshUnread(true) // the badge in the top bar and dock
   }
 
-  const deleteNotif = async (id: string | number, e: React.MouseEvent) => {
-    e.stopPropagation()
+  const deleteNotif = async (id: string | number) => {
+    setMenu(null)
     try { await apiRequest(`/notifications/${id}`, { method: 'DELETE' }) } catch { /* ignore */ }
     resetAndFetch()
     refreshUnread(true) // the badge in the top bar and dock
@@ -220,100 +241,122 @@ export default function TabNotificationsContent() {
     fetchNotifs(nextPage, true)
   }
 
-  if (loading) {
-    return <SkeletonPage />
+  const open = (n: any) => {
+    if (!n.read) markOneRead(n.id)
+    if (n.link) navigate(n.link)
   }
 
+  const Title = asPage ? 'h1' : 'h2'
+  const markBtn = unreadCount > 0 && notifs && (
+    <button type="button" className="ui-btn ui-btn-ghost ui-btn-sm" onClick={markAllRead}><i className="ti ti-checks" aria-hidden="true" /> Mark all read</button>
+  )
+
   return (
-    <>
+    <div className="nt">
       <style>{`
-        .nt-hero{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:8px}
-        .nt-hero-left .nt-greeting{color:var(--text2);font-size:13px;font-weight:600;margin-bottom:2px}
-        .nt-hero-left h1{font-family:Inter;font-size:28px;font-weight:900;margin:0}
-        .nt-hero-right{display:flex;gap:8px}
-        .nt-tabs{display:flex;gap:4px;margin-bottom:16px}
-        .nt-tab{padding:6px 14px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text2);font-size:11px;font-weight:600;cursor:pointer;transition:all .2s}
-        .nt-tab:hover,.nt-tab.active{border-color:var(--accent);color:var(--accent);background:rgba(var(--accent-rgb),.08)}
-        .nt-mark-btn{height:32px;padding:0 12px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text2);font-size:11px;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap}
-        .nt-mark-btn:hover{border-color:var(--accent);color:var(--accent)}
-        .nt-list{display:grid;gap:6px}
-        .nt-item{display:flex;gap:14px;padding:14px 16px;background:var(--card);border:1px solid var(--border);border-radius:12px;transition:all .2s;cursor:pointer;position:relative}
-        .nt-item:hover{border-color:var(--border2)}
-        .nt-item.unread{border-left:3px solid var(--accent);background:rgba(var(--accent-rgb),.03)}
-        .nt-icon{width:36px;height:36px;border-radius:9px;display:grid;place-items:center;flex-shrink:0;font-size:16px}
-        .nt-content{flex:1;min-width:0}
-        .nt-title{font-weight:700;font-size:13px;margin-bottom:2px;padding-right:20px}
-        .nt-desc{color:var(--text2);font-size:12px;margin-bottom:2px}
+        .nt-head-sec{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+        .nt-head-sec h2{margin:0;font-size:var(--fs-h2);font-weight:600;color:var(--text)}
+        .nt-chips{display:flex;gap:8px;margin:16px 0 12px}
+        .nt-chips .ui-chip{height:36px}
+        .nt-list{list-style:none;margin:0;padding:0 0 4px;overflow:visible}
+        .nt-day{padding:14px 16px 6px;font:500 var(--fs-label) var(--font-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--text2)}
+        .nt-day + .nt-row{border-top:0}
+        .nt-row{display:grid;grid-template-columns:minmax(0,1fr) 44px;align-items:start;border-top:1px solid var(--border)}
+        .nt-main{display:grid;grid-template-columns:36px minmax(0,1fr);gap:12px;padding:12px 0 12px 16px;cursor:pointer;min-width:0;border-radius:var(--r-md)}
+        .nt-main:hover .nt-title{text-decoration:underline;text-underline-offset:2px}
+        .nt-icon{width:36px;height:36px;border-radius:var(--r-ctl);display:grid;place-items:center;font-size:16px}
+        .nt-title{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:500;line-height:1.4;color:var(--text);margin-bottom:2px}
+        .nt-row.unread .nt-title{font-weight:600}
+        .nt-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);flex-shrink:0}
+        .nt-desc{color:var(--text2);font-size:13px;line-height:1.5;margin-bottom:2px;overflow-wrap:anywhere}
         .nt-update{color:var(--text);font-size:14px;line-height:1.6;margin:6px 0}.nt-update p{margin:0 0 10px}.nt-update ul,.nt-update ol{margin:0 0 10px;padding-left:20px}.nt-update ul{list-style:disc}.nt-update ol{list-style:decimal}.nt-update li{margin:4px 0}.nt-update a{color:var(--text);text-decoration:underline;text-underline-offset:2px;font-weight:600}
-        .nt-time{font-size:11px;color:var(--text3)}
-        .nt-del{position:absolute;top:10px;right:10px;width:24px;height:24px;border-radius:6px;border:none;background:transparent;color:var(--text3);cursor:pointer;display:grid;place-items:center;font-size:14px;transition:all .15s}
-        .nt-del::after{content:'';position:absolute;inset:-10px}
-        .nt-del:hover{background:rgba(var(--red-rgb,239,68,68),.1);color:var(--red)}
-        .nt-empty{text-align:center;padding:48px 20px;color:var(--text2)}
-        .nt-empty i{font-size:36px;color:var(--text3);margin-bottom:12px;display:block}
-        .nt-load-more{width:100%;padding:12px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--accent);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .2s;margin-top:6px}
-        .nt-load-more:hover{background:var(--bg2)}
-        .nt-load-more:disabled{opacity:.5;cursor:not-allowed}
+        .nt-time{font-size:12px;color:var(--text3)}
+        .nt-more-wrap{position:relative;padding-top:8px}
+        .nt-more{width:44px;height:44px;border:0;border-radius:var(--r-ctl);background:transparent;color:var(--text3);display:grid;place-items:center;font-size:18px;cursor:pointer}
+        .nt-more:hover,.nt-more[aria-expanded="true"]{background:var(--card2);color:var(--text)}
+        .nt-menu{position:absolute;right:6px;top:52px;z-index:30;min-width:170px;padding:6px;border-radius:var(--r-md);border:1px solid var(--border);background:var(--card);box-shadow:var(--sh-pop)}
+        .nt-menu button{width:100%;display:flex;align-items:center;gap:8px;height:40px;padding:0 10px;border:0;border-radius:var(--r-sm);background:none;color:var(--text);font:500 13px var(--font);cursor:pointer;text-align:left}
+        .nt-menu button:hover{background:var(--card2)}
+        .nt-menu button.danger{color:var(--red)}
+        .nt-load-more{width:100%;margin-top:12px}
       `}</style>
 
-      <div className="nt-hero">
-        <div className="nt-hero-left">
-          <div className="nt-greeting">Updates</div>
-          <h1>Notifications {unreadCount > 0 && <span style={{fontSize:14,color:'var(--accent)',fontWeight:700}}>({unreadCount})</span>}</h1>
-        </div>
-        <div className="nt-hero-right">
-          {unreadCount > 0 && (
-            <button className="nt-mark-btn" onClick={markAllRead}><i className="ti ti-checks" /> Mark all read</button>
-          )}
-        </div>
-      </div>
-
-      <PushOffer />
-      <div className="nt-tabs">
-        {[
-          { id: 'all', label: 'All' },
-          { id: 'unread', label: `Unread (${unreadCount})` },
-          { id: 'read', label: 'Read' },
-        ].map(t => (
-          <button key={t.id} className={`nt-tab ${filter === t.id ? 'active' : ''}`} onClick={() => setFilter(t.id)}>{t.label}</button>
-        ))}
-      </div>
-
-      {filtered.length === 0 ? (
-        <div className="nt-empty">
-          <i className="ti ti-bell-off" />
-          <h3 style={{fontFamily:'Inter',fontWeight:800,margin:'0 0 4px',color:'var(--text)'}}>All caught up!</h3>
-          <p style={{fontSize:13,margin:0}}>No notifications here</p>
+      {asPage ? (
+        <div className="ui-head">
+          <div>
+            <span className="ui-eyebrow">Alerts</span>
+            <Title className="ui-title">Notifications</Title>
+          </div>
+          {markBtn && <div className="ui-actions">{markBtn}</div>}
         </div>
       ) : (
-        <div className="nt-list">
-          {filtered.map(n => (
-            <div className={`nt-item ${!n.read ? 'unread' : ''}`} key={n.id} onClick={() => {
-              markOneRead(n.id)
-              if (n.link) navigate(n.link)
-            }}>
-              <div className="nt-icon" style={{background: `color-mix(in srgb, ${n.color} 9%, transparent)`, color: n.color}}>
-                <i className={n.icon} />
-              </div>
-              <div className="nt-content">
-                <div className="nt-title">{n.title}</div>
-                {n.type === 'PLATFORM_UPDATE'
-                  ? <div className="nt-desc nt-update" dangerouslySetInnerHTML={{ __html: renderJobText(String(n.body || '')) }} />
-                  : <div className="nt-desc">{n.desc}</div>}
-                <div className="nt-time">{n.time}</div>
-              </div>
-              <button className="nt-del" onClick={(e) => deleteNotif(n.id, e)} title="Delete" aria-label="Delete this alert">
-                <i className="ti ti-x" />
-              </button>
+        <div className="nt-head-sec"><Title>Notifications</Title>{markBtn}</div>
+      )}
+
+      <div style={{ marginTop: asPage ? 20 : 0 }}><PushOffer /></div>
+
+      {failed && !notifs ? (
+        <div style={{ marginTop: 16 }}><LoadError what="your notifications" onRetry={() => fetchNotifs(1)} /></div>
+      ) : notifs === null ? (
+        <div className="ui-sk" style={{ height: 280, marginTop: 16 }} />
+      ) : (
+        <>
+          <div className="nt-chips" role="tablist" aria-label="Show">
+            <button type="button" role="tab" aria-selected={filter === 'all'} className={`ui-chip${filter === 'all' ? ' on' : ''}`} onClick={() => setFilter('all')}>All</button>
+            <button type="button" role="tab" aria-selected={filter === 'unread'} className={`ui-chip${filter === 'unread' ? ' on' : ''}`} onClick={() => setFilter('unread')}>Unread{unreadCount > 0 && <em>{unreadCount}</em>}</button>
+          </div>
+
+          {filtered.length === 0 ? (
+            <div className="ui-empty">
+              <strong>{filter === 'unread' && mapped.length > 0 ? 'No unread alerts' : 'No notifications yet'}</strong>
+              Payments, job updates and messages for you show here.
             </div>
-          ))}
-          {page < totalPages && (
-            <button className="nt-load-more" onClick={loadMore} disabled={loadingMore}>
-              {loadingMore ? 'Loading...' : 'Load more'}
+          ) : (
+            <ul className="ui-card nt-list">
+              {groups.map(({ g, items }) => (
+                <li key={g} style={{ display: 'contents' }}>
+                  <div className="nt-day" role="presentation">{g}</div>
+                  {items.map(n => (
+                    <div className={`nt-row ${!n.read ? 'unread' : ''}`} key={n.id}>
+                      <div className="nt-main" role={n.link ? 'link' : 'button'} tabIndex={0} onClick={() => open(n)}
+                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(n) } }}>
+                        <div className="nt-icon" style={{ background: `color-mix(in srgb, ${n.color} 12%, transparent)`, color: n.color }}>
+                          <i className={n.icon} aria-hidden="true" />
+                        </div>
+                        <div style={{ minWidth: 0 }}>
+                          <div className="nt-title">{!n.read && <span className="nt-dot" aria-label="Unread" />}{n.title}</div>
+                          {n.type === 'PLATFORM_UPDATE'
+                            ? <div className="nt-desc nt-update" dangerouslySetInnerHTML={{ __html: renderJobText(String(n.body || '')) }} />
+                            : <div className="nt-desc">{n.desc}</div>}
+                          <div className="nt-time">{n.time}</div>
+                        </div>
+                      </div>
+                      <div className="nt-more-wrap">
+                        <button type="button" className="nt-more" aria-label="More options" aria-haspopup="menu" aria-expanded={menu === n.id}
+                          onClick={(e) => { e.stopPropagation(); setMenu(menu === n.id ? null : n.id) }}>
+                          <i className="ti ti-dots" aria-hidden="true" />
+                        </button>
+                        {menu === n.id && (
+                          <div className="nt-menu" role="menu" onClick={(e) => e.stopPropagation()}>
+                            {!n.read && <button type="button" role="menuitem" onClick={() => { setMenu(null); markOneRead(n.id) }}><i className="ti ti-check" aria-hidden="true" /> Mark as read</button>}
+                            <button type="button" role="menuitem" className="danger" onClick={() => deleteNotif(n.id)}><i className="ti ti-trash" aria-hidden="true" /> Delete</button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </li>
+              ))}
+            </ul>
+          )}
+          {filtered.length > 0 && page < totalPages && (
+            <button type="button" className="ui-btn ui-btn-ghost nt-load-more" onClick={loadMore} disabled={loadingMore}>
+              {loadingMore ? 'Loading…' : 'Load more'}
             </button>
           )}
-        </div>
+        </>
       )}
-    </>
+    </div>
   )
 }
+
