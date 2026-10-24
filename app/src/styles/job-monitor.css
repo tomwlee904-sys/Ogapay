@@ -2,7 +2,16 @@
 /* uses the shared page width (.ui-page) */
 .jm2-page { }
 .jm2-prefs { display: flex; gap: 18px; flex-wrap: wrap; }
-.jm2-prefs-note { flex-basis: 100%; margin: 0; max-width: 340px; font-size: 12px; line-height: 1.5; color: var(--text3); }
+.jm2-prefs-note { flex-basis: 100%; margin: 0; max-width: 340px; font-size: 12px; line-height: 1.5; color: var(--text3); }
+/* Phone alerts (PhoneJobAlerts): turn push on, smallest reward that buzzes */
+.jm2-phone { flex-basis: 100%; max-width: 420px; padding: 12px 14px; border: 1px solid var(--border); border-radius: 12px; background: var(--card); }
+.jm2-phone-head { display: flex; align-items: center; gap: 8px; font-size: 14px; }
+.jm2-phone-head i { font-size: 18px; color: var(--text2); }
+.jm2-phone-on { margin-left: auto; font-size: 12px; font-weight: 600; color: var(--green); }
+.jm2-phone p { margin: 8px 0; font-size: 13px; line-height: 1.5; color: var(--text2); }
+.jm2-phone-amts { display: flex; flex-wrap: wrap; gap: 6px; }
+.jm2-phone-amts .ui-chip { min-height: 36px; }
+.jm2-phone .jm2-phone-note { margin-bottom: 0; font-size: 12px; color: var(--text3); }
 .jm2-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin: 24px 0 12px; }
 .jm2-tabs { display: flex; gap: 6px; }
 .jm2-avail { display: inline-flex; align-items: center; gap: 6px; margin-left: auto; }

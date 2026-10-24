@@ -10,6 +10,7 @@ import { jobRequirements } from '../lib/requirements'
 import { savedJobIds, setSaved, onSavedJobsChange } from '../lib/bookmarks'
 import { useJobAlert } from '../contexts/JobAlertContext'
 import InfoTip from '../components/InfoTip'
+import PhoneJobAlerts from '../components/PhoneJobAlerts'
 import '../styles/job-monitor.css'
 
 // Job monitor: open jobs, newest first, checked every 30 seconds while the page is
@@ -126,6 +127,7 @@ export default function JobMonitor() {
             <label className="ui-switch"><input type="checkbox" checked={alerts} onChange={(e) => { setAlerts(e.target.checked); writePref('ogapay_jm_alerts', e.target.checked) }} /><span className="ui-switch-track" /> Pop-up alerts</label>
             <label className="ui-switch"><input type="checkbox" checked={sound} onChange={(e) => { setSound(e.target.checked); writePref('ogapay_jm_sound', e.target.checked); if (e.target.checked) testSound() }} /><span className="ui-switch-track" /> Sound</label>
             {(alerts || sound) && <p className="jm2-prefs-note">Works on every OgaPay page while it's open. Your browser plays sound only after you've tapped the page once. Your own jobs don't alert you{availableOnly ? ", and with Available for me on, neither do jobs you can't take" : ''}.</p>}
+            {user && <PhoneJobAlerts />}
           </div>
         </div>
 
