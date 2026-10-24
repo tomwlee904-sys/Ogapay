@@ -502,6 +502,23 @@ function ExcludePastJobs({ value, onChange }: { value: string[]; onChange: (ids:
 // -- CUSTOM JOB WIZARD ------------------------------------------------------
 const CUSTOM_DRAFT_KEY = "ogapay_custom_job_draft";
 
+// A title that is only a link tells workers nothing (the server refuses it too):
+// suggest one from the site it points to, and the link moves to the description.
+const LINK_ONLY = /^\s*(https?:\/\/|www\.)\S+\s*$/i;
+const LINK_TITLES: [RegExp, string][] = [
+  [/facebook\.com|fb\.com/i, "Follow our Facebook page"],
+  [/instagram\.com/i, "Follow us on Instagram"],
+  [/(^|\.|\/)(x|twitter)\.com/i, "Follow us on X"],
+  [/tiktok\.com/i, "Follow us on TikTok"],
+  [/youtube\.com|youtu\.be/i, "Subscribe to our YouTube channel"],
+  [/t\.me|telegram/i, "Join our Telegram channel"],
+  [/whatsapp|wa\.me/i, "Join our WhatsApp group"],
+  [/linkedin\.com/i, "Follow us on LinkedIn"],
+];
+function titleForLink(url: string) {
+  return LINK_TITLES.find(([re]) => re.test(url))?.[1] || "Visit our website and tell us what you think";
+}
+
 function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
   const navigate = useNavigate();
   const { isAuthed } = useAuth();
@@ -622,7 +639,7 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
   // (a worker took a survey job with no link to the survey); this stops posting
   const linkNeeded = missingLink(`${title}\n${description}`, files.length > 0);
   const checklist = [
-    { ok: title.trim().length >= 5, label: "Give the job a short title." },
+    { ok: title.trim().length >= 5 && !LINK_ONLY.test(title), label: LINK_ONLY.test(title) ? "Use a title that says what to do, not just a link." : "Give the job a short title." },
     { ok: description.trim().length >= 20, label: "Describe the task and what people should submit." },
     ...(linkNeeded ? [{ ok: false, label: missingLinkText(linkNeeded) }] : []),
     // A ready-made example's blanks (app link, phone type) left as they were
@@ -830,7 +847,18 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
 
                   <div className="cf-field">
                     <label htmlFor="cj-title">Title</label>
-                    <input id="cj-title" className="ui-input" maxLength={200} value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Write a thread explaining how OgaPay works" />
+                    <input id="cj-title" className="ui-input" maxLength={200} value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Write a thread explaining how OgaPay works"
+                      aria-invalid={LINK_ONLY.test(title) || undefined} aria-describedby={LINK_ONLY.test(title) ? "cj-title-link" : undefined} />
+                    {LINK_ONLY.test(title) && (
+                      <p className="cf-hint err" id="cj-title-link" role="alert">
+                        Workers can't tell what to do from a link. Use a title like "{titleForLink(title)}" and put the link in the description.{" "}
+                        <button type="button" className="cf-link-btn" onClick={() => {
+                          const url = title.trim();
+                          setTitle(titleForLink(url));
+                          if (!description.includes(url)) setDescription((d) => (d.trim() ? `${url}\n\n${d}` : url));
+                        }}>Fix it for me</button>
+                      </p>
+                    )}
                   </div>
 
                   <div className="cf-field">
