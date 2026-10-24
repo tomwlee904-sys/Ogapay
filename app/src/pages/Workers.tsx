@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import Layout from '../components/Layout'
+import LoadError from '../components/LoadError'
 import { apiRequest } from '../lib/api'
-import '../styles/profile-public.css'
 import '../styles/workers.css'
 import { PremiumMark } from '../components/Perks'
 import { sized } from '../lib/img'
@@ -43,6 +43,7 @@ export default function Workers() {
   const [more, setMore] = useState(false)
   const [loadingMore, setLoadingMore] = useState(false)
   const [err, setErr] = useState(false)
+  const [reload, setReload] = useState(0)
 
   const set = (k: string, v: string) => {
     const next = new URLSearchParams(params)
@@ -62,10 +63,10 @@ export default function Workers() {
     setWorkers(null); setErr(false); setPage(1)
     fetchPage(1)
       .then((list) => { if (live) { setWorkers(list); setMore(list.length === PAGE) } })
-      .catch(() => { if (live) { setWorkers([]); setErr(true) } })
+      .catch(() => { if (live) setErr(true) })
     return () => { live = false }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search, category, sort])
+  }, [search, category, sort, reload])
 
   const loadMore = async () => {
     setLoadingMore(true)
@@ -80,45 +81,53 @@ export default function Workers() {
 
   return (
     <Layout>
-      <div className="up-wrap">
-        <div className="wk2-head">
+      <div className="ui-page">
+        <header className="ui-head">
           <div>
-            <h1>Find workers</h1>
-            <p>Browse people on OgaPay, see their track record, and hire them directly.</p>
+            <h1 className="ui-title">Find workers</h1>
+            <p className="ui-sub">See each person's track record, then hire them directly.</p>
+          </div>
+        </header>
+
+        <div className="wk2-tools">
+          <form className="wk2-bar" role="search" onSubmit={(e) => { e.preventDefault(); set('search', input.trim()) }}>
+            <label className="wk2-search">
+              <i className="ti ti-search" aria-hidden="true" />
+              <input type="search" value={input} onChange={(e) => setInput(e.target.value)} placeholder="Name, skill or bio" aria-label="Search workers by name, skill or bio" />
+              {input && <button type="button" onClick={() => { setInput(''); set('search', '') }} aria-label="Clear search"><i className="ti ti-x" /></button>}
+            </label>
+          </form>
+          <select className="ui-select wk2-sort" value={sort} onChange={(e) => set('sort', e.target.value === 'reputation' ? '' : e.target.value)} aria-label="Sort workers">
+            {SORTS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
+          </select>
+          <div className="wk2-skills" role="group" aria-label="Filter by skill">
+            <button type="button" aria-pressed={!category} className={`wk2-skill tap${!category ? ' on' : ''}`} onClick={() => set('category', '')}>All</button>
+            {SKILLS.map((s) => {
+              const on = category.toLowerCase() === s.toLowerCase()
+              return <button key={s} type="button" aria-pressed={on} className={`wk2-skill tap${on ? ' on' : ''}`} onClick={() => set('category', s.toLowerCase())}>{s}</button>
+            })}
           </div>
         </div>
 
-        <form className="wk2-bar" onSubmit={(e) => { e.preventDefault(); set('search', input.trim()) }}>
-          <label className="wk2-search">
-            <i className="ti ti-search" />
-            <input value={input} onChange={(e) => setInput(e.target.value)} placeholder="Search by name, skill or bio" aria-label="Search workers" />
-            {input && <button type="button" onClick={() => { setInput(''); set('search', '') }} aria-label="Clear search"><i className="ti ti-x" /></button>}
-          </label>
-          <select className="wk2-sort" value={sort} onChange={(e) => set('sort', e.target.value === 'reputation' ? '' : e.target.value)} aria-label="Sort workers">
-            {SORTS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
-          </select>
-        </form>
-
-        <div className="wk2-skills" role="group" aria-label="Filter by skill">
-          <button className={`wk2-skill${!category ? ' on' : ''}`} onClick={() => set('category', '')}>All</button>
-          {SKILLS.map((s) => (
-            <button key={s} className={`wk2-skill${category.toLowerCase() === s.toLowerCase() ? ' on' : ''}`} onClick={() => set('category', s.toLowerCase())}>{s}</button>
-          ))}
-        </div>
-
-        {workers === null ? (
-          <div className="up-empty"><i className="ti ti-loader-2" />Loading…</div>
-        ) : err ? (
-          <div className="up-empty"><i className="ti ti-cloud-off" />Couldn't load workers. Refresh to try again.</div>
+        {err ? (
+          <LoadError what="workers" onRetry={() => setReload((r) => r + 1)} />
+        ) : workers === null ? (
+          <div className="wk2-grid" aria-busy="true" aria-label="Loading workers">
+            {[0, 1, 2].map((i) => <div key={i} className="ui-sk" style={{ height: 220 }} />)}
+          </div>
         ) : workers.length === 0 ? (
-          <div className="up-empty"><i className="ti ti-user-search" />No workers match{search ? ` "${search}"` : ''}{category ? ` in ${category}` : ''}.</div>
+          <div className="ui-empty">
+            <strong>No workers match{search ? ` "${search}"` : ''}{category ? ` in ${category}` : ''}</strong>
+            Try another skill or other words.
+            {(search || category) && <div style={{ marginTop: 14 }}><button type="button" className="ui-btn ui-btn-ghost" onClick={() => { setInput(''); setParams(sort !== 'reputation' ? { sort } : {}, { replace: true }) }}>Clear filters</button></div>}
+          </div>
         ) : (
           <>
             <div className="wk2-grid">
               {workers.map((w) => {
                 const name = w.name || w.username
                 return (
-                  <section key={w.id} className="up-card wk2-card">
+                  <section key={w.id} className="ui-card wk2-card">
                     <Link to={`/user/${w.username}`} className="wk2-top">
                       <span className={`wk2-av${w.frame ? ' oga-frame' : ''}`}>{w.avatarUrl ? <img src={sized(w.avatarUrl, 56, true)} alt="" loading="lazy" /> : initials(name)}</span>
                       <span className="wk2-id">
@@ -127,11 +136,11 @@ export default function Workers() {
                       </span>
                       {w.isAvailable && <span className="wk2-dot" title="Available for work" />}
                     </Link>
-                    <p className="wk2-bio">{w.bio}</p>
+                    {w.bio && <p className="wk2-bio">{w.bio}</p>}
                     {w.skills.length > 0 && (
-                      <div className="up-chips wk2-chips">
-                        {w.skills.slice(0, 4).map((s) => <span key={s} className="up-chip">{s}</span>)}
-                        {w.skills.length > 4 && <span className="up-chip">+{w.skills.length - 4}</span>}
+                      <div className="wk2-chips">
+                        {w.skills.slice(0, 3).map((s) => <span key={s} className="wk2-chip">{s}</span>)}
+                        {w.skills.length > 3 && <span className="wk2-chip">+{w.skills.length - 3}</span>}
                       </div>
                     )}
                     <div className="wk2-stats">
@@ -139,17 +148,14 @@ export default function Workers() {
                       <span><b>{w.tasksCompleted}</b> job{w.tasksCompleted === 1 ? '' : 's'} done</span>
                       {w.tasksCompleted > 0 && <span><b>{Math.round(Number(w.successRate) || 0)}%</b> approved</span>}
                     </div>
-                    <div className="wk2-actions">
-                      <Link className="up-btn" to={`/user/${w.username}`}>Profile</Link>
-                      <Link className="up-btn primary" to={`/user/${w.username}/hire`}>Hire</Link>
-                    </div>
+                    <Link className="ui-btn ui-btn-ghost wk2-hire wk2-on-top" to={`/user/${w.username}/hire`} aria-label={`Hire ${name}`}>Hire</Link>
                   </section>
                 )
               })}
             </div>
             {more && (
               <div className="wk2-more">
-                <button className="up-btn" onClick={loadMore} disabled={loadingMore}>{loadingMore ? 'Loading…' : 'Load more'}</button>
+                <button type="button" className="ui-btn ui-btn-ghost" onClick={loadMore} disabled={loadingMore}>{loadingMore ? 'Loading…' : 'Load more'}</button>
               </div>
             )}
           </>
