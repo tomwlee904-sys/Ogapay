@@ -120,7 +120,7 @@ function Row({ r, onDone }: { r: Rec; onDone: (id: string, msg: string) => void 
         <div className="adm-confirm">
           {mode === 'approve' ? (
             <>
-              <p>{name} will be able to withdraw and send money. An approved NIN or ID earns the ₦1,000 sign-up bonus if they haven't had it; the inviter's referral bonus still waits for their first paid job.</p>
+              <p>{name} will be able to withdraw and send money. With an approved NIN or ID, their first paid job earns the ₦1,000 first job bonus (if they haven't had it); the inviter's referral bonus also waits for that first paid job.</p>
               <label htmlFor={`lvl-${r.id}`}>Level</label>
               <select id={`lvl-${r.id}`} className="ui-select" value={level} onChange={(e) => setLevel(Number(e.target.value))}>
                 <option value={1}>Level 1: NIN or bank name ({naira(withdrawLimit(1))} a day)</option>

@@ -36,8 +36,13 @@ type Job = {
   maxWorkers?: number; currentWorkers?: number; expiresAt?: string | null; deadline?: string | null
   submissions?: { status: string }[]
   featured?: boolean; workerRequirement?: string | null; minJobsDone?: number; excludesTaskIds?: string[]
+  isContest?: boolean; isSelection?: boolean; requiredCommunityId?: string | null; communityId?: string | null
 }
 type Step = { key: string; done: boolean; label: string; sub: string; to?: string; cta?: string; action?: 'mail' }
+
+// The ₦1,000 first job bonus (backend wallet.service rewardSignupBonus): paid once
+// someone is verified by NIN or ID AND has finished their first paid job
+const FIRST_JOB_BONUS = 1000
 
 const LEVELS = ['BEGINNER', 'INTERMEDIATE', 'ADVANCED', 'EXPERT', 'LEGEND']
 const LIVE = ['OPEN', 'IN_PROGRESS', 'COOLING_DOWN', 'DRAFT']
@@ -155,6 +160,18 @@ export default function Dashboard() {
   }
   const starterSorted = starter.map((j) => ({ j, step: stepFor(j) })).sort((a, b) => (a.step?.order ?? 0) - (b.step?.order ?? 0))
 
+  // "Your first job": for someone with no approved job yet, one clear job they can
+  // take right now (the best-paying starter job they qualify for), the job's pay
+  // plus the ₦1,000 first job bonus, and the two steps to get it. A job they've
+  // already taken comes first (finish it), then a starter job, then any simple job.
+  const simple = (j: Job) => !j.isContest && !j.isSelection && !j.requiredCommunityId && !j.communityId && (j.currency || 'NGN') === 'NGN'
+    && j.posterId !== user.id && !taken.has(j.id) && !similarTaken(j) && placesLeft(j) > 0 && jobDeadline(j).state !== 'ended' && !stepFor(j)
+  const byPay = (a: Job, b: Job) => Number(b.reward || 0) - Number(a.reward || 0)
+  const firstPick = (jobs || []).filter((j) => simple(j) && j.featured).sort(byPay)[0]
+    || (jobs || []).filter((j) => simple(j) && Number(j.reward || 0) <= 2000).sort(byPay)[0]
+  const firstActive = [...working, ...waiting][0]
+  const showFirstJob = !!me && jobsDone === 0 && (!!firstActive || !!firstPick)
+
   const loaded = subs !== null && created !== null
   const hires = mine.length > 0
   const works = (subs || []).length > 0
@@ -162,7 +179,7 @@ export default function Dashboard() {
 
   // Most valuable first: identity unlocks withdrawals and the bonus
   const steps: Step[] = [
-    { key: 'id', done: kycOk, label: 'Verify your identity', sub: 'Free, takes a minute, and needed to withdraw. Verify with your NIN to get your ₦1,000 bonus now.', to: '/settings/verification', cta: 'Verify now' },
+    { key: 'id', done: kycOk, label: 'Verify your identity', sub: 'Free, takes a minute, and needed to withdraw. Verify with your NIN, then finish your first job to get your ₦1,000 first job bonus.', to: '/settings/verification', cta: 'Verify now' },
     { key: 'pay', done: !!(hasBank || user.walletAddress || user.bankAccount), label: 'Add a way to get paid', sub: 'A bank account or a Solana wallet for withdrawals.', to: '/wallet', cta: 'Open wallet' },
     { key: 'mail', done: !!user.isEmailVerified, label: 'Verify your email', sub: 'So you get job alerts and payment receipts.', action: 'mail' },
     { key: 'photo', done: !!(user.firstName && user.lastName && user.avatar), label: 'Add your name and a photo', sub: 'People trust those they can recognise.', to: '/edit-profile', cta: 'Edit profile' },
@@ -255,6 +272,38 @@ export default function Dashboard() {
       <button type="button" className="db-more" aria-expanded={allSteps} onClick={() => setAllSteps((v) => !v)}>
         {allSteps ? 'Show only the next step' : `See all ${steps.length} steps`} <i className={`ti ti-chevron-${allSteps ? 'up' : 'down'}`} aria-hidden="true" />
       </button>
+    </section>
+  )
+
+  const firstJobCard = showFirstJob && (
+    <section className="ui-card ui-card-pad db-first" aria-labelledby="db-first">
+      <span className="db-first-tag">Your first job</span>
+      {firstActive ? (
+        <>
+          <h2 id="db-first">Finish "{firstActive.task?.title || 'your job'}"</h2>
+          <p className="db-first-pay"><b>{show(Number(firstActive.task?.reward || 0), firstActive.task?.currency || 'NGN')}</b> + <b>{show(FIRST_JOB_BONUS, 'NGN')}</b> first job bonus</p>
+        </>
+      ) : firstPick && (
+        <>
+          <h2 id="db-first">{firstPick.title}</h2>
+          <p className="db-first-pay">Earn <b>{show(Number(firstPick.reward || 0), firstPick.currency || 'NGN')}</b> + <b>{show(FIRST_JOB_BONUS, 'NGN')}</b> first job bonus</p>
+        </>
+      )}
+      <ol className="db-first-steps">
+        <li className={kycOk ? 'done' : ''}>
+          <i className={`ti ${kycOk ? 'ti-circle-check' : 'ti-circle-number-1'}`} aria-hidden="true" />
+          <span>{kycOk ? 'Your ID is verified' : 'Verify your ID with your NIN (free, about a minute)'}</span>
+          {!kycOk && <Link className="db-step-btn" to="/settings/verification">Verify</Link>}
+        </li>
+        <li>
+          <i className="ti ti-circle-number-2" aria-hidden="true" />
+          <span>{firstActive ? (firstActive.status === 'SUBMITTED' ? "You've sent your work. You're paid when it's approved" : 'Do the job and send your proof') : 'Take the job, do it and send your proof'}</span>
+          {firstActive
+            ? (firstActive.status !== 'SUBMITTED' && <Link className="db-step-btn" to={`/tasks/${firstActive.taskId}/submit`}>Send work</Link>)
+            : firstPick && <Link className="db-step-btn dark" to={`/tasks/${firstPick.id}`}>Take this job</Link>}
+        </li>
+      </ol>
+      <p className="db-first-note">The {show(FIRST_JOB_BONUS, 'NGN')} is added to your wallet with your first approved job, once your ID is verified.</p>
     </section>
   )
 
@@ -419,6 +468,7 @@ export default function Dashboard() {
                 {reviewJobs.length > 0 && <p className="db-attn-note">Work you don't review is approved and paid automatically after a few days.</p>}
               </section>
             )}
+            {firstJobCard}
 
             {starterCard}
             {isNew && setup}
