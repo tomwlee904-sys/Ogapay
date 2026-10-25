@@ -1,8 +1,6 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Layout from '../components/Layout'
-import LoadError from '../components/LoadError'
-import WorkNav from '../components/WorkNav'
 import { ordinal } from '../components/ContestPanel'
 import { apiRequest } from '../lib/api'
 import { categoryLabel } from '../lib/categories'
@@ -13,9 +11,6 @@ import { PayoutCheckStatus } from '../components/PayoutCheck'
 // Jobs you've taken as a worker and where each one stands. Rows open the submit
 // page, which shows the next step (send work, wait for review, result). The old
 // page had made-up "% complete" bars, no links and no page margins.
-// Layout: a place you hold (with its countdown) and the totals come first (the
-// side panel on desktop), then one row of filter chips and the list. The totals
-// are numbers only: the chips are the one filter control.
 // Contests: a contest's reward is its 1st prize, so a 2nd place used to show the
 // 1st prize, and entries that didn't win showed "In review" forever. The server
 // now sends each entry's place, its prize and the result. Amounts paid and the
@@ -96,7 +91,6 @@ function badge(s: Sub): { label: string; cls: string; icon?: string } {
 export default function MyTasks() {
   const show = useMoney()
   const [subs, setSubs] = useState<Sub[] | null>(null)
-  const [failed, setFailed] = useState(false)
   // One total per currency: naira and USDC are never added together
   const [earned, setEarned] = useState<Record<string, number>>({})
   const [tab, setTab] = useState('all')
@@ -113,28 +107,20 @@ export default function MyTasks() {
     return ms > 0 ? `Place held for ${left(ms)} · send your proof before then or it goes to someone else` : 'Your time ran out · the place is being freed'
   }
 
-  // A failed request shows "couldn't load" with Try again, never "no jobs yet"
-  const load = useCallback(() => {
-    setFailed(false)
-    setSubs(null)
+  useEffect(() => {
     apiRequest<{ submissions: Sub[]; stats?: { totalEarned?: number; earned?: Record<string, number> } }>('/tasks/my/submissions')
       .then((d) => {
         setSubs(d?.submissions || [])
         setEarned(d?.stats?.earned || { NGN: Number(d?.stats?.totalEarned || 0) })
       })
-      .catch(() => setFailed(true))
+      .catch(() => setSubs([]))
   }, [])
-  useEffect(() => { load() }, [load])
 
   const list = subs || []
   const shown = list.filter((TABS.find((t) => t.id === tab) || TABS[0]).test)
   const count = (id: string) => list.filter(TABS.find((t) => t.id === id)!.test).length
   // Naira first, then the rest; ₦0 when nothing is paid yet
   const totals = Object.entries(earned).filter(([, v]) => Number(v) > 0).sort(([a], [b]) => (a === 'NGN' ? -1 : b === 'NGN' ? 1 : a.localeCompare(b)))
-  // Places you hold right now, the one running out first on top
-  const held = list
-    .filter((s) => s.holdEndsAt && s.status === 'PENDING' && !out(s) && new Date(s.holdEndsAt).getTime() > now)
-    .sort((a, b) => new Date(a.holdEndsAt as string).getTime() - new Date(b.holdEndsAt as string).getTime())
 
   // What a row pays: the money you got once paid, otherwise what the job offers
   const paid = (s: Sub) => Number(s.paidAmount ?? s.prize ?? s.task?.reward ?? 0)
@@ -177,98 +163,74 @@ export default function MyTasks() {
 
   return (
     <Layout>
-      <div className="ui-page">
+      <div className="ui-page mt2-page">
         <div className="ui-head">
           <div>
             <span className="ui-eyebrow">Working</span>
             <h1 className="ui-title">My tasks</h1>
             <p className="ui-sub">Jobs you've taken and where each one stands.</p>
           </div>
-          {/* Desktop only: phone and tablet have Jobs in the bottom bar, and an
-              empty list has its own button */}
-          {list.length > 0 && <div className="ui-actions mt2-desk"><Link className="ui-btn ui-btn-ghost" to="/tasks"><i className="ti ti-search" aria-hidden="true" /> Find work</Link></div>}
+          <div className="ui-actions">
+            <Link className="ui-btn ui-btn-ghost" to="/my-work"><i className="ti ti-briefcase" /> My work</Link>
+            <Link className="ui-btn ui-btn-dark" to="/tasks"><i className="ti ti-search" /> Find work</Link>
+          </div>
         </div>
-        <WorkNav />
 
-        {failed ? (
-          <div className="mt2-body"><LoadError what="your tasks" onRetry={load} /></div>
-        ) : subs === null ? <div className="ui-sk mt2-body" style={{ height: 240 }} /> : list.length === 0 ? (
-          <div className="ui-empty mt2-body mt2-empty">
-            <strong>No jobs taken yet</strong>
-            Jobs you take show here, with where each one stands and what it pays.
-            <ol className="mt2-steps">
-              <li><b>Take a job</b><span>Pick one you can do and take a place.</span></li>
-              <li><b>Send your proof</b><span>Show the finished work before your time runs out.</span></li>
-              <li><b>Get paid</b><span>The money goes to your wallet when the work is approved.</span></li>
-            </ol>
-            <Link className="ui-btn ui-btn-dark" to="/tasks"><i className="ti ti-search" aria-hidden="true" /> Find jobs</Link>
+        {subs === null ? <div className="ui-sk" style={{ height: 240, marginTop: 24 }} /> : list.length === 0 ? (
+          <div className="ui-empty" style={{ marginTop: 24 }}>
+            <p style={{ margin: '0 0 14px' }}>You haven't taken any jobs yet.</p>
+            <Link className="ui-btn ui-btn-dark" to="/tasks">Browse jobs</Link>
           </div>
         ) : (
-          <div className="ui-split mt2-body">
-            <aside className="ui-split-side ui-split-side-first mt2-side" aria-label="Your totals">
-              {held.slice(0, 3).map((s) => (
-                <section className="mt2-held" key={s.id} aria-label="Place held">
-                  <div className="mt2-held-top">
-                    <span className="mt2-held-ic"><i className="ti ti-hourglass" aria-hidden="true" /></span>
-                    <div>
-                      <span className="mt2-held-k">Place held · send your proof in</span>
-                      <b className="mt2-held-time">{left(new Date(s.holdEndsAt as string).getTime() - now)}</b>
-                    </div>
-                  </div>
-                  <strong className="mt2-held-title">{s.task?.title || 'Job'}</strong>
-                  <span className="mt2-held-sub">If you don't send it in time, the place goes to someone else.</span>
-                  <Link className="ui-btn ui-btn-dark mt2-held-go" to={`/tasks/${s.taskId}/submit`}><i className="ti ti-upload" aria-hidden="true" /> Send proof</Link>
-                </section>
+          <>
+            {/* Totals, like wurk's My submissions: each one is also a filter */}
+            <div className="mt2-sum">
+              {([['all', 'total entries'], ['open', 'open'], ['won', 'winners'], ['paid', 'paid']] as const).map(([id, label]) => (
+                <button key={id} type="button" className={`mt2-sum-btn${tab === id ? ' on' : ''}`} aria-pressed={tab === id} onClick={() => setTab(id)}>
+                  <b>{count(id)}</b><span>{label}</span>
+                </button>
               ))}
-              {/* Totals, numbers only (the chips filter the list) */}
-              <div className="ui-stats mt2-stats">
-                <div>
-                  <span className="ui-stats-label">Earned</span>
-                  <b className="ui-stats-value">{totals.length === 0 ? show(0, 'NGN', { exact: true }) : show(Number(totals[0][1]), totals[0][0], { exact: true })}</b>
-                  {totals.slice(1).map(([c, v]) => <span className="mt2-more" key={c}>+ {show(Number(v), c, { exact: true })}</span>)}
-                </div>
-                <div><span className="ui-stats-label">Open</span><b className="ui-stats-value">{count('open')}</b></div>
-                <div><span className="ui-stats-label">Paid</span><b className="ui-stats-value">{count('paid')}</b></div>
-                <div><span className="ui-stats-label">Won</span><b className="ui-stats-value">{count('won')}</b></div>
+              <div>
+                {totals.length === 0
+                  ? <b>{show(0, 'NGN', { exact: true })}</b>
+                  : totals.map(([c, v]) => <b key={c}>{show(Number(v), c, { exact: true })}</b>)}
+                <span>earned</span>
               </div>
-            </aside>
-
-            <div className="mt2-main">
-              <div className="mt2-tabs ui-scroll-row" role="tablist" aria-label="Filter">
-                {TABS.map((t) => {
-                  const n = count(t.id)
-                  if (t.id !== 'all' && n === 0) return null
-                  return <button key={t.id} role="tab" aria-selected={tab === t.id} className={`ui-chip${tab === t.id ? ' on' : ''}`} onClick={() => setTab(t.id)}>{t.label}<em>{n}</em></button>
-                })}
-              </div>
-
-              <ul className="ui-card mt2-list">
-                {shown.map((s) => {
-                  const st = badge(s)
-                  return (
-                    <li key={s.id}>
-                      <Link to={`/tasks/${s.taskId}/submit`}>
-                        <div className="mt2-t">
-                          <strong>{s.task?.title || 'Job'}</strong>
-                          <span className="mt2-meta">{s.isContest ? 'Contest · ' : ''}{categoryLabel(s.task?.category)}{s.task?.poster?.username ? ` · @${s.task.poster.username}` : ''}</span>
-                          <span className="mt2-detail">{detail(s)}</span>
-                          {s.status === 'REJECTED' && s.posterNotes && <span className="mt2-note">“{s.posterNotes}”</span>}
-                          {s.status === 'SUBMITTED' && s.payoutCheck && <PayoutCheckStatus sub={s} who="worker" compact />}
-                        </div>
-                        <div className="mt2-r">
-                          {amount(s)}
-                          <em className={st.cls}>{st.icon && <i className={`ti ${st.icon}`} aria-hidden="true" />}{st.label}</em>
-                        </div>
-                      </Link>
-                    </li>
-                  )
-                })}
-              </ul>
             </div>
-          </div>
+
+            <div className="mt2-tabs" role="tablist" aria-label="Filter">
+              {TABS.map((t) => {
+                const n = count(t.id)
+                if (t.id !== 'all' && n === 0) return null
+                return <button key={t.id} role="tab" aria-selected={tab === t.id} className={`ui-chip${tab === t.id ? ' on' : ''}`} onClick={() => setTab(t.id)}>{t.label}<em>{n}</em></button>
+              })}
+            </div>
+
+            <ul className="ui-card mt2-list">
+              {shown.map((s) => {
+                const st = badge(s)
+                return (
+                  <li key={s.id}>
+                    <Link to={`/tasks/${s.taskId}/submit`}>
+                      <div className="mt2-t">
+                        <strong>{s.task?.title || 'Job'}</strong>
+                        <span className="mt2-meta">{s.isContest ? 'Contest · ' : ''}{categoryLabel(s.task?.category)}{s.task?.poster?.username ? ` · @${s.task.poster.username}` : ''}</span>
+                        <span className="mt2-detail">{detail(s)}</span>
+                        {s.status === 'REJECTED' && s.posterNotes && <span className="mt2-note">“{s.posterNotes}”</span>}
+                        {s.status === 'SUBMITTED' && s.payoutCheck && <PayoutCheckStatus sub={s} who="worker" compact />}
+                      </div>
+                      <div className="mt2-r">
+                        {amount(s)}
+                        <em className={st.cls}>{st.icon && <i className={`ti ${st.icon}`} aria-hidden="true" />}{st.label}</em>
+                      </div>
+                    </Link>
+                  </li>
+                )
+              })}
+            </ul>
+          </>
         )}
       </div>
     </Layout>
   )
 }
-

@@ -6,7 +6,6 @@ import { useAuth } from '../context/AuthContext'
 import { useUnreadCount } from '../lib/shared'
 import { openSignIn } from '../lib/signin'
 import { sized } from '../lib/img'
-import { navSection, ownProfilePath, type NavSection } from './navTabs'
 
 // The bottom dock on phones (below 768px) and on tablets up to 1023px that are at
 // least 600px tall. Phones held sideways (768-1023 wide but short) keep the desktop
@@ -22,36 +21,27 @@ import { navSection, ownProfilePath, type NavSection } from './navTabs'
 // viewport-fit=cover, so the env(safe-area-inset-*) terms are real on iPhones:
 // the dock sits above the home bar and --dock-clear grows to match.
 
-type TabKey = NavSection
+type TabKey = 'jobs' | 'store' | 'create' | 'alerts' | 'profile'
 type Tab = {
   key: TabKey
   label: string
   path: string
   icon: string
-  /** Opens the sign-in dialog over the current page for visitors (and then goes to path) */
   authRequired?: boolean
-  /** The Sign in tab: opens the dialog and stays on the page */
-  signIn?: boolean
+  /** Other pages (and everything under them) that light this tab */
+  also?: string[]
 }
 
-// Members: Jobs, Store, Create, Alerts, Profile. Visitors get FAQ and Sign in
-// instead of Alerts and Profile, which mean nothing before signing up.
+// Every tab works signed out: Jobs, Store and Create are public pages; Alerts and
+// Profile open the sign-in dialog over the current page and go there once signed in.
 // Earnings used to be the second tab when signed in; it is on the Profile page (its
 // tab and quick link) and the Dashboard, so the dock shows the Store for everyone.
-// Which tab is lit on the pages under each one (Saved jobs is Jobs, My jobs is
-// Create, Wallet is Profile...) is decided in navTabs.ts, shared with the top bar.
-const JOBS: Tab = { key: 'jobs', label: 'Jobs', path: '/tasks', icon: 'ti-briefcase' }
-const STORE: Tab = { key: 'store', label: 'Store', path: '/store', icon: 'ti-building-store' }
-const CREATE: Tab = { key: 'create', label: 'Create', path: '/create', icon: 'ti-plus' }
-const MEMBER_TABS: Tab[] = [
-  JOBS, STORE, CREATE,
+const TABS: Tab[] = [
+  { key: 'jobs', label: 'Jobs', path: '/tasks', icon: 'ti-briefcase', also: ['/my-tasks', '/manage-jobs', '/job-monitor'] },
+  { key: 'store', label: 'Store', path: '/store', icon: 'ti-building-store', also: ['/my-store', '/orders'] },
+  { key: 'create', label: 'Create', path: '/create', icon: 'ti-plus' },
   { key: 'alerts', label: 'Alerts', path: '/notifications', icon: 'ti-bell', authRequired: true },
-  { key: 'profile', label: 'Profile', path: '/profile', icon: 'ti-user', authRequired: true },
-]
-const VISITOR_TABS: Tab[] = [
-  JOBS, STORE, CREATE,
-  { key: 'faq', label: 'FAQ', path: '/faq', icon: 'ti-help-circle' },
-  { key: 'signin', label: 'Sign in', path: '/login', icon: 'ti-login', signIn: true },
+  { key: 'profile', label: 'Profile', path: '/profile', icon: 'ti-user', authRequired: true, also: ['/edit-profile', '/settings', '/earnings'] },
 ]
 
 // The screens that hide the dock. tokens.css, footer.css and messages.css show
@@ -60,6 +50,12 @@ const VISITOR_TABS: Tab[] = [
 // the query). The .98 means a fractional width such as 1023.5px (125% Windows
 // display scaling, for example) can't fall between the dock and the top bar.
 const DOCK_HIDDEN = '(min-width: 1024px), (min-width: 768px) and (max-height: 599.98px)'
+
+const under = (pathname: string, p: string) => pathname === p || pathname.startsWith(p + '/')
+const isActive = (t: Tab, pathname: string, ownProfile: string | null) =>
+  [t.path, ...(t.also || [])].some((p) => under(pathname, p)) ||
+  // your own public page (/user/<you>) belongs to Profile too
+  (t.key === 'profile' && !!ownProfile && under(pathname.toLowerCase(), ownProfile))
 
 // Each page renders its own Layout, so the dock is mounted afresh after a tap
 // changes page: the tap is kept here so the new dock finishes the bounce
@@ -75,26 +71,10 @@ const reducedMotion = () =>
 
 export default function BottomNav() {
   const location = useLocation()
-  const { isAuthed, isLoading, user } = useAuth()
+  const { isAuthed, user } = useAuth()
   const avatar: string | null = isAuthed ? (user as any)?.avatar || (user as any)?.avatarUrl || null : null
   const username: string = isAuthed ? (user as any)?.username || '' : ''
-  // While a saved session is being checked (isLoading only happens with a saved
-  // token) keep the member tabs, so a member's dock doesn't flash FAQ / Sign in
-  const tabs = isAuthed || isLoading ? MEMBER_TABS : VISITOR_TABS
-  const current = navSection(location.pathname, ownProfilePath(username))
-
-  // An open chat on /messages is a full-screen tool on phones: the dock hides and
-  // gives its space to the chat (--dock-clear drops to the home-bar inset, so
-  // messages.css's height fills the screen). The class is on <html> so the
-  // tokens and scroll-padding there follow; it goes when the chat closes.
-  const params = new URLSearchParams(location.search)
-  const chatOpen = /^\/messages\/?$/.test(location.pathname) && (params.has('c') || params.has('user'))
-  useEffect(() => {
-    if (!chatOpen) return
-    const root = document.documentElement
-    root.classList.add('ms-chat-open')
-    return () => root.classList.remove('ms-chat-open')
-  }, [chatOpen])
+  const ownProfile = username ? `/user/${encodeURIComponent(username)}`.toLowerCase() : null
   // Shared with the top bar: one check for both (lib/shared)
   const unreadCount = useUnreadCount(isAuthed)
   const [pulse, setPulse] = useState<{ key: TabKey; elapsed: number } | null>(runningPulse)
@@ -129,15 +109,7 @@ export default function BottomNav() {
     setPulse({ key: t.key, elapsed: 0 })
     pulseTimer.current = setTimeout(() => setPulse(null), PULSE_MS)
 
-    // Sign in: the dialog over the current page, which stays where it is after
-    if (t.signIn) {
-      e.preventDefault()
-      openSignIn()
-      return
-    }
-    // Alerts and Profile for a visitor: sign in first, then go there (while a
-    // saved session is still being checked, the page's own guard decides)
-    if (t.authRequired && !isAuthed && !isLoading) {
+    if (t.authRequired && !isAuthed) {
       e.preventDefault()
       openSignIn({ redirect: t.path })
       return
@@ -237,7 +209,7 @@ export default function BottomNav() {
         .btb-shell i{font-size:22px;line-height:1;display:block}
         .btb-shell .ti-bell{font-size:23px}
         .btb-svg{width:23px;height:23px;display:block}
-        .btb-label{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;font-size:12px;line-height:14px;font-weight:600;letter-spacing:0;white-space:nowrap}
+        .btb-label{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;font-size:11px;line-height:13px;font-weight:600;letter-spacing:.01em;white-space:nowrap}
         /* A cue that isn't only colour: the current tab's label is bolder (Create too) */
         .btb-item--active .btb-label{font-weight:800}
 
@@ -284,17 +256,11 @@ export default function BottomNav() {
 
         /* Desktop, and phones held sideways: the top bar's links take over */
         @media ${DOCK_HIDDEN}{.btb{display:none}}
-        /* A chat open on a phone (see chatOpen above): no dock, and nothing keeps
-           room for it (the home-bar inset stays) */
-        @media (max-width:767.98px){
-          html.ms-chat-open{--bottom-nav-h:0px;--dock-clear:env(safe-area-inset-bottom,0px)}
-          html.ms-chat-open .btb{display:none}
-        }
         @media print{.btb{display:none}}
       `}</style>
       <nav className="btb" aria-label="Main">
-        {tabs.map((t) => {
-          const active = current === t.key
+        {TABS.map((t) => {
+          const active = isActive(t, location.pathname, ownProfile)
           const badge = t.key === 'alerts' && unreadCount > 0 ? (unreadCount > 9 ? '9+' : String(unreadCount)) : null
           const showAvatar = t.key === 'profile' && avatar && !avatarFailed
           // The bell fills in on the Alerts page (the icon font has no filled bell)

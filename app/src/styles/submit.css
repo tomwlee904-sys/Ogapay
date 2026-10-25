@@ -1,56 +1,46 @@
-/* Submit work (/tasks/:id/submit). Shared page width (.ui-page), so the left
-   edge matches Jobs and the job page. Tablet and desktop: form + a 300-340px
-   job card. Phone: job summary, form, then proof and requirements. */
-.sb-back { display: flex; width: fit-content; align-items: center; gap: 6px; min-height: 32px; margin-bottom: 12px; font-size: 13px; color: var(--text2); text-decoration: none; }
+/* Submit work (/tasks/:id/submit) */
+.sb-wrap { max-width: 1000px; }
+.sb-back { display: flex; width: fit-content; align-items: center; gap: 6px; margin-bottom: 18px; font-size: 13px; color: var(--text2); text-decoration: none; }
 .sb-back:hover { color: var(--text); }
-.sb-title { overflow-wrap: anywhere; }
-.sb-grid { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 24px; align-items: start; margin-top: 24px; }
-.sb-main { min-width: 0; }
+.sb-grid { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 16px; align-items: start; margin-top: 24px; }
 
-/* Not found: a full-page state with its own title */
-.sb-gone i { display: block; margin-bottom: 10px; font-size: 28px; color: var(--text3); }
-.sb-gone h1 { margin: 0; font-size: 20px; font-weight: 600; letter-spacing: -.02em; color: var(--text); }
-.sb-gone p { margin: 6px 0 18px; }
-
-/* A column of flex items, so the Send button can stay on screen (sticky) on phone and tablet */
-.sb-form { display: flex; flex-direction: column; gap: 6px; }
+.sb-form { display: grid; gap: 6px; }
 .sb-form .ui-label { margin-top: 12px; }
 .sb-form .ui-label:first-of-type { margin-top: 0; }
 .sb-textarea { height: auto; min-height: 110px; padding: 12px 14px; line-height: 1.55; resize: vertical; }
 .sb-held { margin: 0 0 8px; display: flex; gap: 8px; align-items: center; padding: 10px 12px; border-radius: 12px; background: color-mix(in srgb, var(--green) 10%, transparent); color: var(--green); font-size: 13px; }
 .sb-files { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
-.sb-files li { display: flex; align-items: center; gap: 8px; padding: 6px 6px 6px 10px; border-radius: 10px; background: var(--card2); font-size: 13px; color: var(--text); }
+.sb-files li { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 10px; background: var(--card2); font-size: 13px; color: var(--text); }
 .sb-files li span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.sb-files button { position: relative; flex-shrink: 0; width: 36px; height: 36px; border: 0; border-radius: 8px; background: none; color: var(--text2); cursor: pointer; display: grid; place-items: center; }
-.sb-files button::after { content: ''; position: absolute; inset: -4px; } /* 44px tap area */
+.sb-files button { width: 28px; height: 28px; border: 0; border-radius: 8px; background: none; color: var(--text2); cursor: pointer; display: grid; place-items: center; }
 .sb-files button:hover { background: var(--card); color: var(--text); }
-.sb-drop { display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; height: 64px; border: 1px dashed var(--border2); border-radius: 12px; background: none; color: var(--text); font: 500 13px var(--font); cursor: pointer; }
+.sb-drop { display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; height: 64px; border: 1px dashed var(--border2); border-radius: 12px; background: none; color: var(--text); font: 500 13px 'Inter', system-ui, sans-serif; cursor: pointer; }
 .sb-drop:hover { border-color: var(--text3); background: var(--card2); }
-.sb-drop small { color: var(--text2); font-weight: 400; }
+.sb-drop small { color: var(--text3); font-weight: 400; }
 .sb-send { width: 100%; margin-top: 16px; }
 .sb-spin { animation: spin 1s linear infinite; }
-.sb-error { margin: 10px 0 0; font-size: 13px; color: var(--red); }
-.sb-small { display: flex; gap: 6px; margin: 10px 0 0; font-size: 12.5px; line-height: 1.55; color: var(--text2); }
+.sb-error { margin: 10px 0 0; font-size: 13px; color: #dc2626; }
+.sb-small { display: flex; gap: 6px; margin: 10px 0 0; font-size: 12px; line-height: 1.55; color: var(--text2); }
 .sb-small i { margin-top: 2px; }
 
 .sb-state h2 { margin: 12px 0 0; font-size: 20px; font-weight: 600; letter-spacing: -.02em; color: var(--text); }
 .sb-state > p { margin: 6px 0 0; font-size: 14px; line-height: 1.6; color: var(--text2); }
 .sb-state .ui-actions { margin-top: 18px; }
 .sb-ic { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; font-size: 22px; background: var(--card2); color: var(--text); }
-.sb-ic.wait { background: color-mix(in srgb, var(--gold) 16%, transparent); color: color-mix(in srgb, var(--gold) 55%, var(--text)); }
+.sb-ic.wait { background: color-mix(in srgb, #f59e0b 16%, transparent); color: #b45309; }
 .sb-ic.ok { background: color-mix(in srgb, var(--green) 14%, transparent); color: var(--green); }
-.sb-ic.bad { background: color-mix(in srgb, var(--red) 12%, transparent); color: var(--red); }
+.sb-ic.bad { background: color-mix(in srgb, #ef4444 12%, transparent); color: #dc2626; }
+[data-theme="dark"] .sb-ic.wait { color: #fbbf24; }
 .sb-quote { margin: 12px 0 0; padding: 10px 14px; border-left: 3px solid var(--border2); background: var(--card2); border-radius: 0 10px 10px 0; font-size: 14px; color: var(--text); }
 .sb-sent { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border); display: grid; gap: 6px; }
 .sb-sent p { margin: 0; font-size: 13px; line-height: 1.55; color: var(--text); white-space: pre-wrap; overflow-wrap: anywhere; }
 .sb-sent a { display: inline-flex; gap: 6px; align-items: center; font-size: 13px; color: var(--text); overflow-wrap: anywhere; }
 
-/* The job card beside the form; it stays in view and scrolls inside when the brief is long */
-.sb-side { position: sticky; top: calc(var(--nav-h, 72px) + 16px); max-height: calc(100vh - var(--nav-h, 72px) - 32px); overflow-y: auto; overscroll-behavior: contain; }
-.sb-sum, .sb-more { display: grid; gap: 6px; }
+.sb-side { position: sticky; top: calc(var(--nav-h, 72px) + 16px); display: grid; gap: 6px; }
 .sb-side .ui-label { margin-top: 12px; }
-.sb-reward .o-money-alt { font-size: 12.5px; }
-.sb-meta { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12.5px; color: var(--text2); }
+.sb-reward b { display: block; font-size: 26px; font-weight: 600; letter-spacing: -.03em; color: var(--green); }
+.sb-reward span { font-size: 12px; color: var(--text3); }
+.sb-meta { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12px; color: var(--text2); }
 .sb-meta a { color: var(--text); font-weight: 600; text-decoration: none; }
 .sb-brief { margin: 0; font-size: 13px; line-height: 1.6; color: var(--text2); overflow-wrap: anywhere; }
 .sb-brief p { margin: 0 0 8px; }
@@ -61,26 +51,12 @@
 .sb-brief h3 { font-size: 13px; font-weight: 600; color: var(--text); margin: 8px 0 4px; }
 .sb-brief strong { color: var(--text); font-weight: 600; }
 .sb-brief a { color: var(--text); text-decoration: underline; }
-.sb-brief-btn { display: none; width: fit-content; padding: 0; border: 0; background: none; font: 600 13px var(--font); color: var(--text); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
 .sb-proof { margin: 0; font-size: 13px; line-height: 1.5; color: var(--text); display: flex; gap: 6px; align-items: flex-start; }
-.sb-proof i { color: var(--text2); margin-top: 2px; }
+.sb-proof i { color: var(--text3); margin-top: 2px; }
 .sb-reqs { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font-size: 13px; color: var(--text); }
 .sb-reqs i { color: var(--text2); margin-right: 4px; }
 
-/* Tablet: a narrower card so the form keeps room */
-@media (max-width: 1023.98px) {
-  .sb-grid { grid-template-columns: minmax(0, 1fr) 300px; gap: 16px; }
-  /* Send stays above the bottom bar while you fill the form */
-  .sb-send { position: sticky; bottom: calc(var(--dock-clear) + 8px); z-index: 5; box-shadow: 0 10px 30px -10px rgba(0, 0, 0, .4); }
-}
-/* Phone: summary, form, then proof and requirements; the long brief is cut to 3 lines */
-@media (max-width: 767.98px) {
-  .sb-grid { grid-template-columns: minmax(0, 1fr); margin-top: 16px; }
-  .sb-side { display: contents; }
-  .sb-sum, .sb-more { padding: 20px; border: 1px solid var(--border); border-radius: var(--r-card); background: var(--card); box-shadow: var(--sh-1); }
-  .sb-sum { order: -1; }
-  .sb-more { order: 1; }
-  .sb-more > .ui-label:first-child { margin-top: 0; }
-  .sb-brief.is-cut { max-height: calc(13px * 1.6 * 3); overflow: hidden; -webkit-mask-image: linear-gradient(#000 55%, transparent); mask-image: linear-gradient(#000 55%, transparent); }
-  .sb-brief-btn { display: inline-block; margin-top: 2px; }
+@media (max-width: 767px) {
+  .sb-grid { grid-template-columns: 1fr; }
+  .sb-side { position: static; order: -1; }
 }

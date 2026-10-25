@@ -1,4 +1,4 @@
-import { Component, Suspense, useEffect, useState, type ReactNode } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { SIGN_IN_EVENT, safeRedirect, type SignInRequest } from '../../lib/signin'
@@ -8,24 +8,6 @@ import { lazyPage } from '../../lib/staleBuild'
 const SignInModal = lazyPage(() => import('./SignInModal'))
 
 const AUTH_PAGES = ['/login', '/pair']
-
-// Its own small error boundary: if the dialog fails to load or crashes, say so
-// in a small sheet instead of replacing the whole page with the crash screen
-class DialogBoundary extends Component<{ onClose: () => void; children: ReactNode }, { failed: boolean }> {
-  state = { failed: false }
-  static getDerivedStateFromError() { return { failed: true } }
-  componentDidCatch() { /* the page behind stays usable */ }
-  render() {
-    if (!this.state.failed) return this.props.children
-    return (
-      <div className="ui-actionbar" role="alert" style={{ position: 'fixed', left: 16, right: 16, bottom: 'calc(var(--dock-clear) + 16px)', zIndex: 1000, maxWidth: 480, margin: '0 auto' }}>
-        <span className="ui-actionbar-text"><b>Sign-in couldn't load</b>Check your connection and try again.</span>
-        <button type="button" className="ui-btn ui-btn-dark" onClick={() => window.location.reload()}>Reload</button>
-        <button type="button" className="ui-btn ui-btn-text ui-btn-icon" aria-label="Close" onClick={this.props.onClose}><i className="ti ti-x" /></button>
-      </div>
-    )
-  }
-}
 
 /* Mounted once in App. Shows the sign-in dialog over whatever page is open. */
 export default function SignInHost() {
@@ -58,10 +40,8 @@ export default function SignInHost() {
   }
 
   return (
-    <DialogBoundary key={req.key} onClose={close}>
     <Suspense fallback={null}>
       <SignInModal key={req.key} initialView={req.view} initialCode={req.code} initialNotice={req.notice} redirect={safeRedirect(req.redirect)} onClose={close} onSignedIn={signedIn} />
     </Suspense>
-    </DialogBoundary>
   )
 }

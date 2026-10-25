@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import Layout from '../components/Layout'
-import LoadError from '../components/LoadError'
 import { apiRequest } from '../lib/api'
 import { useAuth } from '../context/AuthContext'
 import '../styles/messages.css'
@@ -50,24 +49,17 @@ export default function Messages() {
   const [draft, setDraft] = useState('')
   const [sending, setSending] = useState(false)
   const [err, setErr] = useState('')
-  // The list or the open chat didn't load (never shown as "no conversations")
-  const [convsFailed, setConvsFailed] = useState(false)
-  const [threadFailed, setThreadFailed] = useState(false)
-  // New message: type a username, then the chat opens (?user=, below)
-  const [newOpen, setNewOpen] = useState(false)
-  const [newName, setNewName] = useState('')
   const threadRef = useRef<HTMLDivElement>(null)
-  const taRef = useRef<HTMLTextAreaElement>(null)
   const stick = useRef(true)
 
   const loadConvs = useCallback(() => {
-    apiRequest<Conv[]>('/messages').then((d) => { setConvs(Array.isArray(d) ? d : []); setConvsFailed(false) }).catch(() => setConvsFailed(true))
+    apiRequest<Conv[]>('/messages').then((d) => setConvs(Array.isArray(d) ? d : [])).catch(() => setConvs((c) => c || []))
   }, [])
 
   const loadThread = useCallback((id: string) => {
     apiRequest<Msg[]>('/messages/' + id)
-      .then((d) => { setMsgs(Array.isArray(d) ? d : []); setThreadFailed(false); setConvs((cs) => cs?.map((c) => (c.id === id ? { ...c, unread: 0 } : c)) || cs) })
-      .catch(() => setThreadFailed(true))
+      .then((d) => { setMsgs(Array.isArray(d) ? d : []); setConvs((cs) => cs?.map((c) => (c.id === id ? { ...c, unread: 0 } : c)) || cs) })
+      .catch(() => setMsgs([]))
   }, [])
 
   useEffect(() => {
@@ -77,7 +69,7 @@ export default function Messages() {
   }, [loadConvs])
 
   useEffect(() => {
-    setMsgs(null); setErr(''); setThreadFailed(false); stick.current = true
+    setMsgs(null); setErr(''); stick.current = true
     if (!openId) return
     loadThread(openId)
     const t = setInterval(() => loadThread(openId), 10000)
@@ -138,63 +130,22 @@ export default function Messages() {
   }
 
   const open = (id: string | null) => { setNewTo(null); setParams(id ? { c: id } : {}, { replace: false }) }
-  const startNew = (e: React.FormEvent) => {
-    e.preventDefault()
-    const name = newName.trim().replace(/^@/, '')
-    if (!name) return
-    setNewOpen(false); setNewName(''); setErr('')
-    setParams({ user: name })
-  }
-
-  // Phones: an open chat is a full-screen view. The class lets the layout hide
-  // the bottom bar while a chat is open (shared change, see messages.css)
-  useEffect(() => {
-    document.body.classList.toggle('ms-chat-open', composing)
-    return () => document.body.classList.remove('ms-chat-open')
-  }, [composing])
-
-  // The message box grows with what you type, up to about 5 lines
-  const grow = (el: HTMLTextAreaElement) => { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 140) + 'px' }
-  useEffect(() => { if (!draft && taRef.current) taRef.current.style.height = '' }, [draft])
-
-  // No chats at all: one message across the whole box, with somewhere to go
-  const noChats = convs !== null && convs.length === 0 && !q && !composing
 
   let lastDay = ''
   return (
     <Layout>
       <div className="ms-wrap">
-        <div className={`ms-shell ${composing ? 'open' : ''} ${noChats ? 'solo' : ''}`}>
+        <div className={`ms-shell ${composing ? 'open' : ''}`}>
           <aside className="ms-side">
             <div className="ms-side-h">
-              <div className="ms-title-row">
-                <h1>Messages</h1>
-                <button type="button" className="ui-btn ui-btn-ghost ui-btn-icon ms-new" aria-label="New message" aria-expanded={newOpen} onClick={() => setNewOpen((o) => !o)}><i className={`ti ${newOpen ? 'ti-x' : 'ti-pencil'}`} /></button>
-              </div>
-              {newOpen && (
-                <form className="ms-newform" onSubmit={startNew}>
-                  <label className="ms-search"><span aria-hidden="true">@</span><input autoFocus autoCapitalize="off" spellCheck={false} placeholder="Their username" value={newName} onChange={(e) => setNewName(e.target.value)} aria-label="Username to message" /></label>
-                  <button type="submit" className="ui-btn ui-btn-dark" disabled={!newName.trim()}>Start</button>
-                </form>
-              )}
-              {err && !composing && <div className="ms-err" role="alert" style={{ margin: '8px 0 0' }}>{err}</div>}
-              {!noChats && <label className="ms-search"><i className="ti ti-search" /><input placeholder="Search chats" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Search chats" /></label>}
+              <h1>Messages</h1>
+              <label className="ms-search"><i className="ti ti-search" /><input placeholder="Search people" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Search conversations" /></label>
             </div>
             <div className="ms-list">
               {convs === null ? (
-                convsFailed ? <div className="ms-pad"><LoadError what="your messages" onRetry={loadConvs} /></div> : <div className="ms-empty">Loading…</div>
-              ) : noChats ? (
-                <div className="ms-empty"><div>
-                  <i className="ti ti-messages" />
-                  <b className="ms-empty-t">No messages yet</b>
-                  Chats start when you hire someone, take a private job or contact a seller.
-                  <div className="ms-empty-acts">
-                    <Link className="ui-btn ui-btn-dark" to="/tasks">Find jobs</Link>
-                    <Link className="ui-btn ui-btn-ghost" to="/store">Browse the store</Link>
-                  </div>
-                </div></div>
+                <div className="ms-empty">Loading…</div>
               ) : shown.length === 0 ? (
-                <div className="ms-empty"><div><i className="ti ti-search" />No chats match “{q}”</div></div>
+                <div className="ms-empty"><div><i className="ti ti-message-off" />{q ? 'No matches' : 'No conversations yet. Chats start when you hire someone or contact a seller.'}</div></div>
               ) : shown.map((c) => {
                 const p = c.participants[0]
                 const mine = c.lastMessage?.senderId === user?.id
@@ -218,11 +169,11 @@ export default function Messages() {
 
           <section className="ms-main">
             {!composing ? (
-              <div className="ms-empty"><div><i className="ti ti-messages" />Pick a conversation</div></div>
+              <div className="ms-empty"><div><i className="ti ti-messages" />{err || 'Pick a conversation'}</div></div>
             ) : (
               <>
                 <div className="ms-main-h">
-                  <button className="ms-back tap" onClick={() => open(null)} aria-label="Back to conversations"><i className="ti ti-arrow-left" /></button>
+                  <button className="ms-back" onClick={() => open(null)} aria-label="Back to conversations"><i className="ti ti-arrow-left" /></button>
                   <Avatar p={other} />
                   <div style={{ minWidth: 0 }}>
                     {other?.username ? <Link to={`/user/${other.username}`}>{other.name?.trim() || other.username}</Link> : <b>{other?.name || 'Conversation'}</b>}
@@ -241,7 +192,7 @@ export default function Messages() {
                   </div>
                 )}
                 <div className="ms-thread" ref={threadRef} onScroll={(e) => { const el = e.currentTarget; stick.current = el.scrollHeight - el.scrollTop - el.clientHeight < 60 }}>
-                  {msgs === null ? (threadFailed ? <LoadError what="this conversation" onRetry={() => openId && loadThread(openId)} /> : <div className="ms-empty">Loading…</div>)
+                  {msgs === null ? <div className="ms-empty">Loading…</div>
                     : msgs.length === 0 ? <div className="ms-empty">{newTo ? `Start a conversation with @${newTo.username}.` : 'No messages yet. Say hello.'}</div>
                     : msgs.map((m) => {
                       const day = new Date(m.createdAt).toDateString()
@@ -261,13 +212,12 @@ export default function Messages() {
                 {err && <div className="ms-err" role="alert">{err}</div>}
                 <div className="ms-compose">
                   <textarea
-                    ref={taRef}
                     value={draft}
                     maxLength={5000}
                     rows={1}
                     placeholder="Write a message"
                     aria-label="Message"
-                    onChange={(e) => { setDraft(e.target.value); grow(e.currentTarget) }}
+                    onChange={(e) => setDraft(e.target.value)}
                     onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } }}
                   />
                   <button className="ms-send" onClick={send} disabled={!draft.trim() || sending}><i className="ti ti-send" /> Send</button>

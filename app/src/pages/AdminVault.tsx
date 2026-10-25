@@ -1,29 +1,22 @@
-﻿import { useState, useEffect } from 'react'
+﻿import { useState, useEffect, type ReactNode } from 'react'
 import { useAuth } from '../context/AuthContext'
 import Layout from '../components/Layout'
-import AdminShell, { AdminEmpty, AdminRefresh } from '../components/AdminShell'
-import LoadError from '../components/LoadError'
-import { useToast } from '../components/Toast'
 import { apiRequest } from '../lib/api'
 import Money from '../components/Money'
 
 // The vault pool and its revenue rows are kept in naira (fees and store sales
 // in other currencies are converted when logged), so amounts show as naira.
 
-const when = (d: string) => new Date(d).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+const OGAPAY_BLUE = 'var(--accent)'
 
 export default function AdminVault() {
   const { user: authUser } = useAuth()
-  const { toast } = useToast()
 
   // Vault state
   const [pool, setPool] = useState<any>(null)
   const [holders, setHolders] = useState<any[]>([])
   const [recentRevenue, setRecentRevenue] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  // Numbers are only shown, and money buttons only work, after a good load
-  const [loaded, setLoaded] = useState(false)
-  const [failed, setFailed] = useState(false)
 
   // Action states
   const [seedUserId, setSeedUserId] = useState('')
@@ -34,11 +27,14 @@ export default function AdminVault() {
   const [revSource, setRevSource] = useState('task_fee')
   const [revDesc, setRevDesc] = useState('')
   const [addingRevenue, setAddingRevenue] = useState(false)
-  // Which action is waiting for "Yes" (each moves money or tokens)
-  const [confirm, setConfirm] = useState<null | 'seed' | 'revenue' | 'run'>(null)
+  const [toast, setToast] = useState<ReactNode>('')
+
+  const showToast = (msg: ReactNode) => {
+    setToast(msg)
+    setTimeout(() => setToast(''), 3000)
+  }
 
   const fetchPool = async () => {
-    setFailed(false)
     try {
       const res = await apiRequest<any>('/vault/admin/pool')
       const d = res?.data || res
@@ -48,9 +44,8 @@ export default function AdminVault() {
       const hRes = await apiRequest<any>('/vault/admin/holders').catch(() => null)
       if (hRes?.data) setHolders(hRes.data)
       if (d?.recentRevenue) setRecentRevenue(d.recentRevenue)
-      setLoaded(true)
     } catch {
-      setLoaded(false); setFailed(true)
+      showToast('Failed to load vault data')
     } finally { setLoading(false) }
   }
 
@@ -65,12 +60,12 @@ export default function AdminVault() {
         body: JSON.stringify({ userId: seedUserId.trim(), amount: parseFloat(seedAmount) }),
       })
       if (res?.success) {
-        toast(`Seeded ${seedAmount} $PAY to ${seedUserId}`, 'success')
+        showToast(<> <i className="ti ti-circle-check" style={{color:'var(--green)'}} /> Seeded {seedAmount} $PAY to {seedUserId}</>)
         setSeedUserId(''); setSeedAmount('')
         fetchPool()
       }
-    } catch { toast('Failed to seed $PAY', 'error') }
-    setSeeding(false); setConfirm(null)
+    } catch { showToast(<> <i className="ti ti-circle-x" style={{color:'var(--red)'}} /> Failed to seed $PAY</>) }
+    setSeeding(false)
   }
 
   const handleDistribute = async () => {
@@ -79,13 +74,13 @@ export default function AdminVault() {
       const res = await apiRequest<any>('/vault/admin/distribute', { method: 'POST' })
       const d = res?.data || res
       if (d?.distributed) {
-        toast(`Distributed ${(d.totalNgp || 0).toLocaleString()} to ${d.recipients} holders`, 'success')
+        showToast(<> <i className="ti ti-circle-check" style={{color:'var(--green)'}} /> Distributed {(d.totalNgp || 0).toLocaleString()} to {d.recipients} holders</>)
       } else {
-        toast(`Skipped: ${d?.reason || 'nothing to do'}`, 'error')
+        showToast(`Skipped: ${d?.reason || 'nothing to do'}`)
       }
       fetchPool()
-    } catch { toast('Distribution failed', 'error') }
-    setDistributing(false); setConfirm(null)
+    } catch { showToast(<> <i className="ti ti-circle-x" style={{color:'var(--red)'}} /> Distribution failed</>) }
+    setDistributing(false)
   }
 
   const handleAddRevenue = async () => {
@@ -97,12 +92,12 @@ export default function AdminVault() {
         body: JSON.stringify({ amountNgp: parseFloat(revAmount), source: revSource, description: revDesc }),
       })
       if (res?.success) {
-        toast(`₦${Number(revAmount).toLocaleString('en-US')} added to pool`, 'success')
+        showToast(<> <i className="ti ti-circle-check" style={{color:'var(--green)'}} /> ₦{Number(revAmount).toLocaleString('en-US')} added to pool</>)
         setRevAmount(''); setRevDesc('')
         fetchPool()
       }
-    } catch { toast('Failed to add revenue', 'error') }
-    setAddingRevenue(false); setConfirm(null)
+    } catch { showToast(<> <i className="ti ti-circle-x" style={{color:'var(--red)'}} /> Failed to add revenue</>) }
+    setAddingRevenue(false)
   }
 
   const isAdmin = authUser?.role === 'ADMIN'
@@ -110,170 +105,208 @@ export default function AdminVault() {
   if (!isAdmin) {
     return (
       <Layout>
-        <div className="ui-page">
-          <div className="ui-empty">
-            <strong>Admin access required</strong>
-            You need admin rights to open this page.
-          </div>
+        <div style={{ textAlign: 'center', padding: '60px 24px' }}>
+          <i className="ti ti-shield-lock" style={{ fontSize: 48, color: 'var(--text3)' }} />
+          <h2 style={{ fontFamily: 'Inter', marginTop: 12 }}>Admin Access Required</h2>
+          <p style={{ color: 'var(--text2)' }}>You need admin privileges to access this page.</p>
         </div>
       </Layout>
     )
   }
 
-  const SOURCES: Record<string, string> = { task_fee: 'Task fee', store_commission: 'Store commission', service_cut: 'Service cut', other: 'Other' }
-  const poolNgn = Number(pool?.totalNgp || 0)
-  const off = !loaded
+  const S: Record<string, React.CSSProperties> = {
+    page: { maxWidth: 1100, margin: '0 auto', padding: '28px 24px 60px' },
+    card: { background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 14, padding: 20, marginBottom: 16 },
+    cardTitle: { fontSize: 15, fontWeight: 800, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 },
+    row: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid var(--border)' },
+    rowLast: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0' },
+    label: { fontSize: 13, color: 'var(--text2)' },
+    value: { fontSize: 14, fontWeight: 700 },
+    input: { width: '100%', padding: '10px 12px', border: '1.5px solid var(--border)', borderRadius: 9, background: 'var(--bg)', color: 'var(--text)', fontSize: 13, outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' as const },
+    select: { padding: '9px 12px', border: '1.5px solid var(--border)', borderRadius: 9, background: 'var(--bg)', color: 'var(--text)', fontSize: 13, outline: 'none', fontFamily: 'inherit' },
+    btn: { height: 38, padding: '0 18px', borderRadius: 9, border: 'none', fontWeight: 700, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', gap: 6 },
+    btnPrimary: { height: 38, padding: '0 18px', borderRadius: 9, border: 'none', fontWeight: 700, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', gap: 6, background: OGAPAY_BLUE, color: 'var(--on-accent)' },
+    statGrid: { display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12, marginBottom: 16 },
+    statCard: { background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 12, padding: 16, textAlign: 'center' as const },
+    statNum: { fontFamily: 'Inter', fontSize: 24, fontWeight: 900 },
+    statLabel: { fontSize: 11, color: 'var(--text2)', marginTop: 2 },
+    flexRow: { display: 'flex', gap: 8, alignItems: 'flex-end' as const, flexWrap: 'wrap' as const },
+    formGroup: { flex: 1, minWidth: 140 },
+    formLabel: { fontSize: 11, fontWeight: 700, color: 'var(--text2)', marginBottom: 4, display: 'block' },
+    toast: { position: 'fixed', bottom: 'max(24px, calc(var(--dock-clear, 0px) + 12px))', left: '50%', transform: 'translateX(-50%)', background: '#111827', color: '#fff', padding: '12px 24px', borderRadius: 10, fontSize: 13, fontWeight: 600, zIndex: 9999, boxShadow: '0 4px 20px rgba(0,0,0,0.3)' },
+  }
 
   return (
-    <AdminShell
-      section="vault"
-      title="Vault"
-      sub="The $PAY revenue pool: add revenue, seed $PAY and run distributions."
-      how={<p>The pool is shared out to $PAY holders automatically at midnight UTC. Run a distribution by hand only when the automatic one didn't run. Every action here moves money or tokens and can't be undone.</p>}
-      actions={<AdminRefresh onClick={() => { setLoading(true); fetchPool() }} loading={loading} />}
-    >
-      <style>{`
-        .av-stats > div:first-child .ui-stats-value{font-size:24px}
-        @media (max-width:767.98px){.av-stats > div:first-child{grid-column:1 / -1}}
-        .av-stats .o-money-main{font-weight:600}
-        .av-form{display:grid;gap:12px;grid-template-columns:minmax(0,1fr)}
-        .av-form .ui-btn{width:100%}
-        .av-id{font-family:var(--font-mono);font-size:12px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
-        .av-rows li > div{min-width:0}
-        .av-rows b{font-weight:600;overflow-wrap:anywhere}
-        .av-rows small{display:block;font-size:12.5px;color:var(--text2);margin-top:2px;overflow-wrap:anywhere}
-        .av-amt{font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap;text-align:right}
-        .av-run p{margin:0;font-size:13.5px;line-height:1.5;color:var(--text2)}
-        .av-body{display:grid;gap:16px}
-      `}</style>
+    <Layout>
+      {toast && <div style={S.toast}>{toast}</div>}
+      <div style={S.page}>
+        <h1 style={{ fontFamily: 'Inter', fontSize: 28, fontWeight: 900, margin: '0 0 4px' }}>
+          <i className="ti ti-vault" style={{ color: OGAPAY_BLUE }} /> Vault Admin
+        </h1>
+        <p style={{ color: 'var(--text2)', fontSize: 14, margin: '0 0 24px' }}>
+          Manage the $PAY revenue distribution vault
+        </p>
 
-      {failed ? (
-        <LoadError what="the vault" onRetry={() => { setLoading(true); fetchPool() }} />
-      ) : (
-        <div className="av-body">
-          {off ? <div className="ui-sk" style={{ height: 96 }} /> : (
-            <div className="ui-stats av-stats">
-              <div><span className="ui-stats-label">Pool balance</span><span className="ui-stats-value"><Money amount={poolNgn} currency="NGN" exact size={24} /></span></div>
-              <div><span className="ui-stats-label">Next distribution</span><span className="ui-stats-value" style={{ fontSize: 16 }}>{pool?.nextDistributionAt ? when(pool.nextDistributionAt) : 'Not scheduled'}</span></div>
-              <div><span className="ui-stats-label">Last distribution</span><span className="ui-stats-value" style={{ fontSize: 16 }}>{pool?.lastDistributionAt ? when(pool.lastDistributionAt) : 'Never'}</span></div>
-              <div><span className="ui-stats-label">$PAY holders</span><span className="ui-stats-value">{holders.length.toLocaleString()}</span></div>
-            </div>
-          )}
-
-          <div className="ui-split">
-            <div className="adm-stack">
-              <section className="ui-card adm-card" aria-labelledby="av-holders">
-                <h2 className="adm-card-title" id="av-holders">$PAY holders{loaded && <em>{holders.length}</em>}</h2>
-                {off ? <div className="ui-sk" style={{ height: 80 }} /> : holders.length === 0 ? (
-                  <AdminEmpty compact title="No $PAY holders yet">Seed $PAY to a member to add one.</AdminEmpty>
-                ) : (
-                  <ul className="adm-rows av-rows">
-                    {holders.map((h: any) => (
-                      <li key={h.userId}>
-                        <div><b>{h.username || h.email || '—'}</b><div className="av-id" title={h.userId}>{h.userId}</div></div>
-                        <span className="av-amt">{(h.payBalance || 0).toLocaleString()} $PAY</span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </section>
-
-              <section className="ui-card adm-card" aria-labelledby="av-rev">
-                <h2 className="adm-card-title" id="av-rev">Recent revenue</h2>
-                {off ? <div className="ui-sk" style={{ height: 80 }} /> : recentRevenue.length === 0 ? (
-                  <AdminEmpty compact title="No revenue logged yet">Add revenue, or wait for task fees.</AdminEmpty>
-                ) : (
-                  <ul className="adm-rows av-rows">
-                    {recentRevenue.map((r: any, i: number) => (
-                      <li key={i}>
-                        <div><span className="adm-pill">{SOURCES[r.source] || r.source}</span><small>{r.description || 'No note'} · {new Date(r.recordedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</small></div>
-                        <span className="av-amt"><Money amount={Number(r.amountNgp || 0)} currency="NGN" exact size={14} /></span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </section>
-            </div>
-
-            <aside className="ui-split-side ui-split-side-first adm-stack">
-              <section className="ui-card adm-card" aria-labelledby="av-add">
-                <h2 className="adm-card-title" id="av-add">Add revenue to the pool</h2>
-                <div className="av-form">
-                  <div className="adm-field">
-                    <label className="ui-label" htmlFor="av-amount">Amount (naira)</label>
-                    <input id="av-amount" className="ui-input" type="number" inputMode="decimal" value={revAmount} onChange={e => setRevAmount(e.target.value)} placeholder="50000" />
-                  </div>
-                  <div className="adm-field">
-                    <label className="ui-label" htmlFor="av-source">Source</label>
-                    <select id="av-source" className="ui-select" value={revSource} onChange={e => setRevSource(e.target.value)}>
-                      <option value="task_fee">Task fee</option>
-                      <option value="store_commission">Store commission</option>
-                      <option value="service_cut">Service cut</option>
-                      <option value="other">Other</option>
-                    </select>
-                  </div>
-                  <div className="adm-field">
-                    <label className="ui-label" htmlFor="av-desc">Note (optional)</label>
-                    <input id="av-desc" className="ui-input" value={revDesc} onChange={e => setRevDesc(e.target.value)} placeholder="What it's from" />
-                  </div>
-                  {confirm === 'revenue' ? (
-                    <div className="adm-confirm">
-                      <p>Add <b>₦{Number(revAmount).toLocaleString('en-US')}</b> ({SOURCES[revSource]}) to the pool?</p>
-                      <div className="adm-actions">
-                        <button type="button" className="ui-btn ui-btn-dark" onClick={handleAddRevenue} disabled={addingRevenue}>{addingRevenue ? 'Adding…' : 'Yes, add it'}</button>
-                        <button type="button" className="ui-btn ui-btn-ghost" onClick={() => setConfirm(null)} disabled={addingRevenue}>Cancel</button>
-                      </div>
-                    </div>
-                  ) : (
-                    <button type="button" className="ui-btn ui-btn-ghost" onClick={() => setConfirm('revenue')} disabled={off || addingRevenue || !revAmount}><i className="ti ti-coin" aria-hidden="true" /> Add revenue</button>
-                  )}
-                </div>
-              </section>
-
-              <section className="ui-card adm-card" aria-labelledby="av-seed">
-                <h2 className="adm-card-title" id="av-seed">Seed $PAY</h2>
-                <div className="av-form">
-                  <div className="adm-field">
-                    <label className="ui-label" htmlFor="av-user">Member's user ID</label>
-                    <input id="av-user" className="ui-input" value={seedUserId} onChange={e => setSeedUserId(e.target.value)} placeholder="The ID from their account, not the username" />
-                  </div>
-                  <div className="adm-field">
-                    <label className="ui-label" htmlFor="av-pay">Amount of $PAY</label>
-                    <input id="av-pay" className="ui-input" type="number" inputMode="decimal" value={seedAmount} onChange={e => setSeedAmount(e.target.value)} placeholder="1000" />
-                  </div>
-                  {confirm === 'seed' ? (
-                    <div className="adm-confirm">
-                      <p>Seed <b>{Number(seedAmount).toLocaleString('en-US')} $PAY</b> to user <b style={{ overflowWrap: 'anywhere' }}>{seedUserId.trim()}</b>?</p>
-                      <div className="adm-actions">
-                        <button type="button" className="ui-btn ui-btn-dark" onClick={handleSeedPay} disabled={seeding}>{seeding ? 'Seeding…' : 'Yes, seed it'}</button>
-                        <button type="button" className="ui-btn ui-btn-ghost" onClick={() => setConfirm(null)} disabled={seeding}>Cancel</button>
-                      </div>
-                    </div>
-                  ) : (
-                    <button type="button" className="ui-btn ui-btn-ghost" onClick={() => setConfirm('seed')} disabled={off || seeding || !seedUserId || !seedAmount}><i className="ti ti-droplet" aria-hidden="true" /> Seed $PAY</button>
-                  )}
-                </div>
-              </section>
-
-              <section className="ui-card adm-card av-run" aria-labelledby="av-run">
-                <h2 className="adm-card-title" id="av-run">Run a distribution</h2>
-                <p>It runs by itself at midnight UTC. Run it now only if it didn't.</p>
-                {confirm === 'run' ? (
-                  <div className="adm-confirm">
-                    <p>Pay out <b><Money amount={poolNgn} currency="NGN" exact size={14} /></b> to <b>{holders.length.toLocaleString()} $PAY {holders.length === 1 ? 'holder' : 'holders'}</b> now? This can't be undone.</p>
-                    <div className="adm-actions">
-                      <button type="button" className="ui-btn adm-danger" onClick={handleDistribute} disabled={distributing}>{distributing ? 'Distributing…' : 'Yes, pay out now'}</button>
-                      <button type="button" className="ui-btn ui-btn-ghost" onClick={() => setConfirm(null)} disabled={distributing}>Cancel</button>
-                    </div>
-                  </div>
-                ) : (
-                  <button type="button" className="ui-btn adm-danger" style={{ width: '100%' }} onClick={() => setConfirm('run')} disabled={off || distributing}><i className="ti ti-player-play" aria-hidden="true" /> Run distribution now</button>
-                )}
-              </section>
-            </aside>
+        {/* ── Pool Stats ── */}
+        <div style={S.statGrid}>
+          <div style={S.statCard}>
+            <div style={{ ...S.statNum, color: OGAPAY_BLUE }}><Money amount={Number(pool?.totalNgp || 0)} currency="NGN" exact size={24} /></div>
+            <div style={S.statLabel}>Pool balance (naira)</div>
+          </div>
+          <div style={S.statCard}>
+            <div style={{ ...S.statNum, color: 'var(--green)' }}>{pool?.nextDistributionAt ? new Date(pool.nextDistributionAt).toLocaleDateString() : 'N/A'}</div>
+            <div style={S.statLabel}>Next Distribution</div>
+          </div>
+          <div style={S.statCard}>
+            <div style={{ ...S.statNum, color: '#f59e0b' }}>{holders.length}</div>
+            <div style={S.statLabel}>$PAY Holders</div>
           </div>
         </div>
-      )}
-    </AdminShell>
+
+        {/* ── Pool Info ── */}
+        <div style={S.card}>
+          <div style={S.cardTitle}><i className="ti ti-coin" style={{ color: OGAPAY_BLUE }} /> Pool Overview</div>
+          <div style={S.row}>
+            <span style={S.label}>Total in Pool</span>
+            <span style={S.value}><Money amount={Number(pool?.totalNgp || 0)} currency="NGN" exact size={14} /></span>
+          </div>
+          <div style={S.row}>
+            <span style={S.label}>Last Distribution</span>
+            <span style={S.value}>{pool?.lastDistributionAt ? new Date(pool.lastDistributionAt).toLocaleString() : 'Never'}</span>
+          </div>
+          <div style={S.rowLast}>
+            <span style={S.label}>Next Distribution</span>
+            <span style={S.value}>{pool?.nextDistributionAt ? new Date(pool.nextDistributionAt).toLocaleString() : 'Not scheduled'}</span>
+          </div>
+        </div>
+
+        {/* ── Actions ── */}
+        <div style={{ display: 'grid', gap: 16 }}>
+
+          {/* 1. Seed $PAY Tokens */}
+          <div style={S.card}>
+            <div style={S.cardTitle}><i className="ti ti-currency-dollar" style={{ color: OGAPAY_BLUE }} /> Seed $PAY Tokens</div>
+            <div style={S.flexRow}>
+              <div style={S.formGroup}>
+                <label style={S.formLabel}>User ID</label>
+                <input style={S.input} value={seedUserId} onChange={e => setSeedUserId(e.target.value)} placeholder="uuid..." />
+              </div>
+              <div style={S.formGroup}>
+                <label style={S.formLabel}>Amount $PAY</label>
+                <input style={S.input} type="number" value={seedAmount} onChange={e => setSeedAmount(e.target.value)} placeholder="1000" />
+              </div>
+              <button style={{ ...S.btnPrimary, marginTop: 18 }} onClick={handleSeedPay} disabled={seeding || !seedUserId || !seedAmount}>
+                {seeding ? 'Seeding…' : <><i className="ti ti-droplet" /> Seed $PAY</>}
+              </button>
+            </div>
+          </div>
+
+          {/* 2. Add Revenue */}
+          <div style={S.card}>
+            <div style={S.cardTitle}><i className="ti ti-upload" style={{ color: 'var(--green)' }} /> Add Revenue to Pool</div>
+            <div style={S.flexRow}>
+              <div style={S.formGroup}>
+                <label style={S.formLabel}>Amount (naira)</label>
+                <input style={S.input} type="number" value={revAmount} onChange={e => setRevAmount(e.target.value)} placeholder="50000" />
+              </div>
+              <div style={S.formGroup}>
+                <label style={S.formLabel}>Source</label>
+                <select style={S.select} value={revSource} onChange={e => setRevSource(e.target.value)}>
+                  <option value="task_fee">Task Fee</option>
+                  <option value="store_commission">Store Commission</option>
+                  <option value="service_cut">Service Cut</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+              <div style={S.formGroup}>
+                <label style={S.formLabel}>Description</label>
+                <input style={S.input} value={revDesc} onChange={e => setRevDesc(e.target.value)} placeholder="Optional note" />
+              </div>
+              <button style={{ ...S.btn, background: 'var(--green)', color: '#fff', marginTop: 18 }} onClick={handleAddRevenue} disabled={addingRevenue || !revAmount}>
+                {addingRevenue ? 'Adding…' : <><i className="ti ti-coin" /> Add Revenue</>}
+              </button>
+            </div>
+          </div>
+
+          {/* 3. Trigger Distribution */}
+          <div style={S.card}>
+            <div style={S.cardTitle}><i className="ti ti-player-play" style={{ color: OGAPAY_BLUE }} /> Trigger Distribution</div>
+            <p style={{ fontSize: 12, color: 'var(--text2)', margin: '0 0 12px' }}>
+              Manually trigger a distribution. Normally runs automatically at midnight UTC.
+            </p>
+            <button style={{ ...S.btnPrimary, height: 44, fontSize: 14, padding: '0 24px' }} onClick={handleDistribute} disabled={distributing}>
+              <i className="ti ti-vault" style={{ fontSize: 16 }} /> {distributing ? 'Distributing…' : <><i className="ti ti-package" /> Run Distribution Now</>}
+            </button>
+          </div>
+
+          {/* 4. $PAY Holders */}
+          <div style={S.card}>
+            <div style={S.cardTitle}><i className="ti ti-users" style={{ color: '#f59e0b' }} /> $PAY Holders ({holders.length})</div>
+            {holders.length === 0 ? (
+              <p style={{ fontSize: 13, color: 'var(--text3)' }}>No $PAY holders yet. Seed tokens above.</p>
+            ) : (
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', fontSize: 12, borderCollapse: 'collapse' }}>
+                  <thead>
+                    <tr style={{ color: 'var(--text3)', borderBottom: '1px solid var(--border)' }}>
+                      <th style={{ textAlign: 'left', padding: '8px 6px', fontWeight: 600 }}>Username</th>
+                      <th style={{ textAlign: 'left', padding: '8px 6px', fontWeight: 600 }}>User ID</th>
+                      <th style={{ textAlign: 'right', padding: '8px 6px', fontWeight: 600 }}>$PAY Balance</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {holders.map((h: any) => (
+                      <tr key={h.userId} style={{ borderBottom: '1px solid var(--border)' }}>
+                        <td style={{ padding: '8px 6px', fontWeight: 600 }}>{h.username || h.email || '—'}</td>
+                        <td style={{ padding: '8px 6px', color: 'var(--text2)', fontSize: 10 }}>{h.userId}</td>
+                        <td style={{ padding: '8px 6px', textAlign: 'right', fontWeight: 700 }}>{(h.payBalance || 0).toLocaleString()}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+
+          {/* 5. Recent Revenue */}
+          <div style={S.card}>
+            <div style={S.cardTitle}><i className="ti ti-history" style={{ color: OGAPAY_BLUE }} /> Recent Revenue Log</div>
+            {recentRevenue.length === 0 ? (
+              <p style={{ fontSize: 13, color: 'var(--text3)' }}>No revenue logged yet. Add revenue above or wait for task fees.</p>
+            ) : (
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', fontSize: 12, borderCollapse: 'collapse' }}>
+                  <thead>
+                    <tr style={{ color: 'var(--text3)', borderBottom: '1px solid var(--border)' }}>
+                      <th style={{ textAlign: 'left', padding: '8px 6px', fontWeight: 600 }}>Source</th>
+                      <th style={{ textAlign: 'left', padding: '8px 6px', fontWeight: 600 }}>Description</th>
+                      <th style={{ textAlign: 'right', padding: '8px 6px', fontWeight: 600 }}>Amount</th>
+                      <th style={{ textAlign: 'right', padding: '8px 6px', fontWeight: 600 }}>Date</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {recentRevenue.map((r: any, i: number) => (
+                      <tr key={i} style={{ borderBottom: '1px solid var(--border)' }}>
+                        <td style={{ padding: '8px 6px' }}><span style={{ background: 'rgba(var(--accent-rgb),0.1)', padding: '2px 6px', borderRadius: 4, fontWeight: 600, fontSize: 10 }}>{r.source}</span></td>
+                        <td style={{ padding: '8px 6px', color: 'var(--text2)' }}>{r.description || '—'}</td>
+                        <td style={{ padding: '8px 6px', textAlign: 'right', fontWeight: 700 }}><Money amount={Number(r.amountNgp || 0)} currency="NGN" exact size={13} /></td>
+                        <td style={{ padding: '8px 6px', textAlign: 'right', color: 'var(--text2)' }}>{new Date(r.recordedAt).toLocaleDateString()}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+
+          {/* 6. Refresh */}
+          <div style={{ textAlign: 'center', padding: 8 }}>
+            <button style={{ ...S.btn, border: '1px solid var(--border)', background: 'var(--card)', color: 'var(--text)' }} onClick={() => { setLoading(true); fetchPool() }}>
+              <i className="ti ti-refresh" /> Refresh Data
+            </button>
+          </div>
+        </div>
+      </div>
+    </Layout>
   )
 }

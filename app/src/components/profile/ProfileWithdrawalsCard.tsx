@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { apiRequest } from '../../lib/api'
 import Money from '../Money'
-import LoadError from '../LoadError'
 import { money, PAYOUT_LABEL, payoutNote, payoutStatusOf, txDetail, txTitle, when, type Tx } from '../../lib/wallet'
 import '../../styles/profile-own.css'
 
@@ -29,8 +28,6 @@ export default function ProfileWithdrawalsCard() {
   const [more, setMore] = useState(false)
   const [busy, setBusy] = useState(false)
   const [failed, setFailed] = useState(false)
-  // Phones show the 3 latest until you ask for all
-  const [all, setAll] = useState(false)
 
   const load = useCallback(async () => {
     setFailed(false)
@@ -63,40 +60,16 @@ export default function ProfileWithdrawalsCard() {
       {rows === null ? (
         <div className="pf-wd-list">{[0, 1, 2].map((i) => <div key={i} className="up-skel" style={{ height: 52, margin: '10px 16px', borderRadius: 12 }} />)}</div>
       ) : failed ? (
-        <LoadError what="your withdrawals" onRetry={load} />
+        <div className="pf-wd-empty">
+          Couldn't load your withdrawals.
+          <button type="button" className="pf-wd-more-btn" onClick={load}>Try again</button>
+        </div>
       ) : rows.length === 0 ? (
         <div className="pf-wd-empty">
           <i className="ti ti-history-off" />
           <div>No withdrawals yet</div>
         </div>
       ) : (
-        <>
-        {/* Phones: one row per withdrawal, the amount and status on the right */}
-        <ul className={`pf-wd-list pf-wd-phone${all ? '' : ' capped'}`}>
-          {rows.map((w) => {
-            const s = payoutStatusOf(w)
-            const detail = txDetail(w)
-            const note = payoutNote(w)
-            const net = w.metadata?.toAddress || w.metadata?.walletAddress ? '' : netLine(w, s)
-            return (
-              <li className="pf-wd-row" key={w.id}>
-                <div className="pf-wd-main">
-                  <strong>{txTitle(w)}</strong>
-                  <span>{[when(w.createdAt), detail].filter(Boolean).join(' · ')}</span>
-                  {net && <span>{net}</span>}
-                  {note && <span className="pf-wd-note">{note}</span>}
-                </div>
-                <div className="pf-wd-side">
-                  <Money amount={Math.abs(Number(w.amount || 0))} currency={w.currency || 'NGN'} exact size={14} className={s === 'failed' || s === 'refunded' ? 'pf-wd-void' : ''} />
-                  <span className={`pf-wd-pill ${s}`}>{PAYOUT_LABEL[s]}</span>
-                </div>
-              </li>
-            )
-          })}
-        </ul>
-        {!all && rows.length > 3 && (
-          <div className="pf-wd-all"><button type="button" className="ui-btn ui-btn-ghost" onClick={() => setAll(true)}>Show all withdrawals</button></div>
-        )}
         <div className="pf-wd-scroll">
           <table className="pf-wd-table">
             <thead>
@@ -125,10 +98,9 @@ export default function ProfileWithdrawalsCard() {
             </tbody>
           </table>
         </div>
-        </>
       )}
       {more && rows && !failed && (
-        <div className={`pf-wd-more${all ? '' : ' capped'}`}><button type="button" className="pf-wd-more-btn" disabled={busy} onClick={loadMore}>{busy ? 'Loading…' : 'Load more'}</button></div>
+        <div className="pf-wd-more"><button type="button" className="pf-wd-more-btn" disabled={busy} onClick={loadMore}>{busy ? 'Loading…' : 'Load more'}</button></div>
       )}
     </section>
   )

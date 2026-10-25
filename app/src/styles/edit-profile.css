@@ -1,41 +1,24 @@
 /* Edit profile (/edit-profile) */
-.ep-back { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; color: var(--text2); text-decoration: none; font-size: 14px; }
-.ep-back:hover { color: var(--text); }
-.ep-head { margin-bottom: 20px; }
-.ep-head .ui-title { margin-top: 0; }
 form .hr-sec + .hr-sec { margin-top: 14px; }
 .ep-field { display: block; margin-top: 14px; }
-.ep-field > span { display: block; font-size: 13px; font-weight: 600; color: var(--text2); margin-bottom: 6px; }
-.ep-field small { display: block; font-size: 12px; color: var(--text2); margin-top: 5px; }
-.ep-field em { display: block; font-style: normal; font-size: 12.5px; color: var(--red); margin-top: 5px; }
+.ep-field > span { display: block; font-size: 12px; font-weight: 700; color: var(--text2); margin-bottom: 6px; }
+.ep-field small { display: block; font-size: 11px; color: var(--text3); margin-top: 5px; }
+.ep-field em { display: block; font-style: normal; font-size: 12px; color: var(--red); margin-top: 5px; }
 .ep-field input[aria-invalid="true"] { border-color: var(--red); }
 .ep-field input:disabled { opacity: .6; }
 .hr-row .ep-field { margin-top: 14px; }
 .ep-avatar { display: flex; align-items: center; gap: 14px; }
 .ep-avatar .up-avatar { width: 64px; height: 64px; border-radius: 14px; font-size: 22px; }
-.ep-avatar p { margin: 6px 0 0; font-size: 12px; color: var(--text2); }
-.ep-chips { display: flex; flex-wrap: wrap; gap: 8px; }
-.ep-chip { height: 40px; padding: 0 14px; border-radius: 99px; border: 1px solid var(--border); background: var(--card); color: var(--text2); font: 600 13px var(--font); cursor: pointer; }
+.ep-avatar p { margin: 6px 0 0; font-size: 11px; color: var(--text3); }
+.ep-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.ep-chip { height: 32px; padding: 0 12px; border-radius: 99px; border: 1px solid var(--border); background: var(--card); color: var(--text2); font-weight:600;font-size:12px;font-family:inherit; font-family: inherit; cursor: pointer; }
 .ep-chip.on { background: var(--text); color: var(--bg); border-color: var(--text); }
-.ep-toggle { display: flex; align-items: center; justify-content: space-between; gap: 14px; min-height: 56px; padding: 10px 0; border-top: 1px solid var(--border); }
+.ep-toggle { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 12px 0; border-top: 1px solid var(--border); }
 .ep-toggle:first-of-type { border-top: 0; }
 .ep-toggle b { display: block; font-size: 14px; color: var(--text); }
-.ep-toggle small { display: block; font-size: 12.5px; color: var(--text2); margin-top: 2px; }
-/* The same switch as Settings and Profile: green when on */
-.ep-switch { width: 44px; height: 26px; border-radius: 99px; border: 0; background: var(--border2); position: relative; cursor: pointer; flex-shrink: 0; padding: 0; transition: background .15s; }
-.ep-switch span { position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.25); transition: transform .15s; }
-.ep-switch.on { background: var(--green); }
-.ep-switch.on span { transform: translateX(18px); }
-.ep-switch:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
-.ep-tip { display: flex; align-items: center; gap: 12px; margin-top: 14px; padding: 12px 14px; border: 1px dashed var(--border2); border-radius: var(--r-md); font-size: 13px; color: var(--text2); line-height: 1.5; }
-.ep-tip > i { font-size: 20px; color: var(--text2); flex-shrink: 0; }
-.ep-tip > span { flex: 1; min-width: 0; }
-/* Save bar: sticky above the bottom bar up to 1023px (ui.css .ui-actionbar) */
-.ep-bar { margin-top: 16px; }
-.ep-bar .ui-btn { flex-shrink: 0; }
-.ep-ok { color: var(--green); }
-.ep-err { color: var(--red); }
-@media (max-width: 767.98px) {
-  .ep-tip { flex-wrap: wrap; }
-  .ep-tip .ui-btn { margin-left: 32px; }
-}
+.ep-toggle small { display: block; font-size: 12px; color: var(--text3); margin-top: 2px; }
+.ep-switch { width: 44px; height: 26px; border-radius: 99px; border: 1px solid var(--border); background: var(--bg2); position: relative; cursor: pointer; flex-shrink: 0; padding: 0; transition: background .15s; }
+.ep-switch span { position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; border-radius: 50%; background: var(--text3); transition: transform .15s, background .15s; }
+.ep-switch.on { background: var(--text); border-color: var(--text); }
+.ep-switch.on span { transform: translateX(18px); background: var(--bg); }
+.ep-bar { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; margin-top: 16px; padding: 12px; background: var(--card); border: 1px solid var(--border); border-radius: 14px; }

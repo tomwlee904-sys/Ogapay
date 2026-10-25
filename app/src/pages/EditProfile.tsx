@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Layout from '../components/Layout'
-import LoadError from '../components/LoadError'
 import { apiRequest } from '../lib/api'
 import { uploadImage } from '../lib/upload'
 import { useAuth } from '../context/AuthContext'
@@ -40,7 +39,6 @@ export default function EditProfile() {
   const [saving, setSaving] = useState(false)
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null)
   const [errors, setErrors] = useState<Record<string, string>>({})
-  const [loadFailed, setLoadFailed] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
 
   const fromUser = (u: any): Form => ({
@@ -56,13 +54,11 @@ export default function EditProfile() {
     twitter: u.twitter || '', telegram: u.telegram || '', discord: u.discord || '', website: u.website || '',
   })
 
-  const load = () => {
-    setLoadFailed(false)
+  useEffect(() => {
     apiRequest<any>('/users/me')
       .then((u) => { setMe(u); setForm(fromUser(u)); setAvatar(u.avatarUrl || null) })
-      .catch(() => setLoadFailed(true))
-  }
-  useEffect(() => { load() }, [])
+      .catch(() => setMsg({ ok: false, text: "Couldn't load your profile. Refresh to try again." }))
+  }, [])
 
   const set = <K extends keyof Form>(k: K, v: Form[K]) => { setForm((f) => (f ? { ...f, [k]: v } : f)); setMsg(null); setErrors((e) => ({ ...e, [k]: '' })) }
 
@@ -118,9 +114,6 @@ export default function EditProfile() {
     setSaving(false)
   }
 
-  // Anything changed since the last load or save (shown in the Save bar)
-  const dirty = !!form && !!me && JSON.stringify(form) !== JSON.stringify(fromUser(me))
-
   // A verified name (matched with a NIN or a bank account) can't be changed
   const nameLocked = me?.kyc?.status === 'APPROVED' && Number(me?.kyc?.kycTier || 0) >= 1
 
@@ -134,23 +127,18 @@ export default function EditProfile() {
 
   return (
     <Layout>
-      <div className="ui-page">
-        <div className="ui-narrow">
-        <Link to="/profile" className="ep-back tap"><i className="ti ti-arrow-left" aria-hidden="true" /> Profile</Link>
-        <div className="ui-head ep-head">
-          <div>
-            <h1 className="ui-title">Edit profile</h1>
-            <p className="ui-sub">What people see on your public profile.</p>
-          </div>
-          {me?.username && <div className="ui-actions"><Link className="ui-btn ui-btn-ghost" to={`/user/${me.username}`}><i className="ti ti-external-link" aria-hidden="true" /> View public profile</Link></div>}
+      <div className="up-wrap" style={{ maxWidth: 760 }}>
+        <div className="up-crumb">
+          <Link to="/profile" className="tap" style={{ color: 'var(--text2)', textDecoration: 'none' }}><i className="ti ti-arrow-left" aria-hidden="true" /> Profile</Link>
+          <h1>Edit profile</h1>
         </div>
 
         {!form ? (
-          loadFailed ? <LoadError what="your profile" onRetry={load} /> : <div className="ui-sk" style={{ height: 320 }} />
+          msg ? <div className="up-empty"><i className="ti ti-cloud-off" />{msg.text}</div> : <div className="up-skel" style={{ height: 320 }} />
         ) : (
           <form onSubmit={save} noValidate>
             <section className="up-card hr-sec">
-              <div className="hr-sec-h"><h2>Basics</h2></div>
+              <div className="hr-sec-h"><h2>Basics</h2>{me?.username && <Link to={`/user/${me.username}`} className="tap">View public profile</Link>}</div>
               <div className="ep-avatar">
                 {avatar ? <img className="up-avatar" src={avatar} alt="" /> : <div className="up-avatar">{(form.firstName[0] || '?').toUpperCase()}</div>}
                 <div>
@@ -179,6 +167,14 @@ export default function EditProfile() {
               <p className="ep-note" role="note" style={{ margin: '0 0 4px', fontSize: 13, color: 'var(--text2)' }}>
                 <i className="ti ti-shield-lock" aria-hidden="true" /> Keep phone numbers, bank details and your home address out of your bio. Anyone can read it. Clients can message you on OgaPay.
               </p>
+            </section>
+
+            <section className="up-card hr-sec">
+              <div className="hr-sec-h"><h2>Verified creator</h2></div>
+              <p style={{ margin: '0 0 12px', fontSize: 14, color: 'var(--text2)' }}>
+                Have an audience on X, Instagram, TikTok or YouTube? Add it to get the verified creator badge and be listed where brands look for creators.
+              </p>
+              <Link to="/settings/creator" className="up-btn" style={{ minHeight: 44, display: 'inline-flex', alignItems: 'center', gap: 6 }}><i className="ti ti-rosette-discount-check" aria-hidden="true" /> Apply for verified creator</Link>
             </section>
 
             <section className="up-card hr-sec">
@@ -216,23 +212,12 @@ export default function EditProfile() {
               </div>
             </section>
 
-            {/* Verified creator: a tip at the end, not in the middle of the form */}
-            <div className="ep-tip">
-              <i className="ti ti-rosette-discount-check" aria-hidden="true" />
-              <span>Have an audience on X, Instagram, TikTok or YouTube? Get the verified creator badge and be listed where brands look for creators.</span>
-              <Link to="/settings/creator" className="ui-btn ui-btn-ghost ui-btn-sm">Apply</Link>
-            </div>
-
-            {/* Save stays in view above the bottom bar on phones and tablets */}
-            <div className="ui-actionbar ui-actionbar-mobile-only ep-bar">
-              <div className="ui-actionbar-text" role="status">
-                {msg ? <span className={msg.ok ? 'ep-ok' : 'ep-err'}>{msg.text}</span> : dirty ? <b>Unsaved changes</b> : 'Change anything above, then save.'}
-              </div>
-              <button type="submit" className="ui-btn ui-btn-dark ui-btn-lg" disabled={saving || uploading}>{saving ? 'Saving…' : 'Save changes'}</button>
+            <div className="ep-bar">
+              {msg && <div className={`up-note ${msg.ok ? 'ok' : 'err'}`} role="status" style={{ margin: 0, flex: 1 }}>{msg.text}</div>}
+              <button type="submit" className="up-btn primary" disabled={saving || uploading} style={{ minWidth: 140, height: 44, marginLeft: 'auto' }}>{saving ? 'Saving…' : 'Save changes'}</button>
             </div>
           </form>
         )}
-        </div>
       </div>
     </Layout>
   )

@@ -5,7 +5,6 @@ import Layout from '../components/Layout'
 import Sheet from '../components/wallet/Sheet'
 import { apiRequest } from '../lib/api'
 import '../styles/wallet.css'
-import '../styles/campaigns.css'
 
 // Campaigns: a named group of your jobs with a budget. Stats come from the jobs
 // in it (spent, remaining, submissions, approvals). The old page showed ad-style
@@ -17,8 +16,6 @@ type JobRow = { id: string; title: string; status: string; reward: number; maxWo
 
 const PLATFORMS = ['X/Twitter', 'Instagram', 'TikTok', 'Facebook', 'YouTube', 'WhatsApp', 'Other']
 const STATUS_LABEL = { ACTIVE: 'Active', PAUSED: 'Paused', ENDED: 'Ended' } as const
-// Active green, Paused amber, Ended grey (the same as jobs in Manage jobs)
-const STATUS_CLS = { ACTIVE: 'ok', PAUSED: 'wait', ENDED: 'hold' } as const
 const money = (n: number, c: string) => (c === 'NGN' ? `₦${Math.round(n).toLocaleString('en-US')}` : `${n.toLocaleString('en-US', { maximumFractionDigits: 2 })} ${c}`)
 const blank = { name: '', description: '', platforms: [] as string[], budget: '', currency: 'NGN' as 'NGN' | 'USDC', status: 'ACTIVE' as Campaign['status'] }
 
@@ -32,7 +29,6 @@ export default function Campaigns() {
   const [formErr, setFormErr] = useState('')
   const [viewing, setViewing] = useState<Campaign | null>(null)
   const [jobs, setJobs] = useState<JobRow[] | null>(null)
-  const [jobsFailed, setJobsFailed] = useState(false)
 
   const load = () => apiRequest<Campaign[]>('/campaigns').then((l) => setList(Array.isArray(l) ? l : [])).catch(() => setLoadFailed(true))
   useEffect(() => { load() }, [])
@@ -56,8 +52,8 @@ export default function Campaigns() {
     try { await apiRequest(`/campaigns/${c.id}`, { method: 'DELETE' }); load() } catch (e: any) { setErr(e?.message || "Couldn't delete it") }
   }
   const view = (c: Campaign) => {
-    setViewing(c); setJobs(null); setJobsFailed(false)
-    apiRequest<{ jobsList: JobRow[] }>(`/campaigns/${c.id}/stats`).then((d) => setJobs(d?.jobsList || [])).catch(() => setJobsFailed(true))
+    setViewing(c); setJobs(null)
+    apiRequest<{ jobsList: JobRow[] }>(`/campaigns/${c.id}/stats`).then((d) => setJobs(d?.jobsList || [])).catch(() => setJobs([]))
   }
 
   return (
@@ -65,54 +61,53 @@ export default function Campaigns() {
       <div className="ui-page">
         <div className="ui-head">
           <div>
-            <span className="ui-eyebrow">Posting</span>
+            <span className="ui-eyebrow"><i className="ti ti-speakerphone" /> Campaigns</span>
             <h1 className="ui-title">Campaigns</h1>
-            <p className="ui-sub">A campaign groups your jobs under one budget, so you see their spend and results together.</p>
+            <p className="ui-sub">Group related jobs, give them a budget, and see their spend and results together.</p>
           </div>
-          {list?.length !== 0 && <div className="ui-actions cp-head-acts"><button type="button" className="ui-btn ui-btn-dark" onClick={() => openForm('new')}><i className="ti ti-plus" /> New campaign</button></div>}
+          <div className="ui-actions"><button type="button" className="ui-btn ui-btn-dark" onClick={() => openForm('new')}><i className="ti ti-plus" /> New campaign</button></div>
         </div>
-        {err && <p role="alert" className="cp-err">{err}</p>}
+        {err && <p role="alert" style={{ color: 'var(--red)', fontSize: 13 }}>{err}</p>}
 
         {list === null && loadFailed ? (
-          <div className="cp-body"><LoadError what="your campaigns" onRetry={() => { setLoadFailed(false); load() }} /></div>
+          <div style={{ marginTop: 24 }}><LoadError what="your campaigns" onRetry={() => { setLoadFailed(false); load() }} /></div>
         ) : list === null ? (
-          <div className="ui-grid-3 cp-body">{[0, 1, 2].map((i) => <div key={i} className="ui-sk" style={{ height: 200 }} />)}</div>
+          <div className="ui-grid-3" style={{ marginTop: 24 }}>{[0, 1, 2].map((i) => <div key={i} className="ui-sk" style={{ height: 200 }} />)}</div>
         ) : list.length === 0 ? (
-          <div className="ui-empty cp-body">
-            <strong>No campaigns yet</strong>
-            Make one for a launch or a promotion, then add jobs to it when you post them. For example: September launch, 3 jobs, ₦50,000 budget.
-            <div className="cp-empty-acts"><button type="button" className="ui-btn ui-btn-dark" onClick={() => openForm('new')}><i className="ti ti-plus" /> New campaign</button></div>
+          <div className="ui-empty" style={{ marginTop: 24 }}>
+            <b style={{ display: 'block', color: 'var(--text)', marginBottom: 6 }}>No campaigns yet</b>
+            Make one for a launch or a promotion, then add jobs to it when you post them.
           </div>
         ) : (
-          <div className="ui-grid-3 cp-body">
+          <div className="ui-grid-3" style={{ marginTop: 24 }}>
             {list.map((c) => {
               const s = c.stats
               const pct = c.budget > 0 ? Math.min(100, (s.spent / c.budget) * 100) : 0
               return (
-                <section key={c.id} className="ui-card ui-card-pad cp-card">
-                  <div className="cp-head">
-                    <h2>{c.name}</h2>
-                    <span className={`wl-pill ${STATUS_CLS[c.status]}`}>{STATUS_LABEL[c.status]}</span>
+                <section key={c.id} className="ui-card ui-card-pad" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, alignItems: 'flex-start' }}>
+                    <h2 style={{ margin: 0, fontSize: 16, fontWeight: 600, letterSpacing: '-.01em', minWidth: 0, overflowWrap: 'anywhere' }}>{c.name}</h2>
+                    <span className={`wl-pill ${c.status === 'ACTIVE' ? 'hold' : c.status === 'PAUSED' ? 'wait' : 'bad'}`} style={{ marginTop: 2 }}>{STATUS_LABEL[c.status]}</span>
                   </div>
-                  {c.platforms?.length > 0 && <div className="cp-tags">{c.platforms.map((p) => <span key={p}>{p}</span>)}</div>}
+                  {c.platforms?.length > 0 && <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>{c.platforms.map((p) => <span key={p} className="wl-coin" style={{ height: 24, fontSize: 11 }}>{p}</span>)}</div>}
                   <div>
-                    <div className="cp-spent">
-                      <span>Spent <b>{money(s.spent, c.currency)}</b></span>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5, color: 'var(--text2)', marginBottom: 6 }}>
+                      <span>Spent <b style={{ color: 'var(--text)' }}>{money(s.spent, c.currency)}</b></span>
                       <span>of {money(c.budget, c.currency)}</span>
                     </div>
-                    <div className="cp-bar" aria-hidden="true"><i className={s.remaining < 0 ? 'over' : ''} style={{ width: `${pct}%` }} /></div>
-                    <div className={`cp-left${s.remaining < 0 ? ' over' : ''}`}>{s.remaining < 0 ? `${money(-s.remaining, c.currency)} over budget` : `${money(s.remaining, c.currency)} left`}</div>
+                    <div style={{ height: 6, borderRadius: 999, background: 'var(--card2)', overflow: 'hidden' }}><div style={{ width: `${pct}%`, height: '100%', background: s.remaining < 0 ? 'var(--red)' : 'var(--green)' }} /></div>
+                    <div style={{ fontSize: 12, color: s.remaining < 0 ? 'var(--red)' : 'var(--text2)', marginTop: 6 }}>{s.remaining < 0 ? `${money(-s.remaining, c.currency)} over budget` : `${money(s.remaining, c.currency)} left`}</div>
                   </div>
-                  <div className="cp-stats">
-                    <div><span>Jobs</span><b>{s.jobs}</b></div>
-                    <div><span>Entries</span><b>{s.submissions}</b></div>
-                    <div><span>Approved</span><b>{s.approved}</b></div>
+                  <div className="wl-stats" style={{ gridTemplateColumns: 'repeat(3, minmax(0, 1fr))' }}>
+                    <div className="wl-stat" style={{ padding: 10 }}><span>Jobs</span><b style={{ fontSize: 16 }}>{s.jobs}</b></div>
+                    <div className="wl-stat" style={{ padding: 10 }}><span>Entries</span><b style={{ fontSize: 16 }}>{s.submissions}</b></div>
+                    <div className="wl-stat" style={{ padding: 10 }}><span>Approved</span><b style={{ fontSize: 16 }}>{s.approved}</b></div>
                   </div>
-                  <div className="cp-acts">
-                    {c.status !== 'ENDED' && <Link className="ui-btn ui-btn-dark cp-add" to={`/create?type=custom&campaign=${c.id}`}><i className="ti ti-plus" /> Add a job</Link>}
+                  <div className="ui-actions" style={{ marginTop: 'auto' }}>
+                    {c.status !== 'ENDED' && <Link className="ui-btn ui-btn-dark" to={`/create?type=custom&campaign=${c.id}`}><i className="ti ti-plus" /> Add a job</Link>}
                     <button type="button" className="ui-btn ui-btn-ghost" onClick={() => view(c)}>View</button>
                     <button type="button" className="ui-btn ui-btn-ghost" onClick={() => openForm(c)}>Edit</button>
-                    <button type="button" className="ui-btn ui-btn-ghost ui-btn-icon cp-del" aria-label={`Delete ${c.name}`} onClick={() => remove(c)}><i className="ti ti-trash" /></button>
+                    <button type="button" className="ui-btn ui-btn-ghost ui-btn-icon" aria-label={`Delete ${c.name}`} onClick={() => remove(c)}><i className="ti ti-trash" /></button>
                   </div>
                 </section>
               )
@@ -151,7 +146,7 @@ export default function Campaigns() {
           {editing !== 'new' && (
             <div className="wl-field">
               <span className="ui-label">Status</span>
-              <div className="wl-seg cp-seg" style={{ gridTemplateColumns: 'repeat(3, 1fr)', marginBottom: 0 }}>
+              <div className="wl-seg" style={{ gridTemplateColumns: 'repeat(3, 1fr)', marginBottom: 0 }}>
                 {(['ACTIVE', 'PAUSED', 'ENDED'] as const).map((st) => <button key={st} type="button" aria-pressed={form.status === st} onClick={() => setForm({ ...form, status: st })}>{STATUS_LABEL[st]}</button>)}
               </div>
             </div>
@@ -175,9 +170,7 @@ export default function Campaigns() {
             <div className="total"><span>{viewing.stats.remaining < 0 ? 'Over budget' : 'Left'}</span><b>{money(Math.abs(viewing.stats.remaining), viewing.currency)}</b></div>
           </div>
           <span className="ui-label">Jobs</span>
-          {jobs === null ? (jobsFailed
-            ? <div className="cp-loaderr"><LoadError what="this campaign's jobs" onRetry={() => viewing && view(viewing)} /></div>
-            : <div className="ui-sk" style={{ height: 60, borderRadius: 12 }} />) : jobs.length === 0 ? (
+          {jobs === null ? <div className="ui-sk" style={{ height: 60, borderRadius: 12 }} /> : jobs.length === 0 ? (
             <p className="wl-note">No jobs yet. {viewing.status !== 'ENDED' && <Link to={`/create?type=custom&campaign=${viewing.id}`}>Post one in this campaign</Link>}</p>
           ) : (
             <ul className="wl-banks">

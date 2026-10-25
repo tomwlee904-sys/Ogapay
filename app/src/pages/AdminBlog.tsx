@@ -1,19 +1,15 @@
-﻿import { useState, useEffect, useRef } from 'react'
-import AdminShell, { AdminEmpty, AdminSkeleton } from '../components/AdminShell'
-import LoadError from '../components/LoadError'
+﻿import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import Layout from '../components/Layout'
 import { apiRequest } from '../lib/api'
 import { uploadImage } from '../lib/upload'
 
 const CATEGORIES = ['News', 'Businesses', 'Freelancers', 'Case Studies']
-// The API marks writers' articles sent for review as PENDING
-const TABS: [string, string][] = [['PENDING', 'Waiting for review'], ['DRAFT', 'Drafts'], ['PUBLISHED', 'Published']]
-const STATUS_LABEL: Record<string, string> = { PENDING: 'Waiting for review', DRAFT: 'Draft', PUBLISHED: 'Published' }
 
 export default function AdminBlog() {
-  const [posts, setPosts] = useState<any[] | null>(null)
-  const [failed, setFailed] = useState(false)
-  const [tab, setTab] = useState('PENDING')
-  const tabPicked = useRef(false)
+  const navigate = useNavigate()
+  const [posts, setPosts] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState<any | null>(null)
   const [form, setForm] = useState({ title: '', excerpt: '', content: '', category: 'News', tags: '', coverImage: '', coverColor: 'var(--accent)', status: 'DRAFT' })
   const [saving, setSaving] = useState(false)
@@ -21,14 +17,12 @@ export default function AdminBlog() {
   const [uploadingCover, setUploadingCover] = useState(false)
 
   const loadPosts = async () => {
-    setFailed(false)
+    setLoading(true)
     try {
       const res = await apiRequest<any>('/blog/admin/all')
-      const list = res.posts || []
-      setPosts(list)
-      // Open on what needs review; with nothing waiting, on the published posts
-      if (!tabPicked.current) { tabPicked.current = true; if (!list.some((p: any) => p.status === 'PENDING')) setTab('PUBLISHED') }
-    } catch { setPosts(null); setFailed(true) }
+      setPosts(res.posts || [])
+    } catch { setPosts([]) }
+    setLoading(false)
   }
 
   useEffect(() => { loadPosts() }, [])
@@ -82,176 +76,157 @@ export default function AdminBlog() {
 
   if (editing !== null) {
     const isEdit = !!editing?.id
-    const buttons = (
-      <>
-        <button type="button" className="ui-btn ui-btn-text" onClick={() => setEditing(null)} disabled={saving}>Cancel</button>
-        <button type="button" className="ui-btn ui-btn-ghost" onClick={() => save('DRAFT')} disabled={saving}>{saving ? 'Saving…' : 'Save draft'}</button>
-        <button type="button" className="ui-btn ui-btn-dark" onClick={() => save('PUBLISHED')} disabled={saving}>{saving ? 'Saving…' : 'Publish'}</button>
-      </>
-    )
     return (
-      <AdminShell section="blog" title={isEdit ? 'Edit post' : 'New post'} sub={isEdit ? 'Update the post, then save it as a draft or publish it.' : 'Write a new post for the OgaPay blog.'}>
+      <Layout sidebar>
         <style>{`
-          .ab-ed{display:grid;gap:16px}
-          .ab-editor.ui-input{min-height:360px;font-family:var(--font-mono);font-size:13px;line-height:1.6;tab-size:2}
-          .ab-upload{position:relative;overflow:hidden;flex-shrink:0}
-          .ab-upload input{position:absolute;inset:0;opacity:0;cursor:pointer}
-          .ab-cover{display:flex;gap:8px;align-items:center}
-          .ab-cover .ui-input{flex:1;min-width:0}
-          .ab-prev{aspect-ratio:16/9;border-radius:var(--r-md);background:var(--card2) center/cover no-repeat;border:1px solid var(--border)}
-          .ab-side-btns{display:flex;flex-direction:column-reverse;gap:8px}
-          .ab-side-btns .ui-btn{width:100%}
-          .ab-bar{justify-content:flex-end}
-          @media (min-width:1024px){.ab-bar{display:none}}
-          @media (max-width:1023.98px){.ab-side-btns{display:none}}
-          @media (max-width:767.98px){.ab-bar .ui-btn-ghost,.ab-bar .ui-btn-dark{flex:1}}
+          .ab-wrap{max-width:900px;margin:0 auto;padding:28px 24px 60px}
+          .ab-wrap h1{font-size:22px;font-weight:800;margin:0 0 4px}
+          .ab-sub{font-size:13px;color:var(--text2);margin-bottom:20px}
+          .ab-label{font-size:12px;font-weight:700;color:var(--text2);margin-bottom:6px;display:block}
+          .ab-input{width:100%;height:40px;padding:0 12px;border:1.5px solid var(--border);border-radius:8px;background:var(--card);color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box}
+          .ab-input:focus{border-color:var(--accent)}
+          .ab-textarea{width:100%;min-height:150px;padding:12px;border:1.5px solid var(--border);border-radius:8px;background:var(--card);color:var(--text);font-size:13px;font-family:inherit;outline:none;resize:vertical;box-sizing:border-box;line-height:1.6}
+          .ab-textarea:focus{border-color:var(--accent)}
+          .ab-select{width:100%;height:40px;padding:0 12px;border:1.5px solid var(--border);border-radius:8px;background:var(--card);color:var(--text);font-size:13px;font-family:inherit;outline:none;cursor:pointer}
+          .ab-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+          @media(max-width:600px){.ab-grid{grid-template-columns:1fr}}
+          .ab-editor{min-height:350px;width:100%;padding:12px;border:1.5px solid var(--border);border-radius:8px;background:var(--card);color:var(--text);font-size:13px;font-family:monospace;outline:none;resize:vertical;box-sizing:border-box;line-height:1.6;tab-size:2}
+          .ab-editor:focus{border-color:var(--accent)}
         `}</style>
-        <div className="ab-ed">
-          {error && <div className="adm-msg bad" role="alert"><span>{error}</span></div>}
-          <div className="ui-split">
-            <section className="ui-card adm-card">
-              <div className="adm-fields">
-                <div className="adm-field">
-                  <label className="ui-label" htmlFor="ab-title">Title</label>
-                  <input id="ab-title" className="ui-input" value={form.title} onChange={s('title')} placeholder="Article title" />
-                </div>
-                <div className="adm-field">
-                  <label className="ui-label" htmlFor="ab-excerpt">Excerpt <span style={{ fontWeight: 400, color: 'var(--text2)' }}>(optional, shown in cards)</span></label>
-                  <textarea id="ab-excerpt" className="ui-input" value={form.excerpt} onChange={s('excerpt')} placeholder="Brief summary..." rows={3} />
-                </div>
-                <div className="adm-field">
-                  <label className="ui-label" htmlFor="ab-content">Content (HTML)</label>
-                  <p className="ui-hint" style={{ margin: 0 }}>Write the article in HTML: h1-h3, p, ul, ol, blockquote, pre, img, a and more.</p>
-                  <textarea id="ab-content" className="ui-input ab-editor" value={form.content} onChange={s('content')} placeholder="<h2>Your heading here</h2><p>Your content here...</p>" />
-                </div>
-              </div>
-            </section>
-            <aside className="ui-split-side">
-              <section className="ui-card adm-card">
-                <div className="adm-fields">
-                  <div className="adm-field">
-                    <label className="ui-label" htmlFor="ab-cat">Category</label>
-                    <select id="ab-cat" className="ui-select" value={form.category} onChange={s('category')}>
-                      {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-                    </select>
-                  </div>
-                  <div className="adm-field">
-                    <label className="ui-label" htmlFor="ab-tags">Tags <span style={{ fontWeight: 400, color: 'var(--text2)' }}>(comma-separated)</span></label>
-                    <input id="ab-tags" className="ui-input" value={form.tags} onChange={s('tags')} placeholder="freelancing, tips" />
-                  </div>
-                  <div className="adm-field">
-                    <label className="ui-label" htmlFor="ab-cover">Cover image</label>
-                    <div className="ab-cover">
-                      <input id="ab-cover" className="ui-input" value={form.coverImage} onChange={s('coverImage')} placeholder="https://..." />
-                      <label className={`ui-btn ui-btn-ghost ab-upload${uploadingCover ? ' is-loading' : ''}`}>
-                        Upload
-                        <input type="file" accept="image/*" aria-label="Upload a cover image" onChange={async e => {
-                          const file = e.target.files?.[0]; if (!file) return
-                          setUploadingCover(true)
-                          try { const url = await uploadImage(file, 'blog-covers'); setForm(f => ({ ...f, coverImage: url })) } catch (e) { console.error('Upload failed', e) }
-                          setUploadingCover(false)
-                        }} />
-                      </label>
-                    </div>
-                    {form.coverImage && <div className="ab-prev" style={{ backgroundImage: `url("${form.coverImage.replace(/"/g, '%22')}")` }} aria-hidden="true" />}
-                  </div>
-                  <div className="ab-side-btns">{buttons}</div>
-                </div>
-              </section>
-            </aside>
+        <div className="ab-wrap">
+          <h1>{isEdit ? 'Edit Post' : 'New Post'}</h1>
+          <p className="ab-sub">{isEdit ? 'Update your blog post below.' : 'Write a new blog post for OgaPay.'}</p>
+          {error && <div style={{ background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: 8, padding: '10px 14px', fontSize: 13, color: '#dc2626', marginBottom: 16 }}>{error}</div>}
+
+          <div className="ab-grid">
+            <div>
+              <label className="ab-label">Title</label>
+              <input className="ab-input" value={form.title} onChange={s('title')} placeholder="Article title" />
+            </div>
+            <div>
+              <label className="ab-label">Category</label>
+              <select className="ab-select" value={form.category} onChange={s('category')}>
+                {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
           </div>
-          <div className="ui-actionbar ui-actionbar-mobile-only ab-bar">{buttons}</div>
+
+          <label className="ab-label">Excerpt <span style={{ fontWeight: 400, color: 'var(--text3)' }}>(optional, shown in cards)</span></label>
+          <textarea className="ab-textarea" value={form.excerpt} onChange={s('excerpt')} placeholder="Brief summary..." rows={3} />
+
+          <div className="ab-grid" style={{ marginTop: 16 }}>
+            <div>
+              <label className="ab-label">Cover Image URL <span style={{ fontWeight: 400, color: 'var(--text3)' }}>(or upload)</span></label>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <input className="ab-input" value={form.coverImage} onChange={s('coverImage')} placeholder="https://..." style={{ flex: 1 }} />
+                <label style={{ height: 40, padding: '0 14px', borderRadius: 8, border: '1.5px solid var(--border)', background: 'var(--bg2)', cursor: 'pointer', fontSize: 12, fontWeight: 600, color: 'var(--text2)', display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'inherit', flexShrink: 0 }}>
+                  Upload
+                  <input type="file" accept="image/*" style={{ display: 'none' }} onChange={async e => {
+                    const file = e.target.files?.[0]; if (!file) return
+                    setUploadingCover(true)
+                    try { const url = await uploadImage(file, 'blog-covers'); setForm(f => ({ ...f, coverImage: url })) } catch (e) { console.error('Upload failed', e) }
+                    setUploadingCover(false)
+                  }} />
+                </label>
+              </div>
+              {uploadingCover && <span style={{ fontSize: 11, color: 'var(--text3)' }}>Uploading...</span>}
+            </div>
+            <div>
+              <label className="ab-label">Tags <span style={{ fontWeight: 400, color: 'var(--text3)' }}>(comma-separated)</span></label>
+              <input className="ab-input" value={form.tags} onChange={s('tags')} placeholder="freelancing, tips" />
+            </div>
+          </div>
+
+          <label className="ab-label" style={{ marginTop: 16 }}>Content (HTML)</label>
+          <p style={{ fontSize: 11, color: 'var(--text3)', margin: '0 0 6px' }}>Write your article using HTML. Supports h1-h3, p, ul, ol, blockquote, pre, img, a, etc.</p>
+          <textarea className="ab-editor" value={form.content} onChange={s('content')} placeholder="<h2>Your heading here</h2><p>Your content here...</p>" />
+
+          <div style={{ display: 'flex', gap: 10, marginTop: 20, flexWrap: 'wrap', alignItems: 'center' }}>
+            <button onClick={() => save('PUBLISHED')} disabled={saving}
+              style={{ height: 42, padding: '0 24px', borderRadius: 99, border: 'none', background: 'var(--accent)', color: 'var(--on-accent)', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+              {saving ? 'Saving...' : 'Publish'}
+            </button>
+            <button onClick={() => save('DRAFT')} disabled={saving}
+              style={{ height: 42, padding: '0 24px', borderRadius: 99, border: '1.5px solid var(--border)', background: 'transparent', color: 'var(--text)', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+              {saving ? 'Saving...' : 'Save Draft'}
+            </button>
+            <button onClick={() => setEditing(null)}
+              style={{ height: 42, padding: '0 24px', borderRadius: 99, border: '1.5px solid #fca5a5', background: 'transparent', color: '#dc2626', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+              Cancel
+            </button>
+          </div>
         </div>
-      </AdminShell>
+      </Layout>
     )
   }
 
-  const counts = { PENDING: 0, DRAFT: 0, PUBLISHED: 0 } as Record<string, number>
-  for (const p of posts || []) counts[p.status] = (counts[p.status] || 0) + 1
-  const shown = (posts || []).filter((p: any) => p.status === tab)
-  const pill = (st: string) => <span className={`adm-pill ${st === 'PUBLISHED' ? 'ok' : st === 'PENDING' ? 'warn' : ''}`}>{STATUS_LABEL[st] || st}</span>
-  const date = (post: any) => (post.publishedAt ? new Date(post.publishedAt) : new Date(post.createdAt)).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
-  const rowActions = (post: any) => (
-    <div className="ab-acts">
-      <button type="button" className="ui-btn ui-btn-ghost ui-btn-sm" onClick={() => openEdit(post)}><i className="ti ti-pencil" aria-hidden="true" /> Edit</button>
-      <button type="button" className="ui-btn ui-btn-ghost ui-btn-sm" onClick={() => toggleStatus(post)}>{post.status === 'PUBLISHED' ? 'Unpublish' : 'Publish'}</button>
-      <button type="button" className="ui-btn ui-btn-text ui-btn-sm ab-del" onClick={() => deletePost(post.id)} aria-label={`Delete ${post.title}`}><i className="ti ti-trash" aria-hidden="true" /> Delete</button>
-    </div>
-  )
-
   return (
-    <AdminShell
-      section="blog"
-      title="Blog"
-      sub="Articles waiting for review, drafts and published posts."
-      actions={<button type="button" className="ui-btn ui-btn-dark" onClick={openCreate}><i className="ti ti-plus" aria-hidden="true" /> New post</button>}
-    >
+    <Layout sidebar>
       <style>{`
-        .ab-list{container-type:inline-size;container-name:ab-list}
-        .ab-table{width:100%;border-collapse:collapse;font-size:13.5px}
-        .ab-table th{text-align:left;padding:10px 12px;border-bottom:1px solid var(--border);color:var(--text2);font-size:12px;font-weight:500}
-        .ab-table td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:middle}
-        .ab-table tr:last-child td{border-bottom:0}
-        .ab-t{font-weight:600;overflow-wrap:anywhere}
-        .ab-t small{display:block;font-weight:400;font-size:12.5px;color:var(--text2);margin-top:2px}
-        .ab-acts{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
-        .ab-del{color:var(--red)}
-        .ab-cards{display:none;list-style:none;margin:0;padding:0;flex-direction:column;gap:12px}
-        .ab-card{padding:16px;display:grid;gap:10px}
-        .ab-card h3{margin:0;font-size:15px;font-weight:600;line-height:1.35;overflow-wrap:anywhere;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
-        .ab-meta{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;font-size:12.5px;color:var(--text2)}
-        .ab-card .ab-del{margin-left:auto}
-        @container ab-list (max-width: 860px){.ab-c-views,.ab-c-cat{display:none}}
-        @container ab-list (max-width: 600px){.ab-table-wrap{display:none}.ab-cards{display:flex}}
+        .ab-wrap{max-width:1100px;margin:0 auto;padding:28px 24px 60px}
+        .ab-wrap h1{font-size:22px;font-weight:800;margin:0 0 4px}
+        .ab-sub{font-size:13px;color:var(--text2);margin-bottom:20px}
+        .ab-table{width:100%;border-collapse:collapse;font-size:13px}
+        .ab-table th{text-align:left;padding:10px 12px;border-bottom:1px solid var(--border);color:var(--text2);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+        .ab-table td{padding:10px 12px;border-bottom:0.5px solid var(--border);vertical-align:middle}
+        .ab-table tr:hover td{background:var(--bg2)}
+        .ab-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;display:inline-block}
+        .ab-btn{height:30px;padding:0 10px;border-radius:6px;border:none;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit}
+        .ab-empty{padding:40px;text-align:center;color:var(--text3);font-size:14px}
       `}</style>
-      <div className="adm-tabs" role="tablist" aria-label="Post status">
-        {TABS.map(([st, label]) => (
-          <button key={st} type="button" role="tab" aria-selected={tab === st} onClick={() => { tabPicked.current = true; setTab(st) }}>
-            {label}{posts && <em>{counts[st] || 0}</em>}
+      <div className="ab-wrap">
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+          <h1>Blog Manager</h1>
+          <button onClick={openCreate} style={{ height: 38, padding: '0 18px', borderRadius: 99, border: 'none', background: 'var(--accent)', color: 'var(--on-accent)', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 6 }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
+            New Post
           </button>
-        ))}
-      </div>
-
-      {failed ? (
-        <LoadError what="blog posts" onRetry={loadPosts} />
-      ) : posts === null ? (
-        <AdminSkeleton rows={3} height={72} />
-      ) : shown.length === 0 ? (
-        tab === 'PENDING' ? <AdminEmpty done title="No articles waiting for review">All caught up.</AdminEmpty>
-          : tab === 'DRAFT' ? <AdminEmpty title="No drafts" />
-          : <AdminEmpty title="No published posts yet"><div style={{ marginTop: 14 }}><button type="button" className="ui-btn ui-btn-dark" onClick={openCreate}><i className="ti ti-plus" aria-hidden="true" /> New post</button></div></AdminEmpty>
-      ) : (
-        <div className="ab-list">
-          <div className="ui-card ab-table-wrap" style={{ overflowX: 'auto' }}>
-            <table className="ab-table">
-              <thead>
-                <tr><th>Title</th><th>Status</th><th className="ab-c-cat">Category</th><th className="ab-c-views">Views</th><th>Date</th><th><span style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0 0 0 0)' }}>Actions</span></th></tr>
-              </thead>
-              <tbody>
-                {shown.map((post: any) => (
-                  <tr key={post.id}>
-                    <td className="ab-t">{post.title}{post.author?.username && <small>by @{post.author.username}</small>}</td>
-                    <td>{pill(post.status)}</td>
-                    <td className="ab-c-cat" style={{ color: 'var(--text2)' }}>{post.category}</td>
-                    <td className="ab-c-views">{post.viewCount || 0}</td>
-                    <td style={{ color: 'var(--text2)', whiteSpace: 'nowrap' }}>{date(post)}</td>
-                    <td>{rowActions(post)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <ul className="ab-cards">
-            {shown.map((post: any) => (
-              <li key={post.id} className="ui-card ab-card">
-                <h3>{post.title}</h3>
-                <div className="ab-meta">{pill(post.status)}<span>{post.category}</span><span>{date(post)}</span><span>{post.viewCount || 0} views</span>{post.author?.username && <span>by @{post.author.username}</span>}</div>
-                {rowActions(post)}
-              </li>
-            ))}
-          </ul>
         </div>
-      )}
-    </AdminShell>
+        <p className="ab-sub">Create, edit, and manage blog posts.</p>
+
+        {loading ? (
+          <div className="ab-empty">Loading...</div>
+        ) : posts.length === 0 ? (
+          <div className="ab-empty">No posts yet. Create your first blog post!</div>
+        ) : (
+          <table className="ab-table">
+            <thead>
+              <tr>
+                <th>Title</th>
+                <th>Status</th>
+                <th>Category</th>
+                <th>Views</th>
+                <th>Date</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {posts.map((post: any) => (
+                <tr key={post.id}>
+                  <td style={{ fontWeight: 600, maxWidth: 280, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{post.title}</td>
+                  <td>
+                    <span className="ab-badge" style={{ background: post.status === 'PUBLISHED' ? '#d1fae5' : '#fef3c7', color: post.status === 'PUBLISHED' ? '#065f46' : '#92400e' }}>
+                      {post.status}
+                    </span>
+                  </td>
+                  <td style={{ color: 'var(--text2)' }}>{post.category}</td>
+                  <td>{post.viewCount || 0}</td>
+                  <td style={{ color: 'var(--text3)', fontSize: 12 }}>{post.publishedAt ? new Date(post.publishedAt).toLocaleDateString() : new Date(post.createdAt).toLocaleDateString()}</td>
+                  <td>
+                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                      <button className="ab-btn" style={{ background: '#eef2ff', color: '#4338ca' }} onClick={() => openEdit(post)}>Edit</button>
+                      <button className="ab-btn" style={{ background: post.status === 'PUBLISHED' ? '#fef3c7' : '#d1fae5', color: post.status === 'PUBLISHED' ? '#92400e' : '#065f46' }} onClick={() => toggleStatus(post)}>
+                        {post.status === 'PUBLISHED' ? 'Unpublish' : 'Publish'}
+                      </button>
+                      <button className="ab-btn" style={{ background: '#fef2f2', color: '#dc2626' }} onClick={() => deletePost(post.id)}>Delete</button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+    </Layout>
   )
 }

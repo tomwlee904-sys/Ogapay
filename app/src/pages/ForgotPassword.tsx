@@ -1,9 +1,8 @@
 import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
-import AuthShell from '../components/auth/AuthShell'
+import Layout from '../components/Layout'
 import { useAuth } from '../context/AuthContext'
 import { apiRequest } from '../lib/api'
-import { openSignIn } from '../lib/signin'
 
 // Reset a forgotten password by email. Someone already signed in doesn't need a
 // reset link: they change their password in Settings > Security.
@@ -26,27 +25,37 @@ export default function ForgotPassword() {
     setBusy(false)
   }
 
-  if (!isLoading && isAuthed) {
-    return (
-      <AuthShell eyebrow="Password" title="Reset your password" sub="You're signed in, so you don't need a reset link. Change your password in Settings, Security.">
-        <Link to="/settings/security" className="ui-btn ui-btn-dark ui-btn-lg" style={{ width: '100%' }}>Change password</Link>
-      </AuthShell>
-    )
-  }
+  const btn = { height: 44, borderRadius: 10, background: 'var(--text)', color: 'var(--bg)', border: 'none', fontSize: 14, fontWeight: 700, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', padding: '0 18px' } as const
 
   return (
-    <AuthShell eyebrow="Password" title="Reset your password" sub="Enter the email address linked to your account and we'll send you a link to set a new password.">
-      <form onSubmit={send} noValidate>
-        <div className="as-field">
-          <label className="ui-label" htmlFor="fp-email">Email</label>
-          <input id="fp-email" className="ui-input" type="email" inputMode="email" autoComplete="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
-        </div>
-        {msg && <p role={msg.ok ? 'status' : 'alert'} className={`as-alert${msg.ok ? ' ok' : ''}`}>{msg.text}</p>}
-        <button type="submit" disabled={busy} className={`ui-btn ui-btn-dark ui-btn-lg${busy ? ' is-loading' : ''}`} style={{ width: '100%' }}>Send reset link</button>
-      </form>
-      <p className="as-links">
-        <button type="button" className="ui-btn ui-btn-text" onClick={() => openSignIn({ view: 'email' })}>Back to sign in</button>
-      </p>
-    </AuthShell>
+    <Layout sidebar={false}>
+      <div style={{ maxWidth: 480, margin: '40px auto', padding: '0 20px' }}>
+        <h1 style={{ fontFamily: 'Inter', fontSize: 22, fontWeight: 800, marginBottom: 8 }}>Reset your password</h1>
+        {!isLoading && isAuthed ? (
+          <>
+            <p style={{ color: 'var(--text2)', fontSize: 14, marginBottom: 24 }}>
+              You're signed in, so you don't need a reset link. Change your password in Settings, Security.
+            </p>
+            <Link to="/settings/security" style={btn}>Change password</Link>
+          </>
+        ) : (
+          <>
+            <p style={{ color: 'var(--text2)', fontSize: 14, marginBottom: 24 }}>
+              Enter the email address linked to your account and we'll send you a password reset link.
+            </p>
+            <form onSubmit={send} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div>
+                <label htmlFor="fp-email" style={{ fontSize: 13, fontWeight: 700, color: 'var(--text2)', display: 'block', marginBottom: 6 }}>Email</label>
+                <input id="fp-email" type="email" autoComplete="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)}
+                  style={{ width: '100%', height: 44, padding: '0 14px', borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--card)', color: 'var(--text)', fontSize: 14, outline: 'none' }} />
+              </div>
+              {msg && <p role={msg.ok ? 'status' : 'alert'} style={{ fontSize: 13, margin: 0, color: msg.ok ? 'var(--green)' : 'var(--red, #dc2626)' }}>{msg.text}</p>}
+              <button type="submit" disabled={busy} style={btn}>{busy ? 'Sending…' : 'Send reset link'}</button>
+              <Link to="/login" className="tap" style={{ textAlign: 'center', color: 'var(--accent)', fontSize: 13, fontWeight: 600 }}>Back to sign in</Link>
+            </form>
+          </>
+        )}
+      </div>
+    </Layout>
   )
 }

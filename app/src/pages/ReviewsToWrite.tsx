@@ -1,23 +1,19 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Layout from '../components/Layout'
-import LoadError from '../components/LoadError'
-import WorkNav from '../components/WorkNav'
 import Money from '../components/Money'
 import RateWork from '../components/RateWork'
 import { useToast } from '../components/Toast'
 import { apiRequest } from '../lib/api'
 import { Pagination } from '../components/Pagination'
-import '../styles/my-tasks.css'
+import '../styles/profile-public.css'
 import '../styles/reviews-to-write.css'
 
 /* Reviews to write, like wurk.fun's creator link of the same name. Work you
    approved without stars (you skipped them, it was approved automatically
    after 3 days, an admin approved it, or it won your contest) can still be
    rated for 14 days. Each piece of work can be rated once; the stars count
-   towards the worker's rating and show on their public profile.
-   Same frame as My tasks and My reviews (ui-page, ui-head, the WorkNav
-   sub-navigation), in the narrow reading column. */
+   towards the worker's rating and show on their public profile. */
 
 type Item = {
   id: string
@@ -62,7 +58,7 @@ export default function ReviewsToWrite() {
     setLoading(true); setError(false)
     apiRequest<{ items: Item[]; days: number }>('/tasks/my/to-rate')
       .then((d) => { setList(Array.isArray(d?.items) ? d.items : []); if (d?.days) setDays(d.days) })
-      .catch(() => setError(true))
+      .catch(() => { setError(true); setList([]) })
       .finally(() => setLoading(false))
   }
   useEffect(load, [])
@@ -92,40 +88,34 @@ export default function ReviewsToWrite() {
 
   return (
     <Layout>
-      <div className="ui-page">
-        <div className="ui-head">
-          <div>
-            <span className="ui-eyebrow">Hiring</span>
-            <h1 className="ui-title rtw-title">Reviews to write{list !== null && !error && <span className="rtw-count">{total} to rate</span>}</h1>
-            <p className="ui-sub">Rate people whose work you approved in the last {days} days. Your stars show on their profile.</p>
-          </div>
-          {!error && (
-            <div className="ui-actions">
-              <button type="button" className={`ui-btn ui-btn-ghost ui-btn-icon${loading ? ' is-loading' : ''}`} onClick={load} disabled={loading} aria-label="Refresh" title="Refresh"><i className="ti ti-refresh" aria-hidden="true" /></button>
-            </div>
-          )}
+      <div className="up-wrap" style={{ maxWidth: 860 }}>
+        <div className="up-sec-h" style={{ marginBottom: 18 }}>
+          <h1 style={{ fontSize: 24 }}>Reviews to write{list !== null && !error && <span className="rtw-count">{total} pending</span>}</h1>
+          <p>Work you approved in the last {days} days without stars. Your stars count towards each worker's rating and show on their public profile.</p>
+          <button className="up-btn" onClick={load} disabled={loading} style={{ marginTop: 10 }}>
+            <i className="ti ti-refresh" aria-hidden="true" /> {loading ? 'Refreshing…' : 'Refresh'}
+          </button>
         </div>
-        <WorkNav />
 
-        <div className="ui-narrow mt2-body">
-        {error ? (
-          <LoadError what="your reviews to write" onRetry={load} />
-        ) : list === null ? (
-          <div className="ui-sk" style={{ height: 160 }} />
+        {list === null ? (
+          <div className="up-skel" style={{ height: 160 }} />
+        ) : error ? (
+          <div className="up-empty"><i className="ti ti-cloud-off" />Couldn't load your reviews to write. Press Refresh to try again.</div>
         ) : list.length === 0 ? (
-          <div className="ui-empty">
-            <strong>All caught up</strong>
-            Nothing to rate. Work you approve without stars shows here for {days} days.
-            <div style={{ marginTop: 14 }}><Link className="ui-btn ui-btn-ghost" to="/manage-jobs">Go to my jobs</Link></div>
+          <div className="up-empty">
+            <i className="ti ti-circle-check" />
+            <b style={{ display: 'block', fontSize: 16, color: 'var(--text)', marginBottom: 4 }}>All caught up</b>
+            Nothing to review. Work you approve without stars shows here for {days} days.
+            <div style={{ marginTop: 14 }}><Link className="up-btn" to="/manage-jobs">Go to My Jobs</Link></div>
           </div>
         ) : (
           <>
           {pages > 1 && <p className="rtw-range">Showing {(page - 1) * PER_PAGE + 1}–{(page - 1) * PER_PAGE + shown.length} of {total}</p>}
-          <div className="rtw-list">
+          <div className="up-list">
             {shown.map((s) => {
               const name = who(s.worker)
               return (
-                <div className="ui-card rtw-card" key={s.id}>
+                <div className="up-card rtw-card" key={s.id}>
                   <div className="rtw-top">
                     <span className="rtw-av" aria-hidden="true">
                       {s.worker.avatarUrl ? <img src={s.worker.avatarUrl} alt="" /> : name.slice(0, 1).toUpperCase()}
@@ -149,7 +139,7 @@ export default function ReviewsToWrite() {
                     onNote={(v) => setNotes((m) => ({ ...m, [s.id]: v }))}
                   />
                   <div className="rtw-actions">
-                    <button type="button" className="ui-btn ui-btn-dark" disabled={!stars[s.id] || busy === s.id} onClick={() => save(s)}>
+                    <button className="up-btn primary" disabled={!stars[s.id] || busy === s.id} onClick={() => save(s)}>
                       {busy === s.id ? 'Saving...' : 'Save rating'}
                     </button>
                   </div>
@@ -169,7 +159,6 @@ export default function ReviewsToWrite() {
           </div>
           </>
         )}
-        </div>
       </div>
     </Layout>
   )

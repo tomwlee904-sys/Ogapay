@@ -2,7 +2,8 @@
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { apiRequest } from '../lib/api'
-import LoadError from './LoadError'
+import { useToast } from '../components/Toast'
+import { SkeletonPage, injectSkeletonStyles } from '../components/SkeletonLoader'
 
 
 // ── Info tooltip ─────────────────────────────────────────────────────
@@ -52,6 +53,14 @@ const COLOR_MAP: Record<string, string> = {
   EXPIRED: 'var(--text3)',
 }
 
+const PROGRESS_MAP: Record<string, number> = {
+  APPLIED: 40,
+  PENDING: 40,
+  SUBMITTED: 70,
+  APPROVED: 100,
+  REJECTED: 0,
+  EXPIRED: 0,
+}
 
 // A contest slot taken but never sent, once an entry can't be sent any more
 // (the end date passed, or the winners were paid)
@@ -95,8 +104,8 @@ export default function TabMyTasksContent() {
   const [submissions, setSubmissions] = useState<any[]>([])
   const [createdTasks, setCreatedTasks] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  // The submissions request failed: say so with Try again, not "No submissions yet"
-  const [failed, setFailed] = useState(false)
+
+  const { toast: showToast } = useToast()
 
   const fetchData = async () => {
     try {
@@ -108,21 +117,23 @@ export default function TabMyTasksContent() {
         const v = subRes.value
         const list = Array.isArray(v) ? v : v.submissions || v.data || v.tasks || []
         setSubmissions(list)
-        setFailed(false)
       } else {
-        setFailed(true)
+        showToast('Failed to load submissions', 'error')
       }
       if (createdRes.status === 'fulfilled' && createdRes.value) {
         const v = createdRes.value
         const list = Array.isArray(v) ? v : v.data || v.tasks || []
         setCreatedTasks(list)
+      } else {
+        showToast('Failed to load created tasks', 'error')
       }
     } catch {
-      setFailed(true)
+      showToast('Failed to load submissions', 'error')
     } finally { setLoading(false) }
   }
 
   useEffect(() => {
+    injectSkeletonStyles()
     fetchData()
     const onVisible = () => { if (!document.hidden) fetchData() }
     document.addEventListener('visibilitychange', onVisible)
@@ -143,40 +154,44 @@ export default function TabMyTasksContent() {
   return (
     <>
       <style>{`
-        .mt-head{margin-bottom:12px}
-        .mt-head h2{margin:0;font-size:var(--fs-h2);font-weight:600;color:var(--text)}
-        .mt-head p{margin:4px 0 0;color:var(--text2);font-size:13px}
-        .mt-head a{color:var(--text);font-weight:600}
-        .mt-tabs{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center}
-        .mt-tabs .ui-chip{height:36px}
-        .mt-sec{margin:0 0 10px;font-size:var(--fs-card);font-weight:600;color:var(--text)}
-        .mt-list{list-style:none;margin:0;padding:0 16px}
-        .mt-list > li + li{border-top:1px solid var(--border)}
-        .mt-item{display:flex;align-items:center;gap:14px;padding:12px 0;width:100%;border:0;background:none;color:inherit;font:inherit;text-align:left;cursor:pointer}
-        .mt-icon{width:36px;height:36px;border-radius:var(--r-ctl);display:grid;place-items:center;flex-shrink:0;font-size:16px}
+        .mt-hero{margin-bottom:20px}
+        .mt-hero h1{font-family:Inter;font-size:28px;font-weight:900;margin:0 0 4px}
+        .mt-hero p{color:var(--text2);font-size:14px;margin:0}
+        .mt-tabs{display:flex;gap:4px;margin-bottom:14px;flex-wrap:wrap}
+        .mt-tab{padding:6px 14px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text2);font-size:11px;font-weight:600;cursor:pointer;transition:all .2s}
+        .mt-tab:hover,.mt-tab.active{border-color:var(--accent);color:var(--accent);background:rgba(var(--accent-rgb),.08)}
+        .mt-list{display:grid;gap:6px}
+        .mt-item{display:flex;align-items:center;gap:14px;padding:14px 16px;background:var(--card);border:1px solid var(--border);border-radius:12px;transition:all .2s}
+        .mt-item:hover{border-color:var(--border2)}
+        .mt-icon{width:36px;height:36px;border-radius:9px;display:grid;place-items:center;flex-shrink:0;font-size:16px}
         .mt-info{flex:1;min-width:0}
-        .mt-title{display:block;font-weight:600;font-size:14px;line-height:1.4;margin-bottom:2px;color:var(--text)}
-        .mt-meta{font-size:12.5px;color:var(--text2)}
-        .mt-right{text-align:right;flex-shrink:0;display:grid;gap:4px;justify-items:end}
-        .mt-reward{font-weight:600;font-size:14px;font-variant-numeric:tabular-nums}
-        .mt-status{padding:3px 9px;border-radius:var(--r-pill);font-size:12px;font-weight:600;display:inline-block}
+        .mt-title{font-weight:700;font-size:13px;margin-bottom:4px}
+        .mt-progress{height:4px;border-radius:2px;background:var(--bg2);overflow:hidden;margin-bottom:4px;max-width:200px}
+        .mt-progress .mt-pf{height:100%;border-radius:2px;transition:width .3s}
+        .mt-meta{font-size:11px;color:var(--text3);display:flex;gap:10px}
+        .mt-right{text-align:right;flex-shrink:0}
+        .mt-reward{font-weight:700;font-size:14px;margin-bottom:4px}
+        .mt-status{padding:3px 8px;border-radius:5px;font-size:11px;font-weight:700;display:inline-block}
+        .mt-empty{text-align:center;padding:48px 20px;color:var(--text2)}
+        .mt-empty i{font-size:36px;color:var(--text3);margin-bottom:12px;display:block}
       `}</style>
 
-      <div className="mt-head">
-        <h2>My tasks</h2>
-        <p>Jobs you've taken and where each one stands. <a href="/my-tasks" onClick={(e) => { e.preventDefault(); navigate('/my-tasks') }}>Open the full list</a></p>
+      <div className="mt-hero">
+        <h1>My Tasks</h1>
+        <p>Track your submitted tasks and their status</p>
       </div>
 
-      <div className="mt-tabs" role="tablist" aria-label="Filter">
+      <div className="mt-tabs"><span style={{fontSize:11,color:"var(--text3)",fontWeight:600,display:"flex",alignItems:"center",gap:4}}>Filter:<InfoBtn text="In Progress: your submission is submitted and awaiting review • Under Review: the creator is reviewing your work • Approved: your submission was accepted and payment processed • Rejected: your submission was declined by the creator" /></span>
         {(tabs || []).map(t => (
-          <button key={t.id} type="button" role="tab" aria-selected={tab === t.id} className={`ui-chip${tab === t.id ? ' on' : ''}`} onClick={() => setTab(t.id)}>{t.label}</button>
+          <button key={t.id} className={`mt-tab ${tab === t.id ? 'active' : ''}`} onClick={() => setTab(t.id)}>{t.label}</button>
         ))}
-        <InfoBtn text="In progress: you took a place and haven't sent your work yet. Under review: the poster is checking your work. Approved: accepted and paid. Rejected: declined by the poster." />
       </div>
-
+      
       {createdTasks.length > 0 && (
         <div style={{ marginBottom: 24 }}>
-          <h3 className="mt-sec">Jobs you posted</h3>
+          <h3 style={{ fontFamily: 'Inter,sans-serif', fontSize: 16, fontWeight: 800, margin: '0 0 10px' }}>
+            <i className="ti ti-briefcase" style={{marginRight:6}} /> My Created Tasks
+          </h3>
           <div style={{ display: 'grid', gap: 8 }}>
             {createdTasks.map(t => (
               <div key={t.id} onClick={() => navigate('/tasks/' + t.id + '/submissions')} style={{
@@ -207,20 +222,21 @@ export default function TabMyTasksContent() {
         </div>
       )}
       
-      <h3 className="mt-sec">Jobs you took</h3>
+      <h3 style={{ fontFamily: 'Inter,sans-serif', fontSize: 16, fontWeight: 800, margin: '0 0 10px' }}>
+        <i className="ti ti-send" style={{marginRight:6}} /> My Submissions
+      </h3>
 
-      {failed && submissions.length === 0 ? (
-        <LoadError what="your tasks" onRetry={() => { setLoading(true); fetchData() }} />
-      ) : loading ? (
-        <div className="ui-sk" style={{ height: 200 }} />
+      {loading ? (
+        <SkeletonPage />
       ) : filtered.length === 0 ? (
-        <div className="ui-empty">
-          <strong>{tab === 'all' ? 'No jobs taken yet' : 'Nothing here'}</strong>
-          {tab === 'all' ? 'Take a job, send your proof and get paid to your wallet.' : 'No jobs match this filter.'}
-          {tab === 'all' && <div style={{ marginTop: 14 }}><button type="button" className="ui-btn ui-btn-dark" onClick={() => navigate('/tasks')}>Find jobs</button></div>}
+        <div className="mt-empty">
+          <i className="ti ti-checklist" />
+          <h3 style={{fontFamily:'Inter',fontWeight:800,margin:'0 0 4px',color:'var(--text)'}}>No submissions yet</h3>
+          <p style={{fontSize:13,margin:0}}>Apply to tasks and submit your work to see them here</p>
+          <a href="/tasks" style={{display:'inline-flex',marginTop:12,height:36,padding:'0 16px',borderRadius:8,border:0,background:'var(--accent)',color:'var(--on-accent)',fontWeight:700,fontSize:12,alignItems:'center',gap:6,textDecoration:'none'}}>Browse Tasks</a>
         </div>
       ) : (
-        <ul className="ui-card mt-list">
+        <div className="mt-list">
           {(filtered || []).map((s: any) => {
             // Contest results: a win, an entry that didn't place once winners are
             // paid, a slot never sent, or an entry waiting for the winners
@@ -233,25 +249,30 @@ export default function TabMyTasksContent() {
             // a place is won it's "Up to" that, not what this entry will get.
             const shownAmount = Number(s.paidAmount ?? s.task?.reward ?? 0)
             const upTo = !!s.isContest && s.contestResult !== 'WON'
+            const progress = PROGRESS_MAP[s.status] || 50
             return (
-              <li key={s.id}>
-                <button type="button" className="mt-item" onClick={() => { const tid = s.task?.id || s.taskId; if (tid) navigate('/tasks/' + tid) }}>
-                  <span className="mt-icon" style={{ background: `color-mix(in srgb, ${color} 12%, transparent)`, color }}>
-                    <i className="ti ti-file-text" aria-hidden="true" />
-                  </span>
-                  <span className="mt-info">
-                    <span className="mt-title">{s.task?.title || 'Task'}</span>
-                    <span className="mt-meta">{timeAgo(s.createdAt)}</span>
-                  </span>
-                  <span className="mt-right">
-                    {!out && <span className="mt-reward">{upTo ? 'Up to ' : ''}{fmtCurrency(s.task?.currency || 'NGN', shownAmount)}</span>}
-                    <span className="mt-status" style={{ background: `color-mix(in srgb, ${color} 12%, transparent)`, color }}>{status}</span>
-                  </span>
-                </button>
-              </li>
+              <div className="mt-item" key={s.id} onClick={() => { const tid = s.task?.id || s.taskId; if (tid) navigate('/tasks/' + tid) }} style={{cursor:'pointer'}}>
+                <div className="mt-icon" style={{background: `color-mix(in srgb, ${color} 9%, transparent)`, color}}>
+                  <i className="ti ti-file-text" />
+                </div>
+                <div className="mt-info">
+                  <div className="mt-title">{s.task?.title || 'Task'}</div>
+                  <div className="mt-progress">
+                    <div className="mt-pf" style={{width: progress + '%', background: color}} />
+                  </div>
+                  <div className="mt-meta">
+                    <span>{timeAgo(s.createdAt)}</span>
+                    <span>{progress}% complete</span>
+                  </div>
+                </div>
+                <div className="mt-right">
+                  {!out && <div className="mt-reward">{upTo ? 'Up to ' : ''}{fmtCurrency(s.task?.currency || 'NGN', shownAmount)}</div>}
+                  <span className="mt-status" style={{background: `color-mix(in srgb, ${color} 9%, transparent)`, color}}>{status}</span>
+                </div>
+              </div>
             )
           })}
-        </ul>
+        </div>
       )}
 
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../components/Toast'
 import { useTheme } from '../context/ThemeContext'
@@ -10,7 +10,6 @@ import { useWalletBalance } from '../context/WalletBalanceContext'
 import { Logo } from './Logo'
 import { openSignIn } from '../lib/signin'
 import { sized } from '../lib/img'
-import { navSection, ownProfilePath, type NavSection } from './navTabs'
 
 const WALLET_CURRENCIES = ['SOL', 'USDC', 'USDT', 'NGN'] as const
 
@@ -37,29 +36,14 @@ interface NavbarProps {
   onMenuToggle: () => void
 }
 
-// The top bar's links. dock: also in the bottom dock, so hidden on tablets
-// where the dock shows (nav.css). Lit on the pages under them too (navTabs.ts).
-const LINKS: { key: NavSection; to: string; icon: string; label: string; dock?: boolean }[] = [
-  { key: 'jobs', to: '/tasks', icon: 'ti-briefcase', label: 'Jobs', dock: true },
-  { key: 'create', to: '/create', icon: 'ti-square-plus', label: 'Create', dock: true },
-  { key: 'store', to: '/store', icon: 'ti-building-store', label: 'Store', dock: true },
-  { key: 'vault', to: '/vault', icon: 'ti-shield-lock', label: 'Vault' },
-  { key: 'faq', to: '/faq', icon: 'ti-help-circle', label: 'FAQ' },
-]
-
 export default function Navbar({ onMenuToggle }: NavbarProps) {
   const navigate = useNavigate()
-  const { pathname } = useLocation()
   const { toast } = useToast()
   const { isAuthed, isLoading, user } = useAuth()
   const { theme, toggle } = useTheme()
   const { convert, preferredCurrency } = useCurrency()
   // Shared with the dock: one check for both (lib/shared)
   const unreadNotifs = useUnreadCount(isAuthed)
-  const current = navSection(pathname, ownProfilePath(user?.username))
-  const onAlerts = /^\/notifications\/?$/.test(pathname)
-  // Members start from their dashboard; visitors from the homepage
-  const home = isAuthed ? '/dashboard' : '/'
   const [scrolled, setScrolled] = useState(false)
   const navRef = useRef<HTMLElement>(null)
 
@@ -104,24 +88,17 @@ export default function Navbar({ onMenuToggle }: NavbarProps) {
 
       {/* ── Desktop ── */}
       <div className="nav-inner nav-desktop">
-        <Link className="brand" to={home} aria-label={isAuthed ? 'OgaPay: your dashboard' : 'OgaPay home'}>
+        <Link className="brand" to="/">
           <span className="logo-mark"><OgaLogo /></span>
           OgaPay
         </Link>
+        {/* nav-link-dock: also in the bottom dock, so hidden on tablets where the dock shows (nav.css) */}
         <div className="nav-links">
-          {LINKS.map((l) => {
-            const on = current === l.key
-            return (
-              <Link
-                key={l.key}
-                className={'nav-link' + (l.dock ? ' nav-link-dock' : '') + (on ? ' active' : '')}
-                to={l.to}
-                aria-current={on ? (pathname === l.to ? 'page' : 'true') : undefined}
-              >
-                <i className={`ti ${l.icon}`} aria-hidden="true" />{l.label}
-              </Link>
-            )
-          })}
+          <NavLink className="nav-link nav-link-dock" to="/tasks"><i className="ti ti-briefcase" />Jobs</NavLink>
+          <NavLink className="nav-link nav-link-dock" to="/create"><i className="ti ti-square-plus" />Create</NavLink>
+          <NavLink className="nav-link nav-link-dock" to="/store"><i className="ti ti-building-store" />Store</NavLink>
+          <NavLink className="nav-link" to="/vault"><i className="ti ti-shield-lock" />Vault</NavLink>
+          <NavLink className="nav-link" to="/faq"><i className="ti ti-help-circle" />FAQ</NavLink>
         </div>
         <div className="nav-actions">
           {isLoading && (
@@ -134,32 +111,21 @@ export default function Navbar({ onMenuToggle }: NavbarProps) {
               <button className="balance-display" onClick={() => navigate('/wallet')} aria-label={`Wallet: total of all your wallets, ${balanceText}`} title={balanceTip}>
                 <small className="balance-total-label">Total</small> {balanceText}
               </button>
-              {/* Alerts with the unread count; on phones and tablets it's the dock's Alerts tab (nav.css hides this there) */}
-              <Link
-                className={'icon-btn nav-bell' + (onAlerts ? ' on' : '')}
-                to="/notifications"
-                aria-label={unreadNotifs > 0 ? `Notifications, ${unreadNotifs} unread` : 'Notifications'}
-                aria-current={onAlerts ? 'page' : undefined}
-                title="Notifications"
-              >
-                <i className="ti ti-bell" aria-hidden="true" />
-                {unreadNotifs > 0 && <span className="nav-badge" aria-hidden="true">{unreadNotifs > 9 ? '9+' : unreadNotifs}</span>}
-              </Link>
               <button className="profile-btn" onClick={() => navigate('/profile')} aria-label="Profile">
                 {user?.avatar ? (
                   <img src={sized(user.avatar, 36, true)} alt={user.displayName || user.username} />
                 ) : (
                   <Silhouette />
                 )}
+                {unreadNotifs > 0 && <span className="notif-dot" />}
               </button>
             </>
           )}
           {!isLoading && !isAuthed && (
-            <>
-              {/* nav-signin: the dock has Sign in where it shows, so nav.css hides this there */}
-              <button type="button" className="nav-signin" onClick={() => openSignIn()}>Sign in</button>
-              <button type="button" className="nav-signup" onClick={() => openSignIn({ view: 'signup' })}>Sign up</button>
-            </>
+            <button className="connect-btn" onClick={() => openSignIn()}>
+              <i className="ti ti-wallet" />
+              Sign in
+            </button>
           )}
           <button className="icon-btn" id="themeToggle" onClick={toggle} aria-label="Toggle theme">
             <i className={`ti ${theme === 'dark' ? 'ti-sun' : 'ti-moon'}`} />
@@ -171,20 +137,18 @@ export default function Navbar({ onMenuToggle }: NavbarProps) {
       </div>
       {/* ── Mobile ── */}
       <div className="nav-mobile flex justify-between items-center w-full px-4 h-full">
-        <Link to={home} aria-label={isAuthed ? 'OgaPay: your dashboard' : 'OgaPay home'} className="tap flex items-center no-underline gap-1.5" style={{textDecoration:'none',color:'inherit',fontWeight:800,fontSize:16}}>
+        <Link to="/" className="tap flex items-center no-underline gap-1.5" style={{textDecoration:'none',color:'inherit',fontWeight:800,fontSize:16}}>
           <Logo size={28} />
           <span>OgaPay</span>
         </Link>
         <div className="nav-mobile-actions flex items-center">
-          {/* Nothing while a saved session is checked, so a member never sees Sign up flash */}
-          {isLoading ? null : isAuthed ? (
+          {!isLoading && isAuthed ? (
             <button className="balance-display" onClick={() => navigate('/wallet')} aria-label={`Wallet: total of all your wallets, ${balanceText}`} title={balanceTip}>
               <small className="balance-total-label">Total</small> {balanceText}
             </button>
           ) : (
-            // Sign in is the dock's last tab on phones
-            <button type="button" className="nav-signup" onClick={() => openSignIn({ view: 'signup' })}>
-              Sign up
+            <button className="connect-btn nav-mobile-signin" onClick={() => openSignIn()}>
+              Sign in
             </button>
           )}
           <button className="icon-btn" onClick={toggle} aria-label="Toggle theme">

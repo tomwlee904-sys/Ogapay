@@ -1,15 +1,29 @@
 ﻿import { useState, useEffect } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { useSearchParams } from 'react-router-dom'
 import Layout from '../components/Layout'
-import LoadError from '../components/LoadError'
 import { apiRequest } from '../lib/api'
-import { formatCompact } from '../lib/currency'
+import { SkeletonPage, injectSkeletonStyles } from '../components/SkeletonLoader'
+import WalletPreviewCard from '../components/WalletPreviewCard'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
-import '../styles/vault.css'
 
-// Every vault distribution, and a lookup for what one wallet received. Same
-// page frame as /vault: the batches in the main column, "Check a wallet" in the
-// side panel (first on phones and tablets once a wallet is being looked at).
+const OGAPAY_BLUE = 'var(--accent)'
+const GREEN = 'var(--green)'
+const GREEN_BG = 'rgba(22,163,74,0.12)'
+
+const S: Record<string, React.CSSProperties> = {
+  page: { maxWidth: 900, margin: '0 auto', padding: '28px 16px 60px', position: 'relative' as const, zIndex: 1 },
+  hero: { marginBottom: 24 },
+  title: { fontFamily: 'Inter', fontSize: 28, fontWeight: 900, margin: '0 0 4px' },
+  sub: { color: 'var(--text2)', fontSize: 14, margin: '0 0 20px' },
+  card: { background: 'var(--glass-bg)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', border: '1px solid var(--glass-border)', borderRadius: 16, padding: 20, marginBottom: 16, boxShadow: '0 8px 32px rgba(0,0,0,0.06)' },
+  statRow: { display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12, marginBottom: 16 },
+  statCard: { background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 10, padding: 14, textAlign: 'center' as const },
+  statNum: { fontFamily: 'Inter', fontSize: 20, fontWeight: 900 },
+  statLabel: { fontSize: 11, color: 'var(--text2)', marginTop: 2, fontWeight: 600, textTransform: 'uppercase' as const, letterSpacing: '0.04em' },
+  pill: { padding: '5px 12px', borderRadius: 999, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text2)', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' },
+  pillActive: { padding: '5px 12px', borderRadius: 999, border: `1px solid ${OGAPAY_BLUE}`, background: OGAPAY_BLUE, color: 'var(--on-accent)', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' },
+  empty: { textAlign: 'center' as const, padding: '48px 20px', color: 'var(--text2)' },
+}
 
 function formatUSD(n: number) {
   if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(2)}M`
@@ -22,9 +36,16 @@ function truncateWallet(addr: string) {
   return addr.slice(0, 6) + '...' + addr.slice(-4)
 }
 
-const ngn = (n: number, dp = 2) => '₦' + (Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: dp, maximumFractionDigits: dp })
-const STATUS: Record<string, [string, string]> = { COMPLETED: ['ok', 'Completed'], PENDING: ['wait', 'Pending'], PROCESSING: ['wait', 'Processing'], FAILED: ['bad', 'Failed'] }
-const RANGES = [['7d', '7 days'], ['30d', '30 days'], ['1y', '1 year']] as const
+function timeAgo(dateStr: string) {
+  const diff = Date.now() - new Date(dateStr).getTime()
+  const mins = Math.floor(diff / 60000)
+  if (mins < 1) return 'just now'
+  if (mins < 60) return `${mins}m ago`
+  const hrs = Math.floor(mins / 60)
+  if (hrs < 24) return `${hrs}h ago`
+  const days = Math.floor(hrs / 24)
+  return `${days}d ago`
+}
 
 export default function VaultHistory() {
   const [searchParams] = useSearchParams()
@@ -40,22 +61,21 @@ export default function VaultHistory() {
   // Wallet rewards data
   const [rewardsData, setRewardsData] = useState<any>(null)
   const [rewardsRange, setRewardsRange] = useState('7d')
-  const [, setRewardsLoading] = useState(false)
+  const [rewardsLoading, setRewardsLoading] = useState(false)
 
   // Distribution batches
   const [batches, setBatches] = useState<any[]>([])
   const [batchPage, setBatchPage] = useState(1)
   const [batchTotalPages, setBatchTotalPages] = useState(1)
   const [batchTotalBatches, setBatchTotalBatches] = useState(0)
-  const [batchLoading, setBatchLoading] = useState(true)
-  const [batchErr, setBatchErr] = useState(false)
+  const [batchLoading, setBatchLoading] = useState(false)
   const [expandedBatch, setExpandedBatch] = useState<string | null>(null)
   const [batchDetail, setBatchDetail] = useState<any[] | null>(null)
   const [batchDetailLoading, setBatchDetailLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
 
   const fetchBatches = async (page: number) => {
     setBatchLoading(true)
-    setBatchErr(false)
     try {
       const res = await apiRequest<any>(`/vault/history/batches?page=${page}`)
       const d = res?.data || res
@@ -63,11 +83,9 @@ export default function VaultHistory() {
       setBatchTotalPages(d?.totalPages || 1)
       setBatchTotalBatches(d?.totalBatches || 0)
     } catch {
-      // Said so, not "no batches yet"
-      setBatchErr(true)
+      // empty state
     } finally { setBatchLoading(false) }
   }
-  const goPage = (p: number) => { setBatchPage(p); setExpandedBatch(null); fetchBatches(p) }
 
   const fetchWalletLookup = async (wallet: string) => {
     if (!wallet.trim()) return
@@ -82,10 +100,10 @@ export default function VaultHistory() {
         // Also fetch rewards
         fetchWalletRewards(wallet.trim())
       } else {
-        setWalletError('No OgaPay account uses this wallet.')
+        setWalletError('Wallet not found on OgaPay')
       }
     } catch {
-      setWalletError("Couldn't check this wallet. Check the address and try again.")
+      setWalletError('Failed to look up. Check the wallet address.')
     } finally { setWalletLoading(false) }
   }
 
@@ -116,10 +134,12 @@ export default function VaultHistory() {
 
   useEffect(() => {
     fetchBatches(1)
+    injectSkeletonStyles()
     // Auto-search if prefilled from URL
     if (prefillWallet) {
       fetchWalletLookup(prefillWallet)
     }
+    setLoading(false)
   }, [])
 
   useEffect(() => {
@@ -147,7 +167,7 @@ export default function VaultHistory() {
   }
 
   const chartData = rewardsData?.chartData?.map((d: any) => ({
-    label: new Date(d.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }),
+    label: new Date(d.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }),
     amount: d.amount,
   })) || []
 
@@ -155,160 +175,250 @@ export default function VaultHistory() {
     if (active && payload?.length) {
       return (
         <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 8, padding: '8px 12px', fontSize: 12 }}>
-          <div style={{ fontWeight: 600, marginBottom: 2 }}>{label}</div>
-          <div style={{ color: 'var(--text)', fontWeight: 600 }}>₦{(payload[0].value || 0).toLocaleString()}</div>
+          <div style={{ fontWeight: 700, marginBottom: 2 }}>{label}</div>
+          <div style={{ color: OGAPAY_BLUE, fontWeight: 600 }}>₦{(payload[0].value || 0).toLocaleString()}</div>
         </div>
       )
     }
     return null
   }
 
-  const v = walletResult?.vault
-
   return (
     <Layout>
-      <div className="ui-page">
-        <div className="ui-head">
-          <div>
-            <Link className="vh-back tap" to="/vault"><i className="ti ti-arrow-left" aria-hidden="true" /> Vault</Link>
-            <h1 className="ui-title">Distribution history</h1>
-            <p className="ui-sub">Every vault distribution to $PAY holders, and what each wallet received. Amounts are in naira.</p>
-          </div>
-        </div>
+      <div style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none',
+        background: 'radial-gradient(circle at 20% 10%, rgba(var(--accent-rgb),0.10), transparent 50%),radial-gradient(circle at 80% 30%, rgba(20,184,166,0.08), transparent 50%),radial-gradient(circle at 50% 90%, rgba(153,69,255,0.06), transparent 50%)',
+      }} />
+      <div style={S.page}>
+        {loading && <SkeletonPage />}
 
-        <div className="ui-split vt2-split">
-          <div style={{ display: "grid", gap: 16, alignContent: "start", minWidth: 0 }}>
-            <section className="ui-card vt2-sec" aria-labelledby="vh-batches-h">
-              <div className="vh-sub-h">
-                <div>
-                  <h2 id="vh-batches-h">All distributions</h2>
-                  {!batchErr && !batchLoading && <div className="vh-count">{batchTotalPages > 1 ? `Page ${batchPage} of ${batchTotalPages} · ` : ''}{batchTotalBatches} {batchTotalBatches === 1 ? 'distribution' : 'distributions'}</div>}
-                </div>
-                {batchTotalPages > 1 && !batchErr && (
-                  <div className="vh-pager">
-                    <button type="button" className="ui-btn ui-btn-ghost ui-btn-icon" aria-label="Newer distributions" disabled={batchPage <= 1 || batchLoading} onClick={() => goPage(Math.max(1, batchPage - 1))}><i className="ti ti-chevron-left" aria-hidden="true" /></button>
-                    <button type="button" className="ui-btn ui-btn-ghost ui-btn-icon" aria-label="Older distributions" disabled={batchPage >= batchTotalPages || batchLoading} onClick={() => goPage(Math.min(batchTotalPages, batchPage + 1))}><i className="ti ti-chevron-right" aria-hidden="true" /></button>
-                  </div>
+        {!loading && (
+          <>
+            {/* Page header */}
+            <div style={S.hero}>
+              <h1 style={S.title}>Distribution History</h1>
+              <p style={S.sub}>Every vault distribution to $PAY holders, and what each wallet received. Amounts are in Naira.</p>
+            </div>
+
+            {/* Check your wallet rewards card */}
+            <div style={S.card}>
+              <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
+                <i className="ti ti-search" style={{ color: OGAPAY_BLUE }} /> Check your wallet rewards
+              </div>
+              <p style={{ fontSize: 12, color: 'var(--text2)', margin: '0 0 12px' }}>
+                Search any wallet to see total rewards received and browse personal distribution payouts 10 at a time.
+              </p>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <input value={searchWallet} onChange={e => setSearchWallet(e.target.value)}
+                  placeholder="Enter Solana wallet address..."
+                  onKeyDown={e => e.key === 'Enter' && handleLoadRewards()}
+                  style={{ flex: 1, height: 40, padding: '0 12px', border: '1.5px solid var(--border)', borderRadius: 9, background: 'var(--bg)', color: 'var(--text)', fontSize: 13, outline: 'none', fontFamily: 'inherit' }} />
+                <button onClick={handleLoadRewards} disabled={walletLoading || !searchWallet.trim()}
+                  style={{ height: 40, padding: '0 16px', borderRadius: 9, background: OGAPAY_BLUE, color: 'var(--on-accent)', border: 'none', fontWeight: 700, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>
+                  {walletLoading ? 'Loading...' : 'Load Rewards'}
+                </button>
+                {searchedWallet && (
+                  <button onClick={handleClear}
+                    style={{ height: 40, padding: '0 14px', borderRadius: 9, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text2)', fontWeight: 600, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>
+                    Clear
+                  </button>
                 )}
               </div>
+              <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 6 }}>
+                Personal history is pulled from the distribution log.
+              </div>
 
-              {batchErr ? (
-                <LoadError what="the distribution history" onRetry={() => fetchBatches(batchPage)} />
-              ) : batchLoading ? (
-                <div style={{ display: 'grid', gap: 10 }}>{[0, 1, 2, 3].map((i) => <div key={i} className="ui-sk" style={{ height: 52, borderRadius: 12 }} />)}</div>
-              ) : batches.length === 0 ? (
-                <p className="vt2-none">No distributions yet. The first one runs at the next 1am or 1pm (Lagos).</p>
-              ) : (
-                <>
-                  <div className="vh-head" aria-hidden="true"><span>Batch</span><span>Distributed</span><span>Total shared</span><span>Status</span><span /></div>
-                  <ul className="vh-batches">
-                    {batches.map((batch: any) => {
-                      const [cls, label] = STATUS[String(batch.status || 'COMPLETED').toUpperCase()] || ['', String(batch.status)]
-                      const isOpen = expandedBatch === batch.id
-                      return (
-                        <li className="vh-batch" key={batch.id}>
-                          <button type="button" className="vh-row" aria-expanded={isOpen} onClick={() => handleBatchToggle(batch.id)}>
-                            <span className="num">#{batch.batchNumber || batch.id?.slice(0, 8) || '—'}</span>
-                            <span className="time">{batch.distributedAt ? new Date(batch.distributedAt).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' }) : '—'}</span>
-                            <span className="tot">{ngn(batch.totalNgn ?? batch.totalPay ?? 0)}</span>
-                            <span className={`vh-st ${cls}`}>{label}</span>
-                            <i className="ti ti-chevron-down chev" aria-hidden="true" />
-                          </button>
-                          {isOpen && (
-                            <div className="vh-detail">
-                              {batchDetailLoading ? (
-                                <div style={{ padding: 8 }}>Loading the wallets…</div>
-                              ) : batchDetail && batchDetail.length > 0 ? (
-                                <>
-                                  <div className="vh-w th"><span>Wallet</span><span>Amount</span><span>Share</span></div>
-                                  {batchDetail.map((w: any, i: number) => (
-                                    <div className="vh-w" key={i}>
-                                      <span style={{ minWidth: 0, display: 'flex', alignItems: 'center' }}><code>{truncateWallet(w.wallet || w.address || '')}</code>{w.you && <b className="vh-you">You</b>}</span>
-                                      <b>{ngn(w.amount || w.shareNgp || 0)}</b>
-                                      <span>{(w.vaultSharePct || 0).toFixed(4)}%</span>
-                                    </div>
-                                  ))}
-                                </>
-                              ) : (
-                                <div style={{ padding: 8 }}>No wallet details for this distribution.</div>
-                              )}
-                            </div>
-                          )}
-                        </li>
-                      )
-                    })}
-                  </ul>
-                </>
+              {walletError && (
+                <div style={{ marginTop: 10, fontSize: 12, color: '#dc2626', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <i className="ti ti-alert-circle" /> {walletError}
+                </div>
               )}
-            </section>
-          </div>
 
-          <div className={`ui-split-side vt2-side${searchedWallet ? ' ui-split-side-first' : ''}`} style={{ display: 'grid', gap: 16, alignContent: 'start' }}>
-            <section className="ui-card vt2-sec" aria-labelledby="vh-check-h">
-              <h2 id="vh-check-h">Check a wallet</h2>
-              <p className="vt2-lead">See what any wallet has received from the vault, and its payouts over time.</p>
-              <form className="vt2-check" onSubmit={(e) => { e.preventDefault(); handleLoadRewards() }}>
-                <input className="ui-input" value={searchWallet} onChange={(e) => setSearchWallet(e.target.value)} placeholder="Solana wallet address" aria-label="Solana wallet address" spellCheck={false} autoComplete="off" />
-                <button type="submit" className={`ui-btn ui-btn-dark${walletLoading ? ' is-loading' : ''}`} disabled={walletLoading}>Check rewards</button>
-              </form>
-              {searchedWallet && <button type="button" className="ui-btn ui-btn-text ui-btn-sm vh-clear" onClick={handleClear}>Clear</button>}
-              {walletError && <div className="vh-err" role="alert"><i className="ti ti-alert-circle" aria-hidden="true" /> {walletError}</div>}
+              {/* Wallet Preview Card */}
+              {walletResult && <WalletPreviewCard data={walletResult} />}
+            </div>
 
-              {v && (
-                <>
-                  <div className="vh-who">
-                    {walletResult?.user?.name ? <><b>{walletResult.user.name}</b> · @{walletResult.user.username}<br /></> : null}
-                    <code>{walletResult.wallet}</code>
-                  </div>
-                  <div className="ui-stats vt2-mini" style={{ marginTop: 12 }}>
-                    <div><span className="ui-stats-label">$PAY held</span><b className="ui-stats-value">{formatCompact(v.heldAmount ?? v.payBalance)}</b></div>
-                    <div><span className="ui-stats-label">In the next run</span><b className="ui-stats-value">{v.isEligible ? 'Yes' : 'No'}</b></div>
-                    <div><span className="ui-stats-label">Share</span><b className="ui-stats-value">{(v.distributionSharePct ?? 0).toFixed(4)}%</b></div>
-                    <div><span className="ui-stats-label">Share now (est.)</span><b className="ui-stats-value">{formatUSD(v.estimatedCurrentUsd ?? 0)}</b></div>
-                  </div>
-                </>
-              )}
-            </section>
-
+            {/* Wallet Rewards section */}
             {walletResult && (
-              <section className="ui-card vt2-sec" aria-labelledby="vh-rew-h">
-                <div className="vh-sub-h" style={{ marginBottom: 0 }}>
-                  <h2 id="vh-rew-h">Rewards for {truncateWallet(walletResult.wallet)}</h2>
+              <div style={S.card}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+                  <span style={{ fontWeight: 700, fontSize: 14, display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <i className="ti ti-gift" style={{ color: OGAPAY_BLUE }} /> Wallet Rewards
+                  </span>
+                  <span style={{ fontFamily: 'monospace', fontSize: 11, color: 'var(--text3)' }}>
+                    {truncateWallet(walletResult.wallet)}
+                  </span>
                 </div>
-                <div className="vt2-strip vh-strip" style={{ marginTop: 12 }}>
-                  <div><span>Received</span><b>₦{(rewardsData?.totalReceivedNgn ?? rewardsData?.totalReceivedPay ?? 0).toLocaleString()}</b></div>
-                  <div><span>Distributions</span><b>{rewardsData?.completedDistributions || 0}</b></div>
-                  <div><span>Other entries</span><b>{rewardsData?.otherEntries || 0}</b></div>
+
+                {/* 3 stat cards */}
+                <div style={S.statRow}>
+                  <div style={S.statCard}>
+                    <div style={{ ...S.statNum, color: OGAPAY_BLUE }}>₦{(rewardsData?.totalReceivedNgn ?? rewardsData?.totalReceivedPay ?? 0).toLocaleString()}</div>
+                    <div style={S.statLabel}>Total Received</div>
+                  </div>
+                  <div style={S.statCard}>
+                    <div style={{ ...S.statNum, color: GREEN }}>{rewardsData?.completedDistributions || 0}</div>
+                    <div style={S.statLabel}>Completed Distributions</div>
+                  </div>
+                  <div style={S.statCard}>
+                    <div style={{ ...S.statNum, color: 'var(--text)' }}>{rewardsData?.otherEntries || 0}</div>
+                    <div style={S.statLabel}>Other Entries</div>
+                  </div>
                 </div>
-                <div className="vh-seg" role="group" aria-label="Period">
-                  {RANGES.map(([r, label]) => <button key={r} type="button" aria-pressed={rewardsRange === r} onClick={() => setRewardsRange(r)}>{label}</button>)}
+
+                {/* Time range pills */}
+                <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+                  {['7d', '30d', '1y'].map(r => (
+                    <button key={r} style={rewardsRange === r ? S.pillActive : S.pill} onClick={() => setRewardsRange(r)}>
+                      {r === '7d' ? '7 days' : r === '30d' ? '30 days' : 'Last year'}
+                    </button>
+                  ))}
                 </div>
-                <div className="vt2-strip vh-strip two">
-                  <div><span>Received in this period</span><b>₦{(rewardsData?.receivedInPeriodNgn ?? rewardsData?.receivedInPeriodPay ?? 0).toLocaleString()}</b></div>
-                  <div><span>Worth today (USD)</span><b>{formatUSD(rewardsData?.currentUsdEstimate || 0)}</b></div>
+
+                {/* Received in period + USD estimate */}
+                <div style={S.statRow}>
+                  <div style={S.statCard}>
+                    <div style={{ ...S.statNum, color: OGAPAY_BLUE }}>₦{(rewardsData?.receivedInPeriodNgn ?? rewardsData?.receivedInPeriodPay ?? 0).toLocaleString()}</div>
+                    <div style={S.statLabel}>Received in Period</div>
+                  </div>
+                  <div style={S.statCard}>
+                    <div style={{ ...S.statNum, color: GREEN }}>{formatUSD(rewardsData?.currentUsdEstimate || 0)}</div>
+                    <div style={S.statLabel}>Current USD Estimate</div>
+                  </div>
                 </div>
+
+                {/* Bar chart */}
                 {chartData.length === 0 ? (
-                  <p className="vt2-none">No rewards landed in this period.</p>
+                  <div style={S.empty}>
+                    <i className="ti ti-chart-bar-off" style={{ fontSize: 24, color: 'var(--text3)', marginBottom: 6, display: 'block' }} />
+                    <p style={{ margin: 0, fontSize: 12 }}>No completed rewards landed in this timeframe yet.</p>
+                  </div>
                 ) : (
                   <>
-                    <div style={{ width: '100%', height: 180, marginTop: 14 }}>
+                    <div style={{ width: '100%', height: 200, marginBottom: 8 }}>
                       <ResponsiveContainer>
                         <BarChart data={chartData} margin={{ top: 4, right: 4, left: -16, bottom: 0 }}>
-                          <XAxis dataKey="label" tick={{ fontSize: 12, fill: 'var(--text2)' }} axisLine={false} tickLine={false} />
-                          <YAxis tick={{ fontSize: 12, fill: 'var(--text2)' }} axisLine={false} tickLine={false}
-                            tickFormatter={(n: number) => n >= 1000 ? `${(n / 1000).toFixed(1)}k` : String(n)} />
+                          <XAxis dataKey="label" tick={{ fontSize: 11, fill: 'var(--text3)' }} axisLine={false} tickLine={false} />
+                          <YAxis tick={{ fontSize: 11, fill: 'var(--text3)' }} axisLine={false} tickLine={false}
+                            tickFormatter={(v: number) => v >= 1000 ? `${(v/1000).toFixed(1)}k` : String(v)} />
                           <Tooltip content={<CustomTooltip />} />
-                          <Bar dataKey="amount" fill="var(--accent)" radius={[4, 4, 0, 0]} maxBarSize={32} />
+                          <Bar dataKey="amount" fill={OGAPAY_BLUE} radius={[4, 4, 0, 0]} maxBarSize={32} />
                         </BarChart>
                       </ResponsiveContainer>
                     </div>
-                    <div className="vh-foot"><span>USD uses today's naira rate.</span><span>Grouped by day (UTC).</span></div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--text3)' }}>
+                      <span>USD estimate uses today's Naira rate.</span>
+                      <span>Grouped in UTC.</span>
+                    </div>
                   </>
                 )}
-              </section>
+              </div>
             )}
-          </div>
-        </div>
+
+            {/* All Distribution Batches */}
+            <div style={S.card}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+                <span style={{ fontWeight: 700, fontSize: 14, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <i className="ti ti-package" style={{ color: OGAPAY_BLUE }} /> All Distribution Batches
+                </span>
+                <span style={{ fontSize: 11, color: 'var(--text3)' }}>Browse batches 10 at a time</span>
+              </div>
+
+              {/* Pagination header */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                <span style={{ fontSize: 11, color: 'var(--text2)' }}>
+                  Page {batchPage} of {batchTotalPages} · {batchTotalBatches} batches
+                </span>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <button className="pg-btn" onClick={() => { setBatchPage(1); fetchBatches(1) }} disabled={batchPage <= 1}
+                    style={{ height: 36, padding: '0 12px', borderRadius: 6, border: '1px solid var(--border)', background: 'transparent', color: batchPage <= 1 ? 'var(--text3)' : 'var(--text2)', fontSize: 11, fontWeight: 700, cursor: batchPage <= 1 ? 'default' : 'pointer', fontFamily: 'inherit' }}>
+                    First
+                  </button>
+                  <button className="pg-btn" onClick={() => { const p = Math.max(1, batchPage - 1); setBatchPage(p); fetchBatches(p) }} disabled={batchPage <= 1}
+                    style={{ height: 36, padding: '0 12px', borderRadius: 6, border: '1px solid var(--border)', background: 'transparent', color: batchPage <= 1 ? 'var(--text3)' : 'var(--text2)', fontSize: 11, fontWeight: 700, cursor: batchPage <= 1 ? 'default' : 'pointer', fontFamily: 'inherit' }}>
+                    Prev
+                  </button>
+                  <button className="pg-btn" onClick={() => { const p = Math.min(batchTotalPages, batchPage + 1); setBatchPage(p); fetchBatches(p) }} disabled={batchPage >= batchTotalPages}
+                    style={{ height: 36, padding: '0 12px', borderRadius: 6, border: '1px solid var(--border)', background: 'transparent', color: batchPage >= batchTotalPages ? 'var(--text3)' : 'var(--text2)', fontSize: 11, fontWeight: 700, cursor: batchPage >= batchTotalPages ? 'default' : 'pointer', fontFamily: 'inherit' }}>
+                    Next
+                  </button>
+                  <button className="pg-btn" onClick={() => { setBatchPage(batchTotalPages); fetchBatches(batchTotalPages) }} disabled={batchPage >= batchTotalPages}
+                    style={{ height: 36, padding: '0 12px', borderRadius: 6, border: '1px solid var(--border)', background: 'transparent', color: batchPage >= batchTotalPages ? 'var(--text3)' : 'var(--text2)', fontSize: 11, fontWeight: 700, cursor: batchPage >= batchTotalPages ? 'default' : 'pointer', fontFamily: 'inherit' }}>
+                    Last
+                  </button>
+                </div>
+              </div>
+
+              {batchLoading ? (
+                <div style={{ padding: '20px 0', textAlign: 'center', color: 'var(--text2)', fontSize: 12 }}>Loading batches...</div>
+              ) : batches.length === 0 ? (
+                <div style={S.empty}>
+                  <i className="ti ti-package-off" style={{ fontSize: 24, color: 'var(--text3)', marginBottom: 6, display: 'block' }} />
+                  <p style={{ margin: 0, fontSize: 12 }}>No distribution batches found yet</p>
+                </div>
+              ) : (
+                batches.map((batch: any) => (
+                  <div key={batch.id} style={{ marginBottom: 10 }}>
+                    <div style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 10, padding: 14 }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr auto', gap: 8, alignItems: 'center' }}>
+                        <div>
+                          <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--text3)', marginBottom: 2 }}>Batch</div>
+                          <div style={{ fontWeight: 700, color: OGAPAY_BLUE, cursor: 'pointer' }}>#{batch.batchNumber || batch.id?.slice(0, 8) || '—'}</div>
+                        </div>
+                        <div>
+                          <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--text3)', marginBottom: 2 }}>Distribution Time</div>
+                          <div style={{ fontSize: 12 }}>{batch.distributedAt ? new Date(batch.distributedAt).toLocaleString() : '—'}</div>
+                        </div>
+                        <div>
+                          <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--text3)', marginBottom: 2 }}>Total shared</div>
+                          <div style={{ fontSize: 12, fontWeight: 700 }}>₦{(batch.totalNgn ?? batch.totalPay ?? 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
+                          <span style={{
+                            padding: '3px 8px', borderRadius: 5, fontSize: 11, fontWeight: 700,
+                            background: batch.status === 'COMPLETED' ? GREEN_BG : batch.status === 'PENDING' ? 'rgba(245,158,11,0.12)' : 'rgba(220,38,38,0.12)',
+                            color: batch.status === 'COMPLETED' ? GREEN : batch.status === 'PENDING' ? '#f59e0b' : '#dc2626',
+                          }}>
+                            {batch.status || 'COMPLETED'}
+                          </span>
+                          <button className="tap" onClick={() => handleBatchToggle(batch.id)} aria-expanded={expandedBatch === batch.id} aria-label={expandedBatch === batch.id ? 'Hide this batch' : 'Show this batch'}
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text3)', fontFamily: 'inherit', padding: 2, transition: 'transform .15s', transform: expandedBatch === batch.id ? 'rotate(180deg)' : 'rotate(0deg)' }}>
+                            <i className="ti ti-chevron-down" style={{ fontSize: 16 }} aria-hidden="true" />
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Expanded batch detail */}
+                      {expandedBatch === batch.id && (
+                        <div style={{ marginTop: 12, borderTop: '1px solid var(--border)', paddingTop: 12 }}>
+                          {batchDetailLoading ? (
+                            <div style={{ textAlign: 'center', padding: 12, fontSize: 12, color: 'var(--text2)' }}>Loading details...</div>
+                          ) : batchDetail && batchDetail.length > 0 ? (
+                            <>
+                              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: 8, padding: '8px 0', borderBottom: '1px solid var(--border)', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--text3)' }}>
+                                <span>Wallet</span>
+                                <span style={{ textAlign: 'right' as const }}>Amount</span>
+                                <span style={{ textAlign: 'right' as const }}>Vault Share</span>
+                              </div>
+                              {batchDetail.map((w: any, i: number) => (
+                                <div key={i} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: 8, padding: '8px 0', borderBottom: i < batchDetail.length - 1 ? '1px solid var(--border)' : 'none', fontSize: 12, alignItems: 'center' }}>
+                                  <span style={{ fontFamily: 'monospace', fontSize: 11, color: OGAPAY_BLUE }}>{truncateWallet(w.wallet || w.address || '')}{w.you && <b style={{ marginLeft: 6, fontFamily: 'inherit', fontSize: 11, color: 'var(--text)', background: 'var(--card2)', borderRadius: 999, padding: '1px 7px' }}>You</b>}</span>
+                                  <span style={{ textAlign: 'right' as const, fontWeight: 600 }}>₦{(w.amount || w.shareNgp || 0).toLocaleString()}</span>
+                                  <span style={{ textAlign: 'right' as const, color: 'var(--text2)', fontSize: 11 }}>{(w.vaultSharePct || 0).toFixed(4)}%</span>
+                                </div>
+                              ))}
+                            </>
+                          ) : (
+                            <div style={{ textAlign: 'center', padding: 12, fontSize: 12, color: 'var(--text2)' }}>No wallet details available</div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </>
+        )}
       </div>
     </Layout>
   )

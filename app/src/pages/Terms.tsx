@@ -1,5 +1,8 @@
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import LegalPage from '../components/LegalPage'
+import Layout from '../components/Layout'
+import '../styles/profile-public.css'
+import '../styles/legal.css'
 
 // Terms of Service. Written from how the platform works today (escrow, 10% fee,
 // 72-hour auto-approval, KYC withdrawal limits, withdrawal minimum and fee,
@@ -29,27 +32,44 @@ const SECTIONS = [
 
 const n = (id: string) => String(SECTIONS.findIndex((s) => s.id === id) + 1).padStart(2, '0')
 
-// The rules people ask about most, each linking to its section. Keep these in
-// step with the sections below.
-const jump = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-function KeyPoints() {
-  return (
-    <div className="ui-card lg-keys">
-      <h2>Key points</h2>
-      <ul>
-        <li><i className="ti ti-check" aria-hidden="true" /><span>Posting a job costs the rewards plus a <b>10% platform fee</b>, held in escrow until work is approved. <button type="button" onClick={() => jump('posting')}>Posting jobs</button></span></li>
-        <li><i className="ti ti-check" aria-hidden="true" /><span>Work nobody reviews is <b>approved automatically 72 hours</b> after it was sent. <button type="button" onClick={() => jump('working')}>Doing jobs</button></span></li>
-        <li><i className="ti ti-check" aria-hidden="true" /><span>Withdrawals need identity checks: <b>₦5,000, ₦10,000 or ₦50,000 a day</b> by level. <button type="button" onClick={() => jump('kyc')}>Limits</button></span></li>
-        <li><i className="ti ti-check" aria-hidden="true" /><span>Bank withdrawals: <b>₦5,000 minimum, 1.5% fee</b>, paid every Thursday to an account in your own name. <button type="button" onClick={() => jump('money')}>Your wallet</button></span></li>
-        <li><i className="ti ti-check" aria-hidden="true" /><span><b>One account per person</b>, and you must be 18 or over. <button type="button" onClick={() => jump('account')}>Your account</button></span></li>
-      </ul>
-    </div>
-  )
-}
-
 export default function Terms() {
+  const [active, setActive] = useState(SECTIONS[0].id)
+
+  useEffect(() => {
+    const io = new IntersectionObserver((entries) => {
+      const hit = entries.filter((e) => e.isIntersecting).sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0]
+      if (hit) setActive(hit.target.id)
+    }, { rootMargin: '-90px 0px -60% 0px' })
+    SECTIONS.forEach((s) => { const el = document.getElementById(s.id); if (el) io.observe(el) })
+    return () => io.disconnect()
+  }, [])
+
+  const go = (id: string) => {
+    const el = document.getElementById(id)
+    if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 80, behavior: 'smooth' })
+  }
+
   return (
-    <LegalPage title="Terms of Service" updated="21 October 2026" sections={SECTIONS} intro={<KeyPoints />} lead={<>These terms are the agreement between you and OgaPay Technologies Ltd. ("OgaPay", "we", "us") for using the OgaPay marketplace, where people post paid jobs, do them, hire creators, and buy and sell services. By creating an account or using OgaPay you accept them. If you don't, please don't use OgaPay.</>}>
+    <Layout>
+      <div className="up-wrap lg-wrap">
+        <header className="lg-head">
+          <div className="up-eyebrow">Legal</div>
+          <h1>Terms of Service</h1>
+          <p>Last updated: 21 October 2026</p>
+          <p className="lg-lead">These terms are the agreement between you and OgaPay Technologies Ltd. ("OgaPay", "we", "us") for using the OgaPay marketplace, where people post paid jobs, do them, hire creators, and buy and sell services. By creating an account or using OgaPay you accept them. If you don't, please don't use OgaPay.</p>
+        </header>
+
+        <div className="lg-body">
+          <nav className="lg-toc" aria-label="On this page">
+            <div className="up-eyebrow">On this page</div>
+            {SECTIONS.map((s, i) => (
+              <button key={s.id} className={active === s.id ? 'on' : ''} onClick={() => go(s.id)}>
+                <span>{String(i + 1).padStart(2, '0')}</span>{s.title}
+              </button>
+            ))}
+          </nav>
+
+          <article className="lg-text">
             <section id="about">
               <h2><span>{n('about')}</span>Who we are and these terms</h2>
               <p>OgaPay connects people who need small jobs done ("posters") with people who do them ("workers"), lets businesses hire creators, and lets people sell products and services in the store. We hold money for jobs and orders, move it when work is approved or an order is received, and keep a record of every payment in your wallet.</p>
@@ -69,11 +89,11 @@ export default function Terms() {
             <section id="kyc">
               <h2><span>{n('kyc')}</span>Identity checks and limits</h2>
               <p>To withdraw money, send money to other users, get your own account number, and take some jobs, you need to verify your identity (KYC). The more you verify, the more you can withdraw in a day:</p>
-              <div className="lg-levels" role="list">
-                <div role="listitem"><b>Level 1</b><span>A bank account in your name, confirmed with your bank through our payment partner; or your NIN, confirmed with the National Identity Management Commission (NIMC) through Didit, or checked by our team when that isn't possible. Bank withdrawals only go to accounts in your own name.</span><span className="lim">₦5,000 a day</span></div>
-                <div role="listitem"><b>Level 2</b><span>An ID document and a selfie, checked by our verification partner Didit.</span><span className="lim">₦10,000 a day</span></div>
-                <div role="listitem"><b>Level 3</b><span>ID documents, checked by our team through support.</span><span className="lim">₦50,000 a day</span></div>
-              </div>
+              <ul>
+                <li>Level 1 (a bank account in your name, confirmed with your bank through our payment partner; or your NIN, confirmed with the National Identity Management Commission (NIMC) through Didit, or checked by our team when that isn't possible): up to ₦5,000 a day. Bank withdrawals only go to accounts in your own name.</li>
+                <li>Level 2 (an ID document and a selfie, checked by our verification partner Didit): up to ₦10,000 a day</li>
+                <li>Level 3 (ID documents, checked by our team through support): up to ₦50,000 a day</li>
+              </ul>
               <p>A day means the 24 hours before each withdrawal. Bank and crypto withdrawals count together, crypto at the naira rate on the day; ones that fail or are rejected don't count. We may ask for more information, refuse a check, or remove a verification we later find was wrong. Using someone else's identity is not allowed.</p>
             </section>
 
@@ -210,6 +230,9 @@ export default function Terms() {
                 <li>Questions: <a href="mailto:support@ogapay.app">support@ogapay.app</a> or the <Link to="/support">help centre</Link>. Privacy: <a href="mailto:privacy@ogapay.app">privacy@ogapay.app</a>.</li>
               </ul>
             </section>
-    </LegalPage>
+          </article>
+        </div>
+      </div>
+    </Layout>
   )
 }

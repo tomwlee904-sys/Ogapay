@@ -5,7 +5,7 @@ import Content from '../components/ProfileEarningsTab'
 export default function Earnings() {
   return (
     <Layout>
-      <div className="ui-page">
+      <div className="ui-page" style={{ paddingBottom: 60 }}>
         <Content />
       </div>
     </Layout>

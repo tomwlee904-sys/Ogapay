@@ -2,13 +2,13 @@
 .cm2-head { overflow: hidden; }
 .cm2-cover { height: 150px; background-size: cover; background-position: center; border-bottom: 1px solid var(--border); }
 .cm2-id { display: grid; grid-template-columns: 76px minmax(0, 1fr) auto; gap: 12px 16px; align-items: start; padding: 12px 22px 0; }
-.cm2-logo { width: 76px; height: 76px; margin-top: -44px; border-radius: 18px; border: 3px solid var(--card); display: grid; place-items: center; font: 800 26px Inter, sans-serif; overflow: hidden; }
+.cm2-logo { width: 76px; height: 76px; margin-top: -44px; border-radius: 18px; border: 3px solid var(--card); display: grid; place-items: center; color: #fff; font: 800 26px Inter, sans-serif; overflow: hidden; }
 .cm2-logo img { width: 100%; height: 100%; object-fit: cover; }
 .cm2-title { min-width: 0; padding-bottom: 2px; }
-.cm2-title h1 { font: 600 26px/1.15 var(--font); letter-spacing: -.02em; margin: 0 0 4px; color: var(--text); overflow-wrap: anywhere; }
+.cm2-title h1 { font: 800 24px/1.15 Inter, sans-serif; letter-spacing: -.02em; margin: 0 0 4px; color: var(--text); overflow-wrap: anywhere; }
 .cm2-sub { font-size: 13px; color: var(--text2); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .cm2-sub a { color: var(--text); font-weight: 600; text-decoration: none; }
-.cm2-social { width: 36px; height: 36px; border-radius: 8px; border: 1px solid var(--border); display: inline-grid; place-items: center; color: var(--text2) !important; }
+.cm2-social { width: 28px; height: 28px; border-radius: 8px; border: 1px solid var(--border); display: inline-grid; place-items: center; color: var(--text2) !important; }
 .cm2-cta { display: flex; gap: 8px; align-items: center; padding-bottom: 2px; }
 .cm2-badge { font-size: 12px; font-weight: 700; color: var(--text2); border: 1px solid var(--border); border-radius: 999px; padding: 6px 12px; white-space: nowrap; }
 .cm2-stats { margin: 18px 22px 18px; }
@@ -18,7 +18,7 @@
 .cm2-invite > div { flex: 1; min-width: 200px; }
 .cm2-ask { padding: 18px 20px; margin-top: 12px; }
 .cm2-ask h2 { font: 700 16px Inter, sans-serif; margin: 0 0 4px; }
-.cm2-ask textarea, .cm2-f input, .cm2-f textarea, .cm2-inline input, .cm2-send input { width: 100%; box-sizing: border-box; border: 1px solid var(--border); border-radius: 10px; background: var(--card2); color: var(--text); font: inherit; font-size: 14px; padding: 10px 12px; outline: 0; }
+.cm2-ask textarea, .cm2-f input, .cm2-f textarea, .cm2-inline input, .cm2-send input { width: 100%; box-sizing: border-box; border: 1px solid var(--border); border-radius: 10px; background: var(--bg2); color: var(--text); font: inherit; font-size: 14px; padding: 10px 12px; outline: 0; }
 .cm2-ask textarea { margin: 12px 0; resize: vertical; }
 .cm2-ask textarea:focus, .cm2-f input:focus, .cm2-f textarea:focus, .cm2-inline input:focus, .cm2-send input:focus { border-color: var(--text3); }
 .cm2-row-end { display: flex; justify-content: flex-end; gap: 8px; }
@@ -26,14 +26,13 @@
 .cm2-about > .up-about:first-child { margin-top: 0; }
 .cm2-members { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px; }
 .cm2-member { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 10px 6px; border-radius: 12px; text-decoration: none; color: var(--text2); font-size: 12px; min-width: 0; }
-.cm2-member:hover { background: var(--card2); }
+.cm2-member:hover { background: var(--bg2); }
 .cm2-member span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cm2-member em { font-style: normal; font-size: 11px; color: var(--text3); }
-.cm2-face { border-radius: 50%; background: var(--card2); border: 1px solid var(--border); display: inline-grid; place-items: center; overflow: hidden; flex-shrink: 0; font-weight: 800; color: var(--text2); font-family: Inter, sans-serif; }
+.cm2-face { border-radius: 50%; background: var(--bg2); border: 1px solid var(--border); display: inline-grid; place-items: center; overflow: hidden; flex-shrink: 0; font-weight: 800; color: var(--text2); font-family: Inter, sans-serif; }
 .cm2-face img { width: 100%; height: 100%; object-fit: cover; }
 .cm2-inline { display: flex; gap: 8px; }
-.cm2-inline input { flex: 1; min-width: 0; height: 44px; padding: 0 12px; }
-.cm2-inline .up-btn { height: 44px; }
+.cm2-inline input { flex: 1; min-width: 0; height: 40px; padding: 0 12px; }
 .cm2-list { padding: 2px 0; }
 .cm2-req { display: flex; align-items: flex-start; gap: 10px; padding: 12px 0; border-bottom: 1px solid var(--border); }
 .cm2-req:last-child { border-bottom: 0; }
@@ -66,12 +65,11 @@
 .cm2-note { margin: -4px 0 10px; }
 .cm2-pager { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 12px; font-size: 13px; color: var(--text2); }
 .cm2-chat { display: flex; flex-direction: column; height: min(62vh, 560px); overflow: hidden; }
-.cm2-send { background: var(--card); }
 .cm2-msgs { flex: 1; overflow-y: auto; padding: 14px 16px; display: flex; flex-direction: column; gap: 12px; }
 .cm2-center { text-align: center; margin: auto; }
 .cm2-msg { display: flex; gap: 8px; align-items: flex-start; max-width: 85%; }
 .cm2-msg.me { align-self: flex-end; flex-direction: row-reverse; }
-.cm2-bubble { background: var(--card2); border: 1px solid var(--border); border-radius: 12px; padding: 7px 11px; min-width: 0; }
+.cm2-bubble { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 7px 11px; min-width: 0; }
 .cm2-msg.me .cm2-bubble { background: color-mix(in srgb, var(--text) 8%, var(--card)); }
 .cm2-msg-h { display: flex; gap: 8px; align-items: baseline; font-size: 12px; }
 .cm2-msg-h a { color: var(--text); font-weight: 700; text-decoration: none; }
@@ -79,7 +77,7 @@
 .cm2-bubble p { margin: 2px 0 0; font-size: 14px; line-height: 1.45; color: var(--text); white-space: pre-wrap; overflow-wrap: anywhere; }
 .cm2-send { display: flex; gap: 8px; padding: 10px 12px; border-top: 1px solid var(--border); }
 .cm2-send input { flex: 1; min-width: 0; height: 42px; padding: 0 12px; }
-@media (max-width: 767.98px) {
+@media (max-width: 760px) {
   .cm2-cover { height: 110px; }
   .cm2-id { grid-template-columns: 60px minmax(0, 1fr); padding: 10px 16px 0; gap: 10px 12px; }
   .cm2-logo { width: 60px; height: 60px; margin-top: -38px; border-radius: 14px; font-size: 20px; }
@@ -96,43 +94,4 @@
   .cm2-req-t { flex-basis: calc(100% - 50px); }
   .cm2-req .up-btn { flex: 1; }
   .cm2-msg { max-width: 94%; }
-}
-
-/* ─── Layout review (batch 2) ───────────────────────────────────────────── */
-/* About cards fill their column (profile-public.css caps .up-about at 640px for profile bios) */
-.cm2-about .up-about, .cm2-side .up-about { max-width: none; }
-.cm2-side .up-about:first-child, .cm2-side > .up-card:first-child { margin-top: 0; }
-.cm2-body { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; }
-.cm2-main { min-width: 0; }
-.cm2-side { display: none; }
-.cm2-joincard { padding: 18px 20px; }
-.cm2-joincard h2 { margin: 0 0 6px; font-size: 15px; font-weight: 600; color: var(--text); }
-.cm2-joincard p { margin: 0 0 14px; line-height: 1.5; }
-.cm2-jobs-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
-.cm2-joinbar { margin-top: 16px; }
-.cm2-cta .up-btn { height: 44px; }
-/* Tabs: a clearly filled selected tab; the row stays under the top bar on phone and tablet */
-.cm2-tabs.up-tabs { background: var(--card2); }
-.cm2-tabs .up-tab { height: 40px; }
-.cm2-tabs .up-tab.on { background: var(--text); color: var(--bg); box-shadow: none; }
-.cm2-tabs .up-tab.on em { color: var(--bg); opacity: .7; }
-@media (min-width: 1024px) {
-  .cm2-body { grid-template-columns: minmax(0, 1fr) 340px; gap: 24px; }
-  .cm2-side { display: grid; gap: 12px; position: sticky; top: calc(var(--nav-h) + 16px); }
-  .cm2-side-copy { display: none; }
-  .cm2-joinbar { display: none; }
-}
-@media (max-width: 1023.98px) {
-  .cm2-tabs-row { position: sticky; top: var(--nav-h); z-index: 5; margin: 16px calc(-1 * var(--gutter)) 14px; padding: 6px var(--gutter); background: var(--bg); }
-  .cm2-tabs.up-tabs { display: flex; width: 100%; }
-  .cm2-tabs .up-tab { flex: 1 0 auto; justify-content: center; }
-  .cm2-tabs-many { -webkit-mask-image: linear-gradient(90deg, #000 88%, transparent); mask-image: linear-gradient(90deg, #000 88%, transparent); }
-  /* Chat fills the screen between the tabs and the bottom bar */
-  .cm2-chat { height: calc(100dvh - var(--nav-h) - var(--dock-clear) - 84px); min-height: 320px; }
-}
-@media (max-width: 767.98px) {
-  .cm2-title h1 { font-size: 20px; }
-  .cm2-tabs .up-tab { padding: 0 10px; }
-  .cm2-jobs-head .st-seg { width: 100%; }
-  .cm2-jobs-head .ui-btn { width: 100%; }
 }

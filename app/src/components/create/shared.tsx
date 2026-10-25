@@ -297,26 +297,6 @@ export function OverviewCard({ rows, total, currency, alt, checklist, primaryLab
   );
 }
 
-// Phone and tablet: the total and the next step stay on screen above the bottom
-// bar while the long form scrolls (the Overview card only comes after the form).
-// Desktop hides it: the Overview column stays in view there. Same button as
-// the Overview's primary, so nothing about paying changes.
-export function PayBar({ total, currency, note, label, onAction, busy }: {
-  total: number; currency: string; note: string; label: string; onAction: () => void; busy?: boolean;
-}) {
-  return (
-    <div className="ui-actionbar ui-actionbar-mobile-only cw-bar">
-      <div className="ui-actionbar-text">
-        <b>You pay {money(total, currency)}</b>
-        <span>{note}</span>
-      </div>
-      <button type="button" className="ui-btn ui-btn-dark" onClick={onAction} disabled={busy}>
-        {label} {!busy && <i className="ti ti-arrow-right" aria-hidden="true" />}
-      </button>
-    </div>
-  );
-}
-
 export const CATEGORIES: Record<string, string[]> = {
   "Social Media": ["X / Twitter", "Instagram", "TikTok", "YouTube", "Facebook"],
   "Content Creation": ["Writing", "Video", "Design", "Photography"],

@@ -84,38 +84,16 @@ function useReveal(root: React.RefObject<HTMLElement>) {
   }, [root]);
 }
 
-// Public JSON. `failed` is true when the request failed, or when nothing came back
-// within `timeoutMs`, so a section can hide instead of showing loading bars forever.
-function useJsonState<T = any>(path: string, pollMs = 0, timeoutMs = 0) {
+function useJson<T = any>(path: string, pollMs = 0) {
   const [data, setData] = useState<T | null>(null);
-  const [failed, setFailed] = useState(false);
   useEffect(() => {
-    let alive = true, got = false;
-    const load = () => earlyFetch(`${API_BASE}${path}`)
-      .then((r) => { if (!r.ok) throw new Error(String(r.status)); return r.json(); })
-      .then((d) => { if (alive) { got = true; setData(d); setFailed(false); } })
-      .catch(() => { if (alive && !got) setFailed(true); });
+    let alive = true;
+    const load = () => earlyFetch(`${API_BASE}${path}`).then((r) => r.json()).then((d) => { if (alive) setData(d); }).catch(() => {});
     load();
     const id = pollMs ? window.setInterval(load, pollMs) : 0;
-    const late = timeoutMs ? window.setTimeout(() => { if (alive && !got) setFailed(true); }, timeoutMs) : 0;
-    return () => { alive = false; if (id) window.clearInterval(id); if (late) window.clearTimeout(late); };
-  }, [path, pollMs, timeoutMs]);
-  return { data, failed };
-}
-const useJson = <T = any,>(path: string, pollMs = 0) => useJsonState<T>(path, pollMs).data;
-
-// Phone and tablet (the site's breakpoint, under 1024px wide)
-function useNarrow() {
-  const q = "(max-width: 1023.98px)";
-  const [narrow, setNarrow] = useState(() => typeof window !== "undefined" && window.matchMedia(q).matches);
-  useEffect(() => {
-    const m = window.matchMedia(q);
-    const on = () => setNarrow(m.matches);
-    on();
-    m.addEventListener("change", on);
-    return () => m.removeEventListener("change", on);
-  }, []);
-  return narrow;
+    return () => { alive = false; if (id) window.clearInterval(id); };
+  }, [path, pollMs]);
+  return data;
 }
 
 /* ─── hero ─────────────────────────────────────────────────────────────────── */
@@ -145,11 +123,8 @@ function StatCard({ icon, label, value, sub, format, positive, tint, delay }: { 
   );
 }
 
-function Hero({ live, liveFailed, onCreate }: { live: any; liveFailed: boolean; onCreate: () => void }) {
+function Hero({ live, onCreate }: { live: any; onCreate: () => void }) {
   const { preferredCurrency, convert } = useCurrency();
-  // No numbers (the request failed or is very slow): leave the cards out rather
-  // than show grey bars that never fill in
-  const showStats = live != null || !liveFailed;
   const inUsd = displayPref(preferredCurrency) === "USDC";
   const fundedFmt = (v: number) => (inUsd ? formatUsd(convert(v, "NGN", "USDC")) : naira(v));
   const n = (k: string) => (live && typeof live[k] === "number" ? live[k] : live ? 0 : null);
@@ -178,25 +153,23 @@ function Hero({ live, liveFailed, onCreate }: { live: any; liveFailed: boolean; 
               <Link to="/tasks" className="hv-btn hv-btn-dark">Start earning <i className="ti ti-arrow-right" /></Link>
               <button className="hv-btn hv-btn-ghost" onClick={onCreate}>Create a job <i className="ti ti-arrow-right" /></button>
             </div>
-            {/* a trust line right under the buttons (it used to sit alone ~200px lower) */}
-            <p className="hv-powered"><i className="ti ti-shield-check" aria-hidden="true" /> Paid in Naira or USDC · Powered by Solana</p>
           </div>
 
-          <div className="hv-hero-side">
+          <div>
             {/* the labels and caption are drawn inside the animation */}
-            <div className="hv-hero-net"><NetworkFlow /></div>
-            {showStats && (
-              <div className="hv-hero-live">
-                <div className="hv-mono hv-eyebrow"><span className="hv-dot" /> Platform activity</div>
-                <div className="hv-stats">
-                  <StatCard icon="briefcase" label="Active jobs" value={n("activeJobs")} sub="Open to apply now" format={(x) => Math.round(x).toLocaleString()} tint="132, 169, 187" delay={0.1} />
-                  <StatCard icon="coins" label="Rewards funded" value={rewards.value} sub={rewards.sub} format={fundedFmt} tint="143, 181, 167" delay={0.28} />
-                  <StatCard icon="circle-check" label="Tasks approved" value={approved.value} sub={approved.sub} format={(x) => Math.round(x).toLocaleString()} tint="160, 162, 194" delay={0.46} />
-                  <StatCard icon="users" label="Active workers" value={n("activeWorkers")} sub="Have earned on OgaPay" format={(x) => Math.round(x).toLocaleString()} positive tint="152, 169, 188" delay={0.64} />
-                </div>
-              </div>
-            )}
+            <NetworkFlow />
+            <div className="hv-mono hv-eyebrow" style={{ marginTop: 26 }}><span className="hv-dot" /> Platform activity</div>
+            <div className="hv-stats">
+              <StatCard icon="briefcase" label="Active jobs" value={n("activeJobs")} sub="Open to apply now" format={(x) => Math.round(x).toLocaleString()} tint="132, 169, 187" delay={0.1} />
+              <StatCard icon="coins" label="Rewards funded" value={rewards.value} sub={rewards.sub} format={fundedFmt} tint="143, 181, 167" delay={0.28} />
+              <StatCard icon="circle-check" label="Tasks approved" value={approved.value} sub={approved.sub} format={(x) => Math.round(x).toLocaleString()} tint="160, 162, 194" delay={0.46} />
+              <StatCard icon="users" label="Active workers" value={n("activeWorkers")} sub="Have earned on OgaPay" format={(x) => Math.round(x).toLocaleString()} positive tint="152, 169, 188" delay={0.64} />
+            </div>
           </div>
+        </div>
+
+        <div className="hv-hero-foot">
+          <span className="hv-powered"><i className="ti ti-shield-check" /> Powered by Solana</span>
         </div>
       </div>
     </section>
@@ -241,17 +214,15 @@ function Ticker({ payouts }: { payouts: Payout[] }) {
 type PathTab = {
   label: string; eyebrow: string; heading: string; lead: string;
   cta: { label: string; to: string };
-  more?: { label: string; to: string };
   steps?: [string, string][];
   code?: { label: string; text: string };
 };
 type PathDef = { id: string; icon: string; title: string; desc: string; tags: string; tabs: PathTab[] };
 
-// Everything here is what the product does today. Three paths: the two sides
-// of the marketplace (earn, hire) and developers.
+// Everything here is what the product does today
 const PATHS: PathDef[] = [
   {
-    id: "earn", icon: "briefcase", title: "I want to earn", desc: "Do paid tasks, or sell your skills in the store.", tags: "Tasks / Store",
+    id: "worker", icon: "user", title: "I'm a Worker", desc: "Earn rewards. Hire help when you need it.", tags: "Earn / Create",
     tabs: [
       {
         label: "Earn", eyebrow: "Put your skills to work", heading: "Your first paid task starts here.",
@@ -263,16 +234,10 @@ const PATHS: PathDef[] = [
           ["Submit proof, get paid", "Approved work is paid into your wallet. Verify your identity to withdraw to your bank."],
         ],
       },
-    ],
-  },
-  {
-    id: "hire", icon: "users", title: "I want to hire", desc: "Post a job and pay only for the work you approve.", tags: "Jobs / Businesses",
-    tabs: [
       {
         label: "Create a job", eyebrow: "Hire real people", heading: "Post a job in a few minutes.",
         lead: "Say what needs doing, set the reward per person and the proof you want. Your budget sits in escrow and is paid out as you approve work.",
         cta: { label: "Create a job", to: "/create" },
-        more: { label: "For businesses", to: "/hire" },
         steps: [
           ["Fund your wallet", "Pay in with Paystack or a bank transfer."],
           ["Post your job", "Instructions, reward per person and the proof you need."],
@@ -282,7 +247,7 @@ const PATHS: PathDef[] = [
     ],
   },
   {
-    id: "builder", icon: "code", title: "I'm a developer", desc: "Post jobs and read results from your own app or agent.", tags: "REST API / API keys",
+    id: "builder", icon: "code", title: "I'm a Builder", desc: "Post jobs and read results from your own app or agent.", tags: "REST API / API keys",
     tabs: [
       {
         label: "Quick start", eyebrow: "Developer API", heading: "Bring OgaPay data into your app.",
@@ -342,7 +307,7 @@ function ChoosePath() {
         <div className="hv-center hv-reveal">
           <span className="hv-mono">Choose your path</span>
           <h2 className="hv-h2">Start with OgaPay</h2>
-          <p className="hv-lead" style={{ marginTop: 16 }}>Whether you're here to earn, to hire or to build, pick your path below.</p>
+          <p className="hv-lead" style={{ marginTop: 16 }}>Whether you're here to earn or to build, pick your path below.</p>
         </div>
         <div className="hv-paths">
           {PATHS.map((p) => {
@@ -369,27 +334,22 @@ function ChoosePath() {
         {cur && t && (
           <div className="hv-pp" id="hv-path-panel" role="region" aria-label={cur.title}>
             <div className="hv-pp-bar">
-              {cur.tabs.length > 1 ? (
-                <div className="hv-pp-tabs" role="tablist">
-                  {cur.tabs.map((x, i) => (
-                    <button key={x.label} type="button" role="tab" aria-selected={i === tab}
-                      className={`hv-pp-tab${i === tab ? " on" : ""}`} onClick={() => setTab(i)}>{x.label}</button>
-                  ))}
-                </div>
-              ) : <span className="hv-pp-name">{cur.title}</span>}
+              <div className="hv-pp-tabs" role="tablist">
+                {cur.tabs.map((x, i) => (
+                  <button key={x.label} type="button" role="tab" aria-selected={i === tab}
+                    className={`hv-pp-tab${i === tab ? " on" : ""}`} onClick={() => setTab(i)}>{x.label}</button>
+                ))}
+              </div>
               <button type="button" className="hv-pp-x" onClick={() => setSel(null)} aria-label="Close">
                 <i className="ti ti-x" aria-hidden="true" />
               </button>
             </div>
-            <div className="hv-pp-body" role={cur.tabs.length > 1 ? "tabpanel" : undefined} key={`${cur.id}-${tab}`}>
+            <div className="hv-pp-body" role="tabpanel" key={`${cur.id}-${tab}`}>
               <div className="hv-pp-intro">
                 <span className="hv-mono">{t.eyebrow}</span>
                 <h3 className="hv-pp-title">{t.heading}</h3>
                 <p className="hv-pp-lead">{t.lead}</p>
-                <div className="hv-pp-ctas">
-                  <Link to={t.cta.to} className="hv-btn hv-btn-dark hv-pp-cta">{t.cta.label} <i className="ti ti-arrow-right" aria-hidden="true" /></Link>
-                  {t.more && <Link to={t.more.to} className="hv-btn hv-btn-ghost hv-pp-cta">{t.more.label}</Link>}
-                </div>
+                <Link to={t.cta.to} className="hv-btn hv-btn-dark hv-pp-cta">{t.cta.label} <i className="ti ti-arrow-right" aria-hidden="true" /></Link>
               </div>
               <div className="hv-pp-side">
                 {t.steps && (
@@ -497,32 +457,19 @@ function SectionHead({ eyebrow, title, sub, more, to }: { eyebrow: string; title
   );
 }
 
-function HighlightedJobs({ jobs, loading, failed, onRetry, inFlow }: { jobs: any[]; loading: boolean; failed?: boolean; onRetry?: () => void; inFlow?: boolean }) {
+function HighlightedJobs({ jobs, loading }: { jobs: any[]; loading: boolean }) {
   const { convert } = useCurrency();
   // Featured first, then the biggest rewards, like a highlighted board should read.
   const shown = useMemo(() => [...jobs]
     .sort((a, b) => Number(!!b.featured) - Number(!!a.featured) || Number(b.reward ?? 0) - Number(a.reward ?? 0))
     .slice(0, 12), [jobs]);
-  // Placeholders: as many cards as the carousel will show (one on phones)
-  const per = typeof window !== "undefined" && window.innerWidth < 640 ? 1 : 3;
   return (
-    <section className={`hv-section${inFlow ? " hv-jobs-first" : ""}`} id="featured-jobs">
+    <section className="hv-section" id="featured-jobs">
       <div className="hv-inner">
         <div className="hv-panel">
         <SectionHead eyebrow="Find your next opportunity" title="Highlighted jobs" sub="Featured jobs" more="More jobs" to="/tasks" />
-        {loading && <div className="hv-car"><div className="hv-car-view"><div className="hv-car-track" style={{ ["--hv-per" as any]: per }}>{Array.from({ length: per }, (_, i) => <div key={i} className="hv-car-slide"><div className="hc-card" style={{ height: 480 }}><span className="hv-sk" /></div></div>)}</div></div></div>}
-        {/* A failed request is not "no jobs": say so, and offer the jobs page and a retry */}
-        {!loading && failed && shown.length === 0 && (
-          <div className="hv-empty" role="alert" style={{ marginTop: 28 }}>
-            <b style={{ display: "block", color: "var(--text)", marginBottom: 4 }}>We couldn't load jobs just now.</b>
-            Check your connection and try again.
-            <div className="hv-btns hv-empty-btns">
-              {onRetry && <button type="button" className="hv-btn hv-btn-dark" onClick={onRetry}><i className="ti ti-refresh" aria-hidden="true" /> Try again</button>}
-              <Link to="/tasks" className="hv-btn hv-btn-ghost">See all jobs</Link>
-            </div>
-          </div>
-        )}
-        {!loading && !failed && shown.length === 0 && <div className="hv-empty" style={{ marginTop: 28 }}>No open jobs right now. <Link to="/create" style={{ fontWeight: 600 }}>Post the first one</Link>.</div>}
+        {loading && <div className="hv-car"><div className="hv-car-view"><div className="hv-car-track" style={{ ["--hv-per" as any]: 3 }}>{[0, 1, 2].map((i) => <div key={i} className="hv-car-slide"><div className="hc-card" style={{ height: 480 }}><span className="hv-sk" /></div></div>)}</div></div></div>}
+        {!loading && shown.length === 0 && <div className="hv-empty" style={{ marginTop: 28 }}>No open jobs right now. <Link to="/create" style={{ fontWeight: 600 }}>Post the first one</Link>.</div>}
         {!loading && shown.length > 0 && (
           <Carousel label="Highlighted jobs carousel" items={shown} render={(t) => <HomeJobCard task={t} convert={convert} />} />
         )}
@@ -604,21 +551,15 @@ export default function HomePage() {
   const rootRef = useRef<HTMLElement>(null);
   useReveal(rootRef);
 
-  // Live stats: hidden if they fail or take more than 8 seconds (see Hero)
-  const { data: live, failed: liveFailed } = useJsonState<any>("/stats/live", 60000, 8000);
+  const live = useJson<any>("/stats/live", 60000);
   const all = useJson<any>("/stats");
   const payoutsRes = useJson<any>("/stats/payouts", 120000);
   const payouts: Payout[] = Array.isArray(payoutsRes?.data) ? payoutsRes.data : [];
-  const { data: jobsRes, error: jobsErr, mutate: retryJobs } = useApi("/tasks?status=OPEN", { auth: false });
+  const { data: jobsRes, error: jobsErr } = useApi("/tasks?status=OPEN", { auth: false });
   // Some older jobs have a past deadline but no expiry, so the API still lists them
   // as open; don't highlight ones that have already ended
   const jobs = useMemo(() => listOf(jobsRes).filter((j: any) => jobDeadline(j).state !== "ended"), [jobsRes]);
   const jobsLoading = !jobsRes && !jobsErr;
-  const jobsFailed = !jobsRes && !!jobsErr;
-  // Phones and tablets: real jobs straight after the hero, as a normal section.
-  // Inside the helix they only appeared after ~4,400px of scrolling. Desktop keeps
-  // them in the helix.
-  const narrow = useNarrow();
   // The discovery panels that pass over the ecosystem helix (only those with content)
   const storeRes = useJson<any>("/store?limit=9&sort=newest");
   const blogRes = useJson<any>("/blog?limit=9");
@@ -628,12 +569,12 @@ export default function HomePage() {
     const posts: any[] = blogRes?.data?.posts || [];
     const commList: any[] = commRes?.data?.communities || (Array.isArray(commRes?.data) ? commRes.data : []);
     const comms = commList.filter((c) => c.isPublic !== false && c.isActive !== false).slice(0, 9);
-    const out: HelixPanel[] = narrow ? [] : [{ key: "jobs", node: <HighlightedJobs jobs={jobs} loading={jobsLoading} failed={jobsFailed} onRetry={() => retryJobs()} /> }];
+    const out: HelixPanel[] = [{ key: "jobs", node: <HighlightedJobs jobs={jobs} loading={jobsLoading} /> }];
     if (storeItems.length) out.push({ key: "store", node: <CreatorStore items={storeItems} /> });
     if (posts.length) out.push({ key: "blogs", node: <Journal posts={posts} /> });
     if (comms.length) out.push({ key: "communities", node: <CommunitiesRow items={comms} /> });
     return out;
-  }, [narrow, jobs, jobsLoading, jobsFailed, retryJobs, storeRes, blogRes, commRes]);
+  }, [jobs, jobsLoading, storeRes, blogRes, commRes]);
 
   useEffect(() => {
     document.body.style.overflow = drawerOpen ? "hidden" : "";
@@ -647,9 +588,8 @@ export default function HomePage() {
       <Navbar onMenuToggle={() => setDrawerOpen(true)} />
       <main ref={rootRef} className="hv" style={{ paddingTop: "var(--nav-h)", overflowX: "clip" }}>
         <div className="hv-frame">
-          <Hero live={live} liveFailed={liveFailed} onCreate={onCreate} />
+          <Hero live={live} onCreate={onCreate} />
           <Ticker payouts={payouts} />
-          {narrow && <HighlightedJobs jobs={jobs} loading={jobsLoading} failed={jobsFailed} onRetry={() => retryJobs()} inFlow />}
           <ChoosePath />
           <Numbers live={live} all={all} />
           <Possibilities />

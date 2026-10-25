@@ -1,5 +1,8 @@
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import LegalPage from '../components/LegalPage'
+import Layout from '../components/Layout'
+import '../styles/profile-public.css'
+import '../styles/legal.css'
 
 // Privacy policy, ported from the June page. Statements were checked against how
 // the platform works today (processors, KYC rules, what is public, retention) and
@@ -21,8 +24,43 @@ const SECTIONS = [
 ]
 
 export default function Privacy() {
+  const [active, setActive] = useState(SECTIONS[0].id)
+
+  useEffect(() => {
+    const io = new IntersectionObserver((entries) => {
+      const hit = entries.filter((e) => e.isIntersecting).sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0]
+      if (hit) setActive(hit.target.id)
+    }, { rootMargin: '-90px 0px -60% 0px' })
+    SECTIONS.forEach((s) => { const el = document.getElementById(s.id); if (el) io.observe(el) })
+    return () => io.disconnect()
+  }, [])
+
+  const go = (id: string) => {
+    const el = document.getElementById(id)
+    if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 80, behavior: 'smooth' })
+  }
+
   return (
-    <LegalPage title="Privacy policy" updated="8 October 2026" sections={SECTIONS} lead={<>OgaPay Technologies Ltd. ("OgaPay", "we", "us") runs the OgaPay marketplace. This policy explains what personal data we collect, why, who we share it with and the choices you have.</>}>
+    <Layout>
+      <div className="up-wrap lg-wrap">
+        <header className="lg-head">
+          <div className="up-eyebrow">Legal</div>
+          <h1>Privacy policy</h1>
+          <p>Last updated: 8 October 2026</p>
+          <p className="lg-lead">OgaPay Technologies Ltd. ("OgaPay", "we", "us") runs the OgaPay marketplace. This policy explains what personal data we collect, why, who we share it with and the choices you have.</p>
+        </header>
+
+        <div className="lg-body">
+          <nav className="lg-toc" aria-label="On this page">
+            <div className="up-eyebrow">On this page</div>
+            {SECTIONS.map((s, i) => (
+              <button key={s.id} className={active === s.id ? 'on' : ''} onClick={() => go(s.id)}>
+                <span>{String(i + 1).padStart(2, '0')}</span>{s.title}
+              </button>
+            ))}
+          </nav>
+
+          <article className="lg-text">
             <section id="collect">
               <h2><span>01</span>Information we collect</h2>
               <ul>
@@ -136,6 +174,9 @@ export default function Privacy() {
                 <li>OgaPay Technologies Ltd., Lagos, Nigeria</li>
               </ul>
             </section>
-    </LegalPage>
+          </article>
+        </div>
+      </div>
+    </Layout>
   )
 }

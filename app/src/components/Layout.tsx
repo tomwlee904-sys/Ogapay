@@ -54,8 +54,7 @@ export default function Layout({ children, sidebar = false }: LayoutProps) {
         </main>
         {sidebar && <Sidebar />}
       </div>
-      {/* Full-screen tools (chat) and the admin area have no footer */}
-      {/^\/(messages|admin)(\/|$)/.test(pathname) ? null : fullFooter ? <Footer /> : <CompactFooter />}
+      {fullFooter ? <Footer /> : <CompactFooter />}
       <BottomNav />
       <div className="toast" id="appToast" />
       <JobAlertToast />

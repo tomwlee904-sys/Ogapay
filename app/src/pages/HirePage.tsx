@@ -19,9 +19,7 @@ export default function HirePage() {
   const navigate = useNavigate()
   const { user } = useAuth()
   const [worker, setWorker] = useState<any>(null)
-  // missing: no such user, or a private profile; error: it didn't load
-  const [missing, setMissing] = useState<"" | "missing" | "private" | "error">("")
-  const [reloadKey, setReloadKey] = useState(0)
+  const [missing, setMissing] = useState(false)
   const [available, setAvailable] = useState<number | null>(null)
   const [title, setTitle] = useState("")
   const [brief, setBrief] = useState("")
@@ -35,11 +33,10 @@ export default function HirePage() {
   const fileRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    setMissing("")
     apiRequest<any>(`/users/${encodeURIComponent(username)}`, { auth: false })
-      .then((p) => (p?.isPublic === false ? setMissing("private") : setWorker(p)))
-      .catch((e) => setMissing(/not found/i.test(e?.message || "") ? "missing" : "error"))
-  }, [username, reloadKey])
+      .then((p) => (p?.isPublic === false ? setMissing(true) : setWorker(p)))
+      .catch(() => setMissing(true))
+  }, [username])
 
   useEffect(() => {
     if (!user) return
@@ -112,29 +109,15 @@ export default function HirePage() {
     setSubmitting(false)
   }
 
-  const crumb = (
-    <div className="up-crumb">
-      <button className="tap" onClick={() => navigate(`/user/${username}`)}><i className="ti ti-arrow-left" aria-hidden="true" /> Back to profile</button>
-      <span>Private direct hire</span>
-    </div>
-  )
-
   if (missing) {
     return (
       <Layout>
         <div className="up-wrap">
-          {crumb}
           <div className="up-card up-state">
-            <i className={`ti ${missing === "error" ? "ti-cloud-off" : missing === "private" ? "ti-lock" : "ti-user-off"}`} />
-            <h1 className="up-state-h">{missing === "error" ? `Couldn't load @${username}` : "Can't hire this person"}</h1>
-            <p>{missing === "error" ? "Check your connection and try again. Nothing has been charged."
-              : missing === "private" ? `@${username} keeps their profile private, so they can't be hired directly.`
-              : `There's no OgaPay user called @${username}.`}</p>
-            <div style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap" }}>
-              {missing === "error"
-                ? <button className="ui-btn ui-btn-dark" onClick={() => setReloadKey((k) => k + 1)}><i className="ti ti-refresh" aria-hidden="true" /> Try again</button>
-                : <Link className="ui-btn ui-btn-dark" to="/creators">Find creators</Link>}
-            </div>
+            <i className="ti ti-user-off" />
+            <h2>Can't hire this person</h2>
+            <p>@{username} doesn't exist or their profile is private.</p>
+            <Link className="up-btn" to="/">Go home</Link>
           </div>
         </div>
       </Layout>
@@ -162,7 +145,10 @@ export default function HirePage() {
   return (
     <Layout>
       <div className="up-wrap">
-        {crumb}
+        <div className="up-crumb">
+          <button onClick={() => navigate(`/user/${username}`)}><i className="ti ti-arrow-left" /> Back to profile</button>
+          <span>Private direct hire</span>
+        </div>
 
         <div className="hr-head">
           <h1>Hire {name}</h1>
@@ -229,6 +215,9 @@ export default function HirePage() {
                 </ul>
               )}
               <p className="hr-note">Your brief becomes the first message in a private chat with {name}. Only you and {name} can see this job.</p>
+              <button type="button" className="up-btn primary hr-next" onClick={() => document.getElementById('hr-pay')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>
+                Continue to payment <i className="ti ti-arrow-down" />
+              </button>
             </section>
           </div>
 
@@ -250,27 +239,14 @@ export default function HirePage() {
             ) : (
               <>
                 <button className="up-btn primary hr-cta" disabled={!ready} onClick={submit} aria-describedby={why ? "hr-why" : undefined}>
-                  {submitting ? "Hiring…" : ready ? `Pay ${naira(total)} & hire` : "Pay & hire"}
+                  {submitting ? "Hiring…" : ready ? `Pay ${naira(total)} & hire` : "Continue to payment"}
                 </button>
-                {why && !submitting && <p className="hr-small hr-why" id="hr-why" style={{ marginTop: 8 }}>{why}</p>}
+                {why && !submitting && <p className="hr-small" id="hr-why" style={{ marginTop: 8 }}>{why}</p>}
               </>
             )}
             <p className="hr-small"><i className="ti ti-shield-lock" /> Paid from your OgaPay wallet and held in escrow. {name} is paid when you approve the work.</p>
           </aside>
         </div>
-
-        {/* Phones: what you pay and the pay button stay above the bottom bar */}
-        {!isSelf && (
-          <div className="ui-actionbar hr-paybar">
-            <div className="ui-actionbar-text">
-              <b>{amt ? `You pay ${naira(total)}` : "Set a budget"}</b>
-              {!user ? "Sign in to hire." : why && !submitting ? why : amt ? `${naira(amt)} to ${name} + ${naira(fee)} fee` : `Minimum ${naira(MIN_BUDGET)}`}
-            </div>
-            {!user
-              ? <button type="button" className="ui-btn ui-btn-dark ui-btn-lg" onClick={() => openSignIn({ redirect: `/user/${username}/hire` })}>Sign in</button>
-              : <button type="button" className="ui-btn ui-btn-dark ui-btn-lg" disabled={!ready} onClick={submit}>{submitting ? "Hiring…" : "Pay & hire"}</button>}
-          </div>
-        )}
       </div>
     </Layout>
   )

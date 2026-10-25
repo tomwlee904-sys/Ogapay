@@ -1,7 +1,6 @@
-import { useState } from "react";
-import { Link, useSearchParams, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { API_BASE } from "../lib/api";
-import AuthShell from "../components/auth/AuthShell";
 
 export default function ResetPasswordPage() {
   const [searchParams] = useSearchParams();
@@ -10,22 +9,29 @@ export default function ResetPasswordPage() {
   const userId = searchParams.get("userId");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [showPw, setShowPw] = useState(false);
+  const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
+  useEffect(() => {
+    if (!token || !userId) {
+      setError("Invalid reset link. Please request a new password reset.");
+    }
+  }, [token, userId]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setMessage("");
 
     // Same rules as sign-up (the server checks them too)
     if (!password || password.length < 8 || !/[A-Z]/.test(password) || !/[0-9]/.test(password)) {
-      setError("Use at least 8 characters, with a capital letter and a number.");
+      setError("Use at least 8 characters, with an uppercase letter and a number");
       return;
     }
     if (password !== confirmPassword) {
-      setError("The two passwords don't match.");
+      setError("Passwords do not match");
       return;
     }
 
@@ -39,62 +45,120 @@ export default function ResetPasswordPage() {
       const data = await res.json();
       if (res.ok) {
         setSubmitted(true);
+        setMessage("Password reset successful! Redirecting to login...");
         setTimeout(() => navigate("/login"), 3000);
       } else {
         setError(data.message || "Something went wrong");
       }
     } catch {
-      setError("Couldn't reach OgaPay. Check your connection and try again.");
+      setError("Network error. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
-  // A broken or expired link: one clear way to get a new one
-  if (!token || !userId) {
-    return (
-      <AuthShell eyebrow="Password" title="This reset link doesn't work" sub="Reset links expire after a while, or the link was cut short in your email. Get a new one below.">
-        <Link to="/forgot-password" className="ui-btn ui-btn-dark ui-btn-lg" style={{ width: "100%" }}>Send me a new link</Link>
-        <p className="as-links"><Link to="/login" className="ui-btn ui-btn-text">Back to sign in</Link></p>
-      </AuthShell>
-    );
-  }
-
-  if (submitted) {
-    return (
-      <AuthShell eyebrow="Password" title="Password changed" sub="You can sign in with your new password. Taking you to sign in…">
-        <Link to="/login" className="ui-btn ui-btn-dark ui-btn-lg" style={{ width: "100%" }}>Sign in</Link>
-      </AuthShell>
-    );
-  }
-
-  const eye = (
-    <button type="button" className="ui-btn ui-btn-text ui-btn-icon" onClick={() => setShowPw((s) => !s)} aria-label={showPw ? "Hide passwords" : "Show passwords"}
-      style={{ position: "absolute", right: 0, top: 0 }}>
-      <i className={`ti ti-eye${showPw ? "-off" : ""}`} aria-hidden="true" />
-    </button>
-  );
-
   return (
-    <AuthShell eyebrow="Password" title="Set a new password" sub="Choose a new password for your OgaPay account.">
-      <form onSubmit={handleSubmit} noValidate>
-        <div className="as-field">
-          <label className="ui-label" htmlFor="rp-pw">New password</label>
-          <div style={{ position: "relative" }}>
-            <input id="rp-pw" className="ui-input" type={showPw ? "text" : "password"} autoComplete="new-password" value={password}
-              onChange={(e) => setPassword(e.target.value)} style={{ paddingRight: 48 }} autoFocus aria-describedby="rp-hint" />
-            {eye}
+    <div style={{
+      minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center",
+      background: "var(--bg)", padding: 24,
+    }}>
+      <div style={{
+        width: "100%", maxWidth: 420,
+        background: "var(--card)", border: "1px solid var(--border)",
+        borderRadius: 18, padding: "32px 28px",
+        boxShadow: "0 8px 40px rgba(0,0,0,0.06)",
+      }}>
+        <div style={{ textAlign: "center", marginBottom: 28 }}>
+          <div style={{ fontSize: 28, fontWeight: 900, marginBottom: 4 }}>OgaPay</div>
+          <h1 style={{ fontSize: 20, fontWeight: 700, margin: "0 0 6px", color: "var(--text)" }}>
+            Reset your password
+          </h1>
+          <p style={{ fontSize: 13, color: "var(--text2)", margin: 0 }}>
+            {submitted ? "Done!" : token && userId ? "Enter your new password below." : "This link doesn't work any more."}
+          </p>
+        </div>
+
+        {error && (
+          <div style={{
+            padding: "10px 14px", background: "color-mix(in srgb, var(--red, #ef4444) 10%, transparent)", border: "1px solid color-mix(in srgb, var(--red, #ef4444) 40%, transparent)",
+            borderRadius: 8, fontSize: 13, color: "var(--red, #dc2626)", marginBottom: 16, fontWeight: 600,
+          }}>
+            {error}
           </div>
-          <p className="ui-hint" id="rp-hint">At least 8 characters, with a capital letter and a number.</p>
+        )}
+        {/* A broken or expired link: a way out instead of a dead end */}
+        {(!token || !userId) && (
+          <button type="button" className="ui-btn ui-btn-dark" style={{ width: "100%", marginBottom: 12 }} onClick={() => navigate("/forgot-password")}>
+            Send me a new reset link
+          </button>
+        )}
+
+        {message && (
+          <div style={{
+            padding: "10px 14px", background: "#f0fdf4", border: "1px solid #bbf7d0",
+            borderRadius: 8, fontSize: 12, color: "#166534", marginBottom: 16, fontWeight: 600,
+          }}>
+            {message}
+          </div>
+        )}
+
+        {!submitted && token && userId && (
+          <form onSubmit={handleSubmit}>
+            <div style={{ marginBottom: 16 }}>
+              <label style={{ fontSize: 12, fontWeight: 600, color: "var(--text2)", display: "block", marginBottom: 4 }}>
+                New Password
+              </label>
+              <input
+                type="password"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                placeholder="At least 8 characters"
+                className="auth-input"
+                autoFocus
+              />
+            </div>
+            <div style={{ marginBottom: 24 }}>
+              <label style={{ fontSize: 12, fontWeight: 600, color: "var(--text2)", display: "block", marginBottom: 4 }}>
+                Confirm Password
+              </label>
+              <input
+                type="password"
+                value={confirmPassword}
+                onChange={e => setConfirmPassword(e.target.value)}
+                placeholder="Repeat your password"
+                className="auth-input"
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={loading}
+              style={{
+                width: "100%", height: 48, borderRadius: 12,
+                background: "var(--accent)", color: "var(--on-accent)", border: "none",
+                fontSize: 15, fontWeight: 700, cursor: "pointer",
+                fontFamily: "inherit", opacity: loading ? 0.6 : 1,
+              }}
+            >
+              {loading ? "Resetting..." : "Reset Password"}
+            </button>
+          </form>
+        )}
+
+        {!submitted && (!token || !userId) && (
+          <div style={{ textAlign: "center" }}>
+            <p style={{ fontSize: 13, color: "var(--text2)", marginBottom: 16 }}>
+              Please use the link from your email.
+            </p>
+            <a href="/" style={{ color: "var(--accent)", fontSize: 13, fontWeight: 600 }}>Go to Home</a>
+          </div>
+        )}
+
+        <div style={{ textAlign: "center", marginTop: 20 }}>
+          <a href="/login" style={{ fontSize: 12, color: "var(--text3)", textDecoration: "underline" }}>
+            Back to Sign In
+          </a>
         </div>
-        <div className="as-field">
-          <label className="ui-label" htmlFor="rp-pw2">Repeat the new password</label>
-          <input id="rp-pw2" className="ui-input" type={showPw ? "text" : "password"} autoComplete="new-password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
-        </div>
-        {error && <p className="as-alert" role="alert">{error}</p>}
-        <button type="submit" disabled={loading} className={`ui-btn ui-btn-dark ui-btn-lg${loading ? " is-loading" : ""}`} style={{ width: "100%" }}>Save new password</button>
-      </form>
-      <p className="as-links"><Link to="/login" className="ui-btn ui-btn-text">Back to sign in</Link></p>
-    </AuthShell>
+      </div>
+    </div>
   );
 }

@@ -69,7 +69,7 @@
    balance, theme, menu). From 1024px, and on phones held sideways, the bar is
    unchanged. */
 @media (min-width: 768px) and (max-width: 1023.98px) and (min-height: 600px) {
-  .nav .nav-link-dock, .nav .nav-desktop .profile-btn, .nav .nav-bell, .nav .nav-signin { display: none; }
+  .nav .nav-link-dock, .nav .nav-desktop .profile-btn { display: none; }
   .nav .nav-links { justify-content: center; gap: 8px; }
 }
 
@@ -86,56 +86,6 @@
 .oga-topup { min-width: 76px; height: 44px; padding: 0 14px; border: 0; border-radius: 13px; background: var(--text); color: var(--bg); font: 600 13px 'Inter', system-ui, sans-serif; cursor: pointer; box-shadow: 0 8px 18px -10px rgba(0,0,0,.45); transition: opacity .15s; }
 .oga-topup:hover { opacity: .88; }
 .oga-topup:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
-
-/* Top-bar links: 40px tall pills (44px to tap, below), the current section
-   lit on its sub-pages too (Navbar.tsx + navTabs.ts) with a visible fill and
-   hairline in both themes */
-@media (min-width: 768px) {
-  .nav .nav-link { min-height: 40px; }
-}
-.nav .nav-link.active { color: var(--text); background: var(--card2); box-shadow: inset 0 0 0 1px var(--border); }
-.nav .nav-link:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
-
-/* Desktop bell: Notifications with the unread count, beside the balance. On
-   phones and tablets the dock's Alerts tab does this (hidden there above). */
-.nav .nav-bell { position: relative; text-decoration: none; }
-.nav .nav-bell.on { background: var(--card2); }
-/* Same badge as the dock's (#dc2626 keeps white text at 4.5:1 in both themes) */
-.nav .nav-badge { position: absolute; top: 1px; right: 0; box-sizing: border-box; min-width: 18px; height: 18px; padding: 0 4px; border: 2px solid var(--bg); border-radius: 9px; background: #dc2626; color: #fff; font: 700 11px/14px 'Inter', system-ui, sans-serif; text-align: center; white-space: nowrap; pointer-events: none; }
-
-/* Visitors: Sign in (outlined) beside Sign up (the one filled button). Phones
-   show only Sign up; the dock's last tab is Sign in. */
-.nav .nav-signin, .nav .nav-signup {
-  display: inline-flex; align-items: center; justify-content: center;
-  height: 40px; padding: 0 16px; border-radius: 10px;
-  font: 600 14px/1 'Inter', system-ui, sans-serif; white-space: nowrap; cursor: pointer;
-  transition: opacity .14s, background .14s, border-color .14s;
-}
-.nav .nav-signin { border: 1px solid var(--border2); background: transparent; color: var(--text); }
-.nav .nav-signin:hover { border-color: var(--text3); background: var(--card2); }
-.nav .nav-signup { border: 1px solid var(--accent); background: var(--accent); color: var(--on-accent); }
-.nav .nav-signup:hover { opacity: .86; }
-.nav .nav-signin:focus-visible, .nav .nav-signup:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
-@media (max-width: 767px) {
-  .nav .nav-signup { height: 36px; padding: 0 14px; font-size: 13.5px; margin-right: 4px; }
-}
-
-/* 44px tap areas for the top bar's smaller controls (same idea as ui.css's
-   list: an invisible box around them, nothing on screen moves) */
-.nav .nav-link, .nav .nav-signin, .nav .nav-signup { position: relative; }
-.nav .nav-link::after, .nav .nav-signin::after, .nav .nav-signup::after {
-  content: ''; position: absolute; top: 50%; left: 50%;
-  width: max(100%, 44px); height: max(100%, 44px); transform: translate(-50%, -50%);
-}
-
-/* Menu: the page you're on, and unread counts (Drawer.tsx) */
-.oga-drawer .oga-drawer-item[aria-current="page"] { background: var(--card2); box-shadow: inset 3px 0 0 var(--text); }
-.oga-drawer .oga-drawer-item[aria-current="page"] strong { color: var(--text); }
-.oga-drawer-count { flex-shrink: 0; margin-left: auto; min-width: 22px; height: 22px; padding: 0 7px; box-sizing: border-box; border-radius: 11px; background: #dc2626; color: #fff; font: 700 12px/22px 'Inter', system-ui, sans-serif; text-align: center; }
-/* The currency switch in the menu: the chosen one filled (white in dark, black
-   in light), like every selected chip and segment */
-.oga-drawer .cur-switch > div { background: var(--card2); }
-.oga-drawer .cur-switch button.on { background: var(--text); color: var(--bg); box-shadow: none; }
 
 /* Clear of an iPhone's notch when held sideways (index.html has viewport-fit=cover) */
 .nav { box-sizing: border-box; padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px); }

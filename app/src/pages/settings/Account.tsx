@@ -49,7 +49,7 @@ export default function Account({ me }: SectionProps) {
           title={me.email}
           sub={me.isEmailVerified
             ? <span className="st2-ok"><i className="ti ti-circle-check" /> Verified</span>
-            : <span className="st2-status-warn"><i className="ti ti-alert-circle" /> Not verified. You won't get email alerts until you confirm it.</span>}
+            : <span className="st2-warn"><i className="ti ti-alert-circle" /> Not verified. You won't get email alerts until you confirm it.</span>}
         >
           {!me.isEmailVerified && <button className="up-btn" onClick={resend} disabled={sending}>{sending ? 'Sending…' : 'Resend link'}</button>}
         </Row>

@@ -1,41 +1,17 @@
 import { useEffect, useState } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { openSignIn } from '../lib/signin'
 import { useWalletBalance } from '../context/WalletBalanceContext'
 import { useCurrency } from '../context/CurrencyContext'
 import { sized } from '../lib/img'
 import { displayPref } from '../lib/money'
-import { useUnreadCount } from '../lib/shared'
 import CurrencySwitch from './CurrencySwitch'
 import { useMyWarnings } from './WarningBanner'
 
 interface DrawerProps {
   open: boolean
   onClose: () => void
-}
-
-const under = (pathname: string, p: string) => pathname === p || pathname.startsWith(p + '/')
-
-type ItemProps = { to: string; icon: string; title: string; desc: string; sub?: boolean; count?: number; exact?: boolean }
-
-// One menu entry. The page you're on is marked (aria-current, styled in
-// nav.css); sub: the smaller icon used inside a group; count: an unread badge.
-function DrawerItem({ to, icon, title, desc, sub, count, exact, pathname, onClose }: ItemProps & { pathname: string; onClose: () => void }) {
-  const here = exact ? pathname === to : under(pathname, to)
-  return (
-    <Link
-      className="oga-drawer-item"
-      to={to}
-      onClick={onClose}
-      aria-current={here ? 'page' : undefined}
-      aria-label={count ? `${title}, ${count} unread` : undefined}
-    >
-      <span className={'oga-drawer-icon' + (sub ? ' oga-drawer-icon--sub' : '')}><i className={`ti ti-${icon}`} /></span>
-      <span><strong>{title}</strong><small>{desc}</small></span>
-      {!!count && <span className="oga-drawer-count" aria-hidden="true">{count > 99 ? '99+' : count}</span>}
-    </Link>
-  )
 }
 
 function DrawerGroup({ label, icon, subtitle, children, defaultOpen }: { label: string; icon: string; subtitle?: string; children: React.ReactNode; defaultOpen?: boolean }) {
@@ -52,11 +28,9 @@ function DrawerGroup({ label, icon, subtitle, children, defaultOpen }: { label: 
   )
 }
 
-// Names follow one word per thing: "job" (not task), the /tasks link is "Find
-// jobs", sentence case. Members get the Dashboard, Notifications (with the
-// unread count) and Messages at the top: on desktop there is no dock to reach
-// them from. "Install the app" isn't listed: the install card offers itself
-// (InstallHost). Vault is listed: on phones and tablets the top bar doesn't show it.
+// Notifications and "Install the app" aren't listed here: notifications are
+// Alerts in the bottom bar, and the install card offers itself (InstallHost).
+// Vault is listed: on phones and tablets the top bar doesn't show it.
 export default function Drawer({ open, onClose }: DrawerProps) {
   // Settings > Developer: "Show Developer API in the menu"
   const readDev = () => { try { return localStorage.getItem('ogapay_developer_mode') === 'true' } catch { return false } }
@@ -71,9 +45,6 @@ export default function Drawer({ open, onClose }: DrawerProps) {
   }, [])
   const { isAuthed, logout, user } = useAuth()
   const navigate = useNavigate()
-  const { pathname } = useLocation()
-  // The same unread count as the top bar and the dock (one shared check, lib/shared)
-  const unread = useUnreadCount(isAuthed)
 
   // Escape closes the menu
   useEffect(() => {
@@ -92,10 +63,6 @@ export default function Drawer({ open, onClose }: DrawerProps) {
     ? (['SOL', 'USDC', 'USDT', 'NGN'] as const).reduce((sum, c) => { const v = balances[c] ? convert(balances[c]!.balance, c as any, inUsd ? 'USDC' : 'NGN') : 0; return sum + (Number.isFinite(v) ? v : 0) }, 0)
     : 0
 
-  const item = (p: ItemProps) => <DrawerItem {...p} pathname={pathname} onClose={onClose} />
-  // A group opens by itself when you're on one of its pages
-  const inAny = (paths: string[]) => paths.some((p) => under(pathname, p))
-
   return (
     <div className={`mobile-menu ${open ? 'open' : ''}`} id="mobileMenu">
       <div className="mobile-overlay" onClick={onClose} />
@@ -113,19 +80,48 @@ export default function Drawer({ open, onClose }: DrawerProps) {
 
         {!isAuthed ? (
           <nav className="oga-drawer-nav oga-drawer-nav-guest" style={{ flex: '0 1 auto' }}>
-            {item({ to: '/tasks', icon: 'briefcase', title: 'Find jobs', desc: 'Paid work you can do today' })}
-            {item({ to: '/store', icon: 'building-store', title: 'Store', desc: 'Products and services' })}
-            {item({ to: '/communities', icon: 'users', title: 'Communities', desc: 'Groups with their own jobs' })}
-            {item({ to: '/blog', icon: 'news', title: 'Blog', desc: 'News and guides' })}
-            {item({ to: '/faq', icon: 'help-circle', title: 'FAQ', desc: 'Answers to common questions' })}
-            {item({ to: '/support', icon: 'headset', title: 'Support', desc: 'Ask our team for help' })}
+            {/* ── Jobs ── */}
+            <Link className="oga-drawer-item" to="/tasks" onClick={onClose}>
+              <span className="oga-drawer-icon"><i className="ti ti-briefcase" /></span>
+              <span><strong>Jobs</strong><small>Browse available tasks</small></span>
+            </Link>
+
+            {/* ── Store ── */}
+            <Link className="oga-drawer-item" to="/store" onClick={onClose}>
+              <span className="oga-drawer-icon"><i className="ti ti-building-store" /></span>
+              <span><strong>Store</strong><small>Browse products &amp; services</small></span>
+            </Link>
+
+            {/* ── Communities ── */}
+            <Link className="oga-drawer-item" to="/communities" onClick={onClose}>
+              <span className="oga-drawer-icon"><i className="ti ti-users" /></span>
+              <span><strong>Communities</strong><small>Discover communities</small></span>
+            </Link>
+
+            {/* ── Blog ── */}
+            <Link className="oga-drawer-item" to="/blog" onClick={onClose}>
+              <span className="oga-drawer-icon"><i className="ti ti-news" /></span>
+              <span><strong>Blog</strong><small>News &amp; updates</small></span>
+            </Link>
+
+            {/* ── FAQ ── */}
+            <Link className="oga-drawer-item" to="/faq" onClick={onClose}>
+              <span className="oga-drawer-icon"><i className="ti ti-help-circle" /></span>
+              <span><strong>FAQ</strong><small>Answers &amp; guides</small></span>
+            </Link>
+
+            {/* ── Support ── */}
+            <Link className="oga-drawer-item" to="/support" onClick={onClose}>
+              <span className="oga-drawer-icon"><i className="ti ti-headset" /></span>
+              <span><strong>Support</strong><small>Contact support</small></span>
+            </Link>
 
             <CurrencySwitch />
 
             {/* ── Bottom CTA ── */}
             <div className="oga-drawer-guest-cta" style={{ marginTop: 24 }}>
               <button type="button" className="oga-drawer-guest-signin" onClick={() => { onClose(); openSignIn() }}>
-                Sign in
+                Sign In
               </button>
               <button type="button" className="oga-drawer-guest-signup" onClick={() => { onClose(); openSignIn({ view: 'signup' }) }}>
                 Create free account
@@ -157,74 +153,186 @@ export default function Drawer({ open, onClose }: DrawerProps) {
                 <button type="button" className="oga-topup" onClick={() => { onClose(); navigate('/deposit') }}>Top up</button>
               </div>
 
-              {/* ── Your places first ── */}
-              {item({ to: '/dashboard', icon: 'layout-dashboard', title: 'Dashboard', desc: 'Your money, jobs and next steps' })}
-              {item({ to: '/notifications', icon: 'bell', title: 'Notifications', desc: 'Updates on your jobs and money', count: unread })}
-              {item({ to: '/messages', icon: 'message', title: 'Messages', desc: 'Chats with workers, buyers and sellers' })}
-
               <div className="oga-drawer-divider" />
 
-              {item({ to: '/create', icon: 'circle-plus', title: 'Post a job', desc: 'Get work done, pay when you approve', exact: true })}
+              {/* ── Create Job ── */}
+              <Link className="oga-drawer-item" to="/create" onClick={onClose}>
+                <span className="oga-drawer-icon"><i className="ti ti-circle-plus" /></span>
+                <span><strong>Create Job</strong><small>Post a new task</small></span>
+              </Link>
 
-              {/* ── Jobs (expandable): doing work first, then the jobs you posted ── */}
-              <DrawerGroup label="Jobs" icon="briefcase" subtitle="Find work and manage your jobs" defaultOpen={inAny(['/tasks', '/job-monitor', '/bookmarks', '/my-tasks', '/my-work', '/my-reviews', '/manage-jobs', '/campaigns', '/reviews-to-write'])}>
-                {item({ sub: true, to: '/tasks', icon: 'checklist', title: 'Find jobs', desc: 'Paid work you can do today' })}
-                {item({ sub: true, to: '/job-monitor', icon: 'activity', title: 'Job monitor', desc: "New jobs as they're posted" })}
-                {item({ sub: true, to: '/bookmarks', icon: 'bookmark', title: 'Saved jobs', desc: 'Jobs you saved for later' })}
-                {item({ sub: true, to: '/my-tasks', icon: 'list-check', title: "Jobs I'm doing", desc: 'Jobs you took and their payment' })}
-                {item({ sub: true, to: '/my-work', icon: 'user-check', title: 'Hired & orders', desc: 'Work you were picked for, orders to deliver' })}
-                {item({ sub: true, to: '/my-reviews', icon: 'star', title: 'My reviews', desc: 'What posters said about your work' })}
-                {item({ sub: true, to: '/manage-jobs', icon: 'briefcase', title: 'Jobs I posted', desc: 'Review work and pay people' })}
-                {item({ sub: true, to: '/campaigns', icon: 'speakerphone', title: 'Campaigns', desc: 'Jobs grouped under one budget' })}
-                {item({ sub: true, to: '/reviews-to-write', icon: 'star', title: 'Reviews to write', desc: 'Rate people who worked for you' })}
+              {/* ── Jobs (expandable) ── */}
+              <DrawerGroup label="Jobs" icon="briefcase" subtitle="Find work and manage your jobs">
+                <Link className="oga-drawer-item" to="/tasks" onClick={onClose}>
+                  <span className="oga-drawer-icon oga-drawer-icon--sub"><i className="ti ti-checklist" /></span>
+                  <span><strong>Browse jobs</strong><small>Find work to do</small></span>
+                </Link>
+                <Link className="oga-drawer-item" to="/bookmarks" onClick={onClose}>
+                  <span className="oga-drawer-icon oga-drawer-icon--sub"><i className="ti ti-bookmark" /></span>
+                  <span><strong>Saved jobs</strong><small>Jobs you saved for later</small></span>
+                </Link>
+                <Link className="oga-drawer-item" to="/my-tasks" onClick={onClose}>
+                  <span className="oga-drawer-icon oga-drawer-icon--sub"><i className="ti ti-list-check" /></span>
+                  <span><strong>My tasks</strong><small>Jobs you've taken</small></span>
+                </Link>
+                <Link className="oga-drawer-item" to="/my-reviews" onClick={onClose}>
+                  <span className="oga-drawer-icon oga-drawer-icon--sub"><i className="ti ti-star" /></span>
+                  <span><strong>My reviews</strong><small>What posters said about your work</small></span>
+                </Link>
+                <Link className="oga-drawer-item" to="/job-monitor" onClick={onClose}>
+                  <span className="oga-drawer-icon oga-drawer-icon--sub"><i className="ti ti-activity" /></span>
+                  <span><strong>Job monitor</strong><small>New jobs as they're posted</small></span>
+                </Link>
+                <Link className="oga-drawer-item" to="/manage-jobs" onClick={onClose}>
+                  <span className="oga-drawer-icon oga-drawer-icon--sub"><i className="ti ti-briefcase" /></span>
+                  <span><strong>My jobs</strong><small>Review work on jobs you posted</small></span>
+                </Link>
+                <Link className="oga-drawer-item" to="/campaigns" onClick={onClose}>
+                  <span className="oga-drawer-icon oga-drawer-icon--sub"><i className="ti ti-speakerphone" /></span>
+                  <span><strong>Campaigns</strong><small>Your X campaigns</small></span>
+                </Link>
+                <Link className="oga-drawer-item" to="/reviews-to-write" onClick={onClose}>
+                  <span className="oga-drawer-icon oga-drawer-icon--sub"><i className="ti ti-star" /></span>
+                  <span><strong>Reviews to write</strong><small>Rate people who worked for you</small></span>
+                </Link>
               </DrawerGroup>
 
               {/* ── Store (expandable) ── */}
-              <DrawerGroup label="Store" icon="building-store" subtitle="Products and services" defaultOpen={inAny(['/store', '/my-store', '/orders'])}>
-                {item({ sub: true, to: '/store', icon: 'building-store', title: 'Browse store', desc: 'Find products and services', exact: true })}
-                {item({ sub: true, to: '/store/orders', icon: 'receipt', title: 'My orders', desc: 'What you bought' })}
-                {item({ sub: true, to: '/my-store', icon: 'building-store', title: 'My store', desc: 'Sell your products' })}
+              <DrawerGroup label="Store" icon="building-store" subtitle="Products and services">
+                <Link className="oga-drawer-item" to="/store" onClick={onClose}>
+                  <span className="oga-drawer-icon oga-drawer-icon--sub"><i className="ti ti-building-store" /></span>
+                  <span><strong>Browse Store</strong><small>Find products</small></span>
+                </Link>
+                <Link className="oga-drawer-item" to="/store/orders" onClick={onClose}>
+                  <span className="oga-drawer-icon oga-drawer-icon--sub"><i className="ti ti-receipt" /></span>
+                  <span><strong>My orders</strong><small>What you bought</small></span>
+                </Link>
+                <Link className="oga-drawer-item" to="/my-store" onClick={onClose}>
+                  <span className="oga-drawer-icon oga-drawer-icon--sub"><i className="ti ti-building-store" /></span>
+                  <span><strong>My Store</strong><small>Manage your shop</small></span>
+                </Link>
               </DrawerGroup>
 
               {/* ── Discover ── */}
-              <DrawerGroup label="Discover" icon="compass" subtitle="People, rankings and what's next" defaultOpen={inAny(['/workers', '/creators', '/leaderboard', '/rank', '/writer', '/roadmap', '/vault'])}>
-                {item({ sub: true, to: '/workers', icon: 'user-search', title: 'Find workers', desc: 'Hire people for your work' })}
-                {item({ sub: true, to: '/creators', icon: 'speakerphone', title: 'Creators', desc: 'Hire verified micro-influencers' })}
-                {item({ sub: true, to: '/leaderboard', icon: 'trophy', title: 'Leaderboard', desc: 'Top earners and posters' })}
-                {item({ sub: true, to: '/rank', icon: 'award', title: 'Your rank', desc: 'Claim a new rank, see your X score' })}
-                {item({ sub: true, to: '/writer', icon: 'pencil', title: 'Writer workspace', desc: 'Writing jobs and tips' })}
-                {item({ sub: true, to: '/roadmap', icon: 'map-2', title: 'Roadmap', desc: "What we're building next" })}
-                {item({ sub: true, to: '/vault', icon: 'shield-lock', title: 'Vault', desc: 'Your share of platform revenue' })}
+              <DrawerGroup label="Discover" icon="compass" subtitle="People, rankings and what's next">
+                <Link className="oga-drawer-item" to="/workers" onClick={onClose}>
+                  <span className="oga-drawer-icon oga-drawer-icon--sub"><i className="ti ti-user-search" /></span>
+                  <span><strong>Find workers</strong><small>Hire people for your work</small></span>
+                </Link>
+                <Link className="oga-drawer-item" to="/creators" onClick={onClose}>
+                  <span className="oga-drawer-icon oga-drawer-icon--sub"><i className="ti ti-speakerphone" /></span>
+                  <span><strong>Creators</strong><small>Hire verified micro-influencers</small></span>
+                </Link>
+                <Link className="oga-drawer-item" to="/leaderboard" onClick={onClose}>
+                  <span className="oga-drawer-icon oga-drawer-icon--sub"><i className="ti ti-trophy" /></span>
+                  <span><strong>Leaderboard</strong><small>Top earners and posters</small></span>
+                </Link>
+                <Link className="oga-drawer-item" to="/rank" onClick={onClose}>
+                  <span className="oga-drawer-icon oga-drawer-icon--sub"><i className="ti ti-award" /></span>
+                  <span><strong>Your rank</strong><small>Claim a new rank, see your X score</small></span>
+                </Link>
+                <Link className="oga-drawer-item" to="/writer" onClick={onClose}>
+                  <span className="oga-drawer-icon oga-drawer-icon--sub"><i className="ti ti-pencil" /></span>
+                  <span><strong>Writer workspace</strong><small>Writing jobs and tips</small></span>
+                </Link>
+                <Link className="oga-drawer-item" to="/roadmap" onClick={onClose}>
+                  <span className="oga-drawer-icon oga-drawer-icon--sub"><i className="ti ti-map-2" /></span>
+                  <span><strong>Roadmap</strong><small>What we're building next</small></span>
+                </Link>
+                <Link className="oga-drawer-item" to="/vault" onClick={onClose}>
+                  <span className="oga-drawer-icon oga-drawer-icon--sub"><i className="ti ti-shield-lock" /></span>
+                  <span><strong>Vault</strong><small>Your share of platform revenue</small></span>
+                </Link>
               </DrawerGroup>
 
-              {item({ to: '/communities', icon: 'users', title: 'Communities', desc: 'Join or start a community' })}
-              {item({ to: '/blog', icon: 'news', title: 'Blog', desc: 'News and guides' })}
-              {item({ to: '/faq', icon: 'help-circle', title: 'FAQ', desc: 'Answers to common questions' })}
-              {item({ to: '/support', icon: 'headset', title: 'Support', desc: 'Ask our team for help' })}
+              {/* ── Communities ── */}
+              <Link className="oga-drawer-item" to="/communities" onClick={onClose}>
+                <span className="oga-drawer-icon"><i className="ti ti-users" /></span>
+                <span><strong>Communities</strong><small>Manage communities</small></span>
+              </Link>
+
+              {/* ── Blog ── */}
+              <Link className="oga-drawer-item" to="/blog" onClick={onClose}>
+                <span className="oga-drawer-icon"><i className="ti ti-news" /></span>
+                <span><strong>Blog</strong><small>News and updates</small></span>
+              </Link>
+
+              {/* ── FAQ ── */}
+              <Link className="oga-drawer-item" to="/faq" onClick={onClose}>
+                <span className="oga-drawer-icon"><i className="ti ti-help-circle" /></span>
+                <span><strong>FAQ</strong><small>Help center</small></span>
+              </Link>
+
+              {/* ── Support ── */}
+              <Link className="oga-drawer-item" to="/support" onClick={onClose}>
+                <span className="oga-drawer-icon"><i className="ti ti-headset" /></span>
+                <span><strong>Support</strong><small>Contact support</small></span>
+              </Link>
 
               <div className="oga-drawer-divider" />
 
-              {/* ── Admin (admins only) ── */}
-              {user?.role === 'ADMIN' && item({ to: '/admin', icon: 'shield-cog', title: 'Admin panel', desc: 'Withdrawals, identity checks, moderation' })}
-
               {/* ── Account ── */}
-              <DrawerGroup label="Account" icon="user-circle" subtitle="Profile, wallet, settings" defaultOpen={inAny(['/profile', '/edit-profile', '/wallet', '/deposit', '/earnings', '/referrals', '/analytics', '/developer', '/settings', '/warnings'])}>
-                {item({ sub: true, to: '/profile', icon: 'user', title: 'My profile', desc: 'View and edit your profile' })}
-                {item({ sub: true, to: '/wallet', icon: 'wallet', title: 'Wallet', desc: 'Balance, deposits and withdrawals' })}
-                {item({ sub: true, to: '/earnings', icon: 'coin', title: 'Earnings', desc: 'What you earned and from where' })}
-                {item({ sub: true, to: '/referrals', icon: 'user-plus', title: 'Referrals', desc: 'Invite friends, see your bonuses' })}
-                {item({ sub: true, to: '/analytics', icon: 'chart-bar', title: 'Analytics', desc: 'Your earnings and activity' })}
-                {devMode && item({ sub: true, to: '/developer', icon: 'code', title: 'Developer API', desc: 'Keys and docs' })}
-                {item({ sub: true, to: '/settings', icon: 'settings', title: 'Settings', desc: 'Account, payments, alerts' })}
-                {hasWarnings && item({ sub: true, to: '/warnings', icon: 'alert-triangle', title: 'Warnings', desc: 'Your warnings and appeals' })}
+              {/* ── Admin (admins only) ── */}
+              {user?.role === 'ADMIN' && (
+                <Link className="oga-drawer-item" to="/admin" onClick={onClose}>
+                  <span className="oga-drawer-icon"><i className="ti ti-shield-cog" /></span>
+                  <span><strong>Admin panel</strong><small>Withdrawals, identity checks, moderation</small></span>
+                </Link>
+              )}
+
+              <DrawerGroup label="Account" icon="user-circle" subtitle="Profile, dashboard, settings">
+                <Link className="oga-drawer-item" to="/profile" onClick={onClose}>
+                  <span className="oga-drawer-icon oga-drawer-icon--sub"><i className="ti ti-user" /></span>
+                  <span><strong>My Profile</strong><small>View and edit profile</small></span>
+                </Link>
+                <Link className="oga-drawer-item" to="/dashboard" onClick={onClose}>
+                  <span className="oga-drawer-icon oga-drawer-icon--sub"><i className="ti ti-layout-dashboard" /></span>
+                  <span><strong>Dashboard</strong><small>Your activity overview</small></span>
+                </Link>
+                <Link className="oga-drawer-item" to="/wallet" onClick={onClose}>
+                  <span className="oga-drawer-icon oga-drawer-icon--sub"><i className="ti ti-wallet" /></span>
+                  <span><strong>Wallet</strong><small>Balance, deposits and withdrawals</small></span>
+                </Link>
+                <Link className="oga-drawer-item" to="/earnings" onClick={onClose}>
+                  <span className="oga-drawer-icon oga-drawer-icon--sub"><i className="ti ti-coin" /></span>
+                  <span><strong>Earnings</strong><small>What you earned and from where</small></span>
+                </Link>
+                <Link className="oga-drawer-item" to="/referrals" onClick={onClose}>
+                  <span className="oga-drawer-icon oga-drawer-icon--sub"><i className="ti ti-user-plus" /></span>
+                  <span><strong>Referrals</strong><small>Invite friends, see your bonuses</small></span>
+                </Link>
+                <Link className="oga-drawer-item" to="/analytics" onClick={onClose}>
+                  <span className="oga-drawer-icon oga-drawer-icon--sub"><i className="ti ti-chart-bar" /></span>
+                  <span><strong>Analytics</strong><small>Your earnings and activity</small></span>
+                </Link>
+                {devMode && (
+                <Link className="oga-drawer-item" to="/developer" onClick={onClose}>
+                  <span className="oga-drawer-icon oga-drawer-icon--sub"><i className="ti ti-code" /></span>
+                  <span><strong>Developer API</strong><small>Keys and docs</small></span>
+                </Link>
+                )}
+                <Link className="oga-drawer-item" to="/settings" onClick={onClose}>
+                  <span className="oga-drawer-icon oga-drawer-icon--sub"><i className="ti ti-settings" /></span>
+                  <span><strong>Settings</strong><small>Account preferences</small></span>
+                </Link>
+                {hasWarnings && (
+                <Link className="oga-drawer-item" to="/warnings" onClick={onClose}>
+                  <span className="oga-drawer-icon oga-drawer-icon--sub"><i className="ti ti-alert-triangle" /></span>
+                  <span><strong>Warnings</strong><small>Your warnings and appeals</small></span>
+                </Link>
+                )}
+                <Link className="oga-drawer-item" to="/messages" onClick={onClose}>
+                  <span className="oga-drawer-icon oga-drawer-icon--sub"><i className="ti ti-message" /></span>
+                  <span><strong>Messages</strong><small>Your conversations</small></span>
+                </Link>
               </DrawerGroup>
 
               <CurrencySwitch />
 
-              {/* ── Log out ── */}
+              {/* ── Logout ── */}
               <button className="oga-drawer-item oga-drawer-logout" onClick={() => { logout(); onClose(); navigate('/'); }}>
                 <span className="oga-drawer-icon oga-drawer-icon-logout"><i className="ti ti-logout" /></span>
-                <span><strong>Log out</strong><small>Sign out of your account</small></span>
+                <span><strong>Logout</strong><small>Sign out of your account</small></span>
               </button>
             </nav>
           </>

@@ -2,10 +2,10 @@
    leader tools for join rules, invite codes and requests. Phone first. */
 .cj-wrap { max-width: 720px; }
 .cj-head { margin: 4px 0 22px; }
-.cj-kicker { display: block; font: 500 var(--fs-label) var(--font-mono, ui-monospace, monospace); letter-spacing: .08em; text-transform: uppercase; color: var(--text2); margin-bottom: 4px; }
+.cj-kicker { display: block; font: 700 11px var(--font-mono, ui-monospace, monospace); letter-spacing: .12em; text-transform: uppercase; color: var(--text3); margin-bottom: 10px; }
 .cj-name { display: flex; align-items: center; gap: 12px; }
 .cj-logo { width: 48px; height: 48px; margin-top: 0; border-radius: 13px; border-width: 0; font-size: 17px; flex-shrink: 0; }
-.cj-head h1, .cj-title { font: 600 var(--fs-title)/1.12 var(--font); letter-spacing: -.02em; margin: 0; color: var(--text); overflow-wrap: anywhere; }
+.cj-head h1, .cj-title { font: 800 26px/1.15 Inter, sans-serif; letter-spacing: -.02em; margin: 0; color: var(--text); overflow-wrap: anywhere; }
 .cj-lead { margin: 10px 0 0; font-size: 14px; color: var(--text2); }
 .cj-h2 { font: 700 15px Inter, sans-serif; color: var(--text); margin: 22px 0 10px; display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
 .cj-sub { font-weight: 500; font-size: 12px; color: var(--text3); }
@@ -29,7 +29,7 @@
 .cj-fl em { font-style: normal; font-weight: 400; color: var(--text3); font-size: 12px; }
 .cj-fl b { margin-left: auto; font: 500 12px var(--font-mono, ui-monospace, monospace); color: var(--text3); }
 .cj-fl b.over { color: var(--red, #dc2626); }
-.cj-field textarea, .cj-code input, .cj-in { width: 100%; box-sizing: border-box; border: 1px solid var(--border); border-radius: 10px; background: var(--card2); color: var(--text); font: inherit; font-size: 16px; padding: 10px 12px; outline: 0; }
+.cj-field textarea, .cj-code input, .cj-in { width: 100%; box-sizing: border-box; border: 1px solid var(--border); border-radius: 10px; background: var(--bg2); color: var(--text); font: inherit; font-size: 16px; padding: 10px 12px; outline: 0; }
 .cj-field textarea { resize: vertical; line-height: 1.5; min-height: 96px; }
 .cj-field textarea:focus, .cj-code input:focus, .cj-in:focus { border-color: var(--text3); }
 .cj-drop { width: 100%; min-height: 48px; display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; border: 1px dashed var(--border); border-radius: 10px; background: none; color: var(--text); font-weight:600;font-size:13px;font-family:inherit; font-family: inherit; cursor: pointer; padding: 10px; }
@@ -38,8 +38,8 @@
 .cj-files { list-style: none; margin: 0 0 8px; padding: 0; display: grid; gap: 6px; }
 .cj-files li { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 10px; font-size: 13px; color: var(--text); min-width: 0; }
 .cj-files li span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.cj-files button { width: 36px; height: 36px; border: 0; background: none; color: var(--text2); cursor: pointer; border-radius: 8px; display: grid; place-items: center; }
-.cj-files button:hover { background: var(--card2); }
+.cj-files button { width: 32px; height: 32px; border: 0; background: none; color: var(--text2); cursor: pointer; border-radius: 8px; display: grid; place-items: center; }
+.cj-files button:hover { background: var(--bg2); }
 .cj-actions { display: flex; gap: 8px; justify-content: flex-end; }
 .cj-pending { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: space-between; }
 .cj-pending p { margin: 0; font-size: 14px; color: var(--text2); display: flex; gap: 8px; align-items: flex-start; flex: 1; min-width: 220px; }
@@ -54,7 +54,7 @@
 .cj-invites { padding: 4px 18px; }
 .cj-invite { display: flex; align-items: flex-start; gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
 .cj-invite:last-child { border-bottom: 0; }
-.cj-mini { width: 40px; height: 40px; border-radius: 11px; display: grid; place-items: center; font: 800 14px Inter, sans-serif; overflow: hidden; flex-shrink: 0; }
+.cj-mini { width: 40px; height: 40px; border-radius: 11px; display: grid; place-items: center; color: #fff; font: 800 14px Inter, sans-serif; overflow: hidden; flex-shrink: 0; }
 .cj-mini img { width: 100%; height: 100%; object-fit: cover; }
 .cj-invite-t { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; font-size: 13px; }
 .cj-invite-t a { color: var(--text); text-decoration: none; }
@@ -76,7 +76,7 @@
 .cj-req-files { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
 .cj-req-files a { display: inline-flex; align-items: center; gap: 4px; max-width: 100%; padding: 4px 8px; border: 1px solid var(--border); border-radius: 8px; font-size: 12px; color: var(--text) !important; text-decoration: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cj-req-meta { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
-.cj-req-meta span { font-size: 12px; color: var(--text2); border: 1px solid var(--border); border-radius: 999px; padding: 2px 8px; }
+.cj-req-meta span { font-size: 11px; color: var(--text2); border: 1px solid var(--border); border-radius: 999px; padding: 2px 8px; }
 .cj-req-btns { display: flex; gap: 8px; }
 
 /* "Join <community> to take this job" on job cards and the job page */
@@ -84,6 +84,7 @@
 .cj-jobneed a { color: var(--text); font-weight: 600; }
 
 @media (max-width: 767px) {
+  .cj-head h1, .cj-title { font-size: 22px; }
   .cj-card { padding: 14px; }
   .cj-actions .up-btn { flex: 1 1 0; }
   .cj-code { flex-direction: column; }
@@ -97,27 +98,3 @@
 
 @media (max-width: 767px) { .cm2-req { flex-wrap: wrap; } }
 .cj-req-btns { margin-left: auto; }
-
-/* Layout review (batch 2): the page sits on the shared frame's left edge
-   (.ui-page + .ui-narrow), code or request as two equal choices, and the
-   requirements as a checklist with a link to fix each missing one */
-.cj-tabs { margin: var(--sp-4) 0 var(--sp-5); }
-.cj-views { margin-bottom: 14px; }
-.cj-head { margin: 0 0 18px; }
-.cj-state-h { margin: 0 0 6px; font-size: var(--fs-h2); font-weight: 600; color: var(--text); }
-.cj-checklist { list-style: none; margin: 0; padding: 0; display: grid; }
-.cj-checklist li { display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 6px 0; border-top: 1px solid var(--border); font-size: 14px; color: var(--text); }
-.cj-checklist li:first-child { border-top: 0; }
-.cj-checklist li > i { font-size: 18px; color: var(--text3); flex-shrink: 0; }
-.cj-checklist li.ok > i { color: var(--green); }
-.cj-checklist li.no > i { color: var(--red); }
-.cj-checklist li > span { flex: 1; min-width: 0; }
-.cj-checklist .ui-btn { flex-shrink: 0; }
-.cj-vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-.cj-invite-a .ui-btn { height: var(--ctl-h-sm); }
-@media (max-width: 767px) {
-  .cj-invite-a .ui-btn { flex: 1 1 0; height: var(--ctl-h); }
-  .cj-actions .ui-btn { flex: 1 1 0; }
-  .cj-code .ui-btn { width: 100%; }
-  .cj-views { width: 100%; }
-}

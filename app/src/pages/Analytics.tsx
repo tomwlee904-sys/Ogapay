@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import Layout from '../components/Layout'
 import { apiRequest } from '../lib/api'
-import LoadError from '../components/LoadError'
+import '../styles/profile-public.css'
 import '../styles/analytics.css'
 
 // Ported from the June analytics page. That version counted every wallet
@@ -32,7 +32,6 @@ export default function Analytics() {
   const [period, setPeriod] = useState<Period>('week')
   const [data, setData] = useState<Data | null>(null)
   const [err, setErr] = useState(false)
-  const [tries, setTries] = useState(0)
 
   useEffect(() => {
     let live = true
@@ -41,7 +40,7 @@ export default function Analytics() {
       .then((d) => live && setData(d))
       .catch(() => live && setErr(true))
     return () => { live = false }
-  }, [period, tries])
+  }, [period])
 
   const span = PERIODS.find((p) => p.id === period)!.span
   const t = data?.totals
@@ -49,92 +48,83 @@ export default function Analytics() {
   const tick = { fontSize: 11, fill: 'var(--text3)' }
   const interval = period === 'month' ? 4 : 0
 
-  // Four states, never mixed: loading (grey shapes), couldn't load (Try
-  // again), nothing yet, or the numbers
   return (
     <Layout>
-      <div className="ui-page">
-        <div className="ui-head an2-head">
+      <div className="up-wrap">
+        <div className="an2-head">
           <div>
-            <span className="ui-eyebrow">Insights</span>
-            <h1 className="ui-title">Analytics</h1>
-            <p className="ui-sub">What you earned from jobs, {span}.</p>
+            <h1>Analytics</h1>
+            <p>Your paid work and spending, {span}.</p>
           </div>
-          <div className="an2-seg" role="group" aria-label="Period">
+          <div className="up-tabs" role="tablist" aria-label="Period">
             {PERIODS.map((p) => (
-              <button key={p.id} type="button" aria-pressed={period === p.id} className={period === p.id ? 'on' : ''} onClick={() => setPeriod(p.id)}>{p.label}</button>
+              <button key={p.id} role="tab" aria-selected={period === p.id} className={`up-tab${period === p.id ? ' on' : ''}`} onClick={() => setPeriod(p.id)}>{p.label}</button>
             ))}
           </div>
         </div>
 
-        {err && <div className="an2-body"><LoadError what="your analytics" onRetry={() => setTries((n) => n + 1)} /></div>}
+        {err && <div className="up-empty"><i className="ti ti-cloud-off" />Couldn't load your analytics. Refresh to try again.</div>}
 
-        {!err && !data && (
-          <div className="an2-body" aria-hidden="true">
-            <div className="ui-sk an2-sk-stats" />
-            <div className="an2-charts"><div className="ui-sk an2-sk-chart" /><div className="ui-sk an2-sk-chart" /></div>
-          </div>
-        )}
-
-        {t && (
-          <div className="ui-stats an2-body an2-stats">
-            <div>
-              <span className="ui-stats-label">Earned</span>
-              <b className="ui-stats-value">{naira(t.earnedNgn)}</b>
-              <span className="an2-cap">{t.otherCurrencyJobs ? `+ ${t.otherCurrencyJobs} job${t.otherCurrencyJobs === 1 ? '' : 's'} paid in crypto` : 'from paid jobs'}</span>
-            </div>
-            <div>
-              <span className="ui-stats-label">Jobs paid</span>
-              <b className="ui-stats-value">{t.jobsPaid.toLocaleString()}</b>
-              <span className="an2-cap">jobs you were paid for</span>
-            </div>
-            <div>
-              <span className="ui-stats-label">Approval rate</span>
-              <b className="ui-stats-value">{t.approvalRate != null ? `${t.approvalRate}%` : '—'}</b>
-              <span className="an2-cap">{t.reviewed ? `of ${t.reviewed} reviewed submission${t.reviewed === 1 ? '' : 's'}` : 'no reviewed work yet'}</span>
-            </div>
-            <div>
-              <span className="ui-stats-label">Rating</span>
-              <b className="ui-stats-value">{t.avgRating != null ? t.avgRating.toFixed(1) : '—'}</b>
-              <span className="an2-cap">{t.ratings ? `from ${t.ratings} rating${t.ratings === 1 ? '' : 's'}` : 'no ratings yet'}</span>
-            </div>
-          </div>
-        )}
+        <div className="an2-stats">
+          <section className="up-card an2-stat">
+            <div className="up-eyebrow">Earned</div>
+            <b>{t ? naira(t.earnedNgn) : '…'}</b>
+            <span>{t?.otherCurrencyJobs ? `+ ${t.otherCurrencyJobs} job${t.otherCurrencyJobs === 1 ? '' : 's'} paid in crypto` : 'from paid jobs'}</span>
+          </section>
+          <section className="up-card an2-stat">
+            <div className="up-eyebrow">Jobs paid</div>
+            <b>{t ? t.jobsPaid.toLocaleString() : '…'}</b>
+            <span>jobs you were paid for</span>
+          </section>
+          <section className="up-card an2-stat">
+            <div className="up-eyebrow">Approval rate</div>
+            <b>{t ? (t.approvalRate != null ? `${t.approvalRate}%` : '—') : '…'}</b>
+            <span>{t?.reviewed ? `of ${t.reviewed} reviewed submission${t.reviewed === 1 ? '' : 's'}` : 'no reviewed work yet'}</span>
+          </section>
+          <section className="up-card an2-stat">
+            <div className="up-eyebrow">Rating</div>
+            <b>{t ? (t.avgRating != null ? t.avgRating.toFixed(1) : '—') : '…'}</b>
+            <span>{t?.ratings ? `from ${t.ratings} rating${t.ratings === 1 ? '' : 's'}` : 'no ratings yet'}</span>
+          </section>
+        </div>
 
         {t && t.spentNgn > 0 && (
-          <section className="ui-card an2-spent">
+          <section className="up-card an2-spent">
             <i className="ti ti-briefcase" />
             <span>Your jobs paid out <b>{naira(t.spentNgn)}</b> to workers ({span}).</span>
             <Link to="/manage-jobs" className="tap">Manage jobs</Link>
           </section>
         )}
 
-        {data && (empty ? (
-          <div className="ui-empty an2-empty">
-            <strong>No paid jobs {span}</strong>
-            Jobs you're paid for show here, by day.
-            <div><Link className="ui-btn ui-btn-dark" to="/tasks">Find jobs</Link></div>
+        {data && empty ? (
+          <div className="up-empty an2-empty">
+            <i className="ti ti-chart-bar" />
+            No paid jobs {span}.
+            <div><Link className="up-btn primary" to="/tasks">Find jobs</Link></div>
           </div>
         ) : (
           <div className="an2-charts">
-            <section className="ui-card an2-chart">
+            <section className="up-card an2-chart">
               <h2>Jobs paid</h2>
               <div className="an2-plot">
-                <ResponsiveContainer width="100%" height="100%">
+                {data ? (
+                  <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={data.series} margin={{ top: 6, right: 6, left: -18, bottom: 0 }}>
                       <CartesianGrid strokeDasharray="3 4" stroke="var(--border)" vertical={false} />
                       <XAxis dataKey="label" tick={tick} axisLine={false} tickLine={false} interval={interval} />
                       <YAxis tick={tick} axisLine={false} tickLine={false} allowDecimals={false} />
-                      <Tooltip {...tip} cursor={{ fill: 'var(--card2)' }} formatter={(v: number) => [v, 'Jobs']} />
+                      <Tooltip {...tip} cursor={{ fill: 'var(--bg2)' }} formatter={(v: number) => [v, 'Jobs']} />
                       <Bar dataKey="jobs" fill="var(--text)" radius={[4, 4, 0, 0]} maxBarSize={28} />
                     </BarChart>
-                </ResponsiveContainer>
+                  </ResponsiveContainer>
+                ) : <div className="an2-wait">Loading…</div>}
               </div>
             </section>
-            <section className="ui-card an2-chart">
+            <section className="up-card an2-chart">
               <h2>Naira earned</h2>
               <div className="an2-plot">
-                <ResponsiveContainer width="100%" height="100%">
+                {data ? (
+                  <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={data.series} margin={{ top: 6, right: 8, left: 0, bottom: 0 }}>
                       <CartesianGrid strokeDasharray="3 4" stroke="var(--border)" vertical={false} />
                       <XAxis dataKey="label" tick={tick} axisLine={false} tickLine={false} interval={interval} />
@@ -142,16 +132,15 @@ export default function Analytics() {
                       <Tooltip {...tip} formatter={(v: number) => [naira(v), 'Earned']} />
                       <Line type="monotone" dataKey="earnedNgn" stroke="var(--green)" strokeWidth={2} dot={{ r: 2.5 }} />
                     </LineChart>
-                </ResponsiveContainer>
+                  </ResponsiveContainer>
+                ) : <div className="an2-wait">Loading…</div>}
               </div>
             </section>
           </div>
-        ))}
+        )}
 
-        {/* Desktop: the table and recent payouts side by side */}
-        <div className="an2-pair">
         {data && !empty && (
-          <section className="ui-card an2-sec">
+          <section className="up-card an2-sec">
             <h2>{period === 'year' ? 'By month' : 'By day'}</h2>
             <div className="an2-scroll">
               <table className="an2-table">
@@ -172,7 +161,7 @@ export default function Analytics() {
         )}
 
         {data && data.recent.length > 0 && (
-          <section className="ui-card an2-sec">
+          <section className="up-card an2-sec">
             <h2>Recent payouts</h2>
             <div className="an2-recent">
               {data.recent.map((p) => (
@@ -185,7 +174,6 @@ export default function Analytics() {
             </div>
           </section>
         )}
-        </div>
       </div>
     </Layout>
   )

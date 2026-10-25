@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import AdminShell, { AdminEmpty, AdminRefresh, AdminSkeleton } from '../components/AdminShell'
-import LoadError from '../components/LoadError'
+import Layout from '../components/Layout'
 import { apiRequest } from '../lib/api'
 
 /* Admin: posters asking for the Verified business badge (Settings > Business).
@@ -52,24 +51,24 @@ function Row({ it, onDone }: { it: Item; onDone: (id: string, msg: string) => vo
   }
 
   return (
-    <article className="adm-row ui-card">
-      <header className="adm-top">
-        <div className="adm-who">
-          <b>{it.companyName}</b>
-          <span>{name} <Link to={`/user/${it.user.username}`} className="adm-handle">@{it.user.username}</Link></span>
-          <span>{it.user.email} · <em className={`adm-pill ${it.user.kycVerified ? 'ok' : 'bad'}`}>{it.user.kycVerified ? 'ID verified' : 'ID not verified'}</em> · {it.user.jobsPosted} {it.user.jobsPosted === 1 ? 'job' : 'jobs'} posted</span>
+    <article className="aw-row ui-card">
+      <header className="aw-top">
+        <div className="aw-who">
+          <b>{name} <Link to={`/user/${it.user.username}`} className="ak-handle">@{it.user.username}</Link></b>
+          <span>{it.user.email} · {it.user.kycVerified ? 'ID verified' : 'ID not verified'} · {it.user.jobsPosted} {it.user.jobsPosted === 1 ? 'job' : 'jobs'} posted</span>
         </div>
         <time dateTime={it.updatedAt} title={new Date(it.updatedAt).toLocaleString()}>{ago(it.updatedAt)}</time>
       </header>
 
-      <dl className="adm-facts ab-facts">
+      <dl className="aw-amounts">
+        <div><dt>Business name</dt><dd>{it.companyName}</dd></div>
         <div><dt>CAC number</dt><dd>{it.regNumber}</dd></div>
         <div><dt>Website</dt><dd>{it.website ? <a href={it.website} target="_blank" rel="noopener noreferrer nofollow">{host(it.website)}</a> : 'None'}</dd></div>
         <div><dt>Social page</dt><dd>{it.socialUrl ? <a href={it.socialUrl} target="_blank" rel="noopener noreferrer nofollow">{host(it.socialUrl)}</a> : 'None'}</dd></div>
         <div><dt>Contact email</dt><dd>{it.contactEmail}</dd></div>
       </dl>
       {!!it.sameNumber?.length && (
-        <p className="adm-callout bad" role="note">
+        <p className="aw-warn" role="note">
           <i className="ti ti-alert-triangle" aria-hidden="true" />
           <span>
             This CAC number was also sent by {it.sameNumber.map((o, i) => (
@@ -79,15 +78,16 @@ function Row({ it, onDone }: { it: Item; onDone: (id: string, msg: string) => vo
           </span>
         </p>
       )}
-      {it.status === 'REJECTED' && it.note && <p className="adm-note">{it.note}</p>}
+      <p className="aw-kind"><i className="ti ti-search" /> Look the CAC number up on the CAC public search and check it matches the business name. Then check the website or page belongs to the same business.</p>
+      {it.status === 'REJECTED' && it.note && <p className="aw-note">{it.note}</p>}
 
       {it.status !== 'REJECTED' && (mode === null ? (
-        <div className="adm-actions">
-          {it.status === 'PENDING' && <button className="ui-btn ui-btn-dark" onClick={() => setMode('approve')}><i className="ti ti-check" aria-hidden="true" /> Verify</button>}
-          <button className="ui-btn ui-btn-ghost" onClick={() => setMode('reject')}><i className="ti ti-x" aria-hidden="true" /> {removing ? 'Remove badge' : 'Reject'}</button>
+        <div className="aw-actions">
+          {it.status === 'PENDING' && <button className="ui-btn ui-btn-dark" onClick={() => setMode('approve')}><i className="ti ti-check" /> Verify</button>}
+          <button className="ui-btn ui-btn-ghost" onClick={() => setMode('reject')}><i className="ti ti-x" /> {removing ? 'Remove badge' : 'Reject'}</button>
         </div>
       ) : (
-        <div className="adm-confirm">
+        <div className="aw-confirm">
           {mode === 'approve' ? (
             <p>The Verified business badge will show as "{it.companyName}" on {name}'s jobs and profile.</p>
           ) : (
@@ -97,9 +97,9 @@ function Row({ it, onDone }: { it: Item; onDone: (id: string, msg: string) => vo
                 placeholder={removing ? 'e.g. The business is no longer registered.' : "e.g. The CAC number doesn't match this business name."} />
             </>
           )}
-          {error && <p className="adm-error" role="alert">{error}</p>}
-          <div className="adm-actions">
-            <button className={`ui-btn ${mode === 'approve' ? 'ui-btn-dark' : 'adm-danger'}`} onClick={act} disabled={busy}>
+          {error && <p className="aw-error" role="alert">{error}</p>}
+          <div className="aw-actions">
+            <button className={`ui-btn ${mode === 'approve' ? 'ui-btn-dark' : 'aw-danger'}`} onClick={act} disabled={busy}>
               {busy ? 'Saving…' : mode === 'approve' ? 'Confirm verify' : removing ? 'Confirm remove' : 'Confirm reject'}
             </button>
             <button className="ui-btn ui-btn-ghost" onClick={() => { setMode(null); setError('') }} disabled={busy}>Cancel</button>
@@ -117,19 +117,11 @@ export default function AdminBrands() {
   const [notice, setNotice] = useState('')
   const [loading, setLoading] = useState(true)
   const [q, setQ] = useState('')
-  const [checkedAt, setCheckedAt] = useState<Date | null>(null)
-  // Waiting count (without a search), kept on its tab while another tab is open
-  const [waiting, setWaiting] = useState<number | null>(null)
 
   const load = async (s = status, term = q) => {
     setLoading(true); setError('')
     const search = term.trim() ? `&q=${encodeURIComponent(term.trim())}` : ''
-    try {
-      const list = (await apiRequest<{ items: Item[] }>(`/brands/admin/queue?status=${s}${search}`)).items
-      setItems(list)
-      setCheckedAt(new Date())
-      if (s === 'PENDING' && !search) setWaiting(list?.length ?? 0)
-    }
+    try { setItems((await apiRequest<{ items: Item[] }>(`/brands/admin/queue?status=${s}${search}`)).items) }
     catch (e: any) { setItems(null); setError(e?.message || 'Could not load business checks') }
     setLoading(false)
   }
@@ -138,62 +130,87 @@ export default function AdminBrands() {
   const onDone = (id: string, msg: string) => {
     setNotice(msg)
     setItems((l) => l && l.filter((x) => x.id !== id))
-    if (status === 'PENDING') setWaiting((n) => (n == null ? n : Math.max(0, n - 1)))
   }
 
-  const countFor = (s: Status) => (error ? null : status === s && items ? items.length : s === 'PENDING' ? waiting : null)
-
   return (
-    <AdminShell
-      section="brands"
-      title="Business checks"
-      sub="Posters asking for the Verified business badge. Posters are told either way."
-      howLabel="How to check"
-      how={<>
-        <p>Look the CAC number up on the CAC public search and check it matches the business name. Then check the website or social page belongs to the same business.</p>
-        <p>CAC details are public, so anyone can copy them. A number can only be verified for one account.</p>
-      </>}
-      actions={<AdminRefresh onClick={() => load()} loading={loading} />}
-    >
+    <Layout sidebar>
       <style>{`
-        .ab-facts{grid-template-columns:repeat(4,minmax(0,1fr))}
-        .ab-facts dd{font-size:14px}
-        @media (max-width:767.98px){.ab-facts{grid-template-columns:repeat(2,minmax(0,1fr))}}
+        .aw{max-width:980px;margin:0 auto;padding:28px 24px 64px}
+        .aw-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:18px}
+        .aw-head h1{font-size:28px;font-weight:600;letter-spacing:-.02em;margin:0 0 4px}
+        .aw-head p{color:var(--text2);font-size:14px;margin:0;max-width:600px}
+        .aw-tabs{display:flex;gap:6px;border-bottom:1px solid var(--border);margin-bottom:14px}
+        .aw-tabs button{background:none;border:0;border-bottom:2px solid transparent;padding:10px 12px;font-family:inherit;font-size:13px;font-weight:500;color:var(--text2);cursor:pointer;margin-bottom:-1px}
+        .aw-tabs button[aria-selected="true"]{color:var(--text);border-bottom-color:var(--text)}
+        .aw-list{display:flex;flex-direction:column;gap:12px}
+        .aw-row{padding:18px 20px;display:flex;flex-direction:column;gap:12px}
+        .aw-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+        .aw-who{display:flex;flex-direction:column;gap:2px;min-width:0}
+        .aw-who b{font-size:15px;font-weight:600}
+        .aw-who span{font-size:12px;color:var(--text2);word-break:break-all}
+        .ak-handle{font-weight:400;font-size:13px;color:var(--text2);text-decoration:none}
+        .aw-top time{font-size:12px;color:var(--text3);white-space:nowrap}
+        .aw-amounts{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin:0}
+        .aw-amounts div{background:var(--card2,var(--bg));border:1px solid var(--border);border-radius:12px;padding:10px 12px;min-width:0}
+        .aw-amounts dt{font-size:11px;color:var(--text3);margin-bottom:2px}
+        .aw-amounts dd{margin:0;font-size:14px;font-weight:600;overflow-wrap:anywhere}
+        .aw-amounts dd a{color:var(--text)}
+        .aw-kind{margin:0;font-size:12.5px;color:var(--text2);display:flex;gap:6px;align-items:baseline;line-height:1.5}
+        .aw-warn{margin:0;font-size:12.5px;line-height:1.5;padding:8px 10px;border-radius:10px;display:flex;gap:6px;align-items:baseline;background:color-mix(in srgb,var(--red) 10%,transparent);color:var(--text)}
+        .aw-warn a{color:inherit;font-weight:600}
+        .aw-search{display:flex;gap:8px;margin-bottom:14px}
+        .aw-search .ui-input{flex:1;min-width:0}
+        .aw-note{margin:0;font-size:12.5px;padding:8px 10px;border-radius:10px;background:var(--card2,var(--bg));color:var(--text2)}
+        .aw-actions{display:flex;gap:8px;flex-wrap:wrap}
+        .aw-confirm{border-top:1px solid var(--border);padding-top:12px;display:flex;flex-direction:column;gap:8px}
+        .aw-confirm p{margin:0;font-size:13px;color:var(--text2);line-height:1.5}
+        .aw-confirm label{font-size:12px;font-weight:500}
+        .aw-confirm textarea{resize:vertical;min-height:64px;padding-top:10px}
+        .aw-danger{background:var(--red);color:#fff}
+        .aw-error{color:var(--red) !important;margin:0;font-size:13px}
+        .aw-msg{padding:10px 14px;border-radius:12px;font-size:13px;margin-bottom:14px;background:color-mix(in srgb,var(--green) 12%,transparent);color:var(--text);display:flex;justify-content:space-between;gap:10px}
+        .aw-msg button{background:none;border:0;color:var(--text2);cursor:pointer}
+        .aw-empty{padding:48px 20px;text-align:center;color:var(--text2);font-size:14px}
+        @media (max-width:640px){
+          .aw{padding:20px 16px 56px}
+          .aw-actions .ui-btn{flex:1}
+        }
       `}</style>
-      <div className="adm-tabs even" role="tablist" aria-label="Business check status">
-        {TABS.map(([s, label]) => {
-          const n = countFor(s)
-          return (
-            <button key={s} type="button" role="tab" aria-selected={status === s} onClick={() => { setStatus(s); setNotice('') }}>
-              {label}{n != null && <em>{n}</em>}
-            </button>
-          )
-        })}
+
+      <div className="aw">
+        <div className="aw-head">
+          <div>
+            <h1>Business checks</h1>
+            <p>Posters asking for the Verified business badge. Check the CAC number and the website or social page, then verify or reject. Posters are notified either way.</p>
+          </div>
+          <button className="ui-btn ui-btn-ghost" onClick={() => load()} disabled={loading}><i className="ti ti-refresh" /> Refresh</button>
+        </div>
+
+        <div className="aw-tabs" role="tablist">
+          {TABS.map(([s, label]) => (
+            <button key={s} role="tab" aria-selected={status === s} onClick={() => { setStatus(s); setNotice('') }}>{label}</button>
+          ))}
+        </div>
+
+        <form className="aw-search" role="search" onSubmit={(e) => { e.preventDefault(); load(status, q) }}>
+          <input className="ui-input" type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search by username, business name or CAC number" aria-label="Search business checks" />
+          <button className="ui-btn ui-btn-ghost" type="submit" disabled={loading}>Search</button>
+        </form>
+
+        {notice && <div className="aw-msg" role="status"><span>{notice}</span><button onClick={() => setNotice('')} aria-label="Dismiss"><i className="ti ti-x" /></button></div>}
+
+        {loading && !items ? (
+          <div className="aw-empty">Loading…</div>
+        ) : error ? (
+          <div className="aw-empty" role="alert">{error}</div>
+        ) : !items || items.length === 0 ? (
+          <div className="aw-empty">{status === 'PENDING' ? (q.trim() ? 'Nothing matches that search.' : 'Nothing waiting for review. All caught up.') : q.trim() ? 'Nothing matches that search.' : 'Nothing here yet.'}</div>
+        ) : (
+          <div className="aw-list">
+            {items.map((it) => <Row key={it.id} it={it} onDone={onDone} />)}
+          </div>
+        )}
       </div>
-
-      <form className="adm-search" role="search" onSubmit={(e) => { e.preventDefault(); load(status, q) }}>
-        <div className="ui-search">
-          <i className="ti ti-search" aria-hidden="true" />
-          <input className="ui-input" type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Name, @user or CAC number" aria-label="Search by username, business name or CAC number" />
-          <button className="ui-search-btn" type="submit" disabled={loading} aria-label="Search"><i className="ti ti-arrow-right" aria-hidden="true" /></button>
-        </div>
-      </form>
-
-      {notice && <div className="adm-msg" role="status"><span>{notice}</span><button type="button" onClick={() => setNotice('')} aria-label="Dismiss"><i className="ti ti-x" aria-hidden="true" /></button></div>}
-
-      {error ? (
-        <LoadError what="business checks" onRetry={() => load()} />
-      ) : loading && !items ? (
-        <AdminSkeleton height={200} />
-      ) : !items || items.length === 0 ? (
-        q.trim() ? <AdminEmpty title="Nothing matches that search" />
-          : status === 'PENDING' ? <AdminEmpty done title="Nothing waiting for review" at={checkedAt}>All caught up.</AdminEmpty>
-          : <AdminEmpty title={status === 'APPROVED' ? 'No verified businesses yet' : 'No rejected checks'} />
-      ) : (
-        <div className="adm-list">
-          {items.map((it) => <Row key={it.id} it={it} onDone={onDone} />)}
-        </div>
-      )}
-    </AdminShell>
+    </Layout>
   )
 }

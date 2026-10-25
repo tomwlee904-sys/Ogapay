@@ -34,12 +34,9 @@ export default function Deposit() {
   // "Not verified yet".)
   const kycOk = kycOf(user).verified
 
-  // The method someone picked (or the link asked for). Until then: bank transfer
-  // if they can use it (verified, or they already have an account number), else
-  // card, so a new member doesn't land on a locked option.
-  const [picked, setMethod] = useState<Method | null>(() => {
+  const [method, setMethod] = useState<Method>(() => {
     const m = params.get('method')
-    return m === 'bank' || m === 'card' || m === 'usdc' ? m : null
+    return m === 'card' || m === 'usdc' ? m : 'bank'
   })
   const [amount, setAmount] = useState(() => { const a = Number(params.get('amount')); return a > 0 ? String(Math.ceil(a)) : '' })
   const [provider, setProvider] = useState<'FLUTTERWAVE' | 'PAYSTACK'>('FLUTTERWAVE')
@@ -113,9 +110,6 @@ export default function Deposit() {
     try { await navigator.clipboard.writeText(dva.accountNumber); setCopied(true); setTimeout(() => setCopied(false), 1800) } catch { /* ignore */ }
   }
 
-  const bankLocked = !kycOk && dva === null
-  const method: Method | null = picked ?? (kycOk || dva ? 'bank' : dva === null ? 'card' : null)
-
   const amt = Number(amount) || 0
   async function pay() {
     if (amt < MIN_DEPOSIT_NGN) { setError(`The minimum is ${naira(MIN_DEPOSIT_NGN, 0)}.`); return }
@@ -182,10 +176,10 @@ export default function Deposit() {
     )
   }
 
-  const METHODS: { id: Method; icon: string; title: string; short: string; text: string; tag?: string }[] = [
-    { id: 'bank', icon: 'ti-building-bank', title: 'Bank transfer', short: 'Bank transfer', text: 'Send to your own OgaPay account number from any bank app.', tag: bankLocked ? 'Needs verification' : undefined },
-    { id: 'card', icon: 'ti-credit-card', title: 'Card, USSD or bank app', short: 'Card or USSD', text: 'Pay now with a Nigerian card, USSD code or your bank app.' },
-    { id: 'usdc', icon: 'ti-currency-dollar', title: 'USDC on Solana', short: 'USDC', text: 'From Phantom, Backpack or Solflare.' },
+  const METHODS: { id: Method; icon: string; title: string; text: string; tag?: string }[] = [
+    { id: 'bank', icon: 'ti-building-bank', title: 'Bank transfer', text: 'Send to your own OgaPay account number from any bank app.' },
+    { id: 'card', icon: 'ti-credit-card', title: 'Card, USSD or bank app', text: 'Pay now with a Nigerian card, USSD code or your bank app.' },
+    { id: 'usdc', icon: 'ti-currency-dollar', title: 'USDC on Solana', text: 'From Phantom, Backpack or Solflare.' },
   ]
 
   return (
@@ -204,19 +198,15 @@ export default function Deposit() {
               <button key={m.id} type="button" className="dp-method" aria-pressed={method === m.id} onClick={() => { setMethod(m.id); setError('') }}>
                 <span className="wl-bank-ic"><i className={`ti ${m.icon}`} /></span>
                 <span className="dp-m-text">
-                  <strong>{m.title}</strong>
-                  <span className="dp-m-short">{m.short}</span>
+                  <strong>{m.title}{m.tag && <em>{m.tag}</em>}</strong>
                   <span>{m.text}</span>
-                  {m.tag && <em>{m.tag}</em>}
                 </span>
               </button>
             ))}
           </div>
 
           <section className="ui-card dp-panel" aria-live="polite">
-            {method === null ? (
-              <div className="ui-sk" style={{ height: 220 }} />
-            ) : method === 'bank' ? (
+            {method === 'bank' ? (
               <>
                 <h2>Bank transfer</h2>
                 <p>Your own account number. Anything you send to it is added to your naira balance, usually within minutes.</p>
@@ -237,7 +227,7 @@ export default function Deposit() {
                     <div className="dp-acct">
                       <div className="dp-acct-row">
                         <span>Account number</span>
-                        <button type="button" className="ui-btn ui-btn-ghost ui-btn-sm dp-copy" onClick={copy}><i className={`ti ${copied ? 'ti-check' : 'ti-copy'}`} /> {copied ? 'Copied' : 'Copy'}</button>
+                        <button type="button" className="ui-btn ui-btn-ghost" style={{ height: 32 }} onClick={copy}><i className={`ti ${copied ? 'ti-check' : 'ti-copy'}`} /> {copied ? 'Copied' : 'Copy'}</button>
                       </div>
                       <b className="dp-acct-num" style={{ fontSize: 28, fontWeight: 600, color: 'var(--text)' }}>{dva.accountNumber}</b>
                       <div className="dp-acct-row"><span>Bank</span><b>{dva.bankName}</b></div>
