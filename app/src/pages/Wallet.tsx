@@ -12,7 +12,7 @@ import { apiRequest } from '../lib/api'
 import { sharedGet, dropShared } from '../lib/shared'
 import { useAuth } from '../context/AuthContext'
 import { useWalletBalance } from '../context/WalletBalanceContext'
-import { isCredit, isEscrowHeld, isStoreHeld, kycOf, isPending, isVoid, usefulNote, maskAcct, money, naira, PAYOUT_LABEL, payoutNote, payoutStatusOf, statusLabel, txDetail, txTitle, when, type Balances, type Bank, type PayoutStatus, type Summary, type Tx } from '../lib/wallet'
+import { MIN_WITHDRAW_NGN, isCredit, isEscrowHeld, isStoreHeld, kycOf, isPending, isVoid, usefulNote, maskAcct, money, naira, PAYOUT_LABEL, payoutNote, payoutStatusOf, statusLabel, txDetail, txTitle, when, type Balances, type Bank, type PayoutStatus, type Summary, type Tx } from '../lib/wallet'
 import '../styles/wallet.css'
 import InfoTip from '../components/InfoTip'
 
@@ -204,7 +204,7 @@ export default function Wallet() {
                 <p className="wl-note wl-dir-note">Verify your identity to add your bank and withdraw. <Link to="/settings/verification">Verify now</Link></p>
               ) : banks === null ? <div className="ui-sk" style={{ height: 62, borderRadius: 14 }} /> : banks.length === 0 ? (
                 <>
-                  <p className="wl-note wl-dir-note">Add your own bank account. Withdrawals are paid into it.</p>
+                  <p className="wl-note wl-dir-note">Add your own bank account. Withdrawals (from {naira(MIN_WITHDRAW_NGN, 0)}) are paid into it every Thursday.</p>
                   <button type="button" className="wl-add wl-full" onClick={() => setModal('bank')}><i className="ti ti-plus" /> Add bank account</button>
                 </>
               ) : (
@@ -230,6 +230,7 @@ export default function Wallet() {
                   ))}
                 </ul>
               )}
+              {verified && banks && banks.length > 0 && <p className="wl-note wl-dir-note">Bank withdrawals are paid every Thursday, from {naira(MIN_WITHDRAW_NGN, 0)}.</p>}
               {bankErr && <div className="wl-err" role="alert" style={{ marginTop: 12, marginBottom: 0 }}><i className="ti ti-alert-circle" /><span>{bankErr}</span></div>}
               </section>
             </div>

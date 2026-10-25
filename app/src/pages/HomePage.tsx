@@ -231,7 +231,7 @@ const PATHS: PathDef[] = [
         steps: [
           ["Create your account", "Free, and it takes under a minute."],
           ["Pick a task", "Social, app testing, community, research and more."],
-          ["Submit proof, get paid", "Approved work is paid into your wallet. Verify your identity to withdraw to your bank."],
+          ["Submit proof, get paid", "Approved work is paid into your wallet. Verify your identity to withdraw to your bank: bank withdrawals are paid every Thursday."],
         ],
       },
       {
