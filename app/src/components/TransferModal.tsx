@@ -165,8 +165,9 @@ export default function TransferModal({ onClose, onSuccess, to, tip = false, sub
       onSuccess?.()
     } catch (e: any) {
       const msg = e?.message || (tip ? "The tip didn't go through. Please try again." : 'Transfer failed. Please try again.')
-      // The server's Level 1 message names NIN; say it simply
-      setError(/Level 1/i.test(msg) ? 'Sending money and tips needs Level 1. Verify your identity first.' : msg)
+      // The server's not-verified message names NIN; say it simply (its daily-limit and
+      // bonus messages also mention a level, and are shown as they are)
+      setError(/Level 1 KYC/i.test(msg) ? 'Sending money and tips needs Level 1. Verify your identity first.' : msg)
       // A missing or wrong 2FA code: stay here so the code can be entered
       if (is2FAError(e?.message)) { setOtpAsked(true); setOtp('') }
       else setStep('form')
