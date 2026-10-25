@@ -145,3 +145,11 @@
 .hc-cmeta i { font-size: 14px; }
 .hc-community .hc-pdesc { -webkit-line-clamp: 3; }
 .hc-cpaid { color: var(--money); font-weight: 600; font-size: 13px; }
+
+/* Phones: the job description and poster name were 13.5px, a touch small to
+   read on a phone. Bigger reading text and labels; the layout is unchanged */
+@media (max-width: 767px) {
+  .hc-brief p { font-size: 15px; min-height: calc(15px * 1.55 * 4); }
+  .hc-by-txt b { font-size: 14.5px; }
+  .hc-by-txt > span, .hc-lbl, .hc-cat, .hc-reqs { font-size: 13px; }
+}
