@@ -15,6 +15,7 @@ import JobActivity from '../components/JobActivity'
 import RateWork, { RatedStars, ratedByTeam } from '../components/RateWork'
 import CopyFlag from '../components/CopyFlag'
 import { formatMoney } from '../lib/money'
+import { MIN_WITHDRAW_NGN } from '../lib/wallet'
 import { jobDeadline, deadlineLabel, deadlineDate } from '../lib/deadline'
 import { categoryLabel } from '../lib/categories'
 import { sized } from '../lib/img'
@@ -1014,6 +1015,9 @@ function WurkJobDetailView(props: any) {
         .wjd-usd{font-family:var(--font-mono);font-size:11px!important;font-weight:400!important;letter-spacing:0;color:var(--text2)!important;margin-top:6px}
         .wjd-reward-mark{position:absolute;right:18px;top:18px;width:36px;height:36px;border-radius:var(--r-ctl);border:1px solid var(--border);background:var(--card);color:var(--money);display:grid;place-items:center;font-size:var(--icon)}
         .wjd-desc{padding:20px 22px 22px!important}
+        .wjd-paid-steps{margin:0;padding-left:22px;list-style:decimal;display:grid;gap:10px;font-size:var(--fs-body);color:var(--text);line-height:1.6}
+        .wjd-paid-steps li::marker{font-weight:600;color:var(--text2)}
+        .wjd-paid-steps small{display:block;color:var(--text2);font-size:14px;margin-top:2px}
         .wjd-desc-title{font-family:var(--font-mono);font-weight:500;font-size:var(--fs-label);letter-spacing:.08em;color:var(--text2);border-bottom:0;padding-bottom:0;margin-bottom:14px}
         .wjd-body{font-size:var(--fs-body);color:var(--text);line-height:1.7}
         .wjd-body{white-space:normal}
@@ -1309,6 +1313,32 @@ function WurkJobDetailView(props: any) {
               </div>
             )}
           </section>
+
+          {/* ── How you get paid: the steps after the description, for people doing
+               the job (members said they didn't know what happens after sending work) ── */}
+          {!canManage && (
+            <section className="wjd-panel wjd-desc" aria-labelledby="wjd-paid-h">
+              <div className="wjd-desc-title" id="wjd-paid-h">
+                <i className="ti ti-wallet" aria-hidden="true" style={{ fontSize: 15 }} />
+                How you get paid
+              </div>
+              <ol className="wjd-paid-steps">
+                {contest ? (<>
+                  <li><b>Send one entry before it closes.</b>{jobRequirements(job).filter(r => r.icon !== 'award').length ? <small>You need: {jobRequirements(job).filter(r => r.icon !== 'award').map(r => r.text).join(', ')}.</small> : null}</li>
+                  <li><b>{contest.randomDraw ? 'The winners are drawn at random' : `${job.brand ? '@' + job.brand.replace('@', '') : 'The poster'} picks the best entries`}</b> when entries close.<small>Only the winners are paid. If yours isn't chosen, it stays yours.</small></li>
+                </>) : job.isSelection ? (<>
+                  <li><b>Apply with a short note.</b><small>The poster reads the notes and picks one person.</small></li>
+                  <li><b>If you're picked, send the work within 24 hours.</b></li>
+                  <li><b>{job.brand ? '@' + job.brand.replace('@', '') : 'The poster'} checks it.</b><small>If they don't review it within 3 days, it's approved automatically.</small></li>
+                </>) : (<>
+                  <li><b>Take a place.</b>{jobRequirements(job).filter(r => r.icon !== 'award').length ? <small>You need: {jobRequirements(job).filter(r => r.icon !== 'award').map(r => r.text).join(', ')}.</small> : <small>It's reserved for you while you do the job.</small>}</li>
+                  <li><b>Do it and send your proof</b>, the way the description asks.{job.payoutCheck ? <small>Payout check: {job.payoutCheck.note}</small> : <small>Once every place is taken, you have 24 hours to send it.</small>}</li>
+                  <li><b>{job.brand ? '@' + job.brand.replace('@', '') : 'The poster'} checks it.</b><small>If they don't review it within 3 days, it's approved automatically. If it's rejected, you'll see why.</small></li>
+                </>)}
+                <li><b>{contest ? 'The prize goes' : `${formatMoney(Number(job.reward || 0), rewardCurrency)} goes`} to your OgaPay wallet.</b><small>To move it to your bank, verify your identity and withdraw from {formatMoney(MIN_WITHDRAW_NGN, 'NGN')}. Bank withdrawals are paid every Thursday.</small></li>
+              </ol>
+            </section>
+          )}
 
           {/* ── Submissions Panel ── */}
           {showSubs && (
