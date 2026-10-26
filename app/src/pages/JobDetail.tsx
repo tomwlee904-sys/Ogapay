@@ -1370,7 +1370,10 @@ function WurkJobDetailView(props: any) {
                                   : <div style={{ color: 'var(--accent)', fontSize: 12, wordBreak: 'break-all' }}>{sub.proof}</div>
                               )}
                               <div className="wjd-sub-actions" onClick={(e: any) => e.stopPropagation()}>
-                                {sub.status === 'SUBMITTED' && (
+                                {sub.status === 'SUBMITTED' && contest && (
+                                  <button className="wjd-no" type="button" onClick={() => handleReject(sub.id)} disabled={rejecting === sub.id}>{rejecting === sub.id ? 'Rejecting...' : 'Reject'}</button>
+                                )}
+                                {sub.status === 'SUBMITTED' && !contest && (
                                   <>
                                     <button className="wjd-ok" type="button" onClick={() => setSelectedSub(sub)} disabled={approving === sub.id || checkBlocksApprove(sub, clock)} title={checkBlocksApprove(sub, clock) ? 'Payout check still running' : undefined}>{approving === sub.id ? 'Approving...' : 'Approve'}</button>
                                     <button className="wjd-no" type="button" onClick={() => handleReject(sub.id)} disabled={rejecting === sub.id}>{rejecting === sub.id ? 'Rejecting...' : 'Reject'}</button>
@@ -1382,7 +1385,12 @@ function WurkJobDetailView(props: any) {
                                 {sub.status === 'EXPIRED' && <span style={{ color: 'var(--text3)', fontSize: 12, fontWeight: 700 }}><i className="ti ti-clock-x" /> Slot released</span>}
                                 <span style={{ color: 'var(--text3,#94a3b8)', fontSize: 12, marginLeft: 'auto' }}>{timeAgo(sub.createdAt)}</span>
                               </div>
-                              {sub.status === 'SUBMITTED' && sub.autoApproveAt && (
+                              {sub.status === 'SUBMITTED' && contest && (
+                                <div style={{ color: 'var(--text3,#94a3b8)', fontSize: 12, marginTop: 6 }}>
+                                  <i className="ti ti-award" /> Contest entry: award places in the contest box above. Entries are never paid automatically.
+                                </div>
+                              )}
+                              {sub.status === 'SUBMITTED' && !contest && sub.autoApproveAt && (
                                 <div style={{ color: 'var(--text3,#94a3b8)', fontSize: 12, marginTop: 6 }}>
                                   <i className="ti ti-clock-check" /> If you don't review it, it's approved and paid automatically on{' '}
                                   {new Date(sub.autoApproveAt).toLocaleString(undefined, { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}.
