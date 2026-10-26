@@ -69,7 +69,18 @@
       "destination": "/api/page-meta?t=blog&id=:slug"
     },
     {
-      "source": "/(tasks|store|blog|leaderboard|vault|create|faq|communities|developer|about)",
+      "source": "/",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "(?i).*(bot|crawler|spider|facebookexternalhit|whatsapp|slack|discord|telegram|linkedin|embedly|pinterest|skype|reddit|preview).*"
+        }
+      ],
+      "destination": "/api/page-meta?t=page&p=/"
+    },
+    {
+      "source": "/(tasks|store|blog|leaderboard|vault|create|faq|communities|developer|about|hire|creators|workers|docs|support|safe|earn-money-online-nigeria|paid-tasks-nigeria|jobs/social-media|jobs/content-writing|jobs/app-testing|jobs/surveys|jobs/design)",
       "has": [
         {
           "type": "header",

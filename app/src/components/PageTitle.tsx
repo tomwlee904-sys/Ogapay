@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
+import { seoPageFor } from '../lib/seoPages'
 
 // Each page names itself in the browser tab, in history and in shared links
 // (every page used to say "OgaPay: earn and hire in Nigeria"). Pages about one
@@ -55,6 +56,8 @@ export default function PageTitle() {
   const { pathname } = useLocation()
   useEffect(() => {
     const path = pathname.replace(/\/+$/, '') || '/'
+    // Landing pages set their full search title themselves
+    if (seoPageFor(path)) return
     const name = TITLES[path] || PATTERNS.find(([re]) => re.test(path))?.[1]
       || (path.startsWith('/settings/') ? 'Settings' : path.startsWith('/admin/') ? 'Admin' : null)
     document.title = name ? `${name} | OgaPay` : HOME

@@ -44,6 +44,21 @@ const PAGES = {
   '/communities': ['Communities | OgaPay', 'Join groups on OgaPay and take jobs only their members can see.'],
   '/developer': ['Developer API | OgaPay', 'Post jobs and pay people from your own app with the OgaPay API.'],
   '/about': ['About OgaPay', "Africa's task network: find work, hire help and get paid in Naira or USDC."],
+  '/': ['OgaPay: earn and hire in Nigeria', 'Post paid jobs or earn by doing them. OgaPay holds the money in escrow and pays workers in naira or crypto when work is approved.'],
+  '/hire': ['Hire freelancers and workers in Nigeria | OgaPay', 'Hire people in Nigeria for small jobs, writing, design and promotion. Your money is held in escrow and only paid when you approve the work.'],
+  '/creators': ['Hire micro-influencers in Nigeria | OgaPay Creators', 'Find Nigerian micro-influencers and creators by audience and followers, and pay them to promote your business through OgaPay.'],
+  '/workers': ['Workers | OgaPay', 'Nigerian workers on OgaPay with their ranks, ratings and finished jobs. Hire someone directly.'],
+  '/docs': ['Docs | OgaPay', 'How OgaPay works: jobs, escrow, payouts, verification levels and fees.'],
+  '/support': ['Support | OgaPay', 'Get help with your OgaPay account, jobs, payments and withdrawals.'],
+  '/safe': ['Staying safe | OgaPay', 'How to spot scams and keep your OgaPay account and money safe.'],
+  // Landing pages (src/lib/seoPages.ts: keep the titles and descriptions the same)
+  '/earn-money-online-nigeria': ['Earn money online in Nigeria with your phone | OgaPay', 'Earn money online in Nigeria by doing simple paid jobs on your phone: social media, writing, testing and surveys. Free to join, paid in Naira.'],
+  '/paid-tasks-nigeria': ['Paid tasks in Nigeria: small jobs that pay in Naira | OgaPay', 'Real paid tasks in Nigeria: follow, review, test apps, answer surveys and write. See the pay first, send proof, get paid when it is approved.'],
+  '/jobs/social-media': ['Social media jobs in Nigeria: get paid to follow, like and share | OgaPay', 'Paid social media jobs in Nigeria: follow, like, repost, comment and share on X, TikTok, Instagram and WhatsApp. See the pay first, get paid when approved.'],
+  '/jobs/content-writing': ['Content writing jobs in Nigeria: paid reviews, articles and posts | OgaPay', 'Content writing jobs in Nigeria on OgaPay: honest reviews, blog articles and short posts, paid in Naira. Original work only.'],
+  '/jobs/app-testing': ['App testing jobs in Nigeria: get paid to test apps and websites | OgaPay', 'Get paid to test apps and websites in Nigeria. Try the app on your phone, report what confused you or broke, and get paid in Naira when approved.'],
+  '/jobs/surveys': ['Paid surveys in Nigeria: answer questions and earn | OgaPay', 'Paid surveys in Nigeria on OgaPay: answer short questions for businesses and earn Naira. Honest answers only, paid when approved.'],
+  '/jobs/design': ['Graphic design jobs in Nigeria: logos, flyers and more | OgaPay', 'Graphic design jobs in Nigeria on OgaPay: logos, flyers and social media designs for real businesses, paid in Naira or USDC through escrow.'],
 }
 
 export function headFor({ title, description, url, image, type = 'website', large = false, jsonLd = null }) {

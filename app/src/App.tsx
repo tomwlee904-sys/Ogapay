@@ -56,6 +56,7 @@ const Support = lazyPage(() => import('./pages/Support'))
 const Vault = lazyPage(() => import('./pages/Vault'))
 const VaultHistory = lazyPage(() => import('./pages/VaultHistory'))
 const NotFound = lazyPage(() => import('./pages/NotFound'))
+const SeoLanding = lazyPage(() => import('./pages/SeoLanding'))
 const AuthCallback = lazyPage(() => import('./pages/AuthCallback'))
 const VeryCallback = lazyPage(() => import('./pages/VeryCallback'))
 const ForgotPassword = lazyPage(() => import('./pages/ForgotPassword'))
@@ -162,6 +163,10 @@ export default function App() {
 <Route path="/tasks/:id/submit" element={<AuthGuard><SubmissionPage /></AuthGuard>} />
             <Route path="/tasks/:id/submissions" element={<AuthGuard><SubmissionsRedirect /></AuthGuard>} />
             <Route path="/jobs" element={<Navigate to="/tasks" replace />} />
+            {/* Landing pages for searches (lib/seoPages.ts) */}
+            <Route path="/jobs/:category" element={<SeoLanding />} />
+            <Route path="/earn-money-online-nigeria" element={<SeoLanding />} />
+            <Route path="/paid-tasks-nigeria" element={<SeoLanding />} />
 
             <Route path="/tasks/:id" element={<JobDetail />} />
             <Route path="/store/pay/:id" element={<AuthGuard><StorePayment /></AuthGuard>} />
