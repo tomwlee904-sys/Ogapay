@@ -426,7 +426,9 @@ export default function JobDetail() {
     if (!job || cancelling) return
     // Admins can cancel someone else's untouched job (spam, tests): the money goes back to the poster
     const forPoster = job.posterId !== authUser?.id
-    if (!window.confirm(forPoster
+    if (!window.confirm(forPoster && job.currentWorkers
+      ? 'Close this job as an admin? Work already approved stays paid. The money for places nobody used, with its share of the fee, goes back to the poster\'s wallet. If someone still holds a place or has work waiting for review, it can\'t be closed yet. This can\'t be undone.'
+      : forPoster
       ? 'Cancel this job as an admin? Nobody has taken it. The money held for it, including the fee, goes back to the poster\'s wallet. This can\'t be undone.'
       : 'Cancel this job? The money held for it, including the fee, goes back to your wallet. This can\'t be undone.')) return
     setCancelling(true)
@@ -1305,9 +1307,9 @@ function WurkJobDetailView(props: any) {
                   <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
                   {showSubs ? 'Hide Submissions' : 'View Submissions'}
                 </button>}
-                {(canManage || authUser?.role === 'ADMIN') && isOpen && !job.currentWorkers && (
+                {isOpen && (((canManage || authUser?.role === 'ADMIN') && !job.currentWorkers) || (authUser?.role === 'ADMIN' && !canManage && job.currentWorkers > 0)) && (
                   <button className="wjd-secondary" type="button" onClick={handleCancelJob} disabled={cancelling} style={{ color: 'var(--red)' }}>
-                    {cancelling ? 'Cancelling…' : 'Cancel job'}
+                    {cancelling ? 'Closing…' : job.currentWorkers ? 'Close job (admin)' : 'Cancel job'}
                   </button>
                 )}
               </div>

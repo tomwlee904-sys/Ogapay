@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { apiRequest } from '../lib/api'
+import { closeAccount } from '../lib/adminClose'
 
 /* Admin: linked accounts. Groups of open accounts that look like one person:
    they share a bank account number (saved, used for Level 1, or withdrawn to),
@@ -86,7 +87,7 @@ export default function AdminLinked() {
                         <td className="al-num">{naira(a.totalWithdrawn)}</td>
                         <td className={`al-num${a.pendingWithdrawals.count ? ' al-pending' : ''}`}>{a.pendingWithdrawals.count ? `${a.pendingWithdrawals.count} · ${naira(a.pendingWithdrawals.amount)}` : 'None'}</td>
                         <td>{a.referrer ? <Link to={`/user/${encodeURIComponent(a.referrer.username)}`}>@{a.referrer.username}</Link> : '-'}</td>
-                        <td className="al-open"><Link className="ui-btn ui-btn-ghost" to={`/user/${encodeURIComponent(a.username)}`}><i className="ti ti-user" /> Open</Link></td>
+                        <td className="al-open"><Link className="ui-btn ui-btn-ghost" to={`/user/${encodeURIComponent(a.username)}`}><i className="ti ti-user" /> Open</Link>{!a.banned && <button type="button" className="ui-btn ui-btn-ghost" style={{ color: 'var(--red)', marginLeft: 6 }} onClick={async () => { if (await closeAccount(a.id, a.username)) load() }}><i className="ti ti-user-x" /> Close</button>}</td>
                       </tr>
                     ))}
                   </tbody>

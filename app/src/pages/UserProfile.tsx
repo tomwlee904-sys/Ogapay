@@ -6,6 +6,7 @@ import InviteToCommunity from "../components/profile/InviteToCommunity"
 import TransferModal from "../components/TransferModal"
 import ReportUser from "../components/profile/ReportUser"
 import { apiRequest } from "../lib/api"
+import { closeAccount } from "../lib/adminClose"
 import { useAuth } from "../context/AuthContext"
 import { openSignIn } from "../lib/signin"
 import "../styles/profile-public.css"
@@ -314,6 +315,9 @@ export default function UserProfile() {
                 {/* Admins: warn this member for breaking the rules (Admin > Warnings) */}
                 {!isMe && me?.role === "ADMIN" && (
                   <Link className="up-btn" to={`/admin/warnings?warn=${encodeURIComponent(handle)}`}><i className="ti ti-alert-triangle" /> Warn</Link>
+                )}
+                {!isMe && me?.role === "ADMIN" && profile?.id && (
+                  <button className="up-btn" style={{ color: "var(--red)" }} onClick={async () => { if (await closeAccount(profile.id, profile.username || handle)) window.location.reload() }}><i className="ti ti-user-x" /> Close account</button>
                 )}
                 {/* Posters can ask for the Verified business badge (optional, Settings > Business) */}
                 {isMe && !profile.posterProfile?.isVerified && (profile.posterProfile?.totalPosted || 0) > 0 && (

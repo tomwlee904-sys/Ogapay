@@ -293,7 +293,8 @@ export default function SubmissionPage() {
                 <label className="ui-label" htmlFor="sb-link">Link to your work</label>
                 <input id="sb-link" className="ui-input" type="url" inputMode="url" value={link} onChange={(e) => setLink(e.target.value)} placeholder="https://… (post, document, recording)" />
                 <label className="ui-label" htmlFor="sb-notes">Note for the poster</label>
-                <textarea id="sb-notes" className="ui-input sb-textarea" maxLength={1000} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="What you did, anything they should know" />
+                <textarea id="sb-notes" className="ui-input sb-textarea" maxLength={20000} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="What you did, anything they should know. You can paste a full article here." />
+                {notes.length > 1000 && <p className="sb-small" aria-live="polite">{notes.length.toLocaleString('en-US')} / 20,000 characters</p>}
                 <span className="ui-label">{needsShot ? 'Screenshot (required)' : 'Screenshots or files'} ({files.length}/{MAX_FILES})</span>
                 {task.watermark && <p className="sb-small"><i className="ti ti-droplet" /> Watermarks are on: the poster sees your images stamped with OGAPAY, and gets the originals only when they approve your work.</p>}
                 {files.length > 0 && (
