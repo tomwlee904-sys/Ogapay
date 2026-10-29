@@ -39,6 +39,8 @@ type Mine = {
 }
 
 const MAX_FILES = 5
+// Sent work can be taken back to edit within this long, before it's reviewed (the server's TAKE_BACK_MINUTES)
+const TAKE_BACK_MINUTES = 60
 const money = (n: number, cur = 'NGN') => cur === 'NGN' ? `₦${Math.round(n).toLocaleString('en-US')}` : `$${n.toFixed(2)}`
 const when = (d?: string | null) => d ? new Date(d).toLocaleString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : ''
 
@@ -111,6 +113,25 @@ export default function SubmissionPage() {
   const proofNote = !needsShot && task.proofRequired ? task.proofRequired.trim() : ''
   const closed = !['OPEN', 'COOLING_DOWN'].includes(task.status)
 
+  // Sent too early: take it back to edit (keeps the place), within the hour
+  const canTakeBack = mine?.status === 'SUBMITTED' && !!mine.submittedAt && !closed
+    && Date.now() - new Date(mine.submittedAt).getTime() < TAKE_BACK_MINUTES * 60000
+  const takeBack = async () => {
+    if (!mine || !window.confirm('Take your work back to edit it? You keep your place. Send it again when it is finished.')) return
+    setError('')
+    setBusy('Taking it back…')
+    try {
+      await apiRequest(`/tasks/submissions/${mine.id}/take-back`, { method: 'POST' })
+      // Put what they sent back in the form (files have to be added again)
+      setLink(mine.proof && /^https?:\/\//.test(mine.proof) ? mine.proof : '')
+      setNotes(mine.workerNotes || '')
+      await loadMine()
+    } catch (e: any) {
+      setError(e?.message || "Couldn't take your work back.")
+    }
+    setBusy('')
+  }
+
   const addFiles = (list: FileList | null) => {
     if (!list) return
     setFiles((f) => [...f, ...Array.from(list)].slice(0, MAX_FILES))
@@ -122,6 +143,8 @@ export default function SubmissionPage() {
     if (needsShot && files.length === 0) { setError('This job needs a screenshot. Add at least one image of your work.'); return }
     const token = getAccessToken()
     if (!token) { navigate('/login?redirect=' + encodeURIComponent(location.pathname)); return }
+    // One check before sending: phones make a mistaken tap easy
+    if (!window.confirm(`Send your work now? Check it's complete. You can take it back to edit within ${TAKE_BACK_MINUTES} minutes, until it's reviewed.`)) return
     setError('')
     try {
       // 1. Take a slot unless you already hold one
@@ -219,6 +242,13 @@ export default function SubmissionPage() {
                 <h2>Entry sent</h2>
                 <p>{task.poster?.username ? `@${task.poster.username}` : 'The poster'} picks the winners after the contest ends. You'll get a notification if your entry wins a place.</p>
                 <Sent m={mine!} />
+                {canTakeBack && (
+                  <p className="sb-small">
+                    Sent it too early?{' '}
+                    <button type="button" disabled={!!busy} onClick={takeBack} style={{ background: "none", border: 0, padding: "10px 0", font: "inherit", fontWeight: 600, color: "var(--text)", textDecoration: "underline", cursor: "pointer" }}>{busy || 'Take it back to edit'}</button>
+                    {' '}(until {when(new Date(new Date(mine!.submittedAt!).getTime() + TAKE_BACK_MINUTES * 60000).toISOString())}, while it isn't reviewed). You keep your place.
+                  </p>
+                )}
                 <div className="ui-actions"><Link className="ui-btn ui-btn-ghost" to="/my-tasks">My tasks</Link><Link className="ui-btn ui-btn-ghost" to="/tasks">Find more jobs</Link></div>
               </section>
             ) : status === 'SUBMITTED' ? (
@@ -229,6 +259,13 @@ export default function SubmissionPage() {
                 {mine?.payoutCheck && <PayoutCheckStatus sub={mine} who="worker" />}
                 {mine?.autoApproveAt && <p className="sb-small"><i className="ti ti-clock-check" /> If they don't review it, it's approved and you're paid automatically on {when(mine.autoApproveAt)}.</p>}
                 <Sent m={mine!} />
+                {canTakeBack && (
+                  <p className="sb-small">
+                    Sent it too early?{' '}
+                    <button type="button" disabled={!!busy} onClick={takeBack} style={{ background: "none", border: 0, padding: "10px 0", font: "inherit", fontWeight: 600, color: "var(--text)", textDecoration: "underline", cursor: "pointer" }}>{busy || 'Take it back to edit'}</button>
+                    {' '}(until {when(new Date(new Date(mine!.submittedAt!).getTime() + TAKE_BACK_MINUTES * 60000).toISOString())}, while it isn't reviewed). You keep your place.
+                  </p>
+                )}
                 <div className="ui-actions"><Link className="ui-btn ui-btn-ghost" to="/my-tasks">My tasks</Link><Link className="ui-btn ui-btn-ghost" to="/tasks">Find more jobs</Link></div>
               </section>
             ) : status === 'APPROVED' ? (
