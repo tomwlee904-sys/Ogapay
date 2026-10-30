@@ -97,7 +97,9 @@
 .db-intent-opt i { font-size: 18px; color: var(--text2); }
 .db-intent-skip { border: 0; background: none; padding: 0 4px; min-height: 32px; font: 500 12.5px 'Inter', system-ui, sans-serif; color: var(--text2); cursor: pointer; }
 .db-intent-skip:hover { color: var(--text); }
-.db-intent-err { margin: 8px 0 0; font-size: 12.5px; color: #dc2626; }
+.db-intent-err { margin: 8px 0 0; font-size: 12.5px; color: var(--red); }
+.db-intent-done { margin: 0; display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--text); outline: none; }
+.db-intent-done i { font-size: 18px; color: var(--green, #16a34a); }
 @media (max-width: 767px) {
   .db-intent-opt { flex-direction: column; gap: 4px; min-height: 64px; padding: 8px 6px; font-size: 13px; }
 }

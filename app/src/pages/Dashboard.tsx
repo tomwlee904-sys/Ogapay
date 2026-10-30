@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { useAuth } from '../context/AuthContext'
@@ -82,6 +82,11 @@ export default function Dashboard() {
   const [intentSkipped, setIntentSkipped] = useState(false)
   const [intentBusy, setIntentBusy] = useState(false)
   const [intentError, setIntentError] = useState('')
+  // After answering or skipping, a short line takes the card's place and gets
+  // focus, so keyboard and screen-reader users keep their place and hear it
+  const [intentDone, setIntentDone] = useState<'saved' | 'skipped' | null>(null)
+  const intentDoneRef = useRef<HTMLParagraphElement>(null)
+  useEffect(() => { if (intentDone) intentDoneRef.current?.focus() }, [intentDone])
 
   useEffect(() => {
     apiRequest<Me>('/users/me').then(setMe).catch(() => setMe({}))
@@ -183,11 +188,19 @@ export default function Dashboard() {
     try {
       await apiRequest('/users/me', { method: 'PATCH', body: JSON.stringify({ signupIntent: value }) })
       setMe((m) => ({ ...(m || {}), signupIntent: value }))
+      setIntentDone('saved')
     } catch (e: any) { setIntentError(e?.message || "Couldn't save that. Please try again.") }
     setIntentBusy(false)
   }
-  const skipIntent = () => { try { localStorage.setItem(skipKey, '1') } catch { /* private mode */ } setIntentSkipped(true) }
-  const intentCard = me?.signupIntent === null && !skipped && (
+  const skipIntent = () => { try { localStorage.setItem(skipKey, '1') } catch { /* private mode */ } setIntentSkipped(true); setIntentDone('skipped') }
+  const intentCard = intentDone ? (
+    <section className="ui-card ui-card-pad db-intent" aria-label="What brings you to OgaPay?">
+      <p ref={intentDoneRef} tabIndex={-1} role="status" className="db-intent-done">
+        <i className="ti ti-check" aria-hidden="true" />
+        {intentDone === 'saved' ? 'Thanks, saved. You can still earn and hire either way.' : "OK, we won't ask again on this device."}
+      </p>
+    </section>
+  ) : me?.signupIntent === null && !skipped && (
     <section className="ui-card ui-card-pad db-intent" aria-labelledby="db-intent">
       <div className="db-sec-head"><h2 id="db-intent">What brings you to OgaPay?</h2><button type="button" className="db-intent-skip" onClick={skipIntent}>Skip</button></div>
       <p className="db-intent-sub">One tap. You can earn and hire either way. This helps us show you the right things first.</p>
@@ -426,7 +439,8 @@ export default function Dashboard() {
             <Link to="/rank" className="db-stat"><span>OgaScore</span><b>{me?.ogaScore ?? '…'}</b><small>{rankLabel} · {plural(me?.workerProfile?.tasksCompleted ?? 0, 'job', 'jobs')} done</small></Link>
           </div>
 
-          {!loaded ? (
+          {/* a new member's two cards wait for /users/me too: their order depends on the answer */}
+          {!loaded || (isNew && me === null) ? (
             <div className="ui-sk" style={{ height: 200, borderRadius: 20 }} />
           ) : isNew ? (
             <div className="db-pair">
