@@ -1,21 +1,26 @@
 import { useEffect, useRef } from 'react'
 import { Logo } from '../Logo'
 
-/* Hero network: 45 fine fibres run from "people + agents" through the OgaPay tile
+/* Hero network: 36 fine fibres run from "people + agents" through the OgaPay tile
    to "escrow protected", with light trails travelling along them. Adapted from
    network-animation-1.html (dark) and network-animation-light.html (light): same
    1080 × 482 frame, palette follows the site theme.
    Matched to the wurk.fun hero: the fibres are bright (up to 75% opacity, with a
    slow per-fibre shimmer) and gather into one bundle at the tile; a slow wave
    runs through each fibre; and on a mouse the bundle bends toward the pointer
-   near it, easing in and out. The canvas is drawn at its on-screen size, so the
-   fibres stay 0.7px wide instead of being shrunk to half that. No background of
+   near it, easing in and out. The canvas is drawn at its on-screen size: fibres
+   are 0.7px wide, thinning in proportion when the canvas is shorter than wurk's
+   238px (phones), and 4 single light trails run along them, the same ink as
+   wurk.fun (45 fibres and 13 glowing trails read twice as heavy, 2026-10-30).
+   No background of
    its own, so the page (and its dark-mode glow) shows through. Pauses
    off-screen and in hidden tabs; one still frame for reduced motion. */
 
 const W = 1080, H = 482, TAU = Math.PI * 2, LOOP = 12
 const CX = 540, CY = 266
-const FIBRES = 45
+const FIBRES = 36
+// The fibres the light trails run along (wurk.fun's four)
+const TRAILS = [4, 12, 22, 31]
 
 type Palette = {
   fibre: string; packets: [string, string, string]; packetAlpha: number
@@ -57,18 +62,19 @@ export default function NetworkFlow() {
     // fibre point is ~6px apart and a trail piece ~5px, which still reads as smooth
     // curves and soft trails, for about a third of the work.
     const STEPS = small ? 64 : 180 // points per fibre
-    const SEGS = small ? 10 : 22 // pieces per light trail, each drawn twice
+    const SEGS = small ? 10 : 22 // pieces per light trail
     // Phones: 30 frames a second is plenty here and halves the work
     const minGap = small ? 1000 / 30 - 2 : 0
     let visible = true, frame = 0, pal = isDark() ? DARK : LIGHT, lastT = 0, prevNow = 0, lastDraw = 0, dead = false
     let unit = 2 // frame units per CSS pixel (set on resize)
+    let scale = 1 // line weight: thinner when the canvas is shorter than 238px (phones)
     // Pointer over the hero, -1..1 on each axis; `ptr` eases toward `target`
     const ptr = [0, 0], target = [0, 0]
 
     const curve = (a: number, b: number, c: number, d: number, t: number) => { const s = 1 - t; return s * s * s * a + 3 * s * s * t * b + 3 * s * t * t * c + t * t * t * d }
     // The supplied files' paths, gathered to a ±30 bundle where they meet the tile
     const point = (i: number, u: number, time: number): [number, number] => {
-      const k = (i - 22) / 22, breath = Math.sin(time / LOOP * TAU) * 3
+      const k = (i - (FIBRES - 1) / 2) / ((FIBRES - 1) / 2), breath = Math.sin(time / LOOP * TAU) * 3
       let x: number, y: number
       if (u < .5) { const t = u * 2; x = curve(56, 230, 371, CX, t); y = curve(263 + k * 160, 344 + k * 79, 253 + k * 34 + breath, CY - 12 + k * 30, t) }
       else { const t = (u - .5) * 2; x = curve(CX, 680, 828, 1023, t); y = curve(CY - 12 + k * 30, 236 + k * 34 + breath, 192 + k * 86, 255 + k * 159, t) }
@@ -94,16 +100,15 @@ export default function NetworkFlow() {
     const draw = (time: number) => {
       const p = pal
       ctx.clearRect(0, 0, W, H) // transparent: the page shows through
-      // Fibres, 0.7 CSS px wide, each with a slow shimmer
+      // Fibres, 0.7 CSS px wide (thinner on short canvases), each with a slow shimmer
       const fade = ctx.createLinearGradient(50, 0, 1030, 0)
       for (const [at, a] of FIBRE_STOPS) fade.addColorStop(at, `rgba(${p.fibre},${a})`)
-      ctx.lineWidth = .7 * unit; ctx.lineCap = 'round'; ctx.strokeStyle = fade
+      ctx.lineWidth = .7 * scale * unit; ctx.lineCap = 'round'; ctx.strokeStyle = fade
       for (let i = 0; i < FIBRES; i++) { ctx.globalAlpha = .56 + .25 * Math.cos(i * .43 + time * .25); path(i, 0, 1, time); ctx.stroke() }
       ctx.globalAlpha = 1
-      // Light trails: a wide faint stroke under a fine bright one (a glow without
-      // canvas blur, which is costly on phones)
-      for (let j = 0; j < 13; j++) {
-        const i = (j * 17 + 4) % FIBRES, u = ((time / LOOP) + (j * .61803398875)) % 1
+      // Light trails: one fine bright stroke each, fading at both ends
+      for (let j = 0; j < TRAILS.length; j++) {
+        const i = TRAILS[j], u = ((time / LOOP) + (j * .61803398875)) % 1
         const length = .14 + (j % 3) * .02
         const color = j % 4 === 0 ? p.packets[0] : j % 3 === 0 ? p.packets[1] : p.packets[2]
         for (let s = 0; s < SEGS; s++) {
@@ -111,8 +116,7 @@ export default function NetworkFlow() {
           if (a < 0 || b > 1) continue
           const env = Math.pow(Math.sin(Math.PI * s / SEGS), 2) * Math.sin(Math.PI * (a + b) / 2)
           if (env < .02) continue
-          ctx.strokeStyle = `rgba(${color},${env * p.packetAlpha * .22})`; ctx.lineWidth = 3 * unit; path(i, a, b, time); ctx.stroke()
-          ctx.strokeStyle = `rgba(${color},${env * p.packetAlpha})`; ctx.lineWidth = 1.15 * unit; ctx.stroke()
+          ctx.strokeStyle = `rgba(${color},${env * p.packetAlpha})`; ctx.lineWidth = 1.2 * scale * unit; path(i, a, b, time); ctx.stroke()
         }
       }
       // Tile: separate outer hairline, inset bevel, raised face (drawn over the fibres)
@@ -140,6 +144,7 @@ export default function NetworkFlow() {
       if (canvas.width !== cw || canvas.height !== ch) { canvas.width = cw; canvas.height = ch }
       ctx.setTransform(cw / W, 0, 0, ch / H, 0, 0)
       unit = W / r.width
+      scale = Math.min(1, r.height / 238)
       draw(lastT)
     }
     const tick = (now: number) => {
