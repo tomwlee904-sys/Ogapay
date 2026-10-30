@@ -37,6 +37,88 @@ function Copy({ text }: { text: string }) {
   )
 }
 
+/* Level 2 requests: members whose Didit ID check didn't work sent a photo of
+   their ID and a selfie holding it. Compare the two, then approve (Level 2) or
+   reject with a reason they see. Photo links expire after 10 minutes: Refresh
+   to get new ones. */
+interface L2 {
+  id: string; status: string; idType: string; idTypeName: string; idNumber: string | null; createdAt: string
+  user: { id: string; username: string; name: string; joined: string; level: number; levelBy: string | null }
+  idFrontUrl: string | null; selfieUrl: string | null
+}
+
+function Level2Row({ r, onDone }: { r: L2; onDone: (id: string, msg: string) => void }) {
+  const [mode, setMode] = useState<null | 'approve' | 'reject'>(null)
+  const [reason, setReason] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+  const name = r.user.name || r.user.username
+  const act = async () => {
+    if (mode === 'reject' && reason.trim().length < 5) { setError('Give a reason. The member will see it.'); return }
+    setBusy(true); setError('')
+    try {
+      await apiRequest(`/kyc/admin/level2/${r.id}`, { method: 'PATCH', body: JSON.stringify(mode === 'approve' ? { action: 'approve' } : { action: 'reject', reason: reason.trim() }) })
+      onDone(r.id, mode === 'approve' ? `${name} is now Level 2.` : `${name}'s Level 2 request rejected. They've been told why.`)
+    } catch (e: any) { setError(e?.message || 'Could not save this'); setBusy(false) }
+  }
+  return (
+    <article className="aw-row ui-card">
+      <header className="aw-top">
+        <div className="aw-who">
+          <b>{name} <Link to={`/user/${r.user.username}`} className="ak-handle">@{r.user.username}</Link></b>
+          <span>Now {r.user.level ? `Level ${r.user.level}` : 'not verified'}{r.user.levelBy === 'bank-name' ? ' (bank name check)' : ''} · joined {day(r.user.joined)}</span>
+        </div>
+        <time dateTime={r.createdAt}>{ago(r.createdAt)}</time>
+      </header>
+      <dl className="aw-amounts">
+        <div><dt>ID</dt><dd>{r.idTypeName}</dd></div>
+        <div><dt>Number</dt><dd className="aw-mono">{r.idNumber || '—'}{r.idNumber && <Copy text={r.idNumber} />}</dd></div>
+        <div><dt>Asks for</dt><dd>Level 2</dd></div>
+      </dl>
+      <div className="ak-photos">
+        {r.idFrontUrl ? <a href={r.idFrontUrl} target="_blank" rel="noreferrer"><img src={r.idFrontUrl} alt={`${name}'s ID`} /><span>ID</span></a> : <span className="aw-note">ID photo link expired: Refresh</span>}
+        {r.selfieUrl ? <a href={r.selfieUrl} target="_blank" rel="noreferrer"><img src={r.selfieUrl} alt={`${name}'s selfie with their ID`} /><span>Selfie with ID</span></a> : <span className="aw-note">Selfie link expired: Refresh</span>}
+      </div>
+      <p className="aw-kind"><i className="ti ti-search" /> Check that the face in the selfie matches the ID photo, the ID in the selfie is the same document, and the name on the ID matches {name}.</p>
+      {mode === null ? (
+        <div className="aw-actions">
+          <button className="ui-btn ui-btn-dark" onClick={() => setMode('approve')}><i className="ti ti-check" /> Approve Level 2</button>
+          <button className="ui-btn ui-btn-ghost" onClick={() => setMode('reject')}><i className="ti ti-x" /> Reject</button>
+        </div>
+      ) : (
+        <div className="aw-confirm">
+          {mode === 'approve'
+            ? <p>{name} becomes Level 2 (withdraw up to ₦10,000 a day) and counts as ID-verified for bonuses and sending money.</p>
+            : <><label htmlFor={`l2r-${r.id}`}>Reason (the member sees this)</label><input id={`l2r-${r.id}`} className="ui-input" value={reason} onChange={(e) => setReason(e.target.value)} placeholder="e.g. The selfie is blurry. Please send a clearer one." /></>}
+          {error && <p className="aw-error" role="alert">{error}</p>}
+          <div className="aw-actions">
+            <button className="ui-btn ui-btn-dark" onClick={act} disabled={busy}>{busy ? 'Saving…' : mode === 'approve' ? 'Confirm: Level 2' : 'Confirm reject'}</button>
+            <button className="ui-btn ui-btn-ghost" onClick={() => { setMode(null); setError('') }} disabled={busy}>Cancel</button>
+          </div>
+        </div>
+      )}
+    </article>
+  )
+}
+
+function Level2Requests() {
+  const [rows, setRows] = useState<L2[] | null>(null)
+  const [error, setError] = useState('')
+  const [notice, setNotice] = useState('')
+  const load = () => apiRequest<{ requests: L2[] }>('/kyc/admin/level2').then((d) => { setRows(d?.requests || []); setError('') }).catch((e: any) => setError(e?.message || 'Could not load Level 2 requests'))
+  useEffect(() => { load() }, [])
+  if (error) return <div className="aw-empty" role="alert">{error}</div>
+  if (!rows || (rows.length === 0 && !notice)) return null
+  return (
+    <section className="ak-l2" aria-labelledby="ak-l2-h">
+      <div className="aw-head"><div><h2 id="ak-l2-h">Level 2 requests ({rows.length})</h2><p>Sent by members whose Didit ID check didn't work.</p></div>
+        <button className="ui-btn ui-btn-ghost" onClick={() => load()}><i className="ti ti-refresh" /> Refresh</button></div>
+      {notice && <div className="aw-msg" role="status"><span>{notice}</span><button onClick={() => setNotice('')} aria-label="Dismiss"><i className="ti ti-x" /></button></div>}
+      <div className="aw-list">{rows.map((r) => <Level2Row key={r.id} r={r} onDone={(id, msg) => { setRows((x) => (x || []).filter((y) => y.id !== id)); setNotice(msg) }} />)}</div>
+    </section>
+  )
+}
+
 function Row({ r, onDone }: { r: Rec; onDone: (id: string, msg: string) => void }) {
   const [mode, setMode] = useState<null | 'approve' | 'reject' | 'revoke'>(null)
   const [reason, setReason] = useState('')
@@ -226,6 +308,11 @@ export default function AdminKyc() {
           .aw-amounts div:first-child{grid-column:1 / -1}
           .aw-actions .ui-btn{flex:1}
         }
+        .ak-photos{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
+        .ak-photos a{display:grid;gap:6px;text-decoration:none;color:var(--text2);font-size:13px}
+        .ak-photos img{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:var(--r-md,12px);border:1px solid var(--border);background:var(--soft,#f4f4f5)}
+        .ak-l2{margin:0 0 28px}
+        .ak-l2 h2{font-size:18px;margin:0}
       `}</style>
 
       <div className="aw">
@@ -236,6 +323,8 @@ export default function AdminKyc() {
           </div>
           <button className="ui-btn ui-btn-ghost" onClick={() => load()} disabled={loading}><i className="ti ti-refresh" /> Refresh</button>
         </div>
+
+        <Level2Requests />
 
         <div className="aw-tabs" role="tablist">
           {TABS.map(([s, label]) => (

@@ -43,6 +43,39 @@ export default function Verification({ me, reload, providers }: SectionProps & {
   const [useNin, setUseNin] = useState(false)
   const synced = useRef(false)
 
+  // Level 2 checked by our team, when Didit doesn't work for someone
+  type ManualReq = { status: 'PENDING' | 'APPROVED' | 'REJECTED'; reason?: string | null } | null
+  const [manualReq, setManualReq] = useState<ManualReq | undefined>(undefined)
+  const [showManual, setShowManual] = useState(false)
+  const [mType, setMType] = useState('NIN')
+  const [mNumber, setMNumber] = useState('')
+  const [mFront, setMFront] = useState<File | null>(null)
+  const [mSelfie, setMSelfie] = useState<File | null>(null)
+  const [mBusy, setMBusy] = useState(false)
+  const [mMsg, setMMsg] = useState<{ ok: boolean; text: string } | null>(null)
+  useEffect(() => {
+    if (tier >= 2) return
+    apiRequest<{ request: ManualReq }>('/kyc/level2/manual').then((d) => setManualReq(d?.request || null)).catch(() => setManualReq(null))
+  }, [tier])
+  const sendManual = async () => {
+    if (!mFront || !mSelfie) { setMMsg({ ok: false, text: 'Add both photos: your ID, and a selfie holding it.' }); return }
+    setMBusy(true); setMMsg(null)
+    try {
+      const fd = new FormData()
+      fd.append('idType', mType)
+      fd.append('idNumber', mNumber)
+      fd.append('id_front', mFront)
+      fd.append('selfie', mSelfie)
+      await apiRequest('/kyc/level2/manual', { method: 'POST', body: fd })
+      setManualReq({ status: 'PENDING' })
+      setShowManual(false); setMFront(null); setMSelfie(null); setMNumber('')
+      toast('Sent. Our team will check your ID and selfie.', 'success')
+    } catch (e: any) {
+      setMMsg({ ok: false, text: e?.message || "Couldn't send your photos. Please try again." })
+    }
+    setMBusy(false)
+  }
+
   const submit = async () => {
     if (!want || busy) return
     if (num.length !== 11) { setNinMsg({ ok: false, text: `Enter all 11 digits of your ${want}.` }); return }
@@ -246,8 +279,47 @@ export default function Verification({ me, reload, providers }: SectionProps & {
           No ID to scan? <button type="button" className="st2-linkbtn" onClick={() => { setUseNin((v) => !v); setMsg(null) }}>{useNin ? 'Hide the NIN form' : 'Use your NIN number instead'}</button> for Level 1 (our team checks it).
         </p>
       )}
+      {manualReq?.status !== 'PENDING' && (
+        <p className="st2-muted" style={{ margin: '10px 0 0' }}>
+          Didit not working? <button type="button" className="st2-linkbtn" onClick={() => { setShowManual((v) => !v); setMMsg(null) }}>{showManual ? 'Hide' : 'Send your ID to our team instead'}</button>
+        </p>
+      )}
     </div>
   )
+
+  // Level 2 by hand: a photo of the ID and a selfie holding it, checked by our team
+  const manualPanel = manualReq?.status === 'PENDING' ? (
+    <div className="st2-banner"><i className="ti ti-hourglass" /> Your ID and selfie are with our team. We'll notify you when your Level 2 is checked. Your current level stays until then.</div>
+  ) : (
+    <form className="st2-panel st2-form" noValidate onSubmit={(e) => { e.preventDefault(); sendManual() }}>
+      <strong>Get Level 2: send your ID to our team</strong>
+      <p className="st2-muted" style={{ margin: '6px 0 0', lineHeight: 1.55 }}>
+        Take a clear photo of your ID, and a selfie holding the same ID next to your face. Our team checks them by hand, usually within a day. Your photos are private and only our verification team can see them.
+      </p>
+      {manualReq?.status === 'REJECTED' && <div className="st2-warn"><i className="ti ti-alert-circle" aria-hidden="true" /><span>Your last request wasn't approved{manualReq.reason ? `: ${manualReq.reason}` : ''}. You can send new photos.</span></div>}
+      <label className="st2-f"><span>Type of ID</span>
+        <select value={mType} onChange={(e) => setMType(e.target.value)}>
+          <option value="NIN">National ID (NIN slip or card)</option>
+          <option value="PASSPORT">International passport</option>
+          <option value="DRIVERS_LICENSE">Driver's licence</option>
+          <option value="VOTERS_CARD">Voter's card</option>
+        </select>
+      </label>
+      <label className="st2-f"><span>ID number (optional)</span>
+        <input autoComplete="off" value={mNumber} maxLength={40} onChange={(e) => setMNumber(e.target.value)} placeholder="The number on your ID" />
+      </label>
+      <label className="st2-f"><span>Photo of your ID (JPG or PNG, up to 5 MB)</span>
+        <input type="file" accept="image/jpeg,image/png,image/webp" onChange={(e) => setMFront(e.target.files?.[0] || null)} />
+      </label>
+      <label className="st2-f"><span>Selfie holding your ID</span>
+        <input type="file" accept="image/jpeg,image/png,image/webp" capture="user" onChange={(e) => setMSelfie(e.target.files?.[0] || null)} />
+      </label>
+      {mMsg && <p className={mMsg.ok ? 'st2-ok' : 'st2-err'}>{mMsg.text}</p>}
+      <div className="st2-actions"><button className="up-btn primary" disabled={mBusy}>{mBusy ? 'Sending…' : 'Send for checking'}</button></div>
+    </form>
+  )
+  // Shown when they ask for it, or when Didit failed for them
+  const manualWanted = tier < 2 && manualReq !== undefined && (manualReq?.status === 'PENDING' || showManual || (!!msg && !msg.ok))
 
   return (
     <>
@@ -283,13 +355,15 @@ export default function Verification({ me, reload, providers }: SectionProps & {
             {bankPanel}
             {useNin && ninForm}
             {useDidit && diditPanel}
+            {useDidit && manualWanted && manualPanel}
           </>
         ) : useDidit ? (
           <>
             {diditPanel}
+            {manualWanted && manualPanel}
             {(useNin || ninInstant) && !diditOpen && tier === 0 && ninForm}
           </>
-        ) : want ? ninForm : (
+        ) : want ? ninForm : tier === 1 && manualReq !== undefined ? manualPanel : (
           <Row title="Need a higher limit?" sub="Level 3 is done by our team with your ID documents.">
             <Link className="up-btn" to="/support">Contact support</Link>
           </Row>
