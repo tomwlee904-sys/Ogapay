@@ -22,7 +22,13 @@ import '../styles/dashboard.css'
 // Starter jobs (the Highlighted ones) are listed in full for anyone with fewer
 // than STARTER_UNTIL finished jobs, the ones they can do right now first.
 
-type Me = { ogaScore?: number; humanVerifiedAt?: string | null; workerProfile?: { tasksCompleted?: number; level?: string } | null; kyc?: { status?: string; kycTier?: number } | null }
+type Intent = 'EARN' | 'HIRE' | 'BOTH'
+const INTENT_OPTS: { value: Intent; label: string; icon: string }[] = [
+  { value: 'EARN', label: 'Earn money', icon: 'ti-coin' },
+  { value: 'HIRE', label: 'Hire people', icon: 'ti-briefcase' },
+  { value: 'BOTH', label: 'Both', icon: 'ti-arrows-exchange' },
+]
+type Me = { ogaScore?: number; signupIntent?: Intent | null; humanVerifiedAt?: string | null; workerProfile?: { tasksCompleted?: number; level?: string } | null; kyc?: { status?: string; kycTier?: number } | null }
 type Sub = {
   id: string; status: string; taskId: string; autoApproveAt?: string | null; submittedAt?: string | null
   task?: { id: string; title: string; reward: number | string; currency?: string; expiresAt?: string | null; deadline?: string | null }
@@ -71,6 +77,11 @@ export default function Dashboard() {
   const [jobs, setJobs] = useState<Job[] | null>(null)
   const [hasBank, setHasBank] = useState(false)
   const [mail, setMail] = useState<'idle' | 'sending' | 'sent' | 'failed'>('idle')
+  // "What brings you to OgaPay?" for members who didn't answer at sign-up
+  // (Google sign-ups, older accounts). Asked once; Skip hides it on this device.
+  const [intentSkipped, setIntentSkipped] = useState(false)
+  const [intentBusy, setIntentBusy] = useState(false)
+  const [intentError, setIntentError] = useState('')
 
   useEffect(() => {
     apiRequest<Me>('/users/me').then(setMe).catch(() => setMe({}))
@@ -163,6 +174,42 @@ export default function Dashboard() {
     ...(!kycOk && ngn > 0 && !isNew ? [{ key: 'kyc', icon: 'ti-id', text: `Verify your identity to withdraw your ${show(ngn, 'NGN', { exact: true })}`, to: '/settings/verification', cta: 'Verify' }] : []),
   ]
   const moreReview = reviewJobs.length - 3
+
+  // "What brings you to OgaPay?" (only when the server says it isn't answered)
+  const skipKey = `ogapay-intent-skip-${user.id}`
+  const skipped = intentSkipped || (() => { try { return localStorage.getItem(skipKey) === '1' } catch { return false } })()
+  const answerIntent = async (value: Intent) => {
+    setIntentBusy(true); setIntentError('')
+    try {
+      await apiRequest('/users/me', { method: 'PATCH', body: JSON.stringify({ signupIntent: value }) })
+      setMe((m) => ({ ...(m || {}), signupIntent: value }))
+    } catch (e: any) { setIntentError(e?.message || "Couldn't save that. Please try again.") }
+    setIntentBusy(false)
+  }
+  const skipIntent = () => { try { localStorage.setItem(skipKey, '1') } catch { /* private mode */ } setIntentSkipped(true) }
+  const intentCard = me?.signupIntent === null && !skipped && (
+    <section className="ui-card ui-card-pad db-intent" aria-labelledby="db-intent">
+      <div className="db-sec-head"><h2 id="db-intent">What brings you to OgaPay?</h2><button type="button" className="db-intent-skip" onClick={skipIntent}>Skip</button></div>
+      <p className="db-intent-sub">One tap. You can earn and hire either way. This helps us show you the right things first.</p>
+      <div className="db-intent-opts">
+        {INTENT_OPTS.map((o) => (
+          <button key={o.value} type="button" className="db-intent-opt" disabled={intentBusy} onClick={() => answerIntent(o.value)}>
+            <i className={`ti ${o.icon}`} aria-hidden="true" /> {o.label}
+          </button>
+        ))}
+      </div>
+      {intentError && <p className="db-intent-err" role="alert">{intentError}</p>}
+    </section>
+  )
+
+  const postFirst = (
+    <Link to="/create" className="ui-card ui-card-pad db-start">
+      <span className="db-start-ic"><i className="ti ti-plus" /></span>
+      <strong>Post your first job</strong>
+      <span>Describe the work, set a reward and how many people you need. The money is held safely until you approve the work.</span>
+      <em>Post a job <i className="ti ti-arrow-right" /></em>
+    </Link>
+  )
 
   const resend = async () => {
     setMail('sending')
@@ -364,6 +411,7 @@ export default function Dashboard() {
             </section>
           )}
 
+          {intentCard}
           {firstJobCard}
           {starterCard}
           {isNew && setup}
@@ -382,18 +430,15 @@ export default function Dashboard() {
             <div className="ui-sk" style={{ height: 200, borderRadius: 20 }} />
           ) : isNew ? (
             <div className="db-pair">
+              {/* Someone who came to hire sees "Post your first job" first */}
+              {me?.signupIntent === 'HIRE' && postFirst}
               <Link to="/tasks" className="ui-card ui-card-pad db-start">
                 <span className="db-start-ic"><i className="ti ti-search" /></span>
                 <strong>Find your first job</strong>
                 <span>Paid tasks you can do from your phone: testing, writing, design and more. Get paid in naira or USDC.</span>
                 <em>Browse jobs <i className="ti ti-arrow-right" /></em>
               </Link>
-              <Link to="/create" className="ui-card ui-card-pad db-start">
-                <span className="db-start-ic"><i className="ti ti-plus" /></span>
-                <strong>Post your first job</strong>
-                <span>Describe the work, set a reward and how many people you need. The money is held safely until you approve the work.</span>
-                <em>Post a job <i className="ti ti-arrow-right" /></em>
-              </Link>
+              {me?.signupIntent !== 'HIRE' && postFirst}
             </div>
           ) : (
             <div className={`db-pair${hires && works ? '' : ' single'}`}>

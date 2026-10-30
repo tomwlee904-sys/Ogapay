@@ -88,6 +88,19 @@
 .db-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: start; }
 .db-pair.single { grid-template-columns: minmax(0, 1fr); }
 .db-pair > * { min-width: 0; }
+/* "What brings you to OgaPay?" (members who didn't answer at sign-up) */
+.db-intent-sub { margin: -4px 0 12px; font-size: 13px; line-height: 1.5; color: var(--text2); }
+.db-intent-opts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.db-intent-opt { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 0 12px; border-radius: var(--r-ctl); border: 1px solid var(--border); background: var(--card); color: var(--text); font: 600 13.5px 'Inter', system-ui, sans-serif; cursor: pointer; }
+.db-intent-opt:hover:not(:disabled) { border-color: var(--text3); }
+.db-intent-opt:disabled { opacity: .6; cursor: default; }
+.db-intent-opt i { font-size: 18px; color: var(--text2); }
+.db-intent-skip { border: 0; background: none; padding: 0 4px; min-height: 32px; font: 500 12.5px 'Inter', system-ui, sans-serif; color: var(--text2); cursor: pointer; }
+.db-intent-skip:hover { color: var(--text); }
+.db-intent-err { margin: 8px 0 0; font-size: 12.5px; color: #dc2626; }
+@media (max-width: 767px) {
+  .db-intent-opt { flex-direction: column; gap: 4px; min-height: 64px; padding: 8px 6px; font-size: 13px; }
+}
 .db-role-label { font: 500 11px var(--font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--text2); margin-bottom: 4px; }
 .db-sub-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: 18px 0 10px; padding-top: 14px; border-top: 1px solid var(--border); }
 .db-sub-head span { font-size: 14px; font-weight: 600; color: var(--text); }

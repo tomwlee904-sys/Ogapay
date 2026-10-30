@@ -1,6 +1,8 @@
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import Layout from '../components/Layout'
+import { apiRequest } from '../lib/api'
 
 // Only pages that exist (Users, Tasks, Disputes and Analytics had no page and
 // just came back here)
@@ -20,8 +22,20 @@ const CARDS = [
   { to: '/admin/vault', icon: 'ti-building-bank', title: 'Vault', desc: 'Revenue pool, distributions and $PAY' },
 ]
 
+// "What brings you to OgaPay?" answers (GET /admin/signup-intents)
+type IntentCounts = { EARN: number; HIRE: number; BOTH: number; NONE: number; total: number }
+const pct = (n: number, of: number) => (of ? ` (${Math.round((n / of) * 100)}%)` : '')
+const intentLine = (c: IntentCounts) => {
+  const answered = c.EARN + c.HIRE + c.BOTH
+  return `Earn ${c.EARN}${pct(c.EARN, answered)} · Hire ${c.HIRE}${pct(c.HIRE, answered)} · Both ${c.BOTH}${pct(c.BOTH, answered)} · Not answered ${c.NONE}`
+}
+
 export default function Admin() {
   const { isAuthed } = useAuth()
+  const [intents, setIntents] = useState<{ all: IntentCounts; last30Days: IntentCounts } | null>(null)
+  useEffect(() => {
+    if (isAuthed) apiRequest<{ all: IntentCounts; last30Days: IntentCounts }>('/admin/signup-intents').then(setIntents).catch(() => {})
+  }, [isAuthed])
 
   if (!isAuthed) return null
 
@@ -37,10 +51,27 @@ export default function Admin() {
         .admin-card i{font-size:24px;color:var(--accent);display:block;margin-bottom:10px}
         .admin-card h3{font-size:15px;font-weight:800;margin:0 0 4px}
         .admin-card p{font-size:12px;color:var(--text2);margin:0}
+        .admin-intents{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px 20px;margin:0 0 20px}
+        .admin-intents h2{font-size:14px;font-weight:800;margin:0 0 8px}
+        .admin-intents dl{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;margin:0;font-size:13px}
+        .admin-intents dt{color:var(--text2)}
+        .admin-intents dd{margin:0;font-variant-numeric:tabular-nums}
+        .admin-intents small{display:block;margin-top:8px;font-size:12px;color:var(--text2)}
+        @media (max-width:767px){.admin-intents dl{grid-template-columns:1fr;gap:2px}.admin-intents dd{margin-bottom:8px}}
       `}</style>
       <div className="admin-wrap">
         <h1>Admin</h1>
         <p>Money out, identity checks, moderation and content.</p>
+        {intents && (
+          <section className="admin-intents" aria-labelledby="admin-intents-h">
+            <h2 id="admin-intents-h">Why members joined</h2>
+            <dl>
+              <dt>All members ({intents.all.total})</dt><dd>{intentLine(intents.all)}</dd>
+              <dt>Joined in the last 30 days ({intents.last30Days.total})</dt><dd>{intentLine(intents.last30Days)}</dd>
+            </dl>
+            <small>Asked at sign-up (or once on the dashboard). Percentages are of those who answered. Closed accounts and admins aren't counted.</small>
+          </section>
+        )}
         <div className="admin-grid">
           {CARDS.map((c) => (
             <Link key={c.to} className="admin-card" to={c.to}>

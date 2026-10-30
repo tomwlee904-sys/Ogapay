@@ -53,6 +53,15 @@ const friendly = (msg = '') => {
   return msg || 'Something went wrong. Please try again.'
 }
 
+// Sign-up: "What brings you to OgaPay?" (saved as signupIntent; changes nothing
+// a member can do, every account can earn and hire)
+type Intent = 'EARN' | 'HIRE' | 'BOTH'
+const INTENTS: { value: Intent; label: string; icon: string }[] = [
+  { value: 'EARN', label: 'Earn money', icon: 'ti-coin' },
+  { value: 'HIRE', label: 'Hire people', icon: 'ti-briefcase' },
+  { value: 'BOTH', label: 'Both', icon: 'ti-arrows-exchange' },
+]
+
 // Sign-up: what's wrong with a password, in plain words (null when it's fine)
 const passwordProblem = (pw: string) =>
   pw.length < 8 ? 'Use at least 8 characters for your password.'
@@ -118,6 +127,7 @@ export default function SignInModal({ initialView = 'options', initialCode = '',
   const [showPw, setShowPw] = useState(false)
   const [remember, setRemember] = useState(() => !!localStorage.getItem('ogapay_remember_email'))
   const [name, setName] = useState('')
+  const [intent, setIntent] = useState<Intent | ''>('')
   const [code, setCode] = useState(initialCode.toUpperCase())
   const [challenge, setChallenge] = useState<{ token: string; userId: string } | null>(null)
   const [otp, setOtp] = useState('')
@@ -201,6 +211,7 @@ export default function SignInModal({ initialView = 'options', initialCode = '',
 
   const signup = (e: FormEvent) => {
     e.preventDefault()
+    if (!intent) { setError('Choose what brings you to OgaPay: earn money, hire people, or both.'); return }
     if (!name.trim() || !email.trim() || !password) { setError('Fill in your name, email and a password.'); return }
     // The server's rules (validate.js registerSchema), checked here so the reason is clear
     const pwProblem = passwordProblem(password)
@@ -213,6 +224,7 @@ export default function SignInModal({ initialView = 'options', initialCode = '',
       email: email.trim(),
       password,
       username: usernameFrom(email),
+      intent,
     }
     const ref = localStorage.getItem('ogapay_referral')
     if (ref) body.referralCode = ref
@@ -389,6 +401,19 @@ export default function SignInModal({ initialView = 'options', initialCode = '',
     body = (
       <form className="si-form" onSubmit={signup} noValidate>
         <p className="si-desc">Earn from tasks, hire people and sell in the store. It takes a minute.</p>
+        <fieldset className="si-intent">
+          <legend className="si-label">What brings you to OgaPay?</legend>
+          <div className="si-intent-opts">
+            {INTENTS.map((o) => (
+              <label key={o.value} className={`si-intent-opt${intent === o.value ? ' on' : ''}`}>
+                <input type="radio" name="si-intent" value={o.value} checked={intent === o.value} onChange={() => { setIntent(o.value); setError('') }} />
+                <i className={`ti ${o.icon}`} aria-hidden="true" />
+                <span>{o.label}</span>
+              </label>
+            ))}
+          </div>
+          <p className="si-hint">You can do both either way. This helps us show you the right things first.</p>
+        </fieldset>
         <div className="si-field">
           <label htmlFor="si-name">Full name</label>
           <input id="si-name" className="si-input" autoComplete="name" value={name} onChange={e => setName(e.target.value)} />
