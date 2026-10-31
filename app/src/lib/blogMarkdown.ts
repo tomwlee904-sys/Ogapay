@@ -3,24 +3,65 @@
 // of its own "![caption](image link)" for a picture, "- [ ] " / "- [x] " checklists,
 // tables ("| a | b |" rows with a "| --- | --- |" line under the header) and code
 // blocks between ``` lines. Inline: **bold**, *italic*, ~~struck out~~, `code` and
-// [text](link). Everything is escaped first, and links and pictures
-// only accept https:// addresses or paths on this site, so a post can't carry
-// HTML or javascript: links.
+// [text](link). A pasted https:// link, and the way many writers paste one,
+// "Name" (https://link), become links too (2026-10-31). Everything is escaped
+// first, and links and pictures only accept https:// addresses or paths on this
+// site, so a post can't carry HTML or javascript: links.
 
 function escapeHtml(text: string) {
   return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;')
 }
 
-const SAFE_URL = /^(https:\/\/[^\s"'<>]+|\/(?!\/)[^\s"'<>]*)$/
+const SAFE_URL = /^(https:\/\/[^\s"'<>\x5c]+|\/(?![/\x5c])[^\s"'<>\x5c]*)$/
 
+const link = (text: string, url: string) =>
+  url.startsWith('/') ? `<a href="${url}">${text}</a>` : `<a href="${url}" target="_blank" rel="noopener nofollow ugc">${text}</a>`
+
+const format = (text: string) => text
+  .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+  .replace(/(^|[^\w*])\*(?!\s)(.+?)\*(?!\w)/g, '$1<em>$2</em>')
+  .replace(/~~(.+?)~~/g, '<del>$1</del>')
+
+// A pasted https:// address, in escaped text. "&amp;" and an escaped apostrophe
+// are part of it, and so is a (bracketed part); a space, any other entity (a
+// quote or < >), a backslash, a lone bracket, curly quotes, dashes, "…", an
+// emoji or a set-aside piece ends it.
+const STOP = String.raw`\s&\x5c\[\]()‘’“”–—…\u0000\p{Extended_Pictographic}\p{Regional_Indicator}`
+const URL_CHARS = String.raw`(?:&amp;|&#039;|[^${STOP}]|\((?:&amp;|[^${STOP}])*\))`
+const BARE_URL = new RegExp(String.raw`https:\/\/${URL_CHARS}+`, 'gu')
+const NAMED_URL = new RegExp(String.raw`(?:&quot;|“)((?:&amp;|&#039;|\u0000\d+\u0000|[^&\n“”\u0000]){1,160}?)(?:&quot;|”)\s?\((https:\/\/${URL_CHARS}+)\)`, 'gu')
+
+// What ends a sentence isn't part of the address: . , ; : ! ? * ~ and a closing
+// quote ("&amp;" keeps its ";"). One pass from the end, so it's quick on any length.
+const trimUrl = (url: string) => {
+  let end = url.length
+  for (;;) {
+    if (url.endsWith('&#039;', end)) { end -= 6; continue }
+    const ch = url[end - 1]
+    if (ch === ';' && url.endsWith('&amp;', end)) break
+    if ('.,;:!?*~'.includes(ch)) { end--; continue }
+    break
+  }
+  return [url.slice(0, end), url.slice(end)]
+}
+
+// Code, links and pasted addresses are set aside first (so formatting can't
+// reach inside them, and an address isn't linked twice), then put back.
 function inline(escaped: string) {
-  return escaped
-    .replace(/\[([^\]]+)\]\((https:\/\/[^\s)]+|\/(?!\/)[^\s)]*)\)/g, (_m, text: string, url: string) =>
-      url.startsWith('/') ? `<a href="${url}">${text}</a>` : `<a href="${url}" target="_blank" rel="noopener nofollow ugc">${text}</a>`)
-    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    .replace(/(^|[^\w*])\*(?!\s)(.+?)\*(?!\w)/g, '$1<em>$2</em>')
-    .replace(/~~(.+?)~~/g, '<del>$1</del>')
-    .replace(/`(.+?)`/g, '<code>$1</code>')
+  const kept: string[] = []
+  const keep = (html: string) => `\u0000${kept.push(html) - 1}\u0000`
+  const text = escaped.replace(/\u0000/g, '')
+    .replace(/`(.+?)`/g, (_m, code: string) => keep(`<code>${code}</code>`))
+    .replace(/\[([^\]]+)\]\((https:\/\/[^\s)\x5c]+|\/(?![/\x5c])[^\s)\x5c]*)\)/g, (_m, t: string, url: string) => keep(link(format(t), url)))
+    .replace(NAMED_URL, (_m, t: string, url: string) => keep(link(format(t), url)))
+    .replace(BARE_URL, (url) => {
+      const [href, after] = trimUrl(url)
+      // "https://" on its own (or followed by dots) is a word about links, not a link
+      return /^https:\/\/[\p{L}\p{N}]/u.test(href) ? keep(link(href, href)) + after : url
+    })
+  // A kept piece can hold earlier ones (code inside a link's text), so put back until none are left
+  const restore = (s: string): string => s.replace(/\u0000(\d+)\u0000/g, (_m, i: string) => restore(kept[Number(i)] ?? ''))
+  return restore(format(text))
 }
 
 // "| a | b |" -> ["a", "b"]

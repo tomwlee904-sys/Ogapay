@@ -378,7 +378,7 @@ export default function BlogEditor() {
             ) : (
               <textarea id="blog-body" className="be-textarea" value={form.body} onChange={s('body')} maxLength={50000} placeholder="Write your article here..." />
             )}
-            <p className="be-hint">Use ## for headings, - or 1. for lists, - [ ] for a checklist, **bold**, *italic*, ~~strike~~, ``` lines around code, | cells | rows for a table and [text](https://link) for links. Image adds a picture (up to 25 MB) on its own line: ![caption](link). HTML isn't supported.</p>
+            <p className="be-hint">Use ## for headings, - or 1. for lists, - [ ] for a checklist, **bold**, *italic*, ~~strike~~, ``` lines around code, | cells | rows for a table and [text](https://link) for links (a pasted https:// link works too). Image adds a picture (up to 25 MB) on its own line: ![caption](link). HTML isn't supported.</p>
 
             {/* Actions */}
             <div className="be-actions">

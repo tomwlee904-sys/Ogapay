@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
+    "test:blog-links": "node scripts/tests/blogmd.test.cjs && node scripts/tests/blogmd.review.test.cjs && node scripts/tests/blogmd.fuzz.cjs",
     "dev": "vite",
     "prebuild": "node scripts/icons-subset.mjs",
     "typecheck": "tsc --noEmit -p .",
