@@ -23,7 +23,9 @@ type Stats = {
   bonusPerReferral?: number; rewardCap?: number; referrals?: Referral[]; signupBonus?: number
 }
 type Leader = { rank: number; username: string | null; avatarUrl: string | null; friends: number; prize: number; isMe: boolean }
-type Board = { week: 'this' | 'last'; weekStart: string; weekEnd: string; prizes: number[]; leaders: Leader[]; me: { rank: number | null; friends: number } | null }
+// week 'contest': the referral contest's whole period and its own prizes (the default)
+type Board = { week: 'contest' | 'this' | 'last'; weekStart: string; weekEnd: string; prizes: number[]; leaders: Leader[]; me: { rank: number | null; friends: number } | null
+  contest?: { taskId: string; title: string; total: number; currency: string; finished: boolean } }
 
 // What each friend still has to do, in words
 const STEPS: Record<Step, { icon: string; text: string; ok?: boolean }> = {
@@ -153,7 +155,7 @@ export default function TabReferralsContent() {
   const [bonuses, setBonuses] = useState<Bonus[]>([])
   const [loading, setLoading] = useState(true)
   const [copied, setCopied] = useState(false)
-  const [week, setWeek] = useState<'this' | 'last'>('this')
+  const [week, setWeek] = useState<'contest' | 'this' | 'last'>('contest')
   const [board, setBoard] = useState<Board | null>(null)
   const [reminded, setReminded] = useState<Record<string, string>>({})
   const [statsFailed, setStatsFailed] = useState(false)
@@ -327,26 +329,29 @@ export default function TabReferralsContent() {
           </details>
         </div>
 
-        <aside className="rf3-side" aria-label="Your progress and the weekly contest">
+        <aside className="rf3-side" aria-label="Your progress and the referral contest">
           <div className="rf3-progress-side">{progress}</div>
 
-          {/* 4. Weekly contest: your place first, then the board */}
+          {/* 4. The referral contest: your place first, then the board */}
           <section className="rf3-card" aria-labelledby="rf3-top">
             <div className="rf3-head">
               <div>
-                <h2 className="rf3-h2" id="rf3-top">Weekly contest</h2>
-                <div className="rf3-muted">{board ? (week === 'this' ? timeLeft(board.weekEnd) : 'Winners are paid every Monday') : boardFailed ? '' : '…'}</div>
+                <h2 className="rf3-h2" id="rf3-top">{board?.contest ? `Referral contest · ${naira(board.contest.total, 0)} in prizes` : 'Weekly contest'}</h2>
+                <div className="rf3-muted">{board ? (board.week === 'last' ? 'Winners are paid every Monday' : board.contest?.finished ? 'This contest has ended' : timeLeft(board.weekEnd)) : boardFailed ? '' : '…'}</div>
+                {board?.contest && <Link className="rf3-muted" to={`/tasks/${board.contest.taskId}`}>Enter the contest to win →</Link>}
               </div>
-              <div className="rf3-seg" role="group" aria-label="Which week">
-                <button type="button" aria-pressed={week === 'this'} onClick={() => setWeek('this')}>This week</button>
-                <button type="button" aria-pressed={week === 'last'} onClick={() => setWeek('last')}>Last week</button>
-              </div>
+              {board && board.week !== 'contest' && (
+                <div className="rf3-seg" role="group" aria-label="Which week">
+                  <button type="button" aria-pressed={week === 'this'} onClick={() => setWeek('this')}>This week</button>
+                  <button type="button" aria-pressed={week === 'last'} onClick={() => setWeek('last')}>Last week</button>
+                </div>
+              )}
             </div>
-            {week === 'this' && board?.me && (
+            {board?.week !== 'last' && board?.me && (
               <div className="rf3-me">
                 <b>{board.me.rank ? `#${board.me.rank}` : '—'}</b>
                 <div className="rf3-muted">{board.me.friends > 0
-                  ? <>Your place · {board.me.friends} qualified {board.me.friends === 1 ? 'friend' : 'friends'} this week</>
+                  ? <>Your place · {board.me.friends} qualified {board.me.friends === 1 ? 'friend' : 'friends'} {board.week === 'contest' ? 'so far' : 'this week'}</>
                   : someoneToRemind ? 'Not on the board yet. Remind your friends who still have a step to do.' : 'Not on the board yet. Share your link to get on it.'}</div>
               </div>
             )}
@@ -359,7 +364,7 @@ export default function TabReferralsContent() {
             ) : !board ? (
               <div className="rf3-skel" aria-hidden="true">{[0, 1, 2].map((i) => <div key={i} className="ui-sk" style={{ height: 32, borderRadius: 10 }} />)}</div>
             ) : board.leaders.length === 0 ? (
-              <div className="rf3-empty"><b>No one has qualified {week === 'this' ? 'yet' : 'last week'}</b>{week === 'this' ? 'One verified friend with a finished job could put you on top.' : ''}</div>
+              <div className="rf3-empty"><b>No one has qualified {board.week === 'last' ? 'last week' : 'yet'}</b>{board.week === 'last' ? '' : 'One verified friend with a finished job could put you on top.'}</div>
             ) : (
               <>
                 <ol style={{ listStyle: 'none', margin: 0, padding: 0 }} aria-label="Top inviters">
