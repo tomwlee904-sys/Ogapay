@@ -385,7 +385,8 @@ function Milestone({ value, label, format }: { value: number; label: string; for
 }
 
 // A number only goes public once it's big enough to be worth showing
-const MILESTONE_MIN = { users: 1000, jobs: 100, paidNgn: 1_000_000 };
+// (lowered 2026-10-31 so members, 207, and paid out, about ₦46K, show now)
+const MILESTONE_MIN = { users: 200, jobs: 100, paidNgn: 40_000 };
 
 function Numbers({ live, all }: { live: any; all: any }) {
   const users = Number(all?.data?.totalUsers ?? all?.totalUsers ?? 0);
