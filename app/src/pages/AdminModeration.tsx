@@ -52,7 +52,8 @@ export default function AdminModeration() {
       setLooks((prev) => (prev || []).filter((x) => x.id !== d.id))
       setMsg(outcome === 'POSTER_WON' ? `Rejection kept on "${d.task?.title}"` : `Paid @${d.worker?.username} for "${d.task?.title}"`)
     } catch (err: any) {
-      setMsg(err.message || 'Failed to decide')
+      setMsg(`Failed: ${err.message || 'could not decide'}`)
+      loadLooks()
     }
     setBusy(null)
   }

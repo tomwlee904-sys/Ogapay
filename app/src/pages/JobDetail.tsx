@@ -294,20 +294,24 @@ export default function JobDetail() {
   }
 
   const handleReject = async (subId: string) => {
+    // A rejection is final for that person on this job, so they're told why
+    const reason = (window.prompt('Why are you rejecting it? The worker sees this, and a rejection is final for them on this job. To ask for a fix instead, use Send back for changes in Manage jobs.') || '').trim()
+    if (!reason) return
+    if (reason.length < 5) { showToast('Give a reason of at least 5 characters.', 'error'); return }
     setRejecting(subId)
     try {
       const token = localStorage.getItem('ogapay_access_token')
-      if (!token) return
+      if (!token) { setRejecting(null); return }
       const res = await fetch(API_BASE + '/tasks/submissions/' + subId + '/reject', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-        body: JSON.stringify({ posterNotes: '' }),
+        body: JSON.stringify({ posterNotes: reason }),
       })
       const json = await res.json()
       if (json.success) {
         setSubmissions(prev => prev.map(s => s.id === subId ? { ...s, status: 'REJECTED' } : s))
         refreshUser()
-      }
+      } else showToast(json.message || 'Failed to reject submission', 'error')
     } catch (e: any) { showToast(e?.message || 'Failed to reject submission', 'error') }
     setRejecting(null)
   }

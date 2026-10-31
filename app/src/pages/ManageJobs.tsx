@@ -15,6 +15,7 @@ import { PayoutCheckStatus, checkBlocksApprove, anyWaiting, useNow } from '../co
 import TransferModal from '../components/TransferModal'
 import { isXFollowJob } from "../lib/followJobs";
 import LoadError from "../components/LoadError";
+import { jobDeadline } from "../lib/deadline";
 
 // Work can be sent back for changes this many times (server: task.service SEND_BACK_LIMIT)
 const SEND_BACK_LIMIT = 2;
@@ -42,13 +43,13 @@ type Sub = {
 }
 type Task = {
   id: string; title: string; status: string; category?: string; reward: number | string; currency?: string
-  maxWorkers?: number; deadline?: string | null; createdAt?: string; submissions?: Sub[]
+  maxWorkers?: number; deadline?: string | null; expiresAt?: string | null; createdAt?: string; submissions?: Sub[]
   description?: string | null; instructions?: string | null; tags?: string[]
   excludesTaskIds?: string[]
   // "Member of community": a public job only that community's members can take
   requiredCommunityId?: string | null; communityId?: string | null
   // A contest: entries aren't approved one by one, places are awarded on the job page
-  isContest?: boolean
+  isContest?: boolean; randomDraw?: boolean
   // Quick social jobs use set prices; private hires: neither can have the pay raised
   socialAction?: string | null
   // Selection jobs: people apply with a note and the poster picks one (hiredWorkerId)
@@ -455,7 +456,7 @@ function JobDrawer({ task, allTasks, focusId, onClose, onChanged }: { task: Task
                         onRating={(v) => setStars((m) => ({ ...m, [s.id]: v }))} onNote={(v) => setNotes((m) => ({ ...m, [s.id]: v }))} />}
                       <div className="mj-acts">
                         {!contest && <button className="ui-btn ui-btn-dark" disabled={busy === s.id || checkBlocksApprove(s, clock)} title={checkBlocksApprove(s, clock) ? "Payout check still running" : undefined} onClick={() => review(s, "APPROVED")}><Icon n="check" s={15} /> {busy === s.id ? "Approving…" : `Approve and pay ${money(reward, cur)}`}</button>}
-                        {(task.status === "OPEN" || task.status === "COOLING_DOWN") && (s.sentBackCount || 0) < SEND_BACK_LIMIT && (
+                        {(task.status === "OPEN" || task.status === "COOLING_DOWN") && jobDeadline(task).state !== "ended" && !(task.isContest && task.randomDraw) && (s.sentBackCount || 0) < SEND_BACK_LIMIT && (
                           <button className="ui-btn ui-btn-ghost" disabled={busy === s.id} onClick={() => { setRejecting(s.id); setAction("back"); setReason(""); }}><Icon n="arrow-back-up" s={15} /> Send back for changes</button>
                         )}
                         <button className="ui-btn ui-btn-ghost" disabled={busy === s.id} onClick={() => { setRejecting(s.id); setAction("reject"); setReason(""); }}>Reject</button>

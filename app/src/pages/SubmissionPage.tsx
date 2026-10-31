@@ -203,7 +203,7 @@ export default function SubmissionPage() {
   }
 
   // A second look at a rejection: an admin checks the work against the brief
-  const canAppeal = mine?.status === 'REJECTED' && !task.isContest && !mine.dispute
+  const canAppeal = mine?.status === 'REJECTED' && !task.isContest && !mine.dispute && !['COMPLETED', 'CANCELLED'].includes(task.status)
     && (!mine.reviewedAt || Date.now() - new Date(mine.reviewedAt).getTime() < APPEAL_DAYS * 86400000)
   const appeal = async () => {
     if (!mine) return
@@ -320,13 +320,15 @@ export default function SubmissionPage() {
             ) : status === 'REJECTED' || status === 'EXPIRED' || status === 'DISPUTED' ? (
               <section className="ui-card ui-card-pad sb-state">
                 <span className="sb-ic bad"><i className={`ti ${status === 'DISPUTED' ? 'ti-scale' : 'ti-x'}`} /></span>
-                <h2>{status === 'REJECTED' ? 'Not approved' : status === 'EXPIRED' ? 'Your slot expired' : 'OgaPay is taking a second look'}</h2>
+                <h2>{status === 'REJECTED' ? (mine?.dispute?.outcome === 'SPLIT' ? 'Half the reward paid' : 'Not approved') : status === 'EXPIRED' ? 'Your slot expired' : 'OgaPay is taking a second look'}</h2>
                 <p>{status === 'REJECTED'
-                  ? (mine?.dispute?.outcome === 'POSTER_WON' ? 'We looked at your work again and the rejection stays.' : "The poster didn't approve this work.")
+                  ? (mine?.dispute?.outcome === 'POSTER_WON' ? 'We looked at your work again and the rejection stays.'
+                    : mine?.dispute?.outcome === 'SPLIT' ? 'We looked at your work again and paid you half the reward. It went to your wallet.'
+                    : "The poster didn't approve this work.")
                   : status === 'EXPIRED' ? 'No work was sent before the time ran out, so the slot went to someone else.'
                   : "Our team is checking your work against the brief. You'll get a notification with the decision, and if it goes your way you're paid from the money held for this job."}</p>
                 {mine?.posterNotes && <blockquote className="sb-quote">“{mine.posterNotes}”</blockquote>}
-                {mine?.dispute?.outcome === 'POSTER_WON' && mine.dispute.resolution && <p className="sb-small"><b>OgaPay:</b> {mine.dispute.resolution}</p>}
+                {mine?.dispute?.resolvedAt && mine.dispute.resolution && <p className="sb-small"><b>OgaPay:</b> {mine.dispute.resolution}</p>}
                 {canAppeal && !appealOpen && (
                   <p className="sb-small sb-block">Think you followed the brief?{' '}
                     <button type="button" className="sb-linkbtn" onClick={() => { setAppealOpen(true); setError('') }}>Ask OgaPay for a second look</button>
@@ -394,7 +396,9 @@ export default function SubmissionPage() {
                   <div className="sb-changes" role="status">
                     <b><i className="ti ti-arrow-back-up" /> The poster asked for changes</b>
                     {mine.posterNotes && <blockquote className="sb-quote">“{mine.posterNotes}”</blockquote>}
-                    <p>What you sent is below. Edit it and send it again {task.isContest ? 'before entries close' : 'within 24 hours'} to keep your place.</p>
+                    <p>{task.watermark && (mine.attachments || []).some(Boolean)
+                      ? 'Your link and note are below. Add your screenshots or files again: on watermarked jobs they have to be uploaded again. '
+                      : 'What you sent is below. '}Edit it and send it again {task.isContest ? 'before entries close' : 'within 24 hours'} to keep your place.</p>
                   </div>
                 ) : status === 'PENDING' && <p className="sb-held"><i className="ti ti-circle-check" /> You have a slot on this job. Send your work when it's done.</p>}
                 <PayoutCheckNote info={task.payoutCheck} />

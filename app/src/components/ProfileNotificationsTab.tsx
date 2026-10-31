@@ -144,6 +144,7 @@ export default function TabNotificationsContent() {
   const linkFor = (n: any): string | null => {
     const d = n.data || {}
     if (n.link) return n.link
+    if (typeof d.link === 'string' && d.link.startsWith('/') && !d.link.startsWith('//')) return d.link
     // Store orders: sellers manage them in My Store, buyers in My orders
     if (n.type === 'STORE_PURCHASE' || n.type === 'STORE_PAYMENT_RELEASED') return '/my-store?tab=orders'
     if (n.type === 'STORE_ORDER_DISPUTED') return /dispute/i.test(n.title || '') ? '/admin/moderation' : '/my-store?tab=orders'
