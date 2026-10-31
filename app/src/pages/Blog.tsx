@@ -129,9 +129,9 @@ function GetInspiredTile({ onClick }: { onClick: () => void }) {
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       onClick={onClick}
-      style={{ position: 'relative', overflow: 'hidden', cursor: 'pointer', background: '#FFD6D6', height: '100%', minHeight: 300 }}
+      style={{ position: 'relative', overflow: 'hidden', cursor: 'pointer', background: '#e4e4e7', height: '100%', minHeight: 300 }}
     >
-      <img src="/assets/get-inspired.png" alt="Get Inspired" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0 }} />
+      <img src="/assets/get-inspired-bw.jpg" alt="Get Inspired" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0 }} />
       <div style={{ position: 'absolute', inset: 0, background: 'rgba(10,10,10,0.1)', opacity: hovered ? 1 : 0, transition: 'opacity 0.3s' }} />
       <div style={{ position: 'absolute', top: 14, left: 14, zIndex: 10, opacity: 1, transition: 'all 0.25s ease' }}>
         <button onClick={onClick} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'var(--bg)', color: 'var(--text)', fontSize: 13, fontWeight: 600, padding: '7px 14px', borderRadius: 8, border: 'none', cursor: 'pointer' }}>
