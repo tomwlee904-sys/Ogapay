@@ -360,8 +360,11 @@ body:has(main.hv), body:has(main.hv) #root { overflow-x: clip; }
   .hv-pp-title { font-size: 24px; }
   .hv-pp-cta { width: 100%; justify-content: center; }
   .hv-pp-code pre { white-space: pre-wrap; word-break: break-all; font-size: 12px; }
-  .hv-numbers { grid-template-columns: 1fr !important; }
-  .hv-num { border-left: 0; padding: 26px 0; border-bottom: 1px solid var(--hv-line); }
+  /* Side by side like wurk (they used to stack one per row) */
+  .hv-num { padding: 20px 10px 16px; }
+  .hv-num:first-child { padding-left: 0; }
+  .hv-num-val { font-size: 30px; }
+  .hv-num-lbl { font-size: 12px; margin-top: 8px; line-height: 1.4; }
   .hv-jobs { grid-template-columns: 1fr; }
   .hv-journal { grid-auto-columns: 86%; }
   .hv-final { padding: 80px 0 120px; }
