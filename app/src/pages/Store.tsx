@@ -255,7 +255,8 @@ function StorePage({
 
       <div className="st-row">
         <span className="ui-count"><b>{products.length ? (page - 1) * limit + products.length : 0}</b> of {total} products</span>
-        <button className="link tap" type="button" onClick={() => navigate('/create')}>Create a job <i className="ti ti-plus" /></button>
+        {/* Sell here: opens the Add product form in My store (it said "Create a job") */}
+        <button className="link tap" type="button" onClick={() => navigate(user ? '/my-store?new=1' : `/login?redirect=${encodeURIComponent('/my-store?new=1')}`)}>Add a product <i className="ti ti-plus" /></button>
       </div>
 
       {error && (

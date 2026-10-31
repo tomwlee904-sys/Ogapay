@@ -49,7 +49,12 @@ export default function MyStore() {
   const [orders, setOrders] = useState<Order[] | null>(null)
   const [error, setError] = useState('')
   const [failed, setFailed] = useState({ products: false, orders: false })
-  const [editing, setEditing] = useState<Product | 'new' | null>(null)
+  // /my-store?new=1 (the Store page's "Add a product") opens the form straight away
+  const [editing, setEditing] = useState<Product | 'new' | null>(() => (params.get('new') === '1' ? 'new' : null))
+  useEffect(() => {
+    if (params.get('new') !== '1') return
+    const next = new URLSearchParams(params); next.delete('new'); setParams(next, { replace: true })
+  }, [])
   const [busy, setBusy] = useState('')
 
   const load = () => {
