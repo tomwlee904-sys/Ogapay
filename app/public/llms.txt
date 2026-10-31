@@ -17,7 +17,7 @@ Official channels: https://x.com/Ogapayhq, https://t.me/ogapayhq (no other accou
 - Communities: groups with members, a chat, a leaderboard and a feed of jobs. Owners and admins can post jobs only their members can take.
 - Contests: prizes for the top places; the poster ranks the winners after the end date, or the earliest entries win 3 days later.
 - Blog: posts can be liked, commented on and tipped (a naira transfer to the author).
-- Money: wallets hold Naira, USDC and SOL (USDC and SOL on Solana). Withdrawals go to a Nigerian bank (1.5% fee, minimum ₦100) or a crypto wallet (no fee) and need identity verification. Transfers between OgaPay users are free.
+- Money: wallets hold Naira, USDC and SOL (USDC and SOL on Solana). Withdrawals go to a Nigerian bank (from ₦5,000; fee 1.5%, at least ₦100; paid every Thursday) or a crypto wallet (no fee) and need identity verification. Transfers between OgaPay users are free.
 - Vault: every 12 hours (00:00 and 12:00 UTC) platform fees in the vault are shared with $PAY holders by how much they hold. Payouts vary with activity. Nothing on OgaPay is financial advice.
 
 ## Public pages

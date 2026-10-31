@@ -167,7 +167,7 @@ export default function Dashboard() {
     { done: !!(user.firstName && user.lastName && user.avatar), label: 'Add your name and a photo', sub: 'People trust those they can recognise.', to: '/edit-profile', cta: 'Edit profile' },
     { done: !!user.isEmailVerified, label: 'Verify your email', sub: 'So you get job alerts and payment receipts.', action: 'mail' as const },
     { done: !!(hasBank || user.walletAddress || user.bankAccount), label: 'Add a way to get paid', sub: 'A bank account or a Solana wallet for withdrawals.', to: '/wallet', cta: 'Open wallet' },
-    { done: kycOk, label: 'Verify your identity', sub: 'Free and takes a minute. You need it to withdraw and send money, and some jobs ask for it. Verify with your NIN, then finish your first job to get your ₦1,000 first job bonus.', to: '/settings/verification', cta: 'Verify' },
+    { done: kycOk, label: 'Verify your identity', sub: 'Free and takes a minute. You need it to withdraw and send money, and some jobs ask for it. Verify with your NIN, then finish your first job to get your ₦1,000 first job bonus. Withdrawals start at ₦5,000 (fee 1.5%, at least ₦100) and are paid every Thursday.', to: '/settings/verification', cta: 'Verify' },
   ]
   const doneCount = steps.filter((s) => s.done).length
 

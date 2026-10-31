@@ -1335,7 +1335,7 @@ function WurkJobDetailView(props: any) {
                 </>) : (<>
                   <li><b>Take a place.</b>{jobRequirements(job).filter(r => r.icon !== 'award').length ? <small>You need: {jobRequirements(job).filter(r => r.icon !== 'award').map(r => r.text).join(', ')}.</small> : <small>It's reserved for you while you do the job.</small>}</li>
                   <li><b>Do it and send your proof</b>, the way the description asks.{job.payoutCheck ? <small>Payout check: {job.payoutCheck.note}</small> : <small>Once every place is taken, you have 24 hours to send it.</small>}</li>
-                  <li><b>{job.brand ? '@' + job.brand.replace('@', '') : 'The poster'} checks it.</b><small>If they don't review it within 3 days, it's approved automatically. If it's rejected, you'll see why.</small></li>
+                  <li><b>{job.brand ? '@' + job.brand.replace('@', '') : 'The poster'} checks it.</b><small>If they don't review it within 3 days, it's approved automatically. If it's rejected, you'll see why. Fake, edited or copied proof gets a warning, and 3 warnings in 30 days stop you taking jobs.</small></li>
                 </>)}
                 <li><b>{contest ? 'The prize goes' : `${formatMoney(Number(job.reward || 0), rewardCurrency)} goes`} to your OgaPay wallet.</b><small>To move it to your bank, verify your identity and withdraw from {formatMoney(MIN_WITHDRAW_NGN, 'NGN')}. Bank withdrawals are paid every Thursday.</small></li>
               </ol>

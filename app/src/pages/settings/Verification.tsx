@@ -106,7 +106,8 @@ export default function Verification({ me, reload, providers }: SectionProps & {
       setMsg({ ok: r?.status !== 'REJECTED', text: r?.message || 'Your verification was updated.' })
       await reload(); refreshUser()
     } catch (e: any) {
-      setMsg({ ok: false, text: e?.message || "Couldn't open the ID check. Please try again." })
+      // The "send your ID to our team" form opens right under this message
+      setMsg({ ok: false, text: `${e?.message || "Couldn't open the ID check."} If it keeps happening, send your ID to our team below.` })
     }
     setDiditBusy(false)
   }

@@ -201,7 +201,7 @@ export default function Wallet() {
                 </div>
                 <h2 id="wl-out" className="wl-dir-title">Withdrawals go to</h2>
               {!verified ? (
-                <p className="wl-note wl-dir-note">Verify your identity to add your bank and withdraw. <Link to="/settings/verification">Verify now</Link></p>
+                <p className="wl-note wl-dir-note">Verify your identity to add your bank and withdraw. Withdrawals start at ₦5,000 and are paid every Thursday. <Link to="/settings/verification">Verify now</Link></p>
               ) : banks === null ? <div className="ui-sk" style={{ height: 62, borderRadius: 14 }} /> : banks.length === 0 ? (
                 <>
                   <p className="wl-note wl-dir-note">Add your own bank account. Withdrawals (from {naira(MIN_WITHDRAW_NGN, 0)}) are paid into it every Thursday.</p>

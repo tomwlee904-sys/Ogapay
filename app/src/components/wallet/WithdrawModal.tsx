@@ -150,7 +150,7 @@ export default function WithdrawModal({ onClose, onDone, balances: given }: { on
         <div className="dp-lock">
           <i className="ti ti-shield-check" />
           <h3>Verify your identity to withdraw</h3>
-          <p>Withdrawals need Level 1 verification: a bank account in your name (free) or your NIN. It takes a minute and lets you withdraw up to {naira(withdrawLimit(1), 0)} a day.</p>
+          <p>Withdrawals need Level 1 verification: a bank account in your name (free) or your NIN. It takes a minute and lets you withdraw up to {naira(withdrawLimit(1), 0)} a day. The smallest withdrawal is ₦5,000 (fee 1.5%, at least ₦100), and bank withdrawals are paid every Thursday.</p>
           <Link className="ui-btn ui-btn-dark" to="/settings/verification" onClick={onClose}>Verify now</Link>
         </div>
       </Sheet>

@@ -23,7 +23,7 @@ export const TOPICS: Topic[] = [
   {
     id: 'earning', title: 'Earning and tasks', items: [
       { q: 'What kinds of tasks can I do?', a: 'Social tasks (follows, reposts, comments, community joins), app testing, surveys, research, data entry, writing, translation, design and video review. Each card shows the reward per worker, how many places are left, requirements and time left.' },
-      { q: 'How do I complete a task?', a: 'Open the job, read the brief carefully, do the work, then press Apply and submit the proof it asks for, such as a screenshot, link or file. Check the requirements first: submissions that don\'t follow the brief are rejected.' },
+      { q: 'How do I complete a task?', a: 'Open the job, read the brief carefully, tap Take a place (or Enter contest), do the work, then press Send work with the proof it asks for, such as a screenshot, link or file. Check the requirements first: submissions that don\'t follow the brief are rejected.' },
       { q: 'What does "Available for me" show?', a: 'It hides jobs that are full, past their deadline, jobs you have already submitted to, and jobs whose requirements you don\'t meet.' },
       { q: 'When do I get paid?', a: 'As soon as the poster approves your submission, the reward moves from escrow into your OgaPay wallet. If the poster doesn\'t review it, they get a reminder a day after you submit, and your work is approved and paid automatically 3 days (72 hours) after you sent it.' },
       { q: 'I sent my work by mistake. Can I change it?', a: 'Yes, within an hour of sending it and before the poster reviews it. Open the job and tap "Take it back to edit": you keep your place, fix your work and send it again. Sending it again counts as a fresh send. Once the poster has approved or rejected it, or a contest\'s entries have closed, it can\'t be taken back.' },
@@ -80,7 +80,7 @@ export const TOPICS: Topic[] = [
     id: 'referrals', title: 'Referrals and bonuses', items: [
       { q: 'How do referrals pay?', a: 'Share your referral link. You earn ₦500 when a friend you invited finishes their first paid job (a job posted by someone else, not you). Signing up or verifying alone does not pay. Paid once per friend.' },
       { q: 'Is there a limit?', a: 'Referral bonuses are paid for up to 20 referrals per person. This stops people farming the programme with fake accounts.' },
-      { q: 'Do new users get a bonus?', a: 'Yes. ₦1,000 goes into your wallet when you verify your identity with your NIN or ID (free in Settings → Verification), or when you finish your first paid job, whichever comes first. Verifying with a bank account lets you withdraw, but the bonus then comes with your first paid job. One bonus per person.' },
+      { q: 'Do new users get a bonus?', a: 'Yes. ₦1,000 goes into your wallet once both are done: you verify your identity with your NIN or ID (free in Settings → Verification) and you finish your first paid job. Verifying with only a bank account lets you withdraw, but doesn’t count for the bonus. One bonus per person.' },
     ],
   },
   {

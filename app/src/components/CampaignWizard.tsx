@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { apiRequest } from "../lib/api";
+import { missingLink, missingLinkText } from "../lib/jobText";
 import { useAuth } from "../context/AuthContext";
 import { useWalletBalance } from "../context/WalletBalanceContext";
 import { useCurrency } from "../context/CurrencyContext";
@@ -113,7 +114,8 @@ export default function CampaignWizard() {
       (details.title || "").trim().length < 5 ? "Give the campaign a title (at least 5 characters)." :
       (details.instructions || "").trim().length < 20 ? "Add instructions for workers (at least 20 characters)." :
       (details.reward || 0) < MIN_REWARD ? `The reward must be at least ₦${MIN_REWARD} per worker.` :
-      (details.workerCount || 0) < 1 ? "Set how many workers you need." : "";
+      (details.workerCount || 0) < 1 ? "Set how many workers you need." :
+      missingLinkText(missingLink(`${details.title || ""} ${details.instructions || ""}`));
     if (missing) { alert(missing); return; }
     setLoading(true);
     try {

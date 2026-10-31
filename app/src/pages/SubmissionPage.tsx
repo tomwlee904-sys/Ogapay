@@ -402,7 +402,7 @@ export default function SubmissionPage() {
                 <input id="sb-link" className="ui-input" type="url" inputMode="url" value={link} onChange={(e) => setLink(e.target.value)} placeholder="https://… (post, document, recording)" />
                 <label className="ui-label" htmlFor="sb-notes">Note for the poster</label>
                 <textarea id="sb-notes" className="ui-input sb-textarea" maxLength={20000} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="What you did, anything they should know. You can paste a full article here." />
-                {notes.length > 1000 && <p className="sb-small" aria-live="polite">{notes.length.toLocaleString('en-US')} / 20,000 characters</p>}
+                {notes.trim() && <p className="sb-small" aria-live="polite">{notes.trim().split(/\s+/).length.toLocaleString('en-US')} words · {notes.length.toLocaleString('en-US')} / 20,000 characters</p>}
                 <span className="ui-label">{needsShot ? 'Screenshot (required)' : 'Screenshots or files'} ({files.length + kept.length}/{MAX_FILES})</span>
                 {kept.length > 0 && (
                   <ul className="sb-files">

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react"
-import { useNavigate } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import { useAuth } from "../context/AuthContext"
 import Layout from "../components/Layout"
 import { apiRequest } from "../lib/api"
@@ -151,6 +151,8 @@ export default function Blog() {
   const [subscribing, setSubscribing] = useState(false)
   const [subError, setSubError] = useState('')
   const [allPosts, setAllPosts] = useState<any[] | null>(null)
+  const [loadFailed, setLoadFailed] = useState(false)
+  const [tries, setTries] = useState(0)
   const navigate = useNavigate()
   const { isAuthed } = useAuth()
 
@@ -158,11 +160,12 @@ export default function Blog() {
   // plus drafts kept in the browser's localStorage)
   useEffect(() => {
     let live = true
+    setLoadFailed(false)
     apiRequest<any>('/blog?limit=100', { auth: false })
       .then((res) => { if (live) setAllPosts(res?.posts || []) })
-      .catch(() => { if (live) setAllPosts([]) })
+      .catch(() => { if (live) { setAllPosts([]); setLoadFailed(true) } })
     return () => { live = false }
-  }, [])
+  }, [tries])
 
   const posts = allPosts || []
   // Category chips only when posts actually have categories
@@ -197,6 +200,7 @@ export default function Blog() {
         .bl-eyebrow{margin:0;font:400 11px/1.5 'JetBrains Mono',ui-monospace,monospace;letter-spacing:.07em;text-transform:uppercase;color:var(--text3)}
         .bl-title{margin:8px 0 0;font-size:var(--fs-title);line-height:1.12;font-weight:600;letter-spacing:var(--tracking-tight);color:var(--text)}
         .bl-sub{margin:8px 0 0;font-size:13px;line-height:1.75;color:var(--text2)}
+        .bl-jobs-hint{margin-top:4px}.bl-jobs-hint a{color:var(--text);font-weight:600}
         .bl-write{display:inline-flex;align-items:center;gap:8px;height:44px;padding:0 14px;border:0;border-radius:10px;background:var(--text);color:var(--bg);font-weight:500;font-size:12px;line-height:1;font-family:inherit;cursor:pointer;white-space:nowrap;flex-shrink:0;margin-top:24px}
         .bl-write i{font-size:15px}
         .bl-bar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:40px;padding-bottom:18px;border-bottom:1px solid var(--border)}
@@ -236,6 +240,7 @@ export default function Blog() {
             <p className="bl-eyebrow">The OgaPay blog</p>
             <h1 className="bl-title">Stories worth sharing.</h1>
             <p className="bl-sub">Ideas, guides and earning stories from the OgaPay community.</p>
+            <p className="bl-sub bl-jobs-hint">The blog is for reading and writing articles. To do a paid job or send your work, go to <Link to="/tasks">Jobs</Link>, or <Link to="/my-tasks">My tasks</Link> for jobs you have taken.</p>
           </div>
           <button className="bl-write" onClick={write}><i className="ti ti-pencil" /> Write a blog</button>
         </header>
@@ -270,8 +275,11 @@ export default function Blog() {
             <div style={{ padding: '3rem 0', textAlign: 'center', color: 'var(--text3)', fontSize: 14 }}>Loading stories…</div>
           ) : filteredArticles.length === 0 ? (
             <div style={{ padding: '3rem 1rem', textAlign: 'center', color: 'var(--text2)', fontSize: 14, border: '1px dashed var(--border)', borderRadius: 16 }}>
-              {q ? `No stories match "${search.trim()}".` : posts.length === 0 ? 'No stories yet.' : `No ${activeCategory} stories yet.`}
-              <div style={{ marginTop: 12 }}><button onClick={write} style={{ fontSize: 13, background: 'var(--text)', color: 'var(--bg)', padding: '8px 16px', borderRadius: 10, border: 'none', cursor: 'pointer', fontWeight: 600 }}>Write the first one</button></div>
+              {loadFailed ? "Couldn't load the blog. Check your connection and try again." : q ? `No stories match "${search.trim()}".` : posts.length === 0 ? 'No stories yet.' : `No ${activeCategory} stories yet.`}
+              <div style={{ marginTop: 12 }}>{loadFailed
+                ? <button onClick={() => { setAllPosts(null); setTries((t) => t + 1) }} style={{ fontSize: 13, background: 'var(--text)', color: 'var(--bg)', padding: '8px 16px', borderRadius: 10, border: 'none', cursor: 'pointer', fontWeight: 600 }}>Try again</button>
+                : <button onClick={write} style={{ fontSize: 13, background: 'var(--text)', color: 'var(--bg)', padding: '8px 16px', borderRadius: 10, border: 'none', cursor: 'pointer', fontWeight: 600 }}>Write the first one</button>}</div>
+              {!loadFailed && !q && <p style={{ margin: '12px 0 0', fontSize: 13 }}>Looking for a writing job you took? It's in <Link to="/my-tasks">My tasks</Link>.</p>}
             </div>
           ) : (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(320px, 100%), 1fr))', gap: '1.5rem' }}>
