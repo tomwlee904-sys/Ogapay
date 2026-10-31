@@ -36,7 +36,14 @@ type Mine = {
   payoutCheck?: string | null; payoutCheckDueAt?: string | null; payoutCheckReason?: string | null
   // Contest entries: the place won and the result (from /tasks/my/submissions)
   place?: number | null; paidAmount?: number | null; contestResult?: 'WON' | 'NOT_PLACED' | 'WAITING' | null; winnersPaidAt?: string | null
+  reviewedAt?: string | null
+  // Sent back for changes by the poster (the note is in posterNotes)
+  sentBackAt?: string | null; sentBackCount?: number
+  // A second look the worker asked for after a rejection, and how it ended
+  dispute?: { createdAt: string; outcome?: 'WORKER_WON' | 'POSTER_WON' | 'SPLIT' | null; resolution?: string | null; resolvedAt?: string | null } | null
 }
+// A rejection can be appealed for this long (the server's APPEAL_DAYS)
+const APPEAL_DAYS = 7
 
 const MAX_FILES = 5
 // Sent work can be taken back to edit within this long, before it's reviewed (the server's TAKE_BACK_MINUTES)
@@ -65,6 +72,12 @@ export default function SubmissionPage() {
   const [error, setError] = useState('')
   const [application, setApplication] = useState<Application | null>(null)
   const [pitch, setPitch] = useState('')
+  // Files already sent, kept when the work comes back for changes (no need to upload them again)
+  const [kept, setKept] = useState<string[]>([])
+  // Asking for a second look at a rejection
+  const [appealOpen, setAppealOpen] = useState(false)
+  const [appealWhy, setAppealWhy] = useState('')
+  const [appealLink, setAppealLink] = useState('')
 
   // A half-written link and note are kept for this job and person until the
   // work is sent (leaving the page used to lose them). Files can't be kept.
@@ -88,6 +101,17 @@ export default function SubmissionPage() {
       setMine((d?.submissions || []).find((s) => s.taskId === id) || null)
     } catch { setMine(null) }
   }
+  // Sent back for changes: what they sent is put back in the form to edit
+  const refilled = useRef('')
+  useEffect(() => {
+    if (!mine || mine.status !== 'PENDING' || !mine.sentBackAt || task === undefined) return
+    if (refilled.current === mine.sentBackAt) return
+    refilled.current = mine.sentBackAt
+    setLink((l) => l || (mine.proof && /^https?:[/][/]/.test(mine.proof) ? mine.proof : ''))
+    setNotes((n) => n || mine.workerNotes || '')
+    // Watermarked jobs need the files again (the originals are kept per upload)
+    setKept(task?.watermark ? [] : (mine.attachments || []).filter(Boolean))
+  }, [mine, task])
   useEffect(() => {
     if (!id) return
     apiRequest<Task | { task: Task }>('/tasks/' + id).then((d: any) => { setTask(d?.task || d || null); setApplication(d?.userApplication || null) }).catch(() => setTask(null))
@@ -134,13 +158,13 @@ export default function SubmissionPage() {
 
   const addFiles = (list: FileList | null) => {
     if (!list) return
-    setFiles((f) => [...f, ...Array.from(list)].slice(0, MAX_FILES))
+    setFiles((f) => [...f, ...Array.from(list)].slice(0, Math.max(0, MAX_FILES - kept.length)))
     if (fileRef.current) fileRef.current.value = ''
   }
 
   const submit = async () => {
-    if (!link.trim() && !notes.trim() && files.length === 0) { setError('Add a link, a note or a file so the poster can check your work.'); return }
-    if (needsShot && files.length === 0) { setError('This job needs a screenshot. Add at least one image of your work.'); return }
+    if (!link.trim() && !notes.trim() && files.length === 0 && kept.length === 0) { setError('Add a link, a note or a file so the poster can check your work.'); return }
+    if (needsShot && files.length === 0 && kept.length === 0) { setError('This job needs a screenshot. Add at least one image of your work.'); return }
     const token = getAccessToken()
     if (!token) { navigate('/login?redirect=' + encodeURIComponent(location.pathname)); return }
     // One check before sending: phones make a mistaken tap easy
@@ -158,7 +182,7 @@ export default function SubmissionPage() {
       // 2. Upload files
       // (Watermarked jobs: images are stamped by the server; the originals stay yours
       // until the poster approves the work)
-      const urls: string[] = []
+      const urls: string[] = [...kept]
       const originals: { url: string; originalUrl: string }[] = []
       for (const [i, f] of files.entries()) {
         setBusy(`Uploading file ${i + 1} of ${files.length}…`)
@@ -169,11 +193,29 @@ export default function SubmissionPage() {
       // 3. Submit
       setBusy('Sending your work…')
       await apiRequest(`/tasks/${task.id}/submit`, { method: 'POST', body: JSON.stringify({ ...(link.trim() && { proof: link.trim() }), ...(notes.trim() && { workerNotes: notes.trim() }), ...(urls.length && { attachments: urls }), ...(originals.length && { originals }) }) })
-      setLink(''); setNotes(''); setFiles([])
+      setLink(''); setNotes(''); setFiles([]); setKept([])
       clearDraft(draftKey, user?.id)
       await loadMine()
     } catch (e: any) {
       setError(e?.message || 'Something went wrong. Your work was not sent.')
+    }
+    setBusy('')
+  }
+
+  // A second look at a rejection: an admin checks the work against the brief
+  const canAppeal = mine?.status === 'REJECTED' && !task.isContest && !mine.dispute
+    && (!mine.reviewedAt || Date.now() - new Date(mine.reviewedAt).getTime() < APPEAL_DAYS * 86400000)
+  const appeal = async () => {
+    if (!mine) return
+    if (appealWhy.trim().length < 10) { setError('Tell us why your work should be approved (at least 10 characters).'); return }
+    setError('')
+    setBusy('Sending…')
+    try {
+      await apiRequest(`/escrow/dispute/${mine.id}`, { method: 'POST', body: JSON.stringify({ reason: appealWhy.trim(), ...(appealLink.trim() && { workerEvidence: appealLink.trim() }) }) })
+      setAppealOpen(false); setAppealWhy(''); setAppealLink('')
+      await loadMine()
+    } catch (e: any) {
+      setError(e?.message || "Couldn't send it. Please try again.")
     }
     setBusy('')
   }
@@ -278,9 +320,32 @@ export default function SubmissionPage() {
             ) : status === 'REJECTED' || status === 'EXPIRED' || status === 'DISPUTED' ? (
               <section className="ui-card ui-card-pad sb-state">
                 <span className="sb-ic bad"><i className={`ti ${status === 'DISPUTED' ? 'ti-scale' : 'ti-x'}`} /></span>
-                <h2>{status === 'REJECTED' ? 'Not approved' : status === 'EXPIRED' ? 'Your slot expired' : 'In dispute'}</h2>
-                <p>{status === 'REJECTED' ? 'The poster didn\'t approve this work.' : status === 'EXPIRED' ? 'No work was sent before the time ran out, so the slot went to someone else.' : 'Our team is looking at this submission.'}</p>
+                <h2>{status === 'REJECTED' ? 'Not approved' : status === 'EXPIRED' ? 'Your slot expired' : 'OgaPay is taking a second look'}</h2>
+                <p>{status === 'REJECTED'
+                  ? (mine?.dispute?.outcome === 'POSTER_WON' ? 'We looked at your work again and the rejection stays.' : "The poster didn't approve this work.")
+                  : status === 'EXPIRED' ? 'No work was sent before the time ran out, so the slot went to someone else.'
+                  : "Our team is checking your work against the brief. You'll get a notification with the decision, and if it goes your way you're paid from the money held for this job."}</p>
                 {mine?.posterNotes && <blockquote className="sb-quote">“{mine.posterNotes}”</blockquote>}
+                {mine?.dispute?.outcome === 'POSTER_WON' && mine.dispute.resolution && <p className="sb-small"><b>OgaPay:</b> {mine.dispute.resolution}</p>}
+                {canAppeal && !appealOpen && (
+                  <p className="sb-small sb-block">Think you followed the brief?{' '}
+                    <button type="button" className="sb-linkbtn" onClick={() => { setAppealOpen(true); setError('') }}>Ask OgaPay for a second look</button>
+                    {' '}(within {APPEAL_DAYS} days).</p>
+                )}
+                {canAppeal && appealOpen && (
+                  <div className="sb-appeal">
+                    <label className="ui-label" htmlFor="sb-appeal-why">Why should it be approved?</label>
+                    <textarea id="sb-appeal-why" className="ui-input sb-textarea" maxLength={1000} value={appealWhy} onChange={(e) => setAppealWhy(e.target.value)} placeholder="Show how your work matches the brief. Our team reads the brief, your work and the poster's reason." />
+                    <label className="ui-label" htmlFor="sb-appeal-link">Link to more proof (optional)</label>
+                    <input id="sb-appeal-link" className="ui-input" type="url" inputMode="url" value={appealLink} onChange={(e) => setAppealLink(e.target.value)} placeholder="https://…" />
+                    {error && <p className="sb-error" role="alert">{error}</p>}
+                    <div className="ui-actions">
+                      <button className="ui-btn ui-btn-dark" disabled={!!busy || appealWhy.trim().length < 10} onClick={appeal}>{busy || 'Send for a second look'}</button>
+                      <button className="ui-btn ui-btn-ghost" disabled={!!busy} onClick={() => setAppealOpen(false)}>Cancel</button>
+                    </div>
+                    <p className="sb-small">You can ask once per job. Our team's decision is final.</p>
+                  </div>
+                )}
                 <div className="ui-actions"><Link className="ui-btn ui-btn-ghost" to="/tasks">Find other jobs</Link></div>
               </section>
             ) : task.isSelection && !mine && application?.status === 'NOT_PICKED' ? (
@@ -325,14 +390,27 @@ export default function SubmissionPage() {
               </section>
             ) : (
               <section className="ui-card ui-card-pad sb-form">
-                {status === 'PENDING' && <p className="sb-held"><i className="ti ti-circle-check" /> You have a slot on this job. Send your work when it's done.</p>}
+                {status === 'PENDING' && mine?.sentBackAt ? (
+                  <div className="sb-changes" role="status">
+                    <b><i className="ti ti-arrow-back-up" /> The poster asked for changes</b>
+                    {mine.posterNotes && <blockquote className="sb-quote">“{mine.posterNotes}”</blockquote>}
+                    <p>What you sent is below. Edit it and send it again {task.isContest ? 'before entries close' : 'within 24 hours'} to keep your place.</p>
+                  </div>
+                ) : status === 'PENDING' && <p className="sb-held"><i className="ti ti-circle-check" /> You have a slot on this job. Send your work when it's done.</p>}
                 <PayoutCheckNote info={task.payoutCheck} />
                 <label className="ui-label" htmlFor="sb-link">Link to your work</label>
                 <input id="sb-link" className="ui-input" type="url" inputMode="url" value={link} onChange={(e) => setLink(e.target.value)} placeholder="https://… (post, document, recording)" />
                 <label className="ui-label" htmlFor="sb-notes">Note for the poster</label>
                 <textarea id="sb-notes" className="ui-input sb-textarea" maxLength={20000} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="What you did, anything they should know. You can paste a full article here." />
                 {notes.length > 1000 && <p className="sb-small" aria-live="polite">{notes.length.toLocaleString('en-US')} / 20,000 characters</p>}
-                <span className="ui-label">{needsShot ? 'Screenshot (required)' : 'Screenshots or files'} ({files.length}/{MAX_FILES})</span>
+                <span className="ui-label">{needsShot ? 'Screenshot (required)' : 'Screenshots or files'} ({files.length + kept.length}/{MAX_FILES})</span>
+                {kept.length > 0 && (
+                  <ul className="sb-files">
+                    {kept.map((u, i) => (
+                      <li key={u}><i className="ti ti-paperclip" /><a href={u} target="_blank" rel="noopener noreferrer">File you sent {i + 1}</a><button onClick={() => setKept((x) => x.filter((y) => y !== u))} aria-label={`Remove file you sent ${i + 1}`}><i className="ti ti-x" /></button></li>
+                    ))}
+                  </ul>
+                )}
                 {task.watermark && <p className="sb-small"><i className="ti ti-droplet" /> Watermarks are on: the poster sees your images stamped with OGAPAY, and gets the originals only when they approve your work.</p>}
                 {files.length > 0 && (
                   <ul className="sb-files">
@@ -341,7 +419,7 @@ export default function SubmissionPage() {
                     ))}
                   </ul>
                 )}
-                {files.length < MAX_FILES && (
+                {files.length + kept.length < MAX_FILES && (
                   <button type="button" className="sb-drop" onClick={() => fileRef.current?.click()}>
                     <i className="ti ti-upload" /> Add files <small>Images, PDFs or documents</small>
                   </button>

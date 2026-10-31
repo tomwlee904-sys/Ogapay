@@ -60,3 +60,12 @@
   .sb-grid { grid-template-columns: 1fr; }
   .sb-side { position: static; order: -1; }
 }
+/* Sent back for changes, and asking for a second look at a rejection (2026-10-31) */
+.sb-block { display: block; }
+.sb-linkbtn { background: none; border: 0; padding: 10px 0; font: inherit; font-weight: 600; color: var(--text); text-decoration: underline; cursor: pointer; }
+.sb-appeal { margin-top: 14px; display: grid; gap: 8px; }
+.sb-changes { margin: 0 0 12px; padding: 12px 14px; border-radius: 12px; background: color-mix(in srgb, #d97706 9%, transparent); border: 1px solid color-mix(in srgb, #d97706 30%, var(--border)); font-size: 13.5px; color: var(--text); }
+.sb-changes b { display: flex; gap: 6px; align-items: center; }
+.sb-changes p { margin: 8px 0 0; color: var(--text2); line-height: 1.5; }
+.sb-changes .sb-quote { margin-top: 8px; }
+.sb-files a { color: var(--text); }

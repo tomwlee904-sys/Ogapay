@@ -73,6 +73,8 @@ button.mj-sum:hover { border-color: var(--text3); }
 .mj-acts { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
 .mj-acts .ui-btn { flex: 1 1 140px; }
 .mj-reason { margin-top: 10px; display: grid; gap: 8px; }
+.mj-reason label { font-size: 13px; font-weight: 600; color: var(--text); }
+.mj-reason-hint { margin: 0; font-size: 12.5px; line-height: 1.5; color: var(--text2); }
 .mj-reason textarea { width: 100%; min-height: 72px; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--card2); color: var(--text); font: 13px/1.5 'Inter', system-ui, sans-serif; resize: vertical; outline: none; }
 .mj-rows { border: 1px solid var(--border); border-radius: 14px; }
 .mj-row { display: flex; align-items: center; gap: 10px; padding: 10px 12px; font-size: 13px; }

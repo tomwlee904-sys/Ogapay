@@ -20,6 +20,10 @@ export default function AdminModeration() {
   // Store orders where the buyer reported a problem: the payment waits for us
   const [disputes, setDisputes] = useState<any[] | null>(null)
   const loadDisputes = () => apiRequest<any[]>('/store/admin/disputes').then((d) => setDisputes(Array.isArray(d) ? d : [])).catch(() => setDisputes([]))
+  // Second looks: workers who asked us to check a rejection (POST /escrow/dispute)
+  const [looks, setLooks] = useState<any[] | null>(null)
+  const [lookNotes, setLookNotes] = useState<Record<string, string>>({})
+  const loadLooks = () => apiRequest<{ disputes: any[] }>('/escrow/disputes').then((d) => setLooks(d?.disputes || [])).catch(() => setLooks([]))
 
   const loadQueue = async () => {
     setLoading(true)
@@ -30,7 +34,28 @@ export default function AdminModeration() {
     setLoading(false)
   }
 
-  useEffect(() => { loadQueue(); loadDisputes() }, [])
+  useEffect(() => { loadQueue(); loadDisputes(); loadLooks() }, [])
+
+  const amountOf = (t: any, share = 1) => {
+    const n = Number(t?.reward || 0) * share
+    return t?.currency === 'NGN' || !t?.currency ? `₦${Math.round(n).toLocaleString('en-US')}` : `${n.toLocaleString('en-US', { maximumFractionDigits: 6 })} ${t.currency}`
+  }
+  const decide = async (d: any, outcome: 'WORKER_WON' | 'POSTER_WON' | 'SPLIT') => {
+    const what = outcome === 'WORKER_WON' ? `Approve the work and pay @${d.worker?.username} ${amountOf(d.task)}`
+      : outcome === 'SPLIT' ? `Pay @${d.worker?.username} half (${amountOf(d.task, 0.5)})`
+      : `Keep @${d.poster?.username}'s rejection (nothing is paid)`
+    if (!window.confirm(`${what}? Both sides are told. This can't be undone.`)) return
+    setBusy(d.id)
+    setMsg('')
+    try {
+      await apiRequest(`/escrow/resolve/${d.id}`, { method: 'POST', body: JSON.stringify({ outcome, ...((lookNotes[d.id] || '').trim() && { resolution: (lookNotes[d.id] || '').trim() }) }) })
+      setLooks((prev) => (prev || []).filter((x) => x.id !== d.id))
+      setMsg(outcome === 'POSTER_WON' ? `Rejection kept on "${d.task?.title}"` : `Paid @${d.worker?.username} for "${d.task?.title}"`)
+    } catch (err: any) {
+      setMsg(err.message || 'Failed to decide')
+    }
+    setBusy(null)
+  }
 
   const settle = async (o: any, action: 'RELEASE' | 'REFUND') => {
     const amount = `${o.currency === 'NGN' ? '₦' : ''}${Number(o.total).toLocaleString('en-US', { maximumFractionDigits: 6 })}${o.currency === 'NGN' ? '' : ' ' + o.currency}`
@@ -50,12 +75,17 @@ export default function AdminModeration() {
 
   const handleResolve = async (submissionId: string, action: 'APPROVED' | 'REJECTED', warn?: { reason: string; note: string }) => {
     if (warn && warn.note.trim().length < 5) { setMsg('Failed: say what you saw (the worker reads it)'); return }
+    let why = ''
+    if (action === 'REJECTED' && !warn) {
+      why = (window.prompt('Why is it rejected? The worker reads this, and a rejection is final for them on this job.') || '').trim()
+      if (why.length < 5) { setMsg('Failed: give a reason of at least 5 characters (the worker reads it)'); return }
+    }
     setBusy(submissionId)
     setMsg('')
     try {
       const res = await apiRequest<any>(`/admin/moderation/resolve/${submissionId}`, {
         method: 'POST',
-        body: JSON.stringify({ action, ...(action === 'APPROVED' && stars[submissionId] ? { rating: stars[submissionId], feedback: (notes[submissionId] || '').trim() || undefined } : {}), ...(warn && { warn: warn.reason, posterNotes: warn.note.trim() }) }),
+        body: JSON.stringify({ action, ...(action === 'APPROVED' && stars[submissionId] ? { rating: stars[submissionId], feedback: (notes[submissionId] || '').trim() || undefined } : {}), ...(warn && { warn: warn.reason, posterNotes: warn.note.trim() }), ...(why && { posterNotes: why }) }),
       })
       setQueue(prev => prev.filter(s => s.id !== submissionId))
       setSpamFor(null); setSpamNote('')
@@ -121,13 +151,67 @@ export default function AdminModeration() {
         .mod-h2 span{font-size:12px;font-weight:700;padding:2px 8px;border-radius:99px;background:#fee2e2;color:#991b1b}
         .mod-dispute{align-items:flex-start}
         .mod-reason{margin:8px 0 0;font-size:13px;line-height:1.5;color:var(--text);white-space:normal}
+        .mod-look{display:block}
+        .mod-look .mod-actions{margin-top:12px;flex-wrap:wrap}
+        .mod-look .mod-text b{display:block;margin-bottom:2px}
+        .mod-look .mod-files{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px;font-size:12px}
+        .mod-look .mod-files a{color:var(--accent);text-decoration:none}
+        .mod-look .ui-input{margin-top:10px}
+        .btn-split{background:transparent;color:var(--text);border:1px solid var(--border)!important}
         @media(max-width:640px){.mod-card{flex-direction:column;align-items:stretch}.mod-actions button{flex:1}}
       `}</style>
       <div className="mod-wrap">
         <h1>Moderation Queue</h1>
-        <p className="sub">Store orders with a reported problem, then job submissions waiting too long for review</p>
+        <p className="sub">Second looks at rejected work, store orders with a reported problem, then job submissions waiting too long for review</p>
 
         {msg && <div className={`mod-msg${msg.includes('Failed') || msg.includes('failed') ? ' error' : ''}`}>{msg}</div>}
+
+        <h2 className="mod-h2">Second looks at rejected work {looks && looks.length > 0 && <span>{looks.length}</span>}</h2>
+        <p className="sub" style={{ marginTop: -6 }}>Workers who think their work was wrongly rejected. Read the brief, what they sent and the poster's reason, then decide. Both sides are told.</p>
+        {looks === null ? (
+          <div className="mod-empty">Loading...</div>
+        ) : looks.length === 0 ? (
+          <div className="mod-empty">No second looks waiting.</div>
+        ) : (
+          <div className="mod-queue" style={{ marginBottom: 28 }}>
+            {looks.map((d: any) => {
+              const sub = d.submission || {}
+              const brief = String(d.task?.instructions || d.task?.description || '').trim()
+              const files = (sub.attachments || []).filter(Boolean)
+              return (
+                <div key={d.id} className="mod-card mod-look">
+                  <div className="mod-card-info">
+                    <h3><Link to={`/tasks/${d.task?.id}`} style={{ color: 'inherit' }}>{d.task?.title || 'Job'}</Link></h3>
+                    <div className="meta">
+                      <span><i className="ti ti-user" /> Worker <Link to={`/user/${d.worker?.username}`} style={{ color: 'inherit' }}>@{d.worker?.username}</Link></span>
+                      <span><i className="ti ti-briefcase" /> Poster @{d.poster?.username}</span>
+                      <span><i className="ti ti-coin" /> {amountOf(d.task)}</span>
+                      <span><i className="ti ti-clock" /> asked {timeSince(d.createdAt)} ago</span>
+                      {d.holdsPlace && <span><i className="ti ti-lock" /> reward held for them</span>}
+                    </div>
+                    {brief && <p className="mod-text"><b>The brief</b>{brief.length > 700 ? brief.slice(0, 700) + '…' : brief}</p>}
+                    <p className="mod-text"><b>What @{d.worker?.username} sent</b>{sub.workerNotes || (sub.proof && sub.proof !== 'Proof attached' ? '' : 'No text')}</p>
+                    {(sub.proof && /^https?:/.test(sub.proof)) || files.length ? (
+                      <div className="mod-files">
+                        {sub.proof && /^https?:/.test(sub.proof) && <a href={sub.proof} target="_blank" rel="noreferrer"><i className="ti ti-link" /> Link they sent</a>}
+                        {files.map((u: string, i: number) => <a key={u} href={u} target="_blank" rel="noreferrer"><i className="ti ti-paperclip" /> File {i + 1}</a>)}
+                      </div>
+                    ) : null}
+                    <p className="mod-text"><b>Why @{d.poster?.username} rejected it</b>{sub.posterNotes || 'No reason given'}</p>
+                    <p className="mod-text"><b>Why @{d.worker?.username} disagrees</b>{d.reason}</p>
+                    {d.workerEvidence && <div className="mod-files">{/^https?:/.test(d.workerEvidence) ? <a href={d.workerEvidence} target="_blank" rel="noreferrer"><i className="ti ti-link" /> More proof from the worker</a> : <span>{d.workerEvidence}</span>}</div>}
+                    <input className="ui-input" value={lookNotes[d.id] || ''} maxLength={500} onChange={(e) => setLookNotes((m) => ({ ...m, [d.id]: e.target.value }))} placeholder="Note to both sides (optional), e.g. The screenshot shows the follow" aria-label="Note to both sides" />
+                  </div>
+                  <div className="mod-actions">
+                    <button className="btn-approve" onClick={() => decide(d, 'WORKER_WON')} disabled={busy === d.id}>{busy === d.id ? '...' : `Approve and pay ${amountOf(d.task)}`}</button>
+                    <button className="btn-split" onClick={() => decide(d, 'SPLIT')} disabled={busy === d.id}>Pay half</button>
+                    <button className="btn-reject" onClick={() => decide(d, 'POSTER_WON')} disabled={busy === d.id}>Keep the rejection</button>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
 
         <h2 className="mod-h2">Store orders with a problem {disputes && disputes.length > 0 && <span>{disputes.length}</span>}</h2>
         {disputes === null ? (

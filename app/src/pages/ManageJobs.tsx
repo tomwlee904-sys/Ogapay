@@ -16,6 +16,9 @@ import TransferModal from '../components/TransferModal'
 import { isXFollowJob } from "../lib/followJobs";
 import LoadError from "../components/LoadError";
 
+// Work can be sent back for changes this many times (server: task.service SEND_BACK_LIMIT)
+const SEND_BACK_LIMIT = 2;
+
 // Manage jobs: the poster's jobs, their review queue and job actions.
 // Counts come from each job's submissions (by status). The old page used
 // currentWorkers (slots taken) as "winners" and every submission as "pending",
@@ -25,6 +28,8 @@ type Sub = {
   id: string; status: string; createdAt: string; submittedAt?: string | null; reviewedAt?: string | null
   proof?: string | null; workerNotes?: string | null; posterNotes?: string | null; attachments?: any[]
   autoApproveAt?: string | null
+  // Sent back for changes (at most SEND_BACK_LIMIT times); the note is in posterNotes
+  sentBackAt?: string | null; sentBackCount?: number
   // Social jobs with a payout check: WAITING until payoutCheckDueAt, then PASSED,
   // SKIPPED, FAILED or UNKNOWN with a plain reason (Approve waits for the window)
   payoutCheck?: string | null; payoutCheckDueAt?: string | null; payoutCheckReason?: string | null
@@ -126,7 +131,9 @@ function JobDrawer({ task, allTasks, focusId, onClose, onChanged }: { task: Task
   // Re-render while a payout check runs, so Approve opens when its window ends
   const clock = useNow(anyWaiting(subs));
   const [busy, setBusy] = useState<string | null>(null);
+  // The open note box: rejecting (final for that person) or sending back for changes
   const [rejecting, setRejecting] = useState<string | null>(null);
+  const [action, setAction] = useState<"reject" | "back">("reject");
   const [reason, setReason] = useState("");
   // Stars and a note for each piece of work, sent with "Approve and pay" (optional)
   const [stars, setStars] = useState<Record<string, number>>({});
@@ -193,10 +200,22 @@ function JobDrawer({ task, allTasks, focusId, onClose, onChanged }: { task: Task
     try {
       await apiRequest(`/tasks/submissions/${s.id}/review`, { method: "PATCH", body: JSON.stringify({
         status,
-        ...(status === "REJECTED" && reason.trim() ? { posterNotes: reason.trim() } : {}),
+        ...(status === "REJECTED" ? { posterNotes: reason.trim() } : {}),
         ...(rating ? { rating, ...(note ? { feedback: note } : {}) } : {}),
       }) });
       toast(status === "APPROVED" ? `Approved. @${who(s.worker)} gets ${money(reward, cur)}${rating ? ` and your ${rating}/5 rating` : ""}.` : contest ? "Rejected. This entry can't win a place." : "Rejected. The slot is open again.", "success");
+      setRejecting(null); setReason("");
+      await load(); onChanged();
+    } catch (e: any) { toast(e?.message || "That didn't work. Try again.", "error"); }
+    setBusy(null);
+  };
+
+  // Back to the worker with a note: they keep their place, edit it and send it again
+  const sendBack = async (s: Sub) => {
+    setBusy(s.id);
+    try {
+      await apiRequest(`/tasks/submissions/${s.id}/send-back`, { method: "POST", body: JSON.stringify({ note: reason.trim() }) });
+      toast(`Sent back. @${who(s.worker)} can edit it and send it again.`, "success");
       setRejecting(null); setReason("");
       await load(); onChanged();
     } catch (e: any) { toast(e?.message || "That didn't work. Try again.", "error"); }
@@ -416,10 +435,17 @@ function JobDrawer({ task, allTasks, focusId, onClose, onChanged }: { task: Task
                     {!contest && s.autoApproveAt && <p className="mj-auto"><Icon n="clock-check" s={14} /> If you don't review it, it's approved and paid automatically on {new Date(s.autoApproveAt).toLocaleString("en-GB", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}.</p>}
                     {rejecting === s.id ? (
                       <div className="mj-reason">
-                        <textarea value={reason} maxLength={500} onChange={(e) => setReason(e.target.value)} placeholder={`Tell @${who(s.worker)} what was wrong (optional)`} autoFocus />
+                        <label htmlFor={`mj-note-${s.id}`}>{action === "back" ? `What should @${who(s.worker)} change?` : `Why are you rejecting it?`}</label>
+                        <textarea id={`mj-note-${s.id}`} value={reason} maxLength={500} onChange={(e) => setReason(e.target.value)}
+                          placeholder={action === "back" ? "e.g. Add a screenshot that shows your username" : "e.g. The screenshot is from a different post"} autoFocus />
+                        <p className="mj-reason-hint">{action === "back"
+                          ? `@${who(s.worker)} sees this, keeps their place and sends it again.${(s.sentBackCount || 0) === 1 ? " This is the last time it can be sent back." : ""}`
+                          : `@${who(s.worker)} sees this. A rejection is final: they can't send work for this job again. If it only needs a fix, send it back instead.`}</p>
                         <div className="mj-acts">
-                          <button className="ui-btn ui-btn-ghost" onClick={() => { setRejecting(null); setReason(""); }}>Back</button>
-                          <button className="ui-btn ui-btn-dark" disabled={busy === s.id} onClick={() => review(s, "REJECTED")}>{busy === s.id ? "Rejecting…" : "Reject work"}</button>
+                          <button className="ui-btn ui-btn-ghost" onClick={() => { setRejecting(null); setReason(""); }}>Cancel</button>
+                          {action === "back"
+                            ? <button className="ui-btn ui-btn-dark" disabled={busy === s.id || reason.trim().length < 5} onClick={() => sendBack(s)}>{busy === s.id ? "Sending back…" : "Send back"}</button>
+                            : <button className="ui-btn ui-btn-dark" disabled={busy === s.id || reason.trim().length < 5} onClick={() => review(s, "REJECTED")}>{busy === s.id ? "Rejecting…" : "Reject work"}</button>}
                         </div>
                       </div>
                     ) : (
@@ -429,7 +455,10 @@ function JobDrawer({ task, allTasks, focusId, onClose, onChanged }: { task: Task
                         onRating={(v) => setStars((m) => ({ ...m, [s.id]: v }))} onNote={(v) => setNotes((m) => ({ ...m, [s.id]: v }))} />}
                       <div className="mj-acts">
                         {!contest && <button className="ui-btn ui-btn-dark" disabled={busy === s.id || checkBlocksApprove(s, clock)} title={checkBlocksApprove(s, clock) ? "Payout check still running" : undefined} onClick={() => review(s, "APPROVED")}><Icon n="check" s={15} /> {busy === s.id ? "Approving…" : `Approve and pay ${money(reward, cur)}`}</button>}
-                        <button className="ui-btn ui-btn-ghost" disabled={busy === s.id} onClick={() => { setRejecting(s.id); setReason(""); }}>Reject</button>
+                        {(task.status === "OPEN" || task.status === "COOLING_DOWN") && (s.sentBackCount || 0) < SEND_BACK_LIMIT && (
+                          <button className="ui-btn ui-btn-ghost" disabled={busy === s.id} onClick={() => { setRejecting(s.id); setAction("back"); setReason(""); }}><Icon n="arrow-back-up" s={15} /> Send back for changes</button>
+                        )}
+                        <button className="ui-btn ui-btn-ghost" disabled={busy === s.id} onClick={() => { setRejecting(s.id); setAction("reject"); setReason(""); }}>Reject</button>
                       </div>
                       </>
                     )}
@@ -441,7 +470,9 @@ function JobDrawer({ task, allTasks, focusId, onClose, onChanged }: { task: Task
                 <section className="mj-sec">
                   <h4>Working on it ({working.length})</h4>
                   <div className="mj-rows">{working.map((s) => (
-                    <div key={s.id} className="mj-row"><div className="mj-who"><Avatar w={s.worker} /><div><WorkerLink w={s.worker} /><small>Took a slot {ago(s.createdAt)}</small></div></div><BlockBtn w={s.worker} /></div>
+                    <div key={s.id} className="mj-row"><div className="mj-who"><Avatar w={s.worker} /><div><WorkerLink w={s.worker} />{s.sentBackAt
+                      ? <><small>You sent it back for changes {ago(s.sentBackAt)}</small>{s.posterNotes && <p>“{s.posterNotes}”</p>}</>
+                      : <small>Took a slot {ago(s.createdAt)}</small>}</div></div><BlockBtn w={s.worker} /></div>
                   ))}</div>
                 </section>
               )}
@@ -449,7 +480,7 @@ function JobDrawer({ task, allTasks, focusId, onClose, onChanged }: { task: Task
                 <section className="mj-sec">
                   <h4>In dispute ({disputed.length})</h4>
                   <div className="mj-rows">{disputed.map((s) => (
-                    <div key={s.id} className="mj-row"><div className="mj-who"><Avatar w={s.worker} /><div><WorkerLink w={s.worker} /><small>Our team is reviewing this</small></div></div></div>
+                    <div key={s.id} className="mj-row"><div className="mj-who"><Avatar w={s.worker} /><div><WorkerLink w={s.worker} /><small>They asked OgaPay for a second look at your rejection. Our team decides and tells you both.</small></div></div></div>
                   ))}</div>
                 </section>
               )}
