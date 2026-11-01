@@ -711,7 +711,7 @@ export default function Profile() {
                 <div className="pw-toggle">
                   <div>
                     <div className="pw-toggle-t">Auto-convert USDC</div>
-                    <div className="pw-toggle-d">Turn USDC you earn into naira automatically, at the current rate.</div>
+                    <div className="pw-toggle-d">Turn new USDC you earn or deposit into naira as it arrives, at the live rate.</div>
                   </div>
                   <Toggle on={autoConvert} set={flip(autoConvert, 'autoConvert')} label="Auto-convert USDC" />
                 </div>

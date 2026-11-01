@@ -21,7 +21,11 @@ export type Tx = {
   completedAt?: string | null
   // Withdrawals only (users.service getTransactionHistory)
   payoutStatus?: PayoutStatus
+  // USDC converted to naira, by hand or automatically: both rows (USDC out,
+  // naira in) carry it; null on everything else (2026-11-01)
+  convert?: Conversion | null
 }
+export type Conversion = { how: 'manual' | 'auto'; rate: number; usdc: number; ngn: number }
 
 export const MIN_DEPOSIT_NGN = 100
 // Largest single card / USSD / bank-app payment (backend MAX_DEPOSIT_NGN)
@@ -68,6 +72,8 @@ export const isPending = (t: Tx) => ['PENDING', 'PROCESSING'].includes(up(t.stat
 // names the person, so only the sender's note after ": " is worth showing.
 const P2P_LEAD = /^(received from|sent to|tip from|tip to)\s/i
 export const usefulNote = (t: Tx) => {
+  // A conversion's description only repeats the amounts in its detail line
+  if (t.convert) return ''
   const d = String(t.description || '')
   if (P2P_LEAD.test(d)) {
     const i = d.indexOf(': ')
@@ -90,6 +96,11 @@ export function isCredit(t: Tx) {
 }
 
 export function txTitle(t: Tx) {
+  // A conversion is two rows: the USDC that left and the naira that came in
+  if (t.convert) {
+    const auto = t.convert.how === 'auto'
+    return up(t.currency) === 'NGN' ? (auto ? 'Auto-converted from USDC' : 'Converted from USDC') : (auto ? 'Auto-converted to naira' : 'Converted to naira')
+  }
   const cr = isCredit(t)
   const who = t.metadata?.counterparty ? ' @' + t.metadata.counterparty : ''
   switch (up(t.type)) {
@@ -116,6 +127,11 @@ export function txTitle(t: Tx) {
 
 // One line on how the money moved (bank, method, address)
 export function txDetail(t: Tx) {
+  // "100 USDC at ₦1,344.28"
+  if (t.convert) {
+    const usdc = Number(t.convert.usdc), rate = Number(t.convert.rate)
+    return usdc > 0 && rate > 0 ? `${usdc.toLocaleString('en-US', { maximumFractionDigits: 6 })} USDC at ${naira(rate)}` : ''
+  }
   const m = t.metadata || {}
   const d = String(t.description || '')
   if (up(t.type) === 'DEPOSIT') {

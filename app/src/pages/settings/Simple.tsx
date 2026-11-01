@@ -140,7 +140,7 @@ export function Payments(props: SectionProps) {
         </div>
       </Card>
       <Card title="USDC">
-        <PrefRow {...props} toast={toast} k="autoConvert" title="Convert USDC to naira automatically" sub="When USDC arrives in your wallet, it's converted to NGN at the current rate" />
+        <PrefRow {...props} toast={toast} k="autoConvert" title="Convert USDC to naira automatically" sub="USDC you're paid for jobs or store sales, and USDC you deposit, is converted to naira at the live rate when it arrives. USDC already in your wallet stays as it is." />
       </Card>
       <Card title="Wallet">
         <Row title="Deposits, withdrawals and your balance live in your wallet"><Link className="up-btn" to="/wallet">Open wallet</Link></Row>

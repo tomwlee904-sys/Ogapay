@@ -78,9 +78,11 @@ export default function Wallet() {
       apiRequest<Summary>('/wallet/summary').catch(() => null),
       sharedGet<Bank[]>('/wallet/banks', 5000).catch(() => null),
     ])
-    setBalances(b || {})
-    setSummary(s || {})
-    setBanks(Array.isArray(bk) ? bk : [])
+    // A request that fails keeps what was shown before (2026-11-01: a refresh
+    // after a failed convert on patchy data showed ₦0.00 and 0 USDC available)
+    setBalances((prev) => b || prev || {})
+    setSummary((prev) => s || prev || {})
+    setBanks((prev) => (Array.isArray(bk) ? bk : prev || []))
   }, [])
   useEffect(() => { load() }, [load])
 
@@ -307,7 +309,7 @@ export default function Wallet() {
       {modal === 'send' && <TransferModal onClose={() => setModal(null)} onSuccess={refreshAll} />}
       {modal === 'convert' && (
         <Sheet title="Convert USDC to naira" onClose={() => setModal(null)}>
-          <ConvertUsdc available={Number(balances?.USDC?.available ?? 0)} onCancel={() => setModal(null)} onDone={refreshAll} />
+          <ConvertUsdc available={Number(balances?.USDC?.available ?? 0)} onCancel={() => setModal(null)} onDone={refreshAll} onRefresh={refreshAll} />
         </Sheet>
       )}
       {modal === 'bank' && (

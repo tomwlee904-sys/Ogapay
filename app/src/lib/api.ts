@@ -122,7 +122,12 @@ async function parseResponse(res: Response) {
       const field = String(first.field || '').replace(/([A-Z])/g, ' $1').toLowerCase().trim()
       message = field ? `Check your ${field}: ${String(first.message).replace(/^String /, '')}` : String(first.message)
     }
-    throw new Error(message)
+    // The status and any data the server sent with the error ride along, e.g. the
+    // new quote when a conversion's rate moved (409) (2026-11-01)
+    const err: Error & { status?: number; data?: any } = new Error(message)
+    err.status = res.status
+    if (json?.data !== undefined) err.data = json.data
+    throw err
   }
   return json && 'data' in json ? json.data : json
 }
