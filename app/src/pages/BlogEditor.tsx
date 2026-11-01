@@ -6,8 +6,8 @@ import { uploadImage } from '../lib/upload'
 import { renderBlog } from '../lib/blogMarkdown'
 
 // Articles used to be saved only in this browser's localStorage, so nobody else
-// ever saw them. They now go to the API; posts by members wait for an admin to
-// approve them before they appear on the public blog.
+// ever saw them. They now go to the API; a member's post goes live as soon as they
+// publish it (their own blog, no review; 2026-11-02).
 
 const CATEGORIES = ['News', 'Businesses', 'Freelancers', 'Case Studies']
 type Mine = { id: string; title: string; slug: string; status: 'DRAFT' | 'PENDING' | 'PUBLISHED'; createdAt: string; viewCount: number }
@@ -383,7 +383,7 @@ export default function BlogEditor() {
             {/* Actions */}
             <div className="be-actions">
               <button className="be-btn-primary" onClick={() => save('published')} disabled={saving || uploading}>
-                <i className="ti ti-send" style={{fontSize:14,marginRight:6}} /> {saving ? 'Saving…' : 'Submit for review'}
+                <i className="ti ti-send" style={{fontSize:14,marginRight:6}} /> {saving ? 'Saving…' : 'Publish'}
               </button>
               <button className="be-btn-secondary" onClick={() => save('draft')} disabled={saving || uploading}>
                 <i className="ti ti-file-text" style={{fontSize:14,marginRight:6}} /> Save draft
