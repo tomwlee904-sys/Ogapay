@@ -22,6 +22,7 @@ import { sized } from '../lib/img'
 import { renderJobText, renderJobLine } from '../lib/jobText'
 import { PayoutCheckStatus, checkBlocksApprove, anyWaiting, useNow } from '../components/PayoutCheck'
 import SocialJobPanel, { type SocialInfo } from '../components/SocialJobPanel'
+import { openRules } from '../lib/welcome'
 
 const BRAND = 'var(--accent)'
 const BRAND_LIGHT = 'rgba(var(--accent-rgb),0.10)'
@@ -571,7 +572,7 @@ const FIXES: Record<string, { label: string; to: string }> = {
 }
 
 // The red "Eligibility requirements" box: what you're missing and how to fix it
-function EligibilityBanner({ eligibility, joinPath }: { eligibility: { eligible: boolean; reasons: { code: string; text: string }[] } | null; joinPath?: string }) {
+function EligibilityBanner({ eligibility, joinPath, onReload }: { eligibility: { eligible: boolean; reasons: { code: string; text: string }[] } | null; joinPath?: string; onReload?: () => void }) {
   if (!eligibility || eligibility.eligible || !eligibility.reasons?.length) return null
   return (
     <section className="wjd-elig" role="alert" aria-label="Why you can't take this job">
@@ -582,7 +583,10 @@ function EligibilityBanner({ eligibility, joinPath }: { eligibility: { eligible:
           return (
             <li key={r.code + r.text}>
               <span>{r.text}</span>
-              {fix && <Link to={fix.to}>{fix.label} <i className="ti ti-arrow-right" aria-hidden="true" /></Link>}
+              {/* The OgaPay rules open in the welcome sheet; accepting them reloads the job (2026-11-01) */}
+              {r.code === 'RULES_REQUIRED'
+                ? <button type="button" onClick={() => openRules(onReload)}>Read the rules <i className="ti ti-arrow-right" aria-hidden="true" /></button>
+                : fix && <Link to={fix.to}>{fix.label} <i className="ti ti-arrow-right" aria-hidden="true" /></Link>}
             </li>
           )
         })}
@@ -974,7 +978,8 @@ function WurkJobDetailView(props: any) {
         .wjd-elig>b{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--red)}
         .wjd-elig ul{list-style:none;margin:8px 0 0;padding:0;display:flex;flex-direction:column;gap:8px}
         .wjd-elig li{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:6px 12px;font-size:13px;line-height:1.5;color:var(--text)}
-        .wjd-elig li a{display:inline-flex;align-items:center;gap:4px;min-height:36px;font-weight:600;color:var(--accent);white-space:nowrap}
+        .wjd-elig li a,.wjd-elig li button{display:inline-flex;align-items:center;gap:4px;min-height:36px;font-weight:600;color:var(--accent);white-space:nowrap}
+        .wjd-elig li button{padding:0;border:0;background:none;font-family:inherit;font-size:inherit;cursor:pointer}
         .wjd-workspace{display:flex;align-items:center;gap:12px;margin:var(--sp-4) 0 0;padding:12px 16px;border-radius:14px;border:1px solid var(--border);background:var(--card);color:var(--text);text-decoration:none;min-height:44px}
         .wjd-workspace>i{font-size:20px;color:var(--accent)}
         .wjd-workspace span{flex:1;min-width:0;display:flex;flex-direction:column}
@@ -1065,7 +1070,7 @@ function WurkJobDetailView(props: any) {
             Back
           </button>
 
-          <EligibilityBanner eligibility={eligibility} joinPath={joinPath} />
+          <EligibilityBanner eligibility={eligibility} joinPath={joinPath} onReload={onReload} />
           {workspaceLink && (
             <Link to={workspaceLink} className="wjd-workspace"><i className="ti ti-messages" aria-hidden="true" /><span><b>{canManage ? 'Job chat and workspace' : 'Your workspace'}</b><small>{canManage ? 'Talk to the person you picked and see their work.' : 'The brief, your work and the private job chat with the poster.'}</small></span><i className="ti ti-arrow-right" aria-hidden="true" /></Link>
           )}

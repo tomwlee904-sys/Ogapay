@@ -1,0 +1,9 @@
+/* Welcome flow (components/WelcomeFlow.tsx): shown in the wallet's Sheet */
+.wf-body:focus { outline: none; }
+.wf-count { display: block; margin-bottom: 12px; }
+.wf-text { margin: 0 0 16px; font-size: 14px; line-height: 1.6; color: var(--text2); }
+.wf-rules { list-style: none; margin: 0 0 18px; padding: 0; display: grid; gap: 12px; }
+.wf-rules li { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; line-height: 1.5; color: var(--text); }
+.wf-rules i { flex-shrink: 0; margin-top: 1px; font-size: 18px; color: var(--text2); }
+.wf-wide { width: 100%; }
+.wf-actions .ui-btn:last-child { flex: 1; }

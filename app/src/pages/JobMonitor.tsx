@@ -11,6 +11,7 @@ import { savedJobIds, setSaved, onSavedJobsChange } from '../lib/bookmarks'
 import { useJobAlert } from '../contexts/JobAlertContext'
 import InfoTip from '../components/InfoTip'
 import PhoneJobAlerts from '../components/PhoneJobAlerts'
+import { isRulesError, openRules } from '../lib/welcome'
 import '../styles/job-monitor.css'
 
 // Job monitor: open jobs, newest first, checked every 30 seconds while the page is
@@ -104,7 +105,11 @@ export default function JobMonitor() {
         if (!/already applied/i.test(String(e?.message || ''))) throw e // other refusals (e.g. a similar job done) must show
       })
       navigate(`/tasks/${j.id}/submit`)
-    } catch (e: any) { toast(e?.message || "Couldn't take a slot", 'error') }
+    } catch (e: any) {
+      // New accounts accept the rules first: show them, then take the slot (2026-11-01)
+      if (isRulesError(e)) openRules(() => { takeSlot(j) })
+      else toast(e?.message || "Couldn't take a slot", 'error')
+    }
     setBusy(null)
   }
 

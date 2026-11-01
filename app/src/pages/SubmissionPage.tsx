@@ -11,6 +11,7 @@ import { ordinal } from '../components/ContestPanel'
 import '../styles/submit.css'
 import { uploadProof } from '../lib/upload'
 import { PayoutCheckNote, PayoutCheckStatus } from '../components/PayoutCheck'
+import { isRulesError, openRules } from '../lib/welcome'
 
 // Submit work for a job (/tasks/:id/submit). Takes a slot if you haven't yet,
 // uploads files, then submits: the same steps as the job page's apply dialog.
@@ -201,6 +202,8 @@ export default function SubmissionPage() {
       await loadMine()
     } catch (e: any) {
       setError(e?.message || 'Something went wrong. Your work was not sent.')
+      // New accounts accept the rules before taking a place: show them, then they send again (2026-11-01)
+      if (isRulesError(e)) openRules(() => setError(''))
     }
     setBusy('')
   }
@@ -236,6 +239,7 @@ export default function SubmissionPage() {
       setPitch('')
     } catch (e: any) {
       setError(e?.message || 'Something went wrong. Your application was not sent.')
+      if (isRulesError(e)) openRules(() => setError(''))
     }
     setBusy('')
   }

@@ -1,8 +1,9 @@
 import { useEffect, useId, useRef, type ReactNode } from 'react'
 
 // Dialog for the wallet (Withdraw, Add bank account): centred on desktop, a
-// bottom sheet on phones. Escape or a click outside closes it.
-export default function Sheet({ title, onClose, children }: { title: string; onClose: () => void; children: ReactNode }) {
+// bottom sheet on phones. Escape or a click outside closes it (outsideCloses
+// false: only the X and Escape, for the welcome flow that shows once (2026-11-01)).
+export default function Sheet({ title, onClose, children, outsideCloses = true }: { title: string; onClose: () => void; children: ReactNode; outsideCloses?: boolean }) {
   const id = useId()
   const box = useRef<HTMLDivElement>(null)
   const close = useRef(onClose)
@@ -20,7 +21,7 @@ export default function Sheet({ title, onClose, children }: { title: string; onC
   }, [])
 
   return (
-    <div className="wl-overlay" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose() }}>
+    <div className="wl-overlay" onMouseDown={(e) => { if (outsideCloses && e.target === e.currentTarget) onClose() }}>
       <div className="wl-sheet" role="dialog" aria-modal="true" aria-labelledby={id} ref={box} tabIndex={-1}>
         <header className="wl-sheet-head">
           <h2 id={id}>{title}</h2>

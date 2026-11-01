@@ -13,6 +13,7 @@ import { ToastProvider } from './components/Toast'
 import SignInHost from './components/auth/SignInHost'
 import { InstallHost } from './components/InstallApp'
 import { PushHost } from './components/PushAlerts'
+import { WelcomeHost } from './components/WelcomeHost'
 import PageLoader from './components/PageLoader'
 import AdminGuard from './components/AdminGuard'
 import { JobAlertProvider } from './contexts/JobAlertContext'
@@ -133,6 +134,8 @@ export default function App() {
           <SignInHost />
           <InstallHost />
           <PushHost />
+          {/* The once-per-account welcome flow, after sign-up (2026-11-01) */}
+          <WelcomeHost />
           <CanonicalUrl />
           <PageTitle />
           <Routes>
