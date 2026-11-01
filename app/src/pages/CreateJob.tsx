@@ -22,6 +22,7 @@ import "../styles/create.css";
 import { missingLink, missingLinkText, TEMPLATE_BLANKS } from '../lib/jobText'
 import InfoTip from '../components/InfoTip'
 import { PayoutCheckPicker, PAYOUT_CHECKS } from '../components/PayoutCheck'
+import { MAX_PLACES } from '../lib/contestPrizes'
 // -- COLOR TOKENS ----------------------------------------------------------
 const C = {
   text: "var(--text)",
@@ -226,7 +227,7 @@ function SelectField({ label, value, onChange, options, style = {} }: any) {
 // "1st", "2nd", "3rd", "4th" ...
 const ordinal = (n: number) => `${n}${n % 10 === 1 && n % 100 !== 11 ? "st" : n % 10 === 2 && n % 100 !== 12 ? "nd" : n % 10 === 3 && n % 100 !== 13 ? "rd" : "th"}`;
 
-// Contest prizes: one per place (up to 10), 1st first, plus an optional entry target
+// Contest prizes: one per place (up to MAX_PLACES, 20), 1st first, plus an optional entry target
 // "Split evenly": the total of the prizes shared equally between the places.
 // Naira in whole naira (crypto to 6 places); what's left over goes to 1st place,
 // so a lower place never pays more than the one above.
@@ -281,7 +282,7 @@ function ContestPrizes({ currency, setCurrency, prizes, setPrizes, target, setTa
           ))}
         </div>
         <div className="cf-prize-actions">
-          {prizes.length < 10 && (
+          {prizes.length < MAX_PLACES && (
             <button type="button" className="ui-btn ui-btn-ghost cf-prize-add" onClick={() => setPrizes(ps => [...ps, ""])}><i className="ti ti-plus" /> Add a place</button>
           )}
           {prizes.length > 1 && (
@@ -539,7 +540,7 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
   const [bounty, setBounty] = useState<string>(init.bounty?.toString() || "");
   const [winnersInput, setWinnersInput] = useState<string>(String(init.winners || 10));
   // Contest: a prize per place, 1st first
-  const [prizesInput, setPrizesInput] = useState<string[]>(Array.isArray(init.prizes) && init.prizes.length ? init.prizes.map(String).slice(0, 10) : ["", "", ""]);
+  const [prizesInput, setPrizesInput] = useState<string[]>(Array.isArray(init.prizes) && init.prizes.length ? init.prizes.map(String).slice(0, MAX_PLACES) : ["", "", ""]);
   const [entryTarget, setEntryTarget] = useState<string>(init.entryTarget ? String(init.entryTarget) : "");
   // Contest: winners drawn at random when entries close, instead of picked by you
   const [randomDraw, setRandomDraw] = useState<boolean>(!!init.randomDraw);

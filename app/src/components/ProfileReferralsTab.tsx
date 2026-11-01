@@ -4,6 +4,7 @@ import { apiRequest } from '../lib/api'
 import { useAuth } from '../context/AuthContext'
 import { naira } from '../lib/wallet'
 import { sized } from '../lib/img'
+import { prizeRuns, runLabel } from '../lib/contestPrizes'
 
 // Referrals. The page is for inviting people, so it reads in that order:
 // 1) the offer, your link and one-tap share, 2) your progress, 3) your friends
@@ -17,6 +18,8 @@ import { sized } from '../lib/img'
 // (referral.service weeklyLeaderboard).
 
 type Step = 'verify' | 'job' | 'processing' | 'paid' | 'capped'
+// Shown until the board loads (server: referral.service WEEKLY_PRIZES_NGN)
+const WEEKLY_PRIZES = [10000, 5000, 3000, 1000, 1000, 1000, 1000, 1000, 1000, 1000]
 type Referral = { username: string; avatarUrl: string | null; joinedAt: string; rewardedAt: string | null; step?: Step }
 type Stats = {
   referralCode: string; totalReferrals: number; rewardedReferrals: number; totalEarned: number | string
@@ -356,8 +359,8 @@ export default function TabReferralsContent() {
               </div>
             )}
             <div className="rf3-prizes">
-              {(board?.prizes || [10000, 5000, 3000, 1000]).slice(0, 3).map((p, i) => <span key={i}>{['1st', '2nd', '3rd'][i]} <b>{naira(p, 0)}</b></span>)}
-              <span>4th–10th <b>{naira(board?.prizes?.[3] ?? 1000, 0)}</b></span>
+              {/* Places that pay the same share a chip: 1st, 2nd, 3rd, 4th–10th (or 4th–12th once places are added) */}
+              {prizeRuns(board?.prizes || WEEKLY_PRIZES).map((r) => <span key={r.from}>{runLabel(r)} <b>{naira(r.prize, 0)}</b></span>)}
             </div>
             {boardFailed ? (
               <Failed what="the contest board" onRetry={() => setBoardKey((k) => k + 1)} />

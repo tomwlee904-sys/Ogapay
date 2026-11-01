@@ -16,6 +16,7 @@ import TransferModal from '../components/TransferModal'
 import { isXFollowJob } from "../lib/followJobs";
 import LoadError from "../components/LoadError";
 import { jobDeadline } from "../lib/deadline";
+import { contestPaidOut } from "../lib/contestPrizes";
 
 // Work can be sent back for changes this many times (server: task.service SEND_BACK_LIMIT)
 const SEND_BACK_LIMIT = 2;
@@ -37,6 +38,8 @@ type Sub = {
   // Set by the server when the entry looks copied from another one on this job, or only says "done"
   spamReason?: string | null; similarToId?: string | null
   rating?: number | null; feedback?: string | null
+  // Contest entries: the place this entry won (1 = first)
+  place?: number | null
   // Who rated it (an admin can rate flagged work) and who moderated it
   ratedById?: string | null; moderatedById?: string | null
   worker?: { id: string; username?: string | null; firstName?: string | null; lastName?: string | null; avatarUrl?: string | null }
@@ -48,8 +51,9 @@ type Task = {
   excludesTaskIds?: string[]
   // "Member of community": a public job only that community's members can take
   requiredCommunityId?: string | null; communityId?: string | null
-  // A contest: entries aren't approved one by one, places are awarded on the job page
-  isContest?: boolean; randomDraw?: boolean
+  // A contest: entries aren't approved one by one, places are awarded on the job page.
+  // prizes: one per place, 1st first (the reward is only the 1st prize)
+  isContest?: boolean; randomDraw?: boolean; prizes?: (number | string)[] | null
   // Quick social jobs use set prices; private hires: neither can have the pay raised
   socialAction?: string | null
   // Selection jobs: people apply with a note and the poster picks one (hiredWorkerId)
@@ -89,13 +93,15 @@ const Pill = ({ status }: { status: string }) => {
   return <span className={`mj-pill ${s.cls}`}>{s.label}</span>;
 };
 
-// Per-job numbers from its submissions
+// Per-job numbers from its submissions. A contest's winners were paid the prize
+// of the place each won, not its reward (the 1st prize) each (2026-11-01).
 function jobCounts(t: Task) {
   const c: Record<string, number> = {};
   for (const s of t.submissions || []) c[s.status] = (c[s.status] || 0) + 1;
   const approved = c.APPROVED || 0, review = c.SUBMITTED || 0, working = c.PENDING || 0, disputed = c.DISPUTED || 0;
   const slots = t.maxWorkers || 1;
-  return { approved, review, working, disputed, rejected: c.REJECTED || 0, slots, left: Math.max(0, slots - approved - review - working - disputed), paid: approved * Number(t.reward || 0) };
+  const paid = t.isContest ? contestPaidOut(t.prizes, t.submissions || [], Number(t.reward || 0), t.currency || "NGN") : approved * Number(t.reward || 0);
+  return { approved, review, working, disputed, rejected: c.REJECTED || 0, slots, left: Math.max(0, slots - approved - review - working - disputed), paid };
 }
 
 const Avatar = ({ w }: { w?: Sub["worker"] }) => (
@@ -262,6 +268,8 @@ function JobDrawer({ task, allTasks, focusId, onClose, onChanged }: { task: Task
   // Raise the pay per person: the extra for every place (plus the 10% fee) is held
   // from the wallet now; work approved from now on is paid the new amount
   const canRaise = (task.status === "OPEN" || task.status === "IN_PROGRESS") && !task.isContest && !task.socialAction && !task.hiredWorkerId;
+  // A contest raises its prizes or adds places on its job page, while entries are open
+  const canRaisePrizes = !!task.isContest && ["OPEN", "IN_PROGRESS", "COOLING_DOWN"].includes(task.status) && jobDeadline(task).state !== "ended";
   const raisePay = async () => {
     const input = window.prompt(`New pay per person (now ${money(reward, cur)}):`, String(cur === "NGN" ? Math.ceil((reward * 1.5) / 50) * 50 : +(reward * 1.5).toFixed(2)));
     if (input === null) return;
@@ -334,7 +342,7 @@ function JobDrawer({ task, allTasks, focusId, onClose, onChanged }: { task: Task
         <div className="mj-dh">
           <div style={{ flex: 1, minWidth: 0 }}>
             <h2>{task.title}</h2>
-            <div className="mj-meta"><Pill status={task.status} /><span>{categoryLabel(task.category)}</span><span>{money(reward, cur)} per person</span></div>
+            <div className="mj-meta"><Pill status={task.status} /><span>{categoryLabel(task.category)}</span><span>{money(reward, cur)} {contest ? "1st place prize" : "per person"}</span></div>
           </div>
           <button className="mj-x" onClick={onClose} aria-label="Close"><Icon n="x" /></button>
         </div>
@@ -374,7 +382,9 @@ function JobDrawer({ task, allTasks, focusId, onClose, onChanged }: { task: Task
                   ))}
                 </fieldset>
               )}
-              <p className="mj-edit-note">The reward and number of people can't change once the job is funded. To change them, cancel the job and post a new one.</p>
+              <p className="mj-edit-note">{task.isContest
+                ? "Prizes can't be lowered once the contest is funded. While entries are open you can raise them or add places with Raise prizes."
+                : "The reward and number of people can't change once the job is funded. To change them, cancel the job and post a new one."}</p>
               {edErr && <p className="mj-tool-err" role="alert">{edErr}</p>}
               <div className="mj-acts">
                 <button className="ui-btn ui-btn-ghost" onClick={() => setEditing(false)}>Cancel</button>
@@ -512,6 +522,7 @@ function JobDrawer({ task, allTasks, focusId, onClose, onChanged }: { task: Task
           <button className="ui-btn ui-btn-ghost" disabled={tpl !== ""} onClick={saveAsTemplate}><Icon n={tpl === "saved" ? "check" : "device-floppy"} s={15} /> {tpl === "saving" ? "Saving…" : tpl === "saved" ? "Saved" : "Save as template"}</button>
           {live && !editing && <button className="ui-btn ui-btn-ghost" onClick={startEdit}><Icon n="edit" s={15} /> Edit</button>}
           {canRaise && !editing && <button className="ui-btn ui-btn-ghost" onClick={raisePay}><Icon n="trending-up" s={15} /> Raise pay</button>}
+          {canRaisePrizes && !editing && <Link className="ui-btn ui-btn-ghost" to={`/tasks/${task.id}?raise=1`}><Icon n="trending-up" s={15} /> Raise prizes</Link>}
           {(task.status === "OPEN" || task.status === "DRAFT") && (
             <button className="ui-btn ui-btn-ghost" onClick={() => setPaused(task.status === "OPEN")}>
               <Icon n={task.status === "OPEN" ? "player-pause" : "player-play"} s={15} /> {task.status === "OPEN" ? "Pause" : "Resume"}
@@ -749,7 +760,7 @@ function JobsListPage({ tasks, reload }: { tasks: Task[]; reload: () => void }) 
                     {t.deadline && <span>Closes {day(t.deadline)}</span>}
                   </div>
                 </div>
-                <div className="mj-reward"><b>{money(Number(t.reward || 0), cur)}</b><span>per person</span></div>
+                <div className="mj-reward"><b>{money(Number(t.reward || 0), cur)}</b><span>{t.isContest ? "1st place prize" : "per person"}</span></div>
               </div>
               <div className="mj-bar" aria-hidden="true"><i style={{ width: `${Math.min(100, (c.approved / c.slots) * 100)}%` }} /></div>
               <div className="mj-job-foot">

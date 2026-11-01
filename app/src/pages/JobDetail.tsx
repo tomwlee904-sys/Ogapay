@@ -1220,7 +1220,10 @@ function WurkJobDetailView(props: any) {
           {/* ── Reward ── */}
           {contest ? (
             <ContestPanel jobId={job.id} contest={contest} currency={rewardCurrency} endsAt={job.deadline || null}
-              canManage={canManage} cancelled={jobStatus === 'cancelled'} convert={convert} onPaid={onContestPaid} />
+              canManage={canManage} cancelled={jobStatus === 'cancelled'} convert={convert} onPaid={onContestPaid}
+              // The poster, or an admin for them, can raise the prizes or add places while it's live
+              canRaise={(canManage || authUser?.role === 'ADMIN') && ['open', 'in_progress', 'cooling_down'].includes(jobStatus)}
+              raiseForPoster={!canManage} />
           ) : (
           <section className="wjd-panel wjd-reward">
               <span className="wjd-reward-mark" aria-hidden="true"><i className="ti ti-currency-dollar" /></span>

@@ -1,8 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import Money from './Money'
+import { useToast } from './Toast'
+import { useCurrency } from '../context/CurrencyContext'
 import { apiRequest } from '../lib/api'
-import { formatMoney } from '../lib/money'
+import { displayMoney, formatMoney } from '../lib/money'
+import { MAX_PLACES, CONTEST_FEE_PERCENT, ordinal, exactMoney, resizePlaces, checkRaise } from '../lib/contestPrizes'
 
 // A contest on its job page: the prize for each place, entries against the
 // target, when entries close and when winners are picked, then the winners.
@@ -14,6 +17,8 @@ import { formatMoney } from '../lib/money'
 // A random-draw contest has no pick: when entries close the server draws the
 // winners from the valid entries and the record (seed and drawn order) shows
 // here, with a button that re-runs the draw in the browser to check it.
+// While entries are open the poster (or an admin for them) can raise the prizes
+// or add places at the end, up to 20 (2026-11-01); /tasks/:id?raise=1 opens it.
 
 export type ContestInfo = {
   prizes: number[]
@@ -24,6 +29,8 @@ export type ContestInfo = {
   winners: { place: number; prize: number; username?: string; avatarUrl?: string | null }[]
   randomDraw?: boolean
   draw?: DrawRecord | null
+  // The fee on prizes raised or places added, from the server (2026-11-01)
+  feePercent?: number
 }
 
 // The public record of a random draw (server: contest.service.js drawOrder).
@@ -63,7 +70,7 @@ type Entry = {
   submittedAt?: string | null; worker?: { username?: string }
 }
 
-export const ordinal = (n: number) => `${n}${n % 10 === 1 && n % 100 !== 11 ? 'st' : n % 10 === 2 && n % 100 !== 12 ? 'nd' : n % 10 === 3 && n % 100 !== 13 ? 'rd' : 'th'}`
+export { ordinal }
 const when = (d: string | number | Date) => new Date(d).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
 
 // No clear answer from the server (it took too long, the connection dropped or
@@ -82,12 +89,16 @@ function useReloadAfterError(onPaid: () => void) {
   }
 }
 
-export default function ContestPanel({ jobId, contest, currency, endsAt, canManage, cancelled = false, convert, onPaid }: {
+export default function ContestPanel({ jobId, contest, currency, endsAt, canManage, canRaise = false, raiseForPoster = false, cancelled = false, convert, onPaid }: {
   jobId: string
   contest: ContestInfo
   currency: string
   endsAt: string | number | null
   canManage: boolean
+  // The poster, or an admin, on a contest that is still live: prizes can be raised and places added
+  canRaise?: boolean
+  // An admin raising them for the poster: the money still comes from the poster's wallet
+  raiseForPoster?: boolean
   // The poster cancelled it: nothing is held any more and no place can be awarded
   cancelled?: boolean
   convert: any
@@ -149,7 +160,18 @@ export default function ContestPanel({ jobId, contest, currency, endsAt, canMana
         .cp-ok{font-size:13px;font-weight:600;color:var(--green)}
         .cp-draw details summary{cursor:pointer;font-size:13px;color:var(--text2)}
         .cp-draw details p{margin:8px 0 0;font-size:12.5px;line-height:1.6;color:var(--text2)}
-        @media(max-width:600px){.cp{padding:18px}.cp-facts{grid-template-columns:1fr}.cp-row{grid-template-columns:44px 1fr}.cp-row .cp-amt{grid-column:2}}
+        .cp-raise-open{margin-top:14px}
+        .cp-count{display:flex;align-items:center;gap:10px}
+        .cp-count label{font-size:13px;font-weight:600;color:var(--text)}
+        .cp-count select{width:auto;min-width:96px}
+        .cp-prefix{position:relative}
+        .cp-prefix>span{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--text2);pointer-events:none}
+        .cp-prefix .ui-input{padding-left:28px;width:100%}
+        .cp-sum{display:grid;gap:4px;padding:12px 14px;border:1px solid var(--border);border-radius:var(--r-ctl,12px);font-size:13px;color:var(--text2)}
+        .cp-sum b{color:var(--text);font-weight:600;font-variant-numeric:tabular-nums}
+        .cp-acts{display:flex;flex-wrap:wrap;gap:8px}
+        .cp-row.cp-raise-row{grid-template-columns:52px 1fr 92px}
+        @media(max-width:600px){.cp{padding:18px}.cp-facts{grid-template-columns:1fr}.cp-row,.cp-row.cp-raise-row{grid-template-columns:44px 1fr}.cp-row .cp-amt{grid-column:2}}
       `}</style>
 
       <div className="cp-head">
@@ -209,6 +231,9 @@ export default function ContestPanel({ jobId, contest, currency, endsAt, canMana
           currency={currency} convert={convert} onPaid={onPaid} />
       )}
       {canManage && !cancelled && !random && ended && !paid && <PickWinners jobId={jobId} contest={contest} currency={currency} convert={convert} onPaid={onPaid} />}
+      {canRaise && !cancelled && !ended && !paid && contest.prizes.length > 0 && (
+        <RaisePrizes jobId={jobId} contest={contest} currency={currency} endsAt={endsAt} forPoster={raiseForPoster} convert={convert} onDone={onPaid} />
+      )}
     </section>
   )
 }
@@ -453,6 +478,205 @@ function AwardNow({ jobId, prize, places, placesLeft, currency, convert, onPaid 
         ))
       )}
       {error && <div className="cp-err">{error}</div>}
+    </div>
+  )
+}
+
+// Raise the prizes or add places while entries are open: the poster, or an admin
+// for them. Places are only added at the end (up to MAX_PLACES), no prize goes
+// down, places already awarded keep theirs and a lower place never pays more
+// than the one above (lib/contestPrizes checkRaise, the server's rules). The
+// extra plus the fee on it is held from the poster's wallet at once, and
+// everyone who entered is told.
+function RaisePrizes({ jobId, contest, currency, endsAt, forPoster, convert, onDone }: {
+  jobId: string; contest: ContestInfo; currency: string; endsAt: string | number | null; forPoster: boolean; convert: any; onDone: () => void
+}) {
+  const { toast } = useToast()
+  const { preferredCurrency, convert: rates } = useCurrency()
+  const [params, setParams] = useSearchParams()
+  // Opened from Manage jobs (its Raise prizes button links to /tasks/:id?raise=1)
+  const askedFor = params.get('raise') === '1'
+  const old = contest.prizes
+  const winners = contest.winners
+  const endsTime = endsAt ? new Date(endsAt).getTime() : null
+  const [open, setOpen] = useState(askedFor)
+  const [rows, setRows] = useState<string[]>(() => old.map(String))
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+  const box = useRef<HTMLDivElement>(null)
+  const reload = useReloadAfterError(onDone)
+  // The prizes the last save sent while its answer is unknown (it took too long).
+  // Only a reload that finds exactly these prizes means it went through, not any
+  // other change such as a place awarded meanwhile (2026-11-01)
+  const sent = useRef('')
+
+  // Done with the form: drop ?raise=1 so a refresh or a shared link doesn't open it again
+  const unask = () => {
+    if (askedFor) setParams((p) => { const q = new URLSearchParams(p); q.delete('raise'); return q }, { replace: true })
+  }
+  const close = () => {
+    sent.current = ''
+    setOpen(false)
+    setRows(old.map(String))
+    setError('')
+    unask()
+  }
+
+  // The contest changed while this was on the page: a save from here went
+  // through, a place was awarded, or someone else (an admin, another tab) changed it
+  const prizesKey = old.join(',')
+  const placesKey = winners.map((w) => w.place).join(',')
+  const seen = useRef({ prizes: prizesKey, places: placesKey })
+  useEffect(() => {
+    const was = seen.current
+    if (was.prizes === prizesKey && was.places === placesKey) return
+    seen.current = { prizes: prizesKey, places: placesKey }
+    if (sent.current && sent.current === prizesKey) {
+      // The save that had no clear answer went through
+      toast('It went through: the prizes above are the new ones.', 'success')
+      close()
+      return
+    }
+    if (was.prizes === prizesKey) {
+      // Only a place was awarded: what was typed stays, but an awarded place
+      // keeps the prize it was paid, and any message stays (it may say why)
+      setRows((r) => r.map((v, i) => (winners.some((w) => w.place === i + 1) ? String(old[i]) : v)))
+      return
+    }
+    // The prizes changed, but not to what was sent from here: start again from
+    // them, and say why when the form is open (a refusal's reason is out of date)
+    sent.current = ''
+    setRows(old.map(String))
+    setError(open ? 'The contest changed while you were editing. Check the prizes above and try again.' : '')
+  }, [prizesKey, placesKey])
+
+  useEffect(() => { if (askedFor) box.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }) }, [askedFor])
+
+  if (!open) {
+    return (
+      <div className="cp-raise-open">
+        <button className="ui-btn ui-btn-ghost" type="button" onClick={() => setOpen(true)}><i className="ti ti-trending-up" /> Raise prizes or add places</button>
+      </div>
+    )
+  }
+
+  // The server's fee, so what is shown here is what is held (10% if it doesn't say)
+  const feePct = typeof contest.feePercent === 'number' && contest.feePercent >= 0 ? contest.feePercent : CONTEST_FEE_PERCENT
+  const check = checkRaise(old, rows, currency, winners.map((w) => w.place), feePct)
+  const payer = forPoster ? "the poster's wallet" : 'your wallet'
+  const sym = currency === 'NGN' ? '₦' : currency === 'USDC' ? '$' : '◎'
+  // Early awards need every place to pay the same
+  const earlyLost = !contest.randomDraw && new Set(old).size === 1 && new Set(check.prizes).size > 1
+  // What leaves the wallet in the display currency too ("Both", or dollars for a
+  // naira contest), the quiet line <Money exact> shows
+  const payAlt = check.ready ? displayMoney(check.pay, currency, preferredCurrency, convert || rates, true).alt : ''
+
+  const save = async () => {
+    if (!check.ready || busy) return
+    // Entries closed while the form was open (the server refuses it then too)
+    if (endsTime != null && endsTime <= Date.now()) {
+      setError("Entries have closed, so the prizes can't be raised or places added now.")
+      return
+    }
+    const what = [
+      check.added ? `add ${check.added} place${check.added === 1 ? '' : 's'}` : '',
+      check.raised ? `raise ${check.raised} prize${check.raised === 1 ? '' : 's'}` : '',
+    ].filter(Boolean).join(' and ')
+    const ask = `${what.charAt(0).toUpperCase()}${what.slice(1)}? ${exactMoney(check.pay, currency)} is held from ${payer} now: `
+      + `${exactMoney(check.extra, currency)} more in prizes plus the ${exactMoney(check.fee, currency)} fee.\n\n`
+      + `The prizes will add up to ${exactMoney(check.newTotal, currency)} for ${check.prizes.length} places. `
+      + "Prizes can't be lowered and places can't be taken away later. Everyone who entered is told."
+    if (!window.confirm(ask)) return
+    setBusy(true)
+    setError('')
+    // If no answer comes, a reload that finds these prizes means it went through
+    sent.current = check.prizes.join(',')
+    try {
+      const r = await apiRequest<any>(`/tasks/${jobId}/raise-prizes`, { method: 'POST', body: JSON.stringify({ prizes: check.prizes }) })
+      sent.current = ''
+      const told = Number(r?.notified) || 0
+      // What the server really held (the extra plus its fee)
+      const held = Number(r?.total)
+      toast(`Prizes updated: ${check.prizes.length} places, ${exactMoney(check.newTotal, currency)} in total.${held > 0 ? ` ${exactMoney(held, currency)} was held from ${payer}.` : ''}${told ? ` ${told} ${told === 1 ? 'person' : 'people'} who entered ${told === 1 ? 'was' : 'were'} told.` : ''}`, 'success')
+      setOpen(false)
+      unask()
+      onDone()
+    } catch (e: any) {
+      // A clear refusal: nothing was raised
+      if (!unsure(e)) sent.current = ''
+      setError(unsure(e)
+        ? "We couldn't confirm this. The prizes may have been raised: check the prizes above before you try again."
+        : e?.message || "Couldn't raise the prizes. Try again.")
+      // It may have gone through anyway (a timeout), or the contest changed: reload
+      // it so the page shows where it stands
+      reload(unsure(e))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div className="cp-pick" ref={box}>
+      <h3>Raise prizes or add places</h3>
+      <p className="cp-note" style={{ margin: 0 }}>
+        Add places at the end (up to {MAX_PLACES}) or raise any prize. A new place starts at the prize of the place above it.
+        No prize can go down, and a lower place can't pay more than the one above.{winners.length ? ' Places already awarded keep their prize.' : ''}
+        {' '}The extra, plus the {feePct}% fee on it, is held from {payer} at once, and everyone who entered is told.
+      </p>
+      <div className="cp-count">
+        <label htmlFor={`cp-places-${jobId}`}>Places</label>
+        <select id={`cp-places-${jobId}`} className="ui-select" value={rows.length} disabled={busy}
+          onChange={(e) => setRows((r) => resizePlaces(r, Number(e.target.value), old.length))}>
+          {Array.from({ length: Math.max(0, MAX_PLACES - old.length) + 1 }, (_, k) => old.length + k).map((n) => (
+            <option key={n} value={n}>{n}{n === old.length ? ' (now)' : ''}</option>
+          ))}
+        </select>
+      </div>
+      {rows.map((v, i) => {
+        const won = winners.find((w) => w.place === i + 1)
+        return (
+          <div key={i} className="cp-row cp-raise-row">
+            <span className="cp-place">{ordinal(i + 1)}</span>
+            {won ? (
+              <span className="cp-none">Awarded{won.username ? ` to @${won.username}` : ''}: {exactMoney(old[i], currency)} paid</span>
+            ) : (
+              <div className="cp-prefix">
+                <span>{sym}</span>
+                <input className="ui-input" inputMode="decimal" aria-label={`${ordinal(i + 1)} place prize`} value={v} placeholder="0" disabled={busy}
+                  onChange={(e) => { const val = e.target.value.replace(/[^0-9.,]/g, ''); setRows((r) => r.map((x, j) => (j === i ? val : x))) }} />
+              </div>
+            )}
+            <span className="cp-amt cp-none">{i >= old.length ? 'New place' : won ? '' : `Now ${exactMoney(old[i], currency)}`}</span>
+          </div>
+        )
+      })}
+      {rows.length < MAX_PLACES && (
+        <button className="ui-btn ui-btn-ghost" type="button" style={{ justifySelf: 'start' }} disabled={busy}
+          onClick={() => setRows((r) => resizePlaces(r, r.length + 1, old.length))}><i className="ti ti-plus" /> Add a place</button>
+      )}
+      {check.error ? (
+        <div className="cp-err" role="status">{check.error}</div>
+      ) : check.ready ? (
+        <div className="cp-sum" role="status">
+          <span>Prizes: <b>{exactMoney(check.oldTotal, currency)}</b> now, <b>{exactMoney(check.newTotal, currency)}</b> after, for {check.prizes.length} {check.prizes.length === 1 ? 'place' : 'places'}</span>
+          <span>Held now: <b>{exactMoney(check.extra, currency)}</b> + <b>{exactMoney(check.fee, currency)}</b> fee ({feePct}%) = <b>{exactMoney(check.pay, currency)}</b> from {payer}</span>
+          {payAlt && <span className="o-money-alt">{payAlt}</span>}
+        </div>
+      ) : (
+        <p className="cp-note" style={{ margin: 0 }}>Add a place or raise a prize to see what it costs.</p>
+      )}
+      {earlyLost && check.ready && (
+        <p className="cp-note" style={{ margin: 0 }}>
+          After this the places won't all pay the same, so places can't be awarded before entries close any more: {forPoster ? 'the poster ranks' : 'you rank'} the winners when entries close.
+        </p>
+      )}
+      {error && <div className="cp-err" role="alert">{error}</div>}
+      <div className="cp-acts">
+        <button className="ui-btn ui-btn-ghost" type="button" disabled={busy} onClick={close}>Cancel</button>
+        <button className="ui-btn ui-btn-dark" type="button" disabled={!check.ready || busy} onClick={save}>
+          {busy ? 'Saving…' : check.ready ? `Hold ${exactMoney(check.pay, currency)} and save` : 'Save'}
+        </button>
+      </div>
     </div>
   )
 }
