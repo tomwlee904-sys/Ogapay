@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { apiRequest } from '../../lib/api'
+import { shrinkImage } from '../../lib/shrinkImage'
 import { useToast } from '../../components/Toast'
 import { useAuth } from '../../context/AuthContext'
 import { Card, Row, type SectionProps } from './ui'
@@ -16,6 +17,98 @@ const VERY_CLAIM_KEY = 'ogapay_very_claim'
 // Didit statuses that mean the person hasn't finished yet
 const OPEN = ['Not Started', 'In Progress', 'Resubmitted']
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms))
+
+// Level 2 checked by our team, when Didit doesn't work for someone
+type ManualReq = { id?: string; status: 'PENDING' | 'APPROVED' | 'REJECTED'; reason?: string | null; createdAt?: string } | null
+// Two photos on slow mobile data get as long as other file uploads (uploadFile
+// in lib/upload.ts); other requests get 15 s (2026-11-01)
+export const MANUAL_UPLOAD_MS = 300_000
+// The server saves both photos before the request shows up, so a check made
+// right after a timeout can be a few seconds early: look once more after this
+export const ARRIVAL_RECHECK_MS = 5_000
+const MAX_PHOTO_BYTES = 5 * 1024 * 1024 // the server's limit per photo (kyc.routes.js)
+export const MANUAL_SENT = 'Sent. Our team will check your ID and selfie.'
+export const MANUAL_ALREADY = "Your earlier request is already with our team, so these photos weren't sent. We'll let you know when it's checked."
+
+const errText = (e: any) => String(e?.message || '')
+const timedOut = (e: any) => /timed out/i.test(errText(e))
+const dropped = (e: any) => e?.name === 'TypeError' || /failed to fetch|networkerror|load failed|network (request|error)/i.test(errText(e))
+// A proxy error page or a server crash, not a reason from our server
+const broken = (e: any) => !errText(e) || e?.name === 'SyntaxError' || /unexpected error/i.test(errText(e))
+
+// No answer came back, so the photos may still have reached us. Anything else
+// is our server saying no (with its reason), and then nothing was kept.
+export function mayHaveArrived(e: any): boolean {
+  return timedOut(e) || dropped(e) || broken(e)
+}
+
+// What to say when sending didn't work (and the photos aren't with us)
+export function manualSendError(e: any): string {
+  if (timedOut(e)) return 'Your photos took too long to send on this connection. Check your data or move to a spot with better signal, then try again.'
+  if (dropped(e)) return 'The connection dropped while sending your photos. Check your data, then try again.'
+  if (/file too large/i.test(errText(e))) return 'A photo is too large. Please choose a smaller one (up to 5 MB).'
+  if (broken(e)) return "Couldn't send your photos. Please try again."
+  return errText(e)
+}
+
+// The member's latest request on the server: null if none, undefined if we couldn't ask
+const latestRequest = () => apiRequest<{ request: ManualReq }>('/kyc/level2/manual').then((d) => d?.request || null, () => undefined)
+
+// sent: these photos are with our team. waiting: an earlier request is, and
+// these weren't kept. failed: nothing arrived; text says why.
+export type ManualSendResult = { result: 'sent' | 'waiting' | 'failed'; text: string; request?: ManualReq }
+
+// Sends the ID photo and selfie (2026-11-01). Big phone photos are made smaller
+// first (lib/shrinkImage) and the upload gets up to 5 minutes instead of 15 s.
+// Before uploading we ask whether a request is already with our team (an earlier
+// send that arrived late, or one from another phone), so photos aren't sent
+// twice on paid data. A timeout or a dropped connection doesn't mean nothing
+// arrived, so we look for the new request before asking them to try again.
+export async function sendManualLevel2(
+  { idType, idNumber, front, selfie }: { idType: string; idNumber: string; front: File; selfie: File },
+  onStep: (text: string) => void = () => {},
+): Promise<ManualSendResult> {
+  onStep('Getting photos ready…')
+  const asked = latestRequest() // while the photos are made smaller, so no extra wait
+  let id: File, me: File
+  try {
+    id = await shrinkImage(front, { maxBytes: MAX_PHOTO_BYTES, label: 'your ID photo' })
+    me = await shrinkImage(selfie, { maxBytes: MAX_PHOTO_BYTES, label: 'your selfie' })
+  } catch (e: any) {
+    return { result: 'failed', text: e?.message || "Couldn't read your photos. Please choose them again." }
+  }
+  const before = await asked
+  if (before?.status === 'PENDING') return { result: 'waiting', text: MANUAL_ALREADY, request: before }
+  const fd = new FormData()
+  fd.append('idType', idType)
+  fd.append('idNumber', idNumber)
+  fd.append('id_front', id)
+  fd.append('selfie', me)
+  onStep('Sending photos…')
+  try {
+    const request = await apiRequest<ManualReq>('/kyc/level2/manual', { method: 'POST', body: fd, timeoutMs: MANUAL_UPLOAD_MS })
+    return { result: 'sent', text: MANUAL_SENT, request: request?.status ? request : { status: 'PENDING' } }
+  } catch (e: any) {
+    onStep('Checking if they arrived…')
+    const unanswered = mayHaveArrived(e)
+    let after = await latestRequest()
+    if (unanswered && after?.status !== 'PENDING') {
+      await wait(ARRIVAL_RECHECK_MS)
+      after = await latestRequest()
+    }
+    // A request waiting now is newer than the one we saw before sending (that
+    // one wasn't waiting, or we'd have stopped above). If we couldn't ask
+    // before, and no answer came back, we take it to be this one.
+    if (after?.status === 'PENDING') {
+      // No answer came back, but the request is there: these photos arrived
+      if (unanswered) return { result: 'sent', text: MANUAL_SENT, request: after }
+      // Our server said no (most often "already with our team": an earlier send
+      // got there first), so these photos weren't kept. Never shown as "Sent".
+      return { result: 'waiting', text: MANUAL_ALREADY, request: after }
+    }
+    return { result: 'failed', text: manualSendError(e) }
+  }
+}
 
 export default function Verification({ me, reload, providers }: SectionProps & { providers: Record<string, boolean> | null }) {
   const { toast } = useToast()
@@ -44,7 +137,6 @@ export default function Verification({ me, reload, providers }: SectionProps & {
   const synced = useRef(false)
 
   // Level 2 checked by our team, when Didit doesn't work for someone
-  type ManualReq = { status: 'PENDING' | 'APPROVED' | 'REJECTED'; reason?: string | null } | null
   const [manualReq, setManualReq] = useState<ManualReq | undefined>(undefined)
   const [showManual, setShowManual] = useState(false)
   const [mType, setMType] = useState('NIN')
@@ -52,28 +144,32 @@ export default function Verification({ me, reload, providers }: SectionProps & {
   const [mFront, setMFront] = useState<File | null>(null)
   const [mSelfie, setMSelfie] = useState<File | null>(null)
   const [mBusy, setMBusy] = useState(false)
+  const [mStep, setMStep] = useState('') // what's happening, on the button
+  const mSending = useRef(false) // a second tap before the button greys out
   const [mMsg, setMMsg] = useState<{ ok: boolean; text: string } | null>(null)
   useEffect(() => {
     if (tier >= 2) return
     apiRequest<{ request: ManualReq }>('/kyc/level2/manual').then((d) => setManualReq(d?.request || null)).catch(() => setManualReq(null))
   }, [tier])
   const sendManual = async () => {
+    if (mSending.current) return
     if (!mFront || !mSelfie) { setMMsg({ ok: false, text: 'Add both photos: your ID, and a selfie holding it.' }); return }
+    mSending.current = true
     setMBusy(true); setMMsg(null)
     try {
-      const fd = new FormData()
-      fd.append('idType', mType)
-      fd.append('idNumber', mNumber)
-      fd.append('id_front', mFront)
-      fd.append('selfie', mSelfie)
-      await apiRequest('/kyc/level2/manual', { method: 'POST', body: fd })
-      setManualReq({ status: 'PENDING' })
-      setShowManual(false); setMFront(null); setMSelfie(null); setMNumber('')
-      toast('Sent. Our team will check your ID and selfie.', 'success')
+      const r = await sendManualLevel2({ idType: mType, idNumber: mNumber, front: mFront, selfie: mSelfie }, setMStep)
+      if (r.result === 'failed') setMMsg({ ok: false, text: r.text })
+      else {
+        // Sent now, or an earlier request is waiting: either way show "with our team"
+        setManualReq(r.request || { status: 'PENDING' })
+        setShowManual(false); setMFront(null); setMSelfie(null); setMNumber('')
+        toast(r.text, 'success')
+      }
     } catch (e: any) {
-      setMMsg({ ok: false, text: e?.message || "Couldn't send your photos. Please try again." })
+      setMMsg({ ok: false, text: manualSendError(e) })
     }
-    setMBusy(false)
+    mSending.current = false
+    setMBusy(false); setMStep('')
   }
 
   const submit = async () => {
@@ -309,14 +405,16 @@ export default function Verification({ me, reload, providers }: SectionProps & {
       <label className="st2-f"><span>ID number (optional)</span>
         <input autoComplete="off" value={mNumber} maxLength={40} onChange={(e) => setMNumber(e.target.value)} placeholder="The number on your ID" />
       </label>
-      <label className="st2-f"><span>Photo of your ID (JPG or PNG, up to 5 MB)</span>
+      {/* Big photos are made smaller before sending, so no size limit to worry about */}
+      <label className="st2-f"><span>Photo of your ID (JPG or PNG)</span>
         <input type="file" accept="image/jpeg,image/png,image/webp" onChange={(e) => setMFront(e.target.files?.[0] || null)} />
       </label>
       <label className="st2-f"><span>Selfie holding your ID</span>
         <input type="file" accept="image/jpeg,image/png,image/webp" capture="user" onChange={(e) => setMSelfie(e.target.files?.[0] || null)} />
       </label>
       {mMsg && <p className={mMsg.ok ? 'st2-ok' : 'st2-err'}>{mMsg.text}</p>}
-      <div className="st2-actions"><button className="up-btn primary" disabled={mBusy}>{mBusy ? 'Sending…' : 'Send for checking'}</button></div>
+      <div className="st2-actions"><button className="up-btn primary" disabled={mBusy}>{mBusy ? mStep || 'Sending…' : 'Send for checking'}</button></div>
+      {mBusy && <p className="st2-muted" style={{ margin: 0 }}>This can take a few minutes on slow mobile data. Please keep this page open.</p>}
     </form>
   )
   // Shown when they ask for it, or when Didit failed for them

@@ -25,7 +25,12 @@ export type AuthUser = {
 type ApiOptions = RequestInit & {
   auth?: boolean
   retryOnUnauthorized?: boolean
+  /** Give up after this long (ms). Most requests get 15 s; photo uploads on
+   *  slow mobile data need longer (2026-11-01). */
+  timeoutMs?: number
 }
+
+export const REQUEST_TIMEOUT_MS = 15000
 
 const ACCESS_TOKEN_KEY = 'ogapay_access_token'
 const REFRESH_TOKEN_KEY = 'ogapay_refresh_token'
@@ -196,7 +201,7 @@ export async function refreshAuthSession(): Promise<AuthTokens | null> {
 }
 
 export async function apiRequest<T = unknown>(path: string, options: ApiOptions = {}): Promise<T> {
-  const { auth = true, retryOnUnauthorized = true, headers, ...init } = options
+  const { auth = true, retryOnUnauthorized = true, timeoutMs, headers, ...init } = options
   const requestHeaders = new Headers(headers)
 
   if (init.body && !(init.body instanceof FormData)) {
@@ -218,7 +223,7 @@ export async function apiRequest<T = unknown>(path: string, options: ApiOptions 
 
   const url = path.startsWith('http') ? path : `${API_BASE}${path.startsWith('/') ? path : `/${path}`}`
   const controller = new AbortController()
-  const timeoutId = setTimeout(() => controller.abort(), 15000)
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs && timeoutMs > 0 ? timeoutMs : REQUEST_TIMEOUT_MS)
   let res: Response;
   try {
     // A signed-out GET may already have been asked for by index.html (lib/early.ts)

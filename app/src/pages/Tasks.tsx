@@ -17,6 +17,7 @@ import { VerifiedBusinessLine } from '../components/Perks'
 import { sized } from '../lib/img'
 import { jobDeadline } from '../lib/deadline'
 import InfoTip from '../components/InfoTip'
+import LoadError from '../components/LoadError'
 
 const OGAPAY_BLUE = 'var(--accent)'
 
@@ -420,29 +421,104 @@ export function invalidateTasksCache() {
   tasksCacheMap.clear()
 }
 
+// One load of the jobs list. eligibility: each job says whether you can take it
+// (signed in, full list only). stale: nothing loaded just now, so this is the last
+// list that did.
+export type TasksLoad = { list: any[]; eligibility: boolean; stale?: boolean }
+
+// apiRequest gives up when no answer starts within 15 s, but not when an answer
+// stops halfway (patchy data): the skeleton then showed for ever. Past this, the
+// load counts as failed, so the page can say so and offer "Try again" (2026-11-01).
+const LIST_TIME_LIMIT = 25_000
+function inTime<T>(p: Promise<T>): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const t = setTimeout(() => reject(new Error('Request timed out')), LIST_TIME_LIMIT)
+    p.then(v => { clearTimeout(t); resolve(v) }, e => { clearTimeout(t); reject(e) })
+  })
+}
+
+// Signed in, the full list is worked out for each person and not cached on the
+// server, so on slow data it can take a while. If it hasn't come after this long,
+// the public list (cached, quicker) is asked for too and shown meanwhile (2026-11-01).
+const STAND_IN_AFTER = 6_000
+
 // Signed in, the list is asked for with the sign-in and ?eligible=1 so each job says
 // whether you can take it (for the "Available for me" switch); cached per person.
-async function fetchTasks(category?: string, userId?: string) {
+// A failed load is never an empty list (2026-11-01): it blamed the member's filters
+// ("No jobs match") when slow data or a server blip stopped the list arriving.
+// Signed in, if the full list fails the public one is tried once so jobs still show.
+// onStandIn: signed in and the full list is slow, gets the public list to show
+// until the full one comes (not called once the full list has come or failed).
+// Gives null only when nothing loaded and there's no earlier list to show.
+export async function fetchTasks(category?: string, userId?: string, maxAge = CACHE_TTL, onStandIn?: (res: TasksLoad) => void): Promise<TasksLoad | null> {
   const cacheKey = `${userId || 'guest'}:${(category || 'all').toLowerCase()}`
   const now = Date.now()
   const cached = tasksCacheMap.get(cacheKey)
-  if (cached && cached.timestamp + CACHE_TTL > now) return cached.data
+  if (cached && cached.timestamp + maxAge > now) return { list: cached.data, eligibility: !!userId }
 
   const url =
     category && !['all', 'trending', 'new'].includes(category.toLowerCase())
       ? '/tasks?limit=100&category=' + encodeURIComponent(category.toUpperCase())
       : '/tasks?limit=100'
-
-  try {
-    const data = await apiRequest<any>(userId ? url + '&eligible=1' : url, { auth: !!userId })
-    const list = Array.isArray(data)
-      ? data
-      : data?.data || data?.tasks || data?.jobs || []
-    tasksCacheMap.set(cacheKey, { data: list, timestamp: now })
-    return list
-  } catch {
-    return []
+  const listOf = (data: any): any[] => Array.isArray(data)
+    ? data
+    : data?.data || data?.tasks || data?.jobs || []
+  // The public list is asked for once at most, by the stand-in or the fallback
+  let publicList: Promise<any[]> | null = null
+  const askPublic = () => {
+    if (!publicList) publicList = inTime(apiRequest<any>(url, { auth: false })).then(listOf)
+    return publicList
   }
+
+  if (userId) {
+    let fullDone = false
+    const standIn = onStandIn && setTimeout(() => {
+      askPublic().then(list => { if (!fullDone) onStandIn({ list, eligibility: false }) }, () => {})
+    }, STAND_IN_AFTER)
+    try {
+      const list = listOf(await inTime(apiRequest<any>(url + '&eligible=1', { auth: true })))
+      tasksCacheMap.set(cacheKey, { data: list, timestamp: now })
+      return { list, eligibility: true }
+    } catch {
+      // Try the public list below (cached on the server, so quicker on slow data)
+    } finally {
+      fullDone = true
+      if (standIn) clearTimeout(standIn)
+    }
+  }
+  try {
+    const list = await askPublic()
+    // Signed in, this isn't kept, so the next load asks for the full list again
+    if (!userId) tasksCacheMap.set(cacheKey, { data: list, timestamp: now })
+    return { list, eligibility: false }
+  } catch {
+    // An older list beats an error
+    return cached ? { list: cached.data, eligibility: !!userId, stale: true } : null
+  }
+}
+
+// ─── What the list shows after a load (2026-11-01) ──────────────
+// jobs is null until a list has loaded. failed: nothing loaded and nothing to show.
+export type JobsState = { jobs: any[] | null; failed: boolean; eligibility: boolean }
+export const JOBS_START: JobsState = { jobs: null, failed: false, eligibility: false }
+const NO_JOBS: any[] = []
+
+// background: a refresh (tab back in focus), not the first load or "Try again"
+export function afterJobsLoad(prev: JobsState, res: TasksLoad | null, background = false): JobsState {
+  // Nothing loaded: the list on screen stays. The error shows only when there's
+  // no list at all, and never from a refresh in the background
+  if (!res) return background || prev.jobs ? prev : { ...prev, failed: true }
+  // An older list handed back after a failed load doesn't replace the one on screen
+  if (res.stale && prev.jobs) return prev
+  // A refresh that only got the public list keeps one that already says which jobs
+  // you can take (the next refresh asks for the full list again)
+  if (background && prev.jobs && prev.eligibility && !res.eligibility) return prev
+  return { jobs: res.list, failed: false, eligibility: res.eligibility }
+}
+
+export function jobsView(s: JobsState, matching: number): 'loading' | 'error' | 'empty' | 'list' {
+  if (!s.jobs) return s.failed ? 'error' : 'loading'
+  return matching > 0 ? 'list' : 'empty'
 }
 
 // ─── Tasks data with SWR ────────────────────────────────────────
@@ -520,14 +596,29 @@ const openSlots = (j: any) => {
 }
 const isClosed = (j: any) => { const e = endOf(j); return !!e && new Date(e).getTime() <= Date.now() }
 
+// "Available for me": can you take this job? mine: your place on it, if any.
+// eligibility: the list says which jobs you can take (the full list loaded).
+export function availableToMe(j: any, mine: string | undefined, userId: string | undefined, eligibility: boolean) {
+  // A place that expired (no work sent in time) can be taken again, so it doesn't count
+  if (openSlots(j) <= 0 || isClosed(j) || (mine && mine !== 'EXPIRED')) return false
+  // Your own job, even when only the public list loaded (2026-11-01)
+  if (userId && (j.posterId || j.poster?.id) === userId) return false
+  // The server's own check (requirements, blocked, similar job taken); only sent when signed in.
+  // If only the public list loaded, it's unknown, so nothing else is hidden for it
+  if (eligibility && j.eligible === false) return false
+  return true
+}
+
 export default function Tasks() {
   const { user } = useAuth()
   const { toast: showToast } = useToast()
   const { convert } = useCurrency()
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
-  const [jobs, setJobs] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
+  const [jobsState, setJobsState] = useState<JobsState>(JOBS_START)
+  const jobs = jobsState.jobs ?? NO_JOBS
+  // "Try again" bumps this to load the list again without reloading the page
+  const [attempt, setAttempt] = useState(0)
   const [search, setSearch] = useState(searchParams.get('search') || '')
   // The page number is in the address too, so Back from a job returns to the same page
   const [page, setPage] = useState(() => Math.max(1, Math.floor(Number(searchParams.get('page'))) || 1))
@@ -542,30 +633,37 @@ export default function Tasks() {
 
   useEffect(() => {
     let alive = true
-    setLoading(true)
-    fetchTasks('all', user?.id).then(data => { if (alive) { setJobs(data || []); setLoading(false) } })
-    if (user) {
-      // apiRequest already unwraps { data }: this is { submissions, buckets, stats }
-      apiRequest('/tasks/my/submissions').catch(() => null).then((d: any) => {
-        if (!alive || !d) return
-        const list = Array.isArray(d) ? d : d?.submissions || []
-        const byJob: Record<string, string> = {}
-        for (const s of list) { const id = s.taskId || s.task?.id; if (id) byJob[id] = String(s.status || '') }
-        setMySubmissions(byJob)
-      })
-    }
+    setJobsState(JOBS_START)
+    // Signed in and the full list is slow: the public list shows meanwhile. Like a
+    // refresh, it never replaces a list that says which jobs you can take
+    const standIn = (res: TasksLoad) => { if (alive) setJobsState(prev => afterJobsLoad(prev, res, true)) }
+    fetchTasks('all', user?.id, CACHE_TTL, standIn).then(res => { if (alive) setJobsState(prev => afterJobsLoad(prev, res)) })
+    return () => { alive = false }
+  }, [user?.id, attempt])
+
+  useEffect(() => {
+    if (!user) return
+    let alive = true
+    // apiRequest already unwraps { data }: this is { submissions, buckets, stats }
+    apiRequest('/tasks/my/submissions').catch(() => null).then((d: any) => {
+      if (!alive || !d) return
+      const list = Array.isArray(d) ? d : d?.submissions || []
+      const byJob: Record<string, string> = {}
+      for (const s of list) { const id = s.taskId || s.task?.id; if (id) byJob[id] = String(s.status || '') }
+      setMySubmissions(byJob)
+    })
     return () => { alive = false }
   }, [user?.id])
 
-  // Refresh when the tab regains focus (cache entries older than a few seconds)
+  // Refresh when the tab regains focus (a list older than a few seconds). If it
+  // fails, the list on screen stays.
   useEffect(() => {
+    let alive = true
     const onFocus = () => {
-      const now = Date.now()
-      tasksCacheMap.forEach((v, k) => { if (now - v.timestamp > FOCUS_STALE_AGE) tasksCacheMap.delete(k) })
-      fetchTasks('all', user?.id).then(data => setJobs(data || []))
+      fetchTasks('all', user?.id, FOCUS_STALE_AGE).then(res => { if (alive) setJobsState(prev => afterJobsLoad(prev, res, true)) })
     }
     window.addEventListener('focus', onFocus)
-    return () => window.removeEventListener('focus', onFocus)
+    return () => { alive = false; window.removeEventListener('focus', onFocus) }
   }, [user?.id])
 
   // ?job=<id> opens the quick-view modal (links from notifications use this)
@@ -600,13 +698,7 @@ export default function Tasks() {
       if (req === 'x' && !(j.requiresX || j.requiresXBlue || Number(j.minXScore) > 0)) return false
       if (req === 'community' && !j.requiredCommunityId) return false
       if (req === 'rank' && rank <= 1) return false
-      if (availableOnly) {
-        // A place that expired (no work sent in time) can be taken again, so it doesn't count
-        const mine = mySubmissions[j.id]
-        if (openSlots(j) <= 0 || isClosed(j) || (mine && mine !== 'EXPIRED')) return false
-        // The server's own check (requirements, blocked, similar job taken); only sent when signed in
-        if (j.eligible === false) return false
-      }
+      if (availableOnly && !availableToMe(j, mySubmissions[j.id], user?.id, jobsState.eligibility)) return false
       return true
     })
     .sort((a, b) => {
@@ -646,6 +738,7 @@ export default function Tasks() {
 
   const goPage = (p: number) => { setPage(p); window.scrollTo({ top: 0, behavior: 'smooth' }) }
   const clearAll = () => { setSearch(''); setReq('all'); setCategory('All'); setAvailableOnly(false) }
+  const view = jobsView(jobsState, filtered.length)
 
   return (
     <Layout>
@@ -686,9 +779,16 @@ export default function Tasks() {
           </InfoTip>
         </div>
 
-        {loading ? (
+        {user && availableOnly && jobsState.jobs && !jobsState.eligibility && (
+          <p className="ui-hint" style={{ margin: '0 0 16px' }}>We couldn't check which jobs you can take just now, so some of these may not be open to you.</p>
+        )}
+
+        {view === 'loading' ? (
           <div className="ui-grid-3">{[0, 1, 2, 3, 4, 5].map(i => <div key={i} className="ui-sk" style={{ height: 480 }} />)}</div>
-        ) : filtered.length === 0 ? (
+        ) : view === 'error' ? (
+          // The list didn't load (slow data, a server blip): say so, not "No jobs match"
+          <LoadError what="jobs" onRetry={() => setAttempt(a => a + 1)} />
+        ) : view === 'empty' ? (
           <div className="ui-empty">
             <i className="ti ti-search-off" style={{ fontSize: 28, display: 'block', marginBottom: 10, color: 'var(--text3)' }} />
             <b style={{ color: 'var(--text)' }}>No jobs match</b>

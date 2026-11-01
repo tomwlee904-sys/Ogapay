@@ -11,6 +11,13 @@ import type { OutputBundle, OutputChunk } from 'rollup'
 // - code: Vite skips a file that already has a <link> in the page
 // - data: src/lib/early.ts hands the answer to the first request for that URL
 //
+// Each answer is read in full here, inside its 15 s limit, and kept (2026-11-01).
+// An answer whose body was read later died with the limit, even one that had long
+// arrived: on a slow phone whose code took over 15 s, or signed in when the full
+// jobs list timed out first, the page said "We couldn't load jobs" with the list
+// already downloaded. Now a late reader gets the answer, or (when it didn't arrive
+// in time) a failure, and early.ts asks again.
+//
 // Only the pages people land on are listed. A wrong guess costs one download,
 // never a wrong page: the router still decides what shows.
 
@@ -60,7 +67,7 @@ if(r[4]&&location.search)break;
 var g=(r[2]||[]).concat(s?[]:(r[3]||[]));
 g.forEach(function(x){var u=B+x.replace('$1',function(){try{return decodeURIComponent(m[1]||'')}catch(y){return m[1]||''}});
 if(e[u])return;var o={};try{if(AbortSignal.timeout)o.signal=AbortSignal.timeout(15000)}catch(y){}
-e[u]=fetch(u,o);e[u]['catch'](function(){})});
+e[u]=fetch(u,o).then(function(a){return a.blob().then(function(b){return new Response(b,{status:a.status,statusText:a.statusText,headers:a.headers})})});e[u]['catch'](function(){})});
 break}
 }catch(x){}})();`
 

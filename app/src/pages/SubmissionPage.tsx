@@ -157,8 +157,11 @@ export default function SubmissionPage() {
   }
 
   const addFiles = (list: FileList | null) => {
-    if (!list) return
-    setFiles((f) => [...f, ...Array.from(list)].slice(0, Math.max(0, MAX_FILES - kept.length)))
+    // Copy the picked files first: clearing the input below empties this list,
+    // and React can run the update after that, so the first pick was lost (2026-11-01)
+    const picked = Array.from(list || [])
+    if (!picked.length) return
+    setFiles((f) => [...f, ...picked].slice(0, Math.max(0, MAX_FILES - kept.length)))
     if (fileRef.current) fileRef.current.value = ''
   }
 
