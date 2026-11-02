@@ -2,7 +2,7 @@
 // in index.html; this sends the sign-up conversion.
 
 // The sign-up conversion action in Google Ads (Goals > Conversions)
-export const ADS_SIGNUP_SEND_TO = 'AW-18550967605/wIGqCO-TqbAdELWa5Y1F'
+export const ADS_SIGNUP_SEND_TO = 'AW-18550967605/Hy2cCK68q7AdELWa5Y1F'
 
 declare global {
   interface Window { gtag?: (...args: unknown[]) => void }
