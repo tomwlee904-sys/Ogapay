@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { API_BASE, persistAuthSession } from "../lib/api";
+import { trackSignUpConversion } from "../lib/ads";
 
 // Page the user was heading to before Google (set by the sign-in dialog)
 function afterLogin() {
@@ -46,6 +47,9 @@ export default function AuthCallback() {
               const result = exchangeData.data || exchangeData;
               appTokens = result.tokens;
               appUser = result.user;
+              // Google Ads sign-up conversion: only when this Google sign-in made the
+              // account (the server sends isNewUser on that one exchange only)
+              if (result.isNewUser && appTokens) trackSignUpConversion(appUser?.id);
               console.log('Backend session synced successfully');
             } else {
               console.warn('Backend exchange failed, using Supabase session directly');

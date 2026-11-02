@@ -5,6 +5,7 @@ import { API_BASE, apiRequest } from '../../lib/api'
 import { supabase } from '../../lib/supabaseClient'
 import type { SignInView } from '../../lib/signin'
 import { inWalletAppBrowser, isPhone, openInWalletUrl, PHONE_WALLET_LINE, WALLET_APP_SIGNIN_LINE } from '../../lib/walletApps'
+import { trackSignUpConversion } from '../../lib/ads'
 import '../../styles/signin.css'
 
 /* Sign-in dialog in the wurk.fun style: pick a method (wallet, Google, email,
@@ -243,6 +244,8 @@ export default function SignInModal({ initialView = 'options', initialCode = '',
       }
       localStorage.setItem('ogapay_is_new_user', 'true')
       finish(result, true)
+      // Google Ads sign-up conversion: only when the server just made the account
+      if (result?.isNewUser) trackSignUpConversion(result?.user?.id)
     })
   }
 
