@@ -37,14 +37,14 @@ function Copy({ text }: { text: string }) {
   )
 }
 
-/* Level 2 requests: members whose Didit ID check didn't work sent a photo of
-   their ID and a selfie holding it. Compare the two, then approve (Level 2) or
-   reject with a reason they see. Photo links expire after 10 minutes: Refresh
+/* Level 2 requests: members send a photo of their ID (usually a NIN slip or
+   card) and its number, no selfie. Check the name matches, then approve
+   (Level 2) or reject with a reason they see. Photo links expire after 10 minutes: Refresh
    to get new ones. */
 interface L2 {
   id: string; status: string; idType: string; idTypeName: string; idNumber: string | null; createdAt: string
   user: { id: string; username: string; name: string; joined: string; level: number; levelBy: string | null }
-  idFrontUrl: string | null; selfieUrl: string | null
+  idFrontUrl: string | null
 }
 
 function Level2Row({ r, onDone }: { r: L2; onDone: (id: string, msg: string) => void }) {
@@ -77,9 +77,8 @@ function Level2Row({ r, onDone }: { r: L2; onDone: (id: string, msg: string) => 
       </dl>
       <div className="ak-photos">
         {r.idFrontUrl ? <a href={r.idFrontUrl} target="_blank" rel="noreferrer"><img src={r.idFrontUrl} alt={`${name}'s ID`} /><span>ID</span></a> : <span className="aw-note">ID photo link expired: Refresh</span>}
-        {r.selfieUrl ? <a href={r.selfieUrl} target="_blank" rel="noreferrer"><img src={r.selfieUrl} alt={`${name}'s selfie with their ID`} /><span>Selfie with ID</span></a> : <span className="aw-note">Selfie link expired: Refresh</span>}
       </div>
-      <p className="aw-kind"><i className="ti ti-search" /> Check that the face in the selfie matches the ID photo, the ID in the selfie is the same document, and the name on the ID matches {name}.</p>
+      <p className="aw-kind"><i className="ti ti-search" /> Check that the ID is real and readable, the number matches the one typed above, and the name on the ID matches {name}.</p>
       {mode === null ? (
         <div className="aw-actions">
           <button className="ui-btn ui-btn-dark" onClick={() => setMode('approve')}><i className="ti ti-check" /> Approve Level 2</button>
@@ -111,7 +110,7 @@ function Level2Requests() {
   if (!rows || (rows.length === 0 && !notice)) return null
   return (
     <section className="ak-l2" aria-labelledby="ak-l2-h">
-      <div className="aw-head"><div><h2 id="ak-l2-h">Level 2 requests ({rows.length})</h2><p>Members' ID and selfie photos for Level 2, checked by hand.</p></div>
+      <div className="aw-head"><div><h2 id="ak-l2-h">Level 2 requests ({rows.length})</h2><p>Members' ID photos for Level 2, checked by hand.</p></div>
         <button className="ui-btn ui-btn-ghost" onClick={() => load()}><i className="ti ti-refresh" /> Refresh</button></div>
       {notice && <div className="aw-msg" role="status"><span>{notice}</span><button onClick={() => setNotice('')} aria-label="Dismiss"><i className="ti ti-x" /></button></div>}
       <div className="aw-list">{rows.map((r) => <Level2Row key={r.id} r={r} onDone={(id, msg) => { setRows((x) => (x || []).filter((y) => y.id !== id)); setNotice(msg) }} />)}</div>

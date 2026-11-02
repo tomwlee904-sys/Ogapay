@@ -27,7 +27,7 @@ export const MANUAL_UPLOAD_MS = 300_000
 // right after a timeout can be a few seconds early: look once more after this
 export const ARRIVAL_RECHECK_MS = 5_000
 const MAX_PHOTO_BYTES = 5 * 1024 * 1024 // the server's limit per photo (kyc.routes.js)
-export const MANUAL_SENT = 'Sent. Our team will check your ID and selfie.'
+export const MANUAL_SENT = 'Sent. Our team will check your ID.'
 export const MANUAL_ALREADY = "Your earlier request is already with our team, so these photos weren't sent. We'll let you know when it's checked."
 
 const errText = (e: any) => String(e?.message || '')
@@ -58,24 +58,23 @@ const latestRequest = () => apiRequest<{ request: ManualReq }>('/kyc/level2/manu
 // these weren't kept. failed: nothing arrived; text says why.
 export type ManualSendResult = { result: 'sent' | 'waiting' | 'failed'; text: string; request?: ManualReq }
 
-// Sends the ID photo and selfie (2026-11-01). Big phone photos are made smaller
+// Sends the ID photo (2026-11-01; no selfie since 2026-11-03). Big phone photos are made smaller
 // first (lib/shrinkImage) and the upload gets up to 5 minutes instead of 15 s.
 // Before uploading we ask whether a request is already with our team (an earlier
 // send that arrived late, or one from another phone), so photos aren't sent
 // twice on paid data. A timeout or a dropped connection doesn't mean nothing
 // arrived, so we look for the new request before asking them to try again.
 export async function sendManualLevel2(
-  { idType, idNumber, front, selfie }: { idType: string; idNumber: string; front: File; selfie: File },
+  { idType, idNumber, front }: { idType: string; idNumber: string; front: File },
   onStep: (text: string) => void = () => {},
 ): Promise<ManualSendResult> {
-  onStep('Getting photos ready…')
-  const asked = latestRequest() // while the photos are made smaller, so no extra wait
-  let id: File, me: File
+  onStep('Getting your photo ready…')
+  const asked = latestRequest() // while the photo is made smaller, so no extra wait
+  let id: File
   try {
     id = await shrinkImage(front, { maxBytes: MAX_PHOTO_BYTES, label: 'your ID photo' })
-    me = await shrinkImage(selfie, { maxBytes: MAX_PHOTO_BYTES, label: 'your selfie' })
   } catch (e: any) {
-    return { result: 'failed', text: e?.message || "Couldn't read your photos. Please choose them again." }
+    return { result: 'failed', text: e?.message || "Couldn't read your photo. Please choose it again." }
   }
   const before = await asked
   if (before?.status === 'PENDING') return { result: 'waiting', text: MANUAL_ALREADY, request: before }
@@ -83,8 +82,7 @@ export async function sendManualLevel2(
   fd.append('idType', idType)
   fd.append('idNumber', idNumber)
   fd.append('id_front', id)
-  fd.append('selfie', me)
-  onStep('Sending photos…')
+  onStep('Sending your photo…')
   try {
     const request = await apiRequest<ManualReq>('/kyc/level2/manual', { method: 'POST', body: fd, timeoutMs: MANUAL_UPLOAD_MS })
     return { result: 'sent', text: MANUAL_SENT, request: request?.status ? request : { status: 'PENDING' } }
@@ -121,7 +119,7 @@ export default function Verification({ me, reload, providers }: SectionProps & {
   const bankKyc = !!providers?.bankKyc // Level 1 from a bank account in their name (free)
   const diditOpen = didit && status === 'PENDING' && me.kyc?.provider === 'didit' // started, not finished
   const inReview = status === 'SUBMITTED'
-  const want = tier === 0 ? 'NIN' : null // Level 2 is the ID + selfie check
+  const want = tier === 0 ? 'NIN' : null // Level 2 is the ID check
   // With Didit, one ID + selfie check takes anyone below Level 2 straight to Level 2
   const useDidit = (didit && tier < 2) || diditOpen
   const nextTier = useDidit ? 2 : tier + 1
@@ -142,7 +140,6 @@ export default function Verification({ me, reload, providers }: SectionProps & {
   const [mType, setMType] = useState('NIN')
   const [mNumber, setMNumber] = useState('')
   const [mFront, setMFront] = useState<File | null>(null)
-  const [mSelfie, setMSelfie] = useState<File | null>(null)
   const [mBusy, setMBusy] = useState(false)
   const [mStep, setMStep] = useState('') // what's happening, on the button
   const mSending = useRef(false) // a second tap before the button greys out
@@ -153,16 +150,18 @@ export default function Verification({ me, reload, providers }: SectionProps & {
   }, [tier])
   const sendManual = async () => {
     if (mSending.current) return
-    if (!mFront || !mSelfie) { setMMsg({ ok: false, text: 'Add both photos: your ID, and a selfie holding it.' }); return }
+    if (mType === 'NIN' && !/^\d{11}$/.test(mNumber.replace(/\s+/g, ''))) { setMMsg({ ok: false, text: 'Type the 11-digit NIN on your slip or card.' }); return }
+    if (mNumber.replace(/\s+/g, '').length < 5) { setMMsg({ ok: false, text: 'Type the number on your ID.' }); return }
+    if (!mFront) { setMMsg({ ok: false, text: 'Add a photo of your ID.' }); return }
     mSending.current = true
     setMBusy(true); setMMsg(null)
     try {
-      const r = await sendManualLevel2({ idType: mType, idNumber: mNumber, front: mFront, selfie: mSelfie }, setMStep)
+      const r = await sendManualLevel2({ idType: mType, idNumber: mNumber, front: mFront }, setMStep)
       if (r.result === 'failed') setMMsg({ ok: false, text: r.text })
       else {
         // Sent now, or an earlier request is waiting: either way show "with our team"
         setManualReq(r.request || { status: 'PENDING' })
-        setShowManual(false); setMFront(null); setMSelfie(null); setMNumber('')
+        setShowManual(false); setMFront(null); setMNumber('')
         toast(r.text, 'success')
       }
     } catch (e: any) {
@@ -391,16 +390,16 @@ export default function Verification({ me, reload, providers }: SectionProps & {
     </div>
   )
 
-  // Level 2 by hand: a photo of the ID and a selfie holding it, checked by our team
+  // Level 2 by hand: a photo of the ID and its number, checked by our team
   const manualPanel = manualReq?.status === 'PENDING' ? (
-    <div className="st2-banner"><i className="ti ti-hourglass" /> Your ID and selfie are with our team. We'll notify you when your Level 2 is checked. Your current level stays until then.</div>
+    <div className="st2-banner"><i className="ti ti-hourglass" /> Your ID is with our team. We'll notify you when your Level 2 is checked. Your current level stays until then.</div>
   ) : (
     <form className="st2-panel st2-form" noValidate onSubmit={(e) => { e.preventDefault(); sendManual() }}>
       <strong>Get Level 2: send your ID to our team</strong>
       <p className="st2-muted" style={{ margin: '6px 0 0', lineHeight: 1.55 }}>
-        Take a clear photo of your ID, and a selfie holding the same ID next to your face. Our team checks them by hand, usually within a day. Your photos are private and only our verification team can see them.
+        Take a clear photo of your NIN slip or card (or another ID) and type its number. Our team checks it by hand, usually within a day. Your photo is private and only our verification team can see it.
       </p>
-      {manualReq?.status === 'REJECTED' && <div className="st2-warn"><i className="ti ti-alert-circle" aria-hidden="true" /><span>Your last request wasn't approved{manualReq.reason ? `: ${manualReq.reason}` : ''}. You can send new photos.</span></div>}
+      {manualReq?.status === 'REJECTED' && <div className="st2-warn"><i className="ti ti-alert-circle" aria-hidden="true" /><span>Your last request wasn't approved{manualReq.reason ? `: ${manualReq.reason}` : ''}. You can send a new photo.</span></div>}
       <label className="st2-f"><span>Type of ID</span>
         <select value={mType} onChange={(e) => setMType(e.target.value)}>
           <option value="NIN">National ID (NIN slip or card)</option>
@@ -409,15 +408,12 @@ export default function Verification({ me, reload, providers }: SectionProps & {
           <option value="VOTERS_CARD">Voter's card</option>
         </select>
       </label>
-      <label className="st2-f"><span>ID number (optional)</span>
-        <input autoComplete="off" value={mNumber} maxLength={40} onChange={(e) => setMNumber(e.target.value)} placeholder="The number on your ID" />
+      <label className="st2-f"><span>{mType === 'NIN' ? 'NIN (11 digits)' : 'ID number'}</span>
+        <input autoComplete="off" inputMode={mType === 'NIN' ? 'numeric' : undefined} value={mNumber} maxLength={40} onChange={(e) => setMNumber(e.target.value)} placeholder="The number on your ID" />
       </label>
       {/* Big photos are made smaller before sending, so no size limit to worry about */}
       <label className="st2-f"><span>Photo of your ID (JPG or PNG)</span>
         <input type="file" accept="image/jpeg,image/png,image/webp" onChange={(e) => setMFront(e.target.files?.[0] || null)} />
-      </label>
-      <label className="st2-f"><span>Selfie holding your ID</span>
-        <input type="file" accept="image/jpeg,image/png,image/webp" capture="user" onChange={(e) => setMSelfie(e.target.files?.[0] || null)} />
       </label>
       {mMsg && <p className={mMsg.ok ? 'st2-ok' : 'st2-err'}>{mMsg.text}</p>}
       <div className="st2-actions"><button className="up-btn primary" disabled={mBusy}>{mBusy ? mStep || 'Sending…' : 'Send for checking'}</button></div>

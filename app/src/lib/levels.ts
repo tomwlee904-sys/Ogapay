@@ -12,7 +12,7 @@ export type Level = { tier: number; name: string; short: string; how: string; li
 // bank: Level 1 can also come from a bank account in your name (free, instant)
 export const levelsFor = (didit: boolean, ninInstant = false, bank = false): Level[] => [
   { tier: 1, name: 'Level 1', short: bank ? 'Bank account or NIN' : 'NIN', how: bank ? 'Verify with your bank account (free) or your NIN' : ninInstant ? 'Your NIN, confirmed with NIMC in seconds' : 'Your NIN, checked by our team', limit: withdrawLimit(1) },
-  { tier: 2, name: 'Level 2', short: 'ID + selfie', how: didit ? 'Take a photo of your ID card and a selfie (about 2 minutes)' : 'A photo of your ID and a selfie holding it, checked by our team', limit: withdrawLimit(2) },
+  { tier: 2, name: 'Level 2', short: didit ? 'ID + selfie' : 'ID photo', how: didit ? 'Take a photo of your ID card and a selfie (about 2 minutes)' : 'A photo of your NIN slip or card, checked by our team', limit: withdrawLimit(2) },
   { tier: 3, name: 'Level 3', short: 'ID documents', how: 'Send your ID documents to our support team', limit: withdrawLimit(3) },
 ]
 
