@@ -494,6 +494,12 @@ function DepositModal({ onClose, onDone, initialTab }: Props) {
                 Your payment was sent. It will show in your wallet once the Solana network confirms it.
               </p>
             )}
+            {/* The server converted the deposit straight away (Settings: convert USDC to naira automatically) (2026-11-02) */}
+            {result?.autoConverted && (
+              <p style={{ fontSize: 13, color: 'var(--text2)', lineHeight: 1.6, margin: '0 0 8px' }}>
+                Automatic conversion is on, so {result.autoConverted.usdcAmount} USDC became ₦{Number(result.autoConverted.ngnAmount).toLocaleString('en-NG', { minimumFractionDigits: 2 })} in your naira wallet (₦{Number(result.autoConverted.rate).toLocaleString('en-NG')} per USDC). You can turn this off in Settings.
+              </p>
+            )}
             {result?.signature && (
               <p style={{ fontSize: 12, color: 'var(--text2)', wordBreak: 'break-all', fontFamily: 'monospace', background: 'var(--bg2)', padding: '8px 12px', borderRadius: 8, margin: '12px 0' }}>
                 Tx: {result.signature.slice(0, 16)}...{result.signature.slice(-8)}
