@@ -13,6 +13,7 @@ const socials = [
   { icon: 'brand-instagram', href: 'https://instagram.com/ogapayhq?igsh=ajJrZzJ3Z2tjMXZm', label: 'OgaPay on Instagram' },
   { icon: 'brand-facebook', href: 'https://www.facebook.com/share/18bRPkuPVy/', label: 'OgaPay on Facebook' },
   { icon: 'brand-tiktok', href: 'https://tiktok.com/@ogapayhq', label: 'OgaPay on TikTok' },
+  { icon: 'brand-linkedin', href: 'https://www.linkedin.com/company/ogapay', label: 'OgaPay on LinkedIn' },
 ]
 
 const columns = [
