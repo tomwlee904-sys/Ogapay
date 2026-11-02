@@ -26,6 +26,18 @@ type Stats = {
   bonusPerReferral?: number; rewardCap?: number; referrals?: Referral[]; signupBonus?: number
 }
 type Leader = { rank: number; username: string | null; avatarUrl: string | null; friends: number; prize: number; isMe: boolean }
+// How far the member is from a prize place on the contest board (2026-11-02).
+// Entry is automatic once a friend qualifies, so this is all they need to know.
+function prizeProgress(b: Board): string | null {
+  if (b.week !== 'contest' || !b.me || b.contest?.finished) return null
+  const places = b.prizes.length
+  const { rank, friends } = b.me
+  if (rank && rank <= places) return `You're in a prize place: ${naira(b.prizes[rank - 1], 0)} if the contest ended now. You're entered automatically once your NIN or ID is verified.`
+  if (b.leaders.length < places) return `One qualified friend puts you in a prize place: ${places - b.leaders.length} of ${places} places are still empty. You're entered automatically once your NIN or ID is verified.`
+  const need = Math.max(1, b.leaders[places - 1].friends - friends + 1)
+  return `${need} more qualified ${need === 1 ? 'friend' : 'friends'} would put you in a prize place.`
+}
+
 // week 'contest': the referral contest's whole period and its own prizes (the default)
 type Board = { week: 'contest' | 'this' | 'last'; weekStart: string; weekEnd: string; prizes: number[]; leaders: Leader[]; me: { rank: number | null; friends: number } | null
   contest?: { taskId: string; title: string; total: number; currency: string; finished: boolean } }
@@ -341,7 +353,7 @@ export default function TabReferralsContent() {
               <div>
                 <h2 className="rf3-h2" id="rf3-top">{board?.contest ? `Referral contest · ${naira(board.contest.total, 0)} in prizes` : 'Weekly contest'}</h2>
                 <div className="rf3-muted">{board ? (board.week === 'last' ? 'Winners are paid every Monday' : board.contest?.finished ? 'This contest has ended' : timeLeft(board.weekEnd)) : boardFailed ? '' : '…'}</div>
-                {board?.contest && <Link className="rf3-muted" to={`/tasks/${board.contest.taskId}`}>Enter the contest to win →</Link>}
+                {board?.contest && <Link className="rf3-muted" to={`/tasks/${board.contest.taskId}`}>Contest rules →</Link>}
               </div>
               {board && board.week !== 'contest' && (
                 <div className="rf3-seg" role="group" aria-label="Which week">
@@ -358,6 +370,7 @@ export default function TabReferralsContent() {
                   : someoneToRemind ? 'Not on the board yet. Remind your friends who still have a step to do.' : 'Not on the board yet. Share your link to get on it.'}</div>
               </div>
             )}
+            {board && prizeProgress(board) && <div className="rf3-muted" style={{ padding: '10px 20px 0' }}>{prizeProgress(board)}</div>}
             <div className="rf3-prizes">
               {/* Places that pay the same share a chip: 1st, 2nd, 3rd, 4th–10th (or 4th–12th once places are added) */}
               {prizeRuns(board?.prizes || WEEKLY_PRIZES).map((r) => <span key={r.from}>{runLabel(r)} <b>{naira(r.prize, 0)}</b></span>)}
