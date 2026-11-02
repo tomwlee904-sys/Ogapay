@@ -36,7 +36,9 @@ export default function SignInHost() {
   const signedIn = (isNewAccount: boolean) => {
     const to = safeRedirect(req.redirect) || (isNewAccount || onAuthPage ? '/dashboard' : null)
     setReq(null)
-    if (to) navigate(to, { replace: onAuthPage })
+    // Signed in from the page it goes back to (a ticket link, say): don't add a
+    // second copy of it to the history (2026-11-02)
+    if (to) navigate(to, { replace: onAuthPage || to === location.pathname + location.search })
   }
 
   return (

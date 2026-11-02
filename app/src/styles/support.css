@@ -67,3 +67,31 @@
 .sp2-files li span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .sp2-files li button { width: 40px; height: 40px; border: 0; background: none; color: var(--text2); cursor: pointer; border-radius: 8px; }
 .sp2-attach { display: inline-flex; align-items: center; gap: 6px; align-self: flex-start; min-height: 44px; cursor: pointer; margin-top: 6px; }
+
+/* Ticket conversation (2026-11-02): rows open the ticket; the team's replies
+   and the member's follow-ups, with times; reply box at the bottom */
+.sp2-t-btn { width: 100%; background: none; border: 0; border-bottom: 1px solid var(--border); font: inherit; color: inherit; text-align: left; cursor: pointer; min-height: 56px; }
+.sp2-t-btn:last-child { border-bottom: 0; }
+.sp2-t-btn:hover { background: var(--bg2); }
+.sp2-t-btn:focus-visible { outline: 2px solid var(--text3); outline-offset: -2px; }
+.sp2-t-go { color: var(--text3); font-size: 16px; flex-shrink: 0; margin-left: -4px; }
+.sp2-thread { max-height: calc(100vh - 32px); max-height: calc(100dvh - 32px); }
+.sp2-thread .sp2-modal-h { align-items: flex-start; gap: 10px; }
+.sp2-thread .sp2-modal-h h2 { font-size: 17px; line-height: 1.3; min-width: 0; overflow-wrap: anywhere; }
+.sp2-thread .sp2-x { flex-shrink: 0; }
+.sp2-thread-meta { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; margin: -6px 0 12px; font-size: 12px; color: var(--text3); }
+.sp2-msgs { list-style: none; margin: 0 0 12px; padding: 0; display: grid; gap: 10px; }
+.sp2-msg { border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; background: var(--bg2); min-width: 0; }
+.sp2-msg.team { background: var(--card); border-color: color-mix(in srgb, var(--green) 35%, var(--border)); }
+.sp2-msg-h { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 4px; font-size: 11px; color: var(--text3); }
+.sp2-msg-h strong { font-size: 13px; color: var(--text); display: inline-flex; align-items: center; gap: 4px; }
+.sp2-msg-h time { white-space: nowrap; }
+.sp2-msg > p { margin: 0; font-size: 14px; line-height: 1.55; color: var(--text); white-space: pre-wrap; overflow-wrap: anywhere; }
+.sp2-msg-files { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 0 !important; }
+.sp2-msg-files a { display: inline-flex; align-items: center; gap: 4px; min-height: 36px; padding: 0 10px; border: 1px solid var(--border); border-radius: 999px; font-size: 12px; font-weight: 600; color: var(--text); text-decoration: none; }
+.sp2-note { margin: 0 0 14px; }
+.sp2-reply-actions { align-items: center; flex-wrap: wrap; }
+.sp2-reply-actions .sp2-attach { margin-top: 0; margin-right: auto; }
+@media (max-width: 480px) {
+  .sp2-reply-actions .sp2-attach { flex: 0 0 auto; }
+}

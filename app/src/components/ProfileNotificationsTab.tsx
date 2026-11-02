@@ -61,6 +61,7 @@ const TYPE_ICONS: Record<string, { icon: string; color: string }> = {
   TRANSFER_RECEIVED:       { icon: 'ti ti-arrows-exchange', color: 'var(--green)' },
   TIP_RECEIVED:            { icon: 'ti ti-heart-handshake', color: 'var(--green)' },
   INFO:                    { icon: 'ti ti-bell', color: 'var(--accent)' },
+  SUPPORT_REPLY:           { icon: 'ti ti-headset', color: 'var(--accent)' },
   ACCOUNT_WARNING:         { icon: 'ti ti-alert-triangle', color: '#F59E0B' },
   JOBS_SUSPENDED:          { icon: 'ti ti-ban', color: 'var(--red)' },
   SUSPENSION_LIFTED:       { icon: 'ti ti-circle-check', color: 'var(--green)' },

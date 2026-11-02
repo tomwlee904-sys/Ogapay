@@ -86,7 +86,7 @@ export default function Docs() {
         ))}
 
         <div className="ui-card dc-help">
-          <p><b>Can't find what you need?</b> Send us a ticket and we'll reply by email.</p>
+          <p><b>Can't find what you need?</b> Send us a ticket and we'll reply in My tickets and by email.</p>
           <Link className="ui-btn ui-btn-dark" to="/support"><i className="ti ti-lifebuoy" /> Contact support</Link>
         </div>
       </div>

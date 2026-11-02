@@ -15,7 +15,8 @@
     "test:kyc-upload": "node scripts/tests/kycupload.test.cjs",
     "test:tasks-load": "node scripts/tests/tasksload.test.cjs",
     "test:welcome": "node scripts/tests/welcome.test.cjs",
-    "test:welcome-flow": "node scripts/tests/welcome-flow.test.cjs"
+    "test:welcome-flow": "node scripts/tests/welcome-flow.test.cjs",
+    "test:support-ticket-link": "node scripts/tests/support-ticket-link.test.cjs"
   },
   "dependencies": {
     "@jup-ag/api": "^6.0.48",
