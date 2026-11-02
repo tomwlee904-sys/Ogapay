@@ -264,7 +264,7 @@ const WENT = 'It went through: the prizes above are the new ones.';
   ok('8a the warning shows and the contest still has 5 places', s.err.includes(UNSURE) && s.prizesShown === 5 && s.awardNow, s);
   await clickText(p, '^Award now$'); await sleep(800);
   s = await state(p);
-  ok('8b place 2 is awarded to @bola', /^Award @bola a place now\?/.test(s.asked) && s.rows[1] && s.rows[1].awarded === 'Awarded to @bola: ₦7,000 paid' && s.rows[1].value === null, [s.asked, s.rows[1]]);
+  ok('8b place 2 is awarded to @bola', /^Award @bola 2nd place now\?/.test(s.asked) && s.rows[1] && s.rows[1].awarded === 'Awarded to @bola: ₦7,000 paid' && s.rows[1].value === null, [s.asked, s.rows[1]]);
   ok('8c no "It went through" message: the contest still has 5 places', !s.toasts.includes(WENT) && s.prizesShown === 5 && s.server.length === 5, s.toasts);
   ok('8d the form stays open with the 12 places typed and the warning', s.editor && s.rows.length === 12 && s.err.includes(UNSURE), s);
   await set(p, '__mode', 'ok'); await clickSave(p); await sleep(700);

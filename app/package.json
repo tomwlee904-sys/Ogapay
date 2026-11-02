@@ -10,6 +10,7 @@
     "test:contest-prizes": "node scripts/tests/contest-prizes.test.cjs",
     "test:contest-raise": "node scripts/tests/contest-raise.test.cjs",
     "test:contest-paid": "node scripts/tests/contest-paid.test.cjs",
+    "test:contest-pick": "node scripts/tests/contest-pick.test.cjs",
     "dev": "vite",
     "prebuild": "node scripts/icons-subset.mjs",
     "typecheck": "tsc --noEmit -p .",

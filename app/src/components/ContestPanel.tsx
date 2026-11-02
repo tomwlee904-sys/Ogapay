@@ -67,8 +67,21 @@ export async function redraw(seed: string, count: number) {
 
 type Entry = {
   id: string; status: string; proof?: string | null; workerNotes?: string | null; attachments?: any[] | null
-  submittedAt?: string | null; worker?: { username?: string }
+  // isBanned: the entry's account was closed, so it can't win (sent once the server includes it)
+  submittedAt?: string | null; worker?: { username?: string; isBanned?: boolean }
 }
+
+// The entries that can still win, oldest first: sent, not rejected, account open.
+// closed: how many waiting entries are from closed accounts (2026-11-02)
+const waitingEntries = (r: any) => {
+  // apiRequest already unwraps { data }: a list comes back as the array itself
+  const all: Entry[] = Array.isArray(r) ? r : r?.data || r?.submissions || []
+  const waiting = all.filter((s) => s.status === 'SUBMITTED')
+  const list = waiting.filter((s) => !s.worker?.isBanned)
+  list.sort((a, b) => new Date(a.submittedAt || 0).getTime() - new Date(b.submittedAt || 0).getTime())
+  return { list, closed: waiting.length - list.length }
+}
+const closedNote = (n: number) => `${n === 1 ? '1 entry is' : `${n} entries are`} from a closed account and can't win, so ${n === 1 ? "it isn't" : "they aren't"} listed.`
 
 export { ordinal }
 const when = (d: string | number | Date) => new Date(d).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
@@ -124,13 +137,17 @@ export default function ContestPanel({ jobId, contest, currency, endsAt, canMana
         .cp-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
         .cp-head b{font-size:15px;font-weight:600;color:var(--text);display:inline-flex;align-items:center;gap:8px}
         .cp-head span{font:500 11px var(--font-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--text3)}
-        .cp-prizes{display:grid;gap:8px}
+        .cp-prizes{display:grid;grid-template-columns:minmax(0,1fr);gap:8px}
         .cp-prize{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border:1px solid var(--border);border-radius:var(--r-ctl,12px);background:var(--card)}
+        .cp-prize>.cp-place,.cp-prize>.o-money{flex-shrink:0}
         .cp-prize.first{background:color-mix(in srgb,var(--money,var(--green)) 8%,var(--card));border-color:color-mix(in srgb,var(--money,var(--green)) 22%,var(--border))}
         .cp-place{font:500 12px var(--font-mono);letter-spacing:.04em;text-transform:uppercase;color:var(--text2)}
         .cp-who{display:inline-flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600;color:var(--text);text-decoration:none}
         .cp-who:hover{text-decoration:underline}
         .cp-none{font-size:12.5px;color:var(--text3)}
+        .cp-won{display:inline-flex;align-items:center;gap:8px;min-width:0}
+        .cp-won .cp-who{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+        .cp-paid{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;color:var(--green);white-space:nowrap;flex-shrink:0}
         .cp-facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:14px}
         .cp-fact{padding:12px 14px;border:1px solid var(--border);border-radius:var(--r-ctl,12px)}
         .cp-fact span{display:block;font-size:12px;color:var(--text3)}
@@ -186,7 +203,14 @@ export default function ContestPanel({ jobId, contest, currency, endsAt, canMana
           return (
             <div key={i} className={`cp-prize${i === 0 ? ' first' : ''}`}>
               <span className="cp-place">{ordinal(i + 1)} place</span>
-              {w?.username && <Link className="cp-who" to={`/user/${encodeURIComponent(w.username)}`}>@{w.username}</Link>}
+              {/* A place awarded before the contest finished is marked paid, so it's clear it can't be picked again (2026-11-02) */}
+              {w && (
+                <span className="cp-won">
+                  {/* A long name is cut short on a phone; the full name shows on hover (2026-11-02) */}
+                  {w.username ? <Link className="cp-who" to={`/user/${encodeURIComponent(w.username)}`} title={`@${w.username}`}>@{w.username}</Link> : <span className="cp-none">Awarded</span>}
+                  {!paid && <span className="cp-paid"><i className="ti ti-check" aria-hidden="true" /> Paid</span>}
+                </span>
+              )}
               {paid && !w && <span className="cp-none">Not filled: returned to the poster</span>}
               <Money amount={p} currency={currency} convert={convert} size={i === 0 ? 22 : 16} positive />
             </div>
@@ -302,30 +326,60 @@ function PickWinners({ jobId, contest, currency, convert, onPaid }: {
   jobId: string; contest: ContestInfo; currency: string; convert: any; onPaid: () => void
 }) {
   const [entries, setEntries] = useState<Entry[] | null>(null)
+  // The first read of the entries failed: there is nothing to show yet, which
+  // is not the same as no entries (2026-11-02)
+  const [loadFailed, setLoadFailed] = useState(false)
+  const [closed, setClosed] = useState(0)
+  // What the server said it needs when it refused the picks: it leaves out
+  // entries from closed accounts, which this list can't tell apart until the
+  // server sends isBanned. open: entries that can win; pick: how many to pick
+  const [need, setNeed] = useState<{ open: number; pick: number } | null>(null)
   const [picks, setPicks] = useState<string[]>([])
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
-  const reload = useReloadAfterError(onPaid)
+  // Bumped after a failed pick so the entries are read again (one may have been rejected meanwhile)
+  const [refresh, setRefresh] = useState(0)
+  // The contest and the entries are both read again, now and (when the answer
+  // was unclear) 5 and 16 seconds later, so the list comes back with the connection
+  const reload = useReloadAfterError(() => { onPaid(); setRefresh((n) => n + 1) })
 
   useEffect(() => {
     apiRequest<any>(`/tasks/${jobId}/submissions?limit=500`)
       .then((r) => {
-        // apiRequest already unwraps { data }: a list comes back as the array itself
-        const all: Entry[] = Array.isArray(r) ? r : r?.data || r?.submissions || []
-        const list = all.filter((s) => s.status === 'SUBMITTED')
-        list.sort((a, b) => new Date(a.submittedAt || 0).getTime() - new Date(b.submittedAt || 0).getTime())
+        const { list, closed: shut } = waitingEntries(r)
         setEntries(list)
-        setPicks(Array(Math.min(contest.prizes.length - contest.winners.length, list.length)).fill(''))
+        setClosed(shut)
+        setLoadFailed(false)
+        // Picks for entries that can still win stay, so a refusal doesn't undo them all (2026-11-02)
+        const still = new Set(list.map((e) => e.id))
+        const n = Math.min(contest.prizes.length - contest.winners.length, list.length, need ? need.pick : Infinity)
+        setPicks((prev) => Array.from({ length: n }, (_, i) => (prev[i] && still.has(prev[i]) ? prev[i] : '')))
       })
-      .catch(() => setEntries([]))
-  }, [jobId, contest.prizes.length, contest.winners.length])
+      // A failed read (the connection dropped) keeps the list already shown, with
+      // its picks and any warning; it never turns into "no entries" (2026-11-02)
+      .catch(() => setLoadFailed(true))
+  }, [jobId, contest.prizes.length, contest.winners.length, refresh, need])
   // Places already awarded early are paid; these picks fill the next ones
   const first = contest.winners.length
 
-  if (!entries) return <div className="cp-pick"><p className="cp-note">Loading entries…</p></div>
+  if (!entries) {
+    return (
+      <div className="cp-pick">
+        {loadFailed ? (
+          <>
+            <p className="cp-note" style={{ margin: 0 }}>We couldn't load the entries. Check your connection and try again.</p>
+            <button className="ui-btn ui-btn-ghost" type="button" style={{ justifySelf: 'start' }}
+              onClick={() => { setLoadFailed(false); setRefresh((n) => n + 1) }}>Try again</button>
+          </>
+        ) : <p className="cp-note">Loading entries…</p>}
+      </div>
+    )
+  }
 
   const label = (e: Entry) => `@${e.worker?.username || 'someone'}${e.submittedAt ? ` · ${when(e.submittedAt)}` : ''}`
   const ready = picks.length > 0 ? picks.every(Boolean) && new Set(picks).size === picks.length : true
+  // Entries listed here that the server says can't win (closed accounts it didn't mark)
+  const hidden = need ? Math.max(0, entries.length - need.open) : 0
 
   const pay = async () => {
     setBusy(true)
@@ -334,9 +388,16 @@ function PickWinners({ jobId, contest, currency, convert, onPaid }: {
       await apiRequest(`/tasks/${jobId}/winners`, { method: 'POST', body: JSON.stringify({ winners: picks }) })
       onPaid()
     } catch (e: any) {
+      const msg: string = e?.message || ''
+      // "There are 10 entries you haven't rejected, so pick all 10 of them": fewer
+      // can win than are listed here, so show only that many places (2026-11-02)
+      const count = /There are (\d+) entries you haven't rejected, so pick all (\d+)/.exec(msg)
+      if (count) setNeed({ open: Number(count[1]), pick: Number(count[2]) })
       setError(unsure(e)
         ? "We couldn't confirm this. The winners may have been paid: check the places above before you try again."
-        : e?.message || 'Could not pay the winners. Try again.')
+        : /can't win/.test(msg)
+        ? `${msg.replace(/\.?$/, '.')} Picks you rejected are cleared below. If you didn't reject any, one of your picks is from a closed account: choose a different entry for it.`
+        : msg || 'Could not pay the winners. Try again.')
       // The winners may have been paid anyway (a timeout, or paid automatically
       // meanwhile): reload the contest so the page shows where it really stands
       reload(unsure(e))
@@ -349,18 +410,32 @@ function PickWinners({ jobId, contest, currency, convert, onPaid }: {
     <div className="cp-pick">
       <h3>Pick the winners</h3>
       {entries.length === 0 ? (
-        <p className="cp-note">
-          {first > 0
-            ? `There are no entries to pick from. The prizes for the ${contest.prizes.length - first} place${contest.prizes.length - first === 1 ? '' : 's'} left, and their share of the fee, come back to your wallet automatically.`
-            : 'There are no entries to pick from. The prizes and fee come back to your wallet automatically.'}
-        </p>
+        <>
+          <p className="cp-note">
+            {first > 0
+              ? `There are no entries to pick from. The prizes for the ${contest.prizes.length - first} place${contest.prizes.length - first === 1 ? '' : 's'} left, and their share of the fee, come back to your wallet automatically.`
+              : 'There are no entries to pick from. The prizes and fee come back to your wallet automatically.'}
+            {closed > 0 && ` ${closedNote(closed)}`}
+          </p>
+          {error && <div className="cp-err">{error}</div>}
+        </>
       ) : (
         <>
           <p className="cp-note" style={{ margin: 0 }}>
             Rank the best entries (see them under View Submissions). Reject any that break your brief first; rejected entries can't win.
             {first > 0 && ` ${first} place${first > 1 ? 's were' : ' was'} awarded early; these fill the rest.`}
             {picks.length < contest.prizes.length - first && ' There are fewer entries than prizes, so the places nobody fills come back to you with their share of the fee.'}
+            {closed > 0 && ` ${closedNote(closed)}`}
+            {need && hidden > 0 && ` ${hidden === 1 ? '1 of these entries is' : `${hidden} of these entries are`} from a closed account and can't win, so ${need.pick} ${need.pick === 1 ? 'place' : 'places'} can be filled. We can't show which ${hidden === 1 ? 'one' : 'ones'} here: if a pick is refused, choose a different entry for it.`}
           </p>
+          {/* Places awarded early: already paid, so they can't be picked again (2026-11-02) */}
+          {contest.winners.map((w) => (
+            <div key={`won-${w.place}`} className="cp-row">
+              <span className="cp-place">{ordinal(w.place)}</span>
+              <span className="cp-none">Paid{w.username ? ` to @${w.username}` : ''}</span>
+              <span className="cp-amt"><Money amount={w.prize ?? contest.prizes[w.place - 1]} currency={currency} convert={convert} size={14} positive /></span>
+            </div>
+          ))}
           {picks.map((v, i) => (
             <div key={i} className="cp-row">
               <span className="cp-place">{ordinal(first + i + 1)}</span>
@@ -390,14 +465,18 @@ function AwardNow({ jobId, prize, places, placesLeft, currency, convert, onPaid 
   jobId: string; prize: number; places: number; placesLeft: number; currency: string; convert: any; onPaid: () => void
 }) {
   const [entries, setEntries] = useState<Entry[] | null>(null)
+  const [closed, setClosed] = useState(0)
   const [busy, setBusy] = useState('')
   const [error, setError] = useState('')
   // Bumped after a failed award so the list is read again (an entry may have been rejected or won meanwhile)
   const [refresh, setRefresh] = useState(0)
-  const reload = useReloadAfterError(onPaid)
+  // The contest and the list are read again together, also on the later reloads (2026-11-02)
+  const reload = useReloadAfterError(() => { onPaid(); setRefresh((n) => n + 1) })
   const last = placesLeft === 1
   // A contest with a single place: it is the only place, not the lowest one
   const only = places === 1
+  // The place the next award fills (the server gives the next one in order)
+  const next = places - placesLeft + 1
 
   // A place was awarded since the error (a reload found it): the error is out of date
   useEffect(() => { setError('') }, [placesLeft])
@@ -405,12 +484,12 @@ function AwardNow({ jobId, prize, places, placesLeft, currency, convert, onPaid 
   useEffect(() => {
     apiRequest<any>(`/tasks/${jobId}/submissions?limit=500`)
       .then((r) => {
-        const all: Entry[] = Array.isArray(r) ? r : r?.data || r?.submissions || []
-        const list = all.filter((s) => s.status === 'SUBMITTED')
-        list.sort((a, b) => new Date(a.submittedAt || 0).getTime() - new Date(b.submittedAt || 0).getTime())
+        const { list, closed: shut } = waitingEntries(r)
         setEntries(list)
+        setClosed(shut)
       })
-      .catch(() => setEntries([]))
+      // A failed read keeps the list already shown (2026-11-02)
+      .catch(() => setEntries((prev) => prev ?? []))
   }, [jobId, placesLeft, refresh])
 
   // A link opens straight away; screenshots, files and notes are read in Manage jobs
@@ -422,7 +501,7 @@ function AwardNow({ jobId, prize, places, placesLeft, currency, convert, onPaid 
 
   const award = async (e: Entry) => {
     const name = `@${e.worker?.username || 'this entry'}`
-    const ask = `Award ${name} ${only ? 'the' : 'a'} place now? ${formatMoney(prize, currency)} is paid to them at once and can't be undone.`
+    const ask = `Award ${name} ${only ? 'the place' : `${ordinal(next)} place`} now? ${formatMoney(prize, currency)} is paid to them at once and can't be undone.`
       + (only ? ' This contest has one place: the contest ends now and no more entries can be sent.'
         : last ? ' This is the last place: the contest ends now and no more entries can be sent.' : '')
     if (!window.confirm(ask)) return
@@ -438,7 +517,6 @@ function AwardNow({ jobId, prize, places, placesLeft, currency, convert, onPaid 
       // The place may have been awarded anyway (a timeout), or entries closed
       // meanwhile: reload the contest and the entries so the page is up to date
       reload(unsure(err))
-      setRefresh((n) => n + 1)
     } finally {
       setBusy('')
     }
@@ -454,7 +532,8 @@ function AwardNow({ jobId, prize, places, placesLeft, currency, convert, onPaid 
           ? 'This contest has one place: when you award it, the contest ends and no more entries can be sent.'
           : last
           ? 'This is the last place: when you award it, the contest ends and no more entries can be sent.'
-          : `${placesLeft} places left; the rest are picked when entries close. If you award every place, the contest ends early.`}
+          : `${placesLeft} places left (${ordinal(next)} to ${ordinal(places)}); the next award gets ${ordinal(next)} place. The rest are picked when entries close. If you award every place, the contest ends early.`}
+        {closed > 0 && ` ${closedNote(closed)}`}
       </p>
       {!entries ? (
         <p className="cp-note">Loading entries…</p>
