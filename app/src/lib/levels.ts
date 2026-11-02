@@ -12,7 +12,7 @@ export type Level = { tier: number; name: string; short: string; how: string; li
 // bank: Level 1 can also come from a bank account in your name (free, instant)
 export const levelsFor = (didit: boolean, ninInstant = false, bank = false): Level[] => [
   { tier: 1, name: 'Level 1', short: bank ? 'Bank account or NIN' : 'NIN', how: bank ? 'Verify with your bank account (free) or your NIN' : ninInstant ? 'Your NIN, confirmed with NIMC in seconds' : 'Your NIN, checked by our team', limit: withdrawLimit(1) },
-  { tier: 2, name: 'Level 2', short: 'ID + selfie', how: didit ? 'Take a photo of your ID card and a selfie (about 2 minutes)' : 'A photo of your ID card and a selfie, through support', limit: withdrawLimit(2) },
+  { tier: 2, name: 'Level 2', short: 'ID + selfie', how: didit ? 'Take a photo of your ID card and a selfie (about 2 minutes)' : 'A photo of your ID and a selfie holding it, checked by our team', limit: withdrawLimit(2) },
   { tier: 3, name: 'Level 3', short: 'ID documents', how: 'Send your ID documents to our support team', limit: withdrawLimit(3) },
 ]
 
@@ -25,7 +25,7 @@ export const nextTierFor = (tier: number, didit: boolean) => (didit && tier < 2 
 // The next step for someone at `tier`, and where to take it
 export const nextStep = (tier: number, didit: boolean): { to: string; label: string } | null => {
   if (tier <= 0) return { to: '/settings/verification', label: didit ? 'Verify with Didit' : 'Verify your identity' }
-  if (tier === 1) return didit ? { to: '/settings/verification', label: 'Get Level 2 with an ID + selfie check' } : { to: '/support', label: 'Ask for Level 2' }
+  if (tier === 1) return didit ? { to: '/settings/verification', label: 'Get Level 2 with an ID + selfie check' } : { to: '/settings/verification', label: 'Get Level 2: send your ID to our team' }
   if (tier === 2) return { to: '/support', label: 'Ask for Level 3' }
   return null
 }

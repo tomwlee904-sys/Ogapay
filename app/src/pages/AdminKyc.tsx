@@ -111,7 +111,7 @@ function Level2Requests() {
   if (!rows || (rows.length === 0 && !notice)) return null
   return (
     <section className="ak-l2" aria-labelledby="ak-l2-h">
-      <div className="aw-head"><div><h2 id="ak-l2-h">Level 2 requests ({rows.length})</h2><p>Sent by members whose Didit ID check didn't work.</p></div>
+      <div className="aw-head"><div><h2 id="ak-l2-h">Level 2 requests ({rows.length})</h2><p>Members' ID and selfie photos for Level 2, checked by hand.</p></div>
         <button className="ui-btn ui-btn-ghost" onClick={() => load()}><i className="ti ti-refresh" /> Refresh</button></div>
       {notice && <div className="aw-msg" role="status"><span>{notice}</span><button onClick={() => setNotice('')} aria-label="Dismiss"><i className="ti ti-x" /></button></div>}
       <div className="aw-list">{rows.map((r) => <Level2Row key={r.id} r={r} onDone={(id, msg) => { setRows((x) => (x || []).filter((y) => y.id !== id)); setNotice(msg) }} />)}</div>

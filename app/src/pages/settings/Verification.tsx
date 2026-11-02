@@ -119,7 +119,7 @@ export default function Verification({ me, reload, providers }: SectionProps & {
   const didit = !!providers?.didit
   const ninInstant = !!providers?.ninInstant // a NIN is confirmed with NIMC on the spot
   const bankKyc = !!providers?.bankKyc // Level 1 from a bank account in their name (free)
-  const diditOpen = status === 'PENDING' && me.kyc?.provider === 'didit' // started, not finished
+  const diditOpen = didit && status === 'PENDING' && me.kyc?.provider === 'didit' // started, not finished
   const inReview = status === 'SUBMITTED'
   const want = tier === 0 ? 'NIN' : null // Level 2 is the ID + selfie check
   // With Didit, one ID + selfie check takes anyone below Level 2 straight to Level 2
@@ -331,6 +331,12 @@ export default function Verification({ me, reload, providers }: SectionProps & {
           No bank account in your own name? <button type="button" className="st2-linkbtn" onClick={() => setUseNin((v) => !v)}>{useNin ? 'Hide the NIN form' : 'Use your NIN instead'}</button>
         </p>
       )}
+      {/* Without Didit, Level 2 is checked by our team and can be the first step too */}
+      {!didit && manualReq !== undefined && manualReq?.status !== 'PENDING' && (
+        <p className="st2-muted" style={{ margin: '4px 0 0' }}>
+          Want Level 2 straight away? <button type="button" className="st2-linkbtn" onClick={() => { setShowManual((v) => !v); setMMsg(null) }}>{showManual ? 'Hide' : 'Send your ID to our team'}</button>
+        </p>
+      )}
     </div>
   )
 
@@ -345,6 +351,7 @@ export default function Verification({ me, reload, providers }: SectionProps & {
           The name on your OgaPay account, <b>{`${me.firstName || ''} ${me.lastName || ''}`.trim() || 'not set'}</b>, must match your NIN: <Link className="st2-linkbtn" to="/settings/account">change it</Link> first if it doesn't.
         </p>
       )}
+      {!ninInstant && <p className="st2-muted" style={{ margin: 0, lineHeight: 1.55 }}>Our team checks your NIN, usually within a day. The name on your OgaPay account must match it.</p>}
       <label className="st2-f"><span>{want} (11 digits)</span>
         <input inputMode="numeric" autoComplete="off" value={num} maxLength={11} onChange={(e) => setNum(e.target.value.replace(/\D/g, '').slice(0, 11))} placeholder="National Identification Number" required />
       </label>
@@ -454,7 +461,7 @@ export default function Verification({ me, reload, providers }: SectionProps & {
             {bankPanel}
             {useNin && ninForm}
             {useDidit && diditPanel}
-            {useDidit && manualWanted && manualPanel}
+            {manualWanted && manualPanel}
           </>
         ) : useDidit ? (
           <>
