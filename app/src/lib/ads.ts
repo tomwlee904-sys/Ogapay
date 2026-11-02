@@ -1,8 +1,8 @@
 // Google Ads conversion tracking (2026-11-02). The Google tag itself loads once
 // in index.html; this sends the sign-up conversion.
 
-// Replace LABEL_HERE with the conversion label from Google Ads (Goals > Conversions)
-export const ADS_SIGNUP_SEND_TO = 'AW-18550967605/LABEL_HERE'
+// The sign-up conversion action in Google Ads (Goals > Conversions)
+export const ADS_SIGNUP_SEND_TO = 'AW-18550967605/wIGqCO-TqbAdELWa5Y1F'
 
 declare global {
   interface Window { gtag?: (...args: unknown[]) => void }
