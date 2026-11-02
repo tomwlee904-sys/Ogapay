@@ -102,9 +102,9 @@ function ConversionsCard() {
 
 export default function Admin() {
   const { isAuthed } = useAuth()
-  const [intents, setIntents] = useState<{ all: IntentCounts; last30Days: IntentCounts } | null>(null)
+  const [intents, setIntents] = useState<{ all: IntentCounts; last30Days: IntentCounts; countries?: { all: Record<string, number>; last30Days: Record<string, number> } } | null>(null)
   useEffect(() => {
-    if (isAuthed) apiRequest<{ all: IntentCounts; last30Days: IntentCounts }>('/admin/signup-intents').then(setIntents).catch(() => {})
+    if (isAuthed) apiRequest<NonNullable<typeof intents>>('/admin/signup-intents').then(setIntents).catch(() => {})
   }, [isAuthed])
 
   if (!isAuthed) return null
@@ -145,6 +145,7 @@ export default function Admin() {
             <dl>
               <dt>All members ({intents.all.total})</dt><dd>{intentLine(intents.all)}</dd>
               <dt>Joined in the last 30 days ({intents.last30Days.total})</dt><dd>{intentLine(intents.last30Days)}</dd>
+              {intents.countries && <><dt>In Ghana</dt><dd>{intents.countries.all.GH || 0} members, {intents.countries.last30Days.GH || 0} joined in the last 30 days</dd></>}
             </dl>
             <small>Asked at sign-up (or once on the dashboard). Percentages are of those who answered. Closed accounts and admins aren't counted.</small>
           </section>

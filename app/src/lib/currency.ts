@@ -1,5 +1,6 @@
 // ─── Types ────────────────────────────────────────────────────────────────
-export type Currency = 'SOL' | 'USDC' | 'USDT' | 'NGN';
+// GHS: cedis, for showing amounts only (the Ghana test); no wallet holds cedis
+export type Currency = 'SOL' | 'USDC' | 'USDT' | 'NGN' | 'GHS';
 export type DisplayMode = Currency | 'BOTH';
 export type CurrencyRates = Record<Currency, number>; // all values in USD
 
@@ -9,18 +10,21 @@ export const CURRENCY_SYMBOLS: Record<Currency, string> = {
   USDC: '$',
   USDT: '$',
   NGN: '₦',
+  GHS: 'GH₵',
 };
 export const CURRENCY_LABELS: Record<Currency, string> = {
   SOL: 'SOL',
   USDC: 'USDC',
   USDT: 'USDT',
   NGN: 'NGN',
+  GHS: 'GHS',
 };
 export const CURRENCY_NAMES: Record<Currency, string> = {
   SOL: 'Solana',
   USDC: 'USD Coin',
   USDT: 'Tether',
   NGN: 'Nigerian Naira',
+  GHS: 'Ghanaian Cedi',
 };
 
 // ─── Withdrawal constants ─────────────────────────────────────────────────
@@ -38,6 +42,7 @@ export const DEFAULT_RATES: CurrencyRates = {
   USDC: 1,     // 1 USDC = $1 USD
   USDT: 1,     // 1 USDT = $1 USD
   NGN: 0.00066, // 1 NGN = $0.00066 USD (approx 1 USD = 1515 NGN)
+  GHS: 0, // no rate yet: amounts stay in their own currency
 };
 
 // ─── Format helpers ───────────────────────────────────────────────────────
@@ -51,6 +56,8 @@ export function formatCurrency(amount: number, currency: Currency): string {
       return `${symbol}${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     case 'NGN':
       return `${symbol}${Math.round(amount).toLocaleString('en-US')}`;
+    case 'GHS':
+      return `${symbol}${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   }
 }
 
@@ -64,6 +71,8 @@ export function formatShort(amount: number, currency: Currency): string {
       return `${symbol}${amount.toFixed(2)}`;
     case 'NGN':
       return `${symbol}${Math.round(amount).toLocaleString('en-US')}`;
+    case 'GHS':
+      return `${symbol}${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   }
 }
 
@@ -143,6 +152,7 @@ export async function fetchLiveRates(): Promise<{ rates: CurrencyRates; lastUpda
   let usdc = DEFAULT_RATES.USDC;
   let usdt = DEFAULT_RATES.USDT;
   let ngn = DEFAULT_RATES.NGN;
+  let ghs = DEFAULT_RATES.GHS;
 
   try {
     const cgRes = await fetch(
@@ -165,11 +175,12 @@ export async function fetchLiveRates(): Promise<{ rates: CurrencyRates; lastUpda
     if (fxRes.ok) {
       const fx = await fxRes.json();
       if (fx?.rates?.NGN) ngn = 1 / Number(fx.rates.NGN);
+      if (fx?.rates?.GHS) ghs = 1 / Number(fx.rates.GHS);
     }
   } catch { /* use defaults */ }
 
   return {
-    rates: { SOL: sol, USDC: usdc, USDT: usdt, NGN: ngn },
+    rates: { SOL: sol, USDC: usdc, USDT: usdt, NGN: ngn, GHS: ghs },
     lastUpdated: new Date(),
   };
 }
@@ -192,6 +203,8 @@ export async function fetchRates(
         USDC: Number(data.USDC || data.usdc || DEFAULT_RATES.USDC),
         USDT: Number(data.USDT || data.usdt || DEFAULT_RATES.USDT),
         NGN: rawNgn > 1 ? 1 / rawNgn : rawNgn,
+        // Cedis per dollar from the server (null until it has a rate)
+        GHS: Number(data.GHS) > 0 ? 1 / Number(data.GHS) : 0,
       },
       lastUpdated: new Date(),
     };
@@ -205,7 +218,7 @@ export async function fetchRates(
 export function getStoredCurrency(): DisplayMode {
   try {
     const stored = localStorage.getItem('ogapay_currency');
-    if (stored && (stored === 'BOTH' || CURRENCIES.includes(stored as Currency))) return stored as DisplayMode;
+    if (stored && (stored === 'BOTH' || stored === 'GHS' || CURRENCIES.includes(stored as Currency))) return stored as DisplayMode;
   } catch {}
   return 'NGN';
 }

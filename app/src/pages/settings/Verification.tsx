@@ -119,6 +119,8 @@ export default function Verification({ me, reload, providers }: SectionProps & {
   const bankKyc = !!providers?.bankKyc // Level 1 from a bank account in their name (free)
   const diditOpen = didit && status === 'PENDING' && me.kyc?.provider === 'didit' // started, not finished
   const inReview = status === 'SUBMITTED'
+  // In Ghana the bank and NIN checks (Nigeria only) don't apply: Level 2 with a Ghana Card
+  const ghana = me.country === 'GH'
   const want = tier === 0 ? 'NIN' : null // Level 2 is the ID check
   // With Didit, one ID + selfie check takes anyone below Level 2 straight to Level 2
   const useDidit = (didit && tier < 2) || diditOpen
@@ -137,7 +139,7 @@ export default function Verification({ me, reload, providers }: SectionProps & {
   // Level 2 checked by our team, when Didit doesn't work for someone
   const [manualReq, setManualReq] = useState<ManualReq | undefined>(undefined)
   const [showManual, setShowManual] = useState(false)
-  const [mType, setMType] = useState('NIN')
+  const [mType, setMType] = useState(ghana ? 'GHANA_CARD' : 'NIN')
   const [mNumber, setMNumber] = useState('')
   const [mFront, setMFront] = useState<File | null>(null)
   const [mBusy, setMBusy] = useState(false)
@@ -406,6 +408,7 @@ export default function Verification({ me, reload, providers }: SectionProps & {
           <option value="PASSPORT">International passport</option>
           <option value="DRIVERS_LICENSE">Driver's licence</option>
           <option value="VOTERS_CARD">Voter's card</option>
+          <option value="GHANA_CARD">Ghana Card</option>
         </select>
       </label>
       <label className="st2-f"><span>{mType === 'NIN' ? 'NIN (11 digits)' : 'ID number'}</span>
@@ -445,7 +448,12 @@ export default function Verification({ me, reload, providers }: SectionProps & {
           <div className="st2-banner"><i className="ti ti-alert-circle" /> Your last attempt wasn't approved{me.kyc?.rejectionReason ? `: ${me.kyc.rejectionReason}` : ''}. You can try again below.</div>
         )}
 
-        {inReview && tier === 0 ? (
+        {ghana && tier < 2 && !inReview ? (
+          <>
+            <p className="st2-muted" style={{ margin: '10px 0 0', lineHeight: 1.55 }}>In Ghana? The bank account and NIN checks are for Nigeria, so send your Ghana Card (or passport) to our team for Level 2.</p>
+            {manualReq !== undefined && manualPanel}
+          </>
+        ) : inReview && tier === 0 ? (
           <>
             <div className="st2-banner"><i className="ti ti-hourglass" /> {me.kyc?.provider === 'didit' ? "Your ID check is being reviewed." : 'Your NIN is with our team for review.'} We'll notify you when it's done.{bankPanel ? ' Or skip the wait with your bank account below.' : ''}</div>
             {msg && <p className={msg.ok ? 'st2-ok' : 'st2-err'}>{msg.text}</p>}

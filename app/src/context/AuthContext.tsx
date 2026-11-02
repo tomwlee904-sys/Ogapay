@@ -41,6 +41,8 @@ export interface User {
   hasPassword?: boolean
   kycStatus: string | null
   kycTier: number
+  // Where they live: NG or GH (the Ghana test)
+  country?: string
   onboardingComplete: boolean
   wallet: Record<string, WalletEntry>
   bankAccount: BankAccount | null
@@ -112,6 +114,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // /users/me sends the KYC record as `kyc`; kycStatus was always empty
         kycStatus: userData.kycStatus || userData.kyc?.status || null,
         kycTier: Number(userData.kyc?.kycTier ?? 0),
+        country: userData.country || 'NG',
         onboardingComplete: userData.onboardingComplete || false,
         wallet: userData.wallet || {},
         bankAccount: userData.bankAccount || null,

@@ -14,6 +14,7 @@ export type Me = {
   id: string; email: string; username: string; firstName: string; lastName: string; avatarUrl: string | null
   isEmailVerified: boolean; isPublic: boolean; isTwoFactorEnabled: boolean; hasPassword: boolean
   humanVerifiedAt: string | null; ogaScore: number; role: string
+  country?: string // NG or GH (the Ghana test)
   preferences: Prefs
   kyc: { status: string; kycTier: number; rejectionReason: string | null; idType: string | null; provider?: string | null } | null
   // X also carries the profile read from X (all fields empty until it has been read; see xRead)

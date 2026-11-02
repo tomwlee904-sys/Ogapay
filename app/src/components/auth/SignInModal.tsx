@@ -128,6 +128,7 @@ export default function SignInModal({ initialView = 'options', initialCode = '',
   const [showPw, setShowPw] = useState(false)
   const [remember, setRemember] = useState(() => !!localStorage.getItem('ogapay_remember_email'))
   const [name, setName] = useState('')
+  const [country, setCountry] = useState<'NG' | 'GH'>('NG')
   const [intent, setIntent] = useState<Intent | ''>('')
   const [code, setCode] = useState(initialCode.toUpperCase())
   const [challenge, setChallenge] = useState<{ token: string; userId: string } | null>(null)
@@ -226,6 +227,7 @@ export default function SignInModal({ initialView = 'options', initialCode = '',
       password,
       username: usernameFrom(email),
       intent,
+      country,
     }
     const ref = localStorage.getItem('ogapay_referral')
     if (ref) body.referralCode = ref
@@ -420,6 +422,13 @@ export default function SignInModal({ initialView = 'options', initialCode = '',
         <div className="si-field">
           <label htmlFor="si-name">Full name</label>
           <input id="si-name" className="si-input" autoComplete="name" value={name} onChange={e => setName(e.target.value)} />
+        </div>
+        <div className="si-field">
+          <label htmlFor="si-country">Where do you live?</label>
+          <select id="si-country" className="si-input" value={country} onChange={e => setCountry(e.target.value as 'NG' | 'GH')}>
+            <option value="NG">Nigeria</option>
+            <option value="GH">Ghana</option>
+          </select>
         </div>
         <div className="si-field">
           <label htmlFor="si-email2">Email address</label>

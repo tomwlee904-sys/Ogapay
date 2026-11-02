@@ -116,6 +116,7 @@ export function Privacy(props: SectionProps) {
 const MODES: { id: DisplayMode; label: string }[] = [
   { id: 'NGN', label: '₦ Naira' },
   { id: 'USDC', label: '$ USDC' },
+  { id: 'GHS', label: 'GH₵ Cedi' },
   { id: 'BOTH', label: 'Both' },
 ]
 
@@ -134,7 +135,7 @@ export function Payments(props: SectionProps) {
     <>
       <Card title="Display currency" sub="How amounts are shown across OgaPay. Your balances don't change.">
         <div className="st2-seg" role="radiogroup" aria-label="Display currency">
-          {MODES.map((m) => (
+          {MODES.filter((m) => m.id !== 'GHS' || props.me.country === 'GH' || mode === 'GHS').map((m) => (
             <button key={m.id} role="radio" aria-checked={mode === m.id} className={mode === m.id ? 'on' : ''} onClick={() => pick(m.id)}>{m.label}</button>
           ))}
         </div>

@@ -37,10 +37,17 @@ export function formatConversion(amount: number, currency: string, convert: Conv
 }
 
 // ── The display currency setting (Settings > Payments, and the menu) ──
-// NGN: amounts in naira. USDC: amounts in dollars. BOTH: the real currency plus a
-// conversion line. Older saved values (SOL, USDT) count as dollars.
-export type DisplayPref = 'NGN' | 'USDC' | 'BOTH'
-export const displayPref = (p?: string | null): DisplayPref => (p === 'BOTH' ? 'BOTH' : p === 'NGN' || !p ? 'NGN' : 'USDC')
+// NGN: amounts in naira. USDC: amounts in dollars. GHS: amounts in cedis (the
+// Ghana test; shown only, nothing is held in cedis). BOTH: the real currency plus
+// a conversion line. Older saved values (SOL, USDT) count as dollars.
+export type DisplayPref = 'NGN' | 'USDC' | 'GHS' | 'BOTH'
+export const displayPref = (p?: string | null): DisplayPref => (p === 'BOTH' || p === 'GHS' ? p : p === 'NGN' || !p ? 'NGN' : 'USDC')
+
+/** "GH₵0.85", "GH₵12.50", "GH₵1,240" */
+export function formatCedi(n: number): string {
+  const v = Number(n) || 0
+  return `GH₵${v >= 1000 ? Math.round(v).toLocaleString('en-US') : v.toFixed(2)}`
+}
 
 /** "$0.08", "$12.50", "$1,240" */
 export function formatUsd(n: number): string {
@@ -59,11 +66,11 @@ export function displayMoney(amount: number, currency: string, pref: string | nu
   const p = displayPref(pref)
   const n = Number(amount) || 0
   if (p === 'BOTH') return { converted: '', alt: formatConversion(n, currency, convert) }
-  const home = p === 'NGN' ? currency === 'NGN' : isDollar(currency)
+  const home = p === 'NGN' ? currency === 'NGN' : p === 'GHS' ? currency === 'GHS' : isDollar(currency)
   if (home || !n) return { converted: '', alt: '' }
-  const v = p === 'NGN' ? convert(n, currency, 'NGN') : convert(n, currency, 'USDC')
+  const v = convert(n, currency, p)
   if (!Number.isFinite(v) || v <= 0) return { converted: '', alt: '' } // no rate yet: just the real amount
-  const text = p === 'NGN' ? `₦${Math.round(v).toLocaleString('en-US')}` : formatUsd(v)
+  const text = p === 'NGN' ? `₦${Math.round(v).toLocaleString('en-US')}` : p === 'GHS' ? formatCedi(v) : formatUsd(v)
   return exact ? { converted: '', alt: `≈ ${text}` } : { converted: text, alt: formatMoney(n, currency) }
 }
 
@@ -80,11 +87,11 @@ export function showMoney(amount: number, currency = 'NGN', pref: string | null 
   const fmtNgn = (v: number) => (opts.short && shortNum(v, '₦')) || `₦${Math.round(v).toLocaleString('en-US')}`
   const fmtUsd = (v: number) => (opts.short && shortNum(v, '$')) || formatUsd(v)
   if (!opts.exact && p !== 'BOTH') {
-    const home = p === 'NGN' ? currency === 'NGN' : isDollar(currency)
-    if (!home && !n) return p === 'NGN' ? '₦0' : '$0.00' // nothing yet: in the chosen currency
+    const home = p === 'NGN' ? currency === 'NGN' : p === 'GHS' ? currency === 'GHS' : isDollar(currency)
+    if (!home && !n) return p === 'NGN' ? '₦0' : p === 'GHS' ? 'GH₵0.00' : '$0.00' // nothing yet: in the chosen currency
     if (!home) {
-      const v = convert(n, currency, p === 'NGN' ? 'NGN' : 'USDC')
-      if (Number.isFinite(v) && v > 0) return `≈ ${p === 'NGN' ? fmtNgn(v) : fmtUsd(v)}`
+      const v = convert(n, currency, p)
+      if (Number.isFinite(v) && v > 0) return `≈ ${p === 'NGN' ? fmtNgn(v) : p === 'GHS' ? ((opts.short && shortNum(v, 'GH₵')) || formatCedi(v)) : fmtUsd(v)}`
     }
   }
   return currency === 'NGN' ? fmtNgn(n) : formatMoney(n, currency)

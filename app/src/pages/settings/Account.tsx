@@ -5,8 +5,8 @@ import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../components/Toast'
 import { Card, Row, type SectionProps } from './ui'
 
-export default function Account({ me }: SectionProps) {
-  const { logout } = useAuth()
+export default function Account({ me, setMe }: SectionProps) {
+  const { logout, refreshUser } = useAuth()
   const navigate = useNavigate()
   const { toast } = useToast()
   const [sending, setSending] = useState(false)
@@ -21,6 +21,22 @@ export default function Account({ me }: SectionProps) {
       toast(e?.message || "Couldn't send the email", 'error')
     }
     setSending(false)
+  }
+
+  // Where they live (the Ghana test): Ghana offers cedis and the Ghana Card
+  const [country, setCountry] = useState(me.country || 'NG')
+  const pickCountry = async (c: string) => {
+    const was = country
+    setCountry(c)
+    try {
+      await apiRequest('/users/me', { method: 'PATCH', body: JSON.stringify({ country: c }) })
+      setMe((m) => ({ ...m, country: c }))
+      refreshUser()
+      toast('Saved', 'success')
+    } catch (e: any) {
+      setCountry(was)
+      toast(e?.message || "Couldn't save it", 'error')
+    }
   }
 
   const signOut = async () => {
@@ -44,6 +60,13 @@ export default function Account({ me }: SectionProps) {
         </div>
       </Card>
 
+      <Card title="Where you live" sub="In Ghana you can show amounts in cedis and verify with your Ghana Card.">
+        <div className="st2-seg" role="radiogroup" aria-label="Where you live">
+          {[['NG', 'Nigeria'], ['GH', 'Ghana']].map(([v, label]) => (
+            <button key={v} role="radio" aria-checked={country === v} className={country === v ? 'on' : ''} onClick={() => pickCountry(v)}>{label}</button>
+          ))}
+        </div>
+      </Card>
       <Card title="Email">
         <Row
           title={me.email}

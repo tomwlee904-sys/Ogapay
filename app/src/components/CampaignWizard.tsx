@@ -124,7 +124,7 @@ export default function CampaignWizard() {
       const budget = reward * maxWorkers;
 
       if (mode === "publish") {
-        const activeCur = preferredCurrency !== 'BOTH' ? preferredCurrency : 'NGN';
+        const activeCur = preferredCurrency === 'BOTH' || preferredCurrency === 'GHS' ? 'NGN' : preferredCurrency; // cedis are display only
       const walletEntry = walletBalances?.[activeCur];
         const currentBalance = walletEntry ? (Number(walletEntry.balance) || 0) : 0;
         if (currentBalance < budget) {
