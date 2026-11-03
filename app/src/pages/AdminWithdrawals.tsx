@@ -48,6 +48,13 @@ interface Withdrawal {
 interface Page { items: Withdrawal[]; total: number; page: number; pages: number; totals: { currency: string; count: number; amount: number }[] }
 // GET /admin/momo/check: are mobile money payouts on, and today's naira per cedi
 interface MomoCheck { momoPayouts: boolean; autoPayouts: boolean; ok: boolean; ngnPerGhs?: number; error?: string }
+// GET /admin/flutterwave/balances: our Flutterwave wallets next to what the waiting withdrawals need
+type FlwBalance = { available: number; ledger?: number } | { error: string }
+interface FlwBalances {
+  ngn: FlwBalance; ghs: FlwBalance
+  waiting: { count: number; toPay: number; bank: { count: number; toPay: number }; momo: { count: number; toPay: number; ghsFee: number | null } }
+  warnings: string[]
+}
 interface SendResult { state: 'sent' | 'sending' | 'review'; transferId?: number | string | null; reason?: string | null; ghs?: number }
 
 const TABS: [Status, string][] = [['PROCESSING', 'Pending'], ['COMPLETED', 'Paid'], ['FAILED', 'Rejected']]
@@ -283,7 +290,13 @@ export default function AdminWithdrawals() {
   // Mobile money payouts on or off, and today's cedi rate (null if the check failed)
   const [momo, setMomo] = useState<MomoCheck | null>(null)
 
-  const loadMomo = () => apiRequest<MomoCheck>('/admin/momo/check').then(setMomo).catch(() => setMomo(null))
+  // What's in our Flutterwave wallets (null while loading or if it failed)
+  const [flw, setFlw] = useState<FlwBalances | null>(null)
+
+  const loadMomo = () => {
+    apiRequest<MomoCheck>('/admin/momo/check').then(setMomo).catch(() => setMomo(null))
+    apiRequest<FlwBalances>('/admin/flutterwave/balances').then(setFlw).catch(() => setFlw(null))
+  }
   useEffect(() => { loadMomo() }, [])
 
   const load = async (s = status, p = page) => {
@@ -389,6 +402,17 @@ export default function AdminWithdrawals() {
         </div>
 
         {notice && <div className="aw-msg" role="status"><span>{notice}</span><button onClick={() => setNotice('')} aria-label="Dismiss"><i className="ti ti-x" /></button></div>}
+
+        {flw && (
+          <div className="aw-totals" aria-label="Flutterwave balance">
+            <span><i className="ti ti-building-bank" /> Flutterwave NGN {'error' in flw.ngn ? <>couldn't be read</> : <b>{money(flw.ngn.available, 'NGN')}</b>}</span>
+            <span>GHS {'error' in flw.ghs ? <>couldn't be read</> : <b>{formatCedi(flw.ghs.available)}</b>}</span>
+            <span>To pay <b>{money(flw.waiting.toPay, 'NGN')}</b> · {flw.waiting.count} waiting{flw.waiting.momo.count ? ` (${flw.waiting.momo.count} mobile money)` : ''}</span>
+          </div>
+        )}
+        {flw && flw.warnings.length > 0 && (
+          <p className="aw-auto review" role="alert"><i className="ti ti-alert-triangle" /><span>{flw.warnings.join(' ')}</span></p>
+        )}
 
         {status === 'PROCESSING' && data && ((data.totals || []).length > 0 || momo) && (
           <div className="aw-totals">
