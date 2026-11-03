@@ -5,6 +5,7 @@ import { apiRequest } from '../lib/api'
 import { useAuth } from '../context/AuthContext'
 import '../styles/messages.css'
 import { sized } from '../lib/img'
+import { shrinkImage } from '../lib/shrinkImage'
 
 type Person = { id: string; username: string | null; name: string; avatarUrl: string | null }
 // The store product a chat is about ("Contact seller" on a product page)
@@ -12,7 +13,17 @@ type ChatProduct = { id: string; name: string; image: string; price: number; cur
 type Conv = { id: string; participants: Person[]; lastMessage: { content: string; createdAt: string; senderId: string } | null; unread: number; updatedAt: string; product?: ChatProduct | null
   // A private job chat (Selection jobs): the job it's about
   job?: { id: string; title: string } | null }
-type Msg = { id: string; content: string; createdAt: string; senderId: string }
+// Files sent with a message: links from private storage that last an hour
+type MsgFile = { name: string; type: string; size: number; isImage: boolean; url: string | null }
+type Msg = { id: string; content: string; createdAt: string; senderId: string; files?: MsgFile[] }
+type Typing = { id: string; name: string }
+
+// What can be sent (backend chatFiles.service): photos, PDF, Word, Excel, text; 4 files of 10 MB
+const MAX_FILES = 4
+const MAX_FILE_BYTES = 10 * 1024 * 1024
+const ACCEPT = 'image/jpeg,image/png,image/webp,image/gif,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/plain,.doc,.docx,.xls,.xlsx,.txt,.pdf'
+const fileSize = (b: number) => (b >= 1024 * 1024 ? `${(b / 1024 / 1024).toFixed(1)} MB` : `${Math.max(1, Math.round(b / 1024))} KB`)
+const fileIcon = (type: string) => (type === 'application/pdf' ? 'ti-file-type-pdf' : /sheet|excel/.test(type) ? 'ti-file-spreadsheet' : 'ti-file-text')
 
 const shortTime = (d: string) => {
   const t = new Date(d)
@@ -51,6 +62,14 @@ export default function Messages() {
   const [err, setErr] = useState('')
   const threadRef = useRef<HTMLDivElement>(null)
   const stick = useRef(true)
+  // Files picked to send with the next message, and the other person typing
+  const [files, setFiles] = useState<File[]>([])
+  const [typing, setTyping] = useState<Typing[]>([])
+  const fileInput = useRef<HTMLInputElement>(null)
+  const lastTypingSent = useRef(0)
+  const lastMsgId = useRef<string | null>(null)
+  const previews = useMemo(() => files.map((f) => (f.type.startsWith('image/') ? URL.createObjectURL(f) : '')), [files])
+  useEffect(() => () => previews.forEach((u) => u && URL.revokeObjectURL(u)), [previews])
 
   const loadConvs = useCallback(() => {
     apiRequest<Conv[]>('/messages').then((d) => setConvs(Array.isArray(d) ? d : [])).catch(() => setConvs((c) => c || []))
@@ -69,18 +88,53 @@ export default function Messages() {
   }, [loadConvs])
 
   useEffect(() => {
-    setMsgs(null); setErr(''); stick.current = true
+    setMsgs(null); setErr(''); setTyping([]); setFiles([]); stick.current = true; lastMsgId.current = null
     if (!openId) return
     loadThread(openId)
-    const t = setInterval(() => loadThread(openId), 10000)
-    return () => clearInterval(t)
+    // Every few seconds a light check: who's typing, and whether a new message
+    // arrived (only then is the whole chat loaded again). A full reload every
+    // 30 seconds as a backstop.
+    const check = () => {
+      if (document.hidden) return
+      apiRequest<{ typing: Typing[]; lastMessageId: string | null }>(`/messages/${openId}/status`)
+        .then((d) => {
+          setTyping(Array.isArray(d?.typing) ? d.typing : [])
+          if (d?.lastMessageId && d.lastMessageId !== lastMsgId.current) loadThread(openId)
+        })
+        .catch(() => setTyping([]))
+    }
+    const t = setInterval(check, 3000)
+    const full = setInterval(() => { if (!document.hidden) loadThread(openId) }, 30000)
+    return () => { clearInterval(t); clearInterval(full) }
   }, [openId, loadThread])
 
   // Keep the newest message in view unless the reader scrolled up
   useEffect(() => {
+    lastMsgId.current = msgs?.length ? msgs[msgs.length - 1].id : null
     const el = threadRef.current
     if (el && stick.current) el.scrollTop = el.scrollHeight
-  }, [msgs])
+  }, [msgs, typing.length])
+
+  // Tell the other person we're typing, at most every 3 seconds
+  const onDraft = (value: string) => {
+    setDraft(value)
+    if (!openId || !value.trim() || Date.now() - lastTypingSent.current < 3000) return
+    lastTypingSent.current = Date.now()
+    apiRequest(`/messages/${openId}/typing`, { method: 'POST' }).catch(() => {})
+  }
+
+  const pickFiles = (list: FileList | null) => {
+    if (!list?.length) return
+    const picked = Array.from(list)
+    const tooBig = picked.find((f) => f.size > MAX_FILE_BYTES && !f.type.startsWith('image/'))
+    if (tooBig) { setErr(`${tooBig.name} is over 10 MB.`); return }
+    setErr('')
+    setFiles((cur) => {
+      const next = [...cur, ...picked]
+      if (next.length > MAX_FILES) setErr(`You can send up to ${MAX_FILES} files at a time.`)
+      return next.slice(0, MAX_FILES)
+    })
+  }
 
   useEffect(() => {
     if (!productParam) { setPendingProduct(null); return }
@@ -112,12 +166,27 @@ export default function Messages() {
 
   const send = async () => {
     const content = draft.trim()
-    if (!content || (!openId && !newTo) || sending) return
+    if ((!content && !files.length) || (!openId && !newTo) || sending) return
     setSending(true); setErr('')
     try {
       const about = productParam ? { productId: productParam } : {}
-      const sent = await apiRequest<{ conversationId?: string }>('/messages', { method: 'POST', body: JSON.stringify(openId ? { conversationId: openId, content, ...about } : { recipientId: newTo!.id, content, ...about }) })
-      setDraft('')
+      let sent: { conversationId?: string } | undefined
+      if (files.length) {
+        // Big phone photos are made smaller first (other files go as they are)
+        const ready = await Promise.all(files.map((f) => (f.type.startsWith('image/') && f.type !== 'image/gif'
+          ? shrinkImage(f, { maxBytes: MAX_FILE_BYTES, label: f.name }).catch(() => f) : Promise.resolve(f))))
+        const big = ready.find((f) => f.size > MAX_FILE_BYTES)
+        if (big) throw new Error(`${big.name} is over 10 MB.`)
+        const fd = new FormData()
+        if (openId) fd.append('conversationId', openId); else fd.append('recipientId', newTo!.id)
+        fd.append('content', content)
+        if (productParam) fd.append('productId', productParam)
+        ready.forEach((f) => fd.append('files', f, f.name))
+        sent = await apiRequest<{ conversationId?: string }>('/messages', { method: 'POST', body: fd, timeoutMs: 180000 })
+      } else {
+        sent = await apiRequest<{ conversationId?: string }>('/messages', { method: 'POST', body: JSON.stringify(openId ? { conversationId: openId, content, ...about } : { recipientId: newTo!.id, content, ...about }) })
+      }
+      setDraft(''); setFiles([]); lastTypingSent.current = 0
       stick.current = true
       if (!openId && sent?.conversationId) { setNewTo(null); setParams({ c: sent.conversationId }, { replace: true }) }
       else if (productParam && openId) setParams({ c: openId }, { replace: true })
@@ -202,25 +271,53 @@ export default function Messages() {
                         <div key={m.id} style={{ display: 'contents' }}>
                           {showDay && <div className="ms-day">{new Date(m.createdAt).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</div>}
                           <div className={`ms-msg ${m.senderId === user?.id ? 'me' : ''}`}>
-                            <Linkified text={m.content} />
+                            {!!m.files?.length && (
+                              <div className="ms-files">
+                                {m.files.map((f, i) => (f.isImage && f.url
+                                  ? <a key={i} href={f.url} target="_blank" rel="noopener noreferrer"><img className="ms-file-img" src={f.url} alt={f.name} loading="lazy" /></a>
+                                  : <a key={i} className="ms-file" href={f.url || undefined} target="_blank" rel="noopener noreferrer" download={f.name}>
+                                      <i className={`ti ${fileIcon(f.type)}`} aria-hidden="true" /><span>{f.name}</span><small>{fileSize(f.size)}</small>
+                                    </a>))}
+                              </div>
+                            )}
+                            {m.content && <Linkified text={m.content} />}
                             <time>{new Date(m.createdAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}</time>
                           </div>
                         </div>
                       )
                     })}
+                  {typing.length > 0 && (
+                    <div className="ms-typing" aria-live="polite">
+                      <span className="ms-dots" aria-hidden="true"><i /><i /><i /></span>
+                      {typing[0].name} is typing…
+                    </div>
+                  )}
                 </div>
                 {err && <div className="ms-err" role="alert">{err}</div>}
+                {files.length > 0 && (
+                  <div className="ms-pending">
+                    {files.map((f, i) => (
+                      <span key={i} className="ms-chip">
+                        {previews[i] ? <img src={previews[i]} alt="" /> : <i className={`ti ${fileIcon(f.type)}`} aria-hidden="true" />}
+                        <span>{f.name}</span>
+                        <button type="button" aria-label={`Remove ${f.name}`} onClick={() => setFiles((l) => l.filter((_, j) => j !== i))}><i className="ti ti-x" /></button>
+                      </span>
+                    ))}
+                  </div>
+                )}
                 <div className="ms-compose">
+                  <input ref={fileInput} type="file" multiple accept={ACCEPT} hidden onChange={(e) => { pickFiles(e.target.files); e.target.value = '' }} />
+                  <button type="button" className="ms-attach" onClick={() => fileInput.current?.click()} disabled={sending || files.length >= MAX_FILES} aria-label="Attach photos or files" title="Attach photos or files"><i className="ti ti-paperclip" /></button>
                   <textarea
                     value={draft}
                     maxLength={5000}
                     rows={1}
-                    placeholder="Write a message"
+                    placeholder={files.length ? 'Add a message (optional)' : 'Write a message'}
                     aria-label="Message"
-                    onChange={(e) => setDraft(e.target.value)}
+                    onChange={(e) => onDraft(e.target.value)}
                     onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } }}
                   />
-                  <button className="ms-send" onClick={send} disabled={!draft.trim() || sending}><i className="ti ti-send" /> Send</button>
+                  <button className="ms-send" onClick={send} disabled={(!draft.trim() && !files.length) || sending}><i className="ti ti-send" /> {sending ? 'Sending…' : 'Send'}</button>
                 </div>
               </>
             )}
