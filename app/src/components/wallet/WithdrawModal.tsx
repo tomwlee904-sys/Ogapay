@@ -12,14 +12,15 @@ import { formatCedi } from '../../lib/money'
 import { MIN_WITHDRAW_NGN, kycOf, maskAcct, money, naira, newKey, ngnWithdrawFee, shortAddr, whenAgain, withdrawLimit, type Allowance, type Balances, type Bank, nextPayoutDay, payoutDayLabel } from '../../lib/wallet'
 import InfoTip from '../InfoTip'
 
-type Done = { kind: 'bank'; net: number; bank: Bank; reference: string; payDay: Date; teamCheck?: boolean } | { kind: 'momo'; net: number; to: string; reference: string; payDay: Date } | { kind: 'crypto'; amount: number; currency: string; to: string; reference: string; pending: boolean }
+type Done = { kind: 'bank'; net: number; bank: Bank; reference: string; payDay: Date; teamCheck?: boolean } | { kind: 'momo'; net: number; to: string; reference: string; payDay: Date; teamPays?: boolean } | { kind: 'crypto'; amount: number; currency: string; to: string; reference: string; pending: boolean }
 
 // Ghana mobile money networks (backend momo.service NETWORKS)
 const MOMO_NETWORKS = [['MTN', 'MTN MoMo'], ['VODAFONE', 'Telecel Cash'], ['AIRTELTIGO', 'AirtelTigo Money']] as const
 
 // Withdraw to a bank account (paid every Thursday, automatically when the account
 // is in their own name: backend payout.service.js), to mobile money for members in
-// Ghana (paid on Thursdays in cedis: backend momo.service.js) or to a Solana
+// Ghana (paid in cedis by our team, usually within a week, until the server sends
+// them on Thursdays: backend momo.service.js) or to a Solana
 // wallet (sent straight away). Bank accounts are the saved, verified
 // ones: the old form took a typed bank name with no bank code, so payouts had to
 // be matched by hand.
@@ -118,13 +119,13 @@ export default function WithdrawModal({ onClose, onDone, balances: given }: { on
         setDone({ kind: 'bank', net: Number(r?.netAmount ?? amt - fee), bank, reference: r?.reference || '', payDay: r?.payoutDate ? new Date(r.payoutDate) : nextPayoutDay(), teamCheck: !!r?.teamCheck })
       } else if (tab === 'momo') {
         if (!momoNumber.trim()) throw new Error('Type your mobile money number.')
-        const r = await apiRequest<{ reference: string; netAmount?: number; payoutDate?: string }>('/wallet/withdraw', {
+        const r = await apiRequest<{ reference: string; netAmount?: number; payoutDate?: string; teamPays?: boolean }>('/wallet/withdraw', {
           method: 'POST',
           headers: { 'Idempotency-Key': key.current },
           body: JSON.stringify({ amount: amt, currency: 'NGN', method: 'MOMO', momoNetwork, momoNumber: momoNumber.trim(), ...(otp && { otp }) }),
         })
         const net = MOMO_NETWORKS.find(([v]) => v === momoNetwork)?.[1] || 'mobile money'
-        setDone({ kind: 'momo', net: Number(r?.netAmount ?? amt - fee), to: `${net} •••• ${momoNumber.replace(/\D/g, '').slice(-4)}`, reference: r?.reference || '', payDay: r?.payoutDate ? new Date(r.payoutDate) : nextPayoutDay() })
+        setDone({ kind: 'momo', net: Number(r?.netAmount ?? amt - fee), to: `${net} •••• ${momoNumber.replace(/\D/g, '').slice(-4)}`, reference: r?.reference || '', payDay: r?.payoutDate ? new Date(r.payoutDate) : nextPayoutDay(), teamPays: !!r?.teamPays || !r?.payoutDate })
       } else {
         const to = address.trim()
         if (!/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(to)) throw new Error("That isn't a Solana wallet address.")
@@ -152,7 +153,9 @@ export default function WithdrawModal({ onClose, onDone, balances: given }: { on
           {done.kind === 'momo' ? (
             <>
               <h3>Withdrawal requested</h3>
-              <p>{naira(done.net)} will be sent to your {done.to} on <b>{payoutDayLabel(done.payDay)}</b>, paid in cedis at the rate on the day. You'll see it in your history as Processing until it's paid.</p>
+              {done.teamPays
+                ? <p>{naira(done.net)} will be sent to your {done.to}, paid in cedis at the rate on the day. Our team pays it, usually within a week. You'll see it in your history as Processing until it's paid.</p>
+                : <p>{naira(done.net)} will be sent to your {done.to} on <b>{payoutDayLabel(done.payDay)}</b>, paid in cedis at the rate on the day. You'll see it in your history as Processing until it's paid.</p>}
             </>
           ) : done.kind === 'bank' ? (
             <>
@@ -180,7 +183,7 @@ export default function WithdrawModal({ onClose, onDone, balances: given }: { on
         <div className="dp-lock">
           <i className="ti ti-shield-check" />
           <h3>Verify your identity to withdraw</h3>
-          {ghana ? <p>In Ghana, withdrawals to mobile money need Level 2: send a photo of your Ghana Card and its number in Settings → Verification. Our team checks it, usually within a day. The smallest withdrawal is ₦5,000 (fee 1.5%, at least ₦100), paid every Thursday in cedis.</p> : <p>Withdrawals need Level 1 verification: a bank account in your name (free) or your NIN. It takes a minute and lets you withdraw up to {naira(withdrawLimit(1), 0)} a day. The smallest withdrawal is ₦5,000 (fee 1.5%, at least ₦100), and bank withdrawals are paid every Thursday.</p>}
+          {ghana ? <p>In Ghana, withdrawals to mobile money need Level 2: send a photo of your Ghana Card and its number in Settings → Verification. Our team checks it, usually within a day. The smallest withdrawal is ₦5,000 (fee 1.5%, at least ₦100), paid in cedis, usually within a week.</p> : <p>Withdrawals need Level 1 verification: a bank account in your name (free) or your NIN. It takes a minute and lets you withdraw up to {naira(withdrawLimit(1), 0)} a day. The smallest withdrawal is ₦5,000 (fee 1.5%, at least ₦100), and bank withdrawals are paid every Thursday.</p>}
           <Link className="ui-btn ui-btn-dark" to="/settings/verification" onClick={onClose}>Verify now</Link>
         </div>
       </Sheet>
@@ -286,7 +289,7 @@ export default function WithdrawModal({ onClose, onDone, balances: given }: { on
             <div className="wl-sum">
               <div><span>Fee (1.5%, min ₦100)</span><b>{naira(fee)}</b></div>
               <div className="total"><span>You receive</span><b>{naira(Math.max(0, amt - fee))}</b></div>
-              {tab === 'momo' && Number.isFinite(ghsNow) && ghsNow > 0 && <div><span>In cedis today</span><b>≈ {formatCedi(ghsNow)}</b></div>}
+              {tab === 'momo' && Number.isFinite(ghsNow) && ghsNow > 0 && <div><span>In cedis today (rough estimate)</span><b>≈ {formatCedi(ghsNow)}</b></div>}
             </div>
           )}
 
@@ -297,7 +300,7 @@ export default function WithdrawModal({ onClose, onDone, balances: given }: { on
             {busy ? 'Sending…' : amt && !problem ? `Withdraw ${money(amt, cur)}` : 'Withdraw'}
           </button>
           <p className="wl-note" style={{ margin: '12px 0 0', textAlign: 'center' }}>
-            {tab === 'momo' ? `Mobile money withdrawals are paid every Thursday (next: ${payoutDayLabel(nextPayoutDay())}), in cedis at the rate on the day. Use your own number. A number used for the first time less than a day before Thursday waits until the next Thursday.` : tab === 'bank' ? `Bank withdrawals are paid every Thursday (next: ${payoutDayLabel(nextPayoutDay())}). Money only goes to a bank account in your own name; if your bank spells it differently, our team checks it first.` : 'Sent on Solana straight away. Check the address: crypto sent to a wrong address can’t be recovered.'}
+            {tab === 'momo' ? 'Our team pays mobile money withdrawals, usually within a week, in cedis at the rate on the day the money is sent, so the cedis above are only a rough estimate. Use your own number. A number used for the first time waits at least a day.' : tab === 'bank' ? `Bank withdrawals are paid every Thursday (next: ${payoutDayLabel(nextPayoutDay())}). Money only goes to a bank account in your own name; if your bank spells it differently, our team checks it first.` : 'Sent on Solana straight away. Check the address: crypto sent to a wrong address can’t be recovered.'}
             {tier < 3 && <> <Link to="/settings/verification" onClick={onClose}>Raise your limit</Link></>}
           </p>
         </>

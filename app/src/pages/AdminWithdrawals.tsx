@@ -2,10 +2,14 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { apiRequest } from '../lib/api'
+import { formatCedi } from '../lib/money'
 
 /* Admin: settle queued withdrawals. Bank withdrawals only hold the user's
    money; an admin sends the transfer by hand, then marks it paid (the money
-   leaves the wallet) or rejects it (the hold is released). */
+   leaves the wallet) or rejects it (the hold is released). Ghana mobile money
+   can also be sent by Flutterwave from here (backend POST
+   /admin/withdrawals/:id/send) when mobile money payouts are on, and any pending
+   row can be marked "paying by hand" so nothing sends it automatically. */
 
 type Status = 'PROCESSING' | 'COMPLETED' | 'FAILED'
 type Kind = 'manual' | 'flutterwave' | 'crypto'
@@ -29,8 +33,17 @@ interface Withdrawal {
   user: { id: string; email: string; name: string; kycTier: number } | null
   // Pending bank withdrawals: other open accounts that use the same bank account
   sharedWith?: { id: string; username: string }[]
+  // An admin is paying it by hand: the Thursday run and Send by Flutterwave skip it
+  payingByHand?: { by: string | null; at: string | null } | null
+  // Flutterwave may already have this transfer: never sent again automatically
+  neverResend?: string | null
+  // Sent, but no final answer from Flutterwave for 3 days
+  stuck?: boolean
 }
 interface Page { items: Withdrawal[]; total: number; page: number; pages: number; totals: { currency: string; count: number; amount: number }[] }
+// GET /admin/momo/check: are mobile money payouts on, and today's naira per cedi
+interface MomoCheck { momoPayouts: boolean; autoPayouts: boolean; ok: boolean; ngnPerGhs?: number; error?: string }
+interface SendResult { state: 'sent' | 'sending' | 'review'; transferId?: number | string | null; reason?: string | null; ghs?: number }
 
 const TABS: [Status, string][] = [['PROCESSING', 'Pending'], ['COMPLETED', 'Paid'], ['FAILED', 'Rejected']]
 
@@ -39,6 +52,11 @@ const KIND: Record<Kind, { label: string; icon: string; hint: string }> = {
   flutterwave: { label: 'Flutterwave transfer', icon: 'send', hint: 'Sent automatically. Check its status in Flutterwave before settling it here.' },
   crypto: { label: 'Crypto, not confirmed', icon: 'currency-solana', hint: 'Already sent and debited. Check the signature: mark paid if it landed, reject only if it never did.' },
 }
+// Ghana mobile money rows, whatever their kind
+const MOMO_KIND = { label: 'Mobile money', icon: 'device-mobile' }
+const momoHint = (on: boolean) => on
+  ? 'The money is held. Check the number with the member, then press Send by Flutterwave to pay it in cedis, or pay it by hand and mark it paid.'
+  : 'The money is held. Mobile money payouts are off, so send it by hand, then mark it paid.'
 
 const money = (n: number, cur: string) =>
   cur === 'NGN' ? `₦${n.toLocaleString('en-NG', { maximumFractionDigits: 2 })}` : `${n.toLocaleString('en-US', { maximumFractionDigits: 6 })} ${cur}`
@@ -60,34 +78,69 @@ function Copy({ text }: { text: string }) {
   )
 }
 
-function Row({ w, onSettled }: { w: Withdrawal; onSettled: (id: string, msg: string) => void }) {
-  const [mode, setMode] = useState<null | 'approve' | 'reject'>(null)
+function Row({ w, momo, onSettled, onChanged }: { w: Withdrawal; momo: MomoCheck | null; onSettled: (id: string, msg: string) => void; onChanged: (msg?: string) => void }) {
+  const [mode, setMode] = useState<null | 'approve' | 'reject' | 'send' | 'back'>(null)
   const [ref, setRef] = useState('')
   const [reason, setReason] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
-  const k = KIND[w.kind]
   const d = w.destination
+  const k = d.momo ? { ...MOMO_KIND, hint: momoHint(!!momo?.momoPayouts) } : KIND[w.kind]
   const sig = w.kind === 'crypto' ? w.externalRef : null
   const auto = w.autoPayout || null
   // An automatic transfer is out: settling it here too would pay twice (the server refuses)
   const inFlight = auto?.state === 'sending' || auto?.state === 'sent'
+  const byHand = !!w.payingByHand
+  // Send by Flutterwave: pending mobile money, while the server says mobile money payouts are on
+  const canSend = !!d.momo && !!momo?.momoPayouts && !inFlight && !byHand && !w.neverResend
+  // What the payout is worth in cedis at Flutterwave's rate now (before it's sent)
+  const ghsToday = d.momo && !d.momo.ghs && momo?.ok && momo.ngnPerGhs ? Math.floor((w.payout / momo.ngnPerGhs) * 100) / 100 : null
+  const who = w.user?.name || 'the user'
 
   const settle = async () => {
     if (mode === 'reject' && !reason.trim()) { setError('Give a reason. The user will see it.'); return }
     setBusy(true); setError('')
     try {
+      if (mode === 'send' || mode === 'back') {
+        // The row stays pending: reload the list to show where it is now
+        if (mode === 'send') {
+          const r = await apiRequest<SendResult>(`/admin/withdrawals/${w.id}/send`, { method: 'POST', body: JSON.stringify({}) })
+          onChanged(r.state === 'sent'
+            ? `Sent${r.ghs ? ` ${formatCedi(r.ghs)}` : ''} to ${d.momo?.network} ${d.momo?.number} by Flutterwave. It settles by itself when Flutterwave confirms.`
+            : r.state === 'review' ? `Flutterwave refused it, so nothing was sent. ${r.reason || ''}`
+              : r.reason || 'Waiting for Flutterwave to confirm.')
+        } else {
+          await apiRequest(`/admin/withdrawals/${w.id}/back-to-review`, { method: 'POST', body: JSON.stringify({}) })
+          onChanged('Moved back to review. Check it on the Flutterwave dashboard before marking it paid or rejecting it.')
+        }
+        setMode(null); setBusy(false)
+        return
+      }
       await apiRequest(`/admin/withdrawals/${w.id}/${mode}`, {
         method: 'POST',
         body: JSON.stringify(mode === 'approve' ? { payoutRef: ref.trim() } : { reason: reason.trim() }),
       })
       onSettled(w.id, mode === 'approve'
-        ? `Marked ${money(w.amount, w.currency)} as paid to ${w.user?.name || 'the user'}.`
-        : `Rejected. ${money(w.amount, w.currency)} is back in ${w.user?.name || 'the user'}'s wallet.`)
+        ? `Marked ${money(w.amount, w.currency)} as paid to ${who}.`
+        : `Rejected. ${money(w.amount, w.currency)} is back in ${who}'s wallet.`)
     } catch (e: any) {
-      setError(e?.message || 'Could not settle this withdrawal')
+      setError(e?.message || 'Could not do that. Refresh and try again.')
       setBusy(false)
+      // A refused Send is saved on the row as the reason: show it
+      if (mode === 'send') onChanged()
     }
+  }
+
+  // "Paying by hand" on or off
+  const toggleByHand = async () => {
+    setBusy(true); setError('')
+    try {
+      await apiRequest(`/admin/withdrawals/${w.id}/by-hand`, { method: 'POST', body: JSON.stringify({ on: !byHand }) })
+      onChanged(byHand ? 'No longer marked as paying by hand.' : `Marked as paying by hand. Nothing sends it automatically now; mark it paid once ${who} has the money.`)
+    } catch (e: any) {
+      setError(e?.message || 'Could not change it. Refresh and try again.')
+    }
+    setBusy(false)
   }
 
   return (
@@ -109,9 +162,9 @@ function Row({ w, onSettled }: { w: Withdrawal; onSettled: (id: string, msg: str
       <div className="aw-dest">
         {d.momo ? (
           <>
-            <span><i className="ti ti-device-mobile" />{d.momo.network} (Ghana)</span>
+            <span><i className="ti ti-device-mobile" />Mobile money · {d.momo.network} (Ghana)</span>
             <span className="aw-mono">{d.momo.number}<Copy text={d.momo.number} /></span>
-            <span>{d.accountName || 'No name'}{d.momo.ghs ? ` · GH₵${d.momo.ghs.toFixed(2)}` : ''}</span>
+            <span>{d.accountName || 'No name'}{d.momo.ghs ? ` · GH₵${d.momo.ghs.toFixed(2)}` : ghsToday ? ` · about ${formatCedi(ghsToday)} at today's rate` : ''}</span>
           </>
         ) : d.accountNumber ? (
           <>
@@ -131,28 +184,54 @@ function Row({ w, onSettled }: { w: Withdrawal; onSettled: (id: string, msg: str
           <span><b>Shares a bank account with {w.sharedWith.map((u, i) => <span key={u.id}>{i ? ', ' : ''}<Link to={`/user/${encodeURIComponent(u.username)}`}>@{u.username}</Link></span>)}.</b> Each person may have one account. Check <Link to="/admin/linked-accounts">Linked accounts</Link> before paying.</span>
         </p>
       )}
-      <p className="aw-kind"><i className={`ti ti-${k.icon}`} /><b>{k.label}.</b> {w.status === 'PROCESSING' && !auto ? k.hint : ''}</p>
-      {w.status === 'PROCESSING' && auto && (
-        <p className={`aw-auto ${auto.state}`}>
-          <i className={`ti ti-${auto.state === 'review' ? 'alert-triangle' : 'send'}`} />
+      <p className="aw-kind"><i className={`ti ti-${k.icon}`} /><b>{k.label}.</b> {w.status === 'PROCESSING' && !auto && !byHand ? k.hint : ''}</p>
+      {w.status === 'PROCESSING' && byHand && (
+        <p className="aw-auto">
+          <i className="ti ti-hand-stop" />
+          <span><b>Paying by hand.</b> The Thursday payout and Send by Flutterwave leave it alone. Mark it paid once the money has arrived.</span>
+        </p>
+      )}
+      {w.status === 'PROCESSING' && auto && !byHand && (
+        <p className={`aw-auto ${auto.state === 'review' || w.stuck ? 'review' : auto.state}`}>
+          <i className={`ti ti-${auto.state === 'review' || w.stuck ? 'alert-triangle' : 'send'}`} />
           {auto.state === 'review'
-            ? <span><b>Needs you:</b> {auto.reason || 'The automatic payout skipped it.'} Send it by hand and mark it paid, or reject it.</span>
-            : auto.state === 'sent'
-              ? <span><b>Sent by the Thursday payout</b>{auto.transferId ? ` (Flutterwave transfer ${auto.transferId})` : ''}. It settles by itself when Flutterwave confirms.</span>
-              : <span><b>Being sent by the Thursday payout.</b> {auto.reason || ''} It settles by itself when Flutterwave confirms.</span>}
+            ? <span><b>Needs you:</b> {auto.reason || 'The automatic payout skipped it.'} {canSend ? 'Press Send by Flutterwave, or send it by hand and mark it paid, or reject it.' : 'Send it by hand and mark it paid, or reject it.'}</span>
+            : w.stuck
+              ? <span><b>No final answer from Flutterwave for 3 days</b>{auto.transferId ? ` (Flutterwave transfer ${auto.transferId})` : ''}. The money is still held. Check reference {w.reference} on the Flutterwave dashboard; if it isn't going through, move it back to review.</span>
+              : auto.state === 'sent'
+                ? <span><b>Sent by Flutterwave</b>{auto.transferId ? ` (Flutterwave transfer ${auto.transferId})` : ''}. It settles by itself when Flutterwave confirms.</span>
+                : <span><b>Being sent by Flutterwave.</b> {auto.reason || ''} It settles by itself when Flutterwave confirms.</span>}
         </p>
       )}
       <p className="aw-ref aw-mono">{w.reference}{w.status !== 'PROCESSING' && w.externalRef && !sig ? ` · payout ref ${w.externalRef}` : ''}</p>
       {w.status !== 'PROCESSING' && w.note && <p className="aw-note">{w.note}</p>}
 
-      {w.status === 'PROCESSING' && !inFlight && (mode === null ? (
-        <div className="aw-actions">
-          <button className="ui-btn ui-btn-dark" onClick={() => setMode('approve')}><i className="ti ti-check" /> Mark as paid</button>
-          <button className="ui-btn ui-btn-ghost" onClick={() => setMode('reject')}><i className="ti ti-x" /> Reject</button>
-        </div>
+      {w.status === 'PROCESSING' && (!inFlight || w.stuck) && (mode === null ? (
+        inFlight ? (
+          <div className="aw-actions">
+            <button className="ui-btn ui-btn-ghost" onClick={() => setMode('back')}><i className="ti ti-arrow-back-up" /> Move back to review</button>
+          </div>
+        ) : (
+          <>
+            <div className="aw-actions">
+              {canSend && <button className="ui-btn ui-btn-dark" onClick={() => setMode('send')}><i className="ti ti-send" /> Send by Flutterwave</button>}
+              <button className={`ui-btn ${canSend ? 'ui-btn-ghost' : 'ui-btn-dark'}`} onClick={() => setMode('approve')}><i className="ti ti-check" /> Mark as paid</button>
+              <button className="ui-btn ui-btn-ghost" onClick={() => setMode('reject')}><i className="ti ti-x" /> Reject</button>
+              <button className={`ui-btn ui-btn-ghost aw-hand${byHand ? ' on' : ''}`} aria-pressed={byHand} onClick={toggleByHand} disabled={busy}
+                title="Mark it while you pay it outside OgaPay, so nothing sends it automatically">
+                <i className={`ti ti-${byHand ? 'check' : 'hand-stop'}`} /> Paying by hand
+              </button>
+            </div>
+            {error && <p className="aw-error" role="alert">{error}</p>}
+          </>
+        )
       ) : (
         <div className="aw-confirm">
-          {mode === 'approve' ? (
+          {mode === 'send' && d.momo ? (
+            <p>Flutterwave sends <b>{ghsToday ? `about ${formatCedi(ghsToday)}` : 'cedis'}</b> (for {money(w.payout, w.currency)}) to <b>{d.momo.network} {d.momo.number}</b>{d.accountName ? `, ${d.accountName}` : ''}. The exact cedis use Flutterwave's rate when it's sent. Only send after checking the number with the member.</p>
+          ) : mode === 'back' ? (
+            <p>Only do this after checking reference <b>{w.reference}</b> on the Flutterwave dashboard. Flutterwave may still pay it, so it will never be sent again automatically. You can then mark it paid or reject it.</p>
+          ) : mode === 'approve' ? (
             <>
               <p>Only confirm after <b>{money(w.payout, w.currency)}</b> has reached {d.momo ? `${d.momo.network} ${d.momo.number}` : d.accountNumber ? `${d.bankName || 'the bank'} ${d.accountNumber}` : 'the address above'}. {money(w.amount, w.currency)} then leaves the user's wallet.</p>
               <label htmlFor={`ref-${w.id}`}>Payout reference (optional)</label>
@@ -167,8 +246,8 @@ function Row({ w, onSettled }: { w: Withdrawal; onSettled: (id: string, msg: str
           )}
           {error && <p className="aw-error" role="alert">{error}</p>}
           <div className="aw-actions">
-            <button className={`ui-btn ${mode === 'approve' ? 'ui-btn-dark' : 'aw-danger'}`} onClick={settle} disabled={busy}>
-              {busy ? 'Saving…' : mode === 'approve' ? 'Confirm paid' : 'Confirm reject'}
+            <button className={`ui-btn ${mode === 'reject' ? 'aw-danger' : 'ui-btn-dark'}`} onClick={settle} disabled={busy}>
+              {busy ? (mode === 'send' ? 'Sending…' : 'Saving…') : mode === 'send' ? 'Confirm send' : mode === 'back' ? 'Move back to review' : mode === 'approve' ? 'Confirm paid' : 'Confirm reject'}
             </button>
             <button className="ui-btn ui-btn-ghost" onClick={() => { setMode(null); setError('') }} disabled={busy}>Cancel</button>
           </div>
@@ -185,6 +264,11 @@ export default function AdminWithdrawals() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
+  // Mobile money payouts on or off, and today's cedi rate (null if the check failed)
+  const [momo, setMomo] = useState<MomoCheck | null>(null)
+
+  const loadMomo = () => apiRequest<MomoCheck>('/admin/momo/check').then(setMomo).catch(() => setMomo(null))
+  useEffect(() => { loadMomo() }, [])
 
   const load = async (s = status, p = page) => {
     setLoading(true); setError('')
@@ -202,6 +286,11 @@ export default function AdminWithdrawals() {
   const onSettled = (id: string, msg: string) => {
     setNotice(msg)
     setData(d => d && { ...d, items: d.items.filter(i => i.id !== id), total: d.total - 1 })
+    load(status, page)
+  }
+  // Sent, marked, or refused: the row stays, so reload to show where it is now
+  const onChanged = (msg?: string) => {
+    if (msg) setNotice(msg)
     load(status, page)
   }
 
@@ -252,6 +341,7 @@ export default function AdminWithdrawals() {
         .aw-confirm label{font-size:12px;font-weight:500}
         .aw-confirm textarea{resize:vertical;min-height:64px;padding-top:10px}
         .aw-danger{background:var(--red);color:#fff}
+        .aw-hand.on{border-color:var(--text);color:var(--text)}
         .aw-error{color:var(--red) !important}
         .aw-msg{padding:10px 14px;border-radius:12px;font-size:13px;margin-bottom:14px;background:color-mix(in srgb,var(--green) 12%,transparent);color:var(--text);display:flex;justify-content:space-between;gap:10px}
         .aw-msg button{background:none;border:0;color:var(--text2);cursor:pointer}
@@ -269,9 +359,9 @@ export default function AdminWithdrawals() {
         <div className="aw-head">
           <div>
             <h1>Withdrawals</h1>
-            <p>Bank withdrawals are paid automatically every Thursday at 10am to accounts in the person's own name. The ones that need you wait here: send them by hand and mark them paid, or reject to return the money.</p>
+            <p>Bank withdrawals are paid automatically every Thursday at 10am to accounts in the person's own name. The ones that need you wait here: send them by hand and mark them paid, or reject to return the money. Ghana mobile money can be sent from here with Send by Flutterwave while mobile money payouts are on.</p>
           </div>
-          <button className="ui-btn ui-btn-ghost" onClick={() => load()} disabled={loading}><i className="ti ti-refresh" /> Refresh</button>
+          <button className="ui-btn ui-btn-ghost" onClick={() => { load(); loadMomo() }} disabled={loading}><i className="ti ti-refresh" /> Refresh</button>
         </div>
 
         <div className="aw-tabs" role="tablist">
@@ -284,9 +374,10 @@ export default function AdminWithdrawals() {
 
         {notice && <div className="aw-msg" role="status"><span>{notice}</span><button onClick={() => setNotice('')} aria-label="Dismiss"><i className="ti ti-x" /></button></div>}
 
-        {status === 'PROCESSING' && data && (data.totals || []).length > 0 && (
+        {status === 'PROCESSING' && data && ((data.totals || []).length > 0 || momo) && (
           <div className="aw-totals">
             {(data.totals || []).map(t => <span key={t.currency}><b>{t.count}</b> waiting · <b>{money(t.amount, t.currency)}</b></span>)}
+            {momo && <span>Mobile money payouts <b>{momo.momoPayouts ? 'on' : 'off'}</b>{momo.ok && momo.ngnPerGhs ? <> · <b>₦{momo.ngnPerGhs.toLocaleString('en-NG', { maximumFractionDigits: 2 })}</b> a cedi today</> : momo.error ? ` · no cedi rate (${momo.error})` : ''}</span>}
           </div>
         )}
 
@@ -298,7 +389,7 @@ export default function AdminWithdrawals() {
           <div className="aw-empty">{status === 'PROCESSING' ? 'No withdrawals waiting. All caught up.' : 'Nothing here yet.'}</div>
         ) : (
           <div className="aw-list">
-            {data.items.map(w => <Row key={w.id} w={w} onSettled={onSettled} />)}
+            {data.items.map(w => <Row key={w.id} w={w} momo={momo} onSettled={onSettled} onChanged={onChanged} />)}
           </div>
         )}
 
