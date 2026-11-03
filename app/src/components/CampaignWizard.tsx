@@ -143,7 +143,8 @@ export default function CampaignWizard() {
         maxWorkers: Math.round(maxWorkers),
         currency: "NGN",
         instructions: details.instructions || "",
-        proofRequired: details.proofRequired || undefined,
+        // "Screenshot" forces a screenshot like the Create form's switch (it saved "SCREENSHOT", which nothing checked)
+        proofRequired: details.proofRequired === 'SCREENSHOT' ? 'Screenshot required' : (details.proofRequired || undefined),
         estimatedTime: Number.isInteger(details.estimatedTime) ? details.estimatedTime : undefined,
         minRank: details.minRank || undefined,
         workerRequirement: details.workerRequirement || undefined,

@@ -110,6 +110,7 @@ interface JobData {
   steps: string[]
   requirements: string[]
   proofRequired: string[]
+  trackingCode?: string
   // Social jobs: the payout check, in words from the server (null when none)
   payoutCheck?: { minutes: number; checkable: boolean; note: string } | null
   // Quick social jobs on X: action, price, target post, place hold, batches, progress
@@ -370,7 +371,9 @@ export default function JobDetail() {
       estimatedTime: Number(t.estimatedTime) > 0 ? (Number(t.estimatedTime) >= 60 ? `About ${Math.round(Number(t.estimatedTime) / 60)} h` : `About ${Number(t.estimatedTime)} min`) : '',
       steps: toArray(t.steps, []),
       requirements: toArray(t.requirements || t.qualifications, []),
-      proofRequired: toArray(t.proofRequired || t.proofInstructions, []),
+      proofRequired: toArray(t.proofRequired || t.proofInstructions, []).map((p: string) => (/^\s*screenshot\s*$/i.test(p) ? 'Screenshot required' : p)),
+      // The poster's code for workers to put in their post (Create > Extra options)
+      trackingCode: typeof t.trackingCode === 'string' ? t.trackingCode.trim() : '',
       // Social jobs: the payout check, in words from the server (null when none)
       payoutCheck: t.payoutCheck || null,
       social: t.social || null,
@@ -432,6 +435,9 @@ export default function JobDetail() {
     if (!job || cancelling) return
     // Admins can cancel someone else's untouched job (spam, tests): the money goes back to the poster
     const forPoster = job.posterId !== authUser?.id
+    // The poster is told OgaPay closed it, with this reason
+    const why = forPoster ? window.prompt('Why is OgaPay closing this job? The poster sees this (optional).', '') : ''
+    if (why === null) return
     if (!window.confirm(forPoster && job.currentWorkers
       ? 'Close this job as an admin? Work already approved stays paid. The money for places nobody used, with its share of the fee, goes back to the poster\'s wallet. If someone still holds a place or has work waiting for review, it can\'t be closed yet. This can\'t be undone.'
       : forPoster
@@ -439,7 +445,7 @@ export default function JobDetail() {
       : 'Cancel this job? The money held for it, including the fee, goes back to your wallet. This can\'t be undone.')) return
     setCancelling(true)
     try {
-      await apiRequest(`/escrow/refund/${job.id}`, { method: 'POST' })
+      await apiRequest(`/escrow/refund/${job.id}`, { method: 'POST', body: JSON.stringify(forPoster && why.trim() ? { reason: why.trim() } : {}) })
       setJob({ ...job, status: 'cancelled' })
       refreshUser?.()
       window.alert(forPoster ? 'Job cancelled. The money is back in the poster\'s wallet.' : 'Job cancelled. The money is back in your wallet.')
@@ -1254,6 +1260,12 @@ function WurkJobDetailView(props: any) {
               <>
                 <div className="wjd-sub-title">Proof to send</div>
                 <div className="wjd-body"><p>{proofText}</p></div>
+              </>
+            )}
+            {job.trackingCode && (
+              <>
+                <div className="wjd-sub-title">Code to put in your post</div>
+                <div className="wjd-body"><p>Include <b>{job.trackingCode}</b> in your post or caption, so the poster can find your content.</p></div>
               </>
             )}
 
