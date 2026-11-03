@@ -51,6 +51,8 @@ type Task = {
   excludesTaskIds?: string[]
   // "Member of community": a public job only that community's members can take
   requiredCommunityId?: string | null; communityId?: string | null
+  // Where workers must live (NG, GH); empty = anyone
+  targetCountries?: string[]
   // A contest: entries aren't approved one by one, places are awarded on the job page.
   // prizes: one per place, 1st first (the reward is only the 1st prize)
   isContest?: boolean; randomDraw?: boolean; prizes?: (number | string)[] | null
@@ -285,8 +287,26 @@ function JobDrawer({ task, allTasks, focusId, onClose, onChanged }: { task: Task
       onChanged(); onClose();
     } catch (e: any) { toast(e?.message || "Couldn't raise the pay", "error"); }
   };
+  // Add places to an open job instead of posting it again (backend escrow.service addPlaces)
+  const canAddPlaces = ["OPEN", "IN_PROGRESS", "COOLING_DOWN", "DRAFT"].includes(task.status) && !task.isContest && !task.isSelection && !task.hiredWorkerId && task.socialAction !== "RAID";
+  const addPlaces = async () => {
+    const input = window.prompt(`How many places to add? (it has ${Number(task.maxWorkers) || 1} now, each pays ${money(reward, cur)})`, "10");
+    if (input === null) return;
+    const n = Number(String(input).replace(/[^\d]/g, ""));
+    if (!Number.isInteger(n) || n < 1) { toast("Enter how many places to add", "error"); return; }
+    const extra = reward * n;
+    const fee = Math.round(extra * 10) / 100; // 10%, to the kobo
+    if (!window.confirm(`Add ${n} place${n === 1 ? "" : "s"} at ${money(reward, cur)} each?\n\n${money(extra, cur)} is held for them, plus a ${money(fee, cur)} fee: ${money(extra + fee, cur)} from your wallet.\n\nMoney for places nobody uses comes back when the job closes.`)) return;
+    try {
+      const r = await apiRequest<{ places: number; reopened?: boolean }>(`/tasks/${task.id}/add-places`, { method: "POST", body: JSON.stringify({ places: n }) });
+      toast(`${n} place${n === 1 ? "" : "s"} added. The job now has ${r?.places ?? (Number(task.maxWorkers) || 0) + n}${r?.reopened ? " and is taking people again" : ""}.`, "success");
+      onChanged(); onClose();
+    } catch (e: any) { toast(e?.message || "Couldn't add places", "error"); }
+  };
   const [editing, setEditing] = useState(false);
   const [ed, setEd] = useState({ title: task.title, brief: "", deadline: "" });
+  // Where workers must live: "" anyone, or one country (backend targetCountries)
+  const [edCountry, setEdCountry] = useState<string>(task.targetCountries?.[0] || "");
   // Similar jobs: people who took part in any of them can't take this one (and the other way round)
   const others = allTasks.filter((t) => t.id !== task.id);
   const [similar, setSimilar] = useState<string[]>(task.excludesTaskIds || []);
@@ -304,6 +324,7 @@ function JobDrawer({ task, allTasks, focusId, onClose, onChanged }: { task: Task
     setEd({ title: task.title, brief: (task.description || "").split("\n\n**Attachments**")[0], deadline: task.deadline ? new Date(task.deadline).toISOString().slice(0, 10) : "" });
     setSimilar(task.excludesTaskIds || []);
     setReqCommunity(task.requiredCommunityId || "");
+    setEdCountry(task.targetCountries?.[0] || "");
     setEdErr(""); setEditing(true);
   };
   // Same check as Create job: a job that sends people to a survey, form, site or
@@ -320,6 +341,7 @@ function JobDrawer({ task, allTasks, focusId, onClose, onChanged }: { task: Task
     const body: Record<string, any> = { title, description: brief + attachments, instructions: brief + attachments, excludesTaskIds: similar };
     if (ed.deadline) body.deadline = new Date(ed.deadline + "T23:59:00").toISOString();
     if (canNeedCommunity && reqCommunity !== (task.requiredCommunityId || "")) body.requiredCommunityId = reqCommunity || null;
+    if (edCountry !== (task.targetCountries?.[0] || "")) body.targetCountries = edCountry ? [edCountry] : [];
     setEdBusy(true); setEdErr("");
     try {
       await apiRequest(`/tasks/${task.id}`, { method: "PATCH", body: JSON.stringify(body) });
@@ -356,6 +378,13 @@ function JobDrawer({ task, allTasks, focusId, onClose, onChanged }: { task: Task
               <label className="ui-label" htmlFor="mj-ed-brief">Brief</label>
               <textarea id="mj-ed-brief" className="ui-input mj-edit-brief" maxLength={10000} value={ed.brief} onChange={(e) => setEd({ ...ed, brief: e.target.value })} />
               {linkNeeded && <p className="mj-edit-warn" role="status"><Icon n="link-off" s={15} /> {missingLinkText(linkNeeded)} Paste the full address (https://...) in the brief.</p>}
+              <label className="ui-label" htmlFor="mj-ed-country">Where they live</label>
+              <select id="mj-ed-country" className="ui-input" value={edCountry} onChange={(e) => setEdCountry(e.target.value)}>
+                <option value="">Anyone, anywhere</option>
+                <option value="NG">Only people in Nigeria</option>
+                <option value="GH">Only people in Ghana</option>
+              </select>
+              <p className="mj-edit-note">Only affects people who haven't taken it yet.</p>
               <label className="ui-label" htmlFor="mj-ed-deadline">Closes on (optional)</label>
               <input id="mj-ed-deadline" className="ui-input" type="date" min={new Date(Date.now() + 86400e3).toISOString().slice(0, 10)} value={ed.deadline} onChange={(e) => setEd({ ...ed, deadline: e.target.value })} />
               {canNeedCommunity && (requirable.length > 0 || reqCommunity) && (
@@ -522,6 +551,7 @@ function JobDrawer({ task, allTasks, focusId, onClose, onChanged }: { task: Task
           <button className="ui-btn ui-btn-ghost" disabled={tpl !== ""} onClick={saveAsTemplate}><Icon n={tpl === "saved" ? "check" : "device-floppy"} s={15} /> {tpl === "saving" ? "Saving…" : tpl === "saved" ? "Saved" : "Save as template"}</button>
           {live && !editing && <button className="ui-btn ui-btn-ghost" onClick={startEdit}><Icon n="edit" s={15} /> Edit</button>}
           {canRaise && !editing && <button className="ui-btn ui-btn-ghost" onClick={raisePay}><Icon n="trending-up" s={15} /> Raise pay</button>}
+          {canAddPlaces && !editing && <button className="ui-btn ui-btn-ghost" onClick={addPlaces}><Icon n="users-plus" s={15} /> Add places</button>}
           {canRaisePrizes && !editing && <Link className="ui-btn ui-btn-ghost" to={`/tasks/${task.id}?raise=1`}><Icon n="trending-up" s={15} /> Raise prizes</Link>}
           {(task.status === "OPEN" || task.status === "DRAFT") && (
             <button className="ui-btn ui-btn-ghost" onClick={() => setPaused(task.status === "OPEN")}>

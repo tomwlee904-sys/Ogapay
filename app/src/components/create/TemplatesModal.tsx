@@ -50,8 +50,92 @@ const APP_TESTING: Example = {
   ].join("\n"),
 };
 
+// A ready-made job: what to do, the proof and what isn't paid, with the parts to
+// fill in as [paste ...] (2026-11-03, the common job types on OgaPay and other
+// task sites). Suggested pay is a guide, from OgaPay's quick X prices.
+const ready = (e: { title: string; category: string; subcategory?: string; winners: number; each: number; days?: string; steps: string[]; proof: string; notPaid: string; screenshot?: boolean; reqId?: string }): Example => ({
+  mode: "Challenge",
+  title: e.title, category: e.category, ...(e.subcategory && { subcategory: e.subcategory }),
+  winners: String(e.winners), currency: "NGN", bounty: String(e.winners * e.each), duration: e.days || "7 days",
+  ...(e.screenshot && { screenshot: true }), ...(e.reqId && { reqId: e.reqId }),
+  note: `Suggested: ₦${e.each.toLocaleString("en-US")} a person, ${e.winners} people. Fill in the parts in [brackets].`,
+  description: [...e.steps, "", `Proof: ${e.proof}`, "", `Not paid if: ${e.notPaid}`].join("\n"),
+});
+
+const READY: Example[] = [
+  ready({ title: "Follow us on TikTok", category: "Social Media", subcategory: "TikTok", winners: 100, each: 50, screenshot: true,
+    steps: ["Follow our TikTok account: [paste your TikTok profile link]", "", "What to do:", "1. Open the link and tap Follow.", "2. Stay followed. Unfollowing after you're paid can get your account flagged."],
+    proof: "a screenshot of our profile showing \"Following\", and your TikTok username in the note.",
+    notPaid: "the screenshot doesn't show \"Following\", or the account is empty or fake." }),
+  ready({ title: "Like, comment on and share our TikTok video", category: "Social Media", subcategory: "TikTok", winners: 100, each: 100, screenshot: true,
+    steps: ["Our video: [paste your TikTok video link]", "", "What to do:", "1. Watch the video to the end and like it.", "2. Leave a real comment of at least 8 words about the video.", "3. Share it to your story or to a friend."],
+    proof: "a screenshot showing your comment under the video with your username visible, and your TikTok username in the note.",
+    notPaid: "the comment is generic (\"nice\", \"fire\", emojis only) or copied from someone else." }),
+  ready({ title: "Follow our Facebook page and like our latest post", category: "Social Media", subcategory: "Facebook", winners: 100, each: 50, screenshot: true,
+    steps: ["Our page: [paste your Facebook page link]", "", "What to do:", "1. Open the page and tap Follow (or Like Page).", "2. Like our most recent post."],
+    proof: "a screenshot of the page showing you follow it, and the name on your Facebook account in the note.",
+    notPaid: "the account is new, empty or fake, or the screenshot doesn't show you follow the page." }),
+  ready({ title: "Follow us on Instagram", category: "Social Media", subcategory: "Instagram", winners: 100, each: 50, screenshot: true,
+    steps: ["Our account: [paste your Instagram profile link]", "", "What to do:", "1. Open the link and tap Follow.", "2. Stay followed. Unfollowing after you're paid can get your account flagged."],
+    proof: "a screenshot of our profile showing \"Following\", and your Instagram username in the note.",
+    notPaid: "the screenshot doesn't show \"Following\", or the account is empty or fake." }),
+  ready({ title: "Like and reply to our post on X", category: "Social Media", subcategory: "X / Twitter", winners: 100, each: 100,
+    steps: ["Our post: [paste your X post link]", "", "What to do:", "1. Like the post.", "2. Reply with a real comment of at least 10 words in your own words: what you like, how you'd use it, or a question."],
+    proof: "the link to your reply, and your X username in the note.",
+    notPaid: "the reply is short or generic (\"nice\", \"👍\"), copied, or deleted later." }),
+  ready({ title: "Leave a real comment on our YouTube video", category: "Social Media", subcategory: "YouTube", winners: 100, each: 50, screenshot: true,
+    steps: ["Our video: [paste your YouTube video link]", "", "What to do:", "1. Watch at least 2 minutes of the video and like it.", "2. Leave a comment of at least 10 words about something in the video."],
+    proof: "a screenshot of your comment with your channel name visible, and your channel name in the note.",
+    notPaid: "the comment could be about any video, is copied, or is under 10 words." }),
+  ready({ title: "Follow our company page on LinkedIn", category: "Social Media", winners: 100, each: 50, screenshot: true,
+    steps: ["Our page: [paste your LinkedIn page link]", "", "What to do:", "1. Open the page and tap Follow.", "2. Like our latest post."],
+    proof: "a screenshot of the page showing \"Following\", and your LinkedIn name in the note.",
+    notPaid: "the profile is empty or fake, or the screenshot doesn't show \"Following\"." }),
+  ready({ title: "Post our flyer on your WhatsApp status", category: "Community", subcategory: "Outreach", winners: 50, each: 100, screenshot: true,
+    steps: ["Our flyer and link: [paste your flyer or link]", "", "What to do:", "1. Post the flyer (or the link) on your WhatsApp status with one line in your own words.", "2. Keep it up for 24 hours."],
+    proof: "a screenshot of your status taken at least 6 hours after you posted it, with the view count showing.",
+    notPaid: "the screenshot is taken before 6 hours or doesn't show the views, or the status was deleted." }),
+  ready({ title: "Join our Discord server", category: "Community", subcategory: "Outreach", winners: 100, each: 50, screenshot: true,
+    steps: ["Our server: [paste your Discord invite link]", "", "What to do:", "1. Join the server and accept the rules.", "2. Say hello in the welcome channel."],
+    proof: "a screenshot of your hello message in the server, and your Discord username in the note.",
+    notPaid: "you leave the server after you're paid, or the screenshot doesn't show your message." }),
+  ready({ title: "Stream our song and follow the artist", category: "Music Promotion", subcategory: "Streaming", winners: 100, each: 100, screenshot: true,
+    steps: ["The song: [paste the song link on Audiomack, Boomplay, Spotify or Apple Music]", "", "What to do:", "1. Play the whole song once, without skipping.", "2. Like or save it.", "3. Follow the artist."],
+    proof: "a screenshot of the song playing with your account name visible, and your username on that app in the note.",
+    notPaid: "the song is skipped or muted, or the screenshot doesn't show your account." }),
+  ready({ title: "Make a TikTok video with our song", category: "Music Promotion", subcategory: "Content Creation", winners: 20, each: 1000, days: "14 days",
+    steps: ["The sound: [paste the TikTok sound link]", "", "What to do:", "1. Make your own 15 to 60 second video (a dance, a skit, a lip-sync or a reaction) using our sound.", "2. Add [paste your hashtag] to the caption.", "3. Keep the video public for at least 14 days."],
+    proof: "the link to your TikTok video.",
+    notPaid: "the video is reposted from someone else, doesn't use the sound, or is under 15 seconds." }),
+  ready({ title: "Answer our short survey", category: "Surveys", subcategory: "Market Research", winners: 100, each: 100, screenshot: true,
+    steps: ["The survey: [paste your survey link]", "", "What to do:", "1. Answer every question honestly. It takes about 5 minutes.", "2. Submit the form."],
+    proof: "a screenshot of the \"response recorded\" page, and the name or email you used in the note.",
+    notPaid: "the answers are random or copied, or the form wasn't submitted." }),
+  ready({ title: "Vote in our poll", category: "Surveys", subcategory: "Opinion Polls", winners: 100, each: 50, screenshot: true,
+    steps: ["The poll: [paste the poll link]", "", "What to do:", "1. Open the link.", "2. Vote for [paste who or what to vote for]."],
+    proof: "a screenshot of the page after you voted.",
+    notPaid: "you vote for something else or vote more than once." }),
+  ready({ title: "Sign up on our app or website", category: "Lead Generation", subcategory: "Email Signups", winners: 50, each: 150, screenshot: true, reqId: "human",
+    steps: ["Sign up here: [paste your sign-up link]", "", "What to do:", "1. Create an account with your real name and email.", "2. Confirm your email if we send you a link.", "", "You never need to pay or send your own money to do this job."],
+    proof: "a screenshot of your account page or welcome screen, and the email you signed up with in the note.",
+    notPaid: "the details are fake, or someone already signed up with the same email or phone." }),
+  ready({ title: "Get 10 friends to sign up with your link", category: "Lead Generation", subcategory: "Referrals", winners: 10, each: 3000, days: "14 days", reqId: "human",
+    steps: ["Where to get your link: [paste the page where people find their referral link]", "", "What to do:", "1. Share your own referral link with friends, family and your followers.", "2. Get 10 real people to sign up with it and confirm their accounts.", "", "This takes a few days. Only real people count."],
+    proof: "a screenshot of your referral page showing 10 or more confirmed sign-ups, with your username visible.",
+    notPaid: "the sign-ups are fake, made by you, or from the same device." }),
+  ready({ title: "Write a post about us on X, Facebook or LinkedIn", category: "Content Creation", subcategory: "Writing", winners: 20, each: 300,
+    steps: ["About us: [paste one or two lines about your brand]", "Our link: [paste your website link]", "", "What to do:", "1. Write a post of at least 60 words in your own words: what we do and why someone should try it.", "2. Include our link.", "3. Keep it up for at least 14 days."],
+    proof: "the link to your post.",
+    notPaid: "the post is copied, written by AI, under 60 words, or deleted." }),
+  ready({ title: "Try our website and tell us what's confusing", category: "App / Website Review", subcategory: "Website Reviews", winners: 30, each: 200,
+    steps: ["Our website: [paste your website link]", "", "What to do:", "1. Spend about 5 minutes using the site as a new visitor would.", "2. Answer in your submission: What did you like? What confused you? What should we fix first?"],
+    proof: "your answers (at least 50 words) and one screenshot of the page you liked or found confusing.",
+    notPaid: "the answers could be about any website or are copied." }),
+];
+
 const EXAMPLES: Example[] = [
   APP_TESTING,
+  ...READY,
   { title: "Follow and repost on X", category: "Social Media", subcategory: "X / Twitter", winners: "50", description: "Follow our account and repost the pinned post. Submit a link to your repost." },
   { title: "Join our Telegram community", category: "Community", winners: "200", description: "Join our Telegram channel and say hello in the group. Submit a screenshot showing you joined." },
   { title: "Like and comment on our Instagram post", category: "Social Media", subcategory: "Instagram", winners: "100", description: "Like our latest post and leave a genuine comment (not just emojis). Submit a screenshot of your comment." },
@@ -63,6 +147,9 @@ export default function TemplatesModal({ onClose, onUse }: { onClose: () => void
   const { isAuthed } = useAuth();
   const [mine, setMine] = useState<JobTemplate[] | null>(isAuthed ? null : []);
   const [tab, setTab] = useState<"mine" | "community" | "examples">("mine");
+  // Examples by category ("" = all)
+  const [exCat, setExCat] = useState("");
+  const exCats = [...new Set(EXAMPLES.map((e) => e.category || "Other"))];
   // Community library: templates other members shared
   const [community, setCommunity] = useState<JobTemplate[] | null>(null);
   const [q, setQ] = useState("");
@@ -178,7 +265,11 @@ export default function TemplatesModal({ onClose, onUse }: { onClose: () => void
                 </div>
               </div>
             ))
-          ) : EXAMPLES.map(({ note, ...d }) => (
+          ) : <>
+            <div className="tm-cats" role="group" aria-label="Show examples for">
+              {["", ...exCats].map((c) => <button key={c || "all"} type="button" className={`ui-chip${exCat === c ? " on" : ""}`} aria-pressed={exCat === c} onClick={() => setExCat(c)}>{c || "All"}</button>)}
+            </div>
+            {EXAMPLES.filter((e) => !exCat || (e.category || "Other") === exCat).map(({ note, ...d }) => (
             <div key={d.title} className="tm-item">
               <div className="tm-item-t">
                 <strong>{d.title}</strong>
@@ -188,6 +279,7 @@ export default function TemplatesModal({ onClose, onUse }: { onClose: () => void
               <button className="ui-btn ui-btn-ghost" onClick={() => use(d, true)}>Use</button>
             </div>
           ))}
+          </>}
         </div>
       </div>
     </div>

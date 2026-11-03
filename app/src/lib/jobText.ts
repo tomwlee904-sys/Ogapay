@@ -158,5 +158,6 @@ export function missingLinkText(thing: string): string {
 }
 
 // The blanks of a ready-made example (components/create/TemplatesModal.tsx),
-// written in [brackets]: the Create checklist won't let a job go out with any left
-export const TEMPLATE_BLANKS = /\[(paste your app'?s? store link|Android \/ iOS \/ both|the main thing your app does)[^\]]*\]/i
+// written in [brackets] ("[paste ...]" and the app-testing ones): the Create
+// checklist won't let a job go out with any left
+export const TEMPLATE_BLANKS = /\[(paste [^\]]+|Android \/ iOS \/ both|the main thing your app does[^\]]*)\]/i

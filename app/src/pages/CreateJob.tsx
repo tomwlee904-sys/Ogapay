@@ -571,6 +571,10 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
   // "Member of community": the job stays public, but only that community's members
   // can take it. Communities you lead, plus OgaPay's own.
   const [requiredCommunityId, setRequiredCommunityId] = useState("");
+  // Where workers must live: "" anyone, "NG" or "GH" (backend targetCountries), with how many members live there
+  const [country, setCountry] = useState("");
+  const [audience, setAudience] = useState<{ all: number; NG: number; GH: number } | null>(null);
+  useEffect(() => { apiRequest<{ all: number; NG: number; GH: number }>("/tasks/audience", { auth: false }).then((a) => setAudience(a || null)).catch(() => {}); }, []);
   const [requirable, setRequirable] = useState<{ id: string; name: string; slug: string; mine: boolean }[]>([]);
   useEffect(() => {
     if (!isAuthed) return;
@@ -644,7 +648,7 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
     { ok: description.trim().length >= 20, label: "Describe the task and what people should submit." },
     ...(linkNeeded ? [{ ok: false, label: missingLinkText(linkNeeded) }] : []),
     // A ready-made example's blanks (app link, phone type) left as they were
-    { ok: !TEMPLATE_BLANKS.test(description), label: "Replace the parts in [brackets] with your app's details." },
+    { ok: !TEMPLATE_BLANKS.test(`${title}\n${description}`), label: "Replace the parts in [brackets] with your own details." },
     { ok: !!category, label: "Pick a category." },
     ...(isContest ? [
       { ok: prizeNums.every(p => p >= floor), label: `Give every place a prize of at least ${money(floor, currency)}.` },
@@ -765,6 +769,7 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
         ...(!community && campaignId && campaignChoices.some((c) => c.id === campaignId) && { campaignId }),
         ...(community && { communityId: community.communityId }),
         ...(requiredCommunity && { requiredCommunityId: requiredCommunity.id }),
+        ...(country && { targetCountries: [country] }),
         ...(checkable && { payoutCooldownMinutes: payoutCheck }),
       });
       try { localStorage.removeItem(CUSTOM_DRAFT_KEY); } catch { /* ignore */ }
@@ -974,7 +979,7 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
                     </div>
                   )}
 
-                  <Fold title="Audience and requirements" sub={[community ? `Members of ${community.name} only` : requiredCommunity ? `Members of ${requiredCommunity.name}` : "", reqLabel(reqs), excludeJobs.length ? `${excludeJobs.length} past job${excludeJobs.length > 1 ? "s" : ""} excluded` : ""].filter(Boolean).join(" · ")} open={openReq} onToggle={() => setOpenReq(o => !o)}>
+                  <Fold title="Audience and requirements" sub={[community ? `Members of ${community.name} only` : requiredCommunity ? `Members of ${requiredCommunity.name}` : "", country ? `People in ${country === "GH" ? "Ghana" : "Nigeria"}` : "", reqLabel(reqs), excludeJobs.length ? `${excludeJobs.length} past job${excludeJobs.length > 1 ? "s" : ""} excluded` : ""].filter(Boolean).join(" · ")} open={openReq} onToggle={() => setOpenReq(o => !o)}>
                     {(myCommunities.length > 0 || requirable.length > 0) && (
                       <div className="cf-field">
                         <label htmlFor="cj-audience">Who can see it <InfoTip label="Who can see and take this job?" title="Who can see it">
@@ -1000,6 +1005,15 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
                         <p className="cf-hint">{community ? `Only members of ${community.name} can take it. It shows on the community page, not in the public job list.` : requiredCommunity ? `Listed publicly. Only members of ${requiredCommunity.name} can take it.` : "Anyone who meets the requirements below can take it."}</p>
                       </div>
                     )}
+                    <div className="cf-field">
+                      <label htmlFor="cj-country">Where they live</label>
+                      <select id="cj-country" className="ui-select" value={country} onChange={(e) => setCountry(e.target.value)}>
+                        <option value="">Anyone, anywhere{audience ? ` (${audience.all.toLocaleString("en-US")} members)` : ""}</option>
+                        <option value="NG">Only people in Nigeria{audience ? ` (${audience.NG.toLocaleString("en-US")})` : ""}</option>
+                        <option value="GH">Only people in Ghana{audience ? ` (${audience.GH.toLocaleString("en-US")})` : ""}</option>
+                      </select>
+                      <p className="cf-hint">{country ? `Only members who say they live in ${country === "GH" ? "Ghana" : "Nigeria"} can take it (Settings, Account).` : "Members in Nigeria and Ghana can take it."}</p>
+                    </div>
                     <RequirementPicker reqs={reqs} onChange={setReqs} />
                     {isAuthed && openReq && <ExcludePastJobs value={excludeJobs} onChange={setExcludeJobs} />}
                   </Fold>
@@ -1064,7 +1078,7 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
                       <div><span>{mode === "Selection" ? "People hired" : "Winners"}</span><b>{winners}</b></div>
                       <div><span>Reward per {mode === "Selection" ? "person" : "winner"}</span><b>{money(perWinner, currency)}</b></div>
                     </>)}
-                    <div><span>Who can take part</span><b>{community ? `Members of ${community.name}` : ""}{community && reqsAny(reqs) ? " · " : ""}{!community || reqsAny(reqs) ? reqLabel(reqs) : ""}{requiredCommunity ? ` · Members of ${requiredCommunity.name}` : ""}</b></div>
+                    <div><span>Who can take part</span><b>{community ? `Members of ${community.name}` : ""}{community && reqsAny(reqs) ? " · " : ""}{!community || reqsAny(reqs) ? reqLabel(reqs) : ""}{requiredCommunity ? ` · Members of ${requiredCommunity.name}` : ""}{country ? ` · People in ${country === "GH" ? "Ghana" : "Nigeria"}` : ""}</b></div>
                     <div><span>{isContest ? "Entries close" : "Closes"}</span><b>{deadline ? deadline.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "No deadline"}</b></div>
                     {isContest && <div><span>Winners</span><b>{randomDraw ? "Drawn at random when entries close, from the entries you haven't rejected" : "You rank them within 3 days of the close, or the earliest entries win" + (prizeNums.length === 1 ? ". You can also award the place to an entry before entries close; the contest then ends early" : prizeNums.length > 1 && new Set(prizeNums).size === 1 ? ". Every place pays the same prize, so you can also award places before entries close; once every place is awarded, the contest ends early" : "")}</b></div>}
                     {screenshot && <div><span>Proof</span><b>Screenshot required</b></div>}

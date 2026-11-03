@@ -13,6 +13,9 @@ export function jobRequirements(job: any): { icon: string; text: string }[] {
   // Member of community (listed first: it decides who can take the job at all)
   const rc = job.requiredCommunity
   if (rc?.name) reqs.push({ icon: 'users-group', text: rc.isMember ? 'Member of ' + rc.name : 'Join ' + rc.name + ' to take this job' })
+  // Where workers must live (Settings > Account)
+  const countries: string[] = Array.isArray(job.targetCountries) ? job.targetCountries : []
+  if (countries.length) reqs.push({ icon: 'map-pin', text: 'Lives in ' + countries.map((c) => (c === 'GH' ? 'Ghana' : c === 'NG' ? 'Nigeria' : c)).join(' or ') })
   if (job.workerRequirement === 'HUMAN') reqs.push({ icon: 'fingerprint', text: 'Human verified' })
   else if (job.workerRequirement === 'KYC2') reqs.push({ icon: 'id-badge-2', text: 'ID verified (Level 2)' })
   else if (job.workerRequirement === 'KYC') reqs.push({ icon: 'id-badge-2', text: 'ID verified (NIN)' })

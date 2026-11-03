@@ -203,3 +203,6 @@
 .tm-files { display: flex; flex-direction: column; gap: 4px; font-size: 13px; }
 .tm-files a { color: var(--accent); min-height: 32px; display: inline-flex; align-items: center; gap: 6px; }
 @media (max-width: 767px) { .tm-item { flex-wrap: wrap; } .tm-item-acts { width: 100%; justify-content: flex-start; } }
+
+/* Examples by category (2026-11-03) */
+.tm-cats { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 10px; }
