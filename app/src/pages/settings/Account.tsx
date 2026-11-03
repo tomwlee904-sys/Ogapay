@@ -3,7 +3,8 @@ import { Link, useNavigate } from 'react-router-dom'
 import { apiRequest } from '../../lib/api'
 import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../components/Toast'
-import { Card, Row, type SectionProps } from './ui'
+import { Card, Row, Toggle, type SectionProps } from './ui'
+import { DEV_MODE_KEY } from './Simple'
 
 export default function Account({ me, setMe }: SectionProps) {
   const { logout, refreshUser } = useAuth()
@@ -39,6 +40,14 @@ export default function Account({ me, setMe }: SectionProps) {
     }
   }
 
+  // Developer tools: shows the Developer API (API keys and docs) in the menu and in Settings
+  const [devMode, setDevMode] = useState(() => { try { return localStorage.getItem(DEV_MODE_KEY) === 'true' } catch { return false } })
+  const toggleDev = (v: boolean) => {
+    setDevMode(v)
+    try { localStorage.setItem(DEV_MODE_KEY, String(v)) } catch {}
+    window.dispatchEvent(new Event('ogapay:devmode'))
+  }
+
   const signOut = async () => {
     await logout()
     navigate('/')
@@ -66,6 +75,9 @@ export default function Account({ me, setMe }: SectionProps) {
             <button key={v} role="radio" aria-checked={country === v} className={country === v ? 'on' : ''} onClick={() => pickCountry(v)}>{label}</button>
           ))}
         </div>
+      </Card>
+      <Card title="Developer tools" sub="For building your own apps and agents with OgaPay. Turn on to see the Developer API (API keys and docs) in the menu and in Settings.">
+        <Row title="Show the Developer API" id="acct-dev"><Toggle on={devMode} onChange={toggleDev} labelledBy="acct-dev" /></Row>
       </Card>
       <Card title="Email">
         <Row

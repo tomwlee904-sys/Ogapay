@@ -56,6 +56,15 @@ export default function Settings() {
   const [params, setParams] = useSearchParams()
   const { toast } = useToast()
   const [me, setMeState] = useState<Me | null>(null)
+  // Developer tools (Settings > Account): the Developer section only shows once turned on
+  const readDev = () => { try { return localStorage.getItem('ogapay_developer_mode') === 'true' } catch { return false } }
+  const [devMode, setDevMode] = useState(readDev)
+  useEffect(() => {
+    const sync = () => setDevMode(readDev())
+    window.addEventListener('ogapay:devmode', sync)
+    window.addEventListener('storage', sync)
+    return () => { window.removeEventListener('ogapay:devmode', sync); window.removeEventListener('storage', sync) }
+  }, [])
   const [err, setErr] = useState(false)
   const [providers, setProviders] = useState<Record<string, boolean> | null>(null)
   const toasted = useRef(false)
@@ -112,7 +121,7 @@ export default function Settings() {
         </div>
         <div className="st2-body">
           <nav className="st2-nav" aria-label="Settings sections">
-            {SECTIONS.map((s) => (
+            {SECTIONS.filter((s) => s.id !== 'developer' || devMode || section === 'developer').map((s) => (
               <NavLink key={s.id} to={`/settings/${s.id}`} className={({ isActive }) => (isActive ? 'on' : '')}>
                 <i className={`ti ${s.icon}`} /> {s.label}
               </NavLink>
