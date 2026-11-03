@@ -7,14 +7,20 @@ import { apiRequest } from '../../lib/api'
 import { sharedGet } from '../../lib/shared'
 import { useAuth } from '../../context/AuthContext'
 import { useWalletBalance } from '../../context/WalletBalanceContext'
+import { useCurrency } from '../../context/CurrencyContext'
+import { formatCedi } from '../../lib/money'
 import { MIN_WITHDRAW_NGN, kycOf, maskAcct, money, naira, newKey, ngnWithdrawFee, shortAddr, whenAgain, withdrawLimit, type Allowance, type Balances, type Bank, nextPayoutDay, payoutDayLabel } from '../../lib/wallet'
 import InfoTip from '../InfoTip'
 
-type Done = { kind: 'bank'; net: number; bank: Bank; reference: string; payDay: Date; teamCheck?: boolean } | { kind: 'crypto'; amount: number; currency: string; to: string; reference: string; pending: boolean }
+type Done = { kind: 'bank'; net: number; bank: Bank; reference: string; payDay: Date; teamCheck?: boolean } | { kind: 'momo'; net: number; to: string; reference: string; payDay: Date } | { kind: 'crypto'; amount: number; currency: string; to: string; reference: string; pending: boolean }
+
+// Ghana mobile money networks (backend momo.service NETWORKS)
+const MOMO_NETWORKS = [['MTN', 'MTN MoMo'], ['VODAFONE', 'Telecel Cash'], ['AIRTELTIGO', 'AirtelTigo Money']] as const
 
 // Withdraw to a bank account (paid every Thursday, automatically when the account
-// is in their own name: backend payout.service.js) or to a Solana wallet (sent
-// straight away). Bank accounts are the saved, verified
+// is in their own name: backend payout.service.js), to mobile money for members in
+// Ghana (paid on Thursdays in cedis: backend momo.service.js) or to a Solana
+// wallet (sent straight away). Bank accounts are the saved, verified
 // ones: the old form took a typed bank name with no bank code, so payouts had to
 // be matched by hand.
 export default function WithdrawModal({ onClose, onDone, balances: given }: { onClose: () => void; onDone?: () => void; balances?: Balances | null }) {
@@ -23,10 +29,14 @@ export default function WithdrawModal({ onClose, onDone, balances: given }: { on
   const balances = (given || ctx) as Balances | null
   const { tier, verified } = kycOf(user)
   const limit = withdrawLimit(tier)
+  const ghana = user?.country === 'GH'
+  const { convert } = useCurrency()
   // What's left of today's limit (the server counts the last 24 hours)
   const [allow, setAllow] = useState<Allowance | null>(null)
 
-  const [tab, setTab] = useState<'bank' | 'crypto'>('bank')
+  const [tab, setTab] = useState<'bank' | 'momo' | 'crypto'>(ghana ? 'momo' : 'bank')
+  const [momoNetwork, setMomoNetwork] = useState<string>('MTN')
+  const [momoNumber, setMomoNumber] = useState('')
   const [banks, setBanks] = useState<Bank[] | null>(null)
   const [bankId, setBankId] = useState('')
   const [adding, setAdding] = useState(false)
@@ -42,7 +52,7 @@ export default function WithdrawModal({ onClose, onDone, balances: given }: { on
   // One key per withdrawal: a retry of the same request (e.g. after a timeout)
   // can't pay out twice. A new key once anything about it changes.
   const key = useRef(newKey())
-  useEffect(() => { key.current = newKey() }, [tab, bankId, amount, coin, address])
+  useEffect(() => { key.current = newKey() }, [tab, bankId, amount, coin, address, momoNetwork, momoNumber])
 
   useEffect(() => {
     if (!verified) return
@@ -61,28 +71,34 @@ export default function WithdrawModal({ onClose, onDone, balances: given }: { on
   const left = allow ? allow.leftToday : limit
   const usedUp = !!allow && allow.leftToday < MIN_WITHDRAW_NGN
 
-  const cur = tab === 'bank' ? 'NGN' : coin
+  // Bank and mobile money both pay out naira (mobile money in cedis on the day)
+  const inNaira = tab !== 'crypto'
+  const cur = inNaira ? 'NGN' : coin
   const available = Number(balances?.[cur]?.available ?? 0)
   const amt = parseFloat(amount) || 0
-  const fee = tab === 'bank' && amt > 0 ? ngnWithdrawFee(amt) : 0
+  const fee = inNaira && amt > 0 ? ngnWithdrawFee(amt) : 0
+  // What the naira is worth in cedis at today's display rate (the exact cedis are
+  // set by Flutterwave's rate when it's sent); 0 when there's no rate yet
+  const ghsNow = tab === 'momo' && amt > fee ? convert(amt - fee, 'NGN', 'GHS') : 0
+  const momoNeedsLevel2 = tab === 'momo' && tier < 2
   const bank = banks?.find((b) => b.id === bankId) || null
 
   // What's wrong with the amount, before asking the server
   const problem = useMemo(() => {
     if (!amt) return ''
     if (amt > available) return `You have ${money(available, cur)} available.`
-    if (tab === 'bank') {
+    if (inNaira) {
       if (amt < MIN_WITHDRAW_NGN) return `The minimum is ${naira(MIN_WITHDRAW_NGN, 0)}.`
       if (amt > left) return usedUp
         ? `You've used today's limit of ${naira(dayLimit, 0)}.${allow?.nextAt ? ` You can withdraw again from ${whenAgain(allow.nextAt)}.` : ''}`
         : `You can withdraw up to ${naira(left, 0)} today (your limit is ${naira(dayLimit, 0)} a day).`
     }
     return ''
-  }, [amt, available, cur, tab, left, usedUp, dayLimit, allow])
+  }, [amt, available, cur, inNaira, left, usedUp, dayLimit, allow])
 
   const max = () => {
-    const m = tab === 'bank' ? Math.min(available, left) : available
-    setAmount(m > 0 ? String(Math.floor(m * (tab === 'bank' ? 1 : 1e6)) / (tab === 'bank' ? 1 : 1e6)) : '')
+    const m = inNaira ? Math.min(available, left) : available
+    setAmount(m > 0 ? String(Math.floor(m * (inNaira ? 1 : 1e6)) / (inNaira ? 1 : 1e6)) : '')
   }
 
   const finish = () => { refreshBalance(); refreshUser(); onDone?.() }
@@ -100,6 +116,15 @@ export default function WithdrawModal({ onClose, onDone, balances: given }: { on
           body: JSON.stringify({ amount: amt, currency: 'NGN', bankCode: bank.bankCode, bankName: bank.bankName, accountNumber: bank.accountNumber, accountName: bank.accountName, ...(otp && { otp }) }),
         })
         setDone({ kind: 'bank', net: Number(r?.netAmount ?? amt - fee), bank, reference: r?.reference || '', payDay: r?.payoutDate ? new Date(r.payoutDate) : nextPayoutDay(), teamCheck: !!r?.teamCheck })
+      } else if (tab === 'momo') {
+        if (!momoNumber.trim()) throw new Error('Type your mobile money number.')
+        const r = await apiRequest<{ reference: string; netAmount?: number; payoutDate?: string }>('/wallet/withdraw', {
+          method: 'POST',
+          headers: { 'Idempotency-Key': key.current },
+          body: JSON.stringify({ amount: amt, currency: 'NGN', method: 'MOMO', momoNetwork, momoNumber: momoNumber.trim(), ...(otp && { otp }) }),
+        })
+        const net = MOMO_NETWORKS.find(([v]) => v === momoNetwork)?.[1] || 'mobile money'
+        setDone({ kind: 'momo', net: Number(r?.netAmount ?? amt - fee), to: `${net} •••• ${momoNumber.replace(/\D/g, '').slice(-4)}`, reference: r?.reference || '', payDay: r?.payoutDate ? new Date(r.payoutDate) : nextPayoutDay() })
       } else {
         const to = address.trim()
         if (!/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(to)) throw new Error("That isn't a Solana wallet address.")
@@ -123,8 +148,13 @@ export default function WithdrawModal({ onClose, onDone, balances: given }: { on
     return (
       <Sheet title="Withdraw" onClose={onClose}>
         <div className="wl-done">
-          <div className={`wl-done-ic${done.kind === 'bank' || done.pending ? ' wait' : ''}`}><i className={done.kind === 'bank' || done.pending ? 'ti ti-clock' : 'ti ti-check'} /></div>
-          {done.kind === 'bank' ? (
+          <div className={`wl-done-ic${done.kind !== 'crypto' || done.pending ? ' wait' : ''}`}><i className={done.kind !== 'crypto' || done.pending ? 'ti ti-clock' : 'ti ti-check'} /></div>
+          {done.kind === 'momo' ? (
+            <>
+              <h3>Withdrawal requested</h3>
+              <p>{naira(done.net)} will be sent to your {done.to} on <b>{payoutDayLabel(done.payDay)}</b>, paid in cedis at the rate on the day. You'll see it in your history as Processing until it's paid.</p>
+            </>
+          ) : done.kind === 'bank' ? (
             <>
               <h3>Withdrawal requested</h3>
               {done.teamCheck
@@ -150,7 +180,7 @@ export default function WithdrawModal({ onClose, onDone, balances: given }: { on
         <div className="dp-lock">
           <i className="ti ti-shield-check" />
           <h3>Verify your identity to withdraw</h3>
-          <p>Withdrawals need Level 1 verification: a bank account in your name (free) or your NIN. It takes a minute and lets you withdraw up to {naira(withdrawLimit(1), 0)} a day. The smallest withdrawal is ₦5,000 (fee 1.5%, at least ₦100), and bank withdrawals are paid every Thursday.</p>
+          {ghana ? <p>In Ghana, withdrawals to mobile money need Level 2: send a photo of your Ghana Card and its number in Settings → Verification. Our team checks it, usually within a day. The smallest withdrawal is ₦5,000 (fee 1.5%, at least ₦100), paid every Thursday in cedis.</p> : <p>Withdrawals need Level 1 verification: a bank account in your name (free) or your NIN. It takes a minute and lets you withdraw up to {naira(withdrawLimit(1), 0)} a day. The smallest withdrawal is ₦5,000 (fee 1.5%, at least ₦100), and bank withdrawals are paid every Thursday.</p>}
           <Link className="ui-btn ui-btn-dark" to="/settings/verification" onClick={onClose}>Verify now</Link>
         </div>
       </Sheet>
@@ -160,6 +190,7 @@ export default function WithdrawModal({ onClose, onDone, balances: given }: { on
   return (
     <Sheet title="Withdraw" onClose={onClose}>
       <div className="wl-seg" role="group" aria-label="Withdraw to">
+        {ghana && <button type="button" aria-pressed={tab === 'momo'} onClick={() => { setTab('momo'); setAmount(''); setError('') }}>To mobile money</button>}
         <button type="button" aria-pressed={tab === 'bank'} onClick={() => { setTab('bank'); setAmount(''); setError('') }}>To a bank</button>
         <button type="button" aria-pressed={tab === 'crypto'} onClick={() => { setTab('crypto'); setAmount(''); setError('') }}>To a crypto wallet</button>
       </div>
@@ -193,6 +224,24 @@ export default function WithdrawModal({ onClose, onDone, balances: given }: { on
                 </div>
               </div>
             )
+          ) : tab === 'momo' ? (
+            <>
+              {momoNeedsLevel2 && (
+                <p className="wl-note" style={{ margin: '0 0 14px' }}>Mobile money withdrawals need Level 2. <Link to="/settings/verification" onClick={onClose}>Send your Ghana Card</Link> and our team checks it, usually within a day.</p>
+              )}
+              <div className="wl-field">
+                <span className="ui-label">Network</span>
+                <div className="wl-quick" style={{ marginTop: 0 }}>
+                  {MOMO_NETWORKS.map(([v, label]) => (
+                    <button key={v} type="button" className={`ui-chip${momoNetwork === v ? ' on' : ''}`} aria-pressed={momoNetwork === v} onClick={() => setMomoNetwork(v)}>{label}</button>
+                  ))}
+                </div>
+              </div>
+              <div className="wl-field">
+                <label className="ui-label" htmlFor="wd-momo">Your mobile money number</label>
+                <input id="wd-momo" className="ui-input" inputMode="tel" autoComplete="tel" placeholder="e.g. 024 123 4567" value={momoNumber} onChange={(e) => setMomoNumber(e.target.value.replace(/[^\d+ ]/g, ''))} />
+              </div>
+            </>
           ) : (
             <>
               <div className="wl-field">
@@ -215,7 +264,7 @@ export default function WithdrawModal({ onClose, onDone, balances: given }: { on
           <div className="wl-field">
             <label className="ui-label" htmlFor="wd-amt">Amount</label>
             <div className="wl-amount">
-              <span>{tab === 'bank' ? '₦' : coin === 'SOL' ? '◎' : '$'}</span>
+              <span>{inNaira ? '₦' : coin === 'SOL' ? '◎' : '$'}</span>
               <input id="wd-amt" className="ui-input" inputMode="decimal" placeholder="0" value={amount} onChange={(e) => setAmount(e.target.value.replace(/[^\d.]/g, '').replace(/(\..*)\./g, '$1'))} />
               <button type="button" className="wl-max" onClick={max}>Max</button>
             </div>
@@ -233,21 +282,22 @@ export default function WithdrawModal({ onClose, onDone, balances: given }: { on
             </div>
           </div>
 
-          {tab === 'bank' && amt >= MIN_WITHDRAW_NGN && !problem && (
+          {inNaira && amt >= MIN_WITHDRAW_NGN && !problem && (
             <div className="wl-sum">
               <div><span>Fee (1.5%, min ₦100)</span><b>{naira(fee)}</b></div>
               <div className="total"><span>You receive</span><b>{naira(Math.max(0, amt - fee))}</b></div>
+              {tab === 'momo' && Number.isFinite(ghsNow) && ghsNow > 0 && <div><span>In cedis today</span><b>≈ {formatCedi(ghsNow)}</b></div>}
             </div>
           )}
 
           {needOtp && <TwoFactorField value={otp} onChange={setOtp} />}
           {error && <div className="wl-err" role="alert"><i className="ti ti-alert-circle" /><span>{error}</span></div>}
 
-          <button type="button" className="ui-btn ui-btn-dark ui-btn-lg wl-full" disabled={busy || !amt || !!problem || (tab === 'bank' ? !bank : !address.trim())} onClick={submit}>
+          <button type="button" className="ui-btn ui-btn-dark ui-btn-lg wl-full" disabled={busy || !amt || !!problem || (tab === 'bank' ? !bank : tab === 'momo' ? (!momoNumber.trim() || momoNeedsLevel2) : !address.trim())} onClick={submit}>
             {busy ? 'Sending…' : amt && !problem ? `Withdraw ${money(amt, cur)}` : 'Withdraw'}
           </button>
           <p className="wl-note" style={{ margin: '12px 0 0', textAlign: 'center' }}>
-            {tab === 'bank' ? `Bank withdrawals are paid every Thursday (next: ${payoutDayLabel(nextPayoutDay())}). Money only goes to a bank account in your own name; if your bank spells it differently, our team checks it first.` : 'Sent on Solana straight away. Check the address: crypto sent to a wrong address can’t be recovered.'}
+            {tab === 'momo' ? `Mobile money withdrawals are paid every Thursday (next: ${payoutDayLabel(nextPayoutDay())}), in cedis at the rate on the day. Use your own number. A number used for the first time less than a day before Thursday waits until the next Thursday.` : tab === 'bank' ? `Bank withdrawals are paid every Thursday (next: ${payoutDayLabel(nextPayoutDay())}). Money only goes to a bank account in your own name; if your bank spells it differently, our team checks it first.` : 'Sent on Solana straight away. Check the address: crypto sent to a wrong address can’t be recovered.'}
             {tier < 3 && <> <Link to="/settings/verification" onClick={onClose}>Raise your limit</Link></>}
           </p>
         </>

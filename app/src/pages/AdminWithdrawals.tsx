@@ -21,7 +21,7 @@ interface Withdrawal {
   createdAt: string
   completedAt: string | null
   externalRef: string | null
-  destination: { bankName: string | null; bankCode: string | null; accountNumber: string | null; accountName: string | null; address: string | null }
+  destination: { bankName: string | null; bankCode: string | null; accountNumber: string | null; accountName: string | null; address: string | null; momo?: { network: string; number: string; ghs: number | null } | null }
   settledAt: string | null
   note: string | null
   // Thursday payouts (backend payout.service.js)
@@ -107,7 +107,13 @@ function Row({ w, onSettled }: { w: Withdrawal; onSettled: (id: string, msg: str
       </dl>
 
       <div className="aw-dest">
-        {d.accountNumber ? (
+        {d.momo ? (
+          <>
+            <span><i className="ti ti-device-mobile" />{d.momo.network} (Ghana)</span>
+            <span className="aw-mono">{d.momo.number}<Copy text={d.momo.number} /></span>
+            <span>{d.accountName || 'No name'}{d.momo.ghs ? ` · GH₵${d.momo.ghs.toFixed(2)}` : ''}</span>
+          </>
+        ) : d.accountNumber ? (
           <>
             <span><i className="ti ti-building-bank" />{d.bankName || 'Bank'}{d.bankCode ? ` (${d.bankCode})` : ''}</span>
             <span className="aw-mono">{d.accountNumber}<Copy text={d.accountNumber} /></span>
@@ -148,7 +154,7 @@ function Row({ w, onSettled }: { w: Withdrawal; onSettled: (id: string, msg: str
         <div className="aw-confirm">
           {mode === 'approve' ? (
             <>
-              <p>Only confirm after <b>{money(w.payout, w.currency)}</b> has reached {d.accountNumber ? `${d.bankName || 'the bank'} ${d.accountNumber}` : 'the address above'}. {money(w.amount, w.currency)} then leaves the user's wallet.</p>
+              <p>Only confirm after <b>{money(w.payout, w.currency)}</b> has reached {d.momo ? `${d.momo.network} ${d.momo.number}` : d.accountNumber ? `${d.bankName || 'the bank'} ${d.accountNumber}` : 'the address above'}. {money(w.amount, w.currency)} then leaves the user's wallet.</p>
               <label htmlFor={`ref-${w.id}`}>Payout reference (optional)</label>
               <input id={`ref-${w.id}`} className="ui-input" value={ref} onChange={e => setRef(e.target.value)} placeholder="Bank or Flutterwave reference" />
             </>
