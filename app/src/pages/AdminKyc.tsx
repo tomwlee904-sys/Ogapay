@@ -201,7 +201,7 @@ function Row({ r, onDone }: { r: Rec; onDone: (id: string, msg: string) => void 
               <select id={`lvl-${r.id}`} className="ui-input" value={level} onChange={(e) => setLevel(Number(e.target.value))}>
                 <option value={1}>Level 1: NIN (₦10,000 per withdrawal)</option>
                 <option value={2}>Level 2: Didit ID + selfie check (₦20,000 per withdrawal)</option>
-                <option value={3}>Level 3: ID documents (₦200,000 per withdrawal)</option>
+                <option value={3}>Level 3: approved by our team (₦50,000 a day)</option>
               </select>
             </>
           ) : (

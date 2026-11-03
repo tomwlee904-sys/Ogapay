@@ -16,6 +16,7 @@ export function jobRequirements(job: any): { icon: string; text: string }[] {
   // Where workers must live (Settings > Account)
   const countries: string[] = Array.isArray(job.targetCountries) ? job.targetCountries : []
   if (countries.length) reqs.push({ icon: 'map-pin', text: 'Lives in ' + countries.map((c) => (c === 'GH' ? 'Ghana' : c === 'NG' ? 'Nigeria' : c)).join(' or ') })
+  if (job.targetGender === 'F' || job.targetGender === 'M') reqs.push({ icon: job.targetGender === 'F' ? 'gender-female' : 'gender-male', text: job.targetGender === 'F' ? 'Women only' : 'Men only' })
   if (job.workerRequirement === 'HUMAN') reqs.push({ icon: 'fingerprint', text: 'Human verified' })
   else if (job.workerRequirement === 'KYC2') reqs.push({ icon: 'id-badge-2', text: 'ID verified (Level 2)' })
   else if (job.workerRequirement === 'KYC') reqs.push({ icon: 'id-badge-2', text: 'ID verified (NIN)' })

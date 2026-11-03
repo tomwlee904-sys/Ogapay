@@ -92,7 +92,7 @@ export default function Terms() {
               <ul>
                 <li>Level 1 (a bank account in your name, confirmed with your bank through our payment partner; or your NIN, confirmed with the National Identity Management Commission (NIMC) through Didit, or checked by our team when that isn't possible): up to ₦5,000 a day. Bank withdrawals only go to accounts in your own name.</li>
                 <li>Level 2 (an ID document and a selfie, checked by our verification partner Didit): up to ₦10,000 a day</li>
-                <li>Level 3 (ID documents, checked by our team through support): up to ₦50,000 a day</li>
+                <li>Level 3 (given by our team on request through support): up to ₦50,000 a day</li>
               </ul>
               <p>A day means the 24 hours before each withdrawal. Bank and crypto withdrawals count together, crypto at the naira rate on the day; ones that fail or are rejected don't count. We may ask for more information, refuse a check, or remove a verification we later find was wrong. Using someone else's identity is not allowed.</p>
             </section>

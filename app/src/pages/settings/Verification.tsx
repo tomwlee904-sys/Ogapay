@@ -474,7 +474,7 @@ export default function Verification({ me, reload, providers }: SectionProps & {
             {(useNin || ninInstant) && !diditOpen && tier === 0 && ninForm}
           </>
         ) : want ? ninForm : tier === 1 && manualReq !== undefined ? manualPanel : (
-          <Row title="Need a higher limit?" sub="Level 3 is done by our team with your ID documents.">
+          <Row title="Need a higher limit?" sub="Ask our team for Level 3. No documents needed.">
             <Link className="up-btn" to="/support">Contact support</Link>
           </Row>
         )}

@@ -57,6 +57,8 @@ type Task = {
   requiredCommunityId?: string | null; communityId?: string | null
   // Where workers must live (NG, GH); empty = anyone
   targetCountries?: string[]
+  // Only women (F) or only men (M); null = anyone
+  targetGender?: string | null
   // A contest: entries aren't approved one by one, places are awarded on the job page.
   // prizes: one per place, 1st first (the reward is only the 1st prize)
   isContest?: boolean; randomDraw?: boolean; prizes?: (number | string)[] | null
@@ -322,8 +324,27 @@ function JobDrawer({ task, allTasks, focusId, onClose, onChanged }: { task: Task
       onChanged(); onClose();
     } catch (e: any) { toast(e?.message || "Couldn't add places", "error"); }
   };
+  // Stop job: pay the work waiting, release unused places and close (backend stopJob)
+  const canStop = ["OPEN", "IN_PROGRESS", "COOLING_DOWN", "DRAFT"].includes(task.status) && !task.isContest;
+  const stopJob = async () => {
+    const subs = task.submissions || [];
+    const waiting = subs.filter((s) => s.status === "SUBMITTED").length;
+    const holding = subs.filter((s) => s.status === "PENDING").length;
+    const lines = [
+      waiting ? `${waiting} piece${waiting === 1 ? "" : "s"} of work waiting for review will be approved and paid (${money(reward * waiting, cur)}). Check them first if you haven't.` : "No work is waiting for review.",
+      holding ? `${holding} ${holding === 1 ? "person holding a place" : "people holding places"} without sending work will lose ${holding === 1 ? "it" : "them"}.` : "",
+      "The money for places nobody used comes back to your wallet. This can't be undone.",
+    ].filter(Boolean);
+    if (!window.confirm(`Stop "${task.title}"?\n\n${lines.join("\n")}`)) return;
+    try {
+      const r = await apiRequest<{ approved: number; released: number }>(`/tasks/${task.id}/stop`, { method: "POST" });
+      toast(`Job stopped.${r?.approved ? ` ${r.approved} paid.` : ""} The unused money is back in your wallet.`, "success");
+      onChanged(); onClose();
+    } catch (e: any) { toast(e?.message || "Couldn't stop the job", "error"); }
+  };
   const [editing, setEditing] = useState(false);
   const [ed, setEd] = useState({ title: task.title, brief: "", deadline: "" });
+  const [edGender, setEdGender] = useState<string>(task.targetGender || "");
   // Where workers must live: "" anyone, or one country (backend targetCountries)
   const [edCountry, setEdCountry] = useState<string>(task.targetCountries?.[0] || "");
   // Similar jobs: people who took part in any of them can't take this one (and the other way round)
@@ -344,6 +365,7 @@ function JobDrawer({ task, allTasks, focusId, onClose, onChanged }: { task: Task
     setSimilar(task.excludesTaskIds || []);
     setReqCommunity(task.requiredCommunityId || "");
     setEdCountry(task.targetCountries?.[0] || "");
+    setEdGender(task.targetGender || "");
     setEdErr(""); setEditing(true);
   };
   // Same check as Create job: a job that sends people to a survey, form, site or
@@ -361,6 +383,7 @@ function JobDrawer({ task, allTasks, focusId, onClose, onChanged }: { task: Task
     if (ed.deadline) body.deadline = new Date(ed.deadline + "T23:59:00").toISOString();
     if (canNeedCommunity && reqCommunity !== (task.requiredCommunityId || "")) body.requiredCommunityId = reqCommunity || null;
     if (edCountry !== (task.targetCountries?.[0] || "")) body.targetCountries = edCountry ? [edCountry] : [];
+    if (edGender !== (task.targetGender || "")) body.targetGender = edGender || null;
     setEdBusy(true); setEdErr("");
     try {
       await apiRequest(`/tasks/${task.id}`, { method: "PATCH", body: JSON.stringify(body) });
@@ -402,6 +425,12 @@ function JobDrawer({ task, allTasks, focusId, onClose, onChanged }: { task: Task
                 <option value="">Anyone, anywhere</option>
                 <option value="NG">Only people in Nigeria</option>
                 <option value="GH">Only people in Ghana</option>
+              </select>
+              <label className="ui-label" htmlFor="mj-ed-gender">Women or men only</label>
+              <select id="mj-ed-gender" className="ui-input" value={edGender} onChange={(e) => setEdGender(e.target.value)}>
+                <option value="">Anyone</option>
+                <option value="F">Only women</option>
+                <option value="M">Only men</option>
               </select>
               <p className="mj-edit-note">Only affects people who haven't taken it yet.</p>
               <label className="ui-label" htmlFor="mj-ed-deadline">Closes on (optional)</label>
@@ -576,12 +605,14 @@ function JobDrawer({ task, allTasks, focusId, onClose, onChanged }: { task: Task
           {live && !editing && <button className="ui-btn ui-btn-ghost" onClick={startEdit}><Icon n="edit" s={15} /> Edit</button>}
           {canRaise && !editing && <button className="ui-btn ui-btn-ghost" onClick={raisePay}><Icon n="trending-up" s={15} /> Raise pay</button>}
           {canAddPlaces && !editing && <button className="ui-btn ui-btn-ghost" onClick={addPlaces}><Icon n="users-plus" s={15} /> Add places</button>}
+          <Link className="ui-btn ui-btn-ghost" to={`/support?job=${task.id}&title=${encodeURIComponent(task.title.slice(0, 80))}`}><Icon n="message-question" s={15} /> Ask OgaPay about this job</Link>
           {canRaisePrizes && !editing && <Link className="ui-btn ui-btn-ghost" to={`/tasks/${task.id}?raise=1`}><Icon n="trending-up" s={15} /> Raise prizes</Link>}
           {(task.status === "OPEN" || task.status === "DRAFT") && (
             <button className="ui-btn ui-btn-ghost" onClick={() => setPaused(task.status === "OPEN")}>
               <Icon n={task.status === "OPEN" ? "player-pause" : "player-play"} s={15} /> {task.status === "OPEN" ? "Pause" : "Resume"}
             </button>
           )}
+          {canStop && !editing && <button className="ui-btn ui-btn-ghost mj-danger" onClick={stopJob} title="Pay the work waiting for review, release unused places and close the job"><Icon n="player-stop" s={15} /> Stop job</button>}
           {live && <button className="ui-btn ui-btn-ghost mj-danger" onClick={cancel}><Icon n="circle-x" s={15} /> Cancel job</button>}
         </div>
       </aside>

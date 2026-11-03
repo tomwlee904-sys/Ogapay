@@ -92,6 +92,16 @@ export default function Support() {
   const [params, setParams] = useSearchParams()
   const navigate = useNavigate()
   const viewId = params.get('ticket')
+  // "Ask OgaPay about this job" (Manage jobs): a new ticket about that job, filled in
+  useEffect(() => {
+    const job = params.get('job')
+    if (!job || !signedIn) return
+    const title = (params.get('title') || '').slice(0, 80)
+    setForm((f) => ({ ...f, category: 'Posting jobs', subject: (`About my job: ${title}` || 'About my job').slice(0, 120), description: `Job: ${window.location.origin}/tasks/${job}\n\n` }))
+    setOpen(true)
+    const next = new URLSearchParams(params); next.delete('job'); next.delete('title')
+    setParams(next, { replace: true })
+  }, [params, signedIn])
   const openedHere = useRef(false)
   const [view, setView] = useState<TicketFull | null>(null)
   const [viewErr, setViewErr] = useState('')

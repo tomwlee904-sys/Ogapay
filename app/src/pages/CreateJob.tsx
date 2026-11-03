@@ -574,6 +574,8 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
   const [requiredCommunityId, setRequiredCommunityId] = useState("");
   // Where workers must live: "" anyone, "NG" or "GH" (backend targetCountries), with how many members live there
   const [country, setCountry] = useState("");
+  // Only women (F) or only men (M); "" anyone (backend targetGender)
+  const [gender, setGender] = useState("");
   // The link people open to start the job ("Start job" on the job page), and what to send as proof
   const [startUrl, setStartUrl] = useState("");
   const [proofText, setProofText] = useState("");
@@ -780,6 +782,7 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
         ...(community && { communityId: community.communityId }),
         ...(requiredCommunity && { requiredCommunityId: requiredCommunity.id }),
         ...(country && { targetCountries: [country] }),
+        ...(gender && { targetGender: gender }),
         ...(checkable && { payoutCooldownMinutes: payoutCheck }),
       });
       try { localStorage.removeItem(CUSTOM_DRAFT_KEY); } catch { /* ignore */ }
@@ -1036,6 +1039,15 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
                       </select>
                       <p className="cf-hint">{country ? `Only members who say they live in ${country === "GH" ? "Ghana" : "Nigeria"} can take it (Settings, Account).` : "Members in Nigeria and Ghana can take it."}</p>
                     </div>
+                    <div className="cf-field">
+                      <label htmlFor="cj-gender">Women or men only</label>
+                      <select id="cj-gender" className="ui-select" value={gender} onChange={(e) => setGender(e.target.value)}>
+                        <option value="">Anyone</option>
+                        <option value="F">Only women</option>
+                        <option value="M">Only men</option>
+                      </select>
+                      {gender && <p className="cf-hint">Members who haven't said their gender (Settings, Account) are asked to before they can take it.</p>}
+                    </div>
                     <RequirementPicker reqs={reqs} onChange={setReqs} />
                     {isAuthed && openReq && <ExcludePastJobs value={excludeJobs} onChange={setExcludeJobs} />}
                   </Fold>
@@ -1100,7 +1112,7 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
                       <div><span>{mode === "Selection" ? "People hired" : "Winners"}</span><b>{winners}</b></div>
                       <div><span>Reward per {mode === "Selection" ? "person" : "winner"}</span><b>{money(perWinner, currency)}</b></div>
                     </>)}
-                    <div><span>Who can take part</span><b>{community ? `Members of ${community.name}` : ""}{community && reqsAny(reqs) ? " · " : ""}{!community || reqsAny(reqs) ? reqLabel(reqs) : ""}{requiredCommunity ? ` · Members of ${requiredCommunity.name}` : ""}{country ? ` · People in ${country === "GH" ? "Ghana" : "Nigeria"}` : ""}</b></div>
+                    <div><span>Who can take part</span><b>{community ? `Members of ${community.name}` : ""}{community && reqsAny(reqs) ? " · " : ""}{!community || reqsAny(reqs) ? reqLabel(reqs) : ""}{requiredCommunity ? ` · Members of ${requiredCommunity.name}` : ""}{country ? ` · People in ${country === "GH" ? "Ghana" : "Nigeria"}` : ""}{gender ? ` · ${gender === "F" ? "Women" : "Men"} only` : ""}</b></div>
                     <div><span>{isContest ? "Entries close" : "Closes"}</span><b>{deadline ? deadline.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "No deadline"}</b></div>
                     {isContest && <div><span>Winners</span><b>{randomDraw ? "Drawn at random when entries close, from the entries you haven't rejected" : "You rank them within 3 days of the close, or the earliest entries win" + (prizeNums.length === 1 ? ". You can also award the place to an entry before entries close; the contest then ends early" : prizeNums.length > 1 && new Set(prizeNums).size === 1 ? ". Every place pays the same prize, so you can also award places before entries close; once every place is awarded, the contest ends early" : "")}</b></div>}
                     {screenshot && <div><span>Proof</span><b>Screenshot required</b></div>}

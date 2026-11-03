@@ -24,6 +24,18 @@ export default function Account({ me, setMe }: SectionProps) {
     setSending(false)
   }
 
+  // Gender, if they want to say (some jobs are for women or men only)
+  const [gender, setGender] = useState<string>((me as any).gender || '')
+  const pickGender = async (g: string) => {
+    const was = gender
+    setGender(g)
+    try {
+      await apiRequest('/users/me', { method: 'PATCH', body: JSON.stringify({ gender: g || null }) })
+      setMe((m) => ({ ...m, gender: g || null } as any))
+      toast('Saved', 'success')
+    } catch (e: any) { setGender(was); toast(e?.message || "Couldn't save it", 'error') }
+  }
+
   // Where they live (the Ghana test): Ghana offers cedis and the Ghana Card
   const [country, setCountry] = useState(me.country || 'NG')
   const pickCountry = async (c: string) => {
@@ -73,6 +85,13 @@ export default function Account({ me, setMe }: SectionProps) {
         <div className="st2-seg" role="radiogroup" aria-label="Where you live">
           {[['NG', 'Nigeria'], ['GH', 'Ghana']].map(([v, label]) => (
             <button key={v} role="radio" aria-checked={country === v} className={country === v ? 'on' : ''} onClick={() => pickCountry(v)}>{label}</button>
+          ))}
+        </div>
+      </Card>
+      <Card title="Gender (optional)" sub="Some jobs are for women or men only. Only you and the jobs you take see this.">
+        <div className="st2-seg" role="radiogroup" aria-label="Gender">
+          {[['F', 'Female'], ['M', 'Male'], ['', 'Prefer not to say']].map(([v, label]) => (
+            <button key={v || 'none'} role="radio" aria-checked={gender === v} className={gender === v ? 'on' : ''} onClick={() => pickGender(v)}>{label}</button>
           ))}
         </div>
       </Card>
