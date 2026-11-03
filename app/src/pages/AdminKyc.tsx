@@ -43,9 +43,12 @@ function Copy({ text }: { text: string }) {
    to get new ones. */
 interface L2 {
   id: string; status: string; idType: string; idTypeName: string; idNumber: string | null; createdAt: string
-  user: { id: string; username: string; name: string; joined: string; level: number; levelBy: string | null }
+  user: { id: string; username: string; name: string; joined: string; level: number; levelBy: string | null; country?: string | null }
   idFrontUrl: string | null
+  // The ID doesn't fit the account's country (Ghana mobile money trusts it)
+  countryWarning?: string | null
 }
+const COUNTRY: Record<string, string> = { NG: 'Nigeria', GH: 'Ghana' }
 
 function Level2Row({ r, onDone }: { r: L2; onDone: (id: string, msg: string) => void }) {
   const [mode, setMode] = useState<null | 'approve' | 'reject'>(null)
@@ -73,11 +76,13 @@ function Level2Row({ r, onDone }: { r: L2; onDone: (id: string, msg: string) => 
       <dl className="aw-amounts">
         <div><dt>ID</dt><dd>{r.idTypeName}</dd></div>
         <div><dt>Number</dt><dd className="aw-mono">{r.idNumber || '—'}{r.idNumber && <Copy text={r.idNumber} />}</dd></div>
+        <div><dt>Country</dt><dd>{r.user.country ? COUNTRY[r.user.country] || r.user.country : '—'}</dd></div>
         <div><dt>Asks for</dt><dd>Level 2</dd></div>
       </dl>
       <div className="ak-photos">
         {r.idFrontUrl ? <a href={r.idFrontUrl} target="_blank" rel="noreferrer"><img src={r.idFrontUrl} alt={`${name}'s ID`} /><span>ID</span></a> : <span className="aw-note">ID photo link expired: Refresh</span>}
       </div>
+      {r.countryWarning && <p className="aw-auto review" role="note"><i className="ti ti-alert-triangle" /><span><b>Check the country.</b> {r.countryWarning}</span></p>}
       <p className="aw-kind"><i className="ti ti-search" /> Check that the ID is real and readable, the number matches the one typed above, and the name on the ID matches {name}.</p>
       {mode === null ? (
         <div className="aw-actions">

@@ -39,6 +39,11 @@ interface Withdrawal {
   neverResend?: string | null
   // Sent, but no final answer from Flutterwave for 3 days
   stuck?: boolean
+  // It can be moved back to review now (3 days with no final answer, or Flutterwave
+  // answered for an amount we didn't ask it to send)
+  canMoveBack?: boolean
+  // Flutterwave's answer the server didn't act on by itself (the admins were told)
+  flutterwaveSays?: { status: string; amount: number | null; currency: string | null; kind: 'amount' | 'admin' | 'late' } | null
 }
 interface Page { items: Withdrawal[]; total: number; page: number; pages: number; totals: { currency: string; count: number; amount: number }[] }
 // GET /admin/momo/check: are mobile money payouts on, and today's naira per cedi
@@ -91,6 +96,9 @@ function Row({ w, momo, onSettled, onChanged }: { w: Withdrawal; momo: MomoCheck
   // An automatic transfer is out: settling it here too would pay twice (the server refuses)
   const inFlight = auto?.state === 'sending' || auto?.state === 'sent'
   const byHand = !!w.payingByHand
+  // Out with Flutterwave, but an admin may take it back now
+  const canMoveBack = inFlight && (!!w.canMoveBack || !!w.stuck)
+  const says = w.flutterwaveSays || null
   // Send by Flutterwave: pending mobile money, while the server says mobile money payouts are on
   const canSend = !!d.momo && !!momo?.momoPayouts && !inFlight && !byHand && !w.neverResend
   // What the payout is worth in cedis at Flutterwave's rate now (before it's sent)
@@ -191,6 +199,14 @@ function Row({ w, momo, onSettled, onChanged }: { w: Withdrawal; momo: MomoCheck
           <span><b>Paying by hand.</b> The Thursday payout and Send by Flutterwave leave it alone. Mark it paid once the money has arrived.</span>
         </p>
       )}
+      {w.status === 'PROCESSING' && says && (
+        <p className="aw-auto review" role="note">
+          <i className="ti ti-alert-triangle" />
+          {says.kind === 'amount'
+            ? <span><b>Flutterwave says {says.status} for {says.amount ?? '?'} {says.currency || ''}</b>, not the amount we asked it to send, so nothing was settled. The money is still held. Check reference {w.reference} on the Flutterwave dashboard, then {inFlight ? 'move it back to review and ' : ''}mark it paid or reject it.</span>
+            : <span><b>Flutterwave says the transfer {says.status === 'FAILED' ? 'failed' : says.status.toLowerCase()}.</b> The money was not given back automatically. If you paid it by hand, mark it paid. If not, reject it to give the money back.</span>}
+        </p>
+      )}
       {w.status === 'PROCESSING' && auto && !byHand && (
         <p className={`aw-auto ${auto.state === 'review' || w.stuck ? 'review' : auto.state}`}>
           <i className={`ti ti-${auto.state === 'review' || w.stuck ? 'alert-triangle' : 'send'}`} />
@@ -206,7 +222,7 @@ function Row({ w, momo, onSettled, onChanged }: { w: Withdrawal; momo: MomoCheck
       <p className="aw-ref aw-mono">{w.reference}{w.status !== 'PROCESSING' && w.externalRef && !sig ? ` · payout ref ${w.externalRef}` : ''}</p>
       {w.status !== 'PROCESSING' && w.note && <p className="aw-note">{w.note}</p>}
 
-      {w.status === 'PROCESSING' && (!inFlight || w.stuck) && (mode === null ? (
+      {w.status === 'PROCESSING' && (!inFlight || canMoveBack) && (mode === null ? (
         inFlight ? (
           <div className="aw-actions">
             <button className="ui-btn ui-btn-ghost" onClick={() => setMode('back')}><i className="ti ti-arrow-back-up" /> Move back to review</button>
