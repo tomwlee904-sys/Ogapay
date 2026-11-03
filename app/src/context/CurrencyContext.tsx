@@ -92,6 +92,8 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
   const setPreferredCurrency = useCallback(async (c: DisplayMode) => {
     setPreferredCurrencyState(c)
     storeCurrency(c as any)
+    // Cedis need the cedi rate: ask again now if we don't have one yet
+    if (c === 'GHS' && !(rates.GHS > 0)) refreshRates()
     const token = getAccessToken()
     if (!token) return
     window.clearTimeout(saveTimer.current)
@@ -102,7 +104,7 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
         body: JSON.stringify({ preferences: { defaultCurrency: c } }),
       }).catch(() => { /* kept in this browser; saved next time */ })
     }, 400)
-  }, [])
+  }, [rates.GHS, refreshRates])
 
   const resolveCurrency = (cur?: Currency): Currency => cur || (preferredCurrency === 'BOTH' ? 'NGN' : preferredCurrency)
 

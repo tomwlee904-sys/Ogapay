@@ -49,6 +49,40 @@ export function formatCedi(n: number): string {
   return `GH₵${v >= 1000 ? Math.round(v).toLocaleString('en-US') : v.toFixed(2)}`
 }
 
+/** The one currency a total or a stat is shown in for someone who chose `pref`:
+ *  naira (also for "Both"), dollars or cedis. For figures made of several
+ *  currencies (a wallet total, "paid out" stats), converted with `convert`. */
+export type DisplayCode = 'NGN' | 'USDC' | 'GHS'
+export const displayCode = (pref?: string | null): DisplayCode => {
+  const p = displayPref(pref)
+  return p === 'BOTH' ? 'NGN' : p
+}
+
+/** A value already in `code` written out: "₦1,240", "$12.50", "GH₵85.05";
+ *  short: "₦1.2M", "$12.5K", "GH₵1.2K" for big figures */
+export function formatIn(code: DisplayCode, v: number, opts: { short?: boolean } = {}): string {
+  const n = Number.isFinite(v) ? v : 0
+  const sym = code === 'NGN' ? '₦' : code === 'GHS' ? 'GH₵' : '$'
+  if (opts.short) {
+    if (n >= 1e9) return `${sym}${(n / 1e9).toFixed(1).replace(/\.0$/, '')}B`
+    if (n >= 1e6) return `${sym}${(n / 1e6).toFixed(1).replace(/\.0$/, '')}M`
+    if (n >= 1e4) return `${sym}${(n / 1e3).toFixed(1).replace(/\.0$/, '')}K`
+  }
+  if (code === 'NGN') return `₦${Math.round(n).toLocaleString('en-US')}`
+  return code === 'GHS' ? formatCedi(n) : formatUsd(n)
+}
+
+/** A naira (or other) amount in the display currency, for totals and stats:
+ *  converted when it can be, else in naira. ("≈" is left to the caller.) */
+export function inDisplay(amount: number, currency: string, pref: string | null | undefined, convert: Convert, opts: { short?: boolean } = {}): string {
+  const code = displayCode(pref)
+  const n = Number(amount) || 0
+  if (currency === code || (code === 'USDC' && isDollar(currency))) return formatIn(code, n, opts)
+  const v = convert(n, currency, code)
+  if (Number.isFinite(v) && v >= 0 && (v > 0 || n === 0)) return formatIn(code, v, opts)
+  return currency === 'NGN' ? formatIn('NGN', n, opts) : formatMoney(n, currency)
+}
+
 /** "$0.08", "$12.50", "$1,240" */
 export function formatUsd(n: number): string {
   const v = Number(n) || 0
