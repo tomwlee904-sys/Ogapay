@@ -2,7 +2,9 @@ import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { apiRequest } from '../lib/api'
 import { useAuth } from '../context/AuthContext'
+import { useCurrency } from '../context/CurrencyContext'
 import { naira } from '../lib/wallet'
+import { inDisplay } from '../lib/money'
 import { sized } from '../lib/img'
 import { prizeRuns, runLabel } from '../lib/contestPrizes'
 
@@ -28,11 +30,12 @@ type Stats = {
 type Leader = { rank: number; username: string | null; avatarUrl: string | null; friends: number; prize: number; isMe: boolean }
 // How far the member is from a prize place on the contest board (2026-11-02).
 // Entry is automatic once a friend qualifies, so this is all they need to know.
-function prizeProgress(b: Board): string | null {
+// fmt writes a prize in the member's display currency.
+function prizeProgress(b: Board, fmt: (n: number) => string): string | null {
   if (b.week !== 'contest' || !b.me || b.contest?.finished) return null
   const places = b.prizes.length
   const { rank, friends } = b.me
-  if (rank && rank <= places) return `You're in a prize place: ${naira(b.prizes[rank - 1], 0)} if the contest ended now. You're entered automatically once your NIN or ID is verified.`
+  if (rank && rank <= places) return `You're in a prize place: ${fmt(b.prizes[rank - 1])} if the contest ended now. You're entered automatically once your NIN or ID is verified.`
   if (b.leaders.length < places) return `One qualified friend puts you in a prize place: ${places - b.leaders.length} of ${places} places are still empty. You're entered automatically once your NIN or ID is verified.`
   const need = Math.max(1, b.leaders[places - 1].friends - friends + 1)
   return `${need} more qualified ${need === 1 ? 'friend' : 'friends'} would put you in a prize place.`
@@ -166,6 +169,7 @@ const CSS = `
 
 export default function TabReferralsContent() {
   const { user } = useAuth()
+  const { preferredCurrency, convert } = useCurrency()
   const [stats, setStats] = useState<Stats | null>(null)
   const [bonuses, setBonuses] = useState<Bonus[]>([])
   const [loading, setLoading] = useState(true)
@@ -235,6 +239,12 @@ export default function TabReferralsContent() {
   const pct = Math.min(100, Math.round((rewarded / Math.max(1, cap)) * 100))
   const friends = [...people].sort((a, b) => STEP_ORDER[(a.step || 'job') as Step] - STEP_ORDER[(b.step || 'job') as Step])
   const someoneToRemind = people.some((p) => p.step === 'verify' || p.step === 'job')
+  // Bonuses are naira; contest prizes are in the contest's currency (weekly: naira).
+  // Both are shown in the member's display currency (naira, dollars or cedis).
+  const ngn = (n: number) => inDisplay(n, 'NGN', preferredCurrency, convert)
+  const prizeCur = board?.contest?.currency || 'NGN'
+  const prize = (n: number) => inDisplay(n, prizeCur, preferredCurrency, convert)
+  const progressLine = board ? prizeProgress(board, prize) : null
   // Says what the friend gets, not just the inviter
   const shareText = `Join me on OgaPay: verify your NIN, finish your first job and get a ${naira(signup, 0)} bonus on top of your pay.\n\nEarn from small jobs (follows, reviews, app tests), paid in Naira or USDC.\nSign up with my link: ${link}`
 
@@ -259,7 +269,7 @@ export default function TabReferralsContent() {
         <div className="rf3-nums">
           <div><span>Friends joined</span><b>{loading || !stats ? '…' : stats.totalReferrals ?? 0}</b></div>
           <div><span>Bonuses paid</span><b>{loading || !stats ? '…' : rewarded}</b></div>
-          <div><span>Earned</span><b>{loading || !stats ? '…' : naira(Number(stats.totalEarned || 0), 0)}</b></div>
+          <div><span>Earned</span><b>{loading || !stats ? '…' : ngn(Number(stats.totalEarned || 0))}</b></div>
         </div>
       </section>
     )
@@ -273,7 +283,7 @@ export default function TabReferralsContent() {
           {/* 1. Invite: what you both get, the link, one-tap share, how it works */}
           <section className="rf3-card rf3-pad" aria-labelledby="rf3-invite">
             <h2 className="rf3-h2" id="rf3-invite">Invite friends, earn together</h2>
-            <div className="rf3-offer"><b>{naira(bonus, 0)} for you</b><span>and {naira(signup, 0)} for your friend</span></div>
+            <div className="rf3-offer"><b>{ngn(bonus)} for you</b><span>and {ngn(signup)} for your friend</span></div>
             {link ? (
               <>
                 <div className="rf3-linkrow">
@@ -291,7 +301,7 @@ export default function TabReferralsContent() {
             <ol className="rf3-how" aria-label="How it works">
               <li><span><b>Share your link</b><br />on WhatsApp, X or Telegram</span></li>
               <li><span><b>Your friend verifies their NIN</b><br />and takes a job</span></li>
-              <li><span><b>They finish a paid job</b><br />you get {naira(bonus, 0)}, they get {naira(signup, 0)}</span></li>
+              <li><span><b>They finish a paid job</b><br />you get {ngn(bonus)}, they get {ngn(signup)}</span></li>
             </ol>
           </section>
 
@@ -317,7 +327,7 @@ export default function TabReferralsContent() {
                       {p.avatarUrl ? <img className="rf3-av" src={sized(p.avatarUrl, 36, true)} alt="" /> : <span className="rf3-av"><i className="ti ti-user" aria-hidden="true" /></span>}
                       <div style={{ minWidth: 0 }}>
                         <Link className="rf3-name" to={`/user/${p.username}`}>@{p.username}</Link>
-                        <span className={`rf3-step${st.ok ? ' ok' : canRemind ? ' wait' : ''}`}><i className={`ti ti-${st.icon}`} aria-hidden="true" /> {st.text === 'paid' ? `${naira(bonus, 0)} paid to you` : st.text}</span>
+                        <span className={`rf3-step${st.ok ? ' ok' : canRemind ? ' wait' : ''}`}><i className={`ti ti-${st.icon}`} aria-hidden="true" /> {st.text === 'paid' ? `${ngn(bonus)} paid to you` : st.text}</span>
                       </div>
                       {canRemind ? (note && note !== 'sending'
                         ? <span className="rf3-note" role="status">{note}</span>
@@ -338,7 +348,7 @@ export default function TabReferralsContent() {
               : bonuses.map((b) => (
                 <div className="rf3-pay" key={b.id}>
                   <span>{day(b.createdAt)} · {b.status === 'COMPLETED' ? 'Paid' : b.status.charAt(0) + b.status.slice(1).toLowerCase()}</span>
-                  <b>{naira(Number(b.amount || 0), 0)}</b>
+                  <b>{ngn(Number(b.amount || 0))}</b>
                 </div>
               ))}
           </details>
@@ -351,7 +361,7 @@ export default function TabReferralsContent() {
           <section className="rf3-card" aria-labelledby="rf3-top">
             <div className="rf3-head">
               <div>
-                <h2 className="rf3-h2" id="rf3-top">{board?.contest ? `Referral contest · ${naira(board.contest.total, 0)} in prizes` : 'Weekly contest'}</h2>
+                <h2 className="rf3-h2" id="rf3-top">{board?.contest ? `Referral contest · ${prize(board.contest.total)} in prizes` : 'Weekly contest'}</h2>
                 <div className="rf3-muted">{board ? (board.week === 'last' ? 'Winners are paid every Monday' : board.contest?.finished ? 'This contest has ended' : timeLeft(board.weekEnd)) : boardFailed ? '' : '…'}</div>
                 {board?.contest && <Link className="rf3-muted" to={`/tasks/${board.contest.taskId}`}>Contest rules →</Link>}
               </div>
@@ -370,10 +380,10 @@ export default function TabReferralsContent() {
                   : someoneToRemind ? 'Not on the board yet. Remind your friends who still have a step to do.' : 'Not on the board yet. Share your link to get on it.'}</div>
               </div>
             )}
-            {board && prizeProgress(board) && <div className="rf3-muted" style={{ padding: '10px 20px 0' }}>{prizeProgress(board)}</div>}
+            {progressLine && <div className="rf3-muted" style={{ padding: '10px 20px 0' }}>{progressLine}</div>}
             <div className="rf3-prizes">
               {/* Places that pay the same share a chip: 1st, 2nd, 3rd, 4th–10th (or 4th–12th once places are added) */}
-              {prizeRuns(board?.prizes || WEEKLY_PRIZES).map((r) => <span key={r.from}>{runLabel(r)} <b>{naira(r.prize, 0)}</b></span>)}
+              {prizeRuns(board?.prizes || WEEKLY_PRIZES).map((r) => <span key={r.from}>{runLabel(r)} <b>{prize(r.prize)}</b></span>)}
             </div>
             {boardFailed ? (
               <Failed what="the contest board" onRetry={() => setBoardKey((k) => k + 1)} />
@@ -389,7 +399,7 @@ export default function TabReferralsContent() {
                       <span className="rk">{l.rank}</span>
                       {l.avatarUrl ? <img className="av" src={sized(l.avatarUrl, 28, true)} alt="" /> : <span className="av"><i className="ti ti-user" aria-hidden="true" /></span>}
                       {l.username ? <Link to={`/user/${l.username}`}>@{l.username}{l.isMe ? ' (you)' : ''}</Link> : <span className="nm">{l.isMe ? 'You' : 'A private member'}</span>}
-                      <span className="rt">{l.prize > 0 && <b>{naira(l.prize, 0)}</b>}<small>{l.friends} {l.friends === 1 ? 'friend' : 'friends'}</small></span>
+                      <span className="rt">{l.prize > 0 && <b>{prize(l.prize)}</b>}<small>{l.friends} {l.friends === 1 ? 'friend' : 'friends'}</small></span>
                     </li>
                   ))}
                 </ol>

@@ -13,6 +13,8 @@ import { useTheme } from '../context/ThemeContext'
 import { useCurrency } from '../context/CurrencyContext'
 import { SkeletonPage, injectSkeletonStyles } from "../components/SkeletonLoader"
 import { HomeJobCard } from '../components/home/HomeCards'
+import Money from '../components/Money'
+import { displayCode, displayMoney } from '../lib/money'
 import { VerifiedBusinessLine } from '../components/Perks'
 import { sized } from '../lib/img'
 import { jobDeadline } from '../lib/deadline'
@@ -52,31 +54,6 @@ function formatTime(sec: number) {
 }
 
 
-// ── Info tooltip ─────────────────────────────────────────────────────
-function InfoBtn({ text }: { text: string }) {
-  const [show, setShow] = useState(false);
-  const ref = useRef<HTMLSpanElement>(null);
-  return (
-    <span ref={ref} style={{ position: "relative", display: "inline-flex", marginLeft: 4, verticalAlign: "middle" }}
-      onMouseEnter={() => setShow(true)}
-      onMouseLeave={() => setShow(false)}
-      onClick={(e) => { e.stopPropagation(); setShow(s => !s) }}>
-      <i className="ti ti-info-circle" style={{ fontSize: 12, color: "var(--text3)", cursor: "pointer" }} />
-      {show && (
-        <div style={{
-          position: "absolute", bottom: "calc(100% + 6px)", left: "50%",
-          transform: "translateX(-50%)", background: "var(--text)", color: "var(--card)",
-          fontSize: 11, lineHeight: 1.5, padding: "6px 10px", borderRadius: 8,
-          whiteSpace: "normal", width: 220, zIndex: 99, pointerEvents: "none",
-          boxShadow: "0 4px 12px rgba(0,0,0,0.2)"
-        }}>
-          {text}
-        </div>
-      )}
-    </span>
-  );
-}
-
 // ─── Job Detail Modal ────────────────────────────────────────────────
 // Save / unsave a job (server-side; shows in /bookmarks)
 function SaveJobButton({ taskId }: { taskId: string }) {
@@ -93,7 +70,7 @@ function SaveJobButton({ taskId }: { taskId: string }) {
 function JobDetailModal({ job, onClose, onApply }: { job: any; onClose: () => void; onApply: (jid: string) => void }) {
   const { user } = useAuth()
   const { toast: showToast } = useToast()
-  const { rates } = useCurrency()
+  const { convert, preferredCurrency } = useCurrency()
   const navigate = useNavigate()
   const [applySubmitting, setApplySubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
@@ -178,6 +155,13 @@ function JobDetailModal({ job, onClose, onApply }: { job: any; onClose: () => vo
 
   if (!job) return null
 
+  // The reward icon matches the figure <Money> shows: the display currency when it
+  // converts the reward, else the job's own currency (no rate yet, or "Both")
+  const rewardAmount = Number(job.reward || job.amount || 0)
+  const rewardCurrency = job.currency || 'NGN'
+  const shownCurrency = displayMoney(rewardAmount, rewardCurrency, preferredCurrency, convert).converted ? displayCode(preferredCurrency) : rewardCurrency
+  const rewardIcon = shownCurrency === 'NGN' ? 'ti-currency-naira' : shownCurrency === 'GHS' ? 'ti-coins' : 'ti-currency-dollar'
+
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'grid', placeItems: 'center', padding: 16, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }} onClick={onClose}>
       <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 16, padding: 24, maxWidth: 500, width: '100%', maxHeight: '90vh', overflow: 'auto' }} onClick={e => e.stopPropagation()}>
@@ -205,6 +189,9 @@ function JobDetailModal({ job, onClose, onApply }: { job: any; onClose: () => vo
           .tk-job-text ol{list-style:decimal}
           .tk-job-text h3{font-size:14px;font-weight:600;margin:12px 0 4px}
           .tk-job-text a{color:var(--accent);text-decoration:underline}
+          .tk-reward-money{align-items:center}
+          .tk-reward-money .o-money-main{color:inherit;font-weight:inherit;letter-spacing:inherit;line-height:inherit;font-variant-numeric:normal}
+          .tk-reward-money .o-money-alt{margin-top:4px;color:var(--text3);font-weight:600}
           [data-theme="dark"] .ngn-shimmer {
             color: #ffffff !important;
             -webkit-text-fill-color: #ffffff !important;
@@ -311,14 +298,12 @@ function JobDetailModal({ job, onClose, onApply }: { job: any; onClose: () => vo
         {/* ── REWARD ── */}
         <div style={{ position: 'relative', background: 'linear-gradient(135deg, rgba(var(--accent-rgb),0.07) 0%, rgba(var(--accent-rgb),0.02) 100%)', border: '1px solid rgba(var(--accent-rgb),0.15)', borderRadius: 14, padding: '22px 20px', textAlign: 'center', marginBottom: 16 }}>
           <div style={{ position: 'absolute', left: 18, top: '50%', transform: 'translateY(-50%)', width: 46, height: 46, borderRadius: 12, background: 'rgba(var(--accent-rgb),0.1)', display: 'grid', placeItems: 'center' }}>
-            <i className="ti ti-currency-naira" style={{ fontSize: 22, color: OGAPAY_BLUE }} />
+            <i className={`ti ${rewardIcon}`} style={{ fontSize: 22, color: OGAPAY_BLUE }} />
           </div>
           <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>Reward Per Task</div>
+          {/* In the member's display currency; the real amount (or a conversion) is the quiet line under it */}
           <div style={{ fontSize: 30, fontWeight: 900, fontFamily: 'Inter', color: OGAPAY_BLUE, lineHeight: 1 }}>
-            ₦{Number(job.reward || job.amount || 0).toLocaleString()}
-          </div>
-          <div style={{ fontSize: 12, color: 'var(--text3)', fontWeight: 600, marginTop: 6 }}>
-            ${(Number(job.reward || job.amount || 0) * rates.NGN).toFixed(2)} USD <InfoBtn text="Approximate value in USD based on current exchange rates. Actual rates may vary." />
+            <Money amount={rewardAmount} currency={rewardCurrency} convert={convert} size={30} className="tk-reward-money" />
           </div>
         </div>
 

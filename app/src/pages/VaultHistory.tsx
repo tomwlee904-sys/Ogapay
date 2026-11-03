@@ -4,6 +4,8 @@ import Layout from '../components/Layout'
 import { apiRequest } from '../lib/api'
 import { SkeletonPage, injectSkeletonStyles } from '../components/SkeletonLoader'
 import WalletPreviewCard from '../components/WalletPreviewCard'
+import { useCurrency } from '../context/CurrencyContext'
+import { displayCode, inDisplay } from '../lib/money'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
 
 const OGAPAY_BLUE = 'var(--accent)'
@@ -73,6 +75,18 @@ export default function VaultHistory() {
   const [batchDetail, setBatchDetail] = useState<any[] | null>(null)
   const [batchDetailLoading, setBatchDetailLoading] = useState(false)
   const [loading, setLoading] = useState(true)
+
+  // The naira figures here follow the display currency (naira, dollars or
+  // cedis). In naira they keep their usual precision: small per-wallet shares
+  // have kobo, which the rounded shared format would show as ₦0
+  const { preferredCurrency, convert } = useCurrency()
+  const code = displayCode(preferredCurrency)
+  const rate = code === 'NGN' ? 1 : convert(1, 'NGN', code)
+  // Naira or Both, or no rate yet for the chosen currency: keep the naira figures
+  const inNaira = code === 'NGN' || !(Number.isFinite(rate) && rate > 0)
+  // A share too small to show in dollars or cedis (it would read $0.00) stays in naira
+  const fromNgn = (n: number, nairaOpts?: Intl.NumberFormatOptions) =>
+    inNaira || (n > 0 && n * rate < 0.005) ? `₦${n.toLocaleString(undefined, nairaOpts)}` : inDisplay(n, 'NGN', preferredCurrency, convert)
 
   const fetchBatches = async (page: number) => {
     setBatchLoading(true)
@@ -166,17 +180,23 @@ export default function VaultHistory() {
     } finally { setBatchDetailLoading(false) }
   }
 
-  const chartData = rewardsData?.chartData?.map((d: any) => ({
-    label: new Date(d.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }),
-    amount: d.amount,
-  })) || []
+  // Bars and the Y axis are in the display currency; the naira figure is kept
+  // for the tooltip
+  const chartData = rewardsData?.chartData?.map((d: any) => {
+    const ngn = Number(d.amount) || 0
+    return {
+      label: new Date(d.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }),
+      amount: inNaira ? ngn : ngn * rate,
+      ngn,
+    }
+  }) || []
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload?.length) {
       return (
         <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 8, padding: '8px 12px', fontSize: 12 }}>
           <div style={{ fontWeight: 700, marginBottom: 2 }}>{label}</div>
-          <div style={{ color: OGAPAY_BLUE, fontWeight: 600 }}>₦{(payload[0].value || 0).toLocaleString()}</div>
+          <div style={{ color: OGAPAY_BLUE, fontWeight: 600 }}>{fromNgn(payload[0].payload?.ngn ?? payload[0].value ?? 0)}</div>
         </div>
       )
     }
@@ -196,7 +216,7 @@ export default function VaultHistory() {
             {/* Page header */}
             <div style={S.hero}>
               <h1 style={S.title}>Distribution History</h1>
-              <p style={S.sub}>Every vault distribution to $PAY holders, and what each wallet received. Amounts are in Naira.</p>
+              <p style={S.sub}>Every vault distribution to $PAY holders, and what each wallet received. Amounts are in {inNaira ? 'Naira' : 'your display currency, converted from Naira'}.</p>
             </div>
 
             {/* Check your wallet rewards card */}
@@ -252,7 +272,7 @@ export default function VaultHistory() {
                 {/* 3 stat cards */}
                 <div style={S.statRow}>
                   <div style={S.statCard}>
-                    <div style={{ ...S.statNum, color: OGAPAY_BLUE }}>₦{(rewardsData?.totalReceivedNgn ?? rewardsData?.totalReceivedPay ?? 0).toLocaleString()}</div>
+                    <div style={{ ...S.statNum, color: OGAPAY_BLUE }}>{fromNgn(rewardsData?.totalReceivedNgn ?? rewardsData?.totalReceivedPay ?? 0)}</div>
                     <div style={S.statLabel}>Total Received</div>
                   </div>
                   <div style={S.statCard}>
@@ -277,7 +297,7 @@ export default function VaultHistory() {
                 {/* Received in period + USD estimate */}
                 <div style={S.statRow}>
                   <div style={S.statCard}>
-                    <div style={{ ...S.statNum, color: OGAPAY_BLUE }}>₦{(rewardsData?.receivedInPeriodNgn ?? rewardsData?.receivedInPeriodPay ?? 0).toLocaleString()}</div>
+                    <div style={{ ...S.statNum, color: OGAPAY_BLUE }}>{fromNgn(rewardsData?.receivedInPeriodNgn ?? rewardsData?.receivedInPeriodPay ?? 0)}</div>
                     <div style={S.statLabel}>Received in Period</div>
                   </div>
                   <div style={S.statCard}>
@@ -299,7 +319,7 @@ export default function VaultHistory() {
                         <BarChart data={chartData} margin={{ top: 4, right: 4, left: -16, bottom: 0 }}>
                           <XAxis dataKey="label" tick={{ fontSize: 11, fill: 'var(--text3)' }} axisLine={false} tickLine={false} />
                           <YAxis tick={{ fontSize: 11, fill: 'var(--text3)' }} axisLine={false} tickLine={false}
-                            tickFormatter={(v: number) => v >= 1000 ? `${(v/1000).toFixed(1)}k` : String(v)} />
+                            tickFormatter={(v: number) => v >= 1000 ? `${(v/1000).toFixed(1)}k` : String(Math.round(v * 100) / 100)} />
                           <Tooltip content={<CustomTooltip />} />
                           <Bar dataKey="amount" fill={OGAPAY_BLUE} radius={[4, 4, 0, 0]} maxBarSize={32} />
                         </BarChart>
@@ -370,7 +390,7 @@ export default function VaultHistory() {
                         </div>
                         <div>
                           <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--text3)', marginBottom: 2 }}>Total shared</div>
-                          <div style={{ fontSize: 12, fontWeight: 700 }}>₦{(batch.totalNgn ?? batch.totalPay ?? 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                          <div style={{ fontSize: 12, fontWeight: 700 }}>{fromNgn(batch.totalNgn ?? batch.totalPay ?? 0, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
                           <span style={{
@@ -402,7 +422,7 @@ export default function VaultHistory() {
                               {batchDetail.map((w: any, i: number) => (
                                 <div key={i} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: 8, padding: '8px 0', borderBottom: i < batchDetail.length - 1 ? '1px solid var(--border)' : 'none', fontSize: 12, alignItems: 'center' }}>
                                   <span style={{ fontFamily: 'monospace', fontSize: 11, color: OGAPAY_BLUE }}>{truncateWallet(w.wallet || w.address || '')}{w.you && <b style={{ marginLeft: 6, fontFamily: 'inherit', fontSize: 11, color: 'var(--text)', background: 'var(--card2)', borderRadius: 999, padding: '1px 7px' }}>You</b>}</span>
-                                  <span style={{ textAlign: 'right' as const, fontWeight: 600 }}>₦{(w.amount || w.shareNgp || 0).toLocaleString()}</span>
+                                  <span style={{ textAlign: 'right' as const, fontWeight: 600 }}>{fromNgn(w.amount || w.shareNgp || 0)}</span>
                                   <span style={{ textAlign: 'right' as const, color: 'var(--text2)', fontSize: 11 }}>{(w.vaultSharePct || 0).toFixed(4)}%</span>
                                 </div>
                               ))}

@@ -5,7 +5,7 @@ import { openSignIn } from '../lib/signin'
 import { useWalletBalance } from '../context/WalletBalanceContext'
 import { useCurrency } from '../context/CurrencyContext'
 import { sized } from '../lib/img'
-import { displayPref } from '../lib/money'
+import { displayCode, formatIn, type DisplayCode } from '../lib/money'
 import CurrencySwitch from './CurrencySwitch'
 import { useMyWarnings } from './WarningBanner'
 
@@ -55,12 +55,15 @@ export default function Drawer({ open, onClose }: DrawerProps) {
   }, [open, onClose])
 
   // Same figure as the balance in the header: all wallets in the display
-  // currency, naira (also for "Both") or dollars.
+  // currency, naira (also for "Both"), dollars or cedis. Until there's a rate
+  // for the chosen currency (cedis load late), naira.
   const { balances } = useWalletBalance()
   const { convert, preferredCurrency } = useCurrency()
-  const inUsd = displayPref(preferredCurrency) === 'USDC'
+  const wanted = displayCode(preferredCurrency)
+  const wantedRate = convert(1, 'NGN', wanted)
+  const code: DisplayCode = Number.isFinite(wantedRate) && wantedRate > 0 ? wanted : 'NGN'
   const totalBalance = balances
-    ? (['SOL', 'USDC', 'USDT', 'NGN'] as const).reduce((sum, c) => { const v = balances[c] ? convert(balances[c]!.balance, c as any, inUsd ? 'USDC' : 'NGN') : 0; return sum + (Number.isFinite(v) ? v : 0) }, 0)
+    ? (['SOL', 'USDC', 'USDT', 'NGN'] as const).reduce((sum, c) => { const v = balances[c] ? convert(balances[c]!.balance, c as any, code) : 0; return sum + (Number.isFinite(v) ? v : 0) }, 0)
     : 0
 
   return (
@@ -145,7 +148,7 @@ export default function Drawer({ open, onClose }: DrawerProps) {
                   <div className="oga-user-card-name">{user?.displayName || user?.username || 'User'}</div>
                   <div className="oga-user-card-balance">
                     <i className="ti ti-wallet" style={{ fontSize: 12 }} />{' '}
-                    Total balance: <b>{inUsd ? `$${totalBalance < 0.01 ? '0.00' : totalBalance.toFixed(2)}` : `₦${Math.round(Math.max(0, totalBalance)).toLocaleString('en-US')}`}</b>
+                    Total balance: <b>{formatIn(code, Math.max(0, totalBalance))}</b>
                   </div>
                 </div>
                 <i className="ti ti-chevron-right oga-user-card-chevron" />

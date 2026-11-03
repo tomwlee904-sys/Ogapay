@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { useToast } from '../components/Toast'
 import { useTheme } from '../context/ThemeContext'
 import { useCurrency } from '../context/CurrencyContext'
-import { displayPref } from '../lib/money'
+import { displayCode, formatIn, type DisplayCode } from '../lib/money'
 import { useUnreadCount } from '../lib/shared'
 import { useWalletBalance } from '../context/WalletBalanceContext'
 import { Logo } from './Logo'
@@ -48,12 +48,15 @@ export default function Navbar({ onMenuToggle }: NavbarProps) {
   const navRef = useRef<HTMLElement>(null)
 
   const { balances: walletBalances } = useWalletBalance()
-  // The whole wallet in the display currency: naira (also for "Both") or dollars
-  const inUsd = displayPref(preferredCurrency) === 'USDC'
+  // The whole wallet in the display currency: naira (also for "Both"), dollars
+  // or cedis. Until there's a rate for the chosen currency (cedis load late), naira.
+  const wanted = displayCode(preferredCurrency)
+  const wantedRate = convert(1, 'NGN', wanted)
+  const code: DisplayCode = Number.isFinite(wantedRate) && wantedRate > 0 ? wanted : 'NGN'
   const total = walletBalances
     ? Object.entries(walletBalances).reduce((sum, [currency, entry]) => {
         if (WALLET_CURRENCIES.includes(currency as any) && entry) {
-          const v = convert(entry.balance, currency as any, inUsd ? 'USDC' : 'NGN')
+          const v = convert(entry.balance, currency as any, code)
           return sum + (Number.isFinite(v) ? v : 0)
         }
         return sum
@@ -62,10 +65,8 @@ export default function Navbar({ onMenuToggle }: NavbarProps) {
   // The pill is every wallet added up (naira + USDC/USDT/SOL converted), so it
   // can be more than the naira you can spend that the Dashboard and Wallet show.
   // It says "Total" and explains itself on hover.
-  const balanceTip = `Total of all your wallets (naira, USDC, USDT and SOL) in ${inUsd ? 'dollars' : 'naira'}. Your spendable naira is on the Wallet page.`
-  const balanceText = inUsd
-    ? `$${(total < 0.01 ? 0 : total).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-    : `₦${Math.round(Math.max(0, total)).toLocaleString('en-US')}`
+  const balanceTip = `Total of all your wallets (naira, USDC, USDT and SOL) in ${code === 'USDC' ? 'dollars' : code === 'GHS' ? 'cedis' : 'naira'}. Your spendable naira is on the Wallet page.`
+  const balanceText = formatIn(code, Math.max(0, total))
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10)

@@ -16,6 +16,7 @@ import CreatorAudiences from "../components/profile/CreatorAudiences"
 import InfoTip from '../components/InfoTip'
 import { XProfileSummary } from '../components/profile/XProfile'
 import type { XPublic } from '../lib/xprofile'
+import { useMoney } from '../lib/useMoney'
 
 type Tab = "store" | "portfolio" | "reviews" | "communities"
 
@@ -41,8 +42,6 @@ const LEVEL_NAMES: Record<string, string> = {
 
 const fmtDate = (d: string, opts: Intl.DateTimeFormatOptions = { month: "short", day: "numeric", year: "numeric" }) =>
   new Date(d).toLocaleDateString("en-US", opts)
-const money = (n: number, cur = "NGN") =>
-  cur === "NGN" ? "₦" + Number(n).toLocaleString("en-US", { maximumFractionDigits: 2 }) : `${Number(n).toLocaleString("en-US", { maximumFractionDigits: 6 })} ${cur}`
 
 // SVG stars: the icon font's filled variants aren't loaded
 const STAR = "M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"
@@ -63,6 +62,8 @@ export default function UserProfile() {
   const { username = "" } = useParams<{ username: string }>()
   const navigate = useNavigate()
   const { user: me } = useAuth()
+  // Earnings and store prices follow the visitor's display currency
+  const show = useMoney()
 
   const [profile, setProfile] = useState<any>(null)
   const [state, setState] = useState<"loading" | "ok" | "private" | "missing" | "error">("loading")
@@ -250,7 +251,7 @@ export default function UserProfile() {
     { icon: "ti-users", label: "Communities", value: String(counts.communityMemberships ?? communities.length) },
   ]
   if (profile?.preferences?.showEarnings && wp.totalEarned != null) {
-    stats.push({ icon: "ti-coin", label: "Earned", value: money(Number(wp.totalEarned)) })
+    stats.push({ icon: "ti-coin", label: "Earned", value: show(Number(wp.totalEarned)) })
   }
 
   const skills: string[] = Array.isArray(wp.skills) ? wp.skills : []
@@ -400,7 +401,7 @@ export default function UserProfile() {
                         </div>
                       )}
                       <div className="foot">
-                        <b>{money(p.price, p.currency)}</b>
+                        <b>{show(Number(p.price || 0), p.currency || "NGN")}</b>
                         {p.reviewsCount > 0 ? <span><Stars value={p.rating} /> <small style={{ color: "var(--text3)" }}>({p.reviewsCount})</small></span> : <span className="link">View details <i className="ti ti-arrow-right" /></span>}
                       </div>
                     </div>

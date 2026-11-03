@@ -2,8 +2,11 @@ import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { useAuth } from '../context/AuthContext'
+import { useCurrency } from '../context/CurrencyContext'
 import { useWalletBalance } from '../context/WalletBalanceContext'
 import { apiRequest } from '../lib/api'
+import type { Currency } from '../lib/currency'
+import { displayCode, formatIn } from '../lib/money'
 import { sharedGet } from '../lib/shared'
 import { categoryLabel } from '../lib/categories'
 import { rankName } from '../lib/requirements'
@@ -61,6 +64,7 @@ export default function Dashboard() {
   const { balances } = useWalletBalance()
   // Amounts follow the display currency; limits and "withdraw your ₦…" stay in naira
   const show = useMoney()
+  const { preferredCurrency, convert } = useCurrency()
   const [me, setMe] = useState<Me | null>(null)
   // Starter jobs fold away so they don't fill the page; the choice is remembered
   const [starterOpen, setStarterOpen] = useState(() => { try { return localStorage.getItem('ogapay-starter-open') === '1' } catch { return false } })
@@ -70,7 +74,8 @@ export default function Dashboard() {
   useEffect(() => {
     apiRequest<any>('/scores/me').then((d) => setRankUp(d?.rank?.canClaim && d.rank.next ? { name: d.rank.next.name } : null)).catch(() => {})
   }, [])
-  // Earned per currency: USDC is never added to the naira total
+  // Earned per currency: USDC is never added to naira as if it were naira (it is
+  // converted first, see earnedText)
   const [earned, setEarned] = useState<Record<string, number> | null>(null)
   const [subs, setSubs] = useState<Sub[] | null>(null)
   const [created, setCreated] = useState<Job[] | null>(null)
@@ -104,12 +109,15 @@ export default function Dashboard() {
   const mine = created || []
   const live = mine.filter((j) => LIVE.includes(String(j.status || 'OPEN')))
   const reviewJobs = mine.filter((j) => toReviewOn(j) > 0)
-  // "₦3,200 earned", or "₦3,200 + 1.50 USDC earned": each currency its own total, naira first
+  // "₦3,200 earned": each currency's total added up in the display currency
+  // (naira, dollars or cedis) at today's rates, like My tasks. Until a rate is
+  // known, each currency its own total, naira first: "₦3,200 + 1.50 USDC earned"
   const earnedBy = Object.entries(earned || {}).filter(([, v]) => Number(v) > 0).sort(([a], [b]) => (a === 'NGN' ? -1 : b === 'NGN' ? 1 : a.localeCompare(b)))
+  const code = displayCode(preferredCurrency)
+  const earnedIn = earnedBy.map(([c, v]) => (c === code ? Number(v) : convert(Number(v), c as Currency, code)))
   const earnedText = earned === null ? 'Earnings'
-    : earnedBy.length > 1 ? `${earnedBy.map(([c, v]) => show(Number(v), c, { exact: true })).join(' + ')} earned`
-      // Exact like My tasks: the money actually paid, never a converted figure
-      : `${show(Number(earnedBy[0]?.[1] || 0), earnedBy[0]?.[0] || 'NGN', { exact: true })} earned`
+    : earnedIn.every((v) => Number.isFinite(v) && v > 0) ? `${formatIn(code, earnedIn.reduce((a, b) => a + b, 0))} earned`
+      : `${earnedBy.map(([c, v]) => show(Number(v), c, { exact: true })).join(' + ')} earned`
   // A contest slot with no entry sent can't be sent once the end date passes
   // (the job stays open while the winners are picked), so it isn't "To do"
   const closedUnsent = (s: Sub) => {
@@ -167,7 +175,7 @@ export default function Dashboard() {
     { done: !!(user.firstName && user.lastName && user.avatar), label: 'Add your name and a photo', sub: 'People trust those they can recognise.', to: '/edit-profile', cta: 'Edit profile' },
     { done: !!user.isEmailVerified, label: 'Verify your email', sub: 'So you get job alerts and payment receipts.', action: 'mail' as const },
     { done: !!(hasBank || user.walletAddress || user.bankAccount), label: 'Add a way to get paid', sub: 'A bank account or a Solana wallet for withdrawals.', to: '/wallet', cta: 'Open wallet' },
-    { done: kycOk, label: 'Verify your identity', sub: 'Free and takes a minute. You need it to withdraw and send money, and some jobs ask for it. Verify with your NIN, then finish your first job to get your ₦1,000 first job bonus. Withdrawals start at ₦5,000 (fee 1.5%, at least ₦100) and are paid every Thursday.', to: '/settings/verification', cta: 'Verify' },
+    { done: kycOk, label: 'Verify your identity', sub: `Free and takes a minute. You need it to withdraw and send money, and some jobs ask for it. Verify with your NIN, then finish your first job to get your ${show(FIRST_JOB_BONUS, 'NGN')} first job bonus. Withdrawals start at ₦5,000 (fee 1.5%, at least ₦100) and are paid every Thursday.`, to: '/settings/verification', cta: 'Verify' },
   ]
   const doneCount = steps.filter((s) => s.done).length
 

@@ -2,8 +2,11 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { ordinal } from '../components/ContestPanel'
+import { useCurrency } from '../context/CurrencyContext'
 import { apiRequest } from '../lib/api'
 import { categoryLabel } from '../lib/categories'
+import type { Currency } from '../lib/currency'
+import { displayCode, formatIn } from '../lib/money'
 import { useMoney } from '../lib/useMoney'
 import '../styles/my-tasks.css'
 import { PayoutCheckStatus } from '../components/PayoutCheck'
@@ -13,8 +16,9 @@ import { PayoutCheckStatus } from '../components/PayoutCheck'
 // page had made-up "% complete" bars, no links and no page margins.
 // Contests: a contest's reward is its 1st prize, so a 2nd place used to show the
 // 1st prize, and entries that didn't win showed "In review" forever. The server
-// now sends each entry's place, its prize and the result. Amounts paid and the
-// earned totals are the payments actually made, one total per currency.
+// now sends each entry's place, its prize and the result. Amounts paid are the
+// payments actually made. Row amounts (paid, prizes, rewards) and the earned
+// total follow the display currency (naira, dollars or cedis).
 
 type Sub = {
   id: string; status: string; taskId: string; createdAt: string; submittedAt?: string | null; reviewedAt?: string | null
@@ -90,8 +94,10 @@ function badge(s: Sub): { label: string; cls: string; icon?: string } {
 
 export default function MyTasks() {
   const show = useMoney()
+  const { preferredCurrency, convert } = useCurrency()
   const [subs, setSubs] = useState<Sub[] | null>(null)
-  // One total per currency: naira and USDC are never added together
+  // One total per currency: USDC is never added to naira as if it were naira
+  // (each is converted first, see earnedIn)
   const [earned, setEarned] = useState<Record<string, number>>({})
   const [tab, setTab] = useState('all')
   // Ticks every second while a place is held, for the countdowns
@@ -119,15 +125,21 @@ export default function MyTasks() {
   const list = subs || []
   const shown = list.filter((TABS.find((t) => t.id === tab) || TABS[0]).test)
   const count = (id: string) => list.filter(TABS.find((t) => t.id === id)!.test).length
-  // Naira first, then the rest; ₦0 when nothing is paid yet
+  // Naira first, then the rest
   const totals = Object.entries(earned).filter(([, v]) => Number(v) > 0).sort(([a], [b]) => (a === 'NGN' ? -1 : b === 'NGN' ? 1 : a.localeCompare(b)))
+  // Earned in the display currency (naira, dollars or cedis): each currency's total
+  // converted at today's rates and added up, 0 when nothing is paid yet. null until
+  // a rate is known: then each currency's own total is shown.
+  const code = displayCode(preferredCurrency)
+  const totalsIn = totals.map(([c, v]) => (c === code ? Number(v) : convert(Number(v), c as Currency, code)))
+  const earnedIn = totalsIn.every((v) => Number.isFinite(v) && v > 0) ? totalsIn.reduce((a, b) => a + b, 0) : null
 
   // What a row pays: the money you got once paid, otherwise what the job offers
   const paid = (s: Sub) => Number(s.paidAmount ?? s.prize ?? s.task?.reward ?? 0)
   const cur = (s: Sub) => s.task?.currency || 'NGN'
 
   function detail(s: Sub) {
-    if (s.contestResult === 'WON') return `Won ${ordinal(s.place || 1)} place: ${show(paid(s), cur(s), { exact: true })}`
+    if (s.contestResult === 'WON') return `Won ${ordinal(s.place || 1)} place: ${show(paid(s), cur(s))}`
     if (unsent(s)) return unsentText(s)
     if (s.contestResult === 'NOT_PLACED') return `The winners were paid${s.winnersPaidAt ? ` on ${day(s.winnersPaidAt)}` : ''} and this entry didn't place`
     if (s.isContest && s.status === 'PENDING') return endsAt(s) ? `Send your entry before ${when(endsAt(s))}` : 'Send your entry before the contest ends'
@@ -155,7 +167,7 @@ export default function MyTasks() {
 
   // The amount on the right: what you were paid, the prize on offer, or nothing
   function amount(s: Sub) {
-    if (s.status === 'APPROVED') return <b className="paid">{show(paid(s), cur(s), { exact: true })}</b>
+    if (s.status === 'APPROVED') return <b className="paid">{show(paid(s), cur(s))}</b>
     if (out(s)) return null
     if (s.isContest) return <b>Up to {show(Number(s.task?.reward || 0), cur(s))}</b>
     return <b>{show(Number(s.task?.reward || 0), cur(s))}</b>
@@ -191,8 +203,8 @@ export default function MyTasks() {
                 </button>
               ))}
               <div>
-                {totals.length === 0
-                  ? <b>{show(0, 'NGN', { exact: true })}</b>
+                {earnedIn !== null
+                  ? <b>{formatIn(code, earnedIn)}</b>
                   : totals.map(([c, v]) => <b key={c}>{show(Number(v), c, { exact: true })}</b>)}
                 <span>earned</span>
               </div>

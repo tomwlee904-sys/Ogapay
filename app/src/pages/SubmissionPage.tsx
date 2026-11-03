@@ -12,6 +12,7 @@ import '../styles/submit.css'
 import { uploadProof } from '../lib/upload'
 import { PayoutCheckNote, PayoutCheckStatus } from '../components/PayoutCheck'
 import { isRulesError, openRules } from '../lib/welcome'
+import { useMoney } from '../lib/useMoney'
 
 // Submit work for a job (/tasks/:id/submit). Takes a slot if you haven't yet,
 // uploads files, then submits: the same steps as the job page's apply dialog.
@@ -63,6 +64,8 @@ export default function SubmissionPage() {
   const navigate = useNavigate()
   const location = useLocation()
   const { user } = useAuth()
+  // The job's reward in the member's display currency (naira, dollars or cedis)
+  const show = useMoney()
   const fileRef = useRef<HTMLInputElement>(null)
   const [task, setTask] = useState<Task | null | undefined>(undefined)
   const [mine, setMine] = useState<Mine | null | undefined>(undefined)
@@ -388,7 +391,7 @@ export default function SubmissionPage() {
                 <button className="ui-btn ui-btn-dark ui-btn-lg sb-send" disabled={!!busy} onClick={sendApplication}>
                   {busy ? <><i className="ti ti-loader-2 sb-spin" /> {busy}</> : <>Send application</>}
                 </button>
-                <p className="sb-small">Applying doesn't take the job. If you're picked, you have 24 hours to send the work, and you're paid {money(reward, cur)} when the poster approves it.</p>
+                <p className="sb-small">Applying doesn't take the job. If you're picked, you have 24 hours to send the work, and you're paid {show(reward, cur)} when the poster approves it.</p>
               </section>
             ) : closed ? (
               <section className="ui-card ui-card-pad sb-state">
@@ -440,13 +443,13 @@ export default function SubmissionPage() {
                 <button className="ui-btn ui-btn-dark ui-btn-lg sb-send" disabled={!!busy} onClick={submit}>
                   {busy ? <><i className="ti ti-loader-2 sb-spin" /> {busy}</> : <>Send work</>}
                 </button>
-                <p className="sb-small">{needsShot ? 'Add at least one screenshot.' : 'Add at least a link, a note or a file.'} {task.isContest ? 'The poster picks the winners when the contest ends, and prizes go to the best entries.' : <>The poster reviews it and you're paid {money(reward, cur)} when it's approved.</>}</p>
+                <p className="sb-small">{needsShot ? 'Add at least one screenshot.' : 'Add at least a link, a note or a file.'} {task.isContest ? 'The poster picks the winners when the contest ends, and prizes go to the best entries.' : <>The poster reviews it and you're paid {show(reward, cur)} when it's approved.</>}</p>
               </section>
             )}
           </div>
 
           <aside className="ui-card ui-card-pad sb-side">
-            <div className="sb-reward"><b>{money(reward, cur)}</b><span>{task.isContest ? '1st prize' : 'per person'}</span></div>
+            <div className="sb-reward"><b>{show(reward, cur)}</b><span>{task.isContest ? '1st prize' : 'per person'}</span></div>
             <div className="sb-meta"><span>{categoryLabel(task.category)}</span>{task.poster?.username && <span>by <Link to={`/user/${task.poster.username}`}>@{task.poster.username}</Link></span>}</div>
             {brief && <><span className="ui-label">What to do</span><div className="sb-brief" dangerouslySetInnerHTML={{ __html: renderJobText(brief) }} /></>}
             {(needsShot || proofNote) && <><span className="ui-label">Proof</span><p className="sb-proof"><i className="ti ti-photo" /> {needsShot ? 'Attach at least one screenshot of your work.' : proofNote}</p></>}

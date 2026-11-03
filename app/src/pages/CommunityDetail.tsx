@@ -9,6 +9,7 @@ import '../styles/profile-public.css'
 import '../styles/community.css'
 import '../styles/community-join.css'
 import { sized } from '../lib/img'
+import { useMoney } from '../lib/useMoney'
 
 // Community page, ported from the June version (leaderboard, open and completed
 // jobs, members-only chat, owner settings) onto the current design. Joining a
@@ -37,7 +38,6 @@ const fileName = (u: string) => { try { return decodeURIComponent(new URL(u).pat
 
 const TABS = ['About', 'Leaderboard', 'Open jobs', 'Completed', 'Chat'] as const
 type Tab = (typeof TABS)[number]
-const money = (n: number, c = 'NGN') => (c === 'NGN' ? '₦' + Math.round(n).toLocaleString('en-US') : `${n.toLocaleString('en-US')} ${c}`)
 const initials = (s: string) => s.split(/\s+/).map((w) => w[0]).join('').toUpperCase().slice(0, 2) || '?'
 const fullName = (u: { firstName?: string; lastName?: string; username?: string }) => `${u.firstName || ''} ${u.lastName || ''}`.trim() || u.username || 'Member'
 const safeLink = (u?: string) => (u && /^https:\/\//i.test(u) ? u : '')
@@ -474,6 +474,7 @@ function Settings({ c, isOwner, onSaved }: { c: Community; isOwner: boolean; onS
 }
 
 function Leaderboard({ id }: { id: string }) {
+  const show = useMoney()
   const [page, setPage] = useState(1)
   const [d, setD] = useState<{ members: Ranked[]; totalPages: number } | null>(null)
   useEffect(() => {
@@ -490,7 +491,7 @@ function Leaderboard({ id }: { id: string }) {
             <span className="cm2-rank">{m.rank}</span>
             <Face url={m.avatarUrl} name={fullName(m)} />
             <span className="cm2-lb-t"><strong>{fullName(m)}</strong><small>@{m.username}{roleLabel(m.role) ? ` · ${roleLabel(m.role)}` : ''}</small></span>
-            <span className="cm2-lb-v"><b>{m.tasksCompleted}</b> job{m.tasksCompleted === 1 ? '' : 's'}{m.totalEarned != null && <small>{money(m.totalEarned)}</small>}</span>
+            <span className="cm2-lb-v"><b>{m.tasksCompleted}</b> job{m.tasksCompleted === 1 ? '' : 's'}{m.totalEarned != null && <small>{show(Number(m.totalEarned))}</small>}</span>
           </Link>
         ))}
       </section>
@@ -500,6 +501,7 @@ function Leaderboard({ id }: { id: string }) {
 }
 
 function Jobs({ id, kind, cat }: { id: string; kind: 'open' | 'completed'; cat: string }) {
+  const show = useMoney()
   const [page, setPage] = useState(1)
   const [d, setD] = useState<{ jobs: Job[]; totalPages: number } | null>(null)
   useEffect(() => {
@@ -521,7 +523,7 @@ function Jobs({ id, kind, cat }: { id: string; kind: 'open' | 'completed'; cat: 
                   ? `${j.submissionCount || 0} submission${j.submissionCount === 1 ? '' : 's'}${j.deadline ? ` · due ${new Date(j.deadline).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}` : ''}`
                   : `Completed ${j.completedAt ? new Date(j.completedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : ''}${j.workers?.length ? ` · ${j.workers.length} worker${j.workers.length === 1 ? '' : 's'} paid` : ''}`}</small>
               </span>
-              <span className="cm2-job-v">{money(j.reward, j.currency)}</span>
+              <span className="cm2-job-v">{show(Number(j.reward || 0), j.currency || 'NGN')}</span>
               <i className="ti ti-chevron-right cm2-go" />
             </Link>
           ))}

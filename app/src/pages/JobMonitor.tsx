@@ -12,6 +12,7 @@ import { useJobAlert } from '../contexts/JobAlertContext'
 import InfoTip from '../components/InfoTip'
 import PhoneJobAlerts from '../components/PhoneJobAlerts'
 import { isRulesError, openRules } from '../lib/welcome'
+import { useMoney } from '../lib/useMoney'
 import '../styles/job-monitor.css'
 
 // Job monitor: open jobs, newest first, checked every 30 seconds while the page is
@@ -31,7 +32,6 @@ type Job = {
 }
 
 const POLL_MS = 30000
-const money = (n: number, cur = 'NGN') => cur === 'NGN' ? `₦${Math.round(n).toLocaleString('en-US')}` : `$${n.toFixed(2)}`
 const ago = (d?: string) => {
   if (!d) return ''
   const m = Math.round((Date.now() - new Date(d).getTime()) / 60000)
@@ -44,6 +44,8 @@ export default function JobMonitor() {
   const navigate = useNavigate()
   const { user } = useAuth()
   const { toast } = useToast()
+  // Job rewards in the member's display currency (naira, dollars or cedis)
+  const show = useMoney()
   // The same chime the site-wide alert plays; switching Sound on plays it once
   const { testSound } = useJobAlert()
   const [jobs, setJobs] = useState<Job[] | null>(null)
@@ -165,7 +167,7 @@ export default function JobMonitor() {
                     {/* What the job asks for, like wurk's "Requires Rank 2 · Human verification" line */}
                     {(() => { const reqs = jobRequirements(j); return <span className={`jm2-req${reqs.length ? '' : ' none'}`}><i className={`ti ti-${reqs.length ? 'shield-check' : 'circle-check'}`} aria-hidden="true" />{reqs.length ? 'Requires ' + reqs.map((r) => r.text).join(' · ') : 'No extra requirements'}</span> })()}
                   </div>
-                  <b>{money(Number(j.reward || 0), j.currency)}</b>
+                  <b>{show(Number(j.reward || 0), j.currency || 'NGN')}</b>
                   <div className="jm2-acts">
                     <button className="ui-btn ui-btn-ghost ui-btn-icon" aria-label={saved.includes(j.id) ? 'Unsave' : 'Save'} onClick={() => toggleSave(j.id)}>{saved.includes(j.id) ? <IconBookmarkFilled size={16} aria-hidden="true" /> : <i className="ti ti-bookmark" />}</button>
                     {mine

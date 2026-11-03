@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { apiRequest, getAccessToken } from '../lib/api'
+import { useMoney } from '../lib/useMoney'
 import '../styles/profile-public.css'
 import '../styles/writer.css'
 
@@ -16,13 +17,13 @@ const KINDS = [
   { id: 'TRANSLATION', label: 'Translation', icon: 'ti-language', tasksLabel: 'Translation' },
 ] as const
 
-const money = (n: number | string, c: string) => (c === 'NGN' ? '₦' + Number(n).toLocaleString('en-US') : `${Number(n).toLocaleString('en-US')} ${c}`)
 const ago = (d: string) => {
   const h = Math.floor((Date.now() - new Date(d).getTime()) / 3600000)
   return h < 1 ? 'just now' : h < 24 ? `${h}h ago` : `${Math.floor(h / 24)}d ago`
 }
 
 export default function Writer() {
+  const show = useMoney()
   const [kind, setKind] = useState<(typeof KINDS)[number]['id']>('CONTENT_WRITING')
   const [jobs, setJobs] = useState<Job[] | null>(null)
   const [counts, setCounts] = useState<Record<string, number>>({})
@@ -97,7 +98,7 @@ export default function Writer() {
                     <strong>{j.title}</strong>
                     <span>{left} of {j.maxWorkers || 1} slot{(j.maxWorkers || 1) === 1 ? '' : 's'} left · posted {ago(j.createdAt)}{j.deadline ? ` · due ${new Date(j.deadline).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}` : ''}</span>
                   </div>
-                  <span className="wr2-pay">{money(j.reward, j.currency)}</span>
+                  <span className="wr2-pay">{show(Number(j.reward || 0), j.currency || 'NGN')}</span>
                   <i className="ti ti-chevron-right wr2-go" />
                 </Link>
               )

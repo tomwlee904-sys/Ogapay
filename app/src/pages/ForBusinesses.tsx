@@ -1,5 +1,7 @@
 import { Link } from 'react-router-dom'
 import Layout from '../components/Layout'
+import { useCurrency } from '../context/CurrencyContext'
+import { displayCode, formatIn, type DisplayCode } from '../lib/money'
 
 // For businesses, brands and communities: what you can get done on OgaPay and
 // how paying for it works. Like wurk.fun's /hire. Keep every line true: fees,
@@ -35,6 +37,17 @@ const REQS = [
 ]
 
 export default function ForBusinesses() {
+  // The worked example in the display currency (naira, dollars or cedis): ₦200
+  // per person at today's rate, rounded the way it's shown, and the rest worked
+  // out from that so the sums still add up. Naira until a rate is known.
+  const { preferredCurrency, convert } = useCurrency()
+  const wanted = displayCode(preferredCurrency)
+  const perIn = wanted === 'NGN' ? 200 : Math.round(convert(200, 'NGN', wanted) * 100) / 100
+  const code: DisplayCode = Number.isFinite(perIn) && perIn > 0 ? wanted : 'NGN'
+  const per = code === 'NGN' ? 200 : perIn
+  const rewards = per * 100
+  const fee = rewards / 10
+
   return (
     <Layout>
       <style>{`
@@ -115,12 +128,12 @@ export default function ForBusinesses() {
               </div>
             ))}
           </div>
-          <p style={{ marginTop: 20 }}>For example, 100 people following and reposting your launch at ₦200 each:</p>
+          <p style={{ marginTop: 20 }}>For example, 100 people following and reposting your launch at {formatIn(code, per)} each:</p>
           <div className="ui-card fb-example">
-            <div><span>Rewards (100 × ₦200)</span><b>₦20,000</b></div>
-            <div><span>Platform fee (10%)</span><b>₦2,000</b></div>
-            <div><span>You fund</span><b>₦22,000</b></div>
-            <div><span>Each approved worker receives</span><b>₦200</b></div>
+            <div><span>Rewards (100 × {formatIn(code, per)})</span><b>{formatIn(code, rewards)}</b></div>
+            <div><span>Platform fee (10%)</span><b>{formatIn(code, fee)}</b></div>
+            <div><span>You fund</span><b>{formatIn(code, rewards + fee)}</b></div>
+            <div><span>Each approved worker receives</span><b>{formatIn(code, per)}</b></div>
           </div>
           <p>Cancel a job before anyone has taken it and the budget and fee come back to your wallet.</p>
         </section>

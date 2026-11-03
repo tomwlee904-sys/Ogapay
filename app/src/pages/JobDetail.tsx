@@ -15,6 +15,7 @@ import JobActivity from '../components/JobActivity'
 import RateWork, { RatedStars, ratedByTeam } from '../components/RateWork'
 import CopyFlag from '../components/CopyFlag'
 import { formatMoney } from '../lib/money'
+import { useMoney } from '../lib/useMoney'
 import { MIN_WITHDRAW_NGN } from '../lib/wallet'
 import { jobDeadline, deadlineLabel, deadlineDate } from '../lib/deadline'
 import { categoryLabel } from '../lib/categories'
@@ -628,6 +629,8 @@ function WurkJobDetailView(props: any) {
   } = props
   // Re-render while a payout check runs, so Approve opens when its window ends
   const clock = useNow(anyWaiting(submissions))
+  // The reward as one line of text in the member's display currency
+  const show = useMoney()
 
   const agentName = job.brand || 'OgaPay'
   const agentInitial = agentName.slice(0, 2).toUpperCase()
@@ -1349,7 +1352,7 @@ function WurkJobDetailView(props: any) {
                   <li><b>Do it and send your proof</b>, the way the description asks.{job.payoutCheck ? <small>Payout check: {job.payoutCheck.note}</small> : <small>Once every place is taken, you have 24 hours to send it.</small>}</li>
                   <li><b>{job.brand ? '@' + job.brand.replace('@', '') : 'The poster'} checks it.</b><small>If they don't review it within 3 days, it's approved automatically. If it's rejected, you'll see why. Fake, edited or copied proof gets a warning, and 3 warnings in 30 days stop you taking jobs.</small></li>
                 </>)}
-                <li><b>{contest ? 'The prize goes' : `${formatMoney(Number(job.reward || 0), rewardCurrency)} goes`} to your OgaPay wallet.</b><small>To move it to your bank, verify your identity and withdraw from {formatMoney(MIN_WITHDRAW_NGN, 'NGN')}. Bank withdrawals are paid every Thursday.</small></li>
+                <li><b>{contest ? 'The prize goes' : `${show(Number(job.reward || 0), rewardCurrency)} goes`} to your OgaPay wallet.</b><small>To move it to your bank, verify your identity and withdraw from {formatMoney(MIN_WITHDRAW_NGN, 'NGN')}. Bank withdrawals are paid every Thursday.</small></li>
               </ol>
             </section>
           )}
@@ -1443,7 +1446,7 @@ function WurkJobDetailView(props: any) {
               <div className="wjd-config-strip">
                 <div className="wjd-config-cell">
                   <div className="wjd-config-cell-label">Reward</div>
-                  <div className="wjd-config-cell-value">{formatMoney(Number(job.reward || 0), rewardCurrency)} each</div>
+                  <div className="wjd-config-cell-value">{show(Number(job.reward || 0), rewardCurrency)} each</div>
                 </div>
                 <div className="wjd-config-cell">
                   <div className="wjd-config-cell-label">Places</div>
@@ -1462,7 +1465,7 @@ function WurkJobDetailView(props: any) {
                   ? (contest.randomDraw
                     ? 'Send one entry before it closes. The winners are then drawn at random from the entries the poster hasn\'t rejected, and paid at once. Only the winners are paid.'
                     : 'Send one entry before it closes. The poster then ranks the best entries and pays a prize for each place. Only the winners are paid.' + earlyAwardText)
-                  : `Everyone whose work is approved is paid ${formatMoney(Number(job.reward || 0), rewardCurrency)}, until all ${job.slots} ${job.slots === 1 ? 'place is' : 'places are'} used.`}</div>
+                  : `Everyone whose work is approved is paid ${show(Number(job.reward || 0), rewardCurrency)}, until all ${job.slots} ${job.slots === 1 ? 'place is' : 'places are'} used.`}</div>
               </div>
               <div className="wjd-info-row" style={{ marginBottom: 20 }}>
                 <div className="wjd-info-row-label">Who can take it</div>
@@ -1475,7 +1478,7 @@ function WurkJobDetailView(props: any) {
               <ol className="wjd-how-steps">
                 <li><strong>Take a place.</strong> It's reserved for you{jobRequirements(job).filter(r => r.icon !== 'award').length ? `, if you meet the requirements (${jobRequirements(job).filter(r => r.icon !== 'award').map(r => r.text).join(', ')})` : ''}.</li>
                 <li><strong>Do the work and send it in</strong> with the proof the poster asked for. Once every place is taken, you have 24 hours to send it, or your place goes to someone else.</li>
-                <li><strong>The poster checks it.</strong> If it's approved, {formatMoney(Number(job.reward || 0), rewardCurrency)} goes straight to your OgaPay wallet.</li>
+                <li><strong>The poster checks it.</strong> If it's approved, {show(Number(job.reward || 0), rewardCurrency)} goes straight to your OgaPay wallet.</li>
                 <li><strong>If it's rejected,</strong> you'll see the reason and the place opens up again.</li>
               </ol>
 

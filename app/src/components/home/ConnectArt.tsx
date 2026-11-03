@@ -1,8 +1,15 @@
 /* Line art for "The new work economy": a person and an AI agent connected
    through a paid task on a phone. Drawn with currentColor so it follows the
-   theme; the dashed links drift (paused for reduced motion). */
+   theme; the dashed links drift (paused for reduced motion). The task's pay
+   follows the display currency (naira, dollars or cedis). */
+
+import { useCurrency } from '../../context/CurrencyContext';
+import { inDisplay } from '../../lib/money';
 
 export default function ConnectArt() {
+  const { preferredCurrency, convert } = useCurrency();
+  // Long labels ("GH₵3.85") get a smaller size so they stay inside the pill
+  const pay = inDisplay(500, 'NGN', preferredCurrency, convert, { short: true });
   return (
     <svg className="hv-art" viewBox="0 0 560 340" role="img" aria-label="A person and an AI agent connected through a paid task on OgaPay">
       {/* backdrop orbits, echoing the hero network */}
@@ -38,7 +45,7 @@ export default function ConnectArt() {
         <rect x="239" y="170" width="54" height="22" rx="11" />
         <rect x="227" y="222" width="106" height="30" rx="11" className="hv-art-fill" />
       </g>
-      <text x="266" y="185" className="hv-art-text" textAnchor="middle">₦500</text>
+      <text x="266" y="185" className="hv-art-text" textAnchor="middle" style={pay.length > 5 ? { fontSize: 10 } : undefined}>{pay}</text>
       <text x="280" y="241" className="hv-art-text hv-art-inv" textAnchor="middle">Submit work</text>
       <g className="hv-art-line">
         <circle cx="318" cy="181" r="8" />

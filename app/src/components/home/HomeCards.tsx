@@ -5,7 +5,9 @@ import { CATEGORY_LABELS as CATEGORY } from "../../lib/categories";
 import { BoostedTag, PremiumMark, VerifiedBusinessLine } from "../Perks";
 import Money from "../Money";
 import ItemCover, { itemCategoryLabel } from "../ItemCover";
-import { spokenMoney } from "../../lib/money";
+import { inDisplay, spokenMoney } from "../../lib/money";
+import { useMoney } from "../../lib/useMoney";
+import { useCurrency } from "../../context/CurrencyContext";
 import { jobDeadline } from "../../lib/deadline";
 import DeadlineTick from "../DeadlineTick";
 import { sized } from '../../lib/img'
@@ -15,7 +17,11 @@ import { sized } from '../../lib/img'
 
 type Convert = (amount: number, from: any, to: any) => number;
 
-const money = (n: number) => Math.round(n).toLocaleString("en-US");
+// For screen readers: the amount as the card shows it (the display currency),
+// e.g. "about GH₵85.05"; the real currency in words when it isn't converted.
+// `shown` is useMoney's show(amount, currency).
+const spoken = (shown: string, amount: number, currency: string) =>
+  shown.startsWith("≈ ") ? `about ${shown.slice(2)}` : spokenMoney(amount, currency);
 
 const plain = (s?: string) => (s || "").replace(/[#*_`>]+/g, "").replace(/\s+/g, " ").trim();
 
@@ -29,6 +35,7 @@ function Avatar({ src, name, size = 32 }: { src?: string | null; name: string; s
 
 // myStatus: your submission's status on this job, if you took a place (Jobs page)
 export function HomeJobCard({ task, convert, myStatus }: { task: any; convert: Convert; myStatus?: string }) {
+  const show = useMoney();
   const poster = task.poster || task.creator || {};
   const name = poster.username || poster.firstName || task.creatorName || "OgaPay";
   const amount = Number(task.reward ?? task.amount ?? 0);
@@ -47,9 +54,10 @@ export function HomeJobCard({ task, convert, myStatus }: { task: any; convert: C
   const tag = Array.isArray(task.tags) && task.tags[0] && task.tags[0] !== category ? ` / ${task.tags[0]}` : "";
 
   const reqs = jobRequirements(task);
+  const said = spoken(show(amount, cur), amount, cur);
 
   return (
-    <Link to={`/tasks/${task.id}`} className="hc-card" aria-label={`${task.title} by ${name}, ${contest ? `contest, 1st place prize ${spokenMoney(amount, cur)}` : `${spokenMoney(amount, cur)} per worker`}. View job`}>
+    <Link to={`/tasks/${task.id}`} className="hc-card" aria-label={`${task.title} by ${name}, ${contest ? `contest, 1st place prize ${said}` : `${said} per worker`}. View job`}>
       <div className="hc-top">
         <span className="hc-type">{contest ? <><i className="ti ti-award" />Contest</> : <><i className="ti ti-briefcase" />{task.category === "SOCIAL_MEDIA" ? "Social task" : "Custom job"}</>}</span>
         {task.isBoosted ? <BoostedTag /> : task.featured && <span className="hc-pill"><i className="ti ti-star" style={{ color: "#bd8517" }} />Highlighted</span>}
@@ -107,6 +115,7 @@ export function HomeJobCard({ task, convert, myStatus }: { task: any; convert: C
 }
 
 export function HomeCommunityCard({ community: c }: { community: any }) {
+  const { preferredCurrency, convert } = useCurrency();
   const members = Number(c.memberCount ?? c.members ?? 0);
   const jobs = Number(c.taskCount ?? c.tasks ?? 0);
   const rewards = Number(c.rewards ?? 0);
@@ -125,7 +134,7 @@ export function HomeCommunityCard({ community: c }: { community: any }) {
         </div>
         <p className="hc-pdesc">{plain(c.description || c.desc)}</p>
         <div className="hc-story-foot">
-          <span>{rewards > 0 ? <><b className="hc-cpaid">₦{money(rewards)}</b> paid out</> : c.isPublic === false ? "Private" : "Open to join"}</span>
+          <span>{rewards > 0 ? <><b className="hc-cpaid">{inDisplay(rewards, "NGN", preferredCurrency, convert)}</b> paid out</> : c.isPublic === false ? "Private" : "Open to join"}</span>
           <span className="hc-go">View community<span className="hc-arrow"><i className="ti ti-arrow-up-right" /></span></span>
         </div>
       </div>
@@ -134,11 +143,12 @@ export function HomeCommunityCard({ community: c }: { community: any }) {
 }
 
 export function HomeProductCard({ item, convert }: { item: any; convert: Convert }) {
+  const show = useMoney();
   const price = Number(item.price ?? 0);
   const cur = item.currency || "NGN";
   const seller = item.seller || "OgaPay";
   return (
-    <Link to={`/store/${item.id}`} className="hc-card hc-product" aria-label={`${item.title} by ${seller}, ${item.priceOnRequest ? "price on request" : spokenMoney(price, cur)}. View details`}>
+    <Link to={`/store/${item.id}`} className="hc-card hc-product" aria-label={`${item.title} by ${seller}, ${item.priceOnRequest ? "price on request" : spoken(show(price, cur), price, cur)}. View details`}>
       <div className="hc-media">
         <ItemCover src={item.image} category={item.category} title={item.title} width={320} />
         <span className="hc-active"><span />Active</span>

@@ -1,5 +1,7 @@
 ﻿import { useNavigate } from 'react-router-dom'
 import { formatCompact } from '../lib/currency'
+import { useCurrency } from '../context/CurrencyContext'
+import { displayCode, displayPref, inDisplay } from '../lib/money'
 
 const OGAPAY_BLUE = 'var(--accent)'
 const OGAPAY_BLUE_MUTED = 'rgba(var(--accent-rgb),0.08)'
@@ -45,6 +47,8 @@ function formatUSD(n: number) {
 
 export default function WalletPreviewCard({ data }: WalletPreviewCardProps) {
   const navigate = useNavigate()
+  // The estimated share (in dollars) is shown in the display currency
+  const { preferredCurrency, convert } = useCurrency()
   const v = data.vault
   const isEligible = v.isEligible
   const snapshotFound = v.snapshotFound !== false // default true if not specified
@@ -53,6 +57,13 @@ export default function WalletPreviewCard({ data }: WalletPreviewCardProps) {
   const sharePct = v.distributionSharePct ?? 0
   const estPay = v.estimatedCurrentPay ?? 0
   const estUsd = v.estimatedCurrentUsd ?? 0
+  // One small dollar figure: dollars (the real amount, full precision) for
+  // "Both", dollar users or when there is no rate; naira or cedis otherwise
+  const code = displayCode(preferredCurrency)
+  const conv = code === 'USDC' ? NaN : convert(estUsd, 'USDC', code)
+  const estText = displayPref(preferredCurrency) === 'BOTH' || code === 'USDC' || !(Number.isFinite(conv) && conv > 0)
+    ? formatUSD(estUsd)
+    : inDisplay(estUsd, 'USDC', preferredCurrency, convert, { short: true })
 
   return (
     <div style={{ marginTop: 16 }}>
@@ -106,7 +117,7 @@ export default function WalletPreviewCard({ data }: WalletPreviewCardProps) {
           <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text2)' }}>ESTIMATED CURRENT SHARE</span>
           <div style={{ textAlign: 'right' as const }}>
             <div style={{ fontSize: 13, fontWeight: 700 }}>{formatCompact(estPay)} $PAY</div>
-            <div style={{ fontSize: 11, color: 'var(--text3)' }}>{formatUSD(estUsd)}</div>
+            <div style={{ fontSize: 11, color: 'var(--text3)' }}>{estText}</div>
           </div>
         </div>
       </div>

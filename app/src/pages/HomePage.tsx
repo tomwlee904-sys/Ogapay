@@ -20,25 +20,20 @@ import "../styles/home-v2.css";
 import "../styles/home-cards.css";
 import { sized } from '../lib/img'
 import { jobDeadline } from '../lib/deadline'
-import { displayPref, formatUsd } from '../lib/money'
+import { inDisplay } from '../lib/money'
+import { useMoney } from '../lib/useMoney'
 
 /* ─── helpers ──────────────────────────────────────────────────────────────── */
 
 // Public milestones only show once they are big enough to be worth showing.
+// Money figures here follow the member's display currency (lib/money inDisplay,
+// useMoney): naira, dollars or cedis.
 
-const naira = (n: number) => {
-  if (n >= 1e9) return `₦${(n / 1e9).toFixed(1).replace(/\.0$/, "")}B`;
-  if (n >= 1e6) return `₦${(n / 1e6).toFixed(1).replace(/\.0$/, "")}M`;
-  if (n >= 1e4) return `₦${Math.round(n / 1e3)}K`;
-  return `₦${Math.round(n).toLocaleString("en-NG")}`;
-};
 const compact = (n: number) => {
   if (n >= 1e6) return `${(n / 1e6).toFixed(1).replace(/\.0$/, "")}M+`;
   if (n >= 1e3) return `${Math.floor(n / 1e3)}K+`;
   return n.toLocaleString("en-US");
 };
-const reward = (amount: number, currency?: string) =>
-  currency && currency !== "NGN" ? `${currency === "SOL" ? "" : "$"}${amount.toLocaleString("en-US")}${currency === "SOL" ? " SOL" : ""}` : `₦${Math.round(amount).toLocaleString("en-NG")}`;
 const ago = (d?: string) => {
   if (!d) return "";
   const s = Math.max(1, Math.floor((Date.now() - new Date(d).getTime()) / 1000));
@@ -125,8 +120,7 @@ function StatCard({ icon, label, value, sub, format, positive, tint, delay }: { 
 
 function Hero({ live, onCreate }: { live: any; onCreate: () => void }) {
   const { preferredCurrency, convert } = useCurrency();
-  const inUsd = displayPref(preferredCurrency) === "USDC";
-  const fundedFmt = (v: number) => (inUsd ? formatUsd(convert(v, "NGN", "USDC")) : naira(v));
+  const fundedFmt = (v: number) => inDisplay(v, "NGN", preferredCurrency, convert, { short: true });
   const n = (k: string) => (live && typeof live[k] === "number" ? live[k] : live ? 0 : null);
   // On a quiet day the 24h figures are zero; show the all-time figure instead and say so.
   const recentOrTotal = (recent: string, total: string) => {
@@ -183,6 +177,7 @@ function Hero({ live, onCreate }: { live: any; onCreate: () => void }) {
 // picture or profile link (the server leaves their name out).
 type Payout = { username: string | null; avatarUrl: string | null; private?: boolean; amount: number; currency: string; at: string };
 function Ticker({ payouts }: { payouts: Payout[] }) {
+  const show = useMoney();
   if (payouts.length === 0) return <div id="hv-ticker" />;
   const items = payouts.slice(0, 20);
   const row = [...items, ...items];
@@ -191,11 +186,14 @@ function Ticker({ payouts }: { payouts: Payout[] }) {
       <div className="hv-ticker-track">
         {row.map((p, i) => {
           const name = p.username || "A member";
+          // "≈ +$1.13", not "+≈ $1.13", when the amount was converted
+          const amt = show(Number(p.amount || 0), p.currency || "NGN");
+          const signed = amt.startsWith("≈ ") ? `≈ +${amt.slice(2)}` : `+${amt}`;
           const inner = (
             <>
               <span className="hv-tick-av">{p.avatarUrl ? <img src={sized(p.avatarUrl, 24, true)} alt="" loading="lazy" /> : name.charAt(0).toUpperCase()}</span>
               <b>{p.username ? `@${p.username}` : name}</b>
-              <span className="amt">+{reward(Number(p.amount || 0), p.currency)}</span>
+              <span className="amt">{signed}</span>
               <span style={{ color: "var(--text2)" }}>paid</span>
               <span className="ago">{ago(p.at)}</span>
             </>
@@ -389,12 +387,13 @@ function Milestone({ value, label, format }: { value: number; label: string; for
 const MILESTONE_MIN = { users: 200, jobs: 100, paidNgn: 40_000 };
 
 function Numbers({ live, all }: { live: any; all: any }) {
+  const { preferredCurrency, convert } = useCurrency();
   const users = Number(all?.data?.totalUsers ?? all?.totalUsers ?? 0);
   const approved = Number(live?.tasksDone ?? 0);
   const funded = Number(live?.totalPaidOut ?? 0);
   const items = [
     { value: approved, label: "Jobs completed", format: (x: number) => compact(Math.round(x)), show: approved >= MILESTONE_MIN.jobs },
-    { value: funded, label: "Paid to workers", format: naira, show: funded >= MILESTONE_MIN.paidNgn },
+    { value: funded, label: "Paid to workers", format: (x: number) => inDisplay(x, "NGN", preferredCurrency, convert, { short: true }), show: funded >= MILESTONE_MIN.paidNgn },
     { value: users, label: "Users registered", format: (x: number) => compact(Math.round(x)), show: users >= MILESTONE_MIN.users },
   ].filter((m) => m.show);
   if (items.length === 0) return null;

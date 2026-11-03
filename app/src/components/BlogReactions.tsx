@@ -4,6 +4,7 @@ import { apiRequest } from '../lib/api'
 import { useAuth } from '../context/AuthContext'
 import { sized } from '../lib/img'
 import { kycOf } from '../lib/wallet'
+import { useMoney } from '../lib/useMoney'
 
 // Likes, comments and tips under a blog post. A tip is a naira transfer from your
 // wallet to the author (the same transfer as sending money, with the same 2FA rule).
@@ -17,6 +18,8 @@ const when = (d: string) => new Date(d).toLocaleString('en-GB', { day: 'numeric'
 export default function BlogReactions({ slug, post }: { slug: string; post: any }) {
   const { user } = useAuth()
   const navigate = useNavigate()
+  // The tips total follows the display currency; the tip form stays in naira (it sends naira)
+  const show = useMoney()
   const [r, setR] = useState<Reactions>({
     likeCount: post.likeCount || 0, commentCount: post.commentCount || 0, tipTotal: post.tipTotal || 0, tipCount: post.tipCount || 0, likedByMe: !!post.likedByMe,
   })
@@ -108,7 +111,7 @@ export default function BlogReactions({ slug, post }: { slug: string; post: any 
             <i className="ti ti-coin" /> Tip the author
           </button>
         )}
-        {r.tipCount > 0 && <span className="br-note">{naira(r.tipTotal)} tipped by {r.tipCount} reader{r.tipCount === 1 ? '' : 's'}</span>}
+        {r.tipCount > 0 && <span className="br-note">{show(r.tipTotal, 'NGN')} tipped by {r.tipCount} reader{r.tipCount === 1 ? '' : 's'}</span>}
       </div>
 
       <div className="br-com" id="comments">

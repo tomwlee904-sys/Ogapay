@@ -2,7 +2,10 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import Layout from '../components/Layout'
+import { useCurrency } from '../context/CurrencyContext'
 import { apiRequest } from '../lib/api'
+import { displayCode, formatIn } from '../lib/money'
+import { useMoney } from '../lib/useMoney'
 import '../styles/profile-public.css'
 import '../styles/analytics.css'
 
@@ -24,14 +27,22 @@ const PERIODS: { id: Period; label: string; span: string }[] = [
   { id: 'month', label: 'Month', span: 'last 30 days' },
   { id: 'year', label: 'Year', span: 'last 12 months' },
 ]
-const naira = (n: number) => '₦' + Math.round(n).toLocaleString('en-US')
-const money = (n: number, c: string) => (c === 'NGN' ? naira(n) : `${n.toLocaleString('en-US', { maximumFractionDigits: 2 })} ${c}`)
 const tip = { contentStyle: { background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 10, fontSize: 12 }, labelStyle: { color: 'var(--text2)' } }
 
 export default function Analytics() {
   const [period, setPeriod] = useState<Period>('week')
   const [data, setData] = useState<Data | null>(null)
   const [err, setErr] = useState(false)
+  // Amounts follow the display currency (naira, dollars or cedis); they always showed naira
+  const show = useMoney()
+  const { preferredCurrency, convert } = useCurrency()
+  // The Earned chart is plotted in the display currency so the axis gets that
+  // currency's own round ticks (naira when no rate is known yet)
+  const code = displayCode(preferredCurrency)
+  const per = code === 'NGN' ? 1 : convert(1, 'NGN', code)
+  const axisCode = Number.isFinite(per) && per > 0 ? code : 'NGN'
+  const rate = axisCode === 'NGN' ? 1 : per
+  const earnedSeries = (data?.series || []).map((r) => ({ ...r, earnedShown: r.earnedNgn * rate }))
 
   useEffect(() => {
     let live = true
@@ -68,7 +79,7 @@ export default function Analytics() {
         <div className="an2-stats">
           <section className="up-card an2-stat">
             <div className="up-eyebrow">Earned</div>
-            <b>{t ? naira(t.earnedNgn) : '…'}</b>
+            <b>{t ? show(t.earnedNgn, 'NGN') : '…'}</b>
             <span>{t?.otherCurrencyJobs ? `+ ${t.otherCurrencyJobs} job${t.otherCurrencyJobs === 1 ? '' : 's'} paid in crypto` : 'from paid jobs'}</span>
           </section>
           <section className="up-card an2-stat">
@@ -91,7 +102,7 @@ export default function Analytics() {
         {t && t.spentNgn > 0 && (
           <section className="up-card an2-spent">
             <i className="ti ti-briefcase" />
-            <span>Your jobs paid out <b>{naira(t.spentNgn)}</b> to workers ({span}).</span>
+            <span>Your jobs paid out <b>{show(t.spentNgn, 'NGN')}</b> to workers ({span}).</span>
             <Link to="/manage-jobs" className="tap">Manage jobs</Link>
           </section>
         )}
@@ -121,16 +132,17 @@ export default function Analytics() {
               </div>
             </section>
             <section className="up-card an2-chart">
-              <h2>Naira earned</h2>
+              {/* The series counts naira-paid jobs only (crypto-paid jobs are counted separately) */}
+              <h2>{t?.otherCurrencyJobs ? 'Earned (naira jobs)' : 'Earned'}</h2>
               <div className="an2-plot">
                 {data ? (
                   <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={data.series} margin={{ top: 6, right: 8, left: 0, bottom: 0 }}>
+                    <LineChart data={earnedSeries} margin={{ top: 6, right: 8, left: 0, bottom: 0 }}>
                       <CartesianGrid strokeDasharray="3 4" stroke="var(--border)" vertical={false} />
                       <XAxis dataKey="label" tick={tick} axisLine={false} tickLine={false} interval={interval} />
-                      <YAxis tick={tick} axisLine={false} tickLine={false} width={56} tickFormatter={(v: number) => (v >= 1000 ? `₦${+(v / 1000).toFixed(1)}k` : `₦${v}`)} />
-                      <Tooltip {...tip} formatter={(v: number) => [naira(v), 'Earned']} />
-                      <Line type="monotone" dataKey="earnedNgn" stroke="var(--green)" strokeWidth={2} dot={{ r: 2.5 }} />
+                      <YAxis tick={tick} axisLine={false} tickLine={false} width={axisCode === 'NGN' ? 56 : 64} tickFormatter={(v: number) => axisCode === 'NGN' ? (v >= 1000 ? `₦${+(v / 1000).toFixed(1)}k` : `₦${v}`) : formatIn(axisCode, v, { short: true })} />
+                      <Tooltip {...tip} formatter={(_v: number, _n: string, item: { payload?: { earnedNgn?: number } }) => [show(Number(item.payload?.earnedNgn || 0), 'NGN'), 'Earned']} />
+                      <Line type="monotone" dataKey="earnedShown" stroke="var(--green)" strokeWidth={2} dot={{ r: 2.5 }} />
                     </LineChart>
                   </ResponsiveContainer>
                 ) : <div className="an2-wait">Loading…</div>}
@@ -150,8 +162,8 @@ export default function Analytics() {
                     <tr key={r.label}>
                       <td>{r.label}</td>
                       <td>{r.jobs}</td>
-                      <td className="amt">{naira(r.earnedNgn)}</td>
-                      <td>{naira(r.earnedNgn / r.jobs)}</td>
+                      <td className="amt">{show(r.earnedNgn, 'NGN')}</td>
+                      <td>{show(r.earnedNgn / r.jobs, 'NGN')}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -168,7 +180,7 @@ export default function Analytics() {
                 <Link key={p.id} to={`/tasks/${p.task.id}`} className="an2-pay">
                   <span className="t">{p.task.title}</span>
                   <span className="d">{new Date(p.at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
-                  <span className="a">+{money(p.amount, p.currency)}</span>
+                  <span className="a">+{show(p.amount, p.currency)}</span>
                 </Link>
               ))}
             </div>

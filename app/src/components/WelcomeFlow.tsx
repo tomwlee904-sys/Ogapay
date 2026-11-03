@@ -5,6 +5,7 @@ import { useToast } from './Toast'
 import { apiRequest } from '../lib/api'
 import { turnOnPush } from '../lib/push'
 import { parseReferralInput, type WelcomeStep } from '../lib/welcome'
+import { useMoney } from '../lib/useMoney'
 import '../styles/wallet.css'
 import '../styles/welcome.css'
 
@@ -30,6 +31,8 @@ const Err = ({ text }: { text: string }) => text ? <div className="wl-err" role=
 
 export default function WelcomeFlow({ steps, myCode, onRulesAccepted, onClaimed, onFinish }: Props) {
   const { toast } = useToast()
+  // The first job bonus (a naira amount) in the member's display currency
+  const show = useMoney()
   const [at, setAt] = useState(0)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -142,7 +145,7 @@ export default function WelcomeFlow({ steps, myCode, onRulesAccepted, onClaimed,
         {step === 'verify' && (
           <>
             <p className="wf-text">Level 1 lets you withdraw your earnings. It's free and takes a minute: use a bank account in your own name, or your NIN.</p>
-            <p className="wf-text">For the ₦1,000 first job bonus, verify with your NIN and finish your first paid job.</p>
+            <p className="wf-text">For the {show(1000, 'NGN')} first job bonus, verify with your NIN and finish your first paid job.</p>
             <div className="ui-actions wf-actions">
               <button type="button" className="ui-btn ui-btn-ghost" onClick={next}>Later</button>
               <Link to="/settings/verification" className="ui-btn ui-btn-dark" onClick={onFinish}>Verify now</Link>

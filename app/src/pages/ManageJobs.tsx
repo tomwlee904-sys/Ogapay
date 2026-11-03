@@ -17,6 +17,10 @@ import { isXFollowJob } from "../lib/followJobs";
 import LoadError from "../components/LoadError";
 import { jobDeadline } from "../lib/deadline";
 import { contestPaidOut } from "../lib/contestPrizes";
+import { useMoney } from "../lib/useMoney";
+import { useCurrency } from "../context/CurrencyContext";
+import { displayCode, formatIn, inDisplay } from "../lib/money";
+import type { Currency } from "../lib/currency";
 
 // Work can be sent back for changes this many times (server: task.service SEND_BACK_LIMIT)
 const SEND_BACK_LIMIT = 2;
@@ -154,6 +158,9 @@ function JobDrawer({ task, allTasks, focusId, onClose, onChanged }: { task: Task
   const cur = task.currency || "NGN";
   const reward = Number(task.reward || 0);
   const contest = !!task.isContest;
+  // Figures people read (the reward in the header, "paid out") follow the display
+  // currency; where money moves (approve, raise pay) it stays in the job's own
+  const show = useMoney();
 
   const load = useCallback(async () => {
     try {
@@ -364,7 +371,7 @@ function JobDrawer({ task, allTasks, focusId, onClose, onChanged }: { task: Task
         <div className="mj-dh">
           <div style={{ flex: 1, minWidth: 0 }}>
             <h2>{task.title}</h2>
-            <div className="mj-meta"><Pill status={task.status} /><span>{categoryLabel(task.category)}</span><span>{money(reward, cur)} {contest ? "1st place prize" : "per person"}</span></div>
+            <div className="mj-meta"><Pill status={task.status} /><span>{categoryLabel(task.category)}</span><span>{show(reward, cur)} {contest ? "1st place prize" : "per person"}</span></div>
           </div>
           <button className="mj-x" onClick={onClose} aria-label="Close"><Icon n="x" /></button>
         </div>
@@ -424,7 +431,7 @@ function JobDrawer({ task, allTasks, focusId, onClose, onChanged }: { task: Task
           <div className="mj-dgrid">
             <div><b>{counts.approved}/{counts.slots}</b><span>approved</span></div>
             <div><b>{counts.review}</b><span>to review</span></div>
-            <div><b>{money(counts.paid, cur)}</b><span>paid out</span></div>
+            <div><b>{show(counts.paid, cur)}</b><span>paid out</span></div>
           </div>
 
           {subs === null ? <div className="ui-sk" style={{ height: 120 }} /> : (
@@ -528,7 +535,7 @@ function JobDrawer({ task, allTasks, focusId, onClose, onChanged }: { task: Task
                 <section className="mj-sec">
                   <h4>Approved ({approved.length})</h4>
                   <div className="mj-rows">{approved.map((s) => (
-                    <div key={s.id} className="mj-row"><div className="mj-who"><Avatar w={s.worker} /><div><WorkerLink w={s.worker} /><small>Paid {money(reward, cur)}{s.reviewedAt ? ` · ${day(s.reviewedAt)}` : ""}</small>{s.rating ? <p>{ratedByTeam(s, user?.id) ? "Rated by the OgaPay team: " : ""}<RatedStars value={s.rating} /> {s.rating}/5{s.feedback ? ` · “${s.feedback}”` : ""}</p> : null}</div></div>{s.worker?.username && <button className="ui-btn ui-btn-ghost" onClick={() => setTipFor(s)}><Icon n="heart-handshake" s={15} /> Tip</button>}</div>
+                    <div key={s.id} className="mj-row"><div className="mj-who"><Avatar w={s.worker} /><div><WorkerLink w={s.worker} /><small>Paid {money(contest && s.place && Number.isFinite(Number(task.prizes?.[s.place - 1])) ? Number(task.prizes![s.place - 1]) : reward, cur)}{s.reviewedAt ? ` · ${day(s.reviewedAt)}` : ""}</small>{s.rating ? <p>{ratedByTeam(s, user?.id) ? "Rated by the OgaPay team: " : ""}<RatedStars value={s.rating} /> {s.rating}/5{s.feedback ? ` · “${s.feedback}”` : ""}</p> : null}</div></div>{s.worker?.username && <button className="ui-btn ui-btn-ghost" onClick={() => setTipFor(s)}><Icon n="heart-handshake" s={15} /> Tip</button>}</div>
                   ))}</div>
                 </section>
               )}
@@ -728,6 +735,9 @@ function JobsListPage({ tasks, reload }: { tasks: Task[]; reload: () => void }) 
     if (!v && (params.get("job") || params.get("entry"))) { params.delete("job"); params.delete("entry"); setParams(params, { replace: true }); }
   };
   const open = tasks.find((t) => t.id === openId) || null;
+  // Rewards and "paid to workers" follow the display currency (naira, dollars or cedis)
+  const show = useMoney();
+  const { preferredCurrency, convert } = useCurrency();
 
   const totals = useMemo(() => {
     const paid: Record<string, number> = {};
@@ -739,9 +749,16 @@ function JobsListPage({ tasks, reload }: { tasks: Task[]; reload: () => void }) 
       paid[cur] = (paid[cur] || 0) + c.paid;
     }
     const live = tasks.filter(FILTERS[2].test).length;
-    const paidText = Object.entries(paid).filter(([, v]) => v > 0).map(([c, v]) => money(v, c)).join(" · ") || money(0);
+    // Every currency added up in the display currency at today's rates. Until a
+    // rate is known, each currency on its own: "₦3,200 · 1.50 USDC"
+    const paidBy = Object.entries(paid).filter(([, v]) => v > 0);
+    const code = displayCode(preferredCurrency);
+    const paidIn = paidBy.map(([c, v]) => (c === code ? v : convert(v, c as Currency, code)));
+    const paidText = paidIn.every((v) => Number.isFinite(v) && v > 0)
+      ? formatIn(code, paidIn.reduce((a, b) => a + b, 0))
+      : paidBy.map(([c, v]) => inDisplay(v, c, preferredCurrency, convert)).join(" · ");
     return { review, approved, live, paidText };
-  }, [tasks]);
+  }, [tasks, preferredCurrency, convert]);
 
   const shown = tasks.filter((FILTERS.find((f) => f.id === filter) || FILTERS[0]).test);
 
@@ -790,7 +807,7 @@ function JobsListPage({ tasks, reload }: { tasks: Task[]; reload: () => void }) 
                     {t.deadline && <span>Closes {day(t.deadline)}</span>}
                   </div>
                 </div>
-                <div className="mj-reward"><b>{money(Number(t.reward || 0), cur)}</b><span>{t.isContest ? "1st place prize" : "per person"}</span></div>
+                <div className="mj-reward"><b>{show(Number(t.reward || 0), cur)}</b><span>{t.isContest ? "1st place prize" : "per person"}</span></div>
               </div>
               <div className="mj-bar" aria-hidden="true"><i style={{ width: `${Math.min(100, (c.approved / c.slots) * 100)}%` }} /></div>
               <div className="mj-job-foot">

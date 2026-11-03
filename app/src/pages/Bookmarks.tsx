@@ -2,13 +2,13 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { listSavedJobs, setSaved, type SavedJob } from '../lib/bookmarks'
+import { useMoney } from '../lib/useMoney'
 import '../styles/profile-public.css'
-
-const money = (n: number | string, cur = 'NGN') =>
-  cur === 'NGN' ? '₦' + Number(n).toLocaleString('en-US', { maximumFractionDigits: 2 }) : `${Number(n).toLocaleString('en-US', { maximumFractionDigits: 6 })} ${cur}`
 
 // Saved jobs (server-side, the same list the bookmark icons use)
 export default function Bookmarks() {
+  // Rewards follow the display currency (naira, dollars or cedis)
+  const show = useMoney()
   const [list, setList] = useState<SavedJob[] | null>(null)
   const [error, setError] = useState(false)
 
@@ -50,7 +50,7 @@ export default function Bookmarks() {
                   <Link to={`/tasks/${b.taskId}`} style={{ flex: 1, minWidth: 0, textDecoration: 'none', color: 'inherit' }}>
                     <b style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t?.title || 'Job no longer available'}</b>
                     <small>
-                      {t ? <>{money(t.reward, t.currency)} · {String(t.category).replace(/_/g, ' ').toLowerCase()} · {open ? 'Open' : String(t.status).replace(/_/g, ' ').toLowerCase()}</> : 'Removed by the creator'}
+                      {t ? <>{show(Number(t.reward) || 0, t.currency || 'NGN')} · {String(t.category).replace(/_/g, ' ').toLowerCase()} · {open ? 'Open' : String(t.status).replace(/_/g, ' ').toLowerCase()}</> : 'Removed by the creator'}
                     </small>
                   </Link>
                   <button className="up-btn" style={{ height: 34, padding: '0 12px' }} onClick={() => remove(b.taskId)} aria-label={`Remove ${t?.title || 'job'} from saved`}>

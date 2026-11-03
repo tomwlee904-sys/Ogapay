@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { apiRequest } from '../lib/api'
+import { useMoney } from '../lib/useMoney'
 
 // The quick social job box on a job page (task.social from GET /tasks/:id):
 // the action and what it pays, the post it is about, progress (paid / waiting
@@ -19,7 +20,6 @@ const PACKS: Record<string, string> = { SMALL: 'Small', MEDIUM: 'Medium', LARGE:
 const ACTION_TEXT: Record<string, string> = {
   FOLLOW: 'Follow', LIKE: 'Like', REPOST: 'Repost', REPLY: 'Comment', BOOKMARK: 'Bookmark', QUOTE: 'Quote', VIEW: 'View', RAID: 'Raid: like, repost and comment',
 }
-const naira = (n: number) => `₦${Number(n || 0).toLocaleString('en-US', { maximumFractionDigits: 2 })}`
 
 // "4:59" from milliseconds
 const clock = (ms: number) => {
@@ -40,6 +40,8 @@ function useTick(active: boolean) {
 export default function SocialJobPanel({ jobId, social, holdEndsAt, signedIn, onTimeUp }: {
   jobId: string; social: SocialInfo; holdEndsAt?: string | null; signedIn: boolean; onTimeUp?: () => void
 }) {
+  // The pay per action (X social prices are naira) in the member's display currency
+  const show = useMoney()
   const holdEnd = holdEndsAt ? new Date(holdEndsAt).getTime() : 0
   const nextBatch = social.nextBatchAt ? new Date(social.nextBatchAt).getTime() : 0
   const now = useTick(!!holdEnd || !!nextBatch)
@@ -106,7 +108,7 @@ export default function SocialJobPanel({ jobId, social, holdEndsAt, signedIn, on
           <small>{social.blueTick ? 'Blue-tick X accounts only. ' : ''}Quick social job: take a place, do it on X, send proof.</small>
         </div>
         <div className="sjp-pay">
-          <strong>{naira(social.pricePerAction)}</strong>
+          <strong>{show(Number(social.pricePerAction || 0), 'NGN')}</strong>
           <span>per {social.action === 'RAID' ? 'raider' : social.actionName}</span>
         </div>
       </div>
