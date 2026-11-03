@@ -20,6 +20,7 @@ import TemplatesModal from "../components/create/TemplatesModal";
 import { useProviders } from "../lib/providers";
 import "../styles/create.css";
 import { missingLink, missingLinkText, TEMPLATE_BLANKS } from '../lib/jobText'
+import { subMinPay } from '../lib/jobCategories'
 import InfoTip from '../components/InfoTip'
 import { PayoutCheckPicker, PAYOUT_CHECKS } from '../components/PayoutCheck'
 import { MAX_PLACES } from '../lib/contestPrizes'
@@ -573,6 +574,10 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
   const [requiredCommunityId, setRequiredCommunityId] = useState("");
   // Where workers must live: "" anyone, "NG" or "GH" (backend targetCountries), with how many members live there
   const [country, setCountry] = useState("");
+  // The link people open to start the job ("Start job" on the job page), and what to send as proof
+  const [startUrl, setStartUrl] = useState("");
+  const [proofText, setProofText] = useState("");
+  const startUrlBad = !!startUrl.trim() && !/^https?:\/\/[^\s]+$/i.test(startUrl.trim());
   const [audience, setAudience] = useState<{ all: number; NG: number; GH: number } | null>(null);
   useEffect(() => { apiRequest<{ all: number; NG: number; GH: number }>("/tasks/audience", { auth: false }).then((a) => setAudience(a || null)).catch(() => {}); }, []);
   const [requirable, setRequirable] = useState<{ id: string; name: string; slug: string; mine: boolean }[]>([]);
@@ -624,7 +629,9 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
   const perWinner = isContest ? prizeNums[0] || 0 : winners > 0 ? rewardPool / winners : 0;
   const platformFee = rewardPool * 0.10;
   const totalToPay = rewardPool + platformFee;
-  const floor = currency === "NGN" ? Math.max(minReward("NGN"), CATEGORY_MIN_PAYOUT[category] || 0) : minReward(currency);
+  // Its sub-category's minimum (the server checks the same numbers), contests aside
+  const subMin = isContest ? 0 : subMinPay(subcategory, currency);
+  const floor = currency === "NGN" ? Math.max(minReward("NGN"), CATEGORY_MIN_PAYOUT[category] || 0, subMin) : minReward(currency);
   const minTotal = floor * Math.max(winners, 1);
   // A contest always ends (entries close, then winners are picked)
   const chosenDeadline = deadlineFor(isContest && duration === "No deadline" ? "7 days" : duration);
@@ -642,7 +649,7 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
 
   // A job that sends people to a survey, form, site or app needs its link
   // (a worker took a survey job with no link to the survey); this stops posting
-  const linkNeeded = missingLink(`${title}\n${description}`, files.length > 0);
+  const linkNeeded = missingLink(`${title}\n${description}\n${startUrl}`, files.length > 0);
   const checklist = [
     { ok: title.trim().length >= 5 && !LINK_ONLY.test(title), label: LINK_ONLY.test(title) ? "Use a title that says what to do, not just a link." : "Give the job a short title." },
     { ok: description.trim().length >= 20, label: "Describe the task and what people should submit." },
@@ -762,7 +769,10 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
         }),
         tags: [category, subcategory].filter(Boolean).slice(0, 5),
         ...(deadline && { deadline: deadline.toISOString() }),
-        ...(screenshot && { proofRequired: "Screenshot required" }),
+        // "Screenshot required" (the switch, checked by the server) and anything else they want sent
+        ...((screenshot || proofText.trim()) && { proofRequired: [screenshot ? "Screenshot required" : "", proofText.trim()].filter(Boolean).join(". ") }),
+        ...(subcategory && { subcategory }),
+        ...(startUrl.trim() && !startUrlBad && { targetUrl: startUrl.trim() }),
         ...reqFields(reqs),
         ...(trackingCode.trim() && { trackingCode: trackingCode.trim() }),
         ...(uploaded.length && { attachments: uploaded.map(u => u.url) }),
@@ -892,8 +902,19 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
                     )}
                     {refineError && <p className="cf-hint err" role="alert">{refineError}</p>}
                     {linkNeeded && (
-                      <p className="cf-warn" role="status"><i className="ti ti-link-off" aria-hidden="true" /> {missingLinkText(linkNeeded)} Paste the full address (https://...) in the description.</p>
+                      <p className="cf-warn" role="status"><i className="ti ti-link-off" aria-hidden="true" /> {missingLinkText(linkNeeded)} Paste the full address (https://...) below or in the description.</p>
                     )}
+                  </div>
+
+                  <div className="cf-field">
+                    <label htmlFor="cj-start">Link for workers (optional)</label>
+                    <input id="cj-start" className="ui-input" inputMode="url" autoComplete="off" maxLength={300} value={startUrl} onChange={(e) => setStartUrl(e.target.value)} placeholder="https://... (the post, page, app or form they start from)" />
+                    <p className={`cf-hint${startUrlBad ? " err" : ""}`}>{startUrlBad ? "Use the full address, starting with https://" : "Workers get a \"Start job\" button that opens it."}</p>
+                  </div>
+                  <div className="cf-field">
+                    <label htmlFor="cj-proof">What to send as proof (optional)</label>
+                    <textarea id="cj-proof" className="ui-input" rows={2} maxLength={400} value={proofText} onChange={(e) => setProofText(e.target.value)} placeholder="e.g. A screenshot showing you follow us, and your username" />
+                    <p className="cf-hint">Shown to workers as "Proof to send". Turn on Screenshot required below if an image is a must.</p>
                   </div>
 
                   {isContest ? (
@@ -953,6 +974,7 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
                         <option value="">{category ? "Optional" : "Choose a category first"}</option>
                         {(CATEGORIES[category as keyof typeof CATEGORIES] || []).map((s: string) => <option key={s} value={s}>{s}</option>)}
                       </select>
+                      {subMin > 0 && <p className="cf-hint">{subcategory} jobs pay at least {money(subMin, "NGN")} a person.</p>}
                     </div>
                   </div>
 

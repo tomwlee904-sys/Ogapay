@@ -138,7 +138,9 @@ export default function SubmissionPage() {
   // The Create form's "Screenshot required" switch (the server checks it too)
   const needsShot = /screenshot required/i.test(task.proofRequired || '') || /^\s*screenshot\s*$/i.test(task.proofRequired || '')
   // Anything else the poster wrote about proof
-  const proofNote = !needsShot && task.proofRequired ? task.proofRequired.trim() : ''
+  // Anything else the poster wrote about proof (after "Screenshot required." when both)
+  const proofNote = (task.proofRequired || '').replace(/^\s*screenshot required\.?\s*/i, '').replace(/^\s*screenshot\s*$/i, '').trim()
+  const startUrl = !task.socialAction && typeof task.targetUrl === 'string' ? task.targetUrl : ''
   const closed = !['OPEN', 'COOLING_DOWN'].includes(task.status)
 
   // Sent too early: take it back to edit (keeps the place), within the hour
@@ -452,7 +454,8 @@ export default function SubmissionPage() {
             <div className="sb-reward"><b>{show(reward, cur)}</b><span>{task.isContest ? '1st prize' : 'per person'}</span></div>
             <div className="sb-meta"><span>{categoryLabel(task.category)}</span>{task.poster?.username && <span>by <Link to={`/user/${task.poster.username}`}>@{task.poster.username}</Link></span>}</div>
             {brief && <><span className="ui-label">What to do</span><div className="sb-brief" dangerouslySetInnerHTML={{ __html: renderJobText(brief) }} /></>}
-            {(needsShot || proofNote) && <><span className="ui-label">Proof</span><p className="sb-proof"><i className="ti ti-photo" /> {needsShot ? 'Attach at least one screenshot of your work.' : proofNote}</p></>}
+            {startUrl && <p className="sb-proof"><a className="ui-btn ui-btn-ghost" href={startUrl} target="_blank" rel="noopener noreferrer nofollow"><i className="ti ti-external-link" /> Open the job link</a></p>}
+            {(needsShot || proofNote) && <><span className="ui-label">Proof</span>{needsShot && <p className="sb-proof"><i className="ti ti-photo" /> Attach at least one screenshot of your work.</p>}{proofNote && <p className="sb-proof"><i className="ti ti-file-check" /> {proofNote}</p>}</>}
             {typeof task.trackingCode === 'string' && task.trackingCode.trim() && <><span className="ui-label">Code to put in your post</span><p className="sb-proof"><i className="ti ti-hash" /> Include <b>{task.trackingCode.trim()}</b> in your post or caption.</p></>}
             <span className="ui-label">Requirements</span>
             {reqs.length ? <ul className="sb-reqs">{reqs.map((r) => <li key={r.text}><i className={`ti ti-${r.icon}`} /> {r.text}</li>)}</ul> : <p className="sb-brief">None. Anyone can take part.</p>}

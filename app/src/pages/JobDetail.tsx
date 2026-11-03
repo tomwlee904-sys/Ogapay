@@ -111,6 +111,7 @@ interface JobData {
   requirements: string[]
   proofRequired: string[]
   trackingCode?: string
+  startUrl?: string
   // Social jobs: the payout check, in words from the server (null when none)
   payoutCheck?: { minutes: number; checkable: boolean; note: string } | null
   // Quick social jobs on X: action, price, target post, place hold, batches, progress
@@ -372,6 +373,8 @@ export default function JobDetail() {
       steps: toArray(t.steps, []),
       requirements: toArray(t.requirements || t.qualifications, []),
       proofRequired: toArray(t.proofRequired || t.proofInstructions, []).map((p: string) => (/^\s*screenshot\s*$/i.test(p) ? 'Screenshot required' : p)),
+      // The link workers open to start (any job but quick X jobs, which show the X post)
+      startUrl: !t.socialAction && typeof t.targetUrl === 'string' ? t.targetUrl : '',
       // The poster's code for workers to put in their post (Create > Extra options)
       trackingCode: typeof t.trackingCode === 'string' ? t.trackingCode.trim() : '',
       // Social jobs: the payout check, in words from the server (null when none)
@@ -777,6 +780,10 @@ function WurkJobDetailView(props: any) {
         .wjd-linkified{color:var(--accent);text-decoration:underline;word-break:break-word;cursor:pointer}
         .wjd-linkified:hover{opacity:.8}
         .wjd-sub-title{color:var(--text,#0f172a);font-size:15px;font-weight:700;margin:18px 0 8px}
+        .wjd-start{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:14px 0 6px}
+        .wjd-start span{font-size:12px;color:var(--text3)}
+        .wjd-jobid{margin:8px 0 0;font-size:12px;color:var(--text3)}
+        .wjd-jobid code{font-family:var(--font-mono,ui-monospace,monospace);color:var(--text2)}
         .wjd-list{margin:0;padding-left:20px;color:var(--text2,#374151);font-size:14px;line-height:1.65;display:grid;gap:4px}
 
         .wjd-translate-row{display:flex;justify-content:flex-end;margin-top:14px}
@@ -1256,6 +1263,13 @@ function WurkJobDetailView(props: any) {
                 <div className="wjd-body" dangerouslySetInnerHTML={{ __html: renderJobText(extraInstructions) }} />
               </>
             )}
+            {job.startUrl && (
+              <div className="wjd-start">
+                <a className="ui-btn ui-btn-dark" href={job.startUrl} target="_blank" rel="noopener noreferrer nofollow"><i className="ti ti-external-link" aria-hidden="true" /> Start job</a>
+                <span>Opens {(() => { try { return new URL(job.startUrl).hostname.replace(/^www\./, '') } catch { return 'the link' } })()}</span>
+              </div>
+            )}
+            <p className="wjd-jobid">Job ID: <code>{job.id.slice(0, 8)}</code></p>
             {proofText && (
               <>
                 <div className="wjd-sub-title">Proof to send</div>

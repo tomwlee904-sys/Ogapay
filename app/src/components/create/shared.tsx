@@ -298,16 +298,16 @@ export function OverviewCard({ rows, total, currency, alt, checklist, primaryLab
 }
 
 export const CATEGORIES: Record<string, string[]> = {
-  "Social Media": ["X / Twitter", "Instagram", "TikTok", "YouTube", "Facebook"],
+  "Social Media": ["X / Twitter", "Instagram", "TikTok", "YouTube", "Facebook", "LinkedIn", "Snapchat", "Threads"],
   "Content Creation": ["Writing", "Video", "Design", "Photography"],
   "Development": ["Frontend", "Backend", "Smart Contract", "Mobile"],
   "Marketing": ["SEO", "Email", "Ads", "Growth"],
-  "Community": ["Moderation", "Support", "Events", "Outreach"],
-  "Music Promotion": ["Streaming", "Download", "Content Creation", "Sharing"],
+  "Community": ["WhatsApp", "Telegram", "Discord", "Moderation", "Support", "Events", "Outreach"],
+  "Music Promotion": ["Streaming", "Download", "Content Creation", "Sharing", "Podcast"],
   "Article / Blog Writing": ["Blog Posts", "Articles", "Copywriting", "Guest Posts"],
   "App / Website Review": ["App Reviews", "Website Reviews", "Video Reviews"],
   "Surveys": ["Market Research", "Product Feedback", "Opinion Polls"],
-  "Lead Generation": ["Email Signups", "Form Submissions", "Referrals"],
+  "Lead Generation": ["Email Signups", "Form Submissions", "App Sign-ups", "Referrals", "App Invites"],
   "App Testing & Install": ["App Download", "Beta Testing", "Install & Review"],
   "Other": ["Miscellaneous"],
 };

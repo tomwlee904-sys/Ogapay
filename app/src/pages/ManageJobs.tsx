@@ -146,7 +146,7 @@ function JobDrawer({ task, allTasks, focusId, onClose, onChanged }: { task: Task
   const [busy, setBusy] = useState<string | null>(null);
   // The open note box: rejecting (final for that person) or sending back for changes
   const [rejecting, setRejecting] = useState<string | null>(null);
-  const [action, setAction] = useState<"reject" | "back">("reject");
+  const [action, setAction] = useState<"reject" | "back" | "fake">("reject");
   const [reason, setReason] = useState("");
   // Stars and a note for each piece of work, sent with "Approve and pay" (optional)
   const [stars, setStars] = useState<Record<string, number>>({});
@@ -232,6 +232,18 @@ function JobDrawer({ task, allTasks, focusId, onClose, onChanged }: { task: Task
     try {
       await apiRequest(`/tasks/submissions/${s.id}/send-back`, { method: "POST", body: JSON.stringify({ note: reason.trim() }) });
       toast(`Sent back. @${who(s.worker)} can edit it and send it again.`, "success");
+      setRejecting(null); setReason("");
+      await load(); onChanged();
+    } catch (e: any) { toast(e?.message || "That didn't work. Try again.", "error"); }
+    setBusy(null);
+  };
+
+  // Report as fake: rejected (final), counted on their account, the OgaPay team told
+  const reportFake = async (s: Sub) => {
+    setBusy(s.id);
+    try {
+      await apiRequest(`/tasks/submissions/${s.id}/report-fake`, { method: "POST", body: JSON.stringify({ reason: reason.trim() }) });
+      toast(`Reported. @${who(s.worker)}'s work was rejected and the OgaPay team was told.`, "success");
       setRejecting(null); setReason("");
       await load(); onChanged();
     } catch (e: any) { toast(e?.message || "That didn't work. Try again.", "error"); }
@@ -484,14 +496,18 @@ function JobDrawer({ task, allTasks, focusId, onClose, onChanged }: { task: Task
                       <div className="mj-reason">
                         <label htmlFor={`mj-note-${s.id}`}>{action === "back" ? `What should @${who(s.worker)} change?` : `Why are you rejecting it?`}</label>
                         <textarea id={`mj-note-${s.id}`} value={reason} maxLength={500} onChange={(e) => setReason(e.target.value)}
-                          placeholder={action === "back" ? "e.g. Add a screenshot that shows your username" : "e.g. The screenshot is from a different post"} autoFocus />
+                          placeholder={action === "back" ? "e.g. Add a screenshot that shows your username" : action === "fake" ? "e.g. The screenshot is edited / it's another person's account" : "e.g. The screenshot is from a different post"} autoFocus />
                         <p className="mj-reason-hint">{action === "back"
                           ? `@${who(s.worker)} sees this, keeps their place and sends it again.${(s.sentBackCount || 0) === 1 ? " This is the last time it can be sent back." : ""}`
+                          : action === "fake"
+                          ? `For work that's faked (edited screenshots, someone else's account, copied proof). @${who(s.worker)} sees this, the work is rejected for good, it's counted on their account and the OgaPay team is told.`
                           : `@${who(s.worker)} sees this. A rejection is final: they can't send work for this job again. If it only needs a fix, send it back instead.`}</p>
                         <div className="mj-acts">
                           <button className="ui-btn ui-btn-ghost" onClick={() => { setRejecting(null); setReason(""); }}>Cancel</button>
                           {action === "back"
                             ? <button className="ui-btn ui-btn-dark" disabled={busy === s.id || reason.trim().length < 5} onClick={() => sendBack(s)}>{busy === s.id ? "Sending back…" : "Send back"}</button>
+                            : action === "fake"
+                            ? <button className="ui-btn ui-btn-dark" disabled={busy === s.id || reason.trim().length < 5} onClick={() => reportFake(s)}>{busy === s.id ? "Reporting…" : "Report as fake"}</button>
                             : <button className="ui-btn ui-btn-dark" disabled={busy === s.id || reason.trim().length < 5} onClick={() => review(s, "REJECTED")}>{busy === s.id ? "Rejecting…" : "Reject work"}</button>}
                         </div>
                       </div>
@@ -506,6 +522,7 @@ function JobDrawer({ task, allTasks, focusId, onClose, onChanged }: { task: Task
                           <button className="ui-btn ui-btn-ghost" disabled={busy === s.id} onClick={() => { setRejecting(s.id); setAction("back"); setReason(""); }}><Icon n="arrow-back-up" s={15} /> Send back for changes</button>
                         )}
                         <button className="ui-btn ui-btn-ghost" disabled={busy === s.id} onClick={() => { setRejecting(s.id); setAction("reject"); setReason(""); }}>Reject</button>
+                        {!contest && <button className="ui-btn ui-btn-ghost mj-danger" disabled={busy === s.id} onClick={() => { setRejecting(s.id); setAction("fake"); setReason(""); }}><Icon n="flag" s={15} /> Report as fake</button>}
                       </div>
                       </>
                     )}
