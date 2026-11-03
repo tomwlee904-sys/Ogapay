@@ -94,4 +94,8 @@
   .cm2-req-t { flex-basis: calc(100% - 50px); }
   .cm2-req .up-btn { flex: 1; }
   .cm2-msg { max-width: 94%; }
+  /* Phones: the chat fills the screen between the top bar and the bottom menu
+     (it was a 62vh box below the banner, its send box behind the bottom menu) */
+  .cm2-chat { height: calc(100vh - 190px); height: calc(100dvh - 190px); min-height: 380px; }
+  .cm2-msgs { padding: 12px; gap: 10px; }
 }

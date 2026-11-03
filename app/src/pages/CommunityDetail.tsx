@@ -550,6 +550,13 @@ function Chat({ id, meId }: { id: string; meId?: string }) {
   const [sending, setSending] = useState(false)
   const box = useRef<HTMLDivElement>(null)
   const nearBottom = useRef(true)
+  const section = useRef<HTMLElement>(null)
+  // Phones: bring the whole chat into view when it opens (it sits below the banner)
+  useEffect(() => {
+    const el = section.current
+    if (!el || !window.matchMedia('(max-width: 760px)').matches) return
+    window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 72, behavior: 'smooth' })
+  }, [])
 
   const load = () => apiRequest<Msg[]>(`/communities/${id}/chat`).then((d) => setMsgs(d || [])).catch(() => setMsgs((m) => m || []))
   // New messages every 10 seconds while the chat is open (June's page never refreshed)
@@ -577,7 +584,7 @@ function Chat({ id, meId }: { id: string; meId?: string }) {
   }
 
   return (
-    <section className="up-card cm2-chat">
+    <section className="up-card cm2-chat" ref={section}>
       <div className="cm2-msgs" ref={box} onScroll={(e) => { const el = e.currentTarget; nearBottom.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80 }}>
         {msgs === null ? <p className="cm2-muted cm2-center">Loading…</p> : msgs.length === 0 ? <p className="cm2-muted cm2-center">No messages yet. Say hello.</p> : msgs.map((m) => (
           <div key={m.id} className={`cm2-msg${m.sender.id === meId ? ' me' : ''}`}>
