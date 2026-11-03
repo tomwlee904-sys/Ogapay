@@ -51,6 +51,13 @@ const PAGES = {
   '/docs': ['Docs | OgaPay', 'How OgaPay works: jobs, escrow, payouts, verification levels and fees.'],
   '/support': ['Support | OgaPay', 'Get help with your OgaPay account, jobs, payments and withdrawals.'],
   '/safe': ['Staying safe | OgaPay', 'How to spot scams and keep your OgaPay account and money safe.'],
+  // In the sitemap too, so each needs its own title (Google showed the home title for /socials)
+  '/socials': ['Official OgaPay channels: X, Telegram and more | OgaPay', 'The only places OgaPay posts from. Follow for new jobs, updates and contests, and stay away from fake pages.'],
+  '/roadmap': ['Roadmap | OgaPay', 'What OgaPay has built so far and what is coming next for workers and the people who hire them.'],
+  '/privacy': ['Privacy policy | OgaPay', 'How OgaPay collects, uses and protects your personal information.'],
+  '/terms': ['Terms of service | OgaPay', 'The rules for using OgaPay: posting and doing jobs, payments, escrow, verification and withdrawals.'],
+  '/license': ['Software license | OgaPay', 'The license for the OgaPay website and software.'],
+  '/copyright': ['Copyright | OgaPay', 'Who owns the content on OgaPay and how to report work used without permission.'],
   // Landing pages (src/lib/seoPages.ts: keep the titles and descriptions the same)
   '/earn-money-online-nigeria': ['Earn money online in Nigeria with your phone | OgaPay', 'Earn money online in Nigeria by doing simple paid jobs on your phone: social media, writing, testing and surveys. Free to join, paid in Naira.'],
   '/paid-tasks-nigeria': ['Paid tasks in Nigeria: small jobs that pay in Naira | OgaPay', 'Real paid tasks in Nigeria: follow, review, test apps, answer surveys and write. See the pay first, send proof, get paid when it is approved.'],
@@ -123,6 +130,19 @@ export async function metaFor(kind, id) {
       type: 'product',
     })
   }
+  if (kind === 'community') {
+    const c = await getJson(`/communities/${safe}`)
+    // Private or closed communities keep the generic preview (they're not in the sitemap either)
+    if (!c || c.isPublic === false || c.isActive === false) return null
+    const members = Number(c.memberCount || 0)
+    return headFor({
+      title: `${c.name} | OgaPay Communities`,
+      description: clip(`${members ? `${members.toLocaleString('en-US')} ${members === 1 ? 'member' : 'members'}. ` : ''}${plain(c.description) || `Join ${c.name} on OgaPay and take jobs only its members can see.`}`, 200),
+      url: `${SITE}/communities/${c.id}`, // the address the sitemap lists
+      image: picture(c.coverImage),
+      large: !!picture(c.coverImage),
+    })
+  }
   if (kind === 'blog') {
     const b = await getJson(`/blog/${safe}`)
     if (!b) return null
@@ -144,7 +164,7 @@ export async function metaFor(kind, id) {
 export default async function handler(req, res) {
   const kind = String(req.query?.t || '')
   const id = kind === 'page' ? String(req.query?.p || '') : String(req.query?.id || '')
-  const back = kind === 'page' ? id : `/${{ job: 'tasks', product: 'store', blog: 'blog' }[kind] || ''}/${id}`
+  const back = kind === 'page' ? id : `/${{ job: 'tasks', product: 'store', blog: 'blog', community: 'communities' }[kind] || ''}/${id}`
   const host = req.headers['x-forwarded-host'] || req.headers.host
   let shell = ''
   try {

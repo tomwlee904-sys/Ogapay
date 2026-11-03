@@ -21,7 +21,7 @@ const TITLES: Record<string, string> = {
   '/edit-profile': 'Edit profile', '/task-history': 'Task history', '/bookmarks': 'Bookmarks',
   '/analytics': 'Analytics', '/create': 'Create a job', '/createcustom': 'Create a custom job',
   '/createsocial': 'Create an X campaign', '/tasks/new': 'Create a job', '/post-job': 'Create a job',
-  '/roadmap': 'Roadmap', '/hire': 'Hire', '/socials': 'Socials', '/license': 'License', '/copyright': 'Copyright',
+  '/roadmap': 'Roadmap', '/hire': 'Hire', '/socials': 'Official channels', '/license': 'License', '/copyright': 'Copyright',
   '/use-cases': 'Use cases', '/about': 'About OgaPay', '/features': 'Features', '/admin': 'Admin',
   '/writer': 'Writer workspace', '/job-monitor': 'Job monitor', '/pair-device': 'Pair a device', '/link-wallet': 'Link a wallet',
   '/verify-email': 'Verify your email', '/reset-password': 'Choose a new password', '/communities/invitations': 'Community invitations',
