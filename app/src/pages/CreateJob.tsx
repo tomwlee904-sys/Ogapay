@@ -1004,7 +1004,7 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
                     </div>
                   )}
 
-                  <Fold title="Audience and requirements" sub={[community ? `Members of ${community.name} only` : requiredCommunity ? `Members of ${requiredCommunity.name}` : "", country ? `People in ${country === "GH" ? "Ghana" : "Nigeria"}` : "", reqLabel(reqs), excludeJobs.length ? `${excludeJobs.length} past job${excludeJobs.length > 1 ? "s" : ""} excluded` : ""].filter(Boolean).join(" · ")} open={openReq} onToggle={() => setOpenReq(o => !o)}>
+                  <Fold title="Audience and requirements" sub={[community ? `Members of ${community.name} only` : requiredCommunity ? `Members of ${requiredCommunity.name}` : "", country ? `People in ${country === "GH" ? "Ghana" : "Nigeria"}` : "", gender ? `${gender === "F" ? "Women" : "Men"} only` : "", reqLabel(reqs), excludeJobs.length ? `${excludeJobs.length} past job${excludeJobs.length > 1 ? "s" : ""} excluded` : ""].filter(Boolean).join(" · ")} open={openReq} onToggle={() => setOpenReq(o => !o)}>
                     {(myCommunities.length > 0 || requirable.length > 0) && (
                       <div className="cf-field">
                         <label htmlFor="cj-audience">Who can see it <InfoTip label="Who can see and take this job?" title="Who can see it">
