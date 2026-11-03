@@ -91,7 +91,7 @@
       "destination": "/api/page-meta?t=page&p=/"
     },
     {
-      "source": "/(tasks|store|blog|leaderboard|vault|create|faq|communities|developer|about|hire|creators|workers|docs|support|safe|socials|roadmap|privacy|terms|license|copyright|earn-money-online-nigeria|paid-tasks-nigeria|jobs/social-media|jobs/content-writing|jobs/app-testing|jobs/surveys|jobs/design)",
+      "source": "/(tasks|store|blog|leaderboard|vault|create|faq|communities|developer|about|hire|creators|workers|docs|support|socials|roadmap|privacy|terms|license|copyright|earn-money-online-nigeria|paid-tasks-nigeria|jobs/social-media|jobs/content-writing|jobs/app-testing|jobs/surveys|jobs/design)",
       "has": [
         {
           "type": "header",

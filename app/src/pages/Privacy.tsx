@@ -46,7 +46,7 @@ export default function Privacy() {
         <header className="lg-head">
           <div className="up-eyebrow">Legal</div>
           <h1>Privacy policy</h1>
-          <p>Last updated: 8 October 2026</p>
+          <p>Last updated: 3 November 2026</p>
           <p className="lg-lead">OgaPay Technologies Ltd. ("OgaPay", "we", "us") runs the OgaPay marketplace. This policy explains what personal data we collect, why, who we share it with and the choices you have.</p>
         </header>
 
@@ -65,7 +65,7 @@ export default function Privacy() {
               <h2><span>01</span>Information we collect</h2>
               <ul>
                 <li><b>Account details:</b> name, email address, username, password (stored only as a bcrypt hash), profile photo and cover, and anything you add to your profile such as a bio, skills, portfolio and social links.</li>
-                <li><b>Identity details for KYC:</b> your NIN, BVN or a government ID, date of birth, the documents you upload for verification and the selfie you take during the ID check.</li>
+                <li><b>Identity details for KYC:</b> your NIN, BVN or a government ID, date of birth and the photo of your ID you upload for verification. We don't take selfies; the ID check used one until 2 November 2026.</li>
                 <li><b>Payment details:</b> bank account name and number for withdrawals, Solana wallet addresses you add, and your transaction history on OgaPay.</li>
                 <li><b>Activity on OgaPay:</b> jobs you post or apply for, work you submit, reviews, store listings and orders, community posts and chat messages, direct messages, and support tickets.</li>
                 <li><b>Technical data:</b> IP address, browser and device type, and server logs created when you use the site.</li>
@@ -98,7 +98,7 @@ export default function Privacy() {
               <p>We share personal data only with the service providers that help us run OgaPay, and only what they need:</p>
               <ul>
                 <li><b>Paystack and Flutterwave</b> process naira deposits and bank withdrawals and receive your payment details and the amount.</li>
-                <li><b>Didit</b> checks your ID document and selfie when you verify with an ID.</li>
+                <li><b>Didit</b>, an identity verification provider, checked ID documents, selfies and NINs for people who verified before 2 November 2026. Checks since then are done by our own team.</li>
                 <li><b>Supabase</b> hosts our database and uploaded files. <b>Railway</b> runs our servers and <b>Vercel</b> hosts the website.</li>
                 <li><b>Resend</b> delivers our emails.</li>
                 <li><b>Sentry</b> receives technical details when something breaks (the page or action that failed, your browser and, if you're signed in, your account ID) so we can fix it. It doesn't receive passwords, codes or what you type in forms.</li>
@@ -141,7 +141,7 @@ export default function Privacy() {
               <h2><span>08</span>KYC and identity checks</h2>
               <ul>
                 <li>You need Level 1 verification or above before you can withdraw money or send money to another user.</li>
-                <li>If you verify with an ID and a selfie, Didit, an identity verification provider, checks the document and compares your selfie with the photo on it. If you verify with your NIN, Didit sends your NIN, the name on your account and your date of birth to the National Identity Management Commission (NIMC) to confirm they match its record. If that check can't be done, our team checks it.</li>
+                <li>If you verify with an ID, our team checks the photo of your ID and its number by hand. If you verify with your NIN, our team checks it against the name on your account and your date of birth. Before 2 November 2026 these checks were done through Didit, which also compared a selfie with the photo on the ID and confirmed NINs with the National Identity Management Commission (NIMC).</li>
                 <li>We keep KYC records and documents with restricted access for as long as the law requires. They are used only for verification, fraud prevention and legal compliance.</li>
                 <li>Your BVN and NIN are never shown to other users.</li>
               </ul>

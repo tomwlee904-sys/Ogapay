@@ -50,7 +50,6 @@ const PAGES = {
   '/workers': ['Workers | OgaPay', 'Nigerian workers on OgaPay with their ranks, ratings and finished jobs. Hire someone directly.'],
   '/docs': ['Docs | OgaPay', 'How OgaPay works: jobs, escrow, payouts, verification levels and fees.'],
   '/support': ['Support | OgaPay', 'Get help with your OgaPay account, jobs, payments and withdrawals.'],
-  '/safe': ['Staying safe | OgaPay', 'How to spot scams and keep your OgaPay account and money safe.'],
   // In the sitemap too, so each needs its own title (Google showed the home title for /socials)
   '/socials': ['Official OgaPay channels: X, Telegram and more | OgaPay', 'The only places OgaPay posts from. Follow for new jobs, updates and contests, and stay away from fake pages.'],
   '/roadmap': ['Roadmap | OgaPay', 'What OgaPay has built so far and what is coming next for workers and the people who hire them.'],
