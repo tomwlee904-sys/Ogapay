@@ -157,6 +157,7 @@ export default function AdminHealth() {
         .ah-new{color:#b45309;font-weight:600}
         .ah-none{color:var(--text2);font-size:13px;margin:0}
         .ah-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+        .ah-grid>*{min-width:0}
         .ah-tags{display:flex;flex-wrap:wrap;gap:6px}
         .ah-tags span{font-size:12px;padding:3px 9px;border-radius:999px;background:color-mix(in srgb,#f59e0b 14%,transparent);color:var(--text)}
         .ah-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
@@ -308,8 +309,8 @@ export default function AdminHealth() {
                 <h3>Same text, different workers</h3>
                 {!p.sameText.length ? <Empty>None.</Empty> : (
                   <ul className="ah-list">
-                    {p.sameText.map((r) => (
-                      <li key={r.text}>
+                    {p.sameText.map((r, i) => (
+                      <li key={`${i}|${r.text}`}>
                         <div className="ah-quote">"{r.text}{r.text.length >= 300 ? '…' : ''}"</div>
                         <div><b>{r.count} workers</b>, {r.jobCount === 1 ? '1 job' : `${r.jobCount} jobs`}</div>
                         <Users names={r.workers} />
