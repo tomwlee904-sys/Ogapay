@@ -7,7 +7,7 @@ import { SkeletonPage, injectSkeletonStyles } from '../components/SkeletonLoader
 import { useToast } from '../components/Toast'
 import { API_BASE, apiRequest, getAccessToken } from '../lib/api'
 import { savedJobIds, setSaved } from '../lib/bookmarks'
-import { jobRequirements, rankName } from '../lib/requirements'
+import { jobRequirements, rankName, askHandleLine, UNFOLLOW_RULE } from '../lib/requirements'
 import { BoostedTag, PremiumMark, VerifiedBusinessLine } from '../components/Perks'
 import Money from '../components/Money'
 import ContestPanel, { type ContestInfo } from '../components/ContestPanel'
@@ -151,6 +151,8 @@ interface JobData {
   minFollowers: number
   // "Member of community": public job only that community's members can take
   requiredCommunity: { id: string; name: string; slug: string; isMember: boolean } | null
+  // Follow jobs: the platform whose username workers type when they send their work
+  askHandle: string | null
 }
 
 export default function JobDetail() {
@@ -410,6 +412,7 @@ export default function JobDetail() {
       audiencePlatform: t.audiencePlatform || null,
       minFollowers: Number(t.minFollowers) || 0,
       requiredCommunity: t.requiredCommunity || null,
+      askHandle: t.askHandle || null,
     }
   }
 
@@ -1207,6 +1210,9 @@ function WurkJobDetailView(props: any) {
                 <div className="wjd-row"><div className="wjd-label">{closedEarly ? 'Ended' : 'Closes in'}</div><div className="wjd-value" style={{ fontVariantNumeric: 'tabular-nums' }}>{countdownStr}</div></div>
                 <div className="wjd-row"><div className="wjd-label">Minimum rank</div><div className="wjd-value">{Number(job.rankRequired || job.minRank) > 1 ? `${rankName(Number(job.rankRequired || job.minRank))} or higher` : 'None'}</div></div>
                 <div className="wjd-row"><div className="wjd-label">Requirements</div><div className="wjd-value">{jobRequirements(job).filter(r => r.icon !== 'award').map(r => r.text).join(', ') || 'No extra requirements'}</div></div>
+                {askHandleLine(job) && (
+                  <div className="wjd-row wide"><div className="wjd-label">Your username</div><div className="wjd-value">{askHandleLine(job)}. {UNFOLLOW_RULE}</div></div>
+                )}
                 {linkedJobs?.length > 0 && (
                   <div className="wjd-row"><div className="wjd-label">Not for</div><div className="wjd-value">People who already did {linkedJobs.map((s: any, i: number) => <span key={s.id}>{i ? ', ' : ''}<Link to={`/tasks/${s.id}`} style={{ color: 'inherit', fontWeight: 600 }}>{s.title}</Link></span>)}. Each person is paid for only one of these.</div></div>
                 )}

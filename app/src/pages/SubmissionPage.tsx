@@ -13,6 +13,7 @@ import { uploadProof } from '../lib/upload'
 import { PayoutCheckNote, PayoutCheckStatus } from '../components/PayoutCheck'
 import { isRulesError, openRules } from '../lib/welcome'
 import { useMoney } from '../lib/useMoney'
+import { cleanHandle, handlePlatformName, UNFOLLOW_BLOCK_DAYS } from '../lib/followHandles'
 
 // Submit work for a job (/tasks/:id/submit). Takes a slot if you haven't yet,
 // uploads files, then submits: the same steps as the job page's apply dialog.
@@ -41,6 +42,8 @@ type Mine = {
   reviewedAt?: string | null
   // Sent back for changes by the poster (the note is in posterNotes)
   sentBackAt?: string | null; sentBackCount?: number
+  // Follow jobs (task.askHandle): the username they sent
+  workerHandle?: string | null
   // A second look the worker asked for after a rejection, and how it ended
   dispute?: { createdAt: string; outcome?: 'WORKER_WON' | 'POSTER_WON' | 'SPLIT' | null; resolution?: string | null; resolvedAt?: string | null } | null
 }
@@ -71,6 +74,8 @@ export default function SubmissionPage() {
   const [mine, setMine] = useState<Mine | null | undefined>(undefined)
   const [link, setLink] = useState('')
   const [notes, setNotes] = useState('')
+  // Follow jobs: their username on the platform the job asks for (task.askHandle)
+  const [handle, setHandle] = useState('')
   const [files, setFiles] = useState<File[]>([])
   const [busy, setBusy] = useState('')
   const [error, setError] = useState('')
@@ -116,6 +121,10 @@ export default function SubmissionPage() {
     // Watermarked jobs need the files again (the originals are kept per upload)
     setKept(task?.watermark ? [] : (mine.attachments || []).filter(Boolean))
   }, [mine, task])
+  // Sending again (taken back or sent back): the username they sent is put back
+  useEffect(() => {
+    if (mine?.status === 'PENDING' && mine.workerHandle) setHandle((h) => h || mine.workerHandle || '')
+  }, [mine])
   useEffect(() => {
     if (!id) return
     apiRequest<Task | { task: Task }>('/tasks/' + id).then((d: any) => { setTask(d?.task || d || null); setApplication(d?.userApplication || null) }).catch(() => setTask(null))
@@ -142,6 +151,10 @@ export default function SubmissionPage() {
   const proofNote = (task.proofRequired || '').replace(/^\s*screenshot required\.?\s*/i, '').replace(/^\s*screenshot\s*$/i, '').trim()
   const startUrl = !task.socialAction && typeof task.targetUrl === 'string' ? task.targetUrl : ''
   const closed = !['OPEN', 'COOLING_DOWN'].includes(task.status)
+  // Follow jobs: the platform whose username they must type (the server checks it too)
+  const askHandle: string | null = typeof task.askHandle === 'string' && task.askHandle ? task.askHandle : null
+  const handleName = handlePlatformName(askHandle)
+  const handleBad = !!askHandle && !!handle.trim() && !cleanHandle(handle)
 
   // Sent too early: take it back to edit (keeps the place), within the hour
   const canTakeBack = mine?.status === 'SUBMITTED' && !!mine.submittedAt && !closed
@@ -155,6 +168,7 @@ export default function SubmissionPage() {
       // Put what they sent back in the form (files have to be added again)
       setLink(mine.proof && /^https?:\/\//.test(mine.proof) ? mine.proof : '')
       setNotes(mine.workerNotes || '')
+      setHandle(mine.workerHandle || '')
       await loadMine()
     } catch (e: any) {
       setError(e?.message || "Couldn't take your work back.")
@@ -174,6 +188,9 @@ export default function SubmissionPage() {
   const submit = async () => {
     if (!link.trim() && !notes.trim() && files.length === 0 && kept.length === 0) { setError('Add a link, a note or a file so the poster can check your work.'); return }
     if (needsShot && files.length === 0 && kept.length === 0) { setError('This job needs a screenshot. Add at least one image of your work.'); return }
+    const cleanName = askHandle ? cleanHandle(handle) : null
+    if (askHandle && !handle.trim()) { setError(`Type your ${handleName} username, e.g. @ogapayhq`); return }
+    if (askHandle && !cleanName) { setError(`That isn't a ${handleName} username. Type just your ${handleName} username, e.g. @ogapayhq (letters, numbers, dots and _ only).`); return }
     const token = getAccessToken()
     if (!token) { navigate('/login?redirect=' + encodeURIComponent(location.pathname)); return }
     // One check before sending: phones make a mistaken tap easy
@@ -201,8 +218,8 @@ export default function SubmissionPage() {
       }
       // 3. Submit
       setBusy('Sending your work…')
-      await apiRequest(`/tasks/${task.id}/submit`, { method: 'POST', body: JSON.stringify({ ...(link.trim() && { proof: link.trim() }), ...(notes.trim() && { workerNotes: notes.trim() }), ...(urls.length && { attachments: urls }), ...(originals.length && { originals }) }) })
-      setLink(''); setNotes(''); setFiles([]); setKept([])
+      await apiRequest(`/tasks/${task.id}/submit`, { method: 'POST', body: JSON.stringify({ ...(link.trim() && { proof: link.trim() }), ...(notes.trim() && { workerNotes: notes.trim() }), ...(urls.length && { attachments: urls }), ...(originals.length && { originals }), ...(cleanName && { handle: cleanName }) }) })
+      setLink(''); setNotes(''); setHandle(''); setFiles([]); setKept([])
       clearDraft(draftKey, user?.id)
       await loadMine()
     } catch (e: any) {
@@ -295,7 +312,7 @@ export default function SubmissionPage() {
                 <span className="sb-ic wait"><i className="ti ti-hourglass" /></span>
                 <h2>Entry sent</h2>
                 <p>{task.poster?.username ? `@${task.poster.username}` : 'The poster'} picks the winners after the contest ends. You'll get a notification if your entry wins a place.</p>
-                <Sent m={mine!} />
+                <Sent m={mine!} platform={handleName} />
                 {canTakeBack && (
                   <p className="sb-small">
                     Sent it too early?{' '}
@@ -312,7 +329,7 @@ export default function SubmissionPage() {
                 <p>{task.poster?.username ? `@${task.poster.username}` : 'The poster'} is checking your work. You'll get a notification when they decide.</p>
                 {mine?.payoutCheck && <PayoutCheckStatus sub={mine} who="worker" />}
                 {mine?.autoApproveAt && <p className="sb-small"><i className="ti ti-clock-check" /> If they don't review it, it's approved and you're paid automatically on {when(mine.autoApproveAt)}.</p>}
-                <Sent m={mine!} />
+                <Sent m={mine!} platform={handleName} />
                 {canTakeBack && (
                   <p className="sb-small">
                     Sent it too early?{' '}
@@ -414,6 +431,15 @@ export default function SubmissionPage() {
                   </div>
                 ) : status === 'PENDING' && <p className="sb-held"><i className="ti ti-circle-check" /> You have a slot on this job. Send your work when it's done.</p>}
                 <PayoutCheckNote info={task.payoutCheck} />
+                {askHandle && (
+                  <>
+                    <label className="ui-label" htmlFor="sb-handle">Your {handleName} username (required)</label>
+                    <input id="sb-handle" className="ui-input" autoComplete="off" autoCapitalize="none" spellCheck={false} maxLength={300} value={handle} onChange={(e) => setHandle(e.target.value)} placeholder="@yourname" aria-invalid={handleBad || undefined} />
+                    <p className={handleBad ? 'sb-error' : 'sb-small'}>{handleBad
+                      ? `That isn't a ${handleName} username. Use letters, numbers, dots and _ only (or paste a link to your profile).`
+                      : `The account you followed with. Unfollowing after you're paid gets a warning and blocks follow jobs for ${UNFOLLOW_BLOCK_DAYS} days.`}</p>
+                  </>
+                )}
                 <label className="ui-label" htmlFor="sb-link">Link to your work</label>
                 <input id="sb-link" className="ui-input" type="url" inputMode="url" value={link} onChange={(e) => setLink(e.target.value)} placeholder="https://… (post, document, recording)" />
                 <label className="ui-label" htmlFor="sb-notes">Note for the poster</label>
@@ -466,12 +492,13 @@ export default function SubmissionPage() {
   )
 }
 
-function Sent({ m }: { m: Mine }) {
+function Sent({ m, platform }: { m: Mine; platform?: string }) {
   const files = (m.attachments || []).filter(Boolean)
-  if (!m.proof && !m.workerNotes && !files.length) return null
+  if (!m.proof && !m.workerNotes && !files.length && !m.workerHandle) return null
   return (
     <div className="sb-sent">
       <span className="ui-label">What you sent</span>
+      {m.workerHandle && <p>{platform || 'Username'}: @{m.workerHandle}</p>}
       {m.workerNotes && <p>{m.workerNotes}</p>}
       {m.proof && /^https?:\/\//.test(m.proof) && <a href={m.proof} target="_blank" rel="noopener noreferrer"><i className="ti ti-external-link" /> {m.proof}</a>}
       {files.map((u, i) => <a key={i} href={u} target="_blank" rel="noopener noreferrer"><i className="ti ti-paperclip" /> File {i + 1}</a>)}

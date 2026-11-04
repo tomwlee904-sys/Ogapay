@@ -14,6 +14,7 @@ import CopyFlag from '../components/CopyFlag'
 import { PayoutCheckStatus, checkBlocksApprove, anyWaiting, useNow } from '../components/PayoutCheck'
 import TransferModal from '../components/TransferModal'
 import { isXFollowJob } from "../lib/followJobs";
+import { HANDLE_PLATFORMS, handlePlatformName, profileUrl, UNFOLLOW_BLOCK_DAYS } from "../lib/followHandles";
 import LoadError from "../components/LoadError";
 import { jobDeadline } from "../lib/deadline";
 import { contestPaidOut } from "../lib/contestPrizes";
@@ -47,6 +48,8 @@ type Sub = {
   // Who rated it (an admin can rate flagged work) and who moderated it
   ratedById?: string | null; moderatedById?: string | null
   worker?: { id: string; username?: string | null; firstName?: string | null; lastName?: string | null; avatarUrl?: string | null }
+  // Follow jobs (task.askHandle): the username they typed, and when you reported an unfollow
+  workerHandle?: string | null; unfollowedAt?: string | null
 }
 type Task = {
   id: string; title: string; status: string; category?: string; reward: number | string; currency?: string
@@ -59,6 +62,8 @@ type Task = {
   targetCountries?: string[]
   // Only women (F) or only men (M); null = anyone
   targetGender?: string | null
+  // Follow jobs: the platform whose username workers type (INSTAGRAM, TIKTOK...); null = none
+  askHandle?: string | null
   // A contest: entries aren't approved one by one, places are awarded on the job page.
   // prizes: one per place, 1st first (the reward is only the 1st prize)
   isContest?: boolean; randomDraw?: boolean; prizes?: (number | string)[] | null
@@ -114,6 +119,10 @@ function jobCounts(t: Task) {
 
 const Avatar = ({ w }: { w?: Sub["worker"] }) => (
   <span className="mj-av">{w?.avatarUrl ? <img src={w.avatarUrl} alt="" /> : who(w).charAt(0).toUpperCase()}</span>
+);
+// Follow jobs: "Instagram: @ada.k", opening their profile to check the follow
+const HandleLine = ({ code, s }: { code?: string | null; s: Sub }) => !code || !s.workerHandle ? null : (
+  <p className="mj-auto"><Icon n="at" s={14} /> {handlePlatformName(code)}: <a href={profileUrl(code, s.workerHandle)} target="_blank" rel="noopener noreferrer">@{s.workerHandle}</a></p>
 );
 const WorkerLink = ({ w }: { w?: Sub["worker"] }) =>
   w?.username ? <Link to={`/user/${w.username}`}>@{w.username}</Link> : <a>{who(w)}</a>;
@@ -252,6 +261,21 @@ function JobDrawer({ task, allTasks, focusId, onClose, onChanged }: { task: Task
     setBusy(null);
   };
 
+  // Follow jobs: they unfollowed after being paid. A warning, and no follow jobs for
+  // 90 days; the pay isn't taken back.
+  const reportUnfollow = async (s: Sub) => {
+    if (!window.confirm(`Report that @${who(s.worker)} unfollowed?
+
+They get a warning on their account and can't take follow jobs for ${UNFOLLOW_BLOCK_DAYS} days. The money they were paid isn't taken back.`)) return;
+    setBusy(s.id);
+    try {
+      await apiRequest(`/tasks/submissions/${s.id}/report-unfollow`, { method: "POST", body: JSON.stringify({}) });
+      toast(`Reported. @${who(s.worker)} got a warning and can't take follow jobs for ${UNFOLLOW_BLOCK_DAYS} days.`, "success");
+      await load(); onChanged();
+    } catch (e: any) { toast(e?.message || "That didn't work. Try again.", "error"); }
+    setBusy(null);
+  };
+
   const toggleBlock = async (w?: Sub["worker"]) => {
     if (!w?.id) return;
     const on = !blocked.has(w.id);
@@ -345,6 +369,8 @@ function JobDrawer({ task, allTasks, focusId, onClose, onChanged }: { task: Task
   const [editing, setEditing] = useState(false);
   const [ed, setEd] = useState({ title: task.title, brief: "", deadline: "" });
   const [edGender, setEdGender] = useState<string>(task.targetGender || "");
+  // Follow jobs: the platform whose username workers type ("" = don't ask)
+  const [edHandle, setEdHandle] = useState<string>(task.askHandle || "");
   // Where workers must live: "" anyone, or one country (backend targetCountries)
   const [edCountry, setEdCountry] = useState<string>(task.targetCountries?.[0] || "");
   // Similar jobs: people who took part in any of them can't take this one (and the other way round)
@@ -366,6 +392,7 @@ function JobDrawer({ task, allTasks, focusId, onClose, onChanged }: { task: Task
     setReqCommunity(task.requiredCommunityId || "");
     setEdCountry(task.targetCountries?.[0] || "");
     setEdGender(task.targetGender || "");
+    setEdHandle(task.askHandle || "");
     setEdErr(""); setEditing(true);
   };
   // Same check as Create job: a job that sends people to a survey, form, site or
@@ -384,6 +411,7 @@ function JobDrawer({ task, allTasks, focusId, onClose, onChanged }: { task: Task
     if (canNeedCommunity && reqCommunity !== (task.requiredCommunityId || "")) body.requiredCommunityId = reqCommunity || null;
     if (edCountry !== (task.targetCountries?.[0] || "")) body.targetCountries = edCountry ? [edCountry] : [];
     if (edGender !== (task.targetGender || "")) body.targetGender = edGender || null;
+    if (edHandle !== (task.askHandle || "")) body.askHandle = edHandle || null;
     setEdBusy(true); setEdErr("");
     try {
       await apiRequest(`/tasks/${task.id}`, { method: "PATCH", body: JSON.stringify(body) });
@@ -433,6 +461,12 @@ function JobDrawer({ task, allTasks, focusId, onClose, onChanged }: { task: Task
                 <option value="M">Only men</option>
               </select>
               <p className="mj-edit-note">Only affects people who haven't taken it yet.</p>
+              <label className="ui-label" htmlFor="mj-ed-handle">Ask for their username on</label>
+              <select id="mj-ed-handle" className="ui-input" value={edHandle} onChange={(e) => setEdHandle(e.target.value)}>
+                <option value="">None</option>
+                {HANDLE_PLATFORMS.map((p) => <option key={p.code} value={p.code}>{p.name}</option>)}
+              </select>
+              <p className="mj-edit-note">Workers must type it to send their work. If someone unfollows after being paid, report it here: they get a warning and can't take follow jobs for {UNFOLLOW_BLOCK_DAYS} days.</p>
               <label className="ui-label" htmlFor="mj-ed-deadline">Closes on (optional)</label>
               <input id="mj-ed-deadline" className="ui-input" type="date" min={new Date(Date.now() + 86400e3).toISOString().slice(0, 10)} value={ed.deadline} onChange={(e) => setEd({ ...ed, deadline: e.target.value })} />
               {canNeedCommunity && (requirable.length > 0 || reqCommunity) && (
@@ -517,6 +551,7 @@ function JobDrawer({ task, allTasks, focusId, onClose, onChanged }: { task: Task
                     <div className="mj-who"><Avatar w={s.worker} /><div><WorkerLink w={s.worker} /><small>Sent {ago(s.submittedAt || s.createdAt)}</small></div><BlockBtn w={s.worker} /></div>
                     <CopyFlag reason={s.spamReason} copy={!!s.similarToId} />
                     <PayoutCheckStatus sub={s} who="poster" />
+                    <HandleLine code={task.askHandle} s={s} />
                     {s.workerNotes && <p className="mj-note">{s.workerNotes}</p>}
                     <Proof s={s} />
                     {/* Contest entries are never approved automatically */}
@@ -581,7 +616,9 @@ function JobDrawer({ task, allTasks, focusId, onClose, onChanged }: { task: Task
                 <section className="mj-sec">
                   <h4>Approved ({approved.length})</h4>
                   <div className="mj-rows">{approved.map((s) => (
-                    <div key={s.id} className="mj-row"><div className="mj-who"><Avatar w={s.worker} /><div><WorkerLink w={s.worker} /><small>Paid {money(contest && s.place && Number.isFinite(Number(task.prizes?.[s.place - 1])) ? Number(task.prizes![s.place - 1]) : reward, cur)}{s.reviewedAt ? ` · ${day(s.reviewedAt)}` : ""}</small>{s.rating ? <p>{ratedByTeam(s, user?.id) ? "Rated by the OgaPay team: " : ""}<RatedStars value={s.rating} /> {s.rating}/5{s.feedback ? ` · “${s.feedback}”` : ""}</p> : null}</div></div>{s.worker?.username && <button className="ui-btn ui-btn-ghost" onClick={() => setTipFor(s)}><Icon n="heart-handshake" s={15} /> Tip</button>}</div>
+                    <div key={s.id} className="mj-row"><div className="mj-who"><Avatar w={s.worker} /><div><WorkerLink w={s.worker} /><small>Paid {money(contest && s.place && Number.isFinite(Number(task.prizes?.[s.place - 1])) ? Number(task.prizes![s.place - 1]) : reward, cur)}{s.reviewedAt ? ` · ${day(s.reviewedAt)}` : ""}</small>{s.rating ? <p>{ratedByTeam(s, user?.id) ? "Rated by the OgaPay team: " : ""}<RatedStars value={s.rating} /> {s.rating}/5{s.feedback ? ` · “${s.feedback}”` : ""}</p> : null}<HandleLine code={task.askHandle} s={s} /></div></div>{task.askHandle && (s.unfollowedAt
+                      ? <span className="mj-pill bad">Unfollow reported</span>
+                      : <button className="ui-btn ui-btn-ghost mj-danger" disabled={busy === s.id} onClick={() => reportUnfollow(s)}><Icon n="user-minus" s={15} /> {busy === s.id ? "Reporting…" : "Report unfollow"}</button>)}{s.worker?.username && <button className="ui-btn ui-btn-ghost" onClick={() => setTipFor(s)}><Icon n="heart-handshake" s={15} /> Tip</button>}</div>
                   ))}</div>
                 </section>
               )}

@@ -24,6 +24,7 @@ import { subMinPay } from '../lib/jobCategories'
 import InfoTip from '../components/InfoTip'
 import { PayoutCheckPicker, PAYOUT_CHECKS } from '../components/PayoutCheck'
 import { MAX_PLACES } from '../lib/contestPrizes'
+import { HANDLE_PLATFORMS, handlePlatformName, UNFOLLOW_BLOCK_DAYS } from '../lib/followHandles'
 // -- COLOR TOKENS ----------------------------------------------------------
 const C = {
   text: "var(--text)",
@@ -579,6 +580,8 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
   // The link people open to start the job ("Start job" on the job page), and what to send as proof
   const [startUrl, setStartUrl] = useState("");
   const [proofText, setProofText] = useState("");
+  // Follow jobs: the platform whose username workers must type ("" = don't ask; backend askHandle)
+  const [askHandle, setAskHandle] = useState("");
   const startUrlBad = !!startUrl.trim() && !/^https?:\/\/[^\s]+$/i.test(startUrl.trim());
   const [audience, setAudience] = useState<{ all: number; NG: number; GH: number } | null>(null);
   useEffect(() => { apiRequest<{ all: number; NG: number; GH: number }>("/tasks/audience", { auth: false }).then((a) => setAudience(a || null)).catch(() => {}); }, []);
@@ -783,6 +786,7 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
         ...(requiredCommunity && { requiredCommunityId: requiredCommunity.id }),
         ...(country && { targetCountries: [country] }),
         ...(gender && { targetGender: gender }),
+        ...(askHandle && { askHandle }),
         ...(checkable && { payoutCooldownMinutes: payoutCheck }),
       });
       try { localStorage.removeItem(CUSTOM_DRAFT_KEY); } catch { /* ignore */ }
@@ -918,6 +922,14 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
                     <label htmlFor="cj-proof">What to send as proof (optional)</label>
                     <textarea id="cj-proof" className="ui-input" rows={2} maxLength={400} value={proofText} onChange={(e) => setProofText(e.target.value)} placeholder="e.g. A screenshot showing you follow us, and your username" />
                     <p className="cf-hint">Shown to workers as "Proof to send". Turn on Screenshot required below if an image is a must.</p>
+                  </div>
+                  <div className="cf-field">
+                    <label htmlFor="cj-handle">Ask for their username on</label>
+                    <select id="cj-handle" className="ui-select" value={askHandle} onChange={(e) => setAskHandle(e.target.value)}>
+                      <option value="">None</option>
+                      {HANDLE_PLATFORMS.map((p) => <option key={p.code} value={p.code}>{p.name}</option>)}
+                    </select>
+                    <p className="cf-hint">Workers must type it to send their work. If someone unfollows after being paid, report it in Manage jobs: they get a warning and can't take follow jobs for {UNFOLLOW_BLOCK_DAYS} days.</p>
                   </div>
 
                   {isContest ? (
@@ -1116,6 +1128,7 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
                     <div><span>{isContest ? "Entries close" : "Closes"}</span><b>{deadline ? deadline.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : "No deadline"}</b></div>
                     {isContest && <div><span>Winners</span><b>{randomDraw ? "Drawn at random when entries close, from the entries you haven't rejected" : "You rank them within 3 days of the close, or the earliest entries win" + (prizeNums.length === 1 ? ". You can also award the place to an entry before entries close; the contest then ends early" : prizeNums.length > 1 && new Set(prizeNums).size === 1 ? ". Every place pays the same prize, so you can also award places before entries close; once every place is awarded, the contest ends early" : "")}</b></div>}
                     {screenshot && <div><span>Proof</span><b>Screenshot required</b></div>}
+                    {askHandle && <div><span>Username</span><b>Workers type their {handlePlatformName(askHandle)} username</b></div>}
                     {isSelection && <div><span>Applications</span><b>Open for {SELECTION_TIMES.find(([h]) => h === selectionHours)?.[1]}, then you pick one person</b></div>}
                     {strict && <div><span>Added automatically</span><b>{strictText}</b></div>}
                     {excludeJobs.length > 0 && <div><span>Excluded</span><b>People from {excludeJobs.length} past job{excludeJobs.length > 1 ? "s" : ""}</b></div>}

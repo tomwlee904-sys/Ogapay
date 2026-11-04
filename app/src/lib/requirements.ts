@@ -2,6 +2,7 @@
    someone applies (task.service checkWorkerRequirements). */
 
 import { audienceRequirement, platformOf } from './creators'
+import { handlePlatformName, UNFOLLOW_BLOCK_DAYS } from './followHandles'
 
 export const LEVEL_NAMES = ['Beginner', 'Intermediate', 'Advanced', 'Expert', 'Legend']
 
@@ -45,3 +46,11 @@ export function requirementLine(job: any): string {
   const rest = jobRequirements(job).filter((r) => r.icon !== 'award').map((r) => r.text)
   return rest.length ? rest.join(' · ') : 'No extra requirements'
 }
+
+/** Follow jobs (askHandle): "Asks for your Instagram username", or null. Not a
+    requirement to meet, so it isn't in jobRequirements' "You need" list. */
+export function askHandleLine(job: any): string | null {
+  return job?.askHandle ? `Asks for your ${handlePlatformName(job.askHandle)} username` : null
+}
+/** The rule that goes with it (the server blocks follow jobs after a report) */
+export const UNFOLLOW_RULE = `Unfollowing after you're paid gets a warning and blocks follow jobs for ${UNFOLLOW_BLOCK_DAYS} days.`
