@@ -10,6 +10,7 @@ import { naira, when } from '../lib/wallet'
 const CARDS = [
   { to: '/admin/withdrawals', icon: 'ti-cash', title: 'Withdrawals', desc: 'Pay out and settle pending withdrawals' },
   { to: '/admin/linked-accounts', icon: 'ti-users-group', title: 'Linked accounts', desc: 'Accounts that share a bank, phone or ID: one person, one account' },
+  { to: '/admin/health', icon: 'ti-activity', title: 'Health', desc: 'Signs of bots and farms: sign-ups, shared IPs, copied proofs, failed sign-ins' },
   { to: '/admin/kyc', icon: 'ti-id', title: 'Identity checks', desc: 'KYC waiting for review, and past approvals' },
   { to: '/admin/creators', icon: 'ti-speakerphone', title: 'Creator checks', desc: 'Follower counts waiting to be verified' },
   { to: '/admin/brands', icon: 'ti-rosette-discount-check', title: 'Business checks', desc: 'Posters asking for the Verified business badge' },

@@ -31,7 +31,7 @@ const TITLES: Record<string, string> = {
   '/admin/withdrawals': 'Admin: Withdrawals', '/admin/kyc': 'Admin: Identity checks', '/admin/creators': 'Admin: Creator checks',
   '/admin/highlights': 'Admin: Highlighted jobs', '/admin/updates': 'Admin: Platform updates', '/admin/ranks': 'Admin: Rank claims',
   '/admin/warnings': 'Admin: Warnings', '/admin/linked-accounts': 'Admin: Linked accounts', '/admin/brands': 'Admin: Business checks',
-  '/admin/support': 'Admin: Support and reports',
+  '/admin/support': 'Admin: Support and reports', '/admin/health': 'Admin: Health',
 }
 
 // Pages with an id in the address. Pages about one thing (an article, a job, a
