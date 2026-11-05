@@ -20,6 +20,7 @@ import { sized } from '../lib/img'
 import { jobDeadline } from '../lib/deadline'
 import InfoTip from '../components/InfoTip'
 import LoadError from '../components/LoadError'
+import { saveJobsList } from '../lib/jobsList'
 
 const OGAPAY_BLUE = 'var(--accent)'
 
@@ -695,8 +696,10 @@ export default function Tasks() {
         const eb = endOf(b) ? new Date(endOf(b)).getTime() : Infinity
         return ea - eb
       }
-      // default: featured first, then still-open, then newest
-      return Number(!!b.featured) - Number(!!a.featured) || Number(isClosed(a)) - Number(isClosed(b)) || time(b) - time(a)
+      // default: jobs you already have a place on go last (an expired place can be
+      // taken again, so it doesn't count), then featured first, still-open, newest
+      const taken = (x: any) => Number(!!mySubmissions[x.id] && mySubmissions[x.id] !== 'EXPIRED')
+      return taken(a) - taken(b) || Number(!!b.featured) - Number(!!a.featured) || Number(isClosed(a)) - Number(isClosed(b)) || time(b) - time(a)
     })
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / perPage))
@@ -720,6 +723,8 @@ export default function Tasks() {
       return next
     }, { replace: true })
   }, [category, search, sort, req, availableOnly, page, setSearchParams])
+  // Remember this page of the list for "Find other jobs" and "Back" (lib/jobsList.ts)
+  useEffect(() => { saveJobsList(searchParams.toString()) }, [searchParams])
 
   const goPage = (p: number) => { setPage(p); window.scrollTo({ top: 0, behavior: 'smooth' }) }
   const clearAll = () => { setSearch(''); setReq('all'); setCategory('All'); setAvailableOnly(false) }

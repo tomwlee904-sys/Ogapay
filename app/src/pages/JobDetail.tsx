@@ -24,6 +24,7 @@ import { renderJobText, renderJobLine } from '../lib/jobText'
 import { PayoutCheckStatus, checkBlocksApprove, anyWaiting, useNow } from '../components/PayoutCheck'
 import SocialJobPanel, { type SocialInfo } from '../components/SocialJobPanel'
 import { openRules } from '../lib/welcome'
+import { jobsListPath } from '../lib/jobsList'
 
 const BRAND = 'var(--accent)'
 const BRAND_LIGHT = 'rgba(var(--accent-rgb),0.10)'
@@ -234,18 +235,13 @@ export default function JobDetail() {
           setCommunity(json.data.community || null)
           loadedId.current = id
         } else if (!quiet) {
-          const res2 = await fetch(`${API_BASE}/jobs/${id}`)
-          const json2 = await res2.json()
-          if (json2.success && json2.data) {
-            setJob(formatTask(json2.data))
-            loadedId.current = id
-          } else {
-            setError('Task not found')
-          }
+          // Only a real 404 means the job is gone. Busy (429), a server error
+          // or a cut connection can be tried again.
+          setError(res.status === 404 ? NOT_FOUND : LOAD_FAILED)
         }
       } catch {
         // A reload that fails keeps the page as it was
-        if (!quiet) setError('Failed to load task')
+        if (!quiet) setError(LOAD_FAILED)
       }
       setLoading(false)
     }
@@ -485,7 +481,7 @@ export default function JobDetail() {
   }
 
   if (loading) return <Layout><SkeletonPage /></Layout>
-  if (error || !job) return <ErrorState message={error || 'Task not found'} onBack={() => navigate(-1)} />
+  if (error || !job) return <ErrorState notFound={error !== LOAD_FAILED} onBack={() => backToJobs(navigate)} onRetry={() => setReloadKey((k) => k + 1)} />
 
   const isOpen = ['open', 'active', 'published'].includes(String(job.status || '').toLowerCase())
   const canManage = Boolean(authUser && (job.creatorId === authUser.id || job.posterId === authUser.id || isMyTask))
@@ -608,8 +604,18 @@ function EligibilityBanner({ eligibility, joinPath, onReload }: { eligibility: {
   )
 }
 
+const NOT_FOUND = 'Task not found'
+const LOAD_FAILED = 'load-failed'
+
+// Back: the page before, or (opened from a link, nothing before it on this
+// site) the page of the jobs list the member was last on
+function backToJobs(navigate: (to: any) => void) {
+  if (Number(window.history.state?.idx ?? 0) > 0) navigate(-1)
+  else navigate(jobsListPath())
+}
+
 /* ── Error State ── */
-function ErrorState({ message, onBack }: { message: string; onBack: () => void }) {
+function ErrorState({ notFound, onBack, onRetry }: { notFound: boolean; onBack: () => void; onRetry: () => void }) {
   return (
     <Layout>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', padding: '0 16px' }}>
@@ -619,9 +625,9 @@ function ErrorState({ message, onBack }: { message: string; onBack: () => void }
               <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
             </svg>
           </div>
-          <h2 style={{ fontSize: 20, fontWeight: 800, color: 'var(--text)', margin: '0 0 8px' }}>{message || 'Task not found'}</h2>
-          <p style={{ fontSize: 14, color: 'var(--text2)', margin: '0 0 20px', lineHeight: 1.5 }}>The task you're looking for doesn't exist or has been removed.</p>
-          <button onClick={onBack} style={{ padding: '12px 28px', borderRadius: 10, border: 'none', background: BRAND, color: 'var(--on-accent)', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>Go Back</button>
+          <h2 style={{ fontSize: 20, fontWeight: 800, color: 'var(--text)', margin: '0 0 8px' }}>{notFound ? NOT_FOUND : 'Could not load this job'}</h2>
+          <p style={{ fontSize: 14, color: 'var(--text2)', margin: '0 0 20px', lineHeight: 1.5 }}>{notFound ? "The task you're looking for doesn't exist or has been removed." : 'Check your connection and try again.'}</p>
+          <button onClick={notFound ? onBack : onRetry} style={{ padding: '12px 28px', borderRadius: 10, border: 'none', background: BRAND, color: 'var(--on-accent)', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>{notFound ? 'Go Back' : 'Try again'}</button>
         </div>
       </div>
     </Layout>
@@ -1084,7 +1090,7 @@ function WurkJobDetailView(props: any) {
 
       <div className="wjd">
         <div className="wjd-wrap">
-          <button className="wjd-back" type="button" onClick={() => navigate(-1)}>
+          <button className="wjd-back" type="button" onClick={() => backToJobs(navigate)}>
             <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7" strokeLinecap="round" strokeLinejoin="round" /></svg>
             Back
           </button>

@@ -66,6 +66,12 @@ const runningPulse = () => {
   return lastTap && elapsed < PULSE_MS ? { key: lastTap.key, elapsed } : null
 }
 
+// Hiding the dock while scrolling down (see the effect in BottomNav)
+const TUCK_AFTER = 80 // px from the top before it can hide
+const NEAR_BOTTOM = 120 // px from the end of the page where it always shows
+const SCROLL_SLACK = 6 // px of movement that counts as a scroll up or down
+const KEYBOARD_MIN = 150 // px change in visible height that means the keyboard
+
 const reducedMotion = () =>
   typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
 
@@ -96,6 +102,55 @@ export default function BottomNav() {
     const p = runningPulse()
     if (p) pulseTimer.current = setTimeout(() => setPulse(null), PULSE_MS - p.elapsed)
     return () => { if (pulseTimer.current) clearTimeout(pulseTimer.current) }
+  }, [])
+
+  // On phones the dock covered the bottom of the page (2026-11-05): it slides
+  // down while you scroll down past TUCK_AFTER px and comes back when you scroll
+  // up, reach the bottom of the page, or the keyboard or focus changes. The dock
+  // opens no menu or sheet of its own (Alerts and Profile signed out open the
+  // sign-in dialog over the page), so there is nothing that must keep it up.
+  const [tucked, setTucked] = useState(false)
+  useEffect(() => {
+    let lastY = window.scrollY
+    let frame = 0
+    const update = () => {
+      frame = 0
+      const y = window.scrollY
+      const nearBottom = window.innerHeight + y >= document.documentElement.scrollHeight - NEAR_BOTTOM
+      if (y <= TUCK_AFTER || nearBottom) setTucked(false)
+      else if (y > lastY + SCROLL_SLACK) setTucked(true)
+      else if (y < lastY - SCROLL_SLACK) setTucked(false)
+      else return // tiny moves (and iOS bounce) keep lastY, so slow scrolls still count
+      lastY = y
+    }
+    const onScroll = () => { if (!frame) frame = requestAnimationFrame(update) }
+    const show = () => { lastY = window.scrollY; setTucked(false) }
+    // The keyboard opening or closing changes the visible height a lot; the
+    // address bar hiding while you scroll changes it a little and is ignored
+    const vv = window.visualViewport
+    let vvHeight = vv?.height ?? 0
+    const onViewport = () => {
+      if (!vv) return
+      if (Math.abs(vv.height - vvHeight) > KEYBOARD_MIN) show()
+      vvHeight = vv.height
+    }
+    // A text box getting or losing focus (the keyboard), or Tab into the dock itself.
+    // Not every tap: buttons take focus too, and the dock would keep popping up.
+    const onFocus = (e: FocusEvent) => {
+      const el = e.target as HTMLElement | null
+      if (el?.closest?.('.btb, input, textarea, select, [contenteditable="true"]')) show()
+    }
+    window.addEventListener('scroll', onScroll, { passive: true })
+    document.addEventListener('focusin', onFocus)
+    document.addEventListener('focusout', onFocus)
+    vv?.addEventListener('resize', onViewport)
+    return () => {
+      if (frame) cancelAnimationFrame(frame)
+      window.removeEventListener('scroll', onScroll)
+      document.removeEventListener('focusin', onFocus)
+      document.removeEventListener('focusout', onFocus)
+      vv?.removeEventListener('resize', onViewport)
+    }
   }, [])
 
   // The items are real links, so Ctrl/Cmd/middle-click and "Open in new tab" work;
@@ -177,7 +232,10 @@ export default function BottomNav() {
           background:var(--dk-solid);color:var(--dk-ink);
           box-shadow:0 8px 28px var(--dk-shadow),0 2px 6px var(--dk-shadow),inset 0 1px 0 var(--dk-shine),inset 0 -1px 0 var(--dk-reflection);
           font-family:inherit;
+          transition:transform 200ms ease;
         }
+        /* Scrolling down: slid below the screen (its gap and the iPhone home bar too) */
+        .btb--tucked{transform:translateY(calc(100% + 12px + env(safe-area-inset-bottom,0px)))}
         @supports ((-webkit-backdrop-filter:blur(1px)) or (backdrop-filter:blur(1px))){
           .btb{background:var(--dk-glass);-webkit-backdrop-filter:blur(16px) saturate(165%);backdrop-filter:blur(16px) saturate(165%)}
         }
@@ -238,7 +296,7 @@ export default function BottomNav() {
         @keyframes btb-bounce-create{0%,100%{transform:scale(1)}44%{transform:scale(1.04)}68%{transform:scale(.98)}}
 
         @media (prefers-reduced-motion:reduce){
-          .btb-item{transition:none}
+          .btb,.btb-item{transition:none}
           .btb-shell--pulse{animation:none}
         }
         @media (prefers-reduced-transparency:reduce){
@@ -258,7 +316,7 @@ export default function BottomNav() {
         @media ${DOCK_HIDDEN}{.btb{display:none}}
         @media print{.btb{display:none}}
       `}</style>
-      <nav className="btb" aria-label="Main">
+      <nav className={'btb' + (tucked ? ' btb--tucked' : '')} aria-label="Main">
         {TABS.map((t) => {
           const active = isActive(t, location.pathname, ownProfile)
           const badge = t.key === 'alerts' && unreadCount > 0 ? (unreadCount > 9 ? '9+' : String(unreadCount)) : null

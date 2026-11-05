@@ -14,6 +14,7 @@ import { PayoutCheckNote, PayoutCheckStatus } from '../components/PayoutCheck'
 import { isRulesError, openRules } from '../lib/welcome'
 import { useMoney } from '../lib/useMoney'
 import { cleanHandle, handlePlatformName, UNFOLLOW_BLOCK_DAYS } from '../lib/followHandles'
+import { jobsListPath } from '../lib/jobsList'
 
 // Submit work for a job (/tasks/:id/submit). Takes a slot if you haven't yet,
 // uploads files, then submits: the same steps as the job page's apply dialog.
@@ -135,7 +136,7 @@ export default function SubmissionPage() {
     return <Layout><div className="ui-page sb-wrap"><div className="ui-sk" style={{ height: 40, width: 260 }} /><div className="sb-grid"><div className="ui-sk" style={{ height: 380 }} /><div className="ui-sk" style={{ height: 260 }} /></div></div></Layout>
   }
   if (!task) {
-    return <Layout><div className="ui-page sb-wrap"><div className="ui-empty"><p>This job doesn't exist or was removed.</p><Link className="ui-btn ui-btn-ghost" to="/tasks">Find other jobs</Link></div></div></Layout>
+    return <Layout><div className="ui-page sb-wrap"><div className="ui-empty"><p>This job doesn't exist or was removed.</p><Link className="ui-btn ui-btn-ghost" to={jobsListPath()}>Find other jobs</Link></div></div></Layout>
   }
   // Your own job: review it instead
   if (user && task.posterId === user.id) return <Navigate to={`/manage-jobs?job=${task.id}`} replace />
@@ -298,14 +299,14 @@ export default function SubmissionPage() {
                     : (mine ? 'You didn\'t send an entry.' : 'This contest isn\'t taking entries any more.')}
                   {!winnersPaidAt && task.winnersDueAt ? ` The winners are picked by ${when(task.winnersDueAt)}.` : ''}
                 </p>
-                <div className="ui-actions"><Link className="ui-btn ui-btn-ghost" to={`/tasks/${task.id}`}>{winnersPaidAt ? 'See the winners' : 'Back to the job'}</Link><Link className="ui-btn ui-btn-ghost" to="/tasks">Find more jobs</Link></div>
+                <div className="ui-actions"><Link className="ui-btn ui-btn-ghost" to={`/tasks/${task.id}`}>{winnersPaidAt ? 'See the winners' : 'Back to the job'}</Link><Link className="ui-btn ui-btn-ghost" to={jobsListPath()}>Find more jobs</Link></div>
               </section>
             ) : mine?.contestResult === 'NOT_PLACED' ? (
               <section className="ui-card ui-card-pad sb-state">
                 <span className="sb-ic"><i className="ti ti-flag" /></span>
                 <h2>Your entry didn't place</h2>
                 <p>The winners of this contest have been paid, and this entry wasn't one of them. Thanks for taking part.</p>
-                <div className="ui-actions"><Link className="ui-btn ui-btn-ghost" to={`/tasks/${task.id}`}>See the winners</Link><Link className="ui-btn ui-btn-ghost" to="/tasks">Find more jobs</Link></div>
+                <div className="ui-actions"><Link className="ui-btn ui-btn-ghost" to={`/tasks/${task.id}`}>See the winners</Link><Link className="ui-btn ui-btn-ghost" to={jobsListPath()}>Find more jobs</Link></div>
               </section>
             ) : status === 'SUBMITTED' && task.isContest ? (
               <section className="ui-card ui-card-pad sb-state">
@@ -320,7 +321,7 @@ export default function SubmissionPage() {
                     {' '}(until {when(new Date(new Date(mine!.submittedAt!).getTime() + TAKE_BACK_MINUTES * 60000).toISOString())}, while it isn't reviewed). You keep your place.
                   </p>
                 )}
-                <div className="ui-actions"><Link className="ui-btn ui-btn-ghost" to="/my-tasks">My tasks</Link><Link className="ui-btn ui-btn-ghost" to="/tasks">Find more jobs</Link></div>
+                <div className="ui-actions"><Link className="ui-btn ui-btn-ghost" to="/my-tasks">My tasks</Link><Link className="ui-btn ui-btn-ghost" to={jobsListPath()}>Find more jobs</Link></div>
               </section>
             ) : status === 'SUBMITTED' ? (
               <section className="ui-card ui-card-pad sb-state">
@@ -337,14 +338,14 @@ export default function SubmissionPage() {
                     {' '}(until {when(new Date(new Date(mine!.submittedAt!).getTime() + TAKE_BACK_MINUTES * 60000).toISOString())}, while it isn't reviewed). You keep your place.
                   </p>
                 )}
-                <div className="ui-actions"><Link className="ui-btn ui-btn-ghost" to="/my-tasks">My tasks</Link><Link className="ui-btn ui-btn-ghost" to="/tasks">Find more jobs</Link></div>
+                <div className="ui-actions"><Link className="ui-btn ui-btn-ghost" to="/my-tasks">My tasks</Link><Link className="ui-btn ui-btn-ghost" to={jobsListPath()}>Find more jobs</Link></div>
               </section>
             ) : status === 'APPROVED' ? (
               <section className="ui-card ui-card-pad sb-state">
                 <span className="sb-ic ok"><i className={`ti ${mine?.contestResult === 'WON' ? 'ti-trophy' : 'ti-check'}`} /></span>
                 <h2>{mine?.contestResult === 'WON' ? `You won ${ordinal(mine.place || 1)} place` : 'Approved and paid'}</h2>
                 <p>{money(paidAmount, cur)} went to your wallet.</p>
-                <div className="ui-actions"><Link className="ui-btn ui-btn-dark" to="/wallet">Open wallet</Link><Link className="ui-btn ui-btn-ghost" to="/tasks">Find more jobs</Link></div>
+                <div className="ui-actions"><Link className="ui-btn ui-btn-dark" to="/wallet">Open wallet</Link><Link className="ui-btn ui-btn-ghost" to={jobsListPath()}>Find more jobs</Link></div>
               </section>
             ) : status === 'REJECTED' || status === 'EXPIRED' || status === 'DISPUTED' ? (
               <section className="ui-card ui-card-pad sb-state">
@@ -377,14 +378,14 @@ export default function SubmissionPage() {
                     <p className="sb-small">You can ask once per job. Our team's decision is final.</p>
                   </div>
                 )}
-                <div className="ui-actions"><Link className="ui-btn ui-btn-ghost" to="/tasks">Find other jobs</Link></div>
+                <div className="ui-actions"><Link className="ui-btn ui-btn-ghost" to={jobsListPath()}>Find other jobs</Link></div>
               </section>
             ) : task.isSelection && !mine && application?.status === 'NOT_PICKED' ? (
               <section className="ui-card ui-card-pad sb-state">
                 <span className="sb-ic bad"><i className="ti ti-user-x" /></span>
                 <h2>You were not picked</h2>
                 <p>{task.poster?.username ? `@${task.poster.username}` : 'The poster'} picked someone else for this job. Thanks for applying.</p>
-                <div className="ui-actions"><Link className="ui-btn ui-btn-ghost" to="/tasks">Find other jobs</Link></div>
+                <div className="ui-actions"><Link className="ui-btn ui-btn-ghost" to={jobsListPath()}>Find other jobs</Link></div>
               </section>
             ) : task.isSelection && !mine && application && !closed ? (
               <section className="ui-card ui-card-pad sb-state">
@@ -392,14 +393,14 @@ export default function SubmissionPage() {
                 <h2>Application sent</h2>
                 <p>{task.poster?.username ? `@${task.poster.username}` : 'The poster'} reads the applications and picks one person. You'll get a notification if it's you, and then you have 24 hours to send the work.</p>
                 <div className="sb-sent"><span className="ui-label">Your note</span><p>{application.pitch}</p></div>
-                <div className="ui-actions"><Link className="ui-btn ui-btn-ghost" to="/tasks">Find more jobs</Link></div>
+                <div className="ui-actions"><Link className="ui-btn ui-btn-ghost" to={jobsListPath()}>Find more jobs</Link></div>
               </section>
             ) : task.isSelection && !mine && !closed && task.hiredWorkerId && task.hiredWorkerId !== user?.id ? (
               <section className="ui-card ui-card-pad sb-state">
                 <span className="sb-ic bad"><i className="ti ti-user-check" /></span>
                 <h2>Someone was picked</h2>
                 <p>The poster already picked someone for this job.</p>
-                <div className="ui-actions"><Link className="ui-btn ui-btn-ghost" to="/tasks">Find other jobs</Link></div>
+                <div className="ui-actions"><Link className="ui-btn ui-btn-ghost" to={jobsListPath()}>Find other jobs</Link></div>
               </section>
             ) : task.isSelection && !mine && !closed ? (
               <section className="ui-card ui-card-pad sb-form">
@@ -417,7 +418,7 @@ export default function SubmissionPage() {
                 <span className="sb-ic bad"><i className="ti ti-lock" /></span>
                 <h2>This job isn't taking work</h2>
                 <p>It's {task.status === 'DRAFT' ? 'paused by the poster' : task.status.toLowerCase().replace('_', ' ')}.</p>
-                <div className="ui-actions"><Link className="ui-btn ui-btn-ghost" to="/tasks">Find other jobs</Link></div>
+                <div className="ui-actions"><Link className="ui-btn ui-btn-ghost" to={jobsListPath()}>Find other jobs</Link></div>
               </section>
             ) : (
               <section className="ui-card ui-card-pad sb-form">

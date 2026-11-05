@@ -3,6 +3,7 @@ import { apiRequest } from '../lib/api'
 import { useAuth } from './AuthContext'
 
 const BALANCE_TTL = 10_000 // 30 seconds
+const RETRY_MS = 4_000
 
 export type BalanceData = Record<string, { balance: number; lockedBalance: number; available: number; pendingBalance?: number }> | null
 
@@ -23,6 +24,11 @@ export function WalletBalanceProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null)
   const [lastFetched, setLastFetched] = useState<number | null>(null)
   const fetchPromiseRef = useRef<Promise<void> | null>(null)
+  // A failed load is tried once more after RETRY_MS (2026-11-05: one failed
+  // load at start-up left the header on ₦0 until the next page refresh)
+  const retried = useRef(false)
+  const retryTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const fetchRef = useRef<() => Promise<void>>(async () => {})
 
   const fetchBalance = useCallback(async () => {
     if (fetchPromiseRef.current) return fetchPromiseRef.current
@@ -33,8 +39,14 @@ export function WalletBalanceProvider({ children }: { children: ReactNode }) {
         const data = await apiRequest<any>('/wallet/balance')
         setBalances(data)
         setLastFetched(Date.now())
+        retried.current = false
       } catch (e: any) {
         setError(e.message || 'Failed to load balance')
+        if (!retried.current) {
+          retried.current = true
+          if (retryTimer.current) clearTimeout(retryTimer.current)
+          retryTimer.current = setTimeout(() => { retryTimer.current = null; fetchRef.current() }, RETRY_MS)
+        }
       } finally {
         setLoading(false)
         fetchPromiseRef.current = null
@@ -42,6 +54,7 @@ export function WalletBalanceProvider({ children }: { children: ReactNode }) {
     })()
     return fetchPromiseRef.current
   }, [])
+  fetchRef.current = fetchBalance
 
   const refresh = useCallback(async () => {
     await fetchBalance()
@@ -50,6 +63,8 @@ export function WalletBalanceProvider({ children }: { children: ReactNode }) {
   // On mount / when user becomes authed, check TTL
   useEffect(() => {
     if (!isAuthed) {
+      if (retryTimer.current) { clearTimeout(retryTimer.current); retryTimer.current = null }
+      retried.current = false
       setBalances(null)
       setLastFetched(null)
       setError(null)
@@ -60,6 +75,7 @@ export function WalletBalanceProvider({ children }: { children: ReactNode }) {
       fetchBalance()
     }
   }, [isAuthed])
+  useEffect(() => () => { if (retryTimer.current) clearTimeout(retryTimer.current) }, [])
 
   return (
     <WalletBalanceContext.Provider value={{ balances, loading, error, lastFetched, refresh }}>
