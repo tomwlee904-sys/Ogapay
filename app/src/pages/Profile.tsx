@@ -1014,11 +1014,12 @@ export default function Profile() {
                     if (editForm.bio !== (profileData?.workerProfile?.bio || '')) body.bio = editForm.bio;
 
                     if (Object.keys(body).length > 0) {
-                      const updated = await apiRequest('/users/me', {
+                      // Let the server's reason through (e.g. a verified name can't be changed)
+                      // instead of a bare "Failed to update profile" (2026-11-06)
+                      await apiRequest('/users/me', {
                         method: 'PATCH',
                         body: JSON.stringify(body),
-                      }).catch(() => null);
-                      if (!updated) throw new Error('Failed to update profile');
+                      });
                       const userData = await apiRequest('/users/me').catch(() => null);
                       if (userData) setProfileData(userData);
                     }
