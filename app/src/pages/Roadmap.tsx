@@ -29,7 +29,7 @@ const phases = [
       "Deposits by card or bank transfer, and your own account number",
       "Withdrawals to Nigerian banks and crypto wallets",
       "Free transfers between OgaPay users",
-      "Identity verification levels: NIN, ID with a selfie, documents",
+      "Identity verification levels: NIN, a photo of your ID, documents",
       "Store with buyer protection: payment held until delivery is confirmed",
       "Vault: platform fees shared with $PAY holders every 12 hours",
       "Developer API for apps and AI agents: post jobs and pay for approved work",

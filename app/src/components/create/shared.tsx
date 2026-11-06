@@ -18,7 +18,7 @@ export const NO_REQS: Reqs = { rank: 1, id: "none", extra: "none", value: "" };
 export const ID_OPTIONS: [string, string][] = [
   ["none", "No identity check"],
   ["kyc", "ID verified (NIN)"],
-  ["kyc2", "ID + selfie verified"],
+  ["kyc2", "ID verified (Level 2)"],
   ["human", "Human verified (VeryAI)"],
 ];
 const ID_FIELD: Record<string, string> = { kyc: "KYC", kyc2: "KYC2", human: "HUMAN" };

@@ -93,7 +93,7 @@ function Level2Row({ r, onDone }: { r: L2; onDone: (id: string, msg: string) => 
         <div className="aw-confirm">
           {mode === 'approve'
             ? <p>{name} becomes Level 2 (withdraw up to ₦10,000 a day) and counts as ID-verified for bonuses and sending money.</p>
-            : <><label htmlFor={`l2r-${r.id}`}>Reason (the member sees this)</label><input id={`l2r-${r.id}`} className="ui-input" value={reason} onChange={(e) => setReason(e.target.value)} placeholder="e.g. The selfie is blurry. Please send a clearer one." /></>}
+            : <><label htmlFor={`l2r-${r.id}`}>Reason (the member sees this)</label><input id={`l2r-${r.id}`} className="ui-input" value={reason} onChange={(e) => setReason(e.target.value)} placeholder="e.g. This is a photo of you, not your ID. Send a clear photo of your NIN slip or ID card." /></>}
           {error && <p className="aw-error" role="alert">{error}</p>}
           <div className="aw-actions">
             <button className="ui-btn ui-btn-dark" onClick={act} disabled={busy}>{busy ? 'Saving…' : mode === 'approve' ? 'Confirm: Level 2' : 'Confirm reject'}</button>

@@ -675,7 +675,7 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
   const strict = strictRulesApply(strictRules, { mode, places: winners, perPerson: perWinner, currency, community: !!community });
   const personCheck = strictRules?.personCheck === "HUMAN" ? "human verification (VeryAI)" : "ID verification (KYC)";
   const strictText = strict && strictRules
-    ? `${rankName(strictRules.rank)} rank or higher and ${reqs.id === "kyc" ? "ID verification (NIN)" : reqs.id === "kyc2" ? "ID + selfie verification" : reqs.id === "human" ? "human verification (VeryAI)" : personCheck}`
+    ? `${rankName(strictRules.rank)} rank or higher and ${reqs.id === "kyc" ? "ID verification (NIN)" : reqs.id === "kyc2" ? "ID verification (Level 2)" : reqs.id === "human" ? "human verification (VeryAI)" : personCheck}`
     : "";
 
   // Refine with AI: a clearer brief from what you wrote (server: briefRefine.service)

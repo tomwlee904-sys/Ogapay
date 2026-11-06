@@ -399,7 +399,7 @@ export default function Verification({ me, reload, providers }: SectionProps & {
     <form className="st2-panel st2-form" noValidate onSubmit={(e) => { e.preventDefault(); sendManual() }}>
       <strong>Get Level 2: send your ID to our team</strong>
       <p className="st2-muted" style={{ margin: '6px 0 0', lineHeight: 1.55 }}>
-        Take a clear photo of your NIN slip or card (or another ID) and type its number. Our team checks it by hand, usually within a day. Your photo is private and only our verification team can see it.
+        Take a clear photo of your NIN slip or card (or another ID) and type its number. The photo must show the ID itself with your name and number readable. A selfie or a photo of your face is not an ID and will be rejected. Our team checks it by hand, usually within a day. Your photo is private and only our verification team can see it.
       </p>
       {manualReq?.status === 'REJECTED' && <div className="st2-warn"><i className="ti ti-alert-circle" aria-hidden="true" /><span>Your last request wasn't approved{manualReq.reason ? `: ${manualReq.reason}` : ''}. You can send a new photo.</span></div>}
       <label className="st2-f"><span>Type of ID</span>
@@ -415,7 +415,7 @@ export default function Verification({ me, reload, providers }: SectionProps & {
         <input autoComplete="off" inputMode={mType === 'NIN' ? 'numeric' : undefined} value={mNumber} maxLength={40} onChange={(e) => setMNumber(e.target.value)} placeholder="The number on your ID" />
       </label>
       {/* Big photos are made smaller before sending, so no size limit to worry about */}
-      <label className="st2-f"><span>Photo of your ID (JPG or PNG)</span>
+      <label className="st2-f"><span>Photo of your ID, not a selfie (JPG or PNG)</span>
         <input type="file" accept="image/jpeg,image/png,image/webp" onChange={(e) => setMFront(e.target.files?.[0] || null)} />
       </label>
       {mMsg && <p className={mMsg.ok ? 'st2-ok' : 'st2-err'}>{mMsg.text}</p>}

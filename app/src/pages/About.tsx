@@ -15,7 +15,7 @@ const DOES = [
 const SAFE = [
   { icon: 'lock', title: 'Escrow on every job', text: 'A job’s budget is locked before anyone starts, so workers can see the money is there. Work nobody reviews within 72 hours is approved automatically.' },
   { icon: 'shield-check', title: 'Buyer protection in the store', text: 'Store payments are held until the buyer confirms delivery, or 3 days after the seller marks it delivered. Problems are reviewed by our team.' },
-  { icon: 'id-badge-2', title: 'Identity checks', text: 'Verification levels (NIN, ID with a selfie, documents) unlock withdrawals and higher limits, and posters can require them for their jobs.' },
+  { icon: 'id-badge-2', title: 'Identity checks', text: 'Verification levels (NIN, a photo of your ID, documents) unlock withdrawals and higher limits, and posters can require them for their jobs.' },
   { icon: 'flag', title: 'Reports and moderation', text: 'Report a job from its page, or tell support about a user or an order. Disputed work and store orders are settled by our team.' },
 ]
 
