@@ -19,9 +19,11 @@ interface LayoutProps {
 const FULL_FOOTER = /^\/(about|hire|roadmap|socials|brand-kit|privacy|terms|license|copyright|developer|docs|join-test-team|rank)?$/
 
 export default function Layout({ children, sidebar = false }: LayoutProps) {
-  const { user } = useAuth()
+  const { user, isLoading } = useAuth()
   const { pathname } = useLocation()
-  const fullFooter = !user || FULL_FOOTER.test(pathname.length > 1 ? pathname.replace(/\/$/, '') : pathname)
+  // While the sign-in check runs the account isn't known yet: a member's page must
+  // not flash the visitors' big footer (2026-11-07)
+  const fullFooter = (!user && !isLoading) || FULL_FOOTER.test(pathname.length > 1 ? pathname.replace(/\/$/, '') : pathname)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [online, setOnline] = useState(navigator.onLine)
 

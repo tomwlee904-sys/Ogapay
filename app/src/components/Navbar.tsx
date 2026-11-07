@@ -144,7 +144,7 @@ export default function Navbar({ onMenuToggle }: NavbarProps) {
           <span>OgaPay</span>
         </Link>
         <div className="nav-mobile-actions flex items-center">
-          {!isLoading && isAuthed ? (
+          {isLoading ? null /* sign-in check still running: neither "Sign in" nor a balance yet */ : isAuthed ? (
             <button className="balance-display" onClick={() => navigate('/wallet')} aria-label={`Wallet: total of all your wallets, ${balanceText}`} title={balanceTip}>
               <small className="balance-total-label">Total</small> {balanceText}
             </button>

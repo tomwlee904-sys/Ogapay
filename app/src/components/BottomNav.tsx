@@ -77,7 +77,7 @@ const reducedMotion = () =>
 
 export default function BottomNav() {
   const location = useLocation()
-  const { isAuthed, user } = useAuth()
+  const { isAuthed, isLoading, user } = useAuth()
   const avatar: string | null = isAuthed ? (user as any)?.avatar || (user as any)?.avatarUrl || null : null
   const username: string = isAuthed ? (user as any)?.username || '' : ''
   const ownProfile = username ? `/user/${encodeURIComponent(username)}`.toLowerCase() : null
@@ -164,7 +164,9 @@ export default function BottomNav() {
     setPulse({ key: t.key, elapsed: 0 })
     pulseTimer.current = setTimeout(() => setPulse(null), PULSE_MS)
 
-    if (t.authRequired && !isAuthed) {
+    // While the sign-in check runs, go on: the page itself waits for it and only then
+    // asks a visitor to sign in (2026-11-07)
+    if (t.authRequired && !isAuthed && !isLoading) {
       e.preventDefault()
       openSignIn({ redirect: t.path })
       return
