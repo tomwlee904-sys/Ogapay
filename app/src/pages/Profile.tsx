@@ -307,7 +307,10 @@ export default function Profile() {
   const isHumanVerified = !!((authUser as any)?.humanVerified || profileData?.humanVerified);
   const lockedNgn = walletBal?.NGN?.lockedBalance ?? 0;
 
-  // Saved preferences (PATCH replaces the whole object, so merge first)
+  // Saved preferences. The server merges what's sent into what's saved, so only the
+  // changed key goes (2026-11-07): sending them all sent jobPush: null (never chosen),
+  // which the server turns down ("Choose Off, My categories or All jobs"), so no
+  // switch here could be saved by anyone who hadn't picked a job-alert setting
   const autoConvert = !!profileData?.preferences?.autoConvert;
   const isPublic = profileData?.isPublic !== false;
   const savePref = async (patch: Record<string, any>) => {
@@ -318,9 +321,8 @@ export default function Profile() {
         await apiRequest('/users/me', { method: 'PATCH', body: JSON.stringify({ isPublic: patch.isPublic }) });
         setProfileData((d: any) => ({ ...d, isPublic: patch.isPublic }));
       } else {
-        const preferences = { ...(profileData?.preferences || {}), ...patch };
-        await apiRequest('/users/me/preferences', { method: 'PATCH', body: JSON.stringify({ preferences }) });
-        setProfileData((d: any) => ({ ...d, preferences }));
+        await apiRequest('/users/me/preferences', { method: 'PATCH', body: JSON.stringify({ preferences: patch }) });
+        setProfileData((d: any) => ({ ...d, preferences: { ...(d?.preferences || {}), ...patch } }));
       }
     } catch (e: any) {
       toast(e?.message || 'Could not save', 'error');
