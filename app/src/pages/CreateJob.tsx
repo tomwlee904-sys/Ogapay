@@ -14,7 +14,7 @@ import { PlatformActionButton } from "../components/PlatformActionButton";
 import CampaignWizard from "../components/CampaignWizard";
 import XCampaignBuilder from "../components/create/XCampaignBuilder";
 import QuickTaskForm from "../components/create/QuickTaskForm";
-import { Steps, Fold, Toggle as CfToggle, OverviewCard, RequirementPicker, reqsFrom, reqsToSaved, reqsAny, type Reqs, DURATIONS, deadlineFor, money, minReward, reqFields, reqLabel, uploadJobFile, createTask, apiErrorText, CATEGORIES, CATEGORY_MAP, listTemplates, saveTemplate, getStrictRules, strictRulesApply, SELECTION_TIMES, type TemplateData, type TemplateFile, type StrictRules } from "../components/create/shared";
+import { Steps, Fold, Toggle as CfToggle, OverviewCard, RequirementPicker, reqsFrom, reqsToSaved, reqsAny, type Reqs, DURATIONS, deadlineFor, money, minReward, reqFields, reqLabel, uploadJobFile, createTask, apiErrorText, CATEGORIES, CATEGORY_MAP, listTemplates, saveTemplate, getStrictRules, strictRulesApply, SELECTION_TIMES, DELIVERY_TIMES, type TemplateData, type TemplateFile, type StrictRules } from "../components/create/shared";
 import { rankName } from "../lib/requirements";
 import TemplatesModal from "../components/create/TemplatesModal";
 import { useProviders } from "../lib/providers";
@@ -596,6 +596,8 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
   const [templateFiles, setTemplateFiles] = useState<TemplateFile[]>(Array.isArray(init.templateFiles) ? init.templateFiles : []);
   // Selection: how long people can apply (hours, as text)
   const [selectionHours, setSelectionHours] = useState<string>(SELECTION_TIMES.some(([h]) => h === String(init.selectionHours)) ? String(init.selectionHours) : "24");
+  // Selection: days the person you pick has to send the work ("1" = the usual 24 hours)
+  const [deliveryDays, setDeliveryDays] = useState<string>(DELIVERY_TIMES.some(([d]) => d === String(init.deliveryDays)) ? String(init.deliveryDays) : "1");
   const [hideAfter, setHideAfter] = useState<boolean>(!!init.hideAfterComplete);
   const [watermark, setWatermark] = useState<boolean>(!!init.watermark);
   const [excludeJobs, setExcludeJobs] = useState<string[]>([]);
@@ -619,11 +621,11 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
   useEffect(() => {
     const t = setTimeout(() => {
       try {
-        localStorage.setItem(CUSTOM_DRAFT_KEY, JSON.stringify({ mode, title, description, currency, bounty, winners: winnersInput, prizes: prizesInput, entryTarget, randomDraw, category, subcategory, duration, ...reqsToSaved(reqs), screenshot, trackingCode, payoutCheck: String(payoutCheck), selectionHours, hideAfterComplete: hideAfter, watermark, templateFiles }));
+        localStorage.setItem(CUSTOM_DRAFT_KEY, JSON.stringify({ mode, title, description, currency, bounty, winners: winnersInput, prizes: prizesInput, entryTarget, randomDraw, category, subcategory, duration, ...reqsToSaved(reqs), screenshot, trackingCode, payoutCheck: String(payoutCheck), selectionHours, deliveryDays, hideAfterComplete: hideAfter, watermark, templateFiles }));
       } catch { /* storage full or blocked */ }
     }, 400);
     return () => clearTimeout(t);
-  }, [mode, title, description, currency, bounty, winnersInput, prizesInput, entryTarget, randomDraw, category, subcategory, duration, reqs, screenshot, trackingCode, payoutCheck, selectionHours, hideAfter, watermark, templateFiles]);
+  }, [mode, title, description, currency, bounty, winnersInput, prizesInput, entryTarget, randomDraw, category, subcategory, duration, reqs, screenshot, trackingCode, payoutCheck, selectionHours, deliveryDays, hideAfter, watermark, templateFiles]);
 
   const isContest = mode === "Contest";
   // The payout check is for social jobs (not contests: winners are picked when they end)
@@ -640,11 +642,13 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
   const minTotal = floor * Math.max(winners, 1);
   // A contest always ends (entries close, then winners are picked)
   const chosenDeadline = deadlineFor(isContest && duration === "No deadline" ? "7 days" : duration);
-  // Selection: the job stays open at least 24 hours after applications close, so
-  // the person you pick has time to send the work (the server checks this too)
+  // Selection: the job stays open at least the time to deliver (24 hours unless
+  // the poster chose more) after applications close, so the person you pick has
+  // time to send the work (the server checks this too; one hour spare)
   const isSelection = mode === "Selection";
+  const deliveryLabel = deliveryDays === "1" ? "24 hours" : `${deliveryDays} days`;
   const appsCloseAt = isSelection ? new Date(Date.now() + Number(selectionHours) * 3600000) : null;
-  const minSelectionEnd = appsCloseAt ? new Date(appsCloseAt.getTime() + 25 * 3600000) : null;
+  const minSelectionEnd = appsCloseAt ? new Date(appsCloseAt.getTime() + (Number(deliveryDays) * 24 + 1) * 3600000) : null;
   const deadline = chosenDeadline && minSelectionEnd && chosenDeadline < minSelectionEnd ? minSelectionEnd : chosenDeadline;
   const deadlineMoved = !!(chosenDeadline && deadline !== chosenDeadline);
   const alt = currency === "USDC"
@@ -728,7 +732,7 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
       await saveTemplate({
         mode, title: title.trim(), description, currency, bounty, winners: winnersInput, category, subcategory, duration, ...reqsToSaved(reqs), screenshot, trackingCode,
         ...(payoutCheck > 0 && { payoutCheck: String(payoutCheck) }),
-        ...(isSelection && { selectionHours }), ...(hideAfter && { hideAfterComplete: true }), ...(watermark && { watermark: true }),
+        ...(isSelection && { selectionHours, deliveryDays }), ...(hideAfter && { hideAfterComplete: true }), ...(watermark && { watermark: true }),
       }, undefined, { isPublic: shareTemplate, files: [...templateFiles, ...added].slice(0, 10) });
       if (added.length) { setTemplateFiles(tf => [...tf, ...added].slice(0, 10)); setFiles([]); }
       setTplSaved("saved");
@@ -762,7 +766,8 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
         currency,
         maxWorkers: winners,
         // Selection: people apply with a note and you pick one person (server: task.service.js)
-        ...(isSelection && { isSelection: true, selectionHours: Number(selectionHours) }),
+        // deliveryDays: 1 is the usual 24 hours, so it is only sent when longer
+        ...(isSelection && { isSelection: true, selectionHours: Number(selectionHours), ...(deliveryDays !== "1" && { deliveryDays: Number(deliveryDays) }) }),
         ...(hideAfter && { hideAfterComplete: true }),
         ...(watermark && { watermark: true }),
         ...(excludeJobs.length && { excludeDoersOfTaskIds: excludeJobs }),
@@ -852,7 +857,7 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
                       <ul>
                         <li><b>Challenge:</b> everyone whose work you approve is paid the reward, until your number of winners is reached. Best for simple tasks.</li>
                         <li><b>Contest:</b> people send entries until it closes, then you rank the best and pay a prize for each place. Best for creative work. Or choose a random draw: the winners are drawn at random from the entries, good for giveaways.</li>
-                        <li><b>Selection:</b> people apply with a short note. You read the notes in Manage jobs and pick one person. They have 24 hours to send the work, and they're paid when you approve it. Cancel before you pick and you get all your money back.</li>
+                        <li><b>Selection:</b> people apply with a short note. You read the notes in Manage jobs and pick one person. They have the time to deliver you choose (1 to 14 days) to send the work, and they're paid when you approve it. Cancel before you pick and you get all your money back.</li>
                       </ul>
                     </InfoTip></span>
                     <div className="cf-modes" role="radiogroup" aria-label="Mode">
@@ -964,7 +969,7 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
                     <div className="cf-field">
                       <span className="cf-lbl">Applications open for <InfoTip label="What is the application window?" title="Application window">
                         <p>People can apply with a note for this long. Then applications close and you pick one person. You can pick sooner if you find the right person.</p>
-                        <p>The job stays open at least 24 hours after applications close, so the person you pick has time to send the work.</p>
+                        <p>The job stays open at least the time to deliver after applications close, so the person you pick has time to send the work.</p>
                       </InfoTip></span>
                       <div className="cf-chips" role="radiogroup" aria-label="Applications open for">
                         {SELECTION_TIMES.map(([h, l]) => (
@@ -972,6 +977,18 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
                         ))}
                       </div>
                       <p className="cf-hint">Applications close {appsCloseAt?.toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}. Your brief becomes the first message of a private job chat with the person you pick.</p>
+                    </div>
+                  )}
+
+                  {isSelection && (
+                    <div className="cf-field">
+                      <span className="cf-lbl">Time to deliver</span>
+                      <div className="cf-chips" role="radiogroup" aria-label="Time to deliver">
+                        {DELIVERY_TIMES.map(([d, l]) => (
+                          <button key={d} type="button" role="radio" aria-checked={deliveryDays === d} className={deliveryDays === d ? "on" : ""} onClick={() => setDeliveryDays(d)}>{l}</button>
+                        ))}
+                      </div>
+                      <p className="cf-hint">How long the person you pick has to send the work. If they send nothing in time, their place opens again.</p>
                     </div>
                   )}
 
@@ -1003,7 +1020,7 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
                     </select>
                     <p className="cf-hint">{isContest && deadline
                       ? `Entries close ${deadline.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}. ${randomDraw ? "The winners are then drawn at random." : "You then have 3 days to rank the winners."}`
-                      : deadline ? `Closes ${deadline.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}${deadlineMoved ? " (moved to 24 hours after applications close)" : ""}. Unused budget returns to your wallet.` : "Stays open until all places are filled or you cancel it."}</p>
+                      : deadline ? `Closes ${deadline.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}${deadlineMoved ? ` (moved to ${deliveryLabel} after applications close)` : ""}. Unused budget returns to your wallet.` : "Stays open until all places are filled or you cancel it."}</p>
                   </div>
 
                   {checkable && (
@@ -1130,6 +1147,7 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
                     {screenshot && <div><span>Proof</span><b>Screenshot required</b></div>}
                     {askHandle && <div><span>Username</span><b>Workers type their {handlePlatformName(askHandle)} username</b></div>}
                     {isSelection && <div><span>Applications</span><b>Open for {SELECTION_TIMES.find(([h]) => h === selectionHours)?.[1]}, then you pick one person</b></div>}
+                    {isSelection && <div><span>Time to deliver</span><b>The person you pick has {deliveryLabel} to send the work</b></div>}
                     {strict && <div><span>Added automatically</span><b>{strictText}</b></div>}
                     {excludeJobs.length > 0 && <div><span>Excluded</span><b>People from {excludeJobs.length} past job{excludeJobs.length > 1 ? "s" : ""}</b></div>}
                     {watermark && <div><span>Images</span><b>Watermarked</b></div>}
@@ -1166,7 +1184,7 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
       {showTemplates && <TemplatesModal onClose={() => setShowTemplates(false)} onUse={(d: TemplateData, example: boolean, tplFiles?: TemplateFile[]) => {
         setTitle(d.title || ""); setDescription(d.description || ""); setBeforeRefine(null);
         setTemplateFiles(Array.isArray(tplFiles) ? tplFiles.slice(0, 10) : []);
-        if (!example) { setHideAfter(!!d.hideAfterComplete); setWatermark(!!d.watermark); if (d.selectionHours && SELECTION_TIMES.some(([h]) => h === d.selectionHours)) setSelectionHours(d.selectionHours); }
+        if (!example) { setHideAfter(!!d.hideAfterComplete); setWatermark(!!d.watermark); if (d.selectionHours && SELECTION_TIMES.some(([h]) => h === d.selectionHours)) setSelectionHours(d.selectionHours); setDeliveryDays(d.deliveryDays && DELIVERY_TIMES.some(([x]) => x === d.deliveryDays) ? d.deliveryDays : "1"); }
         if (!example) { setBounty(d.bounty || ""); if (d.currency) setCurrency(d.currency); if (d.duration) setDuration(d.duration); setTrackingCode(d.trackingCode || ""); setScreenshot(!!d.screenshot); setPayoutCheck(PAYOUT_CHECKS.some(c => String(c.minutes) === d.payoutCheck) ? Number(d.payoutCheck) : 0); }
         // Ready-made examples (app testing) suggest a budget and duration
         // and start from the same proof settings as on a fresh form

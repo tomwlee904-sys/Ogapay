@@ -15,6 +15,7 @@ import { isRulesError, openRules } from '../lib/welcome'
 import { useMoney } from '../lib/useMoney'
 import { cleanHandle, handlePlatformName, UNFOLLOW_BLOCK_DAYS } from '../lib/followHandles'
 import { jobsListPath } from '../lib/jobsList'
+import { deliveryText } from '../lib/delivery'
 
 // Submit work for a job (/tasks/:id/submit). Takes a slot if you haven't yet,
 // uploads files, then submits: the same steps as the job page's apply dialog.
@@ -29,6 +30,8 @@ type Task = {
   reward: number | string; currency?: string; category?: string; status: string; posterId?: string
   poster?: { username?: string | null }
   isSelection?: boolean; hiredWorkerId?: string | null
+  // Selection jobs: days the picked person has to send the work (null = 24 hours)
+  deliveryDays?: number | null
   [k: string]: any
 }
 // Your application to a Selection job (from GET /tasks/:id)
@@ -391,7 +394,7 @@ export default function SubmissionPage() {
               <section className="ui-card ui-card-pad sb-state">
                 <span className="sb-ic wait"><i className="ti ti-hourglass" /></span>
                 <h2>Application sent</h2>
-                <p>{task.poster?.username ? `@${task.poster.username}` : 'The poster'} reads the applications and picks one person. You'll get a notification if it's you, and then you have 24 hours to send the work.</p>
+                <p>{task.poster?.username ? `@${task.poster.username}` : 'The poster'} reads the applications and picks one person. You'll get a notification if it's you, and then you have {deliveryText(task)} to send the work.</p>
                 <div className="sb-sent"><span className="ui-label">Your note</span><p>{application.pitch}</p></div>
                 <div className="ui-actions"><Link className="ui-btn ui-btn-ghost" to={jobsListPath()}>Find more jobs</Link></div>
               </section>
@@ -411,7 +414,7 @@ export default function SubmissionPage() {
                 <button className="ui-btn ui-btn-dark ui-btn-lg sb-send" disabled={!!busy} onClick={sendApplication}>
                   {busy ? <><i className="ti ti-loader-2 sb-spin" /> {busy}</> : <>Send application</>}
                 </button>
-                <p className="sb-small">Applying doesn't take the job. If you're picked, you have 24 hours to send the work, and you're paid {show(reward, cur)} when the poster approves it.</p>
+                <p className="sb-small">Applying doesn't take the job. If you're picked, you have {deliveryText(task)} to send the work, and you're paid {show(reward, cur)} when the poster approves it.</p>
               </section>
             ) : closed ? (
               <section className="ui-card ui-card-pad sb-state">
@@ -428,7 +431,7 @@ export default function SubmissionPage() {
                     {mine.posterNotes && <blockquote className="sb-quote">“{mine.posterNotes}”</blockquote>}
                     <p>{task.watermark && (mine.attachments || []).some(Boolean)
                       ? 'Your link and note are below. Add your screenshots or files again: on watermarked jobs they have to be uploaded again. '
-                      : 'What you sent is below. '}Edit it and send it again {task.isContest ? 'before entries close' : 'within 24 hours'} to keep your place.</p>
+                      : 'What you sent is below. '}Edit it and send it again {task.isContest ? 'before entries close' : `within ${deliveryText(task)}`} to keep your place.</p>
                   </div>
                 ) : status === 'PENDING' && <p className="sb-held"><i className="ti ti-circle-check" /> You have a slot on this job. Send your work when it's done.</p>}
                 <PayoutCheckNote info={task.payoutCheck} />

@@ -348,6 +348,8 @@ export type TemplateData = {
   payoutCheck?: string
   // Selection jobs: hours people can apply ("0.5", "4", "24", ...)
   selectionHours?: string
+  // Selection jobs: days the picked person has to send the work ("1", "3", "7", "14")
+  deliveryDays?: string
   hideAfterComplete?: boolean
   watermark?: boolean
 }
@@ -426,4 +428,12 @@ export function strictRulesApply(r: StrictRules | null, j: { mode: string; place
 // How long people can apply to a Selection job (server: task.service SELECTION_HOURS)
 export const SELECTION_TIMES: [string, string][] = [
   ["0.5", "30 minutes"], ["1", "1 hour"], ["4", "4 hours"], ["8", "8 hours"], ["12", "12 hours"], ["24", "24 hours"], ["72", "3 days"], ["168", "7 days"],
+];
+
+// ── Selection time to deliver ────────────────────────────────────────────────
+// How long the person picked on a Selection job has to send the work, in days
+// (server: task.service DELIVERY_DAYS). "1" is the default and is not sent, so
+// the job keeps the usual 24 hours.
+export const DELIVERY_TIMES: [string, string][] = [
+  ["1", "1 day"], ["3", "3 days"], ["7", "7 days"], ["14", "14 days"],
 ];

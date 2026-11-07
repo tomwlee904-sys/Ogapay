@@ -17,6 +17,7 @@ import { isXFollowJob } from "../lib/followJobs";
 import { HANDLE_PLATFORMS, handlePlatformName, profileUrl, UNFOLLOW_BLOCK_DAYS } from "../lib/followHandles";
 import LoadError from "../components/LoadError";
 import { jobDeadline } from "../lib/deadline";
+import { deliveryText } from "../lib/delivery";
 import { contestPaidOut } from "../lib/contestPrizes";
 import { useMoney } from "../lib/useMoney";
 import { useCurrency } from "../context/CurrencyContext";
@@ -71,6 +72,8 @@ type Task = {
   socialAction?: string | null
   // Selection jobs: people apply with a note and the poster picks one (hiredWorkerId)
   isSelection?: boolean; hiredWorkerId?: string | null
+  // Selection jobs: days the picked person has to send the work (null = 24 hours)
+  deliveryDays?: number | null
   _count?: { submissions?: number; applications?: number }
 }
 type Application = {
@@ -201,11 +204,11 @@ function JobDrawer({ task, allTasks, focusId, onClose, onChanged }: { task: Task
   }, [task.id, task.isSelection]);
   useEffect(() => { loadApps(); }, [loadApps]);
   const pick = async (a: Application) => {
-    if (!window.confirm(`Pick @${who(a.worker)} for this job? They get 24 hours to send the work. Everyone else who applied is told they weren't picked.`)) return;
+    if (!window.confirm(`Pick @${who(a.worker)} for this job? They get ${deliveryText(task)} to send the work. Everyone else who applied is told they weren't picked.`)) return;
     setBusy(a.id);
     try {
-      await apiRequest(`/tasks/${task.id}/applications/${a.id}/pick`, { method: "POST" });
-      toast(`You picked @${who(a.worker)}. They have 24 hours to send the work.`, "success");
+      const r = await apiRequest<{ deliveryText?: string }>(`/tasks/${task.id}/applications/${a.id}/pick`, { method: "POST" });
+      toast(`You picked @${who(a.worker)}. They have ${r?.deliveryText || deliveryText(task)} to send the work.`, "success");
       await Promise.all([loadApps(), load()]); onChanged();
     } catch (e: any) { toast(e?.message || "That didn't work. Try again.", "error"); }
     setBusy(null);
@@ -514,9 +517,9 @@ They get a warning on their account and can't take follow jobs for ${UNFOLLOW_BL
               {task.isSelection && (
                 <section className="mj-sec">
                   <h4>Applications ({apps?.length ?? 0})</h4>
-                  {task.status === "OPEN" && task.hiredWorkerId && <p className="mj-auto"><Icon n="clock-check" s={14} /> You picked someone. Review their work below when it comes in. If you reject it, or their 24 hours run out with no work, you can pick again.</p>}
+                  {["OPEN", "COOLING_DOWN", "IN_PROGRESS"].includes(task.status) && task.hiredWorkerId && <p className="mj-auto"><Icon n="clock-check" s={14} /> You picked someone. They have {deliveryText(task)} to send the work. Review it below when it comes in. If you reject it, or their {deliveryText(task)} run out with no work, you can pick again.</p>}
                   {task.hiredWorkerId && <Link className="ui-btn ui-btn-ghost" to={`/work/${task.id}`} style={{ alignSelf: "flex-start" }}><Icon n="messages" s={14} /> Open the job chat and workspace</Link>}
-                  {task.status === "OPEN" && !task.hiredWorkerId && <p className="mj-auto"><Icon n="user-check" s={14} /> Read the notes and pick one person. They get 24 hours to send the work, and you pay {money(reward, cur)} only when you approve it.</p>}
+                  {task.status === "OPEN" && !task.hiredWorkerId && <p className="mj-auto"><Icon n="user-check" s={14} /> Read the notes and pick one person. They get {deliveryText(task)} to send the work, and you pay {money(reward, cur)} only when you approve it.</p>}
                   {apps === null ? <div className="ui-sk" style={{ height: 80 }} /> : apps.length === 0 ? <div className="mj-empty">No one has applied yet.</div> : apps.map((a) => {
                     const p = a.worker?.workerProfile;
                     return (

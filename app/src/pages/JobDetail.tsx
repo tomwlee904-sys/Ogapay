@@ -18,6 +18,7 @@ import { formatMoney } from '../lib/money'
 import { useMoney } from '../lib/useMoney'
 import { MIN_WITHDRAW_NGN } from '../lib/wallet'
 import { jobDeadline, deadlineLabel, deadlineDate } from '../lib/deadline'
+import { deliveryText } from '../lib/delivery'
 import { categoryLabel } from '../lib/categories'
 import { sized } from '../lib/img'
 import { renderJobText, renderJobLine } from '../lib/jobText'
@@ -128,6 +129,8 @@ interface JobData {
   selectionType: string
   // Selection job: people apply with a note and the poster picks one person
   isSelection?: boolean
+  // Selection job: days the picked person has to send the work (null = 24 hours)
+  deliveryDays?: number | null
   applicationsCount?: number
   capacity: string
   potentialWinners: number
@@ -391,6 +394,7 @@ export default function JobDetail() {
       currentWorkers: Number(t.currentWorkers ?? 0),
       selectionType: t.selectionType || t.selection || 'Random',
       isSelection: !!t.isSelection,
+      deliveryDays: Number(t.deliveryDays) > 0 ? Number(t.deliveryDays) : null,
       capacity: `${filled} of ${slots}`,
       potentialWinners: slots,
       winnersSelected: filled,
@@ -1239,7 +1243,8 @@ function WurkJobDetailView(props: any) {
                   <div className="wjd-row"><div className="wjd-label">Entries</div><div className="wjd-value">{contest.entryTarget ? `${contest.entries} / ${contest.entryTarget} target` : `${contest.entries} (unlimited)`}</div></div>
                 </>) : (<>
                 <div className="wjd-row"><div className="wjd-label">People paid</div><div className="wjd-value">Up to {job.slots}</div></div>
-                <div className="wjd-row"><div className="wjd-label">Places taken <InfoBtn text="Taking a place reserves it for you. Once every place is taken, people who haven't sent their work within 24 hours lose their place to someone else." /></div><div className="wjd-value">{job.capacity}</div></div>
+                {job.isSelection && <div className="wjd-row"><div className="wjd-label">Time to deliver</div><div className="wjd-value">The person picked has {deliveryText(job)} to deliver</div></div>}
+                <div className="wjd-row"><div className="wjd-label">Places taken <InfoBtn text={job.isSelection ? `The person the poster picks keeps the place for ${deliveryText(job)}. If they send nothing in time, their place opens again.` : "Taking a place reserves it for you. Once every place is taken, people who haven't sent their work within 24 hours lose their place to someone else."} /></div><div className="wjd-value">{job.capacity}</div></div>
                 <div className="wjd-row"><div className="wjd-label">Places left</div><div className="wjd-value">{job.slotsLeft}</div></div>
                 </>)}
                 <div className="wjd-row"><div className="wjd-label">Work sent in</div><div className="wjd-value">{job.submitted}</div></div>
@@ -1385,7 +1390,7 @@ function WurkJobDetailView(props: any) {
                   <li><b>{contest.randomDraw ? 'The winners are drawn at random' : `${job.brand ? '@' + job.brand.replace('@', '') : 'The poster'} picks the best entries`}</b> when entries close.<small>Only the winners are paid. If yours isn't chosen, it stays yours.</small></li>
                 </>) : job.isSelection ? (<>
                   <li><b>Apply with a short note.</b><small>The poster reads the notes and picks one person.</small></li>
-                  <li><b>If you're picked, send the work within 24 hours.</b></li>
+                  <li><b>If you're picked, send the work within {deliveryText(job)}.</b><small>If you send nothing in time, your place opens again.</small></li>
                   <li><b>{job.brand ? '@' + job.brand.replace('@', '') : 'The poster'} checks it.</b><small>If they don't review it within 3 days, it's approved automatically.</small></li>
                 </>) : (<>
                   <li><b>Take a place.</b>{jobRequirements(job).filter(r => r.icon !== 'award').length ? <small>You need: {jobRequirements(job).filter(r => r.icon !== 'award').map(r => r.text).join(', ')}.</small> : <small>It's reserved for you while you do the job.</small>}</li>
@@ -1500,11 +1505,13 @@ function WurkJobDetailView(props: any) {
 
               <div className="wjd-info-section-title">This kind of job</div>
               <div className="wjd-info-row">
-                <div className="wjd-info-row-label">{contest ? 'Contest' : 'Challenge'}</div>
+                <div className="wjd-info-row-label">{contest ? 'Contest' : job.isSelection ? 'Selection' : 'Challenge'}</div>
                 <div className="wjd-info-row-val">{contest
                   ? (contest.randomDraw
                     ? 'Send one entry before it closes. The winners are then drawn at random from the entries the poster hasn\'t rejected, and paid at once. Only the winners are paid.'
                     : 'Send one entry before it closes. The poster then ranks the best entries and pays a prize for each place. Only the winners are paid.' + earlyAwardText)
+                  : job.isSelection
+                  ? `People apply with a short note and the poster picks one person. The person picked has ${deliveryText(job)} to send the work, and is paid ${show(Number(job.reward || 0), rewardCurrency)} when it's approved.`
                   : `Everyone whose work is approved is paid ${show(Number(job.reward || 0), rewardCurrency)}, until all ${job.slots} ${job.slots === 1 ? 'place is' : 'places are'} used.`}</div>
               </div>
               <div className="wjd-info-row" style={{ marginBottom: 20 }}>
@@ -1516,8 +1523,8 @@ function WurkJobDetailView(props: any) {
 
               <div className="wjd-info-section-title">Step by step</div>
               <ol className="wjd-how-steps">
-                <li><strong>Take a place.</strong> It's reserved for you{jobRequirements(job).filter(r => r.icon !== 'award').length ? `, if you meet the requirements (${jobRequirements(job).filter(r => r.icon !== 'award').map(r => r.text).join(', ')})` : ''}.</li>
-                <li><strong>Do the work and send it in</strong> with the proof the poster asked for. Once every place is taken, you have 24 hours to send it, or your place goes to someone else.</li>
+                <li>{job.isSelection ? <><strong>Apply with a short note.</strong> The poster reads the notes and picks one person</> : <><strong>Take a place.</strong> It's reserved for you</>}{jobRequirements(job).filter(r => r.icon !== 'award').length ? `, if you meet the requirements (${jobRequirements(job).filter(r => r.icon !== 'award').map(r => r.text).join(', ')})` : ''}.</li>
+                <li><strong>Do the work and send it in</strong> with the proof the poster asked for. {job.isSelection ? `If you're picked, you have ${deliveryText(job)} to send it, or your place opens again.` : "Once every place is taken, you have 24 hours to send it, or your place goes to someone else."}</li>
                 <li><strong>The poster checks it.</strong> If it's approved, {show(Number(job.reward || 0), rewardCurrency)} goes straight to your OgaPay wallet.</li>
                 <li><strong>If it's rejected,</strong> you'll see the reason and the place opens up again.</li>
               </ol>
