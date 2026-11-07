@@ -1523,7 +1523,9 @@ function WurkJobDetailView(props: any) {
 
               <div className="wjd-info-section-title">Step by step</div>
               <ol className="wjd-how-steps">
-                <li>{job.isSelection ? <><strong>Apply with a short note.</strong> The poster reads the notes and picks one person</> : <><strong>Take a place.</strong> It's reserved for you</>}{jobRequirements(job).filter(r => r.icon !== 'award').length ? `, if you meet the requirements (${jobRequirements(job).filter(r => r.icon !== 'award').map(r => r.text).join(', ')})` : ''}.</li>
+                <li>{job.isSelection
+                  ? <><strong>Apply with a short note.</strong> The poster reads the notes and picks one person.{jobRequirements(job).filter(r => r.icon !== 'award').length ? ` You need: ${jobRequirements(job).filter(r => r.icon !== 'award').map(r => r.text).join(', ')}.` : ''}</>
+                  : <><strong>Take a place.</strong> It's reserved for you{jobRequirements(job).filter(r => r.icon !== 'award').length ? `, if you meet the requirements (${jobRequirements(job).filter(r => r.icon !== 'award').map(r => r.text).join(', ')})` : ''}.</>}</li>
                 <li><strong>Do the work and send it in</strong> with the proof the poster asked for. {job.isSelection ? `If you're picked, you have ${deliveryText(job)} to send it, or your place opens again.` : "Once every place is taken, you have 24 hours to send it, or your place goes to someone else."}</li>
                 <li><strong>The poster checks it.</strong> If it's approved, {show(Number(job.reward || 0), rewardCurrency)} goes straight to your OgaPay wallet.</li>
                 <li><strong>If it's rejected,</strong> you'll see the reason and the place opens up again.</li>
