@@ -70,6 +70,23 @@ const unsentContest = (s: any) => {
     && (s.contestResult === 'NOT_PLACED' || (s.status === 'PENDING' && !!e && new Date(e).getTime() <= Date.now()))
 }
 
+// Created jobs: the same words as My Jobs (ManageJobs STATUS), not raw codes,
+// green while live or done, grey once over (2026-11-07)
+const JOB_STATUS: Record<string, { label: string; color: string }> = {
+  OPEN: { label: 'Open', color: 'var(--green)' },
+  IN_PROGRESS: { label: 'In progress', color: 'var(--green)' },
+  COOLING_DOWN: { label: 'All slots taken', color: 'var(--green)' },
+  COMPLETED: { label: 'Completed', color: 'var(--green)' },
+  DRAFT: { label: 'Paused', color: '#F59E0B' },
+  DISPUTED: { label: 'Disputed', color: '#DC2626' },
+  CANCELLED: { label: 'Cancelled', color: 'var(--text3)' },
+  EXPIRED: { label: 'Expired', color: 'var(--text3)' },
+}
+const jobStatus = (st: string) => JOB_STATUS[st] || { label: String(st || '').toLowerCase().replace(/_/g, ' '), color: 'var(--text3)' }
+
+// The tab shows a few created jobs; the rest are in My Jobs
+const CREATED_SHOWN = 5
+
 const tabs = [
   { id: 'all', label: 'All' },
   { id: 'in progress', label: 'In Progress' },
@@ -181,53 +198,26 @@ export default function TabMyTasksContent() {
         <p>Track your submitted tasks and their status</p>
       </div>
 
+      {/* My Submissions first, its filters under the heading (2026-11-07) */}
+      <h3 style={{ fontFamily: 'Inter,sans-serif', fontSize: 16, fontWeight: 800, margin: '0 0 10px' }}>
+        <i className="ti ti-send" style={{marginRight:6}} /> My Submissions
+      </h3>
+
       <div className="mt-tabs"><span style={{fontSize:11,color:"var(--text3)",fontWeight:600,display:"flex",alignItems:"center",gap:4}}>Filter:<InfoBtn text="In Progress: your submission is submitted and awaiting review • Under Review: the creator is reviewing your work • Approved: your submission was accepted and payment processed • Rejected: your submission was declined by the creator" /></span>
         {(tabs || []).map(t => (
           <button key={t.id} className={`mt-tab ${tab === t.id ? 'active' : ''}`} onClick={() => setTab(t.id)}>{t.label}</button>
         ))}
       </div>
-      
-      {createdTasks.length > 0 && (
-        <div style={{ marginBottom: 24 }}>
-          <h3 style={{ fontFamily: 'Inter,sans-serif', fontSize: 16, fontWeight: 800, margin: '0 0 10px' }}>
-            <i className="ti ti-briefcase" style={{marginRight:6}} /> My Created Tasks
-          </h3>
-          <div style={{ display: 'grid', gap: 8 }}>
-            {createdTasks.map(t => (
-              <div key={t.id} onClick={() => navigate('/tasks/' + t.id + '/submissions')} style={{
-                display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px',
-                background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 10,
-                cursor: 'pointer', transition: 'all .2s',
-              }}>
-                <div style={{ width: 36, height: 36, borderRadius: 8, background: 'var(--accent)', display: 'grid', placeItems: 'center', flexShrink: 0 }}>
-                  <i className="ti ti-checklist" style={{color:'var(--on-accent)',fontSize:16}} />
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontWeight: 700, fontSize: 13 }}>{t.title}</div>
-                  <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 2 }}>
-                    {t._count?.submissions || 0} submissions<InfoBtn text="How many workers have applied to this task so far." /> · {t.status} · {fmtCurrency(t.currency || 'NGN', Number(t.reward || 0))}
-                  </div>
-                </div>
-                <span style={{
-                  padding: '3px 8px', borderRadius: 5, fontSize: 11, fontWeight: 700,
-                  background: t.status === 'OPEN' ? 'rgba(22,163,74,0.12)' : 'rgba(245,158,11,0.12)',
-                  color: t.status === 'OPEN' ? 'var(--green)' : '#f59e0b',
-                }}>
-                  {t.status === 'OPEN' ? 'Open' : t.status === 'CLOSED' ? 'Closed' : t.status}
-                </span>
-                <i className="ti ti-chevron-right" style={{color:'var(--text3)',fontSize:14}} />
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-      
-      <h3 style={{ fontFamily: 'Inter,sans-serif', fontSize: 16, fontWeight: 800, margin: '0 0 10px' }}>
-        <i className="ti ti-send" style={{marginRight:6}} /> My Submissions
-      </h3>
 
       {loading ? (
         <SkeletonPage />
+      ) : filtered.length === 0 && submissions.length > 0 ? (
+        // Has submissions, just none under this filter (2026-11-07)
+        <div className="mt-empty">
+          <i className="ti ti-filter" />
+          <h3 style={{fontFamily:'Inter',fontWeight:800,margin:'0 0 4px',color:'var(--text)'}}>No submissions match this filter</h3>
+          <p style={{fontSize:13,margin:0}}>Pick another filter above, or tap All to see every submission</p>
+        </div>
       ) : filtered.length === 0 ? (
         <div className="mt-empty">
           <i className="ti ti-checklist" />
@@ -249,7 +239,10 @@ export default function TabMyTasksContent() {
             // a place is won it's "Up to" that, not what this entry will get.
             const shownAmount = Number(s.paidAmount ?? s.task?.reward ?? 0)
             const upTo = !!s.isContest && s.contestResult !== 'WON'
-            const progress = PROGRESS_MAP[s.status] || 50
+            const progress = PROGRESS_MAP[s.status] ?? 50
+            // Rejected, released and finished contest entries have no progress
+            // to show (they used to read "50% complete") (2026-11-07)
+            const ended = out || s.status === 'REJECTED' || s.status === 'EXPIRED'
             return (
               <div className="mt-item" key={s.id} onClick={() => { const tid = s.task?.id || s.taskId; if (tid) navigate('/tasks/' + tid) }} style={{cursor:'pointer'}}>
                 <div className="mt-icon" style={{background: `color-mix(in srgb, ${color} 9%, transparent)`, color}}>
@@ -257,12 +250,14 @@ export default function TabMyTasksContent() {
                 </div>
                 <div className="mt-info">
                   <div className="mt-title">{s.task?.title || 'Task'}</div>
-                  <div className="mt-progress">
-                    <div className="mt-pf" style={{width: progress + '%', background: color}} />
-                  </div>
+                  {!ended && (
+                    <div className="mt-progress">
+                      <div className="mt-pf" style={{width: progress + '%', background: color}} />
+                    </div>
+                  )}
                   <div className="mt-meta">
                     <span>{timeAgo(s.createdAt)}</span>
-                    <span>{progress}% complete</span>
+                    {!ended && <span>{progress}% complete</span>}
                   </div>
                 </div>
                 <div className="mt-right">
@@ -275,6 +270,46 @@ export default function TabMyTasksContent() {
         </div>
       )}
 
+      {createdTasks.length > 0 && (
+        <div style={{ marginTop: 24 }}>
+          <h3 style={{ fontFamily: 'Inter,sans-serif', fontSize: 16, fontWeight: 800, margin: '0 0 10px' }}>
+            <i className="ti ti-briefcase" style={{marginRight:6}} /> My Created Tasks
+          </h3>
+          <div style={{ display: 'grid', gap: 8 }}>
+            {createdTasks.slice(0, CREATED_SHOWN).map(t => { const js = jobStatus(t.status); return (
+              <div key={t.id} onClick={() => navigate('/tasks/' + t.id + '/submissions')} style={{
+                display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px',
+                background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 10,
+                cursor: 'pointer', transition: 'all .2s',
+              }}>
+                <div style={{ width: 36, height: 36, borderRadius: 8, background: 'var(--accent)', display: 'grid', placeItems: 'center', flexShrink: 0 }}>
+                  <i className="ti ti-checklist" style={{color:'var(--on-accent)',fontSize:16}} />
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontWeight: 700, fontSize: 13 }}>{t.title}</div>
+                  <div style={{ fontSize: 11, color: 'var(--text3)', marginTop: 2 }}>
+                    {t._count?.submissions || 0} submissions<InfoBtn text="How many workers have applied to this task so far." /> · {fmtCurrency(t.currency || 'NGN', Number(t.reward || 0))}
+                  </div>
+                </div>
+                <span style={{
+                  padding: '3px 8px', borderRadius: 5, fontSize: 11, fontWeight: 700,
+                  background: `color-mix(in srgb, ${js.color} 12%, transparent)`,
+                  color: js.color,
+                }}>
+                  {js.label}
+                </span>
+                <i className="ti ti-chevron-right" style={{color:'var(--text3)',fontSize:14}} />
+              </div>
+            ) })}
+          </div>
+          {createdTasks.length > CREATED_SHOWN && (
+            <a href="/manage-jobs" onClick={(e) => { e.preventDefault(); navigate('/manage-jobs') }} style={{display:'inline-flex',alignItems:'center',gap:4,marginTop:10,fontSize:12,fontWeight:700,color:'var(--accent)',textDecoration:'none'}}>
+              See all in My Jobs <i className="ti ti-chevron-right" />
+            </a>
+          )}
+        </div>
+      )}
+      
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </>
   )

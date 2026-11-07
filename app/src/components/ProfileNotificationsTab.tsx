@@ -89,38 +89,74 @@ function resolveIcon(type: string, title: string) {
   return TYPE_ICONS.INFO
 }
 
+// Titles often start with an emoji (❌, 🎉) that sits beside the type icon,
+// looks different on every phone and gets read out (2026-11-07). Display only.
+const LEADING_EMOJI = /^(?:[\p{Extended_Pictographic}\p{Regional_Indicator}\p{Emoji_Modifier}\uFE0F\u200D]\s*)+/u
+const cleanTitle = (t: unknown) => {
+  const s = String(t ?? '')
+  return s.replace(LEADING_EMOJI, '') || s
+}
+
 export default function TabNotificationsContent() {
   const { user: authUser } = useAuth()
   const navigate = useNavigate()
   const [notifs, setNotifs] = useState<any[]>([])
   const [page, setPage] = useState(1)
-  const [totalPages, setTotalPages] = useState(1)
+  const [hasMore, setHasMore] = useState(false)
   const [loading, setLoading] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
   const [filter, setFilter] = useState('all')
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  // The skeleton shows on the very first load only; polls, focus and the
+  // refresh after a failed read/delete run quietly (2026-11-07)
+  const loadedOnce = useRef(false)
+  // Deleted here, so a poll that was already on its way can't bring them back
+  const deletedIds = useRef<Set<string>>(new Set())
 
   const LIMIT = 20
 
   const fetchNotifs = useCallback(async (pageNum: number, append = false) => {
-    if (pageNum === 1) setLoading(true)
-    else setLoadingMore(true)
+    const first = pageNum === 1 && !loadedOnce.current
+    if (first) setLoading(true)
+    else if (append) setLoadingMore(true)
     try {
       const data = await apiRequest<any>(`/notifications?limit=${LIMIT}&page=${pageNum}`)
-      const items = Array.isArray(data) ? data : data?.notifications ?? []
-      setNotifs(prev => append ? [...prev, ...items] : items)
-      if (data?.pagination) {
-        setTotalPages(data.pagination.pages || 1)
+      const raw: any[] = Array.isArray(data) ? data : data?.notifications ?? []
+      const items = raw.filter(n => !deletedIds.current.has(String(n.id)))
+      // The paging info doesn't reach us (it sits outside `data`), so a full
+      // page means there may be more
+      const full = raw.length === LIMIT
+      if (append) {
+        setNotifs(prev => {
+          const have = new Set(prev.map(n => String(n.id)))
+          return [...prev, ...items.filter(n => !have.has(String(n.id)))]
+        })
+        setPage(pageNum)
+        setHasMore(full)
+      } else if (first || !full) {
+        // First load, or page 1 holds everything there is
+        setNotifs(items)
+        setPage(1)
+        setHasMore(full)
+      } else {
+        // A quiet refresh: page 1 replaces what it covers, older pages already
+        // loaded with Load more stay
+        const ids = new Set(items.map(n => String(n.id)))
+        const oldest = new Date(raw[raw.length - 1]?.createdAt || 0).getTime()
+        setNotifs(prev => [...items, ...prev.filter(n => !ids.has(String(n.id)) && new Date(n.createdAt || 0).getTime() < oldest)])
       }
     } catch {
-      if (!append) setNotifs([])
+      // Keep the current list when a refresh fails
     }
+    loadedOnce.current = true
     setLoading(false)
     setLoadingMore(false)
   }, [])
 
   // Initial fetch + refetch on focus
   useEffect(() => {
+    loadedOnce.current = false
+    deletedIds.current = new Set()
     fetchNotifs(1)
     const onFocus = () => fetchNotifs(1)
     window.addEventListener('focus', onFocus)
@@ -177,7 +213,7 @@ export default function TabNotificationsContent() {
       icon: iconInfo.icon,
       color: iconInfo.color,
       type: n.type,
-      title: n.title,
+      title: cleanTitle(n.title),
       // older notifications have category codes (CONTENT_WRITING) in the text
       desc: String(n.body || n.description || '').replace(/[A-Z]+(?:_[A-Z]+)+/g, (c) => CATEGORY_LABELS[c] || c),
       time: n.createdAt ? timeAgo(n.createdAt) : '',
@@ -186,40 +222,40 @@ export default function TabNotificationsContent() {
     }
   }
 
-  const resetAndFetch = () => {
-    setPage(1)
-    fetchNotifs(1)
-  }
-
   const mapped = notifs.map(mapNotif)
   const filtered = filter === 'all' ? mapped
     : filter === 'unread' ? mapped.filter(n => !n.read)
     : mapped.filter(n => n.read)
   const unreadCount = mapped.filter(n => !n.read).length
 
+  // Read and delete change the item in place (2026-11-07); only a failed call
+  // asks the server again, quietly, to show what really happened
   const markAllRead = async () => {
-    try { await apiRequest('/notifications/read-all', { method: 'PATCH' }) } catch { /* ignore */ }
-    resetAndFetch()
+    setNotifs(prev => prev.map(n => ({ ...n, read: true, isRead: true })))
+    try { await apiRequest('/notifications/read-all', { method: 'PATCH' }) } catch { fetchNotifs(1) }
     refreshUnread(true) // the badge in the top bar and dock
   }
 
   const markOneRead = async (id: string | number) => {
-    try { await apiRequest(`/notifications/${id}/read`, { method: 'PATCH' }) } catch { /* ignore */ }
-    resetAndFetch()
+    setNotifs(prev => prev.map(n => String(n.id) === String(id) ? { ...n, read: true, isRead: true } : n))
+    try { await apiRequest(`/notifications/${id}/read`, { method: 'PATCH' }) } catch { fetchNotifs(1) }
     refreshUnread(true) // the badge in the top bar and dock
   }
 
   const deleteNotif = async (id: string | number, e: React.MouseEvent) => {
     e.stopPropagation()
-    try { await apiRequest(`/notifications/${id}`, { method: 'DELETE' }) } catch { /* ignore */ }
-    resetAndFetch()
+    deletedIds.current.add(String(id))
+    setNotifs(prev => prev.filter(n => String(n.id) !== String(id)))
+    try { await apiRequest(`/notifications/${id}`, { method: 'DELETE' }) } catch {
+      deletedIds.current.delete(String(id))
+      fetchNotifs(1)
+    }
     refreshUnread(true) // the badge in the top bar and dock
   }
 
   const loadMore = () => {
-    const nextPage = page + 1
-    setPage(nextPage)
-    fetchNotifs(nextPage, true)
+    if (loadingMore) return
+    fetchNotifs(page + 1, true)
   }
 
   if (loading) {
@@ -309,7 +345,7 @@ export default function TabNotificationsContent() {
               </button>
             </div>
           ))}
-          {page < totalPages && (
+          {hasMore && (
             <button className="nt-load-more" onClick={loadMore} disabled={loadingMore}>
               {loadingMore ? 'Loading...' : 'Load more'}
             </button>
