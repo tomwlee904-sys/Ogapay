@@ -2,7 +2,7 @@
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import Layout from "../components/Layout";
 import { apiRequest, API_BASE } from "../lib/api";
-import { sharedGet } from "../lib/shared";
+import { sharedGet, dropShared } from "../lib/shared";
 import { useCurrency } from "../context/CurrencyContext";
 import { useMoney } from "../lib/useMoney";
 import { useAuth } from "../context/AuthContext";
@@ -62,9 +62,20 @@ function Toggle({ on, set, label }: { on: any; set: any; label: string }) {
   );
 }
 
+// Copy to the clipboard; false when the browser refuses (wallet in-app browsers
+// often do), so "Copied!" only shows when it really worked (2026-11-07)
+async function copyText(text: string) {
+  try { await navigator.clipboard.writeText(text); return true; } catch { return false; }
+}
+const COPY_FAILED = "Couldn't copy - press and hold to copy";
+
 function CopyBtn({ text }: { text: any }) {
   const [ok, setOk] = useState(false);
-  const copy = () => { navigator.clipboard?.writeText(text); setOk(true); setTimeout(() => setOk(false), 1800); };
+  const { toast } = useToast();
+  const copy = async () => {
+    if (!(await copyText(String(text)))) { toast(COPY_FAILED, 'error'); return; }
+    setOk(true); setTimeout(() => setOk(false), 1800);
+  };
   return (
     <button onClick={copy} className="btn-outline btn-sm">
       <Icon n={ok ? "check" : "copy"} s={13} c={ok ? "var(--green)" : "var(--text2)"} />
@@ -76,7 +87,11 @@ function CopyBtn({ text }: { text: any }) {
 // Icon-only copy button that sits inside the referral link box
 function RefCopy({ text }: { text: string }) {
   const [ok, setOk] = useState(false);
-  const copy = () => { navigator.clipboard?.writeText(text); setOk(true); setTimeout(() => setOk(false), 1800); };
+  const { toast } = useToast();
+  const copy = async () => {
+    if (!(await copyText(text))) { toast(COPY_FAILED, 'error'); return; }
+    setOk(true); setTimeout(() => setOk(false), 1800);
+  };
   return (
     <button type="button" onClick={copy} className="pw-copy" aria-label={ok ? "Copied" : "Copy referral link"}>
       <Icon n={ok ? "check" : "copy"} s={16} c={ok ? "var(--green)" : "var(--text2)"} />
@@ -102,21 +117,39 @@ function StatRow({ label, val, info, valClass, onInfoClick }: { label: any; val:
 /* ─── Toast helper ─── */
 
 // ── Info tooltip ─────────────────────────────────────────────────────
+// Opens on a tap or click; only a real mouse opens it on hover. On Android the tap's
+// fake hover opened it and the tap closed it again, so it needed two taps. Kept
+// inside the screen, and a tap anywhere else closes it (2026-11-07)
 function InfoBtn({ text }: { text: string }) {
   const [show, setShow] = useState(false);
+  const [left, setLeft] = useState(0);
   const ref = useRef<HTMLSpanElement>(null);
+  const open = () => {
+    const r = ref.current?.getBoundingClientRect();
+    if (r) {
+      const w = Math.min(240, window.innerWidth - 32);
+      setLeft(Math.min(Math.max(16, r.left + r.width / 2 - w / 2), window.innerWidth - 16 - w) - r.left);
+    }
+    setShow(true);
+  };
+  useEffect(() => {
+    if (!show) return;
+    const onDown = (e: Event) => { if (!ref.current?.contains(e.target as Node)) setShow(false) };
+    document.addEventListener("pointerdown", onDown);
+    return () => document.removeEventListener("pointerdown", onDown);
+  }, [show]);
   return (
     <span ref={ref} style={{ position: "relative", display: "inline-flex", marginLeft: 4, verticalAlign: "middle" }}
-      onMouseEnter={() => setShow(true)}
-      onMouseLeave={() => setShow(false)}
-      onClick={(e) => { e.stopPropagation(); setShow(s => !s) }}>
+      onPointerEnter={(e) => { if (e.pointerType === "mouse") open() }}
+      onPointerLeave={(e) => { if (e.pointerType === "mouse") setShow(false) }}
+      onClick={(e) => { e.stopPropagation(); if (show) setShow(false); else open() }}>
       <i className="ti ti-info-circle" style={{ fontSize: 12, color: "var(--text3)", cursor: "pointer" }} />
       {show && (
         <div style={{
-          position: "absolute", bottom: "calc(100% + 6px)", left: "50%",
-          transform: "translateX(-50%)", background: "var(--text)", color: "var(--card)",
+          position: "absolute", bottom: "calc(100% + 6px)", left,
+          background: "var(--text)", color: "var(--card)",
           fontSize: 11, lineHeight: 1.5, padding: "6px 10px", borderRadius: 8,
-          whiteSpace: "normal", width: 240, zIndex: 99, pointerEvents: "none",
+          whiteSpace: "normal", width: "min(240px, calc(100vw - 32px))", zIndex: 99, pointerEvents: "none",
           boxShadow: "0 4px 12px rgba(0,0,0,0.2)"
         }}>
           {text}
@@ -144,7 +177,6 @@ export default function Profile() {
   const [tab, setTab] = useState(() => { const t = searchParams.get("tab") || "profile"; return t === "portal" ? "profile" : t });
   const [showBal, setShowBal] = useState(false);
   const [fundModal, setFundModal] = useState<null | 'deposit' | 'withdraw'>(null);
-  const [savingPref, setSavingPref] = useState(false);
   const [verifSending, setVerifSending] = useState(false);
   const [verifMsg, setVerifMsg] = useState<React.ReactNode>('');
   const [accountNumber, setAccountNumber] = useState("");
@@ -155,9 +187,10 @@ export default function Profile() {
   const [moneyOut, setMoneyOut] = useState(false);
   // Saved withdrawal banks (Wallet → Money out); null until known, so the banner never flashes
   const [bankCount, setBankCount] = useState<number | null>(null);
-  useEffect(() => {
+  const loadBankCount = () => {
     sharedGet<any[]>('/wallet/banks', 5000).then((d) => setBankCount(Array.isArray(d) ? d.length : 0)).catch(() => {});
-  }, []);
+  };
+  useEffect(loadBankCount, []);
   // /wallet/summary per currency: withdrawals on their way and money earned from jobs.
   // undefined while it loads, null if it failed; loaded again with the balance (2026-11-07)
   const [walletSum, setWalletSum] = useState<Record<string, any> | null | undefined>(undefined);
@@ -189,6 +222,10 @@ export default function Profile() {
   const [showWalletOptions, setShowWalletOptions] = useState(false);
   const [pairCode, setPairCode] = useState('');
   const [generatingPair, setGeneratingPair] = useState(false);
+  // Hides the pairing code after 5 minutes; cleared for a new code so the old timer
+  // can't wipe it early, and when the page closes (2026-11-07)
+  const pairTimer = useRef<ReturnType<typeof setTimeout>>();
+  useEffect(() => () => clearTimeout(pairTimer.current), []);
 
   // ── Fetch all data on mount & when authUser changes (e.g. wallet connected on Dashboard) ──
   const loadProfile = async () => {
@@ -269,12 +306,13 @@ export default function Profile() {
     setDetectedWallets(found);
   }, [showWalletOptions]);
 
-  useEffect(() => {
-    if (editingBank) {
-      setMoneyOut(true);
-      setTimeout(() => document.getElementById('bank-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150);
-    }
-  }, [editingBank]);
+  // "Add Bank Account" banner: open Money out and scroll to it on every tap. It used
+  // to go through editingBank, which never went back to false, so only the first tap worked (2026-11-07)
+  const openMoneyOut = () => {
+    setTab('profile');
+    setMoneyOut(true);
+    setTimeout(() => document.getElementById('bank-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150);
+  };
 
   const parseUser = (d: any) => {
     if (!d) return null;
@@ -344,9 +382,12 @@ export default function Profile() {
   // switch here could be saved by anyone who hadn't picked a job-alert setting
   const autoConvert = !!profileData?.preferences?.autoConvert;
   const isPublic = profileData?.isPublic !== false;
+  // One lock per switch (2026-11-07): a shared lock dropped a quick tap on the other switch
+  const savingPref = useRef(new Set<string>());
   const savePref = async (patch: Record<string, any>) => {
-    if (savingPref) return;
-    setSavingPref(true);
+    const key = Object.keys(patch)[0];
+    if (savingPref.current.has(key)) return;
+    savingPref.current.add(key);
     try {
       if ('isPublic' in patch) {
         await apiRequest('/users/me', { method: 'PATCH', body: JSON.stringify({ isPublic: patch.isPublic }) });
@@ -358,7 +399,7 @@ export default function Profile() {
     } catch (e: any) {
       toast(e?.message || 'Could not save', 'error');
     }
-    setSavingPref(false);
+    savingPref.current.delete(key);
   };
   const flip = (current: boolean, key: string) => (u: any) => savePref({ [key]: typeof u === 'function' ? u(current) : u });
 
@@ -448,7 +489,8 @@ export default function Profile() {
       const data: any = await apiRequest('/devices/pair/generate', { method: 'POST' })
       if (data?.code) {
         setPairCode(data.code)
-        setTimeout(() => setPairCode(''), 5 * 60 * 1000)
+        clearTimeout(pairTimer.current)
+        pairTimer.current = setTimeout(() => setPairCode(''), 5 * 60 * 1000)
       }
     } catch (err: any) {
       toast(err.message || 'Failed to generate code', 'error')
@@ -568,12 +610,13 @@ export default function Profile() {
           <button className="ob-close" onClick={e => ((e.currentTarget.closest('.onboarding-banner') as HTMLElement)!.style.display='none')}><i className="ti ti-x" /></button>
         </div>
       )}
-      {/* Withdrawals use the saved banks; the old profile field (bankAccount) is no longer filled in */}
-      {!loading && bankCount === 0 && !authUser?.bankAccount && (
+      {/* Withdrawals use the saved banks; the old profile field (bankAccount) is no longer filled in.
+          Not for Ghana members, who withdraw to MoMo (2026-11-07) */}
+      {!loading && !ghana && bankCount === 0 && !authUser?.bankAccount && (
         <div className="onboarding-banner">
           <i className="ti ti-building-bank" style={{color:'#f59e0b',fontSize:20}} />
           <span className="ob-msg">Add a bank account to withdraw in Naira</span>
-          <button className="ob-btn" onClick={() => { setTab('profile'); setEditingBank(true); }}>Add Bank Account</button>
+          <button className="ob-btn" onClick={openMoneyOut}>Add Bank Account</button>
           <button className="ob-close" onClick={e => ((e.currentTarget.closest('.onboarding-banner') as HTMLElement)!.style.display='none')}><i className="ti ti-x" /></button>
         </div>
       )}
@@ -735,7 +778,7 @@ export default function Profile() {
                   <div style={{textAlign:'center',padding:'12px',marginBottom:10,background:'var(--bg2)',borderRadius:10,fontSize:12}}>
                     <div style={{fontSize:12,color:'var(--text3)',marginBottom:4,fontWeight:600}}>Pairing Code (expires in 5 min)</div>
                     <div style={{fontSize:20,fontWeight:900,letterSpacing:3,color:'var(--text)',fontFamily:'monospace',wordBreak:'break-all'}}>{pairCode}</div>
-                    <button type="button" onClick={() => { navigator.clipboard.writeText(pairCode); toast('Code copied!') }} style={{marginTop:6,fontSize:11,color:'var(--text2)',background:'none',border:'none',cursor:'pointer',textDecoration:'underline',fontFamily:'inherit'}}>Copy code</button>
+                    <button type="button" onClick={async () => { if (await copyText(pairCode)) toast('Code copied!'); else toast(COPY_FAILED, 'error') }} style={{marginTop:6,fontSize:11,color:'var(--text2)',background:'none',border:'none',cursor:'pointer',textDecoration:'underline',fontFamily:'inherit'}}>Copy code</button>
                   </div>
                 )}
 
@@ -789,7 +832,7 @@ export default function Profile() {
                     <div className="pw-fold-b">
                       <section className="ui-card wl-sec wl-dir-card" aria-labelledby="pf-out">
                         <h2 id="pf-out" className="wl-dir-title">Withdrawals go to</h2>
-                        <SavedBanksList bare onCount={setBankCount} />
+                        <SavedBanksList key={wdKey} bare onCount={setBankCount} />
                       </section>
                     </div>
                   </details>
@@ -1020,13 +1063,14 @@ export default function Profile() {
               </>
             )}
 
+            {/* Laid out like the other info pop-ups: the wjd-info-* styles only exist on the job page (2026-11-07) */}
             {showInfo === 'successRate' && (
-              <div className="wjd-info-overlay" onClick={() => setShowInfo(null)}>
-                <div className="wjd-info-panel" onClick={e => e.stopPropagation()}>
-                  <div className="wjd-info-header"><div className="wjd-info-header-title"><Icon n="trending-up" s={15} /> Success Rate</div><button className="wjd-info-close" onClick={() => setShowInfo(null)}><i className="ti ti-x" /></button></div>
-                  <div className="wjd-info-body"><p style={{fontSize:13,lineHeight:1.7,margin:0,color:'var(--text2)'}}>Your success rate is the percentage of your submitted tasks that were approved: approved / (approved + rejected) × 100. It shows how often your work gets approved. It doesn't change your OgaScore or your rank.</p></div>
-                </div>
-              </div>
+              <>
+                <h2 style={{fontSize:18,fontWeight:900,marginBottom:16}}>What is Success rate?</h2>
+                <p style={{fontSize:13,color:'var(--text)',lineHeight:1.6,marginBottom:12}}>
+                  Your success rate is the percentage of your submitted tasks that were approved: approved / (approved + rejected) × 100. It shows how often your work gets approved. It doesn't change your OgaScore or your rank.
+                </p>
+              </>
             )}
             {/* Keep in sync with the backend: task.service reviewSubmission and calculateLevel */}
             {showInfo === 'avgRating' && (
@@ -1087,7 +1131,9 @@ export default function Profile() {
 
 
       {fundModal && (
-        <FundWalletModal initialStep={fundModal} onClose={() => { setFundModal(null); refreshWallet(); setWdKey((k) => k + 1); }} onDone={() => { refreshWallet(); refreshUser(); }} />
+        // A bank added in the Withdraw sheet shows in Money out (the list loads again with
+        // wdKey) and the "Add Bank Account" banner goes away (2026-11-07)
+        <FundWalletModal initialStep={fundModal} onClose={() => { setFundModal(null); refreshWallet(); dropShared('/wallet/banks'); loadBankCount(); setWdKey((k) => k + 1); }} onDone={() => { refreshWallet(); refreshUser(); }} />
       )}
 
       </div>

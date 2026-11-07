@@ -4,12 +4,14 @@ import { apiRequest } from '../../lib/api'
 import '../../styles/profile-own.css'
 import '../../styles/profile-public.css'
 import { sized } from '../../lib/img'
+import { useToast } from '../Toast'
 
 // Your communities, plus any invites waiting for an answer
 export default function ProfileCommunitiesCard() {
   const [list, setList] = useState<any[] | null>(null)
   const [invites, setInvites] = useState<any[]>([])
   const [busy, setBusy] = useState('')
+  const { toast } = useToast()
 
   const load = () => {
     apiRequest<any[]>('/communities/mine/list').then((d) => setList(Array.isArray(d) ? d : [])).catch(() => setList([]))
@@ -21,8 +23,12 @@ export default function ProfileCommunitiesCard() {
     setBusy(id)
     try {
       await apiRequest('/communities/invites/' + id, { method: 'PATCH', body: JSON.stringify({ action }) })
-      load()
-    } catch { /* stays listed */ }
+    } catch (e: any) {
+      // Say why (e.g. 'Invite has expired'); the reload below drops invites that are
+      // expired or already answered, which used to stay stuck on screen (2026-11-07)
+      toast(e?.message || "Couldn't answer this invite. Please try again.", 'error')
+    }
+    load()
     setBusy('')
   }
 

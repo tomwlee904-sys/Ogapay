@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { apiRequest } from '../lib/api'
 import { sharedGet, dropShared } from '../lib/shared'
 import { maskAcct } from '../lib/wallet'
+import { useToast } from './Toast'
 
 interface BankAccount {
   id: string
@@ -27,6 +28,7 @@ export default function SavedBanksList({ bare = false, onCount }: { bare?: boole
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [bankList, setBankList] = useState<{ code: string; name: string }[]>([])
+  const { toast } = useToast()
 
   async function load() {
     try {
@@ -66,14 +68,20 @@ export default function SavedBanksList({ bare = false, onCount }: { bare?: boole
     setSaving(false)
   }
 
-  async function handleDelete(id: string) {
+  // Asks first (one tap on the bin removed a bank), and says when it fails (2026-11-07)
+  async function handleDelete(bank: BankAccount) {
+    if (!window.confirm(`Remove this bank?
+
+${bank.accountName}, ${bank.bankName} ${maskAcct(bank.accountNumber)}`)) return
     try {
-      await apiRequest(`/wallet/banks/${id}`, { method: 'DELETE' })
+      await apiRequest(`/wallet/banks/${bank.id}`, { method: 'DELETE' })
       dropShared('/wallet/banks')
-      const left = banks.filter(b => b.id !== id)
+      const left = banks.filter(b => b.id !== bank.id)
       setBanks(left)
       onCount?.(left.length)
-    } catch { /* ignore */ }
+    } catch (e: any) {
+      toast(e?.message || "Couldn't remove this bank. Please try again.", 'error')
+    }
   }
 
   async function handleSetDefault(id: string) {
@@ -81,7 +89,9 @@ export default function SavedBanksList({ bare = false, onCount }: { bare?: boole
       await apiRequest(`/wallet/banks/${id}/default`, { method: 'PUT' })
       dropShared('/wallet/banks')
       setBanks(prev => prev.map(b => ({ ...b, isDefault: b.id === id })))
-    } catch { /* ignore */ }
+    } catch (e: any) {
+      toast(e?.message || "Couldn't make this your default bank. Please try again.", 'error')
+    }
   }
 
   const openAdd = () => {
@@ -150,7 +160,7 @@ export default function SavedBanksList({ bare = false, onCount }: { bare?: boole
                   </button>
                 )}
                 <button
-                  onClick={() => handleDelete(bank.id)}
+                  onClick={() => handleDelete(bank)}
                   style={{ height: 32, width: 32, borderRadius: 8, border: '1px solid var(--border)', background: 'transparent', cursor: 'pointer', display: 'grid', placeItems: 'center', color: '#DC2626', fontSize: 14 }}
                   title="Remove"
                 >

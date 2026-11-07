@@ -7,21 +7,39 @@ import { SkeletonPage, injectSkeletonStyles } from '../components/SkeletonLoader
 
 
 // ── Info tooltip ─────────────────────────────────────────────────────
+// Opens on a tap or click; only a real mouse opens it on hover. On Android the tap's
+// fake hover opened it and the tap closed it again, so it needed two taps. Kept
+// inside the screen, and a tap anywhere else closes it (2026-11-07)
 function InfoBtn({ text }: { text: string }) {
   const [show, setShow] = useState(false);
+  const [left, setLeft] = useState(0);
   const ref = useRef<HTMLSpanElement>(null);
+  const open = () => {
+    const r = ref.current?.getBoundingClientRect();
+    if (r) {
+      const w = Math.min(240, window.innerWidth - 32);
+      setLeft(Math.min(Math.max(16, r.left + r.width / 2 - w / 2), window.innerWidth - 16 - w) - r.left);
+    }
+    setShow(true);
+  };
+  useEffect(() => {
+    if (!show) return;
+    const onDown = (e: Event) => { if (!ref.current?.contains(e.target as Node)) setShow(false) };
+    document.addEventListener("pointerdown", onDown);
+    return () => document.removeEventListener("pointerdown", onDown);
+  }, [show]);
   return (
     <span ref={ref} style={{ position: "relative", display: "inline-flex", marginLeft: 4, verticalAlign: "middle" }}
-      onMouseEnter={() => setShow(true)}
-      onMouseLeave={() => setShow(false)}
-      onClick={(e) => { e.stopPropagation(); setShow(s => !s) }}>
+      onPointerEnter={(e) => { if (e.pointerType === "mouse") open() }}
+      onPointerLeave={(e) => { if (e.pointerType === "mouse") setShow(false) }}
+      onClick={(e) => { e.stopPropagation(); if (show) setShow(false); else open() }}>
       <i className="ti ti-info-circle" style={{ fontSize: 12, color: "var(--text3)", cursor: "pointer" }} />
       {show && (
         <div style={{
-          position: "absolute", bottom: "calc(100% + 6px)", left: "50%",
-          transform: "translateX(-50%)", background: "var(--text)", color: "var(--card)",
+          position: "absolute", bottom: "calc(100% + 6px)", left,
+          background: "var(--text)", color: "var(--card)",
           fontSize: 11, lineHeight: 1.5, padding: "6px 10px", borderRadius: 8,
-          whiteSpace: "normal", width: 240, zIndex: 99, pointerEvents: "none",
+          whiteSpace: "normal", width: "min(240px, calc(100vw - 32px))", zIndex: 99, pointerEvents: "none",
           boxShadow: "0 4px 12px rgba(0,0,0,0.2)"
         }}>
           {text}
