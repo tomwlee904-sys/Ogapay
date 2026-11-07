@@ -3,7 +3,7 @@ import { useCurrency } from '../context/CurrencyContext'
 import { useMoney } from '../lib/useMoney'
 import { useAuth } from '../context/AuthContext'
 import { apiRequest } from '../lib/api'
-import { SkeletonPage, injectSkeletonStyles } from "../components/SkeletonLoader"
+import { SkeletonTab, injectSkeletonStyles } from "../components/SkeletonLoader"
 import type { Currency } from '../lib/currency'
 
 // Earnings from the wallet ledger. This used to look for lower-case statuses
@@ -143,8 +143,9 @@ export default function TabEarningsContent() {
     return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
   }
 
+  // Shaped like this tab: title, totals, chart and history (2026-11-07)
   if (loading) {
-    return <SkeletonPage />
+    return <SkeletonTab title stats card rows={4} />
   }
 
   return (

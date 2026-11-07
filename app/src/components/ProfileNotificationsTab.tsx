@@ -3,7 +3,7 @@ import { CATEGORY_LABELS } from '../lib/categories'
 import { useNavigate } from 'react-router-dom'
 import { apiRequest } from '../lib/api'
 import { refreshUnread } from '../lib/shared'
-import { SkeletonPage, injectSkeletonStyles } from '../components/SkeletonLoader'
+import { SkeletonTab, injectSkeletonStyles } from '../components/SkeletonLoader'
 import { useAuth } from '../context/AuthContext'
 import { PushOffer } from './PushAlerts'
 import { renderJobText } from '../lib/jobText'
@@ -258,8 +258,9 @@ export default function TabNotificationsContent() {
     fetchNotifs(page + 1, true)
   }
 
+  // Shaped like the list: a title and alert rows (2026-11-07)
   if (loading) {
-    return <SkeletonPage />
+    return <SkeletonTab title rows={6} />
   }
 
   return (

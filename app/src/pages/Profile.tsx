@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useRef } from "react";
+﻿import { useState, useEffect, useRef, Suspense } from "react";
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import Layout from "../components/Layout";
 import { apiRequest, API_BASE } from "../lib/api";
@@ -8,12 +8,10 @@ import { useMoney } from "../lib/useMoney";
 import { useAuth } from "../context/AuthContext";
 import { useWalletBalance } from "../context/WalletBalanceContext";
 
-import { injectSkeletonStyles, SkeletonPage } from '../components/SkeletonLoader'
+import { injectSkeletonStyles, SkeletonTab } from '../components/SkeletonLoader'
 import { useToast } from '../components/Toast'
-import bs58 from "bs58"
 import VirtualAccountCard from '../components/VirtualAccountCard'
 import SavedBanksList from '../components/SavedBanksList'
-import FundWalletModal from '../components/FundWalletModal'
 import ProfileQuickLinks from '../components/profile/ProfileQuickLinks'
 import ProfileCommunitiesCard from '../components/profile/ProfileCommunitiesCard'
 import ProfileConnectXCard from '../components/profile/ProfileConnectXCard'
@@ -30,8 +28,12 @@ import { sized } from '../lib/img'
 import { categoryLabel } from '../lib/categories'
 import { xProfileOf } from '../lib/xprofile'
 import { isPhone, openInWalletUrl, PHONE_WALLET_LINE, phoneWalletSignInLine, WALLET_APPS, type WalletAppId } from '../lib/walletApps'
+import { lazyPage, isStaleBuildError, reloadForUpdate } from '../lib/staleBuild'
+// The Solana code (about 68KB) loads only when the Withdraw sheet opens or a wallet
+// is linked, not with the page (2026-11-07)
+const FundWalletModal = lazyPage(() => import('../components/FundWalletModal'))
 const Icon = ({ n, s = 16, c }: { n: any; s?: number; c?: any }) => (
-  <i className={`ti ti-${n}`} style={{ fontSize: s, color: c || "var(--text2)", lineHeight: 1, flexShrink: 0 }} />
+  <i className={`ti ti-${n}`} aria-hidden="true" style={{ fontSize: s, color: c || "var(--text2)", lineHeight: 1, flexShrink: 0 }} />
 );
 
 const XIcon = ({ size = 14 }) => (
@@ -103,7 +105,8 @@ function StatRow({ label, val, info, valClass, onInfoClick }: { label: any; val:
   return (
     <div className="stat-row">
       <span className="stat-label">{label}{info && (
-        <button onClick={e => { e.stopPropagation(); onInfoClick?.() }} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', verticalAlign: 'middle', marginLeft: 3 }}>
+        // Named for screen readers, and "tap" gives it a bigger invisible tap area (2026-11-07)
+        <button type="button" className="tap" aria-label={`About ${label}`} onClick={e => { e.stopPropagation(); onInfoClick?.() }} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', verticalAlign: 'middle', marginLeft: 3 }}>
           <Icon n="info-circle" s={13} c="var(--text3)" />
         </button>
       )}</span>
@@ -139,13 +142,15 @@ function InfoBtn({ text }: { text: string }) {
     return () => document.removeEventListener("pointerdown", onDown);
   }, [show]);
   return (
-    <span ref={ref} style={{ position: "relative", display: "inline-flex", marginLeft: 4, verticalAlign: "middle" }}
+    <span ref={ref} className="tap" role="button" tabIndex={0} aria-label="More info" aria-expanded={show}
+      style={{ position: "relative", display: "inline-flex", marginLeft: 4, verticalAlign: "middle" }}
+      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); if (show) setShow(false); else open() } }}
       onPointerEnter={(e) => { if (e.pointerType === "mouse") open() }}
       onPointerLeave={(e) => { if (e.pointerType === "mouse") setShow(false) }}
       onClick={(e) => { e.stopPropagation(); if (show) setShow(false); else open() }}>
-      <i className="ti ti-info-circle" style={{ fontSize: 12, color: "var(--text3)", cursor: "pointer" }} />
+      <i className="ti ti-info-circle" aria-hidden="true" style={{ fontSize: 12, color: "var(--text3)", cursor: "pointer" }} />
       {show && (
-        <div style={{
+        <div role="tooltip" aria-live="polite" style={{
           position: "absolute", bottom: "calc(100% + 6px)", left,
           background: "var(--text)", color: "var(--card)",
           fontSize: 11, lineHeight: 1.5, padding: "6px 10px", borderRadius: 8,
@@ -215,7 +220,9 @@ export default function Profile() {
   // Bumped when the add money / withdraw sheet closes, so Withdrawal History loads again
   const [wdKey, setWdKey] = useState(0);
   const [referralStats, setReferralStats] = useState<any>(null);
-  const [kycStatus, setKycStatus] = useState<any>(null);
+  // undefined while /kyc/status loads, null if it failed: the KYC banner and Identity
+  // row wait for it, so verified members never see a false "not verified" (2026-11-07)
+  const [kycStatus, setKycStatus] = useState<any>(undefined);
   const [loading, setLoading] = useState(true);
   const [connecting, setConnecting] = useState<string | null>(null);
   const [detectedWallets, setDetectedWallets] = useState<string[]>([]);
@@ -228,13 +235,13 @@ export default function Profile() {
   useEffect(() => () => clearTimeout(pairTimer.current), []);
 
   // ── Fetch all data on mount & when authUser changes (e.g. wallet connected on Dashboard) ──
+  // Only /users/me holds the page back; referral stats and KYC fill in when they
+  // arrive. A failed call keeps what was there before (2026-11-07)
   const loadProfile = async () => {
+    apiRequest<any>('/users/referrals/stats').then((d) => { if (d) setReferralStats(d) }).catch(() => {});
+    apiRequest<any>('/kyc/status').then((d) => setKycStatus((s: any) => d || (s ?? null))).catch(() => setKycStatus((s: any) => s ?? null));
     try {
-      const [userData, refData, kycData] = await Promise.all([
-        apiRequest<any>('/users/me').catch(() => null),
-        apiRequest<any>('/users/referrals/stats').catch(() => null),
-        apiRequest<any>('/kyc/status').catch(() => null),
-      ]);
+      const userData = await apiRequest<any>('/users/me').catch(() => null);
       if (userData) {
         setProfileData(userData);
         const ba = userData.bankAccount;
@@ -257,8 +264,6 @@ export default function Profile() {
           setEditingBank(false)
         }
       }
-      if (refData) setReferralStats(refData);
-      if (kycData) setKycStatus(kycData);
     } catch (err) {
       toast('Failed to load profile data', 'error');
     }
@@ -289,7 +294,8 @@ export default function Profile() {
     const id = authUser?.id || null;
     const first = loadedFor.current === null || loadedFor.current !== id;
     loadedFor.current = id;
-    if (first) setLoading(true);
+    // Another account: don't show the last one's KYC or referral tier meanwhile
+    if (first) { setLoading(true); setKycStatus(undefined); setReferralStats(null); }
     loadProfile().finally(() => { if (first) setLoading(false); });
   }, [authUser]);
 
@@ -465,6 +471,7 @@ export default function Profile() {
             const encodedMessage = new TextEncoder().encode(nonceRes.message);
       const signedResult = await wallet.signMessage(encodedMessage);
       const signatureBytes = signedResult?.signature ?? signedResult;
+      const bs58 = (await import('bs58').catch((err) => { if (isStaleBuildError(err)) reloadForUpdate(); throw err })).default;
       const signature = bs58.encode(signatureBytes);
       
             await apiRequest("/wallet/verify", {
@@ -523,9 +530,9 @@ export default function Profile() {
     }
   }, [tab]);
 
-  // The top bar and bottom bar stay while the profile loads (2026-11-07)
-  return loading ? <Layout><SkeletonPage /></Layout> : (
-    <div className="page-fade-in">
+  // One Layout while loading and after (2026-11-07): the top bar, bottom bar and tab bar
+  // stay mounted, and only the profile body swaps from its skeleton
+  return (
     <Layout>
       <style>{`
         .pg{width:100%;max-width:calc(var(--container) + 2 * var(--gutter));margin:0 auto;padding:var(--page-top) var(--gutter) 60px}
@@ -578,15 +585,15 @@ export default function Profile() {
       {/* Onboarding banners */}
       {!loading && !authUser?.walletAddress && (
         <div className="onboarding-banner">
-          <i className="ti ti-wallet" style={{color:'var(--accent)',fontSize:20}} />
+          <i className="ti ti-wallet" aria-hidden="true" style={{color:'var(--accent)',fontSize:20}} />
           <span className="ob-msg">Connect your wallet to unlock full features</span>
           <button className="ob-btn" onClick={() => setShowWalletOptions(true)}>Connect Wallet</button>
-          <button className="ob-close" onClick={e => ((e.currentTarget.closest('.onboarding-banner') as HTMLElement)!.style.display='none')}><i className="ti ti-x" /></button>
+          <button type="button" className="ob-close" aria-label="Close" onClick={e => ((e.currentTarget.closest('.onboarding-banner') as HTMLElement)!.style.display='none')}><i className="ti ti-x" aria-hidden="true" /></button>
         </div>
       )}
       {!loading && !authUser?.isEmailVerified && (
         <div className="onboarding-banner">
-          <i className="ti ti-mail" style={{color:'#f59e0b',fontSize:20}} />
+          <i className="ti ti-mail" aria-hidden="true" style={{color:'#f59e0b',fontSize:20}} />
           <span className="ob-msg">{verifMsg || 'Verify your email address to receive account notifications'}</span>
           <button className="ob-btn" onClick={async () => {
             if (verifSending) return;
@@ -597,35 +604,35 @@ export default function Profile() {
                 method: 'POST',
                 body: JSON.stringify({ email: authUser?.email }),
               });
-              setVerifMsg(<> <i className="ti ti-circle-check" style={{color:'var(--green)'}} /> Verification email sent! Check your inbox.</>);
+              setVerifMsg(<> <i className="ti ti-circle-check" aria-hidden="true" style={{color:'var(--green)'}} /> Verification email sent! Check your inbox.</>);
               setTimeout(() => setVerifMsg(''), 8000);
             } catch (err: any) {
-              setVerifMsg(<> <i className="ti ti-circle-x" style={{color:'var(--red)'}} /> {err?.message || 'Failed to send. Please try again.'}</>);
+              setVerifMsg(<> <i className="ti ti-circle-x" aria-hidden="true" style={{color:'var(--red)'}} /> {err?.message || 'Failed to send. Please try again.'}</>);
             } finally {
               setVerifSending(false);
             }
           }} disabled={verifSending}>
             {verifSending ? 'Sending...' : 'Resend Email'}
           </button>
-          <button className="ob-close" onClick={e => ((e.currentTarget.closest('.onboarding-banner') as HTMLElement)!.style.display='none')}><i className="ti ti-x" /></button>
+          <button type="button" className="ob-close" aria-label="Close" onClick={e => ((e.currentTarget.closest('.onboarding-banner') as HTMLElement)!.style.display='none')}><i className="ti ti-x" aria-hidden="true" /></button>
         </div>
       )}
       {/* Withdrawals use the saved banks; the old profile field (bankAccount) is no longer filled in.
           Not for Ghana members, who withdraw to MoMo (2026-11-07) */}
       {!loading && !ghana && bankCount === 0 && !authUser?.bankAccount && (
         <div className="onboarding-banner">
-          <i className="ti ti-building-bank" style={{color:'#f59e0b',fontSize:20}} />
+          <i className="ti ti-building-bank" aria-hidden="true" style={{color:'#f59e0b',fontSize:20}} />
           <span className="ob-msg">Add a bank account to withdraw in Naira</span>
           <button className="ob-btn" onClick={openMoneyOut}>Add Bank Account</button>
-          <button className="ob-close" onClick={e => ((e.currentTarget.closest('.onboarding-banner') as HTMLElement)!.style.display='none')}><i className="ti ti-x" /></button>
+          <button type="button" className="ob-close" aria-label="Close" onClick={e => ((e.currentTarget.closest('.onboarding-banner') as HTMLElement)!.style.display='none')}><i className="ti ti-x" aria-hidden="true" /></button>
         </div>
       )}
-      {!loading && !isKycVerified && (
+      {!loading && !!kycStatus && !isKycVerified && (
         <div className="onboarding-banner">
-          <i className="ti ti-shield-check" style={{color:'var(--red)',fontSize:20}} />
+          <i className="ti ti-shield-check" aria-hidden="true" style={{color:'var(--red)',fontSize:20}} />
           <span className="ob-msg">Complete identity verification to withdraw</span>
           <button className="ob-btn" onClick={() => navigate('/settings/verification')}>Verify Now</button>
-          <button className="ob-close" onClick={e => ((e.currentTarget.closest('.onboarding-banner') as HTMLElement)!.style.display='none')}><i className="ti ti-x" /></button>
+          <button type="button" className="ob-close" aria-label="Close" onClick={e => ((e.currentTarget.closest('.onboarding-banner') as HTMLElement)!.style.display='none')}><i className="ti ti-x" aria-hidden="true" /></button>
         </div>
       )}
 
@@ -638,16 +645,18 @@ export default function Profile() {
           border: '1px solid rgba(22,163,74,0.25)',
           borderRadius: 12
         }}>
-          <i className="ti ti-circle-check" style={{ fontSize: 22, color: 'var(--green)', flexShrink: 0 }} />
+          <i className="ti ti-circle-check" aria-hidden="true" style={{ fontSize: 22, color: 'var(--green)', flexShrink: 0 }} />
           <div style={{ flex: 1 }}>
             <div style={{ fontWeight: 800, fontSize: 14, color: 'var(--green)' }}>
-              Email Verified! <i className="ti ti-sparkles" style={{color:'var(--green)',marginLeft:6}} />
+              Email Verified! <i className="ti ti-sparkles" aria-hidden="true" style={{color:'var(--green)',marginLeft:6}} />
             </div>
             <div style={{ fontSize: 12, color: 'var(--text2)', marginTop: 2 }}>
               Your account is confirmed. Review your details below and complete your profile.
             </div>
           </div>
           <button
+            type="button"
+            aria-label="Close"
             onClick={() => {
               const p = new URLSearchParams(window.location.search)
               p.delete('verified')
@@ -655,7 +664,7 @@ export default function Profile() {
             }}
             style={{ background: 'none', border: 'none', color: 'var(--text3)', cursor: 'pointer', fontSize: 18, flexShrink: 0 }}
           >
-            <i className="ti ti-x" />
+            <i className="ti ti-x" aria-hidden="true" />
           </button>
         </div>
       )}
@@ -669,7 +678,7 @@ export default function Profile() {
           border: '1px solid rgba(245,158,11,0.25)',
           borderRadius: 12
         }}>
-          <i className="ti ti-shield-check" style={{ fontSize: 22, color: '#b45309', flexShrink: 0 }} />
+          <i className="ti ti-shield-check" aria-hidden="true" style={{ fontSize: 22, color: '#b45309', flexShrink: 0 }} />
           <div style={{ flex: 1 }}>
             <div style={{ fontWeight: 800, fontSize: 14, color: '#b45309' }}>
               KYC Submitted for Review
@@ -679,6 +688,8 @@ export default function Profile() {
             </div>
           </div>
           <button
+            type="button"
+            aria-label="Close"
             onClick={() => {
               const p = new URLSearchParams(window.location.search)
               p.delete('kyc')
@@ -686,7 +697,7 @@ export default function Profile() {
             }}
             style={{ background: 'none', border: 'none', color: 'var(--text3)', cursor: 'pointer', fontSize: 18, flexShrink: 0 }}
           >
-            <i className="ti ti-x" />
+            <i className="ti ti-x" aria-hidden="true" />
           </button>
         </div>
       )}
@@ -695,7 +706,7 @@ export default function Profile() {
       <div className="tab-bar" ref={tabBarRef}>
         {(tabs || []).map(t => (
           <button key={t.id} className={`tab-btn ${tab === t.id ? 'active' : ''} tab-${t.id}`} onClick={() => tabNav(t.id)}>
-            <i className={`ti ti-${t.icon}`} />
+            <i className={`ti ti-${t.icon}`} aria-hidden="true" />
             <span>{t.label}</span>
           </button>
         ))}
@@ -703,8 +714,14 @@ export default function Profile() {
 
       {/* Tab: Profile (default). Laid out like wurk.fun's /profile: account on the
           left, profile on the right, then full-width quick links and histories */}
-      {tab === "profile" && (
-        <>
+      {tab === "profile" && (loading ? (
+        // Shaped like the two profile cards
+        <div className="pw-grid">
+          <div className="pw-col"><div className="profile-card"><div className="profile-card-body"><SkeletonTab title rows={4} /></div></div></div>
+          <div className="pw-col"><div className="profile-card"><div className="profile-card-body"><SkeletonTab title rows={6} /></div></div></div>
+        </div>
+      ) : (
+        <div className="page-fade-in">
           <div className="pw-grid">
             <div className="pw-col pw-left">
             {/* Account Information */}
@@ -817,17 +834,17 @@ export default function Profile() {
                 <div id="bank-section" className="pw-money">
                   <details className="pw-fold" open={moneyIn} onToggle={e => setMoneyIn((e.currentTarget as HTMLDetailsElement).open)}>
                     <summary>
-                      <span className="wl-dir in pw-fold-ic"><i className="ti ti-arrow-down-left" /></span>
+                      <span className="wl-dir in pw-fold-ic"><i className="ti ti-arrow-down-left" aria-hidden="true" /></span>
                       <span className="pw-fold-m"><b>Money in</b><small>Your OgaPay account number for transfers</small></span>
-                      <i className="ti ti-chevron-down pw-fold-chev" />
+                      <i className="ti ti-chevron-down pw-fold-chev" aria-hidden="true" />
                     </summary>
                     <div className="pw-fold-b"><VirtualAccountCard flush /></div>
                   </details>
                   <details className="pw-fold" open={moneyOut} onToggle={e => setMoneyOut((e.currentTarget as HTMLDetailsElement).open)}>
                     <summary>
-                      <span className="wl-dir out pw-fold-ic"><i className="ti ti-arrow-up-right" /></span>
+                      <span className="wl-dir out pw-fold-ic"><i className="ti ti-arrow-up-right" aria-hidden="true" /></span>
                       <span className="pw-fold-m"><b>Money out</b><small>{bankCount ? `Withdrawals go to ${bankCount} saved bank${bankCount === 1 ? '' : 's'}` : 'Add the bank withdrawals go to'}</small></span>
-                      <i className="ti ti-chevron-down pw-fold-chev" />
+                      <i className="ti ti-chevron-down pw-fold-chev" aria-hidden="true" />
                     </summary>
                     <div className="pw-fold-b">
                       <section className="ui-card wl-sec wl-dir-card" aria-labelledby="pf-out">
@@ -892,7 +909,7 @@ export default function Profile() {
                         <Icon n={c.ic} s={16} />
                         <b>{c.n}</b>
                         <span>{c.l}{c.info && (
-                          <button className="pw-i" aria-label={`About ${c.l}`} onClick={() => setShowInfo(c.info as any)}><Icon n="info-circle" s={13} c="var(--text3)" /></button>
+                          <button type="button" className="pw-i tap" aria-label={`About ${c.l}`} onClick={() => setShowInfo(c.info as any)}><Icon n="info-circle" s={13} c="var(--text3)" /></button>
                         )}</span>
                       </div>
                     ))}
@@ -906,7 +923,7 @@ export default function Profile() {
                     <StatRow label="Human verified" val={isHumanVerified ? 'Yes' : (
                       <a href="/settings/verification" className="pw-pill" onClick={e => { e.preventDefault(); navigate('/settings/verification') }}>Verify</a>
                     )} valClass={isHumanVerified ? 'yes' : ''} info onInfoClick={() => setShowInfo('humanVerified')} />
-                    <StatRow label="Identity (KYC)" val={isKycVerified ? 'Verified' : (
+                    <StatRow label="Identity (KYC)" val={kycStatus === undefined ? '…' : isKycVerified ? 'Verified' : kycStatus === null ? '—' : (
                       <a href="/settings/verification" className="pw-pill" onClick={e => { e.preventDefault(); navigate('/settings/verification') }}>Verify</a>
                     )} valClass={isKycVerified ? 'yes' : ''} />
                     <StatRow label="Rating" val={profileData?.workerProfile?.totalRatings ? `${Number(profileData.workerProfile.avgRating || 0).toFixed(1)}/5 (${profileData.workerProfile.totalRatings})` : 'No ratings yet'} info onInfoClick={() => setShowInfo('avgRating')} />
@@ -934,7 +951,7 @@ export default function Profile() {
                           padding: '3px 10px', borderRadius: 20,
                           background: tc.bg, color: tc.color, border: `1px solid ${tc.border}`,
                         }}>
-                          <i className={tc.icon} /> {tc.label} Referrer<InfoBtn text="Your referral tier is based on how many of your referred users have completed their first task. Bronze: 5+ paid referrals, Silver: 10+, Gold: 20 (max)." />
+                          <i className={tc.icon} aria-hidden="true" /> {tc.label} Referrer<InfoBtn text="Your referral tier is based on how many of your referred users have completed their first task. Bronze: 5+ paid referrals, Silver: 10+, Gold: 20 (max)." />
                         </span>
                       );
                     })()}
@@ -967,8 +984,8 @@ export default function Profile() {
           {/* Withdrawal History: every withdrawal, page by page, with its status */}
           <div className="pw-full"><ProfileWithdrawalsCard key={wdKey} /></div>
 
-        </>
-      )}
+        </div>
+      ))}
 
 {showWalletOptions && (
         <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.5)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:1000}}
@@ -1045,7 +1062,7 @@ export default function Profile() {
       {showInfo && (
         <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.5)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:1000}} onClick={() => setShowInfo(null)}>
           <div style={{background:'var(--card)',borderRadius:14,padding:24,maxWidth:460,width:'90%',position:'relative'}} onClick={e => e.stopPropagation()}>
-            <button onClick={() => setShowInfo(null)} style={{position:'absolute',top:16,right:16,background:'none',border:'none',fontSize:24,cursor:'pointer',color:'var(--text2)'}}><i className="ti ti-x" /></button>
+            <button type="button" aria-label="Close" onClick={() => setShowInfo(null)} style={{position:'absolute',top:16,right:16,background:'none',border:'none',fontSize:24,cursor:'pointer',color:'var(--text2)'}}><i className="ti ti-x" aria-hidden="true" /></button>
 
             {showInfo === 'ogaScore' && (
               <>
@@ -1133,11 +1150,12 @@ export default function Profile() {
       {fundModal && (
         // A bank added in the Withdraw sheet shows in Money out (the list loads again with
         // wdKey) and the "Add Bank Account" banner goes away (2026-11-07)
-        <FundWalletModal initialStep={fundModal} onClose={() => { setFundModal(null); refreshWallet(); dropShared('/wallet/banks'); loadBankCount(); setWdKey((k) => k + 1); }} onDone={() => { refreshWallet(); refreshUser(); }} />
+        <Suspense fallback={<div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.5)',display:'grid',placeItems:'center',zIndex:1000}}><span className="spinner" aria-label="Loading" /></div>}>
+          <FundWalletModal initialStep={fundModal} onClose={() => { setFundModal(null); refreshWallet(); dropShared('/wallet/banks'); loadBankCount(); setWdKey((k) => k + 1); }} onDone={() => { refreshWallet(); refreshUser(); }} />
+        </Suspense>
       )}
 
       </div>
     </Layout>
-    </div>
   );
 }

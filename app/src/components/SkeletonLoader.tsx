@@ -70,6 +70,25 @@ export const SkeletonPage = memo(() => (
   </>
 ))
 
+// Shaped like the tab it stands in for (2026-11-07): a title, stat tiles, a chart card
+// and list rows, each optional. No page padding: it sits inside the page's own
+export const SkeletonTab = memo(({ title = false, stats = false, card = false, rows = 0 }: { title?: boolean; stats?: boolean; card?: boolean; rows?: number }) => (
+  <>
+    <style>{style}</style>
+    <div aria-busy="true" aria-label="Loading">
+      {title && (
+        <div style={{ display: 'grid', gap: 8, marginBottom: 20 }}>
+          <div className="sk" style={{ height: 26, width: 'min(200px, 60%)' }} />
+          <SkeletonLineSm />
+        </div>
+      )}
+      {stats && <SkeletonStats />}
+      {card && <div style={{ marginBottom: 20 }}><SkeletonCard /></div>}
+      {Array.from({ length: rows }, (_, i) => <SkeletonRow key={i} />)}
+    </div>
+  </>
+))
+
 export const injectSkeletonStyles = () => {
   if (typeof document === 'undefined') return
   if (document.getElementById('sk-style')) return

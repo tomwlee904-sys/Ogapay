@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { apiRequest } from '../lib/api'
 import { useToast } from '../components/Toast'
-import { SkeletonPage, injectSkeletonStyles } from '../components/SkeletonLoader'
+import { SkeletonTab, injectSkeletonStyles } from '../components/SkeletonLoader'
 
 
 // ── Info tooltip ─────────────────────────────────────────────────────
@@ -228,7 +228,8 @@ export default function TabMyTasksContent() {
       </div>
 
       {loading ? (
-        <SkeletonPage />
+        // Rows like the submissions list; the heading and filters above stay (2026-11-07)
+        <SkeletonTab rows={5} />
       ) : filtered.length === 0 && submissions.length > 0 ? (
         // Has submissions, just none under this filter (2026-11-07)
         <div className="mt-empty">
