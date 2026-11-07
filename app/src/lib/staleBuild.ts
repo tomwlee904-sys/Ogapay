@@ -25,8 +25,14 @@ export function reloadForUpdate(): boolean {
 
 // React.lazy for pages: on a stale-version error, reload instead of failing
 export function lazyPage<T extends ComponentType<any>>(load: () => Promise<{ default: T }>) {
-  return lazy(() => load().catch((err) => {
-    if (isStaleBuildError(err) && reloadForUpdate()) return new Promise<never>(() => {})
-    throw err
-  }))
+  return lazy(() => load().then(
+    // main.tsx stops Vite's preload error while it reloads for the new version, and
+    // the import then resolves to nothing: React read .default of undefined and the
+    // error screen flashed until the reload landed (2026-11-07). Wait for the reload.
+    (mod) => mod ?? new Promise<never>(() => {}),
+    (err) => {
+      if (isStaleBuildError(err) && reloadForUpdate()) return new Promise<never>(() => {})
+      throw err
+    },
+  ))
 }
