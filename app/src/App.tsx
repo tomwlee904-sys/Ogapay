@@ -14,7 +14,7 @@ import SignInHost from './components/auth/SignInHost'
 import { InstallHost } from './components/InstallApp'
 import { PushHost } from './components/PushAlerts'
 import { WelcomeHost } from './components/WelcomeHost'
-import PageLoader from './components/PageLoader'
+import ShellLoader from './components/ShellLoader'
 import AdminGuard from './components/AdminGuard'
 import { JobAlertProvider } from './contexts/JobAlertContext'
 import { WalletBalanceProvider } from './context/WalletBalanceContext'
@@ -130,8 +130,11 @@ export default function App() {
             page's code loads or after a page fails */}
         <ScrollManager />
         <ErrorBoundary>
-        <Suspense fallback={<PageLoader />}>
-          <JobAlertProvider>
+        {/* The page area loads inside the app shell (2026-11-07): the fallback keeps the
+            top bar and bottom bar, so it sits inside JobAlertProvider (the bar's job
+            alert toast needs it); the hosts get their own quiet boundary */}
+        <JobAlertProvider>
+          <Suspense fallback={null}>
           <SignInHost />
           <InstallHost />
           <PushHost />
@@ -139,6 +142,8 @@ export default function App() {
           <WelcomeHost />
           <CanonicalUrl />
           <PageTitle />
+          </Suspense>
+          <Suspense fallback={<ShellLoader />}>
           <Routes>
             {/* ── Public routes ── */}
             <Route path="/" element={<HomePage />} />
@@ -281,8 +286,8 @@ export default function App() {
             {/* ── Catch-all ── */}
             <Route path="*" element={<NotFound />} />
           </Routes>
-          </JobAlertProvider>
-        </Suspense>
+          </Suspense>
+        </JobAlertProvider>
         </ErrorBoundary>
         </ToastProvider>
       </CurrencyProvider>

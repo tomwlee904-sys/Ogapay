@@ -458,7 +458,8 @@ export default function Profile() {
     }
   }, [tab]);
 
-  return loading ? <SkeletonPage /> : (
+  // The top bar and bottom bar stay while the profile loads (2026-11-07)
+  return loading ? <Layout><SkeletonPage /></Layout> : (
     <div className="page-fade-in">
     <Layout>
       <style>{`
