@@ -112,6 +112,9 @@ export default function TabNotificationsContent() {
   const loadedOnce = useRef(false)
   // Deleted here, so a poll that was already on its way can't bring them back
   const deletedIds = useRef<Set<string>>(new Set())
+  // Deletes since the last page loaded: the server pages by position, so each one
+  // moves older alerts up a place and Load more would skip them (2026-11-07)
+  const deletedSince = useRef(0)
 
   const LIMIT = 20
 
@@ -133,6 +136,7 @@ export default function TabNotificationsContent() {
         })
         setPage(pageNum)
         setHasMore(full)
+        deletedSince.current = 0
       } else if (first || !full) {
         // First load, or page 1 holds everything there is
         setNotifs(items)
@@ -157,6 +161,7 @@ export default function TabNotificationsContent() {
   useEffect(() => {
     loadedOnce.current = false
     deletedIds.current = new Set()
+    deletedSince.current = 0
     fetchNotifs(1)
     const onFocus = () => fetchNotifs(1)
     window.addEventListener('focus', onFocus)
@@ -245,17 +250,22 @@ export default function TabNotificationsContent() {
   const deleteNotif = async (id: string | number, e: React.MouseEvent) => {
     e.stopPropagation()
     deletedIds.current.add(String(id))
+    deletedSince.current += 1
     setNotifs(prev => prev.filter(n => String(n.id) !== String(id)))
     try { await apiRequest(`/notifications/${id}`, { method: 'DELETE' }) } catch {
       deletedIds.current.delete(String(id))
+      deletedSince.current = Math.max(0, deletedSince.current - 1)
       fetchNotifs(1)
     }
     refreshUnread(true) // the badge in the top bar and dock
   }
 
-  const loadMore = () => {
+  // After deletes, the pages already loaded are asked for again first (only new
+  // alerts are added), so the ones that moved up are not skipped
+  const loadMore = async () => {
     if (loadingMore) return
-    fetchNotifs(page + 1, true)
+    const from = Math.max(1, page - Math.floor(deletedSince.current / LIMIT))
+    for (let p = deletedSince.current > 0 ? from : page + 1; p <= page + 1; p++) await fetchNotifs(p, true)
   }
 
   // Shaped like the list: a title and alert rows (2026-11-07)

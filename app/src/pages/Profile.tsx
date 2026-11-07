@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useRef, Suspense } from "react";
+﻿import { useState, useEffect, useRef, Suspense, lazy, Component, type ReactNode } from "react";
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import Layout from "../components/Layout";
 import { apiRequest, API_BASE } from "../lib/api";
@@ -28,10 +28,29 @@ import { sized } from '../lib/img'
 import { categoryLabel } from '../lib/categories'
 import { xProfileOf } from '../lib/xprofile'
 import { isPhone, openInWalletUrl, PHONE_WALLET_LINE, phoneWalletSignInLine, WALLET_APPS, type WalletAppId } from '../lib/walletApps'
-import { lazyPage, isStaleBuildError, reloadForUpdate } from '../lib/staleBuild'
+import { isStaleBuildError, reloadForUpdate } from '../lib/staleBuild'
 // The Solana code (about 68KB) loads only when the Withdraw sheet opens or a wallet
-// is linked, not with the page (2026-11-07)
-const FundWalletModal = lazyPage(() => import('../components/FundWalletModal'))
+// is linked, not with the page (2026-11-07). The Withdraw sheet's code is fetched
+// once the page is idle (and on a press of Withdraw), so the sheet opens at once.
+// A failed download can be tried again; it reloads the page only when online, as
+// offline looks the same as an old version after a deploy.
+let fundModalLoad: Promise<typeof import('../components/FundWalletModal')> | null = null
+const loadFundModal = () => (fundModalLoad ??= import('../components/FundWalletModal').catch((err) => { fundModalLoad = null; throw err }))
+const makeFundModal = () => lazy(() => loadFundModal().catch((err) => {
+  if (navigator.onLine && isStaleBuildError(err) && reloadForUpdate()) return new Promise<never>(() => {})
+  throw err
+}))
+// When the Withdraw sheet's code can't download: closes it with a message instead
+// of the whole-site error screen. Any other error goes on to the site's error screen
+class SheetBoundary extends Component<{ onError: () => void; children: ReactNode }, { error: unknown }> {
+  state = { error: null as unknown }
+  static getDerivedStateFromError(error: unknown) { return { error } }
+  componentDidCatch(err: unknown) { if (isStaleBuildError(err)) this.props.onError() }
+  render() {
+    if (this.state.error && !isStaleBuildError(this.state.error)) throw this.state.error
+    return this.state.error ? null : this.props.children
+  }
+}
 const Icon = ({ n, s = 16, c }: { n: any; s?: number; c?: any }) => (
   <i className={`ti ti-${n}`} aria-hidden="true" style={{ fontSize: s, color: c || "var(--text2)", lineHeight: 1, flexShrink: 0 }} />
 );
@@ -71,11 +90,12 @@ async function copyText(text: string) {
 }
 const COPY_FAILED = "Couldn't copy - press and hold to copy";
 
-function CopyBtn({ text }: { text: any }) {
+// failMsg/onFail: for text that isn't shown in full (the short wallet address)
+function CopyBtn({ text, failMsg, onFail }: { text: any; failMsg?: string; onFail?: () => void }) {
   const [ok, setOk] = useState(false);
   const { toast } = useToast();
   const copy = async () => {
-    if (!(await copyText(String(text)))) { toast(COPY_FAILED, 'error'); return; }
+    if (!(await copyText(String(text)))) { toast(failMsg || COPY_FAILED, 'error'); onFail?.(); return; }
     setOk(true); setTimeout(() => setOk(false), 1800);
   };
   return (
@@ -181,7 +201,10 @@ export default function Profile() {
   // ?tab=portal (the retired Worker Portal tab) falls back to the profile
   const [tab, setTab] = useState(() => { const t = searchParams.get("tab") || "profile"; return t === "portal" ? "profile" : t });
   const [showBal, setShowBal] = useState(false);
+  const [showFullAddr, setShowFullAddr] = useState(false);
   const [fundModal, setFundModal] = useState<null | 'deposit' | 'withdraw'>(null);
+  // Made again after a failed download, as React keeps a failed lazy load failed
+  const [FundWalletModal, setFundWalletModal] = useState(makeFundModal);
   const [verifSending, setVerifSending] = useState(false);
   const [verifMsg, setVerifMsg] = useState<React.ReactNode>('');
   const [accountNumber, setAccountNumber] = useState("");
@@ -190,22 +213,28 @@ export default function Profile() {
   const [editingBank, setEditingBank] = useState(false);
   const [moneyIn, setMoneyIn] = useState(false);
   const [moneyOut, setMoneyOut] = useState(false);
-  // Saved withdrawal banks (Wallet → Money out); null until known, so the banner never flashes
+  // Saved withdrawal banks (Wallet → Money out); null until known, so the banner never flashes.
+  // banksAsked: the first answer came (or failed), so the banners can show (2026-11-07)
   const [bankCount, setBankCount] = useState<number | null>(null);
+  const [banksAsked, setBanksAsked] = useState(false);
   const loadBankCount = () => {
-    sharedGet<any[]>('/wallet/banks', 5000).then((d) => setBankCount(Array.isArray(d) ? d.length : 0)).catch(() => {});
+    sharedGet<any[]>('/wallet/banks', 5000).then((d) => setBankCount(Array.isArray(d) ? d.length : 0)).catch(() => {}).finally(() => setBanksAsked(true));
   };
   useEffect(loadBankCount, []);
   // /wallet/summary per currency: withdrawals on their way and money earned from jobs.
-  // undefined while it loads, null if it failed; loaded again with the balance (2026-11-07)
+  // undefined while it loads, null if it failed. Loaded again with each new balance
+  // (once it has arrived, not while it loads) and only on the Profile tab, which
+  // is the only one that uses it (2026-11-07)
   const [walletSum, setWalletSum] = useState<Record<string, any> | null | undefined>(undefined);
+  const onProfileTab = tab === 'profile';
   useEffect(() => {
+    if (balLoading || !onProfileTab) return;
     let live = true;
     apiRequest<any>('/wallet/summary')
       .then((d) => { if (live) setWalletSum(d && typeof d === 'object' ? d : null) })
       .catch(() => { if (live) setWalletSum((s) => s ?? null) });
     return () => { live = false };
-  }, [walletBal]);
+  }, [walletBal, balLoading, onProfileTab]);
   const [savingBank, setSavingBank] = useState(false);
   const [bankMsg, setBankMsg] = useState("");
   const [kycDocument, setKycDocument] = useState<File | null>(null);
@@ -439,6 +468,10 @@ export default function Profile() {
   async function connectWallet(id: string) {
     if (!detectedWallets.includes(id)) return;
     setConnecting(id);
+    // Fetched before the wallet asks to sign, so the member doesn't wait for it after
+    // signing, and an old-version reload can't throw away a signature (2026-11-07)
+    const bs58Load = import('bs58').catch((err) => { if (navigator.onLine && isStaleBuildError(err)) reloadForUpdate(); throw err });
+    bs58Load.catch(() => {});
     try {
             let wallet: any;
       if (id === "phantom") wallet = (window as any).phantom?.solana;
@@ -471,7 +504,7 @@ export default function Profile() {
             const encodedMessage = new TextEncoder().encode(nonceRes.message);
       const signedResult = await wallet.signMessage(encodedMessage);
       const signatureBytes = signedResult?.signature ?? signedResult;
-      const bs58 = (await import('bs58').catch((err) => { if (isStaleBuildError(err)) reloadForUpdate(); throw err })).default;
+      const bs58 = (await bs58Load).default;
       const signature = bs58.encode(signatureBytes);
       
             await apiRequest("/wallet/verify", {
@@ -530,6 +563,20 @@ export default function Profile() {
     }
   }, [tab]);
 
+  // Fetch the Withdraw sheet's code once the profile has loaded and the page is idle
+  useEffect(() => {
+    if (loading) return;
+    const w = window as any;
+    const run = () => { loadFundModal().catch(() => {}) };
+    if (w.requestIdleCallback) { const h = w.requestIdleCallback(run, { timeout: 4000 }); return () => w.cancelIdleCallback(h) }
+    const t = setTimeout(run, 2000);
+    return () => clearTimeout(t);
+  }, [loading]);
+
+  // The banners show together once KYC and the saved banks are known, so the tab bar
+  // moves down once, not two or three times as each answer arrives (2026-11-07)
+  const bannersReady = kycStatus !== undefined && banksAsked;
+
   // One Layout while loading and after (2026-11-07): the top bar, bottom bar and tab bar
   // stay mounted, and only the profile body swaps from its skeleton
   return (
@@ -583,7 +630,7 @@ export default function Profile() {
       <div className="pg">
 
       {/* Onboarding banners */}
-      {!loading && !authUser?.walletAddress && (
+      {bannersReady && !authUser?.walletAddress && (
         <div className="onboarding-banner">
           <i className="ti ti-wallet" aria-hidden="true" style={{color:'var(--accent)',fontSize:20}} />
           <span className="ob-msg">Connect your wallet to unlock full features</span>
@@ -591,7 +638,7 @@ export default function Profile() {
           <button type="button" className="ob-close" aria-label="Close" onClick={e => ((e.currentTarget.closest('.onboarding-banner') as HTMLElement)!.style.display='none')}><i className="ti ti-x" aria-hidden="true" /></button>
         </div>
       )}
-      {!loading && !authUser?.isEmailVerified && (
+      {bannersReady && !authUser?.isEmailVerified && (
         <div className="onboarding-banner">
           <i className="ti ti-mail" aria-hidden="true" style={{color:'#f59e0b',fontSize:20}} />
           <span className="ob-msg">{verifMsg || 'Verify your email address to receive account notifications'}</span>
@@ -619,7 +666,7 @@ export default function Profile() {
       )}
       {/* Withdrawals use the saved banks; the old profile field (bankAccount) is no longer filled in.
           Not for Ghana members, who withdraw to MoMo (2026-11-07) */}
-      {!loading && !ghana && bankCount === 0 && !authUser?.bankAccount && (
+      {bannersReady && !ghana && bankCount === 0 && !authUser?.bankAccount && (
         <div className="onboarding-banner">
           <i className="ti ti-building-bank" aria-hidden="true" style={{color:'#f59e0b',fontSize:20}} />
           <span className="ob-msg">Add a bank account to withdraw in Naira</span>
@@ -627,7 +674,7 @@ export default function Profile() {
           <button type="button" className="ob-close" aria-label="Close" onClick={e => ((e.currentTarget.closest('.onboarding-banner') as HTMLElement)!.style.display='none')}><i className="ti ti-x" aria-hidden="true" /></button>
         </div>
       )}
-      {!loading && !!kycStatus && !isKycVerified && (
+      {bannersReady && !!kycStatus && !isKycVerified && (
         <div className="onboarding-banner">
           <i className="ti ti-shield-check" aria-hidden="true" style={{color:'var(--red)',fontSize:20}} />
           <span className="ob-msg">Complete identity verification to withdraw</span>
@@ -737,12 +784,16 @@ export default function Profile() {
                   {hasWallet ? (
                     <div style={{display:'flex',alignItems:'center',gap:6,minWidth:0}}>
                       <span className="pw-addr">{shortAddr}</span>
-                      <CopyBtn text={walletAddress} />
+                      <CopyBtn text={walletAddress} failMsg="Couldn't copy - press and hold the full address below to copy it" onFail={() => setShowFullAddr(true)} />
                     </div>
                   ) : (
                     <span style={{color:'var(--text3)',fontSize:12}}>Not connected</span>
                   )}
                 </div>
+                {/* Only the short form shows above, so a failed copy shows the full address to copy by hand (2026-11-07) */}
+                {hasWallet && showFullAddr && (
+                  <div style={{fontFamily:'monospace',fontSize:12,color:'var(--text)',wordBreak:'break-all',userSelect:'all',WebkitUserSelect:'all',padding:'8px 10px',margin:'6px 0',background:'var(--bg2)',borderRadius:8}}>{walletAddress}</div>
+                )}
 
                 {/* Naira balance: always visible */}
                 <div className="pw-bal">
@@ -754,11 +805,14 @@ export default function Profile() {
                   {!walletBal && balError && !balLoading && (
                     <button className="pw-pill" onClick={() => refreshWallet()}>Try again</button>
                   )}
-                  {lockedNgn > 0 && (
-                    <div style={{display:'flex',flexDirection:'column',alignItems:'flex-end',gap:2}}>
+                  {/* Nothing until the summary answers, so the words don't change a moment later;
+                      "on hold" only if it failed. marginLeft keeps it on the right when it wraps
+                      under the balance on phones (2026-11-07) */}
+                  {lockedNgn > 0 && walletSum !== undefined && (
+                    <div style={{display:'flex',flexDirection:'column',alignItems:'flex-end',gap:2,marginLeft:'auto'}}>
                       {walletSum ? (
                         <>
-                          {onHold > 0 && <span style={{fontSize:12,color:'var(--text2)'}}>{show(onHold)} held for your jobs</span>}
+                          {onHold > 0 && <span style={{fontSize:12,color:'var(--text2)'}}>{show(onHold)} held for jobs and orders</span>}
                           {onItsWay > 0 && <span style={{fontSize:12,color:'var(--text2)'}}>{show(onItsWay)} on its way to {ghana ? 'your MoMo or bank' : 'your bank'}</span>}
                         </>
                       ) : (
@@ -770,7 +824,7 @@ export default function Profile() {
 
                 {/* Main actions: equal buttons in one row */}
                 <div className="pw-acts">
-                  <button className="dash-btn" onClick={() => setFundModal('withdraw')}><Icon n="arrow-up-right" s={14} c="var(--bg)" /> Withdraw</button>
+                  <button className="dash-btn" onPointerDown={() => { loadFundModal().catch(() => {}) }} onClick={() => setFundModal('withdraw')}><Icon n="arrow-up-right" s={14} c="var(--bg)" /> Withdraw</button>
                   <button className="dash-btn" onClick={() => navigate('/deposit')}><Icon n="plus" s={14} c="var(--bg)" /> Deposit</button>
                 </div>
 
@@ -1150,9 +1204,13 @@ export default function Profile() {
       {fundModal && (
         // A bank added in the Withdraw sheet shows in Money out (the list loads again with
         // wdKey) and the "Add Bank Account" banner goes away (2026-11-07)
-        <Suspense fallback={<div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.5)',display:'grid',placeItems:'center',zIndex:1000}}><span className="spinner" aria-label="Loading" /></div>}>
+        // A tap on the loading cover closes it; if the code can't download, the sheet
+        // closes with a message and the next tap tries again (2026-11-07)
+        <SheetBoundary onError={() => { setFundModal(null); setFundWalletModal(() => makeFundModal()); toast("Couldn't open. Check your connection and try again", 'error'); }}>
+        <Suspense fallback={<div onClick={() => setFundModal(null)} style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.5)',display:'grid',placeItems:'center',zIndex:1000}}><span className="spinner" aria-label="Loading" /></div>}>
           <FundWalletModal initialStep={fundModal} onClose={() => { setFundModal(null); refreshWallet(); dropShared('/wallet/banks'); loadBankCount(); setWdKey((k) => k + 1); }} onDone={() => { refreshWallet(); refreshUser(); }} />
         </Suspense>
+        </SheetBoundary>
       )}
 
       </div>
