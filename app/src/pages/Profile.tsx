@@ -237,10 +237,18 @@ export default function Profile() {
     }
   };
 
+  // The skeleton only on the first load (or another account). Later account updates
+  // reload quietly (2026-11-07): a withdrawal refreshes the account, and the skeleton
+  // unmounted the Withdraw sheet, so its "Withdrawal requested" screen vanished and an
+  // empty form came back (a member could send it twice).
+  const loadedFor = useRef<string | null>(null);
   useEffect(() => {
     if (quietUserUpdate.current) { quietUserUpdate.current = false; return; }
-    setLoading(true);
-    loadProfile().finally(() => setLoading(false));
+    const id = authUser?.id || null;
+    const first = loadedFor.current === null || loadedFor.current !== id;
+    loadedFor.current = id;
+    if (first) setLoading(true);
+    loadProfile().finally(() => { if (first) setLoading(false); });
   }, [authUser]);
 
   // Detect installed Solana wallets. Checked again each time the wallet list
