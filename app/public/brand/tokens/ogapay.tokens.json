@@ -1,0 +1,22 @@
+{
+  "brand": {
+    "name": "OgaPay",
+    "tagline": "Earn your way",
+    "url": "https://ogapay.app"
+  },
+  "color": {
+    "black": "#000000",
+    "white": "#FFFFFF",
+    "charcoal": "#202020",
+    "offWhite": "#F5F5F5",
+    "muted": "#6B6B6B",
+    "border": "#E5E5E5"
+  },
+  "font": {
+    "family": "Inter",
+    "headingWeight": 700,
+    "labelWeight": 600,
+    "bodyWeight": 400
+  },
+  "status": "v1 working kit; vectors reconstructed from supplied raster"
+}

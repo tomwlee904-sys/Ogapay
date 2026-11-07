@@ -1,0 +1,24 @@
+# OgaPay Brand Kit v1
+
+Earn your way.
+
+Open index.html in a browser after extracting the entire ZIP. The guide and downloads work offline. Read guides/OgaPay_Brand_Guide.pdf for the visual specification.
+
+## Contents
+- logos/svg: black and white horizontal lockups, standalone marks and wordmarks. True vector paths, no external fonts or embedded bitmaps.
+- logos/png: transparent lockups and wordmarks at 1200px / 2400px wide; transparent marks at 1024px / 2048px wide.
+- social: light and dark 1080px avatars plus 32px, 64px, 180px and 512px dark icon exports.
+- patterns: light and dark corner patterns, SVG and PNG.
+- fonts: Inter variable font in desktop TTF and web WOFF2, with the original SIL Open Font License.
+- tokens: CSS variables and JSON design tokens.
+- original: the exact supplied logo image, preserved unchanged.
+- guides: PDF brand guide, provenance, and asset manifest.
+
+## Source and status
+The owner-supplied 34609.png is the reference logo. SVGs were traced from its visible mark and lettering, preserving the lettering rather than retyping it in an assumed font. These are reconstructed vectors, not the original designer's vector masters. Compare against the designer's SVG/AI before commercial production. Inter is proposed for brand communication and interface copy, not a claim about the font used to draw the logo. Usage dimensions, typography scale and neutral supporting colors are proposed v1 guidelines.
+
+Use the black or white master with sufficient contrast. Keep the complete lockup's original proportions and gaps. Keep diagonal cuts and rounded corners intact. Do not stretch, rotate, retype, outline or add effects to a master logo. AI-generated campaign imagery and merchandise mockups are not logo masters.
+
+Name: OgaPay (capital O and P). Tagline: Earn your way. Website: https://ogapay.app. Instagram: @ogapayhq.
+
+This package does not deploy a live /brandkit page. index.html is an offline asset browser and implementation reference, with relative links to the included assets.

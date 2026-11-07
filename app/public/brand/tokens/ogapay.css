@@ -1,0 +1,2 @@
+@font-face{font-family:Inter;src:url(../fonts/InterVariable.woff2) format("woff2");font-weight:100 900;font-style:normal;font-display:swap}
+:root{--ogapay-black:#000;--ogapay-white:#fff;--ogapay-charcoal:#202020;--ogapay-off-white:#f5f5f5;--ogapay-muted:#6b6b6b;--ogapay-border:#e5e5e5;--ogapay-font:Inter,Arial,sans-serif;}
