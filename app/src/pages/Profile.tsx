@@ -126,15 +126,18 @@ function InfoBtn({ text }: { text: string }) {
   );
 }
 
+// Highest OgaScore: every point in services/ogascore.service.js POINTS (MAX_SCORE), 2026-11-07
+const OGA_SCORE_MAX = 66;
+
 /* ─── Main Profile Component ─── */
 // ── Inject skeleton styles on mount ──
 export default function Profile() {
   useEffect(() => { injectSkeletonStyles(); }, []);
-  const { fmt, preferredCurrency } = useCurrency()
+  const { fmt, preferredCurrency, convert } = useCurrency()
   const show = useMoney()
   const navigate = useNavigate();
   const { user: authUser, refreshUser } = useAuth();
-  const { balances: walletBal, refresh: refreshWallet } = useWalletBalance();
+  const { balances: walletBal, refresh: refreshWallet, loading: balLoading, error: balError } = useWalletBalance();
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
   // ?tab=portal (the retired Worker Portal tab) falls back to the profile
@@ -155,6 +158,16 @@ export default function Profile() {
   useEffect(() => {
     sharedGet<any[]>('/wallet/banks', 5000).then((d) => setBankCount(Array.isArray(d) ? d.length : 0)).catch(() => {});
   }, []);
+  // /wallet/summary per currency: withdrawals on their way and money earned from jobs.
+  // undefined while it loads, null if it failed; loaded again with the balance (2026-11-07)
+  const [walletSum, setWalletSum] = useState<Record<string, any> | null | undefined>(undefined);
+  useEffect(() => {
+    let live = true;
+    apiRequest<any>('/wallet/summary')
+      .then((d) => { if (live) setWalletSum(d && typeof d === 'object' ? d : null) })
+      .catch(() => { if (live) setWalletSum((s) => s ?? null) });
+    return () => { live = false };
+  }, [walletBal]);
   const [savingBank, setSavingBank] = useState(false);
   const [bankMsg, setBankMsg] = useState("");
   const [kycDocument, setKycDocument] = useState<File | null>(null);
@@ -306,6 +319,24 @@ export default function Profile() {
   const isKycVerified = kycStatus?.status === 'APPROVED' && Number(kycStatus?.kycTier ?? 0) >= 1;
   const isHumanVerified = !!((authUser as any)?.humanVerified || profileData?.humanVerified);
   const lockedNgn = walletBal?.NGN?.lockedBalance ?? 0;
+  // Locked money is job escrow and store orders plus bank withdrawals waiting to be
+  // paid: show them apart, as the Wallet page does (2026-11-07). Without the summary
+  // we can't tell them apart, so it just says "on hold".
+  const onItsWay = walletSum ? Math.min(lockedNgn, Number(walletSum.NGN?.withdrawing) || 0) : 0;
+  const onHold = Math.max(0, lockedNgn - onItsWay);
+  const ghana = authUser?.country === 'GH';
+
+  // Success rate from the counts /users/me returns (the saved successRate is never
+  // updated, so it always read 0%); "—" until something was approved or rejected (2026-11-07)
+  const wp = profileData?.workerProfile;
+  const decided = (Number(wp?.tasksCompleted) || 0) + (Number(wp?.tasksRejected) || 0);
+  const successRate = decided ? Math.round((Number(wp?.tasksCompleted) || 0) / decided * 100) + '%' : '—';
+  // Earned from jobs: each currency's job pay from /wallet/summary in naira, the same
+  // figure as "From jobs" on the Earnings tab. workerProfile.totalEarned adds USDC
+  // straight onto naira (2026-11-07)
+  const jobsEarned = walletSum
+    ? (['NGN', 'USDC', 'USDT', 'SOL'] as const).reduce((t, c) => t + (c === 'NGN' ? Number(walletSum[c]?.earned) || 0 : convert(Number(walletSum[c]?.earned) || 0, c, 'NGN')), 0)
+    : null;
 
   // Saved preferences. The server merges what's sent into what's saved, so only the
   // changed key goes (2026-11-07): sending them all sent jobPush: null (never chosen),
@@ -657,9 +688,24 @@ export default function Profile() {
                 <div className="pw-bal">
                   <div>
                     <div className="pw-bal-k">Available</div>
-                    <div className="pw-bal-v">{show(totalNgn)}</div>
+                    {/* "—" until the balance loads, with Try again if it failed, never a false ₦0 (2026-11-07) */}
+                    <div className="pw-bal-v">{walletBal ? show(totalNgn) : '—'}</div>
                   </div>
-                  {lockedNgn > 0 && <span style={{fontSize:12,color:'var(--text2)'}}>{show(lockedNgn)} held in escrow</span>}
+                  {!walletBal && balError && !balLoading && (
+                    <button className="pw-pill" onClick={() => refreshWallet()}>Try again</button>
+                  )}
+                  {lockedNgn > 0 && (
+                    <div style={{display:'flex',flexDirection:'column',alignItems:'flex-end',gap:2}}>
+                      {walletSum ? (
+                        <>
+                          {onHold > 0 && <span style={{fontSize:12,color:'var(--text2)'}}>{show(onHold)} held for your jobs</span>}
+                          {onItsWay > 0 && <span style={{fontSize:12,color:'var(--text2)'}}>{show(onItsWay)} on its way to {ghana ? 'your MoMo or bank' : 'your bank'}</span>}
+                        </>
+                      ) : (
+                        <span style={{fontSize:12,color:'var(--text2)'}}>{show(lockedNgn)} on hold</span>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 {/* Main actions: equal buttons in one row */}
@@ -796,8 +842,8 @@ export default function Profile() {
                       { ic: 'send', n: profileData?._count?.taskSubmissions || 0, l: 'Submissions' },
                       { ic: 'circle-check', n: profileData?.workerProfile?.tasksCompleted ?? 0, l: 'Tasks completed' },
                       { ic: 'clipboard-plus', n: profileData?._count?.tasksCreated || 0, l: 'Tasks created' },
-                      { ic: 'trending-up', n: profileData?.workerProfile?.successRate ? profileData.workerProfile.successRate + '%' : '0%', l: 'Success rate', info: 'successRate' },
-                      { ic: 'coin', n: profileData?.workerProfile?.totalEarned ? show(Number(profileData.workerProfile.totalEarned)) : show(0), l: 'Total earned' },
+                      { ic: 'trending-up', n: successRate, l: 'Success rate', info: 'successRate' },
+                      { ic: 'coin', n: jobsEarned === null ? '—' : show(jobsEarned), l: 'Earned from jobs' },
                     ].map(c => (
                       <div className="pw-count" key={c.l}>
                         <Icon n={c.ic} s={16} />
@@ -812,7 +858,7 @@ export default function Profile() {
                     <StatRow label="Rank" val={(l => l.charAt(0) + l.slice(1).toLowerCase())(String(profileData?.workerProfile?.level || 'BEGINNER'))} info onInfoClick={() => setShowInfo('rank')} />
                     {/* The same OgaScore the Dashboard, public profiles and job requirements use
                         (services/ogascore.service.js), not the old reputationScore formula */}
-                    <StatRow label="OgaScore" val={profileData?.ogaScore ?? 0} info onInfoClick={() => setShowInfo('ogaScore')} />
+                    <StatRow label="OgaScore" val={`${profileData?.ogaScore ?? 0} / ${OGA_SCORE_MAX}`} info onInfoClick={() => setShowInfo('ogaScore')} />
                     {/* The Verify button lives on Settings > Verification; link straight to it */}
                     <StatRow label="Human verified" val={isHumanVerified ? 'Yes' : (
                       <a href="/settings/verification" className="pw-pill" onClick={e => { e.preventDefault(); navigate('/settings/verification') }}>Verify</a>
