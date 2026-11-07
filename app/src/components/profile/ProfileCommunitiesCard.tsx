@@ -55,7 +55,7 @@ export default function ProfileCommunitiesCard() {
             <Link className="po-row" to={`/communities/${c.communityId}`} key={c.communityId}>
               <span className="ic" style={{ background: c.accentColor || 'var(--text)' }}>{c.iconUrl ? <img src={sized(c.iconUrl, 36, true)} alt="" /> : c.name.slice(0, 2).toUpperCase()}</span>
               <span className="mid"><b>{c.name}</b><small>{c.memberCount} members</small></span>
-              {c.role !== 'MEMBER' && <span className="po-tag">{c.role}</span>}
+              {c.role !== 'MEMBER' && <span className="po-tag">{c.role === 'OWNER' ? 'Owner' : c.role === 'ADMIN' ? 'Admin' : String(c.role ?? '').charAt(0) + String(c.role ?? '').slice(1).toLowerCase()}</span>}
             </Link>
           ))
         )}

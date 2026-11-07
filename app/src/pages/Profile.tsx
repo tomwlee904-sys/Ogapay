@@ -10,7 +10,6 @@ import { useWalletBalance } from "../context/WalletBalanceContext";
 
 import { injectSkeletonStyles, SkeletonPage } from '../components/SkeletonLoader'
 import { useToast } from '../components/Toast'
-import { uploadImage } from '../lib/upload'
 import bs58 from "bs58"
 import VirtualAccountCard from '../components/VirtualAccountCard'
 import SavedBanksList from '../components/SavedBanksList'
@@ -28,6 +27,7 @@ import TabReferralsContent from '../components/ProfileReferralsTab'
 import TabMyTasksContent from '../components/ProfileMyTasksTab'
 import TabEarningsContent from '../components/ProfileEarningsTab'
 import { sized } from '../lib/img'
+import { categoryLabel } from '../lib/categories'
 import { xProfileOf } from '../lib/xprofile'
 import { isPhone, openInWalletUrl, PHONE_WALLET_LINE, phoneWalletSignInLine, WALLET_APPS, type WalletAppId } from '../lib/walletApps'
 const Icon = ({ n, s = 16, c }: { n: any; s?: number; c?: any }) => (
@@ -163,14 +163,6 @@ export default function Profile() {
 
   // ── Info Modal State ──
   const [showInfo, setShowInfo] = useState<string | null>(null);
-
-  // ── Edit Profile Modal State ──
-  const [showEdit, setShowEdit] = useState(false);
-  const [editForm, setEditForm] = useState({ firstName: '', lastName: '', username: '', bio: '', avatarUrl: '' });
-  const [editErrors, setEditErrors] = useState<Record<string, string>>({});
-  const [savingProfile, setSavingProfile] = useState(false);
-  const [usernameCheck, setUsernameCheck] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle');
-  const usernameCheckTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // ── API Data state ──
   const [profileData, setProfileData] = useState<any>(null);
@@ -505,6 +497,8 @@ export default function Profile() {
         .onboarding-banner .ob-msg{flex:1;color:var(--text)}
         .onboarding-banner .ob-btn{height:32px;padding:0 14px;border-radius:8px;border:none;background:var(--accent);color:var(--on-accent);font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:inherit}
         .onboarding-banner .ob-close{width:28px;height:28px;border:none;background:none;color:var(--text3);cursor:pointer;display:grid;place-items:center;font-size:16px;flex-shrink:0}
+        /* Phones (2026-11-07): the button goes under the message so the text isn't squeezed */
+        @media(max-width:767px){.onboarding-banner{flex-wrap:wrap;padding:12px 14px;gap:8px 12px}.onboarding-banner .ob-msg{flex:1 1 calc(100% - 72px)}.onboarding-banner .ob-close{order:2}.onboarding-banner .ob-btn{order:3;margin-left:32px}}
       `}</style>
       <div className="pg">
 
@@ -670,7 +664,7 @@ export default function Profile() {
 
                 {/* Main actions: equal buttons in one row */}
                 <div className="pw-acts">
-                  <button className="dash-btn" onClick={() => setFundModal('withdraw')}><Icon n="logout" s={14} c="var(--bg)" /> Withdraw</button>
+                  <button className="dash-btn" onClick={() => setFundModal('withdraw')}><Icon n="arrow-up-right" s={14} c="var(--bg)" /> Withdraw</button>
                   <button className="dash-btn" onClick={() => navigate('/deposit')}><Icon n="plus" s={14} c="var(--bg)" /> Deposit</button>
                 </div>
 
@@ -765,18 +759,8 @@ export default function Profile() {
             <div className="profile-card pw-profile">
               <div className="profile-card-head">
                 <span><Icon n="user" s={15} /> Profile</span>
-                <button className="btn-outline btn-sm" onClick={() => {
-                  setEditForm({
-                    firstName: user?.firstName || '',
-                    lastName: user?.lastName || '',
-                    username: user?.username || '',
-                    bio: profileData?.workerProfile?.bio || '',
-                    avatarUrl: user?.avatarUrl || '',
-                  });
-                  setEditErrors({});
-                  setUsernameCheck('idle');
-                  setShowEdit(true);
-                }}>
+                {/* One edit form for everyone: the Edit profile page, like Settings (2026-11-07) */}
+                <button className="btn-outline btn-sm" onClick={() => navigate('/edit-profile')}>
                   <Icon n="edit" s={12} /> Edit
                 </button>
               </div>
@@ -838,7 +822,7 @@ export default function Profile() {
                     )} valClass={isKycVerified ? 'yes' : ''} />
                     <StatRow label="Rating" val={profileData?.workerProfile?.totalRatings ? `${Number(profileData.workerProfile.avgRating || 0).toFixed(1)}/5 (${profileData.workerProfile.totalRatings})` : 'No ratings yet'} info onInfoClick={() => setShowInfo('avgRating')} />
                     <StatRow label="Skills" val={profileData?.workerProfile?.skills?.length ? profileData.workerProfile.skills.slice(0,3).join(', ')+(profileData.workerProfile.skills.length>3?' +' + (profileData.workerProfile.skills.length - 3):'') : '-'} />
-                    <StatRow label="Categories" val={profileData?.workerProfile?.categories?.length ? profileData.workerProfile.categories.join(', ') : '-'} />
+                    <StatRow label="Categories" val={profileData?.workerProfile?.categories?.length ? profileData.workerProfile.categories.map((c: string) => categoryLabel(c)).join(', ') : '-'} />
                   </div>
                 </div>
 
@@ -895,160 +879,6 @@ export default function Profile() {
           <div className="pw-full"><ProfileWithdrawalsCard key={wdKey} /></div>
 
         </>
-      )}
-
-      {/* Edit Profile Modal */}
-      {showEdit && (
-        <div style={{position:'fixed',inset:0,zIndex:400,background:'rgba(0,0,0,.5)',display:'flex',alignItems:'center',justifyContent:'center',padding:20}} onClick={() => setShowEdit(false)}>
-          <div style={{background:'var(--card)',border:'1px solid var(--border)',borderRadius:16,maxWidth:520,width:'100%',padding:28,maxHeight:'90vh',overflowY:'auto'}} onClick={e => e.stopPropagation()}>
-            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:24}}>
-              <h3 style={{fontFamily:'Inter',fontSize:20,fontWeight:800,margin:0}}><i className="ti ti-user-edit" style={{color:'var(--accent)',marginRight:8}} />Edit Profile</h3>
-              <button style={{width:32,height:32,border:'1px solid var(--border)',borderRadius:8,background:'var(--bg2)',cursor:'pointer',display:'grid',placeItems:'center',color:'var(--text3)',fontSize:18}} onClick={() => setShowEdit(false)}>
-                <i className="ti ti-x" />
-              </button>
-            </div>
-
-            {/* Avatar */}
-            <div style={{display:'flex',alignItems:'center',gap:16,marginBottom:24}}>
-              <div style={{width:72,height:72,borderRadius:'50%',background:'var(--bg2)',border:'2px solid var(--border)',overflow:'hidden',flexShrink:0,display:'grid',placeItems:'center'}}>
-                {editForm.avatarUrl ? (
-                  <img src={editForm.avatarUrl} alt="" loading="lazy" style={{width:'100%',height:'100%',objectFit:'cover'}} />
-                ) : (
-                  <span style={{fontSize:24,fontWeight:800,color:'var(--text3)'}}>{(editForm.firstName?.[0] || 'U') + (editForm.lastName?.[0] || '')}</span>
-                )}
-              </div>
-              <div>
-                <div style={{fontSize:13,fontWeight:700,marginBottom:4}}>Profile Photo</div>
-                <label style={{display:'inline-flex',alignItems:'center',gap:6,height:34,padding:'0 14px',borderRadius:8,border:'1.5px solid var(--border)',background:'var(--bg2)',cursor:'pointer',fontSize:12,fontWeight:600,color:'var(--text2)',fontFamily:'inherit'}}>
-                  <i className="ti ti-camera" /> Upload Photo
-                  <input type="file" accept="image/*" style={{display:'none'}}
-                    onChange={async (e) => {
-                      const file = e.target.files?.[0];
-                      if (!file) return;
-                      // Validate file size (max 5MB)
-                      if (file.size > 5 * 1024 * 1024) {
-                        setEditErrors(prev => ({...prev, avatar: 'Image must be under 5MB'}));
-                        return;
-                      }
-                      try {
-                        const url = await uploadImage(file, 'avatars');
-                        setEditForm(f => ({...f, avatarUrl: url}));
-                      } catch {
-                        const el = document.getElementById('appToast');
-                        if (el) { el.textContent = 'Image upload failed. Try a smaller file or paste a URL instead.'; el.classList.add('show'); setTimeout(() => el.classList.remove('show'), 3500); }
-                      }
-                    }} />
-                </label>
-                <div style={{fontSize:11,color:'var(--text3)',marginTop:4}}>Upload a photo from your device, or paste a URL below</div>
-                <input type="text" placeholder="https://example.com/photo.jpg" style={{width:'100%',marginTop:8,padding:'6px 10px',border:'1px solid var(--border)',borderRadius:6,fontSize:12,background:'var(--bg2)',color:'var(--text)',outline:'none'}}
-                  value={editForm.avatarUrl} onChange={e => setEditForm(f => ({...f, avatarUrl: e.target.value}))} />
-              </div>
-            </div>
-
-            {/* First & Last Name */}
-            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:16}}>
-              <div>
-                <label style={{display:'block',fontSize:11,fontWeight:700,color:'var(--text3)',marginBottom:4,textTransform:'uppercase',letterSpacing:'.04em'}}>First Name</label>
-                <input className="dash-input" value={editForm.firstName} onChange={e => setEditForm(f => ({...f, firstName: e.target.value}))} placeholder="John" />
-              </div>
-              <div>
-                <label style={{display:'block',fontSize:11,fontWeight:700,color:'var(--text3)',marginBottom:4,textTransform:'uppercase',letterSpacing:'.04em'}}>Last Name</label>
-                <input className="dash-input" value={editForm.lastName} onChange={e => setEditForm(f => ({...f, lastName: e.target.value}))} placeholder="Doe" />
-              </div>
-            </div>
-
-            {/* Username */}
-            <div style={{marginBottom:16}}>
-              <label style={{display:'block',fontSize:11,fontWeight:700,color:'var(--text3)',marginBottom:4,textTransform:'uppercase',letterSpacing:'.04em'}}>Username</label>
-              <div style={{display:'flex',gap:8,alignItems:'center'}}>
-                <div style={{flex:1,position:'relative'}}>
-                  <span style={{position:'absolute',left:12,top:'50%',transform:'translateY(-50%)',fontSize:13,color:'var(--text3)',fontWeight:600}}>@</span>
-                  <input className="dash-input" style={{paddingLeft:28}} value={editForm.username} 
-                    onChange={e => {
-                      const val = e.target.value.replace(/[^a-zA-Z0-9_]/g,'').toLowerCase();
-                      setEditForm(f => ({...f, username: val}));
-                      setEditErrors(e => ({...e, username: ''}));
-                      if (usernameCheckTimer.current) clearTimeout(usernameCheckTimer.current);
-                      if (val && val !== (user?.username || '')) {
-                        setUsernameCheck('checking');
-                        usernameCheckTimer.current = setTimeout(async () => {
-                          try {
-                            const result = await apiRequest<any>('/users/directory/list?search=' + encodeURIComponent(val) + '&limit=1').catch(() => null);
-                            const users = result?.data || result || [];
-                            const taken = users.some((u: any) => u.username?.toLowerCase() === val);
-                            setUsernameCheck(taken ? 'taken' : 'available');
-                          } catch { setUsernameCheck('idle'); }
-                        }, 600);
-                      } else {
-                        setUsernameCheck('idle');
-                      }
-                    }}
-                    placeholder="username" />
-                </div>
-                {usernameCheck === 'checking' && <span className="spinner" style={{width:16,height:16,borderWidth:2}} />}
-                {usernameCheck === 'available' && <i className="ti ti-check" style={{color:'var(--green)',fontSize:18}} />}
-                {usernameCheck === 'taken' && <i className="ti ti-x" style={{color:'var(--red)',fontSize:18}} />}
-              </div>
-              {usernameCheck === 'taken' && <div style={{fontSize:11,color:'var(--red)',marginTop:4}}>Username is taken</div>}
-              {usernameCheck === 'available' && <div style={{fontSize:11,color:'var(--green)',marginTop:4}}>Username is available</div>}
-              {editErrors.username && <div style={{fontSize:11,color:'var(--red)',marginTop:4}}>{editErrors.username}</div>}
-            </div>
-
-            {/* Bio */}
-            <div style={{marginBottom:20}}>
-              <label style={{display:'block',fontSize:11,fontWeight:700,color:'var(--text3)',marginBottom:4,textTransform:'uppercase',letterSpacing:'.04em'}}>
-                Bio <span style={{fontWeight:400,textTransform:'none'}}>({editForm.bio.length}/160)</span>
-              </label>
-              <textarea className="dash-input" style={{height:80,padding:'10px 14px',resize:'vertical',fontFamily:'inherit',lineHeight:1.5}}
-                value={editForm.bio} onChange={e => {
-                  if (e.target.value.length <= 160) setEditForm(f => ({...f, bio: e.target.value}));
-                }} placeholder="Tell task posters about yourself..." />
-              {editErrors.bio && <div style={{fontSize:11,color:'var(--red)',marginTop:4}}>{editErrors.bio}</div>}
-            </div>
-
-            {editErrors.general && <div style={{fontSize:12,color:'var(--red)',marginBottom:12,textAlign:'center'}}>{editErrors.general}</div>}
-
-            {/* Actions */}
-            <div style={{display:'flex',gap:12}}>
-              <button className="dash-btn" style={{flex:1,justifyContent:'center',opacity:savingProfile?0.6:1}} disabled={savingProfile}
-                onClick={async () => {
-                  if (!editForm.firstName.trim()) { setEditErrors({firstName:'First name is required'}); return; }
-                  if (!editForm.username.trim()) { setEditErrors({username:'Username is required'}); return; }
-                  if (usernameCheck === 'taken') { setEditErrors({username:'This username is taken'}); return; }
-                  setSavingProfile(true); setEditErrors({});
-                  try {
-                    const body: Record<string, any> = {};
-                    if (editForm.firstName !== (user?.firstName || '')) body.firstName = editForm.firstName;
-                    if (editForm.lastName !== (user?.lastName || '')) body.lastName = editForm.lastName;
-                    if (editForm.username !== (user?.username || '')) body.username = editForm.username;
-                    if (editForm.avatarUrl !== (user?.avatarUrl || '') && editForm.avatarUrl && !editForm.avatarUrl.startsWith('data:')) body.avatarUrl = editForm.avatarUrl;
-                    if (editForm.bio !== (profileData?.workerProfile?.bio || '')) body.bio = editForm.bio;
-
-                    if (Object.keys(body).length > 0) {
-                      // Let the server's reason through (e.g. a verified name can't be changed)
-                      // instead of a bare "Failed to update profile" (2026-11-06)
-                      await apiRequest('/users/me', {
-                        method: 'PATCH',
-                        body: JSON.stringify(body),
-                      });
-                      const userData = await apiRequest('/users/me').catch(() => null);
-                      if (userData) setProfileData(userData);
-                    }
-
-                    setShowEdit(false);
-                    toast('Profile updated successfully');
-                    refreshUser();
-                  } catch (err: any) {
-                    setEditErrors({general: err.message || 'Failed to save'});
-                  }
-                  setSavingProfile(false);
-                }}>
-                {savingProfile ? <><span className="spinner" style={{width:14,height:14,borderWidth:2}} /> Saving...</> : <><i className="ti ti-check" /> Save Changes</>}
-              </button>
-              <button className="btn-outline" style={{flex:1,justifyContent:'center'}} onClick={() => setShowEdit(false)}>Cancel</button>
-            </div>
-          </div>
-        </div>
       )}
 
 {showWalletOptions && (

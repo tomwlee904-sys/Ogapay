@@ -192,10 +192,11 @@ export default function WithdrawModal({ onClose, onDone, balances: given }: { on
 
   return (
     <Sheet title="Withdraw" onClose={onClose}>
-      <div className="wl-seg" role="group" aria-label="Withdraw to">
-        {ghana && <button type="button" aria-pressed={tab === 'momo'} onClick={() => { setTab('momo'); setAmount(''); setError('') }}>To mobile money</button>}
-        <button type="button" aria-pressed={tab === 'bank'} onClick={() => { setTab('bank'); setAmount(''); setError('') }}>To a bank</button>
-        <button type="button" aria-pressed={tab === 'crypto'} onClick={() => { setTab('crypto'); setAmount(''); setError('') }}>To a crypto wallet</button>
+      {/* Ghana has 3 tabs: one row of 3 (like Campaigns) with short labels so each fits on a phone (2026-11-07) */}
+      <div className="wl-seg" role="group" aria-label="Withdraw to" style={ghana ? { gridTemplateColumns: 'repeat(3, minmax(0, 1fr))' } : undefined}>
+        {ghana && <button type="button" aria-pressed={tab === 'momo'} onClick={() => { setTab('momo'); setAmount(''); setError('') }}>Mobile money</button>}
+        <button type="button" aria-pressed={tab === 'bank'} onClick={() => { setTab('bank'); setAmount(''); setError('') }}>{ghana ? 'Bank' : 'To a bank'}</button>
+        <button type="button" aria-pressed={tab === 'crypto'} onClick={() => { setTab('crypto'); setAmount(''); setError('') }}>{ghana ? 'Crypto' : 'To a crypto wallet'}</button>
       </div>
 
       {tab === 'bank' && (adding || (banks && !banks.length)) ? (
