@@ -1,4 +1,4 @@
-import { API_BASE, getAccessToken } from './api'
+import { API_BASE, getAccessToken, invalidateInFlight } from './api'
 
 interface UploadRoute {
   path: string
@@ -69,6 +69,8 @@ export async function uploadImage(
       body: formData,
       signal: controller.signal,
     })
+    // e.g. a new avatar: a /users/me already on its way has the old one
+    invalidateInFlight()
 
     if (!res.ok) {
       const err = await res.json().catch(() => ({}))

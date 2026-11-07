@@ -6,6 +6,7 @@
   "scripts": {
     "test:blog-links": "node scripts/tests/blogmd.test.cjs && node scripts/tests/blogmd.review.test.cjs && node scripts/tests/blogmd.fuzz.cjs",
     "test:wallet-labels": "node scripts/tests/wallet-labels.test.cjs",
+    "test:share-gets": "node scripts/tests/share-gets.test.cjs",
     "test:convert-usdc": "node scripts/tests/convert-usdc.test.cjs",
     "test:contest-prizes": "node scripts/tests/contest-prizes.test.cjs",
     "test:contest-raise": "node scripts/tests/contest-raise.test.cjs",

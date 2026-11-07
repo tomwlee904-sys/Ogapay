@@ -6,7 +6,7 @@ import FundWalletModal from '../components/FundWalletModal'
 import { itemCategoryLabel } from '../components/ItemCover'
 import { useAuth } from '../context/AuthContext'
 import { useWalletBalance } from '../context/WalletBalanceContext'
-import { API_BASE, apiRequest, getAccessToken } from '../lib/api'
+import { API_BASE, apiRequest, getAccessToken, invalidateInFlight } from '../lib/api'
 import { CURRENCY_SYMBOLS, type Currency } from '../lib/currency'
 import { sized } from '../lib/img'
 import { uploadImage } from '../lib/upload'
@@ -212,6 +212,7 @@ export default function StorePayment() {
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getAccessToken()}` },
           body: JSON.stringify(jobId ? { taskId: jobId } : {}),
         })
+        invalidateInFlight()
         const json = await res.json().catch(() => ({}))
         if (!res.ok) throw new Error(json.message || 'Payment failed. You have not been charged.')
         refresh()

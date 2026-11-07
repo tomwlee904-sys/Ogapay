@@ -5,7 +5,7 @@ import { useCurrency } from '../context/CurrencyContext'
 import { useAuth } from '../context/AuthContext'
 import { SkeletonPage, injectSkeletonStyles } from '../components/SkeletonLoader'
 import { useToast } from '../components/Toast'
-import { API_BASE, apiRequest, getAccessToken } from '../lib/api'
+import { API_BASE, apiRequest, getAccessToken, invalidateInFlight } from '../lib/api'
 import { savedJobIds, setSaved } from '../lib/bookmarks'
 import { jobRequirements, rankName, askHandleLine, UNFOLLOW_RULE } from '../lib/requirements'
 import { BoostedTag, PremiumMark, VerifiedBusinessLine } from '../components/Perks'
@@ -282,6 +282,7 @@ export default function JobDetail() {
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
         body: JSON.stringify({ status: 'APPROVED', ...(rating ? { rating, ...(feedback ? { feedback } : {}) } : {}) }),
       })
+      invalidateInFlight()
       const json = await res.json()
       if (json.success) {
         const apiApprovedAt = json.data?.approvedAt || json.approvedAt
@@ -309,6 +310,7 @@ export default function JobDetail() {
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
         body: JSON.stringify({ posterNotes: reason }),
       })
+      invalidateInFlight()
       const json = await res.json()
       if (json.success) {
         setSubmissions(prev => prev.map(s => s.id === subId ? { ...s, status: 'REJECTED' } : s))

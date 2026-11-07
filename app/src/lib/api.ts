@@ -28,6 +28,9 @@ type ApiOptions = RequestInit & {
   /** Give up after this long (ms). Most requests get 15 s; photo uploads on
    *  slow mobile data need longer (2026-11-01). */
   timeoutMs?: number
+  /** Always send a new request, never join one already on its way (e.g. reading
+   *  the account again right after a change). */
+  fresh?: boolean
 }
 
 export const REQUEST_TIMEOUT_MS = 15000
@@ -202,8 +205,53 @@ export async function refreshAuthSession(): Promise<AuthTokens | null> {
   return refreshInProgress
 }
 
+const urlOf = (path: string) => path.startsWith('http') ? path : `${API_BASE}${path.startsWith('/') ? path : `/${path}`}`
+
+// Identical signed-in GETs asked for at the same moment share one request
+// (2026-11-07): the menu, the providers and the page each asked for /users/me or
+// /wallet/balance at once. Keyed on the address and the token, so two accounts
+// never share. Only plain GETs (no body, headers or other options) join; any other
+// request (a save) empties the table when it starts and ends, so a fresh read
+// after a change never gets an answer that began before it. A joined call uses
+// the first caller's time limit.
+const inFlight = new Map<string, Promise<unknown>>()
+
+// Each caller gets its own copy, so one changing the answer can't change another's
+function copyOf<T>(value: T): T {
+  if (value === null || typeof value !== 'object') return value
+  try { return structuredClone(value) } catch { return JSON.parse(JSON.stringify(value)) }
+}
+
+/** A save sent with a plain fetch (not apiRequest): reads started before it
+ *  must not be shared with reads made after it. */
+export function invalidateInFlight() {
+  inFlight.clear()
+}
+
 export async function apiRequest<T = unknown>(path: string, options: ApiOptions = {}): Promise<T> {
-  const { auth = true, retryOnUnauthorized = true, timeoutMs, headers, ...init } = options
+  const { auth = true, retryOnUnauthorized = true, method, fresh = false, ...rest } = options
+  if ((method || 'GET').toUpperCase() !== 'GET') {
+    inFlight.clear()
+    return sendRequest<T>(path, options).finally(() => inFlight.clear())
+  }
+  const token = auth ? getAccessToken() : null
+  // Signed out, index.html's early answers (lib/early.ts) already cover it
+  if (fresh || !token || Object.keys(rest).some((k) => k !== 'timeoutMs')) return sendRequest<T>(path, options)
+  const key = `${retryOnUnauthorized ? 1 : 0} ${token} ${urlOf(path)}`
+  let pending = inFlight.get(key)
+  if (!pending) {
+    const p = sendRequest<T>(path, options)
+    const drop = () => { if (inFlight.get(key) === p) inFlight.delete(key) }
+    p.then(drop, drop)
+    inFlight.set(key, p)
+    pending = p
+  }
+  return pending.then((v) => copyOf(v as T))
+}
+
+async function sendRequest<T>(path: string, options: ApiOptions): Promise<T> {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { auth = true, retryOnUnauthorized = true, timeoutMs, headers, fresh: _fresh, ...init } = options
   const requestHeaders = new Headers(headers)
 
   if (init.body && !(init.body instanceof FormData)) {
@@ -223,7 +271,7 @@ export async function apiRequest<T = unknown>(path: string, options: ApiOptions 
   const sentToken = auth ? getAccessToken() : null
   if (sentToken) requestHeaders.set('Authorization', `Bearer ${sentToken}`)
 
-  const url = path.startsWith('http') ? path : `${API_BASE}${path.startsWith('/') ? path : `/${path}`}`
+  const url = urlOf(path)
   const controller = new AbortController()
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs && timeoutMs > 0 ? timeoutMs : REQUEST_TIMEOUT_MS)
   let res: Response;

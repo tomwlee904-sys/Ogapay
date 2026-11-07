@@ -14,7 +14,7 @@ import {
   getStoredCurrency,
   storeCurrency,
 } from '../lib/currency'
-import { API_BASE, getAccessToken } from '../lib/api'
+import { API_BASE, apiRequest, getAccessToken, invalidateInFlight } from '../lib/api'
 import { useAuth } from './AuthContext'
 
 interface CurrencyContextValue {
@@ -53,13 +53,10 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
     if (!token) return
     ;(async () => {
       try {
-        const res = await fetch(`${API_BASE}/users/me`, {
-          headers: { Authorization: `Bearer ${token}` },
-        })
-        if (!res.ok) return
-        const json = await res.json()
-        const data = json.data ?? json
-        const p = data.preferences || data
+        // Through apiRequest (2026-11-07): it shares the request when the page asks
+        // for /users/me at the same moment (the dashboard does), and renews the session
+        const data = await apiRequest<any>('/users/me')
+        const p = data?.preferences || data
         // The account's saved display currency wins. Without one, keep what this
         // browser has (it used to fall back to the account's base currency, NGN,
         // and undo a choice made before signing in)
@@ -102,7 +99,7 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getAccessToken()}` },
         body: JSON.stringify({ preferences: { defaultCurrency: c } }),
-      }).catch(() => { /* kept in this browser; saved next time */ })
+      }).then(invalidateInFlight, () => { /* kept in this browser; saved next time */ })
     }, 400)
   }, [rates.GHS, refreshRates])
 
