@@ -24,6 +24,11 @@ export function openSignIn(req: SignInRequest = {}) {
 /** Only allow paths on this site ("/tasks", not "//evil.com" or "https://…") */
 export function safeRedirect(path?: string | null): string | null {
   if (!path || !path.startsWith('/') || path.startsWith('//') || path.startsWith('/\\')) return null
+  // Browsers drop tabs/newlines, so "/<tab>/evil.com" would open evil.com (2026-11-07)
+  if (/[\u0000-\u001f\u007f]/.test(path)) return null
+  try {
+    if (new URL(path, window.location.origin).origin !== window.location.origin) return null
+  } catch { return null }
   if (path.startsWith('/login') || path.startsWith('/pair')) return null
   return path
 }

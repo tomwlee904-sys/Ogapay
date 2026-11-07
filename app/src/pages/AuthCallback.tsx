@@ -3,12 +3,13 @@ import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { API_BASE, persistAuthSession } from "../lib/api";
 import { trackSignUpConversion } from "../lib/ads";
+import { safeRedirect } from "../lib/signin";
 
 // Page the user was heading to before Google (set by the sign-in dialog)
 function afterLogin() {
   const to = sessionStorage.getItem("ogapay_after_login");
   sessionStorage.removeItem("ogapay_after_login");
-  return to && to.startsWith("/") && !to.startsWith("//") ? to : "/dashboard";
+  return safeRedirect(to) || "/dashboard";
 }
 
 export default function AuthCallback() {
