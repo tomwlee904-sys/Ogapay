@@ -27,7 +27,7 @@ type Community = {
 }
 type Ranked = { rank: number; id: string; username: string; firstName: string; lastName: string; avatarUrl: string | null; role: string; level: string; tasksCompleted: number; totalEarned: number | null }
 type Job = { id: string; title: string; reward: number; currency: string; submissionCount?: number; createdAt?: string; completedAt?: string; deadline?: string | null; workers?: { id: string; username: string }[]; membersOnly?: boolean; isContest?: boolean }
-type Msg = { id: string; text: string; createdAt: string; sender: { id: string; username: string; firstName: string; avatarUrl: string | null } }
+type Msg = { id: string; text: string; createdAt: string; senderRole?: string; sender: { id: string; username: string; firstName: string; avatarUrl: string | null } }
 type Req = {
   id: string; message: string | null; attachments: string[]; createdAt: string
   user: { id: string; username: string; firstName: string; lastName: string; avatarUrl: string | null; rank: number; rankName: string; verificationLevel: number; xConnected: boolean; jobsDone: number }
@@ -238,7 +238,7 @@ export default function CommunityDetail() {
         {tab === 'Open jobs' && <Jobs id={c.id} kind="open" cat={cat} />}
         {tab === 'Completed' && <Jobs id={c.id} kind="completed" cat={cat} />}
         {tab === 'Chat' && (isMember
-          ? <Chat id={c.id} meId={me?.id} canModerate={canModerate} />
+          ? <Chat id={c.id} meId={me?.id} myRole={role} />
           : <div className="up-empty"><i className="ti ti-lock" />Only members can read and post in the chat.{!c.hasRequested && !c.banned && <div style={{ marginTop: 12 }}><button className="up-btn primary" onClick={join} disabled={busy}>{c.isPublic ? 'Join to chat' : 'Request to join'}</button></div>}</div>)}
       </div>
     </Layout>
@@ -688,7 +688,11 @@ function Pager({ page, pages, onPage }: { page: number; pages: number; onPage: (
   )
 }
 
-function Chat({ id, meId, canModerate }: { id: string; meId?: string; canModerate: boolean }) {
+// Owner > admin > moderator > member: a leader removes messages from people below them
+const CHAT_RANK = ['OWNER', 'ADMIN', 'MODERATOR', 'MEMBER']
+const chatRank = (r?: string | null) => { const i = CHAT_RANK.indexOf(r || 'MEMBER'); return i < 0 ? 3 : i }
+
+function Chat({ id, meId, myRole }: { id: string; meId?: string; myRole: string | null }) {
   const { toast } = useToast()
   const [msgs, setMsgs] = useState<Msg[] | null>(null)
   const [chatErr, setChatErr] = useState(false)
@@ -730,7 +734,9 @@ function Chat({ id, meId, canModerate }: { id: string; meId?: string; canModerat
     setSending(false)
   }
 
-  // Your own message, or anyone's if you are a leader or moderator (2026-11-08)
+  // Your own message, or one from someone below you if you are the owner, an
+  // admin or a moderator, the same rule the server uses (2026-11-08)
+  const canRemove = (m: Msg) => m.sender.id === meId || (chatRank(myRole) < 3 && chatRank(myRole) < chatRank(m.senderRole))
   const remove = async (m: Msg) => {
     if (!window.confirm(m.sender.id === meId ? 'Delete your message?' : `Remove this message from @${m.sender.username}?`)) return
     try {
@@ -748,7 +754,7 @@ function Chat({ id, meId, canModerate }: { id: string; meId?: string; canModerat
             <Face url={m.sender.avatarUrl} name={m.sender.firstName || m.sender.username} size={30} />
             <div className="cm2-bubble">
               <div className="cm2-msg-h"><Link to={`/user/${m.sender.username}`}>{m.sender.username}</Link><time>{when(m.createdAt)}</time>
-                {(canModerate || m.sender.id === meId) && <button type="button" className="cm2-msg-del" onClick={() => remove(m)} aria-label="Remove message" title="Remove message"><i className="ti ti-trash" /></button>}</div>
+                {canRemove(m) && <button type="button" className="cm2-msg-del" onClick={() => remove(m)} aria-label="Remove message" title="Remove message"><i className="ti ti-trash" /></button>}</div>
               <p>{m.text}</p>
             </div>
           </div>

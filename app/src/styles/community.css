@@ -79,8 +79,9 @@
 .cm2-msg-h a { color: var(--text); font-weight: 700; text-decoration: none; }
 .cm2-msg-h time { color: var(--text3); font-size: 11px; }
 /* Remove a chat message (yours, or anyone's for leaders) (2026-11-08) */
-.cm2-msg-del { margin-left: auto; width: 28px; height: 28px; display: inline-grid; place-items: center; border: 0; border-radius: 8px; background: none; color: var(--text3); cursor: pointer; font-size: 14px; }
-.cm2-msg-del:hover { color: var(--red, #ef4444); background: var(--card); }
+/* 40px tap area; the negative margin keeps the name line its old height (2026-11-08) */
+.cm2-msg-del { margin: -10px -8px -10px auto; width: 40px; height: 40px; display: inline-grid; place-items: center; border: 0; border-radius: 8px; background: none; color: var(--text3); cursor: pointer; font-size: 15px; }
+.cm2-msg-del:hover, .cm2-msg-del:focus-visible { color: var(--red, #ef4444); background: color-mix(in srgb, var(--red, #ef4444) 12%, transparent); }
 .cm2-bubble p { margin: 2px 0 0; font-size: 14px; line-height: 1.45; color: var(--text); white-space: pre-wrap; overflow-wrap: anywhere; }
 .cm2-send { display: flex; gap: 8px; padding: 10px 12px; border-top: 1px solid var(--border); }
 .cm2-send input { flex: 1; min-width: 0; height: 42px; padding: 0 12px; }

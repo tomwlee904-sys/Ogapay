@@ -229,7 +229,7 @@ export default function Communities() {
           <div className="sec-sub">Discover and join communities that match your interests</div>
 
           {loadErr && !loading ? (
-            <div className="ch-empty" role="alert"><i className="ti ti-wifi-off" style={{ fontSize: 32, marginBottom: 8, display: 'block', color: 'var(--text3)' }} />Couldn't load communities. Check your connection. <button className="ch-tab" style={{ marginTop: 12 }} onClick={() => setRetry((n) => n + 1)}>Try again</button></div>
+            <div className="ch-empty" role="alert"><i className="ti ti-wifi-off" style={{ fontSize: 32, marginBottom: 8, display: 'block', color: 'var(--text3)' }} />Couldn't load communities. Check your connection. <button className="ch-tab" style={{ marginTop: 12 }} onClick={() => { setLoadErr(false); setRetry((n) => n + 1) }}>Try again</button></div>
           ) : filtered.length === 0 ? (
             <div className="ch-empty"><i className="ti ti-users" style={{ fontSize: 32, marginBottom: 8, display: 'block', color: 'var(--text3)' }} />{hasJobs ? 'No communities with open jobs match.' : 'No communities found.'} Try a different filter.</div>
           ) : (
