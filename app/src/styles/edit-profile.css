@@ -24,7 +24,8 @@ form .hr-sec + .hr-sec { margin-top: 14px; }
 .ep-bar { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; margin-top: 16px; padding: 12px; background: var(--card); border: 1px solid var(--border); border-radius: 14px; }
 /* Save bar stays in reach at the bottom of the screen, above the phone dock (2026-11-08) */
 .ep-bar { position: sticky; bottom: calc(var(--dock-clear, 0px) + 8px); z-index: 5; box-shadow: 0 6px 24px rgba(0, 0, 0, .08); }
-.ep-bar-hint { flex: 1; min-width: 0; font-size: 13px; color: var(--text3); }
+/* 160px basis: on phones the hint gets its own line instead of a squeezed column (2026-11-08) */
+.ep-bar-hint { flex: 1 1 160px; min-width: 0; font-size: 13px; color: var(--text3); }
 .ep-bar-acts { display: flex; gap: 8px; margin-left: auto; }
 .ep-head { margin: -4px 0 16px; }
 .ep-head p { margin: 4px 0 0; font-size: 14px; color: var(--text2); }

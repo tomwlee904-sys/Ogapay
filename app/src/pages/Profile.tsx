@@ -517,15 +517,14 @@ export default function Profile() {
         pubKey = resp?.publicKey?.toString() || wallet.publicKey?.toString();
       }
       if (!pubKey) throw new Error("No public key");
-      if (hasWallet && pubKey === walletAddress) {
-        toast('This is already your wallet. To change it, switch to another wallet in the app first.', 'error');
-        setConnecting(null);
-        return;
-      }
+      // Signing with the wallet already shown is allowed: many were typed in before
+      // a signature was needed and can't sign in until they're signed once. The
+      // server keeps it and replaces nothing (2026-11-08)
 
+      // purpose 'link': the message names this account and ogapay.app (2026-11-08)
       const nonceRes = await apiRequest<{ nonce: string; message: string }>("/wallet/nonce", {
         method: "POST",
-        body: JSON.stringify({ wallet: pubKey }),
+        body: JSON.stringify({ wallet: pubKey, purpose: 'link' }),
       });
       if (!nonceRes?.nonce) throw new Error("No nonce received");
 
@@ -543,7 +542,9 @@ export default function Profile() {
       await refreshUser()
       await loadProfile()
       setShowWalletOptions(false)
-      toast(res?.replaced || hasWallet ? 'Wallet changed. Your old wallet can no longer sign in.' : 'Wallet connected!')
+      // From the server's answer: signing the same wallet again replaces nothing (2026-11-08)
+      const changed = res && 'replaced' in res ? !!res.replaced : hasWallet && pubKey !== walletAddress
+      toast(changed ? 'Wallet changed. Your old wallet can no longer sign in.' : hasWallet ? 'Wallet confirmed. You can sign in with it.' : 'Wallet connected!')
     } catch (e: any) {
       // A refused signature saves nothing, so the old wallet (if any) still works
       const msg = e?.message || String(e) || "Wallet verification failed";
@@ -898,7 +899,7 @@ export default function Profile() {
                 {/* Why the top bar's Total can be more than Available (2026-11-08) */}
                 {walletBal && (lockedNgn > 0 || otherNgn >= 1) && (
                   <div className="pw-bal-note">
-                    Total {show(totalAll)} = {show(totalNgn)} available{lockedNgn > 0 ? ` + ${show(lockedNgn)} held` : ''}{otherNgn >= 1 ? ` + ${show(otherNgn)} in USDC and SOL` : ''}
+                    Total {show(totalAll)} = {show(totalNgn)} available{lockedNgn > 0 ? ` + ${show(lockedNgn)} held` : ''}{otherNgn >= 1 ? ` + ${show(otherNgn)} in USDC, USDT and SOL` : ''}
                   </div>
                 )}
 

@@ -70,7 +70,7 @@ export default function ProfileWithdrawalsCard({ onWithdraw }: { onWithdraw?: ()
       ) : rows.length === 0 ? (
         <div className="pf-wd-empty">
           <i className="ti ti-history-off" />
-          <div>No withdrawals yet. When you withdraw to your bank, each one shows here with where it stands.</div>
+          <div>No withdrawals yet. When you withdraw, each one shows here with where it stands.</div>
           {onWithdraw && (
             <div className="pf-wd-cta">
               <button type="button" className="pf-wd-more-btn" onClick={onWithdraw}>Withdraw</button>
