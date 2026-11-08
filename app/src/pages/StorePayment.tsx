@@ -245,13 +245,25 @@ export default function StorePayment() {
     setChecking(true)
     refresh()
     try {
-      if (!item.official) {
-        const list = await apiRequest<{ id: string; createdAt: string; conversationId: string | null; product: { id: string } }[]>('/store/my-purchases', { fresh: true })
-        // Two minutes' slack for a phone clock that's a little off
-        const placed = (Array.isArray(list) ? list : []).find((o) => o.product?.id === item.id && new Date(o.createdAt).getTime() >= startedAt - 120000)
-        if (placed) { await finish(placed); return }
+      // 2026-11-08: ask for the order this tap's key made, so an earlier order of
+      // the same product is never shown as if this one worked
+      const hit = await apiRequest<{ found: boolean; id?: string; itemId?: string; conversationId?: string | null; perk?: { taskId?: string | null } | null }>(
+        `/store/my-purchases/by-key/${encodeURIComponent(purchaseKey.current)}`, { fresh: true })
+      if (hit?.found && hit.id && hit.itemId === item.id) {
+        if (item.official) { refresh(); setChecking(false); setDone({ message: 'Done. It has taken effect.', taskId: hit.perk?.taskId || undefined }); return }
+        await finish({ id: hit.id, conversationId: hit.conversationId }); return
       }
-    } catch { /* still unknown: say so below */ }
+    } catch (e: any) {
+      // An older server without that lookup: look for a new order of this product
+      if (e?.status === 404 && !item.official) {
+        try {
+          const list = await apiRequest<{ id: string; createdAt: string; conversationId: string | null; product: { id: string } }[]>('/store/my-purchases', { fresh: true })
+          // Two minutes' slack for a phone clock that's a little off
+          const placed = (Array.isArray(list) ? list : []).find((o) => o.product?.id === item.id && new Date(o.createdAt).getTime() >= startedAt - 120000)
+          if (placed) { await finish(placed); return }
+        } catch { /* still unknown: say so below */ }
+      }
+    }
     setChecking(false)
     setPaying(false)
     // The same key goes with the next tap, so trying again can't charge twice

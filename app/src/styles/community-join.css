@@ -97,4 +97,11 @@
 }
 
 @media (max-width: 767px) { .cm2-req { flex-wrap: wrap; } }
+/* Leaders' Members tab (2026-11-08): on phones the role select takes its own
+   line and Remove / Remove and ban share the next, so nothing runs off the card */
+@media (max-width: 767px) {
+  .cm2-member-btns { flex-wrap: wrap; }
+  .cm2-member-btns select { flex: 1 1 100%; width: 100% !important; }
+  .cm2-member-btns .up-btn { min-width: 0; padding-left: 10px; padding-right: 10px; }
+}
 .cj-req-btns { margin-left: auto; }

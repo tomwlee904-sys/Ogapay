@@ -140,7 +140,7 @@ export default function CreateCommunity() {
         .cc-field textarea{min-height:100px;resize:vertical}
         .cc-field select{cursor:pointer}
         .cc-colors{display:flex;gap:8px;flex-wrap:wrap}
-        .cc-color{width:36px;height:36px;border-radius:50%;border:3px solid transparent;cursor:pointer;transition:all .15s}
+        .cc-color{width:36px;height:36px;border-radius:50%;border:3px solid transparent;box-shadow:inset 0 0 0 1px var(--border);cursor:pointer;transition:all .15s}
         .cc-color:hover{transform:scale(1.1)}
         .cc-color.active{border-color:var(--text)}
         .cc-toggle{display:flex;gap:8px}

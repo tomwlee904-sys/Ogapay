@@ -237,6 +237,11 @@ export default function StoreProduct() {
   }, [])
 
   useEffect(() => { fetchProduct() }, [fetchProduct])
+  // Another product in the same page: its own review form, no thank-you from the
+  // last one (2026-11-08)
+  useEffect(() => {
+    setReviewDone(false); setReviewError(''); setReviewRating(0); setReviewComment('')
+  }, [id])
   // OgaPay's own items have no member behind them: "OgaPay" here is not a username
   // to look up (anyone could register it) (2026-11-08)
   useEffect(() => {

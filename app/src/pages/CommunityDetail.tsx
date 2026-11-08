@@ -23,7 +23,7 @@ type Community = {
   id: string; slug: string; name: string; description: string | null; iconUrl: string | null; coverImage: string | null
   accentColor: string | null; category: string | null; isPublic: boolean; owner: { id: string; username: string; firstName: string; lastName: string; avatarUrl: string | null }
   twitter: string; telegram: string; discord: string; memberCount: number; requestCount: number; recentMembers: Member[]
-  userRole: string | null; hasRequested: boolean; hasEntryTask?: boolean; hasJoinRequirements?: boolean; openJobCount: number; completedJobCount: number; createdAt: string
+  userRole: string | null; hasRequested: boolean; banned?: boolean; hasEntryTask?: boolean; hasJoinRequirements?: boolean; openJobCount: number; completedJobCount: number; createdAt: string
 }
 type Ranked = { rank: number; id: string; username: string; firstName: string; lastName: string; avatarUrl: string | null; role: string; level: string; tasksCompleted: number; totalEarned: number | null }
 type Job = { id: string; title: string; reward: number; currency: string; submissionCount?: number; createdAt?: string; completedAt?: string; deadline?: string | null; workers?: { id: string; username: string }[]; membersOnly?: boolean; isContest?: boolean }
@@ -171,6 +171,9 @@ export default function CommunityDetail() {
               <button className="up-btn" onClick={share} aria-label="Copy link"><i className="ti ti-link" /></button>
               {isMember ? (
                 role === 'OWNER' ? <span className="cm2-badge">You own this</span> : <button className="up-btn" onClick={leave} disabled={busy}>Leave</button>
+              ) : c.banned ? (
+                // 2026-11-08: removed and banned by its leaders, so no Join button
+                <span className="cm2-badge">You can't join</span>
               ) : c.hasRequested ? (
                 <Link className="up-btn" to={`/communities/${c.slug}/request`}>Request sent</Link>
               ) : (
@@ -217,7 +220,7 @@ export default function CommunityDetail() {
         {tab === 'Completed' && <Jobs id={c.id} kind="completed" cat={cat} />}
         {tab === 'Chat' && (isMember
           ? <Chat id={c.id} meId={me?.id} />
-          : <div className="up-empty"><i className="ti ti-lock" />Only members can read and post in the chat.{!c.hasRequested && <div style={{ marginTop: 12 }}><button className="up-btn primary" onClick={join} disabled={busy}>{c.isPublic ? 'Join to chat' : 'Request to join'}</button></div>}</div>)}
+          : <div className="up-empty"><i className="ti ti-lock" />Only members can read and post in the chat.{!c.hasRequested && !c.banned && <div style={{ marginTop: 12 }}><button className="up-btn primary" onClick={join} disabled={busy}>{c.isPublic ? 'Join to chat' : 'Request to join'}</button></div>}</div>)}
       </div>
     </Layout>
   )
@@ -342,8 +345,10 @@ function Members({ c, myRole, meId, onChange }: { c: Community; myRole: string; 
                   </div>
                 </div>
                 {canManage(m) && (
-                  <div className="cj-req-btns">
-                    <select className="cj-in" style={{ width: 'auto', padding: '6px 10px', fontSize: 14 }} aria-label={`Role for @${m.username}`} value={m.role} disabled={!!busy}
+                  // 2026-11-08: wraps on phones (select on its own line); the select keeps
+                  // .cj-in's 16px text so iPhones don't zoom in
+                  <div className="cj-req-btns cm2-member-btns">
+                    <select className="cj-in" style={{ width: 'auto', padding: '6px 10px' }} aria-label={`Role for @${m.username}`} value={m.role} disabled={!!busy}
                       onChange={(e) => setRole(m, e.target.value as 'ADMIN' | 'MODERATOR' | 'MEMBER')}>
                       <option value="MEMBER">Member</option>
                       <option value="MODERATOR">Moderator</option>

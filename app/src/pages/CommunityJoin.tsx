@@ -106,8 +106,10 @@ export default function CommunityJoin() {
     if (!d || busy) return
     setBusy('Joining…')
     try {
-      await apiRequest(`/communities/${d.id}/join`, { method: 'POST' })
-      toast(`You joined ${d.name}`, 'success')
+      // 2026-11-08: the community may have turned private or added an entry task
+      // since the page loaded; then the server only sends a request (joined: false)
+      const r = await apiRequest<{ joined?: boolean }>(`/communities/${d.id}/join`, { method: 'POST' })
+      toast(r?.joined === false ? 'Request sent. The leaders will review it.' : `You joined ${d.name}`, 'success')
       load()
     } catch (e: any) { toast(e?.message || "Couldn't join", 'error') }
     setBusy('')

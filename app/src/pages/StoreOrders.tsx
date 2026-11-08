@@ -43,9 +43,11 @@ export function orderBadge(o: StoreOrder): { label: string; cls: string } {
   }
 }
 
-// A finished order the buyer can rate: paid to the seller and the product still
-// listed. The product page checks again (canReview) before it shows the form (2026-11-08)
-export const canReviewOrder = (o: StoreOrder) => o.status === 'COMPLETED' && !!o.releasedAt && o.product.available !== false
+// A finished order the buyer can rate: paid to the seller (or an older order paid
+// at purchase, not refunded) and the product still listed. Same rule as the
+// server; the product page checks again (canReview) before it shows the form (2026-11-08)
+export const canReviewOrder = (o: StoreOrder) =>
+  (o.status === 'COMPLETED' || (!o.protected && o.status !== 'CANCELLED')) && o.product.available !== false
 
 const isOpen = (o: StoreOrder) => o.held || o.status === 'PENDING' || o.status === 'IN_PROGRESS'
 

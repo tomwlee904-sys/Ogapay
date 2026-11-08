@@ -30,7 +30,8 @@ export default function StarRating({ rating, size = 14, interactive, onChange }:
               cursor: interactive ? 'pointer' : 'default',
               padding: interactive ? 4 : 0,
               fontSize: size,
-              color: filled ? '#f5b301' : 'var(--border)',
+              // 2026-11-08: empty stars in --text3; --border hardly showed (dark mode most)
+              color: filled ? '#f5b301' : 'var(--text3)',
               transition: 'color .1s',
               lineHeight: 1,
             }}
