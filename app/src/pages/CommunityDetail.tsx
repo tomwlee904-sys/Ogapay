@@ -10,6 +10,7 @@ import '../styles/community.css'
 import '../styles/community-join.css'
 import { sized } from '../lib/img'
 import { useMoney } from '../lib/useMoney'
+import { listMembers, changeRole, removeMember, banMember, listBans, unban, type CommunityMemberRow, type CommunityBan } from '../lib/communityMembers'
 
 // Community page, ported from the June version (leaderboard, open and completed
 // jobs, members-only chat, owner settings) onto the current design. Joining a
@@ -36,10 +37,11 @@ type Code = { id: string; code: string; maxUses: number | null; uses: number; ex
 const RANKS = ['Anyone', 'Beginner', 'Intermediate', 'Advanced', 'Expert', 'Legend']
 const fileName = (u: string) => { try { return decodeURIComponent(new URL(u).pathname.split('/').pop() || 'file').replace(/^\d+-/, '') } catch { return 'file' } }
 
-const TABS = ['About', 'Leaderboard', 'Open jobs', 'Completed', 'Chat'] as const
+// Members: leaders only (owner and admins) (2026-11-08)
+const TABS = ['About', 'Leaderboard', 'Open jobs', 'Completed', 'Chat', 'Members'] as const
 type Tab = (typeof TABS)[number]
 const initials = (s: string) => s.split(/\s+/).map((w) => w[0]).join('').toUpperCase().slice(0, 2) || '?'
-const fullName = (u: { firstName?: string; lastName?: string; username?: string }) => `${u.firstName || ''} ${u.lastName || ''}`.trim() || u.username || 'Member'
+const fullName = (u: { firstName?: string | null; lastName?: string | null; username?: string }) => `${u.firstName || ''} ${u.lastName || ''}`.trim() || u.username || 'Member'
 const safeLink = (u?: string) => (u && /^https:\/\//i.test(u) ? u : '')
 const roleLabel = (r: string) => (r === 'OWNER' ? 'Owner' : r === 'ADMIN' ? 'Admin' : r === 'MODERATOR' ? 'Moderator' : '')
 const when = (d: string) => new Date(d).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
@@ -87,10 +89,15 @@ export default function CommunityDetail() {
     if (!invite || busy) return
     setBusy(true)
     try {
-      await apiRequest('/communities/invites/' + invite.id, { method: 'PATCH', body: JSON.stringify({ action }) })
+      const r = await apiRequest<any>('/communities/invites/' + invite.id, { method: 'PATCH', body: JSON.stringify({ action }) })
       setInvite(null)
-      if (action === 'accept') { toast('You joined ' + c!.name, 'success'); load() }
-    } catch (e: any) { toast(e?.message || 'Something went wrong', 'error') }
+      // A member's invite can go to the leaders for review instead of joining (2026-11-08)
+      if (action === 'accept') { toast(r?.joined === false ? `Request sent. The leaders of ${c!.name} will review it.` : 'You joined ' + c!.name, 'success'); load() }
+    } catch (e: any) {
+      // Say why (e.g. you don't meet the requirements yet); an expired or answered invite goes
+      toast(e?.message || 'Something went wrong', 'error')
+      if (e?.status === 409) setInvite(null)
+    }
     setBusy(false)
   }
 
@@ -189,7 +196,7 @@ export default function CommunityDetail() {
 
         <div className="up-tabs-row">
           <div className="up-tabs" role="tablist">
-            {TABS.map((t) => (
+            {TABS.filter((t) => t !== 'Members' || isLeader).map((t) => (
               <button key={t} role="tab" aria-selected={tab === t} className={`up-tab${tab === t ? ' on' : ''}`} onClick={() => setTab(t)}>
                 {t}{t === 'Open jobs' && <em>{c.openJobCount}</em>}{t === 'Chat' && !isMember && <i className="ti ti-lock" />}
               </button>
@@ -199,6 +206,7 @@ export default function CommunityDetail() {
 
         {tab === 'About' && <About c={c} isMember={isMember} isLeader={isLeader} canModerate={canModerate} role={role} onChange={load} />}
         {tab === 'Leaderboard' && <Leaderboard id={c.id} />}
+        {tab === 'Members' && isLeader && <Members c={c} myRole={role!} meId={me?.id} onChange={load} />}
         {tab === 'Open jobs' && (role === 'OWNER' || role === 'ADMIN') && (
           <div className="cm2-post">
             <span>Post a job only your members can take.</span>
@@ -270,6 +278,109 @@ function About({ c, isMember, isLeader, canModerate, role, onChange }: { c: Comm
       {isLeader && <JoinRules c={c} onSaved={onChange} />}
       {isLeader && <InviteCodes c={c} />}
       {isLeader && <Settings c={c} isOwner={role === 'OWNER'} onSaved={onChange} />}
+    </div>
+  )
+}
+
+// Leaders' members list: change a role, remove, or remove and ban (a banned
+// person can't join, ask or be invited again until a leader lifts the ban).
+// Nobody changes the owner; only the owner makes, changes or removes an admin (2026-11-08)
+const ROLE_NAMES: Record<string, string> = { OWNER: 'Owner', ADMIN: 'Admin', MODERATOR: 'Moderator', MEMBER: 'Member' }
+function Members({ c, myRole, meId, onChange }: { c: Community; myRole: string; meId?: string; onChange: () => void }) {
+  const { toast } = useToast()
+  const [list, setList] = useState<CommunityMemberRow[] | null>(null)
+  const [failed, setFailed] = useState(false)
+  const [bans, setBans] = useState<CommunityBan[]>([])
+  const [busy, setBusy] = useState('')
+  const isOwner = myRole === 'OWNER'
+  const load = () => {
+    setFailed(false)
+    listMembers(c.id).then((d) => setList(Array.isArray(d) ? d : [])).catch(() => { setList(null); setFailed(true) })
+    listBans(c.id).then((d) => setBans(Array.isArray(d) ? d : [])).catch(() => setBans([]))
+  }
+  useEffect(load, [c.id])
+
+  const canManage = (m: CommunityMemberRow) => m.role !== 'OWNER' && m.userId !== meId && (isOwner || m.role !== 'ADMIN')
+  const run = async (key: string, fn: () => Promise<unknown>, done: string) => {
+    if (busy) return
+    setBusy(key)
+    try { await fn(); toast(done, 'success'); load(); onChange() } catch (e: any) { toast(e?.message || 'Something went wrong', 'error'); load() }
+    setBusy('')
+  }
+  const setRole = (m: CommunityMemberRow, role: 'ADMIN' | 'MODERATOR' | 'MEMBER') =>
+    run(m.id, () => changeRole(c.id, m.id, role), `@${m.username} is now ${role === 'MEMBER' ? 'a member' : `a ${ROLE_NAMES[role].toLowerCase()}`}`)
+  const remove = (m: CommunityMemberRow) => {
+    if (!window.confirm(`Remove @${m.username} from ${c.name}? They can join again later.`)) return
+    run(m.id, () => removeMember(c.id, m.id), `@${m.username} was removed`)
+  }
+  const ban = (m: CommunityMemberRow) => {
+    if (!window.confirm(`Remove and ban @${m.username}? They can't join, ask to join or be invited again until you lift the ban.`)) return
+    run(m.id, () => banMember(c.id, m.id), `@${m.username} was removed and banned`)
+  }
+  const lift = (b: CommunityBan) => {
+    if (!window.confirm(`Lift the ban on @${b.username}? They can join or be invited again.`)) return
+    run('ban-' + b.userId, () => unban(c.id, b.userId), `Ban lifted for @${b.username}`)
+  }
+
+  return (
+    <div className="cm2-about">
+      <section className="up-card up-about">
+        <h2>Members{list ? ` (${list.length})` : ''}</h2>
+        <p className="cm2-muted" style={{ marginTop: 0 }}>Moderators can review join requests. Admins can also post members-only jobs, make invite codes and manage members{isOwner ? '' : ' (only the owner can make admins)'}.</p>
+        {failed ? (
+          <p className="cm2-muted">We couldn't load the members. <button className="up-btn" onClick={load}>Try again</button></p>
+        ) : list === null ? <p className="cm2-muted">Loading…</p> : list.length === 0 ? <p className="cm2-muted">No members yet.</p> : (
+          <div className="cm2-list">
+            {list.map((m) => (
+              <div key={m.id} className="cm2-req">
+                <Face url={m.avatarUrl} name={fullName(m)} />
+                <div className="cm2-req-t">
+                  <Link to={`/user/${m.username}`}><strong>{fullName(m)}</strong></Link> <span className="cm2-muted">@{m.username}</span>
+                  <div className="cj-req-meta">
+                    <span>{ROLE_NAMES[m.role] || m.role}</span>
+                    <span>Joined {new Date(m.joinedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                  </div>
+                </div>
+                {canManage(m) && (
+                  <div className="cj-req-btns">
+                    <select className="cj-in" style={{ width: 'auto', padding: '6px 10px', fontSize: 14 }} aria-label={`Role for @${m.username}`} value={m.role} disabled={!!busy}
+                      onChange={(e) => setRole(m, e.target.value as 'ADMIN' | 'MODERATOR' | 'MEMBER')}>
+                      <option value="MEMBER">Member</option>
+                      <option value="MODERATOR">Moderator</option>
+                      {(isOwner || m.role === 'ADMIN') && <option value="ADMIN">Admin</option>}
+                    </select>
+                    <button className="up-btn" onClick={() => remove(m)} disabled={!!busy}>Remove</button>
+                    <button className="up-btn" onClick={() => ban(m)} disabled={!!busy}>Remove and ban</button>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {bans.length > 0 && (
+        <section className="up-card up-about">
+          <h2>Banned ({bans.length})</h2>
+          <div className="cm2-list">
+            {bans.map((b) => (
+              <div key={b.userId} className="cm2-req">
+                <Face url={b.avatarUrl} name={fullName(b)} />
+                <div className="cm2-req-t">
+                  <Link to={`/user/${b.username}`}><strong>{fullName(b)}</strong></Link> <span className="cm2-muted">@{b.username}</span>
+                  <div className="cj-req-meta">
+                    {b.bannedAt && <span>Banned {new Date(b.bannedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span>}
+                    {b.bannedBy?.username && <span>by @{b.bannedBy.username}</span>}
+                  </div>
+                </div>
+                <div className="cj-req-btns">
+                  <button className="up-btn" onClick={() => lift(b)} disabled={!!busy}>Lift ban</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   )
 }

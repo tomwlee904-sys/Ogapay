@@ -3,14 +3,21 @@ import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import Layout from '../components/Layout'
 import { uploadImage } from '../lib/upload'
-import { API_BASE, apiRequest } from '../lib/api'
+import { apiRequest } from '../lib/api'
+import { useMoney } from '../lib/useMoney'
+import { useToast } from '../components/Toast'
 
+// Same rank names as the leaders' Join rules (0 = anyone), so the saved value matches (2026-11-08)
+const RANKS = ['Anyone', 'Beginner', 'Intermediate', 'Advanced', 'Expert', 'Legend']
 const CATEGORIES = ['Crypto', 'Business', 'Content', 'Design', 'Marketing', 'Technology', 'Gaming', 'Education', 'Social', 'Other']
-const PRESET_COLORS = ['#7C3AED', 'var(--accent)', '#EC4899', '#22C55E', '#F59E0B', '#EF4444', '#06B6D4', '#8B5CF6']
+// Real hex colours only: the server drops anything else and saves purple (2026-11-08)
+const PRESET_COLORS = ['#7C3AED', '#0A0A0A', '#EC4899', '#22C55E', '#F59E0B', '#EF4444', '#06B6D4', '#8B5CF6']
 
 export default function CreateCommunity() {
   const navigate = useNavigate()
   const { user: authUser } = useAuth()
+  const { toast } = useToast()
+  const show = useMoney()
 
   const [form, setForm] = useState({
     name: '',
@@ -32,11 +39,18 @@ export default function CreateCommunity() {
   const fileRef = useRef<HTMLInputElement>(null)
   // Creating a community costs ₦500 from your naira wallet (free for admins).
   // Shown before you create; nothing is charged if creating fails.
+  // A failed lookup is "unknown", not "free": Create stays off until the fee loads (2026-11-08)
   const [fee, setFee] = useState<{ fee: number; available: number; canPay: boolean } | null>(null)
-  useEffect(() => {
-    apiRequest<{ fee: number; available: number; canPay: boolean }>('/communities/create/fee').then(setFee).catch(() => setFee(null))
-  }, [])
-  const feeText = (n: number) => '₦' + n.toLocaleString('en-NG', { maximumFractionDigits: 2 })
+  const [feeState, setFeeState] = useState<'loading' | 'ok' | 'error'>('loading')
+  const loadFee = () => {
+    setFeeState('loading')
+    apiRequest<{ fee: number; available: number; canPay: boolean }>('/communities/create/fee', { fresh: true })
+      .then((d) => { setFee(d); setFeeState('ok') })
+      .catch(() => { setFee(null); setFeeState('error') })
+  }
+  useEffect(loadFee, [])
+  // Exact, in the member's display currency (cedis for Ghana); the charge is in naira
+  const feeText = (n: number) => show(n, 'NGN', { exact: true })
 
   const update = (field: string, value: any) => setForm(prev => ({ ...prev, [field]: value }))
 
@@ -48,41 +62,47 @@ export default function CreateCommunity() {
       setError('Community name must be at least 2 characters')
       return
     }
-    if (fee && fee.fee > 0 && !window.confirm(`Create "${form.name.trim()}"? ${feeText(fee.fee)} will be taken from your naira wallet.`)) return
+    if (feeState !== 'ok' || !fee) { setError("We couldn't load the fee yet. Tap Try again."); return }
+    if (fee.fee > 0 && !window.confirm(`Create "${form.name.trim()}"? ${feeText(fee.fee)} will be taken from your naira wallet.`)) return
 
-    const token = localStorage.getItem('ogapay_access_token')
-    if (!token) { navigate('/login'); return }
+    if (!localStorage.getItem('ogapay_access_token')) { navigate('/login'); return }
 
     setSubmitting(true)
     try {
-      // Build requirements array
-      const requirements = []
-      if (form.minRank) requirements.push('Minimum rank: ' + form.minRank)
-      if (form.minTasks) requirements.push('Min tasks: ' + form.minTasks)
-      if (form.requireKyc) requirements.push('KYC verified')
-      const body = { ...form, requirements }
-      const res = await fetch(API_BASE + '/communities', {
+      // The entry requirements go with the create call and are saved with it
+      // (same names as Join rules); they used to be thrown away (2026-11-08)
+      const rules = { minRank: Number(form.minRank) || 0, minJobsDone: Number(form.minTasks) || 0, requiresKyc: form.requireKyc }
+      const created = await apiRequest<any>('/communities', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + token,
-        },
-        body: JSON.stringify(body),
+        timeoutMs: 30000,
+        body: JSON.stringify({
+          name: form.name, description: form.description, category: form.category, accentColor: form.accentColor,
+          isPublic: form.isPublic, twitter: form.twitter, telegram: form.telegram, discord: form.discord, ...rules,
+          // The fee shown: the server refuses (FEE_CHANGED) instead of charging a different one
+          expectedFee: fee.fee,
+        }),
       })
-      const json = await res.json()
-      if (!res.ok) throw new Error(json.error || json.message || 'Failed to create community')
-      const communityId = json.data?.id
+      const communityId = created?.id
+      // An older server ignores them on create: save them the usual way then
+      if (communityId && (rules.minRank || rules.minJobsDone || rules.requiresKyc)
+        && (Number(created.joinMinRank || 0) !== rules.minRank || Number(created.joinMinJobs || 0) !== rules.minJobsDone || !!created.joinRequiresKyc !== rules.requiresKyc)) {
+        await apiRequest(`/communities/${communityId}/join-settings`, { method: 'PATCH', body: JSON.stringify(rules) })
+          .catch(() => toast("Community created, but the entry requirements didn't save. Set them again in Join rules.", 'error'))
+      }
+      // Say what was charged (the server's real amount, not the page's guess)
+      const charged = Number(created?.feeCharged) || 0
+      toast(charged > 0 ? `Community created. ${feeText(charged)} was taken from your naira wallet.` : 'Community created', 'success')
       if (coverImage && communityId) {
+        // A cover that fails is said, not hidden (the community is made and paid for already)
+        let coverOk = false
         try {
           const coverUrl = await uploadImage(coverImage, 'community-covers')
           if (coverUrl) {
-            await fetch(API_BASE + '/communities/' + communityId + '/cover', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-              body: JSON.stringify({ coverUrl }),
-            })
+            await apiRequest(`/communities/${communityId}/cover`, { method: 'POST', body: JSON.stringify({ coverUrl }) })
+            coverOk = true
           }
         } catch (e: any) { console.error(e) }
+        if (!coverOk) toast("Your cover picture didn't upload. Use a JPG, PNG or WebP picture and add it in Settings.", 'error')
       }
       if (communityId) {
         navigate('/communities/' + communityId)
@@ -90,7 +110,15 @@ export default function CreateCommunity() {
         navigate('/communities')
       }
     } catch (err: any) {
-      setError(err.message)
+      if (err?.code === 'FEE_CHANGED') {
+        setError('The fee changed. Please check it again.')
+        loadFee()
+        return
+      }
+      // No answer is not "it failed": the community may exist and be paid for, so don't invite a blind second try
+      setError(/timed out|failed to fetch|network/i.test(err?.message || '')
+        ? "We couldn't confirm it. Check My communities before you try again, so you don't pay twice."
+        : err?.message || "Couldn't create the community")
     } finally {
       setSubmitting(false)
     }
@@ -126,6 +154,7 @@ export default function CreateCommunity() {
         .cc-fee i{font-size:18px;color:var(--text2);margin-top:1px}
         .cc-fee div{display:flex;flex-direction:column;gap:2px}
         .cc-fee span{color:var(--text2)}
+        .cc-retry{align-self:flex-start;border:0;background:none;padding:0;font:inherit;color:var(--text);font-weight:600;text-decoration:underline;min-height:32px;cursor:pointer}
         .cc-fee a{color:var(--text);font-weight:600;text-decoration:underline;min-height:32px;display:inline-flex;align-items:center}
       `}</style>
 
@@ -187,7 +216,7 @@ export default function CreateCommunity() {
 
             <div className="cc-field">
               <label>Cover Image (optional)</label>
-              <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={e => {
+              <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" style={{ display: 'none' }} onChange={e => {
                 const file = e.target.files?.[0] || null
                 setCoverImage(file)
                 setCoverPreview(file ? URL.createObjectURL(file) : null)
@@ -247,12 +276,7 @@ export default function CreateCommunity() {
                   <span style={{fontSize:13}}>Minimum OgaPay Rank</span>
                   <select value={form.minRank} onChange={e => update('minRank', e.target.value)}
                     style={{border:'1px solid var(--border)',borderRadius:6,padding:'4px 8px',background:'var(--card)',color:'var(--text)',fontSize:12}}>
-                    <option value="">None</option>
-                    <option value="1">Rank 1+</option>
-                    <option value="2">Rank 2+</option>
-                    <option value="3">Rank 3+</option>
-                    <option value="4">Rank 4+</option>
-                    <option value="5">Rank 5+</option>
+                    {RANKS.map((r, i) => <option key={r} value={i === 0 ? '' : String(i)}>{i === 0 ? r : `${r} or higher`}</option>)}
                   </select>
                 </div>
                 <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'10px 14px',border:'1.5px solid var(--border)',borderRadius:10,background:'var(--bg)'}}>
@@ -267,13 +291,24 @@ export default function CreateCommunity() {
                   </select>
                 </div>
                 <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'10px 14px',border:'1.5px solid var(--border)',borderRadius:10,background:'var(--bg)'}}>
-                  <span style={{fontSize:13}}>KYC Verified required</span>
+                  <span style={{fontSize:13}}>Level 1 verification (KYC) required</span>
                   <input type="checkbox" checked={form.requireKyc} onChange={e => update('requireKyc', e.target.checked)}
                     style={{width:18,height:18,cursor:'pointer'}} />
                 </div>
               </div>
             </div>
-            {fee && fee.fee > 0 && (
+            {feeState === 'loading' && <div className="cc-fee" role="status"><i className="ti ti-loader" aria-hidden="true" /><div><span>Checking the fee…</span></div></div>}
+            {feeState === 'error' && (
+              <div className="cc-fee" role="alert">
+                <i className="ti ti-alert-circle" aria-hidden="true" />
+                <div>
+                  <b>We couldn't load the fee</b>
+                  <span>Creating a community may cost money, so you can create it once we know the fee.</span>
+                  <button type="button" className="cc-retry" onClick={loadFee}>Try again</button>
+                </div>
+              </div>
+            )}
+            {feeState === 'ok' && fee && fee.fee > 0 && (
               <div className="cc-fee" role="note">
                 <i className="ti ti-receipt" aria-hidden="true" />
                 <div>
@@ -283,7 +318,7 @@ export default function CreateCommunity() {
                 </div>
               </div>
             )}
-            <button type="submit" className="cc-submit" disabled={submitting || (!!fee && !fee.canPay)}>
+            <button type="submit" className="cc-submit" disabled={submitting || feeState !== 'ok' || !fee || !fee.canPay}>
               {submitting ? <><i className="ti ti-loader" style={{ animation: 'spin 1s linear infinite' }} /> Creating...</> : <><i className="ti ti-users" /> {fee && fee.fee > 0 ? `Pay ${feeText(fee.fee)} and create` : 'Create Community'}</>}
             </button>
           </form>

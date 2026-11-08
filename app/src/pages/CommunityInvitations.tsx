@@ -24,16 +24,19 @@ export default function CommunityInvitations() {
   const { toast } = useToast()
   const [list, setList] = useState<Invite[] | null>(null)
   const [busy, setBusy] = useState('')
+  const [failed, setFailed] = useState(false)
 
-  const load = () => apiRequest<Invite[]>('/communities/invites/mine').then((d) => setList(d || [])).catch(() => setList([]))
+  // A failed load says so (it used to look like "No invitations") (2026-11-08)
+  const load = () => { setFailed(false); return apiRequest<Invite[]>('/communities/invites/mine', { fresh: true }).then((d) => setList(d || [])).catch(() => { setList([]); setFailed(true) }) }
   useEffect(() => { load() }, [])
 
   const answer = async (inv: Invite, action: 'accept' | 'decline') => {
     if (busy) return
     setBusy(inv.id)
     try {
-      await apiRequest('/communities/invites/' + inv.id, { method: 'PATCH', body: JSON.stringify({ action }) })
-      if (action === 'accept') { toast(`You joined ${inv.community.name}`, 'success'); navigate(`/communities/${inv.community.slug}`); return }
+      const r = await apiRequest<any>('/communities/invites/' + inv.id, { method: 'PATCH', body: JSON.stringify({ action }) })
+      // A member's invite can go to the leaders for review instead of joining (2026-11-08)
+      if (action === 'accept') { toast(r?.joined === false ? `Request sent. The leaders of ${inv.community.name} will review it.` : `You joined ${inv.community.name}`, 'success'); navigate(`/communities/${inv.community.slug}`); return }
       setList((l) => (l || []).filter((x) => x.id !== inv.id))
       toast('Invitation declined', 'success')
     } catch (e: any) { toast(e?.message || 'Something went wrong', 'error'); load() }
@@ -47,9 +50,11 @@ export default function CommunityInvitations() {
         <header className="cj-head">
           <span className="cj-kicker">Communities</span>
           <h1 className="cj-title">Your invitations</h1>
-          <p className="cj-lead">Invites from community leaders sent to your account.</p>
+          <p className="cj-lead">Community invites sent to your account.</p>
         </header>
-        {list === null ? <div className="up-empty"><i className="ti ti-loader-2" />Loading…</div> : list.length === 0 ? (
+        {list === null ? <div className="up-empty"><i className="ti ti-loader-2" />Loading…</div> : failed ? (
+          <div className="up-empty"><i className="ti ti-alert-circle" />We couldn't load your invitations.<div style={{ marginTop: 12 }}><button className="up-btn" onClick={() => load()}>Try again</button></div></div>
+        ) : list.length === 0 ? (
           <div className="up-empty"><i className="ti ti-mail" />No invitations right now.<div style={{ marginTop: 12 }}><Link className="up-btn" to="/communities">Browse communities</Link></div></div>
         ) : (
           <section className="up-card cj-card cj-invites">

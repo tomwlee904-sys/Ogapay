@@ -21,6 +21,8 @@ type JoinInfo = {
   signedIn: boolean; userRole: string | null
   request: { id: string; status: string; createdAt: string } | null
   missing: string[]; eligible: boolean | null
+  // Public with no entry task: joins at once, no leader review; banned: its leaders removed you (2026-11-08)
+  canJoinDirectly?: boolean; banned?: boolean
 }
 
 const ACCEPT = '.png,.jpg,.jpeg,.mp3,.wav,.m4a,.ogg,.aac,.mp4,.mov,.webm,.pdf,.txt,.csv,.md'
@@ -96,6 +98,21 @@ export default function CommunityJoin() {
     setBusy('')
   }
 
+  // Open communities (public, no entry task) join straight away: the server
+  // still checks the requirements. A job's "Join to take this job" lands here,
+  // so this used to leave them waiting for a leader's yes (2026-11-08)
+  const joinNow = async () => {
+    if (!signedIn) { needSignIn(); return }
+    if (!d || busy) return
+    setBusy('Joining…')
+    try {
+      await apiRequest(`/communities/${d.id}/join`, { method: 'POST' })
+      toast(`You joined ${d.name}`, 'success')
+      load()
+    } catch (e: any) { toast(e?.message || "Couldn't join", 'error') }
+    setBusy('')
+  }
+
   const cancelRequest = async () => {
     if (!d || busy) return
     setBusy('Cancelling…')
@@ -135,6 +152,7 @@ export default function CommunityJoin() {
   const pending = d.request?.status === 'PENDING'
   const member = !!d.userRole
   const blocked = d.eligible === false
+  const direct = d.canJoinDirectly ?? (d.isPublic && !d.entryTask)
   const count = msg.length
 
   return (
@@ -148,7 +166,7 @@ export default function CommunityJoin() {
             <span className="cm2-logo cj-logo" style={{ background: accent }}>{d.iconUrl ? <img src={sized(d.iconUrl, 96, true)} alt="" /> : initials(d.name)}</span>
             <h1>{d.name}</h1>
           </div>
-          <p className="cj-lead">Send a request or join with an invite code.</p>
+          <p className="cj-lead">{direct ? 'Join now or with an invite code.' : 'Send a request or join with an invite code.'}</p>
         </header>
 
         {member ? (
@@ -157,9 +175,13 @@ export default function CommunityJoin() {
             <div><b>You're a member of {d.name}.</b></div>
             <Link className="up-btn primary" to={`/communities/${d.slug}`}>Open community</Link>
           </section>
+        ) : d.banned ? (
+          <section className="up-card cj-card" role="status">
+            <p className="cj-elig no"><i className="ti ti-ban" />You can't join this community. Its leaders removed you.</p>
+          </section>
         ) : (
           <>
-            <h2 className="cj-h2">Before you request to join</h2>
+            <h2 className="cj-h2">{direct ? 'Before you join' : 'Before you request to join'}</h2>
             {d.entryTask && (
               <section className="up-card cj-card">
                 <span className="cj-label"><i className="ti ti-flag" /> Entry task</span>
@@ -170,9 +192,9 @@ export default function CommunityJoin() {
             <section className="up-card cj-card">
               <span className="cj-label"><i className="ti ti-list-check" /> Entry requirements</span>
               {d.requirements.length === 0
-                ? <p className="cj-muted">No requirements. Anyone can ask to join.</p>
+                ? <p className="cj-muted">No requirements. Anyone can {direct ? 'join' : 'ask to join'}.</p>
                 : <ul className="cj-reqs">{d.requirements.map((r) => <li key={r}><i className="ti ti-point" />{r}</li>)}</ul>}
-              <p className="cj-muted">Your eligibility is checked when you send a request.</p>
+              <p className="cj-muted">Your eligibility is checked when you {direct ? 'join' : 'send a request'}.</p>
               {d.signedIn && d.eligible !== null && (
                 <p className={`cj-elig ${d.eligible ? 'ok' : 'no'}`} role="status">
                   <i className={`ti ${d.eligible ? 'ti-circle-check' : 'ti-alert-circle'}`} />
@@ -181,6 +203,15 @@ export default function CommunityJoin() {
               )}
             </section>
 
+            {direct ? (
+              <section className="up-card cj-card">
+                <div className="cj-pending">
+                  <p><i className="ti ti-user-plus" />{pending ? "You asked to join earlier. You don't need to wait: this community is open to everyone." : 'This community is open. Join now, no review needed.'}</p>
+                  <button className="up-btn primary" onClick={joinNow} disabled={!!busy || !d.isActive || (signedIn && blocked)}>{busy || 'Join now'}</button>
+                </div>
+                {!d.isActive && <p className="cj-muted">This community is closed.</p>}
+              </section>
+            ) : (<>
             <h2 className="cj-h2">Your request <span className="cj-sub">Community review</span></h2>
             <section className="up-card cj-card">
               {pending ? (
@@ -221,6 +252,7 @@ export default function CommunityJoin() {
                 </>
               )}
             </section>
+            </>)}
 
             <h2 className="cj-h2">Have an invite code?</h2>
             <section className="up-card cj-card">

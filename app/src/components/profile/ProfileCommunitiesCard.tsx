@@ -22,7 +22,9 @@ export default function ProfileCommunitiesCard() {
   const answer = async (id: string, action: 'accept' | 'decline') => {
     setBusy(id)
     try {
-      await apiRequest('/communities/invites/' + id, { method: 'PATCH', body: JSON.stringify({ action }) })
+      const r = await apiRequest<any>('/communities/invites/' + id, { method: 'PATCH', body: JSON.stringify({ action }) })
+      // Joined, or sent to the leaders for review (a member's invite) (2026-11-08)
+      if (action === 'accept') toast(r?.joined === false ? 'Request sent. The leaders will review it.' : 'You joined the community', 'success')
     } catch (e: any) {
       // Say why (e.g. 'Invite has expired'); the reload below drops invites that are
       // expired or already answered, which used to stay stuck on screen (2026-11-07)
