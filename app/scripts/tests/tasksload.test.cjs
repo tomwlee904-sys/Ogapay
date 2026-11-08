@@ -21,7 +21,7 @@ const { code } = transformSync(src, { loader: 'tsx', format: 'cjs', jsx: 'automa
 const api = { apiRequest: null, getAccessToken: () => null };
 const m = { exports: {} };
 new Function('module', 'exports', 'require', code)(m, m.exports, (name) => (name === '../lib/api' ? api : {}));
-const { fetchTasks, invalidateTasksCache, afterJobsLoad, jobsView, JOBS_START, availableToMe } = m.exports;
+const { fetchTasks, invalidateTasksCache, afterJobsLoad, jobsView, JOBS_START, availableToMe, beforeReload } = m.exports;
 
 let fails = 0;
 // A load that never ends would let Node quit quietly before the end: count that as a fail
@@ -217,6 +217,24 @@ const publicAsks = () => calls.filter((c) => !c.url.includes('&eligible=1')).len
   const fullAfter = afterJobsLoad(standInShown, { list: jobs(21, { eligible: true }), eligibility: true });
   ok('then the full list replaces it', fullAfter.eligibility === true && fullAfter.jobs[0].eligible === true, fullAfter);
   ok('a stand-in never replaces a full list already on screen', afterJobsLoad(fullAfter, { list: jobs(20), eligibility: false }, true) === fullAfter);
+
+  // ── Sign-in finishes after the public list showed (2026-11-08): no blank second ──
+  const guest = afterJobsLoad(JOBS_START, { list: jobs(21), eligibility: false });
+  const signingIn = beforeReload(guest, true);
+  ok('signing in: the list on screen stays (no loading placeholders)', jobsView(signingIn, 21) === 'list' && signingIn.jobs === guest.jobs, signingIn);
+  ok('signing in: it no longer says which jobs you can take, and says it is checking', signingIn.eligibility === false && signingIn.checking === true, signingIn);
+  const slowStandIn = afterJobsLoad(signingIn, { list: jobs(22), eligibility: false }, true);
+  ok('a stand-in while checking: still checking', slowStandIn.checking === true && slowStandIn.jobs.length === 22, slowStandIn);
+  const signedInFull = afterJobsLoad(signingIn, { list: jobs(21, { eligible: true }), eligibility: true });
+  ok('then the full list replaces it and checking ends', signedInFull.eligibility === true && !signedInFull.checking && signedInFull.jobs[0].eligible === true, signedInFull);
+  const fullFailed = afterJobsLoad(signingIn, null);
+  ok("full list fails while checking: list kept, checking ends (the couldn't-check note can show)", fullFailed.jobs === guest.jobs && !fullFailed.checking && fullFailed.failed === false, fullFailed);
+  const staleWhileChecking = afterJobsLoad(signingIn, { list: jobs(2), eligibility: true, stale: true });
+  ok('an older list while checking: screen kept, checking ends', staleWhileChecking.jobs === guest.jobs && !staleWhileChecking.checking, staleWhileChecking);
+  ok('signing out: starts over (the list may have members-only jobs)', beforeReload(signedInFull, false) === JOBS_START);
+  ok('nothing on screen yet: starts over with the loading placeholders', beforeReload(JOBS_START, true) === JOBS_START);
+  const afterError = { jobs: null, failed: true, eligibility: false };
+  ok('"Try again" after an error: loading placeholders, error cleared', jobsView(beforeReload(afterError, true), 0) === 'loading');
 
   // ── "Available for me" ──
   const job = (extra) => ({ id: 'x', maxWorkers: 10, submissionsCount: 0, posterId: 'p9', poster: { id: 'p9' }, ...extra });

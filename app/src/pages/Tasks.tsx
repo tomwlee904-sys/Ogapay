@@ -485,12 +485,21 @@ export async function fetchTasks(category?: string, userId?: string, maxAge = CA
 
 // ─── What the list shows after a load (2026-11-01) ──────────────
 // jobs is null until a list has loaded. failed: nothing loaded and nothing to show.
-export type JobsState = { jobs: any[] | null; failed: boolean; eligibility: boolean }
+// checking: the list on screen stays while a new one loads (see beforeReload)
+export type JobsState = { jobs: any[] | null; failed: boolean; eligibility: boolean; checking?: boolean }
 export const JOBS_START: JobsState = { jobs: null, failed: false, eligibility: false }
 const NO_JOBS: any[] = []
 
 // background: a refresh (tab back in focus), not the first load or "Try again"
 export function afterJobsLoad(prev: JobsState, res: TasksLoad | null, background = false): JobsState {
+  const next = nextJobsState(prev, res, background)
+  // Still checking until the load that was waited for ends, list or not (a stand-in
+  // or a focus refresh is in the background and doesn't end it)
+  const checking = background && !!prev.checking
+  return !!next.checking === checking ? next : { ...next, checking }
+}
+
+function nextJobsState(prev: JobsState, res: TasksLoad | null, background: boolean): JobsState {
   // Nothing loaded: the list on screen stays. The error shows only when there's
   // no list at all, and never from a refresh in the background
   if (!res) return background || prev.jobs ? prev : { ...prev, failed: true }
@@ -500,6 +509,14 @@ export function afterJobsLoad(prev: JobsState, res: TasksLoad | null, background
   // you can take (the next refresh asks for the full list again)
   if (background && prev.jobs && prev.eligibility && !res.eligibility) return prev
   return { jobs: res.list, failed: false, eligibility: res.eligibility }
+}
+
+// Signing in (or "Try again") loads the list again. The list on screen stays until
+// the new one comes, so the page doesn't blank for a second when the sign-in check
+// finishes after the public list showed (2026-11-08); it no longer says which jobs
+// you can take until then. Signing out starts over: the list may have members-only jobs
+export function beforeReload(prev: JobsState, signedIn: boolean): JobsState {
+  return signedIn && prev.jobs ? { ...prev, failed: false, eligibility: false, checking: true } : JOBS_START
 }
 
 export function jobsView(s: JobsState, matching: number): 'loading' | 'error' | 'empty' | 'list' {
@@ -646,7 +663,7 @@ export default function Tasks() {
 
   useEffect(() => {
     let alive = true
-    setJobsState(JOBS_START)
+    setJobsState(prev => beforeReload(prev, !!user?.id))
     setOlder({ list: [], page: 1, more: true, busy: false })
     // Signed in and the full list is slow: the public list shows meanwhile. Like a
     // refresh, it never replaces a list that says which jobs you can take
@@ -798,7 +815,9 @@ export default function Tasks() {
         </div>
 
         {user && availableOnly && jobsState.jobs && !jobsState.eligibility && (
-          <p className="ui-hint" style={{ margin: '0 0 16px' }}>We couldn't check which jobs you can take just now, so some of these may not be open to you.</p>
+          <p className="ui-hint" style={{ margin: '0 0 16px' }}>{jobsState.checking
+            ? 'Checking which jobs you can take...'
+            : "We couldn't check which jobs you can take just now, so some of these may not be open to you."}</p>
         )}
 
         {view === 'loading' ? (
