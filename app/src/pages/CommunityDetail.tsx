@@ -23,7 +23,7 @@ type Community = {
   id: string; slug: string; name: string; description: string | null; iconUrl: string | null; coverImage: string | null
   accentColor: string | null; category: string | null; isPublic: boolean; owner: { id: string; username: string; firstName: string; lastName: string; avatarUrl: string | null }
   twitter: string; telegram: string; discord: string; memberCount: number; requestCount: number; recentMembers: Member[]
-  userRole: string | null; hasRequested: boolean; banned?: boolean; hasEntryTask?: boolean; hasJoinRequirements?: boolean; openJobCount: number; completedJobCount: number; createdAt: string
+  userRole: string | null; hasRequested: boolean; banned?: boolean; canSeeMembers?: boolean; hasEntryTask?: boolean; hasJoinRequirements?: boolean; openJobCount: number; completedJobCount: number; createdAt: string
 }
 type Ranked = { rank: number; id: string; username: string; firstName: string; lastName: string; avatarUrl: string | null; role: string; level: string; tasksCompleted: number; totalEarned: number | null }
 type Job = { id: string; title: string; reward: number; currency: string; submissionCount?: number; createdAt?: string; completedAt?: string; deadline?: string | null; workers?: { id: string; username: string }[]; membersOnly?: boolean; isContest?: boolean }
@@ -44,6 +44,12 @@ const initials = (s: string) => s.split(/\s+/).map((w) => w[0]).join('').toUpper
 const fullName = (u: { firstName?: string | null; lastName?: string | null; username?: string }) => `${u.firstName || ''} ${u.lastName || ''}`.trim() || u.username || 'Member'
 const safeLink = (u?: string) => (u && /^https:\/\//i.test(u) ? u : '')
 const roleLabel = (r: string) => (r === 'OWNER' ? 'Owner' : r === 'ADMIN' ? 'Admin' : r === 'MODERATOR' ? 'Moderator' : '')
+// Shorter tab names on small phones, so every tab fits (Chat was off-screen at 360px) (2026-11-08)
+const SHORT_TAB: Partial<Record<Tab, string>> = { Leaderboard: 'Ranks', 'Open jobs': 'Open', Completed: 'Done' }
+// A load that failed (no connection, timeout, server error), with a Retry; not "nothing here" (2026-11-08)
+function LoadFailed({ what, onRetry }: { what: string; onRetry: () => void }) {
+  return <div className="up-empty" role="alert"><i className="ti ti-wifi-off" />Couldn't load {what}. Check your connection.<div style={{ marginTop: 12 }}><button className="up-btn" onClick={onRetry}>Try again</button></div></div>
+}
 const when = (d: string) => new Date(d).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
 
 function Face({ url, name, size = 34 }: { url: string | null; name: string; size?: number }) {
@@ -59,6 +65,8 @@ export default function CommunityDetail() {
 
   const [c, setC] = useState<Community | null>(null)
   const [loading, setLoading] = useState(true)
+  // 'notfound' only when the server said 404; anything else is 'error' with a Retry (2026-11-08)
+  const [failed, setFailed] = useState<'notfound' | 'error' | null>(null)
   const [tab, setTab] = useState<Tab>('About')
   const [busy, setBusy] = useState(false)
   const [invite, setInvite] = useState<any>(null)
@@ -71,11 +79,14 @@ export default function CommunityDetail() {
   const isLeader = role === 'OWNER' || role === 'ADMIN'
   const canModerate = isLeader || role === 'MODERATOR'
 
+  // A failed refresh keeps the page on screen; only a 404 means the community is gone
   const load = () => apiRequest<Community>('/communities/' + id, { auth: signedIn })
-    .then((d) => setC(d))
-    .catch(() => setC(null))
+    .then((d) => { setC(d); setFailed(null) })
+    .catch((e: any) => {
+      if (e?.status === 404) { setC(null); setFailed('notfound') } else setFailed('error')
+    })
     .finally(() => setLoading(false))
-  useEffect(() => { setLoading(true); load() }, [id])
+  useEffect(() => { setLoading(true); setC(null); setFailed(null); load() }, [id])
 
   // A pending invite to this community
   useEffect(() => {
@@ -133,6 +144,9 @@ export default function CommunityDetail() {
   }
 
   if (loading) return <Layout><div className="up-wrap"><div className="up-empty"><i className="ti ti-loader-2" />Loading…</div></div></Layout>
+  if (!c && failed === 'error') {
+    return <Layout><div className="up-wrap"><LoadFailed what="this community" onRetry={() => { setLoading(true); load() }} /></div></Layout>
+  }
   if (!c) {
     return (
       <Layout>
@@ -150,6 +164,8 @@ export default function CommunityDetail() {
     { url: safeLink(c.discord), icon: 'ti-brand-discord', label: 'Discord' },
   ].filter((s) => s.url)
   const cat = c.category ? c.category.charAt(0).toUpperCase() + c.category.slice(1) : ''
+  // A private community's leaderboard is for its members (it said "No members yet.") (2026-11-08)
+  const membersLocked = c.canSeeMembers === false || (c.canSeeMembers === undefined && !c.isPublic && !isMember)
 
   return (
     <Layout>
@@ -197,18 +213,21 @@ export default function CommunityDetail() {
           </div>
         )}
 
-        <div className="up-tabs-row">
+        <div className="up-tabs-row cm2-tabs">
           <div className="up-tabs" role="tablist">
             {TABS.filter((t) => t !== 'Members' || isLeader).map((t) => (
-              <button key={t} role="tab" aria-selected={tab === t} className={`up-tab${tab === t ? ' on' : ''}`} onClick={() => setTab(t)}>
-                {t}{t === 'Open jobs' && <em>{c.openJobCount}</em>}{t === 'Chat' && !isMember && <i className="ti ti-lock" />}
+              <button key={t} role="tab" aria-selected={tab === t} aria-label={t} className={`up-tab${tab === t ? ' on' : ''}`} onClick={() => setTab(t)}>
+                {SHORT_TAB[t] ? <><span className="cm2-tl">{t}</span><span className="cm2-ts" aria-hidden="true">{SHORT_TAB[t]}</span></> : t}
+                {t === 'Open jobs' && <em>{c.openJobCount}</em>}{((t === 'Chat' && !isMember) || (t === 'Leaderboard' && membersLocked)) && <i className="ti ti-lock" />}
               </button>
             ))}
           </div>
         </div>
 
         {tab === 'About' && <About c={c} isMember={isMember} isLeader={isLeader} canModerate={canModerate} role={role} onChange={load} />}
-        {tab === 'Leaderboard' && <Leaderboard id={c.id} />}
+        {tab === 'Leaderboard' && (membersLocked
+          ? <div className="up-empty"><i className="ti ti-lock" />Only members can see the leaderboard.{!c.hasRequested && !c.banned && <div style={{ marginTop: 12 }}><button className="up-btn primary" onClick={join} disabled={busy}>Request to join</button></div>}</div>
+          : <Leaderboard id={c.id} />)}
         {tab === 'Members' && isLeader && <Members c={c} myRole={role!} meId={me?.id} onChange={load} />}
         {tab === 'Open jobs' && (role === 'OWNER' || role === 'ADMIN') && (
           <div className="cm2-post">
@@ -219,7 +238,7 @@ export default function CommunityDetail() {
         {tab === 'Open jobs' && <Jobs id={c.id} kind="open" cat={cat} />}
         {tab === 'Completed' && <Jobs id={c.id} kind="completed" cat={cat} />}
         {tab === 'Chat' && (isMember
-          ? <Chat id={c.id} meId={me?.id} />
+          ? <Chat id={c.id} meId={me?.id} canModerate={canModerate} />
           : <div className="up-empty"><i className="ti ti-lock" />Only members can read and post in the chat.{!c.hasRequested && !c.banned && <div style={{ marginTop: 12 }}><button className="up-btn primary" onClick={join} disabled={busy}>{c.isPublic ? 'Join to chat' : 'Request to join'}</button></div>}</div>)}
       </div>
     </Layout>
@@ -593,10 +612,14 @@ function Leaderboard({ id }: { id: string }) {
   const show = useMoney()
   const [page, setPage] = useState(1)
   const [d, setD] = useState<{ members: Ranked[]; totalPages: number } | null>(null)
+  const [err, setErr] = useState<{ status?: number; message?: string } | null>(null)
+  const [retry, setRetry] = useState(0)
   useEffect(() => {
-    setD(null)
-    apiRequest<any>(`/communities/${id}/leaderboard?page=${page}`, { auth: !!getAccessToken() }).then((x) => setD({ members: x?.members || [], totalPages: x?.totalPages || 1 })).catch(() => setD({ members: [], totalPages: 1 }))
-  }, [id, page])
+    setD(null); setErr(null)
+    apiRequest<any>(`/communities/${id}/leaderboard?page=${page}`, { auth: !!getAccessToken() }).then((x) => setD({ members: x?.members || [], totalPages: x?.totalPages || 1 })).catch((e: any) => setErr({ status: e?.status, message: e?.message }))
+  }, [id, page, retry])
+  // The server's "only members" answer, or a Retry for a failed load (2026-11-08)
+  if (err) return err.status === 403 ? <div className="up-empty"><i className="ti ti-lock" />{err.message || 'Only members can see the leaderboard.'}</div> : <LoadFailed what="the leaderboard" onRetry={() => setRetry((n) => n + 1)} />
   if (!d) return <div className="up-empty"><i className="ti ti-loader-2" />Loading…</div>
   if (d.members.length === 0) return <div className="up-empty"><i className="ti ti-trophy" />No members yet.</div>
   return (
@@ -620,11 +643,14 @@ function Jobs({ id, kind, cat }: { id: string; kind: 'open' | 'completed'; cat: 
   const show = useMoney()
   const [page, setPage] = useState(1)
   const [d, setD] = useState<{ jobs: Job[]; totalPages: number } | null>(null)
+  const [failed, setFailed] = useState(false)
+  const [retry, setRetry] = useState(0)
   useEffect(() => {
-    setD(null)
+    setD(null); setFailed(false)
     // Signed in, so a private community's members-only jobs show to its members
-    apiRequest<any>(`/communities/${id}/jobs/${kind}?page=${page}`, { auth: true }).then((x) => setD({ jobs: x?.jobs || [], totalPages: x?.totalPages || 1 })).catch(() => setD({ jobs: [], totalPages: 1 }))
-  }, [id, kind, page])
+    apiRequest<any>(`/communities/${id}/jobs/${kind}?page=${page}`, { auth: true }).then((x) => setD({ jobs: x?.jobs || [], totalPages: x?.totalPages || 1 })).catch(() => setFailed(true))
+  }, [id, kind, page, retry])
+  if (failed) return <LoadFailed what={`the ${kind} jobs`} onRetry={() => setRetry((n) => n + 1)} />
   if (!d) return <div className="up-empty"><i className="ti ti-loader-2" />Loading…</div>
   return (
     <>
@@ -634,7 +660,8 @@ function Jobs({ id, kind, cat }: { id: string; kind: 'open' | 'completed'; cat: 
           {d.jobs.map((j) => (
             <Link key={j.id} to={`/tasks/${j.id}`} className="cm2-job">
               <span className="cm2-job-t">
-                <strong>{j.title}{j.membersOnly && <span className="cm2-only"><i className="ti ti-lock" />Members only</span>}{j.isContest && <span className="cm2-only"><i className="ti ti-award" />Contest</span>}</strong>
+                {/* The labels sit beside the title, not inside it, so a long title can't push them off a phone screen (2026-11-08) */}
+                <span className="cm2-job-h"><strong>{j.title}</strong>{j.membersOnly && <span className="cm2-only"><i className="ti ti-lock" />Members only</span>}{j.isContest && <span className="cm2-only"><i className="ti ti-award" />Contest</span>}</span>
                 <small>{kind === 'open'
                   ? `${j.submissionCount || 0} submission${j.submissionCount === 1 ? '' : 's'}${j.deadline ? ` · due ${new Date(j.deadline).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}` : ''}`
                   : `Completed ${j.completedAt ? new Date(j.completedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : ''}${j.workers?.length ? ` · ${j.workers.length} worker${j.workers.length === 1 ? '' : 's'} paid` : ''}`}</small>
@@ -661,9 +688,10 @@ function Pager({ page, pages, onPage }: { page: number; pages: number; onPage: (
   )
 }
 
-function Chat({ id, meId }: { id: string; meId?: string }) {
+function Chat({ id, meId, canModerate }: { id: string; meId?: string; canModerate: boolean }) {
   const { toast } = useToast()
   const [msgs, setMsgs] = useState<Msg[] | null>(null)
+  const [chatErr, setChatErr] = useState(false)
   const [text, setText] = useState('')
   const [sending, setSending] = useState(false)
   const box = useRef<HTMLDivElement>(null)
@@ -676,7 +704,8 @@ function Chat({ id, meId }: { id: string; meId?: string }) {
     window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 72, behavior: 'smooth' })
   }, [])
 
-  const load = () => apiRequest<Msg[]>(`/communities/${id}/chat`).then((d) => setMsgs(d || [])).catch(() => setMsgs((m) => m || []))
+  // A failed first load says so (it said "No messages yet"); a failed refresh keeps the messages (2026-11-08)
+  const load = () => apiRequest<Msg[]>(`/communities/${id}/chat`).then((d) => { setMsgs(d || []); setChatErr(false) }).catch(() => setChatErr(true))
   // New messages every 10 seconds while the chat is open (June's page never refreshed)
   useEffect(() => {
     load()
@@ -701,14 +730,25 @@ function Chat({ id, meId }: { id: string; meId?: string }) {
     setSending(false)
   }
 
+  // Your own message, or anyone's if you are a leader or moderator (2026-11-08)
+  const remove = async (m: Msg) => {
+    if (!window.confirm(m.sender.id === meId ? 'Delete your message?' : `Remove this message from @${m.sender.username}?`)) return
+    try {
+      await apiRequest(`/communities/${id}/chat/${encodeURIComponent(m.id)}`, { method: 'DELETE' })
+      setMsgs((l) => (l || []).filter((x) => x.id !== m.id))
+    } catch (e: any) { toast(e?.message || "Couldn't remove the message", 'error') }
+  }
+
   return (
     <section className="up-card cm2-chat" ref={section}>
       <div className="cm2-msgs" ref={box} onScroll={(e) => { const el = e.currentTarget; nearBottom.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80 }}>
-        {msgs === null ? <p className="cm2-muted cm2-center">Loading…</p> : msgs.length === 0 ? <p className="cm2-muted cm2-center">No messages yet. Say hello.</p> : msgs.map((m) => (
+        {msgs === null && chatErr ? <p className="cm2-muted cm2-center">Couldn't load the chat. Check your connection. <button type="button" className="up-btn" onClick={load}>Try again</button></p>
+          : msgs === null ? <p className="cm2-muted cm2-center">Loading…</p> : msgs.length === 0 ? <p className="cm2-muted cm2-center">No messages yet. Say hello.</p> : msgs.map((m) => (
           <div key={m.id} className={`cm2-msg${m.sender.id === meId ? ' me' : ''}`}>
             <Face url={m.sender.avatarUrl} name={m.sender.firstName || m.sender.username} size={30} />
             <div className="cm2-bubble">
-              <div className="cm2-msg-h"><Link to={`/user/${m.sender.username}`}>{m.sender.username}</Link><time>{when(m.createdAt)}</time></div>
+              <div className="cm2-msg-h"><Link to={`/user/${m.sender.username}`}>{m.sender.username}</Link><time>{when(m.createdAt)}</time>
+                {(canModerate || m.sender.id === meId) && <button type="button" className="cm2-msg-del" onClick={() => remove(m)} aria-label="Remove message" title="Remove message"><i className="ti ti-trash" /></button>}</div>
               <p>{m.text}</p>
             </div>
           </div>

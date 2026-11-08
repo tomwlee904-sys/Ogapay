@@ -53,8 +53,12 @@
 .cm2-lb-t, .cm2-job-t { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .cm2-lb-t strong, .cm2-job-t strong { font-size: 14px; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cm2-lb-t small, .cm2-job-t small { font-size: 12px; color: var(--text3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* Tab names: the short one shows on small phones only (2026-11-08) */
+.cm2-tabs .cm2-ts { display: none; }
 /* Members-only / contest label on a job in the community's list */
-.cm2-only { display: inline-flex; align-items: center; gap: 4px; margin-left: 8px; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--border); font: 500 11px var(--font); color: var(--text2); vertical-align: middle; }
+.cm2-job-h { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.cm2-job-h strong { min-width: 0; }
+.cm2-only { flex-shrink: 0; display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--border); font: 500 11px var(--font); color: var(--text2); vertical-align: middle; }
 .cm2-only i { font-size: 12px; }
 .cm2-post { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; padding: 12px 14px; border: 1px solid var(--border); border-radius: var(--r-card, 16px); font-size: 13.5px; color: var(--text2); }
 .cm2-lb-v { font-size: 13px; color: var(--text2); text-align: right; display: flex; flex-direction: column; white-space: nowrap; }
@@ -74,10 +78,16 @@
 .cm2-msg-h { display: flex; gap: 8px; align-items: baseline; font-size: 12px; }
 .cm2-msg-h a { color: var(--text); font-weight: 700; text-decoration: none; }
 .cm2-msg-h time { color: var(--text3); font-size: 11px; }
+/* Remove a chat message (yours, or anyone's for leaders) (2026-11-08) */
+.cm2-msg-del { margin-left: auto; width: 28px; height: 28px; display: inline-grid; place-items: center; border: 0; border-radius: 8px; background: none; color: var(--text3); cursor: pointer; font-size: 14px; }
+.cm2-msg-del:hover { color: var(--red, #ef4444); background: var(--card); }
 .cm2-bubble p { margin: 2px 0 0; font-size: 14px; line-height: 1.45; color: var(--text); white-space: pre-wrap; overflow-wrap: anywhere; }
 .cm2-send { display: flex; gap: 8px; padding: 10px 12px; border-top: 1px solid var(--border); }
 .cm2-send input { flex: 1; min-width: 0; height: 42px; padding: 0 12px; }
 @media (max-width: 760px) {
+  /* Every tab on screen: the strip wraps instead of hiding Chat past the edge (2026-11-08) */
+  .cm2-tabs .up-tabs { display: flex; width: 100%; flex-wrap: wrap; overflow: visible; }
+  .cm2-tabs .up-tab { flex: 1 1 auto; justify-content: center; padding: 0 10px; }
   .cm2-cover { height: 110px; }
   .cm2-id { grid-template-columns: 60px minmax(0, 1fr); padding: 10px 16px 0; gap: 10px 12px; }
   .cm2-logo { width: 60px; height: 60px; margin-top: -38px; border-radius: 14px; font-size: 20px; }
@@ -90,6 +100,9 @@
   .cm2-grid3 { grid-template-columns: 1fr; }
   .cm2-lb, .cm2-job { padding: 10px 14px; gap: 10px; }
   .cm2-go { display: none; }
+  /* Phones: the title gets the full line and its labels sit just under it (2026-11-08) */
+  .cm2-job-h { flex-wrap: wrap; row-gap: 4px; }
+  .cm2-job-h strong { flex-basis: 100%; }
   .cm2-req { flex-wrap: wrap; }
   .cm2-req-t { flex-basis: calc(100% - 50px); }
   .cm2-req .up-btn { flex: 1; }
@@ -98,4 +111,11 @@
      (it was a 62vh box below the banner, its send box behind the bottom menu) */
   .cm2-chat { height: calc(100vh - 190px); height: calc(100dvh - 190px); min-height: 380px; }
   .cm2-msgs { padding: 12px; gap: 10px; }
+}
+
+@media (max-width: 480px) {
+  .cm2-tabs .cm2-tl { display: none; }
+  .cm2-tabs .cm2-ts { display: inline; }
+  .cm2-tabs .up-tabs { gap: 2px; }
+  .cm2-tabs .up-tab { padding: 0 6px; gap: 4px; }
 }

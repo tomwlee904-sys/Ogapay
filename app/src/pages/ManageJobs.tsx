@@ -21,6 +21,7 @@ import { jobDeadline } from "../lib/deadline";
 import { deliveryText, pickedDueAt } from "../lib/delivery";
 import { contestPaidOut } from "../lib/contestPrizes";
 import { useMoney } from "../lib/useMoney";
+import { isOgaPayCommunity } from "../lib/communityMembers";
 import { useCurrency } from "../context/CurrencyContext";
 import { displayCode, formatIn, inDisplay } from "../lib/money";
 import type { Currency } from "../lib/currency";
@@ -432,7 +433,7 @@ They get a warning on their account and can't take follow jobs for ${UNFOLLOW_BL
   // Member of community: communities this poster leads, plus OgaPay's own
   const canNeedCommunity = !task.communityId && !task.hiredWorkerId;
   const [reqCommunity, setReqCommunity] = useState<string>(task.requiredCommunityId || "");
-  const [requirable, setRequirable] = useState<{ id: string; name: string; mine: boolean }[]>([]);
+  const [requirable, setRequirable] = useState<{ id: string; name: string; mine: boolean; platform?: boolean }[]>([]);
   useEffect(() => {
     if (!editing || !canNeedCommunity) return;
     apiRequest<any[]>("/communities/mine/requirable").then((l) => setRequirable(Array.isArray(l) ? l : [])).catch(() => {});
@@ -534,7 +535,7 @@ They get a warning on their account and can't take follow jobs for ${UNFOLLOW_BL
                   <select id="mj-ed-community" className="ui-input" value={reqCommunity} onChange={(e) => setReqCommunity(e.target.value)}>
                     <option value="">Anyone who meets the requirements</option>
                     {reqCommunity && !requirable.some((c) => c.id === reqCommunity) && <option value={reqCommunity}>The community set now</option>}
-                    {requirable.map((c) => <option key={c.id} value={c.id}>Members of {c.name}{c.mine ? "" : " (OgaPay)"}</option>)}
+                    {requirable.map((c) => <option key={c.id} value={c.id}>Members of {c.name}{isOgaPayCommunity(c) ? " (OgaPay)" : ""}</option>)}
                   </select>
                   <p className="mj-edit-note">The job stays on the jobs page; only members can take it. People already working on it keep their place.</p>
                 </>

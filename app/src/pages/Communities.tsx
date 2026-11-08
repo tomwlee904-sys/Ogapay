@@ -5,7 +5,8 @@ import { apiRequest, getAccessToken } from '../lib/api'
 import { openSignIn } from '../lib/signin'
 import { sized } from '../lib/img'
 
-const filters = ['All', 'Trending', 'New', 'Crypto', 'Business', 'Content', 'Design', 'Marketing']
+// Every category the Create page offers has a pill (Technology, the default, had none) (2026-11-08)
+const filters = ['All', 'Trending', 'New', 'Crypto', 'Business', 'Content', 'Design', 'Marketing', 'Technology', 'Gaming', 'Education', 'Social', 'Other']
 
 // The community's own cover picture; the colour gradient only when it has none
 // (the cards used to ignore the cover, so every card was a black block)
@@ -29,6 +30,10 @@ export default function Communities() {
   const [stats, setStats] = useState<any>(null)
   const [trending, setTrending] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  // A failed load says so with a Retry, not "No communities found" (2026-11-08)
+  const [loadErr, setLoadErr] = useState(false)
+  const [retry, setRetry] = useState(0)
+  const [mineErr, setMineErr] = useState(false)
   // "My communities" (from the June page); /communities/mine opens it
   const location = useLocation()
   const signedIn = !!getAccessToken()
@@ -68,17 +73,18 @@ export default function Communities() {
         setTotalPages(Number(data?.totalPages) || 1)
         // Trending stays the first unfiltered page's pick
         if (filter === 'all' && !hasJobs && !recent && !query && page === 1) setTrending(data?.trending || [])
-      } catch {}
+        setLoadErr(false)
+      } catch { if (live) setLoadErr(true) }
       if (live) setLoading(false)
     }
     fetchCommunities()
     return () => { live = false }
-  }, [filter, hasJobs, recent, query, page])
+  }, [filter, hasJobs, recent, query, page, retry])
 
   useEffect(() => {
-    if (tab !== 'mine' || !signedIn || mine) return
-    apiRequest<any[]>('/communities/mine/list').then((d) => setMine(Array.isArray(d) ? d : [])).catch(() => setMine([]))
-  }, [tab, signedIn, mine])
+    if (tab !== 'mine' || !signedIn || mine || mineErr) return
+    apiRequest<any[]>('/communities/mine/list').then((d) => setMine(Array.isArray(d) ? d : [])).catch(() => setMineErr(true))
+  }, [tab, signedIn, mine, mineErr])
 
   // "Trending" keeps the busiest first (the server's default order) and only
   // shows the ones the server marks trending on this page
@@ -162,7 +168,9 @@ export default function Communities() {
       {tab === 'all' && stats && <p className="ui-count ch-count"><b>{(stats.total || 0).toLocaleString()}</b> communities · <b>{(stats.members || 0).toLocaleString()}</b> members</p>}
 
       {tab === 'mine' ? (
-        mine === null ? (
+        mineErr ? (
+          <div className="ch-empty" role="alert"><i className="ti ti-wifi-off" style={{ fontSize: 32, marginBottom: 8, display: 'block', color: 'var(--text3)' }} />Couldn't load your communities. Check your connection. <button className="ch-tab" style={{ marginTop: 12 }} onClick={() => setMineErr(false)}>Try again</button></div>
+        ) : mine === null ? (
           <div style={{ textAlign: 'center', padding: 40, color: 'var(--text3)' }}>Loading your communities…</div>
         ) : mine.length === 0 ? (
           <div className="ch-empty"><i className="ti ti-users" style={{ fontSize: 32, marginBottom: 8, display: 'block', color: 'var(--text3)' }} />You haven't joined any communities yet. <button className="ch-tab" style={{ marginTop: 12 }} onClick={() => setTab('all')}>Browse communities</button></div>
@@ -187,7 +195,9 @@ export default function Communities() {
         <button className={`ch-pill ${recent ? 'active' : ''}`} aria-pressed={recent} onClick={() => setRecent(!recent)}><i className="ti ti-calendar" /> Last 30 days</button>
       </div>
 
-      {loading ? (
+      {/* The spinner only on the first load; a filter, search or page change keeps
+          the cards (dimmed) so the page doesn't collapse and jump (2026-11-08) */}
+      {loading && communities.length === 0 && !loadErr ? (
         <div style={{ textAlign: 'center', padding: 40, color: 'var(--text3)' }}>
           <i className="ti ti-loader" style={{ animation: 'spin 1s linear infinite', fontSize: 24, display: 'block', marginBottom: 8 }} />
           Loading communities...
@@ -218,10 +228,12 @@ export default function Communities() {
           <div className="sec-title">All Communities</div>
           <div className="sec-sub">Discover and join communities that match your interests</div>
 
-          {filtered.length === 0 ? (
+          {loadErr && !loading ? (
+            <div className="ch-empty" role="alert"><i className="ti ti-wifi-off" style={{ fontSize: 32, marginBottom: 8, display: 'block', color: 'var(--text3)' }} />Couldn't load communities. Check your connection. <button className="ch-tab" style={{ marginTop: 12 }} onClick={() => setRetry((n) => n + 1)}>Try again</button></div>
+          ) : filtered.length === 0 ? (
             <div className="ch-empty"><i className="ti ti-users" style={{ fontSize: 32, marginBottom: 8, display: 'block', color: 'var(--text3)' }} />{hasJobs ? 'No communities with open jobs match.' : 'No communities found.'} Try a different filter.</div>
           ) : (
-            <div className="ch-grid">
+            <div className="ch-grid" aria-busy={loading} style={loading ? { opacity: 0.55, transition: 'opacity .15s' } : undefined}>
               {filtered.map(c => (
                 <div className="ch-card" key={c.id} onClick={() => navigate('/communities/' + c.id)}>
                   <div className="ccb" style={coverStyle(c)} />

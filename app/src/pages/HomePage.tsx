@@ -563,7 +563,8 @@ export default function HomePage() {
   // The discovery panels that pass over the ecosystem helix (only those with content)
   const storeRes = useJson<any>("/store?limit=9&sort=newest");
   const blogRes = useJson<any>("/blog?limit=9");
-  const commRes = useJson<any>("/communities?limit=12");
+  // page=1 makes the server send just 12 (without it, every public community came back) (2026-11-08)
+  const commRes = useJson<any>("/communities?page=1&limit=12");
   const panels = useMemo<HelixPanel[]>(() => {
     const storeItems: any[] = Array.isArray(storeRes?.data) ? storeRes.data : [];
     const posts: any[] = blogRes?.data?.posts || [];

@@ -26,6 +26,7 @@ import { PayoutCheckPicker, PAYOUT_CHECKS } from '../components/PayoutCheck'
 import { MAX_PLACES } from '../lib/contestPrizes'
 import { newKey } from '../lib/wallet'
 import { HANDLE_PLATFORMS, handlePlatformName, UNFOLLOW_BLOCK_DAYS } from '../lib/followHandles'
+import { isOgaPayCommunity } from '../lib/communityMembers'
 // -- COLOR TOKENS ----------------------------------------------------------
 const C = {
   text: "var(--text)",
@@ -586,7 +587,7 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
   const startUrlBad = !!startUrl.trim() && !/^https?:\/\/[^\s]+$/i.test(startUrl.trim());
   const [audience, setAudience] = useState<{ all: number; NG: number; GH: number } | null>(null);
   useEffect(() => { apiRequest<{ all: number; NG: number; GH: number }>("/tasks/audience", { auth: false }).then((a) => setAudience(a || null)).catch(() => {}); }, []);
-  const [requirable, setRequirable] = useState<{ id: string; name: string; slug: string; mine: boolean }[]>([]);
+  const [requirable, setRequirable] = useState<{ id: string; name: string; slug: string; mine: boolean; platform?: boolean }[]>([]);
   useEffect(() => {
     if (!isAuthed) return;
     apiRequest<any[]>("/communities/mine/requirable").then((l) => setRequirable(Array.isArray(l) ? l : [])).catch(() => {});
@@ -1070,7 +1071,7 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
                             {myCommunities.map((c) => <option key={c.communityId} value={`only:${c.communityId}`}>Members of {c.name} only</option>)}
                           </optgroup>}
                           {requirable.length > 0 && <optgroup label="Listed for everyone, members take it">
-                            {requirable.map((c) => <option key={c.id} value={`req:${c.id}`}>Members of {c.name} can take it{c.mine ? "" : " (OgaPay)"}</option>)}
+                            {requirable.map((c) => <option key={c.id} value={`req:${c.id}`}>Members of {c.name} can take it{isOgaPayCommunity(c) ? " (OgaPay)" : ""}</option>)}
                           </optgroup>}
                         </select>
                         <p className="cf-hint">{community ? `Only members of ${community.name} can take it. It shows on the community page, not in the public job list.` : requiredCommunity ? `Listed publicly. Only members of ${requiredCommunity.name} can take it.` : "Anyone who meets the requirements below can take it."}</p>

@@ -34,3 +34,9 @@ export const listBans = (communityId: string) =>
 
 export const unban = (communityId: string, userId: string) =>
   apiRequest(`${base(communityId)}/members/banned/${encodeURIComponent(userId)}`, { method: 'DELETE' })
+
+// '(OgaPay)' only for OgaPay's own communities, not ones you help run as an
+// admin or moderator. Uses the server's `platform` flag; an older reply only had
+// `mine` (you own it), so that is the fallback (2026-11-08).
+export const isOgaPayCommunity = (c: { mine?: boolean; platform?: boolean }) =>
+  typeof c.platform === 'boolean' ? c.platform : !c.mine
