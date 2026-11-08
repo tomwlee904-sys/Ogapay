@@ -151,7 +151,8 @@ export function HomeProductCard({ item, convert }: { item: any; convert: Convert
     <Link to={`/store/${item.id}`} className="hc-card hc-product" aria-label={`${item.title} by ${seller}, ${item.priceOnRequest ? "price on request" : spoken(show(price, cur), price, cur)}. View details`}>
       <div className="hc-media">
         <ItemCover src={item.image} category={item.category} title={item.title} width={320} />
-        <span className="hc-active"><span />Active</span>
+        {/* Stock 0 said "Active" too (2026-11-08) */}
+        {item.stock === 0 ? <span className="hc-active off">Sold out</span> : <span className="hc-active"><span />Active</span>}
       </div>
       <div className="hc-pbody">
         <span className="hc-type">{itemCategoryLabel(item.category, item.title)}</span>

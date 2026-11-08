@@ -132,9 +132,11 @@ async function parseResponse(res: Response) {
     }
     // The status and any data the server sent with the error ride along, e.g. the
     // new quote when a conversion's rate moved (409) (2026-11-01)
-    const err: Error & { status?: number; data?: any; errors?: any[] } = new Error(message)
+    const err: Error & { status?: number; data?: any; errors?: any[]; code?: string } = new Error(message)
     err.status = res.status
     if (json?.data !== undefined) err.data = json.data
+    // A top-level reason code, e.g. PRICE_CHANGED when a store price moved (2026-11-08)
+    if (typeof json?.code === 'string') err.code = json.code
     // and the reason codes, e.g. RULES_REQUIRED: the rules aren't accepted yet (2026-11-01)
     if (Array.isArray(json?.errors)) err.errors = json.errors
     throw err

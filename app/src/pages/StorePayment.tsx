@@ -10,6 +10,7 @@ import { API_BASE, apiRequest, getAccessToken, invalidateInFlight } from '../lib
 import { CURRENCY_SYMBOLS, type Currency } from '../lib/currency'
 import { sized } from '../lib/img'
 import { uploadImage } from '../lib/upload'
+import { newKey } from '../lib/wallet'
 import '../styles/checkout.css'
 
 // Store checkout, in the steps wurk.fun uses: Product > Order details > Payment.
@@ -74,7 +75,7 @@ export default function StorePayment() {
   const [params, setParams] = useSearchParams()
   const navigate = useNavigate()
   const { user } = useAuth()
-  const { balances, refresh } = useWalletBalance()
+  const { balances, refresh, loading: balanceLoading, error: balanceError } = useWalletBalance()
   const [item, setItem] = useState<Item | null>(null)
   const [seller, setSeller] = useState<Seller | null>(null)
   const [loadError, setLoadError] = useState('')
@@ -93,10 +94,19 @@ export default function StorePayment() {
   const [jobs, setJobs] = useState<MyJob[] | null>(null)
   const [jobId, setJobId] = useState('')
   const [done, setDone] = useState<{ message: string; taskId?: string | null } | null>(null)
+  // 2026-11-08: one key per checkout visit. The server keeps it on the order, so
+  // a second tap after a timeout returns the first order instead of charging again
+  const purchaseKey = useRef(newKey())
+  // Set when the price changed after the page loaded: the new price is shown and
+  // the buyer has to tap Pay again to agree to it
+  const [priceChanged, setPriceChanged] = useState<string | null>(null)
+  const [checking, setChecking] = useState(false)
 
   useEffect(() => {
     if (!id) return
-    apiRequest<Item>('/store/' + id, { auth: false })
+    // Signed in, the server's 30-second public copy is skipped: checkout shows the
+    // price as it is now (2026-11-08)
+    apiRequest<Item>('/store/' + id, { fresh: true })
       // A price-on-request product has no fixed price to pay: ask the seller instead
       .then((d: any) => { if (d?.priceOnRequest) setLoadError('This product is priced on request. Message the seller from the product page for a price.'); else setItem(d) })
       .catch((e: any) => setLoadError(e?.message || "This product couldn't be loaded"))
@@ -163,13 +173,16 @@ export default function StorePayment() {
     )
   }
 
+  // No balance yet (still loading, or the load failed) is not ₦0: don't say
+  // "Not enough" until it's known (2026-11-08)
+  const balanceKnown = balances != null
   const available = balances?.[item.currency]?.available ?? 0
-  const short = Math.max(0, item.price - available)
+  const short = balanceKnown ? Math.max(0, item.price - available) : 0
   const own = !!user && !item.official && item.sellerId === user.id
   const soldOut = item.isActive === false || item.stock === 0
   const alreadyHave = !!perk?.permanent && owned.includes(perk.kind)
   const needJob = perk?.kind === 'TASK_BOOST' && !jobId
-  const canPay = !own && !soldOut && !alreadyHave && !needJob && short === 0 && !paying
+  const canPay = !own && !soldOut && !alreadyHave && !needJob && balanceKnown && short === 0 && !paying
   const delivery = item.metadata?.delivery || '3 days'
   const revisions = item.metadata?.revisions ?? 3
   const category = [itemCategoryLabel(item.category, item.title), item.metadata?.subcategory].filter(Boolean).join(' / ')
@@ -202,33 +215,84 @@ export default function StorePayment() {
     return parts.join('\n\n')
   }
 
+  // After a placed order: send the brief, then open the order page
+  const finish = async (order: { id: string; conversationId?: string | null }) => {
+    refresh()
+    // Send the brief; if that fails the order still stands and they can send it in the chat
+    let briefSent = true
+    if ((brief.trim() || files.length) && order.conversationId) {
+      briefSent = await apiRequest('/messages', { method: 'POST', body: JSON.stringify({ conversationId: order.conversationId, content: briefMessage() }) }).then(() => true, () => false)
+    }
+    try { sessionStorage.removeItem(draftKey(item.id)) } catch { /* storage off */ }
+    navigate(`/orders/${order.id}`, { replace: true, state: { title: item.title, seller: item.seller, total: item.price, currency: item.currency, conversationId: order.conversationId, briefSent: (brief.trim() || files.length) ? briefSent : undefined } })
+  }
+
+  // The price or currency changed since the page loaded (409 PRICE_CHANGED): nothing
+  // was charged. Show the new price; the buyer taps Pay again to agree to it.
+  const onPriceChanged = (data: any) => {
+    const was = money(item.price, item.currency)
+    const price = Number(data?.price)
+    const currency = (data?.currency || item.currency) as Currency
+    if (Number.isFinite(price) && price > 0) setItem({ ...item, price, currency })
+    else apiRequest<Item>('/store/' + item.id, { fresh: true }).then(setItem, () => {})
+    setPriceChanged(was)
+    refresh()
+  }
+
+  // No answer (timed out, connection dropped or a gateway error): the order may
+  // still have gone through. Look for it before letting the buyer pay again.
+  const recheck = async (startedAt: number) => {
+    setChecking(true)
+    refresh()
+    try {
+      if (!item.official) {
+        const list = await apiRequest<{ id: string; createdAt: string; conversationId: string | null; product: { id: string } }[]>('/store/my-purchases', { fresh: true })
+        // Two minutes' slack for a phone clock that's a little off
+        const placed = (Array.isArray(list) ? list : []).find((o) => o.product?.id === item.id && new Date(o.createdAt).getTime() >= startedAt - 120000)
+        if (placed) { await finish(placed); return }
+      }
+    } catch { /* still unknown: say so below */ }
+    setChecking(false)
+    setPaying(false)
+    // The same key goes with the next tap, so trying again can't charge twice
+    setError(item.official
+      ? "We couldn't confirm your payment. Check your wallet history before you try again. Trying again won't charge you twice."
+      : "We couldn't confirm your payment. Check My orders before you try again. Trying again won't charge you twice.")
+  }
+
   const pay = async () => {
-    setPaying(true); setError('')
+    if (paying) return
+    setPaying(true); setError(''); setPriceChanged(null)
+    const startedAt = Date.now()
+    // What the buyer saw: the server refuses with PRICE_CHANGED if it's different
+    const agreed = { expectedPrice: item.price, currency: item.currency, idempotencyKey: purchaseKey.current }
     try {
       if (item.official) {
         // Takes effect straight away; there's no seller or delivery
-        const res = await fetch(`${API_BASE}/store/${item.id}/purchase`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getAccessToken()}` },
-          body: JSON.stringify(jobId ? { taskId: jobId } : {}),
-        })
-        invalidateInFlight()
+        let res: Response
+        try {
+          res = await fetch(`${API_BASE}/store/${item.id}/purchase`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getAccessToken()}` },
+            body: JSON.stringify(jobId ? { taskId: jobId, ...agreed } : agreed),
+          })
+        } finally { invalidateInFlight() }
         const json = await res.json().catch(() => ({}))
-        if (!res.ok) throw new Error(json.message || 'Payment failed. You have not been charged.')
+        if (res.status === 409 && json.code === 'PRICE_CHANGED') { onPriceChanged(json.data); setPaying(false); return }
+        if (res.status >= 500) { await recheck(startedAt); return }
+        if (!res.ok) throw Object.assign(new Error(json.message || 'Payment failed. You have not been charged.'), { status: res.status })
         refresh()
         setDone({ message: json.message || 'Done. It has taken effect.', taskId: json.data?.perk?.taskId })
         return
       }
-      const order = await apiRequest<{ id: string; conversationId?: string }>(`/store/${item.id}/purchase`, { method: 'POST', body: JSON.stringify({ quantity: 1 }) })
-      refresh()
-      // Send the brief; if that fails the order still stands and they can send it in the chat
-      let briefSent = true
-      if ((brief.trim() || files.length) && order.conversationId) {
-        briefSent = await apiRequest('/messages', { method: 'POST', body: JSON.stringify({ conversationId: order.conversationId, content: briefMessage() }) }).then(() => true, () => false)
-      }
-      try { sessionStorage.removeItem(draftKey(item.id)) } catch { /* storage off */ }
-      navigate(`/orders/${order.id}`, { replace: true, state: { title: item.title, seller: item.seller, total: item.price, currency: item.currency, conversationId: order.conversationId, briefSent: (brief.trim() || files.length) ? briefSent : undefined } })
+      const order = await apiRequest<{ id: string; conversationId?: string }>(`/store/${item.id}/purchase`, { method: 'POST', body: JSON.stringify({ quantity: 1, ...agreed }) })
+      await finish(order)
     } catch (e: any) {
+      if (e?.status === 409 && (e.code === 'PRICE_CHANGED' || e.data?.price != null)) { onPriceChanged(e.data); setPaying(false); return }
+      // No status: timed out or the connection dropped. 5xx: a gateway may have
+      // given up after the server took the money. Either way, check first.
+      if (!e?.status || e.status >= 500) { await recheck(startedAt); return }
+      // The server said no, so nothing was taken
       setError(e?.message || 'Payment failed. You have not been charged.')
       setPaying(false)
     }
@@ -254,7 +318,7 @@ export default function StorePayment() {
     )
   }
 
-  const blocked = own ? "This is your own product, so you can't buy it." : soldOut ? "This product isn't available right now." : alreadyHave ? 'You already have this.' : ''
+  const blocked = own ? "This is your own product, so you can't buy it." : item.isActive !== false && item.stock === 0 ? 'This product is sold out.' : soldOut ? "This product isn't available right now." : alreadyHave ? 'You already have this.' : ''
 
   const ProductCard = (
     <section className="ui-card ui-card-pad sc-side-card">
@@ -393,12 +457,21 @@ export default function StorePayment() {
                     <span className="sc-method-ic"><i className="ti ti-wallet" aria-hidden="true" /></span>
                     <div className="sc-method-t">
                       <strong>Your {item.currency} wallet</strong>
-                      <span>Available: {money(available, item.currency)}</span>
+                      {balanceKnown
+                        ? <span>Available: {money(available, item.currency)}</span>
+                        : balanceError && !balanceLoading
+                          ? <span>Couldn't load your balance. <button type="button" className="sc-more tap" style={{ marginTop: 0 }} onClick={() => refresh()}>Try again</button></span>
+                          : <span>Checking your balance…</span>}
                     </div>
-                    <span className={`sc-state${short ? ' warn' : ''}`}>{short ? 'Not enough' : 'Ready'}</span>
+                    {balanceKnown && <span className={`sc-state${short ? ' warn' : ''}`}>{short ? 'Not enough' : 'Ready'}</span>}
                   </div>
+                  {priceChanged && (
+                    <p className="sc-note warn" role="alert"><i className="ti ti-info-circle" aria-hidden="true" /> The price changed from {priceChanged} to <b>{money(item.price, item.currency)}</b>. You have not been charged. Check it, then tap Pay again if you still want it.</p>
+                  )}
                   <button className="ui-btn ui-btn-dark ui-btn-lg sc-pay" disabled={!canPay} onClick={pay}>
-                    {paying ? <><i className="ti ti-loader-2 sc-spin" aria-hidden="true" /> Paying…</> : <>Pay {money(item.price, item.currency)}</>}
+                    {checking ? <><i className="ti ti-loader-2 sc-spin" aria-hidden="true" /> Checking your order…</>
+                      : paying ? <><i className="ti ti-loader-2 sc-spin" aria-hidden="true" /> Paying…</>
+                      : <>{priceChanged ? 'Confirm and pay' : 'Pay'} {money(item.price, item.currency)}</>}
                   </button>
                   {error && <p className="sc-error" role="alert">{error}</p>}
                   {blocked && <p className="sc-note warn"><i className="ti ti-info-circle" aria-hidden="true" /> {blocked}</p>}

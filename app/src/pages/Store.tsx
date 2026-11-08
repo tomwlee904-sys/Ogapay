@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useCallback, useRef } from 'react'
+﻿import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { apiRequest, API_BASE } from '../lib/api'
@@ -142,8 +142,11 @@ function ProductStars({ rating, compact }: { rating: number; compact?: boolean }
 // ═══════════════════════════════════════════════
 // STORE PAGE (product grid with categories)
 // ═══════════════════════════════════════════════
-// Sort options the API understands (GET /store?sort=): default order is newest-first
-const STORE_SORTS: [string, string][] = [['', 'Quality'], ['newest', 'Newest'], ['stars_desc', 'Highest rated'], ['random', 'Random']]
+// Sort options the API understands (GET /store?sort=): default order is newest-first.
+// 2026-11-08: "Quality" was the same as Newest, "Random" was a fixed order and
+// "Highest rated" counted reviews, so only sorts the server really does are offered
+const STORE_SORTS: [string, string][] = [['', 'Newest'], ['price_low', 'Price: low to high'], ['price_high', 'Price: high to low'], ['rating', 'Highest rated'], ['reviews', 'Most reviewed']]
+const SORT_KEYS = STORE_SORTS.map(([v]) => v)
 
 function StorePage({
   onViewProduct,
@@ -169,7 +172,8 @@ function StorePage({
 
   const category = searchParams.get('category') || ''
   const search = searchParams.get('search') || ''
-  const sort = searchParams.get('sort') || ''
+  // An old link's sort (stars_desc, random, newest) falls back to the default
+  const sort = SORT_KEYS.includes(searchParams.get('sort') || '') ? searchParams.get('sort') || '' : ''
   const page = Number(searchParams.get('page')) || 1
 
   const updateURL = (updates: Record<string, string | undefined>) => {
@@ -180,28 +184,44 @@ function StorePage({
     }, { replace: false })
   }
 
-  const fetchProducts = useCallback(async () => {
-    setLoading(true); setError(null)
-    try {
-      const params = new URLSearchParams()
-      if (category) params.set('category', category)
-      if (search) params.set('search', search)
-      if (sort) params.set('sort', sort)
-      params.set('page', String(page))
-      params.set('limit', String(limit))
-      // Raw fetch: apiRequest unwraps `data` and drops `pagination`, which paging needs
-      const res = await fetch(`${API_BASE}/store?${params.toString()}`)
-      const json = await res.json().catch(() => null)
-      if (!res.ok) throw new Error(json?.message || 'Failed to load products')
-      const items: StoreItem[] = Array.isArray(json?.data) ? json.data : []
-      setProducts(items)
-      setTotal(Number(json?.pagination?.total ?? items.length))
-      setAllCategories(prev => Array.from(new Set([...prev, ...items.map(p => p.category).filter(Boolean)])).sort())
-    } catch (e) {
-      setError((e as any)?.message || 'Failed to load products')
-    } finally { setLoading(false) }
-  }, [category, search, sort, page])
-  useEffect(() => { fetchProducts() }, [fetchProducts])
+  // Each change of filter, sort or page cancels the load before it, so a slow
+  // older answer can't replace the newer one (2026-11-08)
+  const [reloadTick, setReloadTick] = useState(0)
+  const fetchProducts = () => setReloadTick((n) => n + 1)
+  useEffect(() => {
+    const ctl = new AbortController()
+    ;(async () => {
+      setLoading(true); setError(null)
+      try {
+        const params = new URLSearchParams()
+        if (category) params.set('category', category)
+        if (search) params.set('search', search)
+        if (sort) params.set('sort', sort)
+        params.set('page', String(page))
+        params.set('limit', String(limit))
+        // Raw fetch: apiRequest unwraps `data` and drops `pagination`, which paging needs
+        const res = await fetch(`${API_BASE}/store?${params.toString()}`, { signal: ctl.signal })
+        const json = await res.json().catch(() => null)
+        if (ctl.signal.aborted) return
+        if (!res.ok) throw new Error(json?.message || 'Failed to load products')
+        const items: StoreItem[] = Array.isArray(json?.data) ? json.data : []
+        setProducts(items)
+        setTotal(Number(json?.pagination?.total ?? items.length))
+        setAllCategories(prev => Array.from(new Set([...prev, ...items.map(p => p.category).filter(Boolean)])).sort())
+      } catch (e) {
+        if (ctl.signal.aborted) return
+        setError((e as any)?.message || 'Failed to load products')
+      } finally { if (!ctl.signal.aborted) setLoading(false) }
+    })()
+    return () => ctl.abort()
+  }, [category, search, sort, page, reloadTick])
+
+  // Every category with a listed product, not just the ones on this page (2026-11-08)
+  useEffect(() => {
+    apiRequest<{ categories?: string[] }>('/store/categories', { auth: false })
+      .then((d) => { if (Array.isArray(d?.categories)) setAllCategories(prev => Array.from(new Set([...prev, ...d.categories!.filter(Boolean)])).sort()) })
+      .catch(() => { /* the list still fills from the products shown */ })
+  }, [])
 
   const totalPages = Math.max(1, Math.ceil(total / limit))
   const submitSearch = (e?: React.FormEvent) => { e?.preventDefault(); updateURL({ search: searchInput.trim() || undefined, page: undefined }) }
@@ -242,13 +262,13 @@ function StorePage({
           <select id="st-cat" className="ui-select" value={category} onChange={e => updateURL({ category: e.target.value || undefined, page: undefined })}>
             <option value="">All</option>
             {/* OgaPay's own items come with codes (BADGE, SERVICE); show their names */}
-            {[...allCategories].sort((a, b) => itemCategoryLabel(a).localeCompare(itemCategoryLabel(b))).map(c => <option key={c} value={c}>{itemCategoryLabel(c)}</option>)}
+            {[...new Set([...allCategories, ...(category ? [category] : [])])].sort((a, b) => itemCategoryLabel(a).localeCompare(itemCategoryLabel(b))).map(c => <option key={c} value={c}>{itemCategoryLabel(c)}</option>)}
           </select>
         </div>
         <div>
           <label className="ui-label" htmlFor="st-sort">Sort by</label>
           <select id="st-sort" className="ui-select" value={sort} onChange={e => updateURL({ sort: e.target.value || undefined, page: undefined })}>
-            {STORE_SORTS.map(([v, l]) => <option key={v || 'quality'} value={v}>{l}</option>)}
+            {STORE_SORTS.map(([v, l]) => <option key={v || 'newest'} value={v}>{l}</option>)}
           </select>
         </div>
       </form>

@@ -18,6 +18,8 @@ export type StoreOrder = {
   protected: boolean; held: boolean
   deliveredAt: string | null; releaseAt: string | null; releasedAt: string | null; refundedAt: string | null
   disputedAt: string | null; disputeReason: string | null
+  // When an order still not marked delivered is refunded to the buyer (2026-11-08)
+  autoRefundAt?: string | null
   // available: false once the seller deletes the product; the order keeps its name, price and picture
   product: { id: string; name: string; imageUrl: string | null; price?: number; available?: boolean }
   conversationId: string | null
@@ -40,6 +42,10 @@ export function orderBadge(o: StoreOrder): { label: string; cls: string } {
     default: return { label: 'New', cls: '' }
   }
 }
+
+// A finished order the buyer can rate: paid to the seller and the product still
+// listed. The product page checks again (canReview) before it shows the form (2026-11-08)
+export const canReviewOrder = (o: StoreOrder) => o.status === 'COMPLETED' && !!o.releasedAt && o.product.available !== false
 
 const isOpen = (o: StoreOrder) => o.held || o.status === 'PENDING' || o.status === 'IN_PROGRESS'
 
@@ -145,7 +151,7 @@ export default function StoreOrders() {
                   <p className="so-line"><i className="ti ti-clock" aria-hidden="true" /><span>The seller marked this delivered. Confirm you received it, or report a problem before <b>{orderWhen(o.releaseAt)}</b>. After that the payment goes to the seller.</span></p>
                 )}
                 {o.held && (o.status === 'PENDING' || o.status === 'IN_PROGRESS') && (
-                  <p className="so-line"><i className="ti ti-shield-check" aria-hidden="true" /><span>{o.status === 'PENDING' ? 'Waiting for the seller to start. You can still cancel.' : 'The seller is working on it.'} Your payment is held until you confirm.</span></p>
+                  <p className="so-line"><i className="ti ti-shield-check" aria-hidden="true" /><span>{o.status === 'PENDING' ? 'Waiting for the seller to start. You can still cancel.' : 'The seller is working on it.'} Your payment is held until you confirm.{o.autoRefundAt && <> If it isn't marked delivered by <b>{orderWhen(o.autoRefundAt)}</b>, your money comes back to you.</>}</span></p>
                 )}
                 {o.status === 'DISPUTED' && (
                   <p className="so-line bad"><i className="ti ti-alert-triangle" aria-hidden="true" /><span>You reported: "{o.disputeReason}" The payment is on hold while OgaPay reviews it. Keep talking to the seller in your chat.</span></p>
@@ -172,6 +178,7 @@ export default function StoreOrders() {
                     {o.held && o.status === 'PENDING' && <button className="up-btn" disabled={busy === o.id} onClick={() => cancel(o)}>Cancel order</button>}
                     {o.held && o.status !== 'DISPUTED' && <button className="up-btn" disabled={busy === o.id} onClick={() => { setReporting(o.id); setReason('') }}>Report a problem</button>}
                     {o.held && <button className="up-btn primary" disabled={busy === o.id} onClick={() => confirmReceived(o)}><i className="ti ti-check" /> Confirm received</button>}
+                    {canReviewOrder(o) && o.seller && <Link className="up-btn" to={`/store/${o.product.id}#review`}><i className="ti ti-star" /> Leave a review</Link>}
                   </div>
                 )}
               </div>

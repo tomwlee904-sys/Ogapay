@@ -117,6 +117,8 @@
 .hc-active { position: absolute; top: 10px; right: 10px; display: inline-flex; align-items: center; gap: 5px; padding: 4px 8px; border-radius: var(--r-xs); background: #edf8f0; border: 1px solid #c1dfcb; color: #17805c; font-size: 11px; font-weight: 500; }
 [data-theme="dark"] .hc-active { background: #0f1e17; border-color: #1f4433; color: #6ee7b7; }
 .hc-active span { width: 5px; height: 5px; border-radius: 50%; background: #17805c; }
+/* Sold out (stock 0): red, no dot (2026-11-08) */
+.hc-active.off { background: rgba(220, 38, 38, 0.08); border-color: rgba(220, 38, 38, 0.25); color: #dc2626; }
 .hc-pbody { display: flex; flex-direction: column; gap: 10px; padding: 16px 4px 4px; flex: 1; }
 /* titles get two lines and descriptions two, so rows of cards line up */
 .hc-pbody h3 { margin: 0; font-size: var(--fs-card); font-weight: 600; letter-spacing: -.015em; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: calc(var(--fs-card) * 1.35 * 2); }

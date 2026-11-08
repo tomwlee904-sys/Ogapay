@@ -50,6 +50,9 @@ html[data-theme="dark"] .hc-active,
 html[data-theme="dark"] .sp-pill { background: rgba(var(--mint-rgb), 0.1); border-color: rgba(var(--mint-rgb), 0.3); color: var(--mint); }
 html[data-theme="dark"] .hc-active span,
 html[data-theme="dark"] .sp-pill span { background: var(--mint); }
+/* Sold out / Not available stay red in dark mode, not the mint of Active (2026-11-08) */
+html[data-theme="dark"] .hc-active.off,
+html[data-theme="dark"] .sp-pill.sp-pill-off { background: rgba(248, 113, 113, 0.1); border-color: rgba(248, 113, 113, 0.3); color: #f87171; }
 
 /* Carousel controls */
 html[data-theme="dark"] .hv-car-btns button { background: #0a0a0b; border-color: rgba(255, 255, 255, 0.14); }

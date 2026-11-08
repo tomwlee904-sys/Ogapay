@@ -1,5 +1,5 @@
-﻿import { useState, useEffect, useCallback } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+﻿import { useState, useEffect, useCallback, useRef } from 'react'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import Layout from '../components/Layout'
 import { apiRequest } from '../lib/api'
@@ -12,7 +12,6 @@ import { renderBlog } from '../lib/blogMarkdown'
 import SellerCard from '../components/SellerCard'
 import Money from '../components/Money'
 import ItemCover, { itemCategoryLabel } from '../components/ItemCover'
-import { SkeletonPage, injectSkeletonStyles } from "../components/SkeletonLoader";
 
 interface ReviewItem {
   id: string
@@ -47,6 +46,8 @@ interface StoreProductData {
   priceOnRequest?: boolean
   sampleFiles?: { url: string; name: string; type: string; size: number | null }[]
   sellerInfo?: { lastActiveAt: string | null; challengesWon: number; compliments: number; reviews: number; newCreator: boolean } | null
+  canReview?: boolean // the signed-in member bought it and the order is finished (2026-11-08)
+  myReview?: { rating: number; comment: string | null } | null // their review, to change it
 }
 
 // "Last active 6h ago"
@@ -98,215 +99,8 @@ function formatAlt(price: number, currency: string, solRate: number): string {
   return `\u2248 ${formatPrice(price / solRate, 'SOL')}`
 }
 
-// ── Inject skeleton styles on mount ──
-export default function StoreProduct() {
-  useEffect(() => { injectSkeletonStyles(); }, []);
-  const { id } = useParams<{ id: string }>()
-  const navigate = useNavigate()
-  const { user } = useAuth()
-  const { sol } = useLivePrice()
-  const { convert } = useCurrency()
-
-  const [product, setProduct] = useState<StoreProductData | null>(null)
-  const [seller, setSeller] = useState<SellerProfile | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [purchasing, setPurchasing] = useState(false)
-  const [purchased, setPurchased] = useState(false)
-  const [purchaseError, setPurchaseError] = useState<string | null>(null)
-  const [reviewRating, setReviewRating] = useState(0)
-  const [reviewComment, setReviewComment] = useState('')
-  const [submittingReview, setSubmittingReview] = useState(false)
-
-  const isOwner = user && product && user.id === product.sellerId
-  const isSoldOut = product && product.stock !== null && product.stock <= 0
-
-  const fetchProduct = useCallback(async () => {
-    if (!id) return
-    setLoading(true)
-    setError(null)
-    try {
-      const data = await apiRequest<StoreProductData>('/store/' + id, { method: 'GET', auth: false })
-      setProduct(data)
-    } catch (err: any) {
-      setError(err?.message || 'Product not found')
-    } finally {
-      setLoading(false)
-    }
-  }, [id])
-
-  const fetchSeller = useCallback(async (username: string) => {
-    try {
-      const data = await apiRequest<any>('/users/' + username, { auth: false })
-      if (data?.id) {
-        setSeller({
-          id: data.id,
-          username: data.username,
-          firstName: data.firstName,
-          avatarUrl: data.avatarUrl,
-          bio: data.workerProfile?.bio || null,
-          rating: data.workerProfile?.avgRating,
-          reviews: data.workerProfile?.totalRatings,
-          tasksCompleted: data.workerProfile?.tasksCompleted,
-          successRate: data.workerProfile?.successRate,
-          level: data.workerProfile?.level,
-          skills: data.workerProfile?.skills,
-          memberSince: data.createdAt,
-        })
-      }
-    } catch (e: any) { console.error(e) }
-  }, [])
-
-  useEffect(() => { fetchProduct() }, [fetchProduct])
-  useEffect(() => {
-    if (product?.seller) fetchSeller(product.seller)
-  }, [product?.seller, fetchSeller])
-
-  useEffect(() => {
-    if (!product) return
-    document.title = `${product.title} | OgaPay Store`
-    let meta = document.querySelector('meta[name="description"]')
-    if (!meta) {
-      meta = document.createElement('meta')
-      meta.setAttribute('name', 'description')
-      document.head.appendChild(meta)
-    }
-    meta.setAttribute('content', (product.description || '').slice(0, 160))
-  }, [product])
-
-  const handlePurchase = async () => {
-    if (!user) { navigate('/login?redirect=/store/' + id); return }
-    if (!product) return
-    setPurchasing(true)
-    setPurchaseError(null)
-    try {
-      await apiRequest('/store/' + product.id + '/purchase', { method: 'POST' })
-      setPurchased(true)
-    } catch (err: any) {
-      setPurchaseError(err?.message || 'Purchase failed')
-    } finally { setPurchasing(false) }
-  }
-
-  const handleSubmitReview = async () => {
-    if (reviewRating < 1 || !product) return
-    setSubmittingReview(true)
-    try {
-      await apiRequest('/store/' + product.id + '/reviews', {
-        method: 'POST',
-        body: JSON.stringify({ rating: reviewRating, comment: reviewComment }),
-      })
-      setReviewRating(0)
-      setReviewComment('')
-      fetchProduct()
-    } catch (e: any) { console.error(e) } finally { setSubmittingReview(false) }
-  }
-
-  if (loading) {
-    return <SkeletonPage />
-  }
-
-  if (error || !product) {
-    return (
-      <Layout>
-        <div style={{ maxWidth: 960, margin: '0 auto', padding: '60px 20px', textAlign: 'center' }}>
-          <i className="ti ti-alert-circle" style={{ fontSize: 36, color: 'var(--text3)', display: 'block', marginBottom: 12 }} />
-          <h2 style={{ fontSize: 18, fontWeight: 800, color: 'var(--text)', margin: '0 0 8px' }}>{error || 'Product not found'}</h2>
-          <p style={{ fontSize: 13, color: 'var(--text2)', marginBottom: 20 }}>This listing doesn't exist or has been removed.</p>
-          <button onClick={() => navigate('/store')} style={{ background: 'var(--accent)', color: 'var(--on-accent)', border: 'none', borderRadius: 10, padding: '11px 22px', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-            <i className="ti ti-arrow-left" style={{ fontSize: 14 }} /> Back to Store
-          </button>
-        </div>
-      </Layout>
-    )
-  }
-
-  const p = product
-  const cur = (p.currency || 'NGN') as string
-  const delivery = p.metadata?.delivery || '3 days'
-  const revisions = p.metadata?.revisions ?? 3
-  const crumb = [itemCategoryLabel(p.category, p.title), p.metadata?.subcategory].filter(Boolean).join(' / ') || 'Store'
-
-  const onRequest = !!p.priceOnRequest
-  const contactSeller = () => {
-    if (!user) return navigate('/login?redirect=/store/' + p.id)
-    navigate('/messages?user=' + encodeURIComponent(p.seller) + '&product=' + p.id)
-  }
-  const buyLabel = purchasing ? 'Processing…' : purchased ? 'Purchased' : isOwner ? 'Edit listing' : isSoldOut ? 'Sold out' : onRequest ? 'Ask for a price' : 'Buy now'
-  const onBuy = () => {
-    if (isOwner) return navigate('/my-store')
-    if (onRequest) return contactSeller()
-    if (!user) return navigate('/login?redirect=/store/' + p.id)
-    navigate('/store/pay/' + p.id)
-  }
-
-  const PriceCard = (
-    <div className="ui-card sp-price">
-      <div className="sp-price-head">
-        <span>Your next project</span>
-        {isSoldOut ? <span className="sp-pill sp-pill-off">Sold out</span> : <span className="sp-pill"><span />Active</span>}
-      </div>
-      <div className="hc-reward sp-total">
-        <span className="ui-label" style={{ margin: 0 }}>{onRequest ? 'Price' : 'Total price'}</span>
-        {onRequest
-          ? <b style={{ display: 'block', fontSize: 24, fontWeight: 600, marginTop: 6 }}>Price on request</b>
-          : <Money amount={Number(p.price || 0)} currency={cur} convert={convert} size={34} exact />}
-        {onRequest && <small style={{ display: 'block', color: 'var(--text2)', marginTop: 6, fontSize: 12 }}>Message the seller with what you need. They'll reply with a price.</small>}
-      </div>
-      <div className="sp-facts">
-        <div><span><i className="ti ti-clock" />Delivery</span><b>{delivery}</b></div>
-        <div><span><i className="ti ti-refresh" />Revisions</span><b>{revisions}</b></div>
-      </div>
-      {purchaseError && <div className="sp-note sp-note-err"><i className="ti ti-alert-circle" />{purchaseError}</div>}
-      {purchased && <div className="sp-note sp-note-ok"><i className="ti ti-circle-check" />Purchase successful</div>}
-      <button className="ui-btn ui-btn-dark ui-btn-lg" style={{ width: '100%' }} onClick={onBuy} disabled={purchasing || purchased || (!!isSoldOut && !isOwner)}>
-        {buyLabel} {!purchased && !isSoldOut && <i className={isOwner ? 'ti ti-edit' : 'ti ti-arrow-right'} />}
-      </button>
-      {!isOwner && !onRequest && !p.official && (
-        <button className="ui-btn ui-btn-ghost ui-btn-lg" style={{ width: '100%', marginTop: 8 }} onClick={contactSeller}>
-          <i className="ti ti-message" /> Contact seller
-        </button>
-      )}
-      {!isOwner && !p.official && !onRequest && (
-        <p className="sp-protect"><i className="ti ti-shield-check" aria-hidden="true" /> Buyer protection: your payment is held until you confirm you received the order.</p>
-      )}
-    </div>
-  )
-
-  const CreatorCard = (
-    <div className="ui-card sp-creator">
-      <span className="ui-label">Meet the creator</span>
-      <button className="sp-creator-row" onClick={() => navigate('/user/' + p.seller)}>
-        <Avatar src={p.sellerAvatar} name={p.seller} size={40} />
-        <span style={{ minWidth: 0 }}>
-          <b>{p.seller} <i className="ti ti-arrow-up-right" /></b>
-          <span className="sp-rating">
-            {p.reviewsCount > 0
-              ? <><i className="ti ti-star" style={{ color: '#bd8517' }} /> {Number(p.rating).toFixed(1)} <span>/ 5 · {p.reviewsCount} reviews</span></>
-              : p.sellerInfo?.newCreator !== false ? <span className="sp-new">New creator</span> : <span>No reviews on this product yet</span>}
-          </span>
-        </span>
-      </button>
-      {p.sellerInfo && (
-        <ul className="sp-trust">
-          <li><i className="ti ti-clock" aria-hidden="true" /> Last active {activeAgo(p.sellerInfo.lastActiveAt)}</li>
-          <li><i className="ti ti-trophy" aria-hidden="true" /> {p.sellerInfo.challengesWon} {p.sellerInfo.challengesWon === 1 ? 'challenge' : 'challenges'} won</li>
-          {p.sellerInfo.compliments > 0 && <li><i className="ti ti-heart" aria-hidden="true" /> {p.sellerInfo.compliments} {p.sellerInfo.compliments === 1 ? 'compliment' : 'compliments'}</li>}
-        </ul>
-      )}
-      {seller?.bio && <p className="sp-bio">{seller.bio}</p>}
-      {seller && (
-        <div className="sp-stats">
-          <div><span>Tasks completed</span><b>{seller.tasksCompleted ?? 0}</b></div>
-          {/* A rate needs finished work behind it: "0%" read as a bad seller when there was none yet */}
-          <div><span>Success rate</span><b>{(seller.tasksCompleted ?? 0) > 0 && seller.successRate != null ? `${Math.round(seller.successRate)}%` : <span style={{ font: 'inherit', fontSize: 13, letterSpacing: 0, textTransform: 'none', color: 'var(--text2)' }}>No jobs yet</span>}</b></div>
-        </div>
-      )}
-    </div>
-  )
-
-  return (
-    <Layout>
-      <style>{`
+// The product page's styles, shared by the page and its loading skeleton
+const SP_CSS = `
         .sp-page{padding-top:24px}
         .sp-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
         .sp-top button{display:inline-flex;align-items:center;gap:6px;background:none;border:0;cursor:pointer;font:500 13px var(--font);color:var(--text2);padding:4px 0;min-height:36px}
@@ -367,15 +161,284 @@ export default function StoreProduct() {
         .sp-desc img{max-width:100%}
         .sp-mobile-only{display:none}
         @media(max-width:900px){
-          .sp-layout{grid-template-columns:1fr}
+          .sp-layout{grid-template-columns:minmax(0,1fr)} /* minmax: a long name in a review can't widen the column past the phone (2026-11-08) */
           .sp-side{position:static}
           .sp-desktop-only{display:none}
           .sp-mobile-only{display:flex;flex-direction:column;gap:14px;margin-top:14px}
         }
-      `}</style>
+`
+
+export default function StoreProduct() {
+  const { id } = useParams<{ id: string }>()
+  const navigate = useNavigate()
+  const { hash } = useLocation()
+  const { user } = useAuth()
+  const { sol } = useLivePrice()
+  const { convert } = useCurrency()
+
+  const [product, setProduct] = useState<StoreProductData | null>(null)
+  const [seller, setSeller] = useState<SellerProfile | null>(null)
+  // 'none': no profile to show (failed, or an OgaPay item), so nothing is reserved for it
+  const [sellerState, setSellerState] = useState<'loading' | 'ok' | 'none'>('loading')
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [reviewRating, setReviewRating] = useState(0)
+  const [reviewComment, setReviewComment] = useState('')
+  const [submittingReview, setSubmittingReview] = useState(false)
+  const [reviewError, setReviewError] = useState('')
+  const [reviewDone, setReviewDone] = useState(false)
+  const shownId = useRef<string | null>(null)
+  const prefilled = useRef<string | null>(null)
+
+  const isOwner = user && product && user.id === product.sellerId
+  const isSoldOut = product && product.stock !== null && product.stock <= 0
+  // A product the seller hid still opens from old links: it can't be bought (2026-11-08)
+  const isHidden = !!product && product.isActive === false
+
+  // Signed in, the answer also says whether this member can review it (canReview).
+  // Only a new product shows the skeleton; reloading the same one (after a review,
+  // or signing in) updates the page in place (2026-11-08)
+  const fetchProduct = useCallback(async () => {
+    if (!id) return
+    if (shownId.current !== id) setLoading(true)
+    setError(null)
+    try {
+      const data = await apiRequest<StoreProductData>('/store/' + id, { fresh: true })
+      setProduct(data)
+      shownId.current = id
+    } catch (err: any) {
+      if (shownId.current !== id) setError(err?.message || 'Product not found')
+    } finally {
+      setLoading(false)
+    }
+  }, [id, user?.id]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const fetchSeller = useCallback(async (username: string) => {
+    try {
+      const data = await apiRequest<any>('/users/' + username, { auth: false })
+      if (data?.id) {
+        setSeller({
+          id: data.id,
+          username: data.username,
+          firstName: data.firstName,
+          avatarUrl: data.avatarUrl,
+          bio: data.workerProfile?.bio || null,
+          rating: data.workerProfile?.avgRating,
+          reviews: data.workerProfile?.totalRatings,
+          tasksCompleted: data.workerProfile?.tasksCompleted,
+          successRate: data.workerProfile?.successRate,
+          level: data.workerProfile?.level,
+          skills: data.workerProfile?.skills,
+          memberSince: data.createdAt,
+        })
+        setSellerState('ok')
+      } else setSellerState('none')
+    } catch { setSellerState('none') }
+  }, [])
+
+  useEffect(() => { fetchProduct() }, [fetchProduct])
+  // OgaPay's own items have no member behind them: "OgaPay" here is not a username
+  // to look up (anyone could register it) (2026-11-08)
+  useEffect(() => {
+    setSeller(null)
+    if (product?.seller && !product.official) { setSellerState('loading'); fetchSeller(product.seller) }
+    else setSellerState('none')
+  }, [product?.seller, product?.official, fetchSeller])
+
+  // "Leave a review" on an order links here with #review
+  const canReview = !!user && !!product?.canReview && !isOwner && !product.official
+  // A member who already reviewed it sees their stars and words, to change them
+  useEffect(() => {
+    if (!product?.myReview || prefilled.current === product.id) return
+    prefilled.current = product.id
+    setReviewRating(Number(product.myReview.rating) || 0)
+    setReviewComment(product.myReview.comment || '')
+  }, [product])
+  useEffect(() => {
+    if (hash === '#review' && product) document.getElementById('review')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  }, [hash, !!product, canReview]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (!product) return
+    document.title = `${product.title} | OgaPay Store`
+    let meta = document.querySelector('meta[name="description"]')
+    if (!meta) {
+      meta = document.createElement('meta')
+      meta.setAttribute('name', 'description')
+      document.head.appendChild(meta)
+    }
+    meta.setAttribute('content', (product.description || '').slice(0, 160))
+  }, [product])
+
+  const handleSubmitReview = async () => {
+    if (reviewRating < 1 || !product) return
+    setSubmittingReview(true); setReviewError('')
+    try {
+      await apiRequest('/store/' + product.id + '/reviews', {
+        method: 'POST',
+        body: JSON.stringify({ rating: reviewRating, comment: reviewComment }),
+      })
+      // The form stays filled in: it's their review now, and they can change it
+      prefilled.current = product.id
+      setReviewDone(true)
+      fetchProduct()
+    } catch (e: any) {
+      setReviewError(e?.message || "Your review couldn't be sent. Please try again.")
+    } finally { setSubmittingReview(false) }
+  }
+
+  const goBack = () => {
+    // Opened from a shared link there's no page before this one on OgaPay (2026-11-08)
+    if (Number(window.history.state?.idx ?? 0) > 0) navigate(-1)
+    else navigate('/store')
+  }
+
+  if (loading) {
+    // Inside the page frame (menu and dock stay) and shaped like the product page (2026-11-08)
+    return (
+      <Layout>
+        <style>{SP_CSS}</style>
+        <div className="ui-page sp-page" aria-busy="true" aria-label="Loading the product">
+          <div className="sp-top"><div className="ui-sk" style={{ height: 20, width: 70 }} /><div className="ui-sk" style={{ height: 20, width: 110 }} /></div>
+          <div className="ui-sk" style={{ height: 12, width: 120 }} />
+          <div className="ui-sk" style={{ height: 30, width: 'min(420px, 80%)', marginTop: 10 }} />
+          <div className="sp-layout">
+            <div>
+              <div className="sp-media ui-sk" style={{ border: 0 }} />
+              <div className="sp-mobile-only"><div className="ui-sk" style={{ height: 330 }} /></div>
+              <div className="ui-sk" style={{ height: 180, marginTop: 14 }} />
+            </div>
+            <aside className="sp-side sp-desktop-only">
+              <div className="ui-sk" style={{ height: 330 }} />
+              <div className="ui-sk" style={{ height: 160 }} />
+            </aside>
+          </div>
+        </div>
+      </Layout>
+    )
+  }
+
+  if (error || !product) {
+    return (
+      <Layout>
+        <div style={{ maxWidth: 960, margin: '0 auto', padding: '60px 20px', textAlign: 'center' }}>
+          <i className="ti ti-alert-circle" style={{ fontSize: 36, color: 'var(--text3)', display: 'block', marginBottom: 12 }} />
+          <h2 style={{ fontSize: 18, fontWeight: 800, color: 'var(--text)', margin: '0 0 8px' }}>{error || 'Product not found'}</h2>
+          <p style={{ fontSize: 13, color: 'var(--text2)', marginBottom: 20 }}>This listing doesn't exist or has been removed.</p>
+          <button onClick={() => navigate('/store')} style={{ background: 'var(--accent)', color: 'var(--on-accent)', border: 'none', borderRadius: 10, padding: '11px 22px', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+            <i className="ti ti-arrow-left" style={{ fontSize: 14 }} /> Back to Store
+          </button>
+        </div>
+      </Layout>
+    )
+  }
+
+  const p = product
+  const cur = (p.currency || 'NGN') as string
+  const delivery = p.metadata?.delivery || '3 days'
+  const revisions = p.metadata?.revisions ?? 3
+  const crumb = [itemCategoryLabel(p.category, p.title), p.metadata?.subcategory].filter(Boolean).join(' / ') || 'Store'
+
+  const onRequest = !!p.priceOnRequest
+  const contactSeller = () => {
+    if (!user) return navigate('/login?redirect=/store/' + p.id)
+    navigate('/messages?user=' + encodeURIComponent(p.seller) + '&product=' + p.id)
+  }
+  const unavailable = !!isSoldOut || isHidden
+  const buyLabel = isOwner ? 'Edit listing' : isHidden ? 'Not available' : isSoldOut ? 'Sold out' : onRequest ? 'Ask for a price' : 'Buy now'
+  const onBuy = () => {
+    if (isOwner) return navigate('/my-store')
+    if (onRequest) return contactSeller()
+    if (!user) return navigate('/login?redirect=/store/' + p.id)
+    navigate('/store/pay/' + p.id)
+  }
+
+  const PriceCard = (
+    <div className="ui-card sp-price">
+      <div className="sp-price-head">
+        <span>Your next project</span>
+        {isHidden ? <span className="sp-pill sp-pill-off">Not available</span> : isSoldOut ? <span className="sp-pill sp-pill-off">Sold out</span> : <span className="sp-pill"><span />Active</span>}
+      </div>
+      <div className="hc-reward sp-total">
+        <span className="ui-label" style={{ margin: 0 }}>{onRequest ? 'Price' : 'Total price'}</span>
+        {onRequest
+          ? <b style={{ display: 'block', fontSize: 24, fontWeight: 600, marginTop: 6 }}>Price on request</b>
+          : <Money amount={Number(p.price || 0)} currency={cur} convert={convert} size={34} exact />}
+        {onRequest && <small style={{ display: 'block', color: 'var(--text2)', marginTop: 6, fontSize: 12 }}>Message the seller with what you need. They'll reply with a price.</small>}
+      </div>
+      <div className="sp-facts">
+        <div><span><i className="ti ti-clock" />Delivery</span><b>{delivery}</b></div>
+        <div><span><i className="ti ti-refresh" />Revisions</span><b>{revisions}</b></div>
+      </div>
+      {isHidden && !isOwner && <div className="sp-note sp-note-err"><i className="ti ti-eye-off" />The seller isn't selling this right now.</div>}
+      <button className="ui-btn ui-btn-dark ui-btn-lg" style={{ width: '100%' }} onClick={onBuy} disabled={unavailable && !isOwner}>
+        {buyLabel} {(isOwner || !unavailable) && <i className={isOwner ? 'ti ti-edit' : 'ti ti-arrow-right'} />}
+      </button>
+      {!isOwner && !onRequest && !p.official && (
+        <button className="ui-btn ui-btn-ghost ui-btn-lg" style={{ width: '100%', marginTop: 8 }} onClick={contactSeller}>
+          <i className="ti ti-message" /> Contact seller
+        </button>
+      )}
+      {!isOwner && !p.official && !onRequest && (
+        <p className="sp-protect"><i className="ti ti-shield-check" aria-hidden="true" /> Buyer protection: your payment is held until you confirm you received the order.</p>
+      )}
+    </div>
+  )
+
+  // OgaPay's own items: a fixed card, no profile link (2026-11-08)
+  const CreatorCard = p.official ? (
+    <div className="ui-card sp-creator">
+      <span className="ui-label">Sold by</span>
+      <div className="sp-creator-row" style={{ cursor: 'default' }}>
+        <Avatar src={null} name="OgaPay" size={40} />
+        <span style={{ minWidth: 0 }}>
+          <b>Sold by OgaPay</b>
+          <span className="sp-rating"><span>It takes effect as soon as you pay.</span></span>
+        </span>
+      </div>
+    </div>
+  ) : (
+    <div className="ui-card sp-creator">
+      <span className="ui-label">Meet the creator</span>
+      <button className="sp-creator-row" onClick={() => navigate('/user/' + p.seller)}>
+        <Avatar src={p.sellerAvatar} name={p.seller} size={40} />
+        <span style={{ minWidth: 0 }}>
+          <b>{p.seller} <i className="ti ti-arrow-up-right" /></b>
+          <span className="sp-rating">
+            {p.reviewsCount > 0
+              ? <><i className="ti ti-star" style={{ color: '#bd8517' }} /> {Number(p.rating).toFixed(1)} <span>/ 5 · {p.reviewsCount} reviews</span></>
+              : p.sellerInfo?.newCreator !== false ? <span className="sp-new">New creator</span> : <span>No reviews on this product yet</span>}
+          </span>
+        </span>
+      </button>
+      {p.sellerInfo && (
+        <ul className="sp-trust">
+          <li><i className="ti ti-clock" aria-hidden="true" /> Last active {activeAgo(p.sellerInfo.lastActiveAt)}</li>
+          <li><i className="ti ti-trophy" aria-hidden="true" /> {p.sellerInfo.challengesWon} {p.sellerInfo.challengesWon === 1 ? 'challenge' : 'challenges'} won</li>
+          {p.sellerInfo.compliments > 0 && <li><i className="ti ti-heart" aria-hidden="true" /> {p.sellerInfo.compliments} {p.sellerInfo.compliments === 1 ? 'compliment' : 'compliments'}</li>}
+        </ul>
+      )}
+      {seller?.bio && <p className="sp-bio">{seller.bio}</p>}
+      {/* The tiles keep their place while the profile loads, so the text below doesn't jump (2026-11-08) */}
+      {sellerState === 'loading' && (
+        <div className="sp-stats" aria-hidden="true"><div className="ui-sk" style={{ height: 58, border: 0 }} /><div className="ui-sk" style={{ height: 58, border: 0 }} /></div>
+      )}
+      {seller && (
+        <div className="sp-stats">
+          <div><span>Tasks completed</span><b>{seller.tasksCompleted ?? 0}</b></div>
+          {/* A rate needs finished work behind it: "0%" read as a bad seller when there was none yet */}
+          <div><span>Success rate</span><b>{(seller.tasksCompleted ?? 0) > 0 && seller.successRate != null ? `${Math.round(seller.successRate)}%` : <span style={{ font: 'inherit', fontSize: 13, letterSpacing: 0, textTransform: 'none', color: 'var(--text2)' }}>No jobs yet</span>}</b></div>
+        </div>
+      )}
+    </div>
+  )
+
+  return (
+    <Layout>
+      <style>{SP_CSS}</style>
       <div className="ui-page sp-page">
         <div className="sp-top">
-          <button onClick={() => navigate(-1)}><i className="ti ti-arrow-left" />Back</button>
+          <button onClick={goBack}><i className="ti ti-arrow-left" />Back</button>
           <button onClick={() => navigate('/store')}>All products <i className="ti ti-arrow-up-right" /></button>
         </div>
         <span className="ui-eyebrow">{crumb}</span>
@@ -420,27 +483,32 @@ export default function StoreProduct() {
             <section className="ui-card sp-reviews">
               <h2 style={{ fontSize: 15, fontWeight: 600, margin: '0 0 6px' }}>Reviews {p.reviewsCount > 0 && <span style={{ color: 'var(--text2)', fontWeight: 400 }}>· {p.reviewsCount}</span>}</h2>
               {p.reviews.length === 0 ? (
-                <p style={{ fontSize: 13, color: 'var(--text2)', margin: '8px 0 0' }}>No reviews yet. Be the first to order.</p>
+                <p style={{ fontSize: 13, color: 'var(--text2)', margin: '8px 0 0' }}>{canReview ? 'No reviews yet. Be the first to review it.' : 'No reviews yet. Be the first to order.'}</p>
               ) : p.reviews.map(r => (
                 <div key={r.id} className="sp-review">
+                  {/* A long username shortens with "…" so the stars and date stay on a 360px phone (2026-11-08) */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     <Avatar src={r.avatarUrl} name={r.username} size={28} />
-                    <button onClick={() => navigate('/user/' + r.username)} style={{ background: 'none', border: 0, padding: 0, cursor: 'pointer', fontWeight: 600, fontSize: 13, color: 'var(--text)', fontFamily: 'inherit' }}>{r.username}</button>
-                    <span style={{ marginLeft: 'auto' }}><StarRating rating={r.rating} size={11} /></span>
-                    <span style={{ fontSize: 11, color: 'var(--text3)' }}>{timeAgo(r.createdAt)}</span>
+                    <button className="tap" onClick={() => navigate('/user/' + r.username)} style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textAlign: 'left', background: 'none', border: 0, padding: 0, cursor: 'pointer', fontWeight: 600, fontSize: 13, color: 'var(--text)', fontFamily: 'inherit' }}>{r.username}</button>
+                    <span style={{ flexShrink: 0 }}><StarRating rating={r.rating} size={11} /></span>
+                    <span style={{ fontSize: 11, color: 'var(--text3)', flexShrink: 0 }}>{timeAgo(r.createdAt)}</span>
                   </div>
                   {r.comment && <p style={{ fontSize: 13, color: 'var(--text2)', margin: '8px 0 0', lineHeight: 1.6 }}>{r.comment}</p>}
                 </div>
               ))}
 
-              {user && purchased && (
-                <div style={{ borderTop: '1px solid var(--border)', paddingTop: 14, marginTop: 6 }}>
-                  <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 8 }}>Write a review</div>
+              {/* Only for a member who bought it and finished the order (canReview from the server) (2026-11-08) */}
+              {reviewDone && !canReview && <div className="sp-note sp-note-ok" style={{ marginTop: 10 }}><i className="ti ti-circle-check" />Thanks. Your review is posted.</div>}
+              {canReview && (
+                <div id="review" style={{ borderTop: '1px solid var(--border)', paddingTop: 14, marginTop: 6 }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 8 }}>{p.myReview ? 'Your review' : 'Write a review'}</div>
+                  {reviewDone && <div className="sp-note sp-note-ok"><i className="ti ti-circle-check" />Thanks. Your review is saved. You can change it here.</div>}
                   <StarRating rating={reviewRating} size={22} interactive onChange={setReviewRating} />
                   <textarea className="ui-input" value={reviewComment} onChange={e => setReviewComment(e.target.value)} placeholder="Share your experience…"
                     style={{ height: 80, padding: '10px 12px', marginTop: 10, resize: 'vertical' }} />
+                  {reviewError && <div className="sp-note sp-note-err" role="alert" style={{ marginTop: 10, marginBottom: 0 }}><i className="ti ti-alert-circle" />{reviewError}</div>}
                   <button className="ui-btn ui-btn-dark" style={{ marginTop: 10 }} onClick={handleSubmitReview} disabled={submittingReview || reviewRating < 1}>
-                    {submittingReview ? 'Submitting…' : 'Submit review'}
+                    {submittingReview ? 'Submitting…' : p.myReview ? 'Update review' : 'Submit review'}
                   </button>
                 </div>
               )}

@@ -31,6 +31,9 @@ const CATEGORIES = [
   'Graphics & Design', 'Writing & Translation', 'Social Media & Growth', 'Video & Animation', 'Web & App Development',
   'Marketing & Ads', 'Music & Audio', 'Photography', 'Data & Research', 'Tutoring & Coaching', 'Digital Products', 'Other',
 ]
+// 2026-11-08: an order not marked delivered is refunded to the buyer 14 days after
+// it's paid, or the delivery time plus 7 days if that's later (the server keeps
+// the delivery time on the order), so '2 weeks' is safe to promise
 const DELIVERY = ['Instant (digital)', '1 day', '2 days', '3 days', '5 days', '1 week', '2 weeks']
 const MIN_NGN = 100
 
@@ -136,7 +139,7 @@ export default function MyStore() {
           </div>
         </div>
 
-        {error && <div className="up-note err" role="alert" style={{ marginBottom: 12 }}>{error} <button className="up-btn" style={{ height: 26, padding: '0 8px', marginLeft: 8 }} onClick={() => setError('')}>Dismiss</button></div>}
+        {error && <div className="up-note err" role="alert" style={{ marginBottom: 12 }}>{error} <button className="up-btn" style={{ padding: '0 10px', marginLeft: 8 }} onClick={() => setError('')}>Dismiss</button></div>}
 
         {tab === 'products' ? (
           products === null ? (failed.products ? <LoadError what="your products" onRetry={load} /> : <div className="up-skel" style={{ height: 140 }} />)
@@ -198,7 +201,7 @@ export default function MyStore() {
                 <p className="so-line"><i className="ti ti-clock" aria-hidden="true" /><span>Comes to you when the buyer confirms, or on <b>{orderWhen(o.releaseAt)}</b> if they report no problem.</span></p>
               )}
               {o.held && (o.status === 'PENDING' || o.status === 'IN_PROGRESS') && (
-                <p className="so-line"><i className="ti ti-shield-check" aria-hidden="true" /><span>The buyer's payment is held by OgaPay. Deliver, then mark it delivered: you're paid when they confirm, or 3 days later.</span></p>
+                <p className="so-line"><i className="ti ti-shield-check" aria-hidden="true" /><span>The buyer's payment is held by OgaPay. Deliver, then mark it delivered: you're paid when they confirm, or 3 days later.{o.autoRefundAt && <> Mark it delivered by <b>{orderWhen(o.autoRefundAt)}</b> or the buyer is refunded.</>}</span></p>
               )}
               {o.status === 'DISPUTED' && (
                 <p className="so-line bad"><i className="ti ti-alert-triangle" aria-hidden="true" /><span>The buyer reported a problem: "{o.disputeReason}" The payment is on hold while OgaPay reviews it. Sort it out with them in your chat, or refund them.</span></p>
@@ -382,6 +385,7 @@ function ProductEditor({ product, onClose, onSaved }: { product: Product | null;
         <div className="hr-row">
           <label className="ep-field"><span>Delivery time</span>
             <select value={form.delivery} onChange={(e) => set('delivery', e.target.value)}>{(DELIVERY.includes(form.delivery) ? DELIVERY : [form.delivery, ...DELIVERY]).map((d) => <option key={d}>{d}</option>)}</select>
+            <small>Not marked delivered within 14 days (or your delivery time plus 7 days, if longer)? The buyer is refunded.</small>
           </label>
           <label className="ep-field"><span>Revisions</span>
             <select value={form.revisions} onChange={(e) => set('revisions', e.target.value)}>{Array.from({ length: 11 }, (_, i) => <option key={i} value={i}>{i}</option>)}</select>

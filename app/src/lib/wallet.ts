@@ -85,6 +85,10 @@ export const usefulNote = (t: Tx) => {
 // Amounts are stored positive; the direction comes from the balance change, then
 // the P2P metadata, then the type
 export function isCredit(t: Tx) {
+  // The buyer's side of a store order (held: true) is always money out: its
+  // balanceBefore is from the purchase and balanceAfter from the release, so
+  // earnings in between made it look like a "+ Store sale" (2026-11-08)
+  if (up(t.type) === 'STORE_PURCHASE' && t.metadata?.held) return false
   if (t.balanceBefore != null && t.balanceAfter != null) {
     const delta = Number(t.balanceAfter) - Number(t.balanceBefore)
     if (delta !== 0) return delta > 0

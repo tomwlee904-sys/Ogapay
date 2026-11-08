@@ -3,7 +3,7 @@ import { Link, useLocation, useParams } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { apiRequest } from '../lib/api'
 import { sized } from '../lib/img'
-import { orderBadge, orderMoney, type StoreOrder } from './StoreOrders'
+import { canReviewOrder, orderBadge, orderMoney, type StoreOrder } from './StoreOrders'
 import '../styles/checkout.css'
 import '../styles/my-store.css'
 
@@ -100,12 +100,14 @@ export default function OrderConfirmation() {
             {order.quantity > 1 && p.price != null && <div className="sc-line"><span>Price each</span><span>{orderMoney(p.price, order.currency)} × {order.quantity}</span></div>}
             {other && <div className="sc-line"><span>{buyer ? 'Seller' : 'Buyer'}</span><span><Link className="tap" to={`/user/${other.username}`} style={{ color: 'inherit' }}>@{other.username}</Link></span></div>}
             <div className="sc-line" style={{ borderBottom: 0 }}><span>Ordered</span><span>{new Date(order.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span></div>
-            {p.available === false && <p className="ui-sub" style={{ marginTop: 8, fontSize: 13 }}>The seller has removed this product from the store. Your order and its payment protection are not affected.</p>}
+            {/* available: false is also a product the seller only hid, so don't say removed (2026-11-08) */}
+            {p.available === false && <p className="ui-sub" style={{ marginTop: 8, fontSize: 13 }}>This product isn't listed in the store right now. Your order and its payment protection are not affected.</p>}
           </div>
 
           <div className="ui-actions">
             <Link className="ui-btn ui-btn-dark ui-btn-lg" to={chat}><i className="ti ti-message-circle" aria-hidden="true" /> {other ? `Message @${other.username}` : 'Open messages'}</Link>
             <Link className="ui-btn ui-btn-ghost ui-btn-lg" to={buyer ? '/store/orders' : '/my-store'}>{buyer ? 'My orders' : 'My store'}</Link>
+            {buyer && order.seller && canReviewOrder(order) && <Link className="ui-btn ui-btn-ghost ui-btn-lg" to={`/store/${p.id}#review`}><i className="ti ti-star" aria-hidden="true" /> Leave a review</Link>}
           </div>
           <p className="sc-ref">Order reference {order.id.slice(0, 8).toUpperCase()}</p>
         </div>
