@@ -106,6 +106,9 @@ export default function QuickTaskForm({ platform, onBack, onCreated }: { platfor
         ...(deadline && { deadline: deadline.toISOString() }),
         ...reqFields(reqs),
       }, payKey.current);
+      // Posted: the next job from this form gets its own key (2026-11-08). The
+      // form stays open, and the same key returned the first job instead
+      payKey.current = newKey();
       refreshWallet();
       onCreated(taskId);
     } catch (err: any) {

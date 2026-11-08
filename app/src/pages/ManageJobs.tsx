@@ -162,7 +162,7 @@ function Proof({ s }: { s: Sub }) {
 // focusId: an entry to scroll to and mark (the Read link on a contest's job page)
 // onChanged: the job changed (only it is loaded again, not every job); onSubs: its
 // submissions as the drawer has them, so the job's card counts stay right (2026-11-08)
-function JobDrawer({ task, allTasks, focusId, onClose, onChanged, onSubs }: { task: Task; allTasks: Task[]; focusId?: string | null; onClose: () => void; onChanged: () => void; onSubs?: (taskId: string, subs: Sub[]) => void }) {
+function JobDrawer({ task, allTasks, focusId, onClose, onChanged, onSubs }: { task: Task; allTasks: Task[]; focusId?: string | null; onClose: () => void; onChanged: (o?: { subs?: boolean }) => void; onSubs?: (taskId: string, subs: Sub[]) => void }) {
   const navigate = useNavigate();
   const { toast } = useToast();
   // These are the signed-in person's own jobs, so they are the poster
@@ -328,7 +328,7 @@ They get a warning on their account and can't take follow jobs for ${UNFOLLOW_BL
     try {
       await apiRequest(`/escrow/refund/${task.id}`, { method: "POST" });
       toast("Job cancelled. The money is back in your wallet.", "success");
-      onChanged(); onClose();
+      onChanged({ subs: true }); onClose();
     } catch (e: any) { toast(e?.message || "Couldn't cancel this job", "error"); }
   };
   // Raise the pay per person: the extra for every place (plus the 10% fee) is held
@@ -370,9 +370,11 @@ They get a warning on their account and can't take follow jobs for ${UNFOLLOW_BL
     if (!window.confirm(`Add ${n} place${n === 1 ? "" : "s"} at ${money(reward, cur)} each?\n\n${money(extra, cur)} is held for them, plus a ${money(fee, cur)} fee: ${money(extra + fee, cur)} from your wallet.\n\nMoney for places nobody uses comes back when the job closes.`)) return;
     const before = Number(task.maxWorkers) || 0;
     try {
-      const r = await apiRequest<{ places: number; reopened?: boolean }>(`/tasks/${task.id}/add-places`, { method: "POST", body: JSON.stringify({ places: n, idempotencyKey: placesKey.current }), timeoutMs: MONEY_TIMEOUT_MS });
+      const r = await apiRequest<{ places: number; added?: number; reopened?: boolean }>(`/tasks/${task.id}/add-places`, { method: "POST", body: JSON.stringify({ places: n, idempotencyKey: placesKey.current }), timeoutMs: MONEY_TIMEOUT_MS });
       placesKey.current = newKey();
-      toast(`${n} place${n === 1 ? "" : "s"} added. The job now has ${r?.places ?? before + n}${r?.reopened ? " and is taking people again" : ""}.`, "success");
+      // A repeat of an earlier try answers with what that try added (2026-11-08)
+      const added = Number(r?.added) > 0 ? Number(r?.added) : n;
+      toast(`${added} place${added === 1 ? "" : "s"} added. The job now has ${r?.places ?? before + n}${r?.reopened ? " and is taking people again" : ""}.`, "success");
       onChanged(); onClose();
     } catch (e: any) {
       if (!isUnsure(e)) { toast(e?.message || "Couldn't add places", "error"); return; }
@@ -409,7 +411,7 @@ They get a warning on their account and can't take follow jobs for ${UNFOLLOW_BL
     try {
       const r = await apiRequest<{ approved: number; released: number }>(`/tasks/${task.id}/stop`, { method: "POST" });
       toast(`Job stopped.${r?.approved ? ` ${r.approved} paid.` : ""} The unused money is back in your wallet.`, "success");
-      onChanged(); onClose();
+      onChanged({ subs: true }); onClose();
     } catch (e: any) { toast(e?.message || "Couldn't stop the job", "error"); }
   };
   const [editing, setEditing] = useState(false);
@@ -873,7 +875,7 @@ const FILTERS: { id: string; label: string; test: (t: Task) => boolean }[] = [
 ];
 
 type ListProps = {
-  tasks: Task[]; refreshJob: (id: string) => void; onSubs: (id: string, subs: Sub[]) => void
+  tasks: Task[]; refreshJob: (id: string, o?: { subs?: boolean }) => void; onSubs: (id: string, subs: Sub[]) => void
   // Older jobs come a page at a time (2026-11-08): only the newest 100 used to load
   hasMore: boolean; loadingMore: boolean; loadMore: () => void
   // A ?job= link to a job that isn't loaded yet: load just that job
@@ -990,13 +992,16 @@ function JobsListPage({ tasks, refreshJob, onSubs, hasMore, loadingMore, loadMor
         </div>
       )}
 
-      {open && <JobDrawer task={open} allTasks={tasks} focusId={open.id === params.get("job") ? params.get("entry") : null} onClose={() => setOpenId(null)} onChanged={() => refreshJob(open.id)} onSubs={onSubs} />}
+      {open && <JobDrawer task={open} allTasks={tasks} focusId={open.id === params.get("job") ? params.get("entry") : null} onClose={() => setOpenId(null)} onChanged={(o) => refreshJob(open.id, o)} onSubs={onSubs} />}
     </>
   );
 }
 
 // ── MAIN PAGE ──────────────────────────────────────────────────────────────
-const JOBS_PAGE = 50;
+// GET /tasks/:id calls an open job past its end "Expired"; Manage jobs keeps the
+// stored status (the one already shown, else Open), as the list does
+const listStatus = (fresh: string, shown?: string) => fresh === "EXPIRED" ? (shown && shown !== "EXPIRED" ? shown : "OPEN") : fresh;
+const JOBS_PAGE = 100;
 export default function MyJobs() {
   const { toast } = useToast();
   const { user, isAuthed } = useAuth();
@@ -1049,16 +1054,19 @@ export default function MyJobs() {
 
   // One job loaded again after a change in its panel (review, pause, edit...):
   // the whole list with every job's submissions used to download again each time
-  const refreshJob = useCallback(async (id: string) => {
+  // subs: its work too, after Stop job or Cancel (the drawer closes at once, so
+  // the card kept "waiting for review" and the old totals, 2026-11-08)
+  const refreshJob = useCallback(async (id: string, o?: { subs?: boolean }) => {
     try {
-      const d = await apiRequest<any>(`/tasks/${id}`, { fresh: true });
+      const [d, subs] = await Promise.all([
+        apiRequest<any>(`/tasks/${id}`, { fresh: true }),
+        o?.subs ? apiRequest<Sub[]>(`/tasks/${id}/submissions?limit=500`, { fresh: true }).catch(() => null) : Promise.resolve(null),
+      ]);
       const fresh = d?.task || d;
       if (!fresh?.id) return;
       setTasks((prev) => (prev || []).map((t) => {
         if (t.id !== id) return t;
-        // The job page calls an open job past its end "Expired"; here it keeps the stored status
-        const status = fresh.status === "EXPIRED" && t.status !== "EXPIRED" ? t.status : fresh.status;
-        return { ...t, ...fresh, status, submissions: t.submissions, _count: t._count };
+        return { ...t, ...fresh, status: listStatus(fresh.status, t.status), submissions: Array.isArray(subs) ? subs : t.submissions, _count: t._count };
       }));
     } catch { /* the job shown stays as it was */ }
   }, []);
@@ -1072,7 +1080,8 @@ export default function MyJobs() {
       const d = await apiRequest<any>(`/tasks/${id}`);
       const t = d?.task || d;
       if (!t?.id || t.posterId !== user?.id) return;
-      setTasks((prev) => (prev || []).some((x) => x.id === t.id) ? prev : [...(prev || []), { ...t, submissions: [] }]);
+      // An open job past its end comes back "Expired" from the job page: shown as Open, as in the list (2026-11-08)
+      setTasks((prev) => (prev || []).some((x) => x.id === t.id) ? prev : [...(prev || []), { ...t, status: listStatus(t.status), submissions: [] }]);
     } catch { /* gone or not yours: nothing opens */ }
   }, [user?.id]);
 

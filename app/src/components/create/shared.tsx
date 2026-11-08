@@ -230,13 +230,16 @@ export const isUnsure = (err: any) => !err?.status;
 export const MONEY_TIMEOUT_MS = 45000;
 
 /** Your newest jobs, to check whether a job was made after an unsure answer.
-    Gives the job's id, "" when it isn't there, null when we couldn't check. */
-export async function findJustCreated(title: string, since: number): Promise<string | null> {
+    Gives the job's id, "" when it isn't there, null when we couldn't check.
+    The same title, brief and places, made since you pressed Pay (2026-11-08):
+    titles alone repeat ("Like on X"), so an earlier job was taken for this one. */
+export async function findJustCreated(body: Record<string, any>, since: number): Promise<string | null> {
   try {
     const data = await apiRequest<any>("/tasks/my/created?limit=10", { fresh: true });
     const rows: any[] = Array.isArray(data) ? data : data?.tasks || [];
-    const want = title.trim();
-    const hit = rows.find((t) => String(t?.title || "").trim() === want && new Date(t?.createdAt || 0).getTime() >= since - 120000);
+    const same = (a: any, b: any) => String(a ?? "").trim() === String(b ?? "").trim();
+    const hit = rows.find((t) => same(t?.title, body.title) && same(t?.description, body.description)
+      && Number(t?.maxWorkers) === Number(body.maxWorkers) && new Date(t?.createdAt || 0).getTime() >= since - 5000);
     return hit?.id || "";
   } catch { return null; }
 }
@@ -248,17 +251,29 @@ export async function findJustCreated(title: string, since: number): Promise<str
     (2026-11-08). */
 export async function createTask(body: Record<string, any>, key?: string): Promise<string> {
   const since = Date.now();
-  try {
+  const send = async () => {
     const result = await apiRequest<any>("/tasks", { method: "POST", body: JSON.stringify({ ...body, ...(key && { idempotencyKey: key }) }), timeoutMs: MONEY_TIMEOUT_MS });
     const task = result?.data || result?.task || result;
     return task?.id || "";
+  };
+  try {
+    return await send();
   } catch (err: any) {
     if (!isUnsure(err) || !body?.title) throw err;
-    const found = await findJustCreated(String(body.title), since);
+    const found = await findJustCreated(body, since);
     if (found) return found;
+    // Not found: sent once more with the same key (2026-11-08). The server answers
+    // with the job if the first one got through (still saving, or not listed yet),
+    // or posts it once
+    if (key) {
+      try { return await send(); } catch (again: any) {
+        if (!isUnsure(again)) throw again;
+        throw new Error("The connection dropped, so we couldn't check if your job was posted. Look in Manage jobs before you pay again. Trying again from this page won't charge you twice.");
+      }
+    }
     throw new Error(found === ""
-      ? "The connection dropped before your job was posted, and it isn't in your jobs. Try again: you won't be charged twice for this job."
-      : "The connection dropped, so we couldn't check if your job was posted. Look in Manage jobs before you pay again. Trying again from this page won't charge you twice.");
+      ? "The connection dropped before your job was posted, and it isn't in your jobs. Try again."
+      : "The connection dropped, so we couldn't check if your job was posted. Look in Manage jobs before you pay again.");
   }
 }
 
@@ -395,6 +410,9 @@ export type TemplateData = {
   deliveryDays?: string
   hideAfterComplete?: boolean
   watermark?: boolean
+  // Contests: the prizes (1st place first), the entry target and a random draw;
+  // any job: the proof asked for in the poster's words (2026-11-08)
+  prizes?: string[]; entryTarget?: string; randomDraw?: boolean; proofText?: string
 }
 export type TemplateFile = { name: string; url: string }
 export type JobTemplate = {
@@ -433,6 +451,8 @@ export function taskToTemplateData(t: any): TemplateData {
   const selection = !contest && !!t?.isSelection;
   const winners = contest ? prizes.length : selection ? 1 : Math.max(1, Number(t?.maxWorkers) || 1);
   const pool = contest ? prizes.reduce((a, b) => a + b, 0) : Number(t?.reward || 0) * winners;
+  // The proof asked for, without the screenshot switch's own words (2026-11-08)
+  const proofText = String(t?.proofRequired || "").replace(/^\s*screenshot(\s+required)?\s*(\.|$)\s*/i, "").trim().slice(0, 400);
   // Selection: how long applications were open, to the nearest choice on the form
   const openHours = t?.applicationsCloseAt && t?.createdAt ? (new Date(t.applicationsCloseAt).getTime() - new Date(t.createdAt).getTime()) / 3600000 : 0;
   const selectionHours = openHours > 0 ? SELECTION_TIMES.reduce((best, [h]) => Math.abs(Number(h) - openHours) < Math.abs(Number(best) - openHours) ? h : best, "24") : "";
@@ -450,6 +470,10 @@ export function taskToTemplateData(t: any): TemplateData {
     // "Submit your username" came back as a screenshot every worker needed
     screenshot: /screenshot required/i.test(String(t?.proofRequired || "")) || /^\s*screenshot\s*$/i.test(String(t?.proofRequired || "")),
     trackingCode: t?.trackingCode || "",
+    ...(proofText && { proofText }),
+    // A contest keeps its prizes, entry target and draw (2026-11-08): it came back
+    // with empty prize boxes
+    ...(contest && { prizes: prizes.map(String), ...(Number(t?.entryTarget) > 0 && { entryTarget: String(t.entryTarget) }), ...(t?.randomDraw && { randomDraw: true }) }),
     ...(Number(t?.payoutCooldownMinutes) > 0 && { payoutCheck: String(t.payoutCooldownMinutes) }),
     ...(selection && { ...(selectionHours && { selectionHours }), deliveryDays: String(DELIVERY_TIMES.some(([d]) => d === String(t?.deliveryDays)) ? t.deliveryDays : 1) }),
     ...(t?.hideAfterComplete && { hideAfterComplete: true }),

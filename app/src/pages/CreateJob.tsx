@@ -580,7 +580,7 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
   const [gender, setGender] = useState("");
   // The link people open to start the job ("Start job" on the job page), and what to send as proof
   const [startUrl, setStartUrl] = useState("");
-  const [proofText, setProofText] = useState("");
+  const [proofText, setProofText] = useState<string>(typeof init.proofText === "string" ? init.proofText : "");
   // Follow jobs: the platform whose username workers must type ("" = don't ask; backend askHandle)
   const [askHandle, setAskHandle] = useState("");
   const startUrlBad = !!startUrl.trim() && !/^https?:\/\/[^\s]+$/i.test(startUrl.trim());
@@ -743,6 +743,13 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
         mode, title: title.trim(), description, currency, bounty, winners: winnersInput, category, subcategory, duration, ...reqsToSaved(reqs), screenshot, trackingCode,
         ...(payoutCheck > 0 && { payoutCheck: String(payoutCheck) }),
         ...(isSelection && { selectionHours, deliveryDays }), ...(hideAfter && { hideAfterComplete: true }), ...(watermark && { watermark: true }),
+        // The proof text and a contest's prizes, entry target and draw (2026-11-08)
+        ...(proofText.trim() && { proofText: proofText.trim() }),
+        ...(isContest && {
+          prizes: prizesInput.map(p => String(p).replace(/,/g, "").trim()).filter(p => Number(p) > 0),
+          ...(parseInt(entryTarget) > 0 && { entryTarget: String(parseInt(entryTarget)) }),
+          ...(randomDraw && { randomDraw: true }),
+        }),
       }, undefined, { isPublic: shareTemplate, files: [...templateFiles, ...added].slice(0, 10) });
       if (added.length) { setTemplateFiles(tf => [...tf, ...added].slice(0, 10)); setFiles([]); }
       setTplSaved("saved");
@@ -1196,6 +1203,12 @@ function CustomJobWizard({ onClose, onCreate, initialTemplate = null }: any) {
         setTemplateFiles(Array.isArray(tplFiles) ? tplFiles.slice(0, 10) : []);
         if (!example) { setHideAfter(!!d.hideAfterComplete); setWatermark(!!d.watermark); if (d.selectionHours && SELECTION_TIMES.some(([h]) => h === d.selectionHours)) setSelectionHours(d.selectionHours); setDeliveryDays(d.deliveryDays && DELIVERY_TIMES.some(([x]) => x === d.deliveryDays) ? d.deliveryDays : "1"); }
         if (!example) { setBounty(d.bounty || ""); if (d.currency) setCurrency(d.currency); if (d.duration) setDuration(d.duration); setTrackingCode(d.trackingCode || ""); setScreenshot(!!d.screenshot); setPayoutCheck(PAYOUT_CHECKS.some(c => String(c.minutes) === d.payoutCheck) ? Number(d.payoutCheck) : 0); }
+        // Your template's proof text and a contest's prizes, entry target and draw (2026-11-08)
+        if (!example) {
+          setProofText(d.proofText || "");
+          setPrizesInput(Array.isArray(d.prizes) && d.prizes.length ? d.prizes.map(String).slice(0, MAX_PLACES) : ["", "", ""]);
+          setEntryTarget(d.entryTarget ? String(d.entryTarget) : ""); setRandomDraw(!!d.randomDraw);
+        }
         // Ready-made examples (app testing) suggest a budget and duration
         // and start from the same proof settings as on a fresh form
         else if (d.bounty) { setBounty(d.bounty); if (d.currency) setCurrency(d.currency); if (d.duration) setDuration(d.duration); setScreenshot(!!d.screenshot); setTrackingCode(d.trackingCode || ""); }

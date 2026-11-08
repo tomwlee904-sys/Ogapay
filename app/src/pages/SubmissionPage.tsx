@@ -114,10 +114,17 @@ export default function SubmissionPage() {
   // has (a contest's result, a second look, the auto-approve time), in the
   // background. A failed load keeps what's shown: it used to clear it and bring
   // the empty form back as if nothing was sent.
+  // GET /tasks/:id now sends those details too (2026-11-08), so the history is only
+  // loaded from a server that doesn't. An answer asked for before a send or take
+  // back is older than what's shown and is ignored: it brought the form back.
   const [detailed, setDetailed] = useState(false)
+  const changes = useRef(0)
+  const needsDetails = (d: any) => !!d?.userSubmission && !('dispute' in d.userSubmission)
   const loadDetails = async () => {
+    const asked = changes.current
     try {
       const d = await apiRequest<{ submissions: Mine[] }>('/tasks/my/submissions', { fresh: true })
+      if (asked !== changes.current) return
       const row = (d?.submissions || []).find((s) => s.taskId === id)
       if (row) setMine((m) => ({ ...(m || {}), ...row }))
       setDetailed(true)
@@ -128,11 +135,12 @@ export default function SubmissionPage() {
     setTask(d?.task || d || null)
     setApplication(d?.userApplication || null)
     setMine((m) => d?.userSubmission ? { ...(m || {}), ...d.userSubmission } : (d && 'userSubmission' in d ? null : m ?? null))
+    return d
   }
   // After sending, taking back or appealing: your place again, never blocking
   const loadMine = async () => {
-    try { await loadJob() } catch { /* keep what's shown */ }
-    if (user) loadDetails()
+    const d = await loadJob().catch(() => null) // keep what's shown
+    if (user && needsDetails(d)) loadDetails()
   }
   // Sent back for changes: what they sent is put back in the form to edit
   const refilled = useRef('')
@@ -151,8 +159,7 @@ export default function SubmissionPage() {
   }, [mine])
   useEffect(() => {
     if (!id) return
-    loadJob().catch(() => { setTask(null); setMine(null) })
-    if (user) loadDetails()
+    loadJob().then((d) => { if (user && needsDetails(d)) loadDetails() }).catch(() => { setTask(null); setMine(null) })
   }, [id]) // eslint-disable-line react-hooks/exhaustive-deps
 
   if (task === undefined || mine === undefined) {
@@ -196,6 +203,7 @@ export default function SubmissionPage() {
       setLink(mine.proof && /^https?:\/\//.test(mine.proof) ? mine.proof : '')
       setNotes(mine.workerNotes || '')
       setHandle(mine.workerHandle || '')
+      changes.current++
       setMine((m) => m ? { ...m, status: 'PENDING', submittedAt: null } : m)
       setBusy('')
       loadMine()
@@ -251,6 +259,7 @@ export default function SubmissionPage() {
       const sent = await apiRequest<any>(`/tasks/${task.id}/submit`, { method: 'POST', body: JSON.stringify({ ...(link.trim() && { proof: link.trim() }), ...(notes.trim() && { workerNotes: notes.trim() }), ...(urls.length && { attachments: urls }), ...(originals.length && { originals }), ...(cleanName && { handle: cleanName }) }) })
       // Sent: show it at once from the answer, then load the rest in the background
       // (the spinner used to wait for your whole history, 2026-11-08)
+      changes.current++
       setMine((m) => ({ ...(m || {}), ...(sent && typeof sent === 'object' && sent.id ? sent : {}), status: 'SUBMITTED', submittedAt: sent?.submittedAt || new Date().toISOString(), taskId: task.id } as Mine))
       setLink(''); setNotes(''); setHandle(''); setFiles([]); setKept([])
       clearDraft(draftKey, user?.id)
@@ -266,7 +275,7 @@ export default function SubmissionPage() {
   }
 
   // A second look at a rejection: an admin checks the work against the brief
-  const canAppeal = detailed && mine?.status === 'REJECTED' && !task.isContest && !mine.dispute && !['COMPLETED', 'CANCELLED'].includes(task.status)
+  const canAppeal = (detailed || (!!mine && 'dispute' in mine)) && mine?.status === 'REJECTED' && !task.isContest && !mine.dispute && !['COMPLETED', 'CANCELLED'].includes(task.status)
     && (!mine.reviewedAt || Date.now() - new Date(mine.reviewedAt).getTime() < APPEAL_DAYS * 86400000)
   const appeal = async () => {
     if (!mine) return
