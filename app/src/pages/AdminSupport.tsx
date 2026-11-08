@@ -19,6 +19,10 @@ type Ticket = {
   reportedUser?: { id: string; username: string; firstName?: string; lastName?: string } | null
   messages?: TicketMessage[]
 }
+// Files that came in by email (support@): kept by Resend, so the links are
+// fetched when asked for and last about an hour (2026-11-08)
+type EmailFile = { id: string; filename: string; contentType?: string | null; size?: number | null; receivedAt: string; url: string | null; expiresAt?: string | null }
+const fileSize = (n?: number | null) => (!n ? '' : n < 1024 * 1024 ? `${Math.max(1, Math.round(n / 1024))} KB` : `${(n / 1024 / 1024).toFixed(1)} MB`)
 const REPLY_MIN = 10
 const STATUSES = [['open', 'Open'], ['in_review', 'In review'], ['resolved', 'Resolved'], ['dismissed', 'Dismissed']] as const
 const when = (d: string) => new Date(d).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
@@ -32,6 +36,15 @@ export default function AdminSupport() {
   const [replies, setReplies] = useState<Record<string, string>>({})
   const [cardErr, setCardErr] = useState<Record<string, string>>({})
   const [busy, setBusy] = useState('')
+  const [emailFiles, setEmailFiles] = useState<Record<string, EmailFile[] | 'loading' | { error: string }>>({})
+
+  const loadEmailFiles = async (id: string) => {
+    setEmailFiles((f) => ({ ...f, [id]: 'loading' }))
+    try {
+      const l = await apiRequest<EmailFile[]>(`/reports/admin/${id}/email-files`)
+      setEmailFiles((f) => ({ ...f, [id]: Array.isArray(l) ? l : [] }))
+    } catch (e: any) { setEmailFiles((f) => ({ ...f, [id]: { error: e?.message || "Couldn't load the files" } })) }
+  }
 
   const load = useCallback(() => {
     setItems(null); setErr('')
@@ -108,6 +121,34 @@ export default function AdminSupport() {
                       ))}
                     </p>
                   )}
+                  {t.targetType === 'support' && (() => {
+                    const f = emailFiles[t.id]
+                    return (
+                      <div style={{ margin: '0 0 10px' }}>
+                        {f === undefined || f === 'loading' || !Array.isArray(f) ? (
+                          <>
+                            <button type="button" className="ui-chip" style={{ minHeight: 36 }} disabled={f === 'loading'} onClick={() => loadEmailFiles(t.id)}>
+                              <i className="ti ti-mail" /> {f === 'loading' ? 'Loading files…' : 'Files sent by email'}
+                            </button>
+                            {f && typeof f === 'object' && 'error' in f && <span role="alert" style={{ marginLeft: 8, color: 'var(--red)', fontSize: 12.5 }}>{f.error}</span>}
+                          </>
+                        ) : f.length === 0 ? (
+                          <p style={{ margin: 0, fontSize: 12.5, color: 'var(--text2)' }}>No files were sent by email on this ticket.</p>
+                        ) : (
+                          <div>
+                            <p style={{ margin: '0 0 6px', fontSize: 12, color: 'var(--text2)' }}>Files sent by email (links last about an hour; <button type="button" onClick={() => loadEmailFiles(t.id)} style={{ background: 'none', border: 0, padding: 0, color: 'var(--text)', fontWeight: 600, textDecoration: 'underline', cursor: 'pointer', font: 'inherit' }}>get new links</button>)</p>
+                            <p style={{ margin: 0, display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                              {f.map((x, i) => x.url ? (
+                                <a key={`${x.id}-${i}`} href={x.url} target="_blank" rel="noopener noreferrer nofollow" className="ui-chip" style={{ minHeight: 36, maxWidth: '100%', overflowWrap: 'anywhere' }}><i className="ti ti-paperclip" /> {x.filename}{x.size ? ` (${fileSize(x.size)})` : ''}</a>
+                              ) : (
+                                <span key={`${x.id}-${i}`} className="ui-chip" style={{ minHeight: 36, cursor: 'default', color: 'var(--text2)', maxWidth: '100%', overflowWrap: 'anywhere' }}><i className="ti ti-paperclip" /> {x.filename} (no longer available)</span>
+                              ))}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })()}
                   <p style={{ margin: '0 0 12px', fontSize: 12.5, color: 'var(--text2)' }}>
                     From {who}{reply && <> · <a href={`mailto:${reply}?subject=${encodeURIComponent('Re: ' + (t.subject || t.category))}`} style={{ color: 'var(--text)', fontWeight: 600 }}>{reply}</a></>}
                     {target && <> · <Link to={target} style={{ color: 'var(--text)', fontWeight: 600 }}>Open what was reported</Link></>}
