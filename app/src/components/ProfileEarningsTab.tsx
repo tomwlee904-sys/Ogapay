@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext'
 import { apiRequest } from '../lib/api'
 import { SkeletonTab, injectSkeletonStyles } from "../components/SkeletonLoader"
 import type { Currency } from '../lib/currency'
+import { jobsEarnedIn, lifetimeIn } from '../lib/earnings'
 
 // Earnings from the wallet ledger. This used to look for lower-case statuses
 // ("completed") and add amounts as text, so it showed ₦0, "?" and raw type names.
@@ -36,6 +37,9 @@ export default function TabEarningsContent() {
 
   const [loading, setLoading] = useState(true)
   const [taskTotal, setTaskTotal] = useState(0)
+  // Lifetime totals per kind from /wallet/summary, in naira; null on an older
+  // server, which only had job pay (with vault payouts counted in it too) (2026-11-08)
+  const [lifetime, setLifetime] = useState<Record<'referrals' | 'bonuses' | 'tips' | 'vault', number> | null>(null)
   const [availableBalance, setAvailableBalance] = useState<number | null>(null)
   const [history, setHistory] = useState<HistoryItem[]>([])
   // Per-day totals from the server for the chart, so 90 days and a year work
@@ -64,15 +68,18 @@ export default function TabEarningsContent() {
       items.push({ date: t.completedAt || t.createdAt, source: t.description || LABEL[kind], amount, currency, ngn: toNgn(amount, currency), kind, pending: status !== 'COMPLETED' })
     }
 
-    // Lifetime job earnings come from the server's total, not just the last 100 entries
-    let lifetimeTasks: number | null = null
-    if (summary && typeof summary === 'object') {
-      lifetimeTasks = 0
-      for (const [cur, v] of Object.entries<any>(summary)) {
-        if (MONEY.includes(cur as Currency)) lifetimeTasks += toNgn(Number(v?.earned) || 0, cur as Currency)
-      }
-    }
+    // Lifetime totals come from the server, added up over every transaction, not
+    // just the last 100 entries. Vault payouts are no longer inside job pay, so
+    // they aren't counted twice (2026-11-08)
+    const lifetimeTasks = jobsEarnedIn(summary, convert)
     setTaskTotal(lifetimeTasks ?? items.filter((h) => h.kind === 'task' && !h.pending).reduce((s, h) => s + h.ngn, 0))
+    const referralsLt = lifetimeIn(summary, 'referrals', convert)
+    setLifetime(referralsLt === null ? null : {
+      referrals: referralsLt,
+      bonuses: lifetimeIn(summary, 'bonuses', convert) ?? 0,
+      tips: lifetimeIn(summary, 'tips', convert) ?? 0,
+      vault: lifetimeIn(summary, 'vault', convert) ?? 0,
+    })
     const ngn = balanceData?.NGN
     setAvailableBalance(ngn ? Number(ngn.available ?? ngn.balance) || 0 : null)
     setHistory(items)
@@ -100,7 +107,9 @@ export default function TabEarningsContent() {
 
   const done = history.filter((h) => !h.pending)
   const sum = (k: Kind) => done.filter((h) => h.kind === k).reduce((s, h) => s + h.ngn, 0)
-  const referrals = sum('referral'), bonuses = sum('bonus'), vault = sum('vault'), tips = sum('tip')
+  // Lifetime figures when the server sends them; otherwise the recent history
+  const referrals = lifetime?.referrals ?? sum('referral'), bonuses = lifetime?.bonuses ?? sum('bonus')
+  const vault = lifetime?.vault ?? sum('vault'), tips = lifetime?.tips ?? sum('tip')
   const tipCount = done.filter((h) => h.kind === 'tip').length
   const totalEarned = taskTotal + referrals + bonuses + vault + tips
   const pending = history.filter((h) => h.pending).reduce((s, h) => s + h.ngn, 0)
@@ -152,7 +161,7 @@ export default function TabEarningsContent() {
     <>
       <style>{`
         .en-hero{margin-bottom:20px}
-        .en-hero h1{font-family:Inter;font-size:28px;font-weight:900;margin:0 0 4px}
+        .en-hero h1{font:800 var(--page-title-fs,28px)/1.15 Inter,sans-serif;letter-spacing:-.02em;margin:0 0 4px} /* shared title size (ui.css), 2026-11-08 */
         .en-hero p{color:var(--text2);font-size:14px;margin:0}
         .en-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
         @media(max-width:800px){.en-grid{grid-template-columns:repeat(2,1fr)}}

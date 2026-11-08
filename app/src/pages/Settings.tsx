@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { NavLink, Navigate, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { Link, NavLink, Navigate, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { apiRequest } from '../lib/api'
 import { useToast } from '../components/Toast'
@@ -115,6 +115,10 @@ export default function Settings() {
   return (
     <Layout>
       <div className="up-wrap st2-wrap">
+        {/* Back to the Profile, as on Edit profile (2026-11-08) */}
+        <div className="up-crumb">
+          <Link to="/profile" className="tap" style={{ color: 'var(--text2)', textDecoration: 'none' }}><i className="ti ti-arrow-left" aria-hidden="true" /> Profile</Link>
+        </div>
         <div className="st2-head">
           <h1>Settings</h1>
           <p>Your account, privacy, security and verification.</p>

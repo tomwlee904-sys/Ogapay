@@ -190,7 +190,7 @@ export default function TabMyTasksContent() {
     <>
       <style>{`
         .mt-hero{margin-bottom:20px}
-        .mt-hero h1{font-family:Inter;font-size:28px;font-weight:900;margin:0 0 4px}
+        .mt-hero h1{font:800 var(--page-title-fs,28px)/1.15 Inter,sans-serif;letter-spacing:-.02em;margin:0 0 4px} /* shared title size (ui.css), 2026-11-08 */
         .mt-hero p{color:var(--text2);font-size:14px;margin:0}
         .mt-tabs{display:flex;gap:4px;margin-bottom:14px;flex-wrap:wrap}
         .mt-tab{padding:6px 14px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text2);font-size:11px;font-weight:600;cursor:pointer;transition:all .2s}

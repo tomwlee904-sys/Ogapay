@@ -36,11 +36,11 @@
 .po-quick-col h4 { font: 400 11px var(--font-mono, ui-monospace, monospace); letter-spacing: .14em; text-transform: uppercase; color: var(--text3); margin: 0 0 8px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
 .po-ql { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); text-decoration: none; color: inherit; }
 .po-ql .ic { width: 36px; height: 36px; border-radius: 9px; border: 1px solid var(--border); background: var(--bg2); display: grid; place-items: center; flex-shrink: 0; }
-.po-ql .ic i { font-size: 17px; color: var(--text2); }
+.po-ql .ic i { font-size: 20px; color: var(--text2); }
 .po-ql .mid { flex: 1; min-width: 0; }
 .po-ql b { display: block; font-size: 14px; color: var(--text); }
 .po-ql small { display: block; font-size: 12px; color: var(--text3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.po-ql > .ti-chevron-right { color: var(--text3); font-size: 15px; }
+.po-ql > .ti-chevron-right { color: var(--text3); font-size: 16px; }
 .po-ql:hover b { text-decoration: underline; }
 
 .po-pf { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
@@ -89,7 +89,7 @@
 
 /* Withdrawal History (components/profile/ProfileWithdrawalsCard) */
 .pf-wd-title { display: inline-flex; align-items: center; gap: 8px; }
-.pf-wd-title .ti { font-size: 15px; color: var(--text2); }
+.pf-wd-title .ti { font-size: 16px; color: var(--text2); }
 .pf-wd-link { font-size: 13px; font-weight: 700; color: var(--text); text-decoration: underline; }
 .pf-wd-list { list-style: none; margin: 0; padding: 0; }
 .pf-wd-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 13px 24px; border-bottom: 1px solid var(--border); }
@@ -112,6 +112,12 @@
 .pf-wd-more-btn { min-height: 40px; padding: 8px 18px; border: 1px solid var(--border); border-radius: 999px; background: var(--card); color: var(--text); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
 .pf-wd-more-btn:disabled { opacity: .6; cursor: default; }
 @media (max-width: 767px) { .pf-wd-row { padding: 12px 16px; } }
+/* Withdrawal History (2026-11-08): stacked rows on phones, the table from 768px */
+.pf-wd-rows { display: none; }
+@media (max-width: 767px) { .pf-wd-rows { display: block; } .pf-wd-scroll { display: none; } }
+.pf-wd-empty .pf-wd-cta { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 4px; }
+.pf-wd-in { display: block; padding: 0 16px 16px; font-size: 13px; font-weight: 700; color: var(--text); text-align: center; }
+.pf-wd-in:hover { text-decoration: underline; }
 
 /* ── /profile layout, arranged like wurk.fun's profile (pages/Profile.tsx) ── */
 /* Tabs: icon + label pills, left-aligned, divider under */
@@ -130,6 +136,18 @@
 .pw-full { margin-bottom: 18px; min-width: 0; }
 .pw-grid .profile-card-head, .pw-grid .profile-card-body { padding-left: 20px; padding-right: 20px; }
 .pw-head-link { font-size: 12px; font-weight: 700; color: var(--text); text-decoration: underline; }
+/* Balance refresh next to Wallet (2026-11-08) */
+.pw-refresh { width: 28px; height: 28px; display: grid; place-items: center; border: 0; border-radius: 8px; background: none; color: var(--text2); cursor: pointer; padding: 0; }
+.pw-refresh .ti { font-size: 16px; }
+.pw-refresh:hover { background: var(--bg2); color: var(--text); }
+.pw-refresh:disabled { cursor: default; }
+.pw-spin { animation: pw-spin .8s linear infinite; }
+@keyframes pw-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .pw-spin { animation: none; } }
+/* Total vs Available, under the balance (2026-11-08) */
+.pw-bal-note { font-size: 12px; line-height: 1.45; color: var(--text3); padding: 0 0 4px; overflow-wrap: anywhere; }
+/* Empty bio: a grey line linking to Edit profile (2026-11-08) */
+.pw-empty { display: inline-block; color: var(--text3); text-decoration: underline; text-underline-offset: 2px; }
 
 /* Account Information */
 .pw-line { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 0 0 12px; border-bottom: 1px dashed var(--border); font-size: 13px; }

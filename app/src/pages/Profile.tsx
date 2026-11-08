@@ -27,6 +27,7 @@ import TabEarningsContent from '../components/ProfileEarningsTab'
 import { sized } from '../lib/img'
 import { categoryLabel } from '../lib/categories'
 import { xProfileOf } from '../lib/xprofile'
+import { jobsEarnedIn } from '../lib/earnings'
 import { isPhone, openInWalletUrl, PHONE_WALLET_LINE, phoneWalletSignInLine, WALLET_APPS, type WalletAppId } from '../lib/walletApps'
 import { isStaleBuildError, reloadForUpdate } from '../lib/staleBuild'
 // The Solana code (about 68KB) loads only when the Withdraw sheet opens or a wallet
@@ -100,7 +101,7 @@ function CopyBtn({ text, failMsg, onFail }: { text: any; failMsg?: string; onFai
   };
   return (
     <button onClick={copy} className="btn-outline btn-sm">
-      <Icon n={ok ? "check" : "copy"} s={13} c={ok ? "var(--green)" : "var(--text2)"} />
+      <Icon n={ok ? "check" : "copy"} s={14} c={ok ? "var(--green)" : "var(--text2)"} />
       {ok ? "Copied!" : "Copy"}
     </button>
   );
@@ -127,7 +128,7 @@ function StatRow({ label, val, info, valClass, onInfoClick }: { label: any; val:
       <span className="stat-label">{label}{info && (
         // Named for screen readers, and "tap" gives it a bigger invisible tap area (2026-11-07)
         <button type="button" className="tap" aria-label={`About ${label}`} onClick={e => { e.stopPropagation(); onInfoClick?.() }} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', verticalAlign: 'middle', marginLeft: 3 }}>
-          <Icon n="info-circle" s={13} c="var(--text3)" />
+          <Icon n="info-circle" s={14} c="var(--text3)" />
         </button>
       )}</span>
       <span className={`stat-val ${valClass === "no" ? "text-red" : valClass === "yes" ? "text-green" : ""}`}>
@@ -168,7 +169,7 @@ function InfoBtn({ text }: { text: string }) {
       onPointerEnter={(e) => { if (e.pointerType === "mouse") open() }}
       onPointerLeave={(e) => { if (e.pointerType === "mouse") setShow(false) }}
       onClick={(e) => { e.stopPropagation(); if (show) setShow(false); else open() }}>
-      <i className="ti ti-info-circle" aria-hidden="true" style={{ fontSize: 12, color: "var(--text3)", cursor: "pointer" }} />
+      <i className="ti ti-info-circle" aria-hidden="true" style={{ fontSize: 14, color: "var(--text3)", cursor: "pointer" }} />
       {show && (
         <div role="tooltip" aria-live="polite" style={{
           position: "absolute", bottom: "calc(100% + 6px)", left,
@@ -253,6 +254,9 @@ export default function Profile() {
   // row wait for it, so verified members never see a false "not verified" (2026-11-07)
   const [kycStatus, setKycStatus] = useState<any>(undefined);
   const [loading, setLoading] = useState(true);
+  // /users/me failed and there's no profile to show: an error card with Try again,
+  // not "User @user", zero counts and banners that may be false (2026-11-08)
+  const [loadFailed, setLoadFailed] = useState(false);
   const [connecting, setConnecting] = useState<string | null>(null);
   const [detectedWallets, setDetectedWallets] = useState<string[]>([]);
   const [showWalletOptions, setShowWalletOptions] = useState(false);
@@ -271,6 +275,7 @@ export default function Profile() {
     apiRequest<any>('/kyc/status').then((d) => setKycStatus((s: any) => d || (s ?? null))).catch(() => setKycStatus((s: any) => s ?? null));
     try {
       const userData = await apiRequest<any>('/users/me').catch(() => null);
+      setLoadFailed(!userData);
       if (userData) {
         setProfileData(userData);
         const ba = userData.bankAccount;
@@ -297,6 +302,10 @@ export default function Profile() {
       toast('Failed to load profile data', 'error');
     }
   };
+  const retryProfile = () => {
+    setLoading(true);
+    loadProfile().finally(() => setLoading(false));
+  };
 
   // After X is connected or refreshed: load the account again without the page
   // skeleton. If X gave the account its picture, the menus need it too (and the
@@ -322,6 +331,8 @@ export default function Profile() {
     if (quietUserUpdate.current) { quietUserUpdate.current = false; return; }
     const id = authUser?.id || null;
     const first = loadedFor.current === null || loadedFor.current !== id;
+    // Another account: nor the last one's profile, if this one fails to load (2026-11-08)
+    if (loadedFor.current !== null && loadedFor.current !== id) setProfileData(null);
     loadedFor.current = id;
     // Another account: don't show the last one's KYC or referral tier meanwhile
     if (first) { setLoading(true); setKycStatus(undefined); setReferralStats(null); }
@@ -370,6 +381,9 @@ export default function Profile() {
   };
 
   const user = parseUser(profileData);
+  const addPill = (label: string) => (
+    <a href="/edit-profile" className="pw-pill" aria-label={label} onClick={e => { e.preventDefault(); navigate('/edit-profile') }}>Add</a>
+  );
 
   // Computed wallet info — read from authUser (auth context) not local profileData
   const walletAddress = authUser?.walletAddress || profileData?.walletAddress || '';
@@ -404,12 +418,25 @@ export default function Profile() {
   const wp = profileData?.workerProfile;
   const decided = (Number(wp?.tasksCompleted) || 0) + (Number(wp?.tasksRejected) || 0);
   const successRate = decided ? Math.round((Number(wp?.tasksCompleted) || 0) / decided * 100) + '%' : '—';
-  // Earned from jobs: each currency's job pay from /wallet/summary in naira, the same
-  // figure as "From jobs" on the Earnings tab. workerProfile.totalEarned adds USDC
-  // straight onto naira (2026-11-07)
-  const jobsEarned = walletSum
-    ? (['NGN', 'USDC', 'USDT', 'SOL'] as const).reduce((t, c) => t + (c === 'NGN' ? Number(walletSum[c]?.earned) || 0 : convert(Number(walletSum[c]?.earned) || 0, c, 'NGN')), 0)
-    : null;
+  // Earned from jobs: each currency's lifetime job pay from /wallet/summary in naira,
+  // the same figure as "From jobs" on the Earnings tab (vault payouts no longer in it,
+  // 2026-11-08). workerProfile.totalEarned adds USDC straight onto naira (2026-11-07)
+  const jobsEarned = jobsEarnedIn(walletSum, convert);
+
+  // What the top bar's "Total" is made of: all the naira (available + held) plus the
+  // other currencies in naira, so the gap with Available is explained (2026-11-08)
+  const otherNgn = walletBal ? (['USDC', 'USDT', 'SOL'] as const).reduce((t, c) => {
+    const v = Number(walletBal[c]?.balance) || 0;
+    const n = v ? convert(v, c, 'NGN') : 0;
+    return t + (Number.isFinite(n) ? n : 0);
+  }, 0) : 0;
+  const totalAll = (Number(walletBal?.NGN?.balance) || 0) + otherNgn;
+  const [balSpin, setBalSpin] = useState(false);
+  const reloadBalance = async () => {
+    if (balSpin) return;
+    setBalSpin(true);
+    try { await refreshWallet(); } finally { setBalSpin(false); }
+  };
 
   // Saved preferences. The server merges what's sent into what's saved, so only the
   // changed key goes (2026-11-07): sending them all sent jobPush: null (never chosen),
@@ -465,6 +492,11 @@ export default function Profile() {
     }
   };
 
+  // Connects a wallet, or changes it: an account has one wallet, so a new one
+  // replaces the old (which then can't sign in). Nothing is saved until the wallet
+  // has signed: /wallet/verify checks the signature and only then saves the address.
+  // The page used to save it first with POST /users/wallet, so a refused signature
+  // still showed the wallet as connected while wallet sign-in didn't work (2026-11-08)
   async function connectWallet(id: string) {
     if (!detectedWallets.includes(id)) return;
     setConnecting(id);
@@ -473,52 +505,49 @@ export default function Profile() {
     const bs58Load = import('bs58').catch((err) => { if (navigator.onLine && isStaleBuildError(err)) reloadForUpdate(); throw err });
     bs58Load.catch(() => {});
     try {
-            let wallet: any;
+      let wallet: any;
       if (id === "phantom") wallet = (window as any).phantom?.solana;
       else if (id === "backpack") wallet = (window as any).backpack?.solana || (window as any).backpack;
       else if (id === "solflare") wallet = (window as any).solflare;
       if (!wallet?.connect) { setConnecting(null); return; }
 
-            let pubKey = wallet.publicKey?.toString();
+      let pubKey = wallet.publicKey?.toString();
       if (!pubKey) {
         const resp = await wallet.connect();
-        pubKey = resp?.publicKey?.toString();
-              } else {
-              }
+        pubKey = resp?.publicKey?.toString() || wallet.publicKey?.toString();
+      }
       if (!pubKey) throw new Error("No public key");
+      if (hasWallet && pubKey === walletAddress) {
+        toast('This is already your wallet. To change it, switch to another wallet in the app first.', 'error');
+        setConnecting(null);
+        return;
+      }
 
-      // Immediately save wallet address to backend
-      try {
-        await apiRequest("/users/wallet", {
-          method: "POST",
-          body: JSON.stringify({ walletAddress: pubKey, provider: id }),
-        });
-      } catch (e: any) { console.error(e) }
-
-            const nonceRes = await apiRequest<{ nonce: string; message: string }>("/wallet/nonce", {
+      const nonceRes = await apiRequest<{ nonce: string; message: string }>("/wallet/nonce", {
         method: "POST",
         body: JSON.stringify({ wallet: pubKey }),
       });
       if (!nonceRes?.nonce) throw new Error("No nonce received");
-      
-            const encodedMessage = new TextEncoder().encode(nonceRes.message);
+
+      const encodedMessage = new TextEncoder().encode(nonceRes.message);
       const signedResult = await wallet.signMessage(encodedMessage);
       const signatureBytes = signedResult?.signature ?? signedResult;
       const bs58 = (await bs58Load).default;
       const signature = bs58.encode(signatureBytes);
-      
-            await apiRequest("/wallet/verify", {
+
+      const res = await apiRequest<{ wallet?: string; replaced?: string | null }>("/wallet/verify", {
         method: "POST",
-        body: JSON.stringify({ wallet: pubKey, signature }),
+        body: JSON.stringify({ wallet: pubKey, signature, provider: id }),
       });
-      
+
       await refreshUser()
       await loadProfile()
       setShowWalletOptions(false)
-      toast('Wallet connected!')
+      toast(res?.replaced || hasWallet ? 'Wallet changed. Your old wallet can no longer sign in.' : 'Wallet connected!')
     } catch (e: any) {
+      // A refused signature saves nothing, so the old wallet (if any) still works
       const msg = e?.message || String(e) || "Wallet verification failed";
-            toast(msg, 'error');
+      toast(/reject|denied|cancel/i.test(msg) ? 'Not signed, so nothing was changed.' : msg, 'error');
     }
     setConnecting(null);
   }
@@ -575,7 +604,37 @@ export default function Profile() {
 
   // The banners show together once KYC and the saved banks are known, so the tab bar
   // moves down once, not two or three times as each answer arrives (2026-11-07)
-  const bannersReady = kycStatus !== undefined && banksAsked;
+  const bannersReady = kycStatus !== undefined && banksAsked && !!profileData;
+
+  // Banners (2026-11-08): only one shows, in this order: identity check, bank,
+  // email, then the crypto wallet, which only shows to members who chose USDC or
+  // Both as their money display (naira members don't need one). A closed banner
+  // stays closed for 30 days on this device, so it doesn't come back every visit.
+  const bannerKey = (id: string) => `ogapay_banner_closed_${authUser?.id || ''}_${id}`;
+  const readClosed = () => {
+    const out: Record<string, boolean> = {};
+    for (const id of ['kyc', 'bank', 'email', 'wallet']) {
+      try {
+        const at = Number(localStorage.getItem(bannerKey(id)) || 0);
+        out[id] = at > 0 && Date.now() - at < 30 * 86400000;
+      } catch { out[id] = false; }
+    }
+    return out;
+  };
+  const [closedBanners, setClosedBanners] = useState<Record<string, boolean>>(readClosed);
+  useEffect(() => { setClosedBanners(readClosed()); }, [authUser?.id]);
+  const dismissBanner = (id: string) => {
+    setClosedBanners((c) => ({ ...c, [id]: true }));
+    try { localStorage.setItem(bannerKey(id), String(Date.now())); } catch { /* private window: closed until the page reloads */ }
+  };
+  const banner = !bannersReady ? null : ([
+    ['kyc', !!kycStatus && !isKycVerified],
+    // Withdrawals use the saved banks; the old profile field (bankAccount) is no longer
+    // filled in. Not for Ghana members, who withdraw to MoMo (2026-11-07)
+    ['bank', !ghana && bankCount === 0 && !authUser?.bankAccount],
+    ['email', !authUser?.isEmailVerified],
+    ['wallet', !authUser?.walletAddress && (preferredCurrency === 'USDC' || preferredCurrency === 'BOTH')],
+  ] as const).find(([id, on]) => on && !closedBanners[id])?.[0] ?? null;
 
   // One Layout while loading and after (2026-11-07): the top bar, bottom bar and tab bar
   // stay mounted, and only the profile body swaps from its skeleton
@@ -629,16 +688,24 @@ export default function Profile() {
       `}</style>
       <div className="pg">
 
-      {/* Onboarding banners */}
-      {bannersReady && !authUser?.walletAddress && (
+      {/* Onboarding banner: one at a time (2026-11-08) */}
+      {banner === 'kyc' && (
         <div className="onboarding-banner">
-          <i className="ti ti-wallet" aria-hidden="true" style={{color:'var(--accent)',fontSize:20}} />
-          <span className="ob-msg">Connect your wallet to unlock full features</span>
-          <button className="ob-btn" onClick={() => setShowWalletOptions(true)}>Connect Wallet</button>
-          <button type="button" className="ob-close" aria-label="Close" onClick={e => ((e.currentTarget.closest('.onboarding-banner') as HTMLElement)!.style.display='none')}><i className="ti ti-x" aria-hidden="true" /></button>
+          <i className="ti ti-shield-check" aria-hidden="true" style={{color:'var(--red)',fontSize:20}} />
+          <span className="ob-msg">Complete identity verification to withdraw</span>
+          <button className="ob-btn" onClick={() => navigate('/settings/verification')}>Verify Now</button>
+          <button type="button" className="ob-close" aria-label="Close" onClick={() => dismissBanner('kyc')}><i className="ti ti-x" aria-hidden="true" /></button>
         </div>
       )}
-      {bannersReady && !authUser?.isEmailVerified && (
+      {banner === 'bank' && (
+        <div className="onboarding-banner">
+          <i className="ti ti-building-bank" aria-hidden="true" style={{color:'#f59e0b',fontSize:20}} />
+          <span className="ob-msg">Add a bank account to withdraw in Naira</span>
+          <button className="ob-btn" onClick={openMoneyOut}>Add Bank Account</button>
+          <button type="button" className="ob-close" aria-label="Close" onClick={() => dismissBanner('bank')}><i className="ti ti-x" aria-hidden="true" /></button>
+        </div>
+      )}
+      {banner === 'email' && (
         <div className="onboarding-banner">
           <i className="ti ti-mail" aria-hidden="true" style={{color:'#f59e0b',fontSize:20}} />
           <span className="ob-msg">{verifMsg || 'Verify your email address to receive account notifications'}</span>
@@ -661,25 +728,15 @@ export default function Profile() {
           }} disabled={verifSending}>
             {verifSending ? 'Sending...' : 'Resend Email'}
           </button>
-          <button type="button" className="ob-close" aria-label="Close" onClick={e => ((e.currentTarget.closest('.onboarding-banner') as HTMLElement)!.style.display='none')}><i className="ti ti-x" aria-hidden="true" /></button>
+          <button type="button" className="ob-close" aria-label="Close" onClick={() => dismissBanner('email')}><i className="ti ti-x" aria-hidden="true" /></button>
         </div>
       )}
-      {/* Withdrawals use the saved banks; the old profile field (bankAccount) is no longer filled in.
-          Not for Ghana members, who withdraw to MoMo (2026-11-07) */}
-      {bannersReady && !ghana && bankCount === 0 && !authUser?.bankAccount && (
+      {banner === 'wallet' && (
         <div className="onboarding-banner">
-          <i className="ti ti-building-bank" aria-hidden="true" style={{color:'#f59e0b',fontSize:20}} />
-          <span className="ob-msg">Add a bank account to withdraw in Naira</span>
-          <button className="ob-btn" onClick={openMoneyOut}>Add Bank Account</button>
-          <button type="button" className="ob-close" aria-label="Close" onClick={e => ((e.currentTarget.closest('.onboarding-banner') as HTMLElement)!.style.display='none')}><i className="ti ti-x" aria-hidden="true" /></button>
-        </div>
-      )}
-      {bannersReady && !!kycStatus && !isKycVerified && (
-        <div className="onboarding-banner">
-          <i className="ti ti-shield-check" aria-hidden="true" style={{color:'var(--red)',fontSize:20}} />
-          <span className="ob-msg">Complete identity verification to withdraw</span>
-          <button className="ob-btn" onClick={() => navigate('/settings/verification')}>Verify Now</button>
-          <button type="button" className="ob-close" aria-label="Close" onClick={e => ((e.currentTarget.closest('.onboarding-banner') as HTMLElement)!.style.display='none')}><i className="ti ti-x" aria-hidden="true" /></button>
+          <i className="ti ti-wallet" aria-hidden="true" style={{color:'var(--accent)',fontSize:20}} />
+          <span className="ob-msg">Connect a Solana wallet to get paid in USDC and sign in with it</span>
+          <button className="ob-btn" onClick={() => setShowWalletOptions(true)}>Connect Wallet</button>
+          <button type="button" className="ob-close" aria-label="Close" onClick={() => dismissBanner('wallet')}><i className="ti ti-x" aria-hidden="true" /></button>
         </div>
       )}
 
@@ -767,6 +824,16 @@ export default function Profile() {
           <div className="pw-col"><div className="profile-card"><div className="profile-card-body"><SkeletonTab title rows={4} /></div></div></div>
           <div className="pw-col"><div className="profile-card"><div className="profile-card-body"><SkeletonTab title rows={6} /></div></div></div>
         </div>
+      ) : !profileData && loadFailed ? (
+        // The profile couldn't load: say so, with Try again (2026-11-08)
+        <div className="profile-card" role="alert">
+          <div className="profile-card-body" style={{textAlign:'center',padding:'32px 20px'}}>
+            <Icon n="cloud-off" s={28} c="var(--text3)" />
+            <div style={{fontSize:15,fontWeight:800,color:'var(--text)',margin:'10px 0 4px'}}>Couldn't load your profile</div>
+            <div style={{fontSize:13,color:'var(--text2)',margin:'0 0 16px'}}>Check your connection and try again.</div>
+            <button type="button" className="dash-btn" onClick={retryProfile}><Icon n="refresh" s={16} c="var(--bg)" /> Try again</button>
+          </div>
+        </div>
       ) : (
         <div className="page-fade-in">
           <div className="pw-grid">
@@ -774,8 +841,14 @@ export default function Profile() {
             {/* Account Information */}
             <div className="profile-card pw-account">
               <div className="profile-card-head">
-                <span><Icon n="wallet" s={15} /> Account Information</span>
-                <a href="/wallet" className="pw-head-link" onClick={e => { e.preventDefault(); navigate('/wallet') }}>Wallet</a>
+                <span><Icon n="wallet" s={16} /> Account Information</span>
+                {/* Refresh: to check whether a bank transfer has arrived (2026-11-08) */}
+                <span style={{display:'inline-flex',alignItems:'center',gap:6}}>
+                  <button type="button" className="pw-refresh tap" aria-label="Refresh balance" title="Refresh balance" onClick={reloadBalance} disabled={balSpin}>
+                    <i className={`ti ti-refresh${balSpin ? ' pw-spin' : ''}`} aria-hidden="true" />
+                  </button>
+                  <a href="/wallet" className="pw-head-link" onClick={e => { e.preventDefault(); navigate('/wallet') }}>Wallet</a>
+                </span>
               </div>
               <div className="profile-card-body">
                 {/* Wallet address row */}
@@ -822,6 +895,13 @@ export default function Profile() {
                   )}
                 </div>
 
+                {/* Why the top bar's Total can be more than Available (2026-11-08) */}
+                {walletBal && (lockedNgn > 0 || otherNgn >= 1) && (
+                  <div className="pw-bal-note">
+                    Total {show(totalAll)} = {show(totalNgn)} available{lockedNgn > 0 ? ` + ${show(lockedNgn)} held` : ''}{otherNgn >= 1 ? ` + ${show(otherNgn)} in USDC and SOL` : ''}
+                  </div>
+                )}
+
                 {/* Main actions: equal buttons in one row */}
                 <div className="pw-acts">
                   <button className="dash-btn" onPointerDown={() => { loadFundModal().catch(() => {}) }} onClick={() => setFundModal('withdraw')}><Icon n="arrow-up-right" s={14} c="var(--bg)" /> Withdraw</button>
@@ -835,8 +915,9 @@ export default function Profile() {
                       <button className="btn-outline" onClick={handleGeneratePairCode} disabled={generatingPair}>
                         <Icon n="device-mobile" s={14} /> {generatingPair ? 'Generating…' : 'Pair Device'}
                       </button>
+                      {/* One wallet per account: a new one replaces it (2026-11-08) */}
                       <button className="btn-outline" onClick={() => setShowWalletOptions(true)}>
-                        <Icon n="link" s={14} /> Link Extra Wallet
+                        <Icon n="arrows-exchange" s={14} /> Change wallet
                       </button>
                     </>
                   ) : (
@@ -918,10 +999,10 @@ export default function Profile() {
             {/* Profile */}
             <div className="profile-card pw-profile">
               <div className="profile-card-head">
-                <span><Icon n="user" s={15} /> Profile</span>
+                <span><Icon n="user" s={16} /> Profile</span>
                 {/* One edit form for everyone: the Edit profile page, like Settings (2026-11-07) */}
                 <button className="btn-outline btn-sm" onClick={() => navigate('/edit-profile')}>
-                  <Icon n="edit" s={12} /> Edit
+                  <Icon n="edit" s={14} /> Edit
                 </button>
               </div>
               <div className="profile-card-body">
@@ -933,8 +1014,11 @@ export default function Profile() {
                   <div style={{minWidth:0}}>
                     <div className="pw-name">{user?.firstName || 'User'} {user?.lastName || ''}</div>
                     <div className="pw-handle">@{user?.username || 'user'}</div>
-                    {(profileData?.workerProfile?.bio || profileData?.bio) && (
+                    {(profileData?.workerProfile?.bio || profileData?.bio) ? (
                       <div className="pw-bio">{profileData.workerProfile?.bio || profileData.bio}</div>
+                    ) : (
+                      // An empty bio says how to add one (2026-11-08)
+                      <a href="/edit-profile" className="pw-bio pw-empty" onClick={e => { e.preventDefault(); navigate('/edit-profile') }}>No bio yet. Add one</a>
                     )}
                   </div>
                 </div>
@@ -963,7 +1047,7 @@ export default function Profile() {
                         <Icon n={c.ic} s={16} />
                         <b>{c.n}</b>
                         <span>{c.l}{c.info && (
-                          <button type="button" className="pw-i tap" aria-label={`About ${c.l}`} onClick={() => setShowInfo(c.info as any)}><Icon n="info-circle" s={13} c="var(--text3)" /></button>
+                          <button type="button" className="pw-i tap" aria-label={`About ${c.l}`} onClick={() => setShowInfo(c.info as any)}><Icon n="info-circle" s={14} c="var(--text3)" /></button>
                         )}</span>
                       </div>
                     ))}
@@ -981,8 +1065,9 @@ export default function Profile() {
                       <a href="/settings/verification" className="pw-pill" onClick={e => { e.preventDefault(); navigate('/settings/verification') }}>Verify</a>
                     )} valClass={isKycVerified ? 'yes' : ''} />
                     <StatRow label="Rating" val={profileData?.workerProfile?.totalRatings ? `${Number(profileData.workerProfile.avgRating || 0).toFixed(1)}/5 (${profileData.workerProfile.totalRatings})` : 'No ratings yet'} info onInfoClick={() => setShowInfo('avgRating')} />
-                    <StatRow label="Skills" val={profileData?.workerProfile?.skills?.length ? profileData.workerProfile.skills.slice(0,3).join(', ')+(profileData.workerProfile.skills.length>3?' +' + (profileData.workerProfile.skills.length - 3):'') : '-'} />
-                    <StatRow label="Categories" val={profileData?.workerProfile?.categories?.length ? profileData.workerProfile.categories.map((c: string) => categoryLabel(c)).join(', ') : '-'} />
+                    {/* Empty: an "Add" pill to the Edit profile page (2026-11-08) */}
+                    <StatRow label="Skills" val={profileData?.workerProfile?.skills?.length ? profileData.workerProfile.skills.slice(0,3).join(', ')+(profileData.workerProfile.skills.length>3?' +' + (profileData.workerProfile.skills.length - 3):'') : addPill('Add skills')} />
+                    <StatRow label="Categories" val={profileData?.workerProfile?.categories?.length ? profileData.workerProfile.categories.map((c: string) => categoryLabel(c)).join(', ') : addPill('Add categories')} />
                   </div>
                 </div>
 
@@ -1036,7 +1121,7 @@ export default function Profile() {
           <div className="pw-full"><ProfilePortfolioCard /></div>
 
           {/* Withdrawal History: every withdrawal, page by page, with its status */}
-          <div className="pw-full"><ProfileWithdrawalsCard key={wdKey} /></div>
+          <div className="pw-full"><ProfileWithdrawalsCard key={wdKey} onWithdraw={() => { loadFundModal().catch(() => {}); setFundModal('withdraw') }} /></div>
 
         </div>
       ))}
@@ -1045,10 +1130,17 @@ export default function Profile() {
         <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.5)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:1000}}
           onClick={() => setShowWalletOptions(false)}>
           <div onClick={e => e.stopPropagation()} style={{background:'var(--card)',border:'1px solid var(--border)',borderRadius:16,padding:24,maxWidth:380,width:'90%'}}>
-            <h3 style={{margin:'0 0 4px',fontSize:16,fontWeight:800}}>Connect a Solana Wallet</h3>
+            <h3 style={{margin:'0 0 4px',fontSize:16,fontWeight:800}}>{hasWallet ? 'Change wallet' : 'Connect a Solana Wallet'}</h3>
             <p style={{color:'var(--text2)',fontSize:13,margin:'0 0 16px',lineHeight:1.5}}>
-              Select a wallet provider to connect. You'll be asked to sign a message to verify ownership.
+              {hasWallet ? 'Pick the new wallet.' : 'Select a wallet provider to connect.'} You'll be asked to sign a message to prove it's yours. Nothing is saved until you sign.
             </p>
+            {/* An account has one wallet: say so before it is replaced (2026-11-08) */}
+            {hasWallet && (
+              <div role="note" style={{display:'flex',gap:8,alignItems:'flex-start',padding:'10px 12px',margin:'-4px 0 14px',borderRadius:10,background:'color-mix(in srgb, #f59e0b 12%, transparent)',color:'var(--text)',fontSize:13,lineHeight:1.5}}>
+                <Icon n="alert-triangle" s={16} c="#b45309" />
+                <span>Your current wallet ({shortAddr}) will be replaced and can no longer be used to sign in.</span>
+              </div>
+            )}
             {isPhone() && detectedWallets.length === 0 && (<>
               <p style={{color:'var(--text)',fontSize:13,fontWeight:600,margin:'-6px 0 6px',lineHeight:1.5}}>{PHONE_WALLET_LINE}</p>
               {/* The wallet app's browser needs a fresh sign-in, and Google won't work there */}
@@ -1094,7 +1186,7 @@ export default function Profile() {
                       opacity:installed ? 1 : 0.5,transition:'border-color .13s',
                     }}>
                     <div style={{width:32,height:32,borderRadius:8,background:'var(--card)',display:'grid',placeItems:'center',flexShrink:0}}>
-                      <Icon n={p.icon} s={18} />
+                      <Icon n={p.icon} s={20} />
                     </div>
                     <span style={{flex:1,textAlign:'left'}}>{p.label}</span>
                     {connecting === p.id && <span className="spinner" style={{width:16,height:16,borderWidth:2}} />}

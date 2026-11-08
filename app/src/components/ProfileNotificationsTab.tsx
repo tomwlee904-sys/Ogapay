@@ -71,6 +71,8 @@ const TYPE_ICONS: Record<string, { icon: string; color: string }> = {
   BRAND_APPLICATION:       { icon: 'ti ti-building-store', color: 'var(--accent)' },
   BRAND_VERIFIED:          { icon: 'ti ti-rosette-discount-check', color: 'var(--green)' },
   BRAND_REJECTED:          { icon: 'ti ti-building-store', color: 'var(--red)' },
+  // The account's wallet was replaced (backend walletLink.service, 2026-11-08)
+  WALLET_CHANGED:          { icon: 'ti ti-wallet', color: '#F59E0B' },
 }
 
 function resolveIcon(type: string, title: string) {
@@ -106,6 +108,9 @@ export default function TabNotificationsContent() {
   const [loading, setLoading] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
   const [filter, setFilter] = useState('all')
+  // Unread alerts in the whole account, from the server (not just the pages
+  // loaded here); null until known or on an older server (2026-11-08)
+  const [serverUnread, setServerUnread] = useState<number | null>(null)
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null)
   // The skeleton shows on the very first load only; polls, focus and the
   // refresh after a failed read/delete run quietly (2026-11-07)
@@ -126,9 +131,16 @@ export default function TabNotificationsContent() {
       const data = await apiRequest<any>(`/notifications?limit=${LIMIT}&page=${pageNum}`)
       const raw: any[] = Array.isArray(data) ? data : data?.notifications ?? []
       const items = raw.filter(n => !deletedIds.current.has(String(n.id)))
-      // The paging info doesn't reach us (it sits outside `data`), so a full
-      // page means there may be more
-      const full = raw.length === LIMIT
+      // Paging info comes inside data (data.pagination / data.hasNext, 2026-11-08).
+      // An older server sent it outside `data`, where it doesn't reach us: then a
+      // full page means there may be more
+      const pg = data && !Array.isArray(data) ? data.pagination : null
+      const next = typeof data?.hasNext === 'boolean' ? data.hasNext
+        : typeof pg?.hasNext === 'boolean' ? pg.hasNext
+        : pg && Number(pg.pages) > 0 ? Number(pg.page || pageNum) < Number(pg.pages)
+        : null
+      const full = next ?? raw.length === LIMIT
+      if (data && !Array.isArray(data) && Number.isFinite(Number(data.unreadCount)) && data.unreadCount !== null) setServerUnread(Math.max(0, Number(data.unreadCount)))
       if (append) {
         setNotifs(prev => {
           const have = new Set(prev.map(n => String(n.id)))
@@ -231,17 +243,23 @@ export default function TabNotificationsContent() {
   const filtered = filter === 'all' ? mapped
     : filter === 'unread' ? mapped.filter(n => !n.read)
     : mapped.filter(n => n.read)
-  const unreadCount = mapped.filter(n => !n.read).length
+  // The server's count for the whole account; the loaded list can only hold the
+  // newest pages. Never fewer than the unread ones on screen (2026-11-08)
+  const unreadShown = mapped.filter(n => !n.read).length
+  const unreadCount = serverUnread === null ? unreadShown : Math.max(serverUnread, unreadShown)
 
   // Read and delete change the item in place (2026-11-07); only a failed call
   // asks the server again, quietly, to show what really happened
   const markAllRead = async () => {
     setNotifs(prev => prev.map(n => ({ ...n, read: true, isRead: true })))
+    setServerUnread(0)
     try { await apiRequest('/notifications/read-all', { method: 'PATCH' }) } catch { fetchNotifs(1) }
     refreshUnread(true) // the badge in the top bar and dock
   }
 
   const markOneRead = async (id: string | number) => {
+    const wasUnread = notifs.some(n => String(n.id) === String(id) && !(n.read ?? n.isRead))
+    if (wasUnread) setServerUnread(c => c === null ? c : Math.max(0, c - 1))
     setNotifs(prev => prev.map(n => String(n.id) === String(id) ? { ...n, read: true, isRead: true } : n))
     try { await apiRequest(`/notifications/${id}/read`, { method: 'PATCH' }) } catch { fetchNotifs(1) }
     refreshUnread(true) // the badge in the top bar and dock
@@ -251,6 +269,7 @@ export default function TabNotificationsContent() {
     e.stopPropagation()
     deletedIds.current.add(String(id))
     deletedSince.current += 1
+    if (notifs.some(n => String(n.id) === String(id) && !(n.read ?? n.isRead))) setServerUnread(c => c === null ? c : Math.max(0, c - 1))
     setNotifs(prev => prev.filter(n => String(n.id) !== String(id)))
     try { await apiRequest(`/notifications/${id}`, { method: 'DELETE' }) } catch {
       deletedIds.current.delete(String(id))
@@ -278,7 +297,7 @@ export default function TabNotificationsContent() {
       <style>{`
         .nt-hero{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:8px}
         .nt-hero-left .nt-greeting{color:var(--text2);font-size:13px;font-weight:600;margin-bottom:2px}
-        .nt-hero-left h1{font-family:Inter;font-size:28px;font-weight:900;margin:0}
+        .nt-hero-left h1{font:800 var(--page-title-fs,28px)/1.15 Inter,sans-serif;letter-spacing:-.02em;margin:0} /* shared title size (ui.css), 2026-11-08 */
         .nt-hero-right{display:flex;gap:8px}
         .nt-tabs{display:flex;gap:4px;margin-bottom:16px}
         .nt-tab{padding:6px 14px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text2);font-size:11px;font-weight:600;cursor:pointer;transition:all .2s}

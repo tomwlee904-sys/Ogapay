@@ -50,7 +50,12 @@ export default function Wallet() {
   const [page, setPage] = useState(1)
   const [more, setMore] = useState(false)
   const [loadingMore, setLoadingMore] = useState(false)
-  const [filter, setFilter] = useState<(typeof FILTERS)[number]['key']>('all')
+  // ?filter=in (or out, withdrawals, pending) opens the history on that filter,
+  // e.g. "Deposits, refunds and job payments" on the Profile (2026-11-08)
+  const [filter, setFilter] = useState<(typeof FILTERS)[number]['key']>(() => {
+    const f = params.get('filter')
+    return FILTERS.find((x) => x.key === f)?.key ?? 'all'
+  })
   const [open, setOpen] = useState<string | null>(null)
   const [banks, setBanks] = useState<Bank[] | null>(null)
   const [bankMenu, setBankMenu] = useState<string | null>(null)

@@ -1,6 +1,6 @@
 /* Settings (/settings/:section) */
 .st2-head { margin-bottom: 18px; }
-.st2-head h1 { font: 800 30px/1.1 Inter, sans-serif; letter-spacing: -.02em; margin: 0 0 6px; color: var(--text); }
+.st2-head h1 { font: 800 var(--page-title-fs, 28px)/1.15 Inter, sans-serif; /* shared title size (ui.css), 2026-11-08 */ letter-spacing: -.02em; margin: 0 0 6px; color: var(--text); }
 .st2-head p { margin: 0; font-size: 14px; color: var(--text2); }
 .st2-body { display: grid; grid-template-columns: 210px minmax(0, 1fr); gap: 28px; align-items: start; }
 .st2-nav { position: sticky; top: 84px; display: flex; flex-direction: column; gap: 2px; }
@@ -124,7 +124,6 @@
   .st2-section-title { display: none; }
 }
 @media (max-width: 520px) {
-  .st2-head h1 { font-size: 26px; }
   .st2-card { padding: 16px; }
   .st2-row { align-items: flex-start; }
   .st2-row:has(.up-btn) { flex-direction: column; align-items: stretch; }

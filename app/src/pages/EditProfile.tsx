@@ -29,12 +29,18 @@ function Switch({ on, onChange, label }: { on: boolean; onChange: (v: boolean) =
   )
 }
 
-// Real profile editor: loads /users/me, saves only what changed to PATCH /users/me
+// Real profile editor: loads /users/me, saves only what changed to PATCH /users/me.
+// Everything, the photo too, is saved only when Save changes is pressed (2026-11-08):
+// the photo used to be saved the moment it was picked, so leaving or changing your
+// mind didn't undo it. Leaving with unsaved changes asks first.
 export default function EditProfile() {
   const { refreshUser } = useAuth()
   const [me, setMe] = useState<any>(null)
   const [form, setForm] = useState<Form | null>(null)
   const [avatar, setAvatar] = useState<string | null>(null)
+  // A picked photo waits here (with a preview) until Save changes
+  const [photo, setPhoto] = useState<{ file: File; preview: string } | null>(null)
+  useEffect(() => () => { if (photo) URL.revokeObjectURL(photo.preview) }, [photo])
   const [uploading, setUploading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null)
@@ -62,27 +68,18 @@ export default function EditProfile() {
 
   const set = <K extends keyof Form>(k: K, v: Form[K]) => { setForm((f) => (f ? { ...f, [k]: v } : f)); setMsg(null); setErrors((e) => ({ ...e, [k]: '' })) }
 
-  const pickAvatar = async (file?: File) => {
-    if (!file) return
-    setUploading(true); setMsg(null)
-    try {
-      const url = await uploadImage(file, 'avatars') // saves it on the account too
-      setAvatar(url)
-      refreshUser()
-    } catch (e: any) { setMsg({ ok: false, text: e?.message || 'Photo upload failed' }) }
-    setUploading(false)
+  // Only shows the photo; it is uploaded when Save changes is pressed (2026-11-08)
+  const pickAvatar = (file?: File) => {
     if (fileRef.current) fileRef.current.value = ''
+    if (!file) return
+    if (!/^image\/(jpeg|png|webp|gif)$/.test(file.type)) { setMsg({ ok: false, text: 'Pick a JPG, PNG, WebP or GIF photo.' }); return }
+    setPhoto({ file, preview: URL.createObjectURL(file) })
+    setMsg(null)
   }
 
-  const save = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!form || !me) return
-    const errs: Record<string, string> = {}
-    if (!form.firstName.trim()) errs.firstName = 'First name is required'
-    if (!USERNAME_RE.test(form.username.trim())) errs.username = '3-30 letters, numbers or _'
-    if (form.website.trim() && !/^https?:\/\//i.test(form.website.trim())) errs.website = 'Start with https://'
-    if (Object.keys(errs).length) { setErrors(errs); return }
-
+  // What would be sent to PATCH /users/me: only the fields that changed
+  const changes = (): Record<string, any> => {
+    if (!form || !me) return {}
     const base = fromUser(me)
     const body: Record<string, any> = {}
     for (const k of ['firstName', 'lastName', 'username', 'twitter', 'telegram', 'discord', 'website'] as const) {
@@ -98,13 +95,61 @@ export default function EditProfile() {
     if (form.showEarnings !== base.showEarnings || form.showRank !== base.showRank) {
       body.preferences = { ...(me.preferences || {}), showEarnings: form.showEarnings, showRank: form.showRank }
     }
-    if (!Object.keys(body).length) { setMsg({ ok: true, text: 'No changes to save.' }); return }
+    return body
+  }
+  const dirty = !!photo || Object.keys(changes()).length > 0
+
+  // Unsaved changes: closing or reloading the tab, or following a link on the page
+  // (Cancel, the Profile link, the menus), asks first (2026-11-08)
+  const dirtyRef = useRef(false)
+  dirtyRef.current = dirty && !saving
+  useEffect(() => {
+    const onUnload = (e: BeforeUnloadEvent) => { if (dirtyRef.current) { e.preventDefault(); e.returnValue = '' } }
+    const onClick = (e: MouseEvent) => {
+      if (!dirtyRef.current || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return
+      const a = (e.target as Element | null)?.closest?.('a[href]') as HTMLAnchorElement | null
+      if (!a || a.target === '_blank' || a.hasAttribute('download') || a.getAttribute('href')?.startsWith('#')) return
+      if (!window.confirm('You have unsaved changes. Leave without saving?')) { e.preventDefault(); e.stopPropagation() }
+    }
+    window.addEventListener('beforeunload', onUnload)
+    document.addEventListener('click', onClick, true)
+    return () => { window.removeEventListener('beforeunload', onUnload); document.removeEventListener('click', onClick, true) }
+  }, [])
+
+  const save = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!form || !me) return
+    const errs: Record<string, string> = {}
+    if (!form.firstName.trim()) errs.firstName = 'First name is required'
+    if (!USERNAME_RE.test(form.username.trim())) errs.username = '3-30 letters, numbers or _'
+    if (form.website.trim() && !/^https?:\/\//i.test(form.website.trim())) errs.website = 'Start with https://'
+    if (Object.keys(errs).length) { setErrors(errs); setMsg({ ok: false, text: 'Check the highlighted fields.' }); return }
+
+    const body = changes()
+    if (!Object.keys(body).length && !photo) { setMsg({ ok: true, text: 'No changes to save.' }); return }
 
     setSaving(true); setMsg(null)
+    // The photo first: if it fails, nothing else is saved, so the page and the
+    // account still match (2026-11-08)
+    if (photo) {
+      setUploading(true)
+      try {
+        const url = await uploadImage(photo.file, 'avatars') // saves it on the account
+        if (url) setAvatar(url)
+        setPhoto(null)
+      } catch (err: any) {
+        setUploading(false); setSaving(false)
+        setMsg({ ok: false, text: `${err?.message || 'Photo upload failed'}. Nothing was saved.` })
+        return
+      }
+      setUploading(false)
+    }
     try {
-      await apiRequest('/users/me', { method: 'PATCH', body: JSON.stringify(body) })
-      const fresh = await apiRequest<any>('/users/me')
-      setMe(fresh); setForm(fromUser(fresh))
+      if (Object.keys(body).length) {
+        await apiRequest('/users/me', { method: 'PATCH', body: JSON.stringify(body) })
+        const fresh = await apiRequest<any>('/users/me')
+        setMe(fresh); setForm(fromUser(fresh))
+      }
       refreshUser()
       setMsg({ ok: true, text: 'Profile saved.' })
     } catch (err: any) {
@@ -130,7 +175,11 @@ export default function EditProfile() {
       <div className="up-wrap" style={{ maxWidth: 760 }}>
         <div className="up-crumb">
           <Link to="/profile" className="tap" style={{ color: 'var(--text2)', textDecoration: 'none' }}><i className="ti ti-arrow-left" aria-hidden="true" /> Profile</Link>
-          <h1>Edit profile</h1>
+        </div>
+        {/* A real page title, and how saving works (2026-11-08) */}
+        <div className="ep-head">
+          <h1 className="page-title">Edit profile</h1>
+          <p>Nothing changes, not even your photo, until you press Save changes.</p>
         </div>
 
         {!form ? (
@@ -140,10 +189,11 @@ export default function EditProfile() {
             <section className="up-card hr-sec">
               <div className="hr-sec-h"><h2>Basics</h2>{me?.username && <Link to={`/user/${me.username}`} className="tap">View public profile</Link>}</div>
               <div className="ep-avatar">
-                {avatar ? <img className="up-avatar" src={avatar} alt="" /> : <div className="up-avatar">{(form.firstName[0] || '?').toUpperCase()}</div>}
+                {photo || avatar ? <img className="up-avatar" src={photo?.preview || avatar || ''} alt="" /> : <div className="up-avatar">{(form.firstName[0] || '?').toUpperCase()}</div>}
                 <div>
-                  <button type="button" className="up-btn" disabled={uploading} onClick={() => fileRef.current?.click()}>{uploading ? 'Uploading…' : avatar ? 'Change photo' : 'Add photo'}</button>
-                  <p>JPG or PNG, square works best.</p>
+                  <button type="button" className="up-btn" disabled={uploading || saving} onClick={() => fileRef.current?.click()}>{uploading ? 'Uploading…' : photo || avatar ? 'Change photo' : 'Add photo'}</button>
+                  {photo && <button type="button" className="up-btn" style={{ marginLeft: 8 }} disabled={saving} onClick={() => setPhoto(null)}>Undo</button>}
+                  <p>{photo ? 'New photo picked. It is saved when you press Save changes.' : 'JPG or PNG, square works best.'}</p>
                 </div>
                 <input ref={fileRef} type="file" accept="image/*" hidden onChange={(e) => pickAvatar(e.target.files?.[0])} />
               </div>
@@ -212,9 +262,14 @@ export default function EditProfile() {
               </div>
             </section>
 
+            {/* Always in reach at the bottom of the screen, with Cancel (2026-11-08) */}
             <div className="ep-bar">
-              {msg && <div className={`up-note ${msg.ok ? 'ok' : 'err'}`} role="status" style={{ margin: 0, flex: 1 }}>{msg.text}</div>}
-              <button type="submit" className="up-btn primary" disabled={saving || uploading} style={{ minWidth: 140, height: 44, marginLeft: 'auto' }}>{saving ? 'Saving…' : 'Save changes'}</button>
+              {msg ? <div className={`up-note ${msg.ok ? 'ok' : 'err'}`} role="status" style={{ margin: 0, flex: 1 }}>{msg.text}</div>
+                : <span className="ep-bar-hint">{dirty ? 'You have unsaved changes.' : 'No unsaved changes.'}</span>}
+              <div className="ep-bar-acts">
+                <Link to="/profile" className="up-btn" style={{ height: 44, display: 'inline-flex', alignItems: 'center' }}>Cancel</Link>
+                <button type="submit" className="up-btn primary" disabled={saving || uploading} style={{ minWidth: 140, height: 44 }}>{saving ? 'Saving…' : 'Save changes'}</button>
+              </div>
             </div>
           </form>
         )}

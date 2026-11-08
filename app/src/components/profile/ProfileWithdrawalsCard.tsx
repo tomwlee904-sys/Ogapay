@@ -22,7 +22,10 @@ function netLine(w: Tx, s: string) {
 // for withdrawals only: the latest transactions of any type are mostly job
 // payments and fees, so older withdrawals used to drop out of view. Each one
 // says where it stands: processing, paid, failed (the money came back) or refunded.
-export default function ProfileWithdrawalsCard() {
+// On phones each one is a stacked row (the table scrolled sideways and hid Amount
+// and Status); from 768px it is a table. onWithdraw opens the Withdraw sheet from
+// the empty state (2026-11-08)
+export default function ProfileWithdrawalsCard({ onWithdraw }: { onWithdraw?: () => void } = {}) {
   const [rows, setRows] = useState<Tx[] | null>(null)
   const [page, setPage] = useState(1)
   const [more, setMore] = useState(false)
@@ -67,9 +70,36 @@ export default function ProfileWithdrawalsCard() {
       ) : rows.length === 0 ? (
         <div className="pf-wd-empty">
           <i className="ti ti-history-off" />
-          <div>No withdrawals yet</div>
+          <div>No withdrawals yet. When you withdraw to your bank, each one shows here with where it stands.</div>
+          {onWithdraw && (
+            <div className="pf-wd-cta">
+              <button type="button" className="pf-wd-more-btn" onClick={onWithdraw}>Withdraw</button>
+            </div>
+          )}
         </div>
-      ) : (
+      ) : (<>
+        <ul className="pf-wd-list pf-wd-rows">
+          {rows.map((w) => {
+            const s = payoutStatusOf(w)
+            const detail = txDetail(w)
+            const note = payoutNote(w)
+            const net = w.metadata?.toAddress || w.metadata?.walletAddress ? '' : netLine(w, s)
+            return (
+              <li key={w.id} className="pf-wd-row">
+                <div className="pf-wd-main">
+                  <strong>{txTitle(w)}</strong>
+                  <span>{when(w.createdAt)}{detail ? ` · ${detail}` : ''}</span>
+                  {net && <span>{net}</span>}
+                  {note && <span className="pf-wd-note">{note}</span>}
+                </div>
+                <div className="pf-wd-side">
+                  <Money amount={Math.abs(Number(w.amount || 0))} currency={w.currency || 'NGN'} exact size={14} className={s === 'failed' || s === 'refunded' ? 'pf-wd-void' : ''} />
+                  <span className={`pf-wd-pill ${s}`}>{PAYOUT_LABEL[s]}</span>
+                </div>
+              </li>
+            )
+          })}
+        </ul>
         <div className="pf-wd-scroll">
           <table className="pf-wd-table">
             <thead>
@@ -98,10 +128,12 @@ export default function ProfileWithdrawalsCard() {
             </tbody>
           </table>
         </div>
-      )}
+      </>)}
       {more && rows && !failed && (
         <div className="pf-wd-more"><button type="button" className="pf-wd-more-btn" disabled={busy} onClick={loadMore}>{busy ? 'Loading…' : 'Load more'}</button></div>
       )}
+      {/* Everything else that came in is on the Wallet page (2026-11-08) */}
+      <Link to="/wallet?filter=in" className="pf-wd-in">Deposits, refunds and job payments →</Link>
     </section>
   )
 }

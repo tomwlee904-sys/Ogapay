@@ -114,6 +114,10 @@ export default function MyStore() {
   return (
     <Layout>
       <div className="up-wrap">
+        {/* Back to the Profile, as on Edit profile (2026-11-08) */}
+        <div className="up-crumb">
+          <Link to="/profile" className="tap" style={{ color: 'var(--text2)', textDecoration: 'none' }}><i className="ti ti-arrow-left" aria-hidden="true" /> Profile</Link>
+        </div>
         <div className="ms2-head">
           <div>
             <h1>My Store</h1>
